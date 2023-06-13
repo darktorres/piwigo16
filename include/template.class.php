@@ -10,8 +10,45 @@
  * @package template
  */
 
-require_once( PHPWG_ROOT_PATH .'include/smarty/libs/Smarty.class.php');
+set_error_handler(function (
+  $errno,
+  $errstr,
+  $errfile,
+  $errline
+) {
+  // Define error types and corresponding prefixes
+  $error_types = [
+      E_ERROR => 'error',
+      E_WARNING => 'warn',
+      E_PARSE => 'error',
+      E_NOTICE => 'info',
+      E_CORE_ERROR => 'error',
+      E_CORE_WARNING => 'warn',
+      E_COMPILE_ERROR => 'error',
+      E_COMPILE_WARNING => 'warn',
+      E_USER_ERROR => 'error',
+      E_USER_WARNING => 'warn',
+      E_USER_NOTICE => 'info',
+      E_RECOVERABLE_ERROR => 'error',
+      E_DEPRECATED => 'warn',
+      E_USER_DEPRECATED => 'warn',
+  ];
 
+  // Determine the error type
+  $error_type = $error_types[$errno] ?? 'Unknown Error';
+
+  // Construct the error message
+  $errorMessage = json_encode("PHP: {$errstr} in {$errfile} on line {$errline}");
+
+  // Store in global var
+  global $custom_error_log;
+  $custom_error_log .= "console.{$error_type}({$errorMessage});\n";
+
+  // Ensure PHP's internal error handler is not bypassed
+  return false;
+});
+
+require_once( PHPWG_ROOT_PATH .'include/smarty/libs/Smarty.class.php');
 
 /** default rank for buttons */
 define('BUTTONS_RANK_NEUTRAL', 50);
@@ -563,6 +600,21 @@ class Template
       } //else maybe error or warning ?
       $this->html_head_elements = array();
       $this->html_style = '';
+    }
+
+    global $custom_error_log;
+
+    if (!empty($custom_error_log)) {
+      $search = "\n</body>";
+      $pos = strpos($this->output, $search);
+      if ($pos !== false) {
+          $rep = '<script>
+              window.addEventListener("load", function() {
+                  ' . $custom_error_log . '
+              });
+          </script>';
+          $this->output = substr_replace($this->output, $rep, $pos, 0);
+      }
     }
 
     echo $this->output;

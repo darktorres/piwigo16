@@ -129,6 +129,16 @@ function pwg_query($query)
   global $mysqli, $conf, $page, $debug, $t2;
 
   $start = microtime(true);
+
+  $log_file = dirname(__DIR__, 2) . '/_data/sql/mysqli.sql';
+  $log_dir = dirname($log_file);
+
+  if (! is_dir($log_dir)) {
+      mkdir($log_dir, 0777, true);
+  }
+
+  file_put_contents($log_file, $query . "\n\n", FILE_APPEND | LOCK_EX);
+
   ($result = $mysqli->query($query)) or my_error($query, $conf['die_on_sql_error']);
 
   $time = microtime(true) - $start;

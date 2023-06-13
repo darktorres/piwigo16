@@ -1,7 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "reinstall": "bunx rimraf node_modules && bun install"
+    "preinstall": "cd tests && bun install",
+    "reinstall": "bunx rimraf node_modules tests/node_modules && bun install && cd tests && bun install",
+    "tests": "cd tests && bun tests"
   },
   "dependencies": {
     "jquery-migrate": "^1.4.1"

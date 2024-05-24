@@ -33,7 +33,7 @@
                             <div class="col-sm-4">
                                 <input type="text" id="username_or_email" name="username_or_email" class="form-control"
                                     maxlength="100" {if isset($username_or_email)} value="{$username_or_email}" {/if}
-                                    placeholder="{'Username or email'|translate}">
+                                    placeholder="{'Username or email'|translate}" autocomplete="email">
                             </div>
                         </div>
                         <div class="form-group">
@@ -49,14 +49,14 @@
                             <label for="use_new_pwd" class="col-sm-2 control-label">{'New password'|translate}</label>
                             <div class="col-sm-4">
                                 <input type="password" name="use_new_pwd" id="use_new_pwd" value="" class="form-control"
-                                    placeholder="{'New password'|translate}">
+                                    placeholder="{'New password'|translate}" autocomplete="new-password">
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="passwordConf" class="col-sm-2 control-label">{'Confirm Password'|translate}</label>
                             <div class="col-sm-4">
                                 <input type="password" name="passwordConf" id="passwordConf" class="form-control" value=""
-                                    placeholder="{'Confirm Password'|translate}">
+                                    placeholder="{'Confirm Password'|translate}" autocomplete="new-password">
                             </div>
                         </div>
                         <div class="form-group">

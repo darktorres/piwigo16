@@ -12,8 +12,8 @@
                         <div class="form-group row">
                             <label for="username" class="col-12 col-md-3 col-form-label">{'Username'|translate}</label>
                             <div class="col-12 col-md-4">
-                                <input id="username" class="form-control-plaintext" type="text" value="{$USERNAME}"
-                                    readonly />
+                                <input id="username" class="form-control-plaintext" type="text" value="{$USERNAME}" readonly
+                                    autocomplete="username" />
                             </div>
                         </div>
                         {if not $SPECIAL_USER} {* can modify password + email*}
@@ -22,14 +22,14 @@
                                     class="col-12 col-md-3 col-form-label">{'Email address'|translate}</label>
                                 <div class="col-12 col-md-4">
                                     <input type="text" name="mail_address" id="mail_address" class="form-control"
-                                        value="{$EMAIL}" placeholder="{'Email address'|translate}">
+                                        value="{$EMAIL}" placeholder="{'Email address'|translate}" autocomplete="email">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label for="password" class="col-12 col-md-3 col-form-label">{'Password'|translate}</label>
                                 <div class="col-12 col-md-4">
                                     <input type="password" name="password" id="password" class="form-control" value=""
-                                        placeholder="{'Password'|translate}">
+                                        placeholder="{'Password'|translate}" autocomplete="current-password">
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -37,7 +37,7 @@
                                     class="col-12 col-md-3 col-form-label">{'New password'|translate}</label>
                                 <div class="col-12 col-md-4">
                                     <input type="password" name="use_new_pwd" id="use_new_pwd" class="form-control" value=""
-                                        placeholder="{'New password'|translate}">
+                                        placeholder="{'New password'|translate}" autocomplete="new-password">
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -45,7 +45,7 @@
                                     class="col-12 col-md-3 col-form-label">{'Confirm Password'|translate}</label>
                                 <div class="col-12 col-md-4">
                                     <input type="password" name="passwordConf" id="passwordConf" class="form-control" value=""
-                                        placeholder="{'Confirm Password'|translate}">
+                                        placeholder="{'Confirm Password'|translate}" autocomplete="new-password">
                                 </div>
                             </div>
                         {/if}

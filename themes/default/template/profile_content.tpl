@@ -13,25 +13,25 @@
           <span class="property">
             <label for="mail_address">{'Email address'|translate}</label>
           </span>
-          <input type="text" name="mail_address" id="mail_address" value="{$EMAIL}">
+          <input type="text" name="mail_address" id="mail_address" value="{$EMAIL}" autocomplete="email">
         </li>
         <li>
           <span class="property">
             <label for="password">{'Password'|translate}</label>
           </span>
-          <input type="password" name="password" id="password" value="">
+          <input type="password" name="password" id="password" value="" autocomplete="current-password">
         </li>
         <li>
           <span class="property">
             <label for="use_new_pwd">{'New password'|translate}</label>
           </span>
-          <input type="password" name="use_new_pwd" id="use_new_pwd" value="">
+          <input type="password" name="use_new_pwd" id="use_new_pwd" value="" autocomplete="new-password">
         </li>
         <li>
           <span class="property">
             <label for="passwordConf">{'Confirm Password'|translate}</label>
           </span>
-          <input type="password" name="passwordConf" id="passwordConf" value="">
+          <input type="password" name="passwordConf" id="passwordConf" value="" autocomplete="new-password">
         </li>
       {/if}
     </ul>

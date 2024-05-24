@@ -132,11 +132,11 @@
 						<legend>{'Quick connect'|translate}</legend>
 						<p>
 							<label for=userX>{'Username'|translate}</label><br>
-							<input type=text name=username id=userX value="" style="width:99%">
+							<input type=text name=username id=userX value="" style="width:99%" autocomplete="username">
 						</p>
 
 						<p><label for=passX>{'Password'|translate}</label><br>
-							<input type=password name=password id=passX style="width:99%">
+							<input type=password name=password id=passX style="width:99%" autocomplete="current-password">
 						</p>
 
 						{if $AUTHORIZE_REMEMBERING}

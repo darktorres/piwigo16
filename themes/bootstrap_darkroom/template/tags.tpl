@@ -40,7 +40,7 @@
     {if $display_mode == 'cloud' and isset($tags)}
         {if $theme_config->tag_cloud_type == 'basic'}
             <div id="tagCloud">
-                {foreach from=$tags item=tag}
+                {foreach $tags as $tag}
                     <span><a href="{$tag.URL}" class="tagLevel{$tag.level}"
                             title="{$tag.counter|translate_dec:'%d photo':'%d photos'}">{$tag.name}</a></span>
                 {/foreach}
@@ -69,7 +69,7 @@
                 });
             </script>{/footer_script}
             <div id="tagCloudCanvas">
-                {foreach from=$tags item=tag}
+                {foreach $tags as $tag}
                     <span data-weight="{$tag.counter}"><a href="{$tag.URL}">{$tag.name}</a></span>
                 {/foreach}
             </div>
@@ -80,11 +80,11 @@
 
     {if $display_mode == 'letters' and isset($letters)}
         <div id="tagLetters">
-            {foreach from=$letters item=letter}
+            {foreach $letters as $letter}
                 <div class="card w-100 mb-3">
                     <div class="card-header">{$letter.TITLE}</div>
                     <div class="list-group list-group-flush">
-                        {foreach from=$letter.tags item=tag}
+                        {foreach $letter.tags as $tag}
                             <a href="{$tag.URL}" class="list-group-item list-group-item-action" title="{$tag.name}">{$tag.name}<span
                                     class="badge badge-secondary ml-2">{$tag.counter|translate_dec:'%d photo':'%d photos'}</span></a>
                         {/foreach}

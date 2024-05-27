@@ -189,12 +189,12 @@
         {/if}
         <br>
         <select class="invisible-related-categories-select" name="associate[]" multiple>
-          {foreach from=$related_categories item=$cat_path key=$key}
+          {foreach $related_categories as $key => $cat_path}
             <option selected value="{$key}"></option>
           {/foreach}
         </select>
       <div class="related-categories-container">
-        {foreach from=$related_categories item=$cat_path key=$key}
+        {foreach $related_categories as $key => $cat_path}
           <div class="breadcrumb-item"><span class="link-path">{$cat_path['name']}</span>{if $cat_path['unlinkable']}<span
               id={$key} class="icon-cancel-circled remove-item"></span>{else}<span id={$key}
                 class="icon-help-circled help-item tiptip"

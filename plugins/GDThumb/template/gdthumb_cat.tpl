@@ -3,7 +3,7 @@
 
   {if !empty($category_thumbnails)}
     {assign var=has_cats value="true" scope=root nocache}
-    {foreach from=$category_thumbnails item=cat name=cat_loop}
+    {foreach $category_thumbnails as $cat}
       {assign var=derivative value=$pwg->derivative($GDThumb_derivative_params, $cat.representative.src_image)}
 
       <li class="gdthumb{if $GDThumb.thumb_animate} animate{/if} {$GDThumb.method} album">

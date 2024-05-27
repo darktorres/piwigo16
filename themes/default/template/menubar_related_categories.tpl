@@ -3,7 +3,7 @@
 </dt>
 <dd>
   {assign var='ref_level' value=0}
-  {foreach from=$block->data.MENU_CATEGORIES item=cat}
+  {foreach $block->data.MENU_CATEGORIES as $cat}
     {if $cat.LEVEL > $ref_level}
       <ul>
       {else}

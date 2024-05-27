@@ -90,7 +90,7 @@
       <div class="col-lg-10 col-md-12 mx-auto">
         <div id="thumbnailCarousel" class="slick-carousel{if $theme_config->slick_centered} center{/if}">
           {assign var=idx value=0}
-          {foreach from=$thumbnails item=thumbnail}
+          {foreach $thumbnails as $thumbnail}
             {assign var=derivative value=$pwg->derivative($derivative_params_square, $thumbnail.src_image)}
             {if !$theme_config->slick_infinite}
               {assign var=derivative_medium value=$pwg->derivative($derivative_params_medium, $thumbnail.src_image)}

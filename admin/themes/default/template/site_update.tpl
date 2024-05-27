@@ -38,14 +38,14 @@
   <h3>{'Error list'|translate}</h3>
   <div class="errors">
     <ul>
-      {foreach from=$sync_errors item=error}
+      {foreach $sync_errors as $error}
         <li>[{$error.ELEMENT}] {$error.LABEL}</li>
       {/foreach}
     </ul>
   </div>
   <h3>{'Errors caption'|translate}</h3>
   <ul>
-    {foreach from=$sync_error_captions item=caption}
+    {foreach $sync_error_captions as $caption}
       <li><strong>{$caption.TYPE}</strong>: {$caption.LABEL}</li>
     {/foreach}
   </ul>
@@ -55,7 +55,7 @@
   <h3>{'Detailed information'|translate}</h3>
   <div class="infos">
     <ul>
-      {foreach from=$sync_infos item=info}
+      {foreach $sync_infos as $info}
         <li>[{$info.ELEMENT}] {$info.LABEL}</li>
       {/foreach}
     </ul>

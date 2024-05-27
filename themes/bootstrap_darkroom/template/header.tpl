@@ -69,7 +69,7 @@
   {combine_css path='themes/bootstrap_darkroom/node_modules/@fortawesome/fontawesome-free/css/all.css' order=-14}
   {combine_css path='themes/bootstrap_darkroom/assets/photography-icons/css/PhotographyIcons.css' order=-13}
   {combine_css path='themes/bootstrap_darkroom/node_modules/bootstrap-social/bootstrap-social.css' order=-12}
-  {foreach from=$themes item=theme}
+  {foreach $themes as $theme}
     {if $theme.load_css}
       {combine_css path="themes/`$theme.id`/theme.css" order=-10}
     {/if}
@@ -97,12 +97,12 @@
   {combine_script id=$themeconf.name require='bootstrap' path='themes/bootstrap_darkroom/js/theme.js' load='footer'}
   {get_combined_scripts load='header'}
   {if not empty($head_elements)}
-    {foreach from=$head_elements item=elt}{$elt}
+    {foreach $head_elements as $elt}{$elt}
     {/foreach}
   {/if}
 </head>
 
-<body id="{$BODY_ID}" class="{foreach from=$BODY_CLASSES item=class}{$class} {/foreach}" data-infos='{$BODY_DATA}'>
+<body id="{$BODY_ID}" class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}" data-infos='{$BODY_DATA}'>
 
   <div id="wrapper">
     {if isset($MENUBAR)}
@@ -254,12 +254,12 @@
     {/if}
 
     {if not empty($header_msgs)}
-      {foreach from=$header_msgs item=msg}
+      {foreach $header_msgs as $msg}
       {/foreach}
     {/if}
 
     {if not empty($header_notes)}
-      {foreach from=$header_notes item=note}
+      {foreach $header_notes as $note}
       {/foreach}
     {/if}
 

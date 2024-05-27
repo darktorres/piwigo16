@@ -184,7 +184,7 @@
   <p id="up_to_date" style="display:none; text-align:left; margin-left:20px;">
     {'All %s are up to date.'|sprintf:$EXT_TYPE|translate}</p>
 
-  {foreach from=$UPDATES_EXTENSION key=type item=updates}
+  {foreach $UPDATES_EXTENSION as $type => $updates}
     {if not empty($updates)}
       <fieldset id="{$type}" class="pluginContainer pluginUpdateContainer line-form" data-type="{$type}">
         <legend>
@@ -197,7 +197,7 @@
           {/if}
         </legend>
 
-        {foreach from=$updates item=extension}
+        {foreach $updates as $extension}
           <div class="pluginBox pluginMiniBox" id="{$type}_{$extension.EXT_ID}" {if $extension.IGNORED}data-ignored="true"
             style="display:none;" {/if}>
             <div class="pluginContent">

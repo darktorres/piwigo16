@@ -406,7 +406,7 @@
   {if count($setup_errors) > 0}
     <div class="errors">
       <ul>
-        {foreach from=$setup_errors item=error}
+        {foreach $setup_errors as $error}
           <li>{$error}</li>
         {/foreach}
       </ul>
@@ -415,7 +415,7 @@
     {if count($setup_warnings) > 0}
       <div class="warnings">
         <ul>
-          {foreach from=$setup_warnings item=warning}
+          {foreach $setup_warnings as $warning}
             <li>{$warning}</li>
           {/foreach}
         </ul>

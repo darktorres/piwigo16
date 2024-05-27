@@ -127,7 +127,7 @@
 					</a></li>
 			{/if}
 			{if !empty($PLUGIN_INDEX_BUTTONS)}
-				{foreach from=$PLUGIN_INDEX_BUTTONS item=button}<li>{$button}</li>
+				{foreach $PLUGIN_INDEX_BUTTONS as $button}<li>{$button}</li>
 				{/foreach}
 			{/if}
 			{if !empty($PLUGIN_INDEX_ACTIONS)}{$PLUGIN_INDEX_ACTIONS}{/if}
@@ -138,7 +138,7 @@
 		{if isset($chronology_views)}
 			<div class="calendarViews">{'View'|translate}:
 				<a id="calendarViewSwitchLink" href="#">
-					{foreach from=$chronology_views item=view}
+					{foreach $chronology_views as $view}
 						{if $view.SELECTED}{$view.CONTENT}
 						{/if}
 					{/foreach}

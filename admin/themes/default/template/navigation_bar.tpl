@@ -11,7 +11,7 @@
 
   {assign var='prev_page' value=0}
   <div class="pagination-item-container">
-    {foreach from=$navbar.pages key=page item=url}
+    {foreach $navbar.pages as $page => $url}
       {if $page > $prev_page+1}<span>...</span>{/if}
       {if $page == $navbar.CURRENT_PAGE}
         <a class="actual">{$page}</a>

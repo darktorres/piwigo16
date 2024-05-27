@@ -35,7 +35,7 @@
 
 <form id="menuOrdering" action="{$F_ACTION}" method="post">
   <ul class="menuUl">
-    {foreach from=$blocks item=block name="block_loop"}
+    {foreach $blocks as $block}
       <li class="menuLi {if $block.pos<0}menuLi_hidden{/if}" id="menu_{$block.reg->get_id()}">
         <p>
           <span>

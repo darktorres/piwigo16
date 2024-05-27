@@ -20,7 +20,7 @@
   {'and'|translate} {$content_new_elements_between.DATE_BETWEEN_2}.
 {/if}
 {if not empty($global_new_lines)}
-  {foreach from=$global_new_lines item=line}
+  {foreach $global_new_lines as $line}
     o {$line}
   {/foreach}
 {/if}

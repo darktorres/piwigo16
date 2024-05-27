@@ -1,7 +1,7 @@
 <li class="nav-item dropdown" id="bd_downloads">
   <a class="nav-link dropdown-toggle" data-toggle="dropdown">{$block->get_title()}</a>
   <ul class="dropdown-menu dropdown-menu-right">
-    {foreach from=$block->data item=link}
+    {foreach $block->data as $link}
       <li>
         <a href="{$link.URL}" title="{$link.TITLE}" rel="nofollow" class="dropdown-item">
           {$link.NAME}

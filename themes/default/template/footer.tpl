@@ -20,7 +20,7 @@
   {/if}
 
   {if isset($footer_elements)}
-    {foreach from=$footer_elements item=elt}
+    {foreach $footer_elements as $elt}
       {$elt}
     {/foreach}
   {/if}

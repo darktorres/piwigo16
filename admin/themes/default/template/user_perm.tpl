@@ -5,7 +5,7 @@
     <legend>{'Albums authorized thanks to group associations'|translate}</legend>
 
     <ul>
-      {foreach from=$categories_because_of_groups item=cat }
+      {foreach $categories_because_of_groups as $cat}
         <li>{$cat}</li>
       {/foreach}
     </ul>

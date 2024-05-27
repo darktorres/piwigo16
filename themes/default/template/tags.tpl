@@ -25,7 +25,7 @@
 
 	{if $display_mode == 'cloud' and isset($tags)}
 		<div id="fullTagCloud">
-			{foreach from=$tags item=tag}
+			{foreach $tags as $tag}
 				<span><a href="{$tag.URL}" class="tagLevel{$tag.level}"
 						title="{$tag.counter|translate_dec:'%d photo':'%d photos'}">{$tag.name}</a></span>
 			{/foreach}
@@ -36,11 +36,11 @@
 		<table>
 			<tr>
 				<td valign="top">
-					{foreach from=$letters item=letter}
+					{foreach $letters as $letter}
 						<fieldset class="tagLetter">
 							<legend class="tagLetterLegend">{$letter.TITLE}</legend>
 							<table class="tagLetterContent">
-								{foreach from=$letter.tags item=tag}
+								{foreach $letter.tags as $tag}
 									<tr class="tagLine">
 										<td><a href="{$tag.URL}" title="{$tag.name}">{$tag.name}</a></td>
 										<td class="nbEntries">{$tag.counter|translate_dec:'%d photo':'%d photos'}</td>

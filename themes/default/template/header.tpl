@@ -49,7 +49,7 @@
   {if not empty($page_refresh)}
   <meta http-equiv="refresh" content="{$page_refresh.TIME};url={$page_refresh.U_REFRESH}">{/if}
 
-  {foreach from=$themes item=theme}
+  {foreach $themes as $theme}
     {if $theme.load_css}
       {combine_css path="themes/`$theme.id`/theme.css" order=-10}
     {/if}
@@ -67,19 +67,19 @@
   <!-- END get_combined -->
 
   {if not empty($head_elements)}
-    {foreach from=$head_elements item=elt}
+    {foreach $head_elements as $elt}
       {$elt}
     {/foreach}
   {/if}
 </head>
 
-<body id="{$BODY_ID}" class="{foreach from=$BODY_CLASSES item=class}{$class} {/foreach}" data-infos='{$BODY_DATA}'>
+<body id="{$BODY_ID}" class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}" data-infos='{$BODY_DATA}'>
 
   <div id="the_page">
 
     {if not empty($header_msgs)}
       <div class="header_msgs">
-        {foreach from=$header_msgs item=elt}
+        {foreach $header_msgs as $elt}
           {$elt}<br>
         {/foreach}
       </div>
@@ -89,7 +89,7 @@
 
     {if not empty($header_notes)}
       <div class="header_notes">
-        {foreach from=$header_notes item=elt}
+        {foreach $header_notes as $elt}
           <p>{$elt}</p>
         {/foreach}
       </div>

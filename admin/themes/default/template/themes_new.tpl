@@ -21,7 +21,7 @@
 
 {if not empty($new_themes)}
   <div class="themeBoxes">
-    {foreach from=$new_themes item=theme name=themes_loop}
+    {foreach $new_themes as $theme}
       <div class="themeBox">
         <div class="themeShot"><a href="{$theme.screenshot}" class="preview-box" title="{$theme.name}"><img
               src="{$theme.screenshot}" onerror="this.src='{$default_screenshot}'"></a></div>

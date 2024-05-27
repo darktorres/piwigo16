@@ -92,7 +92,7 @@
                     <div class="form-group">
                         <select class="form-control" id="authors" placeholder="{'Type in a search term'|translate}"
                             name="authors[]" multiple>
-                            {foreach from=$AUTHORS item=author}
+                            {foreach $AUTHORS as $author}
                                 <option value="{$author.author|strip_tags:false|escape:html}">{$author.author|strip_tags:false}
                                     ({$author.counter|translate_dec:'%d photo':'%d photos'})</option>
                             {/foreach}
@@ -110,7 +110,7 @@
                     <div class="form-group mb-3">
                         <select class="form-control" id="tags" placeholder="{'Type in a search term'|translate}"
                             name="tags[]" multiple>
-                            {foreach from=$TAGS item=tag}
+                            {foreach $TAGS as $tag}
                                 <option value="{$tag.id}">{$tag.name} ({$tag.counter|translate_dec:'%d photo':'%d photos'})
                                 </option>
                             {/foreach}

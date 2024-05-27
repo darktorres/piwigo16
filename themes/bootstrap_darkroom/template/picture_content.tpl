@@ -32,7 +32,7 @@
           usemap="#map{$current.selected_derivative->get_type()}"
           title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|strip_tags:false|replace:'"':' '}{else}{$current.TITLE_ESC} - {$ALT_IMG}{/if}">
 
-      {foreach from=$current.unique_derivatives item=derivative key=derivative_type}
+      {foreach $current.unique_derivatives as $derivative_type => $derivative}
       <map name="map{$derivative->get_type()}">
         {assign var='size' value=$derivative->get_size()}
         {if isset($previous)}

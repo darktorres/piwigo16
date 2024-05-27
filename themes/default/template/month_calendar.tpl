@@ -1,5 +1,5 @@
 {if !empty($chronology_navigation_bars)}
-	{foreach from=$chronology_navigation_bars item=bar}
+	{foreach $chronology_navigation_bars as $bar}
 		<div class="calendarBar">
 			{if isset($bar.previous)}
 				<div style="float:left;margin-right:5px">&laquo; <a href="{$bar.previous.URL}">{$bar.previous.LABEL}</a></div>
@@ -10,7 +10,7 @@
 			{if empty($bar.items)}
 				&nbsp;
 			{else}
-				{foreach from=$bar.items item=item}
+				{foreach $bar.items as $item}
 					{if !isset($item.URL)}
 						<span class="calItem">{$item.LABEL}</span>
 					{else}
@@ -24,10 +24,10 @@
 {/if}
 
 {if !empty($chronology_calendar.calendar_bars)}
-	{foreach from=$chronology_calendar.calendar_bars item=bar}
+	{foreach $chronology_calendar.calendar_bars as $bar}
 		<div class="calendarCalBar">
 			<span class="calCalHead"><a href="{$bar.U_HEAD}">{$bar.HEAD_LABEL}</a> ({$bar.NB_IMAGES})</span><br>
-			{foreach from=$bar.items item=item}
+			{foreach $bar.items as $item}
 				<span class="calCal{if !isset($item.URL)}Empty{/if}">
 					{if isset($item.URL)}
 						<a href="{$item.URL}">{$item.LABEL}</a>
@@ -45,7 +45,7 @@
 	<table class="calMonth">
 		<thead>
 			<tr>
-				{foreach from=$chronology_calendar.month_view.wday_labels item=wday}
+				{foreach $chronology_calendar.month_view.wday_labels as $wday}
 					<th>{$wday}</th>
 				{/foreach}
 			</tr>
@@ -56,9 +56,9 @@
 				width:{$chronology_calendar.month_view.CELL_WIDTH}px;height:{$chronology_calendar.month_view.CELL_HEIGHT}px
 			}
 		</style>{/html_style}
-		{foreach from=$chronology_calendar.month_view.weeks item=week}
+		{foreach $chronology_calendar.month_view.weeks as $week}
 			<tr>
-				{foreach from=$week item=day}
+				{foreach $week as $day}
 					{if !empty($day)}
 						{if isset($day.IMAGE)}
 							<td class="calDayCellFull">

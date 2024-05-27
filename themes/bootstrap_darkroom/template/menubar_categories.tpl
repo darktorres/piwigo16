@@ -2,7 +2,7 @@
   <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{'Albums'|translate}</a>
   <div class="dropdown-menu dropdown-menu-right" role="menu">
     {assign var='ref_level' value=0}
-    {foreach from=$block->data.MENU_CATEGORIES item=cat}
+    {foreach $block->data.MENU_CATEGORIES as $cat}
       <a class="dropdown-item{if $cat.SELECTED} active{/if}" data-level="{($cat.LEVEL -1)}" href="{$cat.URL}">
         {$cat.NAME}
         {if $cat.count_images > 0}

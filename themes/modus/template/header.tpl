@@ -31,7 +31,7 @@
 	<meta name=viewport content="width=device-width,initial-scale=1">
 	{*combine_script id='jquery' load='footer'*}
 	{if not empty($head_elements)}
-		{foreach from=$head_elements item=elt}{$elt}
+		{foreach $head_elements as $elt}{$elt}
 		{/foreach}
 	{/if}
 
@@ -57,17 +57,17 @@
 </head>
 
 <body id={$BODY_ID}
-	class="{foreach from=$BODY_CLASSES item=class}{$class} {/foreach}{if !empty($PAGE_BANNER) && $MODUS_DISPLAY_PAGE_BANNER} modus-withPageBanner{/if}"
+	class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}{if !empty($PAGE_BANNER) && $MODUS_DISPLAY_PAGE_BANNER} modus-withPageBanner{/if}"
 	data-infos='{$BODY_DATA}'>
 	{if not empty($header_msgs) or not empty($header_notes)}
 		<div class="header_msgs">
 			{if not empty($header_msgs)}
-				{foreach from=$header_msgs item=elt}
+				{foreach $header_msgs as $elt}
 					<p>{$elt}</p>
 				{/foreach}
 			{/if}
 			{if not empty($header_notes)}
-				{foreach from=$header_notes item=elt}
+				{foreach $header_notes as $elt}
 					<p>{$elt}</p>
 				{/foreach}
 			{/if}

@@ -159,7 +159,7 @@
     <fieldset class="">
       <legend><span class="icon-puzzle icon-purple"></span>{'Advanced features'|translate}</legend>
       <div style="display:flex;flex-wrap: wrap;">
-        {foreach from=$advanced_features item=feature key=key name=name}
+        {foreach $advanced_features as $feature}
           <a href="{$feature.URL}" class="{$feature.ICON} maintenance-action">{$feature.CAPTION}</a>
         {/foreach}
       </div>
@@ -209,7 +209,7 @@
         </span>
       </span>
       <div class="delete-check-container">
-        {foreach from=$purge_derivatives key=name item=url name=loop}
+        {foreach $purge_derivatives as $name => $url}
           <div class="delete-size-check"
             title="{if isset($cache_sizes)}{"%s MB"|translate:{round($cache_sizes[1]['value'][$url]/1024/1024, 2)}}{else}{'N/A'|translate}{/if}"
             data-selected="0" name="{$url}">

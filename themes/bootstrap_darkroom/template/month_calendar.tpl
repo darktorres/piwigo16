@@ -1,5 +1,5 @@
 {if !empty($chronology_navigation_bars)}
-    {foreach from=$chronology_navigation_bars item=bar}
+    {foreach $chronology_navigation_bars as $bar}
         <div id="calendar-nav">
             {if isset($bar.previous)}
                 <a id="calendar-prev" class="btn btn-secondary pull-left" href="{$bar.previous.URL}"><span
@@ -9,7 +9,7 @@
                 <div id="calendar-nav-buttons" class="btn-group" role="group">
                     {assign var=item_type value=reset($bar.items)} {* avoid strict standards warning with nested resets *}
                     {if gettype(reset($item_type)) === 'string' || (!isset($bar.previous) && !isset($bar.next))}
-                        {foreach from=$bar.items item=item}
+                        {foreach $bar.items as $item}
                             {if !isset($item.URL)}
                                 <a class="btn btn-secondary" disabled="disabled">{$item.LABEL}</a>
                             {else}
@@ -21,7 +21,7 @@
                         <table class="table table-sm table-bordered">
                             <tbody>
                                 {assign var=i value=0}
-                                {foreach from=$bar.items item=item}
+                                {foreach $bar.items as $item}
                                     {if $i == 0}
                                         <tr>
                                         {/if}
@@ -52,13 +52,13 @@
 {/if}
 
 {if !empty($chronology_calendar.calendar_bars)}
-    {foreach from=$chronology_calendar.calendar_bars item=bar}
+    {foreach $chronology_calendar.calendar_bars as $bar}
         <div class="card">
             <div class="card-header"><a href="{$bar.U_HEAD}">{$bar.HEAD_LABEL}</a> <span
                     class="badge badge-secondary">{$bar.NB_IMAGES}</span></div>
             <div class="card-body">
                 <ul class="calendar-month-list">
-                    {foreach from=$bar.items item=item}
+                    {foreach $bar.items as $item}
                         <li><a href="{if isset($item.URL)}{$item.URL}{else}#{/if}">{$item.LABEL}{if isset($item.NB_IMAGES)} <span
                                 class="badge badge-secondary">{$item.NB_IMAGES}</span>{/if}</a></li>
                 {/foreach}
@@ -73,7 +73,7 @@
         <table id="calMonth" class="table table-sm table-bordered">
             <thead>
                 <tr>
-                    {foreach from=$chronology_calendar.month_view.wday_labels item=wday}
+                    {foreach $chronology_calendar.month_view.wday_labels as $wday}
                         <th>{$wday}</th>
                     {/foreach}
                 </tr>
@@ -87,9 +87,9 @@
                     width:{$chronology_calendar.month_view.CELL_WIDTH}px;height:{$chronology_calendar.month_view.CELL_HEIGHT + 29}px
                 }
             </style>{/html_style}
-            {foreach from=$chronology_calendar.month_view.weeks item=week}
+            {foreach $chronology_calendar.month_view.weeks as $week}
                 <tr>
-                    {foreach from=$week item=day}
+                    {foreach $week as $day}
                         {if !empty($day)}
                             {if isset($day.IMAGE)}
                                 <td class="calDayCellFull">

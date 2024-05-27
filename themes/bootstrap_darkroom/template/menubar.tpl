@@ -1,7 +1,7 @@
 <!-- Start of menubar.tpl -->
 <ul class="navbar-nav{if !$theme_config->quicksearch_navbar} ml-auto{/if}">
     {assign var="discover_menu_exists" value=false}
-    {foreach from=$blocks key=id item=block}
+    {foreach $blocks as $id => $block}
         {if not empty($block->template)}
             {if $id != "mbMenu" && $id != "mbSpecials" && $id != "mbIdentification"}
                 {include file=$block->template|get_extent:$id }
@@ -29,7 +29,7 @@
     {/foreach}
 
     {* use foreach again for plugin compatibility, no idea why $blocks.mbIdentification->template breaks SocialConnect, for example *}
-    {foreach from=$blocks key=id item=block}
+    {foreach $blocks as $id => $block}
         {if not empty($block->template) && $id == "mbIdentification"}
             {include file=$block->template|get_extent:$id }
         {/if}

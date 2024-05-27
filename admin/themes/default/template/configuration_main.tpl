@@ -100,7 +100,7 @@
         <li id="order_filters">
           <label>{'Default photos order'|translate}</label>
 
-          {foreach from=$main.order_by item=order}
+          {foreach $main.order_by as $order}
             <span class="filter {if isset($ORDER_BY_IS_CUSTOM)}transparent{/if}">
               <select name="order_by[]" {if isset($ORDER_BY_IS_CUSTOM)}disabled{/if}>
                 {html_options options=$main.order_by_options selected=$order}
@@ -276,7 +276,7 @@
           <label>{'Mail theme'|translate}</label>
 
           <div class="themeBoxes font-checkbox">
-            {foreach from=$main.mail_theme_options item=name key=theme}
+            {foreach $main.mail_theme_options as $theme => $name}
               <div class="themeSelect {if $main.mail_theme==$theme}themeDefault{/if}">
                 <label class="font-checkbox">
                   <div class="themeName">

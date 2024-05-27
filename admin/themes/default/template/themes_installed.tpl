@@ -64,7 +64,7 @@
 <div id="themesContent">
 
   {assign var='field_name' value='null'} {* <!-- 'counter' for fieldset management --> *}
-  {foreach from=$tpl_themes item=theme}
+  {foreach $tpl_themes as $theme}
 
     {if $field_name != $theme.STATE}
       {if $field_name != 'null'}

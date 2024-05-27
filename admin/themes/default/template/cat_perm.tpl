@@ -99,7 +99,7 @@
         <a href="#" class="toggle-indirectPermissions">{'show details'|translate}</a>
 
       <ul id="indirectPermissionsDetails" style="display:none">
-        {foreach from=$user_granted_indirect_groups item=group_details}
+        {foreach $user_granted_indirect_groups as $group_details}
           <li><strong>{$group_details.group_name}</strong> : {$group_details.group_users}</li>
         {/foreach}
       </ul>
@@ -112,7 +112,7 @@
   <fieldset>
     <legend>{'Permission granted'|translate}</legend>
     <ul>
-      {foreach from=$group_granted_ids item=id}
+      {foreach $group_granted_ids as $id}
       <li><label><input type="checkbox" name="deny_groups[]" value="{$id}"> {$all_groups[$id]}</label></li>
       {/foreach}
     </ul>
@@ -122,7 +122,7 @@
   <fieldset>
     <legend>{'Permission denied'|translate}</legend>
     <ul>
-      {foreach from=$group_denied_ids item=id}
+      {foreach $group_denied_ids as $id}
       <li><label><input type="checkbox" name="grant_groups[]" value="{$id}"> {$all_groups[$id]}</label></li>
       {/foreach}
     </ul>
@@ -135,7 +135,7 @@
   <fieldset>
     <legend>{'Permission granted'|translate}</legend>
     <ul>
-      {foreach from=$user_granted_direct_ids item=id}
+      {foreach $user_granted_direct_ids as $id}
       <li><label><input type="checkbox" name="deny_users[]" value="{$id}"> {$all_users[$id]}</label></li>
       {/foreach}
     </ul>
@@ -146,7 +146,7 @@
     <legend>{'Permission granted thanks to a group'|translate}</legend>
     {if isset($user_granted_indirects) }
     <ul>
-      {foreach from=$user_granted_indirects item=user_group}
+      {foreach $user_granted_indirects as $user_group}
       <li>{$user_group.USER} ({$user_group.GROUP})</li>
       {/foreach}
     </ul>
@@ -156,7 +156,7 @@
   <fieldset>
     <legend>{'Permission denied'|translate}</legend>
     <ul>
-      {foreach from=$user_denied_ids item=id}
+      {foreach $user_denied_ids as $id}
       <li><label><input type="checkbox" name="grant_users[]" value="{$id}"> {$all_users[$id]}</label></li>
       {/foreach}
     </ul>

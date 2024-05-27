@@ -3,7 +3,7 @@
 	{html_head}
 	<link rel="stylesheet" type="text/css" href="./template-extension/distributed/samples/my-thumbnails2.css">{/html_head}
 	<ul class="thumbnails">
-		{foreach from=$thumbnails item=thumbnail}
+		{foreach $thumbnails as $thumbnail}
 			<li>
 				<fieldset class="fld1">
 					<legend class="thumbLegend">

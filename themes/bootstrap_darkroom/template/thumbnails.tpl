@@ -16,7 +16,7 @@
     {/if}
     {define_derivative name='derivative_params' width=$width height=$height crop=true}
     {assign var=idx value=0+$START_ID}
-    {foreach from=$thumbnails item=thumbnail}
+    {foreach $thumbnails as $thumbnail}
         {assign var=derivative value=$pwg->derivative($derivative_params, $thumbnail.src_image)}
         {if !$derivative->is_cached()}
             {combine_script id='jquery.ajaxmanager' path='https://rawcdn.githack.com/aFarkas/Ajaxmanager/refs/heads/master/jquery.ajaxmanager.js' load='footer'}

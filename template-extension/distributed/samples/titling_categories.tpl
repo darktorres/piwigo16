@@ -56,7 +56,7 @@
   </style>
   {/html_head}
   <ul class="thumbnailCategories" id="Titling"> {*                   1st difference: Titling/thumbnail *}
-    {foreach from=$category_thumbnails item=cat}
+    {foreach $category_thumbnails as $cat}
       <div class="unbordered"> {*                                                   W3C HTML non conform *}
         <h3> {*                                               2nd difference: h3 is outside of description *}
           <a href="{$cat.URL}">{$cat.NAME}</a>{$cat.ICON_TS}

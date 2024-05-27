@@ -53,7 +53,7 @@
 
   {if !empty($elements) }
     <div><input type="hidden" name="element_ids" value="{$ELEMENT_IDS}"></div>
-    {foreach from=$elements item=element}
+    {foreach $elements as $element}
       <fieldset class="elementEdit">
         <legend>{$element.LEGEND}</legend>
 

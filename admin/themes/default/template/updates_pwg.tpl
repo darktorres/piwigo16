@@ -165,13 +165,13 @@
       {if !empty($missing.plugins)}
         <p><i>{'Following plugins may not be compatible with the new version of Piwigo:'|translate}</i></p>
         <p>
-        <ul>{foreach from=$missing.plugins item=plugin}<li><a href="{$plugin.uri}" class="externalLink">{$plugin.name}</a>
+        <ul>{foreach $missing.plugins as $plugin}<li><a href="{$plugin.uri}" class="externalLink">{$plugin.name}</a>
           </li>{/foreach}</ul><br></p>
       {/if}
       {if !empty($missing.themes)}
         <p><i>{'Following themes may not be compatible with the new version of Piwigo:'|translate}</i></p>
         <p>
-        <ul>{foreach from=$missing.themes item=theme}<li><a href="{$theme.uri}" class="externalLink">{$theme.name}</a></li>
+        <ul>{foreach $missing.themes as $theme}<li><a href="{$theme.uri}" class="externalLink">{$theme.name}</a></li>
           {/foreach}</ul><br></p>
       {/if}
       <p>

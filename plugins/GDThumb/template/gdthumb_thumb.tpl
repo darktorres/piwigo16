@@ -1,5 +1,5 @@
 {if !empty($thumbnails)}
-  {foreach from=$thumbnails item=thumbnail}
+  {foreach $thumbnails as $thumbnail}
     {assign var=derivative value=$pwg->derivative($GDThumb_derivative_params, $thumbnail.src_image)}
     {assign var=media_type value={media_type file=$thumbnail.file}}
     {assign var=media_type_name value={$media_type|capitalize:false:true}}

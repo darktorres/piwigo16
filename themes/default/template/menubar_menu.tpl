@@ -14,7 +14,7 @@
 		</script>
 	{/if}
 	<ul>
-		{foreach from=$block->data item=link}
+		{foreach $block->data as $link}
 			{if is_array($link)}
 				<li><a href="{$link.URL}" {if isset($link.TITLE)} title="{$link.TITLE}" {/if}{if isset($link.REL)}
 						{$link.REL}{/if}>{$link.NAME}</a>{if isset($link.COUNTER)} ({$link.COUNTER}){/if}</li>

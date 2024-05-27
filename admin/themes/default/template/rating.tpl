@@ -99,7 +99,7 @@
       <td style="border-right:1px solid"><strong>{$image.SUM_RATE}</strong></td>
       <td>
         <table style="width:100%">
-          {foreach from=$image.rates item=rate name=rate}
+          {foreach $image.rates as $rate}
             <tr>
               <td>{$rate.rate}</td>
               <td><b>{$rate.USER}</b></td>

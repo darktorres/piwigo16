@@ -16,7 +16,7 @@
 
   {combine_css path="admin/themes/default/fontello/css/fontello.css" order=-10}
   {assign "theme_id" ""}
-  {foreach from=$themes item=theme}
+  {foreach $themes as $theme}
     {assign "theme_id" $theme.id}
 
     {if $theme.load_css}
@@ -37,7 +37,7 @@
   <!-- END get_combined -->
 
   {if not empty($head_elements)}
-    {foreach from=$head_elements item=elt}
+    {foreach $head_elements as $elt}
       {$elt}
     {/foreach}
   {/if}
@@ -49,7 +49,7 @@
 
     {if not empty($header_msgs)}
       <div class="header_msgs">
-        {foreach from=$header_msgs item=elt}
+        {foreach $header_msgs as $elt}
           {$elt}
         {/foreach}
       </div>
@@ -85,7 +85,7 @@
 
     {if not empty($header_notes)}
       <div class="header_notes">
-        {foreach from=$header_notes item=elt}
+        {foreach $header_notes as $elt}
           {$elt}
         {/foreach}
       </div>

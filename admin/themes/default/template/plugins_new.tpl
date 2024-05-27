@@ -132,7 +132,7 @@
 
     {assign var='color_tab' value=["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"]}
 
-    {foreach from=$plugins item=plugin name=plugins_loop}
+    {foreach $plugins as $plugin}
       <div class="pluginBox pluginBigBox" id="plugin_{$plugin.ID}" data-id="{$plugin.ID}" data-date="{$plugin.ID}"
         data-name="{$plugin.EXT_NAME}" data-revision="{$plugin.REVISION_DATE}" data-downloads="{$plugin.DOWNLOADS}"
         data-author="{$plugin.AUTHOR}" data-tags="{implode(', ', $plugin.TAGS)}">
@@ -187,7 +187,7 @@
           </div>
           <div class="pluginMoreInfo">
             <div class="pluginTags tiptip" title="{'Tags'|translate} : {implode(', ', $plugin.TAGS)}">
-              {foreach from=$plugin.TAGS key=tag_id item=tag_label}
+              {foreach $plugin.TAGS as $tag_id => $tag_label}
                 <span data-id="{$tag_id}">{$tag_label}</span>
               {/foreach}
             </div>

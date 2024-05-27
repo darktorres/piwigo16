@@ -24,7 +24,7 @@
 
   {if not empty($global_new_lines)}
     <ul id="nbm_new_line">
-      {foreach from=$global_new_lines item=line}
+      {foreach $global_new_lines as $line}
         <li>{$line}</li>
       {/foreach}
     </ul>
@@ -50,7 +50,7 @@
   {if not empty($recent_posts)}
   </div>
   <div id="nbm_recent_post">
-    {foreach from=$recent_posts item=recent_post }
+    {foreach $recent_posts as $recent_post}
       <h2>{$recent_post.TITLE}</h2>
       {$recent_post.HTML_DATA}
     {/foreach}

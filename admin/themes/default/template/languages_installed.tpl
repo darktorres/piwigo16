@@ -15,7 +15,7 @@
   });
 </script>{/footer_script}
 
-{foreach from=$language_states item=language_state}
+{foreach $language_states as $language_state}
   <fieldset>
     <legend>
       {if $language_state == 'active'}
@@ -27,7 +27,7 @@
       {/if}
     </legend>
     <div class="languageBoxes">
-      {foreach from=$languages item=language}
+      {foreach $languages as $language}
         {if $language.state == $language_state}
           <div class="languageBox{if $language.is_default} languageDefault{/if}">
             <div class="languageName">{$language.name}{if $language.is_default} <em>({'default'|translate})</em>{/if}</div>

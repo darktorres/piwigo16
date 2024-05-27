@@ -1,7 +1,7 @@
 {if isset($errors)}
 	<div class="errors">
 		<ul>
-			{foreach from=$errors item=error}
+			{foreach $errors as $error}
 				<li>{$error}</li>
 			{/foreach}
 		</ul>
@@ -11,7 +11,7 @@
 {if isset($infos)}
 	<div class="infos">
 		<ul>
-			{foreach from=$infos item=info}
+			{foreach $infos as $info}
 				<li>{$info}</li>
 			{/foreach}
 		</ul>

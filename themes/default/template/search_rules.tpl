@@ -16,7 +16,7 @@
   <ul>
 
     {if isset($search_words)}
-      {foreach from=$search_words item=v}
+      {foreach $search_words as $v}
         <li>{$v}</li>
       {/foreach}
     {/if}
@@ -25,7 +25,7 @@
       <li>
         <p>{if 'AND'==$SEARCH_TAGS_MODE}{'All tags'|translate}{else}{'Any tag'|translate}{/if}</p>
         <ul>
-          {foreach from=$search_tags item=v}
+          {foreach $search_tags as $v}
             <li>{$v}</li>
           {/foreach}
         </ul>
@@ -45,7 +45,7 @@
         <p>{'Albums'|translate}</p>
 
         <ul>
-          {foreach from=$search_categories item=v}
+          {foreach $search_categories as $v}
             <li>{$v}</li>
           {/foreach}
         </ul>

@@ -16,7 +16,7 @@
       </ul>
     {/if}
     {if not empty($about_msgs)}
-      {foreach from=$about_msgs item=elt}
+      {foreach $about_msgs as $elt}
         {$elt}
       {/foreach}
     {/if}

@@ -40,7 +40,7 @@
                                 class="d-lg-none ml-2">{'Sort order'|translate}</span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" role="menu">
-                            {foreach from=$image_orders item=image_order name=loop}
+                            {foreach $image_orders as $image_order}
                                 <a class="dropdown-item{if $image_order.SELECTED} active{/if}" href="{$image_order.URL}"
                                     rel="nofollow">{$image_order.DISPLAY}</a>
                             {/foreach}
@@ -55,7 +55,7 @@
                                 class="d-lg-none ml-2">{'Photo sizes'|translate}</span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" role="menu">
-                            {foreach from=$image_derivatives item=image_derivative name=loop}
+                            {foreach $image_derivatives as $image_derivative}
                                 <a class="dropdown-item{if $image_derivative.SELECTED} active{/if}"
                                     href="{$image_derivative.URL}" rel="nofollow">{$image_derivative.DISPLAY}</a>
                             {/foreach}
@@ -148,7 +148,7 @@
                     </li>
                 {/if}
                 {if !empty($PLUGIN_INDEX_BUTTONS)}
-                    {foreach from=$PLUGIN_INDEX_BUTTONS item=button}<li>{$button}</li>
+                    {foreach $PLUGIN_INDEX_BUTTONS as $button}<li>{$button}</li>
                     {/foreach}
                 {/if}
                 {if !empty($PLUGIN_INDEX_ACTIONS)}{$PLUGIN_INDEX_ACTIONS}{/if}
@@ -186,13 +186,13 @@
         <div id="calendar-select" class="btn-group">
             <button id="calendar-view" type="button" class="btn btn-primary btn-raised dropdown-toggle"
                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                {foreach from=$chronology_views item=view}
+                {foreach $chronology_views as $view}
                     {if $view.SELECTED}{$view.CONTENT}
                     {/if}
                 {/foreach}
             </button>
             <div class="dropdown-menu" aria-labelledby="calendar-view">
-                {foreach from=$chronology_views item=view name=loop}
+                {foreach $chronology_views as $view}
                     <a class="dropdown-item {if $view.SELECTED} active{/if}" href="{$view.VALUE}">{$view.CONTENT}</a>
                 {/foreach}
             </div>

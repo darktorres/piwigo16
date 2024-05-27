@@ -99,7 +99,7 @@
       <td>{'Hit'|translate} {$SORT_OLD_HIT}</td>
       <td style="width:5px;"></td>
     </tr>
-    {foreach from=$deleted_permalinks item=permalink}
+    {foreach $deleted_permalinks as $permalink}
       <tr style="line-height:1.5em;">
         <td style="text-align:center;">{$permalink.cat_id}</td>
         <td>{$permalink.name}</td>

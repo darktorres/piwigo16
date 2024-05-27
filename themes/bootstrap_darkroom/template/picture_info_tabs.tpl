@@ -72,7 +72,7 @@
                           <div id="rating" class="imageInfo">
                             <form action="{$rating.F_ACTION}" method="post" id="rateForm" style="margin:0;">
                               <div>
-                                {foreach from=$rating.marks item=mark name=rate_loop}
+                                {foreach $rating.marks as $mark}
                                   {if isset($rating.USER_RATE) && $mark==$rating.USER_RATE}
                                     <span class="rateButtonStarFull" data-value="{$mark}"></span>
                                   {else}
@@ -214,7 +214,7 @@
                                 {$available_permission_levels[$current.level]}
                               </button>
                               <div class="dropdown-menu" role="menu" aria-labelledby="dropdownPermissions">
-                                {foreach from=$available_permission_levels item=label key=level}
+                                {foreach $available_permission_levels as $level => $label}
                                   <a id="permission-{$level}"
                                     class="dropdown-item permission-li {if $current.level == $level} active{/if}"
                                     href="javascript:setPrivacyLevel({$current.id},{$level},'{$label}')">{$label}</a>
@@ -242,8 +242,8 @@
                       <col class="w-50">
                     </colgroup>
                     <tbody>
-                      {foreach from=$metadata item=meta}
-                        {foreach from=$meta.lines item=value key=label}
+                      {foreach $metadata as $meta}
+                        {foreach $meta.lines as $label => $value}
                           <tr>
                             <th scope="row">{$label}</th>
                             <td>{$value}</td>

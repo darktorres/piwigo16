@@ -1,6 +1,6 @@
 {if !empty($blocks) }
 	<div id="menubar">
-		{foreach from=$blocks key=id item=block}
+		{foreach $blocks as $id => $block}
 			<dl id="{$id}">
 				{if not empty($block->template)}
 					{include file=$block->template|get_extent:$id }

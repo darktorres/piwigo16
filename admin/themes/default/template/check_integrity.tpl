@@ -84,7 +84,7 @@
             {/if}
             {if isset($c13y_do_check)}
               / <a href="#" onclick="DeselectAll(document.getElementById('c13y'));
-            {foreach from=$c13y_do_check item=ID}
+            {foreach $c13y_do_check as $ID}
               document.getElementById('c13y_selection-{$ID}').checked = true;
             {/foreach}
             return false;">{'Check automatic corrections'|translate}</a>

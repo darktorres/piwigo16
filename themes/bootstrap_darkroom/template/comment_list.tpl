@@ -13,7 +13,7 @@
     </script>{/footer_script}
 {/if}
 <div id="commentList">
-    {foreach from=$comments item=comment name=comment_loop}
+    {foreach $comments as $comment}
         <div class="comment">
             <div class="image">
                 {if isset($comment.src_image)}

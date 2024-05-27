@@ -208,7 +208,7 @@
     {assign var='color_tab' value=["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"]}
 
     {if not empty($groups)}
-      {foreach from=$groups item=group name=group_loop}
+      {foreach $groups as $group}
         {assign var='color_id' value=$group.ID%5}
         {groupContent grp_id=$group.ID grp_name=$group.NAME grp_members=$group.MEMBERS grp_color=$color_tab[$color_id] grp_is_default=$group.IS_DEFAULT}
       {/foreach}

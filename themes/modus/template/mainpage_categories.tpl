@@ -1,6 +1,6 @@
 {if !empty($album_thumb_size)}{* ================= modus mode ===*}
 	<ul class="albThumbs" id="rv-at">
-		{foreach from=$category_thumbnails item=item}
+		{foreach $category_thumbnails as $item}
 			<li>
 				<a href="{$item.URL}">
 					<img class=albImg{$item.MODUS_STYLE} src="{$item.modus_deriv->get_url()}" alt="{$item.TN_ALT}">

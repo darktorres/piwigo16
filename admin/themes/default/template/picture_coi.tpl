@@ -7,7 +7,7 @@
 
 	<fieldset>
 		<legend>{'Photo sizes with crop'|translate}</legend>
-		{foreach from=$cropped_derivatives item=deriv}
+		{foreach $cropped_derivatives as $deriv}
 			<img src="{$deriv.U_IMG}" alt="{$ALT}" {$deriv.HTM_SIZE}>
 		{/foreach}
 	</fieldset>

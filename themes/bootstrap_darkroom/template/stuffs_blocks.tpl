@@ -1,6 +1,6 @@
 <div class="container{if $theme_config->fluid_width}-fluid{/if} pwgstuffs-container">
     <div class="row">
-        {foreach from=$blocks item=block key=key}
+        {foreach $blocks as $key => $block}
             {if !empty($block.given_width) || !empty($block.WIDTH)}
                 {if !empty($block.WIDTH)}
                     {assign var=bwidth value=$block.WIDTH}

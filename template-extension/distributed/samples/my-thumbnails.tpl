@@ -1,7 +1,7 @@
 <!-- This is a sample of template extensions -->
 {if !empty($thumbnails)}
 	<ul class="thumbnails">
-		{foreach from=$thumbnails item=thumbnail}
+		{foreach $thumbnails as $thumbnail}
 			<li>
 				<span class="wrap1">
 					<span class="wrap2">

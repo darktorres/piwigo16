@@ -7,7 +7,7 @@ var error_icon = "{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png", max_reques
 {define_derivative name='derivative_params' width=$width height=$height crop=true}
 {define_derivative name='derivative_params_square' type=IMG_SQUARE}
 <div class="row">
-  {foreach from=$category_thumbnails item=cat name=cat_loop}
+  {foreach $category_thumbnails as $cat}
     {if $theme_config->category_wells == 'never' || ($theme_config->category_wells == 'mobile_only' && functions::get_device() == 'desktop')}
       {assign var=derivative value=$pwg->derivative($derivative_params, $cat.representative.src_image)}
       {if !$derivative->is_cached()}

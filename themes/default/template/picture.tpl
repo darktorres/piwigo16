@@ -43,7 +43,7 @@
 				</a>
 				<div id="derivativeSwitchBox" class="switchBox">
 					<div class="switchBoxTitle">{'Photo sizes'|translate}</div>
-					{foreach from=$current.unique_derivatives item=derivative key=derivative_type}
+					{foreach $current.unique_derivatives as $derivative_type => $derivative}
 						<span class="switchCheck" id="derivativeChecked{$derivative->get_type()}"
 							{if $derivative->get_type() ne $current.selected_derivative->get_type()} style="visibility:hidden"
 							{/if}>&#x2714; </span>
@@ -92,7 +92,7 @@
 					<div id="downloadSwitchBox" class="switchBox">
 						<div class="switchBoxTitle">{'Download'|translate} - {'Formats'|translate}</div>
 						<ul>
-							{foreach from=$current.formats item=format}
+							{foreach $current.formats as $format}
 								<li><a href="{$format.download_url}" rel="nofollow">{$format.label}<span
 											class="downloadformatDetails"> ({$format.filesize})</span></a></li>
 							{/foreach}
@@ -101,7 +101,7 @@
 				{/if} {* has formats *}
 			{/if}
 			{if isset($PLUGIN_PICTURE_BUTTONS)}
-				{foreach from=$PLUGIN_PICTURE_BUTTONS item=button}{$button}
+				{foreach $PLUGIN_PICTURE_BUTTONS as $button}{$button}
 				{/foreach}
 			{/if}
 			{if isset($PLUGIN_PICTURE_ACTIONS)}{$PLUGIN_PICTURE_ACTIONS}{/if}
@@ -252,7 +252,7 @@
 						<dt>{'Albums'|translate}</dt>
 						<dd>
 							<ul>
-								{foreach from=$related_categories item=cat}
+								{foreach $related_categories as $cat}
 									<li>{$cat}</li>
 								{/foreach}
 							</ul>
@@ -289,7 +289,7 @@
 						<dd>
 							<form action="{$rating.F_ACTION}" method="post" id="rateForm" style="margin:0;">
 								<div>
-									{foreach from=$rating.marks item=mark name=rate_loop}
+									{foreach $rating.marks as $mark}
 										{if isset($rating.USER_RATE) && $mark==$rating.USER_RATE}
 											<input type="button" name="rate" value="{$mark}" class="rateButtonSelected"
 												title="{$mark}">
@@ -351,7 +351,7 @@
 								(window.SwitchBox = window.SwitchBox || []).push("#privacyLevelLink", "#privacyLevelBox");
 							</script>{/footer_script}
 							<div id="privacyLevelBox" class="switchBox" style="display:none">
-								{foreach from=$available_permission_levels item=label key=level}
+								{foreach $available_permission_levels as $level => $label}
 									<span class="switchCheck" {if $level != $current.level} style="visibility:hidden"
 										{/if}>&#x2714; </span>
 									<a id="switchLevel{$level}"
@@ -365,9 +365,9 @@
 
 			{if isset($metadata)}
 				<dl id="Metadata" class="imageInfoTable">
-					{foreach from=$metadata item=meta}
+					{foreach $metadata as $meta}
 						<h3>{$meta.TITLE}</h3>
-						{foreach from=$meta.lines item=value key=label}
+						{foreach $meta.lines as $label => $value}
 							<div class="imageInfo">
 								<dt>{$label}</dt>
 								<dd>{$value}</dd>

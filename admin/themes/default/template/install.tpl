@@ -223,27 +223,27 @@ jQuery().ready(function(){ldelim}
   <table class="table2">
     <tr>
       <td style="width: 30%;" class="fieldname">{'Host'|@translate}</td>
-      <td><input type="text" name="dbhost" value="{$F_DB_HOST}" required></td>
+      <td><input type="text" name="dbhost" value="127.0.0.1" required></td>
       <td class="fielddesc">{'localhost or other, supplied by your host provider'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'User'|@translate}</td>
-      <td><input type="text" name="dbuser" value="{$F_DB_USER}" required></td>
+      <td><input type="text" name="dbuser" value="root" required></td>
       <td class="fielddesc">{'user login given by your host provider'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'Password'|@translate}</td>
-      <td><input type="password" name="dbpasswd" value=""></td>
+      <td><input type="password" name="dbpasswd" value="1234"></td>
       <td class="fielddesc">{'user password given by your host provider'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'Database name'|@translate}</td>
-      <td><input type="text" name="dbname" value="{$F_DB_NAME}" required></td>
+      <td><input type="text" name="dbname" value="piwigo_fork" required></td>
       <td class="fielddesc">{'also given by your host provider'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'Database table prefix'|@translate}</td>
-      <td><input type="text" name="prefix" value="{$F_DB_PREFIX}"></td>
+      <td><input type="text" name="prefix" value=""></td>
       <td class="fielddesc">{'database tables names will be prefixed with it (enables you to manage better your tables)'|@translate}</td>
     </tr>
   </table>
@@ -255,34 +255,34 @@ jQuery().ready(function(){ldelim}
   <table class="table2">
     <tr>
       <td style="width: 30%;" class="fieldname">{'Username'|@translate}</td>
-      <td><input type="text" name="admin_name" value="{$F_ADMIN}" required></td>
+      <td><input type="text" name="admin_name" value="darktorres" required></td>
       <td class="fielddesc">{'It will be shown to the visitors. It is necessary for website administration'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'Password'|@translate}</td>
-      <td><input type="password" name="admin_pass1" value="" required></td>
+      <td><input type="password" name="admin_pass1" value="1234" required></td>
       <td class="fielddesc">{'Keep it confidential, it enables you to access administration panel'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'Password [confirm]'|@translate}</td>
-      <td><input type="password" name="admin_pass2" value="" required></td>
+      <td><input type="password" name="admin_pass2" value="1234" required></td>
       <td class="fielddesc">{'verification'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'Email address'|@translate}</td>
-      <td><input type="text" name="admin_mail" id="admin_mail" value="{$F_ADMIN_EMAIL}" required></td>
+      <td><input type="text" name="admin_mail" id="admin_mail" value="torres.dark@gmail.com" required></td>
       <td class="fielddesc">{'Visitors will be able to contact site administrator with this mail'|@translate}</td>
     </tr>
     <tr>
       <td>{'Options'|@translate}</options>
       <td colspan="2">
         <label>
-          <input type="checkbox" name="newsletter_subscribe"{if $F_NEWSLETTER_SUBSCRIBE} checked="checked"{/if}>
+          <input type="checkbox" name="newsletter_subscribe"{if $F_NEWSLETTER_SUBSCRIBE}{/if}>
           <span class="cluetip" title="{'Piwigo Announcements Newsletter'|@translate}|{'Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it\'s important to know and upgrade) and when major events happen to the project. Only a few emails a year.'|@translate|@htmlspecialchars|@nl2br}">{'Subscribe %s to Piwigo Announcements Newsletter'|@translate:$EMAIL}</span>
         </label>
         <br>
         <label>
-          <input type="checkbox" name="send_credentials_by_mail" checked="checked">
+          <input type="checkbox" name="send_credentials_by_mail">
           {'Send my connection settings by email'|@translate}
         </label>
       </td>

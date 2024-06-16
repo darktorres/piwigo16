@@ -1,0 +1,70 @@
+{
+  "diffEditor.renderSideBySide": true,
+  "explorer.excludeGitIgnore": true,
+  "files.exclude": {
+    "**/.git": false,
+    "**/.git/**": true,
+    "**/.idea/**": true,
+    "**/CVS": false,
+    "**/galleries/**": true,
+    "**/upload/**": true
+  },
+  "files.watcherExclude": {
+    "**/_data/**": true,
+    "**/galleries/**": true,
+    "**/node_modules/**": true,
+    "**/vendor/**": true
+  },
+  "formatFiles.excludedFolders": [
+    ".chrome",
+    ".git",
+    ".vscode",
+    "_data",
+    "galleries",
+    "node_modules",
+    "tests",
+    "themes/bootstrap_darkroom/node_modules",
+    "vendor"
+  ],
+  "git.autofetch": true,
+  "gitlens.autolinks": [],
+  "gitlens.views.showContributorsStatistics": true,
+  "php.docblock.functionSnippet": {},
+  "php.format.codeStyle": "PER",
+  "php.inlayHints.parameters.byReference": true,
+  "php.inlayHints.parameters.enabled": true,
+  "php.inlayHints.types.return": true,
+  "php.inlayHints.types.variable": true,
+  "php.problems.exclude": {
+    "_data/": true,
+    "galleries/": true,
+    "install/": true,
+    "tools": true,
+    "vendor/": true
+  },
+  "remote.autoForwardPorts": false,
+  "search.exclude": {
+    "**/_data/**": true,
+    "**/*.code-search": false,
+    "**/*.code-search/**": true,
+    "**/bower_components": false,
+    "**/bower_components/**": true,
+    "**/galleries/**": true,
+    "**/language/**": true,
+    "**/node_modules": false,
+    "**/node_modules/**": true,
+    "**/tests/pages/**": true,
+    "**/vendor/**": true
+  },
+  "search.followSymlinks": false,
+  "smarty.highlight": true,
+  "workbench.editorAssociations": {
+    "git-rebase-todo": "default"
+  },
+  "[php]": {
+    "editor.defaultFormatter": "DEVSENSE.phptools-vscode"
+  },
+  "php.stubs": [
+    "all"
+  ]
+}

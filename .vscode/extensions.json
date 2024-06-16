@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "aswinkumar863.smarty-template-support",
+    "devsense.composer-php-vscode",
+    "devsense.phptools-vscode",
+    "eamodio.gitlens",
+    "xdebug.php-debug"
+  ]
+}

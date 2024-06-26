@@ -10,6 +10,7 @@
         "phpstan/phpstan": "^2.1.17",
         "rector/rector": "^2.0.17",
         "rector/swiss-knife": "^2.2.0",
+        "symplify/easy-coding-standard": "^12.5.20",
         "vimeo/psalm": "^6.12.0"
     }
 }

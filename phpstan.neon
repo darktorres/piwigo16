@@ -1,0 +1,21 @@
+# phpstan.neon
+includes:
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+
+parameters:
+    level: 0
+    paths:
+        - .
+    excludePaths:
+        - ./coverage.php
+        - ./ecs.php
+        - ./phpinfo.php
+        - ./rector.php
+        - ./_data/*
+        - ./galleries/*
+        - ./node_modules/*
+        - ./tests/*
+        - ./themes/bootstrap_darkroom/node_modules/*
+        - ./vendor/*
+    ignoreErrors:
+        - identifier: require.fileNotFound

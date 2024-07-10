@@ -2211,7 +2211,6 @@ function get_device()
 
   if (is_null($device))
   {
-    include_once(PHPWG_ROOT_PATH.'include/mdetect.php');
     $uagent_obj = new uagent_info();
     if ($uagent_obj->DetectSmartphone())
     {

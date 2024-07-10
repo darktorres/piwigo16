@@ -1,0 +1,17 @@
+{
+    "_hash": "5504a09971fdb6d7d88dcfddcc1df96a160dcd6a4f45bc3a5570b6a9addf9bd1",
+    "patches": {
+        "smarty/smarty": [
+            {
+                "package": "smarty/smarty",
+                "description": "Patch strftime",
+                "url": "patches/strftime.patch",
+                "sha256": "bf219ebcd5caffb19bcae0e59d6aec1d8c6f97eb064c8e01b6333e282a78d14d",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ]
+    }
+}

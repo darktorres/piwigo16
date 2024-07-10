@@ -2085,8 +2085,8 @@ final class FileCombiner
     $css = self::process_css_rec($css, dirname($file), $header);
     if (strpos($file, '.min')===false and version_compare(PHP_VERSION, '5.2.4', '>='))
     {
-      require_once(PHPWG_ROOT_PATH.'include/cssmin.class.php');
-      $css = CssMin::minify($css, array('Variables'=>false));
+      $cssMin = new tubalmartin\CssMin\Minifier();
+      $css = $cssMin->run($css);
     }
     $css = trigger_change('combined_css_postfilter', $css);
     return $css;

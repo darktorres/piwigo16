@@ -667,7 +667,6 @@ DELETE FROM '. PLUGINS_TABLE .'
       if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data))
       {
         fclose($handle);
-        include_once(PHPWG_ROOT_PATH.'admin/include/pclzip.lib.php');
         $zip = new PclZip($archive);
         if ($list = $zip->listContent())
         {

@@ -17,7 +17,6 @@ if (!$conf['enable_core_update'])
 }
 
 include_once(PHPWG_ROOT_PATH.'admin/include/updates.class.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/pclzip.lib.php');
 
 /*
 STEP:

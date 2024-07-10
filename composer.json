@@ -10,7 +10,8 @@
         "openpsa/universalfeedcreator": "^v1.9",
         "pclzip/pclzip": "^2.8.2",
         "pelago/emogrifier": "^7.3",
-        "phpmailer/phpmailer": "^6.10.0"
+        "phpmailer/phpmailer": "^6.10.0",
+        "tedivm/jshrink": "^1.7"
     },
     "require-dev": {
         "phpstan/phpstan": "^2.1.17",

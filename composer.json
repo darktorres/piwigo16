@@ -6,7 +6,8 @@
     "require": {
         "php": "^8.4",
         "ahand/mobileesp": "dev-master",
-        "katzgrau/klogger": "^1.2.2"
+        "katzgrau/klogger": "^1.2.2",
+        "openpsa/universalfeedcreator": "^v1.9"
     },
     "require-dev": {
         "phpstan/phpstan": "^2.1.17",

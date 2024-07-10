@@ -169,7 +169,7 @@ function merge_chunks($output_filepath, $original_sum, $type)
 {
   global $conf, $logger;
 
-  $logger->debug('[merge_chunks] input parameter $output_filepath : '.$output_filepath, 'WS');
+  $logger->debug('[merge_chunks] input parameter $output_filepath : '.$output_filepath);
 
   if (is_file($output_filepath))
   {
@@ -191,7 +191,7 @@ function merge_chunks($output_filepath, $original_sum, $type)
     {
       if (preg_match($pattern, $file))
       {
-        $logger->debug($file, 'WS');
+        $logger->debug($file);
         $chunks[] = $upload_dir.'/'.$file;
       }
     }
@@ -201,7 +201,7 @@ function merge_chunks($output_filepath, $original_sum, $type)
   sort($chunks);
 
   if (function_exists('memory_get_usage')) {
-    $logger->debug('[merge_chunks] memory_get_usage before loading chunks: '.memory_get_usage(), 'WS');
+    $logger->debug('[merge_chunks] memory_get_usage before loading chunks: '.memory_get_usage());
   }
 
   $i = 0;
@@ -211,7 +211,7 @@ function merge_chunks($output_filepath, $original_sum, $type)
     $string = file_get_contents($chunk);
 
     if (function_exists('memory_get_usage')) {
-      $logger->debug('[merge_chunks] memory_get_usage on chunk '.++$i.': '.memory_get_usage(), 'WS');
+      $logger->debug('[merge_chunks] memory_get_usage on chunk '.++$i.': '.memory_get_usage());
     }
 
     if (!file_put_contents($output_filepath, $string, FILE_APPEND))
@@ -223,7 +223,7 @@ function merge_chunks($output_filepath, $original_sum, $type)
   }
 
   if (function_exists('memory_get_usage')) {
-    $logger->debug('[merge_chunks] memory_get_usage after loading chunks: '.memory_get_usage(), 'WS');
+    $logger->debug('[merge_chunks] memory_get_usage after loading chunks: '.memory_get_usage());
   }
 }
 
@@ -1022,7 +1022,7 @@ function ws_images_add_chunk($params, $service)
       '[ws_images_add_chunk] input param "%s" : "%s"',
       $param_key,
       is_null($param_value) ? 'NULL' : $param_value
-      ), 'WS');
+      ));
   }
 
   $upload_dir = $conf['upload_dir'].'/buffer';
@@ -1040,7 +1040,7 @@ function ws_images_add_chunk($params, $service)
     $params['position']
     );
 
-  $logger->debug('[ws_images_add_chunk] data length : '.strlen($params['data']), 'WS');
+  $logger->debug('[ws_images_add_chunk] data length : '.strlen($params['data']));
 
   $bytes_written = file_put_contents(
     $upload_dir.'/'.$filename,
@@ -1067,7 +1067,7 @@ function ws_images_addFile($params, $service)
 {
   global $conf, $logger;
 
-  $logger->debug(__FUNCTION__, 'WS', $params);
+  $logger->debug(__FUNCTION__, $params);
 
   // what is the path and other infos about the photo?
   $query = '
@@ -1166,7 +1166,7 @@ function ws_images_add($params, $service)
       '[pwg.images.add] input param "%s" : "%s"',
       $param_key,
       is_null($param_value) ? 'NULL' : $param_value
-      ), 'WS');
+      ));
   }
 
   if ($params['image_id'] > 0)
@@ -1954,7 +1954,7 @@ function ws_images_exist($params, $service)
 {
   global $conf, $logger;
 
-  $logger->debug(__FUNCTION__, 'WS', $params);
+  $logger->debug(__FUNCTION__, $params);
 
   $split_pattern = '/[\s,;\|]/';
   $result = array();
@@ -2029,7 +2029,7 @@ function ws_images_formats_searchImage($params, $service)
 {
   global $conf, $logger;
 
-  $logger->debug(__FUNCTION__, 'WS', $params);
+  $logger->debug(__FUNCTION__, $params);
 
   $candidates = json_decode(stripslashes($params['filename_list']), true);
 
@@ -2218,7 +2218,7 @@ function ws_images_checkFiles($params, $service)
 {
   global $logger;
 
-  $logger->debug(__FUNCTION__, 'WS', $params);
+  $logger->debug(__FUNCTION__, $params);
 
   $query = '
 SELECT path
@@ -2256,7 +2256,7 @@ SELECT path
 
   if (isset($compare_type))
   {
-    $logger->debug(__FUNCTION__.', md5_file($path) = '.md5_file($path), 'WS');
+    $logger->debug(__FUNCTION__.', md5_file($path) = '.md5_file($path));
     if (md5_file($path) != $params[$compare_type.'_sum'])
     {
       $ret[$compare_type] = 'differs';
@@ -2267,7 +2267,7 @@ SELECT path
     }
   }
 
-  $logger->debug(__FUNCTION__, 'WS', $ret);
+  $logger->debug(__FUNCTION__, $ret);
 
   return $ret;
 }

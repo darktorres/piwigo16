@@ -404,7 +404,7 @@ function get_regular_search_results($search, $images_where='')
 {
   global $conf, $logger;
 
-  $logger->debug(__FUNCTION__, 'search', $search);
+  $logger->debug(__FUNCTION__, $search);
 
   $has_filters_filled = false;
 

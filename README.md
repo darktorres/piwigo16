@@ -11,7 +11,7 @@ The [piwigo.org](https://piwigo.org) website introduces you to Piwigo. You'll fi
  * A webserver (Apache or nginx recommended)
  * PHP 8.4+
  * MySQL 8.4+ or MariaDB equivalent
- * ImageMagick (recommended) or PHP GD
+ * ImageMagick (recommended) or PHP GD or libvips (set "zend.max_allowed_stack_size = -1" and "ffi.enable = true" in php.ini)
 
 ## Quick start install
 

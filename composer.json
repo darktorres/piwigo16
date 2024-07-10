@@ -7,6 +7,7 @@
         "php": "^8.4",
         "ahand/mobileesp": "dev-master",
         "cweagans/composer-patches": "^2.0.0-beta2",
+        "jcupitt/vips": "^2.5.0",
         "katzgrau/klogger": "^1.2.2",
         "openpsa/universalfeedcreator": "^v1.9",
         "pclzip/pclzip": "^2.8.2",

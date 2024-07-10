@@ -625,10 +625,6 @@ function pwg_mail($to, $args=array(), $tpl=array())
     $conf_mail = get_mail_configuration();
   }
 
-  include_once(PHPWG_ROOT_PATH.'include/phpmailer/Exception.php');
-  include_once(PHPWG_ROOT_PATH.'include/phpmailer/SMTP.php');
-  include_once(PHPWG_ROOT_PATH.'include/phpmailer/PHPMailer.php');
-
   $mail = new PHPMailer;
 
   foreach (get_clean_recipients_list($to) as $recipient)

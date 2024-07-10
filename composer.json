@@ -4,7 +4,8 @@
     "minimum-stability": "beta",
     "prefer-stable": true,
     "require": {
-        "php": "^8.4"
+        "php": "^8.4",
+        "ahand/mobileesp": "dev-master"
     },
     "require-dev": {
         "phpstan/phpstan": "^2.1.17",

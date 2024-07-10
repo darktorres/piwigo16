@@ -241,7 +241,6 @@ while ($row = pwg_db_fetch_assoc($result))
 if ($has_remote_site)
 {
   include_once(PHPWG_ROOT_PATH.'admin/include/updates.class.php');
-  include_once(PHPWG_ROOT_PATH.'admin/include/pclzip.lib.php');
 
   $page['errors'] = array();
   $step = 3;

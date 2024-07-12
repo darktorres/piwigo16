@@ -495,7 +495,7 @@ $conf['template_compile_check'] = true;
 // This forces Smarty to (re)compile templates on every invocation. This is
 // handy for development and debugging. It should never be used in a
 // production environment.
-$conf['template_force_compile'] = false;
+$conf['template_force_compile'] = true; // false
 
 // activate merging of javascript / css files
 $conf['template_combine_files'] = false; // true

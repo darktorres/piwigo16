@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
+
 /**
  *                           configuration page
  *

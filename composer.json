@@ -1,0 +1,9 @@
+{
+    "type": "project",
+    "private": true,
+    "minimum-stability": "beta",
+    "prefer-stable": true,
+    "require": {
+        "php": "^8.4"
+    }
+}

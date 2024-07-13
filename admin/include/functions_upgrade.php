@@ -264,24 +264,25 @@ WHERE '.$conf['user_fields']['username'].'=\''.$username.'\'
  */
 function get_available_upgrade_ids()
 {
-  $upgrades_path = PHPWG_ROOT_PATH.'install/db';
+  // $upgrades_path = PHPWG_ROOT_PATH.'install/db';
 
-  $available_upgrade_ids = array();
+  // $available_upgrade_ids = array();
 
-  if ($contents = opendir($upgrades_path))
-  {
-    while (($node = readdir($contents)) !== false)
-    {
-      if (is_file($upgrades_path.'/'.$node)
-          and preg_match('/^(.*?)-database\.php$/', $node, $match))
-      {
-        $available_upgrade_ids[] = $match[1];
-      }
-    }
-  }
-  natcasesort($available_upgrade_ids);
+  // if ($contents = opendir($upgrades_path))
+  // {
+  //   while (($node = readdir($contents)) !== false)
+  //   {
+  //     if (is_file($upgrades_path.'/'.$node)
+  //         and preg_match('/^(.*?)-database\.php$/', $node, $match))
+  //     {
+  //       $available_upgrade_ids[] = $match[1];
+  //     }
+  //   }
+  // }
+  // natcasesort($available_upgrade_ids);
 
-  return $available_upgrade_ids;
+  // return $available_upgrade_ids;
+  return [];
 }
 
 

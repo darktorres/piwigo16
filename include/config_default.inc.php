@@ -498,7 +498,7 @@ $conf['template_compile_check'] = true;
 $conf['template_force_compile'] = false;
 
 // activate merging of javascript / css files
-$conf['template_combine_files'] = true;
+$conf['template_combine_files'] = false; // true
 
 // this permit to show the php errors reporting (see INI 'error_reporting'
 // for possible values)

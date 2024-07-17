@@ -1984,6 +1984,11 @@ final class FileCombiner
 
       if ($return_content)
         return $content;
+
+      if (! file_exists(dirname(PHPWG_ROOT_PATH . $file))) {
+          mkgetdir(dirname(PHPWG_ROOT_PATH . $file));
+      }
+
       file_put_contents( PHPWG_ROOT_PATH.$file, $content );
       $combinable->path = $file;
     }

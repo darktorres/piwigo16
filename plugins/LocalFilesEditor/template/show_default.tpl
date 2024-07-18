@@ -9,7 +9,7 @@
 {combine_css path="plugins/LocalFilesEditor/template/locfiledit.css"}
 
 {footer_script}
-var editor = CodeMirror.fromTextArea(document.getElementById("text"), {ldelim}
+var editor = CodeMirror.fromTextArea(document.getElementById("text"), {
   readOnly: true,
   mode: "application/x-httpd-php"
 });
@@ -17,7 +17,7 @@ var editor = CodeMirror.fromTextArea(document.getElementById("text"), {ldelim}
 
 {html_head}
 <style type="text/css">
-#headbranch, #theHeader, #copyright {ldelim} display: none; }
+#headbranch, #theHeader, #copyright { display: none; }
 </style>
 {/html_head}
 

@@ -91,13 +91,13 @@
     </div>
 {strip}
 {footer_script}
-document.onkeydown = function(e){ldelim}
+document.onkeydown = function(e){
 	e=e||window.event;
 	if (e.altKey) return true;
 	var target=e.target||e.srcElement;
 	if (target && target.type) return true;{* an input editable element *}
 	var keyCode=e.keyCode||e.which, docElem=document.documentElement, url;
-	switch(keyCode){ldelim}
+	switch(keyCode){
 {if isset($next)}
 	case 63235: case 39: if ((e.ctrlKey || docElem.scrollLeft==docElem.scrollWidth-docElem.clientWidth) && $('.pswp--visible').length === 0)url="{$next.U_IMG}"; break;
 {/if}
@@ -120,7 +120,7 @@ document.onkeydown = function(e){ldelim}
 	{* Play *}case 32: url="{$slideshow.U_STOP_PLAY}"; break;
 {/if}
 	}
-	if (url) {ldelim}window.location=url.replace("&amp;","&"); return false;}
+	if (url) { window.location=url.replace("&amp;","&"); return false;}
 	return true;
 }
 {/footer_script}

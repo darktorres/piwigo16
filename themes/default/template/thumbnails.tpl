@@ -4,20 +4,20 @@
 {*Set some sizes according to maximum thumbnail width and height*}
 .thumbnails SPAN,
 .thumbnails .wrap2 A,
-.thumbnails LABEL{ldelim}
+.thumbnails LABEL{
 	width: {$derivative_params->max_width()+2}px;
 }
 
-.thumbnails .wrap2{ldelim}
+.thumbnails .wrap2{
 	height: {$derivative_params->max_height()+3}px;
 }
 {if $derivative_params->max_width() > 600}
-.thumbLegend {ldelim}font-size: 130%}
+.thumbLegend { font-size: 130% }
 {else}
 {if $derivative_params->max_width() > 400}
-.thumbLegend {ldelim}font-size: 110%}
+.thumbLegend { font-size: 110% }
 {else}
-.thumbLegend {ldelim}font-size: 90%}
+.thumbLegend { font-size: 90% }
 {/if}
 {/if}
 {/html_style}

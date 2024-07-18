@@ -1,8 +1,8 @@
 {combine_script id='jquery.cluetip' load='async' require='jquery' path='node_modules/cluetip/jquery.cluetip.js'}
 
 {footer_script require='jquery.cluetip'}
-jQuery().ready(function(){ldelim}
-	jQuery('.cluetip').cluetip({ldelim}
+jQuery().ready(function() {
+	jQuery('.cluetip').cluetip({
 		width: 300,
 		splitTitle: '|'
 	});

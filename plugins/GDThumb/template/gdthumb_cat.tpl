@@ -51,7 +51,7 @@
 </ul>
 
 {strip}{html_style}
-.thumbnailCategories .gdthumb {ldelim} margin: {$GDThumb.margin / 2}px {$GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px !important; }
+.thumbnailCategories .gdthumb { margin: {$GDThumb.margin / 2}px {$GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px !important; }
 {/html_style}{/strip}
 
 {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css"}
@@ -64,7 +64,7 @@
 $(function() {
   {if isset($GDThumb_big)}
   {assign var=gt_size value=$GDThumb_big->get_size()}
-  var big_thumb = {ldelim}id: {$GDThumb_big->src_image->id}, src: '{$GDThumb_big->get_url()}', width: {$gt_size[0]}, height: {$gt_size[1]}{rdelim};
+  var big_thumb = { id: {$GDThumb_big->src_image->id}, src: '{$GDThumb_big->get_url()}', width: {$gt_size[0]}, height: {$gt_size[1]} };
   {else}
   var big_thumb = null;
   {/if}

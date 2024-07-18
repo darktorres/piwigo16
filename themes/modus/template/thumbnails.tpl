@@ -96,9 +96,9 @@
 	}
 }
 {if $derivative_params->max_width() > 400}
-.thumbLegend {ldelim}font-size: 110%}
+.thumbLegend { font-size: 110% }
 {else}
-.thumbLegend {ldelim}font-size: 90%}
+.thumbLegend { font-size: 90% }
 {/if}
 {/html_style}
 {foreach from=$thumbnails item=thumbnail}

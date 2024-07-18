@@ -101,26 +101,26 @@
                         {combine_script id='rating' require='core.scripts' path='themes/bootstrap_darkroom/js/rating.js' load='async'}
                         {footer_script require='jquery'}
                                 var _pwgRatingAutoQueue = _pwgRatingAutoQueue||[];
-                                _pwgRatingAutoQueue.push( {ldelim}rootUrl: '{$ROOT_URL}', image_id: {$current.id},
-                                        onSuccess : function(rating) {ldelim}
+                                _pwgRatingAutoQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
+                                        onSuccess : function(rating) {
                                                 var e = document.getElementById("updateRate");
                                                 if (e) e.innerHTML = "{'Update your rating'|@translate|@escape:'javascript'}";
                                                 e = document.getElementById("ratingScore");
                                                 if (e) e.innerHTML = rating.score;
                                                 e = document.getElementById("ratingCount");
-                                                if (e) {ldelim}
-                                                        if (rating.count == 1) {ldelim}
+                                                if (e) {
+                                                        if (rating.count == 1) {
                                                                 e.innerHTML = "({'%d rate'|@translate|@escape:'javascript'})".replace( "%d", rating.count);
-                                                        {rdelim} else {ldelim}
+                                                        } else {
                                                                 e.innerHTML = "({'%d rates'|@translate|@escape:'javascript'})".replace( "%d", rating.count);
-                                                        {rdelim}
-                                                {rdelim}
-                                                $('#averageRate').find('span').each(function() {ldelim}
+                                                        }
+                                                }
+                                                $('#averageRate').find('span').each(function() {
                                                         $(this).addClass(rating.average > $(this).data('value') - 0.5 ? 'rateButtonStarFull' : 'rateButtonStarEmpty');
                                                         $(this).removeClass(rating.average > $(this).data('value') - 0.5 ? 'rateButtonStarEmpty' : 'rateButtonStarFull');
-                                                {rdelim});
-                                        {rdelim}
-                                {rdelim});
+                                                });
+                                        }
+                                });
                         {/footer_script}
                         {/strip}
                         </div>

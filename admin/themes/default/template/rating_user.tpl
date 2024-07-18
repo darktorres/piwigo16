@@ -189,7 +189,7 @@ $(document).ready( function(){
 </tr>
 </thead>
 {foreach from=$ratings item=rating key=user}
-<tr data-usr='{ldelim}"uid":{$rating.uid},"aid":"{$rating.aid}"}'>
+<tr data-usr='{ "uid":{$rating.uid},"aid":"{$rating.aid}" }'>
 {strip}
 <td class=usr>{$user}</td><td title="First: {$rating.first_date}">{$rating.last_date}</td>
 <td>{$rating.count}</td><td>{$rating.avg|@number_format:2}</td>

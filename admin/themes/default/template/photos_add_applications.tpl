@@ -1,12 +1,12 @@
 {include file='inc/colorbox.inc.tpl'}
 
-{footer_script}{literal}
+{footer_script}
 jQuery().ready(function(){
-  jQuery(".illustration a").colorbox({rel:'group1'});
+  jQuery(".illustration a").colorbox({ rel:'group1' });
 });
-{/literal}{/footer_script}
+{/footer_script}
 
-{html_head}{literal}
+{html_head}
 <style type="text/css">
   .applicationContainer {
     width: 100%;
@@ -66,7 +66,7 @@ jQuery().ready(function(){
   }
 
 </style>
-{/literal}{/html_head}
+{/html_head}
 
 <div class="applicationContainer">
 

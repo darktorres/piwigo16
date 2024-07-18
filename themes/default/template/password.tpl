@@ -55,9 +55,9 @@
 
 <script type="text/javascript">
 {if $action eq 'lost'}
-{literal}try{document.getElementById('username_or_email').focus();}catch(e){}{/literal}
+try{ document.getElementById('username_or_email').focus(); }catch(e){}
 {elseif $action eq 'reset'}
-{literal}try{document.getElementById('use_new_pwd').focus();}catch(e){}{/literal}
+try{ document.getElementById('use_new_pwd').focus(); }catch(e){}
 {/if}
 </script>
 

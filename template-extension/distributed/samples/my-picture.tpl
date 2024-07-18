@@ -70,20 +70,20 @@
 {/if}
 {if isset($U_CADDIE)}{*caddie management BEGIN*}
 <script type="text/javascript">
-{literal}function addToCadie(aElement, rootUrl, id)
+function addToCadie(aElement, rootUrl, id)
 {
 if (aElement.disabled) return;
 aElement.disabled=true;
 var y = new PwgWS(rootUrl);
 
 y.callService(
-	"pwg.caddie.add", {image_id: id} ,
+	"pwg.caddie.add", { image_id: id } ,
 	{
 		onFailure: function(num, text) { alert(num + " " + text); document.location=aElement.href; },
 		onSuccess: function(result) { aElement.disabled = false; }
 	}
 	);
-}{/literal}
+}
 </script>
 		<a href="{$U_CADDIE}" onclick="addToCadie(this, '{$ROOT_URL|@escape:'javascript'}', {$current.id}); return false;" title="{'Add to caddie'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 			<span class="pwg-icon pwg-icon-caddie-add">&nbsp;</span><span class="pwg-button-text">{'Caddie'|@translate}</span>

@@ -130,7 +130,7 @@ $(qsearch_icon).click(function () {
   $(qsearch_text).focus();
 });
 $(document).ready(function() {
-  $('#navbar-menubar>#quicksearch').css({literal}{'color': $('#navbar-menubar .nav-link').css('color')}{/literal});
+  $('#navbar-menubar>#quicksearch').css({ 'color': $('#navbar-menubar .nav-link').css('color') });
 });
 {/footer_script}
 {/if}

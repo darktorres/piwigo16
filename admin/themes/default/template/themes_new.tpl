@@ -1,5 +1,5 @@
 {include file='inc/colorbox.inc.tpl'} 
-{footer_script}{literal}
+{footer_script}
 
 $(window).bind("load", function() {
   $('.themeBox').each(function() {
@@ -18,7 +18,7 @@ $(window).bind("load", function() {
     }
   })
 })
-{/literal}{/footer_script}
+{/footer_script}
 
 {if not empty($new_themes)}
 <div class="themeBoxes">

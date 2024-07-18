@@ -1,6 +1,6 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-{footer_script require='jquery.ui'}{literal}
+{footer_script require='jquery.ui'}
 jQuery(document).ready(function(){
 	jQuery(".menuPos").hide();
 	jQuery(".drag_button").show();
@@ -25,7 +25,7 @@ jQuery(document).ready(function(){
 		}
 	});
 });
-{/literal}{/footer_script}
+{/footer_script}
 
 {html_style}
 .font-checkbox i {

@@ -11,7 +11,6 @@ var successHead = '{'Update Complete'|@translate|@escape:'javascript'}';
 var errorMsg    = '{'an error happened'|@translate|@escape:'javascript'}';
 var restoreMsg  = '{'Reset ignored updates'|@translate|@escape:'javascript'}';
 
-{literal}
 var todo = 0;
 var queuedManager = $.manageAjax.create('queued', { 
 	queue: true,  
@@ -127,7 +126,6 @@ function autoupdate_bar_toggle(i) {
 }
 
 checkFieldsets();
-{/literal}
 {/footer_script}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}

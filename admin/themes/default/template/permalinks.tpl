@@ -13,13 +13,11 @@ jQuery(document).ready(function(){
 });
 {/footer_script}
 
-{literal}
 <style>
-#showAddPermalink {text-align:left;margin-left:1em;margin-top:0;}
-form fieldset p {margin:0 0 1em 0;}
-form fieldset p.actionButtons {margin-bottom:0}
+#showAddPermalink { text-align:left;margin-left:1em;margin-top:0; }
+form fieldset p { margin:0 0 1em 0; }
+form fieldset p.actionButtons { margin-bottom:0 }
 </style>
-{/literal}
 
 {html_style}
 [name="permalink"] {

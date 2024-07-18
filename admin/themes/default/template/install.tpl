@@ -18,7 +18,6 @@
 <!-- END get_combined_scripts -->
 
 {combine_script id='jquery'}
-{literal}
 <script type="text/javascript">
 $(document).ready(function() {
   $("a.externalLink").click(function() {
@@ -130,7 +129,6 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
 }
 
 </style>
-{/literal}
 
 {combine_script id='jquery.cluetip' load='async' require='jquery' path='node_modules/cluetip/jquery.cluetip.js'}
 

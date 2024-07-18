@@ -126,13 +126,13 @@
   {combine_script id='jquery.colorbox' load='footer' require='jquery' path='node_modules/jquery-colorbox/jquery.colorbox-min.js' }
   {combine_script id='greydragon.admin' load='footer' require='jquery' path=$GDTHEME_PATH|cat:"admin/js/admin.js" }
 {else}
-{html_head}{literal}
+{html_head}
 <style type="text/css">
   .gd-checkbox { display: none; }
   #generate_cache p.buttons { margin-top: 0; }
   .content select { width: 20.4em !important; margin-right: 0.6em; }
 </style>
-{/literal}{/html_head}
+{/html_head}
 {/if}
 
 {combine_script id='iloader' load='footer' path=$GDTHUMB_PATH|cat:"/js/image.loader.js"}

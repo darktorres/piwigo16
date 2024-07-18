@@ -13,14 +13,12 @@ const storage_total = {$STORAGE_TOTAL};
 const storage_details = {$STORAGE_CHART_DATA|json_encode};
 const translate_files = "{'%d files'|translate|escape:javascript}";
 let translate_type = {};
-{literal}
 jQuery().ready(function(){
 	jQuery('.cluetip').cluetip({
 		width: 300,
 		splitTitle: '|',
 		positionBy: 'bottomTop'
 	});
-{/literal}
 {if $CHECK_FOR_UPDATES}
   jQuery.ajax({
     type: 'GET',
@@ -42,7 +40,6 @@ jQuery().ready(function(){
     }
   });
 {/if}
-{literal}
 
   jQuery('.newsletter-subscription a').click(function() {
     jQuery('.newsletter-subscription').hide();
@@ -60,11 +57,9 @@ jQuery().ready(function(){
   let size_nb = storage_total > 1000000 ? (storage_total / 1000000).toFixed(2) : (storage_total / 1000).toFixed(0);
   $(".chart-title-infos").html(size_info.replace("%s", size_nb));
 });
-{/literal}
 {foreach from=$STORAGE_CHART_DATA key=type_to_translate item=details}
 translate_type['{$type_to_translate}'] = "{$type_to_translate|translate}";
 {/foreach}
-{literal}
 Object.entries(storage_details).forEach(([type, infos]) => {
   // Determine if we use MB or GB and show it correctly 
   let size = infos.total.filesize;
@@ -177,7 +172,6 @@ $(window).on('resize', function(){
       }
   });
 });
-{/literal}
 {/footer_script}
 
 {html_style}

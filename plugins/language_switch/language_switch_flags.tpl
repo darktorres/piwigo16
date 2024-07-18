@@ -12,7 +12,7 @@
 </div>
 {/strip}</li>
 
-{footer_script require='jquery'}{literal}
+{footer_script require='jquery'}
 jQuery("#languageSwitchLink").click(function() {
 	var elt = jQuery("#languageSwitchBox");
 	elt.css("left", Math.min(jQuery(this).offset().left, jQuery(window).width() - elt.outerWidth(true) - 5))
@@ -22,7 +22,7 @@ jQuery("#languageSwitchLink").click(function() {
 jQuery("#languageSwitchBox").on("mouseleave", function() {
 	jQuery(this).hide();
 });
-{/literal}{/footer_script}
+{/footer_script}
 
 {* <!-- stylish for themes missing .switchBox styles --> *}
 {if $LANGUAGE_SWITCH_LOAD_STYLE}

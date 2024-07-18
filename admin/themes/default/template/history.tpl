@@ -249,7 +249,7 @@ const guest_id = {$guest_id};
 
 {combine_script id='jquery.geoip' load='async' path='admin/themes/default/js/jquery.geoip.js'}
 
-{footer_script}{literal}
+{footer_script}
 jQuery(document).ready( function() {
   jQuery(".IP").one( "mouseenter", function(){
   	var that = $(this);
@@ -291,7 +291,7 @@ jQuery(document).ready( function() {
     return false;
   });
 });
-{/literal}{/footer_script}
+{/footer_script}
 
 <style>
 

@@ -20,7 +20,7 @@
 
 <div class="actionButtons">
 {if isset($current.unique_derivatives) && count($current.unique_derivatives)>1}
-{footer_script require='jquery'}{literal}
+{footer_script require='jquery'}
 function changeImgSrc(url,typeSave,typeMap)
 {
 	var theImg = document.getElementById("theMainImage");
@@ -32,10 +32,10 @@ function changeImgSrc(url,typeSave,typeMap)
 	}
 	jQuery('#derivativeSwitchBox .switchCheck').css('visibility','hidden');
 	jQuery('#derivativeChecked'+typeMap).css('visibility','visible');
-	document.cookie = 'picture_deriv='+typeSave+';path={/literal}{$COOKIE_PATH}{literal}';
+	document.cookie = 'picture_deriv='+typeSave+';path={$COOKIE_PATH}';
 }
 (window.SwitchBox=window.SwitchBox||[]).push("#derivativeSwitchLink", "#derivativeSwitchBox");
-{/literal}{/footer_script}
+{/footer_script}
 {strip}<a id="derivativeSwitchLink" title="{'Photo sizes'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
   <span class="pwg-icon pwg-icon-sizes"></span><span class="pwg-button-text">{'Photo sizes'|@translate}</span>
 </a>
@@ -70,13 +70,13 @@ function changeImgSrc(url,typeSave,typeMap)
 	</a>
 
 {if !empty($current.formats)}
-{footer_script require='jquery'}{literal}
+{footer_script require='jquery'}
 jQuery().ready(function() {
   jQuery("#downloadSwitchLink").removeAttr("href");
 
   (window.SwitchBox=window.SwitchBox||[]).push("#downloadSwitchLink", "#downloadSwitchBox");
 });
-{/literal}{/footer_script}
+{/footer_script}
 
 <div id="downloadSwitchBox" class="switchBox">
   <div class="switchBoxTitle">{'Download'|translate} - {'Formats'|translate}</div>
@@ -107,19 +107,19 @@ jQuery().ready(function() {
 {/if}{/strip}
 {strip}{if isset($U_CADDIE)}{*caddie management BEGIN*}
 {footer_script}
-{literal}function addToCadie(aElement, rootUrl, id)
+function addToCadie(aElement, rootUrl, id)
 {
 if (aElement.disabled) return;
 aElement.disabled=true;
 var y = new PwgWS(rootUrl);
 y.callService(
-	"pwg.caddie.add", {image_id: id} ,
+	"pwg.caddie.add", { image_id: id } ,
 	{
 		onFailure: function(num, text) { alert(num + " " + text); document.location=aElement.href; },
 		onSuccess: function(result) { aElement.disabled = false; }
 	}
 	);
-}{/literal}
+}
 {/footer_script}
 	<a href="{$U_CADDIE}" onclick="addToCadie(this, '{$ROOT_URL}', {$current.id}); return false;" title="{'Add to caddie'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-caddie-add"> </span><span class="pwg-button-text">{'Caddie'|@translate}</span>

@@ -9,13 +9,13 @@ input[type=checkbox] {
 }
 {/html_style}
 
-{footer_script}{literal}
+{footer_script}
 jQuery(document).ready(function() {
   jQuery('form li label input[type=checkbox]').change(function() {
     jQuery(this).prev().toggleClass('icon-check icon-check-empty');
   });
 });
-{/literal}{/footer_script}
+{/footer_script}
 
 <div class="titrePage">
   <h2>{'Smartpocket, Configuration Page'|@translate}</h2>

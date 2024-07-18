@@ -52,9 +52,7 @@ function startPhotoSwipe(idx) {
                          $href           = $(this).attr('href'),
                          $title          = '<a href="' + $href + '"><div><div>' + $(this).data('name');
                          $title         += '</div>';
-{literal}
-                     if ($(this).data('description').length > 0) {$title += '<ul id="pswp--caption--description"><li>' + $(this).data('description') + '</li></ul>'; }
-{/literal}
+                     if ($(this).data('description').length > 0) { $title += '<ul id="pswp--caption--description"><li>' + $(this).data('description') + '</li></ul>'; }
                          $title      += '</div></a>';
                      var item = {
                          is_video: false,
@@ -106,21 +104,19 @@ function startPhotoSwipe(idx) {
             preload: [1,2],
 {if $theme_config->social_enabled}
             shareButtons: [
-{if $theme_config->social_facebook}{literal}
-                           {id:'facebook', label:'<i class="fab fa-facebook fa-2x fa-fw"></i> Share on Facebook', url:'https://www.facebook.com/sharer/sharer.php?u={{url}}'},
-{/literal}{/if}
-{if $theme_config->social_twitter}{literal}
-                           {id:'twitter', label:'<i class="fab fa-twitter fa-2x fa-fw"></i> Tweet', url:'https://twitter.com/intent/tweet?url={{url}}'},
-{/literal}{/if}
-{if $theme_config->social_pinterest}{literal}
-                           {id:'pinterest', label:'<i class="fab fa-pinterest fa-2x fa-fw"></i> Pin it', url:'http://www.pinterest.com/pin/create/button/?url={{url}}&media=' + window.location + '/../{{raw_image_url}}'},
-{/literal}{/if}
-{if functions::get_device() == 'mobile'}{literal}
-                           {id:'whatsapp', label:'<i class="fab fa-whatsapp fa-2x fa-fw"></i> Share via WhatsApp', url:'whatsapp://send?text={{url}}', download:true},
-{/literal}{/if}
-{literal}
-                           {id:'download', label:'<i class="fas fa-cloud-download-alt fa-2x fa-fw"></i> Download image', url:'{{raw_image_url}}', download:true}
-{/literal}
+{if $theme_config->social_facebook}
+                           { id:'facebook', label:'<i class="fab fa-facebook fa-2x fa-fw"></i> Share on Facebook', url:'https://www.facebook.com/sharer/sharer.php?u={literal}{{url}}{/literal}' },
+{/if}
+{if $theme_config->social_twitter}
+                           { id:'twitter', label:'<i class="fab fa-twitter fa-2x fa-fw"></i> Tweet', url:'https://twitter.com/intent/tweet?url={literal}{{url}}{/literal}' },
+{/if}
+{if $theme_config->social_pinterest}
+                           { id:'pinterest', label:'<i class="fab fa-pinterest fa-2x fa-fw"></i> Pin it', url:'http://www.pinterest.com/pin/create/button/?url={literal}{{url}}{/literal}&media=' + window.location + '/../{literal}{{raw_image_url}}{/literal}' },
+{/if}
+{if functions::get_device() == 'mobile'}
+                           { id:'whatsapp', label:'<i class="fab fa-whatsapp fa-2x fa-fw"></i> Share via WhatsApp', url:'whatsapp://send?text={literal}{{url}}{/literal}', download:true },
+{/if}
+                           { id:'download', label:'<i class="fas fa-cloud-download-alt fa-2x fa-fw"></i> Download image', url:'{literal}{{raw_image_url}}{/literal}', download:true }
                         ],
 {/if}
         };
@@ -219,7 +215,7 @@ function startPhotoSwipe(idx) {
            if ($('.pswp-video-modal').length > 0) {
               var vsize = setVideoSize(photoSwipe.currItem, photoSwipe.viewportSize);
               console.log('PhotoSwipe resize in action. Setting video size to ' + vsize.w + 'x' + vsize.h);
-              $('.pswp-video-modal').css({literal}{'width':vsize.w, 'height':vsize.h}{/literal});
+              $('.pswp-video-modal').css({ 'width':vsize.w, 'height':vsize.h });
               updateVideoPosition(photoSwipe);
            }
         });
@@ -259,7 +255,7 @@ function startPhotoSwipe(idx) {
         var vsize = setVideoSize(item, vp);
         var v = $('<div />', {
                     class:'pswp-video-modal',
-                    css : ({literal}{'position': 'absolute','width':vsize.w, 'height':vsize.h}{/literal})
+                    css : ({ 'position': 'absolute','width':vsize.w, 'height':vsize.h })
 
         });
         v.one('{if functions::get_device() == 'desktop'}click{else}tap{/if}', (function(event) {
@@ -306,7 +302,7 @@ function startPhotoSwipe(idx) {
         var vsize = setVideoSize(item, vp);
         var top = (vp.y - vsize.h)/2;
         var left = (vp.x - vsize.w)/2;
-        $('.pswp-video-modal').css({literal}{position:'absolute',top:top, left:left}{/literal});
+        $('.pswp-video-modal').css({ position:'absolute',top:top, left:left });
     }
 
     function setVideoSize(item, vp) {

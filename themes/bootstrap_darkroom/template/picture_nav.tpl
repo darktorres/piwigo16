@@ -100,7 +100,7 @@
         if (aElement.disabled) return;
         aElement.disabled=true;
         var y = new PwgWS(rootUrl);
-        y.callService("pwg.caddie.add", {literal}{image_id: id}{/literal}, {
+        y.callService("pwg.caddie.add", { image_id: id }, {
             onFailure: function(num, text) { alert(num + " " + text); document.location=aElement.href; },
             onSuccess: function(result) { aElement.disabled = false; }
         });

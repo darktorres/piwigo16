@@ -14,10 +14,10 @@
 </div>
 {/if}
 
-{footer_script}{literal}
+{footer_script}
 $(document).ready(function () {
   $('.close-button').click(function() {
     $(this).parents('.ui-bar').remove();
   });
 });
-{/literal}{/footer_script}
+{/footer_script}

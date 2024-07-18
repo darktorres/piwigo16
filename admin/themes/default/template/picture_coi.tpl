@@ -34,7 +34,6 @@
 </form>
 
 {footer_script}
-{literal}
 function from_coi(f, total) {
 	return f*total;
 }
@@ -54,7 +53,6 @@ function jOnRelease() {
 	jQuery("#l,#t,#r,#b").val("");
 }
 
-{/literal}
 jQuery("#jcrop").Jcrop({
 	boxWidth: 500, boxHeight: 400,
 	onChange: jOnChange,

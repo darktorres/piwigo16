@@ -1,5 +1,5 @@
 {footer_script require='jquery'}
-{literal}$(document).ready(function() { $("#wrapper").css({"position":"relative","overflow-x":"hidden"}); });{/literal}
+$(document).ready(function() { $("#wrapper").css({ "position":"relative","overflow-x":"hidden" }); });
 {/footer_script}
 <div id="sidebar">
     <div id="info-content" class="info">

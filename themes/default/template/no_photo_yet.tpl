@@ -4,7 +4,6 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" type="text/css" href="themes/default/theme.css">
 <title>Piwigo, {'Welcome'|@translate}</title>
-{literal}
 <style type="text/css">
 body {
 margin: 0;
@@ -12,8 +11,8 @@ padding: 0;
 background-color:#f9f9f9;
 }
 
-P {text-align:center;}
-TD {color:#888; letter-spacing:1px;}
+P { text-align:center; }
+TD { color:#888; letter-spacing:1px; }
 
 #global {
 position:absolute;
@@ -28,10 +27,10 @@ background-color: #f1f1f1;
 border:2px solid #dddddd;
 }
 
-#noPhotoWelcome {font-size:25px; color:#555;text-align:center; letter-spacing:1px; margin-top:30px;}
+#noPhotoWelcome { font-size:25px; color:#555;text-align:center; letter-spacing:1px; margin-top:30px; }
 .bigButton {}
 
-.bigButton {text-align:center; margin-top:120px;}
+.bigButton { text-align:center; margin-top:120px; }
 
 .bigButton a {
     background-color:#666;
@@ -63,7 +62,7 @@ border:2px solid #dddddd;
     font-size:1.0em;
 }
 
-.submit {font-size:1.0em; letter-spacing:2px; font-weight:normal;}
+.submit { font-size:1.0em; letter-spacing:2px; font-weight:normal; }
 
 #deactivate A {
     text-decoration:none;
@@ -117,7 +116,6 @@ border:2px solid #dddddd;
   color:white;
 }
 </style>
-{/literal}
 
 </head>
 

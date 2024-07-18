@@ -58,7 +58,6 @@ str_no_search_in_progress = '{'No search in progress'|@translate|escape:javascri
 related_categories_ids = {$related_categories_ids|@json_encode};
 str_already_in_related_cats = '{'This albums is already in related categories list'|translate|escape:javascript}';
 
-{literal}
 $('#action-delete-picture').on('click', function() {
   $.confirm({
     title: str_are_you_sure,
@@ -87,7 +86,6 @@ $('#action-delete-picture').on('click', function() {
     }
   });
 })
-{/literal}
 
 }());
 {/footer_script}

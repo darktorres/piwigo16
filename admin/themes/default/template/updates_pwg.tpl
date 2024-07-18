@@ -13,7 +13,6 @@ jQuery(document).ready(function() {
 {/footer_script}
 
 {html_head}
-{literal}
 <style type="text/css">
 form { width: 750px; }
 fieldset { padding-bottom: 30px; }
@@ -43,9 +42,8 @@ a.badge-release:hover {
   margin-top:30px;
 }
 
-p.release .errors {margin:0}
+p.release .errors { margin:0 }
 </style>
-{/literal}
 {/html_head}
 
 {if isset($MINOR_RELEASE_PHP_REQUIRED) and isset($MAJOR_RELEASE_PHP_REQUIRED)}

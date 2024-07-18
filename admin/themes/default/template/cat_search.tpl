@@ -21,7 +21,6 @@ var str_albums_found = '{"<b>%d</b> albums found"|translate}';
 var str_album_found = '{"<b>1</b> album found"|translate}';
 var str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|translate|escape:javascript}';
 
-{literal}
 var editLink = "admin.php?page=album-";
 var colors = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
 
@@ -127,13 +126,12 @@ function getHtmlPath (cat) {
 function resultAppear(result) {
   result.fadeIn();
   if (result.next().length != 0) {
-    setTimeout(() => {resultAppear(result.next().first())}, 50);
+    setTimeout(() => { resultAppear(result.next().first()) }, 50);
   }
 }
 
 updateSearch();
 $('.search-input').focus();
-{/literal}
 {/footer_script}
 
 <div class="search-album">

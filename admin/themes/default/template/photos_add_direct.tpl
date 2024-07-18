@@ -89,7 +89,6 @@ var format_ext = "{$format_ext}";
 var uploadedPhotos = [];
 var uploadCategory = null;
 
-{literal}
 jQuery(document).ready(function(){
   jQuery(".dont-show-again").on("click", function() {
     jQuery.ajax({
@@ -129,14 +128,14 @@ jQuery(document).ready(function(){
 		// url : '../upload.php',
 		url : 'ws.php?method=pwg.images.upload&format=json',
 		
-		chunk_size: '{/literal}{$chunk_size}{literal}kb',
+		chunk_size: '{$chunk_size}kb',
 		
 		filters : {
 			// Maximum file size
-			max_file_size : '{/literal}{$max_file_size}{literal}mb',
+			max_file_size : '{$max_file_size}mb',
 			// Specify what files to browse for
 			mime_types: [
-				{title : "Image files", extensions : formatMode ? format_ext : file_ext}
+				{ title : "Image files", extensions : formatMode ? format_ext : file_ext }
 			]
 		},
 
@@ -245,8 +244,8 @@ jQuery(document).ready(function(){
 
               $.alert({
                 title: str_format_warning,
-                content : (notFound.length ? `<p>${str_format_warning_notFound.replace('%s', notFoundStr.join(', '))}</p>` : "")
-                  +(multiple.length ? `<p>${str_format_warning_multiple.replace('%s', multStr.join(', '))}</p>` : ""),
+                content : (notFound.length ? `<p>${ str_format_warning_notFound.replace('%s', notFoundStr.join(', ')) }</p>` : "")
+                  +(multiple.length ? `<p>${ str_format_warning_multiple.replace('%s', multStr.join(', ')) }</p>` : ""),
                 ...jConfirm_warning_options
               })
             }
@@ -276,7 +275,7 @@ jQuery(document).ready(function(){
 
         // warn user if she wants to leave page while upload is running
         jQuery(window).bind('beforeunload', function() {
-          return "{/literal}{'Upload in progress'|translate|escape}{literal}";
+          return "{'Upload in progress'|translate|escape}";
         });
 
         // no more change on category/level
@@ -386,7 +385,6 @@ jQuery(document).ready(function(){
       }
     }
 	});
-{/literal}
 });
 {/footer_script}
 

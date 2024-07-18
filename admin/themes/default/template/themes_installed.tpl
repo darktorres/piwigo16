@@ -18,7 +18,7 @@ $(".delete-theme-button").each(function() {
 });
 {/footer_script}
 
-{footer_script}{literal}
+{footer_script}
 jQuery(document).ready(function() {
   $("a.preview-box").colorbox();
   
@@ -60,7 +60,7 @@ $(window).bind("load", function() {
   })
 })
 
-{/literal}{/footer_script}
+{/footer_script}
 
 <div id="themesContent">
 

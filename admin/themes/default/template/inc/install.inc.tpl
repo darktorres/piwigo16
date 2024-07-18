@@ -1,5 +1,4 @@
 <script type="text/javascript" src="template-common/lib/jquery.packed.js"></script>
-{literal}
 <script type="text/javascript">
 $(function() {
     $option_selected = $('#dblayer option:selected').attr('value');
@@ -16,4 +15,3 @@ $(function() {
       });
   });
 </script>
-{/literal}

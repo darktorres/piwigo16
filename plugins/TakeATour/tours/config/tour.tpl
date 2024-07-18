@@ -1,64 +1,64 @@
-{footer_script require='jquery.bootstrap-tour'  load="async"}{literal}
+{footer_script require='jquery.bootstrap-tour'  load="async"}
 
 var tour = new Tour({
   name: "config",
   orphan: true,
-  onEnd: function (tour) {window.location = "{/literal}{$ABS_U_ADMIN}{literal}admin.php?page=plugin-TakeATour&tour_ended=config"},
-  template: "<div class='popover'>          <div class='arrow'></div>          <h3 class='popover-title'></h3>          <div class='popover-content'></div>          <div class='popover-navigation'>            <div class='btn-group'>              <button class='btn btn-sm btn-default' data-role='prev'>&laquo; {/literal}{'Prev'|@translate|@escape:'javascript'}{literal}</button>              <button class='btn btn-sm btn-default' data-role='next'>{/literal}{'Next '|@translate|@escape:'javascript'}{literal} &raquo;</button>            </div>            <button class='btn btn-sm btn-default' data-role='end'>{/literal}{'End tour'|@translate|@escape:'javascript'}{literal}</button>          </div>        </div>",
+  onEnd: function (tour) { window.location = "{$ABS_U_ADMIN}admin.php?page=plugin-TakeATour&tour_ended=config" },
+  template: "<div class='popover'>          <div class='arrow'></div>          <h3 class='popover-title'></h3>          <div class='popover-content'></div>          <div class='popover-navigation'>            <div class='btn-group'>              <button class='btn btn-sm btn-default' data-role='prev'>&laquo; {'Prev'|@translate|@escape:'javascript'}</button>              <button class='btn btn-sm btn-default' data-role='next'>{'Next '|@translate|@escape:'javascript'} &raquo;</button>            </div>            <button class='btn btn-sm btn-default' data-role='end'>{'End tour'|@translate|@escape:'javascript'}</button>          </div>        </div>",
 });
-{/literal}{if isset($TAT_restart) and $TAT_restart}tour.restart();{/if}{literal}
+{if isset($TAT_restart) and $TAT_restart}tour.restart();{/if}
 
 tour.addSteps([
   {
-    path: "{/literal}{$TAT_path}{literal}admin.php?page=configuration",
+    path: "{$TAT_path}admin.php?page=configuration",
     placement: "top",
     element: "",
-    title: "{/literal}{'first_contact_title29'|@translate|@escape:'javascript'}{literal}",
-    content: "{/literal}{'first_contact_stp29'|@translate|@escape:'javascript'}{literal}"
+    title: "{'first_contact_title29'|@translate|@escape:'javascript'}",
+    content: "{'first_contact_stp29'|@translate|@escape:'javascript'}"
   },
-  {//30
-    path: "{/literal}{$TAT_path}{literal}admin.php?page=configuration",
+  { //30
+    path: "{$TAT_path}admin.php?page=configuration",
     placement: "right",
     element: "#gallery_title",
-    title: "{/literal}{'first_contact_title30'|@translate|@escape:'javascript'}{literal}",
-    content: "{/literal}{'first_contact_stp30'|@translate|@escape:'javascript'}{literal}"
+    title: "{'first_contact_title30'|@translate|@escape:'javascript'}",
+    content: "{'first_contact_stp30'|@translate|@escape:'javascript'}"
   },
   {
-    path: "{/literal}{$TAT_path}{literal}admin.php?page=configuration",
+    path: "{$TAT_path}admin.php?page=configuration",
     placement: "right",
     element: "#page_banner",
-    title: "{/literal}{'first_contact_title31'|@translate|@escape:'javascript'}{literal}",
-    content: "{/literal}{'first_contact_stp31'|@translate|@escape:'javascript'}{literal}"
+    title: "{'first_contact_title31'|@translate|@escape:'javascript'}",
+    content: "{'first_contact_stp31'|@translate|@escape:'javascript'}"
   },
   {
-    path: "{/literal}{$TAT_path}{literal}admin.php?page=configuration",
+    path: "{$TAT_path}admin.php?page=configuration",
     reflex: true,
     placement: "top",
     element: ".formButtons input",
-    title: "{/literal}{'first_contact_title32'|@translate|@escape:'javascript'}{literal}",
-    content: "{/literal}{'first_contact_stp32'|@translate|@escape:'javascript'}{literal}"
+    title: "{'first_contact_title32'|@translate|@escape:'javascript'}",
+    content: "{'first_contact_stp32'|@translate|@escape:'javascript'}"
   },
   {
-    path: "{/literal}{$TAT_path}{literal}admin.php?page=configuration",
+    path: "{$TAT_path}admin.php?page=configuration",
     placement: "bottom",
     element: "li.normal_tab:nth-child(6) > a:nth-child(1)",
-    title: "{/literal}{'first_contact_title33'|@translate|@escape:'javascript'}{literal}",
-    content: "{/literal}{'first_contact_stp33'|@translate|@escape:'javascript'}{literal}",
+    title: "{'first_contact_title33'|@translate|@escape:'javascript'}",
+    content: "{'first_contact_stp33'|@translate|@escape:'javascript'}",
     prev:30
   },
   {
-    path: "{/literal}{$TAT_path}{literal}admin.php?page=themes",
+    path: "{$TAT_path}admin.php?page=themes",
     placement: "top",
     element: "",
-    title: "{/literal}{'first_contact_title34'|@translate|@escape:'javascript'}{literal}",
-    content: "{/literal}{'first_contact_stp34'|@translate|@escape:'javascript'}{literal}"
+    title: "{'first_contact_title34'|@translate|@escape:'javascript'}",
+    content: "{'first_contact_stp34'|@translate|@escape:'javascript'}"
   },
-  {//35
-    path: "{/literal}{$TAT_path}{literal}admin.php?page=themes",
+  { //35
+    path: "{$TAT_path}admin.php?page=themes",
     placement: "top",
     element: "#TAT_FC_35",
-    title: "{/literal}{'first_contact_title35'|@translate|@escape:'javascript'}{literal}",
-    content: "{/literal}{'first_contact_stp35'|@translate|@escape:'javascript'}{literal}"
+    title: "{'first_contact_title35'|@translate|@escape:'javascript'}",
+    content: "{'first_contact_stp35'|@translate|@escape:'javascript'}"
   }
 ]);
 
@@ -68,4 +68,4 @@ tour.init();
 // Start the tour
 tour.start();
 
-{/literal}{/footer_script}
+{/footer_script}

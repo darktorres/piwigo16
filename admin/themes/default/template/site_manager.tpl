@@ -1,11 +1,11 @@
-{footer_script}{literal}
+{footer_script}
 jQuery(document).ready(function(){
   jQuery("#showCreateSite a").click(function(){
     jQuery("#showCreateSite").hide();
     jQuery("#createSite").show();
   });
 });
-{/literal}{/footer_script}
+{/footer_script}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
 {combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}

@@ -20,7 +20,6 @@
 
 {footer_script}
 var rootUrl = "{get_absolute_root_url()}";
-{literal}
 jQuery(document).ready(function(){
 
   function checkUploadStart() {
@@ -171,7 +170,6 @@ Piecon.setOptions({
   fallback: 'force'
 });
 
-{/literal}
 
 var pwg_token = '{$pwg_token}';
 var photosUploaded_label = "{'%d photos uploaded into album "%s"'|translate|escape}";
@@ -185,7 +183,6 @@ var sumQueueFilesize = 0;
 var limit_storage = {$limit_storage};
 {/if}
 
-{literal}
 	jQuery("#uploader").pluploadQueue({
 		// General settings
     browse_button : 'addFiles',
@@ -197,14 +194,14 @@ var limit_storage = {$limit_storage};
 		// url : '../upload.php',
 		url : rootUrl + 'ws.php?method=pwg.images.upload&format=json',
 		
-		chunk_size: '{/literal}{$chunk_size}{literal}kb',
+		chunk_size: '{$chunk_size}kb',
 		
 		filters : {
 			// Maximum file size
 			max_file_size : '1000mb',
 			// Specify what files to browse for
 			mime_types: [
-				{title : "Image files", extensions : "{/literal}{$file_exts}{literal}"}
+				{ title : "Image files", extensions : "{$file_exts}" }
 			]
 		},
 
@@ -251,7 +248,7 @@ var limit_storage = {$limit_storage};
 
         // warn user if she wants to leave page while upload is running
         jQuery(window).bind('beforeunload', function() {
-          return "{/literal}{'Upload in progress'|translate|escape}{literal}";
+          return "{'Upload in progress'|translate|escape}";
         });
 
         // no more change on category/level
@@ -374,9 +371,8 @@ var limit_storage = {$limit_storage};
     }
   });
 });
-{/literal}{/footer_script}
+{/footer_script}
 
-{literal}
 <style type="text/css">
 /*
 #photosAddContent form p {
@@ -389,43 +385,43 @@ var limit_storage = {$limit_storage};
 }
 */
 
-#photosAddContent fieldset#photoProperties {padding-bottom:0}
-#photosAddContent fieldset#photoProperties p {text-align:left;margin:0 0 1em 0;line-height:20px;}
-#photosAddContent fieldset#photoProperties input[type="text"] {width:320px}
-#photosAddContent fieldset#photoProperties textarea {width:500px; height:100px}
+#photosAddContent fieldset#photoProperties { padding-bottom:0 }
+#photosAddContent fieldset#photoProperties p { text-align:left;margin:0 0 1em 0;line-height:20px; }
+#photosAddContent fieldset#photoProperties input[type="text"] { width:320px }
+#photosAddContent fieldset#photoProperties textarea { width:500px; height:100px }
 
 #photosAddContent P {
   margin:0;
 }
 
-p#uploadWarningsSummary {text-align:left;margin-bottom:1em;font-size:90%;color:#999;line-height:2.5em}
-p#uploadWarningsSummary .showInfo {position:static;display:inline;padding:1px 6px;margin-left:3px;}
-p#uploadWarnings {display:none;text-align:left;margin-bottom:1em;font-size:90%;color:#999;}
-p#uploadModeInfos {text-align:left;margin-top:1em;font-size:90%;color:#999;}
+p#uploadWarningsSummary { text-align:left;margin-bottom:1em;font-size:90%;color:#999;line-height:2.5em }
+p#uploadWarningsSummary .showInfo { position:static;display:inline;padding:1px 6px;margin-left:3px; }
+p#uploadWarnings { display:none;text-align:left;margin-bottom:1em;font-size:90%;color:#999; }
+p#uploadModeInfos { text-align:left;margin-top:1em;font-size:90%;color:#999; }
 
-#photosAddContent p.showFieldset {text-align:left;margin: 0 auto 10px auto;}
+#photosAddContent p.showFieldset { text-align:left;margin: 0 auto 10px auto; }
 
-#uploadProgress {width:650px; margin:10px auto;font-size:90%;}
-#progressbar {border:1px solid #ccc; background-color:#eee;}
+#uploadProgress { width:650px; margin:10px auto;font-size:90%; }
+#progressbar { border:1px solid #ccc; background-color:#eee; }
 .ui-progressbar-value { background-image: url(admin/themes/default/images/pbar-ani.gif); height:10px;margin:-1px;border:1px solid #E78F08;}
 
 /* Upload Form */
-.plupload_header {display:none;}
-#uploadForm .plupload_container {padding:0}
-#uploadForm .plupload_scroll .plupload_filelist {height:250px;}
-#uploadForm li.plupload_droptext {line-height:230px;font-size:2em;}
+.plupload_header { display:none; }
+#uploadForm .plupload_container { padding:0 }
+#uploadForm .plupload_scroll .plupload_filelist { height:250px; }
+#uploadForm li.plupload_droptext { line-height:230px;font-size:2em; }
 
-#uploadBoxes .file {margin-bottom:5px;text-align:left;}
-#uploadBoxes {margin-top:20px;}
-#addUploadBox {margin-bottom:2em;}
+#uploadBoxes .file { margin-bottom:5px;text-align:left; }
+#uploadBoxes { margin-top:20px; }
+#addUploadBox { margin-bottom:2em; }
 
-p.uploadInfo {text-align:left;font-size:90%;color:#999;}
-p#uploadWarningsSummary {text-align:left;margin-bottom:1em;font-size:90%;color:#999;}
-p#uploadWarningsSummary .showInfo {margin-left:3px;}
-p#uploadWarnings {display:none;text-align:left;margin-bottom:1em;font-size:90%;color:#999;}
-p#uploadModeInfos {text-align:left;margin-top:1em;font-size:90%;color:#999;}
+p.uploadInfo { text-align:left;font-size:90%;color:#999; }
+p#uploadWarningsSummary { text-align:left;margin-bottom:1em;font-size:90%;color:#999; }
+p#uploadWarningsSummary .showInfo { margin-left:3px; }
+p#uploadWarnings { display:none;text-align:left;margin-bottom:1em;font-size:90%;color:#999; }
+p#uploadModeInfos { text-align:left;margin-top:1em;font-size:90%;color:#999; }
 
-#photosAddContent p.showFieldset {text-align:left;margin: 1em;}
+#photosAddContent p.showFieldset { text-align:left;margin: 1em; }
 
 #uploadForm .plupload_buttons, #uploadForm .plupload_progress { display:none !important; }
 #uploadForm #startUpload { margin:5px 0 15px 15px; padding:5px 10px; font-size:1.1em; }
@@ -464,7 +460,6 @@ p#uploadModeInfos {text-align:left;margin-top:1em;font-size:90%;color:#999;}
   -webkit-animation: animatedBackground 1s linear infinite;
 }
 </style>
-{/literal}
 
 <div id="photosAddContent" class="col-lg-8 col-md-10 col-sm-12 col-centered">
 
@@ -624,13 +619,13 @@ p#uploadModeInfos {text-align:left;margin-top:1em;font-size:90%;color:#999;}
 </div> <!-- photosAddContent -->
 
 {* Community specific *}
-{footer_script}{literal}
+{footer_script}
 jQuery(document).ready(function(){
-  jQuery("a.colorboxThumb").colorbox({rel:"colorboxThumb"});
+  jQuery("a.colorboxThumb").colorbox({ rel:"colorboxThumb" });
 
   jQuery("a.externalLink").click(function() {
     window.open($(this).attr("href"));
     return false;
   });
 });
-{/literal}{/footer_script}
+{/footer_script}

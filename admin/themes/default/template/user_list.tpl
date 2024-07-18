@@ -81,9 +81,7 @@ has_group = "{$filter_group}";
 
 let register_dates_str = '{$register_dates}';
 let register_dates = register_dates_str.split(',');
-{literal}
-let groupOptions = groups_arr.map(x => ({value: x[0], label: x[1], isSelected: 0}));
-{/literal}
+let groupOptions = groups_arr.map(x => ({ value: x[0], label: x[1], isSelected: 0 }));
 
 /* Startup */
 setupRegisterDates(register_dates);

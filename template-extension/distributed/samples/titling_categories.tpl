@@ -6,15 +6,15 @@
 {if !empty($category_thumbnails)}
   {html_head}
 <style media="screen,handheld,projection,tv" type="text/css">
-#content ul.thumbnailCategories li {ldelim} width:100%; z-index: 55; position: relative;}
-#Titling h3 {ldelim} margin:11px 0 -13px; padding:0 3px 0 20px; text-align:left; z-index: 99; position: relative;}
-#Titling h3 a {ldelim} background-color: #222; padding: 0 10px; }
-#content ul.thumbnailCategories .unbordered {ldelim} width:49%; float:left; margin:0 0 0 5px; }
-.content div.thumbnailCategory div.description p.dates {ldelim} margin: 0 45px 0 20px; }
-#content .thumbnailCategory div.description .text {ldelim} margin: 0; padding: 0 4px; text-align: justify; }
-p.Nb_images {ldelim} text-align: left; color: #444; }
+#content ul.thumbnailCategories li { width:100%; z-index: 55; position: relative;}
+#Titling h3 { margin:11px 0 -13px; padding:0 3px 0 20px; text-align:left; z-index: 99; position: relative;}
+#Titling h3 a { background-color: #222; padding: 0 10px; }
+#content ul.thumbnailCategories .unbordered { width:49%; float:left; margin:0 0 0 5px; }
+.content div.thumbnailCategory div.description p.dates { margin: 0 45px 0 20px; }
+#content .thumbnailCategory div.description .text { margin: 0; padding: 0 4px; text-align: justify; }
+p.Nb_images { text-align: left; color: #444; }
 /* hacks */
-*+html #Titling h3, * html #Titling h3 {ldelim} font-weight: normal;} /* IE browsers */
+*+html #Titling h3, * html #Titling h3 { font-weight: normal;} /* IE browsers */
 </style>
   {/html_head}
   <ul class="thumbnailCategories" id="Titling"> {*                   1st difference: Titling/thumbnail *}

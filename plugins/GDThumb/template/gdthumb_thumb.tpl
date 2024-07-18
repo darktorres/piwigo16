@@ -74,7 +74,7 @@
 $(function() {
   {if isset($GDThumb_big)}
   {assign var=gt_size value=$GDThumb_big->get_size()}
-  var big_thumb = {ldelim}id: {$GDThumb_big->src_image->id}, src: '{$GDThumb_big->get_url()}', width: {$gt_size[0]}, height: {$gt_size[1]}{rdelim};
+  var big_thumb = { id: {$GDThumb_big->src_image->id}, src: '{$GDThumb_big->get_url()}', width: {$gt_size[0]}, height: {$gt_size[1]} };
   {else}
   var big_thumb = null;
   {/if}
@@ -84,6 +84,6 @@ $(function() {
 {/footer_script}
 
 {html_head}
-<style type="text/css">#thumbnails .gdthumb {ldelim} margin:{$GDThumb.margin / 2}px {$GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px !important; }</style>
+<style type="text/css">#thumbnails .gdthumb { margin:{$GDThumb.margin / 2}px {$GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px !important; }</style>
 {/html_head}
 {/if}

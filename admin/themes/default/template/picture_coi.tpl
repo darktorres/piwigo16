@@ -55,13 +55,13 @@ function jOnRelease() {
 }
 
 {/literal}
-jQuery("#jcrop").Jcrop( {ldelim}
+jQuery("#jcrop").Jcrop({
 	boxWidth: 500, boxHeight: 400,
 	onChange: jOnChange,
 	onRelease: jOnRelease
 	}
 {if isset($coi)}
-	,function() {ldelim}
+	,function() {
 		var $img = jQuery("#jcrop");
 		this.animateTo( [from_coi({$coi.l}, $img.width()), from_coi({$coi.t}, $img.height()), from_coi({$coi.r}, $img.width()), from_coi({$coi.b}, $img.height()) ] );
 	}

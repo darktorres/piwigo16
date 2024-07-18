@@ -10,7 +10,7 @@
 
 {footer_script}
 if (document.getElementById("text") != null)
-  var editor = CodeMirror.fromTextArea(document.getElementById("text"), {ldelim}
+  var editor = CodeMirror.fromTextArea(document.getElementById("text"), {
     matchBrackets: true,
     mode: "{$CODEMIRROR_MODE}",
     tabMode: "shift"

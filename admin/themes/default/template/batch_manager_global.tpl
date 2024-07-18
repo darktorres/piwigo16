@@ -585,10 +585,10 @@ var sliders = {
 
 	<ul class="thumbnails">
 		{html_style}
-UL.thumbnails SPAN.wrap2{ldelim}
+UL.thumbnails SPAN.wrap2 {
   width: {$thumb_params->max_width()+2}px;
 }
-UL.thumbnails SPAN.wrap2 {ldelim}
+UL.thumbnails SPAN.wrap2 {
   height: {$thumb_params->max_height()+25}px;
 }
 		{/html_style}

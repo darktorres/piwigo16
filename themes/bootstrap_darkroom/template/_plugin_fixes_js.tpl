@@ -1,4 +1,3 @@
-{strip}
 {if isset($loaded_plugins['piwigo-openstreetmap']) && ($BODY_ID == "thePicturePage" || $BODY_ID == "theCategoryPage")}
 {footer_script require='jquery'}
 $(document).ready(function() {
@@ -171,7 +170,6 @@ $(document).ready(function() {
 });
 {/footer_script}
 {/if}
-{/strip}
 
 {if isset($loaded_plugins['rv_tscroller'])}
 {footer_script require='jquery'}

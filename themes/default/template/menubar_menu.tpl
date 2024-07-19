@@ -8,11 +8,11 @@
 	</form>
 	<script type="text/javascript">var qsearch_prompt="{'Quick search'|@translate|@escape:'javascript'}";{if empty($QUERY_SEARCH)}document.getElementById('qsearchInput').value=qsearch_prompt;{/if}</script>
 {/if}
-	<ul>{strip}
+	<ul>
 	{foreach from=$block->data item=link}
 		{if is_array($link)}
 			<li><a href="{$link.URL}"{if isset($link.TITLE)} title="{$link.TITLE}"{/if}{if isset($link.REL)} {$link.REL}{/if}>{$link.NAME}</a>{if isset($link.COUNTER)} ({$link.COUNTER}){/if}</li>
 		{/if}
 	{/foreach}
-	{/strip}</ul>
+	</ul>
 </dd>

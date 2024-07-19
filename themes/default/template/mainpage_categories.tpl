@@ -1,4 +1,4 @@
-{strip}{html_style}
+{html_style}
 .thumbnailCategory .illustration {
 	width: {$derivative_params->max_width()+5}px;
 }
@@ -6,7 +6,7 @@
 .content .thumbnailCategory .description {
 	height: {$derivative_params->max_height()+5}px;
 }
-{/html_style}{/strip}
+{/html_style}
 {footer_script}
   var error_icon = "{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png", max_requests = {$maxRequests};
 {/footer_script}

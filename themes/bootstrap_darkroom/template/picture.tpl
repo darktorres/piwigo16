@@ -14,7 +14,7 @@
     {include file='picture_nav_buttons.tpl'|@get_extent:'picture_nav_buttons'}
   </div>
 {if functions::get_device() != 'desktop' }
-{footer_script require="jquery"}{strip}
+{footer_script require="jquery"}
 $('#theImage img').bind('swipeleft swiperight', function (event) {
    if (event.type == 'swipeleft') {
        $('#navigationButtons a#navNextPicture i').click();
@@ -24,7 +24,7 @@ $('#theImage img').bind('swipeleft swiperight', function (event) {
        return;
    }
 });
-{/strip}{/footer_script}
+{/footer_script}
 {/if}
 
   <div id="theImage" class="row d-block justify-content-center mb-3">

@@ -49,7 +49,7 @@
                       <span class="rateButtonStarEmpty" data-value="{$mark}"></span>
                       {/if}
                       {/foreach}
-                      {strip}{combine_script id='core.scripts' path='themes/default/js/scripts.js' load='async'}
+                      {combine_script id='core.scripts' path='themes/default/js/scripts.js' load='async'}
                       {combine_script id='rating' require='core.scripts' path='themes/bootstrap_darkroom/js/rating.js' load='async'}
                       {footer_script require='jquery'}
                            var _pwgRatingAutoQueue = _pwgRatingAutoQueue||[];
@@ -74,7 +74,6 @@
                                    }
                            });
                       {/footer_script}
-                      {/strip}
                     </div>
                   </form>
                 </dd>
@@ -143,7 +142,7 @@
 {/if}
 {if $display_info.privacy_level and isset($available_permission_levels)}
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-{footer_script require='jquery'}{strip}
+{footer_script require='jquery'}
     function setPrivacyLevel(id, level, label) {
     (new PwgWS('{$ROOT_URL}')).callService(
         "pwg.images.setPrivacyLevel", { image_id:id, level:level},
@@ -158,7 +157,7 @@
         }
     );
     }
-{/strip}{/footer_script}
+{/footer_script}
             <div id="Privacy" class="imageInfo">
               <dl class="row mb-0">
                 <dt class="col-sm-5">{'Who can see this photo?'|@translate}</dt>

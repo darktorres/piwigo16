@@ -1,4 +1,4 @@
-{if !empty($thumbnails)}{strip}
+{if !empty($thumbnails)}
 {if $derivative_params->max_width()/$derivative_params->max_height() > 1.5 || ($derivative_params->max_height()<400 && !$derivative_params->sizing->max_crop)}
 {modus_thumbs}
 {else}
@@ -136,4 +136,4 @@
 	</li>
 {/foreach}
 {/if}
-{/strip}{/if}
+{/if}

@@ -4,7 +4,7 @@
 <title>{if $PAGE_TITLE=='Home'|@translate}{$GALLERY_TITLE}{else}{$PAGE_TITLE}{/if}</title>
 <link rel="shortcut icon" type="image/x-icon" href="{$ROOT_URL}{$themeconf.icon_dir}/favicon.ico">
 <link rel="stylesheet" type="text/css" href="{$ROOT_URL}themes/{$themeconf.id}/css/open-sans/open-sans.css"> {* cannot be loaded by combine_css because it contains relative urls *}
-{strip}{get_combined_css}
+{get_combined_css}
 {combine_css path="themes/`$themeconf.id`/css/base.css.tpl" version=$MODUS_CSS_VERSION template=true order=-10}
 {combine_css path="themes/`$themeconf.id`/css/iconfontello.css.tpl" version=$MODUS_CSS_VERSION template=true order=-10}
 {combine_css path="themes/`$themeconf.id`/css/menuh.css.tpl" version=$MODUS_CSS_VERSION template=true order=-10}
@@ -18,7 +18,6 @@
   {combine_css path="themes/`$themeconf.id`/css/hf_base.css" order=-10} {* load base CSS for skins designed by Hannah *}
   {combine_css path="themes/`$themeconf.id`/skins/`$MODUS_CSS_SKIN`.css" order=-10}
 {/if}
-{/strip}
 {if isset($U_PREFETCH)}<link rel=prefetch href="{$U_PREFETCH}">{/if}
 {if isset($U_CANONICAL)}<link rel=canonical href="{$U_CANONICAL}">{/if}
 {if not empty($page_refresh)}<meta http-equiv="refresh" content="{$page_refresh.TIME};url={$page_refresh.U_REFRESH}">{/if}

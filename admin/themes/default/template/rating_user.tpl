@@ -190,7 +190,6 @@ $(document).ready( function(){
 </thead>
 {foreach from=$ratings item=rating key=user}
 <tr data-usr='{ "uid":{$rating.uid},"aid":"{$rating.aid}" }'>
-{strip}
 <td class=usr>{$user}</td><td title="First: {$rating.first_date}">{$rating.last_date}</td>
 <td>{$rating.count}</td><td>{$rating.avg|@number_format:2}</td>
 <td>{$rating.cv|@number_format:3}</td><td>{$rating.cd|@number_format:3}</td><td>{if !empty($rating.cdtop)}{$rating.cdtop|@number_format:3}{/if}</td>
@@ -202,7 +201,6 @@ $(document).ready( function(){
 {/foreach}
 <td><a class="del icon-trash"></a></td>
 </tr>
-{/strip}
 {/foreach}
 </table>
 

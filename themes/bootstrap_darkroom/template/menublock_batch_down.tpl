@@ -3,12 +3,10 @@
   <ul class="dropdown-menu dropdown-menu-right">
 {foreach from=$block->data item=link}
   <li>
-  {strip}
     <a href="{$link.URL}" title="{$link.TITLE}" rel="nofollow" class="dropdown-item">
       {$link.NAME}
       <span class="badge badge-secondary ml-2">{$link.COUNT}</span>
     </a>
-  {/strip}
   </li>
 {/foreach}
   </ul>

@@ -1,7 +1,7 @@
 {if !empty($album_thumb_size)}{* ================= modus mode ===*}
 <ul class="albThumbs" id="rv-at">
 {foreach from=$category_thumbnails item=item}
-<li>{strip}
+<li>
 <a href="{$item.URL}">
 	<img class=albImg{$item.MODUS_STYLE} src="{$item.modus_deriv->get_url()}" alt="{$item.TN_ALT}">
 	<div class=albLegend>
@@ -15,11 +15,11 @@
 		</div>
 	</div>
 </a>
-{/strip}</li>
+</li>
 {/foreach}
 </ul>
 {else}{* ================= standard mode ===*}
-{strip}{html_style}
+{html_style}
 .thumbnailCategory .illustration{
 	width:{$derivative_params->max_width()+5}px;
 }
@@ -52,7 +52,7 @@
 	}
 }
 
-{/html_style}{/strip}
+{/html_style}
 <ul class="thumbnailCategories">
 {foreach from=$category_thumbnails item=cat name=cat_loop}
 {assign var=derivative value=$pwg->derivative($derivative_params, $cat.representative.src_image)}

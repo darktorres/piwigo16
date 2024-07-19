@@ -29,7 +29,7 @@ cp: '{$COOKIE_PATH|@escape:'javascript'}'
     {/if}
 {/if}
 
-{foreach from=$current.unique_derivatives item=derivative key=derivative_type}{strip}
+{foreach from=$current.unique_derivatives item=derivative key=derivative_type}
 <map name="map{$derivative->get_type()}">
 {assign var='size' value=$derivative->get_size()}
 {if isset($previous)}
@@ -40,4 +40,4 @@ cp: '{$COOKIE_PATH|@escape:'javascript'}'
 <area shape=rect coords="{($size[0]/1.33)|@intval},0,{$size[0]},{$size[1]}" href="{$next.U_IMG}" title="{'Next'|@translate} : {$next.TITLE_ESC}" alt="{$next.TITLE_ESC}">
 {/if}
 </map>
-{/strip}{/foreach}
+{/foreach}

@@ -36,7 +36,7 @@ function changeImgSrc(url,typeSave,typeMap)
 }
 (window.SwitchBox=window.SwitchBox||[]).push("#derivativeSwitchLink", "#derivativeSwitchBox");
 {/footer_script}
-{strip}<a id="derivativeSwitchLink" title="{'Photo sizes'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
+<a id="derivativeSwitchLink" title="{'Photo sizes'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
   <span class="pwg-icon pwg-icon-sizes"></span><span class="pwg-button-text">{'Photo sizes'|@translate}</span>
 </a>
 <div id="derivativeSwitchBox" class="switchBox">
@@ -52,19 +52,18 @@ function changeImgSrc(url,typeSave,typeMap)
   <a href="javascript:phpWGOpenWindow('{$U_ORIGINAL}','xxx','scrollbars=yes,toolbar=no,status=no,resizable=yes')" rel="nofollow">{'Original'|@translate}</a>
   {/if}
 </div>
-{/strip}
 {/if}
-{strip}{if isset($U_SLIDESHOW_START)}
+{if isset($U_SLIDESHOW_START)}
 	<a href="{$U_SLIDESHOW_START}" title="{'slideshow'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-slideshow"></span><span class="pwg-button-text">{'slideshow'|@translate}</span>
 	</a>
-{/if}{/strip}
-{strip}{if isset($U_METADATA)}
+{/if}
+{if isset($U_METADATA)}
 	<a href="{$U_METADATA}" title="{'Show file metadata'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-camera-info"></span><span class="pwg-button-text">{'Show file metadata'|@translate}</span>
 	</a>
-{/if}{/strip}
-{strip}{if isset($current.U_DOWNLOAD)}
+{/if}
+{if isset($current.U_DOWNLOAD)}
 	<a id="downloadSwitchLink" href="{$current.U_DOWNLOAD}" title="{'Download this file'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-save"></span><span class="pwg-button-text">{'Download'|@translate}</span>
 	</a>
@@ -87,25 +86,25 @@ jQuery().ready(function() {
   </ul>
 </div>
 {/if} {* has formats *}
-{/if}{/strip}
+{/if}
 {if isset($PLUGIN_PICTURE_BUTTONS)}{foreach from=$PLUGIN_PICTURE_BUTTONS item=button}{$button}{/foreach}{/if}
 {if isset($PLUGIN_PICTURE_ACTIONS)}{$PLUGIN_PICTURE_ACTIONS}{/if}
-{strip}{if isset($favorite)}
+{if isset($favorite)}
 	<a href="{$favorite.U_FAVORITE}" title="{if $favorite.IS_FAVORITE}{'delete this photo from your favorites'|@translate}{else}{'add this photo to your favorites'|@translate}{/if}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-favorite-{if $favorite.IS_FAVORITE}del{else}add{/if}"></span><span class="pwg-button-text">{'Favorites'|@translate}</span>
 	</a>
-{/if}{/strip}
-{strip}{if isset($U_SET_AS_REPRESENTATIVE)}
+{/if}
+{if isset($U_SET_AS_REPRESENTATIVE)}
 	<a id="cmdSetRepresentative" href="{$U_SET_AS_REPRESENTATIVE}" title="{'set as album representative'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-representative"></span><span class="pwg-button-text">{'representative'|@translate}</span>
 	</a>
-{/if}{/strip}
-{strip}{if isset($U_PHOTO_ADMIN)}
+{/if}
+{if isset($U_PHOTO_ADMIN)}
 	<a id="cmdEditPhoto" href="{$U_PHOTO_ADMIN}" title="{'Edit photo'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-edit"></span><span class="pwg-button-text">{'Edit'|@translate}</span>
 	</a>
-{/if}{/strip}
-{strip}{if isset($U_CADDIE)}{*caddie management BEGIN*}
+{/if}
+{if isset($U_CADDIE)}{*caddie management BEGIN*}
 {footer_script}
 function addToCadie(aElement, rootUrl, id)
 {
@@ -124,7 +123,7 @@ y.callService(
 	<a href="{$U_CADDIE}" onclick="addToCadie(this, '{$ROOT_URL}', {$current.id}); return false;" title="{'Add to caddie'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-caddie-add"> </span><span class="pwg-button-text">{'Caddie'|@translate}</span>
 	</a>
-{/if}{/strip}{*caddie management END*}
+{/if}{*caddie management END*}
 </div>
 </div>{*<!-- imageToolBar -->*}
 
@@ -170,7 +169,6 @@ y.callService(
 {/if}
 
 <dl id="standard" class="imageInfoTable">
-{strip}
 	{if $display_info.author and isset($INFO_AUTHOR)}
 	<div id="Author" class="imageInfo">
 		<dt>{'Author'|@translate}</dt>
@@ -262,7 +260,7 @@ y.callService(
 				<input type="submit" name="rate" value="{$mark}" class="rateButton" title="{$mark}">
 			{/if}
 			{/foreach}
-			{strip}{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
+			{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
 			{combine_script id='rating' load='async' require='core.scripts' path='themes/default/js/rating.js'}
 			{footer_script}
 				var _pwgRatingAutoQueue = _pwgRatingAutoQueue||[];
@@ -283,7 +281,6 @@ y.callService(
 					}
 				} );
 			{/footer_script}
-			{/strip}
 			</div>
 			</form>
 		</dd>
@@ -298,7 +295,7 @@ y.callService(
 				<a id="privacyLevelLink" href>{$available_permission_levels[$current.level]}</a>
 			</div>
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-{footer_script require='jquery'}{strip}
+{footer_script require='jquery'}
 function setPrivacyLevel(id, level){
 (new PwgWS('{$ROOT_URL}')).callService(
 	"pwg.images.setPrivacyLevel", { image_id:id, level:level},
@@ -314,7 +311,7 @@ function setPrivacyLevel(id, level){
 	);
 }
 (window.SwitchBox=window.SwitchBox||[]).push("#privacyLevelLink", "#privacyLevelBox");
-{/strip}{/footer_script}
+{/footer_script}
 			<div id="privacyLevelBox" class="switchBox" style="display:none">
 				{foreach from=$available_permission_levels item=label key=level}
 					<span class="switchCheck"{if $level != $current.level} style="visibility:hidden"{/if}>&#x2714; </span>
@@ -324,7 +321,6 @@ function setPrivacyLevel(id, level){
 		</dd>
 	</div>
 {/if}
-{/strip}
 </dl>
 
 {if isset($metadata)}

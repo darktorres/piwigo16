@@ -90,16 +90,16 @@
 {/if}
 {if isset($U_MODE_FLAT)}
                     <li class="nav-item">
-                        {strip}<a class="nav-link" href="{$U_MODE_FLAT}" title="{'display all photos in all sub-albums'|@translate}" rel="nofollow">
+                        <a class="nav-link" href="{$U_MODE_FLAT}" title="{'display all photos in all sub-albums'|@translate}" rel="nofollow">
                             <i class="fas fa-th-large fa-fw" aria-hidden="true"></i><span class="d-lg-none ml-2">{'display all photos in all sub-albums'|@translate}</span>
-                        </a>{/strip}
+                        </a>
                     </li>
 {/if}
 {if isset($U_MODE_NORMAL)}
                     <li class="nav-item">
-                        {strip}<a class="nav-link" href="{$U_MODE_NORMAL}" title="{'return to normal view mode'|@translate}">
+                        <a class="nav-link" href="{$U_MODE_NORMAL}" title="{'return to normal view mode'|@translate}">
                             <i class="fas fa-home fa-fw" aria-hidden="true"></i><span class="d-lg-none ml-2">{'return to normal view mode'|@translate}</span>
-                        </a>{/strip}
+                        </a>
                     </li>
 {/if}
 {if isset($U_MODE_POSTED) || isset($U_MODE_CREATED)}
@@ -197,11 +197,11 @@
 {if !empty($CATEGORIES)}
     <!-- Start of categories -->
 {$CATEGORIES}
-{footer_script require='jquery'}{strip}
+{footer_script require='jquery'}
 $(document).ready(function() {
   $('#content .col-outer .card-body:has(> .card-title)').equalHeights();
 });
-{/strip}{/footer_script}
+{/footer_script}
     <!-- End of categories -->
 {/if}
 
@@ -249,7 +249,7 @@ $(document).ready(function() {
 {/foreach}
 {include file='_photoswipe_js.tpl' selector='#photoSwipeData'}
         </div>
-{footer_script require='jquery' require='photoswipe'}{strip}
+{footer_script require='jquery' require='photoswipe'}
 $('#startSlideshow').on('click touchstart', function() {
    startPhotoSwipe(0);
    $('.pswp__button--autoplay')[0].click();
@@ -293,9 +293,9 @@ $(document).ajaxComplete(function() {
 });
 {/if}
 {/if}
-{/strip}{/footer_script}
+{/footer_script}
 {/if}
-{footer_script require="jquery"}{strip}
+{footer_script require="jquery"}
 {if !isset($loaded_plugins['piwigo-videojs']) && (isset($GThumb) || isset($GDThumb))}
 function addVideoIndicator() {
   $('img.thumbnail[src*="pwg_representative"]').each(function() {
@@ -313,7 +313,7 @@ $('.card-thumbnail').find('img[src*="pwg_representative"]').each(function() {
   $(this).closest('div').append('<i class="fas fa-file-video fa-2x video-indicator" aria-hidden="true" style="position: absolute; top: 10px; left: 10px; z-index: 100; color: #fff;"></i>');
 });
 {/if}
-{/strip}{/footer_script}
+{/footer_script}
         <!-- End of thumbnails -->
 {else if !empty($SEARCH_ID)}
         <div class="mcs-no-result">

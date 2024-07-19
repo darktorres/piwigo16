@@ -1,4 +1,3 @@
-{strip}
 {combine_css path=$ADMINTOOLS_PATH|cat:'template/public_style.css'}
 {combine_css path='admin/themes/default/fontello/css/fontello.css'}
 {combine_css path=$ADMINTOOLS_PATH|cat:'template/fontello/css/fontello-ato.css'}
@@ -31,7 +30,6 @@
 {/if}
 
 {combine_script id='admintools.controller' load='footer' require='jquery' path=$ADMINTOOLS_PATH|cat:'template/public_controller.js'}
-{/strip}
 
 {footer_script require='admintools.controller'}
 AdminTools.urlWS = '{$ROOT_URL}ws.php?format=json&method=';

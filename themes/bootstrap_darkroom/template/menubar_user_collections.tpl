@@ -11,13 +11,13 @@
 <li class="nav-item dropdown">
     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{$block->get_title()|strip_tags:true}</a>
     <div class="dropdown-menu dropdown-menu-right" role="menu">
-        {strip}<a class="dropdown-item" href="{$block->data.U_LIST}">
+        <a class="dropdown-item" href="{$block->data.U_LIST}">
                 {if $block->data.NB_COL == 0}
                 {'You have no collection'|translate}
                 {else}
                 {$pwg->l10n_dec('You have %d collection', 'You have %d collections', $block->data.NB_COL)}
                 {/if}
-        {/strip}</a>
+        </a>
         <div class="divider"></div>
         <div id="menu-info-coll-container">
             {collectionsMenuItem
@@ -27,14 +27,14 @@
               coll_nb_images = "coll_nb_images"
             }
             {if $block->data.collections}
-            {foreach from=$block->data.collections item=col}{strip}
+            {foreach from=$block->data.collections item=col}
                 {collectionsMenuItem
                   coll_id = $col.id
                   coll_name = $col.name
                   coll_edit = $col.u_edit
                   coll_nb_images = $col.nb_images
                 }
-            {/strip}{/foreach}
+            {/foreach}
         </div>
         {if isset($block->data.MORE)}
         <div class="dropdown-divider"></div>

@@ -1,4 +1,4 @@
-{if !empty($thumbnails)}{strip}
+{if !empty($thumbnails)}
 {*define_derivative name='derivative_params' width=160 height=90 crop=true*}
 {html_style}
 {*Set some sizes according to maximum thumbnail width and height*}
@@ -60,5 +60,5 @@
 		{/if}
 	</span>
 	</li>
-{/foreach}{/strip}
+{/foreach}
 {/if}

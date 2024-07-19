@@ -13,7 +13,6 @@
 <link rel="icon" type="image/svg+xml" href="{$ROOT_URL}{$themeconf.icon_dir}/piwigo.org-icon 1.svg">
 <link rel="stylesheet" type="text/css" href="{$ROOT_URL}admin/themes/default/fonts/open-sans/open-sans.css">
 
-{strip}
 {combine_css path="admin/themes/default/fontello/css/fontello.css" order=-10}
 {assign "theme_id" ""}
 {foreach from=$themes item=theme}
@@ -29,7 +28,6 @@
 {/foreach}
 
 {combine_script id='jquery'}
-{/strip}
 
 <!-- BEGIN get_combined -->
 {get_combined_css}
@@ -66,7 +64,6 @@
     <a href="{$U_RETURN}" title="{'Visit Gallery'|translate}"><i class="icon-eye"></i><span>{'Visit Gallery'|translate}</span></a>
 *}
 
-{strip}
     <a href="{$U_CHANGE_THEME}" class="tiptip" title="{'Switch to clear or dark colors for administration'|translate}">
 {if $theme_id eq "clear"}
       <i class="icon-moon-inv"></i><span>Dark</span>
@@ -74,7 +71,6 @@
       <i class="icon-sun-inv"></i><span>Light</span>
 {/if}
 </a>
-{/strip}
 
     <a class="tiptip" href="{$U_FAQ}" title="{'Instructions to use Piwigo'|@translate}"><i class="icon-help-circled"></i><span>{'Help Me'|translate}</span></a>
     <a href="{$U_LOGOUT}"><i class="icon-logout"></i><span>{'Logout'|translate}</span></a>

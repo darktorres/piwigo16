@@ -1,4 +1,4 @@
-<li id="languageSwitch">{strip}<a id="languageSwitchLink" title="{'Language'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
+<li id="languageSwitch"><a id="languageSwitchLink" title="{'Language'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
   <span class="pwg-icon langflag-{$lang_switch.Active.code}">&nbsp;</span><span class="pwg-button-text">{'Language'|@translate}</span>
 </a>
 <div id="languageSwitchBox" class="switchBox">
@@ -10,7 +10,7 @@
   {if ($smarty.foreach.f.index+1)%3 == 0}<br>{/if}
   {/foreach}
 </div>
-{/strip}</li>
+</li>
 
 {footer_script require='jquery'}
 jQuery("#languageSwitchLink").click(function() {

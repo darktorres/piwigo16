@@ -13,7 +13,7 @@
 {/foreach}
     </div>
 </li>
-{footer_script require='jquery'}{strip}
+{footer_script require='jquery'}
 $('#relatedCategoriesDropdownMenu').on('show.bs.dropdown', function() {
   $(this).find('.dropdown-item').each(function() {
     var level = $(this).data('level');
@@ -23,4 +23,4 @@ $('#relatedCategoriesDropdownMenu').on('show.bs.dropdown', function() {
     }
   });
 });
-{/strip}{/footer_script}
+{/footer_script}

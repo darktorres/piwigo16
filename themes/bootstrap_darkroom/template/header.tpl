@@ -53,7 +53,6 @@
     <meta http-equiv="refresh" content="{$page_refresh.TIME};url={$page_refresh.U_REFRESH}">
 {/if}
 
-{strip}
 {if $theme_config->bootstrap_theme} {* see https://github.com/tkuther/piwigo-bootstrap-darkroom/issues/104 *}
     {combine_css path="themes/bootstrap_darkroom/css/{$theme_config->bootstrap_theme}/bootstrap.min.css" order=-20}
 {else}
@@ -93,7 +92,6 @@
     {combine_script id='bootstrap' require='popper.js' path='themes/bootstrap_darkroom/node_modules/bootstrap/dist/js/bootstrap.min.js' load=$loc}
 {/if}
 {combine_script id=$themeconf.name require='bootstrap' path='themes/bootstrap_darkroom/js/theme.js' load='footer'}
-{/strip}
 {get_combined_scripts load='header'}
 {if not empty($head_elements)}
     {foreach from=$head_elements item=elt}{$elt}

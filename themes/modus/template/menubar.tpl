@@ -22,7 +22,7 @@
 {else}
 <dt><a>{'Links'|@translate}</a></dt>
 <dd>
-	<ul>{strip}
+	<ul>
 		{foreach from=$block->data item=link}
 			<li>
 				<a href="{$link.URL}" class="external"{if isset($link.new_window)} onclick="window.open(this.href, '{$link.new_window.NAME}','{$link.new_window.FEATURES}'); return false;"{/if}>
@@ -30,7 +30,7 @@
 				</a>
 			</li>
 		{/foreach}
-	{/strip}</ul>
+	</ul>
 </dd>
 {/if}
 
@@ -39,14 +39,14 @@
 <dt><a>{'Related tags'|@translate}</a></dt>
 <dd>
 	<div id=menuTagCloud>
-		{foreach from=$block->data item=tag}{strip}
+		{foreach from=$block->data item=tag}
 			<a class="tagLevel{if isset($tag.level)}{$tag.level}{/if}" href=
 			{if isset($tag.U_ADD)}
 				"{$tag.U_ADD}" title="{$tag.counter|@translate_dec:'%d photo is also linked to current tags':'%d photos are also linked to current tags'}" rel=nofollow>+
 			{else}
 				"{$tag.URL}" title="{'display photos linked to this tag'|@translate}">
 			{/if}
-				{$tag.name}</a>{/strip}
+				{$tag.name}</a>
 		{/foreach}
 	</div>
 </dd>
@@ -55,7 +55,7 @@
 {* ============ mbSpecials ========== *}
 <dt><a>{'Explore'|@translate}</a></dt>
 <dd>
-	<ul>{strip}
+	<ul>
 		{foreach from=$block->data item=link}
 		<li><a href="{$link.URL}" title="{$link.TITLE}"{if isset($link.REL)} {$link.REL}{/if}>{$link.NAME}</a></li>
 		{/foreach}
@@ -65,7 +65,7 @@
 		<li><a href="{$link.URL}" title="{if isset($link.TITLE)}{$link.TITLE}{/if}"{if isset($link.REL)} {$link.REL}{/if}>{$link.NAME}</a>{if isset($link.COUNTER)} ({$link.COUNTER}){/if}</li>
 		{/if}{/foreach}
 		{/if}
-	{/strip}</ul>
+	</ul>
 </dd>
 
 		{else}
@@ -103,7 +103,6 @@
 		{/if}
 		<li><a href="{$U_LOST_PASSWORD}" title="{'Forgot your password?'|@translate}" rel="nofollow">{'Forgot your password?'|@translate}</a></li>
 		</ul>
-{strip}
 		<form method=post action="{$U_LOGIN}" id=quickconnect>
 		<fieldset>
 		<legend>{'Quick connect'|@translate}</legend>
@@ -129,7 +128,6 @@
 
 		</fieldset>
 		</form>
-{/strip}
 	</dd>
 </dl>
 {/if}

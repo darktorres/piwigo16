@@ -1,7 +1,6 @@
 <li class="nav-item dropdown" id="identificationDropdown">
     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{if isset($USERNAME)}<i class="fas fa-user"></i> {$USERNAME}{else}{'Login'|@translate}{/if}</a>
     <div class="dropdown-menu dropdown-menu-right" role="menu">
-{strip}
     {if isset($USERNAME)}
         <div class="dropdown-header">{'Hello'|@translate} {$USERNAME}!</div>
         <div class="dropdown-divider"></div>
@@ -16,7 +15,7 @@
                 {if $AUTHORIZE_REMEMBERING}
                 <div class="form-check checkbox">
                     <label class="form-check-label">
-                        <input class="form-check-input" type="checkbox" name="remember_me" id="remember_me" value="1">{/strip} {'Auto login'|@translate}{strip}
+                        <input class="form-check-input" type="checkbox" name="remember_me" id="remember_me" value="1"> {'Auto login'|@translate}
                     </label>
                 </div>
                 {/if}
@@ -40,6 +39,5 @@
     {if isset($U_ADMIN)}
         <a class="dropdown-item" href="{$U_ADMIN}" title="{'available for administrators only'|@translate}">{'Administration'|@translate}</a>
     {/if}
-{/strip}
     </div>
 </li>

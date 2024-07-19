@@ -17,7 +17,7 @@
         <div class="dropdown-header">{$block->data.NB_PICTURE|@translate_dec:'%d photo':'%d photos'}</div>
     </div>
 </li>
-{footer_script require='jquery'}{strip}
+{footer_script require='jquery'}
 $('#categoriesDropdownMenu').on('show.bs.dropdown', function() {
   $(this).find('a.dropdown-item').each(function() {
     var level = $(this).data('level');
@@ -27,4 +27,4 @@ $('#categoriesDropdownMenu').on('show.bs.dropdown', function() {
     }
   });
 });
-{/strip}{/footer_script}
+{/footer_script}

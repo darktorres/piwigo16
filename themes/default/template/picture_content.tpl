@@ -6,7 +6,7 @@
 
 <img class="file-ext-{if isset($current.file_ext)}{$current.file_ext}{/if} path-ext-{if isset($current.path_ext)}{$current.path_ext}{/if}" {if (isset($current.path_ext) and $current.path_ext == 'svg')} src="{$current.path}" {elseif $current.selected_derivative->is_cached()}src="{$current.selected_derivative->get_url()}"{$current.selected_derivative->get_size_htm()}{else}src="{$ROOT_URL}{$themeconf.img_dir}/ajax_loader.gif" data-src="{$current.selected_derivative->get_url()}"{/if} alt="{$ALT_IMG}" id="theMainImage" usemap="#map{$current.selected_derivative->get_type()}" title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|@strip_tags:false|@replace:'"':' '}{else}{$current.TITLE_ESC} - {$ALT_IMG}{/if}">
 
-{foreach from=$current.unique_derivatives item=derivative key=derivative_type}{strip}
+{foreach from=$current.unique_derivatives item=derivative key=derivative_type}
 <map name="map{$derivative->get_type()}">
 {assign var='size' value=$derivative->get_size()}
 {if isset($previous)}
@@ -17,4 +17,4 @@
 <area shape=rect coords="{($size[0]/1.33)|@intval},0,{$size[0]},{$size[1]}" href="{$next.U_IMG}" title="{'Next'|@translate} : {$next.TITLE_ESC}" alt="{$next.TITLE_ESC}">
 {/if}
 </map>
-{/strip}{/foreach}
+{/foreach}

@@ -1,6 +1,5 @@
 <dt>{'Identification'|@translate}</dt>
 <dd>
-{strip}
 	{if isset($USERNAME)}
 	<p>{'Hello'|@translate} {$USERNAME} !</p>
 	{/if}
@@ -21,9 +20,7 @@
 	<li><a href="{$U_ADMIN}" title="{'available for administrators only'|@translate}">{'Administration'|@translate}</a></li>
 	{/if}
 	</ul>
-{/strip}
 	{if isset($U_LOGIN)}
-{strip}
 	<form method="post" action="{$U_LOGIN}" id="quickconnect">
 	<fieldset>
 	<legend>{'Quick connect'|@translate}</legend>
@@ -59,6 +56,5 @@
 
 	</fieldset>
 	</form>
-{/strip}
 	{/if}
 </dd>

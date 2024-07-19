@@ -4,15 +4,14 @@
   {$shortname = $theme_config->comments_disqus_shortname}
   {if $theme_config->comments_type == 'disqus' and !empty($shortname)}
       <div id="disqus_thread"></div>
-{footer_script}{strip}
-var disqus_shortname = '{/strip}{$shortname}{strip}';
+{footer_script}
+var disqus_shortname = '{$shortname}';
 
 (function() {
 var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
 dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
 (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
 })();
-{/strip}
 {/footer_script}
   {else}
       <ul class="nav nav-pills p-2" role="tablist">

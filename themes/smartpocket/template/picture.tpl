@@ -14,7 +14,6 @@
 {/if}
 
 <ul data-role="listview" data-inset="true" id="PictureInfo">
-{strip}
 	{if $display_info.author and isset($INFO_AUTHOR)}
 	<li id="Author" class="imageInfo">
 		<dt>{'Author'|@translate}</dt>

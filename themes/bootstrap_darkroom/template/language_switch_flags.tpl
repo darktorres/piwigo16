@@ -19,8 +19,8 @@
 {combine_css path=$LANGUAGE_SWITCH_PATH|@cat:"language_switch.css"}
 
 {* move to main navbar to avoid scrolling issues in navmenu on mobile devices *}
-{footer_script require='jquery'}{strip}
+{footer_script require='jquery'}
 $(document).ready(function() {
   $('#languageSwitch').appendTo('#navbar-menubar>ul.navbar-nav');
 });
-{/strip}{/footer_script}
+{/footer_script}

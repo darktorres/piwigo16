@@ -38,7 +38,6 @@
 
 {if not empty($page_refresh)}<meta http-equiv="refresh" content="{$page_refresh.TIME};url={$page_refresh.U_REFRESH}">{/if}
 
-{strip}
 {foreach from=$themes item=theme}
   {if $theme.load_css}
   {combine_css path="themes/`$theme.id`/theme.css" order=-10}
@@ -49,7 +48,6 @@
 {/foreach}
 
 {combine_script id="jquery" load="footer"}
-{/strip}
 
 <!-- BEGIN get_combined -->
 {get_combined_css}

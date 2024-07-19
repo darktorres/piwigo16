@@ -3,7 +3,7 @@
 {modus_thumbs}
 {else}
 {if $smarty.const.IMG_SQUARE == $derivative_params->type}{assign var='SHOW_THUMBNAIL_CAPTION' value=false}{/if}
-{html_style}
+{html_style}<style>
 {*Set some sizes according to maximum thumbnail width and height*}
 .thumbnails SPAN,.thumbnails .wrap2 A{
 	width:{$derivative_params->max_width()+2}px
@@ -100,7 +100,7 @@
 {else}
 .thumbLegend { font-size: 90% }
 {/if}
-{/html_style}
+</style>{/html_style}
 {foreach from=$thumbnails item=thumbnail}
 	<li>
 	<span class="wrap1">

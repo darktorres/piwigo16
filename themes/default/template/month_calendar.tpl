@@ -49,11 +49,11 @@
  {/foreach}
  </tr>
  </thead>
-{html_style}
+{html_style}<style>
 .calMonth TD, .calMonth .calImg{
 	width:{$chronology_calendar.month_view.CELL_WIDTH}px;height:{$chronology_calendar.month_view.CELL_HEIGHT}px
 }
-{/html_style}
+</style>{/html_style}
  {foreach from=$chronology_calendar.month_view.weeks item=week}
  <tr>
  	{foreach from=$week item=day}

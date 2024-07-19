@@ -1,4 +1,4 @@
-{html_style}
+{html_style}<style>
 .graphicalCheckbox {
   font-size:16px;
   line-height:16px;
@@ -7,7 +7,7 @@
 input[type=checkbox] {
   display:none;
 }
-{/html_style}
+</style>{/html_style}
 
 {footer_script}<script>
 jQuery(document).ready(function() {

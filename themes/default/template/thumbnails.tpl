@@ -1,6 +1,6 @@
 {if !empty($thumbnails)}
 {*define_derivative name='derivative_params' width=160 height=90 crop=true*}
-{html_style}
+{html_style}<style>
 {*Set some sizes according to maximum thumbnail width and height*}
 .thumbnails SPAN,
 .thumbnails .wrap2 A,
@@ -20,7 +20,7 @@
 .thumbLegend { font-size: 90% }
 {/if}
 {/if}
-{/html_style}
+</style>{/html_style}
 {footer_script}
   var error_icon = "{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png", max_requests = {$maxRequests};
 {/footer_script}

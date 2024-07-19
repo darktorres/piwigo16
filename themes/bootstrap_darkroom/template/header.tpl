@@ -220,13 +220,13 @@ $('.navbar-contextual .navbar-collapse').on('hidden.bs.collapse', function() {
 
 {if $theme_config->page_header == 'fancy' && $theme_config->page_header_both_navs}
 {if empty($MENUBAR)}
-{html_style}
+{html_style}<style>
 .navbar-contextual {
   background-color: #000 !important;
   padding-top: 5px;
   padding-bottom: 5px;
 }
-{/html_style}
+</style>{/html_style}
 {footer_script require='jquery'}<script>
 $(document).ready(function() {
   $('.navbar-contextual').removeClass('navbar-light').addClass('navbar-dark navbar-forced-sm');

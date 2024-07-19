@@ -584,14 +584,14 @@ var sliders = {
   </p>
 
 	<ul class="thumbnails">
-		{html_style}
+		{html_style}<style>
 UL.thumbnails SPAN.wrap2 {
   width: {$thumb_params->max_width()+2}px;
 }
 UL.thumbnails SPAN.wrap2 {
   height: {$thumb_params->max_height()+25}px;
 }
-		{/html_style}
+		</style>{/html_style}
 		{foreach from=$thumbnails item=thumbnail}
 		{assign var='isSelected' value=$thumbnail.id|@in_array:$selection}
 		<li{if $isSelected} class="thumbSelected"{/if}>

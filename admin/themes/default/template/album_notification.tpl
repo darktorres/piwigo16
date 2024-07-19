@@ -47,7 +47,7 @@ jQuery(document).ready(function() {
 });
 </script>{/footer_script}
 
-{html_style}
+{html_style}<style>
 .who_option {
   margin-top:5px;
 }
@@ -58,7 +58,7 @@ span.errors {
   margin:0;
   border-radius:5px;
 }
-{/html_style}
+</style>{/html_style}
 
 <form action="{$F_ACTION}" method="post" id="categoryNotify">
 

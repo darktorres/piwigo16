@@ -1,6 +1,6 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-{html_style}
+{html_style}<style>
 /*
 .adminOnlyIcon::before {
   content:"(";
@@ -15,7 +15,7 @@
   border-radius:5px;
   font-size:90%;
 }
-{/html_style}
+</style>{/html_style}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

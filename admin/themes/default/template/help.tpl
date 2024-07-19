@@ -1,7 +1,7 @@
 {if not $ENABLE_SYNCHRONIZATION}
-{html_style}
+{html_style}<style>
 #helpSynchro { display:none; }
-{/html_style}
+</style>{/html_style}
 {/if}
 
 <h2>{'Help'|@translate} &raquo; {$HELP_SECTION_TITLE}</h2>

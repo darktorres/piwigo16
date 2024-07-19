@@ -642,7 +642,7 @@ class Template
         if (count($this->html_head_elements) ||
             strlen($this->html_style)
         ) {
-            $search = "\n</head>";
+            $search = '</head>';
             $pos = strpos($this->output, $search);
 
             if ($pos !== false) {
@@ -662,7 +662,7 @@ class Template
         global $custom_error_log;
 
         if (! empty($custom_error_log)) {
-            $search = "\n</body>";
+            $search = '</body>';
             $pos = strpos($this->output, $search);
 
             if ($pos !== false) {

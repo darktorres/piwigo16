@@ -1450,9 +1450,9 @@ $(document).ready(function() {
     border:none;
 }
 
-{* .AddUserPopInContainer .user-property-input {
+ /* .AddUserPopInContainer .user-property-input {
   background-color: #F3F3F3;
-} *}
+}  */
 
 .user-property-button {
     margin-top:0;

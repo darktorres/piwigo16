@@ -191,23 +191,9 @@ if (!$.cookie("pwg_tags_per_page")) {
   {foreach from=$first_tags item=tag}
   <div class='tag-box' data-id='{$tag.id}' data-selected='0'>
   {if isset($tag.counter)}
-    {tagContent 
-        tag_name = $tag.name
-        tag_U_VIEW = 'index.php?/tags/%s-%s'|@sprintf:$tag['id']:$tag['url_name']
-        tag_U_EDIT = 'admin.php?page=batch_manager&amp;filter=tag-%s'|@sprintf:$tag['id']
-        has_image = ($tag.counter > 0)
-        tag_count = $tag.counter
-        tag_raw_name = $tag.raw_name
-      }
+    {tagContent tag_name = $tag.name tag_U_VIEW = 'index.php?/tags/%s-%s'|@sprintf:$tag['id']:$tag['url_name'] tag_U_EDIT = 'admin.php?page=batch_manager&amp;filter=tag-%s'|@sprintf:$tag['id'] has_image = ($tag.counter > 0) tag_count = $tag.counter tag_raw_name = $tag.raw_name}
   {else}
-    {tagContent 
-        tag_name = $tag.name
-        tag_U_VIEW = 'index.php?/tags/%s-%s'|@sprintf:$tag['id']:$tag['url_name']
-        tag_U_EDIT = 'admin.php?page=batch_manager&amp;filter=tag-%s'|@sprintf:$tag['id']
-        has_image = false
-        tag_count = 0
-        tag_raw_name = $tag.raw_name
-      }
+    {tagContent tag_name = $tag.name tag_U_VIEW = 'index.php?/tags/%s-%s'|@sprintf:$tag['id']:$tag['url_name'] tag_U_EDIT = 'admin.php?page=batch_manager&amp;filter=tag-%s'|@sprintf:$tag['id'] has_image = false tag_count = 0 tag_raw_name = $tag.raw_name}
   {/if}
 
   </div>
@@ -252,12 +238,5 @@ if (!$.cookie("pwg_tags_per_page")) {
 </div>
 
 <div class='tag-template' style='display:none'>
-  {tagContent 
-    tag_name='%name%'
-    tag_U_VIEW='%U_VIEW%' 
-    tag_U_EDIT='%U_EDIT%'
-    has_image=false
-    tag_count='%count%'
-    tag_raw_name = '%raw_name%'
-  }
+  {tagContent tag_name='%name%' tag_U_VIEW='%U_VIEW%' tag_U_EDIT='%U_EDIT%' has_image=false tag_count='%count%' tag_raw_name = '%raw_name%'}
 </div> 

@@ -42,7 +42,7 @@
     <a href="{$cat.URL}">
       <img class="category thumbnail" {if $derivative->is_cached()}src="{$derivative->get_url()}"{else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" 
         data-src="{$derivative->get_url()}"{/if} alt="{$cat.TN_ALT}" 
-        title="{$cat.NAME|@replace:'"':' '|@strip_tags:false}" {$derivative->get_size_htm()}>
+        title="{$cat.NAME|@replace:'\"':' '|@strip_tags:false}" {$derivative->get_size_htm()}>
     </a>
   </li>
 {/foreach}

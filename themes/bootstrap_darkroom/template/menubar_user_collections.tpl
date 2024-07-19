@@ -20,20 +20,10 @@
         </a>
         <div class="divider"></div>
         <div id="menu-info-coll-container">
-            {collectionsMenuItem
-              coll_id = "coll_template" 
-              coll_name = "coll_name"
-              coll_edit = "coll_edit"
-              coll_nb_images = "coll_nb_images"
-            }
+            {collectionsMenuItem coll_id = "coll_template" coll_name = "coll_name" coll_edit = "coll_edit" coll_nb_images = "coll_nb_images" }
             {if $block->data.collections}
             {foreach from=$block->data.collections item=col}
-                {collectionsMenuItem
-                  coll_id = $col.id
-                  coll_name = $col.name
-                  coll_edit = $col.u_edit
-                  coll_nb_images = $col.nb_images
-                }
+                {collectionsMenuItem coll_id = $col.id coll_name = $col.name coll_edit = $col.u_edit coll_nb_images = $col.nb_images}
             {/foreach}
         </div>
         {if isset($block->data.MORE)}

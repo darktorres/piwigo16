@@ -5,7 +5,7 @@
 	list-style: none;
 	text-align: center;	/* to center the whole collection in .content */
 }
-.thumbnails LI { display: inline }
+.thumbnails LI { display: inline; }
 
 .thumbnails .wrap1 {
 	margin: 0 7px 5px 7px;
@@ -36,7 +36,7 @@
 
 {if $smarty.const.MODUS_POP}
 .popDesc {
-	display: none
+	display: none;
 }
 {else}
 .overDesc {
@@ -170,7 +170,7 @@ LI:hover>.overDesc {
 
 .albImg {
 	display: block;
-	position: relative
+	position: relative;
   top: 0px;
   left: 0px;
 }
@@ -211,7 +211,7 @@ LI:hover>.overDesc {
 
 @media {cssResolution min=1.3}{
 	.albThumbs LI {
-		width:{($MODUS_ALBUM_THUMB_SIZE/1.5)|intval}px;height:{($MODUS_ALBUM_THUMB_SIZE/1.5)|intval}px
+		width:{($MODUS_ALBUM_THUMB_SIZE/1.5)|intval}px;height:{($MODUS_ALBUM_THUMB_SIZE/1.5)|intval}px;
 	}
 
 	.albImg {

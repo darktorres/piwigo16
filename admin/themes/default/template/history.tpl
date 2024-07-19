@@ -715,9 +715,9 @@ jQuery(document).ready( function() {
   font-weight: bold;
 }
 
-{* .user-list {
+ /* .user-list {
   margin-right: 10px;
-} *}
+} */
 
 #start_unset, #end_unset {
   text-decoration: none;

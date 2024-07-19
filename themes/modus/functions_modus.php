@@ -305,25 +305,27 @@ class functions_modus
         $template->block_html_style(
             null,
             '
-            #thumbnails {
-                text-align: justify;
-                overflow: hidden;
-                margin-left: ' . ($container_margin - $horizontal_margin) . 'px;
-                margin-right: ' . $container_margin . 'px;
-            }
+                <style>
+                    #thumbnails {
+                        text-align: justify;
+                        overflow: hidden;
+                        margin-left: ' . ($container_margin - $horizontal_margin) . 'px;
+                        margin-right: ' . $container_margin . 'px;
+                    }
 
-            #thumbnails > li {
-                float: left;
-                overflow: hidden;
-                position: relative;
-                margin-bottom: ' . $vertical_margin . 'px;
-                margin-left: ' . $horizontal_margin . 'px;
-            }
+                    #thumbnails > li {
+                        float: left;
+                        overflow: hidden;
+                        position: relative;
+                        margin-bottom: ' . $vertical_margin . 'px;
+                        margin-left: ' . $horizontal_margin . 'px;
+                    }
 
-            #thumbnails > li > a {
-                position: absolute;
-                border: 0;
-            }'
+                    #thumbnails > li > a {
+                        position: absolute;
+                        border: 0;
+                    }
+                </style>'
         );
         $template->block_footer_script(
             null,

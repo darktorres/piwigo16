@@ -19,7 +19,7 @@
 {/foreach}
 </ul>
 {else}{* ================= standard mode ===*}
-{html_style}
+{html_style}<style>
 .thumbnailCategory .illustration{
 	width:{$derivative_params->max_width()+5}px;
 }
@@ -52,7 +52,7 @@
 	}
 }
 
-{/html_style}
+</style>{/html_style}
 <ul class="thumbnailCategories">
 {foreach from=$category_thumbnails item=cat name=cat_loop}
 {assign var=derivative value=$pwg->derivative($derivative_params, $cat.representative.src_image)}

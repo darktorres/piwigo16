@@ -1,5 +1,5 @@
 {if isset($comment_derivative_params)}
-{html_style}
+{html_style}<style>
 .commentElement .illustration{
 	width:{$comment_derivative_params->max_width()+5}px
 }
@@ -7,7 +7,7 @@
 .content .commentElement .description{
 	min-height:{$comment_derivative_params->max_height()+5}px
 }
-{/html_style}
+</style>{/html_style}
 {footer_script}<script>var error_icon = "{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png";</script>{/footer_script}
 {/if}
 <div id="commentList">

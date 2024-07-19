@@ -174,7 +174,7 @@ $(window).on('resize', function(){
 });
 </script>{/footer_script}
 
-{html_style}
+{html_style}<style>
 .eiw .messages ul li {
   list-style-type:none !important;
 }
@@ -182,7 +182,7 @@ $(window).on('resize', function(){
 .eiw .messages .eiw-icon {
   margin-right:10px !important;
 }
-{/html_style}
+</style>{/html_style}
 
 <h2>{'Piwigo Administration'|@translate}</h2>
 

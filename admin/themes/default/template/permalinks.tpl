@@ -19,12 +19,12 @@ form fieldset p { margin:0 0 1em 0; }
 form fieldset p.actionButtons { margin-bottom:0 }
 </style>
 
-{html_style}
+{html_style}<style>
 [name="permalink"] {
   width : 100%;
   max-width : 600px;
 }
-{/html_style}
+</style>{/html_style}
 
 <p id="showAddPermalink"><a href="#" id="addPermalinkOpen">{'Add/delete a permalink'|@translate}</a></p>
 

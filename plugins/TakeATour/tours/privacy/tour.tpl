@@ -185,11 +185,11 @@ jQuery( "p.albumActions a" ).click(function() {
 });
 
 </script>{/footer_script}
-{html_style}
+{html_style}<style>
 #step-21 {
   max-width:476px;
 }
 #step-22 {
   max-width:376px;
 }
-{/html_style}
+</style>{/html_style}

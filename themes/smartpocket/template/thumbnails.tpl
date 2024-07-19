@@ -13,11 +13,11 @@ var var_loop = {if $smartpocket.loop}true{else}false{/if}, var_autohide = {$smar
 var SPThumbsOpts ={ hMargin:{$hmargin},rowHeight:{$row_height}};
 </script>{/footer_script}
 {$thumb_picker->init($row_height)}
-{html_style}
+{html_style}<style>
 .thumbnails .liEmpty{ display:none}
 .thumbnails LI{ margin-left:{$hmargin}px; margin-bottom:{$vmargin}px}
 .thumbnails { margin:0 {$container_margin}px 0 {$container_margin-$hmargin}px}
-{/html_style}
+</style>{/html_style}
 <ul class="thumbnails"
 {if !empty($smartpocket_log_history.cat_id)}data-cat_id="{$smartpocket_log_history.cat_id}"{/if}
 {if !empty($smartpocket_log_history.section)}data-section="{$smartpocket_log_history.section}"{/if}

@@ -3,7 +3,7 @@
 {combine_script id='jquery.ui' require='jquery' load='footer'}
 {combine_css path="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.slider.css"}
 
-{html_style}
+{html_style}<style>
 .graphicalCheckbox {
   font-size:16px;
   line-height:16px;
@@ -75,7 +75,7 @@
   padding: 0 10px;
 }
 
-{/html_style}
+</style>{/html_style}
 
 
 {footer_script}<script>

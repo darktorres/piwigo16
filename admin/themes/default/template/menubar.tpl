@@ -27,11 +27,11 @@ jQuery(document).ready(function(){
 });
 </script>{/footer_script}
 
-{html_style}
+{html_style}<style>
 .font-checkbox i {
   margin-left:5px;
 }
-{/html_style}
+</style>{/html_style}
 
 <form id="menuOrdering" action="{$F_ACTION}" method="post">
   <ul class="menuUl">

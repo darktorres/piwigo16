@@ -22,7 +22,7 @@ jQuery(".showDetails a").click(function() {
 });
 </script>{/footer_script}
 
-{html_style}
+{html_style}<style>
 .pluginBox {
   display:none;
 }
@@ -31,7 +31,7 @@ jQuery(".showDetails a").click(function() {
   padding:0;
   margin:-1em -1em 0.5em 0;
 }
-{/html_style}
+</style>{/html_style}
 
 <div class="titrePage">
   <h2>{'takeatour_configpage'|@translate}</h2>

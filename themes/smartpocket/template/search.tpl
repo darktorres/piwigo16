@@ -12,7 +12,7 @@ jQuery(document).ready(function() {
 });
 </script>{/footer_script}
 
-{html_style}
+{html_style}<style>
 .ui-checkbox, .ui-radio, .ui-btn-text {
   z-index:0;
 }
@@ -21,7 +21,7 @@ jQuery(document).ready(function() {
   margin-top:3em;
   margin-bottom:3em;
 }
-{/html_style}
+</style>{/html_style}
 
 {include file='infos_errors.tpl'}
 <div data-role="content">

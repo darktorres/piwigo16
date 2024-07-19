@@ -68,7 +68,7 @@ $(".restore-settings-button").each(function() {
 })();
 </script>{/footer_script}
 
-{html_style}
+{html_style}<style>
 .sizeEnable { width:50px; }
 .sizeEnable .icon-ok { position:relative; left:2px; }
 .sizeEditForm { margin:0 0 10px 20px; }
@@ -77,7 +77,7 @@ $(".restore-settings-button").each(function() {
 .showDetails { padding:0; }
 .sizeDetails { display:none;margin-left:10px; }
 .sizeEditOpen { margin-left:10px; }
-{/html_style}
+</style>{/html_style}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

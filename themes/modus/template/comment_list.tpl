@@ -1,5 +1,5 @@
 {if isset($comment_derivative_params)}
-{html_style}
+{html_style}<style>
 .commentElement .illustration{
 	width:{$comment_derivative_params->max_width()+5}px
 }
@@ -23,7 +23,7 @@
 	}
 }
 
-{/html_style}
+</style>{/html_style}
 {/if}
 <ul class="commentsList">
 {foreach from=$comments item=comment name=comment_loop}

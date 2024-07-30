@@ -87,3 +87,7 @@ INSERT INTO piwigo_config (param, value, comment) VALUES ('AdminTools', 'a:3:{s:
 -- Plugin 'Take A Tour of Your Piwigo'
 
 INSERT INTO piwigo_plugins (id, state, version) VALUES ('TakeATour', 'active', '14.5.0');
+
+-- Plugin 'Language Switch'
+
+INSERT INTO piwigo_plugins (id, state, version) VALUES ('language_switch', 'active', '14.5.0');

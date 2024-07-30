@@ -1,0 +1,4 @@
+File automatically created from SVN or Git repository.
+
+URL: https://github.com/Piwigo/LanguageSwitch 
+Revision: 54d48d151b18e632a9afc31e556811313174c12e (Sun Jan 14 18:37:16 2024 +0100)

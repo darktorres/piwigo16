@@ -63,7 +63,7 @@ INSERT INTO piwigo_config (param,value) VALUES ('original_resize','false');
 INSERT INTO piwigo_config (param,value) VALUES ('original_resize_maxwidth','2016');
 INSERT INTO piwigo_config (param,value) VALUES ('original_resize_maxheight','2016');
 INSERT INTO piwigo_config (param,value) VALUES ('original_resize_quality','95');
-INSERT INTO piwigo_config (param,value) VALUES ('mobile_theme',null);
+INSERT INTO piwigo_config (param,value) VALUES ('mobile_theme','smartpocket');
 INSERT INTO piwigo_config (param,value) VALUES ('mail_theme','clear');
 INSERT INTO piwigo_config (param,value) VALUES ('picture_sizes_icon','true');
 INSERT INTO piwigo_config (param,value) VALUES ('index_sizes_icon','true');
@@ -114,3 +114,8 @@ INSERT INTO piwigo_config (param, value, comment) VALUES ('modus_theme', 'a:5:{s
 
 INSERT INTO piwigo_themes (id, version, name) VALUES ('elegant', '14.5.0', 'elegant');
 INSERT INTO piwigo_config (param, value, comment) VALUES ('elegant', 'a:3:{s:11:\"p_main_menu\";s:2:\"on\";s:12:\"p_pict_descr\";s:2:\"on\";s:14:\"p_pict_comment\";s:3:\"off\";}', NULL);
+
+-- Theme 'Smart Pocket'
+
+INSERT INTO piwigo_themes (id, version, name) VALUES ('smartpocket', '14.5.0', 'Smart Pocket');
+INSERT INTO piwigo_config (param, value, comment) VALUES ('smartpocket', 'a:2:{s:4:\"loop\";b:1;s:8:\"autohide\";i:5000;}', NULL);

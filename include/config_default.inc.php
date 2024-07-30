@@ -43,6 +43,7 @@ if (! extension_loaded('tokenizer')) {
 }
 
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
+// require_once PHPWG_ROOT_PATH . 'coverage.php';
 
 /**
  *                           configuration page

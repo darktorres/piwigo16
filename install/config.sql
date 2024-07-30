@@ -109,3 +109,8 @@ INSERT INTO piwigo_plugins (id, state, version) VALUES ('rv_tscroller', 'active'
 
 INSERT INTO piwigo_themes (id, version, name) VALUES ('modus', '14.5.0', 'modus');
 INSERT INTO piwigo_config (param, value, comment) VALUES ('modus_theme', 'a:5:{s:4:\"skin\";s:9:\"newspaper\";s:16:\"album_thumb_size\";i:250;s:17:\"index_photo_deriv\";s:6:\"2small\";s:22:\"index_photo_deriv_hdpi\";s:6:\"xsmall\";s:19:\"display_page_banner\";b:0;}', NULL);
+
+-- Theme 'Elegant'
+
+INSERT INTO piwigo_themes (id, version, name) VALUES ('elegant', '14.5.0', 'elegant');
+INSERT INTO piwigo_config (param, value, comment) VALUES ('elegant', 'a:3:{s:11:\"p_main_menu\";s:2:\"on\";s:12:\"p_pict_descr\";s:2:\"on\";s:14:\"p_pict_comment\";s:3:\"off\";}', NULL);

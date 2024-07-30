@@ -1,0 +1,4 @@
+File automatically created from SVN or Git repository.
+
+URL: https://github.com/Piwigo/piwigo-elegant 
+Revision: bb9b5a09714493757be760ff322ebf791d12954d (Sun Feb 11 15:50:53 2024 +0100)

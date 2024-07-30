@@ -78,3 +78,8 @@ INSERT INTO piwigo_config (param,value) VALUES ('show_mobile_app_banner_in_galle
 INSERT INTO piwigo_config (param,value) VALUES ('index_search_in_set_button','false');
 INSERT INTO piwigo_config (param,value) VALUES ('index_search_in_set_action','true');
 INSERT INTO piwigo_config (param,value) VALUES ('upload_detect_duplicate','true');
+
+-- Plugin 'Admin Tools'
+
+INSERT INTO piwigo_plugins (id, state, version) VALUES ('AdminTools', 'active', '14.5.0');
+INSERT INTO piwigo_config (param, value, comment) VALUES ('AdminTools', 'a:3:{s:12:\"default_open\";b:1;s:15:\"closed_position\";s:4:\"left\";s:17:\"public_quick_edit\";b:1;}', NULL);

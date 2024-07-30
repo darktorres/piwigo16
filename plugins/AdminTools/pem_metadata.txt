@@ -1,0 +1,4 @@
+File automatically created from SVN or Git repository.
+
+URL: https://github.com/Piwigo/AdminTools 
+Revision: 78a35bad72e1c3c04925c6be838e05f87cb62569 (Fri Jul 5 08:16:01 2024 +0200)

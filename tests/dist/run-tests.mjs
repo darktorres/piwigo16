@@ -43,8 +43,8 @@ async function runPuppeteerScript() {
     await page.waitForSelector("#deactivate > a");
     await page.click("#deactivate > a");
     // admin button
-    await page.waitForSelector("#mbIdentification > dd > ul > li:nth-child(3) > a");
-    await page.click("#mbIdentification > dd > ul > li:nth-child(3) > a");
+    await page.waitForSelector("#menubar > dl:nth-child(7) > dt > a:nth-child(4)");
+    await page.click("#menubar > dl:nth-child(7) > dt > a:nth-child(4)");
     // hide subscribe to newsletter button
     await page.waitForSelector("#content > p > span > a.newsletter-hide");
     await page.click("#content > p > span > a.newsletter-hide");
@@ -155,12 +155,12 @@ async function runPuppeteerScript() {
     await page.click("#pwgHead > a");
     await sleep(1500);
     // open album
-    await page.waitForSelector("#content > ul > li > a");
-    await page.click("#content > ul > li > a");
+    await page.waitForSelector("#content > ul > li");
+    await page.click("#content > ul > li");
     await sleep(1500);
     // open image
-    await page.waitForSelector("#thumbnails > li:nth-child(1) > a");
-    await page.click("#thumbnails > li:nth-child(1) > a");
+    await page.waitForSelector("#thumbnails > li:nth-child(1)");
+    await page.click("#thumbnails > li:nth-child(1)");
     await sleep(1500);
     await browser.close();
 }

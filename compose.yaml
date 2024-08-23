@@ -1,0 +1,13 @@
+services:
+  nginx-php-fpm:
+    build:
+      context: ./docker
+    network_mode: "host"
+    volumes:
+      - piwigo:/var/www/html/piwigo-fork
+      - percona_data:/var/lib/mysql
+    restart: unless-stopped
+
+volumes:
+  piwigo:
+  percona_data:

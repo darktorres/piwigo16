@@ -1,0 +1,13 @@
+diff --git a/dist/photoswipe-lightbox.esm.js b/dist/photoswipe-lightbox.esm.js
+index c0f0d3e00e4a6d6a89d09a10089ff35f4e69e026..6181ec52e1c40d1a355a9d9c53c2a3c1bfe23d72 100644
+--- a/dist/photoswipe-lightbox.esm.js
++++ b/dist/photoswipe-lightbox.esm.js
+@@ -637,7 +637,7 @@ class Content {
+         const placeholderSrc = this.instance.applyFilters('placeholderSrc', // use  image-based placeholder only for the first slide,
+         // as rendering (even small stretched thumbnail) is an expensive operation
+         this.data.msrc && this.slide.isFirstSlide ? this.data.msrc : false, this);
+-        this.placeholder = new Placeholder(placeholderSrc, this.slide.container);
++        this.placeholder = new Placeholder(this.data.src, this.slide.container);
+       } else {
+         const placeholderEl = this.placeholder.element; // Add placeholder to DOM if it was already created
+ 

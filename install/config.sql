@@ -119,3 +119,8 @@ INSERT INTO piwigo_config (param, value, comment) VALUES ('elegant', 'a:3:{s:11:
 
 INSERT INTO piwigo_themes (id, version, name) VALUES ('smartpocket', '14.5.0', 'Smart Pocket');
 INSERT INTO piwigo_config (param, value, comment) VALUES ('smartpocket', 'a:2:{s:4:\"loop\";b:1;s:8:\"autohide\";i:5000;}', NULL);
+
+-- Theme 'Bootstrap Darkroom'
+
+INSERT INTO piwigo_themes (id, version, name) VALUES ('bootstrap_darkroom', '2.5.22', 'Bootstrap Darkroom');
+INSERT INTO piwigo_config (param, value, comment) VALUES ('bootstrap_darkroom', '{\"fluid_width\":true,\"fluid_width_col_xxl\":true,\"bootstrap_theme\":\"material-darkroom\",\"bootswatch_theme\":null,\"material_color\":null,\"navbar_main_style\":\"navbar-dark\",\"navbar_main_bg\":\"bg-dark\",\"navbar_contextual_style\":\"navbar-dark\",\"navbar_contextual_bg\":\"bg-primary\",\"slick_enabled\":true,\"slick_lazyload\":\"ondemand\",\"slick_infinite\":false,\"slick_centered\":false,\"page_header\":\"none\",\"page_header_full\":false,\"page_header_image\":null,\"page_header_both_navs\":true,\"picture_info\":\"cards\",\"photoswipe\":true,\"photoswipe_interval\":\"3500\",\"thumbnail_linkto\":\"photoswipe\",\"thumbnail_caption\":true,\"thumbnail_desc\":false,\"thumbnail_cat_desc\":\"simple\",\"category_wells\":\"never\",\"logo_image_enabled\":false,\"logo_image_path\":null,\"quicksearch_navbar\":true,\"cat_descriptions\":false,\"cat_nb_images\":true,\"social_enabled\":false,\"social_buttons\":false,\"social_twitter\":true,\"social_facebook\":true,\"social_pinterest\":true,\"social_vk\":true,\"comments_type\":\"piwigo\",\"comments_disqus_shortname\":null,\"tag_cloud_type\":\"basic\",\"custom_css\":null,\"conf_version\":20}', NULL);

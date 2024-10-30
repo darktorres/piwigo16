@@ -85,8 +85,5 @@ $(function() {
 
 {html_head}
 <style type="text/css">#thumbnails .gdthumb {ldelim} margin:{$GDThumb.margin / 2}px {$GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px !important; }</style>
-<!--[if IE 8]>
-<style type="text/css">#thumbnails .gdthumb a {ldelim} right: 0px; }</style>
-<![endif]-->
 {/html_head}
 {/if}

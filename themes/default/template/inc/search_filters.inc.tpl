@@ -1,6 +1,6 @@
-{combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.min.js'}
+{combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-{combine_script id='jquery.tipTip' load='header' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
+{combine_script id='jquery.tipTip' load='header' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.js'}
 {combine_css path="themes/default/css/search.css" order=-100}
 {combine_css path="themes/default/css/{$themeconf.colorscheme}-search.css" order=-100}
 {combine_css path="themes/default/fontello/css/gallery-icon.css" order=-10}

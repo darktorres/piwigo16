@@ -1,5 +1,5 @@
 {combine_script id='jquery.ajaxmanager' load='footer' require='jquery' path='https://rawcdn.githack.com/aFarkas/Ajaxmanager/refs/heads/master/jquery.ajaxmanager.js'}
-{combine_script id='jquery.jgrowl' load='footer' require='jquery' path='node_modules/jgrowl/jquery.jgrowl.min.js'}
+{combine_script id='jquery.jgrowl' load='footer' require='jquery' path='node_modules/jgrowl/jquery.jgrowl.js'}
 {combine_css path="themes/default/js/plugins/jquery.jgrowl.css"}
 
 {footer_script require='jquery.ui,jquery.ajaxmanager,jquery.jgrowl'}<script>
@@ -141,8 +141,8 @@
   checkFieldsets();
 </script>{/footer_script}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
-{combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
+{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
+{combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
 {footer_script}<script>
   const are_you_sure_msg  = '{'Are you sure?'|@translate|@escape:'javascript'}';
   const confirm_msg = '{"Yes, I am sure"|@translate}';

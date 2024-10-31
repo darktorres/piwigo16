@@ -99,12 +99,12 @@ class RVTS
         $template->func_combine_script([
             'id' => 'jquery',
             'load' => 'footer',
-            'path' => 'node_modules/jquery/dist/jquery.min.js',
+            'path' => 'node_modules/jquery/dist/jquery.js',
         ]);
         $template->func_combine_script([
             'id' => $my_base_name,
             'load' => 'async',
-            'path' => 'plugins/' . $my_base_name . '/rv_tscroller.min.js',
+            'path' => 'plugins/' . $my_base_name . '/rv_tscroller.js',
             'require' => 'jquery',
             'version' => RVTS_VERSION,
         ]);
@@ -176,7 +176,7 @@ class RVTS
             $template->func_combine_script([
                 'id' => $my_base_name,
                 'load' => 'async',
-                'path' => 'plugins/' . $my_base_name . '/rv_tscroller.min.js',
+                'path' => 'plugins/' . $my_base_name . '/rv_tscroller.js',
                 'require' => $req,
                 'version' => RVTS_VERSION,
             ], $template->smarty);

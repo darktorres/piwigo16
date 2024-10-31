@@ -1,6 +1,6 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
-{combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
+{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
+{combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 {footer_script}<script>
   const confirm_msg = '{"Yes, I am sure"|@translate}';

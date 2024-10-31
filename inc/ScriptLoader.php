@@ -44,7 +44,7 @@ class ScriptLoader
 
     private static $known_paths = [
         'core.scripts' => 'themes/default/js/scripts.js',
-        'jquery' => 'node_modules/jquery/dist/jquery.min.js',
+        'jquery' => 'node_modules/jquery/dist/jquery.js',
         'jquery.ui' => 'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js',
     ];
 

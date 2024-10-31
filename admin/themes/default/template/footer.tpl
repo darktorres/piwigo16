@@ -32,7 +32,7 @@
 </div>{* <!-- the_page --> *}
 
 
-{combine_script id='jquery.tipTip' load='footer' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
+{combine_script id='jquery.tipTip' load='footer' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.js'}
 {footer_script require='jquery.tipTip'}<script>
   jQuery('.tiptip').tipTip({
     delay: 0,

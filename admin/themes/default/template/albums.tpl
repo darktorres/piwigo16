@@ -22,8 +22,8 @@
   var delay_autoOpen = {$delay_before_autoOpen}
 </script>{/footer_script}
 
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
-{combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
+{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
+{combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_css path="node_modules/jqtree/jqtree.css"}
 {combine_script id='jtree' load='footer' path='node_modules/jqtree/tree.jquery.js'}
@@ -52,7 +52,7 @@
   const tiptip_locked_album = "{'Locked album'|translate|escape:javascript}";
 </script>{/footer_script}
 
-{combine_script id='jquery.tipTip' load='footer' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
+{combine_script id='jquery.tipTip' load='footer' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.js'}
 
 {combine_script id='albums' load='footer' path='admin/themes/default/js/albums.js'}
 

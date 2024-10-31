@@ -89,8 +89,8 @@
 	</fieldset>
 </form>
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
-{combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
+{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
+{combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
 {combine_script id='jquery.geoip' load='async' path='admin/themes/default/js/jquery.geoip.js'}
 {footer_script}<script>

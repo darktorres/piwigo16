@@ -4,10 +4,10 @@
 
 {if isset($ato.QUICK_EDIT)}
   {*<!-- mousetrap -->*}
-  {combine_script id='mousetrap' load='footer' path='node_modules/mousetrap/mousetrap.min.js'}
+  {combine_script id='mousetrap' load='footer' path='node_modules/mousetrap/mousetrap.js'}
 
   {*<!-- colorbox -->*}
-  {combine_script id='jquery.colorbox' load='footer' require='jquery' path='node_modules/jquery-colorbox/jquery.colorbox-min.js'}
+  {combine_script id='jquery.colorbox' load='footer' require='jquery' path='node_modules/jquery-colorbox/jquery.colorbox.js'}
   {combine_css id='colorbox' path='node_modules/jquery-colorbox/example2/colorbox.css'}
 
   {if isset($ato.IS_PICTURE)}

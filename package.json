@@ -3,6 +3,9 @@
   "scripts": {
     "reinstall": "bunx rimraf node_modules && bun install"
   },
+  "dependencies": {
+    "jquery-migrate": "^1.4.1"
+  },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@eslint/js": "^9.28.0",

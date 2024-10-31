@@ -466,7 +466,7 @@ $conf['lounge_max_duration'] = 5*60;
 $conf['show_queries'] = false;
 
 // show_gt : display generation time at the bottom of each page
-$conf['show_gt'] = false;
+$conf['show_gt'] = true; // false
 
 // debug_l10n : display a warning message each time an unset language key is
 // accessed

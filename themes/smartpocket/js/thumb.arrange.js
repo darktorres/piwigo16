@@ -13,8 +13,8 @@ SPTLine.prototype = {
     add: function ($elt, absIndex) {
         if (this.elements.length === 0) this.firstThumbIndex = absIndex;
         if (!$elt.data("w")) {
-            var w = $elt.width(),
-                h = $elt.height();
+            var w = $elt.width();
+            var h = $elt.height();
             if (h > this.rowHeight) {
                 w = Math.round((w * this.rowHeight) / h);
                 h = this.rowHeight;
@@ -80,12 +80,12 @@ SPThumbs.prototype = {
 
     process: function (startIndex) {
         startIndex = startIndex ? startIndex : 0;
-        var containerWidth = this.$thumbs.width(),
-            maxExtraMarginPerThumb = 1;
+        var containerWidth = this.$thumbs.width();
+        var maxExtraMarginPerThumb = 1;
         this.prevContainerWidth = containerWidth;
 
-        var $elts = $("li.liVisible>a>img", this.$thumbs),
-            line = new SPTLine(this.opts.hMargin, this.opts.rowHeight);
+        var $elts = $("li.liVisible>a>img", this.$thumbs);
+        var line = new SPTLine(this.opts.hMargin, this.opts.rowHeight);
 
         for (var i = startIndex; i < $elts.length; i++) {
             var $elt = $($elts[i]);
@@ -105,10 +105,10 @@ SPThumbs.prototype = {
     },
 
     processLine: function (line, containerWidth, lastLine) {
-        var toRecover,
-            eltW,
-            eltH,
-            rowHeight = line.maxHeight ? line.maxHeight : line.elements[0].h;
+        var toRecover;
+        var eltW;
+        var eltH;
+        var rowHeight = line.maxHeight ? line.maxHeight : line.elements[0].h;
 
         if (line.width / containerWidth > 1.01) {
             var ratio =
@@ -135,10 +135,10 @@ SPThumbs.prototype = {
         if (lastLine) toRecover = 0;
 
         for (var i = 0; i < line.elements.length; i++) {
-            var eltObj = line.elements[i],
-                eltW = eltObj.w,
-                eltH = eltObj.h,
-                eltToRecover;
+            var eltObj = line.elements[i];
+            var eltW = eltObj.w;
+            var eltH = eltObj.h;
+            var eltToRecover;
 
             if (i == line.elements.length - 1) eltToRecover = toRecover;
             else

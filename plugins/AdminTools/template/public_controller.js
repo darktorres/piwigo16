@@ -5,9 +5,9 @@ var AdminTools = (function ($) {
     this.urlSelf;
     this.multiView;
 
-    var $ato = $("#ato_header"),
-        $ato_closed = $("#ato_header_closed"),
-        ato_height = 28; // normal height, real height computed on init()
+    var $ato = $("#ato_header");
+    var $ato_closed = $("#ato_header_closed");
+    var ato_height = 28; // normal height, real height computed on init()
 
     // move to whole page down or up
     function moveBody(dir, anim) {

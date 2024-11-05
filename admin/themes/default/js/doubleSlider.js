@@ -22,8 +22,8 @@
         }
 
         function findClosest(array, value) {
-            var closest = null,
-                index = -1;
+            var closest = null;
+            var index = -1;
             $.each(array, function (i, v) {
                 if (
                     closest == null ||

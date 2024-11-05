@@ -111,10 +111,10 @@
 
         this.get(function (data) {
             $target.each(function () {
-                var filtered,
-                    value,
-                    defaultValue,
-                    options = $.extend({}, globalOptions);
+                var filtered;
+                var value;
+                var defaultValue;
+                var options = $.extend({}, globalOptions);
 
                 // apply filter function
                 if (options.filter != undefined) {

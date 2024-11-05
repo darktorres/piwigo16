@@ -77,15 +77,15 @@ function getRandomInt(min, max) {
 }
 
 function sprintf() {
-    var i = 0,
-        a,
-        f = arguments[i++],
-        o = [],
-        m,
-        p,
-        c,
-        x,
-        s = "";
+    var i = 0;
+    var a;
+    var f = arguments[i++];
+    var o = [];
+    var m;
+    var p;
+    var c;
+    var x;
+    var s = "";
     while (f) {
         if ((m = /^[^\x25]+/.exec(f))) {
             o.push(m[0]);

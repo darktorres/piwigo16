@@ -2,8 +2,8 @@
     jQuery.timepicker.log = jQuery.noop; // that's ugly, but the timepicker is acting weird and throws parsing errors
 
     // modify DatePicker internal methods to replace year select by a numeric input
-    var origGenerateMonthYearHeader = $.datepicker._generateMonthYearHeader,
-        origSelectMonthYear = $.datepicker._selectMonthYear;
+    var origGenerateMonthYearHeader = $.datepicker._generateMonthYearHeader;
+    var origSelectMonthYear = $.datepicker._selectMonthYear;
 
     $.datepicker._generateMonthYearHeader = function (
         inst,
@@ -42,9 +42,9 @@
         if (period === "M") {
             origSelectMonthYear.call(this, id, select, period);
         } else {
-            var target = $(id),
-                inst = this._getInst(target[0]),
-                val = parseInt(select.value, 10);
+            var target = $(id);
+            var inst = this._getInst(target[0]);
+            var val = parseInt(select.value, 10);
 
             if (isNaN(val)) {
                 inst["drawYear"] = "";
@@ -71,13 +71,13 @@
         );
 
         return this.each(function () {
-            var $this = jQuery(this),
-                originalValue = $this.val(),
-                originalDate,
-                $target = jQuery('[name="' + $this.data("datepicker") + '"]'),
-                linked = !!$target.length,
-                $start,
-                $end;
+            var $this = jQuery(this);
+            var originalValue = $this.val();
+            var originalDate;
+            var $target = jQuery('[name="' + $this.data("datepicker") + '"]');
+            var linked = !!$target.length;
+            var $start;
+            var $end;
 
             if (linked) {
                 originalValue = $target.val();

@@ -1,10 +1,10 @@
 ﻿(function () {
     var session_storage = window.sessionStorage || {};
 
-    var menubar = jQuery("#menubar"),
-        menuswitcher = jQuery("#menuSwitcher"),
-        content = jQuery("#the_page > .content"),
-        pcontent = jQuery("#content");
+    var menubar = jQuery("#menubar");
+    var menuswitcher = jQuery("#menuSwitcher");
+    var content = jQuery("#the_page > .content");
+    var pcontent = jQuery("#content");
 
     function hideMenu(delay) {
         menubar.hide(delay);

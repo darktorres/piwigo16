@@ -2,11 +2,11 @@ function phpWGOpenWindow(theURL, winName, features) {
     img = new Image();
     img.src = theURL;
     if (img.complete) {
-        var width = img.width + 40,
-            height = img.height + 40;
+        var width = img.width + 40;
+        var height = img.height + 40;
     } else {
-        var width = 640,
-            height = 480;
+        var width = 640;
+        var height = 480;
         img.onload = function () {
             newWin.resizeTo(img.width + 50, img.height + 100);
         };

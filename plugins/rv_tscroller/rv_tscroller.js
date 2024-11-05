@@ -23,8 +23,8 @@ if (window.jQuery && window.RVTS)
 
             loadUp: function () {
                 if (RVTS.loadingUp || RVTS.start <= 0) return;
-                var newStart = RVTS.start - RVTS.perPage,
-                    reqCount = RVTS.perPage;
+                var newStart = RVTS.start - RVTS.perPage;
+                var reqCount = RVTS.perPage;
                 if (newStart < 0) {
                     reqCount += newStart;
                     newStart = 0;
@@ -113,9 +113,8 @@ if (window.jQuery && window.RVTS)
 
             checkAutoScroll: function (evt) {
                 var tBot =
-                        RVTS.$thumbs.position().top +
-                        RVTS.$thumbs.outerHeight(),
-                    wBot = $(window).scrollTop() + $(window).height();
+                    RVTS.$thumbs.position().top + RVTS.$thumbs.outerHeight();
+                var wBot = $(window).scrollTop() + $(window).height();
                 tBot -= !evt ? 0 : 100; //begin 100 pixels before end
                 return tBot <= wBot ? (RVTS.doAutoScroll(), 1) : 0;
             },
@@ -149,13 +148,13 @@ if (window.jQuery && window.RVTS)
             var iniStart = RVTS.start;
             $(window).one("RVTS_loaded", function () {
                 $(window).on("unload", function () {
-                    var threshold = Math.max(0, $(window).scrollTop() - 60),
-                        elts = RVTS.$thumbs.children("li");
+                    var threshold = Math.max(0, $(window).scrollTop() - 60);
+                    var elts = RVTS.$thumbs.children("li");
                     for (var i = 0; i < elts.length; i++) {
                         var offset = $(elts[i]).offset();
                         if (offset.top >= threshold) {
-                            var start = RVTS.start + i,
-                                delta = start - iniStart;
+                            var start = RVTS.start + i;
+                            var delta = start - iniStart;
                             if (delta < 0 || delta >= RVTS.perPage) {
                                 var url = start
                                     ? RVTS.urlModel.replace("%start%", start)

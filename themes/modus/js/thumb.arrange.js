@@ -12,7 +12,8 @@ RVGTLine.prototype = {
 
     add: function ($elt, absIndex) {
         if (this.elements.length === 0) this.firstThumbIndex = absIndex;
-        var w, h;
+        var w;
+        var h;
 
         if (!(w = $elt.data("w"))) {
             if ((w = $elt[0].getAttribute("width")) && (w = parseInt(w))) {
@@ -97,12 +98,12 @@ RVGThumbs.prototype = {
 
     process: function (startIndex) {
         startIndex = startIndex ? startIndex : 0;
-        var containerWidth = this.$thumbs.width(),
-            maxExtraMarginPerThumb = 1;
+        var containerWidth = this.$thumbs.width();
+        var maxExtraMarginPerThumb = 1;
         this.prevContainerWidth = containerWidth;
 
-        var $elts = $("li>a>img", this.$thumbs),
-            line = new RVGTLine(this.opts.hMargin, this.opts.rowHeight);
+        var $elts = $("li>a>img", this.$thumbs);
+        var line = new RVGTLine(this.opts.hMargin, this.opts.rowHeight);
 
         for (var i = startIndex; i < $elts.length; i++) {
             var $elt = $($elts[i]);
@@ -122,10 +123,10 @@ RVGThumbs.prototype = {
     },
 
     processLine: function (line, containerWidth, lastLine) {
-        var toRecover,
-            eltW,
-            eltH,
-            rowHeight = line.maxHeight ? line.maxHeight : line.elements[0].h;
+        var toRecover;
+        var eltW;
+        var eltH;
+        var rowHeight = line.maxHeight ? line.maxHeight : line.elements[0].h;
 
         if (line.width / containerWidth > this.opts.resizeThreshold) {
             var ratio =
@@ -153,10 +154,10 @@ RVGThumbs.prototype = {
         if (lastLine) toRecover = 0;
 
         for (var i = 0; i < line.elements.length; i++) {
-            var eltObj = line.elements[i],
-                eltW = eltObj.w,
-                eltH = eltObj.h,
-                eltToRecover;
+            var eltObj = line.elements[i];
+            var eltW = eltObj.w;
+            var eltH = eltObj.h;
+            var eltToRecover;
 
             if (i == line.elements.length - 1) eltToRecover = toRecover;
             else

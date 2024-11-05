@@ -1,11 +1,11 @@
 jQuery.fn.pwgAddAlbum = function (options) {
     options = options || {};
 
-    var $popup = jQuery("#addAlbumForm"),
-        $albumParent = $popup.find('[name="category_parent"]');
-    ($button = jQuery(this)),
-        ($target = jQuery('[name="' + $button.data("addAlbum") + '"]')),
-        (cache = $target.data("cache"));
+    var $popup = jQuery("#addAlbumForm");
+    var $albumParent = $popup.find('[name="category_parent"]');
+    var $button = jQuery(this);
+    var $target = jQuery('[name="' + $button.data("addAlbum") + '"]');
+    var cache = $target.data("cache");
 
     // console.log(cache);
 
@@ -39,8 +39,8 @@ jQuery.fn.pwgAddAlbum = function (options) {
         $popup.find("form").on("submit", function (e) {
             e.preventDefault();
 
-            var parent_id = $albumParent.val(),
-                name = $popup.find("[name=category_name]").val();
+            var parent_id = $albumParent.val();
+            var name = $popup.find("[name=category_name]").val();
 
             if (!name) {
                 jQuery("#categoryNameError").css("visibility", "visible");

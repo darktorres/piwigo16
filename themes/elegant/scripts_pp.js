@@ -1,18 +1,18 @@
 ﻿(function () {
     var session_storage = window.sessionStorage || {};
 
-    var menubar = jQuery("#menubar"),
-        menuswitcher,
-        content = jQuery("#the_page > .content"),
-        pcontent = jQuery("#content"),
-        imageInfos = jQuery("#imageInfos"),
-        infoswitcher,
-        theImage = jQuery("#theImage"),
-        comments = jQuery("#thePicturePage #comments"),
-        comments_button,
-        commentsswitcher,
-        comments_add,
-        comments_top_offset = 0;
+    var menubar = jQuery("#menubar");
+    var menuswitcher;
+    var content = jQuery("#the_page > .content");
+    var pcontent = jQuery("#content");
+    var imageInfos = jQuery("#imageInfos");
+    var infoswitcher;
+    var theImage = jQuery("#theImage");
+    var comments = jQuery("#thePicturePage #comments");
+    var comments_button;
+    var commentsswitcher;
+    var comments_add;
+    var comments_top_offset = 0;
 
     function hideMenu(delay) {
         menubar.hide(delay);

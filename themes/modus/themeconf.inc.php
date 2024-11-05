@@ -97,7 +97,7 @@ function modus_loc_begin_index()
 
 function modus_index_prefilter_1($content)
 {
-  $search = '{combine_css path="themes/default/vendor/fontello/css/fontello.css" order=-10}';
+  $search = '{combine_css path="themes/default/fontello/css/fontello.css" order=-10}';
   $replacement = '';
   return str_replace($search, $replacement, $content);
 }

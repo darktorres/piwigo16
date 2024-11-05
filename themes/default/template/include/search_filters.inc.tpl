@@ -3,7 +3,7 @@
 {combine_script id='jquery.tipTip' load='header' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
 {combine_css path="themes/default/css/search.css" order=-100}
 {combine_css path="themes/default/css/{$themeconf.colorscheme}-search.css" order=-100}
-{combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10} 
+{combine_css path="themes/default/fontello/css/gallery-icon.css" order=-10} 
 
 {footer_script}
 {if isset($GP)}

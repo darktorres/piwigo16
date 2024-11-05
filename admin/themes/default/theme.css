@@ -2292,7 +2292,7 @@ h2:lang(en) { text-transform:capitalize; }
 
 .checkActions {text-align:left;padding:0;margin:0;}
 #user-table-content #checkActions {margin:0; display:flex; flex-wrap:wrap; align-items:center;}
-#user-table-content #checkActions a {padding:10px; margin: 0 4px};
+#user-table-content #checkActions a {padding:10px; margin: 0 4px;}
 #checkActions {text-align:left; margin:0 0 20px 0;}
 .ActionUserList #checkActions {margin: 20px 0 20px 0;}
 
@@ -3519,7 +3519,7 @@ LEGEND SPAN {
 #order_filters a.removeFilter {font-weight:normal;}
 #order_filters span.property span.filter:first-child a.removeFilter {display:none;} /* can't delete the first field */
 #order_filters span.filter {display:block;margin-left:20px;}
-#order_filters .transparent {opacity:0.5;filter:alpha(opacity=50);}
+#order_filters .transparent {opacity:0.5;}
 #order_filters .order_by_is_custom {display:block;font-weight:normal;font-style:italic;margin-left:20px;}
 
 /* Upload Form */
@@ -3966,7 +3966,7 @@ a#showPermissions:hover {text-decoration: none;}
 }
 
 .tag-pagination {
-  margin: 0 20px;;
+  margin: 0 20px;
   display: flex;
   margin-bottom: 20px;
   margin-right: 223px;

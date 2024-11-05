@@ -1802,7 +1802,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important;
 }
 
 .AddUserErrors, .update-user-fail {
-  background-color: #f22;;
+  background-color: #f22;
   color: #ffd5dc;
   border-left:solid 3px #f22;
 }
@@ -1965,7 +1965,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important;
 }
 
 .see-out.disabled p {
-  background-color: #5d5d5d !important;;
+  background-color: #5d5d5d !important;
   color: #373737 !important;
 }
 

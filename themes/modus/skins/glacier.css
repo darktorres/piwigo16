@@ -93,7 +93,7 @@ INPUT[type="password"],
 }
 
 #menubar DD{
-  background-image:linear-gradient(#1E3259,#27498C);;
+  background-image:linear-gradient(#1E3259,#27498C);
   color:white;
   box-shadow: 5px 5px 10px black;
 }

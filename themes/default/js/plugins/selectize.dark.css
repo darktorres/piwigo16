@@ -168,7 +168,7 @@
   display: -moz-inline-stack;
   display: inline-block;
   zoom: 1;
-  *display: inline;
+  display: inline;
 }
 .selectize-control.multi .selectize-input > div {
   cursor: pointer;
@@ -346,7 +346,6 @@
   background-image: -o-linear-gradient(top, #1da7ee, #178ee9);
   background-image: linear-gradient(to bottom, #1da7ee, #178ee9);
   background-repeat: repeat-x;
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff1da7ee', endColorstr='#ff178ee9', GradientType=0);
   -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),inset 0 1px rgba(255,255,255,0.03);
   box-shadow: 0 1px 0 rgba(0,0,0,0.2),inset 0 1px rgba(255,255,255,0.03);
 }
@@ -358,7 +357,6 @@
   background-image: -o-linear-gradient(top, #008fd8, #0075cf);
   background-image: linear-gradient(to bottom, #008fd8, #0075cf);
   background-repeat: repeat-x;
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff008fd8', endColorstr='#ff0075cf', GradientType=0);
 }
 .selectize-control.single .selectize-input {
   background-color: #343434;
@@ -368,7 +366,6 @@
   background-image: -o-linear-gradient(top, #363636, #303030);
   background-image: linear-gradient(to bottom, #363636, #303030);
   background-repeat: repeat-x;
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff363636', endColorstr='#ff303030', GradientType=0);
 }
 .selectize-input.focus {
   background-color: #363636;

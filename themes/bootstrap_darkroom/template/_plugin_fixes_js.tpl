@@ -4,7 +4,7 @@
       $('.pwg-icon-globe').removeClass('pwg-icon').closest('a').html(
         '<i class="fas fa-globe fa-fw" aria-hidden="true"></i>').addClass('nav-link').removeClass(
         'pwg-state-default pwg-button').closest('li').addClass('nav-item osm-button').find('a>i').after(
-        '<span class="d-lg-none ml-2">' + $('.osm-button').find('a').attr('title') + '</span>');;
+        '<span class="d-lg-none ml-2">' + $('.osm-button').find('a').attr('title') + '</span>');
     });
   </script>{/footer_script}
 {/if}

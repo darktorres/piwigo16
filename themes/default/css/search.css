@@ -671,7 +671,7 @@
 .filter-tag-form .selectize-dropdown,
 .filter-author-form .selectize-dropdown,
 .filter-added_by-form .selectize-dropdown {
-  padding: 5px;;
+  padding: 5px;
   max-height: 200px;
   overflow-y: scroll;
   position: absolute;

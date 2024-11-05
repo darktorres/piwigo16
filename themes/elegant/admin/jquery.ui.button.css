@@ -48,7 +48,6 @@
 	left: 0;
 	position: absolute;
 	opacity: 0;
-	filter:Alpha(Opacity=0);
 }
 
 #content .ui-front {
@@ -300,18 +299,13 @@
 #content .ui-widget-content .ui-priority-secondary,
 #content .ui-widget-header .ui-priority-secondary {
 	opacity: .7;
-	filter:Alpha(Opacity=70);
 	font-weight: normal;
 }
 #content .ui-state-disabled,
 #content .ui-widget-content .ui-state-disabled,
 #content .ui-widget-header .ui-state-disabled {
 	opacity: .35;
-	filter:Alpha(Opacity=35);
 	background-image: none;
-}
-#content .ui-state-disabled .ui-icon {
-	filter:Alpha(Opacity=35); /* For IE8 - See #6059 */
 }
 
 /* Icons
@@ -559,13 +553,11 @@
 #content .ui-widget-overlay {
 	background: #aaaaaa url(images/ui-bg_flat_0_aaaaaa_40x100.png) 50% 50% repeat-x;
 	opacity: .3;
-	filter: Alpha(Opacity=30);
 }
 #content .ui-widget-shadow {
 	margin: -8px 0 0 -8px;
 	padding: 8px;
 	background: #aaaaaa url(images/ui-bg_flat_0_aaaaaa_40x100.png) 50% 50% repeat-x;
 	opacity: .3;
-	filter: Alpha(Opacity=30);
 	border-radius: 8px;
 }

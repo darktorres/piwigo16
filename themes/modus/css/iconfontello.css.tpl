@@ -19,7 +19,6 @@ display:none;
 .pwg-state-disabled .pwg-icon {
 opacity: .5;
 -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
-filter: alpha(opacity=50);
 }
 
 .pwg-button {

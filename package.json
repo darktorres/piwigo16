@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "reinstall": "bunx rimraf node_modules && bun install"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1"
+  }
+}

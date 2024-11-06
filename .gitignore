@@ -1,22 +1,22 @@
 # Piwigo specific directories
 /_data
-/plugins/*
-!/plugins/index.php
-/themes/*
-!/themes/index.php
-!/themes/default
-/upload
+/cache
 /galleries/*
 !/galleries/index.php
 /local/*
 !/local/**/index.php
+/upload
+
+# NPM
+/node_modules/
+/tests/node_modules/
+/themes/bootstrap_darkroom/node_modules/
+
+# Composer
+/vendor/
 
 # IntelliJ
 .idea
-*.iml
-*.ipr
-*.iws
 
-# Eclipse
-.settings
-.project
+# Docker
+compose.override.yaml

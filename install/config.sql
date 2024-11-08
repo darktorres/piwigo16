@@ -15,12 +15,12 @@ INSERT INTO piwigo_config (param,value,comment) VALUES ('email_admin_on_comment_
 INSERT INTO piwigo_config (param,value,comment) VALUES ('email_admin_on_comment_deletion','false','Send an email to the administrators when a comment is deleted');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('gallery_locked','false','Lock your gallery temporary for non admin users');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('gallery_title','','Title at top of each page and for RSS feed');
-INSERT INTO piwigo_config (param,value,comment) VALUES ('rate','false','Rating pictures feature is enabled');
+INSERT INTO piwigo_config (param,value,comment) VALUES ('rate','true','Rating pictures feature is enabled');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('rate_anonymous','true','Rating pictures feature is also enabled for visitors');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('page_banner','','html displayed on the top each page of your gallery');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('history_admin','false','keep a history of administrator visits on your website');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('history_guest','true','keep a history of guest visits on your website');
-INSERT INTO piwigo_config (param,value,comment) VALUES ('allow_user_registration','true','allow visitors to register?');
+INSERT INTO piwigo_config (param,value,comment) VALUES ('allow_user_registration','false','allow visitors to register?');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('allow_user_customization','true','allow users to customize their gallery?');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('nb_categories_page','12','Param for categories pagination');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('nbm_send_html_mail','true','Send mail on HTML format for notification by mail');
@@ -57,8 +57,8 @@ INSERT INTO piwigo_config (param,value,comment)
   );
 INSERT INTO piwigo_config (param,value,comment) VALUES ('week_starts_on','monday','Monday may not be the first day of the week');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('updates_ignored','a:3:{s:7:"plugins";a:0:{}s:6:"themes";a:0:{}s:9:"languages";a:0:{}}','Extensions ignored for update');
-INSERT INTO piwigo_config (param,value,comment) VALUES ('order_by','ORDER BY date_available DESC, file ASC, id ASC','default photo order');
-INSERT INTO piwigo_config (param,value,comment) VALUES ('order_by_inside_category','ORDER BY date_available DESC, file ASC, id ASC','default photo order inside category');
+INSERT INTO piwigo_config (param,value,comment) VALUES ('order_by','ORDER BY date_creation DESC, file ASC, id ASC','default photo order');
+INSERT INTO piwigo_config (param,value,comment) VALUES ('order_by_inside_category','ORDER BY date_creation DESC, file ASC, id ASC','default photo order inside category');
 INSERT INTO piwigo_config (param,value) VALUES ('original_resize','false');
 INSERT INTO piwigo_config (param,value) VALUES ('original_resize_maxwidth','2016');
 INSERT INTO piwigo_config (param,value) VALUES ('original_resize_maxheight','2016');

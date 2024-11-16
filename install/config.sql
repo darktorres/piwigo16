@@ -95,3 +95,8 @@ INSERT INTO piwigo_plugins (id, state, version) VALUES ('language_switch', 'acti
 -- Plugin 'LocalFiles Editor'
 
 INSERT INTO piwigo_plugins (id, state, version) VALUES ('LocalFilesEditor', 'active', '14.5.0');
+
+-- Plugin 'gdThumb'
+
+INSERT INTO piwigo_plugins (id, state, version) VALUES ('GDThumb', 'active', '1.0.26');
+INSERT INTO piwigo_config (param, value, comment) VALUES ('gdThumb', 'a:13:{s:6:\"height\";s:3:\"200\";s:6:\"margin\";s:2:\"10\";s:13:\"nb_image_page\";s:2:\"80\";s:9:\"big_thumb\";b:1;s:16:\"big_thumb_noinpw\";b:0;s:15:\"cache_big_thumb\";b:1;s:15:\"normalize_title\";s:3:\"off\";s:6:\"method\";s:4:\"crop\";s:16:\"thumb_mode_album\";s:6:\"bottom\";s:16:\"thumb_mode_photo\";s:6:\"bottom\";s:14:\"thumb_metamode\";s:6:\"merged\";s:11:\"no_wordwrap\";b:0;s:13:\"thumb_animate\";b:0;}', NULL);

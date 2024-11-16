@@ -1,0 +1,154 @@
+=== gdThumb Plugin ===
+Apply card style to album or image thumbs.
+Plugin was inspired by GThumb+ but adds new options:
+
+ * apply style to album or image thumbs or both
+ * Thumbnails max height
+ * Margin between thumbnails
+ * Number of photos per page
+ * Double the size of the first thumbnail
+ * Cache the big thumbnails (recommended)
+ * Scale thumbnails
+ * Title Display Mode: Overlay Top/Overlay Top (Static)/Overlay Bottom/Overlay Bottom (Static)/Hide 
+ * Meta Data Display Mode
+
+http://blog.dragonsoft.us/
+Copyright (C) 2009-2022 Serguei Dosyukov
+
+Compatible: PW 11.x, 12.x, 13.x
+Minimum requirement: PW 2.6.3
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+details. You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street Fifth Floor, Boston, MA  02110-1301, USA.
+
+=== Changelog ===
+version 1.0.26
+- Removed antiflicker logic as not working in some browsers
+
+version 1.0.25
++ Support for PIWIGO 13 verified
++ ADMIN: Updated reference to styles from GreyDragon Theme
++ Added antiflicker logic to improve CLS
+
+version 1.0.24
+- Removed smarty reference in prefilter function
++ Removed compatibility with older versions of PIWIGO. Min required version is now 11.x
+
+version 1.0.23
++ Support for PIWIGO 12 verified
++ ADMIN: buttons shifted to the left
++ Added safety wrappers for variables in some templates as required by new SMARTY engine
+
+version 1.0.22
+- Fix for tile crop - see https://piwigo.org/forum/viewtopic.php?pid=168141#p168141
+
+version 1.0.21
++ Support for PIWIGO 2.9 and 2.10 verified
++ Deprecated maintain.inc.php
++ Switched to use FantAwesome from GreyDragon when used
+
+version 1.0.20
++ Added "album" class to <li> elements for albums
++ Translation updates: NL
+
+version 1.0.19
++ Support for PIWIGO 2.8 verified
++ Translation updates: DK, DE, ES, FR, IT, NL, BR, RU, SE, UA
+
+version 1.0.18
++ ADMIN: style improvements
++ ADMIN: Experimental: New option for Thumbnail mode - "slide" - Square thumb with standard static Overlay (bottom/top)
++ ADMIN: Changed to use standard PWG persistence method for settings
++ Improved handling of derivatives
+- Fixed issue with Photo thumb metadata not including Visits and Rating metadata
++ Translation improvements. New languages: NO, TR, GR, PT
+
+version 1.0.17
++ All language translations are deprecated to allow full reset. en_UK folder now includes full set of translation resources
+- Removed duplicate reference to cache build js files
+
+version 1.0.16
++ ADMIN: Added new option  "Animate thumbnail on hover"
++ Added event integration with RV Thumb Scroller
++ Corrected PayPal link for "Donate" link in admin area
+- Remove reference to jquery.ui.button.js in admin page
+- Added check for shared system variables to prevent conflict with other GD plugins and themes
+
+version 1.0.15
++ In Overlay Ex mode place "New Item" marker is placed in metadata area
++ Further and final improvement for file type markers in Overlay Ex mode. Now sensitive to file extensions. Supports image, video, music, pdf, doc, xls, ppt formats with associated markers.
+- Fixed issue when "big thumb" for video files become smaller than desired min size
+
+version 1.0.14
++ Added integration with VideoJS plugin to allow display of "film" icon in Overlay Ex mode
+- Fixed issue with incorrect callback when "RV Thumb Scroller" plugin is used
+
+version 1.0.13
++ ADMIN: Added ChangeLog link in toolbar
++ ADMIN: New option for Normalize Photo Title
+
+version 1.0.12
++ ADMIN: New thumb mode: Overlay Ex (only available with GD theme)
++ ADMIN: Added support links
++ Added support for thumb shadow space. Custom CSS is required to add desired shadow
+
+version 1.0.11
++ ADMIN: Optimized use of GreyDragon Theme to remove code duplication
+- Fixed issue with state of "Block for Panoramic Photo Page" not recognized properly
+
+version 1.0.10
++ ADMIN: new sub option "Block for Panoramic Photo Page" for "Double the size of the first thumbnail"
+- Fixed z-index for overlay to prevent improper overlay with other theme components (ex: drop down menu)
+- Admin area CSS/JS reference reverted back to standard path format
+- Another attempt to fix issues with css/js paths in admin area when Piwigo is installed in subfolder
+
+version 1.0.9
++ Piwigo 2.7 compatible
+- Fixed issue when some plugin settings are not initialized properly on version update
+- Fixed issue when under some conditions reference urls for JS/CSS are not constructed properly in admin area
+
+version 1.0.8
++ ADMIN: New option: Prevent word wrap
++ CSS: add ellipse when text overflows (triggered when No word wrap is enabled)
++ Adjusted file structure and CSS reference from templates
++ Added folder protection when browse is not blocked
+- Fixed issue with HTML 5 validation
+- Removed caption fixed size when no-word-wrap is enabled
+
+version 1.0.7
+- Plugin maintenance code converted to use PluginMaintain class (Piwigo 2.6). This addresses some inconsistencies in DB operations handling.
+
+version 1.0.6
+- Fixed issue where size of the first thumb was not initialized when "Big Thumb" in Square mode is used
+
+version 1.0.5
++ Admin: Metadata Display Mode extended to allow exclusion of Catalog Description from the Thumb content
+- Fixed issue with some js variables not being initialized when big thumb mode is used
+- Fixed issue when "Big Thumb" in Square mode does not keep size ratio
+
+version 1.0.4
++ Merge thumbs for albums and images into one list before processing. 
+  This may conflict with Lightbox plugin if items are mixed
++ Full support for square thumbs
++ New overlay mode type - Overlay - on hover covers entire thumb. Metadata bottom left aligned
++ Admin: "Apply to album/image thumbs" options deprecated
++ Admin: New option "Normalize Image Title" - if enabled, images with Title matching File name would be shown as "Photo ID"
+- Remove second loader element from pages with album and image thumbs
+- Fixed issue with Stripped theme in photo lists due to different class structure
+
+version 1.0.3
++ Added support for "Square" Scale thumbnails mode (experimental)
+- Fixed issue caption overlay partially visible in "stripped" theme
+
+version 1.0.2
+- Fixed issue with save of "Scale thumbnails" settign
+
+version 1.0.1
+- Fixed issue with plugin initialization procedure not being called on first activation
+- Removed debug mode from admin
+
+version 1.0
++ initial release

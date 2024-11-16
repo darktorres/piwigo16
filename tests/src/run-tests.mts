@@ -192,12 +192,12 @@ async function runPuppeteerScript(): Promise<void> {
     await page.click("#pwgHead > a");
     await sleep(1500);
     // open album
-    await page.waitForSelector("#content > ul > li > div > div.description > h3 > a");
-    await page.click("#content > ul > li > div > div.description > h3 > a");
+    await page.waitForSelector("#content > ul > li > a");
+    await page.click("#content > ul > li > a");
     await sleep(1500);
     // open image
-    await page.waitForSelector("#thumbnails > li:nth-child(1) > span > span.wrap2 > a > img");
-    await page.click("#thumbnails > li:nth-child(1) > span > span.wrap2 > a > img");
+    await page.waitForSelector("#thumbnails > li:nth-child(1) > a");
+    await page.click("#thumbnails > li:nth-child(1) > a");
     await sleep(1500);
 
     await browser.close();

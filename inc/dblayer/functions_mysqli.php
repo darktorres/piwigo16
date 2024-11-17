@@ -55,6 +55,7 @@ final class functions_mysqli
             $host = null;
         } elseif (str_contains($host, ':')) {
             [$host, $port] = explode(':', $host);
+            $port = (int) $port;
         }
 
         $mysqli = new mysqli($host, $user, $password, '', $port, $socket);

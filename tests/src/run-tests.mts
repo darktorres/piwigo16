@@ -7,6 +7,11 @@ import fs from "fs-extra";
 import path from "node:path";
 import { gray, cyan, magenta, red, yellow } from "colorette";
 
+// Parse CLI argument
+const args = process.argv.slice(2);
+const dbTypeArg = args.find(arg => arg.startsWith("--dbtype="));
+const dbType = dbTypeArg?.split("=")[1] ?? "mysqli"; // default to mysqli
+
 const main = async () => {
     await runPuppeteerScript();
 };
@@ -56,6 +61,9 @@ async function runPuppeteerScript(): Promise<void> {
     await page.goto("http://localhost/piwigo-fork/install.php", { waitUntil: "networkidle0" });
 
     await page.waitForSelector("#content > form > fieldset:nth-child(2) > table > tbody > tr:nth-child(2) > td:nth-child(2) > input[type=text]");
+
+    // Set dbtype from CLI
+    await page.select("select[name=dbtype]", dbType);
 
     // install button
     await page.click("#content > form > div > input");

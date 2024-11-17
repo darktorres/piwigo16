@@ -111,7 +111,7 @@ $dbpasswd = (empty($_POST['dbpasswd'])) ? '' : $_POST['dbpasswd'];
 $dbname = (empty($_POST['dbname'])) ? '' : $_POST['dbname'];
 
 // dblayer
-$dblayer = 'mysqli';
+$dblayer = (empty($_POST['dbtype'])) ? 'mysqli' : str_replace('-socket', '', $_POST['dbtype']);
 
 $admin_name = (empty($_POST['admin_name'])) ? '' : $_POST['admin_name'];
 $admin_pass1 = (empty($_POST['admin_pass1'])) ? '' : $_POST['admin_pass1'];

@@ -52,11 +52,12 @@ if (isset($_POST['falsify']) and
     // if you forbid access to a category, all sub-categories become
     // automatically forbidden
     $subcats = functions_category::get_subcat_ids($_POST['cat_true']);
-    $query = '
-DELETE FROM user_access
-  WHERE user_id = ' . $page['user'] . '
-    AND cat_id IN (' . implode(',', $subcats) . ')
-;';
+    $subcat_ids = implode(', ', $subcats);
+    $query = <<<SQL
+        DELETE FROM user_access
+        WHERE user_id = {$page['user']}
+            AND cat_id IN ({$subcat_ids});
+        SQL;
     functions_mysqli::pwg_query($query);
 } elseif (isset($_POST['truthify']) and
           isset($_POST['cat_false']) and
@@ -96,15 +97,13 @@ $template->assign(
 // retrieve category ids authorized to the groups the user belongs to
 $group_authorized = [];
 
-$query = '
-SELECT DISTINCT cat_id, c.uppercats, c.global_rank
-  FROM user_group AS ug
-    INNER JOIN group_access AS ga
-      ON ug.group_id = ga.group_id
-    INNER JOIN categories AS c
-      ON c.id = ga.cat_id
-  WHERE ug.user_id = ' . $page['user'] . '
-;';
+$query = <<<SQL
+    SELECT DISTINCT cat_id, c.uppercats, c.global_rank
+    FROM user_group AS ug
+    INNER JOIN group_access AS ga ON ug.group_id = ga.group_id
+    INNER JOIN categories AS c ON c.id = ga.cat_id
+    WHERE ug.user_id = {$page['user']};
+    SQL;
 $result = functions_mysqli::pwg_query($query);
 
 if (functions_mysqli::pwg_db_num_rows($result) > 0) {
@@ -126,19 +125,21 @@ if (functions_mysqli::pwg_db_num_rows($result) > 0) {
 }
 
 // only private categories are listed
-$query_true = '
-SELECT id,name,uppercats,global_rank
-  FROM categories INNER JOIN user_access ON cat_id = id
-  WHERE status = \'private\'
-    AND user_id = ' . $page['user'];
+$query_true = <<<SQL
+    SELECT id, name, uppercats, global_rank
+    FROM categories
+    INNER JOIN user_access ON cat_id = id
+    WHERE status = 'private'
+        AND user_id = {$page['user']}
+
+    SQL;
 
 if (count($group_authorized) > 0) {
-    $query_true .= '
-    AND cat_id NOT IN (' . implode(',', $group_authorized) . ')';
+    $groupAuthorizedImplode = implode(', ', $group_authorized);
+    $query_true .= " AND cat_id NOT IN ({$groupAuthorizedImplode})\n";
 }
 
-$query_true .= '
-;';
+$query_true .= ';';
 functions_category::display_select_cat_wrapper($query_true, [], 'category_option_true');
 
 $result = functions_mysqli::pwg_query($query_true);
@@ -148,23 +149,24 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $authorized_ids[] = $row['id'];
 }
 
-$query_false = '
-SELECT id,name,uppercats,global_rank
-  FROM categories
-  WHERE status = \'private\'';
+$query_false = <<<SQL
+    SELECT id, name, uppercats, global_rank
+    FROM categories
+    WHERE status = 'private'
+
+    SQL;
 
 if (count($authorized_ids) > 0) {
-    $query_false .= '
-    AND id NOT IN (' . implode(',', $authorized_ids) . ')';
+    $authorizedIdsImplode = implode(', ', $authorized_ids);
+    $query_false .= " AND id NOT IN ({$authorizedIdsImplode})\n";
 }
 
 if (count($group_authorized) > 0) {
-    $query_false .= '
-    AND id NOT IN (' . implode(',', $group_authorized) . ')';
+    $groupAuthorizedImplode = implode(', ', $group_authorized);
+    $query_false .= " AND id NOT IN ({$groupAuthorizedImplode})\n";
 }
 
-$query_false .= '
-;';
+$query_false .= ';';
 functions_category::display_select_cat_wrapper($query_false, [], 'category_option_false');
 
 $template->assign('PWG_TOKEN', functions::get_pwg_token());

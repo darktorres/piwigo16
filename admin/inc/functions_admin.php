@@ -37,19 +37,19 @@ class functions_admin
     public static function delete_site($id)
     {
         // destruction of the categories of the site
-        $query = '
-  SELECT id
-    FROM categories
-    WHERE site_id = ' . $id . '
-  ;';
+        $query = <<<SQL
+            SELECT id
+            FROM categories
+            WHERE site_id = {$id};
+            SQL;
         $category_ids = functions_mysqli::query2array($query, null, 'id');
         self::delete_categories($category_ids);
 
         // destruction of the site
-        $query = '
-  DELETE FROM sites
-    WHERE id = ' . $id . '
-  ;';
+        $query = <<<SQL
+            DELETE FROM sites
+            WHERE id = {$id};
+            SQL;
         functions_mysqli::pwg_query($query);
     }
 
@@ -77,12 +77,13 @@ class functions_admin
         $ids = functions_category::get_subcat_ids($ids);
 
         // destruction of all photos physically linked to the category
-        $query = '
-  SELECT id
-    FROM images
-    WHERE storage_category_id IN (
-  ' . wordwrap(implode(', ', $ids), 80, "\n") . ')
-  ;';
+        $ids_str = implode(', ', $ids);
+        $wrapped_ids = wordwrap($ids_str, 80, "\n");
+        $query = <<<SQL
+            SELECT id
+            FROM images
+            WHERE storage_category_id IN ({$wrapped_ids});
+            SQL;
         $element_ids = functions_mysqli::query2array($query, null, 'id');
         self::delete_elements($element_ids);
 
@@ -90,23 +91,24 @@ class functions_admin
         if ($photo_deletion_mode == 'delete_orphans' or
             $photo_deletion_mode == 'force_delete'
         ) {
-            $query = '
-  SELECT
-      DISTINCT(image_id)
-    FROM image_category
-    WHERE category_id IN (' . implode(',', $ids) . ')
-  ;';
+            $ids_str = implode(', ', $ids);
+            $query = <<<SQL
+                SELECT DISTINCT image_id
+                FROM image_category
+                WHERE category_id IN ({$ids_str});
+                SQL;
             $image_ids_linked = functions_mysqli::query2array($query, null, 'image_id');
 
             if (count($image_ids_linked) > 0) {
                 if ($photo_deletion_mode == 'delete_orphans') {
-                    $query = '
-  SELECT
-      DISTINCT(image_id)
-    FROM image_category
-    WHERE image_id IN (' . implode(',', $image_ids_linked) . ')
-      AND category_id NOT IN (' . implode(',', $ids) . ')
-  ;';
+                    $image_ids_list = implode(', ', $image_ids_linked);
+                    $category_ids_list = implode(', ', $ids);
+                    $query = <<<SQL
+                        SELECT DISTINCT image_id
+                        FROM image_category
+                        WHERE image_id IN ({$image_ids_list})
+                            AND category_id NOT IN ({$category_ids_list});
+                        SQL;
                     $image_ids_not_orphans = functions_mysqli::query2array($query, null, 'image_id');
                     $image_ids_to_delete = array_diff($image_ids_linked, $image_ids_not_orphans);
                 }
@@ -120,44 +122,48 @@ class functions_admin
         }
 
         // destruction of the links between images and this category
-        $query = '
-  DELETE FROM image_category
-    WHERE category_id IN (
-  ' . wordwrap(implode(', ', $ids), 80, "\n") . ')
-  ;';
+        $category_ids_list = wordwrap(implode(', ', $ids), 80, "\n");
+        $query = <<<SQL
+            DELETE FROM image_category
+            WHERE category_id IN ({$category_ids_list});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // destruction of the access linked to the category
-        $query = '
-  DELETE FROM user_access
-    WHERE cat_id IN (
-  ' . wordwrap(implode(', ', $ids), 80, "\n") . ')
-  ;';
+        $cat_ids_list = wordwrap(implode(', ', $ids), 80, "\n");
+        $query = <<<SQL
+            DELETE FROM user_access
+            WHERE cat_id IN ({$cat_ids_list});
+            SQL;
         functions_mysqli::pwg_query($query);
 
-        $query = '
-  DELETE FROM group_access
-    WHERE cat_id IN (
-  ' . wordwrap(implode(', ', $ids), 80, "\n") . ')
-  ;';
+        $cat_ids_list = wordwrap(implode(', ', $ids), 80, "\n");
+        $query = <<<SQL
+            DELETE FROM group_access
+            WHERE cat_id IN ({$cat_ids_list});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // destruction of the category
-        $query = '
-  DELETE FROM categories
-    WHERE id IN (
-  ' . wordwrap(implode(', ', $ids), 80, "\n") . ')
-  ;';
+        $category_ids_list = wordwrap(implode(', ', $ids), 80, "\n");
+        $query = <<<SQL
+            DELETE FROM categories
+            WHERE id IN ({$category_ids_list});
+            SQL;
         functions_mysqli::pwg_query($query);
 
-        $query = '
-  DELETE FROM old_permalinks
-    WHERE cat_id IN (' . implode(',', $ids) . ')';
+        $cat_ids_list = implode(', ', $ids);
+        $query = <<<SQL
+            DELETE FROM old_permalinks
+            WHERE cat_id IN ({$cat_ids_list});
+            SQL;
         functions_mysqli::pwg_query($query);
 
-        $query = '
-  DELETE FROM user_cache_categories
-    WHERE cat_id IN (' . implode(',', $ids) . ')';
+        $cat_ids_list = implode(', ', $ids);
+        $query = <<<SQL
+            DELETE FROM user_cache_categories
+            WHERE cat_id IN ({$cat_ids_list});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         functions_plugins::trigger_notify('delete_categories', $ids);
@@ -183,13 +189,12 @@ class functions_admin
         $new_ids = [];
         $formats_of = [];
 
-        $query = '
-  SELECT
-      image_id,
-      ext
-    FROM image_format
-    WHERE image_id IN (' . implode(',', $ids) . ')
-  ;';
+        $image_ids_list = implode(', ', $ids);
+        $query = <<<SQL
+            SELECT image_id, ext
+            FROM image_format
+            WHERE image_id IN ({$image_ids_list});
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -200,14 +205,12 @@ class functions_admin
             $formats_of[$row['image_id']][] = $row['ext'];
         }
 
-        $query = '
-  SELECT
-      id,
-      path,
-      representative_ext
-    FROM images
-    WHERE id IN (' . implode(',', $ids) . ')
-  ;';
+        $image_ids_list = implode(', ', $ids);
+        $query = <<<SQL
+            SELECT id, path, representative_ext
+            FROM images
+            WHERE id IN ({$image_ids_list});
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -284,68 +287,67 @@ class functions_admin
         $ids_str = wordwrap(implode(', ', $ids), 80, "\n");
 
         // destruction of the comments on the image
-        $query = '
-  DELETE FROM comments
-    WHERE image_id IN (' . $ids_str . ')
-  ;';
+        $query = <<<SQL
+            DELETE FROM comments
+            WHERE image_id IN ({$ids_str});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // destruction of the links between images and categories
-        $query = '
-  DELETE FROM image_category
-    WHERE image_id IN (' . $ids_str . ')
-  ;';
+        $query = <<<SQL
+            DELETE FROM image_category
+            WHERE image_id IN ({$ids_str});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // destruction of the formats
-        $query = '
-  DELETE FROM image_format
-    WHERE image_id IN (' . $ids_str . ')
-  ;';
+        $query = <<<SQL
+            DELETE FROM image_format
+            WHERE image_id IN ({$ids_str});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // destruction of the links between images and tags
-        $query = '
-  DELETE FROM image_tag
-    WHERE image_id IN (' . $ids_str . ')
-  ;';
+        $query = <<<SQL
+            DELETE FROM image_tag
+            WHERE image_id IN ({$ids_str});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // destruction of the favorites associated with the picture
-        $query = '
-  DELETE FROM favorites
-    WHERE image_id IN (' . $ids_str . ')
-  ;';
+        $query = <<<SQL
+            DELETE FROM favorites
+            WHERE image_id IN ({$ids_str});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // destruction of the rates associated to this element
-        $query = '
-  DELETE FROM rate
-    WHERE element_id IN (' . $ids_str . ')
-  ;';
+        $query = <<<SQL
+            DELETE FROM rate
+            WHERE element_id IN ({$ids_str});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // destruction of the caddie associated to this element
-        $query = '
-  DELETE FROM caddie
-    WHERE element_id IN (' . $ids_str . ')
-  ;';
+        $query = <<<SQL
+            DELETE FROM caddie
+            WHERE element_id IN ({$ids_str});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // destruction of the image
-        $query = '
-  DELETE FROM images
-    WHERE id IN (' . $ids_str . ')
-  ;';
+        $query = <<<SQL
+            DELETE FROM images
+            WHERE id IN ({$ids_str});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // are the photo used as category representative?
-        $query = '
-  SELECT
-      id
-    FROM categories
-    WHERE representative_picture_id IN (' . $ids_str . ')
-  ;';
+        $query = <<<SQL
+            SELECT id
+            FROM categories
+            WHERE representative_picture_id IN ({$ids_str});
+            SQL;
         $category_ids = functions_mysqli::query2array($query, null, 'id');
 
         if (count($category_ids) > 0) {
@@ -390,10 +392,10 @@ class functions_admin
         ];
 
         foreach ($tables as $table) {
-            $query = '
-  DELETE FROM ' . $table . '
-    WHERE user_id = ' . $user_id . '
-  ;';
+            $query = <<<SQL
+                DELETE FROM {$table}
+                WHERE user_id = {$user_id};
+                SQL;
             functions_mysqli::pwg_query($query);
         }
 
@@ -401,10 +403,10 @@ class functions_admin
         functions_session::delete_user_sessions($user_id);
 
         // destruction of the user
-        $query = '
-  DELETE FROM users
-    WHERE ' . $conf['user_fields']['id'] . ' = ' . $user_id . '
-  ;';
+        $query = <<<SQL
+            DELETE FROM users
+            WHERE {$conf['user_fields']['id']} = {$user_id};
+            SQL;
         functions_mysqli::pwg_query($query);
 
         functions_plugins::trigger_notify('delete_user', $user_id);
@@ -434,15 +436,13 @@ class functions_admin
      */
     public static function get_orphan_tags()
     {
-        $query = '
-  SELECT
-      id,
-      name
-    FROM tags
-      LEFT JOIN image_tag ON id = tag_id
-    WHERE tag_id IS NULL
-      AND lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY)
-  ;';
+        $query = <<<SQL
+            SELECT id, name
+            FROM tags
+            LEFT JOIN image_tag ON id = tag_id
+            WHERE tag_id IS NULL
+                AND lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY);
+            SQL;
         return functions_mysqli::query2array($query);
     }
 
@@ -457,35 +457,37 @@ class functions_admin
         global $conf;
 
         if ($ids == 'all') {
-            $where_cats = '1=1';
+            $where_cats = '1 = 1';
         } elseif (! is_array($ids)) {
-            $where_cats = '%s=' . $ids;
+            $where_cats = "%s = {$ids}";
         } else {
             if (count($ids) == 0) {
                 return false;
             }
 
-            $where_cats = '%s IN(' . wordwrap(implode(', ', $ids), 120, "\n") . ')';
+            $where_cats = '%s IN (' . wordwrap(implode(', ', $ids), 120, "\n") . ')';
         }
 
         // find all categories where the set representative is not possible :
         // the picture does not exist
-        $query = '
-  SELECT DISTINCT c.id
-    FROM categories AS c LEFT JOIN images AS i
-      ON c.representative_picture_id = i.id
-    WHERE representative_picture_id IS NOT NULL
-      AND ' . sprintf($where_cats, 'c.id') . '
-      AND i.id IS NULL
-  ;';
+        $where_cats_condition = sprintf($where_cats, 'c.id');
+        $query = <<<SQL
+            SELECT DISTINCT c.id
+            FROM categories AS c
+            LEFT JOIN images AS i ON c.representative_picture_id = i.id
+            WHERE representative_picture_id IS NOT NULL
+                AND {$where_cats_condition}
+                AND i.id IS NULL;
+            SQL;
         $wrong_representative = functions_mysqli::query2array($query, null, 'id');
 
         if (count($wrong_representative) > 0) {
-            $query = '
-  UPDATE categories
-    SET representative_picture_id = NULL
-    WHERE id IN (' . wordwrap(implode(', ', $wrong_representative), 120, "\n") . ')
-  ;';
+            $wrong_representative_list = wordwrap(implode(', ', $wrong_representative), 120, "\n");
+            $query = <<<SQL
+                UPDATE categories
+                SET representative_picture_id = NULL
+                WHERE id IN ({$wrong_representative_list});
+                SQL;
             functions_mysqli::pwg_query($query);
         }
 
@@ -494,13 +496,13 @@ class functions_admin
             // categories with elements and with no representative. Those categories
             // must be added to the list of categories to set to a random
             // representative.
-            $query = '
-  SELECT DISTINCT id
-    FROM categories INNER JOIN image_category
-      ON id = category_id
-    WHERE representative_picture_id IS NULL
-      AND ' . sprintf($where_cats, 'category_id') . '
-  ;';
+            $where_cats_condition = sprintf($where_cats, 'category_id');
+            $query = <<<SQL
+                SELECT DISTINCT id
+                FROM categories INNER JOIN image_category ON id = category_id
+                WHERE representative_picture_id IS NULL
+                    AND {$where_cats_condition};
+                SQL;
             $to_rand = functions_mysqli::query2array($query, null, 'id');
 
             if (count($to_rand) > 0) {
@@ -515,21 +517,20 @@ class functions_admin
      */
     public static function images_integrity()
     {
-        $query = '
-  SELECT
-      image_id
-    FROM image_category
-      LEFT JOIN images ON id = image_id
-    WHERE id IS NULL
-  ;';
+        $query = <<<SQL
+            SELECT image_id
+            FROM image_category
+            LEFT JOIN images ON id = image_id
+            WHERE id IS NULL;
+            SQL;
         $orphan_image_ids = functions_mysqli::query2array($query, null, 'image_id');
 
         if (count($orphan_image_ids) > 0) {
-            $query = '
-  DELETE
-    FROM image_category
-    WHERE image_id IN (' . implode(',', $orphan_image_ids) . ')
-  ;';
+            $orphan_image_ids_list = implode(', ', $orphan_image_ids);
+            $query = <<<SQL
+                DELETE FROM image_category
+                WHERE image_id IN ({$orphan_image_ids_list});
+                SQL;
             functions_mysqli::pwg_query($query);
         }
     }
@@ -551,21 +552,20 @@ class functions_admin
         foreach ($related_columns as $fullcol) {
             list($table, $column) = explode('.', $fullcol);
 
-            $query = '
-  SELECT
-      ' . $column . '
-    FROM ' . $table . '
-      LEFT JOIN categories ON id = ' . $column . '
-    WHERE id IS NULL
-  ;';
+            $query = <<<SQL
+                SELECT {$column}
+                FROM {$table}
+                LEFT JOIN categories ON id = {$column}
+                WHERE id IS NULL;
+                SQL;
             $orphans = array_unique(functions_mysqli::query2array($query, null, $column));
 
             if (count($orphans) > 0) {
-                $query = '
-  DELETE
-    FROM ' . $table . '
-    WHERE ' . $column . ' IN (' . implode(',', $orphans) . ')
-  ;';
+                $orphans_list = implode(', ', $orphans);
+                $query = <<<SQL
+                    DELETE FROM {$table}
+                    WHERE {$column} IN ({$orphans_list});
+                    SQL;
                 functions_mysqli::pwg_query($query);
             }
         }
@@ -672,10 +672,11 @@ class functions_admin
      */
     public static function update_global_rank()
     {
-        $query = '
-  SELECT id, id_uppercat, uppercats, `rank`, global_rank
-    FROM categories
-    ORDER BY id_uppercat, `rank`, name';
+        $query = <<<SQL
+            SELECT id, id_uppercat, uppercats, `rank`, global_rank
+            FROM categories
+            ORDER BY id_uppercat, `rank`, name;
+            SQL;
 
         global $cat_map; // used in preg_replace callback
         $cat_map = [];
@@ -761,19 +762,23 @@ class functions_admin
                 $cats = array_merge($cats, functions_category::get_subcat_ids($categories));
             }
 
-            $query = '
-  UPDATE categories
-    SET visible = \'true\'
-    WHERE id IN (' . implode(',', $cats) . ')';
+            $cats_list = implode(', ', $cats);
+            $query = <<<SQL
+                UPDATE categories
+                SET visible = 'true'
+                WHERE id IN ({$cats_list});
+                SQL;
             functions_mysqli::pwg_query($query);
         }
         // locking a category   => all its child categories become locked
         else {
             $subcats = functions_category::get_subcat_ids($categories);
-            $query = '
-  UPDATE categories
-    SET visible = \'false\'
-    WHERE id IN (' . implode(',', $subcats) . ')';
+            $subcats_list = implode(', ', $subcats);
+            $query = <<<SQL
+                UPDATE categories
+                SET visible = 'false'
+                WHERE id IN ({$subcats_list});
+                SQL;
             functions_mysqli::pwg_query($query);
         }
     }
@@ -794,11 +799,12 @@ class functions_admin
         // make public a category => all its parent categories become public
         if ($value == 'public') {
             $uppercats = self::get_uppercat_ids($categories);
-            $query = '
-  UPDATE categories
-    SET status = \'public\'
-    WHERE id IN (' . implode(',', $uppercats) . ')
-  ;';
+            $uppercats_list = implode(', ', $uppercats);
+            $query = <<<SQL
+                UPDATE categories
+                SET status = 'public'
+                WHERE id IN ({$uppercats_list});
+                SQL;
             functions_mysqli::pwg_query($query);
         }
 
@@ -806,10 +812,12 @@ class functions_admin
         if ($value == 'private') {
             $subcats = functions_category::get_subcat_ids($categories);
 
-            $query = '
-  UPDATE categories
-    SET status = \'private\'
-    WHERE id IN (' . implode(',', $subcats) . ')';
+            $subcats_list = implode(', ', $subcats);
+            $query = <<<SQL
+                UPDATE categories
+                SET status = 'private'
+                WHERE id IN ({$subcats_list});
+                SQL;
             functions_mysqli::pwg_query($query);
 
             // We have to keep permissions consistent: a sub-album can't be
@@ -848,16 +856,12 @@ class functions_admin
             $top_categories = [];
             $parent_ids = [];
 
-            $query = '
-  SELECT
-      id,
-      name,
-      id_uppercat,
-      uppercats,
-      global_rank
-    FROM categories
-    WHERE id IN (' . implode(',', $categories) . ')
-  ;';
+            $categories_list = implode(', ', $categories);
+            $query = <<<SQL
+                SELECT id, name, id_uppercat, uppercats, global_rank
+                FROM categories
+                WHERE id IN ({$categories_list});
+                SQL;
             $all_categories = functions_mysqli::query2array($query);
             usort($all_categories, functions_category::global_rank_compare(...));
 
@@ -888,13 +892,12 @@ class functions_admin
             $parent_cats = [];
 
             if (count($parent_ids) > 0) {
-                $query = '
-  SELECT
-      id,
-      status
-    FROM categories
-    WHERE id IN (' . implode(',', $parent_ids) . ')
-  ;';
+                $parent_ids_list = implode(', ', $parent_ids);
+                $query = <<<SQL
+                    SELECT id, status
+                    FROM categories
+                    WHERE id IN ({$parent_ids_list});
+                    SQL;
                 $parent_cats = functions_mysqli::query2array($query, 'id');
             }
 
@@ -919,11 +922,11 @@ class functions_admin
 
                 foreach ($tables as $table => $field) {
                     // what are the permissions user/group of the reference album
-                    $query = '
-  SELECT ' . $field . '
-    FROM ' . $table . '
-    WHERE cat_id = ' . $ref_cat_id . '
-  ;';
+                    $query = <<<SQL
+                        SELECT {$field}
+                        FROM {$table}
+                        WHERE cat_id = {$ref_cat_id};
+                        SQL;
                     $ref_access = functions_mysqli::query2array($query, null, $field);
 
                     if (count($ref_access) == 0) {
@@ -931,12 +934,13 @@ class functions_admin
                     }
 
                     // step 3, remove the inconsistent permissions from sub-albums
-                    $query = '
-  DELETE
-    FROM ' . $table . '
-    WHERE ' . $field . ' NOT IN (' . implode(',', $ref_access) . ')
-      AND cat_id IN (' . implode(',', $subcats) . ')
-  ;';
+                    $ref_access_list = implode(', ', $ref_access);
+                    $subcats_list = implode(', ', $subcats);
+                    $query = <<<SQL
+                        DELETE FROM {$table}
+                        WHERE {$field} NOT IN ({$ref_access_list})
+                            AND cat_id IN ({$subcats_list});
+                        SQL;
                     functions_mysqli::pwg_query($query);
                 }
             }
@@ -959,11 +963,12 @@ class functions_admin
 
         $uppercats = [];
 
-        $query = '
-  SELECT uppercats
-    FROM categories
-    WHERE id IN (' . implode(',', $cat_ids) . ')
-  ;';
+        $cat_ids_list = implode(', ', $cat_ids);
+        $query = <<<SQL
+            SELECT uppercats
+            FROM categories
+            WHERE id IN ({$cat_ids_list});
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -980,11 +985,11 @@ class functions_admin
 
     public static function get_category_representative_properties($image_id, $size = null)
     {
-        $query = '
-  SELECT id,representative_ext,path
-    FROM images
-    WHERE id = ' . $image_id . '
-  ;';
+        $query = <<<SQL
+            SELECT id, representative_ext, path
+            FROM images
+            WHERE id = {$image_id};
+            SQL;
 
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
@@ -1012,13 +1017,14 @@ class functions_admin
         $datas = [];
 
         foreach ($categories as $category_id) {
-            $query = '
-  SELECT image_id
-    FROM image_category
-    WHERE category_id = ' . $category_id . '
-    ORDER BY ' . functions_mysqli::DB_RANDOM_FUNCTION . '()
-    LIMIT 1
-  ;';
+            $random_function = functions_mysqli::DB_RANDOM_FUNCTION . '()';
+            $query = <<<SQL
+                SELECT image_id
+                FROM image_category
+                WHERE category_id = {$category_id}
+                ORDER BY {$random_function}
+                LIMIT 1;
+                SQL;
             list($representative) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             $datas[] = [
@@ -1051,28 +1057,28 @@ class functions_admin
 
         // caching directories of existing categories
         global $cat_dirs; // used in preg_replace callback
-        $query = '
-  SELECT id, dir
-    FROM categories
-    WHERE dir IS NOT NULL
-  ;';
+        $query = <<<SQL
+            SELECT id, dir
+            FROM categories
+            WHERE dir IS NOT NULL;
+            SQL;
         $cat_dirs = functions_mysqli::query2array($query, 'id', 'dir');
 
         // caching galleries_url
-        $query = '
-  SELECT id, galleries_url
-    FROM sites
-  ;';
+        $query = <<<SQL
+            SELECT id, galleries_url
+            FROM sites;
+            SQL;
         $galleries_url = functions_mysqli::query2array($query, 'id', 'galleries_url');
 
         // categories : id, site_id, uppercats
-        $query = '
-  SELECT id, uppercats, site_id
-    FROM categories
-    WHERE dir IS NOT NULL
-      AND id IN (
-  ' . wordwrap(implode(', ', $cat_ids), 80, "\n") . ')
-  ;';
+        $cat_ids_list = wordwrap(implode(', ', $cat_ids), 80, "\n");
+        $query = <<<SQL
+            SELECT id, uppercats, site_id
+            FROM categories
+            WHERE dir IS NOT NULL
+                AND id IN ({$cat_ids_list});
+            SQL;
         $categories = functions_mysqli::query2array($query);
 
         // filling $cat_fulldirs
@@ -1193,16 +1199,16 @@ class functions_admin
     {
         global $conf;
 
-        $query = '
-  SELECT ' . $conf['user_fields']['id'] . ' AS id
-    FROM users
-  ;';
+        $query = <<<SQL
+            SELECT {$conf['user_fields']['id']} AS id
+            FROM users;
+            SQL;
         $base_users = functions_mysqli::query2array($query, null, 'id');
 
-        $query = '
-  SELECT user_id
-    FROM user_infos
-  ;';
+        $query = <<<SQL
+            SELECT user_id
+            FROM user_infos;
+            SQL;
         $infos_users = functions_mysqli::query2array($query, null, 'user_id');
 
         // users present in $base_users and not in $infos_users must be added
@@ -1225,21 +1231,21 @@ class functions_admin
         ];
 
         foreach ($tables as $table) {
-            $query = '
-  SELECT DISTINCT user_id
-    FROM ' . $table . '
-  ;';
+            $query = <<<SQL
+                SELECT DISTINCT user_id
+                FROM {$table};
+                SQL;
             $to_delete = array_diff(
                 functions_mysqli::query2array($query, null, 'user_id'),
                 $base_users
             );
 
             if (count($to_delete) > 0) {
-                $query = '
-  DELETE
-    FROM ' . $table . '
-    WHERE user_id in (' . implode(',', $to_delete) . ')
-  ;';
+                $to_delete_list = implode(', ', $to_delete);
+                $query = <<<SQL
+                    DELETE FROM {$table}
+                    WHERE user_id in ({$to_delete_list});
+                    SQL;
                 functions_mysqli::pwg_query($query);
             }
         }
@@ -1250,10 +1256,10 @@ class functions_admin
      */
     public static function update_uppercats()
     {
-        $query = '
-  SELECT id, id_uppercat, uppercats
-    FROM categories
-  ;';
+        $query = <<<SQL
+            SELECT id, id_uppercat, uppercats
+            FROM categories;
+            SQL;
         $cat_map = functions_mysqli::query2array($query, 'id');
 
         $datas = [];
@@ -1268,7 +1274,7 @@ class functions_admin
                 $uppercat = $cat_map[$uppercat]['id_uppercat'];
             }
 
-            $new_uppercats = implode(',', array_reverse($upper_list));
+            $new_uppercats = implode(', ', array_reverse($upper_list));
 
             if ($new_uppercats != $cat['uppercats']) {
                 $datas[] = [
@@ -1290,20 +1296,21 @@ class functions_admin
      */
     public static function update_path()
     {
-        $query = '
-  SELECT DISTINCT(storage_category_id)
-    FROM images
-    WHERE storage_category_id IS NOT NULL
-  ;';
+        $query = <<<SQL
+            SELECT DISTINCT storage_category_id
+            FROM images
+            WHERE storage_category_id IS NOT NULL;
+            SQL;
         $cat_ids = functions_mysqli::query2array($query, null, 'storage_category_id');
         $fulldirs = self::get_fulldirs($cat_ids);
 
         foreach ($cat_ids as $cat_id) {
-            $query = '
-  UPDATE images
-    SET path = ' . functions_mysqli::pwg_db_concat(["'" . $fulldirs[$cat_id] . "/'", 'file']) . '
-    WHERE storage_category_id = ' . $cat_id . '
-  ;';
+            $path_concat = functions_mysqli::pwg_db_concat(["'{$fulldirs[$cat_id]}/'", 'file']);
+            $query = <<<SQL
+                UPDATE images
+                SET path = {$path_concat}
+                WHERE storage_category_id = {$cat_id};
+                SQL;
             functions_mysqli::pwg_query($query);
         }
     }
@@ -1327,11 +1334,12 @@ class functions_admin
 
         $categories = [];
 
-        $query = '
-  SELECT id, id_uppercat, status, uppercats
-    FROM categories
-    WHERE id IN (' . implode(',', $category_ids) . ')
-  ;';
+        $category_ids_list = implode(', ', $category_ids);
+        $query = <<<SQL
+            SELECT id, id_uppercat, status, uppercats
+            FROM categories
+            WHERE id IN ({$category_ids_list});
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -1346,11 +1354,11 @@ class functions_admin
         // is the movement possible? The movement is impossible if you try to move
         // a category in a sub-category or itself
         if ($new_parent != 'NULL') {
-            $query = '
-  SELECT uppercats
-    FROM categories
-    WHERE id = ' . $new_parent . '
-  ;';
+            $query = <<<SQL
+                SELECT uppercats
+                FROM categories
+                WHERE id = {$new_parent};
+                SQL;
             list($new_parent_uppercats) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             foreach ($categories as $category) {
@@ -1368,11 +1376,12 @@ class functions_admin
             'group_access' => 'group_id',
         ];
 
-        $query = '
-  UPDATE categories
-    SET id_uppercat = ' . $new_parent . '
-    WHERE id IN (' . implode(',', $category_ids) . ')
-  ;';
+        $category_ids_list = implode(', ', $category_ids);
+        $query = <<<SQL
+            UPDATE categories
+            SET id_uppercat = {$new_parent}
+            WHERE id IN ({$category_ids_list});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         self::update_uppercats();
@@ -1382,11 +1391,11 @@ class functions_admin
         if ($new_parent == 'NULL') {
             $parent_status = 'public';
         } else {
-            $query = '
-  SELECT status
-    FROM categories
-    WHERE id = ' . $new_parent . '
-  ;';
+            $query = <<<SQL
+                SELECT status
+                FROM categories
+                WHERE id = {$new_parent};
+                SQL;
             list($parent_status) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         }
 
@@ -1434,11 +1443,12 @@ class functions_admin
 
         if ($conf['newcat_default_position'] == 'last') {
             //what is the current higher rank for this parent?
-            $query = '
-  SELECT MAX(`rank`) AS max_rank
-    FROM categories
-    WHERE id_uppercat ' . (empty($parent_id) ? 'IS NULL' : '= ' . $parent_id) . '
-  ;';
+            $parent_condition = empty($parent_id) ? 'IS NULL' : "= {$parent_id}";
+            $query = <<<SQL
+                SELECT MAX(`rank`) AS max_rank
+                FROM categories
+                WHERE id_uppercat {$parent_condition};
+                SQL;
             $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
             if (is_numeric($row['max_rank'])) {
@@ -1493,11 +1503,11 @@ class functions_admin
         if (! empty($parent_id) and
             is_numeric($parent_id)
         ) {
-            $query = '
-  SELECT id, uppercats, global_rank, visible, status
-    FROM categories
-    WHERE id = ' . $parent_id . '
-  ;';
+            $query = <<<SQL
+                SELECT id, uppercats, global_rank, visible, status
+                FROM categories
+                WHERE id = {$parent_id};
+                SQL;
             $parent = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
             $insert['id_uppercat'] = $parent['id'];
@@ -1542,11 +1552,11 @@ class functions_admin
             ! empty($insert['id_uppercat']) and
             ((isset($options['inherit']) and $options['inherit']) or $conf['inheritance_by_default'])
         ) {
-            $query = '
-        SELECT group_id
-        FROM group_access
-        WHERE cat_id = ' . $insert['id_uppercat'] . '
-      ;';
+            $query = <<<SQL
+                SELECT group_id
+                FROM group_access
+                WHERE cat_id = {$insert['id_uppercat']};
+                SQL;
             $granted_grps = functions_mysqli::query2array($query, null, 'group_id');
             $inserts = [];
 
@@ -1559,11 +1569,11 @@ class functions_admin
 
             functions_mysqli::mass_inserts('group_access', ['group_id', 'cat_id'], $inserts);
 
-            $query = '
-        SELECT user_id
-        FROM user_access
-        WHERE cat_id = ' . $insert['id_uppercat'] . '
-      ;';
+            $query = <<<SQL
+                SELECT user_id
+                FROM user_access
+                WHERE cat_id = {$insert['id_uppercat']};
+                SQL;
             $granted_users = functions_mysqli::query2array($query, null, 'user_id');
             self::add_permission_on_category($inserted_id, $granted_users);
         } elseif ($insert['status'] == 'private') {
@@ -1613,12 +1623,13 @@ class functions_admin
 
         // we can't insert twice the same {image_id,tag_id} so we must first
         // delete lines we'll insert later
-        $query = '
-  DELETE
-    FROM image_tag
-    WHERE image_id IN (' . implode(',', $images) . ')
-      AND tag_id IN (' . implode(',', $tags) . ')
-  ;';
+        $image_ids_list = implode(', ', $images);
+        $tag_ids_list = implode(', ', $tags);
+        $query = <<<SQL
+            DELETE FROM image_tag
+            WHERE image_id IN ({$image_ids_list})
+                AND tag_id IN ({$tag_ids_list});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         $inserts = [];
@@ -1661,26 +1672,26 @@ class functions_admin
         }
 
         // we need the list of impacted images, to update their lastmodified
-        $query = '
-  SELECT
-      image_id
-    FROM image_tag
-    WHERE tag_id IN (' . implode(',', $tag_ids) . ')
-  ;';
+        $tag_ids_list = implode(', ', $tag_ids);
+        $query = <<<SQL
+            SELECT image_id
+            FROM image_tag
+            WHERE tag_id IN ({$tag_ids_list});
+            SQL;
         $image_ids = functions_mysqli::query2array($query, null, 'image_id');
 
-        $query = '
-  DELETE
-    FROM image_tag
-    WHERE tag_id IN (' . implode(',', $tag_ids) . ')
-  ;';
+        $tag_ids_list = implode(', ', $tag_ids);
+        $query = <<<SQL
+            DELETE FROM image_tag
+            WHERE tag_id IN ({$tag_ids_list});
+            SQL;
         functions_mysqli::pwg_query($query);
 
-        $query = '
-  DELETE
-    FROM tags
-    WHERE id IN (' . implode(',', $tag_ids) . ')
-  ;';
+        $tag_ids_list = implode(', ', $tag_ids);
+        $query = <<<SQL
+            DELETE FROM tags
+            WHERE id IN ({$tag_ids_list});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         functions_plugins::trigger_notify('delete_tags', $tag_ids);
@@ -1707,21 +1718,21 @@ class functions_admin
         }
 
         // search existing by exact name
-        $query = '
-  SELECT id
-    FROM tags
-    WHERE name = \'' . $tag_name . '\'
-  ;';
+        $query = <<<SQL
+            SELECT id
+            FROM tags
+            WHERE name = '{$tag_name}';
+            SQL;
         $existing_tags = functions_mysqli::query2array($query, null, 'id');
 
         if (count($existing_tags) == 0) {
             $url_name = functions_plugins::trigger_change('render_tag_url', $tag_name);
             // search existing by url name
-            $query = '
-  SELECT id
-    FROM tags
-    WHERE url_name = \'' . $url_name . '\'
-  ;';
+            $query = <<<SQL
+                SELECT id
+                FROM tags
+                WHERE url_name = '{$url_name}';
+                SQL;
             $existing_tags = functions_mysqli::query2array($query, null, 'id');
 
             if (count($existing_tags) == 0) {
@@ -1729,11 +1740,12 @@ class functions_admin
                 $sub_name_where = functions_plugins::trigger_change('get_tag_name_like_where', [], $tag_name);
 
                 if (count($sub_name_where)) {
-                    $query = '
-  SELECT id
-    FROM tags
-    WHERE ' . implode(' OR ', $sub_name_where) . '
-  ;';
+                    $sub_name_conditions = implode(' OR ', $sub_name_where);
+                    $query = <<<SQL
+                        SELECT id
+                        FROM tags
+                        WHERE {$sub_name_conditions};
+                        SQL;
                     $existing_tags = functions_mysqli::query2array($query, null, 'id');
                 }
 
@@ -1774,11 +1786,11 @@ class functions_admin
             global $logger;
             $logger->debug('taglist_before', $taglist_before);
 
-            $query = '
-  DELETE
-    FROM image_tag
-    WHERE image_id IN (' . implode(',', array_keys($tags_of)) . ')
-  ;';
+            $tag_ids = implode(', ', array_keys($tags_of));
+            $query = <<<SQL
+                DELETE FROM image_tag
+                WHERE image_id IN ({$tag_ids});
+                SQL;
             functions_mysqli::pwg_query($query);
 
             $inserts = [];
@@ -1831,13 +1843,12 @@ class functions_admin
             return [];
         }
 
-        $query = '
-  SELECT
-      image_id,
-      tag_id
-    FROM image_tag
-    WHERE image_id IN (' . implode(',', $image_ids) . ')
-  ;';
+        $image_ids_list = implode(', ', $image_ids);
+        $query = <<<SQL
+            SELECT image_id, tag_id
+            FROM image_tag
+            WHERE image_id IN ({$image_ids_list});
+            SQL;
 
         $tags_of = array_fill_keys($image_ids, []);
         $image_tags = functions_mysqli::query2array($query);
@@ -1929,15 +1940,19 @@ class functions_admin
         $logger->debug(__FUNCTION__ . (isset($_REQUEST['method']) ? ' (API:' . $_REQUEST['method'] . ')' : '') . ', exec=' . $exec_id . ', begins');
 
         // if lounge is already being emptied, skip
-        $query = '
-  INSERT IGNORE
-    INTO config
-    SET param="empty_lounge_running"
-      , value="' . $exec_id . '-' . time() . '"
-  ;';
+        $current_time = time();
+        $query = <<<SQL
+            INSERT IGNORE
+            INTO config
+            SET param = "empty_lounge_running",
+                value = "{$exec_id}-{$current_time}";
+            SQL;
         functions_mysqli::pwg_query($query);
 
-        list($empty_lounge_running) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT value FROM config WHERE param = "empty_lounge_running"'));
+        $query = <<<SQL
+            SELECT value FROM config WHERE param = "empty_lounge_running";
+            SQL;
+        list($empty_lounge_running) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         list($running_exec_id) = explode('-', $empty_lounge_running);
 
         if ($running_exec_id != $exec_id) {
@@ -1949,13 +1964,11 @@ class functions_admin
 
         $max_image_id = 0;
 
-        $query = '
-  SELECT
-      image_id,
-      category_id
-    FROM lounge
-    ORDER BY category_id ASC, image_id ASC
-  ;';
+        $query = <<<SQL
+            SELECT image_id, category_id
+            FROM lounge
+            ORDER BY category_id ASC, image_id ASC;
+            SQL;
 
         $rows = functions_mysqli::query2array($query);
 
@@ -1977,11 +1990,10 @@ class functions_admin
             }
         }
 
-        $query = '
-  DELETE
-    FROM lounge
-    WHERE image_id <= ' . $max_image_id . '
-  ;';
+        $query = <<<SQL
+            DELETE FROM lounge
+            WHERE image_id <= {$max_image_id};
+            SQL;
         functions_mysqli::pwg_query($query);
 
         if ($invalidate_user_cache) {
@@ -2013,14 +2025,14 @@ class functions_admin
         }
 
         // get existing associations
-        $query = '
-  SELECT
-      image_id,
-      category_id
-    FROM image_category
-    WHERE image_id IN (' . implode(',', $images) . ')
-      AND category_id IN (' . implode(',', $categories) . ')
-  ;';
+        $image_ids = implode(', ', $images);
+        $category_ids = implode(', ', $categories);
+        $query = <<<SQL
+            SELECT image_id, category_id
+            FROM image_category
+            WHERE image_id IN ({$image_ids})
+                AND category_id IN ({$category_ids});
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         $existing = [];
@@ -2030,15 +2042,14 @@ class functions_admin
         }
 
         // get max rank of each categories
-        $query = '
-  SELECT
-      category_id,
-      MAX(`rank`) AS max_rank
-    FROM image_category
-    WHERE `rank` IS NOT NULL
-      AND category_id IN (' . implode(',', $categories) . ')
-    GROUP BY category_id
-  ;';
+        $category_ids = implode(', ', $categories);
+        $query = <<<SQL
+            SELECT category_id, MAX(`rank`) AS max_rank
+            FROM image_category
+            WHERE `rank` IS NOT NULL
+                AND category_id IN ({$category_ids})
+            GROUP BY category_id;
+            SQL;
 
         $current_rank_of = functions_mysqli::query2array(
             $query,
@@ -2092,26 +2103,24 @@ class functions_admin
     {
         // physical links must not be broken, so we must first retrieve image_id
         // which create virtual links with the category to "dissociate from".
-        $query = '
-  SELECT id
-    FROM image_category
-      INNER JOIN images ON image_id = id
-    WHERE category_id =' . $category . '
-      AND id IN (' . implode(',', $images) . ')
-      AND (
-        category_id != storage_category_id
-        OR storage_category_id IS NULL
-      )
-  ;';
+        $image_ids = implode(', ', $images);
+        $query = <<<SQL
+            SELECT id
+            FROM image_category
+            INNER JOIN images ON image_id = id
+            WHERE category_id = {$category}
+                AND id IN ({$image_ids})
+                AND (category_id != storage_category_id OR storage_category_id IS NULL);
+            SQL;
         $dissociables = functions::array_from_query($query, 'id');
 
         if (! empty($dissociables)) {
-            $query = '
-  DELETE
-    FROM image_category
-    WHERE category_id = ' . $category . '
-      AND image_id IN (' . implode(',', $dissociables) . ')
-  ';
+            $dissociable_ids = implode(', ', $dissociables);
+            $query = <<<SQL
+                DELETE FROM image_category
+                WHERE category_id = {$category}
+                    AND image_id IN ({$dissociable_ids});
+                SQL;
             functions_mysqli::pwg_query($query);
         }
 
@@ -2133,24 +2142,27 @@ class functions_admin
         }
 
         // let's first break links with all old albums but their "storage album"
-        $query = '
-  DELETE image_category.*
-    FROM image_category
-      JOIN images ON image_id=id
-    WHERE id IN (' . implode(',', $images) . ')
-  ';
+        $image_ids = implode(', ', $images);
+        $query = <<<SQL
+            DELETE FROM image_category
+            JOIN images ON image_id = id
+            WHERE id IN ({$image_ids})
+
+            SQL;
 
         if (is_array($categories) and
             count($categories) > 0
         ) {
-            $query .= '
-      AND category_id NOT IN (' . implode(',', $categories) . ')
-  ';
+            $category_ids = implode(', ', $categories);
+            $query .= <<<SQL
+                AND category_id NOT IN ({$category_ids})
+
+                SQL;
         }
 
-        $query .= '
-      AND (storage_category_id IS NULL OR storage_category_id != category_id)
-  ;';
+        $query .= <<<SQL
+            AND (storage_category_id IS NULL OR storage_category_id != category_id);
+            SQL;
         functions_mysqli::pwg_query($query);
 
         if (is_array($categories) and
@@ -2173,11 +2185,12 @@ class functions_admin
             return false;
         }
 
-        $query = '
-  SELECT image_id
-    FROM image_category
-    WHERE category_id IN (' . implode(',', $sources) . ')
-  ;';
+        $category_ids = implode(', ', $sources);
+        $query = <<<SQL
+            SELECT image_id
+            FROM image_category
+            WHERE category_id IN ({$category_ids});
+            SQL;
         $images = functions_mysqli::query2array($query, null, 'image_id');
 
         self::associate_images_to_categories($images, $destinations);
@@ -2207,16 +2220,19 @@ class functions_admin
     public static function invalidate_user_cache($full = true)
     {
         if ($full) {
-            $query = '
-  TRUNCATE TABLE user_cache_categories;';
+            $query = <<<SQL
+                TRUNCATE TABLE user_cache_categories;
+                SQL;
             functions_mysqli::pwg_query($query);
-            $query = '
-  TRUNCATE TABLE user_cache;';
+            $query = <<<SQL
+                TRUNCATE TABLE user_cache;
+                SQL;
             functions_mysqli::pwg_query($query);
         } else {
-            $query = '
-  UPDATE user_cache
-    SET need_update = \'true\';';
+            $query = <<<SQL
+                UPDATE user_cache
+                SET need_update = 'true';
+                SQL;
             functions_mysqli::pwg_query($query);
         }
 
@@ -2232,9 +2248,10 @@ class functions_admin
         global $user;
         unset($user['nb_available_tags']);
 
-        $query = '
-  UPDATE user_cache
-    SET nb_available_tags = NULL';
+        $query = <<<SQL
+            UPDATE user_cache
+            SET nb_available_tags = NULL;
+            SQL;
         functions_mysqli::pwg_query($query);
     }
 
@@ -2358,11 +2375,11 @@ class functions_admin
         $tag_name = strip_tags($tag_name);
 
         // does the tag already exists?
-        $query = '
-  SELECT id
-    FROM tags
-    WHERE name = \'' . $tag_name . '\'
-  ;';
+        $query = <<<SQL
+            SELECT id
+            FROM tags
+            WHERE name = '{$tag_name}';
+            SQL;
         $existing_tags = functions_mysqli::query2array($query, null, 'id');
 
         if (count($existing_tags) == 0) {
@@ -2608,11 +2625,11 @@ class functions_admin
      */
     public static function get_groupname($group_id)
     {
-        $query = '
-  SELECT name
-    FROM `groups`
-    WHERE id = ' . intval($group_id) . '
-  ;';
+        $query = <<<SQL
+            SELECT name
+            FROM `groups`
+            WHERE id = {$group_id};
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         if (functions_mysqli::pwg_db_num_rows($result) > 0) {
@@ -2639,39 +2656,36 @@ class functions_admin
             }
         }
 
-        $group_id_string = implode(',', $group_ids);
+        $group_id_string = implode(', ', $group_ids);
 
         // destruction of the access linked to the group
-        $query = '
-  DELETE
-    FROM group_access
-    WHERE group_id IN (' . $group_id_string . ')
-  ;';
+        $query = <<<SQL
+            DELETE FROM group_access
+            WHERE group_id IN ({$group_id_string});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // destruction of the users links for this group
-        $query = '
-  DELETE
-    FROM user_group
-    WHERE group_id IN (' . $group_id_string . ')
-  ;';
+        $query = <<<SQL
+            DELETE FROM user_group
+            WHERE group_id IN ({$group_id_string});
+            SQL;
         functions_mysqli::pwg_query($query);
 
-        $query = '
-  SELECT id, name
-    FROM `groups`
-    WHERE id IN (' . $group_id_string . ')
-  ;';
+        $query = <<<SQL
+            SELECT id, name
+            FROM `groups`
+            WHERE id IN ({$group_id_string});
+            SQL;
 
         $group_list = functions_mysqli::query2array($query, 'id', 'name');
         $groupids = array_keys($group_list);
 
         // destruction of the group
-        $query = '
-  DELETE
-    FROM `groups`
-    WHERE id IN (' . $group_id_string . ')
-  ;';
+        $query = <<<SQL
+            DELETE FROM `groups`
+            WHERE id IN ({$group_id_string});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         functions_plugins::trigger_notify('delete_group', $groupids);
@@ -2690,11 +2704,11 @@ class functions_admin
     {
         global $conf;
 
-        $query = '
-  SELECT ' . $conf['user_fields']['username'] . '
-    FROM users
-    WHERE ' . $conf['user_fields']['id'] . ' = ' . intval($user_id) . '
-  ;';
+        $query = <<<SQL
+            SELECT {$conf['user_fields']['username']}
+            FROM users
+            WHERE {$conf['user_fields']['id']} = {$user_id};
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         if (functions_mysqli::pwg_db_num_rows($result) > 0) {
@@ -2908,12 +2922,13 @@ class functions_admin
             $cat_ids = array_merge($cat_ids, functions_category::get_subcat_ids($category_ids));
         }
 
-        $query = '
-  SELECT id
-    FROM categories
-    WHERE id IN (' . implode(',', $cat_ids) . ')
-      AND status = \'private\'
-  ;';
+        $category_ids = implode(', ', $cat_ids);
+        $query = <<<SQL
+            SELECT id
+            FROM categories
+            WHERE id IN ({$category_ids})
+                AND status = 'private';
+            SQL;
         $private_cats = functions_mysqli::query2array($query, null, 'id');
 
         if (count($private_cats) == 0) {
@@ -2955,12 +2970,12 @@ class functions_admin
             $status_list[] = 'webmaster';
         }
 
-        $query = '
-  SELECT
-      user_id
-    FROM user_infos
-    WHERE status in (\'' . implode("','", $status_list) . '\')
-  ;';
+        $status_values = implode("','", $status_list);
+        $query = <<<SQL
+            SELECT user_id
+            FROM user_infos
+            WHERE status in ('{$status_values}');
+            SQL;
 
         return functions_mysqli::query2array($query, null, 'user_id');
     }
@@ -3207,14 +3222,10 @@ class functions_admin
         ];
 
         foreach ($requested as $item) {
-            $query = '
-  SELECT CONCAT(
-      UNIX_TIMESTAMP(MAX(lastmodified)),
-      "_",
-      COUNT(*)
-    )
-    FROM `' . $tables[$item] . '`
-  ;';
+            $query = <<<SQL
+                SELECT CONCAT(UNIX_TIMESTAMP(MAX(lastmodified)), "_", COUNT(*))
+                FROM `{$tables[$item]}`;
+                SQL;
             list($keys[$item]) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         }
 
@@ -3228,11 +3239,11 @@ class functions_admin
      */
     public static function get_photos_no_md5sum()
     {
-        $query = '
-  SELECT id
-    FROM images
-    WHERE md5sum is null
-  ;';
+        $query = <<<SQL
+            SELECT id
+            FROM images
+            WHERE md5sum IS NULL;
+            SQL;
         return functions_mysqli::query2array($query, null, 'id');
     }
 
@@ -3243,11 +3254,12 @@ class functions_admin
      */
     public static function add_md5sum($ids)
     {
-        $query = '
-  SELECT path
-    FROM images
-    WHERE id IN (' . implode(', ', $ids) . ')
-  ;';
+        $ids_list = implode(', ', $ids);
+        $query = <<<SQL
+            SELECT path
+            FROM images
+            WHERE id IN ({$ids_list});
+            SQL;
         $paths = functions_mysqli::query2array($query, null, 'path');
         $imgs_ids_paths = array_combine($ids, $paths);
         $updates = [];
@@ -3277,18 +3289,16 @@ class functions_admin
         if (functions::conf_get_param('count_orphans') === null) {
             // we don't care about the list of image_ids, we only care about the number
             // of orphans, so let's use a faster method than calling count(get_orphans())
-            $query = '
-  SELECT
-      COUNT(*)
-    FROM images
-  ;';
+            $query = <<<SQL
+                SELECT COUNT(*)
+                FROM images;
+                SQL;
             list($image_counter_all) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-            $query = '
-  SELECT
-      COUNT(DISTINCT(image_id))
-    FROM image_category
-  ;';
+            $query = <<<SQL
+                SELECT COUNT(DISTINCT image_id)
+                FROM image_category;
+                SQL;
             list($image_counter_in_categories) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             $counter = $image_counter_all - $image_counter_in_categories;
@@ -3306,28 +3316,31 @@ class functions_admin
     public static function get_orphans()
     {
         // exclude images in the lounge
-        $query = '
-  SELECT
-      image_id
-    FROM lounge
-  ;';
+        $query = <<<SQL
+            SELECT image_id
+            FROM lounge;
+            SQL;
         $lounged_ids = functions_mysqli::query2array($query, null, 'image_id');
 
-        $query = '
-  SELECT
-      id
-    FROM images
-      LEFT JOIN image_category ON id = image_id
-    WHERE category_id is null';
+        $query = <<<SQL
+            SELECT id
+            FROM images
+            LEFT JOIN image_category ON id = image_id
+            WHERE category_id IS NULL
+
+            SQL;
 
         if (count($lounged_ids) > 0) {
-            $query .= '
-      AND id NOT IN (' . implode(',', $lounged_ids) . ')';
+            $imploded_lounged_ids = implode(', ', $lounged_ids);
+            $query .= <<<SQL
+                AND id NOT IN ({$imploded_lounged_ids})
+
+                SQL;
         }
 
-        $query .= '
-    ORDER BY id ASC
-  ;';
+        $query .= <<<SQL
+            ORDER BY id ASC;
+            SQL;
 
         return functions_mysqli::query2array($query, null, 'id');
     }
@@ -3378,11 +3391,12 @@ class functions_admin
             return;
         }
 
-        $query = '
-  UPDATE images
-    SET lastmodified = NOW()
-    WHERE id IN (' . implode(',', $image_ids) . ')
-  ;';
+        $image_ids_list = implode(', ', $image_ids);
+        $query = <<<SQL
+            UPDATE images
+            SET lastmodified = NOW()
+            WHERE id IN ({$image_ids_list});
+            SQL;
         functions_mysqli::pwg_query($query);
     }
 
@@ -3428,11 +3442,11 @@ class functions_admin
             functions_html::fatal_error('[' . __FUNCTION__ . '] invalid image identifier ' . htmlentities($image_id));
         }
 
-        $query = '
-  SELECT *
-    FROM images
-    WHERE id = ' . $image_id . '
-  ;';
+        $query = <<<SQL
+            SELECT *
+            FROM images
+            WHERE id = {$image_id};
+            SQL;
         $images = functions_mysqli::query2array($query);
 
         if (count($images) == 0) {
@@ -3508,24 +3522,22 @@ class functions_admin
         $page[__FUNCTION__ . '_already_called'] = true;
         functions::conf_update_param('fs_quick_check_last_check', date('c'));
 
-        $query = '
-  SELECT
-      id
-    FROM images
-    WHERE date_available < \'2022-12-08 00:00:00\'
-      AND path LIKE \'./upload/%\'
-    LIMIT 5000
-  ;';
+        $query = <<<SQL
+            SELECT id
+            FROM images
+            WHERE date_available < '2022-12-08 00:00:00'
+                AND path LIKE './upload/%'
+            LIMIT 5000;
+            SQL;
         $issue1827_ids = functions_mysqli::query2array($query, null, 'id');
         shuffle($issue1827_ids);
         $issue1827_ids = array_slice($issue1827_ids, 0, 50);
 
-        $query = '
-  SELECT
-      id
-    FROM images
-    LIMIT 5000
-  ;';
+        $query = <<<SQL
+            SELECT id
+            FROM images
+            LIMIT 5000;
+            SQL;
         $random_image_ids = functions_mysqli::query2array($query, null, 'id');
         shuffle($random_image_ids);
         $random_image_ids = array_slice($random_image_ids, 0, 50);
@@ -3536,13 +3548,12 @@ class functions_admin
             return;
         }
 
-        $query = '
-  SELECT
-      id,
-      path
-    FROM images
-    WHERE id IN (' . implode(',', $fs_quick_check_ids) . ')
-  ;';
+        $quick_check_ids = implode(', ', $fs_quick_check_ids);
+        $query = <<<SQL
+            SELECT id, path
+            FROM images
+            WHERE id IN ({$quick_check_ids});
+            SQL;
         $fsqc_paths = functions_mysqli::query2array($query, 'id', 'path');
 
         foreach ($fsqc_paths as $id => $path) {
@@ -3653,26 +3664,24 @@ class functions_admin
         $category_ids = functions_category::get_subcat_ids($ids);
 
         // search for the reference date of each album
-        $query = '
-  SELECT
-      category_id,
-      ' . $minmax . '(' . $field . ') as ref_date
-    FROM image_category
-      JOIN images ON image_id = id
-    WHERE category_id IN (' . implode(',', $category_ids) . ')
-    GROUP BY category_id
-  ;';
+        $category_ids_str = implode(', ', $category_ids);
+        $query = <<<SQL
+            SELECT category_id, {$minmax}({$field}) AS ref_date
+            FROM image_category
+            JOIN images ON image_id = id
+            WHERE category_id IN ({$category_ids_str})
+            GROUP BY category_id;
+            SQL;
         $ref_dates = functions_mysqli::query2array($query, 'category_id', 'ref_date');
 
         // the iterate on all albums (having a ref_date or not) to find the
         // reference_date, with a search on sub-albums
-        $query = '
-  SELECT
-      id,
-      uppercats
-    FROM categories
-    WHERE id IN (' . implode(',', $category_ids) . ')
-  ;';
+        $category_ids_str = implode(', ', $category_ids);
+        $query = <<<SQL
+            SELECT id, uppercats
+            FROM categories
+            WHERE id IN ({$category_ids_str});
+            SQL;
         $uppercats_of = functions_mysqli::query2array($query, 'id', 'uppercats');
 
         foreach (array_keys($uppercats_of) as $cat_id) {
@@ -3739,9 +3748,11 @@ class functions_admin
         if (isset($page['plain_structure'][$category_id]['uppercats'])) {
             $uppercats = $page['plain_structure'][$category_id]['uppercats'];
         } else {
-            $query = 'SELECT uppercats';
-            $query .= ' FROM categories WHERE id = ' . $category_id;
-            $query .= ';';
+            $query = <<<SQL
+                SELECT uppercats
+                FROM categories
+                WHERE id = {$category_id};
+                SQL;
             $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
             $uppercats = $row['uppercats'];
         }
@@ -3749,9 +3760,11 @@ class functions_admin
         $upper_array = explode(',', $uppercats);
 
         $database_dirs = [];
-        $query = 'SELECT id,dir';
-        $query .= ' FROM categories WHERE id IN (' . $uppercats . ')';
-        $query .= ';';
+        $query = <<<SQL
+            SELECT id, dir
+            FROM categories
+            WHERE id IN ({$uppercats});
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -3771,12 +3784,12 @@ class functions_admin
     {
         global $page;
 
-        $query = '
-  SELECT galleries_url
-    FROM sites AS s,categories AS c
-    WHERE s.id = c.site_id
-      AND c.id = ' . $category_id . '
-  ;';
+        $query = <<<SQL
+            SELECT galleries_url
+            FROM sites AS s, categories AS c
+            WHERE s.id = c.site_id
+                AND c.id = {$category_id};
+            SQL;
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
         return $row['galleries_url'];
     }
@@ -3892,28 +3905,22 @@ class functions_admin
         global $conf, $page, $env_nbm;
 
         // Set null mail_address empty
-        $query = '
-  update
-    users
-  set
-    ' . $conf['user_fields']['email'] . ' = null
-  where
-    trim(' . $conf['user_fields']['email'] . ') = \'\';';
+        $query = <<<SQL
+            UPDATE users
+            SET {$conf['user_fields']['email']} = NULL
+            WHERE TRIM({$conf['user_fields']['email']}) = '';
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // null mail_address are not selected in the list
-        $query = '
-  select
-    u.' . $conf['user_fields']['id'] . ' as user_id,
-    u.' . $conf['user_fields']['username'] . ' as username,
-    u.' . $conf['user_fields']['email'] . ' as mail_address
-  from
-    users as u left join user_mail_notification as m on u.' . $conf['user_fields']['id'] . ' = m.user_id
-  where
-    u.' . $conf['user_fields']['email'] . ' is not null and
-    m.user_id is null
-  order by
-    user_id;';
+        $query = <<<SQL
+            SELECT u.{$conf['user_fields']['id']} AS user_id, u.{$conf['user_fields']['username']} AS username, u.{$conf['user_fields']['email']} AS mail_address
+            FROM users AS u
+            LEFT JOIN user_mail_notification AS m ON u.{$conf['user_fields']['id']} = m.user_id
+            WHERE u.{$conf['user_fields']['email']} IS NOT NULL
+                AND m.user_id IS NULL
+            ORDER BY user_id;
+            SQL;
 
         $result = functions_mysqli::pwg_query($query);
 
@@ -3956,7 +3963,11 @@ class functions_admin
                 $quoted_check_key_list = functions_notification_by_mail::quote_check_key_list(array_diff($check_key_list, $check_key_treated));
 
                 if (count($quoted_check_key_list) != 0) {
-                    $query = 'delete from user_mail_notification where check_key in (' . implode(',', $quoted_check_key_list) . ');';
+                    $imploded_check_key_list = implode(', ', $quoted_check_key_list);
+                    $query = <<<SQL
+                        DELETE FROM user_mail_notification
+                        WHERE check_key IN ({$imploded_check_key_list});
+                        SQL;
                     $result = functions_mysqli::pwg_query($query);
 
                     functions::redirect($base_url . functions_url::get_query_string_diff([], false), functions::l10n('Operation in progress') . "\n" . functions::l10n('Please wait...'));
@@ -4309,60 +4320,52 @@ class functions_admin
     //Get the last unit of time for years, months, days and hours
     public static function get_last($last_number = 60, $type = 'year')
     {
-        $query = '
-  SELECT
-      year,
-      month,
-      day,
-      hour,
-      nb_pages
-    FROM history_summary';
+        $query = <<<SQL
+            SELECT year, month, day, hour, nb_pages
+            FROM history_summary
+
+            SQL;
 
         if ($type === 'hour') {
-            $query .= '
-    WHERE year IS NOT NULL
-      AND month IS NOT NULL
-      AND day IS NOT NULL
-      AND hour IS NOT NULL
-    ORDER BY
-      year DESC,
-      month DESC,
-      day DESC,
-      hour DESC
-    LIMIT ' . $last_number . '
-  ;';
+            $query .= <<<SQL
+                WHERE year IS NOT NULL
+                    AND month IS NOT NULL
+                    AND day IS NOT NULL
+                    AND hour IS NOT NULL
+                ORDER BY year DESC, month DESC, day DESC, hour DESC
+                LIMIT {$last_number}
+
+                SQL;
         } elseif ($type === 'day') {
-            $query .= '
-    WHERE year IS NOT NULL
-      AND month IS NOT NULL
-      AND day IS NOT NULL
-      AND hour IS NULL
-    ORDER BY
-      year DESC,
-      month DESC,
-      day DESC
-    LIMIT ' . $last_number . '
-  ;';
+            $query .= <<<SQL
+                WHERE year IS NOT NULL
+                    AND month IS NOT NULL
+                    AND day IS NOT NULL
+                    AND hour IS NULL
+                ORDER BY year DESC, month DESC, day DESC
+                LIMIT {$last_number}
+
+                SQL;
         } elseif ($type === 'month') {
-            $query .= '
-    WHERE year IS NOT NULL
-      AND month IS NOT NULL
-      AND day IS NULL
-    ORDER BY
-      year DESC,
-      month DESC
-    LIMIT ' . $last_number . '
-  ;';
+            $query .= <<<SQL
+                WHERE year IS NOT NULL
+                    AND month IS NOT NULL
+                    AND day IS NULL
+                ORDER BY year DESC, month DESC
+                LIMIT {$last_number}
+
+                SQL;
         } else {
-            $query .= '
-    WHERE year IS NOT NULL
-      AND month IS NULL
-    ORDER BY
-      year DESC
-    LIMIT ' . $last_number . '
-  ;';
+            $query .= <<<SQL
+                WHERE year IS NOT NULL
+                    AND month IS NULL
+                ORDER BY year DESC
+                LIMIT {$last_number}
+
+                SQL;
         }
 
+        $query = trim($query) . ';';
         $result = functions_mysqli::pwg_query($query);
 
         $output = [];
@@ -4376,25 +4379,19 @@ class functions_admin
 
     public static function get_month_of_last_years($last = 'all')
     {
-        $query = '
-  SELECT
-    year,
-    month,
-    day,
-    hour,
-    nb_pages
-  FROM history_summary
-  WHERE month IS NOT NULL
-    AND day IS NULL
-  ORDER BY
-    year DESC,
-    month DESC';
+        $query = <<<SQL
+            SELECT year, month, day, hour, nb_pages
+            FROM history_summary
+            WHERE month IS NOT NULL
+                AND day IS NULL
+            ORDER BY year DESC, month DESC
+
+            SQL;
 
         if ($last !== 'all') {
             $date = new DateTime();
             $limit = ($last - 1) * 12 + $date->format('n') - 1;
-            $query .=
-  ' LIMIT ' . $limit;
+            $query .= " LIMIT {$limit}";
             $result = functions_mysqli::query2array($query . ';');
             $lastDate = $date->sub(new DateInterval('P' . ($last - 1) . 'Y' . ($date->format('n') - 1) . 'M'));
             return self::set_missing_values('month', $result, $lastDate, new DateTime());
@@ -4423,26 +4420,19 @@ class functions_admin
 
         $date_last_month->sub(new DateInterval('P1M'));
         $date_last_year->sub(new DateInterval('P1Y'));
-        $query = '
-  SELECT
-    year,
-    month,
-    day,
-    hour,
-    nb_pages
-  FROM history_summary
-  WHERE
-    (
-      (year = ' . $date->format('Y') . ' AND month = ' . $date->format('n') . ')
-      OR (year = ' . $date_last_month->format('Y') . ' AND month = ' . $date_last_month->format('n') . ')
-      OR (year = ' . $date_last_year->format('Y') . ' AND month = ' . $date_last_year->format('n') . ')
-    )
-    AND day IS NOT NULL
-    AND hour IS NULL
-  ORDER BY
-    year DESC,
-    month DESC
-  ;';
+        $query = <<<SQL
+            SELECT year, month, day, hour, nb_pages
+            FROM history_summary
+            WHERE
+            (
+                (year = {$date->format('Y')} AND month = {$date->format('n')})
+                OR (year = {$date_last_month->format('Y')} AND month = {$date_last_month->format('n')})
+                OR (year = {$date_last_year->format('Y')} AND month = {$date_last_year->format('n')})
+            )
+                AND day IS NOT NULL
+                AND hour IS NULL
+            ORDER BY year DESC, month DESC;
+            SQL;
 
         foreach (functions_mysqli::query2array($query) as $value) {
             $date = self::get_date_object($value);
@@ -4473,21 +4463,18 @@ class functions_admin
             $result['month'][] = self::set_missing_values('day', $val, new DateTime($key), $lastDate);
         }
 
-        $query = '
-  SELECT
-    AVG(nb_pages)
-  FROM history_summary
-  WHERE
-    (
-    year = ' . $date->format('Y') . ' OR
-    (year = ' . ($date->format('Y') - 1) . ' and month > ' . $date->format('n') . ')
-    )
-    AND day IS NOT NULL
-    AND hour IS NULL
-  ORDER BY
-    year DESC,
-    month DESC
-  ;';
+        $query = <<<SQL
+            SELECT AVG(nb_pages)
+            FROM history_summary
+            WHERE
+            (
+                year = {$date->format('Y')} OR
+                (year = ({$date->format('Y')} - 1) AND month > {$date->format('n')})
+            )
+                AND day IS NOT NULL
+                AND hour IS NULL
+            ORDER BY year DESC, month DESC;
+            SQL;
 
         list($result['avg']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 

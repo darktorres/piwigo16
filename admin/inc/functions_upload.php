@@ -165,12 +165,11 @@ class functions_upload
         if (! isset($image_id) and
             $conf['upload_detect_duplicate']
         ) {
-            $query = '
-  SELECT
-      id
-    FROM images
-    WHERE md5sum = \'' . $md5sum . '\'
-  ;';
+            $query = <<<SQL
+                SELECT id
+                FROM images
+                WHERE md5sum = '{$md5sum}';
+                SQL;
             $images_found = functions_mysqli::query2array($query);
 
             if (count($images_found) > 0) {
@@ -192,12 +191,11 @@ class functions_upload
 
         if (isset($image_id)) {
             // this photo already exists, we update it
-            $query = '
-  SELECT
-      path
-    FROM images
-    WHERE id = ' . $image_id . '
-  ;';
+            $query = <<<SQL
+                SELECT path
+                FROM images
+                WHERE id = {$image_id};
+                SQL;
             $result = functions_mysqli::pwg_query($query);
 
             while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -374,14 +372,11 @@ class functions_upload
         functions_metadata_admin::sync_metadata([$image_id]);
 
         // cache a derivative
-        $query = '
-  SELECT
-      id,
-      path,
-      representative_ext
-    FROM images
-    WHERE id = ' . $image_id . '
-  ;';
+        $query = <<<SQL
+            SELECT id, path, representative_ext
+            FROM images
+            WHERE id = {$image_id};
+            SQL;
         $image_infos = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
         $src_image = new SrcImage($image_infos);
 
@@ -447,12 +442,11 @@ class functions_upload
             die('[' . __FUNCTION__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', functions::conf_get_param('format_ext', ['cr2'])) . ')');
         }
 
-        $query = '
-  SELECT
-      path
-    FROM images
-    WHERE id = ' . $format_of . '
-  ;';
+        $query = <<<SQL
+            SELECT path
+            FROM images
+            WHERE id = {$format_of};
+            SQL;
         $images = functions_mysqli::query2array($query);
 
         if (! isset($images[0])) {

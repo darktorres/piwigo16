@@ -95,11 +95,11 @@ if (isset($_GET['album'])) {
     functions::check_input_parameter('album', $_GET, false, PATTERN_ID);
 
     // test if album really exists
-    $query = '
-SELECT id, uppercats
-  FROM categories
-  WHERE id = ' . $_GET['album'] . '
-;';
+    $query = <<<SQL
+        SELECT id, uppercats
+        FROM categories
+        WHERE id = {$_GET['album']};
+        SQL;
     $result = functions_mysqli::pwg_query($query);
 
     if (functions_mysqli::pwg_db_num_rows($result) == 1) {
@@ -112,15 +112,14 @@ SELECT id, uppercats
     }
 } else {
     // we need to know the category in which the last photo was added
-    $query = '
-SELECT category_id
-  FROM images AS i
-    JOIN image_category AS ic ON image_id = i.id
-    JOIN categories AS c ON category_id = c.id
-  ORDER BY i.id DESC
-  LIMIT 1
-;
-';
+    $query = <<<SQL
+        SELECT category_id
+        FROM images AS i
+        JOIN image_category AS ic ON image_id = i.id
+        JOIN categories AS c ON category_id = c.id
+        ORDER BY i.id DESC
+        LIMIT 1;
+        SQL;
     $result = functions_mysqli::pwg_query($query);
 
     if (functions_mysqli::pwg_db_num_rows($result) > 0) {
@@ -133,11 +132,10 @@ SELECT category_id
 $template->assign('selected_category', $selected_category);
 
 // how many existing albums?
-$query = '
-SELECT
-    COUNT(*)
-  FROM categories
-;';
+$query = <<<SQL
+    SELECT COUNT(*)
+    FROM categories;
+    SQL;
 list($nb_albums) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 // $nb_albums = 0;
 $template->assign('NB_ALBUMS', $nb_albums);

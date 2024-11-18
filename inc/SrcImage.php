@@ -167,7 +167,7 @@ final class SrcImage
 
             if ($size !== false) {
                 $this->size = [$size[0], $size[1]];
-                functions_mysqli::pwg_query('UPDATE images SET width=' . $size[0] . ', height=' . $size[1] . ' WHERE id=' . $this->id);
+                functions_mysqli::pwg_query("UPDATE images SET width = {$size[0]}, height = {$size[1]} WHERE id = {$this->id};");
             }
         }
 

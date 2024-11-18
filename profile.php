@@ -45,11 +45,12 @@ if (! defined('PHPWG_ROOT_PATH')) { //direct script access
         ];
 
         // Get the Guest custom settings
-        $query = '
-SELECT ' . implode(',', $fields) . '
-  FROM user_infos
-  WHERE user_id = ' . $conf['default_user_id'] . '
-;';
+        $imploded_fields = implode(', ', $fields);
+        $query = <<<SQL
+            SELECT {$imploded_fields}
+            FROM user_infos
+            WHERE user_id = {$conf['default_user_id']};
+            SQL;
         $result = functions_mysqli::pwg_query($query);
         $default_user = functions_mysqli::pwg_db_fetch_assoc($result);
         $userdata = array_merge($userdata, $default_user);

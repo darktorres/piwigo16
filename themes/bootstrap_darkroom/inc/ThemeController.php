@@ -244,22 +244,13 @@ class ThemeController
         }
 
         // select all pictures for this category
-        $query = '
-            SELECT
-              id,
-              file,
-              representative_ext,
-              name,
-              comment,
-              width,
-              height,
-              date_creation,
-              path,
-              rotation
+        $items = implode(', ', $page['items']);
+        $query = <<<SQL
+            SELECT id, file, representative_ext, name, comment, width, height, date_creation, path, rotation
             FROM images
-            WHERE id IN (' . implode(',', $page['items']) . ')
-            ORDER BY FIELD(id, ' . implode(',', $page['items']) . ')
-            ;';
+            WHERE id IN ({$items})
+            ORDER BY FIELD(id, {$items});
+            SQL;
 
         $result = functions_mysqli::pwg_query($query);
 

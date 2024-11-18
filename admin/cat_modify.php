@@ -52,10 +52,12 @@ foreach (['comment', 'dir', 'site_id', 'id_uppercat'] as $nullable) {
 
 $category['is_virtual'] = empty($category['dir']) ? true : false;
 
-$query = 'SELECT DISTINCT category_id
-  FROM image_category
-  WHERE category_id = ' . $_GET['cat_id'] . '
-  LIMIT 1';
+$query = <<<SQL
+    SELECT DISTINCT category_id
+    FROM image_category
+    WHERE category_id = {$_GET['cat_id']}
+    LIMIT 1;
+    SQL;
 $result = functions_mysqli::pwg_query($query);
 $category['has_images'] = functions_mysqli::pwg_db_num_rows($result) > 0 ? true : false;
 
@@ -136,15 +138,12 @@ if ($category['has_images']) {
         $base_url . 'batch_manager&amp;filter=album-' . $category['id']
     );
 
-    $query = '
-SELECT
-    COUNT(image_id),
-    MIN(DATE(date_available)),
-    MAX(DATE(date_available))
-  FROM images
-    JOIN image_category ON image_id = id
-  WHERE category_id = ' . $category['id'] . '
-;';
+    $query = <<<SQL
+        SELECT COUNT(image_id), MIN(DATE(date_available)), MAX(DATE(date_available))
+        FROM images
+        JOIN image_category ON image_id = id
+        WHERE category_id = {$category['id']};
+        SQL;
     list($image_count, $min_date, $max_date) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     if ($min_date == $max_date) {
@@ -174,26 +173,24 @@ $template->assign(
 );
 
 // total number of images under this category (including sub-categories)
-$query = '
-SELECT DISTINCT
-    (image_id)
-  FROM
-    image_category
-  WHERE
-    category_id IN (' . implode(',', $subcat_ids) . ')
-  ;';
+$subcat_ids_str = implode(', ', $subcat_ids);
+$query = <<<SQL
+    SELECT DISTINCT (image_id)
+    FROM image_category
+    WHERE category_id IN ({$subcat_ids_str});
+    SQL;
 $image_ids_recursive = functions_mysqli::query2array($query, null, 'image_id');
 
 $category['nb_images_recursive'] = count($image_ids_recursive);
 
 // date creation
-$query = '
-SELECT occurred_on
-  FROM `activity`
-  WHERE object_id = ' . $category['id'] . '
-    AND object = "album"
-    AND action = "add"
-';
+$query = <<<SQL
+    SELECT occurred_on
+    FROM `activity`
+    WHERE object_id = {$category['id']}
+        AND object = "album"
+        AND action = "add";
+    SQL;
 $result = functions_mysqli::query2array($query);
 
 if (count($result) > 0) {
@@ -206,11 +203,11 @@ if (count($result) > 0) {
 }
 
 // Sub Albums
-$query = '
-SELECT COUNT(*)
-  FROM `categories`
-  WHERE id_uppercat = ' . $category['id'] . '
-';
+$query = <<<SQL
+    SELECT COUNT(*)
+    FROM `categories`
+    WHERE id_uppercat = {$category['id']};
+    SQL;
 $result = functions_mysqli::query2array($query);
 
 $template->assign(

@@ -59,10 +59,10 @@ functions_mysqli::pwg_db_check_charset();
 // +-----------------------------------------------------------------------+
 
 // retrieve already applied upgrades
-$query = '
-SELECT id
-  FROM upgrade
-;';
+$query = <<<SQL
+    SELECT id
+    FROM upgrade;
+    SQL;
 $applied = functions::array_from_query($query, 'id');
 
 // retrieve existing upgrades
@@ -86,12 +86,12 @@ foreach ($to_apply as $upgrade_id) {
     include(UPGRADES_PATH . '/' . $upgrade_id . '-database.php');
 
     // notify upgrade
-    $query = '
-INSERT INTO upgrade
-  (id, applied, description)
-  VALUES
-  (\'' . $upgrade_id . '\', NOW(), \'' . $upgrade_description . '\')
-;';
+    $query = <<<SQL
+        INSERT INTO upgrade
+            (id, applied, description)
+        VALUES
+            ('{$upgrade_id}', NOW(), '{$upgrade_description}');
+        SQL;
     functions_mysqli::pwg_query($query);
 }
 

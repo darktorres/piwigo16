@@ -101,8 +101,8 @@ class functions_install
                 $_POST['dbname']
             );
             functions_mysqli::pwg_db_check_version();
-            functions_mysqli::pwg_query('DROP DATABASE IF EXISTS ' . $_POST['dbname']);
-            functions_mysqli::pwg_query('CREATE DATABASE ' . $_POST['dbname']);
+            functions_mysqli::pwg_query("DROP DATABASE IF EXISTS {$_POST['dbname']};");
+            functions_mysqli::pwg_query("CREATE DATABASE {$_POST['dbname']};");
             global $mysqli;
             $mysqli->select_db($_POST['dbname']);
         } catch (Exception $e) {

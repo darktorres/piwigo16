@@ -209,9 +209,9 @@ if (empty($page['is_external'])) {
                 $search_items = $page['items'];
             }
 
-            $search_items_clause = 'image_id IN (' . implode(',', $search_items) . ')';
+            $search_items_clause = 'image_id IN (' . implode(', ', $search_items) . ')';
         } else {
-            $search_items_clause = '1=1';
+            $search_items_clause = '1 = 1';
         }
 
         if (isset($my_search['fields']['tags'])) {
@@ -244,24 +244,24 @@ if (empty($page['is_external'])) {
         }
 
         if (isset($my_search['fields']['author'])) {
-            $query = '
-SELECT
-    author,
-    COUNT(DISTINCT(id)) AS counter
-  FROM images AS i
-    JOIN image_category AS ic ON ic.image_id = i.id
-  WHERE ' . $search_items_clause . '
-  ' . functions_user::get_sql_condition_FandF(
+            $sql_condition = functions_user::get_sql_condition_FandF(
                 [
                     'forbidden_categories' => 'category_id',
                     'visible_categories' => 'category_id',
                     'visible_images' => 'id',
                 ],
-                ' AND '
-            ) . '
-    AND author IS NOT NULL
-  GROUP BY author
-;';
+                'AND'
+            );
+
+            $query = <<<SQL
+                SELECT author, COUNT(DISTINCT id) AS counter
+                FROM images AS i
+                JOIN image_category AS ic ON ic.image_id = i.id
+                WHERE {$search_items_clause}
+                    {$sql_condition}
+                    AND author IS NOT NULL
+                GROUP BY author;
+                SQL;
             $authors = functions_mysqli::query2array($query);
             $author_names = [];
 
@@ -276,32 +276,32 @@ SELECT
         }
 
         if (isset($my_search['fields']['date_posted'])) {
-            $query = '
-SELECT
-    SUBDATE(NOW(), INTERVAL 24 HOUR) AS 24h,
-    SUBDATE(NOW(), INTERVAL 7 DAY) AS 7d,
-    SUBDATE(NOW(), INTERVAL 30 DAY) AS 30d,
-    SUBDATE(NOW(), INTERVAL 3 MONTH) AS 3m,
-    SUBDATE(NOW(), INTERVAL 6 MONTH) AS 6m
-;';
+            $query = <<<SQL
+                SELECT
+                    SUBDATE(NOW(), INTERVAL 24 HOUR) AS 24h,
+                    SUBDATE(NOW(), INTERVAL 7 DAY) AS 7d,
+                    SUBDATE(NOW(), INTERVAL 30 DAY) AS 30d,
+                    SUBDATE(NOW(), INTERVAL 3 MONTH) AS 3m,
+                    SUBDATE(NOW(), INTERVAL 6 MONTH) AS 6m;
+                SQL;
             $thresholds = functions_mysqli::query2array($query)[0];
 
-            $query = '
-SELECT
-    image_id,
-    date_available
-  FROM images AS i
-    JOIN image_category AS ic ON ic.image_id = i.id
-  WHERE ' . $search_items_clause . '
-  ' . functions_user::get_sql_condition_FandF(
+            $sql_condition = functions_user::get_sql_condition_FandF(
                 [
                     'forbidden_categories' => 'category_id',
                     'visible_categories' => 'category_id',
                     'visible_images' => 'id',
                 ],
-                ' AND '
-            ) . '
-;';
+                'AND'
+            );
+
+            $query = <<<SQL
+                SELECT image_id, date_available
+                FROM images AS i
+                JOIN image_category AS ic ON ic.image_id = i.id
+                WHERE {$search_items_clause}
+                    {$sql_condition};
+                SQL;
             $dates = functions_mysqli::query2array($query);
             $pre_counters = array_fill_keys(array_keys($thresholds), []);
 
@@ -359,24 +359,24 @@ SELECT
         }
 
         if (isset($my_search['fields']['added_by'])) {
-            $query = '
-SELECT
-    COUNT(DISTINCT(id)) AS counter,
-    added_by AS added_by_id
-  FROM images AS i
-    JOIN image_category AS ic ON ic.image_id = i.id
-  WHERE ' . $search_items_clause . '
-  ' . functions_user::get_sql_condition_FandF(
+            $sql_condition = functions_user::get_sql_condition_FandF(
                 [
                     'forbidden_categories' => 'category_id',
                     'visible_categories' => 'category_id',
                     'visible_images' => 'id',
                 ],
-                ' AND '
-            ) . '
-  GROUP BY added_by_id
-  ORDER BY counter DESC
-;';
+                'AND'
+            );
+
+            $query = <<<SQL
+                SELECT COUNT(DISTINCT id) AS counter, added_by AS added_by_id
+                FROM images AS i
+                JOIN image_category AS ic ON ic.image_id = i.id
+                WHERE {$search_items_clause}
+                    {$sql_condition}
+                GROUP BY added_by_id
+                ORDER BY counter DESC;
+                SQL;
             $added_by = functions_mysqli::query2array($query);
             $user_ids = [];
 
@@ -386,13 +386,12 @@ SELECT
                     $user_ids[] = $i['added_by_id'];
                 }
 
-                $query = '
-SELECT
-    ' . $conf['user_fields']['id'] . ' AS id,
-    ' . $conf['user_fields']['username'] . ' AS username
-  FROM users
-  WHERE ' . $conf['user_fields']['id'] . ' IN (' . implode(',', $user_ids) . ')
-;';
+                $user_ids_str = implode(', ', $user_ids);
+                $query = <<<SQL
+                    SELECT {$conf['user_fields']['id']} AS id, {$conf['user_fields']['username']} AS username
+                    FROM users
+                    WHERE {$conf['user_fields']['id']} IN ({$user_ids_str});
+                    SQL;
                 $username_of = functions_mysqli::query2array($query, 'id', 'username');
 
                 foreach (array_keys($added_by) as $added_by_idx) {
@@ -412,14 +411,13 @@ SELECT
         ) {
             $fullname_of = [];
 
-            $query = '
-SELECT
-    id,
-    uppercats
-  FROM categories
-    INNER JOIN user_cache_categories ON id = cat_id AND user_id = ' . $user['id'] . '
-  WHERE id IN (' . implode(',', $my_search['fields']['cat']['words']) . ')
-;';
+            $cat_words = implode(', ', $my_search['fields']['cat']['words']);
+            $query = <<<SQL
+                SELECT id, uppercats
+                FROM categories
+                INNER JOIN user_cache_categories ON id = cat_id AND user_id = {$user['id']}
+                WHERE id IN ({$cat_words});
+                SQL;
             $result = functions_mysqli::pwg_query($query);
 
             while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -439,24 +437,24 @@ SELECT
         }
 
         if (isset($my_search['fields']['filetypes'])) {
-            $query = '
-SELECT
-    SUBSTRING_INDEX(path, ".", -1) AS ext,
-    COUNT(DISTINCT(id)) AS counter
-  FROM images AS i
-    JOIN image_category AS ic ON ic.image_id = i.id
-  WHERE ' . $search_items_clause . '
-  ' . functions_user::get_sql_condition_FandF(
+            $sql_condition = functions_user::get_sql_condition_FandF(
                 [
                     'forbidden_categories' => 'category_id',
                     'visible_categories' => 'category_id',
                     'visible_images' => 'id',
                 ],
-                ' AND '
-            ) . '
-  GROUP BY ext
-  ORDER BY counter DESC
-;';
+                'AND'
+            );
+
+            $query = <<<SQL
+                SELECT SUBSTRING_INDEX(path, ".", -1) AS ext, COUNT(DISTINCT id) AS counter
+                FROM images AS i
+                JOIN image_category AS ic ON ic.image_id = i.id
+                WHERE {$search_items_clause}
+                    {$sql_condition}
+                GROUP BY ext
+                ORDER BY counter DESC;
+                SQL;
             $template->assign('FILETYPES', functions_mysqli::query2array($query, 'ext', 'counter'));
         }
 
@@ -475,13 +473,13 @@ SELECT
                 $cat_ids = $page['search_details']['matching_cat_ids'];
 
                 if (count($cat_ids)) {
-                    $query = '
-SELECT
-    c.*
-  FROM categories AS c
-    INNER JOIN user_cache_categories ON c.id = cat_id and user_id = ' . $user['id'] . '
-  WHERE id IN (' . implode(',', $cat_ids) . ')
-;';
+                    $cat_ids_str = implode(', ', $cat_ids);
+                    $query = <<<SQL
+                        SELECT c.*
+                        FROM categories AS c
+                        INNER JOIN user_cache_categories ON c.id = cat_id AND user_id = {$user['id']}
+                        WHERE id IN ({$cat_ids_str});
+                        SQL;
                     $cats = functions_mysqli::query2array($query);
                     usort($cats, functions_html::name_compare(...));
                     $albums_found = [];

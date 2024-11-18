@@ -103,12 +103,12 @@ if (isset($_POST['submit'])) {
     $redirect = false;
 
     if ($action == 'remove_from_caddie') {
-        $query = '
-DELETE
-  FROM caddie
-  WHERE element_id IN (' . implode(',', $collection) . ')
-    AND user_id = ' . $user['id'] . '
-;';
+        $collection_str = implode(', ', $collection);
+        $query = <<<SQL
+            DELETE FROM caddie
+            WHERE element_id IN ({$collection_str})
+                AND user_id = {$user['id']};
+            SQL;
         functions_mysqli::pwg_query($query);
 
         // remove from caddie action available only in caddie so reload content
@@ -130,12 +130,13 @@ DELETE
         ) {
             $taglist_before = functions_admin::get_image_tag_ids($collection);
 
-            $query = '
-DELETE
-  FROM image_tag
-  WHERE image_id IN (' . implode(',', $collection) . ')
-    AND tag_id IN (' . implode(',', $_POST['del_tags']) . ')
-;';
+            $collection_str = implode(', ', $collection);
+            $del_tags_str = implode(', ', $_POST['del_tags']);
+            $query = <<<SQL
+                DELETE FROM image_tag
+                WHERE image_id IN ({$collection_str})
+                    AND tag_id IN ({$del_tags_str});
+                SQL;
             functions_mysqli::pwg_query($query);
 
             $taglist_after = functions_admin::get_image_tag_ids($collection);
@@ -363,8 +364,12 @@ DELETE
     } elseif ($action == 'delete_derivatives' &&
               ! empty($_POST['del_derivatives_type'])
     ) {
-        $query = 'SELECT path,representative_ext FROM images
-  WHERE id IN (' . implode(',', $collection) . ')';
+        $collection_str = implode(', ', $collection);
+        $query = <<<SQL
+            SELECT path, representative_ext
+            FROM images
+            WHERE id IN ({$collection_str});
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         while ($info = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -507,13 +512,12 @@ $template->assign(
 $filter_tags = [];
 
 if (! empty($_SESSION['bulk_manager_filter']['tags'])) {
-    $query = '
-SELECT
-    id,
-    name
-  FROM tags
-  WHERE id IN (' . implode(',', $_SESSION['bulk_manager_filter']['tags']) . ')
-;';
+    $tag_ids = implode(', ', $_SESSION['bulk_manager_filter']['tags']);
+    $query = <<<SQL
+        SELECT id, name
+        FROM tags
+        WHERE id IN ({$tag_ids});
+        SQL;
 
     $filter_tags = functions_admin::get_taglist($query);
 }
@@ -527,12 +531,12 @@ if (isset($_SESSION['bulk_manager_filter']['category'])) {
     $selected_category = [$_SESSION['bulk_manager_filter']['category']];
 } else {
     // we need to know the category in which the last photo was added
-    $query = '
-SELECT category_id
-  FROM image_category
-  ORDER BY image_id DESC
-  LIMIT 1
-;';
+    $query = <<<SQL
+        SELECT category_id
+        FROM image_category
+        ORDER BY image_id DESC
+        LIMIT 1;
+        SQL;
     $result = functions_mysqli::pwg_query($query);
 
     if (functions_mysqli::pwg_db_num_rows($result) > 0) {
@@ -549,17 +553,14 @@ $template->assign('filter_category_selected', $selected_category);
 $associated_categories = [];
 
 if (count($page['cat_elements_id']) > 0) {
-    $query = '
-SELECT
-    DISTINCT(category_id) AS id
-  FROM image_category AS ic
-    JOIN images AS i ON i.id = ic.image_id
-  WHERE ic.image_id IN (' . implode(',', $page['cat_elements_id']) . ')
-    AND (
-      ic.category_id != i.storage_category_id
-      OR i.storage_category_id IS NULL
-    )
-;';
+    $implodedCatElementsId = implode(', ', $page['cat_elements_id']);
+    $query = <<<SQL
+        SELECT DISTINCT category_id AS id
+        FROM image_category AS ic
+        JOIN images AS i ON i.id = ic.image_id
+        WHERE ic.image_id IN ({$implodedCatElementsId})
+            AND (ic.category_id != i.storage_category_id OR i.storage_category_id IS NULL);
+        SQL;
 
     $associated_categories = functions_mysqli::query2array($query, 'id', 'id');
 }
@@ -658,9 +659,11 @@ if (count($page['cat_elements_id']) > 0) {
         $conf['order_by'] = ' ORDER BY ' . join(', ', $order_by_fields);
     }
 
-    $query = '
-SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
-  FROM images';
+    $query = <<<SQL
+        SELECT id, path, representative_ext, file, filesize, level, name, width, height, rotation
+        FROM images
+
+        SQL;
 
     if ($is_category) {
         $category_info = functions_category::get_cat_info($_SESSION['bulk_manager_filter']['category']);
@@ -671,22 +674,29 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
             $conf['order_by'] = ' ORDER BY ' . $category_info['image_order'];
         }
 
-        $query .= '
-    JOIN image_category ON id = image_id';
+        $query .= <<<SQL
+            JOIN image_category ON id = image_id
+
+            SQL;
     }
 
-    $query .= '
-  WHERE id IN (' . implode(',', $page['cat_elements_id']) . ')';
+    $cat_elements_id = implode(', ', $page['cat_elements_id']);
+    $query .= <<<SQL
+        WHERE id IN ({$cat_elements_id})
+
+        SQL;
 
     if ($is_category) {
-        $query .= '
-    AND category_id = ' . $_SESSION['bulk_manager_filter']['category'];
+        $query .= <<<SQL
+            AND category_id = {$_SESSION['bulk_manager_filter']['category']}
+
+            SQL;
     }
 
-    $query .= '
-  ' . $conf['order_by'] . '
-  LIMIT ' . $page['nb_images'] . ' OFFSET ' . $page['start'] . '
-;';
+    $query .= <<<SQL
+        {$conf['order_by']}
+        LIMIT {$page['nb_images']} OFFSET {$page['start']};
+        SQL;
     $result = functions_mysqli::pwg_query($query);
 
     $thumb_params = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE);

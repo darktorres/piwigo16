@@ -117,12 +117,11 @@ if (isset($_GET['filter_ip']) or
 }
 
 if ($form_param['user_id'] != '-1') {
-    $query = '
-  SELECT
-      username
-    FROM users
-    WHERE id = ' . $form_param['user_id'] . '
-  ;';
+    $query = <<<SQL
+        SELECT username
+        FROM users
+        WHERE id = {$form_param['user_id']};
+        SQL;
 
     list($form_param['user_name']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
     $form_param['user_id'] = empty(functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query))) ? '-1' : $form_param['user_id'];

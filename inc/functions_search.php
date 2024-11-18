@@ -52,11 +52,12 @@ class functions_search
             die('Invalid search identifier');
         }
 
-        $query = '
-  SELECT *
-    FROM search
-    WHERE ' . sprintf($clause_pattern, $candidate) . '
-  ;';
+        $clause = sprintf($clause_pattern, $candidate);
+        $query = <<<SQL
+            SELECT *
+            FROM search
+            WHERE {$clause};
+            SQL;
         $searches = functions_mysqli::query2array($query);
 
         if (count($searches) > 0) {
@@ -193,52 +194,51 @@ class functions_search
                     // adds brackets around where clauses
                     $cat_word_clauses[] = implode(' OR ', $cat_field_clauses);
 
-                    $query = '
-  SELECT
-      id
-    FROM categories
-    WHERE ' . implode(' OR ', $cat_word_clauses) . '
-  ;';
+                    $catWordClauses = implode(' OR ', $cat_word_clauses);
+                    $query = <<<SQL
+                        SELECT id
+                        FROM categories
+                        WHERE {$catWordClauses};
+                        SQL;
                     $cat_ids = functions_mysqli::query2array($query, null, 'id');
                     $cat_ids_by_word[$word] = $cat_ids;
 
                     if (count($cat_ids) > 0) {
-                        $query = '
-  SELECT
-      image_id
-    FROM image_category
-    WHERE category_id IN (' . implode(',', $cat_ids) . ')
-  ;';
+                        $catIdsList = implode(', ', $cat_ids);
+                        $query = <<<SQL
+                            SELECT image_id
+                            FROM image_category
+                            WHERE category_id IN ({$catIdsList});
+                            SQL;
                         $cat_image_ids = functions_mysqli::query2array($query, null, 'image_id');
 
                         if (count($cat_image_ids) > 0) {
-                            $field_clauses[] = 'id IN (' . implode(',', $cat_image_ids) . ')';
+                            $field_clauses[] = 'id IN (' . implode(', ', $cat_image_ids) . ')';
                         }
                     }
                 }
 
                 // search_in_tags
                 if (in_array('tags', $search['fields']['allwords']['fields'])) {
-                    $query = '
-  SELECT
-      id
-    FROM tags
-    WHERE name LIKE \'%' . $word . '%\'
-  ;';
+                    $query = <<<SQL
+                        SELECT id
+                        FROM tags
+                        WHERE name LIKE '%{$word}%';
+                        SQL;
                     $tag_ids = functions_mysqli::query2array($query, null, 'id');
                     $tag_ids_by_word[$word] = $tag_ids;
 
                     if (count($tag_ids) > 0) {
-                        $query = '
-  SELECT
-      image_id
-    FROM image_tag
-    WHERE tag_id IN (' . implode(',', $tag_ids) . ')
-  ;';
+                        $tagIdsList = implode(', ', $tag_ids);
+                        $query = <<<SQL
+                            SELECT image_id
+                            FROM image_tag
+                            WHERE tag_id IN ({$tagIdsList});
+                            SQL;
                         $tag_image_ids = functions_mysqli::query2array($query, null, 'image_id');
 
                         if (count($tag_image_ids) > 0) {
-                            $field_clauses[] = 'id IN (' . implode(',', $tag_image_ids) . ')';
+                            $field_clauses[] = 'id IN (' . implode(', ', $tag_image_ids) . ')';
                         }
                     }
                 }
@@ -346,7 +346,7 @@ class functions_search
         }
 
         if (! empty($search['fields']['added_by'])) {
-            $clauses[] = 'added_by IN (' . implode(',', $search['fields']['added_by']) . ')';
+            $clauses[] = 'added_by IN (' . implode(', ', $search['fields']['added_by']) . ')';
         }
 
         if (isset($search['fields']['cat']) and
@@ -359,7 +359,7 @@ class functions_search
                 $cat_ids = $search['fields']['cat']['words'];
             }
 
-            $local_clause = 'category_id IN (' . implode(',', $cat_ids) . ')';
+            $local_clause = 'category_id IN (' . implode(', ', $cat_ids) . ')';
             $clauses[] = $local_clause;
         }
 
@@ -426,19 +426,26 @@ class functions_search
         if (! empty($search_clause)) {
             $has_filters_filled = true;
 
-            $query = '
-  SELECT DISTINCT(id)
-    FROM images i
-      INNER JOIN image_category AS ic ON id = ic.image_id
-      LEFT JOIN image_tag AS it ON id = it.image_id
-    WHERE ' . $search_clause;
+            $query = <<<SQL
+                SELECT DISTINCT id
+                FROM images i
+                INNER JOIN image_category AS ic ON id = ic.image_id
+                LEFT JOIN image_tag AS it ON id = it.image_id
+                WHERE {$search_clause}
+
+                SQL;
 
             if (! empty($images_where)) {
-                $query .= "\n  AND " . $images_where;
+                $query .= <<<SQL
+                    AND {$images_where}
+
+                    SQL;
             }
 
-            $query .= $forbidden . '
-    ' . $conf['order_by'];
+            $query .= <<<SQL
+                {$forbidden}
+                {$conf['order_by']};
+                SQL;
             $items = functions::array_from_query($query, 'id');
 
             $logger->debug(__FUNCTION__ . ' ' . count($items) . ' items in $items');
@@ -556,8 +563,13 @@ class functions_search
     {
         $qsr->images_iids = array_fill(0, count($expr->stokens), []);
 
-        $query_base = 'SELECT id from images i WHERE
-  ';
+        $query_base = <<<SQL
+            SELECT id
+            FROM images i
+            WHERE
+
+            SQL;
+
         for ($i = 0; $i < count($expr->stokens); $i++) {
             $token = $expr->stokens[$i];
             $scope_id = isset($token->scope) ? $token->scope->id : 'photo';
@@ -657,8 +669,11 @@ class functions_search
             }
 
             $clauses = self::qsearch_get_text_token_search_sql($token, ['name']);
-            $query = 'SELECT * FROM tags
-  WHERE (' . implode("\n OR ", $clauses) . ')';
+            $clausesList = implode("\n OR ", $clauses);
+            $query = <<<SQL
+                SELECT * FROM tags
+                WHERE ({$clausesList});
+                SQL;
             $result = functions_mysqli::pwg_query($query);
 
             while ($tag = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -689,10 +704,12 @@ class functions_search
             $token = $expr->stokens[$i];
 
             if (! empty($tag_ids)) {
-                $query = '
-  SELECT image_id FROM image_tag
-    WHERE tag_id IN (' . implode(',', $tag_ids) . ')
-    GROUP BY image_id';
+                $tagIdsList = implode(', ', $tag_ids);
+                $query = <<<SQL
+                    SELECT image_id FROM image_tag
+                    WHERE tag_id IN ({$tagIdsList})
+                    GROUP BY image_id;
+                    SQL;
                 $qsr->tag_iids[$i] = functions_mysqli::query2array($query, null, 'image_id');
 
                 if ($expr->stoken_modifiers[$i] & self::QST_NOT) {
@@ -708,9 +725,9 @@ class functions_search
                 }
             } elseif (isset($token->scope) && $token->scope->id == 'tag' && strlen($token->term) == 0) {
                 if ($token->modifier & self::QST_WILDCARD) { // eg. 'tag:*' returns all tagged images
-                    $qsr->tag_iids[$i] = functions_mysqli::query2array('SELECT DISTINCT image_id FROM image_tag', null, 'image_id');
+                    $qsr->tag_iids[$i] = functions_mysqli::query2array('SELECT DISTINCT image_id FROM image_tag;', null, 'image_id');
                 } else { // eg. 'tag:' returns all untagged images
-                    $qsr->tag_iids[$i] = functions_mysqli::query2array('SELECT id FROM images LEFT JOIN image_tag ON id=image_id WHERE image_id IS NULL', null, 'id');
+                    $qsr->tag_iids[$i] = functions_mysqli::query2array('SELECT id FROM images LEFT JOIN image_tag ON id = image_id WHERE image_id IS NULL;', null, 'id');
                 }
             }
         }
@@ -745,12 +762,13 @@ class functions_search
             }
 
             $clauses = self::qsearch_get_text_token_search_sql($token, ['name', 'comment']);
-            $query = '
-  SELECT
-      *
-    FROM categories
-      INNER JOIN user_cache_categories ON id = cat_id and user_id = ' . $user['id'] . '
-    WHERE (' . implode("\n OR ", $clauses) . ')';
+            $clausesList = implode("\n OR ", $clauses);
+            $query = <<<SQL
+                SELECT *
+                FROM categories
+                INNER JOIN user_cache_categories ON id = cat_id AND user_id = {$user['id']}
+                WHERE ({$clausesList});
+                SQL;
             $result = functions_mysqli::pwg_query($query);
 
             while ($cat = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -782,20 +800,22 @@ class functions_search
 
             if (! empty($cat_ids)) {
                 if ($conf['quick_search_include_sub_albums']) {
-                    $query = '
-  SELECT
-      id
-    FROM categories
-      INNER JOIN user_cache_categories ON id = cat_id and user_id = ' . $user['id'] . '
-    WHERE id IN (' . implode(',', functions_category::get_subcat_ids($cat_ids)) . ')
-  ;';
+                    $subcatIdsList = implode(', ', functions_category::get_subcat_ids($cat_ids));
+                    $query = <<<SQL
+                        SELECT id
+                        FROM categories
+                        INNER JOIN user_cache_categories ON id = cat_id AND user_id = {$user['id']}
+                        WHERE id IN ({$subcatIdsList});
+                        SQL;
                     $cat_ids = functions_mysqli::query2array($query, null, 'id');
                 }
 
-                $query = '
-  SELECT image_id FROM image_category
-    WHERE category_id IN (' . implode(',', $cat_ids) . ')
-    GROUP BY image_id';
+                $catIdsList = implode(', ', $cat_ids);
+                $query = <<<SQL
+                    SELECT image_id FROM image_category
+                    WHERE category_id IN ({$catIdsList})
+                    GROUP BY image_id;
+                    SQL;
                 $qsr->cat_iids[$i] = functions_mysqli::query2array($query, null, 'image_id');
 
                 if ($expr->stoken_modifiers[$i] & self::QST_NOT) {
@@ -814,9 +834,9 @@ class functions_search
                       strlen($token->term) == 0
             ) {
                 if ($token->modifier & self::QST_WILDCARD) { // eg. 'category:*' returns all images associated to an album
-                    $qsr->cat_iids[$i] = functions_mysqli::query2array('SELECT DISTINCT image_id FROM image_category', null, 'image_id');
+                    $qsr->cat_iids[$i] = functions_mysqli::query2array('SELECT DISTINCT image_id FROM image_category;', null, 'image_id');
                 } else { // eg. 'category:' returns all orphan images
-                    $qsr->cat_iids[$i] = functions_mysqli::query2array('SELECT id FROM images LEFT JOIN image_category ON id=image_id WHERE image_id IS NULL', null, 'id');
+                    $qsr->cat_iids[$i] = functions_mysqli::query2array('SELECT id FROM images LEFT JOIN image_category ON id = image_id WHERE image_id IS NULL;', null, 'id');
                 }
             }
         }
@@ -1052,7 +1072,7 @@ class functions_search
         $permissions = ! isset($options['permissions']) ? true : $options['permissions'];
 
         $where_clauses = [];
-        $where_clauses[] = 'i.id IN (' . implode(',', $ids) . ')';
+        $where_clauses[] = 'i.id IN (' . implode(', ', $ids) . ')';
 
         if (! empty($options['images_where'])) {
             $where_clauses[] = '(' . $options['images_where'] . ')';
@@ -1069,17 +1089,23 @@ class functions_search
             );
         }
 
-        $query = '
-  SELECT DISTINCT(id) FROM images i';
+        $whereClauses = implode("\n AND ", $where_clauses);
+        $query = <<<SQL
+            SELECT DISTINCT id FROM images i
+
+            SQL;
 
         if ($permissions) {
-            $query .= '
-      INNER JOIN image_category AS ic ON id = ic.image_id';
+            $query .= <<<SQL
+                INNER JOIN image_category AS ic ON id = ic.image_id
+
+                SQL;
         }
 
-        $query .= '
-    WHERE ' . implode("\n AND ", $where_clauses) . "\n" .
-        $conf['order_by'];
+        $query .= <<<SQL
+            WHERE {$whereClauses}
+            {$conf['order_by']};
+            SQL;
 
         $ids = functions_mysqli::query2array($query, null, 'id');
 
@@ -1147,12 +1173,11 @@ class functions_search
     {
         $candidate = 'psk-' . date('Ymd') . '-' . functions_session::generate_key(10);
 
-        $query = '
-  SELECT
-      COUNT(*)
-    FROM search
-    WHERE search_uuid = \'' . $candidate . '\'
-  ;';
+        $query = <<<SQL
+            SELECT COUNT(*)
+            FROM search
+            WHERE search_uuid = '{$candidate}';
+            SQL;
         list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($counter == 0) {
@@ -1166,7 +1191,7 @@ class functions_search
     {
         global $user;
 
-        list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW()'));
+        list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
         $search_uuid = self::get_available_search_uuid();
 
         functions_mysqli::single_insert(

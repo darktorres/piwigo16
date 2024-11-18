@@ -34,12 +34,12 @@ functions_plugins::trigger_notify('loc_begin_notification');
 
 $page['feed'] = functions::find_available_feed_id();
 
-$query = '
-INSERT INTO user_feed
-  (id, user_id, last_check)
-  VALUES
-  (\'' . $page['feed'] . '\', ' . $user['id'] . ', NULL)
-;';
+$query = <<<SQL
+    INSERT INTO user_feed
+        (id, user_id, last_check)
+    VALUES
+        ('{$page['feed']}', {$user['id']}, NULL);
+    SQL;
 functions_mysqli::pwg_query($query);
 
 $feed_url = PHPWG_ROOT_PATH . 'feed.php';

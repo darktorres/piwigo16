@@ -62,11 +62,11 @@ $template->assign(
 // |                              group list                               |
 // +-----------------------------------------------------------------------+
 
-$query = '
-SELECT id, name, is_default
-  FROM `groups`
-  ORDER BY name ASC
-;';
+$query = <<<SQL
+    SELECT id, name, is_default
+    FROM `groups`
+    ORDER BY name ASC;
+    SQL;
 $result = functions_mysqli::pwg_query($query);
 
 $admin_url = functions_url::get_root_url() . 'admin.php?page=';
@@ -78,13 +78,12 @@ $toggle_is_default_url = $admin_url . 'group_list&amp;toggle_is_default=';
 $group_counter = 0;
 
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
-    $query = '
-SELECT u.' . $conf['user_fields']['username'] . ' AS username
-  FROM users AS u
-  INNER JOIN user_group AS ug
-    ON u.' . $conf['user_fields']['id'] . ' = ug.user_id
-  WHERE ug.group_id = ' . $row['id'] . '
-;';
+    $query = <<<SQL
+        SELECT u.{$conf['user_fields']['username']} AS username
+        FROM users AS u
+        INNER JOIN user_group AS ug ON u.{$conf['user_fields']['id']} = ug.user_id
+        WHERE ug.group_id = {$row['id']};
+        SQL;
     $members = [];
     $res = functions_mysqli::pwg_query($query);
 

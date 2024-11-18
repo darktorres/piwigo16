@@ -96,10 +96,10 @@ class functions_html
         }
 
         if (! isset($cache['cat_names'])) {
-            $query = '
-  SELECT id, name, permalink
-    FROM categories
-  ;';
+            $query = <<<SQL
+                SELECT id, name, permalink
+                FROM categories;
+                SQL;
             $cache['cat_names'] = functions_mysqli::query2array($query, 'id');
         }
 

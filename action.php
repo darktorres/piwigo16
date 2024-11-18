@@ -29,12 +29,11 @@ if ($conf['enable_formats'] and
 ) {
     functions::check_input_parameter('format', $_GET, false, PATTERN_ID);
 
-    $query = '
-SELECT
-    *
-  FROM image_format
-  WHERE format_id = ' . $_GET['format'] . '
-;';
+    $query = <<<SQL
+        SELECT *
+        FROM image_format
+        WHERE format_id = {$_GET['format']};
+        SQL;
     $formats = functions_mysqli::query2array($query);
 
     if (count($formats) == 0) {
@@ -55,10 +54,11 @@ if (! isset($_GET['id']) or
     functions::do_error(400, 'Invalid request - id/part');
 }
 
-$query = '
-SELECT * FROM images
-  WHERE id=' . $_GET['id'] . '
-;';
+$query = <<<SQL
+    SELECT *
+    FROM images
+    WHERE id = {$_GET['id']};
+    SQL;
 
 $element_info = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
@@ -81,20 +81,22 @@ $src_image = new SrcImage($element_info);
 
 // $filter['visible_categories'] and $filter['visible_images']
 // are not used because it's not necessary (filter != restriction)
-$query = '
-SELECT id
-  FROM categories
-    INNER JOIN image_category ON category_id = id
-  WHERE image_id = ' . $_GET['id'] . '
-' . functions_user::get_sql_condition_FandF(
+$sql_condition = functions_user::get_sql_condition_FandF(
     [
         'forbidden_categories' => 'category_id',
         'forbidden_images' => 'image_id',
     ],
-    '    AND'
-) . '
-  LIMIT 1
-;';
+    'AND'
+);
+
+$query = <<<SQL
+    SELECT id
+    FROM categories
+    INNER JOIN image_category ON category_id = id
+    WHERE image_id = {$_GET['id']}
+    {$sql_condition}
+    LIMIT 1;
+    SQL;
 
 if (! $is_admin_download and
     functions_mysqli::pwg_db_num_rows(functions_mysqli::pwg_query($query)) < 1

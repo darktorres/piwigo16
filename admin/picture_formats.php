@@ -26,20 +26,19 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 functions::check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
-$query = '
-SELECT *
-  FROM images
-  WHERE id = ' . $_GET['image_id'] . '
-;';
+$query = <<<SQL
+    SELECT *
+    FROM images
+    WHERE id = {$_GET['image_id']};
+    SQL;
 $images = functions_mysqli::query2array($query);
 $image = $images[0];
 
-$query = '
-SELECT
-    *
-  FROM image_format
-  WHERE image_id = ' . $_GET['image_id'] . '
-;';
+$query = <<<SQL
+    SELECT *
+    FROM image_format
+    WHERE image_id = {$_GET['image_id']};
+    SQL;
 
 $formats = functions_mysqli::query2array($query);
 

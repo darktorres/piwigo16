@@ -52,60 +52,54 @@ class functions_rate
             $save_anonymous_id = functions_cookie::pwg_get_cookie_var('anonymous_rater', $anonymous_id);
 
             if ($anonymous_id != $save_anonymous_id) { // client has changed his IP address or he's trying to fool us
-                $query = '
-  SELECT element_id
-    FROM rate
-    WHERE user_id = ' . $user['id'] . '
-      AND anonymous_id = \'' . $anonymous_id . '\'
-  ;';
+                $query = <<<SQL
+                    SELECT element_id
+                    FROM rate
+                    WHERE user_id = {$user['id']}
+                        AND anonymous_id = '{$anonymous_id}';
+                    SQL;
                 $already_there = functions::array_from_query($query, 'element_id');
 
                 if (count($already_there) > 0) {
-                    $query = '
-  DELETE
-    FROM rate
-    WHERE user_id = ' . $user['id'] . '
-      AND anonymous_id = \'' . $save_anonymous_id . '\'
-      AND element_id IN (' . implode(',', $already_there) . ')
-  ;';
+                    $already_there_imploded = implode(', ', $already_there);
+                    $query = <<<SQL
+                        DELETE FROM rate
+                        WHERE user_id = {$user['id']}
+                            AND anonymous_id = '{$save_anonymous_id}'
+                            AND element_id IN ({$already_there_imploded});
+                        SQL;
                     functions_mysqli::pwg_query($query);
                 }
 
-                $query = '
-  UPDATE rate
-    SET anonymous_id = \'' . $anonymous_id . '\'
-    WHERE user_id = ' . $user['id'] . '
-      AND anonymous_id = \'' . $save_anonymous_id . '\'
-  ;';
+                $query = <<<SQL
+                    UPDATE rate
+                    SET anonymous_id = '{$anonymous_id}'
+                    WHERE user_id = {$user['id']}
+                        AND anonymous_id = '{$save_anonymous_id}';
+                    SQL;
                 functions_mysqli::pwg_query($query);
             }
 
             functions_cookie::pwg_set_cookie_var('anonymous_rater', $anonymous_id);
         }
 
-        $query = '
-  DELETE
-    FROM rate
-    WHERE element_id = ' . $image_id . '
-      AND user_id = ' . $user['id'] . '
-  ';
+        $query = <<<SQL
+            DELETE FROM rate
+            WHERE element_id = {$image_id}
+                AND user_id = {$user['id']}
+
+            SQL;
         if ($user_anonymous) {
-            $query .= ' AND anonymous_id = \'' . $anonymous_id . '\'';
+            $query .= " AND anonymous_id = '{$anonymous_id}'\n";
         }
 
         functions_mysqli::pwg_query($query);
-        $query = '
-  INSERT
-    INTO rate
-    (user_id,anonymous_id,element_id,rate,date)
-    VALUES
-    ('
-          . $user['id'] . ','
-          . '\'' . $anonymous_id . '\','
-          . $image_id . ','
-          . $rate
-          . ',NOW())
-  ;';
+        $query = <<<SQL
+            INSERT INTO rate
+                (user_id, anonymous_id, element_id, rate, date)
+            VALUES
+                ({$user['id']}, '{$anonymous_id}', {$image_id}, {$rate}, NOW());
+            SQL;
         functions_mysqli::pwg_query($query);
 
         return self::update_rating_score($image_id);
@@ -128,12 +122,11 @@ class functions_rate
             return $alt_result;
         }
 
-        $query = '
-  SELECT element_id,
-      COUNT(rate) AS rcount,
-      SUM(rate) AS rsum
-    FROM rate
-    GROUP by element_id';
+        $query = <<<SQL
+            SELECT element_id, COUNT(rate) AS rcount, SUM(rate) AS rsum
+            FROM rate
+            GROUP BY element_id;
+            SQL;
 
         $all_rates_count = 0;
         $all_rates_avg = 0;
@@ -184,18 +177,21 @@ class functions_rate
 
         //set to null all items with no rate
         if (! isset($by_item[$element_id])) {
-            $query = '
-  SELECT id FROM images
-    LEFT JOIN rate ON id=element_id
-    WHERE element_id IS NULL AND rating_score IS NOT NULL';
+            $query = <<<SQL
+                SELECT id FROM images
+                LEFT JOIN rate ON id = element_id
+                WHERE element_id IS NULL AND rating_score IS NOT NULL;
+                SQL;
 
             $to_update = functions::array_from_query($query, 'id');
 
             if (! empty($to_update)) {
-                $query = '
-  UPDATE images
-    SET rating_score=NULL
-    WHERE id IN (' . implode(',', $to_update) . ')';
+                $to_update_imploded = implode(', ', $to_update);
+                $query = <<<SQL
+                    UPDATE images
+                    SET rating_score = NULL
+                    WHERE id IN ({$to_update_imploded});
+                    SQL;
                 functions_mysqli::pwg_query($query);
             }
         }

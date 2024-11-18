@@ -74,11 +74,11 @@ if (isset($_POST['submit']) and
     }
 
     // site must not exists
-    $query = '
-SELECT COUNT(id) AS count
-  FROM sites
-  WHERE galleries_url = \'' . $url . '\'
-;';
+    $query = <<<SQL
+        SELECT COUNT(id) AS count
+        FROM sites
+        WHERE galleries_url = '{$url}';
+        SQL;
     $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
     if ($row['count'] > 0) {
@@ -92,12 +92,12 @@ SELECT COUNT(id) AS count
     }
 
     if (count($page['errors']) == 0) {
-        $query = '
-INSERT INTO sites
-  (galleries_url)
-  VALUES
-  (\'' . $url . '\')
-;';
+        $query = <<<SQL
+            INSERT INTO sites
+                (galleries_url)
+            VALUES
+                ('{$url}');
+            SQL;
         functions_mysqli::pwg_query($query);
         $page['infos'][] = $url . ' ' . functions::l10n('created');
     }
@@ -115,11 +115,11 @@ if (isset($_GET['site']) and
 if (isset($_GET['action']) and
     isset($page['site'])
 ) {
-    $query = '
-SELECT galleries_url
-  FROM sites
-  WHERE id = ' . $page['site'] . '
-;';
+    $query = <<<SQL
+        SELECT galleries_url
+        FROM sites
+        WHERE id = {$page['site']};
+        SQL;
     list($galleries_url) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     switch ($_GET['action']) {
@@ -138,19 +138,19 @@ $template->assign(
     ]
 );
 
-$query = '
-SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images
-  FROM categories AS c LEFT JOIN images AS i
-  ON c.id=i.storage_category_id
-  WHERE c.site_id IS NOT NULL
-  GROUP BY c.site_id
-;';
+$query = <<<SQL
+    SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images
+    FROM categories AS c
+    LEFT JOIN images AS i ON c.id = i.storage_category_id
+    WHERE c.site_id IS NOT NULL
+    GROUP BY c.site_id;
+    SQL;
 $sites_detail = functions::hash_from_query($query, 'site_id');
 
-$query = '
-SELECT *
-  FROM sites
-;';
+$query = <<<SQL
+    SELECT *
+    FROM sites;
+    SQL;
 $result = functions_mysqli::pwg_query($query);
 
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {

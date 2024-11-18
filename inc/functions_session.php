@@ -115,11 +115,12 @@ class functions_session
      */
     public static function pwg_session_read($session_id)
     {
-        $query = '
-  SELECT data
-    FROM sessions
-    WHERE id = \'' . self::get_remote_addr_session_hash() . $session_id . '\'
-  ;';
+        $session_hash = self::get_remote_addr_session_hash() . $session_id;
+        $query = <<<SQL
+            SELECT data
+            FROM sessions
+            WHERE id = '{$session_hash}';
+            SQL;
         $result = functions_mysqli::pwg_query($query);
         $row = functions_mysqli::pwg_db_fetch_assoc($result);
 
@@ -139,11 +140,12 @@ class functions_session
      */
     public static function pwg_session_write($session_id, $data)
     {
-        $query = '
-  REPLACE INTO sessions
-    (id,data,expiration)
-    VALUES(\'' . self::get_remote_addr_session_hash() . $session_id . '\',\'' . functions_mysqli::pwg_db_real_escape_string($data) . '\',now())
-  ;';
+        $session_hash = self::get_remote_addr_session_hash() . $session_id;
+        $escaped_data = functions_mysqli::pwg_db_real_escape_string($data);
+        $query = <<<SQL
+            REPLACE INTO sessions (id, data, expiration)
+            VALUES ('{$session_hash}', '{$escaped_data}', NOW());
+            SQL;
         functions_mysqli::pwg_query($query);
         return true;
     }
@@ -156,11 +158,11 @@ class functions_session
      */
     public static function pwg_session_destroy($session_id)
     {
-        $query = '
-  DELETE
-    FROM sessions
-    WHERE id = \'' . self::get_remote_addr_session_hash() . $session_id . '\'
-  ;';
+        $session_id_hash = self::get_remote_addr_session_hash() . $session_id;
+        $query = <<<SQL
+            DELETE FROM sessions
+            WHERE id = '{$session_id_hash}';
+            SQL;
         functions_mysqli::pwg_query($query);
         return true;
     }
@@ -174,12 +176,12 @@ class functions_session
     {
         global $conf;
 
-        $query = '
-  DELETE
-    FROM sessions
-    WHERE ' . functions_mysqli::pwg_db_date_to_ts('NOW()') . ' - ' . functions_mysqli::pwg_db_date_to_ts('expiration') . ' > '
-        . $conf['session_length'] . '
-  ;';
+        $now_ts = functions_mysqli::pwg_db_date_to_ts('NOW()');
+        $expiration_ts = functions_mysqli::pwg_db_date_to_ts('expiration');
+        $query = <<<SQL
+            DELETE FROM sessions
+            WHERE {$now_ts} - {$expiration_ts} > {$conf['session_length']};
+            SQL;
         functions_mysqli::pwg_query($query);
         return true;
     }
@@ -240,11 +242,10 @@ class functions_session
      */
     public static function delete_user_sessions($user_id)
     {
-        $query = '
-  DELETE
-    FROM sessions
-    WHERE data LIKE \'%pwg_uid|i:' . (int) $user_id . ';%\'
-  ;';
+        $query = <<<SQL
+            DELETE FROM sessions
+            WHERE data LIKE '%pwg_uid|i:{$user_id};%';
+            SQL;
         functions_mysqli::pwg_query($query);
     }
 }

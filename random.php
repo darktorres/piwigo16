@@ -28,21 +28,25 @@ functions_user::check_status(ACCESS_GUEST);
 // |                     generate random element list                      |
 // +-----------------------------------------------------------------------+
 
-$query = '
-SELECT id
-  FROM images
-    INNER JOIN image_category AS ic ON id = ic.image_id
-' . functions_user::get_sql_condition_FandF(
+$sql_conditions = functions_user::get_sql_condition_FandF(
     [
         'forbidden_categories' => 'category_id',
         'visible_categories' => 'category_id',
         'visible_images' => 'id',
     ],
     'WHERE'
-) . '
-  ORDER BY ' . functions_mysqli::DB_RANDOM_FUNCTION . '()
-  LIMIT ' . min(50, $conf['top_number'], $user['nb_image_page']) . '
-;';
+);
+$db_random_function = functions_mysqli::DB_RANDOM_FUNCTION;
+$limit_value = min(50, $conf['top_number'], $user['nb_image_page']);
+
+$query = <<<SQL
+    SELECT id
+    FROM images
+    INNER JOIN image_category AS ic ON id = ic.image_id
+    {$sql_conditions}
+    ORDER BY {$db_random_function}()
+    LIMIT {$limit_value};
+    SQL;
 
 // +-----------------------------------------------------------------------+
 // |                                redirect                               |

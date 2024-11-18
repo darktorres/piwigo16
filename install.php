@@ -270,10 +270,13 @@ if (isset($_POST['install'])) {
             'mysql'
         );
 
-        $query = '
-INSERT INTO config (param,value,comment)
-   VALUES (\'secret_key\',md5(' . functions_mysqli::pwg_db_cast_to_text(functions_mysqli::DB_RANDOM_FUNCTION . '()') . '),
-   \'a secret key specific to the gallery for internal use\');';
+        $random_function = functions_mysqli::pwg_db_cast_to_text(functions_mysqli::DB_RANDOM_FUNCTION . '()');
+        $query = <<<SQL
+            INSERT INTO config
+                (param, value, comment)
+            VALUES
+                ('secret_key', md5({$random_function}), 'a secret key specific to the gallery for internal use');
+            SQL;
         functions_mysqli::pwg_query($query);
 
         functions::conf_update_param('piwigo_db_version', functions::get_branch_from_version(PHPWG_VERSION));

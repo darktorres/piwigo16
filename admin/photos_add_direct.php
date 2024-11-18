@@ -28,10 +28,10 @@ if (! defined('PHOTOS_ADD_BASE_URL')) {
 if (isset($_GET['batch'])) {
     functions::check_input_parameter('batch', $_GET, false, '/^\d+(,\d+)*$/');
 
-    $query = '
-DELETE FROM caddie
-  WHERE user_id = ' . $user['id'] . '
-;';
+    $query = <<<SQL
+        DELETE FROM caddie
+        WHERE user_id = {$user['id']};
+        SQL;
     functions_mysqli::pwg_query($query);
 
     $inserts = [];
@@ -53,25 +53,25 @@ DELETE FROM caddie
 }
 
 if (functions_user::userprefs_get_param('promote-mobile-apps', true)) {
-    $query = '
-SELECT registration_date
-  FROM user_infos
-  WHERE registration_date IS NOT NULL
-  ORDER BY user_id ASC
-  LIMIT 1
-;';
+    $query = <<<SQL
+        SELECT registration_date
+        FROM user_infos
+        WHERE registration_date IS NOT NULL
+        ORDER BY user_id ASC
+        LIMIT 1;
+        SQL;
     list($register_date) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-    $query = '
-SELECT COUNT(*)
-  FROM categories
-;';
+    $query = <<<SQL
+        SELECT COUNT(*)
+        FROM categories;
+        SQL;
     list($nb_cats) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-    $query = '
-SELECT COUNT(*)
-  FROM images
-;';
+    $query = <<<SQL
+        SELECT COUNT(*)
+        FROM images;
+        SQL;
     list($nb_images) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     $uagent_obj = new uagent_info();
@@ -109,11 +109,11 @@ if ($display_formats &&
         $formats_original_info['src'] = DerivativeImage::url(derivative_std_params::IMG_SQUARE, $src_image);
 
         // Fetch actual formats
-        $query = '
-SELECT *
-  FROM image_format
-  WHERE image_id = ' . $formats_original_info['id'] . '
-;';
+        $query = <<<SQL
+            SELECT *
+            FROM image_format
+            WHERE image_id = {$formats_original_info['id']};
+            SQL;
         $formats = functions_mysqli::query2array($query);
 
         if (! empty($formats)) {

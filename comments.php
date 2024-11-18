@@ -89,7 +89,7 @@ $since_options = [
     ],
     4 => [
         'label' => functions::l10n('the beginning'),
-        'clause' => '1=1',
+        'clause' => '1 = 1',
     ], // stupid but generic
 ];
 
@@ -149,12 +149,13 @@ if (isset($_GET['cat']) and
         $category_ids = [-1];
     }
 
-    $page['where_clauses'][] = 'category_id IN (' . implode(',', $category_ids) . ')';
+    $imploded_category_ids = implode(', ', $category_ids);
+    $page['where_clauses'][] = "category_id IN ({$imploded_category_ids})";
 }
 
 // search a particular author
 if (! empty($_GET['author'])) {
-    $page['where_clauses'][] = '(u.' . $conf['user_fields']['username'] . ' = \'' . $_GET['author'] . '\' OR author = \'' . $_GET['author'] . '\')';
+    $page['where_clauses'][] = "(u.{$conf['user_fields']['username']} = '{$_GET['author']}' OR author = '{$_GET['author']}')";
 }
 
 // search a specific comment (if you're coming directly from an admin
@@ -306,17 +307,19 @@ $template->assign(
 // Search in a particular category
 $blockname = 'categories';
 
-$query = '
-SELECT id, name, uppercats, global_rank
-  FROM categories
-' . functions_user::get_sql_condition_FandF(
+$sql_condition = functions_user::get_sql_condition_FandF(
     [
         'forbidden_categories' => 'id',
         'visible_categories' => 'id',
     ],
     'WHERE'
-) . '
-;';
+);
+
+$query = <<<SQL
+    SELECT id, name, uppercats, global_rank
+    FROM categories
+    {$sql_condition};
+    SQL;
 functions_category::display_select_cat_wrapper($query, [@$_GET['cat']], $blockname, true);
 
 // Filter on recent comments...
@@ -366,35 +369,28 @@ $comments = [];
 $element_ids = [];
 $category_ids = [];
 
-$query = '
-SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
-       com.image_id,
-       ic.category_id,
-       com.author,
-       com.author_id,
-       u.' . $conf['user_fields']['email'] . ' AS user_email,
-       com.email,
-       com.date,
-       com.website_url,
-       com.content,
-       com.validated
-  FROM image_category AS ic
-    INNER JOIN comments AS com
-    ON ic.image_id = com.image_id
-    LEFT JOIN users As u
-    ON u.' . $conf['user_fields']['id'] . ' = com.author_id
-  WHERE ' . implode('
-    AND ', $page['where_clauses']) . '
-  GROUP BY comment_id
-  ORDER BY ' . $page['sort_by'] . ' ' . $page['sort_order'];
+$where_clauses = implode(' AND ', $page['where_clauses']);
+$query = <<<SQL
+    SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id, com.image_id, ic.category_id, com.author, com.author_id,
+        u.{$conf['user_fields']['email']} AS user_email, com.email, com.date, com.website_url, com.content,
+        com.validated
+    FROM image_category AS ic
+    INNER JOIN comments AS com ON ic.image_id = com.image_id
+    LEFT JOIN users As u ON u.{$conf['user_fields']['id']} = com.author_id
+    WHERE {$where_clauses}
+    GROUP BY comment_id
+    ORDER BY {$page['sort_by']} {$page['sort_order']}
+
+    SQL;
 
 if ($page['items_number'] != 'all') {
-    $query .= '
-  LIMIT ' . $page['items_number'] . ' OFFSET ' . $start;
+    $query .= <<<SQL
+        LIMIT {$page['items_number']} OFFSET {$start}
+
+        SQL;
 }
 
-$query .= '
-;';
+$query = trim($query) . ';';
 $result = functions_mysqli::pwg_query($query);
 
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -403,7 +399,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $category_ids[] = $row['category_id'];
 }
 
-list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS()'));
+list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
 
 $url = PHPWG_ROOT_PATH . 'comments.php' . functions_url::get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
 
@@ -419,17 +415,21 @@ $template->assign('navbar', $navbar);
 
 if (count($comments) > 0) {
     // retrieving element information
-    $query = '
-SELECT *
-  FROM images
-  WHERE id IN (' . implode(',', $element_ids) . ')
-;';
+    $element_ids_str = implode(', ', $element_ids);
+    $query = <<<SQL
+        SELECT *
+        FROM images
+        WHERE id IN ({$element_ids_str});
+        SQL;
     $elements = functions_mysqli::query2array($query, 'id');
 
     // retrieving category information
-    $query = 'SELECT id, name, permalink, uppercats
-  FROM categories
-  WHERE id IN (' . implode(',', $category_ids) . ')';
+    $category_ids_str = implode(', ', $category_ids);
+    $query = <<<SQL
+        SELECT id, name, permalink, uppercats
+        FROM categories
+        WHERE id IN ({$category_ids_str});
+        SQL;
     $categories = functions_mysqli::query2array($query, 'id');
 
     foreach ($comments as $comment) {

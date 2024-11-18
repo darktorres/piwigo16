@@ -40,12 +40,11 @@ if (isset($_GET['consensus_top_number'])) {
 
 // build users
 global $conf;
-$query = 'SELECT DISTINCT
-  u.' . $conf['user_fields']['id'] . ' AS id,
-  u.' . $conf['user_fields']['username'] . ' AS name,
-  ui.status
-  FROM users AS u INNER JOIN user_infos AS ui
-    ON u.' . $conf['user_fields']['id'] . ' = ui.user_id';
+$query = <<<SQL
+    SELECT DISTINCT u.{$conf['user_fields']['id']} AS id, u.{$conf['user_fields']['username']} AS name, ui.status
+    FROM users AS u
+    INNER JOIN user_infos AS ui ON u.{$conf['user_fields']['id']} = ui.user_id;
+    SQL;
 
 $users_by_id = [];
 $result = functions_mysqli::pwg_query($query);
@@ -68,8 +67,10 @@ foreach ($conf['rate_items'] as $rate) {
 // by user aggregation
 $image_ids = [];
 $by_user_ratings = [];
-$query = '
-SELECT * FROM rate ORDER by date DESC';
+$query = <<<SQL
+    SELECT * FROM rate
+    ORDER BY date DESC;
+    SQL;
 $result = functions_mysqli::pwg_query($query);
 
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -111,9 +112,12 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 $image_urls = [];
 
 if (count($image_ids) > 0) {
-    $query = 'SELECT id, name, file, path, representative_ext, level
-  FROM images
-  WHERE id IN (' . implode(',', array_keys($image_ids)) . ')';
+    $ids = implode(', ', array_keys($image_ids));
+    $query = <<<SQL
+        SELECT id, name, file, path, representative_ext, level
+        FROM images
+        WHERE id IN ({$ids});
+        SQL;
     $result = functions_mysqli::pwg_query($query);
     $params = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE);
 
@@ -129,10 +133,11 @@ if (count($image_ids) > 0) {
 }
 
 //all image averages
-$query = 'SELECT element_id,
-    AVG(rate) AS avg
-  FROM rate
-  GROUP BY element_id';
+$query = <<<SQL
+    SELECT element_id, AVG(rate) AS avg
+    FROM rate
+    GROUP BY element_id;
+    SQL;
 $all_img_sum = [];
 $result = functions_mysqli::pwg_query($query);
 
@@ -142,10 +147,12 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     ];
 }
 
-$query = 'SELECT id
-  FROM images
-  ORDER by rating_score DESC
-  LIMIT ' . $consensus_top_number;
+$query = <<<SQL
+    SELECT id
+    FROM images
+    ORDER BY rating_score DESC
+    LIMIT {$consensus_top_number};
+    SQL;
 $best_rated = array_flip(functions::array_from_query($query, 'id'));
 
 // by user stats
@@ -227,11 +234,10 @@ $template->assign('order_by_options_selected', [$order_by_index]);
 
 $x = uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 
-$query = '
-SELECT
-    COUNT(*)
-  FROM rate' .
-';';
+$query = <<<SQL
+    SELECT COUNT(*)
+    FROM rate;
+    SQL;
 list($nb_elements) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $template->assign([

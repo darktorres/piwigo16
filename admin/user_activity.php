@@ -33,21 +33,12 @@ if (isset($_GET['type']) &&
 ) {
     $output_lines = [];
 
-    $query = '
-SELECT
-    activity_id,
-    performed_by,
-    object,
-    object_id,
-    action,
-    ip_address,
-    occurred_on,
-    details,
-    ' . $conf['user_fields']['username'] . ' AS username
-  FROM activity
-    JOIN users AS u ON performed_by = u.' . $conf['user_fields']['id'] . '
-  ORDER BY activity_id DESC
-;';
+    $query = <<<SQL
+        SELECT activity_id, performed_by, object, object_id, action, ip_address, occurred_on, details, {$conf['user_fields']['username']} AS username
+        FROM activity
+        JOIN users AS u ON performed_by = u.{$conf['user_fields']['id']}
+        ORDER BY activity_id DESC;
+        SQL;
 
     $result = functions_mysqli::pwg_query($query);
     array_push($output_lines, ['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']);
@@ -101,24 +92,22 @@ $template->assign([
     'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(['users']),
 ]);
 
-$query = '
-SELECT
-    performed_by,
-    COUNT(*) as counter
-  FROM activity
-  WHERE object != \'system\'
-  GROUP BY performed_by
-;';
+$query = <<<SQL
+    SELECT performed_by, COUNT(*) AS counter
+    FROM activity
+    WHERE object != 'system'
+    GROUP BY performed_by;
+    SQL;
 
 $nb_lines_for_user = functions_mysqli::query2array($query, 'performed_by', 'counter');
 
 if (count($nb_lines_for_user) > 0) {
-    $query = '
-  SELECT
-      ' . $conf['user_fields']['id'] . ' AS id,
-      ' . $conf['user_fields']['username'] . ' AS username
-    FROM users
-    WHERE ' . $conf['user_fields']['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
+    $ids = implode(', ', array_keys($nb_lines_for_user));
+    $query = <<<SQL
+        SELECT {$conf['user_fields']['id']} AS id, {$conf['user_fields']['username']} AS username
+        FROM users
+        WHERE {$conf['user_fields']['id']} IN ({$ids});
+        SQL;
 }
 
 $username_of = functions_mysqli::query2array($query, 'id', 'username');
@@ -138,10 +127,10 @@ foreach ($nb_lines_for_user as $id => $nb_line) {
 
 $template->assign('ulist', $filterable_users);
 
-$query = '
-SELECT COUNT(*)
-  FROM users
-;';
+$query = <<<SQL
+    SELECT COUNT(*)
+    FROM users;
+    SQL;
 
 list($nb_users) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 $template->assign('nb_users', $nb_users);

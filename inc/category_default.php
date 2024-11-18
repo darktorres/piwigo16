@@ -36,11 +36,12 @@ $selection = functions_plugins::trigger_change('loc_index_thumbnails_selection',
 if (count($selection) > 0) {
     $rank_of = array_flip($selection);
 
-    $query = '
-SELECT *
-  FROM images
-  WHERE id IN (' . implode(',', $selection) . ')
-;';
+    $implodedSelection = implode(', ', $selection);
+    $query = <<<SQL
+        SELECT *
+        FROM images
+        WHERE id IN ({$implodedSelection});
+        SQL;
     $result = functions_mysqli::pwg_query($query);
 
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -74,13 +75,14 @@ if (count($pictures) > 0) {
     if ($conf['activate_comments'] and
         $user['show_nb_comments']
     ) {
-        $query = '
-SELECT image_id, COUNT(*) AS nb_comments
-  FROM comments
-  WHERE validated = \'true\'
-    AND image_id IN (' . implode(',', $selection) . ')
-  GROUP BY image_id
-;';
+        $implodedSelection = implode(', ', $selection);
+        $query = <<<SQL
+            SELECT image_id, COUNT(*) AS nb_comments
+            FROM comments
+            WHERE validated = 'true'
+                AND image_id IN ({$implodedSelection})
+            GROUP BY image_id;
+            SQL;
         $nb_comments_of = functions_mysqli::query2array($query, 'image_id', 'nb_comments');
     }
 }

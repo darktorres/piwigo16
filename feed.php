@@ -28,12 +28,11 @@ $image_only = isset($_GET['image_only']);
 
 // echo '<pre>'.\Piwigo\inc\functions_session::generate_key(50).'</pre>';
 if (! empty($feed_id)) {
-    $query = '
-SELECT user_id,
-       last_check
-  FROM user_feed
-  WHERE id = \'' . $feed_id . '\'
-;';
+    $query = <<<SQL
+        SELECT user_id, last_check
+        FROM user_feed
+        WHERE id = '{$feed_id}';
+        SQL;
     $feed_row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
     if (empty($feed_row)) {
@@ -94,11 +93,11 @@ if (! $image_only) {
 
         $rss->addItem($item);
 
-        $query = '
-UPDATE user_feed
-  SET last_check = \'' . $dbnow . '\'
-  WHERE id = \'' . $feed_id . '\'
-;';
+        $query = <<<SQL
+            UPDATE user_feed
+            SET last_check = '{$dbnow}'
+            WHERE id = '{$feed_id}';
+            SQL;
         functions_mysqli::pwg_query($query);
     }
 }
@@ -109,11 +108,12 @@ if (! empty($feed_id) and
     if (! isset($feed_row['last_check']) or
         time() - functions::datetime_to_ts($feed_row['last_check']) > 30 * 24 * 3600
     ) {
-        $query = '
-UPDATE user_feed
-  SET last_check = ' . functions_mysqli::pwg_db_get_recent_period_expression(-15, $dbnow) . '
-  WHERE id = \'' . $feed_id . '\'
-;';
+        $last_check_expr = functions_mysqli::pwg_db_get_recent_period_expression(-15, $dbnow);
+        $query = <<<SQL
+            UPDATE user_feed
+            SET last_check = {$last_check_expr}
+            WHERE id = '{$feed_id}';
+            SQL;
         functions_mysqli::pwg_query($query);
     }
 }

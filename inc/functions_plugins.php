@@ -239,23 +239,28 @@ class functions_plugins
      */
     public static function get_db_plugins($state = '', $id = '')
     {
-        $query = '
-  SELECT * FROM plugins';
         $clauses = [];
 
         if (! empty($state)) {
-            $clauses[] = 'state=\'' . $state . '\'';
+            $clauses[] = "state = '{$state}'";
         }
 
         if (! empty($id)) {
-            $clauses[] = 'id="' . $id . '"';
+            $clauses[] = "id = '{$id}'";
         }
+
+        $where_clause = '';
 
         if (count($clauses)) {
-            $query .= '
-    WHERE ' . implode(' AND ', $clauses);
+            $where_clause = 'WHERE ' . implode(' AND ', $clauses);
         }
 
+        $query = <<<SQL
+            SELECT * FROM plugins
+            {$where_clause}
+            SQL;
+
+        $query = trim($query) . ';';
         return functions_mysqli::query2array($query);
     }
 
@@ -338,11 +343,11 @@ class functions_plugins
             // update database (only on production). We want to avoid registering an "auto" to "auto" update,
             // which happens for each "version=auto" plugin on each page load.
             if ($new_version != $old_version) {
-                $query = '
-  UPDATE plugins
-    SET version = "' . $plugin['version'] . '"
-    WHERE id = "' . $plugin['id'] . '"
-  ;';
+                $query = <<<SQL
+                    UPDATE plugins
+                    SET version = "{$plugin['version']}"
+                    WHERE id = "{$plugin['id']}";
+                    SQL;
                 functions_mysqli::pwg_query($query);
 
                 functions::pwg_activity('system', ACTIVITY_SYSTEM_PLUGIN, 'autoupdate', [

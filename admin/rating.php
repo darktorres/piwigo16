@@ -77,41 +77,45 @@ if (isset($_GET['cat']) and
     $cat_ids = functions_category::get_subcat_ids([$_GET['cat']]);
 
     if (count($cat_ids) > 0) {
-        $page['cat_filter'] = ' AND ic.category_id IN (' . implode(',', $cat_ids) . ')';
+        $page['cat_filter'] = ' AND ic.category_id IN (' . implode(', ', $cat_ids) . ')';
     }
 }
 
 $users = [];
-$query = '
-SELECT ' . $conf['user_fields']['username'] . ' as username, ' . $conf['user_fields']['id'] . ' as id
-  FROM users
-;';
+$query = <<<SQL
+    SELECT {$conf['user_fields']['username']} AS username, {$conf['user_fields']['id']} AS id
+    FROM users;
+    SQL;
 $result = functions_mysqli::pwg_query($query);
 
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $users[$row['id']] = stripslashes($row['username']);
 }
 
-$query = '
-SELECT
-    COUNT(DISTINCT(r.element_id))
-  FROM rate AS r';
+$query = <<<SQL
+    SELECT COUNT(DISTINCT r.element_id)
+    FROM rate AS r
+
+    SQL;
 
 if (! empty($page['cat_filter'])) {
-    $query .= '
-    JOIN images AS i ON r.element_id = i.id
-    JOIN image_category AS ic ON ic.image_id = i.id';
+    $query .= <<<SQL
+        JOIN images AS i ON r.element_id = i.id
+        JOIN image_category AS ic ON ic.image_id = i.id
+
+        SQL;
 }
 
-$query .= '
-WHERE 1=1' . $page['user_filter'];
+$query .= <<<SQL
+    WHERE 1 = 1 {$page['user_filter']}
+    SQL;
+$query = trim($query) . ';';
 list($nb_images) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-$query = '
-SELECT
-    COUNT(*)
-  FROM rate' .
-';';
+$query = <<<SQL
+    SELECT COUNT(*)
+    FROM rate;
+    SQL;
 list($nb_elements) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 // +-----------------------------------------------------------------------+
@@ -166,35 +170,27 @@ $template->assign('user_options', $user_options);
 $template->assign('user_options_selected', [@$_GET['users']]);
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Rating'));
 
-$query = '
-SELECT i.id,
-    i.path,
-    i.file,
-    i.representative_ext,
-    i.rating_score       AS score,
-    MAX(r.date)          AS recently_rated,
-    ROUND(AVG(r.rate),2) AS avg_rates,
-    COUNT(r.rate)        AS nb_rates,
-    SUM(r.rate)          AS sum_rates
-  FROM rate AS r
-    LEFT JOIN images AS i ON r.element_id = i.id';
+$query = <<<SQL
+    SELECT i.id, i.path, i.file, i.representative_ext, i.rating_score AS score, MAX(r.date) AS recently_rated,
+        ROUND(AVG(r.rate), 2) AS avg_rates, COUNT(r.rate) AS nb_rates, SUM(r.rate) AS sum_rates
+    FROM rate AS r
+    LEFT JOIN images AS i ON r.element_id = i.id
+
+    SQL;
 
 if (! empty($page['cat_filter'])) {
-    $query .= '
-    JOIN image_category AS ic ON ic.image_id = i.id';
+    $query .= <<<SQL
+        JOIN image_category AS ic ON ic.image_id = i.id
+
+        SQL;
 }
 
-$query .= '
-  WHERE 1 = 1 ' . $page['user_filter'] . $page['cat_filter'] . '
-  GROUP BY i.id,
-        i.path,
-        i.file,
-        i.representative_ext,
-        i.rating_score,
-        r.element_id
-  ORDER BY ' . $available_order_by[$order_by_index][1] . '
-  LIMIT ' . $elements_per_page . ' OFFSET ' . $start . '
-;';
+$query .= <<<SQL
+    WHERE 1 = 1 {$page['user_filter']} {$page['cat_filter']}
+    GROUP BY i.id, i.path, i.file, i.representative_ext, i.rating_score, r.element_id
+    ORDER BY {$available_order_by[$order_by_index][1]}
+    LIMIT {$elements_per_page} OFFSET {$start};
+    SQL;
 
 $images = [];
 $result = functions_mysqli::pwg_query($query);
@@ -210,10 +206,12 @@ foreach ($images as $image) {
 
     $image_url = functions_url::get_root_url() . 'admin.php?page=photo-' . $image['id'];
 
-    $query = 'SELECT *
-FROM rate AS r
-WHERE r.element_id=' . $image['id'] . '
-ORDER BY date DESC;';
+    $query = <<<SQL
+        SELECT *
+        FROM rate AS r
+        WHERE r.element_id = {$image['id']}
+        ORDER BY date DESC;
+        SQL;
     $result = functions_mysqli::pwg_query($query);
     $nb_rates = functions_mysqli::pwg_db_num_rows($result);
 

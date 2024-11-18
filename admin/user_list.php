@@ -31,11 +31,11 @@ include(PHPWG_ROOT_PATH . 'admin/inc/user_tabs.php');
 
 $groups = [];
 
-$query = '
-SELECT id, name
-  FROM `groups`
-  ORDER BY name ASC
-;';
+$query = <<<SQL
+    SELECT id, name
+    FROM `groups`
+    ORDER BY name ASC;
+    SQL;
 $result = functions_mysqli::pwg_query($query);
 
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -46,13 +46,11 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 // |                              Dates for filtering                      |
 // +-----------------------------------------------------------------------+
 
-$query = '
-SELECT DISTINCT
-      month(registration_date) as registration_month,
-      year(registration_date) as registration_year
-FROM user_infos
-ORDER BY registration_date
-;';
+$query = <<<SQL
+    SELECT DISTINCT MONTH(registration_date) AS registration_month, YEAR(registration_date) AS registration_year
+    FROM user_infos
+    ORDER BY registration_date;
+    SQL;
 $result = functions_mysqli::pwg_query($query);
 
 $register_dates = [];
@@ -91,12 +89,11 @@ $password_protected_users = [$conf['guest_id']];
 
 // an admin can't delete other admin/webmaster
 if ($user['status'] == 'admin') {
-    $query = '
-SELECT
-    user_id
-  FROM user_infos
-  WHERE status IN (\'webmaster\', \'admin\')
-;';
+    $query = <<<SQL
+        SELECT user_id
+        FROM user_infos
+        WHERE status IN ('webmaster', 'admin');
+        SQL;
     $admin_ids = functions_mysqli::query2array($query, null, 'user_id');
 
     $protected_users = array_merge($protected_users, $admin_ids);
@@ -155,11 +152,11 @@ foreach ($conf['available_permission_levels'] as $level) {
 $template->assign('level_options', $level_options);
 $template->assign('level_selected', $default_user['level']);
 
-$query = '
-SELECT id, name, is_default
-  FROM `groups`
-  ORDER BY name ASC
-;';
+$query = <<<SQL
+    SELECT id, name, is_default
+    FROM `groups`
+    ORDER BY name ASC;
+    SQL;
 $result = functions_mysqli::pwg_query($query);
 
 $groups_arr_id = [];

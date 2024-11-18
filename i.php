@@ -60,7 +60,12 @@ try {
 
 functions_mysqli::pwg_db_check_charset();
 
-list($conf['derivatives']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT value FROM config WHERE param=\'derivatives\''));
+$query = <<<SQL
+    SELECT value
+    FROM config
+    WHERE param = 'derivatives';
+    SQL;
+list($conf['derivatives']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 ImageStdParams::load_from_db();
 
 functions::parse_request();
@@ -114,11 +119,13 @@ if (strpos($page['src_location'], '/pwg_representative/') === false &&
     strpos($page['src_location'], 'plugins/') === false
 ) {
     try {
-        $query = '
-SELECT *
-  FROM images
-  WHERE path=\'' . addslashes($page['src_location']) . '\'
-;';
+        // Extract the function result
+        $escaped_path = addslashes($page['src_location']);
+        $query = <<<SQL
+            SELECT *
+            FROM images
+            WHERE path = '{$escaped_path}';
+            SQL;
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
         if ($row) {

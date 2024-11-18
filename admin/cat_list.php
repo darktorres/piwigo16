@@ -146,44 +146,35 @@ $template->assign([
 
 $categories = [];
 
-$query = '
-SELECT id, name, permalink, dir, `rank`, status
-  FROM categories';
+$parentIdCondition = isset($_GET['parent_id'])
+    ? "WHERE id_uppercat = {$_GET['parent_id']}"
+    : 'WHERE id_uppercat IS NULL';
 
-if (! isset($_GET['parent_id'])) {
-    $query .= '
-  WHERE id_uppercat IS NULL';
-} else {
-    $query .= '
-  WHERE id_uppercat = ' . $_GET['parent_id'];
-}
-
-$query .= '
-  ORDER BY `rank` ASC
-;';
+$query = <<<SQL
+    SELECT id, name, permalink, dir, `rank`, status
+    FROM categories
+    {$parentIdCondition}
+    ORDER BY `rank` ASC;
+    SQL;
 $categories = functions::hash_from_query($query, 'id');
 
 // get the categories containing images directly
 $categories_with_images = [];
 
 if (count($categories)) {
-    $query = '
-SELECT
-    category_id,
-    COUNT(*) AS nb_photos
-  FROM image_category
-  GROUP BY category_id
-;';
-    // WHERE category_id IN ('.implode(',', array_keys($categories)).')
+    $query = <<<SQL
+        SELECT category_id, COUNT(*) AS nb_photos
+        FROM image_category
+        GROUP BY category_id;
+        SQL;
+    // WHERE category_id IN ('.implode(', ', array_keys($categories)).')
 
     $nb_photos_in = functions_mysqli::query2array($query, 'category_id', 'nb_photos');
 
-    $query = '
-SELECT
-    id,
-    uppercats
-  FROM categories
-;';
+    $query = <<<SQL
+        SELECT id, uppercats
+        FROM categories;
+        SQL;
     $all_categories = functions_mysqli::query2array($query, 'id', 'uppercats');
     $subcats_of = [];
 

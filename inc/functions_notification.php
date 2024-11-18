@@ -54,94 +54,126 @@ class functions_notification
 
         switch ($type) {
             case 'new_comments':
-                $query = '
-    FROM comments AS c
-      INNER JOIN image_category AS ic ON c.image_id = ic.image_id
-    WHERE 1=1';
+                $query = <<<SQL
+                    FROM comments AS c
+                    INNER JOIN image_category AS ic ON c.image_id = ic.image_id
+                    WHERE 1 = 1
+
+                    SQL;
 
                 if (! empty($start)) {
-                    $query .= '
-      AND c.validation_date > \'' . $start . '\'';
+                    $query .= <<<SQL
+                        AND c.validation_date > '{$start}'
+
+                        SQL;
                 }
 
                 if (! empty($end)) {
-                    $query .= '
-      AND c.validation_date <= \'' . $end . '\'';
+                    $query .= <<<SQL
+                        AND c.validation_date <= '{$end}'
+
+                        SQL;
                 }
 
                 $query .= self::get_std_sql_where_restrict_filter('AND');
                 break;
 
             case 'unvalidated_comments':
-                $query = '
-    FROM comments
-    WHERE 1=1';
+                $query = <<<SQL
+                    FROM comments
+                    WHERE 1 = 1
+
+                    SQL;
 
                 if (! empty($start)) {
-                    $query .= '
-      AND date > \'' . $start . '\'';
+                    $query .= <<<SQL
+                        AND date > '{$start}'
+
+                        SQL;
                 }
 
                 if (! empty($end)) {
-                    $query .= '
-      AND date <= \'' . $end . '\'';
+                    $query .= <<<SQL
+                        AND date <= '{$end}'
+
+                        SQL;
                 }
 
-                $query .= '
-      AND validated = \'false\'';
+                $query .= <<<SQL
+                    AND validated = 'false'
+
+                    SQL;
                 break;
 
             case 'new_elements':
-                $query = '
-    FROM images
-      INNER JOIN image_category AS ic ON image_id = id
-    WHERE 1=1';
+                $query = <<<SQL
+                    FROM images
+                    INNER JOIN image_category AS ic ON image_id = id
+                    WHERE 1 = 1
+
+                    SQL;
 
                 if (! empty($start)) {
-                    $query .= '
-      AND date_available > \'' . $start . '\'';
+                    $query .= <<<SQL
+                        AND date_available > '{$start}'
+
+                        SQL;
                 }
 
                 if (! empty($end)) {
-                    $query .= '
-      AND date_available <= \'' . $end . '\'';
+                    $query .= <<<SQL
+                        AND date_available <= '{$end}'
+
+                        SQL;
                 }
 
                 $query .= self::get_std_sql_where_restrict_filter('AND', 'id');
                 break;
 
             case 'updated_categories':
-                $query = '
-    FROM images
-      INNER JOIN image_category AS ic ON image_id = id
-    WHERE 1=1';
+                $query = <<<SQL
+                    FROM images
+                    INNER JOIN image_category AS ic ON image_id = id
+                    WHERE 1 = 1
+
+                    SQL;
 
                 if (! empty($start)) {
-                    $query .= '
-      AND date_available > \'' . $start . '\'';
+                    $query .= <<<SQL
+                        AND date_available > '{$start}'
+
+                        SQL;
                 }
 
                 if (! empty($end)) {
-                    $query .= '
-      AND date_available <= \'' . $end . '\'';
+                    $query .= <<<SQL
+                        AND date_available <= '{$end}'
+
+                        SQL;
                 }
 
                 $query .= self::get_std_sql_where_restrict_filter('AND', 'id');
                 break;
 
             case 'new_users':
-                $query = '
-    FROM user_infos
-    WHERE 1=1';
+                $query = <<<SQL
+                    FROM user_infos
+                    WHERE 1 = 1
+
+                    SQL;
 
                 if (! empty($start)) {
-                    $query .= '
-      AND registration_date > \'' . $start . '\'';
+                    $query .= <<<SQL
+                        AND registration_date > '{$start}'
+
+                        SQL;
                 }
 
                 if (! empty($end)) {
-                    $query .= '
-      AND registration_date <= \'' . $end . '\'';
+                    $query .= <<<SQL
+                        AND registration_date <= '{$end}'
+
+                        SQL;
                 }
 
                 break;
@@ -174,7 +206,9 @@ class functions_notification
                         break;
                 }
 
-                $query = 'SELECT COUNT(DISTINCT ' . $field_id . ') ' . $query . ';';
+                $query = <<<SQL
+                    SELECT COUNT(DISTINCT {$field_id}) {$query};
+                    SQL;
                 list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
                 return $count;
                 break;
@@ -202,7 +236,9 @@ class functions_notification
                         break;
                 }
 
-                $query = 'SELECT DISTINCT ' . $field_id . ' ' . $query . ';';
+                $query = <<<SQL
+                    SELECT DISTINCT {$field_id} {$query};
+                    SQL;
                 $infos = functions_mysqli::query2array($query);
                 return $infos;
                 break;
@@ -466,47 +502,43 @@ class functions_notification
 
         $where_sql = self::get_std_sql_where_restrict_filter('WHERE', 'i.id', true);
 
-        $query = '
-  SELECT
-      date_available,
-      COUNT(DISTINCT id) AS nb_elements,
-      COUNT(DISTINCT category_id) AS nb_cats
-    FROM images i INNER JOIN image_category AS ic ON id=image_id
-    ' . $where_sql . '
-    GROUP BY date_available
-    ORDER BY date_available DESC
-    LIMIT ' . $max_dates . '
-  ;';
+        $query = <<<SQL
+            SELECT date_available, COUNT(DISTINCT id) AS nb_elements, COUNT(DISTINCT category_id) AS nb_cats
+            FROM images i INNER JOIN image_category AS ic ON id = image_id
+            {$where_sql}
+            GROUP BY date_available
+            ORDER BY date_available DESC
+            LIMIT {$max_dates};
+            SQL;
         $dates = functions_mysqli::query2array($query);
 
         for ($i = 0; $i < count($dates); $i++) {
             if ($max_elements > 0) { // get some thumbnails ...
-                $query = '
-  SELECT DISTINCT i.*
-    FROM images i
-      INNER JOIN image_category AS ic ON id=image_id
-    ' . $where_sql . '
-      AND date_available=\'' . $dates[$i]['date_available'] . '\'
-    ORDER BY ' . functions_mysqli::DB_RANDOM_FUNCTION . '()
-    LIMIT ' . $max_elements . '
-  ;';
+                $randomFunction = functions_mysqli::DB_RANDOM_FUNCTION;
+                $query = <<<SQL
+                    SELECT DISTINCT i.*
+                    FROM images i
+                    INNER JOIN image_category AS ic ON id = image_id
+                    {$where_sql}
+                        AND date_available = '{$dates[$i]['date_available']}'
+                    ORDER BY {$randomFunction}()
+                    LIMIT {$max_elements};
+                    SQL;
                 $dates[$i]['elements'] = functions_mysqli::query2array($query);
             }
 
             if ($max_cats > 0) { // get some categories ...
-                $query = '
-  SELECT
-      DISTINCT c.uppercats,
-      COUNT(DISTINCT i.id) AS img_count
-    FROM images i
-      INNER JOIN image_category AS ic ON i.id=image_id
-      INNER JOIN categories c ON c.id=category_id
-    ' . $where_sql . '
-      AND date_available=\'' . $dates[$i]['date_available'] . '\'
-    GROUP BY category_id, c.uppercats
-    ORDER BY img_count DESC
-    LIMIT ' . $max_cats . '
-  ;';
+                $query = <<<SQL
+                    SELECT DISTINCT c.uppercats, COUNT(DISTINCT i.id) AS img_count
+                    FROM images i
+                    INNER JOIN image_category AS ic ON i.id = image_id
+                    INNER JOIN categories c ON c.id = category_id
+                    {$where_sql}
+                        AND date_available = '{$dates[$i]['date_available']}'
+                    GROUP BY category_id, c.uppercats
+                    ORDER BY img_count DESC
+                    LIMIT {$max_cats};
+                    SQL;
                 $dates[$i]['categories'] = functions_mysqli::query2array($query);
             }
         }

@@ -14,10 +14,10 @@ $template->assign('TAT_HAS_ORPHANS', count(functions_admin::get_orphans()) > 0 ?
 
 // category id for notification new features
 if (! isset($_SESSION['TAT_cat_id'])) {
-    $query = '
-SELECT MAX(id) AS cat_id
-  FROM categories
-;';
+    $query = <<<SQL
+        SELECT MAX(id) AS cat_id
+        FROM categories;
+        SQL;
     $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
     $_SESSION['TAT_cat_id'] = $row['cat_id'];
 }

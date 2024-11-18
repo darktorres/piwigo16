@@ -504,11 +504,11 @@ class functions
      */
     public static function get_languages()
     {
-        $query = '
-  SELECT id, name
-    FROM languages
-    ORDER BY name ASC
-  ;';
+        $query = <<<SQL
+            SELECT id, name
+            FROM languages
+            ORDER BY name ASC;
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         $languages = [];
@@ -570,12 +570,11 @@ class functions
         $update_last_visit = functions_plugins::trigger_change('pwg_log_update_last_visit', $update_last_visit);
 
         if ($update_last_visit) {
-            $query = '
-  UPDATE user_infos
-    SET last_visit = NOW(),
-        lastmodified = lastmodified
-    WHERE user_id = ' . $user['id'] . '
-  ';
+            $query = <<<SQL
+                UPDATE user_infos
+                SET last_visit = NOW(), lastmodified = lastmodified
+                WHERE user_id = {$user['id']};
+                SQL;
             functions_mysqli::pwg_query($query);
         }
 
@@ -634,38 +633,21 @@ class functions
             }
         }
 
-        $query = '
-  INSERT INTO history
-    (
-      date,
-      time,
-      user_id,
-      IP,
-      section,
-      category_id,
-      search_id,
-      image_id,
-      image_type,
-      format_id,
-      auth_key_id,
-      tag_ids
-    )
-    VALUES
-    (
-      CURRENT_DATE,
-      CURRENT_TIME,
-      ' . $user['id'] . ',
-      \'' . $ip . '\',
-      ' . (isset($section) ? "'" . $section . "'" : 'NULL') . ',
-      ' . (isset($page['category']['id']) ? $page['category']['id'] : 'NULL') . ',
-      ' . (isset($page['search_id']) ? $page['search_id'] : 'NULL') . ',
-      ' . (isset($image_id) ? $image_id : 'NULL') . ',
-      ' . (isset($image_type) ? "'" . $image_type . "'" : 'NULL') . ',
-      ' . (isset($format_id) ? $format_id : 'NULL') . ',
-      ' . (isset($page['auth_key_id']) ? $page['auth_key_id'] : 'NULL') . ',
-      ' . (isset($tags_string) ? "'" . $tags_string . "'" : 'NULL') . '
-    )
-  ;';
+        $sectionValue = isset($section) ? "'{$section}'" : 'NULL';
+        $categoryIdValue = $page['category']['id'] ?? 'NULL';
+        $searchIdValue = $page['search_id'] ?? 'NULL';
+        $imageIdValue = $image_id ?? 'NULL';
+        $imageTypeValue = isset($image_type) ? "'{$image_type}'" : 'NULL';
+        $formatIdValue = $format_id ?? 'NULL';
+        $authKeyIdValue = $page['auth_key_id'] ?? 'NULL';
+        $tagsStringValue = isset($tags_string) ? "'{$tags_string}'" : 'NULL';
+        $query = <<<SQL
+            INSERT INTO history
+                (date, time, user_id, IP, section, category_id, search_id, image_id, image_type, format_id, auth_key_id, tag_ids)
+            VALUES
+                (CURRENT_DATE, CURRENT_TIME, {$user['id']}, '{$ip}', {$sectionValue}, {$categoryIdValue}, {$searchIdValue},
+                {$imageIdValue}, {$imageTypeValue}, {$formatIdValue}, {$authKeyIdValue}, {$tagsStringValue});
+            SQL;
         functions_mysqli::pwg_query($query);
 
         $history_id = functions_mysqli::pwg_db_insert_id('history');
@@ -1264,13 +1246,11 @@ class functions
 
         $themes = [];
 
-        $query = '
-  SELECT
-      id,
-      name
-    FROM themes
-    ORDER BY name ASC
-  ;';
+        $query = <<<SQL
+            SELECT id, name
+            FROM themes
+            ORDER BY name ASC;
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -1362,11 +1342,11 @@ class functions
     {
         global $user;
 
-        $query = '
-  SELECT element_id
-    FROM caddie
-    WHERE user_id = ' . $user['id'] . '
-  ;';
+        $query = <<<SQL
+            SELECT element_id
+            FROM caddie
+            WHERE user_id = {$user['id']};
+            SQL;
         $in_caddie = functions_mysqli::query2array($query, null, 'element_id');
 
         $caddiables = array_diff($elements_id, $in_caddie);
@@ -1527,11 +1507,11 @@ class functions
     {
         global $conf;
 
-        $query = '
-  SELECT ' . $conf['user_fields']['email'] . '
-    FROM users
-    WHERE ' . $conf['user_fields']['id'] . ' = ' . $conf['webmaster_id'] . '
-  ;';
+        $query = <<<SQL
+            SELECT {$conf['user_fields']['email']}
+            FROM users
+            WHERE {$conf['user_fields']['id']} = {$conf['webmaster_id']};
+            SQL;
         list($email) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $email = functions_plugins::trigger_change('get_webmaster_mail_address', $email);
@@ -1548,11 +1528,13 @@ class functions
     {
         global $conf;
 
-        $query = '
-  SELECT param, value
-  FROM config
-  ' . (! empty($condition) ? 'WHERE ' . $condition : '') . '
-  ;';
+        $condition = ! empty($condition) ? "WHERE {$condition}" : '';
+        $query = <<<SQL
+            SELECT param, value
+            FROM config
+            {$condition}
+            SQL;
+        $query = trim($query) . ';';
         $result = functions_mysqli::pwg_query($query);
 
         if (functions_mysqli::pwg_db_num_rows($result) == 0 and
@@ -1588,7 +1570,7 @@ class functions
         list($param, $value) = ['pwg_is_dbconf_writeable_' . functions_session::generate_key(12), date('c') . ' ' . functions_session::generate_key(20)];
 
         self::conf_update_param($param, $value);
-        list($dbvalue) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT value FROM config WHERE param = \'' . $param . '\''));
+        list($dbvalue) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query("SELECT value FROM config WHERE param = '{$param}';"));
 
         if ($dbvalue != $value) {
             return false;
@@ -1619,12 +1601,14 @@ class functions
             $dbValue = functions_mysqli::boolean_to_string($value);
         }
 
-        $query = '
-  INSERT INTO
-    config (param, value)
-    VALUES(\'' . $param . '\', \'' . $dbValue . '\')
-    ON DUPLICATE KEY UPDATE value = \'' . $dbValue . '\'
-  ;';
+        $query = <<<SQL
+            INSERT INTO config
+                (param, value)
+            VALUES
+                ('{$param}', '{$dbValue}')
+            ON DUPLICATE KEY UPDATE
+                value = '{$dbValue}';
+            SQL;
 
         functions_mysqli::pwg_query($query);
 
@@ -1651,10 +1635,11 @@ class functions
             return;
         }
 
-        $query = '
-  DELETE FROM config
-    WHERE param IN(\'' . implode('\',\'', $params) . '\')
-  ;';
+        $implodedParams = implode("','", $params);
+        $query = <<<SQL
+            DELETE FROM config
+            WHERE param IN ('{$implodedParams}');
+            SQL;
         functions_mysqli::pwg_query($query);
 
         foreach ($params as $param) {
@@ -2440,13 +2425,13 @@ class functions
                 true
             );
 
-            $query = '
-  SELECT COUNT(DISTINCT(com.id))
-    FROM image_category AS ic
-      INNER JOIN comments AS com
-      ON ic.image_id = com.image_id
-    WHERE ' . implode('
-      AND ', $where);
+            $whereClause = implode(' AND ', $where);
+            $query = <<<SQL
+                SELECT COUNT(DISTINCT com.id)
+                FROM image_category AS ic
+                INNER JOIN comments AS com ON ic.image_id = com.image_id
+                WHERE {$whereClause};
+                SQL;
             list($user['nb_available_comments']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             functions_mysqli::single_update(
@@ -2511,16 +2496,13 @@ class functions
         }
 
         // is the oldest photo in the lounge older than lounge maximum waiting time?
-        $query = '
-  SELECT
-      image_id,
-      date_available,
-      NOW() AS dbnow
-    FROM lounge
-      JOIN images ON image_id = id
-    ORDER BY image_id ASC
-    LIMIT 1
-  ;';
+        $query = <<<SQL
+            SELECT image_id, date_available, NOW() AS dbnow
+            FROM lounge
+            JOIN images ON image_id = id
+            ORDER BY image_id ASC
+            LIMIT 1;
+            SQL;
         $voyagers = functions_mysqli::query2array($query);
 
         if (count($voyagers)) {
@@ -2977,11 +2959,11 @@ class functions
     {
         while (true) {
             $key = functions_session::generate_key(50);
-            $query = '
-  SELECT COUNT(*)
-    FROM user_feed
-    WHERE id = \'' . $key . '\'
-  ;';
+            $query = <<<SQL
+                SELECT COUNT(*)
+                FROM user_feed
+                WHERE id = '{$key}';
+                SQL;
             list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             if ($count == 0) {
@@ -3039,7 +3021,7 @@ class functions
 
         $activation_key = functions_session::generate_key(20);
 
-        list($expire) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 HOUR)'));
+        list($expire) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 HOUR);'));
 
         functions_mysqli::single_update(
             'user_infos',
@@ -3106,12 +3088,12 @@ class functions
 
         $user_ids = [];
 
-        $query = '
-  SELECT
-    ' . $conf['user_fields']['id'] . ' AS id
-    FROM users
-    WHERE ' . $conf['user_fields']['email'] . ' = \'' . functions_mysqli::pwg_db_real_escape_string($email) . '\'
-  ;';
+        $escaped_email = functions_mysqli::pwg_db_real_escape_string($email);
+        $query = <<<SQL
+            SELECT {$conf['user_fields']['id']} AS id
+            FROM users
+            WHERE {$conf['user_fields']['email']} = '{$escaped_email}';
+            SQL;
         $user_ids = functions_mysqli::query2array($query, null, 'id');
 
         if (count($user_ids) == 0) {
@@ -3121,16 +3103,12 @@ class functions
 
         $user_id = null;
 
-        $query = '
-  SELECT
-      user_id,
-      status,
-      activation_key,
-      activation_key_expire,
-      NOW() AS dbnow
-    FROM user_infos
-    WHERE user_id IN (' . implode(',', $user_ids) . ')
-  ;';
+        $imploded_user_ids = implode(', ', $user_ids);
+        $query = <<<SQL
+            SELECT user_id, status, activation_key, activation_key_expire, NOW() AS dbnow
+            FROM user_infos
+            WHERE user_id IN ({$imploded_user_ids});
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -3302,9 +3280,9 @@ class functions
     {
         $tables = [];
 
-        $query = '
-  SHOW TABLES
-  ;';
+        $query = <<<SQL
+            SHOW TABLES;
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         while ($row = functions_mysqli::pwg_db_fetch_row($result)) {
@@ -3324,9 +3302,9 @@ class functions
         $columns_of = [];
 
         foreach ($tables as $table) {
-            $query = '
-  DESC `' . $table . '`
-  ;';
+            $query = <<<SQL
+                DESC {$table};
+                SQL;
             $result = functions_mysqli::pwg_query($query);
 
             $columns_of[$table] = [];
@@ -3424,11 +3402,11 @@ class functions
             }
 
             if (! defined('IN_ADMIN')) { // changing password requires old password
-                $query = '
-    SELECT ' . $conf['user_fields']['password'] . ' AS password
-      FROM users
-      WHERE ' . $conf['user_fields']['id'] . ' = \'' . $userdata['id'] . '\'
-    ;';
+                $query = <<<SQL
+                    SELECT {$conf['user_fields']['password']} AS password
+                    FROM users
+                    WHERE {$conf['user_fields']['id']} = '{$userdata['id']}';
+                    SQL;
                 list($current_password) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
                 if (! $conf['password_verify']($_POST['password'], $current_password)) {

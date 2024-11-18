@@ -15,12 +15,11 @@ $template->assign('TAT_HAS_ORPHANS', count(functions_admin::get_orphans()) > 0 ?
 // category id for example of delete options. To illustrate the new
 // features, we need an album with photos.
 if (! isset($_SESSION['TAT_tour29_delete_cat_id'])) {
-    $query = '
-SELECT
-    category_id
-  FROM image_category
-  LIMIT 1
-;';
+    $query = <<<SQL
+        SELECT category_id
+        FROM image_category
+        LIMIT 1;
+        SQL;
     $rows = functions_mysqli::query2array($query);
 
     if (count($rows) == 0) {
@@ -35,13 +34,12 @@ if ($_SESSION['TAT_tour29_delete_cat_id'] > 0) {
 }
 
 if (! isset($_SESSION['TAT_tour29_image_id'])) {
-    $query = '
-SELECT
-    id
-  FROM images
-  ORDER BY id DESC
-  LIMIT 1
-;';
+    $query = <<<SQL
+        SELECT id
+        FROM images
+        ORDER BY id DESC
+        LIMIT 1;
+        SQL;
     $images = functions_mysqli::query2array($query);
 
     if (count($images) == 0) {
@@ -57,11 +55,10 @@ if ($_SESSION['TAT_tour29_image_id'] > 0) {
 
 $template->assign('TAT_tour29_history_url', 'admin.php?page=stats&year=' . date('Y') . '&month=' . date('n'));
 
-$query = '
-SELECT
-    COUNT(*)
-  FROM tags
-;';
+$query = <<<SQL
+    SELECT COUNT(*)
+    FROM tags;
+    SQL;
 list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 if ($counter > 0) {

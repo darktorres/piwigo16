@@ -47,7 +47,7 @@ class functions_calendar
                 }
 
                 $inner_sql .= '
-  WHERE category_id IN (' . implode(',', $sub_ids) . ')';
+  WHERE category_id IN (' . implode(', ', $sub_ids) . ')';
                 $inner_sql .= '
       ' . functions_user::get_sql_condition_FandF(
                     [
@@ -74,7 +74,7 @@ class functions_calendar
             }
 
             $inner_sql .= '
-  WHERE id IN (' . implode(',', $page['items']) . ')';
+  WHERE id IN (' . implode(', ', $page['items']) . ')';
         }
 
         //-------------------------------------- initialize the calendar parameters ---
@@ -272,10 +272,12 @@ class functions_calendar
             if (! isset($cache_key) ||
                 ! $persistent_cache->get($cache_key, $page['items'])
             ) {
-                $query = 'SELECT DISTINCT id '
-                  . $calendar->inner_sql . '
-    ' . $calendar->get_date_where() . '
-    ' . $order_by;
+                $query = <<<SQL
+                    SELECT DISTINCT id
+                    {$calendar->inner_sql}
+                    {$calendar->get_date_where()}
+                    {$order_by};
+                    SQL;
                 $page['items'] = functions::array_from_query($query, 'id');
 
                 if (isset($cache_key)) {

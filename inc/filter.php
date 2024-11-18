@@ -60,27 +60,32 @@ if ($filter['enabled']) {
 
         $filter['categories'] = functions_category::get_computed_categories($user, (int) $filter['recent_period']);
 
-        $filter['visible_categories'] = implode(',', array_keys($filter['categories']));
+        $filter['visible_categories'] = implode(', ', array_keys($filter['categories']));
 
         if (empty($filter['visible_categories'])) {
             // Must be not empty
             $filter['visible_categories'] = -1;
         }
 
-        $query = '
-SELECT
-  distinct image_id
-FROM
-  image_category INNER JOIN images ON image_id = id
-WHERE ';
+        $query = <<<SQL
+            SELECT DISTINCT image_id
+            FROM image_category
+            INNER JOIN images ON image_id = id
+            WHERE
+
+            SQL;
 
         if (! empty($filter['visible_categories'])) {
-            $query .= '
-  category_id  IN (' . $filter['visible_categories'] . ') and';
+            $query .= <<<SQL
+                category_id IN ({$filter['visible_categories']}) AND
+
+                SQL;
         }
 
-        $query .= '
-    date_available >= ' . functions_mysqli::pwg_db_get_recent_period_expression($filter['recent_period']);
+        $recent_period_expression = functions_mysqli::pwg_db_get_recent_period_expression($filter['recent_period']);
+        $query .= <<<SQL
+            date_available >= {$recent_period_expression};
+            SQL;
 
         $filter['visible_images'] = implode(',', functions::array_from_query($query, 'image_id'));
 

@@ -97,13 +97,12 @@ class themes
                 $theme_maintain->activate($this->fs_themes[$theme_id]['version'], $errors);
 
                 if (empty($errors)) {
-                    $query = '
-INSERT INTO themes
-  (id, version, name)
-  VALUES(\'' . $theme_id . '\',
-         \'' . $this->fs_themes[$theme_id]['version'] . '\',
-         \'' . $this->fs_themes[$theme_id]['name'] . '\')
-;';
+                    $query = <<<SQL
+                        INSERT INTO themes
+                            (id, version, name)
+                        VALUES
+                            ('{$theme_id}', '{$this->fs_themes[$theme_id]['version']}', '{$this->fs_themes[$theme_id]['name']}');
+                        SQL;
                     functions_mysqli::pwg_query($query);
 
                     $activity_details['version'] = $this->fs_themes[$theme_id]['version'];
@@ -131,11 +130,11 @@ INSERT INTO themes
                     // find a random theme to replace
                     $new_theme = null;
 
-                    $query = '
-SELECT id
-  FROM themes
-  WHERE id != \'' . $theme_id . '\'
-;';
+                    $query = <<<SQL
+                        SELECT id
+                        FROM themes
+                        WHERE id != '{$theme_id}';
+                        SQL;
                     $result = functions_mysqli::pwg_query($query);
 
                     if (functions_mysqli::pwg_db_num_rows($result) == 0) {
@@ -149,11 +148,10 @@ SELECT id
 
                 $theme_maintain->deactivate();
 
-                $query = '
-DELETE
-  FROM themes
-  WHERE id= \'' . $theme_id . '\'
-;';
+                $query = <<<SQL
+                    DELETE FROM themes
+                    WHERE id = '{$theme_id}';
+                    SQL;
                 functions_mysqli::pwg_query($query);
 
                 if ($this->fs_themes[$theme_id]['mobile']) {
@@ -240,12 +238,11 @@ DELETE
         // first we need to know which users are using the current default theme
         $default_theme = functions_user::get_default_theme();
 
-        $query = '
-SELECT
-    user_id
-  FROM user_infos
-  WHERE theme = \'' . $default_theme . '\'
-;';
+        $query = <<<SQL
+            SELECT user_id
+            FROM user_infos
+            WHERE theme = '{$default_theme}';
+            SQL;
         $user_ids = array_unique(
             array_merge(
                 functions::array_from_query($query, 'user_id'),
@@ -256,32 +253,30 @@ SELECT
         // $user_ids can't be empty, at least the default user has the default
         // theme
 
-        $query = '
-UPDATE user_infos
-  SET theme = \'' . $theme_id . '\'
-  WHERE user_id IN (' . implode(',', $user_ids) . ')
-;';
+        $users = implode(', ', $user_ids);
+        $query = <<<SQL
+            UPDATE user_infos
+            SET theme = '{$theme_id}'
+            WHERE user_id IN ({$users});
+            SQL;
         functions_mysqli::pwg_query($query);
     }
 
     public function get_db_themes($id = '')
     {
-        $query = '
-SELECT
-    *
-  FROM themes';
-
-        $clauses = [];
+        $where = '';
 
         if (! empty($id)) {
-            $clauses[] = 'id = \'' . $id . '\'';
+            $where = "WHERE id = '{$id}'";
         }
 
-        if (count($clauses) > 0) {
-            $query .= '
-  WHERE ' . implode(' AND ', $clauses);
-        }
+        $query = <<<SQL
+            SELECT *
+            FROM themes
+            {$where}
+            SQL;
 
+        $query = trim($query) . ';';
         $result = functions_mysqli::pwg_query($query);
         $themes = [];
 

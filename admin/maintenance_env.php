@@ -82,18 +82,16 @@ switch ($action) {
         break;
 
     case 'history_detail':
-        $query = '
-DELETE
-  FROM history
-;';
+        $query = <<<SQL
+            DELETE FROM history;
+            SQL;
         functions_mysqli::pwg_query($query);
         break;
 
     case 'history_summary':
-        $query = '
-DELETE
-  FROM history_summary
-;';
+        $query = <<<SQL
+            DELETE FROM history_summary;
+            SQL;
         functions_mysqli::pwg_query($query);
         break;
 
@@ -101,19 +99,16 @@ DELETE
         functions_session::pwg_session_gc();
 
         // delete all sessions associated to invalid user ids (it should never happen)
-        $query = '
-SELECT
-    id,
-    data
-  FROM sessions
-;';
+        $query = <<<SQL
+            SELECT id, data
+            FROM sessions;
+            SQL;
         $sessions = functions_mysqli::query2array($query);
 
-        $query = '
-SELECT
-    ' . $conf['user_fields']['id'] . ' AS id
-  FROM users
-;';
+        $query = <<<SQL
+            SELECT {$conf['user_fields']['id']} AS id
+            FROM users;
+            SQL;
         $all_user_ids = functions_mysqli::query2array($query, 'id', null);
 
         $sessions_to_delete = [];
@@ -127,22 +122,21 @@ SELECT
         }
 
         if (count($sessions_to_delete) > 0) {
-            $query = '
-DELETE
-  FROM sessions
-  WHERE id IN (\'' . implode("','", $sessions_to_delete) . '\')
-;';
+            $sessions_to_delete_imploded = implode("','", $sessions_to_delete);
+            $query = <<<SQL
+                DELETE FROM sessions
+                WHERE id IN ('{$sessions_to_delete_imploded}');
+                SQL;
             functions_mysqli::pwg_query($query);
         }
 
         break;
 
     case 'feeds':
-        $query = '
-DELETE
-  FROM user_feed
-  WHERE last_check IS NULL
-;';
+        $query = <<<SQL
+            DELETE FROM user_feed
+            WHERE last_check IS NULL;
+            SQL;
         functions_mysqli::pwg_query($query);
         break;
 
@@ -156,10 +150,9 @@ DELETE
         break;
 
     case 'search':
-        $query = '
-DELETE
-  FROM search
-;';
+        $query = <<<SQL
+            DELETE FROM search;
+            SQL;
         functions_mysqli::pwg_query($query);
         break;
 
@@ -240,7 +233,7 @@ $purge_urls[functions::l10n(derivative_std_params::IMG_CUSTOM)] = sprintf($url_f
 
 $php_current_timestamp = date('Y-m-d H:i:s');
 $db_version = functions_mysqli::pwg_get_db_version();
-list($db_current_date) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT now();'));
+list($db_current_date) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 
 $template->assign(
     [
@@ -325,12 +318,11 @@ if ($conf['gallery_locked']) {
     );
 }
 
-$query = '
-SELECT
-    registration_date
-  FROM user_infos
-  WHERE user_id = 2
-;';
+$query = <<<SQL
+    SELECT registration_date
+    FROM user_infos
+    WHERE user_id = 2;
+    SQL;
 $users = functions_mysqli::query2array($query);
 
 if (count($users) > 0) {

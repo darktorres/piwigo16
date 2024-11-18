@@ -36,12 +36,13 @@ class functions_upgrade
             'LocalFilesEditor',
         ];
 
-        $query = '
-  SELECT id
-  FROM plugins
-  WHERE state = \'active\'
-  AND id NOT IN (\'' . implode('\',\'', $standard_plugins) . '\')
-  ;';
+        $implodedStandardPlugins = implode('\',\'', $standard_plugins);
+        $query = <<<SQL
+            SELECT id
+            FROM plugins
+            WHERE state = 'active'
+                AND id NOT IN ('{$implodedStandardPlugins}');
+            SQL;
 
         $result = functions_mysqli::pwg_query($query);
         $plugins = [];
@@ -51,11 +52,12 @@ class functions_upgrade
         }
 
         if (! empty($plugins)) {
-            $query = '
-  UPDATE plugins
-  SET state=\'inactive\'
-  WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
-  ;';
+            $implodedPlugins = implode('\',\'', $plugins);
+            $query = <<<SQL
+                UPDATE plugins
+                SET state = 'inactive'
+                WHERE id IN ('{$implodedPlugins}');
+                SQL;
             functions_mysqli::pwg_query($query);
 
             $page['infos'][] = functions::l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactivating them:')
@@ -74,13 +76,12 @@ class functions_upgrade
             'smartpocket',
         ];
 
-        $query = '
-  SELECT
-      id,
-      name
-    FROM themes
-    WHERE id NOT IN (\'' . implode("','", $standard_themes) . '\')
-  ;';
+        $implodedStandardThemes = implode("','", $standard_themes);
+        $query = <<<SQL
+            SELECT id, name
+            FROM themes
+            WHERE id NOT IN ('{$implodedStandardThemes}');
+            SQL;
         $result = functions_mysqli::pwg_query($query);
         $theme_ids = [];
         $theme_names = [];
@@ -91,33 +92,33 @@ class functions_upgrade
         }
 
         if (! empty($theme_ids)) {
-            $query = '
-  DELETE
-    FROM themes
-    WHERE id IN (\'' . implode("','", $theme_ids) . '\')
-  ;';
+            $implodedThemeIds = implode("','", $theme_ids);
+            $query = <<<SQL
+                DELETE FROM themes
+                WHERE id IN ('{$implodedThemeIds}');
+                SQL;
             functions_mysqli::pwg_query($query);
 
             $page['infos'][] = functions::l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactivating them:')
                                 . '<p><i>' . implode(', ', $theme_names) . '</i></p>';
 
             // what is the default theme?
-            $query = '
-  SELECT theme
-    FROM user_infos
-    WHERE user_id = ' . $conf['default_user_id'] . '
-  ;';
+            $query = <<<SQL
+                SELECT theme
+                FROM user_infos
+                WHERE user_id = {$conf['default_user_id']};
+                SQL;
             list($default_theme) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             // if the default theme has just been deactivated, let's set another core theme as default
             if (in_array($default_theme, $theme_ids)) {
                 // make sure default Piwigo theme is active
-                $query = '
-  SELECT
-      COUNT(*)
-    FROM themes
-    WHERE id = \'' . PHPWG_DEFAULT_TEMPLATE . '\'
-  ;';
+                $defaultTemplate = PHPWG_DEFAULT_TEMPLATE;
+                $query = <<<SQL
+                    SELECT COUNT(*)
+                    FROM themes
+                    WHERE id = '{$defaultTemplate}';
+                    SQL;
                 list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
                 if ($counter < 1) {
@@ -127,11 +128,12 @@ class functions_upgrade
                 }
 
                 // then associate it to default user
-                $query = '
-  UPDATE user_infos
-    SET theme = \'' . PHPWG_DEFAULT_TEMPLATE . '\'
-    WHERE user_id = ' . $conf['default_user_id'] . '
-  ;';
+                $defaultTemplate = PHPWG_DEFAULT_TEMPLATE;
+                $query = <<<SQL
+                    UPDATE user_infos
+                    SET theme = '{$defaultTemplate}'
+                    WHERE user_id = {$conf['default_user_id']};
+                    SQL;
                 functions_mysqli::pwg_query($query);
             }
         }
@@ -154,11 +156,11 @@ class functions_upgrade
             // Check if user is already connected as webmaster
             session_start();
             if (! empty($_SESSION['pwg_uid'])) {
-                $query = '
-  SELECT status
-    FROM user_infos
-    WHERE user_id = ' . $_SESSION['pwg_uid'] . '
-  ;';
+                $query = <<<SQL
+                    SELECT status
+                    FROM user_infos
+                    WHERE user_id = {$_SESSION['pwg_uid']};
+                    SQL;
                 functions_mysqli::pwg_query($query);
 
                 $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
@@ -193,19 +195,18 @@ class functions_upgrade
         }
 
         if (version_compare($current_release, '1.5', '<')) {
-            $query = '
-  SELECT password, status
-  FROM users
-  WHERE username = \'' . $username . '\'
-  ;';
+            $query = <<<SQL
+                SELECT password, status
+                FROM users
+                WHERE username = '{$username}';
+                SQL;
         } else {
-            $query = '
-  SELECT u.password, ui.status
-  FROM users AS u
-  INNER JOIN user_infos AS ui
-  ON u.' . $conf['user_fields']['id'] . '=ui.user_id
-  WHERE ' . $conf['user_fields']['username'] . '=\'' . $username . '\'
-  ;';
+            $query = <<<SQL
+                SELECT u.password, ui.status
+                FROM users AS u
+                INNER JOIN user_infos AS ui ON u.{$conf['user_fields']['id']} = ui.user_id
+                WHERE {$conf['user_fields']['username']} = '{$username}';
+                SQL;
         }
 
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
@@ -256,10 +257,10 @@ class functions_upgrade
     public static function check_upgrade_feed()
     {
         // retrieve already applied upgrades
-        $query = '
-  SELECT id
-    FROM upgrade
-  ;';
+        $query = <<<SQL
+            SELECT id
+            FROM upgrade;
+            SQL;
         $applied = functions::array_from_query($query, 'id');
 
         // retrieve existing upgrades

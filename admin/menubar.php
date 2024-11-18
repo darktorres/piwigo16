@@ -123,11 +123,13 @@ if (isset($_POST['submit']) and
     //var_export( $best_slice ); var_export($mb_conf);  var_export($mb_conf_db);
     // END OPTIM
     */
-    $query = '
-UPDATE config
-  SET value=\'' . addslashes(serialize($mb_conf_db)) . '\'
-  WHERE param=\'blk_' . addslashes($menu->get_id()) . '\'
-  ';
+    $serialized_value = addslashes(serialize($mb_conf_db));
+    $menu_id = addslashes($menu->get_id());
+    $query = <<<SQL
+        UPDATE config
+        SET value = '{$serialized_value}'
+        WHERE param = 'blk_{$menu_id}';
+        SQL;
     functions_mysqli::pwg_query($query);
 
     $page['infos'][] = functions::l10n('Order of menubar items has been updated successfully.');

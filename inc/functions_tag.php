@@ -48,41 +48,46 @@ class functions_tag
     public static function get_available_tags($tag_ids = [])
     {
         // we can find top fatter tags among reachable images
-        $query = '
-  SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
-    FROM image_category ic
-      INNER JOIN image_tag it
-      ON ic.image_id=it.image_id
-    WHERE 1=1
-    ' . functions_user::get_sql_condition_FandF(
+        $permissions_conditions = functions_user::get_sql_condition_FandF(
             [
                 'forbidden_categories' => 'category_id',
                 'visible_categories' => 'category_id',
                 'visible_images' => 'ic.image_id',
             ],
-            ' AND '
+            'AND',
         );
+
+        $query = <<<SQL
+            SELECT tag_id, COUNT(DISTINCT it.image_id) AS counter
+            FROM image_category ic
+            INNER JOIN image_tag it ON ic.image_id = it.image_id
+            WHERE 1 = 1 {$permissions_conditions}
+
+            SQL;
 
         if (is_array($tag_ids) and
             count($tag_ids) > 0
         ) {
-            $query .= '
-      AND tag_id IN (' . implode(',', $tag_ids) . ')
-  ';
+            $tags_list = implode(', ', $tag_ids);
+            $query .= <<<SQL
+                AND tag_id IN ({$tags_list})
+
+                SQL;
         }
 
-        $query .= '
-    GROUP BY tag_id
-  ;';
+        $query .= <<<SQL
+            GROUP BY tag_id;
+            SQL;
         $tag_counters = functions_mysqli::query2array($query, 'tag_id', 'counter');
 
         if (empty($tag_counters)) {
             return [];
         }
 
-        $query = '
-  SELECT *
-    FROM tags';
+        $query = <<<SQL
+            SELECT *
+            FROM tags;
+            SQL;
         $result = functions_mysqli::pwg_query($query);
 
         $tags = [];
@@ -107,10 +112,10 @@ class functions_tag
      */
     public static function get_all_tags()
     {
-        $query = '
-  SELECT *
-    FROM tags
-  ;';
+        $query = <<<SQL
+            SELECT *
+            FROM tags;
+            SQL;
         $result = functions_mysqli::pwg_query($query);
         $tags = [];
 
@@ -196,42 +201,54 @@ class functions_tag
             return [];
         }
 
-        $query = '
-  SELECT id
-    FROM images i ';
+        $permissions_conditions = $use_permissions ? functions_user::get_sql_condition_FandF(
+            [
+                'forbidden_categories' => 'category_id',
+                'visible_categories' => 'category_id',
+                'visible_images' => 'id',
+            ],
+            'AND'
+        ) : '';
 
-        if ($use_permissions) {
-            $query .= '
-      INNER JOIN image_category ic ON id=ic.image_id';
-        }
-
-        $query .= '
-      INNER JOIN image_tag it ON id=it.image_id
-      WHERE tag_id IN (' . implode(',', $tag_ids) . ')';
-
-        if ($use_permissions) {
-            $query .= functions_user::get_sql_condition_FandF(
-                [
-                    'forbidden_categories' => 'category_id',
-                    'visible_categories' => 'category_id',
-                    'visible_images' => 'id',
-                ],
-                "\n  AND"
-            );
-        }
-
-        $query .= (empty($extra_images_where_sql) ? '' : " \nAND (" . $extra_images_where_sql . ')') . '
-    GROUP BY id';
-
-        if ($mode == 'AND' and
+        $tags_list = implode(', ', $tag_ids);
+        $extra_conditions = ! empty($extra_images_where_sql) ? " AND ({$extra_images_where_sql})" : '';
+        $having_clause = (
+            $mode === 'AND' &&
             count($tag_ids) > 1
-        ) {
-            $query .= '
-    HAVING COUNT(DISTINCT tag_id)=' . count($tag_ids);
+        ) ? 'HAVING COUNT(DISTINCT tag_id) = ' . count($tag_ids) : '';
+        $order_clause = ! empty($order_by) ? $order_by : $conf['order_by'];
+        $query = <<<SQL
+            SELECT id
+            FROM images i
+
+            SQL;
+
+        if ($use_permissions) {
+            $query .= <<<SQL
+                INNER JOIN image_category ic ON id = ic.image_id
+
+                SQL;
         }
 
-        $query .= "\n" . (empty($order_by) ? $conf['order_by'] : $order_by);
+        $query .= <<<SQL
+            INNER JOIN image_tag it ON id = it.image_id
+            WHERE tag_id IN ({$tags_list})
+                {$permissions_conditions}
+                {$extra_conditions}
+            GROUP BY id
 
+            SQL;
+
+        if (! empty($having_clause)) {
+            $query .= <<<SQL
+                {$having_clause}
+
+                SQL;
+        }
+
+        $query .= <<<SQL
+            {$order_clause};
+            SQL;
         return functions_mysqli::query2array($query, null, 'id');
     }
 
@@ -249,28 +266,36 @@ class functions_tag
             return [];
         }
 
-        $query = '
-  SELECT t.*, count(*) AS counter
-    FROM image_tag
-      INNER JOIN tags t ON tag_id = id
-    WHERE image_id IN (' . implode(',', $items) . ')';
+        $items_list = implode(', ', $items);
+        $query = <<<SQL
+            SELECT t.*, COUNT(*) AS counter
+            FROM image_tag
+            INNER JOIN tags t ON tag_id = id
+            WHERE image_id IN ({$items_list})
+
+            SQL;
 
         if (! empty($excluded_tag_ids)) {
-            $query .= '
-      AND tag_id NOT IN (' . implode(',', $excluded_tag_ids) . ')';
+            $excluded_tags = implode(', ', $excluded_tag_ids);
+            $query .= <<<SQL
+                AND tag_id NOT IN ({$excluded_tags})
+
+                SQL;
         }
 
-        $query .= '
-    GROUP BY t.id
-    ORDER BY ';
+        $query .= <<<SQL
+            GROUP BY t.id
+            SQL;
 
-        if ($max_tags > 0) { // TODO : why ORDER field is in the if ?
-            $query .= 'counter DESC
-    LIMIT ' . $max_tags;
-        } else {
-            $query .= 'NULL';
+        if ($max_tags > 0) {
+            $query .= <<<SQL
+
+                ORDER BY counter DESC
+                LIMIT {$max_tags}
+                SQL;
         }
 
+        $query = trim($query) . ';';
         $result = functions_mysqli::pwg_query($query);
         $tags = [];
 
@@ -296,7 +321,7 @@ class functions_tag
         $where_clauses = [];
 
         if (! empty($ids)) {
-            $where_clauses[] = 'id IN (' . implode(',', $ids) . ')';
+            $where_clauses[] = 'id IN (' . implode(', ', $ids) . ')';
         }
 
         if (! empty($url_names)) {
@@ -313,11 +338,12 @@ class functions_tag
             return [];
         }
 
-        $query = '
-  SELECT *
-    FROM tags
-    WHERE ' . implode('
-      OR ', $where_clauses);
+        $where_conditions = implode("\n    OR ", $where_clauses);
+        $query = <<<SQL
+            SELECT *
+            FROM tags
+            WHERE {$where_conditions};
+            SQL;
 
         return functions_mysqli::query2array($query);
     }

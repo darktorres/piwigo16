@@ -19,11 +19,10 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-$query = '
-SELECT
-    COUNT(*)
-  FROM categories
-;';
+$query = <<<SQL
+    SELECT COUNT(*)
+    FROM categories;
+    SQL;
 list($albums_counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 // +-----------------------------------------------------------------------+
@@ -67,12 +66,12 @@ if (isset($_POST['simpleAutoOrder']) ||
 
     functions::check_input_parameter('id', $_POST, false, '/^-?\d+$/');
 
-    $query = '
-SELECT id
-  FROM categories
-  WHERE id_uppercat ' .
-      (($_POST['id'] === '-1') ? 'IS NULL' : '= ' . $_POST['id']) . '
-;';
+    $id_condition = ($_POST['id'] === '-1') ? 'IS NULL' : "= {$_POST['id']}";
+    $query = <<<SQL
+        SELECT id
+        FROM categories
+        WHERE id_uppercat {$id_condition};
+        SQL;
     $category_ids = functions::array_from_query($query, 'id');
 
     if (isset($_POST['recursiveAutoOrder'])) {
@@ -96,11 +95,12 @@ SELECT id
         );
     }
 
-    $query = '
-SELECT id, name, id_uppercat
-  FROM categories
-  WHERE id IN (' . implode(',', $category_ids) . ')
-;';
+    $category_ids_str = implode(', ', $category_ids);
+    $query = <<<SQL
+        SELECT id, name, id_uppercat
+        FROM categories
+        WHERE id IN ({$category_ids_str});
+        SQL;
     $result = functions_mysqli::pwg_query($query);
 
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -152,10 +152,10 @@ $template->assign('POS_PREF', $conf['newcat_default_position']); //TODO use user
 // +-----------------------------------------------------------------------+
 
 //Get all albums
-$query = '
-SELECT id,name,`rank`,status, visible, uppercats, lastmodified
-  FROM categories
-;';
+$query = <<<SQL
+    SELECT id, name, `rank`, status, visible, uppercats, lastmodified
+    FROM categories;
+    SQL;
 
 $allAlbum = functions_mysqli::query2array($query);
 
@@ -184,22 +184,18 @@ foreach ($allAlbum as $album) {
 $is_forbidden = array_fill_keys(@explode(',', $user['forbidden_categories']), 1);
 
 //Make an ordered tree
-$query = '
-SELECT
-    category_id,
-    COUNT(*) AS nb_photos
-  FROM image_category
-  GROUP BY category_id
-;';
+$query = <<<SQL
+    SELECT category_id, COUNT(*) AS nb_photos
+    FROM image_category
+    GROUP BY category_id;
+    SQL;
 
 $nb_photos_in = functions_mysqli::query2array($query, 'category_id', 'nb_photos');
 
-$query = '
-SELECT
-    id,
-    uppercats
-  FROM categories
-;';
+$query = <<<SQL
+    SELECT id, uppercats
+    FROM categories;
+    SQL;
 $all_categories = functions_mysqli::query2array($query, 'id', 'uppercats');
 
 $subcats_of = [];

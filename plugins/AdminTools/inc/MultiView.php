@@ -308,16 +308,12 @@ class MultiView
         global $conf;
 
         // get users
-        $query = '
-SELECT
-  ' . $conf['user_fields']['id'] . ' AS id,
-  ' . $conf['user_fields']['username'] . ' AS username,
-  status
-FROM users AS u
-  INNER JOIN user_infos AS i
-    ON ' . $conf['user_fields']['id'] . ' = user_id
-  ORDER BY CONVERT(' . $conf['user_fields']['username'] . ', CHAR)
-;';
+        $query = <<<SQL
+            SELECT {$conf['user_fields']['id']} AS id, {$conf['user_fields']['username']} AS username, status
+            FROM users AS u
+            INNER JOIN user_infos AS i ON {$conf['user_fields']['id']} = user_id
+            ORDER BY CONVERT({$conf['user_fields']['username']}, CHAR);
+            SQL;
         $out['users'] = functions::array_from_query($query);
 
         // get themes

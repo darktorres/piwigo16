@@ -41,11 +41,12 @@ if (isset($_POST['falsify']) and
 ) {
     switch ($_GET['section']) {
         case 'comments':
-            $query = '
-UPDATE categories
-  SET commentable = \'false\'
-  WHERE id IN (' . implode(',', $_POST['cat_true']) . ')
-;';
+            $cat_true_str = implode(', ', $_POST['cat_true']);
+            $query = <<<SQL
+                UPDATE categories
+                SET commentable = 'false'
+                WHERE id IN ({$cat_true_str});
+                SQL;
             functions_mysqli::pwg_query($query);
             break;
 
@@ -58,11 +59,12 @@ UPDATE categories
             break;
 
         case 'representative':
-            $query = '
-UPDATE categories
-  SET representative_picture_id = NULL
-  WHERE id IN (' . implode(',', $_POST['cat_true']) . ')
-;';
+            $cat_true_str = implode(', ', $_POST['cat_true']);
+            $query = <<<SQL
+                UPDATE categories
+                SET representative_picture_id = NULL
+                WHERE id IN ({$cat_true_str});
+                SQL;
             functions_mysqli::pwg_query($query);
             break;
     }
@@ -77,11 +79,12 @@ UPDATE categories
 ) {
     switch ($_GET['section']) {
         case 'comments':
-            $query = '
-UPDATE categories
-  SET commentable = \'true\'
-  WHERE id IN (' . implode(',', $_POST['cat_false']) . ')
-;';
+            $cat_false_str = implode(', ', $_POST['cat_false']);
+            $query = <<<SQL
+                UPDATE categories
+                SET commentable = 'true'
+                WHERE id IN ({$cat_false_str});
+                SQL;
             functions_mysqli::pwg_query($query);
             break;
 
@@ -151,16 +154,18 @@ $cats_false = [];
 
 switch ($page['section']) {
     case 'comments':
-        $query_true = '
-SELECT id,name,uppercats,global_rank
-  FROM categories
-  WHERE commentable = \'true\'
-;';
-        $query_false = '
-SELECT id,name,uppercats,global_rank
-  FROM categories
-  WHERE commentable = \'false\'
-;';
+        $query_true = <<<SQL
+            SELECT id, name, uppercats, global_rank
+            FROM categories
+            WHERE commentable = 'true';
+            SQL;
+
+        $query_false = <<<SQL
+            SELECT id, name, uppercats, global_rank
+            FROM categories
+            WHERE commentable = 'false';
+            SQL;
+
         $template->assign(
             [
                 'L_SECTION' => functions::l10n('Authorize users to add comments on selected albums'),
@@ -171,16 +176,18 @@ SELECT id,name,uppercats,global_rank
         break;
 
     case 'visible':
-        $query_true = '
-SELECT id,name,uppercats,global_rank
-  FROM categories
-  WHERE visible = \'true\'
-;';
-        $query_false = '
-SELECT id,name,uppercats,global_rank
-  FROM categories
-  WHERE visible = \'false\'
-;';
+        $query_true = <<<SQL
+            SELECT id, name, uppercats, global_rank
+            FROM categories
+            WHERE visible = 'true';
+            SQL;
+
+        $query_false = <<<SQL
+            SELECT id, name, uppercats, global_rank
+            FROM categories
+            WHERE visible = 'false';
+            SQL;
+
         $template->assign(
             [
                 'L_SECTION' => functions::l10n('Lock albums'),
@@ -191,16 +198,18 @@ SELECT id,name,uppercats,global_rank
         break;
 
     case 'status':
-        $query_true = '
-SELECT id,name,uppercats,global_rank
-  FROM categories
-  WHERE status = \'public\'
-;';
-        $query_false = '
-SELECT id,name,uppercats,global_rank
-  FROM categories
-  WHERE status = \'private\'
-;';
+        $query_true = <<<SQL
+            SELECT id, name, uppercats, global_rank
+            FROM categories
+            WHERE status = 'public';
+            SQL;
+
+        $query_false = <<<SQL
+            SELECT id, name, uppercats, global_rank
+            FROM categories
+            WHERE status = 'private';
+            SQL;
+
         $template->assign(
             [
                 'L_SECTION' => functions::l10n('Manage authorizations for selected albums'),
@@ -211,16 +220,19 @@ SELECT id,name,uppercats,global_rank
         break;
 
     case 'representative':
-        $query_true = '
-SELECT id,name,uppercats,global_rank
-  FROM categories
-  WHERE representative_picture_id IS NOT NULL
-;';
-        $query_false = '
-SELECT DISTINCT id,name,uppercats,global_rank
-  FROM categories INNER JOIN image_category ON id=category_id
-  WHERE representative_picture_id IS NULL
-;';
+        $query_true = <<<SQL
+            SELECT id, name, uppercats, global_rank
+            FROM categories
+            WHERE representative_picture_id IS NOT NULL;
+            SQL;
+
+        $query_false = <<<SQL
+            SELECT DISTINCT id, name, uppercats, global_rank
+            FROM categories
+            INNER JOIN image_category ON id = category_id
+            WHERE representative_picture_id IS NULL;
+            SQL;
+
         $template->assign(
             [
                 'L_SECTION' => functions::l10n('Representative'),

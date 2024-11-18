@@ -2,12 +2,12 @@
 {combine_script id='activated_plugin_list' load='footer' path='admin/themes/default/js/maintenance_env.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10}
  {* order 10 is required, see issue 1080 *}
-{footer_script}
+{footer_script}<script>
 const no_time_elapsed = "{"right now"|@translate}";
 const no_active_plugin = "{"No plugin activated"|@translate}";
 const error_occurred = "{"an error happened"|@translate}";
 const unit_MB = "{"%s MB"|@translate}"
-{/footer_script}
+</script>{/footer_script}
 
 <fieldset id="environment">
   <legend><span class="icon-television icon-red"></span> {'Environment'|@translate}</legend>

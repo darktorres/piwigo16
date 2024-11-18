@@ -27,7 +27,7 @@
 .addAlbumFormParent { display: none; } /* specific to this page, do not move in theme.css */
 {/html_style}
 
-{footer_script}
+{footer_script}<script>
 
 const formatMode = {if $DISPLAY_FORMATS}true{else}false{/if};
 const haveFormatsOriginal = {if $HAVE_FORMATS_ORIGINAL}true{else}false{/if};
@@ -386,7 +386,7 @@ jQuery(document).ready(function(){
     }
 	});
 });
-{/footer_script}
+</script>{/footer_script}
 
 <div id="photosAddContent">
 

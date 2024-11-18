@@ -10,7 +10,7 @@
 {combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
 {combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
 
-{footer_script}
+{footer_script}<script>
 (function(){
 {* <!-- CATEGORIES --> *}
 var categoriesCache = new CategoriesCache({
@@ -88,7 +88,7 @@ $('#action-delete-picture').on('click', function() {
 })
 
 }());
-{/footer_script}
+</script>{/footer_script}
 
 {combine_script id='picture_modify' load='footer' path='admin/themes/default/js/picture_modify.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}

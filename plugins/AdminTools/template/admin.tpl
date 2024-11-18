@@ -9,14 +9,14 @@
 }
 {/html_style}
 
-{footer_script}
+{footer_script}<script>
 jQuery('#ato-config input[type=checkbox]').change(function() {
   jQuery(this).prev().toggleClass('icon-check icon-check-empty');
 });
 jQuery('#ato-config input[type=radio]').change(function() {
   jQuery('#ato-config input[type=radio][name='+ $(this).attr('name') +']').prev().toggleClass('icon-check icon-check-empty');
 });
-{/footer_script}
+</script>{/footer_script}
 
 <div class="titrePage">
   <h2>Admin Tools</h2>

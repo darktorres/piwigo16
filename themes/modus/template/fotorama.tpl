@@ -8,7 +8,7 @@
 		<a href="#" onclick="return fotoramaTogglePause();" title="{'slideshow'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-{if $Fotorama.autoplay}pause{else}play{/if}" id="togglePause"></span>
 	</a>
-{footer_script}
+{footer_script}<script>
 function fotoramaTogglePause() {
 	if ($("#togglePause").hasClass("pwg-icon-pause")) {
 		$(".fotorama").data("fotorama").stopAutoplay();
@@ -19,7 +19,7 @@ function fotoramaTogglePause() {
 	$("#togglePause").toggleClass("pwg-icon-play pwg-icon-pause");
 	return false;
 }
-{/footer_script}
+</script>{/footer_script}
 	  <h2 class="showtitle">{$current.TITLE}</h2>
 	</div>
   </div>

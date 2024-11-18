@@ -1,4 +1,4 @@
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 		var h = jQuery("#theHeader div.banner").css("height");
 		var d = jQuery("#menuSwitcher").css("padding-top");
 
@@ -7,7 +7,7 @@
 				jQuery("#menuSwitcher").css("padding-top",parseInt(h)+parseInt(d));
 			};
 		});
-{/footer_script}
+</script>{/footer_script}
 
 
 {* basically a copy of menubar.tpl with manual inclusion of menubar_xxx.tpl *}

@@ -8,7 +8,7 @@
 
 {combine_script id='pluginInstallated' load='footer' require='jquery.ajaxmanager' path='admin/themes/default/js/plugins_installated.js'}
 
-{footer_script}
+{footer_script}<script>
 /* incompatible message */
 var incompatible_msg = '{'WARNING! This plugin does not seem to be compatible with this version of Piwigo.'|@translate|@escape:'javascript'}';
 var activate_msg = '\n{'Do you want to activate anyway?'|@translate|@escape:'javascript'}';
@@ -46,7 +46,7 @@ const show_details = {if $show_details} true {else} false {/if};
 
 let searchParams = new URLSearchParams(window.location.search);
 let plugin_filter = searchParams.get('filter');
-{/footer_script}
+</script>{/footer_script}
 
 {if isset($plugins)}
 

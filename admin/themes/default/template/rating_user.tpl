@@ -36,11 +36,11 @@ body .ui-tooltip {
 }
 
 {/html_style}
-{footer_script}
+{footer_script}<script>
 $(document).ready(function() {
   $('h1').append("<span class='badge-number'>{$NB_ELEMENTS}</span>")
 });
-{/footer_script}
+</script>{/footer_script}
 
 <form action="{$F_ACTION}" method="GET">
 <fieldset>
@@ -75,7 +75,7 @@ $(document).ready(function() {
 {combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
 {combine_script id='jquery.geoip' load='async' path='admin/themes/default/js/jquery.geoip.js'}
-{footer_script}
+{footer_script}<script>
 jQuery('#rateTable').dataTable({
 	dom : '<"dtBar"filp>rt<"dtBar"ilp>',
 	pageLength: 100,
@@ -171,7 +171,7 @@ $(document).ready( function(){
 	});
 });
 
-{/footer_script}
+</script>{/footer_script}
 <table id="rateTable">
 <thead>
 <tr class="throw">
@@ -205,7 +205,7 @@ $(document).ready( function(){
 </table>
 
 {combine_script id='jquery.ui' load='footer'}
-{footer_script require='jquery.ui'}
+{footer_script require='jquery.ui'}<script>
 jQuery(document).ready(function(){
 	jQuery("#rateTable").tooltip({
 		items: ".usr,[title]",
@@ -237,4 +237,4 @@ jQuery(document).ready(function(){
 		}
 	});
 })
-{/footer_script}
+</script>{/footer_script}

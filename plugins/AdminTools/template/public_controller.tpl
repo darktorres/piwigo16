@@ -31,7 +31,7 @@
 
 {combine_script id='admintools.controller' load='footer' require='jquery' path=$ADMINTOOLS_PATH|cat:'template/public_controller.js'}
 
-{footer_script require='admintools.controller'}
+{footer_script require='admintools.controller'}<script>
 AdminTools.urlWS = '{$ROOT_URL}ws.php?format=json&method=';
 AdminTools.urlSelf = '{$ato.U_SELF}';
 
@@ -64,7 +64,7 @@ AdminTools.multiView = {
     newText: ' ({'new'|translate|escape:javascript})'
   });
 {/if}
-{/footer_script}
+</script>{/footer_script}
 
 <div id="ato_header_closed"{if $ato.POSITION=='right'} class="right"{/if}><a href="#" class="icon-tools"></a></div>
 

@@ -1,10 +1,10 @@
 {combine_css path="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.button.css"}
 {combine_css path="themes/elegant/admin/jquery.ui.button.css"}
-{footer_script require='jquery.ui'}
+{footer_script require='jquery.ui'}<script>
 jQuery(document).ready(function(){
   jQuery( ".radio" ).buttonset();
 });
-{/footer_script}
+</script>{/footer_script}
 
 <div class="titrePage">
   <h2>{'Elegant, Configuration Page'|@translate}</h2>

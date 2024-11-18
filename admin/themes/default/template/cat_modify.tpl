@@ -5,7 +5,7 @@
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 {combine_script id='jquery.tipTip' load='footer' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
 
-{footer_script}
+{footer_script}<script>
 const has_images_associated_outside = '{"delete album and all %d photos, even the %d associated to other albums"|@translate|escape:javascript}';
 const has_images_becoming_orphans = '{'delete album and the %d orphan photos'|@translate|escape:javascript}';
 const has_images_recursives = '{'delete only album, not photos'|@translate|escape:javascript}';
@@ -37,7 +37,7 @@ str_already_in_related_cats = '{'This albums is already in related categories li
 str_album_comment_allow = '{'Comments allowed for sub-albums'|@translate|escape:javascript}';
 str_album_comment_disallow = '{'Comments disallowed for sub-albums'|@translate|escape:javascript}';
 str_root = '{'Root'|@translate|escape:javascript}';
-{/footer_script}
+</script>{/footer_script}
 
 <div class="cat-modify" id="cat-modify">
 

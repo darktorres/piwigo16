@@ -1,6 +1,6 @@
 
 {include file='inc/autosize.inc.tpl'}
-{footer_script}
+{footer_script}<script>
 jQuery(document).ready(function(){
 
 	jQuery("#checkAllLink").click(function () {
@@ -14,7 +14,7 @@ jQuery(document).ready(function(){
 	});
 
 });
-{/footer_script}
+</script>{/footer_script}
 
 <form method="post" name="notification_by_mail" id="notification_by_mail" action="{$F_ACTION}">
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">

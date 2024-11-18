@@ -2,7 +2,7 @@
 {combine_css path=$ADMINTOOLS_PATH|cat:'template/fontello/css/fontello-ato.css'}
 {combine_script id='admintools.controller' load='footer' require='jquery' path=$ADMINTOOLS_PATH|cat:'template/admin_controller.js'}
 
-{footer_script require='admintools.controller'}
+{footer_script require='admintools.controller'}<script>
 AdminTools.urlWS = '{$ROOT_URL}ws.php?format=json&method=';
 AdminTools.urlSelf = '{$ato.U_SELF}';
 
@@ -16,7 +16,7 @@ AdminTools.multiView = {
   AdminTools.deleteCache();
 {/if}
   AdminTools.init();
-{/footer_script}
+</script>{/footer_script}
 
 <ul class="multiview">
   <li><label>{'View as'|translate}</label>

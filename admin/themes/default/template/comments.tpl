@@ -1,4 +1,4 @@
-{footer_script}
+{footer_script}<script>
 jQuery(document).ready(function(){
   $("h1").append("<span class='badge-number'>"+{$nb_total}+"</span>");
 
@@ -43,7 +43,7 @@ jQuery(document).ready(function(){
   });
 
 });
-{/footer_script}
+</script>{/footer_script}
 
 <div class="commentFilter">
   <a href="{$F_ACTION}&amp;filter=all" class="{if $filter == 'all'}commentFilterSelected{/if}">{'All'|@translate}</a> ({$nb_total})

@@ -1,4 +1,4 @@
-{footer_script require='jquery.bootstrap-tour'}
+{footer_script require='jquery.bootstrap-tour'}<script>
 
 var tour = new Tour({
   name: "privacy",
@@ -184,7 +184,7 @@ jQuery( "p.albumActions a" ).click(function() {
   }
 });
 
-{/footer_script}
+</script>{/footer_script}
 {html_style}
 #step-21 {
   max-width:476px;

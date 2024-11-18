@@ -2,7 +2,7 @@
 {combine_script id='jquery.jgrowl' load='footer' require='jquery' path='node_modules/jgrowl/jquery.jgrowl.min.js'}
 {combine_css path="themes/default/js/plugins/jquery.jgrowl.css"}
 
-{footer_script require='jquery.ui,jquery.ajaxmanager,jquery.jgrowl'}
+{footer_script require='jquery.ui,jquery.ajaxmanager,jquery.jgrowl'}<script>
 var pwg_token = '{$PWG_TOKEN}';
 var extType = '{$EXT_TYPE}';
 var confirmMsg  = '{'Are you sure?'|@translate|@escape:'javascript'}';
@@ -126,11 +126,11 @@ function autoupdate_bar_toggle(i) {
 }
 
 checkFieldsets();
-{/footer_script}
+</script>{/footer_script}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
 {combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
-{footer_script}
+{footer_script}<script>
 
 const are_you_sure_msg  = '{'Are you sure?'|@translate|@escape:'javascript'}';
 const confirm_msg = '{"Yes, I am sure"|@translate}';
@@ -154,7 +154,7 @@ $("#update_all").click(function() {
       ...jConfirm_confirm_options
     });
 })
-{/footer_script}
+</script>{/footer_script}
 
 {if $isWebmaster == 1}
 

@@ -18,7 +18,7 @@
 
 {combine_script id='piecon' load='footer' path='node_modules/piecon/piecon.js'}
 
-{footer_script}
+{footer_script}<script>
 var rootUrl = "{get_absolute_root_url()}";
 jQuery(document).ready(function(){
 
@@ -371,7 +371,7 @@ var limit_storage = {$limit_storage};
     }
   });
 });
-{/footer_script}
+</script>{/footer_script}
 
 <style type="text/css">
 /*
@@ -619,7 +619,7 @@ p#uploadModeInfos { text-align:left;margin-top:1em;font-size:90%;color:#999; }
 </div> <!-- photosAddContent -->
 
 {* Community specific *}
-{footer_script}
+{footer_script}<script>
 jQuery(document).ready(function(){
   jQuery("a.colorboxThumb").colorbox({ rel:"colorboxThumb" });
 
@@ -628,4 +628,4 @@ jQuery(document).ready(function(){
     return false;
   });
 });
-{/footer_script}
+</script>{/footer_script}

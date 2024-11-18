@@ -1,7 +1,7 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
 {combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
-{footer_script}
+{footer_script}<script>
 
 
 const title_msg = '{'Are you sure you want to restore to default settings?'|@translate|@escape:javascript}';
@@ -66,7 +66,7 @@ $(".restore-settings-button").each(function() {
 		return false;
   });
 })();
-{/footer_script}
+</script>{/footer_script}
 
 {html_style}
 .sizeEnable { width:50px; }

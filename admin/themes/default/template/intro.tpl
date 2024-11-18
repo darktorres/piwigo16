@@ -2,7 +2,7 @@
 
 {combine_script id='jquery.cluetip' load='async' require='jquery' path='node_modules/cluetip/jquery.cluetip.js'}
 
-{footer_script require='jquery.cluetip'}
+{footer_script require='jquery.cluetip'}<script>
 var piwigo_need_update_msg = '<a href="admin.php?page=updates">{'A new version of Piwigo is available.'|@translate|@escape:"javascript"} <i class="icon-right"></i></a>';
 var ext_need_update_msg = '<a href="admin.php?page=updates&amp;tab=ext">{'Some upgrades are available for extensions.'|@translate|@escape:"javascript"} <i class="icon-right"></i></a>';
 const str_gb_used = "{'%s GB used'|translate}";
@@ -172,7 +172,7 @@ $(window).on('resize', function(){
       }
   });
 });
-{/footer_script}
+</script>{/footer_script}
 
 {html_style}
 .eiw .messages ul li {

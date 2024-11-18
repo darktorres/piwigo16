@@ -3,7 +3,7 @@
 
 {include file='inc/colorbox.inc.tpl' load_mode=$load_mode}
 {combine_script id='albumSelector' load_mode=$load_mode path='admin/themes/default/js/album_selector.js'}
-{footer_script}
+{footer_script}<script>
   str_no_search_in_progress = '{'No search in progress'|@translate|escape:javascript}';
   str_albums_found = '{"<b>%d</b> albums found"|translate}';
   str_album_found = '{"<b>1</b> album found"|translate}';
@@ -14,7 +14,7 @@
     api_method = 'pwg.categories.getAdminList';
   {/if}
   
-{/footer_script}
+</script>{/footer_script}
 
 <div id="addLinkedAlbum" class="linkedAlbumPopIn">
   <div class="linkedAlbumPopInContainer">

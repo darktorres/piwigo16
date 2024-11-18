@@ -11,7 +11,7 @@
 {combine_script id='pluginsNew' load='footer' require='jquery.ui,jquery.sort' path='admin/themes/default/js/plugins_new.js'}
 {combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
 
-{footer_script}
+{footer_script}<script>
 const str_confirm_msg = "{"Yes, I am sure"|@translate}";
 const str_cancel_msg = "{"No, I have chaged my mind"|@translate}";
 const str_install_title = "{'Are you sure you want to install the plugin "%s"?'|@translate|@escape:'javascript'}";
@@ -27,7 +27,7 @@ const str_x_months = "{"%d months"|@translate}";
 const str_x_year = "{"%d year"|@translate}";
 const str_x_years = "{"%d years"|@translate}";
 const str_from_beginning = "{"since the beginning"|@translate}";
-{/footer_script}
+</script>{/footer_script}
 
 <div class="titrePage">
   <div class="sort">

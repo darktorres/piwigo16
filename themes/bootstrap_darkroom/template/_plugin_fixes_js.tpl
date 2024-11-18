@@ -1,30 +1,30 @@
 {if isset($loaded_plugins['piwigo-openstreetmap']) && ($BODY_ID == "thePicturePage" || $BODY_ID == "theCategoryPage")}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   $('.pwg-icon-globe').removeClass('pwg-icon').closest('a').html('<i class="fas fa-globe fa-fw" aria-hidden="true"></i>').addClass('nav-link').removeClass('pwg-state-default pwg-button').closest('li').addClass('nav-item osm-button').find('a>i').after('<span class="d-lg-none ml-2">'+$('.osm-button').find('a').attr('title')+'</span>');;
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 
 {if isset($loaded_plugins['rv_gmaps']) && $BODY_ID == "thePicturePage"}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   $('.pwg-icon-map').removeClass('pwg-icon').closest('a').html('<i class="fas fa-globe fa-fw" aria-hidden="true"></i>').addClass('nav-link').removeClass('pwg-state-default pwg-button').wrap('<li class="nav-item rvgmaps-button"></li>').find('i').after('<span class="d-lg-none ml-2">'+$('.rvgmaps-button').find('a').attr('title')+'</span>');
   $('#map').wrap('<div id="mapContainer" class="container"></div>');
   $('#mapPicture').prependTo('#mapContainer').wrap('<div class="row justify-content-center"></div>');
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 
 {if isset($loaded_plugins['rv_gmaps']) && $BODY_ID == "theCategoryPage"}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   $('.pwg-icon-map').removeClass('pwg-icon').closest('a').html('<i class="fas fa-globe fa-fw" aria-hidden="true"></i>').addClass('nav-link').removeClass('pwg-state-default pwg-button').closest('li').addClass('nav-item rvgmaps-button').find('a>i').after('<span class="d-lg-none ml-2">'+$('.rvgmaps-button').find('a').attr('title')+'</span>');
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 {if isset($loaded_plugins['rv_gmaps']) && $BODY_ID == "theMapListPage"}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   $('#theMapListPage #wrapper').addClass('container');
   $('#theMapListPage ul.categoryActions').addClass('nav flex-column').find('li').addClass('nav-item').find('a').addClass('nav-link');
@@ -33,22 +33,22 @@ $(document).ready(function() {
   $('#theMapListPage #thumbnails').addClass('row').changeElementType('div');
   $('#theMapListPage #thumbnails').find('.card-thumbnail').addClass('mb-3');
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 
 {if isset($loaded_plugins['oAuth'])}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   $('#navbar-menubar>.navbar-nav>dd>#quickconnect').attr('id', 'oAuthQuickconnect');
   $('#oAuthQuickconnect legend').addClass('dropdown-header').appendTo('#identificationDropdown>.dropdown-menu').changeElementType('li');
   $('#oAuthQuickconnect').closest('dd').appendTo('#identificationDropdown>.dropdown-menu');
   $('#oAuthQuickconnect').closest('dd').changeElementType('li');
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 
 {if isset($loaded_plugins['ProtectedAlbums']) && $BODY_ID == 'theCategoryPage'}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 var form = $('#content>form');
 $(form).addClass('form-inline').wrap('<div class="col-sm-12"></div>');
 $(form).find('legend').changeElementType('h4');
@@ -58,11 +58,11 @@ $(form).find('div>input[type="password"]').addClass('form-control');
 $(form).find('div>input[type="submit"]').changeElementType('button');
 $(form).find('button').addClass('btn btn-primary btn-raised').text('Login');
 $(form).find('label').remove();
-{/footer_script}
+</script>{/footer_script}
 {/if}
 
 {if isset($loaded_plugins['user_custom_fields']) && ($BODY_ID == 'theProfilePage' || $BODY_ID == 'theRegisterPage')}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 var ucf_body_id = $('{if $BODY_ID == 'theProfilePage'}#theProfilePage{else}#theRegisterPage{/if}');
 $(document).ready(function() {
   $(ucf_body_id).find('fieldset>legend').remove();
@@ -74,11 +74,11 @@ $(document).ready(function() {
   var u = $('#theProfilePage form#profile .form-group').first().contents().filter(function() { return this.nodeType == 3; }).eq(1);
   $(u).wrap('<div class="col-sm-4"><p class="form-control-static"></p></div>');
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 
 {if isset($loaded_plugins['BatchDownloader'])}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   if ($('#batchDownloadLink').next('div#batchDownloadBox').length > 0) {
     $('#batchDownloadLink').closest('li').addClass('nav-item dropdown');
@@ -102,11 +102,11 @@ $(window).on('load', function() {
     $('#batchDownloadLink').off().on('click', function() { $('#batchDownloadLink').dropdown() });
   }
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 
 {if isset($loaded_plugins['download_by_size'])}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   if ($('#downloadSizeBox').length < 1) {
     return false;
@@ -129,11 +129,11 @@ $(window).on("load", function() {
     $('#downloadSwitchLink').dropdown();
   });
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 
 {if isset($loaded_plugins['PWG_Stuffs'])}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   {if $theme_config->page_header == 'jumbotron'}
   var stuffAboveContent = $('.jumbotron').next('.pwgstuffs-container');
@@ -144,40 +144,40 @@ $(document).ready(function() {
   {/if}
   $(stuffAboveContent).insertAfter('.navbar-contextual');
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 
 {if isset($loaded_plugins['Piwecard']) && $BODY_ID == 'thePicturePage'}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   $('.imageComment .createECardOpen').appendTo('#important-info').addClass('btn btn-primary mt-2');
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 
 {if isset($loaded_plugins['tag_groups']) && $BODY_ID == 'theTagsPage'}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   $('.container table').addClass('table table-sm').attr('id', 'tagGroupsTable');
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 
 {if isset($loaded_plugins['Contact1menu'])}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   $('#navbar-menubar a[title="{'Contact'|@translate}"]').addClass('nav-link').closest('dt').addClass('nav-item').attr('id', 'Contact1menu').changeElementType('li');
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 
 {if isset($loaded_plugins['rv_tscroller'])}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   if (window.jQuery && window.RVTS && RVTS.start>0) {
         var $f = $('.navbar-contextual .navbar-brand a:last-child');
         $('#rvtsUp').html( '<div id="rvtsUp" style="text-align:center;font-size:120%;margin:10px"><a href="'+$f.attr("href")+'">'+$f.html()+'</a> | <a href="javascript:RVTS.loadUp()">'+RVTS.prevMsg+"</a></div>" );
   }
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}

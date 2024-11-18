@@ -32,7 +32,7 @@
 
 
 {combine_script id='jquery.tipTip' load='footer' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
-{footer_script require='jquery.tipTip'}
+{footer_script require='jquery.tipTip'}<script>
 jQuery('.tiptip').tipTip({
   delay: 0,
   fadeIn: 200,
@@ -43,7 +43,7 @@ jQuery('a.externalLink').click(function() {
   window.open(jQuery(this).attr("href"));
   return false;
 });
-{/footer_script}
+</script>{/footer_script}
 
 <!-- BEGIN get_combined -->
 {get_combined_scripts load='footer'}

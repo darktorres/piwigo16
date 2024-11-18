@@ -1,4 +1,4 @@
-{footer_script require='jquery.bootstrap-tour'  load="async"}
+{footer_script require='jquery.bootstrap-tour'  load="async"}<script>
 
 var tour = new Tour({
   name: "first_contact",
@@ -67,4 +67,4 @@ tour.init();
 // Start the tour
 tour.start();
 
-{/footer_script}
+</script>{/footer_script}

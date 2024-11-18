@@ -4,7 +4,7 @@
   {$shortname = $theme_config->comments_disqus_shortname}
   {if $theme_config->comments_type == 'disqus' and !empty($shortname)}
       <div id="disqus_thread"></div>
-{footer_script}
+{footer_script}<script>
 var disqus_shortname = '{$shortname}';
 
 (function() {
@@ -12,7 +12,7 @@ var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.as
 dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
 (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
 })();
-{/footer_script}
+</script>{/footer_script}
   {else}
       <ul class="nav nav-pills p-2" role="tablist">
     {if !empty($COMMENT_COUNT)}

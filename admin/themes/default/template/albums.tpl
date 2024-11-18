@@ -1,4 +1,4 @@
-{footer_script}
+{footer_script}<script>
 var data = {json_encode($album_data)};
 var pwg_token = "{$PWG_TOKEN}";
 var str_show_sub = "{'Show sub-albums'|@translate}";
@@ -20,7 +20,7 @@ var x_nb_images = "{'%d photos'|@translate}";
 var x_nb_sub_photos = "{'%d pictures in sub-albums'|@translate}";
 
 var delay_autoOpen = {$delay_before_autoOpen}
-{/footer_script}
+</script>{/footer_script}
 
 {combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
 {combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
@@ -29,7 +29,7 @@ var delay_autoOpen = {$delay_before_autoOpen}
 {combine_script id='jtree' load='footer' path='node_modules/jqtree/tree.jquery.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
-{footer_script}
+{footer_script}<script>
 const delete_album_with_name = '{'Delete album "%s".'|@translate|escape:javascript}';
 const delete_album_with_subs = '{'Delete album "%s" and its %d sub-albums.'|@translate|escape:javascript}'
 const has_images_associated_outside = '{"delete album and all %d photos, even the %d associated to other albums"|@translate|escape:javascript}';
@@ -50,7 +50,7 @@ str_album_name_empty = '{'Album name must not be empty'|@translate|escape:javasc
 const add_album_root_title = '{'Create a new album at root'|@translate|escape:javascript}';
 const add_sub_album_of = '{'Create a sub-album of "%s"'|@translate|escape:javascript}';
 const tiptip_locked_album = "{'Locked album'|translate|escape:javascript}";
-{/footer_script}
+</script>{/footer_script}
 
 {combine_script id='jquery.tipTip' load='footer' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
 

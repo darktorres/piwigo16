@@ -15,7 +15,7 @@
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
-{footer_script}
+{footer_script}<script>
 
 /* Translates */
 const title_msg = '{'Are you sure you want to delete the user "%s"?'|@translate|escape:'javascript'}';
@@ -186,7 +186,7 @@ $(document).ready(function() {
   });
 });
 
-{/footer_script}
+</script>{/footer_script}
 
 {combine_script id='user_list' load='footer' path='admin/themes/default/js/user_list.js'}
 

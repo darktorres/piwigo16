@@ -6,7 +6,7 @@
 
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-{footer_script}
+{footer_script}<script>
 {* <!-- USERS --> *}
 var usersCache = new UsersCache({
   serverKey: '{$CACHE_KEYS.users}',
@@ -685,7 +685,7 @@ $(document).ready(function () {
     });
 });
 
-{/footer_script}
+</script>{/footer_script}
 
 <div class="container"> 
 

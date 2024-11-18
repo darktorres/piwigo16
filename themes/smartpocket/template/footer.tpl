@@ -18,9 +18,9 @@
   </h6>
 </div>
 {/if}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 document.cookie = 'screen_size='+jQuery(document).width()+'x'+jQuery(document).height();{if isset($COOKIE_PATH)}path={$COOKIE_PATH};{/if}
-{/footer_script}
+</script>{/footer_script}
 {get_combined_scripts load='footer'}
 {if isset($footer_elements)}
 {foreach $footer_elements as $v}

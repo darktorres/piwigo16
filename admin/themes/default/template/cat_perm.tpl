@@ -4,7 +4,7 @@
 {combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.min.js'}
 {combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
 
-{footer_script}
+{footer_script}<script>
 const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
 (function(){
 {* <!-- GROUPS --> *}
@@ -49,7 +49,7 @@ jQuery("#selectStatus").change(function() {
 {/if}
 }());
 
-{/footer_script}
+</script>{/footer_script}
 
 <form action="{$F_ACTION}" method="post" id="categoryPermissions">
 

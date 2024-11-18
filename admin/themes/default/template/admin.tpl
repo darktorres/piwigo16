@@ -1,4 +1,4 @@
-{footer_script}
+{footer_script}<script>
 jQuery.fn.lightAccordion = function(options) {
   var settings = $.extend({
     header: 'dt',
@@ -43,7 +43,7 @@ jQuery(document).ready(function() {
     jQuery('h1').html(jQuery('h2').html());
   }
 });
-{/footer_script}
+</script>{/footer_script}
 
 <div id="menubar">
   <div id="adminHome"><a href="{$U_ADMIN}" class="admin-main"><i class="icon-television"></i> {'Dashboard'|@translate}</a></div>
@@ -136,9 +136,9 @@ jQuery(document).ready(function() {
   {/if}
   {if isset($U_HELP)}
   {include file='inc/colorbox.inc.tpl'}
-{footer_script}
+{footer_script}<script>
   jQuery('.help-popin').colorbox({ width:"500px" });
-{/footer_script}
+</script>{/footer_script}
   <ul class="HelpActions">
     <li><a href="{$U_HELP}&amp;output=content_only" title="{'Help'|@translate}" class="help-popin"><span class="icon-help-circled"></span></a></li>
   </ul>

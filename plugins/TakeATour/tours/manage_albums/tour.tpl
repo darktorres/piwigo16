@@ -1,4 +1,4 @@
-{footer_script require='jquery.bootstrap-tour'  load="async"}
+{footer_script require='jquery.bootstrap-tour'  load="async"}<script>
 
 var tour = new Tour({
   name: "manage_albums",
@@ -62,4 +62,4 @@ jQuery( "p.albumActions > a:nth-child(1)" ).click(function() {
 });
 
 
-{/footer_script}
+</script>{/footer_script}

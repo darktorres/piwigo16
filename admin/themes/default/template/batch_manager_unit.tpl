@@ -7,7 +7,7 @@
 {combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.min.js'}
 {combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
 
-{footer_script}
+{footer_script}<script>
 (function(){
 {* <!-- TAGS --> *}
 var tagsCache = new TagsCache({
@@ -33,7 +33,7 @@ jQuery("a.preview-box").colorbox( {
 	photo: true
 });
 }());
-{/footer_script}
+</script>{/footer_script}
 
 <form action="{$F_ACTION}" method="POST">
   <div style="margin: 30px 0; display: flex; justify-content: space-between;">

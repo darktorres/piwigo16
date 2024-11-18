@@ -1,4 +1,4 @@
-{footer_script require='jquery.bootstrap-tour'}
+{footer_script require='jquery.bootstrap-tour'}<script>
 
 var tour = new Tour({
   name: "2_9_0",
@@ -70,4 +70,4 @@ tour.init();
 // Start the tour
 tour.start();
 
-{/footer_script}
+</script>{/footer_script}

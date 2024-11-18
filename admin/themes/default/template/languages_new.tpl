@@ -1,13 +1,13 @@
 {combine_script id='jquery.cluetip' load='async' require='jquery' path='node_modules/cluetip/jquery.cluetip.js'}
 
-{footer_script require='jquery.cluetip'}
+{footer_script require='jquery.cluetip'}<script>
 jQuery().ready(function() {
 	jQuery('.cluetip').cluetip({
 		width: 300,
 		splitTitle: '|'
 	});
 });
-{/footer_script}
+</script>{/footer_script}
 
 {if $isWebmaster == 1}
   

@@ -5,7 +5,7 @@
 {combine_css path="themes/default/css/{$themeconf.colorscheme}-search.css" order=-100}
 {combine_css path="themes/default/fontello/css/gallery-icon.css" order=-10} 
 
-{footer_script}
+{footer_script}<script>
 {if isset($GP)}
   global_params = {$GP};
 {/if}
@@ -29,7 +29,7 @@ str_empty_search_top_alt = "{'Fill in the filters to start a search'|@translate|
 str_empty_search_bot_alt = "{'Pre-established filters are proposed, but you can add or remove them using the "Choose filters" button.'|@translate|escape:javascript}";
 
 const prefix_icon = 'gallery-icon-';
-{/footer_script}
+</script>{/footer_script}
 
 {combine_script id='mcs' load='async' require='jquery' path='themes/default/js/mcs.js'}
 <div class="mcs-container">

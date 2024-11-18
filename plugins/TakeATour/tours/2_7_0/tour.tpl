@@ -1,4 +1,4 @@
-{footer_script require='jquery.bootstrap-tour'}
+{footer_script require='jquery.bootstrap-tour'}<script>
 
 var tour = new Tour({
   name: "2_7_0",
@@ -95,4 +95,4 @@ jQuery( "input[class='submit']" ).click(function() {
     tour.goTo(6);
   }
 });
-{/footer_script}
+</script>{/footer_script}

@@ -1,4 +1,4 @@
-{footer_script require="jquery"}
+{footer_script require="jquery"}<script>
 jQuery('.TAT_description a[href*="piwigo.org"]').addClass("externalLink");
 
 jQuery('.showInfo').tipTip({
@@ -20,7 +20,7 @@ jQuery(".showDetails a").click(function() {
 
   return false;
 });
-{/footer_script}
+</script>{/footer_script}
 
 {html_style}
 .pluginBox {

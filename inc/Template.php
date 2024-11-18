@@ -1001,9 +1001,7 @@ class Template
         }
 
         if (count($this->scriptLoader->inline_scripts)) {
-            $content[] = '<script type="text/javascript">//<![CDATA[' . "\n";
             $content = array_merge($content, $this->scriptLoader->inline_scripts);
-            $content[] = '//]]></script>';
         }
 
         if (count($scripts[1])) {

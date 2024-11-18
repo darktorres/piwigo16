@@ -4,7 +4,7 @@
 {combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.min.js'}
 {combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
 
-{footer_script}
+{footer_script}<script>
 {* <!-- CATEGORIES --> *}
 var categoriesCache = new CategoriesCache({
   serverKey: '{$CACHE_KEYS.categories}',
@@ -37,7 +37,7 @@ $(document).ready(function() {
   $('h1').append("<span class='badge-number'>{$NB_ELEMENTS}</span>")
 });
 
-{/footer_script}
+</script>{/footer_script}
 
 <form action="{$F_ACTION}" method="GET" class="filter">
   <fieldset>
@@ -119,7 +119,7 @@ $(document).ready(function() {
 {/foreach}{*images*}
 </table>
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-{footer_script}
+{footer_script}<script>
 function del(node,id,uid,aid){
 	var tr = jQuery(node).parents("tr").first().fadeTo(1000, 0.4),
 		data = {
@@ -144,6 +144,6 @@ function del(node,id,uid,aid){
 	);
 	return false;
 }
-{/footer_script}
+</script>{/footer_script}
 
 {if !empty($navbar)}{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}

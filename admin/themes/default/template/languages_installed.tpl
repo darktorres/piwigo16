@@ -1,7 +1,7 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
 {combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
-{footer_script}
+{footer_script}<script>
 $(".delete-lang-button").each(function() {
   let title_msg = '{'Are you sure you want to delete the language "%s"?'|@translate|@escape:'javascript'}';
   const confirm_msg = '{"Yes, I am sure"|@translate}';
@@ -13,7 +13,7 @@ $(".delete-lang-button").each(function() {
     alert_cancel: cancel_msg
   });
 });
-{/footer_script}
+</script>{/footer_script}
 
 {foreach from=$language_states item=language_state}
 <fieldset>

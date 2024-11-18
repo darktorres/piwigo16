@@ -33,7 +33,7 @@
 </fieldset>
 </form>
 
-{footer_script}
+{footer_script}<script>
 function from_coi(f, total) {
 	return f*total;
 }
@@ -65,5 +65,5 @@ jQuery("#jcrop").Jcrop({
 	}
 {/if}
 );
-{/footer_script}
+</script>{/footer_script}
 

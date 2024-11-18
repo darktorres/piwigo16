@@ -8,14 +8,14 @@
 
 {combine_css path="plugins/LocalFilesEditor/template/locfiledit.css"}
 
-{footer_script}
+{footer_script}<script>
 if (document.getElementById("text") != null)
   var editor = CodeMirror.fromTextArea(document.getElementById("text"), {
     matchBrackets: true,
     mode: "{$CODEMIRROR_MODE}",
     tabMode: "shift"
   });
-{/footer_script}
+</script>{/footer_script}
 
 <div class="titrePage">
   <h2>LocalFiles Editor</h2>

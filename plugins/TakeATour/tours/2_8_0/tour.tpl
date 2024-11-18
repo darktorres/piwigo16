@@ -1,4 +1,4 @@
-{footer_script require='jquery.bootstrap-tour'}
+{footer_script require='jquery.bootstrap-tour'}<script>
 
 var tour = new Tour({
   name: "2_8_0",
@@ -65,4 +65,4 @@ if (tour.getCurrentStep() == 3) {
   jQuery("input[value=custom]").prop("checked", true);
 }
 
-{/footer_script}
+</script>{/footer_script}

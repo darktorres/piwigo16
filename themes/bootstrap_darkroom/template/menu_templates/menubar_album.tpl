@@ -19,7 +19,7 @@
 *}
     </div>
 </li>
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $('#categoriesDropdownMenu').on('show.bs.dropdown', function() {
   $(this).find('a.dropdown-item').each(function() {
     var level = $(this).data('level');
@@ -29,4 +29,4 @@ $('#categoriesDropdownMenu').on('show.bs.dropdown', function() {
     }
   });
 });
-{/footer_script}
+</script>{/footer_script}

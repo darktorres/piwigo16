@@ -41,7 +41,7 @@
     </div>
 {else}
 {combine_script id='jquery.awesomeCloud' load='footer' path="https://rawcdn.githack.com/russelporosky/jQuery.awesomeCloud.plugin/refs/heads/master/jquery.awesomeCloud-0.2.js"}
-{footer_script require='jquery.awesomeCloud'}
+{footer_script require='jquery.awesomeCloud'}<script>
     $(document).ready(function(){
         $("#tagCloudCanvas").awesomeCloud({
             "size" : {
@@ -61,7 +61,7 @@
             "shape": "circle"
         });
     });
-{/footer_script}
+</script>{/footer_script}
     <div id="tagCloudCanvas">
 {foreach from=$tags item=tag}
         <span data-weight="{$tag.counter}"><a href="{$tag.URL}">{$tag.name}</a></span>

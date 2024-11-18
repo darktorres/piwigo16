@@ -14,12 +14,12 @@
     <a href="#" onclick="window.close();">{'Close this window'|@translate}</a>
 </p>
 
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 if (window.opener || window.name) {
 	jQuery("#closeLink").show();
 	jQuery("#homeLink").hide();
 }
-{/footer_script}
+</script>{/footer_script}
 </div> <!-- content -->
 
 

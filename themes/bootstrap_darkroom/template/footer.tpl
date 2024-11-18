@@ -38,9 +38,9 @@
 {include file='_plugin_fixes_js.tpl'}
 
 {if preg_match('/^material/', $theme_config->bootstrap_theme)}
-{footer_script require='bootstrap'}
+{footer_script require='bootstrap'}<script>
  $('body').bootstrapMaterialDesign();
-{/footer_script}
+</script>{/footer_script}
 {/if}
 {get_combined_scripts load='footer'}
 </body>

@@ -121,7 +121,7 @@
                         <input type="text" name="q" id="qsearchInput" class="form-control" placeholder="{'Search'|@translate}" />
                     </div>
                   </form>
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 var qsearch_icon = $('#navbar-menubar>#quicksearch>.fa-search');
 var qsearch_text = $('#navbar-menubar>#quicksearch #qsearchInput');
 $(qsearch_icon).click(function () {
@@ -130,14 +130,14 @@ $(qsearch_icon).click(function () {
 $(document).ready(function() {
   $('#navbar-menubar>#quicksearch').css({ 'color': $('#navbar-menubar .nav-link').css('color') });
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 {$MENUBAR}
                 </div>
             </div>
         </nav>
 {if $theme_config->page_header == 'fancy'}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 var sfactor = $(".page-header").height() - 50;
 var color = "rgba(0, 0, 0, 1)";
 var nb_main_height = $('.navbar-main').outerHeight();
@@ -195,7 +195,7 @@ $('.navbar-contextual .navbar-collapse').on('hidden.bs.collapse', function() {
   setNavbarOpacity();
 });
 {/if}
-{/footer_script}
+</script>{/footer_script}
 {/if}
 {/if}
 
@@ -227,18 +227,18 @@ $('.navbar-contextual .navbar-collapse').on('hidden.bs.collapse', function() {
   padding-bottom: 5px;
 }
 {/html_style}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   $('.navbar-contextual').removeClass('navbar-light').addClass('navbar-dark navbar-forced-sm');
 });
-{/footer_script}
+</script>{/footer_script}
 {else}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() {
   $('.page-header').addClass('mb-5');
   $('.navbar-contextual').addClass('navbar-transparent navbar-sm');
 });
-{/footer_script}
+</script>{/footer_script}
 {/if}
 {/if}
 

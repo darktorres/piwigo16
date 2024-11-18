@@ -20,7 +20,7 @@
 
 <div class="actionButtons">
 {if isset($current.unique_derivatives) && count($current.unique_derivatives)>1}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 function changeImgSrc(url,typeSave,typeMap)
 {
 	var theImg = document.getElementById("theMainImage");
@@ -35,7 +35,7 @@ function changeImgSrc(url,typeSave,typeMap)
 	document.cookie = 'picture_deriv='+typeSave+';path={$COOKIE_PATH}';
 }
 (window.SwitchBox=window.SwitchBox||[]).push("#derivativeSwitchLink", "#derivativeSwitchBox");
-{/footer_script}
+</script>{/footer_script}
 <a id="derivativeSwitchLink" title="{'Photo sizes'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
   <span class="pwg-icon pwg-icon-sizes"></span><span class="pwg-button-text">{'Photo sizes'|@translate}</span>
 </a>
@@ -69,13 +69,13 @@ function changeImgSrc(url,typeSave,typeMap)
 	</a>
 
 {if !empty($current.formats)}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 jQuery().ready(function() {
   jQuery("#downloadSwitchLink").removeAttr("href");
 
   (window.SwitchBox=window.SwitchBox||[]).push("#downloadSwitchLink", "#downloadSwitchBox");
 });
-{/footer_script}
+</script>{/footer_script}
 
 <div id="downloadSwitchBox" class="switchBox">
   <div class="switchBoxTitle">{'Download'|translate} - {'Formats'|translate}</div>
@@ -105,7 +105,7 @@ jQuery().ready(function() {
 	</a>
 {/if}
 {if isset($U_CADDIE)}{*caddie management BEGIN*}
-{footer_script}
+{footer_script}<script>
 function addToCadie(aElement, rootUrl, id)
 {
 if (aElement.disabled) return;
@@ -119,7 +119,7 @@ y.callService(
 	}
 	);
 }
-{/footer_script}
+</script>{/footer_script}
 	<a href="{$U_CADDIE}" onclick="addToCadie(this, '{$ROOT_URL}', {$current.id}); return false;" title="{'Add to caddie'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-caddie-add"> </span><span class="pwg-button-text">{'Caddie'|@translate}</span>
 	</a>
@@ -262,7 +262,7 @@ y.callService(
 			{/foreach}
 			{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
 			{combine_script id='rating' load='async' require='core.scripts' path='themes/default/js/rating.js'}
-			{footer_script}
+			{footer_script}<script>
 				var _pwgRatingAutoQueue = _pwgRatingAutoQueue||[];
 				_pwgRatingAutoQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
 					onSuccess : function(rating) {
@@ -280,7 +280,7 @@ y.callService(
 						}
 					}
 				} );
-			{/footer_script}
+			</script>{/footer_script}
 			</div>
 			</form>
 		</dd>
@@ -295,7 +295,7 @@ y.callService(
 				<a id="privacyLevelLink" href>{$available_permission_levels[$current.level]}</a>
 			</div>
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 function setPrivacyLevel(id, level){
 (new PwgWS('{$ROOT_URL}')).callService(
 	"pwg.images.setPrivacyLevel", { image_id:id, level:level},
@@ -311,7 +311,7 @@ function setPrivacyLevel(id, level){
 	);
 }
 (window.SwitchBox=window.SwitchBox||[]).push("#privacyLevelLink", "#privacyLevelBox");
-{/footer_script}
+</script>{/footer_script}
 			<div id="privacyLevelBox" class="switchBox" style="display:none">
 				{foreach from=$available_permission_levels item=label key=level}
 					<span class="switchCheck"{if $level != $current.level} style="visibility:hidden"{/if}>&#x2714; </span>

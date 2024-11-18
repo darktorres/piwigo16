@@ -400,7 +400,7 @@
         <input type="submit" name="submit" value="{'Save Settings'|@translate}">
     </p>
 </form>
-{footer_script require="jquery"}
+{footer_script require="jquery"}<script>
 (function(){
     var targets = {
         'input[name="social_enabled"]': ['#social_twitter', '#social_facebook', '#social_pinterest', '#social_vk', '#social_buttons'],
@@ -571,4 +571,4 @@ $('input[name=photoswipe]').change(function() {
     $('select[name=thumbnail_linkto] option[value=photoswipe_mobile_only]').removeAttr('disabled');
   }
 });
-{/footer_script}
+</script>{/footer_script}

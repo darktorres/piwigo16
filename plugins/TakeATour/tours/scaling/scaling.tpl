@@ -1,4 +1,4 @@
-{footer_script require='jquery.bootstrap-tour'}
+{footer_script require='jquery.bootstrap-tour'}<script>
 // Instance the tour
 var tour = new Tour({
   name: "scaling",
@@ -86,4 +86,4 @@ jQuery( "input[class='submit']" ).click(function() {
     tour.goTo(6);
   }
 });
-{/footer_script}
+</script>{/footer_script}

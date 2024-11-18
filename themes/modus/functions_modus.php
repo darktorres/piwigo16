@@ -328,10 +328,12 @@ class functions_modus
         $template->block_footer_script(
             null,
             '
-            rvgtProcessor = new RVGThumbs({
-                hMargin: ' . $horizontal_margin . ',
-                rowHeight: ' . $row_height . '
-            });'
+                <script>
+                    rvgtProcessor = new RVGThumbs({
+                        hMargin: ' . $horizontal_margin . ',
+                        rowHeight: ' . $row_height . '
+                    });
+                </script>'
         );
 
         $my_base_name = basename(dirname(__FILE__));
@@ -347,15 +349,17 @@ class functions_modus
             $template->block_footer_script(
                 null,
                 '
-                try {
-                    document.cookie = "caps=" +
-                        (window.devicePixelRatio ? window.devicePixelRatio : 1) + "x" +
-                        document.documentElement.clientWidth + "x" +
-                        document.documentElement.clientHeight +
-                        ";path=' . functions_cookie::cookie_path() . '";
-                } catch (er) {
-                    document.cookie = "caps=1x1x1x" + er.message;
-                }'
+                    <script>
+                        try {
+                            document.cookie = "caps=" +
+                                (window.devicePixelRatio ? window.devicePixelRatio : 1) + "x" +
+                                document.documentElement.clientWidth + "x" +
+                                document.documentElement.clientHeight +
+                                ";path=' . functions_cookie::cookie_path() . '";
+                        } catch (er) {
+                            document.cookie = "caps=1x1x1x" + er.message;
+                        }
+                    </script>'
             );
         }
 

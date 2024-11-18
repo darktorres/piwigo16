@@ -8,10 +8,10 @@
 {combine_script id='photoswipe' path='https://rawcdn.githack.com/Piwigo/piwigo-smartpocket/dea72053d0d5d3ec1ec61fccb58dac35ad9c8bf5/js/code.photoswipe.jquery.min.js' require='klass,jquery.mobile'}
 {combine_script id='smartpocket' path='themes/smartpocket/js/smartpocket.js' require='photoswipe' load='footer'}
 {combine_script id='sp.thumb.arrange' path='themes/smartpocket/js/thumb.arrange.js' require='jquery' load='footer'}
-{footer_script}
+{footer_script}<script>
 var var_loop = {if $smartpocket.loop}true{else}false{/if}, var_autohide = {$smartpocket.autohide}, var_trad = "{'More Information'|@translate}";
 var SPThumbsOpts ={ hMargin:{$hmargin},rowHeight:{$row_height}};
-{/footer_script}
+</script>{/footer_script}
 {$thumb_picker->init($row_height)}
 {html_style}
 .thumbnails .liEmpty{ display:none}

@@ -9,7 +9,7 @@
         <div class="navbar-collapse collapse justify-content-end" id="secondary-navbar">
             <ul class="navbar-nav">
 {if isset($current.unique_derivatives) && count($current.unique_derivatives)>1}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
     function changeImgSrc(url,typeSave,typeMap) {
         var theImg = document.getElementById("theMainImage");
         if (theImg) {
@@ -22,7 +22,7 @@
         jQuery('#derivative'+typeMap).addClass('active');
         document.cookie = 'picture_deriv='+typeSave+';path={$COOKIE_PATH}';
     }
-{/footer_script}
+</script>{/footer_script}
                 <li class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" title="{'Photo sizes'|@translate}">
                         <i class="far fa-image fa-fw" aria-hidden="true"></i><span class="d-lg-none ml-2">{'Photo sizes'|@translate}</span>
@@ -95,7 +95,7 @@
                 </li>
 {/if}
 {if isset($U_CADDIE)}
-{footer_script}
+{footer_script}<script>
     function addToCadie(aElement, rootUrl, id) {
         if (aElement.disabled) return;
         aElement.disabled=true;
@@ -105,7 +105,7 @@
             onSuccess: function(result) { aElement.disabled = false; }
         });
     }
-{/footer_script}
+</script>{/footer_script}
                 <li class="nav-item">
                     <a class="nav-link" href="{$U_CADDIE}" onclick="addToCadie(this, '{$ROOT_URL}', {$current.id}); return false;" title="{'Add to caddie'|@translate}" rel="nofollow">
                         <i class="fas fa-shopping-basket fa-fw" aria-hidden="true"></i><span class="d-lg-none ml-2">{'Add to caddie'|@translate}</span>

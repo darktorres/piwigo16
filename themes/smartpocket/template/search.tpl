@@ -1,7 +1,7 @@
 {combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.min.js'}
 {combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
 
-{footer_script}
+{footer_script}<script>
 jQuery(document).ready(function() {
   jQuery("#authors, #tags, #categories").each(function() {
     jQuery(this).selectize({
@@ -10,7 +10,7 @@ jQuery(document).ready(function() {
     });
   })
 });
-{/footer_script}
+</script>{/footer_script}
 
 {html_style}
 .ui-checkbox, .ui-radio, .ui-btn-text {

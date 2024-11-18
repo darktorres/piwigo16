@@ -1,6 +1,6 @@
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
 $(document).ready(function() { $("#wrapper").css({ "position":"relative","overflow-x":"hidden" }); });
-{/footer_script}
+</script>{/footer_script}
 <div id="sidebar">
     <div id="info-content" class="info">
         <dl id="standard" class="imageInfoTable">
@@ -99,7 +99,7 @@ $(document).ready(function() { $("#wrapper").css({ "position":"relative","overfl
                         {/foreach}
                         {combine_script id='core.scripts' path='themes/default/js/scripts.js' load='async'}
                         {combine_script id='rating' require='core.scripts' path='themes/bootstrap_darkroom/js/rating.js' load='async'}
-                        {footer_script require='jquery'}
+                        {footer_script require='jquery'}<script>
                                 var _pwgRatingAutoQueue = _pwgRatingAutoQueue||[];
                                 _pwgRatingAutoQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
                                         onSuccess : function(rating) {
@@ -121,7 +121,7 @@ $(document).ready(function() { $("#wrapper").css({ "position":"relative","overfl
                                                 });
                                         }
                                 });
-                        {/footer_script}
+                        </script>{/footer_script}
                         </div>
                         </form>
                 </dd>
@@ -129,7 +129,7 @@ $(document).ready(function() { $("#wrapper").css({ "position":"relative","overfl
 {/if}
 {if $display_info.privacy_level and isset($available_permission_levels)}
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-{footer_script require='jquery'}
+{footer_script require='jquery'}<script>
     function setPrivacyLevel(id, level, label) {
     (new PwgWS('{$ROOT_URL}')).callService(
         "pwg.images.setPrivacyLevel", { image_id:id, level:level},
@@ -145,7 +145,7 @@ $(document).ready(function() { $("#wrapper").css({ "position":"relative","overfl
     );
     }
     (SwitchBox=window.SwitchBox||[]).push("#privacyLevelLink", "#privacyLevelBox");
-{/footer_script}
+</script>{/footer_script}
             <div id="Privacy" class="imageInfo">
                 <dt>{'Who can see this photo?'|@translate}</dt>
                 <dd>

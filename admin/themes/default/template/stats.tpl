@@ -1,4 +1,4 @@
-{footer_script}
+{footer_script}<script>
 var str_number_page_visited = "{'Page Visited'|@translate}";
 var str_number_page_visited_with_year = "{'Page Visited in %s'|@translate}";
 var str_tooltip_format = {
@@ -15,7 +15,7 @@ var str_avg = "{'Average last 12 months'|@translate}";
 var str_months_tosplit = "{$month_labels}";
 var str_months = str_months_tosplit.split('~');
 moment.locale("{$langCode}");
-{/footer_script}
+</script>{/footer_script}
 
 {combine_script id='chart.js' load='footer' path='node_modules/chart.js/dist/Chart.min.js'}
 {combine_css path="node_modules/chart.js/dist/Chart.min.css"}

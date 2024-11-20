@@ -19,12 +19,12 @@ class image_vips implements imageInterface
 {
     public Image $image;
 
-    public $quality = 75;
+    public int $quality = 75;
 
-    public $source_filepath;
+    public string|false $source_filepath;
 
     public function __construct(
-        $source_filepath
+        string $source_filepath
     ) {
         // putenv('VIPS_WARNING=0');
         $this->image = Image::newFromFile(realpath($source_filepath), [
@@ -33,61 +33,78 @@ class image_vips implements imageInterface
         $this->source_filepath = realpath($source_filepath);
     }
 
-    public function add_command($command, $params = null) {}
+    public function add_command(
+        string $command,
+        ?array $params = null
+    ): void {}
 
-    public function get_width()
+    public function get_width(): int
     {
         return $this->image->width;
     }
 
-    public function get_height()
+    public function get_height(): int
     {
         return $this->image->height;
     }
 
-    public function crop($width, $height, $x, $y)
-    {
+    public function crop(
+        int $width,
+        int $height,
+        int $x,
+        int $y
+    ): true {
         $this->image = $this->image->crop($x, $y, $width, $height);
         return true;
     }
 
-    public function strip()
+    public function strip(): true
     {
         return true;
     }
 
-    public function rotate($rotation)
-    {
+    public function rotate(
+        int $rotation
+    ): true {
         $this->image = $this->image->rotate($rotation);
         return true;
     }
 
-    public function set_compression_quality($quality)
-    {
+    public function set_compression_quality(
+        int $quality
+    ): true {
         $this->quality = $quality;
         return true;
     }
 
-    public function resize($width, $height)
-    {
+    public function resize(
+        int $width,
+        int $height
+    ): true {
         $this->image = Image::thumbnail($this->source_filepath, $width, [
             'height' => $height,
         ]);
         return true;
     }
 
-    public function sharpen($amount)
-    {
+    public function sharpen(
+        int $amount
+    ): true {
         return true;
     }
 
-    public function compose($overlay, $x, $y, $opacity)
-    {
+    public function compose(
+        pwg_image $overlay,
+        int $x,
+        int $y,
+        int $opacity
+    ): true {
         return true;
     }
 
-    public function write($destination_filepath)
-    {
+    public function write(
+        string $destination_filepath
+    ): true {
         $dest = pathinfo((string) $destination_filepath);
         $this->image->writeToFile(realpath($dest['dirname']) . '/' . $dest['basename']);
         return true;

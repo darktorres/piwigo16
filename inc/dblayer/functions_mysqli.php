@@ -17,15 +17,15 @@ use Piwigo\inc\functions_html;
 
 class functions_mysqli
 {
-    public const DB_ENGINE = 'MySQL';
+    public const string DB_ENGINE = 'MySQL';
 
-    public const REQUIRED_MYSQL_VERSION = '8.4.4';
+    public const string REQUIRED_MYSQL_VERSION = '8.4.4';
 
-    public const DB_REGEX_OPERATOR = 'REGEXP';
+    public const string DB_REGEX_OPERATOR = 'REGEXP';
 
-    public const DB_RANDOM_FUNCTION = 'RAND';
+    public const string DB_RANDOM_FUNCTION = 'RAND';
 
-    public const MASS_UPDATES_SKIP_EMPTY = 1;
+    public const int MASS_UPDATES_SKIP_EMPTY = 1;
 
     /**
      * Connect to database and store MySQLi resource in __$mysqli__ global variable.
@@ -34,14 +34,15 @@ class functions_mysqli
      *    - localhost
      *    - 1.2.3.4:3405
      *    - /path/to/socket
-     * @param string $user
-     * @param string $password
-     * @param string $database
      *
      * @throws Exception
      */
-    public static function pwg_db_connect($host, $user, $password, $database)
-    {
+    public static function pwg_db_connect(
+        string $host,
+        string $user,
+        string $password,
+        string $database
+    ): void {
         global $mysqli;
 
         $port = null;
@@ -82,7 +83,7 @@ class functions_mysqli
     /**
      * Set charset for database connection.
      */
-    public static function pwg_db_check_charset()
+    public static function pwg_db_check_charset(): void
     {
         global $mysqli;
 
@@ -100,7 +101,7 @@ class functions_mysqli
     /**
      * Check MySQL version. Can call fatal_error().
      */
-    public static function pwg_db_check_version()
+    public static function pwg_db_check_version(): void
     {
         $current_mysql = self::pwg_get_db_version();
 
@@ -117,10 +118,8 @@ class functions_mysqli
 
     /**
      * Get Mysql Version.
-     *
-     * @return string
      */
-    public static function pwg_get_db_version()
+    public static function pwg_get_db_version(): string
     {
         global $mysqli;
 
@@ -129,12 +128,10 @@ class functions_mysqli
 
     /**
      * Execute a query
-     *
-     * @param string $query
-     * @return mysqli_result|bool
      */
-    public static function pwg_query($query)
-    {
+    public static function pwg_query(
+        string $query
+    ): mysqli_result|bool|null {
         global $mysqli, $conf, $page, $debug, $t2;
 
         $start = microtime(true);
@@ -197,12 +194,11 @@ class functions_mysqli
 
     /**
      * Get max value plus one of a particular column.
-     *
-     * @param string $column
-     * @param string $table
      */
-    public static function pwg_db_nextval($column, $table)
-    {
+    public static function pwg_db_nextval(
+        string $column,
+        string $table
+    ): array|bool|string|null {
         $query = <<<SQL
             SELECT IF(MAX({$column}) + 1 IS NULL, 1, MAX({$column}) + 1)
             FROM {$table};
@@ -212,72 +208,79 @@ class functions_mysqli
         return $next;
     }
 
-    public static function pwg_db_changes()
+    public static function pwg_db_changes(): int|string
     {
         global $mysqli;
 
         return $mysqli->affected_rows;
     }
 
-    public static function pwg_db_num_rows($result)
-    {
+    public static function pwg_db_num_rows(
+        mysqli_result $result
+    ): int|string {
         return $result->num_rows;
     }
 
-    public static function pwg_db_fetch_array($result)
-    {
+    public static function pwg_db_fetch_array(
+        mysqli_result $result
+    ): array|bool|null {
         return $result->fetch_array();
     }
 
-    public static function pwg_db_fetch_assoc($result)
-    {
+    public static function pwg_db_fetch_assoc(
+        mysqli_result $result
+    ): array|bool|null {
         return $result->fetch_assoc();
     }
 
-    public static function pwg_db_fetch_row($result)
-    {
+    public static function pwg_db_fetch_row(
+        mysqli_result $result
+    ): array|bool|null {
         return $result->fetch_row();
     }
 
-    public static function pwg_db_fetch_object($result)
-    {
+    public static function pwg_db_fetch_object(
+        mysqli_result $result
+    ): bool|object|null {
         return $result->fetch_object();
     }
 
-    public static function pwg_db_free_result($result)
-    {
-        return $result->free_result();
+    public static function pwg_db_free_result(
+        mysqli_result $result
+    ): void {
+        $result->free_result();
     }
 
-    public static function pwg_db_real_escape_string($s)
-    {
+    public static function pwg_db_real_escape_string(
+        ?string $s
+    ): ?string {
         global $mysqli;
 
         return isset($s) ? $mysqli->real_escape_string($s) : null;
     }
 
-    public static function pwg_db_insert_id()
+    public static function pwg_db_insert_id(): int|string
     {
         global $mysqli;
 
         return $mysqli->insert_id;
     }
 
-    public static function pwg_db_errno()
+    public static function pwg_db_errno(): int
     {
         global $mysqli;
 
         return $mysqli->errno;
     }
 
-    public static function pwg_db_error()
+    public static function pwg_db_error(): string
     {
         global $mysqli;
 
         return $mysqli->error;
     }
 
-    public static function pwg_db_close()
+    public static function pwg_db_close(): true
     {
         global $mysqli;
 
@@ -287,13 +290,16 @@ class functions_mysqli
     /**
      * Updates multiple lines in a table.
      *
-     * @param string $tablename
-     * @param array $dbfields - contains 'primary' and 'update' arrays
-     * @param array $datas - indexed by column names
+     * @param array<array<int, string>> $dbfields - contains 'primary' and 'update' arrays
+     * @param array<array<string, string>> $datas - indexed by column names
      * @param int $flags - if MASS_UPDATES_SKIP_EMPTY, empty values do not overwrite existing ones
      */
-    public static function mass_updates($tablename, $dbfields, $datas, $flags = 0)
-    {
+    public static function mass_updates(
+        string $tablename,
+        array $dbfields,
+        array $datas,
+        int $flags = 0
+    ): void {
         if (count($datas) == 0) {
             return;
         }
@@ -407,9 +413,9 @@ class functions_mysqli
             self::mass_inserts($temporary_tablename, $all_fields, $datas);
 
             if ($flags & self::MASS_UPDATES_SKIP_EMPTY) {
-                $func_set = function ($s) { return "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})"; };
+                $func_set = function (string $s): string { return "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})"; };
             } else {
-                $func_set = function ($s) { return "t1.{$s} = t2.{$s}"; };
+                $func_set = function (string $s): string { return "t1.{$s} = t2.{$s}"; };
             }
 
             // update of table by joining with temporary table
@@ -422,7 +428,7 @@ class functions_mysqli
             $primaryConditions = implode(
                 "\n    AND ",
                 array_map(
-                    function ($s) { return "t1.{$s} = t2.{$s}"; },
+                    function (string $s): string { return "t1.{$s} = t2.{$s}"; },
                     $dbfields['primary']
                 )
             );
@@ -441,13 +447,14 @@ class functions_mysqli
     /**
      * Updates one line in a table.
      *
-     * @param string $tablename
-     * @param array $datas
-     * @param array $where
      * @param int $flags - if MASS_UPDATES_SKIP_EMPTY, empty values do not overwrite existing ones
      */
-    public static function single_update($tablename, $datas, $where, $flags = 0)
-    {
+    public static function single_update(
+        string $tablename,
+        array $datas,
+        array $where,
+        int $flags = 0
+    ): void {
         if (count($datas) == 0) {
             return;
         }
@@ -509,15 +516,17 @@ class functions_mysqli
     /**
      * Inserts multiple lines in a table.
      *
-     * @param string $table_name
      * @param array $dbfields - fields from $datas which will be used
-     * @param array $datas
      * @param array{
      *     ignore: bool,
      * } $options
      */
-    public static function mass_inserts($table_name, $dbfields, $datas, $options = [])
-    {
+    public static function mass_inserts(
+        string $table_name,
+        array $dbfields,
+        array $datas,
+        array $options = []
+    ): void {
         $ignore = '';
 
         if (isset($options['ignore']) and
@@ -582,14 +591,15 @@ class functions_mysqli
     /**
      * Inserts one line in a table.
      *
-     * @param string $table_name
-     * @param array $data
      * @param array{
      *     ignore: bool,
      * } $options
      */
-    public static function single_insert($table_name, $data, $options = [])
-    {
+    public static function single_insert(
+        string $table_name,
+        array $data,
+        array $options = []
+    ): void {
         $ignore = '';
 
         if (isset($options['ignore']) and
@@ -635,8 +645,9 @@ class functions_mysqli
         }
     }
 
-    public static function protect_column_name($column_name)
-    {
+    public static function protect_column_name(
+        string $column_name
+    ): string {
         if ($column_name[0] != '`') {
             $column_name = '`' . $column_name . '`';
         }
@@ -647,7 +658,7 @@ class functions_mysqli
     /**
      * Do maintenance on all Piwigo tables
      */
-    public static function do_maintenance_all_tables()
+    public static function do_maintenance_all_tables(): void
     {
         global $page;
 
@@ -708,32 +719,36 @@ class functions_mysqli
         }
     }
 
-    public static function pwg_db_concat($array)
-    {
+    public static function pwg_db_concat(
+        array $array
+    ): string {
         $string = implode(', ', $array);
         return "CONCAT({$string})";
     }
 
-    public static function pwg_db_concat_ws($array, $separator)
-    {
+    public static function pwg_db_concat_ws(
+        array $array,
+        string $separator
+    ): string {
         $string = implode(', ', $array);
         return "CONCAT_WS('{$separator}', {$string})";
     }
 
-    public static function pwg_db_cast_to_text($string)
-    {
+    public static function pwg_db_cast_to_text(
+        string $string
+    ): string {
         return $string;
     }
 
     /**
      * Returns an array containing the possible values of an enum field.
      *
-     * @param string $table
-     * @param string $field
-     * @return string[]
+     * @return array<string>
      */
-    public static function get_enums($table, $field)
-    {
+    public static function get_enums(
+        string $table,
+        string $field
+    ): array {
         $result = self::pwg_query("DESC {$table};");
 
         while ($row = self::pwg_db_fetch_assoc($result)) {
@@ -753,12 +768,10 @@ class functions_mysqli
 
     /**
      * Checks if a variable is equivalent to true or false.
-     *
-     * @param mixed $input
-     * @return bool
      */
-    public static function get_boolean($input)
-    {
+    public static function get_boolean(
+        array|string $input
+    ): bool {
         if (strtolower($input) === 'false') {
             return false;
         }
@@ -769,12 +782,10 @@ class functions_mysqli
     /**
      * Returns string 'true' or 'false' if the given var is boolean.
      * If the input is another type, it is not changed.
-     *
-     * @param mixed $var
-     * @return mixed
      */
-    public static function boolean_to_string($var)
-    {
+    public static function boolean_to_string(
+        bool|int|string $var
+    ): bool|int|string {
         if (is_bool($var)) {
             return $var ? 'true' : 'false';
         }
@@ -782,8 +793,10 @@ class functions_mysqli
         return $var;
     }
 
-    public static function pwg_db_get_recent_period_expression($period, $date = 'CURRENT_DATE')
-    {
+    public static function pwg_db_get_recent_period_expression(
+        string|int $period,
+        string $date = 'CURRENT_DATE'
+    ): string {
         if ($date != 'CURRENT_DATE') {
             $date = "'{$date}'";
         }
@@ -793,8 +806,10 @@ class functions_mysqli
             SQL;
     }
 
-    public static function pwg_db_get_recent_period($period, $date = 'CURRENT_DATE')
-    {
+    public static function pwg_db_get_recent_period(
+        string|int $period,
+        string $date = 'CURRENT_DATE'
+    ): array|bool|string|null {
         $recentPeriodExpression = self::pwg_db_get_recent_period_expression($period);
         $query = <<<SQL
             SELECT {$recentPeriodExpression};
@@ -804,50 +819,58 @@ class functions_mysqli
         return $d;
     }
 
-    public static function pwg_db_get_flood_period_expression($seconds)
-    {
+    public static function pwg_db_get_flood_period_expression(
+        int|string $seconds
+    ): string {
         return <<<SQL
             SUBDATE(NOW(), INTERVAL {$seconds} SECOND)
             SQL;
     }
 
-    public static function pwg_db_get_hour($date)
-    {
+    public static function pwg_db_get_hour(
+        string $date
+    ): string {
         return <<<SQL
             HOUR({$date})
             SQL;
     }
 
-    public static function pwg_db_get_date_YYYYMM($date)
-    {
+    public static function pwg_db_get_date_YYYYMM(
+        string $date
+    ): string {
         return <<<SQL
             DATE_FORMAT({$date}, '%Y%m')
             SQL;
     }
 
-    public static function pwg_db_get_date_MMDD($date)
-    {
+    public static function pwg_db_get_date_MMDD(
+        string $date
+    ): string {
         return <<<SQL
             DATE_FORMAT({$date}, '%m%d')
             SQL;
     }
 
-    public static function pwg_db_get_year($date)
-    {
+    public static function pwg_db_get_year(
+        string $date
+    ): string {
         return <<<SQL
             YEAR({$date})
             SQL;
     }
 
-    public static function pwg_db_get_month($date)
-    {
+    public static function pwg_db_get_month(
+        string $date
+    ): string {
         return <<<SQL
             MONTH({$date})
             SQL;
     }
 
-    public static function pwg_db_get_week($date, $mode = null)
-    {
+    public static function pwg_db_get_week(
+        string $date,
+        ?int $mode = null
+    ): string {
         if ($mode) {
             return <<<SQL
                 WEEK({$date}, {$mode})
@@ -859,29 +882,33 @@ class functions_mysqli
             SQL;
     }
 
-    public static function pwg_db_get_dayofmonth($date)
-    {
+    public static function pwg_db_get_dayofmonth(
+        string $date
+    ): string {
         return <<<SQL
             DAYOFMONTH({$date})
             SQL;
     }
 
-    public static function pwg_db_get_dayofweek($date)
-    {
+    public static function pwg_db_get_dayofweek(
+        string $date
+    ): string {
         return <<<SQL
             DAYOFWEEK({$date})
             SQL;
     }
 
-    public static function pwg_db_get_weekday($date)
-    {
+    public static function pwg_db_get_weekday(
+        string $date
+    ): string {
         return <<<SQL
             WEEKDAY({$date})
             SQL;
     }
 
-    public static function pwg_db_date_to_ts($date)
-    {
+    public static function pwg_db_date_to_ts(
+        string $date
+    ): string {
         return <<<SQL
             UNIX_TIMESTAMP({$date})
             SQL;
@@ -891,8 +918,10 @@ class functions_mysqli
      * Returns (or send to standard output) the message concerning the
      * error occurred for the last mysql query.
      */
-    public static function my_error($header, $die)
-    {
+    public static function my_error(
+        string $header,
+        bool $die
+    ): void {
         global $mysqli;
 
         $error = '[mysql error ' . $mysqli->errno . '] ' . $mysqli->error . "\n";
@@ -934,14 +963,12 @@ class functions_mysqli
      *          'DSC8957' => 2,
      *          ...
      *          )
-     *
-     * @param string $query
-     * @param string $key_name
-     * @param string $value_name
-     * @return array
      */
-    public static function query2array($query, $key_name = null, $value_name = null)
-    {
+    public static function query2array(
+        string $query,
+        ?string $key_name = null,
+        ?string $value_name = null
+    ): array {
         $result = self::pwg_query($query);
         $data = [];
 

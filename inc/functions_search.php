@@ -14,22 +14,23 @@ use SmartyException;
 
 class functions_search
 {
-    public const QST_QUOTED = 0x01;
+    public const int QST_QUOTED = 0x01;
 
-    public const QST_NOT = 0x02;
+    public const int QST_NOT = 0x02;
 
-    public const QST_OR = 0x04;
+    public const int QST_OR = 0x04;
 
-    public const QST_WILDCARD_BEGIN = 0x08;
+    public const int QST_WILDCARD_BEGIN = 0x08;
 
-    public const QST_WILDCARD_END = 0x10;
+    public const int QST_WILDCARD_END = 0x10;
 
-    public const QST_WILDCARD = self::QST_WILDCARD_BEGIN | self::QST_WILDCARD_END;
+    public const int QST_WILDCARD = self::QST_WILDCARD_BEGIN | self::QST_WILDCARD_END;
 
-    public const QST_BREAK = 0x20;
+    public const int QST_BREAK = 0x20;
 
-    public static function get_search_id_pattern($candidate)
-    {
+    public static function get_search_id_pattern(
+        string $candidate
+    ): ?string {
         $clause_pattern = null;
 
         if (preg_match('/^psk-\d{8}-[a-z0-9]{10}$/i', $candidate)) {
@@ -41,8 +42,9 @@ class functions_search
         return $clause_pattern;
     }
 
-    public static function get_search_info($candidate)
-    {
+    public static function get_search_info(
+        string $candidate
+    ): array|null {
         global $page;
 
         // $candidate might be a search.id or a search_uuid
@@ -93,12 +95,11 @@ class functions_search
      * Returns search rules stored into a serialized array in "search"
      * table. Each search rules set is numerically identified.
      *
-     * @param int $search_id
-     * @return array
      * @throws SmartyException
      */
-    public static function get_search_array($search_id)
-    {
+    public static function get_search_array(
+        int|string $search_id
+    ): array {
         global $user;
 
         $search = self::get_search_info($search_id);
@@ -113,12 +114,10 @@ class functions_search
     /**
      * Returns the SQL clause for a search.
      * Transforms the array returned by get_search_array() into SQL sub-query.
-     *
-     * @param array $search
-     * @return array
      */
-    public static function get_sql_search_clause($search)
-    {
+    public static function get_sql_search_clause(
+        array $search
+    ): array {
         // SQL where clauses are stored in $clauses array during query
         // construction
         $clauses = [];
@@ -255,7 +254,7 @@ class functions_search
             if (count($word_clauses) > 0) {
                 array_walk(
                     $word_clauses,
-                    function (&$s) { $s = '(' . $s . ')'; }
+                    function (string &$s): void { $s = '(' . $s . ')'; }
                 );
             }
 
@@ -384,12 +383,12 @@ class functions_search
     /**
      * Returns the list of items corresponding to the advanced search array.
      *
-     * @param array $search
      * @param string $images_where optional additional restriction on images table
-     * @return array
      */
-    public static function get_regular_search_results($search, $images_where = '')
-    {
+    public static function get_regular_search_results(
+        array $search,
+        string $images_where = ''
+    ): array {
         global $conf, $logger;
 
         $logger->debug(__FUNCTION__, $search);
@@ -487,8 +486,10 @@ class functions_search
         ];
     }
 
-    public static function qsearch_get_text_token_search_sql($token, $fields)
-    {
+    public static function qsearch_get_text_token_search_sql(
+        QSingleToken $token,
+        array $fields
+    ): array {
         global $page;
 
         $clauses = [];
@@ -559,8 +560,10 @@ class functions_search
         return $clauses;
     }
 
-    public static function qsearch_get_images(QExpression $expr, QResults $qsr)
-    {
+    public static function qsearch_get_images(
+        QExpression $expr,
+        QResults $qsr
+    ): void {
         $qsr->images_iids = array_fill(0, count($expr->stokens), []);
 
         $query_base = <<<SQL
@@ -650,8 +653,10 @@ class functions_search
         }
     }
 
-    public static function qsearch_get_tags(QExpression $expr, QResults $qsr)
-    {
+    public static function qsearch_get_tags(
+        QExpression $expr,
+        QResults $qsr
+    ): void {
         $token_tag_ids = $qsr->tag_iids = array_fill(0, count($expr->stokens), []);
         $all_tags = [];
 
@@ -743,8 +748,10 @@ class functions_search
         $qsr->tag_ids = $token_tag_ids;
     }
 
-    public static function qsearch_get_categories(QExpression $expr, QResults $qsr)
-    {
+    public static function qsearch_get_categories(
+        QExpression $expr,
+        QResults $qsr
+    ): void {
         global $user, $conf;
 
         $token_cat_ids = $qsr->cat_iids = array_fill(0, count($expr->stokens), []);
@@ -852,8 +859,12 @@ class functions_search
         $qsr->cat_ids = $token_cat_ids;
     }
 
-    public static function qsearch_eval(QMultiToken $expr, QResults $qsr, &$qualifies, &$ignored_terms)
-    {
+    public static function qsearch_eval(
+        QMultiToken $expr,
+        QResults $qsr,
+        bool &$qualifies,
+        array &$ignored_terms
+    ): array {
         $qualifies = false; // until we find at least one positive term
         $ignored_terms = [];
 
@@ -919,16 +930,16 @@ class functions_search
      *      )
      *    )
      *
-     * @param string $q
      * @param array{
-     *     permissions: mixed,
-     *     images_where: mixed,
+     *     permissions: bool,
+     *     images_where: string,
      *     super_order_by: bool,
      * } $options
-     * @return array
      */
-    public static function get_quick_search_results($q, $options)
-    {
+    public static function get_quick_search_results(
+        string $q,
+        array $options
+    ): array {
         global $persistent_cache, $conf, $user;
 
         $cache_key = $persistent_cache->make_key([
@@ -955,8 +966,10 @@ class functions_search
     /**
      * @see get_quick_search_results but without result caching
      */
-    public static function get_quick_search_results_no_cache($q, $options)
-    {
+    public static function get_quick_search_results_no_cache(
+        string $q,
+        array $options
+    ): array {
         global $conf;
 
         $q = trim(stripslashes($q));
@@ -1124,14 +1137,14 @@ class functions_search
      * Returns an array of 'items' corresponding to the search id.
      * It can be either a quick search or a regular search.
      *
-     * @param int $search_id
-     * @param bool $super_order_by
      * @param string $images_where optional additional restriction on images table
-     * @return array
      * @throws SmartyException
      */
-    public static function get_search_results($search_id, $super_order_by, $images_where = '')
-    {
+    public static function get_search_results(
+        int|string $search_id,
+        ?bool $super_order_by,
+        string $images_where = ''
+    ): array {
         $search = self::get_search_array($search_id);
 
         if (! isset($search['q'])) {
@@ -1145,8 +1158,9 @@ class functions_search
 
     }
 
-    public static function split_allwords($raw_allwords)
-    {
+    public static function split_allwords(
+        string $raw_allwords
+    ): array|false|null {
         $words = null;
 
         // we specify the list of characters to trim, to add the ".". We don't want to split words
@@ -1173,7 +1187,7 @@ class functions_search
         return $words;
     }
 
-    public static function get_available_search_uuid()
+    public static function get_available_search_uuid(): string
     {
         $candidate = 'psk-' . date('Ymd') . '-' . functions_session::generate_key(10);
 
@@ -1191,8 +1205,10 @@ class functions_search
         return self::get_available_search_uuid();
     }
 
-    public static function save_search($rules, $forked_from = null)
-    {
+    public static function save_search(
+        array $rules,
+        ?string $forked_from = null
+    ): array {
         global $user;
 
         list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));

@@ -16,41 +16,33 @@ use SmartyException;
  */
 class BlockManager
 {
-    /**
-     * @var string
-     */
-    protected $id;
+    protected string $id;
 
     /**
-     * @var RegisteredBlock[]
+     * @var array<RegisteredBlock>
      */
-    protected $registered_blocks = [];
+    protected array $registered_blocks = [];
 
     /**
-     * @var DisplayBlock[]
+     * @var array<DisplayBlock>
      */
-    protected $display_blocks = [];
+    protected array $display_blocks = [];
 
-    /**
-     * @param string $id
-     */
-    public function __construct($id)
-    {
+    public function __construct(
+        string $id
+    ) {
         $this->id = $id;
     }
 
     /**
      * Triggers a notice that allows plugins of menu blocks to register the blocks.
      */
-    public function load_registered_blocks()
+    public function load_registered_blocks(): void
     {
         functions_plugins::trigger_notify('blockmanager_register_blocks', [$this]);
     }
 
-    /**
-     * @return string
-     */
-    public function get_id()
+    public function get_id(): string
     {
         return $this->id;
     }
@@ -58,18 +50,17 @@ class BlockManager
     /**
      * @return RegisteredBlock[]
      */
-    public function get_registered_blocks()
+    public function get_registered_blocks(): array
     {
         return $this->registered_blocks;
     }
 
     /**
      * Add a block with the menu. Usually called in 'blockmanager_register_blocks' event.
-     *
-     * @param RegisteredBlock $block
      */
-    public function register_block($block)
-    {
+    public function register_block(
+        RegisteredBlock $block
+    ): bool {
         if (isset($this->registered_blocks[$block->get_id()])) {
             return false;
         }
@@ -83,7 +74,7 @@ class BlockManager
      * Triggers 'blockmanager_prepare_display' event where plugins can
      * reposition or hide blocks
      */
-    public function prepare_display()
+    public function prepare_display(): void
     {
         global $conf;
         $conf_id = 'blk_' . $this->id;
@@ -113,33 +104,28 @@ class BlockManager
 
     /**
      * Returns true if the block is hidden.
-     *
-     * @param string $block_id
-     * @return bool
      */
-    public function is_hidden($block_id)
-    {
+    public function is_hidden(
+        string $block_id
+    ): bool {
         return ! isset($this->display_blocks[$block_id]);
     }
 
     /**
      * Remove a block from the displayed blocks.
-     *
-     * @param string $block_id
      */
-    public function hide_block($block_id)
-    {
+    public function hide_block(
+        string $block_id
+    ): void {
         unset($this->display_blocks[$block_id]);
     }
 
     /**
      * Returns a visible block.
-     *
-     * @param string $block_id
-     * @return DisplayBlock|null
      */
-    public function get_block($block_id)
-    {
+    public function get_block(
+        string $block_id
+    ): ?DisplayBlock {
         if (isset($this->display_blocks[$block_id])) {
             return $this->display_blocks[$block_id];
         }
@@ -149,12 +135,11 @@ class BlockManager
 
     /**
      * Changes the position of a block.
-     *
-     * @param string $block_id
-     * @param int $position
      */
-    public function set_block_position($block_id, $position)
-    {
+    public function set_block_position(
+        string $block_id,
+        int $position
+    ): void {
         if (isset($this->display_blocks[$block_id])) {
             $this->display_blocks[$block_id]->set_position($position);
         }
@@ -162,13 +147,12 @@ class BlockManager
 
     /**
      * Parse the menu and assign the result in a template variable.
-     *
-     * @param string $var
-     * @param string $file
      * @throws SmartyException
      */
-    public function apply($var, $file)
-    {
+    public function apply(
+        string $var,
+        string $file
+    ): void {
         global $template;
 
         $template->set_filename('menubar', $file);
@@ -190,7 +174,7 @@ class BlockManager
     /**
      * Sorts the blocks.
      */
-    protected function sort_blocks()
+    protected function sort_blocks(): void
     {
         uasort($this->display_blocks, self::cmp_by_position(...));
     }
@@ -198,8 +182,10 @@ class BlockManager
     /**
      * Callback for blocks sorting.
      */
-    protected static function cmp_by_position($a, $b)
-    {
+    protected static function cmp_by_position(
+        DisplayBlock $a,
+        DisplayBlock $b
+    ): int {
         return $a->get_position() - $b->get_position();
     }
 }

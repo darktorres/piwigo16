@@ -20,6 +20,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgNamedArray;
 use Piwigo\inc\PwgNamedStruct;
+use Piwigo\inc\PwgServer;
 use Piwigo\inc\ws_functions;
 
 class pwg_tags
@@ -31,12 +32,14 @@ class pwg_tags
      *     sort_by_counter: bool,
      * } $params
      */
-    public static function ws_tags_getList($params, &$service)
-    {
+    public static function ws_tags_getList(
+        array $params,
+        PwgServer &$service
+    ): array {
         $tags = functions_tag::get_available_tags();
 
         if ($params['sort_by_counter']) {
-            usort($tags, function ($a, $b) {  return -$a['counter'] + $b['counter']; });
+            usort($tags, function (array $a, array $b): int|float {  return -$a['counter'] + $b['counter']; });
         } else {
             usort($tags, functions_html::tag_alpha_compare(...));
         }
@@ -69,8 +72,10 @@ class pwg_tags
      * Only admin can run this method and permissions are not taken into
      * account.
      */
-    public static function ws_tags_getAdminList($params, &$service)
-    {
+    public static function ws_tags_getAdminList(
+        array $params,
+        PwgServer &$service
+    ): array {
         return [
             'tags' => new PwgNamedArray(
                 functions_tag::get_all_tags(),
@@ -84,17 +89,19 @@ class pwg_tags
      * API method
      * Returns a list of images for tags
      * @param array{
-     *     tag_id?: int[],
-     *     tag_url_name?: string[],
-     *     tag_name?: string[],
+     *     tag_id?: array<int>,
+     *     tag_url_name?: array<string>,
+     *     tag_name?: array<string>,
      *     tag_mode_and: bool,
      *     per_page: int,
      *     page: int,
      *     order: string,
      * } $params
      */
-    public static function ws_tags_getImages($params, &$service)
-    {
+    public static function ws_tags_getImages(
+        array $params,
+        PwgServer &$service
+    ): array {
         // first build all the tag_ids we are interested in
         $tags = functions_tag::find_tags($params['tag_id'], $params['tag_url_name'], $params['tag_name']);
         $tags_by_id = [];
@@ -239,8 +246,10 @@ class pwg_tags
      *     name: string,
      * } $params
      */
-    public static function ws_tags_add($params, &$service)
-    {
+    public static function ws_tags_add(
+        array $params,
+        PwgServer &$service
+    ): PwgError|array {
         $creation_output = functions_admin::create_tag($params['name']);
 
         if (isset($creation_output['error'])) {
@@ -265,8 +274,10 @@ class pwg_tags
         ];
     }
 
-    public static function ws_tags_delete($params, &$service)
-    {
+    public static function ws_tags_delete(
+        array $params,
+        PwgServer &$service
+    ): PwgError|array {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -298,8 +309,10 @@ class pwg_tags
 
     }
 
-    public static function ws_tags_rename($params, &$service)
-    {
+    public static function ws_tags_rename(
+        array $params,
+        PwgServer &$service
+    ): array|PwgError {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -357,8 +370,10 @@ class pwg_tags
         return functions_mysqli::query2array($query)[0];
     }
 
-    public static function ws_tags_duplicate($params, &$service)
-    {
+    public static function ws_tags_duplicate(
+        array $params,
+        PwgServer &$service
+    ): PwgError|array {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -438,8 +453,10 @@ class pwg_tags
         ];
     }
 
-    public static function ws_tags_merge($params, &$service)
-    {
+    public static function ws_tags_merge(
+        array $params,
+        PwgServer &$service
+    ): PwgError|array {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }

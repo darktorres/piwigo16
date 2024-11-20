@@ -11,11 +11,14 @@ namespace Piwigo\inc\ws_protocols;
 
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgRequestHandler;
+use Piwigo\inc\PwgServer;
 
 class PwgRestRequestHandler extends PwgRequestHandler
 {
-    public function handleRequest(&$service)
-    {
+    #[\Override]
+    public function handleRequest(
+        PwgServer &$service
+    ): void {
         $params = [];
 
         $param_array = $service->isPost() ? $_POST : $_GET;

@@ -12,13 +12,16 @@ namespace Piwigo\inc;
 /** Represents an expression of several words or sub expressions to be searched.*/
 class QMultiToken
 {
-    public $is_single = false;
+    public bool $is_single = false;
 
-    public $modifier;
+    public int $modifier;
 
-    public $tokens = []; // the actual array of QSingleToken or QMultiToken
+    /**
+     * @var array<QSingleToken|QMultiToken>
+     */
+    public array $tokens = [];
 
-    public function __toString()
+    public function __toString(): string
     {
         $s = '';
 
@@ -56,8 +59,12 @@ class QMultiToken
      * @param int $qi the character index in $q where to start parsing
      * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
      */
-    protected function parse_expression($q, &$qi, $level, $root)
-    {
+    protected function parse_expression(
+        string $q,
+        int &$qi,
+        int $level,
+        QExpression $root
+    ): void {
         $crt_token = '';
         $crt_modifier = 0;
         $crt_scope = null;
@@ -261,7 +268,7 @@ class QMultiToken
     }
 
     /* because evaluations occur left to right, we ensure that 'a OR b c d' is interpreted as 'a OR (b c d)'*/
-    protected function check_operator_priority()
+    protected function check_operator_priority(): void
     {
         for ($i = 0; $i < count($this->tokens); $i++) {
             if (! $this->tokens[$i]->is_single) {
@@ -307,8 +314,11 @@ class QMultiToken
         }
     }
 
-    private function push(&$token, &$modifier, &$scope)
-    {
+    private function push(
+        string &$token,
+        int &$modifier,
+        QSearchScope &$scope
+    ): void {
         if (strlen($token) ||
            (isset($scope) && $scope->nullable)
         ) {
@@ -328,8 +338,9 @@ class QMultiToken
      * Applies recursively a search scope to all sub single tokens. We allow 'tag:(John Bill)' but we cannot evaluate
      * scopes on expressions so we rewrite as '(tag:John tag:Bill)'
      */
-    private function apply_scope(QSearchScope $scope)
-    {
+    private function apply_scope(
+        QSearchScope $scope
+    ): void {
         for ($i = 0; $i < count($this->tokens); $i++) {
             if ($this->tokens[$i]->is_single) {
                 if (! isset($this->tokens[$i]->scope)) {
@@ -341,8 +352,9 @@ class QMultiToken
         }
     }
 
-    private static function priority($modifier)
-    {
+    private static function priority(
+        int $modifier
+    ): int {
         return $modifier & functions_search::QST_OR ? 0 : 1;
     }
 }

@@ -17,21 +17,21 @@ use SmartyException;
 class CssLoader
 {
     /**
-     * @var Css[]
+     * @var array<Css>
      */
-    private $registered_css;
+    private array $registered_css;
 
     /**
-     * @var int used to keep declaration order
+     * used to keep declaration order
      */
-    private $counter;
+    private int $counter;
 
     public function __construct()
     {
         $this->clear();
     }
 
-    public function clear()
+    public function clear(): void
     {
         $this->registered_css = [];
         $this->counter = 0;
@@ -41,7 +41,7 @@ class CssLoader
      * @return Combinable[] array of combined CSS.
      * @throws SmartyException
      */
-    public function get_css()
+    public function get_css(): array
     {
         uasort($this->registered_css, self::cmp_by_order(...));
         $combiner = new FileCombiner('css', $this->registered_css);
@@ -51,15 +51,14 @@ class CssLoader
     /**
      * Adds a new file, if a file with the same $id already exists, the one with
      * the higher $order or higher $version is kept.
-     *
-     * @param string $id
-     * @param string $path
-     * @param string $version
-     * @param int $order
-     * @param bool $is_template
      */
-    public function add($id, $path, $version = 0, $order = 0, $is_template = false)
-    {
+    public function add(
+        string $id,
+        string $path,
+        int|string $version = 0,
+        int $order = 0,
+        bool $is_template = false
+    ): void {
         if (! isset($this->registered_css[$id])) {
             // custom order as an higher impact than declaration order
             $css = new Css($id, $path, $version, $order * 1000 + $this->counter);
@@ -81,8 +80,10 @@ class CssLoader
     /**
      * Callback for CSS files sorting.
      */
-    private static function cmp_by_order($a, $b)
-    {
+    private static function cmp_by_order(
+        Css $a,
+        Css $b
+    ): int|float {
         return $a->order - $b->order;
     }
 }

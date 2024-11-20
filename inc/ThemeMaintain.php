@@ -14,26 +14,23 @@ namespace Piwigo\inc;
  */
 class ThemeMaintain
 {
-    /**
-     * @var string
-     */
-    protected $theme_id;
+    protected string $theme_id;
 
-    /**
-     * @param string $id
-     */
-    public function __construct($id)
-    {
+    public function __construct(
+        string $id
+    ) {
         $this->theme_id = $id;
     }
 
     /**
-     * @param string $theme_version
      * @param array $errors - used to return error messages
      */
-    public function activate($theme_version, &$errors = []) {}
+    public function activate(
+        string $theme_version,
+        array &$errors = []
+    ): void {}
 
-    public function deactivate() {}
+    public function deactivate(): void {}
 
-    public function delete() {}
+    public function delete(): void {}
 }

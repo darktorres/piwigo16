@@ -26,6 +26,7 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgNamedArray;
+use Piwigo\inc\PwgServer;
 use Piwigo\inc\SrcImage;
 use Piwigo\inc\ws_functions;
 
@@ -35,14 +36,16 @@ class pwg
      * API method
      * Returns a list of missing derivatives (not generated yet)
      * @param array{
-     *     types?: string,
-     *     ids: int[],
+     *     types?: array,
+     *     ids: array<int>,
      *     max_urls: int,
      *     prev_page?: int,
      * } $params
      */
-    public static function ws_getMissingDerivatives($params, &$service)
-    {
+    public static function ws_getMissingDerivatives(
+        array $params,
+        PwgServer &$service
+    ): PwgError|array {
         global $conf;
 
         if (empty($params['types'])) {
@@ -147,20 +150,22 @@ class pwg
     /**
      * API method
      * Returns Piwigo version
-     * @param array $params
      */
-    public static function ws_getVersion($params, &$service)
-    {
+    public static function ws_getVersion(
+        array $params,
+        PwgServer &$service
+    ): string {
         return PHPWG_VERSION;
     }
 
     /**
      * API method
      * Returns general information about the installation
-     * @param array $params
      */
-    public static function ws_getInfos($params, &$service)
-    {
+    public static function ws_getInfos(
+        array $params,
+        PwgServer &$service
+    ): array {
         $infos['version'] = PHPWG_VERSION;
 
         $query = <<<SQL
@@ -248,11 +253,11 @@ class pwg
     /**
      * API method
      * Calculates and returns the size of the cache
-     *
-     * @param array $params
      */
-    public static function ws_getCacheSize($params, &$service)
-    {
+    public static function ws_getCacheSize(
+        array $params,
+        PwgServer &$service
+    ): array {
         global $conf;
 
         // Cache size
@@ -321,11 +326,13 @@ class pwg
      * API method
      * Adds images to the caddie
      * @param array{
-     *     image_id: int[],
+     *     image_id: array<int>,
      * } $params
      */
-    public static function ws_caddie_add($params, &$service)
-    {
+    public static function ws_caddie_add(
+        array $params,
+        PwgServer &$service
+    ): ?int {
         global $user;
 
         $imageIdsList = implode(', ', $params['image_id']);
@@ -364,11 +371,13 @@ class pwg
      * @param array{
      *     user_id: int,
      *     anonymous_id?: string,
-     *     image_id: mixed,
+     *     image_id: int,
      * } $params
      */
-    public static function ws_rates_delete($params, &$service)
-    {
+    public static function ws_rates_delete(
+        array $params,
+        PwgServer &$service
+    ): int|string {
         $query = <<<SQL
             DELETE FROM rate
             WHERE user_id = {$params['user_id']}
@@ -407,8 +416,10 @@ class pwg
      *     password: string,
      * } $params
      */
-    public static function ws_session_login($params, &$service)
-    {
+    public static function ws_session_login(
+        array $params,
+        PwgServer &$service
+    ): PwgError|true {
         if (functions_user::try_log_user($params['username'], $params['password'], false)) {
             return true;
         }
@@ -419,10 +430,11 @@ class pwg
     /**
      * API method
      * Performs a logout
-     * @param array $params
      */
-    public static function ws_session_logout($params, &$service)
-    {
+    public static function ws_session_logout(
+        array $params,
+        PwgServer &$service
+    ): true {
         if (! functions_user::is_a_guest()) {
             functions_user::logout_user();
         }
@@ -433,10 +445,11 @@ class pwg
     /**
      * API method
      * Returns info about the current user
-     * @param array $params
      */
-    public static function ws_session_getStatus($params, &$service)
-    {
+    public static function ws_session_getStatus(
+        array $params,
+        PwgServer &$service
+    ): array {
         global $user, $conf;
 
         $res['username'] = functions_user::is_a_guest() ? 'guest' : stripslashes($user['username']);
@@ -490,8 +503,10 @@ class pwg
      * API method
      * Returns lines of users activity
      */
-    public static function ws_getActivityList($param, &$service)
-    {
+    public static function ws_getActivityList(
+        array $param,
+        PwgServer &$service
+    ): array {
         global $conf;
 
         /* Test Latency */
@@ -645,8 +660,10 @@ class pwg
      * API method
      * Log a new line in visit history
      */
-    public static function ws_history_log($params, &$service)
-    {
+    public static function ws_history_log(
+        array $params,
+        PwgServer &$service
+    ): void {
         global $logger, $page;
 
         if (! empty($params['section']) and
@@ -686,8 +703,10 @@ class pwg
      * API method
      * Returns lines of an history search
      */
-    public static function ws_history_search($param, &$service)
-    {
+    public static function ws_history_search(
+        array $param,
+        PwgServer &$service
+    ): array {
         include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_history.php');
 
         global $conf;
@@ -1003,7 +1022,7 @@ class pwg
             if (isset($line['tag_ids'])) {
                 $tag_names = preg_replace_callback(
                     '/(\d+)/',
-                    function ($m) use ($name_of_tag) { return isset($name_of_tag[$m[1]]) ? $name_of_tag[$m[1]] : $m[1]; },
+                    function (array $m) use ($name_of_tag): string { return isset($name_of_tag[$m[1]]) ? $name_of_tag[$m[1]] : $m[1]; },
                     $line['tag_ids']
                 );
                 $tag_ids = $line['tag_ids'];

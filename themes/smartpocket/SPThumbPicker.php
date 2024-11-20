@@ -12,18 +12,21 @@ Author URI: http://piwigo.org
 namespace Piwigo\themes\smartpocket;
 
 use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\DerivativeParams;
 use Piwigo\inc\ImageStdParams;
+use Piwigo\inc\SrcImage;
 
 class SPThumbPicker
 {
-    public $candidates;
+    public array $candidates;
 
-    public $default;
+    public DerivativeParams $default;
 
-    public $height;
+    public int $height;
 
-    public function init($height)
-    {
+    public function init(
+        int $height
+    ): void {
         $this->candidates = [];
 
         foreach (ImageStdParams::get_defined_type_map() as $params) {
@@ -44,8 +47,10 @@ class SPThumbPicker
         $this->height = $height;
     }
 
-    public function pick($src_image, $height)
-    {
+    public function pick(
+        SrcImage $src_image,
+        int $height
+    ): DerivativeImage {
         $ok = false;
 
         foreach ($this->candidates as $candidate) {

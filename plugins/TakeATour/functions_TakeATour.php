@@ -10,7 +10,7 @@ use Piwigo\inc\functions_user;
 
 class functions_TakeATour
 {
-    public static function TAT_tour_setup()
+    public static function TAT_tour_setup(): void
     {
         if (! functions_user::is_admin()) {
             return;
@@ -60,15 +60,16 @@ class functions_TakeATour
         $template->parse('TAT_tour_tpl');
     }
 
-    public static function TAT_help()
+    public static function TAT_help(): void
     {
         global $template;
         functions::load_language('plugin.lang', PHPWG_PLUGINS_PATH . 'TakeATour/');
         $template->set_prefilter('help', self::TAT_help_prefilter(...));
     }
 
-    public static function TAT_help_prefilter($content)
-    {
+    public static function TAT_help_prefilter(
+        array|string $content
+    ): array|string {
 
         $search = '<div id="helpContent">';
         $replacement = <<<HTML
@@ -86,7 +87,7 @@ class functions_TakeATour
 
     }
 
-    public static function TAT_no_photo_yet()
+    public static function TAT_no_photo_yet(): void
     {
         global $template;
         functions::load_language('plugin.lang', PHPWG_PLUGINS_PATH . 'TakeATour/');
@@ -99,8 +100,9 @@ class functions_TakeATour
         );
     }
 
-    public static function TAT_no_photo_yet_prefilter($content)
-    {
+    public static function TAT_no_photo_yet_prefilter(
+        array|string $content
+    ): array|string {
         $search = '<div class="bigButton"><a href="{$next_step_url}">{\'I want to add photos\'|translate}</a></div>';
         $replacement = '<div class="bigButton"><a href="{$F_ACTION}?submitted_tour_path=tours/first_contact&pwg_token={$pwg_token}">{\'Start the Tour\'|translate}</a></div>';
         return str_replace($search, $replacement, $content);

@@ -20,11 +20,11 @@ class functions_install
      * Before executing a query, $replaced is... replaced by $replacing. This is
      * useful when the SQL file contains generic words. Drop table queries are
      * not executed.
-     *
-     * @param string $filepath
      */
-    public static function execute_sqlfile($filepath, $dblayer)
-    {
+    public static function execute_sqlfile(
+        string $filepath,
+        string $dblayer
+    ): void {
         $sql_lines = file($filepath);
         $query = '';
 
@@ -60,7 +60,7 @@ class functions_install
     /**
      * Automatically activate all core themes in the "themes" directory.
      */
-    public static function activate_core_themes()
+    public static function activate_core_themes(): void
     {
         $themes = new themes();
 
@@ -74,7 +74,7 @@ class functions_install
     /**
      * Automatically activate some core plugins
      */
-    public static function activate_core_plugins()
+    public static function activate_core_plugins(): void
     {
         $plugins = new plugins();
 
@@ -89,10 +89,12 @@ class functions_install
      * Connect to database during installation. Uses $_POST.
      *
      * @param array $infos - populated with infos
-     * @param array $errors - populated with errors
+     * @param array<string> $errors - populated with errors
      */
-    public static function install_db_connect(&$infos, &$errors)
-    {
+    public static function install_db_connect(
+        array &$infos,
+        array &$errors
+    ): void {
         try {
             functions_mysqli::pwg_db_connect(
                 $_POST['dbhost'],

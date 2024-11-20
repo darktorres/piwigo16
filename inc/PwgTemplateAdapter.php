@@ -18,45 +18,43 @@ class PwgTemplateAdapter
     /**
      * @deprecated use "translate" modifier
      */
-    public function l10n($text)
-    {
+    public function l10n(
+        string $text
+    ): string {
         return functions::l10n($text);
     }
 
     /**
      * @deprecated use "translate_dec" modifier
      */
-    public function l10n_dec($s, $p, $v)
-    {
+    public function l10n_dec(
+        string $s,
+        string $p,
+        int|string $v
+    ): string {
         return functions::l10n_dec($s, $p, $v);
     }
 
     /**
      * @deprecated use "translate" or "sprintf" modifier
      */
-    public function sprintf()
+    public function sprintf(): string
     {
         $args = func_get_args();
         return call_user_func_array(sprintf(...), $args);
     }
 
-    /**
-     * @param string $type
-     * @param array $img
-     * @return DerivativeImage
-     */
-    public function derivative($type, $img)
-    {
+    public function derivative(
+        DerivativeParams|string $type,
+        SrcImage|array $img
+    ): DerivativeImage {
         return new DerivativeImage($type, $img);
     }
 
-    /**
-     * @param string $type
-     * @param array $img
-     * @return string
-     */
-    public function derivative_url($type, $img)
-    {
+    public function derivative_url(
+        DerivativeParams|string $type,
+        SrcImage|array $img
+    ): string {
         return DerivativeImage::url($type, $img);
     }
 }

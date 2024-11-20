@@ -11,23 +11,25 @@ namespace Piwigo\inc;
 
 class PwgServer
 {
-    public $_requestHandler;
+    public PwgRequestHandler $_requestHandler;
 
-    public $_requestFormat;
+    public string $_requestFormat;
 
-    public $_responseEncoder;
+    public PwgResponseEncoder $_responseEncoder;
 
-    public $_responseFormat;
+    public string $_responseFormat;
 
-    public $_methods = [];
+    public array $_methods = [];
 
     public function __construct() {}
 
     /**
      * Initializes the request handler.
      */
-    public function setHandler($requestFormat, &$requestHandler)
-    {
+    public function setHandler(
+        string $requestFormat,
+        PwgRequestHandler &$requestHandler
+    ): void {
         $this->_requestHandler = &$requestHandler;
         $this->_requestFormat = $requestFormat;
     }
@@ -35,8 +37,10 @@ class PwgServer
     /**
      * Initializes the request handler.
      */
-    public function setEncoder($responseFormat, &$encoder)
-    {
+    public function setEncoder(
+        string $responseFormat,
+        PwgResponseEncoder &$encoder
+    ): void {
         $this->_responseEncoder = &$encoder;
         $this->_responseFormat = $responseFormat;
     }
@@ -45,7 +49,7 @@ class PwgServer
      * Runs the web service call (handler and response encoder should have been
      * created)
      */
-    public function run()
+    public function run(): void
     {
         if ($this->_responseEncoder === null) {
             functions_html::set_status_header(400);
@@ -79,8 +83,9 @@ class PwgServer
     /**
      * Encodes a response and sends it back to the browser.
      */
-    public function sendResponse($response)
-    {
+    public function sendResponse(
+        array|bool|string|PwgError|null $response
+    ): void {
         $encodedResponse = $this->_responseEncoder->encodeResponse($response);
         $contentType = $this->_responseEncoder->getContentType();
 
@@ -93,22 +98,28 @@ class PwgServer
      * Registers a web service method.
      * @param string $methodName The name of the method as seen externally.
      * @param callable $callback PHP method to be invoked internally.
-     * @param array{
+     * @param ?array{
      *     default?: mixed,
      *     flags?: int,
      *     type?: int,
      *     maxValue?: int|float,
      * } $params Map of allowed parameter names with options.
-     * @param string $description A description of the method.
-     * @param string $include_file A file to be included before the callback is executed.
+     * @param ?string $description A description of the method.
+     * @param ?string $include_file A file to be included before the callback is executed.
      * @param array{
      *     hidden?: bool,
      *     admin_only?: bool,
      *     post_only?: bool,
      * } $options Additional options for the method.
      */
-    public function addMethod($methodName, $callback, $params = [], $description = '', $include_file = '', $options = [])
-    {
+    public function addMethod(
+        string $methodName,
+        callable $callback,
+        ?array $params = [],
+        ?string $description = '',
+        ?string $include_file = '',
+        array $options = []
+    ): void {
         if (! is_array($params)) {
             $params = [];
         }
@@ -149,37 +160,42 @@ class PwgServer
         ];
     }
 
-    public function hasMethod($methodName)
-    {
+    public function hasMethod(
+        string $methodName
+    ): bool {
         return isset($this->_methods[$methodName]);
     }
 
-    public function getMethodDescription($methodName)
-    {
+    public function getMethodDescription(
+        string $methodName
+    ): string {
         $desc = $this->_methods[$methodName]['description'];
         return isset($desc) ? $desc : '';
     }
 
-    public function getMethodSignature($methodName)
-    {
+    public function getMethodSignature(
+        string $methodName
+    ): array {
         $signature = $this->_methods[$methodName]['signature'];
         return isset($signature) ? $signature : [];
     }
 
-    public function getMethodOptions($methodName)
-    {
+    public function getMethodOptions(
+        string $methodName
+    ): array|string {
         $options = $this->_methods[$methodName]['options'];
         return isset($options) ? $options : [];
     }
 
-    public static function isPost()
+    public static function isPost(): bool
     {
         return isset($HTTP_RAW_POST_DATA) or
                ! empty($_POST);
     }
 
-    public static function makeArrayParam(&$param)
-    {
+    public static function makeArrayParam(
+        array|string|int &$param
+    ): void {
         if ($param == null) {
             $param = [];
         } else {
@@ -189,8 +205,11 @@ class PwgServer
         }
     }
 
-    public static function checkType(&$param, $type, $name)
-    {
+    public static function checkType(
+        array|string &$param,
+        int $type,
+        string $name
+    ): ?PwgError {
         $opts = [];
         $msg = '';
 
@@ -263,8 +282,10 @@ class PwgServer
         return null;
     }
 
-    public static function hasFlag($val, $flag)
-    {
+    public static function hasFlag(
+        int $val,
+        int $flag
+    ): bool {
         return ($val & $flag) == $flag;
     }
 
@@ -272,10 +293,12 @@ class PwgServer
      * Invokes a registered method. Returns the return of the method (or
      * a PwgError object if the method is not found)
      * @param string $methodName the name of the method to invoke
-     * @param array $params array of parameters to pass to the invoked method
+     * @param array<string, string> $params array of parameters to pass to the invoked method
      */
-    public function invoke($methodName, $params)
-    {
+    public function invoke(
+        string $methodName,
+        array $params
+    ): PwgError|array|bool|string|null {
         $method = $this->_methods[$methodName];
 
         if ($method == null) {
@@ -379,11 +402,13 @@ class PwgServer
     /**
      * WS reflection method implementation: lists all available methods
      */
-    public static function ws_getMethodList($params, &$service)
-    {
+    public static function ws_getMethodList(
+        string $params,
+        self &$service
+    ): array {
         $methods = array_filter(
             $service->_methods,
-            function ($m) { return empty($m['options']['hidden']) || ! $m['options']['hidden']; }
+            function (array $m): bool { return empty($m['options']['hidden']) || ! $m['options']['hidden']; }
         );
         return [
             'methods' => new PwgNamedArray(array_keys($methods), 'method'),
@@ -393,8 +418,10 @@ class PwgServer
     /**
      * WS reflection method implementation: gets information about a given method
      */
-    public static function ws_getMethodDetails($params, &$service)
-    {
+    public static function ws_getMethodDetails(
+        array $params,
+        self &$service
+    ): PwgError|array {
         $methodName = $params['methodName'];
 
         if (! $service->hasMethod($methodName)) {

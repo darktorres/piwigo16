@@ -4,16 +4,21 @@ namespace Piwigo\themes\modus;
 
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\DerivativeParams;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_cookie;
 use Piwigo\inc\functions_session;
 use Piwigo\inc\ImageRect;
 use Piwigo\inc\ImageStdParams;
+use Piwigo\inc\Script;
+use Piwigo\inc\Template;
+use Smarty_Internal_Template;
 
 class functions_modus
 {
-    public static function modus_css_gradient($gradient)
-    {
+    public static function modus_css_gradient(
+        array $gradient
+    ): ?string {
         if (! empty($gradient)) {
             $std = implode(',', $gradient);
             $gs = trim($gradient[0], '#');
@@ -25,9 +30,11 @@ class functions_modus
                 background-image: -o-linear-gradient(top,{$std}); /* Opera 11 to 12 */
                 background-image: linear-gradient(to bottom,{$std}); /* Standard must be last */";
         }
+
+        return null;
     }
 
-    public static function modus_get_default_config()
+    public static function modus_get_default_config(): array
     {
         return [
             'skin' => 'newspaper',
@@ -38,8 +45,9 @@ class functions_modus
         ];
     }
 
-    public static function modus_smarty_prefilter($source)
-    {
+    public static function modus_smarty_prefilter(
+        array|string $source
+    ): array|string|null {
         global $lang, $conf;
 
         $source = str_replace('<div id="imageHeaderBar">', '<div class=titrePage id=imageHeaderBar>', $source);
@@ -110,41 +118,48 @@ class functions_modus
         return $source;
     }
 
-    public static function modus_smarty_prefilter_wrap($source)
-    {
+    public static function modus_smarty_prefilter_wrap(
+        array|string $source
+    ): array|string|null {
         return self::modus_smarty_prefilter($source);
     }
 
-    public static function rv_cdn_prefilter($source, &$smarty)
-    {
+    public static function rv_cdn_prefilter(
+        string $source,
+        Smarty_Internal_Template &$smarty
+    ): array|string {
         $source = str_replace('src="{$ROOT_URL}{$themeconf.icon_dir}/', 'src="' . RVCDN_ROOT_URL . '{$themeconf.icon_dir}/', $source);
         $source = str_replace('url({$ROOT_URL}', 'url(' . RVCDN_ROOT_URL, $source);
         return $source;
     }
 
-    public static function modus_loc_begin_index()
+    public static function modus_loc_begin_index(): void
     {
         global $template;
         $template->set_prefilter('index', self::modus_index_prefilter_1(...));
         $template->set_prefilter('index', self::modus_index_prefilter_2(...));
     }
 
-    public static function modus_index_prefilter_1($content)
-    {
+    public static function modus_index_prefilter_1(
+        array|string $content
+    ): array|string {
         $search = '{combine_css path="themes/default/fontello/css/fontello.css" order=-10}';
         $replacement = '';
         return str_replace($search, $replacement, $content);
     }
 
-    public static function modus_index_prefilter_2($content)
-    {
+    public static function modus_index_prefilter_2(
+        array|string $content
+    ): array|string {
         $search = '<span class="pwg-icon-search-folder"></span>';
         $replacement = '<span class="pwg-icon pwg-icon-search-folder"></span>';
         return str_replace($search, $replacement, $content);
     }
 
-    public static function rv_cdn_combined_script($url, $script)
-    {
+    public static function rv_cdn_combined_script(
+        string $url,
+        Script $script
+    ): string {
         if (! $script->is_remote()) {
             $url = RVCDN_ROOT_URL . $script->path;
         }
@@ -152,7 +167,7 @@ class functions_modus
         return $url;
     }
 
-    public static function modus_loc_begin_page_header()
+    public static function modus_loc_begin_page_header(): void
     {
         $all = $GLOBALS['template']->scriptLoader->get_all();
         $jq = $all['jquery'];
@@ -162,8 +177,9 @@ class functions_modus
         }
     }
 
-    public static function modus_combinable_preparse($template)
-    {
+    public static function modus_combinable_preparse(
+        Template $template
+    ): void {
         global $conf, $template;
 
         if (! isset($template->smarty->registered_plugins['modifier']['cssGradient'])) {
@@ -181,8 +197,9 @@ class functions_modus
         ]);
     }
 
-    public static function modus_css_resolution($params)
-    {
+    public static function modus_css_resolution(
+        array $params
+    ): string {
         $base = ($params['base'] ?? null);
         $min = $params['min'];
         $max = ($params['max'] ?? null);
@@ -218,8 +235,10 @@ class functions_modus
         return $res;
     }
 
-    public static function modus_thumbs($x, $smarty)
-    {
+    public static function modus_thumbs(
+        array $x,
+        Smarty_Internal_Template $smarty
+    ): void {
         global $template, $page, $conf;
 
         $default_params = $smarty->getTemplateVars('derivative_params');
@@ -341,7 +360,7 @@ class functions_modus
         $template->scriptLoader->add('modus.arange', 1, ['jquery'], 'themes/' . $my_base_name . '/js/thumb.arrange.js', 0);
     }
 
-    public static function modus_on_end_index()
+    public static function modus_on_end_index(): void
     {
         global $template;
 
@@ -365,8 +384,9 @@ class functions_modus
 
     }
 
-    public static function modus_get_index_photo_derivative_params($default)
-    {
+    public static function modus_get_index_photo_derivative_params(
+        DerivativeParams $default
+    ): DerivativeParams {
         global $conf;
 
         if (isset($conf['modus_theme']) &&
@@ -393,8 +413,9 @@ class functions_modus
         return $default;
     }
 
-    public static function modus_index_category_thumbnails($items)
-    {
+    public static function modus_index_category_thumbnails(
+        array $items
+    ): array {
         global $page, $template, $conf;
         $wh = $conf['modus_theme']['album_thumb_size'];
 
@@ -479,7 +500,7 @@ class functions_modus
         return $items;
     }
 
-    public static function modus_loc_begin_picture()
+    public static function modus_loc_begin_picture(): void
     {
         global $conf, $template;
 
@@ -502,8 +523,10 @@ class functions_modus
         );
     }
 
-    public static function modus_picture_content($content, $element_info)
-    {
+    public static function modus_picture_content(
+        string $content,
+        array $element_info
+    ): string|null {
         global $conf, $picture, $template;
 
         if (! empty($content)) { // someone hooked us - so we skip;

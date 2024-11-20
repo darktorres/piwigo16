@@ -24,15 +24,15 @@ class functions_plugins
      * @param string $event the name of the event to listen to
      * @param callable $func the callback function
      * @param int $priority greater priority will be executed at last
-     * @param string $include_path file to include before executing the callback
+     * @param ?string $include_path file to include before executing the callback
      * @return bool false is handler already exists
      */
     public static function add_event_handler(
-        $event,
-        $func,
-        $priority = EVENT_HANDLER_PRIORITY_NEUTRAL,
-        $include_path = null
-    ) {
+        string $event,
+        callable $func,
+        int $priority = EVENT_HANDLER_PRIORITY_NEUTRAL,
+        ?string $include_path = null
+    ): bool {
         global $pwg_event_handlers;
 
         if (isset($pwg_event_handlers[$event][$priority])) {
@@ -55,16 +55,12 @@ class functions_plugins
     /**
      * Removes an event handler.
      * @see add_event_handler()
-     *
-     * @param string $event
-     * @param callable $func
-     * @param int $priority
      */
     public static function remove_event_handler(
-        $event,
-        $func,
-        $priority = EVENT_HANDLER_PRIORITY_NEUTRAL
-    ) {
+        string $event,
+        callable $func,
+        int $priority = EVENT_HANDLER_PRIORITY_NEUTRAL
+    ): bool {
         global $pwg_event_handlers;
 
         if (! isset($pwg_event_handlers[$event][$priority])) {
@@ -97,12 +93,12 @@ class functions_plugins
      * through all handlers, thus each handler MUST return a value,
      * optional _$args_ are not transmitted.
      *
-     * @param string $event
      * @param mixed $data data to transmit to all handlers
-     * @return mixed
      */
-    public static function trigger_change($event, $data = null)
-    {
+    public static function trigger_change(
+        string $event,
+        array|bool|string|int|float|null|object $data = null
+    ): array|bool|string|int|float|null|object {
         global $pwg_event_handlers;
 
         if (isset($pwg_event_handlers['trigger'])) { // debugging
@@ -152,11 +148,10 @@ class functions_plugins
     /**
      * Triggers a notifier event and calls all registered event handlers.
      * trigger_notify() is only used as a notifier, no modification of data is possible
-     *
-     * @param string $event
      */
-    public static function trigger_notify($event)
-    {
+    public static function trigger_notify(
+        string $event
+    ): void {
         global $pwg_event_handlers;
 
         if (isset($pwg_event_handlers['trigger']) and
@@ -194,13 +189,11 @@ class functions_plugins
      * Saves some data with the associated plugin id, data are only available
      * during script lifetime.
      * @deprecated 2.6
-     *
-     * @param string $plugin_id
-     * @param mixed $data
-     * @return bool
      */
-    public static function set_plugin_data($plugin_id, &$data)
-    {
+    public static function set_plugin_data(
+        string $plugin_id,
+        array|bool|string|int|float|null|object &$data
+    ): bool {
         global $pwg_loaded_plugins;
 
         if (isset($pwg_loaded_plugins[$plugin_id])) {
@@ -215,12 +208,10 @@ class functions_plugins
      * Retrieves plugin data saved previously with set_plugin_data.
      * @see set_plugin_data()
      * @deprecated 2.6
-     *
-     * @param string $plugin_id
-     * @return mixed
      */
-    public static function &get_plugin_data($plugin_id)
-    {
+    public static function &get_plugin_data(
+        string $plugin_id
+    ): array|bool|string|int|float|null|object {
         global $pwg_loaded_plugins;
 
         if (isset($pwg_loaded_plugins[$plugin_id]['plugin_data'])) {
@@ -233,12 +224,13 @@ class functions_plugins
     /**
      * Returns an array of plugins defined in the database.
      *
-     * @param string $state optional filter
+     * @param ?string $state optional filter
      * @param string $id returns only data about given plugin
-     * @return array
      */
-    public static function get_db_plugins($state = '', $id = '')
-    {
+    public static function get_db_plugins(
+        ?string $state = '',
+        string $id = ''
+    ): array {
         $clauses = [];
 
         if (! empty($state)) {
@@ -267,11 +259,10 @@ class functions_plugins
     /**
      * Loads a plugin in memory.
      * It performs autoupdate, includes the main.php file and updates *$pwg_loaded_plugins*.
-     *
-     * @param string $plugin
      */
-    public static function load_plugin($plugin)
-    {
+    public static function load_plugin(
+        array $plugin
+    ): void {
         $file_name = PHPWG_PLUGINS_PATH . $plugin['id'] . '/main.php';
 
         if (file_exists($file_name)) {
@@ -286,10 +277,11 @@ class functions_plugins
      * Performs update task of a plugin.
      * Autoupdate is only performed if the plugin has a *_maintain.php file.
      *
-     * @param array $plugin (id, version, state) will be updated if version changes
+     * @param array<string, string> $plugin (id, version, state) will be updated if version changes
      */
-    public static function autoupdate_plugin(&$plugin)
-    {
+    public static function autoupdate_plugin(
+        array &$plugin
+    ): void {
         // try to find the filesystem version in lines 2 to 10 of main.php
         $fh = fopen(PHPWG_PLUGINS_PATH . $plugin['id'] . '/main.php', 'r');
         $fs_version = null;
@@ -362,7 +354,7 @@ class functions_plugins
     /**
      * Loads all the registered plugins.
      */
-    public static function load_plugins()
+    public static function load_plugins(): void
     {
         global $conf, $pwg_loaded_plugins;
         $pwg_loaded_plugins = [];

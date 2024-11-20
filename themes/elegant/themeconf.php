@@ -22,7 +22,7 @@ global $conf;
 include(PHPWG_THEMES_PATH . 'elegant/admin/upgrade.php');
 
 functions_plugins::add_event_handler('init', set_config_values_elegant(...));
-function set_config_values_elegant()
+function set_config_values_elegant(): void
 {
     global $conf, $template;
     $config = functions::safe_unserialize($conf['elegant']);

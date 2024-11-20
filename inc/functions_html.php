@@ -20,13 +20,11 @@ class functions_html
      * array $cat_information. $cat_information array must be an array
      * of array( id=>?, name=>?, permalink=>?). If url input parameter is null,
      * returns only the categories name without links.
-     *
-     * @param array $cat_information
-     * @param string|null $url
-     * @return string
      */
-    public static function get_cat_display_name($cat_information, $url = '')
-    {
+    public static function get_cat_display_name(
+        array $cat_information,
+        ?string $url = ''
+    ): string {
         global $conf;
 
         //$output = '<a href="'.\Piwigo\inc\functions_url::get_absolute_root_url().$conf['home_page'].'">'.\Piwigo\inc\functions::l10n('Home').'</a>';
@@ -73,20 +71,14 @@ class functions_html
     /**
      * Generates breadcrumb from categories list using a cache.
      * @see get_cat_display_name()
-     *
-     * @param string $uppercats
-     * @param string|null $url
-     * @param bool $single_link
-     * @param string|null $link_class
-     * @return string
      */
     public static function get_cat_display_name_cache(
-        $uppercats,
-        $url = '',
-        $single_link = false,
-        $link_class = null,
-        $auth_key = null
-    ) {
+        string $uppercats,
+        ?string $url = '',
+        bool $single_link = false,
+        ?string $link_class = null,
+        ?string $auth_key = null
+    ): string {
         global $cache, $conf;
 
         $add_url_params = [];
@@ -169,13 +161,11 @@ class functions_html
     /**
      * Generates breadcrumb for a category.
      * @see get_cat_display_name()
-     *
-     * @param int $cat_id
-     * @param string|null $url
-     * @return string
      */
-    public static function get_cat_display_name_from_id($cat_id, $url = '')
-    {
+    public static function get_cat_display_name_from_id(
+        int|string $cat_id,
+        ?string $url = ''
+    ): string {
         $cat_info = functions_category::get_cat_info($cat_id);
         return self::get_cat_display_name($cat_info['upper_names'], $url);
     }
@@ -187,12 +177,10 @@ class functions_html
      * /word/ becomes italic
      * *word* becomes bolded
      * urls becomes a tags
-     *
-     * @param string $content
-     * @return string
      */
-    public static function render_comment_content($content)
-    {
+    public static function render_comment_content(
+        string $content
+    ): string|null {
         $content = htmlspecialchars($content);
         $pattern = '/(https?:\/\/\S*)/';
         $replacement = '<a href="$1" rel="nofollow">$1</a>';
@@ -223,16 +211,20 @@ class functions_html
     /**
      * Callback used for sorting by name.
      */
-    public static function name_compare($a, $b)
-    {
+    public static function name_compare(
+        array $a,
+        array $b
+    ): int {
         return strcmp(strtolower($a['name']), strtolower($b['name']));
     }
 
     /**
      * Callback used for sorting by name (slug) with cache.
      */
-    public static function tag_alpha_compare($a, $b)
-    {
+    public static function tag_alpha_compare(
+        array $a,
+        array $b
+    ): int {
         global $cache;
 
         foreach ([$a, $b] as $tag) {
@@ -247,7 +239,7 @@ class functions_html
     /**
      * Exits the current script (or redirect to login page if not logged).
      */
-    public static function access_denied()
+    public static function access_denied(): void
     {
         global $user, $conf;
 
@@ -277,13 +269,14 @@ class functions_html
 
     /**
      * Exits the current script with 403 code.
-     * @param string $msg
-     * @param string|null $alternate_url redirect to this url
+     * @param ?string $alternate_url redirect to this url
      * @throws SmartyException
      * @todo nice display if $template loaded
      */
-    public static function page_forbidden($msg, $alternate_url = null)
-    {
+    public static function page_forbidden(
+        string $msg,
+        ?string $alternate_url = null
+    ): void {
         self::set_status_header(403);
 
         if ($alternate_url == null) {
@@ -304,13 +297,14 @@ class functions_html
 
     /**
      * Exits the current script with 400 code.
-     * @param string $msg
-     * @param string|null $alternate_url redirect to this url
+     * @param ?string $alternate_url redirect to this url
      * @throws SmartyException
      * @todo nice display if $template loaded
      */
-    public static function bad_request($msg, $alternate_url = null)
-    {
+    public static function bad_request(
+        string $msg,
+        ?string $alternate_url = null
+    ): void {
         self::set_status_header(400);
 
         if ($alternate_url == null) {
@@ -331,13 +325,14 @@ class functions_html
 
     /**
      * Exits the current script with 404 code.
-     * @param string $msg
-     * @param string|null $alternate_url redirect to this url
+     * @param ?string $alternate_url redirect to this url
      * @throws SmartyException
      * @todo nice display if $template loaded
      */
-    public static function page_not_found($msg, $alternate_url = null)
-    {
+    public static function page_not_found(
+        ?string $msg,
+        ?string $alternate_url = null
+    ): void {
         self::set_status_header(404);
 
         if ($alternate_url == null) {
@@ -359,13 +354,12 @@ class functions_html
     /**
      * Exits the current script with 500 code.
      * @todo nice display if $template loaded
-     *
-     * @param string $msg
-     * @param string|null $title
-     * @param bool $show_trace
      */
-    public static function fatal_error($msg, $title = null, $show_trace = true)
-    {
+    public static function fatal_error(
+        string $msg,
+        ?string $title = null,
+        bool $show_trace = true
+    ): never {
         if (empty($title)) {
             $title = functions::l10n('Piwigo encountered a non recoverable error');
         }
@@ -409,10 +403,8 @@ class functions_html
 
     /**
      * Returns the breadcrumb to be displayed above thumbnails on tag page.
-     *
-     * @return string
      */
-    public static function get_tags_content_title()
+    public static function get_tags_content_title(): string
     {
         global $page;
         $title = '<a href="' . functions_url::get_root_url() . 'tags.php" title="' . functions::l10n('display available tags') . '">'
@@ -461,10 +453,8 @@ class functions_html
 
     /**
      * Returns the breadcrumb to be displayed above thumbnails on combined categories page.
-     *
-     * @return string
      */
-    public static function get_combined_categories_content_title()
+    public static function get_combined_categories_content_title(): string
     {
         global $page;
 
@@ -509,11 +499,12 @@ class functions_html
 
     /**
      * Sets the http status header (200,401,...)
-     * @param int $code
      * @param string $text for exotic http codes
      */
-    public static function set_status_header($code, $text = '')
-    {
+    public static function set_status_header(
+        int $code,
+        string $text = ''
+    ): void {
         if (empty($text)) {
             switch ($code) {
                 case 200: $text = 'OK';
@@ -566,12 +557,10 @@ class functions_html
     /**
      * Returns the category comment for rendering in html textual mode (subcatify)
      * This method is called by a trigger_notify()
-     *
-     * @param string $desc
-     * @return string
      */
-    public static function render_category_literal_description($desc)
-    {
+    public static function render_category_literal_description(
+        ?string $desc
+    ): string {
         if (! isset($desc)) {
             $desc = '';
         }
@@ -585,8 +574,9 @@ class functions_html
      *
      * @param BlockManager[] $menu_ref_arr
      */
-    public static function register_default_menubar_blocks($menu_ref_arr)
-    {
+    public static function register_default_menubar_blocks(
+        array $menu_ref_arr
+    ): void {
         $menu = &$menu_ref_arr[0];
 
         if ($menu->get_id() != 'menubar') {
@@ -611,11 +601,11 @@ class functions_html
      * Returns display name for an element.
      * Returns 'name' if exists of name from 'file'.
      *
-     * @param array $info at least file or name
-     * @return string
+     * @param array<string, ?string> $info at least file or name
      */
-    public static function render_element_name($info)
-    {
+    public static function render_element_name(
+        array $info
+    ): string {
         if (! empty($info['name'])) {
             return functions_plugins::trigger_change('render_element_name', $info['name'], $info);
         }
@@ -626,12 +616,13 @@ class functions_html
     /**
      * Returns display description for an element.
      *
-     * @param array $info at least comment
+     * @param array<string, int|string|null> $info at least comment
      * @param string $param used to identify the trigger
-     * @return string
      */
-    public static function render_element_description($info, $param = '')
-    {
+    public static function render_element_description(
+        array $info,
+        string $param = ''
+    ): string {
         if (! empty($info['comment'])) {
             return functions_plugins::trigger_change('render_element_description', $info['comment'], $param);
         }
@@ -642,13 +633,13 @@ class functions_html
     /**
      * Add info to the title of the thumbnail based on photo properties.
      *
-     * @param array $info hit, rating_score, nb_comments
-     * @param string $title
-     * @param string $comment
-     * @return string
+     * @param array<string, int|string|null> $info hit, rating_score, nb_comments
      */
-    public static function get_thumbnail_title($info, $title, $comment = '')
-    {
+    public static function get_thumbnail_title(
+        array $info,
+        string $title,
+        string $comment = ''
+    ): string {
         global $conf, $user;
 
         $details = [];
@@ -686,25 +677,23 @@ class functions_html
 
     /**
      * Event handler to protect src image urls.
-     *
-     * @param string $url
-     * @param SrcImage $src_image
-     * @return string
      */
-    public static function get_src_image_url_protection_handler($url, $src_image)
-    {
+    public static function get_src_image_url_protection_handler(
+        string $url,
+        SrcImage $src_image
+    ): string {
         return functions_url::get_action_url($src_image->id, $src_image->is_original() ? 'e' : 'r', false);
     }
 
     /**
      * Event handler to protect element urls.
      *
-     * @param string $url
      * @param array $infos id, path
-     * @return string
      */
-    public static function get_element_url_protection_handler($url, $infos)
-    {
+    public static function get_element_url_protection_handler(
+        string $url,
+        array $infos
+    ): string {
         global $conf;
 
         if ($conf['original_url_protection'] == 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
@@ -721,7 +710,7 @@ class functions_html
     /**
      * Sends to the template all messages stored in $page and in the session.
      */
-    public static function flush_page_messages()
+    public static function flush_page_messages(): void
     {
         global $template, $page;
 

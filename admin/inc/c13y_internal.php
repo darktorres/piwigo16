@@ -27,11 +27,10 @@ class c13y_internal
 
     /**
      * Check version
-     *
-     * @param check_integrity $c13y
      */
-    public function c13y_version($c13y)
-    {
+    public function c13y_version(
+        check_integrity $c13y
+    ): void {
         global $conf;
 
         $check_list = [];
@@ -64,11 +63,10 @@ class c13y_internal
 
     /**
      * Check exif
-     *
-     * @param check_integrity $c13y
      */
-    public function c13y_exif($c13y)
-    {
+    public function c13y_exif(
+        check_integrity $c13y
+    ): void {
         global $conf;
 
         foreach (['show_exif', 'use_exif'] as $value) {
@@ -89,11 +87,10 @@ class c13y_internal
 
     /**
      * Check user
-     *
-     * @param check_integrity $c13y
      */
-    public function c13y_user($c13y)
-    {
+    public function c13y_user(
+        check_integrity $c13y
+    ): void {
         global $conf;
 
         $c13y_users = [];
@@ -158,13 +155,13 @@ class c13y_internal
     /**
      * Do correction user
      *
-     * @param mixed $id
-     * @param mixed $action
      * @return bool true if ok else false
      * @throws RandomException
      */
-    public function c13y_correction_user($id, $action)
-    {
+    public function c13y_correction_user(
+        int $id,
+        string $action
+    ): bool {
         global $conf, $page;
 
         $result = false;

@@ -18,10 +18,10 @@ class CalendarWeekly extends CalendarBase
 {
     /**
      * Initialize the calendar
-     * @param string $inner_sql
      */
-    public function initialize($inner_sql)
-    {
+    public function initialize(
+        string $inner_sql
+    ): void {
         parent::initialize($inner_sql);
         global $lang, $conf;
         $week_no_labels = [];
@@ -59,7 +59,7 @@ class CalendarWeekly extends CalendarBase
      *
      * @return bool false indicates that thumbnails where not included
      */
-    public function generate_category_content()
+    public function generate_category_content(): bool
     {
         global $conf, $page;
 
@@ -83,10 +83,10 @@ class CalendarWeekly extends CalendarBase
      * Returns a sql WHERE subquery for the date field.
      *
      * @param int $max_levels (e.g. 2=only year and month)
-     * @return string
      */
-    public function get_date_where($max_levels = 3)
-    {
+    public function get_date_where(
+        int $max_levels = 3
+    ): string {
         global $page;
         $date = $page['chronology_date'];
 

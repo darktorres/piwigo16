@@ -185,10 +185,13 @@ if (count($missing_plugin_ids) > 0) {
 }
 
 // Stopped plugin sorting for new plugin manager
-// usort($tpl_plugins, function ($a, $b) {
+// usort($tpl_plugins, function (
+//     array $a,
+//     array $b
+// ): int {
 //   // sort plugins by state then by name
 //   $s = array('merged' => 0, 'missing' => 1, 'active' => 2, 'inactive' => 3);
-//
+
 //   if($a['STATE'] == $b['STATE'])
 //     return strcasecmp($a['NAME'], $b['NAME']);
 //   else

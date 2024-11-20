@@ -14,8 +14,10 @@ use Piwigo\inc\PwgResponseEncoder;
 
 class PwgJsonEncoder extends PwgResponseEncoder
 {
-    public function encodeResponse($response)
-    {
+    #[\Override]
+    public function encodeResponse(
+        array|bool|PwgError|null $response
+    ): bool|string {
         if ($response instanceof PwgError) {
             return json_encode(
                 [
@@ -35,7 +37,8 @@ class PwgJsonEncoder extends PwgResponseEncoder
         );
     }
 
-    public function getContentType()
+    #[\Override]
+    public function getContentType(): string
     {
         return 'text/plain';
     }

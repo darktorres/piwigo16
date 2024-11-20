@@ -18,14 +18,15 @@ if (defined('IN_ADMIN') and
     functions_plugins::add_event_handler('loc_end_cat_modify', TAT_FC_23(...));
 }
 
-function TAT_FC_23()
+function TAT_FC_23(): void
 {
     global $template;
     $template->set_prefilter('album_properties', TAT_FC_23_prefilter(...));
 }
 
-function TAT_FC_23_prefilter($content)
-{
+function TAT_FC_23_prefilter(
+    array|string $content
+): array|string {
     $search = '<strong>{\'Lock\'|translate}</strong>';
     $replacement = '<span id="TAT_FC_23"><strong>{\'Lock\'|translate}</strong></span>';
     return str_replace($search, $replacement, $content);

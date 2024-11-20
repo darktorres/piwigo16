@@ -14,19 +14,19 @@ namespace Piwigo\inc;
  */
 class QResults
 {
-    public $all_tags;
+    public array $all_tags;
 
-    public $tag_ids;
+    public array $tag_ids;
 
-    public $tag_iids;
+    public array $tag_iids;
 
-    public $all_cats;
+    public array $all_cats;
 
-    public $cat_ids;
+    public array $cat_ids;
 
-    public $cat_iids;
+    public array $cat_iids;
 
-    public $images_iids;
+    public array $images_iids;
 
-    public $iids;
+    public array $iids;
 }

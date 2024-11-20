@@ -19,7 +19,7 @@ use Piwigo\inc\functions_url;
 
 class RVTS
 {
-    public static function on_end_section_init()
+    public static function on_end_section_init(): void
     {
         global $page;
         $page['nb_image_page'] *= functions_session::pwg_get_session_var('rvts_mult', 1);
@@ -35,7 +35,7 @@ class RVTS
         functions_plugins::add_event_handler('loc_begin_index', self::on_index_begin(...), EVENT_HANDLER_PRIORITY_NEUTRAL + 10);
     }
 
-    public static function on_index_begin()
+    public static function on_index_begin(): void
     {
         global $page;
         $is_ajax = isset($_GET['rvts']);
@@ -74,8 +74,9 @@ class RVTS
         }
     }
 
-    public static function on_index_thumbnails($thumbs)
-    {
+    public static function on_index_thumbnails(
+        array $thumbs
+    ): array {
         global $page, $template;
         $total = count($page['items']);
 
@@ -148,8 +149,9 @@ class RVTS
         return $thumbs;
     }
 
-    public static function on_index_thumbnails_ajax($thumbs)
-    {
+    public static function on_index_thumbnails_ajax(
+        array $thumbs
+    ): never {
         global $template;
         $template->assign('thumbnails', $thumbs);
         header('Content-Type: text/html; charset=' . functions::get_pwg_charset());
@@ -157,7 +159,7 @@ class RVTS
         exit;
     }
 
-    public static function on_end_index()
+    public static function on_end_index(): void
     {
         global $template;
         $req = null;

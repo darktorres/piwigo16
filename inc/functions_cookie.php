@@ -16,10 +16,8 @@ class functions_cookie
      * If Piwigo is installed on :
      * http://domain.org/meeting/gallery/
      * it will return : "/meeting/gallery"
-     *
-     * @return string
      */
-    public static function cookie_path()
+    public static function cookie_path(): string|null
     {
         if (isset($_SERVER['REDIRECT_SCRIPT_NAME']) and
             ! empty($_SERVER['REDIRECT_SCRIPT_NAME'])
@@ -75,14 +73,12 @@ class functions_cookie
     /**
      * Persistently stores a variable in pwg cookie.
      * Set $value to null to delete the cookie.
-     *
-     * @param string $var
-     * @param mixed $value
-     * @param int|null $expire
-     * @return bool
      */
-    public static function pwg_set_cookie_var($var, $value, $expire = null)
-    {
+    public static function pwg_set_cookie_var(
+        string $var,
+        string $value,
+        ?int $expire = null
+    ): bool {
         if ($value == null or
             $expire === 0
         ) {
@@ -98,13 +94,11 @@ class functions_cookie
     /**
      * Retrieves the value of a persistent variable in pwg cookie
      * @see pwg_set_cookie_var
-     *
-     * @param string $var
-     * @param mixed $default
-     * @return mixed
      */
-    public static function pwg_get_cookie_var($var, $default = null)
-    {
+    public static function pwg_get_cookie_var(
+        string $var,
+        string|null $default = null
+    ): string|null {
         if (isset($_COOKIE['pwg_' . $var])) {
             return $_COOKIE['pwg_' . $var];
         }

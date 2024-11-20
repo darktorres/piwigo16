@@ -58,7 +58,7 @@ functions_plugins::add_event_handler('loc_end_index_category_thumbnails', GDThum
 functions_plugins::add_event_handler('get_admin_plugin_menu_links', GDThumb_admin_menu(...));
 functions_plugins::add_event_handler('loc_end_index', GDThumb_remove_thumb_size(...));
 
-function GDThumb_init()
+function GDThumb_init(): void
 {
     global $conf, $user, $page, $stripped;
 
@@ -68,7 +68,7 @@ function GDThumb_init()
     $stripped['maxThumb'] = $confTemp['nb_image_page'];
 }
 
-function GDThumb_index()
+function GDThumb_index(): void
 {
     global $template;
 
@@ -78,8 +78,10 @@ function GDThumb_index()
     functions_plugins::add_event_handler('loc_end_index_thumbnails', GDThumb_process_thumb(...), 50);
 }
 
-function GDThumb_endsWith($needles, $haystack)
-{
+function GDThumb_endsWith(
+    string $needles,
+    string $haystack
+): bool {
     if (empty($needles) ||
         empty($haystack)
     ) {
@@ -98,8 +100,10 @@ function GDThumb_endsWith($needles, $haystack)
 
 }
 
-function GDThumb_media_type($params, $smarty)
-{
+function GDThumb_media_type(
+    array $params,
+    Smarty_Internal_Template $smarty
+): string {
     if (empty($params['file'])) {
         return 'image';
     }
@@ -133,8 +137,10 @@ function GDThumb_media_type($params, $smarty)
     return 'image';
 }
 
-function GDThumb_process_thumb($tpl_vars, $pictures)
-{
+function GDThumb_process_thumb(
+    array $tpl_vars,
+    array $pictures
+): array {
     global $template, $conf;
     $confTemp = $conf['gdThumb'];
     $confTemp['GDTHUMB_ROOT'] = 'plugins/' . GDTHUMB_ID;
@@ -172,8 +178,9 @@ function GDThumb_process_thumb($tpl_vars, $pictures)
     return $tpl_vars;
 }
 
-function GDThumb_process_category($tpl_vars)
-{
+function GDThumb_process_category(
+    array $tpl_vars
+): array {
     global $template, $conf;
     $confTemp = $conf['gdThumb'];
     $confTemp['GDTHUMB_ROOT'] = 'plugins/' . GDTHUMB_ID;
@@ -213,16 +220,18 @@ function GDThumb_process_category($tpl_vars)
     return $tpl_vars;
 }
 
-function GDThumb_prefilter($content)
-{
+function GDThumb_prefilter(
+    string $content
+): string|array|null {
     $pattern = '#\<div.*?id\="thumbnails".*?\>\{\$THUMBNAILS\}\</div\>#';
     $replacement = '<ul id="thumbnails">{$THUMBNAILS}</ul>';
 
     return preg_replace($pattern, $replacement, $content);
 }
 
-function GDThumb_admin_menu($menu)
-{
+function GDThumb_admin_menu(
+    array $menu
+): array|string {
     array_push(
         $menu,
         [
@@ -233,7 +242,7 @@ function GDThumb_admin_menu($menu)
     return $menu;
 }
 
-function GDThumb_remove_thumb_size()
+function GDThumb_remove_thumb_size(): void
 {
     global $template;
     $template->clear_assign('image_derivatives');

@@ -14,24 +14,29 @@ namespace Piwigo\inc;
  */
 class QSearchScope
 {
-    public $id;
+    public string $id;
 
-    public $aliases;
+    public array $aliases;
 
-    public $is_text;
+    public bool $is_text;
 
-    public $nullable;
+    public bool $nullable;
 
-    public function __construct($id, $aliases, $nullable = false, $is_text = true)
-    {
+    public function __construct(
+        string $id,
+        array $aliases,
+        bool $nullable = false,
+        bool $is_text = true
+    ) {
         $this->id = $id;
         $this->aliases = $aliases;
         $this->is_text = $is_text;
         $this->nullable = $nullable;
     }
 
-    public function parse($token)
-    {
+    public function parse(
+        QSingleToken $token
+    ): bool {
         if (! $this->nullable &&
             strlen($token->term) == 0
         ) {
@@ -41,8 +46,10 @@ class QSearchScope
         return true;
     }
 
-    public function process_char(&$ch, &$crt_token)
-    {
+    public function process_char(
+        string &$ch,
+        string &$crt_token
+    ): false {
         return false;
     }
 }

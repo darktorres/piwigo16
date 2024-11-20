@@ -15,10 +15,10 @@ use Piwigo\inc\functions;
 class functions_permalinks
 {
     /** returns a category id that corresponds to the given permalink (or null)
-     * @param string $permalink
      */
-    public static function get_cat_id_from_permalink($permalink)
-    {
+    public static function get_cat_id_from_permalink(
+        string $permalink
+    ): ?int {
         $query = <<<SQL
             SELECT id FROM categories
             WHERE permalink = '{$permalink}';
@@ -33,10 +33,10 @@ class functions_permalinks
     }
 
     /** returns a category id that has used before this permalink (or null)
-     * @param string $permalink
      */
-    public static function get_cat_id_from_old_permalink($permalink)
-    {
+    public static function get_cat_id_from_old_permalink(
+        string $permalink
+    ): array|bool|null {
         $query = <<<SQL
             SELECT c.id
             FROM old_permalinks op
@@ -60,8 +60,10 @@ class functions_permalinks
      * @param bool $save if true, the current category-permalink association
      * is saved in the old permalinks table in case external links hit it
      */
-    public static function delete_cat_permalink($cat_id, $save)
-    {
+    public static function delete_cat_permalink(
+        int $cat_id,
+        bool $save
+    ): bool {
         global $page, $cache;
         $query = <<<SQL
             SELECT permalink
@@ -134,8 +136,11 @@ class functions_permalinks
      * @param bool $save if true, the current category-permalink association
      * is saved in the old permalinks table in case external links hit it
      */
-    public static function set_cat_permalink($cat_id, $permalink, $save)
-    {
+    public static function set_cat_permalink(
+        int $cat_id,
+        string $permalink,
+        bool $save
+    ): bool {
         global $page, $cache;
 
         $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', $permalink);

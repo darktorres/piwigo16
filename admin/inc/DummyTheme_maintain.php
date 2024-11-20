@@ -16,24 +16,26 @@ use Piwigo\inc\ThemeMaintain;
  */
 class DummyTheme_maintain extends ThemeMaintain
 {
-    public function activate($theme_version, &$errors = [])
-    {
+    public function activate(
+        string $theme_version,
+        array &$errors = []
+    ): void {
         if (is_callable('theme_activate')) {
-            return theme_activate($this->theme_id, $theme_version, $errors);
+            theme_activate($this->theme_id, $theme_version, $errors);
         }
     }
 
-    public function deactivate()
+    public function deactivate(): void
     {
         if (is_callable('theme_deactivate')) {
-            return theme_deactivate($this->theme_id);
+            theme_deactivate($this->theme_id);
         }
     }
 
-    public function delete()
+    public function delete(): void
     {
         if (is_callable('theme_delete')) {
-            return theme_delete($this->theme_id);
+            theme_delete($this->theme_id);
         }
     }
 }

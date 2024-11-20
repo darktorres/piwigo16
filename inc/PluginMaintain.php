@@ -14,46 +14,47 @@ namespace Piwigo\inc;
  */
 class PluginMaintain
 {
-    /**
-     * @var string
-     */
-    protected $plugin_id;
+    protected string $plugin_id;
 
-    /**
-     * @param string $id
-     */
-    public function __construct($id)
-    {
+    public function __construct(
+        string $id
+    ) {
         $this->plugin_id = $id;
     }
 
     /**
-     * @param string $plugin_version
      * @param array $errors - used to return error messages
      */
-    public function install($plugin_version, &$errors = []) {}
+    public function install(
+        string $plugin_version,
+        array &$errors = []
+    ): void {}
 
     /**
-     * @param string $plugin_version
      * @param array $errors - used to return error messages
      */
-    public function activate($plugin_version, &$errors = []) {}
+    public function activate(
+        string $plugin_version,
+        array &$errors = []
+    ): void {}
 
-    public function deactivate() {}
+    public function deactivate(): void {}
 
-    public function uninstall() {}
+    public function uninstall(): void {}
 
     /**
-     * @param string $old_version
-     * @param string $new_version
      * @param array $errors - used to return error messages
      */
-    public function update($old_version, $new_version, &$errors = []) {}
+    public function update(
+        string $old_version,
+        string $new_version,
+        array &$errors = []
+    ): void {}
 
     /**
      * @removed 2.7
      */
-    public function autoUpdate()
+    public function autoUpdate(): void
     {
         if (functions_user::is_admin() &&
             ! defined('IN_WS')

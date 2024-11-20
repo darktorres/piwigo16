@@ -16,28 +16,28 @@ namespace Piwigo\inc;
 final class SizingParams
 {
     /**
-     * @var int[]
+     * @var array<int>
      */
-    public $ideal_size;
+    public array $ideal_size;
+
+    public float|int $max_crop;
 
     /**
-     * @var float
+     * @var array<int>
      */
-    public $max_crop;
+    public ?array $min_size;
 
     /**
-     * @var int[]
-     */
-    public $min_size;
-
-    /**
-     * @param int[] $ideal_size - two element array of maximum output dimensions (width, height)
-     * @param float $max_crop - from 0=no cropping to 1= max cropping (100% of width/height);
+     * @param array<int> $ideal_size - two element array of maximum output dimensions (width, height)
+     * @param float|int $max_crop - from 0=no cropping to 1= max cropping (100% of width/height);
      *    expressed as a factor of the input width/height
-     * @param int[] $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height)
+     * @param ?array<int> $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height)
      */
-    public function __construct($ideal_size, $max_crop = 0, $min_size = null)
-    {
+    public function __construct(
+        array $ideal_size,
+        float|int $max_crop = 0,
+        ?array $min_size = null
+    ) {
         $this->ideal_size = $ideal_size;
         $this->max_crop = $max_crop;
         $this->min_size = $min_size;
@@ -45,34 +45,29 @@ final class SizingParams
 
     /**
      * Returns a simple SizingParams object.
-     *
-     * @param int $w
-     * @param int $h
-     * @return SizingParams
      */
-    public static function classic($w, $h)
-    {
+    public static function classic(
+        int $w,
+        int $h
+    ): self {
         return new self([$w, $h]);
     }
 
     /**
      * Returns a square SizingParams object.
-     *
-     * @param int $w
-     * @return SizingParams
      */
-    public static function square($w)
-    {
+    public static function square(
+        int $w
+    ): self {
         return new self([$w, $w], 1, [$w, $w]);
     }
 
     /**
      * Adds tokens depending on sizing configuration.
-     *
-     * @param array $tokens
      */
-    public function add_url_tokens(&$tokens)
-    {
+    public function add_url_tokens(
+        array &$tokens
+    ): void {
         if ($this->max_crop == 0) {
             $tokens[] = 's' . derivative_params::size_to_url($this->ideal_size);
         } elseif ($this->max_crop == 1 &&
@@ -89,13 +84,17 @@ final class SizingParams
     /**
      * Calculates the cropping rectangle and the scaled size for an input image size.
      *
-     * @param int[] $in_size - two element array of input dimensions (width, height)
-     * @param string $coi - four character encoded string containing the center of interest (unused if max_crop=0)
-     * @param ImageRect $crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
-     * @param int[] $scale_size - two element array containing width and height of the scaled image
+     * @param array<int> $in_size - two element array of input dimensions (width, height)
+     * @param ?string $coi - four character encoded string containing the center of interest (unused if max_crop=0)
+     * @param ?ImageRect $crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
+     * @param ?array<int> $scale_size - two element array containing width and height of the scaled image
      */
-    public function compute($in_size, $coi, &$crop_rect, &$scale_size)
-    {
+    public function compute(
+        array $in_size,
+        ?string $coi,
+        ?ImageRect &$crop_rect,
+        ?array &$scale_size
+    ): void {
         $destCrop = new ImageRect($in_size);
 
         if ($this->max_crop > 0) {

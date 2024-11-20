@@ -137,7 +137,10 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
     $tpl_themes[] = $tpl_theme;
 }
 
-usort($tpl_themes, function ($a, $b) {
+usort($tpl_themes, function (
+    array $a,
+    array $b
+): int {
     // sort themes by state then by name
     $s = [
         'active' => 0,

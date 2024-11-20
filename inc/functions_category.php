@@ -16,27 +16,30 @@ class functions_category
     /**
      * Callback used for sorting by global_rank
      */
-    public static function global_rank_compare($a, $b)
-    {
+    public static function global_rank_compare(
+        array $a,
+        array $b
+    ): int {
         return strnatcasecmp($a['global_rank'], $b['global_rank']);
     }
 
     /**
      * Callback used for sorting by rank
      */
-    public static function rank_compare($a, $b)
-    {
+    public static function rank_compare(
+        array $a,
+        array $b
+    ): int|float {
         return $a['rank'] - $b['rank'];
     }
 
     /**
      * Is the category accessible to the connected user ?
      * If the user is not authorized to see this category, script exits
-     *
-     * @param int $category_id
      */
-    public static function check_restrictions($category_id)
-    {
+    public static function check_restrictions(
+        int|string $category_id
+    ): void {
         global $user;
 
         // $filter['visible_categories'] and $filter['visible_images']
@@ -51,7 +54,7 @@ class functions_category
      *
      * @return array[]
      */
-    public static function get_categories_menu()
+    public static function get_categories_menu(): array
     {
         global $page, $user, $filter, $conf;
 
@@ -152,12 +155,10 @@ class functions_category
 
     /**
      * Retrieves information about a category.
-     *
-     * @param int $id
-     * @return array
      */
-    public static function get_cat_info($id)
-    {
+    public static function get_cat_info(
+        int|string $id
+    ): array|bool|null {
         $query = <<<SQL
             SELECT *
             FROM categories
@@ -217,7 +218,7 @@ class functions_category
      *
      * @return array[]
      */
-    public static function get_category_preferred_image_orders()
+    public static function get_category_preferred_image_orders(): array
     {
         global $conf, $page;
 
@@ -240,17 +241,17 @@ class functions_category
     /**
      * Assign a template var usable with {html_options} from a list of categories
      *
-     * @param array[] $categories (at least id,name,global_rank,uppercats for each)
-     * @param int[] $selecteds ids of selected items
+     * @param array<array<string, string>> $categories (at least id,name,global_rank,uppercats for each)
+     * @param array<int> $selecteds ids of selected items
      * @param string $blockname variable name in template
      * @param bool $fullname full breadcrumb or not
      */
     public static function display_select_categories(
-        $categories,
-        $selecteds,
-        $blockname,
-        $fullname = true
-    ) {
+        array $categories,
+        array $selecteds,
+        string $blockname,
+        bool $fullname = true
+    ): void {
         global $template;
 
         $tpl_cats = [];
@@ -290,11 +291,11 @@ class functions_category
      * @see display_select_categories()
      */
     public static function display_select_cat_wrapper(
-        $query,
-        $selecteds,
-        $blockname,
-        $fullname = true
-    ) {
+        string $query,
+        array $selecteds,
+        string $blockname,
+        bool $fullname = true
+    ): void {
         $categories = functions_mysqli::query2array($query);
         usort($categories, self::global_rank_compare(...));
         self::display_select_categories($categories, $selecteds, $blockname, $fullname);
@@ -303,11 +304,12 @@ class functions_category
     /**
      * Returns all subcategory identifiers of given category ids
      *
-     * @param int[] $ids
-     * @return int[]
+     * @param array<int> $ids
+     * @return array<int>
      */
-    public static function get_subcat_ids($ids)
-    {
+    public static function get_subcat_ids(
+        array $ids
+    ): array {
         $query = <<<SQL
             SELECT DISTINCT id
             FROM categories
@@ -335,12 +337,13 @@ class functions_category
     /**
      * Finds a matching category id from a potential list of permalinks
      *
-     * @param string[] $permalinks
+     * @param array<string> $permalinks
      * @param int $idx filled with the index in $permalinks that matches
-     * @return int|null
      */
-    public static function get_cat_id_from_permalinks($permalinks, &$idx)
-    {
+    public static function get_cat_id_from_permalinks(
+        array $permalinks,
+        int &$idx
+    ): ?int {
         $in = '';
 
         foreach ($permalinks as $permalink) {
@@ -391,15 +394,18 @@ class functions_category
     /**
      * Returns display text for images counter of category
      *
-     * @param int $cat_nb_images nb images directly in category
-     * @param int $cat_count_images nb images in category (including subcats)
-     * @param int $cat_count_categories nb subcats
+     * @param int|string $cat_nb_images nb images directly in category
+     * @param int|string $cat_count_images nb images in category (including subcats)
+     * @param int|string $cat_count_categories nb subcats
      * @param bool $short_message if true append " in this album"
-     * @param string $separator
-     * @return string
      */
-    public static function get_display_images_count($cat_nb_images, $cat_count_images, $cat_count_categories, $short_message = true, $separator = '\n')
-    {
+    public static function get_display_images_count(
+        int|string $cat_nb_images,
+        int|string $cat_count_images,
+        int|string $cat_count_categories,
+        bool $short_message = true,
+        string $separator = '\n'
+    ): string {
         $display_text = '';
 
         if ($cat_count_images > 0) {
@@ -433,11 +439,11 @@ class functions_category
      * Find a random photo among all photos inside an album (including sub-albums)
      *
      * @param array $category (at least id,uppercats,count_images)
-     * @param bool $recursive
-     * @return int|null
      */
-    public static function get_random_image_in_category($category, $recursive = true)
-    {
+    public static function get_random_image_in_category(
+        array $category,
+        bool $recursive = true
+    ): ?int {
         $image_id = null;
 
         if ($category['count_images'] > 0) {
@@ -490,12 +496,12 @@ class functions_category
      * Get computed array of categories, that means cache data of all categories
      * available for the current user (count_categories, count_images, etc.).
      *
-     * @param array $userdata
-     * @param int $filter_days number of recent days to filter on or null
-     * @return array
+     * @param ?int $filter_days number of recent days to filter on or null
      */
-    public static function get_computed_categories(&$userdata, $filter_days = null)
-    {
+    public static function get_computed_categories(
+        array &$userdata,
+        ?int $filter_days = null
+    ): array {
         // Count by date_available to avoid count null
         $query = <<<SQL
             SELECT c.id AS cat_id, id_uppercat, global_rank, MAX(date_available) AS date_last, COUNT(date_available) AS nb_images
@@ -595,11 +601,12 @@ class functions_category
     /**
      * Removes a category from computed array of categories and updates counters.
      *
-     * @param array $cats
      * @param array $cat category to remove
      */
-    public static function remove_computed_category(&$cats, $cat)
-    {
+    public static function remove_computed_category(
+        array &$cats,
+        array $cat
+    ): void {
         if (isset($cats[$cat['id_uppercat']])) {
             $parent = &$cats[$cat['id_uppercat']];
             $parent['nb_categories']--;
@@ -623,15 +630,17 @@ class functions_category
      * Return the list of image ids corresponding to given categories.
      * AND & OR mode supported.
      *
-     * @param int[] $cat_ids
-     * @param string $mode
+     * @param array<int> $cat_ids
      * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
      * @param string $order_by - optionally overwrite default photo order
-     * @param bool $use_permissions
-     * @return array
      */
-    public static function get_image_ids_for_categories($cat_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', $use_permissions = true)
-    {
+    public static function get_image_ids_for_categories(
+        array $cat_ids,
+        string $mode = 'AND',
+        string $extra_images_where_sql = '',
+        string $order_by = '',
+        bool $use_permissions = true
+    ): array {
         global $conf;
 
         if (empty($cat_ids)) {
@@ -679,13 +688,16 @@ class functions_category
     /**
      * Return a list of categories corresponding to given items.
      *
-     * @param int[] $items
-     * @param int $max
-     * @param int[] $excluded_cat_ids
+     * @param array<int> $items
+     * @param array<int> $excluded_cat_ids
      * @return array [id, name, counter, url_name]
      */
-    public static function get_common_categories($items, $max = null, $excluded_cat_ids = [], $use_permissions = true)
-    {
+    public static function get_common_categories(
+        array $items,
+        ?int $max = null,
+        array $excluded_cat_ids = [],
+        bool $use_permissions = true
+    ): array {
         if (empty($items)) {
             return [];
         }
@@ -741,8 +753,10 @@ class functions_category
         return $cats;
     }
 
-    public static function get_related_categories_menu($items, $excluded_cat_ids = [])
-    {
+    public static function get_related_categories_menu(
+        array $items,
+        array $excluded_cat_ids = []
+    ): array {
         global $page, $conf;
 
         $common_cats = self::get_common_categories($items, $conf['related_albums_display_limit'], $excluded_cat_ids);

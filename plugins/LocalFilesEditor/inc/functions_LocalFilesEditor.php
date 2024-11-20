@@ -34,8 +34,9 @@ class functions_LocalFilesEditor
      *
      * @param string $code php code
      */
-    public static function eval_syntax($code)
-    {
+    public static function eval_syntax(
+        string $code
+    ): false|string {
         $code = str_replace(['<?php', '?>'], '', $code);
 
         if (function_exists('token_get_all')) {
@@ -70,11 +71,10 @@ class functions_LocalFilesEditor
      * returns true or false if $str is bool
      * returns $str if $str is integer
      * else "$str"
-     *
-     * @param string $value
      */
-    public static function editarea_quote($value)
-    {
+    public static function editarea_quote(
+        string $value
+    ): string {
         switch (gettype($value)) {
             case 'boolean':
                 return $value ? 'true' : 'false';
@@ -87,10 +87,10 @@ class functions_LocalFilesEditor
 
     /**
      * returns bak file for restore
-     * @param string $file
      */
-    public static function get_bak_file($file)
-    {
+    public static function get_bak_file(
+        string $file
+    ): array|string {
         if (functions::get_extension($file) == 'php') {
             return substr_replace($file, '.bak', strrpos($file, '.'), 0);
         }
@@ -101,11 +101,10 @@ class functions_LocalFilesEditor
 
     /**
      * returns dirs and subdirs
-     * @param string $path
-     * @return array
      */
-    public static function get_rec_dirs($path = '')
-    {
+    public static function get_rec_dirs(
+        string $path = ''
+    ): array {
         $options = [];
 
         if (is_dir($path)) {

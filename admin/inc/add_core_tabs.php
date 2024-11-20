@@ -13,8 +13,10 @@ use Piwigo\inc\functions_url;
 
 functions_plugins::add_event_handler('tabsheet_before_select', add_core_tabs(...), 0);
 
-function add_core_tabs($sheets, $tab_id)
-{
+function add_core_tabs(
+    array $sheets,
+    ?string $tab_id
+): array {
     global $conf;
 
     switch ($tab_id) {

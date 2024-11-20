@@ -4,8 +4,11 @@ use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\themes\modus\functions_modus;
 
-function theme_activate($id, $version, &$errors)
-{
+function theme_activate(
+    string $id,
+    string $version,
+    array &$errors
+): void {
     global $conf;
 
     $default_conf = functions_modus::modus_get_default_config();
@@ -22,7 +25,7 @@ function theme_activate($id, $version, &$errors)
     functions::conf_update_param('modus_theme', addslashes(serialize($my_conf)));
 }
 
-function theme_delete()
+function theme_delete(): void
 {
     $query = <<<SQL
         DELETE FROM config

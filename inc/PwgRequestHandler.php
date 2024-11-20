@@ -18,5 +18,7 @@ abstract class PwgRequestHandler
      * Virtual abstract method. Decodes the request (GET or POST) handles the
      * method invocation as well as response sending.
      */
-    abstract public function handleRequest(&$service);
+    abstract public function handleRequest(
+        PwgServer &$service
+    ): void;
 }

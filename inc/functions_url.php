@@ -17,9 +17,8 @@ class functions_url
     /**
      * returns a prefix for each url link on displayed page
      * and return an empty string for current path
-     * @return string
      */
-    public static function get_root_url()
+    public static function get_root_url(): string
     {
         global $page;
         $root_url = ($page['root_path'] ?? null);
@@ -39,8 +38,9 @@ class functions_url
      * returns the absolute url to the root of PWG
      * @param bool $with_scheme if false - does not add http://toto.com
      */
-    public static function get_absolute_root_url($with_scheme = true)
-    {
+    public static function get_absolute_root_url(
+        bool $with_scheme = true
+    ): string {
         global $conf;
         // TODO - add HERE the possibility to call PWG functions from external scripts
 
@@ -102,12 +102,12 @@ class functions_url
      * adds one or more _GET style parameters to an url
      * example: add_url_params('/x', array('a'=>'b')) returns /x?a=b
      * add_url_params('/x?cat_id=10', array('a'=>'b')) returns /x?cat_id=10&amp;a=b
-     * @param string $url
-     * @param array $params
-     * @return string
      */
-    public static function add_url_params($url, $params, $arg_separator = '&amp;')
-    {
+    public static function add_url_params(
+        string $url,
+        array $params,
+        string $arg_separator = '&amp;'
+    ): string {
         if (! empty($params)) {
             assert(is_array($params));
             $is_first = true;
@@ -133,12 +133,10 @@ class functions_url
 
     /**
      * build an index URL for a specific section
-     *
-     * @param array $params
-     * @return string
      */
-    public static function make_index_url($params = [])
-    {
+    public static function make_index_url(
+        array $params = []
+    ): string {
         global $conf;
         $url = self::get_root_url() . 'index';
 
@@ -172,12 +170,13 @@ class functions_url
      * ) will create an index URL on the current section (categories), but on
      * a redefined category and without the start URL parameter.
      *
-     * @param array $redefined keys
-     * @param array $removed keys
-     * @return string
+     * @param array<string, string> $redefined keys
+     * @param array<int, string> $removed keys
      */
-    public static function duplicate_index_url($redefined = [], $removed = [])
-    {
+    public static function duplicate_index_url(
+        array $redefined = [],
+        array $removed = []
+    ): string {
         return self::make_index_url(
             self::params_for_duplication($redefined, $removed)
         );
@@ -186,12 +185,13 @@ class functions_url
     /**
      * returns $page global array with key redefined and key removed
      *
-     * @param array $redefined keys
-     * @param array $removed keys
-     * @return array
+     * @param array<string, string> $redefined keys
+     * @param array<int, string> $removed keys
      */
-    public static function params_for_duplication($redefined, $removed)
-    {
+    public static function params_for_duplication(
+        array $redefined,
+        array $removed
+    ): array {
         global $page;
 
         $params = $page;
@@ -211,12 +211,13 @@ class functions_url
      * create a picture URL with current page parameters, but with redefinitions
      * and removes. See duplicate_index_url.
      *
-     * @param array $redefined keys
-     * @param array $removed keys
-     * @return string
+     * @param array<string, string> $redefined keys
+     * @param array<int, string> $removed keys
      */
-    public static function duplicate_picture_url($redefined = [], $removed = [])
-    {
+    public static function duplicate_picture_url(
+        array $redefined = [],
+        array $removed = []
+    ): string {
         return self::make_picture_url(
             self::params_for_duplication($redefined, $removed)
         );
@@ -224,12 +225,10 @@ class functions_url
 
     /**
      * create a picture URL on a specific section for a specific picture
-     *
-     * @param array $params
-     * @return string
      */
-    public static function make_picture_url($params)
-    {
+    public static function make_picture_url(
+        array $params
+    ): string {
         global $conf;
 
         $url = self::get_root_url() . 'picture';
@@ -283,8 +282,10 @@ class functions_url
     /**
      * adds to the url the chronology and start parameters
      */
-    public static function add_well_known_params_in_url($url, $params)
-    {
+    public static function add_well_known_params_in_url(
+        string $url,
+        array $params
+    ): string {
         if (isset($params['chronology_field'])) {
             $url .= '/' . $params['chronology_field'];
             $url .= '-' . $params['chronology_style'];
@@ -316,12 +317,10 @@ class functions_url
      *
      * Depending on section, other parameters are required (see function code
      * for details)
-     *
-     * @param array $params
-     * @return string
      */
-    public static function make_section_in_url($params)
-    {
+    public static function make_section_in_url(
+        array $params
+    ): string {
         global $conf;
         $section_string = '';
         $section = ($params['section'] ?? null);
@@ -440,13 +439,14 @@ class functions_url
      *
      * Depending on section, other parameters are returned (category/tags/list/...)
      *
-     * @param array $tokens of url tokens to parse
+     * @param array<int, string> $tokens of url tokens to parse
      * @param int $next_token the index in the array of url tokens; in/out
-     * @return array
      * @throws SmartyException
      */
-    public static function parse_section_url($tokens, &$next_token)
-    {
+    public static function parse_section_url(
+        array $tokens,
+        int &$next_token
+    ): array {
         $page = [];
 
         if (isset($tokens[$next_token]) and
@@ -655,8 +655,10 @@ class functions_url
      * the reverse of add_well_known_params_in_url
      * parses start, flat and chronology from url tokens
      */
-    public static function parse_well_known_params_url($tokens, &$i)
-    {
+    public static function parse_well_known_params_url(
+        array $tokens,
+        int &$i
+    ): array {
         $page = [];
 
         while (isset($tokens[$i])) {
@@ -709,11 +711,14 @@ class functions_url
     }
 
     /**
-     * @param mixed $id image id
+     * @param int|string $id image id
      * @param string $what_part string one of 'e' (element), 'r' (representative)
      */
-    public static function get_action_url($id, $what_part, $download)
-    {
+    public static function get_action_url(
+        int|string $id,
+        string $what_part,
+        bool $download
+    ): string {
         $params = [
             'id' => $id,
             'part' => $what_part,
@@ -730,8 +735,9 @@ class functions_url
      * @param array $element_info array containing element information from db;
      * at least 'id', 'path' should be present
      */
-    public static function get_element_url($element_info)
-    {
+    public static function get_element_url(
+        array $element_info
+    ): string {
         $url = $element_info['path'];
 
         if (! self::url_is_remote($url)) {
@@ -744,7 +750,7 @@ class functions_url
     /**
      * Indicate to build url with full path
      */
-    public static function set_make_full_url()
+    public static function set_make_full_url(): void
     {
         global $page;
 
@@ -763,7 +769,7 @@ class functions_url
     /**
      * Restore old parameter to build url with full path
      */
-    public static function unset_make_full_url()
+    public static function unset_make_full_url(): void
     {
         global $page;
 
@@ -785,11 +791,11 @@ class functions_url
     /**
      * Embellish the url argument
      *
-     * @param string $url
      * @return string embellished
      */
-    public static function embellish_url($url)
-    {
+    public static function embellish_url(
+        string $url
+    ): string {
         $url = str_replace('/./', '/', $url);
 
         while (($dotdot = strpos($url, '/../', 1)) !== false) {
@@ -808,7 +814,7 @@ class functions_url
     /**
      * Returns the 'home page' of this gallery
      */
-    public static function get_gallery_home_url()
+    public static function get_gallery_home_url(): string
     {
         global $conf;
 
@@ -828,12 +834,13 @@ class functions_url
     /**
      * returns $_SERVER['QUERY_STRING'] without keys given in parameters
      *
-     * @param string[] $rejects
+     * @param array<int, string> $rejects
      * @param bool $escape escape *&* to *&amp;*
-     * @return string
      */
-    public static function get_query_string_diff($rejects = [], $escape = true)
-    {
+    public static function get_query_string_diff(
+        array $rejects = [],
+        bool $escape = true
+    ): string {
         if (empty($_SERVER['QUERY_STRING'])) {
             return '';
         }
@@ -847,12 +854,10 @@ class functions_url
 
     /**
      * returns true if the url is absolute (begins with http)
-     *
-     * @param string $url
-     * @return bool
      */
-    public static function url_is_remote($url)
-    {
+    public static function url_is_remote(
+        string $url
+    ): bool {
         if (strncmp($url, 'http://', 7) == 0 or
             strncmp($url, 'https://', 8) == 0
         ) {
@@ -865,7 +870,7 @@ class functions_url
     /**
      * List favorite image_ids of the current user.
      */
-    public static function get_user_favorites()
+    public static function get_user_favorites(): array
     {
         global $user;
 

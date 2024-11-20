@@ -51,7 +51,7 @@ if (! defined('IN_ADMIN')) {
     functions_plugins::add_event_handler('loc_after_page_header', admintools_add_admin_controller(...));
 }
 
-function admintools_init()
+function admintools_init(): void
 {
     global $conf;
     $conf['AdminTools'] = functions::safe_unserialize($conf['AdminTools']);

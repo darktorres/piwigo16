@@ -17,8 +17,9 @@ class functions_plugins_admin
      * Retrieves an url for a plugin page.
      * @param string $file - php script full name
      */
-    public static function get_admin_plugin_menu_link($file)
-    {
+    public static function get_admin_plugin_menu_link(
+        string $file
+    ): string {
         global $page;
         $real_file = realpath($file);
         $url = functions_url::get_root_url() . 'admin.php?page=plugin';

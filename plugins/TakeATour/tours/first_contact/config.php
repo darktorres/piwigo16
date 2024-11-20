@@ -25,14 +25,15 @@ if (defined('IN_ADMIN') and
     functions_plugins::add_event_handler('loc_end_themes_installed', TAT_FC_35(...));
 }
 
-function TAT_FC_7()
+function TAT_FC_7(): void
 {
     global $template;
     $template->set_prefilter('photos_add', TAT_FC_7_prefilter(...));
 }
 
-function TAT_FC_7_prefilter($content)
-{
+function TAT_FC_7_prefilter(
+    string $content
+): array|string {
     $search = 'UploadComplete: function(up, files) {';
     $replacement = 'UploadComplete: function(up, files) {
   if (tour.getCurrentStep()==5)
@@ -43,14 +44,15 @@ function TAT_FC_7_prefilter($content)
     return str_replace($search, $replacement, $content);
 }
 
-function TAT_FC_6()
+function TAT_FC_6(): void
 {
     global $template;
     $template->set_prefilter('photos_add', TAT_FC_6_prefilter(...));
 }
 
-function TAT_FC_6_prefilter($content)
-{
+function TAT_FC_6_prefilter(
+    string $content
+): array|string {
     $search = 'BeforeUpload:';
     $replacement = 'FilesAdded: function() {
     if (tour.getCurrentStep()==4)
@@ -63,14 +65,15 @@ function TAT_FC_6_prefilter($content)
     return str_replace($search, $replacement, $content);
 }
 
-function TAT_FC_14()
+function TAT_FC_14(): void
 {
     global $template;
     $template->set_prefilter('batch_manager_global', TAT_FC_14_prefilter(...));
 }
 
-function TAT_FC_14_prefilter($content)
-{
+function TAT_FC_14_prefilter(
+    string $content
+): array|string {
     $search = '<span class="wrap2';
     $replacement = '{counter print=false assign=TAT_FC_14}<span {if $TAT_FC_14==1}id="TAT_FC_14"{/if} class="wrap2';
     $content = str_replace($search, $replacement, $content);
@@ -79,53 +82,57 @@ function TAT_FC_14_prefilter($content)
     return str_replace($search, $replacement, $content);
 }
 
-function TAT_FC_16()
+function TAT_FC_16(): void
 {
     global $template;
     $template->set_prefilter('picture_modify', TAT_FC_16_prefilter(...));
 }
 
-function TAT_FC_16_prefilter($content)
-{
+function TAT_FC_16_prefilter(
+    string $content
+): array|string {
     $search = '<strong>{\'Linked albums\'|translate}</strong>';
     $replacement = '<span id="TAT_FC_16"><strong>{\'Linked albums\'|translate}</strong></span>';
     return str_replace($search, $replacement, $content);
 }
 
-function TAT_FC_17()
+function TAT_FC_17(): void
 {
     global $template;
     $template->set_prefilter('picture_modify', TAT_FC_17_prefilter(...));
 }
 
-function TAT_FC_17_prefilter($content)
-{
+function TAT_FC_17_prefilter(
+    string $content
+): array|string {
     $search = '<strong>{\'Representation of albums\'|translate}</strong>';
     $replacement = '<span id="TAT_FC_17"><strong>{\'Representation of albums\'|translate}</strong></span>';
     return str_replace($search, $replacement, $content);
 }
 
-function TAT_FC_23()
+function TAT_FC_23(): void
 {
     global $template;
     $template->set_prefilter('album_properties', TAT_FC_23_prefilter(...));
 }
 
-function TAT_FC_23_prefilter($content)
-{
+function TAT_FC_23_prefilter(
+    string $content
+): array|string {
     $search = '<strong>{\'Lock\'|translate}</strong>';
     $replacement = '<span id="TAT_FC_23"><strong>{\'Lock\'|translate}</strong></span>';
     return str_replace($search, $replacement, $content);
 }
 
-function TAT_FC_35()
+function TAT_FC_35(): void
 {
     global $template;
     $template->set_prefilter('themes', TAT_FC_35_prefilter(...));
 }
 
-function TAT_FC_35_prefilter($content)
-{
+function TAT_FC_35_prefilter(
+    string $content
+): array|string {
     $search = '<a href="{$set_default_baseurl}{$theme.ID}" class="tiptip"';
     $replacement = '{counter print=false assign=TAT_FC_35}<a href="{$set_default_baseurl}{$theme.ID}" class="tiptip" {if $TAT_FC_35==1}id="TAT_FC_35"{/if}';
     return str_replace($search, $replacement, $content);

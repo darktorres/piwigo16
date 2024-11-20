@@ -27,7 +27,7 @@ functions_plugins::add_event_handler('upload_file', functions_upload::upload_fil
 
 class functions_upload
 {
-    public static function get_upload_form_config()
+    public static function get_upload_form_config(): array
     {
         // default configuration for upload
         $upload_form_config = [
@@ -67,8 +67,11 @@ class functions_upload
         return $upload_form_config;
     }
 
-    public static function save_upload_form_config($data, &$errors = [], &$form_errors = [])
-    {
+    public static function save_upload_form_config(
+        array $data,
+        array &$errors = [],
+        array &$form_errors = []
+    ): bool {
         if (! is_array($data) or
             empty($data)
         ) {
@@ -141,8 +144,14 @@ class functions_upload
         return false;
     }
 
-    public static function add_uploaded_file($source_filepath, $original_filename = null, $categories = null, $level = null, $image_id = null, $original_md5sum = null)
-    {
+    public static function add_uploaded_file(
+        string $source_filepath,
+        ?string $original_filename = null,
+        ?array $categories = null,
+        ?int $level = null,
+        ?string $image_id = null,
+        ?string $original_md5sum = null
+    ): int|string {
         // 1) move uploaded file to upload/2010/01/22/20100122003814-449ada00.jpg
         //
         // 2) keep/resize original
@@ -394,8 +403,10 @@ class functions_upload
         return $image_id;
     }
 
-    public static function add_uploaded_file_add_to_categories($image_id, $categories)
-    {
+    public static function add_uploaded_file_add_to_categories(
+        int|string $image_id,
+        array $categories
+    ): void {
         global $conf;
 
         if (! isset($conf['lounge_active'])) {
@@ -426,8 +437,11 @@ class functions_upload
         }
     }
 
-    public static function add_format($source_filepath, $format_ext, $format_of)
-    {
+    public static function add_format(
+        string $source_filepath,
+        string $format_ext,
+        string $format_of
+    ): int|string {
         // 1) find infos about the extended image
         //
         // 2) move uploaded file to upload/2022/05/16/pwg_format/20100122003814-449ada00.cr2
@@ -492,8 +506,10 @@ class functions_upload
         return $format_id;
     }
 
-    public static function upload_file_pdf($representative_ext, $file_path)
-    {
+    public static function upload_file_pdf(
+        ?string $representative_ext,
+        string $file_path
+    ): ?string {
         global $logger, $conf;
 
         $logger->info(__FUNCTION__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
@@ -536,8 +552,10 @@ class functions_upload
         return $representative_ext;
     }
 
-    public static function upload_file_heic($representative_ext, $file_path)
-    {
+    public static function upload_file_heic(
+        ?string $representative_ext,
+        string $file_path
+    ): ?string {
         global $logger, $conf;
 
         $logger->info(__FUNCTION__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
@@ -580,8 +598,10 @@ class functions_upload
         return $representative_ext;
     }
 
-    public static function upload_file_tiff($representative_ext, $file_path)
-    {
+    public static function upload_file_tiff(
+        ?string $representative_ext,
+        string $file_path
+    ): ?string {
         global $logger, $conf;
 
         $logger->info(__FUNCTION__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
@@ -640,8 +660,10 @@ class functions_upload
         return functions::get_extension($representative_file_abspath);
     }
 
-    public static function upload_file_video($representative_ext, $file_path)
-    {
+    public static function upload_file_video(
+        ?string $representative_ext,
+        string $file_path
+    ): ?string {
         global $logger, $conf;
 
         $logger->info(__FUNCTION__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
@@ -700,8 +722,10 @@ class functions_upload
         return $representative_ext;
     }
 
-    public static function upload_file_psd($representative_ext, $file_path)
-    {
+    public static function upload_file_psd(
+        ?string $representative_ext,
+        string $file_path
+    ): ?string {
         global $logger, $conf;
 
         $logger->info(__FUNCTION__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
@@ -757,8 +781,10 @@ class functions_upload
         return functions::get_extension($representative_file_abspath);
     }
 
-    public static function upload_file_eps($representative_ext, $file_path)
-    {
+    public static function upload_file_eps(
+        ?string $representative_ext,
+        string $file_path
+    ): ?string {
         global $logger, $conf;
 
         $logger->info(__FUNCTION__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
@@ -801,8 +827,9 @@ class functions_upload
         return $representative_ext;
     }
 
-    public static function prepare_directory($directory)
-    {
+    public static function prepare_directory(
+        string $directory
+    ): void {
         if (! is_dir($directory)) {
             if (substr(PHP_OS, 0, 3) == 'WIN') {
                 $directory = str_replace('/', DIRECTORY_SEPARATOR, $directory);
@@ -828,8 +855,11 @@ class functions_upload
         functions::secure_directory($directory);
     }
 
-    public static function need_resize($image_filepath, $max_width, $max_height)
-    {
+    public static function need_resize(
+        string $image_filepath,
+        int $max_width,
+        int $max_height
+    ): bool {
         // TODO: the resize check should take the orientation into account. If a
         // rotation must be applied to the resized photo, then we should test
         // invert width and height.
@@ -844,8 +874,9 @@ class functions_upload
         return false;
     }
 
-    public static function pwg_image_infos($path)
-    {
+    public static function pwg_image_infos(
+        string $path
+    ): array {
         list($width, $height) = getimagesize($path);
         $filesize = floor(filesize($path) / 1024);
 
@@ -856,8 +887,9 @@ class functions_upload
         ];
     }
 
-    public static function is_valid_image_extension($extension)
-    {
+    public static function is_valid_image_extension(
+        string $extension
+    ): array {
         global $conf;
 
         if (isset($conf['upload_form_all_types']) and
@@ -871,8 +903,9 @@ class functions_upload
         return array_unique(array_map(strtolower(...), $extensions));
     }
 
-    public static function file_upload_error_message($error_code)
-    {
+    public static function file_upload_error_message(
+        string $error_code
+    ): string {
         switch ($error_code) {
             case UPLOAD_ERR_INI_SIZE:
                 return sprintf(
@@ -903,8 +936,10 @@ class functions_upload
         }
     }
 
-    public static function get_ini_size($ini_key, $in_bytes = true)
-    {
+    public static function get_ini_size(
+        string $ini_key,
+        bool $in_bytes = true
+    ): bool|int|string {
         $size = ini_get($ini_key);
 
         if ($in_bytes) {
@@ -914,8 +949,9 @@ class functions_upload
         return $size;
     }
 
-    public static function convert_shorthand_notation_to_bytes($value)
-    {
+    public static function convert_shorthand_notation_to_bytes(
+        string $value
+    ): int|string {
         $suffix = substr($value, -1);
         $multiply_by = null;
 
@@ -935,12 +971,14 @@ class functions_upload
         return $value;
     }
 
-    public static function add_upload_error($upload_id, $error_message)
-    {
+    public static function add_upload_error(
+        string $upload_id,
+        string $error_message
+    ): void {
         $_SESSION['uploads_error'][$upload_id][] = $error_message;
     }
 
-    public static function ready_for_upload_message()
+    public static function ready_for_upload_message(): ?string
     {
         global $conf;
 
@@ -975,7 +1013,7 @@ class functions_upload
      *
      * @return array(width, height)
      */
-    public static function get_optimal_dimensions_for_representative()
+    public static function get_optimal_dimensions_for_representative(): array
     {
         global $conf;
 

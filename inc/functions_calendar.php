@@ -14,17 +14,17 @@ class functions_calendar
     /**
      * URL keyword for list view
      */
-    public const CAL_VIEW_LIST = 'list';
+    public const string CAL_VIEW_LIST = 'list';
 
     /**
      * URL keyword for calendar view
      */
-    public const CAL_VIEW_CALENDAR = 'calendar';
+    public const string CAL_VIEW_CALENDAR = 'calendar';
 
     /**
      * Initialize _$page_ and _$template_ vars for calendar view.
      */
-    public static function initialize_calendar()
+    public static function initialize_calendar(): void
     {
         global $page, $conf, $user, $template, $persistent_cache, $filter;
 

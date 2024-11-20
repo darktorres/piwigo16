@@ -14,8 +14,9 @@ use Piwigo\inc\PwgResponseEncoder;
 
 class PwgXmlRpcEncoder extends PwgResponseEncoder
 {
-    public static function xmlrpc_encode($data)
-    {
+    public static function xmlrpc_encode(
+        array|bool|string|int|float|object|null $data
+    ): ?string {
         switch (gettype($data)) {
             case 'boolean':
                 return '<boolean>' . ($data ? '1' : '0') . '</boolean>';
@@ -55,10 +56,14 @@ class PwgXmlRpcEncoder extends PwgResponseEncoder
 
                 return $return;
         }
+
+        return null;
     }
 
-    public function encodeResponse($response)
-    {
+    #[\Override]
+    public function encodeResponse(
+        array|bool|PwgError|null $response
+    ): string {
         if ($response instanceof PwgError) {
             $code = $response->code();
             $msg = htmlspecialchars($response->message());
@@ -99,7 +104,8 @@ class PwgXmlRpcEncoder extends PwgResponseEncoder
         return $ret;
     }
 
-    public function getContentType()
+    #[\Override]
+    public function getContentType(): string
     {
         return 'text/xml';
     }

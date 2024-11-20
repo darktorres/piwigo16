@@ -11,13 +11,17 @@ namespace Piwigo\inc;
 
 class QDateRangeScope extends QSearchScope
 {
-    public function __construct($id, $aliases, $nullable = false)
-    {
+    public function __construct(
+        string $id,
+        array $aliases,
+        bool $nullable = false
+    ) {
         parent::__construct($id, $aliases, $nullable, false);
     }
 
-    public function parse($token)
-    {
+    public function parse(
+        QSingleToken $token
+    ): bool {
         $str = $token->term;
         $strict = [0, 0];
         $pos = strpos($str, '..');
@@ -71,8 +75,10 @@ class QDateRangeScope extends QSearchScope
         return true;
     }
 
-    public function get_sql($field, $token)
-    {
+    public function get_sql(
+        string $field,
+        QSingleToken $token
+    ): string {
         $clauses = [];
 
         if ($token->scope_data[0] != '') {

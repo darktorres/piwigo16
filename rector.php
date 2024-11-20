@@ -24,15 +24,15 @@ return RectorConfig::configure()
     ])
     ->withSkip([
         __DIR__ . '/themes/bootstrap_darkroom/node_modules',
-        ClassOnObjectRector::class,
-        DisallowedEmptyRuleFixerRector::class,
-        EncapsedStringsToSprintfRector::class,
-        NullToStrictStringFuncCallArgRector::class,
-        RemoveExtraParametersRector::class,
-        SensitiveHereNowDocRector::class,
-        StringClassNameToClassConstantRector::class,
-        UnnecessaryTernaryExpressionRector::class,
-        UseClassKeywordForClassNameResolutionRector::class,
+        // ClassOnObjectRector::class,
+        // DisallowedEmptyRuleFixerRector::class,
+        // EncapsedStringsToSprintfRector::class,
+        // NullToStrictStringFuncCallArgRector::class,
+        // RemoveExtraParametersRector::class,
+        // SensitiveHereNowDocRector::class,
+        // StringClassNameToClassConstantRector::class,
+        // UnnecessaryTernaryExpressionRector::class,
+        // UseClassKeywordForClassNameResolutionRector::class,
     ])
     ->withRootFiles()
     // ->withPhpSets()
@@ -44,5 +44,5 @@ return RectorConfig::configure()
         // instanceOf: false,
         // naming: false,
         // privatization: false,
-        // typeDeclarations: true
+        typeDeclarations: true
     );

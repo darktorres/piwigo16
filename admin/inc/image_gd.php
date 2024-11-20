@@ -17,12 +17,13 @@ use Piwigo\inc\functions;
 
 class image_gd implements imageInterface
 {
-    public $image;
+    public bool|\GdImage $image;
 
-    public $quality = 95;
+    public int $quality = 95;
 
-    public function __construct($source_filepath)
-    {
+    public function __construct(
+        string $source_filepath
+    ) {
         $gd_info = gd_info();
         $extension = strtolower(functions::get_extension($source_filepath));
 
@@ -40,18 +41,22 @@ class image_gd implements imageInterface
         }
     }
 
-    public function get_width()
+    public function get_width(): int
     {
         return imagesx($this->image);
     }
 
-    public function get_height()
+    public function get_height(): int
     {
         return imagesy($this->image);
     }
 
-    public function crop($width, $height, $x, $y)
-    {
+    public function crop(
+        int $width,
+        int $height,
+        int $x,
+        int $y
+    ): bool {
         $dest = imagecreatetruecolor($width, $height);
 
         imagealphablending($dest, false);
@@ -73,27 +78,31 @@ class image_gd implements imageInterface
         return $result;
     }
 
-    public function strip()
+    public function strip(): true
     {
         return true;
     }
 
-    public function rotate($rotation)
-    {
+    public function rotate(
+        int $rotation
+    ): true {
         $dest = imagerotate($this->image, $rotation, 0);
         imagedestroy($this->image);
         $this->image = $dest;
         return true;
     }
 
-    public function set_compression_quality($quality)
-    {
+    public function set_compression_quality(
+        int $quality
+    ): true {
         $this->quality = $quality;
         return true;
     }
 
-    public function resize($width, $height)
-    {
+    public function resize(
+        int $width,
+        int $height
+    ): bool {
         $dest = imagecreatetruecolor($width, $height);
 
         imagealphablending($dest, false);
@@ -115,14 +124,19 @@ class image_gd implements imageInterface
         return $result;
     }
 
-    public function sharpen($amount)
-    {
+    public function sharpen(
+        int $amount
+    ): bool {
         $m = pwg_image::get_sharpen_matrix($amount);
         return imageconvolution($this->image, $m, 1, 0);
     }
 
-    public function compose($overlay, $x, $y, $opacity)
-    {
+    public function compose(
+        pwg_image $overlay,
+        int $x,
+        int $y,
+        int $opacity
+    ): true {
         $ioverlay = $overlay->image->image;
         /* A replacement for php's imagecopymerge() function that supports the alpha channel
         See php bug #23815:  http://bugs.php.net/bug.php?id=23815 */
@@ -143,20 +157,21 @@ class image_gd implements imageInterface
         return true;
     }
 
-    public function write($destination_filepath)
-    {
+    public function write(
+        string $destination_filepath
+    ): bool {
         $extension = strtolower(functions::get_extension($destination_filepath));
 
         if ($extension == 'png') {
-            imagepng($this->image, $destination_filepath);
+            return imagepng($this->image, $destination_filepath);
         } elseif ($extension == 'gif') {
-            imagegif($this->image, $destination_filepath);
-        } else {
-            imagejpeg($this->image, $destination_filepath, $this->quality);
+            return imagegif($this->image, $destination_filepath);
         }
+
+        return imagejpeg($this->image, $destination_filepath, $this->quality);
     }
 
-    public function destroy()
+    public function destroy(): void
     {
         imagedestroy($this->image);
     }

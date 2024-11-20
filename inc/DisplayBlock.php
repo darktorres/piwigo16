@@ -14,74 +14,43 @@ namespace Piwigo\inc;
  */
 class DisplayBlock
 {
-    /**
-     * @var mixed
-     */
-    public $data = [];
+    public array $data = [];
 
-    /**
-     * @var string
-     */
-    public $template;
+    public string $template;
 
-    /**
-     * @var string
-     */
-    public $raw_content;
+    public string $raw_content;
 
-    public $id;
+    public string|int|null $id;
 
-    /**
-     * @var RegisteredBlock
-     */
-    protected $_registeredBlock;
+    protected RegisteredBlock $_registeredBlock;
 
-    /**
-     * @var int
-     */
-    protected $_position;
+    protected int $_position;
 
-    /**
-     * @var string
-     */
-    protected $_title;
+    protected string $_title;
 
-    /**
-     * @param RegisteredBlock $block
-     */
-    public function __construct($block)
-    {
+    public function __construct(
+        RegisteredBlock $block
+    ) {
         $this->_registeredBlock = $block;
     }
 
-    /**
-     * @return RegisteredBlock
-     */
-    public function get_block()
+    public function get_block(): RegisteredBlock
     {
         return $this->_registeredBlock;
     }
 
-    /**
-     * @return int
-     */
-    public function get_position()
+    public function get_position(): int
     {
         return $this->_position;
     }
 
-    /**
-     * @param int $position
-     */
-    public function set_position($position)
-    {
+    public function set_position(
+        int $position
+    ): void {
         $this->_position = $position;
     }
 
-    /**
-     * @return string
-     */
-    public function get_title()
+    public function get_title(): string
     {
         if (isset($this->_title)) {
             return $this->_title;
@@ -90,11 +59,9 @@ class DisplayBlock
         return $this->_registeredBlock->get_name();
     }
 
-    /**
-     * @param string $title
-     */
-    public function set_title($title)
-    {
+    public function set_title(
+        string $title
+    ): void {
         $this->_title = $title;
     }
 }

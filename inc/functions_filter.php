@@ -13,11 +13,10 @@ class functions_filter
 {
     /**
      * Updates data of categories with filtered values
-     *
-     * @param array $cats
      */
-    public static function update_cats_with_filtered_data(&$cats)
-    {
+    public static function update_cats_with_filtered_data(
+        array &$cats
+    ): void {
         global $filter;
 
         if ($filter['enabled']) {

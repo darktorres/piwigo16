@@ -12,14 +12,15 @@ namespace Piwigo\inc;
 use Closure;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Smarty;
+use Smarty_Internal_Template;
 use SmartyException;
 
 set_error_handler(function (
-    $errno,
-    $errstr,
-    $errfile,
-    $errline
-) {
+    int $errno,
+    string $errstr,
+    string $errfile,
+    int $errline
+): bool {
     // Define error types and corresponding prefixes
     $error_types = [
         E_ERROR => 'error',
@@ -60,79 +61,61 @@ define('BUTTONS_RANK_NEUTRAL', 50);
  */
 class Template
 {
-    /**
-     * @const string
-     */
-    public const COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
+    public const string COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
+
+    public const string COMBINED_CSS_TAG = '<!-- COMBINED_CSS -->';
+
+    public Smarty $smarty;
+
+    public string $output = '';
 
     /**
-     * @const string
+     * @var array<string> - Hash of filenames for each template handle.
      */
-    public const COMBINED_CSS_TAG = '<!-- COMBINED_CSS -->';
+    public array $files = [];
 
     /**
-     * @var Smarty
+     * @var array<string> - Template extents filenames for each template handle.
      */
-    public $smarty;
+    public array $extents = [];
 
     /**
-     * @var string
+     * Templates prefilter from external sources (plugins)
      */
-    public $output = '';
+    public array $external_filters = [];
 
     /**
-     * @var string[] - Hash of filenames for each template handle.
+     * Content to add before </head> tag
      */
-    public $files = [];
+    public array $html_head_elements = [];
+
+    public ScriptLoader $scriptLoader;
+
+    public CssLoader $cssLoader;
 
     /**
-     * @var string[] - Template extents filenames for each template handle.
+     * Runtime buttons on picture page
      */
-    public $extents = [];
+    public array $picture_buttons = [];
 
     /**
-     * @var array - Templates prefilter from external sources (plugins)
+     * Runtime buttons on index page
      */
-    public $external_filters = [];
+    public array $index_buttons = [];
 
     /**
-     * @var string - Content to add before </head> tag
+     * Runtime CSS rules
      */
-    public $html_head_elements = [];
+    private string $html_style = '';
 
     /**
-     * @var ScriptLoader
-     */
-    public $scriptLoader;
-
-    /**
-     * @var CssLoader
-     */
-    public $cssLoader;
-
-    /**
-     * @var array - Runtime buttons on picture page
-     */
-    public $picture_buttons = [];
-
-    /**
-     * @var array - Runtime buttons on index page
-     */
-    public $index_buttons = [];
-
-    /**
-     * @var string - Runtime CSS rules
-     */
-    private $html_style = '';
-
-    /**
-     * @param string $root
-     * @param string $theme
-     * @param string $path
      * @throws SmartyException
      */
-    public function __construct($root = '.', $theme = '', $path = 'template')
-    {
+    public function __construct(
+        string $root = '.',
+        string $theme = '',
+        string $path = 'template'
+    ) {
         global $conf, $lang_info;
 
         SmartyException::$escape = false;
@@ -258,15 +241,15 @@ class Template
 
     /**
      * Loads theme's parameters.
-     *
-     * @param string $root
-     * @param string $theme
-     * @param string $path
-     * @param bool $load_css
-     * @param bool $load_local_head
      */
-    public function set_theme($root, $theme, $path, $load_css = true, $load_local_head = true, $colorscheme = 'dark')
-    {
+    public function set_theme(
+        string $root,
+        string $theme,
+        string $path,
+        bool $load_css = true,
+        bool $load_local_head = true,
+        string $colorscheme = 'dark'
+    ): void {
         $this->set_template_dir($root . '/' . $theme . '/' . $path);
 
         $themeconf = $this->load_themeconf($root . '/' . $theme);
@@ -307,11 +290,10 @@ class Template
     /**
      * Adds template directory for this Template object.
      * Also set compile id if not exists.
-     *
-     * @param string $dir
      */
-    public function set_template_dir($dir)
-    {
+    public function set_template_dir(
+        string $dir
+    ): void {
         $this->smarty->addTemplateDir($dir);
 
         if (! isset($this->smarty->compile_id)) {
@@ -323,10 +305,8 @@ class Template
 
     /**
      * Gets the template root directory for this Template object.
-     *
-     * @return string
      */
-    public function get_template_dir()
+    public function get_template_dir(): array|string
     {
         return $this->smarty->getTemplateDir();
     }
@@ -334,7 +314,7 @@ class Template
     /**
      * Deletes all compiled templates.
      */
-    public function delete_compiled_templates()
+    public function delete_compiled_templates(): void
     {
         $save_compile_id = $this->smarty->compile_id;
         $this->smarty->compile_id = null;
@@ -345,25 +325,21 @@ class Template
 
     /**
      * Returns theme's parameter.
-     *
-     * @param string $val
-     * @return mixed
      */
-    public function get_themeconf($val)
-    {
+    public function get_themeconf(
+        string $val
+    ): array|bool|string {
         $tc = $this->smarty->getTemplateVars('themeconf');
         return isset($tc[$val]) ? $tc[$val] : '';
     }
 
     /**
      * Sets the template filename for handle.
-     *
-     * @param string $handle
-     * @param string $filename
-     * @return bool
      */
-    public function set_filename($handle, $filename)
-    {
+    public function set_filename(
+        string $handle,
+        string $filename
+    ): bool {
         return $this->set_filenames([
             $handle => $filename,
         ]);
@@ -372,11 +348,11 @@ class Template
     /**
      * Sets the template filenames for handles.
      *
-     * @param string[] $filename_array hashmap of handle=>filename
-     * @return true
+     * @param array<string, string> $filename_array hashmap of handle=>filename
      */
-    public function set_filenames($filename_array)
-    {
+    public function set_filenames(
+        array $filename_array
+    ): bool {
         if (! is_array($filename_array)) {
             return false;
         }
@@ -396,16 +372,14 @@ class Template
 
     /**
      * Sets template extension filename for handles.
-     *
-     * @param string $filename
-     * @param mixed $param
-     * @param string $dir
-     * @param bool $overwrite
-     * @param string $theme
-     * @return bool
      */
-    public function set_extent($filename, $param, $dir = '', $overwrite = true, $theme = 'N/A')
-    {
+    public function set_extent(
+        string $filename,
+        string|array $param,
+        string $dir = '',
+        bool $overwrite = true,
+        string $theme = 'N/A'
+    ): bool {
         return $this->set_extents([
             $filename => $param,
         ], $dir, $overwrite);
@@ -414,14 +388,14 @@ class Template
     /**
      * Sets template extensions filenames for handles.
      *
-     * @param string[] $filename_array hashmap of handle=>filename
-     * @param string $dir
-     * @param bool $overwrite
-     * @param string $theme
-     * @return bool
+     * @param array<string> $filename_array hashmap of handle=>filename
      */
-    public function set_extents($filename_array, $dir = '', $overwrite = true, $theme = 'N/A')
-    {
+    public function set_extents(
+        array $filename_array,
+        string $dir = '',
+        bool $overwrite = true,
+        string $theme = 'N/A'
+    ): bool {
         if (! is_array($filename_array)) {
             return false;
         }
@@ -455,11 +429,11 @@ class Template
      * Returns template extension if exists.
      *
      * @param string $filename should be empty!
-     * @param string $handle
-     * @return string
      */
-    public function get_extent($filename = '', $handle = '')
-    {
+    public function get_extent(
+        string $filename = '',
+        string $handle = ''
+    ): string {
         if (isset($this->extents[$handle])) {
             $filename = $this->extents[$handle];
         }
@@ -473,10 +447,11 @@ class Template
      *
      * @param string|array $tpl_var can be a var name or a hashmap of variables
      *    (in this case, do not use the _$value_ parameter)
-     * @param mixed $value
      */
-    public function assign($tpl_var, $value = null)
-    {
+    public function assign(
+        string|array $tpl_var,
+        array|bool|string|int|float|null|object $value = null
+    ): void {
         $this->smarty->assign($tpl_var, $value);
     }
 
@@ -484,14 +459,12 @@ class Template
      * Defines _$varname_ as the compiled result of _$handle_.
      * This can be used to effectively include a template in another template.
      * This is equivalent to assign($varname, $this->parse($handle, true)).
-     *
-     * @param string $varname
-     * @param string $handle
-     * @return true
      * @throws SmartyException
      */
-    public function assign_var_from_handle($varname, $handle)
-    {
+    public function assign_var_from_handle(
+        string $varname,
+        string $handle
+    ): bool {
         $this->assign($varname, $this->parse($handle, true));
         return true;
     }
@@ -499,24 +472,22 @@ class Template
     /**
      * Appends a new value in a template array variable, the variable is created if needed.
      * @see http://www.smarty.net/manual/en/api.append.php
-     *
-     * @param string $tpl_var
-     * @param mixed $value
-     * @param bool $merge
      */
-    public function append($tpl_var, $value = null, $merge = false)
-    {
+    public function append(
+        string $tpl_var,
+        array|string|null $value = null,
+        bool $merge = false
+    ): void {
         $this->smarty->append($tpl_var, $value, $merge);
     }
 
     /**
      * Performs a string concatenation.
-     *
-     * @param string $tpl_var
-     * @param string $value
      */
-    public function concat($tpl_var, $value)
-    {
+    public function concat(
+        string $tpl_var,
+        string $value
+    ): void {
         $this->assign(
             $tpl_var,
             $this->smarty->getTemplateVars($tpl_var) . $value
@@ -526,36 +497,32 @@ class Template
     /**
      * Removes an assigned template variable.
      * @see http://www.smarty.net/manual/en/api.clear_assign.php
-     *
-     * @param string $tpl_var
      */
-    public function clear_assign($tpl_var)
-    {
+    public function clear_assign(
+        array|string $tpl_var
+    ): void {
         $this->smarty->clearAssign($tpl_var);
     }
 
     /**
      * Returns an assigned template variable.
      * @see http://www.smarty.net/manual/en/api.get_template_vars.php
-     *
-     * @param string $tpl_var
      */
-    public function get_template_vars($tpl_var = null)
-    {
+    public function get_template_vars(
+        ?string $tpl_var = null
+    ): array|string|int|float|bool|null|object {
         return $this->smarty->getTemplateVars($tpl_var);
     }
 
     /**
      * Loads the template file of the handle, compiles it and appends the result to the output
      * (or returns it if _$return_ is true).
-     *
-     * @param string $handle
-     * @param bool $return
-     * @return null|string
      * @throws SmartyException
      */
-    public function parse($handle, $return = false)
-    {
+    public function parse(
+        string $handle,
+        bool $return = false
+    ): ?string {
         if (! isset($this->files[$handle])) {
             functions_html::fatal_error("Template->parse(): Couldn't load template file for handle {$handle}");
         }
@@ -583,17 +550,18 @@ class Template
         }
 
         $this->output .= $v;
+
+        return null;
     }
 
     /**
      * Loads the template file of the handle, compiles it and appends the result to the output,
      * then sends the output to the browser.
-     *
-     * @param string $handle
      * @throws SmartyException
      */
-    public function pparse($handle)
-    {
+    public function pparse(
+        string $handle
+    ): void {
         $this->parse($handle, false);
         $this->flush();
     }
@@ -601,7 +569,7 @@ class Template
     /**
      * Load and compile JS & CSS into the template and sends the output to the browser.
      */
-    public function flush()
+    public function flush(): void
     {
         if (! $this->scriptLoader->did_head()) {
             $pos = strpos($this->output, self::COMBINED_SCRIPTS_TAG);
@@ -690,7 +658,7 @@ class Template
      * Same as flush() but with optional debugging.
      * @see Template::flush()
      */
-    public function p()
+    public function p(): void
     {
         $this->flush();
 
@@ -707,12 +675,10 @@ class Template
 
     /**
      * Eval a temp string to retrieve the original PHP value.
-     *
-     * @param string $str
-     * @return mixed
      */
-    public static function get_php_str_val($str)
-    {
+    public static function get_php_str_val(
+        string $str
+    ): string|null {
         if (is_string($str) &&
             strlen($str) > 1
         ) {
@@ -733,12 +699,10 @@ class Template
      *    - {'Comment'|translate}
      *    - {'%d comments'|translate:$count}
      * @see l10n()
-     *
-     * @param array $params
-     * @return string
      */
-    public static function modcompiler_translate($params)
-    {
+    public static function modcompiler_translate(
+        array $params
+    ): string {
         global $conf, $lang;
 
         switch (count($params)) {
@@ -771,12 +735,10 @@ class Template
      * Usage :
      *    - {$count|translate_dec:'%d comment':'%d comments'}
      * @see l10n_dec()
-     *
-     * @param array $params
-     * @return string
      */
-    public static function modcompiler_translate_dec($params)
-    {
+    public static function modcompiler_translate_dec(
+        array $params
+    ): string {
         global $conf, $lang, $lang_info;
 
         if ($conf['compiled_template_cache_language']) {
@@ -804,13 +766,11 @@ class Template
      * "explode" variable modifier.
      * Usage :
      *    - {assign var=valueExploded value=$value|explode:','}
-     *
-     * @param string $text
-     * @param string $delimiter
-     * @return array
      */
-    public static function mod_explode($text, $delimiter = ',')
-    {
+    public static function mod_explode(
+        string $text,
+        string $delimiter = ','
+    ): array {
         return explode($delimiter, $text);
     }
 
@@ -818,14 +778,12 @@ class Template
      * ternary variable modifier.
      * Usage :
      *    - {$variable|ternary:'yes':'no'}
-     *
-     * @param mixed $param
-     * @param mixed $true
-     * @param mixed $false
-     * @return mixed
      */
-    public static function mod_ternary($param, $true, $false)
-    {
+    public static function mod_ternary(
+        bool|int|float|string|array|null $param,
+        bool|int|float|string|array|null $true,
+        bool|int|float|string|array|null $false
+    ): bool|int|float|string|array|null {
         return $param ? $true : $false;
     }
 
@@ -833,11 +791,12 @@ class Template
      * The "html_head" block allows to add content just before
      * </head> element in the output after the head has been parsed.
      *
-     * @param array $params (unused)
-     * @param string $content
+     * @param ?array $params (unused)
      */
-    public function block_html_head($params, $content)
-    {
+    public function block_html_head(
+        ?array $params,
+        ?string $content
+    ): void {
         $content = isset($content) ? trim($content) : '';
 
         if (! empty($content)) { // second call
@@ -849,11 +808,12 @@ class Template
      * The "html_style" block allows to add CSS juste before
      * </head> element in the output after the head has been parsed.
      *
-     * @param array $params (unused)
-     * @param string $content
+     * @param ?array $params (unused)
      */
-    public function block_html_style($params, $content)
-    {
+    public function block_html_style(
+        ?array $params,
+        ?string $content
+    ): void {
         $content = isset($content) ? trim($content) : '';
 
         if (! empty($content)) { // second call
@@ -875,10 +835,11 @@ class Template
      *     min_height?: mixed,
      *     min_width: mixed,
      * } $params
-     * @param Smarty $smarty
      */
-    public function func_define_derivative($params, $smarty)
-    {
+    public function func_define_derivative(
+        array $params,
+        Smarty $smarty
+    ): void {
         if (empty($params['name'])) {
             functions_html::fatal_error('define_derivative missing name');
         }
@@ -941,8 +902,9 @@ class Template
      *     template: mixed,
      * } $params
      */
-    public function func_combine_script($params)
-    {
+    public function func_combine_script(
+        array $params
+    ): void {
         if (! isset($params['id'])) {
             trigger_error("combine_script: missing 'id' parameter", E_USER_ERROR);
         }
@@ -983,8 +945,9 @@ class Template
      * } $params
      * @throws SmartyException
      */
-    public function func_get_combined_scripts($params)
-    {
+    public function func_get_combined_scripts(
+        array $params
+    ): string {
         if (! isset($params['load'])) {
             trigger_error("get_combined_scripts: missing 'load' parameter", E_USER_ERROR);
         }
@@ -1033,13 +996,14 @@ class Template
     /**
      * The "footer_script" block allows to add runtime script in the HTML page.
      *
-     * @param array{
+     * @param ?array{
      *     require?: mixed,
      * } $params
-     * @param string $content
      */
-    public function block_footer_script($params, $content)
-    {
+    public function block_footer_script(
+        ?array $params,
+        ?string $content
+    ): void {
         $content = isset($content) ? trim($content) : '';
 
         if (! empty($content)) { // second call
@@ -1055,15 +1019,16 @@ class Template
      * The engine will combine several css files into a single one.
      *
      * @param array{
-     *     id?: mixed,
-     *     path: mixed,
-     *     version?: mixed,
-     *     order?: mixed,
-     *     template?: mixed,
+     *     id?: string,
+     *     path: string,
+     *     version?: int,
+     *     order?: int,
+     *     template?: bool,
      * } $params
      */
-    public function func_combine_css($params)
-    {
+    public function func_combine_css(
+        array $params
+    ): void {
         if (empty($params['path'])) {
             functions_html::fatal_error('combine_css missing path');
         }
@@ -1081,8 +1046,9 @@ class Template
      *
      * @param array $params (unused)
      */
-    public function func_get_combined_css($params)
-    {
+    public function func_get_combined_css(
+        array $params
+    ): string {
         return self::COMBINED_CSS_TAG;
     }
 
@@ -1091,13 +1057,12 @@ class Template
      * source before compilation and without changing core files.
      * They will be processed by weight ascending.
      * @see http://www.smarty.net/manual/en/advanced.features.prefilters.php
-     *
-     * @param string $handle
-     * @param callable $callback
-     * @param int $weight
      */
-    public function set_prefilter($handle, $callback, $weight = 50)
-    {
+    public function set_prefilter(
+        string $handle,
+        callable $callback,
+        int $weight = 50
+    ): void {
         $this->external_filters[$handle][$weight][] = ['pre', $callback];
         ksort($this->external_filters[$handle]);
     }
@@ -1106,13 +1071,12 @@ class Template
      * Declares a Smarty postfilter.
      * They will be processed by weight ascending.
      * @see http://www.smarty.net/manual/en/advanced.features.postfilters.php
-     *
-     * @param string $handle
-     * @param callable $callback
-     * @param int $weight
      */
-    public function set_postfilter($handle, $callback, $weight = 50)
-    {
+    public function set_postfilter(
+        string $handle,
+        callable $callback,
+        int $weight = 50
+    ): void {
         $this->external_filters[$handle][$weight][] = ['post', $callback];
         ksort($this->external_filters[$handle]);
     }
@@ -1121,25 +1085,23 @@ class Template
      * Declares a Smarty outputfilter.
      * They will be processed by weight ascending.
      * @see http://www.smarty.net/manual/en/advanced.features.outputfilters.php
-     *
-     * @param string $handle
-     * @param callable $callback
-     * @param int $weight
      */
-    public function set_outputfilter($handle, $callback, $weight = 50)
-    {
+    public function set_outputfilter(
+        string $handle,
+        callable $callback,
+        int $weight = 50
+    ): void {
         $this->external_filters[$handle][$weight][] = ['output', $callback];
         ksort($this->external_filters[$handle]);
     }
 
     /**
      * Register the filters for the tpl file.
-     *
-     * @param string $handle
      * @throws SmartyException
      */
-    public function load_external_filters($handle)
-    {
+    public function load_external_filters(
+        string $handle
+    ): void {
         if (isset($this->external_filters[$handle])) {
             $compile_id = '';
 
@@ -1166,11 +1128,10 @@ class Template
 
     /**
      * Unregister the filters for the tpl file.
-     *
-     * @param string $handle
      */
-    public function unload_external_filters($handle)
-    {
+    public function unload_external_filters(
+        string $handle
+    ): void {
         if (isset($this->external_filters[$handle])) {
             foreach ($this->external_filters[$handle] as $filters) {
                 foreach ($filters as $filter) {
@@ -1183,13 +1144,11 @@ class Template
 
     /**
      * @todo : description of Template::prefilter_white_space
-     *
-     * @param string $source
-     * @param Smarty $smarty
-     * @return string
      */
-    public static function prefilter_white_space($source, $smarty)
-    {
+    public static function prefilter_white_space(
+        string $source,
+        Smarty_Internal_Template $smarty
+    ): string|null {
         $ld = $smarty->left_delimiter;
         $rd = $smarty->right_delimiter;
         $ldq = preg_quote($ld, '#');
@@ -1215,17 +1174,15 @@ class Template
 
     /**
      * Postfilter used when $conf['compiled_template_cache_language'] is true.
-     *
-     * @param string $source
-     * @param Smarty $smarty
-     * @return string
      */
-    public static function postfilter_language($source, $smarty)
-    {
+    public static function postfilter_language(
+        string $source,
+        Smarty_Internal_Template $smarty
+    ): string|null {
         // replaces echo PHP_STRING_LITERAL; with the string literal value
         $source = preg_replace_callback(
             '/\\<\\?php echo ((?:\'(?:(?:\\\\.)|[^\'])*\')|(?:"(?:(?:\\\\.)|[^"])*"));\\?\\>\\n/',
-            function ($matches) {
+            function (array $matches): string {
                 eval('$tmp=' . $matches[1] . ';');
                 return $tmp;
             },
@@ -1236,13 +1193,11 @@ class Template
 
     /**
      * Prefilter used to add theme local CSS files.
-     *
-     * @param string $source
-     * @param Smarty $smarty
-     * @return string
      */
-    public static function prefilter_local_css($source, $smarty)
-    {
+    public static function prefilter_local_css(
+        string $source,
+        Smarty_Internal_Template $smarty
+    ): string {
         $css = [];
 
         foreach ($smarty->getTemplateVars('themes') as $theme) {
@@ -1268,12 +1223,10 @@ class Template
 
     /**
      * Loads the configuration file from a theme directory and returns it.
-     *
-     * @param string $dir
-     * @return array
      */
-    public function load_themeconf($dir)
-    {
+    public function load_themeconf(
+        string $dir
+    ): array {
         global $themeconfs, $conf;
 
         $dir = realpath($dir);
@@ -1290,30 +1243,28 @@ class Template
 
     /**
      * Registers a button to be displayed on picture page.
-     *
-     * @param string $content
-     * @param int $rank
      */
-    public function add_picture_button($content, $rank = BUTTONS_RANK_NEUTRAL)
-    {
+    public function add_picture_button(
+        string $content,
+        int $rank = BUTTONS_RANK_NEUTRAL
+    ): void {
         $this->picture_buttons[$rank][] = $content;
     }
 
     /**
      * Registers a button to be displayed on index pages.
-     *
-     * @param string $content
-     * @param int $rank
      */
-    public function add_index_button($content, $rank = BUTTONS_RANK_NEUTRAL)
-    {
+    public function add_index_button(
+        string $content,
+        int $rank = BUTTONS_RANK_NEUTRAL
+    ): void {
         $this->index_buttons[$rank][] = $content;
     }
 
     /**
      * Assigns PLUGIN_PICTURE_BUTTONS template variable with registered picture buttons.
      */
-    public function parse_picture_buttons()
+    public function parse_picture_buttons(): void
     {
         if (! empty($this->picture_buttons)) {
             ksort($this->picture_buttons);
@@ -1338,7 +1289,7 @@ class Template
     /**
      * Assigns PLUGIN_INDEX_BUTTONS template variable with registered index buttons.
      */
-    public function parse_index_buttons()
+    public function parse_index_buttons(): void
     {
         if (! empty($this->index_buttons)) {
             ksort($this->index_buttons);
@@ -1362,12 +1313,10 @@ class Template
 
     /**
      * Returns clean relative URL to script file.
-     *
-     * @param Combinable $script
-     * @return string
      */
-    private static function make_script_src($script)
-    {
+    private static function make_script_src(
+        Combinable $script
+    ): string {
         $ret = '';
 
         if ($script->is_remote()) {

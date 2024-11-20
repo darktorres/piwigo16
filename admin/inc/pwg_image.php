@@ -19,16 +19,18 @@ use Piwigo\inc\functions_plugins;
 
 class pwg_image
 {
-    public $image;
+    public ?imageInterface $image = null;
 
-    public $library = '';
+    public bool|string $library = '';
 
-    public $source_filepath = '';
+    public string $source_filepath = '';
 
-    public static $ext_imagick_version = '';
+    public static string $ext_imagick_version = '';
 
-    public function __construct($source_filepath, $library = null)
-    {
+    public function __construct(
+        string $source_filepath,
+        ?string $library = null
+    ) {
         global $conf;
         $this->source_filepath = $source_filepath;
 
@@ -55,14 +57,24 @@ class pwg_image
     }
 
     // Unknown methods will be redirected to image object
-    public function __call($method, $arguments)
-    {
+    public function __call(
+        string $method,
+        array $arguments
+    ): bool|int|float|string|array|null {
         return call_user_func_array([$this->image, $method], $arguments);
     }
 
     // Piwigo resize function
-    public function pwg_resize($destination_filepath, $max_width, $max_height, $quality, $automatic_rotation = true, $strip_metadata = false, $crop = false, $follow_orientation = true)
-    {
+    public function pwg_resize(
+        string $destination_filepath,
+        int $max_width,
+        int $max_height,
+        int $quality,
+        bool $automatic_rotation = true,
+        bool $strip_metadata = false,
+        bool $crop = false,
+        bool $follow_orientation = true
+    ): array {
         $starttime = functions::get_moment();
 
         // width/height
@@ -110,8 +122,15 @@ class pwg_image
         return $this->get_resize_result($destination_filepath, $resize_dimensions['width'], $resize_dimensions['height'], $starttime);
     }
 
-    public static function get_resize_dimensions($width, $height, $max_width, $max_height, $rotation = null, $crop = false, $follow_orientation = true)
-    {
+    public static function get_resize_dimensions(
+        int $width,
+        int $height,
+        int $max_width,
+        int $max_height,
+        ?int $rotation = null,
+        bool $crop = false,
+        bool $follow_orientation = true
+    ): array {
         $rotate_for_dimensions = false;
 
         if (isset($rotation) and
@@ -189,8 +208,9 @@ class pwg_image
         return $result;
     }
 
-    public static function webp_info($source_filepath)
-    {
+    public static function webp_info(
+        string $source_filepath
+    ): array {
         // function based on https://stackoverflow.com/questions/61221874/detect-if-a-webp-image-is-transparent-in-php
         //
         // https://github.com/webmproject/libwebp/blob/master/src/dec/webp_dec.c
@@ -243,8 +263,9 @@ class pwg_image
         }
     }
 
-    public static function get_rotation_angle($source_filepath)
-    {
+    public static function get_rotation_angle(
+        string $source_filepath
+    ): ?int {
         list($width, $height, $type) = getimagesize($source_filepath);
 
         if ($type != IMAGETYPE_JPEG) {
@@ -284,31 +305,36 @@ class pwg_image
         return $rotation;
     }
 
-    public static function get_rotation_code_from_angle($rotation_angle)
-    {
+    public static function get_rotation_code_from_angle(
+        ?int $rotation_angle
+    ): int {
         switch ($rotation_angle) {
             case 0:   return 0;
             case 90:  return 1;
             case 180: return 2;
             case 270: return 3;
+            default:  return 0;
         }
     }
 
-    public static function get_rotation_angle_from_code($rotation_code)
-    {
+    public static function get_rotation_angle_from_code(
+        string $rotation_code
+    ): int {
         switch ($rotation_code % 4) {
-            case 0: return 0;
-            case 1: return 90;
-            case 2: return 180;
-            case 3: return 270;
+            case 0:  return 0;
+            case 1:  return 90;
+            case 2:  return 180;
+            case 3:  return 270;
+            default: return 0;
         }
     }
 
     /**
      * Returns a normalized convolution kernel for sharpening
      */
-    public static function get_sharpen_matrix($amount)
-    {
+    public static function get_sharpen_matrix(
+        int $amount
+    ): array {
         // Amount should be in the range of 48-10
         $amount = round(abs(-48 + ($amount * 0.38)), 2);
 
@@ -329,13 +355,13 @@ class pwg_image
         return $matrix;
     }
 
-    public static function is_imagick()
+    public static function is_imagick(): bool
     {
         return extension_loaded('imagick') and
                class_exists('Imagick');
     }
 
-    public static function is_ext_imagick()
+    public static function is_ext_imagick(): bool
     {
         global $conf;
 
@@ -359,18 +385,20 @@ class pwg_image
         return false;
     }
 
-    public static function is_gd()
+    public static function is_gd(): bool
     {
         return function_exists('gd_info');
     }
 
-    public static function is_vips()
+    public static function is_vips(): bool
     {
         return class_exists('\Piwigo\admin\inc\image_vips');
     }
 
-    public static function get_library($library = null, $extension = null)
-    {
+    public static function get_library(
+        ?string $library = null,
+        ?string $extension = null
+    ): bool|string {
         global $conf;
 
         if ($library === null) {
@@ -418,7 +446,7 @@ class pwg_image
         return false;
     }
 
-    public function destroy()
+    public function destroy(): bool|null
     {
         if (method_exists($this->image, 'destroy')) {
             return $this->image->destroy();
@@ -427,8 +455,12 @@ class pwg_image
         return true;
     }
 
-    private function get_resize_result($destination_filepath, $width, $height, $time = null)
-    {
+    private function get_resize_result(
+        string $destination_filepath,
+        int $width,
+        int $height,
+        int|float|null $time = null
+    ): array {
         return [
             'source' => $this->source_filepath,
             'destination' => $destination_filepath,

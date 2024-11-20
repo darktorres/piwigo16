@@ -16,23 +16,44 @@ namespace Piwigo\admin\inc;
 // Define all needed methods for image class
 interface imageInterface
 {
-    public function get_width();
+    public function get_width(): int;
 
-    public function get_height();
+    public function get_height(): int;
 
-    public function set_compression_quality($quality);
+    public function set_compression_quality(
+        int $quality
+    ): bool;
 
-    public function crop($width, $height, $x, $y);
+    public function crop(
+        int $width,
+        int $height,
+        int $x,
+        int $y
+    );
 
-    public function strip();
+    public function strip(): bool;
 
-    public function rotate($rotation);
+    public function rotate(
+        int $rotation
+    ): bool;
 
-    public function resize($width, $height);
+    public function resize(
+        int $width,
+        int $height
+    ): bool;
 
-    public function sharpen($amount);
+    public function sharpen(
+        int $amount
+    ): bool;
 
-    public function compose($overlay, $x, $y, $opacity);
+    public function compose(
+        pwg_image $overlay,
+        int $x,
+        int $y,
+        int $opacity
+    ): bool;
 
-    public function write($destination_filepath);
+    public function write(
+        string $destination_filepath
+    ): bool;
 }

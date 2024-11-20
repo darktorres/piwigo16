@@ -30,6 +30,7 @@ use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgNamedArray;
 use Piwigo\inc\PwgNamedStruct;
+use Piwigo\inc\PwgServer;
 use Piwigo\inc\ws_functions;
 use Random\RandomException;
 
@@ -41,12 +42,14 @@ class pwg_images
 
     /**
      * Sets associations of an image
-     * @param int $image_id
      * @param string $categories_string - "cat_id[,rank];cat_id[,rank]"
      * @param bool $replace_mode - removes old associations
      */
-    public static function ws_add_image_category_relations($image_id, $categories_string, $replace_mode = false)
-    {
+    public static function ws_add_image_category_relations(
+        int $image_id,
+        string $categories_string,
+        bool $replace_mode = false
+    ): bool|PwgError|null {
         // let's add links between the image and the categories
         //
         // $params['categories'] should look like 123,12;456,auto;789 which means:
@@ -180,16 +183,17 @@ class pwg_images
         );
 
         functions_admin::update_category($new_cat_ids);
+        return null;
     }
 
     /**
      * Merge chunks added by pwg.images.addChunk
-     * @param string $output_filepath
-     * @param string $original_sum
-     * @param string $type
      */
-    public static function merge_chunks($output_filepath, $original_sum, $type)
-    {
+    public static function merge_chunks(
+        string $output_filepath,
+        string $original_sum,
+        string $type
+    ): ?PwgError {
         global $conf, $logger;
 
         $logger->debug('[merge_chunks] input parameter $output_filepath : ' . $output_filepath);
@@ -243,11 +247,12 @@ class pwg_images
         if (function_exists('memory_get_usage')) {
             $logger->debug('[merge_chunks] memory_get_usage after loading chunks: ' . memory_get_usage());
         }
+
+        return null;
     }
 
     /**
      * Deletes chunks added with pwg.images.addChunk
-     * @param string $original_sum
      * @param string $type
      *
      * Function introduced for Piwigo 2.4 and the new "multiple size"
@@ -257,8 +262,10 @@ class pwg_images
      * will be the biggest (we could remove the thumb, but let's use the same
      * algorithm)
      */
-    public static function remove_chunks($original_sum, $type)
-    {
+    public static function remove_chunks(
+        string $original_sum,
+        string $type
+    ): void {
         global $conf;
 
         $upload_dir = $conf['upload_dir'] . '/buffer';
@@ -296,8 +303,10 @@ class pwg_images
      * } $params
      * @throws Exception
      */
-    public static function ws_images_addComment($params, $service)
-    {
+    public static function ws_images_addComment(
+        array $params,
+        PwgServer $service
+    ): PwgError|array {
         $sql_conditions = functions_user::get_sql_condition_FandF(
             [
                 'forbidden_categories' => 'id',
@@ -354,13 +363,15 @@ class pwg_images
      * API method
      * Returns detailed information for an element
      * @param array{
-     *     image_id: int,
+     *     image_id: int|string,
      *     comments_page: int,
      *     comments_per_page: int,
      * } $params
      */
-    public static function ws_images_getInfo($params, $service)
-    {
+    public static function ws_images_getInfo(
+        array $params,
+        PwgServer $service
+    ): array|PwgError {
         global $user, $conf;
 
         $sql_conditions = functions_user::get_sql_condition_FandF(
@@ -593,8 +604,10 @@ class pwg_images
      *     rate: float,
      * } $params
      */
-    public static function ws_images_rate($params, $service)
-    {
+    public static function ws_images_rate(
+        array $params,
+        PwgServer $service
+    ): PwgError|array {
         $sql_conditions = functions_user::get_sql_condition_FandF(
             [
                 'forbidden_categories' => 'category_id',
@@ -635,8 +648,10 @@ class pwg_images
      *     order?: string,
      * } $params
      */
-    public static function ws_images_search($params, $service)
-    {
+    public static function ws_images_search(
+        array $params,
+        PwgServer $service
+    ): array {
         $images = [];
         $where_clauses = ws_functions::ws_std_image_sql_filter($params, 'i.');
         $order_by = ws_functions::ws_std_image_sql_order($params, 'i.');
@@ -722,18 +737,20 @@ class pwg_images
      *     allwords: mixed,
      *     allwords_mode: mixed,
      *     allwords_fields: mixed,
-     *     tags: mixed,
+     *     tags: array,
      *     tags_mode: mixed,
-     *     categories: mixed,
-     *     categories_withsubs: mixed,
-     *     filetypes: mixed,
-     *     added_by: mixed,
+     *     categories: array<int>,
+     *     categories_withsubs: bool,
+     *     filetypes: array,
+     *     added_by: array,
      *     date_posted: mixed,
-     *     authors: mixed,
+     *     authors: array,
      * } $params
      */
-    public static function ws_images_filteredSearch_create($params, $service)
-    {
+    public static function ws_images_filteredSearch_create(
+        array $params,
+        PwgServer $service
+    ): PwgError|array {
         global $user;
 
         // * check the search exists
@@ -871,12 +888,14 @@ class pwg_images
      * API method
      * Sets the level of an image
      * @param array{
-     *     image_id: int,
+     *     image_id: array<int>,
      *     level: int,
      * } $params
      */
-    public static function ws_images_setPrivacyLevel($params, $service)
-    {
+    public static function ws_images_setPrivacyLevel(
+        array $params,
+        PwgServer $service
+    ): int|string|PwgError {
         global $conf;
 
         if (! in_array($params['level'], $conf['available_permission_levels'])) {
@@ -906,13 +925,15 @@ class pwg_images
      * API method
      * Sets the rank of an image in a category
      * @param array{
-     *     image_id: int,
+     *     image_id: array<int>|int,
      *     category_id: int,
      *     rank: int,
      * } $params
      */
-    public static function ws_images_setRank($params, $service)
-    {
+    public static function ws_images_setRank(
+        array $params,
+        PwgServer $service
+    ): PwgError|array {
         if (count($params['image_id']) > 1) {
             functions_admin::save_images_order(
                 $params['category_id'],
@@ -1020,8 +1041,10 @@ class pwg_images
      * } $params
      *     type = 'file'
      */
-    public static function ws_images_add_chunk($params, $service)
-    {
+    public static function ws_images_add_chunk(
+        array $params,
+        PwgServer $service
+    ): ?PwgError {
         global $conf, $logger;
 
         foreach ($params as $param_key => $param_value) {
@@ -1063,20 +1086,24 @@ class pwg_images
                 'an error has occurred while writing chunk ' . $params['position'] . ' for ' . $params['type']
             );
         }
+
+        return null;
     }
 
     /**
      * API method
      * Adds a file
      * @param array{
-     *     image_id: int,
+     *     image_id: int|string,
      *     type: string,
      *     sum: string,
      * } $params
      *     type = 'file'
      */
-    public static function ws_images_addFile($params, $service)
-    {
+    public static function ws_images_addFile(
+        array $params,
+        PwgServer $service
+    ): bool|PwgError|null {
         global $conf, $logger;
 
         $logger->debug(__FUNCTION__, $params);
@@ -1142,6 +1169,8 @@ class pwg_images
             $params['image_id'],
             $image['md5sum'] // we force the md5sum to remain the same
         );
+
+        return null;
     }
 
     /**
@@ -1163,8 +1192,10 @@ class pwg_images
      *     tag_ids: mixed,
      * } $params
      */
-    public static function ws_images_add($params, $service)
-    {
+    public static function ws_images_add(
+        array $params,
+        PwgServer $service
+    ): PwgError|array {
         global $conf, $user, $logger;
 
         foreach ($params as $param_key => $param_value) {
@@ -1309,17 +1340,19 @@ class pwg_images
      * API method
      * Adds a image (simple way)
      * @param array{
-     *     category: int[],
+     *     category: array<int>,
      *     name?: string,
      *     author?: string,
      *     comment?: string,
      *     level: int,
-     *     tags: string|string[],
+     *     tags: string|array<string>,
      *     image_id?: int,
      * } $params
      */
-    public static function ws_images_addSimple($params, $service)
-    {
+    public static function ws_images_addSimple(
+        array $params,
+        PwgServer $service
+    ): PwgError|array {
         global $conf, $logger;
 
         if (! isset($_FILES['image'])) {
@@ -1466,19 +1499,21 @@ class pwg_images
      * API method
      * Adds a image (simple way)
      * @param array{
-     *     category: int[],
+     *     category: array<int>,
      *     name?: string,
      *     author?: string,
      *     comment?: string,
      *     level: int,
-     *     tags: string|string[],
+     *     tags: string|array<string>,
      *     image_id?: int,
      *     pwg_token: mixed,
      *     format_of: mixed,
      * } $params
      */
-    public static function ws_images_upload($params, $service)
-    {
+    public static function ws_images_upload(
+        array $params,
+        PwgServer $service
+    ): array|PwgError|null {
         global $conf;
 
         if (functions::get_pwg_token() != $params['pwg_token']) {
@@ -1653,6 +1688,8 @@ class pwg_images
                 ],
             ];
         }
+
+        return null;
     }
 
     /**
@@ -1665,7 +1702,7 @@ class pwg_images
      *     chunk_sum: string,
      *     chunks: int,
      *     original_sum: string,
-     *     category: int[],
+     *     category: array<int>,
      *     filename: string,
      *     name?: string,
      *     author?: string,
@@ -1673,11 +1710,13 @@ class pwg_images
      *     date_creation?: string,
      *     level: int,
      *     tag_ids?: string,
-     *     image_id?: int,
+     *     image_id?: int|string,
      * } $params
      */
-    public static function ws_images_uploadAsync($params, &$service)
-    {
+    public static function ws_images_uploadAsync(
+        array $params,
+        PwgServer &$service
+    ): array|bool|PwgError|string|null {
         global $conf, $user, $logger;
 
         // the username/password parameters have been used in inc/user.php
@@ -1940,8 +1979,10 @@ class pwg_images
      *     filename_list?: string,
      * } $params
      */
-    public static function ws_images_exist($params, $service)
-    {
+    public static function ws_images_exist(
+        array $params,
+        PwgServer $service
+    ): array {
         global $conf, $logger;
 
         $logger->debug(__FUNCTION__, $params);
@@ -2012,8 +2053,10 @@ class pwg_images
      *     filename_list: string,
      * } $params
      */
-    public static function ws_images_formats_searchImage($params, $service)
-    {
+    public static function ws_images_formats_searchImage(
+        array $params,
+        PwgServer $service
+    ): array {
         global $conf, $logger;
 
         $logger->debug(__FUNCTION__, $params);
@@ -2034,7 +2077,7 @@ class pwg_images
         }
 
         // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
-        usort($conf['format_ext'], function ($a, $b) {
+        usort($conf['format_ext'], function (string $a, string $b): int {
             return strlen($b) - strlen($a);
         });
 
@@ -2082,12 +2125,14 @@ class pwg_images
      * Remove a formats from the database and the file system
      *
      * @param array{
-     *     format_id: int,
+     *     format_id: array<int>|string,
      *     pwg_token: string,
      * } $params
      */
-    public static function ws_images_formats_delete($params, $service)
-    {
+    public static function ws_images_formats_delete(
+        array $params,
+        PwgServer $service
+    ): PwgError|bool {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -2194,8 +2239,10 @@ class pwg_images
      *     high_sum: mixed,
      * } $params
      */
-    public static function ws_images_checkFiles($params, $service)
-    {
+    public static function ws_images_checkFiles(
+        array $params,
+        PwgServer $service
+    ): PwgError|array {
         global $logger;
 
         $logger->debug(__FUNCTION__, $params);
@@ -2259,12 +2306,14 @@ class pwg_images
      *     level?: int,
      *     single_value_mode: string,
      *     multiple_value_mode: string,
-     *     pwg_token: mixed,
-     *     tag_ids: mixed,
+     *     pwg_token: string,
+     *     tag_ids: array|string,
      * } $params
      */
-    public static function ws_images_setInfo($params, $service)
-    {
+    public static function ws_images_setInfo(
+        array $params,
+        PwgServer $service
+    ): ?PwgError {
         global $conf;
 
         if (isset($params['pwg_token']) and
@@ -2393,18 +2442,21 @@ class pwg_images
         }
 
         functions_admin::invalidate_user_cache();
+        return null;
     }
 
     /**
      * API method
      * Deletes an image
      * @param array{
-     *     image_id: int|int[],
+     *     image_id: int|array<int>|string,
      *     pwg_token: string,
      * } $params
      */
-    public static function ws_images_delete($params, $service)
-    {
+    public static function ws_images_delete(
+        array $params,
+        PwgServer $service
+    ): PwgError|int {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -2437,10 +2489,11 @@ class pwg_images
     /**
      * API method
      * Checks if Piwigo is ready for upload
-     * @param array $params
      */
-    public static function ws_images_checkUpload($params, $service)
-    {
+    public static function ws_images_checkUpload(
+        array $params,
+        PwgServer $service
+    ): array {
         include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php');
 
         $ret['message'] = functions_upload::ready_for_upload_message();
@@ -2456,11 +2509,12 @@ class pwg_images
     /**
      * API method
      * Empties the lounge, where photos may wait before taking off.
-     * @param array $params
      * @throws RandomException
      */
-    public static function ws_images_emptyLounge($params, $service)
-    {
+    public static function ws_images_emptyLounge(
+        array $params,
+        PwgServer $service
+    ): array {
         $ret = [
             'rows' => functions_admin::empty_lounge(),
         ];
@@ -2471,11 +2525,12 @@ class pwg_images
     /**
      * API method
      * Empties the lounge, where photos may wait before taking off.
-     * @param array $params
      * @throws RandomException
      */
-    public static function ws_images_uploadCompleted($params, $service)
-    {
+    public static function ws_images_uploadCompleted(
+        array $params,
+        PwgServer $service
+    ): PwgError|array {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -2535,11 +2590,13 @@ class pwg_images
      * add md5sum at photos, by block. Returns how md5sum were added and how many are remaining.
      * @param array{
      *     block_size: int,
-     *     pwg_token: mixed,
+     *     pwg_token: string,
      * } $params
      */
-    public static function ws_images_setMd5sum($params, $service)
-    {
+    public static function ws_images_setMd5sum(
+        array $params,
+        PwgServer $service
+    ): PwgError|array {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -2562,12 +2619,14 @@ class pwg_images
      * API method
      * Synchronize metadatas photos. Returns how many metadatas were sync.
      * @param array{
-     *     image_id: int,
-     *     pwg_token: mixed,
+     *     image_id: array<int>,
+     *     pwg_token: string,
      * } $params
      */
-    public static function ws_images_syncMetadata($params, $service)
-    {
+    public static function ws_images_syncMetadata(
+        array $params,
+        PwgServer $service
+    ): PwgError|array {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -2596,11 +2655,13 @@ class pwg_images
      * Deletes orphan photos, by block. Returns how many orphans were deleted and how many are remaining.
      * @param array{
      *     block_size: int,
-     *     pwg_token: mixed,
+     *     pwg_token: string,
      * } $params
      */
-    public static function ws_images_deleteOrphans($params, $service)
-    {
+    public static function ws_images_deleteOrphans(
+        array $params,
+        PwgServer $service
+    ): PwgError|array {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -2619,14 +2680,16 @@ class pwg_images
      * Associate/Dissociate/Move photos with an album.
      *
      * @param array{
-     *     image_id: int[],
+     *     image_id: array<int>,
      *     category_id: int,
      *     action: string,
      *     pwg_token: string,
      * } $params
      */
-    public static function ws_images_setCategory($params, $service)
-    {
+    public static function ws_images_setCategory(
+        array $params,
+        PwgServer $service
+    ): ?PwgError {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -2652,5 +2715,6 @@ class pwg_images
         }
 
         functions_admin::invalidate_user_cache();
+        return null;
     }
 }

@@ -16,12 +16,12 @@ class functions_rate
     /**
      * Rate a picture by the current user.
      *
-     * @param int $image_id
-     * @param float $rate
-     * @return array as return by update_rating_score()
+     * @return false|array as return by update_rating_score()
      */
-    public static function rate_picture($image_id, $rate)
-    {
+    public static function rate_picture(
+        int $image_id,
+        float $rate
+    ): false|array {
         global $conf, $user;
 
         if (! isset($rate) or
@@ -111,11 +111,12 @@ class functions_rate
      *  C = average number of rates per item
      *  m = global average rate (all rates)
      *
-     * @param int|false $element_id if false applies to all
+     * @param false|int $element_id if false applies to all
      * @return array (score, average, count) values are null if $element_id is false
      */
-    public static function update_rating_score($element_id = false)
-    {
+    public static function update_rating_score(
+        false|int $element_id = false
+    ): array {
         $alt_result = functions_plugins::trigger_change('update_rating_score', false, $element_id);
 
         if ($alt_result !== false) {

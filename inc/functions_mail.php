@@ -13,6 +13,7 @@ use Exception;
 use InvalidArgumentException;
 use Pelago\Emogrifier\CssInliner;
 use PHPMailer\PHPMailer\PHPMailer;
+use Random\RandomException;
 use SmartyException;
 use Symfony\Component\CssSelector\Exception\ParseException;
 
@@ -20,10 +21,8 @@ class functions_mail
 {
     /**
      * Returns the name of the mail sender
-     *
-     * @return string
      */
-    public static function get_mail_sender_name()
+    public static function get_mail_sender_name(): string
     {
         global $conf;
 
@@ -32,10 +31,8 @@ class functions_mail
 
     /**
      * Returns the email of the mail sender
-     *
-     * @return string
      */
-    public static function get_mail_sender_email()
+    public static function get_mail_sender_email(): string
     {
         global $conf;
 
@@ -53,10 +50,8 @@ class functions_mail
      * - smtp_secure
      * - email_webmaster
      * - name_webmaster
-     *
-     * @return array
      */
-    public static function get_mail_configuration()
+    public static function get_mail_configuration(): array
     {
         global $conf;
 
@@ -81,13 +76,11 @@ class functions_mail
      * Can return either:
      *    - email@domain.com
      *    - name <email@domain.com>
-     *
-     * @param string $name
-     * @param string $email
-     * @return string
      */
-    public static function format_email($name, $email)
-    {
+    public static function format_email(
+        string $name,
+        string $email
+    ): string {
         $cvt_email = trim(preg_replace('#[\n\r]+#s', '', $email));
         $cvt_name = trim(preg_replace('#[\n\r]+#s', '', $name));
 
@@ -105,11 +98,12 @@ class functions_mail
     /**
      * Returns the email and the name from a formatted address.
      *
-     * @param string|string[] $input - if is an array must contain email[, name]
+     * @param string|array<string> $input - if is an array must contain email[, name]
      * @return array email, name
      */
-    public static function unformat_email($input)
-    {
+    public static function unformat_email(
+        array|string $input
+    ): array {
         if (is_array($input)) {
             if (! isset($input['name'])) {
                 $input['name'] = '';
@@ -139,11 +133,11 @@ class functions_mail
      *    - single hashmap (email[, name])
      *    - array of incomplete hashmaps
      *
-     * @param mixed $data
-     * @return string[][]
+     * @return array<array{email: string, name: string}>
      */
-    public static function get_clean_recipients_list($data)
-    {
+    public static function get_clean_recipients_list(
+        array|string $data
+    ): array {
         if (empty($data)) {
             return [];
         } elseif (is_array($data)) {
@@ -190,10 +184,10 @@ class functions_mail
      * @deprecated 2.6
      *
      * @param string $email_list - comma separated
-     * @return string
      */
-    public static function get_strict_email_list($email_list)
-    {
+    public static function get_strict_email_list(
+        string $email_list
+    ): string {
         $result = [];
         $list = explode(',', $email_list);
 
@@ -212,34 +206,31 @@ class functions_mail
      * Return an new mail template.
      *
      * @param string $email_format - text/html or text/plain
-     * @return Template
      * @throws SmartyException
      */
-    public static function &get_mail_template($email_format)
-    {
+    public static function &get_mail_template(
+        string $email_format
+    ): Template {
         $template = new Template(PHPWG_ROOT_PATH . 'themes', 'default', 'template/mail/' . $email_format);
         return $template;
     }
 
     /**
      * Return string email format (text/html or text/plain).
-     *
-     * @param bool $is_html
-     * @return string
      */
-    public static function get_str_email_format($is_html)
-    {
+    public static function get_str_email_format(
+        bool $is_html
+    ): string {
         return $is_html ? 'text/html' : 'text/plain';
     }
 
     /**
      * Switch language to specified language.
      * All entries are push on language stack
-     *
-     * @param string $language
      */
-    public static function switch_lang_to($language)
-    {
+    public static function switch_lang_to(
+        string $language
+    ): void {
         global $switch_lang, $user, $lang, $lang_info, $language_files;
 
         // explanation of switch_lang
@@ -311,7 +302,7 @@ class functions_mail
      * @see switch_lang_to()
      * Language files are not reloaded
      */
-    public static function switch_lang_back()
+    public static function switch_lang_back(): void
     {
         global $switch_lang, $user, $lang, $lang_info;
 
@@ -333,14 +324,15 @@ class functions_mail
      * Send a notification email to all administrators.
      * current user (if admin) is not notified
      *
-     * @param string|array $subject
-     * @param string|array $content
      * @param bool $send_technical_details - send user IP and browser
-     * @return bool
      * @throws Exception
      */
-    public static function pwg_mail_notification_admins($subject, $content, $send_technical_details = true, $group_id = null)
-    {
+    public static function pwg_mail_notification_admins(
+        array|string $subject,
+        array|string $content,
+        bool $send_technical_details = true,
+        string|null $group_id = null
+    ): bool {
         if (empty($subject) or
             empty($content)
         ) {
@@ -398,12 +390,16 @@ class functions_mail
      * current user (if admin) is excluded
      * @param array $args - as in pwg_mail()
      * @param array $tpl - as in pwg_mail()
-     * @return bool
      * @throws Exception
      * @see pwg_mail()
      */
-    public static function pwg_mail_admins($args = [], $tpl = [], $exclude_current_user = true, $only_webmasters = false, $group_id = null)
-    {
+    public static function pwg_mail_admins(
+        array $args = [],
+        array $tpl = [],
+        bool $exclude_current_user = true,
+        bool $only_webmasters = false,
+        ?string $group_id = null
+    ): bool {
         if (empty($args['content']) and
             empty($tpl)
         ) {
@@ -475,16 +471,17 @@ class functions_mail
 
     /**
      * Send an email to a group.
-     * @param int $group_id
      * @param array $args - as in pwg_mail()
      *       o language_selected: filters users of the group by language [default value empty]
      * @param array $tpl - as in pwg_mail()
-     * @return bool
-     * @throws Exception
+     * @throws RandomException
      * @see pwg_mail()
      */
-    public static function pwg_mail_group($group_id, $args = [], $tpl = [])
-    {
+    public static function pwg_mail_group(
+        int $group_id,
+        array $args = [],
+        array $tpl = []
+    ): bool|int {
         if (empty($group_id) or
            (empty($args['content']) and empty($tpl))
         ) {
@@ -576,7 +573,6 @@ class functions_mail
     /**
      * Sends an email, using Piwigo specific information.
      *
-     * @param string|array $to
      * @param array $args
      *       o from: sender [default value webmaster email]
      *       o Cc: array of carbon copy receivers of the mail. [default value empty]
@@ -594,11 +590,13 @@ class functions_mail
      *       o dirname (optional)
      *       o assign (optional)
      *
-     * @return bool
      * @throws Exception
      */
-    public static function pwg_mail($to, $args = [], $tpl = [])
-    {
+    public static function pwg_mail(
+        array|string $to,
+        array $args = [],
+        array $tpl = []
+    ): bool {
         global $conf, $conf_mail, $lang_info, $page;
 
         if (empty($to) and
@@ -895,8 +893,13 @@ class functions_mail
     /**
      * @deprecated 2.6
      */
-    public static function pwg_send_mail($result, $to, $subject, $content, $headers)
-    {
+    public static function pwg_send_mail(
+        bool $result,
+        array|string $to,
+        string $subject,
+        string $content,
+        array|string $headers
+    ): bool {
         if (functions_user::is_admin()) {
             trigger_error('pwg_send_mail function is deprecated', E_USER_NOTICE);
         }
@@ -914,25 +917,23 @@ class functions_mail
     /**
      * Moves CSS rules contained in the <style> tag to inline CSS.
      * Used for compatibility with Gmail and such clients
-     * @param string $content
-     * @return string
      * @throws InvalidArgumentException
      * @throws ParseException
      */
-    public static function move_css_to_body($content)
-    {
+    public static function move_css_to_body(
+        string $content
+    ): string {
         return CssInliner::fromHtml($content)->inlineCss()->render();
     }
 
     /**
      * Saves a copy of the mail if _data/tmp.
-     *
-     * @param bool $success
-     * @param PHPMailer $mail
-     * @param array $args
      */
-    public static function pwg_send_mail_test($success, $mail, $args)
-    {
+    public static function pwg_send_mail_test(
+        bool $success,
+        PHPMailer $mail,
+        array $args
+    ): void {
         global $conf, $user, $lang_info;
 
         $dir = PHPWG_ROOT_PATH . $conf['data_location'] . 'tmp';

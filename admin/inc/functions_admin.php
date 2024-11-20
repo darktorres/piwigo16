@@ -31,11 +31,10 @@ class functions_admin
 {
     /**
      * Deletes a site and call delete_categories for each primary category of the site
-     *
-     * @param int $id
      */
-    public static function delete_site($id)
-    {
+    public static function delete_site(
+        int $id
+    ): void {
         // destruction of the categories of the site
         $query = <<<SQL
             SELECT id
@@ -60,14 +59,15 @@ class functions_admin
      *    - all the links between elements and this category
      *    - all the restrictions linked to the category
      *
-     * @param int[] $ids
-     * @param string $photo_deletion_mode
+     * @param array<int> $ids
      *    - no_delete : delete no photo, may create orphans
      *    - delete_orphans : delete photos that are no longer linked to any category
      *    - force_delete : delete photos even if they are linked to another category
      */
-    public static function delete_categories($ids, $photo_deletion_mode = 'no_delete')
-    {
+    public static function delete_categories(
+        array $ids,
+        string $photo_deletion_mode = 'no_delete'
+    ): void {
         if (count($ids) == 0) {
             return;
         }
@@ -175,11 +175,12 @@ class functions_admin
     /**
      * Deletes all files (on disk) related to given image ids.
      *
-     * @param int[] $ids
-     * @return int[]|int image ids where files were successfully deleted
+     * @param array<int> $ids
+     * @return array<int>|int image ids where files were successfully deleted
      */
-    public static function delete_element_files($ids)
-    {
+    public static function delete_element_files(
+        array $ids
+    ): array|int {
         global $conf;
 
         if (count($ids) == 0) {
@@ -264,12 +265,13 @@ class functions_admin
      *    - all the favorites/rates associated to elements
      *    - removes elements from caddie
      *
-     * @param int[] $ids
-     * @param bool $physical_deletion
+     * @param array<int> $ids
      * @return int number of deleted elements
      */
-    public static function delete_elements($ids, $physical_deletion = false)
-    {
+    public static function delete_elements(
+        array $ids,
+        bool $physical_deletion = false
+    ): int {
         if (count($ids) == 0) {
             return 0;
         }
@@ -363,11 +365,10 @@ class functions_admin
      * Deletes an user.
      * It also deletes all related data (accesses, favorites, permissions, etc.)
      * @todo : accept array input
-     *
-     * @param int $user_id
      */
-    public static function delete_user($user_id)
-    {
+    public static function delete_user(
+        int $user_id
+    ): void {
         global $conf;
         $tables = [
             // destruction of the access linked to the user
@@ -416,7 +417,7 @@ class functions_admin
     /**
      * Deletes all tags linked to no photo
      */
-    public static function delete_orphan_tags()
+    public static function delete_orphan_tags(): void
     {
         $orphan_tags = self::get_orphan_tags();
 
@@ -434,7 +435,7 @@ class functions_admin
     /**
      * Get all tags (id + name) linked to no photo
      */
-    public static function get_orphan_tags()
+    public static function get_orphan_tags(): array
     {
         $query = <<<SQL
             SELECT id, name
@@ -450,10 +451,11 @@ class functions_admin
      * Verifies that the representative picture really exists in the db and
      * picks up a random representative if possible and based on config.
      *
-     * @param 'all'|int|int[] $ids
+     * @param string|int|array<int> $ids
      */
-    public static function update_category($ids = 'all')
-    {
+    public static function update_category(
+        string|int|array $ids = 'all'
+    ): ?bool {
         global $conf;
 
         if ($ids == 'all') {
@@ -509,13 +511,15 @@ class functions_admin
                 self::set_random_representative($to_rand);
             }
         }
+
+        return null;
     }
 
     /**
      * Checks and repairs image_category integrity.
      * Removes all entries from the table which correspond to a deleted image.
      */
-    public static function images_integrity()
+    public static function images_integrity(): void
     {
         $query = <<<SQL
             SELECT image_id
@@ -539,7 +543,7 @@ class functions_admin
      * Checks and repairs integrity on categories.
      * Removes all entries from related tables which correspond to a deleted category.
      */
-    public static function categories_integrity()
+    public static function categories_integrity(): void
     {
         $related_columns = [
             'image_category.category_id',
@@ -578,10 +582,12 @@ class functions_admin
      * are omitted.
      *
      * @param string $path (eg: ./galleries)
-     * @return string[]
+     * @return array<string>
      */
-    public static function get_fs_directories($path, $recursive = true)
-    {
+    public static function get_fs_directories(
+        string $path,
+        bool $recursive = true
+    ): array {
         global $conf;
 
         $dirs = [];
@@ -626,11 +632,10 @@ class functions_admin
      *
      * The list of ordered categories id is supposed to be in the same parent
      * category
-     *
-     * @param array $categories
      */
-    public static function save_categories_order($categories)
-    {
+    public static function save_categories_order(
+        array $categories
+    ): void {
         $current_rank_for_id_uppercat = [];
         $current_rank = 0;
 
@@ -670,7 +675,7 @@ class functions_admin
      * Orders categories (update categories.rank and global_rank database fields)
      * so that rank field are consecutive integers starting at 1 for each child.
      */
-    public static function update_global_rank()
+    public static function update_global_rank(): int
     {
         $query = <<<SQL
             SELECT id, id_uppercat, uppercats, `rank`, global_rank
@@ -705,7 +710,7 @@ class functions_admin
 
         $datas = [];
 
-        $cat_map_callback = function ($m) use ($cat_map) {  return $cat_map[$m[1]]['rank']; };
+        $cat_map_callback = function (array $m) use ($cat_map): int {  return $cat_map[$m[1]]['rank']; };
 
         foreach ($cat_map as $id => $cat) {
             $new_global_rank = preg_replace_callback(
@@ -741,12 +746,13 @@ class functions_admin
     /**
      * Change the **visible** property on a set of categories.
      *
-     * @param int[] $categories
-     * @param bool|string $value
-     * @param bool $unlock_child optional   default false
+     * @param array<int> $categories
      */
-    public static function set_cat_visible($categories, $value, $unlock_child = false)
-    {
+    public static function set_cat_visible(
+        array $categories,
+        bool|string $value,
+        bool $unlock_child = false
+    ): ?bool {
         $value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 
         if ($value === null) {
@@ -781,16 +787,19 @@ class functions_admin
                 SQL;
             functions_mysqli::pwg_query($query);
         }
+
+        return null;
     }
 
     /**
      * Change the **status** property on a set of categories : private or public.
      *
-     * @param int[] $categories
-     * @param string $value
+     * @param array<int> $categories
      */
-    public static function set_cat_status($categories, $value)
-    {
+    public static function set_cat_status(
+        array $categories,
+        string $value
+    ): ?bool {
         if (! in_array($value, ['public', 'private'])) {
             trigger_error("set_cat_status invalid param {$value}", E_USER_WARNING);
             return false;
@@ -945,16 +954,19 @@ class functions_admin
                 }
             }
         }
+
+        return null;
     }
 
     /**
      * Returns all uppercats category ids of the given category ids.
      *
-     * @param int[] $cat_ids
-     * @return int[]
+     * @param array<int> $cat_ids
+     * @return array<int>
      */
-    public static function get_uppercat_ids($cat_ids)
-    {
+    public static function get_uppercat_ids(
+        array $cat_ids
+    ): array {
         if (! is_array($cat_ids) or
             count($cat_ids) < 1
         ) {
@@ -983,8 +995,10 @@ class functions_admin
         return $uppercats;
     }
 
-    public static function get_category_representative_properties($image_id, $size = null)
-    {
+    public static function get_category_representative_properties(
+        string $image_id,
+        ?string $size = null
+    ): array {
         $query = <<<SQL
             SELECT id, representative_ext, path
             FROM images
@@ -1010,10 +1024,11 @@ class functions_admin
     /**
      * Set a new random representative to the categories.
      *
-     * @param int[] $categories
+     * @param array<int> $categories
      */
-    public static function set_random_representative($categories)
-    {
+    public static function set_random_representative(
+        array $categories
+    ): void {
         $datas = [];
 
         foreach ($categories as $category_id) {
@@ -1046,11 +1061,12 @@ class functions_admin
     /**
      * Returns the fulldir for each given category id.
      *
-     * @param int[] $cat_ids
-     * @return string[]
+     * @param array<int> $cat_ids
+     * @return array<string>
      */
-    public static function get_fulldirs($cat_ids)
-    {
+    public static function get_fulldirs(
+        array $cat_ids
+    ): array {
         if (count($cat_ids) == 0) {
             return [];
         }
@@ -1082,7 +1098,7 @@ class functions_admin
         $categories = functions_mysqli::query2array($query);
 
         // filling $cat_fulldirs
-        $cat_dirs_callback = function ($m) use ($cat_dirs) { return $cat_dirs[$m[1]]; };
+        $cat_dirs_callback = function (array $m) use ($cat_dirs): string { return $cat_dirs[$m[1]]; };
 
         $cat_fulldirs = [];
 
@@ -1105,13 +1121,11 @@ class functions_admin
      * Returns an array with all file system files according to $conf['file_ext']
      *
      * @deprecated 2.4
-     *
-     * @param string $path
-     * @param bool $recursive
-     * @return array
      */
-    public static function get_fs($path, $recursive = true)
-    {
+    public static function get_fs(
+        string $path,
+        bool $recursive = true
+    ): array {
         global $conf;
 
         // because isset is faster than in_array...
@@ -1195,7 +1209,7 @@ class functions_admin
      * base user must be present in child tables, users in child tables not
      * present in base table must be deleted.
      */
-    public static function sync_users()
+    public static function sync_users(): void
     {
         global $conf;
 
@@ -1254,7 +1268,7 @@ class functions_admin
     /**
      * Updates categories.uppercats field based on categories.id + categories.id_uppercat
      */
-    public static function update_uppercats()
+    public static function update_uppercats(): void
     {
         $query = <<<SQL
             SELECT id, id_uppercat, uppercats
@@ -1294,7 +1308,7 @@ class functions_admin
     /**
      * Update images.path field base on images.file and storage categories fulldirs.
      */
-    public static function update_path()
+    public static function update_path(): void
     {
         $query = <<<SQL
             SELECT DISTINCT storage_category_id
@@ -1319,11 +1333,13 @@ class functions_admin
      * Change the parent category of the given categories. The categories are
      * supposed virtual.
      *
-     * @param int[] $category_ids
+     * @param array<int> $category_ids
      * @param int $new_parent (-1 for root)
      */
-    public static function move_categories($category_ids, $new_parent = -1)
-    {
+    public static function move_categories(
+        array $category_ids,
+        int $new_parent = -1
+    ): void {
         global $page;
 
         if (count($category_ids) == 0) {
@@ -1417,8 +1433,6 @@ class functions_admin
     /**
      * Create a virtual category.
      *
-     * @param string $category_name
-     * @param int $parent_id
      * @param array{
      *    commentable: bool,
      *    visible: bool,
@@ -1428,8 +1442,11 @@ class functions_admin
      * } $options
      * @return array ('info', 'id') or ('error')
      */
-    public static function create_virtual_category($category_name, $parent_id = null, $options = [])
-    {
+    public static function create_virtual_category(
+        string $category_name,
+        ?int $parent_id = null,
+        array $options = []
+    ): array {
         global $conf, $user;
 
         // is the given category name only containing blank spaces ?
@@ -1595,11 +1612,12 @@ class functions_admin
      * Set tags to an image.
      * Warning: given tags are all tags associated to the image, not additional tags.
      *
-     * @param int[] $tags
-     * @param int $image_id
+     * @param array<int> $tags
      */
-    public static function set_tags($tags, $image_id)
-    {
+    public static function set_tags(
+        array $tags,
+        int|string $image_id
+    ): void {
         self::set_tags_of([
             $image_id => $tags,
         ]);
@@ -1608,11 +1626,13 @@ class functions_admin
     /**
      * Add new tags to a set of images.
      *
-     * @param int[] $tags
-     * @param int[] $images
+     * @param array<int> $tags
+     * @param array<int> $images
      */
-    public static function add_tags($tags, $images)
-    {
+    public static function add_tags(
+        array $tags,
+        array $images
+    ): void {
         if (count($tags) == 0 or
             count($images) == 0
         ) {
@@ -1659,10 +1679,11 @@ class functions_admin
     /**
      * Delete tags and tags associations.
      *
-     * @param int[] $tag_ids
+     * @param array<int> $tag_ids
      */
-    public static function delete_tags($tag_ids)
-    {
+    public static function delete_tags(
+        array $tag_ids
+    ): ?bool {
         if (is_numeric($tag_ids)) {
             $tag_ids = [$tag_ids];
         }
@@ -1699,16 +1720,16 @@ class functions_admin
 
         self::update_images_lastmodified($image_ids);
         self::invalidate_user_cache_nb_tags();
+
+        return null;
     }
 
     /**
      * Returns a tag id from its name. If nothing found, create a new tag.
-     *
-     * @param string $tag_name
-     * @return int
      */
-    public static function tag_id_from_tag_name($tag_name)
-    {
+    public static function tag_id_from_tag_name(
+        string $tag_name
+    ): int {
         global $page;
 
         $tag_name = trim($tag_name);
@@ -1777,10 +1798,11 @@ class functions_admin
     /**
      * Set tags of images. Overwrites all existing associations.
      *
-     * @param array $tags_of - keys are image ids, values are array of tag ids
+     * @param array<int, string> $tags_of - keys are image ids, values are array of tag ids
      */
-    public static function set_tags_of($tags_of)
-    {
+    public static function set_tags_of(
+        array $tags_of
+    ): void {
         if (count($tags_of) > 0) {
             $taglist_before = self::get_image_tag_ids(array_keys($tags_of));
             global $logger;
@@ -1828,11 +1850,11 @@ class functions_admin
      * Get list of tag ids for each image. Returns an empty list if the image has
      * no tags.
      *
-     * @param array $image_ids
      * @return array image_id => list of tag ids
      */
-    public static function get_image_tag_ids($image_ids)
-    {
+    public static function get_image_tag_ids(
+        array $image_ids
+    ): array {
         if (! is_array($image_ids) and
             is_int($image_ids)
         ) {
@@ -1867,8 +1889,10 @@ class functions_admin
      * @param array $taglist_after - for each image_id (key), list of tag ids
      * @return array - image_ids where the list has changed
      */
-    public static function compare_image_tag_lists($taglist_before, $taglist_after)
-    {
+    public static function compare_image_tag_lists(
+        array $taglist_before,
+        array $taglist_after
+    ): array {
         $images_to_update = [];
 
         foreach ($taglist_after as $image_id => $list_after) {
@@ -1891,8 +1915,10 @@ class functions_admin
      * @param array $images - list of image ids
      * @param array $categories - list of category ids
      */
-    public static function fill_lounge($images, $categories)
-    {
+    public static function fill_lounge(
+        array $images,
+        array $categories
+    ): void {
         $inserts = [];
 
         foreach ($categories as $category_id) {
@@ -1919,12 +1945,12 @@ class functions_admin
     /**
      * Move images from the lounge to the categories they were intended for.
      *
-     * @param bool $invalidate_user_cache
-     * @return array|void number of images moved
+     * @return ?array number of images moved
      * @throws RandomException
      */
-    public static function empty_lounge($invalidate_user_cache = true)
-    {
+    public static function empty_lounge(
+        bool $invalidate_user_cache = true
+    ): ?array {
         global $logger;
 
         if (isset($conf['empty_lounge_running'])) {
@@ -1957,7 +1983,7 @@ class functions_admin
 
         if ($running_exec_id != $exec_id) {
             $logger->debug(__FUNCTION__ . ', exec=' . $exec_id . ', skip');
-            return;
+            return null;
         }
 
         $logger->debug(__FUNCTION__ . ', exec=' . $exec_id . ' wins the race and gets the token!');
@@ -2013,11 +2039,13 @@ class functions_admin
      * Associate a list of images to a list of categories.
      * The function will not duplicate links and will preserve ranks.
      *
-     * @param int[] $images
-     * @param int[] $categories
+     * @param array<int> $images
+     * @param array<int> $categories
      */
-    public static function associate_images_to_categories($images, $categories)
-    {
+    public static function associate_images_to_categories(
+        array $images,
+        array $categories
+    ): ?bool {
         if (count($images) == 0 or
             count($categories) == 0
         ) {
@@ -2091,16 +2119,19 @@ class functions_admin
 
             self::update_category($categories);
         }
+
+        return null;
     }
 
     /**
      * Dissociate a list of images from a category.
      *
-     * @param int[] $images
-     * @param int $category
+     * @param array<int> $images
      */
-    public static function dissociate_images_from_category($images, $category)
-    {
+    public static function dissociate_images_from_category(
+        array $images,
+        int $category
+    ): ?int {
         // physical links must not be broken, so we must first retrieve image_id
         // which create virtual links with the category to "dissociate from".
         $image_ids = implode(', ', $images);
@@ -2132,11 +2163,13 @@ class functions_admin
      * associate to new categories.
      * This function will preserve ranks.
      *
-     * @param int[] $images
-     * @param int[] $categories
+     * @param array<int> $images
+     * @param array<int> $categories
      */
-    public static function move_images_to_categories($images, $categories)
-    {
+    public static function move_images_to_categories(
+        array $images,
+        array $categories
+    ): ?bool {
         if (count($images) == 0) {
             return false;
         }
@@ -2170,17 +2203,21 @@ class functions_admin
         ) {
             self::associate_images_to_categories($images, $categories);
         }
+
+        return null;
     }
 
     /**
      * Associate images associated to a list of source categories to a list of
      * destination categories.
      *
-     * @param int[] $sources
-     * @param int[] $destinations
+     * @param array<int> $sources
+     * @param array<int> $destinations
      */
-    public static function associate_categories_to_categories($sources, $destinations)
-    {
+    public static function associate_categories_to_categories(
+        array $sources,
+        array $destinations
+    ): ?bool {
         if (count($sources) == 0) {
             return false;
         }
@@ -2194,14 +2231,16 @@ class functions_admin
         $images = functions_mysqli::query2array($query, null, 'image_id');
 
         self::associate_images_to_categories($images, $destinations);
+
+        return null;
     }
 
     /**
      * Refer main Piwigo URLs (currently PHPWG_DOMAIN domain)
      *
-     * @return string[]
+     * @return array<string>
      */
-    public static function pwg_URL()
+    public static function pwg_URL(): array
     {
         $urls = [
             'HOME' => PHPWG_URL,
@@ -2217,8 +2256,9 @@ class functions_admin
     /**
      * Invalidates cached data (permissions and category counts) for all users.
      */
-    public static function invalidate_user_cache($full = true)
-    {
+    public static function invalidate_user_cache(
+        bool $full = true
+    ): void {
         if ($full) {
             $query = <<<SQL
                 TRUNCATE TABLE user_cache_categories;
@@ -2243,7 +2283,7 @@ class functions_admin
     /**
      * Invalidates cached tags counter for all users.
      */
-    public static function invalidate_user_cache_nb_tags()
+    public static function invalidate_user_cache_nb_tags(): void
     {
         global $user;
         unset($user['nb_available_tags']);
@@ -2258,12 +2298,10 @@ class functions_admin
     /**
      * Adds the character set to a create table sql query.
      * All CREATE TABLE queries must call this function
-     *
-     * @param string $query
-     * @return string
      */
-    public static function create_table_add_character_set($query)
-    {
+    public static function create_table_add_character_set(
+        string $query
+    ): string {
         if (! defined('DB_CHARSET')) {
             functions_html::fatal_error('create_table_add_character_set DB_CHARSET undefined');
         }
@@ -2308,13 +2346,11 @@ class functions_admin
 
     /**
      * Returns access levels as array used on template with html_options functions.
-     *
-     * @param int $MinLevelAccess
-     * @param int $MaxLevelAccess
-     * @return array
      */
-    public static function get_user_access_level_html_options($MinLevelAccess = ACCESS_FREE, $MaxLevelAccess = ACCESS_CLOSED)
-    {
+    public static function get_user_access_level_html_options(
+        int $MinLevelAccess = ACCESS_FREE,
+        int $MaxLevelAccess = ACCESS_CLOSED
+    ): array {
         $tpl_options = [];
 
         for ($level = $MinLevelAccess; $level <= $MaxLevelAccess; $level++) {
@@ -2329,10 +2365,11 @@ class functions_admin
      * Each .tpl file is extracted from template-extension.
      *
      * @param string $start (internal use)
-     * @return string[]
+     * @return array<string>
      */
-    public static function get_extents($start = '')
-    {
+    public static function get_extents(
+        string $start = ''
+    ): array {
         if ($start == '') {
             $start = './template-extension';
         }
@@ -2366,11 +2403,11 @@ class functions_admin
     /**
      * Create a new tag.
      *
-     * @param string $tag_name
      * @return array ('id', info') or ('error')
      */
-    public static function create_tag($tag_name)
-    {
+    public static function create_tag(
+        string $tag_name
+    ): array {
         // clean the tag, no html/js allowed in tag name
         $tag_name = strip_tags($tag_name);
 
@@ -2408,12 +2445,10 @@ class functions_admin
      * Is the category accessible to the (Admin) user ?
      * Note : if the user is not authorized to see this category, category jump
      * will be replaced by admin cat_modify page
-     *
-     * @param int $category_id
-     * @return bool
      */
-    public static function cat_admin_access($category_id)
-    {
+    public static function cat_admin_access(
+        int $category_id
+    ): bool {
         global $user;
 
         // $filter['visible_categories'] and $filter['visible_images']
@@ -2428,16 +2463,19 @@ class functions_admin
     /**
      * Retrieve data from external URL.
      *
-     * @param string $src
-     * @param string|resource $dest - can be a file resource or string
-     * @param array $get_data - data added to request url
-     * @param array $post_data - data transmitted with POST
-     * @param string $user_agent
+     * @param string|resource|null $dest - can be a file resource or string
+     * @param array<string, string> $get_data - data added to request url
+     * @param array<string, string> $post_data - data transmitted with POST
      * @param int $step (internal use)
-     * @return bool
      */
-    public static function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent = 'Piwigo', $step = 0)
-    {
+    public static function fetchRemote(
+        string $src,
+        mixed &$dest,
+        array $get_data = [],
+        array $post_data = [],
+        string $user_agent = 'Piwigo',
+        int $step = 0
+    ): bool {
         global $conf;
 
         // Try to retrieve data from local file?
@@ -2619,12 +2657,10 @@ class functions_admin
 
     /**
      * Returns the groupname corresponding to the given group identifier if exists.
-     *
-     * @param int $group_id
-     * @return string|false
      */
-    public static function get_groupname($group_id)
-    {
+    public static function get_groupname(
+        int $group_id
+    ): false|string {
         $query = <<<SQL
             SELECT name
             FROM `groups`
@@ -2641,8 +2677,9 @@ class functions_admin
         return $groupname;
     }
 
-    public static function delete_groups($group_ids)
-    {
+    public static function delete_groups(
+        array $group_ids
+    ): false|array {
         if (count($group_ids) == 0) {
             trigger_error('There is no group to delete', E_USER_WARNING);
             return false;
@@ -2696,12 +2733,10 @@ class functions_admin
 
     /**
      * Returns the username corresponding to the given user identifier if exists.
-     *
-     * @param int $user_id
-     * @return string|false
      */
-    public static function get_username($user_id)
-    {
+    public static function get_username(
+        int $user_id
+    ): false|string {
         global $conf;
 
         $query = <<<SQL
@@ -2724,21 +2759,19 @@ class functions_admin
      * Get url on piwigo.org for newsletter subscription
      *
      * @param string $language (unused)
-     * @return string
      */
-    public static function get_newsletter_subscribe_base_url($language = 'en_UK')
-    {
+    public static function get_newsletter_subscribe_base_url(
+        string $language = 'en_UK'
+    ): string {
         return PHPWG_URL . '/announcement/subscribe/';
     }
 
     /**
      * Return admin menu id for accordion.
-     *
-     * @param string $menu_page
-     * @return int
      */
-    public static function get_active_menu($menu_page)
-    {
+    public static function get_active_menu(
+        string $menu_page
+    ): int {
         global $page;
 
         if (isset($page['active_menu'])) {
@@ -2796,13 +2829,14 @@ class functions_admin
     /**
      * Get tags list from SQL query (ids are surrounded by ~~, for get_tag_ids()).
      *
-     * @param string $query
      * @param bool $only_user_language - if true, only local name is returned for
      *    multilingual tags (if ExtendedDescription plugin is active)
      * @return array[] ('id', 'name')
      */
-    public static function get_taglist($query, $only_user_language = true)
-    {
+    public static function get_taglist(
+        string $query,
+        bool $only_user_language = true
+    ): array {
         $result = functions_mysqli::pwg_query($query);
 
         $taglist = [];
@@ -2847,12 +2881,13 @@ class functions_admin
      * tag. We added the surrounding ~~ to permit creation of tags like "10"
      * or "1234" (numeric characters only)
      *
-     * @param string|string[] $raw_tags - array or comma separated string
-     * @param bool $allow_create
-     * @return int[]
+     * @param string|array<string> $raw_tags - array or comma separated string
+     * @return array<int>
      */
-    public static function get_tag_ids($raw_tags, $allow_create = true)
-    {
+    public static function get_tag_ids(
+        array|string $raw_tags,
+        bool $allow_create = true
+    ): array {
         $tag_ids = [];
 
         if (! is_array($raw_tags)) {
@@ -2876,12 +2911,14 @@ class functions_admin
      * names. Sequence is not case sensitive.
      * Warning: By definition, this function breaks original keys.
      *
-     * @param int[] $element_ids
-     * @param string[] $name - names of elements, indexed by ids
-     * @return int[]
+     * @param array<int> $element_ids
+     * @param array<string> $name - names of elements, indexed by ids
+     * @return array<int>
      */
-    public static function order_by_name($element_ids, $name)
-    {
+    public static function order_by_name(
+        array $element_ids,
+        array $name
+    ): array {
         $ordered_element_ids = [];
 
         foreach ($element_ids as $k_id => $element_id) {
@@ -2896,11 +2933,13 @@ class functions_admin
     /**
      * Grant access to a list of categories for a list of users.
      *
-     * @param int[] $category_ids
-     * @param int[] $user_ids
+     * @param array<int>|int $category_ids
+     * @param array<int> $user_ids
      */
-    public static function add_permission_on_category($category_ids, $user_ids)
-    {
+    public static function add_permission_on_category(
+        array|int $category_ids,
+        array $user_ids
+    ): void {
         if (! is_array($category_ids)) {
             $category_ids = [$category_ids];
         }
@@ -2960,11 +2999,11 @@ class functions_admin
     /**
      * Returns the list of admin users.
      *
-     * @param bool $include_webmaster
-     * @return int[]
+     * @return array<int>
      */
-    public static function get_admins($include_webmaster = true)
-    {
+    public static function get_admins(
+        bool $include_webmaster = true
+    ): array {
         $status_list = ['admin'];
 
         if ($include_webmaster) {
@@ -2984,10 +3023,11 @@ class functions_admin
     /**
      * Delete all derivative files for one or several types
      *
-     * @param 'all'|int[] $types
+     * @param array<int>|string $types
      */
-    public static function clear_derivative_cache($types = 'all')
-    {
+    public static function clear_derivative_cache(
+        array|string $types = 'all'
+    ): void {
         if ($types === 'all') {
             $types = ImageStdParams::get_all_types();
             $types[] = derivative_std_params::IMG_CUSTOM;
@@ -3037,8 +3077,10 @@ class functions_admin
     /**
      * Used by clear_derivative_cache()
      */
-    public static function clear_derivative_cache_rec($path, $pattern)
-    {
+    public static function clear_derivative_cache_rec(
+        string $path,
+        string $pattern
+    ): bool|int|null {
         $rmdir = true;
         $rm_index = false;
         $contents = opendir($path);
@@ -3077,16 +3119,19 @@ class functions_admin
 
             return $rmdir;
         }
+
+        return null;
     }
 
     /**
      * Deletes derivatives of a particular element
      *
      * @param array $infos ('path'[, 'representative_ext'])
-     * @param 'all'|int $type
      */
-    public static function delete_element_derivatives($infos, $type = 'all')
-    {
+    public static function delete_element_derivatives(
+        array $infos,
+        int|string $type = 'all'
+    ): void {
         $path = $infos['path'];
 
         if (! empty($infos['representative_ext'])) {
@@ -3118,11 +3163,11 @@ class functions_admin
     /**
      * Returns an array containing sub-directories, excluding ".svn"
      *
-     * @param string $directory
-     * @return string[]
+     * @return array<string>
      */
-    public static function get_dirs($directory)
-    {
+    public static function get_dirs(
+        string $directory
+    ): array {
         $sub_dirs = [];
         $opendir = opendir($directory);
 
@@ -3146,11 +3191,12 @@ class functions_admin
     /**
      * Recursively delete a directory.
      *
-     * @param string $path
-     * @param string $trash_path, try to move the directory to this path if it cannot be delete
+     * @param ?string $trash_path, try to move the directory to this path if it cannot be delete
      */
-    public static function deltree($path, $trash_path = null)
-    {
+    public static function deltree(
+        string $path,
+        ?string $trash_path = null
+    ): ?bool {
         if (is_dir($path)) {
             $fh = opendir($path);
 
@@ -3187,6 +3233,8 @@ class functions_admin
                 return false;
             }
         }
+
+        return null;
     }
 
     /**
@@ -3195,11 +3243,12 @@ class functions_admin
      * Additionally returns the hash of root path.
      * Used to invalidate LocalStorage cache on admin pages.
      *
-     * @param string|string[] $requested list of keys to retrieve (categories,groups,images,tags,users)
-     * @return string[]
+     * @param string|array<string> $requested list of keys to retrieve (categories,groups,images,tags,users)
+     * @return array<string>
      */
-    public static function get_admin_client_cache_keys($requested = [])
-    {
+    public static function get_admin_client_cache_keys(
+        array|string $requested = []
+    ): array {
         $tables = [
             'categories' => 'categories',
             'groups' => 'groups',
@@ -3236,9 +3285,9 @@ class functions_admin
     /**
      * Return the list of image ids where md5sum is null
      *
-     * @return int[] image_ids
+     * @return array<int> image_ids
      */
-    public static function get_photos_no_md5sum()
+    public static function get_photos_no_md5sum(): array
     {
         $query = <<<SQL
             SELECT id
@@ -3250,11 +3299,12 @@ class functions_admin
 
     /**
      * Compute and add the md5sum of image ids (where md5sum is null)
-     * @param int[] $ids list of image ids and there paths
+     * @param array<int> $ids list of image ids and there paths
      * @return int number of md5sum added
      */
-    public static function add_md5sum($ids)
-    {
+    public static function add_md5sum(
+        array $ids
+    ): int {
         $ids_list = implode(', ', $ids);
         $query = <<<SQL
             SELECT path
@@ -3285,7 +3335,7 @@ class functions_admin
         return count($ids);
     }
 
-    public static function count_orphans()
+    public static function count_orphans(): bool|int
     {
         if (functions::conf_get_param('count_orphans') === null) {
             // we don't care about the list of image_ids, we only care about the number
@@ -3312,9 +3362,9 @@ class functions_admin
     /**
      * Return the list of image ids associated to no album
      *
-     * @return int[] $image_ids
+     * @return array<int> $image_ids
      */
-    public static function get_orphans()
+    public static function get_orphans(): array
     {
         // exclude images in the lounge
         $query = <<<SQL
@@ -3352,11 +3402,12 @@ class functions_admin
      * The list of ordered images id is supposed to be in the same parent
      * category
      *
-     * @param int $category_id
-     * @param int[] $images
+     * @param array<int> $images
      */
-    public static function save_images_order($category_id, $images)
-    {
+    public static function save_images_order(
+        int $category_id,
+        array $images
+    ): void {
         $current_rank = 0;
         $datas = [];
 
@@ -3377,11 +3428,10 @@ class functions_admin
 
     /**
      * Force update on images.lastmodified column. Useful when modifying the tag list.
-     *
-     * @param array $image_ids
      */
-    public static function update_images_lastmodified($image_ids)
-    {
+    public static function update_images_lastmodified(
+        array $image_ids
+    ): void {
         if (! is_array($image_ids) and
             is_int($image_ids)
         ) {
@@ -3403,11 +3453,10 @@ class functions_admin
 
     /**
      * Get a more human friendly representation of big numbers. Like 17.8k instead of 17832
-     *
-     * @param float $numbers
      */
-    public static function number_format_human_readable($numbers)
-    {
+    public static function number_format_human_readable(
+        ?float $numbers
+    ): string {
         $readable = ['', 'k', 'M'];
         $index = 0;
         $numbers = empty($numbers) ? 0 : $numbers;
@@ -3433,12 +3482,11 @@ class functions_admin
 
     /**
      * Get infos related to an image
-     *
-     * @param int $image_id
-     * @param bool $die_on_missing
      */
-    public static function get_image_infos($image_id, $die_on_missing = false)
-    {
+    public static function get_image_infos(
+        int|string $image_id,
+        bool $die_on_missing = false
+    ): array|int|null {
         if (! is_numeric($image_id)) {
             functions_html::fatal_error('[' . __FUNCTION__ . '] invalid image identifier ' . htmlentities($image_id));
         }
@@ -3463,11 +3511,10 @@ class functions_admin
 
     /**
      * Return each cache image sizes.
-     *
-     * @param string $path
      */
-    public static function get_cache_size_derivatives($path)
-    {
+    public static function get_cache_size_derivatives(
+        string $path
+    ): array {
         $msizes = []; //final res
         $subdirs = []; //sous-rep
 
@@ -3510,7 +3557,7 @@ class functions_admin
     /**
      * Displays a header warning if we find missing photos on a random sample.
      */
-    public static function fs_quick_check()
+    public static function fs_quick_check(): void
     {
         global $page, $conf;
 
@@ -3578,7 +3625,7 @@ class functions_admin
     /**
      * Return latest news from piwigo.org.
      */
-    public static function get_piwigo_news()
+    public static function get_piwigo_news(): array
     {
         global $lang_info;
 
@@ -3623,8 +3670,9 @@ class functions_admin
         return $news;
     }
 
-    public static function assocToOrderedTree($assocT)
-    {
+    public static function assocToOrderedTree(
+        array $assocT
+    ): array {
         global $nb_photos_in, $nb_sub_photos, $is_forbidden;
 
         $orderedTree = [];
@@ -3650,7 +3698,7 @@ class functions_admin
             array_push($orderedTree, $orderedCat);
         }
 
-        usort($orderedTree, function ($a, $b) {
+        usort($orderedTree, function (array $a, array $b): int {
             if ($a['rank'] == $b['rank']) {
                 return 0;
             }
@@ -3660,8 +3708,11 @@ class functions_admin
         return $orderedTree;
     }
 
-    public static function get_categories_ref_date($ids, $field = 'date_available', $minmax = 'max')
-    {
+    public static function get_categories_ref_date(
+        array $ids,
+        string $field = 'date_available',
+        string $minmax = 'max'
+    ): array {
         // we need to work on the whole tree under each category, even if we don't
         // want to sort sub categories
         $category_ids = functions_category::get_subcat_ids($ids);
@@ -3722,8 +3773,10 @@ class functions_admin
         return $return;
     }
 
-    public static function UC_name_compare($a, $b)
-    {
+    public static function UC_name_compare(
+        array $a,
+        array $b
+    ): int {
         return strcmp(strtolower($a['NAME']), strtolower($b['NAME']));
     }
 
@@ -3732,8 +3785,9 @@ class functions_admin
     // Example : "pets > rex > 1_year_old" is on the the same site as the
     // Piwigo files and this category has 22 for identifier
     // get_complete_dir(22) returns "./galleries/pets/rex/1_year_old/"
-    public static function get_complete_dir($category_id)
-    {
+    public static function get_complete_dir(
+        string $category_id
+    ): string {
         return self::get_site_url($category_id) . self::get_local_dir($category_id);
     }
 
@@ -3741,8 +3795,9 @@ class functions_admin
     // Example : "pets > rex > 1_year_old" is on the the same site as the
     // Piwigo files and this category has 22 for identifier
     // get_local_dir(22) returns "pets/rex/1_year_old/"
-    public static function get_local_dir($category_id)
-    {
+    public static function get_local_dir(
+        string $category_id
+    ): string {
         global $page;
 
         $uppercats = '';
@@ -3783,8 +3838,9 @@ class functions_admin
 
     // retrieving the site url : "http://domain.com/gallery/" or
     // simply "./galleries/"
-    public static function get_site_url($category_id)
-    {
+    public static function get_site_url(
+        string $category_id
+    ): string {
         global $page;
 
         $query = <<<SQL
@@ -3797,8 +3853,9 @@ class functions_admin
         return $row['galleries_url'];
     }
 
-    public static function get_min_local_dir($local_dir)
-    {
+    public static function get_min_local_dir(
+        string $local_dir
+    ): string {
         $full_dir = explode('/', $local_dir);
 
         if (count($full_dir) <= 3) {
@@ -3812,7 +3869,7 @@ class functions_admin
 
     }
 
-    public static function order_by_is_local()
+    public static function order_by_is_local(): bool
     {
         $conf = [];
         include(PHPWG_ROOT_PATH . 'inc/config_default.php');
@@ -3829,9 +3886,11 @@ class functions_admin
                isset($conf['order_by_inside_category']);
     }
 
-    public static function make_consecutive(&$orders, $step = 50)
-    {
-        uasort($orders, function ($a, $b) {
+    public static function make_consecutive(
+        array &$orders,
+        int $step = 50
+    ): void {
+        uasort($orders, function (float|int $a, float|int $b): float|int {
             return abs($a) - abs($b);
         });
 
@@ -3849,8 +3908,10 @@ class functions_admin
      * @param $post_keyname: key of check_key post array
      * @param $check_key_treated: array of check_key treated
      */
-    public static function do_timeout_treatment($post_keyname, $check_key_treated = [])
-    {
+    public static function do_timeout_treatment(
+        string $post_keyname,
+        array $check_key_treated = []
+    ): void {
         global $env_nbm, $base_url, $page, $must_repost;
 
         if ($env_nbm['is_sendmail_timeout']) {
@@ -3881,8 +3942,9 @@ class functions_admin
      * Get the authorized_status for each tab
      * return corresponding status
      */
-    public static function get_tab_status($mode)
-    {
+    public static function get_tab_status(
+        string $mode
+    ): int {
         $result = ACCESS_WEBMASTER;
 
         switch ($mode) {
@@ -3906,7 +3968,7 @@ class functions_admin
     /**
      * Inserting News users
      */
-    public static function insert_new_data_user_mail_notification()
+    public static function insert_new_data_user_mail_notification(): void
     {
         global $conf, $page, $env_nbm;
 
@@ -3986,8 +4048,9 @@ class functions_admin
      * Apply global functions to mail content
      * return customize mail content rendered
      */
-    public static function render_global_customize_mail_content($customize_mail_content)
-    {
+    public static function render_global_customize_mail_content(
+        string $customize_mail_content
+    ): string {
         global $conf;
 
         if ($conf['nbm_send_html_mail'] and
@@ -4007,8 +4070,11 @@ class functions_admin
      * Return list of "selected" users for 'list_to_send'
      * Return list of "treated" check_key for 'send'
      */
-    public static function do_action_send_mail_notification($action = 'list_to_send', $check_key_list = [], $customize_mail_content = '')
-    {
+    public static function do_action_send_mail_notification(
+        string $action = 'list_to_send',
+        array $check_key_list = [],
+        string $customize_mail_content = ''
+    ): array {
         global $conf, $page, $user, $lang_info, $lang, $env_nbm;
         $return_list = [];
 
@@ -4228,13 +4294,13 @@ class functions_admin
     }
 
     public static function parse_sort_variables(
-        $sortable_by,
-        $default_field,
-        $get_param,
-        $get_rejects,
-        $template_var,
-        $anchor = ''
-    ) {
+        array $sortable_by,
+        string|null $default_field,
+        string $get_param,
+        array $get_rejects,
+        ?string $template_var,
+        string $anchor = ''
+    ): array {
         global $template;
 
         $url_components = parse_url($_SERVER['REQUEST_URI']);
@@ -4294,38 +4360,50 @@ class functions_admin
         return $ret;
     }
 
-    public static function avg_compare($a, $b)
-    {
+    public static function avg_compare(
+        array $a,
+        array $b
+    ): int {
         $d = $a['avg'] - $b['avg'];
         return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
     }
 
-    public static function count_compare($a, $b)
-    {
+    public static function count_compare(
+        array $a,
+        array $b
+    ): int {
         $d = $a['count'] - $b['count'];
         return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
     }
 
-    public static function cv_compare($a, $b)
-    {
+    public static function cv_compare(
+        array $a,
+        array $b
+    ): int {
         $d = $b['cv'] - $a['cv']; //desc
         return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
     }
 
-    public static function consensus_dev_compare($a, $b)
-    {
+    public static function consensus_dev_compare(
+        array $a,
+        array $b
+    ): int {
         $d = $b['cd'] - $a['cd']; //desc
         return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
     }
 
-    public static function last_rate_compare($a, $b)
-    {
+    public static function last_rate_compare(
+        array $a,
+        array $b
+    ): int {
         return -strcmp($a['last_date'], $b['last_date']);
     }
 
     //Get the last unit of time for years, months, days and hours
-    public static function get_last($last_number = 60, $type = 'year')
-    {
+    public static function get_last(
+        int $last_number = 60,
+        string $type = 'year'
+    ): array {
         $query = <<<SQL
             SELECT year, month, day, hour, nb_pages
             FROM history_summary
@@ -4383,8 +4461,9 @@ class functions_admin
         return $output;
     }
 
-    public static function get_month_of_last_years($last = 'all')
-    {
+    public static function get_month_of_last_years(
+        string|int $last = 'all'
+    ): array {
         $query = <<<SQL
             SELECT year, month, day, hour, nb_pages
             FROM history_summary
@@ -4416,7 +4495,7 @@ class functions_admin
         );
     }
 
-    public static function get_month_stats()
+    public static function get_month_stats(): array
     {
         $result = [];
         $date = new DateTime();
@@ -4487,8 +4566,12 @@ class functions_admin
         return $result;
     }
 
-    public static function set_missing_values($unit, $data, $firstDate = null, $lastDate = null)
-    {
+    public static function set_missing_values(
+        string $unit,
+        array $data,
+        ?DateTime $firstDate = null,
+        ?DateTime $lastDate = null
+    ): array {
         $limit = count($data);
         $result = [];
 
@@ -4538,8 +4621,9 @@ class functions_admin
     }
 
     //Get a DateTime object for a database row
-    public static function get_date_object($row)
-    {
+    public static function get_date_object(
+        array $row
+    ): DateTime {
         $date_string = $row['year'];
 
         if ($row['month'] != null) {
@@ -4559,8 +4643,11 @@ class functions_admin
         return new DateTime($date_string);
     }
 
-    public static function get_watermark_filename($list, $candidate, $step = 0)
-    {
+    public static function get_watermark_filename(
+        array $list,
+        string $candidate,
+        int $step = 0
+    ): string {
         global $change_name;
         $change_name = $candidate;
 

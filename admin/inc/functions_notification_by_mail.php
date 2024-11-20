@@ -17,6 +17,7 @@ use Piwigo\inc\functions_mail;
 use Piwigo\inc\functions_session;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
+use Random\RandomException;
 
 $env_nbm =
           [
@@ -40,8 +41,9 @@ class functions_notification_by_mail
      * It's a copy of function find_available_feed_id
      *
      * @return string nbm identifier
+     * @throws RandomException
      */
-    public static function find_available_check_key()
+    public static function find_available_check_key(): string
     {
         while (true) {
             $key = functions_session::generate_key(16);
@@ -64,7 +66,7 @@ class functions_notification_by_mail
      *
      * @return true, if it's timeout
      */
-    public static function check_sendmail_timeout()
+    public static function check_sendmail_timeout(): bool
     {
         global $env_nbm;
 
@@ -78,9 +80,10 @@ class functions_notification_by_mail
      *
      * @return array quoted check key list
      */
-    public static function quote_check_key_list($check_key_list = [])
-    {
-        return array_map(function ($s) { return '\'' . $s . '\''; }, $check_key_list);
+    public static function quote_check_key_list(
+        array $check_key_list = []
+    ): array {
+        return array_map(function (string $s): string { return '\'' . $s . '\''; }, $check_key_list);
     }
 
     /**
@@ -90,8 +93,11 @@ class functions_notification_by_mail
      *
      * @return array of users
      */
-    public static function get_user_notifications($action, $check_key_list = [], $enabled_filter_value = '')
-    {
+    public static function get_user_notifications(
+        string $action,
+        array $check_key_list = [],
+        bool|string $enabled_filter_value = ''
+    ): array {
         global $conf;
 
         $data_users = [];
@@ -165,8 +171,9 @@ class functions_notification_by_mail
      * Begin of use nbm environment
      * Prepare and save current environment and initialize data in order to send mail
      */
-    public static function begin_users_env_nbm($is_to_send_mail = false)
-    {
+    public static function begin_users_env_nbm(
+        bool $is_to_send_mail = false
+    ): void {
         global $user, $lang, $lang_info, $conf, $env_nbm;
 
         // Save $user, $lang_info and $lang arrays (inc/user.php has been executed)
@@ -195,7 +202,7 @@ class functions_notification_by_mail
      * End of use nbm environment
      * Restore environment
      */
-    public static function end_users_env_nbm()
+    public static function end_users_env_nbm(): void
     {
         global $user, $lang, $lang_info, $env_nbm;
 
@@ -223,8 +230,10 @@ class functions_notification_by_mail
     /**
      * Set user on nbm environment
      */
-    public static function set_user_on_env_nbm(&$nbm_user, $is_action_send)
-    {
+    public static function set_user_on_env_nbm(
+        array &$nbm_user,
+        bool $is_action_send
+    ): void {
         global $user, $lang, $lang_info, $env_nbm;
 
         $user = functions_user::build_user($nbm_user['user_id'], true);
@@ -240,7 +249,7 @@ class functions_notification_by_mail
     /**
      * Unset user on nbm environment
      */
-    public static function unset_user_on_env_nbm()
+    public static function unset_user_on_env_nbm(): void
     {
         global $env_nbm;
 
@@ -251,8 +260,9 @@ class functions_notification_by_mail
     /**
      * Inc Counter success
      */
-    public static function inc_mail_sent_success($nbm_user)
-    {
+    public static function inc_mail_sent_success(
+        array $nbm_user
+    ): void {
         global $page, $env_nbm;
 
         ++$env_nbm['sent_mail_count'];
@@ -262,8 +272,9 @@ class functions_notification_by_mail
     /**
      * Inc Counter failed
      */
-    public static function inc_mail_sent_failed($nbm_user)
-    {
+    public static function inc_mail_sent_failed(
+        array $nbm_user
+    ): void {
         global $page, $env_nbm;
 
         ++$env_nbm['error_on_mail_count'];
@@ -273,7 +284,7 @@ class functions_notification_by_mail
     /**
      * Display Counter Info
      */
-    public static function display_counter_info()
+    public static function display_counter_info(): void
     {
         global $page, $env_nbm;
 
@@ -304,8 +315,9 @@ class functions_notification_by_mail
         }
     }
 
-    public static function assign_vars_nbm_mail_content($nbm_user)
-    {
+    public static function assign_vars_nbm_mail_content(
+        array $nbm_user
+    ): void {
         global $env_nbm;
 
         functions_url::set_make_full_url();
@@ -336,9 +348,13 @@ class functions_notification_by_mail
      * check_key list where action will be done
      *
      * @return array check_key list treated
+     * @throws \Exception
      */
-    public static function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_subscribe = false, $check_key_list = [])
-    {
+    public static function do_subscribe_unsubscribe_notification_by_mail(
+        bool $is_admin_request,
+        bool $is_subscribe = false,
+        array $check_key_list = []
+    ): array {
         global $conf, $page, $env_nbm, $conf;
 
         functions_url::set_make_full_url();
@@ -478,9 +494,12 @@ class functions_notification_by_mail
      * check_key list where action will be done
      *
      * @return array check_key list treated
+     * @throws \Exception
      */
-    public static function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = [])
-    {
+    public static function unsubscribe_notification_by_mail(
+        bool $is_admin_request,
+        array $check_key_list = []
+    ): array {
         return self::do_subscribe_unsubscribe_notification_by_mail($is_admin_request, false, $check_key_list);
     }
 
@@ -490,9 +509,12 @@ class functions_notification_by_mail
      * check_key list where action will be done
      *
      * @return array check_key list treated
+     * @throws \Exception
      */
-    public static function subscribe_notification_by_mail($is_admin_request, $check_key_list = [])
-    {
+    public static function subscribe_notification_by_mail(
+        bool $is_admin_request,
+        array $check_key_list = []
+    ): array {
         return self::do_subscribe_unsubscribe_notification_by_mail($is_admin_request, true, $check_key_list);
     }
 }

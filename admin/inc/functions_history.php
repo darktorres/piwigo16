@@ -18,7 +18,7 @@ class functions_history
     /**
      * Init tabsheet for history pages
      */
-    public static function history_tabsheet()
+    public static function history_tabsheet(): void
     {
         global $page, $link_start;
 
@@ -32,8 +32,10 @@ class functions_history
     /**
      * Callback used to sort history entries
      */
-    public static function history_compare($a, $b)
-    {
+    public static function history_compare(
+        array $a,
+        array $b
+    ): int {
         return strcmp($a['date'] . $a['time'], $b['date'] . $b['time']);
     }
 
@@ -41,12 +43,13 @@ class functions_history
      * Perform history search.
      *
      * @param array $data  - used in trigger_change
-     * @param array $search
-     * @param string[] $types
-     * @return array
+     * @param array<string> $types
      */
-    public static function get_history($data, $search, $types)
-    {
+    public static function get_history(
+        array $data,
+        array $search,
+        array $types
+    ): array {
         if (isset($search['fields']['filename'])) {
             $query = <<<SQL
                 SELECT id
@@ -141,10 +144,11 @@ class functions_history
     /**
      * Compute statistics from history table to history_summary table
      *
-     * @param int $max_lines - to only compute the next X lines, not the whole remaining lines
+     * @param int|null $max_lines - to only compute the next X lines, not the whole remaining lines
      */
-    public static function history_summarize($max_lines = null)
-    {
+    public static function history_summarize(
+        ?int $max_lines = null
+    ): void {
         // we need to know which was the last line "summarized"
         $query = <<<SQL
             SELECT *
@@ -329,7 +333,7 @@ class functions_history
     /**
      * Smart purge on history table. Keep some lines, purge only summarized lines
      */
-    public static function history_autopurge()
+    public static function history_autopurge(): void
     {
         global $conf, $logger;
 
@@ -410,7 +414,7 @@ class functions_history
         self::history_remove_summarized_column();
     }
 
-    public static function history_remove_summarized_column()
+    public static function history_remove_summarized_column(): void
     {
         global $conf;
 

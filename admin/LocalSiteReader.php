@@ -17,10 +17,11 @@ use Piwigo\inc\functions;
 
 class LocalSiteReader
 {
-    public $site_url;
+    public string $site_url;
 
-    public function __construct($url)
-    {
+    public function __construct(
+        string $url
+    ) {
         $this->site_url = $url;
         global $conf;
 
@@ -38,7 +39,7 @@ class LocalSiteReader
      *
      * @return true on success, false otherwise
      */
-    public function open()
+    public function open(): bool
     {
         global $errors;
 
@@ -55,8 +56,12 @@ class LocalSiteReader
     }
 
     // retrieve file system sub-directories fulldirs
-    public function get_full_directories($basedir)
-    {
+    /**
+     * @return array<string>
+     */
+    public function get_full_directories(
+        string $basedir
+    ): array {
         $fs_fulldirs = functions_admin::get_fs_directories($basedir);
         return $fs_fulldirs;
     }
@@ -67,8 +72,9 @@ class LocalSiteReader
      * @param string $path recurse in this directory
      * @return array like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
-    public function get_elements($path)
-    {
+    public function get_elements(
+        string $path
+    ): array {
         global $conf;
 
         $subdirs = [];
@@ -128,13 +134,14 @@ class LocalSiteReader
 
     // returns the name of the attributes that are supported for
     // files update/synchronization
-    public function get_update_attributes()
+    public function get_update_attributes(): array
     {
         return ['representative_ext'];
     }
 
-    public function get_element_update_attributes($file)
-    {
+    public function get_element_update_attributes(
+        string $file
+    ): array {
         global $conf;
         $data = [];
 
@@ -155,20 +162,23 @@ class LocalSiteReader
 
     // returns the name of the attributes that are supported for
     // metadata update/synchronization according to configuration
-    public function get_metadata_attributes()
+    public function get_metadata_attributes(): array
     {
         return functions_metadata_admin::get_sync_metadata_attributes();
     }
 
     // returns a hash of attributes (metadata+filesize+width,...) for file
-    public function get_element_metadata($infos)
-    {
+    public function get_element_metadata(
+        array $infos
+    ): array|bool {
         return functions_metadata_admin::get_sync_metadata($infos);
     }
 
     //-------------------------------------------------- private functions --------
-    public function get_representative_ext($path, $filename_wo_ext)
-    {
+    public function get_representative_ext(
+        string $path,
+        string $filename_wo_ext
+    ): ?string {
         global $conf;
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';
 
@@ -183,8 +193,10 @@ class LocalSiteReader
         return null;
     }
 
-    public function get_formats($path, $filename_wo_ext)
-    {
+    public function get_formats(
+        string $path,
+        string $filename_wo_ext
+    ): array {
         global $conf;
 
         $formats = [];

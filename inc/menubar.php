@@ -14,7 +14,7 @@ class menubar
     /**
      * Setups each block the main menubar.
      */
-    public static function initialize_menu()
+    public static function initialize_menu(): void
     {
         global $page, $conf, $user, $template, $filter;
 

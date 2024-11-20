@@ -25,8 +25,11 @@ class ws_functions
      * Event handler for method invocation security check. Should return a PwgError
      * if the preconditions are not satisfied for method invocation.
      */
-    public static function ws_isInvokeAllowed($res, $methodName, $params)
-    {
+    public static function ws_isInvokeAllowed(
+        string $res,
+        string $methodName,
+        array $params
+    ): PwgError|string {
         global $conf;
 
         if (strpos($methodName, 'reflection.') === 0) { // OK for reflection
@@ -46,8 +49,10 @@ class ws_functions
      * returns a "standard" (for our web service) array of sql where clauses that
      * filters the images (images table only)
      */
-    public static function ws_std_image_sql_filter($params, $tbl_name = '')
-    {
+    public static function ws_std_image_sql_filter(
+        array $params,
+        string $tbl_name = ''
+    ): array {
         $clauses = [];
 
         if (is_numeric($params['f_min_rate'])) {
@@ -100,8 +105,10 @@ class ws_functions
     /**
      * returns a "standard" (for our web service) ORDER BY sql clause for images
      */
-    public static function ws_std_image_sql_order($params, $tbl_name = '')
-    {
+    public static function ws_std_image_sql_order(
+        array $params,
+        string $tbl_name = ''
+    ): string {
         $ret = '';
 
         if (empty($params['order'])) {
@@ -155,8 +162,9 @@ class ws_functions
      * returns an array map of urls (thumb/element) for image_row - to be returned
      * in a standard way by different web service methods
      */
-    public static function ws_std_get_urls($image_row)
-    {
+    public static function ws_std_get_urls(
+        array $image_row
+    ): array {
         $ret = [];
 
         $ret['page_url'] = functions_url::make_picture_url(
@@ -213,21 +221,21 @@ class ws_functions
      * returns an array of image attributes that are to be encoded as xml attributes
      * instead of xml elements
      */
-    public static function ws_std_get_image_xml_attributes()
+    public static function ws_std_get_image_xml_attributes(): array
     {
         return [
             'id', 'element_url', 'page_url', 'file', 'width', 'height', 'hit', 'date_available', 'date_creation',
         ];
     }
 
-    public static function ws_std_get_category_xml_attributes()
+    public static function ws_std_get_category_xml_attributes(): array
     {
         return [
             'id', 'url', 'nb_images', 'total_nb_images', 'nb_categories', 'date_last', 'max_date_last', 'status',
         ];
     }
 
-    public static function ws_std_get_tag_xml_attributes()
+    public static function ws_std_get_tag_xml_attributes(): array
     {
         return [
             'id', 'name', 'url_name', 'counter', 'url', 'page_url',
@@ -237,8 +245,9 @@ class ws_functions
     /**
      * create a tree from a flat list of categories, no recursion for high speed
      */
-    public static function categories_flatlist_to_tree($categories)
-    {
+    public static function categories_flatlist_to_tree(
+        array $categories
+    ): array {
         $tree = [];
         $key_of_cat = [];
 
@@ -263,9 +272,13 @@ class ws_functions
     /**
      * event handler that registers standard methods with the web service
      */
-    public static function ws_addDefaultMethods($arr)
-    {
+    public static function ws_addDefaultMethods(
+        array $arr
+    ): void {
         global $conf, $user;
+        /**
+         * @var PwgServer
+         */
         $service = &$arr[0];
 
         $ws_functions_root = PHPWG_ROOT_PATH . 'inc/ws_functions/';

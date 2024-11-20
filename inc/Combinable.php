@@ -14,53 +14,34 @@ namespace Piwigo\inc;
  */
 class Combinable
 {
-    /**
-     * @var string
-     */
-    public $id;
+    public string $id;
 
-    /**
-     * @var string
-     */
-    public $path = '';
+    public string $path = '';
 
-    /**
-     * @var string
-     */
-    public $version;
+    public bool|int|string $version;
 
-    /**
-     * @var bool
-     */
-    public $is_template;
+    public ?bool $is_template;
 
-    /**
-     * @param string $id
-     * @param string $path
-     * @param string $version
-     */
-    public function __construct($id, $path, $version = 0)
-    {
+    public function __construct(
+        string $id,
+        ?string $path,
+        bool|int|string $version = 0
+    ) {
         $this->id = $id;
         $this->set_path($path);
         $this->version = $version;
         $this->is_template = false;
     }
 
-    /**
-     * @param string $path
-     */
-    public function set_path($path)
-    {
+    public function set_path(
+        ?string $path
+    ): void {
         if (! empty($path)) {
             $this->path = $path;
         }
     }
 
-    /**
-     * @return bool
-     */
-    public function is_remote()
+    public function is_remote(): bool
     {
         return functions_url::url_is_remote($this->path) ||
                strncmp($this->path, '//', 2) == 0;

@@ -18,31 +18,22 @@ use SmartyException;
 class ScriptLoader
 {
     /**
-     * @var string[]
+     * @var array<string>
      */
-    public $inline_scripts;
+    public array $inline_scripts;
 
     /**
-     * @var Script[]
+     * @var array<Script>
      */
-    private $registered_scripts;
+    private array $registered_scripts;
 
-    /**
-     * @var bool
-     */
-    private $did_head;
+    private bool $did_head;
 
-    /**
-     * @var bool
-     */
-    private $head_done_scripts;
+    private array $head_done_scripts;
 
-    /**
-     * @var bool
-     */
-    private $did_footer;
+    private bool $did_footer;
 
-    private static $known_paths = [
+    private static array $known_paths = [
         'core.scripts' => 'themes/default/js/scripts.js',
         'jquery' => 'node_modules/jquery/dist/jquery.js',
         'jquery.ui' => 'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js',
@@ -53,7 +44,7 @@ class ScriptLoader
         $this->clear();
     }
 
-    public function clear()
+    public function clear(): void
     {
         $this->registered_scripts = [];
         $this->inline_scripts = [];
@@ -61,10 +52,7 @@ class ScriptLoader
         $this->did_head = $this->did_footer = false;
     }
 
-    /**
-     * @return bool
-     */
-    public function did_head()
+    public function did_head(): bool
     {
         return $this->did_head;
     }
@@ -72,17 +60,18 @@ class ScriptLoader
     /**
      * @return Script[]
      */
-    public function get_all()
+    public function get_all(): array
     {
         return $this->registered_scripts;
     }
 
     /**
-     * @param string $code
-     * @param string[] $require
+     * @param array<int, string> $require
      */
-    public function add_inline($code, $require)
-    {
+    public function add_inline(
+        string $code,
+        array $require
+    ): void {
         if ($this->did_footer) {
             trigger_error('Attempt to add inline script but the footer has been written', E_USER_WARNING);
         }
@@ -107,14 +96,16 @@ class ScriptLoader
     }
 
     /**
-     * @param string $id
-     * @param int $load_mode
-     * @param string[] $require
-     * @param string $path
-     * @param string $version
+     * @param array<int, string> $require
      */
-    public function add($id, $load_mode, $require, $path, $version = 0, $is_template = false)
-    {
+    public function add(
+        string $id,
+        int $load_mode,
+        array $require,
+        ?string $path,
+        int|string $version = 0,
+        $is_template = false
+    ): void {
         if ($this->did_head &&
             $load_mode == 0
         ) {
@@ -162,7 +153,7 @@ class ScriptLoader
      * @return Combinable[]
      * @throws SmartyException
      */
-    public function get_head_scripts()
+    public function get_head_scripts(): array
     {
         self::check_load_dep($this->registered_scripts);
 
@@ -194,7 +185,7 @@ class ScriptLoader
      * @return Combinable[][]
      * @throws SmartyException
      */
-    public function get_footer_scripts()
+    public function get_footer_scripts(): array
     {
         if (! $this->did_head) {
             self::check_load_dep($this->registered_scripts);
@@ -228,12 +219,13 @@ class ScriptLoader
 
     /**
      * @param Script[] $scripts
-     * @param int $load_mode
      * @return Combinable[]
      * @throws SmartyException
      */
-    private static function do_combine($scripts, $load_mode)
-    {
+    private static function do_combine(
+        array $scripts,
+        int $load_mode
+    ): array {
         $combiner = new FileCombiner('js', $scripts);
         return $combiner->combine();
     }
@@ -244,8 +236,9 @@ class ScriptLoader
      *
      * @param Script[] $scripts
      */
-    private static function check_load_dep($scripts)
-    {
+    private static function check_load_dep(
+        array $scripts
+    ): void {
         global $conf;
 
         do {
@@ -280,10 +273,11 @@ class ScriptLoader
      * Fill a script dependencies with the known jQuery UI scripts.
      *
      * @param string $id in FileCombiner::$known_paths
-     * @param Script $script
      */
-    private static function fill_well_known($id, $script)
-    {
+    private static function fill_well_known(
+        string $id,
+        Script $script
+    ): void {
         if (empty($script->path) &&
             isset(self::$known_paths[$id])
         ) {
@@ -305,11 +299,11 @@ class ScriptLoader
      * Add a known jQuery UI script to loaded scripts.
      *
      * @param string $id in FileCombiner::$known_paths
-     * @param int $load_mode
-     * @return bool
      */
-    private function load_known_required_script($id, $load_mode)
-    {
+    private function load_known_required_script(
+        string $id,
+        int $load_mode
+    ): bool {
         if (isset(self::$known_paths[$id])) {
             $this->add($id, $load_mode, [], null);
             return true;
@@ -321,13 +315,11 @@ class ScriptLoader
     /**
      * Compute script order depending on dependencies.
      * Assigned to $script->extra['order'].
-     *
-     * @param string $script_id
-     * @param int $recursion_limiter
-     * @return int
      */
-    private function compute_script_topological_order($script_id, $recursion_limiter = 0)
-    {
+    private function compute_script_topological_order(
+        string $script_id,
+        int $recursion_limiter = 0
+    ): int {
         if (! isset($this->registered_scripts[$script_id])) {
             trigger_error("Undefined script {$script_id} is required by someone", E_USER_WARNING);
             return 0;
@@ -360,8 +352,10 @@ class ScriptLoader
     /**
      * Callback for scripts sorter.
      */
-    private static function cmp_by_mode_and_order($s1, $s2)
-    {
+    private static function cmp_by_mode_and_order(
+        Script $s1,
+        Script $s2
+    ): int|float {
         $ret = intval($s1->load_mode) - intval($s2->load_mode);
 
         if ($ret) {

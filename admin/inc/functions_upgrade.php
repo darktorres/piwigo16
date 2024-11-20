@@ -15,7 +15,7 @@ use Piwigo\inc\functions;
 
 class functions_upgrade
 {
-    public static function check_upgrade()
+    public static function check_upgrade(): bool
     {
         if (defined('PHPWG_IN_UPGRADE')) {
             return PHPWG_IN_UPGRADE;
@@ -25,7 +25,7 @@ class functions_upgrade
     }
 
     // Deactivate all non-standard plugins
-    public static function deactivate_non_standard_plugins()
+    public static function deactivate_non_standard_plugins(): void
     {
         global $page;
 
@@ -66,7 +66,7 @@ class functions_upgrade
     }
 
     // Deactivate all non-standard themes
-    public static function deactivate_non_standard_themes()
+    public static function deactivate_non_standard_themes(): void
     {
         global $page, $conf;
 
@@ -140,13 +140,13 @@ class functions_upgrade
     }
 
     // Deactivate all templates
-    public static function deactivate_templates()
+    public static function deactivate_templates(): void
     {
         functions::conf_update_param('extents_for_templates', []);
     }
 
     // Check access rights
-    public static function check_upgrade_access_rights()
+    public static function check_upgrade_access_rights(): void
     {
         global $conf, $page, $current_release;
 
@@ -224,10 +224,8 @@ class functions_upgrade
 
     /**
      * which upgrades are available ?
-     *
-     * @return array
      */
-    public static function get_available_upgrade_ids()
+    public static function get_available_upgrade_ids(): array
     {
         // $upgrades_path = PHPWG_ROOT_PATH.'install/db';
 
@@ -254,7 +252,7 @@ class functions_upgrade
     /**
      * returns true if there are available upgrade files
      */
-    public static function check_upgrade_feed()
+    public static function check_upgrade_feed(): bool
     {
         // retrieve already applied upgrades
         $query = <<<SQL
@@ -270,7 +268,7 @@ class functions_upgrade
         return count(array_diff($existing, $applied)) > 0;
     }
 
-    public static function upgrade_db_connect()
+    public static function upgrade_db_connect(): void
     {
         global $conf;
 

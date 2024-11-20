@@ -16,6 +16,7 @@ use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_user;
 use Piwigo\inc\PwgError;
+use Piwigo\inc\PwgServer;
 use SmartyException;
 
 class pwg_extensions
@@ -23,10 +24,11 @@ class pwg_extensions
     /**
      * API method
      * Returns the list of all plugins
-     * @param array $params
      */
-    public static function ws_plugins_getList($params, $service)
-    {
+    public static function ws_plugins_getList(
+        array $params,
+        PwgServer $service
+    ): array {
         $plugins = new plugins();
         $plugins->sort_fs_plugins('name');
         $plugin_list = [];
@@ -59,8 +61,10 @@ class pwg_extensions
      *     pwg_token: string,
      * } $params
      */
-    public static function ws_plugins_performAction($params, $service)
-    {
+    public static function ws_plugins_performAction(
+        array $params,
+        PwgServer $service
+    ): PwgError|true {
         global $template, $conf;
 
         if (functions::get_pwg_token() != $params['pwg_token']) {
@@ -102,8 +106,10 @@ class pwg_extensions
      *     pwg_token: string,
      * } $params
      */
-    public static function ws_themes_performAction($params, $service)
-    {
+    public static function ws_themes_performAction(
+        array $params,
+        PwgServer $service
+    ): PwgError|true {
         global $template, $conf;
 
         if (functions::get_pwg_token() != $params['pwg_token']) {
@@ -144,8 +150,10 @@ class pwg_extensions
      * } $params
      * @throws SmartyException
      */
-    public static function ws_extensions_update($params, $service)
-    {
+    public static function ws_extensions_update(
+        array $params,
+        PwgServer $service
+    ): PwgError|string {
         global $conf;
 
         if (! $conf['enable_extensions_install']) {
@@ -251,8 +259,10 @@ class pwg_extensions
      *     pwg_token: string,
      * } $params
      */
-    public static function ws_extensions_ignoreupdate($params, $service)
-    {
+    public static function ws_extensions_ignoreupdate(
+        array $params,
+        PwgServer $service
+    ): PwgError|true {
         global $conf;
 
         define('IN_ADMIN', true);
@@ -306,10 +316,11 @@ class pwg_extensions
     /**
      * API method
      * Checks for updates (core and extensions)
-     * @param array $params
      */
-    public static function ws_extensions_checkupdates($params, $service)
-    {
+    public static function ws_extensions_checkupdates(
+        array $params,
+        PwgServer $service
+    ): array {
         global $conf;
 
         $update = new updates();

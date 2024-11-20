@@ -11,16 +11,21 @@ namespace Piwigo\inc;
 
 class QNumericRangeScope extends QSearchScope
 {
-    private $epsilon;
+    private float|int $epsilon;
 
-    public function __construct($id, $aliases, $nullable = false, $epsilon = 0)
-    {
+    public function __construct(
+        string $id,
+        array $aliases,
+        bool $nullable = false,
+        float|int $epsilon = 0
+    ) {
         parent::__construct($id, $aliases, $nullable, false);
         $this->epsilon = $epsilon;
     }
 
-    public function parse($token)
-    {
+    public function parse(
+        QSingleToken $token
+    ): bool {
         $str = $token->term;
         $strict = [0, 0];
         $range_requested = true;
@@ -104,8 +109,10 @@ class QNumericRangeScope extends QSearchScope
         return true;
     }
 
-    public function get_sql($field, $token)
-    {
+    public function get_sql(
+        string $field,
+        QSingleToken $token
+    ): string {
         $clauses = [];
 
         if ($token->scope_data['range'][0] !== '') {

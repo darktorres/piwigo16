@@ -17,10 +17,12 @@ use Piwigo\inc\PwgResponseEncoder;
 
 class PwgRestEncoder extends PwgResponseEncoder
 {
-    private $_writer;
+    private PwgXmlWriter $_writer;
 
-    public function encodeResponse($response)
-    {
+    #[\Override]
+    public function encodeResponse(
+        array|bool|PwgError|null $response
+    ): string {
         if ($response instanceof PwgError) {
             $escapedMessage = htmlspecialchars($response->message());
             $ret = <<<XML
@@ -46,13 +48,17 @@ class PwgRestEncoder extends PwgResponseEncoder
         return $ret;
     }
 
-    public function getContentType()
+    #[\Override]
+    public function getContentType(): string
     {
         return 'text/xml';
     }
 
-    public function encode_array($data, $itemName, $xml_attributes = [])
-    {
+    public function encode_array(
+        array $data,
+        string $itemName,
+        array $xml_attributes = []
+    ): void {
         foreach ($data as $item) {
             $this->_writer->start_element($itemName);
             $this->encode($item, $xml_attributes);
@@ -60,8 +66,11 @@ class PwgRestEncoder extends PwgResponseEncoder
         }
     }
 
-    public function encode_struct($data, $skip_underscore, $xml_attributes = [])
-    {
+    public function encode_struct(
+        array $data,
+        bool $skip_underscore,
+        array $xml_attributes = []
+    ): void {
         foreach ($data as $name => $value) {
             if (is_numeric($name)) {
                 continue;
@@ -112,8 +121,10 @@ class PwgRestEncoder extends PwgResponseEncoder
         }
     }
 
-    public function encode($data, $xml_attributes = [])
-    {
+    public function encode(
+        array|bool|string|int|float|null|object $data,
+        array $xml_attributes = []
+    ): void {
         switch (gettype($data)) {
             case 'null':
             case 'NULL':

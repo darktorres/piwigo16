@@ -15,10 +15,8 @@ class functions_tag
 {
     /**
      * Returns the number of available tags for the connected user.
-     *
-     * @return int
      */
-    public static function get_nb_available_tags()
+    public static function get_nb_available_tags(): int|string
     {
         global $user;
 
@@ -45,8 +43,9 @@ class functions_tag
      *
      * @return array [id, name, counter, url_name]
      */
-    public static function get_available_tags($tag_ids = [])
-    {
+    public static function get_available_tags(
+        array $tag_ids = []
+    ): array {
         // we can find top fatter tags among reachable images
         $permissions_conditions = functions_user::get_sql_condition_FandF(
             [
@@ -110,7 +109,7 @@ class functions_tag
      *
      * @return array [id, name, url_name]
      */
-    public static function get_all_tags()
+    public static function get_all_tags(): array
     {
         $query = <<<SQL
             SELECT *
@@ -140,8 +139,9 @@ class functions_tag
      * @param array $tags at least [id, counter]
      * @return array [..., level]
      */
-    public static function add_level_to_tags($tags)
-    {
+    public static function add_level_to_tags(
+        array $tags
+    ): array {
         global $conf;
 
         if (count($tags) == 0) {
@@ -186,15 +186,17 @@ class functions_tag
      * Return the list of image ids corresponding to given tags.
      * AND & OR mode supported.
      *
-     * @param int[] $tag_ids
-     * @param string $mode
-     * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
-     * @param string $order_by - optionally overwrite default photo order
-     * @param bool $use_permissions
-     * @return array
+     * @param array<int> $tag_ids
+     * @param ?string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
+     * @param ?string $order_by - optionally overwrite default photo order
      */
-    public static function get_image_ids_for_tags($tag_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', $use_permissions = true)
-    {
+    public static function get_image_ids_for_tags(
+        array $tag_ids,
+        string $mode = 'AND',
+        ?string $extra_images_where_sql = '',
+        ?string $order_by = '',
+        bool $use_permissions = true
+    ): array {
         global $conf;
 
         if (empty($tag_ids)) {
@@ -255,13 +257,15 @@ class functions_tag
     /**
      * Return a list of tags corresponding to given items.
      *
-     * @param int[] $items
-     * @param int $max_tags
-     * @param int[] $excluded_tag_ids
+     * @param array<int> $items
+     * @param array<int> $excluded_tag_ids
      * @return array [id, name, counter, url_name]
      */
-    public static function get_common_tags($items, $max_tags, $excluded_tag_ids = [])
-    {
+    public static function get_common_tags(
+        array $items,
+        int $max_tags,
+        array $excluded_tag_ids = []
+    ): array {
         if (empty($items)) {
             return [];
         }
@@ -311,13 +315,16 @@ class functions_tag
     /**
      * Return a list of tags corresponding to any of ids, url_names or names.
      *
-     * @param int[] $ids
-     * @param string[] $url_names
-     * @param string[] $names
+     * @param array<int> $ids
+     * @param array<string> $url_names
+     * @param array<string> $names
      * @return array [id, name, url_name]
      */
-    public static function find_tags($ids = [], $url_names = [], $names = [])
-    {
+    public static function find_tags(
+        array $ids = [],
+        array $url_names = [],
+        array $names = []
+    ): array {
         $where_clauses = [];
 
         if (! empty($ids)) {
@@ -348,13 +355,17 @@ class functions_tag
         return functions_mysqli::query2array($query);
     }
 
-    public static function tags_id_compare($a, $b)
-    {
+    public static function tags_id_compare(
+        array $a,
+        array $b
+    ): int {
         return ($a['id'] < $b['id']) ? -1 : 1;
     }
 
-    public static function tags_counter_compare($a, $b)
-    {
+    public static function tags_counter_compare(
+        array $a,
+        array $b
+    ): int {
         if ($a['counter'] == $b['counter']) {
             return self::tags_id_compare($a, $b);
         }

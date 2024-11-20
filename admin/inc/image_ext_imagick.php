@@ -17,20 +17,21 @@ use Piwigo\inc\functions;
 
 class image_ext_imagick implements imageInterface
 {
-    public $imagickdir = '';
+    public string $imagickdir = '';
 
-    public $source_filepath = '';
+    public string $source_filepath = '';
 
-    public $width = '';
+    public int $width;
 
-    public $height = '';
+    public int $height;
 
-    public $is_animated_webp = false;
+    public bool $is_animated_webp = false;
 
-    public $commands = [];
+    public array $commands = [];
 
-    public function __construct($source_filepath)
-    {
+    public function __construct(
+        string $source_filepath
+    ) {
         global $conf;
         $this->source_filepath = $source_filepath;
         $this->imagickdir = $conf['ext_imagick_dir'];
@@ -68,23 +69,29 @@ class image_ext_imagick implements imageInterface
         $this->height = $match[2];
     }
 
-    public function add_command($command, $params = null)
-    {
+    public function add_command(
+        string $command,
+        int|string|null $params = null
+    ): void {
         $this->commands[$command] = $params;
     }
 
-    public function get_width()
+    public function get_width(): int
     {
         return $this->width;
     }
 
-    public function get_height()
+    public function get_height(): int
     {
         return $this->height;
     }
 
-    public function crop($width, $height, $x, $y)
-    {
+    public function crop(
+        int $width,
+        int $height,
+        int $x,
+        int $y
+    ): true {
         $this->width = $width;
         $this->height = $height;
 
@@ -93,14 +100,15 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function strip()
+    public function strip(): true
     {
         $this->add_command('strip');
         return true;
     }
 
-    public function rotate($rotation)
-    {
+    public function rotate(
+        int $rotation
+    ): true {
         if (empty($rotation)) {
             return true;
         }
@@ -118,8 +126,9 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function set_compression_quality($quality)
-    {
+    public function set_compression_quality(
+        int $quality
+    ): true {
         global $conf;
 
         if ($this->is_animated_webp) {
@@ -133,8 +142,10 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function resize($width, $height)
-    {
+    public function resize(
+        int $width,
+        int $height
+    ): true {
         $this->width = $width;
         $this->height = $height;
 
@@ -143,8 +154,9 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function sharpen($amount)
-    {
+    public function sharpen(
+        int $amount
+    ): true {
         $m = pwg_image::get_sharpen_matrix($amount);
 
         $param = 'convolve "' . count($m) . ':';
@@ -159,8 +171,12 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function compose($overlay, $x, $y, $opacity)
-    {
+    public function compose(
+        mixed $overlay,
+        int $x,
+        int $y,
+        int $opacity
+    ): true {
         $param = 'compose dissolve -define compose:args=' . $opacity;
         $param .= ' ' . escapeshellarg(realpath($overlay->image->source_filepath));
         $param .= ' -gravity NorthWest -geometry +' . $x . '+' . $y;
@@ -169,8 +185,9 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function write($destination_filepath)
-    {
+    public function write(
+        string $destination_filepath
+    ): bool {
         global $logger;
 
         $this->add_command('interlace', 'line'); // progressive rendering

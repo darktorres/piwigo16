@@ -15,6 +15,7 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgNamedArray;
+use Piwigo\inc\PwgServer;
 
 class pwg_permissions
 {
@@ -22,13 +23,15 @@ class pwg_permissions
      * API method
      * Returns permissions
      * @param array{
-     *     cat_id?: int[],
-     *     group_id?: int[],
-     *     user_id?: int[],
+     *     cat_id?: array<int>,
+     *     group_id?: array<int>,
+     *     user_id?: array<int>,
      * } $params
      */
-    public static function ws_permissions_getList($params, &$service)
-    {
+    public static function ws_permissions_getList(
+        array $params,
+        PwgServer &$service
+    ): PwgError|array {
         $my_params = array_intersect(array_keys($params), ['cat_id', 'group_id', 'user_id']);
 
         if (count($my_params) > 1) {
@@ -133,15 +136,17 @@ class pwg_permissions
      * API method
      * Add permissions
      * @param array{
-     *     cat_id: int[],
-     *     group_id?: int[],
-     *     user_id?: int[],
+     *     cat_id: array<int>,
+     *     group_id?: array<int>,
+     *     user_id?: array<int>,
      *     recursive: bool,
-     *     pwg_token: mixed,
+     *     pwg_token: string,
      * } $params
      */
-    public static function ws_permissions_add($params, &$service)
-    {
+    public static function ws_permissions_add(
+        array $params,
+        PwgServer &$service
+    ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -200,14 +205,16 @@ class pwg_permissions
      * API method
      * Removes permissions
      * @param array{
-     *     cat_id: int[],
-     *     group_id?: int[],
-     *     user_id?: int[],
-     *     pwg_token: mixed,
+     *     cat_id: array<int>,
+     *     group_id?: array<int>,
+     *     user_id?: array<int>,
+     *     pwg_token: string,
      * } $params
      */
-    public static function ws_permissions_remove($params, &$service)
-    {
+    public static function ws_permissions_remove(
+        array $params,
+        PwgServer &$service
+    ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }

@@ -14,7 +14,7 @@ namespace Piwigo\inc;
  */
 class PersistentFileCache extends PersistentCache
 {
-    private $dir;
+    private string $dir;
 
     public function __construct()
     {
@@ -22,8 +22,10 @@ class PersistentFileCache extends PersistentCache
         $this->dir = PHPWG_ROOT_PATH . $conf['data_location'] . 'cache/';
     }
 
-    public function get($key, &$value)
-    {
+    public function get(
+        string $key,
+        array|bool|string|int|float|null|object &$value
+    ): bool {
         $loaded = file_exists($this->dir . $key . '.cache') ? file_get_contents($this->dir . $key . '.cache') : false;
 
         if ($loaded !== false) {
@@ -40,8 +42,11 @@ class PersistentFileCache extends PersistentCache
         return false;
     }
 
-    public function set($key, $value, $lifetime = null)
-    {
+    public function set(
+        string $key,
+        array|bool|string|int|float|null|object $value,
+        ?int $lifetime = null
+    ): bool {
         if ($lifetime === null) {
             $lifetime = $this->default_lifetime;
         }
@@ -62,8 +67,9 @@ class PersistentFileCache extends PersistentCache
         return file_put_contents($this->dir . $key . '.cache', $serialized) !== false;
     }
 
-    public function purge($all)
-    {
+    public function purge(
+        bool $all
+    ): void {
         $files = glob($this->dir . '*.cache');
 
         if (empty($files)) {

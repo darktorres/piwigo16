@@ -8,8 +8,9 @@ use Piwigo\inc\menubar;
 
 class functions_smartpocket
 {
-    public static function sp_select_all_thumbnails($selection)
-    {
+    public static function sp_select_all_thumbnails(
+        array $selection
+    ): array|bool|int|string {
         global $page, $template;
 
         $template->assign('page_selection', array_flip($selection));
@@ -17,13 +18,14 @@ class functions_smartpocket
         return $page['items'];
     }
 
-    public static function sp_select_all_categories($selection)
-    {
+    public static function sp_select_all_categories(
+        array $selection
+    ): array {
         global $tpl_thumbnails_var;
         return $tpl_thumbnails_var;
     }
 
-    public static function sp_end_section_init()
+    public static function sp_end_section_init(): void
     {
         global $page, $template;
 
@@ -38,7 +40,7 @@ class functions_smartpocket
         );
     }
 
-    public static function mobile_link()
+    public static function mobile_link(): void
     {
         global $template, $conf;
 
@@ -56,7 +58,7 @@ class functions_smartpocket
         }
     }
 
-    public static function add_menu_on_public_pages()
+    public static function add_menu_on_public_pages(): ?bool
     {
         if (function_exists('initialize_menu')) {
             return false;
@@ -74,5 +76,7 @@ class functions_smartpocket
             menubar::initialize_menu();
             $template->parse('add_menu_on_public_pages');
         }
+
+        return null;
     }
 }

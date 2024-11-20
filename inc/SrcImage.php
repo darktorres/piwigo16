@@ -18,42 +18,31 @@ use Piwigo\inc\dblayer\functions_mysqli;
  */
 final class SrcImage
 {
-    public const IS_ORIGINAL = 0x01;
+    public const int IS_ORIGINAL = 0x01;
 
-    public const IS_MIMETYPE = 0x02;
+    public const int IS_MIMETYPE = 0x02;
 
-    public const DIM_NOT_GIVEN = 0x04;
+    public const int DIM_NOT_GIVEN = 0x04;
 
-    /**
-     * @var int
-     */
-    public $id;
+    public int|string $id;
 
-    /**
-     * @var string
-     */
-    public $rel_path;
+    public string $rel_path;
+
+    public int $rotation = 0;
 
     /**
-     * @var int
+     * @var array<int>
      */
-    public $rotation = 0;
+    private ?array $size = null;
+
+    private int $flags = 0;
 
     /**
-     * @var int[]
+     * @param array<string, ?string> $infos assoc array of data from images table
      */
-    private $size = null;
-
-    /**
-     * @var int
-     */
-    private $flags = 0;
-
-    /**
-     * @param array $infos assoc array of data from images table
-     */
-    public function __construct($infos)
-    {
+    public function __construct(
+        array $infos
+    ) {
         global $conf;
 
         $this->id = $infos['id'];
@@ -105,34 +94,22 @@ final class SrcImage
         }
     }
 
-    /**
-     * @return int
-     */
-    public function is_original()
+    public function is_original(): int
     {
         return $this->flags & self::IS_ORIGINAL;
     }
 
-    /**
-     * @return int
-     */
-    public function is_mimetype()
+    public function is_mimetype(): int
     {
         return $this->flags & self::IS_MIMETYPE;
     }
 
-    /**
-     * @return string
-     */
-    public function get_path()
+    public function get_path(): string
     {
         return PHPWG_ROOT_PATH . $this->rel_path;
     }
 
-    /**
-     * @return string
-     */
-    public function get_url()
+    public function get_url(): string
     {
         $url = functions_url::get_root_url() . $this->rel_path;
 
@@ -143,18 +120,15 @@ final class SrcImage
         return functions_url::embellish_url($url);
     }
 
-    /**
-     * @return bool
-     */
-    public function has_size()
+    public function has_size(): bool
     {
         return $this->size != null;
     }
 
     /**
-     * @return int[]|null 0=width, 1=height or null if fail to compute size
+     * @return ?array<int> 0=width, 1=height or null if fail to compute size
      */
-    public function get_size()
+    public function get_size(): ?array
     {
         if ($this->size == null) {
             if ($this->flags & self::DIM_NOT_GIVEN) {

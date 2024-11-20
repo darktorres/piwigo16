@@ -24,7 +24,7 @@
 
 use Piwigo\inc\dblayer\functions_mysqli;
 
-function plugin_uninstall()
+function plugin_uninstall(): void
 {
     $query = <<<SQL
         DELETE FROM config

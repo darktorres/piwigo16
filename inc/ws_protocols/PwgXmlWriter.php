@@ -11,17 +11,17 @@ namespace Piwigo\inc\ws_protocols;
 
 class PwgXmlWriter
 {
-    public $_indent;
+    public bool $_indent;
 
-    public $_indentStr;
+    public string $_indentStr;
 
-    public $_elementStack;
+    public array $_elementStack;
 
-    public $_lastTagOpen;
+    public bool $_lastTagOpen;
 
-    public $_indentLevel;
+    public int $_indentLevel;
 
-    public $_encodedXml;
+    public string $_encodedXml;
 
     public function __construct()
     {
@@ -34,13 +34,14 @@ class PwgXmlWriter
         $this->_indentStr = "\t";
     }
 
-    public function &getOutput()
+    public function &getOutput(): string
     {
         return $this->_encodedXml;
     }
 
-    public function start_element($name)
-    {
+    public function start_element(
+        string $name
+    ): void {
         $this->_end_prev(false);
 
         if (! empty($this->_elementStack)) {
@@ -62,8 +63,9 @@ class PwgXmlWriter
         $this->_elementStack[] = $name;
     }
 
-    public function end_element($x)
-    {
+    public function end_element(
+        string $x
+    ): void {
         $close_tag = $this->_end_prev(true);
         $name = array_pop($this->_elementStack);
 
@@ -75,15 +77,17 @@ class PwgXmlWriter
         }
     }
 
-    public function write_content($value)
-    {
+    public function write_content(
+        string $value
+    ): void {
         $this->_end_prev(false);
         $value = (string) $value;
         $this->_output(htmlspecialchars($value));
     }
 
-    public function write_cdata($value)
-    {
+    public function write_cdata(
+        string|int|float|bool $value
+    ): void {
         $this->_end_prev(false);
         $value = (string) $value;
         $this->_output(
@@ -93,18 +97,22 @@ class PwgXmlWriter
         );
     }
 
-    public function write_attribute($name, $value)
-    {
+    public function write_attribute(
+        string $name,
+        string $value
+    ): void {
         $this->_output(' ' . $name . '="' . $this->encode_attribute($value) . '"');
     }
 
-    public function encode_attribute($value)
-    {
+    public function encode_attribute(
+        string $value
+    ): string {
         return htmlspecialchars((string) $value);
     }
 
-    public function _end_prev($done)
-    {
+    public function _end_prev(
+        bool $done
+    ): bool {
         $ret = true;
 
         if ($this->_lastTagOpen) {
@@ -123,14 +131,14 @@ class PwgXmlWriter
         return $ret;
     }
 
-    public function _eol_indent()
+    public function _eol_indent(): void
     {
         if ($this->_indent) {
             $this->_output("\n");
         }
     }
 
-    public function _indent()
+    public function _indent(): void
     {
         if ($this->_indent and
             $this->_indentLevel > count($this->_elementStack)
@@ -141,8 +149,9 @@ class PwgXmlWriter
         }
     }
 
-    public function _output($raw_content)
-    {
+    public function _output(
+        string $raw_content
+    ): void {
         $this->_encodedXml .= $raw_content;
     }
 }

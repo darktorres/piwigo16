@@ -19,26 +19,25 @@ use tubalmartin\CssMin\Minifier;
 final class FileCombiner
 {
     /**
-     * @var string 'js' or 'css'
+     * 'js' or 'css'
      */
-    private $type;
+    private string $type;
+
+    private bool $is_css;
 
     /**
-     * @var bool
+     * @var array<Combinable>
      */
-    private $is_css;
-
-    /**
-     * @var Combinable[]
-     */
-    private $combinables;
+    private array $combinables;
 
     /**
      * @param string $type 'js' or 'css'
-     * @param Combinable[] $combinables
+     * @param array<Combinable> $combinables
      */
-    public function __construct($type, $combinables = [])
-    {
+    public function __construct(
+        string $type,
+        array $combinables = []
+    ) {
         $this->type = $type;
         $this->is_css = $type == 'css';
         $this->combinables = $combinables;
@@ -47,7 +46,7 @@ final class FileCombiner
     /**
      * Deletes all combined files from cache directory.
      */
-    public static function clear_combined_files()
+    public static function clear_combined_files(): void
     {
         $dir = opendir(PHPWG_ROOT_PATH . PWG_COMBINED_DIR);
 
@@ -65,8 +64,9 @@ final class FileCombiner
     /**
      * @param Combinable|Combinable[] $combinable
      */
-    public function add($combinable)
-    {
+    public function add(
+        array|Combinable $combinable
+    ): void {
         if (is_array($combinable)) {
             $this->combinables = array_merge($this->combinables, $combinable);
         } else {
@@ -78,7 +78,7 @@ final class FileCombiner
      * @return Combinable[]
      * @throws SmartyException
      */
-    public function combine()
+    public function combine(): array
     {
         global $conf;
         $force = false;
@@ -123,14 +123,15 @@ final class FileCombiner
     /**
      * Process a set of pending files.
      *
-     * @param array $result
-     * @param array $pending
-     * @param string[] $key
-     * @param bool $force
+     * @param array<int, int|string> $key
      * @throws SmartyException
      */
-    private function flush_pending(&$result, &$pending, $key, $force)
-    {
+    private function flush_pending(
+        array &$result,
+        array &$pending,
+        array $key,
+        bool $force
+    ): void {
         if (count($pending) > 1) {
             $key = join('>', $key);
             $file = PWG_COMBINED_DIR . base_convert(hash('crc32b', $key), 16, 36) . '.' . $this->type;
@@ -167,17 +168,17 @@ final class FileCombiner
     /**
      * Process one combinable file.
      *
-     * @param Combinable $combinable
-     * @param bool $return_content
-     * @param bool $force
      * @param string $header CSS directives that must appear first in
      *                       the minified file (only used when
      *                       $return_content===true)
-     * @return null|string
      * @throws SmartyException
      */
-    private function process_combinable($combinable, $return_content, $force, &$header)
-    {
+    private function process_combinable(
+        Combinable $combinable,
+        bool $return_content,
+        bool $force,
+        string &$header
+    ): ?string {
         global $conf;
 
         if ($combinable->is_template) {
@@ -195,7 +196,7 @@ final class FileCombiner
                 ) {
                     $combinable->path = $file;
                     $combinable->version = false;
-                    return;
+                    return null;
                 }
             }
 
@@ -232,17 +233,19 @@ final class FileCombiner
 
             return $content;
         }
+
+        return null;
     }
 
     /**
      * Process a JS file.
      *
      * @param string $js file content
-     * @param string $file
-     * @return string
      */
-    private static function process_js($js, $file)
-    {
+    private static function process_js(
+        string $js,
+        string $file
+    ): string {
         if (strpos($file, '.min') === false and
             strpos($file, '.packed') === false
         ) {
@@ -259,13 +262,14 @@ final class FileCombiner
      * Process a CSS file.
      *
      * @param string $css file content
-     * @param string $file
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
-     * @return string
      */
-    private static function process_css($css, $file, &$header)
-    {
+    private static function process_css(
+        string $css,
+        string $file,
+        string &$header
+    ): string {
         $css = self::process_css_rec($css, dirname($file), $header);
 
         if (strpos($file, '.min') === false and
@@ -283,13 +287,14 @@ final class FileCombiner
      * Resolves relative links in CSS file.
      *
      * @param string $css file content
-     * @param string $dir
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
-     * @return string
      */
-    private static function process_css_rec($css, $dir, &$header)
-    {
+    private static function process_css_rec(
+        string $css,
+        string $dir,
+        string &$header
+    ): string {
         static $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";
         static $PATTERN_IMPORT = "#@import\s*['|\"]{0,1}(.*?)['|\"]{0,1};#";
 

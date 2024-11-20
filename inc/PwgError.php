@@ -14,12 +14,14 @@ namespace Piwigo\inc;
  */
 class PwgError
 {
-    private $_code;
+    private int $_code;
 
-    private $_codeText;
+    private string $_codeText;
 
-    public function __construct($code, $codeText)
-    {
+    public function __construct(
+        ?int $code,
+        array|string $codeText
+    ) {
         if ($code >= 400 and
             $code < 600
         ) {
@@ -30,12 +32,12 @@ class PwgError
         $this->_codeText = $codeText;
     }
 
-    public function code()
+    public function code(): int
     {
         return $this->_code;
     }
 
-    public function message()
+    public function message(): string
     {
         return $this->_codeText;
     }

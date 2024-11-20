@@ -13,22 +13,24 @@ use Piwigo\inc\functions_plugins;
 
 class tabsheet
 {
-    public $sheets;
+    public array $sheets;
 
-    public $uniqid;
+    public ?string $uniqid;
 
-    public $name;
+    public string $name;
 
-    public $titlename;
+    public string $titlename;
 
-    public $selected;
+    public string $selected = '';
 
     /**
      * @param string $name is the tabsheet's name inside the template .tpl file
      * @param string $titlename in the template is affected by $titlename value
      */
-    public function __construct($name = 'TABSHEET', $titlename = 'TABSHEET_TITLE')
-    {
+    public function __construct(
+        string $name = 'TABSHEET',
+        string $titlename = 'TABSHEET_TITLE'
+    ) {
         $this->sheets = [];
         $this->uniqid = null;
         $this->name = $name;
@@ -36,16 +38,21 @@ class tabsheet
         $this->selected = '';
     }
 
-    public function set_id($id)
-    {
+    public function set_id(
+        string $id
+    ): void {
         $this->uniqid = $id;
     }
 
     /**
      *  add a tab
      */
-    public function add($name, $caption, $url, $selected = false)
-    {
+    public function add(
+        string $name,
+        string $caption,
+        string $url,
+        bool $selected = false
+    ): bool {
         if (! isset($this->sheets[$name])) {
             $this->sheets[$name] = [
                 'caption' => $caption,
@@ -65,8 +72,9 @@ class tabsheet
     /**
      *  remove a tab
      */
-    public function delete($name)
-    {
+    public function delete(
+        string $name
+    ): bool {
         if (isset($this->sheets[$name])) {
             array_splice($this->sheets, (int) $name, 1);
 
@@ -83,8 +91,9 @@ class tabsheet
     /**
      *  select a tab to be active
      */
-    public function select($name)
-    {
+    public function select(
+        string $name
+    ): void {
         $this->sheets = functions_plugins::trigger_change('tabsheet_before_select', $this->sheets, $this->uniqid);
 
         if (! array_key_exists($name, $this->sheets)) {
@@ -98,8 +107,9 @@ class tabsheet
     /**
      * set $titlename value
      */
-    public function set_titlename($titlename)
-    {
+    public function set_titlename(
+        string $titlename
+    ): string {
         $this->titlename = $titlename;
         return $this->titlename;
     }
@@ -107,7 +117,7 @@ class tabsheet
     /**
      * returns $titlename value
      */
-    public function get_titlename()
+    public function get_titlename(): string
     {
         return $this->titlename;
     }
@@ -115,7 +125,7 @@ class tabsheet
     /**
      * returns properties of selected tab
      */
-    public function get_selected()
+    public function get_selected(): array|string|null
     {
         if (! empty($this->selected)) {
             return $this->sheets[$this->selected];
@@ -130,7 +140,7 @@ class tabsheet
      * Fill $this->$name {default value = TABSHEET} with HTML code for tabsheet
      * Fill $this->titlename {default value = TABSHEET_TITLE} with formated caption of the selected tab
      */
-    public function assign()
+    public function assign(): void
     {
         global $template;
 

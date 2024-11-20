@@ -29,39 +29,37 @@ class functions
     /**
      * no option for mkgetdir()
      */
-    public const MKGETDIR_NONE = 0;
+    public const int MKGETDIR_NONE = 0;
 
     /**
      * sets mkgetdir() recursive
      */
-    public const MKGETDIR_RECURSIVE = 1;
+    public const int MKGETDIR_RECURSIVE = 1;
 
     /**
      * sets mkgetdir() exit script on error
      */
-    public const MKGETDIR_DIE_ON_ERROR = 2;
+    public const int MKGETDIR_DIE_ON_ERROR = 2;
 
     /**
      * sets mkgetdir() add a index.htm file
      */
-    public const MKGETDIR_PROTECT_INDEX = 4;
+    public const int MKGETDIR_PROTECT_INDEX = 4;
 
     /**
      * sets mkgetdir() add a .htaccess file
      */
-    public const MKGETDIR_PROTECT_HTACCESS = 8;
+    public const int MKGETDIR_PROTECT_HTACCESS = 8;
 
     /**
      * default options for mkgetdir() = MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX
      */
-    public const MKGETDIR_DEFAULT = self::MKGETDIR_RECURSIVE | self::MKGETDIR_DIE_ON_ERROR | self::MKGETDIR_PROTECT_INDEX;
+    public const int MKGETDIR_DEFAULT = self::MKGETDIR_RECURSIVE | self::MKGETDIR_DIE_ON_ERROR | self::MKGETDIR_PROTECT_INDEX;
 
     /**
      * returns the current microsecond since Unix epoch
-     *
-     * @return string
      */
-    public static function micro_seconds()
+    public static function micro_seconds(): string
     {
         $t1 = explode(' ', microtime());
         $t2 = explode('.', $t1[0]);
@@ -73,10 +71,8 @@ class functions
      * returns a float value corresponding to the number of seconds since
      * the unix epoch (1st January 1970) and the microseconds are precised
      * e.g. 1052343429.89276600
-     *
-     * @return float
      */
-    public static function get_moment()
+    public static function get_moment(): float
     {
         return microtime(true);
     }
@@ -85,23 +81,21 @@ class functions
      * returns the number of seconds (with 3 decimals precision)
      * between the start time and the end time given
      *
-     * @param float $start
-     * @param float $end
      * @return string "$TIME s"
      */
-    public static function get_elapsed_time($start, $end)
-    {
+    public static function get_elapsed_time(
+        float $start,
+        float $end
+    ): string {
         return number_format($end - $start, 3, '.', ' ') . ' s';
     }
 
     /**
      * returns the part of the string after the last "."
-     *
-     * @param string $filename
-     * @return string
      */
-    public static function get_extension($filename)
-    {
+    public static function get_extension(
+        ?string $filename
+    ): string {
         $pos = strrpos((string) $filename, '.');
         return ($pos !== false) ? substr($filename, $pos + 1) : '';
     }
@@ -109,12 +103,10 @@ class functions
     /**
      * returns the part of the string before the last ".".
      * get_filename_wo_extension( 'test.tar.gz' ) = 'test.tar'
-     *
-     * @param string $filename
-     * @return string
      */
-    public static function get_filename_wo_extension($filename)
-    {
+    public static function get_filename_wo_extension(
+        string $filename
+    ): string {
         $pos = strrpos($filename, '.');
         return ($pos === false) ? $filename : substr($filename, 0, $pos);
     }
@@ -122,12 +114,12 @@ class functions
     /**
      * creates directory if not exists and ensures that directory is writable
      *
-     * @param string $dir
      * @param int $flags combination of MKGETDIR_xxx
-     * @return bool
      */
-    public static function mkgetdir($dir, $flags = self::MKGETDIR_DEFAULT)
-    {
+    public static function mkgetdir(
+        string $dir,
+        int $flags = self::MKGETDIR_DEFAULT
+    ): bool {
         if (! is_dir($dir)) {
             global $conf;
 
@@ -178,11 +170,11 @@ class functions
     /**
      * finds out if a string is in ASCII, UTF-8 or other encoding
      *
-     * @param string $Str
      * @return int *0* if _$str_ is ASCII, *1* if UTF-8, *-1* otherwise
      */
-    public static function qualify_utf8($Str)
-    {
+    public static function qualify_utf8(
+        string $Str
+    ): int {
         $ret = 0;
 
         for ($i = 0; $i < strlen($Str); $i++) {
@@ -227,12 +219,10 @@ class functions
 
     /**
      * Remove accents from a UTF-8 or ISO-8859-1 string (from wordpress)
-     *
-     * @param string $string
-     * @return string
      */
-    public static function remove_accents($string)
-    {
+    public static function remove_accents(
+        string $string
+    ): string {
         $utf = self::qualify_utf8($string);
 
         if ($utf == 0) {
@@ -463,12 +453,10 @@ class functions
 
     /**
      * removes accents from a string and converts it to lower case
-     *
-     * @param string $term
-     * @return string
      */
-    public static function pwg_transliterate($term)
-    {
+    public static function pwg_transliterate(
+        string $term
+    ): string {
         if (function_exists('mb_strtolower') &&
             defined('PWG_CHARSET')
         ) {
@@ -480,12 +468,10 @@ class functions
 
     /**
      * simplify a string to insert it into an URL
-     *
-     * @param string $str
-     * @return string
      */
-    public static function str2url($str)
-    {
+    public static function str2url(
+        string $str
+    ): string {
         $str = $safe = self::pwg_transliterate($str);
         $str = preg_replace('/[^\x80-\xffa-z0-9_\s\'\:\/\[\],-]/', '', $str);
         $str = preg_replace('/[\s\'\:\/\[\],-]+/', ' ', trim($str));
@@ -501,9 +487,9 @@ class functions
     /**
      * returns an array with a list of {language_code => language_name}
      *
-     * @return string[]
+     * @return array<string>
      */
-    public static function get_languages()
+    public static function get_languages(): array
     {
         $query = <<<SQL
             SELECT id, name
@@ -525,13 +511,11 @@ class functions
 
     /**
      * Does the current user must log visits in history table
-     *
-     * @param int $image_id
-     * @param string $image_type
-     * @return bool
      */
-    public static function do_log($image_id = null, $image_type = null)
-    {
+    public static function do_log(
+        int|string|null $image_id = null,
+        ?string $image_type = null
+    ): bool {
         global $conf;
 
         $do_log = $conf['log'];
@@ -551,13 +535,12 @@ class functions
 
     /**
      * log the visit into history table
-     *
-     * @param int $image_id
-     * @param string $image_type
-     * @return bool
      */
-    public static function pwg_log($image_id = null, $image_type = null, $format_id = null)
-    {
+    public static function pwg_log(
+        int|string|null $image_id = null,
+        ?string $image_type = null,
+        int|string|null $format_id = null
+    ): bool {
         global $conf, $user, $page;
 
         $update_last_visit = false;
@@ -668,8 +651,12 @@ class functions
         return true;
     }
 
-    public static function pwg_activity($object, $object_id, $action, $details = [])
-    {
+    public static function pwg_activity(
+        string $object,
+        array|int|string $object_id,
+        string $action,
+        array $details = []
+    ): void {
         global $user;
 
         // in case of uploadAsync, do not log the automatic login as an independent activity
@@ -783,13 +770,12 @@ class functions
      * returns a DateInterval object or a stdClass with the same attributes
      * http://stephenharris.info/date-intervals-in-php-5-2
      *
-     * @param DateTime $date1
-     * @param DateTime $date2
-     * @return DateInterval|stdClass
      * @throws DateMalformedStringException
      */
-    public static function dateDiff($date1, $date2)
-    {
+    public static function dateDiff(
+        DateTime $date1,
+        DateTime $date2
+    ): DateInterval|stdClass {
         if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
             return $date1->diff($date2);
         }
@@ -854,13 +840,14 @@ class functions
     /**
      * converts a string into a DateTime object
      *
-     * @param int|string $original timestamp or datetime string
-     * @param string $format input format respecting date() syntax
-     * @return DateTime|false
+     * @param int|string|null $original timestamp or datetime string
+     * @param ?string $format input format respecting date() syntax
      * @throws DateMalformedStringException
      */
-    public static function str2DateTime($original, $format = null)
-    {
+    public static function str2DateTime(
+        int|string|null $original,
+        ?string $format = null
+    ): DateTime|false {
         if (empty($original)) {
             return false;
         }
@@ -916,15 +903,17 @@ class functions
     /**
      * returns a formatted and localized date for display
      *
-     * @param int|string $original timestamp or datetime string
-     * @param array $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
+     * @param bool|DateTime|int|string|null $original timestamp or datetime string
+     * @param ?array $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
      *    THIS PARAMETER IS PLANNED TO CHANGE
-     * @param string $format input format respecting date() syntax
-     * @return string
+     * @param ?string $format input format respecting date() syntax
      * @throws DateMalformedStringException
      */
-    public static function format_date($original, $show = null, $format = null)
-    {
+    public static function format_date(
+        bool|DateTime|int|string|null $original,
+        ?array $show = null,
+        ?string $format = null
+    ): string {
         global $lang;
 
         $date = self::str2DateTime($original, $format);
@@ -972,14 +961,13 @@ class functions
 
     /**
      * Format a "From ... to ..." string from two dates
-     * @param string $from
-     * @param string $to
-     * @param bool $full
-     * @return string
      * @throws DateMalformedStringException
      */
-    public static function format_fromto($from, $to, $full = false)
-    {
+    public static function format_fromto(
+        string $from,
+        string $to,
+        bool $full = false
+    ): string {
         $from = self::str2DateTime($from);
         $to = self::str2DateTime($to);
 
@@ -1005,16 +993,20 @@ class functions
     /**
      * Works out the time since the given date
      *
-     * @param int|string $original timestamp or datetime string
+     * @param int|string|null $original timestamp or datetime string
      * @param string $stop year,month,week,day,hour,minute,second
-     * @param string $format input format respecting date() syntax
+     * @param ?string $format input format respecting date() syntax
      * @param bool $with_text append "ago" or "in the future"
-     * @param bool $with_week
-     * @return string
      * @throws DateMalformedStringException
      */
-    public static function time_since($original, $stop = 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = false)
-    {
+    public static function time_since(
+        int|string|null $original,
+        string $stop = 'minute',
+        ?string $format = null,
+        bool $with_text = true,
+        bool $with_week = true,
+        bool $only_last_unit = false
+    ): string {
         $date = self::str2DateTime($original, $format);
 
         if (! $date) {
@@ -1096,15 +1088,17 @@ class functions
     /**
      * transform a date string from a format to another (MySQL to d/M/Y for instance)
      *
-     * @param string $original
      * @param string $format_in respecting date() syntax
      * @param string $format_out respecting date() syntax
-     * @param string $default if _$original_ is empty
-     * @return string
+     * @param ?string $default if _$original_ is empty
      * @throws DateMalformedStringException
      */
-    public static function transform_date($original, $format_in, $format_out, $default = null)
-    {
+    public static function transform_date(
+        string $original,
+        string $format_in,
+        string $format_out,
+        ?string $default = null
+    ): ?string {
         if (empty($original)) {
             return $default;
         }
@@ -1115,11 +1109,10 @@ class functions
 
     /**
      * append a variable to _$debug_ global
-     *
-     * @param string $string
      */
-    public static function pwg_debug($string)
-    {
+    public static function pwg_debug(
+        string $string
+    ): void {
         global $debug,$t2,$page;
 
         $now = explode(' ', microtime());
@@ -1136,11 +1129,10 @@ class functions
      * Redirects to the given URL (HTTP method).
      * once this function called, the execution doesn't go further
      * (presence of an exit() instruction.
-     *
-     * @param string $url
      */
-    public static function redirect_http($url)
-    {
+    public static function redirect_http(
+        string $url
+    ): never {
         if (ob_get_length() !== false) {
             ob_clean();
         }
@@ -1158,13 +1150,13 @@ class functions
      * once this function called, the execution doesn't go further
      * (presence of an exit() instruction.
      *
-     * @param string $url
-     * @param string $msg
-     * @param int $refresh_time
      * @throws SmartyException
      */
-    public static function redirect_html($url, $msg = '', $refresh_time = 0)
-    {
+    public static function redirect_html(
+        string $url,
+        string $msg = '',
+        int $refresh_time = 0
+    ): never {
         global $user, $template, $lang_info, $conf, $lang, $t2, $page, $debug;
 
         if (! isset($lang_info) ||
@@ -1215,13 +1207,13 @@ class functions
      * once this function called, the execution doesn't go further
      * (presence of an exit() instruction.
      *
-     * @param string $url
-     * @param string $msg
-     * @param int $refresh_time
      * @throws SmartyException
      */
-    public static function redirect($url, $msg = '', $refresh_time = 0)
-    {
+    public static function redirect(
+        string $url,
+        string $msg = '',
+        int $refresh_time = 0
+    ): void {
         global $conf;
 
         // with RefreshTime != 0, only html must be used
@@ -1237,12 +1229,10 @@ class functions
 
     /**
      * returns available themes
-     *
-     * @param bool $show_mobile
-     * @return array
      */
-    public static function get_pwg_themes($show_mobile = false)
-    {
+    public static function get_pwg_themes(
+        bool $show_mobile = false
+    ): array {
         global $conf;
 
         $themes = [];
@@ -1276,12 +1266,10 @@ class functions
 
     /**
      * check if a theme is installed (directory exists)
-     *
-     * @param string $theme_id
-     * @return bool
      */
-    public static function check_theme_installed($theme_id)
-    {
+    public static function check_theme_installed(
+        string $theme_id
+    ): bool {
         global $conf;
 
         return file_exists($conf['themes_dir'] . '/' . $theme_id . '/themeconf.php');
@@ -1289,13 +1277,11 @@ class functions
 
     /**
      * Transforms an original path to its pwg representative
-     *
-     * @param string $path
-     * @param string $representative_ext
-     * @return string
      */
-    public static function original_to_representative($path, $representative_ext)
-    {
+    public static function original_to_representative(
+        string $path,
+        string $representative_ext
+    ): string {
         $pos = strrpos($path, '/');
         $path = substr_replace($path, 'pwg_representative/', $pos + 1, 0);
         $pos = strrpos($path, '.');
@@ -1304,13 +1290,11 @@ class functions
 
     /**
      * Transforms an original path to its format
-     *
-     * @param string $path
-     * @param string $format_ext
-     * @return string
      */
-    public static function original_to_format($path, $format_ext)
-    {
+    public static function original_to_format(
+        string $path,
+        string $format_ext
+    ): string {
         $pos = strrpos($path, '/');
         $path = substr_replace($path, 'pwg_format/', $pos + 1, 0);
         $pos = strrpos($path, '.');
@@ -1321,10 +1305,10 @@ class functions
      * get the full path of an image
      *
      * @param array $element_info element information from db (at least 'path')
-     * @return string
      */
-    public static function get_element_path($element_info)
-    {
+    public static function get_element_path(
+        array $element_info
+    ): string {
         $path = $element_info['path'];
 
         if (! functions_url::url_is_remote($path)) {
@@ -1337,10 +1321,11 @@ class functions
     /**
      * fill the current user caddie with given elements, if not already in caddie
      *
-     * @param int[] $elements_id
+     * @param array<int> $elements_id
      */
-    public static function fill_caddie($elements_id)
-    {
+    public static function fill_caddie(
+        array $elements_id
+    ): void {
         global $user;
 
         $query = <<<SQL
@@ -1370,11 +1355,11 @@ class functions
      * returns the element name from its filename.
      * removes file extension and replace underscores by spaces
      *
-     * @param string $filename
      * @return string name
      */
-    public static function get_name_from_file($filename)
-    {
+    public static function get_name_from_file(
+        string $filename
+    ): string {
         return str_replace('_', ' ', self::get_filename_wo_extension($filename));
     }
 
@@ -1382,12 +1367,10 @@ class functions
      * translation function.
      * returns the corresponding value from _$lang_ if existing else the key is returned
      * if more than one parameter is provided sprintf is applied
-     *
-     * @param string $key
-     * @return string
      */
-    public static function l10n($key)
-    {
+    public static function l10n(
+        string $key
+    ): string {
         global $lang, $conf;
 
         $val = ($lang[$key] ?? null);
@@ -1414,14 +1397,12 @@ class functions
     /**
      * returns the printf value for strings including %d
      * returned value is concorded with decimal value (singular, plural)
-     *
-     * @param string $singular_key
-     * @param string $plural_key
-     * @param int $decimal
-     * @return string
      */
-    public static function l10n_dec($singular_key, $plural_key, $decimal)
-    {
+    public static function l10n_dec(
+        string $singular_key,
+        string $plural_key,
+        int|string $decimal
+    ): string {
         global $lang_info;
 
         return sprintf(
@@ -1438,12 +1419,14 @@ class functions
      * returns a single element to use with l10n_args
      *
      * @param string $key translation key
-     * @param mixed $args arguments to use on sprintf($key, args)
+     * @param array|string $args arguments to use on sprintf($key, args)
      *   if args is a array, each values are used on sprintf
      * @return array[]
      */
-    public static function get_l10n_args($key, $args = '')
-    {
+    public static function get_l10n_args(
+        string $key,
+        array|string $args = ''
+    ): array {
         if (is_array($args)) {
             $key_arg = array_merge([$key], $args);
         } else {
@@ -1462,10 +1445,11 @@ class functions
      *
      * @param array $key_args one l10n_args element or array of l10n_args elements
      * @param string $sep used when translated elements are concatenated
-     * @return string
      */
-    public static function l10n_args($key_args, $sep = "\n")
-    {
+    public static function l10n_args(
+        array $key_args,
+        string $sep = "\n"
+    ): string {
         if (is_array($key_args)) {
             foreach ($key_args as $key => $element) {
                 if (isset($result)) {
@@ -1490,21 +1474,17 @@ class functions
 
     /**
      * returns the corresponding value from $themeconf if existing or an empty string
-     *
-     * @param string $key
-     * @return string
      */
-    public static function get_themeconf($key)
-    {
+    public static function get_themeconf(
+        string $key
+    ): array|bool {
         return $GLOBALS['template']->get_themeconf($key);
     }
 
     /**
      * Returns webmaster mail address depending on $conf['webmaster_id']
-     *
-     * @return string
      */
-    public static function get_webmaster_mail_address()
+    public static function get_webmaster_mail_address(): string
     {
         global $conf;
 
@@ -1525,8 +1505,9 @@ class functions
      *
      * @param string $condition SQL condition
      */
-    public static function load_conf_from_db($condition = '')
-    {
+    public static function load_conf_from_db(
+        string $condition = ''
+    ): void {
         global $conf;
 
         $condition = ! empty($condition) ? "WHERE {$condition}" : '';
@@ -1563,10 +1544,9 @@ class functions
     /**
      * Is the config table currently writeable?
      *
-     * @return bool
      * @throws RandomException
      */
-    public static function pwg_is_dbconf_writeable()
+    public static function pwg_is_dbconf_writeable(): bool
     {
         list($param, $value) = ['pwg_is_dbconf_writeable_' . functions_session::generate_key(12), date('c') . ' ' . functions_session::generate_key(20)];
 
@@ -1584,14 +1564,16 @@ class functions
     /**
      * Add or update a config parameter
      *
-     * @param string $param
-     * @param string $value
      * @param bool $updateGlobal update global *$conf* variable
-     * @param callable $parser function to apply to the value before save in database
+     * @param ?callable $parser function to apply to the value before save in database
      *     (eg: serialize, json_encode) will not be applied to *$conf* if *$parser* is *true*
      */
-    public static function conf_update_param($param, $value, $updateGlobal = false, $parser = null)
-    {
+    public static function conf_update_param(
+        string $param,
+        string|array|int|bool $value,
+        bool $updateGlobal = false,
+        ?callable $parser = null
+    ): void {
         if ($parser != null) {
             $dbValue = call_user_func($parser, $value);
         } elseif (is_array($value) ||
@@ -1622,10 +1604,11 @@ class functions
     /**
      * Delete one or more config parameters
      *
-     * @param string|string[] $params
+     * @param string|array<string> $params
      */
-    public static function conf_delete_param($params)
-    {
+    public static function conf_delete_param(
+        array|string $params
+    ): void {
         global $conf;
 
         if (! is_array($params)) {
@@ -1653,10 +1636,12 @@ class functions
      *
      * @param string $param the configuration value to be extracted (if it exists)
      * @param mixed $default_value the default value for the configuration value if it does not exist.
-     * @return mixed The configuration value if the variable exists, otherwise the default.
+     * @return array|bool|string|int|float|object|null The configuration value if the variable exists, otherwise the default.
      */
-    public static function conf_get_param($param, $default_value = null)
-    {
+    public static function conf_get_param(
+        string $param,
+        mixed $default_value = null
+    ): array|bool|string|int|float|null|object {
         global $conf;
 
         if (isset($conf[$param])) {
@@ -1753,22 +1738,20 @@ class functions
     /**
      * Apply *unserialize* on a value only if it is a string
      *
-     * @param array|string $value
      * @return array
      */
-    public static function safe_unserialize($value)
-    {
+    public static function safe_unserialize(
+        array|string $value
+    ): array|bool|string|int|float|null|object {
         return self::is_serialized($value) ? unserialize($value) : false;
     }
 
     /**
      * Apply *json_decode* on a value only if it is a string
-     *
-     * @param array|string $value
-     * @return array
      */
-    public static function safe_json_decode($value)
-    {
+    public static function safe_json_decode(
+        array|string $value
+    ): array {
         if (is_string($value)) {
             return json_decode($value, true);
         }
@@ -1778,15 +1761,13 @@ class functions
 
     /**
      * Prepends and appends strings at each value of the given array.
-     *
-     * @param array $array
-     * @param string $prepend_str
-     * @param string $append_str
-     * @return array
      */
-    public static function prepend_append_array_items($array, $prepend_str, $append_str)
-    {
-        array_walk($array, function (&$value, $key) use ($prepend_str, $append_str) { $value = "{$prepend_str}{$value}{$append_str}"; });
+    public static function prepend_append_array_items(
+        array $array,
+        string $prepend_str,
+        string $append_str
+    ): array {
+        array_walk($array, function (&$value, $key) use ($prepend_str, $append_str): void { $value = "{$prepend_str}{$value}{$append_str}"; });
         return $array;
     }
 
@@ -1794,14 +1775,12 @@ class functions
      * creates an simple hashmap based on a SQL query.
      * choose one to be the key, another one to be the value.
      * @deprecated 2.6
-     *
-     * @param string $query
-     * @param string $keyname
-     * @param string $valuename
-     * @return array
      */
-    public static function simple_hash_from_query($query, $keyname, $valuename)
-    {
+    public static function simple_hash_from_query(
+        string $query,
+        string $keyname,
+        string $valuename
+    ): array {
         return functions_mysqli::query2array($query, $keyname, $valuename);
     }
 
@@ -1809,13 +1788,11 @@ class functions
      * creates an associative array based on a SQL query.
      * choose one to be the key
      * @deprecated 2.6
-     *
-     * @param string $query
-     * @param string $keyname
-     * @return array
      */
-    public static function hash_from_query($query, $keyname)
-    {
+    public static function hash_from_query(
+        string $query,
+        string $keyname
+    ): array {
         return functions_mysqli::query2array($query, $keyname);
     }
 
@@ -1824,13 +1801,11 @@ class functions
      * if _$fieldname_ is empty the returned value will be an array of arrays
      * if _$fieldname_ is provided the returned value will be a one dimension array
      * @deprecated 2.6
-     *
-     * @param string $query
-     * @param string $fieldname
-     * @return array
      */
-    public static function array_from_query($query, $fieldname = false)
-    {
+    public static function array_from_query(
+        string $query,
+        bool|string $fieldname = false
+    ): array {
         if ($fieldname === false) {
             return functions_mysqli::query2array($query);
         }
@@ -1841,10 +1816,8 @@ class functions
     /**
      * Return the basename of the current script.
      * The lowercase case filename of the current script without extension
-     *
-     * @return string
      */
-    public static function script_basename()
+    public static function script_basename(): string
     {
         global $conf;
 
@@ -1871,12 +1844,10 @@ class functions
 
     /**
      * Return $conf['filter_pages'] value for the current page
-     *
-     * @param string $value_name
-     * @return mixed
      */
-    public static function get_filter_page_value($value_name)
-    {
+    public static function get_filter_page_value(
+        string $value_name
+    ): bool|string|null {
         global $conf;
 
         $page_name = self::script_basename();
@@ -1892,9 +1863,8 @@ class functions
 
     /**
      * return the character set used by Piwigo
-     * @return string
      */
-    public static function get_pwg_charset()
+    public static function get_pwg_charset(): string
     {
         $pwg_charset = 'utf-8';
 
@@ -1908,12 +1878,10 @@ class functions
     /**
      * returns the parent (fallback) language of a language.
      * if _$lang_id_ is null it applies to the current language
-     *
-     * @param string $lang_id
-     * @return string|null
      */
-    public static function get_parent_language($lang_id = null)
-    {
+    public static function get_parent_language(
+        ?string $lang_id = null
+    ): ?string {
         if (empty($lang_id)) {
             global $lang_info;
             return ! empty($lang_info['parent']) ? $lang_info['parent'] : null;
@@ -1935,8 +1903,6 @@ class functions
      * tries to load in descending order:
      *   param language, user language, default language
      *
-     * @param string $filename
-     * @param string $dirname
      * @param array{
      *     language: string,
      *     return: bool,
@@ -1945,10 +1911,12 @@ class functions
      *     local: bool,
      *     target_charset: string,
      * } $options
-     * @return bool|string
      */
-    public static function load_language($filename, $dirname = '', $options = [])
-    {
+    public static function load_language(
+        string $filename,
+        string $dirname = '',
+        array $options = []
+    ): bool|string {
         global $user, $language_files;
 
         // keep trace of plugins loaded files for switch_lang_to() function
@@ -2085,13 +2053,12 @@ class functions
 
     /**
      * converts a string from a character set to another character set
-     *
-     * @param string $str
-     * @param string $source_charset
-     * @param string $dest_charset
      */
-    public static function convert_charset($str, $source_charset, $dest_charset)
-    {
+    public static function convert_charset(
+        string $str,
+        string $source_charset,
+        string $dest_charset
+    ): array|false|string|null {
         if ($source_charset == $dest_charset) {
             return $str;
         }
@@ -2121,11 +2088,10 @@ class functions
 
     /**
      * makes sure a index.htm protects the directory from browser file listing
-     *
-     * @param string $dir
      */
-    public static function secure_directory($dir)
-    {
+    public static function secure_directory(
+        string $dir
+    ): void {
         $file = $dir . '/index.htm';
 
         if (! file_exists($file)) {
@@ -2137,11 +2103,11 @@ class functions
      * returns a "secret key" that is to be sent back when a user posts a form
      *
      * @param int $valid_after_seconds - key validity start time from now
-     * @param string $additional_data_to_hash
-     * @return string
      */
-    public static function get_ephemeral_key($valid_after_seconds, $additional_data_to_hash = '')
-    {
+    public static function get_ephemeral_key(
+        int $valid_after_seconds,
+        string $additional_data_to_hash = ''
+    ): string {
         global $conf;
         $time = round(microtime(true), 1);
         return $time . ':' . $valid_after_seconds . ':'
@@ -2154,13 +2120,11 @@ class functions
 
     /**
      * verify a key sent back with a form
-     *
-     * @param string $key
-     * @param string $additional_data_to_hash
-     * @return bool
      */
-    public static function verify_ephemeral_key($key, $additional_data_to_hash = '')
-    {
+    public static function verify_ephemeral_key(
+        string $key,
+        string $additional_data_to_hash = ''
+    ): bool {
         global $conf;
         $time = microtime(true);
         $key = explode(':', $key);
@@ -2184,15 +2148,15 @@ class functions
      * return an array which will be sent to template to display navigation bar
      *
      * @param string $url base url of all links
-     * @param int $nb_element
-     * @param int $start
-     * @param int $nb_element_page
-     * @param bool $clean_url
-     * @param string $param_name
-     * @return array
      */
-    public static function create_navigation_bar($url, $nb_element, $start, $nb_element_page, $clean_url = false, $param_name = 'start')
-    {
+    public static function create_navigation_bar(
+        string $url,
+        int|string $nb_element,
+        int|string $start,
+        int|string $nb_element_page,
+        bool|string $clean_url = false,
+        string $param_name = 'start'
+    ): array {
         global $conf;
 
         $navbar = [];
@@ -2248,13 +2212,11 @@ class functions
 
     /**
      * return an array which will be sent to template to display recent icon
-     *
-     * @param string $date
-     * @param bool $is_child_date
-     * @return array
      */
-    public static function get_icon($date, $is_child_date = false)
-    {
+    public static function get_icon(
+        ?string $date,
+        bool $is_child_date = false
+    ): false|array {
         global $cache, $user;
 
         if (empty($date)) {
@@ -2294,7 +2256,7 @@ class functions
      *
      * @throws SmartyException
      */
-    public static function check_pwg_token()
+    public static function check_pwg_token(): void
     {
         if (! empty($_REQUEST['pwg_token'])) {
             if (self::get_pwg_token() != $_REQUEST['pwg_token']) {
@@ -2307,10 +2269,8 @@ class functions
 
     /**
      * get pwg_token used to prevent csrf attacks
-     *
-     * @return string
      */
-    public static function get_pwg_token()
+    public static function get_pwg_token(): string
     {
         global $conf;
 
@@ -2320,15 +2280,14 @@ class functions
     /**
      * breaks the script execution if the given value doesn't match the given
      * pattern. This should happen only during hacking attempts.
-     *
-     * @param string $param_name
-     * @param array $param_array
-     * @param bool $is_array
-     * @param string $pattern
-     * @param bool $mandatory
      */
-    public static function check_input_parameter($param_name, $param_array, $is_array, $pattern, $mandatory = false)
-    {
+    public static function check_input_parameter(
+        string $param_name,
+        array $param_array,
+        bool $is_array,
+        string $pattern,
+        bool $mandatory = false
+    ): ?bool {
         $param_value = null;
 
         if (isset($param_array[$param_name])) {
@@ -2361,14 +2320,16 @@ class functions
                 functions_html::fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid');
             }
         }
+
+        return null;
     }
 
     /**
      * get localized privacy level values
      *
-     * @return string[]
+     * @return array<string>
      */
-    public static function get_privacy_level_options()
+    public static function get_privacy_level_options(): array
     {
         global $conf;
 
@@ -2394,12 +2355,10 @@ class functions
 
     /**
      * return the branch from the version. For example version 11.1.2 is on branch 11
-     *
-     * @param string $version
-     * @return string
      */
-    public static function get_branch_from_version($version)
-    {
+    public static function get_branch_from_version(
+        string $version
+    ): string {
         // the algorithm is a bit complicated to just retrieve the first digits before
         // the first ".". It's because before version 11.0.0, we used to take the 2 first
         // digits, ie version 2.2.4 was on branch 2.2
@@ -2408,10 +2367,8 @@ class functions
 
     /**
      * return the device type: mobile, tablet or desktop
-     *
-     * @return string
      */
-    public static function get_device()
+    public static function get_device(): string
     {
         $device = functions_session::pwg_get_session_var('device');
 
@@ -2434,10 +2391,8 @@ class functions
 
     /**
      * return true if mobile theme should be loaded
-     *
-     * @return bool
      */
-    public static function mobile_theme()
+    public static function mobile_theme(): bool
     {
         global $conf;
 
@@ -2466,12 +2421,10 @@ class functions
 
     /**
      * check url format
-     *
-     * @param string $url
-     * @return bool
      */
-    public static function url_check_format($url)
-    {
+    public static function url_check_format(
+        string $url
+    ): bool {
         if (strpos($url, '"') !== false) {
             return false;
         }
@@ -2487,21 +2440,17 @@ class functions
 
     /**
      * check email format
-     *
-     * @param string $mail_address
-     * @return bool
      */
-    public static function email_check_format($mail_address)
-    {
+    public static function email_check_format(
+        string $mail_address
+    ): bool {
         return filter_var($mail_address, FILTER_VALIDATE_EMAIL) !== false;
     }
 
     /**
      * returns the number of available comments for the connected user
-     *
-     * @return int
      */
-    public static function get_nb_available_comments()
+    public static function get_nb_available_comments(): int
     {
         global $user;
 
@@ -2548,14 +2497,13 @@ class functions
      * Compare two versions with version_compare after having converted
      * single chars to their decimal values.
      * Needed because version_compare does not understand versions like '2.5.c'.
-     *
-     * @param string $a
-     * @param string $b
-     * @param string $op
      */
-    public static function safe_version_compare($a, $b, $op = null)
-    {
-        $replace_chars = function ($m) { return ord(strtolower($m[1])); };
+    public static function safe_version_compare(
+        string $a,
+        string $b,
+        ?string $op = null
+    ): bool|int {
+        $replace_chars = function ($m): int { return ord(strtolower($m[1])); };
 
         // add dot before groups of letters (version_compare does the same thing)
         $a = preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $a);
@@ -2575,7 +2523,7 @@ class functions
     /**
      * Checks if the lounge needs to be emptied automatically.
      */
-    public static function check_lounge()
+    public static function check_lounge(): void
     {
         global $conf;
 
@@ -2611,8 +2559,9 @@ class functions
         }
     }
 
-    public static function guess_mime_type($ext)
-    {
+    public static function guess_mime_type(
+        string $ext
+    ): string {
         switch (strtolower($ext)) {
             case 'jpe': case 'jpeg':
             case 'jpg': $ctype = 'image/jpeg';
@@ -2656,8 +2605,10 @@ class functions
         return $ctype;
     }
 
-    public static function do_error($code, $str)
-    {
+    public static function do_error(
+        int $code,
+        string $str
+    ): never {
         functions_html::set_status_header($code);
         echo $str;
         exit();
@@ -2668,10 +2619,11 @@ class functions
      * GMT) from a MySQL datetime format (2005-07-14 23:01:37)
      *
      * @param string $datetime mysql datetime format
-     * @return int timestamp
+     * @return bool|int timestamp
      */
-    public static function datetime_to_ts($datetime)
-    {
+    public static function datetime_to_ts(
+        string $datetime
+    ): bool|int {
         return strtotime($datetime);
     }
 
@@ -2684,15 +2636,18 @@ class functions
      * @param int $ts timestamp
      * @return string ISO 8601 date format
      */
-    public static function ts_to_iso8601($ts)
-    {
+    public static function ts_to_iso8601(
+        int $ts
+    ): string {
         $tz = date('O', $ts);
         $tz = substr($tz, 0, -2) . ':' . substr($tz, -2);
         return date('Y-m-d\\TH:i:s', $ts) . $tz;
     }
 
-    public static function ierror($msg, $code)
-    {
+    public static function ierror(
+        string $msg,
+        int $code
+    ): never {
         global $logger;
 
         if ($code == 301 ||
@@ -2733,15 +2688,17 @@ class functions
         exit;
     }
 
-    public static function time_step(&$step)
-    {
+    public static function time_step(
+        float &$step
+    ): int {
         $tmp = $step;
         $step = microtime(true);
         return intval(1000 * ($step - $tmp));
     }
 
-    public static function url_to_size($s)
-    {
+    public static function url_to_size(
+        string $s
+    ): array {
         $pos = strpos($s, 'x');
 
         if ($pos === false) {
@@ -2751,8 +2708,9 @@ class functions
         return [(int) substr($s, 0, $pos), (int) substr($s, $pos + 1)];
     }
 
-    public static function parse_custom_params($tokens)
-    {
+    public static function parse_custom_params(
+        array $tokens
+    ): DerivativeParams {
         if (count($tokens) < 1) {
             self::ierror('Empty array while parsing Sizing', 400);
         }
@@ -2784,7 +2742,7 @@ class functions
         return new DerivativeParams(new SizingParams($size, $crop, $min_size));
     }
 
-    public static function parse_request()
+    public static function parse_request(): void
     {
         global $conf, $page;
 
@@ -2900,8 +2858,10 @@ class functions
         $page['src_url'] = $page['src_location'];
     }
 
-    public static function try_switch_source(DerivativeParams $params, $original_mtime)
-    {
+    public static function try_switch_source(
+        DerivativeParams $params,
+        int $original_mtime
+    ): bool {
         global $page;
 
         if (! isset($page['original_size'])) {
@@ -2999,8 +2959,9 @@ class functions
         return false;
     }
 
-    public static function send_derivative($expires)
-    {
+    public static function send_derivative(
+        int|bool $expires
+    ): void {
         global $page;
 
         if (isset($_GET['ajaxload']) and
@@ -3051,7 +3012,7 @@ class functions
      * @return string feed identifier
      * @throws RandomException
      */
-    public static function find_available_feed_id()
+    public static function find_available_feed_id(): string
     {
         while (true) {
             $key = functions_session::generate_key(50);
@@ -3075,7 +3036,7 @@ class functions
      * @return bool (true if email was sent, false otherwise)
      * @throws RandomException
      */
-    public static function process_password_request()
+    public static function process_password_request(): bool
     {
         global $page, $conf;
 
@@ -3169,10 +3130,11 @@ class functions
      *  checks the activation key: does it match the expected pattern? is it
      *  linked to a user? is this user allowed to reset his password?
      *
-     * @return mixed (user_id if OK, false otherwise)
+     * @return int|false (user_id if OK, false otherwise)
      */
-    public static function check_password_reset_key($reset_key)
-    {
+    public static function check_password_reset_key(
+        string $reset_key
+    ): int|false {
         global $page, $conf;
 
         list($key, $email) = explode('-', $reset_key, 2);
@@ -3240,7 +3202,7 @@ class functions
      *
      * @return bool (true if password was reset, false otherwise)
      */
-    public static function reset_password()
+    public static function reset_password(): bool
     {
         global $page, $conf;
 
@@ -3283,14 +3245,17 @@ class functions
      * parameter on nl2br() (and anyway the second parameter of nl2br does not
      * match what Piwigo gives.
      */
-    public static function pwg_nl2br($string)
-    {
+    public static function pwg_nl2br(
+        string $string
+    ): string {
         return nl2br($string);
     }
 
     // this is the default handler that generates the display for the element
-    public static function default_picture_content($content, $element_info)
-    {
+    public static function default_picture_content(
+        string|null $content,
+        array $element_info
+    ): string|null {
         global $conf;
 
         if (! empty($content)) { // someone hooked us - so we skip;
@@ -3369,10 +3334,8 @@ class functions
 
     /**
      * list all tables in an array
-     *
-     * @return array
      */
-    public static function get_tables()
+    public static function get_tables(): array
     {
         $tables = [];
 
@@ -3393,8 +3356,9 @@ class functions
      *
      * @return array of array
      */
-    public static function get_columns_of($tables)
-    {
+    public static function get_columns_of(
+        array $tables
+    ): array {
         $columns_of = [];
 
         foreach ($tables as $table) {
@@ -3413,8 +3377,9 @@ class functions
         return $columns_of;
     }
 
-    public static function print_time($message)
-    {
+    public static function print_time(
+        string $message
+    ): void {
         global $last_time;
 
         $new_time = self::get_moment();
@@ -3425,8 +3390,10 @@ class functions
         $last_time = $new_time;
     }
 
-    public static function save_profile_from_post($userdata, &$errors)
-    {
+    public static function save_profile_from_post(
+        array $userdata,
+        array &$errors
+    ): bool {
         global $conf, $page;
         $errors = [];
 
@@ -3635,13 +3602,13 @@ class functions
     /**
      * Assign template variables, from arguments
      * Used to build profile edition pages
-     *
-     * @param string $url_action
-     * @param string $url_redirect
-     * @param array $userdata
      */
-    public static function load_profile_in_template($url_action, $url_redirect, $userdata, $template_prefix = null)
-    {
+    public static function load_profile_in_template(
+        string $url_action,
+        string $url_redirect,
+        array $userdata,
+        ?string $template_prefix = null
+    ): void {
         global $template, $conf;
 
         $template->assign(

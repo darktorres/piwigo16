@@ -13,13 +13,12 @@ class functions_metadata
 {
     /**
      * returns information from IPTC metadata, mapping is done in this function.
-     *
-     * @param string $filename
-     * @param array $map
-     * @return array
      */
-    public static function get_iptc_data($filename, $map, $array_sep = ',')
-    {
+    public static function get_iptc_data(
+        string $filename,
+        array $map,
+        string $array_sep = ','
+    ): array {
         global $conf;
 
         $result = [];
@@ -67,12 +66,10 @@ class functions_metadata
 
     /**
      * return a cleaned IPTC value.
-     *
-     * @param string $value
-     * @return string
      */
-    public static function clean_iptc_value($value)
-    {
+    public static function clean_iptc_value(
+        string $value
+    ): string {
         // strip leading zeros (weird Kodak Scanner software)
         while (isset($value[0]) and
                $value[0] == chr(0)
@@ -116,13 +113,11 @@ class functions_metadata
 
     /**
      * returns information from EXIF metadata, mapping is done in this function.
-     *
-     * @param string $filename
-     * @param array $map
-     * @return array
      */
-    public static function get_exif_data($filename, $map)
-    {
+    public static function get_exif_data(
+        string $filename,
+        array $map
+    ): array {
         global $conf, $logger;
 
         $result = [];
@@ -211,23 +206,27 @@ class functions_metadata
         return $result;
     }
 
-    public static function strip_html_in_metadata(&$v, $k)
-    {
+    public static function strip_html_in_metadata(
+        string &$v,
+        $k
+    ): void {
         $v = strip_tags($v);
     }
 
     /**
      * Converts EXIF GPS format to a float value.
      *
-     * @param string[] $raw eg:
+     * @param array<string> $raw eg:
      *    - 41/1
      *    - 54/1
      *    - 9843/500
      * @param string $ref 'S', 'N', 'E', 'W'. eg: 'N'
-     * @return float eg: 41.905468
+     * @return float|int|string eg: 41.905468
      */
-    public static function parse_exif_gps_data($raw, $ref)
-    {
+    public static function parse_exif_gps_data(
+        array $raw,
+        string $ref
+    ): float|int|string {
         foreach ($raw as &$i) {
             $i = explode('/', $i);
             $i = $i[1] == 0 ? 0 : $i[0] / $i[1];

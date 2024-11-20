@@ -15,6 +15,7 @@ use Piwigo\inc\functions;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgNamedArray;
 use Piwigo\inc\PwgNamedStruct;
+use Piwigo\inc\PwgServer;
 
 class pwg_groups
 {
@@ -22,15 +23,17 @@ class pwg_groups
      * API method
      * Returns the list of groups
      * @param array{
-     *     group_id?: int[],
+     *     group_id?: array<int>,
      *     name?: string,
      *     order: mixed,
      *     per_page: mixed,
      *     page: mixed,
      * } $params
      */
-    public static function ws_groups_getList($params, &$service)
-    {
+    public static function ws_groups_getList(
+        array $params,
+        PwgServer &$service
+    ): PwgError|array {
         if (! preg_match(PATTERN_ORDER, $params['order'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
         }
@@ -77,8 +80,10 @@ class pwg_groups
      *     is_default: bool,
      * } $params
      */
-    public static function ws_groups_add($params, &$service)
-    {
+    public static function ws_groups_add(
+        array $params,
+        PwgServer &$service
+    ): array|bool|PwgError|string|null {
         $params['name'] = functions_mysqli::pwg_db_real_escape_string(strip_tags(stripslashes($params['name'])));
 
         // is the name not already used ?
@@ -118,12 +123,14 @@ class pwg_groups
      * API method
      * Deletes a group
      * @param array{
-     *     group_id: int[],
+     *     group_id: array<int>,
      *     pwg_token: string,
      * } $params
      */
-    public static function ws_groups_delete($params, &$service)
-    {
+    public static function ws_groups_delete(
+        array $params,
+        &$service
+    ): PwgError|PwgNamedArray {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -142,11 +149,13 @@ class pwg_groups
      *     group_id: int,
      *     name?: string,
      *     is_default?: bool,
-     *     pwg_token: mixed,
+     *     pwg_token: string,
      * } $params
      */
-    public static function ws_groups_setInfo($params, &$service)
-    {
+    public static function ws_groups_setInfo(
+        array $params,
+        PwgServer &$service
+    ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -216,12 +225,14 @@ class pwg_groups
      * Adds user(s) to a group
      * @param array{
      *     group_id: int,
-     *     user_id: int[],
-     *     pwg_token: mixed,
+     *     user_id: array<int>,
+     *     pwg_token: string,
      * } $params
      */
-    public static function ws_groups_addUser($params, &$service)
-    {
+    public static function ws_groups_addUser(
+        array $params,
+        PwgServer &$service
+    ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -268,12 +279,14 @@ class pwg_groups
      * Merge groups in one other group
      * @param array{
      *     destination_group_id: int,
-     *     merge_group_id: int[],
-     *     pwg_token: mixed,
+     *     merge_group_id: array<int>,
+     *     pwg_token: string,
      * } $params
      */
-    public static function ws_groups_merge($params, &$service)
-    {
+    public static function ws_groups_merge(
+        array $params,
+        PwgServer &$service
+    ): PwgError|array {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -365,11 +378,13 @@ class pwg_groups
      * @param array{
      *     group_id: int,
      *     copy_name: string,
-     *     pwg_token: mixed,
+     *     pwg_token: string,
      * } $params
      */
-    public static function ws_groups_duplicate($params, &$service)
-    {
+    public static function ws_groups_duplicate(
+        array $params,
+        PwgServer &$service
+    ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -461,12 +476,14 @@ class pwg_groups
      * Removes user(s) from a group
      * @param array{
      *     group_id: int,
-     *     user_id: int[],
-     *     pwg_token: mixed,
+     *     user_id: array<int>,
+     *     pwg_token: string,
      * } $params
      */
-    public static function ws_groups_deleteUser($params, &$service)
-    {
+    public static function ws_groups_deleteUser(
+        array $params,
+        PwgServer &$service
+    ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }

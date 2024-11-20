@@ -20,6 +20,7 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgNamedArray;
 use Piwigo\inc\PwgNamedStruct;
+use Piwigo\inc\PwgServer;
 use Piwigo\inc\ws_functions;
 use Random\RandomException;
 
@@ -29,25 +30,27 @@ class pwg_users
      * API method
      * Returns a list of users
      * @param array{
-     *     user_id?: int[],
+     *     user_id?: array<int>,
      *     username?: string,
-     *     status?: string[],
+     *     status?: array<string>,
      *     min_level?: int,
      *     max_level?: int,
-     *     group_id?: int[],
+     *     group_id?: array<int>,
      *     per_page: int,
      *     page: int,
      *     order: string,
-     *     display: string,
+     *     display: array|string,
      *     filter: string,
-     *     exclude?: int[],
+     *     exclude?: array<int>,
      *     min_register: string,
      *     max_register: string,
      * } $params
      * @throws DateMalformedStringException
      */
-    public static function ws_users_getList($params, &$service)
-    {
+    public static function ws_users_getList(
+        array $params,
+        PwgServer &$service
+    ): PwgError|array {
         global $conf;
 
         if (! preg_match(PATTERN_ORDER, $params['order'])) {
@@ -358,14 +361,16 @@ class pwg_users
      *     username: string,
      *     password?: string,
      *     email?: string,
-     *     password_confirm: mixed,
-     *     pwg_token: mixed,
-     *     send_password_by_mail: mixed,
+     *     password_confirm: string,
+     *     pwg_token: string,
+     *     send_password_by_mail: bool,
      * } $params
      * @throws Exception
      */
-    public static function ws_users_add($params, &$service)
-    {
+    public static function ws_users_add(
+        array $params,
+        PwgServer &$service
+    ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -404,13 +409,15 @@ class pwg_users
      * API method
      * Get a new authentication key for a user.
      * @param array{
-     *     user_id: int[],
+     *     user_id: int,
      *     pwg_token: string,
      * } $params
      * @throws RandomException
      */
-    public static function ws_users_getAuthKey($params, &$service)
-    {
+    public static function ws_users_getAuthKey(
+        array $params,
+        PwgServer &$service
+    ): PwgError|array {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -428,12 +435,14 @@ class pwg_users
      * API method
      * Deletes users
      * @param array{
-     *     user_id: int[],
+     *     user_id: array<int>,
      *     pwg_token: string,
      * } $params
      */
-    public static function ws_users_delete($params, &$service)
-    {
+    public static function ws_users_delete(
+        array $params,
+        PwgServer &$service
+    ): PwgError|string {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -478,7 +487,7 @@ class pwg_users
      * API method
      * Updates users
      * @param array{
-     *     user_id: int[],
+     *     user_id: array<int>,
      *     username?: string,
      *     password?: string,
      *     email?: string,
@@ -492,13 +501,15 @@ class pwg_users
      *     show_nb_comments?: bool,
      *     show_nb_hits?: bool,
      *     enabled_high?: bool,
-     *     pwg_token: mixed,
-     *     user_id_for_status: mixed,
-     *     group_id: mixed,
+     *     pwg_token: string,
+     *     user_id_for_status: array,
+     *     group_id: array,
      * } $params
      */
-    public static function ws_users_setInfo($params, &$service)
-    {
+    public static function ws_users_setInfo(
+        array $params,
+        PwgServer &$service
+    ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -775,11 +786,13 @@ class pwg_users
      * @param array{
      *     param: string,
      *     value: mixed,
-     *     is_json: mixed,
+     *     is_json: bool,
      * } $params
      */
-    public static function ws_users_preferences_set($params, &$service)
-    {
+    public static function ws_users_preferences_set(
+        array $params,
+        PwgServer &$service
+    ): array|PwgError {
         global $user;
 
         if (! preg_match('/^[a-zA-Z0-9_-]+$/', $params['param'])) {
@@ -804,8 +817,10 @@ class pwg_users
      *     image_id: int,
      * } $params
      */
-    public static function ws_users_favorites_add($params, &$service)
-    {
+    public static function ws_users_favorites_add(
+        array $params,
+        PwgServer &$service
+    ): PwgError|true {
         global $user;
 
         if (functions_user::is_a_guest()) {
@@ -845,8 +860,10 @@ class pwg_users
      *     image_id: int,
      * } $params
      */
-    public static function ws_users_favorites_remove($params, &$service)
-    {
+    public static function ws_users_favorites_remove(
+        array $params,
+        PwgServer &$service
+    ): PwgError|true {
         global $user;
 
         if (functions_user::is_a_guest()) {
@@ -885,8 +902,10 @@ class pwg_users
      *     order: string,
      * } $params
      */
-    public static function ws_users_favorites_getList($params, &$service)
-    {
+    public static function ws_users_favorites_getList(
+        array $params,
+        PwgServer &$service
+    ): false|array {
         global $conf, $user;
 
         if (functions_user::is_a_guest()) {

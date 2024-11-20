@@ -11,14 +11,19 @@ namespace Piwigo\inc;
 
 class QExpression extends QMultiToken
 {
-    public $scopes = [];
+    /**
+     * @var array<QSearchScope>
+     */
+    public array $scopes = [];
 
-    public $stokens = [];
+    public array $stokens = [];
 
-    public $stoken_modifiers = [];
+    public array $stoken_modifiers = [];
 
-    public function __construct($q, $scopes)
-    {
+    public function __construct(
+        string $q,
+        array $scopes
+    ) {
         foreach ($scopes as $scope) {
             $this->scopes[$scope->id] = $scope;
 
@@ -34,8 +39,10 @@ class QExpression extends QMultiToken
         $this->build_single_tokens($this, 0);
     }
 
-    private function build_single_tokens(QMultiToken $expr, $this_is_not)
-    {
+    private function build_single_tokens(
+        QMultiToken $expr,
+        int $this_is_not
+    ): void {
         for ($i = 0; $i < count($expr->tokens); $i++) {
             $token = $expr->tokens[$i];
             $crt_is_not = ($token->modifier ^ $this_is_not) & functions_search::QST_NOT; // no negation OR double negation -> no negation;

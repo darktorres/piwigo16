@@ -12,28 +12,31 @@ namespace Piwigo\inc;
 /** Represents a single word or quoted phrase to be searched.*/
 class QSingleToken
 {
-    public $is_single = true;
+    public bool $is_single = true;
 
-    public $modifier;
+    public int $modifier;
 
-    public $term; /* the actual word/phrase string*/
+    public string $term; /* the actual word/phrase string*/
 
-    public $variants = [];
+    public array $variants = [];
 
-    public $scope;
+    public QSearchScope $scope;
 
-    public $scope_data;
+    public array $scope_data;
 
-    public $idx;
+    public int $idx;
 
-    public function __construct($term, $modifier, $scope)
-    {
+    public function __construct(
+        string $term,
+        int $modifier,
+        QSearchScope $scope
+    ) {
         $this->term = $term;
         $this->modifier = $modifier;
         $this->scope = $scope;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         $s = '';
 

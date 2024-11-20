@@ -18,10 +18,8 @@ class functions_picture
      * - period
      * - repeat
      * - play
-     *
-     * @return array
      */
-    public static function get_default_slideshow_params()
+    public static function get_default_slideshow_params(): array
     {
         global $conf;
 
@@ -34,12 +32,10 @@ class functions_picture
 
     /**
      * Checks and corrects slideshow params
-     *
-     * @param array $params
-     * @return array
      */
-    public static function correct_slideshow_params($params = [])
-    {
+    public static function correct_slideshow_params(
+        array $params = []
+    ): array {
         global $conf;
 
         if ($params['period'] < $conf['slideshow_period_min']) {
@@ -53,12 +49,10 @@ class functions_picture
 
     /**
      * Decodes slideshow string params into array
-     *
-     * @param string $encode_params
-     * @return array
      */
-    public static function decode_slideshow_params($encode_params = null)
-    {
+    public static function decode_slideshow_params(
+        ?string $encode_params = null
+    ): array {
         global $conf;
 
         $result = self::get_default_slideshow_params();
@@ -90,12 +84,10 @@ class functions_picture
 
     /**
      * Encodes slideshow array params into a string
-     *
-     * @param array $decode_params
-     * @return string
      */
-    public static function encode_slideshow_params($decode_params = [])
-    {
+    public static function encode_slideshow_params(
+        array $decode_params = []
+    ): string {
         global $conf;
 
         $params = array_diff_assoc(self::correct_slideshow_params($decode_params), self::get_default_slideshow_params());
@@ -113,11 +105,10 @@ class functions_picture
      * Increase the number of visits for a given photo.
      *
      * Code moved from picture.php to be used by both the API and picture.php
-     *
-     * @param int $image_id
      */
-    public static function increase_image_visit_counter($image_id)
-    {
+    public static function increase_image_visit_counter(
+        int|string $image_id
+    ): void {
         // avoiding auto update of "lastmodified" field
         $query = <<<SQL
             UPDATE images

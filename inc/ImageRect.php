@@ -14,48 +14,31 @@ namespace Piwigo\inc;
  */
 final class ImageRect
 {
-    /**
-     * @var int
-     */
-    public $l;
+    public int|float $l;
+
+    public int|float $t;
+
+    public int|float|string $r;
+
+    public int|float|string $b;
 
     /**
-     * @var int
+     * @param array<int> $l width and height
      */
-    public $t;
-
-    /**
-     * @var int
-     */
-    public $r;
-
-    /**
-     * @var int
-     */
-    public $b;
-
-    /**
-     * @param int[] $l width and height
-     */
-    public function __construct($l)
-    {
+    public function __construct(
+        array $l
+    ) {
         $this->l = $this->t = 0;
         $this->r = $l[0];
         $this->b = $l[1];
     }
 
-    /**
-     * @return int
-     */
-    public function width()
+    public function width(): int|float
     {
         return $this->r - $this->l;
     }
 
-    /**
-     * @return int
-     */
-    public function height()
+    public function height(): int|float
     {
         return $this->b - $this->t;
     }
@@ -63,11 +46,13 @@ final class ImageRect
     /**
      * Crops horizontally this rectangle by increasing left side and/or reducing the right side.
      *
-     * @param int $pixels - the amount to subtract from the width
-     * @param string $coi - a 4 character string (or null) containing the center of interest
+     * @param int|float $pixels - the amount to subtract from the width
+     * @param ?string $coi - a 4 character string (or null) containing the center of interest
      */
-    public function crop_h($pixels, $coi)
-    {
+    public function crop_h(
+        int|float $pixels,
+        ?string $coi
+    ): void {
         if ($this->width() <= $pixels) {
             return;
         }
@@ -96,11 +81,13 @@ final class ImageRect
     /**
      * Crops vertically this rectangle by increasing top side and/or reducing the bottom side.
      *
-     * @param int $pixels - the amount to subtract from the height
-     * @param string $coi - a 4 character string (or null) containing the center of interest
+     * @param int|float $pixels - the amount to subtract from the height
+     * @param ?string $coi - a 4 character string (or null) containing the center of interest
      */
-    public function crop_v($pixels, $coi)
-    {
+    public function crop_v(
+        int|float $pixels,
+        ?string $coi
+    ): void {
         if ($this->height() <= $pixels) {
             return;
         }

@@ -14,53 +14,33 @@ namespace Piwigo\inc;
  */
 class RegisteredBlock
 {
-    /**
-     * @var string
-     */
-    protected $id;
+    protected string $id;
 
-    /**
-     * @var string
-     */
-    protected $name;
+    protected string $name;
 
-    /**
-     * @var string
-     */
-    protected $owner;
+    protected string $owner;
 
-    /**
-     * @param string $id
-     * @param string $name
-     * @param string $owner
-     */
-    public function __construct($id, $name, $owner)
-    {
+    public function __construct(
+        string $id,
+        string $name,
+        string $owner
+    ) {
         $this->id = $id;
         $this->name = $name;
         $this->owner = $owner;
     }
 
-    /**
-     * @return string
-     */
-    public function get_id()
+    public function get_id(): string
     {
         return $this->id;
     }
 
-    /**
-     * @return string
-     */
-    public function get_name()
+    public function get_name(): string
     {
         return $this->name;
     }
 
-    /**
-     * @return string
-     */
-    public function get_owner()
+    public function get_owner(): string
     {
         return $this->owner;
     }

@@ -40,8 +40,10 @@ $t2 = microtime(true);
 if (! function_exists('get_magic_quotes_gpc') or
     ! get_magic_quotes_gpc()
 ) {
-    function sanitize_mysql_kv(&$v, $k)
-    {
+    function sanitize_mysql_kv(
+        string &$v,
+        $k
+    ): void {
         $v = addslashes($v);
     }
 

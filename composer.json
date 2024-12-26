@@ -29,13 +29,19 @@
     "config": {
         "allow-plugins": {
             "cweagans/composer-patches": true
-        }
+        },
+        "optimize-autoloader": false
     },
     "extra": {
         "patches": {
             "smarty/smarty": {
                 "Patch strftime": "patches/strftime.patch"
             }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Piwigo\\": ""
         }
     }
 }

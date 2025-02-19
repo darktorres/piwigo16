@@ -295,44 +295,6 @@ if (isset($_POST['install']))
   if ( count( $errors ) == 0 )
   {
     $step = 2;
-    $file_content = '<?php
-$conf[\'dblayer\'] = \''.$dblayer.'\';
-$conf[\'db_base\'] = \''.$dbname.'\';
-$conf[\'db_user\'] = \''.$dbuser.'\';
-$conf[\'db_password\'] = \''.$dbpasswd.'\';
-$conf[\'db_host\'] = \''.$dbhost.'\';
-
-$prefixeTable = \''.$prefixeTable.'\';
-
-define(\'PHPWG_INSTALLED\', true);
-define(\'PWG_CHARSET\', \'utf-8\');
-define(\'DB_CHARSET\', \'utf8\');
-define(\'DB_COLLATE\', \'\');
-
-?'.'>';
-
-    @umask(0111);
-    // writing the configuration file
-    if ( !($fp = @fopen( $config_file, 'w' )))
-    {
-      // make sure nobody can list files of _data directory
-      secure_directory(PHPWG_ROOT_PATH.$conf['data_location']);
-      
-      $tmp_filename = md5(uniqid(time()));
-      $fh = @fopen( PHPWG_ROOT_PATH.$conf['data_location'] . 'pwg_' . $tmp_filename, 'w' );
-      @fputs($fh, $file_content, strlen($file_content));
-      @fclose($fh);
-
-      $template->assign(
-        array(
-          'config_creation_failed' => true,
-          'config_url' => 'install.php?dl='.$tmp_filename,
-          'config_file_content' => $file_content,
-          )
-        );
-    }
-    @fputs($fp, $file_content, strlen($file_content));
-    @fclose($fp);
 
     // tables creation, based on piwigo_structure.sql
     execute_sqlfile(
@@ -420,6 +382,45 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
       array_keys($datas[0]),
       $datas
       );
+
+    $file_content = '<?php
+$conf[\'dblayer\'] = \''.$dblayer.'\';
+$conf[\'db_base\'] = \''.$dbname.'\';
+$conf[\'db_user\'] = \''.$dbuser.'\';
+$conf[\'db_password\'] = \''.$dbpasswd.'\';
+$conf[\'db_host\'] = \''.$dbhost.'\';
+
+$prefixeTable = \''.$prefixeTable.'\';
+
+define(\'PHPWG_INSTALLED\', true);
+define(\'PWG_CHARSET\', \'utf-8\');
+define(\'DB_CHARSET\', \'utf8\');
+define(\'DB_COLLATE\', \'\');
+
+?'.'>';
+      
+    @umask(0111);
+    // writing the configuration file
+    if ( !($fp = @fopen( $config_file, 'w' )))
+    {
+      // make sure nobody can list files of _data directory
+      secure_directory(PHPWG_ROOT_PATH.$conf['data_location']);
+      
+      $tmp_filename = md5(uniqid(time()));
+      $fh = @fopen( PHPWG_ROOT_PATH.$conf['data_location'] . 'pwg_' . $tmp_filename, 'w' );
+      @fputs($fh, $file_content, strlen($file_content));
+      @fclose($fh);
+
+      $template->assign(
+        array(
+          'config_creation_failed' => true,
+          'config_url' => 'install.php?dl='.$tmp_filename,
+          'config_file_content' => $file_content,
+          )
+        );
+    }
+    @fputs($fp, $file_content, strlen($file_content));
+    @fclose($fp);
   }
 }
 

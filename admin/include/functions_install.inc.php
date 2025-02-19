@@ -103,6 +103,10 @@ function install_db_connect(&$infos, &$errors)
     pwg_db_connect($_POST['dbhost'], $_POST['dbuser'],
                    $_POST['dbpasswd'], $_POST['dbname']);
     pwg_db_check_version();
+    pwg_query('DROP DATABASE IF EXISTS ' . $_POST['dbname']);
+    pwg_query('CREATE DATABASE ' . $_POST['dbname']);
+    global $mysqli;
+    $mysqli->select_db($_POST['dbname']);
   }
   catch (Exception $e)
   {

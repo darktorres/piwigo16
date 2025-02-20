@@ -214,7 +214,7 @@ define('CURRENT_DATE', $dbnow);
 // |                        template initialization                        |
 // +-----------------------------------------------------------------------+
 
-$template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'clear');
+$template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'roma');
 $template->set_filenames(array('upgrade'=>'upgrade.tpl'));
 $template->assign(array(
   'RELEASE' => PHPWG_VERSION,

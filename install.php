@@ -120,24 +120,7 @@ $dbpasswd = (!empty($_POST['dbpasswd'])) ? $_POST['dbpasswd'] : '';
 $dbname = (!empty($_POST['dbname'])) ? $_POST['dbname'] : '';
 
 // dblayer
-if (extension_loaded('mysqli'))
-{
-  $dblayer = 'mysqli';
-}
-else
-{
-  if (version_compare(PHP_VERSION, '7') >= 0)
-  {
-    fatal_error('PHP extension "mysqli" is not loaded');
-  }
-
-  if (!extension_loaded('mysql'))
-  {
-    fatal_error('No PHP extension installed for mysql, Piwigo needs one');
-  }
-
-  $dblayer = 'mysql';
-}
+$dblayer = 'mysqli';
 
 $admin_name = (!empty($_POST['admin_name'])) ? $_POST['admin_name'] : '';
 $admin_pass1 = (!empty($_POST['admin_pass1'])) ? $_POST['admin_pass1'] : '';

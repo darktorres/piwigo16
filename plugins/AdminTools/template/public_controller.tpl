@@ -5,28 +5,28 @@
 
 {if isset($ato.QUICK_EDIT)}
   {*<!-- mousetrap -->*}
-  {combine_script id='mousetrap' load='footer' path=$ADMINTOOLS_PATH|cat:'template/mousetrap.min.js'}
+  {combine_script id='mousetrap' load='footer' path='node_modules/mousetrap/mousetrap.min.js'}
   
   {*<!-- colorbox -->*}
-  {combine_script id='jquery.colorbox' load='footer' require='jquery' path='themes/default/js/plugins/jquery.colorbox.min.js'}
-  {combine_css id='colorbox' path='themes/default/js/plugins/colorbox/style2/colorbox.css'}
+  {combine_script id='jquery.colorbox' load='footer' require='jquery' path='node_modules/jquery-colorbox/jquery.colorbox-min.js'}
+  {combine_css id='colorbox' path='node_modules/jquery-colorbox/example2/colorbox.css'}
 
   {if isset($ato.IS_PICTURE)}
     {*<!-- tokeninput -->*}
-    {combine_script id='jquery.tokeninput' load='footer' require='jquery' path='themes/default/js/plugins/jquery.tokeninput.js'}
-    {combine_css path='themes/default/js/plugins/jquery.tokeninput.css'}
+    {combine_script id='jquery.tokeninput' load='footer' require='jquery' path='https://rawcdn.githack.com/Piwigo/Piwigo/refs/heads/14.x/themes/default/js/plugins/jquery.tokeninput.js'}
+    {combine_css path='https://rawcdn.githack.com/Piwigo/Piwigo/refs/heads/14.x/themes/default/js/plugins/jquery.tokeninput.css'}
 
     {*<!-- datepicker -->*}
-    {combine_script id='jquery.ui.datepicker' load='footer' path='themes/default/js/ui/jquery.ui.datepicker.js'}
+    {combine_script id='jquery.ui' load='footer'}
 
-    {assign var=datepicker_language value='themes/default/js/ui/i18n/jquery.ui.datepicker-'|cat:$lang_info.code|cat:'.js'}
+    {assign var=datepicker_language value='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/i18n/jquery.ui.datepicker-'|cat:$lang_info.code|cat:'.js'}
     {if 'PHPWG_ROOT_PATH'|constant|cat:$datepicker_language|file_exists}
     {combine_script id='jquery.ui.datepicker-'|cat:$lang_info.code load='footer' path=$datepicker_language}
     {/if}
 
-    {combine_css path='themes/default/js/ui/theme/jquery.ui.core.css'}
-    {combine_css path='themes/default/js/ui/theme/jquery.ui.theme.css'}
-    {combine_css path='themes/default/js/ui/theme/jquery.ui.datepicker.css'}
+    {combine_css path='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.core.css'}
+    {combine_css path='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.theme.css'}
+    {combine_css path='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.datepicker.css'}
   {/if}
 {/if}
 

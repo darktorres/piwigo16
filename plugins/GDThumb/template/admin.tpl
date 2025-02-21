@@ -120,10 +120,10 @@
 {combine_css path=$GDTHUMB_PATH|cat:"/css/admin.css"}
 
 {if $CUSTOM_CSS=="yes"}
-  {combine_css path="themes/default/js/plugins/colorbox/style2/colorbox.css"}
+  {combine_css path="node_modules/jquery-colorbox/example2/colorbox.css"}
   {combine_css path=$GDTHEME_PATH|cat:"admin/css/styles.css"}
   {combine_css path=$GDTHEME_PATH|cat:"css/all.min.css"}
-  {combine_script id='jquery.colorbox' load='footer' require='jquery' path='themes/default/js/plugins/jquery.colorbox.min.js' }
+  {combine_script id='jquery.colorbox' load='footer' require='jquery' path='node_modules/jquery-colorbox/jquery.colorbox-min.js' }
   {combine_script id='greydragon.admin' load='footer' require='jquery' path=$GDTHEME_PATH|cat:"admin/js/admin.js" }
 {else}
 {html_head}{literal}
@@ -136,4 +136,5 @@
 {/if}
 
 {combine_script id='iloader' load='footer' path=$GDTHUMB_PATH|cat:"/js/image.loader.js"}
-{combine_script id='admin.precache' load='footer' path=$GDTHUMB_PATH|cat:"/js/gdthumb.admin.js" require='jquery.ui.effect-slide'}
+{combine_script id='jquery.tipTip' load='footer' require='jquery' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.js'}
+{combine_script id='admin.precache' load='footer' path=$GDTHUMB_PATH|cat:"/js/gdthumb.admin.js" require='jquery.ui,jquery.tipTip'}

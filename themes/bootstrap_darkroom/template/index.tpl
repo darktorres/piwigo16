@@ -1,6 +1,6 @@
 <!-- Start of index.tpl -->
-{combine_script id='cookie' require='jquery' path='themes/bootstrap_darkroom/js/jquery.cookie.js' load='footer'}
-{combine_script id='equalheights' require='jquery' path='themes/bootstrap_darkroom/js/jquery.equalheights.js' load='footer'}
+{combine_script id='cookie' require='jquery' path='node_modules/jquery.cookie/jquery.cookie.js' load='footer'}
+{combine_script id='equalheights' require='jquery' path='https://rawcdn.githack.com/Piwigo/piwigo-bootstrap-darkroom/refs/heads/master/js/jquery.equalheights.js' load='footer'}
 {if get_device() != 'desktop'}
 {combine_script id='jquery.mobile-events' path='themes/bootstrap_darkroom/node_modules/jQuery-Touch-Events/src/jquery.mobile-events.min.js' require='jquery' load='footer'}
 {/if}

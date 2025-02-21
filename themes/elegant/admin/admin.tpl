@@ -1,6 +1,6 @@
-{combine_css path="themes/default/js/ui/theme/jquery.ui.button.css"}
+{combine_css path="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.button.css"}
 {combine_css path="themes/elegant/admin/jquery.ui.button.css"}
-{footer_script require='jquery.ui.button'}
+{footer_script require='jquery.ui'}
 {literal}
 jQuery(document).ready(function(){
   jQuery( ".radio" ).buttonset();

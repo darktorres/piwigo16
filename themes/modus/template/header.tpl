@@ -25,7 +25,7 @@
 {get_combined_scripts load='header'}
 {if empty($smarty.server.HTTP_USER_AGENT) || strpos($smarty.server.HTTP_USER_AGENT, 'MSIE')}
 <meta http-equiv=x-ua-compatible content="IE=edge">
-<!--[if lt IE 9]><script type="text/javascript" src="{$ROOT_URL}themes/{$themeconf.id}/html5shiv.js"></script><![endif]-->
+<!--[if lt IE 9]><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.2pre/html5shiv.js"></script><![endif]-->
 {/if}
 <meta name=viewport content="width=device-width,initial-scale=1">
 {*combine_script id='jquery' load='footer'*}

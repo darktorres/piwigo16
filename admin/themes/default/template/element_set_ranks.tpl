@@ -1,5 +1,5 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{footer_script require='jquery.ui.sortable'}
+{footer_script require='jquery.ui'}
 
 const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
 

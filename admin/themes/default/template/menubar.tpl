@@ -1,6 +1,6 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-{footer_script require='jquery.ui.sortable'}{literal}
+{footer_script require='jquery.ui'}{literal}
 jQuery(document).ready(function(){
 	jQuery(".menuPos").hide();
 	jQuery(".drag_button").show();

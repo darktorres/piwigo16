@@ -74,7 +74,7 @@ static function on_index_thumbnails($thumbs)
 	$template->func_combine_script( array(
 			'id'=> 'jquery',
 			'load'=> 'footer',
-			'path'=> 'themes/default/js/jquery.min.js',
+			'path'=> 'node_modules/jquery/dist/jquery.min.js',
 		));
 	$template->func_combine_script( array(
 			'id'=> $my_base_name,

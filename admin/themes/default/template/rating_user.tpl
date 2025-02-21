@@ -1,14 +1,14 @@
-{combine_script id='jquery.dataTables' load='footer' path='themes/default/js/plugins/jquery.dataTables.js'}
+{combine_script id='jquery.dataTables' load='footer' path='node_modules/datatables/media/js/jquery.dataTables.js'}
 {html_style}
-.sorting { background: url({$ROOT_URL}themes/default/js/plugins/datatables/images/sort_both.png) no-repeat center right; cursor:pointer; }
-.sorting_asc { background: url({$ROOT_URL}themes/default/js/plugins/datatables/images/sort_asc.png) no-repeat center right; }
-.sorting_desc { background: url({$ROOT_URL}themes/default/js/plugins/datatables/images/sort_desc.png) no-repeat center right; }
+.sorting { background: url(node_modules/datatables/media/images/sort_both.png) no-repeat center right; cursor:pointer; }
+.sorting_asc { background: url(node_modules/datatables/media/images/sort_asc.png) no-repeat center right; }
+.sorting_desc { background: url(node_modules/datatables/media/images/sort_desc.png) no-repeat center right; }
 
 .sorting, .sorting_asc, .sorting_desc { 
 	padding: 3px 18px 3px 10px;
 }
-.sorting_asc_disabled { background: url({$ROOT_URL}themes/default/js/plugins/datatables/images/sort_asc_disabled.png) no-repeat center right; }
-.sorting_desc_disabled { background: url({$ROOT_URL}themes/default/js/plugins/datatables/images/sort_desc_disabled.png) no-repeat center right; }
+.sorting_asc_disabled { background: url(node_modules/datatables/media/images/sort_asc_disabled.png) no-repeat center right; }
+.sorting_desc_disabled { background: url(node_modules/datatables/media/images/sort_desc_disabled.png) no-repeat center right; }
 
 .dtBar {
 	text-align:left;
@@ -71,8 +71,8 @@ $(document).ready(function() {
 </fieldset>
 </form>
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
+{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
+{combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
 {combine_script id='jquery.geoip' load='async' path='admin/themes/default/js/jquery.geoip.js'}
 {footer_script}
@@ -206,8 +206,8 @@ $(document).ready( function(){
 {/foreach}
 </table>
 
-{combine_script id='jquery.ui.tooltip' load='footer'}
-{footer_script require='jquery.ui.tooltip'}
+{combine_script id='jquery.ui' load='footer'}
+{footer_script require='jquery.ui'}
 jQuery(document).ready(function(){
 	jQuery("#rateTable").tooltip({
 		items: ".usr,[title]",

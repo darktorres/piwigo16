@@ -1,7 +1,7 @@
 {include file='include/colorbox.inc.tpl'}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.ui.slider' require='jquery.ui' load='footer' path='themes/default/js/ui/minified/jquery.ui.slider.min.js'}
-{combine_css path="themes/default/js/ui/theme/jquery.ui.slider.css"}
+{combine_script id='jquery.ui' require='jquery' load='footer'}
+{combine_css path="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.slider.css"}
 
 {html_style}
 .graphicalCheckbox {

@@ -22,7 +22,7 @@
   {/if}
   {assign var=derivative value=$pwg->derivative($cropped_derivative_params, $comment.src_image)}
   {if !$derivative->is_cached()}
-  {combine_script id='jquery.ajaxmanager' path='themes/default/js/plugins/jquery.ajaxmanager.js' load='footer'}
+  {combine_script id='jquery.ajaxmanager' path='https://rawcdn.githack.com/aFarkas/Ajaxmanager/refs/heads/master/jquery.ajaxmanager.js' load='footer'}
   {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' require='jquery.ajaxmanager' load='footer'}
   {/if}
             <a href="{$comment.U_PICTURE}">

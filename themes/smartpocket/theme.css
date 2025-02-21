@@ -1,5 +1,28 @@
-@import "jquery.mobile.css";
-@import "photoswipe.css";
+@import url("https://rawcdn.githack.com/Piwigo/piwigo-smartpocket/refs/heads/master/jquery.mobile.css");
+@import url("https://rawcdn.githack.com/Piwigo/piwigo-smartpocket/refs/heads/master/photoswipe.css");
+
+/* photoswipe images override */
+
+div.ps-carousel-item-loading {
+  background: url(./images/loader.gif) !important;
+}
+
+div.ps-carousel-item-error {
+  background: url(./images/error.gif) !important;
+}
+
+div.ps-toolbar div div.ps-toolbar-content {
+  background-image: url(./images/icons.png) !important;
+}
+
+/* Hi-res display */
+@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min--moz-device-pixel-ratio: 1.5), only screen and (min-resolution: 240dpi) {
+  div.ps-toolbar div div.ps-toolbar-content {
+    background-image: url(./images/icons@2x.png) !important;
+  }
+}
+
+/* end photoswipe override */
 
 .title { margin: 10px; text-align: center; }
 .title .ui-btn { margin-top: -5px; }

@@ -11,7 +11,7 @@
 {if $theme_config->category_wells == 'never' || ($theme_config->category_wells == 'mobile_only' && get_device() == 'desktop')}
 {assign var=derivative value=$pwg->derivative($derivative_params, $cat.representative.src_image)}
 {if !$derivative->is_cached()}
-    {combine_script id='jquery.ajaxmanager' path='themes/default/js/plugins/jquery.ajaxmanager.js' load='footer'}
+    {combine_script id='jquery.ajaxmanager' path='https://rawcdn.githack.com/aFarkas/Ajaxmanager/refs/heads/master/jquery.ajaxmanager.js' load='footer'}
     {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' require='jquery.ajaxmanager' load='footer'}
 {/if}
 {* this needs a fixed size else it messes up the grid on tablets *}
@@ -47,7 +47,7 @@
 {else}
 {assign var=derivative_square value=$pwg->derivative($derivative_params_square, $cat.representative.src_image)}
 {if !$derivative_square->is_cached()}
-    {combine_script id='jquery.ajaxmanager' path='themes/default/js/plugins/jquery.ajaxmanager.js' load='footer'}
+    {combine_script id='jquery.ajaxmanager' path='https://rawcdn.githack.com/aFarkas/Ajaxmanager/refs/heads/master/jquery.ajaxmanager.js' load='footer'}
     {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' require='jquery.ajaxmanager' load='footer'}
 {/if}
   <div class="col-outer col-12">

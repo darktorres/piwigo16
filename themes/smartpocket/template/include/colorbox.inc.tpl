@@ -1,2 +1,2 @@
-{combine_script id='jquery.colorbox' load='footer' require='jquery' path='themes/default/js/plugins/jquery.colorbox.min.js'}
-{combine_css path="themes/default/js/plugins/colorbox/style2/colorbox.css"}
+{combine_script id='jquery.colorbox' load='footer' require='jquery' path='node_modules/jquery-colorbox/jquery.colorbox-min.js'}
+{combine_css path="node_modules/jquery-colorbox/example2/colorbox.css"}

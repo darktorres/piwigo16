@@ -1,22 +1,22 @@
 {combine_script id='common' load='footer' require='jquery' path='admin/themes/default/js/common.js'}
 
-{combine_script id='jquery.jgrowl' load='footer' require='jquery' path='themes/default/js/plugins/jquery.jgrowl_minimized.js'}
+{combine_script id='jquery.jgrowl' load='footer' require='jquery' path='node_modules/jgrowl/jquery.jgrowl.min.js'}
 
-{combine_script id='jquery.plupload' load='footer' require='jquery' path='themes/default/js/plugins/plupload/plupload.full.min.js'}
-{combine_script id='jquery.plupload.queue' load='footer' require='jquery' path='themes/default/js/plugins/plupload/jquery.plupload.queue/jquery.plupload.queue.min.js'}
+{combine_script id='jquery.plupload' load='footer' require='jquery' path='node_modules/plupload/js/plupload.full.min.js'}
+{combine_script id='jquery.plupload.queue' load='footer' require='jquery' path='node_modules/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js'}
 
 {combine_css path="themes/default/js/plugins/jquery.jgrowl.css"}
-{combine_css path="themes/default/js/plugins/plupload/jquery.plupload.queue/css/jquery.plupload.queue.css"}
+{combine_css path="node_modules/plupload/js/jquery.plupload.queue/css/jquery.plupload.queue.css"}
 
-{assign var="plupload_i18n" value="themes/default/js/plugins/plupload/i18n/`$lang_info.plupload_code`.js"}
+{assign var="plupload_i18n" value="node_modules/plupload/js/i18n/`$lang_info.plupload_code`.js"}
 {if "PHPWG_ROOT_PATH"|@constant|@cat:$plupload_i18n|@file_exists}
   {combine_script id="plupload_i18n-`$lang_info.plupload_code`" load="footer" path=$plupload_i18n require="jquery.plupload.queue"}
 {/if}
 
-{combine_script id='jquery.colorbox' load='footer' require='jquery' path='themes/default/js/plugins/jquery.colorbox.min.js'}
-{combine_css path="themes/default/js/plugins/colorbox/style2/colorbox.css"}
+{combine_script id='jquery.colorbox' load='footer' require='jquery' path='node_modules/jquery-colorbox/jquery.colorbox-min.js'}
+{combine_css path="node_modules/jquery-colorbox/example2/colorbox.css"}
 
-{combine_script id='piecon' load='footer' path='themes/default/js/plugins/piecon.js'}
+{combine_script id='piecon' load='footer' path='node_modules/piecon/piecon.js'}
 
 {footer_script}
 var rootUrl = "{get_absolute_root_url()}";

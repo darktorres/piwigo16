@@ -1,7 +1,7 @@
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 {combine_script id='picture_formats' load='footer' path='admin/themes/default/js/picture_formats.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
+{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
+{combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
 <script>

@@ -2,16 +2,16 @@
 
 {combine_script id='common' load='header' require='jquery' path='admin/themes/default/js/common.js'}
 
-{combine_script id='jquery.selectize' load='header' path='themes/default/js/plugins/selectize.min.js'}
+{combine_script id='jquery.selectize' load='header' path='node_modules/selectize/dist/js/standalone/selectize.min.js'}
 {combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
 
-{combine_script id='jquery.ui.slider' require='jquery.ui' load='header' path='themes/default/js/ui/minified/jquery.ui.slider.min.js'}
-{combine_css path="themes/default/js/ui/theme/jquery.ui.slider.css"}
+{combine_script id='jquery.ui' require='jquery' load='header'}
+{combine_css path="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.slider.css"}
 
-{combine_script id='jquery.confirm' load='header' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
+{combine_script id='jquery.confirm' load='header' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
+{combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
 
-{combine_script id='jquery.tipTip' load='header' path='themes/default/js/plugins/jquery.tipTip.minified.js'}
+{combine_script id='jquery.tipTip' load='header' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
@@ -192,7 +192,7 @@ $(document).ready(function() {
 
 {combine_script id='user_list' load='footer' path='admin/themes/default/js/user_list.js'}
 
-{combine_script id='jquery.cookie' path='themes/default/js/jquery.cookie.js' load='footer'}
+{combine_script id='jquery.cookie' path='node_modules/jquery.cookie/jquery.cookie.js' load='footer'}
 
 <div class="selection-mode-group-manager" style="right:30px">
   <label class="switch">

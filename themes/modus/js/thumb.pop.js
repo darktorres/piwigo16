@@ -1,3 +1,5 @@
+// https://raw.githubusercontent.com/briancherne/jquery-hoverIntent/28921f38a80eaeb56a2f2d28ec44bb1989246daa/jquery.hoverIntent.js with some additions
+
 if (window.jQuery) {
 /**
 * hoverIntent is similar to jQuery's built-in "hover" function except that

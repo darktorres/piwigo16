@@ -59,7 +59,6 @@ class themes
       }
     }
     
-    include_once(PHPWG_ROOT_PATH.'admin/inc/DummyTheme_maintain.php');
     return new DummyTheme_maintain($theme_id);
   }
 

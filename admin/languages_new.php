@@ -18,8 +18,6 @@ if (!$conf['enable_extensions_install'])
   die('Piwigo extensions install/update system is disabled');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/languages.php');
-
 $template->set_filenames(array('languages' => 'languages_new.tpl'));
 
 $base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];

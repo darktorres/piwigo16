@@ -18,8 +18,6 @@ if (!$conf['enable_core_update'])
   die('Piwigo core update system is disabled');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/updates.php');
-
 /*
 STEP:
 0 = check is needed. If version is latest or check fail, we stay on step 0

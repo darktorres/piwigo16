@@ -8,8 +8,6 @@
 
 namespace Piwigo\inc;
 
-include_once(PHPWG_ROOT_PATH.'inc/PersistentCache.php');
-
 /**
   Implementation of a persistent cache using files.
 */

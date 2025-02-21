@@ -158,7 +158,6 @@ DELETE
   }
   case 'c13y' :
   {
-    include_once(PHPWG_ROOT_PATH.'admin/inc/check_integrity.php');
     $c13y = new check_integrity();
     $c13y->maintenance();
     $page['infos'][] = sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.'));

@@ -64,7 +64,6 @@ class plugins
       }
     }
 
-    include_once(PHPWG_ROOT_PATH.'admin/inc/DummyPlugin_maintain.php');
     return new DummyPlugin_maintain($plugin_id);
   }
 

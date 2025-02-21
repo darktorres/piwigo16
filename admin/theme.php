@@ -21,7 +21,6 @@ if (empty($_GET['theme']))
   die('Invalid theme URL');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/themes.php');
 $themes = new themes();
 if (!in_array($_GET['theme'], array_keys($themes->fs_themes)))
 {

@@ -22,7 +22,6 @@ include_once( PHPWG_ROOT_PATH .'inc/functions_tag.php' );
 include_once( PHPWG_ROOT_PATH .'inc/functions_url.php' );
 include_once( PHPWG_ROOT_PATH .'inc/derivative_params.php');
 include_once( PHPWG_ROOT_PATH .'inc/derivative_std_params.php');
-include_once( PHPWG_ROOT_PATH .'inc/derivative.php');
 
 
 /**

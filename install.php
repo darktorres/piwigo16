@@ -153,7 +153,6 @@ if (@file_exists($config_file))
 include(PHPWG_ROOT_PATH . 'inc/constants.php');
 include(PHPWG_ROOT_PATH . 'admin/inc/functions_admin.php');
 
-include(PHPWG_ROOT_PATH . 'admin/inc/languages.php');
 $languages = new languages('utf-8');
 
 if (isset($_GET['language']))

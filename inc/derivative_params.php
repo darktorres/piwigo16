@@ -69,8 +69,4 @@ function fraction_to_char($f)
 	return chr(ord('a') + round($f*25));
 }
 
-include_once(PHPWG_ROOT_PATH.'inc/ImageRect.php');
-include_once(PHPWG_ROOT_PATH.'inc/SizingParams.php');
-include_once(PHPWG_ROOT_PATH.'inc/DerivativeParams.php');
-
 ?>

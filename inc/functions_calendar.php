@@ -97,13 +97,11 @@ WHERE id IN (' . implode(',',$page['items']) .')';
   $styles = array(
     // Monthly style
     'monthly' => array(
-      'include'        => 'CalendarMonthly.php',
       'view_calendar'  => true,
       'classname'      => 'CalendarMonthly',
       ),
     // Weekly style
     'weekly' => array(
-      'include'        => 'CalendarWeekly.php',
       'view_calendar'  => false,
       'classname'      => 'CalendarWeekly',
       ),
@@ -122,7 +120,6 @@ WHERE id IN (' . implode(',',$page['items']) .')';
   $cal_style = $page['chronology_style'];
   $classname = $styles[$cal_style]['classname'];
 
-  include(PHPWG_ROOT_PATH.'inc/'. $styles[$cal_style]['include']);
   $calendar = new $classname();
 
   // Retrieve view

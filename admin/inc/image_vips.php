@@ -14,8 +14,6 @@ namespace Piwigo\admin\inc;
 
 use Jcupitt\Vips\Image;
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/imageInterface.php');
-
 class image_vips implements imageInterface
 {
     public Image $image;

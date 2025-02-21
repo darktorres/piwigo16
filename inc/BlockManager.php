@@ -12,8 +12,6 @@ namespace Piwigo\inc;
  * @package functions\menubar
  */
 
- include_once(PHPWG_ROOT_PATH.'inc/DisplayBlock.php');
- include_once(PHPWG_ROOT_PATH.'inc/RegisteredBlock.php');
 
 /**
  * Manages a set of RegisteredBlock and DisplayBlock.

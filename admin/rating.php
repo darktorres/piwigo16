@@ -23,7 +23,6 @@ check_status(ACCESS_ADMINISTRATOR);
 
 check_input_parameter('display', $_GET, false, PATTERN_ID);
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet.php');
 $tabsheet = new tabsheet();
 $tabsheet->set_id('rating');
 $tabsheet->select('rating');

@@ -38,7 +38,6 @@ class updates
 
     foreach ($this->types as $type)
     {
-      include_once(PHPWG_ROOT_PATH.'admin/inc/'.$type.'.php');
       $className = "\\Piwigo\\admin\\inc\\{$type}";
       $this->{$type} = new $className();
     }

@@ -157,7 +157,6 @@ SELECT
       if ($counter < 1)
       {
         // we need to activate theme first
-        include_once(PHPWG_ROOT_PATH.'admin/inc/themes.php');
         $themes = new themes();
         $themes->perform_action('activate', PHPWG_DEFAULT_TEMPLATE);
       }

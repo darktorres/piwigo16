@@ -33,11 +33,4 @@ define( 'WS_ERR_INVALID_PARAM',   1003 );
 
 define( 'WS_XML_ATTRIBUTES', 'attributes_xml_');
 
-include_once(PHPWG_ROOT_PATH.'inc/PwgError.php');
-include_once(PHPWG_ROOT_PATH.'inc/PwgNamedArray.php');
-include_once(PHPWG_ROOT_PATH.'inc/PwgNamedStruct.php');
-include_once(PHPWG_ROOT_PATH.'inc/PwgRequestHandler.php');
-include_once(PHPWG_ROOT_PATH.'inc/PwgResponseEncoder.php');
-include_once(PHPWG_ROOT_PATH.'inc/PwgServer.php');
-
 ?>

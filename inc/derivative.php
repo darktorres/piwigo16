@@ -10,7 +10,4 @@
  * @package Derivatives
  */
 
- include_once(PHPWG_ROOT_PATH.'inc/SrcImage.php');
- include_once(PHPWG_ROOT_PATH.'inc/DerivativeImage.php');
-
 ?>

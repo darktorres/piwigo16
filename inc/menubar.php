@@ -12,8 +12,6 @@ use Piwigo\inc\BlockManager;
  * @package functions\menubar
  */
 
-include_once(PHPWG_ROOT_PATH.'inc/BlockManager.php');
-
 initialize_menu();
 
 /**

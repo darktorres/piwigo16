@@ -24,7 +24,6 @@
 use Piwigo\admin\inc\tabsheet;
 
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
-include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet.php');
 include_once(LOCALEDIT_PATH.'inc/functions_LocalFilesEditor.php');
 load_language('plugin.lang', LOCALEDIT_PATH);
 $my_base_url = get_root_url().'admin.php?page=plugin-'.basename(dirname(__FILE__));

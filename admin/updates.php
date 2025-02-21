@@ -18,8 +18,6 @@ if (!$conf['enable_extensions_install'] and !$conf['enable_core_update'])
   die('update system is disabled');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet.php');
-
 $my_base_url = get_root_url().'admin.php?page=updates';
 
 if (isset($_GET['tab']))

@@ -134,7 +134,6 @@ function print_time($message)
 // +-----------------------------------------------------------------------+
 // |                             language                                  |
 // +-----------------------------------------------------------------------+
-include(PHPWG_ROOT_PATH . 'admin/inc/languages.php');
 $languages = new languages('utf-8');
 if (isset($_GET['language']))
 {
@@ -244,8 +243,6 @@ while ($row = pwg_db_fetch_assoc($result))
 
 if ($has_remote_site)
 {
-  include_once(PHPWG_ROOT_PATH.'admin/inc/updates.php');
-
   $page['errors'] = array();
   $step = 3;
   updates::upgrade_to('2.3.4', $step, false);
@@ -517,7 +514,6 @@ else
     define('PWG_CHARSET', 'utf-8');
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/languages.php');
   $languages = new languages();
   
   foreach ($languages->fs_languages as $language_code => $fs_language)

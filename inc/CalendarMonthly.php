@@ -12,8 +12,6 @@ namespace Piwigo\inc;
  * @package functions\calendar
  */
 
-include_once(PHPWG_ROOT_PATH.'inc/CalendarBase.php');
-
 /**
  * Monthly calendar style (composed of years/months and days)
  */

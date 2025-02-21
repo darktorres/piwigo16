@@ -10,8 +10,6 @@ namespace Piwigo\admin\inc;
 
 use Piwigo\inc\ThemeMaintain;
 
-include_once(PHPWG_ROOT_PATH.'inc/ThemeMaintain.php');
-
 /**
  * class DummyTheme_maintain
  * used when a theme uses the old procedural declaration of maintenance methods

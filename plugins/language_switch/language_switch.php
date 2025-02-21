@@ -33,7 +33,6 @@ function language_controler_switch()
   
   if (isset($_GET['lang']))
   {
-    include_once(PHPWG_ROOT_PATH . 'admin/inc/languages.php');
     $languages = new languages();
     if ( !in_array($_GET['lang'], array_keys($languages->fs_languages)) )
     {

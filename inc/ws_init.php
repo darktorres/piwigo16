@@ -41,7 +41,6 @@ if (!is_null($requestFormat))
   switch ($requestFormat)
   {
     case 'rest':
-      include_once(PHPWG_ROOT_PATH.'inc/ws_protocols/PwgRestRequestHandler.php');
       $handler = new PwgRestRequestHandler();
       break;
   }
@@ -54,19 +53,15 @@ if (!is_null($responseFormat))
   switch ($responseFormat)
   {
     case 'rest':
-      include_once(PHPWG_ROOT_PATH.'inc/ws_protocols/PwgRestEncoder.php');
       $encoder = new PwgRestEncoder();
       break;
     case 'php':
-      include_once(PHPWG_ROOT_PATH.'inc/ws_protocols/PwgSerialPhpEncoder.php');
       $encoder = new PwgSerialPhpEncoder();
       break;
     case 'json':
-      include_once(PHPWG_ROOT_PATH.'inc/ws_protocols/PwgJsonEncoder.php');
       $encoder = new PwgJsonEncoder();
       break;
     case 'xmlrpc':
-      include_once(PHPWG_ROOT_PATH.'inc/ws_protocols/PwgXmlRpcEncoder.php');
       $encoder = new PwgXmlRpcEncoder();
       break;
   }

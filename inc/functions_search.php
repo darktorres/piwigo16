@@ -513,14 +513,6 @@ define('QST_WILDCARD_END',   0x10);
 define('QST_WILDCARD', QST_WILDCARD_BEGIN|QST_WILDCARD_END);
 define('QST_BREAK',          0x20);
 
-include_once(PHPWG_ROOT_PATH.'inc/QSearchScope.php');
-include_once(PHPWG_ROOT_PATH.'inc/QNumericRangeScope.php');
-include_once(PHPWG_ROOT_PATH.'inc/QDateRangeScope.php');
-include_once(PHPWG_ROOT_PATH.'inc/QSingleToken.php');
-include_once(PHPWG_ROOT_PATH.'inc/QMultiToken.php');
-include_once(PHPWG_ROOT_PATH.'inc/QExpression.php');
-include_once(PHPWG_ROOT_PATH.'inc/QResults.php');
-
 function qsearch_get_text_token_search_sql($token, $fields)
 {
   global $page;

@@ -58,14 +58,6 @@ set_error_handler(function (
 /** default rank for buttons */
 define('BUTTONS_RANK_NEUTRAL', 50);
 
-include(PHPWG_ROOT_PATH.'inc/Combinable.php');
-include(PHPWG_ROOT_PATH.'inc/Css.php');
-include(PHPWG_ROOT_PATH.'inc/CssLoader.php');
-include(PHPWG_ROOT_PATH.'inc/FileCombiner.php');
-include(PHPWG_ROOT_PATH.'inc/PwgTemplateAdapter.php');
-include(PHPWG_ROOT_PATH.'inc/Script.php');
-include(PHPWG_ROOT_PATH.'inc/ScriptLoader.php');
-
 /**
  * This a wrapper arround Smarty classes proving various custom mechanisms for templates.
  */

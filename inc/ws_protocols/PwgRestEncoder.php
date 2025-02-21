@@ -13,8 +13,6 @@ use Piwigo\inc\PwgNamedArray;
 use Piwigo\inc\PwgNamedStruct;
 use Piwigo\inc\PwgResponseEncoder;
 
-include_once(PHPWG_ROOT_PATH.'inc/ws_protocols/PwgXmlWriter.php');
-
 class PwgRestEncoder extends PwgResponseEncoder
 {
   private $_writer;

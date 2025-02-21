@@ -12,8 +12,6 @@ namespace Piwigo\admin\inc;
 // |                       Class for GD library                            |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/imageInterface.php');
-
 class image_gd implements imageInterface
 {
   var $image;

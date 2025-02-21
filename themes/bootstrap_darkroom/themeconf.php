@@ -10,8 +10,6 @@ Author URI: https://github.com/tkuther/piwigo-bootstrap-darkroom
 
 use Piwigo\themes\bootstrap_darkroom\inc\ThemeController;
 
-require_once(PHPWG_THEMES_PATH . 'bootstrap_darkroom/inc/themecontroller.php');
-require_once(PHPWG_THEMES_PATH . 'bootstrap_darkroom/inc/config.php');
 
 $themeconf = array(
     'name' => 'bootstrap_darkroom',

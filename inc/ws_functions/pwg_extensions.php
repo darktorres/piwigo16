@@ -18,8 +18,6 @@ use Piwigo\inc\PwgError;
  */
 function ws_plugins_getList($params, $service)
 {
-  include_once(PHPWG_ROOT_PATH.'admin/inc/plugins.php');
-
   $plugins = new plugins();
   $plugins->sort_fs_plugins('name');
   $plugin_list = array();
@@ -75,7 +73,6 @@ function ws_plugins_performAction($params, $service)
   }
 
   define('IN_ADMIN', true);
-  include_once(PHPWG_ROOT_PATH.'admin/inc/plugins.php');
 
   $plugins = new plugins();
   $errors = $plugins->perform_action($params['action'], $params['plugin']);
@@ -117,7 +114,6 @@ function ws_themes_performAction($params, $service)
   }
 
   define('IN_ADMIN', true);
-  include_once(PHPWG_ROOT_PATH.'admin/inc/themes.php');
 
   $themes = new themes();
   $errors = $themes->perform_action($params['action'], $params['theme']);
@@ -331,7 +327,6 @@ function ws_extensions_checkupdates($params, $service)
   global $conf;
 
   include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-  include_once(PHPWG_ROOT_PATH.'admin/inc/updates.php');
 
   $update = new updates();
   $result = array();

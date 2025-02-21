@@ -33,8 +33,6 @@ if (isset($_GET['slideshow']))
   unset($_GET['slideshow']);
 }
 
-include_once(PHPWG_ROOT_PATH.'themes/smartpocket/SPThumbPicker.php');
-
 //Retrive all pictures on thumbnails page
 add_event_handler('loc_index_thumbnails_selection', sp_select_all_thumbnails(...));
 

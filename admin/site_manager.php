@@ -40,7 +40,6 @@ $template->set_filenames(array('site_manager'=>'site_manager.tpl'));
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet.php');
 $my_base_url = get_root_url().'admin.php?page=';
 
 $tabsheet = new tabsheet();

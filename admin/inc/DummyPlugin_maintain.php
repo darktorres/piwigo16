@@ -10,8 +10,6 @@ namespace Piwigo\admin\inc;
 
 use Piwigo\inc\PluginMaintain;
 
-include_once(PHPWG_ROOT_PATH.'inc/PluginMaintain.php');
-
 /**
  * class DummyPlugin_maintain
  * used when a plugin uses the old procedural declaration of maintenance methods

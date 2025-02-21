@@ -19,7 +19,6 @@ if (!defined('PHPWG_ROOT_PATH'))
 
 include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 include_once(PHPWG_ROOT_PATH.'admin/inc/functions_notification_by_mail.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet.php');
 include_once(PHPWG_ROOT_PATH.'inc/common.php');
 include_once(PHPWG_ROOT_PATH.'inc/functions_notification.php');
 include_once(PHPWG_ROOT_PATH.'inc/functions_mail.php');

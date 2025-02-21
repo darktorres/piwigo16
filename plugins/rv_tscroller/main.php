@@ -12,7 +12,5 @@ use Piwigo\plugins\rv_tscroller\RVTS;
 
 define('RVTS_VERSION', '12.a');
 
-include_once(PHPWG_ROOT_PATH.'plugins/rv_tscroller/RVTS.php');
-
 add_event_handler('loc_end_section_init', RVTS::on_end_section_init(...));
 ?>

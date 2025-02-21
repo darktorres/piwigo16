@@ -35,13 +35,9 @@ function make_consecutive( &$orders, $step=50 )
   }
 }
 
-include_once(PHPWG_ROOT_PATH.'inc/BlockManager.php');
-
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
-
-include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet.php');
 
 $my_base_url = get_root_url().'admin.php?page=';
 

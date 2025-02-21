@@ -8,7 +8,6 @@ if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 global $template;
 
 include_once( dirname(dirname(__FILE__)).'/functions_modus.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet.php');
 
 $default_conf = modus_get_default_config();
 

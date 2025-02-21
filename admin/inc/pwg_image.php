@@ -45,7 +45,6 @@ class pwg_image
       die('No image library available on your server.');
     }
 
-    include_once(PHPWG_ROOT_PATH."admin/inc/image_$this->library.php");
     $class = '\Piwigo\admin\inc\image_'.$this->library;
     $this->image = new $class($source_filepath);
   }
@@ -372,7 +371,6 @@ class pwg_image
 
   static function is_vips()
   {
-    include_once(PHPWG_ROOT_PATH.'admin/inc/image_vips.php');
     return class_exists('\Piwigo\admin\inc\image_vips');
   }
 

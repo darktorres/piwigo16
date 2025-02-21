@@ -22,7 +22,4 @@ define('IMG_XLARGE', 'xlarge');
 define('IMG_XXLARGE', 'xxlarge');
 define('IMG_CUSTOM', 'custom');
 
-include_once(PHPWG_ROOT_PATH.'inc/WatermarkParams.php');
-include_once(PHPWG_ROOT_PATH.'inc/ImageStdParams.php');
-
 ?>

@@ -12,8 +12,6 @@ namespace Piwigo\admin\inc;
 // |            Class for ImageMagick external installation                |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/imageInterface.php');
-
 class image_ext_imagick implements imageInterface
 {
   var $imagickdir = '';

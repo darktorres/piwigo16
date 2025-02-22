@@ -351,7 +351,7 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
       array(
         'id'           => 1,
         'username'     => $admin_name,
-        'password'     => md5($admin_pass1),
+        'password'     => pwg_password_hash($admin_pass1),
         'mail_address' => $admin_mail,
         ),
       array(

@@ -4,7 +4,7 @@
 
 {combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
 {combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
-{combine_script id='tiptip' load='header' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
+{combine_script id='jquery.tipTip' load='header' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
 
 {combine_script id='pluginInstallated' load='footer' require='jquery.ajaxmanager' path='admin/themes/default/js/plugins_installated.js'}
 

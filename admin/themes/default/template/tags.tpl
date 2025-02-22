@@ -40,7 +40,7 @@ $(document).ready(function() {
 {combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/dist/jquery-confirm.min.js'}
 {combine_css path="node_modules/jquery-confirm/dist/jquery-confirm.min.css"}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-{combine_script id='tiptip' load='header' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
+{combine_script id='jquery.tipTip' load='header' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
 {combine_script id='tags' load='footer' path='admin/themes/default/js/tags.js'}
 {combine_script id='jquery.cookie' path='node_modules/jquery.cookie/jquery.cookie.js' load='footer'}
 

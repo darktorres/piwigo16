@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /**
  * A search scope applies to a single token and restricts the search to a subset of searchable fields.
  */

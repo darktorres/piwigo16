@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /** Represents an expression of several words or sub expressions to be searched.*/
 class QMultiToken
 {

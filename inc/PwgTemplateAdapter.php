@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /**
  * This class contains basic functions that can be called directly from the
  * templates in the form $pwg->l10n('edit')

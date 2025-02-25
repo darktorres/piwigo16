@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /**
   Structure of results being filled from different tables
 */

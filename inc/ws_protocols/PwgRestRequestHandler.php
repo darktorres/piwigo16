@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc\ws_protocols;
+
 class PwgRestRequestHandler extends PwgRequestHandler
 {
   function handleRequest(&$service)

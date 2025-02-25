@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /**
  * A Combinable represents a JS or CSS file ready for cobination and minification.
  */

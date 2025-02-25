@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /** Represents a single word or quoted phrase to be searched.*/
 class QSingleToken
 {

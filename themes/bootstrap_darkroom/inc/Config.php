@@ -1,5 +1,5 @@
 <?php
-namespace BootstrapDarkroom;
+namespace Piwigo\themes\bootstrap_darkroom\inc;
 
 class Config {
 

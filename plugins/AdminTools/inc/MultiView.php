@@ -1,4 +1,7 @@
 <?php
+
+namespace Piwigo\plugins\AdminTools\inc;
+
 defined('ADMINTOOLS_PATH') or die('Hacking attempt!');
 
 /**

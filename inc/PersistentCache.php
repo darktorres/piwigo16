@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /**
   Provides a persistent cache mechanism across multiple page loads/sessions etc...
 */

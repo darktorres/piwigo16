@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc\inflectors;
+
 class Inflector_en
 {
   private $exceptions;

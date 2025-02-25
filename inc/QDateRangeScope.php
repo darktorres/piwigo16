@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 class QDateRangeScope extends QSearchScope
 {
   function __construct($id, $aliases, $nullable=false)

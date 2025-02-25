@@ -8,6 +8,8 @@ Author URI: http://www.modusoptimus.com
 Has Settings: false
 */
 
+namespace Piwigo\plugins\rv_tscroller;
+
 class RVTS
 {
 static function on_end_section_init()

@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /**
  * Simple wrapper around an array (keys are consecutive integers starting at 0).
  * Provides naming clues for xml output (xml attributes vs. xml child elements?)

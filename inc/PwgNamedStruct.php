@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /**
  * Simple wrapper around a "struct" (php array whose keys are not consecutive
  * integers starting at 0). Provides naming clues for xml output (what is xml

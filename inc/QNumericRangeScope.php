@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 class QNumericRangeScope extends QSearchScope
 {
   private $epsilon;

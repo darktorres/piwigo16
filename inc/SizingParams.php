@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /**
  * Paramaters for derivative scaling and cropping.
  * Instance of this class contained by DerivativeParams class.

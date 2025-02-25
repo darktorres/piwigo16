@@ -1,4 +1,7 @@
 <?php
+
+namespace Piwigo\plugins\GDThumb;
+
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
 class GDThumb_maintain extends PluginMaintain {

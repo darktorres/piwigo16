@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /**
  * Manage a list of required scripts for a page, by optimizing their loading location (head, footer, async)
  * and later on by combining them in a unique file respecting at the same time dependencies.

@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc\ws_protocols;
+
 class PwgJsonEncoder extends PwgResponseEncoder
 {
   function encodeResponse($response)

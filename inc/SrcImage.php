@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /**
  * A source image is used to get a derivative image. It is either
  * the original file for a jpg/png/... or a 'representative' image

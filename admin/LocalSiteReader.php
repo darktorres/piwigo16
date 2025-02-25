@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\admin;
+
 // provides data for site synchronization from the local file system
 class LocalSiteReader
 {

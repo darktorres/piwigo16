@@ -8,6 +8,8 @@ Author: P@t
 Author URI: http://piwigo.org
 */
 
+namespace Piwigo\themes\smartpocket;
+
 class SPThumbPicker
 {
   var $candidates;

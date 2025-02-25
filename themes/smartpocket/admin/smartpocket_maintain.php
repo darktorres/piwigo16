@@ -1,4 +1,7 @@
 <?php
+
+namespace Piwigo\themes\smartpocket\admin;
+
 class smartpocket_maintain extends ThemeMaintain
 {
   private $installed = false;

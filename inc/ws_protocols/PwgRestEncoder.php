@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc\ws_protocols;
+
 include_once(PHPWG_ROOT_PATH.'inc/ws_protocols/PwgXmlWriter.php');
 
 class PwgRestEncoder extends PwgResponseEncoder

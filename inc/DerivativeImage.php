@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 /**
  * Holds information (path, url, dimensions) about a derivative image.
  * A derivative image is constructed from a source image (SrcImage class)

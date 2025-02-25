@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\inc;
+
 include_once(PHPWG_ROOT_PATH.'inc/PersistentCache.php');
 
 /**

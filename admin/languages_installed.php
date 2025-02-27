@@ -16,7 +16,7 @@ if (!is_webmaster())
   $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/languages.class.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/languages_class.php');
 
 $template->set_filenames(array('languages' => 'languages_installed.tpl'));
 

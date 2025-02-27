@@ -1,4 +1,4 @@
-{include file='include/colorbox.inc.tpl'}
+{include file='inc/colorbox.inc.tpl'}
 {footer_script}
 var pwg_token = "{$PWG_TOKEN}";
 var str_member_default = "{'member'|@translate|@escape:'javascript'}"

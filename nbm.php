@@ -9,12 +9,12 @@
 
 //--------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH','./');
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+include_once(PHPWG_ROOT_PATH.'inc/common.php');
 check_status(ACCESS_FREE);
-include_once(PHPWG_ROOT_PATH.'include/functions_notification.inc.php');
-include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/functions_notification_by_mail.inc.php');
+include_once(PHPWG_ROOT_PATH.'inc/functions_notification.php');
+include_once(PHPWG_ROOT_PATH.'inc/functions_mail.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions_notification_by_mail.php');
 // Translations are in admin file too
 load_language('admin.lang');
 // Need to update a second time
@@ -53,14 +53,14 @@ $template->set_filenames(array('nbm'=>'nbm.tpl'));
 $themeconf = $template->get_template_vars('themeconf');
 if (!isset($themeconf['hide_menu_on']) OR !in_array('theNBMPage', $themeconf['hide_menu_on']))
 {
-  include( PHPWG_ROOT_PATH.'include/menubar.inc.php');
+  include( PHPWG_ROOT_PATH.'inc/menubar.php');
 }
 
 // +-----------------------------------------------------------------------+
 // | html code display                                                     |
 // +-----------------------------------------------------------------------+
-include(PHPWG_ROOT_PATH.'include/page_header.php');
+include(PHPWG_ROOT_PATH.'inc/page_header.php');
 flush_page_messages();
 $template->parse('nbm');
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 ?>

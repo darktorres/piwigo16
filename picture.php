@@ -7,9 +7,9 @@
 // +-----------------------------------------------------------------------+
 
 define('PHPWG_ROOT_PATH','./');
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
-include(PHPWG_ROOT_PATH.'include/section_init.inc.php');
-include_once(PHPWG_ROOT_PATH.'include/functions_picture.inc.php');
+include_once(PHPWG_ROOT_PATH.'inc/common.php');
+include(PHPWG_ROOT_PATH.'inc/section_init.php');
+include_once(PHPWG_ROOT_PATH.'inc/functions_picture.php');
 
 // Check Access and exit when user status is not ok
 check_status(ACCESS_GUEST);
@@ -303,7 +303,7 @@ UPDATE '.CATEGORIES_TABLE.'
         pwg_query($query);
         pwg_activity('album', $page['category']['id'], 'edit', array('action'=>$_GET['action'], 'image_id'=>$page['image_id']));
 
-        include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+        include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
         invalidate_user_cache();
       }
 
@@ -319,13 +319,13 @@ UPDATE '.CATEGORIES_TABLE.'
     }
     case 'rate' :
     {
-      include_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
+      include_once(PHPWG_ROOT_PATH.'inc/functions_rate.php');
       rate_picture($page['image_id'], $_POST['rate']);
       redirect($url_self);
     }
     case 'edit_comment':
     {
-      include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
+      include_once(PHPWG_ROOT_PATH.'inc/functions_comment.php');
       check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
       $author_id = get_comment_author_id($_GET['comment_to_edit']);
 
@@ -375,7 +375,7 @@ UPDATE '.CATEGORIES_TABLE.'
     {
       check_pwg_token();
 
-      include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
+      include_once(PHPWG_ROOT_PATH.'inc/functions_comment.php');
 
       check_input_parameter('comment_to_delete', $_GET, false, PATTERN_ID);
 
@@ -392,7 +392,7 @@ UPDATE '.CATEGORIES_TABLE.'
     {
       check_pwg_token();
 
-      include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
+      include_once(PHPWG_ROOT_PATH.'inc/functions_comment.php');
 
       check_input_parameter('comment_to_validate', $_GET, false, PATTERN_ID);
 
@@ -1004,14 +1004,14 @@ $template->assign(
 // |                               sub pages                               |
 // +-----------------------------------------------------------------------+
 
-include(PHPWG_ROOT_PATH.'include/picture_rate.inc.php');
+include(PHPWG_ROOT_PATH.'inc/picture_rate.php');
 if ($conf['activate_comments'])
 {
-  include(PHPWG_ROOT_PATH.'include/picture_comment.inc.php');
+  include(PHPWG_ROOT_PATH.'inc/picture_comment.php');
 }
 if ($metadata_showable and pwg_get_session_var('show_metadata') <> null )
 {
-  include(PHPWG_ROOT_PATH.'include/picture_metadata.inc.php');
+  include(PHPWG_ROOT_PATH.'inc/picture_metadata.php');
 }
 
 // include menubar
@@ -1019,10 +1019,10 @@ $themeconf = $template->get_template_vars('themeconf');
 if ($conf['picture_menu'] AND (!isset($themeconf['hide_menu_on']) OR !in_array('thePicturePage', $themeconf['hide_menu_on'])))
 {
   if (!isset($page['start'])) $page['start'] = 0;
-  include( PHPWG_ROOT_PATH.'include/menubar.inc.php');
+  include( PHPWG_ROOT_PATH.'inc/menubar.php');
 }
 
-include(PHPWG_ROOT_PATH.'include/page_header.php');
+include(PHPWG_ROOT_PATH.'inc/page_header.php');
 trigger_notify('loc_end_picture');
 flush_page_messages();
 if ($page['slideshow'] and $conf['light_slideshow'])
@@ -1036,5 +1036,5 @@ else
 }
 //------------------------------------------------------------ log informations
 pwg_log($picture['current']['id'], 'picture');
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 ?>

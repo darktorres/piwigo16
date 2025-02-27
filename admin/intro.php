@@ -11,9 +11,9 @@ if (!defined('PHPWG_ROOT_PATH'))
   die ("Hacking attempt!");
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/check_integrity.class.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/c13y_internal.class.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/check_integrity_class.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/c13y_internal_class.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -31,7 +31,7 @@ if (isset($_GET['action']) and 'hide_newsletter_subscription' == $_GET['action']
   exit();
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet_class.php');
 
 $my_base_url = get_root_url().'admin.php?page=';
 

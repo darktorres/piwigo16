@@ -9,13 +9,13 @@
 define('PHPWG_ROOT_PATH','./');
 
 // fast bootstrap - no db connection
-include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
-@include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
+include(PHPWG_ROOT_PATH . 'inc/config_default.php');
+@include(PHPWG_ROOT_PATH. 'local/config/config.php');
 
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $conf['data_location'].'i/');
 
-@include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php');
+@include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.php');
 
 $logger = new Katzgrau\KLogger\Logger(PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'], $conf['log_level'], array(
   // we use an hashed filename to prevent direct file access, and we salt with
@@ -331,8 +331,8 @@ function send_derivative($expires)
 
   if (isset($_GET['ajaxload']) and $_GET['ajaxload'] == 'true')
   {
-    include_once(PHPWG_ROOT_PATH.'include/functions_cookie.inc.php');
-    include_once(PHPWG_ROOT_PATH.'include/functions_url.inc.php');
+    include_once(PHPWG_ROOT_PATH.'inc/functions_cookie.php');
+    include_once(PHPWG_ROOT_PATH.'inc/functions_url.php');
 
     echo json_encode( array( 'url'=>embellish_url(get_absolute_root_url().$page['derivative_path']) ) );
     return;
@@ -369,9 +369,9 @@ foreach( explode(',','load,rotate,crop,scale,sharpen,watermark,save,send') as $k
   $timing[$k] = '';
 }
 
-include_once(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$conf['dblayer'].'.inc.php');
-include_once( PHPWG_ROOT_PATH .'/include/derivative_params.inc.php');
-include_once( PHPWG_ROOT_PATH .'/include/derivative_std_params.inc.php');
+include_once(PHPWG_ROOT_PATH .'inc/dblayer/functions_'.$conf['dblayer'].'.php');
+include_once( PHPWG_ROOT_PATH .'/inc/derivative_params.php');
+include_once( PHPWG_ROOT_PATH .'/inc/derivative_std_params.php');
 
 try
 {
@@ -433,7 +433,7 @@ if (!$need_generate)
   exit;
 }
 
-include_once(PHPWG_ROOT_PATH . 'admin/include/image.class.php');
+include_once(PHPWG_ROOT_PATH . 'admin/inc/image_class.php');
 $page['coi'] = null;
 if (strpos($page['src_location'], '/pwg_representative/')===false
     && strpos($page['src_location'], 'themes/')===false

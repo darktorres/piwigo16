@@ -10,8 +10,8 @@
 // |                           initialization                              |
 // +-----------------------------------------------------------------------+
 define('PHPWG_ROOT_PATH','./');
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
-include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
+include_once(PHPWG_ROOT_PATH.'inc/common.php');
+include_once(PHPWG_ROOT_PATH.'inc/functions_comment.php');
 
 if (!$conf['activate_comments'])
 {
@@ -532,16 +532,16 @@ $template->assign( 'comment_derivative_params', $derivative_params );
 $themeconf = $template->get_template_vars('themeconf');
 if (!isset($themeconf['hide_menu_on']) OR !in_array('theCommentsPage', $themeconf['hide_menu_on']))
 {
-  include( PHPWG_ROOT_PATH.'include/menubar.inc.php');
+  include( PHPWG_ROOT_PATH.'inc/menubar.php');
 }
 
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+
-include(PHPWG_ROOT_PATH.'include/page_header.php');
+include(PHPWG_ROOT_PATH.'inc/page_header.php');
 trigger_notify('loc_end_comments');
 flush_page_messages();
 if (count($comments) > 0)  $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');
 $template->pparse('comments');
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 ?>

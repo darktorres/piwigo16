@@ -13,7 +13,7 @@
 define('PHPWG_ROOT_PATH', '../');
 define('PWG_HELP', true);
 define('IN_ADMIN', true);
-include_once( PHPWG_ROOT_PATH.'include/common.inc.php' );
+include_once( PHPWG_ROOT_PATH.'inc/common.php' );
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -39,7 +39,7 @@ if (!isset($_GET['output']) or 'content_only' != $_GET['output'])
     )
   );
 
-  include(PHPWG_ROOT_PATH.'include/page_header.php');
+  include(PHPWG_ROOT_PATH.'inc/page_header.php');
 }
 
 if
@@ -89,6 +89,6 @@ if (isset($_GET['output']) and 'content_only' == $_GET['output'])
 
 $template->pparse('popuphelp');
 
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 
 ?>

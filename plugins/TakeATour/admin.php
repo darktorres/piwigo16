@@ -6,7 +6,7 @@ global $template, $conf, $user, $page;
 
 load_language('plugin.lang', PHPWG_PLUGINS_PATH .'TakeATour/', array('force_fallback'=>'en_UK'));
 
-include_once(PHPWG_ROOT_PATH .'admin/include/tabsheet.class.php');
+include_once(PHPWG_ROOT_PATH .'admin/inc/tabsheet_class.php');
 $page['tab'] = 'list';
 
 $tabsheet = new tabsheet();
@@ -52,7 +52,7 @@ $tours = array(
 
 $version_tour = str_replace('.', '_', get_branch_from_version(PHPWG_VERSION)).'_0';
 
-if (file_exists(PHPWG_PLUGINS_PATH.'TakeATour/tours/'.$version_tour.'/config.inc.php'))
+if (file_exists(PHPWG_PLUGINS_PATH.'TakeATour/tours/'.$version_tour.'/config.php'))
 {
   $tours[] = $version_tour;
 }

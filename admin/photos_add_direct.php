@@ -136,7 +136,7 @@ SELECT *
 // |                             prepare form                              |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH.'admin/include/photos_add_direct_prepare.inc.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/photos_add_direct_prepare.php');
 
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |

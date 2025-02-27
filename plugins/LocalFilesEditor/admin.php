@@ -22,8 +22,8 @@
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
-include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
-include_once(LOCALEDIT_PATH.'include/functions.inc.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet_class.php');
+include_once(LOCALEDIT_PATH.'inc/functions.php');
 load_language('plugin.lang', LOCALEDIT_PATH);
 $my_base_url = get_root_url().'admin.php?page=plugin-'.basename(dirname(__FILE__));
 
@@ -50,7 +50,7 @@ foreach ($conf['LocalFilesEditor_tabs'] as $tab)
 $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
-include_once(LOCALEDIT_PATH.'include/'.$page['tab'].'.inc.php');
+include_once(LOCALEDIT_PATH.'inc/'.$page['tab'].'.php');
 
 // +-----------------------------------------------------------------------+
 // |                           Load backup file

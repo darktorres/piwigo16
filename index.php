@@ -8,8 +8,8 @@
 
 //--------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH','./');
-include_once( PHPWG_ROOT_PATH.'include/common.inc.php' );
-include(PHPWG_ROOT_PATH.'include/section_init.inc.php');
+include_once( PHPWG_ROOT_PATH.'inc/common.php' );
+include(PHPWG_ROOT_PATH.'inc/section_init.php');
 
 // Check Access and exit when user status is not ok
 check_status(ACCESS_GUEST);
@@ -100,7 +100,7 @@ $template->assign('TITLE', $template_title);
 $template->assign('NB_ITEMS', $nb_items);
 
 //-------------------------------------------------------------- menubar
-include( PHPWG_ROOT_PATH.'include/menubar.inc.php');
+include( PHPWG_ROOT_PATH.'inc/menubar.php');
 
 $template->set_filename('index', 'index.tpl');
 
@@ -179,7 +179,7 @@ if ( empty($page['is_external']) )
   // be able to show an old quicksearch result, we must check this condtion too.
   if ('search' == $page['section'] and isset($page['search_details']))
   {
-    include_once(PHPWG_ROOT_PATH.'include/functions_search.inc.php');
+    include_once(PHPWG_ROOT_PATH.'inc/functions_search.php');
 
     $my_search = get_search_array($page['search']);
 
@@ -664,12 +664,12 @@ SELECT
     and (!isset($page['category']['count_categories']) or $page['category']['count_categories']>0 )
   )
   {
-    include(PHPWG_ROOT_PATH.'include/category_cats.inc.php');
+    include(PHPWG_ROOT_PATH.'inc/category_cats.php');
   }
 
   if ( !empty($page['items']) )
   {
-    include(PHPWG_ROOT_PATH.'include/category_default.inc.php');
+    include(PHPWG_ROOT_PATH.'inc/category_default.php');
 
     if ($conf['index_sizes_icon'])
     {
@@ -713,7 +713,7 @@ SELECT
 }
 
 //------------------------------------------------------------ end
-include(PHPWG_ROOT_PATH.'include/page_header.php');
+include(PHPWG_ROOT_PATH.'inc/page_header.php');
 trigger_notify('loc_end_index');
 flush_page_messages();
 $template->parse_index_buttons();
@@ -721,5 +721,5 @@ $template->pparse('index');
 
 //------------------------------------------------------------ log informations
 pwg_log();
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 ?>

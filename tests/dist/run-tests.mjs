@@ -29,7 +29,12 @@ async function runPuppeteerScript() {
         .on("requestfailed", (request) => console.log(magenta(`${request.failure()?.errorText} ${request.url()}`)));
     await page.setRequestInterception(true);
     page.on("request", handleRequest);
-    await fs.remove(path.resolve(import.meta.dirname, "../../local/config/database.inc.php"));
+    await fs.remove(
+        path.resolve(
+            import.meta.dirname,
+            "../../local/config/database.php",
+        ),
+    );
     // Navigate to the install page
     await page.goto("http://localhost/piwigo-fork/install.php", { waitUntil: "networkidle0" });
     await page.waitForSelector("#content > form > fieldset:nth-child(2) > table > tbody > tr:nth-child(2) > td:nth-child(2) > input[type=text]");

@@ -6,7 +6,7 @@ Doing this, they won't be lost during the next upgrade.
 For example, if you want your own header file just copy 
 "template/yoga/header.tpl" to this directory with whatever, but significant,
 filename you want.
-Then edit "include/page_header.php" and replace the line :
+Then edit "inc/page_header.php" and replace the line :
   $template->set_filenames(array('header'=>'header.tpl'));
 by
   $template->set_filenames(array('header'=>'../../template-extension/yoga/local/header.tpl'));

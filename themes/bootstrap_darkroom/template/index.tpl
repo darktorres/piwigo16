@@ -144,7 +144,7 @@
 
 {if !empty($SEARCH_ID)}
     <div class="container{if $theme_config->fluid_width}-fluid{/if}">
-    {include file='themes/default/template/include/search_filters.inc.tpl'}
+    {include file='themes/default/template/inc/search_filters.inc.tpl'}
     </div>
 {/if}
 

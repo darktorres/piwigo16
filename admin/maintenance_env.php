@@ -11,8 +11,8 @@ if (!defined('PHPWG_ROOT_PATH'))
   die ("Hacking attempt!");
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/image.class.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/image_class.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -65,7 +65,7 @@ switch ($action)
   {
     images_integrity();
     update_path();
-		include_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
+		include_once(PHPWG_ROOT_PATH.'inc/functions_rate.php');
     update_rating_score();
     invalidate_user_cache();
     break;
@@ -160,7 +160,7 @@ DELETE
   }
   case 'c13y' :
   {
-    include_once(PHPWG_ROOT_PATH.'admin/include/check_integrity.class.php');
+    include_once(PHPWG_ROOT_PATH.'admin/inc/check_integrity_class.php');
     $c13y = new check_integrity();
     $c13y->maintenance();
     break;

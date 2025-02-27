@@ -52,7 +52,7 @@ switch ($action)
   {
     images_integrity();
     update_path();
-		include_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
+		include_once(PHPWG_ROOT_PATH.'inc/functions_rate.php');
     update_rating_score();
     invalidate_user_cache();
     $page['infos'][] = sprintf('%s : %s', l10n('Update photos information'), l10n('action successfully performed.'));
@@ -153,7 +153,7 @@ DELETE
   }
   case 'c13y' :
   {
-    include_once(PHPWG_ROOT_PATH.'admin/include/check_integrity.class.php');
+    include_once(PHPWG_ROOT_PATH.'admin/inc/check_integrity_class.php');
     $c13y = new check_integrity();
     $c13y->maintenance();
     $page['infos'][] = sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.'));

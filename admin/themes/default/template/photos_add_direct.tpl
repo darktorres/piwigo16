@@ -11,9 +11,9 @@
   {combine_script id="plupload_i18n-`$lang_info.plupload_code`" load="footer" path=$plupload_i18n require="jquery.plupload.queue"}
 {/if}
 
-{include file='include/colorbox.inc.tpl'}
+{include file='inc/colorbox.inc.tpl'}
 {if !$DISPLAY_FORMATS}
-  {include file='include/add_album.inc.tpl'}
+  {include file='inc/add_album.inc.tpl'}
 {/if}
 
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}

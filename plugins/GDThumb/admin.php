@@ -23,7 +23,7 @@ function delete_gdthumb_cache($height) {
 global $template, $conf, $page;
 
 load_language('plugin.lang', GDTHUMB_PATH);
-include(dirname(__FILE__).'/config_default.inc.php');
+include(dirname(__FILE__).'/config_default.php');
 $params = $conf['gdThumb'];
 
 if (isset($_GET['getMissingDerivative'])) {

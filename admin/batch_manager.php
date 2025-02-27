@@ -17,8 +17,8 @@ if (!defined('PHPWG_ROOT_PATH'))
   die('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet_class.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -591,7 +591,7 @@ SELECT id
 if (isset($_SESSION['bulk_manager_filter']['search']) && 
     strlen($_SESSION['bulk_manager_filter']['search']['q']))
 {
-  include_once( PHPWG_ROOT_PATH .'include/functions_search.inc.php' );
+  include_once( PHPWG_ROOT_PATH .'inc/functions_search.php' );
   $res = get_quick_search_results_no_cache($_SESSION['bulk_manager_filter']['search']['q'], array('permissions'=>false));
   if (!empty($res['items']) && !empty($res['qs']['unmatched_terms']))
   {

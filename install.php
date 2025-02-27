@@ -90,12 +90,12 @@ else
   $prefixeTable = DEFAULT_PREFIX_TABLE;
 }
 
-include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
-@include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
+include(PHPWG_ROOT_PATH . 'inc/config_default.php');
+@include(PHPWG_ROOT_PATH. 'local/config/config.php');
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
-include(PHPWG_ROOT_PATH . 'include/functions.inc.php');
-include(PHPWG_ROOT_PATH . 'include/template.class.php');
+include(PHPWG_ROOT_PATH . 'inc/functions.php');
+include(PHPWG_ROOT_PATH . 'inc/template_class.php');
 
 // download database config file if exists
 check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
@@ -105,7 +105,7 @@ if (!empty($_GET['dl']) && file_exists(PHPWG_ROOT_PATH.$conf['data_location'].'p
   $filename = PHPWG_ROOT_PATH.$conf['data_location'].'pwg_'.$_GET['dl'];
   header('Cache-Control: no-cache, must-revalidate');
   header('Pragma: no-cache');
-  header('Content-Disposition: attachment; filename="database.inc.php"');
+  header('Content-Disposition: attachment; filename="database.php"');
   header('Content-Transfer-Encoding: binary');
   header('Content-Length: '.filesize($filename));
   echo file_get_contents($filename);
@@ -136,7 +136,7 @@ if (isset($_POST['install']))
 $infos = array();
 $errors = array();
 
-$config_file = PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php';
+$config_file = PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.php';
 if (@file_exists($config_file))
 {
   include($config_file);
@@ -147,10 +147,10 @@ if (@file_exists($config_file))
   }
 }
 
-include(PHPWG_ROOT_PATH . 'include/constants.php');
-include(PHPWG_ROOT_PATH . 'admin/include/functions.php');
+include(PHPWG_ROOT_PATH . 'inc/constants.php');
+include(PHPWG_ROOT_PATH . 'admin/inc/functions.php');
 
-include(PHPWG_ROOT_PATH . 'admin/include/languages.class.php');
+include(PHPWG_ROOT_PATH . 'admin/inc/languages_class.php');
 $languages = new languages('utf-8');
 
 if (isset($_GET['language']))
@@ -233,9 +233,9 @@ if (!isset($step))
   $step = 1;
 }
 //---------------------------------------------------------------- form analyze
-include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$dblayer.'.inc.php');
-include(PHPWG_ROOT_PATH . 'admin/include/functions_install.inc.php');
-include(PHPWG_ROOT_PATH . 'admin/include/functions_upgrade.php');
+include(PHPWG_ROOT_PATH .'inc/dblayer/functions_'.$dblayer.'.php');
+include(PHPWG_ROOT_PATH . 'admin/inc/functions_install.php');
+include(PHPWG_ROOT_PATH . 'admin/inc/functions_upgrade.php');
 
 if (isset($_POST['install']))
 {
@@ -486,7 +486,7 @@ else
     // email notification
     if (isset($_POST['send_credentials_by_mail']))
     {
-      include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
+      include_once(PHPWG_ROOT_PATH.'inc/functions_mail.php');
             
       $keyargs_content = array(
         get_l10n_args('Hello %s,', $admin_name),

@@ -11,7 +11,7 @@ if( !defined("PHPWG_ROOT_PATH") )
   die ("Hacking attempt!");
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet_class.php');
 
 $my_base_url = get_root_url().'admin.php?page=languages';
 

@@ -158,7 +158,7 @@ jQuery().ready(function(){ldelim}
 {if isset($config_creation_failed)}
 <div class="errors">
   <p style="margin-left:30px;">
-    <strong>{'Creation of config file local/config/database.inc.php failed.'|@translate}</strong>
+    <strong>{'Creation of config file local/config/database.php failed.'|@translate}</strong>
   </p>
   <ul>
     <li>
@@ -168,7 +168,7 @@ jQuery().ready(function(){ldelim}
       </p>
     </li>
     <li>
-      <p>{'An alternate solution is to copy the text in the box above and paste it into the file "local/config/database.inc.php" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)'|@translate}</p>
+      <p>{'An alternate solution is to copy the text in the box above and paste it into the file "local/config/database.php" (Warning : database.php must only contain what is in the textarea, no line return or space character)'|@translate}</p>
       <textarea rows="15" cols="70">{$config_file_content}</textarea>
     </li>
   </ul>

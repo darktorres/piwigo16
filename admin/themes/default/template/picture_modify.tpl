@@ -1,6 +1,6 @@
-{include file='include/autosize.inc.tpl'}
-{include file='include/datepicker.inc.tpl'}
-{include file='include/colorbox.inc.tpl'}
+{include file='inc/autosize.inc.tpl'}
+{include file='inc/datepicker.inc.tpl'}
+{include file='inc/colorbox.inc.tpl'}
 
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
@@ -235,7 +235,7 @@ $('#action-delete-picture').on('click', function() {
 
 </form>
 
-{include file='include/album_selector.inc.tpl' 
+{include file='inc/album_selector.inc.tpl' 
   title={'Associate to album'|@translate}
   searchPlaceholder={'Search'|@translate}
 }

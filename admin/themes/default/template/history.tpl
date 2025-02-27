@@ -1,5 +1,5 @@
 
-{include file='include/datepicker.inc.tpl'}
+{include file='inc/datepicker.inc.tpl'}
 
 {footer_script}
 jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}

@@ -8,8 +8,8 @@
 
 //--------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH','./');
-include_once( PHPWG_ROOT_PATH.'include/common.inc.php' );
-include_once(PHPWG_ROOT_PATH.'include/functions_search.inc.php');
+include_once( PHPWG_ROOT_PATH.'inc/common.php' );
+include_once(PHPWG_ROOT_PATH.'inc/functions_search.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |

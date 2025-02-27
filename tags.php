@@ -11,7 +11,7 @@
 // +-----------------------------------------------------------------------+
 
 define('PHPWG_ROOT_PATH','./');
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+include_once(PHPWG_ROOT_PATH.'inc/common.php');
 
 check_status(ACCESS_GUEST);
 
@@ -157,12 +157,12 @@ else
 $themeconf = $template->get_template_vars('themeconf');
 if (!isset($themeconf['hide_menu_on']) OR !in_array('theTagsPage', $themeconf['hide_menu_on']))
 {
-  include( PHPWG_ROOT_PATH.'include/menubar.inc.php');
+  include( PHPWG_ROOT_PATH.'inc/menubar.php');
 }
 
-include(PHPWG_ROOT_PATH.'include/page_header.php');
+include(PHPWG_ROOT_PATH.'inc/page_header.php');
 trigger_notify('loc_end_tags');
 flush_page_messages();
 $template->pparse('tags');
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 ?>

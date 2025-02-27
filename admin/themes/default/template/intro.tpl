@@ -1,4 +1,4 @@
-{include file='include/colorbox.inc.tpl'}
+{include file='inc/colorbox.inc.tpl'}
 
 {combine_script id='jquery.cluetip' load='async' require='jquery' path='node_modules/cluetip/jquery.cluetip.js'}
 

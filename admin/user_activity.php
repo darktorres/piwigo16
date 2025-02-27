@@ -11,7 +11,7 @@ if (!defined('PHPWG_ROOT_PATH'))
   die('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -23,7 +23,7 @@ check_status(ACCESS_ADMINISTRATOR);
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'user_activity';
-include(PHPWG_ROOT_PATH.'admin/include/user_tabs.inc.php');
+include(PHPWG_ROOT_PATH.'admin/inc/user_tabs.php');
 
 
 if (isset($_GET['type']) && 'download_logs' == $_GET['type'])

@@ -1,6 +1,6 @@
-{include file='include/datepicker.inc.tpl' load_mode='async'}
-{include file='include/colorbox.inc.tpl' load_mode='footer'}
-{include file='include/add_album.inc.tpl' load_mode='async'}
+{include file='inc/datepicker.inc.tpl' load_mode='async'}
+{include file='inc/colorbox.inc.tpl' load_mode='footer'}
+{include file='inc/add_album.inc.tpl' load_mode='async'}
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 

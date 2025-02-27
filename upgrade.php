@@ -17,11 +17,11 @@ if (function_exists('ini_set'))
 define('PHPWG_ROOT_PATH', './');
 
 // load config file
-include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
-@include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
+include(PHPWG_ROOT_PATH . 'inc/config_default.php');
+@include(PHPWG_ROOT_PATH. 'local/config/config.php');
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
-$config_file = PHPWG_ROOT_PATH.PWG_LOCAL_DIR.'config/database.inc.php';
+$config_file = PHPWG_ROOT_PATH.PWG_LOCAL_DIR.'config/database.php';
 $config_file_contents = @file_get_contents($config_file);
 if ($config_file_contents === false)
 {
@@ -37,13 +37,13 @@ include($config_file);
 
 // $conf is not used for users tables - define cannot be re-defined
 define('USERS_TABLE', $prefixeTable.'users');
-include_once(PHPWG_ROOT_PATH.'include/constants.php');
+include_once(PHPWG_ROOT_PATH.'inc/constants.php');
 define('PREFIX_TABLE', $prefixeTable);
 define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 
-include_once(PHPWG_ROOT_PATH.'include/functions.inc.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH . 'include/template.class.php');
+include_once(PHPWG_ROOT_PATH.'inc/functions.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+include_once(PHPWG_ROOT_PATH . 'inc/template_class.php');
 
 // +-----------------------------------------------------------------------+
 // |                              functions                                |
@@ -130,7 +130,7 @@ function print_time($message)
 // +-----------------------------------------------------------------------+
 // |                             language                                  |
 // +-----------------------------------------------------------------------+
-include(PHPWG_ROOT_PATH . 'admin/include/languages.class.php');
+include(PHPWG_ROOT_PATH . 'admin/inc/languages_class.php');
 $languages = new languages('utf-8');
 if (isset($_GET['language']))
 {
@@ -201,8 +201,8 @@ load_language( 'upgrade.lang', '', array('language'=>$language, 'target_charset'
 // +-----------------------------------------------------------------------+
 // |                          database connection                          |
 // +-----------------------------------------------------------------------+
-include_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
-include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$conf['dblayer'].'.inc.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions_upgrade.php');
+include(PHPWG_ROOT_PATH .'inc/dblayer/functions_'.$conf['dblayer'].'.php');
 
 upgrade_db_connect();
 pwg_db_check_charset();
@@ -240,7 +240,7 @@ while ($row = pwg_db_fetch_assoc($result))
 
 if ($has_remote_site)
 {
-  include_once(PHPWG_ROOT_PATH.'admin/include/updates.class.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/updates_class.php');
 
   $page['errors'] = array();
   $step = 3;
@@ -409,7 +409,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
     include($upgrade_file);
     conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
 
-    // Something to add in database.inc.php?
+    // Something to add in database.php?
     if (!empty($mysql_changes))
     {
       $config_file_contents = 
@@ -421,7 +421,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
       {
         $page['infos'][] = l10n(
           'In <i>%s</i>, before <b>?></b>, insert:',
-          PWG_LOCAL_DIR.'config/database.inc.php'
+          PWG_LOCAL_DIR.'config/database.php'
           )
         .'<p><textarea rows="4" cols="40">'
         .implode("\r\n" , $mysql_changes).'</textarea></p>';
@@ -471,7 +471,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
     {
       $version_ = str_replace('.', '_', get_branch_from_version(PHPWG_VERSION).'.0');
       
-      if (file_exists(PHPWG_PLUGINS_PATH .'TakeATour/tours/'.$version_.'/config.inc.php'))
+      if (file_exists(PHPWG_PLUGINS_PATH .'TakeATour/tours/'.$version_.'/config.php'))
       {
         $query = '
 REPLACE INTO '.PLUGINS_TABLE.'
@@ -513,7 +513,7 @@ else
     define('PWG_CHARSET', 'utf-8');
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/include/languages.class.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/languages_class.php');
   $languages = new languages();
   
   foreach ($languages->fs_languages as $language_code => $fs_language)

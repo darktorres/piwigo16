@@ -1,4 +1,4 @@
-{include file='include/colorbox.inc.tpl'}
+{include file='inc/colorbox.inc.tpl'}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
 {footer_script require='jquery'}

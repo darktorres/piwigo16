@@ -34,7 +34,7 @@ class updates
 
     foreach ($this->types as $type)
     {
-      include_once(PHPWG_ROOT_PATH.'admin/inc/'.$type.'_class.php');
+      include_once(PHPWG_ROOT_PATH.'admin/inc/'.$type.'.php');
       $this->$type = new $type();
     }
   }

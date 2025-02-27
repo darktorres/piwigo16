@@ -43,7 +43,7 @@ if (!is_a_guest())
 //   if ($check_for_updates)
 //   {
 //     include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-//     include_once(PHPWG_ROOT_PATH.'admin/inc/updates.class.php');
+//     include_once(PHPWG_ROOT_PATH.'admin/inc/updates.php');
 //     $updates = new updates();
 //     $updates->notify_piwigo_new_versions();
 //   }

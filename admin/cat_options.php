@@ -12,7 +12,7 @@ if (!defined('PHPWG_ROOT_PATH'))
 }
 
 include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet_class.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |

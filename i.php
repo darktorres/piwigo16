@@ -433,7 +433,7 @@ if (!$need_generate)
   exit;
 }
 
-include_once(PHPWG_ROOT_PATH . 'admin/inc/image_class.php');
+include_once(PHPWG_ROOT_PATH . 'admin/inc/pwg_image.php');
 $page['coi'] = null;
 if (strpos($page['src_location'], '/pwg_representative/')===false
     && strpos($page['src_location'], 'themes/')===false

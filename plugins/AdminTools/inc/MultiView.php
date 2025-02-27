@@ -285,7 +285,7 @@ class MultiView
 
     $service->addMethod(
       'multiView.getData',
-      MultiView::ws_get_data(...),
+      self::ws_get_data(...),
       array(),
       'AdminTools private method.',
       null,
@@ -315,7 +315,7 @@ FROM '.USERS_TABLE.' AS u
     $out['users'] = array_from_query($query);
 
     // get themes
-    include_once(PHPWG_ROOT_PATH.'admin/inc/themes_class.php');
+    include_once(PHPWG_ROOT_PATH.'admin/inc/themes.php');
     $themes = new themes();
     foreach (array_keys($themes->db_themes_by_id) as $theme)
     {

@@ -16,7 +16,7 @@ if (!is_webmaster())
   $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/themes_class.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/themes.php');
 
 $base_url = get_root_url().'admin.php?page='.$page['page'];
 

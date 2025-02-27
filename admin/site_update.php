@@ -63,7 +63,7 @@ if ($site_is_remote)
 }
 else
 {
-  include_once( PHPWG_ROOT_PATH.'admin/site_reader_local.php');
+  include_once( PHPWG_ROOT_PATH.'admin/LocalSiteReader.php');
   $site_reader = new LocalSiteReader($site_url);
 }
 
@@ -76,7 +76,7 @@ if (isset($page['no_md5sum_number']))
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet_class.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet.php');
 $my_base_url = get_root_url().'admin.php?page=';
 
 $tabsheet = new tabsheet();

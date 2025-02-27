@@ -16,7 +16,7 @@ define('ADMINTOOLS_PATH' ,    PHPWG_PLUGINS_PATH . ADMINTOOLS_ID . '/');
 define('ADMINTOOLS_ADMIN',    get_root_url() . 'admin.php?page=plugin-' . ADMINTOOLS_ID);
 
 include_once(ADMINTOOLS_PATH . 'inc/events.php');
-include_once(ADMINTOOLS_PATH . 'inc/MultiView_class.php');
+include_once(ADMINTOOLS_PATH . 'inc/MultiView.php');
 
 
 global $MultiView;

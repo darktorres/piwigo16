@@ -10,7 +10,7 @@
  * @package functions\menubar
  */
 
-include_once(PHPWG_ROOT_PATH.'inc/block_class.php');
+include_once(PHPWG_ROOT_PATH.'inc/BlockManager.php');
 
 initialize_menu();
 

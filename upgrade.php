@@ -43,7 +43,7 @@ define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 
 include_once(PHPWG_ROOT_PATH.'inc/functions.php');
 include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-include_once(PHPWG_ROOT_PATH . 'inc/template_class.php');
+include_once(PHPWG_ROOT_PATH . 'inc/Template.php');
 
 // +-----------------------------------------------------------------------+
 // |                              functions                                |
@@ -130,7 +130,7 @@ function print_time($message)
 // +-----------------------------------------------------------------------+
 // |                             language                                  |
 // +-----------------------------------------------------------------------+
-include(PHPWG_ROOT_PATH . 'admin/inc/languages_class.php');
+include(PHPWG_ROOT_PATH . 'admin/inc/languages.php');
 $languages = new languages('utf-8');
 if (isset($_GET['language']))
 {
@@ -240,7 +240,7 @@ while ($row = pwg_db_fetch_assoc($result))
 
 if ($has_remote_site)
 {
-  include_once(PHPWG_ROOT_PATH.'admin/inc/updates_class.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/updates.php');
 
   $page['errors'] = array();
   $step = 3;
@@ -513,7 +513,7 @@ else
     define('PWG_CHARSET', 'utf-8');
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/languages_class.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/languages.php');
   $languages = new languages();
   
   foreach ($languages->fs_languages as $language_code => $fs_language)

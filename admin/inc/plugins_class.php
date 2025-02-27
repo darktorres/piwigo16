@@ -71,7 +71,7 @@ class plugins
    */
   private static function build_maintain_class($plugin_id)
   {
-    $file_to_include = PHPWG_PLUGINS_PATH . $plugin_id . '/maintain';
+    $file_to_include = PHPWG_PLUGINS_PATH . $plugin_id . '/' . $plugin_id . '_maintain.php';
     $classname = $plugin_id.'_maintain';
 
     // piwigo-videojs and piwigo-openstreetmap unfortunately have a "-" in their folder
@@ -79,16 +79,18 @@ class plugins
     $classname = str_replace('-', '_', $classname);
 
     // 2.7 pattern (OO only)
-    if (file_exists($file_to_include.'_class.php'))
+    if (file_exists($file_to_include))
     {
-      include_once($file_to_include.'_class.php');
+      include_once($file_to_include);
       return new $classname($plugin_id);
     }
 
+    $file_to_include = PHPWG_PLUGINS_PATH . $plugin_id . '/maintain.php';
+
     // before 2.7 pattern (OO or procedural)
-    if (file_exists($file_to_include.'.php'))
+    if (file_exists($file_to_include))
     {
-      include_once($file_to_include.'.php');
+      include_once($file_to_include);
 
       if (class_exists($classname))
       {

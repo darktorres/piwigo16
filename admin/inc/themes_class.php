@@ -62,9 +62,19 @@ class themes
    */
   private static function build_maintain_class($theme_id)
   {
-    $file_to_include = PHPWG_THEMES_PATH.'/'.$theme_id.'/admin/maintain.php';
+    $file_to_include = PHPWG_THEMES_PATH.$theme_id.'/admin/'.$theme_id.'_maintain.php';
     $classname = $theme_id.'_maintain';
 
+    // 2.7 pattern (OO only)
+    if (file_exists($file_to_include))
+    {
+      include_once($file_to_include);
+      return new $classname($theme_id);
+    }
+
+    $file_to_include = PHPWG_THEMES_PATH . $theme_id . '/admin/maintain.php';
+
+    // before 2.7 pattern (OO or procedural)
     if (file_exists($file_to_include))
     {
       include_once($file_to_include);

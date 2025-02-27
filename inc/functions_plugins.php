@@ -353,7 +353,7 @@ function load_plugin($plugin)
 
 /**
  * Performs update task of a plugin.
- * Autoupdate is only performed if the plugin has a maintain_class.php file.
+ * Autoupdate is only performed if the plugin has a *_maintain.php file.
  *
  * @since 2.7
  *
@@ -390,7 +390,7 @@ function autoupdate_plugin(&$plugin)
 
     $plugin['version'] = $fs_version;
 
-    $maintain_file = PHPWG_PLUGINS_PATH.$plugin['id'].'/maintain_class.php';
+    $maintain_file = PHPWG_PLUGINS_PATH.$plugin['id'].'/'.$plugin['id'].'_maintain.php';
 
     // autoupdate is applicable only to plugins with 2.7 architecture
     if (file_exists($maintain_file))

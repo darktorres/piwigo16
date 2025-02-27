@@ -10,7 +10,7 @@
  * @package functions\calendar
  */
 
-include_once(PHPWG_ROOT_PATH.'inc/calendar_base_class.php');
+include_once(PHPWG_ROOT_PATH.'inc/CalendarBase.php');
 
 /**
  * Weekly calendar style (composed of years/week in years and days in week)

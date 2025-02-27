@@ -6,7 +6,7 @@ global $template, $conf, $user, $page;
 
 load_language('plugin.lang', PHPWG_PLUGINS_PATH .'TakeATour/', array('force_fallback'=>'en_UK'));
 
-include_once(PHPWG_ROOT_PATH .'admin/inc/tabsheet_class.php');
+include_once(PHPWG_ROOT_PATH .'admin/inc/tabsheet.php');
 $page['tab'] = 'list';
 
 $tabsheet = new tabsheet();

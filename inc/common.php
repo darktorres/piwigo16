@@ -96,8 +96,8 @@ if ($conf['session_gc_probability'] > 0)
 
 include(PHPWG_ROOT_PATH . 'inc/constants.php');
 include(PHPWG_ROOT_PATH . 'inc/functions.php');
-include(PHPWG_ROOT_PATH . 'inc/template_class.php');
-include(PHPWG_ROOT_PATH . 'inc/cache_class.php');
+include(PHPWG_ROOT_PATH . 'inc/Template.php');
+include(PHPWG_ROOT_PATH . 'inc/PersistentFileCache.php');
 
 $persistent_cache = new PersistentFileCache();
 

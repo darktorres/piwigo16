@@ -7,7 +7,7 @@
 // +-----------------------------------------------------------------------+
 
 include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/image_class.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/pwg_image.php');
 
 function get_upload_form_config()
 {

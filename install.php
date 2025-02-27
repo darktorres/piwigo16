@@ -95,7 +95,7 @@ include(PHPWG_ROOT_PATH . 'inc/config_default.php');
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 include(PHPWG_ROOT_PATH . 'inc/functions.php');
-include(PHPWG_ROOT_PATH . 'inc/template_class.php');
+include(PHPWG_ROOT_PATH . 'inc/Template.php');
 
 // download database config file if exists
 check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
@@ -150,7 +150,7 @@ if (@file_exists($config_file))
 include(PHPWG_ROOT_PATH . 'inc/constants.php');
 include(PHPWG_ROOT_PATH . 'admin/inc/functions_admin.php');
 
-include(PHPWG_ROOT_PATH . 'admin/inc/languages_class.php');
+include(PHPWG_ROOT_PATH . 'admin/inc/languages.php');
 $languages = new languages('utf-8');
 
 if (isset($_GET['language']))

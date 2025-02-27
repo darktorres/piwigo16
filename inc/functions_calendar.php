@@ -97,13 +97,13 @@ WHERE id IN (' . implode(',',$page['items']) .')';
   $styles = array(
     // Monthly style
     'monthly' => array(
-      'include'        => 'calendar_monthly_class.php',
+      'include'        => 'CalendarMonthly.php',
       'view_calendar'  => true,
       'classname'      => 'CalendarMonthly',
       ),
     // Weekly style
     'weekly' => array(
-      'include'        => 'calendar_weekly_class.php',
+      'include'        => 'CalendarWeekly.php',
       'view_calendar'  => false,
       'classname'      => 'CalendarWeekly',
       ),

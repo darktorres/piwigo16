@@ -6,7 +6,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-global $prefixTable, $conf;
+global $conf;
 
 if (! isset($conf['elegant'])) {
     $config = [

@@ -22,10 +22,8 @@ class functions_install
      * not executed.
      *
      * @param string $filepath
-     * @param string $replaced
-     * @param string $replacing
      */
-    public static function execute_sqlfile($filepath, $replaced, $replacing, $dblayer)
+    public static function execute_sqlfile($filepath, $dblayer)
     {
         $sql_lines = file($filepath);
         $query = '';
@@ -42,7 +40,6 @@ class functions_install
             // if we reached the end of query, we execute it and reinitialize the variable "query"
             if (preg_match('/;$/', $sql_line)) {
                 $query = trim($query);
-                $query = str_replace($replaced, $replacing, $query);
 
                 // we don't execute "DROP TABLE" queries
                 if (! preg_match('/^DROP TABLE/i', $query)) {

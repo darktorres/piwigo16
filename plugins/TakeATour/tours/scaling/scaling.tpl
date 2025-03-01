@@ -40,7 +40,7 @@ generated on your computer in the _data/i folder: be careful when naming the fil
   {
     path: "{/literal}{$TAT_path}{literal}admin.phpHISTORY",
     title: "{/literal}{'History'|@translate}{literal}",
-    content: "{/literal}{'Some hosting has a limitation for how much data can be stored in the database. The history data can become huge if you record guest visits and don/'t purge the history. So you can disable it or disable for guests, but check before the available plugins!<br>So if you get an error about a "piwigo_history" "table", it/'s probably about a needed purge of the history.'|@translate}{literal}"
+    content: "{/literal}{'Some hosting has a limitation for how much data can be stored in the database. The history data can become huge if you record guest visits and don/'t purge the history. So you can disable it or disable for guests, but check before the available plugins!<br>So if you get an error about a "history" "table", it/'s probably about a needed purge of the history.'|@translate}{literal}"
   },
 
   {

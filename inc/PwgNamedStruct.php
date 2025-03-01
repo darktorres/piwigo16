@@ -15,15 +15,15 @@ namespace Piwigo\inc;
  */
 class PwgNamedStruct
 {
-  /*private*/ var $_content;
-  /*private*/ var $_xmlAttributes;
+  var $_content;
+  var $_xmlAttributes;
 
   /**
    * Constructs a named struct (usually returned by web service function
    * implementation)
-   * @param name string - containing xml element name
-   * @param content array - the actual content (php array)
-   * @param xmlAttributes array - name of the keys in $content that will be
+   * @param array $content - the actual content (php array)
+   * @param array $xmlAttributes - containing xml element name
+   * @param array $xmlElements - name of the keys in $content that will be
    *    encoded as xml attributes (if null - automatically prefer xml attributes
    *    whenever possible)
    */

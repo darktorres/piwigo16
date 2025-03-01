@@ -26,8 +26,9 @@ class pwg_tags
   /**
    * API method
    * Returns a list of tags
-   * @param mixed[] $params
-   *    @option bool sort_by_counter
+   * @param array{
+   *     sort_by_counter: bool,
+   * } $params
    */
   static function ws_tags_getList($params, &$service)
   {
@@ -65,7 +66,7 @@ class pwg_tags
   /**
    * API method
    * Returns the list of tags as you can see them in administration
-   * @param mixed[] $params
+   * @param array $params
    *
    * Only admin can run this method and permissions are not taken into
    * account.
@@ -84,14 +85,15 @@ class pwg_tags
   /**
    * API method
    * Returns a list of images for tags
-   * @param mixed[] $params
-   *    @option int[] tag_id (optional)
-   *    @option string[] tag_url_name (optional)
-   *    @option string[] tag_name (optional)
-   *    @option bool tag_mode_and
-   *    @option int per_page
-   *    @option int page
-   *    @option string order
+   * @param array{
+   *     tag_id?: int[], 
+   *     tag_url_name?: string[], 
+   *     tag_name?: string[], 
+   *     tag_mode_and: bool, 
+   *     per_page: int, 
+   *     page: int, 
+   *     order: string,
+   * } $params
    */
   static function ws_tags_getImages($params, &$service)
   {
@@ -232,8 +234,9 @@ class pwg_tags
   /**
    * API method
    * Adds a tag
-   * @param mixed[] $params
-   *    @option string name
+   * @param array{
+   *     name: string,
+   * } $params
    */
   static function ws_tags_add($params, &$service)
   {

@@ -9,6 +9,7 @@
 namespace Piwigo\inc;
 
 use Piwigo\inc\dblayer\functions_mysqli;
+use Random\RandomException;
 
 if (isset($conf['session_save_handler'])
   and ($conf['session_save_handler'] == 'db')
@@ -45,6 +46,7 @@ class functions_session
    *
    * @param int $size
    * @return string
+   * @throws RandomException
    */
   static function generate_key($size)
   {
@@ -231,7 +233,6 @@ class functions_session
   /**
    * delete all sessions for a given user (certainly deleted)
    *
-   * @since 2.8
    * @param int $user_id
    * @return null
    */

@@ -29,12 +29,13 @@ class pwg_categories
   /**
    * API method
    * Returns images per category
-   * @param mixed[] $params
-   *    @option int[] cat_id (optional)
-   *    @option bool recursive
-   *    @option int per_page
-   *    @option int page
-   *    @option string order (optional)
+   * @param array{
+   *     cat_id?: int[],
+   *     recursive: bool,
+   *     per_page: int,
+   *     page: int,
+   *     order?: string,
+   * } $params
    */
   static function ws_categories_getImages($params, &$service)
   {
@@ -250,12 +251,15 @@ class pwg_categories
   /**
    * API method
    * Returns a list of categories
-   * @param mixed[] $params
-   *    @option int cat_id (optional)
-   *    @option bool recursive
-   *    @option bool public
-   *    @option bool tree_output
-   *    @option bool fullname
+   * @param array{
+   *     cat_id?: int,
+   *     recursive: bool,
+   *     public: bool,
+   *     tree_output: bool,
+   *     fullname: bool,
+   *     thumbnail_size: mixed,
+   *     search: mixed,
+   * } $params
    */
   static function ws_categories_getList($params, &$service)
   {
@@ -574,7 +578,7 @@ class pwg_categories
   /**
    * API method
    * Returns the list of categories as you can see them in administration
-   * @param mixed[] $params
+   * @param array $params
    *
    * Only admin can run this method and permissions are not taken into
    * account.
@@ -676,13 +680,16 @@ class pwg_categories
   /**
    * API method
    * Adds a category
-   * @param mixed[] $params
-   *    @option string name
-   *    @option int parent (optional)
-   *    @option string comment (optional)
-   *    @option bool visible
-   *    @option string status (optional)
-   *    @option bool commentable
+   * @param array{
+   *     name: string,
+   *     parent?: int,
+   *     comment?: string,
+   *     visible: bool,
+   *     status?: string,
+   *     commentable: bool,
+   *     pwg_token: mixed,
+   *     position: mixed,
+   * } $params
    */
   static function ws_categories_add($params, &$service)
   {
@@ -729,9 +736,10 @@ class pwg_categories
   /**
    * API method
    * Set the rank of a category
-   * @param mixed[] $params
-   *    @option int cat_id
-   *    @option int rank
+   * @param array{
+   *     category_id: int,
+   *     rank: int,
+   * } $params
    */
   static function ws_categories_setRank($params, &$service)
   {
@@ -810,14 +818,16 @@ class pwg_categories
   /**
    * API method
    * Sets details of a category
-   * @param mixed[] $params
-   *    @option int cat_id
-   *    @option string name (optional)
-   *    @option string status (optional)
-   *    @option bool visible (optional)
-   *    @option string comment (optional)
-   *    @option bool commentable (optional)
-   *    @option bool apply_commentable_to_subalbums (optional)
+   * @param array{
+   *     category_id: int,
+   *     name?: string,
+   *     status?: string,
+   *     visible?: bool,
+   *     comment?: string,
+   *     commentable?: bool,
+   *     apply_commentable_to_subalbums?: bool,
+   *     pwg_token: mixed,
+   * } $params
    */
   static function ws_categories_setInfo($params, &$service)
   {
@@ -913,9 +923,10 @@ class pwg_categories
   /**
    * API method
    * Sets representative image of a category
-   * @param mixed[] $params
-   *    @option int category_id
-   *    @option int image_id
+   * @param array{
+   *     category_id: int,
+   *     image_id: int,
+   * } $params
    */
   static function ws_categories_setRepresentative($params, &$service)
   {
@@ -967,8 +978,9 @@ class pwg_categories
    * Deletes the album thumbnail. Only possible if
    * $conf['allow_random_representative'] or if the album has no direct photos.
    *
-   * @param mixed[] $params
-   *    @option int category_id
+   * @param array{
+   *     category_id: int,
+   * } $params
    */
   static function ws_categories_deleteRepresentative($params, &$service)
   {
@@ -1013,8 +1025,9 @@ class pwg_categories
    *
    * Find a new album thumbnail.
    *
-   * @param mixed[] $params
-   *    @option int category_id
+   * @param array{
+   *     category_id: int,
+   * } $params
    */
   static function ws_categories_refreshRepresentative($params, &$service)
   {
@@ -1065,10 +1078,11 @@ class pwg_categories
   /**
    * API method
    * Deletes a category
-   * @param mixed[] $params
-   *    @option string|int[] category_id
-   *    @option string photo_deletion_mode
-   *    @option string pwg_token
+   * @param array{
+   *     category_id: string|int[],
+   *     photo_deletion_mode: string,
+   *     pwg_token: string,
+   * } $params
    */
   static function ws_categories_delete($params, &$service)
   {
@@ -1132,10 +1146,11 @@ class pwg_categories
   /**
    * API method
    * Moves a category
-   * @param mixed[] $params
-   *    @option string|int[] category_id
-   *    @option int parent
-   *    @option string pwg_token
+   * @param array{
+   *     category_id: string|int[],
+   *     parent: int,
+   *     pwg_token: string,
+   * } $params
    */
   static function ws_categories_move($params, &$service)
   {
@@ -1293,7 +1308,6 @@ class pwg_categories
   /**
    * API method
    * Return the number of orphan photos if an album is deleted
-   * @since 12
    */
   static function ws_categories_calculateOrphans($param, &$service)
   {

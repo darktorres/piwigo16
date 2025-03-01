@@ -9,6 +9,7 @@
 namespace Piwigo\inc;
 
 use Piwigo\inc\dblayer\functions_mysqli;
+use SmartyException;
 
 class functions_search
 {
@@ -79,6 +80,7 @@ class functions_search
    *
    * @param int $search_id
    * @return array
+   * @throws SmartyException
    */
   static function get_search_array($search_id)
   {
@@ -99,7 +101,7 @@ class functions_search
    * Transforms the array returned by get_search_array() into SQL sub-query.
    *
    * @param array $search
-   * @return string
+   * @return array
    */
   static function get_sql_search_clause($search)
   {
@@ -903,8 +905,11 @@ class functions_search
    *    )
    *
    * @param string $q
-   * @param bool $super_order_by
-   * @param string $images_where optional additional restriction on images table
+   * @param array{
+   *     permissions: mixed,
+   *     images_where: mixed,
+   *     super_order_by: bool,
+   * } $options
    * @return array
    */
   static function get_quick_search_results($q, $options)
@@ -1089,6 +1094,7 @@ class functions_search
    * @param bool $super_order_by
    * @param string $images_where optional additional restriction on images table
    * @return array
+   * @throws SmartyException
    */
   static function get_search_results($search_id, $super_order_by, $images_where='')
   {

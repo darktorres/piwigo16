@@ -43,7 +43,7 @@ final class DerivativeParams
   /**
    * Adds tokens depending on sizing configuration.
    *
-   * @param array &$tokens
+   * @param array $tokens
    */
   function add_url_tokens(&$tokens)
   {

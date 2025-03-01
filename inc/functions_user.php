@@ -8,7 +8,9 @@
 
 namespace Piwigo\inc;
 
+use Exception;
 use Piwigo\inc\dblayer\functions_mysqli;
+use Random\RandomException;
 
 functions_plugins::add_event_handler('try_log_user', functions_user::pwg_login(...));
 
@@ -119,9 +121,10 @@ class functions_user
    * @param string $password
    * @param string $mail_address
    * @param bool $notify_admin
-   * @param array &$errors populated with error messages
+   * @param array $errors populated with error messages
    * @param bool $notify_user
    * @return int|false user id or false
+   * @throws Exception
    */
   static function register_user($login, $password, $mail_address, $notify_admin=true, &$errors = array(), $notify_user=false)
   {
@@ -293,7 +296,7 @@ class functions_user
    * Same that getuserdata() but with additional tests for guest.
    *
    * @param int $user_id
-   * @param boolean $user_cache
+   * @param bool $use_cache
    * @return array
    */
   static function build_user($user_id, $use_cache=true)
@@ -325,7 +328,7 @@ class functions_user
    * Finds information related to the user identifier.
    *
    * @param int $user_id
-   * @param boolean $use_cache
+   * @param bool $use_cache
    * @return array
    */
   static function getuserdata($user_id, $use_cache=false)
@@ -643,7 +646,7 @@ class functions_user
    * Returns user identifier thanks to his name.
    *
    * @param string $username
-   * @param int|false
+   * @return int|false
    */
   static function get_userid($username)
   {
@@ -673,7 +676,7 @@ class functions_user
    * Returns user identifier thanks to his email.
    *
    * @param string $email
-   * @param int|false
+   * @return int|false
    */
   static function get_userid_by_email($email)
   {
@@ -703,7 +706,7 @@ class functions_user
   /**
    * Returns a array with default user values.
    *
-   * @param convert_str converts 'true' and 'false' into booleans
+   * @param bool $convert_str converts 'true' and 'false' into booleans
    * @return array
    */
   static function get_default_user_info($convert_str=true)
@@ -952,7 +955,7 @@ class functions_user
    *
    * @param int $user_id
    * @param int $time
-   * @param string &$username file with corresponding username
+   * @param string $username file with corresponding username
    * @return string|false
    */
   static function calculate_auto_login_key($user_id, $time, &$username)
@@ -1053,7 +1056,6 @@ class functions_user
 
   /**
    * Hashes a password.
-   * @since 2.5
    *
    * @param string $password plain text
    * @return string
@@ -1065,7 +1067,6 @@ class functions_user
 
   /**
    * Verifies a password.
-   * @since 2.5
    *
    * @param string $password plain text
    * @param string $hash may be md5 or phpass hashed password
@@ -1267,7 +1268,7 @@ class functions_user
   /**
    * Returns if user has access to a particular ACCESS_*
    *
-   * @return int $access_type one of ACCESS_* constants
+   * @param int $access_type one of ACCESS_* constants
    * @param string $user_status used if $user not initialized
    * @return bool
    */
@@ -1279,7 +1280,7 @@ class functions_user
   /**
    * Abort script if user has no access to a particular ACCESS_*
    *
-   * @return int $access_type one of ACCESS_* constants
+   * @param int $access_type one of ACCESS_* constants
    * @param string $user_status used if $user not initialized
    */
   static function check_status($access_type, $user_status='')
@@ -1398,7 +1399,7 @@ class functions_user
    *    - forbidden_images
    *    - visible_images
    * @param string $prefix_condition prefixes query if condition is not empty
-   * @param boolean $force_one_condition use at least "1 = 1"
+   * @param bool $force_one_condition use at least "1 = 1"
    * @return string
    */
   static function get_sql_condition_FandF(
@@ -1512,8 +1513,6 @@ class functions_user
   /**
    * Performs auto-connection if authentication key is valid.
    *
-   * @since 2.8
-   *
    * @return bool
    */
   static function auth_key_login($auth_key)
@@ -1570,9 +1569,9 @@ class functions_user
   /**
    * Creates an authentication key.
    *
-   * @since 2.8
    * @param int $user_id
    * @return array
+   * @throws RandomException
    */
   static function create_user_auth_key($user_id, $user_status=null)
   {
@@ -1643,7 +1642,6 @@ class functions_user
   /**
    * Deactivates authentication keys
    *
-   * @since 2.8
    * @param int $user_id
    * @return null
    */
@@ -1661,7 +1659,6 @@ class functions_user
   /**
    * Deactivates password reset key
    *
-   * @since 11
    * @param int $user_id
    * @return null
    */
@@ -1680,9 +1677,8 @@ class functions_user
   /**
    * Gets the last visit (datetime) of a user, based on history table
    *
-   * @since 2.9
    * @param int $user_id
-   * @param boolean $save_in_user_infos to store result in user_infos.last_visit
+   * @param bool $save_in_user_infos to store result in user_infos.last_visit
    * @return string date & time of last visit
    */
   static function get_user_last_visit_from_history($user_id, $save_in_user_infos=false)
@@ -1721,7 +1717,6 @@ class functions_user
 
   /**
    * Save user preferences in database
-   * @since 13
    */
   static function userprefs_save()
   {
@@ -1739,11 +1734,9 @@ class functions_user
 
   /**
    * Add or update a user preferences parameter
-   * @since 13
    *
    * @param string $param
    * @param string $value
-   * @param boolean $updateGlobal update global *$conf* variable
    */
   static function userprefs_update_param($param, $value)
   {
@@ -1766,7 +1759,6 @@ class functions_user
 
   /**
    * Delete one or more user preferences parameters
-   * @since 13
    *
    * @param string|string[] $params
    */
@@ -1796,11 +1788,9 @@ class functions_user
 
   /**
    * Return a default value for a user preferences parameter.
-   * @since 13
    *
    * @param string $param the configuration value to be extracted (if it exists)
    * @param mixed $default_value the default value if it does not exist yet.
-   *
    * @return mixed The configuration value if the variable exists, otherwise the default.
    */
   static function userprefs_get_param($param, $default_value=null)

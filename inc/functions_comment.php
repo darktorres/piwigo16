@@ -8,6 +8,7 @@
 
 namespace Piwigo\inc;
 
+use Exception;
 use Piwigo\inc\dblayer\functions_mysqli;
 
 functions_plugins::add_event_handler('user_comment_check', functions_comment::user_comment_check(...));
@@ -57,10 +58,11 @@ class functions_comment
   /**
    * Tries to insert a user comment and returns action to perform.
    *
-   * @param array &$comm
+   * @param array $comm
    * @param string $key secret key sent back to the browser
-   * @param array &$infos output array of error messages
+   * @param array $infos output array of error messages
    * @return string validate, moderate, reject
+   * @throws Exception
    */
   static function insert_user_comment(&$comm, $key, &$infos)
   {
@@ -269,6 +271,7 @@ class functions_comment
    *
    * @param int|int[] $comment_id
    * @return bool false if nothing deleted
+   * @throws Exception
    */
   static function delete_user_comment($comment_id)
   {
@@ -313,6 +316,7 @@ class functions_comment
    * @param array $comment
    * @param string $post_key secret key sent back to the browser
    * @return string validate, moderate, reject
+   * @throws Exception
    */
 
   static function update_user_comment($comment, $post_key)
@@ -415,6 +419,7 @@ class functions_comment
    *
    * @param string $action edit, delete
    * @param array $comment
+   * @throws Exception
    */
   static function email_admin($action, $comment)
   {

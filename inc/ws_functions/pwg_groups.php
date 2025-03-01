@@ -20,9 +20,13 @@ class pwg_groups
   /**
    * API method
    * Returns the list of groups
-   * @param mixed[] $params
-   *    @option int[] group_id (optional)
-   *    @option string name (optional)
+   * @param array{
+   *     group_id?: int[], 
+   *     name?: string,
+   *     order: mixed,
+   *     per_page: mixed,
+   *     page: mixed,
+   * } $params
    */
   static function ws_groups_getList($params, &$service)
   {
@@ -71,9 +75,10 @@ class pwg_groups
   /**
    * API method
    * Adds a group
-   * @param mixed[] $params
-   *    @option string name
-   *    @option bool is_default
+   * @param array{
+   *     name: string, 
+   *     is_default: bool,
+   * } $params
    */
   static function ws_groups_add($params, &$service)
   {
@@ -113,9 +118,10 @@ class pwg_groups
   /**
    * API method
    * Deletes a group
-   * @param mixed[] $params
-   *    @option int[] group_id
-   *    @option string pwg_token
+   * @param array{
+   *     group_id: int[], 
+   *     pwg_token: string,
+   * } $params
    */
   static function ws_groups_delete($params, &$service)
   {
@@ -134,10 +140,12 @@ class pwg_groups
   /**
    * API method
    * Updates a group
-   * @param mixed[] $params
-   *    @option int group_id
-   *    @option string name (optional)
-   *    @option bool is_default (optional)
+   * @param array{
+   *     group_id: int, 
+   *     name?: string, 
+   *     is_default?: bool,
+   *     pwg_token: mixed,
+   * } $params
    */
   static function ws_groups_setInfo($params, &$service)
   {
@@ -203,9 +211,11 @@ class pwg_groups
   /**
    * API method
    * Adds user(s) to a group
-   * @param mixed[] $params
-   *    @option int group_id
-   *    @option int[] user_id
+   * @param array{
+   *     group_id: int, 
+   *     user_id: int[],
+   *     pwg_token: mixed,
+   * } $params
    */
   static function ws_groups_addUser($params, &$service)
   {
@@ -252,9 +262,11 @@ class pwg_groups
   /**
    * API method
    * Merge groups in one other group
-   * @param mixed[] $params
-   *    @option int destination_group_id
-   *    @option int[] merge_group_id
+   * @param array{
+   *     destination_group_id: int, 
+   *     merge_group_id: int[],
+   *     pwg_token: mixed,
+   * } $params
    */
   static function ws_groups_merge($params, &$service) {
 
@@ -339,9 +351,11 @@ class pwg_groups
   /**
    * API method
    * Create a copy of a group
-   * @param mixed[] $params
-   *    @option int group_id
-   *    @option string copy_name
+   * @param array{
+   *     group_id: int, 
+   *     copy_name: string,
+   *     pwg_token: mixed,
+   * } $params
    */
   static function ws_groups_duplicate($params, &$service) {
 
@@ -429,9 +443,11 @@ class pwg_groups
   /**
    * API method
    * Removes user(s) from a group
-   * @param mixed[] $params
-   *    @option int group_id
-   *    @option int[] user_id
+   * @param array{
+   *     group_id: int, 
+   *     user_id: int[],
+   *     pwg_token: mixed,
+   * } $params
    */
   static function ws_groups_deleteUser($params, &$service)
   {

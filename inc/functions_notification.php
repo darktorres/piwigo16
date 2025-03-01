@@ -332,7 +332,7 @@ class functions_notification
    *
    * @param string $start (mysql datetime format)
    * @param string $end (mysql datetime format)
-   * @return boolean
+   * @return bool
    */
   static function news_exists($start=null, $end=null)
   {
@@ -347,7 +347,7 @@ class functions_notification
   /**
    * Formats a news line and adds it to the array (e.g. '5 new elements')
    *
-   * @param array &$news
+   * @param array $news
    * @param int $count
    * @param string $singular_key
    * @param string $plural_key

@@ -15,13 +15,14 @@ use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_user;
 use Piwigo\inc\PwgError;
+use SmartyException;
 
 class pwg_extensions
 {
   /**
    * API method
    * Returns the list of all plugins
-   * @param mixed[] $params
+   * @param array $params
    */
   static function ws_plugins_getList($params, $service)
   {
@@ -55,10 +56,11 @@ class pwg_extensions
   /**
    * API method
    * Performs an action on a plugin
-   * @param mixed[] $params
-   *    @option string action
-   *    @option string plugin
-   *    @option string pwg_token
+   * @param array{
+   *     action: string,
+   *     plugin: string,
+   *     pwg_token: string,
+   * } $params
    */
   static function ws_plugins_performAction($params, $service)
   {
@@ -101,10 +103,11 @@ class pwg_extensions
   /**
    * API method
    * Performs an action on a theme
-   * @param mixed[] $params
-   *    @option string action
-   *    @option string theme
-   *    @option string pwg_token
+   * @param array{
+   *     action: string,
+   *     theme: string,
+   *     pwg_token: string,
+   * } $params
    */
   static function ws_themes_performAction($params, $service)
   {
@@ -142,12 +145,14 @@ class pwg_extensions
   /**
    * API method
    * Updates an extension
-   * @param mixed[] $params
-   *    @option string type
-   *    @option string id
-   *    @option string revision
-   *    @option string pwg_token
-   *    @option bool reactivate (optional - undocumented)
+   * @param array{
+   *     type: string,
+   *     id: string,
+   *     revision: string,
+   *     pwg_token: string,
+   *     reactivate?: bool,
+   * } $params
+   * @throws SmartyException
    */
   static function ws_extensions_update($params, $service)
   {
@@ -259,11 +264,12 @@ class pwg_extensions
   /**
    * API method
    * Ignore an update
-   * @param mixed[] $params
-   *    @option string type (optional)
-   *    @option string id (optional)
-   *    @option bool reset
-   *    @option string pwg_token
+   * @param array{
+   *     type?: string, 
+   *     id?: string, 
+   *     reset: bool, 
+   *     pwg_token: string,
+   * } $params
    */
   static function ws_extensions_ignoreupdate($params, $service)
   {
@@ -323,7 +329,7 @@ class pwg_extensions
   /**
    * API method
    * Checks for updates (core and extensions)
-   * @param mixed[] $params
+   * @param array $params
    */
   static function ws_extensions_checkupdates($params, $service)
   {

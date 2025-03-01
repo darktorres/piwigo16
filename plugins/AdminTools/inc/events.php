@@ -13,7 +13,7 @@ defined('ADMINTOOLS_PATH') or die('Hacking attempt!');
 
 /**
  * Add main toolbar to current page
- * @trigger loc_after_page_header
+ * trigger loc_after_page_header
  */
 function admintools_add_public_controller()
 {
@@ -187,7 +187,7 @@ SELECT * FROM '.IMAGES_TABLE.'
 
 /**
  * Add main toolbar to current page
- * @trigger loc_after_page_header
+ * trigger loc_after_page_header
  */
 function admintools_add_admin_controller()
 {
@@ -254,7 +254,7 @@ function admintools_remove_privacy($content)
 
 /**
  * Save picture form
- * @trigger loc_begin_picture
+ * trigger loc_begin_picture
  */
 function admintools_save_picture()
 {
@@ -346,7 +346,7 @@ function admintools_save_picture()
 
 /**
  * Save category form
- * @trigger loc_begin_index
+ * trigger loc_begin_index
  */
 function admintools_save_category()
 {

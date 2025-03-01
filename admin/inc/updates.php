@@ -64,7 +64,6 @@ class updates
   /**
    * finds new versions of Piwigo on Piwigo.org.
    *
-   * @since 2.9
    * @return array (
    *   'piwigo.org-checked' => has piwigo.org been checked?,
    *   'is_dev' => are we on a dev version?,
@@ -139,8 +138,6 @@ class updates
   /**
    * Checks for new versions of Piwigo. Notify webmasters if new versions are available, but not too often, see
    * $conf['update_notify_reminder_period'] parameter.
-   *
-   * @since 2.9
    */
   function notify_piwigo_new_versions()
   {

@@ -57,7 +57,7 @@ class CalendarWeekly extends CalendarBase
   /**
    * Generate navigation bars for category page.
    *
-   * @return boolean false indicates that thumbnails where not included
+   * @return bool false indicates that thumbnails where not included
    */
   function generate_category_content()
   {

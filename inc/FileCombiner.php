@@ -9,6 +9,7 @@
 namespace Piwigo\inc;
 
 use Exception;
+use SmartyException;
 use tubalmartin\CssMin\Minifier;
 
 /**
@@ -65,6 +66,7 @@ final class FileCombiner
 
   /**
    * @return Combinable[]
+   * @throws SmartyException
    */
   function combine()
   {
@@ -109,10 +111,11 @@ final class FileCombiner
   /**
    * Process a set of pending files.
    *
-   * @param array &$result
-   * @param array &$pending
+   * @param array $result
+   * @param array $pending
    * @param string[] $key
    * @param bool $force
+   * @throws SmartyException
    */
   private function flush_pending(&$result, &$pending, $key, $force)
   {
@@ -157,6 +160,7 @@ final class FileCombiner
    *                       the minified file (only used when
    *                       $return_content===true)
    * @return null|string
+   * @throws SmartyException
    */
   private function process_combinable($combinable, $return_content, $force, &$header)
   {

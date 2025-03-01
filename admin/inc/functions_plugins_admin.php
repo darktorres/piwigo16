@@ -14,7 +14,7 @@ class functions_plugins_admin
 {
   /**
    * Retrieves an url for a plugin page.
-   * @param string file - php script full name
+   * @param string $file - php script full name
    */
   static function get_admin_plugin_menu_link($file)
   {

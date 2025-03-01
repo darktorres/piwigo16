@@ -16,7 +16,6 @@ class functions_history
 {
   /**
    * Init tabsheet for history pages
-   * @ignore
    */
   static function history_tabsheet()
   {
@@ -43,7 +42,7 @@ class functions_history
    * @param array $data  - used in trigger_change
    * @param array $search
    * @param string[] $types
-   * @param array
+   * @return array
    */
   static function get_history($data, $search, $types)
   {
@@ -379,8 +378,6 @@ class functions_history
 
   /**
    * Smart purge on history table. Keep some lines, purge only summarized lines
-   *
-   * @since 2.9
    */
   static function history_autopurge()
   {

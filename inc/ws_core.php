@@ -6,7 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-/**** WEB SERVICE CORE CLASSES************************************************
+/**
+ * WEB SERVICE CORE CLASSES************************************************
  * PwgServer - main object - the link between web service methods, request
  *  handler and response encoder
  * PwgRequestHandler - base class for handlers

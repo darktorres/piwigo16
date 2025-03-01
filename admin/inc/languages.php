@@ -30,9 +30,9 @@ class languages
 
   /**
    * Perform requested actions
-   * @param string - action
-   * @param string - language id
-   * @param array - errors
+   * @param string $action
+   * @param string $language_id
+   * @return array - errors
    */
   function perform_action($action, $language_id)
   {
@@ -298,9 +298,9 @@ UPDATE '.USER_INFOS_TABLE.'
   /**
    * Extract language files from archive
    *
-   * @param string - install or upgrade
-   * @param string - remote revision identifier (numeric)
-   * @param string - language id or extension id
+   * @param string $action - install or upgrade
+   * @param string $revision - remote revision identifier (numeric)
+   * @param string $dest - language id or extension id
    */
   function extract_language_files($action, $revision, $dest='')
   {

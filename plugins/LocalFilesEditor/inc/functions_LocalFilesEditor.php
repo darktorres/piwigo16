@@ -31,7 +31,7 @@ class functions_LocalFilesEditor
    * returns $code if php syntax is correct
    * else return false
    *
-   * @param string php code
+   * @param string $code php code
    */
   static function eval_syntax($code)
   {
@@ -61,7 +61,7 @@ class functions_LocalFilesEditor
     * returns $str if $str is integer
   * else "$str"
   *
-  * @param string
+  * @param string $value
   */
   static function editarea_quote($value)
   {
@@ -78,7 +78,7 @@ class functions_LocalFilesEditor
 
   /**
    * returns bak file for restore
-   * @param string
+   * @param string $file
    */
   static function get_bak_file($file)
   {
@@ -94,8 +94,8 @@ class functions_LocalFilesEditor
 
   /**
    * returns dirs and subdirs
-   * return array
-   * @param string
+   * @param string $path
+   * @return array
    */
   static function get_rec_dirs($path='')
   {

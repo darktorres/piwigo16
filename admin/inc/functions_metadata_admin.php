@@ -16,7 +16,7 @@ class functions_metadata_admin
 {
   /**
    * Returns IPTC metadata to sync from a file, depending on IPTC mapping.
-   * @toto : clean code (factorize foreach)
+   * @todo : clean code (factorize foreach)
    *
    * @param string $file
    * @return array
@@ -334,8 +334,8 @@ class functions_metadata_admin
    *
    * @param int $category_id
    * @param int $site_id
-   * @param boolean $recursive
-   * @param boolean $only_new
+   * @param bool $recursive
+   * @param bool $only_new
    * @return array
    */
   static function get_filelist($category_id = '', $site_id=1, $recursive = false,

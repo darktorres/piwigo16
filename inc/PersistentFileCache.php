@@ -9,8 +9,8 @@
 namespace Piwigo\inc;
 
 /**
-  Implementation of a persistent cache using files.
-*/
+ * Implementation of a persistent cache using files.
+ */
 class PersistentFileCache extends PersistentCache
 {
   private $dir;

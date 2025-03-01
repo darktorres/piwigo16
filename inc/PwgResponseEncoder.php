@@ -14,12 +14,14 @@ namespace Piwigo\inc;
  */
 abstract class PwgResponseEncoder
 {
-  /** encodes the web service response to the appropriate output format
-   * @param response mixed the unencoded result of a service method call
+  /**
+   * encodes the web service response to the appropriate output format
+   * @param mixed $response the unencoded result of a service method call
    */
   abstract function encodeResponse($response);
 
-  /** default "Content-Type" http header for this kind of response format
+  /**
+   * default "Content-Type" http header for this kind of response format
    */
   abstract function getContentType();
 

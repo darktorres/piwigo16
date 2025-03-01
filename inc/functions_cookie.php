@@ -79,7 +79,7 @@ class functions_cookie
    * Persistently stores a variable in pwg cookie.
    * Set $value to null to delete the cookie.
    *
-   * @param string $car
+   * @param string $var
    * @param mixed $value
    * @param int|null $expire
    * @return bool

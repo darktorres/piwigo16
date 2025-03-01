@@ -55,12 +55,12 @@ class QMultiToken
   }
 
   /**
-  * Parses the input query string by tokenizing the input, generating the modifiers (and/or/not/quotation/wildcards...).
-  * Recursion occurs when parsing ()
-  * @param string $q the actual query to be parsed
-  * @param int $qi the character index in $q where to start parsing
-  * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
-  */
+   * Parses the input query string by tokenizing the input, generating the modifiers (and/or/not/quotation/wildcards...).
+   * Recursion occurs when parsing ()
+   * @param string $q the actual query to be parsed
+   * @param int $qi the character index in $q where to start parsing
+   * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
+   */
   protected function parse_expression($q, &$qi, $level, $root)
   {
     $crt_token = "";
@@ -232,9 +232,9 @@ class QMultiToken
   }
 
   /**
-  * Applies recursively a search scope to all sub single tokens. We allow 'tag:(John Bill)' but we cannot evaluate
-  * scopes on expressions so we rewrite as '(tag:John tag:Bill)'
-  */
+   * Applies recursively a search scope to all sub single tokens. We allow 'tag:(John Bill)' but we cannot evaluate
+   * scopes on expressions so we rewrite as '(tag:John tag:Bill)'
+   */
   private function apply_scope(QSearchScope $scope)
   {
     for ($i=0; $i<count($this->tokens); $i++)

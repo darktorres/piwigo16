@@ -49,7 +49,7 @@ class derivative_params
   /**
    * Converts a char a-z into a float.
    *
-   * @param string
+   * @param string $c
    * @return float
    */
   static function char_to_fraction($c)
@@ -60,7 +60,7 @@ class derivative_params
   /**
    * Converts a float into a char a-z.
    *
-   * @param float
+   * @param float $f
    * @return string
    */
   static function fraction_to_char($f)

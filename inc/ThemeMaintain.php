@@ -26,7 +26,7 @@ class ThemeMaintain
 
   /**
    * @param string $theme_version
-   * @param array &$errors - used to return error messages
+   * @param array $errors - used to return error messages
    */
   function activate($theme_version, &$errors=array()) {}
 

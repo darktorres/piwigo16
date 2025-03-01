@@ -8,6 +8,8 @@
 
 namespace Piwigo\inc;
 
+use SmartyException;
+
 /**
  * Manages a set of RegisteredBlock and DisplayBlock.
  */
@@ -169,6 +171,7 @@ class BlockManager
    *
    * @param string $var
    * @param string $file
+   * @throws SmartyException
    */
   public function apply($var, $file)
   {

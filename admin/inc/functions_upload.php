@@ -1051,8 +1051,6 @@ class functions_upload
    * Return the optimized resize dimensions for a representative, based on maximum display size.
    * There is no need to generate a 4000x3000 JPEG from a 4000x3000 HEIC if XXL size is only 1600x1200.
    * 
-   * @since 14
-   *
    * @return array(width, height)
    */
   static function get_optimal_dimensions_for_representative()

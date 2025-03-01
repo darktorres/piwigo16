@@ -11,6 +11,7 @@ namespace Piwigo\admin\inc;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
+use SmartyException;
 
 class check_integrity
 {
@@ -28,7 +29,6 @@ class check_integrity
   /**
    * Check integrity
    *
-   * @param void
    * @return void
    */
   function check()
@@ -163,8 +163,8 @@ class check_integrity
   /**
    * Display anomalies list
    *
-   * @param void
    * @return void
+   * @throws SmartyException
    */
   function display()
   {
@@ -263,7 +263,7 @@ class check_integrity
   /**
    * Add anomaly data
    *
-   * @param anomaly arguments
+   * @param mixed $anomaly arguments
    * @return void
    */
   function add_anomaly($anomaly, $correction_fct = null, $correction_fct_args = null, $correction_msg = null)
@@ -290,7 +290,7 @@ class check_integrity
   /**
    * Update table config
    *
-   * @param ignore list array
+   * @param array $conf_ignore_list list array
    * @return void
    */
   function update_conf($conf_ignore_list = array())
@@ -305,7 +305,6 @@ class check_integrity
   /**
    * Apply maintenance
    *
-   * @param void
    * @return void
    */
   function maintenance()
@@ -316,8 +315,7 @@ class check_integrity
   /**
    * Returns links more information
    *
-   * @param void
-   * @return html links
+   * @return string html links
    */
   function get_html_links_more_info()
   {

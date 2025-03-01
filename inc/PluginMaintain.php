@@ -26,13 +26,13 @@ class PluginMaintain
 
   /**
    * @param string $plugin_version
-   * @param array &$errors - used to return error messages
+   * @param array $errors - used to return error messages
    */
   function install($plugin_version, &$errors=array()) {}
 
   /**
    * @param string $plugin_version
-   * @param array &$errors - used to return error messages
+   * @param array $errors - used to return error messages
    */
   function activate($plugin_version, &$errors=array()) {}
 
@@ -43,7 +43,7 @@ class PluginMaintain
   /**
    * @param string $old_version
    * @param string $new_version
-   * @param array &$errors - used to return error messages
+   * @param array $errors - used to return error messages
    */
   function update($old_version, $new_version, &$errors=array()) {}
   

@@ -73,9 +73,9 @@ class plugins
 
   /**
    * Perform requested actions
-   * @param string - action
-   * @param string - plugin id
-   * @param array - errors
+   * @param string $action - action
+   * @param string $plugin_id - plugin id
+   * @param array $options - errors
    */
   function perform_action($action, $plugin_id, $options=array())
   {
@@ -619,9 +619,9 @@ DELETE FROM '. PLUGINS_TABLE .'
 
   /**
    * Extract plugin files from archive
-   * @param string - install or upgrade
-   *  @param string - archive URL
-    * @param string - plugin id or extension id
+   * @param string $action - install or upgrade
+   * @param string $dest - archive URL
+   * @param string $plugin_id - plugin id or extension id
    */
   function extract_plugin_files($action, $revision, $dest, &$plugin_id=null)
   {

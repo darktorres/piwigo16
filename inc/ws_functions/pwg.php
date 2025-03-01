@@ -33,11 +33,12 @@ class pwg
   /**
    * API method
    * Returns a list of missing derivatives (not generated yet)
-   * @param mixed[] $params
-   *    @option string types (optional)
-   *    @option int[] ids
-   *    @option int max_urls
-   *    @option int prev_page (optional)
+   * @param array{
+   *     types?: string,
+   *     ids: int[],
+   *     max_urls: int,
+   *     prev_page?: int,
+   * } $params
    */
   static function ws_getMissingDerivatives($params, &$service)
   {
@@ -144,7 +145,7 @@ class pwg
   /**
    * API method
    * Returns Piwigo version
-   * @param mixed[] $params
+   * @param array $params
    */
   static function ws_getVersion($params, &$service)
   {
@@ -154,7 +155,7 @@ class pwg
   /**
    * API method
    * Returns general information about the installation
-   * @param mixed[] $params
+   * @param array $params
    */
   static function ws_getInfos($params, &$service)
   {
@@ -222,8 +223,7 @@ class pwg
    * API method
    * Calculates and returns the size of the cache
    *
-   * @since 12
-   * @param mixed[] $params
+   * @param array $params
    */
   static function ws_getCacheSize($params, &$service)
   {
@@ -294,8 +294,9 @@ class pwg
   /**
    * API method
    * Adds images to the caddie
-   * @param mixed[] $params
-   *    @option int[] image_id
+   * @param array{
+   *     image_id: int[],
+   * } $params
    */
   static function ws_caddie_add($params, &$service)
   {
@@ -333,9 +334,11 @@ class pwg
   /**
    * API method
    * Deletes rates of an user
-   * @param mixed[] $params
-   *    @option int user_id
-   *    @option string anonymous_id (optional)
+   * @param array{
+   *     user_id: int,
+   *     anonymous_id?: string,
+   *     image_id: mixed,
+   * } $params
    */
   static function ws_rates_delete($params, &$service)
   {
@@ -363,9 +366,10 @@ class pwg
   /**
    * API method
    * Performs a login
-   * @param mixed[] $params
-   *    @option string username
-   *    @option string password
+   * @param array{
+   *     username: string,
+   *     password: string,
+   * } $params
    */
   static function ws_session_login($params, &$service)
   {
@@ -380,7 +384,7 @@ class pwg
   /**
    * API method
    * Performs a logout
-   * @param mixed[] $params
+   * @param array $params
    */
   static function ws_session_logout($params, &$service)
   {
@@ -394,7 +398,7 @@ class pwg
   /**
    * API method
    * Returns info about the current user
-   * @param mixed[] $params
+   * @param array $params
    */
   static function ws_session_getStatus($params, &$service)
   {
@@ -447,7 +451,6 @@ class pwg
   /**
    * API method
    * Returns lines of users activity
-   *  @since 12
    */
   static function ws_getActivityList($param, &$service)
   {
@@ -621,7 +624,6 @@ class pwg
   /**
    * API method
    * Log a new line in visit history
-   * @since 13
    */
   static function ws_history_log($params, &$service)
   {
@@ -661,7 +663,6 @@ class pwg
   /**
    * API method
    * Returns lines of an history search
-   * @since 13
    */
   static function ws_history_search($param, &$service)
   {

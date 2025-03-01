@@ -8,14 +8,16 @@
 
 namespace Piwigo\inc;
 
+use SmartyException;
+
 /**
  * Manages a list of CSS files and combining them in a unique file.
  */
 class CssLoader
 {
-  /** @param Css[] */
+  /** @var Css[] */
   private $registered_css;
-  /** @param int used to keep declaration order */
+  /** @var int used to keep declaration order */
   private $counter;
 
   function __construct()
@@ -31,6 +33,7 @@ class CssLoader
 
   /**
    * @return Combinable[] array of combined CSS.
+   * @throws SmartyException
    */
   function get_css()
   {

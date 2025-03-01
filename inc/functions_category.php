@@ -236,7 +236,7 @@ class functions_category
    * Assign a template var usable with {html_options} from a list of categories
    *
    * @param array[] $categories (at least id,name,global_rank,uppercats for each)
-   * @param int[] $selected ids of selected items
+   * @param int[] $selecteds ids of selected items
    * @param string $blockname variable name in template
    * @param bool $fullname full breadcrumb or not
    */
@@ -328,7 +328,7 @@ class functions_category
    * Finds a matching category id from a potential list of permalinks
    *
    * @param string[] $permalinks
-   * @param int &$idx filled with the index in $permalinks that matches
+   * @param int $idx filled with the index in $permalinks that matches
    * @return int|null
    */
   static function get_cat_id_from_permalinks($permalinks, &$idx)
@@ -470,7 +470,7 @@ class functions_category
    * Get computed array of categories, that means cache data of all categories
    * available for the current user (count_categories, count_images, etc.).
    *
-   * @param array &$userdata
+   * @param array $userdata
    * @param int $filter_days number of recent days to filter on or null
    * @return array
    */
@@ -577,7 +577,7 @@ class functions_category
   /**
    * Removes a category from computed array of categories and updates counters.
    *
-   * @param array &$cats
+   * @param array $cats
    * @param array $cat category to remove
    */
   static function remove_computed_category(&$cats, $cat)
@@ -609,10 +609,10 @@ class functions_category
    * AND & OR mode supported.
    *
    * @param int[] $cat_ids
-   * @param string mode
+   * @param string $mode
    * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
    * @param string $order_by - optionally overwrite default photo order
-   * @param bool $user_permissions
+   * @param bool $use_permissions
    * @return array
    */
   static function get_image_ids_for_categories($cat_ids, $mode='AND', $extra_images_where_sql='', $order_by='', $use_permissions=true)

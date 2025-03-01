@@ -13,7 +13,7 @@ class functions_filter
   /**
    * Updates data of categories with filtered values
    *
-   * @param array &$cats
+   * @param array $cats
    */
   static function update_cats_with_filtered_data(&$cats)
   {

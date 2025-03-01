@@ -36,13 +36,13 @@ if
 
 class functions_notification_by_mail
 {
-  /*
-  * Search an available check_key
-  *
-  * It's a copy of function find_available_feed_id
-  *
-  * @return string nbm identifier
-  */
+  /**
+   * Search an available check_key
+   *
+   * It's a copy of function find_available_feed_id
+   *
+   * @return string nbm identifier
+   */
   static function find_available_check_key()
   {
     while (true)
@@ -64,11 +64,11 @@ class functions_notification_by_mail
     }
   }
 
-  /*
-  * Check sendmail timeout state
-  *
-  * @return true, if it's timeout
-  */
+  /**
+   * Check sendmail timeout state
+   *
+   * @return true, if it's timeout
+   */
   static function check_sendmail_timeout()
   {
     global $env_nbm;
@@ -79,23 +79,23 @@ class functions_notification_by_mail
   }
 
 
-  /*
-  * Add quote to all elements of check_key_list
-  *
-  * @return quoted check key list
-  */
+  /**
+   * Add quote to all elements of check_key_list
+   *
+   * @return array quoted check key list
+   */
   static function quote_check_key_list($check_key_list = array())
   {
     return array_map(function($s) { return  '\''.$s.'\'';   } , $check_key_list);
   }
 
-  /*
-  * Execute all main queries to get list of user
-  *
-  * Type are the type of list 'subscribe', 'send'
-  *
-  * return array of users
-  */
+  /**
+   * Execute all main queries to get list of user
+   *
+   * Type are the type of list 'subscribe', 'send'
+   *
+   * @return array of users
+   */
   static function get_user_notifications($action, $check_key_list = array(), $enabled_filter_value = '')
   {
     global $conf;
@@ -173,12 +173,12 @@ class functions_notification_by_mail
     return $data_users;
   }
 
-  /*
-  * Begin of use nbm environment
-  * Prepare and save current environment and initialize data in order to send mail
-  *
-  * Return none
-  */
+  /**
+   * Begin of use nbm environment
+   * Prepare and save current environment and initialize data in order to send mail
+   *
+   * @return void
+   */
   static function begin_users_env_nbm($is_to_send_mail = false)
   {
     global $user, $lang, $lang_info, $conf, $env_nbm;
@@ -206,12 +206,12 @@ class functions_notification_by_mail
     }
   }
 
-  /*
-  * End of use nbm environment
-  * Restore environment
-  *
-  * Return none
-  */
+  /**
+   * End of use nbm environment
+   * Restore environment
+   *
+   * @return void
+   */
   static function end_users_env_nbm()
   {
     global $user, $lang, $lang_info, $env_nbm;
@@ -238,11 +238,11 @@ class functions_notification_by_mail
     unset($env_nbm['is_to_send_mail']);
   }
 
-  /*
-  * Set user on nbm environment
-  *
-  * Return none
-  */
+  /**
+   * Set user on nbm environment
+   *
+   * @return void
+   */
   static function set_user_on_env_nbm(&$nbm_user, $is_action_send)
   {
     global $user, $lang, $lang_info, $env_nbm;
@@ -258,11 +258,11 @@ class functions_notification_by_mail
     }
   }
 
-  /*
-  * Unset user on nbm environment
-  *
-  * Return none
-  */
+  /**
+   * Unset user on nbm environment
+   *
+   * @return void
+   */
   static function unset_user_on_env_nbm()
   {
     global $env_nbm;
@@ -271,11 +271,11 @@ class functions_notification_by_mail
     unset($env_nbm['mail_template']);
   }
 
-  /*
-  * Inc Counter success
-  *
-  * Return none
-  */
+  /**
+   * Inc Counter success
+   *
+   * @return void
+   */
   static function inc_mail_sent_success($nbm_user)
   {
     global $page, $env_nbm;
@@ -284,11 +284,11 @@ class functions_notification_by_mail
     $page['infos'][] = sprintf($env_nbm['msg_info'], stripslashes($nbm_user['username']), $nbm_user['mail_address']);
   }
 
-  /*
-  * Inc Counter failed
-  *
-  * Return none
-  */
+  /**
+   * Inc Counter failed
+   *
+   * @return void
+   */
   static function inc_mail_sent_failed($nbm_user)
   {
     global $page, $env_nbm;
@@ -297,11 +297,11 @@ class functions_notification_by_mail
     $page['errors'][] = sprintf($env_nbm['msg_error'], stripslashes($nbm_user['username']), $nbm_user['mail_address']);
   }
 
-  /*
-  * Display Counter Info
-  *
-  * Return none
-  */
+  /**
+   * Display Counter Info
+   *
+   * @return void
+   */
   static function display_counter_info()
   {
     global $page, $env_nbm;
@@ -360,14 +360,14 @@ class functions_notification_by_mail
     functions_url::unset_make_full_url();
   }
 
-  /*
-  * Subscribe or unsubscribe notification by mail
-  *
-  * is_subscribe define if action=subscribe or unsubscribe
-  * check_key list where action will be done
-  *
-  * @return check_key list treated
-  */
+  /**
+   * Subscribe or unsubscribe notification by mail
+   *
+   * is_subscribe define if action=subscribe or unsubscribe
+   * check_key list where action will be done
+   *
+   * @return array check_key list treated
+   */
   static function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_subscribe = false, $check_key_list = array())
   {
     global $conf, $page, $env_nbm, $conf;
@@ -516,25 +516,25 @@ class functions_notification_by_mail
     return $check_key_treated;
   }
 
-  /*
-  * Unsubscribe notification by mail
-  *
-  * check_key list where action will be done
-  *
-  * @return check_key list treated
-  */
+  /**
+   * Unsubscribe notification by mail
+   *
+   * check_key list where action will be done
+   *
+   * @return array check_key list treated
+   */
   static function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = array())
   {
     return self::do_subscribe_unsubscribe_notification_by_mail($is_admin_request, false, $check_key_list);
   }
 
-  /*
-  * Subscribe notification by mail
-  *
-  * check_key list where action will be done
-  *
-  * @return check_key list treated
-  */
+  /**
+   * Subscribe notification by mail
+   *
+   * check_key list where action will be done
+   *
+   * @return array check_key list treated
+   */
   static function subscribe_notification_by_mail($is_admin_request, $check_key_list = array())
   {
     return self::do_subscribe_unsubscribe_notification_by_mail($is_admin_request, true, $check_key_list);

@@ -42,7 +42,7 @@ class CalendarMonthly extends CalendarBase
   /**
    * Generate navigation bars for category page.
    *
-   * @return boolean false indicates that thumbnails where not included
+   * @return bool false indicates that thumbnails where not included
    */
   function generate_category_content()
   {
@@ -176,7 +176,7 @@ class CalendarMonthly extends CalendarBase
    *
    * @param int $year
    * @param int $month
-   * @return int[]
+   * @return int
    */
   protected function get_all_days_in_month($year, $month)
   {

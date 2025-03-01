@@ -9,8 +9,8 @@
 namespace Piwigo\inc;
 
 /**
-  Structure of results being filled from different tables
-*/
+ * Structure of results being filled from different tables
+ */
 class QResults
 {
   var $all_tags;

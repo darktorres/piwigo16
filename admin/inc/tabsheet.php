@@ -18,10 +18,10 @@ class tabsheet
   var $titlename;
   var $selected;
 
-  /*
-    $name is the tabsheet's name inside the template .tpl file
-    $titlename in the template is affected by $titlename value
-  */
+  /**
+   * @param string $name is the tabsheet's name inside the template .tpl file
+   * @param string $titlename in the template is affected by $titlename value
+   */
   function __construct($name = 'TABSHEET', $titlename = 'TABSHEET_TITLE')
   {
     $this->sheets = array();
@@ -36,9 +36,9 @@ class tabsheet
     $this->uniqid = $id;
   }
 
-  /*
-     add a tab
-  */
+  /**
+   *  add a tab
+   */
   function add($name, $caption, $url, $selected = false)
   {
     if (!isset($this->sheets[$name]))
@@ -54,9 +54,9 @@ class tabsheet
     return false;
   }
 
-  /*
-     remove a tab
-  */
+  /**
+   *  remove a tab
+   */
   function delete($name)
   {
     if (isset($this->sheets[$name]))
@@ -72,9 +72,9 @@ class tabsheet
     return false;
   }
 
-  /*
-     select a tab to be active
-  */
+  /**
+   *  select a tab to be active
+   */
   function select($name)
   {
     $this->sheets = functions_plugins::trigger_change('tabsheet_before_select', $this->sheets, $this->uniqid);
@@ -86,26 +86,26 @@ class tabsheet
     $this->selected = $name;
   }
 
-  /*
-    set $titlename value
-  */
+  /**
+   * set $titlename value
+   */
   function set_titlename($titlename)
   {
     $this->titlename = $titlename;
     return $this->titlename;
   }
 
-  /*
-    returns $titlename value
-  */
+  /**
+   * returns $titlename value
+   */
   function get_titlename()
   {
     return $this->titlename;
   }
 
-  /*
-    returns properties of selected tab
-  */
+  /**
+   * returns properties of selected tab
+   */
   function get_selected()
   {
     if (!empty($this->selected))
@@ -118,7 +118,7 @@ class tabsheet
     }
   }
 
-  /*
+  /**
    * Build TabSheet and assign this content to current page
    *
    * Fill $this->$name {default value = TABSHEET} with HTML code for tabsheet

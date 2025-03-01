@@ -217,7 +217,6 @@ class functions_metadata
 
   /**
    * Converts EXIF GPS format to a float value.
-   * @since 2.6
    *
    * @param string[] $raw eg:
    *    - 41/1

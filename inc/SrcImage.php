@@ -13,7 +13,7 @@ use Piwigo\inc\dblayer\functions_mysqli;
 /**
  * A source image is used to get a derivative image. It is either
  * the original file for a jpg/png/... or a 'representative' image
- * of a  non image file or a standard icon for the non-image file.
+ * of a non image file or a standard icon for the non-image file.
  */
 final class SrcImage
 {
@@ -97,7 +97,7 @@ final class SrcImage
   }
 
   /**
-   * @return bool
+   * @return int
    */
   function is_original()
   {
@@ -105,7 +105,7 @@ final class SrcImage
   }
 
   /**
-   * @return bool
+   * @return int
    */
   function is_mimetype()
   {

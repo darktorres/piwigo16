@@ -303,7 +303,9 @@ class pwg_image
     }
   }
 
-  /** Returns a normalized convolution kernel for sharpening*/
+  /**
+   * Returns a normalized convolution kernel for sharpening
+   */
   static function get_sharpen_matrix($amount)
   {
     // Amount should be in the range of 48-10

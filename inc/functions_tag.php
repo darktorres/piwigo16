@@ -179,10 +179,10 @@ class functions_tag
    * AND & OR mode supported.
    *
    * @param int[] $tag_ids
-   * @param string mode
+   * @param string $mode
    * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
    * @param string $order_by - optionally overwrite default photo order
-   * @param bool $user_permissions
+   * @param bool $use_permissions
    * @return array
    */
   static function get_image_ids_for_tags($tag_ids, $mode='AND', $extra_images_where_sql='', $order_by='', $use_permissions=true)

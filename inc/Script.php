@@ -21,7 +21,7 @@ final class Script extends Combinable
   public $extra;
 
   /**
-   * @param int 0,1,2
+   * @param int $load_mode 0,1,2
    * @param string $id
    * @param string $path
    * @param string $version

@@ -94,9 +94,10 @@ class Template
 
 
   /**
-   * @var string $root
-   * @var string $theme
-   * @var string $path
+   * @param string $root
+   * @param string $theme
+   * @param string $path
+   * @throws SmartyException
    */
   function __construct($root=".", $theme="", $path="template")
   {
@@ -446,6 +447,7 @@ class Template
    * @param string $varname
    * @param string $handle
    * @return true
+   * @throws SmartyException
    */
   function assign_var_from_handle($varname, $handle)
   {
@@ -507,6 +509,7 @@ class Template
    * @param string $handle
    * @param bool $return
    * @return null|string
+   * @throws SmartyException
    */
   function parse($handle, $return=false)
   {
@@ -543,6 +546,7 @@ class Template
    * then sends the output to the browser.
    *
    * @param string $handle
+   * @throws SmartyException
    */
   function pparse($handle)
   {
@@ -804,14 +808,16 @@ class Template
    * The "define_derivative" function allows to define derivative from tpl file.
    * It assigns a DerivativeParams object to _name_ template variable.
    *
-   * @param array $params
-   *    - name (required)
-   *    - type (optional)
-   *    - width (required if type is empty)
-   *    - height (required if type is empty)
-   *    - crop (optional, used if type is empty)
-   *    - min_height (optional, used with crop)
-   *    - min_height (optional, used with crop)
+   * @param array{
+   *     name: mixed,
+   *     type?: mixed,
+   *     width: mixed,
+   *     height: mixed,
+   *     crop?: mixed,
+   *     min_height?: mixed,
+   *     min_height?: mixed,
+   *     min_width: mixed,
+   * } $params
    * @param Smarty $smarty
    */
   function func_define_derivative($params, $smarty)
@@ -859,13 +865,14 @@ class Template
    * The "combine_script" functions allows inclusion of a javascript file in the current page.
    * The engine will combine several js files into a single one.
    *
-   * @param array $params
-   *   - id (required)
-   *   - path (required)
-   *   - load (optional) 'header', 'footer' or 'async'
-   *   - require (optional) comma separated list of script ids required to be loaded
-   *     and executed before this one
-   *   - version (optional) used to force a browser refresh
+   * @param array{
+   *     id: mixed,
+   *     path: mixed,
+   *     load?: mixed,
+   *     require?: mixed,
+   *     version?: mixed,
+   *     template: mixed,
+   * } $params
    */
   function func_combine_script($params)
   {
@@ -896,8 +903,10 @@ class Template
    * The "get_combined_scripts" function returns HTML tag of combined scripts.
    * It can returns a placeholder for delayed JS files combination and minification.
    *
-   * @param array $params
-   *    - load (required)
+   * @param array{
+   *     load: mixed,
+   * } $params
+   * @throws SmartyException
    */
   function func_get_combined_scripts($params)
   {
@@ -977,8 +986,9 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
   /**
    * The "footer_script" block allows to add runtime script in the HTML page.
    *
-   * @param array $params
-   *    - require (optional) comma separated list of script ids
+   * @param array{
+   *     require?: mixed,
+   * } $params
    * @param string $content
    */
   function block_footer_script($params, $content)
@@ -998,12 +1008,13 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
    * The "combine_css" function allows inclusion of a css file in the current page.
    * The engine will combine several css files into a single one.
    *
-   * @param array $params
-   *    - id (optional) used to deal with multiple inclusions from plugins
-   *    - path (required)
-   *    - version (optional) used to force a browser refresh
-   *    - order (optional)
-   *    - template (optional) set to true to allow smarty syntax in the css file
+   * @param array{
+   *     id?: mixed,
+   *     path: mixed,
+   *     version?: mixed,
+   *     order?: mixed,
+   *     template?: mixed,
+   * } $params
    */
   function func_combine_css($params)
   {
@@ -1081,6 +1092,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
    * Register the filters for the tpl file.
    *
    * @param string $handle
+   * @throws SmartyException
    */
   function load_external_filters($handle)
   {
@@ -1130,11 +1142,11 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
   }
 
   /**
-   * @toto : description of Template::prefilter_white_space
+   * @todo : description of Template::prefilter_white_space
    *
    * @param string $source
    * @param Smarty $smarty
-   * @param return string
+   * @return string
    */
   static function prefilter_white_space($source, $smarty)
   {
@@ -1164,7 +1176,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
    *
    * @param string $source
    * @param Smarty $smarty
-   * @param return string
+   * @return string
    */
   static function postfilter_language($source, $smarty)
   {
@@ -1181,7 +1193,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
    *
    * @param string $source
    * @param Smarty $smarty
-   * @param return string
+   * @return string
    */
   static function prefilter_local_css($source, $smarty)
   {

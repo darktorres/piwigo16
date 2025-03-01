@@ -356,7 +356,7 @@ final class DerivativeImage
    * Returns the scaled size as HTML attributes.
    *
    * @param int $maxw
-   * @param int $mawh
+   * @param int $maxh
    * @return string
    */
   function get_scaled_size_htm($maxw=9999, $maxh=9999)

@@ -93,8 +93,8 @@ class functions_install
   /**
    * Connect to database during installation. Uses $_POST.
    *
-   * @param array &$infos - populated with infos
-   * @param array &$errors - populated with errors
+   * @param array $infos - populated with infos
+   * @param array $errors - populated with errors
    */
   static function install_db_connect(&$infos, &$errors)
   {

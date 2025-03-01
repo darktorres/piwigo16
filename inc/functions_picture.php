@@ -121,7 +121,6 @@ class functions_picture
    * 
    * Code moved from picture.php to be used by both the API and picture.php
    * 
-   * @since 14
    * @param int $image_id
    */
   static function increase_image_visit_counter($image_id)

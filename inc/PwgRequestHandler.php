@@ -13,7 +13,8 @@ namespace Piwigo\inc;
  */
 abstract class PwgRequestHandler
 {
-  /** Virtual abstract method. Decodes the request (GET or POST) handles the
+  /**
+   * Virtual abstract method. Decodes the request (GET or POST) handles the
    * method invocation as well as response sending.
    */
   abstract function handleRequest(&$service);

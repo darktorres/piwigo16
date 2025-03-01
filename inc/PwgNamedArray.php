@@ -15,15 +15,15 @@ namespace Piwigo\inc;
  */
 class PwgNamedArray
 {
-  /*private*/ var $_content;
-  /*private*/ var $_itemName;
-  /*private*/ var $_xmlAttributes;
+  var $_content;
+  var $_itemName;
+  var $_xmlAttributes;
 
   /**
    * Constructs a named array
-   * @param arr array (keys must be consecutive integers starting at 0)
-   * @param itemName string xml element name for values of arr (e.g. image)
-   * @param xmlAttributes array of sub-item attributes that will be encoded as
+   * @param array $arr (keys must be consecutive integers starting at 0)
+   * @param string $itemName xml element name for values of arr (e.g. image)
+   * @param array $xmlAttributes of sub-item attributes that will be encoded as
    *      xml attributes instead of xml child elements
    */
   function __construct($arr, $itemName, $xmlAttributes=array() )

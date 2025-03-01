@@ -194,7 +194,6 @@ class functions_mysqli
    *
    * @param string $column
    * @param string $table
-   * @param int
    */
   static function pwg_db_nextval($column, $table)
   {
@@ -499,8 +498,9 @@ class functions_mysqli
    * @param string $table_name
    * @param array $dbfields - fields from $datas which will be used
    * @param array $datas
-   * @param array $options
-   *    - boolean ignore - use "INSERT IGNORE"
+   * @param array{
+   *     ignore: bool,
+   * } $options
    */
   static function mass_inserts($table_name, $dbfields, $datas, $options=array())
   {
@@ -570,8 +570,9 @@ class functions_mysqli
    *
    * @param string $table_name
    * @param array $data
-   * @param array $options
-   *    - boolean ignore - use "INSERT IGNORE"
+   * @param array{
+   *     ignore: bool,
+   * } $options
    */
   static function single_insert($table_name, $data, $options=array())
   {
@@ -889,8 +890,6 @@ class functions_mysqli
    *          'DSC8957' => 2,
    *          ...
    *          )
-   *
-   * @since 2.6
    *
    * @param string $query
    * @param string $key_name

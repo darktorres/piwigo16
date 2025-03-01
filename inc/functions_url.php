@@ -9,6 +9,7 @@
 namespace Piwigo\inc;
 
 use Piwigo\inc\dblayer\functions_mysqli;
+use SmartyException;
 
 class functions_url
 {
@@ -33,7 +34,7 @@ class functions_url
 
   /**
    * returns the absolute url to the root of PWG
-   * @param boolean with_scheme if false - does not add http://toto.com
+   * @param bool $with_scheme if false - does not add http://toto.com
    */
   static function get_absolute_root_url($with_scheme=true)
   {
@@ -101,8 +102,8 @@ class functions_url
    * adds one or more _GET style parameters to an url
    * example: add_url_params('/x', array('a'=>'b')) returns /x?a=b
    * add_url_params('/x?cat_id=10', array('a'=>'b')) returns /x?cat_id=10&amp;a=b
-   * @param string url
-   * @param array params
+   * @param string $url
+   * @param array $params
    * @return string
    */
   static function add_url_params($url, $params, $arg_separator='&amp;' )
@@ -135,7 +136,7 @@ class functions_url
   /**
    * build an index URL for a specific section
    *
-   * @param array
+   * @param array $params
    * @return string
    */
   static function make_index_url($params = array())
@@ -174,8 +175,8 @@ class functions_url
    * ) will create an index URL on the current section (categories), but on
    * a redefined category and without the start URL parameter.
    *
-   * @param array redefined keys
-   * @param array removed keys
+   * @param array $redefined keys
+   * @param array $removed keys
    * @return string
    */
   static function duplicate_index_url($redefined = array(), $removed = array())
@@ -188,8 +189,8 @@ class functions_url
   /**
    * returns $page global array with key redefined and key removed
    *
-   * @param array redefined keys
-   * @param array removed keys
+   * @param array $redefined keys
+   * @param array $removed keys
    * @return array
    */
   static function params_for_duplication($redefined, $removed)
@@ -215,8 +216,8 @@ class functions_url
    * create a picture URL with current page parameters, but with redefinitions
    * and removes. See duplicate_index_url.
    *
-   * @param array redefined keys
-   * @param array removed keys
+   * @param array $redefined keys
+   * @param array $removed keys
    * @return string
    */
   static function duplicate_picture_url($redefined = array(), $removed = array())
@@ -229,7 +230,7 @@ class functions_url
   /**
    * create a picture URL on a specific section for a specific picture
    *
-   * @param array
+   * @param array $params
    * @return string
    */
   static function make_picture_url($params)
@@ -278,8 +279,8 @@ class functions_url
   }
 
   /**
-   *adds to the url the chronology and start parameters
-  */
+   * adds to the url the chronology and start parameters
+   */
   static function add_well_known_params_in_url($url, $params)
   {
     if ( isset($params['chronology_field']) )
@@ -314,7 +315,7 @@ class functions_url
    * Depending on section, other parameters are required (see function code
    * for details)
    *
-   * @param array
+   * @param array $params
    * @return string
    */
   static function make_section_in_url($params)
@@ -458,9 +459,10 @@ class functions_url
    *
    * Depending on section, other parameters are returned (category/tags/list/...)
    *
-   * @param array of url tokens to parse
-   * @param int the index in the array of url tokens; in/out
+   * @param array $tokens of url tokens to parse
+   * @param int $next_token the index in the array of url tokens; in/out
    * @return array
+   * @throws SmartyException
    */
   static function parse_section_url( $tokens, &$next_token)
   {
@@ -698,7 +700,7 @@ class functions_url
   /**
    * the reverse of add_well_known_params_in_url
    * parses start, flat and chronology from url tokens
-  */
+   */
   static function parse_well_known_params_url($tokens, &$i)
   {
     $page = array();
@@ -759,8 +761,8 @@ class functions_url
 
 
   /**
-   * @param id image id
-   * @param what_part string one of 'e' (element), 'r' (representative)
+   * @param mixed $id image id
+   * @param string $what_part string one of 'e' (element), 'r' (representative)
    */
   static function get_action_url($id, $what_part, $download)
   {
@@ -776,10 +778,10 @@ class functions_url
     return self::add_url_params(self::get_root_url().'action.php', $params);
   }
 
-  /*
-  * @param element_info array containing element information from db;
-  * at least 'id', 'path' should be present
-  */
+  /**
+   * @param array $element_info array containing element information from db;
+   * at least 'id', 'path' should be present
+   */
   static function get_element_url($element_info)
   {
     $url = $element_info['path'];
@@ -794,7 +796,6 @@ class functions_url
   /**
    * Indicate to build url with full path
    *
-   * @param null
    * @return null
    */
   static function set_make_full_url()
@@ -819,7 +820,6 @@ class functions_url
   /**
    * Restore old parameter to build url with full path
    *
-   * @param null
    * @return null
    */
   static function unset_make_full_url()
@@ -850,8 +850,8 @@ class functions_url
   /**
    * Embellish the url argument
    *
-   * @param $url
-   * @return $url embellished
+   * @param string $url
+   * @return string $url embellished
    */
   static function embellish_url($url)
   {
@@ -893,8 +893,8 @@ class functions_url
    * returns $_SERVER['QUERY_STRING'] without keys given in parameters
    *
    * @param string[] $rejects
-   * @param boolean $escape escape *&* to *&amp;*
-   * @returns string
+   * @param bool $escape escape *&* to *&amp;*
+   * @return string
    */
   static function get_query_string_diff($rejects=array(), $escape=true)
   {
@@ -914,7 +914,7 @@ class functions_url
    * returns true if the url is absolute (begins with http)
    *
    * @param string $url
-   * @returns boolean
+   * @return bool
    */
   static function url_is_remote($url)
   {
@@ -928,7 +928,6 @@ class functions_url
 
   /**
    * List favorite image_ids of the current user.
-   * @since 13
    */
   static function get_user_favorites()
   {

@@ -49,7 +49,7 @@ final class SizingParams
   /**
    * Returns a square SizingParams object.
    *
-   * @param int $x
+   * @param int $w
    * @return SizingParams
    */
   static function square($w)
@@ -60,7 +60,7 @@ final class SizingParams
   /**
    * Adds tokens depending on sizing configuration.
    *
-   * @param array &$tokens
+   * @param array $tokens
    */
   function add_url_tokens(&$tokens)
   {
@@ -85,8 +85,8 @@ final class SizingParams
    *
    * @param int[] $in_size - two element array of input dimensions (width, height)
    * @param string $coi - four character encoded string containing the center of interest (unused if max_crop=0)
-   * @param ImageRect &$crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
-   * @param int[] &$scale_size - two element array containing width and height of the scaled image
+   * @param ImageRect $crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
+   * @param int[] $scale_size - two element array containing width and height of the scaled image
    */
   function compute($in_size, $coi, &$crop_rect, &$scale_size)
   {

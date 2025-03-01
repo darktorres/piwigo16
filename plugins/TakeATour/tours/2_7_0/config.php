@@ -39,7 +39,7 @@ if (isset($_GET['image_id']) and
 } else {
     $query = '
     SELECT id
-      FROM ' . IMAGES_TABLE . '
+      FROM images
       ORDER BY RAND()
       LIMIT 1
     ;';

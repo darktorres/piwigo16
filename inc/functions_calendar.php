@@ -29,12 +29,12 @@ class functions_calendar
         global $page, $conf, $user, $template, $persistent_cache, $filter;
 
         //------------------ initialize the condition on items to take into account ---
-        $inner_sql = ' FROM ' . IMAGES_TABLE;
+        $inner_sql = ' FROM images';
 
         if ($page['section'] == 'categories') { // we will regenerate the items by including subcats elements
             $page['items'] = [];
             $inner_sql .= '
-  INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = image_id';
+  INNER JOIN image_category ON id = image_id';
 
             if (isset($page['category'])) {
                 $sub_ids = array_diff(

@@ -44,7 +44,7 @@ $query = 'SELECT DISTINCT
   u.' . $conf['user_fields']['id'] . ' AS id,
   u.' . $conf['user_fields']['username'] . ' AS name,
   ui.status
-  FROM ' . USERS_TABLE . ' AS u INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
+  FROM users AS u INNER JOIN user_infos AS ui
     ON u.' . $conf['user_fields']['id'] . ' = ui.user_id';
 
 $users_by_id = [];
@@ -69,7 +69,7 @@ foreach ($conf['rate_items'] as $rate) {
 $image_ids = [];
 $by_user_ratings = [];
 $query = '
-SELECT * FROM ' . RATE_TABLE . ' ORDER by date DESC';
+SELECT * FROM rate ORDER by date DESC';
 $result = functions_mysqli::pwg_query($query);
 
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -112,7 +112,7 @@ $image_urls = [];
 
 if (count($image_ids) > 0) {
     $query = 'SELECT id, name, file, path, representative_ext, level
-  FROM ' . IMAGES_TABLE . '
+  FROM images
   WHERE id IN (' . implode(',', array_keys($image_ids)) . ')';
     $result = functions_mysqli::pwg_query($query);
     $params = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE);
@@ -131,7 +131,7 @@ if (count($image_ids) > 0) {
 //all image averages
 $query = 'SELECT element_id,
     AVG(rate) AS avg
-  FROM ' . RATE_TABLE . '
+  FROM rate
   GROUP BY element_id';
 $all_img_sum = [];
 $result = functions_mysqli::pwg_query($query);
@@ -143,7 +143,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 }
 
 $query = 'SELECT id
-  FROM ' . IMAGES_TABLE . '
+  FROM images
   ORDER by rating_score DESC
   LIMIT ' . $consensus_top_number;
 $best_rated = array_flip(functions::array_from_query($query, 'id'));
@@ -230,7 +230,7 @@ $x = uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 $query = '
 SELECT
     COUNT(*)
-  FROM ' . RATE_TABLE .
+  FROM rate' .
 ';';
 list($nb_elements) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 

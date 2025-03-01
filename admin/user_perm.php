@@ -53,7 +53,7 @@ if (isset($_POST['falsify']) and
     // automatically forbidden
     $subcats = functions_category::get_subcat_ids($_POST['cat_true']);
     $query = '
-DELETE FROM ' . USER_ACCESS_TABLE . '
+DELETE FROM user_access
   WHERE user_id = ' . $page['user'] . '
     AND cat_id IN (' . implode(',', $subcats) . ')
 ;';
@@ -98,10 +98,10 @@ $group_authorized = [];
 
 $query = '
 SELECT DISTINCT cat_id, c.uppercats, c.global_rank
-  FROM ' . USER_GROUP_TABLE . ' AS ug
-    INNER JOIN ' . GROUP_ACCESS_TABLE . ' AS ga
+  FROM user_group AS ug
+    INNER JOIN group_access AS ga
       ON ug.group_id = ga.group_id
-    INNER JOIN ' . CATEGORIES_TABLE . ' AS c
+    INNER JOIN categories AS c
       ON c.id = ga.cat_id
   WHERE ug.user_id = ' . $page['user'] . '
 ;';
@@ -128,7 +128,7 @@ if (functions_mysqli::pwg_db_num_rows($result) > 0) {
 // only private categories are listed
 $query_true = '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_ACCESS_TABLE . ' ON cat_id = id
+  FROM categories INNER JOIN user_access ON cat_id = id
   WHERE status = \'private\'
     AND user_id = ' . $page['user'];
 
@@ -150,7 +150,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 
 $query_false = '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM categories
   WHERE status = \'private\'';
 
 if (count($authorized_ids) > 0) {

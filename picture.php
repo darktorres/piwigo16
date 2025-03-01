@@ -43,7 +43,7 @@ $page['rank_of'] = array_flip($page['items']);
 if (! isset($page['rank_of'][$page['image_id']])) {
     $query = '
 SELECT id, file, level
-  FROM ' . IMAGES_TABLE . '
+  FROM images
   WHERE ';
     if ($page['image_id'] > 0) {
         $query .= 'id = ' . $page['image_id'];
@@ -89,7 +89,7 @@ SELECT id, file, level
         } else { // try to see if we can access it differently
             $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id
+  FROM images INNER JOIN image_category ON id=image_id
   WHERE id=' . $page['image_id']
               . functions_user::get_sql_condition_FandF(
                   [
@@ -191,7 +191,7 @@ if (isset($_GET['action'])) {
     switch ($_GET['action']) {
         case 'add_to_favorites':
             $query = '
-INSERT INTO ' . FAVORITES_TABLE . '
+INSERT INTO favorites
   (image_id,user_id)
   VALUES
   (' . $page['image_id'] . ',' . $user['id'] . ')
@@ -202,7 +202,7 @@ INSERT INTO ' . FAVORITES_TABLE . '
 
         case 'remove_from_favorites':
             $query = '
-DELETE FROM ' . FAVORITES_TABLE . '
+DELETE FROM favorites
   WHERE user_id = ' . $user['id'] . '
     AND image_id = ' . $page['image_id'] . '
 ;';
@@ -221,7 +221,7 @@ DELETE FROM ' . FAVORITES_TABLE . '
                 isset($page['category'])
             ) {
                 $query = '
-UPDATE ' . CATEGORIES_TABLE . '
+UPDATE categories
   SET representative_picture_id = ' . $page['image_id'] . '
   WHERE id = ' . $page['category']['id'] . '
 ;';
@@ -354,8 +354,8 @@ if (functions_plugins::trigger_change('allow_increment_element_hit_count', $inc_
 //---------------------------------------------------------- related categories
 $query = '
 SELECT id,uppercats,commentable,visible,status,global_rank
-  FROM ' . IMAGE_CATEGORY_TABLE . '
-    INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id = id
+  FROM image_category
+    INNER JOIN categories ON category_id = id
   WHERE image_id = ' . $page['image_id'] . '
 ' . functions_user::get_sql_condition_FandF(
     [
@@ -384,7 +384,7 @@ if (isset($page['next_item'])) {
 
 $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM images
   WHERE id IN (' . implode(',', $ids) . ')
 ;';
 
@@ -572,7 +572,7 @@ if ($conf['picture_download_icon'] and
     if ($conf['enable_formats']) {
         $query = '
 SELECT *
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM image_format
   WHERE image_id = ' . $picture['current']['id'] . '
 ;';
         $formats = functions_mysqli::query2array($query);
@@ -743,7 +743,7 @@ if (! functions_user::is_a_guest() and
     // verify if the picture is already in the favorite of the user
     $query = '
 SELECT COUNT(*) AS nb_fav
-  FROM ' . FAVORITES_TABLE . '
+  FROM favorites
   WHERE image_id = ' . $page['image_id'] . '
     AND user_id = ' . $user['id'] . '
 ;';
@@ -880,7 +880,7 @@ if (count($related_categories) == 1 and
     $ids = array_unique($ids);
     $query = '
 SELECT id, name, permalink
-  FROM ' . CATEGORIES_TABLE . '
+  FROM categories
   WHERE id IN (' . implode(',', $ids) . ')';
     $cat_map = functions::hash_from_query($query, 'id');
 

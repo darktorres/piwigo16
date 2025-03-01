@@ -308,7 +308,7 @@ $blockname = 'categories';
 
 $query = '
 SELECT id, name, uppercats, global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM categories
 ' . functions_user::get_sql_condition_FandF(
     [
         'forbidden_categories' => 'id',
@@ -378,10 +378,10 @@ SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
        com.website_url,
        com.content,
        com.validated
-  FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic
-    INNER JOIN ' . COMMENTS_TABLE . ' AS com
+  FROM image_category AS ic
+    INNER JOIN comments AS com
     ON ic.image_id = com.image_id
-    LEFT JOIN ' . USERS_TABLE . ' As u
+    LEFT JOIN users As u
     ON u.' . $conf['user_fields']['id'] . ' = com.author_id
   WHERE ' . implode('
     AND ', $page['where_clauses']) . '
@@ -421,14 +421,14 @@ if (count($comments) > 0) {
     // retrieving element information
     $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM images
   WHERE id IN (' . implode(',', $element_ids) . ')
 ;';
     $elements = functions_mysqli::query2array($query, 'id');
 
     // retrieving category information
     $query = 'SELECT id, name, permalink, uppercats
-  FROM ' . CATEGORIES_TABLE . '
+  FROM categories
   WHERE id IN (' . implode(',', $category_ids) . ')';
     $categories = functions_mysqli::query2array($query, 'id');
 

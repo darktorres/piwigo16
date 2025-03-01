@@ -248,8 +248,8 @@ if (empty($page['is_external'])) {
 SELECT
     author,
     COUNT(DISTINCT(id)) AS counter
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM images AS i
+    JOIN image_category AS ic ON ic.image_id = i.id
   WHERE ' . $search_items_clause . '
   ' . functions_user::get_sql_condition_FandF(
                 [
@@ -290,8 +290,8 @@ SELECT
 SELECT
     image_id,
     date_available
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM images AS i
+    JOIN image_category AS ic ON ic.image_id = i.id
   WHERE ' . $search_items_clause . '
   ' . functions_user::get_sql_condition_FandF(
                 [
@@ -363,8 +363,8 @@ SELECT
 SELECT
     COUNT(DISTINCT(id)) AS counter,
     added_by AS added_by_id
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM images AS i
+    JOIN image_category AS ic ON ic.image_id = i.id
   WHERE ' . $search_items_clause . '
   ' . functions_user::get_sql_condition_FandF(
                 [
@@ -390,7 +390,7 @@ SELECT
 SELECT
     ' . $conf['user_fields']['id'] . ' AS id,
     ' . $conf['user_fields']['username'] . ' AS username
-  FROM ' . USERS_TABLE . '
+  FROM users
   WHERE ' . $conf['user_fields']['id'] . ' IN (' . implode(',', $user_ids) . ')
 ;';
                 $username_of = functions_mysqli::query2array($query, 'id', 'username');
@@ -416,8 +416,8 @@ SELECT
 SELECT
     id,
     uppercats
-  FROM ' . CATEGORIES_TABLE . '
-    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id AND user_id = ' . $user['id'] . '
+  FROM categories
+    INNER JOIN user_cache_categories ON id = cat_id AND user_id = ' . $user['id'] . '
   WHERE id IN (' . implode(',', $my_search['fields']['cat']['words']) . ')
 ;';
             $result = functions_mysqli::pwg_query($query);
@@ -443,8 +443,8 @@ SELECT
 SELECT
     SUBSTRING_INDEX(path, ".", -1) AS ext,
     COUNT(DISTINCT(id)) AS counter
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM images AS i
+    JOIN image_category AS ic ON ic.image_id = i.id
   WHERE ' . $search_items_clause . '
   ' . functions_user::get_sql_condition_FandF(
                 [
@@ -478,8 +478,8 @@ SELECT
                     $query = '
 SELECT
     c.*
-  FROM ' . CATEGORIES_TABLE . ' AS c
-    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON c.id = cat_id and user_id = ' . $user['id'] . '
+  FROM categories AS c
+    INNER JOIN user_cache_categories ON c.id = cat_id and user_id = ' . $user['id'] . '
   WHERE id IN (' . implode(',', $cat_ids) . ')
 ;';
                     $cats = functions_mysqli::query2array($query);

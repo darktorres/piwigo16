@@ -30,7 +30,7 @@ $admin_album_base_url = functions_url::get_root_url() . 'admin.php?page=album-' 
 
 $query = '
 SELECT *
-  FROM ' . CATEGORIES_TABLE . '
+  FROM categories
   WHERE id = ' . $_GET['cat_id'] . '
 ;';
 $category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));

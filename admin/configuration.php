@@ -266,7 +266,7 @@ if (isset($_POST['submit'])) {
         functions_user::is_webmaster()
     ) {
         //echo '<pre>'; print_r($_POST); echo '</pre>';
-        $result = functions_mysqli::pwg_query('SELECT param FROM ' . CONFIG_TABLE);
+        $result = functions_mysqli::pwg_query('SELECT param FROM config');
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             if (isset($_POST[$row['param']])) {
@@ -279,7 +279,7 @@ if (isset($_POST['submit'])) {
                 }
 
                 $query = '
-UPDATE ' . CONFIG_TABLE . '
+UPDATE config
 SET value = \'' . str_replace("\'", "''", $value) . '\'
 WHERE param = \'' . $row['param'] . '\'
 ;';
@@ -303,7 +303,7 @@ if ($page['section'] == 'sizes' and
     $_GET['action'] == 'restore_settings'
 ) {
     ImageStdParams::set_and_save(ImageStdParams::get_default_sizes());
-    functions_mysqli::pwg_query('DELETE FROM ' . CONFIG_TABLE . ' WHERE param = \'disabled_derivatives\'');
+    functions_mysqli::pwg_query('DELETE FROM config WHERE param = \'disabled_derivatives\'');
     functions_admin::clear_derivative_cache();
 
     $page['infos'][] = functions::l10n('Your configuration settings are saved');
@@ -376,7 +376,7 @@ switch ($page['section']) {
     SELECT
         id,
         name
-      FROM `' . GROUPS_TABLE . '`
+      FROM `groups`
     ;';
         $groups = functions_mysqli::query2array($query, 'id', 'name');
         natcasesort($groups);

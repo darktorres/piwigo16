@@ -35,7 +35,7 @@ functions_plugins::trigger_notify('loc_begin_notification');
 $page['feed'] = functions::find_available_feed_id();
 
 $query = '
-INSERT INTO ' . USER_FEED_TABLE . '
+INSERT INTO user_feed
   (id, user_id, last_check)
   VALUES
   (\'' . $page['feed'] . '\', ' . $user['id'] . ', NULL)

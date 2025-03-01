@@ -36,8 +36,6 @@ if (! $conf['check_upgrade_feed']) {
     die('upgrade feed is not active');
 }
 
-functions_upgrade::prepare_conf_upgrade();
-
 define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 
 // +-----------------------------------------------------------------------+

@@ -90,7 +90,7 @@ switch ($page['mode']) {
 
             $updated_param_count = 0;
             // Update param
-            $result = functions_mysqli::pwg_query('select param, value from ' . CONFIG_TABLE . ' where param like \'nbm\\_%\'');
+            $result = functions_mysqli::pwg_query('select param, value from config where param like \'nbm\\_%\'');
 
             while ($nbm_user = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 if (isset($_POST[$nbm_user['param']])) {

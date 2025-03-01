@@ -117,7 +117,7 @@ class functions_session
     {
         $query = '
   SELECT data
-    FROM ' . SESSIONS_TABLE . '
+    FROM sessions
     WHERE id = \'' . self::get_remote_addr_session_hash() . $session_id . '\'
   ;';
         $result = functions_mysqli::pwg_query($query);
@@ -140,7 +140,7 @@ class functions_session
     public static function pwg_session_write($session_id, $data)
     {
         $query = '
-  REPLACE INTO ' . SESSIONS_TABLE . '
+  REPLACE INTO sessions
     (id,data,expiration)
     VALUES(\'' . self::get_remote_addr_session_hash() . $session_id . '\',\'' . functions_mysqli::pwg_db_real_escape_string($data) . '\',now())
   ;';
@@ -158,7 +158,7 @@ class functions_session
     {
         $query = '
   DELETE
-    FROM ' . SESSIONS_TABLE . '
+    FROM sessions
     WHERE id = \'' . self::get_remote_addr_session_hash() . $session_id . '\'
   ;';
         functions_mysqli::pwg_query($query);
@@ -176,7 +176,7 @@ class functions_session
 
         $query = '
   DELETE
-    FROM ' . SESSIONS_TABLE . '
+    FROM sessions
     WHERE ' . functions_mysqli::pwg_db_date_to_ts('NOW()') . ' - ' . functions_mysqli::pwg_db_date_to_ts('expiration') . ' > '
         . $conf['session_length'] . '
   ;';
@@ -242,7 +242,7 @@ class functions_session
     {
         $query = '
   DELETE
-    FROM ' . SESSIONS_TABLE . '
+    FROM sessions
     WHERE data LIKE \'%pwg_uid|i:' . (int) $user_id . ';%\'
   ;';
         functions_mysqli::pwg_query($query);

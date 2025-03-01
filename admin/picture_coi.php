@@ -30,7 +30,7 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 functions::check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
 if (isset($_POST['submit'])) {
-    $query = 'UPDATE ' . IMAGES_TABLE;
+    $query = 'UPDATE images';
 
     if (strlen($_POST['l']) == 0) {
         $query .= ' SET coi=NULL';
@@ -46,7 +46,7 @@ if (isset($_POST['submit'])) {
     functions_mysqli::pwg_query($query);
 }
 
-$query = 'SELECT * FROM ' . IMAGES_TABLE . ' WHERE id=' . $_GET['image_id'];
+$query = 'SELECT * FROM images WHERE id=' . $_GET['image_id'];
 $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
 if (isset($_POST['submit'])) {

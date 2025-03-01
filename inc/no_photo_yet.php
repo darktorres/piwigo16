@@ -28,7 +28,7 @@ if (! (defined('IN_ADMIN') and IN_ADMIN) and          // no message inside admin
     $query = '
 SELECT
     COUNT(*)
-  FROM ' . IMAGES_TABLE . '
+  FROM images
 ;';
     list($nb_photos) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 

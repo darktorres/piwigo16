@@ -101,8 +101,8 @@ if (in_array('author', $fields)) {
     $query = '
 SELECT
     id
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM images AS i
+    JOIN image_category AS ic ON ic.image_id = i.id
   ' . functions_user::get_sql_condition_FandF(
         [
             'forbidden_categories' => 'category_id',

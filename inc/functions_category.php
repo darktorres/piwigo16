@@ -57,16 +57,16 @@ class functions_category
 
         $query = '
   SELECT ';
-        // From CATEGORIES_TABLE
+        // From categories
         $query .= '
     id, name, permalink, nb_images, global_rank,';
-        // From USER_CACHE_CATEGORIES_TABLE
+        // From user_cache_categories
         $query .= '
     date_last, max_date_last, count_images, count_categories';
 
-        // $user['forbidden_categories'] including with USER_CACHE_CATEGORIES_TABLE
+        // $user['forbidden_categories'] including with user_cache_categories
         $query .= '
-  FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . '
+  FROM categories INNER JOIN user_cache_categories
     ON id = cat_id and user_id = ' . $user['id'];
 
         // Always expand when filter is activated
@@ -164,7 +164,7 @@ class functions_category
     {
         $query = '
   SELECT *
-    FROM ' . CATEGORIES_TABLE . '
+    FROM categories
     WHERE id = ' . $id . '
   ;';
         $cat = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
@@ -196,7 +196,7 @@ class functions_category
         } else {
             $query = '
     SELECT id, name, permalink
-      FROM ' . CATEGORIES_TABLE . '
+      FROM categories
       WHERE id IN (' . $cat['uppercats'] . ')
     ;';
             $names = functions_mysqli::query2array($query, 'id');
@@ -314,7 +314,7 @@ class functions_category
     {
         $query = '
   SELECT DISTINCT(id)
-    FROM ' . CATEGORIES_TABLE . '
+    FROM categories
     WHERE ';
 
         foreach ($ids as $num => $category_id) {
@@ -356,11 +356,11 @@ class functions_category
 
         $query = '
   SELECT cat_id AS id, permalink, 1 AS is_old
-    FROM ' . OLD_PERMALINKS_TABLE . '
+    FROM old_permalinks
     WHERE permalink IN (' . $in . ')
   UNION
   SELECT id, permalink, 0 AS is_old
-    FROM ' . CATEGORIES_TABLE . '
+    FROM categories
     WHERE permalink IN (' . $in . ')
   ;';
         $perma_hash = functions_mysqli::query2array($query, 'permalink');
@@ -376,7 +376,7 @@ class functions_category
 
                 if ($perma_hash[$permalinks[$i]]['is_old']) {
                     $query = '
-  UPDATE ' . OLD_PERMALINKS_TABLE . ' SET last_hit=NOW(), hit=hit+1
+  UPDATE old_permalinks SET last_hit=NOW(), hit=hit+1
     WHERE permalink=\'' . $permalinks[$i] . '\' AND cat_id=' . $cat_id . '
     LIMIT 1';
                     functions_mysqli::pwg_query($query);
@@ -444,8 +444,8 @@ class functions_category
         if ($category['count_images'] > 0) {
             $query = '
   SELECT image_id
-    FROM ' . CATEGORIES_TABLE . ' AS c
-      INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.category_id = c.id
+    FROM categories AS c
+      INNER JOIN image_category AS ic ON ic.category_id = c.id
     WHERE ';
 
             if ($recursive) {
@@ -493,9 +493,9 @@ class functions_category
         // Count by date_available to avoid count null
         $query .= ',
     MAX(date_available) AS date_last, COUNT(date_available) AS nb_images
-  FROM ' . CATEGORIES_TABLE . ' as c
-    LEFT JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.category_id = c.id
-    LEFT JOIN ' . IMAGES_TABLE . ' AS i
+  FROM categories as c
+    LEFT JOIN image_category AS ic ON ic.category_id = c.id
+    LEFT JOIN images AS i
       ON ic.image_id = i.id
         AND i.level<=' . $userdata['level'];
 
@@ -632,8 +632,8 @@ class functions_category
 
         $query = '
   SELECT id
-    FROM ' . IMAGES_TABLE . ' i
-      INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ic ON id=ic.image_id
+    FROM images i
+      INNER JOIN image_category ic ON id=ic.image_id
     WHERE category_id IN (' . implode(',', $cat_ids) . ')';
 
         if ($use_permissions) {
@@ -681,8 +681,8 @@ class functions_category
       c.id,
       c.uppercats,
       count(*) AS counter
-    FROM ' . IMAGE_CATEGORY_TABLE . '
-      INNER JOIN ' . CATEGORIES_TABLE . ' c ON category_id = id
+    FROM image_category
+      INNER JOIN categories c ON category_id = id
     WHERE image_id IN (' . implode(',', $items) . ')';
 
         if ($use_permissions) {
@@ -748,7 +748,7 @@ class functions_category
       id_uppercat,
       uppercats,
       global_rank
-    FROM ' . CATEGORIES_TABLE . '
+    FROM categories
     WHERE id IN (' . implode(',', array_keys($cat_ids)) . ')
   ;';
         $cats = functions_mysqli::query2array($query);

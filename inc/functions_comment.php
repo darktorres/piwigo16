@@ -109,7 +109,7 @@ class functions_comment
             if ($comm['author'] != 'guest') {
                 $query = '
   SELECT COUNT(*) AS user_exists
-    FROM ' . USERS_TABLE . '
+    FROM users
     WHERE ' . $conf['user_fields']['username'] . " = '" . addslashes($comm['author']) . "'";
                 $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
@@ -180,7 +180,7 @@ class functions_comment
             $reference_date = functions_mysqli::pwg_db_get_flood_period_expression($conf['anti-flood_time']);
 
             $query = '
-  SELECT count(1) FROM ' . COMMENTS_TABLE . '
+  SELECT count(1) FROM comments
     WHERE date > ' . $reference_date . '
       AND author_id = ' . $comm['author_id'];
 
@@ -210,7 +210,7 @@ class functions_comment
 
         if ($comment_action != 'reject') {
             $query = '
-  INSERT INTO ' . COMMENTS_TABLE . '
+  INSERT INTO comments
     (author, author_id, anonymous_id, content, date, validated, validation_date, image_id, website_url, email)
     VALUES (
       \'' . $comm['author'] . '\',
@@ -226,7 +226,7 @@ class functions_comment
     )
   ';
             functions_mysqli::pwg_query($query);
-            $comm['id'] = functions_mysqli::pwg_db_insert_id(COMMENTS_TABLE);
+            $comm['id'] = functions_mysqli::pwg_db_insert_id('comments');
 
             self::invalidate_user_cache_nb_comments();
 
@@ -283,7 +283,7 @@ class functions_comment
         }
 
         $query = '
-  DELETE FROM ' . COMMENTS_TABLE . '
+  DELETE FROM comments
     WHERE ' . $where_clause .
   $user_where_clause . '
   ;';
@@ -369,7 +369,7 @@ class functions_comment
             }
 
             $query = '
-  UPDATE ' . COMMENTS_TABLE . '
+  UPDATE comments
     SET content = \'' . $comment['content'] . '\',
         website_url = ' . (! empty($comment['website_url']) ? '\'' . $comment['website_url'] . '\'' : 'NULL') . ',
         validated = \'' . ($comment_action == 'validate' ? 'true' : 'false') . '\',
@@ -463,7 +463,7 @@ class functions_comment
         $query = '
   SELECT
       author_id
-    FROM ' . COMMENTS_TABLE . '
+    FROM comments
     WHERE id = ' . $comment_id . '
   ;';
         $result = functions_mysqli::pwg_query($query);
@@ -495,7 +495,7 @@ class functions_comment
         }
 
         $query = '
-  UPDATE ' . COMMENTS_TABLE . '
+  UPDATE comments
     SET validated = \'true\'
       , validation_date = NOW()
     WHERE ' . $where_clause . '
@@ -516,7 +516,7 @@ class functions_comment
         unset($user['nb_available_comments']);
 
         $query = '
-  UPDATE ' . USER_CACHE_TABLE . '
+  UPDATE user_cache
     SET nb_available_comments = NULL
   ;';
         functions_mysqli::pwg_query($query);

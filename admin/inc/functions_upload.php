@@ -128,7 +128,7 @@ class functions_upload
 
         if (count($errors) == 0) {
             functions_mysqli::mass_updates(
-                CONFIG_TABLE,
+                'config',
                 [
                     'primary' => ['param'],
                     'update' => ['value'],
@@ -168,7 +168,7 @@ class functions_upload
             $query = '
   SELECT
       id
-    FROM ' . IMAGES_TABLE . '
+    FROM images
     WHERE md5sum = \'' . $md5sum . '\'
   ;';
             $images_found = functions_mysqli::query2array($query);
@@ -195,7 +195,7 @@ class functions_upload
             $query = '
   SELECT
       path
-    FROM ' . IMAGES_TABLE . '
+    FROM images
     WHERE id = ' . $image_id . '
   ;';
             $result = functions_mysqli::pwg_query($query);
@@ -326,7 +326,7 @@ class functions_upload
             }
 
             functions_mysqli::single_update(
-                IMAGES_TABLE,
+                'images',
                 $update,
                 [
                     'id' => $image_id,
@@ -356,9 +356,9 @@ class functions_upload
                 $insert['representative_ext'] = $representative_ext;
             }
 
-            functions_mysqli::single_insert(IMAGES_TABLE, $insert);
+            functions_mysqli::single_insert('images', $insert);
 
-            $image_id = functions_mysqli::pwg_db_insert_id(IMAGES_TABLE);
+            $image_id = functions_mysqli::pwg_db_insert_id('images');
             functions::pwg_activity('photo', $image_id, 'add');
         }
 
@@ -379,7 +379,7 @@ class functions_upload
       id,
       path,
       representative_ext
-    FROM ' . IMAGES_TABLE . '
+    FROM images
     WHERE id = ' . $image_id . '
   ;';
         $image_infos = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
@@ -409,7 +409,7 @@ class functions_upload
 
         if (! $conf['lounge_active']) {
             // check if we need to use the lounge from now
-            list($nb_photos) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT COUNT(*) FROM ' . IMAGES_TABLE . ';'));
+            list($nb_photos) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT COUNT(*) FROM images;'));
 
             if ($nb_photos >= $conf['lounge_activate_threshold']) {
                 functions::conf_update_param('lounge_active', true, true);
@@ -450,7 +450,7 @@ class functions_upload
         $query = '
   SELECT
       path
-    FROM ' . IMAGES_TABLE . '
+    FROM images
     WHERE id = ' . $format_of . '
   ;';
         $images = functions_mysqli::query2array($query);
@@ -481,8 +481,8 @@ class functions_upload
             'filesize' => $file_infos['filesize'],
         ];
 
-        functions_mysqli::single_insert(IMAGE_FORMAT_TABLE, $insert);
-        $format_id = functions_mysqli::pwg_db_insert_id(IMAGE_FORMAT_TABLE);
+        functions_mysqli::single_insert('image_format', $insert);
+        $format_id = functions_mysqli::pwg_db_insert_id('image_format');
 
         functions::pwg_activity('photo', $format_of, 'edit', [
             'action' => 'add format',

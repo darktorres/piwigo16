@@ -26,6 +26,6 @@ use Piwigo\inc\dblayer\functions_mysqli;
 
 function plugin_uninstall()
 {
-    $query = 'DELETE FROM ' . CONFIG_TABLE . ' WHERE param=\'LocalFilesEditor\' LIMIT 1;';
+    $query = 'DELETE FROM config WHERE param=\'LocalFilesEditor\' LIMIT 1;';
     functions_mysqli::pwg_query($query);
 }

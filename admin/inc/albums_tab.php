@@ -20,7 +20,7 @@ $tabsheet->assign();
 
 $query = '
 SELECT COUNT(*)
-  FROM ' . CATEGORIES_TABLE . '
+  FROM categories
 ;';
 
 list($nb_cats) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));

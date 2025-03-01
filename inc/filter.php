@@ -70,8 +70,8 @@ if ($filter['enabled']) {
         $query = '
 SELECT
   distinct image_id
-FROM ' .
-  IMAGE_CATEGORY_TABLE . ' INNER JOIN ' . IMAGES_TABLE . ' ON image_id = id
+FROM
+  image_category INNER JOIN images ON image_id = id
 WHERE ';
 
         if (! empty($filter['visible_categories'])) {

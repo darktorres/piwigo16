@@ -148,7 +148,7 @@ $categories = [];
 
 $query = '
 SELECT id, name, permalink, dir, `rank`, status
-  FROM ' . CATEGORIES_TABLE;
+  FROM categories';
 
 if (! isset($_GET['parent_id'])) {
     $query .= '
@@ -171,7 +171,7 @@ if (count($categories)) {
 SELECT
     category_id,
     COUNT(*) AS nb_photos
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM image_category
   GROUP BY category_id
 ;';
     // WHERE category_id IN ('.implode(',', array_keys($categories)).')
@@ -182,7 +182,7 @@ SELECT
 SELECT
     id,
     uppercats
-  FROM ' . CATEGORIES_TABLE . '
+  FROM categories
 ;';
     $all_categories = functions_mysqli::query2array($query, 'id', 'uppercats');
     $subcats_of = [];

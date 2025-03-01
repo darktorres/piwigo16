@@ -24,43 +24,6 @@ class functions_upgrade
         return false;
     }
 
-    // concerning upgrade, we use the default tables
-    public static function prepare_conf_upgrade()
-    {
-        // $conf is not used for users tables
-        // define cannot be re-defined
-        define('CATEGORIES_TABLE', 'categories');
-        define('COMMENTS_TABLE', 'comments');
-        define('CONFIG_TABLE', 'config');
-        define('FAVORITES_TABLE', 'favorites');
-        define('GROUP_ACCESS_TABLE', 'group_access');
-        define('GROUPS_TABLE', 'groups');
-        define('HISTORY_TABLE', 'history');
-        define('HISTORY_SUMMARY_TABLE', 'history_summary');
-        define('IMAGE_CATEGORY_TABLE', 'image_category');
-        define('IMAGES_TABLE', 'images');
-        define('SESSIONS_TABLE', 'sessions');
-        define('SITES_TABLE', 'sites');
-        define('USER_ACCESS_TABLE', 'user_access');
-        define('USER_GROUP_TABLE', 'user_group');
-        define('USERS_TABLE', 'users');
-        define('USER_INFOS_TABLE', 'user_infos');
-        define('USER_FEED_TABLE', 'user_feed');
-        define('RATE_TABLE', 'rate');
-        define('USER_CACHE_TABLE', 'user_cache');
-        define('USER_CACHE_CATEGORIES_TABLE', 'user_cache_categories');
-        define('CADDIE_TABLE', 'caddie');
-        define('UPGRADE_TABLE', 'upgrade');
-        define('SEARCH_TABLE', 'search');
-        define('USER_MAIL_NOTIFICATION_TABLE', 'user_mail_notification');
-        define('TAGS_TABLE', 'tags');
-        define('IMAGE_TAG_TABLE', 'image_tag');
-        define('PLUGINS_TABLE', 'plugins');
-        define('OLD_PERMALINKS_TABLE', 'old_permalinks');
-        define('THEMES_TABLE', 'themes');
-        define('LANGUAGES_TABLE', 'languages');
-    }
-
     // Deactivate all non-standard plugins
     public static function deactivate_non_standard_plugins()
     {
@@ -193,7 +156,7 @@ class functions_upgrade
             if (! empty($_SESSION['pwg_uid'])) {
                 $query = '
   SELECT status
-    FROM ' . USER_INFOS_TABLE . '
+    FROM user_infos
     WHERE user_id = ' . $_SESSION['pwg_uid'] . '
   ;';
                 functions_mysqli::pwg_query($query);
@@ -232,14 +195,14 @@ class functions_upgrade
         if (version_compare($current_release, '1.5', '<')) {
             $query = '
   SELECT password, status
-  FROM ' . USERS_TABLE . '
+  FROM users
   WHERE username = \'' . $username . '\'
   ;';
         } else {
             $query = '
   SELECT u.password, ui.status
-  FROM ' . USERS_TABLE . ' AS u
-  INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
+  FROM users AS u
+  INNER JOIN user_infos AS ui
   ON u.' . $conf['user_fields']['id'] . '=ui.user_id
   WHERE ' . $conf['user_fields']['username'] . '=\'' . $username . '\'
   ;';
@@ -295,7 +258,7 @@ class functions_upgrade
         // retrieve already applied upgrades
         $query = '
   SELECT id
-    FROM ' . UPGRADE_TABLE . '
+    FROM upgrade
   ;';
         $applied = functions::array_from_query($query, 'id');
 

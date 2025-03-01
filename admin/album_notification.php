@@ -50,7 +50,7 @@ if (isset($_POST['submitEmail'])) {
     if (! empty($category['representative_picture_id'])) {
         $query = '
 SELECT id, file, path, representative_ext
-  FROM ' . IMAGES_TABLE . '
+  FROM images
   WHERE id = ' . $category['representative_picture_id'] . '
 ;';
 
@@ -117,8 +117,8 @@ SELECT
     ui.language,
     u.' . $conf['user_fields']['email'] . ' AS email,
     u.' . $conf['user_fields']['username'] . ' AS username
-  FROM ' . USER_INFOS_TABLE . ' AS ui
-    JOIN ' . USERS_TABLE . ' AS u ON u.' . $conf['user_fields']['id'] . ' = ui.user_id
+  FROM user_infos AS ui
+    JOIN users AS u ON u.' . $conf['user_fields']['id'] . ' = ui.user_id
   WHERE ui.user_id IN (' . implode(',', $_POST['users']) . ')
 ;';
         $users = functions_mysqli::query2array($query);
@@ -171,7 +171,7 @@ SELECT
         $query = '
 SELECT
     name
-  FROM `' . GROUPS_TABLE . '`
+  FROM `groups`
   WHERE id = ' . $_POST['group'] . '
 ;';
         list($group_name) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -221,7 +221,7 @@ if ($conf['auth_key_duration'] > 0) {
 $query = '
 SELECT
     id AS group_id
-  FROM `' . GROUPS_TABLE . '`
+  FROM `groups`
 ;';
 $all_group_ids = functions::array_from_query($query, 'group_id');
 
@@ -232,7 +232,7 @@ if (count($all_group_ids) == 0) {
         $query = '
 SELECT
     group_id
-  FROM ' . GROUP_ACCESS_TABLE . '
+  FROM group_access
   WHERE cat_id = ' . $category['id'] . '
 ;';
         $group_ids = functions::array_from_query($query, 'group_id');
@@ -249,7 +249,7 @@ SELECT
 SELECT
     id,
     name
-  FROM `' . GROUPS_TABLE . '`
+  FROM `groups`
   WHERE id IN (' . implode(',', $group_ids) . ')
   ORDER BY name ASC
 ;';
@@ -266,7 +266,7 @@ SELECT
 $query = '
 SELECT
     user_id
-  FROM ' . USER_INFOS_TABLE . '
+  FROM user_infos
   WHERE status != \'guest\'
 ;';
 $all_user_ids = functions_mysqli::query2array($query, null, 'user_id');
@@ -280,7 +280,7 @@ if ($category['status'] == 'private') {
         $query = '
 SELECT
     user_id
-  FROM ' . USER_GROUP_TABLE . '
+  FROM user_group
   WHERE group_id IN (' . implode(',', $group_ids) . ')
 ';
         $user_ids_access_indirect = functions_mysqli::query2array($query, null, 'user_id');
@@ -289,7 +289,7 @@ SELECT
     $query = '
 SELECT
     user_id
-  FROM ' . USER_ACCESS_TABLE . '
+  FROM user_access
   WHERE cat_id = ' . $category['id'] . '
 ;';
     $user_ids_access_direct = functions_mysqli::query2array($query, null, 'user_id');
@@ -306,7 +306,7 @@ if (count($user_ids) > 0) {
 SELECT
     ' . $conf['user_fields']['id'] . ' AS id,
     ' . $conf['user_fields']['username'] . ' AS username
-  FROM ' . USERS_TABLE . '
+  FROM users
   WHERE id IN (' . implode(',', $user_ids) . ')
 ;';
 

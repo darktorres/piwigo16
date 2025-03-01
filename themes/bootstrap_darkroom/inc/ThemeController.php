@@ -256,7 +256,7 @@ class ThemeController
               date_creation,
               path,
               rotation
-            FROM ' . IMAGES_TABLE . '
+            FROM images
             WHERE id IN (' . implode(',', $page['items']) . ')
             ORDER BY FIELD(id, ' . implode(',', $page['items']) . ')
             ;';

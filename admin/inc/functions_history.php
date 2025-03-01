@@ -51,7 +51,7 @@ class functions_history
             $query = '
   SELECT
       id
-    FROM ' . IMAGES_TABLE . '
+    FROM images
     WHERE file LIKE \'' . $search['fields']['filename'] . '\'
   ;';
             $search['image_ids'] = functions::array_from_query($query, 'id');
@@ -134,7 +134,7 @@ class functions_history
       tag_ids,
       image_id,
       image_type
-    FROM ' . HISTORY_TABLE . '
+    FROM history
     WHERE ' . $where_separator . '
   ;';
 
@@ -160,7 +160,7 @@ class functions_history
         $query = '
   SELECT
       *
-    FROM ' . HISTORY_SUMMARY_TABLE . '
+    FROM history_summary
     WHERE history_id_to IS NOT NULL
     ORDER BY history_id_to DESC
     LIMIT 1
@@ -179,7 +179,7 @@ class functions_history
             $query = '
   SELECT
       MIN(id) AS min_id
-    FROM ' . HISTORY_TABLE . '
+    FROM history
   ;';
             $history_lines = functions_mysqli::query2array($query);
 
@@ -195,7 +195,7 @@ class functions_history
       MIN(id) AS min_id,
       MAX(id) AS max_id,
       COUNT(*) AS nb_pages
-    FROM ' . HISTORY_TABLE . '
+    FROM history
     WHERE id > ' . $history_min_id;
 
         if (isset($max_lines)) {
@@ -279,7 +279,7 @@ class functions_history
 
             $query = '
   SELECT *
-    FROM ' . HISTORY_SUMMARY_TABLE . '
+    FROM history_summary
     WHERE year=' . $year . '
       AND ( month IS NULL
         OR ( month=' . $month . '
@@ -333,7 +333,7 @@ class functions_history
 
         if (count($updates) > 0) {
             functions_mysqli::mass_updates(
-                HISTORY_SUMMARY_TABLE,
+                'history_summary',
                 [
                     'primary' => ['year', 'month', 'day', 'hour'],
                     'update' => ['nb_pages', 'history_id_to'],
@@ -344,7 +344,7 @@ class functions_history
 
         if (count($inserts) > 0) {
             functions_mysqli::mass_inserts(
-                HISTORY_SUMMARY_TABLE,
+                'history_summary',
                 array_keys($inserts[0]),
                 $inserts
             );
@@ -367,7 +367,7 @@ class functions_history
         $query = '
   SELECT
       COUNT(*)
-    FROM ' . HISTORY_TABLE . '
+    FROM history
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
@@ -380,7 +380,7 @@ class functions_history
         $query = '
   SELECT
       *
-    FROM ' . HISTORY_SUMMARY_TABLE . '
+    FROM history_summary
     WHERE history_id_to IS NOT NULL
     ORDER BY history_id_to DESC
     LIMIT 1
@@ -397,7 +397,7 @@ class functions_history
         $query = '
   SELECT
       id
-    FROM ' . HISTORY_TABLE . '
+    FROM history
     ORDER BY id DESC
     LIMIT 1
   ;';
@@ -413,7 +413,7 @@ class functions_history
         $query = '
   SELECT
       id
-    FROM ' . HISTORY_TABLE . '
+    FROM history
     ORDER BY id ASC
     LIMIT 1
   ;';
@@ -432,7 +432,7 @@ class functions_history
 
         $query = '
   DELETE
-    FROM ' . HISTORY_TABLE . '
+    FROM history
     WHERE id < ' . $history_id_delete_before . '
   ;';
         functions_mysqli::pwg_query($query);
@@ -453,7 +453,7 @@ class functions_history
         $query = '
   SELECT
       COUNT(*)
-    FROM ' . HISTORY_TABLE . '
+    FROM history
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
@@ -462,10 +462,10 @@ class functions_history
             return;
         }
 
-        $result = functions_mysqli::pwg_query('SHOW COLUMNS FROM `' . HISTORY_TABLE . '` LIKE "summarized";');
+        $result = functions_mysqli::pwg_query('SHOW COLUMNS FROM `history` LIKE "summarized";');
 
         if (functions_mysqli::pwg_db_num_rows($result)) {
-            functions_mysqli::pwg_query('ALTER TABLE `' . HISTORY_TABLE . '` DROP COLUMN `summarized`;');
+            functions_mysqli::pwg_query('ALTER TABLE `history` DROP COLUMN `summarized`;');
         }
 
         functions::conf_update_param('history_summarized_dropped', true);

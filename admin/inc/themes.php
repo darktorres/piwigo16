@@ -98,7 +98,7 @@ class themes
 
                 if (empty($errors)) {
                     $query = '
-INSERT INTO ' . THEMES_TABLE . '
+INSERT INTO themes
   (id, version, name)
   VALUES(\'' . $theme_id . '\',
          \'' . $this->fs_themes[$theme_id]['version'] . '\',
@@ -133,7 +133,7 @@ INSERT INTO ' . THEMES_TABLE . '
 
                     $query = '
 SELECT id
-  FROM ' . THEMES_TABLE . '
+  FROM themes
   WHERE id != \'' . $theme_id . '\'
 ;';
                     $result = functions_mysqli::pwg_query($query);
@@ -151,7 +151,7 @@ SELECT id
 
                 $query = '
 DELETE
-  FROM ' . THEMES_TABLE . '
+  FROM themes
   WHERE id= \'' . $theme_id . '\'
 ;';
                 functions_mysqli::pwg_query($query);
@@ -243,7 +243,7 @@ DELETE
         $query = '
 SELECT
     user_id
-  FROM ' . USER_INFOS_TABLE . '
+  FROM user_infos
   WHERE theme = \'' . $default_theme . '\'
 ;';
         $user_ids = array_unique(
@@ -257,7 +257,7 @@ SELECT
         // theme
 
         $query = '
-UPDATE ' . USER_INFOS_TABLE . '
+UPDATE user_infos
   SET theme = \'' . $theme_id . '\'
   WHERE user_id IN (' . implode(',', $user_ids) . ')
 ;';
@@ -269,7 +269,7 @@ UPDATE ' . USER_INFOS_TABLE . '
         $query = '
 SELECT
     *
-  FROM ' . THEMES_TABLE;
+  FROM themes';
 
         $clauses = [];
 

@@ -78,7 +78,7 @@ if ($nb_orphans > 0) {
 // locked album ?
 $query = '
 SELECT COUNT(*)
-  FROM ' . CATEGORIES_TABLE . '
+  FROM categories
   WHERE visible =\'false\'
 ;';
 list($locked_album) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -116,50 +116,50 @@ if ($conf['show_newsletter_subscription'] and
 
 $query = '
 SELECT COUNT(*)
-  FROM ' . IMAGES_TABLE . '
+  FROM images
 ;';
 list($nb_photos) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT COUNT(*)
-  FROM ' . CATEGORIES_TABLE . '
+  FROM categories
 ;';
 list($nb_categories) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT COUNT(*)
-  FROM ' . TAGS_TABLE . '
+  FROM tags
 ;';
 list($nb_tags) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT COUNT(*)
-  FROM ' . IMAGE_TAG_TABLE . '
+  FROM image_tag
 ;';
 list($nb_image_tag) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT COUNT(*)
-  FROM ' . USERS_TABLE . '
+  FROM users
 ;';
 list($nb_users) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT COUNT(*)
-  FROM `' . GROUPS_TABLE . '`
+  FROM `groups`
 ;';
 list($nb_groups) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT COUNT(*)
-  FROM ' . RATE_TABLE . '
+  FROM rate
 ;';
 list($nb_rates) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT
     SUM(nb_pages)
-  FROM ' . HISTORY_SUMMARY_TABLE . '
+  FROM history_summary
   WHERE month IS NULL
 ;';
 list($nb_views) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -167,14 +167,14 @@ list($nb_views) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query
 $query = '
 SELECT
     SUM(filesize)
-  FROM ' . IMAGES_TABLE . '
+  FROM images
 ;';
 list($disk_usage) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT
     SUM(filesize)
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM image_format
 ;';
 list($formats_disk_usage) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
@@ -207,7 +207,7 @@ $template->assign(
 if ($conf['activate_comments']) {
     $query = '
 SELECT COUNT(*)
-  FROM ' . COMMENTS_TABLE . '
+  FROM comments
 ;';
     list($nb_comments) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
     $template->assign('NB_COMMENTS', $nb_comments);
@@ -273,7 +273,7 @@ if (! isset($_SESSION['cache_activity_last_weeks']) or
       object,
       action,
       COUNT(*) AS activity_counter
-    FROM `' . ACTIVITY_TABLE . '`
+    FROM `activity`
     WHERE occurred_on >= \'' . $date_string . '\'
     GROUP BY activity_day, object, action
   ;';
@@ -405,7 +405,7 @@ SELECT
   COUNT(*) AS ext_counter,
    SUBSTRING_INDEX(path,".",-1) AS ext,
    SUM(filesize) AS filesize
-  FROM `' . IMAGES_TABLE . '`
+  FROM `images`
   GROUP BY ext
 ;';
 
@@ -437,7 +437,7 @@ SELECT
     COUNT(*) AS ext_counter,
     ext,
     SUM(filesize) AS filesize
-  FROM `' . IMAGE_FORMAT_TABLE . '`
+  FROM `image_format`
   GROUP BY ext
 ;';
 

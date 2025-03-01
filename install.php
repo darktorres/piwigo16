@@ -303,7 +303,7 @@ INSERT INTO config (param,value,comment)
             'id' => 1,
             'galleries_url' => PHPWG_ROOT_PATH . 'galleries/',
         ];
-        functions_mysqli::mass_inserts(SITES_TABLE, array_keys($insert), [$insert]);
+        functions_mysqli::mass_inserts('sites', array_keys($insert), [$insert]);
 
         // webmaster admin user
         $inserts = [
@@ -318,7 +318,7 @@ INSERT INTO config (param,value,comment)
                 'username' => 'guest',
             ],
         ];
-        functions_mysqli::mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
+        functions_mysqli::mass_inserts('users', array_keys($inserts[0]), $inserts);
 
         functions_user::create_user_infos([1, 2], [
             'language' => $language,
@@ -339,7 +339,7 @@ INSERT INTO config (param,value,comment)
         //     );
         // }
         // \Piwigo\inc\dblayer\functions_mysqli::mass_inserts(
-        //   UPGRADE_TABLE,
+        //   'upgrade',
         //   array_keys($datas[0]),
         //   $datas
         //   );

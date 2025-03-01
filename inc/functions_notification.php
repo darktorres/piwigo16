@@ -15,7 +15,7 @@ class functions_notification
 {
     /**
      * Get standard sql where in order to restrict and filter categories and images.
-     * IMAGE_CATEGORY_TABLE must be named "ic" in the query
+     * image_category must be named "ic" in the query
      *
      * @param string $prefix_condition
      * @param string $img_field
@@ -55,8 +55,8 @@ class functions_notification
         switch ($type) {
             case 'new_comments':
                 $query = '
-    FROM ' . COMMENTS_TABLE . ' AS c
-      INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON c.image_id = ic.image_id
+    FROM comments AS c
+      INNER JOIN image_category AS ic ON c.image_id = ic.image_id
     WHERE 1=1';
 
                 if (! empty($start)) {
@@ -74,7 +74,7 @@ class functions_notification
 
             case 'unvalidated_comments':
                 $query = '
-    FROM ' . COMMENTS_TABLE . '
+    FROM comments
     WHERE 1=1';
 
                 if (! empty($start)) {
@@ -93,8 +93,8 @@ class functions_notification
 
             case 'new_elements':
                 $query = '
-    FROM ' . IMAGES_TABLE . '
-      INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON image_id = id
+    FROM images
+      INNER JOIN image_category AS ic ON image_id = id
     WHERE 1=1';
 
                 if (! empty($start)) {
@@ -112,8 +112,8 @@ class functions_notification
 
             case 'updated_categories':
                 $query = '
-    FROM ' . IMAGES_TABLE . '
-      INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON image_id = id
+    FROM images
+      INNER JOIN image_category AS ic ON image_id = id
     WHERE 1=1';
 
                 if (! empty($start)) {
@@ -131,7 +131,7 @@ class functions_notification
 
             case 'new_users':
                 $query = '
-    FROM ' . USER_INFOS_TABLE . '
+    FROM user_infos
     WHERE 1=1';
 
                 if (! empty($start)) {
@@ -471,7 +471,7 @@ class functions_notification
       date_available,
       COUNT(DISTINCT id) AS nb_elements,
       COUNT(DISTINCT category_id) AS nb_cats
-    FROM ' . IMAGES_TABLE . ' i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id=image_id
+    FROM images i INNER JOIN image_category AS ic ON id=image_id
     ' . $where_sql . '
     GROUP BY date_available
     ORDER BY date_available DESC
@@ -483,8 +483,8 @@ class functions_notification
             if ($max_elements > 0) { // get some thumbnails ...
                 $query = '
   SELECT DISTINCT i.*
-    FROM ' . IMAGES_TABLE . ' i
-      INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id=image_id
+    FROM images i
+      INNER JOIN image_category AS ic ON id=image_id
     ' . $where_sql . '
       AND date_available=\'' . $dates[$i]['date_available'] . '\'
     ORDER BY ' . functions_mysqli::DB_RANDOM_FUNCTION . '()
@@ -498,9 +498,9 @@ class functions_notification
   SELECT
       DISTINCT c.uppercats,
       COUNT(DISTINCT i.id) AS img_count
-    FROM ' . IMAGES_TABLE . ' i
-      INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON i.id=image_id
-      INNER JOIN ' . CATEGORIES_TABLE . ' c ON c.id=category_id
+    FROM images i
+      INNER JOIN image_category AS ic ON i.id=image_id
+      INNER JOIN categories c ON c.id=category_id
     ' . $where_sql . '
       AND date_available=\'' . $dates[$i]['date_available'] . '\'
     GROUP BY category_id, c.uppercats

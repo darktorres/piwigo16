@@ -44,8 +44,8 @@ SELECT
     occurred_on,
     details,
     ' . $conf['user_fields']['username'] . ' AS username
-  FROM ' . ACTIVITY_TABLE . '
-    JOIN ' . USERS_TABLE . ' AS u ON performed_by = u.' . $conf['user_fields']['id'] . '
+  FROM activity
+    JOIN users AS u ON performed_by = u.' . $conf['user_fields']['id'] . '
   ORDER BY activity_id DESC
 ;';
 
@@ -105,7 +105,7 @@ $query = '
 SELECT
     performed_by,
     COUNT(*) as counter
-  FROM ' . ACTIVITY_TABLE . '
+  FROM activity
   WHERE object != \'system\'
   GROUP BY performed_by
 ;';
@@ -117,7 +117,7 @@ if (count($nb_lines_for_user) > 0) {
   SELECT
       ' . $conf['user_fields']['id'] . ' AS id,
       ' . $conf['user_fields']['username'] . ' AS username
-    FROM ' . USERS_TABLE . '
+    FROM users
     WHERE ' . $conf['user_fields']['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
 }
 
@@ -140,7 +140,7 @@ $template->assign('ulist', $filterable_users);
 
 $query = '
 SELECT COUNT(*)
-  FROM ' . USERS_TABLE . '
+  FROM users
 ;';
 
 list($nb_users) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));

@@ -82,7 +82,7 @@ if (isset($_POST['submit'])) {
     }
 
     $query = '
-UPDATE ' . CATEGORIES_TABLE . '
+UPDATE categories
   SET image_order = ' . (isset($image_order) ? '\'' . $image_order . '\'' : 'NULL') . '
   WHERE id=' . $page['category_id'];
     functions_mysqli::pwg_query($query);
@@ -91,7 +91,7 @@ UPDATE ' . CATEGORIES_TABLE . '
         $cat_info = functions_category::get_cat_info($page['category_id']);
 
         $query = '
-UPDATE ' . CATEGORIES_TABLE . '
+UPDATE categories
   SET image_order = ' . (isset($image_order) ? '\'' . $image_order . '\'' : 'NULL') . '
   WHERE uppercats LIKE \'' . $cat_info['uppercats'] . ',%\'';
         functions_mysqli::pwg_query($query);
@@ -113,7 +113,7 @@ $base_url = functions_url::get_root_url() . 'admin.php';
 
 $query = '
 SELECT *
-  FROM ' . CATEGORIES_TABLE . '
+  FROM categories
   WHERE id = ' . $page['category_id'] . '
 ;';
 $category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
@@ -152,8 +152,8 @@ SELECT
     width, height, rotation,
     name,
     `rank`
-  FROM ' . IMAGES_TABLE . '
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' ON image_id = id
+  FROM images
+    JOIN image_category ON image_id = id
   WHERE category_id = ' . $page['category_id'] . '
   ORDER BY `rank`
 ;';

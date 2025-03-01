@@ -61,7 +61,7 @@ class languages
                 }
 
                 $query = '
-INSERT INTO ' . LANGUAGES_TABLE . '
+INSERT INTO languages
   (id, version, name)
   VALUES(\'' . $language_id . '\',
          \'' . $this->fs_languages[$language_id]['version'] . '\',
@@ -83,7 +83,7 @@ INSERT INTO ' . LANGUAGES_TABLE . '
 
                 $query = '
 DELETE
-  FROM ' . LANGUAGES_TABLE . '
+  FROM languages
   WHERE id= \'' . $language_id . '\'
 ;';
                 functions_mysqli::pwg_query($query);
@@ -102,7 +102,7 @@ DELETE
 
                 // Set default language to user who are using this language
                 $query = '
-UPDATE ' . USER_INFOS_TABLE . '
+UPDATE user_infos
   SET language = \'' . functions_user::get_default_language() . '\'
   WHERE language = \'' . $language_id . '\'
 ;';
@@ -113,7 +113,7 @@ UPDATE ' . USER_INFOS_TABLE . '
 
             case 'set_default':
                 $query = '
-UPDATE ' . USER_INFOS_TABLE . '
+UPDATE user_infos
   SET language = \'' . $language_id . '\'
   WHERE user_id IN (' . $conf['default_user_id'] . ', ' . $conf['guest_id'] . ')
 ;';
@@ -203,7 +203,7 @@ UPDATE ' . USER_INFOS_TABLE . '
     {
         $query = '
   SELECT id, name
-    FROM ' . LANGUAGES_TABLE . '
+    FROM languages
     ORDER BY name ASC
   ;';
         $result = functions_mysqli::pwg_query($query);

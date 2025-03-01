@@ -35,7 +35,7 @@ $page['image'] = functions_admin::get_image_infos($_GET['image_id'], true);
 if (isset($_GET['cat_id'])) {
     $query = '
 SELECT *
-  FROM ' . CATEGORIES_TABLE . '
+  FROM categories
   WHERE id = ' . $_GET['cat_id'] . '
 ;';
     $category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));

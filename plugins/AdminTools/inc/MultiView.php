@@ -313,8 +313,8 @@ SELECT
   ' . $conf['user_fields']['id'] . ' AS id,
   ' . $conf['user_fields']['username'] . ' AS username,
   status
-FROM ' . USERS_TABLE . ' AS u
-  INNER JOIN ' . USER_INFOS_TABLE . ' AS i
+FROM users AS u
+  INNER JOIN user_infos AS i
     ON ' . $conf['user_fields']['id'] . ' = user_id
   ORDER BY CONVERT(' . $conf['user_fields']['username'] . ', CHAR)
 ;';

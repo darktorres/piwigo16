@@ -56,7 +56,7 @@ class pwg
         }
 
         $max_urls = $params['max_urls'];
-        $query = 'SELECT MAX(id)+1, COUNT(*) FROM ' . IMAGES_TABLE . ';';
+        $query = 'SELECT MAX(id)+1, COUNT(*) FROM images;';
         list($max_id, $image_count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($image_count == 0) {
@@ -85,7 +85,7 @@ class pwg
 
         $query_model = '
   SELECT id, path, representative_ext, width, height, rotation
-    FROM ' . IMAGES_TABLE . '
+    FROM images
     WHERE ' . implode(' AND ', $where_clauses) . '
     ORDER BY id DESC
     LIMIT ' . $qlimit . '
@@ -158,45 +158,45 @@ class pwg
     {
         $infos['version'] = PHPWG_VERSION;
 
-        $query = 'SELECT COUNT(*) FROM ' . IMAGES_TABLE . ';';
+        $query = 'SELECT COUNT(*) FROM images;';
         list($infos['nb_elements']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        $query = 'SELECT COUNT(*) FROM ' . CATEGORIES_TABLE . ';';
+        $query = 'SELECT COUNT(*) FROM categories;';
         list($infos['nb_categories']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        $query = 'SELECT COUNT(*) FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NULL;';
+        $query = 'SELECT COUNT(*) FROM categories WHERE dir IS NULL;';
         list($infos['nb_virtual']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        $query = 'SELECT COUNT(*) FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NOT NULL;';
+        $query = 'SELECT COUNT(*) FROM categories WHERE dir IS NOT NULL;';
         list($infos['nb_physical']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        $query = 'SELECT COUNT(*) FROM ' . IMAGE_CATEGORY_TABLE . ';';
+        $query = 'SELECT COUNT(*) FROM image_category;';
         list($infos['nb_image_category']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        $query = 'SELECT COUNT(*) FROM ' . TAGS_TABLE . ';';
+        $query = 'SELECT COUNT(*) FROM tags;';
         list($infos['nb_tags']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        $query = 'SELECT COUNT(*) FROM ' . IMAGE_TAG_TABLE . ';';
+        $query = 'SELECT COUNT(*) FROM image_tag;';
         list($infos['nb_image_tag']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        $query = 'SELECT COUNT(*) FROM ' . USERS_TABLE . ';';
+        $query = 'SELECT COUNT(*) FROM users;';
         list($infos['nb_users']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        $query = 'SELECT COUNT(*) FROM `' . GROUPS_TABLE . '`;';
+        $query = 'SELECT COUNT(*) FROM `groups`;';
         list($infos['nb_groups']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        $query = 'SELECT COUNT(*) FROM ' . COMMENTS_TABLE . ';';
+        $query = 'SELECT COUNT(*) FROM comments;';
         list($infos['nb_comments']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         // first element
         if ($infos['nb_elements'] > 0) {
-            $query = 'SELECT MIN(date_available) FROM ' . IMAGES_TABLE . ';';
+            $query = 'SELECT MIN(date_available) FROM images;';
             list($infos['first_date']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         }
 
         // unvalidated comments
         if ($infos['nb_comments'] > 0) {
-            $query = 'SELECT COUNT(*) FROM ' . COMMENTS_TABLE . ' WHERE validated=\'false\';';
+            $query = 'SELECT COUNT(*) FROM comments WHERE validated=\'false\';';
             list($infos['nb_unvalidated_comments']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         }
 
@@ -300,8 +300,8 @@ class pwg
 
         $query = '
   SELECT id
-    FROM ' . IMAGES_TABLE . '
-        LEFT JOIN ' . CADDIE_TABLE . '
+    FROM images
+        LEFT JOIN caddie
         ON id=element_id AND user_id=' . $user['id'] . '
     WHERE id IN (' . implode(',', $params['image_id']) . ')
       AND element_id IS NULL
@@ -319,7 +319,7 @@ class pwg
 
         if (count($datas)) {
             functions_mysqli::mass_inserts(
-                CADDIE_TABLE,
+                'caddie',
                 ['element_id', 'user_id'],
                 $datas
             );
@@ -340,7 +340,7 @@ class pwg
     public static function ws_rates_delete($params, &$service)
     {
         $query = '
-  DELETE FROM ' . RATE_TABLE . '
+  DELETE FROM rate
     WHERE user_id=' . $params['user_id'];
 
         if (! empty($params['anonymous_id'])) {
@@ -478,7 +478,7 @@ class pwg
       occurred_on,
       details,
       user_agent
-    FROM ' . ACTIVITY_TABLE . '
+    FROM activity
     WHERE object != \'system\'';
 
         if (isset($param['uid'])) {
@@ -559,7 +559,7 @@ class pwg
   SELECT
       `' . $conf['user_fields']['id'] . '` AS user_id,
       `' . $conf['user_fields']['username'] . '` AS username
-    FROM ' . USERS_TABLE . '
+    FROM users
     WHERE `' . $conf['user_fields']['id'] . '` IN (' . implode(',', array_keys($user_ids)) . ')
   ;';
             $username_of = functions_mysqli::query2array($query, 'user_id', 'username');
@@ -587,14 +587,14 @@ class pwg
             $query = '
     SELECT
         count(*)
-      FROM ' . ACTIVITY_TABLE . '
+      FROM activity
       WHERE performed_by = ' . $param['uid'] . '
     ;';
         } else {
             $query = '
     SELECT
         count(*)
-      FROM ' . ACTIVITY_TABLE . '
+      FROM activity
     ;';
         }
 
@@ -616,7 +616,7 @@ class pwg
         global $logger, $page;
 
         if (! empty($params['section']) and
-            in_array($params['section'], functions_mysqli::get_enums(HISTORY_TABLE, 'section'))
+            in_array($params['section'], functions_mysqli::get_enums('history', 'section'))
         ) {
             $page['section'] = $params['section'];
         }
@@ -666,7 +666,7 @@ class pwg
             $page['start'] = 0;
         }
 
-        $types = array_merge(['none'], functions_mysqli::get_enums(HISTORY_TABLE, 'image_type'));
+        $types = array_merge(['none'], functions_mysqli::get_enums('history', 'image_type'));
 
         $display_thumbnails = [
             'no_display_thumbnail' => functions::l10n('No display'),
@@ -750,7 +750,7 @@ class pwg
             // register search rules in database, then they will be available on
             // thumbnails page and picture page.
             $query = '
-    INSERT INTO ' . SEARCH_TABLE . '
+    INSERT INTO search
     (rules)
     VALUES
     (\'' . functions_mysqli::pwg_db_real_escape_string(serialize($search)) . '\')
@@ -758,7 +758,7 @@ class pwg
 
             functions_mysqli::pwg_query($query);
 
-            $search_id = functions_mysqli::pwg_db_insert_id(SEARCH_TABLE);
+            $search_id = functions_mysqli::pwg_db_insert_id('search');
 
             // Remove redirect for ajax //
             // \Piwigo\inc\functions::redirect(
@@ -771,7 +771,7 @@ class pwg
         // what are the lines to display in reality ?
         $query = '
   SELECT rules
-    FROM ' . SEARCH_TABLE . '
+    FROM search
     WHERE id = ' . $search_id . '
   ;';
         list($serialized_rules) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -821,7 +821,7 @@ class pwg
   SELECT
       id,
       rules
-    FROM ' . SEARCH_TABLE . '
+    FROM search
     WHERE id IN (' . implode(',', $search_ids) . ')
   ;';
             $search_details = functions_mysqli::query2array($query, 'id', 'rules');
@@ -851,7 +851,7 @@ class pwg
             $query = '
   SELECT ' . $conf['user_fields']['id'] . ' AS id
       , ' . $conf['user_fields']['username'] . ' AS username
-    FROM ' . USERS_TABLE . '
+    FROM users
     WHERE id IN (' . implode(',', array_keys($user_ids)) . ')
   ;';
             $result = functions_mysqli::pwg_query($query);
@@ -866,7 +866,7 @@ class pwg
         if (count($category_ids) > 0) {
             $query = '
   SELECT id, uppercats
-    FROM ' . CATEGORIES_TABLE . '
+    FROM categories
     WHERE id IN (' . implode(',', array_values($category_ids)) . ')
   ;';
             $uppercats_of = functions_mysqli::query2array($query, 'id', 'uppercats');
@@ -897,7 +897,7 @@ class pwg
       file,
       path,
       representative_ext
-    FROM ' . IMAGES_TABLE . '
+    FROM images
     WHERE id IN (' . implode(',', array_keys($image_ids)) . ')
   ;';
             $image_infos = functions_mysqli::query2array($query, 'id');
@@ -908,7 +908,7 @@ class pwg
   SELECT
       id,
       name, url_name
-    FROM ' . TAGS_TABLE;
+    FROM tags';
 
             global $name_of_tag; // used for preg_replace
             $name_of_tag = [];

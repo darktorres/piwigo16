@@ -105,7 +105,7 @@ if (isset($_POST['submit'])) {
     if ($action == 'remove_from_caddie') {
         $query = '
 DELETE
-  FROM ' . CADDIE_TABLE . '
+  FROM caddie
   WHERE element_id IN (' . implode(',', $collection) . ')
     AND user_id = ' . $user['id'] . '
 ;';
@@ -132,7 +132,7 @@ DELETE
 
             $query = '
 DELETE
-  FROM ' . IMAGE_TAG_TABLE . '
+  FROM image_tag
   WHERE image_id IN (' . implode(',', $collection) . ')
     AND tag_id IN (' . implode(',', $_POST['del_tags']) . ')
 ;';
@@ -222,7 +222,7 @@ DELETE
         }
 
         functions_mysqli::mass_updates(
-            IMAGES_TABLE,
+            'images',
             [
                 'primary' => ['id'],
                 'update' => ['author'],
@@ -251,7 +251,7 @@ DELETE
         }
 
         functions_mysqli::mass_updates(
-            IMAGES_TABLE,
+            'images',
             [
                 'primary' => ['id'],
                 'update' => ['name'],
@@ -284,7 +284,7 @@ DELETE
         }
 
         functions_mysqli::mass_updates(
-            IMAGES_TABLE,
+            'images',
             [
                 'primary' => ['id'],
                 'update' => ['date_creation'],
@@ -309,7 +309,7 @@ DELETE
         }
 
         functions_mysqli::mass_updates(
-            IMAGES_TABLE,
+            'images',
             [
                 'primary' => ['id'],
                 'update' => ['level'],
@@ -363,7 +363,7 @@ DELETE
     } elseif ($action == 'delete_derivatives' &&
               ! empty($_POST['del_derivatives_type'])
     ) {
-        $query = 'SELECT path,representative_ext FROM ' . IMAGES_TABLE . '
+        $query = 'SELECT path,representative_ext FROM images
   WHERE id IN (' . implode(',', $collection) . ')';
         $result = functions_mysqli::pwg_query($query);
 
@@ -511,7 +511,7 @@ if (! empty($_SESSION['bulk_manager_filter']['tags'])) {
 SELECT
     id,
     name
-  FROM ' . TAGS_TABLE . '
+  FROM tags
   WHERE id IN (' . implode(',', $_SESSION['bulk_manager_filter']['tags']) . ')
 ;';
 
@@ -529,7 +529,7 @@ if (isset($_SESSION['bulk_manager_filter']['category'])) {
     // we need to know the category in which the last photo was added
     $query = '
 SELECT category_id
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM image_category
   ORDER BY image_id DESC
   LIMIT 1
 ;';
@@ -552,8 +552,8 @@ if (count($page['cat_elements_id']) > 0) {
     $query = '
 SELECT
     DISTINCT(category_id) AS id
-  FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic
-    JOIN ' . IMAGES_TABLE . ' AS i ON i.id = ic.image_id
+  FROM image_category AS ic
+    JOIN images AS i ON i.id = ic.image_id
   WHERE ic.image_id IN (' . implode(',', $page['cat_elements_id']) . ')
     AND (
       ic.category_id != i.storage_category_id
@@ -660,7 +660,7 @@ if (count($page['cat_elements_id']) > 0) {
 
     $query = '
 SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
-  FROM ' . IMAGES_TABLE;
+  FROM images';
 
     if ($is_category) {
         $category_info = functions_category::get_cat_info($_SESSION['bulk_manager_filter']['category']);
@@ -672,7 +672,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
         }
 
         $query .= '
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = image_id';
+    JOIN image_category ON id = image_id';
     }
 
     $query .= '

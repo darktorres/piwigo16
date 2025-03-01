@@ -47,7 +47,7 @@ if (! defined('PHPWG_ROOT_PATH')) { //direct script access
         // Get the Guest custom settings
         $query = '
 SELECT ' . implode(',', $fields) . '
-  FROM ' . USER_INFOS_TABLE . '
+  FROM user_infos
   WHERE user_id = ' . $conf['default_user_id'] . '
 ;';
         $result = functions_mysqli::pwg_query($query);

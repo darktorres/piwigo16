@@ -126,14 +126,14 @@ $per_page = 100;
 // tag counters
 $query = '
 SELECT tag_id, COUNT(image_id) AS counter
-  FROM ' . IMAGE_TAG_TABLE . '
+  FROM image_tag
   GROUP BY tag_id';
 $tag_counters = functions::simple_hash_from_query($query, 'tag_id', 'counter');
 
 // all tags
 $query = '
 SELECT name, id, url_name
-  FROM ' . TAGS_TABLE . '
+  FROM tags
 ;';
 $result = functions_mysqli::pwg_query($query);
 $all_tags = [];

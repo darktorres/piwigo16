@@ -56,7 +56,7 @@ if (! empty($_POST)) {
         //
         $query = '
 SELECT group_id
-  FROM ' . GROUP_ACCESS_TABLE . '
+  FROM group_access
   WHERE cat_id = ' . $page['cat'] . '
 ;';
         $groups_granted = functions::array_from_query($query, 'group_id');
@@ -75,7 +75,7 @@ SELECT group_id
             // automatically forbidden
             $query = '
 DELETE
-  FROM ' . GROUP_ACCESS_TABLE . '
+  FROM group_access
   WHERE group_id IN (' . implode(',', $deny_groups) . ')
     AND cat_id IN (' . implode(',', functions_category::get_subcat_ids([$page['cat']])) . ')
 ;';
@@ -96,7 +96,7 @@ DELETE
 
             $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM categories
   WHERE id IN (' . implode(',', $cat_ids) . ')
     AND status = \'private\'
 ;';
@@ -114,7 +114,7 @@ SELECT id
             }
 
             functions_mysqli::mass_inserts(
-                GROUP_ACCESS_TABLE,
+                'group_access',
                 ['group_id', 'cat_id'],
                 $inserts,
                 [
@@ -128,7 +128,7 @@ SELECT id
         //
         $query = '
 SELECT user_id
-  FROM ' . USER_ACCESS_TABLE . '
+  FROM user_access
   WHERE cat_id = ' . $page['cat'] . '
 ;';
         $users_granted = functions::array_from_query($query, 'user_id');
@@ -147,7 +147,7 @@ SELECT user_id
             // forbidden
             $query = '
 DELETE
-  FROM ' . USER_ACCESS_TABLE . '
+  FROM user_access
   WHERE user_id IN (' . implode(',', $deny_users) . ')
     AND cat_id IN (' . implode(',', functions_category::get_subcat_ids([$page['cat']])) . ')
 ;';
@@ -197,7 +197,7 @@ $groups = [];
 
 $query = '
 SELECT id, name
-  FROM `' . GROUPS_TABLE . '`
+  FROM `groups`
   ORDER BY name ASC
 ;';
 $groups = functions::simple_hash_from_query($query, 'id', 'name');
@@ -206,7 +206,7 @@ $template->assign('groups', $groups);
 // groups granted to access the category
 $query = '
 SELECT group_id
-  FROM ' . GROUP_ACCESS_TABLE . '
+  FROM group_access
   WHERE cat_id = ' . $page['cat'] . '
 ;';
 $group_granted_ids = functions::array_from_query($query, 'group_id');
@@ -218,14 +218,14 @@ $users = [];
 $query = '
 SELECT ' . $conf['user_fields']['id'] . ' AS id,
        ' . $conf['user_fields']['username'] . ' AS username
-  FROM ' . USERS_TABLE . '
+  FROM users
 ;';
 $users = functions::simple_hash_from_query($query, 'id', 'username');
 $template->assign('users', $users);
 
 $query = '
 SELECT user_id
-  FROM ' . USER_ACCESS_TABLE . '
+  FROM user_access
   WHERE cat_id = ' . $page['cat'] . '
 ;';
 $user_granted_direct_ids = functions::array_from_query($query, 'user_id');
@@ -238,7 +238,7 @@ if (count($group_granted_ids) > 0) {
 
     $query = '
 SELECT user_id, group_id
-  FROM ' . USER_GROUP_TABLE . '
+  FROM user_group
   WHERE group_id IN (' . implode(',', $group_granted_ids) . ')
 ';
     $result = functions_mysqli::pwg_query($query);

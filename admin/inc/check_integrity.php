@@ -264,7 +264,7 @@ class check_integrity
         $conf_c13y_ignore = [];
         $conf_c13y_ignore['version'] = PHPWG_VERSION;
         $conf_c13y_ignore['list'] = $conf_ignore_list;
-        $query = 'update ' . CONFIG_TABLE . ' set value =\'' . serialize($conf_c13y_ignore) . '\'where param = \'c13y_ignore\';';
+        $query = 'update config set value =\'' . serialize($conf_c13y_ignore) . '\'where param = \'c13y_ignore\';';
         functions_mysqli::pwg_query($query);
     }
 

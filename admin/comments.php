@@ -103,7 +103,7 @@ $query = '
 SELECT
     COUNT(*) AS counter,
     validated
-  FROM ' . COMMENTS_TABLE . '
+  FROM comments
   GROUP BY validated
 ;';
 $result = functions_mysqli::pwg_query($query);
@@ -156,10 +156,10 @@ SELECT
     i.representative_ext,
     validated,
     c.anonymous_id
-  FROM ' . COMMENTS_TABLE . ' AS c
-    INNER JOIN ' . IMAGES_TABLE . ' AS i
+  FROM comments AS c
+    INNER JOIN images AS i
       ON i.id = c.image_id
-    LEFT JOIN ' . USERS_TABLE . ' AS u
+    LEFT JOIN users AS u
       ON u.' . $conf['user_fields']['id'] . ' = c.author_id
   WHERE ' . implode(' AND ', $where_clauses) . '
   ORDER BY c.date DESC

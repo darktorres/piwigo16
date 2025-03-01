@@ -49,9 +49,8 @@ if ($php_end_tag === false) {
 include($config_file);
 
 // $conf is not used for users tables - define cannot be re-defined
-define('USERS_TABLE', $prefixTable . 'users');
+define('USERS_TABLE', 'users');
 include_once(PHPWG_ROOT_PATH . 'inc/constants.php');
-define('PREFIX_TABLE', $prefixTable);
 define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 
 include_once(PHPWG_ROOT_PATH . 'inc/functions.php');
@@ -206,50 +205,50 @@ $tables = functions::get_tables();
 $columns_of = functions::get_columns_of($tables);
 
 // find the current release
-if (! in_array('param', $columns_of[PREFIX_TABLE . 'config'])) {
+if (! in_array('param', $columns_of['config'])) {
     // we're in branch 1.3, important upgrade, isn't it?
-    if (in_array(PREFIX_TABLE . 'user_category', $tables)) {
+    if (in_array('user_category', $tables)) {
         $current_release = '1.3.1';
     } else {
         $current_release = '1.3.0';
     }
-} elseif (! in_array(PREFIX_TABLE . 'user_cache', $tables)) {
+} elseif (! in_array('user_cache', $tables)) {
     $current_release = '1.4.0';
-} elseif (! in_array(PREFIX_TABLE . 'tags', $tables)) {
+} elseif (! in_array('tags', $tables)) {
     $current_release = '1.5.0';
-} elseif (! in_array(PREFIX_TABLE . 'plugins', $tables)) {
-    if (! in_array('auto_login_key', $columns_of[PREFIX_TABLE . 'user_infos'])) {
+} elseif (! in_array('plugins', $tables)) {
+    if (! in_array('auto_login_key', $columns_of['user_infos'])) {
         $current_release = '1.6.0';
     } else {
         $current_release = '1.6.2';
     }
-} elseif (! in_array('md5sum', $columns_of[PREFIX_TABLE . 'images'])) {
+} elseif (! in_array('md5sum', $columns_of['images'])) {
     $current_release = '1.7.0';
-} elseif (! in_array(PREFIX_TABLE . 'themes', $tables)) {
+} elseif (! in_array('themes', $tables)) {
     $current_release = '2.0.0';
-} elseif (! in_array('added_by', $columns_of[PREFIX_TABLE . 'images'])) {
+} elseif (! in_array('added_by', $columns_of['images'])) {
     $current_release = '2.1.0';
-} elseif (! in_array('rating_score', $columns_of[PREFIX_TABLE . 'images'])) {
+} elseif (! in_array('rating_score', $columns_of['images'])) {
     $current_release = '2.2.0';
-} elseif (! in_array('rotation', $columns_of[PREFIX_TABLE . 'images'])) {
+} elseif (! in_array('rotation', $columns_of['images'])) {
     $current_release = '2.3.0';
-} elseif (! in_array('website_url', $columns_of[PREFIX_TABLE . 'comments'])) {
+} elseif (! in_array('website_url', $columns_of['comments'])) {
     $current_release = '2.4.0';
-} elseif (! in_array('nb_available_tags', $columns_of[PREFIX_TABLE . 'user_cache'])) {
+} elseif (! in_array('nb_available_tags', $columns_of['user_cache'])) {
     $current_release = '2.5.0';
-} elseif (! in_array('activation_key_expire', $columns_of[PREFIX_TABLE . 'user_infos'])) {
+} elseif (! in_array('activation_key_expire', $columns_of['user_infos'])) {
     $current_release = '2.6.0';
-} elseif (! in_array('auth_key_id', $columns_of[PREFIX_TABLE . 'history'])) {
+} elseif (! in_array('auth_key_id', $columns_of['history'])) {
     $current_release = '2.7.0';
-} elseif (! in_array('history_id_to', $columns_of[PREFIX_TABLE . 'history_summary'])) {
+} elseif (! in_array('history_id_to', $columns_of['history_summary'])) {
     $current_release = '2.8.0';
-} elseif (! in_array(PREFIX_TABLE . 'activity', $tables)) {
+} elseif (! in_array('activity', $tables)) {
     $current_release = '2.9.0';
 } else {
     // retrieve already applied upgrades
     $query = '
 SELECT id
-  FROM ' . PREFIX_TABLE . 'upgrade
+  FROM upgrade
 ;';
     $applied_upgrades = functions::array_from_query($query, 'id');
 

@@ -16,7 +16,7 @@ class smartpocket_maintain extends ThemeMaintain
 
     public function activate($theme_version, &$errors = [])
     {
-        global $conf, $prefixTable;
+        global $conf;
 
         if (empty($conf['smartpocket'])) {
             functions::conf_update_param('smartpocket', $this->default_conf, true);

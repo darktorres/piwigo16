@@ -81,14 +81,6 @@ if (function_exists('get_magic_quotes_gpc') &&
 
 //----------------------------------------------------- variable initialization
 
-define('DEFAULT_PREFIX_TABLE', 'piwigo_');
-
-if (isset($_POST['install'])) {
-    $prefixTable = $_POST['prefix'];
-} else {
-    $prefixTable = DEFAULT_PREFIX_TABLE;
-}
-
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
 @include(PHPWG_ROOT_PATH . 'local/config/config.php');
 
@@ -270,20 +262,16 @@ if (isset($_POST['install'])) {
         // tables creation, based on piwigo_structure.sql
         functions_install::execute_sqlfile(
             PHPWG_ROOT_PATH . 'install/piwigo_structure-mysql.sql',
-            DEFAULT_PREFIX_TABLE,
-            $prefixTable,
             'mysql'
         );
         // We fill the tables with basic information
         functions_install::execute_sqlfile(
             PHPWG_ROOT_PATH . 'install/config.sql',
-            DEFAULT_PREFIX_TABLE,
-            $prefixTable,
             'mysql'
         );
 
         $query = '
-INSERT INTO ' . $prefixTable . 'config (param,value,comment)
+INSERT INTO config (param,value,comment)
    VALUES (\'secret_key\',md5(' . functions_mysqli::pwg_db_cast_to_text(functions_mysqli::DB_RANDOM_FUNCTION . '()') . '),
    \'a secret key specific to the gallery for internal use\');';
         functions_mysqli::pwg_query($query);
@@ -365,8 +353,6 @@ INSERT INTO ' . $prefixTable . 'config (param,value,comment)
             \$conf['db_password'] = '{$dbpasswd}';
             \$conf['db_host'] = '{$dbhost}';
 
-            \$prefixTable = '{$prefixTable}';
-
             define('PHPWG_INSTALLED', true);
             define('PWG_CHARSET', 'utf-8');
             define('DB_CHARSET', 'utf8');
@@ -420,7 +406,6 @@ $template->assign(
         'F_DB_HOST' => $dbhost,
         'F_DB_USER' => $dbuser,
         'F_DB_NAME' => $dbname,
-        'F_DB_PREFIX' => $prefixTable,
         'F_ADMIN' => $admin_name,
         'F_ADMIN_EMAIL' => $admin_mail,
         'EMAIL' => '<span class="adminEmail">' . $admin_mail . '</span>',

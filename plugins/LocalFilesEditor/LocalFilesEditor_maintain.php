@@ -26,8 +26,6 @@ use Piwigo\inc\dblayer\functions_mysqli;
 
 function plugin_uninstall()
 {
-    global $prefixTable;
-
     $query = 'DELETE FROM ' . CONFIG_TABLE . ' WHERE param=\'LocalFilesEditor\' LIMIT 1;';
     functions_mysqli::pwg_query($query);
 }

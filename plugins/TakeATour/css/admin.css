@@ -1,13 +1,13 @@
 #helpContent .TAT_description {
-  text-align: justify;
+    text-align: justify;
 }
 #helpContent form {
-  text-align: center;
+    text-align: center;
 }
 #helpContent form input {
-  width: 50%;
-  margin-top: 10px;
+    width: 50%;
+    margin-top: 10px;
 }
 #helpContent P {
-  margin: 1em;
+    margin: 1em;
 }

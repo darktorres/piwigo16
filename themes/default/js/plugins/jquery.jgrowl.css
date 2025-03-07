@@ -1,124 +1,126 @@
 div.jGrowl {
-	z-index: 			9999;
-	color: 				#fff;
-	font-size: 			12px;
+    z-index: 9999;
+    color: #fff;
+    font-size: 12px;
 }
 
-div.jGrowl-notification.success>div,
-div.jGrowl-notification.error>div,
-div.jGrowl-notification.warning>div{
-  margin-left:45px;
+div.jGrowl-notification.success > div,
+div.jGrowl-notification.error > div,
+div.jGrowl-notification.warning > div {
+    margin-left: 45px;
 }
 div.jGrowl-notification.success {
-	background: url(jgrowl-check.png) no-repeat 5px 5px;
+    background: url(jgrowl-check.png) no-repeat 5px 5px;
 }
 div.jGrowl-notification.error {
-	background: url(jgrowl-error.png) no-repeat 5px 5px;
+    background: url(jgrowl-error.png) no-repeat 5px 5px;
 }
 div.jGrowl-notification.warning {
-	background: url(jgrowl-alert.png) no-repeat 5px 5px;
+    background: url(jgrowl-alert.png) no-repeat 5px 5px;
 }
 div.jGrowl-notification.warning:before {
-  content:none;
+    content: none;
 }
 
 /** Cross Browser Styling **/
-div.center div.jGrowl-notification, div.center div.jGrowl-closer {
-	margin-left: 		auto;
-	margin-right: 		auto;
-}
-
-div.jGrowl div.jGrowl-notification, div.jGrowl div.jGrowl-closer {
-	background-color: 		#000;
-	opacity: 				.85;
-	-ms-filter: 			"progid:DXImageTransform.Microsoft.Alpha(Opacity=85)"; 
-	zoom: 					1;
-	width: 					300px;
-	padding: 				5px;
-	margin-top: 			5px;
-	margin-bottom: 			5px;
-	font-family: 			Tahoma, Arial, Helvetica, sans-serif;
-	font-size: 				1em;
-	text-align: 			left;
-	display: 				none;
-  border-radius: 5px;
-	-moz-border-radius: 	5px;
-	-webkit-border-radius:	5px;
-}
-
-div.jGrowl div.jGrowl-notification {
-	min-height: 			40px;
+div.center div.jGrowl-notification,
+div.center div.jGrowl-closer {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 div.jGrowl div.jGrowl-notification,
 div.jGrowl div.jGrowl-closer {
-	margin: 				8px;
+    background-color: #000;
+    opacity: 0.85;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=85)";
+    zoom: 1;
+    width: 300px;
+    padding: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    font-family: Tahoma, Arial, Helvetica, sans-serif;
+    font-size: 1em;
+    text-align: left;
+    display: none;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+}
+
+div.jGrowl div.jGrowl-notification {
+    min-height: 40px;
+}
+
+div.jGrowl div.jGrowl-notification,
+div.jGrowl div.jGrowl-closer {
+    margin: 8px;
 }
 
 div.jGrowl div.jGrowl-notification div.jGrowl-header {
-	font-weight: 			bold;
-	font-size:				1em;
+    font-weight: bold;
+    font-size: 1em;
 }
 
 div.jGrowl div.jGrowl-notification div.jGrowl-message {
-  font-size:        0.9em;
+    font-size: 0.9em;
 }
 
 div.jGrowl div.jGrowl-notification div.jGrowl-close {
-	z-index:				99;
-	float: 					right;
-	font-weight: 			bold;
-	font-size: 				1em;
-	cursor:					pointer;
+    z-index: 99;
+    float: right;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
 }
 
 div.jGrowl div.jGrowl-closer {
-	padding-top: 			4px;
-	padding-bottom: 		4px;
-	cursor: 				pointer;
-	font-size:				.9em;
-	font-weight: 			bold;
-	text-align: 			center;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    cursor: pointer;
+    font-size: .9em;
+    font-weight: bold;
+    text-align: center;
 }
 
 /** Hide jGrowl when printing **/
 @media print {
-	div.jGrowl {
-		display: 			none;
-	}
+    div.jGrowl {
+        display: none;
+    }
 }
 
 /** Normal Style Positions **/
 div.jGrowl {
-	position:			absolute;
+    position: absolute;
 }
 
 body > div.jGrowl {
-	position:			fixed;
+    position: fixed;
 }
 
 div.jGrowl.top-left {
-	left: 				0px;
-	top: 				0px;
+    left: 0px;
+    top: 0px;
 }
 
 div.jGrowl.top-right {
-	right: 				0px;
-	top: 				0px;
+    right: 0px;
+    top: 0px;
 }
 
 div.jGrowl.bottom-left {
-	left: 				0px;
-	bottom:				0px;
+    left: 0px;
+    bottom: 0px;
 }
 
 div.jGrowl.bottom-right {
-	right: 				0px;
-	bottom: 			0px;
+    right: 0px;
+    bottom: 0px;
 }
 
 div.jGrowl.center {
-	top: 				0px;
-	width: 				50%;
-	left: 				25%;
+    top: 0px;
+    width: 50%;
+    left: 25%;
 }

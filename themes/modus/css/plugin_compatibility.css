@@ -19,7 +19,8 @@
     height: 120px !important;
 }
 
-.thumbnailCategory .illustration, .thumbnailCategory .description {
+.thumbnailCategory .illustration,
+.thumbnailCategory .description {
     margin-left: 10px;
 }
 
@@ -32,10 +33,10 @@
 
 .thumbnailCategory .illustration img {
     height: 120px;
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform: translate(-50%,-50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .content .thumbnailCategory .description {
@@ -72,9 +73,9 @@
 }
 
 @media (max-width: 576px) {
-  .thumbnailCategories LI {
-    width: 75% !important;
-    margin:0 auto!important;
-    float:unset;
-  }
+    .thumbnailCategories LI {
+        width: 75% !important;
+        margin: 0 auto !important;
+        float: unset;
+    }
 }

@@ -49,10 +49,7 @@ async function runPuppeteerScript(): Promise<void> {
     page.on("request", handleRequest);
 
     await fs.remove(
-        path.resolve(
-            import.meta.dirname,
-            "../../local/config/database.php",
-        ),
+        path.resolve(import.meta.dirname, "../../local/config/database.php"),
     );
 
     // Navigate to the install page

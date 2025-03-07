@@ -13,14 +13,15 @@
 </script>
 
 <div class="formats-header">
-    <a class="{if (count($FORMATS) != 0)}head-button-1{else}head-button-2{/if} icon-plus-circled" href="{$ADD_FORMATS_URL}">{"Add formats"|@translate}</a>
+    <a class="{if (count($FORMATS) != 0)}head-button-1{else}head-button-2{/if} icon-plus-circled"
+        href="{$ADD_FORMATS_URL}">{"Add formats"|@translate}</a>
 </div>
 <div class="formats-content">
-    <div class="no-formats" {if (count($FORMATS) != 0)}style="display:none"{/if}>
+    <div class="no-formats" {if (count($FORMATS) != 0)}style="display:none" {/if}>
         {"No format for this picture"|@translate}
     </div>
 
-    <div class="formats-list" {if (count($FORMATS) == 0)}style="display:none"{/if}>
+    <div class="formats-list" {if (count($FORMATS) == 0)}style="display:none" {/if}>
         {foreach from=$FORMATS item=$format}
             <div class="format-card" data-id="{$format["format_id"]}" style="background-image: url('{$IMG_SQUARE_SRC}')">
                 <span class="format-card-size">{'%s MB'|@translate:$format["filesize"]}</span>

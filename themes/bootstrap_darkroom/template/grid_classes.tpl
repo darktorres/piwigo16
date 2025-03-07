@@ -10,17 +10,17 @@ size menu is enabled in child theme *}
 {assign var=col_class value=""}
 
 {if $theme_config->fluid_width && $theme_config->fluid_width_col_xxl}
-{if $width > ($width_xxl - (4 * $col_padding)) / 2}
-    {$col_class = $col_class|cat:"col-xxl-12"}
-{elseif $width > ($width_xxl - (6 * $col_padding)) / 3}
-    {$col_class = $col_class|cat:"col-xxl-4"}
-{elseif $width > ($width_xxl - (8 * $col_padding)) / 4}
-    {$col_class = $col_class|cat:"col-xxl-3"}
-{elseif $width <= ($width_xxl - (8 * $col_padding)) / 4 && $width > ($width_xxl - (12 * $col_padding)) / 6}
-    {$col_class = $col_class|cat:"col-xxl-2"}
-{else}
-    {$col_class = $col_class|cat:"col-xxl-1"}
-{/if}
+    {if $width > ($width_xxl - (4 * $col_padding)) / 2}
+        {$col_class = $col_class|cat:"col-xxl-12"}
+    {elseif $width > ($width_xxl - (6 * $col_padding)) / 3}
+        {$col_class = $col_class|cat:"col-xxl-4"}
+    {elseif $width > ($width_xxl - (8 * $col_padding)) / 4}
+        {$col_class = $col_class|cat:"col-xxl-3"}
+    {elseif $width <= ($width_xxl - (8 * $col_padding)) / 4 && $width > ($width_xxl - (12 * $col_padding)) / 6}
+        {$col_class = $col_class|cat:"col-xxl-2"}
+    {else}
+        {$col_class = $col_class|cat:"col-xxl-1"}
+    {/if}
 {/if}
 
 {* Calulate grid for xlarge desktops *}

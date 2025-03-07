@@ -1,9 +1,8 @@
 {include file='infos_errors.tpl'}
 <div data-role="content">
 
-{if isset($comments)}
-	{include file='comment_list.tpl' comment_derivative_params=$comment_derivative_params}
-{/if}
+	{if isset($comments)}
+		{include file='comment_list.tpl' comment_derivative_params=$comment_derivative_params}
+	{/if}
 
 </div> <!-- content -->
-

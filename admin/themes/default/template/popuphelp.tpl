@@ -1,5 +1,5 @@
 <div id="content" class="content">
-{$HELP_CONTENT}
+  {$HELP_CONTENT}
 </div> <!-- content -->
 
 <ul class="categoryActions">
@@ -9,4 +9,3 @@
     </a>
   </li>
 </ul>
-

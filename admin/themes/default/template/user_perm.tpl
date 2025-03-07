@@ -1,15 +1,15 @@
 <h2>{$TITLE}</h2>
 
 {if isset($categories_because_of_groups) }
-<fieldset>
-  <legend>{'Albums authorized thanks to group associations'|@translate}</legend>
+  <fieldset>
+    <legend>{'Albums authorized thanks to group associations'|@translate}</legend>
 
-  <ul>
-    {foreach from=$categories_because_of_groups item=cat }
-    <li>{$cat}</li>
-    {/foreach}
-  </ul>
-</fieldset>
+    <ul>
+      {foreach from=$categories_because_of_groups item=cat }
+        <li>{$cat}</li>
+      {/foreach}
+    </ul>
+  </fieldset>
 {/if}
 
 

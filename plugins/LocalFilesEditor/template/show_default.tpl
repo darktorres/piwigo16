@@ -9,24 +9,28 @@
 {combine_css path="plugins/LocalFilesEditor/template/locfiledit.css"}
 
 {footer_script}<script>
-var editor = CodeMirror.fromTextArea(document.getElementById("text"), {
-  readOnly: true,
-  mode: "application/x-httpd-php"
-});
+  var editor = CodeMirror.fromTextArea(document.getElementById("text"), {
+    readOnly: true,
+    mode: "application/x-httpd-php"
+  });
 </script>{/footer_script}
 
 {html_head}
 <style type="text/css">
-#headbranch, #theHeader, #copyright { display: none; }
+  #headbranch,
+  #theHeader,
+  #copyright {
+    display: none;
+  }
 </style>
 {/html_head}
 
 <div id="LocalFilesEditor">
 
-<div id="title_bar">
-  <span class="file_name">{$TITLE}</span>
-</div>
+  <div id="title_bar">
+    <span class="file_name">{$TITLE}</span>
+  </div>
 
-<textarea id="text" rows="30" cols="90" class="show_default_area">{$DEFAULT_CONTENT}</textarea>
+  <textarea id="text" rows="30" cols="90" class="show_default_area">{$DEFAULT_CONTENT}</textarea>
 
 </div>

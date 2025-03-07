@@ -5,22 +5,23 @@
 </div>{* <!-- pwgMain --> *}
 
 {if isset($footer_elements)}
-{foreach from=$footer_elements item=elt}
-  {$elt}
-{/foreach}
+  {foreach from=$footer_elements item=elt}
+    {$elt}
+  {/foreach}
 {/if}
 
 {if isset($debug.QUERIES_LIST)}
-<div id="debug">
-  {$debug.QUERIES_LIST}
-</div>
+  <div id="debug">
+    {$debug.QUERIES_LIST}
+  </div>
 {/if}
 
 <div id="footer">
-  <a class="externalLink tiptip piwigo-logo" href="{$PHPWG_URL}" title="{'Visit Piwigo project website'|translate}"><img src="admin/themes/default/images/piwigo-grey.svg"></a>
+  <a class="externalLink tiptip piwigo-logo" href="{$PHPWG_URL}" title="{'Visit Piwigo project website'|translate}"><img
+      src="admin/themes/default/images/piwigo-grey.svg"></a>
   <div id="pageInfos">
     {if isset($debug.TIME) }
-    {'Page generated in'|translate} {$debug.TIME} ({$debug.NB_QUERIES} {'SQL queries in'|translate} {$debug.SQL_TIME}) -
+      {'Page generated in'|translate} {$debug.TIME} ({$debug.NB_QUERIES} {'SQL queries in'|translate} {$debug.SQL_TIME}) -
     {/if}
 
     {'Contact'|translate}
@@ -33,16 +34,16 @@
 
 {combine_script id='jquery.tipTip' load='footer' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.minified.js'}
 {footer_script require='jquery.tipTip'}<script>
-jQuery('.tiptip').tipTip({
-  delay: 0,
-  fadeIn: 200,
-  fadeOut: 200
-});
+  jQuery('.tiptip').tipTip({
+    delay: 0,
+    fadeIn: 200,
+    fadeOut: 200
+  });
 
-jQuery('a.externalLink').click(function() {
-  window.open(jQuery(this).attr("href"));
-  return false;
-});
+  jQuery('a.externalLink').click(function() {
+    window.open(jQuery(this).attr("href"));
+    return false;
+  });
 </script>{/footer_script}
 
 <!-- BEGIN get_combined -->
@@ -50,4 +51,5 @@ jQuery('a.externalLink').click(function() {
 <!-- END get_combined -->
 
 </body>
+
 </html>

@@ -1,20 +1,20 @@
 {footer_script}<script>
-var str_number_page_visited = "{'Page Visited'|@translate}";
-var str_number_page_visited_with_year = "{'Page Visited in %s'|@translate}";
-var str_tooltip_format = {
-  "years":"YYYY",
-  "months":"MMMM YYYY",
-  "days":"DD MMM",
-  "hours":"LT"
-};
-var str_unit_format = {
-  "day":"dddd",
-  "month":"MMM YYYY"
-}
-var str_avg = "{'Average last 12 months'|@translate}";
-var str_months_tosplit = "{$month_labels}";
-var str_months = str_months_tosplit.split('~');
-moment.locale("{$langCode}");
+  var str_number_page_visited = "{'Page Visited'|@translate}";
+  var str_number_page_visited_with_year = "{'Page Visited in %s'|@translate}";
+  var str_tooltip_format = {
+    "years": "YYYY",
+    "months": "MMMM YYYY",
+    "days": "DD MMM",
+    "hours": "LT"
+  };
+  var str_unit_format = {
+    "day": "dddd",
+    "month": "MMM YYYY"
+  }
+  var str_avg = "{'Average last 12 months'|@translate}";
+  var str_months_tosplit = "{$month_labels}";
+  var str_months = str_months_tosplit.split('~');
+  moment.locale("{$langCode}");
 </script>{/footer_script}
 
 {combine_script id='chart.js' load='footer' path='node_modules/chart.js/dist/Chart.min.js'}
@@ -26,20 +26,15 @@ moment.locale("{$langCode}");
 
 <div class="stat-compare-mode">
   <label class="switch">
-      <input type="checkbox" id="toggleCompareMode">
-      <span class="slider round" checked="false"></span>
+    <input type="checkbox" id="toggleCompareMode">
+    <span class="slider round" checked="false"></span>
   </label>
   {'Compare mode'|@translate}
 </div>
 
-<div id="data" 
-  data-hours='{json_encode($lastHours)}' 
-  data-days='{json_encode($lastDays)}' 
-  data-months='{json_encode($lastMonths)}' 
-  data-years='{json_encode($lastYears)}'
-  data-compare-years='{json_encode($compareYears)}'
-  data-month-stats='{json_encode($monthStats)}' 
-  ></div>
+<div id="data" data-hours='{json_encode($lastHours)}' data-days='{json_encode($lastDays)}'
+  data-months='{json_encode($lastMonths)}' data-years='{json_encode($lastYears)}'
+  data-compare-years='{json_encode($compareYears)}' data-month-stats='{json_encode($monthStats)}'></div>
 <div class="stat-legend-container">
   <div class="stat-data-selector">
     <input type="radio" id="hours-selector" name="stat-data-type">
@@ -54,5 +49,7 @@ moment.locale("{$langCode}");
 </div>
 
 <div class="stat-graph-container">
-  <canvas id="stat-graph" width="400" height="150" role="img"><p>Your browser does not support the canvas element.</p></canvas>
+  <canvas id="stat-graph" width="400" height="150" role="img">
+    <p>Your browser does not support the canvas element.</p>
+  </canvas>
 </div>

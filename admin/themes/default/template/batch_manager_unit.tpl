@@ -8,31 +8,33 @@
 {combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
 
 {footer_script}<script>
-(function(){
-{* <!-- TAGS --> *}
-var tagsCache = new TagsCache({
-  serverKey: '{$CACHE_KEYS.tags}',
-  serverId: '{$CACHE_KEYS._hash}',
-  rootUrl: '{$ROOT_URL}'
-});
+  (function() {
+    {* <!-- TAGS --> *}
+    var tagsCache = new TagsCache({
+      serverKey: '{$CACHE_KEYS.tags}',
+      serverId: '{$CACHE_KEYS._hash}',
+      rootUrl: '{$ROOT_URL}'
+    });
 
-tagsCache.selectize(jQuery('[data-selectize=tags]'), { lang: {
-  'Add': '{'Create'|translate}'
-}});
+    tagsCache.selectize(jQuery('[data-selectize=tags]'), {
+      lang: {
+        'Add': '{'Create'|translate}'
+      }
+    });
 
-{* <!-- DATEPICKER --> *}
-jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
-  jQuery('[data-datepicker]').pwgDatepicker({
-    showTimepicker: true,
-    cancelButton: '{'Cancel'|translate}'
+    {* <!-- DATEPICKER --> *}
+    jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
+    jQuery('[data-datepicker]').pwgDatepicker({
+      showTimepicker: true,
+      cancelButton: '{'Cancel'|translate}'
+    });
   });
-});
 
-{* <!-- THUMBNAILS --> *}
-jQuery("a.preview-box").colorbox( {
-	photo: true
-});
-}());
+  {* <!-- THUMBNAILS --> *}
+  jQuery("a.preview-box").colorbox({
+    photo: true
+  });
+  }());
 </script>{/footer_script}
 
 <form action="{$F_ACTION}" method="POST">
@@ -49,109 +51,116 @@ jQuery("a.preview-box").colorbox( {
   </div>
   <div style="clear:both"></div>
 
-{if !empty($elements) }
-<div><input type="hidden" name="element_ids" value="{$ELEMENT_IDS}"></div>
-{foreach from=$elements item=element}
-<fieldset class="elementEdit">
-  <legend>{$element.LEGEND}</legend>
+  {if !empty($elements) }
+    <div><input type="hidden" name="element_ids" value="{$ELEMENT_IDS}"></div>
+    {foreach from=$elements item=element}
+      <fieldset class="elementEdit">
+        <legend>{$element.LEGEND}</legend>
 
-  <span class="thumb">
-    <a href="{$element.FILE_SRC}" class="preview-box icon-zoom-in" title="{$element.LEGEND|@htmlspecialchars}"><img src="{$element.TN_SRC}" alt="" {if $element.is_svg}style="{if $current.width < 100}min-width: 100px;{/if}{if $current.height < 100} min-height: 100px; {/if}" {/if}></a>
-    <a href="{$element.U_EDIT}" class="icon-pencil">{'Edit'|@translate}</a>
-  </span>
+        <span class="thumb">
+          <a href="{$element.FILE_SRC}" class="preview-box icon-zoom-in" title="{$element.LEGEND|@htmlspecialchars}"><img
+              src="{$element.TN_SRC}" alt=""
+              {if $element.is_svg}style="{if $current.width < 100}min-width: 100px;{/if}{if $current.height < 100} min-height: 100px; {/if}"
+            {/if}></a>
+        <a href="{$element.U_EDIT}" class="icon-pencil">{'Edit'|@translate}</a>
+      </span>
 
-  <table>
+      <table>
 
-    <tr>
-      <td><strong>{'Title'|@translate}</strong></td>
-      <td><input type="text" class="large" name="name-{$element.id}" value="{$element.NAME}"></td>
-    </tr>
+        <tr>
+          <td><strong>{'Title'|@translate}</strong></td>
+          <td><input type="text" class="large" name="name-{$element.id}" value="{$element.NAME}"></td>
+        </tr>
 
-    <tr>
-      <td><strong>{'Author'|@translate}</strong></td>
-      <td><input type="text" class="large" name="author-{$element.id}" value="{$element.AUTHOR}"></td>
-    </tr>
+        <tr>
+          <td><strong>{'Author'|@translate}</strong></td>
+          <td><input type="text" class="large" name="author-{$element.id}" value="{$element.AUTHOR}"></td>
+        </tr>
 
-    <tr>
-      <td><strong>{'Creation date'|@translate}</strong></td>
-      <td>
-        <input type="hidden" name="date_creation-{$element.id}" value="{$element.DATE_CREATION}">
-        <label>
-          <i class="icon-calendar"></i>
-          <input type="text" data-datepicker="date_creation-{$element.id}" data-datepicker-unset="date_creation_unset-{$element.id}" readonly>
-        </label>
-        <a href="#" class="icon-cancel-circled" id="date_creation_unset-{$element.id}">{'unset'|translate}</a>
-      </td>
-    </tr>
-    <tr>
-      <td><strong>{'Who can see this photo?'|@translate}</strong><br>({'Privacy level'|translate})</td>
-      <td>
-        <select name="level-{$element.id}">
-          {html_options options=$level_options selected=$element.LEVEL}
-        </select>
-      </td>
-    </tr>
+        <tr>
+          <td><strong>{'Creation date'|@translate}</strong></td>
+          <td>
+            <input type="hidden" name="date_creation-{$element.id}" value="{$element.DATE_CREATION}">
+            <label>
+              <i class="icon-calendar"></i>
+              <input type="text" data-datepicker="date_creation-{$element.id}"
+                data-datepicker-unset="date_creation_unset-{$element.id}" readonly>
+            </label>
+            <a href="#" class="icon-cancel-circled" id="date_creation_unset-{$element.id}">{'unset'|translate}</a>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>{'Who can see this photo?'|@translate}</strong><br>({'Privacy level'|translate})</td>
+          <td>
+            <select name="level-{$element.id}">
+              {html_options options=$level_options selected=$element.LEVEL}
+            </select>
+          </td>
+        </tr>
 
-    <tr>
-      <td><strong>{'Tags'|@translate}</strong></td>
-      <td>
-        <select data-selectize="tags" data-value="{$element.TAGS|@json_encode|escape:html}"
-          placeholder="{'Type in a search term'|translate}"
-          data-create="true" name="tags-{$element.id}[]" multiple style="width:500px;"></select>
-      </td>
-    </tr>
+        <tr>
+          <td><strong>{'Tags'|@translate}</strong></td>
+          <td>
+            <select data-selectize="tags" data-value="{$element.TAGS|@json_encode|escape:html}"
+              placeholder="{'Type in a search term'|translate}" data-create="true" name="tags-{$element.id}[]" multiple
+              style="width:500px;"></select>
+          </td>
+        </tr>
 
-    <tr>
-      <td><strong>{'Description'|@translate}</strong></td>
-      <td><textarea cols="50" rows="5" name="description-{$element.id}" id="description-{$element.id}" class="description">{$element.DESCRIPTION}</textarea></td>
-    </tr>
+        <tr>
+          <td><strong>{'Description'|@translate}</strong></td>
+          <td><textarea cols="50" rows="5" name="description-{$element.id}" id="description-{$element.id}"
+              class="description">{$element.DESCRIPTION}</textarea></td>
+        </tr>
 
-  </table>
+      </table>
 
-</fieldset>
-{/foreach}
+    </fieldset>
+  {/foreach}
 
-{if !empty($navbar)}{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+  {if !empty($navbar)}{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
 
-<p>
-  <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
-  <button class="buttonLike" type="submit" value="{'Submit'|@translate}" name="submit"><i class="icon-floppy"></i>{'Submit'|@translate}</button>
-  <button class="resetButton" type="reset" value="{'Reset'|@translate}" name="reset">{'Reset'|@translate}</button>
+  <p>
+    <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+    <button class="buttonLike" type="submit" value="{'Submit'|@translate}" name="submit"><i
+        class="icon-floppy"></i>{'Submit'|@translate}</button>
+    <button class="resetButton" type="reset" value="{'Reset'|@translate}" name="reset">{'Reset'|@translate}</button>
 
-  {* <span class="buttonLike" type="submit" name="submit"> {'Submit'|@translate}</span> *}
-  {* <input type="reset" value="{'Reset'|@translate}"> *}
-</p>
-{/if}
+    {* <span class="buttonLike" type="submit" name="submit"> {'Submit'|@translate}</span> *}
+    {* <input type="reset" value="{'Reset'|@translate}"> *}
+  </p>
+  {/if}
 
 </form>
 
 <style>
-.selectize-input  .item,
-.selectize-input .item.active {
-  background-image:none !important;
-  background-color: #ffa646 !important;
-  border-color: transparent !important;
-  color: black !important;
+  .selectize-input .item,
+  .selectize-input .item.active {
+    background-image: none !important;
+    background-color: #ffa646 !important;
+    border-color: transparent !important;
+    color: black !important;
 
-  border-radius: 20px !important;
-}
+    border-radius: 20px !important;
+  }
 
-.selectize-input .item .remove,
-.selectize-input .item .remove {
-  background-color: transparent !important;
-  border-top-right-radius: 20px !important;
-  border-bottom-right-radius: 20px !important;
-  color: black !important;
-  
-  border-left: 1px solid transparent !important;
+  .selectize-input .item .remove,
+  .selectize-input .item .remove {
+    background-color: transparent !important;
+    border-top-right-radius: 20px !important;
+    border-bottom-right-radius: 20px !important;
+    color: black !important;
 
-}
-.selectize-input .item .remove:hover,
-.selectize-input .item .remove:hover {
-  background-color: #ff7700 !important;
-}
+    border-left: 1px solid transparent !important;
 
-.thumb {
-  float: right;
-}
+  }
+
+  .selectize-input .item .remove:hover,
+  .selectize-input .item .remove:hover {
+    background-color: #ff7700 !important;
+  }
+
+  .thumb {
+    float: right;
+  }
 </style>

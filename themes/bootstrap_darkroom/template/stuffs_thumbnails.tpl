@@ -5,14 +5,17 @@
 </div>
 
 {footer_script require='jquery'}<script>
-$(document).ready(function() {
-  var elm = $('.pwgstuffs-thumbnails').closest('.pwgstuffs-col');
-  if ($(elm).is('.col-lg-3, .col-lg-4')) {
-    $('.pwgstuffs-thumbnails .col-outer').removeClass($('.pwgstuffs-thumbnails .col-outer').data('grid-classes')).addClass('col-12');
-  } else if ($(elm).is('.col-lg-6')) {
-    $('.pwgstuffs-thumbnails .col-outer').removeClass($('.pwgstuffs-thumbnails .col-outer').data('grid-classes')).addClass('col-12 col-lg-6');
-  } else if ($(elm).is('.col-lg-8, .col-lg-9')) {
-    $('.pwgstuffs-thumbnails .col-outer').removeClass($('.pwgstuffs-thumbnails .col-outer').data('grid-classes')).addClass('col-12 col-lg-4');
-  }
-});
+  $(document).ready(function() {
+    var elm = $('.pwgstuffs-thumbnails').closest('.pwgstuffs-col');
+    if ($(elm).is('.col-lg-3, .col-lg-4')) {
+      $('.pwgstuffs-thumbnails .col-outer').removeClass($('.pwgstuffs-thumbnails .col-outer').data('grid-classes'))
+        .addClass('col-12');
+    } else if ($(elm).is('.col-lg-6')) {
+      $('.pwgstuffs-thumbnails .col-outer').removeClass($('.pwgstuffs-thumbnails .col-outer').data('grid-classes'))
+        .addClass('col-12 col-lg-6');
+    } else if ($(elm).is('.col-lg-8, .col-lg-9')) {
+      $('.pwgstuffs-thumbnails .col-outer').removeClass($('.pwgstuffs-thumbnails .col-outer').data('grid-classes'))
+        .addClass('col-12 col-lg-4');
+    }
+  });
 </script>{/footer_script}

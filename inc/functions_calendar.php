@@ -250,7 +250,7 @@ class functions_calendar
             'TITLE' => $calendar_title
           )
         );
-    } // end category calling
+    }
 
     if ($must_show_list)
     {

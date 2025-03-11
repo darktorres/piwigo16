@@ -347,8 +347,8 @@ class functions_mysqli
 
           self::pwg_query($query);
         }
-      } // foreach update
-    } // if count<X
+      }
+    }
     else
     {
       // creation of the temporary table

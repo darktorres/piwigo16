@@ -575,7 +575,7 @@ class Template
           }
 
           $this->output = substr_replace( $this->output, implode( "\n", $content ), $pos, strlen(self::COMBINED_SCRIPTS_TAG) );
-      } //else maybe error or warning ?
+      }
     }
 
     $css = $this->cssLoader->get_css();
@@ -607,7 +607,7 @@ class Template
           $rep.='<style type="text/css">'.$this->html_style.'</style>';
         }
         $this->output = substr_replace( $this->output, $rep, $pos, 0 );
-      } //else maybe error or warning ?
+      }
       $this->html_head_elements = array();
       $this->html_style = '';
     }

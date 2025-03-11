@@ -109,7 +109,7 @@ function get_elements($path)
       {
         $subdirs[] = $node;
       }
-    } //end while readdir
+    }
     closedir($contents);
 
     foreach ($subdirs as $subdir)
@@ -118,7 +118,7 @@ function get_elements($path)
       $fs = array_merge($fs, $tmp_fs);
     }
     ksort($fs);
-  } //end if is_dir
+  }
   return $fs;
 }
 

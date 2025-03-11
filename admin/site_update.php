@@ -792,7 +792,7 @@ if (isset($_POST['submit'])
 
       $data['id']=$id;
       $datas[] = $data;
-    } // end foreach file
+    }
 
     $counts['upd_elements'] = count($datas);
     if (!$simulate and count($datas)>0 )

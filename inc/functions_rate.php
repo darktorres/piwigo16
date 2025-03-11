@@ -78,10 +78,10 @@ class functions_rate
       AND anonymous_id = \'' . $save_anonymous_id.'\'
   ;';
         functions_mysqli::pwg_query($query);
-      } // end client changed ip
+      }
 
       functions_cookie::pwg_set_cookie_var('anonymous_rater', $anonymous_id);
-    } // end anonymous user
+    }
 
     $query = '
   DELETE

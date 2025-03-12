@@ -32,7 +32,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_history.php');
+require_once PHPWG_ROOT_PATH . 'admin/inc/functions_history.php';
 
 $types = array_merge(['none'], functions_mysqli::get_enums('history', 'image_type'));
 

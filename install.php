@@ -83,18 +83,18 @@ if (function_exists('get_magic_quotes_gpc') &&
 
 //----------------------------------------------------- variable initialization
 
-include(PHPWG_ROOT_PATH . 'inc/config_default.php');
+require PHPWG_ROOT_PATH . 'inc/config_default.php';
 
 if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
-    include(PHPWG_ROOT_PATH . 'local/config/config.php');
+    require PHPWG_ROOT_PATH . 'local/config/config.php';
 }
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
-include(PHPWG_ROOT_PATH . 'inc/functions.php');
-include(PHPWG_ROOT_PATH . 'inc/Template.php');
+require PHPWG_ROOT_PATH . 'inc/functions.php';
+require PHPWG_ROOT_PATH . 'inc/Template.php';
 
 // download database config file if exists
 functions::check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
@@ -139,14 +139,14 @@ $errors = [];
 $config_file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php';
 
 if (file_exists($config_file)) {
-    include($config_file);
+    require $config_file;
     // Is Piwigo already installed ?
     if (defined('PHPWG_INSTALLED')) {
         die('Piwigo is already installed');
     }
 }
 
-include(PHPWG_ROOT_PATH . 'inc/constants.php');
+require PHPWG_ROOT_PATH . 'inc/constants.php';
 
 $languages = new languages('utf-8');
 
@@ -466,7 +466,7 @@ if ($step == 1) {
 
         // email notification
         if (isset($_POST['send_credentials_by_mail'])) {
-            include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
+            require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
 
             $keyargs_content = [
                 functions::get_l10n_args('Hello %s,', $admin_name),

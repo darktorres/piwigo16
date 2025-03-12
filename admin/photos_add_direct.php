@@ -145,7 +145,7 @@ if ($display_formats &&
 // |                             prepare form                              |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH . 'admin/inc/photos_add_direct_prepare.php');
+require_once PHPWG_ROOT_PATH . 'admin/inc/photos_add_direct_prepare.php';
 
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |

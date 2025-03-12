@@ -3874,14 +3874,14 @@ final class functions_admin
     public static function order_by_is_local(): bool
     {
         $conf = [];
-        include(PHPWG_ROOT_PATH . 'inc/config_default.php');
+        require PHPWG_ROOT_PATH . 'inc/config_default.php';
 
         if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
-            include(PHPWG_ROOT_PATH . 'local/config/config.php');
+            require PHPWG_ROOT_PATH . 'local/config/config.php';
         }
 
         if (isset($conf['local_dir_site']) && file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.php')) {
-            include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.php');
+            require PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.php';
         }
 
         return isset($conf['order_by']) or

@@ -777,4 +777,4 @@ $template->assign('filesize', $filesize);
 // |                         open specific mode                            |
 // +-----------------------------------------------------------------------+
 
-include(PHPWG_ROOT_PATH . 'admin/batch_manager_' . $page['tab'] . '.php');
+require PHPWG_ROOT_PATH . 'admin/batch_manager_' . $page['tab'] . '.php';

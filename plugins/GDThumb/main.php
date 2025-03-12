@@ -41,7 +41,7 @@ if (! defined('GDTHEME_PATH')) {
 }
 
 if (! isset($conf['gdThumb'])) {
-    include(dirname(__FILE__) . '/config_default.php');
+    require dirname(__FILE__) . '/config_default.php';
     functions::conf_update_param('gdThumb', $config_default);
     functions::load_conf_from_db();
 }

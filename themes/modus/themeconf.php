@@ -41,7 +41,7 @@ if (! empty($_GET['skin']) &&
 }
 
 // we're mainly interested in an override of the colorscheme
-include(dirname(__FILE__) . '/skins/' . $conf['modus_theme']['skin'] . '.php');
+require dirname(__FILE__) . '/skins/' . $conf['modus_theme']['skin'] . '.php';
 
 $this->assign(
     [

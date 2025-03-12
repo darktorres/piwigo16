@@ -21,7 +21,7 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\menubar;
 
 define('PHPWG_ROOT_PATH', './');
-include_once(PHPWG_ROOT_PATH . 'inc/common.php');
+require_once PHPWG_ROOT_PATH . 'inc/common.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -88,8 +88,8 @@ if (! isset($themeconf['hide_menu_on']) or
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+
-include(PHPWG_ROOT_PATH . 'inc/page_header.php');
+require PHPWG_ROOT_PATH . 'inc/page_header.php';
 functions_plugins::trigger_notify('loc_end_notification');
 functions_html::flush_page_messages();
 $template->pparse('notification');
-include(PHPWG_ROOT_PATH . 'inc/page_tail.php');
+require PHPWG_ROOT_PATH . 'inc/page_tail.php';

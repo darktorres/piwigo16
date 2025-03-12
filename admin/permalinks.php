@@ -61,7 +61,7 @@ $template->set_filename('permalinks', 'permalinks.tpl');
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'permalinks';
-include(PHPWG_ROOT_PATH . 'admin/inc/albums_tab.php');
+require PHPWG_ROOT_PATH . 'admin/inc/albums_tab.php';
 
 $query = <<<SQL
     SELECT id, permalink, CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;")) AS name, uppercats, global_rank

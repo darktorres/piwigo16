@@ -7,7 +7,7 @@ global $conf;
 
 use Piwigo\inc\functions;
 
-include(PHPWG_THEMES_PATH . 'elegant/admin/upgrade.php');
+require PHPWG_THEMES_PATH . 'elegant/admin/upgrade.php';
 
 functions::load_language('theme.lang', PHPWG_THEMES_PATH . 'elegant/');
 

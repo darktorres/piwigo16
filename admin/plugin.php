@@ -50,7 +50,7 @@ if (! isset($pwg_loaded_plugins[$plugin_id])) {
 $filename = PHPWG_PLUGINS_PATH . implode('/', $sections);
 
 if (is_file($filename)) {
-    include_once($filename);
+    require_once $filename;
 } else {
     die('Missing file ' . htmlentities($filename));
 }

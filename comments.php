@@ -26,8 +26,8 @@ use Piwigo\inc\SrcImage;
 // |                           initialization                              |
 // +-----------------------------------------------------------------------+
 define('PHPWG_ROOT_PATH', './');
-include_once(PHPWG_ROOT_PATH . 'inc/common.php');
-include_once(PHPWG_ROOT_PATH . 'inc/functions_comment.php');
+require_once PHPWG_ROOT_PATH . 'inc/common.php';
+require_once PHPWG_ROOT_PATH . 'inc/functions_comment.php';
 
 if (! $conf['activate_comments']) {
     functions_html::page_not_found(null);
@@ -538,7 +538,7 @@ if (! isset($themeconf['hide_menu_on']) or
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+
-include(PHPWG_ROOT_PATH . 'inc/page_header.php');
+require PHPWG_ROOT_PATH . 'inc/page_header.php';
 functions_plugins::trigger_notify('loc_end_comments');
 functions_html::flush_page_messages();
 
@@ -547,4 +547,4 @@ if (count($comments) > 0) {
 }
 
 $template->pparse('comments');
-include(PHPWG_ROOT_PATH . 'inc/page_tail.php');
+require PHPWG_ROOT_PATH . 'inc/page_tail.php';

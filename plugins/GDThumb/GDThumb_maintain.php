@@ -21,7 +21,7 @@ final class GDThumb_maintain extends PluginMaintain
         string $plugin_version,
         array &$errors = []
     ): void {
-        include(dirname(__FILE__) . '/config_default.php');
+        require dirname(__FILE__) . '/config_default.php';
         global $conf;
 
         if (empty($conf['gdThumb'])) {

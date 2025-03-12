@@ -25,7 +25,7 @@ define('ADMINTOOLS_ID', basename(dirname(__FILE__)));
 define('ADMINTOOLS_PATH', PHPWG_PLUGINS_PATH . ADMINTOOLS_ID . '/');
 define('ADMINTOOLS_ADMIN', functions_url::get_root_url() . 'admin.php?page=plugin-' . ADMINTOOLS_ID);
 
-include_once(ADMINTOOLS_PATH . 'inc/events.php');
+require_once ADMINTOOLS_PATH . 'inc/events.php';
 
 global $MultiView;
 $MultiView = new MultiView();

@@ -25,8 +25,8 @@ use Piwigo\inc\menubar;
 
 //--------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
-include_once(PHPWG_ROOT_PATH . 'inc/common.php');
-include(PHPWG_ROOT_PATH . 'inc/section_init.php');
+require_once PHPWG_ROOT_PATH . 'inc/common.php';
+require PHPWG_ROOT_PATH . 'inc/section_init.php';
 
 // Check Access and exit when user status is not ok
 functions_user::check_status(ACCESS_GUEST);
@@ -677,11 +677,11 @@ if (empty($page['is_external'])) {
         ($page['section'] == 'recent_cats' or $page['section'] == 'categories') and
         (! isset($page['category']['count_categories']) or $page['category']['count_categories'] > 0)
     ) {
-        include(PHPWG_ROOT_PATH . 'inc/category_cats.php');
+        require PHPWG_ROOT_PATH . 'inc/category_cats.php';
     }
 
     if (! empty($page['items'])) {
-        include(PHPWG_ROOT_PATH . 'inc/category_default.php');
+        require PHPWG_ROOT_PATH . 'inc/category_default.php';
 
         if ($conf['index_sizes_icon']) {
             $url = functions_url::add_url_params(
@@ -722,7 +722,7 @@ if (empty($page['is_external'])) {
 }
 
 //------------------------------------------------------------ end
-include(PHPWG_ROOT_PATH . 'inc/page_header.php');
+require PHPWG_ROOT_PATH . 'inc/page_header.php';
 functions_plugins::trigger_notify('loc_end_index');
 functions_html::flush_page_messages();
 $template->parse_index_buttons();
@@ -730,4 +730,4 @@ $template->pparse('index');
 
 //------------------------------------------------------------ log information
 functions::pwg_log();
-include(PHPWG_ROOT_PATH . 'inc/page_tail.php');
+require PHPWG_ROOT_PATH . 'inc/page_tail.php';

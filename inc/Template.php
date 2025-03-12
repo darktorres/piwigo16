@@ -1235,7 +1235,7 @@ final class Template
 
         if (! isset($themeconfs[$dir])) {
             $themeconf = [];
-            include($dir . '/themeconf.php');
+            require $dir . '/themeconf.php';
             // Put themeconf in cache
             $themeconfs[$dir] = $themeconf;
         }

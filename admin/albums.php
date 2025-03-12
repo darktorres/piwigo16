@@ -39,7 +39,7 @@ functions::check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'list';
-include(PHPWG_ROOT_PATH . 'admin/inc/albums_tab.php');
+require PHPWG_ROOT_PATH . 'admin/inc/albums_tab.php';
 
 // +-----------------------------------------------------------------------+
 // |                         categories auto order                         |

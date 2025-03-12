@@ -20,18 +20,18 @@ if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
 
 define('PHPWG_ROOT_PATH', './');
 
-include(PHPWG_ROOT_PATH . 'inc/config_default.php');
+require PHPWG_ROOT_PATH . 'inc/config_default.php';
 
 if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
-    include(PHPWG_ROOT_PATH . 'local/config/config.php');
+    require PHPWG_ROOT_PATH . 'local/config/config.php';
 }
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
-include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php');
-include_once(PHPWG_ROOT_PATH . 'inc/functions.php');
+require PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php';
+require_once PHPWG_ROOT_PATH . 'inc/functions.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when it is not ok                               |
@@ -88,7 +88,7 @@ foreach ($to_apply as $upgrade_id) {
     // include & execute upgrade script. Each upgrade script must contain
     // $upgrade_description variable which describe briefly what the upgrade
     // script does.
-    include(UPGRADES_PATH . '/' . $upgrade_id . '-database.php');
+    require UPGRADES_PATH . '/' . $upgrade_id . '-database.php';
 
     // notify upgrade
     $query = <<<SQL

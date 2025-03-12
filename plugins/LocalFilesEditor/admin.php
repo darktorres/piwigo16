@@ -34,7 +34,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-include_once(LOCALEDIT_PATH . 'inc/functions_LocalFilesEditor.php');
+require_once LOCALEDIT_PATH . 'inc/functions_LocalFilesEditor.php';
 functions::load_language('plugin.lang', LOCALEDIT_PATH);
 $my_base_url = functions_url::get_root_url() . 'admin.php?page=plugin-' . basename(dirname(__FILE__));
 
@@ -63,7 +63,7 @@ foreach ($conf['LocalFilesEditor_tabs'] as $tab) {
 $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
-include_once(LOCALEDIT_PATH . 'inc/' . $page['tab'] . '.php');
+require_once LOCALEDIT_PATH . 'inc/' . $page['tab'] . '.php';
 
 // +-----------------------------------------------------------------------+
 // |                           Load backup file

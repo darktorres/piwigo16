@@ -126,7 +126,7 @@ final class functions_plugins
                 $args[0] = $data;
 
                 if (! empty($handler['include_path'])) {
-                    include_once($handler['include_path']);
+                    require_once $handler['include_path'];
                 }
 
                 $data = call_user_func_array($handler['function'], $args);
@@ -179,7 +179,7 @@ final class functions_plugins
         foreach ($pwg_event_handlers[$event] as $priority => $handlers) {
             foreach ($handlers as $handler) {
                 if (! empty($handler['include_path'])) {
-                    include_once($handler['include_path']);
+                    require_once $handler['include_path'];
                 }
 
                 call_user_func_array($handler['function'], $args);
@@ -271,7 +271,7 @@ final class functions_plugins
             self::autoupdate_plugin($plugin);
             global $pwg_loaded_plugins;
             $pwg_loaded_plugins[$plugin['id']] = $plugin;
-            include_once($file_name);
+            require_once $file_name;
         }
     }
 
@@ -322,7 +322,7 @@ final class functions_plugins
                 global $page;
 
                 // call update method
-                include_once($maintain_file);
+                require_once $maintain_file;
 
                 $classname = $plugin['id'] . '_maintain';
 

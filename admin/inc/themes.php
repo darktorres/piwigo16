@@ -775,7 +775,7 @@ final class themes
 
         // 2.7 pattern (OO only)
         if (file_exists($file_to_include)) {
-            include_once($file_to_include);
+            require_once $file_to_include;
             return new $classname($theme_id);
         }
 
@@ -783,7 +783,7 @@ final class themes
 
         // before 2.7 pattern (OO or procedural)
         if (file_exists($file_to_include)) {
-            include_once($file_to_include);
+            require_once $file_to_include;
 
             if (class_exists($classname)) {
                 return new $classname($theme_id);

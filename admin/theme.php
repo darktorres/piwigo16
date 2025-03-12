@@ -31,7 +31,7 @@ if (! in_array($_GET['theme'], array_keys($themes->fs_themes))) {
 $filename = PHPWG_THEMES_PATH . $_GET['theme'] . '/admin/admin.php';
 
 if (is_file($filename)) {
-    include_once($filename);
+    require_once $filename;
 } else {
     die('Missing file ' . $filename);
 }

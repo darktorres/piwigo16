@@ -27,7 +27,7 @@ if (! functions_user::is_webmaster()) {
     $page['warnings'][] = str_replace('%s', functions::l10n('user_status_webmaster'), functions::l10n('%s status is required to edit parameters.'));
 }
 
-include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php');
+require_once PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -216,11 +216,11 @@ if (isset($_POST['submit'])) {
             break;
 
         case 'watermark':
-            include(PHPWG_ROOT_PATH . 'admin/inc/configuration_watermark_process.php');
+            require PHPWG_ROOT_PATH . 'admin/inc/configuration_watermark_process.php';
             break;
 
         case 'sizes':
-            include(PHPWG_ROOT_PATH . 'admin/inc/configuration_sizes_process.php');
+            require PHPWG_ROOT_PATH . 'admin/inc/configuration_sizes_process.php';
             break;
 
         case 'comments':
@@ -427,7 +427,7 @@ switch ($page['section']) {
 
     case 'default':
         $edit_user = functions_user::build_user($conf['guest_id'], false);
-        include_once(PHPWG_ROOT_PATH . 'profile.php');
+        require_once PHPWG_ROOT_PATH . 'profile.php';
 
         $errors = [];
 

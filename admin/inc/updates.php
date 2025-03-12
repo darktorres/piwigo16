@@ -199,7 +199,7 @@ final class updates
 
         if ($notify) {
             // send email
-            include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
+            require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
 
             functions_mail::switch_lang_to(functions_user::get_default_language());
 

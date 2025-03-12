@@ -293,7 +293,7 @@ DELETE FROM '. PLUGINS_TABLE .'
           $activity_details['fs_version'] = $this->fs_plugins[$plugin_id]['version'];
         }
 
-        include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+        include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
         deltree(PHPWG_PLUGINS_PATH . $plugin_id, PHPWG_PLUGINS_PATH . 'trash');
         break;
     }

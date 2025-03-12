@@ -165,7 +165,7 @@ function ws_extensions_update($params, $service)
     return new PwgError(403, "invalid extension type");
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
   include_once(PHPWG_ROOT_PATH.'admin/inc/'.$params['type'].'_class.php');
 
   $type = $params['type'];
@@ -264,7 +264,7 @@ function ws_extensions_ignoreupdate($params, $service)
   global $conf;
 
   define('IN_ADMIN', true);
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   if (!is_webmaster())
   {
@@ -324,7 +324,7 @@ function ws_extensions_checkupdates($params, $service)
 {
   global $conf;
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
   include_once(PHPWG_ROOT_PATH.'admin/inc/updates_class.php');
 
   $update = new updates();

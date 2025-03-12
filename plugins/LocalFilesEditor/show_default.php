@@ -24,7 +24,7 @@
 define('PHPWG_ROOT_PATH', '../../');
 define('IN_ADMIN', true);
 include_once(PHPWG_ROOT_PATH . 'inc/common.php');
-include_once(LOCALEDIT_PATH.'inc/functions.php');
+include_once(LOCALEDIT_PATH.'inc/functions_LocalFilesEditor.php');
 load_language('plugin.lang', LOCALEDIT_PATH);
 check_status(ACCESS_WEBMASTER);
 

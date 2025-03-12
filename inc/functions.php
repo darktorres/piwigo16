@@ -2405,7 +2405,7 @@ SELECT
 
     if ($age > $conf['lounge_max_duration'])
     {
-      include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+      include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
       empty_lounge();
     }
   }

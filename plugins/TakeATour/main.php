@@ -76,7 +76,7 @@ function TAT_tour_setup()
   $template->assign('ABS_U_ADMIN', get_absolute_root_url());// absolute one due to public pages and $conf['question_mark_in_urls'] = false+$conf['php_extension_in_urls'] = false;
 
   // some tours may need admin functions (like 2_8_0 needs get_orphans)
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   include($tour_to_launch.'/config.php');
   $template->set_filename('TAT_tour_tpl', $TOUR_PATH);

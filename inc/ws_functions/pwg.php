@@ -221,7 +221,7 @@ function ws_getCacheSize($params, &$service)
     }
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
   // Multiples sizes size
   $path_msizes = $conf['data_location'].'i';
   $msizes = get_cache_size_derivatives($path_msizes);
@@ -468,7 +468,7 @@ SELECT
   }
   elseif ('admins_only' == $conf['activity_display_connections'])
   {
-    include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+    include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
     $query.= '
     AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN ('.implode(',', get_admins()).'))';
   }
@@ -646,7 +646,7 @@ function ws_history_log($params, &$service)
 function ws_history_search($param, &$service)
 {
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
   include_once(PHPWG_ROOT_PATH.'admin/inc/functions_history.php');
 
   global $conf;

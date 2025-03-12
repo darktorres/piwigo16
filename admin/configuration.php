@@ -16,7 +16,7 @@ if (!is_webmaster())
   $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 include_once(PHPWG_ROOT_PATH.'admin/inc/functions_upload.php');
 include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet_class.php');
 

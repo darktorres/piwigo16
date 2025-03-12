@@ -303,7 +303,7 @@ UPDATE '.CATEGORIES_TABLE.'
         pwg_query($query);
         pwg_activity('album', $page['category']['id'], 'edit', array('action'=>$_GET['action'], 'image_id'=>$page['image_id']));
 
-        include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+        include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
         invalidate_user_cache();
       }
 

@@ -175,7 +175,7 @@ function save_profile_from_post($userdata, &$errors)
   if (count($errors) == 0)
   {
     // mass_updates function
-    include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+    include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
     $activity_details_tables = array();
 

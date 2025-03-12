@@ -13,7 +13,7 @@ include_once(PHPWG_ROOT_PATH.'inc/common.php');
 check_status(ACCESS_FREE);
 include_once(PHPWG_ROOT_PATH.'inc/functions_notification.php');
 include_once(PHPWG_ROOT_PATH.'inc/functions_mail.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 include_once(PHPWG_ROOT_PATH.'admin/inc/functions_notification_by_mail.php');
 // Translations are in admin file too
 load_language('admin.lang');

@@ -97,7 +97,7 @@ SELECT element_id FROM ' . CADDIE_TABLE . '
       );
 
     // gets tags (full available list is loaded in ajax)
-    include_once(PHPWG_ROOT_PATH . 'admin/inc/functions.php');
+    include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_admin.php');
 
     $query = '
 SELECT id, name
@@ -271,7 +271,7 @@ function admintools_save_picture()
 
   if (isset($_GET['delete']) and get_pwg_token()==@$_GET['pwg_token'])
   {
-    include_once(PHPWG_ROOT_PATH . 'admin/inc/functions.php');
+    include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_admin.php');
 
     delete_elements(array($page['image_id']), true);
     invalidate_user_cache();
@@ -296,7 +296,7 @@ function admintools_save_picture()
 
   if ($_POST['action'] == 'quick_edit')
   {
-    include_once(PHPWG_ROOT_PATH . 'admin/inc/functions.php');
+    include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_admin.php');
 
     check_pwg_token();
 

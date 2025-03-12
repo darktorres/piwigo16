@@ -136,7 +136,7 @@ function ws_permissions_add($params, &$service)
     return new PwgError(403, 'Invalid security token');
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   if (!empty($params['group_id']))
   {
@@ -198,7 +198,7 @@ function ws_permissions_remove($params, &$service)
     return new PwgError(403, 'Invalid security token');
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   $cat_ids = get_subcat_ids($params['cat_id']);
 

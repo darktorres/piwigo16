@@ -67,7 +67,7 @@ elseif ('tablet'==get_device())
 $this->smarty->registerFilter('pre', 'modus_smarty_prefilter_wrap');
 function modus_smarty_prefilter_wrap($source)
 {
-	include_once(dirname(__FILE__).'/functions.php');
+	include_once(dirname(__FILE__).'/functions_modus.php');
 	return modus_smarty_prefilter($source);
 }
 
@@ -131,7 +131,7 @@ add_event_handler('combinable_preparse', 'modus_combinable_preparse');
 function modus_combinable_preparse($template)
 {
 	global $conf, $template;
-	include_once(dirname(__FILE__).'/functions.php');
+	include_once(dirname(__FILE__).'/functions_modus.php');
 
 	try {
 		$template->smarty->registerPlugin('modifier', 'cssGradient', 'modus_css_gradient');

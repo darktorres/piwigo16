@@ -14,8 +14,8 @@ define('PHPWG_ROOT_PATH','./');
 define('IN_ADMIN', true);
 
 include_once(PHPWG_ROOT_PATH.'inc/common.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_plugins.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions_plugins_admin.php');
 include_once(PHPWG_ROOT_PATH.'admin/inc/add_core_tabs.php');
 
 trigger_notify('loc_begin_admin');

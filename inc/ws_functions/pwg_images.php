@@ -155,7 +155,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
     $inserts
     );
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
   update_category($new_cat_ids);
 }
 
@@ -877,7 +877,7 @@ UPDATE '. IMAGES_TABLE .'
   $affected_rows = pwg_db_changes($result);
   if ($affected_rows)
   {
-    include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+    include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
     invalidate_user_cache();
   }
   return $affected_rows;
@@ -895,7 +895,7 @@ function ws_images_setRank($params, $service)
 {
   if (count($params['image_id']) > 1)
   {
-    include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+    include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
     save_images_order(
       $params['category_id'],
@@ -1410,7 +1410,7 @@ SELECT COUNT(*)
 
   if (isset($params['tags']) and !empty($params['tags']))
   {
-    include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+    include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
     $tag_ids = array();
     if (is_array($params['tags']))
@@ -1450,7 +1450,7 @@ SELECT id, name, permalink
 
   // update metadata from the uploaded file (exif/iptc), even if the sync
   // was already performed by add_uploaded_file().
-  require_once(PHPWG_ROOT_PATH.'admin/inc/functions_metadata.php');
+  require_once(PHPWG_ROOT_PATH.'admin/inc/functions_metadata_admin.php');
   sync_metadata(array($image_id));
 
   return array(
@@ -2123,7 +2123,7 @@ function ws_images_formats_delete($params, $service) {
     }
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   $image_ids = array();
   $formats_of = array();
@@ -2297,7 +2297,7 @@ function ws_images_setInfo($params, $service)
     return new PwgError(403, 'Invalid security token');
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   $query='
 SELECT *
@@ -2470,7 +2470,7 @@ function ws_images_delete($params, $service)
     }
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
   $ret = delete_elements($image_ids, true);
   invalidate_user_cache();
 
@@ -2504,7 +2504,7 @@ function ws_images_checkUpload($params, $service)
  */
 function ws_images_emptyLounge($params, $service)
 {
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   $ret = array('rows' => empty_lounge());
 
@@ -2519,7 +2519,7 @@ function ws_images_emptyLounge($params, $service)
  */
 function ws_images_uploadCompleted($params, $service)
 {
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   if (get_pwg_token() != $params['pwg_token'])
   {
@@ -2591,7 +2591,7 @@ function ws_images_setMd5sum($params, $service)
     return new PwgError(403, 'Invalid security token');
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   $nb_no_md5sum = count(get_photos_no_md5sum());
   $added_count = 0;
@@ -2633,8 +2633,8 @@ SELECT id
     return new PwgError(403, 'No image found');
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_metadata.php');
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_metadata_admin.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
   sync_metadata($params['image_id']);
 
   return array(
@@ -2655,7 +2655,7 @@ function ws_images_deleteOrphans($params, $service)
     return new PwgError(403, 'Invalid security token');
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   $orphan_ids_to_delete = array_slice(get_orphans(), 0, $params['block_size']);
   $deleted_count = delete_elements($orphan_ids_to_delete, true);
@@ -2698,7 +2698,7 @@ SELECT
     return new PwgError(404, 'category_id not found');
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   if ('associate' == $params['action'])
   {

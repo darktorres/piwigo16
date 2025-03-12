@@ -220,7 +220,7 @@ SELECT *
  */
 function ws_tags_add($params, &$service)
 {
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   $creation_output = create_tag($params['name']);
 
@@ -248,7 +248,7 @@ $new_tag = query2array($query);
 
 function ws_tags_delete($params, &$service) 
 {
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   if (get_pwg_token() != $params['pwg_token'])
   {
@@ -280,7 +280,7 @@ SELECT COUNT(*)
 
 function ws_tags_rename($params, &$service) 
 {
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   if (get_pwg_token() != $params['pwg_token'])
   {
@@ -348,7 +348,7 @@ SELECT
 function ws_tags_duplicate($params, &$service)
 {
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   if (get_pwg_token() != $params['pwg_token'])
   {
@@ -498,7 +498,7 @@ SELECT image_id
     pwg_activity('photo', $image_id, 'edit', array("tag-add" => $params['destination_tag_id']));
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   delete_tags($merge_tag);
 

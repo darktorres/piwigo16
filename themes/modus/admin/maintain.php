@@ -4,7 +4,7 @@ function theme_activate($id, $version, &$errors)
 {
   global $conf;
 
-  include_once( dirname(dirname(__FILE__)).'/functions.php');
+  include_once( dirname(dirname(__FILE__)).'/functions_modus.php');
   $default_conf = modus_get_default_config();
 
   $my_conf = @$conf['modus_theme'];

@@ -666,7 +666,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
  */
 function ws_categories_add($params, &$service)
 {
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   global $conf;
 
@@ -786,7 +786,7 @@ SELECT id
     }
   }
   // include function to set the global rank
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
   save_categories_order($order_new);
 }
 
@@ -834,7 +834,7 @@ SELECT *
 
     if ($params['status'] != $category['status'])
     {
-      include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+      include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
       set_cat_status(array($params['category_id']), $params['status']);
     }
   }
@@ -853,7 +853,7 @@ SELECT *
 
   if (!empty($params['visible']) and ($params['visible'] != $category['visible']))
   {
-    include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+    include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
     set_cat_visible(array($params['category_id']), $params['visible']);
   }
 
@@ -1032,7 +1032,7 @@ SELECT
     return new PwgError(401, 'not permitted');
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
   
   set_random_representant(array($params['category_id']));
 
@@ -1111,7 +1111,7 @@ SELECT id
     return;
   }
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
   delete_categories($category_ids, $params['photo_deletion_mode']);
   update_global_rank();
   invalidate_user_cache();
@@ -1222,7 +1222,7 @@ SELECT id, name, dir, uppercats
   $page['infos'] = array();
   $page['errors'] = array();
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
   move_categories($category_ids, $params['parent']);
   invalidate_user_cache();
 

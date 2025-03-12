@@ -440,7 +440,7 @@ function ws_users_delete($params, &$service)
 
   global $conf, $user;
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   $protected_users = array(
     $user['id'],
@@ -510,7 +510,7 @@ function ws_users_setInfo($params, &$service)
 
   global $conf, $user;
 
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
   $updates = $updates_infos = array();
   $update_status = null;

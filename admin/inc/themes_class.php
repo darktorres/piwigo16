@@ -235,7 +235,7 @@ DELETE
 
         $theme_maintain->delete();
 
-        include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+        include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
         deltree(PHPWG_THEMES_PATH.$theme_id, PHPWG_THEMES_PATH . 'trash');
         break;
 

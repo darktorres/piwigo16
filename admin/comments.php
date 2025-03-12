@@ -11,7 +11,7 @@ if (!defined('PHPWG_ROOT_PATH'))
   die ("Hacking attempt!");
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
 if (isset($_GET['start']) and is_numeric($_GET['start']))
 {

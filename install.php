@@ -148,7 +148,7 @@ if (@file_exists($config_file))
 }
 
 include(PHPWG_ROOT_PATH . 'inc/constants.php');
-include(PHPWG_ROOT_PATH . 'admin/inc/functions.php');
+include(PHPWG_ROOT_PATH . 'admin/inc/functions_admin.php');
 
 include(PHPWG_ROOT_PATH . 'admin/inc/languages_class.php');
 $languages = new languages('utf-8');

@@ -22,7 +22,7 @@ include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.php');
 include(PHPWG_ROOT_PATH .'inc/dblayer/functions_'.$conf['dblayer'].'.php');
 
 include_once(PHPWG_ROOT_PATH.'inc/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions.php');
+include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 include_once(PHPWG_ROOT_PATH.'admin/inc/functions_upgrade.php');
 
 

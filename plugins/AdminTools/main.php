@@ -9,13 +9,16 @@ Author URI: http://piwigo.org
 Has Settings: webmaster
 */
 
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
 use Piwigo\plugins\AdminTools\inc\MultiView;
 
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
 define('ADMINTOOLS_ID',       basename(dirname(__FILE__)));
 define('ADMINTOOLS_PATH' ,    PHPWG_PLUGINS_PATH . ADMINTOOLS_ID . '/');
-define('ADMINTOOLS_ADMIN',    get_root_url() . 'admin.php?page=plugin-' . ADMINTOOLS_ID);
+define('ADMINTOOLS_ADMIN',    functions_url::get_root_url() . 'admin.php?page=plugin-' . ADMINTOOLS_ID);
 
 include_once(ADMINTOOLS_PATH . 'inc/events.php');
 
@@ -23,32 +26,32 @@ include_once(ADMINTOOLS_PATH . 'inc/events.php');
 global $MultiView;
 $MultiView = new MultiView();
 
-add_event_handler('init', admintools_init(...));
+functions_plugins::add_event_handler('init', admintools_init(...));
 
-add_event_handler('user_init', $MultiView->user_init(...));
-add_event_handler('init', $MultiView->init(...));
+functions_plugins::add_event_handler('user_init', $MultiView->user_init(...));
+functions_plugins::add_event_handler('init', $MultiView->init(...));
 
-add_event_handler('ws_add_methods', MultiView::register_ws(...));
-add_event_handler('delete_user', MultiView::invalidate_cache(...));
-add_event_handler('register_user', MultiView::invalidate_cache(...));
+functions_plugins::add_event_handler('ws_add_methods', MultiView::register_ws(...));
+functions_plugins::add_event_handler('delete_user', MultiView::invalidate_cache(...));
+functions_plugins::add_event_handler('register_user', MultiView::invalidate_cache(...));
 
 if (!defined('IN_ADMIN'))
 {
-  add_event_handler('loc_after_page_header', admintools_add_public_controller(...));
-  add_event_handler('loc_begin_picture', admintools_save_picture(...));
-  add_event_handler('loc_begin_index', admintools_save_category(...));
+  functions_plugins::add_event_handler('loc_after_page_header', admintools_add_public_controller(...));
+  functions_plugins::add_event_handler('loc_begin_picture', admintools_save_picture(...));
+  functions_plugins::add_event_handler('loc_begin_index', admintools_save_category(...));
 }
 else
 {
-  add_event_handler('loc_begin_page_header', admintools_add_admin_controller_setprefilter(...));
-  add_event_handler('loc_after_page_header', admintools_add_admin_controller(...));
+  functions_plugins::add_event_handler('loc_begin_page_header', admintools_add_admin_controller_setprefilter(...));
+  functions_plugins::add_event_handler('loc_after_page_header', admintools_add_admin_controller(...));
 }
 
 
 function admintools_init()
 {
   global $conf;
-  $conf['AdminTools'] = safe_unserialize($conf['AdminTools']);
+  $conf['AdminTools'] = functions::safe_unserialize($conf['AdminTools']);
 
-  load_language('plugin.lang', ADMINTOOLS_PATH);
+  functions::load_language('plugin.lang', ADMINTOOLS_PATH);
 }

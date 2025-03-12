@@ -6,7 +6,16 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\admin\inc\functions_install;
 use Piwigo\admin\inc\languages;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_cookie;
+use Piwigo\inc\functions_mail;
+use Piwigo\inc\functions_session;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\Template;
 
 //----------------------------------------------------------- include
@@ -101,7 +110,7 @@ include(PHPWG_ROOT_PATH . 'inc/functions.php');
 include(PHPWG_ROOT_PATH . 'inc/Template.php');
 
 // download database config file if exists
-check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
+functions::check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
 
 if (!empty($_GET['dl']) && file_exists(PHPWG_ROOT_PATH.$conf['data_location'].'pwg_'.$_GET['dl']))
 {
@@ -151,7 +160,6 @@ if (@file_exists($config_file))
 }
 
 include(PHPWG_ROOT_PATH . 'inc/constants.php');
-include(PHPWG_ROOT_PATH . 'admin/inc/functions_admin.php');
 
 $languages = new languages('utf-8');
 
@@ -216,15 +224,15 @@ else {
 }
 define('PHPWG_URL', 'https://'.PHPWG_DOMAIN);
 
-load_language('common.lang', '', array('language' => $language, 'target_charset'=>'utf-8'));
-load_language('admin.lang', '', array('language' => $language, 'target_charset'=>'utf-8'));
-load_language('install.lang', '', array('language' => $language, 'target_charset'=>'utf-8'));
+functions::load_language('common.lang', '', array('language' => $language, 'target_charset'=>'utf-8'));
+functions::load_language('admin.lang', '', array('language' => $language, 'target_charset'=>'utf-8'));
+functions::load_language('install.lang', '', array('language' => $language, 'target_charset'=>'utf-8'));
 
 header('Content-Type: text/html; charset=UTF-8');
 //------------------------------------------------- check php version
 if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<'))
 {
-  $errors[] = l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION);
+  $errors[] = functions::l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION);
 }
 
 //----------------------------------------------------- template initialization
@@ -235,41 +243,38 @@ if (!isset($step))
   $step = 1;
 }
 //---------------------------------------------------------------- form analyze
-include(PHPWG_ROOT_PATH .'inc/dblayer/functions_'.$dblayer.'.php');
-include(PHPWG_ROOT_PATH . 'admin/inc/functions_install.php');
-include(PHPWG_ROOT_PATH . 'admin/inc/functions_upgrade.php');
 
 if (isset($_POST['install']))
 {
-  install_db_connect($infos, $errors);
+  functions_install::install_db_connect($infos, $errors);
 
   if (count($errors) > 0)
   {
     print_r($errors);
   }
 
-  pwg_db_check_charset();
+  functions_mysqli::pwg_db_check_charset();
 
   $webmaster = trim(preg_replace('/\s{2,}/', ' ', $admin_name));
   if (empty($webmaster))
   {
-    $errors[] = l10n('enter a login for webmaster');
+    $errors[] = functions::l10n('enter a login for webmaster');
   }
   else if (preg_match( '/[\'"]/', $webmaster))
   {
-    $errors[] = l10n('webmaster login can\'t contain characters \' or "');
+    $errors[] = functions::l10n('webmaster login can\'t contain characters \' or "');
   }
   if ($admin_pass1 != $admin_pass2 || empty($admin_pass1))
   {
-    $errors[] = l10n('please enter your password again');
+    $errors[] = functions::l10n('please enter your password again');
   }
   if (empty($admin_mail))
   {
-    $errors[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
+    $errors[] = functions::l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
   }
   else
   {
-    $error_mail_address = validate_mail_address(null, $admin_mail);
+    $error_mail_address = functions_user::validate_mail_address(null, $admin_mail);
     if (!empty($error_mail_address))
     {
       $errors[] = $error_mail_address;
@@ -281,14 +286,14 @@ if (isset($_POST['install']))
     $step = 2;
 
     // tables creation, based on piwigo_structure.sql
-    execute_sqlfile(
+    functions_install::execute_sqlfile(
       PHPWG_ROOT_PATH.'install/piwigo_structure-mysql.sql',
       DEFAULT_PREFIX_TABLE,
       $prefixeTable,
       'mysql'
       );
     // We fill the tables with basic informations
-    execute_sqlfile(
+    functions_install::execute_sqlfile(
       PHPWG_ROOT_PATH.'install/config.sql',
       DEFAULT_PREFIX_TABLE,
       $prefixeTable,
@@ -297,23 +302,23 @@ if (isset($_POST['install']))
 
     $query = '
 INSERT INTO '.$prefixeTable.'config (param,value,comment) 
-   VALUES (\'secret_key\',md5('.pwg_db_cast_to_text(DB_RANDOM_FUNCTION.'()').'),
+   VALUES (\'secret_key\',md5('.functions_mysqli::pwg_db_cast_to_text(functions_mysqli::DB_RANDOM_FUNCTION.'()').'),
    \'a secret key specific to the gallery for internal use\');';
-    pwg_query($query);
+    functions_mysqli::pwg_query($query);
 
-    conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
-    conf_update_param('gallery_title', pwg_db_real_escape_string(l10n('Just another Piwigo gallery')));
+    functions::conf_update_param('piwigo_db_version', functions::get_branch_from_version(PHPWG_VERSION));
+    functions::conf_update_param('gallery_title', functions_mysqli::pwg_db_real_escape_string(functions::l10n('Just another Piwigo gallery')));
 
-    conf_update_param(
+    functions::conf_update_param(
       'page_banner',
-      '<h1>%gallery_title%</h1>'."\n\n<p>".pwg_db_real_escape_string(l10n('Welcome to my photo gallery')).'</p>'
+      '<h1>%gallery_title%</h1>'."\n\n<p>".functions_mysqli::pwg_db_real_escape_string(functions::l10n('Welcome to my photo gallery')).'</p>'
       );
 
     // fill languages table, only activate the current language
     $languages->perform_action('activate', $language);
 
     // fill $conf global array
-    load_conf_from_db();
+    functions::load_conf_from_db();
 
     // PWG_CHARSET is required for building the fs_themes array in the
     // themes class
@@ -321,21 +326,21 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
     {
       define('PWG_CHARSET', 'utf-8');
     }
-    activate_core_themes();
-    activate_core_plugins();
+    functions_install::activate_core_themes();
+    functions_install::activate_core_plugins();
 
     $insert = array(
       'id' => 1,
       'galleries_url' => PHPWG_ROOT_PATH.'galleries/',
       );
-    mass_inserts(SITES_TABLE, array_keys($insert), array($insert));
+    functions_mysqli::mass_inserts(SITES_TABLE, array_keys($insert), array($insert));
 
     // webmaster admin user
     $inserts = array(
       array(
         'id'           => 1,
         'username'     => $admin_name,
-        'password'     => pwg_password_hash($admin_pass1),
+        'password'     => functions_user::pwg_password_hash($admin_pass1),
         'mail_address' => $admin_mail,
         ),
       array(
@@ -343,17 +348,17 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
         'username'     => 'guest',
         ),
       );
-    mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
+    functions_mysqli::mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
 
-    create_user_infos(array(1,2), array('language' => $language));
+    functions_user::create_user_infos(array(1,2), array('language' => $language));
 
     // Available upgrades must be ignored after a fresh installation. To
     // make PWG avoid upgrading, we must tell it upgrades have already been
     // made.
-    // list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+    // list($dbnow) = \Piwigo\inc\dblayer\functions_mysqli::pwg_db_fetch_row(\Piwigo\inc\dblayer\functions_mysqli::pwg_query('SELECT NOW();'));
     // define('CURRENT_DATE', $dbnow);
     // $datas = array();
-    // foreach (get_available_upgrade_ids() as $upgrade_id)
+    // foreach (\Piwigo\admin\inc\functions_upgrade::get_available_upgrade_ids() as $upgrade_id)
     // {
     //   $datas[] = array(
     //     'id'          => $upgrade_id,
@@ -361,7 +366,7 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
     //     'description' => 'upgrade included in installation',
     //     );
     // }
-    // mass_inserts(
+    // \Piwigo\inc\dblayer\functions_mysqli::mass_inserts(
     //   UPGRADE_TABLE,
     //   array_keys($datas[0]),
     //   $datas
@@ -388,7 +393,7 @@ define(\'DB_COLLATE\', \'\');
     if ( !($fp = @fopen( $config_file, 'w' )))
     {
       // make sure nobody can list files of _data directory
-      secure_directory(PHPWG_ROOT_PATH.$conf['data_location']);
+      functions::secure_directory(PHPWG_ROOT_PATH.$conf['data_location']);
       
       $tmp_filename = md5(uniqid(time()));
       $fh = @fopen( PHPWG_ROOT_PATH.$conf['data_location'] . 'pwg_' . $tmp_filename, 'w' );
@@ -432,7 +437,7 @@ $template->assign(
     'F_ADMIN_EMAIL' => $admin_mail,
     'EMAIL' => '<span class="adminEmail">'.$admin_mail.'</span>',
     'F_NEWSLETTER_SUBSCRIBE' => $is_newsletter_subscribe,
-    'L_INSTALL_HELP' => l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL.'/forum'),
+    'L_INSTALL_HELP' => functions::l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL.'/forum'),
     ));
 
 //------------------------------------------------------ errors & infos display
@@ -442,8 +447,8 @@ if ($step == 1)
 }
 else
 {
-  pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'install', array('version'=>PHPWG_VERSION));
-  $infos[] = l10n('Congratulations, Piwigo installation is completed');
+  functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'install', array('version'=>PHPWG_VERSION));
+  $infos[] = functions::l10n('Congratulations, Piwigo installation is completed');
 
   if (isset($error_copy))
   {
@@ -451,12 +456,12 @@ else
   }
   else
   {
-    session_set_save_handler(pwg_session_open(...),
-      pwg_session_close(...),
-      pwg_session_read(...),
-      pwg_session_write(...),
-      pwg_session_destroy(...),
-      pwg_session_gc(...)
+    session_set_save_handler(functions_session::pwg_session_open(...),
+      functions_session::pwg_session_close(...),
+      functions_session::pwg_session_read(...),
+      functions_session::pwg_session_write(...),
+      functions_session::pwg_session_destroy(...),
+      functions_session::pwg_session_gc(...)
     );
     if ( function_exists('ini_set') )
     {
@@ -466,23 +471,23 @@ else
       ini_set('session.cookie_httponly', 1);
     }
     session_name($conf['session_name']);
-    session_set_cookie_params(0, cookie_path());
+    session_set_cookie_params(0, functions_cookie::cookie_path());
     register_shutdown_function('session_write_close');
     
-    $user = build_user(1, true);
-    log_user($user['id'], false);
+    $user = functions_user::build_user(1, true);
+    functions_user::log_user($user['id'], false);
     
     // newsletter subscription
     if ($is_newsletter_subscribe)
     {
-      fetchRemote(
-        get_newsletter_subscribe_base_url($language).$admin_mail,
+      functions_admin::fetchRemote(
+        functions_admin::get_newsletter_subscribe_base_url($language).$admin_mail,
         $result,
         array(),
         array('origin' => 'installation')
         );
 
-      userprefs_update_param('show_newsletter_subscription', false);
+      functions_user::userprefs_update_param('show_newsletter_subscription', false);
     }
 
     // email notification
@@ -491,24 +496,24 @@ else
       include_once(PHPWG_ROOT_PATH.'inc/functions_mail.php');
             
       $keyargs_content = array(
-        get_l10n_args('Hello %s,', $admin_name),
-        get_l10n_args('Welcome to your new installation of Piwigo!', ''),
-        get_l10n_args('', ''),
-        get_l10n_args('Here are your connection settings', ''),
-        get_l10n_args('', ''),
-        get_l10n_args('Link: %s', get_absolute_root_url()),
-        get_l10n_args('Username: %s', $admin_name),
-        get_l10n_args('Password: ********** (no copy by email)', ''),
-        get_l10n_args('Email: %s', $admin_mail),
-        get_l10n_args('', ''),
-        get_l10n_args('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
+        functions::get_l10n_args('Hello %s,', $admin_name),
+        functions::get_l10n_args('Welcome to your new installation of Piwigo!', ''),
+        functions::get_l10n_args('', ''),
+        functions::get_l10n_args('Here are your connection settings', ''),
+        functions::get_l10n_args('', ''),
+        functions::get_l10n_args('Link: %s', functions_url::get_absolute_root_url()),
+        functions::get_l10n_args('Username: %s', $admin_name),
+        functions::get_l10n_args('Password: ********** (no copy by email)', ''),
+        functions::get_l10n_args('Email: %s', $admin_mail),
+        functions::get_l10n_args('', ''),
+        functions::get_l10n_args('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
         );
         
-      pwg_mail(
+      functions_mail::pwg_mail(
         $admin_mail,
         array(
-          'subject' => l10n('Just another Piwigo gallery'),
-          'content' => l10n_args($keyargs_content),
+          'subject' => functions::l10n('Just another Piwigo gallery'),
+          'content' => functions::l10n_args($keyargs_content),
           'content_format' => 'text/plain',
           )
         );

@@ -19,7 +19,7 @@
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 
-{if (isset($REVERSE) and $REVERSE and $PAGE_TITLE == l10n('Home'))}
+{if (isset($REVERSE) and $REVERSE and $PAGE_TITLE == functions::l10n('Home'))}
 <title>{$GALLERY_TITLE} | {$PAGE_TITLE}</title>{else}
 <title>{$PAGE_TITLE} | {$GALLERY_TITLE}</title>{/if}
 <link rel="start" title="{'Home'|@translate}" href="{$U_HOME}" >

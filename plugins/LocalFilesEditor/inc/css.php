@@ -1,6 +1,8 @@
 <?php
 
 use Piwigo\admin\inc\themes;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_user;
 
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
@@ -29,7 +31,7 @@ else
   
   if (!isset($page['theme']) or !in_array($page['theme'], array_keys($themes->fs_themes)))
   {
-    $page['theme'] = get_default_theme();
+    $page['theme'] = functions_user::get_default_theme();
   }
   
   $edited_file = PHPWG_ROOT_PATH.PWG_LOCAL_DIR . 'css/'.$page['theme'].'-rules.css';
@@ -43,7 +45,7 @@ if (file_exists($edited_file))
 }
 else
 {
-  $content_file = "/* " . l10n('locfiledit_newfile') . " */\n\n";
+  $content_file = "/* " . functions::l10n('locfiledit_newfile') . " */\n\n";
 }
 
 $selected = 0; 
@@ -60,7 +62,7 @@ if ($page['theme'] == $value)
 // [Administration > Configuration > Themes]
 
 $themes->sort_fs_themes();
-$default_theme = get_default_theme();
+$default_theme = functions_user::get_default_theme();
 $db_themes = $themes->get_db_themes();
 
 $db_theme_ids = array();
@@ -105,7 +107,7 @@ foreach ($active_themes as $theme)
 
   if ($default_theme == $theme['id'])
   {
-    $label.= ' ('.l10n('default').')';
+    $label.= ' ('. functions::l10n('default').')';
   }
 
   $active_theme_options[$theme['id']] = $label;
@@ -118,7 +120,7 @@ foreach ($active_themes as $theme)
 
 if (count($active_theme_options) > 0)
 {
-  $options[l10n('Active Themes')] = $active_theme_options;
+  $options[functions::l10n('Active Themes')] = $active_theme_options;
 }
 
 $inactive_theme_options = array();
@@ -136,7 +138,7 @@ foreach ($inactive_themes as $theme)
 
 if (count($inactive_theme_options) > 0)
 {
-  $options[l10n('Inactive Themes')] = $inactive_theme_options;
+  $options[functions::l10n('Inactive Themes')] = $inactive_theme_options;
 }
 
 $template->assign(

@@ -10,6 +10,10 @@
 // |                           initialization                              |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_user;
+
 define('PHPWG_ROOT_PATH','./');
 define('PWG_HELP', true);
 include_once( PHPWG_ROOT_PATH.'inc/common.php' );
@@ -17,10 +21,10 @@ include_once( PHPWG_ROOT_PATH.'inc/common.php' );
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_GUEST);
+functions_user::check_status(ACCESS_GUEST);
 
 $page['body_id'] = 'thePopuphelpPage';
-$title = l10n('Piwigo Help');
+$title = functions::l10n('Piwigo Help');
 $page['page_banner'] = '';
 $page['meta_robots']=array('noindex'=>1, 'nofollow'=>1);
 include(PHPWG_ROOT_PATH.'inc/page_header.php');
@@ -32,14 +36,14 @@ if
   )
 {
   $help_content =
-    load_language('help/'.$_GET['page'].'.html', '', array('return'=>true) );
+    functions::load_language('help/'.$_GET['page'].'.html', '', array('return'=>true) );
 
   if ($help_content == false)
   {
     $help_content = '';
   }
 
-  $help_content = trigger_change(
+  $help_content = functions_plugins::trigger_change(
     'get_popup_help_content', $help_content, $_GET['page']);
 }
 else

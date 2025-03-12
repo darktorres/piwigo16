@@ -1,5 +1,7 @@
 <?php
 
+use Piwigo\inc\functions;
+
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
 $edited_file = PHPWG_ROOT_PATH.PWG_LOCAL_DIR . "config/config.php";
@@ -10,7 +12,7 @@ if (file_exists($edited_file))
 }
 else
 {
-  $content_file = "<?php\n\n/* ".l10n('locfiledit_newfile')." */\n\n\n\n\n?>";
+  $content_file = "<?php\n\n/* ".functions::l10n('locfiledit_newfile')." */\n\n\n\n\n?>";
 }
 
 $template->assign('show_default', array(

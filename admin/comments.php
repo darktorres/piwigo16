@@ -7,14 +7,18 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_comment;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 if (!defined('PHPWG_ROOT_PATH'))
 {
   die ("Hacking attempt!");
 }
-
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
 if (isset($_GET['start']) and is_numeric($_GET['start']))
 {
@@ -29,7 +33,7 @@ else
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 // +-----------------------------------------------------------------------+
 // |                                actions                                |
@@ -39,18 +43,18 @@ if (!empty($_POST))
 {
   if (empty($_POST['comments']))
   {
-    $page['errors'][] = l10n('Select at least one comment');
+    $page['errors'][] = functions::l10n('Select at least one comment');
   }
   else
   {
     include_once( PHPWG_ROOT_PATH .'inc/functions_comment.php' );
-    check_input_parameter('comments', $_POST, true, PATTERN_ID);
+    functions::check_input_parameter('comments', $_POST, true, PATTERN_ID);
 
     if (isset($_POST['validate']))
     {
-      validate_user_comment($_POST['comments']);
+      functions_comment::validate_user_comment($_POST['comments']);
 
-      $page['infos'][] = l10n_dec(
+      $page['infos'][] = functions::l10n_dec(
         '%d user comment validated', '%d user comments validated',
         count($_POST['comments'])
         );
@@ -58,9 +62,9 @@ if (!empty($_POST))
 
     if (isset($_POST['reject']))
     {
-      delete_user_comment($_POST['comments']);
+      functions_comment::delete_user_comment($_POST['comments']);
 
-      $page['infos'][] = l10n_dec(
+      $page['infos'][] = functions::l10n_dec(
         '%d user comment rejected', '%d user comments rejected',
         count($_POST['comments'])
         );
@@ -76,7 +80,7 @@ $template->set_filenames(array('comments'=>'comments.tpl'));
 
 $template->assign(
   array(
-    'F_ACTION' => get_root_url().'admin.php?page=comments'
+    'F_ACTION' => functions_url::get_root_url().'admin.php?page=comments'
     )
   );
 
@@ -84,7 +88,7 @@ $template->assign(
 // | Tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = get_root_url().'admin.php?page=';
+$my_base_url = functions_url::get_root_url().'admin.php?page=';
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('comments');
@@ -105,8 +109,8 @@ SELECT
   FROM '.COMMENTS_TABLE.'
   GROUP BY validated
 ;';
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result))
+$result = functions_mysqli::pwg_query($query);
+while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   $nb_total+= $row['counter'];
 
@@ -166,8 +170,8 @@ SELECT
   ORDER BY c.date DESC
   LIMIT '.$page['start'].', '.$conf['comments_page_nb_comments'].'
 ;';
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result))
+$result = functions_mysqli::pwg_query($query);
+while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   $thumb = DerivativeImage::thumb_url(
       array(
@@ -187,12 +191,12 @@ while ($row = pwg_db_fetch_assoc($result))
   $template->append(
     'comments',
     array(
-      'U_PICTURE' => get_root_url().'admin.php?page=photo-'.$row['image_id'],
+      'U_PICTURE' => functions_url::get_root_url().'admin.php?page=photo-'.$row['image_id'],
       'ID' => $row['id'],
       'TN_SRC' => $thumb,
-      'AUTHOR' => trigger_change('render_comment_author', $author_name),
-      'DATE' => format_date($row['date'], array('day_name','day','month','year','time')),
-      'CONTENT' => trigger_change('render_comment_content',$row['content']),
+      'AUTHOR' => functions_plugins::trigger_change('render_comment_author', $author_name),
+      'DATE' => functions::format_date($row['date'], array('day_name','day','month','year','time')),
+      'CONTENT' => functions_plugins::trigger_change('render_comment_content',$row['content']),
       'IS_PENDING' => ('false' == $row['validated']),
       'IP' => $row['anonymous_id'],
       )
@@ -205,15 +209,15 @@ while ($row = pwg_db_fetch_assoc($result))
 // |                            navigation bar                             |
 // +-----------------------------------------------------------------------+
 
-$navbar = create_navigation_bar(
-  get_root_url().'admin.php'.get_query_string_diff(array('start')),
+$navbar = functions::create_navigation_bar(
+  functions_url::get_root_url().'admin.php'.functions_url::get_query_string_diff(array('start')),
   ('pending' == $page['filter'] ? $nb_pending : $nb_total),
   $page['start'],
   $conf['comments_page_nb_comments']
   );
 
 $template->assign('navbar', $navbar);
-$template->assign('ADMIN_PAGE_TITLE', l10n('User comments'));
+$template->assign('ADMIN_PAGE_TITLE', functions::l10n('User comments'));
 
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |

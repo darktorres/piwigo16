@@ -1,17 +1,19 @@
 <?php
 
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
 
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
 global $template, $conf, $user, $page;
 
-load_language('plugin.lang', PHPWG_PLUGINS_PATH .'TakeATour/', array('force_fallback'=>'en_UK'));
+functions::load_language('plugin.lang', PHPWG_PLUGINS_PATH .'TakeATour/', array('force_fallback'=>'en_UK'));
 
 $page['tab'] = 'list';
 
 $tabsheet = new tabsheet();
-$tabsheet->add('list', '<span class="icon-menu"></span>'.'Take a Tour', get_root_url().'admin.php?page=plugin-TakeATour');
+$tabsheet->add('list', '<span class="icon-menu"></span>'.'Take a Tour', functions_url::get_root_url().'admin.php?page=plugin-TakeATour');
 $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
@@ -32,8 +34,8 @@ $tat_29url.= 'piwigo.org/releases/2.9.0';
 
 $template->assign(
   array(
-    'F_ACTION' => get_root_url().'admin.php',
-    'pwg_token' => get_pwg_token(),
+    'F_ACTION' => functions_url::get_root_url().'admin.php',
+    'pwg_token' => functions::get_pwg_token(),
     )
   );
 
@@ -51,7 +53,7 @@ $tours = array(
   'privacy',
   );
 
-$version_tour = str_replace('.', '_', get_branch_from_version(PHPWG_VERSION)).'_0';
+$version_tour = str_replace('.', '_', functions::get_branch_from_version(PHPWG_VERSION)).'_0';
 
 if (file_exists(PHPWG_PLUGINS_PATH.'TakeATour/tours/'.$version_tour.'/config.php'))
 {
@@ -74,27 +76,27 @@ foreach ($tours as $tour_id)
 {
   $tour = array(
     'id' => $tour_id,
-    'name' => l10n($tour_id.'_name'),
-    'desc' => l10n($tour_id.'_descrp'),
+    'name' => functions::l10n($tour_id.'_name'),
+    'desc' => functions::l10n($tour_id.'_descrp'),
     );
 
   switch ($tour_id)
   {
     case 'first_contact':
-      $tour['name'] = l10n('First Contact');
+      $tour['name'] = functions::l10n('First Contact');
       break;
     case 'privacy':
-      $tour['name'] = l10n('Privacy');
+      $tour['name'] = functions::l10n('Privacy');
       break;
     case '2_9_0':
-      $tour['desc'] = l10n($tour_id.'_descrp', $tat_29url);
+      $tour['desc'] = functions::l10n($tour_id.'_descrp', $tat_29url);
       break;
     case '2_8_0':
-      $tour['name'] = l10n('2.8 Tour');
-      $tour['desc'] = l10n($tour_id.'_descrp', $tat_28url);
+      $tour['name'] = functions::l10n('2.8 Tour');
+      $tour['desc'] = functions::l10n($tour_id.'_descrp', $tat_28url);
       break;
     case '2_7_0':
-      $tour['name'] = l10n('2.7 Tour');
+      $tour['name'] = functions::l10n('2.7 Tour');
       break;
   }
 

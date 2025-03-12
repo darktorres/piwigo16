@@ -7,6 +7,7 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\functions_url;
 
 if( !defined("PHPWG_ROOT_PATH") )
 {
@@ -18,7 +19,7 @@ if (!$conf['enable_extensions_install'] and !$conf['enable_core_update'])
   die('update system is disabled');
 }
 
-$my_base_url = get_root_url().'admin.php?page=updates';
+$my_base_url = functions_url::get_root_url().'admin.php?page=updates';
 
 if (isset($_GET['tab']))
   $page['tab'] = $_GET['tab'];

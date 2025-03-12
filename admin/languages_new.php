@@ -7,6 +7,9 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\languages;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 if( !defined("PHPWG_ROOT_PATH") )
 {
@@ -20,7 +23,7 @@ if (!$conf['enable_extensions_install'])
 
 $template->set_filenames(array('languages' => 'languages_new.tpl'));
 
-$base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];
+$base_url = functions_url::get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];
 
 $languages = new languages();
 $languages->get_db_languages();
@@ -32,7 +35,7 @@ $languages->get_db_languages();
 $languages_dir = PHPWG_ROOT_PATH.'language';
 if (!is_writable($languages_dir))
 {
-  $page['errors'][] = l10n('Add write access to the "%s" directory', 'language');
+  $page['errors'][] = functions::l10n('Add write access to the "%s" directory', 'language');
 }
 
 // +-----------------------------------------------------------------------+
@@ -41,17 +44,17 @@ if (!is_writable($languages_dir))
 
 if (isset($_GET['revision']))
 {
-  if (!is_webmaster())
+  if (!functions_user::is_webmaster())
   {
-    $page['errors'][] = l10n('Webmaster status is required.');
+    $page['errors'][] = functions::l10n('Webmaster status is required.');
   }
   else
   {
-    check_pwg_token();
+    functions::check_pwg_token();
 
     $install_status = $languages->extract_language_files('install', $_GET['revision']);
 
-    redirect($base_url.'&installstatus='.$install_status);
+    functions::redirect($base_url.'&installstatus='.$install_status);
   }
 }
 
@@ -63,23 +66,23 @@ if (isset($_GET['installstatus']))
   switch ($_GET['installstatus'])
   {
     case 'ok':
-      $page['infos'][] = l10n('Language has been successfully installed');
+      $page['infos'][] = functions::l10n('Language has been successfully installed');
       break;
 
     case 'temp_path_error':
-      $page['errors'][] = l10n('Can\'t create temporary file.');
+      $page['errors'][] = functions::l10n('Can\'t create temporary file.');
       break;
 
     case 'dl_archive_error':
-      $page['errors'][] = l10n('Can\'t download archive.');
+      $page['errors'][] = functions::l10n('Can\'t download archive.');
       break;
 
     case 'archive_error':
-      $page['errors'][] = l10n('Can\'t read or extract archive.');
+      $page['errors'][] = functions::l10n('Can\'t read or extract archive.');
       break;
 
     default:
-      $page['errors'][] = l10n('An error occured during extraction (%s).', htmlspecialchars($_GET['installstatus']));
+      $page['errors'][] = functions::l10n('An error occured during extraction (%s).', htmlspecialchars($_GET['installstatus']));
   }  
 }
 
@@ -94,7 +97,7 @@ if ($languages->get_server_languages(true))
 
     $url_auto_install = htmlentities($base_url)
       . '&amp;revision=' . $language['revision_id']
-      . '&amp;pwg_token='.get_pwg_token()
+      . '&amp;pwg_token='.functions::get_pwg_token()
     ;
 
     $template->append('languages', array(
@@ -111,10 +114,10 @@ if ($languages->get_server_languages(true))
 }
 else
 {
-  $page['errors'][] = l10n('Can\'t connect to server.');
+  $page['errors'][] = functions::l10n('Can\'t connect to server.');
 }
-$template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
-$template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
+$template->assign('ADMIN_PAGE_TITLE', functions::l10n('Languages'));
+$template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');
 ?>

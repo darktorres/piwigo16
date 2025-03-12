@@ -8,7 +8,12 @@
 
 namespace Piwigo\admin;
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\admin\inc\functions_metadata_admin;
+use Piwigo\inc\functions;
+
 // provides data for site synchronization from the local file system
+
 class LocalSiteReader
 {
 
@@ -53,7 +58,7 @@ function open()
 // retrieve file system sub-directories fulldirs
 function get_full_directories($basedir)
 {
-  $fs_fulldirs = get_fs_directories($basedir);
+  $fs_fulldirs = functions_admin::get_fs_directories($basedir);
   return $fs_fulldirs;
 }
 
@@ -77,8 +82,8 @@ function get_elements($path)
 
       if (is_file($path.'/'.$node))
       {
-        $extension = strtolower(get_extension($node));
-        $filename_wo_ext = get_filename_wo_extension($node);
+        $extension = strtolower(functions::get_extension($node));
+        $filename_wo_ext = functions::get_filename_wo_extension($node);
 
         if ( isset($conf['flip_file_ext'][$extension]) )
         {
@@ -130,13 +135,13 @@ function get_element_update_attributes($file)
   $data = array();
 
   $filename = basename($file);
-  $extension = get_extension($filename);
+  $extension = functions::get_extension($filename);
 
   $representative_ext = null;
   if (! isset($conf['flip_picture_ext'][$extension]) )
   {
     $dirname = dirname($file);
-    $filename_wo_ext = get_filename_wo_extension($filename);
+    $filename_wo_ext = functions::get_filename_wo_extension($filename);
     $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
   }
 
@@ -148,13 +153,13 @@ function get_element_update_attributes($file)
 // metadata update/synchronization according to configuration
 function get_metadata_attributes()
 {
-  return get_sync_metadata_attributes();
+  return functions_metadata_admin::get_sync_metadata_attributes();
 }
 
 // returns a hash of attributes (metadata+filesize+width,...) for file
 function get_element_metadata($infos)
 {
-  return get_sync_metadata($infos);
+  return functions_metadata_admin::get_sync_metadata($infos);
 }
 
 

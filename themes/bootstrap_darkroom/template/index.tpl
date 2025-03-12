@@ -1,7 +1,7 @@
 <!-- Start of index.tpl -->
 {combine_script id='cookie' require='jquery' path='node_modules/jquery.cookie/jquery.cookie.js' load='footer'}
 {combine_script id='equalheights' require='jquery' path='https://rawcdn.githack.com/Piwigo/piwigo-bootstrap-darkroom/refs/heads/master/js/jquery.equalheights.js' load='footer'}
-{if get_device() != 'desktop'}
+{if functions::get_device() != 'desktop'}
 {combine_script id='jquery.mobile-events' path='themes/bootstrap_darkroom/node_modules/jQuery-Touch-Events/src/jquery.mobile-events.min.js' require='jquery' load='footer'}
 {/if}
 {if !empty($PLUGIN_INDEX_CONTENT_BEFORE)}{$PLUGIN_INDEX_CONTENT_BEFORE}{/if}
@@ -123,7 +123,7 @@
 {/if}
 {if !empty($PLUGIN_INDEX_BUTTONS)}{foreach from=$PLUGIN_INDEX_BUTTONS item=button}<li>{$button}</li>{/foreach}{/if}
 {if !empty($PLUGIN_INDEX_ACTIONS)}{$PLUGIN_INDEX_ACTIONS}{/if}
-{if ((!empty($CATEGORIES) && !isset($GDThumb)) || (!empty($THUMBNAILS) && !isset($GThumb) && !isset($GDThumb))) && ($theme_config->category_wells == 'never' || ($theme_config->category_wells == 'mobile_only' && get_device() == 'desktop'))}
+{if ((!empty($CATEGORIES) && !isset($GDThumb)) || (!empty($THUMBNAILS) && !isset($GThumb) && !isset($GDThumb))) && ($theme_config->category_wells == 'never' || ($theme_config->category_wells == 'mobile_only' && functions::get_device() == 'desktop'))}
                     <li id="btn-grid" class="nav-item{if isset($smarty.cookies.view) and $smarty.cookies.view != 'list'} active{/if}">
                         <a class="nav-link" href="javascript:;" title="{'Grid view'|@translate}">
                             <i class="fas fa-th fa-fw"></i><span class="d-lg-none ml-2">{'Grid view'|@translate}</span>
@@ -282,7 +282,7 @@ function setupPhotoSwipe() {
    }
 }
 
-{if $theme_config->thumbnail_linkto == 'photoswipe' || ($theme_config->thumbnail_linkto == 'photoswipe_mobile_only' && get_device() != 'desktop')}
+{if $theme_config->thumbnail_linkto == 'photoswipe' || ($theme_config->thumbnail_linkto == 'photoswipe_mobile_only' && functions::get_device() != 'desktop')}
 $(document).ready(function() {
    setupPhotoSwipe();
 });

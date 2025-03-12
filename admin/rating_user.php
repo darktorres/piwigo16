@@ -6,8 +6,14 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 
 defined('PHPWG_ROOT_PATH') or die ("Hacking attempt!");
@@ -39,12 +45,12 @@ $query = 'SELECT DISTINCT
     ON u.'.$conf['user_fields']['id'].' = ui.user_id';
 
 $users_by_id = array();
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result))
+$result = functions_mysqli::pwg_query($query);
+while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   $users_by_id[(int)$row['id']] = array(
     'name' => $row['name'],
-    'anon' => is_autorize_status(ACCESS_CLASSIC, $row['status']) ? false : true
+    'anon' => functions_user::is_autorize_status(ACCESS_CLASSIC, $row['status']) ? false : true
   );
 }
 
@@ -59,8 +65,8 @@ $image_ids = array();
 $by_user_ratings = array();
 $query = '
 SELECT * FROM '.RATE_TABLE.' ORDER by date DESC';
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result))
+$result = functions_mysqli::pwg_query($query);
+while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   if (!isset($users_by_id[$row['user_id']]))
   {
@@ -101,13 +107,13 @@ if (count($image_ids) > 0 )
   $query = 'SELECT id, name, file, path, representative_ext, level
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', array_keys($image_ids)).')';
-  $result = pwg_query($query);
-  $params = ImageStdParams::get_by_type(IMG_SQUARE);
-  while ($row = pwg_db_fetch_assoc($result))
+  $result = functions_mysqli::pwg_query($query);
+  $params = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE);
+  while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
   {
     $image_urls[ $row['id'] ] = array(
       'tn' => DerivativeImage::url($params, $row),
-      'page' => make_picture_url( array('image_id'=>$row['id'], 'image_file'=>$row['file']) ),
+      'page' => functions_url::make_picture_url( array('image_id'=>$row['id'], 'image_file'=>$row['file']) ),
     );
   }
 }
@@ -118,8 +124,8 @@ $query='SELECT element_id,
   FROM '.RATE_TABLE.'
   GROUP BY element_id';
 $all_img_sum = array();
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result))
+$result = functions_mysqli::pwg_query($query);
+while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   $all_img_sum[(int)$row['element_id']] = array( 'avg'=>(float)$row['avg'] );
 }
@@ -128,7 +134,7 @@ $query='SELECT id
   FROM '.IMAGES_TABLE.'
   ORDER by rating_score DESC
   LIMIT '.$consensus_top_number;
-$best_rated = array_flip( array_from_query($query, 'id'));
+$best_rated = array_flip( functions::array_from_query($query, 'id'));
 
 // by user stats
 foreach($by_user_ratings as $id => &$rating)
@@ -177,36 +183,6 @@ foreach($by_user_ratings as $id => $rating)
   }
 }
 
-
-function avg_compare($a, $b)
-{
-  $d = $a['avg'] - $b['avg'];
-  return ($d==0) ? 0 : ($d<0 ? -1 : 1);
-}
-
-function count_compare($a, $b)
-{
-  $d = $a['count'] - $b['count'];
-  return ($d==0) ? 0 : ($d<0 ? -1 : 1);
-}
-
-function cv_compare($a, $b)
-{
-  $d = $b['cv'] - $a['cv']; //desc
-  return ($d==0) ? 0 : ($d<0 ? -1 : 1);
-}
-
-function consensus_dev_compare($a, $b)
-{
-  $d = $b['cd'] - $a['cd']; //desc
-  return ($d==0) ? 0 : ($d<0 ? -1 : 1);
-}
-
-function last_rate_compare($a, $b)
-{
-  return -strcmp( $a['last_date'], $b['last_date']);
-}
-
 $order_by_index=4;
 if (isset($_GET['order_by']) and is_numeric($_GET['order_by']))
 {
@@ -214,11 +190,11 @@ if (isset($_GET['order_by']) and is_numeric($_GET['order_by']))
 }
 
 $available_order_by= array(
-    array(l10n('Average rate'), avg_compare(...)),
-    array(l10n('Number of rates'), count_compare(...)),
-    array(l10n('Variation'), cv_compare(...)),
-    array(l10n('Consensus deviation'), consensus_dev_compare(...)),
-    array(l10n('Last'), last_rate_compare(...)),
+    array(functions::l10n('Average rate'), functions_admin::avg_compare(...)),
+    array(functions::l10n('Number of rates'), functions_admin::count_compare(...)),
+    array(functions::l10n('Variation'), functions_admin::cv_compare(...)),
+    array(functions::l10n('Consensus deviation'), functions_admin::consensus_dev_compare(...)),
+    array(functions::l10n('Last'), functions_admin::last_rate_compare(...)),
   );
 
 for ($i=0; $i<count($available_order_by); $i++)
@@ -237,18 +213,18 @@ SELECT
     COUNT(*)
   FROM '.RATE_TABLE.
 ';';
-list($nb_elements) = pwg_db_fetch_row(pwg_query($query));
+list($nb_elements) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $template->assign( array(
-  'F_ACTION' => get_root_url().'admin.php',
+  'F_ACTION' => functions_url::get_root_url().'admin.php',
   'F_MIN_RATES' => $filter_min_rates,
   'CONSENSUS_TOP_NUMBER' => $consensus_top_number,
   'available_rates' => $conf['rate_items'],
   'ratings' => $by_user_ratings,
   'image_urls' => $image_urls,
-  'TN_WIDTH' => ImageStdParams::get_by_type(IMG_SQUARE)->sizing->ideal_size[0],
+  'TN_WIDTH' => ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE)->sizing->ideal_size[0],
   'NB_ELEMENTS' => $nb_elements,
-  'ADMIN_PAGE_TITLE' => l10n('Rating'),
+  'ADMIN_PAGE_TITLE' => functions::l10n('Rating'),
   ));
 $template->set_filename('rating', 'rating_user.tpl');
 $template->assign_var_from_handle('ADMIN_CONTENT', 'rating');

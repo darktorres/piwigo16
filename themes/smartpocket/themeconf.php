@@ -8,8 +8,11 @@ Author: P@t
 Author URI: http://piwigo.org
 */
 
+use Piwigo\inc\derivative_std_params;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
 use Piwigo\inc\ImageStdParams;
-use Piwigo\themes\smartpocket\SPThumbPicker;
+use Piwigo\themes\smartpocket\functions_smartpocket;
 
 $themeconf = array(
   'mobile' => true,
@@ -19,12 +22,12 @@ $themeconf = array(
 global $conf;
 include(PHPWG_THEMES_PATH.'smartpocket/admin/upgrade.php');
 
-load_language('theme.lang', PHPWG_THEMES_PATH.'smartpocket/');
+functions::load_language('theme.lang', PHPWG_THEMES_PATH.'smartpocket/');
 
 
 // Redirect if page is not compatible with mobile theme
-/*if (!in_array(script_basename(), array('index', 'register', 'profile', 'identification', 'ws', 'admin')))
-  redirect(duplicate_index_url());
+/*if (!in_array(\Piwigo\inc\functions::script_basename(), array('index', 'register', 'profile', 'identification', 'ws', 'admin')))
+  \Piwigo\inc\functions::redirect(\Piwigo\inc\functions_url::duplicate_index_url());
 */
 
 // avoid trying to load slideshow.tpl which does not exist in SmartPocket theme
@@ -34,28 +37,13 @@ if (isset($_GET['slideshow']))
 }
 
 //Retrive all pictures on thumbnails page
-add_event_handler('loc_index_thumbnails_selection', sp_select_all_thumbnails(...));
-
-function sp_select_all_thumbnails($selection)
-{
-  global $page, $template;
-
-  $template->assign('page_selection', array_flip($selection));
-  $template->assign('thumb_picker', new SPThumbPicker() );
-  return $page['items'];
-}
+functions_plugins::add_event_handler('loc_index_thumbnails_selection', functions_smartpocket::sp_select_all_thumbnails(...));
 
 // Retrive all categories on thumbnails page
-add_event_handler('loc_end_index_category_thumbnails', sp_select_all_categories(...));
-
-function sp_select_all_categories($selection)
-{
-  global $tpl_thumbnails_var;
-  return $tpl_thumbnails_var;
-}
+functions_plugins::add_event_handler('loc_end_index_category_thumbnails', functions_smartpocket::sp_select_all_categories(...));
 
 // Get better derive parameters for screen size
-$type = IMG_LARGE;
+$type = derivative_std_params::IMG_LARGE;
 if (!empty($_COOKIE['screen_size']))
 {
   $screen_size = explode('x', $_COOKIE['screen_size']);
@@ -67,59 +55,16 @@ if (!empty($_COOKIE['screen_size']))
 }
 
 $this->assign('picture_derivative_params', ImageStdParams::get_by_type($type));
-$this->assign('thumbnail_derivative_params', ImageStdParams::get_by_type(IMG_SQUARE));
+$this->assign('thumbnail_derivative_params', ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE));
 
-add_event_handler('loc_end_section_init', sp_end_section_init(...));
-function sp_end_section_init()
-{
-  global $page, $template;
-
-  // variables to log history
-  $template->assign(
-    'smartpocket_log_history',
-    array(
-      'cat_id' => @$page['category']['id'],
-      'section' => @$page['section'],
-      'tags_string' => (isset($page['tag_ids']) ? implode(',', $page['tag_ids']) : ''),
-      )
-    );
-}
+functions_plugins::add_event_handler('loc_end_section_init', functions_smartpocket::sp_end_section_init(...));
 
 //------------------------------------------------------------- mobile version & theme config
-add_event_handler('init', mobile_link(...));
-
-function mobile_link()
-{
-  global $template, $conf;
-  $config = safe_unserialize( $conf['smartpocket'] );
-  $template->assign( 'smartpocket', $config );
-  if ( !empty($conf['mobile_theme']) && (get_device() != 'desktop' || mobile_theme()))
-  {
-    $template->assign(array(
-                            'TOGGLE_MOBILE_THEME_URL' => add_url_params(htmlspecialchars($_SERVER['REQUEST_URI']),array('mobile' => mobile_theme() ? 'false' : 'true')),
-      ));
-  }
-}
-
+functions_plugins::add_event_handler('init', functions_smartpocket::mobile_link(...));
 
 if ( !function_exists( 'add_menu_on_public_pages' ) ) { 
   if ( defined('IN_ADMIN') and IN_ADMIN ) return false; 
-  add_event_handler('loc_after_page_header', add_menu_on_public_pages(...), 20); 
-
-  function  add_menu_on_public_pages() { 
-    if ( function_exists( 'initialize_menu') ) return false; # The current page has already the menu  
-    global $template, $page, $conf; 
-    if ( isset($page['body_id']) and $page['body_id']=="thePicturePage" ) 
-    {	 	 
-      $template->set_filenames(array( 
-            'add_menu_on_public_pages' => dirname(__FILE__) . '/template/add_menu_on_public_pages.tpl', 
-      )); 
-      include_once(PHPWG_ROOT_PATH.'inc/menubar.php'); 
-      $template->parse('add_menu_on_public_pages');
-    }
-     
-     
-  } 
+  functions_plugins::add_event_handler('loc_after_page_header', functions_smartpocket::add_menu_on_public_pages(...), 20);
 } 
 
 

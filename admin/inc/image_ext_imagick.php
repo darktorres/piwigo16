@@ -12,6 +12,8 @@ namespace Piwigo\admin\inc;
 // |            Class for ImageMagick external installation                |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\functions;
+
 class image_ext_imagick implements imageInterface
 {
   var $imagickdir = '';
@@ -32,7 +34,7 @@ class image_ext_imagick implements imageInterface
       @putenv('MAGICK_THREAD_LIMIT=1');
     }
 
-    if ('webp' == strtolower(get_extension($source_filepath)))
+    if ('webp' == strtolower(functions::get_extension($source_filepath)))
     {
       $webp_info = pwg_image::webp_info($source_filepath);
 

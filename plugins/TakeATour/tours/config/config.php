@@ -2,13 +2,15 @@
 /**********************************
  * REQUIRED PATH TO THE TPL FILE */
 
+use Piwigo\inc\functions_plugins;
+
 $TOUR_PATH = PHPWG_PLUGINS_PATH.'TakeATour/tours/config/tour.tpl';
 
 /*********************************/
 
 if ( defined('IN_ADMIN') and IN_ADMIN )
 {
-  add_event_handler('loc_end_themes_installed', TAT_FC_35(...));
+  functions_plugins::add_event_handler('loc_end_themes_installed', TAT_FC_35(...));
 }
 function TAT_FC_35()
 {

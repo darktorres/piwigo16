@@ -6,6 +6,10 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\PwgError;
 
 // by default we start with guest
@@ -15,8 +19,8 @@ if (isset($_COOKIE[session_name()]))
 {
   if (isset($_GET['act']) and $_GET['act'] == 'logout')
   { // logout
-    logout_user();
-    redirect(get_gallery_home_url());
+    functions_user::logout_user();
+    functions::redirect(functions_url::get_gallery_home_url());
   }
   elseif (!empty($_SESSION['pwg_uid']))
   {
@@ -27,7 +31,7 @@ if (isset($_COOKIE[session_name()]))
 // Now check the auto-login
 if ( $user['id']==$conf['guest_id'] )
 {
-  auto_login();
+  functions_user::auto_login();
 }
 
 // using Apache authentication override the above user search
@@ -45,9 +49,9 @@ if ($conf['apache_authentication'])
 
   if (isset($remote_user))
   {
-    if (!($user['id'] = get_userid($remote_user)))
+    if (!($user['id'] = functions_user::get_userid($remote_user)))
     {
-      $user['id'] = register_user($remote_user, '', '', false);
+      $user['id'] = functions_user::register_user($remote_user, '', '', false);
     }
   }
 }
@@ -55,7 +59,7 @@ if ($conf['apache_authentication'])
 // automatic login by authentication key
 if (isset($_GET['auth']))
 {
-  auth_key_login($_GET['auth']);
+  functions_user::auth_key_login($_GET['auth']);
 }
 
 if (
@@ -66,7 +70,7 @@ if (
   and isset($_POST['password'])
 )
 {
-  if (!try_log_user($_POST['username'], $_POST['password'], false))
+  if (!functions_user::try_log_user($_POST['username'], $_POST['password'], false))
   {
     include_once(PHPWG_ROOT_PATH.'inc/ws_init.php');
     $service->sendResponse(new PwgError(999, 'Invalid username/password'));
@@ -74,12 +78,12 @@ if (
   }
 }
 
-$user = build_user( $user['id'],
+$user = functions_user::build_user( $user['id'],
           ( defined('IN_ADMIN') and IN_ADMIN ) ? false : true // use cache ?
          );
-if ($conf['browser_language'] and (is_a_guest() or is_generic()) and $language = get_browser_language())
+if ($conf['browser_language'] and (functions_user::is_a_guest() or functions_user::is_generic()) and $language = functions_user::get_browser_language())
 {
   $user['language'] = $language;
 }
-trigger_notify('user_init', $user);
+functions_plugins::trigger_notify('user_init', $user);
 ?>

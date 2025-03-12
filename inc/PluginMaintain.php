@@ -52,7 +52,7 @@ class PluginMaintain
    */
   function autoUpdate()
   {
-    if (is_admin() && !defined('IN_WS'))
+    if (functions_user::is_admin() && !defined('IN_WS'))
     {
       trigger_error('Function PluginMaintain::autoUpdate deprecated', E_USER_WARNING);
     }

@@ -6,6 +6,15 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_category;
+use Piwigo\inc\functions_filter;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\SrcImage;
 
@@ -37,7 +46,7 @@ SELECT SQL_CALC_FOUND_ROWS
 if ('recent_cats' == $page['section'])
 {
   $query.= '
-  AND '.get_recent_photos_sql('date_last');
+  AND '.functions_user::get_recent_photos_sql('date_last');
 }
 else
 {
@@ -46,7 +55,7 @@ else
 }
 
 $query.= '
-      '.get_sql_condition_FandF(
+      '.functions_user::get_sql_condition_FandF(
         array('visible_categories' => 'id'),
         'AND'
         );
@@ -66,17 +75,17 @@ $query.= '
   LIMIT '.$conf['nb_categories_page'].' OFFSET '.($page['startcat'] ?? 0).'
 ;';
 
-$query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
+$query = functions_plugins::trigger_change('loc_begin_index_category_thumbnails_query', $query);
 
-$result = pwg_query($query);
-list($page['total_categories']) = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+$result = functions_mysqli::pwg_query($query);
+list($page['total_categories']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS()'));
 
 $categories = array();
 $category_ids = array();
 $image_ids = array();
 $user_representative_updates_for = array();
 
-while ($row = pwg_db_fetch_assoc($result))
+while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   $row['is_child_date_last'] = @$row['max_date_last']>@$row['date_last'];
 
@@ -90,7 +99,7 @@ while ($row = pwg_db_fetch_assoc($result))
   }
   elseif ($conf['allow_random_representative'])
   { // searching a random representant among elements in sub-categories
-    $image_id = get_random_image_in_category($row);
+    $image_id = functions_category::get_random_image_in_category($row);
   }
   elseif ($row['count_categories']>0 and $row['count_images']>0) // at this point, $row['count_images'] should always be >0 (used as condition in SQL)
   { // searching a random representant among representant of sub-categories
@@ -100,7 +109,7 @@ SELECT representative_picture_id
   ON id = cat_id and user_id = '.$user['id'].'
   WHERE uppercats LIKE \''.$row['uppercats'].',%\'
     AND representative_picture_id IS NOT NULL'
-  .get_sql_condition_FandF
+  .functions_user::get_sql_condition_FandF
   (
     array
       (
@@ -108,13 +117,13 @@ SELECT representative_picture_id
       ),
     "\n  AND"
   ).'
-  ORDER BY '.DB_RANDOM_FUNCTION.'()
+  ORDER BY '.functions_mysqli::DB_RANDOM_FUNCTION.'()
   LIMIT 1
 ;';
-    $subresult = pwg_query($query);
-    if (pwg_db_num_rows($subresult) > 0)
+    $subresult = functions_mysqli::pwg_query($query);
+    if (functions_mysqli::pwg_db_num_rows($subresult) > 0)
     {
-      list($image_id) = pwg_db_fetch_row($subresult);
+      list($image_id) = functions_mysqli::pwg_db_fetch_row($subresult);
     }
   }
 
@@ -156,7 +165,7 @@ SELECT
   FROM '.IMAGE_CATEGORY_TABLE.'
     INNER JOIN '.IMAGES_TABLE.' ON image_id = id
   WHERE category_id IN ('.implode(',', $category_ids).')
-'.get_sql_condition_FandF
+'.functions_user::get_sql_condition_FandF
   (
     array
       (
@@ -167,13 +176,13 @@ SELECT
   ).'
   GROUP BY category_id
 ;';
-    $dates_of_category = query2array($query, 'category_id');
+    $dates_of_category = functions_mysqli::query2array($query, 'category_id');
   }
 }
 
 if ($page['section']=='recent_cats')
 {
-  usort($categories, global_rank_compare(...));
+  usort($categories, functions_category::global_rank_compare(...));
 }
 
 if (count($categories) > 0)
@@ -186,8 +195,8 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', $image_ids).')
 ;';
-  $result = pwg_query($query);
-  while ($row = pwg_db_fetch_assoc($result))
+  $result = functions_mysqli::pwg_query($query);
+  while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
   {
     if ($row['level'] <= $user['level'])
     {
@@ -208,7 +217,7 @@ SELECT *
         if ($row['id'] == $category['representative_picture_id'])
         {
           // searching a random representant among elements in sub-categories
-          $image_id = get_random_image_in_category($category);
+          $image_id = functions_category::get_random_image_in_category($category);
 
           if (isset($image_id) and !in_array($image_id, $image_ids))
           {
@@ -234,8 +243,8 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', $new_image_ids).')
 ;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result))
+    $result = functions_mysqli::pwg_query($query);
+    while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
     {
       $infos_of_image[$row['id']] = $row;
     }
@@ -262,7 +271,7 @@ if (count($user_representative_updates_for))
         );
   }
 
-  mass_updates(
+  functions_mysqli::mass_updates(
     USER_CACHE_CATEGORIES_TABLE,
     array(
       'primary' => array('user_id', 'cat_id'),
@@ -275,14 +284,14 @@ if (count($user_representative_updates_for))
 if (count($categories) > 0)
 {
   // Update filtered data
-  if (function_exists('update_cats_with_filtered_data'))
+  if (function_exists('\Piwigo\inc\functions_filter::update_cats_with_filtered_data'))
   {
-    update_cats_with_filtered_data($categories);
+    functions_filter::update_cats_with_filtered_data($categories);
   }
 
   $template->set_filename('index_category_thumbnails', 'mainpage_categories.tpl');
 
-  trigger_notify('loc_begin_index_category_thumbnails', $categories);
+  functions_plugins::trigger_notify('loc_begin_index_category_thumbnails', $categories);
 
   $tpl_thumbnails_var = array();
 
@@ -293,7 +302,7 @@ if (count($categories) > 0)
       continue;
     }
 
-    $category['name'] = trigger_change(
+    $category['name'] = functions_plugins::trigger_change(
         'render_category_name',
         $category['name'],
         'subcatify_category_name'
@@ -301,7 +310,7 @@ if (count($categories) > 0)
 
     if ($page['section']=='recent_cats')
     {
-      $name = get_cat_display_name_cache($category['uppercats'], null);
+      $name = functions_html::get_cat_display_name_cache($category['uppercats'], null);
     }
     else
     {
@@ -315,12 +324,12 @@ if (count($categories) > 0)
           'representative'   => $representative_infos,
           'TN_ALT'   => strip_tags($category['name']),
 
-          'URL'   => make_index_url(
+          'URL'   => functions_url::make_index_url(
             array(
               'category' => $category
               )
             ),
-          'CAPTION_NB_IMAGES' => get_display_images_count
+          'CAPTION_NB_IMAGES' => functions_category::get_display_images_count
                                   (
                                     $category['nb_images'],
                                     $category['count_images'],
@@ -329,15 +338,15 @@ if (count($categories) > 0)
                                     '<br>'
                                   ),
           'DESCRIPTION' =>
-            trigger_change('render_category_literal_description',
-              trigger_change('render_category_description',
+            functions_plugins::trigger_change('render_category_literal_description',
+              functions_plugins::trigger_change('render_category_description',
                 @$category['comment'],
                 'subcatify_category_description')),
           'NAME'  => $name,
         ) );
     if ($conf['index_new_icon'])
     {
-      $tpl_var['icon_ts'] = get_icon($category['max_date_last'], $category['is_child_date_last']);
+      $tpl_var['icon_ts'] = functions::get_icon($category['max_date_last'], $category['is_child_date_last']);
     }
 
     if ($conf['display_fromto'])
@@ -349,7 +358,7 @@ if (count($categories) > 0)
 
         if (!empty($from))
         {
-          $tpl_var['INFO_DATES'] = format_fromto($from, $to);
+          $tpl_var['INFO_DATES'] = functions::format_fromto($from, $to);
         }
       }
     }
@@ -360,8 +369,8 @@ if (count($categories) > 0)
   // pagination
   $tpl_thumbnails_var_selection = $tpl_thumbnails_var;
 
-  $derivative_params = trigger_change('get_index_album_derivative_params', ImageStdParams::get_by_type(IMG_THUMB) );
-  $tpl_thumbnails_var_selection = trigger_change('loc_end_index_category_thumbnails', $tpl_thumbnails_var_selection);
+  $derivative_params = functions_plugins::trigger_change('get_index_album_derivative_params', ImageStdParams::get_by_type(derivative_std_params::IMG_THUMB) );
+  $tpl_thumbnails_var_selection = functions_plugins::trigger_change('loc_end_index_category_thumbnails', $tpl_thumbnails_var_selection);
   $template->assign( array(
     'maxRequests' =>$conf['max_requests'],
     'category_thumbnails' => $tpl_thumbnails_var_selection,
@@ -374,8 +383,8 @@ if (count($categories) > 0)
   $page['cats_navigation_bar'] = array();
   if ($page['total_categories'] > $conf['nb_categories_page'])
   {
-    $page['cats_navigation_bar'] = create_navigation_bar(
-      duplicate_index_url(array(), array('startcat')),
+    $page['cats_navigation_bar'] = functions::create_navigation_bar(
+      functions_url::duplicate_index_url(array(), array('startcat')),
       $page['total_categories'],
       $page['startcat'],
       $conf['nb_categories_page'],
@@ -386,5 +395,5 @@ if (count($categories) > 0)
   $template->assign('cats_navbar', $page['cats_navigation_bar'] );
 }
 
-pwg_debug('end inc/category_cats.php');
+functions::pwg_debug('end inc/category_cats.php');
 ?>

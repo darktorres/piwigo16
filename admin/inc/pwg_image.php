@@ -13,6 +13,8 @@ namespace Piwigo\admin\inc;
 // +-----------------------------------------------------------------------+
 
 use Exception;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
 
 class pwg_image
 {
@@ -26,14 +28,14 @@ class pwg_image
     global $conf;
     $this->source_filepath = $source_filepath;
 
-    trigger_notify('load_image_library', array(&$this) );
+    functions_plugins::trigger_notify('load_image_library', array(&$this) );
 
     if (is_object($this->image))
     {
       return; // A plugin may have load its own library
     }
 
-    $extension = strtolower(get_extension($source_filepath));
+    $extension = strtolower(functions::get_extension($source_filepath));
 
     if (!in_array($extension, $conf['picture_ext']))
     {
@@ -58,7 +60,7 @@ class pwg_image
   // Piwigo resize function
   function pwg_resize($destination_filepath, $max_width, $max_height, $quality, $automatic_rotation=true, $strip_metadata=false, $crop=false, $follow_orientation=true)
   {
-    $starttime = get_moment();
+    $starttime = functions::get_moment();
 
     // width/height
     $source_width  = $this->image->get_width();
@@ -334,7 +336,7 @@ class pwg_image
       'width'       => $width,
       'height'      => $height,
       'size'        => floor(filesize($destination_filepath) / 1024).' KB',
-      'time'        => $time ? number_format((get_moment() - $time) * 1000, 2, '.', ' ').' ms' : null,
+      'time'        => $time ? number_format((functions::get_moment() - $time) * 1000, 2, '.', ' ').' ms' : null,
       'library'     => $this->library,
     );
   }

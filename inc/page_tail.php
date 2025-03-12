@@ -7,10 +7,14 @@
 // +-----------------------------------------------------------------------+
 
 // use Piwigo\admin\inc\updates;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 $template->set_filenames(array('tail'=>'footer.tpl'));
 
-trigger_notify('loc_begin_page_tail');
+functions_plugins::trigger_notify('loc_begin_page_tail');
 
 $template->assign(
   array(
@@ -20,10 +24,10 @@ $template->assign(
 
 //--------------------------------------------------------------------- contact
 
-if (!is_a_guest())
+if (!functions_user::is_a_guest())
 {
   $template->assign(
-    'CONTACT_MAIL', get_webmaster_mail_address()
+    'CONTACT_MAIL', functions::get_webmaster_mail_address()
     );
 }
 
@@ -45,7 +49,6 @@ if (!is_a_guest())
 
 //   if ($check_for_updates)
 //   {
-//     include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 //     $updates = new updates();
 //     $updates->notify_piwigo_new_versions();
 //   }
@@ -66,7 +69,7 @@ if ($conf['show_gt'])
     $page['count_queries'] = 0;
     $page['queries_time'] = 0;
   }
-  $time = get_elapsed_time($t2, get_moment());
+  $time = functions::get_elapsed_time($t2, functions::get_moment());
 
   $debug_vars = array_merge($debug_vars,
     array('TIME' => $time,
@@ -78,17 +81,17 @@ if ($conf['show_gt'])
 $template->assign('debug', $debug_vars );
 
 //------------------------------------------------------------- mobile version
-if ( !empty($conf['mobile_theme']) && (get_device() != 'desktop' || mobile_theme()))
+if ( !empty($conf['mobile_theme']) && (functions::get_device() != 'desktop' || functions::mobile_theme()))
 {
   $template->assign('TOGGLE_MOBILE_THEME_URL',
-      add_url_params(
+      functions_url::add_url_params(
         htmlspecialchars($_SERVER['REQUEST_URI']),
-        array('mobile' => mobile_theme() ? 'false' : 'true')
+        array('mobile' => functions::mobile_theme() ? 'false' : 'true')
       )
     );
 }
 
-trigger_notify('loc_end_page_tail');
+functions_plugins::trigger_notify('loc_end_page_tail');
 //
 // Generate the page
 //

@@ -1,4 +1,9 @@
 <?php
+
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\inc\functions;
+use Piwigo\plugins\LocalFilesEditor\inc\functions_LocalFilesEditor;
+
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
 $edited_file = '';
@@ -39,23 +44,23 @@ if (isset($_POST['create_tpl']))
   $filename = $_POST['tpl_name'];
   if (empty($filename))
   {
-    $page['errors'][] = l10n('locfiledit_empty_filename');
+    $page['errors'][] = functions::l10n('locfiledit_empty_filename');
   }
-  if (get_extension($filename) != 'tpl')
+  if (functions::get_extension($filename) != 'tpl')
   {
     $filename .= '.tpl';
   }
   if (!preg_match('/^[a-zA-Z0-9-_.]+$/', $filename))
   {
-    $page['errors'][] = l10n('locfiledit_filename_error');
+    $page['errors'][] = functions::l10n('locfiledit_filename_error');
   }
   if (is_numeric($_POST['tpl_model']) and $_POST['tpl_model'] != '0')
   {
-    $page['errors'][] = l10n('locfiledit_model_error');
+    $page['errors'][] = functions::l10n('locfiledit_model_error');
   }
   if (file_exists($_POST['tpl_parent'] . '/' . $filename))
   {
-    $page['errors'][] = l10n('locfiledit_file_already_exists');
+    $page['errors'][] = functions::l10n('locfiledit_file_already_exists');
   }
   if (!empty($page['errors']))
   {
@@ -77,18 +82,18 @@ if ($newfile_page)
 
   // Parent directories list
   $options['parent'] = array(PHPWG_ROOT_PATH . 'template-extension' => 'template-extension');
-  $options['parent'] = array_merge($options['parent'], get_rec_dirs(PHPWG_ROOT_PATH . 'template-extension'));
+  $options['parent'] = array_merge($options['parent'], functions_LocalFilesEditor::get_rec_dirs(PHPWG_ROOT_PATH . 'template-extension'));
 
-  $options['model'][] = l10n('locfiledit_empty_page');
+  $options['model'][] = functions::l10n('locfiledit_empty_page');
   $options['model'][] = '----------------------';
   $i = 0;
-  foreach (get_extents() as $pwg_template)
+  foreach (functions_admin::get_extents() as $pwg_template)
   {
     $value = PHPWG_ROOT_PATH . 'template-extension/' . $pwg_template;
     $options['model'][$value] =  'template-extension / ' . str_replace('/', ' / ', $pwg_template);
     $i++;
   }
-  foreach (get_dirs($conf['themes_dir']) as $theme_id)
+  foreach (functions_admin::get_dirs($conf['themes_dir']) as $theme_id)
   {
     if ($i)
     {
@@ -100,7 +105,7 @@ if ($newfile_page)
     {
       while ($node = readdir($content))
       {
-        if (is_file($dir.$node) and get_extension($node) == 'tpl')
+        if (is_file($dir.$node) and functions::get_extension($node) == 'tpl')
         {
           $value = $dir . $node;
           $options['model'][$value] = $theme_id . ' / ' . $node;
@@ -127,9 +132,9 @@ else
 {
   // List existing template extensions
   $selected = 0; 
-  $options[] = l10n('locfiledit_choose_file');
+  $options[] = functions::l10n('locfiledit_choose_file');
   $options[] = '----------------------';
-  foreach (get_extents() as $pwg_template)
+  foreach (functions_admin::get_extents() as $pwg_template)
   {
     $value = $pwg_template;
     $options[$value] =  str_replace('/', ' / ', $pwg_template);

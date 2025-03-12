@@ -7,6 +7,10 @@
 // +-----------------------------------------------------------------------+
 
 //check php version
+use Piwigo\admin\inc\functions_upgrade;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+
 if (version_compare(PHP_VERSION, '5', '<'))
 {
   die('Piwigo requires PHP 5 or above.');
@@ -19,12 +23,7 @@ include(PHPWG_ROOT_PATH . 'inc/config_default.php');
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.php');
-include(PHPWG_ROOT_PATH .'inc/dblayer/functions_'.$conf['dblayer'].'.php');
-
 include_once(PHPWG_ROOT_PATH.'inc/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_upgrade.php');
-
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when it is not ok                               |
@@ -35,7 +34,7 @@ if (!$conf['check_upgrade_feed'])
   die("upgrade feed is not active");
 }
 
-prepare_conf_upgrade();
+functions_upgrade::prepare_conf_upgrade();
 
 define('PREFIX_TABLE', $prefixeTable);
 define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
@@ -45,15 +44,15 @@ define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 // +-----------------------------------------------------------------------+
 try
 {
-  pwg_db_connect($conf['db_host'], $conf['db_user'],
+  functions_mysqli::pwg_db_connect($conf['db_host'], $conf['db_user'],
                  $conf['db_password'], $conf['db_base']);
 }
 catch (Exception $e)
 {
-  my_error(l10n($e->getMessage(), true)); 
+  functions_mysqli::my_error(functions::l10n($e->getMessage(), true));
 }
 
-pwg_db_check_charset();
+functions_mysqli::pwg_db_check_charset();
 
 // +-----------------------------------------------------------------------+
 // |                              Upgrades                                 |
@@ -64,10 +63,10 @@ $query = '
 SELECT id
   FROM '.PREFIX_TABLE.'upgrade
 ;';
-$applied = array_from_query($query, 'id');
+$applied = functions::array_from_query($query, 'id');
 
 // retrieve existing upgrades
-$existing = get_available_upgrade_ids();
+$existing = functions_upgrade::get_available_upgrade_ids();
 
 // which upgrades need to be applied?
 $to_apply = array_diff($existing, $applied);
@@ -94,7 +93,7 @@ INSERT INTO '.PREFIX_TABLE.'upgrade
   VALUES
   (\''.$upgrade_id.'\', NOW(), \''.$upgrade_description.'\')
 ;';
-  pwg_query($query);
+  functions_mysqli::pwg_query($query);
 }
 
 echo '</pre>';

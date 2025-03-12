@@ -6,7 +6,14 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_params;
+use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\SrcImage;
 
@@ -18,9 +25,9 @@ if(!defined("PHPWG_ROOT_PATH"))
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+functions::check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
 if (isset($_POST['submit']))
 {
@@ -31,18 +38,18 @@ if (isset($_POST['submit']))
   }
   else
   {
-    $coi = fraction_to_char($_POST['l'])
-      .fraction_to_char($_POST['t'])
-      .fraction_to_char($_POST['r'])
-      .fraction_to_char($_POST['b']);
+    $coi = derivative_params::fraction_to_char($_POST['l'])
+      .derivative_params::fraction_to_char($_POST['t'])
+      .derivative_params::fraction_to_char($_POST['r'])
+      .derivative_params::fraction_to_char($_POST['b']);
     $query .= ' SET coi=\''.$coi.'\'';
   }
   $query .= ' WHERE id='.$_GET['image_id'];
-  pwg_query($query);
+  functions_mysqli::pwg_query($query);
 }
 
 $query = 'SELECT * FROM '.IMAGES_TABLE.' WHERE id='.$_GET['image_id'];
-$row = pwg_db_fetch_assoc( pwg_query($query) );
+$row = functions_mysqli::pwg_db_fetch_assoc( functions_mysqli::pwg_query($query) );
 
 if (isset($_POST['submit']))
 {
@@ -50,10 +57,10 @@ if (isset($_POST['submit']))
   {
     if ($params->sizing->max_crop != 0)
     {
-      delete_element_derivatives($row, $params->type);
+      functions_admin::delete_element_derivatives($row, $params->type);
     }
   }
-  delete_element_derivatives($row, IMG_CUSTOM);
+  functions_admin::delete_element_derivatives($row, derivative_std_params::IMG_CUSTOM);
   $uid = '&b='.time();
   $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
   if ($conf['derivative_url_style']==1)
@@ -67,18 +74,18 @@ else
 }
 
 $tpl_var = array(
-  'TITLE' => render_element_name($row),
+  'TITLE' => functions_html::render_element_name($row),
   'ALT' => $row['file'],
-  'U_IMG' => DerivativeImage::url(IMG_LARGE, $row),
+  'U_IMG' => DerivativeImage::url(derivative_std_params::IMG_LARGE, $row),
   );
 
 if (!empty($row['coi']))
 {
   $tpl_var['coi'] = array(
-    'l'=> char_to_fraction($row['coi'][0]),
-    't'=> char_to_fraction($row['coi'][1]),
-    'r'=> char_to_fraction($row['coi'][2]),
-    'b'=> char_to_fraction($row['coi'][3]),
+    'l'=> derivative_params::char_to_fraction($row['coi'][0]),
+    't'=> derivative_params::char_to_fraction($row['coi'][1]),
+    'r'=> derivative_params::char_to_fraction($row['coi'][2]),
+    'b'=> derivative_params::char_to_fraction($row['coi'][3]),
   );
 }
 

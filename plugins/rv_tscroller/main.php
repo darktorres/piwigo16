@@ -8,9 +8,10 @@ Author URI: http://www.modusoptimus.com
 Has Settings: false
 */
 
+use Piwigo\inc\functions_plugins;
 use Piwigo\plugins\rv_tscroller\RVTS;
 
 define('RVTS_VERSION', '12.a');
 
-add_event_handler('loc_end_section_init', RVTS::on_end_section_init(...));
+functions_plugins::add_event_handler('loc_end_section_init', RVTS::on_end_section_init(...));
 ?>

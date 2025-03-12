@@ -15,8 +15,8 @@ final class ImageStdParams
 {
   /** @var string[] */
   private static $all_types = array(
-    IMG_SQUARE, IMG_THUMB, IMG_XXSMALL, IMG_XSMALL, IMG_SMALL,
-    IMG_MEDIUM, IMG_LARGE, IMG_XLARGE, IMG_XXLARGE
+    derivative_std_params::IMG_SQUARE, derivative_std_params::IMG_THUMB, derivative_std_params::IMG_XXSMALL, derivative_std_params::IMG_XSMALL, derivative_std_params::IMG_SMALL,
+    derivative_std_params::IMG_MEDIUM, derivative_std_params::IMG_LARGE, derivative_std_params::IMG_XLARGE, derivative_std_params::IMG_XXLARGE
     );
   /** @var DerivativeParams[] */
   private static $all_type_map = array();
@@ -159,7 +159,7 @@ final class ImageStdParams
       'w' => self::$watermark,
       'c' => self::$custom,
       ) );
-    conf_update_param('derivatives', addslashes($ser) );
+    functions::conf_update_param('derivatives', addslashes($ser) );
   }
 
   /**
@@ -168,15 +168,15 @@ final class ImageStdParams
   static function get_default_sizes()
   {
     $arr = array(
-      IMG_SQUARE => new DerivativeParams( SizingParams::square(120,120) ),
-      IMG_THUMB => new DerivativeParams( SizingParams::classic(144,144) ),
-      IMG_XXSMALL => new DerivativeParams( SizingParams::classic(240,240) ),
-      IMG_XSMALL => new DerivativeParams( SizingParams::classic(432,324) ),
-      IMG_SMALL => new DerivativeParams( SizingParams::classic(576,432) ),
-      IMG_MEDIUM => new DerivativeParams( SizingParams::classic(792,594) ),
-      IMG_LARGE => new DerivativeParams( SizingParams::classic(1008,756) ),
-      IMG_XLARGE => new DerivativeParams( SizingParams::classic(1224,918) ),
-      IMG_XXLARGE => new DerivativeParams( SizingParams::classic(1656,1242) ),
+      derivative_std_params::IMG_SQUARE => new DerivativeParams( SizingParams::square(120,120) ),
+      derivative_std_params::IMG_THUMB => new DerivativeParams( SizingParams::classic(144,144) ),
+      derivative_std_params::IMG_XXSMALL => new DerivativeParams( SizingParams::classic(240,240) ),
+      derivative_std_params::IMG_XSMALL => new DerivativeParams( SizingParams::classic(432,324) ),
+      derivative_std_params::IMG_SMALL => new DerivativeParams( SizingParams::classic(576,432) ),
+      derivative_std_params::IMG_MEDIUM => new DerivativeParams( SizingParams::classic(792,594) ),
+      derivative_std_params::IMG_LARGE => new DerivativeParams( SizingParams::classic(1008,756) ),
+      derivative_std_params::IMG_XLARGE => new DerivativeParams( SizingParams::classic(1224,918) ),
+      derivative_std_params::IMG_XXLARGE => new DerivativeParams( SizingParams::classic(1656,1242) ),
     );
     $now = time();
     foreach($arr as $params)

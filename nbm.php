@@ -8,18 +8,23 @@
 
 
 //--------------------------------------------------------------------- include
+use Piwigo\admin\inc\functions_notification_by_mail;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_user;
+use Piwigo\inc\menubar;
+
 define('PHPWG_ROOT_PATH','./');
 include_once(PHPWG_ROOT_PATH.'inc/common.php');
-check_status(ACCESS_FREE);
-include_once(PHPWG_ROOT_PATH.'inc/functions_notification.php');
+functions_user::check_status(ACCESS_FREE);
 include_once(PHPWG_ROOT_PATH.'inc/functions_mail.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 include_once(PHPWG_ROOT_PATH.'admin/inc/functions_notification_by_mail.php');
 // Translations are in admin file too
-load_language('admin.lang');
+functions::load_language('admin.lang');
 // Need to update a second time
-trigger_notify('loading_lang');
-load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, array('no_fallback'=>true, 'local'=>true) );
+functions_plugins::trigger_notify('loading_lang');
+functions::load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, array('no_fallback'=>true, 'local'=>true) );
 
 
 // +-----------------------------------------------------------------------+
@@ -28,22 +33,22 @@ load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, array('no_fallback'=>true, 
 if (isset($_GET['subscribe'])
     and preg_match('/^[A-Za-z0-9]{16}$/', $_GET['subscribe']))
 {
-  subscribe_notification_by_mail(false, array($_GET['subscribe']));
+  functions_notification_by_mail::subscribe_notification_by_mail(false, array($_GET['subscribe']));
 }
 else if (isset($_GET['unsubscribe'])
     and preg_match('/^[A-Za-z0-9]{16}$/', $_GET['unsubscribe']))
 {
-  unsubscribe_notification_by_mail(false, array($_GET['unsubscribe']));
+  functions_notification_by_mail::unsubscribe_notification_by_mail(false, array($_GET['unsubscribe']));
 }
 else
 {
-  $page['errors'][] = l10n('Unknown identifier');
+  $page['errors'][] = functions::l10n('Unknown identifier');
 }
 
 // +-----------------------------------------------------------------------+
 // | template initialization                                               |
 // +-----------------------------------------------------------------------+
-$title = l10n('Notification');
+$title = functions::l10n('Notification');
 $page['body_id'] = 'theNBMPage';
 
 $template->set_filenames(array('nbm'=>'nbm.tpl'));
@@ -53,14 +58,14 @@ $template->set_filenames(array('nbm'=>'nbm.tpl'));
 $themeconf = $template->get_template_vars('themeconf');
 if (!isset($themeconf['hide_menu_on']) OR !in_array('theNBMPage', $themeconf['hide_menu_on']))
 {
-  include( PHPWG_ROOT_PATH.'inc/menubar.php');
+  menubar::initialize_menu();
 }
 
 // +-----------------------------------------------------------------------+
 // | html code display                                                     |
 // +-----------------------------------------------------------------------+
 include(PHPWG_ROOT_PATH.'inc/page_header.php');
-flush_page_messages();
+functions_html::flush_page_messages();
 $template->parse('nbm');
 include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 ?>

@@ -10,24 +10,31 @@
 // | Basic constants and includes                                          |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_session;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
+
 define('PHPWG_ROOT_PATH','./');
 define('IN_ADMIN', true);
 
 include_once(PHPWG_ROOT_PATH.'inc/common.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_plugins_admin.php');
 include_once(PHPWG_ROOT_PATH.'admin/inc/add_core_tabs.php');
 
-trigger_notify('loc_begin_admin');
+functions_plugins::trigger_notify('loc_begin_admin');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-check_input_parameter('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
-check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
+functions::check_input_parameter('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
+functions::check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
 
 // +-----------------------------------------------------------------------+
 // | Filesystem checks                                                     |
@@ -50,7 +57,7 @@ if ($conf['fs_quick_check_period'] > 0)
 
   if ($perform_fsqc)
   {
-    fs_quick_check();
+    functions_admin::fs_quick_check();
   }
 }
 
@@ -61,7 +68,7 @@ if ($conf['fs_quick_check_period'] > 0)
 // save plugins_new display order (AJAX action)
 if (isset($_GET['plugins_new_order']))
 {
-  pwg_set_session_var('plugins_new_order', $_GET['plugins_new_order']);
+  functions_session::pwg_set_session_var('plugins_new_order', $_GET['plugins_new_order']);
   exit;
 }
 
@@ -69,7 +76,7 @@ if (isset($_GET['plugins_new_order']))
 if (isset($_GET['change_theme']))
 {
   $admin_themes = array('roma', 'clear');
-  $admin_theme_array = array(userprefs_get_param('admin_theme', 'roma'));
+  $admin_theme_array = array(functions_user::userprefs_get_param('admin_theme', 'roma'));
   $result = array_diff(
       $admin_themes,
       $admin_theme_array
@@ -79,7 +86,7 @@ if (isset($_GET['change_theme']))
       $result
     );
 
-  userprefs_update_param('admin_theme', $new_admin_theme);
+  functions_user::userprefs_update_param('admin_theme', $new_admin_theme);
 
   $url_params = array();
   foreach (array('page', 'tab', 'section') as $url_param)
@@ -96,7 +103,7 @@ if (isset($_GET['change_theme']))
     $redirect_url.= '?'.implode('&amp;', $url_params);
   }
 
-  redirect($redirect_url);
+  functions::redirect($redirect_url);
 }
 
 // +-----------------------------------------------------------------------+
@@ -106,7 +113,7 @@ if (isset($_GET['change_theme']))
 // sync_user() is only useful when external authentication is activated
 if ($conf['external_authentification'])
 {
-  sync_users();
+  functions_admin::sync_users();
 }
 
 // +-----------------------------------------------------------------------+
@@ -183,14 +190,14 @@ $conf_link = $link_start.'configuration&amp;section=';
 // $_GET['tab'] is often used to perform and
 // include('admin_page_'.$_GET['tab'].'.php') : we need to protect it to
 // avoid any unexpected file inclusion
-check_input_parameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
+functions::check_input_parameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 
 // +-----------------------------------------------------------------------+
 // | Template init                                                         |
 // +-----------------------------------------------------------------------+
 
-$title = l10n('Piwigo Administration'); // for inc/page_header.php
-$page['page_banner'] = '<h1>'.l10n('Piwigo Administration').'</h1>';
+$title = functions::l10n('Piwigo Administration'); // for inc/page_header.php
+$page['page_banner'] = '<h1>'.functions::l10n('Piwigo Administration').'</h1>';
 $page['body_id'] = 'theAdminPage';
 
 $template->set_filenames(array('admin' => 'admin.tpl'));
@@ -222,7 +229,7 @@ $template->assign(
     'U_TAGS'=> $link_start.'tags',
     'U_USERS'=> $link_start.'user_list',
     'U_GROUPS'=> $link_start.'group_list',
-    'U_RETURN'=> get_gallery_home_url(),
+    'U_RETURN'=> functions_url::get_gallery_home_url(),
     'U_ADMIN'=> PHPWG_ROOT_PATH.'admin.php',
     'U_LOGOUT'=> PHPWG_ROOT_PATH.'index.php?act=logout',
     'U_PLUGINS'=> $link_start.'plugins',
@@ -250,7 +257,7 @@ SELECT COUNT(*)
   FROM '.COMMENTS_TABLE.'
   WHERE validated=\'false\'
 ;';
-  list($nb_comments) = pwg_db_fetch_row(pwg_query($query));
+  list($nb_comments) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
   if ($nb_comments > 0)
   {
@@ -265,7 +272,7 @@ SELECT COUNT(*)
   FROM '.CADDIE_TABLE.'
   WHERE user_id = '.$user['id'].'
 ;';
-list($nb_photos_in_caddie) = pwg_db_fetch_row(pwg_query($query));
+list($nb_photos_in_caddie) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 if ($nb_photos_in_caddie > 0)
 {
@@ -287,7 +294,7 @@ if ($nb_photos_in_caddie > 0)
 // any photos with no md5sum ?
 if (in_array($page['page'], array('site_update', 'batch_manager')))
 {
-  $nb_no_md5sum = count(get_photos_no_md5sum());
+  $nb_no_md5sum = count(functions_admin::get_photos_no_md5sum());
 
   if ($nb_no_md5sum > 0)
   {
@@ -298,10 +305,10 @@ if (in_array($page['page'], array('site_update', 'batch_manager')))
 // only calculate number of orphans on all pages if the number of images is "not huge"
 $page['nb_orphans'] = 0;
 
-list($page['nb_photos_total']) = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM '.IMAGES_TABLE));
+list($page['nb_photos_total']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT COUNT(*) FROM '.IMAGES_TABLE));
 if ($page['nb_photos_total'] < 100000) // 100k is already a big gallery
 {
-  $page['nb_orphans'] = count_orphans();
+  $page['nb_orphans'] = functions_admin::count_orphans();
 }
 
 $template->assign(
@@ -335,30 +342,30 @@ if (
     )
   )
 {
-  invalidate_user_cache();
+  functions_admin::invalidate_user_cache();
 }
 
 // +-----------------------------------------------------------------------+
 // | Include specific page                                                 |
 // +-----------------------------------------------------------------------+
 
-trigger_notify('loc_begin_admin_page');
+functions_plugins::trigger_notify('loc_begin_admin_page');
 include(PHPWG_ROOT_PATH.'admin/'.$page['page'].'.php');
 
-$template->assign('ACTIVE_MENU', get_active_menu($page['page']));
+$template->assign('ACTIVE_MENU', functions_admin::get_active_menu($page['page']));
 
 // +-----------------------------------------------------------------------+
 // | Sending html code                                                     |
 // +-----------------------------------------------------------------------+
 
 // Add the Piwigo Official menu
-$template->assign( 'pwgmenu', pwg_URL() );
+$template->assign( 'pwgmenu', functions_admin::pwg_URL() );
 
 include(PHPWG_ROOT_PATH.'inc/page_header.php');
 
-trigger_notify('loc_end_admin');
+functions_plugins::trigger_notify('loc_end_admin');
 
-flush_page_messages();
+functions_html::flush_page_messages();
 
 $template->pparse('admin');
 

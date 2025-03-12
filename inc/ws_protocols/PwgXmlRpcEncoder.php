@@ -11,47 +11,47 @@ namespace Piwigo\inc\ws_protocols;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgResponseEncoder;
 
-function xmlrpc_encode($data)
-{
-  switch (gettype($data))
-  {
-    case 'boolean':
-      return '<boolean>'.($data ? '1' : '0').'</boolean>';
-    case 'integer':
-      return '<int>'.$data.'</int>';
-    case 'double':
-      return '<double>'.$data.'</double>';
-    case 'string':
-      return '<string>'.htmlspecialchars($data).'</string>';
-    case 'object':
-    case 'array':
-      $is_array = range(0, count($data) - 1) === array_keys($data);
-      if ($is_array)
-      {
-        $return = '<array><data>'."\n";
-        foreach ($data as $item)
-        {
-          $return .= '  <value>'.xmlrpc_encode($item)."</value>\n";
-        }
-        $return .= '</data></array>';
-      }
-      else
-      {
-        $return = '<struct>'."\n";
-        foreach ($data as $name => $value)
-        {
-					$name = htmlspecialchars($name);
-          $return .= "  <member><name>$name</name><value>";
-          $return .= xmlrpc_encode($value)."</value></member>\n";
-        }
-        $return .= '</struct>';
-      }
-      return $return;
-  }
-}
-
 class PwgXmlRpcEncoder extends PwgResponseEncoder
 {
+  static function xmlrpc_encode($data)
+  {
+    switch (gettype($data))
+    {
+      case 'boolean':
+        return '<boolean>'.($data ? '1' : '0').'</boolean>';
+      case 'integer':
+        return '<int>'.$data.'</int>';
+      case 'double':
+        return '<double>'.$data.'</double>';
+      case 'string':
+        return '<string>'.htmlspecialchars($data).'</string>';
+      case 'object':
+      case 'array':
+        $is_array = range(0, count($data) - 1) === array_keys($data);
+        if ($is_array)
+        {
+          $return = '<array><data>'."\n";
+          foreach ($data as $item)
+          {
+            $return .= '  <value>'.self::xmlrpc_encode($item)."</value>\n";
+          }
+          $return .= '</data></array>';
+        }
+        else
+        {
+          $return = '<struct>'."\n";
+          foreach ($data as $name => $value)
+          {
+            $name = htmlspecialchars($name);
+            $return .= "  <member><name>$name</name><value>";
+            $return .= self::xmlrpc_encode($value)."</value></member>\n";
+          }
+          $return .= '</struct>';
+        }
+        return $return;
+    }
+  }
+
   function encodeResponse($response)
   {
     if ($response instanceof PwgError)
@@ -80,7 +80,7 @@ EOD;
     }
 
     parent::flattenResponse($response);
-    $ret = xmlrpc_encode($response);
+    $ret = self::xmlrpc_encode($response);
     $ret = <<<EOD
 <methodResponse>
   <params>

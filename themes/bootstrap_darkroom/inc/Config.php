@@ -1,6 +1,8 @@
 <?php
 namespace Piwigo\themes\bootstrap_darkroom\inc;
 
+use Piwigo\inc\functions;
+
 class Config {
 
     const CONF_PARAM = 'bootstrap_darkroom';
@@ -222,7 +224,7 @@ class Config {
     }
 
     public function save() {
-        conf_update_param(self::CONF_PARAM, json_encode($this->config));
+        functions::conf_update_param(self::CONF_PARAM, json_encode($this->config));
     }
 
     private function createDefaultConfig() {

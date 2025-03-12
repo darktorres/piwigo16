@@ -8,24 +8,22 @@
 
 namespace Piwigo\inc;
 
-/**
- * @package functions\calendar
- */
-
-/** level of year view */
-define('CYEAR', 0);
-/** level of week view in weekly view */
-define('CWEEK', 1);
-/** level of month view in monthly view */
-define('CMONTH', 1);
-/** level of day view */
-define('CDAY',  2);
+use Piwigo\inc\dblayer\functions_mysqli;
 
 /**
  * Base class for monthly and weekly calendar styles
  */
 abstract class CalendarBase
 {
+/** level of year view */
+const CYEAR = 0;
+/** level of week view in weekly view */
+const CWEEK = 1;
+/** level of month view in monthly view */
+const CMONTH = 1;
+/** level of day view */
+const CDAY = 2;
+
   /** db column on which this calendar works */
   var $date_field;
   /** used for queries (INNER JOIN or normal) */
@@ -83,7 +81,7 @@ abstract class CalendarBase
       if ( isset($page['chronology_date'][$i+1]) )
       {
         $chronology_date = array_slice($page['chronology_date'],0, $i+1);
-        $url = duplicate_index_url(
+        $url = functions_url::duplicate_index_url(
             array( 'chronology_date'=>$chronology_date ),
             array( 'start' )
             );
@@ -117,7 +115,7 @@ abstract class CalendarBase
     }
     elseif ('any' === $date_component )
     {
-      $label = l10n('All');
+      $label = functions::l10n('All');
     }
     return $label;
   }
@@ -192,7 +190,7 @@ abstract class CalendarBase
       }
       else
       {
-        $url = duplicate_index_url(
+        $url = functions_url::duplicate_index_url(
           array('chronology_date'=>array_merge($date_components,array($item))),
           array( 'start' )
             );
@@ -212,12 +210,12 @@ abstract class CalendarBase
     if ($conf['calendar_show_any'] and $show_any and count($items)>1 and
           count($date_components)<count($this->calendar_levels)-1 )
     {
-      $url = duplicate_index_url(
+      $url = functions_url::duplicate_index_url(
         array('chronology_date'=>array_merge($date_components,array('any'))),
         array( 'start' )
           );
       $nav_bar_datas[]=array(
-        'LABEL' => l10n('All'),
+        'LABEL' => functions::l10n('All'),
         'URL' => $url
       );
     }
@@ -241,7 +239,7 @@ $this->inner_sql.
 $this->get_date_where($level).'
   GROUP BY period;';
 
-    $level_items = query2array($query, 'period', 'nb_images');
+    $level_items = functions_mysqli::query2array($query, 'period', 'nb_images');
 
     if ( count($level_items)==1 and
          count($page['chronology_date'])<count($this->calendar_levels)-1)
@@ -303,16 +301,16 @@ $this->get_date_where($level).'
       }
       else
       {
-        $sub_queries[] = pwg_db_cast_to_text($this->calendar_levels[$i]['sql']);
+        $sub_queries[] = functions_mysqli::pwg_db_cast_to_text($this->calendar_levels[$i]['sql']);
       }
     }
-    $query = 'SELECT '.pwg_db_concat_ws($sub_queries, '-').' AS period';
+    $query = 'SELECT '.functions_mysqli::pwg_db_concat_ws($sub_queries, '-').' AS period';
     $query .= $this->inner_sql .'
 AND ' . $this->date_field . ' IS NOT NULL
 GROUP BY period';
     
     $current = implode('-', $page['chronology_date'] );
-    $upper_items = query2array($query,null, 'period');
+    $upper_items = functions_mysqli::query2array($query,null, 'period');
 
     usort($upper_items, version_compare(...));
     $upper_items_rank = array_flip($upper_items);
@@ -333,7 +331,7 @@ GROUP BY period';
       $tpl_var['previous'] =
         array(
           'LABEL' => $this->get_date_nice_name($prev),
-          'URL' => duplicate_index_url(
+          'URL' => functions_url::duplicate_index_url(
                 array('chronology_date'=>$chronology_date), array('start')
                 )
         );
@@ -346,7 +344,7 @@ GROUP BY period';
       $tpl_var['next'] =
         array(
           'LABEL' => $this->get_date_nice_name($next),
-          'URL' => duplicate_index_url(
+          'URL' => functions_url::duplicate_index_url(
                 array('chronology_date'=>$chronology_date), array('start')
                 )
         );

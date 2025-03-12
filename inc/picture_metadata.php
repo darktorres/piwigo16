@@ -12,7 +12,9 @@
  */
 
 
-include_once(PHPWG_ROOT_PATH.'/inc/functions_metadata.php');
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_metadata;
+
 if (($conf['show_exif']) and (function_exists('exif_read_data')))
 {
   $exif_mapping = array();
@@ -21,12 +23,12 @@ if (($conf['show_exif']) and (function_exists('exif_read_data')))
     $exif_mapping[$field] = $field;
   }
 
-  $exif = get_exif_data($picture['current']['src_image']->get_path(), $exif_mapping);
+  $exif = functions_metadata::get_exif_data($picture['current']['src_image']->get_path(), $exif_mapping);
   
   if (count($exif) > 0)
   {
     $tpl_meta = array(
-        'TITLE' => l10n('EXIF Metadata'),
+        'TITLE' => functions::l10n('EXIF Metadata'),
         'lines' => array(),
       );
 
@@ -66,12 +68,12 @@ if (($conf['show_exif']) and (function_exists('exif_read_data')))
 
 if ($conf['show_iptc'])
 {
-  $iptc = get_iptc_data($picture['current']['src_image']->get_path(), $conf['show_iptc_mapping'], ', ');
+  $iptc = functions_metadata::get_iptc_data($picture['current']['src_image']->get_path(), $conf['show_iptc_mapping'], ', ');
 
   if (count($iptc) > 0)
   {
     $tpl_meta = array(
-        'TITLE' => l10n('IPTC Metadata'),
+        'TITLE' => functions::l10n('IPTC Metadata'),
         'lines' => array(),
       );
 

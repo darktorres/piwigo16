@@ -6,7 +6,15 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_mail;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 if (!defined('PHPWG_ROOT_PATH'))
 {
@@ -14,13 +22,12 @@ if (!defined('PHPWG_ROOT_PATH'))
 }
 
 include_once(PHPWG_ROOT_PATH.'inc/functions_mail.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 // +-----------------------------------------------------------------------+
 // |                       variable initialization                         |
@@ -35,7 +42,7 @@ $page['cat'] = $category['id'];
 // info by email to an access granted group of category informations
 if (isset($_POST['submitEmail']))
 {
-  set_make_full_url();
+  functions_url::set_make_full_url();
 
   $img = array();
 
@@ -49,26 +56,26 @@ SELECT id, file, path, representative_ext
   WHERE id = '.$category['representative_picture_id'].'
 ;';
 
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result) > 0)
+    $result = functions_mysqli::pwg_query($query);
+    if (functions_mysqli::pwg_db_num_rows($result) > 0)
     {
-      $element = pwg_db_fetch_assoc($result);
+      $element = functions_mysqli::pwg_db_fetch_assoc($result);
 
       $img = array(
-        'link' => make_picture_url(
+        'link' => functions_url::make_picture_url(
           array(
             'image_id' => $element['id'],
             'image_file' => $element['file'],
             'category' => $category
             )
           ),
-        'src' => DerivativeImage::url(IMG_THUMB, $element),
+        'src' => DerivativeImage::url(derivative_std_params::IMG_THUMB, $element),
         );
     }
   }
 
   $args = array(
-    'subject' => l10n('[%s] Visit album %s', $conf['gallery_title'], trigger_change('render_category_name', $category['name'], 'admin_cat_list')),
+    'subject' => functions::l10n('[%s] Visit album %s', $conf['gallery_title'], functions_plugins::trigger_change('render_category_name', $category['name'], 'admin_cat_list')),
     // TODO : change this language variable to 'Visit album %s'
     // TODO : 'language_selected' => ....
     );
@@ -77,12 +84,12 @@ SELECT id, file, path, representative_ext
     'filename' => 'cat_group_info',
     'assign' => array(
       'IMG' => $img,
-      'CAT_NAME' => trigger_change('render_category_name', $category['name'], 'admin_cat_list'),
-      'LINK' => make_index_url(
+      'CAT_NAME' => functions_plugins::trigger_change('render_category_name', $category['name'], 'admin_cat_list'),
+      'LINK' => functions_url::make_index_url(
         array(
           'category' => array(
             'id' => $category['id'],
-            'name' => trigger_change('render_category_name', $category['name'], 'admin_cat_list'),
+            'name' => functions_plugins::trigger_change('render_category_name', $category['name'], 'admin_cat_list'),
             'permalink' => $category['permalink']
             )
           )
@@ -93,7 +100,7 @@ SELECT id, file, path, representative_ext
 
   if ('users' == $_POST['who'] and isset($_POST['users']) and count($_POST['users']) > 0)
   {
-    check_input_parameter('users', $_POST, true, PATTERN_ID);
+    functions::check_input_parameter('users', $_POST, true, PATTERN_ID);
 
     // TODO code very similar to function pwg_mail_group. We'd better create
     // a function pwg_mail_users that could be called from here and from
@@ -114,24 +121,24 @@ SELECT
     JOIN '.USERS_TABLE.' AS u ON u.'.$conf['user_fields']['id'].' = ui.user_id
   WHERE ui.user_id IN ('.implode(',', $_POST['users']).')
 ;';
-    $users = query2array($query);
+    $users = functions_mysqli::query2array($query);
     $usernames = array();
     
     foreach ($users as $u)
     {
       $usernames[] = $u['username'];
       
-      $authkey = create_user_auth_key($u['user_id'], $u['status']);
+      $authkey = functions_user::create_user_auth_key($u['user_id'], $u['status']);
       
       $user_tpl = $tpl;
 
       if ($authkey !== false)
       {
-        $user_tpl['assign']['LINK'] = add_url_params($tpl['assign']['LINK'], array('auth' => $authkey['auth_key']));
+        $user_tpl['assign']['LINK'] = functions_url::add_url_params($tpl['assign']['LINK'], array('auth' => $authkey['auth_key']));
 
         if (isset($user_tpl['assign']['IMG']['link']))
         {
-          $user_tpl['assign']['IMG']['link'] = add_url_params(
+          $user_tpl['assign']['IMG']['link'] = functions_url::add_url_params(
             $user_tpl['assign']['IMG']['link'],
             array('auth' => $authkey['auth_key'])
             );
@@ -144,21 +151,21 @@ SELECT
         $user_args['auth_key'] = $authkey['auth_key'];
       }
 
-      switch_lang_to($u['language']);
-      pwg_mail($u['email'], $user_args, $user_tpl);
-      switch_lang_back();
+      functions_mail::switch_lang_to($u['language']);
+      functions_mail::pwg_mail($u['email'], $user_args, $user_tpl);
+      functions_mail::switch_lang_back();
     }
 
-    $message = l10n_dec('%d mail was sent.', '%d mails were sent.', count($users));
+    $message = functions::l10n_dec('%d mail was sent.', '%d mails were sent.', count($users));
     $message.= ' ('.implode(', ', $usernames).')';
     
     $page['infos'][] = $message;
   }
   elseif ('group' == $_POST['who'] and !empty($_POST['group']))
   {
-    check_input_parameter('group', $_POST, false, PATTERN_ID);
+    functions::check_input_parameter('group', $_POST, false, PATTERN_ID);
     
-    pwg_mail_group($_POST['group'], $args, $tpl);
+    functions_mail::pwg_mail_group($_POST['group'], $args, $tpl);
 
     $query = '
 SELECT
@@ -166,12 +173,12 @@ SELECT
   FROM `'.GROUPS_TABLE.'`
   WHERE id = '.$_POST['group'].'
 ;';
-    list($group_name) = pwg_db_fetch_row(pwg_query($query));
+    list($group_name) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-    $page['infos'][] = l10n('An information email was sent to group "%s"', $group_name);
+    $page['infos'][] = functions::l10n('An information email was sent to group "%s"', $group_name);
   }
 
-  unset_make_full_url();
+  functions_url::unset_make_full_url();
 }
 
 // +-----------------------------------------------------------------------+
@@ -184,13 +191,13 @@ $template->assign(
   array(
     'CATEGORIES_NAV' =>
       trim(
-        get_cat_display_name_from_id(
+        functions_html::get_cat_display_name_from_id(
           $page['cat'],
           'admin.php?page=album-'
         )
       ),
     'F_ACTION' => $admin_album_base_url.'-notification',
-    'PWG_TOKEN' => get_pwg_token(),
+    'PWG_TOKEN' => functions::get_pwg_token(),
     )
   );
 
@@ -198,7 +205,7 @@ if ($conf['auth_key_duration'] > 0)
 {
   $template->assign(
     'auth_key_duration',
-    time_since(
+    functions::time_since(
       strtotime('now -'.$conf['auth_key_duration'].' second'),
       'second',
       null,
@@ -216,7 +223,7 @@ SELECT
     id AS group_id
   FROM `'.GROUPS_TABLE.'`
 ;';
-$all_group_ids = array_from_query($query, 'group_id');
+$all_group_ids = functions::array_from_query($query, 'group_id');
 
 if (count($all_group_ids) == 0)
 {
@@ -232,7 +239,7 @@ SELECT
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE cat_id = '.$category['id'].'
 ;';
-    $group_ids = array_from_query($query, 'group_id');
+    $group_ids = functions::array_from_query($query, 'group_id');
 
     if (count($group_ids) == 0)
     {
@@ -256,7 +263,7 @@ SELECT
 ;';
     $template->assign(
       'group_mail_options',
-      simple_hash_from_query($query, 'id', 'name')
+      functions::simple_hash_from_query($query, 'id', 'name')
       );
   }
 }
@@ -270,7 +277,7 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status != \'guest\'
 ;';
-$all_user_ids = query2array($query, null, 'user_id');
+$all_user_ids = functions_mysqli::query2array($query, null, 'user_id');
 
 if ('private' == $category['status'])
 {
@@ -284,7 +291,7 @@ SELECT
   FROM '.USER_GROUP_TABLE.'
   WHERE group_id IN ('.implode(',', $group_ids).') 
 ';
-    $user_ids_access_indirect = query2array($query, null, 'user_id');
+    $user_ids_access_indirect = functions_mysqli::query2array($query, null, 'user_id');
   }
 
   $query = '
@@ -293,7 +300,7 @@ SELECT
   FROM '.USER_ACCESS_TABLE.'
   WHERE cat_id = '.$category['id'].'
 ;';
-  $user_ids_access_direct = query2array($query, null, 'user_id');
+  $user_ids_access_direct = functions_mysqli::query2array($query, null, 'user_id');
 
   $user_ids_access = array_unique(array_merge($user_ids_access_direct, $user_ids_access_indirect));
 
@@ -314,7 +321,7 @@ SELECT
   WHERE id IN ('.implode(',', $user_ids).')
 ;';
 
-  $users = query2array($query, 'id', 'username');
+  $users = functions_mysqli::query2array($query, 'id', 'username');
 
   $template->assign('user_options', $users);
 }

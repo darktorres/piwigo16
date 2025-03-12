@@ -73,7 +73,7 @@ class ScriptLoader
       foreach ($require as $id)
       {
         if(!isset($this->registered_scripts[$id]))
-          $this->load_known_required_script($id, 1) or fatal_error("inline script not found require $id");
+          $this->load_known_required_script($id, 1) or functions_html::fatal_error("inline script not found require $id");
         $s = $this->registered_scripts[$id];
         if($s->load_mode==2)
           $s->load_mode=1; // until now the implementation does not allow executing inline script depending on another async script
@@ -294,7 +294,7 @@ class ScriptLoader
       trigger_error("Undefined script $script_id is required by someone", E_USER_WARNING);
       return 0;
     }
-    $recursion_limiter<5 or fatal_error("combined script circular dependency");
+    $recursion_limiter<5 or functions_html::fatal_error("combined script circular dependency");
     $script = $this->registered_scripts[$script_id];
     if (isset($script->extra['order']))
       return $script->extra['order'];

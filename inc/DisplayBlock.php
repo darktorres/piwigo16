@@ -9,11 +9,6 @@
 namespace Piwigo\inc;
 
 /**
- * @package functions\menubar
- */
-
-
-/**
  * Represents a menu block ready for display in the BlockManager object.
  */
 class DisplayBlock

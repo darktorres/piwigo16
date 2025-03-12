@@ -7,6 +7,10 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\plugins;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_session;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 if( !defined("PHPWG_ROOT_PATH") )
 {
@@ -20,24 +24,24 @@ if (!$conf['enable_extensions_install'])
 
 $template->set_filenames(array('plugins' => 'plugins_new.tpl'));
 
-$base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];
+$base_url = functions_url::get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];
 
 $plugins = new plugins();
 
 //------------------------------------------------------automatic installation
 if (isset($_GET['revision']) and isset($_GET['extension']))
 {
-  if (!is_webmaster())
+  if (!functions_user::is_webmaster())
   {
-    $page['errors'][] = l10n('Webmaster status is required.');
+    $page['errors'][] = functions::l10n('Webmaster status is required.');
   }
   else
   {
-    check_pwg_token();
+    functions::check_pwg_token();
     
     $install_status = $plugins->extract_plugin_files('install', $_GET['revision'], $_GET['extension'], $plugin_id);
 
-    redirect($base_url.'&installstatus='.$install_status.'&plugin_id='.$plugin_id);
+    functions::redirect($base_url.'&installstatus='.$install_status.'&plugin_id='.$plugin_id);
   }
 }
 
@@ -51,14 +55,14 @@ if (isset($_GET['installstatus']))
       // a JS action, no need to provide plugin_id in URL, just link to the page of installed
       // plugins, filtered on deactivated plugins. The webmaster will have to find its newly
       // installed plugin and click on the activation switch.
-      $activate_url = get_root_url().'admin.php?page=plugins&amp;filter=deactivated';
+      $activate_url = functions_url::get_root_url().'admin.php?page=plugins&amp;filter=deactivated';
 
-      $page['infos'][] = l10n('Plugin has been successfully copied');
-      $page['infos'][] = '<a href="'. $activate_url . '">' . l10n('Activate it now') . '</a>';
+      $page['infos'][] = functions::l10n('Plugin has been successfully copied');
+      $page['infos'][] = '<a href="'. $activate_url . '">' . functions::l10n('Activate it now') . '</a>';
 
       if (isset($plugins->fs_plugins[$_GET['plugin_id']]))
       {
-        pwg_activity(
+        functions::pwg_activity(
           'system',
           ACTIVITY_SYSTEM_PLUGIN,
           'install',
@@ -71,31 +75,31 @@ if (isset($_GET['installstatus']))
       break;
 
     case 'temp_path_error':
-      $page['errors'][] = l10n('Can\'t create temporary file.');
+      $page['errors'][] = functions::l10n('Can\'t create temporary file.');
       break;
 
     case 'dl_archive_error':
-      $page['errors'][] = l10n('Can\'t download archive.');
+      $page['errors'][] = functions::l10n('Can\'t download archive.');
       break;
 
     case 'archive_error':
-      $page['errors'][] = l10n('Can\'t read or extract archive.');
+      $page['errors'][] = functions::l10n('Can\'t read or extract archive.');
       break;
 
     default:
-      $page['errors'][] = l10n('An error occured during extraction (%s).', htmlspecialchars($_GET['installstatus']));
-      $page['errors'][] = l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).');
+      $page['errors'][] = functions::l10n('An error occured during extraction (%s).', htmlspecialchars($_GET['installstatus']));
+      $page['errors'][] = functions::l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).');
   }  
 }
 
 //---------------------------------------------------------------Order options
 $template->assign('order_options',
   array(
-    'date' => l10n('Post date'),
-    'revision' => l10n('Last revisions'),
-    'name' => l10n('Name'),
-    'author' => l10n('Author'),
-    'downloads' => l10n('Number of downloads')));
+    'date' => functions::l10n('Post date'),
+    'revision' => functions::l10n('Last revisions'),
+    'name' => functions::l10n('Name'),
+    'author' => functions::l10n('Author'),
+    'downloads' => functions::l10n('Number of downloads')));
 
 // +-----------------------------------------------------------------------+
 // |                     start template output                             |
@@ -113,9 +117,9 @@ if(isset($_GET['beta-test']) && $_GET['beta-test'] == 'true')
 if ($plugins->get_server_plugins(true, $beta_test))
 {
   /* order plugins */
-  if (pwg_get_session_var('plugins_new_order') != null)
+  if (functions_session::pwg_get_session_var('plugins_new_order') != null)
   {
-    $order_selected = pwg_get_session_var('plugins_new_order');
+    $order_selected = functions_session::pwg_get_session_var('plugins_new_order');
     $plugins->sort_server_plugins($order_selected);
     $template->assign('order_selected', $order_selected);
   }
@@ -133,7 +137,7 @@ if ($plugins->get_server_plugins(true, $beta_test))
     $url_auto_install = htmlentities($base_url)
       . '&amp;revision=' . $plugin['revision_id']
       . '&amp;extension=' . $plugin['extension_id']
-      . '&amp;pwg_token='.get_pwg_token()
+      . '&amp;pwg_token='.functions::get_pwg_token()
     ;
 
     // get the age of the last revision in days
@@ -145,7 +149,7 @@ if ($plugins->get_server_plugins(true, $beta_test))
     // Check if the current version is in the compatible version (not necessary if we are in beta test)
     if ($beta_test) {
       foreach ($plugin['compatible_with_versions'] as $vers) {
-        if (get_branch_from_version($vers) == get_branch_from_version(PHPWG_VERSION)) 
+        if (functions::get_branch_from_version($vers) == functions::get_branch_from_version(PHPWG_VERSION))
         {
           $has_compatible_version = true;
         } 
@@ -179,7 +183,7 @@ if ($plugins->get_server_plugins(true, $beta_test))
       'BIG_DESC' => $ext_desc,
       'VERSION' => $plugin['revision_name'],
       'REVISION_DATE' => preg_replace('/[^0-9]/', '', strtotime($plugin['revision_date'])),
-      'REVISION_FORMATED_DATE' => format_date($plugin['revision_date'], array('day','month','year')).", ".time_since($plugin['revision_date'], "day"),
+      'REVISION_FORMATED_DATE' => functions::format_date($plugin['revision_date'], array('day','month','year')).", ".functions::time_since($plugin['revision_date'], "day"),
       'AUTHOR' => $plugin['author_name'],
       'DOWNLOADS' => $plugin['extension_nb_downloads'],
       'URL_INSTALL' => $url_auto_install,
@@ -195,14 +199,14 @@ if ($plugins->get_server_plugins(true, $beta_test))
 }
 else
 {
-  $page['errors'][] = l10n('Can\'t connect to server.');
+  $page['errors'][] = functions::l10n('Can\'t connect to server.');
 }
 
 if (!$beta_test and preg_match('/(beta|RC)/', PHPWG_VERSION))
 {
   $template->assign('BETA_URL', $base_url.'&amp;beta-test=true');
 }
-$template->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));
+$template->assign('ADMIN_PAGE_TITLE', functions::l10n('Plugins'));
 $template->assign('BETA_TEST', $beta_test);
 $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');
 ?>

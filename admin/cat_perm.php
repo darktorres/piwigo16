@@ -6,17 +6,23 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_category;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
+
 if (!defined('PHPWG_ROOT_PATH'))
 {
   die ("Hacking attempt!");
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 // +-----------------------------------------------------------------------+
 // |                       variable initialization                         |
@@ -30,16 +36,16 @@ $page['cat'] = $category['id'];
 
 if (!empty($_POST))
 {
-  check_pwg_token();
+  functions::check_pwg_token();
 
   if ($category['status'] != $_POST['status'] or ($category['status'] != 'public' and isset($_POST['apply_on_sub'])))
   {
     $cat_ids = array($page['cat']);
     if (isset($_POST['apply_on_sub']))
       {
-        $cat_ids = array_merge($cat_ids, get_subcat_ids(array($page['cat'])));
+        $cat_ids = array_merge($cat_ids, functions_category::get_subcat_ids(array($page['cat'])));
       }
-    set_cat_status($cat_ids, $_POST['status']);
+    functions_admin::set_cat_status($cat_ids, $_POST['status']);
     $category['status'] = $_POST['status'];
   }
 
@@ -53,7 +59,7 @@ SELECT group_id
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE cat_id = '.$page['cat'].'
 ;';
-    $groups_granted = array_from_query($query, 'group_id');
+    $groups_granted = functions::array_from_query($query, 'group_id');
 
     if (!isset($_POST['groups']))
     {
@@ -72,9 +78,9 @@ SELECT group_id
 DELETE
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE group_id IN ('.implode(',', $deny_groups).')
-    AND cat_id IN ('.implode(',', get_subcat_ids(array($page['cat']))).')
+    AND cat_id IN ('.implode(',', functions_category::get_subcat_ids(array($page['cat']))).')
 ;';
-      pwg_query($query);
+      functions_mysqli::pwg_query($query);
     }
 
     //
@@ -83,10 +89,10 @@ DELETE
     $grant_groups = $_POST['groups'];
     if (count($grant_groups) > 0)
     {
-      $cat_ids = get_uppercat_ids(array($page['cat']));
+      $cat_ids = functions_admin::get_uppercat_ids(array($page['cat']));
       if (isset($_POST['apply_on_sub']))
       {
-        $cat_ids = array_merge($cat_ids, get_subcat_ids(array($page['cat'])));
+        $cat_ids = array_merge($cat_ids, functions_category::get_subcat_ids(array($page['cat'])));
       }
       
       $query = '
@@ -95,7 +101,7 @@ SELECT id
   WHERE id IN ('.implode(',', $cat_ids).')
     AND status = \'private\'
 ;';
-      $private_cats = array_from_query($query, 'id');
+      $private_cats = functions::array_from_query($query, 'id');
       
       $inserts = array();
       foreach ($private_cats as $cat_id)
@@ -109,7 +115,7 @@ SELECT id
         }
       }
       
-      mass_inserts(
+      functions_mysqli::mass_inserts(
         GROUP_ACCESS_TABLE,
         array('group_id','cat_id'),
         $inserts,
@@ -125,7 +131,7 @@ SELECT user_id
   FROM '.USER_ACCESS_TABLE.'
   WHERE cat_id = '.$page['cat'].'
 ;';
-    $users_granted = array_from_query($query, 'user_id');
+    $users_granted = functions::array_from_query($query, 'user_id');
 
     if (!isset($_POST['users']))
     {
@@ -144,9 +150,9 @@ SELECT user_id
 DELETE
   FROM '.USER_ACCESS_TABLE.'
   WHERE user_id IN ('.implode(',', $deny_users).')
-    AND cat_id IN ('.implode(',', get_subcat_ids(array($page['cat']))).')
+    AND cat_id IN ('.implode(',', functions_category::get_subcat_ids(array($page['cat']))).')
 ;';
-      pwg_query($query);
+      functions_mysqli::pwg_query($query);
     }
 
     //
@@ -155,11 +161,11 @@ DELETE
     $grant_users = $_POST['users'];
     if (count($grant_users) > 0)
     {
-      add_permission_on_category($page['cat'], $grant_users);
+      functions_admin::add_permission_on_category($page['cat'], $grant_users);
     }
   }
 
-  $page['infos'][] = l10n('Album updated successfully');
+  $page['infos'][] = functions::l10n('Album updated successfully');
 }
 
 // +-----------------------------------------------------------------------+
@@ -171,11 +177,11 @@ $template->set_filename('cat_perm', 'cat_perm.tpl');
 $template->assign(
   array(
     'CATEGORIES_NAV' =>
-      get_cat_display_name_from_id(
+      functions_html::get_cat_display_name_from_id(
         $page['cat'],
         'admin.php?page=album-'
         ),
-    'U_HELP' => get_root_url().'admin/popuphelp.php?page=cat_perm',
+    'U_HELP' => functions_url::get_root_url().'admin/popuphelp.php?page=cat_perm',
     'F_ACTION' => $admin_album_base_url.'-permissions',
     'private' => ('private' == $category['status']),
     )
@@ -195,7 +201,7 @@ SELECT id, name
   FROM `'.GROUPS_TABLE.'`
   ORDER BY name ASC
 ;';
-$groups = simple_hash_from_query($query, 'id', 'name');
+$groups = functions::simple_hash_from_query($query, 'id', 'name');
 $template->assign('groups', $groups);
 
 // groups granted to access the category
@@ -204,7 +210,7 @@ SELECT group_id
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE cat_id = '.$page['cat'].'
 ;';
-$group_granted_ids = array_from_query($query, 'group_id');
+$group_granted_ids = functions::array_from_query($query, 'group_id');
 $template->assign('groups_selected', $group_granted_ids);
 
 // users...
@@ -215,7 +221,7 @@ SELECT '.$conf['user_fields']['id'].' AS id,
        '.$conf['user_fields']['username'].' AS username
   FROM '.USERS_TABLE.'
 ;';
-$users = simple_hash_from_query($query, 'id', 'username');
+$users = functions::simple_hash_from_query($query, 'id', 'username');
 $template->assign('users', $users);
 
 
@@ -224,7 +230,7 @@ SELECT user_id
   FROM '.USER_ACCESS_TABLE.'
   WHERE cat_id = '.$page['cat'].'
 ;';
-$user_granted_direct_ids = array_from_query($query, 'user_id');
+$user_granted_direct_ids = functions::array_from_query($query, 'user_id');
 $template->assign('users_selected', $user_granted_direct_ids);
 
 
@@ -238,8 +244,8 @@ SELECT user_id, group_id
   FROM '.USER_GROUP_TABLE.'
   WHERE group_id IN ('.implode(',', $group_granted_ids).') 
 ';
-  $result = pwg_query($query);
-  while ($row = pwg_db_fetch_assoc($result))
+  $result = functions_mysqli::pwg_query($query);
+  while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
   {
     if (!isset($granted_groups[ $row['group_id'] ]))
     {
@@ -289,9 +295,9 @@ SELECT user_id, group_id
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
 $template->assign(array(
-  'PWG_TOKEN' => get_pwg_token(),
+  'PWG_TOKEN' => functions::get_pwg_token(),
   'INHERIT' => $conf['inheritance_by_default'],
-  'CACHE_KEYS' => get_admin_client_cache_keys(array('groups', 'users')),
+  'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(array('groups', 'users')),
   ));
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'cat_perm');

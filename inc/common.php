@@ -6,6 +6,13 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_upgrade;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\PersistentFileCache;
 use Piwigo\inc\Template;
@@ -81,7 +88,6 @@ if (!defined('PHPWG_INSTALLED'))
   header('Location: install.php');
   exit;
 }
-include(PHPWG_ROOT_PATH .'inc/dblayer/functions_'.$conf['dblayer'].'.php');
 
 if(isset($conf['show_php_errors']) && !empty($conf['show_php_errors']))
 {
@@ -107,17 +113,17 @@ $persistent_cache = new PersistentFileCache();
 // Database connection
 try
 {
-  pwg_db_connect($conf['db_host'], $conf['db_user'],
+  functions_mysqli::pwg_db_connect($conf['db_host'], $conf['db_user'],
                  $conf['db_password'], $conf['db_base']);
 }
 catch (Exception $e)
 {
-  my_error(l10n($e->getMessage()), true);
+  functions_mysqli::my_error(functions::l10n($e->getMessage()), true);
 }
 
-pwg_db_check_charset();
+functions_mysqli::pwg_db_check_charset();
 
-load_conf_from_db();
+functions::load_conf_from_db();
 
 $logger = new Katzgrau\KLogger\Logger(PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'], $conf['log_level'], array(
   // we use an hashed filename to prevent direct file access, and we salt with
@@ -128,25 +134,25 @@ $logger = new Katzgrau\KLogger\Logger(PHPWG_ROOT_PATH . $conf['data_location'] .
 
 if (!$conf['check_upgrade_feed'])
 {
-  if (!isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != get_branch_from_version(PHPWG_VERSION))
+  if (!isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != functions::get_branch_from_version(PHPWG_VERSION))
   {
-    redirect(get_root_url().'upgrade.php');
+    functions::redirect(functions_url::get_root_url().'upgrade.php');
   }
 }
 
 ImageStdParams::load_from_db();
 
 session_start();
-load_plugins();
+functions_plugins::load_plugins();
 
 if (!isset($conf['piwigo_installed_version']))
 {
-  conf_update_param('piwigo_installed_version', PHPWG_VERSION);
+  functions::conf_update_param('piwigo_installed_version', PHPWG_VERSION);
 }
 elseif ($conf['piwigo_installed_version'] != PHPWG_VERSION)
 {
-  pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', array('from_version'=>$conf['piwigo_installed_version'], 'to_version'=>PHPWG_VERSION));
-  conf_update_param('piwigo_installed_version', PHPWG_VERSION);
+  functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', array('from_version'=>$conf['piwigo_installed_version'], 'to_version'=>PHPWG_VERSION));
+  functions::conf_update_param('piwigo_installed_version', PHPWG_VERSION);
 }
 
 // 2022-02-25 due to escape on "rank" (becoming a mysql keyword in version 8), the $conf['order_by'] might
@@ -159,7 +165,7 @@ if (preg_match('/(, )?`rank` ASC/', $conf['order_by']))
   {
     $order_by = 'ORDER BY id ASC';
   }
-  conf_update_param('order_by', $order_by, true);
+  functions::conf_update_param('order_by', $order_by, true);
 }
 
 // users can have defined a custom order pattern, incompatible with GUI form
@@ -172,7 +178,7 @@ if (isset($conf['order_by_inside_category_custom']))
   $conf['order_by_inside_category'] = $conf['order_by_inside_category_custom'];
 }
 
-check_lounge();
+functions::check_lounge();
 
 include(PHPWG_ROOT_PATH.'inc/user.php');
 
@@ -201,19 +207,19 @@ else
 }
 
 // language files
-load_language('common.lang');
-if ( is_admin() || (defined('IN_ADMIN') and IN_ADMIN) )
+functions::load_language('common.lang');
+if ( functions_user::is_admin() || (defined('IN_ADMIN') and IN_ADMIN) )
 {
-  load_language('admin.lang');
+  functions::load_language('admin.lang');
 }
-trigger_notify('loading_lang');
-load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, array('no_fallback'=>true, 'local'=>true) );
+functions_plugins::trigger_notify('loading_lang');
+functions::load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, array('no_fallback'=>true, 'local'=>true) );
 
 // only now we can set the localized username of the guest user (and not in
 // inc/user.php)
-if (is_a_guest())
+if (functions_user::is_a_guest())
 {
-  $user['username'] = l10n('guest');
+  $user['username'] = functions::l10n('guest');
 }
 
 // in case an auth key was provided and is no longer valid, we must wait to
@@ -221,20 +227,20 @@ if (is_a_guest())
 if (isset($page['auth_key_invalid']) and $page['auth_key_invalid'])
 {
   $page['errors'][] =
-    l10n('Your authentication key is no longer valid.')
-    .sprintf(' <a href="%s">%s</a>', get_root_url().'identification.php', l10n('Login'))
+    functions::l10n('Your authentication key is no longer valid.')
+    .sprintf(' <a href="%s">%s</a>', functions_url::get_root_url().'identification.php', functions::l10n('Login'))
     ;
 }
 
 // template instance
 if (defined('IN_ADMIN') and IN_ADMIN )
 {// Admin template
-  $template = new Template(PHPWG_ROOT_PATH.'admin/themes', userprefs_get_param('admin_theme', 'roma'));
+  $template = new Template(PHPWG_ROOT_PATH.'admin/themes', functions_user::userprefs_get_param('admin_theme', 'roma'));
 }
 else
 { // Classic template
   $theme = $user['theme'];
-  if (script_basename() != 'ws' and mobile_theme())
+  if (functions::script_basename() != 'ws' and functions::mobile_theme())
   {
     $theme = $conf['mobile_theme'];
   }
@@ -250,19 +256,19 @@ if (isset($user['internal_status']['guest_must_be_guest'])
     and
     $user['internal_status']['guest_must_be_guest'] === true)
 {
-  $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
+  $header_msgs[] = functions::l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
 }
 
 if ($conf['gallery_locked'])
 {
-  $header_msgs[] = l10n('The gallery is locked for maintenance. Please, come back later.');
+  $header_msgs[] = functions::l10n('The gallery is locked for maintenance. Please, come back later.');
 
-  if ( script_basename() != 'identification' and !is_admin() )
+  if ( functions::script_basename() != 'identification' and !functions_user::is_admin() )
   {
-    set_status_header(503, 'Service Unavailable');
+    functions_html::set_status_header(503, 'Service Unavailable');
     @header('Retry-After: 900');
-    header('Content-Type: text/html; charset='.get_pwg_charset());
-    echo '<a href="'.get_absolute_root_url(false).'identification.php">'.l10n('The gallery is locked for maintenance. Please, come back later.').'</a>';
+    header('Content-Type: text/html; charset='.functions::get_pwg_charset());
+    echo '<a href="'.functions_url::get_absolute_root_url(false).'identification.php">'.functions::l10n('The gallery is locked for maintenance. Please, come back later.').'</a>';
     echo str_repeat( ' ', 512); //IE6 doesn't error output if below a size
     exit();
   }
@@ -270,11 +276,10 @@ if ($conf['gallery_locked'])
 
 if ($conf['check_upgrade_feed'])
 {
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_upgrade.php');
-  if (check_upgrade_feed())
+  if (functions_upgrade::check_upgrade_feed())
   {
     $header_msgs[] = 'Some database upgrades are missing, '
-      .'<a href="'.get_absolute_root_url(false).'upgrade_feed.php">upgrade now</a>';
+      .'<a href="'.functions_url::get_absolute_root_url(false).'upgrade_feed.php">upgrade now</a>';
   }
 }
 
@@ -284,7 +289,7 @@ if (count($header_msgs) > 0)
   $header_msgs=array();
 }
 
-if (!empty($conf['filter_pages']) and get_filter_page_value('used'))
+if (!empty($conf['filter_pages']) and functions::get_filter_page_value('used'))
 {
   include(PHPWG_ROOT_PATH.'inc/filter.php');
 }
@@ -299,19 +304,19 @@ if (isset($conf['header_notes']))
 }
 
 // default event handlers
-add_event_handler('render_category_literal_description', render_category_literal_description(...));
+functions_plugins::add_event_handler('render_category_literal_description', functions_html::render_category_literal_description(...));
 if ( !$conf['allow_html_descriptions'] )
 {
-  add_event_handler('render_category_description', nl2br(...));
+  functions_plugins::add_event_handler('render_category_description', nl2br(...));
 }
-add_event_handler('render_comment_content', render_comment_content(...));
-add_event_handler('render_comment_author', strip_tags(...));
-add_event_handler('render_tag_url', str2url(...));
-add_event_handler('blockmanager_register_blocks', register_default_menubar_blocks(...), EVENT_HANDLER_PRIORITY_NEUTRAL-1);
+functions_plugins::add_event_handler('render_comment_content', functions_html::render_comment_content(...));
+functions_plugins::add_event_handler('render_comment_author', strip_tags(...));
+functions_plugins::add_event_handler('render_tag_url', functions::str2url(...));
+functions_plugins::add_event_handler('blockmanager_register_blocks', functions_html::register_default_menubar_blocks(...), EVENT_HANDLER_PRIORITY_NEUTRAL-1);
 if ( !empty($conf['original_url_protection']) )
 {
-  add_event_handler('get_element_url', get_element_url_protection_handler(...));
-  add_event_handler('get_src_image_url', get_src_image_url_protection_handler(...));
+  functions_plugins::add_event_handler('get_element_url', functions_html::get_element_url_protection_handler(...));
+  functions_plugins::add_event_handler('get_src_image_url', functions_html::get_src_image_url_protection_handler(...));
 }
-trigger_notify('init');
+functions_plugins::trigger_notify('init');
 ?>

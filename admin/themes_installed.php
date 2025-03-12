@@ -7,18 +7,22 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\themes;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 if( !defined("PHPWG_ROOT_PATH") )
 {
   die ("Hacking attempt!");
 }
 
-if (!is_webmaster())
+if (!functions_user::is_webmaster())
 {
-  $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+  $page['warnings'][] = str_replace('%s', functions::l10n('user_status_webmaster'), functions::l10n('%s status is required to edit parameters.'));
 }
 
-$base_url = get_root_url().'admin.php?page='.$page['page'];
+$base_url = functions_url::get_root_url().'admin.php?page='.$page['page'];
 
 $themes = new themes();
 
@@ -36,7 +40,7 @@ if (isset($_GET['action']) and isset($_GET['theme']))
     {
       $template->delete_compiled_templates();
     }
-    redirect($base_url);
+    functions::redirect($base_url);
   }
 }
 
@@ -46,7 +50,7 @@ if (isset($_GET['action']) and isset($_GET['theme']))
 
 $themes->sort_fs_themes();
 
-$default_theme = get_default_theme();
+$default_theme = functions_user::get_default_theme();
 
 $db_themes = $themes->get_db_themes();
 $db_theme_ids = array();
@@ -87,12 +91,12 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme)
     if (count($db_theme_ids) <= 1)
     {
       $tpl_theme['DEACTIVABLE'] = false;
-      $tpl_theme['DEACTIVATE_TOOLTIP'] = l10n('Impossible to deactivate this theme, you need at least one theme.');
+      $tpl_theme['DEACTIVATE_TOOLTIP'] = functions::l10n('Impossible to deactivate this theme, you need at least one theme.');
     }
     if ($tpl_theme['IS_DEFAULT'])
     {
       $tpl_theme['DEACTIVABLE'] = false;
-      $tpl_theme['DEACTIVATE_TOOLTIP'] = l10n('Impossible to deactivate the default theme.');
+      $tpl_theme['DEACTIVATE_TOOLTIP'] = functions::l10n('Impossible to deactivate the default theme.');
     }
   }
   else
@@ -103,7 +107,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme)
     if (isset($fs_theme['activable']) and !$fs_theme['activable'])
     {
       $tpl_theme['ACTIVABLE'] = false;
-      $tpl_theme['ACTIVABLE_TOOLTIP'] = l10n('This theme was not designed to be directly activated');
+      $tpl_theme['ACTIVABLE_TOOLTIP'] = functions::l10n('This theme was not designed to be directly activated');
     }
     else
     {
@@ -115,7 +119,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme)
     {
       $tpl_theme['ACTIVABLE'] = false;
 
-      $tpl_theme['ACTIVABLE_TOOLTIP'] = l10n(
+      $tpl_theme['ACTIVABLE_TOOLTIP'] = functions::l10n(
         'Impossible to activate this theme, the parent theme is missing: %s',
         $missing_parent
         );
@@ -130,7 +134,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme)
     {
       $tpl_theme['DELETABLE'] = false;
 
-      $tpl_theme['DELETE_TOOLTIP'] = l10n(
+      $tpl_theme['DELETE_TOOLTIP'] = functions::l10n(
         'Impossible to delete this theme. Other themes depends on it: %s',
         implode(', ', $children)
         );
@@ -140,20 +144,18 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme)
   $tpl_themes[] = $tpl_theme;
 }
 
-// sort themes by state then by name
-function cmp($a, $b)
-{ 
+usort($tpl_themes, function ($a, $b){
+  // sort themes by state then by name
   $s = array('active' => 0, 'inactive' => 1);
-  
+    
   if (@$a['IS_DEFAULT']) return -1;
   if (@$b['IS_DEFAULT']) return 1;
-  
+
   if($a['STATE'] == $b['STATE'])
     return strcasecmp($a['NAME'], $b['NAME']); 
   else
     return ($s[$a['STATE']] >= $s[$b['STATE']] ? 1 : -1);
-}
-usort($tpl_themes, cmp(...));
+});
 
 $template->assign(
     array(
@@ -166,10 +168,10 @@ $template->assign(
     )
   );
 
-trigger_notify('loc_end_themes_installed');
+functions_plugins::trigger_notify('loc_end_themes_installed');
 
-$template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
-$template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
+$template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
+$template->assign('ADMIN_PAGE_TITLE', functions::l10n('Themes'));
 $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $conf['enable_extensions_install']);
 
 $template->set_filenames(array('themes' => 'themes_installed.tpl'));

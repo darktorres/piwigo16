@@ -8,9 +8,7 @@
 
 namespace Piwigo\inc;
 
-/**
- * @package functions\calendar
- */
+use Piwigo\inc\dblayer\functions_mysqli;
 
 /**
  * Monthly calendar style (composed of years/months and days)
@@ -27,15 +25,15 @@ class CalendarMonthly extends CalendarBase
     global $lang;
     $this->calendar_levels = array(
       array(
-          'sql'=> pwg_db_get_year($this->date_field),
+          'sql'=> functions_mysqli::pwg_db_get_year($this->date_field),
           'labels' => null
         ),
       array(
-	  'sql'=> pwg_db_get_month($this->date_field),
+	  'sql'=> functions_mysqli::pwg_db_get_month($this->date_field),
 	  'labels' => $lang['month']
         ),
       array(
-          'sql'=> pwg_db_get_dayofmonth($this->date_field),
+          'sql'=> functions_mysqli::pwg_db_get_dayofmonth($this->date_field),
           'labels' => null
         ),
      );
@@ -51,7 +49,7 @@ class CalendarMonthly extends CalendarBase
     global $conf, $page;
 
     $view_type = $page['chronology_view'];
-    if ($view_type==CAL_VIEW_CALENDAR)
+    if ($view_type==functions_calendar::CAL_VIEW_CALENDAR)
     {
       global $template;
       $tpl_var = array();
@@ -69,7 +67,7 @@ class CalendarMonthly extends CalendarBase
         if ($this->build_year_calendar($tpl_var))
         {
           $template->assign('chronology_calendar', $tpl_var);
-          $this->build_nav_bar(CYEAR); // years
+          $this->build_nav_bar(CalendarBase::CYEAR); // years
           return true;
         }
       }
@@ -85,23 +83,23 @@ class CalendarMonthly extends CalendarBase
       }
     }
 
-    if ($view_type==CAL_VIEW_LIST or count($page['chronology_date'])==3)
+    if ($view_type==functions_calendar::CAL_VIEW_LIST or count($page['chronology_date'])==3)
     {
       if ( count($page['chronology_date'])==0 )
       {
-        $this->build_nav_bar(CYEAR); // years
+        $this->build_nav_bar(CalendarBase::CYEAR); // years
       }
       if ( count($page['chronology_date'])==1)
       {
-        $this->build_nav_bar(CMONTH); // month
+        $this->build_nav_bar(CalendarBase::CMONTH); // month
       }
       if ( count($page['chronology_date'])==2 )
       {
         $day_labels = range( 1, $this->get_all_days_in_month(
-                $page['chronology_date'][CYEAR] ,$page['chronology_date'][CMONTH] ) );
+                $page['chronology_date'][CalendarBase::CYEAR] ,$page['chronology_date'][CalendarBase::CMONTH] ) );
         array_unshift($day_labels, 0);
         unset( $day_labels[0] );
-        $this->build_nav_bar( CDAY, $day_labels ); // days
+        $this->build_nav_bar( CalendarBase::CDAY, $day_labels ); // days
       }
       $this->build_next_prev();
     }
@@ -124,36 +122,36 @@ class CalendarMonthly extends CalendarBase
       array_pop($date);
     }
     $res = '';
-    if (isset($date[CYEAR]) and $date[CYEAR]!=='any')
+    if (isset($date[CalendarBase::CYEAR]) and $date[CalendarBase::CYEAR]!=='any')
     {
-      $b = $date[CYEAR] . '-';
-      $e = $date[CYEAR] . '-';
-      if (isset($date[CMONTH]) and $date[CMONTH]!=='any')
+      $b = $date[CalendarBase::CYEAR] . '-';
+      $e = $date[CalendarBase::CYEAR] . '-';
+      if (isset($date[CalendarBase::CMONTH]) and $date[CalendarBase::CMONTH]!=='any')
       {
-        $b .= sprintf('%02d-', $date[CMONTH]);
-        $e .= sprintf('%02d-', $date[CMONTH]);
-        if (isset($date[CDAY]) and $date[CDAY]!=='any')
+        $b .= sprintf('%02d-', $date[CalendarBase::CMONTH]);
+        $e .= sprintf('%02d-', $date[CalendarBase::CMONTH]);
+        if (isset($date[CalendarBase::CDAY]) and $date[CalendarBase::CDAY]!=='any')
         {
-          $b .= sprintf('%02d', $date[CDAY]);
-          $e .= sprintf('%02d', $date[CDAY]);
+          $b .= sprintf('%02d', $date[CalendarBase::CDAY]);
+          $e .= sprintf('%02d', $date[CalendarBase::CDAY]);
         }
         else
         {
           $b .= '01';
-          $e .= $this->get_all_days_in_month($date[CYEAR], $date[CMONTH]);
+          $e .= $this->get_all_days_in_month($date[CalendarBase::CYEAR], $date[CalendarBase::CMONTH]);
         }
       }
       else
       {
         $b .= '01-01';
         $e .= '12-31';
-        if (isset($date[CMONTH]) and $date[CMONTH]!=='any')
+        if (isset($date[CalendarBase::CMONTH]) and $date[CalendarBase::CMONTH]!=='any')
         {
-          $res .= ' AND '.$this->calendar_levels[CMONTH]['sql'].'='.$date[CMONTH];
+          $res .= ' AND '.$this->calendar_levels[CalendarBase::CMONTH]['sql'].'='.$date[CalendarBase::CMONTH];
         }
-        if (isset($date[CDAY]) and $date[CDAY]!=='any')
+        if (isset($date[CalendarBase::CDAY]) and $date[CalendarBase::CDAY]!=='any')
         {
-          $res .= ' AND '.$this->calendar_levels[CDAY]['sql'].'='.$date[CDAY];
+          $res .= ' AND '.$this->calendar_levels[CalendarBase::CDAY]['sql'].'='.$date[CalendarBase::CDAY];
         }
       }
       $res = " AND $this->date_field BETWEEN '$b' AND '$e 23:59:59'" . $res;
@@ -161,13 +159,13 @@ class CalendarMonthly extends CalendarBase
     else
     {
       $res = ' AND '.$this->date_field.' IS NOT NULL';
-      if (isset($date[CMONTH]) and $date[CMONTH]!=='any')
+      if (isset($date[CalendarBase::CMONTH]) and $date[CalendarBase::CMONTH]!=='any')
       {
-        $res .= ' AND '.$this->calendar_levels[CMONTH]['sql'].'='.$date[CMONTH];
+        $res .= ' AND '.$this->calendar_levels[CalendarBase::CMONTH]['sql'].'='.$date[CalendarBase::CMONTH];
       }
-      if (isset($date[CDAY]) and $date[CDAY]!=='any')
+      if (isset($date[CalendarBase::CDAY]) and $date[CalendarBase::CDAY]!=='any')
       {
-        $res .= ' AND '.$this->calendar_levels[CDAY]['sql'].'='.$date[CDAY];
+        $res .= ' AND '.$this->calendar_levels[CalendarBase::CDAY]['sql'].'='.$date[CalendarBase::CDAY];
       }
     }
     return $res;
@@ -215,17 +213,17 @@ class CalendarMonthly extends CalendarBase
 
     assert( count($page['chronology_date']) == 0 );
     $query='
-  SELECT '.pwg_db_get_date_YYYYMM($this->date_field).' as period,
+  SELECT '.functions_mysqli::pwg_db_get_date_YYYYMM($this->date_field).' as period,
     COUNT(distinct id) as count';
     $query.= $this->inner_sql;
     $query.= $this->get_date_where();
     $query.= '
     GROUP BY period
-    ORDER BY '.pwg_db_get_year($this->date_field).' DESC, '.pwg_db_get_month($this->date_field).' ASC';
+    ORDER BY '.functions_mysqli::pwg_db_get_year($this->date_field).' DESC, '.functions_mysqli::pwg_db_get_month($this->date_field).' ASC';
 
-    $result = pwg_query($query);
+    $result = functions_mysqli::pwg_query($query);
     $items=array();
-    while ($row = pwg_db_fetch_assoc($result))
+    while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
     {
       $y = substr($row['period'], 0, 4);
       $m = (int)substr($row['period'], 4, 2);
@@ -240,7 +238,7 @@ class CalendarMonthly extends CalendarBase
     if (count($items)==1)
     {// only one year exists so bail out to year view
       list($y) = array_keys($items);
-      $page['chronology_date'][CYEAR] = $y;
+      $page['chronology_date'][CalendarBase::CYEAR] = $y;
       return false;
     }
 
@@ -248,7 +246,7 @@ class CalendarMonthly extends CalendarBase
     foreach ( $items as $year=>$year_data)
     {
       $chronology_date = array( $year );
-      $url = duplicate_index_url( array('chronology_date'=>$chronology_date) );
+      $url = functions_url::duplicate_index_url( array('chronology_date'=>$chronology_date) );
 
       $nav_bar = $this->get_nav_bar_from_items( $chronology_date,
               $year_data['children'], false, false, $lang['month'] );
@@ -276,7 +274,7 @@ class CalendarMonthly extends CalendarBase
     global $page;
 
     assert( count($page['chronology_date']) == 1 );
-    $query='SELECT '.pwg_db_get_date_MMDD($this->date_field).' as period,
+    $query='SELECT '.functions_mysqli::pwg_db_get_date_MMDD($this->date_field).' as period,
               COUNT(DISTINCT id) as count';
     $query.= $this->inner_sql;
     $query.= $this->get_date_where();
@@ -284,9 +282,9 @@ class CalendarMonthly extends CalendarBase
     GROUP BY period
     ORDER BY period ASC';
 
-    $result = pwg_query($query);
+    $result = functions_mysqli::pwg_query($query);
     $items=array();
-    while ($row = pwg_db_fetch_assoc($result))
+    while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
     {
       $m = (int)substr($row['period'], 0, 2);
       $d = substr($row['period'], 2, 2);
@@ -300,14 +298,14 @@ class CalendarMonthly extends CalendarBase
     if (count($items)==1)
     { // only one month exists so bail out to month view
       list($m) = array_keys($items);
-      $page['chronology_date'][CMONTH] = $m;
+      $page['chronology_date'][CalendarBase::CMONTH] = $m;
       return false;
     }
     global $lang;
     foreach ( $items as $month=>$month_data)
     {
-      $chronology_date = array( $page['chronology_date'][CYEAR], $month );
-      $url = duplicate_index_url( array('chronology_date'=>$chronology_date) );
+      $chronology_date = array( $page['chronology_date'][CalendarBase::CYEAR], $month );
+      $url = functions_url::duplicate_index_url( array('chronology_date'=>$chronology_date) );
 
       $nav_bar = $this->get_nav_bar_from_items( $chronology_date,
                        $month_data['children'], false );
@@ -334,7 +332,7 @@ class CalendarMonthly extends CalendarBase
   {
     global $page, $lang, $conf;
 
-    $query='SELECT '.pwg_db_get_dayofmonth($this->date_field).' as period,
+    $query='SELECT '.functions_mysqli::pwg_db_get_dayofmonth($this->date_field).' as period,
               COUNT(DISTINCT id) as count';
     $query.= $this->inner_sql;
     $query.= $this->get_date_where();
@@ -343,8 +341,8 @@ class CalendarMonthly extends CalendarBase
     ORDER BY period ASC';
 
     $items=array();
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result))
+    $result = functions_mysqli::pwg_query($query);
+    while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
     {
       $d = (int)$row['period'];
       $items[$d] = array('nb_images'=>$row['count']);
@@ -352,18 +350,18 @@ class CalendarMonthly extends CalendarBase
 
     foreach ( $items as $day=>$data)
     {
-      $page['chronology_date'][CDAY]=$day;
+      $page['chronology_date'][CalendarBase::CDAY]=$day;
       $query = '
-  SELECT id, file,representative_ext,path,width,height,rotation, '.pwg_db_get_dayofweek($this->date_field).'-1 as dow';
+  SELECT id, file,representative_ext,path,width,height,rotation, '.functions_mysqli::pwg_db_get_dayofweek($this->date_field).'-1 as dow';
       $query.= $this->inner_sql;
       $query.= $this->get_date_where();
       $query.= '
-    ORDER BY '.DB_RANDOM_FUNCTION.'()
+    ORDER BY '.functions_mysqli::DB_RANDOM_FUNCTION.'()
     LIMIT 1';
-      unset ( $page['chronology_date'][CDAY] );
+      unset ( $page['chronology_date'][CalendarBase::CDAY] );
 
-      $row = pwg_db_fetch_assoc(pwg_query($query));
-      $derivative = new DerivativeImage(IMG_SQUARE, new SrcImage($row));
+      $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+      $derivative = new DerivativeImage(derivative_std_params::IMG_SQUARE, new SrcImage($row));
       $items[$day]['derivative'] = $derivative;
       $items[$day]['file'] = $row['file'];
       $items[$day]['dow'] = $row['dow'];
@@ -395,7 +393,7 @@ class CalendarMonthly extends CalendarBase
         $wday_labels[] = array_shift($wday_labels);
       }
 
-      list($cell_width, $cell_height) = ImageStdParams::get_by_type(IMG_SQUARE)->sizing->ideal_size;
+      list($cell_width, $cell_height) = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE)->sizing->ideal_size;
 
       $tpl_weeks    = array();
       $tpl_crt_week = array();
@@ -408,7 +406,7 @@ class CalendarMonthly extends CalendarBase
 
       for ( $day = 1;
             $day <= $this->get_all_days_in_month(
-              $page['chronology_date'][CYEAR], $page['chronology_date'][CMONTH]
+              $page['chronology_date'][CalendarBase::CYEAR], $page['chronology_date'][CalendarBase::CMONTH]
                 );
             $day++)
       {
@@ -428,12 +426,12 @@ class CalendarMonthly extends CalendarBase
         }
         else
         {
-          $url = duplicate_index_url(
+          $url = functions_url::duplicate_index_url(
               array(
                 'chronology_date' =>
                   array(
-                    $page['chronology_date'][CYEAR],
-                    $page['chronology_date'][CMONTH],
+                    $page['chronology_date'][CalendarBase::CYEAR],
+                    $page['chronology_date'][CalendarBase::CMONTH],
                     $day
                   )
               )

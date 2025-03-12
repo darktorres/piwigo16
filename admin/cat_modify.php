@@ -6,6 +6,16 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_category;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
+
 if (!defined('PHPWG_ROOT_PATH'))
 {
   die('Hacking attempt!');
@@ -13,98 +23,12 @@ if (!defined('PHPWG_ROOT_PATH'))
 
 include_once(PHPWG_ROOT_PATH.'inc/functions_mail.php');
 
-
-// get_complete_dir returns the concatenation of get_site_url and
-// get_local_dir
-// Example : "pets > rex > 1_year_old" is on the the same site as the
-// Piwigo files and this category has 22 for identifier
-// get_complete_dir(22) returns "./galleries/pets/rex/1_year_old/"
-function get_complete_dir( $category_id )
-{
-  return get_site_url($category_id).get_local_dir($category_id);
-}
-
-// get_local_dir returns an array with complete path without the site url
-// Example : "pets > rex > 1_year_old" is on the the same site as the
-// Piwigo files and this category has 22 for identifier
-// get_local_dir(22) returns "pets/rex/1_year_old/"
-function get_local_dir( $category_id )
-{
-  global $page;
-
-  $uppercats = '';
-  $local_dir = '';
-
-  if ( isset( $page['plain_structure'][$category_id]['uppercats'] ) )
-  {
-    $uppercats = $page['plain_structure'][$category_id]['uppercats'];
-  }
-  else
-  {
-    $query = 'SELECT uppercats';
-    $query.= ' FROM '.CATEGORIES_TABLE.' WHERE id = '.$category_id;
-    $query.= ';';
-    $row = pwg_db_fetch_assoc( pwg_query( $query ) );
-    $uppercats = $row['uppercats'];
-  }
-
-  $upper_array = explode( ',', $uppercats );
-
-  $database_dirs = array();
-  $query = 'SELECT id,dir';
-  $query.= ' FROM '.CATEGORIES_TABLE.' WHERE id IN ('.$uppercats.')';
-  $query.= ';';
-  $result = pwg_query( $query );
-  while( $row = pwg_db_fetch_assoc( $result ) )
-  {
-    $database_dirs[$row['id']] = $row['dir'];
-  }
-  foreach ($upper_array as $id)
-  {
-    $local_dir.= $database_dirs[$id].'/';
-  }
-
-  return $local_dir;
-}
-
-// retrieving the site url : "http://domain.com/gallery/" or
-// simply "./galleries/"
-function get_site_url($category_id)
-{
-  global $page;
-
-  $query = '
-SELECT galleries_url
-  FROM '.SITES_TABLE.' AS s,'.CATEGORIES_TABLE.' AS c
-  WHERE s.id = c.site_id
-    AND c.id = '.$category_id.'
-;';
-  $row = pwg_db_fetch_assoc(pwg_query($query));
-  return $row['galleries_url'];
-}
-
-function get_min_local_dir($local_dir)
-{
-  $full_dir = explode('/', $local_dir);
-  if (count($full_dir) <= 3)
-  {
-    return $local_dir;
-  }
-  else
-  {
-    $start = $full_dir[0] . '/' . $full_dir[1];
-    $end = end($full_dir);
-    $concat = $start . '/&hellip;/' . $end;
-    return $concat;
-  }
-}
-
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-trigger_notify('loc_begin_cat_modify');
+functions_plugins::trigger_notify('loc_begin_cat_modify');
 
 //---------------------------------------------------------------- verification
 if ( !isset( $_GET['cat_id'] ) || !is_numeric( $_GET['cat_id'] ) )
@@ -116,7 +40,7 @@ if ( !isset( $_GET['cat_id'] ) || !is_numeric( $_GET['cat_id'] ) )
 
 if (isset($redirect))
 {
-  redirect($admin_album_base_url.'-properties');
+  functions::redirect($admin_album_base_url.'-properties');
 }
 
 // nullable fields
@@ -134,18 +58,18 @@ $query = 'SELECT DISTINCT category_id
   FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE category_id = '.$_GET['cat_id'].'
   LIMIT 1';
-$result = pwg_query($query);
-$category['has_images'] = pwg_db_num_rows($result)>0 ? true : false;
+$result = functions_mysqli::pwg_query($query);
+$category['has_images'] = functions_mysqli::pwg_db_num_rows($result)>0 ? true : false;
 
 // number of sub-categories
-$subcat_ids = get_subcat_ids(array($category['id']));
+$subcat_ids = functions_category::get_subcat_ids(array($category['id']));
 
 $category['nb_subcats'] = count($subcat_ids) - 1;
 
 // Navigation path
-$navigation = get_cat_display_name_cache(
+$navigation = functions_html::get_cat_display_name_cache(
   $category['uppercats'],
-  get_root_url().'admin.php?page=album-'
+  functions_url::get_root_url().'admin.php?page=album-'
 );
 
 // Parent navigation path
@@ -153,20 +77,20 @@ $uppercats_array = explode(',', $category['uppercats']);
 if (count($uppercats_array) > 1)
 {
   array_pop($uppercats_array);
-  $parent_navigation = get_cat_display_name_cache(
+  $parent_navigation = functions_html::get_cat_display_name_cache(
     implode(',', $uppercats_array),
-    get_root_url().'admin.php?page=album-'
+    functions_url::get_root_url().'admin.php?page=album-'
   );
 }
 else
 {
-  $parent_navigation = l10n('Root');
+  $parent_navigation = functions::l10n('Root');
 }
 
 //----------------------------------------------------- template initialization
 $template->set_filename( 'album_properties', 'cat_modify.tpl');
 
-$base_url = get_root_url().'admin.php?page=';
+$base_url = functions_url::get_root_url().'admin.php?page=';
 $cat_list_url = $base_url.'albums';
 
 $self_url = $cat_list_url;
@@ -176,7 +100,7 @@ if (!empty($category['id_uppercat']))
 }
 
 // We show or hide this warning in JS
-$page['warnings'][] = l10n('This album is currently locked, visible only to administrators.').'<span class="icon-cone unlock-album">'.l10n('Unlock it').'</span>';
+$page['warnings'][] = functions::l10n('This album is currently locked, visible only to administrators.').'<span class="icon-cone unlock-album">'.functions::l10n('Unlock it').'</span>';
 
 $template->assign(
   array(
@@ -186,11 +110,11 @@ $template->assign(
     'CAT_ID'             => $category['id'],
     'CAT_NAME'           => @htmlspecialchars($category['name']),
     'CAT_COMMENT'        => @htmlspecialchars($category['comment']),
-    'IS_VISIBLE'          => boolean_to_string($category['visible']),
+    'IS_VISIBLE'          => functions_mysqli::boolean_to_string($category['visible']),
 
     'U_DELETE' => $base_url.'albums',
 
-    'U_JUMPTO' => make_index_url(
+    'U_JUMPTO' => functions_url::make_index_url(
       array(
         'category' => $category
         )
@@ -204,7 +128,7 @@ $template->assign(
  
 if ($conf['activate_comments'])
 {
-  $template->assign('CAT_COMMENTABLE', boolean_to_string($category['commentable']));
+  $template->assign('CAT_COMMENTABLE', functions_mysqli::boolean_to_string($category['commentable']));
 }
 
 // manage album elements link
@@ -226,28 +150,28 @@ SELECT
     JOIN '.IMAGE_CATEGORY_TABLE.' ON image_id = id
   WHERE category_id = '.$category['id'].'
 ;';
-  list($image_count, $min_date, $max_date) = pwg_db_fetch_row(pwg_query($query));
+  list($image_count, $min_date, $max_date) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
   if ($min_date == $max_date)
   {
-    $info_title = l10n(
+    $info_title = functions::l10n(
       'This album contains %d photos, added on %s.',
       $image_count,
-      format_date($min_date)
+      functions::format_date($min_date)
       );
   }
   else
   {
-    $info_title = l10n(
+    $info_title = functions::l10n(
       'This album contains %d photos, added between %s and %s.',
       $image_count,
-      format_date($min_date),
-      format_date($max_date)
+      functions::format_date($min_date),
+      functions::format_date($max_date)
       );
   }
   
 }
-$info_photos = l10n('%d photos', $image_count);
+$info_photos = functions::l10n('%d photos', $image_count);
 
 $template->assign(
   array(
@@ -265,7 +189,7 @@ SELECT DISTINCT
   WHERE 
     category_id IN ('.implode(',', $subcat_ids).')
   ;';
-  $image_ids_recursive = query2array($query, null, 'image_id');
+  $image_ids_recursive = functions_mysqli::query2array($query, null, 'image_id');
 
   $category['nb_images_recursive'] = count($image_ids_recursive);
 
@@ -277,13 +201,13 @@ SELECT occured_on
     AND object = "album"
     AND action = "add"
 ';
-$result = query2array($query);
+$result = functions_mysqli::query2array($query);
 
 if (count($result) > 0) {
   $template->assign(
     array(
-      'INFO_CREATION_SINCE' => time_since($result[0]['occured_on'], 'day', $format=null, $with_text=true, $with_week=true, $only_last_unit=true),
-      'INFO_CREATION' => format_date($result[0]['occured_on'], array('day', 'month','year'))
+      'INFO_CREATION_SINCE' => functions::time_since($result[0]['occured_on'], 'day', $format=null, $with_text=true, $with_week=true, $only_last_unit=true),
+      'INFO_CREATION' => functions::format_date($result[0]['occured_on'], array('day', 'month','year'))
       )
     );
 }
@@ -294,12 +218,12 @@ SELECT COUNT(*)
   FROM `'.CATEGORIES_TABLE.'`
   WHERE id_uppercat = '.$category['id'].'
 ';
-$result = query2array($query);
+$result = functions_mysqli::query2array($query);
 
 
 $template->assign(
   array(
-    'INFO_DIRECT_SUB' => l10n(
+    'INFO_DIRECT_SUB' => functions::l10n(
       '%d sub-albums',
       $result[0]['COUNT(*)']
     ), 
@@ -307,14 +231,14 @@ $template->assign(
   );
 
 $template->assign(array(
-  'INFO_ID' => l10n('Numeric identifier : %d',$category['id']),
-  'INFO_LAST_MODIFIED_SINCE' => time_since($category['lastmodified'], 'minute', $format=null, $with_text=true, $with_week=true, $only_last_unit=true),
-  'INFO_LAST_MODIFIED'=> format_date($category['lastmodified'], array('day', 'month','year')),
-  'INFO_IMAGES_RECURSIVE' => l10n(
+  'INFO_ID' => functions::l10n('Numeric identifier : %d',$category['id']),
+  'INFO_LAST_MODIFIED_SINCE' => functions::time_since($category['lastmodified'], 'minute', $format=null, $with_text=true, $with_week=true, $only_last_unit=true),
+  'INFO_LAST_MODIFIED'=> functions::format_date($category['lastmodified'], array('day', 'month','year')),
+  'INFO_IMAGES_RECURSIVE' => functions::l10n(
     '%d including sub-albums',
     $category['nb_images_recursive']
   ),
-  'INFO_SUBCATS' => l10n(
+  'INFO_SUBCATS' => functions::l10n(
     '%d in whole branch',
     $category['nb_subcats']
   ),
@@ -325,12 +249,12 @@ $template->assign(array(
 
 $template->assign(array(
   'U_MANAGE_RANKS' => $base_url.'element_set_ranks&amp;cat_id='.$category['id'],
-  'CACHE_KEYS' => get_admin_client_cache_keys(array('categories')),
+  'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(array('categories')),
   ));
 
 if (!$category['is_virtual'])
 {
-  $category['cat_full_dir'] = get_complete_dir($_GET['cat_id']);
+  $category['cat_full_dir'] = functions_admin::get_complete_dir($_GET['cat_id']);
   $category_full_dir = preg_replace('/\/$/', '', $category['cat_full_dir']);
   $template->assign(
     array(
@@ -338,7 +262,7 @@ if (!$category['is_virtual'])
       )
     );
   $template->assign('CAT_DIR_NAME', basename($category_full_dir));
-  $template->assign('CAT_MIN_DIR', get_min_local_dir($category_full_dir));
+  $template->assign('CAT_MIN_DIR', functions_admin::get_min_local_dir($category_full_dir));
 
   if ($conf['enable_synchronization'])
   {
@@ -359,7 +283,7 @@ if ($category['has_images'] or !empty($category['representative_picture_id']))
   // representant ?
   if (!empty($category['representative_picture_id']))
   {
-    $tpl_representant['picture'] = get_category_representant_properties($category['representative_picture_id'], IMG_MEDIUM);
+    $tpl_representant['picture'] = functions_admin::get_category_representant_properties($category['representative_picture_id'], derivative_std_params::IMG_MEDIUM);
   }
 
   // can the admin choose to set a new random representant ?
@@ -383,9 +307,9 @@ if ($category['is_virtual'])
   $template->assign('parent_category', empty($category['id_uppercat']) ? array() : array($category['id_uppercat']));
 }
 
-$template->assign('PWG_TOKEN', get_pwg_token());
+$template->assign('PWG_TOKEN', functions::get_pwg_token());
 
-trigger_notify('loc_end_cat_modify');
+functions_plugins::trigger_notify('loc_end_cat_modify');
 
 //----------------------------------------------------------- sending html code
 $template->assign_var_from_handle('ADMIN_CONTENT', 'album_properties');

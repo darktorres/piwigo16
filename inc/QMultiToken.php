@@ -23,9 +23,9 @@ class QMultiToken
       $modifier = $this->tokens[$i]->modifier;
       if ($i)
         $s .= ' ';
-      if ($modifier & QST_OR)
+      if ($modifier & functions_search::QST_OR)
         $s .= 'OR ';
-      if ($modifier & QST_NOT)
+      if ($modifier & functions_search::QST_NOT)
         $s .= 'NOT ';
       if (! ($this->tokens[$i]->is_single) )
       {
@@ -46,7 +46,7 @@ class QMultiToken
     if (strlen($token) || (isset($scope) && $scope->nullable))
     {
       if (isset($scope))
-        $modifier |= QST_BREAK;
+        $modifier |= functions_search::QST_BREAK;
       $this->tokens[] = new QSingleToken($token, $modifier, $scope);
     }
     $token = "";
@@ -70,7 +70,7 @@ class QMultiToken
     for ($stop=false; !$stop && $qi<strlen($q); $qi++)
     {
       $ch = $q[$qi];
-      if ( ($crt_modifier&QST_QUOTED)==0)
+      if ( ($crt_modifier&functions_search::QST_QUOTED)==0)
       {
         switch ($ch)
         {
@@ -108,19 +108,19 @@ class QMultiToken
           case '"':
             if (strlen($crt_token))
               $this->push($crt_token, $crt_modifier, $crt_scope);
-            $crt_modifier |= QST_QUOTED;
+            $crt_modifier |= functions_search::QST_QUOTED;
             break;
           case '-':
             if (strlen($crt_token) || isset($crt_scope))
               $crt_token .= $ch;
             else
-              $crt_modifier |= QST_NOT;
+              $crt_modifier |= functions_search::QST_NOT;
             break;
           case '*':
             if (strlen($crt_token))
               $crt_token .= $ch; // wildcard end later
             else
-              $crt_modifier |= QST_WILDCARD_BEGIN;
+              $crt_modifier |= functions_search::QST_WILDCARD_BEGIN;
             break;
           case '.':
             if (isset($crt_scope) && !$crt_scope->is_text)
@@ -154,7 +154,7 @@ class QMultiToken
         {
           if ($qi+1 < strlen($q) && $q[$qi+1]=='*')
           {
-            $crt_modifier |= QST_WILDCARD_END;
+            $crt_modifier |= functions_search::QST_WILDCARD_END;
             $qi++;
           }
           $this->push($crt_token, $crt_modifier, $crt_scope);
@@ -172,26 +172,26 @@ class QMultiToken
       $remove = false;
       if ($token->is_single)
       {
-        if ( ($token->modifier & QST_QUOTED)==0
+        if ( ($token->modifier & functions_search::QST_QUOTED)==0
           && substr($token->term, -1)=='*' )
         {
           $token->term = rtrim($token->term, '*');
-          $token->modifier |= QST_WILDCARD_END;
+          $token->modifier |= functions_search::QST_WILDCARD_END;
         }
 
         if ( !isset($token->scope)
-          && ($token->modifier & (QST_QUOTED|QST_WILDCARD))==0 )
+          && ($token->modifier & (functions_search::QST_QUOTED|functions_search::QST_WILDCARD))==0 )
         {
           if ('not' == strtolower($token->term))
           {
             if ($i+1 < count($this->tokens))
-              $this->tokens[$i+1]->modifier |= QST_NOT;
+              $this->tokens[$i+1]->modifier |= functions_search::QST_NOT;
             $token->term = "";
           }
           if ('or' == strtolower($token->term))
           {
             if ($i+1 < count($this->tokens))
-              $this->tokens[$i+1]->modifier |= QST_OR;
+              $this->tokens[$i+1]->modifier |= functions_search::QST_OR;
             $token->term = "";
           }
           if ('and' == strtolower($token->term))
@@ -219,7 +219,7 @@ class QMultiToken
         array_splice($this->tokens, $i, 1);
         if ($i<count($this->tokens) && $this->tokens[$i]->is_single)
         {
-          $this->tokens[$i]->modifier |= QST_BREAK;
+          $this->tokens[$i]->modifier |= functions_search::QST_BREAK;
         }
         $i--;
       }
@@ -227,7 +227,7 @@ class QMultiToken
 
     if ($level>0 && count($this->tokens) && $this->tokens[0]->is_single)
     {
-      $this->tokens[0]->modifier |= QST_BREAK;
+      $this->tokens[0]->modifier |= functions_search::QST_BREAK;
     }
   }
 
@@ -251,7 +251,7 @@ class QMultiToken
 
   private static function priority($modifier)
   {
-    return $modifier & QST_OR ? 0 :1;
+    return $modifier & functions_search::QST_OR ? 0 :1;
   }
 
   /* because evaluations occur left to right, we ensure that 'a OR b c d' is interpreted as 'a OR (b c d)'*/
@@ -284,8 +284,8 @@ class QMultiToken
 
         // rewrite ourseleves as a (b c d)
         array_splice($this->tokens, $i, 0, array($sub));
-        $sub->modifier = $sub->tokens[0]->modifier & QST_OR;
-        $sub->tokens[0]->modifier &= ~QST_OR;
+        $sub->modifier = $sub->tokens[0]->modifier & functions_search::QST_OR;
+        $sub->tokens[0]->modifier &= ~functions_search::QST_OR;
 
         $sub->check_operator_priority();
       }

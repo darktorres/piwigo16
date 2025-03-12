@@ -6,32 +6,34 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_upload;
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 if( !defined("PHPWG_ROOT_PATH") )
 {
   die ("Hacking attempt!");
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 include_once(PHPWG_ROOT_PATH.'admin/inc/functions_upload.php');
 
 define(
   'PHOTOS_ADD_BASE_URL',
-  get_root_url().'admin.php?page=photos_add'
+  functions_url::get_root_url().'admin.php?page=photos_add'
   );
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 // +-----------------------------------------------------------------------+
 // |                          Load configuration                           |
 // +-----------------------------------------------------------------------+
 
-$upload_form_config = get_upload_form_config();
+$upload_form_config = functions_upload::get_upload_form_config();
 
 // +-----------------------------------------------------------------------+
 // |                                 Tabs                                  |

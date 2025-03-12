@@ -2,13 +2,18 @@
 /**********************************
  * REQUIRED PATH TO THE TPL FILE */
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_session;
+
 $TOUR_PATH = PHPWG_PLUGINS_PATH.'TakeATour/tours/manage_albums/tour.tpl';
 
 /*********************************/
 
 if ( defined('IN_ADMIN') and IN_ADMIN )
 {
-  add_event_handler('loc_end_cat_modify', TAT_FC_23(...));
+  functions_plugins::add_event_handler('loc_end_cat_modify', TAT_FC_23(...));
 }
       
 function TAT_FC_23()
@@ -31,15 +36,15 @@ function TAT_FC_23_prefilter ($content)
   {
     $_GET['image_id'] = $matches[1];
   }
-  check_input_parameter('image_id', $_GET, false, PATTERN_ID);
-  if (isset($_GET['image_id']) and pwg_get_session_var('TAT_image_id')==null)
+  functions::check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+  if (isset($_GET['image_id']) and functions_session::pwg_get_session_var('TAT_image_id')==null)
   {
     $template->assign('TAT_image_id', $_GET['image_id']);
-    pwg_set_session_var('TAT_image_id', $_GET['image_id']);
+    functions_session::pwg_set_session_var('TAT_image_id', $_GET['image_id']);
   }
-  elseif (is_numeric(pwg_get_session_var('TAT_image_id')))
+  elseif (is_numeric(functions_session::pwg_get_session_var('TAT_image_id')))
   {
-    $template->assign('TAT_image_id', pwg_get_session_var('TAT_image_id'));
+    $template->assign('TAT_image_id', functions_session::pwg_get_session_var('TAT_image_id'));
   }
   else
   {
@@ -49,7 +54,7 @@ function TAT_FC_23_prefilter ($content)
       ORDER BY RAND()
       LIMIT 1  
     ;';
-    $row = pwg_db_fetch_assoc(pwg_query($query));
+    $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
     $template->assign('TAT_image_id', $row['id']);
   }
   //album id
@@ -57,15 +62,15 @@ function TAT_FC_23_prefilter ($content)
   {
     $_GET['cat_id'] = $matches[1];
   }
-  check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
-  if (isset($_GET['cat_id']) and pwg_get_session_var('TAT_cat_id')==null)
+  functions::check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+  if (isset($_GET['cat_id']) and functions_session::pwg_get_session_var('TAT_cat_id')==null)
   {
     $template->assign('TAT_cat_id', $_GET['cat_id']);
-    pwg_set_session_var('TAT_cat_id', $_GET['cat_id']);
+    functions_session::pwg_set_session_var('TAT_cat_id', $_GET['cat_id']);
   }
-  elseif (is_numeric(pwg_get_session_var('TAT_cat_id')))
+  elseif (is_numeric(functions_session::pwg_get_session_var('TAT_cat_id')))
   {
-    $template->assign('TAT_cat_id', pwg_get_session_var('TAT_cat_id'));
+    $template->assign('TAT_cat_id', functions_session::pwg_get_session_var('TAT_cat_id'));
   }
   else
   {
@@ -75,7 +80,7 @@ function TAT_FC_23_prefilter ($content)
       ORDER BY RAND()
       LIMIT 1  
     ;';
-    $row = pwg_db_fetch_assoc(pwg_query($query));
+    $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
     $template->assign('TAT_cat_id', $row['id']);
   }
   global $conf;

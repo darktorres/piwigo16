@@ -8,7 +8,7 @@
 {define_derivative name='derivative_params_square' type=IMG_SQUARE}
 <div class="row">
 {foreach from=$category_thumbnails item=cat name=cat_loop}
-{if $theme_config->category_wells == 'never' || ($theme_config->category_wells == 'mobile_only' && get_device() == 'desktop')}
+{if $theme_config->category_wells == 'never' || ($theme_config->category_wells == 'mobile_only' && functions::get_device() == 'desktop')}
 {assign var=derivative value=$pwg->derivative($derivative_params, $cat.representative.src_image)}
 {if !$derivative->is_cached()}
     {combine_script id='jquery.ajaxmanager' path='https://rawcdn.githack.com/aFarkas/Ajaxmanager/refs/heads/master/jquery.ajaxmanager.js' load='footer'}

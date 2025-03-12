@@ -47,7 +47,7 @@ class PwgServer
   {
     if ( is_null($this->_responseEncoder) )
     {
-      set_status_header(400);
+      functions_html::set_status_header(400);
       @header("Content-Type: text/plain");
       echo ("Cannot process your request. Unknown response format.
 Request format: ".@$this->_requestFormat." Response format: ".@$this->_responseFormat."\n");
@@ -72,7 +72,7 @@ Request format: ".@$this->_requestFormat." Response format: ".@$this->_responseF
         array('methodName')
         );
 
-    trigger_notify('ws_add_methods', array(&$this) );
+    functions_plugins::trigger_notify('ws_add_methods', array(&$this) );
     uksort( $this->_methods, strnatcmp(...) );
     $this->_requestHandler->handleRequest($this);
   }
@@ -85,9 +85,9 @@ Request format: ".@$this->_requestFormat." Response format: ".@$this->_responseF
     $encodedResponse = $this->_responseEncoder->encodeResponse($response);
     $contentType = $this->_responseEncoder->getContentType();
 
-    @header('Content-Type: '.$contentType.'; charset='.get_pwg_charset());
+    @header('Content-Type: '.$contentType.'; charset='.functions::get_pwg_charset());
     print_r($encodedResponse);
-    trigger_notify('sendResponse', $encodedResponse );
+    functions_plugins::trigger_notify('sendResponse', $encodedResponse );
   }
 
   /**
@@ -308,7 +308,7 @@ Request format: ".@$this->_requestFormat." Response format: ".@$this->_responseF
       return new PwgError(405, 'This method requires HTTP POST');
     }
     
-    if ( isset($method['options']['admin_only']) and $method['options']['admin_only'] and !is_admin() )
+    if ( isset($method['options']['admin_only']) and $method['options']['admin_only'] and !functions_user::is_admin() )
     {
       return new PwgError(401, 'Access denied');
     }
@@ -379,7 +379,7 @@ Request format: ".@$this->_requestFormat." Response format: ".@$this->_responseF
       return new PwgError(WS_ERR_MISSING_PARAM, 'Missing parameters: '.implode(',',$missing_params));
     }
     
-    $result = trigger_change('ws_invoke_allowed', true, $methodName, $params);
+    $result = functions_plugins::trigger_change('ws_invoke_allowed', true, $methodName, $params);
     
     $is_error = false;
     if ($result instanceof PwgError)

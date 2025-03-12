@@ -8,8 +8,8 @@ Author: Thomas Kuther
 Author URI: https://github.com/tkuther/piwigo-bootstrap-darkroom
 */
 
+use Piwigo\inc\functions_session;
 use Piwigo\themes\bootstrap_darkroom\inc\ThemeController;
-
 
 $themeconf = array(
     'name' => 'bootstrap_darkroom',
@@ -25,7 +25,7 @@ $themeconf = array(
 //$conf['template_combine_files'] = false;
 
 // always show metadata initially
-pwg_set_session_var('show_metadata', true);
+functions_session::pwg_set_session_var('show_metadata', true);
 
 // register video files
 $video_ext = array('mp4','m4v');

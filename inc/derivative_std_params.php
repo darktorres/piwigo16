@@ -6,20 +6,20 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-/**
- * @package Derivatives
- */
+namespace Piwigo\inc;
 
-
-define('IMG_SQUARE', 'square');
-define('IMG_THUMB', 'thumb');
-define('IMG_XXSMALL', '2small');
-define('IMG_XSMALL', 'xsmall');
-define('IMG_SMALL', 'small');
-define('IMG_MEDIUM', 'medium');
-define('IMG_LARGE', 'large');
-define('IMG_XLARGE', 'xlarge');
-define('IMG_XXLARGE', 'xxlarge');
-define('IMG_CUSTOM', 'custom');
+class derivative_std_params
+{
+    const IMG_SQUARE = 'square';
+    const IMG_THUMB = 'thumb';
+    const IMG_XXSMALL = '2small';
+    const IMG_XSMALL = 'xsmall';
+    const IMG_SMALL = 'small';
+    const IMG_MEDIUM = 'medium';
+    const IMG_LARGE = 'large';
+    const IMG_XLARGE = 'xlarge';
+    const IMG_XXLARGE = 'xxlarge';
+    const IMG_CUSTOM = 'custom';
+}
 
 ?>

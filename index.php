@@ -6,7 +6,19 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_category;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_search;
+use Piwigo\inc\functions_session;
+use Piwigo\inc\functions_tag;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
+use Piwigo\inc\menubar;
 
 //--------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH','./');
@@ -14,34 +26,34 @@ include_once( PHPWG_ROOT_PATH.'inc/common.php' );
 include(PHPWG_ROOT_PATH.'inc/section_init.php');
 
 // Check Access and exit when user status is not ok
-check_status(ACCESS_GUEST);
+functions_user::check_status(ACCESS_GUEST);
 
 
 // access authorization check
 if (isset($page['category']))
 {
-  check_restrictions($page['category']['id']);
+  functions_category::check_restrictions($page['category']['id']);
 }
 if ($page['start']>0 && $page['start']>=count($page['items']))
 {
-  page_not_found('', duplicate_index_url(array('start'=>0)));
+  functions_html::page_not_found('', functions_url::duplicate_index_url(array('start'=>0)));
 }
 
-trigger_notify('loc_begin_index');
+functions_plugins::trigger_notify('loc_begin_index');
 
 //---------------------------------------------- change of image display order
 if (isset($_GET['image_order']))
 {
   if ( (int)$_GET['image_order'] > 0)
   {
-    pwg_set_session_var('image_order', (int)$_GET['image_order']);
+    functions_session::pwg_set_session_var('image_order', (int)$_GET['image_order']);
   }
   else
   {
-    pwg_unset_session_var('image_order');
+    functions_session::pwg_unset_session_var('image_order');
   }
-  redirect(
-    duplicate_index_url(
+  functions::redirect(
+    functions_url::duplicate_index_url(
       array(),        // nothing to redefine
       array('start')  // changing display order goes back to section first page
       )
@@ -52,7 +64,7 @@ if (isset($_GET['display']))
   $page['meta_robots']['noindex']=1;
   if (array_key_exists($_GET['display'], ImageStdParams::get_defined_type_map()))
   {
-    pwg_set_session_var('index_deriv', $_GET['display']);
+    functions_session::pwg_set_session_var('index_deriv', $_GET['display']);
   }
 }
 
@@ -61,8 +73,8 @@ if (isset($_GET['display']))
 $page['navigation_bar'] = array();
 if (count($page['items']) > $page['nb_image_page'])
 {
-  $page['navigation_bar'] = create_navigation_bar(
-    duplicate_index_url(array(), array('start')),
+  $page['navigation_bar'] = functions::create_navigation_bar(
+    functions_url::duplicate_index_url(array(), array('start')),
     count($page['items']),
     $page['start'],
     $page['nb_image_page'],
@@ -75,13 +87,13 @@ $template->assign('thumb_navbar', $page['navigation_bar'] );
 // caddie filling :-)
 if (isset($_GET['caddie']))
 {
-  fill_caddie($page['items']);
-  redirect(duplicate_index_url());
+  functions::fill_caddie($page['items']);
+  functions::redirect(functions_url::duplicate_index_url());
 }
 
 if (isset($page['is_homepage']) and $page['is_homepage'])
 {
-  $canonical_url = get_gallery_home_url();
+  $canonical_url = functions_url::get_gallery_home_url();
 }
 else
 {
@@ -90,7 +102,7 @@ else
   {
     $start -= $page['nb_image_page'];
   }
-  $canonical_url = duplicate_index_url(array('start' => $start));
+  $canonical_url = functions_url::duplicate_index_url(array('start' => $start));
 }
 $template->assign('U_CANONICAL', $canonical_url);
 
@@ -102,7 +114,7 @@ $template->assign('TITLE', $template_title);
 $template->assign('NB_ITEMS', $nb_items);
 
 //-------------------------------------------------------------- menubar
-include( PHPWG_ROOT_PATH.'inc/menubar.php');
+menubar::initialize_menu();
 
 $template->set_filename('index', 'index.tpl');
 
@@ -118,7 +130,7 @@ if ( empty($page['is_external']) )
   {
     $template->assign(
       'U_MODE_NORMAL',
-      duplicate_index_url( array(), array('chronology_field', 'start', 'flat') )
+      functions_url::duplicate_index_url( array(), array('chronology_field', 'start', 'flat') )
       );
   }
 
@@ -126,7 +138,7 @@ if ( empty($page['is_external']) )
   {
     $template->assign(
       'U_MODE_FLAT',
-      duplicate_index_url(array('flat' => ''), array('start', 'chronology_field'))
+      functions_url::duplicate_index_url(array('flat' => ''), array('start', 'chronology_field'))
       );
   }
 
@@ -141,7 +153,7 @@ if ( empty($page['is_external']) )
     {
       $template->assign(
         'U_MODE_CREATED',
-        duplicate_index_url( $chronology_params, array('start', 'flat') )
+        functions_url::duplicate_index_url( $chronology_params, array('start', 'flat') )
         );
     }
     if ($conf['index_posted_date_icon'])
@@ -149,7 +161,7 @@ if ( empty($page['is_external']) )
       $chronology_params['chronology_field'] = 'posted';
       $template->assign(
         'U_MODE_POSTED',
-        duplicate_index_url( $chronology_params, array('start', 'flat') )
+        functions_url::duplicate_index_url( $chronology_params, array('start', 'flat') )
         );
     }
   }
@@ -165,7 +177,7 @@ if ( empty($page['is_external']) )
     }
     if ($conf['index_'.$chronology_field.'_date_icon'])
     {
-      $url = duplicate_index_url(
+      $url = functions_url::duplicate_index_url(
                 array('chronology_field'=>$chronology_field ),
                 array('chronology_date', 'start', 'flat')
               );
@@ -181,9 +193,7 @@ if ( empty($page['is_external']) )
   // be able to show an old quicksearch result, we must check this condtion too.
   if ('search' == $page['section'] and isset($page['search_details']))
   {
-    include_once(PHPWG_ROOT_PATH.'inc/functions_search.php');
-
-    $my_search = get_search_array($page['search']);
+    $my_search = functions_search::get_search_array($page['search']);
 
     // we want filters to be filled with values related to current items ONLY IF we have some filters filled
     if ($page['search_details']['has_filters_filled'])
@@ -208,7 +218,7 @@ if ( empty($page['is_external']) )
       // we should reuse the result if already executed (for building the menu for example)
       if (isset($search_items))
       {
-        $filter_tags = get_common_tags($search_items, 0);
+        $filter_tags = functions_tag::get_common_tags($search_items, 0);
 
         // the user may have started a search on 2 or more tags that have no
         // intersection. In this case, $search_items is empty and get_common_tags
@@ -218,13 +228,13 @@ if ( empty($page['is_external']) )
 
         if (count($missing_tag_ids) > 0)
         {
-          $filter_tags = array_merge(get_available_tags($missing_tag_ids), $filter_tags);
+          $filter_tags = array_merge(functions_tag::get_available_tags($missing_tag_ids), $filter_tags);
         }
       }
       else
       {
-        $filter_tags = get_available_tags();
-        usort($filter_tags, tag_alpha_compare(...));
+        $filter_tags = functions_tag::get_available_tags();
+        usort($filter_tags, functions_html::tag_alpha_compare(...));
       }
 
       $template->assign('TAGS', $filter_tags);
@@ -244,7 +254,7 @@ SELECT
   FROM '.IMAGES_TABLE.' AS i
     JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON ic.image_id = i.id
   WHERE '.$search_items_clause.'
-  '.get_sql_condition_FandF(
+  '.functions_user::get_sql_condition_FandF(
     array(
       'forbidden_categories' => 'category_id',
       'visible_categories' => 'category_id',
@@ -255,7 +265,7 @@ SELECT
     AND author IS NOT NULL
   GROUP BY author
 ;';
-      $authors = query2array($query);
+      $authors = functions_mysqli::query2array($query);
       $author_names = array();
       foreach ($authors as $author)
       {
@@ -277,7 +287,7 @@ SELECT
     SUBDATE(NOW(), INTERVAL 3 MONTH) AS 3m,
     SUBDATE(NOW(), INTERVAL 6 MONTH) AS 6m
 ;';
-    $thresholds = query2array($query)[0];
+    $thresholds = functions_mysqli::query2array($query)[0];
 
     $query = '
 SELECT
@@ -286,7 +296,7 @@ SELECT
   FROM '.IMAGES_TABLE.' AS i
     JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON ic.image_id = i.id
   WHERE '.$search_items_clause.'
-  '.get_sql_condition_FandF(
+  '.functions_user::get_sql_condition_FandF(
     array(
       'forbidden_categories' => 'category_id',
       'visible_categories' => 'category_id',
@@ -295,7 +305,7 @@ SELECT
     ' AND '
     ).'
 ;';
-    $dates = query2array($query);
+    $dates = functions_mysqli::query2array($query);
     $pre_counters = array_fill_keys(array_keys($thresholds), array());
     foreach ($dates as $date_row)
     {
@@ -311,11 +321,11 @@ SELECT
     }
 
     $label_for_threshold = array(
-      '24h' => l10n('last 24 hours'),
-      '7d' => l10n('last 7 days'),
-      '30d' => l10n('last 30 days'),
-      '3m' => l10n('last 3 months'),
-      '6m' => l10n('last 6 months'),
+      '24h' => functions::l10n('last 24 hours'),
+      '7d' => functions::l10n('last 7 days'),
+      '30d' => functions::l10n('last 30 days'),
+      '3m' => functions::l10n('last 3 months'),
+      '6m' => functions::l10n('last 6 months'),
     );
 
     // pre_counters need to be deduplicated because a photo can be in several albums
@@ -336,7 +346,7 @@ SELECT
       if (preg_match('/^y(\d+)$/', $key, $matches))
       {
         $counters[$key] = array(
-          'label' => l10n('year %d', $matches[1]),
+          'label' => functions::l10n('year %d', $matches[1]),
           'counter' => count(array_keys($pre_counters[$key]))
         );
       }
@@ -362,7 +372,7 @@ SELECT
   FROM '.IMAGES_TABLE.' AS i
     JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON ic.image_id = i.id
   WHERE '.$search_items_clause.'
-  '.get_sql_condition_FandF(
+  '.functions_user::get_sql_condition_FandF(
     array(
       'forbidden_categories' => 'category_id',
       'visible_categories' => 'category_id',
@@ -373,7 +383,7 @@ SELECT
   GROUP BY added_by_id
   ORDER BY counter DESC
 ;';
-      $added_by = query2array($query);
+      $added_by = functions_mysqli::query2array($query);
       $user_ids = array();
 
       if (count($added_by) > 0)
@@ -391,7 +401,7 @@ SELECT
   FROM '.USERS_TABLE.'
   WHERE '.$conf['user_fields']['id'].' IN ('.implode(',', $user_ids).')
 ;';
-        $username_of = query2array($query, 'id', 'username');
+        $username_of = functions_mysqli::query2array($query, 'id', 'username');
 
         foreach (array_keys($added_by) as $added_by_idx)
         {
@@ -418,11 +428,11 @@ SELECT
     INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id AND user_id = '.$user['id'].'
   WHERE id IN ('.implode(',', $my_search['fields']['cat']['words']).')
 ;';
-      $result = pwg_query($query);
+      $result = functions_mysqli::pwg_query($query);
 
-      while ($row = pwg_db_fetch_assoc($result))
+      while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
       {
-        $cat_display_name = get_cat_display_name_cache(
+        $cat_display_name = functions_html::get_cat_display_name_cache(
           $row['uppercats'],
           'admin.php?page=album-' // TODO not sure it's relevant to link to admin pages
         );
@@ -446,7 +456,7 @@ SELECT
   FROM '.IMAGES_TABLE.' AS i
     JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON ic.image_id = i.id
   WHERE '.$search_items_clause.'
-  '.get_sql_condition_FandF(
+  '.functions_user::get_sql_condition_FandF(
     array(
       'forbidden_categories' => 'category_id',
       'visible_categories' => 'category_id',
@@ -457,7 +467,7 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-      $template->assign('FILETYPES', query2array($query, 'ext', 'counter'));
+      $template->assign('FILETYPES', functions_mysqli::query2array($query, 'ext', 'counter'));
     }
 
     $template->assign(
@@ -481,13 +491,13 @@ SELECT
     INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON c.id = cat_id and user_id = '.$user['id'].'
   WHERE id IN ('.implode(',', $cat_ids).')
 ;';
-          $cats = query2array($query);
-          usort($cats, name_compare(...));
+          $cats = functions_mysqli::query2array($query);
+          usort($cats, functions_html::name_compare(...));
           $albums_found = array();
           foreach ($cats as $cat)
           {
             $single_link = false;
-            $albums_found[] = get_cat_display_name_cache(
+            $albums_found[] = functions_html::get_cat_display_name_cache(
               $cat['uppercats'],
               '',
               $single_link
@@ -506,12 +516,12 @@ SELECT
 
         if (count($tag_ids) > 0)
         {
-          $tags = get_available_tags($tag_ids);
-          usort($tags, tag_alpha_compare(...));
+          $tags = functions_tag::get_available_tags($tag_ids);
+          usort($tags, functions_html::tag_alpha_compare(...));
           $tags_found = array();
           foreach ($tags as $tag)
           {
-            $url = make_index_url(
+            $url = functions_url::make_index_url(
               array(
                 'tags' => array($tag)
               )
@@ -534,7 +544,7 @@ SELECT
       array(
         'SEARCH_IN_SET_BUTTON' => $conf['index_search_in_set_button'],
         'SEARCH_IN_SET_ACTION' => $conf['index_search_in_set_action'],
-        'SEARCH_IN_SET_URL' => get_root_url().'search.php?cat_id='.$page['category']['id'],
+        'SEARCH_IN_SET_URL' => functions_url::get_root_url().'search.php?cat_id='.$page['category']['id'],
       )
     );
   }
@@ -545,24 +555,24 @@ SELECT
       array(
         'SEARCH_IN_SET_BUTTON' => $conf['index_search_in_set_button'],
         'SEARCH_IN_SET_ACTION' => $conf['index_search_in_set_action'],
-        'SEARCH_IN_SET_URL' => get_root_url().'search.php?tag_id='.implode(',', $page['body_data']['tag_ids']),
+        'SEARCH_IN_SET_URL' => functions_url::get_root_url().'search.php?tag_id='.implode(',', $page['body_data']['tag_ids']),
       )
     );
   }
 
-  if (isset($page['category']) and is_admin() and $conf['index_edit_icon'])
+  if (isset($page['category']) and functions_user::is_admin() and $conf['index_edit_icon'])
   {
     $template->assign(
       'U_EDIT',
-      get_root_url().'admin.php?page=album-'.$page['category']['id']
+      functions_url::get_root_url().'admin.php?page=album-'.$page['category']['id']
       );
   }
 
-  if (is_admin() and !empty($page['items']) and $conf['index_caddie_icon'])
+  if (functions_user::is_admin() and !empty($page['items']) and $conf['index_caddie_icon'])
   {
     $template->assign(
       'U_CADDIE',
-       add_url_params(duplicate_index_url(), array('caddie'=>1) )
+       functions_url::add_url_params(functions_url::duplicate_index_url(), array('caddie'=>1) )
       );
   }
 
@@ -574,11 +584,11 @@ SELECT
         (array)@$page['qsearch_details']['matching_cats'] );
     if (count($cats))
     {
-      usort($cats, name_compare(...));
+      usort($cats, functions_html::name_compare(...));
       $hints = array();
       foreach ( $cats as $cat )
       {
-        $hints[] = get_cat_display_name( array($cat), '' );
+        $hints[] = functions_html::get_cat_display_name( array($cat), '' );
       }
       $template->assign( 'category_search_results', $hints);
     }
@@ -586,7 +596,7 @@ SELECT
     $tags = (array)@$page['qsearch_details']['matching_tags'];
     foreach ( $tags as $tag )
     {
-      $tag['URL'] = make_index_url(array('tags'=>array($tag)));
+      $tag['URL'] = functions_url::make_index_url(array('tags'=>array($tag)));
       $template->append( 'tag_search_results', $tag);
     }
     
@@ -606,8 +616,8 @@ SELECT
       and $page['section'] != 'most_visited'
       and $page['section'] != 'best_rated')
   {
-    $preferred_image_orders = get_category_preferred_image_orders();
-    $order_idx = pwg_get_session_var( 'image_order', 0 );
+    $preferred_image_orders = functions_category::get_category_preferred_image_orders();
+    $order_idx = functions_session::pwg_get_session_var( 'image_order', 0 );
     
     // get first order field and direction
     $first_order = substr($conf['order_by'], 9);
@@ -617,8 +627,8 @@ SELECT
     }
     $first_order = trim($first_order);
     
-    $url = add_url_params(
-            duplicate_index_url(),
+    $url = functions_url::add_url_params(
+            functions_url::duplicate_index_url(),
             array('image_order' => '')
           );
     $tpl_orders = array();
@@ -675,22 +685,22 @@ SELECT
 
     if ($conf['index_sizes_icon'])
     {
-      $url = add_url_params(
-        duplicate_index_url(),
+      $url = functions_url::add_url_params(
+        functions_url::duplicate_index_url(),
         array('display' => '')
         );
 
       $selected_type = $template->get_template_vars('derivative_params')->type;
       $template->clear_assign( 'derivative_params' );
       $type_map = ImageStdParams::get_defined_type_map();
-      unset($type_map[IMG_XXLARGE], $type_map[IMG_XLARGE]);
+      unset($type_map[derivative_std_params::IMG_XXLARGE], $type_map[derivative_std_params::IMG_XLARGE]);
 
       foreach($type_map as $params)
       {
         $template->append(
           'image_derivatives',
           array(
-            'DISPLAY' => l10n($params->type),
+            'DISPLAY' => functions::l10n($params->type),
             'URL' => $url.$params->type,
             'SELECTED' => ($params->type == $selected_type ? true:false),
             )
@@ -705,7 +715,7 @@ SELECT
   {
     if (isset($_GET['slideshow']))
     {
-      redirect($page['cat_slideshow_url']);
+      functions::redirect($page['cat_slideshow_url']);
     }
     elseif ($conf['index_slideshow_icon'])
     {
@@ -716,12 +726,12 @@ SELECT
 
 //------------------------------------------------------------ end
 include(PHPWG_ROOT_PATH.'inc/page_header.php');
-trigger_notify('loc_end_index');
-flush_page_messages();
+functions_plugins::trigger_notify('loc_end_index');
+functions_html::flush_page_messages();
 $template->parse_index_buttons();
 $template->pparse('index');
 
 //------------------------------------------------------------ log informations
-pwg_log();
+functions::pwg_log();
 include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 ?>

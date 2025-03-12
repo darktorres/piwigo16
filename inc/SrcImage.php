@@ -8,6 +8,8 @@
 
 namespace Piwigo\inc;
 
+use Piwigo\inc\dblayer\functions_mysqli;
+
 /**
  * A source image is used to get a derivative image. It is either
  * the original file for a jpg/png/... or a 'representative' image
@@ -38,8 +40,8 @@ final class SrcImage
     global $conf;
 
     $this->id = $infos['id'];
-    $ext = strtolower(get_extension($infos['path']));
-    $infos['file_ext'] = @strtolower(get_extension($infos['file']));
+    $ext = strtolower(functions::get_extension($infos['path']));
+    $infos['file_ext'] = @strtolower(functions::get_extension($infos['file']));
     $infos['path_ext'] = $ext;
     if (in_array($ext, $conf['picture_ext']))
     {
@@ -48,11 +50,11 @@ final class SrcImage
     }
     elseif (!empty($infos['representative_ext']))
     {
-      $this->rel_path = original_to_representative($infos['path'], $infos['representative_ext']);
+      $this->rel_path = functions::original_to_representative($infos['path'], $infos['representative_ext']);
     }
     else
     {
-      $this->rel_path = trigger_change('get_mimetype_location', get_themeconf('mime_icon_dir').$ext.'.png', $ext );
+      $this->rel_path = functions_plugins::trigger_change('get_mimetype_location', functions::get_themeconf('mime_icon_dir').$ext.'.png', $ext );
       $this->flags |= self::IS_MIMETYPE;
       if ( ($size=@getimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false)
       {
@@ -123,12 +125,12 @@ final class SrcImage
    */
   function get_url()
   {
-    $url = get_root_url().$this->rel_path;
+    $url = functions_url::get_root_url().$this->rel_path;
     if ( !($this->flags & self::IS_MIMETYPE) )
     {
-      $url = trigger_change('get_src_image_url', $url, $this);
+      $url = functions_plugins::trigger_change('get_src_image_url', $url, $this);
     }
-    return embellish_url($url);
+    return functions_url::embellish_url($url);
   }
 
   /**
@@ -147,12 +149,12 @@ final class SrcImage
     if ($this->size == null)
     {
       if ($this->flags & self::DIM_NOT_GIVEN)
-        fatal_error('SrcImage dimensions required but not provided');
+        functions_html::fatal_error('SrcImage dimensions required but not provided');
       // probably not metadata synced
       if ( ($size = getimagesize( $this->get_path() )) !== false)
       {
         $this->size = array($size[0],$size[1]);
-        pwg_query('UPDATE '.IMAGES_TABLE.' SET width='.$size[0].', height='.$size[1].' WHERE id='.$this->id);
+        functions_mysqli::pwg_query('UPDATE '.IMAGES_TABLE.' SET width='.$size[0].', height='.$size[1].' WHERE id='.$this->id);
       }
     }
     return $this->size;

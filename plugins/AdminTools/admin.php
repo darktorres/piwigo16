@@ -1,4 +1,7 @@
 <?php
+
+use Piwigo\inc\functions;
+
 defined('ADMINTOOLS_PATH') or die('Hacking attempt!');
 
 if (isset($_POST['save_config']))
@@ -9,8 +12,8 @@ if (isset($_POST['save_config']))
     'public_quick_edit' => isset($_POST['public_quick_edit']),
     );
 
-  conf_update_param('AdminTools', $conf['AdminTools']);
-  $page['infos'][] = l10n('Information data registered in database');
+  functions::conf_update_param('AdminTools', $conf['AdminTools']);
+  $page['infos'][] = functions::l10n('Information data registered in database');
 }
 
 

@@ -7,6 +7,8 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\updates;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_user;
 
 if( !defined("PHPWG_ROOT_PATH") )
 {
@@ -27,7 +29,7 @@ STEP:
 */
 $step = isset($_GET['step']) ? $_GET['step'] : 0;
 
-check_input_parameter('to', $_GET, false, '/^\d+\.\d+\.\d+$/');
+functions::check_input_parameter('to', $_GET, false, '/^\d+\.\d+\.\d+$/');
 $upgrade_to = isset($_GET['to']) ? $_GET['to'] : '';
 
 $updates = new updates();
@@ -69,7 +71,7 @@ if ($step == 1)
 // +-----------------------------------------------------------------------+
 // |                                Step 2                                 |
 // +-----------------------------------------------------------------------+
-if ($step == 2 and is_webmaster())
+if ($step == 2 and functions_user::is_webmaster())
 {
   if (isset($_POST['submit']) and isset($_POST['upgrade_to']))
   {
@@ -80,7 +82,7 @@ if ($step == 2 and is_webmaster())
 // +-----------------------------------------------------------------------+
 // |                                Step 3                                 |
 // +-----------------------------------------------------------------------+
-if ($step == 3 and is_webmaster())
+if ($step == 3 and functions_user::is_webmaster())
 {
   if (isset($_POST['submit']) and isset($_POST['upgrade_to']))
   {
@@ -110,9 +112,9 @@ if (isset($new_versions['major_php']) and version_compare(phpversion(), $new_ver
 // |                        Process template                               |
 // +-----------------------------------------------------------------------+
 
-if (!is_webmaster())
+if (!functions_user::is_webmaster())
 {
-  $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+  $page['warnings'][] = str_replace('%s', functions::l10n('user_status_webmaster'), functions::l10n('%s status is required to edit parameters.'));
 }
 
 $template->assign(array(
@@ -142,7 +144,7 @@ if (isset($new_versions['major']))
   );
 }
 
-$template->assign('ADMIN_PAGE_TITLE', l10n('Updates'));
+$template->assign('ADMIN_PAGE_TITLE', functions::l10n('Updates'));
 $template->set_filename('plugin_admin_content', 'updates_pwg.tpl');
 $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
 

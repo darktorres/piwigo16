@@ -4,6 +4,11 @@ namespace Piwigo\plugins\AdminTools\inc;
 
 use Piwigo\admin\inc\themes;
 use Piwigo\inc\FileCombiner;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_session;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 defined('ADMINTOOLS_PATH') or die('Hacking attempt!');
 
@@ -40,7 +45,7 @@ class MultiView
         'template_combine_files' => $conf['template_combine_files'],
         'no_history' => false,
         ),
-      pwg_get_session_var('multiview', array())
+      functions_session::pwg_get_session_var('multiview', array())
       );
 
     $this->data_url_params = array_keys($this->data);
@@ -76,7 +81,7 @@ class MultiView
    */
   private function save()
   {
-    pwg_set_session_var('multiview', $this->data);
+    functions_session::pwg_set_session_var('multiview', $this->data);
   }
 
   /**
@@ -87,17 +92,17 @@ class MultiView
    */
   public function get_clean_url($with_amp=false)
   {
-    if (script_basename() == 'picture')
+    if (functions::script_basename() == 'picture')
     {
-      $url = duplicate_picture_url(array(), $this->data_url_params);
+      $url = functions_url::duplicate_picture_url(array(), $this->data_url_params);
     }
-    else if (script_basename() == 'index')
+    else if (functions::script_basename() == 'index')
     {
-      $url = duplicate_index_url(array(), $this->data_url_params);
+      $url = functions_url::duplicate_index_url(array(), $this->data_url_params);
     }
     else
     {
-      $url = get_query_string_diff($this->data_url_params);
+      $url = functions_url::get_query_string_diff($this->data_url_params);
     }
 
     if ($with_amp)
@@ -140,7 +145,7 @@ class MultiView
   {
     global $user, $conf;
 
-    $this->is_admin = is_admin();
+    $this->is_admin = functions_user::is_admin();
 
     $this->user = array(
       'id' => $user['id'],
@@ -150,7 +155,7 @@ class MultiView
       );
 
     // inactive on ws.php to allow AJAX admin tasks
-    if ($this->is_admin && script_basename() != 'ws')
+    if ($this->is_admin && functions::script_basename() != 'ws')
     {
       // show_queries
       if (isset($_GET['ato_show_queries']))
@@ -181,7 +186,7 @@ class MultiView
         }
         if ($this->data['view_as'] != $user['id'])
         {
-          $user = build_user($this->data['view_as'], true);
+          $user = functions_user::build_user($this->data['view_as'], true);
           if (isset($_GET['ato_view_as']))
           {
             $this->data['theme'] = $user['theme'];
@@ -200,7 +205,7 @@ class MultiView
       // lang
       if (isset($_GET['ato_lang']))
       {
-        check_input_parameter('ato_lang', $_GET, false, '/^[a-z]{2,3}_[A-Z]{2}$/');
+        functions::check_input_parameter('ato_lang', $_GET, false, '/^[a-z]{2,3}_[A-Z]{2}$/');
         $this->data['lang'] = $_GET['ato_lang'];
       }
       $user['language'] = $this->data['lang'];
@@ -234,8 +239,8 @@ class MultiView
       if ($this->data['no_history'])
       {
         $ret_false = function() {return false;};
-        add_event_handler('pwg_log_allowed', $ret_false);
-        add_event_handler('pwg_log_update_last_visit', $ret_false);
+        functions_plugins::add_event_handler('pwg_log_allowed', $ret_false);
+        functions_plugins::add_event_handler('pwg_log_update_last_visit', $ret_false);
       }
 
       $this->save();
@@ -279,7 +284,7 @@ class MultiView
   public static function invalidate_cache()
   {
     global $conf;
-    conf_update_param('multiview_invalidate_cache', true, true);
+    functions::conf_update_param('multiview_invalidate_cache', true, true);
   }
 
   /**
@@ -318,7 +323,7 @@ FROM '.USERS_TABLE.' AS u
     ON '.$conf['user_fields']['id'].' = user_id
   ORDER BY CONVERT('.$conf['user_fields']['username'].', CHAR)
 ;';
-    $out['users'] = array_from_query($query);
+    $out['users'] = functions::array_from_query($query);
 
     // get themes
     $themes = new themes();
@@ -331,7 +336,7 @@ FROM '.USERS_TABLE.' AS u
     }
 
     // get languages
-    foreach (get_languages() as $code => $name)
+    foreach (functions::get_languages() as $code => $name)
     {
       $out['languages'][] = array(
         'id' => $code,
@@ -339,7 +344,7 @@ FROM '.USERS_TABLE.' AS u
         );
     }
 
-    conf_delete_param('multiview_invalidate_cache');
+    functions::conf_delete_param('multiview_invalidate_cache');
 
     return $out;
   }

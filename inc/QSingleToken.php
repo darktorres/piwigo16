@@ -32,14 +32,14 @@ class QSingleToken
     $s = '';
     if (isset($this->scope))
       $s .= $this->scope->id .':';
-    if ($this->modifier & QST_WILDCARD_BEGIN)
+    if ($this->modifier & functions_search::QST_WILDCARD_BEGIN)
       $s .= '*';
-    if ($this->modifier & QST_QUOTED)
+    if ($this->modifier & functions_search::QST_QUOTED)
       $s .= '"';
     $s .= $this->term;
-    if ($this->modifier & QST_QUOTED)
+    if ($this->modifier & functions_search::QST_QUOTED)
       $s .= '"';
-    if ($this->modifier & QST_WILDCARD_END)
+    if ($this->modifier & functions_search::QST_WILDCARD_END)
       $s .= '*';
     return $s;
   }

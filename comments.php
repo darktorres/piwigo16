@@ -6,7 +6,17 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_category;
+use Piwigo\inc\functions_comment;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
+use Piwigo\inc\menubar;
 use Piwigo\inc\SrcImage;
 
 // +-----------------------------------------------------------------------+
@@ -18,26 +28,26 @@ include_once(PHPWG_ROOT_PATH.'inc/functions_comment.php');
 
 if (!$conf['activate_comments'])
 {
-  page_not_found(null);
+  functions_html::page_not_found(null);
 }
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_GUEST);
+functions_user::check_status(ACCESS_GUEST);
 
 $url_self = PHPWG_ROOT_PATH.'comments.php'
-  .get_query_string_diff(array('delete','edit','validate','pwg_token'));
+  .functions_url::get_query_string_diff(array('delete','edit','validate','pwg_token'));
 
 $sort_order = array(
-  'DESC' => l10n('descending'),
-  'ASC'  => l10n('ascending')
+  'DESC' => functions::l10n('descending'),
+  'ASC'  => functions::l10n('ascending')
   );
 
 // sort_by : database fields proposed for sorting comments list
 $sort_by = array(
-  'date' => l10n('comment date'),
-  'image_id' => l10n('photo')
+  'date' => functions::l10n('comment date'),
+  'image_id' => functions::l10n('photo')
   );
 
 // items_number : list of number of items to display per page
@@ -67,17 +77,17 @@ if (!in_array($conf['comments_page_nb_comments'], $items_number))
 // since when display comments ?
 //
 $since_options = array(
-  1 => array('label' => l10n('today'),
-             'clause' => 'date > '.pwg_db_get_recent_period_expression(1)),
-  2 => array('label' => l10n('last %d days', 7),
-             'clause' => 'date > '.pwg_db_get_recent_period_expression(7)),
-  3 => array('label' => l10n('last %d days', 30),
-             'clause' => 'date > '.pwg_db_get_recent_period_expression(30)),
-  4 => array('label' => l10n('the beginning'),
+  1 => array('label' => functions::l10n('today'),
+             'clause' => 'date > '.functions_mysqli::pwg_db_get_recent_period_expression(1)),
+  2 => array('label' => functions::l10n('last %d days', 7),
+             'clause' => 'date > '.functions_mysqli::pwg_db_get_recent_period_expression(7)),
+  3 => array('label' => functions::l10n('last %d days', 30),
+             'clause' => 'date > '.functions_mysqli::pwg_db_get_recent_period_expression(30)),
+  4 => array('label' => functions::l10n('the beginning'),
              'clause' => '1=1') // stupid but generic
   );
 
-trigger_notify('loc_begin_comments');
+functions_plugins::trigger_notify('loc_begin_comments');
 
 if (!empty($_GET['since']))
 {
@@ -123,9 +133,9 @@ $page['where_clauses'] = array();
 // which category to filter on ?
 if (isset($_GET['cat']) and 0 != $_GET['cat'])
 {
-  check_input_parameter('cat', $_GET, false, PATTERN_ID);
+  functions::check_input_parameter('cat', $_GET, false, PATTERN_ID);
 
-  $category_ids = get_subcat_ids(array($_GET['cat']));
+  $category_ids = functions_category::get_subcat_ids(array($_GET['cat']));
   if (empty($category_ids))
   {
     $category_ids = array(-1);
@@ -146,17 +156,17 @@ if (!empty($_GET['author']))
 // notification email)
 if (!empty($_GET['comment_id']))
 {
-  check_input_parameter('comment_id', $_GET, false, PATTERN_ID);
+  functions::check_input_parameter('comment_id', $_GET, false, PATTERN_ID);
 
   // currently, the $_GET['comment_id'] is only used by admins from email
   // for management purpose (validate/delete)
-  if (!is_admin())
+  if (!functions_user::is_admin())
   {
     $login_url =
-      get_root_url().'identification.php?redirect='
+      functions_url::get_root_url().'identification.php?redirect='
       .urlencode(urlencode($_SERVER['REQUEST_URI']))
       ;
-    redirect($login_url);
+    functions::redirect($login_url);
   }
 
   $page['where_clauses'][] = 'com.id = '.$_GET['comment_id'];
@@ -179,12 +189,12 @@ if (!empty($_GET['keyword']))
 $page['where_clauses'][] = $since_options[$page['since']]['clause'];
 
 // which status to filter on ?
-if ( !is_admin() )
+if ( !functions_user::is_admin() )
 {
   $page['where_clauses'][] = 'validated=\'true\'';
 }
 
-$page['where_clauses'][] = get_sql_condition_FandF
+$page['where_clauses'][] = functions_user::get_sql_condition_FandF
   (
     array
       (
@@ -208,7 +218,7 @@ foreach ($actions as $loop_action)
   if (isset($_GET[$loop_action]))
   {
     $action = $loop_action;
-    check_input_parameter($action, $_GET, false, PATTERN_ID);
+    functions::check_input_parameter($action, $_GET, false, PATTERN_ID);
     $comment_id = $_GET[$action];
     break;
   }
@@ -216,23 +226,23 @@ foreach ($actions as $loop_action)
 
 if (isset($action))
 {
-  $comment_author_id = get_comment_author_id($comment_id);
+  $comment_author_id = functions_comment::get_comment_author_id($comment_id);
 
-  if (can_manage_comment($action, $comment_author_id))
+  if (functions_user::can_manage_comment($action, $comment_author_id))
   {
     $perform_redirect = false;
 
     if ('delete' == $action)
     {
-      check_pwg_token();
-      delete_user_comment($comment_id);
+      functions::check_pwg_token();
+      functions_comment::delete_user_comment($comment_id);
       $perform_redirect = true;
     }
 
     if ('validate' == $action)
     {
-      check_pwg_token();
-      validate_user_comment($comment_id);
+      functions::check_pwg_token();
+      functions_comment::validate_user_comment($comment_id);
       $perform_redirect = true;
     }
 
@@ -240,8 +250,8 @@ if (isset($action))
     {
       if (!empty($_POST['content']))
       {
-        check_pwg_token();
-        $comment_action = update_user_comment(
+        functions::check_pwg_token();
+        $comment_action = functions_comment::update_user_comment(
           array(
             'comment_id' => $_GET['edit'],
             'image_id' => $_POST['image_id'],
@@ -254,13 +264,13 @@ if (isset($action))
         switch ($comment_action)
         {
           case 'moderate':
-            $_SESSION['page_infos'][] = l10n('An administrator must authorize your comment before it is visible.');
+            $_SESSION['page_infos'][] = functions::l10n('An administrator must authorize your comment before it is visible.');
           case 'validate':
-            $_SESSION['page_infos'][] = l10n('Your comment has been registered');
+            $_SESSION['page_infos'][] = functions::l10n('Your comment has been registered');
             $perform_redirect = true;
             break;
           case 'reject':
-            $_SESSION['page_errors'][] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
+            $_SESSION['page_errors'][] = functions::l10n('Your comment has NOT been registered because it did not pass the validation rules');
             break;
           default:
             trigger_error('Invalid comment action '.$comment_action, E_USER_WARNING);
@@ -272,7 +282,7 @@ if (isset($action))
 
     if ($perform_redirect)
     {
-      redirect($url_self);
+      functions::redirect($url_self);
     }
   }
 }
@@ -281,7 +291,7 @@ if (isset($action))
 // |                       page header and options                         |
 // +-----------------------------------------------------------------------+
 
-$title= l10n('User comments');
+$title= functions::l10n('User comments');
 $page['body_id'] = 'theCommentsPage';
 
 $template->set_filenames(array('comments'=>'comments.tpl', 'comment_list'=>'comment_list.tpl'));
@@ -303,7 +313,7 @@ $blockname = 'categories';
 $query = '
 SELECT id, name, uppercats, global_rank
   FROM '.CATEGORIES_TABLE.'
-'.get_sql_condition_FandF
+'.functions_user::get_sql_condition_FandF
   (
     array
       (
@@ -313,7 +323,7 @@ SELECT id, name, uppercats, global_rank
     'WHERE'
   ).'
 ;';
-display_select_cat_wrapper($query, array(@$_GET['cat']), $blockname, true);
+functions_category::display_select_cat_wrapper($query, array(@$_GET['cat']), $blockname, true);
 
 // Filter on recent comments...
 $tpl_var=array();
@@ -338,7 +348,7 @@ $blockname = 'items_number_option';
 $tpl_var=array();
 foreach ($items_number as $option)
 {
-  $tpl_var[ $option ] = is_numeric($option) ? $option : l10n($option);
+  $tpl_var[ $option ] = is_numeric($option) ? $option : functions::l10n($option);
 }
 $template->assign( 'item_number_options', $tpl_var);
 $template->assign( 'item_number_options_selected', $page['items_number']);
@@ -393,19 +403,19 @@ if ('all' != $page['items_number'])
 }
 $query.= '
 ;';
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result))
+$result = functions_mysqli::pwg_query($query);
+while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   $comments[] = $row;
   $element_ids[] = $row['image_id'];
   $category_ids[] = $row['category_id'];
 }
-list($counter) = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS()'));
 
 $url = PHPWG_ROOT_PATH.'comments.php'
-  .get_query_string_diff(array('start','edit','delete','validate','pwg_token'));
+  .functions_url::get_query_string_diff(array('start','edit','delete','validate','pwg_token'));
 
-$navbar = create_navigation_bar($url,
+$navbar = functions::create_navigation_bar($url,
                                 $counter,
                                 $start,
                                 $page['items_number'],
@@ -422,13 +432,13 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', $element_ids).')
 ;';
-  $elements = query2array($query, 'id');
+  $elements = functions_mysqli::query2array($query, 'id');
 
   // retrieving category informations
   $query = 'SELECT id, name, permalink, uppercats
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $category_ids).')';
-  $categories = query2array($query, 'id');
+  $categories = functions_mysqli::query2array($query, 'id');
 
   foreach ($comments as $comment)
   {
@@ -438,14 +448,14 @@ SELECT *
     }
     else
     {
-      $name=get_name_from_file($elements[$comment['image_id']]['file']);
+      $name=functions::get_name_from_file($elements[$comment['image_id']]['file']);
     }
 
     // source of the thumbnail picture
     $src_image = new SrcImage($elements[$comment['image_id']]);
 
     // link to the full size picture
-    $url = make_picture_url(
+    $url = functions_url::make_picture_url(
       array(
         'category' => $categories[ $comment['category_id'] ],
         'image_id' => $comment['image_id'],
@@ -468,31 +478,31 @@ SELECT *
       'U_PICTURE' => $url,
       'src_image' => $src_image,
       'ALT' => $name,
-      'AUTHOR' => trigger_change('render_comment_author', $comment['author']),
+      'AUTHOR' => functions_plugins::trigger_change('render_comment_author', $comment['author']),
       'WEBSITE_URL' => $comment['website_url'],
-      'DATE'=>format_date($comment['date'], array('day_name','day','month','year','time')),
-      'CONTENT'=>trigger_change('render_comment_content',$comment['content']),
+      'DATE'=>functions::format_date($comment['date'], array('day_name','day','month','year','time')),
+      'CONTENT'=>functions_plugins::trigger_change('render_comment_content',$comment['content']),
       );
 
-    if (is_admin())
+    if (functions_user::is_admin())
     {
       $tpl_comment['EMAIL'] = $email;
     }
 
-    if (can_manage_comment('delete', $comment['author_id']))
+    if (functions_user::can_manage_comment('delete', $comment['author_id']))
     {
-      $tpl_comment['U_DELETE'] = add_url_params(
+      $tpl_comment['U_DELETE'] = functions_url::add_url_params(
         $url_self,
         array(
           'delete' => $comment['comment_id'],
-          'pwg_token' => get_pwg_token(),
+          'pwg_token' => functions::get_pwg_token(),
           )
         );
     }
 
-    if (can_manage_comment('edit', $comment['author_id']))
+    if (functions_user::can_manage_comment('edit', $comment['author_id']))
     {
-      $tpl_comment['U_EDIT'] = add_url_params(
+      $tpl_comment['U_EDIT'] = functions_url::add_url_params(
         $url_self,
         array(
           'edit' => $comment['comment_id']
@@ -502,24 +512,24 @@ SELECT *
       if (isset($edit_comment) and ($comment['comment_id'] == $edit_comment))
       {
         $tpl_comment['IN_EDIT'] = true;
-        $key = get_ephemeral_key(2, $comment['image_id']);
+        $key = functions::get_ephemeral_key(2, $comment['image_id']);
         $tpl_comment['KEY'] = $key;
         $tpl_comment['IMAGE_ID'] = $comment['image_id'];
         $tpl_comment['CONTENT'] = $comment['content'];
-        $tpl_comment['PWG_TOKEN'] = get_pwg_token();
+        $tpl_comment['PWG_TOKEN'] = functions::get_pwg_token();
         $tpl_comment['U_CANCEL'] = $url_self;
       }
     }
 
-    if (can_manage_comment('validate', $comment['author_id']))
+    if (functions_user::can_manage_comment('validate', $comment['author_id']))
     {
       if ('true' != $comment['validated'])
       {
-        $tpl_comment['U_VALIDATE'] = add_url_params(
+        $tpl_comment['U_VALIDATE'] = functions_url::add_url_params(
           $url_self,
           array(
             'validate'=> $comment['comment_id'],
-            'pwg_token' => get_pwg_token(),
+            'pwg_token' => functions::get_pwg_token(),
             )
           );
       }
@@ -528,22 +538,22 @@ SELECT *
   }
 }
 
-$derivative_params = trigger_change('get_comments_derivative_params', ImageStdParams::get_by_type(IMG_THUMB) );
+$derivative_params = functions_plugins::trigger_change('get_comments_derivative_params', ImageStdParams::get_by_type(derivative_std_params::IMG_THUMB) );
 $template->assign( 'comment_derivative_params', $derivative_params );
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
 if (!isset($themeconf['hide_menu_on']) OR !in_array('theCommentsPage', $themeconf['hide_menu_on']))
 {
-  include( PHPWG_ROOT_PATH.'inc/menubar.php');
+  menubar::initialize_menu();
 }
 
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+
 include(PHPWG_ROOT_PATH.'inc/page_header.php');
-trigger_notify('loc_end_comments');
-flush_page_messages();
+functions_plugins::trigger_notify('loc_end_comments');
+functions_html::flush_page_messages();
 if (count($comments) > 0)  $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');
 $template->pparse('comments');
 include(PHPWG_ROOT_PATH.'inc/page_tail.php');

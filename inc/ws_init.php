@@ -6,7 +6,10 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
 use Piwigo\inc\PwgServer;
+use Piwigo\inc\ws_functions;
 use Piwigo\inc\ws_protocols\PwgJsonEncoder;
 use Piwigo\inc\ws_protocols\PwgRestEncoder;
 use Piwigo\inc\ws_protocols\PwgRestRequestHandler;
@@ -17,8 +20,8 @@ defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 
 include_once(PHPWG_ROOT_PATH.'inc/ws_core.php');
 
-add_event_handler('ws_add_methods', ws_addDefaultMethods(...));
-add_event_handler('ws_invoke_allowed', ws_isInvokeAllowed(...), EVENT_HANDLER_PRIORITY_NEUTRAL, 3);
+functions_plugins::add_event_handler('ws_add_methods', ws_functions::ws_addDefaultMethods(...));
+functions_plugins::add_event_handler('ws_invoke_allowed', ws_functions::ws_isInvokeAllowed(...), EVENT_HANDLER_PRIORITY_NEUTRAL, 3);
 
 $requestFormat = 'rest';
 $responseFormat = null;
@@ -68,4 +71,4 @@ if (!is_null($responseFormat))
   $service->setEncoder($responseFormat, $encoder);
 }
 
-set_make_full_url();
+functions_url::set_make_full_url();

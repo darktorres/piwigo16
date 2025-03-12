@@ -6,7 +6,14 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\SrcImage;
 
 define('PHPWG_ROOT_PATH','./');
@@ -14,41 +21,11 @@ session_cache_limiter('public');
 include_once(PHPWG_ROOT_PATH.'inc/common.php');
 
 // Check Access and exit when user status is not ok
-check_status(ACCESS_GUEST);
-
-function guess_mime_type($ext)
-{
-  switch ( strtolower($ext) )
-  {
-    case "jpe": case "jpeg":
-    case "jpg": $ctype="image/jpeg"; break;
-    case "png": $ctype="image/png"; break;
-    case "gif": $ctype="image/gif"; break;
-    case "webp": $ctype="image/webp"; break;
-    case "tiff":
-    case "tif": $ctype="image/tiff"; break;
-    case "txt": $ctype="text/plain"; break;
-    case "html":
-    case "htm": $ctype="text/html"; break;
-    case "xml": $ctype="text/xml"; break;
-    case "pdf": $ctype="application/pdf"; break;
-    case "zip": $ctype="application/zip"; break;
-    case "ogg": $ctype="application/ogg"; break;
-    default: $ctype="application/octet-stream";
-  }
-  return $ctype;
-}
-
-function do_error( $code, $str )
-{
-  set_status_header( $code );
-  echo $str ;
-  exit();
-}
+functions_user::check_status(ACCESS_GUEST);
 
 if ($conf['enable_formats'] and isset($_GET['format']))
 {
-  check_input_parameter('format', $_GET, false, PATTERN_ID);
+  functions::check_input_parameter('format', $_GET, false, PATTERN_ID);
 
   $query = '
 SELECT
@@ -56,11 +33,11 @@ SELECT
   FROM '.IMAGE_FORMAT_TABLE.'
   WHERE format_id = '.$_GET['format'].'
 ;';
-  $formats = query2array($query);
+  $formats = functions_mysqli::query2array($query);
 
   if (count($formats) == 0)
   {
-    do_error(400, 'Invalid request - format');
+    functions::do_error(400, 'Invalid request - format');
   }
 
   $format = $formats[0];
@@ -75,7 +52,7 @@ if (!isset($_GET['id'])
     or !isset($_GET['part'])
     or !in_array($_GET['part'], array('e','r','f') ) )
 {
-  do_error(400, 'Invalid request - id/part');
+  functions::do_error(400, 'Invalid request - id/part');
 }
 
 $query = '
@@ -83,15 +60,15 @@ SELECT * FROM '. IMAGES_TABLE.'
   WHERE id='.$_GET['id'].'
 ;';
 
-$element_info = pwg_db_fetch_assoc(pwg_query($query));
+$element_info = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 if ( empty($element_info) )
 {
-  do_error(404, 'Requested id not found');
+  functions::do_error(404, 'Requested id not found');
 }
 
 // special download action for admins
 $is_admin_download = false;
-if (is_admin() and isset($_GET['pwg_token']) and get_pwg_token() == $_GET['pwg_token'])
+if (functions_user::is_admin() and isset($_GET['pwg_token']) and functions::get_pwg_token() == $_GET['pwg_token'])
 {
   $is_admin_download = true;
   $user['enabled_high'] = true;
@@ -106,7 +83,7 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' ON category_id = id
   WHERE image_id = '.$_GET['id'].'
-'.get_sql_condition_FandF(
+'.functions_user::get_sql_condition_FandF(
   array(
       'forbidden_categories' => 'category_id',
       'forbidden_images' => 'image_id',
@@ -115,62 +92,61 @@ SELECT id
   ).'
   LIMIT 1
 ;';
-if (!$is_admin_download and pwg_db_num_rows(pwg_query($query))<1 )
+if (!$is_admin_download and functions_mysqli::pwg_db_num_rows(functions_mysqli::pwg_query($query))<1 )
 {
-  do_error(401, 'Access denied');
+  functions::do_error(401, 'Access denied');
 }
 
-include_once(PHPWG_ROOT_PATH.'inc/functions_picture.php');
 $file='';
 switch ($_GET['part'])
 {
   case 'e':
     if ( $src_image->is_original() and !$user['enabled_high'] )
     {// we have a photo and the user has no access to HD
-      $deriv = new DerivativeImage(IMG_XXLARGE, $src_image);
+      $deriv = new DerivativeImage(derivative_std_params::IMG_XXLARGE, $src_image);
       if ( !$deriv->same_as_source() )
       {
-        do_error(401, 'Access denied e');
+        functions::do_error(401, 'Access denied e');
       }
     }
-    $file = get_element_path($element_info);
+    $file = functions::get_element_path($element_info);
     break;
   case 'r':
-    $file = original_to_representative( get_element_path($element_info), $element_info['representative_ext'] );
+    $file = functions::original_to_representative( functions::get_element_path($element_info), $element_info['representative_ext'] );
     break;
   case 'f' :
-    $file = original_to_format(get_element_path($element_info), $format['ext']);
-    $element_info['file'] = get_filename_wo_extension($element_info['file']).'.'.$format['ext'];
+    $file = functions::original_to_format(functions::get_element_path($element_info), $format['ext']);
+    $element_info['file'] = functions::get_filename_wo_extension($element_info['file']).'.'.$format['ext'];
     break;
 }
 
 if ( empty($file) )
 {
-  do_error(404, 'Requested file not found');
+  functions::do_error(404, 'Requested file not found');
 }
 
 if ($_GET['part'] == 'e') {
-  pwg_log($_GET['id'], 'high');
+  functions::pwg_log($_GET['id'], 'high');
 }
 else if ($_GET['part'] == 'e')
 {
-  pwg_log($_GET['id'], 'other');
+  functions::pwg_log($_GET['id'], 'other');
 }
 else if ($_GET['part'] == 'f')
 {
-  pwg_log($_GET['id'], 'high', $format['format_id']);
+  functions::pwg_log($_GET['id'], 'high', $format['format_id']);
 }
 
-trigger_notify('loc_action_before_http_headers');
+functions_plugins::trigger_notify('loc_action_before_http_headers');
 
 $http_headers = array();
 
 $ctype = null;
-if (!url_is_remote($file))
+if (!functions_url::url_is_remote($file))
 {
   if ( !@is_readable($file) )
   {
-    do_error(404, "Requested file not found - $file");
+    functions::do_error(404, "Requested file not found - $file");
   }
   $http_headers[] = 'Content-Length: '.@filesize($file);
   if ( function_exists('mime_content_type') )
@@ -189,7 +165,7 @@ if (!url_is_remote($file))
 
   if ('f' != $_GET['part'] and isset( $_SERVER['HTTP_IF_MODIFIED_SINCE'] ) )
   {
-    set_status_header(304);
+    functions_html::set_status_header(304);
     foreach ($http_headers as $header)
     {
       header( $header );
@@ -200,7 +176,7 @@ if (!url_is_remote($file))
 
 if (!isset($ctype))
 { // give it a guess
-  $ctype = guess_mime_type( get_extension($file) );
+  $ctype = functions::guess_mime_type( functions::get_extension($file) );
 }
 
 $http_headers[] = 'Content-Type: '.$ctype;

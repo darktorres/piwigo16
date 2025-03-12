@@ -1,37 +1,22 @@
 <?php
 
+use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\functions;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\SrcImage;
+use Piwigo\plugins\GDThumb\functions_GDThumb;
 
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
-function int_delete_gdthumb_cache($pattern) {
-  if ($contents = @opendir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR)):
-    while (($node = readdir($contents)) !== false):
-      if ($node != '.'
-          and $node != '..'
-          and is_dir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $node)):
-        clear_derivative_cache_rec(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $node, $pattern);
-      endif;
-    endwhile;
-    closedir($contents);
-  endif;
-}
-
-function delete_gdthumb_cache($height) {
-  int_delete_gdthumb_cache('#.*-cu_s9999x' . $height . '\.[a-zA-Z0-9]{3,4}$#');
-  int_delete_gdthumb_cache('#.*-cu_s' . $height . 'x9999\.[a-zA-Z0-9]{3,4}$#');
-}
-
 global $template, $conf, $page;
 
-load_language('plugin.lang', GDTHUMB_PATH);
+functions::load_language('plugin.lang', GDTHUMB_PATH);
 include(dirname(__FILE__).'/config_default.php');
 $params = $conf['gdThumb'];
 
 if (isset($_GET['getMissingDerivative'])) {
-  list($max_id, $image_count) = pwg_db_fetch_row( pwg_query('SELECT MAX(id)+1, COUNT(*) FROM '.IMAGES_TABLE) );
+  list($max_id, $image_count) = functions_mysqli::pwg_db_fetch_row( functions_mysqli::pwg_query('SELECT MAX(id)+1, COUNT(*) FROM '.IMAGES_TABLE) );
   $start_id = intval($_POST['prev_page']);
   $max_urls = intval($_POST['max_urls']);
   if ($start_id<=0) {
@@ -49,9 +34,9 @@ if (isset($_GET['getMissingDerivative'])) {
 
   $urls=array();
   do {
-    $result = pwg_query( str_replace('start_id', $start_id, $query_model));
-    $is_last = pwg_db_num_rows($result) < $qlimit;
-    while ($row=pwg_db_fetch_assoc($result)) {
+    $result = functions_mysqli::pwg_query( str_replace('start_id', $start_id, $query_model));
+    $is_last = functions_mysqli::pwg_db_num_rows($result) < $qlimit;
+    while ($row=functions_mysqli::pwg_db_fetch_assoc($result)) {
       $start_id = $row['id'];
       $src_image = new SrcImage($row);
       if ($src_image->is_mimetype())
@@ -83,10 +68,10 @@ if (isset($_GET['getMissingDerivative'])) {
 
 // Delete cache
 if (isset($_POST['cachedelete'])) {
-  check_pwg_token();
-  delete_gdthumb_cache($params['height']);
-  delete_gdthumb_cache($params['height'] * 2 + $params['margin']);
-  redirect('admin.php?page=plugin-GDThumb');
+  functions::check_pwg_token();
+  functions_GDThumb::delete_gdthumb_cache($params['height']);
+  functions_GDThumb::delete_gdthumb_cache($params['height'] * 2 + $params['margin']);
+  functions::redirect('admin.php?page=plugin-GDThumb');
 }
 
 // Save configuration
@@ -112,21 +97,21 @@ if (isset($_POST['submit'])) {
   if ($method == "slide"):
     if ($big_thumb):
       $big_thumb = false;
-      array_push($page['warnings'], l10n('Big thumb cannot be used in Slide mode. Disabled'));
+      array_push($page['warnings'], functions::l10n('Big thumb cannot be used in Slide mode. Disabled'));
     endif;
     if ($thumb_animate):
       $thumb_animate = false;
-      array_push($page['warnings'], l10n('Thumb animation cannot be used in Slide mode. Disabled'));
+      array_push($page['warnings'], functions::l10n('Thumb animation cannot be used in Slide mode. Disabled'));
     endif;
 
     if (($thumb_mode_album == "overlay-ex") || ($thumb_mode_album == "overlay") || ($thumb_mode_album == "top") || ($thumb_mode_album == "bottom")):
       $thumb_mode_album = "bottom_static";
-      array_push($page['warnings'], l10n('This Thumb mode cannot be used in Slide mode. Changed to default'));
+      array_push($page['warnings'], functions::l10n('This Thumb mode cannot be used in Slide mode. Changed to default'));
     endif;
 
     if (($thumb_mode_photo == "overlay-ex") || ($thumb_mode_photo == "overlay") || ($thumb_mode_photo == "top") || ($thumb_mode_photo == "bottom")):
       $thumb_mode_photo = "bottom_static";
-      array_push($page['warnings'], l10n('This Thumb mode cannot be used in Slide mode. Changed to default'));
+      array_push($page['warnings'], functions::l10n('This Thumb mode cannot be used in Slide mode. Changed to default'));
     endif;
   endif;
 
@@ -151,25 +136,25 @@ if (isset($_POST['submit'])) {
   );
 
   if (!is_numeric($params['height'])) {
-    array_push($page['errors'], l10n('Thumbnails max height must be an integer'));
+    array_push($page['errors'], functions::l10n('Thumbnails max height must be an integer'));
   }
   if (!is_numeric($params['margin'])) {
-    array_push($page['errors'], l10n('Margin between thumbnails must be an integer'));
+    array_push($page['errors'], functions::l10n('Margin between thumbnails must be an integer'));
   }
   if (!is_numeric($params['nb_image_page'])) {
-    array_push($page['errors'], l10n('Number of photos per page must be an integer'));
+    array_push($page['errors'], functions::l10n('Number of photos per page must be an integer'));
   }
 
   if ($params['height'] != $conf['gdThumb']['height']) {
-    delete_gdthumb_cache($conf['gdThumb']['height']);
+    functions_GDThumb::delete_gdthumb_cache($conf['gdThumb']['height']);
   }
   elseif ($params['margin'] != $conf['gdThumb']['margin']) {
-    delete_gdthumb_cache($conf['gdThumb']['height'] * 2 + $conf['gdThumb']['margin']);
+    functions_GDThumb::delete_gdthumb_cache($conf['gdThumb']['height'] * 2 + $conf['gdThumb']['margin']);
   }
 
   if (empty($page['errors'])) {
-    conf_update_param('gdThumb', $params);
-    array_push($page['infos'], l10n('Information data registered in database'));
+    functions::conf_update_param('gdThumb', $params);
+    array_push($page['infos'], functions::l10n('Information data registered in database'));
   }
 }
 
@@ -209,7 +194,7 @@ $template->assign(
     'NO_WORDWRAP'      => isset($params['no_wordwrap']) && $params['no_wordwrap'],
     'THUMB_ANIMATE'    => isset($params['thumb_animate']) && $params['thumb_animate'],
 
-    'PWG_TOKEN'        => get_pwg_token(),
+    'PWG_TOKEN'        => functions::get_pwg_token(),
     'CUSTOM_CSS'       => $custom_css
   )
 );

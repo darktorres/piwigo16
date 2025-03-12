@@ -1,17 +1,17 @@
 <?php
 
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\functions;
 use Piwigo\inc\ImageStdParams;
+use Piwigo\themes\modus\functions_modus;
 
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
 global $template;
 
-include_once( dirname(dirname(__FILE__)).'/functions_modus.php');
+$default_conf = functions_modus::modus_get_default_config();
 
-$default_conf = modus_get_default_config();
-
-load_language('theme.lang', dirname(__FILE__).'/../');
+functions::load_language('theme.lang', dirname(__FILE__).'/../');
 
 $my_conf = @$conf['modus_theme'];
 if (!isset($my_conf))
@@ -41,10 +41,10 @@ if (isset($_POST[$text_values[0]]))
 	// int/double
 	$my_conf['album_thumb_size'] = max(0, $my_conf['album_thumb_size']);
   $my_conf = array_intersect_key($my_conf, $default_conf);
-  conf_update_param('modus_theme', addslashes(serialize($my_conf)) );
+  functions::conf_update_param('modus_theme', addslashes(serialize($my_conf)) );
 
 	global $page;
-  $page['infos'][] = l10n('Information data registered in database');
+  $page['infos'][] = functions::l10n('Information data registered in database');
 }
 
 // *************** tabs ********************
@@ -52,7 +52,7 @@ if (isset($_POST[$text_values[0]]))
 $tabs = array(
   array(
     'code' => 'config',
-    'label' => l10n('Configuration'),
+    'label' => functions::l10n('Configuration'),
     ),
   );
 
@@ -99,7 +99,7 @@ if (0 == $my_conf['album_thumb_size'])
 
 $available_derivatives = array();
 foreach(array_keys(ImageStdParams::get_defined_type_map()) as $type)
-	$available_derivatives[$type] = l10n($type);
+	$available_derivatives[$type] = functions::l10n($type);
 
 $available_skins=array();
 $skin_dir = dirname(dirname(__FILE__)).'/skins/';

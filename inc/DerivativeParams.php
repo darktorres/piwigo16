@@ -16,7 +16,7 @@ final class DerivativeParams
   /** @var SizingParams */
   public $sizing;
   /** @var string among IMG_* */
-  public $type = IMG_CUSTOM;
+  public $type = derivative_std_params::IMG_CUSTOM;
   /** @var int used for non-custom images to regenerate the cached files */
   public $last_mod_time = 0;
   /** @var bool */

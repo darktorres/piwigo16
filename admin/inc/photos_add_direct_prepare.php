@@ -10,14 +10,19 @@
 // | Photo selection                                                       |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\admin\inc\functions_upload;
 use Piwigo\admin\inc\pwg_image;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_html;
 
 $template->assign(
     array(
       'F_ADD_ACTION'=> PHOTOS_ADD_BASE_URL,
       'chunk_size' => $conf['upload_form_chunk_size'],
       'max_file_size' => $conf['upload_form_max_file_size'],
-      'ADMIN_PAGE_TITLE' => l10n('Upload Photos'),
+      'ADMIN_PAGE_TITLE' => functions::l10n('Upload Photos'),
     )
   );
 
@@ -25,7 +30,7 @@ $template->assign(
 if (pwg_image::get_library() == 'gd')
 {
   $fudge_factor = 1.7;
-  $available_memory = get_ini_size('memory_limit') - memory_get_usage();
+  $available_memory = functions_upload::get_ini_size('memory_limit') - memory_get_usage();
   $max_upload_width = round(sqrt($available_memory/(2 * $fudge_factor)));
   $max_upload_height = round(2 * $max_upload_width / 3);
   
@@ -63,7 +68,7 @@ if ($conf['original_resize'])
 $template->assign(
     array(
       'form_action' => PHOTOS_ADD_BASE_URL,
-      'pwg_token' => get_pwg_token(),
+      'pwg_token' => functions::get_pwg_token(),
     )
   );
 
@@ -91,7 +96,7 @@ $selected_category = array();
 if (isset($_GET['album']))
 {
   // set the category from get url or ...
-  check_input_parameter('album', $_GET, false, PATTERN_ID);
+  functions::check_input_parameter('album', $_GET, false, PATTERN_ID);
   
   // test if album really exists
   $query = '
@@ -99,17 +104,17 @@ SELECT id, uppercats
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$_GET['album'].'
 ;';
-  $result = pwg_query($query);
-  if (pwg_db_num_rows($result) == 1)
+  $result = functions_mysqli::pwg_query($query);
+  if (functions_mysqli::pwg_db_num_rows($result) == 1)
   {
     $selected_category = array($_GET['album']);
 
-    $cat = pwg_db_fetch_assoc($result);
-    $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache($cat['uppercats'], null));
+    $cat = functions_mysqli::pwg_db_fetch_assoc($result);
+    $template->assign('ADD_TO_ALBUM', functions_html::get_cat_display_name_cache($cat['uppercats'], null));
   }
   else
   {
-    fatal_error('[Hacking attempt] the album id = "'.$_GET['album'].'" is not valid');
+    functions_html::fatal_error('[Hacking attempt] the album id = "'.$_GET['album'].'" is not valid');
   }
 }
 else
@@ -124,10 +129,10 @@ SELECT category_id
   LIMIT 1
 ;
 ';
-  $result = pwg_query($query);
-  if (pwg_db_num_rows($result) > 0)
+  $result = functions_mysqli::pwg_query($query);
+  if (functions_mysqli::pwg_db_num_rows($result) > 0)
   {
-    $row = pwg_db_fetch_assoc($result);
+    $row = functions_mysqli::pwg_db_fetch_assoc($result);
     $selected_category = array($row['category_id']);
   }
 }
@@ -141,7 +146,7 @@ SELECT
     COUNT(*)
   FROM '.CATEGORIES_TABLE.'
 ;';
-list($nb_albums) = pwg_db_fetch_row(pwg_query($query));
+list($nb_albums) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 // $nb_albums = 0;
 $template->assign('NB_ALBUMS', $nb_albums);
 
@@ -149,7 +154,7 @@ $template->assign('NB_ALBUMS', $nb_albums);
 $selected_level = isset($_POST['level']) ? $_POST['level'] : 0;
 $template->assign(
     array(
-      'level_options'=> get_privacy_level_options(),
+      'level_options'=> functions::get_privacy_level_options(),
       'level_options_selected' => array($selected_level)
     )
   );
@@ -161,7 +166,7 @@ $template->assign(
 // Errors
 $setup_errors = array();
 
-$error_message = ready_for_upload_message();
+$error_message = functions_upload::ready_for_upload_message();
 if (!empty($error_message))
 {
   $setup_errors[] = $error_message;
@@ -169,12 +174,12 @@ if (!empty($error_message))
 
 if (!function_exists('gd_info'))
 {
-  $setup_errors[] = l10n('GD library is missing');
+  $setup_errors[] = functions::l10n('GD library is missing');
 }
 
 $template->assign(array(
   'setup_errors'=> $setup_errors,
-  'CACHE_KEYS' => get_admin_client_cache_keys(array('categories')),
+  'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(array('categories')),
   ));
 
 // Warnings
@@ -189,24 +194,24 @@ if (!isset($_SESSION['upload_hide_warnings']))
   
   if ($conf['use_exif'] and !function_exists('exif_read_data'))
   {
-    $setup_warnings[] = l10n('Exif extension not available, admin should disable exif use');
+    $setup_warnings[] = functions::l10n('Exif extension not available, admin should disable exif use');
   }
 
-  if (get_ini_size('upload_max_filesize') > get_ini_size('post_max_size'))
+  if (functions_upload::get_ini_size('upload_max_filesize') > functions_upload::get_ini_size('post_max_size'))
   {
-    $setup_warnings[] = l10n(
+    $setup_warnings[] = functions::l10n(
       'In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting',
-      get_ini_size('upload_max_filesize', false),
-      get_ini_size('post_max_size', false)
+      functions_upload::get_ini_size('upload_max_filesize', false),
+      functions_upload::get_ini_size('post_max_size', false)
       );
   }
 
-  if (get_ini_size('upload_max_filesize') < $conf['upload_form_chunk_size']*1024)
+  if (functions_upload::get_ini_size('upload_max_filesize') < $conf['upload_form_chunk_size']*1024)
   {
     $setup_warnings[] = sprintf(
       'Piwigo setting upload_form_chunk_size (%ukB) should be smaller than PHP configuration setting upload_max_filesize (%ukB)',
       $conf['upload_form_chunk_size'],
-      ceil(get_ini_size('upload_max_filesize') / 1024)
+      ceil(functions_upload::get_ini_size('upload_max_filesize') / 1024)
       );
   }
 

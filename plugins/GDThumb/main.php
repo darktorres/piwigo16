@@ -11,13 +11,16 @@ Has Settings: true
 // Original work by P@t - GTHumb+
 
 use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
 use Piwigo\inc\ImageStdParams;
 
 global $conf;
 
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
-if (mobile_theme()) return;
+if (functions::mobile_theme()) return;
 
 // +-----------------------------------------------------------------------+
 // | Plugin constants                                               |
@@ -31,8 +34,8 @@ endif;
 
 if (!isset($conf['gdThumb'])):
   include(dirname(__FILE__).'/config_default.php');
-  conf_update_param('gdThumb', $config_default);
-  load_conf_from_db();
+  functions::conf_update_param('gdThumb', $config_default);
+  functions::load_conf_from_db();
 endif;
 
 $conf['gdThumb'] = unserialize($conf['gdThumb']);
@@ -40,14 +43,14 @@ $conf['gdThumb'] = unserialize($conf['gdThumb']);
 // RV Thumbnails Scroller
 if (isset($_GET['rvts'])):
   $conf['gdThumb']['big_thumb'] = false;
-  add_event_handler('loc_end_index_thumbnails', GDThumb_process_thumb(...), 50, 2);
+  functions_plugins::add_event_handler('loc_end_index_thumbnails', GDThumb_process_thumb(...), 50, 2);
 endif;
 
-add_event_handler('init', GDThumb_init(...));
-add_event_handler('loc_begin_index', GDThumb_index(...), 60);
-add_event_handler('loc_end_index_category_thumbnails', GDThumb_process_category(...), 50, 2);
-add_event_handler('get_admin_plugin_menu_links', GDThumb_admin_menu(...));
-add_event_handler('loc_end_index', GDThumb_remove_thumb_size(...));
+functions_plugins::add_event_handler('init', GDThumb_init(...));
+functions_plugins::add_event_handler('loc_begin_index', GDThumb_index(...), 60);
+functions_plugins::add_event_handler('loc_end_index_category_thumbnails', GDThumb_process_category(...), 50, 2);
+functions_plugins::add_event_handler('get_admin_plugin_menu_links', GDThumb_admin_menu(...));
+functions_plugins::add_event_handler('loc_end_index', GDThumb_remove_thumb_size(...));
 
 function GDThumb_init() {
   global $conf, $user, $page, $stripped;
@@ -64,7 +67,7 @@ function GDThumb_index() {
   $template->smarty->registerPlugin("function", "media_type", GDThumb_media_type(...));
   $template->set_prefilter('index', GDThumb_prefilter(...));
 
-  add_event_handler('loc_end_index_thumbnails', GDThumb_process_thumb(...), 50, 2);
+  functions_plugins::add_event_handler('loc_end_index_thumbnails', GDThumb_process_thumb(...), 50, 2);
 }
                                                  
 function GDThumb_endsWith($needles, $haystack) {
@@ -171,7 +174,7 @@ function GDThumb_admin_menu($menu) {
   array_push($menu,
     array(
       'NAME' => 'gdThumb',
-      'URL' => get_root_url() . 'admin.php?page=plugin-' . basename(dirname(__FILE__)),
+      'URL' => functions_url::get_root_url() . 'admin.php?page=plugin-' . basename(dirname(__FILE__)),
     )
   );
   return $menu;

@@ -6,25 +6,29 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
+
 if( !defined("PHPWG_ROOT_PATH") ) die ("Hacking attempt!");
 
-check_input_parameter('user_id', $_GET, false, PATTERN_ID);
+functions::check_input_parameter('user_id', $_GET, false, PATTERN_ID);
 
-$edit_user = build_user( $_GET['user_id'], false );
+$edit_user = functions_user::build_user( $_GET['user_id'], false );
 
 if (!empty($_POST))
 {
-  check_pwg_token();
+  functions::check_pwg_token();
 }
 
 include_once(PHPWG_ROOT_PATH.'profile.php');
 
 $errors = array();
-save_profile_from_post($edit_user, $errors);
+functions::save_profile_from_post($edit_user, $errors);
 
-load_profile_in_template(
-  get_root_url().'admin.php?page=profile&amp;user_id='.$edit_user['id'],
-  get_root_url().'admin.php?page=user_list',
+functions::load_profile_in_template(
+  functions_url::get_root_url().'admin.php?page=profile&amp;user_id='.$edit_user['id'],
+  functions_url::get_root_url().'admin.php?page=user_list',
   $edit_user
   );
 $page['errors'] = array_merge($page['errors'], $errors);

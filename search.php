@@ -7,16 +7,22 @@
 // +-----------------------------------------------------------------------+
 
 //--------------------------------------------------------------------- include
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_search;
+use Piwigo\inc\functions_tag;
+use Piwigo\inc\functions_user;
+
 define('PHPWG_ROOT_PATH','./');
 include_once( PHPWG_ROOT_PATH.'inc/common.php' );
-include_once(PHPWG_ROOT_PATH.'inc/functions_search.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_GUEST);
+functions_user::check_status(ACCESS_GUEST);
 
-trigger_notify('loc_begin_search');
+functions_plugins::trigger_notify('loc_begin_search');
 
 // +-----------------------------------------------------------------------+
 // | Create a default search                                               |
@@ -30,19 +36,19 @@ $search = array(
 // list of filters in user preferences
 // allwords, cat, tags, author, added_by, filetypes, date_posted
 $default_fields = array('allwords', 'cat', 'tags', 'author');
-if (is_a_guest() or is_generic())
+if (functions_user::is_a_guest() or functions_user::is_generic())
 {
   $fields = $default_fields;
 }
 else
 {
-  $fields = userprefs_get_param('gallery_search_filters', $default_fields);
+  $fields = functions_user::userprefs_get_param('gallery_search_filters', $default_fields);
 }
 
 $words = array();
 if (!empty($_GET['q']))
 {
-  $words = split_allwords($_GET['q']);
+  $words = functions_search::split_allwords($_GET['q']);
 }
 
 if (count($words) > 0 or in_array('allwords', $fields))
@@ -57,7 +63,7 @@ if (count($words) > 0 or in_array('allwords', $fields))
 $cat_ids = array();
 if (isset($_GET['cat_id']))
 {
-  check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+  functions::check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
   $cat_ids = array($_GET['cat_id']);
 }
 
@@ -69,12 +75,12 @@ if (count($cat_ids) > 0 or in_array('cat', $fields))
   );
 }
 
-if (count(get_available_tags()) > 0)
+if (count(functions_tag::get_available_tags()) > 0)
 {
   $tag_ids = array();
   if (isset($_GET['tag_id']))
   {
-    check_input_parameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
+    functions::check_input_parameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
     $tag_ids = explode(',', $_GET['tag_id']);
   }
 
@@ -95,7 +101,7 @@ SELECT
     id
   FROM '.IMAGES_TABLE.' AS i
     JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON ic.image_id = i.id
-  '.get_sql_condition_FandF(
+  '.functions_user::get_sql_condition_FandF(
     array(
       'forbidden_categories' => 'category_id',
       'visible_categories' => 'category_id',
@@ -106,7 +112,7 @@ SELECT
     AND author IS NOT NULL
     LIMIT 1
 ;';
-  $first_author = query2array($query);
+  $first_author = functions_mysqli::query2array($query);
 
   if (count($first_author) > 0)
   {
@@ -125,6 +131,6 @@ foreach (array('added_by', 'filetypes', 'date_posted') as $field)
   }
 }
 
-list($search_uuid, $search_url) = save_search($search);
-redirect($search_url);
+list($search_uuid, $search_url) = functions_search::save_search($search);
+functions::redirect($search_url);
 ?>

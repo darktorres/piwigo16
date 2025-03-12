@@ -12,6 +12,8 @@ namespace Piwigo\admin\inc;
 // |                       Class for GD library                            |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\functions;
+
 class image_gd implements imageInterface
 {
   var $image;
@@ -20,7 +22,7 @@ class image_gd implements imageInterface
   function __construct($source_filepath)
   {
     $gd_info = gd_info();
-    $extension = strtolower(get_extension($source_filepath));
+    $extension = strtolower(functions::get_extension($source_filepath));
 
     if (in_array($extension, array('jpg', 'jpeg')))
     {
@@ -149,7 +151,7 @@ class image_gd implements imageInterface
 
   function write($destination_filepath)
   {
-    $extension = strtolower(get_extension($destination_filepath));
+    $extension = strtolower(functions::get_extension($destination_filepath));
 
     if ($extension == 'png')
     {

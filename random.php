@@ -10,13 +10,18 @@
 // |                          define and include                           |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
+
 define('PHPWG_ROOT_PATH','./');
 include_once( PHPWG_ROOT_PATH.'inc/common.php' );
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_GUEST);
+functions_user::check_status(ACCESS_GUEST);
 
 // +-----------------------------------------------------------------------+
 // |                     generate random element list                      |
@@ -26,7 +31,7 @@ $query = '
 SELECT id
   FROM '.IMAGES_TABLE.'
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id = ic.image_id
-'.get_sql_condition_FandF
+'.functions_user::get_sql_condition_FandF
   (
     array
       (
@@ -36,7 +41,7 @@ SELECT id
       ),
     'WHERE'
   ).'
-  ORDER BY '.DB_RANDOM_FUNCTION.'()
+  ORDER BY '.functions_mysqli::DB_RANDOM_FUNCTION.'()
   LIMIT '.min(50, $conf['top_number'],$user['nb_image_page']).'
 ;';
 
@@ -44,5 +49,5 @@ SELECT id
 // |                                redirect                               |
 // +-----------------------------------------------------------------------+
 
-redirect(make_index_url(array('list' => array_from_query($query, 'id'))));
+functions::redirect(functions_url::make_index_url(array('list' => functions::array_from_query($query, 'id'))));
 ?>

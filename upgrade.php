@@ -6,8 +6,13 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\admin\inc\functions_upgrade;
 use Piwigo\admin\inc\languages;
 use Piwigo\admin\inc\updates;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
 use Piwigo\inc\Template;
 
 // right after the overwrite of previous version files by the unzip in the administration,
@@ -46,87 +51,16 @@ define('PREFIX_TABLE', $prefixeTable);
 define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 
 include_once(PHPWG_ROOT_PATH.'inc/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 include_once(PHPWG_ROOT_PATH . 'inc/Template.php');
-
-// +-----------------------------------------------------------------------+
-// |                              functions                                |
-// +-----------------------------------------------------------------------+
-
-/**
- * list all tables in an array
- *
- * @return array
- */
-function get_tables()
-{
-  $tables = array();
-
-  $query = '
-SHOW TABLES
-;';
-  $result = pwg_query($query);
-
-  while ($row = pwg_db_fetch_row($result))
-  {
-    if (preg_match('/^'.PREFIX_TABLE.'/', $row[0]))
-    {
-      $tables[] = $row[0];
-    }
-  }
-
-  return $tables;
-}
-
-/**
- * list all columns of each given table
- *
- * @return array of array
- */
-function get_columns_of($tables)
-{
-  $columns_of = array();
-
-  foreach ($tables as $table)
-  {
-    $query = '
-DESC `'.$table.'`
-;';
-    $result = pwg_query($query);
-
-    $columns_of[$table] = array();
-
-    while ($row = pwg_db_fetch_row($result))
-    {
-      $columns_of[$table][] = $row[0];
-    }
-  }
-
-  return $columns_of;
-}
-
-/**
- */
-function print_time($message)
-{
-  global $last_time;
-
-  $new_time = get_moment();
-  echo '<pre>['.get_elapsed_time($last_time, $new_time).']';
-  echo ' '.$message;
-  echo '</pre>';
-  flush();
-  $last_time = $new_time;
-}
 
 // +-----------------------------------------------------------------------+
 // |                             playing zone                              |
 // +-----------------------------------------------------------------------+
 
-// echo implode('<br>', get_tables());
-// echo '<pre>'; print_r(get_columns_of(get_tables())); echo '</pre>';
+// echo implode('<br>', \Piwigo\inc\functions::get_tables());
+// echo '<pre>'; print_r(\Piwigo\inc\functions::get_columns_of(\Piwigo\inc\functions::get_tables())); echo '</pre>';
 
-// foreach (get_available_upgrade_ids() as $upgrade_id)
+// foreach (\Piwigo\admin\inc\functions_upgrade::get_available_upgrade_ids() as $upgrade_id)
 // {
 //   echo $upgrade_id, '<br>';
 // }
@@ -196,21 +130,19 @@ else {
 }
 define('PHPWG_URL', 'https://'.PHPWG_DOMAIN);
 
-load_language( 'common.lang', '', array('language'=>$language, 'target_charset'=>'utf-8', 'no_fallback' => true) );
-load_language( 'admin.lang', '', array('language'=>$language, 'target_charset'=>'utf-8', 'no_fallback' => true) );
-load_language( 'install.lang', '', array('language'=>$language, 'target_charset'=>'utf-8', 'no_fallback' => true) );
-load_language( 'upgrade.lang', '', array('language'=>$language, 'target_charset'=>'utf-8', 'no_fallback' => true) );
+functions::load_language( 'common.lang', '', array('language'=>$language, 'target_charset'=>'utf-8', 'no_fallback' => true) );
+functions::load_language( 'admin.lang', '', array('language'=>$language, 'target_charset'=>'utf-8', 'no_fallback' => true) );
+functions::load_language( 'install.lang', '', array('language'=>$language, 'target_charset'=>'utf-8', 'no_fallback' => true) );
+functions::load_language( 'upgrade.lang', '', array('language'=>$language, 'target_charset'=>'utf-8', 'no_fallback' => true) );
 
 // +-----------------------------------------------------------------------+
 // |                          database connection                          |
 // +-----------------------------------------------------------------------+
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_upgrade.php');
-include(PHPWG_ROOT_PATH .'inc/dblayer/functions_'.$conf['dblayer'].'.php');
 
-upgrade_db_connect();
-pwg_db_check_charset();
+functions_upgrade::upgrade_db_connect();
+functions_mysqli::pwg_db_check_charset();
 
-list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 define('CURRENT_DATE', $dbnow);
 
 // +-----------------------------------------------------------------------+
@@ -221,7 +153,7 @@ $template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'roma');
 $template->set_filenames(array('upgrade'=>'upgrade.tpl'));
 $template->assign(array(
   'RELEASE' => PHPWG_VERSION,
-  'L_UPGRADE_HELP' => l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL.'/forum'),
+  'L_UPGRADE_HELP' => functions::l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL.'/forum'),
   )
 );
 
@@ -232,10 +164,10 @@ $template->assign(array(
 $has_remote_site = false;
 
 $query = 'SELECT galleries_url FROM '.SITES_TABLE.';';
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result))
+$result = functions_mysqli::pwg_query($query);
+while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
-  if (url_is_remote($row['galleries_url']))
+  if (functions_url::url_is_remote($row['galleries_url']))
   {
     $has_remote_site = true;
   }
@@ -264,8 +196,8 @@ if ($has_remote_site)
 // |                            upgrade choice                             |
 // +-----------------------------------------------------------------------+
 
-$tables = get_tables();
-$columns_of = get_columns_of($tables);
+$tables = functions::get_tables();
+$columns_of = functions::get_columns_of($tables);
 
 // find the current release
 if (!in_array('param', $columns_of[PREFIX_TABLE.'config']))
@@ -350,7 +282,7 @@ else
 SELECT id
   FROM '.PREFIX_TABLE.'upgrade
 ;';
-  $applied_upgrades = array_from_query($query, 'id');
+  $applied_upgrades = functions::array_from_query($query, 'id');
 
   if (!in_array(159, $applied_upgrades))
   {
@@ -371,9 +303,9 @@ SELECT id
   else
   {
     // confirm that the database is in the same version as source code files
-    conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
+    functions::conf_update_param('piwigo_db_version', functions::get_branch_from_version(PHPWG_VERSION));
 
-    header('Content-Type: text/html; charset='.get_pwg_charset());
+    header('Content-Type: text/html; charset='.functions::get_pwg_charset());
     echo 'No upgrade required, the database structure is up to date';
     echo '<br><a href="index.php">← back to gallery</a>';
     exit();
@@ -390,13 +322,13 @@ $mysql_changes = array();
 // check php version
 if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<'))
 {
-  $page['errors'][] = l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION);
+  $page['errors'][] = functions::l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION);
 }
 
-check_upgrade_access_rights();
+functions_upgrade::check_upgrade_access_rights();
 
 if ((isset($_POST['submit']) or isset($_GET['now']))
-  and check_upgrade())
+  and functions_upgrade::check_upgrade())
 {
   $upgrade_file = PHPWG_ROOT_PATH.'install/upgrade_'.$current_release.'.php';
   if (is_file($upgrade_file))
@@ -405,10 +337,10 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
     $page['queries_time'] = 0;
     $page['count_queries'] = 0;
     
-    $page['upgrade_start'] = get_moment();
+    $page['upgrade_start'] = functions::get_moment();
     $conf['die_on_sql_error'] = false;
     include($upgrade_file);
-    conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
+    functions::conf_update_param('piwigo_db_version', functions::get_branch_from_version(PHPWG_VERSION));
 
     // Something to add in database.php?
     if (!empty($mysql_changes))
@@ -420,7 +352,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
 
       if (!@file_put_contents($config_file, $config_file_contents))
       {
-        $page['infos'][] = l10n(
+        $page['infos'][] = functions::l10n(
           'In <i>%s</i>, before <b>?></b>, insert:',
           PWG_LOCAL_DIR.'config/database.php'
           )
@@ -430,17 +362,17 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
     }
 
     // Deactivate non standard extensions
-    deactivate_non_standard_plugins();
-    deactivate_non_standard_themes();
-    deactivate_templates();
+    functions_upgrade::deactivate_non_standard_plugins();
+    functions_upgrade::deactivate_non_standard_themes();
+    functions_upgrade::deactivate_templates();
 
-    $page['upgrade_end'] = get_moment();
+    $page['upgrade_end'] = functions::get_moment();
 
     $template->assign(
       'upgrade',
       array(
         'VERSION' => $current_release,
-        'TOTAL_TIME' => get_elapsed_time(
+        'TOTAL_TIME' => functions::get_elapsed_time(
           $page['upgrade_start'],
           $page['upgrade_end']
           ),
@@ -454,7 +386,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
         )
       );
 
-    $page['infos'][] = l10n('Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem.');
+    $page['infos'][] = functions::l10n('Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem.');
 
     // Save $page['infos'] in order to restore after maintenance actions
     $page['infos_sav'] = $page['infos'];
@@ -462,7 +394,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
 
     $template->assign(
       array(
-        'button_label' => l10n('Home'),
+        'button_label' => functions::l10n('Home'),
         'button_link' => 'index.php',
         )
       );
@@ -470,7 +402,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
     // if the webmaster has a session, let's give a link to discover new features
     if (!empty($_SESSION['pwg_uid']))
     {
-      $version_ = str_replace('.', '_', get_branch_from_version(PHPWG_VERSION).'.0');
+      $version_ = str_replace('.', '_', functions::get_branch_from_version(PHPWG_VERSION).'.0');
       
       if (file_exists(PHPWG_PLUGINS_PATH .'TakeATour/tours/'.$version_.'/config.php'))
       {
@@ -479,22 +411,22 @@ REPLACE INTO '.PLUGINS_TABLE.'
   (id, state)
   VALUES (\'TakeATour\', \'active\')
 ;';
-        pwg_query($query);
+        functions_mysqli::pwg_query($query);
 
         // we need the secret key for get_pwg_token()
-        load_conf_from_db();
+        functions::load_conf_from_db();
         
         $template->assign(
           array(
-            'button_label' => l10n('Discover what\'s new in Piwigo %s', get_branch_from_version(PHPWG_VERSION)),
-            'button_link' => 'admin.php?submited_tour_path=tours/'.$version_.'&amp;pwg_token='.get_pwg_token(),
+            'button_label' => functions::l10n('Discover what\'s new in Piwigo %s', functions::get_branch_from_version(PHPWG_VERSION)),
+            'button_link' => 'admin.php?submited_tour_path=tours/'.$version_.'&amp;pwg_token='.functions::get_pwg_token(),
             )
           );
       }
     }
 
     // Delete cache data
-    invalidate_user_cache(true);
+    functions_admin::invalidate_user_cache(true);
     $template->delete_compiled_templates();
 
     // Restore $page['infos'] in order to hide informations messages from functions calles
@@ -530,7 +462,7 @@ else
     'CURRENT_RELEASE' => $current_release,
     'F_ACTION' => 'upgrade.php?language=' . $language));
 
-  if (!check_upgrade())
+  if (!functions_upgrade::check_upgrade())
   {
     $template->assign('login', true);
   }

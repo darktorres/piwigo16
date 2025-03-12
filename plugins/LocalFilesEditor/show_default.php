@@ -21,19 +21,22 @@
 // | USA.                                                                  |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_user;
+
 define('PHPWG_ROOT_PATH', '../../');
 define('IN_ADMIN', true);
 include_once(PHPWG_ROOT_PATH . 'inc/common.php');
 include_once(LOCALEDIT_PATH.'inc/functions_LocalFilesEditor.php');
-load_language('plugin.lang', LOCALEDIT_PATH);
-check_status(ACCESS_WEBMASTER);
+functions::load_language('plugin.lang', LOCALEDIT_PATH);
+functions_user::check_status(ACCESS_WEBMASTER);
 
-check_input_parameter('file', $_GET, false, '/^(include\/config_default\.inc\.php|language\/[a-z]+_[A-Z]+\/(common|admin)\.lang\.php)$/');
+functions::check_input_parameter('file', $_GET, false, '/^(include\/config_default\.inc\.php|language\/[a-z]+_[A-Z]+\/(common|admin)\.lang\.php)$/');
 
 if (isset($_GET['file']))
 {
   $path = $_GET['file'];
-  if (!is_admin())
+  if (!functions_user::is_admin())
   {
   	die('Hacking attempt!');
   }

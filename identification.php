@@ -7,22 +7,30 @@
 // +-----------------------------------------------------------------------+
 
 //--------------------------------------------------------------------- include
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_cookie;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
+use Piwigo\inc\menubar;
+
 define('PHPWG_ROOT_PATH','./');
 include_once( PHPWG_ROOT_PATH.'inc/common.php' );
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_FREE);
+functions_user::check_status(ACCESS_FREE);
 
 // but if the user is already identified, we redirect to gallery home
 // instead of displaying the log in form
-if (!is_a_guest())
+if (!functions_user::is_a_guest())
 {
-  redirect(get_gallery_home_url());
+  functions::redirect(functions_url::get_gallery_home_url());
 }
 
-trigger_notify('loc_begin_identification');
+functions_plugins::trigger_notify('loc_begin_identification');
 
 //-------------------------------------------------------------- identification
 
@@ -32,7 +40,7 @@ if (isset($_POST['redirect']))
 {
   $_POST['redirect_decoded'] = urldecode($_POST['redirect']);
 }
-check_input_parameter('redirect_decoded', $_POST, false, '{^'.preg_quote(cookie_path()).'}');
+functions::check_input_parameter('redirect_decoded', $_POST, false, '{^'.preg_quote(functions_cookie::cookie_path()).'}');
 
 $redirect_to = '';
 if ( !empty($_GET['redirect']) )
@@ -40,7 +48,7 @@ if ( !empty($_GET['redirect']) )
   $redirect_to = urldecode($_GET['redirect']);
   if ( $conf['guest_access'] and !isset($_GET['hide_redirect_error']))
   {
-    $page['errors'][] = l10n('You are not authorized to access the requested page');
+    $page['errors'][] = functions::l10n('You are not authorized to access the requested page');
   }
 }
 
@@ -48,19 +56,19 @@ if (isset($_POST['login']))
 {
   if (!isset($_COOKIE[session_name()]))
   {
-    $page['errors'][] = l10n('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
+    $page['errors'][] = functions::l10n('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
   }
   else
   {
     if ($conf['insensitive_case_logon'] == true)
     {
-      $_POST['username'] = search_case_username($_POST['username']);
+      $_POST['username'] = functions_user::search_case_username($_POST['username']);
     }
     
     $redirect_to = isset($_POST['redirect']) ? urldecode($_POST['redirect']) : '';
     $remember_me = isset($_POST['remember_me']) and $_POST['remember_me']==1;
 
-    if ( try_log_user($_POST['username'], $_POST['password'], $remember_me) )
+    if ( functions_user::try_log_user($_POST['username'], $_POST['password'], $remember_me) )
     {
       // security (level 2): force redirect within Piwigo. We redirect to
       // absolute root url, including http(s)://, without the cookie path,
@@ -72,17 +80,17 @@ if (isset($_POST['login']))
       // {cookie_path = /piwigo/git/}
       // {host = http://localhost}
       // {redirect (final) = http://localhost/piwigo/git/admin.php}
-      $root_url = get_absolute_root_url();
+      $root_url = functions_url::get_absolute_root_url();
 
-      redirect(
+      functions::redirect(
         empty($redirect_to)
-          ? get_gallery_home_url()
-          : substr($root_url, 0, strlen($root_url) - strlen(cookie_path())).$redirect_to
+          ? functions_url::get_gallery_home_url()
+          : substr($root_url, 0, strlen($root_url) - strlen(functions_cookie::cookie_path())).$redirect_to
         );
     }
     else
     {
-      $page['errors'][] = l10n('Invalid username or password!');
+      $page['errors'][] = functions::l10n('Invalid username or password!');
     }
   }
 }
@@ -91,7 +99,7 @@ if (isset($_POST['login']))
 //
 // Start output of page
 //
-$title = l10n('Identification');
+$title = functions::l10n('Identification');
 $page['body_id'] = 'theIdentificationPage';
 
 $template->set_filenames( array('identification'=>'identification.tpl') );
@@ -100,31 +108,31 @@ $template->assign(
   array(
     'U_REDIRECT' => $redirect_to,
 
-    'F_LOGIN_ACTION' => get_root_url().'identification.php',
+    'F_LOGIN_ACTION' => functions_url::get_root_url().'identification.php',
     'authorize_remembering' => $conf['authorize_remembering'],
     ));
 
 if (!$conf['gallery_locked'] && $conf['allow_user_registration'])
 {
-  $template->assign('U_REGISTER', get_root_url().'register.php' );
+  $template->assign('U_REGISTER', functions_url::get_root_url().'register.php' );
 }
 
 if (!$conf['gallery_locked'])
 {
-  $template->assign('U_LOST_PASSWORD', get_root_url().'password.php' );
+  $template->assign('U_LOST_PASSWORD', functions_url::get_root_url().'password.php' );
 }
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
 if (!$conf['gallery_locked'] && (!isset($themeconf['hide_menu_on']) OR !in_array('theIdentificationPage', $themeconf['hide_menu_on'])))
 {
-  include( PHPWG_ROOT_PATH.'inc/menubar.php');
+  menubar::initialize_menu();
 }
 
 //----------------------------------------------------------- html code display
 include(PHPWG_ROOT_PATH.'inc/page_header.php');
-trigger_notify('loc_end_identification');
-flush_page_messages();
+functions_plugins::trigger_notify('loc_end_identification');
+functions_html::flush_page_messages();
 $template->pparse('identification');
 include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 ?>

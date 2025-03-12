@@ -7,6 +7,12 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\plugins;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_session;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 if( !defined("PHPWG_ROOT_PATH") )
 {
@@ -27,19 +33,19 @@ if (isset($_GET['show_details']))
     $show_details = false;
   }
 
-  pwg_set_session_var('plugins_show_details', $show_details);
+  functions_session::pwg_set_session_var('plugins_show_details', $show_details);
 }
-elseif (null != pwg_get_session_var('plugins_show_details'))
+elseif (null != functions_session::pwg_get_session_var('plugins_show_details'))
 {
-  $show_details = pwg_get_session_var('plugins_show_details');
+  $show_details = functions_session::pwg_get_session_var('plugins_show_details');
 }
 else
 {
   $show_details = false;
 }
 
-$base_url = get_root_url().'admin.php?page='.$page['page'];
-$pwg_token = get_pwg_token();
+$base_url = functions_url::get_root_url().'admin.php?page='.$page['page'];
+$pwg_token = functions::get_pwg_token();
 $action_url = $base_url.'&amp;plugin='.'%s'.'&amp;pwg_token='.$pwg_token;
 
 $plugins = new plugins();
@@ -69,7 +75,7 @@ if (isset($_GET['incompatible_plugins']))
 
 //--------------------------------------------------------Get the menu with the depreciated version
 
-$plugin_menu_links_deprec = trigger_change('get_admin_plugin_menu_links', array());
+$plugin_menu_links_deprec = functions_plugins::trigger_change('get_admin_plugin_menu_links', array());
 
 $settings_url_for_plugin_deprec = array();
 
@@ -138,10 +144,10 @@ foreach($plugins->fs_plugins as $plugin_id => $fs_plugin)
   {
     // Deactivate manually plugin from database
     $query = 'UPDATE '.PLUGINS_TABLE.' SET state=\'inactive\' WHERE id=\''.$plugin_id.'\'';
-    pwg_query($query);
+    functions_mysqli::pwg_query($query);
 
     $tpl_plugin['STATE'] = 'merged';
-    $tpl_plugin['DESC'] = l10n('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');
+    $tpl_plugin['DESC'] = functions::l10n('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');
     $merged_plugins = true;
   }
   
@@ -171,7 +177,7 @@ if (count($missing_plugin_ids) > 0)
       'NAME' => $plugin_id,
       'ID' => $plugin_id,
       'VERSION' => $plugins->db_plugins_by_id[$plugin_id]['version'],
-      'DESC' => l10n('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'),
+      'DESC' => functions::l10n('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'),
       'U_ACTION' => sprintf($action_url, $plugin_id),
       'STATE' => 'missing',
       );
@@ -180,19 +186,16 @@ if (count($missing_plugin_ids) > 0)
   $template->append('plugin_states', 'missing');
 }
 
-// sort plugins by state then by name
-function cmp($a, $b)
-{ 
-  $s = array('merged' => 0, 'missing' => 1, 'active' => 2, 'inactive' => 3);
-  
-  if($a['STATE'] == $b['STATE'])
-    return strcasecmp($a['NAME'], $b['NAME']); 
-  else
-    return $s[$a['STATE']] >= $s[$b['STATE']]; 
-}
-
 // Stoped plugin sorting for new plugin manager
-// usort($tpl_plugins, cmp(...));
+// usort($tpl_plugins, function ($a, $b) {
+//   // sort plugins by state then by name
+//   $s = array('merged' => 0, 'missing' => 1, 'active' => 2, 'inactive' => 3);
+//  
+//   if($a['STATE'] == $b['STATE'])
+//     return strcasecmp($a['NAME'], $b['NAME']); 
+//   else
+//     return $s[$a['STATE']] >= $s[$b['STATE']]; 
+// });
 
 $template->assign(
   array(
@@ -202,9 +205,9 @@ $template->assign(
     'base_url' => $base_url,
     'show_details' => $show_details,
     'max_inactive_before_hide' => isset($_GET['show_inactive']) ? 999 : 8,
-    'isWebmaster' => (is_webmaster()) ? 1 : 0,
-    'ADMIN_PAGE_TITLE' => l10n('Plugins'),
-    'view_selector' => userprefs_get_param('plugin-manager-view', 'classic'),
+    'isWebmaster' => (functions_user::is_webmaster()) ? 1 : 0,
+    'ADMIN_PAGE_TITLE' => functions::l10n('Plugins'),
+    'view_selector' => functions_user::userprefs_get_param('plugin-manager-view', 'classic'),
     'CONF_ENABLE_EXTENSIONS_INSTALL' => $conf['enable_extensions_install'],
     )
   );

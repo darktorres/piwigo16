@@ -8,20 +8,24 @@
 
 use Piwigo\admin\inc\c13y_internal;
 use Piwigo\admin\inc\check_integrity;
+use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 if (!defined('PHPWG_ROOT_PATH'))
 {
   die ("Hacking attempt!");
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
@@ -29,11 +33,11 @@ check_status(ACCESS_ADMINISTRATOR);
 
 if (isset($_GET['action']) and 'hide_newsletter_subscription' == $_GET['action'])
 {
-  userprefs_update_param('show_newsletter_subscription', 'false');
+  functions_user::userprefs_update_param('show_newsletter_subscription', 'false');
   exit();
 }
 
-$my_base_url = get_root_url().'admin.php?page=';
+$my_base_url = functions_url::get_root_url().'admin.php?page=';
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('admin_home');
@@ -46,9 +50,9 @@ $tabsheet->assign();
 
 if (isset($page['nb_pending_comments']))
 {
-  $message = l10n('User comments').' <i class="icon-chat"></i> ';
+  $message = functions::l10n('User comments').' <i class="icon-chat"></i> ';
   $message.= '<a href="'.$link_start.'comments">';
-  $message.= l10n('%d waiting for validation', $page['nb_pending_comments']);
+  $message.= functions::l10n('%d waiting for validation', $page['nb_pending_comments']);
   $message.= ' <i class="icon-right"></i></a>';
   
   $page['messages'][] = $message;
@@ -59,7 +63,7 @@ $nb_orphans = $page['nb_orphans']; // already calculated in admin.php
 
 if ($page['nb_photos_total'] >= 100000) // but has not been calculated on a big gallery, so force it now
 {
-  $nb_orphans = count_orphans();
+  $nb_orphans = functions_admin::count_orphans();
 }
 
 if ($nb_orphans > 0)
@@ -67,7 +71,7 @@ if ($nb_orphans > 0)
   $orphans_url = PHPWG_ROOT_PATH.'admin.php?page=batch_manager&amp;filter=prefilter-no_album';
 
   $message = '<a href="'.$orphans_url.'"><i class="icon-heart-broken"></i>';
-  $message.= l10n('Orphans').'</a>';
+  $message.= functions::l10n('Orphans').'</a>';
   $message.= '<span class="adminMenubarCounter">'.$nb_orphans.'</span>';
 
   $page['warnings'][] = $message;
@@ -79,19 +83,19 @@ SELECT COUNT(*)
   FROM '.CATEGORIES_TABLE.'
   WHERE visible =\'false\'
 ;';
-list($locked_album) = pwg_db_fetch_row(pwg_query($query));
+list($locked_album) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 if ($locked_album > 0)
 {
   $locked_album_url = PHPWG_ROOT_PATH.'admin.php?page=cat_options&section=visible';
 
   $message = '<a href="'.$locked_album_url.'"><i class="icon-cone"></i>';
-  $message.= l10n('Locked album').'</a>';
+  $message.= functions::l10n('Locked album').'</a>';
   $message.= '<span class="adminMenubarCounter">'.$locked_album.'</span>';
 
   $page['warnings'][] = $message;
 }
 
-fs_quick_check();
+functions_admin::fs_quick_check();
 
 // +-----------------------------------------------------------------------+
 // |                             template init                             |
@@ -99,11 +103,11 @@ fs_quick_check();
 
 $template->set_filenames(array('intro' => 'intro.tpl'));
 
-if ($conf['show_newsletter_subscription'] and userprefs_get_param('show_newsletter_subscription', true)) {
+if ($conf['show_newsletter_subscription'] and functions_user::userprefs_get_param('show_newsletter_subscription', true)) {
   $template->assign(
     array(
       'EMAIL' => $user['email'],
-      'SUBSCRIBE_BASE_URL' => get_newsletter_subscribe_base_url($user['language']),
+      'SUBSCRIBE_BASE_URL' => functions_admin::get_newsletter_subscribe_base_url($user['language']),
       )
     );
 }
@@ -113,43 +117,43 @@ $query = '
 SELECT COUNT(*)
   FROM '.IMAGES_TABLE.'
 ;';
-list($nb_photos) = pwg_db_fetch_row(pwg_query($query));
+list($nb_photos) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT COUNT(*)
   FROM '.CATEGORIES_TABLE.'
 ;';
-list($nb_categories) = pwg_db_fetch_row(pwg_query($query));
+list($nb_categories) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT COUNT(*)
   FROM '.TAGS_TABLE.'
 ;';
-list($nb_tags) = pwg_db_fetch_row(pwg_query($query));
+list($nb_tags) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT COUNT(*)
   FROM '.IMAGE_TAG_TABLE.'
 ;';
-list($nb_image_tag) = pwg_db_fetch_row(pwg_query($query));
+list($nb_image_tag) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT COUNT(*)
   FROM '.USERS_TABLE.'
 ;';
-list($nb_users) = pwg_db_fetch_row(pwg_query($query));
+list($nb_users) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT COUNT(*)
   FROM `'.GROUPS_TABLE.'`
 ;';
-list($nb_groups) = pwg_db_fetch_row(pwg_query($query));
+list($nb_groups) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT COUNT(*)
   FROM '.RATE_TABLE.'
 ;';
-list($nb_rates) = pwg_db_fetch_row(pwg_query($query));
+list($nb_rates) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT
@@ -157,21 +161,21 @@ SELECT
   FROM '.HISTORY_SUMMARY_TABLE.'
   WHERE month IS NULL
 ;';
-list($nb_views) = pwg_db_fetch_row(pwg_query($query));
+list($nb_views) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT
     SUM(filesize)
   FROM '.IMAGES_TABLE.'
 ;';
-list($disk_usage) = pwg_db_fetch_row(pwg_query($query));
+list($disk_usage) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = '
 SELECT
     SUM(filesize)
   FROM '.IMAGE_FORMAT_TABLE.'
 ;';
-list($formats_disk_usage) = pwg_db_fetch_row(pwg_query($query));
+list($formats_disk_usage) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $disk_usage+= $formats_disk_usage;
 
@@ -191,10 +195,10 @@ $template->assign(
     'NB_USERS' => $nb_users,
     'NB_GROUPS' => $nb_groups,
     'NB_RATES' => $nb_rates,
-    'NB_VIEWS' => number_format_human_readable($nb_views),
+    'NB_VIEWS' => functions_admin::number_format_human_readable($nb_views),
     'NB_PLUGINS' => count($pwg_loaded_plugins),
-    'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
-    'U_QUICK_SYNC' => PHPWG_ROOT_PATH.'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token='.get_pwg_token(),
+    'STORAGE_USED' => str_replace(' ', '&nbsp;', functions::l10n('%sGB', number_format($du_gb, $du_decimals))),
+    'U_QUICK_SYNC' => PHPWG_ROOT_PATH.'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token='.functions::get_pwg_token(),
     'CHECK_FOR_UPDATES' => $conf['dashboard_check_for_updates'],
     )
   );
@@ -205,7 +209,7 @@ if ($conf['activate_comments'])
 SELECT COUNT(*)
   FROM '.COMMENTS_TABLE.'
 ;';
-  list($nb_comments) = pwg_db_fetch_row(pwg_query($query));
+  list($nb_comments) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
   $template->assign('NB_COMMENTS', $nb_comments);
 } else {
   $template->assign('NB_COMMENTS', 0);
@@ -213,21 +217,21 @@ SELECT COUNT(*)
 
 if ($conf['show_piwigo_latest_news'])
 {
-  $latest_news = get_piwigo_news();
+  $latest_news = functions_admin::get_piwigo_news();
 
   if (isset($latest_news['id']) and $latest_news['posted_on'] > time()-60*60*24*30)
   {
     $page['messages'][] = sprintf(
       '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
-      l10n('Latest Piwigo news'),
+      functions::l10n('Latest Piwigo news'),
       $latest_news['url'],
-      time_since($latest_news['posted_on'], 'year').' ('.$latest_news['posted'].')',
+      functions::time_since($latest_news['posted_on'], 'year').' ('.$latest_news['posted'].')',
       $latest_news['subject']
     );
   }
 }
 
-trigger_notify('loc_end_intro');
+functions_plugins::trigger_notify('loc_end_intro');
 
 // +-----------------------------------------------------------------------+
 // |                           get activity data                           |
@@ -262,7 +266,7 @@ $date_string = $date->format('Y-m-d');
 
 if (!isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity_last_weeks']['calculated_on'] < strtotime('5 minutes ago'))
 {
-  $start_time = get_moment();
+  $start_time = functions::get_moment();
 
   $query = '
   SELECT
@@ -274,7 +278,7 @@ if (!isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity_
     WHERE occured_on >= \''.$date_string.'\'
     GROUP BY activity_day, object, action
   ;';
-  $activity_actions = query2array($query);
+  $activity_actions = functions_mysqli::query2array($query);
 
   foreach ($activity_actions as $action)
   {
@@ -293,10 +297,10 @@ if (!isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity_
 
     @$activity_last_weeks[$week][$day_nb]['details'][ucfirst($action['object'])][ucfirst($action['action'])] = $action['activity_counter'];
     @$activity_last_weeks[$week][$day_nb]['number'] += $action['activity_counter'];
-    @$activity_last_weeks[$week][$day_nb]['date'] = format_date($day_date->getTimestamp());
+    @$activity_last_weeks[$week][$day_nb]['date'] = functions::format_date($day_date->getTimestamp());
   }
 
-  $logger->debug('[admin/intro::'.__LINE__.'] recent activity calculated in '.get_elapsed_time($start_time, get_moment()));
+  $logger->debug('[admin/intro::'.__LINE__.'] recent activity calculated in '.functions::get_elapsed_time($start_time, functions::get_moment()));
 
   $_SESSION['cache_activity_last_weeks'] = array(
     'calculated_on' => time(),
@@ -326,17 +330,14 @@ foreach($activity_last_weeks as $week => $i)
 //  * Split days max $circle_sizes time on the biggest difference (but not below 120%)
 //  * Set the sizes according to the groups created
 
-//Function to sort days by number of activity
-function cmp_day($a, $b)
-{
+usort($temp_data, function ($a, $b){
+  //Function to sort days by number of activity
   if ($a['x'] == $b['x']) 
   {
     return 0;
   }
   return ($a['x'] < $b['x']) ? -1 : 1;
-}
-
-usort($temp_data, cmp_day(...));
+});
 
 //Get the percent difference
 $diff_x = array();
@@ -415,7 +416,7 @@ SELECT
   GROUP BY ext
 ;';
 
-$file_extensions = query2array($query, 'ext');
+$file_extensions = functions_mysqli::query2array($query, 'ext');
 
 foreach ($file_extensions as $ext => $ext_details)
 {
@@ -452,7 +453,7 @@ SELECT
   GROUP BY ext
 ;';
 
-$file_extensions = query2array($query, 'ext');
+$file_extensions = functions_mysqli::query2array($query, 'ext');
 foreach ($file_extensions as $ext => $ext_details)
 {
   $type = 'Formats';

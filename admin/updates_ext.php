@@ -7,6 +7,8 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\updates;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_user;
 
 if( !defined("PHPWG_ROOT_PATH") )
 {
@@ -18,9 +20,9 @@ if (!$conf['enable_extensions_install'])
   die('Piwigo extensions install/update system is disabled');
 }
 
-if (!is_webmaster())
+if (!functions_user::is_webmaster())
 {
-  $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+  $page['warnings'][] = str_replace('%s', functions::l10n('user_status_webmaster'), functions::l10n('%s status is required to edit parameters.'));
 }
 
 $conf['updates_ignored'] = unserialize($conf['updates_ignored']);
@@ -30,7 +32,7 @@ $autoupdate = new updates($page['page']);
 $show_reset = false;
 if (!$autoupdate->get_server_extensions())
 {
-  $page['errors'][] = l10n('Can\'t connect to server.');
+  $page['errors'][] = functions::l10n('Can\'t connect to server.');
   return; // TODO: remove this return and add a proper "page killer"
 }
 
@@ -59,7 +61,7 @@ foreach ($autoupdate->types as $type)
 
     $ext_info = $server_ext[$fs_ext['extension']];
 
-    if (!safe_version_compare($fs_ext['version'], $ext_info['revision_name'], '>='))
+    if (!functions::safe_version_compare($fs_ext['version'], $ext_info['revision_name'], '>='))
     {
       array_push($updates_extension[$type], array(
         'ID' => $ext_info['extension_id'],
@@ -85,11 +87,11 @@ foreach ($autoupdate->types as $type)
 
 $template->assign('UPDATES_EXTENSION', $updates_extension);
 $template->assign('SHOW_RESET', $show_reset);
-$template->assign('PWG_TOKEN', get_pwg_token());
+$template->assign('PWG_TOKEN', functions::get_pwg_token());
 $template->assign('EXT_TYPE', $page['page'] == 'updates' ? 'extensions' : $page['page']);
-$template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
+$template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
 $template->set_filename('plugin_admin_content', 'updates_ext.tpl');
 $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
-$template->assign('ADMIN_PAGE_TITLE', l10n('Updates'));
+$template->assign('ADMIN_PAGE_TITLE', functions::l10n('Updates'));
 
 ?>

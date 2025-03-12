@@ -10,18 +10,26 @@
 // |                           initialization                              |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_tag;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
+use Piwigo\inc\menubar;
+
 define('PHPWG_ROOT_PATH','./');
 include_once(PHPWG_ROOT_PATH.'inc/common.php');
 
-check_status(ACCESS_GUEST);
+functions_user::check_status(ACCESS_GUEST);
 
-trigger_notify('loc_begin_tags');
+functions_plugins::trigger_notify('loc_begin_tags');
 
 // +-----------------------------------------------------------------------+
 // |                       page header and options                         |
 // +-----------------------------------------------------------------------+
 
-$title= l10n('Tags');
+$title= functions::l10n('Tags');
 $page['body_id'] = 'theTagsPage';
 
 $template->set_filenames(array('tags'=>'tags.tpl'));
@@ -39,14 +47,14 @@ foreach (array('cloud', 'letters') as $mode)
 {
   $template->assign(
     'U_'.strtoupper($mode),
-    get_root_url().'tags.php'. ($conf['tags_default_display_mode']==$mode ? '' : '?display_mode='.$mode)
+    functions_url::get_root_url().'tags.php'. ($conf['tags_default_display_mode']==$mode ? '' : '?display_mode='.$mode)
     );
 }
 
 $template->assign( 'display_mode', $page['display_mode'] );
 
 // find all tags available for the current user
-$tags = get_available_tags();
+$tags = functions_tag::get_available_tags();
 
 // +-----------------------------------------------------------------------+
 // |                       letter groups construction                      |
@@ -54,7 +62,7 @@ $tags = get_available_tags();
 
 if ($page['display_mode'] == 'letters') {
   // we want tags diplayed in alphabetic order
-  usort($tags, tag_alpha_compare(...));
+  usort($tags, functions_html::tag_alpha_compare(...));
 
   $current_letter = null;
   $nb_tags = count($tags);
@@ -67,7 +75,7 @@ if ($page['display_mode'] == 'letters') {
 
   foreach ($tags as $tag)
   {
-    $tag_letter = mb_strtoupper(mb_substr(pwg_transliterate($tag['name']), 0, 1, PWG_CHARSET), PWG_CHARSET);
+    $tag_letter = mb_strtoupper(mb_substr(functions::pwg_transliterate($tag['name']), 0, 1, PWG_CHARSET), PWG_CHARSET);
 
     if ($current_tag_idx==0) {
       $current_letter = $tag_letter;
@@ -100,7 +108,7 @@ if ($page['display_mode'] == 'letters') {
     $letter['tags'][] = array_merge(
       $tag,
       array(
-        'URL' => make_index_url(array('tags' => array($tag))),
+        'URL' => functions_url::make_index_url(array('tags' => array($tag))),
         )
       );
 
@@ -126,14 +134,14 @@ else
 
   // we want only the first most represented tags, so we sort them by counter
   // and take the first tags
-  usort($tags, tags_counter_compare(...));
+  usort($tags, functions_tag::tags_counter_compare(...));
   $tags = array_slice($tags, 0, $conf['full_tag_cloud_items_number']);
 
   // depending on its counter and the other tags counter, each tag has a level
-  $tags = add_level_to_tags($tags);
+  $tags = functions_tag::add_level_to_tags($tags);
 
   // we want tags diplayed in alphabetic order
-  usort($tags, tag_alpha_compare(...));
+  usort($tags, functions_html::tag_alpha_compare(...));
 
   // display sorted tags
   foreach ($tags as $tag)
@@ -143,7 +151,7 @@ else
       array_merge(
         $tag,
         array(
-          'URL' => make_index_url(
+          'URL' => functions_url::make_index_url(
             array(
               'tags' => array($tag),
               )
@@ -157,12 +165,12 @@ else
 $themeconf = $template->get_template_vars('themeconf');
 if (!isset($themeconf['hide_menu_on']) OR !in_array('theTagsPage', $themeconf['hide_menu_on']))
 {
-  include( PHPWG_ROOT_PATH.'inc/menubar.php');
+  menubar::initialize_menu();
 }
 
 include(PHPWG_ROOT_PATH.'inc/page_header.php');
-trigger_notify('loc_end_tags');
-flush_page_messages();
+functions_plugins::trigger_notify('loc_end_tags');
+functions_html::flush_page_messages();
 $template->pparse('tags');
 include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 ?>

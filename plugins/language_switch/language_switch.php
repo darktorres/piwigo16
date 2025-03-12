@@ -22,6 +22,11 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\languages;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_session;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
@@ -41,9 +46,9 @@ function language_controler_switch()
 
     if ( !empty($_GET['lang']) and file_exists(PHPWG_ROOT_PATH.'language/'.$_GET['lang'].'/common.lang.php') )
     {
-      if ( is_a_guest() or is_generic() )
+      if ( functions_user::is_a_guest() or functions_user::is_generic() )
       {
-        pwg_set_session_var('lang_switch', $_GET['lang']);
+        functions_session::pwg_set_session_var('lang_switch', $_GET['lang']);
       }
       else
       {
@@ -52,7 +57,7 @@ UPDATE '.USER_INFOS_TABLE.'
   SET language = \''.$_GET['lang'].'\'
   WHERE user_id = '.$user['id'].'
 ;';
-        pwg_query($query);
+        functions_mysqli::pwg_query($query);
       }
       
       $user['language'] = $_GET['lang'];
@@ -60,20 +65,20 @@ UPDATE '.USER_INFOS_TABLE.'
 
     if (isset($_GET['redirect_to_home']))
     {
-      redirect(get_absolute_root_url());
+      functions::redirect(functions_url::get_absolute_root_url());
     }
   }
-  elseif ( (is_a_guest() or is_generic()) )
+  elseif ( (functions_user::is_a_guest() or functions_user::is_generic()) )
   {
-    $user['language'] = pwg_get_session_var('lang_switch', $user['language']);
+    $user['language'] = functions_session::pwg_get_session_var('lang_switch', $user['language']);
   }
   
   // Reload language only if it isn't the same one
   if ( $same !== $user['language'] )
   {
-    load_language('common.lang', '', array('language'=>$user['language']));
+    functions::load_language('common.lang', '', array('language'=>$user['language']));
     
-    load_language(
+    functions::load_language(
       'lang',
       PHPWG_ROOT_PATH.PWG_LOCAL_DIR,
       array(
@@ -86,7 +91,7 @@ UPDATE '.USER_INFOS_TABLE.'
     if ( defined('IN_ADMIN') and IN_ADMIN )
     {
       // Never currently
-      load_language('admin.lang', '', array('language'=>$user['language']));
+      functions::load_language('admin.lang', '', array('language'=>$user['language']));
     }
   }
 }
@@ -95,22 +100,22 @@ function language_controler_flags()
 {
   global $user, $template, $conf, $page;
   
-  $available_lang = get_languages();
+  $available_lang = functions::get_languages();
   
   if (isset($conf['no_flag_languages']))
   {
     $available_lang = array_diff_key($available_lang, array_flip($conf['no_flag_languages']));
   }
   
-  $url_starting = get_query_string_diff(array('lang'));
+  $url_starting = functions_url::get_query_string_diff(array('lang'));
   
   if (isset($page['section']) and $page['section'] == 'additional_page' and isset($page['additional_page']))
   {
-    $base_url = make_index_url(array('section'=>'page')).'/'.(isset($page['additional_page']['permalink']) ? $page['additional_page']['permalink'] : $page['additional_page']['id']);
+    $base_url = functions_url::make_index_url(array('section'=>'page')).'/'.(isset($page['additional_page']['permalink']) ? $page['additional_page']['permalink'] : $page['additional_page']['id']);
   }
   else
   {
-    $base_url = duplicate_index_url();
+    $base_url = functions_url::duplicate_index_url();
   }
 
   // Bootstrap Darkroom does not consider index?/categories as the homepage, thus doesn't display
@@ -125,7 +130,7 @@ function language_controler_flags()
   foreach ($available_lang as $code => $displayname)
   {
     $qlc = array (
-      'url' => add_url_params($base_url, array_merge($url_options, array('lang'=> $code))),
+      'url' => functions_url::add_url_params($base_url, array_merge($url_options, array('lang'=> $code))),
       'alt' => ucwords($displayname),
       'title' => substr($displayname, 0, -4), // remove [FR] or [RU]
       'code' => $code,

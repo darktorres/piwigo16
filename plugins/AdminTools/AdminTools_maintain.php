@@ -2,6 +2,7 @@
 
 namespace Piwigo\plugins\AdminTools;
 
+use Piwigo\inc\functions;
 use Piwigo\inc\PluginMaintain;
 
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
@@ -20,7 +21,7 @@ class AdminTools_maintain extends PluginMaintain
 
     if (empty($conf['AdminTools']))
     {
-      conf_update_param('AdminTools', $this->default_conf, true);
+      functions::conf_update_param('AdminTools', $this->default_conf, true);
     }
   }
 
@@ -31,6 +32,6 @@ class AdminTools_maintain extends PluginMaintain
 
   function uninstall()
   {
-    conf_delete_param('AdminTools');
+    functions::conf_delete_param('AdminTools');
   }
 }

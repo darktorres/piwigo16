@@ -6,23 +6,29 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_category;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
+
 if( !defined("PHPWG_ROOT_PATH") )
 {
   die ("Hacking attempt!");
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 if (!empty($_POST))
 {
-  check_pwg_token();
-  check_input_parameter('cat_true', $_POST, true, PATTERN_ID);
-  check_input_parameter('cat_false', $_POST, true, PATTERN_ID);
+  functions::check_pwg_token();
+  functions::check_input_parameter('cat_true', $_POST, true, PATTERN_ID);
+  functions::check_input_parameter('cat_false', $_POST, true, PATTERN_ID);
 }
 
 // +-----------------------------------------------------------------------+
@@ -31,10 +37,10 @@ if (!empty($_POST))
 
 if (!isset($_GET['group_id']))
 {
-  fatal_error('group_id URL parameter is missing');
+  functions_html::fatal_error('group_id URL parameter is missing');
 }
 
-check_input_parameter('group_id', $_GET, false, PATTERN_ID);
+functions::check_input_parameter('group_id', $_GET, false, PATTERN_ID);
 
 $page['group'] = $_GET['group_id'];
 
@@ -48,20 +54,20 @@ if (isset($_POST['falsify'])
 {
   // if you forbid access to a category, all sub-categories become
   // automatically forbidden
-  $subcats = get_subcat_ids($_POST['cat_true']);
+  $subcats = functions_category::get_subcat_ids($_POST['cat_true']);
   $query = '
 DELETE
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE group_id = '.$page['group'].'
   AND cat_id IN ('.implode(',', $subcats).')
 ;';
-  pwg_query($query);
+  functions_mysqli::pwg_query($query);
 }
 else if (isset($_POST['trueify'])
          and isset($_POST['cat_false'])
          and count($_POST['cat_false']) > 0)
 {
-  $uppercats = get_uppercat_ids($_POST['cat_false']);
+  $uppercats = functions_admin::get_uppercat_ids($_POST['cat_false']);
   $private_uppercats = array();
 
   $query = '
@@ -70,8 +76,8 @@ SELECT id
   WHERE id IN ('.implode(',', $uppercats).')
   AND status = \'private\'
 ;';
-  $result = pwg_query($query);
-  while ($row = pwg_db_fetch_assoc($result))
+  $result = functions_mysqli::pwg_query($query);
+  while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
   {
     $private_uppercats[] = $row['id'];
   }
@@ -86,9 +92,9 @@ SELECT cat_id
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE group_id = '.$page['group'].'
 ;';
-  $result = pwg_query($query);
+  $result = functions_mysqli::pwg_query($query);
 
-  while ($row = pwg_db_fetch_assoc($result))
+  while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
   {
     $authorized_ids[] = $row['cat_id'];
   }
@@ -103,8 +109,8 @@ SELECT cat_id
       );
   }
 
-  mass_inserts(GROUP_ACCESS_TABLE, array('group_id','cat_id'), $inserts);
-  invalidate_user_cache();
+  functions_mysqli::mass_inserts(GROUP_ACCESS_TABLE, array('group_id','cat_id'), $inserts);
+  functions_admin::invalidate_user_cache();
 }
 
 // +-----------------------------------------------------------------------+
@@ -121,15 +127,15 @@ $template->set_filenames(
 $template->assign(
   array(
     'TITLE' =>
-      l10n(
+      functions::l10n(
         'Manage permissions for group "%s"',
-        get_groupname($page['group'])
+        functions_admin::get_groupname($page['group'])
         ),
-    'L_CAT_OPTIONS_TRUE'=>l10n('Authorized'),
-    'L_CAT_OPTIONS_FALSE'=>l10n('Forbidden'),
+    'L_CAT_OPTIONS_TRUE'=>functions::l10n('Authorized'),
+    'L_CAT_OPTIONS_FALSE'=>functions::l10n('Forbidden'),
 
     'F_ACTION' =>
-        get_root_url().
+        functions_url::get_root_url().
         'admin.php?page=group_perm&amp;group_id='.
         $page['group']
     )
@@ -142,11 +148,11 @@ SELECT id,name,uppercats,global_rank
   WHERE status = \'private\'
     AND group_id = '.$page['group'].'
 ;';
-display_select_cat_wrapper($query_true,array(),'category_option_true');
+functions_category::display_select_cat_wrapper($query_true,array(),'category_option_true');
 
-$result = pwg_query($query_true);
+$result = functions_mysqli::pwg_query($query_true);
 $authorized_ids = array();
-while ($row = pwg_db_fetch_assoc($result))
+while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   $authorized_ids[] = $row['id'];
 }
@@ -162,9 +168,9 @@ if (count($authorized_ids) > 0)
 }
 $query_false.= '
 ;';
-display_select_cat_wrapper($query_false,array(),'category_option_false');
+functions_category::display_select_cat_wrapper($query_false,array(),'category_option_false');
 
-$template->assign('PWG_TOKEN', get_pwg_token());
+$template->assign('PWG_TOKEN', functions::get_pwg_token());
 
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |

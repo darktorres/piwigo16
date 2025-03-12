@@ -54,7 +54,7 @@ final class DerivativeImage
    */
   static function thumb_url($infos)
   {
-    return self::url(IMG_THUMB, $infos);
+    return self::url(derivative_std_params::IMG_THUMB, $infos);
   }
 
   /**
@@ -74,9 +74,9 @@ final class DerivativeImage
     {
       return $src_image->get_url();
     }
-    return embellish_url(
-        trigger_change('get_derivative_url',
-          get_root_url().$rel_url,
+    return functions_url::embellish_url(
+        functions_plugins::trigger_change('get_derivative_url',
+          functions_url::get_root_url().$rel_url,
           $params, $src_image, $rel_url
           ) );
   }
@@ -180,7 +180,7 @@ final class DerivativeImage
     $tokens=array();
     $tokens[] = substr($params->type,0,2);
 
-    if ($params->type==IMG_CUSTOM)
+    if ($params->type==derivative_std_params::IMG_CUSTOM)
     {
       $params->add_url_tokens($tokens);
     }
@@ -244,9 +244,9 @@ final class DerivativeImage
     {
       return $this->src_image->get_url();
     }
-    return embellish_url(
-        trigger_change('get_derivative_url',
-          get_root_url().$this->rel_url,
+    return functions_url::embellish_url(
+        functions_plugins::trigger_change('get_derivative_url',
+          functions_url::get_root_url().$this->rel_url,
           $this->params, $this->src_image, $this->rel_url
           ) );
   }

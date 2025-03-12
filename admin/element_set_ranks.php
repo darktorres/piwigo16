@@ -6,7 +6,15 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_category;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\SrcImage;
 
@@ -20,12 +28,10 @@ if (!defined('PHPWG_ROOT_PATH'))
   die('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 if (!isset($_GET['cat_id']) or !is_numeric($_GET['cat_id']))
 {
@@ -47,12 +53,12 @@ if (isset($_POST['submit']))
   {
     asort($_POST['rank_of_image'], SORT_NUMERIC);
 
-    save_images_order(
+    functions_admin::save_images_order(
       $page['category_id'],
       array_keys($_POST['rank_of_image'])
       );
 
-    $page['infos'][] = l10n('Images manual order was saved');
+    $page['infos'][] = functions::l10n('Images manual order was saved');
   }
 
   if (!empty($_POST['image_order_choice'])
@@ -81,20 +87,20 @@ if (isset($_POST['submit']))
 UPDATE '.CATEGORIES_TABLE.' 
   SET image_order = '.(isset($image_order) ? '\''.$image_order.'\'' : 'NULL').'
   WHERE id='.$page['category_id'];
-  pwg_query($query);
+  functions_mysqli::pwg_query($query);
 
   if (isset($_POST['image_order_subcats']))
   {
-    $cat_info = get_cat_info($page['category_id']);
+    $cat_info = functions_category::get_cat_info($page['category_id']);
 
     $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET image_order = '.(isset($image_order) ? '\''.$image_order.'\'' : 'NULL').'
   WHERE uppercats LIKE \''.$cat_info['uppercats'].',%\'';
-    pwg_query($query);
+    functions_mysqli::pwg_query($query);
   }
 
-  $page['infos'][] = l10n('Your configuration settings are saved');
+  $page['infos'][] = functions::l10n('Your configuration settings are saved');
 }
 
 // +-----------------------------------------------------------------------+
@@ -104,14 +110,14 @@ $template->set_filenames(
   array('element_set_ranks' => 'element_set_ranks.tpl')
   );
 
-$base_url = get_root_url().'admin.php';
+$base_url = functions_url::get_root_url().'admin.php';
 
 $query = '
 SELECT *
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$page['category_id'].'
 ;';
-$category = pwg_db_fetch_assoc(pwg_query($query));
+$category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
 if ($category['image_order']=='rank ASC' or $category['image_order']=='`rank` ASC')
 {
@@ -123,15 +129,15 @@ elseif ($category['image_order']!='')
 }
 
 // Navigation path
-$navigation = get_cat_display_name_cache(
+$navigation = functions_html::get_cat_display_name_cache(
   $category['uppercats'],
-  get_root_url().'admin.php?page=album-'
+  functions_url::get_root_url().'admin.php?page=album-'
   );
 
 $template->assign(
   array(
     'CATEGORIES_NAV' => preg_replace("# {2,}#"," ",preg_replace("#(\r\n|\n\r|\n|\r)#"," ",$navigation)),
-    'F_ACTION' => $base_url.get_query_string_diff(array()),
+    'F_ACTION' => $base_url.functions_url::get_query_string_diff(array()),
    )
  );
 
@@ -153,13 +159,13 @@ SELECT
   WHERE category_id = '.$page['category_id'].'
   ORDER BY `rank`
 ;';
-$result = pwg_query($query);
-if (pwg_db_num_rows($result) > 0)
+$result = functions_mysqli::pwg_query($query);
+if (functions_mysqli::pwg_db_num_rows($result) > 0)
 {
 	// template thumbnail initialization
 	$current_rank = 1;
-  $derivativeParams = ImageStdParams::get_by_type(IMG_SQUARE);
-	while ($row = pwg_db_fetch_assoc($result))
+  $derivativeParams = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE);
+	while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 	{
     $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
 
@@ -169,7 +175,7 @@ if (pwg_db_num_rows($result) > 0)
 		}
 		else
 		{
-			$file_wo_ext = get_filename_wo_extension($row['file']);
+			$file_wo_ext = functions::get_filename_wo_extension($row['file']);
 			$thumbnail_name = str_replace('_', ' ', $file_wo_ext);
 		}
 		$current_rank++;
@@ -188,21 +194,21 @@ if (pwg_db_num_rows($result) > 0)
 // image order management
 $sort_fields = array(
   ''                    => '',
-  'file ASC'            => l10n('File name, A &rarr; Z'),
-  'file DESC'           => l10n('File name, Z &rarr; A'),
-  'name ASC'            => l10n('Photo title, A &rarr; Z'),
-  'name DESC'           => l10n('Photo title, Z &rarr; A'),
-  'date_creation DESC'  => l10n('Date created, new &rarr; old'),
-  'date_creation ASC'   => l10n('Date created, old &rarr; new'),
-  'date_available DESC' => l10n('Date posted, new &rarr; old'),
-  'date_available ASC'  => l10n('Date posted, old &rarr; new'),
-  'rating_score DESC'   => l10n('Rating score, high &rarr; low'),
-  'rating_score ASC'    => l10n('Rating score, low &rarr; high'),
-  'hit DESC'            => l10n('Visits, high &rarr; low'),
-  'hit ASC'             => l10n('Visits, low &rarr; high'),
-  'id ASC'              => l10n('Numeric identifier, 1 &rarr; 9'),
-  'id DESC'             => l10n('Numeric identifier, 9 &rarr; 1'),
-  'rank ASC'            => l10n('Manual sort order'),
+  'file ASC'            => functions::l10n('File name, A &rarr; Z'),
+  'file DESC'           => functions::l10n('File name, Z &rarr; A'),
+  'name ASC'            => functions::l10n('Photo title, A &rarr; Z'),
+  'name DESC'           => functions::l10n('Photo title, Z &rarr; A'),
+  'date_creation DESC'  => functions::l10n('Date created, new &rarr; old'),
+  'date_creation ASC'   => functions::l10n('Date created, old &rarr; new'),
+  'date_available DESC' => functions::l10n('Date posted, new &rarr; old'),
+  'date_available ASC'  => functions::l10n('Date posted, old &rarr; new'),
+  'rating_score DESC'   => functions::l10n('Rating score, high &rarr; low'),
+  'rating_score ASC'    => functions::l10n('Rating score, low &rarr; high'),
+  'hit DESC'            => functions::l10n('Visits, high &rarr; low'),
+  'hit ASC'             => functions::l10n('Visits, low &rarr; high'),
+  'id ASC'              => functions::l10n('Numeric identifier, 1 &rarr; 9'),
+  'id DESC'             => functions::l10n('Numeric identifier, 9 &rarr; 1'),
+  'rank ASC'            => functions::l10n('Manual sort order'),
   );
 
 $template->assign('image_order_options', $sort_fields);

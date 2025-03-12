@@ -7,13 +7,15 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
 
 if( !defined("PHPWG_ROOT_PATH") )
 {
   die ("Hacking attempt!");
 }
 
-$my_base_url = get_root_url().'admin.php?page=plugins';
+$my_base_url = functions_url::get_root_url().'admin.php?page=plugins';
 
 if (isset($_GET['tab']))
   $page['tab'] = $_GET['tab'];
@@ -27,7 +29,7 @@ $tabsheet->assign();
 
 if ($page['tab'] == 'update') {
   include(PHPWG_ROOT_PATH.'admin/updates_ext.php');
-  $template->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));
+  $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Plugins'));
 }
 else
 {

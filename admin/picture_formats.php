@@ -6,7 +6,12 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 
 if(!defined("PHPWG_ROOT_PATH"))
@@ -17,16 +22,16 @@ if(!defined("PHPWG_ROOT_PATH"))
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+functions::check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
 $query='
 SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id = '. $_GET['image_id'] .'
 ;';
-$images = query2array($query);
+$images = functions_mysqli::query2array($query);
 $image = $images[0];
 
 $query = '
@@ -36,7 +41,7 @@ SELECT
   WHERE image_id = '.$_GET['image_id'].'
 ;';
 
-$formats = query2array($query);
+$formats = functions_mysqli::query2array($query);
 
 foreach ($formats as &$format)
 {
@@ -54,10 +59,10 @@ foreach ($formats as &$format)
 }
 
 $template->assign(array(
-  'ADD_FORMATS_URL' => get_root_url().'admin.php?page=photos_add&formats='.$_GET['image_id'],
-  'IMG_SQUARE_SRC' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
+  'ADD_FORMATS_URL' => functions_url::get_root_url().'admin.php?page=photos_add&formats='.$_GET['image_id'],
+  'IMG_SQUARE_SRC' => DerivativeImage::url(ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE), $image),
   'FORMATS' => $formats,
-  'PWG_TOKEN' => get_pwg_token(),
+  'PWG_TOKEN' => functions::get_pwg_token(),
 ));
 
 $template->set_filename('picture_formats', 'picture_formats.tpl');

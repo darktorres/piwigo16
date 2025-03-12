@@ -34,9 +34,9 @@ class QNumericRangeScope extends QSearchScope
       $range = array('', substr($str,1));
       $strict[1] = 1;
     }
-    elseif( ($token->modifier & QST_WILDCARD_BEGIN) )
+    elseif( ($token->modifier & functions_search::QST_WILDCARD_BEGIN) )
       $range = array('', $str);
-    elseif( ($token->modifier & QST_WILDCARD_END) )
+    elseif( ($token->modifier & functions_search::QST_WILDCARD_END) )
       $range = array($str, '');
     else
     {
@@ -100,7 +100,7 @@ class QNumericRangeScope extends QSearchScope
 
     if (empty($clauses))
     {
-      if ($token->modifier & QST_WILDCARD)
+      if ($token->modifier & functions_search::QST_WILDCARD)
         return $field.' IS NOT NULL';
       else
         return $field.' IS NULL';

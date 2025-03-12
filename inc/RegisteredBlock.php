@@ -9,11 +9,6 @@
 namespace Piwigo\inc;
 
 /**
- * @package functions\menubar
- */
-
-
-/**
  * Represents a menu block registered in a BlockManager object.
  */
 class RegisteredBlock

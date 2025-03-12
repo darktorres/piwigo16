@@ -10,6 +10,10 @@
 // |                           initialization                              |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_user;
+
 define('PHPWG_ROOT_PATH', '../');
 define('PWG_HELP', true);
 define('IN_ADMIN', true);
@@ -18,13 +22,13 @@ include_once( PHPWG_ROOT_PATH.'inc/common.php' );
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 if (!isset($_GET['output']) or 'content_only' != $_GET['output'])
 {
   // Note on 2023-09-28 : calling popuphelp.php without output=content_only no longer occurs in Piwigo core. 
   $page['body_id'] = 'thePopuphelpPage';
-  $title = l10n('Piwigo Help');
+  $title = functions::l10n('Piwigo Help');
   $page['page_banner'] = '<h1>'.$title.'</h1>';
   $page['meta_robots']=array('noindex'=>1, 'nofollow'=>1);
 
@@ -48,7 +52,7 @@ if
     and preg_match('/^[a-z_]*$/', $_GET['page'])
   )
 {
-  $help_content = load_language(
+  $help_content = functions::load_language(
     'help/'.$_GET['page'].'.html',
     '',
     array(
@@ -62,7 +66,7 @@ if
     $help_content = '';
   }
 
-  $help_content = trigger_change('get_popup_help_content', $help_content, $_GET['page']);
+  $help_content = functions_plugins::trigger_change('get_popup_help_content', $help_content, $_GET['page']);
 }
 else
 {

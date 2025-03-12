@@ -21,94 +21,101 @@
 // | USA.                                                                  |
 // +-----------------------------------------------------------------------+
 
-/**
- * returns $code if php syntax is correct
- * else return false
- *
- * @param string php code
- */
-function eval_syntax($code)
-{
-  $code = str_replace(array('<?php', '?>'), '', $code);
-  if (function_exists('token_get_all'))
-  {
-    $b = 0;
-    foreach (token_get_all($code) as $token)
-    {
-      if ('{' == $token) ++$b;
-      else if ('}' == $token) --$b;
-    }
-    if ($b) return false;
-    else
-    {
-      ob_start();
-      $eval = eval('if(0){' . $code . '}');
-      ob_end_clean();
-      if ($eval === false) return false;
-    }
-  }
-  return '<?php' . $code . '?>';
-}
+namespace Piwigo\plugins\LocalFilesEditor\inc;
 
-/**
- * returns true or false if $str is bool
-  * returns $str if $str is integer
- * else "$str"
- *
- * @param string
- */
-function editarea_quote($value)
-{
-  switch (gettype($value))
-  {
-    case "boolean":
-      return $value ? 'true' : 'false';
-    case "integer":
-      return $value;
-    default:
-      return '"'.$value.'"';
-  }
-}
+use Piwigo\inc\functions;
 
-/**
- * returns bak file for restore
- * @param string
- */
-function get_bak_file($file)
+class functions_LocalFilesEditor
 {
-  if (get_extension($file) == 'php')
+  /**
+   * returns $code if php syntax is correct
+   * else return false
+   *
+   * @param string php code
+   */
+  static function eval_syntax($code)
   {
-    return substr_replace($file, '.bak', strrpos($file , '.'), 0);
-  }
-  else
-  {
-    return $file . '.bak';
-  }
-}
-
-/**
- * returns dirs and subdirs
- * retun array
- * @param string
- */
-function get_rec_dirs($path='')
-{
-  $options = array();
-  if (is_dir($path))
-  {
-    $fh = opendir($path);
-    while ($file = readdir($fh))
+    $code = str_replace(array('<?php', '?>'), '', $code);
+    if (function_exists('token_get_all'))
     {
-      $pathfile = $path . '/' . $file;
-      if ($file != '.' and $file != '..' and $file != '.svn' and is_dir($pathfile))
+      $b = 0;
+      foreach (token_get_all($code) as $token)
       {
-        $options[$pathfile] = str_replace(array('./', '/'), array('', ' / '), $pathfile);
-        $options = array_merge($options, get_rec_dirs($pathfile));
+        if ('{' == $token) ++$b;
+        else if ('}' == $token) --$b;
+      }
+      if ($b) return false;
+      else
+      {
+        ob_start();
+        $eval = eval('if(0){' . $code . '}');
+        ob_end_clean();
+        if ($eval === false) return false;
       }
     }
-    closedir($fh);
+    return '<?php' . $code . '?>';
   }
-  return $options;
+
+  /**
+   * returns true or false if $str is bool
+    * returns $str if $str is integer
+  * else "$str"
+  *
+  * @param string
+  */
+  static function editarea_quote($value)
+  {
+    switch (gettype($value))
+    {
+      case "boolean":
+        return $value ? 'true' : 'false';
+      case "integer":
+        return $value;
+      default:
+        return '"'.$value.'"';
+    }
+  }
+
+  /**
+   * returns bak file for restore
+   * @param string
+   */
+  static function get_bak_file($file)
+  {
+    if (functions::get_extension($file) == 'php')
+    {
+      return substr_replace($file, '.bak', strrpos($file , '.'), 0);
+    }
+    else
+    {
+      return $file . '.bak';
+    }
+  }
+
+  /**
+   * returns dirs and subdirs
+   * retun array
+   * @param string
+   */
+  static function get_rec_dirs($path='')
+  {
+    $options = array();
+    if (is_dir($path))
+    {
+      $fh = opendir($path);
+      while ($file = readdir($fh))
+      {
+        $pathfile = $path . '/' . $file;
+        if ($file != '.' and $file != '..' and $file != '.svn' and is_dir($pathfile))
+        {
+          $options[$pathfile] = str_replace(array('./', '/'), array('', ' / '), $pathfile);
+          $options = array_merge($options, self::get_rec_dirs($pathfile));
+        }
+      }
+      closedir($fh);
+    }
+    return $options;
+  }
 }
 
 ?>

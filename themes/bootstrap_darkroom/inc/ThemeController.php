@@ -1,6 +1,12 @@
 <?php
 namespace Piwigo\themes\bootstrap_darkroom\inc;
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\SrcImage;
 
@@ -12,33 +18,33 @@ class ThemeController {
     }
 
     public function init() {
-        load_language('theme.lang', PHPWG_THEMES_PATH.'bootstrap_darkroom/');
-        load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, array('no_fallback'=>true, 'local'=>true) );
+        functions::load_language('theme.lang', PHPWG_THEMES_PATH.'bootstrap_darkroom/');
+        functions::load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, array('no_fallback'=>true, 'local'=>true) );
 
-        add_event_handler('init', $this->assignConfig(...));
-        add_event_handler('init', $this->setInitValues(...));
+        functions_plugins::add_event_handler('init', $this->assignConfig(...));
+        functions_plugins::add_event_handler('init', $this->setInitValues(...));
 
         if ($this->config->bootstrap_theme === 'darkroom' || $this->config->bootstrap_theme === 'material' || $this->config->bootstrap_theme === 'bootswatch') {
           $this->config->bootstrap_theme = 'bootstrap-darkroom';
           $this->config->save();
-          add_event_handler('loc_begin_page_header', $this->showUpgradeWarning(...));
+          functions_plugins::add_event_handler('loc_begin_page_header', $this->showUpgradeWarning(...));
         }
 
         $shortname = $this->config->comments_disqus_shortname;                                                                                                                 
         if ($this->config->comments_type == 'disqus' && !empty($shortname)) {                                                                                                  
-            add_event_handler('blockmanager_apply', $this->hideMenus(...));                                                                                                
+            functions_plugins::add_event_handler('blockmanager_apply', $this->hideMenus(...));
         }
 
-        add_event_handler('loc_begin_page_header', $this->checkIfHomepage(...));
-        add_event_handler('loc_after_page_header', $this->stripBreadcrumbs(...));
-        add_event_handler('format_exif_data', $this->exifReplacements(...));
-        add_event_handler('loc_end_picture', $this->registerPictureTemplates(...), 1000);
-        add_event_handler('loc_begin_index_thumbnails', $this->returnPageStart(...));
+        functions_plugins::add_event_handler('loc_begin_page_header', $this->checkIfHomepage(...));
+        functions_plugins::add_event_handler('loc_after_page_header', $this->stripBreadcrumbs(...));
+        functions_plugins::add_event_handler('format_exif_data', $this->exifReplacements(...));
+        functions_plugins::add_event_handler('loc_end_picture', $this->registerPictureTemplates(...), 1000);
+        functions_plugins::add_event_handler('loc_begin_index_thumbnails', $this->returnPageStart(...));
 
         if ($this->config->slick_enabled === true || $this->config->photoswipe === true) {
-            add_event_handler('loc_end_picture', $this->getAllThumbnailsInCategory(...));
+            functions_plugins::add_event_handler('loc_end_picture', $this->getAllThumbnailsInCategory(...));
            // also needed on index.tpl for compatibility with GThumb+/GDThumb
-           add_event_handler('loc_end_index', $this->getAllThumbnailsInCategory(...));
+           functions_plugins::add_event_handler('loc_end_index', $this->getAllThumbnailsInCategory(...));
         }
     }
 
@@ -63,7 +69,7 @@ class ThemeController {
 
     public function showUpgradeWarning() {
         global $page;
-        $page['errors'][] = l10n('Your selected color style has been reset to "bootstrap-darkroom". You can select a different color style in the admin section.');
+        $page['errors'][] = functions::l10n('Your selected color style has been reset to "bootstrap-darkroom". You can select a different color style in the admin section.');
     }
 
     public function hideMenus($menus) {
@@ -104,16 +110,16 @@ class ThemeController {
         }
 
         if (isset($pwg_loaded_plugins['language_switch'])) {
-            add_event_handler('loc_end_search', language_controler_flags(...), 95 );
-            add_event_handler('loc_end_identification', language_controler_flags(...), 95 );
-            add_event_handler('loc_end_tags', language_controler_flags(...), 95 );
-            add_event_handler('loc_begin_about', language_controler_flags(...), 95 );
-            add_event_handler('loc_end_register', language_controler_flags(...), 95 );
-            add_event_handler('loc_end_password', language_controler_flags(...), 95 );
+            functions_plugins::add_event_handler('loc_end_search', language_controler_flags(...), 95 );
+            functions_plugins::add_event_handler('loc_end_identification', language_controler_flags(...), 95 );
+            functions_plugins::add_event_handler('loc_end_tags', language_controler_flags(...), 95 );
+            functions_plugins::add_event_handler('loc_begin_about', language_controler_flags(...), 95 );
+            functions_plugins::add_event_handler('loc_end_register', language_controler_flags(...), 95 );
+            functions_plugins::add_event_handler('loc_end_password', language_controler_flags(...), 95 );
         }
 
         if (isset($pwg_loaded_plugins['exif_view'])) {
-            load_language('lang.exif', PHPWG_PLUGINS_PATH.'exif_view/');
+            functions::load_language('lang.exif', PHPWG_PLUGINS_PATH.'exif_view/');
         }
     }
 
@@ -159,7 +165,7 @@ class ThemeController {
             $title = str_replace('<a href', '<a class="nav-breadcrumb-item" href', $title);
             $title = str_replace($l_sep, '', $title);
             if ($page['section'] == 'recent_cats' or $page['section'] == 'favorites') {
-                $title = preg_replace('/<\/a>([a-zA-Z0-9]+)/', '</a><a class="nav-breadcrumb-item" href="' . make_index_url(array('section' => $page['section'])) . '">${1}', $title) . '</a>';
+                $title = preg_replace('/<\/a>([a-zA-Z0-9]+)/', '</a><a class="nav-breadcrumb-item" href="' . functions_url::make_index_url(array('section' => $page['section'])) . '">${1}', $title) . '</a>';
             }
             if (empty($section_title)) {
                 $template->assign('TITLE', $title);
@@ -203,10 +209,10 @@ class ThemeController {
             ORDER BY FIELD(id, '.implode(',', $page['items']).')
             ;';
 
-        $result = pwg_query($query);
+        $result = functions_mysqli::pwg_query($query);
 
         $pictures = array();
-        while ($row = pwg_db_fetch_assoc($result))
+        while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
         {
             $pictures[] = $row;
         }
@@ -217,7 +223,7 @@ class ThemeController {
 
         foreach ($pictures as $row)
         {
-            $url = duplicate_picture_url(
+            $url = functions_url::duplicate_picture_url(
                 array(
                     'image_id' => $row['id'],
                     'image_file' => $row['file'],
@@ -225,8 +231,8 @@ class ThemeController {
                 array('start')
             );
 
-            $name = render_element_name($row);
-            $desc = render_element_description($row, 'main_page_element_description');
+            $name = functions_html::render_element_name($row);
+            $desc = functions_html::render_element_description($row, 'main_page_element_description');
 
             $tpl_var = array_merge($row, array(
                 'NAME' => $name,
@@ -237,8 +243,8 @@ class ThemeController {
                 'SIZE' => $row['width'].'x'.$row['height'],
                 'PATH' => $row['path'],
                 'DATE_CREATED' => $row['date_creation'],
-                'file_ext' => strtolower(get_extension($row['file'])),
-                'path_ext' => strtolower(get_extension($row['path'])),
+                'file_ext' => strtolower(functions::get_extension($row['file'])),
+                'path_ext' => strtolower(functions::get_extension($row['path'])),
             ));
 
             $tpl_thumbnails_var[] = $tpl_var;
@@ -247,10 +253,10 @@ class ThemeController {
         $template->assign('thumbnails', $tpl_thumbnails_var);
 
         $template->assign(array(
-            'derivative_params_square' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( IMG_SQUARE ) ),
-            'derivative_params_medium' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( IMG_MEDIUM ) ),
-            'derivative_params_large' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( IMG_LARGE ) ),
-            'derivative_params_xxlarge' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( IMG_XXLARGE ) ),
+            'derivative_params_square' => functions_plugins::trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( derivative_std_params::IMG_SQUARE ) ),
+            'derivative_params_medium' => functions_plugins::trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( derivative_std_params::IMG_MEDIUM ) ),
+            'derivative_params_large' => functions_plugins::trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( derivative_std_params::IMG_LARGE ) ),
+            'derivative_params_xxlarge' => functions_plugins::trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( derivative_std_params::IMG_XXLARGE ) ),
         ));
 
         unset($tpl_thumbnails_var, $pictures);

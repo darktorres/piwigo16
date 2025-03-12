@@ -8,6 +8,8 @@
 
 namespace Piwigo\admin\inc;
 
+use Piwigo\inc\functions_plugins;
+
 class tabsheet
 {
   var $sheets;
@@ -75,7 +77,7 @@ class tabsheet
   */
   function select($name)
   {
-    $this->sheets = trigger_change('tabsheet_before_select', $this->sheets, $this->uniqid);
+    $this->sheets = functions_plugins::trigger_change('tabsheet_before_select', $this->sheets, $this->uniqid);
     if (!array_key_exists($name, $this->sheets))
     {
       $keys = array_keys($this->sheets);

@@ -9,14 +9,18 @@
 //
 // Start output of page
 //
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+
 $template->set_filenames(array('header'=>'header.tpl'));
 
-trigger_notify('loc_begin_page_header');
+functions_plugins::trigger_notify('loc_begin_page_header');
 
-$show_mobile_app_banner = conf_get_param('show_mobile_app_banner_in_gallery', false);
+$show_mobile_app_banner = functions::conf_get_param('show_mobile_app_banner_in_gallery', false);
 if (defined('IN_ADMIN') and IN_ADMIN)
 {
-  $show_mobile_app_banner = conf_get_param('show_mobile_app_banner_in_admin', true);
+  $show_mobile_app_banner = functions::conf_get_param('show_mobile_app_banner_in_admin', true);
 }
 
 $template->assign(
@@ -26,7 +30,7 @@ $template->assign(
         $page['gallery_title'] : $conf['gallery_title'],
 
     'PAGE_BANNER' =>
-      trigger_change(
+      functions_plugins::trigger_change(
         'render_page_banner',
         str_replace(
           '%gallery_title%',
@@ -39,10 +43,10 @@ $template->assign(
       isset($page['body_id']) ?
         $page['body_id'] : '',
 
-    'CONTENT_ENCODING' => get_pwg_charset(),
+    'CONTENT_ENCODING' => functions::get_pwg_charset(),
     'PAGE_TITLE' => strip_tags($title),
 
-    'U_HOME' => get_gallery_home_url(),
+    'U_HOME' => functions_url::get_gallery_home_url(),
 
     'LEVEL_SEPARATOR' => $conf['level_separator'],
 
@@ -94,10 +98,10 @@ if ( isset( $refresh ) and intval($refresh) >= 0
       ));
 }
 
-trigger_notify('loc_end_page_header');
+functions_plugins::trigger_notify('loc_end_page_header');
 
-header('Content-Type: text/html; charset='.get_pwg_charset());
+header('Content-Type: text/html; charset='.functions::get_pwg_charset());
 $template->parse('header');
 
-trigger_notify('loc_after_page_header');
+functions_plugins::trigger_notify('loc_after_page_header');
 ?>

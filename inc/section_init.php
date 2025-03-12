@@ -27,6 +27,18 @@
 //   );
 
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_calendar;
+use Piwigo\inc\functions_category;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_search;
+use Piwigo\inc\functions_session;
+use Piwigo\inc\functions_tag;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
+
 $page['items'] = array();
 $page['start'] = $page['startcat'] = 0;
 
@@ -50,7 +62,7 @@ else
   }
 
   // the $_GET keys are not protected in inc/common.php, only the values
-  $rewritten = pwg_db_real_escape_string($rewritten);
+  $rewritten = functions_mysqli::pwg_db_real_escape_string($rewritten);
   $page['root_path'] = PHPWG_ROOT_PATH;
 }
 
@@ -73,7 +85,7 @@ $next_token = 0;
 // |                             picture page                              |
 // +-----------------------------------------------------------------------+
 // the first token must be the identifier for the picture
-if (script_basename() == 'picture')
+if (functions::script_basename() == 'picture')
 {
   $token = $tokens[$next_token];
   $next_token++;
@@ -82,7 +94,7 @@ if (script_basename() == 'picture')
     $page['image_id'] = $token;
     if ($page['image_id']==0)
     {
-      bad_request('invalid picture identifier');
+      functions_html::bad_request('invalid picture identifier');
     }
   }
   else
@@ -105,20 +117,20 @@ if (script_basename() == 'picture')
       }
       else
       {
-        bad_request('picture identifier is missing');
+        functions_html::bad_request('picture identifier is missing');
       }
     }
   }
 }
 
 
-$page = array_merge( $page, parse_section_url( $tokens, $next_token) );
+$page = array_merge( $page, functions_url::parse_section_url( $tokens, $next_token) );
 
 if ( !isset($page['section']) )
 {
   $page['section'] = 'categories';
 
-  switch (script_basename())
+  switch (functions::script_basename())
   {
     case 'picture':
       break;
@@ -137,22 +149,22 @@ if ( !isset($page['section']) )
         }
         if (!empty($random_index_redirect))
         {
-          redirect($random_index_redirect[mt_rand(0, count($random_index_redirect)-1)]);
+          functions::redirect($random_index_redirect[mt_rand(0, count($random_index_redirect)-1)]);
         }
       }
       $page['is_homepage'] = true;
       break;
     }
     default:
-      trigger_error('script_basename "'.script_basename().'" unknown',
+      trigger_error('script_basename "'.functions::script_basename().'" unknown',
         E_USER_WARNING);
   }
 }
 
-$page = array_merge( $page, parse_well_known_params_url( $tokens, $next_token) );
+$page = array_merge( $page, functions_url::parse_well_known_params_url( $tokens, $next_token) );
 
 //access a picture only by id, file or id-file without given section
-if ( script_basename()=='picture' and 'categories'==$page['section'] and
+if ( functions::script_basename()=='picture' and 'categories'==$page['section'] and
       !isset($page['category']) and !isset($page['chronology_field']) )
 {
   $page['flat'] = true;
@@ -170,11 +182,11 @@ if ('categories' == $page['section'] and !isset($page['flat']))
   $conf['order_by'] = $conf['order_by_inside_category'];
 }
 
-if (pwg_get_session_var('image_order',0) > 0)
+if (functions_session::pwg_get_session_var('image_order',0) > 0)
 {
-  $image_order_id = pwg_get_session_var('image_order');
+  $image_order_id = functions_session::pwg_get_session_var('image_order');
 
-  $orders = get_category_preferred_image_orders();
+  $orders = functions_category::get_category_preferred_image_orders();
 
   // the current session stored image_order might be not compatible with
   // current image set, for example if the current image_order is the rank
@@ -192,12 +204,12 @@ if (pwg_get_session_var('image_order',0) > 0)
   }
   else
   {
-    pwg_unset_session_var('image_order');
+    functions_session::pwg_unset_session_var('image_order');
     $page['super_order_by'] = false;
   }
 }
 
-$forbidden = get_sql_condition_FandF(
+$forbidden = functions_user::get_sql_condition_FandF(
       array(
         'forbidden_categories' => 'category_id',
         'visible_categories' => 'category_id',
@@ -213,19 +225,19 @@ if ('categories' == $page['section'])
 {
   if (isset($page['combined_categories']))
   {
-    $page['title'] = get_combined_categories_content_title();
+    $page['title'] = functions_html::get_combined_categories_content_title();
   }
   elseif (isset($page['category']))
   {
     $page = array_merge(
       $page,
       array(
-        'comment' => trigger_change(
+        'comment' => functions_plugins::trigger_change(
             'render_category_description',
             $page['category']['comment'],
             'main_page_category_description'
             ),
-        'title'   => get_cat_display_name($page['category']['upper_names'], '', false),
+        'title'   => functions_html::get_cat_display_name($page['category']['upper_names'], '', false),
         )
       );
   }
@@ -243,7 +255,7 @@ if ('categories' == $page['section'])
       $cat_ids[] = $category['id'];
     }
 
-    $page['items'] = get_image_ids_for_categories($cat_ids);
+    $page['items'] = functions_category::get_image_ids_for_categories($cat_ids);
   }
   elseif
     (
@@ -271,7 +283,7 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE
     uppercats LIKE \''.$page['category']['uppercats'].',%\' '
-    .get_sql_condition_FandF(
+    .functions_user::get_sql_condition_FandF(
         array(
           'forbidden_categories' => 'id',
           'visible_categories' => 'id',
@@ -279,11 +291,11 @@ SELECT id
         "\n  AND"
         );
 
-        $subcat_ids = query2array($query,null, 'id');
+        $subcat_ids = functions_mysqli::query2array($query,null, 'id');
         $subcat_ids[] = $page['category']['id'];
         $where_sql = 'category_id IN ('.implode(',',$subcat_ids).')';
         // remove categories from forbidden because just checked above
-        $forbidden = get_sql_condition_FandF(
+        $forbidden = functions_user::get_sql_condition_FandF(
               array( 'visible_images' => 'id' ),
               'AND'
           );
@@ -314,7 +326,7 @@ SELECT DISTINCT(image_id)
   '.$conf['order_by'].'
 ;';
 
-      $page['items'] = query2array($query,null, 'image_id');
+      $page['items'] = functions_mysqli::query2array($query,null, 'image_id');
       
       if ( isset($cache_key) )
         $persistent_cache->set($cache_key, $page['items']);
@@ -335,7 +347,7 @@ else
       $page['tag_ids'][] = $tag['id'];
     }
 
-    $items = get_image_ids_for_tags($page['tag_ids']);
+    $items = functions_tag::get_image_ids_for_tags($page['tag_ids']);
 
     if (count($items) == 0)
     {
@@ -343,13 +355,13 @@ else
         'attempt to see the name of the tag #'.implode(', #', $page['tag_ids'])
         .' from the address : '.$_SERVER['REMOTE_ADDR']
       );
-      access_denied();
+      functions_html::access_denied();
     }
 
     $page = array_merge(
       $page,
       array(
-        'title' => get_tags_content_title(),
+        'title' => functions_html::get_tags_content_title(),
         'items' => $items,
         )
       );
@@ -359,9 +371,7 @@ else
 // +-----------------------------------------------------------------------+
   else if ($page['section'] == 'search')
   {
-    include_once( PHPWG_ROOT_PATH .'inc/functions_search.php' );
-
-    $search_result = get_search_results($page['search'], @$page['super_order_by'] );
+    $search_result = functions_search::get_search_results($page['search'], @$page['super_order_by'] );
 
     //save the details of the query search
     if ( isset($search_result['qs']) )
@@ -377,8 +387,8 @@ else
       $page,
       array(
         'items' => $search_result['items'],
-        'title' => '<a href="'.duplicate_index_url(array('start'=>0)).'">'
-                    .l10n('Search results').'</a>',
+        'title' => '<a href="'.functions_url::duplicate_index_url(array('start'=>0)).'">'
+                    .functions::l10n('Search results').'</a>',
         )
       );
   }
@@ -387,13 +397,13 @@ else
 // +-----------------------------------------------------------------------+
   else if ($page['section'] == 'favorites')
   {
-    check_user_favorites();
+    functions_user::check_user_favorites();
 
     $page = array_merge(
       $page,
       array(
-        'title' => '<a href="'.duplicate_index_url(array('start'=>0)).'">'
-                    .l10n('Favorites').'</a>'
+        'title' => '<a href="'.functions_url::duplicate_index_url(array('start'=>0)).'">'
+                    .functions::l10n('Favorites').'</a>'
       )
     );
 
@@ -403,8 +413,8 @@ else
 DELETE FROM '.FAVORITES_TABLE.'
   WHERE user_id = '.$user['id'].'
 ;';
-      pwg_query($query);
-      redirect(make_index_url( array('section'=>'favorites') ));
+      functions_mysqli::pwg_query($query);
+      functions::redirect(functions_url::make_index_url( array('section'=>'favorites') ));
     }
     else
     {
@@ -413,7 +423,7 @@ SELECT image_id
   FROM '.FAVORITES_TABLE.'
     INNER JOIN '.IMAGES_TABLE.' ON image_id = id
   WHERE user_id = '.$user['id'].'
-'.get_sql_condition_FandF(
+'.functions_user::get_sql_condition_FandF(
       array(
         'visible_images' => 'id'
         ),
@@ -424,7 +434,7 @@ SELECT image_id
       $page = array_merge(
         $page,
         array(
-          'items' => query2array($query,null, 'image_id'),
+          'items' => functions_mysqli::query2array($query,null, 'image_id'),
           )
         );
 
@@ -433,8 +443,8 @@ SELECT image_id
         $template->assign(
             'favorite',
             array(
-              'U_FAVORITE' => add_url_params(
-                  make_index_url( array('section'=>'favorites') ),
+              'U_FAVORITE' => functions_url::add_url_params(
+                  functions_url::make_index_url( array('section'=>'favorites') ),
                   array('action'=>'remove_all_from_favorites')
                   ),
               )
@@ -461,7 +471,7 @@ SELECT DISTINCT(id)
   FROM '.IMAGES_TABLE.'
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id = ic.image_id
   WHERE '
-  .get_recent_photos_sql('date_available').'
+  .functions_user::get_recent_photos_sql('date_available').'
   '.$forbidden
   .$conf['order_by'].'
 ;';
@@ -469,9 +479,9 @@ SELECT DISTINCT(id)
     $page = array_merge(
       $page,
       array(
-        'title' => '<a href="'.duplicate_index_url(array('start'=>0)).'">'
-                    .l10n('Recent photos').'</a>',
-        'items' => query2array($query,null, 'id'),
+        'title' => '<a href="'.functions_url::duplicate_index_url(array('start'=>0)).'">'
+                    .functions::l10n('Recent photos').'</a>',
+        'items' => functions_mysqli::query2array($query,null, 'id'),
         )
       );
   }
@@ -483,8 +493,8 @@ SELECT DISTINCT(id)
     $page = array_merge(
       $page,
       array(
-        'title' => '<a href="'.duplicate_index_url(array('start'=>0)).'">'
-                    .l10n('Recent albums').'</a>'
+        'title' => '<a href="'.functions_url::duplicate_index_url(array('start'=>0)).'">'
+                    .functions::l10n('Recent albums').'</a>'
         )
       );
   }
@@ -509,9 +519,9 @@ SELECT DISTINCT(id)
     $page = array_merge(
       $page,
       array(
-        'title' => '<a href="'.duplicate_index_url(array('start'=>0)).'">'
-                    .$conf['top_number'].' '.l10n('Most visited').'</a>',
-        'items' => query2array($query,null, 'id'),
+        'title' => '<a href="'.functions_url::duplicate_index_url(array('start'=>0)).'">'
+                    .$conf['top_number'].' '.functions::l10n('Most visited').'</a>',
+        'items' => functions_mysqli::query2array($query,null, 'id'),
         )
       );
   }
@@ -535,9 +545,9 @@ SELECT DISTINCT(id)
     $page = array_merge(
       $page,
       array(
-        'title' => '<a href="'.duplicate_index_url(array('start'=>0)).'">'
-                    .$conf['top_number'].' '.l10n('Best rated').'</a>',
-        'items' => query2array($query,null, 'id'),
+        'title' => '<a href="'.functions_url::duplicate_index_url(array('start'=>0)).'">'
+                    .$conf['top_number'].' '.functions::l10n('Best rated').'</a>',
+        'items' => functions_mysqli::query2array($query,null, 'id'),
         )
       );
   }
@@ -558,9 +568,9 @@ SELECT DISTINCT(id)
     $page = array_merge(
       $page,
       array(
-        'title' => '<a href="'.duplicate_index_url(array('start'=>0)).'">'
-                    .l10n('Random photos').'</a>',
-        'items' => query2array($query,null, 'id'),
+        'title' => '<a href="'.functions_url::duplicate_index_url(array('start'=>0)).'">'
+                    .functions::l10n('Random photos').'</a>',
+        'items' => functions_mysqli::query2array($query,null, 'id'),
         )
       );
   }
@@ -572,14 +582,13 @@ SELECT DISTINCT(id)
 if (isset($page['chronology_field']))
 {
   unset($page['is_homepage']);
-  include_once( PHPWG_ROOT_PATH.'inc/functions_calendar.php' );
-  initialize_calendar();
+  functions_calendar::initialize_calendar();
 }
 
 // title update
 if (isset($page['title']))
 {
-  $page['section_title'] = '<a href="'.get_gallery_home_url().'">'.l10n('Home').'</a>';
+  $page['section_title'] = '<a href="'.functions_url::get_gallery_home_url().'">'.functions::l10n('Home').'</a>';
   if (!empty($page['title']))
   {
     $page['section_title'] .= $conf['level_separator'].$page['title'];
@@ -625,7 +634,7 @@ if ( 'categories'==$page['section'] and isset($page['category']) and !isset($pag
   if ( empty($page['category']['permalink']) )
   {
     if ( $conf['category_url_style'] == 'id-name' and
-        @$page['hit_by']['cat_url_name'] !== str2url($page['category']['name']) )
+        @$page['hit_by']['cat_url_name'] !== functions::str2url($page['category']['name']) )
     {
       $need_redirect=true;
     }
@@ -640,15 +649,15 @@ if ( 'categories'==$page['section'] and isset($page['category']) and !isset($pag
 
   if ($need_redirect)
   {
-    check_restrictions($page['category']['id']);
-    $redirect_url = script_basename()=='picture' ? duplicate_picture_url() : duplicate_index_url();
+    functions_category::check_restrictions($page['category']['id']);
+    $redirect_url = functions::script_basename()=='picture' ? functions_url::duplicate_picture_url() : functions_url::duplicate_index_url();
 
     if (!headers_sent())
     { // this is a permanent redirection
-      set_status_header(301);
-      redirect_http( $redirect_url );
+      functions_html::set_status_header(301);
+      functions::redirect_http( $redirect_url );
     }
-    redirect( $redirect_url );
+    functions::redirect( $redirect_url );
   }
   unset( $need_redirect, $page['hit_by'] );
 }
@@ -694,5 +703,5 @@ if (isset($page['image_id']))
   $page['body_data']['image_id'] = $page['image_id'];
 }
 
-trigger_notify('loc_end_section_init');
+functions_plugins::trigger_notify('loc_end_section_init');
 ?>

@@ -7,15 +7,17 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\tabsheet;
-
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-$help_link = get_root_url().'admin.php?page=help&section=';
+$help_link = functions_url::get_root_url().'admin.php?page=help&section=';
 $selected = null;
 
 if (!isset($_GET['section']))
@@ -32,13 +34,13 @@ $tabsheet->set_id('help');
 $tabsheet->select($selected);
 $tabsheet->assign();
 
-trigger_notify('loc_end_help');
+functions_plugins::trigger_notify('loc_end_help');
 
 $template->set_filenames(array('help' => 'help.tpl'));
 
 $template->assign(
   array(
-    'HELP_CONTENT' => load_language(
+    'HELP_CONTENT' => functions::load_language(
       'help/help_'.$tabsheet->selected.'.html',
       '',
       array('return'=>true)

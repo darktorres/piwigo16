@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\functions;
+
 if (!defined('PHOTOS_ADD_BASE_URL'))
 {
   die ("Hacking attempt!");
@@ -17,7 +19,7 @@ if (!defined('PHOTOS_ADD_BASE_URL'))
 
 $template->assign(
   'FTP_HELP_CONTENT',
-  load_language(
+  functions::load_language(
     'help/photos_add_ftp.html',
     '',
     array('return'=>true)
@@ -27,7 +29,7 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
-$template->assign('ADMIN_PAGE_TITLE', l10n('Upload Photos'));
+$template->assign('ADMIN_PAGE_TITLE', functions::l10n('Upload Photos'));
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');
 ?>

@@ -9,6 +9,11 @@
 namespace Piwigo\admin\inc;
 
 use PclZip;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 class themes
 {
@@ -105,7 +110,7 @@ class themes
         $missing_parent = $this->missing_parent_theme($theme_id);
         if (isset($missing_parent))
         {
-          $errors[] = l10n(
+          $errors[] = functions::l10n(
             'Impossible to activate this theme, the parent theme is missing: %s',
             $missing_parent
             );
@@ -117,7 +122,7 @@ class themes
             and !empty($conf['mobile_theme'])
             and $conf['mobile_theme'] != $theme_id)
         {
-          $errors[] = l10n('You can activate only one mobile theme.');
+          $errors[] = functions::l10n('You can activate only one mobile theme.');
           break;
         }
 
@@ -132,13 +137,13 @@ INSERT INTO '.THEMES_TABLE.'
          \''.$this->fs_themes[$theme_id]['version'].'\',
          \''.$this->fs_themes[$theme_id]['name'].'\')
 ;';
-          pwg_query($query);
+          functions_mysqli::pwg_query($query);
 
           $activity_details['version'] = $this->fs_themes[$theme_id]['version'];
 
           if ($this->fs_themes[$theme_id]['mobile'])
           {
-            conf_update_param('mobile_theme', $theme_id);
+            functions::conf_update_param('mobile_theme', $theme_id);
           }
         }
         break;
@@ -153,11 +158,11 @@ INSERT INTO '.THEMES_TABLE.'
         // you can't deactivate the last theme
         if (count($this->db_themes_by_id) <= 1)
         {
-          $errors[] = l10n('Impossible to deactivate this theme, you need at least one theme.');
+          $errors[] = functions::l10n('Impossible to deactivate this theme, you need at least one theme.');
           break;
         }
 
-        if ($theme_id == get_default_theme())
+        if ($theme_id == functions_user::get_default_theme())
         {
           // find a random theme to replace
           $new_theme = null;
@@ -167,14 +172,14 @@ SELECT id
   FROM '.THEMES_TABLE.'
   WHERE id != \''.$theme_id.'\'
 ;';
-          $result = pwg_query($query);
-          if (pwg_db_num_rows($result) == 0)
+          $result = functions_mysqli::pwg_query($query);
+          if (functions_mysqli::pwg_db_num_rows($result) == 0)
           {
             $new_theme = 'default';
           }
           else
           {
-            list($new_theme) = pwg_db_fetch_row($result);
+            list($new_theme) = functions_mysqli::pwg_db_fetch_row($result);
           }
 
           $this->set_default_theme($new_theme);
@@ -187,11 +192,11 @@ DELETE
   FROM '.THEMES_TABLE.'
   WHERE id= \''.$theme_id.'\'
 ;';
-        pwg_query($query);
+        functions_mysqli::pwg_query($query);
 
         if ($this->fs_themes[$theme_id]['mobile'])
         {
-          conf_update_param('mobile_theme', '');
+          functions::conf_update_param('mobile_theme', '');
         }
         break;
 
@@ -210,7 +215,7 @@ DELETE
         $children = $this->get_children_themes($theme_id);
         if (count($children) > 0)
         {
-          $errors[] = l10n(
+          $errors[] = functions::l10n(
             'Impossible to delete this theme. Other themes depends on it: %s',
             implode(', ', $children)
             );
@@ -219,8 +224,7 @@ DELETE
 
         $theme_maintain->delete();
 
-        include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-        deltree(PHPWG_THEMES_PATH.$theme_id, PHPWG_THEMES_PATH . 'trash');
+        functions_admin::deltree(PHPWG_THEMES_PATH.$theme_id, PHPWG_THEMES_PATH . 'trash');
         break;
 
       case 'set_default':
@@ -229,7 +233,7 @@ DELETE
         break;
     }
 
-    pwg_activity('system', ACTIVITY_SYSTEM_THEME, $action, $activity_details);
+    functions::pwg_activity('system', ACTIVITY_SYSTEM_THEME, $action, $activity_details);
 
     return $errors;
   }
@@ -276,7 +280,7 @@ DELETE
     global $conf;
 
     // first we need to know which users are using the current default theme
-    $default_theme = get_default_theme();
+    $default_theme = functions_user::get_default_theme();
 
     $query = '
 SELECT
@@ -286,7 +290,7 @@ SELECT
 ;';
     $user_ids = array_unique(
       array_merge(
-        array_from_query($query, 'user_id'),
+        functions::array_from_query($query, 'user_id'),
         array($conf['guest_id'], $conf['default_user_id'])
         )
       );
@@ -299,7 +303,7 @@ UPDATE '.USER_INFOS_TABLE.'
   SET theme = \''.$theme_id.'\'
   WHERE user_id IN ('.implode(',', $user_ids).')
 ;';
-    pwg_query($query);
+    functions_mysqli::pwg_query($query);
   }
 
   function get_db_themes($id='')
@@ -320,9 +324,9 @@ SELECT
   WHERE '. implode(' AND ', $clauses);
     }
 
-    $result = pwg_query($query);
+    $result = functions_mysqli::pwg_query($query);
     $themes = array();
-    while ($row = pwg_db_fetch_assoc($result))
+    while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
     {
       $themes[] = $row;
     }
@@ -370,7 +374,7 @@ SELECT
           {
             $theme['uri'] = trim($val[1]);
           }
-          if ($desc = load_language('description.txt', $path.'/', array('return' => true)))
+          if ($desc = functions::load_language('description.txt', $path.'/', array('return' => true)))
           {
             $theme['description'] = trim($desc);
           }
@@ -397,11 +401,11 @@ SELECT
           }
           if (preg_match('/["\']activable["\'].*?(true|false)/i', $theme_data, $val))
           {
-            $theme['activable'] = get_boolean($val[1]);
+            $theme['activable'] = functions_mysqli::get_boolean($val[1]);
           }
           if (preg_match('/["\']mobile["\'].*?(true|false)/i', $theme_data, $val))
           {
-            $theme['mobile'] = get_boolean($val[1]);
+            $theme['mobile'] = functions_mysqli::get_boolean($val[1]);
           }
 
           // screenshot
@@ -415,7 +419,7 @@ SELECT
             global $conf;
             $theme['screenshot'] =
               PHPWG_ROOT_PATH.'admin/themes/'
-              .userprefs_get_param('admin_theme', 'roma')
+              .functions_user::userprefs_get_param('admin_theme', 'roma')
               .'/images/missing_screenshot.png'
               ;
           }
@@ -423,7 +427,7 @@ SELECT
           $admin_file = $path.'/admin/admin.php';
           if (file_exists($admin_file))
           {
-            $theme['admin_uri'] = get_root_url().'admin.php?page=theme&theme='.$file;
+            $theme['admin_uri'] = functions_url::get_root_url().'admin.php?page=theme&theme='.$file;
           }
 
           // IMPORTANT SECURITY !
@@ -443,7 +447,7 @@ SELECT
     switch ($order)
     {
       case 'name':
-        uasort($this->fs_themes, name_compare(...));
+        uasort($this->fs_themes, functions_html::name_compare(...));
         break;
       case 'status':
         $this->sort_themes_by_state();
@@ -473,13 +477,13 @@ SELECT
     $version = PHPWG_VERSION;
     $versions_to_check = array();
     $url = PEM_URL . '/api/get_version_list.php';
-    if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result))
+    if (functions_admin::fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result))
     {
       if (!preg_match('/^\d+\.\d+\.\d+$/', $version))
       {
         $version = $pem_versions[0]['name'];
       }
-      $branch = get_branch_from_version($version);
+      $branch = functions::get_branch_from_version($version);
       foreach ($pem_versions as $pem_version)
       {
         if (strpos($pem_version['name'], $branch) === 0)
@@ -524,7 +528,7 @@ SELECT
         $get_data['extension_include'] = implode(',', $themes_to_check);
       }
     }
-    if (fetchRemote($url, $result, $get_data))
+    if (functions_admin::fetchRemote($url, $result, $get_data))
     {
       $pem_themes = @unserialize($result);
       if (!is_array($pem_themes))
@@ -584,7 +588,7 @@ SELECT
         'origin' => 'piwigo_'.$action,
       );
 
-      if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data))
+      if ($handle = @fopen($archive, 'wb') and functions_admin::fetchRemote($url, $handle, $get_data))
       {
         fclose($handle);
         $zip = new PclZip($archive);
@@ -670,7 +674,7 @@ SELECT
                   }
                   elseif (is_dir($path))
                   {
-                    deltree($path, PHPWG_THEMES_PATH . 'trash');
+                    functions_admin::deltree($path, PHPWG_THEMES_PATH . 'trash');
                   }
                 }
               }
@@ -713,7 +717,7 @@ SELECT
   function theme_author_compare($a, $b)
   {
     $r = strcasecmp($a['author'], $b['author']);
-    if ($r == 0) return name_compare($a, $b);
+    if ($r == 0) return functions_html::name_compare($a, $b);
     else return $r;
   }
 
@@ -725,7 +729,7 @@ SELECT
 
   function sort_themes_by_state()
   {
-    uasort($this->fs_themes, name_compare(...));
+    uasort($this->fs_themes, functions_html::name_compare(...));
 
     $active_themes = array();
     $inactive_themes = array();

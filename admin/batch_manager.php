@@ -6,7 +6,16 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_category;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_search;
+use Piwigo\inc\functions_tag;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 /**
  * Management of elements set. Elements can belong to a category or to the
@@ -19,16 +28,14 @@ if (!defined('PHPWG_ROOT_PATH'))
   die('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-check_input_parameter('selection', $_POST, true, PATTERN_ID);
-check_input_parameter('display', $_REQUEST, false, '/^(\d+|all)$/');
+functions::check_input_parameter('selection', $_POST, true, PATTERN_ID);
+functions::check_input_parameter('display', $_REQUEST, false, '/^(\d+|all)$/');
 
 // +-----------------------------------------------------------------------+
 // | specific actions                                                      |
@@ -42,41 +49,41 @@ if (isset($_GET['action']))
 DELETE FROM '.CADDIE_TABLE.'
   WHERE user_id = '.$user['id'].'
 ;';
-    pwg_query($query);
+    functions_mysqli::pwg_query($query);
 
     $_SESSION['page_infos'] = array(
-      l10n('Information data registered in database')
+      functions::l10n('Information data registered in database')
       );
     
-    redirect(get_root_url().'admin.php?page='.$_GET['page']);
+    functions::redirect(functions_url::get_root_url().'admin.php?page='.$_GET['page']);
   }
 
   if ('delete_orphans' == $_GET['action'] and isset($_GET['nb_orphans_deleted']))
   {
-    check_input_parameter('nb_orphans_deleted', $_GET, false, '/^\d+$/');
+    functions::check_input_parameter('nb_orphans_deleted', $_GET, false, '/^\d+$/');
 
     if ($_GET['nb_orphans_deleted'] > 0)
     {
-      $_SESSION['page_infos'][] = l10n_dec(
+      $_SESSION['page_infos'][] = functions::l10n_dec(
         '%d photo was deleted', '%d photos were deleted',
         $_GET['nb_orphans_deleted']
         );
 
-      redirect(get_root_url().'admin.php?page='.$_GET['page']);
+      functions::redirect(functions_url::get_root_url().'admin.php?page='.$_GET['page']);
     }
   }
 
   if ('sync_md5sum' == $_GET['action'] and isset($_GET['nb_md5sum_added']))
   {
-    check_input_parameter('nb_md5sum_added', $_GET, false, '/^\d+$/');
+    functions::check_input_parameter('nb_md5sum_added', $_GET, false, '/^\d+$/');
     if ($_GET['nb_md5sum_added'] > 0)
     {
-      $_SESSION['page_infos'][] = l10n_dec(
+      $_SESSION['page_infos'][] = functions::l10n_dec(
         '%d checksums were added', '%d checksums were added',
         $_GET['nb_md5sum_added']
       );
 
-      redirect(get_root_url().'admin.php?page='.$_GET['page']);
+      functions::redirect(functions_url::get_root_url().'admin.php?page='.$_GET['page']);
     }
   }
 }
@@ -126,7 +133,7 @@ if (isset($_POST['submitFilter']))
 
   if (isset($_POST['filter_category_use']))
   {
-    check_input_parameter('filter_category', $_POST, false, PATTERN_ID);
+    functions::check_input_parameter('filter_category', $_POST, false, PATTERN_ID);
 
     $_SESSION['bulk_manager_filter']['category'] = $_POST['filter_category'];
 
@@ -138,7 +145,7 @@ if (isset($_POST['submitFilter']))
 
   if (isset($_POST['filter_tags_use']))
   {
-    $_SESSION['bulk_manager_filter']['tags'] = get_tag_ids($_POST['filter_tags'], false);
+    $_SESSION['bulk_manager_filter']['tags'] = functions_admin::get_tag_ids($_POST['filter_tags'], false);
 
     if (isset($_POST['tag_mode']) and in_array($_POST['tag_mode'], array('AND', 'OR')))
     {
@@ -148,7 +155,7 @@ if (isset($_POST['submitFilter']))
 
   if (isset($_POST['filter_level_use']))
   {
-    check_input_parameter('filter_level', $_POST, false, '/^\d+$/');
+    functions::check_input_parameter('filter_level', $_POST, false, '/^\d+$/');
     
     if (in_array($_POST['filter_level'], $conf['available_permission_levels']))
     {
@@ -195,7 +202,7 @@ if (isset($_POST['submitFilter']))
     $_SESSION['bulk_manager_filter']['search']['q'] = $_POST['q'];
   }
 
-  $_SESSION['bulk_manager_filter'] = trigger_change('batch_manager_register_filters', $_SESSION['bulk_manager_filter']);
+  $_SESSION['bulk_manager_filter'] = functions_plugins::trigger_change('batch_manager_register_filters', $_SESSION['bulk_manager_filter']);
 }
 // filters from url
 elseif (isset($_GET['filter']))
@@ -280,7 +287,7 @@ elseif (isset($_GET['filter']))
       break;
 
     default:
-      $_SESSION['bulk_manager_filter'] = trigger_change('batch_manager_url_filter', $_SESSION['bulk_manager_filter'], $filter);
+      $_SESSION['bulk_manager_filter'] = functions_plugins::trigger_change('batch_manager_url_filter', $_SESSION['bulk_manager_filter'], $filter);
       break;
     }
   }
@@ -307,7 +314,7 @@ SELECT element_id
   FROM '.CADDIE_TABLE.'
   WHERE user_id = '.$user['id'].'
 ;';
-    $filter_sets[] = query2array($query, null, 'element_id');
+    $filter_sets[] = functions_mysqli::query2array($query, null, 'element_id');
 
     break;
 
@@ -317,7 +324,7 @@ SELECT image_id
   FROM '.FAVORITES_TABLE.'
   WHERE user_id = '.$user['id'].'
 ;';
-    $filter_sets[] = query2array($query, null, 'image_id');
+    $filter_sets[] = functions_mysqli::query2array($query, null, 'image_id');
 
     break;
 
@@ -326,15 +333,15 @@ SELECT image_id
 SELECT MAX(date_available) AS date
   FROM '.IMAGES_TABLE.'
 ;';
-    $row = pwg_db_fetch_assoc(pwg_query($query));
+    $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
     if (!empty($row['date']))
     {
       $query = '
 SELECT id
   FROM '.IMAGES_TABLE.'
-  WHERE date_available BETWEEN '.pwg_db_get_recent_period_expression(1, $row['date']).' AND \''.$row['date'].'\'
+  WHERE date_available BETWEEN '.functions_mysqli::pwg_db_get_recent_period_expression(1, $row['date']).' AND \''.$row['date'].'\'
 ;';
-      $filter_sets[] = query2array($query, null, 'id');
+      $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
     }
 
     break;
@@ -345,7 +352,7 @@ SELECT id
  SELECT id
    FROM '.IMAGES_TABLE.'
  ;';
-    $all_elements = query2array($query, null, 'id');
+    $all_elements = functions_mysqli::query2array($query, null, 'id');
 
     $linked_to_virtual = array();
 
@@ -354,7 +361,7 @@ SELECT id
    FROM '.CATEGORIES_TABLE.'
    WHERE dir IS NULL
  ;';
-    $virtual_categories = query2array($query, null, 'id');
+    $virtual_categories = functions_mysqli::query2array($query, null, 'id');
     if (!empty($virtual_categories))
     {
       $query = '
@@ -362,7 +369,7 @@ SELECT id
    FROM '.IMAGE_CATEGORY_TABLE.'
    WHERE category_id IN ('.implode(',', $virtual_categories).')
  ;';
-      $linked_to_virtual = query2array($query, null, 'image_id');
+      $linked_to_virtual = functions_mysqli::query2array($query, null, 'image_id');
     }
 
     $filter_sets[] = array_diff($all_elements, $linked_to_virtual);
@@ -370,10 +377,10 @@ SELECT id
     break;
 
   case 'no_album':
-    $filter_sets[] = get_orphans();
+    $filter_sets[] = functions_admin::get_orphans();
     break;
   case 'no_sync_md5sum':
-    $filter_sets[] = get_photos_no_md5sum();
+    $filter_sets[] = functions_admin::get_photos_no_md5sum();
     break;
 
   case 'no_tag':
@@ -384,7 +391,7 @@ SELECT
     LEFT JOIN '.IMAGE_TAG_TABLE.' ON id = image_id
   WHERE tag_id is null
 ;';
-    $filter_sets[] = query2array($query, null, 'id');
+    $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
 
     break;
 
@@ -434,7 +441,7 @@ SELECT
   GROUP BY '.implode(',', $duplicates_on_fields).'
   HAVING COUNT(*) > 1
 ;';
-    $array_of_ids_string = query2array($query, null, 'ids');
+    $array_of_ids_string = functions_mysqli::query2array($query, null, 'ids');
 
     $ids = array();
     
@@ -456,12 +463,12 @@ SELECT id
   FROM '.IMAGES_TABLE.'
   '.$conf['order_by'];
 
-      $filter_sets[] = query2array($query, null, 'id');
+      $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
     }
     break;
 
   default:
-    $filter_sets = trigger_change('perform_batch_manager_prefilters', $filter_sets, $_SESSION['bulk_manager_filter']['prefilter']);
+    $filter_sets = functions_plugins::trigger_change('perform_batch_manager_prefilters', $filter_sets, $_SESSION['bulk_manager_filter']['prefilter']);
     break;
   }
 }
@@ -476,16 +483,16 @@ SELECT COUNT(*)
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$_SESSION['bulk_manager_filter']['category'].'
 ;';
-  list($counter) = pwg_db_fetch_row(pwg_query($query));
+  list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
   if (0 == $counter)
   {
     unset($_SESSION['bulk_manager_filter']);
-    redirect(get_root_url().'admin.php?page='.$_GET['page']);
+    functions::redirect(functions_url::get_root_url().'admin.php?page='.$_GET['page']);
   }
 
   if (isset($_SESSION['bulk_manager_filter']['category_recursive']))
   {
-    $categories = get_subcat_ids(array($_SESSION['bulk_manager_filter']['category']));
+    $categories = functions_category::get_subcat_ids(array($_SESSION['bulk_manager_filter']['category']));
   }
   else
   {
@@ -497,7 +504,7 @@ SELECT COUNT(*)
    FROM '.IMAGE_CATEGORY_TABLE.'
    WHERE category_id IN ('.implode(',', $categories).')
  ;';
-  $filter_sets[] = query2array($query, null, 'image_id');
+  $filter_sets[] = functions_mysqli::query2array($query, null, 'image_id');
 }
 
 if (isset($_SESSION['bulk_manager_filter']['level']))
@@ -514,12 +521,12 @@ SELECT id
   WHERE level '.$operator.' '.$_SESSION['bulk_manager_filter']['level'].'
   '.$conf['order_by'];
 
-  $filter_sets[] = query2array($query, null, 'id');
+  $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
 }
 
 if (!empty($_SESSION['bulk_manager_filter']['tags']))
 {
-  $filter_sets[] = get_image_ids_for_tags(
+  $filter_sets[] = functions_tag::get_image_ids_for_tags(
     $_SESSION['bulk_manager_filter']['tags'],
     $_SESSION['bulk_manager_filter']['tag_mode'],
     null,
@@ -563,7 +570,7 @@ SELECT id
   WHERE '.implode(' AND ',$where_clause).'
   '.$conf['order_by'];
 
-  $filter_sets[] = query2array($query, null, 'id');
+  $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
 }
 
 if (isset($_SESSION['bulk_manager_filter']['filesize']))
@@ -586,14 +593,13 @@ SELECT id
   WHERE '.implode(' AND ',$where_clause).'
   '.$conf['order_by'];
 
-  $filter_sets[] = query2array($query, null, 'id');
+  $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
 }
 
 if (isset($_SESSION['bulk_manager_filter']['search']) && 
     strlen($_SESSION['bulk_manager_filter']['search']['q']))
 {
-  include_once( PHPWG_ROOT_PATH .'inc/functions_search.php' );
-  $res = get_quick_search_results_no_cache($_SESSION['bulk_manager_filter']['search']['q'], array('permissions'=>false));
+  $res = functions_search::get_quick_search_results_no_cache($_SESSION['bulk_manager_filter']['search']['q'], array('permissions'=>false));
   if (!empty($res['items']) && !empty($res['qs']['unmatched_terms']))
   {
     $template->assign('no_search_results', array_map(htmlspecialchars(...), $res['qs']['unmatched_terms']) );
@@ -601,7 +607,7 @@ if (isset($_SESSION['bulk_manager_filter']['search']) &&
   $filter_sets[] = $res['items'];
 }
 
-$filter_sets = trigger_change('batch_manager_perform_filters', $filter_sets, $_SESSION['bulk_manager_filter']);
+$filter_sets = functions_plugins::trigger_change('batch_manager_perform_filters', $filter_sets, $_SESSION['bulk_manager_filter']);
 
 $current_set = array_shift($filter_sets);
 foreach ($filter_sets as $set)
@@ -635,11 +641,11 @@ else
 // +-----------------------------------------------------------------------+
 // |                                 Tabs                                  |
 // +-----------------------------------------------------------------------+
-$manager_link = get_root_url().'admin.php?page=batch_manager&amp;mode=';
+$manager_link = functions_url::get_root_url().'admin.php?page=batch_manager&amp;mode=';
 
 if (isset($_GET['mode']))
 {
-  check_input_parameter('mode', $_GET, false, '/^(global|unit)$/');
+  functions::check_input_parameter('mode', $_GET, false, '/^(global|unit)$/');
   $page['tab'] = $_GET['mode'];
 }
 else
@@ -670,11 +676,11 @@ SELECT
   WHERE width IS NOT NULL
     AND height IS NOT NULL
 ;';
-$result = pwg_query($query);
+$result = functions_mysqli::pwg_query($query);
 
-if (pwg_db_num_rows($result))
+if (functions_mysqli::pwg_db_num_rows($result))
 {
-  while ($row = pwg_db_fetch_assoc($result))
+  while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
   {
     if ($row['width']>0 && $row['height']>0)
     {
@@ -771,9 +777,9 @@ SELECT
   WHERE filesize IS NOT NULL
   GROUP BY filesize
 ;';
-$result = pwg_query($query);
+$result = functions_mysqli::pwg_query($query);
 
-while ($row = pwg_db_fetch_assoc($result))
+while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   $filesizes[] = sprintf('%.1f', $row['filesize']/1024);
 }

@@ -7,17 +7,19 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
 
 if( !defined("PHPWG_ROOT_PATH") )
 {
   die ("Hacking attempt!");
 }
 
-$my_base_url = get_root_url().'admin.php?page=languages';
+$my_base_url = functions_url::get_root_url().'admin.php?page=languages';
 
 if (isset($_GET['tab']))
 {
-  check_input_parameter('tab', $_GET, false, '/^(installed|update|new)$/');
+  functions::check_input_parameter('tab', $_GET, false, '/^(installed|update|new)$/');
   $page['tab'] = $_GET['tab'];
 }
 else
@@ -32,7 +34,7 @@ $tabsheet->assign();
 
 if ($page['tab'] == 'update') {
   include(PHPWG_ROOT_PATH.'admin/updates_ext.php');
-  $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
+  $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Languages'));
 }
 else
 { 

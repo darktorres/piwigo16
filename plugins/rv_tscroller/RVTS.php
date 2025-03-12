@@ -10,18 +10,23 @@ Has Settings: false
 
 namespace Piwigo\plugins\rv_tscroller;
 
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_session;
+use Piwigo\inc\functions_url;
+
 class RVTS
 {
 static function on_end_section_init()
 {
 	global $page;
-	$page['nb_image_page'] *= pwg_get_session_var('rvts_mult', 1);
+	$page['nb_image_page'] *= functions_session::pwg_get_session_var('rvts_mult', 1);
 	if (count($page['items'])<$page['nb_image_page']+3)
 	{
-		if (!@$page['start'] || script_basename()=='picture')
+		if (!@$page['start'] || functions::script_basename()=='picture')
 			$page['nb_image_page'] = max($page['nb_image_page'], count($page['items']));
 	}
-	add_event_handler('loc_begin_index', self::on_index_begin(...), EVENT_HANDLER_PRIORITY_NEUTRAL+10);
+	functions_plugins::add_event_handler('loc_begin_index', self::on_index_begin(...), EVENT_HANDLER_PRIORITY_NEUTRAL+10);
 }
 
 static function on_index_begin()
@@ -31,24 +36,24 @@ static function on_index_begin()
 	if (!$is_ajax)
 	{
 		if (empty($page['items']))
-			add_event_handler('loc_end_index', self::on_end_index(...));
+			functions_plugins::add_event_handler('loc_end_index', self::on_end_index(...));
 		else
-			add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails(...), EVENT_HANDLER_PRIORITY_NEUTRAL, 1);
+			functions_plugins::add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails(...), EVENT_HANDLER_PRIORITY_NEUTRAL, 1);
 	}
 	else
 	{
 		$adj = (int)@$_GET['adj'];
 		if ($adj)
 		{
-			$mult = pwg_get_session_var('rvts_mult', 1);
+			$mult = functions_session::pwg_get_session_var('rvts_mult', 1);
 			if ($adj>0 && $mult<5)
-				pwg_set_session_var('rvts_mult', ++$mult);
+				functions_session::pwg_set_session_var('rvts_mult', ++$mult);
 			if ($adj<0 && $mult>1)
-				pwg_set_session_var('rvts_mult', --$mult);
+				functions_session::pwg_set_session_var('rvts_mult', --$mult);
 		}
 		$page['nb_image_page']=(int)$_GET['rvts'];
-		add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails_ajax(...), EVENT_HANDLER_PRIORITY_NEUTRAL+5, 1);
-		$page['root_path'] = get_absolute_root_url(false);
+		functions_plugins::add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails_ajax(...), EVENT_HANDLER_PRIORITY_NEUTRAL+5, 1);
+		$page['root_path'] = functions_url::get_absolute_root_url(false);
 		$page['body_id'] = 'scroll';
 		global $user, $template, $conf;
 		include(PHPWG_ROOT_PATH.'inc/category_default.php');
@@ -61,17 +66,17 @@ static function on_index_thumbnails($thumbs)
 	$total = count($page['items']);
 	if (count($thumbs) >= $total)
 	{
-		add_event_handler('loc_end_index', self::on_end_index(...));
+		functions_plugins::add_event_handler('loc_end_index', self::on_end_index(...));
 		return $thumbs;
 	}
-	$url_model = str_replace('123456789', '%start%', duplicate_index_url( array('start'=>123456789) ) );
-	$ajax_url_model = add_url_params($url_model, array( 'rvts'=>'%per%' ) );
+	$url_model = str_replace('123456789', '%start%', functions_url::duplicate_index_url( array('start'=>123456789) ) );
+	$ajax_url_model = functions_url::add_url_params($url_model, array( 'rvts'=>'%per%' ) );
 
 	$url_model = str_replace('&amp;', '&', $url_model);
 	$ajax_url_model = str_replace('&amp;', '&', $ajax_url_model);
 
 	$my_base_name = basename(dirname(__FILE__));
-	$ajax_loader_image = get_root_url()."plugins/$my_base_name/ajax-loader.gif";
+	$ajax_loader_image = functions_url::get_root_url()."plugins/$my_base_name/ajax-loader.gif";
 	$template->func_combine_script( array(
 			'id'=> 'jquery',
 			'load'=> 'footer',
@@ -89,8 +94,8 @@ static function on_index_thumbnails($thumbs)
 	$moreMsg = 'See the remaining %d photos';
 	if ('en' != $GLOBALS['lang_info']['code'])
 	{
-		load_language('lang', dirname(__FILE__).'/');
-		$moreMsg = l10n($moreMsg);
+		functions::load_language('lang', dirname(__FILE__).'/');
+		$moreMsg = functions::l10n($moreMsg);
 	}
 
 	// the String.fromCharCode comes from google bot which somehow manage to get these urls
@@ -103,7 +108,7 @@ next: ".($start+$per_page).",
 total: $total,
 urlModel: String.fromCharCode(".ord($url_model[0]).")+'".substr($url_model,1)."',
 moreMsg: '$moreMsg',
-prevMsg: '".l10n("Previous")."',
+prevMsg: '".functions::l10n("Previous")."',
 ajaxLoaderImage: '$ajax_loader_image'
 };
 jQuery('.navigationBar').hide();");
@@ -114,7 +119,7 @@ static function on_index_thumbnails_ajax($thumbs)
 {
 	global $template;
 	$template->assign('thumbnails', $thumbs);
-	header('Content-Type: text/html; charset='.get_pwg_charset());
+	header('Content-Type: text/html; charset='.functions::get_pwg_charset());
 	$template->pparse('index_thumbnails');
 	exit;
 }

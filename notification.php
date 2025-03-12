@@ -10,44 +10,28 @@
 // |                           initialization                              |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_user;
+use Piwigo\inc\menubar;
+
 define('PHPWG_ROOT_PATH','./');
 include_once( PHPWG_ROOT_PATH.'inc/common.php' );
-
-/**
- * search an available feed_id
- *
- * @return string feed identifier
- */
-function find_available_feed_id()
-{
-  while (true)
-  {
-    $key = generate_key(50);
-    $query = '
-SELECT COUNT(*)
-  FROM '.USER_FEED_TABLE.'
-  WHERE id = \''.$key.'\'
-;';
-    list($count) = pwg_db_fetch_row(pwg_query($query));
-    if (0 == $count)
-    {
-      return $key;
-    }
-  }
-}
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_GUEST);
+functions_user::check_status(ACCESS_GUEST);
 
-trigger_notify('loc_begin_notification');
+functions_plugins::trigger_notify('loc_begin_notification');
 
 // +-----------------------------------------------------------------------+
 // |                          new feed creation                            |
 // +-----------------------------------------------------------------------+
 
-$page['feed'] = find_available_feed_id();
+$page['feed'] = functions::find_available_feed_id();
 
 $query = '
 INSERT INTO '.USER_FEED_TABLE.'
@@ -55,11 +39,11 @@ INSERT INTO '.USER_FEED_TABLE.'
   VALUES
   (\''.$page['feed'].'\', '.$user['id'].', NULL)
 ;';
-pwg_query($query);
+functions_mysqli::pwg_query($query);
 
 
 $feed_url=PHPWG_ROOT_PATH.'feed.php';
-if (is_a_guest())
+if (functions_user::is_a_guest())
 {
   $feed_image_only_url=$feed_url;
   $feed_url .= '?feed='.$page['feed'];
@@ -74,7 +58,7 @@ else
 // |                        template initialization                        |
 // +-----------------------------------------------------------------------+
 
-$title = l10n('Notification');
+$title = functions::l10n('Notification');
 $page['body_id'] = 'theNotificationPage';
 $page['meta_robots']=array('noindex'=>1, 'nofollow'=>1);
 
@@ -92,15 +76,15 @@ $template->assign(
 $themeconf = $template->get_template_vars('themeconf');
 if (!isset($themeconf['hide_menu_on']) OR !in_array('theNotificationPage', $themeconf['hide_menu_on']))
 {
-  include( PHPWG_ROOT_PATH.'inc/menubar.php');
+  menubar::initialize_menu();
 }
 
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+
 include(PHPWG_ROOT_PATH.'inc/page_header.php');
-trigger_notify('loc_end_notification');
-flush_page_messages();
+functions_plugins::trigger_notify('loc_end_notification');
+functions_html::flush_page_messages();
 $template->pparse('notification');
 include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 

@@ -19,7 +19,7 @@ class PwgTemplateAdapter
    */
   function l10n($text)
   {
-    return l10n($text);
+    return functions::l10n($text);
   }
 
   /**
@@ -27,7 +27,7 @@ class PwgTemplateAdapter
    */
   function l10n_dec($s, $p, $v)
   {
-    return l10n_dec($s, $p, $v);
+    return functions::l10n_dec($s, $p, $v);
   }
 
   /**

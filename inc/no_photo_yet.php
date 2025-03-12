@@ -6,6 +6,11 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\Template;
 
 
@@ -14,11 +19,11 @@ use Piwigo\inc\Template;
 // photos
 if (
   !(defined('IN_ADMIN') and IN_ADMIN)   // no message inside administration
-  and script_basename() != 'identification' // keep the ability to login
-  and script_basename() != 'password'       // keep the ability to reset password
-  and script_basename() != 'ws'             // keep the ability to discuss with web API
-  and script_basename() != 'popuphelp'      // keep the ability to display help popups
-  and (is_a_guest() or is_admin())          // normal users are not concerned by no_photo_yet
+  and functions::script_basename() != 'identification' // keep the ability to login
+  and functions::script_basename() != 'password'       // keep the ability to reset password
+  and functions::script_basename() != 'ws'             // keep the ability to discuss with web API
+  and functions::script_basename() != 'popuphelp'      // keep the ability to display help popups
+  and (functions_user::is_a_guest() or functions_user::is_admin())          // normal users are not concerned by no_photo_yet
   and !isset($_SESSION['no_photo_yet'])     // temporary hide
   )
 {
@@ -27,7 +32,7 @@ SELECT
     COUNT(*)
   FROM '.IMAGES_TABLE.'
 ;';
-  list($nb_photos) = pwg_db_fetch_row(pwg_query($query));
+  list($nb_photos) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
   if (0 == $nb_photos)
   {
     // make sure we don't use the mobile theme, which is not compatible with
@@ -39,38 +44,38 @@ SELECT
       if ('browse' == $_GET['no_photo_yet'])
       {
         $_SESSION['no_photo_yet'] = 'browse';
-        redirect(make_index_url());
+        functions::redirect(functions_url::make_index_url());
         exit();
       }
 
       if ('deactivate' == $_GET['no_photo_yet'])
       {
-        conf_update_param('no_photo_yet', 'false');
-        redirect(make_index_url());
+        functions::conf_update_param('no_photo_yet', 'false');
+        functions::redirect(functions_url::make_index_url());
         exit();
       }
     }
 
-    header('Content-Type: text/html; charset='.get_pwg_charset());
+    header('Content-Type: text/html; charset='.functions::get_pwg_charset());
     $template->set_filenames(array('no_photo_yet'=>'no_photo_yet.tpl'));
 
-    if (is_admin())
+    if (functions_user::is_admin())
     {
       $url = $conf['no_photo_yet_url'];
       if (substr($url, 0, 4) != 'http')
       {
-        $url = get_root_url().$url;
+        $url = functions_url::get_root_url().$url;
       }
 
       $template->assign(
         array(
           'step' => 2,
-          'intro' => l10n(
+          'intro' => functions::l10n(
             'Hello %s, your Piwigo photo gallery is empty!',
             $user['username']
             ),
           'next_step_url' => $url,
-          'deactivate_url' => get_root_url().'?no_photo_yet=deactivate',
+          'deactivate_url' => functions_url::get_root_url().'?no_photo_yet=deactivate',
           )
         );
     }
@@ -81,19 +86,19 @@ SELECT
         array(
           'step' => 1,
           'U_LOGIN' => 'identification.php',
-          'deactivate_url' => get_root_url().'?no_photo_yet=browse',
+          'deactivate_url' => functions_url::get_root_url().'?no_photo_yet=browse',
           )
         );
     }
 
-    trigger_notify('loc_end_no_photo_yet');
+    functions_plugins::trigger_notify('loc_end_no_photo_yet');
 
     $template->pparse('no_photo_yet');
     exit();
   }
   else
   {
-    conf_update_param('no_photo_yet', 'false');
+    functions::conf_update_param('no_photo_yet', 'false');
   }
 }
 

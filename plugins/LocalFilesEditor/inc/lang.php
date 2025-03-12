@@ -1,7 +1,11 @@
 <?php
+
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_user;
+
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
-$languages = get_languages();
+$languages = functions::get_languages();
 
 if (isset($_POST['edit']))
 {
@@ -15,7 +19,7 @@ if (isset($_POST['language']))
   
 if (!isset($page['language']) or !in_array($page['language'], array_keys($languages)))
 {
-  $page['language'] = get_default_language();
+  $page['language'] = functions_user::get_default_language();
 }
 
 $template->assign('language', $page['language']);
@@ -28,11 +32,11 @@ if (file_exists($edited_file))
 }
 else
 {
-  $content_file = "<?php\n\n/* ".l10n('locfiledit_newfile')." */\n\n\n\n\n?>";
+  $content_file = "<?php\n\n/* ".functions::l10n('locfiledit_newfile')." */\n\n\n\n\n?>";
 }
 
 $selected = 0;
-foreach (get_languages() as $language_code => $language_name)
+foreach (functions::get_languages() as $language_code => $language_name)
 {
   $file = PHPWG_ROOT_PATH.PWG_LOCAL_DIR.'language/'.$language_code.'.lang.php';
 

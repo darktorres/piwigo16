@@ -7,11 +7,20 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\check_integrity;
+use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\pwg_image;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\FileCombiner;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_rate;
+use Piwigo\inc\functions_session;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 
-fs_quick_check();
+functions_admin::fs_quick_check();
 
 // +-----------------------------------------------------------------------+
 // |                                actions                                |
@@ -29,50 +38,49 @@ switch ($action)
   }
   case 'lock_gallery' :
   {
-    conf_update_param('gallery_locked', 'true');
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', array('maintenance_action'=>$action));
-    redirect(get_root_url().'admin.php?page=maintenance');
+    functions::conf_update_param('gallery_locked', 'true');
+    functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', array('maintenance_action'=>$action));
+    functions::redirect(functions_url::get_root_url().'admin.php?page=maintenance');
     break;
   }
   case 'unlock_gallery' :
   {
-    conf_update_param('gallery_locked', 'false');
-    $_SESSION['page_infos'] = array(l10n('Gallery unlocked'));
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', array('maintenance_action'=>$action));
-    redirect(get_root_url().'admin.php?page=maintenance');
+    functions::conf_update_param('gallery_locked', 'false');
+    $_SESSION['page_infos'] = array(functions::l10n('Gallery unlocked'));
+    functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', array('maintenance_action'=>$action));
+    functions::redirect(functions_url::get_root_url().'admin.php?page=maintenance');
     break;
   }
   case 'categories' :
   {
-    images_integrity();
-    categories_integrity();
-    update_uppercats();
-    update_category('all');
-    update_global_rank();
-    invalidate_user_cache(true);
-    $page['infos'][] = sprintf('%s : %s', l10n('Update albums informations'), l10n('action successfully performed.'));
+    functions_admin::images_integrity();
+    functions_admin::categories_integrity();
+    functions_admin::update_uppercats();
+    functions_admin::update_category('all');
+    functions_admin::update_global_rank();
+    functions_admin::invalidate_user_cache(true);
+    $page['infos'][] = sprintf('%s : %s', functions::l10n('Update albums informations'), functions::l10n('action successfully performed.'));
     break;
   }
   case 'images' :
   {
-    images_integrity();
-    update_path();
-		include_once(PHPWG_ROOT_PATH.'inc/functions_rate.php');
-    update_rating_score();
-    invalidate_user_cache();
-    $page['infos'][] = sprintf('%s : %s', l10n('Update photos information'), l10n('action successfully performed.'));
+    functions_admin::images_integrity();
+    functions_admin::update_path();
+    functions_rate::update_rating_score();
+    functions_admin::invalidate_user_cache();
+    $page['infos'][] = sprintf('%s : %s', functions::l10n('Update photos information'), functions::l10n('action successfully performed.'));
     break;
   }
   case 'delete_orphan_tags' :
   {
-    delete_orphan_tags();
-    $page['infos'][] = sprintf('%s : %s', l10n('Delete orphan tags'), l10n('action successfully performed.'));
+    functions_admin::delete_orphan_tags();
+    $page['infos'][] = sprintf('%s : %s', functions::l10n('Delete orphan tags'), functions::l10n('action successfully performed.'));
     break;
   }
   case 'user_cache' :
   {
-    invalidate_user_cache();
-    $page['infos'][] = sprintf('%s : %s', l10n('Purge user cache'), l10n('action successfully performed.'));
+    functions_admin::invalidate_user_cache();
+    $page['infos'][] = sprintf('%s : %s', functions::l10n('Purge user cache'), functions::l10n('action successfully performed.'));
     break;
   }
   case 'history_detail' :
@@ -81,8 +89,8 @@ switch ($action)
 DELETE
   FROM '.HISTORY_TABLE.'
 ;';
-    pwg_query($query);
-    $page['infos'][] = sprintf('%s : %s', l10n('Purge history detail'), l10n('action successfully performed.'));
+    functions_mysqli::pwg_query($query);
+    $page['infos'][] = sprintf('%s : %s', functions::l10n('Purge history detail'), functions::l10n('action successfully performed.'));
     break;
   }
   case 'history_summary' :
@@ -91,13 +99,13 @@ DELETE
 DELETE
   FROM '.HISTORY_SUMMARY_TABLE.'
 ;';
-    pwg_query($query);
-    $page['infos'][] = sprintf('%s : %s', l10n('Purge history summary'), l10n('action successfully performed.'));
+    functions_mysqli::pwg_query($query);
+    $page['infos'][] = sprintf('%s : %s', functions::l10n('Purge history summary'), functions::l10n('action successfully performed.'));
     break;
   }
   case 'sessions' :
   {
-    pwg_session_gc();
+    functions_session::pwg_session_gc();
 
     // delete all sessions associated to invalid user ids (it should never happen)
     $query = '
@@ -106,14 +114,14 @@ SELECT
     data
   FROM '.SESSIONS_TABLE.'
 ;';
-    $sessions = query2array($query);
+    $sessions = functions_mysqli::query2array($query);
 
     $query = '
 SELECT
     '.$conf['user_fields']['id'].' AS id
   FROM '.USERS_TABLE.'
 ;';
-    $all_user_ids = query2array($query, 'id', null);
+    $all_user_ids = functions_mysqli::query2array($query, 'id', null);
 
     $sessions_to_delete = array();
 
@@ -135,9 +143,9 @@ DELETE
   FROM '.SESSIONS_TABLE.'
   WHERE id IN (\''.implode("','", $sessions_to_delete).'\')
 ;';
-      pwg_query($query);
+      functions_mysqli::pwg_query($query);
     }
-    $page['infos'][] = sprintf('%s : %s', l10n('Purge sessions'), l10n('action successfully performed.'));
+    $page['infos'][] = sprintf('%s : %s', functions::l10n('Purge sessions'), functions::l10n('action successfully performed.'));
     break;
   }
   case 'feeds' :
@@ -147,20 +155,20 @@ DELETE
   FROM '.USER_FEED_TABLE.'
   WHERE last_check IS NULL
 ;';
-    pwg_query($query);
-    $page['infos'][] = sprintf('%s : %s', l10n('Purge never used notification feeds'), l10n('action successfully performed.'));
+    functions_mysqli::pwg_query($query);
+    $page['infos'][] = sprintf('%s : %s', functions::l10n('Purge never used notification feeds'), functions::l10n('action successfully performed.'));
     break;
   }
   case 'database' :
   {
-    do_maintenance_all_tables();
+    functions_mysqli::do_maintenance_all_tables();
     break;
   }
   case 'c13y' :
   {
     $c13y = new check_integrity();
     $c13y->maintenance();
-    $page['infos'][] = sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.'));
+    $page['infos'][] = sprintf('%s : %s', functions::l10n('Reinitialize check integrity'), functions::l10n('action successfully performed.'));
     break;
   }
   case 'search' :
@@ -169,8 +177,8 @@ DELETE
 DELETE
   FROM '.SEARCH_TABLE.'
 ;';
-    pwg_query($query);
-    sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.'));
+    functions_mysqli::pwg_query($query);
+    sprintf('%s : %s', functions::l10n('Reinitialize check integrity'), functions::l10n('action successfully performed.'));
     break;
   }
   case 'compiled-templates':
@@ -178,29 +186,29 @@ DELETE
     $template->delete_compiled_templates();
     FileCombiner::clear_combined_files();
     $persistent_cache->purge(true);
-    $page['infos'][] = sprintf('%s : %s', l10n('Purge compiled templates'), l10n('action successfully performed.'));
+    $page['infos'][] = sprintf('%s : %s', functions::l10n('Purge compiled templates'), functions::l10n('action successfully performed.'));
     break;
   }
   case 'derivatives':
   {
     $types_str = $_GET['type'];
     if ($types_str == "all") {
-      clear_derivative_cache($_GET['type']);
+      functions_admin::clear_derivative_cache($_GET['type']);
     } else {
       $types = explode('_', $types_str);
       foreach ($types as $type_to_clear) {
-        clear_derivative_cache($type_to_clear);
+        functions_admin::clear_derivative_cache($type_to_clear);
       }
     }
-    $page['infos'][] = l10n('action successfully performed.');
+    $page['infos'][] = functions::l10n('action successfully performed.');
     break;
   }
 
   case 'check_upgrade':
   {
-    if (!fetchRemote(PHPWG_URL.'/download/latest_version', $result))
+    if (!functions_admin::fetchRemote(PHPWG_URL.'/download/latest_version', $result))
     {
-      $page['errors'][] = l10n('Unable to check for upgrade.');
+      $page['errors'][] = functions::l10n('Unable to check for upgrade.');
     }
     else
     {
@@ -228,24 +236,24 @@ DELETE
   
       if ('' == $versions['latest'])
       {
-        $page['errors'][] = l10n('Check for upgrade failed for unknown reasons.');
+        $page['errors'][] = functions::l10n('Check for upgrade failed for unknown reasons.');
       }
       // concatenation needed to avoid automatic transformation by release
       // script generator
       else if ('%'.'PWGVERSION'.'%' == $versions['current'])
       {
-        $page['infos'][] = l10n('You are running on development sources, no check possible.');
+        $page['infos'][] = functions::l10n('You are running on development sources, no check possible.');
       }
       else if (version_compare($versions['current'], $versions['latest']) < 0)
       {
-        $page['infos'][] = l10n('A new version of Piwigo is available.');
+        $page['infos'][] = functions::l10n('A new version of Piwigo is available.');
       }
       else
       {
-        $page['infos'][] = l10n('You are running the latest version of Piwigo.');
+        $page['infos'][] = functions::l10n('You are running the latest version of Piwigo.');
       }
     }
-    $page['infos'][] = l10n('action successfully performed.');
+    $page['infos'][] = functions::l10n('action successfully performed.');
   }
 
   default :
@@ -257,7 +265,7 @@ DELETE
 
 if ($register_activity)
 {
-  pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', array('maintenance_action'=>$action));
+  functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', array('maintenance_action'=>$action));
 }
 
 // +-----------------------------------------------------------------------+
@@ -265,24 +273,24 @@ if ($register_activity)
 // +-----------------------------------------------------------------------+
 
 $template->set_filenames(array('maintenance'=>'maintenance_actions.tpl'));
-$pwg_token = get_pwg_token();
-$url_format = get_root_url().'admin.php?page=maintenance&amp;action=%s&amp;pwg_token='.get_pwg_token();
+$pwg_token = functions::get_pwg_token();
+$url_format = functions_url::get_root_url().'admin.php?page=maintenance&amp;action=%s&amp;pwg_token='.functions::get_pwg_token();
 
-if (!is_webmaster()) 
+if (!functions_user::is_webmaster())
 {
-  $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+  $page['warnings'][] = str_replace('%s', functions::l10n('user_status_webmaster'), functions::l10n('%s status is required to edit parameters.'));
 }
 
-$purge_urls[l10n('All')] = 'all';
+$purge_urls[functions::l10n('All')] = 'all';
 foreach(ImageStdParams::get_defined_type_map() as $params)
 {
-  $purge_urls[ l10n($params->type) ] = $params->type;
+  $purge_urls[ functions::l10n($params->type) ] = $params->type;
 }
-$purge_urls[ l10n(IMG_CUSTOM) ] = IMG_CUSTOM;
+$purge_urls[ functions::l10n(derivative_std_params::IMG_CUSTOM) ] = derivative_std_params::IMG_CUSTOM;
 
 $php_current_timestamp = date("Y-m-d H:i:s");
-$db_version = pwg_get_db_version();
-list($db_current_date) = pwg_db_fetch_row(pwg_query('SELECT now();'));
+$db_version = functions_mysqli::pwg_get_db_version();
+list($db_current_date) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT now();'));
 
 $template->assign(
   array(
@@ -300,7 +308,7 @@ $template->assign(
     'U_MAINT_COMPILED_TEMPLATES' => sprintf($url_format, 'compiled-templates'),
     'U_MAINT_DERIVATIVES' => sprintf($url_format, 'derivatives'),
     'purge_derivatives' => $purge_urls,
-    'U_HELP' => get_root_url().'admin/popuphelp.php?page=maintenance',
+    'U_HELP' => functions_url::get_root_url().'admin/popuphelp.php?page=maintenance',
 
     'PHPWG_URL' => PHPWG_URL,
     'PWG_VERSION' => PHPWG_VERSION,
@@ -314,7 +322,7 @@ $template->assign(
     'DB_DATATIME' => $db_current_date,
     'pwg_token' => $pwg_token,
     'cache_sizes' => (isset($conf['cache_sizes'])) ? unserialize($conf['cache_sizes']) : null,
-    'time_elapsed_since_last_calc' => (isset($conf['cache_sizes'])) ? time_since(unserialize($conf['cache_sizes'])[3]['value'], 'year') : null,
+    'time_elapsed_since_last_calc' => (isset($conf['cache_sizes'])) ? functions::time_since(unserialize($conf['cache_sizes'])[3]['value'], 'year') : null,
     )
   );
 
@@ -370,7 +378,7 @@ else
     );
 }
 
-$template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
+$template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
 
 // +-----------------------------------------------------------------------+
 // | Define advanced features                                              |
@@ -379,7 +387,7 @@ $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
 $advanced_features = array();
 
 //$advanced_features is array of array composed of CAPTION & URL
-$advanced_features = trigger_change(
+$advanced_features = functions_plugins::trigger_change(
   'get_admin_advanced_features_links',
   $advanced_features
   );

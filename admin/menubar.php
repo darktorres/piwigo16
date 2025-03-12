@@ -6,40 +6,29 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
 use Piwigo\inc\BlockManager;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 if (!defined('PHPWG_ROOT_PATH'))
 {
   die ("Hacking attempt!");
 }
 
-if (!is_webmaster())
+if (!functions_user::is_webmaster())
 {
-  $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
-}
-
-function abs_fn_cmp($a, $b)
-{
-  return abs($a)-abs($b);
-}
-
-function make_consecutive( &$orders, $step=50 )
-{
-  uasort( $orders, abs_fn_cmp(...) );
-  $crt = 1;
-  foreach( $orders as $id=>$pos)
-  {
-    $orders[$id] = $step * ($pos<0 ? -$crt : $crt);
-    $crt++;
-  }
+  $page['warnings'][] = str_replace('%s', functions::l10n('user_status_webmaster'), functions::l10n('%s status is required to edit parameters.'));
 }
 
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = get_root_url().'admin.php?page=';
+$my_base_url = functions_url::get_root_url().'admin.php?page=';
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('menus');
@@ -72,7 +61,7 @@ foreach ($reg_blocks as $id => $block)
 }
 
 
-if ( isset($_POST['submit']) and is_webmaster())
+if ( isset($_POST['submit']) and functions_user::is_webmaster())
 {
   foreach ( $mb_conf as $id => $pos )
   {
@@ -83,7 +72,7 @@ if ( isset($_POST['submit']) and is_webmaster())
     if ($pos>0)
       $mb_conf[$id] = $mb_conf[$id] > 0 ? $pos : -$pos;
   }
-  make_consecutive( $mb_conf );
+  functions_admin::make_consecutive( $mb_conf );
 
   // BEGIN OPTIM - DONT ASK ABOUT THIS ALGO - but optimizes the size of the array we save in DB
   /* !!! OPTIM DISABLED UNTIL IT HAS BEEN FIXED !!!
@@ -133,12 +122,12 @@ UPDATE '.CONFIG_TABLE.'
   SET value=\''.addslashes(serialize($mb_conf_db)).'\'
   WHERE param=\'blk_'.addslashes($menu->get_id()).'\'
   ';
-  pwg_query($query);
+  functions_mysqli::pwg_query($query);
 
-  $page['infos'][] = l10n('Order of menubar items has been updated successfully.');
+  $page['infos'][] = functions::l10n('Order of menubar items has been updated successfully.');
 }
 
-make_consecutive( $mb_conf );
+functions_admin::make_consecutive( $mb_conf );
 
 foreach ($mb_conf as $id => $pos )
 {
@@ -150,11 +139,11 @@ foreach ($mb_conf as $id => $pos )
      );
 }
 
-$action = get_root_url().'admin.php?page=menubar';
+$action = functions_url::get_root_url().'admin.php?page=menubar';
 $template->assign(array('F_ACTION'=>$action));
 
-$template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
-$template->assign('ADMIN_PAGE_TITLE', l10n('Menu Management'));
+$template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
+$template->assign('ADMIN_PAGE_TITLE', functions::l10n('Menu Management'));
 
 $template->set_filename( 'menubar_admin_content', 'menubar.tpl' );
 $template->assign_var_from_handle( 'ADMIN_CONTENT', 'menubar_admin_content');

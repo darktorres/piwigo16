@@ -24,13 +24,18 @@
 //                            initialization                              |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
+
 if (!defined('PHPWG_ROOT_PATH')) { die('Hacking attempt!'); }
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 $tpl_extension = isset($conf['extents_for_templates']) ?
       unserialize($conf['extents_for_templates']) : array();
-$new_extensions = get_extents(); 
+$new_extensions = functions_admin::get_extents();
 
 /* Selective URLs keyword */
 $relevant_parameters = array(
@@ -55,7 +60,7 @@ SELECT permalink
 ';
 
 /* Add active permalinks */ 
-$permalinks = array_from_query($query, 'permalink');
+$permalinks = functions::array_from_query($query, 'permalink');
 $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
 /* Link all supported templates to their respective handle */
@@ -99,7 +104,7 @@ $flip_templates = array_flip($eligible_templates);
 
 $available_templates = array_merge(
   array('N/A' => '----------'),
-  get_dirs(PHPWG_ROOT_PATH.'themes'));
+  functions_admin::get_dirs(PHPWG_ROOT_PATH.'themes'));
 
 // +-----------------------------------------------------------------------+
 // |                            selected templates                         |
@@ -131,9 +136,9 @@ if (isset($_POST['submit']))
 UPDATE '.CONFIG_TABLE.'
   SET value = \''. $conf['extents_for_templates'] .'\'
 WHERE param = \'extents_for_templates\';';
-  if (pwg_query($query))
+  if (functions_mysqli::pwg_query($query))
   {
-    $page['infos'][] = l10n('Templates configuration has been recorded.');
+    $page['infos'][] = functions::l10n('Templates configuration has been recorded.');
   }
 }
 
@@ -159,7 +164,7 @@ $base_url = PHPWG_ROOT_PATH.'admin.php?page=extend_for_templates';
 
 $template->assign(
   array(
-    'U_HELP' => get_root_url().'admin/popuphelp.php?page=extend_for_templates',
+    'U_HELP' => functions_url::get_root_url().'admin/popuphelp.php?page=extend_for_templates',
     ));
 ksort($tpl_extension);
 foreach ($tpl_extension as $file => $conditions)    
@@ -183,7 +188,7 @@ foreach ($tpl_extension as $file => $conditions)
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+
-$template->assign('ADMIN_PAGE_TITLE', l10n('Extend for templates'));
+$template->assign('ADMIN_PAGE_TITLE', functions::l10n('Extend for templates'));
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'extend_for_templates');
 ?>

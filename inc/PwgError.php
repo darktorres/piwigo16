@@ -20,7 +20,7 @@ class PwgError
   {
     if ($code>=400 and $code<600)
     {
-      set_status_header($code, $codeText);
+      functions_html::set_status_header($code, $codeText);
     }
 
     $this->_code = $code;

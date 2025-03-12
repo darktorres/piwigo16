@@ -7,28 +7,34 @@
 // +-----------------------------------------------------------------------+
 
 //----------------------------------------------------------- include
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_user;
+use Piwigo\inc\menubar;
+
 define('PHPWG_ROOT_PATH','./');
 include_once( PHPWG_ROOT_PATH.'inc/common.php' );
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_GUEST);
+functions_user::check_status(ACCESS_GUEST);
 
 //----------------------------------------------------- template initialization
 //
 // Start output of page
 //
-$title= l10n('About Piwigo');
+$title= functions::l10n('About Piwigo');
 $page['body_id'] = 'theAboutPage';
 
-trigger_notify('loc_begin_about');
+functions_plugins::trigger_notify('loc_begin_about');
 
 $template->set_filename('about', 'about.tpl');
 
-$template->assign('ABOUT_MESSAGE', load_language('about.html','', array('return'=>true)) );
+$template->assign('ABOUT_MESSAGE', functions::load_language('about.html','', array('return'=>true)) );
 
-$theme_about = load_language('about.html', PHPWG_THEMES_PATH.$user['theme'].'/', array('return' => true));
+$theme_about = functions::load_language('about.html', PHPWG_THEMES_PATH.$user['theme'].'/', array('return' => true));
 if ( $theme_about !== false )
 {
   $template->assign('THEME_ABOUT', $theme_about);
@@ -38,11 +44,11 @@ if ( $theme_about !== false )
 $themeconf = $template->get_template_vars('themeconf');
 if (!isset($themeconf['hide_menu_on']) OR !in_array('theAboutPage', $themeconf['hide_menu_on']))
 {
-  include( PHPWG_ROOT_PATH.'inc/menubar.php');
+  menubar::initialize_menu();
 }
 
 include(PHPWG_ROOT_PATH.'inc/page_header.php');
-flush_page_messages();
+functions_html::flush_page_messages();
 $template->pparse('about');
 include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 ?>

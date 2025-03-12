@@ -30,13 +30,15 @@ Author: Piwigo team
 Author URI: http://piwigo.org
 */
 
+use Piwigo\inc\functions_plugins;
+
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
 define('LANGUAGE_SWITCH_PATH' , PHPWG_PLUGINS_PATH.basename(dirname(__FILE__)).'/');
 
 include_once(LANGUAGE_SWITCH_PATH.'language_switch.php');
 
-add_event_handler('loading_lang', language_controler_switch(...), 5 );
-add_event_handler('loc_end_index', language_controler_flags(...), 95 );
+functions_plugins::add_event_handler('loading_lang', language_controler_switch(...), 5 );
+functions_plugins::add_event_handler('loc_end_index', language_controler_flags(...), 95 );
 
 ?>

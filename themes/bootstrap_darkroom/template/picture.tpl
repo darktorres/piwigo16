@@ -1,5 +1,5 @@
 <!-- Start of picture.tpl -->
-{if get_device() != 'desktop'}
+{if functions::get_device() != 'desktop'}
 {combine_script id='jquery.mobile-events' path='themes/bootstrap_darkroom/node_modules/jQuery-Touch-Events/src/jquery.mobile-events.min.js' require='jquery' load='footer'}
 {/if}
 
@@ -13,7 +13,7 @@
   <div class="row justify-content-center">
     {include file='picture_nav_buttons.tpl'|@get_extent:'picture_nav_buttons'}
   </div>
-{if get_device() != 'desktop' }
+{if functions::get_device() != 'desktop' }
 {footer_script require="jquery"}{strip}
 $('#theImage img').bind('swipeleft swiperight', function (event) {
    if (event.type == 'swipeleft') {

@@ -8,6 +8,12 @@ Author:Piwigo Team
 Author URI: http://piwigo.org
 Has Settings: true
 */
+
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_session;
+use Piwigo\plugins\TakeATour\functions_TakeATour;
+
 if (!defined('PHPWG_ROOT_PATH'))
 {
   die('Hacking attempt!');
@@ -16,14 +22,14 @@ if (!defined('PHPWG_ROOT_PATH'))
 /** Tour sended via $_POST or $_GET**/
 if ( isset($_REQUEST['submited_tour_path']) and defined('IN_ADMIN') and IN_ADMIN )
 {
-  check_pwg_token();
-  pwg_set_session_var('tour_to_launch', $_REQUEST['submited_tour_path']);
+  functions::check_pwg_token();
+  functions_session::pwg_set_session_var('tour_to_launch', $_REQUEST['submited_tour_path']);
   global $TAT_restart;
   $TAT_restart=true;
 }
 elseif ( isset($_GET['tour_ended']) and defined('IN_ADMIN') and IN_ADMIN )
 {
-  pwg_unset_session_var('tour_to_launch');
+  functions_session::pwg_unset_session_var('tour_to_launch');
 }
 
 /** Setup the tour **/
@@ -32,99 +38,18 @@ elseif ( isset($_GET['tour_ended']) and defined('IN_ADMIN') and IN_ADMIN )
 $version_=str_replace('.','_',PHPWG_VERSION);*/
 $version_="2_8_0";
 /***/
-if (pwg_get_session_var('tour_to_launch')!='tours/'.$version_ and isset($_GET['page']) and $_GET['page']=="plugin-TakeATour")
+if (functions_session::pwg_get_session_var('tour_to_launch')!='tours/'.$version_ and isset($_GET['page']) and $_GET['page']=="plugin-TakeATour")
 { 
-  pwg_unset_session_var('tour_to_launch');
+  functions_session::pwg_unset_session_var('tour_to_launch');
 }
-elseif ( pwg_get_session_var('tour_to_launch') )
+elseif ( functions_session::pwg_get_session_var('tour_to_launch') )
 {
-  add_event_handler('init', TAT_tour_setup(...));
-}
-
-function TAT_tour_setup()
-{
-  if (!is_admin())
-  {
-    return;
-  }
-
-  global $template, $TAT_restart, $conf;
-  $tour_to_launch=pwg_get_session_var('tour_to_launch');
-  load_language('plugin.lang', PHPWG_PLUGINS_PATH .'TakeATour/', array('force_fallback'=>'en_UK'));
-  
-  list(, $tour_name) = explode('/', $tour_to_launch);
-  load_language('tour_'.$tour_name.'.lang', PHPWG_PLUGINS_PATH .'TakeATour/', array('force_fallback'=>'en_UK'));
-
-  if (in_array($tour_name, array('edit_photos', 'manage_albums', 'config', 'plugins')))
-  {
-    // because these tours come from splitting the original "first_contact"
-    // tour, we also load this language file
-    load_language('tour_first_contact.lang', PHPWG_PLUGINS_PATH .'TakeATour/', array('force_fallback'=>'en_UK'));
-  }
-
-  $template->set_filename('TAT_js_css', PHPWG_PLUGINS_PATH.'TakeATour/tpl/js_css.tpl');
-  $template->assign('ADMIN_THEME', $conf['admin_theme']);
-  $template->parse('TAT_js_css');
-
-  if (isset($TAT_restart) and $TAT_restart)
-  {
-    $TAT_restart=false;
-    $template->assign('TAT_restart',true);
-  }
-  $tat_path=str_replace(basename($_SERVER['SCRIPT_NAME']),'', $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME']);
-  $template->assign('TAT_path', $tat_path);
-  $template->assign('ABS_U_ADMIN', get_absolute_root_url());// absolute one due to public pages and $conf['question_mark_in_urls'] = false+$conf['php_extension_in_urls'] = false;
-
-  // some tours may need admin functions (like 2_8_0 needs get_orphans)
-  include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-
-  include($tour_to_launch.'/config.php');
-  $template->set_filename('TAT_tour_tpl', $TOUR_PATH);
-
-  trigger_notify('TAT_before_parse_tour');
-
-  $template->parse('TAT_tour_tpl');
+  functions_plugins::add_event_handler('init', functions_TakeATour::TAT_tour_setup(...));
 }
 
 /** Add link in Help pages **/
-add_event_handler('loc_end_help',TAT_help(...));
-function TAT_help()
-{
-  global $template;
-  load_language('plugin.lang', PHPWG_PLUGINS_PATH .'TakeATour/');
-  $template->set_prefilter('help', TAT_help_prefilter(...));
-}
-function TAT_help_prefilter($content)
-{
-  
-  $search = '<div id="helpContent">';
-  $replacement = '<div id="helpContent">
-<fieldset>
-<legend>{\'Visit your Piwigo!\'|@translate}</legend>
-<p class="nextStepLink"><a href="admin.php?page=plugin-TakeATour">{\'Take a tour and discover the features of your Piwigo gallery » Go to the available tours\'|@translate}</a></p>
-</fieldset>';
-  return(str_replace($search, $replacement, $content));
-
-}
+functions_plugins::add_event_handler('loc_end_help', functions_TakeATour::TAT_help(...));
 
 /** Add link in no_photo_yet **/
-add_event_handler('loc_end_no_photo_yet',TAT_no_photo_yet(...));
-function TAT_no_photo_yet()
-{
-  global $template;
-  load_language('plugin.lang', PHPWG_PLUGINS_PATH .'TakeATour/');
-  $template->set_prefilter('no_photo_yet', TAT_no_photo_yet_prefilter(...));
-  $template->assign(
-  array(
-    'F_ACTION' => get_root_url().'admin.php',
-    'pwg_token' => get_pwg_token()
-    )
-  );
-}
-function TAT_no_photo_yet_prefilter($content)
-{
-  $search = '<div class="bigButton"><a href="{$next_step_url}">{\'I want to add photos\'|@translate}</a></div>';
-  $replacement = '<div class="bigButton"><a href="{$F_ACTION}?submited_tour_path=tours/first_contact&pwg_token={$pwg_token}">{\'Start the Tour\'|@translate}</a></div>';
-  return(str_replace($search, $replacement, $content));
-}
+functions_plugins::add_event_handler('loc_end_no_photo_yet',functions_TakeATour::TAT_no_photo_yet(...));
 ?>

@@ -6,6 +6,14 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_category;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_session;
+use Piwigo\inc\functions_url;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\SrcImage;
 
@@ -23,7 +31,7 @@ $selection = array_slice(
   $page['nb_image_page']
   );
 
-$selection = trigger_change('loc_index_thumbnails_selection', $selection);
+$selection = functions_plugins::trigger_change('loc_index_thumbnails_selection', $selection);
 
 if (count($selection) > 0)
 {
@@ -34,14 +42,14 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', $selection).')
 ;';
-  $result = pwg_query($query);
-  while ($row = pwg_db_fetch_assoc($result))
+  $result = functions_mysqli::pwg_query($query);
+  while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
   {
     $row['rank'] = $rank_of[ $row['id'] ];
     $pictures[] = $row;
   }
 
-  usort($pictures, rank_compare(...));
+  usort($pictures, functions_category::rank_compare(...));
   unset($rank_of);
 }
 
@@ -50,8 +58,8 @@ if (count($pictures) > 0)
   // define category slideshow url
   $row = reset($pictures);
   $page['cat_slideshow_url'] =
-    add_url_params(
-      duplicate_picture_url(
+    functions_url::add_url_params(
+      functions_url::duplicate_picture_url(
         array(
           'image_id' => $row['id'],
           'image_file' => $row['file']
@@ -72,20 +80,20 @@ SELECT image_id, COUNT(*) AS nb_comments
     AND image_id IN ('.implode(',', $selection).')
   GROUP BY image_id
 ;';
-    $nb_comments_of = query2array($query, 'image_id', 'nb_comments');
+    $nb_comments_of = functions_mysqli::query2array($query, 'image_id', 'nb_comments');
   }
 }
 
 // template thumbnail initialization
 $template->set_filenames( array( 'index_thumbnails' => 'thumbnails.tpl',));
 
-trigger_notify('loc_begin_index_thumbnails', $pictures);
+functions_plugins::trigger_notify('loc_begin_index_thumbnails', $pictures);
 $tpl_thumbnails_var = array();
 
 foreach ($pictures as $row)
 {
   // link on picture.php page
-  $url = duplicate_picture_url(
+  $url = functions_url::duplicate_picture_url(
         array(
           'image_id' => $row['id'],
           'image_file' => $row['file']
@@ -98,22 +106,22 @@ foreach ($pictures as $row)
     $row['NB_COMMENTS'] = $row['nb_comments'] = (int)@$nb_comments_of[$row['id']];
   }
 
-  $name = render_element_name($row);
-  $desc = render_element_description($row, 'main_page_element_description');
+  $name = functions_html::render_element_name($row);
+  $desc = functions_html::render_element_description($row, 'main_page_element_description');
 
   $tpl_var = array_merge( $row, array(
     'TN_ALT' => htmlspecialchars(strip_tags($name)),
-    'TN_TITLE' => get_thumbnail_title($row, $name, $desc),
+    'TN_TITLE' => functions_html::get_thumbnail_title($row, $name, $desc),
     'URL' => $url,
     'DESCRIPTION' => $desc,
     'src_image' => new SrcImage($row),
-    'path_ext' => strtolower(get_extension($row['path'])),
-    'file_ext' => strtolower(get_extension($row['file'])),
+    'path_ext' => strtolower(functions::get_extension($row['path'])),
+    'file_ext' => strtolower(functions::get_extension($row['file'])),
     ) );
 
   if ($conf['index_new_icon'])
   {
-    $tpl_var['icon_ts'] = get_icon($row['date_available']);
+    $tpl_var['icon_ts'] = functions::get_icon($row['date_available']);
   }
 
   if ($user['show_nb_hits'])
@@ -142,15 +150,15 @@ foreach ($pictures as $row)
 }
 
 $template->assign( array(
-  'derivative_params' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( pwg_get_session_var('index_deriv', IMG_THUMB) ) ),
+  'derivative_params' => functions_plugins::trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( functions_session::pwg_get_session_var('index_deriv', derivative_std_params::IMG_THUMB) ) ),
   'maxRequests' =>$conf['max_requests'],
   'SHOW_THUMBNAIL_CAPTION' =>$conf['show_thumbnail_caption'],
     ) );
-$tpl_thumbnails_var = trigger_change('loc_end_index_thumbnails', $tpl_thumbnails_var, $pictures);
+$tpl_thumbnails_var = functions_plugins::trigger_change('loc_end_index_thumbnails', $tpl_thumbnails_var, $pictures);
 $template->assign('thumbnails', $tpl_thumbnails_var);
 
 $template->assign_var_from_handle('THUMBNAILS', 'index_thumbnails');
 unset($pictures, $selection, $tpl_thumbnails_var);
 $template->clear_assign( 'thumbnails' );
-pwg_debug('end inc/category_default.php');
+functions::pwg_debug('end inc/category_default.php');
 ?>

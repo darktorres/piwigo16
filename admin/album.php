@@ -7,6 +7,11 @@
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 
 if( !defined("PHPWG_ROOT_PATH") )
 {
@@ -17,18 +22,18 @@ if( !defined("PHPWG_ROOT_PATH") )
 // | Basic checks                                                          |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+functions::check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 
-$admin_album_base_url = get_root_url().'admin.php?page=album-'.$_GET['cat_id'];
+$admin_album_base_url = functions_url::get_root_url().'admin.php?page=album-'.$_GET['cat_id'];
 
 $query = '
 SELECT *
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$_GET['cat_id'].'
 ;';
-$category = pwg_db_fetch_assoc(pwg_query($query));
+$category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
 if (!isset($category['id']))
 {
@@ -55,13 +60,13 @@ $tabsheet->assign();
 // | Load the tab                                                          |
 // +-----------------------------------------------------------------------+
 
-$category_name = trigger_change(
+$category_name = functions_plugins::trigger_change(
   'render_category_name',
   $category['name'],
-  'get_cat_display_name_cache'
+  '\Piwigo\inc\functions_html::get_cat_display_name_cache'
   );
 $template->assign(array(
-  'ADMIN_PAGE_TITLE' => l10n('Edit album').' <strong>'.$category_name.'</strong>',
+  'ADMIN_PAGE_TITLE' => functions::l10n('Edit album').' <strong>'.$category_name.'</strong>',
   'ADMIN_PAGE_OBJECT_ID' => '#'.$category['id'],
 ));
 

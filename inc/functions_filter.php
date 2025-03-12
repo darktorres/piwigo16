@@ -6,29 +6,29 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-/**
- * @package functions\filter
- */
+namespace Piwigo\inc;
 
-
-/**
- * Updates data of categories with filtered values
- *
- * @param array &$cats
- */
-function update_cats_with_filtered_data(&$cats)
+class functions_filter
 {
-  global $filter;
-
-  if ($filter['enabled'])
+  /**
+   * Updates data of categories with filtered values
+   *
+   * @param array &$cats
+   */
+  static function update_cats_with_filtered_data(&$cats)
   {
-    $upd_fields = array('date_last', 'max_date_last', 'count_images', 'count_categories', 'nb_images');
+    global $filter;
 
-    foreach ($cats as $cat_id => $category)
+    if ($filter['enabled'])
     {
-      foreach ($upd_fields as $upd_field)
+      $upd_fields = array('date_last', 'max_date_last', 'count_images', 'count_categories', 'nb_images');
+
+      foreach ($cats as $cat_id => $category)
       {
-        $cats[$cat_id][$upd_field] = $filter['categories'][$category['id']][$upd_field];
+        foreach ($upd_fields as $upd_field)
+        {
+          $cats[$cat_id][$upd_field] = $filter['categories'][$category['id']][$upd_field];
+        }
       }
     }
   }

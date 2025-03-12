@@ -1,16 +1,18 @@
 <?php
 
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
 use Piwigo\themes\bootstrap_darkroom\inc\Config;
 
 // Check whether we are indeed included by Piwigo.
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
-load_language('theme.lang', PHPWG_THEMES_PATH.'bootstrap_darkroom/');
+functions::load_language('theme.lang', PHPWG_THEMES_PATH.'bootstrap_darkroom/');
 
 // Constants
 define('THEME_ID', basename(dirname(dirname(__FILE__))));
-define('ADMIN_PATH',   get_root_url() . 'admin.php?page=theme&theme=' . THEME_ID);
+define('ADMIN_PATH',   functions_url::get_root_url() . 'admin.php?page=theme&theme=' . THEME_ID);
 define('TAB_SETTINGS', 'settings');
 define('TAB_ABOUT', 'about');
 
@@ -32,8 +34,8 @@ if ($page['tab'] == TAB_SETTINGS) {
 // TabSheet
 $tabsheet = new tabsheet();
 $tabsheet->set_id('bsdark');
-$tabsheet->add(TAB_SETTINGS, l10n('Settings'), ADMIN_PATH . '&tab=' . TAB_SETTINGS);
-$tabsheet->add(TAB_ABOUT, l10n('About'), ADMIN_PATH . '&tab=' . TAB_ABOUT);
+$tabsheet->add(TAB_SETTINGS, functions::l10n('Settings'), ADMIN_PATH . '&tab=' . TAB_SETTINGS);
+$tabsheet->add(TAB_ABOUT, functions::l10n('About'), ADMIN_PATH . '&tab=' . TAB_ABOUT);
 $tabsheet->select($page['tab']);
 $tabsheet->assign();
 

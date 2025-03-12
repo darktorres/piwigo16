@@ -66,17 +66,17 @@ final class SizingParams
   {
       if ($this->max_crop == 0)
       {
-        $tokens[] = 's'.size_to_url($this->ideal_size);
+        $tokens[] = 's'.derivative_params::size_to_url($this->ideal_size);
       }
-      elseif ($this->max_crop == 1 && size_equals($this->ideal_size, $this->min_size) )
+      elseif ($this->max_crop == 1 && derivative_params::size_equals($this->ideal_size, $this->min_size) )
       {
-        $tokens[] = 'e'.size_to_url($this->ideal_size);
+        $tokens[] = 'e'.derivative_params::size_to_url($this->ideal_size);
       }
       else
       {
-        $tokens[] = size_to_url($this->ideal_size);
-        $tokens[] = fraction_to_char($this->max_crop);
-        $tokens[] = size_to_url($this->min_size);
+        $tokens[] = derivative_params::size_to_url($this->ideal_size);
+        $tokens[] = derivative_params::fraction_to_char($this->max_crop);
+        $tokens[] = derivative_params::size_to_url($this->min_size);
       }
   }
 

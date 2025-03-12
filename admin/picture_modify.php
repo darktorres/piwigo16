@@ -6,7 +6,17 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\admin\inc\functions_metadata_admin;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_category;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\SrcImage;
 
 if(!defined("PHPWG_ROOT_PATH"))
@@ -14,22 +24,20 @@ if(!defined("PHPWG_ROOT_PATH"))
   die('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-check_input_parameter('image_id', $_GET, false, PATTERN_ID);
-check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+functions::check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+functions::check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 
 // retrieving direct information about picture. This may have been already
 // done on admin/photo.php but this page can also be accessed without
 // photo.php as proxy.
 if (!isset($page['image']))
 {
-  $page['image'] = get_image_infos($_GET['image_id'], true);
+  $page['image'] = functions_admin::get_image_infos($_GET['image_id'], true);
 }
 
 // represent
@@ -38,7 +46,7 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE representative_picture_id = '.$_GET['image_id'].'
 ;';
-$represented_albums = query2array($query, null, 'id');
+$represented_albums = functions_mysqli::query2array($query, null, 'id');
 
 // +-----------------------------------------------------------------------+
 // |                             delete photo                              |
@@ -46,10 +54,10 @@ $represented_albums = query2array($query, null, 'id');
 
 if (isset($_GET['delete']))
 {
-  check_pwg_token();
+  functions::check_pwg_token();
 
-  delete_elements(array($_GET['image_id']), true);
-  invalidate_user_cache();
+  functions_admin::delete_elements(array($_GET['image_id']), true);
+  functions_admin::invalidate_user_cache();
 
   // where to redirect the user now?
   //
@@ -59,10 +67,10 @@ if (isset($_GET['delete']))
 
   if (isset($_GET['cat_id']) and !empty($_GET['cat_id']))
   {
-    redirect(
-      make_index_url(
+    functions::redirect(
+      functions_url::make_index_url(
         array(
-          'category' => get_cat_info($_GET['cat_id'])
+          'category' => functions_category::get_cat_info($_GET['cat_id'])
           )
         )
       );
@@ -75,22 +83,22 @@ SELECT category_id
 ;';
 
   $authorizeds = array_diff(
-    array_from_query($query, 'category_id'),
-    explode(',', calculate_permissions($user['id'], $user['status']))
+    functions::array_from_query($query, 'category_id'),
+    explode(',', functions_user::calculate_permissions($user['id'], $user['status']))
     );
 
   foreach ($authorizeds as $category_id)
   {
-    redirect(
-      make_index_url(
+    functions::redirect(
+      functions_url::make_index_url(
         array(
-          'category' => get_cat_info($category_id)
+          'category' => functions_category::get_cat_info($category_id)
           )
         )
       );
   }
 
-  redirect(make_index_url());
+  functions::redirect(functions_url::make_index_url());
 }
 
 // +-----------------------------------------------------------------------+
@@ -99,14 +107,14 @@ SELECT category_id
 
 if (isset($_GET['sync_metadata']))
 {
-  sync_metadata(array( intval($_GET['image_id'])));
-  $page['infos'][] = l10n('Metadata synchronized from file');
+  functions_metadata_admin::sync_metadata(array( intval($_GET['image_id'])));
+  $page['infos'][] = functions::l10n('Metadata synchronized from file');
 }
 
 //--------------------------------------------------------- update informations
 if (isset($_POST['submit']))
 {
-  check_pwg_token();
+  functions::check_pwg_token();
 
   $data = array();
   $data['id'] = $_GET['image_id'];
@@ -132,9 +140,9 @@ if (isset($_POST['submit']))
     $data['date_creation'] = null;
   }
 
-  $data = trigger_change('picture_modify_before_update', $data);
+  $data = functions_plugins::trigger_change('picture_modify_before_update', $data);
   
-  single_update(
+  functions_mysqli::single_update(
     IMAGES_TABLE,
     $data,
     array('id' => $data['id'])
@@ -144,31 +152,31 @@ if (isset($_POST['submit']))
   $tag_ids = array();
   if (!empty($_POST['tags']))
   {
-    $tag_ids = get_tag_ids($_POST['tags']);
+    $tag_ids = functions_admin::get_tag_ids($_POST['tags']);
   }
-  set_tags($tag_ids, $_GET['image_id']);
+  functions_admin::set_tags($tag_ids, $_GET['image_id']);
 
   // association to albums
   if (!isset($_POST['associate']))
   {
     $_POST['associate'] = array();
   }
-  check_input_parameter('associate', $_POST, true, PATTERN_ID);
-  move_images_to_categories(array($_GET['image_id']), $_POST['associate']);
+  functions::check_input_parameter('associate', $_POST, true, PATTERN_ID);
+  functions_admin::move_images_to_categories(array($_GET['image_id']), $_POST['associate']);
 
-  invalidate_user_cache();
+  functions_admin::invalidate_user_cache();
 
   // thumbnail for albums
   if (!isset($_POST['represent']))
   {
     $_POST['represent'] = array();
   }
-  check_input_parameter('represent', $_POST, true, PATTERN_ID);
+  functions::check_input_parameter('represent', $_POST, true, PATTERN_ID);
 
   $no_longer_thumbnail_for = array_diff($represented_albums, $_POST['represent']);
   if (count($no_longer_thumbnail_for) > 0)
   {
-    set_random_representant($no_longer_thumbnail_for);
+    functions_admin::set_random_representant($no_longer_thumbnail_for);
   }
 
   $new_thumbnail_for = array_diff($_POST['represent'], $represented_albums);
@@ -179,16 +187,16 @@ UPDATE '.CATEGORIES_TABLE.'
   SET representative_picture_id = '.$_GET['image_id'].'
   WHERE id IN ('.implode(',', $new_thumbnail_for).')
 ;';
-    pwg_query($query);
+    functions_mysqli::pwg_query($query);
   }
 
   $represented_albums = $_POST['represent'];
 
-  $page['infos'][] = l10n('Photo informations updated');
-  pwg_activity('photo', $_GET['image_id'], 'edit');
+  $page['infos'][] = functions::l10n('Photo informations updated');
+  functions::pwg_activity('photo', $_GET['image_id'], 'edit');
 
   // refresh page cache
-  $page['image'] = get_image_infos($_GET['image_id'], true);
+  $page['image'] = functions_admin::get_image_infos($_GET['image_id'], true);
 }
 
 // tags
@@ -200,7 +208,7 @@ SELECT
     JOIN '.TAGS_TABLE.' AS t ON t.id = it.tag_id
   WHERE image_id = '.$_GET['image_id'].'
 ;';
-$tag_selection = get_taglist($query);
+$tag_selection = functions_admin::get_taglist($query);
 
 $row = $page['image'];
 
@@ -241,21 +249,21 @@ if (in_array($row['rotation'], array(1, 3)))
 $template->assign(
   array(
     'tag_selection' => $tag_selection,
-    'U_DOWNLOAD' => 'action.php?id='.$_GET['image_id'].'&amp;part=e&amp;pwg_token='.get_pwg_token().'&amp;download',
+    'U_DOWNLOAD' => 'action.php?id='.$_GET['image_id'].'&amp;part=e&amp;pwg_token='.functions::get_pwg_token().'&amp;download',
     'U_SYNC' => $admin_url_start.'&amp;sync_metadata=1',
-    'U_DELETE' => $admin_url_start.'&amp;delete=1&amp;pwg_token='.get_pwg_token(),
-    'U_HISTORY' => get_root_url().'admin.php?page=history&amp;filter_image_id='.$_GET['image_id'],
+    'U_DELETE' => $admin_url_start.'&amp;delete=1&amp;pwg_token='.functions::get_pwg_token(),
+    'U_HISTORY' => functions_url::get_root_url().'admin.php?page=history&amp;filter_image_id='.$_GET['image_id'],
 
     'PATH'=>$row['path'],
 
-    'TN_SRC' => DerivativeImage::url(IMG_MEDIUM, $src_image),
-    'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
+    'TN_SRC' => DerivativeImage::url(derivative_std_params::IMG_MEDIUM, $src_image),
+    'FILE_SRC' => DerivativeImage::url(derivative_std_params::IMG_LARGE, $src_image),
 
     'NAME' =>
       isset($_POST['name']) ?
         stripslashes($_POST['name']) : @$row['name'],
 
-    'TITLE' => render_element_name($row),
+    'TITLE' => functions_html::render_element_name($row),
 
     'DIMENSIONS' => @$row['width'].' * '.@$row['height'],
 
@@ -263,7 +271,7 @@ $template->assign(
 
     'FILESIZE' => @$row['filesize'].' KB',
 
-    'REGISTRATION_DATE' => format_date($row['date_available']),
+    'REGISTRATION_DATE' => functions::format_date($row['date_available']),
 
     'AUTHOR' => htmlspecialchars(
       isset($_POST['author'])
@@ -278,8 +286,8 @@ $template->assign(
         stripslashes($_POST['description']) : (empty($row['comment']) ? '' : $row['comment'])),
 
     'F_ACTION' =>
-        get_root_url().'admin.php'
-        .get_query_string_diff(array('sync_metadata'))
+        functions_url::get_root_url().'admin.php'
+        .functions_url::get_query_string_diff(array('sync_metadata'))
     )
   );
 
@@ -289,8 +297,8 @@ SELECT '.$conf['user_fields']['username'].' AS username
   FROM '.USERS_TABLE.'
   WHERE '.$conf['user_fields']['id'].' = '.$row['added_by'].'
 ;';
-$result = pwg_query($query);
-while ($user_row = pwg_db_fetch_assoc($result))
+$result = functions_mysqli::pwg_query($query);
+while ($user_row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   $row['added_by'] = $user_row['username'];
 }
@@ -298,14 +306,14 @@ while ($user_row = pwg_db_fetch_assoc($result))
 $extTab = explode('.',$row['file']);
 
 $intro_vars = array(
-  'file' => l10n('%s', $row['file']),
-  'date' => l10n('Posted the %s', format_date($row['date_available'], array('day', 'month', 'year'))),
-  'age' => l10n(ucfirst(time_since($row['date_available'], 'year'))),
-  'added_by' => l10n('Added by %s', $row['added_by']),
-  'size' => l10n('%s pixels, %.2f MB', $row['width'].'&times;'.$row['height'], $row['filesize']/1024),
-  'stats' => l10n('Visited %d times', $row['hit']),
-  'id' => l10n($row['id']),
-  'ext' => l10n('%s file type',strtoupper(end($extTab))),
+  'file' => functions::l10n('%s', $row['file']),
+  'date' => functions::l10n('Posted the %s', functions::format_date($row['date_available'], array('day', 'month', 'year'))),
+  'age' => functions::l10n(ucfirst(functions::time_since($row['date_available'], 'year'))),
+  'added_by' => functions::l10n('Added by %s', $row['added_by']),
+  'size' => functions::l10n('%s pixels, %.2f MB', $row['width'].'&times;'.$row['height'], $row['filesize']/1024),
+  'stats' => functions::l10n('Visited %d times', $row['hit']),
+  'id' => functions::l10n($row['id']),
+  'ext' => functions::l10n('%s file type',strtoupper(end($extTab))),
   'is_svg'=> (strtoupper(end($extTab)) == 'SVG'),
   );
 
@@ -317,9 +325,9 @@ SELECT
   FROM '.RATE_TABLE.'
   WHERE element_id = '.$_GET['image_id'].'
 ;';
-  list($row['nb_rates']) = pwg_db_fetch_row(pwg_query($query));
+  list($row['nb_rates']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-  $intro_vars['stats'].= ', '.sprintf(l10n('Rated %d times, score : %.2f'), $row['nb_rates'], $row['rating_score']);
+  $intro_vars['stats'].= ', '.sprintf(functions::l10n('Rated %d times, score : %.2f'), $row['nb_rates'], $row['rating_score']);
 }
 
 $query = '
@@ -327,7 +335,7 @@ SELECT *
   FROM '.IMAGE_FORMAT_TABLE.'
   WHERE image_id = '.$row['id'].'
 ;';
-$formats = query2array($query);
+$formats = functions_mysqli::query2array($query);
 
 if (!empty($formats))
 {
@@ -338,22 +346,22 @@ if (!empty($formats))
     $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format['filesize']/1024);
   }
 
-  $intro_vars['formats'] = l10n('Formats: %s', implode(', ', $format_strings));
+  $intro_vars['formats'] = functions::l10n('Formats: %s', implode(', ', $format_strings));
 }
 
 $template->assign('INTRO', $intro_vars);
 
 
-if (in_array(get_extension($row['path']),$conf['picture_ext']))
+if (in_array(functions::get_extension($row['path']),$conf['picture_ext']))
 {
-  $template->assign('U_COI', get_root_url().'admin.php?page=picture_coi&amp;image_id='.$_GET['image_id']);
+  $template->assign('U_COI', functions_url::get_root_url().'admin.php?page=picture_coi&amp;image_id='.$_GET['image_id']);
 }
 
 // image level options
 $selected_level = isset($_POST['level']) ? $_POST['level'] : $row['level'];
 $template->assign(
     array(
-      'level_options'=> get_privacy_level_options(),
+      'level_options'=> functions::get_privacy_level_options(),
       'level_options_selected' => array($selected_level)
     )
   );
@@ -366,17 +374,17 @@ SELECT category_id, uppercats, dir
       ON c.id = ic.category_id
   WHERE image_id = '.$_GET['image_id'].'
 ;';
-$result = pwg_query($query);
+$result = functions_mysqli::pwg_query($query);
 
 $related_categories = array();
 $related_categories_ids = array();
 
-while ($row = pwg_db_fetch_assoc($result))
+while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   $name =
-    get_cat_display_name_cache(
+    functions_html::get_cat_display_name_cache(
       $row['uppercats'],
-      get_root_url().'admin.php?page=album-'
+      functions_url::get_root_url().'admin.php?page=album-'
       );
 
   if ($row['category_id'] == $storage_category_id)
@@ -407,17 +415,17 @@ SELECT category_id
 ;';
 
 $authorizeds = array_diff(
-  array_from_query($query, 'category_id'),
+  functions::array_from_query($query, 'category_id'),
   explode(
     ',',
-    calculate_permissions($user['id'], $user['status'])
+    functions_user::calculate_permissions($user['id'], $user['status'])
     )
   );
 
 if (isset($_GET['cat_id'])
     and in_array($_GET['cat_id'], $authorizeds))
 {
-  $url_img = make_picture_url(
+  $url_img = functions_url::make_picture_url(
     array(
       'image_id' => $_GET['image_id'],
       'image_file' => $image_file,
@@ -429,7 +437,7 @@ else
 {
   foreach ($authorizeds as $category)
   {
-    $url_img = make_picture_url(
+    $url_img = functions_url::make_picture_url(
       array(
         'image_id' => $_GET['image_id'],
         'image_file' => $image_file,
@@ -452,17 +460,17 @@ SELECT id
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' ON id = category_id
   WHERE image_id = '.$_GET['image_id'].'
 ;';
-$associated_albums = query2array($query, null, 'id');
+$associated_albums = functions_mysqli::query2array($query, null, 'id');
 
 $template->assign(array(
   'associated_albums' => $associated_albums,
   'represented_albums' => $represented_albums,
   'STORAGE_ALBUM' => $storage_category_id,
-  'CACHE_KEYS' => get_admin_client_cache_keys(array('tags', 'categories')),
-  'PWG_TOKEN' => get_pwg_token(),
+  'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(array('tags', 'categories')),
+  'PWG_TOKEN' => functions::get_pwg_token(),
   ));
 
-trigger_notify('loc_end_picture_modify');
+functions_plugins::trigger_notify('loc_end_picture_modify');
 
 //----------------------------------------------------------- sending html code
 

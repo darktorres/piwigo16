@@ -1,5 +1,7 @@
 <?php
 
+use Piwigo\inc\functions;
+
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
 $edited_file = PHPWG_PLUGINS_PATH . "PersonalPlugin/main.php";
@@ -11,9 +13,9 @@ if (file_exists($edited_file))
 else
 {
   $content_file = "<?php\n/*
-Plugin Name: " . l10n('locfiledit_onglet_plug') . "
+Plugin Name: " . functions::l10n('locfiledit_onglet_plug') . "
 Version: 1.0
-Description: " . l10n('locfiledit_onglet_plug') . "
+Description: " . functions::l10n('locfiledit_onglet_plug') . "
 Plugin URI: http://piwigo.org
 Author:
 Author URI:

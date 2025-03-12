@@ -6,7 +6,14 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\admin\inc\functions_upload;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_params;
+use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeParams;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\SizingParams;
 
@@ -15,7 +22,7 @@ if( !defined("PHPWG_ROOT_PATH") )
   die ("Hacking attempt!");
 }
 
-if (!is_webmaster())
+if (!functions_user::is_webmaster())
 {
   return;
 }
@@ -38,7 +45,7 @@ foreach ($original_fields as $field)
   $updates[$field] = $value;
 }
 
-save_upload_form_config($updates, $page['errors'], $errors);
+functions_upload::save_upload_form_config($updates, $page['errors'], $errors);
 
 if ($_POST['resize_quality'] < 50 or $_POST['resize_quality'] > 98)
 {
@@ -50,13 +57,13 @@ $pderivatives = $_POST['d'];
 // step 1 - sanitize HTML input
 foreach ($pderivatives as $type => &$pderivative)
 {
-  if ($pderivative['must_square'] = ($type==IMG_SQUARE ? true : false))
+  if ($pderivative['must_square'] = ($type==derivative_std_params::IMG_SQUARE ? true : false))
   {
     $pderivative['h'] = $pderivative['w'];
     $pderivative['minh'] = $pderivative['minw'] = $pderivative['w'];
     $pderivative['crop'] = 100;
   }
-  $pderivative['must_enable'] = ($type==IMG_SQUARE || $type==IMG_THUMB || $type==$conf['derivative_default_size'])? true : false;
+  $pderivative['must_enable'] = ($type==derivative_std_params::IMG_SQUARE || $type==derivative_std_params::IMG_THUMB || $type==$conf['derivative_default_size'])? true : false;
   $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'] ? true : false;
 
   if (isset($pderivative['crop']))
@@ -84,7 +91,7 @@ foreach(ImageStdParams::get_all_types() as $type)
     continue;
   }
 
-  if ($type == IMG_THUMB)
+  if ($type == derivative_std_params::IMG_THUMB)
   {
     $w = intval($pderivative['w']);
     if ($w <= 0)
@@ -166,7 +173,7 @@ if (count($errors) == 0)
       {
         $old_params = $enabled[$type];
         $same = true;
-        if (!size_equals($old_params->sizing->ideal_size, $new_params->sizing->ideal_size)
+        if (!derivative_params::size_equals($old_params->sizing->ideal_size, $new_params->sizing->ideal_size)
             or $old_params->sizing->max_crop != $new_params->sizing->max_crop)
         {
           $same = false;
@@ -174,7 +181,7 @@ if (count($errors) == 0)
 
         if ($same
             and $new_params->sizing->max_crop != 0
-            and !size_equals($old_params->sizing->min_size, $new_params->sizing->min_size))
+            and !derivative_params::size_equals($old_params->sizing->min_size, $new_params->sizing->min_size))
         {
           $same = false;
         }
@@ -235,21 +242,21 @@ if (count($errors) == 0)
   if (count($disabled) == 0)
   {
     $query='DELETE FROM '.CONFIG_TABLE.' WHERE param = \'disabled_derivatives\'';
-    pwg_query($query);
+    functions_mysqli::pwg_query($query);
   }
   else
   {
-    conf_update_param('disabled_derivatives', addslashes(serialize($disabled)) );
+    functions::conf_update_param('disabled_derivatives', addslashes(serialize($disabled)) );
   }
   $conf['disabled_derivatives'] = serialize($disabled);
 
   if (count($changed_types))
   {
-    clear_derivative_cache($changed_types);
+    functions_admin::clear_derivative_cache($changed_types);
   }
 
-  $page['infos'][] = l10n('Your configuration settings are saved');
-  pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', array('config_section'=>'sizes'));
+  $page['infos'][] = functions::l10n('Your configuration settings are saved');
+  functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', array('config_section'=>'sizes'));
 }
 else
 {

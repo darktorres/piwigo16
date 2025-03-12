@@ -2,6 +2,7 @@
 
 namespace Piwigo\themes\smartpocket\admin;
 
+use Piwigo\inc\functions;
 use Piwigo\inc\ThemeMaintain;
 
 class smartpocket_maintain extends ThemeMaintain
@@ -19,18 +20,18 @@ class smartpocket_maintain extends ThemeMaintain
 
     if (empty($conf['smartpocket']))
     {
-      conf_update_param('smartpocket', $this->default_conf, true);
+      functions::conf_update_param('smartpocket', $this->default_conf, true);
     }
-    elseif (count(safe_unserialize($conf['smartpocket'])) != 2)
+    elseif (count(functions::safe_unserialize($conf['smartpocket'])) != 2)
     {
-      $conff = safe_unserialize($conf['smartpocket']);
+      $conff = functions::safe_unserialize($conf['smartpocket']);
       
       $config = array(
         'loop' => (!empty($conff['loop'])) ? $conff['loop'] :true,
         'autohide' => (!empty($conff['autohide'])) ? $conff['autohide'] :5000,
       );
       
-      conf_update_param('smartpocket', $config, true);
+      functions::conf_update_param('smartpocket', $config, true);
     }
     $this->installed = true;
   }
@@ -42,7 +43,7 @@ class smartpocket_maintain extends ThemeMaintain
   function delete()
   {
     // delete configuration
-    conf_delete_param('smartpocket');
+    functions::conf_delete_param('smartpocket');
   }
 }
 ?>

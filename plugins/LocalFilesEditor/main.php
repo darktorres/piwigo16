@@ -31,15 +31,18 @@ Author URI: http://piwigo.org
 Has Settings: webmaster
 */
 
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
+
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 define('LOCALEDIT_PATH' , PHPWG_PLUGINS_PATH . basename(dirname(__FILE__)) . '/');
 
-add_event_handler('loc_end_themes_installed', localfiles_css_link(...));
+functions_plugins::add_event_handler('loc_end_themes_installed', localfiles_css_link(...));
 function localfiles_css_link()
 {
   global $template;
 
-  load_language('plugin.lang', LOCALEDIT_PATH);
+  functions::load_language('plugin.lang', LOCALEDIT_PATH);
 
   $template->set_prefilter('themes', localfiles_css_link_prefilter(...));
 }

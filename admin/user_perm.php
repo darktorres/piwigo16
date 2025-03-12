@@ -6,23 +6,28 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_category;
+use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_user;
+
 if (!defined('IN_ADMIN'))
 {
   die('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
-
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 if (!empty($_POST))
 {
-  check_pwg_token();
-  check_input_parameter('cat_true', $_POST, true, PATTERN_ID);
-  check_input_parameter('cat_false', $_POST, true, PATTERN_ID);
+  functions::check_pwg_token();
+  functions::check_input_parameter('cat_true', $_POST, true, PATTERN_ID);
+  functions::check_input_parameter('cat_false', $_POST, true, PATTERN_ID);
 }
 
 // +-----------------------------------------------------------------------+
@@ -48,19 +53,19 @@ if (isset($_POST['falsify'])
 {
   // if you forbid access to a category, all sub-categories become
   // automatically forbidden
-  $subcats = get_subcat_ids($_POST['cat_true']);
+  $subcats = functions_category::get_subcat_ids($_POST['cat_true']);
   $query = '
 DELETE FROM '.USER_ACCESS_TABLE.'
   WHERE user_id = '.$page['user'].'
     AND cat_id IN ('.implode(',', $subcats).')
 ;';
-  pwg_query($query);
+  functions_mysqli::pwg_query($query);
 }
 elseif (isset($_POST['trueify'])
     and isset($_POST['cat_false'])
     and count($_POST['cat_false']) > 0)
 {
-  add_permission_on_category($_POST['cat_false'], $page['user']);
+  functions_admin::add_permission_on_category($_POST['cat_false'], $page['user']);
 }
 
 // +-----------------------------------------------------------------------+
@@ -77,12 +82,12 @@ $template->set_filenames(
 $template->assign(
   array(
     'TITLE' =>
-      l10n(
+      functions::l10n(
         'Manage permissions for user "%s"',
-        get_username($page['user'])
+        functions_admin::get_username($page['user'])
         ),
-    'L_CAT_OPTIONS_TRUE'=>l10n('Authorized'),
-    'L_CAT_OPTIONS_FALSE'=>l10n('Forbidden'),
+    'L_CAT_OPTIONS_TRUE'=>functions::l10n('Authorized'),
+    'L_CAT_OPTIONS_FALSE'=>functions::l10n('Forbidden'),
 
     'F_ACTION' =>
         PHPWG_ROOT_PATH.
@@ -104,23 +109,23 @@ SELECT DISTINCT cat_id, c.uppercats, c.global_rank
       ON c.id = ga.cat_id
   WHERE ug.user_id = '.$page['user'].'
 ;';
-$result = pwg_query($query);
+$result = functions_mysqli::pwg_query($query);
 
-if (pwg_db_num_rows($result) > 0)
+if (functions_mysqli::pwg_db_num_rows($result) > 0)
 {
   $cats = array();
-  while ($row = pwg_db_fetch_assoc($result))
+  while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
   {
     $cats[] = $row;
     $group_authorized[] = $row['cat_id'];
   }
-  usort($cats, global_rank_compare(...));
+  usort($cats, functions_category::global_rank_compare(...));
 
   foreach ($cats as $category)
   {
     $template->append(
       'categories_because_of_groups',
-      get_cat_display_name_cache($category['uppercats'], null)
+      functions_html::get_cat_display_name_cache($category['uppercats'], null)
       );
   }
 }
@@ -138,11 +143,11 @@ if (count($group_authorized) > 0)
 }
 $query_true.= '
 ;';
-display_select_cat_wrapper($query_true,array(),'category_option_true');
+functions_category::display_select_cat_wrapper($query_true,array(),'category_option_true');
 
-$result = pwg_query($query_true);
+$result = functions_mysqli::pwg_query($query_true);
 $authorized_ids = array();
-while ($row = pwg_db_fetch_assoc($result))
+while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   $authorized_ids[] = $row['id'];
 }
@@ -163,9 +168,9 @@ if (count($group_authorized) > 0)
 }
 $query_false.= '
 ;';
-display_select_cat_wrapper($query_false,array(),'category_option_false');
+functions_category::display_select_cat_wrapper($query_false,array(),'category_option_false');
 
-$template->assign('PWG_TOKEN', get_pwg_token());
+$template->assign('PWG_TOKEN', functions::get_pwg_token());
 
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |

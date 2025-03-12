@@ -61,8 +61,8 @@ final class ImageRect
 
     if (!empty($coi))
     {
-      $coil = floor($this->r * char_to_fraction($coi[0]));
-      $coir = ceil($this->r * char_to_fraction($coi[2]));
+      $coil = floor($this->r * derivative_params::char_to_fraction($coi[0]));
+      $coir = ceil($this->r * derivative_params::char_to_fraction($coi[2]));
       $availableL = $coil > $this->l ? $coil - $this->l : 0;
       $availableR = $coir < $this->r ? $this->r - $coir : 0;
       if ($availableL + $availableR >= $pixels)
@@ -95,8 +95,8 @@ final class ImageRect
 
     if (!empty($coi))
     {
-      $coit = floor($this->b * char_to_fraction($coi[1]));
-      $coib = ceil($this->b * char_to_fraction($coi[3]));
+      $coit = floor($this->b * derivative_params::char_to_fraction($coi[1]));
+      $coib = ceil($this->b * derivative_params::char_to_fraction($coi[3]));
       $availableT = $coit > $this->t ? $coit - $this->t : 0;
       $availableB = $coib < $this->b ? $this->b - $coib : 0;
       if ($availableT + $availableB >= $pixels)

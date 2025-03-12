@@ -6,8 +6,14 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\pwg_image;
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\derivative_std_params;
+use Piwigo\inc\functions;
+use Piwigo\inc\functions_url;
+use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 
 if( !defined("PHPWG_ROOT_PATH") )
@@ -15,22 +21,21 @@ if( !defined("PHPWG_ROOT_PATH") )
   die ("Hacking attempt!");
 }
 
-if (!is_webmaster())
+if (!functions_user::is_webmaster())
 {
-  $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+  $page['warnings'][] = str_replace('%s', functions::l10n('user_status_webmaster'), functions::l10n('%s status is required to edit parameters.'));
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 include_once(PHPWG_ROOT_PATH.'admin/inc/functions_upload.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 //-------------------------------------------------------- sections definitions
 
-check_input_parameter('section', $_GET, false, '/^[a-z]+$/i');
+functions::check_input_parameter('section', $_GET, false, '/^[a-z]+$/i');
 
 if (!isset($_GET['section']))
 {
@@ -118,26 +123,26 @@ $display_info_checkboxes = array(
 // image order management
 $sort_fields = array(
   ''                    => '',
-  'file ASC'            => l10n('File name, A &rarr; Z'),
-  'file DESC'           => l10n('File name, Z &rarr; A'),
-  'name ASC'            => l10n('Photo title, A &rarr; Z'),
-  'name DESC'           => l10n('Photo title, Z &rarr; A'),
-  'date_creation DESC'  => l10n('Date created, new &rarr; old'),
-  'date_creation ASC'   => l10n('Date created, old &rarr; new'),
-  'date_available DESC' => l10n('Date posted, new &rarr; old'),
-  'date_available ASC'  => l10n('Date posted, old &rarr; new'),
-  'rating_score DESC'   => l10n('Rating score, high &rarr; low'),
-  'rating_score ASC'    => l10n('Rating score, low &rarr; high'),
-  'hit DESC'            => l10n('Visits, high &rarr; low'),
-  'hit ASC'             => l10n('Visits, low &rarr; high'),
-  'id ASC'              => l10n('Numeric identifier, 1 &rarr; 9'),
-  'id DESC'             => l10n('Numeric identifier, 9 &rarr; 1'),
-  '`rank` ASC'          => l10n('Manual sort order'),
+  'file ASC'            => functions::l10n('File name, A &rarr; Z'),
+  'file DESC'           => functions::l10n('File name, Z &rarr; A'),
+  'name ASC'            => functions::l10n('Photo title, A &rarr; Z'),
+  'name DESC'           => functions::l10n('Photo title, Z &rarr; A'),
+  'date_creation DESC'  => functions::l10n('Date created, new &rarr; old'),
+  'date_creation ASC'   => functions::l10n('Date created, old &rarr; new'),
+  'date_available DESC' => functions::l10n('Date posted, new &rarr; old'),
+  'date_available ASC'  => functions::l10n('Date posted, old &rarr; new'),
+  'rating_score DESC'   => functions::l10n('Rating score, high &rarr; low'),
+  'rating_score ASC'    => functions::l10n('Rating score, low &rarr; high'),
+  'hit DESC'            => functions::l10n('Visits, high &rarr; low'),
+  'hit ASC'             => functions::l10n('Visits, low &rarr; high'),
+  'id ASC'              => functions::l10n('Numeric identifier, 1 &rarr; 9'),
+  'id DESC'             => functions::l10n('Numeric identifier, 9 &rarr; 1'),
+  '`rank` ASC'          => functions::l10n('Manual sort order'),
   );
 
 $comments_order = array(
-  'ASC' => l10n('Show oldest comments first'),
-  'DESC' => l10n('Show latest comments first'),
+  'ASC' => functions::l10n('Show oldest comments first'),
+  'DESC' => functions::l10n('Show latest comments first'),
   );
 
 $mail_themes = array(
@@ -148,7 +153,7 @@ $mail_themes = array(
 //------------------------------ verification and registration of modifications
 if (isset($_POST['submit']))
 {
-  check_pwg_token();
+  functions::check_pwg_token();
   $int_pattern = '/^\d+$/';
 
   switch ($page['section'])
@@ -159,7 +164,7 @@ if (isset($_POST['submit']))
       {
         if ( !empty($_POST['order_by']) )
         {
-          check_input_parameter('order_by', $_POST, true, '/^('.implode('|', array_keys($sort_fields)).')$/');
+          functions::check_input_parameter('order_by', $_POST, true, '/^('.implode('|', array_keys($sort_fields)).')$/');
 
           $used = array();
           foreach ($_POST['order_by'] as $i => $val)
@@ -175,7 +180,7 @@ if (isset($_POST['submit']))
           }
           if ( !count($_POST['order_by']) )
           {
-            $page['errors'][] = l10n('No order field selected');
+            $page['errors'][] = functions::l10n('No order field selected');
           }
           else
           {
@@ -200,7 +205,7 @@ if (isset($_POST['submit']))
         }
         else
         {
-          $page['errors'][] = l10n('No order field selected');
+          $page['errors'][] = functions::l10n('No order field selected');
         }
       }
 
@@ -248,7 +253,7 @@ if (isset($_POST['submit']))
            or $_POST['nb_comment_page'] < 5
            or $_POST['nb_comment_page'] > 50)
       {
-        $page['errors'][] = l10n('The number of comments a page must be between 5 and 50 included.');
+        $page['errors'][] = functions::l10n('The number of comments a page must be between 5 and 50 included.');
       }
       foreach( $comments_checkboxes as $checkbox)
       {
@@ -266,7 +271,7 @@ if (isset($_POST['submit']))
       if (!preg_match($int_pattern, $_POST['nb_categories_page'])
             or $_POST['nb_categories_page'] < 4)
       {
-        $page['errors'][] = l10n('The number of albums a page must be above 4.');
+        $page['errors'][] = functions::l10n('The number of albums a page must be above 4.');
       }
       foreach( $display_checkboxes as $checkbox)
       {
@@ -283,11 +288,11 @@ if (isset($_POST['submit']))
   }
 
   // updating configuration if no error found
-  if (!in_array($page['section'], array('sizes', 'watermark')) and count($page['errors']) == 0 and is_webmaster())
+  if (!in_array($page['section'], array('sizes', 'watermark')) and count($page['errors']) == 0 and functions_user::is_webmaster())
   {
     //echo '<pre>'; print_r($_POST); echo '</pre>';
-    $result = pwg_query('SELECT param FROM '.CONFIG_TABLE);
-    while ($row = pwg_db_fetch_assoc($result))
+    $result = functions_mysqli::pwg_query('SELECT param FROM '.CONFIG_TABLE);
+    while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
     {
       if (isset($_POST[$row['param']]))
       {
@@ -306,26 +311,26 @@ UPDATE '.CONFIG_TABLE.'
 SET value = \''. str_replace("\'", "''", $value).'\'
 WHERE param = \''.$row['param'].'\'
 ;';
-        pwg_query($query);
+        functions_mysqli::pwg_query($query);
       }
     }
-    $page['infos'][] = l10n('Your configuration settings are saved');
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', array('config_section'=>$page['section']));
+    $page['infos'][] = functions::l10n('Your configuration settings are saved');
+    functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', array('config_section'=>$page['section']));
   }
 
   //------------------------------------------------------ $conf reinitialization
-  load_conf_from_db();
+  functions::load_conf_from_db();
 }
 
 // restore default derivatives settings
 if ('sizes' == $page['section'] and isset($_GET['action']) and 'restore_settings' == $_GET['action'])
 {
   ImageStdParams::set_and_save( ImageStdParams::get_default_sizes() );
-  pwg_query('DELETE FROM '.CONFIG_TABLE.' WHERE param = \'disabled_derivatives\'');
-  clear_derivative_cache();
+  functions_mysqli::pwg_query('DELETE FROM '.CONFIG_TABLE.' WHERE param = \'disabled_derivatives\'');
+  functions_admin::clear_derivative_cache();
 
-  $page['infos'][] = l10n('Your configuration settings are saved');
-  pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', array('config_section'=>$page['section'],'config_action'=>$_GET['action']));
+  $page['infos'][] = functions::l10n('Your configuration settings are saved');
+  functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', array('config_section'=>$page['section'],'config_action'=>$_GET['action']));
 }
 
 //----------------------------------------------------- template initialization
@@ -337,13 +342,13 @@ $tabsheet->set_id('configuration');
 $tabsheet->select($page['section']);
 $tabsheet->assign();
 
-$action = get_root_url().'admin.php?page=configuration';
+$action = functions_url::get_root_url().'admin.php?page=configuration';
 $action.= '&amp;section='.$page['section'];
 
 $template->assign(
   array(
-    'U_HELP' => get_root_url().'admin/popuphelp.php?page=configuration',
-    'PWG_TOKEN' => get_pwg_token(),
+    'U_HELP' => functions_url::get_root_url().'admin/popuphelp.php?page=configuration',
+    'PWG_TOKEN' => functions::get_pwg_token(),
     'F_ACTION'=>$action
     ));
 
@@ -351,23 +356,9 @@ switch ($page['section'])
 {
   case 'main' :
   {
-
-    function order_by_is_local()
+    if (functions_admin::order_by_is_local())
     {
-      $conf = array();
-      include(PHPWG_ROOT_PATH . 'inc/config_default.php');
-      @include(PHPWG_ROOT_PATH. 'local/config/config.php');
-      if (isset($conf['local_dir_site']))
-      {
-        @include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR. 'config/config.php');
-      }
-
-      return isset($conf['order_by']) or isset($conf['order_by_inside_category']);
-    }
-
-    if (order_by_is_local())
-    {
-      $page['warnings'][] = l10n('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !');
+      $page['warnings'][] = functions::l10n('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !');
     }
 
     if ( isset($conf['order_by_custom']) or isset($conf['order_by_inside_category_custom']) )
@@ -410,7 +401,7 @@ switch ($page['section'])
         name
       FROM `'.GROUPS_TABLE.'`
     ;';
-    $groups = query2array($query, 'id', 'name');
+    $groups = functions_mysqli::query2array($query, 'id', 'name');
     natcasesort($groups);
 
     $template->assign(
@@ -456,19 +447,19 @@ switch ($page['section'])
   }
   case 'default' :
   {
-    $edit_user = build_user($conf['guest_id'], false);
+    $edit_user = functions_user::build_user($conf['guest_id'], false);
     include_once(PHPWG_ROOT_PATH.'profile.php');
 
     $errors = array();
-    if (save_profile_from_post($edit_user, $errors))
+    if (functions::save_profile_from_post($edit_user, $errors))
     {
       // Reload user
-      $edit_user = build_user($conf['guest_id'], false);
-      $page['infos'][] = l10n('Information data registered in database');
+      $edit_user = functions_user::build_user($conf['guest_id'], false);
+      $page['infos'][] = functions::l10n('Information data registered in database');
     }
     $page['errors'] = array_merge($page['errors'], $errors);
 
-    load_profile_in_template(
+    functions::load_profile_in_template(
       $action,
       '',
       $edit_user,
@@ -540,8 +531,8 @@ switch ($page['section'])
       {
         $tpl_var = array();
 
-        $tpl_var['must_square'] = ($type==IMG_SQUARE ? true : false);
-        $tpl_var['must_enable'] = ($type==IMG_SQUARE || $type==IMG_THUMB || $type==$conf['derivative_default_size'])? true : false;
+        $tpl_var['must_square'] = ($type==derivative_std_params::IMG_SQUARE ? true : false);
+        $tpl_var['must_enable'] = ($type==derivative_std_params::IMG_SQUARE || $type==derivative_std_params::IMG_THUMB || $type==$conf['derivative_default_size'])? true : false;
 
         if ($params = @$enabled[$type])
         {
@@ -575,7 +566,7 @@ switch ($page['section'])
       $now = time();
       foreach(ImageStdParams::$custom as $custom=>$time)
       {
-        $tpl_vars[$custom] = ($now-$time<=24*3600) ? l10n('today') : time_since($time, 'day');
+        $tpl_vars[$custom] = ($now-$time<=24*3600) ? functions::l10n('today') : functions::time_since($time, 'day');
       }
       $template->assign('custom_derivatives', $tpl_vars);
     }
@@ -655,8 +646,8 @@ switch ($page['section'])
   }
 }
 
-$template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
-$template->assign('ADMIN_PAGE_TITLE', l10n('Configuration'));
+$template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
+$template->assign('ADMIN_PAGE_TITLE', functions::l10n('Configuration'));
 
 //----------------------------------------------------------- sending html code
 $template->assign_var_from_handle('ADMIN_CONTENT', 'config');

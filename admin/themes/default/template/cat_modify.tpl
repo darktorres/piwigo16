@@ -182,7 +182,7 @@ str_root = '{'Root'|@translate|escape:javascript}';
 
   <div class="cat-modify-footer">
    <div class="cat-modify-footer-start">
-    {if cat_admin_access($CAT_ID)}
+    {if functions_admin::cat_admin_access($CAT_ID)}
       <a class="cat-modify-footer-see-out" href="{$U_JUMPTO}"><i class="icon-left-open"></i>{'Open in gallery'|translate}</a>
     {else}
     <a class="tiptip cat-modify-footer-see-out disabled" title="{'ACCESS_5'|translate}" href="#"><i class="icon-left-open"></i>{'Open in gallery'|translate}</a>

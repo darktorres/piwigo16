@@ -29,40 +29,6 @@ $logger = new Katzgrau\KLogger\Logger(PHPWG_ROOT_PATH . $conf['data_location'] .
   'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf['db_password']) . '.txt',
   ));
 
-
-function trigger_notify() {}
-function get_extension( $filename )
-{
-  return substr( strrchr( $filename, '.' ), 1, strlen ( $filename ) );
-}
-
-function mkgetdir($dir)
-{
-  if ( !is_dir($dir) )
-  {
-    global $conf;
-    if (substr(PHP_OS, 0, 3) == 'WIN')
-    {
-      $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
-    }
-    $umask = umask(0);
-    $mkd = @mkdir($dir, $conf['chmod_value'], true);
-    umask($umask);
-    if ($mkd==false && !is_dir($dir) /* retest existence because of potential concurrent i.php with slow file systems*/)
-    {
-      return false;
-    }
-
-    $file = $dir.'/index.htm';
-    file_exists($file) or @file_put_contents( $file, 'Not allowed!' );
-  }
-  if ( !is_writable($dir) )
-  {
-    return false;
-  }
-  return true;
-}
-
 // end fast bootstrap
 
 function ierror($msg, $code)

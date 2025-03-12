@@ -61,7 +61,7 @@ $navigation .= '</a>';
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'list';
-include(PHPWG_ROOT_PATH . 'admin/inc/albums_tab.php');
+require PHPWG_ROOT_PATH . 'admin/inc/albums_tab.php';
 
 // +-----------------------------------------------------------------------+
 // |                    virtual categories management                      |

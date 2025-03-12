@@ -16,7 +16,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 global $template, $conf, $page;
 
 functions::load_language('plugin.lang', GDTHUMB_PATH);
-include(dirname(__FILE__) . '/config_default.php');
+require dirname(__FILE__) . '/config_default.php';
 $params = $conf['gdThumb'];
 
 if (isset($_GET['getMissingDerivative'])) {

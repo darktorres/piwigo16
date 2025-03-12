@@ -25,7 +25,7 @@ functions::check_input_parameter('group', $_GET, false, PATTERN_ID);
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'user_list';
-include(PHPWG_ROOT_PATH . 'admin/inc/user_tabs.php');
+require PHPWG_ROOT_PATH . 'admin/inc/user_tabs.php';
 
 // +-----------------------------------------------------------------------+
 // |                              groups list                              |

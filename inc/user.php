@@ -66,7 +66,7 @@ if (defined('IN_WS') and
     isset($_POST['password'])
 ) {
     if (! functions_user::try_log_user($_POST['username'], $_POST['password'], false)) {
-        include_once(PHPWG_ROOT_PATH . 'inc/ws_init.php');
+        require_once PHPWG_ROOT_PATH . 'inc/ws_init.php';
         $service->sendResponse(new PwgError(999, 'Invalid username/password'));
         exit();
     }

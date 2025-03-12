@@ -22,9 +22,9 @@ use SmartyException;
 use stdClass;
 use uagent_info;
 
-include_once(PHPWG_ROOT_PATH . 'inc/functions_plugins.php');
-include_once(PHPWG_ROOT_PATH . 'inc/functions_user.php');
-include_once(PHPWG_ROOT_PATH . 'inc/functions_session.php');
+require_once PHPWG_ROOT_PATH . 'inc/functions_plugins.php';
+require_once PHPWG_ROOT_PATH . 'inc/functions_user.php';
+require_once PHPWG_ROOT_PATH . 'inc/functions_session.php';
 
 final class functions
 {
@@ -639,14 +639,14 @@ final class functions
         $history_id = functions_mysqli::pwg_db_insert_id('history');
 
         if ($history_id % 1000 == 0) {
-            include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_history.php');
+            require_once PHPWG_ROOT_PATH . 'admin/inc/functions_history.php';
             functions_history::history_summarize(50000);
         }
 
         if ($conf['history_autopurge_every'] > 0 and
             $history_id % $conf['history_autopurge_every'] == 0
         ) {
-            include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_history.php');
+            require_once PHPWG_ROOT_PATH . 'admin/inc/functions_history.php';
             functions_history::history_autopurge();
         }
 
@@ -1190,7 +1190,7 @@ final class functions
             'redirect' => 'redirect.tpl',
         ]);
 
-        include(PHPWG_ROOT_PATH . 'inc/page_header.php');
+        require PHPWG_ROOT_PATH . 'inc/page_header.php';
 
         $template->set_filenames([
             'redirect' => 'redirect.tpl',
@@ -1199,7 +1199,7 @@ final class functions
 
         $template->parse('redirect');
 
-        include(PHPWG_ROOT_PATH . 'inc/page_tail.php');
+        require PHPWG_ROOT_PATH . 'inc/page_tail.php';
 
         exit();
     }
@@ -1892,7 +1892,7 @@ final class functions
         $f = PHPWG_ROOT_PATH . 'language/' . $lang_id . '/common.lang.php';
 
         if (file_exists($f)) {
-            include($f);
+            require $f;
             return ! empty($lang_info['parent']) ? $lang_info['parent'] : null;
         }
 
@@ -1999,15 +1999,15 @@ final class functions
                     $path = str_replace($selected_language, $options['force_fallback'], $source_file);
 
                     if (file_exists($path)) {
-                        include($path);
+                        require $path;
                     }
                 }
 
                 // load language content
                 if (file_exists($source_file)) {
-                    include($source_file);
+                    require $source_file;
                 }
-                
+
                 $load_lang = $lang;
                 $load_lang_info = ($lang_info ?? null);
 
@@ -2035,7 +2035,7 @@ final class functions
                     $path = str_replace($selected_language, $parent_language, $source_file);
 
                     if (file_exists($path)) {
-                        include($path);
+                        require $path;
                     }
                 }
 
@@ -3515,7 +3515,7 @@ final class functions
 
                         // send email to the user
                         if ($_POST['username'] != $userdata['username']) {
-                            include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
+                            require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
                             functions_mail::switch_lang_to($userdata['language']);
 
                             $keyargs_content = [

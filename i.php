@@ -19,10 +19,10 @@ use Piwigo\inc\SizingParams;
 define('PHPWG_ROOT_PATH', './');
 
 // fast bootstrap - no db connection
-include(PHPWG_ROOT_PATH . 'inc/config_default.php');
+require PHPWG_ROOT_PATH . 'inc/config_default.php';
 
 if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
-    include(PHPWG_ROOT_PATH . 'local/config/config.php');
+    require PHPWG_ROOT_PATH . 'local/config/config.php';
 }
 
 if (! defined('PWG_LOCAL_DIR')) {
@@ -34,7 +34,7 @@ if (! defined('PWG_DERIVATIVE_DIR')) {
 }
 
 if (file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php')) {
-    include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php');
+    require PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php';
 }
 
 $logger = new Katzgrau\KLogger\Logger(PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'], $conf['log_level'], [

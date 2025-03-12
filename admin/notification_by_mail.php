@@ -26,9 +26,9 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_notification_by_mail.php');
-include_once(PHPWG_ROOT_PATH . 'inc/common.php');
-include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
+require_once PHPWG_ROOT_PATH . 'admin/inc/functions_notification_by_mail.php';
+require_once PHPWG_ROOT_PATH . 'inc/common.php';
+require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |

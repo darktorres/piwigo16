@@ -21,7 +21,7 @@ use Piwigo\inc\SrcImage;
 
 define('PHPWG_ROOT_PATH', './');
 session_cache_limiter('public');
-include_once(PHPWG_ROOT_PATH . 'inc/common.php');
+require_once PHPWG_ROOT_PATH . 'inc/common.php';
 
 // Check Access and exit when user status is not ok
 functions_user::check_status(ACCESS_GUEST);

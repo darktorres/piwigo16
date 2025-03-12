@@ -337,7 +337,7 @@ final class pwg_images
             'image_id' => $params['image_id'],
         ];
 
-        include_once(PHPWG_ROOT_PATH . 'inc/functions_comment.php');
+        require_once PHPWG_ROOT_PATH . 'inc/functions_comment.php';
 
         $comment_action = functions_comment::insert_user_comment($comm, $params['key'], $infos);
 
@@ -1142,7 +1142,7 @@ final class pwg_images
         self::merge_chunks($file_path, $image['md5sum'], $original_type);
         chmod($file_path, 0644);
 
-        include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php');
+        require_once PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php';
 
         // if we receive the "file", we only update the original if the "file" is
         // bigger than current original
@@ -1260,7 +1260,7 @@ final class pwg_images
         self::merge_chunks($file_path, $params['original_sum'], $original_type);
         chmod($file_path, 0644);
 
-        include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php');
+        require_once PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php';
 
         $image_id = functions_upload::add_uploaded_file(
             $file_path,
@@ -1416,7 +1416,7 @@ final class pwg_images
             }
         }
 
-        include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php');
+        require_once PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php';
 
         $image_id = functions_upload::add_uploaded_file(
             $_FILES['image']['tmp_name'],
@@ -1621,7 +1621,7 @@ final class pwg_images
             // Strip the temp .part suffix off
             rename("{$filePath}.part", $filePath);
 
-            include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php');
+            require_once PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php';
 
             if (isset($params['format_of'])) {
                 $query = <<<SQL
@@ -1882,7 +1882,7 @@ final class pwg_images
 
         $logger->debug(__FUNCTION__ . ' ' . $output_filepath . ' MD5 checksum OK');
 
-        include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php');
+        require_once PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php';
 
         $image_id = functions_upload::add_uploaded_file(
             $output_filepath,
@@ -2496,7 +2496,7 @@ final class pwg_images
         array $params,
         PwgServer $service
     ): array {
-        include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php');
+        require_once PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php';
 
         $ret['message'] = functions_upload::ready_for_upload_message();
         $ret['ready_for_upload'] = true;

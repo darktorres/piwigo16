@@ -71,12 +71,12 @@ $template->assign([
 ]);
 
 if ($page['tab'] == 'properties') {
-    include(PHPWG_ROOT_PATH . 'admin/cat_modify.php');
+    require PHPWG_ROOT_PATH . 'admin/cat_modify.php';
 } elseif ($page['tab'] == 'sort_order') {
-    include(PHPWG_ROOT_PATH . 'admin/element_set_ranks.php');
+    require PHPWG_ROOT_PATH . 'admin/element_set_ranks.php';
 } elseif ($page['tab'] == 'permissions') {
     $_GET['cat'] = $_GET['cat_id'];
-    include(PHPWG_ROOT_PATH . 'admin/cat_perm.php');
+    require PHPWG_ROOT_PATH . 'admin/cat_perm.php';
 } else {
-    include(PHPWG_ROOT_PATH . 'admin/album_' . $page['tab'] . '.php');
+    require PHPWG_ROOT_PATH . 'admin/album_' . $page['tab'] . '.php';
 }

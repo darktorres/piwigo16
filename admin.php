@@ -25,8 +25,8 @@ use Piwigo\inc\functions_user;
 define('PHPWG_ROOT_PATH', './');
 define('IN_ADMIN', true);
 
-include_once(PHPWG_ROOT_PATH . 'inc/common.php');
-include_once(PHPWG_ROOT_PATH . 'admin/inc/add_core_tabs.php');
+require_once PHPWG_ROOT_PATH . 'inc/common.php';
+require_once PHPWG_ROOT_PATH . 'admin/inc/add_core_tabs.php';
 
 functions_plugins::trigger_notify('loc_begin_admin');
 
@@ -185,7 +185,7 @@ $link_start = PHPWG_ROOT_PATH . 'admin.php?page=';
 $conf_link = $link_start . 'configuration&amp;section=';
 
 // $_GET['tab'] is often used to perform and
-// include('admin_page_'.$_GET['tab'].'.php') : we need to protect it to
+// require 'admin_page_'.$_GET['tab'].'.php' : we need to protect it to
 // avoid any unexpected file inclusion
 functions::check_input_parameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 
@@ -343,7 +343,7 @@ if (in_array($page['page'], [
 // +-----------------------------------------------------------------------+
 
 functions_plugins::trigger_notify('loc_begin_admin_page');
-include(PHPWG_ROOT_PATH . 'admin/' . $page['page'] . '.php');
+require PHPWG_ROOT_PATH . 'admin/' . $page['page'] . '.php';
 
 $template->assign('ACTIVE_MENU', functions_admin::get_active_menu($page['page']));
 
@@ -354,7 +354,7 @@ $template->assign('ACTIVE_MENU', functions_admin::get_active_menu($page['page'])
 // Add the Piwigo Official menu
 $template->assign('pwgmenu', functions_admin::pwg_URL());
 
-include(PHPWG_ROOT_PATH . 'inc/page_header.php');
+require PHPWG_ROOT_PATH . 'inc/page_header.php';
 
 functions_plugins::trigger_notify('loc_end_admin');
 
@@ -362,4 +362,4 @@ functions_html::flush_page_messages();
 
 $template->pparse('admin');
 
-include(PHPWG_ROOT_PATH . 'inc/page_tail.php');
+require PHPWG_ROOT_PATH . 'inc/page_tail.php';

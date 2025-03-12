@@ -18,10 +18,10 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\menubar;
 
 define('PHPWG_ROOT_PATH', './');
-include_once(PHPWG_ROOT_PATH . 'inc/common.php');
+require_once PHPWG_ROOT_PATH . 'inc/common.php';
 functions_user::check_status(ACCESS_FREE);
-include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
-include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_notification_by_mail.php');
+require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
+require_once PHPWG_ROOT_PATH . 'admin/inc/functions_notification_by_mail.php';
 // Translations are in admin file too
 functions::load_language('admin.lang');
 // Need to update a second time
@@ -68,7 +68,7 @@ if (! isset($themeconf['hide_menu_on']) or
 // +-----------------------------------------------------------------------+
 // | html code display                                                     |
 // +-----------------------------------------------------------------------+
-include(PHPWG_ROOT_PATH . 'inc/page_header.php');
+require PHPWG_ROOT_PATH . 'inc/page_header.php';
 functions_html::flush_page_messages();
 $template->parse('nbm');
-include(PHPWG_ROOT_PATH . 'inc/page_tail.php');
+require PHPWG_ROOT_PATH . 'inc/page_tail.php';

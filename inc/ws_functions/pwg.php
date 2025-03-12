@@ -709,7 +709,7 @@ final class pwg
         array $param,
         PwgServer &$service
     ): array {
-        include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_history.php');
+        require_once PHPWG_ROOT_PATH . 'admin/inc/functions_history.php';
 
         global $conf;
 

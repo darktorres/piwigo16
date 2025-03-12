@@ -28,10 +28,10 @@ if (function_exists('ini_set')) {
 define('PHPWG_ROOT_PATH', './');
 
 // load config file
-include(PHPWG_ROOT_PATH . 'inc/config_default.php');
+require PHPWG_ROOT_PATH . 'inc/config_default.php';
 
 if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
-    include(PHPWG_ROOT_PATH . 'local/config/config.php');
+    require PHPWG_ROOT_PATH . 'local/config/config.php';
 }
 
 if (! defined('PWG_LOCAL_DIR')) {
@@ -51,13 +51,13 @@ if ($php_end_tag === false) {
     die('Cannot find php end tag in ' . $config_file);
 }
 
-include($config_file);
+require $config_file;
 
-include_once(PHPWG_ROOT_PATH . 'inc/constants.php');
+require_once PHPWG_ROOT_PATH . 'inc/constants.php';
 define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 
-include_once(PHPWG_ROOT_PATH . 'inc/functions.php');
-include_once(PHPWG_ROOT_PATH . 'inc/Template.php');
+require_once PHPWG_ROOT_PATH . 'inc/functions.php';
+require_once PHPWG_ROOT_PATH . 'inc/Template.php';
 
 // +-----------------------------------------------------------------------+
 // |                             playing zone                              |
@@ -302,7 +302,7 @@ if ((isset($_POST['submit']) or isset($_GET['now'])) and
 
         $page['upgrade_start'] = functions::get_moment();
         $conf['die_on_sql_error'] = false;
-        include($upgrade_file);
+        require $upgrade_file;
         functions::conf_update_param('piwigo_db_version', functions::get_branch_from_version(PHPWG_VERSION));
 
         // Something to add in database.php?

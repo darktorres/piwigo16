@@ -187,7 +187,7 @@ final class functions_modus
             $template->smarty->registerPlugin('modifier', 'cssGradient', self::modus_css_gradient(...));
         }
 
-        include(dirname(__FILE__) . '/skins/' . $conf['modus_theme']['skin'] . '.php');
+        require dirname(__FILE__) . '/skins/' . $conf['modus_theme']['skin'] . '.php';
 
         $template->assign([
             'conf' => $conf,

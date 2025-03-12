@@ -237,7 +237,7 @@ final class functions_user
             if ($notify_admin and
                 $conf['email_admin_on_new_user'] != 'none'
             ) {
-                include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
+                require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
                 $admin_url = functions_url::get_absolute_root_url() . 'admin.php?page=user_list&username=' . $login;
 
                 $keyargs_content = [
@@ -264,7 +264,7 @@ final class functions_user
             if ($notify_user and
                 functions::email_check_format($mail_address)
             ) {
-                include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
+                require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
 
                 $keyargs_content = [
                     functions::get_l10n_args('Hello %s,', stripslashes($login)),

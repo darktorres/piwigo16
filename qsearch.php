@@ -14,7 +14,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 define('PHPWG_ROOT_PATH', './');
-include_once(PHPWG_ROOT_PATH . 'inc/common.php');
+require_once PHPWG_ROOT_PATH . 'inc/common.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |

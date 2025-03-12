@@ -54,7 +54,7 @@ final class functions_TakeATour
 
         // some tours may need admin functions (like 2_8_0 needs get_orphans)
 
-        include($tour_to_launch . '/config.php');
+        require $tour_to_launch . '/config.php';
         $template->set_filename('TAT_tour_tpl', $TOUR_PATH);
 
         functions_plugins::trigger_notify('TAT_before_parse_tour');

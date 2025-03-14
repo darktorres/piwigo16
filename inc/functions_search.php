@@ -6,6 +6,13 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\QDateRangeScope;
+use Piwigo\inc\QExpression;
+use Piwigo\inc\QMultiToken;
+use Piwigo\inc\QNumericRangeScope;
+use Piwigo\inc\QResults;
+use Piwigo\inc\QSearchScope;
+
 /**
  * @package functions\search
  */

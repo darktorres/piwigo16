@@ -8,6 +8,9 @@
 
 namespace Piwigo\inc\ws_protocols;
 
+use Piwigo\inc\PwgError;
+use Piwigo\inc\PwgRequestHandler;
+
 class PwgRestRequestHandler extends PwgRequestHandler
 {
   function handleRequest(&$service)

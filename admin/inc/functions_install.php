@@ -6,6 +6,9 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\plugins;
+use Piwigo\admin\inc\themes;
+
 /**
  * @package functions\admin\install
  */

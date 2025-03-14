@@ -6,6 +6,10 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\pwg_image;
+use Piwigo\admin\inc\tabsheet;
+use Piwigo\inc\ImageStdParams;
+
 if( !defined("PHPWG_ROOT_PATH") )
 {
   die ("Hacking attempt!");

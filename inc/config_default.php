@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Psr\Log\LogLevel;
+
 if (! extension_loaded('curl')) {
     exit('PHP extension "curl" is not loaded');
 }
@@ -1027,7 +1029,7 @@ $conf['log_dir'] = '/logs';
 
 // Log level (EMERGENCY, ALERT, CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG)
 // development = DEBUG, production = ERROR
-$conf['log_level'] = \Psr\Log\LogLevel::DEBUG;
+$conf['log_level'] = LogLevel::DEBUG;
 
 // Keep logs file during X days
 $conf['log_archive_days'] = 30;

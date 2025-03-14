@@ -6,6 +6,10 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\BlockManager;
+use Piwigo\inc\RegisteredBlock;
+use Piwigo\inc\SrcImage;
+
 /**
  * @package functions\html
  */

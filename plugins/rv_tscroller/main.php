@@ -7,6 +7,9 @@ Author: rvelices
 Author URI: http://www.modusoptimus.com
 Has Settings: false
 */
+
+use Piwigo\plugins\rv_tscroller\RVTS;
+
 define('RVTS_VERSION', '12.a');
 
 include_once(PHPWG_ROOT_PATH.'plugins/rv_tscroller/RVTS.php');

@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\Template;
+
 
 // The "No Photo Yet" feature: if you have no photo yet in your gallery, the
 // gallery displays only a big box to show you the way for adding your first

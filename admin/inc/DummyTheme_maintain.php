@@ -8,6 +8,8 @@
 
 namespace Piwigo\admin\inc;
 
+use Piwigo\inc\ThemeMaintain;
+
 include_once(PHPWG_ROOT_PATH.'inc/ThemeMaintain.php');
 
 /**

@@ -10,6 +10,9 @@ Author URI: http://piwigo.org
 
 namespace Piwigo\themes\smartpocket;
 
+use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\ImageStdParams;
+
 class SPThumbPicker
 {
   var $candidates;

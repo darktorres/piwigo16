@@ -8,6 +8,9 @@
 
 namespace Piwigo\inc;
 
+use Exception;
+use tubalmartin\CssMin\Minifier;
+
 /**
  * Allows merging of javascript and css files into a single one.
  */
@@ -217,7 +220,7 @@ final class FileCombiner
   {
     if (strpos($file, '.min')===false and strpos($file, '.packed')===false )
     {
-      try { $js = JShrink\Minifier::minify($js); } catch(Exception $e) {}
+      try { $js = \JShrink\Minifier::minify($js); } catch(Exception $e) {}
     }
     return trim($js, " \t\r\n;").";\n";
   }
@@ -236,7 +239,7 @@ final class FileCombiner
     $css = self::process_css_rec($css, dirname($file), $header);
     if (strpos($file, '.min')===false and version_compare(PHP_VERSION, '5.2.4', '>='))
     {
-      $cssMin = new tubalmartin\CssMin\Minifier();
+      $cssMin = new Minifier();
       $css = $cssMin->run($css);
     }
     $css = trigger_change('combined_css_postfilter', $css);

@@ -6,6 +6,10 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\ImageStdParams;
+use Piwigo\inc\SrcImage;
+
 define('PHPWG_ROOT_PATH','./');
 include_once(PHPWG_ROOT_PATH.'inc/common.php');
 include(PHPWG_ROOT_PATH.'inc/section_init.php');

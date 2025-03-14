@@ -11,6 +11,7 @@
  */
 
 use PHPMailer\PHPMailer\PHPMailer;
+use Piwigo\inc\Template;
 
 /**
  * Returns the name of the mail sender

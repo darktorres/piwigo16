@@ -10,6 +10,9 @@ Has Settings: true
 */
 // Original work by P@t - GTHumb+
 
+use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\ImageStdParams;
+
 global $conf;
 
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');

@@ -6,6 +6,10 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\c13y_internal;
+use Piwigo\admin\inc\check_integrity;
+use Piwigo\admin\inc\tabsheet;
+
 if (!defined('PHPWG_ROOT_PATH'))
 {
   die ("Hacking attempt!");

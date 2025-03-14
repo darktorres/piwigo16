@@ -1,5 +1,7 @@
 <?php
 
+use Piwigo\admin\inc\tabsheet;
+
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
 global $template, $conf, $user, $page;

@@ -6,6 +6,10 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\languages;
+use Piwigo\admin\inc\updates;
+use Piwigo\inc\Template;
+
 // right after the overwrite of previous version files by the unzip in the administration,
 // PHP engine might still have old files in cache. We do not want to use the cache and
 // force reload of all application files. Thus we disable opcache.

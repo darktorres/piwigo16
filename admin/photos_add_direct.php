@@ -6,6 +6,9 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\SrcImage;
+
 if (!defined('PHOTOS_ADD_BASE_URL'))
 {
   die ("Hacking attempt!");

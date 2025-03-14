@@ -9,19 +9,19 @@ $TOUR_PATH = PHPWG_PLUGINS_PATH.'TakeATour/tours/first_contact/tour.tpl';
 if ( defined('IN_ADMIN') and IN_ADMIN )
 {
 /* first contact */
-add_event_handler('loc_end_photo_add_direct', 'TAT_FC_6');
-add_event_handler('loc_end_photo_add_direct', 'TAT_FC_7');
-add_event_handler('loc_end_element_set_global', 'TAT_FC_14');
-add_event_handler('loc_end_picture_modify', 'TAT_FC_16');
-add_event_handler('loc_end_picture_modify', 'TAT_FC_17');
-add_event_handler('loc_end_cat_modify', 'TAT_FC_23');
-add_event_handler('loc_end_themes_installed', 'TAT_FC_35');
+add_event_handler('loc_end_photo_add_direct', TAT_FC_6(...));
+add_event_handler('loc_end_photo_add_direct', TAT_FC_7(...));
+add_event_handler('loc_end_element_set_global', TAT_FC_14(...));
+add_event_handler('loc_end_picture_modify', TAT_FC_16(...));
+add_event_handler('loc_end_picture_modify', TAT_FC_17(...));
+add_event_handler('loc_end_cat_modify', TAT_FC_23(...));
+add_event_handler('loc_end_themes_installed', TAT_FC_35(...));
 }
       
 function TAT_FC_7()
 {
   global $template;
-  $template->set_prefilter('photos_add', 'TAT_FC_7_prefilter');
+  $template->set_prefilter('photos_add', TAT_FC_7_prefilter(...));
 }
 function TAT_FC_7_prefilter ($content)
 {
@@ -37,7 +37,7 @@ function TAT_FC_7_prefilter ($content)
 function TAT_FC_6()
 {
   global $template;
-  $template->set_prefilter('photos_add', 'TAT_FC_6_prefilter');
+  $template->set_prefilter('photos_add', TAT_FC_6_prefilter(...));
 }
 function TAT_FC_6_prefilter ($content)
 {
@@ -55,7 +55,7 @@ function TAT_FC_6_prefilter ($content)
 function TAT_FC_14()
 {
   global $template;
-  $template->set_prefilter('batch_manager_global', 'TAT_FC_14_prefilter');
+  $template->set_prefilter('batch_manager_global', TAT_FC_14_prefilter(...));
 }
 function TAT_FC_14_prefilter ($content)
 {
@@ -69,7 +69,7 @@ function TAT_FC_14_prefilter ($content)
 function TAT_FC_16()
 {
   global $template;
-  $template->set_prefilter('picture_modify', 'TAT_FC_16_prefilter');
+  $template->set_prefilter('picture_modify', TAT_FC_16_prefilter(...));
 }
 function TAT_FC_16_prefilter ($content)
 {
@@ -80,7 +80,7 @@ function TAT_FC_16_prefilter ($content)
 function TAT_FC_17()
 {
   global $template;
-  $template->set_prefilter('picture_modify', 'TAT_FC_17_prefilter');
+  $template->set_prefilter('picture_modify', TAT_FC_17_prefilter(...));
 }
 function TAT_FC_17_prefilter ($content)
 {
@@ -91,7 +91,7 @@ function TAT_FC_17_prefilter ($content)
 function TAT_FC_23()
 {
   global $template;
-  $template->set_prefilter('album_properties', 'TAT_FC_23_prefilter');
+  $template->set_prefilter('album_properties', TAT_FC_23_prefilter(...));
 }
 function TAT_FC_23_prefilter ($content)
 {
@@ -102,7 +102,7 @@ function TAT_FC_23_prefilter ($content)
 function TAT_FC_35()
 {
   global $template;
-  $template->set_prefilter('themes', 'TAT_FC_35_prefilter');
+  $template->set_prefilter('themes', TAT_FC_35_prefilter(...));
 }
 function TAT_FC_35_prefilter ($content)
 {

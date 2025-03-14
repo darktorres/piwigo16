@@ -38,7 +38,7 @@ if (pwg_get_session_var('tour_to_launch')!='tours/'.$version_ and isset($_GET['p
 }
 elseif ( pwg_get_session_var('tour_to_launch') )
 {
-  add_event_handler('init', 'TAT_tour_setup');
+  add_event_handler('init', TAT_tour_setup(...));
 }
 
 function TAT_tour_setup()
@@ -87,12 +87,12 @@ function TAT_tour_setup()
 }
 
 /** Add link in Help pages **/
-add_event_handler('loc_end_help','TAT_help');
+add_event_handler('loc_end_help',TAT_help(...));
 function TAT_help()
 {
   global $template;
   load_language('plugin.lang', PHPWG_PLUGINS_PATH .'TakeATour/');
-  $template->set_prefilter('help', 'TAT_help_prefilter');
+  $template->set_prefilter('help', TAT_help_prefilter(...));
 }
 function TAT_help_prefilter($content)
 {
@@ -108,12 +108,12 @@ function TAT_help_prefilter($content)
 }
 
 /** Add link in no_photo_yet **/
-add_event_handler('loc_end_no_photo_yet','TAT_no_photo_yet');
+add_event_handler('loc_end_no_photo_yet',TAT_no_photo_yet(...));
 function TAT_no_photo_yet()
 {
   global $template;
   load_language('plugin.lang', PHPWG_PLUGINS_PATH .'TakeATour/');
-  $template->set_prefilter('no_photo_yet', 'TAT_no_photo_yet_prefilter');
+  $template->set_prefilter('no_photo_yet', TAT_no_photo_yet_prefilter(...));
   $template->assign(
   array(
     'F_ACTION' => get_root_url().'admin.php',

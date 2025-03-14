@@ -399,7 +399,7 @@ DELETE FROM '. PLUGINS_TABLE .'
       }
 
       // IMPORTANT SECURITY !
-      $plugin = array_map('htmlspecialchars', $plugin);
+      $plugin = array_map(htmlspecialchars(...), $plugin);
       $this->fs_plugins[$plugin_id] = $plugin;
 
       return $plugin;
@@ -416,16 +416,16 @@ DELETE FROM '. PLUGINS_TABLE .'
     switch ($order)
     {
       case 'name':
-        uasort($this->fs_plugins, 'name_compare');
+        uasort($this->fs_plugins, name_compare(...));
         break;
       case 'status':
         $this->sort_plugins_by_state();
         break;
       case 'author':
-        uasort($this->fs_plugins, array($this, 'plugin_author_compare'));
+        uasort($this->fs_plugins, $this->plugin_author_compare(...));
         break;
       case 'id':
-        uksort($this->fs_plugins, 'strcasecmp');
+        uksort($this->fs_plugins, strcasecmp(...));
         break;
     }
   }
@@ -634,16 +634,16 @@ DELETE FROM '. PLUGINS_TABLE .'
         krsort($this->server_plugins);
         break;
       case 'revision':
-        usort($this->server_plugins, array($this, 'extension_revision_compare'));
+        usort($this->server_plugins, $this->extension_revision_compare(...));
         break;
       case 'name':
-        uasort($this->server_plugins, array($this, 'extension_name_compare'));
+        uasort($this->server_plugins, $this->extension_name_compare(...));
         break;
       case 'author':
-        uasort($this->server_plugins, array($this, 'extension_author_compare'));
+        uasort($this->server_plugins, $this->extension_author_compare(...));
         break;
       case 'downloads':
-        usort($this->server_plugins, array($this, 'extension_downloads_compare'));
+        usort($this->server_plugins, $this->extension_downloads_compare(...));
         break;
     }
   }
@@ -820,7 +820,7 @@ DELETE FROM '. PLUGINS_TABLE .'
 
   function sort_plugins_by_state()
   {
-    uasort($this->fs_plugins, 'name_compare');
+    uasort($this->fs_plugins, name_compare(...));
 
     $active_plugins = array();
     $inactive_plugins = array();

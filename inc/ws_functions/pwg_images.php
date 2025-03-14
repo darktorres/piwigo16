@@ -403,7 +403,7 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
     $row['id']=(int)$row['id'];
     $related_categories[] = $row;
   }
-  usort($related_categories, 'global_rank_compare');
+  usort($related_categories, global_rank_compare(...));
 
   if (empty($related_categories) and !is_admin())
   {
@@ -2112,7 +2112,7 @@ function ws_images_formats_delete($params, $service) {
       PREG_SPLIT_NO_EMPTY
       );
   }
-  $params['format_id'] = array_map('intval', $params['format_id']);
+  $params['format_id'] = array_map(intval(...), $params['format_id']);
 
   $format_ids = array();
   foreach ($params['format_id'] as $format_id)
@@ -2459,7 +2459,7 @@ function ws_images_delete($params, $service)
       PREG_SPLIT_NO_EMPTY
       );
   }
-  $params['image_id'] = array_map('intval', $params['image_id']);
+  $params['image_id'] = array_map(intval(...), $params['image_id']);
 
   $image_ids = array();
   foreach ($params['image_id'] as $image_id)
@@ -2535,7 +2535,7 @@ function ws_images_uploadCompleted($params, $service)
       PREG_SPLIT_NO_EMPTY
       );
   }
-  $params['image_id'] = array_map('intval', $params['image_id']);
+  $params['image_id'] = array_map(intval(...), $params['image_id']);
 
   $image_ids = array();
   foreach ($params['image_id'] as $image_id)

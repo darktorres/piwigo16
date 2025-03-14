@@ -100,7 +100,7 @@ class ThemeMaintain
  * Register an event handler.
  *
  * @param string $event the name of the event to listen to
- * @param Callable $func the callback function
+ * @param callable $func the callback function
  * @param int $priority greater priority will be executed at last
  * @param string $include_path file to include before executing the callback
  * @return bool false is handler already exists
@@ -135,7 +135,7 @@ function add_event_handler($event, $func,
  * @see add_event_handler()
  *
  * @param string $event
- * @param Callable $func
+ * @param callable $func
  * @param int $priority
  */
 function remove_event_handler($event, $func,

@@ -480,7 +480,7 @@ check_status(get_tab_status($page['mode']));
 // +-----------------------------------------------------------------------+
 // | Add event handler                                                     |
 // +-----------------------------------------------------------------------+
-add_event_handler('nbm_render_global_customize_mail_content', 'render_global_customize_mail_content');
+add_event_handler('nbm_render_global_customize_mail_content', render_global_customize_mail_content(...));
 trigger_notify('nbm_event_handler_added');
 
 

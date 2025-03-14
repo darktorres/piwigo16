@@ -222,7 +222,7 @@ if ( empty($page['is_external']) )
       else
       {
         $filter_tags = get_available_tags();
-        usort($filter_tags, 'tag_alpha_compare');
+        usort($filter_tags, tag_alpha_compare(...));
       }
 
       $template->assign('TAGS', $filter_tags);
@@ -480,7 +480,7 @@ SELECT
   WHERE id IN ('.implode(',', $cat_ids).')
 ;';
           $cats = query2array($query);
-          usort($cats, 'name_compare');
+          usort($cats, name_compare(...));
           $albums_found = array();
           foreach ($cats as $cat)
           {
@@ -505,7 +505,7 @@ SELECT
         if (count($tag_ids) > 0)
         {
           $tags = get_available_tags($tag_ids);
-          usort($tags, 'tag_alpha_compare');
+          usort($tags, tag_alpha_compare(...));
           $tags_found = array();
           foreach ($tags as $tag)
           {
@@ -572,7 +572,7 @@ SELECT
         (array)@$page['qsearch_details']['matching_cats'] );
     if (count($cats))
     {
-      usort($cats, 'name_compare');
+      usort($cats, name_compare(...));
       $hints = array();
       foreach ( $cats as $cat )
       {
@@ -594,7 +594,7 @@ SELECT
     }
     elseif (!empty($page['qsearch_details']['unmatched_terms']))
     {
-      $template->assign( 'no_search_results', array_map('htmlspecialchars', $page['qsearch_details']['unmatched_terms']));
+      $template->assign( 'no_search_results', array_map(htmlspecialchars(...), $page['qsearch_details']['unmatched_terms']));
     }
   }
 

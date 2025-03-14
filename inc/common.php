@@ -31,15 +31,15 @@ if(!function_exists('get_magic_quotes_gpc') or !@get_magic_quotes_gpc() )
   }
   if( is_array( $_GET ) )
   {
-    array_walk_recursive( $_GET, 'sanitize_mysql_kv' );
+    array_walk_recursive( $_GET, sanitize_mysql_kv(...) );
   }
   if( is_array( $_POST ) )
   {
-    array_walk_recursive( $_POST, 'sanitize_mysql_kv' );
+    array_walk_recursive( $_POST, sanitize_mysql_kv(...) );
   }
   if( is_array( $_COOKIE ) )
   {
-    array_walk_recursive( $_COOKIE, 'sanitize_mysql_kv' );
+    array_walk_recursive( $_COOKIE, sanitize_mysql_kv(...) );
   }
 }
 if ( !empty($_SERVER["PATH_INFO"]) )
@@ -296,19 +296,19 @@ if (isset($conf['header_notes']))
 }
 
 // default event handlers
-add_event_handler('render_category_literal_description', 'render_category_literal_description');
+add_event_handler('render_category_literal_description', render_category_literal_description(...));
 if ( !$conf['allow_html_descriptions'] )
 {
-  add_event_handler('render_category_description', 'nl2br');
+  add_event_handler('render_category_description', nl2br(...));
 }
-add_event_handler('render_comment_content', 'render_comment_content');
-add_event_handler('render_comment_author', 'strip_tags');
-add_event_handler('render_tag_url', 'str2url');
-add_event_handler('blockmanager_register_blocks', 'register_default_menubar_blocks', EVENT_HANDLER_PRIORITY_NEUTRAL-1);
+add_event_handler('render_comment_content', render_comment_content(...));
+add_event_handler('render_comment_author', strip_tags(...));
+add_event_handler('render_tag_url', str2url(...));
+add_event_handler('blockmanager_register_blocks', register_default_menubar_blocks(...), EVENT_HANDLER_PRIORITY_NEUTRAL-1);
 if ( !empty($conf['original_url_protection']) )
 {
-  add_event_handler('get_element_url', 'get_element_url_protection_handler');
-  add_event_handler('get_src_image_url', 'get_src_image_url_protection_handler');
+  add_event_handler('get_element_url', get_element_url_protection_handler(...));
+  add_event_handler('get_src_image_url', get_src_image_url_protection_handler(...));
 }
 trigger_notify('init');
 ?>

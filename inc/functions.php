@@ -486,7 +486,7 @@ UPDATE '.USER_INFOS_TABLE.'
 
     if (
       in_array($page['section'], $conf['history_sections_cache'])
-      or in_array(strtolower($page['section']), array_map('strtolower', $conf['history_sections_cache']))
+      or in_array(strtolower($page['section']), array_map(strtolower(...), $conf['history_sections_cache']))
     )
     {
       $section = $page['section'];
@@ -1341,7 +1341,7 @@ function l10n_args($key_args, $sep = "\n")
       if ($key === 'key_args')
       {
         array_unshift($element, l10n(array_shift($element))); // translate the key
-        $result .= call_user_func_array('sprintf', $element);
+        $result .= call_user_func_array(sprintf(...), $element);
       }
       else
       {

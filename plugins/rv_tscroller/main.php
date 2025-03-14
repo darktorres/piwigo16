@@ -20,7 +20,7 @@ static function on_end_section_init()
 		if (!@$page['start'] || script_basename()=='picture')
 			$page['nb_image_page'] = max($page['nb_image_page'], count($page['items']));
 	}
-	add_event_handler('loc_begin_index', array('RVTS','on_index_begin'), EVENT_HANDLER_PRIORITY_NEUTRAL+10);
+	add_event_handler('loc_begin_index', self::on_index_begin(...), EVENT_HANDLER_PRIORITY_NEUTRAL+10);
 }
 
 static function on_index_begin()
@@ -30,9 +30,9 @@ static function on_index_begin()
 	if (!$is_ajax)
 	{
 		if (empty($page['items']))
-			add_event_handler('loc_end_index', array('RVTS','on_end_index'));
+			add_event_handler('loc_end_index', self::on_end_index(...));
 		else
-			add_event_handler('loc_end_index_thumbnails', array('RVTS','on_index_thumbnails'), EVENT_HANDLER_PRIORITY_NEUTRAL, 1);
+			add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails(...), EVENT_HANDLER_PRIORITY_NEUTRAL, 1);
 	}
 	else
 	{
@@ -46,7 +46,7 @@ static function on_index_begin()
 				pwg_set_session_var('rvts_mult', --$mult);
 		}
 		$page['nb_image_page']=(int)$_GET['rvts'];
-		add_event_handler('loc_end_index_thumbnails', array('RVTS','on_index_thumbnails_ajax'), EVENT_HANDLER_PRIORITY_NEUTRAL+5, 1);
+		add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails_ajax(...), EVENT_HANDLER_PRIORITY_NEUTRAL+5, 1);
 		$page['root_path'] = get_absolute_root_url(false);
 		$page['body_id'] = 'scroll';
 		global $user, $template, $conf;
@@ -60,7 +60,7 @@ static function on_index_thumbnails($thumbs)
 	$total = count($page['items']);
 	if (count($thumbs) >= $total)
 	{
-		add_event_handler('loc_end_index', array('RVTS','on_end_index'));
+		add_event_handler('loc_end_index', self::on_end_index(...));
 		return $thumbs;
 	}
 	$url_model = str_replace('123456789', '%start%', duplicate_index_url( array('start'=>123456789) ) );
@@ -143,5 +143,5 @@ static function on_end_index()
 
 }
 
-add_event_handler('loc_end_section_init', array('RVTS','on_end_section_init'));
+add_event_handler('loc_end_section_init', RVTS::on_end_section_init(...));
 ?>

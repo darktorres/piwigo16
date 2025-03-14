@@ -21,7 +21,7 @@ function ws_tags_getList($params, &$service)
   }
   else
   {
-    usort($tags, 'tag_alpha_compare');
+    usort($tags, tag_alpha_compare(...));
   }
 
   for ($i=0; $i<count($tags); $i++)
@@ -191,7 +191,7 @@ SELECT *
       $images[] = $image;
     }
 
-    usort($images, 'rank_compare');
+    usort($images, rank_compare(...));
     unset($rank_of);
   }
 

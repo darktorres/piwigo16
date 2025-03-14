@@ -148,7 +148,7 @@ while ( $row = pwg_db_fetch_assoc($result) )
 
 if ( $sort_by[0]=='name')
 {
-  usort($categories, 'global_rank_compare');
+  usort($categories, global_rank_compare(...));
 }
 $template->assign( 'permalinks', $categories );
 

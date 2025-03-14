@@ -73,7 +73,7 @@ class SPThumbPicker
 }
 
 //Retrive all pictures on thumbnails page
-add_event_handler('loc_index_thumbnails_selection', 'sp_select_all_thumbnails');
+add_event_handler('loc_index_thumbnails_selection', sp_select_all_thumbnails(...));
 
 function sp_select_all_thumbnails($selection)
 {
@@ -85,7 +85,7 @@ function sp_select_all_thumbnails($selection)
 }
 
 // Retrive all categories on thumbnails page
-add_event_handler('loc_end_index_category_thumbnails', 'sp_select_all_categories');
+add_event_handler('loc_end_index_category_thumbnails', sp_select_all_categories(...));
 
 function sp_select_all_categories($selection)
 {
@@ -108,7 +108,7 @@ if (!empty($_COOKIE['screen_size']))
 $this->assign('picture_derivative_params', ImageStdParams::get_by_type($type));
 $this->assign('thumbnail_derivative_params', ImageStdParams::get_by_type(IMG_SQUARE));
 
-add_event_handler('loc_end_section_init', 'sp_end_section_init');
+add_event_handler('loc_end_section_init', sp_end_section_init(...));
 function sp_end_section_init()
 {
   global $page, $template;
@@ -125,7 +125,7 @@ function sp_end_section_init()
 }
 
 //------------------------------------------------------------- mobile version & theme config
-add_event_handler('init', 'mobile_link');
+add_event_handler('init', mobile_link(...));
 
 function mobile_link()
 {
@@ -143,7 +143,7 @@ function mobile_link()
 
 if ( !function_exists( 'add_menu_on_public_pages' ) ) { 
   if ( defined('IN_ADMIN') and IN_ADMIN ) return false; 
-  add_event_handler('loc_after_page_header', 'add_menu_on_public_pages', 20); 
+  add_event_handler('loc_after_page_header', add_menu_on_public_pages(...), 20); 
 
   function  add_menu_on_public_pages() { 
     if ( function_exists( 'initialize_menu') ) return false; # The current page has already the menu  

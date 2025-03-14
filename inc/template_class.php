@@ -138,40 +138,40 @@ class Template
     $this->smarty->setCompileDir($compile_dir);
 
     $this->smarty->assign( 'pwg', new PwgTemplateAdapter() );
-    $this->smarty->registerPlugin('modifiercompiler', 'translate', array('Template', 'modcompiler_translate') );
-    $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', array('Template', 'modcompiler_translate_dec') );
-    $this->smarty->registerPlugin('modifier', 'sprintf', 'sprintf');
-    $this->smarty->registerPlugin('modifier', 'urlencode', 'urlencode');
-    $this->smarty->registerPlugin('modifier', 'intval', 'intval');
-    $this->smarty->registerPlugin('modifier', 'file_exists', 'file_exists');
-    $this->smarty->registerPlugin('modifier', 'constant', 'constant');
-    $this->smarty->registerPlugin('modifier', 'json_encode', 'json_encode');
-    $this->smarty->registerPlugin('modifier', 'htmlspecialchars', 'htmlspecialchars');
-    $this->smarty->registerPlugin('modifier', 'implode', 'implode');
-    $this->smarty->registerPlugin('modifier', 'stripslashes', 'stripslashes');
-    $this->smarty->registerPlugin('modifier', 'in_array', 'in_array');
-    $this->smarty->registerPlugin('modifier', 'ucfirst', 'ucfirst');
-    $this->smarty->registerPlugin('modifier', 'strstr', 'strstr');
-    $this->smarty->registerPlugin('modifier', 'stristr', 'stristr');
-    $this->smarty->registerPlugin('modifier', 'trim', 'trim');
-    $this->smarty->registerPlugin('modifier', 'md5', 'md5');
-    $this->smarty->registerPlugin('modifier', 'strtolower', 'strtolower');
-    $this->smarty->registerPlugin('modifier', 'str_ireplace', 'str_ireplace');
-    $this->smarty->registerPlugin('modifier', 'explode', array('Template', 'mod_explode') );
-    $this->smarty->registerPlugin('modifier', 'ternary', array('Template', 'mod_ternary') );
-    $this->smarty->registerPlugin('modifier', 'get_extent', array($this, 'get_extent') );
-    $this->smarty->registerPlugin('block', 'html_head', array($this, 'block_html_head') );
-    $this->smarty->registerPlugin('block', 'html_style', array($this, 'block_html_style') );
-    $this->smarty->registerPlugin('function', 'combine_script', array($this, 'func_combine_script') );
-    $this->smarty->registerPlugin('function', 'get_combined_scripts', array($this, 'func_get_combined_scripts') );
-    $this->smarty->registerPlugin('function', 'combine_css', array($this, 'func_combine_css') );
-    $this->smarty->registerPlugin('function', 'define_derivative', array($this, 'func_define_derivative') );
-    $this->smarty->registerPlugin('compiler', 'get_combined_css', array($this, 'func_get_combined_css') );
-    $this->smarty->registerPlugin('block', 'footer_script', array($this, 'block_footer_script') );
-    $this->smarty->registerFilter('pre', array('Template', 'prefilter_white_space') );
+    $this->smarty->registerPlugin('modifiercompiler', 'translate', Template::modcompiler_translate(...) );
+    $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', Template::modcompiler_translate_dec(...) );
+    $this->smarty->registerPlugin('modifier', 'sprintf', sprintf(...));
+    $this->smarty->registerPlugin('modifier', 'urlencode', urlencode(...));
+    $this->smarty->registerPlugin('modifier', 'intval', intval(...));
+    $this->smarty->registerPlugin('modifier', 'file_exists', file_exists(...));
+    $this->smarty->registerPlugin('modifier', 'constant', constant(...));
+    $this->smarty->registerPlugin('modifier', 'json_encode', json_encode(...));
+    $this->smarty->registerPlugin('modifier', 'htmlspecialchars', htmlspecialchars(...));
+    $this->smarty->registerPlugin('modifier', 'implode', implode(...));
+    $this->smarty->registerPlugin('modifier', 'stripslashes', stripslashes(...));
+    $this->smarty->registerPlugin('modifier', 'in_array', in_array(...));
+    $this->smarty->registerPlugin('modifier', 'ucfirst', ucfirst(...));
+    $this->smarty->registerPlugin('modifier', 'strstr', strstr(...));
+    $this->smarty->registerPlugin('modifier', 'stristr', stristr(...));
+    $this->smarty->registerPlugin('modifier', 'trim', trim(...));
+    $this->smarty->registerPlugin('modifier', 'md5', md5(...));
+    $this->smarty->registerPlugin('modifier', 'strtolower', strtolower(...));
+    $this->smarty->registerPlugin('modifier', 'str_ireplace', str_ireplace(...));
+    $this->smarty->registerPlugin('modifier', 'explode', Template::mod_explode(...) );
+    $this->smarty->registerPlugin('modifier', 'ternary', Template::mod_ternary(...) );
+    $this->smarty->registerPlugin('modifier', 'get_extent', $this->get_extent(...) );
+    $this->smarty->registerPlugin('block', 'html_head', $this->block_html_head(...) );
+    $this->smarty->registerPlugin('block', 'html_style', $this->block_html_style(...) );
+    $this->smarty->registerPlugin('function', 'combine_script', $this->func_combine_script(...) );
+    $this->smarty->registerPlugin('function', 'get_combined_scripts', $this->func_get_combined_scripts(...) );
+    $this->smarty->registerPlugin('function', 'combine_css', $this->func_combine_css(...) );
+    $this->smarty->registerPlugin('function', 'define_derivative', $this->func_define_derivative(...) );
+    $this->smarty->registerPlugin('compiler', 'get_combined_css', $this->func_get_combined_css(...) );
+    $this->smarty->registerPlugin('block', 'footer_script', $this->block_footer_script(...) );
+    $this->smarty->registerFilter('pre', Template::prefilter_white_space(...) );
     if ( $conf['compiled_template_cache_language'] )
     {
-      $this->smarty->registerFilter('post', array('Template', 'postfilter_language') );
+      $this->smarty->registerFilter('post', Template::postfilter_language(...) );
     }
 
     $this->smarty->setTemplateDir(array());
@@ -180,7 +180,7 @@ class Template
       $this->set_theme($root, $theme, $path);
       if (!defined('IN_ADMIN'))
       {
-        $this->set_prefilter( 'header', array('Template', 'prefilter_local_css') );
+        $this->set_prefilter( 'header', Template::prefilter_local_css(...) );
       }
     }
     else
@@ -1030,7 +1030,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
    * @see http://www.smarty.net/manual/en/advanced.features.prefilters.php
    *
    * @param string $handle
-   * @param Callable $callback
+   * @param callable $callback
    * @param int $weight
    */
   function set_prefilter($handle, $callback, $weight=50)
@@ -1045,7 +1045,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
    * @see http://www.smarty.net/manual/en/advanced.features.postfilters.php
    *
    * @param string $handle
-   * @param Callable $callback
+   * @param callable $callback
    * @param int $weight
    */
   function set_postfilter($handle, $callback, $weight=50)
@@ -1060,7 +1060,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
    * @see http://www.smarty.net/manual/en/advanced.features.outputfilters.php
    *
    * @param string $handle
-   * @param Callable $callback
+   * @param callable $callback
    * @param int $weight
    */
   function set_outputfilter($handle, $callback, $weight=50)
@@ -1084,7 +1084,16 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         foreach ($filters as $filter)
         {
           list($type, $callback) = $filter;
-          $compile_id .= $type.( is_array($callback) ? implode('', $callback) : $callback );
+
+          if (is_array($callback)) {
+              $callbackString = implode('', $callback);
+          } elseif (is_string($callback)) {
+              $callbackString = $callback;
+          } elseif ($callback instanceof \Closure) {
+              $callbackString = 'closure';
+          }
+
+          $compile_id .= $type . $callbackString;
           $this->smarty->registerFilter($type, $callback);
         }
       }
@@ -1314,7 +1323,7 @@ class PwgTemplateAdapter
   function sprintf()
   {
     $args = func_get_args();
-    return call_user_func_array('sprintf',  $args );
+    return call_user_func_array(sprintf(...),  $args );
   }
 
   /**
@@ -1460,7 +1469,7 @@ class CssLoader
    */
   function get_css()
   {
-    uasort($this->registered_css, array('CssLoader', 'cmp_by_order'));
+    uasort($this->registered_css, CssLoader::cmp_by_order(...));
     $combiner = new FileCombiner('css', $this->registered_css);
     return $combiner->combine();
   }
@@ -1639,7 +1648,7 @@ class ScriptLoader
       $this->compute_script_topological_order($id);
     }
 
-    uasort($this->registered_scripts, array('ScriptLoader', 'cmp_by_mode_and_order'));
+    uasort($this->registered_scripts, ScriptLoader::cmp_by_mode_and_order(...));
 
     foreach( $this->registered_scripts as $id => $script)
     {
@@ -1680,7 +1689,7 @@ class ScriptLoader
       $this->compute_script_topological_order($id);
     }
 
-    uasort($todo, array('ScriptLoader', 'cmp_by_mode_and_order'));
+    uasort($todo, ScriptLoader::cmp_by_mode_and_order(...));
 
     $result = array( array(), array() );
     foreach( $todo as $id => $script)

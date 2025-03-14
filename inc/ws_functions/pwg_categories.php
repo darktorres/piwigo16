@@ -427,7 +427,7 @@ SELECT representative_picture_id
 
     $cats[] = $row;
   }
-  usort($cats, 'global_rank_compare');
+  usort($cats, global_rank_compare(...));
 
   // management of the album thumbnail -- starts here
   if (count($categories) > 0)
@@ -567,7 +567,7 @@ function ws_categories_getAdminList($params, &$service)
   {
     $params['additional_output'] = "";
   }
-  $params['additional_output'] = array_map('trim', explode(',', $params['additional_output']));
+  $params['additional_output'] = array_map(trim(...), explode(',', $params['additional_output']));
 
   $query = '
 SELECT category_id, COUNT(*) AS counter
@@ -641,7 +641,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
     $limit_reached = true;
   }
 
-  usort($cats, 'global_rank_compare');
+  usort($cats, global_rank_compare(...));
   return array(
     'categories' => new PwgNamedArray(
       $cats,
@@ -1083,7 +1083,7 @@ function ws_categories_delete($params, &$service)
       PREG_SPLIT_NO_EMPTY
       );
   }
-  $params['category_id'] = array_map('intval', $params['category_id']);
+  $params['category_id'] = array_map(intval(...), $params['category_id']);
 
   $category_ids = array();
   foreach ($params['category_id'] as $category_id)
@@ -1143,7 +1143,7 @@ function ws_categories_move($params, &$service)
       PREG_SPLIT_NO_EMPTY
       );
   }
-  $params['category_id'] = array_map('intval', $params['category_id']);
+  $params['category_id'] = array_map(intval(...), $params['category_id']);
 
   $category_ids = array();
   foreach ($params['category_id'] as $category_id)

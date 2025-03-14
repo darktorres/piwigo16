@@ -268,16 +268,16 @@ Request format: ".@$this->_requestFormat." Response format: ".@$this->_responseF
     // add reflection methods
     $this->addMethod(
         'reflection.getMethodList',
-        array('PwgServer', 'ws_getMethodList')
+        PwgServer::ws_getMethodList(...)
         );
     $this->addMethod(
         'reflection.getMethodDetails',
-        array('PwgServer', 'ws_getMethodDetails'),
+        PwgServer::ws_getMethodDetails(...),
         array('methodName')
         );
 
     trigger_notify('ws_add_methods', array(&$this) );
-    uksort( $this->_methods, 'strnatcmp' );
+    uksort( $this->_methods, strnatcmp(...) );
     $this->_requestHandler->handleRequest($this);
   }
 

@@ -527,7 +527,7 @@ function mass_inserts($table_name, $dbfields, $datas, $options=array())
       {
         $query = '
 INSERT '.$ignore.' INTO '.protect_column_name($table_name).'
-  ('.implode(',', array_map('protect_column_name', $dbfields)).')
+  ('.implode(',', array_map(protect_column_name(...), $dbfields)).')
   VALUES';
         $first = false;
       }
@@ -581,7 +581,7 @@ function single_insert($table_name, $data, $options=array())
   {
     $query = '
 INSERT '.$ignore.' INTO '.protect_column_name($table_name).'
-  ('.implode(',', array_map('protect_column_name', array_keys($data))).')
+  ('.implode(',', array_map(protect_column_name(...), array_keys($data))).')
   VALUES';
 
     $query .= '(';

@@ -211,11 +211,11 @@ if (isset($_GET['order_by']) and is_numeric($_GET['order_by']))
 }
 
 $available_order_by= array(
-    array(l10n('Average rate'), 'avg_compare'),
-    array(l10n('Number of rates'), 'count_compare'),
-    array(l10n('Variation'), 'cv_compare'),
-    array(l10n('Consensus deviation'), 'consensus_dev_compare'),
-    array(l10n('Last'), 'last_rate_compare'),
+    array(l10n('Average rate'), avg_compare(...)),
+    array(l10n('Number of rates'), count_compare(...)),
+    array(l10n('Variation'), cv_compare(...)),
+    array(l10n('Consensus deviation'), consensus_dev_compare(...)),
+    array(l10n('Last'), last_rate_compare(...)),
   );
 
 for ($i=0; $i<count($available_order_by); $i++)

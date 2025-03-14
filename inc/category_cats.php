@@ -170,7 +170,7 @@ SELECT
 
 if ($page['section']=='recent_cats')
 {
-  usort($categories, 'global_rank_compare');
+  usort($categories, global_rank_compare(...));
 }
 
 if (count($categories) > 0)

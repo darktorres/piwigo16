@@ -336,7 +336,7 @@ function cmp_day($a, $b)
   return ($a['x'] < $b['x']) ? -1 : 1;
 }
 
-usort($temp_data, 'cmp_day');
+usort($temp_data, cmp_day(...));
 
 //Get the percent difference
 $diff_x = array();

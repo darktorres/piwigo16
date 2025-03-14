@@ -134,7 +134,7 @@ WHERE '.$where.'
     if ($row['id']==@$page['category']['id']) //save the number of subcats for later optim
       $page['category']['count_categories'] = $row['count_categories'];
   }
-  usort($cats, 'global_rank_compare');
+  usort($cats, global_rank_compare(...));
 
   // Update filtered data
   if (function_exists('update_cats_with_filtered_data'))
@@ -288,7 +288,7 @@ function display_select_cat_wrapper($query,
                                     $fullname = true)
 {
   $categories = query2array($query);
-  usort($categories, 'global_rank_compare');
+  usort($categories, global_rank_compare(...));
   display_select_categories($categories, $selecteds, $blockname, $fullname);
 }
 
@@ -522,7 +522,7 @@ FROM '.CATEGORIES_TABLE.' as c
   // it is important to logically sort the albums because some operations
   // (like removal) rely on this logical order. Child album doesn't always
   // have a bigger id than its parent (if it was moved afterwards).
-  uasort($cats, 'global_rank_compare');
+  uasort($cats, global_rank_compare(...));
 
   foreach ($cats as $cat)
   {
@@ -752,7 +752,7 @@ SELECT
   WHERE id IN ('.implode(',', array_keys($cat_ids)).')
 ;';
   $cats = query2array($query);
-  usort($cats, 'global_rank_compare');
+  usort($cats, global_rank_compare(...));
 
   $index_of_cat = array();
 

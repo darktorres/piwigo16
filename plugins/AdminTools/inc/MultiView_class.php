@@ -285,7 +285,7 @@ class MultiView
 
     $service->addMethod(
       'multiView.getData',
-      array('MultiView', 'ws_get_data'),
+      MultiView::ws_get_data(...),
       array(),
       'AdminTools private method.',
       null,

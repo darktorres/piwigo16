@@ -125,10 +125,6 @@ final class functions
         if (! is_dir($dir)) {
             global $conf;
 
-            if (substr(PHP_OS, 0, 3) == 'WIN') {
-                $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
-            }
-
             $umask = umask(0);
             $mkd = mkdir($dir, $conf['chmod_value'], ($flags & self::MKGETDIR_RECURSIVE) ? true : false);
             umask($umask);

@@ -16,12 +16,12 @@ if (isset($conf['session_save_handler'])
   and defined('PHPWG_INSTALLED'))
 {
   session_set_save_handler(
-    'pwg_session_open',
-    'pwg_session_close',
-    'pwg_session_read',
-    'pwg_session_write',
-    'pwg_session_destroy',
-    'pwg_session_gc'
+    pwg_session_open(...),
+    pwg_session_close(...),
+    pwg_session_read(...),
+    pwg_session_write(...),
+    pwg_session_destroy(...),
+    pwg_session_gc(...)
   );
 
   if (function_exists('ini_set'))

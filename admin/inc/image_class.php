@@ -337,7 +337,7 @@ class pwg_image
       array(-1,   -1,    -1),
       );
 
-    $norm = array_sum(array_map('array_sum', $matrix));
+    $norm = array_sum(array_map(array_sum(...), $matrix));
 
     for ($i=0; $i<3; $i++)
     {

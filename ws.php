@@ -56,7 +56,7 @@ function ws_addDefaultMethods( $arr )
   
   $service->addMethod(
       'pwg.getVersion',
-      'ws_getVersion',
+      ws_getVersion(...),
       null,
       'Returns the Piwigo version.',
       $ws_functions_root . 'pwg.php'
@@ -64,7 +64,7 @@ function ws_addDefaultMethods( $arr )
 	  
   $service->addMethod(
       'pwg.getInfos',
-      'ws_getInfos',
+      ws_getInfos(...),
       null,
       'Returns general informations.',
       $ws_functions_root . 'pwg.php',
@@ -73,7 +73,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.getCacheSize',
-      'ws_getCacheSize',
+      ws_getCacheSize(...),
       null,
       'Returns general informations.',
       $ws_functions_root . 'pwg.php',
@@ -82,7 +82,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
     'pwg.activity.getList',
-    'ws_getActivityList',
+    ws_getActivityList(...),
     array(
       'page' => array('default'=>null,
                       'type'=>WS_TYPE_INT|WS_TYPE_POSITIVE),
@@ -96,7 +96,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
     'pwg.activity.downloadLog',
-    'ws_activity_downloadLog',
+    ws_activity_downloadLog(...),
     null,
     'Returns general informations.',
     $ws_functions_root . 'pwg.php',
@@ -105,7 +105,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.caddie.add',
-      'ws_caddie_add',
+      ws_caddie_add(...),
       array(
         'image_id'=> array('flags'=>WS_PARAM_FORCE_ARRAY,
                            'type'=>WS_TYPE_ID),
@@ -117,7 +117,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.categories.getImages',
-      'ws_categories_getImages',
+      ws_categories_getImages(...),
       array_merge(array(
         'cat_id' =>     array('default'=>null,
                               'flags'=>WS_PARAM_FORCE_ARRAY,
@@ -140,7 +140,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.categories.getList',
-      'ws_categories_getList',
+      ws_categories_getList(...),
       array(
         'cat_id' =>       array('default'=>null,
                                 'type'=>WS_TYPE_INT|WS_TYPE_POSITIVE,
@@ -165,7 +165,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.getMissingDerivatives',
-      'ws_getMissingDerivatives',
+      ws_getMissingDerivatives(...),
       array_merge(array(
         'types' =>        array('default'=>null,
                                 'flags'=>WS_PARAM_FORCE_ARRAY,
@@ -185,7 +185,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.addComment',
-      'ws_images_addComment',
+      ws_images_addComment(...),
       array(
         'image_id' => array('type'=>WS_TYPE_ID),
         'author' =>   array('default'=>is_a_guest()?'guest':$user['username']),
@@ -199,7 +199,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.getInfo',
-      'ws_images_getInfo',
+      ws_images_getInfo(...),
       array(
         'image_id' =>           array('type'=>WS_TYPE_ID),
         'comments_page' =>      array('default'=>0,
@@ -214,7 +214,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.rate',
-      'ws_images_rate',
+      ws_images_rate(...),
       array(
         'image_id' => array('type'=>WS_TYPE_ID),
         'rate' =>     array('type'=>WS_TYPE_FLOAT),
@@ -225,7 +225,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.search',
-      'ws_images_search',
+      ws_images_search(...),
       array_merge(array(
         'query' =>        array(),
         'per_page' =>     array('default'=>100,
@@ -242,7 +242,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.setPrivacyLevel',
-      'ws_images_setPrivacyLevel',
+      ws_images_setPrivacyLevel(...),
       array(
         'image_id' => array('flags'=>WS_PARAM_FORCE_ARRAY,
                             'type'=>WS_TYPE_ID),
@@ -256,7 +256,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.formats.searchImage',
-      'ws_images_formats_searchImage',
+      ws_images_formats_searchImage(...),
       array(
         'category_id' => array('type'=>WS_TYPE_ID, 'default'=>null),
         'filename_list' => array(),
@@ -268,7 +268,7 @@ function ws_addDefaultMethods( $arr )
   
   $service->addMethod(
       'pwg.images.formats.delete',
-      'ws_images_formats_delete',
+      ws_images_formats_delete(...),
       array(
         'format_id' => array('type'=>WS_TYPE_ID, 'default'=>null, 'flags'=>WS_PARAM_ACCEPT_ARRAY),
         'pwg_token' =>  array(),
@@ -280,7 +280,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.setRank',
-      'ws_images_setRank',
+      ws_images_setRank(...),
       array(
         'image_id'    => array('type'=>WS_TYPE_ID,'flags'=>WS_PARAM_FORCE_ARRAY),
         'category_id' => array('type'=>WS_TYPE_ID),
@@ -298,7 +298,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.setCategory',
-      'ws_images_setCategory',
+      ws_images_setCategory(...),
       array(
         'image_id'    => array('flags'=>WS_PARAM_FORCE_ARRAY, 'type'=>WS_TYPE_ID),
         'category_id' => array('type'=>WS_TYPE_ID),
@@ -312,7 +312,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.rates.delete',
-      'ws_rates_delete',
+      ws_rates_delete(...),
       array(
         'user_id' =>      array('type'=>WS_TYPE_ID),
         'anonymous_id' => array('default'=>null),
@@ -325,7 +325,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.session.getStatus',
-      'ws_session_getStatus',
+      ws_session_getStatus(...),
       null,
       'Gets information about the current session. Also provides a token useable with admin methods.',
       $ws_functions_root . 'pwg.php'
@@ -333,7 +333,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.session.login',
-      'ws_session_login',
+      ws_session_login(...),
       array(
         'username' => array(),
         'password' => array('default'=>null),
@@ -345,7 +345,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.session.logout',
-      'ws_session_logout',
+      ws_session_logout(...),
       null,
       'Ends the current session.',
       $ws_functions_root . 'pwg.php'
@@ -353,7 +353,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.tags.getList',
-      'ws_tags_getList',
+      ws_tags_getList(...),
       array(
         'sort_by_counter' => array('default'=>false,
                                    'type'=>WS_TYPE_BOOL),
@@ -364,7 +364,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.tags.getImages',
-      'ws_tags_getImages',
+      ws_tags_getImages(...),
       array_merge(array(
         'tag_id' =>       array('default'=>null,
                                 'flags'=>WS_PARAM_FORCE_ARRAY,
@@ -389,7 +389,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.addChunk',
-      'ws_images_add_chunk',
+      ws_images_add_chunk(...),
       array(
         'data' =>         array(),
         'original_sum' => array(),
@@ -404,7 +404,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.addFile',
-      'ws_images_addFile',
+      ws_images_addFile(...),
       array(
         'image_id' => array('type'=>WS_TYPE_ID),
         'type' =>     array('default'=>'file',
@@ -420,7 +420,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.add',
-      'ws_images_add',
+      ws_images_add(...),
       array(
         'thumbnail_sum' =>      array('default'=>null),
         'high_sum' =>           array('default'=>null),
@@ -452,7 +452,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.addSimple',
-      'ws_images_addSimple',
+      ws_images_addSimple(...),
       array(
         'category' => array('default'=>null,
                             'flags'=>WS_PARAM_FORCE_ARRAY,
@@ -478,7 +478,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.upload',
-      'ws_images_upload',
+      ws_images_upload(...),
       array(
         'name' => array('default' => null),
         'category' => array(
@@ -507,7 +507,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
     'pwg.images.uploadAsync',
-    'ws_images_uploadAsync',
+    ws_images_uploadAsync(...),
     array(
         'username' => array(),
         'password' => array('default'=>null),
@@ -537,7 +537,7 @@ function ws_addDefaultMethods( $arr )
   
   $service->addMethod(
       'pwg.images.delete',
-      'ws_images_delete',
+      ws_images_delete(...),
       array(
         'image_id' =>   array('flags'=>WS_PARAM_ACCEPT_ARRAY),
         'pwg_token' =>  array(),
@@ -549,7 +549,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.setMd5sum',
-      'ws_images_setMd5sum',
+      ws_images_setMd5sum(...),
       array(
         'block_size' => array('default'=>$conf['checksum_compute_blocksize'], 'type'=>WS_TYPE_INT|WS_TYPE_POSITIVE),
         'pwg_token' =>  array(),
@@ -561,7 +561,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.syncMetadata',
-      'ws_images_syncMetadata',
+      ws_images_syncMetadata(...),
       array(
         'image_id' => array('default'=>null,
                             'type'=>WS_TYPE_ID|WS_TYPE_POSITIVE,
@@ -575,7 +575,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.deleteOrphans',
-      'ws_images_deleteOrphans',
+      ws_images_deleteOrphans(...),
       array(
         'block_size' => array('default'=>1000, 'type'=>WS_TYPE_INT|WS_TYPE_POSITIVE),
         'pwg_token' =>  array(),
@@ -587,7 +587,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.categories.calculateOrphans',
-      'ws_categories_calculateOrphans',
+      ws_categories_calculateOrphans(...),
       array(
         'category_id' =>  array('type'=>WS_TYPE_ID,
                                 'flags'=>WS_PARAM_FORCE_ARRAY),
@@ -599,7 +599,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.categories.getAdminList',
-      'ws_categories_getAdminList',
+      ws_categories_getAdminList(...),
       array(
         'search' => array('default' => null),
         'additional_output' =>    array('default'=>null,
@@ -614,7 +614,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.categories.add',
-      'ws_categories_add',
+      ws_categories_add(...),
       array(
         'name' =>         array(),
         'parent' =>       array('default'=>null,
@@ -636,7 +636,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.categories.delete',
-      'ws_categories_delete',
+      ws_categories_delete(...),
       array(
         'category_id'=>           array('flags'=>WS_PARAM_ACCEPT_ARRAY),
         'photo_deletion_mode' =>  array('default'=>'delete_orphans'),
@@ -651,7 +651,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.categories.move',
-      'ws_categories_move',
+      ws_categories_move(...),
       array(
         'category_id' =>  array('flags'=>WS_PARAM_ACCEPT_ARRAY),
         'parent' =>       array('type'=>WS_TYPE_INT|WS_TYPE_POSITIVE),
@@ -665,7 +665,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.categories.setRepresentative',
-      'ws_categories_setRepresentative',
+      ws_categories_setRepresentative(...),
       array(
         'category_id' =>  array('type'=>WS_TYPE_ID),
         'image_id' =>     array('type'=>WS_TYPE_ID),
@@ -677,7 +677,7 @@ function ws_addDefaultMethods( $arr )
   
   $service->addMethod(
       'pwg.categories.deleteRepresentative',
-      'ws_categories_deleteRepresentative',
+      ws_categories_deleteRepresentative(...),
       array(
         'category_id' =>  array('type'=>WS_TYPE_ID),
         ),
@@ -688,7 +688,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.categories.refreshRepresentative',
-      'ws_categories_refreshRepresentative',
+      ws_categories_refreshRepresentative(...),
       array(
         'category_id' =>  array('type'=>WS_TYPE_ID),
         ),
@@ -699,7 +699,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.tags.getAdminList',
-      'ws_tags_getAdminList',
+      ws_tags_getAdminList(...),
       null,
       '<b>Admin only.</b>',
       $ws_functions_root . 'pwg_tags.php',
@@ -708,7 +708,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod( // TODO: create multiple tags
       'pwg.tags.add',
-      'ws_tags_add',
+      ws_tags_add(...),
       array(
         'name' => array()
       ),
@@ -719,7 +719,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.tags.delete',
-      'ws_tags_delete',
+      ws_tags_delete(...),
       array(
         'tag_id' => array('type'=>WS_TYPE_ID,
                       'flags'=>WS_PARAM_FORCE_ARRAY),
@@ -732,7 +732,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.tags.rename',
-      'ws_tags_rename',
+      ws_tags_rename(...),
       array(
         'tag_id' => array('type'=>WS_TYPE_ID),
         'new_name' => array(),
@@ -745,7 +745,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.tags.duplicate',
-      'ws_tags_duplicate',
+      ws_tags_duplicate(...),
       array(
         'tag_id' => array('type'=>WS_TYPE_ID),
         'copy_name' => array(),
@@ -758,7 +758,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.tags.merge',
-      'ws_tags_merge',
+      ws_tags_merge(...),
       array(
         'destination_tag_id' => array('type'=>WS_TYPE_ID,
           'info'=>'Is not necessarily part of groups to merge'),
@@ -773,7 +773,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.exist',
-      'ws_images_exist',
+      ws_images_exist(...),
       array(
         'md5sum_list' =>    array('default'=>null),
         'filename_list' =>  array('default'=>null),
@@ -786,7 +786,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.checkFiles',
-      'ws_images_checkFiles',
+      ws_images_checkFiles(...),
       array(
         'image_id' =>       array('type'=>WS_TYPE_ID),
         'file_sum' =>       array('default'=>null),
@@ -801,7 +801,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.checkUpload',
-      'ws_images_checkUpload',
+      ws_images_checkUpload(...),
       null,
       'Checks if Piwigo is ready for upload.',
       $ws_functions_root . 'pwg_images.php',
@@ -810,7 +810,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.emptyLounge',
-      'ws_images_emptyLounge',
+      ws_images_emptyLounge(...),
       null,
       'Empty lounge, where images may be waiting before taking off.',
       $ws_functions_root . 'pwg_images.php',
@@ -819,7 +819,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.uploadCompleted',
-      'ws_images_uploadCompleted',
+      ws_images_uploadCompleted(...),
       array(
         'image_id' => array('default'=>null, 'flags'=>WS_PARAM_ACCEPT_ARRAY),
         'pwg_token' => array(),
@@ -832,7 +832,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.images.setInfo',
-      'ws_images_setInfo',
+      ws_images_setInfo(...),
       array(
         'image_id' =>       array('type'=>WS_TYPE_ID),
         'file' =>           array('default'=>null),
@@ -862,7 +862,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.categories.setInfo',
-      'ws_categories_setInfo',
+      ws_categories_setInfo(...),
       array(
         'category_id' =>  array('type'=>WS_TYPE_ID),
         'name' =>         array('default'=>null,
@@ -889,7 +889,7 @@ function ws_addDefaultMethods( $arr )
 
     $service->addMethod(
         'pwg.categories.setRank',
-        'ws_categories_setRank',
+        ws_categories_setRank(...),
         array(
           'category_id' =>  array('type'=>WS_TYPE_ID,
                                   'flags'=>WS_PARAM_FORCE_ARRAY),
@@ -908,7 +908,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.plugins.getList',
-      'ws_plugins_getList',
+      ws_plugins_getList(...),
       null,
       'Gets the list of plugins with id, name, version, state and description.',
       $ws_functions_root . 'pwg_extensions.php',
@@ -917,7 +917,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.plugins.performAction',
-      'ws_plugins_performAction',
+      ws_plugins_performAction(...),
       array(
         'action'    => array('info'=>'install, activate, deactivate, uninstall, delete'),
         'plugin'    => array(),
@@ -930,7 +930,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.themes.performAction',
-      'ws_themes_performAction',
+      ws_themes_performAction(...),
       array(
         'action'    => array('info'=>'activate, deactivate, delete, set_default'),
         'theme'     => array(),
@@ -943,7 +943,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.extensions.update',
-      'ws_extensions_update',
+      ws_extensions_update(...),
       array(
         'type' => array('info'=>'plugins, languages, themes'),
         'id' => array(),
@@ -957,7 +957,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.extensions.ignoreUpdate',
-      'ws_extensions_ignoreupdate',
+      ws_extensions_ignoreupdate(...),
       array(
         'type' =>       array('default'=>null,
                               'info'=>'plugins, languages, themes'),
@@ -974,7 +974,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.extensions.checkUpdates',
-      'ws_extensions_checkupdates',
+      ws_extensions_checkupdates(...),
       null,
       'Checks if piwigo or extensions are up to date.',
       $ws_functions_root . 'pwg_extensions.php',
@@ -983,7 +983,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.groups.getList',
-      'ws_groups_getList',
+      ws_groups_getList(...),
       array(
         'group_id' => array('flags'=>WS_PARAM_OPTIONAL|WS_PARAM_FORCE_ARRAY,
                             'type'=>WS_TYPE_ID),
@@ -1004,7 +1004,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.groups.add',
-      'ws_groups_add',
+      ws_groups_add(...),
       array(
         'name' =>       array(),
         'is_default' => array('default'=>false,
@@ -1017,7 +1017,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.groups.delete',
-      'ws_groups_delete',
+      ws_groups_delete(...),
       array(
         'group_id' => array('flags'=>WS_PARAM_FORCE_ARRAY,
                             'type'=>WS_TYPE_ID),
@@ -1030,7 +1030,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.groups.setInfo',
-      'ws_groups_setInfo',
+      ws_groups_setInfo(...),
       array(
         'group_id' =>   array('type'=>WS_TYPE_ID),
         'name' =>       array('flags'=>WS_PARAM_OPTIONAL),
@@ -1045,7 +1045,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.groups.addUser',
-      'ws_groups_addUser',
+      ws_groups_addUser(...),
       array(
         'group_id' => array('type'=>WS_TYPE_ID),
         'user_id' =>  array('flags'=>WS_PARAM_FORCE_ARRAY,
@@ -1059,7 +1059,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.groups.deleteUser',
-      'ws_groups_deleteUser',
+      ws_groups_deleteUser(...),
       array(
         'group_id' => array('type'=>WS_TYPE_ID),
         'user_id' =>  array('flags'=>WS_PARAM_FORCE_ARRAY,
@@ -1073,7 +1073,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.groups.merge',
-      'ws_groups_merge',
+      ws_groups_merge(...),
       array(
         'destination_group_id' => array('type'=>WS_TYPE_ID,
           'info'=>'Is not necessarily part of groups to merge'),
@@ -1088,7 +1088,7 @@ function ws_addDefaultMethods( $arr )
 
     $service->addMethod(
       'pwg.groups.duplicate',
-      'ws_groups_duplicate',
+      ws_groups_duplicate(...),
       array(
         'group_id' => array('type'=>WS_TYPE_ID),
         'copy_name' => array(),
@@ -1101,7 +1101,7 @@ function ws_addDefaultMethods( $arr )
 
   $service->addMethod(
       'pwg.users.getList',
-      'ws_users_getList',
+      ws_users_getList(...),
       array(
         'user_id' =>    array('flags'=>WS_PARAM_OPTIONAL|WS_PARAM_FORCE_ARRAY,
                               'type'=>WS_TYPE_ID),
@@ -1148,7 +1148,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
   $service->addMethod(
       'pwg.users.add',
-      'ws_users_add',
+      ws_users_add(...),
       array(
         'username' => array(),
         'password' => array('default'=>null),
@@ -1164,7 +1164,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
   $service->addMethod(
       'pwg.users.delete',
-      'ws_users_delete',
+      ws_users_delete(...),
       array(
         'user_id' =>  array('flags'=>WS_PARAM_FORCE_ARRAY,
                             'type'=>WS_TYPE_ID),
@@ -1177,7 +1177,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
   $service->addMethod(
     'pwg.users.getAuthKey',
-    'ws_users_getAuthKey',
+    ws_users_getAuthKey(...),
     array(
       'user_id' => array('type'=>WS_TYPE_ID),
       'pwg_token' => array(),
@@ -1189,7 +1189,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
   $service->addMethod(
       'pwg.users.setInfo',
-      'ws_users_setInfo',
+      ws_users_setInfo(...),
       array(
         'user_id' =>          array('flags'=>WS_PARAM_FORCE_ARRAY,
                                     'type'=>WS_TYPE_ID),
@@ -1228,7 +1228,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
     
   $service->addMethod(
       'pwg.permissions.getList',
-      'ws_permissions_getList',
+      ws_permissions_getList(...),
       array(
         'cat_id' =>     array('flags'=>WS_PARAM_FORCE_ARRAY|WS_PARAM_OPTIONAL,
                               'type'=>WS_TYPE_ID),
@@ -1245,7 +1245,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
     
   $service->addMethod(
       'pwg.permissions.add',
-      'ws_permissions_add',
+      ws_permissions_add(...),
       array(
         'cat_id' =>     array('flags'=>WS_PARAM_FORCE_ARRAY,
                               'type'=>WS_TYPE_ID),
@@ -1264,7 +1264,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
     
   $service->addMethod(
       'pwg.permissions.remove',
-      'ws_permissions_remove',
+      ws_permissions_remove(...),
       array(
         'cat_id' =>   array('flags'=>WS_PARAM_FORCE_ARRAY,
                             'type'=>WS_TYPE_ID),
@@ -1281,7 +1281,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
   $service->addMethod(
       'pwg.users.preferences.set',
-      'ws_users_preferences_set',
+      ws_users_preferences_set(...),
       array(
         'param' => array(),
         'value' => array('flags'=>WS_PARAM_OPTIONAL),
@@ -1293,7 +1293,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
   $service->addMethod(
       'pwg.users.favorites.add',
-      'ws_users_favorites_add',
+      ws_users_favorites_add(...),
       array(
         'image_id' =>  array('type'=>WS_TYPE_ID)
       ),
@@ -1303,7 +1303,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
   $service->addMethod(
       'pwg.users.favorites.remove',
-      'ws_users_favorites_remove',
+      ws_users_favorites_remove(...),
       array(
         'image_id' =>  array('type'=>WS_TYPE_ID)
       ),
@@ -1313,7 +1313,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
   $service->addMethod(
       'pwg.users.favorites.getList',
-      'ws_users_favorites_getList',
+      ws_users_favorites_getList(...),
       array(
         'per_page' => array(
           'default'=>100,
@@ -1335,7 +1335,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
   $service->addMethod(
     'pwg.history.log',
-    'ws_history_log',
+    ws_history_log(...),
     array(
       'image_id' => array('type'=>WS_TYPE_ID),
       'cat_id' => array('type'=>WS_TYPE_ID, 'default'=>null),
@@ -1349,7 +1349,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
   $service->addMethod(
       'pwg.history.search',
-      'ws_history_search',
+      ws_history_search(...),
       array(
         'start' => array(
           'default' => null
@@ -1396,7 +1396,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
       'pwg.images.filteredSearch.create',
-      'ws_images_filteredSearch_create',
+      ws_images_filteredSearch_create(...),
       array(
         'search_id' => array(
           'flags' => WS_PARAM_OPTIONAL,

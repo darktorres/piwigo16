@@ -500,7 +500,7 @@ SELECT
   conf_update_param('history_summarized_dropped', true);
 }
 
-add_event_handler('get_history', 'get_history');
+add_event_handler('get_history', get_history(...));
 trigger_notify('functions_history_included');
 
 ?>

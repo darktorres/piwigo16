@@ -176,13 +176,13 @@ UPDATE '.USER_INFOS_TABLE.'
           }
 
           // IMPORTANT SECURITY !
-          $language = array_map('htmlspecialchars', $language);
+          $language = array_map(htmlspecialchars(...), $language);
           $this->fs_languages[$file] = $language;
         }
       }
     }
     closedir($dir);
-    @uasort($this->fs_languages, 'name_compare');
+    @uasort($this->fs_languages, name_compare(...));
   }
 
   function get_db_languages()
@@ -281,7 +281,7 @@ UPDATE '.USER_INFOS_TABLE.'
           $this->server_languages[$language['extension_id']] = $language;
         }
       }
-      @uasort($this->server_languages, array($this, 'extension_name_compare'));
+      @uasort($this->server_languages, $this->extension_name_compare(...));
       return true;
     }
     return false;

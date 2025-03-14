@@ -10,8 +10,8 @@ include_once(PHPWG_ROOT_PATH.'admin/inc/functions_admin.php');
 include_once(PHPWG_ROOT_PATH.'admin/inc/image_class.php');
 
 // add default event handler for image and thumbnail resize
-add_event_handler('upload_image_resize', 'pwg_image_resize');
-add_event_handler('upload_thumbnail_resize', 'pwg_image_resize');
+add_event_handler('upload_image_resize', pwg_image_resize(...));
+add_event_handler('upload_thumbnail_resize', pwg_image_resize(...));
 
 function get_upload_form_config()
 {
@@ -523,7 +523,7 @@ SELECT
   return $format_id;
 }
 
-add_event_handler('upload_file', 'upload_file_pdf');
+add_event_handler('upload_file', upload_file_pdf(...));
 function upload_file_pdf($representative_ext, $file_path)
 {
   global $logger, $conf;
@@ -571,7 +571,7 @@ function upload_file_pdf($representative_ext, $file_path)
   return $representative_ext;
 }
 
-add_event_handler('upload_file', 'upload_file_heic');
+add_event_handler('upload_file', upload_file_heic(...));
 function upload_file_heic($representative_ext, $file_path)
 {
   global $logger, $conf;
@@ -620,7 +620,7 @@ function upload_file_heic($representative_ext, $file_path)
   return $representative_ext;
 }
 
-add_event_handler('upload_file', 'upload_file_tiff');
+add_event_handler('upload_file', upload_file_tiff(...));
 function upload_file_tiff($representative_ext, $file_path)
 {
   global $logger, $conf;
@@ -686,7 +686,7 @@ function upload_file_tiff($representative_ext, $file_path)
   return get_extension($representative_file_abspath);
 }
 
-add_event_handler('upload_file', 'upload_file_video');
+add_event_handler('upload_file', upload_file_video(...));
 function upload_file_video($representative_ext, $file_path)
 {
   global $logger, $conf;
@@ -753,7 +753,7 @@ function upload_file_video($representative_ext, $file_path)
   return $representative_ext;
 }
 
-add_event_handler('upload_file', 'upload_file_psd');
+add_event_handler('upload_file', upload_file_psd(...));
 function upload_file_psd($representative_ext, $file_path)
 {
   global $logger, $conf;
@@ -815,7 +815,7 @@ function upload_file_psd($representative_ext, $file_path)
   return get_extension($representative_file_abspath);
 }
 
-add_event_handler('upload_file', 'upload_file_eps');
+add_event_handler('upload_file', upload_file_eps(...));
 function upload_file_eps($representative_ext, $file_path)
 {
   global $logger, $conf;
@@ -933,7 +933,7 @@ function is_valid_image_extension($extension)
     $extensions = $conf['picture_ext'];
   }
 
-  return array_unique(array_map('strtolower', $extensions));
+  return array_unique(array_map(strtolower(...), $extensions));
 }
 
 function file_upload_error_message($error_code)

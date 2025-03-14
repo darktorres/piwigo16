@@ -12,30 +12,30 @@ class ThemeController {
         load_language('theme.lang', PHPWG_THEMES_PATH.'bootstrap_darkroom/');
         load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, array('no_fallback'=>true, 'local'=>true) );
 
-        add_event_handler('init', array($this, 'assignConfig'));
-        add_event_handler('init', array($this, 'setInitValues'));
+        add_event_handler('init', $this->assignConfig(...));
+        add_event_handler('init', $this->setInitValues(...));
 
         if ($this->config->bootstrap_theme === 'darkroom' || $this->config->bootstrap_theme === 'material' || $this->config->bootstrap_theme === 'bootswatch') {
           $this->config->bootstrap_theme = 'bootstrap-darkroom';
           $this->config->save();
-          add_event_handler('loc_begin_page_header', array($this, 'showUpgradeWarning'));
+          add_event_handler('loc_begin_page_header', $this->showUpgradeWarning(...));
         }
 
         $shortname = $this->config->comments_disqus_shortname;                                                                                                                 
         if ($this->config->comments_type == 'disqus' && !empty($shortname)) {                                                                                                  
-            add_event_handler('blockmanager_apply', array($this, 'hideMenus'));                                                                                                
+            add_event_handler('blockmanager_apply', $this->hideMenus(...));                                                                                                
         }
 
-        add_event_handler('loc_begin_page_header', array($this, 'checkIfHomepage'));
-        add_event_handler('loc_after_page_header', array($this, 'stripBreadcrumbs'));
-        add_event_handler('format_exif_data', array($this, 'exifReplacements'));
-        add_event_handler('loc_end_picture', array($this, 'registerPictureTemplates'), 1000);
-        add_event_handler('loc_begin_index_thumbnails', array($this, 'returnPageStart'));
+        add_event_handler('loc_begin_page_header', $this->checkIfHomepage(...));
+        add_event_handler('loc_after_page_header', $this->stripBreadcrumbs(...));
+        add_event_handler('format_exif_data', $this->exifReplacements(...));
+        add_event_handler('loc_end_picture', $this->registerPictureTemplates(...), 1000);
+        add_event_handler('loc_begin_index_thumbnails', $this->returnPageStart(...));
 
         if ($this->config->slick_enabled === true || $this->config->photoswipe === true) {
-            add_event_handler('loc_end_picture', array($this, 'getAllThumbnailsInCategory'));
+            add_event_handler('loc_end_picture', $this->getAllThumbnailsInCategory(...));
            // also needed on index.tpl for compatibility with GThumb+/GDThumb
-           add_event_handler('loc_end_index', array($this, 'getAllThumbnailsInCategory'));
+           add_event_handler('loc_end_index', $this->getAllThumbnailsInCategory(...));
         }
     }
 
@@ -101,12 +101,12 @@ class ThemeController {
         }
 
         if (isset($pwg_loaded_plugins['language_switch'])) {
-            add_event_handler('loc_end_search', 'language_controler_flags', 95 );
-            add_event_handler('loc_end_identification', 'language_controler_flags', 95 );
-            add_event_handler('loc_end_tags', 'language_controler_flags', 95 );
-            add_event_handler('loc_begin_about', 'language_controler_flags', 95 );
-            add_event_handler('loc_end_register', 'language_controler_flags', 95 );
-            add_event_handler('loc_end_password', 'language_controler_flags', 95 );
+            add_event_handler('loc_end_search', language_controler_flags(...), 95 );
+            add_event_handler('loc_end_identification', language_controler_flags(...), 95 );
+            add_event_handler('loc_end_tags', language_controler_flags(...), 95 );
+            add_event_handler('loc_begin_about', language_controler_flags(...), 95 );
+            add_event_handler('loc_end_register', language_controler_flags(...), 95 );
+            add_event_handler('loc_end_password', language_controler_flags(...), 95 );
         }
 
         if (isset($pwg_loaded_plugins['exif_view'])) {

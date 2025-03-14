@@ -60,7 +60,7 @@ function admintools_add_public_controller()
         'U_CADDIE',
         ));
 
-      $template->set_prefilter('picture', 'admintools_remove_privacy');
+      $template->set_prefilter('picture', admintools_remove_privacy(...));
 
       $tpl_vars['U_CADDIE'] = add_url_params(
         $url_self,
@@ -214,7 +214,7 @@ function admintools_add_admin_controller()
 function admintools_add_admin_controller_setprefilter()
 {
   global $template;
-  $template->set_prefilter('header', 'admintools_admin_prefilter');
+  $template->set_prefilter('header', admintools_admin_prefilter(...));
 }
 
 function admintools_admin_prefilter($content)

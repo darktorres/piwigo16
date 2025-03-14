@@ -8,15 +8,15 @@ $TOUR_PATH = PHPWG_PLUGINS_PATH.'TakeATour/tours/edit_photos/tour.tpl';
 
 if ( defined('IN_ADMIN') and IN_ADMIN )
 {
-  add_event_handler('loc_end_element_set_global', 'TAT_FC_14');
-  add_event_handler('loc_end_picture_modify', 'TAT_FC_16');
-  add_event_handler('loc_end_picture_modify', 'TAT_FC_17');
+  add_event_handler('loc_end_element_set_global', TAT_FC_14(...));
+  add_event_handler('loc_end_picture_modify', TAT_FC_16(...));
+  add_event_handler('loc_end_picture_modify', TAT_FC_17(...));
 }
       
 function TAT_FC_14()
 {
   global $template;
-  $template->set_prefilter('batch_manager_global', 'TAT_FC_14_prefilter');
+  $template->set_prefilter('batch_manager_global', TAT_FC_14_prefilter(...));
 }
 function TAT_FC_14_prefilter ($content)
 {
@@ -30,7 +30,7 @@ function TAT_FC_14_prefilter ($content)
 function TAT_FC_16()
 {
   global $template;
-  $template->set_prefilter('picture_modify', 'TAT_FC_16_prefilter');
+  $template->set_prefilter('picture_modify', TAT_FC_16_prefilter(...));
 }
 function TAT_FC_16_prefilter ($content)
 {
@@ -41,7 +41,7 @@ function TAT_FC_16_prefilter ($content)
 function TAT_FC_17()
 {
   global $template;
-  $template->set_prefilter('picture_modify', 'TAT_FC_17_prefilter');
+  $template->set_prefilter('picture_modify', TAT_FC_17_prefilter(...));
 }
 function TAT_FC_17_prefilter ($content)
 {

@@ -64,7 +64,7 @@ if ('mobile'==get_device())
 elseif ('tablet'==get_device())
 	$conf['tag_letters_column_number'] = min($conf['tag_letters_column_number'],3);
 
-$this->smarty->registerFilter('pre', 'modus_smarty_prefilter_wrap');
+$this->smarty->registerFilter('pre', modus_smarty_prefilter_wrap(...));
 function modus_smarty_prefilter_wrap($source)
 {
 	include_once(dirname(__FILE__).'/functions_modus.php');
@@ -74,8 +74,8 @@ function modus_smarty_prefilter_wrap($source)
 
 if (!defined('IN_ADMIN') && defined('RVCDN') )
 {
-	$this->smarty->registerFilter('pre', 'rv_cdn_prefilter' );
-	add_event_handler('combined_script', 'rv_cdn_combined_script', EVENT_HANDLER_PRIORITY_NEUTRAL, 2);
+	$this->smarty->registerFilter('pre', rv_cdn_prefilter(...) );
+	add_event_handler('combined_script', rv_cdn_combined_script(...), EVENT_HANDLER_PRIORITY_NEUTRAL, 2);
 }
 
 function rv_cdn_prefilter($source, &$smarty)
@@ -87,12 +87,12 @@ function rv_cdn_prefilter($source, &$smarty)
 
 // Add prefilter to remove fontello loaded by piwigo 14 search, 
 // this avoids conflicts of loading 2 fontellos
-add_event_handler('loc_begin_index', 'modus_loc_begin_index', 60);
+add_event_handler('loc_begin_index', modus_loc_begin_index(...), 60);
 function modus_loc_begin_index()
 {
 	global $template;
-	$template->set_prefilter('index', 'modus_index_prefilter_1');
-	$template->set_prefilter('index', 'modus_index_prefilter_2');
+	$template->set_prefilter('index', modus_index_prefilter_1(...));
+	$template->set_prefilter('index', modus_index_prefilter_2(...));
 }
 
 function modus_index_prefilter_1($content)
@@ -119,7 +119,7 @@ function rv_cdn_combined_script($url, $script)
 }
 
 if (defined('RVPT_JQUERY_SRC'))
-add_event_handler('loc_begin_page_header', 'modus_loc_begin_page_header');
+add_event_handler('loc_begin_page_header', modus_loc_begin_page_header(...));
 function modus_loc_begin_page_header()
 {
 	$all = $GLOBALS['template']->scriptLoader->get_all();
@@ -127,14 +127,14 @@ function modus_loc_begin_page_header()
 		$jq->set_path(RVPT_JQUERY_SRC);
 }
 
-add_event_handler('combinable_preparse', 'modus_combinable_preparse');
+add_event_handler('combinable_preparse', modus_combinable_preparse(...));
 function modus_combinable_preparse($template)
 {
 	global $conf, $template;
 	include_once(dirname(__FILE__).'/functions_modus.php');
 
 	try {
-		$template->smarty->registerPlugin('modifier', 'cssGradient', 'modus_css_gradient');
+		$template->smarty->registerPlugin('modifier', 'cssGradient', modus_css_gradient(...));
 	} catch(SmartyException $exc) {}
 
 	include( dirname(__FILE__).'/skins/'.$conf['modus_theme']['skin'].'.php' );
@@ -149,7 +149,7 @@ function modus_combinable_preparse($template)
 }
 
 
-$this->smarty->registerPlugin('function', 'cssResolution', 'modus_css_resolution');
+$this->smarty->registerPlugin('function', 'cssResolution', modus_css_resolution(...));
 function modus_css_resolution($params)
 {
 	$base = @$params['base'];
@@ -179,7 +179,7 @@ function modus_css_resolution($params)
 	return $res;
 }
 
-$this->smarty->registerPlugin('function', 'modus_thumbs', 'modus_thumbs');
+$this->smarty->registerPlugin('function', 'modus_thumbs', modus_thumbs(...));
 function modus_thumbs($x, $smarty)
 {
 	global $template, $page, $conf;
@@ -253,7 +253,7 @@ function modus_thumbs($x, $smarty)
 	$template->scriptLoader->add('modus.arange', 1, array('jquery'), 'themes/'.$my_base_name."/js/thumb.arrange.min.js", 0);
 }
 
-add_event_handler('loc_end_index', 'modus_on_end_index');
+add_event_handler('loc_end_index', modus_on_end_index(...));
 function modus_on_end_index()
 {
 	global $template;
@@ -262,7 +262,7 @@ function modus_on_end_index()
 
 }
 
-add_event_handler('get_index_derivative_params', 'modus_get_index_photo_derivative_params', EVENT_HANDLER_PRIORITY_NEUTRAL+1 );
+add_event_handler('get_index_derivative_params', modus_get_index_photo_derivative_params(...), EVENT_HANDLER_PRIORITY_NEUTRAL+1 );
 function modus_get_index_photo_derivative_params($default)
 {
 	global $conf;
@@ -282,7 +282,7 @@ function modus_get_index_photo_derivative_params($default)
 	return $default;
 }
 
-add_event_handler('loc_end_index_category_thumbnails', 'modus_index_category_thumbnails' );
+add_event_handler('loc_end_index_category_thumbnails', modus_index_category_thumbnails(...) );
 function modus_index_category_thumbnails($items)
 {
 	global $page, $template, $conf;
@@ -350,7 +350,7 @@ function modus_index_category_thumbnails($items)
 	return $items;
 }
 
-add_event_handler('loc_begin_picture', 'modus_loc_begin_picture');
+add_event_handler('loc_begin_picture', modus_loc_begin_picture(...));
 function modus_loc_begin_picture()
 {
 	global $conf, $template;
@@ -365,7 +365,7 @@ function modus_loc_begin_picture()
 	$template->append('head_elements', '<script>if(document.documentElement.offsetWidth>1270)document.documentElement.className=\'wide\'</script>');
 }
 
-add_event_handler('render_element_content', 'modus_picture_content', EVENT_HANDLER_PRIORITY_NEUTRAL-1, 2 );
+add_event_handler('render_element_content', modus_picture_content(...), EVENT_HANDLER_PRIORITY_NEUTRAL-1, 2 );
 function modus_picture_content($content, $element_info)
 {
 	global $conf, $picture, $template;

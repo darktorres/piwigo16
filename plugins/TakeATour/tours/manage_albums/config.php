@@ -8,13 +8,13 @@ $TOUR_PATH = PHPWG_PLUGINS_PATH.'TakeATour/tours/manage_albums/tour.tpl';
 
 if ( defined('IN_ADMIN') and IN_ADMIN )
 {
-  add_event_handler('loc_end_cat_modify', 'TAT_FC_23');
+  add_event_handler('loc_end_cat_modify', TAT_FC_23(...));
 }
       
 function TAT_FC_23()
 {
   global $template;
-  $template->set_prefilter('album_properties', 'TAT_FC_23_prefilter');
+  $template->set_prefilter('album_properties', TAT_FC_23_prefilter(...));
 }
 function TAT_FC_23_prefilter ($content)
 {

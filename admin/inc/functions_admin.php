@@ -862,7 +862,7 @@ SELECT
   WHERE id IN ('.implode(',', $categories).')
 ;';
     $all_categories = query2array($query);
-    usort($all_categories, 'global_rank_compare');
+    usort($all_categories, global_rank_compare(...));
 
     foreach ($all_categories as $cat)
     {
@@ -2827,10 +2827,10 @@ function get_taglist($query, $only_user_language=true)
     }
   }
 
-  usort($taglist, 'tag_alpha_compare');
+  usort($taglist, tag_alpha_compare(...));
   if (count($altlist))
   {
-    usort($altlist, 'tag_alpha_compare');
+    usort($altlist, tag_alpha_compare(...));
     $taglist = array_merge($taglist, $altlist);
   }
 

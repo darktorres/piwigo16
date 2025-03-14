@@ -192,7 +192,7 @@ function cmp($a, $b)
 }
 
 // Stoped plugin sorting for new plugin manager
-// usort($tpl_plugins, 'cmp');
+// usort($tpl_plugins, cmp(...));
 
 $template->assign(
   array(

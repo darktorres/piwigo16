@@ -11,7 +11,7 @@
  */
 
 
-add_event_handler('user_comment_check', 'user_comment_check');
+add_event_handler('user_comment_check', user_comment_check(...));
 
 /**
  * Does basic check on comment and returns action to perform.

@@ -43,7 +43,7 @@ function get_iptc_data($filename, $map, $array_sep=',')
           if ($iptc_key == '2#025')
           {
             $value = implode($array_sep,
-                             array_map('clean_iptc_value',$iptc[$iptc_key]));
+                             array_map(clean_iptc_value(...),$iptc[$iptc_key]));
           }
           else
           {
@@ -199,7 +199,7 @@ function get_exif_data($filename, $map)
       // HTML tags to avoid XSS (malicious execution of javascript)
       if (is_array($value))
       {
-        array_walk_recursive($value, 'strip_html_in_metadata');
+        array_walk_recursive($value, strip_html_in_metadata(...));
       }
       else
       {

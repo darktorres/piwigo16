@@ -929,7 +929,7 @@ function create_user_infos($user_ids, $override_values=null)
       }
       
       $insert = array_merge(
-        array_map('pwg_db_real_escape_string', $default_user),
+        array_map(pwg_db_real_escape_string(...), $default_user),
         array(
           'user_id' => $user_id,
           'status' => $status,
@@ -1086,7 +1086,7 @@ function try_log_user($username, $password, $remember_me)
   return trigger_change('try_log_user', false, $username, $password, $remember_me);
 }
 
-add_event_handler('try_log_user', 'pwg_login');
+add_event_handler('try_log_user', pwg_login(...));
 
 /**
  * Default method for user login, can be overwritten with 'try_log_user' trigger.

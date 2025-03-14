@@ -453,7 +453,7 @@ SELECT
           }
 
           // IMPORTANT SECURITY !
-          $theme = array_map('htmlspecialchars', $theme);
+          $theme = array_map(htmlspecialchars(...), $theme);
           $this->fs_themes[$file] = $theme;
         }
       }
@@ -469,16 +469,16 @@ SELECT
     switch ($order)
     {
       case 'name':
-        uasort($this->fs_themes, 'name_compare');
+        uasort($this->fs_themes, name_compare(...));
         break;
       case 'status':
         $this->sort_themes_by_state();
         break;
       case 'author':
-        uasort($this->fs_themes, array($this, 'theme_author_compare'));
+        uasort($this->fs_themes, $this->theme_author_compare(...));
         break;
       case 'id':
-        uksort($this->fs_themes, 'strcasecmp');
+        uksort($this->fs_themes, strcasecmp(...));
         break;
     }
   }
@@ -577,16 +577,16 @@ SELECT
         krsort($this->server_themes);
         break;
       case 'revision':
-        usort($this->server_themes, array($this, 'extension_revision_compare'));
+        usort($this->server_themes, $this->extension_revision_compare(...));
         break;
       case 'name':
-        uasort($this->server_themes, array($this, 'extension_name_compare'));
+        uasort($this->server_themes, $this->extension_name_compare(...));
         break;
       case 'author':
-        uasort($this->server_themes, array($this, 'extension_author_compare'));
+        uasort($this->server_themes, $this->extension_author_compare(...));
         break;
       case 'downloads':
-        usort($this->server_themes, array($this, 'extension_downloads_compare'));
+        usort($this->server_themes, $this->extension_downloads_compare(...));
         break;
     }
   }
@@ -751,7 +751,7 @@ SELECT
 
   function sort_themes_by_state()
   {
-    uasort($this->fs_themes, 'name_compare');
+    uasort($this->fs_themes, name_compare(...));
 
     $active_themes = array();
     $inactive_themes = array();

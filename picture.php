@@ -120,9 +120,9 @@ if ( isset($_GET['metadata']) )
 }
 
 // add default event handler for rendering element content
-add_event_handler('render_element_content', 'default_picture_content');
+add_event_handler('render_element_content', default_picture_content(...));
 // add default event handler for rendering element description
-add_event_handler('render_element_description', 'pwg_nl2br');
+add_event_handler('render_element_description', pwg_nl2br(...));
 
 /**
  * pwg_nl2br is useful for PHP 5.2 which doesn't accept more than 1
@@ -450,7 +450,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
   ).'
 ;';
 $related_categories = array_from_query($query);
-usort($related_categories, 'global_rank_compare');
+usort($related_categories, global_rank_compare(...));
 //-------------------------first, prev, current, next & last picture management
 $picture = array();
 

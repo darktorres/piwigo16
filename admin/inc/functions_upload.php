@@ -833,10 +833,6 @@ final class functions_upload
         string $directory
     ): void {
         if (! is_dir($directory)) {
-            if (substr(PHP_OS, 0, 3) == 'WIN') {
-                $directory = str_replace('/', DIRECTORY_SEPARATOR, $directory);
-            }
-
             umask(0000);
             $recursive = true;
 

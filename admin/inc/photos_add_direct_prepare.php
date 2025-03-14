@@ -10,6 +10,8 @@
 // | Photo selection                                                       |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\pwg_image;
+
 $template->assign(
     array(
       'F_ADD_ACTION'=> PHOTOS_ADD_BASE_URL,

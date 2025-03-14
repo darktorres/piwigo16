@@ -6,6 +6,9 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\ImageStdParams;
+use Piwigo\inc\SrcImage;
+
 /**
  * This file is included by the main page to show subcategories of a category
  * or to show recent categories or main page categories list

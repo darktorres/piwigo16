@@ -1,4 +1,8 @@
 <?php
+
+use Piwigo\admin\inc\tabsheet;
+use Piwigo\themes\bootstrap_darkroom\inc\Config;
+
 // Check whether we are indeed included by Piwigo.
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
@@ -20,7 +24,7 @@ if (!in_array($page['tab'], array(TAB_SETTINGS, TAB_ABOUT))) {
     $page['tab'] = TAB_SETTINGS;
 }
 
-$themeconfig = new \BootstrapDarkroom\Config();
+$themeconfig = new Config();
 
 // Save settings
 if ($page['tab'] == TAB_SETTINGS) {

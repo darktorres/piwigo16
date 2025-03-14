@@ -6,6 +6,9 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\ImageStdParams;
+use Piwigo\inc\SrcImage;
+
 /**
  * This file is included by the main page to show thumbnails for the default
  * case

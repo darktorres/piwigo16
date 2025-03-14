@@ -12,6 +12,9 @@ namespace Piwigo\admin\inc;
 // |                   Class for Imagick extension                         |
 // +-----------------------------------------------------------------------+
 
+use Imagick;
+use ImagickPixel;
+
 include_once(PHPWG_ROOT_PATH.'admin/inc/imageInterface.php');
 
 class image_imagick implements imageInterface

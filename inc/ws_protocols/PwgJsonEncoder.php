@@ -8,6 +8,9 @@
 
 namespace Piwigo\inc\ws_protocols;
 
+use Piwigo\inc\PwgError;
+use Piwigo\inc\PwgResponseEncoder;
+
 class PwgJsonEncoder extends PwgResponseEncoder
 {
   function encodeResponse($response)

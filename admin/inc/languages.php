@@ -8,6 +8,8 @@
 
 namespace Piwigo\admin\inc;
 
+use PclZip;
+
 class languages
 {
   var $fs_languages = array();

@@ -6,6 +6,10 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\DerivativeParams;
+use Piwigo\inc\ImageStdParams;
+use Piwigo\inc\SizingParams;
+
 if( !defined("PHPWG_ROOT_PATH") )
 {
   die ("Hacking attempt!");

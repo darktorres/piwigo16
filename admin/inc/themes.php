@@ -8,6 +8,8 @@
 
 namespace Piwigo\admin\inc;
 
+use PclZip;
+
 class themes
 {
   var $fs_themes = array();
@@ -35,7 +37,7 @@ class themes
   private static function build_maintain_class($theme_id)
   {
     $file_to_include = PHPWG_THEMES_PATH.$theme_id.'/admin/'.$theme_id.'_maintain.php';
-    $classname = $theme_id.'_maintain';
+    $classname = '\\Piwigo\\themes\\'.$theme_id.'\\admin\\'.$theme_id.'_maintain';
 
     // 2.7 pattern (OO only)
     if (file_exists($file_to_include))

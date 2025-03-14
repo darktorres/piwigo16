@@ -6,6 +6,9 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\PwgError;
+use Piwigo\inc\PwgNamedArray;
+
 /**
  * API method
  * Returns permissions

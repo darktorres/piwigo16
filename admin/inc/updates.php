@@ -8,6 +8,8 @@
 
 namespace Piwigo\admin\inc;
 
+use PclZip;
+
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
 class updates
@@ -37,7 +39,8 @@ class updates
     foreach ($this->types as $type)
     {
       include_once(PHPWG_ROOT_PATH.'admin/inc/'.$type.'.php');
-      $this->$type = new $type();
+      $className = "\\Piwigo\\admin\\inc\\{$type}";
+      $this->{$type} = new $className();
     }
   }
 

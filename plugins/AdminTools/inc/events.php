@@ -1,4 +1,7 @@
 <?php
+
+use Piwigo\inc\DerivativeImage;
+
 defined('ADMINTOOLS_PATH') or die('Hacking attempt!');
 
 /**

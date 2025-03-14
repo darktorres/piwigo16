@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\tabsheet;
+
 /**
  * Management of elements set. Elements can belong to a category or to the
  * user caddie.

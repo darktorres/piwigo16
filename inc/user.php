@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\PwgError;
+
 // by default we start with guest
 $user['id'] = $conf['guest_id'];
 

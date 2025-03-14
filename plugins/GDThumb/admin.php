@@ -1,5 +1,9 @@
 <?php
 
+use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\ImageStdParams;
+use Piwigo\inc\SrcImage;
+
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
 function int_delete_gdthumb_cache($pattern) {

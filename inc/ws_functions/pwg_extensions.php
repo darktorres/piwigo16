@@ -6,6 +6,11 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\plugins;
+use Piwigo\admin\inc\themes;
+use Piwigo\admin\inc\updates;
+use Piwigo\inc\PwgError;
+
 /**
  * API method
  * Returns the list of all plugins
@@ -172,7 +177,8 @@ function ws_extensions_update($params, $service)
   $extension_id = $params['id'];
   $revision = $params['revision'];
 
-  $extension = new $type();
+  $class = '\\Piwigo\\admin\\inc\\' . $type;
+  $extension = new $class();
 
   if ($type == 'plugins')
   {

@@ -6,6 +6,12 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\ImageStdParams;
+use Piwigo\inc\PwgError;
+use Piwigo\inc\PwgNamedArray;
+use Piwigo\inc\PwgNamedStruct;
+
 /**
  * API method
  * Returns images per category

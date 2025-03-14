@@ -12,6 +12,8 @@ namespace Piwigo\admin\inc;
 // |                          Main Image Class                             |
 // +-----------------------------------------------------------------------+
 
+use Exception;
+
 class pwg_image
 {
   var $image;
@@ -44,7 +46,7 @@ class pwg_image
     }
 
     include_once(PHPWG_ROOT_PATH."admin/inc/image_$this->library.php");
-    $class = 'image_'.$this->library;
+    $class = '\Piwigo\admin\inc\image_'.$this->library;
     $this->image = new $class($source_filepath);
   }
 
@@ -371,7 +373,7 @@ class pwg_image
   static function is_vips()
   {
     include_once(PHPWG_ROOT_PATH.'admin/inc/image_vips.php');
-    return class_exists('image_vips');
+    return class_exists('\Piwigo\admin\inc\image_vips');
   }
 
   static function get_library($library=null, $extension=null)

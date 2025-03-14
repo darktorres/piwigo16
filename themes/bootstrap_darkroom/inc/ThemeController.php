@@ -1,6 +1,9 @@
 <?php
 namespace Piwigo\themes\bootstrap_darkroom\inc;
 
+use Piwigo\inc\ImageStdParams;
+use Piwigo\inc\SrcImage;
+
 class ThemeController {
     private $config;
 
@@ -230,7 +233,7 @@ class ThemeController {
                 'TN_ALT' => htmlspecialchars(strip_tags($name)),
                 'URL' => $url,
                 'DESCRIPTION' => htmlspecialchars(strip_tags($desc)),
-                'src_image' => new \SrcImage($row),
+                'src_image' => new SrcImage($row),
                 'SIZE' => $row['width'].'x'.$row['height'],
                 'PATH' => $row['path'],
                 'DATE_CREATED' => $row['date_creation'],
@@ -244,10 +247,10 @@ class ThemeController {
         $template->assign('thumbnails', $tpl_thumbnails_var);
 
         $template->assign(array(
-            'derivative_params_square' => trigger_change('get_index_derivative_params', \ImageStdParams::get_by_type( IMG_SQUARE ) ),
-            'derivative_params_medium' => trigger_change('get_index_derivative_params', \ImageStdParams::get_by_type( IMG_MEDIUM ) ),
-            'derivative_params_large' => trigger_change('get_index_derivative_params', \ImageStdParams::get_by_type( IMG_LARGE ) ),
-            'derivative_params_xxlarge' => trigger_change('get_index_derivative_params', \ImageStdParams::get_by_type( IMG_XXLARGE ) ),
+            'derivative_params_square' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( IMG_SQUARE ) ),
+            'derivative_params_medium' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( IMG_MEDIUM ) ),
+            'derivative_params_large' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( IMG_LARGE ) ),
+            'derivative_params_xxlarge' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type( IMG_XXLARGE ) ),
         ));
 
         unset($tpl_thumbnails_var, $pictures);

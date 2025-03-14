@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\ImageStdParams;
+
 define ('PHPWG_ROOT_PATH', './');
 define ('IN_WS', true);
 

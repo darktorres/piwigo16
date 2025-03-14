@@ -8,6 +8,9 @@
 
 namespace Piwigo\inc\ws_protocols;
 
+use Piwigo\inc\PwgError;
+use Piwigo\inc\PwgResponseEncoder;
+
 function xmlrpc_encode($data)
 {
   switch (gettype($data))

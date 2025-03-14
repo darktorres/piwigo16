@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\DerivativeImage;
+
 if (!defined('PHPWG_ROOT_PATH'))
 {
   die ("Hacking attempt!");

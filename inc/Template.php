@@ -8,6 +8,11 @@
 
 namespace Piwigo\inc;
 
+use Closure;
+use Smarty;
+use Smarty_Internal_Debug;
+use SmartyException;
+
 /**
  * @package template
  */
@@ -1099,7 +1104,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
               $callbackString = implode('', $callback);
           } elseif (is_string($callback)) {
               $callbackString = $callback;
-          } elseif ($callback instanceof \Closure) {
+          } elseif ($callback instanceof Closure) {
               $callbackString = 'closure';
           }
 

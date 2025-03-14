@@ -5,6 +5,9 @@
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
+
+// use Piwigo\admin\inc\updates;
+
 $template->set_filenames(array('tail'=>'footer.tpl'));
 
 trigger_notify('loc_begin_page_tail');

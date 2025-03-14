@@ -6,6 +6,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\inc\tabsheet;
+
 include_once(PHPWG_ROOT_PATH.'admin/inc/tabsheet.php');
 
 $my_base_url = get_root_url().'admin.php?page=';

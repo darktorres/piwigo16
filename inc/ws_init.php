@@ -6,6 +6,13 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\PwgServer;
+use Piwigo\inc\ws_protocols\PwgJsonEncoder;
+use Piwigo\inc\ws_protocols\PwgRestEncoder;
+use Piwigo\inc\ws_protocols\PwgRestRequestHandler;
+use Piwigo\inc\ws_protocols\PwgSerialPhpEncoder;
+use Piwigo\inc\ws_protocols\PwgXmlRpcEncoder;
+
 defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 
 include_once(PHPWG_ROOT_PATH.'inc/ws_core.php');

@@ -8,6 +8,8 @@
 
 namespace Piwigo\admin\inc;
 
+use Piwigo\inc\PluginMaintain;
+
 include_once(PHPWG_ROOT_PATH.'inc/PluginMaintain.php');
 
 /**

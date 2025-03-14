@@ -6,6 +6,11 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\inc\DerivativeImage;
+use Piwigo\inc\PwgError;
+use Piwigo\inc\PwgNamedArray;
+use Piwigo\inc\SrcImage;
+
 /**
  * Event handler for method invocation security check. Should return a PwgError
  * if the preconditions are not satifsied for method invocation.

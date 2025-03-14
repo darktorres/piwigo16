@@ -9,6 +9,8 @@ Author URI: http://piwigo.org
 Has Settings: webmaster
 */
 
+use Piwigo\plugins\AdminTools\inc\MultiView;
+
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
 define('ADMINTOOLS_ID',       basename(dirname(__FILE__)));

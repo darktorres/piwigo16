@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -15,25 +16,23 @@ namespace Piwigo\admin\inc;
 // Define all needed methods for image class
 interface imageInterface
 {
-  function get_width();
+    public function get_width();
 
-  function get_height();
+    public function get_height();
 
-  function set_compression_quality($quality);
+    public function set_compression_quality($quality);
 
-  function crop($width, $height, $x, $y);
+    public function crop($width, $height, $x, $y);
 
-  function strip();
+    public function strip();
 
-  function rotate($rotation);
+    public function rotate($rotation);
 
-  function resize($width, $height);
+    public function resize($width, $height);
 
-  function sharpen($amount);
+    public function sharpen($amount);
 
-  function compose($overlay, $x, $y, $opacity);
+    public function compose($overlay, $x, $y, $opacity);
 
-  function write($destination_filepath);
+    public function write($destination_filepath);
 }
-
-?>

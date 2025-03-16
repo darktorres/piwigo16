@@ -1,4 +1,5 @@
 <?php
+
 $lang['2_8_0_title1'] = 'Welcome in Piwigo 2.8';
 $lang['2_8_0_stp1'] = 'User details are no longer opening inside the users list, you get a simple form, focused on a single user.<br><br>Piwigo 2.8 also fixes a few bugs like user list update once user is edited or check on invalid email address.';
 

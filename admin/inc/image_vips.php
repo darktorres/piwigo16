@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -32,10 +33,7 @@ class image_vips implements imageInterface
         $this->source_filepath = realpath($source_filepath);
     }
 
-    public function add_command($command, $params = null)
-    {
-
-    }
+    public function add_command($command, $params = null) {}
 
     public function get_width()
     {
@@ -95,5 +93,3 @@ class image_vips implements imageInterface
         return true;
     }
 }
-
-?>

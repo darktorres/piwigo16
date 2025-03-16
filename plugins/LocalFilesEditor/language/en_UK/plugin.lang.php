@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | Piwigo - a PHP based photo gallery                                    |
 // +-----------------------------------------------------------------------+
@@ -27,7 +28,7 @@ $lang['locfiledit_onglet_tpl'] = 'Templates';
 $lang['locfiledit_onglet_lang'] = 'Languages';
 $lang['locfiledit_onglet_plug'] = 'Personal Plugin';
 $lang['locfiledit_cant_save'] = 'Current file isn\'t writeable. Check if directory "local/" is writeable (chmod).';
-$lang['locfiledit_newfile'] = 'The file does not exist until some information is entered 
+$lang['locfiledit_newfile'] = 'The file does not exist until some information is entered
 below. Once information is entered and saved, the file will be created.';
 $lang['locfiledit_save_config'] = 'File written successfully.';
 $lang['locfiledit_show_default'] = 'Display reference file: ';
@@ -53,4 +54,3 @@ $lang['locfiledit_model_error'] = 'You must choose a model.';
 $lang['locfiledit_empty_filename'] = 'You must enter the file name.';
 $lang['locfiledit_webmaster_only'] = 'Only webmasters can create or modify local files.';
 $lang['Customize CSS'] = 'Customize CSS';
-?>

@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,22 +14,27 @@ namespace Piwigo\inc;
  */
 class PwgError
 {
-  private $_code;
-  private $_codeText;
+    private $_code;
 
-  function __construct($code, $codeText)
-  {
-    if ($code>=400 and $code<600)
+    private $_codeText;
+
+    public function __construct($code, $codeText)
     {
-      functions_html::set_status_header($code, $codeText);
+        if ($code >= 400 and $code < 600) {
+            functions_html::set_status_header($code, $codeText);
+        }
+
+        $this->_code = $code;
+        $this->_codeText = $codeText;
     }
 
-    $this->_code = $code;
-    $this->_codeText = $codeText;
-  }
+    public function code()
+    {
+        return $this->_code;
+    }
 
-  function code() { return $this->_code; }
-  function message() { return $this->_codeText; }
+    public function message()
+    {
+        return $this->_codeText;
+    }
 }
-
-?>

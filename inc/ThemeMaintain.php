@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,26 +14,26 @@ namespace Piwigo\inc;
  */
 class ThemeMaintain
 {
-  /** @var string $theme_id */
-  protected $theme_id;
+    /**
+     * @var string
+     */
+    protected $theme_id;
 
-  /**
-   * @param string $id
-   */
-  function __construct($id)
-  {
-    $this->theme_id = $id;
-  }
+    /**
+     * @param string $id
+     */
+    public function __construct($id)
+    {
+        $this->theme_id = $id;
+    }
 
-  /**
-   * @param string $theme_version
-   * @param array $errors - used to return error messages
-   */
-  function activate($theme_version, &$errors=array()) {}
+    /**
+     * @param string $theme_version
+     * @param array $errors - used to return error messages
+     */
+    public function activate($theme_version, &$errors = []) {}
 
-  function deactivate() {}
+    public function deactivate() {}
 
-  function delete() {}
+    public function delete() {}
 }
-
-?>

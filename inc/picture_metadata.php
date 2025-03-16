@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -8,87 +9,67 @@
 
 /**
  * This file is included by the picture page to manage picture metadata
- *
  */
-
 
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_metadata;
 
-if (($conf['show_exif']) and (function_exists('exif_read_data')))
-{
-  $exif_mapping = array();
-  foreach ($conf['show_exif_fields'] as $field)
-  {
-    $exif_mapping[$field] = $field;
-  }
-
-  $exif = functions_metadata::get_exif_data($picture['current']['src_image']->get_path(), $exif_mapping);
-  
-  if (count($exif) > 0)
-  {
-    $tpl_meta = array(
-        'TITLE' => functions::l10n('EXIF Metadata'),
-        'lines' => array(),
-      );
-
-    foreach ($conf['show_exif_fields'] as $field)
-    {
-      if (strpos($field, ';') === false)
-      {
-        // template cannot deal with an array as value, we skip it
-        if (isset($exif[$field]) and !is_array($exif[$field]))
-        {
-          $key = $field;
-          if (isset($lang['exif_field_'.$field]))
-          {
-            $key = $lang['exif_field_'.$field];
-          }
-          $tpl_meta['lines'][$key] = $exif[$field];
-        }
-      }
-      else
-      {
-        $tokens = explode(';', $field);
-        // template cannot deal with an array as value, we skip it
-        if (isset($exif[$field]) and !is_array($exif[$field]))
-        {
-          $key = $tokens[1];
-          if (isset($lang['exif_field_'.$key]))
-          {
-            $key = $lang['exif_field_'.$key];
-          }
-          $tpl_meta['lines'][$key] = $exif[$field];
-        }
-      }
+if (($conf['show_exif']) and (function_exists('exif_read_data'))) {
+    $exif_mapping = [];
+    foreach ($conf['show_exif_fields'] as $field) {
+        $exif_mapping[$field] = $field;
     }
-    $template->append('metadata', $tpl_meta);
-  }
+
+    $exif = functions_metadata::get_exif_data($picture['current']['src_image']->get_path(), $exif_mapping);
+
+    if (count($exif) > 0) {
+        $tpl_meta = [
+            'TITLE' => functions::l10n('EXIF Metadata'),
+            'lines' => [],
+        ];
+
+        foreach ($conf['show_exif_fields'] as $field) {
+            if (strpos($field, ';') === false) {
+                // template cannot deal with an array as value, we skip it
+                if (isset($exif[$field]) and ! is_array($exif[$field])) {
+                    $key = $field;
+                    if (isset($lang['exif_field_' . $field])) {
+                        $key = $lang['exif_field_' . $field];
+                    }
+                    $tpl_meta['lines'][$key] = $exif[$field];
+                }
+            } else {
+                $tokens = explode(';', $field);
+                // template cannot deal with an array as value, we skip it
+                if (isset($exif[$field]) and ! is_array($exif[$field])) {
+                    $key = $tokens[1];
+                    if (isset($lang['exif_field_' . $key])) {
+                        $key = $lang['exif_field_' . $key];
+                    }
+                    $tpl_meta['lines'][$key] = $exif[$field];
+                }
+            }
+        }
+        $template->append('metadata', $tpl_meta);
+    }
 }
 
-if ($conf['show_iptc'])
-{
-  $iptc = functions_metadata::get_iptc_data($picture['current']['src_image']->get_path(), $conf['show_iptc_mapping'], ', ');
+if ($conf['show_iptc']) {
+    $iptc = functions_metadata::get_iptc_data($picture['current']['src_image']->get_path(), $conf['show_iptc_mapping'], ', ');
 
-  if (count($iptc) > 0)
-  {
-    $tpl_meta = array(
-        'TITLE' => functions::l10n('IPTC Metadata'),
-        'lines' => array(),
-      );
+    if (count($iptc) > 0) {
+        $tpl_meta = [
+            'TITLE' => functions::l10n('IPTC Metadata'),
+            'lines' => [],
+        ];
 
-    foreach ($iptc as $field => $value)
-    {
-      $key = $field;
-      if (isset($lang[$field]))
-      {
-        $key = $lang[$field];
-      }
-      $tpl_meta['lines'][$key] = $value;
+        foreach ($iptc as $field => $value) {
+            $key = $field;
+            if (isset($lang[$field])) {
+                $key = $lang[$field];
+            }
+            $tpl_meta['lines'][$key] = $value;
+        }
+        $template->append('metadata', $tpl_meta);
     }
-    $template->append('metadata', $tpl_meta);
-  }
 }
-
-
-?>

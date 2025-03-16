@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -10,17 +11,17 @@ use Piwigo\admin\inc\tabsheet;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 
-if( !defined("PHPWG_ROOT_PATH") )
-{
-  die ("Hacking attempt!");
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
-$my_base_url = functions_url::get_root_url().'admin.php?page=plugins';
+$my_base_url = functions_url::get_root_url() . 'admin.php?page=plugins';
 
-if (isset($_GET['tab']))
-  $page['tab'] = $_GET['tab'];
-else
-  $page['tab'] = 'installed';
+if (isset($_GET['tab'])) {
+    $page['tab'] = $_GET['tab'];
+} else {
+    $page['tab'] = 'installed';
+}
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('plugins');
@@ -28,11 +29,8 @@ $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
 if ($page['tab'] == 'update') {
-  include(PHPWG_ROOT_PATH.'admin/updates_ext.php');
-  $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Plugins'));
+    include(PHPWG_ROOT_PATH . 'admin/updates_ext.php');
+    $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Plugins'));
+} else {
+    include(PHPWG_ROOT_PATH . 'admin/plugins_' . $page['tab'] . '.php');
 }
-else
-{
-  include(PHPWG_ROOT_PATH.'admin/plugins_'.$page['tab'].'.php');
-}
-?>

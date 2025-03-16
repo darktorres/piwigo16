@@ -1,4 +1,5 @@
 <?php
+
 /*
 Theme Name: Bootstrap Darkroom
 Version: 2.5.22
@@ -11,15 +12,15 @@ Author URI: https://github.com/tkuther/piwigo-bootstrap-darkroom
 use Piwigo\inc\functions_session;
 use Piwigo\themes\bootstrap_darkroom\inc\ThemeController;
 
-$themeconf = array(
+$themeconf = [
     'name' => 'bootstrap_darkroom',
     'parent' => 'default',
     'load_parent_css' => false,
     'load_parent_local_head' => true,
     'local_head' => 'local_head.tpl',
     'url' => 'https://kuther.net/',
-    'colorscheme' => 'dark'
-);
+    'colorscheme' => 'dark',
+];
 
 //debug
 //$conf['template_combine_files'] = false;
@@ -28,14 +29,13 @@ $themeconf = array(
 functions_session::pwg_set_session_var('show_metadata', true);
 
 // register video files
-$video_ext = array('mp4','m4v');
-$conf['file_ext'] = array_merge ($conf['file_ext'], $video_ext, array_map(strtoupper(...), $video_ext));
+$video_ext = ['mp4', 'm4v'];
+$conf['file_ext'] = array_merge($conf['file_ext'], $video_ext, array_map(strtoupper(...), $video_ext));
 
 $controller = new ThemeController();
 
-
 // Define if skin is clear or dark
-$clear_skins = array(
+$clear_skins = [
     'bootstrap-default',
     'material-amber',
     'material-blue',
@@ -65,7 +65,7 @@ $clear_skins = array(
     'bootswatch-spacelab',
     'bootswatch-united',
     'bootswatch-yeti',
-);
+];
 // Get value of bootstrap theme and set themeconf to clear or leave as default (dark)
 $closure = Closure::bind(function &(ThemeController $controller) {
     return $controller->config;
@@ -73,8 +73,7 @@ $closure = Closure::bind(function &(ThemeController $controller) {
 
 $config = &$closure($controller);
 
-if (in_array($config->bootstrap_theme, $clear_skins))
-{
+if (in_array($config->bootstrap_theme, $clear_skins)) {
     $themeconf['colorscheme'] = 'clear';
 }
 

@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -15,9 +16,9 @@ define('PHPWG_DEFAULT_LANGUAGE', 'en_UK');
 // default value (see file install/piwigo_structure-mysql.sql)
 define('PHPWG_DEFAULT_TEMPLATE', 'modus');
 
-define('PHPWG_THEMES_PATH', $conf['themes_dir'].'/');
-defined('PWG_COMBINED_DIR') or define('PWG_COMBINED_DIR', $conf['data_location'].'combined/');
-defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $conf['data_location'].'i/');
+define('PHPWG_THEMES_PATH', $conf['themes_dir'] . '/');
+defined('PWG_COMBINED_DIR') or define('PWG_COMBINED_DIR', $conf['data_location'] . 'combined/');
+defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $conf['data_location'] . 'i/');
 
 // Required versions
 define('REQUIRED_PHP_VERSION', '8.4.6');
@@ -40,73 +41,105 @@ define('PATTERN_ID', '/^\d+$/');
 define('PATTERN_ORDER', '/^(rand(om)?|[a-z_]+(\s+(asc|desc))?)(\s*,\s*(rand(om)?|[a-z_]+(\s+(asc|desc))?))*$/i');
 
 // Table names
-if (!defined('CATEGORIES_TABLE'))
-  define('CATEGORIES_TABLE', $prefixTable.'categories');
-if (!defined('COMMENTS_TABLE'))
-  define('COMMENTS_TABLE', $prefixTable.'comments');
-if (!defined('CONFIG_TABLE'))
-  define('CONFIG_TABLE', $prefixTable.'config');
-if (!defined('FAVORITES_TABLE'))
-  define('FAVORITES_TABLE', $prefixTable.'favorites');
-if (!defined('GROUP_ACCESS_TABLE'))
-  define('GROUP_ACCESS_TABLE', $prefixTable.'group_access');
-if (!defined('GROUPS_TABLE'))
-  define('GROUPS_TABLE', $prefixTable.'groups');
-if (!defined('HISTORY_TABLE'))
-  define('HISTORY_TABLE', $prefixTable.'history');
-if (!defined('HISTORY_SUMMARY_TABLE'))
-  define('HISTORY_SUMMARY_TABLE', $prefixTable.'history_summary');
-if (!defined('IMAGE_CATEGORY_TABLE'))
-  define('IMAGE_CATEGORY_TABLE', $prefixTable.'image_category');
-if (!defined('IMAGES_TABLE'))
-  define('IMAGES_TABLE', $prefixTable.'images');
-if (!defined('SESSIONS_TABLE'))
-  define('SESSIONS_TABLE', $prefixTable.'sessions');
-if (!defined('SITES_TABLE'))
-  define('SITES_TABLE', $prefixTable.'sites');
-if (!defined('USER_ACCESS_TABLE'))
-  define('USER_ACCESS_TABLE', $prefixTable.'user_access');
-if (!defined('USER_GROUP_TABLE'))
-  define('USER_GROUP_TABLE', $prefixTable.'user_group');
-if (!defined('USERS_TABLE'))
-  define('USERS_TABLE', isset($conf['users_table']) ? $conf['users_table'] : $prefixTable.'users' );
-if (!defined('USER_INFOS_TABLE'))
-  define('USER_INFOS_TABLE', $prefixTable.'user_infos');
-if (!defined('USER_FEED_TABLE'))
-  define('USER_FEED_TABLE', $prefixTable.'user_feed');
-if (!defined('RATE_TABLE'))
-  define('RATE_TABLE', $prefixTable.'rate');
-if (!defined('USER_AUTH_KEYS_TABLE'))
-  define('USER_AUTH_KEYS_TABLE', $prefixTable.'user_auth_keys');
-if (!defined('USER_CACHE_TABLE'))
-  define('USER_CACHE_TABLE', $prefixTable.'user_cache');
-if (!defined('USER_CACHE_CATEGORIES_TABLE'))
-  define('USER_CACHE_CATEGORIES_TABLE', $prefixTable.'user_cache_categories');
-if (!defined('CADDIE_TABLE'))
-  define('CADDIE_TABLE', $prefixTable.'caddie');
-if (!defined('UPGRADE_TABLE'))
-  define('UPGRADE_TABLE', $prefixTable.'upgrade');
-if (!defined('SEARCH_TABLE'))
-  define('SEARCH_TABLE', $prefixTable.'search');
-if (!defined('USER_MAIL_NOTIFICATION_TABLE'))
-  define('USER_MAIL_NOTIFICATION_TABLE', $prefixTable.'user_mail_notification');
-if (!defined('TAGS_TABLE'))
-  define('TAGS_TABLE', $prefixTable.'tags');
-if (!defined('IMAGE_TAG_TABLE'))
-  define('IMAGE_TAG_TABLE', $prefixTable.'image_tag');
-if (!defined('PLUGINS_TABLE'))
-  define('PLUGINS_TABLE', $prefixTable.'plugins');
-if (!defined('OLD_PERMALINKS_TABLE'))
-  define('OLD_PERMALINKS_TABLE', $prefixTable.'old_permalinks');
-if (!defined('THEMES_TABLE'))
-  define('THEMES_TABLE', $prefixTable.'themes');
-if (!defined('LANGUAGES_TABLE'))
-  define('LANGUAGES_TABLE', $prefixTable.'languages');
-if (!defined('IMAGE_FORMAT_TABLE'))
-  define('IMAGE_FORMAT_TABLE', $prefixTable.'image_format');
-if (!defined('ACTIVITY_TABLE'))
-  define('ACTIVITY_TABLE', $prefixTable.'activity');
-if (!defined('LOUNGE_TABLE'))
-  define('LOUNGE_TABLE', $prefixTable.'lounge');
-
-?>
+if (! defined('CATEGORIES_TABLE')) {
+    define('CATEGORIES_TABLE', $prefixTable . 'categories');
+}
+if (! defined('COMMENTS_TABLE')) {
+    define('COMMENTS_TABLE', $prefixTable . 'comments');
+}
+if (! defined('CONFIG_TABLE')) {
+    define('CONFIG_TABLE', $prefixTable . 'config');
+}
+if (! defined('FAVORITES_TABLE')) {
+    define('FAVORITES_TABLE', $prefixTable . 'favorites');
+}
+if (! defined('GROUP_ACCESS_TABLE')) {
+    define('GROUP_ACCESS_TABLE', $prefixTable . 'group_access');
+}
+if (! defined('GROUPS_TABLE')) {
+    define('GROUPS_TABLE', $prefixTable . 'groups');
+}
+if (! defined('HISTORY_TABLE')) {
+    define('HISTORY_TABLE', $prefixTable . 'history');
+}
+if (! defined('HISTORY_SUMMARY_TABLE')) {
+    define('HISTORY_SUMMARY_TABLE', $prefixTable . 'history_summary');
+}
+if (! defined('IMAGE_CATEGORY_TABLE')) {
+    define('IMAGE_CATEGORY_TABLE', $prefixTable . 'image_category');
+}
+if (! defined('IMAGES_TABLE')) {
+    define('IMAGES_TABLE', $prefixTable . 'images');
+}
+if (! defined('SESSIONS_TABLE')) {
+    define('SESSIONS_TABLE', $prefixTable . 'sessions');
+}
+if (! defined('SITES_TABLE')) {
+    define('SITES_TABLE', $prefixTable . 'sites');
+}
+if (! defined('USER_ACCESS_TABLE')) {
+    define('USER_ACCESS_TABLE', $prefixTable . 'user_access');
+}
+if (! defined('USER_GROUP_TABLE')) {
+    define('USER_GROUP_TABLE', $prefixTable . 'user_group');
+}
+if (! defined('USERS_TABLE')) {
+    define('USERS_TABLE', isset($conf['users_table']) ? $conf['users_table'] : $prefixTable . 'users');
+}
+if (! defined('USER_INFOS_TABLE')) {
+    define('USER_INFOS_TABLE', $prefixTable . 'user_infos');
+}
+if (! defined('USER_FEED_TABLE')) {
+    define('USER_FEED_TABLE', $prefixTable . 'user_feed');
+}
+if (! defined('RATE_TABLE')) {
+    define('RATE_TABLE', $prefixTable . 'rate');
+}
+if (! defined('USER_AUTH_KEYS_TABLE')) {
+    define('USER_AUTH_KEYS_TABLE', $prefixTable . 'user_auth_keys');
+}
+if (! defined('USER_CACHE_TABLE')) {
+    define('USER_CACHE_TABLE', $prefixTable . 'user_cache');
+}
+if (! defined('USER_CACHE_CATEGORIES_TABLE')) {
+    define('USER_CACHE_CATEGORIES_TABLE', $prefixTable . 'user_cache_categories');
+}
+if (! defined('CADDIE_TABLE')) {
+    define('CADDIE_TABLE', $prefixTable . 'caddie');
+}
+if (! defined('UPGRADE_TABLE')) {
+    define('UPGRADE_TABLE', $prefixTable . 'upgrade');
+}
+if (! defined('SEARCH_TABLE')) {
+    define('SEARCH_TABLE', $prefixTable . 'search');
+}
+if (! defined('USER_MAIL_NOTIFICATION_TABLE')) {
+    define('USER_MAIL_NOTIFICATION_TABLE', $prefixTable . 'user_mail_notification');
+}
+if (! defined('TAGS_TABLE')) {
+    define('TAGS_TABLE', $prefixTable . 'tags');
+}
+if (! defined('IMAGE_TAG_TABLE')) {
+    define('IMAGE_TAG_TABLE', $prefixTable . 'image_tag');
+}
+if (! defined('PLUGINS_TABLE')) {
+    define('PLUGINS_TABLE', $prefixTable . 'plugins');
+}
+if (! defined('OLD_PERMALINKS_TABLE')) {
+    define('OLD_PERMALINKS_TABLE', $prefixTable . 'old_permalinks');
+}
+if (! defined('THEMES_TABLE')) {
+    define('THEMES_TABLE', $prefixTable . 'themes');
+}
+if (! defined('LANGUAGES_TABLE')) {
+    define('LANGUAGES_TABLE', $prefixTable . 'languages');
+}
+if (! defined('IMAGE_FORMAT_TABLE')) {
+    define('IMAGE_FORMAT_TABLE', $prefixTable . 'image_format');
+}
+if (! defined('ACTIVITY_TABLE')) {
+    define('ACTIVITY_TABLE', $prefixTable . 'activity');
+}
+if (! defined('LOUNGE_TABLE')) {
+    define('LOUNGE_TABLE', $prefixTable . 'lounge');
+}

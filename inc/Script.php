@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,27 +14,33 @@ namespace Piwigo\inc;
  */
 final class Script extends Combinable
 {
-  /** @var int 0,1,2 */
-  public $load_mode;
-  /** @var array */
-  public $precedents;
-  /** @var array */
-  public $extra;
+    /**
+     * @var int 0,1,2
+     */
+    public $load_mode;
 
-  /**
-   * @param int $load_mode 0,1,2
-   * @param string $id
-   * @param string $path
-   * @param string $version
-   * @param array $precedents
-   */
-  function __construct($load_mode, $id, $path, $version=0, $precedents=array())
-  {
-    parent::__construct($id, $path, $version);
-    $this->load_mode = $load_mode;
-    $this->precedents = $precedents;
-    $this->extra = array();
-  }
+    /**
+     * @var array
+     */
+    public $precedents;
+
+    /**
+     * @var array
+     */
+    public $extra;
+
+    /**
+     * @param int $load_mode 0,1,2
+     * @param string $id
+     * @param string $path
+     * @param string $version
+     * @param array $precedents
+     */
+    public function __construct($load_mode, $id, $path, $version = 0, $precedents = [])
+    {
+        parent::__construct($id, $path, $version);
+        $this->load_mode = $load_mode;
+        $this->precedents = $precedents;
+        $this->extra = [];
+    }
 }
-
-?>

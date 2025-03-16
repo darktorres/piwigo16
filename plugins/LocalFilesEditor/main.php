@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | Piwigo - a PHP based photo gallery                                    |
 // +-----------------------------------------------------------------------+
@@ -34,24 +35,25 @@ Has Settings: webmaster
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 
-if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
-define('LOCALEDIT_PATH' , PHPWG_PLUGINS_PATH . basename(dirname(__FILE__)) . '/');
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
+}
+define('LOCALEDIT_PATH', PHPWG_PLUGINS_PATH . basename(dirname(__FILE__)) . '/');
 
 functions_plugins::add_event_handler('loc_end_themes_installed', localfiles_css_link(...));
 function localfiles_css_link()
 {
-  global $template;
+    global $template;
 
-  functions::load_language('plugin.lang', LOCALEDIT_PATH);
+    functions::load_language('plugin.lang', LOCALEDIT_PATH);
 
-  $template->set_prefilter('themes', localfiles_css_link_prefilter(...));
+    $template->set_prefilter('themes', localfiles_css_link_prefilter(...));
 }
 
 function localfiles_css_link_prefilter($content)
 {
-  $search = '{if isset($theme.DEACTIVATABLE) and $theme.DEACTIVATABLE}';
-  $replacement = '{if $theme.STATE eq "active"}<a href="admin.php?page=plugin-LocalFilesEditor-css&amp;theme={$theme.ID}" class="dropdown-option icon-brush">{\'Customize CSS\'|translate}</a>{/if}'.$search;
+    $search = '{if isset($theme.DEACTIVATABLE) and $theme.DEACTIVATABLE}';
+    $replacement = '{if $theme.STATE eq "active"}<a href="admin.php?page=plugin-LocalFilesEditor-css&amp;theme={$theme.ID}" class="dropdown-option icon-brush">{\'Customize CSS\'|translate}</a>{/if}' . $search;
 
-  return str_replace($search, $replacement, $content);
+    return str_replace($search, $replacement, $content);
 }
-?>

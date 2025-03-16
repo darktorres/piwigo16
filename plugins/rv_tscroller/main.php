@@ -1,4 +1,6 @@
-<?php /*
+<?php
+
+/*
 Plugin Name: RV Thumb Scroller
 Version: 12.a
 Plugin URI: http://piwigo.org/ext/extension_view.php?eid=493
@@ -14,4 +16,3 @@ use Piwigo\plugins\rv_tscroller\RVTS;
 define('RVTS_VERSION', '12.a');
 
 functions_plugins::add_event_handler('loc_end_section_init', RVTS::on_end_section_init(...));
-?>

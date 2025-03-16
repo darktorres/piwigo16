@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -12,326 +13,303 @@ use Piwigo\inc\dblayer\functions_mysqli;
 
 class functions_tag
 {
-  /**
-   * Returns the number of available tags for the connected user.
-   *
-   * @return int
-   */
-  static function get_nb_available_tags()
-  {
-    global $user;
-    if (!isset($user['nb_available_tags']))
+    /**
+     * Returns the number of available tags for the connected user.
+     *
+     * @return int
+     */
+    public static function get_nb_available_tags()
     {
-      $user['nb_available_tags'] = count(self::get_available_tags());
-      functions_mysqli::single_update(USER_CACHE_TABLE,
-        array('nb_available_tags'=>$user['nb_available_tags']),
-        array('user_id'=>$user['id'])
-        );
+        global $user;
+        if (! isset($user['nb_available_tags'])) {
+            $user['nb_available_tags'] = count(self::get_available_tags());
+            functions_mysqli::single_update(
+                USER_CACHE_TABLE,
+                [
+                    'nb_available_tags' => $user['nb_available_tags'],
+                ],
+                [
+                    'user_id' => $user['id'],
+                ]
+            );
+        }
+        return $user['nb_available_tags'];
     }
-    return $user['nb_available_tags'];
-  }
 
-  /**
-   * Returns all available tags for the connected user (not sorted).
-   * The returned list can be a subset of all existing tags due to permissions,
-   * also tags with no images are not returned.
-   *
-   * @return array [id, name, counter, url_name]
-   */
-  static function get_available_tags($tag_ids=array())
-  {
-    // we can find top fatter tags among reachable images
-    $query = '
+    /**
+     * Returns all available tags for the connected user (not sorted).
+     * The returned list can be a subset of all existing tags due to permissions,
+     * also tags with no images are not returned.
+     *
+     * @return array [id, name, counter, url_name]
+     */
+    public static function get_available_tags($tag_ids = [])
+    {
+        // we can find top fatter tags among reachable images
+        $query = '
   SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
-    FROM '.IMAGE_CATEGORY_TABLE.' ic
-      INNER JOIN '.IMAGE_TAG_TABLE.' it
+    FROM ' . IMAGE_CATEGORY_TABLE . ' ic
+      INNER JOIN ' . IMAGE_TAG_TABLE . ' it
       ON ic.image_id=it.image_id
     WHERE 1=1
-    '.functions_user::get_sql_condition_FandF(
-      array(
-        'forbidden_categories' => 'category_id',
-        'visible_categories' => 'category_id',
-        'visible_images' => 'ic.image_id'
-        ),
-      ' AND '
-      );
+    ' . functions_user::get_sql_condition_FandF(
+            [
+                'forbidden_categories' => 'category_id',
+                'visible_categories' => 'category_id',
+                'visible_images' => 'ic.image_id',
+            ],
+            ' AND '
+        );
 
-    if (is_array($tag_ids) and count($tag_ids) > 0)
-    {
-      $query .= '
-      AND tag_id IN ('.implode(',', $tag_ids).')
+        if (is_array($tag_ids) and count($tag_ids) > 0) {
+            $query .= '
+      AND tag_id IN (' . implode(',', $tag_ids) . ')
   ';
-    }
+        }
 
-    $query .= '
+        $query .= '
     GROUP BY tag_id
   ;';
-    $tag_counters = functions_mysqli::query2array($query, 'tag_id', 'counter');
+        $tag_counters = functions_mysqli::query2array($query, 'tag_id', 'counter');
 
-    if ( empty($tag_counters) )
-    {
-      return array();
-    }
-
-    $query = '
-  SELECT *
-    FROM '.TAGS_TABLE;
-    $result = functions_mysqli::pwg_query($query);
-
-    $tags = array();
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
-    {
-      $counter = intval(@$tag_counters[ $row['id'] ]);
-      if ( $counter )
-      {
-        $row['counter'] = $counter;
-        $row['name'] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
-        $tags[] = $row;
-      }
-    }
-    return $tags;
-  }
-
-  /**
-   * Returns all tags even associated to no image.
-   *
-   * @return array [id, name, url_name]
-   */
-  static function get_all_tags()
-  {
-    $query = '
-  SELECT *
-    FROM '.TAGS_TABLE.'
-  ;';
-    $result = functions_mysqli::pwg_query($query);
-    $tags = array();
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
-    {
-      $row['name'] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
-      $tags[] = $row;
-    }
-
-    usort($tags, functions_html::tag_alpha_compare(...));
-
-    return $tags;
-  }
-
-  /**
-   * Giving a set of tags with a counter for each one, calculate the display
-   * level of each tag.
-   *
-   * The level of each tag depends on the average count of tags. This
-   * calculation method avoid having very different levels for tags having
-   * nearly the same count when set are small.
-   *
-   * @param array $tags at least [id, counter]
-   * @return array [..., level]
-   */
-  static function add_level_to_tags($tags)
-  {
-    global $conf;
-
-    if (count($tags) == 0)
-    {
-      return $tags;
-    }
-
-    $total_count = 0;
-
-    foreach ($tags as $tag)
-    {
-      $total_count+= $tag['counter'];
-    }
-
-    // average count of available tags will determine the level of each tag
-    $tag_average_count = $total_count / count($tags);
-
-    // tag levels threshold calculation: a tag with an average rate must have
-    // the middle level.
-    for ($i = 1; $i < $conf['tags_levels']; $i++)
-    {
-      $threshold_of_level[$i] =
-        2 * $i * $tag_average_count / $conf['tags_levels'];
-    }
-
-    // display sorted tags
-    foreach ($tags as &$tag)
-    {
-      $tag['level'] = 1;
-
-      // based on threshold, determine current tag level
-      for ($i = $conf['tags_levels'] - 1; $i >= 1; $i--)
-      {
-        if ($tag['counter'] > $threshold_of_level[$i])
-        {
-          $tag['level'] = $i + 1;
-          break;
+        if (empty($tag_counters)) {
+            return [];
         }
-      }
+
+        $query = '
+  SELECT *
+    FROM ' . TAGS_TABLE;
+        $result = functions_mysqli::pwg_query($query);
+
+        $tags = [];
+        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            $counter = intval(@$tag_counters[$row['id']]);
+            if ($counter) {
+                $row['counter'] = $counter;
+                $row['name'] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
+                $tags[] = $row;
+            }
+        }
+        return $tags;
     }
-    unset($tag);
 
-    return $tags;
-  }
-
-  /**
-   * Return the list of image ids corresponding to given tags.
-   * AND & OR mode supported.
-   *
-   * @param int[] $tag_ids
-   * @param string $mode
-   * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
-   * @param string $order_by - optionally overwrite default photo order
-   * @param bool $use_permissions
-   * @return array
-   */
-  static function get_image_ids_for_tags($tag_ids, $mode='AND', $extra_images_where_sql='', $order_by='', $use_permissions=true)
-  {
-    global $conf;
-    if (empty($tag_ids))
+    /**
+     * Returns all tags even associated to no image.
+     *
+     * @return array [id, name, url_name]
+     */
+    public static function get_all_tags()
     {
-      return array();
+        $query = '
+  SELECT *
+    FROM ' . TAGS_TABLE . '
+  ;';
+        $result = functions_mysqli::pwg_query($query);
+        $tags = [];
+        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            $row['name'] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
+            $tags[] = $row;
+        }
+
+        usort($tags, functions_html::tag_alpha_compare(...));
+
+        return $tags;
     }
 
-    $query = '
+    /**
+     * Giving a set of tags with a counter for each one, calculate the display
+     * level of each tag.
+     *
+     * The level of each tag depends on the average count of tags. This
+     * calculation method avoid having very different levels for tags having
+     * nearly the same count when set are small.
+     *
+     * @param array $tags at least [id, counter]
+     * @return array [..., level]
+     */
+    public static function add_level_to_tags($tags)
+    {
+        global $conf;
+
+        if (count($tags) == 0) {
+            return $tags;
+        }
+
+        $total_count = 0;
+
+        foreach ($tags as $tag) {
+            $total_count += $tag['counter'];
+        }
+
+        // average count of available tags will determine the level of each tag
+        $tag_average_count = $total_count / count($tags);
+
+        // tag levels threshold calculation: a tag with an average rate must have
+        // the middle level.
+        for ($i = 1; $i < $conf['tags_levels']; $i++) {
+            $threshold_of_level[$i] =
+              2 * $i * $tag_average_count / $conf['tags_levels'];
+        }
+
+        // display sorted tags
+        foreach ($tags as &$tag) {
+            $tag['level'] = 1;
+
+            // based on threshold, determine current tag level
+            for ($i = $conf['tags_levels'] - 1; $i >= 1; $i--) {
+                if ($tag['counter'] > $threshold_of_level[$i]) {
+                    $tag['level'] = $i + 1;
+                    break;
+                }
+            }
+        }
+        unset($tag);
+
+        return $tags;
+    }
+
+    /**
+     * Return the list of image ids corresponding to given tags.
+     * AND & OR mode supported.
+     *
+     * @param int[] $tag_ids
+     * @param string $mode
+     * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
+     * @param string $order_by - optionally overwrite default photo order
+     * @param bool $use_permissions
+     * @return array
+     */
+    public static function get_image_ids_for_tags($tag_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', $use_permissions = true)
+    {
+        global $conf;
+        if (empty($tag_ids)) {
+            return [];
+        }
+
+        $query = '
   SELECT id
-    FROM '.IMAGES_TABLE.' i ';
+    FROM ' . IMAGES_TABLE . ' i ';
 
-    if ($use_permissions)
-    {
-      $query.= '
-      INNER JOIN '.IMAGE_CATEGORY_TABLE.' ic ON id=ic.image_id';
-    }
+        if ($use_permissions) {
+            $query .= '
+      INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ic ON id=ic.image_id';
+        }
 
-    $query.= '
-      INNER JOIN '.IMAGE_TAG_TABLE.' it ON id=it.image_id
-      WHERE tag_id IN ('.implode(',', $tag_ids).')';
+        $query .= '
+      INNER JOIN ' . IMAGE_TAG_TABLE . ' it ON id=it.image_id
+      WHERE tag_id IN (' . implode(',', $tag_ids) . ')';
 
-    if ($use_permissions)
-    {
-      $query.= functions_user::get_sql_condition_FandF(
-        array(
-          'forbidden_categories' => 'category_id',
-          'visible_categories' => 'category_id',
-          'visible_images' => 'id'
-          ),
-        "\n  AND"
-        );
-    }
+        if ($use_permissions) {
+            $query .= functions_user::get_sql_condition_FandF(
+                [
+                    'forbidden_categories' => 'category_id',
+                    'visible_categories' => 'category_id',
+                    'visible_images' => 'id',
+                ],
+                "\n  AND"
+            );
+        }
 
-    $query.= (empty($extra_images_where_sql) ? '' : " \nAND (".$extra_images_where_sql.')').'
+        $query .= (empty($extra_images_where_sql) ? '' : " \nAND (" . $extra_images_where_sql . ')') . '
     GROUP BY id';
-    
-    if ($mode=='AND' and count($tag_ids)>1)
-    {
-      $query .= '
-    HAVING COUNT(DISTINCT tag_id)='.count($tag_ids);
-    }
-    $query .= "\n".(empty($order_by) ? $conf['order_by'] : $order_by);
 
-    return functions_mysqli::query2array($query, null, 'id');
-  }
+        if ($mode == 'AND' and count($tag_ids) > 1) {
+            $query .= '
+    HAVING COUNT(DISTINCT tag_id)=' . count($tag_ids);
+        }
+        $query .= "\n" . (empty($order_by) ? $conf['order_by'] : $order_by);
 
-  /**
-   * Return a list of tags corresponding to given items.
-   *
-   * @param int[] $items
-   * @param int $max_tags
-   * @param int[] $excluded_tag_ids
-   * @return array [id, name, counter, url_name]
-   */
-  static function get_common_tags($items, $max_tags, $excluded_tag_ids=array())
-  {
-    if (empty($items))
-    {
-      return array();
+        return functions_mysqli::query2array($query, null, 'id');
     }
-    $query = '
+
+    /**
+     * Return a list of tags corresponding to given items.
+     *
+     * @param int[] $items
+     * @param int $max_tags
+     * @param int[] $excluded_tag_ids
+     * @return array [id, name, counter, url_name]
+     */
+    public static function get_common_tags($items, $max_tags, $excluded_tag_ids = [])
+    {
+        if (empty($items)) {
+            return [];
+        }
+        $query = '
   SELECT t.*, count(*) AS counter
-    FROM '.IMAGE_TAG_TABLE.'
-      INNER JOIN '.TAGS_TABLE.' t ON tag_id = id
-    WHERE image_id IN ('.implode(',', $items).')';
-    if (!empty($excluded_tag_ids))
-    {
-      $query.='
-      AND tag_id NOT IN ('.implode(',', $excluded_tag_ids).')';
-    }
-    $query .='
+    FROM ' . IMAGE_TAG_TABLE . '
+      INNER JOIN ' . TAGS_TABLE . ' t ON tag_id = id
+    WHERE image_id IN (' . implode(',', $items) . ')';
+        if (! empty($excluded_tag_ids)) {
+            $query .= '
+      AND tag_id NOT IN (' . implode(',', $excluded_tag_ids) . ')';
+        }
+        $query .= '
     GROUP BY t.id
     ORDER BY ';
-    if ($max_tags>0)
-    { // TODO : why ORDER field is in the if ?
-      $query .= 'counter DESC
-    LIMIT '.$max_tags;
-    }
-    else
-    {
-      $query .= 'NULL';
+        if ($max_tags > 0) { // TODO : why ORDER field is in the if ?
+            $query .= 'counter DESC
+    LIMIT ' . $max_tags;
+        } else {
+            $query .= 'NULL';
+        }
+
+        $result = functions_mysqli::pwg_query($query);
+        $tags = [];
+        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            $row['name'] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
+            $tags[] = $row;
+        }
+        usort($tags, functions_html::tag_alpha_compare(...));
+        return $tags;
     }
 
-    $result = functions_mysqli::pwg_query($query);
-    $tags = array();
-    while($row = functions_mysqli::pwg_db_fetch_assoc($result))
+    /**
+     * Return a list of tags corresponding to any of ids, url_names or names.
+     *
+     * @param int[] $ids
+     * @param string[] $url_names
+     * @param string[] $names
+     * @return array [id, name, url_name]
+     */
+    public static function find_tags($ids = [], $url_names = [], $names = [])
     {
-      $row['name'] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
-      $tags[] = $row;
-    }
-    usort($tags, functions_html::tag_alpha_compare(...));
-    return $tags;
-  }
+        $where_clauses = [];
+        if (! empty($ids)) {
+            $where_clauses[] = 'id IN (' . implode(',', $ids) . ')';
+        }
+        if (! empty($url_names)) {
+            $where_clauses[] =
+              'url_name IN (\'' . implode('\', \'', $url_names) . '\')';
+        }
+        if (! empty($names)) {
+            $where_clauses[] =
+              'name IN (\'' . implode('\', \'', $names) . '\')';
+        }
+        if (empty($where_clauses)) {
+            return [];
+        }
 
-  /**
-   * Return a list of tags corresponding to any of ids, url_names or names.
-   *
-   * @param int[] $ids
-   * @param string[] $url_names
-   * @param string[] $names
-   * @return array [id, name, url_name]
-   */
-  static function find_tags($ids=array(), $url_names=array(), $names=array() )
-  {
-    $where_clauses = array();
-    if (!empty($ids))
-    {
-      $where_clauses[] = 'id IN ('.implode(',', $ids).')';
-    }
-    if (!empty($url_names))
-    {
-      $where_clauses[] =
-        'url_name IN (\''. implode('\', \'', $url_names) .'\')';
-    }
-    if (!empty($names))
-    {
-      $where_clauses[] =
-        'name IN (\''. implode('\', \'', $names) .'\')';
-    }
-    if (empty($where_clauses))
-    {
-      return array();
-    }
-
-    $query = '
+        $query = '
   SELECT *
-    FROM '.TAGS_TABLE.'
-    WHERE '. implode( '
+    FROM ' . TAGS_TABLE . '
+    WHERE ' . implode('
       OR ', $where_clauses);
 
-    return functions_mysqli::query2array($query);
-  }
-
-  static function tags_id_compare($a, $b)
-  {
-    return ($a['id'] < $b['id']) ? -1 : 1;
-  }
-
-  static function tags_counter_compare($a, $b)
-  {
-    if ($a['counter'] == $b['counter'])
-    {
-      return self::tags_id_compare($a, $b);
+        return functions_mysqli::query2array($query);
     }
 
-    return ($a['counter'] < $b['counter']) ? +1 : -1;
-  }
+    public static function tags_id_compare($a, $b)
+    {
+        return ($a['id'] < $b['id']) ? -1 : 1;
+    }
+
+    public static function tags_counter_compare($a, $b)
+    {
+        if ($a['counter'] == $b['counter']) {
+            return self::tags_id_compare($a, $b);
+        }
+
+        return ($a['counter'] < $b['counter']) ? +1 : -1;
+    }
 }
-?>

@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,14 +14,19 @@ namespace Piwigo\inc;
  */
 class QResults
 {
-  var $all_tags;
-  var $tag_ids;
-  var $tag_iids;
-  var $all_cats;
-  var $cat_ids;
-  var $cat_iids;
-  var $images_iids;
-  var $iids;
-}
+    public $all_tags;
 
-?>
+    public $tag_ids;
+
+    public $tag_iids;
+
+    public $all_cats;
+
+    public $cat_ids;
+
+    public $cat_iids;
+
+    public $images_iids;
+
+    public $iids;
+}

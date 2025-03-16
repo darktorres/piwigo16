@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,72 +14,62 @@ namespace Piwigo\inc;
  */
 class PersistentFileCache extends PersistentCache
 {
-  private $dir;
+    private $dir;
 
-  function __construct()
-  {
-    global $conf;
-    $this->dir = PHPWG_ROOT_PATH.$conf['data_location'].'cache/';
-  }
-
-  function get($key, &$value)
-  {
-    $loaded = @file_get_contents($this->dir.$key.'.cache');
-    if ($loaded !== false && ($loaded=unserialize($loaded)) !== false)
+    public function __construct()
     {
-      if ($loaded['expire'] > time())
-      {
-        $value = $loaded['data'];
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function set($key, $value, $lifetime=null)
-  {
-    if ($lifetime === null)
-    {
-      $lifetime = $this->default_lifetime;
+        global $conf;
+        $this->dir = PHPWG_ROOT_PATH . $conf['data_location'] . 'cache/';
     }
 
-    if (rand() % 97 == 0)
+    public function get($key, &$value)
     {
-      $this->purge(false);
-    }
-
-    $serialized = serialize( array(
-        'expire' => time() + $lifetime,
-        'data' => $value
-      ));
-
-    if (false === @file_put_contents($this->dir.$key.'.cache', $serialized))
-    {
-      functions::mkgetdir($this->dir, functions::MKGETDIR_DEFAULT&~functions::MKGETDIR_DIE_ON_ERROR);
-      if (false === @file_put_contents($this->dir.$key.'.cache', $serialized))
-      {
+        $loaded = @file_get_contents($this->dir . $key . '.cache');
+        if ($loaded !== false && ($loaded = unserialize($loaded)) !== false) {
+            if ($loaded['expire'] > time()) {
+                $value = $loaded['data'];
+                return true;
+            }
+        }
         return false;
-      }
     }
-    return true;
-  }
 
-  function purge($all)
-  {
-    $files = glob($this->dir.'*.cache');
-    if (empty($files))
+    public function set($key, $value, $lifetime = null)
     {
-      return;
+        if ($lifetime === null) {
+            $lifetime = $this->default_lifetime;
+        }
+
+        if (mt_rand() % 97 == 0) {
+            $this->purge(false);
+        }
+
+        $serialized = serialize([
+            'expire' => time() + $lifetime,
+            'data' => $value,
+        ]);
+
+        if (@file_put_contents($this->dir . $key . '.cache', $serialized) === false) {
+            functions::mkgetdir($this->dir, functions::MKGETDIR_DEFAULT & ~functions::MKGETDIR_DIE_ON_ERROR);
+            if (@file_put_contents($this->dir . $key . '.cache', $serialized) === false) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    $limit = time() - $this->default_lifetime;
-    foreach ($files as $file)
+    public function purge($all)
     {
-      if ($all || @filemtime($file) < $limit)
-        @unlink($file);
-    }
-  }
+        $files = glob($this->dir . '*.cache');
+        if (empty($files)) {
+            return;
+        }
 
+        $limit = time() - $this->default_lifetime;
+        foreach ($files as $file) {
+            if ($all || @filemtime($file) < $limit) {
+                @unlink($file);
+            }
+        }
+    }
 }
-
-?>

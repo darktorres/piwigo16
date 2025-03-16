@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -11,19 +12,19 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
-if( !defined("PHPWG_ROOT_PATH") )
-{
-  die ("Hacking attempt!");
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
-if (!$conf['enable_extensions_install'])
-{
-  die('Piwigo extensions install/update system is disabled');
+if (! $conf['enable_extensions_install']) {
+    die('Piwigo extensions install/update system is disabled');
 }
 
-$template->set_filenames(array('languages' => 'languages_new.tpl'));
+$template->set_filenames([
+    'languages' => 'languages_new.tpl',
+]);
 
-$base_url = functions_url::get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];
+$base_url = functions_url::get_root_url() . 'admin.php?page=' . $page['page'] . '&tab=' . $page['tab'];
 
 $languages = new languages();
 $languages->get_db_languages();
@@ -32,92 +33,81 @@ $languages->get_db_languages();
 // |                           setup check                                 |
 // +-----------------------------------------------------------------------+
 
-$languages_dir = PHPWG_ROOT_PATH.'language';
-if (!is_writable($languages_dir))
-{
-  $page['errors'][] = functions::l10n('Add write access to the "%s" directory', 'language');
+$languages_dir = PHPWG_ROOT_PATH . 'language';
+if (! is_writable($languages_dir)) {
+    $page['errors'][] = functions::l10n('Add write access to the "%s" directory', 'language');
 }
 
 // +-----------------------------------------------------------------------+
 // |                       perform installation                            |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['revision']))
-{
-  if (!functions_user::is_webmaster())
-  {
-    $page['errors'][] = functions::l10n('Webmaster status is required.');
-  }
-  else
-  {
-    functions::check_pwg_token();
+if (isset($_GET['revision'])) {
+    if (! functions_user::is_webmaster()) {
+        $page['errors'][] = functions::l10n('Webmaster status is required.');
+    } else {
+        functions::check_pwg_token();
 
-    $install_status = $languages->extract_language_files('install', $_GET['revision']);
+        $install_status = $languages->extract_language_files('install', $_GET['revision']);
 
-    functions::redirect($base_url.'&installstatus='.$install_status);
-  }
+        functions::redirect($base_url . '&installstatus=' . $install_status);
+    }
 }
 
 // +-----------------------------------------------------------------------+
 // |                        installation result                            |
 // +-----------------------------------------------------------------------+
-if (isset($_GET['installstatus']))
-{
-  switch ($_GET['installstatus'])
-  {
-    case 'ok':
-      $page['infos'][] = functions::l10n('Language has been successfully installed');
-      break;
+if (isset($_GET['installstatus'])) {
+    switch ($_GET['installstatus']) {
+        case 'ok':
+            $page['infos'][] = functions::l10n('Language has been successfully installed');
+            break;
 
-    case 'temp_path_error':
-      $page['errors'][] = functions::l10n('Can\'t create temporary file.');
-      break;
+        case 'temp_path_error':
+            $page['errors'][] = functions::l10n('Can\'t create temporary file.');
+            break;
 
-    case 'dl_archive_error':
-      $page['errors'][] = functions::l10n('Can\'t download archive.');
-      break;
+        case 'dl_archive_error':
+            $page['errors'][] = functions::l10n('Can\'t download archive.');
+            break;
 
-    case 'archive_error':
-      $page['errors'][] = functions::l10n('Can\'t read or extract archive.');
-      break;
+        case 'archive_error':
+            $page['errors'][] = functions::l10n('Can\'t read or extract archive.');
+            break;
 
-    default:
-      $page['errors'][] = functions::l10n('An error occurred during extraction (%s).', htmlspecialchars($_GET['installstatus']));
-  }  
+        default:
+            $page['errors'][] = functions::l10n('An error occurred during extraction (%s).', htmlspecialchars($_GET['installstatus']));
+    }
 }
 
 // +-----------------------------------------------------------------------+
 // |                     start template output                             |
 // +-----------------------------------------------------------------------+
-if ($languages->get_server_languages(true))
-{
-  foreach($languages->server_languages as $language)
-  {
-    list($date, ) = explode(' ', $language['revision_date']);
+if ($languages->get_server_languages(true)) {
+    foreach ($languages->server_languages as $language) {
+        list($date) = explode(' ', $language['revision_date']);
 
-    $url_auto_install = htmlentities($base_url)
-      . '&amp;revision=' . $language['revision_id']
-      . '&amp;pwg_token='.functions::get_pwg_token()
-    ;
+        $url_auto_install = htmlentities($base_url)
+          . '&amp;revision=' . $language['revision_id']
+          . '&amp;pwg_token=' . functions::get_pwg_token()
+        ;
 
-    $template->append('languages', array(
-      'EXT_NAME' => $language['extension_name'],
-      'EXT_DESC' => $language['extension_description'],
-      'EXT_URL' => PEM_URL.'/extension_view.php?eid='.$language['extension_id'],
-      'VERSION' => $language['revision_name'],
-      'VER_DESC' => $language['revision_description'],
-      'DATE' => $date,
-      'AUTHOR' => $language['author_name'],
-      'URL_INSTALL' => $url_auto_install,
-      'URL_DOWNLOAD' => $language['download_url'] . '&amp;origin=piwigo_download'));
-  }
-}
-else
-{
-  $page['errors'][] = functions::l10n('Can\'t connect to server.');
+        $template->append('languages', [
+            'EXT_NAME' => $language['extension_name'],
+            'EXT_DESC' => $language['extension_description'],
+            'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . $language['extension_id'],
+            'VERSION' => $language['revision_name'],
+            'VER_DESC' => $language['revision_description'],
+            'DATE' => $date,
+            'AUTHOR' => $language['author_name'],
+            'URL_INSTALL' => $url_auto_install,
+            'URL_DOWNLOAD' => $language['download_url'] . '&amp;origin=piwigo_download',
+        ]);
+    }
+} else {
+    $page['errors'][] = functions::l10n('Can\'t connect to server.');
 }
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Languages'));
 $template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');
-?>

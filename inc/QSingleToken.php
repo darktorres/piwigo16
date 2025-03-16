@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -11,38 +12,46 @@ namespace Piwigo\inc;
 /** Represents a single word or quoted phrase to be searched.*/
 class QSingleToken
 {
-  var $is_single = true;
-  var $modifier;
-  var $term; /* the actual word/phrase string*/
-  var $variants = array();
-  var $scope;
+    public $is_single = true;
 
-  var $scope_data;
-  var $idx;
+    public $modifier;
 
-  function __construct($term, $modifier, $scope)
-  {
-    $this->term = $term;
-    $this->modifier = $modifier;
-    $this->scope = $scope;
-  }
+    public $term; /* the actual word/phrase string*/
 
-  function __toString()
-  {
-    $s = '';
-    if (isset($this->scope))
-      $s .= $this->scope->id .':';
-    if ($this->modifier & functions_search::QST_WILDCARD_BEGIN)
-      $s .= '*';
-    if ($this->modifier & functions_search::QST_QUOTED)
-      $s .= '"';
-    $s .= $this->term;
-    if ($this->modifier & functions_search::QST_QUOTED)
-      $s .= '"';
-    if ($this->modifier & functions_search::QST_WILDCARD_END)
-      $s .= '*';
-    return $s;
-  }
+    public $variants = [];
+
+    public $scope;
+
+    public $scope_data;
+
+    public $idx;
+
+    public function __construct($term, $modifier, $scope)
+    {
+        $this->term = $term;
+        $this->modifier = $modifier;
+        $this->scope = $scope;
+    }
+
+    public function __toString()
+    {
+        $s = '';
+        if (isset($this->scope)) {
+            $s .= $this->scope->id . ':';
+        }
+        if ($this->modifier & functions_search::QST_WILDCARD_BEGIN) {
+            $s .= '*';
+        }
+        if ($this->modifier & functions_search::QST_QUOTED) {
+            $s .= '"';
+        }
+        $s .= $this->term;
+        if ($this->modifier & functions_search::QST_QUOTED) {
+            $s .= '"';
+        }
+        if ($this->modifier & functions_search::QST_WILDCARD_END) {
+            $s .= '*';
+        }
+        return $s;
+    }
 }
-
-?>

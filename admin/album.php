@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,9 +14,8 @@ use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
-if( !defined("PHPWG_ROOT_PATH") )
-{
-  die ("Hacking attempt!");
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+
@@ -26,18 +26,17 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 functions::check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 
-$admin_album_base_url = functions_url::get_root_url().'admin.php?page=album-'.$_GET['cat_id'];
+$admin_album_base_url = functions_url::get_root_url() . 'admin.php?page=album-' . $_GET['cat_id'];
 
 $query = '
 SELECT *
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$_GET['cat_id'].'
+  FROM ' . CATEGORIES_TABLE . '
+  WHERE id = ' . $_GET['cat_id'] . '
 ;';
 $category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
-if (!isset($category['id']))
-{
-  die("unknown album");
+if (! isset($category['id'])) {
+    die('unknown album');
 }
 
 // +-----------------------------------------------------------------------+
@@ -46,9 +45,8 @@ if (!isset($category['id']))
 
 $page['tab'] = 'properties';
 
-if (isset($_GET['tab']))
-{
-  $page['tab'] = $_GET['tab'];
+if (isset($_GET['tab'])) {
+    $page['tab'] = $_GET['tab'];
 }
 
 $tabsheet = new tabsheet();
@@ -61,30 +59,22 @@ $tabsheet->assign();
 // +-----------------------------------------------------------------------+
 
 $category_name = functions_plugins::trigger_change(
-  'render_category_name',
-  $category['name'],
-  '\Piwigo\inc\functions_html::get_cat_display_name_cache'
-  );
-$template->assign(array(
-  'ADMIN_PAGE_TITLE' => functions::l10n('Edit album').' <strong>'.$category_name.'</strong>',
-  'ADMIN_PAGE_OBJECT_ID' => '#'.$category['id'],
-));
+    'render_category_name',
+    $category['name'],
+    '\Piwigo\inc\functions_html::get_cat_display_name_cache'
+);
+$template->assign([
+    'ADMIN_PAGE_TITLE' => functions::l10n('Edit album') . ' <strong>' . $category_name . '</strong>',
+    'ADMIN_PAGE_OBJECT_ID' => '#' . $category['id'],
+]);
 
-if ('properties' == $page['tab'])
-{
-  include(PHPWG_ROOT_PATH.'admin/cat_modify.php');
+if ($page['tab'] == 'properties') {
+    include(PHPWG_ROOT_PATH . 'admin/cat_modify.php');
+} elseif ($page['tab'] == 'sort_order') {
+    include(PHPWG_ROOT_PATH . 'admin/element_set_ranks.php');
+} elseif ($page['tab'] == 'permissions') {
+    $_GET['cat'] = $_GET['cat_id'];
+    include(PHPWG_ROOT_PATH . 'admin/cat_perm.php');
+} else {
+    include(PHPWG_ROOT_PATH . 'admin/album_' . $page['tab'] . '.php');
 }
-elseif ('sort_order' == $page['tab'])
-{
-  include(PHPWG_ROOT_PATH.'admin/element_set_ranks.php');
-}
-elseif ('permissions' == $page['tab'])
-{
-  $_GET['cat'] = $_GET['cat_id'];
-  include(PHPWG_ROOT_PATH.'admin/cat_perm.php');
-}
-else
-{
-  include(PHPWG_ROOT_PATH.'admin/album_'.$page['tab'].'.php');
-}
-?>

@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -14,15 +15,14 @@ use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
-if (!defined('PHPWG_ROOT_PATH'))
-{
-  die('Hacking attempt!');
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 $query = '
 SELECT
     COUNT(*)
-  FROM '.CATEGORIES_TABLE.'
+  FROM ' . CATEGORIES_TABLE . '
 ;';
 list($albums_counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
@@ -38,7 +38,7 @@ functions::check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'list';
-include(PHPWG_ROOT_PATH.'admin/inc/albums_tab.php');
+include(PHPWG_ROOT_PATH . 'admin/inc/albums_tab.php');
 
 // +-----------------------------------------------------------------------+
 // |                         categories auto order                         |
@@ -46,91 +46,83 @@ include(PHPWG_ROOT_PATH.'admin/inc/albums_tab.php');
 
 $open_cat = $_GET['parent_id'] ?? -1;
 
-$sort_orders = array(
-  'name ASC',
-  'name DESC',
-  'date_creation DESC',
-  'date_creation ASC',
-  'date_available DESC',
-  'date_available ASC',
-  'natural_order DESC',
-  'natural_order ASC'
-);
+$sort_orders = [
+    'name ASC',
+    'name DESC',
+    'date_creation DESC',
+    'date_creation ASC',
+    'date_available DESC',
+    'date_available ASC',
+    'natural_order DESC',
+    'natural_order ASC',
+];
 
-if (isset($_POST['simpleAutoOrder']) || isset($_POST['recursiveAutoOrder']) )
-{
+if (isset($_POST['simpleAutoOrder']) || isset($_POST['recursiveAutoOrder'])) {
 
-  if (!in_array($_POST['order'],$sort_orders))
-  {
-    die('Invalid sort order');
-  }
-  functions::check_input_parameter('id', $_POST, false, '/^-?\d+$/');
-  
-  $query = '
+    if (! in_array($_POST['order'], $sort_orders)) {
+        die('Invalid sort order');
+    }
+    functions::check_input_parameter('id', $_POST, false, '/^-?\d+$/');
+
+    $query = '
 SELECT id
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id_uppercat '.
-    (($_POST['id'] === '-1') ? 'IS NULL' : '= '.$_POST['id']).'
+  FROM ' . CATEGORIES_TABLE . '
+  WHERE id_uppercat ' .
+      (($_POST['id'] === '-1') ? 'IS NULL' : '= ' . $_POST['id']) . '
 ;';
-  $category_ids = functions::array_from_query($query, 'id');
+    $category_ids = functions::array_from_query($query, 'id');
 
-  if (isset($_POST['recursiveAutoOrder']))
-  {
-    $category_ids = functions_category::get_subcat_ids($category_ids);
-  }
-  
-  $categories = array();
-  $sort = array();
+    if (isset($_POST['recursiveAutoOrder'])) {
+        $category_ids = functions_category::get_subcat_ids($category_ids);
+    }
 
-  list($order_by_field, $order_by_asc) = explode(' ', $_POST['order']);
-  
-  $order_by_date = false;
-  if (strpos($order_by_field, 'date_') === 0)
-  {
-    $order_by_date = true;
-    
-    $ref_dates = functions_admin::get_categories_ref_date(
-      $category_ids,
-      $order_by_field,
-      'ASC' == $order_by_asc ? 'min' : 'max'
-      );
-  }
+    $categories = [];
+    $sort = [];
 
-  $query = '
+    list($order_by_field, $order_by_asc) = explode(' ', $_POST['order']);
+
+    $order_by_date = false;
+    if (strpos($order_by_field, 'date_') === 0) {
+        $order_by_date = true;
+
+        $ref_dates = functions_admin::get_categories_ref_date(
+            $category_ids,
+            $order_by_field,
+            $order_by_asc == 'ASC' ? 'min' : 'max'
+        );
+    }
+
+    $query = '
 SELECT id, name, id_uppercat
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', $category_ids).')
+  FROM ' . CATEGORIES_TABLE . '
+  WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
-  $result = functions_mysqli::pwg_query($query);
-  while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
-  {
-    $row['name'] = functions_plugins::trigger_change('render_category_name', $row['name'], 'admin_cat_list');
+    $result = functions_mysqli::pwg_query($query);
+    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        $row['name'] = functions_plugins::trigger_change('render_category_name', $row['name'], 'admin_cat_list');
 
-    if ($order_by_date)
-    {
-      $sort[] = $ref_dates[ $row['id'] ];
-    }
-    else
-    {
-      $sort[] = functions::remove_accents($row['name']);
-    }
-    
-    $categories[] = array(
-      'id' => $row['id'],
-      'id_uppercat' => $row['id_uppercat'],
-      );
-  }
+        if ($order_by_date) {
+            $sort[] = $ref_dates[$row['id']];
+        } else {
+            $sort[] = functions::remove_accents($row['name']);
+        }
 
-  array_multisort(
-    $sort,
-    $order_by_field === "natural_order" ? SORT_NATURAL : SORT_REGULAR,
-    'ASC' == $order_by_asc ? SORT_ASC : SORT_DESC,
-    $categories
+        $categories[] = [
+            'id' => $row['id'],
+            'id_uppercat' => $row['id_uppercat'],
+        ];
+    }
+
+    array_multisort(
+        $sort,
+        $order_by_field === 'natural_order' ? SORT_NATURAL : SORT_REGULAR,
+        $order_by_asc == 'ASC' ? SORT_ASC : SORT_DESC,
+        $categories
     );
-  
-  functions_admin::save_categories_order($categories);
 
-  $open_cat = $_POST['id'];
+    functions_admin::save_categories_order($categories);
+
+    $open_cat = $_POST['id'];
 }
 
 $template->assign('open_cat', $open_cat);
@@ -141,14 +133,14 @@ $template->assign('open_cat', $open_cat);
 $template->set_filename('albums', 'albums.tpl');
 
 $template->assign(
-  array(
-    'F_ACTION' => functions_url::get_root_url().'admin.php?page=albums',
-    )
-  );
+    [
+        'F_ACTION' => functions_url::get_root_url() . 'admin.php?page=albums',
+    ]
+);
 
 $template->assign('delay_before_autoOpen', $conf['album_move_delay_before_auto_opening']);
 
-$template->assign("POS_PREF", $conf['newcat_default_position']); //TODO use user pref if it exists
+$template->assign('POS_PREF', $conf['newcat_default_position']); //TODO use user pref if it exists
 
 // +-----------------------------------------------------------------------+
 // |                          Album display                                |
@@ -157,26 +149,24 @@ $template->assign("POS_PREF", $conf['newcat_default_position']); //TODO use user
 //Get all albums
 $query = '
 SELECT id,name,`rank`,status, visible, uppercats, lastmodified
-  FROM '.CATEGORIES_TABLE.'
+  FROM ' . CATEGORIES_TABLE . '
 ;';
 
 $allAlbum = functions_mysqli::query2array($query);
 
 //Make an id tree
-$associatedTree = array();
+$associatedTree = [];
 
-foreach ($allAlbum as $album) 
-{
-  $album['name'] = functions_plugins::trigger_change('render_category_name', $album['name'], 'admin_cat_list');
-  $album['lastmodified'] = functions::time_since($album['lastmodified'], 'year');
+foreach ($allAlbum as $album) {
+    $album['name'] = functions_plugins::trigger_change('render_category_name', $album['name'], 'admin_cat_list');
+    $album['lastmodified'] = functions::time_since($album['lastmodified'], 'year');
 
-  $parents = explode(',',$album['uppercats']);
-  $the_place = &$associatedTree[strval($parents[0])];
-  for ($i=1; $i < count($parents); $i++) 
-  { 
-    $the_place = &$the_place['children'][strval($parents[$i])];
-  }
-  $the_place['cat'] = $album;
+    $parents = explode(',', $album['uppercats']);
+    $the_place = &$associatedTree[strval($parents[0])];
+    for ($i = 1; $i < count($parents); $i++) {
+        $the_place = &$the_place['children'][strval($parents[$i])];
+    }
+    $the_place['cat'] = $album;
 }
 
 // WARNING $user['forbidden_categories'] is 100% reliable only on gallery side because
@@ -191,7 +181,7 @@ $query = '
 SELECT
     category_id,
     COUNT(*) AS nb_photos
-  FROM '.IMAGE_CATEGORY_TABLE.'
+  FROM ' . IMAGE_CATEGORY_TABLE . '
   GROUP BY category_id
 ;';
 
@@ -201,43 +191,38 @@ $query = '
 SELECT
     id,
     uppercats
-  FROM '.CATEGORIES_TABLE.'
+  FROM ' . CATEGORIES_TABLE . '
 ;';
 $all_categories = functions_mysqli::query2array($query, 'id', 'uppercats');
 
-$subcats_of = array();
+$subcats_of = [];
 
-foreach ($all_categories as $id => $uppercats)
-{
-  foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id)
-  {
-    @$subcats_of[$uppercat_id][] = $id;
-  }
+foreach ($all_categories as $id => $uppercats) {
+    foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id) {
+        @$subcats_of[$uppercat_id][] = $id;
+    }
 }
 
-$nb_sub_photos = array();
-foreach ($subcats_of as $cat_id => $subcat_ids)
-{
-  $nb_photos = 0;
-  foreach ($subcat_ids as $id)
-  {
-    if (isset($nb_photos_in[$id]))
-    {
-      $nb_photos+= $nb_photos_in[$id];
+$nb_sub_photos = [];
+foreach ($subcats_of as $cat_id => $subcat_ids) {
+    $nb_photos = 0;
+    foreach ($subcat_ids as $id) {
+        if (isset($nb_photos_in[$id])) {
+            $nb_photos += $nb_photos_in[$id];
+        }
     }
-  }
 
-  $nb_sub_photos[$cat_id] = $nb_photos;
+    $nb_sub_photos[$cat_id] = $nb_photos;
 }
 
 $template->assign(
-  array(
-    'album_data' => functions_admin::assocToOrderedTree($associatedTree),
-    'PWG_TOKEN' => functions::get_pwg_token(),
-    'nb_albums' => count($allAlbum),
-    'ADMIN_PAGE_TITLE' => functions::l10n('Albums'),
-    'light_album_manager' => ($albums_counter > $conf['light_album_manager_threshold']) ? 1 : 0,
-  )
+    [
+        'album_data' => functions_admin::assocToOrderedTree($associatedTree),
+        'PWG_TOKEN' => functions::get_pwg_token(),
+        'nb_albums' => count($allAlbum),
+        'ADMIN_PAGE_TITLE' => functions::l10n('Albums'),
+        'light_album_manager' => ($albums_counter > $conf['light_album_manager_threshold']) ? 1 : 0,
+    ]
 );
 
 // +-----------------------------------------------------------------------+
@@ -245,5 +230,3 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'albums');
-
-?>

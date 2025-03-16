@@ -17,5 +17,3 @@ $lang['Give access to quick edit to photo owners even if they are not admin'] = 
 $lang['Open toolbar by default'] = 'Open toolbar by default';
 $lang['left'] = 'left';
 $lang['right'] = 'right';
-
-?>

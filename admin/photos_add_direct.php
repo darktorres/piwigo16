@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -16,72 +17,66 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 use Piwigo\inc\SrcImage;
 
-if (!defined('PHOTOS_ADD_BASE_URL'))
-{
-  die ("Hacking attempt!");
+if (! defined('PHOTOS_ADD_BASE_URL')) {
+    die('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+
 // |                        batch management request                       |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['batch']))
-{
-  functions::check_input_parameter('batch', $_GET, false, '/^\d+(,\d+)*$/');
+if (isset($_GET['batch'])) {
+    functions::check_input_parameter('batch', $_GET, false, '/^\d+(,\d+)*$/');
 
-  $query = '
-DELETE FROM '.CADDIE_TABLE.'
-  WHERE user_id = '.$user['id'].'
+    $query = '
+DELETE FROM ' . CADDIE_TABLE . '
+  WHERE user_id = ' . $user['id'] . '
 ;';
-  functions_mysqli::pwg_query($query);
+    functions_mysqli::pwg_query($query);
 
-  $inserts = array();
-  foreach (explode(',', $_GET['batch']) as $image_id)
-  {
-    $inserts[] = array(
-      'user_id' => $user['id'],
-      'element_id' => $image_id,
-      );
-  }
-  functions_mysqli::mass_inserts(
-    CADDIE_TABLE,
-    array_keys($inserts[0]),
-    $inserts
+    $inserts = [];
+    foreach (explode(',', $_GET['batch']) as $image_id) {
+        $inserts[] = [
+            'user_id' => $user['id'],
+            'element_id' => $image_id,
+        ];
+    }
+    functions_mysqli::mass_inserts(
+        CADDIE_TABLE,
+        array_keys($inserts[0]),
+        $inserts
     );
 
-  functions::redirect(functions_url::get_root_url().'admin.php?page=batch_manager&filter=prefilter-caddie');
+    functions::redirect(functions_url::get_root_url() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
 }
 
-if (functions_user::userprefs_get_param('promote-mobile-apps', true))
-{
-  $query = '
-SELECT registration_date 
-  FROM '.USER_INFOS_TABLE.'
-  WHERE registration_date IS NOT NULL  
+if (functions_user::userprefs_get_param('promote-mobile-apps', true)) {
+    $query = '
+SELECT registration_date
+  FROM ' . USER_INFOS_TABLE . '
+  WHERE registration_date IS NOT NULL
   ORDER BY user_id ASC
   LIMIT 1
 ;';
-  list($register_date) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    list($register_date) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-  $query = '
+    $query = '
 SELECT COUNT(*)
-  FROM '.CATEGORIES_TABLE.'
+  FROM ' . CATEGORIES_TABLE . '
 ;';
-  list($nb_cats) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    list($nb_cats) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-  $query = '
+    $query = '
 SELECT COUNT(*)
-  FROM '.IMAGES_TABLE.'
+  FROM ' . IMAGES_TABLE . '
 ;';
-  list($nb_images) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    list($nb_images) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-  $uagent_obj = new uagent_info();
-  // To see the mobile app promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
-  $template->assign("PROMOTE_MOBILE_APPS", (!$uagent_obj->DetectIos() and strtotime($register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30));
-} 
-else
-{
-  $template->assign("PROMOTE_MOBILE_APPS", false);
+    $uagent_obj = new uagent_info();
+    // To see the mobile app promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
+    $template->assign('PROMOTE_MOBILE_APPS', (! $uagent_obj->DetectIos() and strtotime($register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30));
+} else {
+    $template->assign('PROMOTE_MOBILE_APPS', false);
 }
 
 $template->assign('PHPWG_URL', PHPWG_URL);
@@ -93,60 +88,54 @@ $template->assign('PHPWG_URL', PHPWG_URL);
 $display_formats = $conf['enable_formats'] && isset($_GET['formats']);
 
 $have_formats_original = false;
-$formats_original_info = array();
+$formats_original_info = [];
 
 // If URL parameter isn't empty
-if ($display_formats && $_GET['formats']) 
-{
-  functions::check_input_parameter('formats', $_GET, false, PATTERN_ID, false);
-  
-  $formats_original_info = functions_admin::get_image_infos($_GET['formats']);
-  if ($formats_original_info)
-  {
-    $src_image = new SrcImage($formats_original_info);
-  
-    $formats_original_info['src'] = DerivativeImage::url(derivative_std_params::IMG_SQUARE, $src_image);
+if ($display_formats && $_GET['formats']) {
+    functions::check_input_parameter('formats', $_GET, false, PATTERN_ID, false);
 
-    // Fetch actual formats
-    $query = '
+    $formats_original_info = functions_admin::get_image_infos($_GET['formats']);
+    if ($formats_original_info) {
+        $src_image = new SrcImage($formats_original_info);
+
+        $formats_original_info['src'] = DerivativeImage::url(derivative_std_params::IMG_SQUARE, $src_image);
+
+        // Fetch actual formats
+        $query = '
 SELECT *
-  FROM '.IMAGE_FORMAT_TABLE.'
-  WHERE image_id = '.$formats_original_info['id'].'
+  FROM ' . IMAGE_FORMAT_TABLE . '
+  WHERE image_id = ' . $formats_original_info['id'] . '
 ;';
-    $formats = functions_mysqli::query2array($query);
+        $formats = functions_mysqli::query2array($query);
 
-    if (!empty($formats))
-    {
-      $format_strings = array();
-      
-      foreach ($formats as $format)
-      {
-        $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format['filesize']/1024);
-      }
+        if (! empty($formats)) {
+            $format_strings = [];
 
-      $formats_original_info['formats'] = functions::l10n('Formats: %s', implode(', ', $format_strings));
+            foreach ($formats as $format) {
+                $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format['filesize'] / 1024);
+            }
+
+            $formats_original_info['formats'] = functions::l10n('Formats: %s', implode(', ', $format_strings));
+        }
+
+        $extTab = explode('.', $formats_original_info['file']);
+
+        $formats_original_info['ext'] = functions::l10n('%s file type', strtoupper(end($extTab)));
+
+        $formats_original_info['u_edit'] = functions_url::get_root_url() . 'admin.php?page=photo-' . $formats_original_info['id'];
+
+        $have_formats_original = true;
+    } else {
+        $page['errors'][] = functions::l10n('The original picture selected doesn\'t exists.');
     }
 
-    $extTab = explode('.',$formats_original_info['file']);
-
-    $formats_original_info['ext'] = functions::l10n('%s file type',strtoupper(end($extTab)));
-
-    $formats_original_info['u_edit'] = functions_url::get_root_url().'admin.php?page=photo-'.$formats_original_info['id'];
-      
-    $have_formats_original = true;
-  } 
-  else
-  {
-    $page['errors'][] = functions::l10n('The original picture selected doesn\'t exists.');
-  }
-  
 }
 
 // +-----------------------------------------------------------------------+
 // |                             prepare form                              |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH.'admin/inc/photos_add_direct_prepare.php');
+include_once(PHPWG_ROOT_PATH . 'admin/inc/photos_add_direct_prepare.php');
 
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |
@@ -154,15 +143,14 @@ include_once(PHPWG_ROOT_PATH.'admin/inc/photos_add_direct_prepare.php');
 
 functions_plugins::trigger_notify('loc_end_photo_add_direct');
 
-$template->assign(array(
-  'ENABLE_FORMATS' => $conf['enable_formats'],
-  'DISPLAY_FORMATS' => $display_formats,
-  'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
-  'FORMATS_ORIGINAL_INFO' => $formats_original_info,
-  'SWITCH_MODE_URL' => functions_url::get_root_url().'admin.php?page=photos_add'.($display_formats ? '':'&formats'),
-  'format_ext' =>  implode(',', $conf['format_ext']),
-  'str_format_ext' =>  implode(', ', $conf['format_ext']),
-));
+$template->assign([
+    'ENABLE_FORMATS' => $conf['enable_formats'],
+    'DISPLAY_FORMATS' => $display_formats,
+    'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
+    'FORMATS_ORIGINAL_INFO' => $formats_original_info,
+    'SWITCH_MODE_URL' => functions_url::get_root_url() . 'admin.php?page=photos_add' . ($display_formats ? '' : '&formats'),
+    'format_ext' => implode(',', $conf['format_ext']),
+    'str_format_ext' => implode(', ', $conf['format_ext']),
+]);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');
-?>

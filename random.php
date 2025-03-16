@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -15,8 +16,8 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
-define('PHPWG_ROOT_PATH','./');
-include_once( PHPWG_ROOT_PATH.'inc/common.php' );
+define('PHPWG_ROOT_PATH', './');
+include_once(PHPWG_ROOT_PATH . 'inc/common.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -29,25 +30,24 @@ functions_user::check_status(ACCESS_GUEST);
 
 $query = '
 SELECT id
-  FROM '.IMAGES_TABLE.'
-    INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id = ic.image_id
-'.functions_user::get_sql_condition_FandF
-  (
-    array
-      (
+  FROM ' . IMAGES_TABLE . '
+    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+' . functions_user::get_sql_condition_FandF(
+    [
         'forbidden_categories' => 'category_id',
         'visible_categories' => 'category_id',
-        'visible_images' => 'id'
-      ),
+        'visible_images' => 'id',
+    ],
     'WHERE'
-  ).'
-  ORDER BY '.functions_mysqli::DB_RANDOM_FUNCTION.'()
-  LIMIT '.min(50, $conf['top_number'],$user['nb_image_page']).'
+) . '
+  ORDER BY ' . functions_mysqli::DB_RANDOM_FUNCTION . '()
+  LIMIT ' . min(50, $conf['top_number'], $user['nb_image_page']) . '
 ;';
 
 // +-----------------------------------------------------------------------+
 // |                                redirect                               |
 // +-----------------------------------------------------------------------+
 
-functions::redirect(functions_url::make_index_url(array('list' => functions::array_from_query($query, 'id'))));
-?>
+functions::redirect(functions_url::make_index_url([
+    'list' => functions::array_from_query($query, 'id'),
+]));

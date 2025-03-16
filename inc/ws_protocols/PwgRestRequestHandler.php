@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,39 +14,32 @@ use Piwigo\inc\PwgRequestHandler;
 
 class PwgRestRequestHandler extends PwgRequestHandler
 {
-  function handleRequest(&$service)
-  {
-    $params = array();
-
-    $param_array = $service->isPost() ? $_POST : $_GET;
-    foreach ($param_array as $name => $value)
+    public function handleRequest(&$service)
     {
-      if ($name=='format')
-        continue; // ignore - special keys
-      if ($name=='method')
-      {
-        $method = $value;
-      }
-      else
-      {
-        $params[$name]=$value;
-      }
-    }
-		if ( empty($method) && isset($_GET['method']) )
-		{
-			$method = $_GET['method'];
-		}
+        $params = [];
 
-    if ( empty($method) )
-    {
-      $service->sendResponse(
-          new PwgError(WS_ERR_INVALID_METHOD, 'Missing "method" name')
-        );
-      return;
+        $param_array = $service->isPost() ? $_POST : $_GET;
+        foreach ($param_array as $name => $value) {
+            if ($name == 'format') {
+                continue;
+            } // ignore - special keys
+            if ($name == 'method') {
+                $method = $value;
+            } else {
+                $params[$name] = $value;
+            }
+        }
+        if (empty($method) && isset($_GET['method'])) {
+            $method = $_GET['method'];
+        }
+
+        if (empty($method)) {
+            $service->sendResponse(
+                new PwgError(WS_ERR_INVALID_METHOD, 'Missing "method" name')
+            );
+            return;
+        }
+        $resp = $service->invoke($method, $params);
+        $service->sendResponse($resp);
     }
-    $resp = $service->invoke($method, $params);
-    $service->sendResponse($resp);
-  }
 }
-
-?>

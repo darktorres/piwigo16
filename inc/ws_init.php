@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -18,7 +19,7 @@ use Piwigo\inc\ws_protocols\PwgXmlRpcEncoder;
 
 defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 
-include_once(PHPWG_ROOT_PATH.'inc/ws_core.php');
+include_once(PHPWG_ROOT_PATH . 'inc/ws_core.php');
 
 functions_plugins::add_event_handler('ws_add_methods', ws_functions::ws_addDefaultMethods(...));
 functions_plugins::add_event_handler('ws_invoke_allowed', ws_functions::ws_isInvokeAllowed(...), EVENT_HANDLER_PRIORITY_NEUTRAL, 3);
@@ -26,49 +27,43 @@ functions_plugins::add_event_handler('ws_invoke_allowed', ws_functions::ws_isInv
 $requestFormat = 'rest';
 $responseFormat = null;
 
-if ( isset($_GET['format']) )
-{
-  $responseFormat = $_GET['format'];
+if (isset($_GET['format'])) {
+    $responseFormat = $_GET['format'];
 }
 
-if ( !isset($responseFormat) and isset($requestFormat) )
-{
-  $responseFormat = $requestFormat;
+if (! isset($responseFormat) and isset($requestFormat)) {
+    $responseFormat = $requestFormat;
 }
 
 $service = new PwgServer();
 
-if (!is_null($requestFormat))
-{
-  $handler = null;
-  switch ($requestFormat)
-  {
-    case 'rest':
-      $handler = new PwgRestRequestHandler();
-      break;
-  }
-  $service->setHandler($requestFormat, $handler);
+if ($requestFormat !== null) {
+    $handler = null;
+    switch ($requestFormat) {
+        case 'rest':
+            $handler = new PwgRestRequestHandler();
+            break;
+    }
+    $service->setHandler($requestFormat, $handler);
 }
 
-if (!is_null($responseFormat))
-{
-  $encoder = null;
-  switch ($responseFormat)
-  {
-    case 'rest':
-      $encoder = new PwgRestEncoder();
-      break;
-    case 'php':
-      $encoder = new PwgSerialPhpEncoder();
-      break;
-    case 'json':
-      $encoder = new PwgJsonEncoder();
-      break;
-    case 'xmlrpc':
-      $encoder = new PwgXmlRpcEncoder();
-      break;
-  }
-  $service->setEncoder($responseFormat, $encoder);
+if ($responseFormat !== null) {
+    $encoder = null;
+    switch ($responseFormat) {
+        case 'rest':
+            $encoder = new PwgRestEncoder();
+            break;
+        case 'php':
+            $encoder = new PwgSerialPhpEncoder();
+            break;
+        case 'json':
+            $encoder = new PwgJsonEncoder();
+            break;
+        case 'xmlrpc':
+            $encoder = new PwgXmlRpcEncoder();
+            break;
+    }
+    $service->setEncoder($responseFormat, $encoder);
 }
 
 functions_url::set_make_full_url();

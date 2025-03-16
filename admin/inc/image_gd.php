@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -16,161 +17,140 @@ use Piwigo\inc\functions;
 
 class image_gd implements imageInterface
 {
-  var $image;
-  var $quality = 95;
+    public $image;
 
-  function __construct($source_filepath)
-  {
-    $gd_info = gd_info();
-    $extension = strtolower(functions::get_extension($source_filepath));
+    public $quality = 95;
 
-    if (in_array($extension, array('jpg', 'jpeg')))
+    public function __construct($source_filepath)
     {
-      $this->image = imagecreatefromjpeg($source_filepath);
-    }
-    else if ($extension == 'png')
-    {
-      $this->image = imagecreatefrompng($source_filepath);
-    }
-    elseif ($extension == 'gif' and $gd_info['GIF Read Support'] and $gd_info['GIF Create Support'])
-    {
-      $this->image = imagecreatefromgif($source_filepath);
-    }
-    else
-    {
-      die('[Image GD] unsupported file extension');
-    }
-  }
+        $gd_info = gd_info();
+        $extension = strtolower(functions::get_extension($source_filepath));
 
-  function get_width()
-  {
-    return imagesx($this->image);
-  }
-
-  function get_height()
-  {
-    return imagesy($this->image);
-  }
-
-  function crop($width, $height, $x, $y)
-  {
-    $dest = imagecreatetruecolor($width, $height);
-
-    imagealphablending($dest, false);
-    imagesavealpha($dest, true);
-    if (function_exists('imageantialias'))
-    {
-      imageantialias($dest, true);
+        if (in_array($extension, ['jpg', 'jpeg'])) {
+            $this->image = imagecreatefromjpeg($source_filepath);
+        } elseif ($extension == 'png') {
+            $this->image = imagecreatefrompng($source_filepath);
+        } elseif ($extension == 'gif' and $gd_info['GIF Read Support'] and $gd_info['GIF Create Support']) {
+            $this->image = imagecreatefromgif($source_filepath);
+        } else {
+            die('[Image GD] unsupported file extension');
+        }
     }
 
-    $result = imagecopymerge($dest, $this->image, 0, 0, $x, $y, $width, $height, 100);
-
-    if ($result !== false)
+    public function get_width()
     {
-      imagedestroy($this->image);
-      $this->image = $dest;
-    }
-    else
-    {
-      imagedestroy($dest);
-    }
-    return $result;
-  }
-
-  function strip()
-  {
-    return true;
-  }
-
-  function rotate($rotation)
-  {
-    $dest = imagerotate($this->image, $rotation, 0);
-    imagedestroy($this->image);
-    $this->image = $dest;
-    return true;
-  }
-
-  function set_compression_quality($quality)
-  {
-    $this->quality = $quality;
-    return true;
-  }
-
-  function resize($width, $height)
-  {
-    $dest = imagecreatetruecolor($width, $height);
-
-    imagealphablending($dest, false);
-    imagesavealpha($dest, true);
-    if (function_exists('imageantialias'))
-    {
-      imageantialias($dest, true);
+        return imagesx($this->image);
     }
 
-    $result = imagecopyresampled($dest, $this->image, 0, 0, 0, 0, $width, $height, $this->get_width(), $this->get_height());
-
-    if ($result !== false)
+    public function get_height()
     {
-      imagedestroy($this->image);
-      $this->image = $dest;
+        return imagesy($this->image);
     }
-    else
+
+    public function crop($width, $height, $x, $y)
     {
-      imagedestroy($dest);
+        $dest = imagecreatetruecolor($width, $height);
+
+        imagealphablending($dest, false);
+        imagesavealpha($dest, true);
+        if (function_exists('imageantialias')) {
+            imageantialias($dest, true);
+        }
+
+        $result = imagecopymerge($dest, $this->image, 0, 0, $x, $y, $width, $height, 100);
+
+        if ($result !== false) {
+            imagedestroy($this->image);
+            $this->image = $dest;
+        } else {
+            imagedestroy($dest);
+        }
+        return $result;
     }
-    return $result;
-  }
 
-  function sharpen($amount)
-  {
-    $m = pwg_image::get_sharpen_matrix($amount);
-    return imageconvolution($this->image, $m, 1, 0);
-  }
-
-  function compose($overlay, $x, $y, $opacity)
-  {
-    $ioverlay = $overlay->image->image;
-    /* A replacement for php's imagecopymerge() function that supports the alpha channel
-    See php bug #23815:  http://bugs.php.net/bug.php?id=23815 */
-
-    $ow = imagesx($ioverlay);
-    $oh = imagesy($ioverlay);
-
-		// Create a new blank image the site of our source image
-		$cut = imagecreatetruecolor($ow, $oh);
-
-		// Copy the blank image into the destination image where the source goes
-		imagecopy($cut, $this->image, 0, 0, $x, $y, $ow, $oh);
-
-		// Place the source image in the destination image
-		imagecopy($cut, $ioverlay, 0, 0, 0, 0, $ow, $oh);
-		imagecopymerge($this->image, $cut, $x, $y, 0, 0, $ow, $oh, $opacity);
-    imagedestroy($cut);
-    return true;
-  }
-
-  function write($destination_filepath)
-  {
-    $extension = strtolower(functions::get_extension($destination_filepath));
-
-    if ($extension == 'png')
+    public function strip()
     {
-      imagepng($this->image, $destination_filepath);
+        return true;
     }
-    elseif ($extension == 'gif')
-    {
-      imagegif($this->image, $destination_filepath);
-    }
-    else
-    {
-      imagejpeg($this->image, $destination_filepath, $this->quality);
-    }
-  }
 
-  function destroy()
-  {
-    imagedestroy($this->image);
-  }
+    public function rotate($rotation)
+    {
+        $dest = imagerotate($this->image, $rotation, 0);
+        imagedestroy($this->image);
+        $this->image = $dest;
+        return true;
+    }
+
+    public function set_compression_quality($quality)
+    {
+        $this->quality = $quality;
+        return true;
+    }
+
+    public function resize($width, $height)
+    {
+        $dest = imagecreatetruecolor($width, $height);
+
+        imagealphablending($dest, false);
+        imagesavealpha($dest, true);
+        if (function_exists('imageantialias')) {
+            imageantialias($dest, true);
+        }
+
+        $result = imagecopyresampled($dest, $this->image, 0, 0, 0, 0, $width, $height, $this->get_width(), $this->get_height());
+
+        if ($result !== false) {
+            imagedestroy($this->image);
+            $this->image = $dest;
+        } else {
+            imagedestroy($dest);
+        }
+        return $result;
+    }
+
+    public function sharpen($amount)
+    {
+        $m = pwg_image::get_sharpen_matrix($amount);
+        return imageconvolution($this->image, $m, 1, 0);
+    }
+
+    public function compose($overlay, $x, $y, $opacity)
+    {
+        $ioverlay = $overlay->image->image;
+        /* A replacement for php's imagecopymerge() function that supports the alpha channel
+        See php bug #23815:  http://bugs.php.net/bug.php?id=23815 */
+
+        $ow = imagesx($ioverlay);
+        $oh = imagesy($ioverlay);
+
+        // Create a new blank image the site of our source image
+        $cut = imagecreatetruecolor($ow, $oh);
+
+        // Copy the blank image into the destination image where the source goes
+        imagecopy($cut, $this->image, 0, 0, $x, $y, $ow, $oh);
+
+        // Place the source image in the destination image
+        imagecopy($cut, $ioverlay, 0, 0, 0, 0, $ow, $oh);
+        imagecopymerge($this->image, $cut, $x, $y, 0, 0, $ow, $oh, $opacity);
+        imagedestroy($cut);
+        return true;
+    }
+
+    public function write($destination_filepath)
+    {
+        $extension = strtolower(functions::get_extension($destination_filepath));
+
+        if ($extension == 'png') {
+            imagepng($this->image, $destination_filepath);
+        } elseif ($extension == 'gif') {
+            imagegif($this->image, $destination_filepath);
+        } else {
+            imagejpeg($this->image, $destination_filepath, $this->quality);
+        }
+    }
+
+    public function destroy()
+    {
+        imagedestroy($this->image);
+    }
 }
-
-?>

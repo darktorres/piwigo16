@@ -1,4 +1,5 @@
 <?php
+
 $lang['2_7_0_title1'] = 'Welcome in Piwigo 2.7';
 $lang['2_7_0_stp1'] = 'Hello! I will be your guide to discover Piwigo. Please follow my instructions, and click Next (or use the arrows of your keyboard) to navigate. If you go to an other page, you will be redirected to the current page of the Tour.';
 $lang['2_7_0_title2'] = 'First new feature';

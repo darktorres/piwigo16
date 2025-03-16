@@ -1,63 +1,70 @@
 <?php
+
 /*gradients facebook '#3B5998','#2B4170' ; Google '#E64522','#C33219' ; Pinterest '#CB2027','#A0171C'*/
-$skin = array(
-	'BODY' => array(
-			// REQUIRED
-			'backgroundColor' 	=> '#fff',
-			// REQUIRED
-			'color' 						=> '#000',
-		),
-		
-	'A' => array(
-			// REQUIRED
-			'color' 						=> '#00f',
-		),
+$skin = [
+    'BODY' => [
+        // REQUIRED
+        'backgroundColor' => '#fff',
+        // REQUIRED
+        'color' => '#000',
+    ],
 
-	'A:hover' => array(
-			'color' 						=> '#000',
-		),
+    'A' => [
+        // REQUIRED
+        'color' => '#00f',
+    ],
 
-	'menubar' => array(
-			'backgroundColor' 	=> '#C33219', 
-			'gradient' 					=> array('#E64522','#C33219'),
-			'color' 						=> '#bbb',
-			'link'							=> array( 'color' => '#ddd' ),
-			'linkHover'					=> array( 'color' => '#fff' ),
-		),
+    'A:hover' => [
+        'color' => '#000',
+    ],
 
-	'dropdowns' => array(
-			// REQUIRED - cannot be transparent
-			'backgroundColor' 	=> '#0f0',
-		),
+    'menubar' => [
+        'backgroundColor' => '#C33219',
+        'gradient' => ['#E64522', '#C33219'],
+        'color' => '#bbb',
+        'link' => [
+            'color' => '#ddd',
+        ],
+        'linkHover' => [
+            'color' => '#fff',
+        ],
+    ],
 
-	'pageTitle' => array(
-			'backgroundColor' 	=> '#2B4170', 
-			'gradient' 					=> array('#3B5998','#2B4170'),
-			'color' 						=> '#bbb',
-			'link'							=> array( 'color' => '#ddd' ),
-			'linkHover'					=> array( 'color' => '#fff' ),
-		),
+    'dropdowns' => [
+        // REQUIRED - cannot be transparent
+        'backgroundColor' => '#0f0',
+    ],
 
-	'pictureBar' => array(
-			'backgroundColor' 	=> '#ccc',
-		),
+    'pageTitle' => [
+        'backgroundColor' => '#2B4170',
+        'gradient' => ['#3B5998', '#2B4170'],
+        'color' => '#bbb',
+        'link' => [
+            'color' => '#ddd',
+        ],
+        'linkHover' => [
+            'color' => '#fff',
+        ],
+    ],
 
-	'widePictureBar' => array(
-			'backgroundColor' 	=> '#dca',
-		),
+    'pictureBar' => [
+        'backgroundColor' => '#ccc',
+    ],
 
-	'pictureWideInfoTable' => array(
-			'backgroundColor' 	=> '#ccc',
-		),
+    'widePictureBar' => [
+        'backgroundColor' => '#dca',
+    ],
 
-	'comment' => array(
-			'backgroundColor' 	=> '#ccc',
-		),
+    'pictureWideInfoTable' => [
+        'backgroundColor' => '#ccc',
+    ],
 
-	// should be white or around white
-	'albumLegend' => array(
-			'color' 	=> '#fff',
-		),
+    'comment' => [
+        'backgroundColor' => '#ccc',
+    ],
 
-);
-?>
+    // should be white or around white
+    'albumLegend' => [
+        'color' => '#fff',
+    ],
+];

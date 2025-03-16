@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,11 +14,9 @@ namespace Piwigo\inc;
  */
 abstract class PwgRequestHandler
 {
-  /**
-   * Virtual abstract method. Decodes the request (GET or POST) handles the
-   * method invocation as well as response sending.
-   */
-  abstract function handleRequest(&$service);
+    /**
+     * Virtual abstract method. Decodes the request (GET or POST) handles the
+     * method invocation as well as response sending.
+     */
+    abstract public function handleRequest(&$service);
 }
-
-?>

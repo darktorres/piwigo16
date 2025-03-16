@@ -1,4 +1,5 @@
 <?php
+
 $lang['first_contact_title1'] = 'Welcome in your Piwigo gallery';
 $lang['first_contact_stp1'] = 'Hello! I will be your guide to discovering Piwigo. Please follow my instructions, and click Next (or use the arrows of your keyboard) to navigate. If you go to another page of the administration, you will be redirected to the current page of the Tour. If you are stuck and can\'t end the tour, going to <em>Plugins » Take A Tour</em> will end the tour.<br>Let\'s start by adding photos!';
 $lang['first_contact_title2'] = '';
@@ -77,7 +78,6 @@ $lang['first_contact_title40'] = '';
 $lang['first_contact_stp40'] = 'It\'s me here! Don\'t deactivate me now, but you can see you can Deactivate or Restore an activated plugin.';
 $lang['first_contact_title41'] = '';
 $lang['first_contact_stp41'] = 'You can see on the last tab all the plugins available for your version of Piwigo. Hundred of plugins are there!';
-
 
 $lang['first_contact_title43'] = 'It\'s been a great time';
 $lang['first_contact_stp43'] = 'This tour was quite long, but we only have seen a small part of how powerful Piwigo is. Everything has an end, this overview is finished.<br><br>You can investigate more deeply the features of Piwigo by taking another tour or reading our documentation, on the piwigo.org website.<br><br>Don\'t forget also the Help link at the upper right corner of any administration page.<p style="text-align:center">Enjoy your Piwigo!</p>';

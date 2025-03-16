@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | Piwigo - a PHP based photo gallery                                    |
 // +-----------------------------------------------------------------------+
@@ -32,13 +33,13 @@ Author URI: http://piwigo.org
 
 use Piwigo\inc\functions_plugins;
 
-if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
+}
 
-define('LANGUAGE_SWITCH_PATH' , PHPWG_PLUGINS_PATH.basename(dirname(__FILE__)).'/');
+define('LANGUAGE_SWITCH_PATH', PHPWG_PLUGINS_PATH . basename(dirname(__FILE__)) . '/');
 
-include_once(LANGUAGE_SWITCH_PATH.'language_switch.php');
+include_once(LANGUAGE_SWITCH_PATH . 'language_switch.php');
 
-functions_plugins::add_event_handler('loading_lang', language_controller_switch(...), 5 );
-functions_plugins::add_event_handler('loc_end_index', language_controller_flags(...), 95 );
-
-?>
+functions_plugins::add_event_handler('loading_lang', language_controller_switch(...), 5);
+functions_plugins::add_event_handler('loc_end_index', language_controller_flags(...), 95);

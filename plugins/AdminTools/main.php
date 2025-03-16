@@ -1,4 +1,5 @@
 <?php
+
 /*
 Plugin Name: Admin Tools
 Version: 14.5.0
@@ -16,12 +17,11 @@ use Piwigo\plugins\AdminTools\inc\MultiView;
 
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
-define('ADMINTOOLS_ID',       basename(dirname(__FILE__)));
-define('ADMINTOOLS_PATH' ,    PHPWG_PLUGINS_PATH . ADMINTOOLS_ID . '/');
-define('ADMINTOOLS_ADMIN',    functions_url::get_root_url() . 'admin.php?page=plugin-' . ADMINTOOLS_ID);
+define('ADMINTOOLS_ID', basename(dirname(__FILE__)));
+define('ADMINTOOLS_PATH', PHPWG_PLUGINS_PATH . ADMINTOOLS_ID . '/');
+define('ADMINTOOLS_ADMIN', functions_url::get_root_url() . 'admin.php?page=plugin-' . ADMINTOOLS_ID);
 
 include_once(ADMINTOOLS_PATH . 'inc/events.php');
-
 
 global $MultiView;
 $MultiView = new MultiView();
@@ -35,23 +35,19 @@ functions_plugins::add_event_handler('ws_add_methods', MultiView::register_ws(..
 functions_plugins::add_event_handler('delete_user', MultiView::invalidate_cache(...));
 functions_plugins::add_event_handler('register_user', MultiView::invalidate_cache(...));
 
-if (!defined('IN_ADMIN'))
-{
-  functions_plugins::add_event_handler('loc_after_page_header', admintools_add_public_controller(...));
-  functions_plugins::add_event_handler('loc_begin_picture', admintools_save_picture(...));
-  functions_plugins::add_event_handler('loc_begin_index', admintools_save_category(...));
+if (! defined('IN_ADMIN')) {
+    functions_plugins::add_event_handler('loc_after_page_header', admintools_add_public_controller(...));
+    functions_plugins::add_event_handler('loc_begin_picture', admintools_save_picture(...));
+    functions_plugins::add_event_handler('loc_begin_index', admintools_save_category(...));
+} else {
+    functions_plugins::add_event_handler('loc_begin_page_header', admintools_add_admin_controller_setprefilter(...));
+    functions_plugins::add_event_handler('loc_after_page_header', admintools_add_admin_controller(...));
 }
-else
-{
-  functions_plugins::add_event_handler('loc_begin_page_header', admintools_add_admin_controller_setprefilter(...));
-  functions_plugins::add_event_handler('loc_after_page_header', admintools_add_admin_controller(...));
-}
-
 
 function admintools_init()
 {
-  global $conf;
-  $conf['AdminTools'] = functions::safe_unserialize($conf['AdminTools']);
+    global $conf;
+    $conf['AdminTools'] = functions::safe_unserialize($conf['AdminTools']);
 
-  functions::load_language('plugin.lang', ADMINTOOLS_PATH);
+    functions::load_language('plugin.lang', ADMINTOOLS_PATH);
 }

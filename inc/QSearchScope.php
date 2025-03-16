@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,30 +14,32 @@ namespace Piwigo\inc;
  */
 class QSearchScope
 {
-  var $id;
-  var $aliases;
-  var $is_text;
-  var $nullable;
+    public $id;
 
-  function __construct($id, $aliases, $nullable=false, $is_text=true)
-  {
-    $this->id = $id;
-    $this->aliases = $aliases;
-    $this->is_text = $is_text;
-    $this->nullable =$nullable;
-  }
+    public $aliases;
 
-  function parse($token)
-  {
-    if (!$this->nullable && 0==strlen($token->term))
-      return false;
-    return true;
-  }
+    public $is_text;
 
-  function process_char(&$ch, &$crt_token)
-  {
-    return false;
-  }
+    public $nullable;
+
+    public function __construct($id, $aliases, $nullable = false, $is_text = true)
+    {
+        $this->id = $id;
+        $this->aliases = $aliases;
+        $this->is_text = $is_text;
+        $this->nullable = $nullable;
+    }
+
+    public function parse($token)
+    {
+        if (! $this->nullable && strlen($token->term) == 0) {
+            return false;
+        }
+        return true;
+    }
+
+    public function process_char(&$ch, &$crt_token)
+    {
+        return false;
+    }
 }
-
-?>

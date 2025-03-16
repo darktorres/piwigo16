@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,31 +14,28 @@ use Piwigo\inc\PwgResponseEncoder;
 
 class PwgJsonEncoder extends PwgResponseEncoder
 {
-  function encodeResponse($response)
-  {
-    if ($response instanceof PwgError)
+    public function encodeResponse($response)
     {
-      return json_encode(
-        array(
-          'stat' => 'fail',
-          'err' => $response->code(),
-          'message' => $response->message(),
-          )
-      );
+        if ($response instanceof PwgError) {
+            return json_encode(
+                [
+                    'stat' => 'fail',
+                    'err' => $response->code(),
+                    'message' => $response->message(),
+                ]
+            );
+        }
+        parent::flattenResponse($response);
+        return json_encode(
+            [
+                'stat' => 'ok',
+                'result' => $response,
+            ]
+        );
     }
-    parent::flattenResponse($response);
-    return json_encode(
-        array(
-          'stat' => 'ok',
-          'result' => $response,
-      )
-    );
-  }
 
-  function getContentType()
-  {
-    return 'text/plain';
-  }
+    public function getContentType()
+    {
+        return 'text/plain';
+    }
 }
-
-?>

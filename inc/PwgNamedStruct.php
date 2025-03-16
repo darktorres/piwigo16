@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -15,40 +16,33 @@ namespace Piwigo\inc;
  */
 class PwgNamedStruct
 {
-  var $_content;
-  var $_xmlAttributes;
+    public $_content;
 
-  /**
-   * Constructs a named struct (usually returned by web service function
-   * implementation)
-   * @param array $content - the actual content (php array)
-   * @param array $xmlAttributes - containing xml element name
-   * @param array $xmlElements - name of the keys in $content that will be
-   *    encoded as xml attributes (if null - automatically prefer xml attributes
-   *    whenever possible)
-   */
-  function __construct($content, $xmlAttributes=null, $xmlElements=null )
-  {
-    $this->_content = $content;
-    if ( isset($xmlAttributes) )
+    public $_xmlAttributes;
+
+    /**
+     * Constructs a named struct (usually returned by web service function
+     * implementation)
+     * @param array $content - the actual content (php array)
+     * @param array $xmlAttributes - containing xml element name
+     * @param array $xmlElements - name of the keys in $content that will be
+     *    encoded as xml attributes (if null - automatically prefer xml attributes
+     *    whenever possible)
+     */
+    public function __construct($content, $xmlAttributes = null, $xmlElements = null)
     {
-      $this->_xmlAttributes = array_flip($xmlAttributes);
-    }
-    else
-    {
-      $this->_xmlAttributes = array();
-      foreach ($this->_content as $key=>$value)
-      {
-        if (!empty($key) and (is_scalar($value) or is_null($value)) )
-        {
-          if ( empty($xmlElements) or !in_array($key,$xmlElements) )
-          {
-            $this->_xmlAttributes[$key]=1;
-          }
+        $this->_content = $content;
+        if (isset($xmlAttributes)) {
+            $this->_xmlAttributes = array_flip($xmlAttributes);
+        } else {
+            $this->_xmlAttributes = [];
+            foreach ($this->_content as $key => $value) {
+                if (! empty($key) and (is_scalar($value) or $value === null)) {
+                    if (empty($xmlElements) or ! in_array($key, $xmlElements)) {
+                        $this->_xmlAttributes[$key] = 1;
+                    }
+                }
+            }
         }
-      }
     }
-  }
 }
-
-?>

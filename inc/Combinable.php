@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,44 +14,54 @@ namespace Piwigo\inc;
  */
 class Combinable
 {
-  /** @var string */
-  public $id;
-  /** @var string */
-  public $path;
-  /** @var string */
-  public $version;
-  /** @var bool */
-  public $is_template;
+    /**
+     * @var string
+     */
+    public $id;
 
-  /**
-   * @param string $id
-   * @param string $path
-   * @param string $version
-   */
-  function __construct($id, $path, $version=0)
-  {
-    $this->id = $id;
-    $this->set_path($path);
-    $this->version = $version;
-    $this->is_template = false;
-  }
+    /**
+     * @var string
+     */
+    public $path;
 
-  /**
-   * @param string $path
-   */
-  function set_path($path)
-  {
-    if (!empty($path))
-      $this->path = $path;
-  }
+    /**
+     * @var string
+     */
+    public $version;
 
-  /**
-   * @return bool
-   */
-  function is_remote()
-  {
-    return functions_url::url_is_remote($this->path) || strncmp($this->path, '//', 2)==0;
-  }
+    /**
+     * @var bool
+     */
+    public $is_template;
+
+    /**
+     * @param string $id
+     * @param string $path
+     * @param string $version
+     */
+    public function __construct($id, $path, $version = 0)
+    {
+        $this->id = $id;
+        $this->set_path($path);
+        $this->version = $version;
+        $this->is_template = false;
+    }
+
+    /**
+     * @param string $path
+     */
+    public function set_path($path)
+    {
+        if (! empty($path)) {
+            $this->path = $path;
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function is_remote()
+    {
+        return functions_url::url_is_remote($this->path) || strncmp($this->path, '//', 2) == 0;
+    }
 }
-
-?>

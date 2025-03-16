@@ -1,29 +1,27 @@
 <?php
 
 $lines = file('changelog.txt');
-$show = FALSE;
-$first = TRUE;
+$show = false;
+$first = true;
 
 echo '<div class="changelog">';
 
 foreach ($lines as $line_num => $line) {
-  if (trim($line)) {
-    if ($show) {
-      if (substr( $line, 0, 7 ) === "version") {
-        if ($first) {
-          $first = FALSE;
-        } else {
-          echo "</ul>";
+    if (trim($line)) {
+        if ($show) {
+            if (substr($line, 0, 7) === 'version') {
+                if ($first) {
+                    $first = false;
+                } else {
+                    echo '</ul>';
+                }
+                echo '<h3>' . htmlspecialchars(str_replace('version ', '', $line)) . "</h3>\n<ul>";
+            } else {
+                echo '<li>' . htmlspecialchars($line) . "</li>\n";
+            }
+        } elseif (trim($line) == '=== Changelog ===') {
+            $show = true;
         }
-        echo "<h3>" . htmlspecialchars(str_replace("version ", "", $line)) . "</h3>\n<ul>";
-      } else {
-        echo "<li>" . htmlspecialchars($line) . "</li>\n";
-      }
-    } elseif (trim($line) == "=== Changelog ===") {
-      $show = TRUE;
     }
-  }
 }
-echo "</ul></div>";
-
-?>
+echo '</ul></div>';

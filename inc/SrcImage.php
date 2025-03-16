@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -17,148 +18,146 @@ use Piwigo\inc\dblayer\functions_mysqli;
  */
 final class SrcImage
 {
-  const IS_ORIGINAL = 0x01;
-  const IS_MIMETYPE = 0x02;
-  const DIM_NOT_GIVEN = 0x04;
+    public const IS_ORIGINAL = 0x01;
 
-  /** @var int */
-  public $id;
-  /** @var string */
-  public $rel_path;
-  /** @var int */
-  public $rotation = 0;
-  /** @var int[] */
-  private $size=null;
-  /** @var int */
-  private $flags=0;
+    public const IS_MIMETYPE = 0x02;
 
-  /**
-   * @param array $infos assoc array of data from images table
-   */
-  function __construct($infos)
-  {
-    global $conf;
+    public const DIM_NOT_GIVEN = 0x04;
 
-    $this->id = $infos['id'];
-    $ext = strtolower(functions::get_extension($infos['path']));
-    $infos['file_ext'] = @strtolower(functions::get_extension($infos['file']));
-    $infos['path_ext'] = $ext;
-    if (in_array($ext, $conf['picture_ext']))
+    /**
+     * @var int
+     */
+    public $id;
+
+    /**
+     * @var string
+     */
+    public $rel_path;
+
+    /**
+     * @var int
+     */
+    public $rotation = 0;
+
+    /**
+     * @var int[]
+     */
+    private $size = null;
+
+    /**
+     * @var int
+     */
+    private $flags = 0;
+
+    /**
+     * @param array $infos assoc array of data from images table
+     */
+    public function __construct($infos)
     {
-      $this->rel_path = $infos['path'];
-      $this->flags |= self::IS_ORIGINAL;
-    }
-    elseif (!empty($infos['representative_ext']))
-    {
-      $this->rel_path = functions::original_to_representative($infos['path'], $infos['representative_ext']);
-    }
-    else
-    {
-      $this->rel_path = functions_plugins::trigger_change('get_mimetype_location', functions::get_themeconf('mime_icon_dir').$ext.'.png', $ext );
-      $this->flags |= self::IS_MIMETYPE;
-      if ( ($size=@getimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false)
-      {
-        if ('svg' == $ext) 
-        {
-          $this->rel_path = $infos['path'];
-        }
-        else 
-        {
-          $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
-        }
-        $size = getimagesize(PHPWG_ROOT_PATH.$this->rel_path);
-      }
-      $this->size = @array($size[0],$size[1]);
-    }
+        global $conf;
 
-    if (!$this->size)
-    {
-      if (isset($infos['width']) && isset($infos['height']))
-      {
-        $width = $infos['width'];
-        $height = $infos['height'];
-
-        $this->rotation = intval($infos['rotation']) % 4;
-        // 1 or 5 =>  90 clockwise
-        // 3 or 7 => 270 clockwise
-        if ($this->rotation % 2)
-        {
-          $width = $infos['height'];
-          $height = $infos['width'];
+        $this->id = $infos['id'];
+        $ext = strtolower(functions::get_extension($infos['path']));
+        $infos['file_ext'] = @strtolower(functions::get_extension($infos['file']));
+        $infos['path_ext'] = $ext;
+        if (in_array($ext, $conf['picture_ext'])) {
+            $this->rel_path = $infos['path'];
+            $this->flags |= self::IS_ORIGINAL;
+        } elseif (! empty($infos['representative_ext'])) {
+            $this->rel_path = functions::original_to_representative($infos['path'], $infos['representative_ext']);
+        } else {
+            $this->rel_path = functions_plugins::trigger_change('get_mimetype_location', functions::get_themeconf('mime_icon_dir') . $ext . '.png', $ext);
+            $this->flags |= self::IS_MIMETYPE;
+            if (($size = @getimagesize(PHPWG_ROOT_PATH . $this->rel_path)) === false) {
+                if ($ext == 'svg') {
+                    $this->rel_path = $infos['path'];
+                } else {
+                    $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
+                }
+                $size = getimagesize(PHPWG_ROOT_PATH . $this->rel_path);
+            }
+            $this->size = @[$size[0], $size[1]];
         }
 
-        $this->size = array($width, $height);
-      }
-      elseif (!array_key_exists('width', $infos))
-      {
-        $this->flags |= self::DIM_NOT_GIVEN;
-      }
+        if (! $this->size) {
+            if (isset($infos['width']) && isset($infos['height'])) {
+                $width = $infos['width'];
+                $height = $infos['height'];
+
+                $this->rotation = intval($infos['rotation']) % 4;
+                // 1 or 5 =>  90 clockwise
+                // 3 or 7 => 270 clockwise
+                if ($this->rotation % 2) {
+                    $width = $infos['height'];
+                    $height = $infos['width'];
+                }
+
+                $this->size = [$width, $height];
+            } elseif (! array_key_exists('width', $infos)) {
+                $this->flags |= self::DIM_NOT_GIVEN;
+            }
+        }
     }
-  }
 
-  /**
-   * @return int
-   */
-  function is_original()
-  {
-    return $this->flags & self::IS_ORIGINAL;
-  }
-
-  /**
-   * @return int
-   */
-  function is_mimetype()
-  {
-    return $this->flags & self::IS_MIMETYPE;
-  }
-
-  /**
-   * @return string
-   */
-  function get_path()
-  {
-    return PHPWG_ROOT_PATH.$this->rel_path;
-  }
-
-  /**
-   * @return string
-   */
-  function get_url()
-  {
-    $url = functions_url::get_root_url().$this->rel_path;
-    if ( !($this->flags & self::IS_MIMETYPE) )
+    /**
+     * @return int
+     */
+    public function is_original()
     {
-      $url = functions_plugins::trigger_change('get_src_image_url', $url, $this);
+        return $this->flags & self::IS_ORIGINAL;
     }
-    return functions_url::embellish_url($url);
-  }
 
-  /**
-   * @return bool
-   */
-  function has_size()
-  {
-    return $this->size != null;
-  }
-
-  /**
-   * @return int[]|null 0=width, 1=height or null if fail to compute size
-   */
-  function get_size()
-  {
-    if ($this->size == null)
+    /**
+     * @return int
+     */
+    public function is_mimetype()
     {
-      if ($this->flags & self::DIM_NOT_GIVEN)
-        functions_html::fatal_error('SrcImage dimensions required but not provided');
-      // probably not metadata synced
-      if ( ($size = getimagesize( $this->get_path() )) !== false)
-      {
-        $this->size = array($size[0],$size[1]);
-        functions_mysqli::pwg_query('UPDATE '.IMAGES_TABLE.' SET width='.$size[0].', height='.$size[1].' WHERE id='.$this->id);
-      }
+        return $this->flags & self::IS_MIMETYPE;
     }
-    return $this->size;
-  }
+
+    /**
+     * @return string
+     */
+    public function get_path()
+    {
+        return PHPWG_ROOT_PATH . $this->rel_path;
+    }
+
+    /**
+     * @return string
+     */
+    public function get_url()
+    {
+        $url = functions_url::get_root_url() . $this->rel_path;
+        if (! ($this->flags & self::IS_MIMETYPE)) {
+            $url = functions_plugins::trigger_change('get_src_image_url', $url, $this);
+        }
+        return functions_url::embellish_url($url);
+    }
+
+    /**
+     * @return bool
+     */
+    public function has_size()
+    {
+        return $this->size != null;
+    }
+
+    /**
+     * @return int[]|null 0=width, 1=height or null if fail to compute size
+     */
+    public function get_size()
+    {
+        if ($this->size == null) {
+            if ($this->flags & self::DIM_NOT_GIVEN) {
+                functions_html::fatal_error('SrcImage dimensions required but not provided');
+            }
+            // probably not metadata synced
+            if (($size = getimagesize($this->get_path())) !== false) {
+                $this->size = [$size[0], $size[1]];
+                functions_mysqli::pwg_query('UPDATE ' . IMAGES_TABLE . ' SET width=' . $size[0] . ', height=' . $size[1] . ' WHERE id=' . $this->id);
+            }
+        }
+        return $this->size;
+    }
 }
-
-?>

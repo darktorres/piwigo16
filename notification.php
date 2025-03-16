@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -17,8 +18,8 @@ use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_user;
 use Piwigo\inc\menubar;
 
-define('PHPWG_ROOT_PATH','./');
-include_once( PHPWG_ROOT_PATH.'inc/common.php' );
+define('PHPWG_ROOT_PATH', './');
+include_once(PHPWG_ROOT_PATH . 'inc/common.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -34,24 +35,20 @@ functions_plugins::trigger_notify('loc_begin_notification');
 $page['feed'] = functions::find_available_feed_id();
 
 $query = '
-INSERT INTO '.USER_FEED_TABLE.'
+INSERT INTO ' . USER_FEED_TABLE . '
   (id, user_id, last_check)
   VALUES
-  (\''.$page['feed'].'\', '.$user['id'].', NULL)
+  (\'' . $page['feed'] . '\', ' . $user['id'] . ', NULL)
 ;';
 functions_mysqli::pwg_query($query);
 
-
-$feed_url=PHPWG_ROOT_PATH.'feed.php';
-if (functions_user::is_a_guest())
-{
-  $feed_image_only_url=$feed_url;
-  $feed_url .= '?feed='.$page['feed'];
-}
-else
-{
-  $feed_url .= '?feed='.$page['feed'];
-  $feed_image_only_url=$feed_url.'&amp;image_only';
+$feed_url = PHPWG_ROOT_PATH . 'feed.php';
+if (functions_user::is_a_guest()) {
+    $feed_image_only_url = $feed_url;
+    $feed_url .= '?feed=' . $page['feed'];
+} else {
+    $feed_url .= '?feed=' . $page['feed'];
+    $feed_image_only_url = $feed_url . '&amp;image_only';
 }
 
 // +-----------------------------------------------------------------------+
@@ -60,32 +57,33 @@ else
 
 $title = functions::l10n('Notification');
 $page['body_id'] = 'theNotificationPage';
-$page['meta_robots']=array('noindex'=>1, 'nofollow'=>1);
+$page['meta_robots'] = [
+    'noindex' => 1,
+    'nofollow' => 1,
+];
 
-
-$template->set_filenames(array('notification'=>'notification.tpl'));
+$template->set_filenames([
+    'notification' => 'notification.tpl',
+]);
 
 $template->assign(
-  array(
-    'U_FEED' => $feed_url,
-    'U_FEED_IMAGE_ONLY' => $feed_image_only_url,
-    )
-  );
-  
+    [
+        'U_FEED' => $feed_url,
+        'U_FEED_IMAGE_ONLY' => $feed_image_only_url,
+    ]
+);
+
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (!isset($themeconf['hide_menu_on']) OR !in_array('theNotificationPage', $themeconf['hide_menu_on']))
-{
-  menubar::initialize_menu();
+if (! isset($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'])) {
+    menubar::initialize_menu();
 }
 
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+
-include(PHPWG_ROOT_PATH.'inc/page_header.php');
+include(PHPWG_ROOT_PATH . 'inc/page_header.php');
 functions_plugins::trigger_notify('loc_end_notification');
 functions_html::flush_page_messages();
 $template->pparse('notification');
-include(PHPWG_ROOT_PATH.'inc/page_tail.php');
-
-?>
+include(PHPWG_ROOT_PATH . 'inc/page_tail.php');

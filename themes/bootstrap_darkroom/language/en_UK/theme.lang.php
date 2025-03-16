@@ -1,4 +1,5 @@
 <?php
+
 $lang['Enabled'] = 'Enabled';
 $lang['Disabled'] = 'Disabled';
 $lang['Color theme'] = 'Color theme';

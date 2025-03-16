@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -10,16 +11,23 @@ namespace Piwigo\inc;
 
 class derivative_std_params
 {
-    const IMG_SQUARE = 'square';
-    const IMG_THUMB = 'thumb';
-    const IMG_XXSMALL = '2small';
-    const IMG_XSMALL = 'xsmall';
-    const IMG_SMALL = 'small';
-    const IMG_MEDIUM = 'medium';
-    const IMG_LARGE = 'large';
-    const IMG_XLARGE = 'xlarge';
-    const IMG_XXLARGE = 'xxlarge';
-    const IMG_CUSTOM = 'custom';
-}
+    public const IMG_SQUARE = 'square';
 
-?>
+    public const IMG_THUMB = 'thumb';
+
+    public const IMG_XXSMALL = '2small';
+
+    public const IMG_XSMALL = 'xsmall';
+
+    public const IMG_SMALL = 'small';
+
+    public const IMG_MEDIUM = 'medium';
+
+    public const IMG_LARGE = 'large';
+
+    public const IMG_XLARGE = 'xlarge';
+
+    public const IMG_XXLARGE = 'xxlarge';
+
+    public const IMG_CUSTOM = 'custom';
+}

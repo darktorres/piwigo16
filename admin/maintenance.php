@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -11,9 +12,8 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
-if (!defined('PHPWG_ROOT_PATH'))
-{
-  die ("Hacking attempt!");
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+
@@ -22,35 +22,32 @@ if (!defined('PHPWG_ROOT_PATH'))
 
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-if (isset($_GET['action']))
-{
-  functions::check_pwg_token();
+if (isset($_GET['action'])) {
+    functions::check_pwg_token();
 }
 
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = functions_url::get_root_url().'admin.php?page=';
+$my_base_url = functions_url::get_root_url() . 'admin.php?page=';
 
-if (isset($_GET['tab']))
-{
-  functions::check_input_parameter('tab', $_GET, false, '/^(actions|env)$/');
-  $page['tab'] = $_GET['tab'];
+if (isset($_GET['tab'])) {
+    functions::check_input_parameter('tab', $_GET, false, '/^(actions|env)$/');
+    $page['tab'] = $_GET['tab'];
+} else {
+    $page['tab'] = 'actions';
 }
-else
-{
-  $page['tab'] = 'actions';
-}
-
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('maintenance');
 $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
-include(PHPWG_ROOT_PATH.'admin/maintenance_'.$page['tab'].'.php');
+include(PHPWG_ROOT_PATH . 'admin/maintenance_' . $page['tab'] . '.php');
 
 $template->assign(
-  array('ADMIN_PAGE_TITLE' => functions::l10n('Maintenance'))
+    [
+        'ADMIN_PAGE_TITLE' => functions::l10n('Maintenance'),
+    ]
 );

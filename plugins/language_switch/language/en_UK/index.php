@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | Piwigo - a PHP based photo gallery                                    |
 // +-----------------------------------------------------------------------+
@@ -23,8 +24,7 @@
 
 // Recursive call
 $url = '../';
-header( 'Request-URI: '.$url );
-header( 'Content-Location: '.$url );
-header( 'Location: '.$url );
+header('Request-URI: ' . $url);
+header('Content-Location: ' . $url);
+header('Location: ' . $url);
 exit();
-?>

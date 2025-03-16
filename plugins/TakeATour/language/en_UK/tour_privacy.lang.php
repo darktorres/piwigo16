@@ -1,4 +1,5 @@
 <?php
+
 $lang['privacy_title1'] = 'Welcome in the Privacy Tour';
 $lang['privacy_stp1'] = 'Hello! I will be your guide to discover how to protect your photos in Piwigo. Please follow my instructions, and click Next (or use the arrows of your keyboard) to navigate. If you go to an other page of the administration, you will be redirected to the current page of the Tour. If you are stuck and can\'t end the tour, going to <em>Plugins » Take A Tour</em> will end the tour.<br>Let\'s start!';
 $lang['privacy_title2'] = 'Help inside your Piwigo';

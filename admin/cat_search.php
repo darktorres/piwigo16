@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -11,9 +12,8 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_user;
 
-if (!defined('PHPWG_ROOT_PATH'))
-{
-  die('Hacking attempt!');
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+
@@ -21,36 +21,34 @@ if (!defined('PHPWG_ROOT_PATH'))
 // +-----------------------------------------------------------------------+
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'search';
-include(PHPWG_ROOT_PATH.'admin/inc/albums_tab.php');
+include(PHPWG_ROOT_PATH . 'admin/inc/albums_tab.php');
 
 // +-----------------------------------------------------------------------+
 // | Get Categories                                                        |
 // +-----------------------------------------------------------------------+
 
-$categories = array();
+$categories = [];
 
 $query = '
 SELECT id, name, status, uppercats
-  FROM '.CATEGORIES_TABLE;
+  FROM ' . CATEGORIES_TABLE;
 
 $result = functions_mysqli::query2array($query);
 
-foreach ($result as $cat) 
-{
-  $cat['name'] = functions_plugins::trigger_change('render_category_name', $cat['name'], 'admin_cat_list');
+foreach ($result as $cat) {
+    $cat['name'] = functions_plugins::trigger_change('render_category_name', $cat['name'], 'admin_cat_list');
 
-  $private = ($cat['status'] == 'private')? 1:0;
+    $private = ($cat['status'] == 'private') ? 1 : 0;
 
-  $parents = explode(',', $cat['uppercats']);
-  
-  $content = array($cat['name'], $parents, $private);
-  $categories[$cat['id']] = $content;
+    $parents = explode(',', $cat['uppercats']);
+
+    $content = [$cat['name'], $parents, $private];
+    $categories[$cat['id']] = $content;
 }
 
 // +-----------------------------------------------------------------------+
@@ -61,42 +59,38 @@ foreach ($result as $cat)
 $query = '
 SELECT
     name
-  FROM '.CATEGORIES_TABLE.'
+  FROM ' . CATEGORIES_TABLE . '
   ORDER BY RAND()
   LIMIT 1
 ;';
 $lines = functions_mysqli::query2array($query);
 $placeholder = null;
-foreach ($lines as $line)
-{
-  $name = functions_plugins::trigger_change('render_category_name', $line['name']);
+foreach ($lines as $line) {
+    $name = functions_plugins::trigger_change('render_category_name', $line['name']);
 
-  if (mb_strlen($name) > 25)
-  {
-    $name = mb_substr($name, 0, 25).'...';
-  }
+    if (mb_strlen($name) > 25) {
+        $name = mb_substr($name, 0, 25) . '...';
+    }
 
-  $placeholder = $name;
-  break;
+    $placeholder = $name;
+    break;
 }
 
-if (empty($placeholder))
-{
-  $placeholder = functions::l10n('Portraits');
+if (empty($placeholder)) {
+    $placeholder = functions::l10n('Portraits');
 }
 
 $template->set_filename('cat_search', 'cat_search.tpl');
 
 $template->assign(
-  array(
-    'data_cat' => $categories,
-    'ADMIN_PAGE_TITLE' => functions::l10n('Albums'),
-    'placeholder' => $placeholder,
-  )
+    [
+        'data_cat' => $categories,
+        'ADMIN_PAGE_TITLE' => functions::l10n('Albums'),
+        'placeholder' => $placeholder,
+    ]
 );
 
 // +-----------------------------------------------------------------------+
 // |                          sending html code                            |
 // +-----------------------------------------------------------------------+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'cat_search');
-?>

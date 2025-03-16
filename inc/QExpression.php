@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -10,48 +11,47 @@ namespace Piwigo\inc;
 
 class QExpression extends QMultiToken
 {
-  var $scopes = array();
-  var $stokens = array();
-  var $stoken_modifiers = array();
+    public $scopes = [];
 
-  function __construct($q, $scopes)
-  {
-    foreach ($scopes as $scope)
+    public $stokens = [];
+
+    public $stoken_modifiers = [];
+
+    public function __construct($q, $scopes)
     {
-      $this->scopes[$scope->id] = $scope;
-      foreach ($scope->aliases as $alias)
-        $this->scopes[strtolower($alias)] = $scope;
+        foreach ($scopes as $scope) {
+            $this->scopes[$scope->id] = $scope;
+            foreach ($scope->aliases as $alias) {
+                $this->scopes[strtolower($alias)] = $scope;
+            }
+        }
+        $i = 0;
+        $this->parse_expression($q, $i, 0, $this);
+        //manipulate the tree so that 'a OR b c' is the same as 'b c OR a'
+        $this->check_operator_priority();
+        $this->build_single_tokens($this, 0);
     }
-    $i = 0;
-    $this->parse_expression($q, $i, 0, $this);
-    //manipulate the tree so that 'a OR b c' is the same as 'b c OR a'
-    $this->check_operator_priority();
-    $this->build_single_tokens($this, 0);
-  }
 
-  private function build_single_tokens(QMultiToken $expr, $this_is_not)
-  {
-    for ($i=0; $i<count($expr->tokens); $i++)
+    private function build_single_tokens(QMultiToken $expr, $this_is_not)
     {
-      $token = $expr->tokens[$i];
-      $crt_is_not = ($token->modifier ^ $this_is_not) & functions_search::QST_NOT; // no negation OR double negation -> no negation;
+        for ($i = 0; $i < count($expr->tokens); $i++) {
+            $token = $expr->tokens[$i];
+            $crt_is_not = ($token->modifier ^ $this_is_not) & functions_search::QST_NOT; // no negation OR double negation -> no negation;
 
-      if ($token->is_single)
-      {
-        $token->idx = count($this->stokens);
-        $this->stokens[] = $token;
+            if ($token->is_single) {
+                $token->idx = count($this->stokens);
+                $this->stokens[] = $token;
 
-        $modifier = $token->modifier;
-        if ($crt_is_not)
-          $modifier |= functions_search::QST_NOT;
-        else
-          $modifier &= ~functions_search::QST_NOT;
-        $this->stoken_modifiers[] = $modifier;
-      }
-      else
-        $this->build_single_tokens($token, $crt_is_not);
+                $modifier = $token->modifier;
+                if ($crt_is_not) {
+                    $modifier |= functions_search::QST_NOT;
+                } else {
+                    $modifier &= ~functions_search::QST_NOT;
+                }
+                $this->stoken_modifiers[] = $modifier;
+            } else {
+                $this->build_single_tokens($token, $crt_is_not);
+            }
+        }
     }
-  }
 }
-
-?>

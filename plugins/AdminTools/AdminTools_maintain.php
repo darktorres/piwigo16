@@ -9,29 +9,28 @@ defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
 class AdminTools_maintain extends PluginMaintain
 {
-  private $default_conf = array(
-    'default_open' => true,
-    'closed_position' => 'left',
-    'public_quick_edit' => true,
-    );
+    private $default_conf = [
+        'default_open' => true,
+        'closed_position' => 'left',
+        'public_quick_edit' => true,
+    ];
 
-  function install($plugin_version, &$errors=array())
-  {
-    global $conf;
-
-    if (empty($conf['AdminTools']))
+    public function install($plugin_version, &$errors = [])
     {
-      functions::conf_update_param('AdminTools', $this->default_conf, true);
+        global $conf;
+
+        if (empty($conf['AdminTools'])) {
+            functions::conf_update_param('AdminTools', $this->default_conf, true);
+        }
     }
-  }
 
-  function update($old_version, $new_version, &$errors=array())
-  {
-    $this->install($new_version, $errors);
-  }
+    public function update($old_version, $new_version, &$errors = [])
+    {
+        $this->install($new_version, $errors);
+    }
 
-  function uninstall()
-  {
-    functions::conf_delete_param('AdminTools');
-  }
+    public function uninstall()
+    {
+        functions::conf_delete_param('AdminTools');
+    }
 }

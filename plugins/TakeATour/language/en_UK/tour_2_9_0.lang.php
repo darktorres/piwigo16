@@ -1,4 +1,5 @@
 <?php
+
 $lang['2_9_0_title1'] = 'Welcome in Piwigo 2.9';
 $lang['2_9_0_stp1'] = 'Here we go with the biggest change on 2.9: design! Dark header, footer and menubar. Less borders.<br><br>Brand new administration home page, called "Dashboard", with big icons for quick access to main pages.';
 

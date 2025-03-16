@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,96 +14,106 @@ namespace Piwigo\inc;
  */
 final class DerivativeParams
 {
-  /** @var SizingParams */
-  public $sizing;
-  /** @var string among IMG_* */
-  public $type = derivative_std_params::IMG_CUSTOM;
-  /** @var int used for non-custom images to regenerate the cached files */
-  public $last_mod_time = 0;
-  /** @var bool */
-  public $use_watermark = false;
-  /** @var float from 0=no sharpening to 1=max sharpening */
-  public $sharpen = 0;
+    /**
+     * @var SizingParams
+     */
+    public $sizing;
 
-  /**
-   * @param SizingParams $sizing
-   */
-  function __construct($sizing)
-  {
-    $this->sizing = $sizing;
-  }
+    /**
+     * @var string among IMG_*
+     */
+    public $type = derivative_std_params::IMG_CUSTOM;
 
-  /**
-   * @return array
-   */
-  public function __sleep()
-  {
-    return array('last_mod_time', 'sizing', 'sharpen');
-  }
+    /**
+     * @var int used for non-custom images to regenerate the cached files
+     */
+    public $last_mod_time = 0;
 
-  /**
-   * Adds tokens depending on sizing configuration.
-   *
-   * @param array $tokens
-   */
-  function add_url_tokens(&$tokens)
-  {
-    $this->sizing->add_url_tokens($tokens);
-  }
+    /**
+     * @var bool
+     */
+    public $use_watermark = false;
 
-  /**
-   * @return int[]
-   */
-  function compute_final_size($in_size)
-  {
-    $this->sizing->compute( $in_size, null, $crop_rect, $scale_size );
-    return $scale_size != null ? $scale_size : $in_size;
-  }
+    /**
+     * @var float from 0=no sharpening to 1=max sharpening
+     */
+    public $sharpen = 0;
 
-  /**
-   * @return int
-   */
-  function max_width()
-  {
-    return $this->sizing->ideal_size[0];
-  }
-
-  /**
-   * @return int
-   */
-  function max_height()
-  {
-    return $this->sizing->ideal_size[1];
-  }
-
-  /**
-   * @todo : description of DerivativeParams::is_identity
-   *
-   * @return bool
-   */
-  function is_identity($in_size)
-  {
-    if ($in_size[0] > $this->sizing->ideal_size[0] or
-        $in_size[1] > $this->sizing->ideal_size[1] )
+    /**
+     * @param SizingParams $sizing
+     */
+    public function __construct($sizing)
     {
-      return false;
+        $this->sizing = $sizing;
     }
-    return true;
-  }
 
-  /**
-   * @return bool
-   */
-  function will_watermark($out_size)
-  {
-    if ($this->use_watermark)
+    /**
+     * @return array
+     */
+    public function __sleep()
     {
-      $min_size = ImageStdParams::get_watermark()->min_size;
-      return $min_size[0]<=$out_size[0]
-        || $min_size[1]<=$out_size[1];
+        return ['last_mod_time', 'sizing', 'sharpen'];
     }
-    return false;
-  }
+
+    /**
+     * Adds tokens depending on sizing configuration.
+     *
+     * @param array $tokens
+     */
+    public function add_url_tokens(&$tokens)
+    {
+        $this->sizing->add_url_tokens($tokens);
+    }
+
+    /**
+     * @return int[]
+     */
+    public function compute_final_size($in_size)
+    {
+        $this->sizing->compute($in_size, null, $crop_rect, $scale_size);
+        return $scale_size != null ? $scale_size : $in_size;
+    }
+
+    /**
+     * @return int
+     */
+    public function max_width()
+    {
+        return $this->sizing->ideal_size[0];
+    }
+
+    /**
+     * @return int
+     */
+    public function max_height()
+    {
+        return $this->sizing->ideal_size[1];
+    }
+
+    /**
+     * @todo : description of DerivativeParams::is_identity
+     *
+     * @return bool
+     */
+    public function is_identity($in_size)
+    {
+        if ($in_size[0] > $this->sizing->ideal_size[0] or
+            $in_size[1] > $this->sizing->ideal_size[1]) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @return bool
+     */
+    public function will_watermark($out_size)
+    {
+        if ($this->use_watermark) {
+            $min_size = ImageStdParams::get_watermark()->min_size;
+            return $min_size[0] <= $out_size[0]
+              || $min_size[1] <= $out_size[1];
+        }
+        return false;
+    }
 }
-
-?>

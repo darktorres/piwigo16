@@ -437,7 +437,7 @@ class themes
         $url = PEM_URL . '/api/get_version_list.php';
 
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
-            $pem_versions = unserialize($result);
+            $pem_versions = functions::safe_unserialize($result);
 
             if ($pem_versions) {
                 if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
@@ -488,7 +488,7 @@ class themes
         }
 
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
-            $pem_themes = unserialize($result);
+            $pem_themes = functions::safe_unserialize($result);
 
             if (! is_array($pem_themes)) {
                 return false;

@@ -287,6 +287,7 @@ if (! isset($_SESSION['cache_activity_last_weeks']) or
         $day_nb = $day_date->format('N');
 
         $activity_last_weeks[$week][$day_nb]['details'][ucfirst($action['object'])][ucfirst($action['action'])] = $action['activity_counter'];
+        $activity_last_weeks[$week][$day_nb]['number'] ??= 0;
         $activity_last_weeks[$week][$day_nb]['number'] += $action['activity_counter'];
         $activity_last_weeks[$week][$day_nb]['date'] = functions::format_date($day_date->getTimestamp());
     }
@@ -412,7 +413,9 @@ foreach ($file_extensions as $ext => $ext_details) {
         $type = 'Other';
     }
 
+    $data_storage[$type]['total']['filesize'] ??= 0;
     $data_storage[$type]['total']['filesize'] += $ext_details['filesize'];
+    $data_storage[$type]['total']['nb_files'] ??= 0;
     $data_storage[$type]['total']['nb_files'] += $ext_details['ext_counter'];
 
     $data_storage[$type]['details'][strtoupper($ext)] = [

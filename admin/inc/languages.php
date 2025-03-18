@@ -230,7 +230,7 @@ class languages
         $url = PEM_URL . '/api/get_version_list.php';
 
         if (functions_admin::fetchRemote($url, $result, $get_data) and
-            $pem_versions = unserialize($result)
+            $pem_versions = functions::safe_unserialize($result)
         ) {
             if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $version = $pem_versions[0]['name'];
@@ -279,7 +279,7 @@ class languages
         }
 
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
-            $pem_languages = unserialize($result);
+            $pem_languages = functions::safe_unserialize($result);
 
             if (! is_array($pem_languages)) {
                 return false;

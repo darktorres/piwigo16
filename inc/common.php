@@ -82,13 +82,18 @@ $header_notes = [];
 $filter = [];
 
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
-include(PHPWG_ROOT_PATH . 'local/config/config.php');
+
+if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
+    include(PHPWG_ROOT_PATH . 'local/config/config.php');
+}
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
-include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php');
+if (file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php')) {
+    include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php');
+}
 
 if (! defined('PHPWG_INSTALLED')) {
     header('Location: install.php');

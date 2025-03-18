@@ -1109,7 +1109,7 @@ function get_formatted_date(date_str) {
     }
     let first_part = date_str.split(" ")[0];
     let formatted = first_part.split("-").join("/");
-    console.log(formatted);
+    // console.log(formatted);
     return formatted;
 }
 
@@ -1138,7 +1138,7 @@ function set_selected_groups(groups) {
 }
 
 function fill_user_edit_summary(user_to_edit, pop_in, isGuest) {
-    console.log(isGuest);
+    // console.log(isGuest);
     if (isGuest) {
         pop_in
             .find(".user-property-initials span")
@@ -1442,7 +1442,7 @@ function fill_ajax_data_from_properties(ajax_data, pop_in) {
             return parseInt($(this).attr("data-value"));
         })
         .get();
-    console.log(groups_selected);
+    // console.log(groups_selected);
     ajax_data["email"] = pop_in.find(".user-property-email input").val();
     if (
         connected_user_status == "admin" &&
@@ -1453,7 +1453,7 @@ function fill_ajax_data_from_properties(ajax_data, pop_in) {
     } else if (connected_user_status == "webmaster") {
         ajax_data["status"] = pop_in.find(".user-property-status select").val();
     }
-    console.log(ajax_data["status"]);
+    // console.log(ajax_data["status"]);
     ajax_data["level"] = pop_in.find(".user-property-level select").val();
     ajax_data["group_id"] = groups_selected.length == 0 ? -1 : groups_selected;
     ajax_data["enabled_high"] =

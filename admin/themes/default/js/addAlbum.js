@@ -7,7 +7,7 @@ jQuery.fn.pwgAddAlbum = function (options) {
         ($target = jQuery('[name="' + $button.data("addAlbum") + '"]')),
         (cache = $target.data("cache"));
 
-    console.log(cache);
+    // console.log(cache);
 
     if ($target[0] && !$target[0].selectize) {
         jQuery.error("pwgAddAlbum: target must use selectize");

@@ -86,7 +86,7 @@ if (! defined('IN_ADMIN') &&
     defined('RVCDN')
 ) {
     $this->smarty->registerFilter('pre', functions_modus::rv_cdn_prefilter(...));
-    functions_plugins::add_event_handler('combined_script', functions_modus::rv_cdn_combined_script(...), EVENT_HANDLER_PRIORITY_NEUTRAL, 2);
+    functions_plugins::add_event_handler('combined_script', functions_modus::rv_cdn_combined_script(...), EVENT_HANDLER_PRIORITY_NEUTRAL);
 }
 
 // Add prefilter to remove fontello loaded by piwigo 14 search,
@@ -106,4 +106,4 @@ functions_plugins::add_event_handler('loc_end_index', functions_modus::modus_on_
 functions_plugins::add_event_handler('get_index_derivative_params', functions_modus::modus_get_index_photo_derivative_params(...), EVENT_HANDLER_PRIORITY_NEUTRAL + 1);
 functions_plugins::add_event_handler('loc_end_index_category_thumbnails', functions_modus::modus_index_category_thumbnails(...));
 functions_plugins::add_event_handler('loc_begin_picture', functions_modus::modus_loc_begin_picture(...));
-functions_plugins::add_event_handler('render_element_content', functions_modus::modus_picture_content(...), EVENT_HANDLER_PRIORITY_NEUTRAL - 1, 2);
+functions_plugins::add_event_handler('render_element_content', functions_modus::modus_picture_content(...), EVENT_HANDLER_PRIORITY_NEUTRAL - 1);

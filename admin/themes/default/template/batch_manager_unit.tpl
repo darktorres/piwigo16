@@ -11,8 +11,8 @@
   (function() {
     {* <!-- TAGS --> *}
     var tagsCache = new TagsCache({
-      serverKey: '{$CACHE_KEYS.tags}',
-      serverId: '{$CACHE_KEYS._hash}',
+      serverKey: '{$CACHE_KEYS.tags|default:''}',
+      serverId: '{$CACHE_KEYS._hash|default:''}',
       rootUrl: '{$ROOT_URL}'
     });
 

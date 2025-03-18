@@ -24,7 +24,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 include_once(PHPWG_ROOT_PATH . 'inc/ws_core.php');
 
 functions_plugins::add_event_handler('ws_add_methods', ws_functions::ws_addDefaultMethods(...));
-functions_plugins::add_event_handler('ws_invoke_allowed', ws_functions::ws_isInvokeAllowed(...), EVENT_HANDLER_PRIORITY_NEUTRAL, 3);
+functions_plugins::add_event_handler('ws_invoke_allowed', ws_functions::ws_isInvokeAllowed(...), EVENT_HANDLER_PRIORITY_NEUTRAL);
 
 $requestFormat = 'rest';
 $responseFormat = null;

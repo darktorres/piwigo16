@@ -2442,7 +2442,7 @@ class functions_admin
 
         // Try to retrieve data from local file?
         if (! functions_url::url_is_remote($src)) {
-            $content = file_get_contents($src);
+            $content = file_exists($src) ? file_get_contents($src) : false;
 
             if ($content !== false) {
                 is_resource($dest) ? fwrite($dest, $content) : $dest = $content;
@@ -2526,6 +2526,7 @@ class functions_admin
                 'http' => [
                     'method' => $method,
                     'user_agent' => $user_agent,
+                    'header' => str_contains($src, 'format=php') ? "Content-type: application/x-www-form-urlencoded\r\n" : '',
                 ],
             ];
 
@@ -3485,12 +3486,14 @@ class functions_admin
 
                         if ($split) {
                             $size_code = substr(end($split), 0, 2);
+                            $msizes[$size_code] ??= 0;
                             $msizes[$size_code] += filesize($path . '/' . $node);
                         }
                     } elseif (is_dir($path . '/' . $node)) {
                         $tmp_msizes = self::get_cache_size_derivatives($path . '/' . $node);
 
                         foreach ($tmp_msizes as $size_key => $value) {
+                            $msizes[$size_key] ??= 0;
                             $msizes[$size_key] += $value;
                         }
                     }
@@ -3812,9 +3815,12 @@ class functions_admin
     {
         $conf = [];
         include(PHPWG_ROOT_PATH . 'inc/config_default.php');
-        include(PHPWG_ROOT_PATH . 'local/config/config.php');
 
-        if (isset($conf['local_dir_site'])) {
+        if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
+            include(PHPWG_ROOT_PATH . 'local/config/config.php');
+        }
+
+        if (isset($conf['local_dir_site']) && file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.php')) {
             include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.php');
         }
 
@@ -4258,7 +4264,7 @@ class functions_admin
             $url = $base_url;
             $disp = '↓'; // TODO: an small image is better
 
-            if ($field !== $_GET[$get_param]) {
+            if ($field !== ($_GET[$get_param] ?? null)) {
                 if (! isset($default_field) or
                     $default_field != $field
                 ) { // the first should be the default

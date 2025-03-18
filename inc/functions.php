@@ -102,7 +102,7 @@ class functions
      */
     public static function get_extension($filename)
     {
-        return substr(strrchr($filename, '.'), 1, strlen($filename));
+        return substr(strrchr(($filename ?? ''), '.'), 1, strlen(($filename ?? '')));
     }
 
     /**
@@ -615,8 +615,8 @@ class functions
 
             $conf['history_sections_cache'] = self::safe_unserialize($conf['history_sections_cache']);
 
-            if (in_array($page['section'], $conf['history_sections_cache']) or
-                in_array(strtolower($page['section']), array_map(strtolower(...), $conf['history_sections_cache']))
+            if (in_array($page['section'], ($conf['history_sections_cache'] ?: [])) or
+                in_array(strtolower($page['section']), array_map(strtolower(...), $conf['history_sections_cache'] ?: []))
             ) {
                 $section = $page['section'];
             } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page['section'])) {
@@ -1389,7 +1389,7 @@ class functions
     {
         global $lang, $conf;
 
-        $val = $lang[$key];
+        $val = ($lang[$key] ?? null);
 
         if ($val === null) {
             if ($conf['debug_l10n'] and
@@ -1665,6 +1665,90 @@ class functions
         return $default_value;
     }
 
+    public static function is_serialized(
+        mixed $data,
+        bool $strict = true
+    ): bool {
+        // If it isn't a string, it isn't serialized.
+        if (! is_string($data)) {
+            return false;
+        }
+
+        $data = trim($data);
+
+        if ($data === 'N;') {
+            return true;
+        }
+
+        if (strlen($data) < 4) {
+            return false;
+        }
+
+        if ($data[1] !== ':') {
+            return false;
+        }
+
+        if ($strict) {
+            $lastc = substr($data, -1);
+
+            if ($lastc !== ';' &&
+                $lastc !== '}'
+            ) {
+                return false;
+            }
+        } else {
+            $semicolon = strpos($data, ';');
+            $brace = strpos($data, '}');
+
+            // Either ; or } must exist.
+            if ($semicolon === false &&
+                $brace === false
+            ) {
+                return false;
+            }
+
+            // But neither must be in the first X characters.
+            if ($semicolon !== false &&
+                $semicolon < 3
+            ) {
+                return false;
+            }
+
+            if ($brace !== false &&
+                $brace < 4
+            ) {
+                return false;
+            }
+        }
+
+        $token = $data[0];
+
+        switch ($token) {
+            case 's':
+                if ($strict) {
+                    if (substr($data, -2, 1) !== '"') {
+                        return false;
+                    }
+                } elseif (! str_contains($data, '"')) {
+                    return false;
+                }
+                // no break
+
+            case 'a':
+            case 'O':
+            case 'E':
+                return (bool) preg_match(sprintf('/^%s:[0-9]+:/s', $token), $data);
+
+            case 'b':
+            case 'i':
+            case 'd':
+                $end = $strict ? '$' : '';
+                return (bool) preg_match(sprintf('/^%s:[0-9.E+-]+;%s/', $token, $end), $data);
+        }
+
+        return false;
+    }
+
     /**
      * Apply *unserialize* on a value only if it is a string
      *
@@ -1673,11 +1757,7 @@ class functions
      */
     public static function safe_unserialize($value)
     {
-        if (is_string($value)) {
-            return unserialize($value);
-        }
-
-        return $value;
+        return self::is_serialized($value) ? unserialize($value) : false;
     }
 
     /**
@@ -1873,13 +1953,13 @@ class functions
         // keep trace of plugins loaded files for switch_lang_to() function
         if (! empty($dirname) &&
             ! empty($filename) &&
-            ! $options['return'] &&
+            ! ($options['return'] ?? null) &&
             ! isset($language_files[$dirname][$filename])
         ) {
             $language_files[$dirname][$filename] = $options;
         }
 
-        if (! $options['return']) {
+        if (! ($options['return'] ?? null)) {
             $filename .= '.php';
         }
 
@@ -1919,7 +1999,7 @@ class functions
             $languages[] = $options['force_fallback'];
         }
 
-        if (! $options['no_fallback']) { // default language
+        if (! ($options['no_fallback'] ?? null)) { // default language
             $languages[] = $default_language;
         }
 
@@ -1930,7 +2010,7 @@ class functions
         $selected_language = '';
 
         foreach ($languages as $language) {
-            $f = $options['local'] ?
+            $f = ($options['local'] ?? null) ?
               $dirname . $language . '.' . $filename :
               $dirname . $language . '/' . $filename;
 
@@ -1942,16 +2022,23 @@ class functions
         }
 
         if (! empty($source_file)) {
-            if (! $options['return']) {
+            if (! ($options['return'] ?? null)) {
                 // load forced fallback
                 if (isset($options['force_fallback']) && $options['force_fallback'] != $selected_language) {
-                    include(str_replace($selected_language, $options['force_fallback'], $source_file));
+                    $path = str_replace($selected_language, $options['force_fallback'], $source_file);
+
+                    if (file_exists($path)) {
+                        include($path);
+                    }
                 }
 
                 // load language content
-                include($source_file);
+                if (file_exists($source_file)) {
+                    include($source_file);
+                }
+                
                 $load_lang = $lang;
-                $load_lang_info = $lang_info;
+                $load_lang_info = ($lang_info ?? null);
 
                 // access already existing values
                 global $lang, $lang_info;
@@ -1974,7 +2061,11 @@ class functions
                 }
 
                 if (! empty($parent_language) && $parent_language != $selected_language) {
-                    include(str_replace($selected_language, $parent_language, $source_file));
+                    $path = str_replace($selected_language, $parent_language, $source_file);
+
+                    if (file_exists($path)) {
+                        include($path);
+                    }
                 }
 
                 // merge contents
@@ -2883,7 +2974,7 @@ class functions
         foreach (array_reverse($candidates) as $candidate) {
             $candidate_path = $page['derivative_path'];
             $candidate_path = str_replace('-' . derivative_params::derivative_to_url($params->type), '-' . derivative_params::derivative_to_url($candidate->type), $candidate_path);
-            $candidate_mtime = filemtime($candidate_path);
+            $candidate_mtime = file_exists($candidate_path) ? filemtime($candidate_path) : false;
 
             if ($candidate_mtime === false ||
                 $candidate_mtime < $original_mtime ||

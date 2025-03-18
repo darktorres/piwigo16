@@ -248,7 +248,7 @@ class updates
         $url = PEM_URL . '/api/get_version_list.php';
 
         if (functions_admin::fetchRemote($url, $result, $get_data) and
-            $pem_versions = unserialize($result)
+            $pem_versions = functions::safe_unserialize($result)
         ) {
             if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $version = $pem_versions[0]['name'];
@@ -299,7 +299,7 @@ class updates
         }
 
         if (functions_admin::fetchRemote($url, $result, $get_data, $post_data)) {
-            $pem_exts = unserialize($result);
+            $pem_exts = functions::safe_unserialize($result);
 
             if (! is_array($pem_exts)) {
                 return false;
@@ -494,7 +494,7 @@ class updates
                 $chunk_num++;
 
                 if (functions_admin::fetchRemote(PHPWG_URL . '/download/dlcounter.php?code=' . $dl_code . '&chunk_num=' . $chunk_num, $result) and
-                    $input = unserialize($result)
+                    $input = functions::safe_unserialize($result)
                 ) {
                     if ($input['remaining'] == 0) {
                         $end = true;

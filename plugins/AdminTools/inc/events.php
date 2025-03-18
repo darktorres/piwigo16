@@ -135,7 +135,7 @@ function admintools_add_public_controller()
     }
     // album page (admin only)
     elseif ($MultiView->is_admin() and
-            $page['section'] == 'categories' and
+            ($page['section'] ?? null) == 'categories' and
             isset($page['category'])
     ) {
         $url_self = functions_url::duplicate_index_url();
@@ -266,8 +266,7 @@ function admintools_save_picture()
     global $page, $conf, $MultiView, $user, $picture;
 
     if (! isset($_GET['delete']) and
-        ! isset($_POST['action']) and
-        $_POST['action'] != 'quick_edit'
+       (! isset($_POST['action']) or $_POST['action'] != 'quick_edit')
     ) {
         return;
     }
@@ -366,7 +365,7 @@ function admintools_save_category()
         return;
     }
 
-    if ($_POST['action'] == 'quick_edit') {
+    if (($_POST['action'] ?? null) == 'quick_edit') {
         functions::check_pwg_token();
 
         $data = [

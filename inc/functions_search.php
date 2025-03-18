@@ -1003,7 +1003,11 @@ class functions_search
         // get inflections for terms
         $inflector = null;
         $lang_code = substr(functions_user::get_default_language(), 0, 2);
-        include_once(PHPWG_ROOT_PATH . 'inc/inflectors/Inflector_' . $lang_code . '.php');
+
+        if (file_exists(PHPWG_ROOT_PATH . 'inc/inflectors/Inflector_' . $lang_code . '.php')) {
+            include_once(PHPWG_ROOT_PATH . 'inc/inflectors/Inflector_' . $lang_code . '.php');
+        }
+
         $class_name = 'Inflector_' . $lang_code;
 
         if (class_exists($class_name)) {

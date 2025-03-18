@@ -24,7 +24,7 @@
             {/if}
             {if $GDThumb.thumb_mode_album !== "overlay-ex"}
               {if !empty($thumbnail.icon_ts)}
-                <img title="{$thumbnail.icon_ts.TITLE}" src="{$ROOT_URL}{$themeconf.icon_dir}/recent.png" alt="(!)">
+                <img title="{$thumbnail.icon_ts.TITLE}" src="{$ROOT_URL}{$themeconf.icon_dir|default:null}/recent.png" alt="(!)">
               {/if}
             {/if}
           </span>
@@ -62,7 +62,7 @@
       {/if}
       <a href="{$thumbnail.URL}">
         <img class="thumbnail" {if $derivative->is_cached()}src="{$derivative->get_url()}"
-          {else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->get_url()}" 
+          {else}src="{$ROOT_URL}{$themeconf.icon_dir|default:null}/img_small.png" data-src="{$derivative->get_url()}" 
           {/if}
           alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}" {$derivative->get_size_htm()}>
       </a>

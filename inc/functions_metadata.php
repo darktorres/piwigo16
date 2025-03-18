@@ -131,7 +131,15 @@ class functions_metadata
             die('Exif extension not available, admin should disable exif use');
         }
 
+        getimagesize($filename, $info);
+
+        // Check if the APP1 segment exists in the info array
+        if (! isset($info['APP1']) || ! str_starts_with((string) $info['APP1'], 'Exif')) {
+            return [];
+        }
+
         // Read EXIF data
+        // https://github.com/php/php-src/issues/11020
         $exif = @exif_read_data($filename);
 
         if (! $exif) {

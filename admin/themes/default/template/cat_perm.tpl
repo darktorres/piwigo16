@@ -9,7 +9,7 @@
   (function() {
     {* <!-- GROUPS --> *}
     var groupsCache = new GroupsCache({
-      serverKey: '{$CACHE_KEYS.groups}',
+      serverKey: '{$CACHE_KEYS.groups|default:''}',
       serverId: '{$CACHE_KEYS._hash}',
       rootUrl: '{$ROOT_URL}'
     });

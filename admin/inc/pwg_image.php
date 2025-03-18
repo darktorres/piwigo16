@@ -257,6 +257,14 @@ class pwg_image
 
         $rotation = 0;
 
+        getimagesize($source_filepath, $info);
+
+        // Check if the APP1 segment exists in the info array
+        if (! isset($info['APP1']) || ! str_starts_with((string) $info['APP1'], 'Exif')) {
+            return 0;
+        }
+
+        // https://github.com/php/php-src/issues/11020
         $exif = @exif_read_data($source_filepath);
 
         if (isset($exif['Orientation']) and
@@ -331,7 +339,7 @@ class pwg_image
     {
         global $conf;
 
-        if (! function_exists('exec')) {
+        if (! function_exists('exec') || empty($conf['ext_imagick_dir'])) {
             return false;
         }
 

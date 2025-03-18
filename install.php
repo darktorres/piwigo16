@@ -275,7 +275,7 @@ if (isset($_POST['install'])) {
             'mysql'
         );
 
-        $random_function = functions_mysqli::pwg_db_cast_to_text(functions_mysqli::DB_RANDOM_FUNCTION . '()');
+        $random_function = functions_mysqli::DB_RANDOM_FUNCTION . '()';
         $query = <<<SQL
             INSERT INTO config
                 (param, value, comment)

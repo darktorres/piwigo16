@@ -1431,7 +1431,6 @@ final class functions_user
 
                 default:
                     die('Unknown condition');
-                    break;
             }
         }
 

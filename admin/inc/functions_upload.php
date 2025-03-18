@@ -367,7 +367,7 @@ final class functions_upload
 
             functions_mysqli::single_insert('images', $insert);
 
-            $image_id = functions_mysqli::pwg_db_insert_id('images');
+            $image_id = functions_mysqli::pwg_db_insert_id();
             functions::pwg_activity('photo', $image_id, 'add');
         }
 
@@ -492,7 +492,7 @@ final class functions_upload
         ];
 
         functions_mysqli::single_insert('image_format', $insert);
-        $format_id = functions_mysqli::pwg_db_insert_id('image_format');
+        $format_id = functions_mysqli::pwg_db_insert_id();
 
         functions::pwg_activity('photo', $format_of, 'edit', [
             'action' => 'add format',

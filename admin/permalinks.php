@@ -49,7 +49,7 @@ if (isset($_POST['set_permalink']) and
         SQL;
     $result = functions_mysqli::pwg_query($query);
 
-    if (functions_mysqli::pwg_db_changes($result) == 0) {
+    if (functions_mysqli::pwg_db_changes() == 0) {
         $page['errors'][] = functions::l10n('Cannot delete the old permalink !');
     }
 }

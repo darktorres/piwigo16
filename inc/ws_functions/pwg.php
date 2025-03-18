@@ -814,7 +814,7 @@ final class pwg
 
             functions_mysqli::pwg_query($query);
 
-            $search_id = functions_mysqli::pwg_db_insert_id('search');
+            $search_id = functions_mysqli::pwg_db_insert_id();
 
             // Remove redirect for ajax //
             // \Piwigo\inc\functions::redirect(

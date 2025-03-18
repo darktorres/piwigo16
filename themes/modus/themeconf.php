@@ -84,21 +84,9 @@ if (functions::get_device() == 'mobile') {
 
 $this->smarty->registerFilter('pre', functions_modus::modus_smarty_prefilter_wrap(...));
 
-if (! defined('IN_ADMIN') &&
-    defined('RVCDN')
-) {
-    $this->smarty->registerFilter('pre', functions_modus::rv_cdn_prefilter(...));
-    functions_plugins::add_event_handler('combined_script', functions_modus::rv_cdn_combined_script(...), EVENT_HANDLER_PRIORITY_NEUTRAL);
-}
-
 // Add prefilter to remove fontello loaded by piwigo 14 search,
 // this avoids conflicts of loading 2 fontello
 functions_plugins::add_event_handler('loc_begin_index', functions_modus::modus_loc_begin_index(...), 60);
-
-if (defined('RVPT_JQUERY_SRC')) {
-    functions_plugins::add_event_handler('loc_begin_page_header', functions_modus::modus_loc_begin_page_header(...));
-}
-
 functions_plugins::add_event_handler('combinable_preparse', functions_modus::modus_combinable_preparse(...));
 
 $this->smarty->registerPlugin('function', 'cssResolution', functions_modus::modus_css_resolution(...));

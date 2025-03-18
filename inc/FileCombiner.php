@@ -274,9 +274,7 @@ final class FileCombiner
     ): string {
         $css = self::process_css_rec($css, dirname($file), $header);
 
-        if (strpos($file, '.min') === false and
-            version_compare(PHP_VERSION, '5.2.4', '>=')
-        ) {
+        if (strpos($file, '.min') === false) {
             $cssMin = new Minifier();
             $css = $cssMin->run($css);
         }

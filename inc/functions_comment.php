@@ -232,7 +232,7 @@ final class functions_comment
                 );
                 SQL;
             functions_mysqli::pwg_query($query);
-            $comm['id'] = functions_mysqli::pwg_db_insert_id('comments');
+            $comm['id'] = functions_mysqli::pwg_db_insert_id();
 
             self::invalidate_user_cache_nb_comments();
 

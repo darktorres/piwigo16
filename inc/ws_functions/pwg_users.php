@@ -807,7 +807,7 @@ final class pwg_users
             $value = json_decode($value, true);
         }
 
-        functions_user::userprefs_update_param($params['param'], $value, true);
+        functions_user::userprefs_update_param($params['param'], $value);
 
         return $user['preferences'];
     }

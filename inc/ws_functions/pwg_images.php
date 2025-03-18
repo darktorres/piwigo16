@@ -914,7 +914,7 @@ final class pwg_images
 
         functions::pwg_activity('photo', $params['image_id'], 'edit');
 
-        $affected_rows = functions_mysqli::pwg_db_changes($result);
+        $affected_rows = functions_mysqli::pwg_db_changes();
 
         if ($affected_rows) {
             functions_admin::invalidate_user_cache();

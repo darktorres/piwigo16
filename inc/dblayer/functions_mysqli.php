@@ -223,11 +223,11 @@ final class functions_mysqli
         return $result->num_rows;
     }
 
-    public static function pwg_db_fetch_array(
-        mysqli_result $result
-    ): array|bool|null {
-        return $result->fetch_array();
-    }
+    // public static function pwg_db_fetch_array(
+    //     mysqli_result $result
+    // ): array|bool|null {
+    //     return $result->fetch_array();
+    // }
 
     public static function pwg_db_fetch_assoc(
         mysqli_result $result
@@ -241,17 +241,17 @@ final class functions_mysqli
         return $result->fetch_row();
     }
 
-    public static function pwg_db_fetch_object(
-        mysqli_result $result
-    ): bool|object|null {
-        return $result->fetch_object();
-    }
+    // public static function pwg_db_fetch_object(
+    //     mysqli_result $result
+    // ): bool|object|null {
+    //     return $result->fetch_object();
+    // }
 
-    public static function pwg_db_free_result(
-        mysqli_result $result
-    ): void {
-        $result->free_result();
-    }
+    // public static function pwg_db_free_result(
+    //     mysqli_result $result
+    // ): void {
+    //     $result->free_result();
+    // }
 
     public static function pwg_db_real_escape_string(
         ?string $s
@@ -268,19 +268,19 @@ final class functions_mysqli
         return $mysqli->insert_id;
     }
 
-    public static function pwg_db_errno(): int
-    {
-        global $mysqli;
+    // public static function pwg_db_errno(): int
+    // {
+    //     global $mysqli;
 
-        return $mysqli->errno;
-    }
+    //     return $mysqli->errno;
+    // }
 
-    public static function pwg_db_error(): string
-    {
-        global $mysqli;
+    // public static function pwg_db_error(): string
+    // {
+    //     global $mysqli;
 
-        return $mysqli->error;
-    }
+    //     return $mysqli->error;
+    // }
 
     public static function pwg_db_close(): true
     {
@@ -736,11 +736,11 @@ final class functions_mysqli
         return "CONCAT_WS('{$separator}', {$string})";
     }
 
-    public static function pwg_db_cast_to_text(
-        string $string
-    ): string {
-        return $string;
-    }
+    // public static function pwg_db_cast_to_text(
+    //     string $string
+    // ): string {
+    //     return $string;
+    // }
 
     /**
      * Returns an array containing the possible values of an enum field.
@@ -764,7 +764,7 @@ final class functions_mysqli
             }
         }
 
-        self::pwg_db_free_result($result);
+        $result->free_result();
         return $options;
     }
 

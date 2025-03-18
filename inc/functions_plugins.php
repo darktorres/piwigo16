@@ -26,14 +26,12 @@ final class functions_plugins
      * @param string $event the name of the event to listen to
      * @param callable $func the callback function
      * @param int $priority greater priority will be executed at last
-     * @param ?string $include_path file to include before executing the callback
      * @return bool false is handler already exists
      */
     public static function add_event_handler(
         string $event,
         callable $func,
-        int $priority = EVENT_HANDLER_PRIORITY_NEUTRAL,
-        ?string $include_path = null
+        int $priority = EVENT_HANDLER_PRIORITY_NEUTRAL
     ): bool {
         global $pwg_event_handlers;
 
@@ -47,7 +45,6 @@ final class functions_plugins
 
         $pwg_event_handlers[$event][$priority][] = [
             'function' => $func,
-            'include_path' => is_string($include_path) ? $include_path : null,
         ];
 
         ksort($pwg_event_handlers[$event]);

@@ -179,13 +179,9 @@ final class Template
         $this->smarty->registerPlugin('modifier', 'in_array', in_array(...));
         $this->smarty->registerPlugin('modifier', 'ucfirst', ucfirst(...));
         $this->smarty->registerPlugin('modifier', 'strstr', strstr(...));
-        $this->smarty->registerPlugin('modifier', 'stristr', stristr(...));
         $this->smarty->registerPlugin('modifier', 'trim', trim(...));
         $this->smarty->registerPlugin('modifier', 'md5', md5(...));
         $this->smarty->registerPlugin('modifier', 'strtolower', strtolower(...));
-        $this->smarty->registerPlugin('modifier', 'str_ireplace', str_ireplace(...));
-        $this->smarty->registerPlugin('modifier', 'explode', self::mod_explode(...));
-        $this->smarty->registerPlugin('modifier', 'ternary', self::mod_ternary(...));
         $this->smarty->registerPlugin('modifier', 'get_extent', $this->get_extent(...));
         $this->smarty->registerPlugin('modifier', 'strpos', strpos(...));
         $this->smarty->registerPlugin('modifier', 'preg_match', preg_match(...));
@@ -764,30 +760,30 @@ final class Template
         return '\Piwigo\inc\functions::l10n_dec(' . $params[1] . ',' . $params[2] . ',' . $params[0] . ')';
     }
 
-    /**
-     * "explode" variable modifier.
-     * Usage :
-     *    - {assign var=valueExploded value=$value|explode:','}
-     */
-    public static function mod_explode(
-        string $text,
-        string $delimiter = ','
-    ): array {
-        return explode($delimiter, $text);
-    }
+    // /**
+    //  * "explode" variable modifier.
+    //  * Usage :
+    //  *    - {assign var=valueExploded value=$value|explode:','}
+    //  */
+    // public static function mod_explode(
+    //     string $text,
+    //     string $delimiter = ','
+    // ): array {
+    //     return explode($delimiter, $text);
+    // }
 
-    /**
-     * ternary variable modifier.
-     * Usage :
-     *    - {$variable|ternary:'yes':'no'}
-     */
-    public static function mod_ternary(
-        bool|int|float|string|array|null $param,
-        bool|int|float|string|array|null $true,
-        bool|int|float|string|array|null $false
-    ): bool|int|float|string|array|null {
-        return $param ? $true : $false;
-    }
+    // /**
+    //  * ternary variable modifier.
+    //  * Usage :
+    //  *    - {$variable|ternary:'yes':'no'}
+    //  */
+    // public static function mod_ternary(
+    //     bool|int|float|string|array|null $param,
+    //     bool|int|float|string|array|null $true,
+    //     bool|int|float|string|array|null $false
+    // ): bool|int|float|string|array|null {
+    //     return $param ? $true : $false;
+    // }
 
     /**
      * The "html_head" block allows to add content just before
@@ -1277,14 +1273,6 @@ final class Template
             }
 
             $this->assign('PLUGIN_PICTURE_BUTTONS', $buttons);
-
-            // only for PHP 5.3
-            // $this->assign('PLUGIN_PICTURE_BUTTONS',
-            // array_reduce(
-            // $this->picture_buttons,
-            // create_function('$v,$w', 'return array_merge($v, $w);'),
-            // array()
-            // ));
         }
     }
 
@@ -1302,14 +1290,6 @@ final class Template
             }
 
             $this->assign('PLUGIN_INDEX_BUTTONS', $buttons);
-
-            // only for PHP 5.3
-            // $this->assign('PLUGIN_INDEX_BUTTONS',
-            // array_reduce(
-            // $this->index_buttons,
-            // create_function('$v,$w', 'return array_merge($v, $w);'),
-            // array()
-            // ));
         }
     }
 

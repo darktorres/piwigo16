@@ -494,7 +494,7 @@ switch ($page['section']) {
 
             // derivatives = multiple size
             $enabled = ImageStdParams::get_defined_type_map();
-            $disabled = unserialize($conf['disabled_derivatives']);
+            $disabled = functions::safe_unserialize($conf['disabled_derivatives'] ?? '');
 
             if ($disabled === false) {
                 $disabled = [];

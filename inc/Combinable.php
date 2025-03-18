@@ -22,7 +22,7 @@ class Combinable
     /**
      * @var string
      */
-    public $path;
+    public $path = '';
 
     /**
      * @var string

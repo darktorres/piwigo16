@@ -44,10 +44,10 @@ class RVTS
             if (empty($page['items'])) {
                 functions_plugins::add_event_handler('loc_end_index', self::on_end_index(...));
             } else {
-                functions_plugins::add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails(...), EVENT_HANDLER_PRIORITY_NEUTRAL, 1);
+                functions_plugins::add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails(...), EVENT_HANDLER_PRIORITY_NEUTRAL);
             }
         } else {
-            $adj = (int) $_GET['adj'];
+            $adj = (int) ($_GET['adj'] ?? null);
 
             if ($adj) {
                 $mult = functions_session::pwg_get_session_var('rvts_mult', 1);
@@ -66,7 +66,7 @@ class RVTS
             }
 
             $page['nb_image_page'] = (int) $_GET['rvts'];
-            functions_plugins::add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails_ajax(...), EVENT_HANDLER_PRIORITY_NEUTRAL + 5, 1);
+            functions_plugins::add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails_ajax(...), EVENT_HANDLER_PRIORITY_NEUTRAL + 5);
             $page['root_path'] = functions_url::get_absolute_root_url(false);
             $page['body_id'] = 'scroll';
             global $user, $template, $conf;

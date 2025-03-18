@@ -16,14 +16,7 @@ if (isset($conf['session_save_handler']) and
     $conf['session_save_handler'] == 'db' and
     defined('PHPWG_INSTALLED')
 ) {
-    session_set_save_handler(
-        functions_session::pwg_session_open(...),
-        functions_session::pwg_session_close(...),
-        functions_session::pwg_session_read(...),
-        functions_session::pwg_session_write(...),
-        functions_session::pwg_session_destroy(...),
-        functions_session::pwg_session_gc(...)
-    );
+    session_set_save_handler(new PwgSessionHandler(), true);
 
     if (function_exists('ini_set')) {
         ini_set('session.use_cookies', $conf['session_use_cookies']);
@@ -182,8 +175,16 @@ class functions_session
             DELETE FROM sessions
             WHERE {$now_ts} - {$expiration_ts} > {$conf['session_length']};
             SQL;
-        functions_mysqli::pwg_query($query);
-        return true;
+
+        $result = functions_mysqli::pwg_query($query);
+
+        if ($result === false) {
+            return false;
+        }
+
+        $affected_rows = functions_mysqli::pwg_db_changes();
+
+        return $affected_rows;
     }
 
     /**

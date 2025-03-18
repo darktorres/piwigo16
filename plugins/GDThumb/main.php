@@ -49,12 +49,12 @@ $conf['gdThumb'] = unserialize($conf['gdThumb']);
 // RV Thumbnails Scroller
 if (isset($_GET['rvts'])) {
     $conf['gdThumb']['big_thumb'] = false;
-    functions_plugins::add_event_handler('loc_end_index_thumbnails', GDThumb_process_thumb(...), 50, 2);
+    functions_plugins::add_event_handler('loc_end_index_thumbnails', GDThumb_process_thumb(...), 50);
 }
 
 functions_plugins::add_event_handler('init', GDThumb_init(...));
 functions_plugins::add_event_handler('loc_begin_index', GDThumb_index(...), 60);
-functions_plugins::add_event_handler('loc_end_index_category_thumbnails', GDThumb_process_category(...), 50, 2);
+functions_plugins::add_event_handler('loc_end_index_category_thumbnails', GDThumb_process_category(...), 50);
 functions_plugins::add_event_handler('get_admin_plugin_menu_links', GDThumb_admin_menu(...));
 functions_plugins::add_event_handler('loc_end_index', GDThumb_remove_thumb_size(...));
 
@@ -75,7 +75,7 @@ function GDThumb_index()
     $template->smarty->registerPlugin('function', 'media_type', GDThumb_media_type(...));
     $template->set_prefilter('index', GDThumb_prefilter(...));
 
-    functions_plugins::add_event_handler('loc_end_index_thumbnails', GDThumb_process_thumb(...), 50, 2);
+    functions_plugins::add_event_handler('loc_end_index_thumbnails', GDThumb_process_thumb(...), 50);
 }
 
 function GDThumb_endsWith($needles, $haystack)

@@ -22,7 +22,7 @@ class functions_url
     public static function get_root_url()
     {
         global $page;
-        $root_url = $page['root_path'];
+        $root_url = ($page['root_path'] ?? null);
 
         if ($root_url == null) { // TODO - add HERE the possibility to call PWG functions from external scripts
             $root_url = PHPWG_ROOT_PATH;
@@ -324,7 +324,7 @@ class functions_url
     {
         global $conf;
         $section_string = '';
-        $section = $params['section'];
+        $section = ($params['section'] ?? null);
 
         if (! isset($section)) {
             $section_of = [

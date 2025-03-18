@@ -362,7 +362,7 @@ class plugins
         $url = PEM_URL . '/api/get_version_list.php?category_id=' . $conf['pem_plugins_category'] . '&format=php';
 
         if (functions_admin::fetchRemote($url, $result)) {
-            $pem_versions = unserialize($result);
+            $pem_versions = functions::safe_unserialize($result);
 
             if ($pem_versions) {
                 $i = 0;
@@ -459,7 +459,7 @@ class plugins
         }
 
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
-            $pem_plugins = unserialize($result);
+            $pem_plugins = functions::safe_unserialize($result);
 
             if (! is_array($pem_plugins)) {
                 return false;
@@ -515,7 +515,7 @@ class plugins
         ];
 
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
-            $pem_plugins = unserialize($result);
+            $pem_plugins = functions::safe_unserialize($result);
 
             if (! is_array($pem_plugins)) {
                 return false;

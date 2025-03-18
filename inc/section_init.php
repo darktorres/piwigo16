@@ -346,7 +346,7 @@ else {
     // |                           search section                              |
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'search') {
-        $search_result = functions_search::get_search_results($page['search'], $page['super_order_by']);
+        $search_result = functions_search::get_search_results($page['search'], ($page['super_order_by'] ?? null));
 
         //save the details of the query search
         if (isset($search_result['qs'])) {

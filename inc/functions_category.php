@@ -135,7 +135,7 @@ class functions_category
 
             $cats[] = $row;
 
-            if ($row['id'] == $page['category']['id']) { //save the number of subcats for later optim
+            if ($row['id'] == ($page['category']['id'] ?? null)) { //save the number of subcats for later optim
                 $page['category']['count_categories'] = $row['count_categories'];
             }
         }
@@ -756,6 +756,7 @@ class functions_category
         // now we add the upper categories and useful values such as depth level and url
         foreach ($common_cats as $cat) {
             foreach (explode(',', $cat['uppercats']) as $uppercat) {
+                $cat_ids[$uppercat] ??= 0;
                 $cat_ids[$uppercat]++;
             }
         }

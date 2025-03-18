@@ -9,7 +9,6 @@ use Piwigo\inc\functions_cookie;
 use Piwigo\inc\functions_session;
 use Piwigo\inc\ImageRect;
 use Piwigo\inc\ImageStdParams;
-use SmartyException;
 
 class functions_modus
 {
@@ -167,9 +166,8 @@ class functions_modus
     {
         global $conf, $template;
 
-        try {
+        if (! isset($template->smarty->registered_plugins['modifier']['cssGradient'])) {
             $template->smarty->registerPlugin('modifier', 'cssGradient', self::modus_css_gradient(...));
-        } catch (SmartyException $exc) {
         }
 
         include(dirname(__FILE__) . '/skins/' . $conf['modus_theme']['skin'] . '.php');
@@ -185,9 +183,9 @@ class functions_modus
 
     public static function modus_css_resolution($params)
     {
-        $base = $params['base'];
+        $base = ($params['base'] ?? null);
         $min = $params['min'];
-        $max = $params['max'];
+        $max = ($params['max'] ?? null);
 
         $rules = [];
 

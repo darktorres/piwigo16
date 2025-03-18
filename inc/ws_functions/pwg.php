@@ -115,7 +115,9 @@ class pwg
                         continue;
                     }
 
-                    if (filemtime($derivative->get_path()) === false) {
+                    $mtime = file_exists($derivative->get_path()) ? filemtime($derivative->get_path()) : false;
+
+                    if ($mtime === false) {
                         $urls[] = $derivative->get_url() . $uid;
                     }
                 }
@@ -277,7 +279,8 @@ class pwg
         $all = 0;
 
         foreach (array_keys($infos['msizes']) as $size_type) {
-            $infos['msizes'][$size_type] += $msizes[derivative_params::derivative_to_url($size_type)];
+            $infos['msizes'][$size_type] ??= 0;
+            $infos['msizes'][$size_type] += $msizes[derivative_params::derivative_to_url($size_type)] ?? null;
             $all += $infos['msizes'][$size_type];
         }
 
@@ -1063,6 +1066,7 @@ class pwg
                 $search_detail = null;
             }
 
+            $sorted_members[$user_name] ??= 0;
             ++$sorted_members[$user_name];
 
             array_push(

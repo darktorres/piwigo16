@@ -14,9 +14,9 @@ use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_cookie;
 use Piwigo\inc\functions_mail;
-use Piwigo\inc\functions_session;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
+use Piwigo\inc\PwgSessionHandler;
 use Piwigo\inc\Template;
 
 //----------------------------------------------------------- include
@@ -82,7 +82,10 @@ if (function_exists('get_magic_quotes_gpc') &&
 //----------------------------------------------------- variable initialization
 
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
-include(PHPWG_ROOT_PATH . 'local/config/config.php');
+
+if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
+    include(PHPWG_ROOT_PATH . 'local/config/config.php');
+}
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
@@ -429,14 +432,7 @@ if ($step == 1) {
     if (isset($error_copy)) {
         $errors[] = $error_copy;
     } else {
-        session_set_save_handler(
-            functions_session::pwg_session_open(...),
-            functions_session::pwg_session_close(...),
-            functions_session::pwg_session_read(...),
-            functions_session::pwg_session_write(...),
-            functions_session::pwg_session_destroy(...),
-            functions_session::pwg_session_gc(...)
-        );
+        session_set_save_handler(new PwgSessionHandler(), true);
 
         if (function_exists('ini_set')) {
             ini_set('session.use_cookies', $conf['session_use_cookies']);

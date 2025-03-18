@@ -374,7 +374,7 @@ final class DerivativeImage
         $url_style = $conf['derivative_url_style'];
 
         if (! $url_style) {
-            $mtime = filemtime(PHPWG_ROOT_PATH . $rel_path);
+            $mtime = file_exists(PHPWG_ROOT_PATH . $rel_path) ? filemtime(PHPWG_ROOT_PATH . $rel_path) : false;
 
             if ($mtime === false or
                 $mtime < $params->last_mod_time

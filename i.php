@@ -18,7 +18,10 @@ define('PHPWG_ROOT_PATH', './');
 
 // fast bootstrap - no db connection
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
-include(PHPWG_ROOT_PATH . 'local/config/config.php');
+
+if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
+    include(PHPWG_ROOT_PATH . 'local/config/config.php');
+}
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
@@ -28,7 +31,9 @@ if (! defined('PWG_DERIVATIVE_DIR')) {
     define('PWG_DERIVATIVE_DIR', $conf['data_location'] . 'i/');
 }
 
-include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php');
+if (file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php')) {
+    include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php');
+}
 
 $logger = new Katzgrau\KLogger\Logger(PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'], $conf['log_level'], [
     // we use an hashed filename to prevent direct file access, and we salt with
@@ -73,14 +78,14 @@ functions::parse_request();
 
 $params = $page['derivative_params'];
 
-$src_mtime = filemtime($page['src_path']);
+$src_mtime = file_exists($page['src_path']) ? filemtime($page['src_path']) : false;
 
 if ($src_mtime === false) {
     functions::ierror('Source not found', 404);
 }
 
 $need_generate = false;
-$derivative_mtime = filemtime($page['derivative_path']);
+$derivative_mtime = file_exists($page['derivative_path']) ? filemtime($page['derivative_path']) : false;
 
 if ($derivative_mtime === false or
     $derivative_mtime < $src_mtime or

@@ -203,6 +203,12 @@ class Template
         $this->smarty->registerPlugin('modifier', 'explode', self::mod_explode(...));
         $this->smarty->registerPlugin('modifier', 'ternary', self::mod_ternary(...));
         $this->smarty->registerPlugin('modifier', 'get_extent', $this->get_extent(...));
+        $this->smarty->registerPlugin('modifier', 'strpos', strpos(...));
+        $this->smarty->registerPlugin('modifier', 'preg_match', preg_match(...));
+        $this->smarty->registerPlugin('modifier', 'array_key_exists', array_key_exists(...));
+        $this->smarty->registerPlugin('modifier', 'is_null', is_null(...));
+        $this->smarty->registerPlugin('modifier', 'gettype', gettype(...));
+        $this->smarty->registerPlugin('modifier', 'reset', reset(...));
         $this->smarty->registerPlugin('block', 'html_head', $this->block_html_head(...));
         $this->smarty->registerPlugin('block', 'html_style', $this->block_html_style(...));
         $this->smarty->registerPlugin('function', 'combine_script', $this->func_combine_script(...));
@@ -963,9 +969,9 @@ class Template
             $params['id'],
             $load,
             empty($params['require']) ? [] : explode(',', $params['require']),
-            $params['path'],
+            ($params['path'] ?? null),
             isset($params['version']) ? $params['version'] : 0,
-            $params['template']
+            ($params['template'] ?? null)
         );
     }
 
@@ -1067,7 +1073,7 @@ class Template
             $params['id'] = md5($params['path']);
         }
 
-        $this->cssLoader->add($params['id'], $params['path'], isset($params['version']) ? $params['version'] : 0, (int) $params['order'], (bool) $params['template']);
+        $this->cssLoader->add($params['id'], $params['path'], isset($params['version']) ? $params['version'] : 0, (int) ($params['order'] ?? null), (bool) ($params['template'] ?? null));
     }
 
     /**

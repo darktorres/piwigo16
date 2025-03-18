@@ -29,7 +29,7 @@ class menubar
 
         $menu->prepare_display();
 
-        if ($page['section'] == 'search' and
+        if (($page['section'] ?? null) == 'search' and
             isset($page['qsearch_details'])
         ) {
             $template->assign('QUERY_SEARCH', htmlspecialchars($page['qsearch_details']['q']));
@@ -147,7 +147,7 @@ class menubar
         if ($block != null and
             functions::script_basename() != 'picture'
         ) {
-            if ($page['section'] == 'tags') {
+            if (($page['section'] ?? null) == 'tags') {
                 $tags = functions_tag::get_common_tags(
                     $page['items'],
                     $conf['menubar_tag_cloud_items_number'],

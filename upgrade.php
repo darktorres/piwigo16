@@ -27,7 +27,10 @@ define('PHPWG_ROOT_PATH', './');
 
 // load config file
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
-include(PHPWG_ROOT_PATH . 'local/config/config.php');
+
+if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
+    include(PHPWG_ROOT_PATH . 'local/config/config.php');
+}
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');

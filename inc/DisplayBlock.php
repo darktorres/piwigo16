@@ -17,7 +17,7 @@ class DisplayBlock
     /**
      * @var mixed
      */
-    public $data;
+    public $data = [];
 
     /**
      * @var string

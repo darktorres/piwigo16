@@ -63,7 +63,9 @@ if (isset($_GET['getMissingDerivative'])) {
                 $derivative = new DerivativeImage(ImageStdParams::get_custom(9999, $params['height']), $src_image);
             }
 
-            if (filemtime($derivative->get_path()) === false) {
+            $mtime = file_exists($derivative->get_path()) ? filemtime($derivative->get_path()) : false;
+
+            if ($mtime === false) {
                 $urls[] = $derivative->get_url() . $uid;
             }
 

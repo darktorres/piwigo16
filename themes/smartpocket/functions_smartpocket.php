@@ -31,7 +31,7 @@ class functions_smartpocket
         $template->assign(
             'smartpocket_log_history',
             [
-                'cat_id' => $page['category']['id'],
+                'cat_id' => ($page['category']['id'] ?? null),
                 'section' => $page['section'],
                 'tags_string' => (isset($page['tag_ids']) ? implode(',', $page['tag_ids']) : ''),
             ]

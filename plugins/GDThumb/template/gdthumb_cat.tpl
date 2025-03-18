@@ -1,4 +1,4 @@
-<div class="loader"><img src="{$ROOT_URL}{$themeconf.img_dir}/ajax_loader.gif" alt=""></div>
+<div class="loader"><img src="{$ROOT_URL}{$themeconf.img_dir|default:null}/ajax_loader.gif" alt=""></div>
 <ul class="thumbnailCategories thumbnails {if $GDThumb.no_wordwrap}nowrap{/if}">
 
   {if !empty($category_thumbnails)}
@@ -14,7 +14,7 @@
                 {if $GDThumb.thumb_mode_album !== "overlay-ex"}
                   {if !empty($cat.icon_ts)}
                     <img title="{$cat.icon_ts.TITLE}"
-                      src="{$ROOT_URL}{$themeconf.icon_dir}/recent{if $cat.icon_ts.IS_CHILD_DATE}_by_child{/if}.png" alt="(!)">
+                      src="{$ROOT_URL}{$themeconf.icon_dir|default:null}/recent{if $cat.icon_ts.IS_CHILD_DATE}_by_child{/if}.png" alt="(!)">
                   {/if}
                 {/if}
               </span>

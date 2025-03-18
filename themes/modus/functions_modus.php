@@ -11,7 +11,6 @@ use Piwigo\inc\functions_cookie;
 use Piwigo\inc\functions_session;
 use Piwigo\inc\ImageRect;
 use Piwigo\inc\ImageStdParams;
-use Piwigo\inc\Script;
 use Piwigo\inc\Template;
 use Smarty_Internal_Template;
 
@@ -125,15 +124,6 @@ final class functions_modus
         return self::modus_smarty_prefilter($source);
     }
 
-    public static function rv_cdn_prefilter(
-        string $source,
-        Smarty_Internal_Template &$smarty
-    ): array|string {
-        $source = str_replace('src="{$ROOT_URL}{$themeconf.icon_dir}/', 'src="' . RVCDN_ROOT_URL . '{$themeconf.icon_dir}/', $source);
-        $source = str_replace('url({$ROOT_URL}', 'url(' . RVCDN_ROOT_URL, $source);
-        return $source;
-    }
-
     public static function modus_loc_begin_index(): void
     {
         global $template;
@@ -155,27 +145,6 @@ final class functions_modus
         $search = '<span class="pwg-icon-search-folder"></span>';
         $replacement = '<span class="pwg-icon pwg-icon-search-folder"></span>';
         return str_replace($search, $replacement, $content);
-    }
-
-    public static function rv_cdn_combined_script(
-        string $url,
-        Script $script
-    ): string {
-        if (! $script->is_remote()) {
-            $url = RVCDN_ROOT_URL . $script->path;
-        }
-
-        return $url;
-    }
-
-    public static function modus_loc_begin_page_header(): void
-    {
-        $all = $GLOBALS['template']->scriptLoader->get_all();
-        $jq = $all['jquery'];
-
-        if ($jq) {
-            $jq->set_path(RVPT_JQUERY_SRC);
-        }
     }
 
     public static function modus_combinable_preparse(

@@ -22,8 +22,6 @@ final class DisplayBlock
 
     public string $raw_content;
 
-    public string|int|null $id;
-
     private readonly RegisteredBlock $_registeredBlock;
 
     private int $_position;

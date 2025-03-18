@@ -413,7 +413,7 @@ final class pwg_tags
                 'url_name' => functions_plugins::trigger_change('render_tag_url', $copy_name),
             ]
         );
-        $destination_tag_id = functions_mysqli::pwg_db_insert_id('tags');
+        $destination_tag_id = functions_mysqli::pwg_db_insert_id();
 
         functions::pwg_activity('tag', $destination_tag_id, 'add', [
             'action' => 'duplicate',

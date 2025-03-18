@@ -43,8 +43,7 @@ if (! function_exists('get_magic_quotes_gpc') or
     ! get_magic_quotes_gpc()
 ) {
     function sanitize_mysql_kv(
-        string &$v,
-        $k
+        string &$v
     ): void {
         $v = addslashes($v);
     }

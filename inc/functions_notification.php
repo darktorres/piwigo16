@@ -212,7 +212,6 @@ final class functions_notification
                     SQL;
                 list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
                 return $count;
-                break;
 
             case 'info':
                 switch ($type) {
@@ -242,7 +241,6 @@ final class functions_notification
                     SQL;
                 $infos = functions_mysqli::query2array($query);
                 return $infos;
-                break;
 
             default:
                 return null; // stop and return nothing

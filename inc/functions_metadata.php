@@ -209,8 +209,7 @@ final class functions_metadata
     }
 
     public static function strip_html_in_metadata(
-        string &$v,
-        $k
+        string &$v
     ): void {
         $v = strip_tags($v);
     }

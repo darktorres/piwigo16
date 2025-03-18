@@ -183,7 +183,7 @@ final class RVTS
                 'path' => 'plugins/' . $my_base_name . '/rv_tscroller.js',
                 'require' => $req,
                 'version' => RVTS_VERSION,
-            ], $template->smarty);
+            ]);
         }
 
         //var_export($template->scriptLoader);

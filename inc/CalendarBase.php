@@ -324,7 +324,7 @@ abstract class CalendarBase
             if ($page['chronology_date'][$i] === 'any') {
                 $sub_queries[] = '\'any\'';
             } else {
-                $sub_queries[] = functions_mysqli::pwg_db_cast_to_text($this->calendar_levels[$i]['sql']);
+                $sub_queries[] = $this->calendar_levels[$i]['sql'];
             }
         }
 

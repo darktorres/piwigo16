@@ -1553,7 +1553,7 @@ final class functions_admin
 
         // we have then to add the virtual category
         functions_mysqli::single_insert('categories', $insert);
-        $inserted_id = functions_mysqli::pwg_db_insert_id('categories');
+        $inserted_id = functions_mysqli::pwg_db_insert_id();
 
         functions_mysqli::single_update(
             'categories',
@@ -1784,7 +1784,7 @@ final class functions_admin
                         ]
                     );
 
-                    $page['tag_id_from_tag_name_cache'][$tag_name] = functions_mysqli::pwg_db_insert_id('tags');
+                    $page['tag_id_from_tag_name_cache'][$tag_name] = functions_mysqli::pwg_db_insert_id();
 
                     self::invalidate_user_cache_nb_tags();
 
@@ -2430,7 +2430,7 @@ final class functions_admin
                 ]
             );
 
-            $inserted_id = functions_mysqli::pwg_db_insert_id('tags');
+            $inserted_id = functions_mysqli::pwg_db_insert_id();
 
             return [
                 'info' => functions::l10n('Tag "%s" was added', stripslashes($tag_name)),

@@ -19,7 +19,6 @@ use Piwigo\admin\inc\functions_history;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Random\RandomException;
 use SmartyException;
-use stdClass;
 use uagent_info;
 
 require_once __DIR__ . '/../inc/functions_plugins.php';
@@ -632,7 +631,7 @@ final class functions
             SQL;
         functions_mysqli::pwg_query($query);
 
-        $history_id = functions_mysqli::pwg_db_insert_id('history');
+        $history_id = functions_mysqli::pwg_db_insert_id();
 
         if ($history_id % 1000 == 0) {
             require_once __DIR__ . '/../admin/inc/functions_history.php';
@@ -765,74 +764,12 @@ final class functions
 
     /**
      * Computes the difference between two dates.
-     * returns a DateInterval object or a stdClass with the same attributes
-     * http://stephenharris.info/date-intervals-in-php-5-2
-     *
-     * @throws DateMalformedStringException
      */
     public static function dateDiff(
         DateTime $date1,
         DateTime $date2
-    ): DateInterval|stdClass {
-        if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
-            return $date1->diff($date2);
-        }
-
-        $diff = new stdClass();
-
-        //Make sure $date1 is earlier
-        $diff->invert = $date2 < $date1;
-
-        if ($diff->invert) {
-            list($date1, $date2) = [$date2, $date1];
-        }
-
-        //Calculate R values
-        $R = ($date1 <= $date2 ? '+' : '-');
-        $r = ($date1 <= $date2 ? '' : '-');
-
-        //Calculate total days
-        $diff->days = round(abs($date1->format('U') - $date2->format('U')) / 86400);
-
-        //A leap year work around - consistent with DateInterval
-        $leap_year = $date1->format('m-d') == '02-29';
-
-        if ($leap_year) {
-            $date1->modify('-1 day');
-        }
-
-        //Years, months, days, hours
-        $periods = [
-            'years' => -1,
-            'months' => -1,
-            'days' => -1,
-            'hours' => -1,
-        ];
-
-        foreach ($periods as $period => &$i) {
-            if ($period == 'days' &&
-                $leap_year
-            ) {
-                $date1->modify('+1 day');
-            }
-
-            while ($date1 <= $date2) {
-                $date1->modify('+1 ' . $period);
-                $i++;
-            }
-
-            //Reset date and record increments
-            $date1->modify('-1 ' . $period);
-        }
-
-        list($diff->y, $diff->m, $diff->d, $diff->h) = array_values($periods);
-
-        //Minutes, seconds
-        $diff->s = round(abs($date1->format('U') - $date2->format('U')));
-        $diff->i = floor($diff->s / 60);
-        $diff->s = $diff->s - $diff->i * 60;
-
-        return $diff;
+    ): DateInterval {
+        return $date1->diff($date2);
     }
 
     /**
@@ -854,9 +791,7 @@ final class functions
             return $original;
         }
 
-        if (! empty($format) &&
-            version_compare(PHP_VERSION, '5.3.0') >= 0
-        ) { // from known date format
+        if (! empty($format)) { // from known date format
             return DateTime::createFromFormat('!' . $format, $original); // ! char to reset fields to UNIX epoch
         }
 

@@ -92,7 +92,7 @@ if (isset($_GET['delete']) and
 elseif (isset($_POST['submitAdd'])) {
     $output_create = functions_admin::create_virtual_category(
         $_POST['virtual_name'],
-        @$_GET['parent_id']
+        $_GET['parent_id']
     );
 
     functions_admin::invalidate_user_cache();
@@ -180,7 +180,7 @@ if (count($categories)) {
 
     foreach ($all_categories as $id => $uppercats) {
         foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id) {
-            @$subcats_of[$uppercat_id][] = $id;
+            $subcats_of[$uppercat_id][] = $id;
         }
     }
 

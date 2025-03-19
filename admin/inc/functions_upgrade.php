@@ -184,7 +184,7 @@ class functions_upgrade
         $password = $_POST['password'];
 
         if (function_exists('get_magic_quotes_gpc') &&
-            ! @get_magic_quotes_gpc()
+            ! get_magic_quotes_gpc()
         ) {
             $username = functions_mysqli::pwg_db_real_escape_string($username);
         }

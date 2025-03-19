@@ -28,10 +28,10 @@ class QNumericRangeScope extends QSearchScope
 
         if ($pos !== false) {
             $range = [substr($str, 0, $pos), substr($str, $pos + 2)];
-        } elseif (@$str[0] == '>') { // ratio:>1
+        } elseif ($str[0] == '>') { // ratio:>1
             $range = [substr($str, 1), ''];
             $strict[0] = 1;
-        } elseif (@$str[0] == '<') { // size:<5mp
+        } elseif ($str[0] == '<') { // size:<5mp
             $range = ['', substr($str, 1)];
             $strict[1] = 1;
         } elseif (($token->modifier & functions_search::QST_WILDCARD_BEGIN)) {

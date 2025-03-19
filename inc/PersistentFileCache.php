@@ -24,7 +24,7 @@ class PersistentFileCache extends PersistentCache
 
     public function get($key, &$value)
     {
-        $loaded = @file_get_contents($this->dir . $key . '.cache');
+        $loaded = file_get_contents($this->dir . $key . '.cache');
 
         if ($loaded !== false) {
             $loaded = unserialize($loaded);
@@ -55,10 +55,10 @@ class PersistentFileCache extends PersistentCache
             'data' => $value,
         ]);
 
-        if (@file_put_contents($this->dir . $key . '.cache', $serialized) === false) {
+        if (file_put_contents($this->dir . $key . '.cache', $serialized) === false) {
             functions::mkgetdir($this->dir, functions::MKGETDIR_DEFAULT & ~functions::MKGETDIR_DIE_ON_ERROR);
 
-            if (@file_put_contents($this->dir . $key . '.cache', $serialized) === false) {
+            if (file_put_contents($this->dir . $key . '.cache', $serialized) === false) {
                 return false;
             }
         }
@@ -78,9 +78,9 @@ class PersistentFileCache extends PersistentCache
 
         foreach ($files as $file) {
             if ($all ||
-                @filemtime($file) < $limit
+                filemtime($file) < $limit
             ) {
-                @unlink($file);
+                unlink($file);
             }
         }
     }

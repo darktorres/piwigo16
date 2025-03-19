@@ -49,8 +49,8 @@ class PwgServer
     {
         if ($this->_responseEncoder === null) {
             functions_html::set_status_header(400);
-            @header('Content-Type: text/plain');
-            echo "Cannot process your request. Unknown response format.\nRequest format: " . @$this->_requestFormat . ' Response format: ' . @$this->_responseFormat . "\n";
+            header('Content-Type: text/plain');
+            echo "Cannot process your request. Unknown response format.\nRequest format: " . $this->_requestFormat . ' Response format: ' . $this->_responseFormat . "\n";
             var_export($this);
             die(0);
         }
@@ -84,7 +84,7 @@ class PwgServer
         $encodedResponse = $this->_responseEncoder->encodeResponse($response);
         $contentType = $this->_responseEncoder->getContentType();
 
-        @header('Content-Type: ' . $contentType . '; charset=' . functions::get_pwg_charset());
+        header('Content-Type: ' . $contentType . '; charset=' . functions::get_pwg_charset());
         print_r($encodedResponse);
         functions_plugins::trigger_notify('sendResponse', $encodedResponse);
     }
@@ -156,19 +156,19 @@ class PwgServer
 
     public function getMethodDescription($methodName)
     {
-        $desc = @$this->_methods[$methodName]['description'];
+        $desc = $this->_methods[$methodName]['description'];
         return isset($desc) ? $desc : '';
     }
 
     public function getMethodSignature($methodName)
     {
-        $signature = @$this->_methods[$methodName]['signature'];
+        $signature = $this->_methods[$methodName]['signature'];
         return isset($signature) ? $signature : [];
     }
 
     public function getMethodOptions($methodName)
     {
-        $options = @$this->_methods[$methodName]['options'];
+        $options = $this->_methods[$methodName]['options'];
         return isset($options) ? $options : [];
     }
 
@@ -276,7 +276,7 @@ class PwgServer
      */
     public function invoke($methodName, $params)
     {
-        $method = @$this->_methods[$methodName];
+        $method = $this->_methods[$methodName];
 
         if ($method == null) {
             return new PwgError(WS_ERR_INVALID_METHOD, 'Method name is not valid');

@@ -190,7 +190,7 @@ switch ($action) {
             $versions = [
                 'current' => PHPWG_VERSION,
             ];
-            $lines = @explode("\r\n", $result);
+            $lines = explode("\r\n", $result);
 
             // if the current version is a BSF (development branch) build, we check
             // the first line, for stable versions, we check the second line
@@ -323,7 +323,7 @@ switch (pwg_image::get_library()) {
 
     case 'gd':
         $gd_info = gd_info();
-        $template->assign('GRAPHICS_LIBRARY', 'GD ' . @$gd_info['GD Version']);
+        $template->assign('GRAPHICS_LIBRARY', 'GD ' . $gd_info['GD Version']);
         break;
 
     case 'vips':

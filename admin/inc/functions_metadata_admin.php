@@ -138,7 +138,7 @@ class functions_metadata_admin
     {
         global $conf;
         $file = PHPWG_ROOT_PATH . $infos['path'];
-        $fs = @filesize($file);
+        $fs = filesize($file);
 
         if ($fs === false) {
             return false;
@@ -149,7 +149,7 @@ class functions_metadata_admin
         $is_tiff = false;
 
         if (isset($infos['representative_ext'])) {
-            $image_size = @getimagesize($file);
+            $image_size = getimagesize($file);
 
             if ($image_size) {
                 $type = $image_size[2];
@@ -195,7 +195,7 @@ class functions_metadata_admin
             }
         }
 
-        $image_size = @getimagesize($file);
+        $image_size = getimagesize($file);
 
         if ($image_size) {
             $infos['width'] = $image_size[0];

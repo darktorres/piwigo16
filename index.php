@@ -307,11 +307,11 @@ if (empty($page['is_external'])) {
 
             foreach ($dates as $date_row) {
                 $year = date('Y', strtotime($date_row['date_available']));
-                @$pre_counters['y' . $year][$date_row['image_id']] = 1;
+                $pre_counters['y' . $year][$date_row['image_id']] = 1;
 
                 foreach ($thresholds as $threshold => $date_limit) {
                     if ($date_row['date_available'] > $date_limit) {
-                        @$pre_counters[$threshold][$date_row['image_id']] = 1;
+                        $pre_counters[$threshold][$date_row['image_id']] = 1;
                     }
                 }
             }
@@ -575,8 +575,8 @@ if (empty($page['is_external'])) {
         isset($page['qsearch_details'])
     ) {
         $cats = array_merge(
-            (array) @$page['qsearch_details']['matching_cats_no_images'],
-            (array) @$page['qsearch_details']['matching_cats']
+            (array) $page['qsearch_details']['matching_cats_no_images'],
+            (array) $page['qsearch_details']['matching_cats']
         );
 
         if (count($cats)) {
@@ -590,7 +590,7 @@ if (empty($page['is_external'])) {
             $template->assign('category_search_results', $hints);
         }
 
-        $tags = (array) @$page['qsearch_details']['matching_tags'];
+        $tags = (array) $page['qsearch_details']['matching_tags'];
 
         foreach ($tags as $tag) {
             $tag['URL'] = functions_url::make_index_url([

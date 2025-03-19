@@ -124,7 +124,7 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
         'VERSION' => $fs_plugin['version'],
         'DESC' => $fs_plugin['description'],
         'AUTHOR' => $fs_plugin['author'],
-        'AUTHOR_URL' => @$fs_plugin['author uri'],
+        'AUTHOR_URL' => $fs_plugin['author uri'],
         'U_ACTION' => sprintf($action_url, $plugin_id),
         'SETTINGS_URL' => $setting_url,
     ];

@@ -44,13 +44,13 @@ include(dirname(__FILE__) . '/skins/' . $conf['modus_theme']['skin'] . '.php');
 $this->assign(
     [
         'MODUS_CSS_VERSION' => crc32(implode(',', [
-            'a' . @$conf['modus_theme']['skin'],
-            @$conf['modus_theme']['album_thumb_size'],
+            'a' . $conf['modus_theme']['skin'],
+            $conf['modus_theme']['album_thumb_size'],
             ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE)->max_width(),
             $conf['index_created_date_icon'],
             $conf['index_posted_date_icon'],
         ])),
-        'MODUS_DISPLAY_PAGE_BANNER' => @$conf['modus_theme']['display_page_banner'],
+        'MODUS_DISPLAY_PAGE_BANNER' => $conf['modus_theme']['display_page_banner'],
     ]
 );
 

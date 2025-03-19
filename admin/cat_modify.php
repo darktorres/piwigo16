@@ -106,8 +106,8 @@ $template->assign(
         'CATEGORIES_PARENT_NAV' => preg_replace('# {2,}#', ' ', preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation)),
         'PARENT_CAT_ID' => ! empty($category['id_uppercat']) ? $category['id_uppercat'] : 0,
         'CAT_ID' => $category['id'],
-        'CAT_NAME' => @htmlspecialchars($category['name']),
-        'CAT_COMMENT' => @htmlspecialchars($category['comment']),
+        'CAT_NAME' => htmlspecialchars($category['name']),
+        'CAT_COMMENT' => htmlspecialchars($category['comment']),
         'IS_VISIBLE' => functions_mysqli::boolean_to_string($category['visible']),
 
         'U_DELETE' => $base_url . 'albums',

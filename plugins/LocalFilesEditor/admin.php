@@ -93,19 +93,19 @@ if (isset($_POST['submit'])) {
             if ($page['tab'] == 'plug' and
                 ! is_dir(PHPWG_PLUGINS_PATH . 'PersonalPlugin')
             ) {
-                @mkdir(PHPWG_PLUGINS_PATH . 'PersonalPlugin');
+                mkdir(PHPWG_PLUGINS_PATH . 'PersonalPlugin');
             }
 
             if (file_exists($edited_file)) {
-                @copy($edited_file, functions_LocalFilesEditor::get_bak_file($edited_file));
+                copy($edited_file, functions_LocalFilesEditor::get_bak_file($edited_file));
                 $page['infos'][] = functions::l10n('locfiledit_saved_bak', substr(functions_LocalFilesEditor::get_bak_file($edited_file), 2));
             }
 
-            $file = @fopen($edited_file, 'w');
+            $file = fopen($edited_file, 'w');
 
             if ($file) {
-                @fwrite($file, $content_file);
-                @fclose($file);
+                fwrite($file, $content_file);
+                fclose($file);
                 array_unshift($page['infos'], functions::l10n('locfiledit_save_config'));
                 $template->delete_compiled_templates();
             } else {
@@ -150,7 +150,7 @@ $template->assign(
         'F_ACTION' => PHPWG_ROOT_PATH . 'admin.php?page=plugin-LocalFilesEditor-' . $page['tab'],
         'LOCALEDIT_PATH' => LOCALEDIT_PATH,
         'PWG_TOKEN' => functions::get_pwg_token(),
-        'CODEMIRROR_MODE' => @$codemirror_mode,
+        'CODEMIRROR_MODE' => $codemirror_mode,
     ]
 );
 

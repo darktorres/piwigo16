@@ -378,8 +378,8 @@ class functions_html
             $bt = debug_backtrace();
 
             for ($i = 1; $i < count($bt); $i++) {
-                $class = isset($bt[$i]['class']) ? (@$bt[$i]['class'] . '::') : '';
-                $btrace_msg .= "#{$i}\t" . $class . @$bt[$i]['function'] . ' ' . @$bt[$i]['file'] . '(' . @$bt[$i]['line'] . ")\n";
+                $class = isset($bt[$i]['class']) ? ($bt[$i]['class'] . '::') : '';
+                $btrace_msg .= "#{$i}\t" . $class . $bt[$i]['function'] . ' ' . $bt[$i]['file'] . '(' . $bt[$i]['line'] . ")\n";
             }
 
             $btrace_msg = trim($btrace_msg);
@@ -395,7 +395,7 @@ class functions_html
             </pre>
             HTML;
 
-        @self::set_status_header(500);
+        self::set_status_header(500);
         echo $display . str_repeat(' ', 300); // IE6 doesn't error output if below a size
 
         if (function_exists('ini_set')) { // if possible turn off error display (we display it)

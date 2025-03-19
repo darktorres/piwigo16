@@ -652,7 +652,7 @@ class functions_mail
         }
 
         // Bcc
-        $Bcc = self::get_clean_recipients_list(@$args['Bcc']);
+        $Bcc = self::get_clean_recipients_list($args['Bcc']);
 
         if ($conf_mail['send_bcc_mail_webmaster']) {
             $Bcc[] = [
@@ -704,7 +704,7 @@ class functions_mail
 
         $content_type_list = [];
         if ($conf_mail['mail_allow_html'] and
-            @$args['email_format'] != 'text/plain'
+            $args['email_format'] != 'text/plain'
         ) {
             $content_type_list[] = 'text/html';
         }

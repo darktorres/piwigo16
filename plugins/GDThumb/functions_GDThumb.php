@@ -8,7 +8,7 @@ class functions_GDThumb
 {
     public static function int_delete_gdthumb_cache($pattern)
     {
-        $contents = @opendir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR);
+        $contents = opendir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR);
 
         if ($contents) {
             while (($node = readdir($contents)) !== false) {

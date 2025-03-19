@@ -129,7 +129,7 @@ class functions_comment
             $comment_action = 'reject';
         }
 
-        if (! functions::verify_ephemeral_key(@$key, $comm['image_id'])) {
+        if (! functions::verify_ephemeral_key($key, $comm['image_id'])) {
             $comment_action = 'reject';
             $_POST['cr'][] = 'key'; // rvelices: I use this outside to see how spam robots work
         }

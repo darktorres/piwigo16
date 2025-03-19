@@ -22,13 +22,13 @@ use Piwigo\inc\Template;
 //----------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
 
-// @set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
+// set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
 //
 // addslashes to vars if magic_quotes_gpc is off this is a security
 // precaution to prevent someone trying to break out of a SQL statement.
 //
 if (function_exists('get_magic_quotes_gpc') &&
-    ! @get_magic_quotes_gpc()
+    ! get_magic_quotes_gpc()
 ) {
     if (is_array($_POST)) {
         foreach ($_POST as $k => $v) {
@@ -37,13 +37,13 @@ if (function_exists('get_magic_quotes_gpc') &&
                     $_POST[$k][$k2] = addslashes($v2);
                 }
 
-                @reset($_POST[$k]);
+                reset($_POST[$k]);
             } else {
                 $_POST[$k] = addslashes($v);
             }
         }
 
-        @reset($_POST);
+        reset($_POST);
     }
 
     if (is_array($_GET)) {
@@ -53,13 +53,13 @@ if (function_exists('get_magic_quotes_gpc') &&
                     $_GET[$k][$k2] = addslashes($v2);
                 }
 
-                @reset($_GET[$k]);
+                reset($_GET[$k]);
             } else {
                 $_GET[$k] = addslashes($v);
             }
         }
 
-        @reset($_GET);
+        reset($_GET);
     }
 
     if (is_array($_COOKIE)) {
@@ -69,20 +69,20 @@ if (function_exists('get_magic_quotes_gpc') &&
                     $_COOKIE[$k][$k2] = addslashes($v2);
                 }
 
-                @reset($_COOKIE[$k]);
+                reset($_COOKIE[$k]);
             } else {
                 $_COOKIE[$k] = addslashes($v);
             }
         }
 
-        @reset($_COOKIE);
+        reset($_COOKIE);
     }
 }
 
 //----------------------------------------------------- variable initialization
 
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
-@include(PHPWG_ROOT_PATH . 'local/config/config.php');
+include(PHPWG_ROOT_PATH . 'local/config/config.php');
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
@@ -133,7 +133,7 @@ $errors = [];
 
 $config_file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php';
 
-if (@file_exists($config_file)) {
+if (file_exists($config_file)) {
     include($config_file);
     // Is Piwigo already installed ?
     if (defined('PHPWG_INSTALLED')) {
@@ -156,7 +156,7 @@ if (isset($_GET['language'])) {
     // Try to get browser language
     // foreach ($languages->fs_languages as $language_code => $fs_language)
     // {
-    //   if (substr($language_code,0,2) == @substr($_SERVER["HTTP_ACCEPT_LANGUAGE"],0,2))
+    //   if (substr($language_code,0,2) == substr($_SERVER["HTTP_ACCEPT_LANGUAGE"],0,2))
     //   {
     //     $language = $language_code;
     //     break;
@@ -363,18 +363,18 @@ if (isset($_POST['install'])) {
 
             PHP;
 
-        @umask(0111);
+        umask(0111);
         // writing the configuration file
-        $fp = @fopen($config_file, 'w');
+        $fp = fopen($config_file, 'w');
 
         if (! $fp) {
             // make sure nobody can list files of _data directory
             functions::secure_directory(PHPWG_ROOT_PATH . $conf['data_location']);
 
             $tmp_filename = md5(uniqid(time()));
-            $fh = @fopen(PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $tmp_filename, 'w');
-            @fputs($fh, $file_content, strlen($file_content));
-            @fclose($fh);
+            $fh = fopen(PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $tmp_filename, 'w');
+            fputs($fh, $file_content, strlen($file_content));
+            fclose($fh);
 
             $template->assign(
                 [
@@ -385,8 +385,8 @@ if (isset($_POST['install'])) {
             );
         }
 
-        @fputs($fp, $file_content, strlen($file_content));
-        @fclose($fp);
+        fputs($fp, $file_content, strlen($file_content));
+        fclose($fp);
     }
 }
 

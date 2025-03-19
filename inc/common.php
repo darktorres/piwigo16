@@ -27,7 +27,7 @@ error_log("Page loaded: {$_SERVER['REQUEST_URI']}");
 // determine the initial instant to indicate the generation time of this page
 $t2 = microtime(true);
 
-// @set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
+// set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
 
 //
 // addslashes to vars if magic_quotes_gpc is off this is a security
@@ -38,7 +38,7 @@ $t2 = microtime(true);
 // Since php 8 the function get_magic_quotes_gpc is also removed
 // but we still want to sanitize user input variables.
 if (! function_exists('get_magic_quotes_gpc') or
-    ! @get_magic_quotes_gpc()
+    ! get_magic_quotes_gpc()
 ) {
     function sanitize_mysql_kv(&$v, $k)
     {
@@ -82,13 +82,13 @@ $header_notes = [];
 $filter = [];
 
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
-@include(PHPWG_ROOT_PATH . 'local/config/config.php');
+include(PHPWG_ROOT_PATH . 'local/config/config.php');
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
-@include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php');
+include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php');
 
 if (! defined('PHPWG_INSTALLED')) {
     header('Location: install.php');
@@ -98,16 +98,16 @@ if (! defined('PHPWG_INSTALLED')) {
 if (isset($conf['show_php_errors']) &&
     ! empty($conf['show_php_errors'])
 ) {
-    @ini_set('error_reporting', $conf['show_php_errors']);
+    ini_set('error_reporting', $conf['show_php_errors']);
 
     if ($conf['show_php_errors_on_frontend']) {
-        @ini_set('display_errors', true);
+        ini_set('display_errors', true);
     }
 }
 
 if ($conf['session_gc_probability'] > 0) {
-    @ini_set('session.gc_divisor', 100);
-    @ini_set('session.gc_probability', min((int) $conf['session_gc_probability'], 100));
+    ini_set('session.gc_divisor', 100);
+    ini_set('session.gc_probability', min((int) $conf['session_gc_probability'], 100));
 }
 
 include(PHPWG_ROOT_PATH . 'inc/constants.php');
@@ -274,7 +274,7 @@ if ($conf['gallery_locked']) {
         ! functions_user::is_admin()
     ) {
         functions_html::set_status_header(503, 'Service Unavailable');
-        @header('Retry-After: 900');
+        header('Retry-After: 900');
         header('Content-Type: text/html; charset=' . functions::get_pwg_charset());
         echo '<a href="' . functions_url::get_absolute_root_url(false) . 'identification.php">' . functions::l10n('The gallery is locked for maintenance. Please, come back later.') . '</a>';
         echo str_repeat(' ', 512); //IE6 doesn't error output if below a size

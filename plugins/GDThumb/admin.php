@@ -63,7 +63,7 @@ if (isset($_GET['getMissingDerivative'])) {
                 $derivative = new DerivativeImage(ImageStdParams::get_custom(9999, $params['height']), $src_image);
             }
 
-            if (@filemtime($derivative->get_path()) === false) {
+            if (filemtime($derivative->get_path()) === false) {
                 $urls[] = $derivative->get_url() . $uid;
             }
 
@@ -198,7 +198,7 @@ if (isset($_POST['submit'])) {
 // Try to find GreyDragon Theme and use Theme's styles for admin area
 $css_file = str_replace('/./', '/', dirname(dirname(dirname(__FILE__))) . '/' . GDTHEME_PATH . 'admin/css/styles.css');
 
-if (@file_exists($css_file)) {
+if (file_exists($css_file)) {
     $custom_css = 'yes';
 } else {
     $custom_css = 'no';

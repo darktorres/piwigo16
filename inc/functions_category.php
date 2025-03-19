@@ -104,7 +104,7 @@ class functions_category
         $selected_category = isset($page['category']) ? $page['category'] : null;
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
-            $child_date_last = @$row['max_date_last'] > @$row['date_last'];
+            $child_date_last = $row['max_date_last'] > $row['date_last'];
             $row = array_merge(
                 $row,
                 [
@@ -135,7 +135,7 @@ class functions_category
 
             $cats[] = $row;
 
-            if ($row['id'] == @$page['category']['id']) { //save the number of subcats for later optim
+            if ($row['id'] == $page['category']['id']) { //save the number of subcats for later optim
                 $page['category']['count_categories'] = $row['count_categories'];
             }
         }
@@ -756,7 +756,7 @@ class functions_category
         // now we add the upper categories and useful values such as depth level and url
         foreach ($common_cats as $cat) {
             foreach (explode(',', $cat['uppercats']) as $uppercat) {
-                @$cat_ids[$uppercat]++;
+                $cat_ids[$uppercat]++;
             }
         }
 
@@ -804,10 +804,10 @@ class functions_category
             //
             // Option 3 seems more appropriate here.
             if (! empty($cat['id_uppercat']) and
-                @$cats[$idx]['count_images'] > 0
+                $cats[$idx]['count_images'] > 0
             ) {
                 foreach (array_slice(explode(',', $cat['uppercats']), 0, -1) as $uppercat_id) {
-                    @$cats[$index_of_cat[$uppercat_id]]['count_categories']++;
+                    $cats[$index_of_cat[$uppercat_id]]['count_categories']++;
                 }
             }
         }

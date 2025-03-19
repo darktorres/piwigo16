@@ -135,7 +135,7 @@ function admintools_add_public_controller()
     }
     // album page (admin only)
     elseif ($MultiView->is_admin() and
-            @$page['section'] == 'categories' and
+            $page['section'] == 'categories' and
             isset($page['category'])
     ) {
         $url_self = functions_url::duplicate_index_url();
@@ -186,7 +186,7 @@ function admintools_add_public_controller()
     $template->parse('ato_public_controller');
 
     if ($MultiView->is_admin() &&
-        @$admin_lang !== false
+        $admin_lang !== false
     ) {
         functions_mail::switch_lang_back();
     }
@@ -222,7 +222,7 @@ function admintools_add_admin_controller()
     $template->parse('ato_admin_controller');
 
     if ($MultiView->is_admin() &&
-        @$admin_lang !== false
+        $admin_lang !== false
     ) {
         functions_mail::switch_lang_back();
     }
@@ -267,7 +267,7 @@ function admintools_save_picture()
 
     if (! isset($_GET['delete']) and
         ! isset($_POST['action']) and
-        @$_POST['action'] != 'quick_edit'
+        $_POST['action'] != 'quick_edit'
     ) {
         return;
     }
@@ -290,7 +290,7 @@ function admintools_save_picture()
     }
 
     if (isset($_GET['delete']) and
-        functions::get_pwg_token() == @$_GET['pwg_token']
+        functions::get_pwg_token() == $_GET['pwg_token']
     ) {
         functions_admin::delete_elements([$page['image_id']], true);
         functions_admin::invalidate_user_cache();
@@ -325,9 +325,9 @@ function admintools_save_picture()
         if (functions_user::is_admin() and
             $conf['allow_html_descriptions']
         ) {
-            $data['comment'] = @$_POST['comment'];
+            $data['comment'] = $_POST['comment'];
         } else {
-            $data['comment'] = strip_tags(@$_POST['comment']);
+            $data['comment'] = strip_tags($_POST['comment']);
         }
 
         if (! empty($_POST['date_creation']) and
@@ -366,7 +366,7 @@ function admintools_save_category()
         return;
     }
 
-    if (@$_POST['action'] == 'quick_edit') {
+    if ($_POST['action'] == 'quick_edit') {
         functions::check_pwg_token();
 
         $data = [
@@ -376,9 +376,9 @@ function admintools_save_category()
         if (functions_user::is_admin() and
             $conf['allow_html_descriptions']
         ) {
-            $data['comment'] = @$_POST['comment'];
+            $data['comment'] = $_POST['comment'];
         } else {
-            $data['comment'] = strip_tags(@$_POST['comment']);
+            $data['comment'] = strip_tags($_POST['comment']);
         }
 
         functions_mysqli::single_update(

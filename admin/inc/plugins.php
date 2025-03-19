@@ -362,7 +362,7 @@ class plugins
         $url = PEM_URL . '/api/get_version_list.php?category_id=' . $conf['pem_plugins_category'] . '&format=php';
 
         if (functions_admin::fetchRemote($url, $result)) {
-            $pem_versions = @unserialize($result);
+            $pem_versions = unserialize($result);
 
             if ($pem_versions) {
                 $i = 0;
@@ -459,7 +459,7 @@ class plugins
         }
 
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
-            $pem_plugins = @unserialize($result);
+            $pem_plugins = unserialize($result);
 
             if (! is_array($pem_plugins)) {
                 return false;
@@ -515,7 +515,7 @@ class plugins
         ];
 
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
-            $pem_plugins = @unserialize($result);
+            $pem_plugins = unserialize($result);
 
             if (! is_array($pem_plugins)) {
                 return false;
@@ -593,7 +593,7 @@ class plugins
                 'rid' => $revision,
                 'origin' => 'piwigo_' . $action,
             ];
-            $handle = @fopen($archive, 'wb');
+            $handle = fopen($archive, 'wb');
 
             if ($handle and
                 functions_admin::fetchRemote($url, $handle, $get_data)
@@ -668,7 +668,7 @@ class plugins
                                         $logger->debug(__FUNCTION__ . ', to delete = ' . $path);
 
                                         if (is_file($path)) {
-                                            @unlink($path);
+                                            unlink($path);
                                         } elseif (is_dir($path)) {
                                             functions_admin::deltree($path, PHPWG_PLUGINS_PATH . 'trash');
                                         }
@@ -691,7 +691,7 @@ class plugins
             $status = 'temp_path_error';
         }
 
-        @unlink($archive);
+        unlink($archive);
         return $status;
     }
 

@@ -109,7 +109,7 @@ final class ImageStdParams
         $params->add_url_tokens($key);
         $key = implode('_', $key);
 
-        if (@self::$custom[$key] < time() - 24 * 3600) {
+        if (self::$custom[$key] < time() - 24 * 3600) {
             self::$custom[$key] = time();
             self::save();
         }
@@ -131,17 +131,17 @@ final class ImageStdParams
     public static function load_from_db()
     {
         global $conf;
-        $arr = @unserialize($conf['derivatives']);
+        $arr = unserialize($conf['derivatives']);
 
         if ($arr !== false) {
             self::$type_map = $arr['d'];
-            self::$watermark = @$arr['w'];
+            self::$watermark = $arr['w'];
 
             if (! self::$watermark) {
                 self::$watermark = new WatermarkParams();
             }
 
-            self::$custom = @$arr['c'];
+            self::$custom = $arr['c'];
 
             if (! self::$custom) {
                 self::$custom = [];

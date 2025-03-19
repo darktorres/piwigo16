@@ -346,7 +346,7 @@ else {
     // |                           search section                              |
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'search') {
-        $search_result = functions_search::get_search_results($page['search'], @$page['super_order_by']);
+        $search_result = functions_search::get_search_results($page['search'], $page['super_order_by']);
 
         //save the details of the query search
         if (isset($search_result['qs'])) {
@@ -620,12 +620,12 @@ if ($page['section'] == 'categories' and
 
     if (empty($page['category']['permalink'])) {
         if ($conf['category_url_style'] == 'id-name' and
-            @$page['hit_by']['cat_url_name'] !== functions::str2url($page['category']['name'])
+            $page['hit_by']['cat_url_name'] !== functions::str2url($page['category']['name'])
         ) {
             $need_redirect = true;
         }
     } else {
-        if ($page['category']['permalink'] !== @$page['hit_by']['cat_permalink']) {
+        if ($page['category']['permalink'] !== $page['hit_by']['cat_permalink']) {
             $need_redirect = true;
         }
     }

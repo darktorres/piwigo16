@@ -264,7 +264,7 @@ class functions_upload
             rename($source_filepath, $file_path);
         }
 
-        @chmod($file_path, 0644);
+        chmod($file_path, 0644);
 
         // handle the uploaded file type by potentially making a
         // pwg_representative file.
@@ -465,7 +465,7 @@ class functions_upload
             rename($source_filepath, $format_path);
         }
 
-        @chmod($format_path, 0644);
+        chmod($format_path, 0644);
 
         $file_infos = self::pwg_image_infos($format_path);
 
@@ -526,7 +526,7 @@ class functions_upload
         $exec .= ' "' . realpath($file_path) . '"[0]';
         $exec .= ' "' . $representative_file_path . '"';
         $exec .= ' 2>&1';
-        @exec($exec, $returnarray);
+        exec($exec, $returnarray);
 
         // Return the extension (if successful) or false (if failed)
         if (file_exists($representative_file_path)) {
@@ -570,7 +570,7 @@ class functions_upload
 
         $logger->info(__FUNCTION__ . ', exec = ' . $exec);
 
-        @exec($exec, $returnarray);
+        exec($exec, $returnarray);
 
         // Return the extension (if successful) or false (if failed)
         if (file_exists($representative_file_path)) {
@@ -619,7 +619,7 @@ class functions_upload
         $exec .= ' "' . realpath($dest['dirname']) . '/' . $dest['basename'] . '"';
 
         $exec .= ' 2>&1';
-        @exec($exec, $returnarray);
+        exec($exec, $returnarray);
 
         // sometimes ImageMagick creates file-0.jpg (full size) + file-1.jpg
         // (thumbnail). I don't know how to avoid it.
@@ -685,7 +685,7 @@ class functions_upload
         $ffmpeg .= ' -frames:v 1';  // Extract one frame
         $ffmpeg .= ' "' . $representative_file_path . '"'; // Output file
 
-        @exec($ffmpeg . ' 2>&1', $FO, $FS);
+        exec($ffmpeg . ' 2>&1', $FO, $FS);
 
         if (! empty($FO[0])) {
             $logger->debug(__FUNCTION__ . ', Tried ' . $ffmpeg);
@@ -736,7 +736,7 @@ class functions_upload
 
         $exec .= ' 2>&1';
         $logger->info(__FUNCTION__ . ', exec = ' . $exec);
-        @exec($exec, $returnarray);
+        exec($exec, $returnarray);
 
         // sometimes ImageMagick creates file-0.png + file-1.png + file-2.png...
         // It seems we can't avoid it.
@@ -791,7 +791,7 @@ class functions_upload
         $exec .= ' "' . $representative_file_path . '"';
         $exec .= ' 2>&1';
         $logger->info(__FUNCTION__ . ', $exec = ' . $exec);
-        @exec($exec, $returnarray);
+        exec($exec, $returnarray);
 
         // Return the extension (if successful) or false (if failed)
         if (file_exists($representative_file_path)) {
@@ -811,14 +811,14 @@ class functions_upload
             umask(0000);
             $recursive = true;
 
-            if (! @mkdir($directory, 0777, $recursive)) {
+            if (! mkdir($directory, 0777, $recursive)) {
                 die('[prepare_directory] cannot create directory "' . $directory . '"');
             }
         }
 
         if (! is_writable($directory)) {
             // last chance to make the directory writable
-            @chmod($directory, 0777);
+            chmod($directory, 0777);
 
             if (! is_writable($directory)) {
                 die('[prepare_directory] directory "' . $directory . '" has no write access');
@@ -955,7 +955,7 @@ class functions_upload
             }
         } else {
             if (! is_writable($conf['upload_dir'])) {
-                @chmod($conf['upload_dir'], 0777);
+                chmod($conf['upload_dir'], 0777);
 
                 if (! is_writable($conf['upload_dir'])) {
                     return sprintf(
@@ -980,7 +980,7 @@ class functions_upload
         global $conf;
 
         $enabled = ImageStdParams::get_defined_type_map();
-        $disabled = @unserialize(@$conf['disabled_derivatives']);
+        $disabled = unserialize($conf['disabled_derivatives']);
 
         if ($disabled === false) {
             $disabled = [];
@@ -989,7 +989,7 @@ class functions_upload
         $w = $h = 2000; // safe default values
 
         foreach (ImageStdParams::get_all_types() as $type) {
-            $params = $enabled[$type] ?? @$disabled[$type];
+            $params = $enabled[$type] ?? $disabled[$type];
 
             if ($params) {
                 list($w, $h) = $params->sizing->ideal_size;

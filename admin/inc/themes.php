@@ -437,7 +437,7 @@ class themes
         $url = PEM_URL . '/api/get_version_list.php';
 
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
-            $pem_versions = @unserialize($result);
+            $pem_versions = unserialize($result);
 
             if ($pem_versions) {
                 if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
@@ -488,7 +488,7 @@ class themes
         }
 
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
-            $pem_themes = @unserialize($result);
+            $pem_themes = unserialize($result);
 
             if (! is_array($pem_themes)) {
                 return false;
@@ -551,7 +551,7 @@ class themes
                 'rid' => $revision,
                 'origin' => 'piwigo_' . $action,
             ];
-            $handle = @fopen($archive, 'wb');
+            $handle = fopen($archive, 'wb');
 
             if ($handle and
                 functions_admin::fetchRemote($url, $handle, $get_data)
@@ -625,7 +625,7 @@ class themes
                                         $logger->debug(__FUNCTION__ . ', to delete = ' . $path);
 
                                         if (is_file($path)) {
-                                            @unlink($path);
+                                            unlink($path);
                                         } elseif (is_dir($path)) {
                                             functions_admin::deltree($path, PHPWG_THEMES_PATH . 'trash');
                                         }
@@ -648,7 +648,7 @@ class themes
             $status = 'temp_path_error';
         }
 
-        @unlink($archive);
+        unlink($archive);
         return $status;
     }
 

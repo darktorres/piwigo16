@@ -494,7 +494,7 @@ switch ($page['section']) {
 
             // derivatives = multiple size
             $enabled = ImageStdParams::get_defined_type_map();
-            $disabled = @unserialize(@$conf['disabled_derivatives']);
+            $disabled = unserialize($conf['disabled_derivatives']);
 
             if ($disabled === false) {
                 $disabled = [];
@@ -507,13 +507,13 @@ switch ($page['section']) {
 
                 $tpl_var['must_square'] = ($type == derivative_std_params::IMG_SQUARE ? true : false);
                 $tpl_var['must_enable'] = ($type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB || $type == $conf['derivative_default_size']) ? true : false;
-                $params = @$enabled[$type];
+                $params = $enabled[$type];
 
                 if ($params) {
                     $tpl_var['enabled'] = true;
                 } else {
                     $tpl_var['enabled'] = false;
-                    $params = @$disabled[$type];
+                    $params = $disabled[$type];
                 }
 
                 if ($params) {

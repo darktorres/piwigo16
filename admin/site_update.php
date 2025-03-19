@@ -980,7 +980,7 @@ if (isset($_POST['submit'])) {
         'display_info' => isset($_POST['display_info']) and $_POST['display_info'] == 1,
         'add_to_caddie' => isset($_POST['add_to_caddie']) and $_POST['add_to_caddie'] == 1,
         'subcats_included' => isset($_POST['subcats-included']) and $_POST['subcats-included'] == 1,
-        'privacy_level_selected' => (int) @$_POST['privacy_level'],
+        'privacy_level_selected' => (int) $_POST['privacy_level'],
         'meta_all' => isset($_POST['meta_all']) ? true : false,
         'meta_empty_overrides' => isset($_POST['meta_empty_overrides']) ? true : false,
     ];

@@ -58,7 +58,7 @@ final class SrcImage
 
         $this->id = $infos['id'];
         $ext = strtolower(functions::get_extension($infos['path']));
-        $infos['file_ext'] = @strtolower(functions::get_extension($infos['file']));
+        $infos['file_ext'] = strtolower(functions::get_extension($infos['file']));
         $infos['path_ext'] = $ext;
 
         if (in_array($ext, $conf['picture_ext'])) {
@@ -69,7 +69,7 @@ final class SrcImage
         } else {
             $this->rel_path = functions_plugins::trigger_change('get_mimetype_location', functions::get_themeconf('mime_icon_dir') . $ext . '.png', $ext);
             $this->flags |= self::IS_MIMETYPE;
-            $size = @getimagesize(PHPWG_ROOT_PATH . $this->rel_path);
+            $size = getimagesize(PHPWG_ROOT_PATH . $this->rel_path);
 
             if ($size === false) {
                 if ($ext == 'svg') {
@@ -81,7 +81,7 @@ final class SrcImage
                 $size = getimagesize(PHPWG_ROOT_PATH . $this->rel_path);
             }
 
-            $this->size = @[$size[0], $size[1]];
+            $this->size = [$size[0], $size[1]];
         }
 
         if (! $this->size) {

@@ -135,7 +135,7 @@ class functions
             }
 
             $umask = umask(0);
-            $mkd = @mkdir($dir, $conf['chmod_value'], ($flags & self::MKGETDIR_RECURSIVE) ? true : false);
+            $mkd = mkdir($dir, $conf['chmod_value'], ($flags & self::MKGETDIR_RECURSIVE) ? true : false);
             umask($umask);
 
             if ($mkd == false) {
@@ -150,7 +150,7 @@ class functions
                 $file = $dir . '/.htaccess';
 
                 if (! file_exists($file)) {
-                    @file_put_contents($file, 'deny from all');
+                    file_put_contents($file, 'deny from all');
                 }
             }
 
@@ -158,7 +158,7 @@ class functions
                 $file = $dir . '/index.htm';
 
                 if (! file_exists($file)) {
-                    @file_put_contents($file, 'Not allowed!');
+                    file_put_contents($file, 'Not allowed!');
                 }
             }
         }
@@ -583,7 +583,7 @@ class functions
         }
 
         $tags_string = null;
-        if (@$page['section'] == 'tags') {
+        if ($page['section'] == 'tags') {
             $tags_string = implode(',', $page['tag_ids']);
 
             if (strlen($tags_string) > 50) {
@@ -1389,7 +1389,7 @@ class functions
     {
         global $lang, $conf;
 
-        $val = @$lang[$key];
+        $val = $lang[$key];
 
         if ($val === null) {
             if ($conf['debug_l10n'] and
@@ -1873,13 +1873,13 @@ class functions
         // keep trace of plugins loaded files for switch_lang_to() function
         if (! empty($dirname) &&
             ! empty($filename) &&
-            ! @$options['return'] &&
+            ! $options['return'] &&
             ! isset($language_files[$dirname][$filename])
         ) {
             $language_files[$dirname][$filename] = $options;
         }
 
-        if (! @$options['return']) {
+        if (! $options['return']) {
             $filename .= '.php';
         }
 
@@ -1919,7 +1919,7 @@ class functions
             $languages[] = $options['force_fallback'];
         }
 
-        if (! @$options['no_fallback']) { // default language
+        if (! $options['no_fallback']) { // default language
             $languages[] = $default_language;
         }
 
@@ -1930,7 +1930,7 @@ class functions
         $selected_language = '';
 
         foreach ($languages as $language) {
-            $f = @$options['local'] ?
+            $f = $options['local'] ?
               $dirname . $language . '.' . $filename :
               $dirname . $language . '/' . $filename;
 
@@ -1942,16 +1942,16 @@ class functions
         }
 
         if (! empty($source_file)) {
-            if (! @$options['return']) {
+            if (! $options['return']) {
                 // load forced fallback
                 if (isset($options['force_fallback']) && $options['force_fallback'] != $selected_language) {
-                    @include(str_replace($selected_language, $options['force_fallback'], $source_file));
+                    include(str_replace($selected_language, $options['force_fallback'], $source_file));
                 }
 
                 // load language content
-                @include($source_file);
-                $load_lang = @$lang;
-                $load_lang_info = @$lang_info;
+                include($source_file);
+                $load_lang = $lang;
+                $load_lang_info = $lang_info;
 
                 // access already existing values
                 global $lang, $lang_info;
@@ -1974,7 +1974,7 @@ class functions
                 }
 
                 if (! empty($parent_language) && $parent_language != $selected_language) {
-                    @include(str_replace($selected_language, $parent_language, $source_file));
+                    include(str_replace($selected_language, $parent_language, $source_file));
                 }
 
                 // merge contents
@@ -1983,7 +1983,7 @@ class functions
                 return true;
             }
 
-            $content = @file_get_contents($source_file);
+            $content = file_get_contents($source_file);
             //Note: target charset is always utf-8 $content = convert_charset($content, 'utf-8', $target_charset);
             return $content;
         }
@@ -2037,7 +2037,7 @@ class functions
         $file = $dir . '/index.htm';
 
         if (! file_exists($file)) {
-            @file_put_contents($file, 'Not allowed!');
+            file_put_contents($file, 'Not allowed!');
         }
     }
 
@@ -2071,7 +2071,7 @@ class functions
     {
         global $conf;
         $time = microtime(true);
-        $key = explode(':', @$key);
+        $key = explode(':', $key);
 
         if (count($key) != 3 or
             $key[0] > $time - (float) $key[1] or // page must have been retrieved more than X sec ago
@@ -2883,7 +2883,7 @@ class functions
         foreach (array_reverse($candidates) as $candidate) {
             $candidate_path = $page['derivative_path'];
             $candidate_path = str_replace('-' . derivative_params::derivative_to_url($params->type), '-' . derivative_params::derivative_to_url($candidate->type), $candidate_path);
-            $candidate_mtime = @filemtime($candidate_path);
+            $candidate_mtime = filemtime($candidate_path);
 
             if ($candidate_mtime === false ||
                 $candidate_mtime < $original_mtime ||
@@ -3559,7 +3559,7 @@ class functions
         $template->assign(
             [
                 $template_prefix . 'USERNAME' => stripslashes($userdata['username']),
-                $template_prefix . 'EMAIL' => @$userdata['email'],
+                $template_prefix . 'EMAIL' => $userdata['email'],
                 $template_prefix . 'ALLOW_USER_CUSTOMIZATION' => $conf['allow_user_customization'],
                 $template_prefix . 'ACTIVATE_COMMENTS' => $conf['activate_comments'],
                 $template_prefix . 'NB_IMAGE_PAGE' => $userdata['nb_image_page'],

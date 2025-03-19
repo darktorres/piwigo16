@@ -41,16 +41,16 @@ if ($page['show_comments'] and
     }
 
     $comm = [
-        'author' => empty(@$_POST['author']) ? '' : trim(@$_POST['author']),
-        'content' => empty(@$_POST['content']) ? '' : trim($_POST['content']),
-        'website_url' => empty(@$_POST['website_url']) ? '' : trim(@$_POST['website_url']),
-        'email' => empty(@$_POST['email']) ? '' : trim(@$_POST['email']),
+        'author' => empty($_POST['author']) ? '' : trim($_POST['author']),
+        'content' => empty($_POST['content']) ? '' : trim($_POST['content']),
+        'website_url' => empty($_POST['website_url']) ? '' : trim($_POST['website_url']),
+        'email' => empty($_POST['email']) ? '' : trim($_POST['email']),
         'image_id' => $page['image_id'],
     ];
 
     include_once(PHPWG_ROOT_PATH . 'inc/functions_comment.php');
 
-    $comment_action = functions_comment::insert_user_comment($comm, @$_POST['key'], $page['errors']);
+    $comment_action = functions_comment::insert_user_comment($comm, $_POST['key'], $page['errors']);
 
     switch ($comment_action) {
         case 'moderate':
@@ -250,9 +250,9 @@ if ($page['show_comments']) {
             'SHOW_WEBSITE' => $conf['comments_enable_website'],
         ];
 
-        if (@$comment_action == 'reject') {
+        if ($comment_action == 'reject') {
             foreach (['content', 'author', 'website_url', 'email'] as $k) {
-                $tpl_var[strtoupper($k)] = isset($_POST[$k]) ? htmlspecialchars(stripslashes(@$_POST[$k])) : '';
+                $tpl_var[strtoupper($k)] = isset($_POST[$k]) ? htmlspecialchars(stripslashes($_POST[$k])) : '';
             }
         }
 

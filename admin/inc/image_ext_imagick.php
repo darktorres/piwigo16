@@ -35,8 +35,8 @@ class image_ext_imagick implements imageInterface
         $this->source_filepath = $source_filepath;
         $this->imagickdir = $conf['ext_imagick_dir'];
 
-        if (strpos(@$_SERVER['SCRIPT_FILENAME'], '/kunden/') === 0) {  // 1and1
-            @putenv('MAGICK_THREAD_LIMIT=1');
+        if (strpos($_SERVER['SCRIPT_FILENAME'], '/kunden/') === 0) {  // 1and1
+            putenv('MAGICK_THREAD_LIMIT=1');
         }
 
         if (strtolower(functions::get_extension($source_filepath)) == 'webp') {
@@ -55,7 +55,7 @@ class image_ext_imagick implements imageInterface
         }
 
         $command = $this->imagickdir . 'identify -format "%wx%h" "' . realpath($source_filepath) . '"';
-        @exec($command, $returnarray);
+        exec($command, $returnarray);
 
         if (! is_array($returnarray) or
             empty($returnarray[0]) or
@@ -199,7 +199,7 @@ class image_ext_imagick implements imageInterface
         $dest = pathinfo($destination_filepath);
         $exec .= ' "' . realpath($dest['dirname']) . '/' . $dest['basename'] . '" 2>&1';
         $logger->debug($exec);
-        @exec($exec, $returnarray);
+        exec($exec, $returnarray);
 
         if (is_array($returnarray) && (count($returnarray) > 0)) {
             $logger->error('', $returnarray);

@@ -96,7 +96,7 @@ class QMultiToken
                         break;
 
                     case ':':
-                        $scope = @$root->scopes[strtolower($crt_token)];
+                        $scope = $root->scopes[strtolower($crt_token)];
 
                         if (! isset($scope) ||
                             isset($crt_scope)

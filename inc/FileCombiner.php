@@ -150,7 +150,7 @@ final class FileCombiner
                 $output = "/*BEGIN header */\n" . $header . "\n" . $output;
                 functions::mkgetdir(dirname(PHPWG_ROOT_PATH . $file));
                 file_put_contents(PHPWG_ROOT_PATH . $file, $output);
-                @chmod(PHPWG_ROOT_PATH . $file, 0644);
+                chmod(PHPWG_ROOT_PATH . $file, 0644);
             }
 
             $result[] = new Combinable('combi', $file, false);

@@ -22,7 +22,7 @@ class functions_url
     public static function get_root_url()
     {
         global $page;
-        $root_url = @$page['root_path'];
+        $root_url = $page['root_path'];
 
         if ($root_url == null) { // TODO - add HERE the possibility to call PWG functions from external scripts
             $root_url = PHPWG_ROOT_PATH;
@@ -324,7 +324,7 @@ class functions_url
     {
         global $conf;
         $section_string = '';
-        $section = @$params['section'];
+        $section = $params['section'];
 
         if (! isset($section)) {
             $section_of = [
@@ -548,7 +548,7 @@ class functions_url
 
                 $page['combined_categories'] = $combined_categories;
             }
-        } elseif (@$tokens[$next_token] == 'tags') {
+        } elseif ($tokens[$next_token] == 'tags') {
             global $conf;
 
             $page['section'] = 'tags';
@@ -592,29 +592,29 @@ class functions_url
             if (empty($page['tags'])) {
                 functions_html::page_not_found(functions::l10n('Requested tag does not exist'), self::get_root_url() . 'tags.php');
             }
-        } elseif (@$tokens[$next_token] == 'favorites') {
+        } elseif ($tokens[$next_token] == 'favorites') {
             $page['section'] = 'favorites';
             $next_token++;
-        } elseif (@$tokens[$next_token] == 'most_visited') {
+        } elseif ($tokens[$next_token] == 'most_visited') {
             $page['section'] = 'most_visited';
             $next_token++;
-        } elseif (@$tokens[$next_token] == 'best_rated') {
+        } elseif ($tokens[$next_token] == 'best_rated') {
             $page['section'] = 'best_rated';
             $next_token++;
-        } elseif (@$tokens[$next_token] == 'recent_pics') {
+        } elseif ($tokens[$next_token] == 'recent_pics') {
             $page['section'] = 'recent_pics';
             $next_token++;
-        } elseif (@$tokens[$next_token] == 'recent_cats') {
+        } elseif ($tokens[$next_token] == 'recent_cats') {
             $page['section'] = 'recent_cats';
             $next_token++;
-        } elseif (@$tokens[$next_token] == 'search') {
+        } elseif ($tokens[$next_token] == 'search') {
             $page['section'] = 'search';
             $next_token++;
 
-            preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', @$tokens[$next_token], $matches);
+            preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', $tokens[$next_token], $matches);
 
             if (! isset($matches[1])) {
-                preg_match('/(\d+)/', @$tokens[$next_token], $matches);
+                preg_match('/(\d+)/', $tokens[$next_token], $matches);
 
                 if (! isset($matches[1])) {
                     functions_html::bad_request('search identifier is missing');
@@ -623,7 +623,7 @@ class functions_url
 
             $page['search'] = $matches[1];
             $next_token++;
-        } elseif (@$tokens[$next_token] == 'list') {
+        } elseif ($tokens[$next_token] == 'list') {
             $page['section'] = 'list';
             $next_token++;
 

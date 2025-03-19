@@ -335,7 +335,7 @@ class pwg_image
             return false;
         }
 
-        @exec($conf['ext_imagick_dir'] . 'convert -version', $returnarray);
+        exec($conf['ext_imagick_dir'] . 'convert -version', $returnarray);
 
         if (is_array($returnarray) and
             ! empty($returnarray[0]) and

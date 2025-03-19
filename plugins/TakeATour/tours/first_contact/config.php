@@ -87,8 +87,8 @@ function TAT_FC_16()
 
 function TAT_FC_16_prefilter($content)
 {
-    $search = '<strong>{\'Linked albums\'|@translate}</strong>';
-    $replacement = '<span id="TAT_FC_16"><strong>{\'Linked albums\'|@translate}</strong></span>';
+    $search = '<strong>{\'Linked albums\'|translate}</strong>';
+    $replacement = '<span id="TAT_FC_16"><strong>{\'Linked albums\'|translate}</strong></span>';
     return str_replace($search, $replacement, $content);
 }
 
@@ -100,8 +100,8 @@ function TAT_FC_17()
 
 function TAT_FC_17_prefilter($content)
 {
-    $search = '<strong>{\'Representation of albums\'|@translate}</strong>';
-    $replacement = '<span id="TAT_FC_17"><strong>{\'Representation of albums\'|@translate}</strong></span>';
+    $search = '<strong>{\'Representation of albums\'|translate}</strong>';
+    $replacement = '<span id="TAT_FC_17"><strong>{\'Representation of albums\'|translate}</strong></span>';
     return str_replace($search, $replacement, $content);
 }
 
@@ -113,8 +113,8 @@ function TAT_FC_23()
 
 function TAT_FC_23_prefilter($content)
 {
-    $search = '<strong>{\'Lock\'|@translate}</strong>';
-    $replacement = '<span id="TAT_FC_23"><strong>{\'Lock\'|@translate}</strong></span>';
+    $search = '<strong>{\'Lock\'|translate}</strong>';
+    $replacement = '<span id="TAT_FC_23"><strong>{\'Lock\'|translate}</strong></span>';
     return str_replace($search, $replacement, $content);
 }
 

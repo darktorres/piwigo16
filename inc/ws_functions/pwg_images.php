@@ -61,7 +61,7 @@ class pwg_images
         $tokens = explode(';', $categories_string);
 
         foreach ($tokens as $token) {
-            @list($cat_id, $rank) = explode(',', $token);
+            list($cat_id, $rank) = explode(',', $token);
 
             if (! preg_match('/^\d+$/', $cat_id)) {
                 continue;
@@ -1543,7 +1543,7 @@ class pwg_images
         // file_put_contents('/tmp/plupload.log', "[".date('c')."] ".__FUNCTION__.', '.$fileName.' '.($chunk+1).'/'.$chunks."\n", FILE_APPEND);
 
         // Open temp file
-        $out = @fopen("{$filePath}.part", $chunks ? 'ab' : 'wb');
+        $out = fopen("{$filePath}.part", $chunks ? 'ab' : 'wb');
 
         if (! $out) {
             die('{"jsonrpc" : "2.0", "error" : {"code": 102, "message": "Failed to open output stream."}, "id" : "id"}');
@@ -1557,13 +1557,13 @@ class pwg_images
             }
 
             // Read binary input stream and append it to temp file
-            $in = @fopen($_FILES['file']['tmp_name'], 'rb');
+            $in = fopen($_FILES['file']['tmp_name'], 'rb');
 
             if (! $in) {
                 die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
             }
         } else {
-            $in = @fopen('php://input', 'rb');
+            $in = fopen('php://input', 'rb');
 
             if (! $in) {
                 die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
@@ -1574,8 +1574,8 @@ class pwg_images
             fwrite($out, $buff);
         }
 
-        @fclose($out);
-        @fclose($in);
+        fclose($out);
+        fclose($in);
 
         // Check if file has been uploaded
         if (! $chunks ||
@@ -1813,7 +1813,7 @@ class pwg_images
                 fclose($fp);
 
                 // delete merge file without returning an error
-                @unlink($output_filepath);
+                unlink($output_filepath);
                 return new PwgError(500, 'error while merging chunk ' . $chunk_id);
             }
 
@@ -2030,7 +2030,7 @@ class pwg_images
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $filename_wo_ext = functions::get_filename_wo_extension($row['file']);
-            @$unique_filenames_db[$filename_wo_ext][] = $row['id'];
+            $unique_filenames_db[$filename_wo_ext][] = $row['id'];
         }
 
         // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example

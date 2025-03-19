@@ -602,7 +602,7 @@ class pwg_users
         }
 
         if (! empty($params['level']) or
-            @$params['level'] === 0
+            $params['level'] === 0
         ) {
             if (! in_array($params['level'], $conf['available_permission_levels'])) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
@@ -632,31 +632,31 @@ class pwg_users
         }
 
         if (! empty($params['recent_period']) or
-            @$params['recent_period'] === 0
+            $params['recent_period'] === 0
         ) {
             $updates_infos['recent_period'] = $params['recent_period'];
         }
 
         if (! empty($params['expand']) or
-            @$params['expand'] === false
+            $params['expand'] === false
         ) {
             $updates_infos['expand'] = functions_mysqli::boolean_to_string($params['expand']);
         }
 
         if (! empty($params['show_nb_comments']) or
-            @$params['show_nb_comments'] === false
+            $params['show_nb_comments'] === false
         ) {
             $updates_infos['show_nb_comments'] = functions_mysqli::boolean_to_string($params['show_nb_comments']);
         }
 
         if (! empty($params['show_nb_hits']) or
-            @$params['show_nb_hits'] === false
+            $params['show_nb_hits'] === false
         ) {
             $updates_infos['show_nb_hits'] = functions_mysqli::boolean_to_string($params['show_nb_hits']);
         }
 
         if (! empty($params['enabled_high']) or
-            @$params['enabled_high'] === false
+            $params['enabled_high'] === false
         ) {
             $updates_infos['enabled_high'] = functions_mysqli::boolean_to_string($params['enabled_high']);
         }

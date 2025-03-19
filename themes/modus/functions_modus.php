@@ -156,7 +156,7 @@ class functions_modus
     public static function modus_loc_begin_page_header()
     {
         $all = $GLOBALS['template']->scriptLoader->get_all();
-        $jq = @$all['jquery'];
+        $jq = $all['jquery'];
 
         if ($jq) {
             $jq->set_path(RVPT_JQUERY_SRC);
@@ -177,7 +177,7 @@ class functions_modus
         $template->assign([
             'conf' => $conf,
             'skin' => $skin,
-            'MODUS_ALBUM_THUMB_SIZE' => intval(@$conf['modus_theme']['album_thumb_size']),
+            'MODUS_ALBUM_THUMB_SIZE' => intval($conf['modus_theme']['album_thumb_size']),
             'SQUARE_WIDTH' => ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE)->max_width(),
             'loaded_plugins' => $GLOBALS['pwg_loaded_plugins'],
         ]);
@@ -185,9 +185,9 @@ class functions_modus
 
     public static function modus_css_resolution($params)
     {
-        $base = @$params['base'];
-        $min = @$params['min'];
-        $max = @$params['max'];
+        $base = $params['base'];
+        $min = $params['min'];
+        $max = $params['max'];
 
         $rules = [];
 
@@ -385,7 +385,7 @@ class functions_modus
                 }
             }
 
-            $new = @ImageStdParams::get_by_type($type);
+            $new = ImageStdParams::get_by_type($type);
 
             if ($new) {
                 return $new;
@@ -398,7 +398,7 @@ class functions_modus
     public static function modus_index_category_thumbnails($items)
     {
         global $page, $template, $conf;
-        $wh = @$conf['modus_theme']['album_thumb_size'];
+        $wh = $conf['modus_theme']['album_thumb_size'];
 
         if ($page['section'] != 'categories' ||
             ! $wh

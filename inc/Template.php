@@ -963,9 +963,9 @@ class Template
             $params['id'],
             $load,
             empty($params['require']) ? [] : explode(',', $params['require']),
-            @$params['path'],
+            $params['path'],
             isset($params['version']) ? $params['version'] : 0,
-            @$params['template']
+            $params['template']
         );
     }
 
@@ -1067,7 +1067,7 @@ class Template
             $params['id'] = md5($params['path']);
         }
 
-        $this->cssLoader->add($params['id'], $params['path'], isset($params['version']) ? $params['version'] : 0, (int) @$params['order'], (bool) @$params['template']);
+        $this->cssLoader->add($params['id'], $params['path'], isset($params['version']) ? $params['version'] : 0, (int) $params['order'], (bool) $params['template']);
     }
 
     /**

@@ -264,7 +264,7 @@ if (isset($_GET['action'])) {
                             'comment_id' => $_GET['comment_to_edit'],
                             'image_id' => $page['image_id'],
                             'content' => $_POST['content'],
-                            'website_url' => @$_POST['website_url'],
+                            'website_url' => $_POST['website_url'],
                         ],
                         $_POST['key']
                     );
@@ -915,7 +915,7 @@ $template->assign('ELEMENT_CONTENT', $element_content);
 if (isset($picture['next']) and
     $picture['next']['src_image']->is_original() and
     $template->get_template_vars('U_PREFETCH') == null and
-    strpos(@$_SERVER['HTTP_USER_AGENT'], 'Chrome/') === false
+    strpos($_SERVER['HTTP_USER_AGENT'], 'Chrome/') === false
 ) {
     $template->assign(
         'U_PREFETCH',

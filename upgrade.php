@@ -20,21 +20,21 @@ use Piwigo\inc\Template;
 // PHP engine might still have old files in cache. We do not want to use the cache and
 // force reload of all application files. Thus we disable opcache.
 if (function_exists('ini_set')) {
-    @ini_set('opcache.enable', 0);
+    ini_set('opcache.enable', 0);
 }
 
 define('PHPWG_ROOT_PATH', './');
 
 // load config file
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
-@include(PHPWG_ROOT_PATH . 'local/config/config.php');
+include(PHPWG_ROOT_PATH . 'local/config/config.php');
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
 $config_file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php';
-$config_file_contents = @file_get_contents($config_file);
+$config_file_contents = file_get_contents($config_file);
 
 if ($config_file_contents === false) {
     die('Cannot load ' . $config_file);
@@ -81,7 +81,7 @@ if (isset($_GET['language'])) {
     $language = 'en_UK';
     // Try to get browser language
     foreach ($languages->fs_languages as $language_code => $fs_language) {
-        if (substr($language_code, 0, 2) == @substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) {
+        if (substr($language_code, 0, 2) == substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) {
             $language = $language_code;
             break;
         }
@@ -307,7 +307,7 @@ if ((isset($_POST['submit']) or isset($_GET['now'])) and
               . implode("\r\n", $mysql_changes) . "\r\n"
               . substr($config_file_contents, $php_end_tag);
 
-            if (! @file_put_contents($config_file, $config_file_contents)) {
+            if (! file_put_contents($config_file, $config_file_contents)) {
                 $page['infos'][] = functions::l10n(
                     'In <i>%s</i>, before <b>?></b>, insert:',
                     PWG_LOCAL_DIR . 'config/database.php'

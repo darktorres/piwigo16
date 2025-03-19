@@ -32,7 +32,7 @@ if (! $conf['allow_user_registration']) {
 functions_plugins::trigger_notify('loc_begin_register');
 
 if (isset($_POST['submit'])) {
-    if (! functions::verify_ephemeral_key(@$_POST['key'])) {
+    if (! functions::verify_ephemeral_key($_POST['key'])) {
         functions_html::set_status_header(403);
         $page['errors'][] = functions::l10n('Invalid/expired form key');
     }

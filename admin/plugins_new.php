@@ -172,7 +172,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
             'SMALL_DESC' => trim($small_desc, " \r\n"),
             'BIG_DESC' => $ext_desc,
             'VERSION' => $plugin['revision_name'],
-            'REVISION_DATE' => preg_replace('/[^0-9]/', '', strtotime($plugin['revision_date'])),
+            'REVISION_DATE' => preg_replace('/[^0-9]/', '', (string) strtotime($plugin['revision_date'])),
             'REVISION_FORMATED_DATE' => functions::format_date($plugin['revision_date'], ['day', 'month', 'year']) . ', ' . functions::time_since($plugin['revision_date'], 'day'),
             'AUTHOR' => $plugin['author_name'],
             'DOWNLOADS' => $plugin['extension_nb_downloads'],

@@ -537,7 +537,7 @@ class functions_modus
         }
 
         if (isset($_COOKIE['picture_deriv'])) { // ignore persistence
-            setcookie('picture_deriv', false, 0, functions_cookie::cookie_path());
+            setcookie('picture_deriv', '', 0, functions_cookie::cookie_path());
         }
 
         $selected_derivative = null;

@@ -174,7 +174,7 @@ if (isset($_POST['submit'])) {
                         $page['errors'][] = functions::l10n('No order field selected');
                     } else {
                         // limit to the number of available parameters
-                        $order_by = $order_by_inside_category = array_slice($_POST['order_by'], 0, ceil(count($sort_fields) / 2));
+                        $order_by = $order_by_inside_category = array_slice($_POST['order_by'], 0, (int) ceil(count($sort_fields) / 2));
                         $i = array_search('`rank` ASC', $order_by);
 
                         // there is no rank outside categories
@@ -351,7 +351,7 @@ switch ($page['section']) {
         } else {
             $out = [];
             $order_by = trim($conf['order_by_inside_category']);
-            $order_by = str_replace('ORDER BY ', false, $order_by);
+            $order_by = str_replace('ORDER BY ', '', $order_by);
             $order_by = explode(', ', $order_by);
         }
 

@@ -37,7 +37,7 @@ class functions_metadata_admin
                     $month = $matches[2];
                     $day = $matches[3];
 
-                    if (! checkdate($month, $day, $year)) {
+                    if (! checkdate((int) $month, (int) $day, (int) $year)) {
                         // we suppose the year is correct
                         $month = 1;
                         $day = 1;

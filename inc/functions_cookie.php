@@ -87,7 +87,7 @@ class functions_cookie
             $expire === 0
         ) {
             unset($_COOKIE['pwg_' . $var]);
-            return setcookie('pwg_' . $var, false, 0, self::cookie_path());
+            return setcookie('pwg_' . $var, '', 0, self::cookie_path());
         }
 
         $_COOKIE['pwg_' . $var] = $value;

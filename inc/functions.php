@@ -874,7 +874,7 @@ class functions
             return DateTime::createFromFormat('!' . $format, $original); // ! char to reset fields to UNIX epoch
         }
 
-        $t = trim($original, '0123456789');
+        $t = trim((string) $original, '0123456789');
 
         if (empty($t)) { // from timestamp
             return new DateTime('@' . $original);
@@ -907,8 +907,8 @@ class functions
         }
 
         $date = new DateTime();
-        $date->setDate($ymdhms[0], $ymdhms[1], $ymdhms[2]);
-        $date->setTime($ymdhms[3], $ymdhms[4], $ymdhms[5]);
+        $date->setDate((int) $ymdhms[0], (int) $ymdhms[1], (int) $ymdhms[2]);
+        $date->setTime((int) $ymdhms[3], (int) $ymdhms[4], (int) $ymdhms[5]);
         return $date;
     }
 
@@ -2349,7 +2349,7 @@ class functions
             }
 
             foreach ($param_value as $key => $item_to_check) {
-                if (! preg_match(PATTERN_ID, $key) or
+                if (! preg_match(PATTERN_ID, (string) $key) or
                     ! preg_match($pattern, $item_to_check)
                 ) {
                     functions_html::fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"');
@@ -3297,7 +3297,7 @@ class functions
                 functions_session::pwg_set_session_var('picture_deriv', $_COOKIE['picture_deriv']);
             }
 
-            setcookie('picture_deriv', false, 0, functions_cookie::cookie_path());
+            setcookie('picture_deriv', '', 0, functions_cookie::cookie_path());
         }
 
         $deriv_type = functions_session::pwg_get_session_var('picture_deriv', $conf['derivative_default_size']);

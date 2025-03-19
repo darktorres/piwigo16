@@ -27,8 +27,8 @@ $pictures = [];
 
 $selection = array_slice(
     $page['items'],
-    $page['start'],
-    $page['nb_image_page']
+    (int) $page['start'],
+    (int) $page['nb_image_page']
 );
 
 $selection = functions_plugins::trigger_change('loc_index_thumbnails_selection', $selection);

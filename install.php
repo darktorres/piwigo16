@@ -374,7 +374,7 @@ if (isset($_POST['install'])) {
             // make sure nobody can list files of _data directory
             functions::secure_directory(PHPWG_ROOT_PATH . $conf['data_location']);
 
-            $tmp_filename = md5(uniqid(time()));
+            $tmp_filename = md5(uniqid((string) time()));
             $fh = fopen(PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $tmp_filename, 'w');
             fputs($fh, $file_content, strlen($file_content));
             fclose($fh);

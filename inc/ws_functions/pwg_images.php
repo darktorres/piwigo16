@@ -807,7 +807,7 @@ class pwg_images
 
         if (isset($params['categories'])) {
             foreach ($params['categories'] as $cat_id) {
-                if (! preg_match('/^\d+$/', $cat_id)) {
+                if (! preg_match('/^\d+$/', (string) $cat_id)) {
                     return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter categories');
                 }
             }
@@ -843,7 +843,7 @@ class pwg_images
 
         if (isset($params['added_by'])) {
             foreach ($params['added_by'] as $user_id) {
-                if (! preg_match('/^\d+$/', $user_id)) {
+                if (! preg_match('/^\d+$/', (string) $user_id)) {
                     return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter added_by');
                 }
             }

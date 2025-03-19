@@ -268,7 +268,7 @@ class pwg_image
         $exif = @exif_read_data($source_filepath);
 
         if (isset($exif['Orientation']) and
-            preg_match('/^\s*(\d)/', $exif['Orientation'], $matches)
+            preg_match('/^\s*(\d)/', (string) $exif['Orientation'], $matches)
         ) {
             $orientation = $matches[1];
 

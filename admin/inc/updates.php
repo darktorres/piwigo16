@@ -64,7 +64,7 @@ class updates
         $_SESSION['need_update' . PHPWG_VERSION] = null;
 
         if (preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches) and
-            functions_admin::fetchRemote(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid(mt_rand(), true)), $result)
+            functions_admin::fetchRemote(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true)), $result)
         ) {
             $all_versions = explode("\n", $result);
             $new_version = trim($all_versions[0]);
@@ -96,7 +96,7 @@ class updates
             $actual_branch = functions::get_branch_from_version(PHPWG_VERSION);
 
             $url = PHPWG_URL . '/download/all_versions.php';
-            $url .= '?rand=' . md5(uniqid(mt_rand(), true)); // Avoid server cache
+            $url .= '?rand=' . md5(uniqid((string) mt_rand(), true)); // Avoid server cache
             $url .= '&show_requirements';
             $url .= '&origin_hash=' . sha1($conf['secret_key'] . functions_url::get_absolute_root_url());
 

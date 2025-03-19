@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*gradients facebook '#3B5998','#2B4170' ; Google '#E64522','#C33219' ; Pinterest '#CB2027','#A0171C'*/
 $skin = [
     'BODY' => [

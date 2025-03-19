@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Piwigo\admin\inc\themes;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_user;

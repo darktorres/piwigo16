@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Piwigo\inc\functions;
 
 if (! defined('PHPWG_ROOT_PATH')) {

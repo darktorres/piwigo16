@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $lang['%d file'] = '%d file';
 $lang['%d files'] = '%d files';
 $lang['Animate thumbnail on hover'] = 'Animate thumbnail on hover';

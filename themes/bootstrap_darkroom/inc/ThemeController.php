@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Piwigo\themes\bootstrap_darkroom\inc;
 
 use Piwigo\inc\dblayer\functions_mysqli;

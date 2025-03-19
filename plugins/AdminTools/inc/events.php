@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;

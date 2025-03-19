@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $lang['Enabled'] = 'Enabled';
 $lang['Disabled'] = 'Disabled';
 $lang['Color theme'] = 'Color theme';

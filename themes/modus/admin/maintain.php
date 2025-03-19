@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\themes\modus\functions_modus;

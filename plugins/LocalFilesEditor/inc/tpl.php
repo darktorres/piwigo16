@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\inc\functions;
 use Piwigo\plugins\LocalFilesEditor\inc\functions_LocalFilesEditor;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Piwigo\plugins\AdminTools;
 
 use Piwigo\inc\functions;

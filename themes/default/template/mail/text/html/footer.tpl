@@ -15,7 +15,7 @@ to show the origin of the script... --> *}
 
                 - {'Contact'|translate}
                 <a
-                  href="mailto:{$CONTACT_MAIL}?subject={'A comment on your site'|translate|escape:url}">{'Webmaster'|@translate}</a>
+                  href="mailto:{$CONTACT_MAIL}?subject={'A comment on your site'|translate|escape:url}">{'Webmaster'|translate}</a>
                 {* <!-- end FOOTER --> *}
               </td>
             </tr>

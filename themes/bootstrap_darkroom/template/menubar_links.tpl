@@ -1,5 +1,5 @@
 <li class="nav-item dropdown" id="linksDropdown">
-    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{'Links'|@translate}</a>
+    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{'Links'|translate}</a>
     <div class="dropdown-menu dropdown-menu-right" role="menu">
         {foreach from=$block->data item=link}
             <a href="{$link.URL}" class="dropdown-item external" {if isset($link.new_window)}

@@ -45,11 +45,11 @@
 </script>{/footer_script}
 
 <div class="commentFilter">
-  <a href="{$F_ACTION}&amp;filter=all" class="{if $filter == 'all'}commentFilterSelected{/if}">{'All'|@translate}</a>
+  <a href="{$F_ACTION}&amp;filter=all" class="{if $filter == 'all'}commentFilterSelected{/if}">{'All'|translate}</a>
   ({$nb_total})
   | <a href="{$F_ACTION}&amp;filter=pending"
-    class="{if $filter == 'pending'}commentFilterSelected{/if}">{'Waiting'|@translate}</a> ({$nb_pending})
-  {if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+    class="{if $filter == 'pending'}commentFilterSelected{/if}">{'Waiting'|translate}</a> ({$nb_pending})
+  {if !empty($navbar) }{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}
 </div>
 
 
@@ -66,7 +66,7 @@
           <td>
             <div class="comment">
               <a class="illustration" href="{$comment.U_PICTURE}"><img src="{$comment.TN_SRC}"></a>
-              <p class="commentHeader">{if $comment.IS_PENDING}<span class="pendingFlag">{'Waiting'|@translate}</span> -
+              <p class="commentHeader">{if $comment.IS_PENDING}<span class="pendingFlag">{'Waiting'|translate}</span> -
                   {/if}{if !empty($comment.IP)}{$comment.IP} - {/if}<strong>{$comment.AUTHOR}</strong> -
                   <em>{$comment.DATE}</em>
                 </p>
@@ -78,15 +78,15 @@
       </table>
 
       <p class="checkActions">
-        {'Select:'|@translate}
-        <a href="#" id="commentSelectAll">{'All'|@translate}</a>,
-        <a href="#" id="commentSelectNone">{'None'|@translate}</a>,
-        <a href="#" id="commentSelectInvert">{'Invert'|@translate}</a>
+        {'Select:'|translate}
+        <a href="#" id="commentSelectAll">{'All'|translate}</a>,
+        <a href="#" id="commentSelectNone">{'None'|translate}</a>,
+        <a href="#" id="commentSelectInvert">{'Invert'|translate}</a>
       </p>
 
       <p class="bottomButtons">
-        <input type="submit" name="validate" value="{'Validate'|@translate}">
-        <input type="submit" name="reject" value="{'Reject'|@translate}">
+        <input type="submit" name="validate" value="{'Validate'|translate}">
+        <input type="submit" name="reject" value="{'Reject'|translate}">
       </p>
 
     </form>

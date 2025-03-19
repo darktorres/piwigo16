@@ -1,5 +1,5 @@
 <li id="relatedCategoriesDropdownMenu" class="nav-item dropdown">
-  <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{'Related albums'|@translate}</a>
+  <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{'Related albums'|translate}</a>
   <div class="dropdown-menu dropdown-menu-right" role="menu">
     {foreach from=$block->data.MENU_CATEGORIES item=cat}
       <{if isset($cat.url)}a href="{$cat.url}" {else}span{/if} class="dropdown-item" data-level="{($cat.LEVEL -1)}">

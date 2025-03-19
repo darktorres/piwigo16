@@ -4,7 +4,7 @@
             onsubmit="return this.q.value!='' && this.q.value!=qsearch_prompt;">
             <div class="form-group">
                 <input type="text" name="q" id="qsearchInput" class="form-control"
-                    placeholder="{'Quick search'|@translate}" />
+                    placeholder="{'Quick search'|translate}" />
             </div>
         </form>
     </div>

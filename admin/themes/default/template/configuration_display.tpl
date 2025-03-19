@@ -29,7 +29,7 @@
             <span class="icon-check"></span>
             <input type="checkbox" name="menubar_filter_icon" {if ($display.menubar_filter_icon)}checked="checked"
               {/if}>
-            {'Activate icon "%s"'|translate:('display only recently posted photos'|translate|@ucfirst)}
+            {'Activate icon "%s"'|translate:('display only recently posted photos'|translate|ucfirst)}
           </label>
         </li>
 
@@ -72,7 +72,7 @@
           <label class="font-checkbox">
             <span class="icon-check"></span>
             <input type="checkbox" name="index_flat_icon" {if ($display.index_flat_icon)}checked="checked" {/if}>
-            {'Activate icon "%s"'|translate:('display all photos in all sub-albums'|translate|@ucfirst)}
+            {'Activate icon "%s"'|translate:('display all photos in all sub-albums'|translate|ucfirst)}
           </label>
         </li>
 
@@ -81,7 +81,7 @@
             <span class="icon-check"></span>
             <input type="checkbox" name="index_posted_date_icon" {if ($display.index_posted_date_icon)}checked="checked"
               {/if}>
-            {'Activate icon "%s"'|translate:('display a calendar by posted date'|translate|@ucfirst)}
+            {'Activate icon "%s"'|translate:('display a calendar by posted date'|translate|ucfirst)}
           </label>
         </li>
 
@@ -90,7 +90,7 @@
             <span class="icon-check"></span>
             <input type="checkbox" name="index_created_date_icon"
               {if ($display.index_created_date_icon)}checked="checked" {/if}>
-            {'Activate icon "%s"'|translate:('display a calendar by creation date'|translate|@ucfirst)}
+            {'Activate icon "%s"'|translate:('display a calendar by creation date'|translate|ucfirst)}
           </label>
         </li>
 
@@ -99,7 +99,7 @@
             <span class="icon-check"></span>
             <input type="checkbox" name="index_slideshow_icon" {if ($display.index_slideshow_icon)}checked="checked"
               {/if}>
-            {'Activate icon "%s"'|translate:('slideshow'|translate|@ucfirst)}
+            {'Activate icon "%s"'|translate:('slideshow'|translate|ucfirst)}
           </label>
         </li>
 
@@ -107,7 +107,7 @@
           <label class="font-checkbox">
             <span class="icon-check"></span>
             <input type="checkbox" name="index_sizes_icon" {if ($display.index_sizes_icon)}checked="checked" {/if}>
-            {'Activate icon "%s"'|translate:('Photo sizes'|translate|@ucfirst)}
+            {'Activate icon "%s"'|translate:('Photo sizes'|translate|ucfirst)}
           </label>
         </li>
 
@@ -115,7 +115,7 @@
           <label class="font-checkbox">
             <span class="icon-check"></span>
             <input type="checkbox" name="index_edit_icon" {if ($display.index_edit_icon)}checked="checked" {/if}>
-            {'Activate icon "%s"'|translate:('Edit album'|translate|@ucfirst)} <span class="adminOnlyIcon tiptip"
+            {'Activate icon "%s"'|translate:('Edit album'|translate|ucfirst)} <span class="adminOnlyIcon tiptip"
               title="{'available for administrators only'|translate}"><i class="icon-users"></i>
               {'administrators'}</span>
           </label>
@@ -125,7 +125,7 @@
           <label class="font-checkbox">
             <span class="icon-check"></span>
             <input type="checkbox" name="index_caddie_icon" {if ($display.index_caddie_icon)}checked="checked" {/if}>
-            {'Activate icon "%s"'|translate:('Add to caddie'|translate|@ucfirst)} <span class="adminOnlyIcon tiptip"
+            {'Activate icon "%s"'|translate:('Add to caddie'|translate|ucfirst)} <span class="adminOnlyIcon tiptip"
               title="{'available for administrators only'|translate}"><i class="icon-users"></i>
               {'administrators'}</span>
           </label>
@@ -157,7 +157,7 @@
             <span class="icon-check"></span>
             <input type="checkbox" name="picture_slideshow_icon" {if ($display.picture_slideshow_icon)}checked="checked"
               {/if}>
-            {'Activate icon "%s"'|translate:('slideshow'|translate|@ucfirst)}
+            {'Activate icon "%s"'|translate:('slideshow'|translate|ucfirst)}
           </label>
         </li>
 
@@ -175,7 +175,7 @@
             <span class="icon-check"></span>
             <input type="checkbox" name="picture_download_icon" {if ($display.picture_download_icon)}checked="checked"
               {/if}>
-            {'Activate icon "%s"'|translate:('Download this file'|translate|@ucfirst)}
+            {'Activate icon "%s"'|translate:('Download this file'|translate|ucfirst)}
           </label>
         </li>
 
@@ -184,7 +184,7 @@
             <span class="icon-check"></span>
             <input type="checkbox" name="picture_favorite_icon" {if ($display.picture_favorite_icon)}checked="checked"
               {/if}>
-            {'Activate icon "%s"'|translate:('add this photo to your favorites'|translate|@ucfirst)}
+            {'Activate icon "%s"'|translate:('add this photo to your favorites'|translate|ucfirst)}
           </label>
         </li>
 
@@ -192,7 +192,7 @@
           <label class="font-checkbox">
             <span class="icon-check"></span>
             <input type="checkbox" name="picture_sizes_icon" {if ($display.picture_sizes_icon)}checked="checked" {/if}>
-            {'Activate icon "%s"'|translate:('Photo sizes'|translate|@ucfirst)}
+            {'Activate icon "%s"'|translate:('Photo sizes'|translate|ucfirst)}
           </label>
         </li>
 
@@ -200,7 +200,7 @@
           <label class="font-checkbox">
             <span class="icon-check"></span>
             <input type="checkbox" name="picture_edit_icon" {if ($display.picture_edit_icon)}checked="checked" {/if}>
-            {'Activate icon "%s"'|translate:('Edit photo'|translate|@ucfirst)} <span class="adminOnlyIcon tiptip"
+            {'Activate icon "%s"'|translate:('Edit photo'|translate|ucfirst)} <span class="adminOnlyIcon tiptip"
               title="{'available for administrators only'|translate}"><i class="icon-users"></i>
               {'administrators'}</span>
           </label>
@@ -211,7 +211,7 @@
             <span class="icon-check"></span>
             <input type="checkbox" name="picture_caddie_icon" {if ($display.picture_caddie_icon)}checked="checked"
               {/if}>
-            {'Activate icon "%s"'|translate:('Add to caddie'|translate|@ucfirst)} <span class="adminOnlyIcon tiptip"
+            {'Activate icon "%s"'|translate:('Add to caddie'|translate|ucfirst)} <span class="adminOnlyIcon tiptip"
               title="{'available for administrators only'|translate}"><i class="icon-users"></i>
               {'administrators'}</span>
           </label>
@@ -222,7 +222,7 @@
             <span class="icon-check"></span>
             <input type="checkbox" name="picture_representative_icon"
               {if ($display.picture_representative_icon)}checked="checked" {/if}>
-            {'Activate icon "%s"'|translate:('set as album representative'|translate|@ucfirst)} <span
+            {'Activate icon "%s"'|translate:('set as album representative'|translate|ucfirst)} <span
               class="adminOnlyIcon tiptip" title="{'available for administrators only'|translate}"><i
                 class="icon-users"></i> {'administrators'}</span>
           </label>
@@ -366,7 +366,7 @@
 
   <p class="formButtons">
     <button name="submit" type="submit" class="buttonLike" {if $isWebmaster != 1}disabled{/if}>
-      <i class="icon-floppy"></i> {'Save Settings'|@translate}
+      <i class="icon-floppy"></i> {'Save Settings'|translate}
     </button>
   </p>
 

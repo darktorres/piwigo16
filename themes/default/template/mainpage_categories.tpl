@@ -25,7 +25,7 @@ var error_icon = "{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png", max_reques
 						<img {if $derivative->is_cached()}src="{$derivative->get_url()}"
 							{else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->get_url()}"
 							{/if} alt="{$cat.TN_ALT}"
-							title="{$cat.NAME|@replace:'"':' '|@strip_tags:false} - {'display this album'|@translate}">
+							title="{$cat.NAME|replace:'"':' '|strip_tags:false} - {'display this album'|translate}">
 				</a>
 			</div>
 			<div class="description">

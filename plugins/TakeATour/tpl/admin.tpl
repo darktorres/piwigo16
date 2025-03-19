@@ -34,10 +34,10 @@
 </style>{/html_style}
 
 <div class="titrePage">
-  <h2>{'takeatour_configpage'|@translate}</h2>
+  <h2>{'takeatour_configpage'|translate}</h2>
 </div>
 <div id="helpContent">
-  <p>{'TAT_descrp'|@translate}</p>
+  <p>{'TAT_descrp'|translate}</p>
 
   <fieldset style="text-align:left">
     <legend>List of Tours</legend>
@@ -50,7 +50,7 @@
       <div id="{$tour.id}" class="pluginMiniBox">
         <div class="pluginMiniBoxNameCell">
           {$tour.name}
-          <a class="icon-info-circled-1 showInfo" title="{$tour.desc|@escape:'html'}"></a>
+          <a class="icon-info-circled-1 showInfo" title="{$tour.desc|escape:'html'}"></a>
         </div>
         <div class="pluginActions">
           <div>

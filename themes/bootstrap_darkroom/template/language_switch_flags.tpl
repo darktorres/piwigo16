@@ -1,7 +1,7 @@
 <li id="languageSwitch" class="nav-item dropdown">
     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
         <span class="pwg-icon langflag-{$lang_switch.Active.code}">&nbsp;</span><span
-            class="pwg-button-text">{'Language'|@translate}</span>
+            class="pwg-button-text">{'Language'|translate}</span>
     </a>
     <div class="dropdown-menu dropdown-menu-right" role="menu">
         {foreach from=$lang_switch.flags item=flag name=f}
@@ -19,7 +19,7 @@
 </li>
 
 {* <!-- common style specific for LanguageSwitch --> *}
-{combine_css path=$LANGUAGE_SWITCH_PATH|@cat:"language_switch.css"}
+{combine_css path=$LANGUAGE_SWITCH_PATH|cat:"language_switch.css"}
 
 {* move to main navbar to avoid scrolling issues in navmenu on mobile devices *}
 {footer_script require='jquery'}<script>

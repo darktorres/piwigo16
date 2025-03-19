@@ -2,14 +2,14 @@
         <ul class="pagination justify-content-center">
                 {if isset($navbar.URL_FIRST)}
                         <li class="page-item"><a class="page-link" href="{$navbar.URL_FIRST}{if $fragment}#{$fragment}{/if}"
-                                        rel="first"><i class="fas fa-fast-backward" title="{'First'|@translate}"></i></a></li>
+                                        rel="first"><i class="fas fa-fast-backward" title="{'First'|translate}"></i></a></li>
                         <li class="page-item"><a class="page-link" href="{$navbar.URL_PREV}{if $fragment}#{$fragment}{/if}"
-                                        rel="prev"><i class="fas fa-backward" title="{'Previous'|@translate}"></i></a></li>
+                                        rel="prev"><i class="fas fa-backward" title="{'Previous'|translate}"></i></a></li>
                 {else}
                         <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-fast-backward"
-                                                title="{'First'|@translate}"></i></a></li>
+                                                title="{'First'|translate}"></i></a></li>
                         <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-backward"
-                                                title="{'Previous'|@translate}"></i></a></li>
+                                                title="{'Previous'|translate}"></i></a></li>
                 {/if}
                 {assign var='prev_page' value=0}
                 {foreach from=$navbar.pages key=page item=url}
@@ -23,14 +23,14 @@
 
                 {if isset($navbar.URL_NEXT)}
                         <li class="page-item"><a class="page-link" href="{$navbar.URL_NEXT}{if $fragment}#{$fragment}{/if}"
-                                        rel="next"><i class="fas fa-forward" title="{'Next'|@translate}"></i></a></li>
+                                        rel="next"><i class="fas fa-forward" title="{'Next'|translate}"></i></a></li>
                         <li class="page-item"><a class="page-link" href="{$navbar.URL_LAST}{if $fragment}#{$fragment}{/if}"
-                                        rel="last"><i class="fas fa-fast-forward" title="{'Last'|@translate}"></i></a></li>
+                                        rel="last"><i class="fas fa-fast-forward" title="{'Last'|translate}"></i></a></li>
                 {else}
                         <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-forward"
-                                                title="{'Next'|@translate}"></i></a></li>
+                                                title="{'Next'|translate}"></i></a></li>
                         <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-fast-forward"
-                                                title="{'Last'|@translate}"></i></a></li>
+                                                title="{'Last'|translate}"></i></a></li>
                 {/if}
         </ul>
 </nav>

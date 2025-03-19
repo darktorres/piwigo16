@@ -2,12 +2,12 @@
       <!-- Picture infos -->
       <div id="card-information" class="card mb-2">
         <div class="card-body">
-          <h5 class="card-title">{'Information'|@translate}</h5>
+          <h5 class="card-title">{'Information'|translate}</h5>
           <div id="info-content" class="d-flex flex-column">
             {if $display_info.author and isset($INFO_AUTHOR)}
               <div id="Author" class="imageInfo">
                 <dl class="row mb-0">
-                  <dt class="col-sm-5">{'Author'|@translate}</dt>
+                  <dt class="col-sm-5">{'Author'|translate}</dt>
                   <dd class="col-sm-7">{$INFO_AUTHOR}</dd>
                 </dl>
               </div>
@@ -15,7 +15,7 @@
             {if isset($CR_INFO_NAME) && !empty($CR_INFO_NAME)}
               <div id="Copyright" class="imageInfo">
                 <dl class="row mb-0">
-                  <dt class="col-sm-5">{'Copyright'|@translate}</dt>
+                  <dt class="col-sm-5">{'Copyright'|translate}</dt>
                   <dd class="col-sm-7">{if isset($CR_INFO_URL)}<a
                       href="{$CR_INFO_URL}">{$CR_INFO_NAME}</a>{else}{$CR_INFO_NAME}
                     {/if}</dd>
@@ -25,13 +25,13 @@
             {if $display_info.rating_score and isset($rate_summary)}
               <div id="Average" class="imageInfo">
                 <dl class="row mb-0">
-                  <dt class="col-sm-5">{'Rating score'|@translate}</dt>
+                  <dt class="col-sm-5">{'Rating score'|translate}</dt>
                   <dd class="col-sm-7">
                     {if $rate_summary.count}
                       <span id="ratingScore">{$rate_summary.score}</span> <span
-                        id="ratingCount">({$rate_summary.count|@translate_dec:'%d rate':'%d rates'})</span>
+                        id="ratingCount">({$rate_summary.count|translate_dec:'%d rate':'%d rates'})</span>
                     {else}
-                      <span id="ratingScore">{'no rate'|@translate}</span> <span id="ratingCount"></span>
+                      <span id="ratingScore">{'no rate'|translate}</span> <span id="ratingCount"></span>
                     {/if}
                   </dd>
                 </dl>
@@ -42,7 +42,7 @@
               <div id="rating" class="imageInfo">
                 <dl class="row mb-0">
                   <dt class="col-sm-5" id="updateRate">
-                    {if isset($rating.USER_RATE)}{'Update your rating'|@translate}{else}{'Rate this photo'|@translate}{/if}
+                    {if isset($rating.USER_RATE)}{'Update your rating'|translate}{else}{'Rate this photo'|translate}{/if}
                   </dt>
                   <dd class="col-sm-7">
                     <form action="{$rating.F_ACTION}" method="post" id="rateForm" style="margin:0;">
@@ -61,15 +61,15 @@
                           _pwgRatingAutoQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
                           onSuccess: function(rating) {
                           var e = document.getElementById("updateRate");
-                          if (e) e.innerHTML = "{'Update your rating'|@translate|@escape:'javascript'}";
+                          if (e) e.innerHTML = "{'Update your rating'|translate|escape:'javascript'}";
                           e = document.getElementById("ratingScore");
                           if (e) e.innerHTML = rating.score;
                           e = document.getElementById("ratingCount");
                           if (e) {
                             if (rating.count == 1) {
-                              e.innerHTML = "({'%d rate'|@translate|@escape:'javascript'})".replace( "%d", rating.count);
+                              e.innerHTML = "({'%d rate'|translate|escape:'javascript'})".replace( "%d", rating.count);
                             } else {
-                              e.innerHTML = "({'%d rates'|@translate|@escape:'javascript'})".replace( "%d", rating.count);
+                              e.innerHTML = "({'%d rates'|translate|escape:'javascript'})".replace( "%d", rating.count);
                             }
                           }
                           $('#averageRate').find('span').each(function() {
@@ -90,7 +90,7 @@
             {if $display_info.created_on and isset($INFO_CREATION_DATE)}
               <div id="datecreate" class="imageInfo">
                 <dl class="row mb-0">
-                  <dt class="col-sm-5">{'Created on'|@translate}</dt>
+                  <dt class="col-sm-5">{'Created on'|translate}</dt>
                   <dd class="col-sm-7">{$INFO_CREATION_DATE}</dd>
                 </dl>
               </div>
@@ -98,7 +98,7 @@
             {if $display_info.posted_on}
               <div id="datepost" class="imageInfo">
                 <dl class="row mb-0">
-                  <dt class="col-sm-5">{'Posted on'|@translate}</dt>
+                  <dt class="col-sm-5">{'Posted on'|translate}</dt>
                   <dd class="col-sm-7">{$INFO_POSTED_DATE}</dd>
                 </dl>
               </div>
@@ -106,7 +106,7 @@
             {if $display_info.visits}
               <div id="visits" class="imageInfo">
                 <dl class="row mb-0">
-                  <dt class="col-sm-5">{'Visits'|@translate}</dt>
+                  <dt class="col-sm-5">{'Visits'|translate}</dt>
                   <dd class="col-sm-7">{$INFO_VISITS}</dd>
                 </dl>
               </div>
@@ -114,7 +114,7 @@
             {if $display_info.dimensions and isset($INFO_DIMENSIONS)}
               <div id="Dimensions" class="imageInfo">
                 <dl class="row mb-0">
-                  <dt class="col-sm-5">{'Dimensions'|@translate}</dt>
+                  <dt class="col-sm-5">{'Dimensions'|translate}</dt>
                   <dd class="col-sm-7">{$INFO_DIMENSIONS}</dd>
                 </dl>
               </div>
@@ -122,7 +122,7 @@
             {if $display_info.file}
               <div id="File" class="imageInfo">
                 <dl class="row mb-0">
-                  <dt class="col-sm-5">{'File'|@translate}</dt>
+                  <dt class="col-sm-5">{'File'|translate}</dt>
                   <dd class="col-sm-7">{$INFO_FILE}</dd>
                 </dl>
               </div>
@@ -130,7 +130,7 @@
             {if $display_info.filesize and isset($INFO_FILESIZE)}
               <div id="Filesize" class="imageInfo">
                 <dl class="row mb-0">
-                  <dt class="col-sm-5">{'Filesize'|@translate}</dt>
+                  <dt class="col-sm-5">{'Filesize'|translate}</dt>
                   <dd class="col-sm-7">{$INFO_FILESIZE}</dd>
                 </dl>
               </div>
@@ -138,7 +138,7 @@
             {if $display_info.categories and isset($related_categories)}
               <div id="Categories" class="imageInfo">
                 <dl class="row mb-0">
-                  <dt class="col-sm-5">{'Albums'|@translate}</dt>
+                  <dt class="col-sm-5">{'Albums'|translate}</dt>
                   <dd class="col-sm-7">
                     {foreach from=$related_categories item=cat name=cat_loop}
                       {if !$smarty.foreach.cat_loop.first}<br />{/if}{$cat}
@@ -168,7 +168,7 @@
               </script>{/footer_script}
               <div id="Privacy" class="imageInfo">
                 <dl class="row mb-0">
-                  <dt class="col-sm-5">{'Who can see this photo?'|@translate}</dt>
+                  <dt class="col-sm-5">{'Who can see this photo?'|translate}</dt>
                   <dd class="col-sm-7">
                     <div class="dropdown">
                       <button class="btn btn-primary btn-raised dropdown-toggle ellipsis" type="button"
@@ -193,7 +193,7 @@
       {if $display_info.tags and isset($related_tags)}
         <div id="card-tags" class="card mb-2">
           <div class="card-body">
-            <h5 class="card-title">{'Tags'|@translate}</h5>
+            <h5 class="card-title">{'Tags'|translate}</h5>
             <div id="Tags" class="imageInfo">
               {foreach from=$related_tags item=tag name=tag_loop}<a class="btn btn-primary btn-raised mr-1"
                 href="{$tag.URL}">{$tag.name}</a>{/foreach}
@@ -208,15 +208,15 @@
         <!-- metadata -->
         {if isset($metadata)}
           {if isset($loaded_plugins['exif_view'])}
-            {assign var="exif_make" value="{'exif_field_Make'|@translate}"}
-            {assign var="exif_model" value="{'exif_field_Model'|@translate}"}
-            {assign var="exif_lens" value="{'exif_field_UndefinedTag:0xA434'|@translate}"}
-            {assign var="exif_fnumber" value="{'exif_field_FNumber'|@translate}"}
-            {assign var="exif_iso" value="{'exif_field_ISOSpeedRatings'|@translate}"}
-            {assign var="exif_focal_length" value="{'exif_field_FocalLength'|@translate}"}
-            {assign var="exif_flash" value="{'exif_field_Flash'|@translate}"}
-            {assign var="exif_exposure_time" value="{'exif_field_ExposureTime'|@translate}"}
-            {assign var="exif_exposure_bias" value="{'exif_field_ExposureBiasValue'|@translate}"}
+            {assign var="exif_make" value="{'exif_field_Make'|translate}"}
+            {assign var="exif_model" value="{'exif_field_Model'|translate}"}
+            {assign var="exif_lens" value="{'exif_field_UndefinedTag:0xA434'|translate}"}
+            {assign var="exif_fnumber" value="{'exif_field_FNumber'|translate}"}
+            {assign var="exif_iso" value="{'exif_field_ISOSpeedRatings'|translate}"}
+            {assign var="exif_focal_length" value="{'exif_field_FocalLength'|translate}"}
+            {assign var="exif_flash" value="{'exif_field_Flash'|translate}"}
+            {assign var="exif_exposure_time" value="{'exif_field_ExposureTime'|translate}"}
+            {assign var="exif_exposure_bias" value="{'exif_field_ExposureBiasValue'|translate}"}
           {else}
             {assign var="exif_make" value="Make"}
             {assign var="exif_model" value="Model"}
@@ -231,7 +231,7 @@
 
           <div id="card-metadata" class="card mb-2">
             <div class="card-body">
-              <h5 class="card-title">{'EXIF Metadata'|@translate}</h5>
+              <h5 class="card-title">{'EXIF Metadata'|translate}</h5>
               <div id="metadata">
                 {if is_array($metadata.0.lines) && (array_key_exists("{$exif_make}", $metadata.0.lines) ||
                   array_key_exists("{$exif_model}", $metadata.0.lines))}
@@ -296,15 +296,15 @@
                 </div>
               </div>
               <button id="show_exif_data" class="btn btn-primary btn-raised mt-1" style="text-transform: none;"><i
-                  class="fas fa-info mr-1"></i> {'Show EXIF data'|@translate}</button>
+                  class="fas fa-info mr-1"></i> {'Show EXIF data'|translate}</button>
               {footer_script require='jquery'}<script>
                 $('#show_exif_data').on('click', function() {
                   if ($('#full_exif_data').hasClass('d-none')) {
                     $('#full_exif_data').addClass('d-flex').removeClass('d-none');
-                    $('#show_exif_data').html('<i class="fas fa-info mr-1"></i> {"Hide EXIF data"|@translate}');
+                    $('#show_exif_data').html('<i class="fas fa-info mr-1"></i> {"Hide EXIF data"|translate}');
                   } else {
                     $('#full_exif_data').addClass('d-none').removeClass('d-flex');
-                    $('#show_exif_data').html('<i class="fas fa-info mr-1"></i> {"Show EXIF data"|@translate}');
+                    $('#show_exif_data').html('<i class="fas fa-info mr-1"></i> {"Show EXIF data"|translate}');
                   }
                 });
               </script>{/footer_script}

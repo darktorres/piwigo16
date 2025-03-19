@@ -1,4 +1,4 @@
-<h3>{'Menu'|@translate}</h3>
+<h3>{'Menu'|translate}</h3>
 <ul data-role="listview">
 	{foreach from=$block->data item=link}
 		{if is_array($link)}

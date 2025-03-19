@@ -14,7 +14,7 @@
                                 <a class="btn btn-secondary" disabled="disabled">{$item.LABEL}</a>
                             {else}
                                 <a class="btn btn-secondary" {if isset($item.NB_IMAGES)}
-                                    title="{$item.NB_IMAGES|@translate_dec:'%d photo':'%d photos'}" {/if} href="{$item.URL}">{$item.LABEL}</a>
+                                    title="{$item.NB_IMAGES|translate_dec:'%d photo':'%d photos'}" {/if} href="{$item.URL}">{$item.LABEL}</a>
                             {/if}
                         {/foreach}
                     {else}
@@ -29,7 +29,7 @@
                                             <td>{$item.LABEL}</td>
                                         {else}
                                             <td class="bg-light">
-                                                <a{if isset($item.NB_IMAGES)} title="{$item.NB_IMAGES|@translate_dec:'%d photo':'%d photos'}"
+                                                <a{if isset($item.NB_IMAGES)} title="{$item.NB_IMAGES|translate_dec:'%d photo':'%d photos'}"
                                                     {/if} href="{$item.URL}">{$item.LABEL}</a>
                                             </td>
                                         {/if}
@@ -97,7 +97,7 @@
                                     <div class="calImg">
                                         <a href="{$day.U_IMG_LINK}">
                                             <img class="img-fluid" src="{$day.IMAGE}" alt="{$day.IMAGE_ALT}"
-                                                title="{$day.NB_ELEMENTS|@translate_dec:'%d photo':'%d photos'}">
+                                                title="{$day.NB_ELEMENTS|translate_dec:'%d photo':'%d photos'}">
                                         </a>
                                     </div>
                                 {else}

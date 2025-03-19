@@ -11,7 +11,7 @@
   {include file='infos_errors.tpl'}
 
   <div class="row justify-content-center">
-    {include file='picture_nav_buttons.tpl'|@get_extent:'picture_nav_buttons'}
+    {include file='picture_nav_buttons.tpl'|get_extent:'picture_nav_buttons'}
   </div>
   {if functions::get_device() != 'desktop' }
     {footer_script require="jquery"}<script>

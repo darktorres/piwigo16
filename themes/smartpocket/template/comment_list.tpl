@@ -1,5 +1,5 @@
 <ul data-role="listview" data-inset="true">
-  <li data-role="list-divider">{'User comments'|@translate}</li>
+  <li data-role="list-divider">{'User comments'|translate}</li>
   {foreach from=$comments item=comment name=comment_loop}
     <li>
       {if !isset($from) or $from!="picture"}<a href="{$comment.U_PICTURE}">

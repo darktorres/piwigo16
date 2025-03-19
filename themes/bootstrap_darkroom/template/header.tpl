@@ -11,7 +11,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   {if $meta_ref_enabled}
     {if isset($INFO_AUTHOR)}
-      <meta name="author" content="{$INFO_AUTHOR|@strip_tags:false|@replace:'"':' '}">
+      <meta name="author" content="{$INFO_AUTHOR|strip_tags:false|replace:'"':' '}">
   {/if}
   {if isset($related_tags)}
   <meta name="keywords"
@@ -19,7 +19,7 @@
   {/if}
   {if isset($COMMENT_IMG)}
   <meta name="description"
-    content="{$COMMENT_IMG|@strip_tags:false|@replace:'"':' '}{if isset($INFO_FILE)} - {$INFO_FILE}{/if}">
+    content="{$COMMENT_IMG|strip_tags:false|replace:'"':' '}{if isset($INFO_FILE)} - {$INFO_FILE}{/if}">
     {else}
       <meta name="description" content="{$PAGE_TITLE}{if isset($INFO_FILE)} - {$INFO_FILE}{/if}">
     {/if}
@@ -29,22 +29,22 @@
   <link rel="shortcut icon" type="image/x-icon" href="{$ROOT_URL}{$themeconf.icon_dir}/favicon.ico">
   <link rel="icon" sizes="192x192" href="{$ROOT_URL}themes/bootstrap_darkroom/img/logo.png">
   <link rel="apple-touch-icon" sizes="192x192" href="{$ROOT_URL}themes/bootstrap_darkroom/img/logo.png">
-  <link rel="start" title="{'Home'|@translate}" href="{$U_HOME}">
-  <link rel="search" title="{'Search'|@translate}" href="{$ROOT_URL}search.php">
+  <link rel="start" title="{'Home'|translate}" href="{$U_HOME}">
+  <link rel="search" title="{'Search'|translate}" href="{$ROOT_URL}search.php">
   {if isset($first.U_IMG)}
-    <link rel="first" title="{'First'|@translate}" href="{$first.U_IMG}">
+    <link rel="first" title="{'First'|translate}" href="{$first.U_IMG}">
   {/if}
   {if isset($previous.U_IMG)}
-    <link rel="prev" title="{'Previous'|@translate}" href="{$previous.U_IMG}">
+    <link rel="prev" title="{'Previous'|translate}" href="{$previous.U_IMG}">
   {/if}
   {if isset($next.U_IMG)}
-    <link rel="next" title="{'Next'|@translate}" href="{$next.U_IMG}">
+    <link rel="next" title="{'Next'|translate}" href="{$next.U_IMG}">
   {/if}
   {if isset($last.U_IMG)}
-    <link rel="last" title="{'Last'|@translate}" href="{$last.U_IMG}">
+    <link rel="last" title="{'Last'|translate}" href="{$last.U_IMG}">
   {/if}
   {if isset($U_UP)}
-    <link rel="up" title="{'Thumbnails'|@translate}" href="{$U_UP}">
+    <link rel="up" title="{'Thumbnails'|translate}" href="{$U_UP}">
   {/if}
   {if isset($U_PREFETCH)}
     <link rel="prefetch" href="{$U_PREFETCH}">
@@ -123,9 +123,9 @@
             {if $theme_config->quicksearch_navbar}
               <form class="form-inline navbar-form ml-auto" role="search" action="{$ROOT_URL}qsearch.php" method="get"
                 id="quicksearch" onsubmit="return this.q.value!='' && this.q.value!=qsearch_prompt;">
-                <i class="fas fa-search" title="{'Search'|@translate}" aria-hidden="true"></i>
+                <i class="fas fa-search" title="{'Search'|translate}" aria-hidden="true"></i>
                 <div class="form-group">
-                  <input type="text" name="q" id="qsearchInput" class="form-control" placeholder="{'Search'|@translate}" />
+                  <input type="text" name="q" id="qsearchInput" class="form-control" placeholder="{'Search'|translate}" />
                 </div>
               </form>
               {footer_script require='jquery'}<script>

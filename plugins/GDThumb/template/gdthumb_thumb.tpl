@@ -17,7 +17,7 @@
               {assign var="file_title" value=$thumbnail.NAME|cat:"."}
               {assign var="file_name" value=$thumbnail.file|replace:"_":" "}
               {if $file_name|strstr:$file_title}
-                {$media_type_name|@translate} {$thumbnail.id}
+                {$media_type_name|translate} {$thumbnail.id}
               {else}
                 {$thumbnail.NAME}
               {/if}
@@ -54,7 +54,7 @@
                 class="{if 0==$thumbnail.hit}zero {/if}nb-hits">{$pwg->l10n_dec('%d visit', '%d visits',$thumbnail.hit)}</span>
             {/if}
             {if isset($thumbnail.rating_score)}
-              <span class="{if 0==$thumbnail.rating_score}zero {/if}rating">, {'Rating:'|@translate}
+              <span class="{if 0==$thumbnail.rating_score}zero {/if}rating">, {'Rating:'|translate}
                 {$thumbnail.rating_score}</span>
             {/if}
           {/if}

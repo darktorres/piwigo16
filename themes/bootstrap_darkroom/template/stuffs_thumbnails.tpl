@@ -1,7 +1,7 @@
 {assign var='thumbnails' value=$block.thumbnails}
 {assign var='derivative_params' value=$block.derivative_params}
 <div class="row pwgstuffs-thumbnails">
-  {include file='thumbnails.tpl'|@get_extent:'index_thumbnails'}
+  {include file='thumbnails.tpl'|get_extent:'index_thumbnails'}
 </div>
 
 {footer_script require='jquery'}<script>

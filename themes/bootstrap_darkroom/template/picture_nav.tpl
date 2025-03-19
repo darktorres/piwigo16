@@ -28,17 +28,17 @@
                     </script>{/footer_script}
                     <li class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"
-                            title="{'Photo sizes'|@translate}">
+                            title="{'Photo sizes'|translate}">
                             <i class="far fa-image fa-fw" aria-hidden="true"></i><span
-                                class="d-lg-none ml-2">{'Photo sizes'|@translate}</span>
+                                class="d-lg-none ml-2">{'Photo sizes'|translate}</span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" role="menu">
                             {foreach from=$current.unique_derivatives item=derivative key=derivative_type}
                                 <a id="derivative{$derivative->get_type()}"
                                     class="dropdown-item derivative-li{if $derivative->get_type() == $current.selected_derivative->get_type()} active{/if}"
-                                    href="javascript:changeImgSrc('{$derivative->get_url()|@escape:javascript}','{$derivative_type}','{$derivative->get_type()}')"
+                                    href="javascript:changeImgSrc('{$derivative->get_url()|escape:javascript}','{$derivative_type}','{$derivative->get_type()}')"
                                     rel="nofollow">
-                                    {$derivative->get_type()|@translate}<span class="derivativeSizeDetails">
+                                    {$derivative->get_type()|translate}<span class="derivativeSizeDetails">
                                         ({$derivative->get_size_hr()})</span>
                                 </a>
                             {/foreach}
@@ -46,7 +46,7 @@
                                 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
                                 <a class="dropdown-item"
                                     href="javascript:phpWGOpenWindow('{$U_ORIGINAL}','xxx','scrollbars=yes,toolbar=no,status=no,resizable=yes')"
-                                    rel="nofollow">{'Original'|@translate}</a>
+                                    rel="nofollow">{'Original'|translate}</a>
                             {/if}
                         </div>
                     </li>
@@ -54,16 +54,16 @@
                 {if isset($U_SLIDESHOW_START)}
                     <li class="nav-item">
                         <a class="nav-link" href="{if $theme_config->photoswipe}javascript:;{else}{$U_SLIDESHOW_START}{/if}"
-                            title="{'slideshow'|@translate}" id="startSlideshow" rel="nofollow">
+                            title="{'slideshow'|translate}" id="startSlideshow" rel="nofollow">
                             <i class="fas fa-play fa-fw" aria-hidden="true"></i><span
-                                class="d-lg-none ml-2 text-capitalize">{'slideshow'|@translate}</span>
+                                class="d-lg-none ml-2 text-capitalize">{'slideshow'|translate}</span>
                         </a>
                     </li>
                 {/if}
                 {*{if isset($U_METADATA)}
                 <li class="nav-item">
-                    <a class="nav-link" href="{$U_METADATA}" title="{'Show file metadata'|@translate}" rel="nofollow">
-                        <i class="fas fa-camera-retro fa-fw" aria-hidden="true"></i><span class="d-lg-none ml-2">{'Show file metadata'|@translate}</span>
+                    <a class="nav-link" href="{$U_METADATA}" title="{'Show file metadata'|translate}" rel="nofollow">
+                        <i class="fas fa-camera-retro fa-fw" aria-hidden="true"></i><span class="d-lg-none ml-2">{'Show file metadata'|translate}</span>
                     </a>
                 </li>
 {/if}*}
@@ -71,16 +71,16 @@
                     {if empty($current.formats)}
                         <li class="nav-item">
                             <a id="downloadSwitchLink" class="nav-link" href="{$current.U_DOWNLOAD}"
-                                title="{'Download this file'|@translate}" rel="nofollow">
+                                title="{'Download this file'|translate}" rel="nofollow">
                                 <i class="fas fa-download fa-fw" aria-hidden="true"></i><span
-                                    class="d-lg-none ml-2">{'Download this file'|@translate}</span>
+                                    class="d-lg-none ml-2">{'Download this file'|translate}</span>
                             </a>
                         {else}
                         <li class="nav-item dropdown">
                             <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
-                                title="{'Download this file'|@translate}">
+                                title="{'Download this file'|translate}">
                                 <i class="fas fa-download fa-fw" aria-hidden="true"></i><span
-                                    class="d-lg-none ml-2">{'Download this file'|@translate}</span>
+                                    class="d-lg-none ml-2">{'Download this file'|translate}</span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-right" role="menu">
                                 {foreach from=$current.formats item=format}
@@ -94,28 +94,28 @@
                 {if isset($favorite)}
                     <li class="nav-item">
                         <a class="nav-link" href="{$favorite.U_FAVORITE}"
-                            title="{if $favorite.IS_FAVORITE}{'delete this photo from your favorites'|@translate}{else}{'add this photo to your favorites'|@translate}{/if}"
+                            title="{if $favorite.IS_FAVORITE}{'delete this photo from your favorites'|translate}{else}{'add this photo to your favorites'|translate}{/if}"
                             rel="nofollow">
                             <i class="fa{if !$favorite.IS_FAVORITE}r{else}s{/if} fa-heart fa-fw"></i><span
-                                class="d-lg-none ml-2">{if $favorite.IS_FAVORITE}{'delete this photo from your favorites'|@translate}{else}{'add this photo to your favorites'|@translate}{/if}</span>
+                                class="d-lg-none ml-2">{if $favorite.IS_FAVORITE}{'delete this photo from your favorites'|translate}{else}{'add this photo to your favorites'|translate}{/if}</span>
                         </a>
                     </li>
                 {/if}
                 {if isset($U_SET_AS_REPRESENTATIVE)}
                     <li class="nav-item">
                         <a class="nav-link" id="cmdSetRepresentative" href="{$U_SET_AS_REPRESENTATIVE}"
-                            title="{'set as album representative'|@translate}" rel="nofollow">
+                            title="{'set as album representative'|translate}" rel="nofollow">
                             <i class="fas fa-link fa-fw" aria-hidden="true"></i><span
-                                class="d-lg-none ml-2">{'set as album representative'|@translate}</span>
+                                class="d-lg-none ml-2">{'set as album representative'|translate}</span>
                         </a>
                     </li>
                 {/if}
                 {if isset($U_PHOTO_ADMIN)}
                     <li class="nav-item">
                         <a class="nav-link" id="cmdEditPhoto" href="{$U_PHOTO_ADMIN}"
-                            title="{'Modify information'|@translate}" rel="nofollow">
+                            title="{'Modify information'|translate}" rel="nofollow">
                             <i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i><span
-                                class="d-lg-none ml-2">{'Modify information'|@translate}</span>
+                                class="d-lg-none ml-2">{'Modify information'|translate}</span>
                         </a>
                     </li>
                 {/if}
@@ -137,9 +137,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{$U_CADDIE}"
                             onclick="addToCadie(this, '{$ROOT_URL}', {$current.id}); return false;"
-                            title="{'Add to caddie'|@translate}" rel="nofollow">
+                            title="{'Add to caddie'|translate}" rel="nofollow">
                             <i class="fas fa-shopping-basket fa-fw" aria-hidden="true"></i><span
-                                class="d-lg-none ml-2">{'Add to caddie'|@translate}</span>
+                                class="d-lg-none ml-2">{'Add to caddie'|translate}</span>
                         </a>
                     </li>
                 {/if}

@@ -1,23 +1,23 @@
 {footer_script}<script>
   var data = {json_encode($album_data)};
   var pwg_token = "{$PWG_TOKEN}";
-  var str_show_sub = "{'Show sub-albums'|@translate}";
-  var str_hide_sub = "{'Hide sub-albums'|@translate}";
-  var str_manage_sub_album = "{'Manage sub-albums'|@translate}";
+  var str_show_sub = "{'Show sub-albums'|translate}";
+  var str_hide_sub = "{'Hide sub-albums'|translate}";
+  var str_manage_sub_album = "{'Manage sub-albums'|translate}";
   var str_apply_order_raw = "{'apply automatic sort order'|translate}";
   var str_apply_order = str_apply_order_raw.charAt(0).toUpperCase() + str_apply_order_raw.slice(1);
-  var str_edit = "{'Edit album'|@translate}";
-  var str_are_you_sure = "{'The status of the album \'%s\' and its sub-albums will change to private. Are you sure?'|@translate}";
-  var str_yes_change_parent = "{'Yes change parent anyway'|@translate}";
-  var str_no_change_parent = "{'No, don\'t move this album here'|@translate}";
-  var str_root = "{'Root'|@translate}";
+  var str_edit = "{'Edit album'|translate}";
+  var str_are_you_sure = "{'The status of the album \'%s\' and its sub-albums will change to private. Are you sure?'|translate}";
+  var str_yes_change_parent = "{'Yes change parent anyway'|translate}";
+  var str_no_change_parent = "{'No, don\'t move this album here'|translate}";
+  var str_root = "{'Root'|translate}";
   var openCat = {$open_cat};
   var nb_albums = {$nb_albums};
   var light_album_manager = {$light_album_manager};
 
-  var x_nb_subcats = "{'%d sub-albums'|@translate}";
-  var x_nb_images = "{'%d photos'|@translate}";
-  var x_nb_sub_photos = "{'%d pictures in sub-albums'|@translate}";
+  var x_nb_subcats = "{'%d sub-albums'|translate}";
+  var x_nb_images = "{'%d photos'|translate}";
+  var x_nb_sub_photos = "{'%d pictures in sub-albums'|translate}";
 
   var delay_autoOpen = {$delay_before_autoOpen}
 </script>{/footer_script}
@@ -30,25 +30,25 @@
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 {footer_script}<script>
-  const delete_album_with_name = '{'Delete album "%s".'|@translate|escape:javascript}';
-  const delete_album_with_subs = '{'Delete album "%s" and its %d sub-albums.'|@translate|escape:javascript}'
-  const has_images_associated_outside = '{"delete album and all %d photos, even the %d associated to other albums"|@translate|escape:javascript}';
-  const has_images_becoming_orphans = '{'delete album and the %d orphan photos'|@translate|escape:javascript}';
-  const has_images_recursives = '{'delete only album, not photos'|@translate|escape:javascript}';
-  const rename_item = '{'Rename "%s"'|@translate|escape:javascript}';
+  const delete_album_with_name = '{'Delete album "%s".'|translate|escape:javascript}';
+  const delete_album_with_subs = '{'Delete album "%s" and its %d sub-albums.'|translate|escape:javascript}'
+  const has_images_associated_outside = '{"delete album and all %d photos, even the %d associated to other albums"|translate|escape:javascript}';
+  const has_images_becoming_orphans = '{'delete album and the %d orphan photos'|translate|escape:javascript}';
+  const has_images_recursives = '{'delete only album, not photos'|translate|escape:javascript}';
+  const rename_item = '{'Rename "%s"'|translate|escape:javascript}';
 
-  const str_add_album = '{'Add Album'|@translate|escape:javascript}';
-  const str_edit_album = '{'Edit album'|@translate|escape:javascript}';
-  const str_add_photo = '{'Add Photos'|@translate|escape:javascript}';
-  const str_visit_gallery = '{'Visit Gallery'|@translate|escape:javascript}';
-  const str_sort_order = '{'Automatic sort order'|@translate|escape:javascript}';
-  const str_delete_album = '{'Delete album'|@translate|escape:javascript}';
-  const str_root_order = '{'Apply to root albums'|@translate|escape:javascript}';
-  str_sub_album_order = '{'Apply to direct sub-albums'|@translate|escape:javascript}';
-  str_album_name_empty = '{'Album name must not be empty'|@translate|escape:javascript}'
+  const str_add_album = '{'Add Album'|translate|escape:javascript}';
+  const str_edit_album = '{'Edit album'|translate|escape:javascript}';
+  const str_add_photo = '{'Add Photos'|translate|escape:javascript}';
+  const str_visit_gallery = '{'Visit Gallery'|translate|escape:javascript}';
+  const str_sort_order = '{'Automatic sort order'|translate|escape:javascript}';
+  const str_delete_album = '{'Delete album'|translate|escape:javascript}';
+  const str_root_order = '{'Apply to root albums'|translate|escape:javascript}';
+  str_sub_album_order = '{'Apply to direct sub-albums'|translate|escape:javascript}';
+  str_album_name_empty = '{'Album name must not be empty'|translate|escape:javascript}'
 
-  const add_album_root_title = '{'Create a new album at root'|@translate|escape:javascript}';
-  const add_sub_album_of = '{'Create a sub-album of "%s"'|@translate|escape:javascript}';
+  const add_album_root_title = '{'Create a new album at root'|translate|escape:javascript}';
+  const add_sub_album_of = '{'Create a sub-album of "%s"'|translate|escape:javascript}';
   const tiptip_locked_album = "{'Locked album'|translate|escape:javascript}";
 </script>{/footer_script}
 
@@ -68,53 +68,53 @@
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="name ASC" name="order" checked>
-          {'Album name, A &rarr; Z'|@translate}
+          {'Album name, A &rarr; Z'|translate}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="name DESC" name="order">
-          {'Album name, Z &rarr; A'|@translate}
+          {'Album name, Z &rarr; A'|translate}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="natural_order ASC" name="order">
-          {'Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100'|@translate}
+          {'Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100'|translate}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="natural_order DESC" name="order">
-          {'Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1'|@translate}
+          {'Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1'|translate}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="date_creation DESC" name="order">
-          {'Date created, new &rarr; old'|@translate}
+          {'Date created, new &rarr; old'|translate}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="date_creation ASC" name="order">
-          {'Date created, old &rarr; new'|@translate}
+          {'Date created, old &rarr; new'|translate}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="date_available DESC" name="order">
-          {'Date posted, new &rarr; old'|@translate}
+          {'Date posted, new &rarr; old'|translate}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="date_available ASC" name="order">
-          {'Date posted, old &rarr; new'|@translate}
+          {'Date posted, old &rarr; new'|translate}
         </label>
       </div>
-      <input type="submit" name="simpleAutoOrder" value="{'Apply to direct sub-albums'|@translate}" />
-      <input type="submit" name="recursiveAutoOrder" value="{'Apply to the whole hierarchy'|@translate}" />
+      <input type="submit" name="simpleAutoOrder" value="{'Apply to direct sub-albums'|translate}" />
+      <input type="submit" name="recursiveAutoOrder" value="{'Apply to the whole hierarchy'|translate}" />
     </form>
   </div>
 </div>
@@ -122,15 +122,15 @@
 <div class="cat-move-header">
   <div class="add-album-button">
     <label class="head-button-2 icon-add-album">
-      <p>{'Add Album'|@translate}</p>
+      <p>{'Add Album'|translate}</p>
     </label>
   </div>
   <div class="order-root-button">
     <label class="order-root head-button-2 icon-sort-name-up">
-      <p>{'Automatic sort order'|@translate}</p>
+      <p>{'Automatic sort order'|translate}</p>
     </label>
   </div>
-  <div class="cat-move-info icon-help-circled"> {'Drag and drop to reorder albums'|@translate}</div>
+  <div class="cat-move-info icon-help-circled"> {'Drag and drop to reorder albums'|translate}</div>
 </div>
 
 <div id="AddAlbum" class="AddAlbumPopIn">
@@ -145,13 +145,13 @@
     </div>
 
     <div class="AddAlbumInputContainer">
-      <label class="user-property-label AddAlbumLabelUsername">{'Album name'|@translate}
+      <label class="user-property-label AddAlbumLabelUsername">{'Album name'|translate}
         <input class="user-property-input" />
       </label>
     </div>
 
     <div class="AddAlbumInputContainer">
-      <label class="user-property-label AddAlbumLabelUsername">{'Position'|@translate}
+      <label class="user-property-label AddAlbumLabelUsername">{'Position'|translate}
 
         <div class="AddAlbumPositionSelect">
           <div class="AddAlbumRadioInput">
@@ -172,11 +172,11 @@
 
     <div class="AddAlbumFormValidation">
       <div class="AddAlbumSubmit">
-        <span>{'Add'|@translate}</span>
+        <span>{'Add'|translate}</span>
       </div>
 
       <div class="AddAlbumCancel">
-        <span>{'Cancel'|@translate}</span>
+        <span>{'Cancel'|translate}</span>
       </div>
     </div>
   </div>
@@ -194,7 +194,7 @@
     </div>
 
     <div class="RenameAlbumInputContainer">
-      <label class="user-property-label RenameAlbumLabelUsername">{'Rename album'|@translate}
+      <label class="user-property-label RenameAlbumLabelUsername">{'Rename album'|translate}
         <input class="user-property-input" />
       </label>
     </div>
@@ -204,11 +204,11 @@
 
     <div class="RenameAlbumFormValidation">
       <div class="RenameAlbumSubmit">
-        <span>{'Yes, rename'|@translate}</span>
+        <span>{'Yes, rename'|translate}</span>
       </div>
 
       <div class="RenameAlbumCancel">
-        <span>{'Cancel'|@translate}</span>
+        <span>{'Cancel'|translate}</span>
       </div>
     </div>
   </div>

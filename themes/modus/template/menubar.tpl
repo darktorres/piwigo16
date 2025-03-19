@@ -21,7 +21,7 @@
 						{if count($block->data)==1}
 							<dt><a href="{$block->data[0].URL}">{$block->data[0].LABEL}</a></dt>
 						{else}
-							<dt><a>{'Links'|@translate}</a></dt>
+							<dt><a>{'Links'|translate}</a></dt>
 							<dd>
 								<ul>
 									{foreach from=$block->data item=link}
@@ -39,15 +39,15 @@
 
 					{elseif $id=="mbTags"}
 						{* ============ mbTags ========== *}
-						<dt><a>{'Related tags'|@translate}</a></dt>
+						<dt><a>{'Related tags'|translate}</a></dt>
 						<dd>
 							<div id=menuTagCloud>
 								{foreach from=$block->data item=tag}
 									<a class="tagLevel{if isset($tag.level)}{$tag.level}{/if}" href={if isset($tag.U_ADD)} "{$tag.U_ADD}"
-										title="{$tag.counter|@translate_dec:'%d photo is also linked to current tags':'%d photos are also linked to current tags'}"
+										title="{$tag.counter|translate_dec:'%d photo is also linked to current tags':'%d photos are also linked to current tags'}"
 										rel=nofollow>+
 									{else}
-										"{$tag.URL}" title="{'display photos linked to this tag'|@translate}">
+										"{$tag.URL}" title="{'display photos linked to this tag'|translate}">
 									{/if}
 									{$tag.name}</a>
 							{/foreach}
@@ -56,7 +56,7 @@
 
 				{elseif $id=="mbSpecials"}
 					{* ============ mbSpecials ========== *}
-					<dt><a>{'Explore'|@translate}</a></dt>
+					<dt><a>{'Explore'|translate}</a></dt>
 					<dd>
 						<ul>
 							{foreach from=$block->data item=link}
@@ -109,45 +109,45 @@
 	<dl style="float:none">
 		<form style="margin:0;display:inline" action="{$ROOT_URL}qsearch.php" method=get id=quicksearch
 			onsubmit="return this.q.value!='';">
-			<input type="text" name=q id=qsearchInput placeholder="{'Search'|@translate|escape:'html'}..."
+			<input type="text" name=q id=qsearchInput placeholder="{'Search'|translate|escape:'html'}..."
 				{if !empty($QUERY_SEARCH)} value="{$QUERY_SEARCH}" {/if}>
 		</form>
 	</dl>
 	{if isset($U_LOGIN)}
 		<dl style="float:right;margin-top:3px">
 			<dt style="font-size:100%;font-weight:normal;padding-left:15px{*to avoid loosing hover*}"><a href="{$U_LOGIN}"
-					rel=nofollow>{'Login'|@translate}</a></dt>
+					rel=nofollow>{'Login'|translate}</a></dt>
 			<dd style="right:0">
 				<ul>
-					<li><a href="{$U_LOGIN}" rel="nofollow">{'Login'|@translate}</a></li>
+					<li><a href="{$U_LOGIN}" rel="nofollow">{'Login'|translate}</a></li>
 					{if isset($U_REGISTER)}
-						<li><a href="{$U_REGISTER}" title="{'Create a new account'|@translate}"
-								rel="nofollow">{'Register'|@translate}</a></li>
+						<li><a href="{$U_REGISTER}" title="{'Create a new account'|translate}"
+								rel="nofollow">{'Register'|translate}</a></li>
 					{/if}
-					<li><a href="{$U_LOST_PASSWORD}" title="{'Forgot your password?'|@translate}"
-							rel="nofollow">{'Forgot your password?'|@translate}</a></li>
+					<li><a href="{$U_LOST_PASSWORD}" title="{'Forgot your password?'|translate}"
+							rel="nofollow">{'Forgot your password?'|translate}</a></li>
 				</ul>
 				<form method=post action="{$U_LOGIN}" id=quickconnect>
 					<fieldset>
-						<legend>{'Quick connect'|@translate}</legend>
+						<legend>{'Quick connect'|translate}</legend>
 						<p>
-							<label for=userX>{'Username'|@translate}</label><br>
+							<label for=userX>{'Username'|translate}</label><br>
 							<input type=text name=username id=userX value="" style="width:99%">
 						</p>
 
-						<p><label for=passX>{'Password'|@translate}</label><br>
+						<p><label for=passX>{'Password'|translate}</label><br>
 							<input type=password name=password id=passX style="width:99%">
 						</p>
 
 						{if $AUTHORIZE_REMEMBERING}
 							<p><label>
-									{'Auto login'|@translate}&nbsp;<input type=checkbox name=remember_me value=1>
+									{'Auto login'|translate}&nbsp;<input type=checkbox name=remember_me value=1>
 								</label></p>
 						{/if}
 
 						<p>
-							<input type=hidden name=redirect value="{$smarty.server.REQUEST_URI|@urlencode}">
-							<input type=submit name=login value="{'Submit'|@translate}">
+							<input type=hidden name=redirect value="{$smarty.server.REQUEST_URI|urlencode}">
+							<input type=submit name=login value="{'Submit'|translate}">
 						</p>
 
 					</fieldset>
@@ -158,15 +158,15 @@
 	{if isset($U_LOGOUT)}
 		<dl style="float:right;margin-top:3px">
 			<dt style="font-size:100%;font-weight:normal">
-				{if isset($USERNAME)}{'Hello'|@translate}
+				{if isset($USERNAME)}{'Hello'|translate}
 					{if isset($U_PROFILE)}<a href="{$U_PROFILE}">{/if}{$USERNAME}{if isset($U_PROFILE)}</a>{/if} ! &nbsp;{/if}
-					<a href="{$U_LOGOUT}">{'Logout'|@translate}</a>
+					<a href="{$U_LOGOUT}">{'Logout'|translate}</a>
 					{if isset($U_PROFILE)}
 						<a id="mbProfile" href="{$U_PROFILE}"
-							title="{'customize the appearance of the gallery'|@translate}">{'Customize'|@translate}</a>
+							title="{'customize the appearance of the gallery'|translate}">{'Customize'|translate}</a>
 					{/if}
 					{if isset($U_ADMIN)}
-						<a href="{$U_ADMIN}" title="{'available for administrators only'|@translate}">{'Admin'|@translate}</a>
+						<a href="{$U_ADMIN}" title="{'available for administrators only'|translate}">{'Admin'|translate}</a>
 					{/if}
 				</dt>
 			</dl>
@@ -174,5 +174,5 @@
 
 	</aside>
 {/if}
-<a id="menuSwitcher" class="pwg-button" title="{'Menu'|@translate}"><span class="pwg-icon pwg-icon-menu"></span></a>
+<a id="menuSwitcher" class="pwg-button" title="{'Menu'|translate}"><span class="pwg-icon pwg-icon-menu"></span></a>
 {combine_script id='zzz.d1.menu' load='async' path="themes/`$themeconf.id`/js/menuh.js" require="jquery" version=0}

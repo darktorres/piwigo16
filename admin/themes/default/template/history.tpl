@@ -42,23 +42,23 @@
   const str_recent_cats = "{'Recent albums'|translate}";
   const str_recent_pics = "{'Recent photos'|translate}";
   const str_memories = "{'Memories'|translate}";
-  const str_no_longer_exist_photo = "{'This photo no longer exists'|@translate}";
+  const str_no_longer_exist_photo = "{'This photo no longer exists'|translate}";
   const str_tags = "{'Tags'|translate}";
-  const unit_MB = "{"%s MB"|@translate}";
-  const str_guest = '{'guest'|@translate}';
-  const str_contact_form = '{'Contact Form'|@translate}';
-  const str_edit_img = '{'Edit photo'|@translate}';
+  const unit_MB = "{"%s MB"|translate}";
+  const str_guest = '{'guest'|translate}';
+  const str_contact_form = '{'Contact Form'|translate}';
+  const str_edit_img = '{'Edit photo'|translate}';
 
   const str_search_details = {
-    "allwords": "{'Search for words'|@translate}",
-    "date_posted": "{'Post date'|@translate}",
+    "allwords": "{'Search for words'|translate}",
+    "date_posted": "{'Post date'|translate}",
     "tags": str_tags,
-    "cat": "{'Album'|@translate}",
-    "author": "{'Author'|@translate}",
-    "added_by": "{'Added by'|@translate}",
-    "filetypes": "{'File type'|@translate}",
+    "cat": "{'Album'|translate}",
+    "author": "{'Author'|translate}",
+    "added_by": "{'Added by'|translate}",
+    "filetypes": "{'File type'|translate}",
   };
-  const str_and_more = "{'and %d more'|@translate}"
+  const str_and_more = "{'and %d more'|translate}"
 
   const guest_id = {$guest_id};
 </script>{/footer_script}
@@ -74,7 +74,7 @@
   <fieldset class="history-filter">
     <div class="selectable-filter">
       <div class="filter-part date-start">
-        <label>{'Start-Date'|@translate}</label>
+        <label>{'Start-Date'|translate}</label>
         <input type="hidden" name="start" value="{$START}">
         <label>
           <input type="text" data-datepicker="start" data-datepicker-end="end" data-datepicker-unset="start_unset"
@@ -83,7 +83,7 @@
         <a href="#" class="icon-cancel-circled" id="start_unset">{'unset'|translate}</a>
       </div>
       <div class="filter-part date-end">
-        <label>{'End-Date'|@translate}</label>
+        <label>{'End-Date'|translate}</label>
         <input type="hidden" name="end" value="{$END}">
         <label>
           <input type="text" data-datepicker="end" data-datepicker-start="start" data-datepicker-unset="end_unset"
@@ -93,11 +93,11 @@
       </div>
       <div class="filter-part elem-type advanced-filter-select-container">
         <label>
-          {'Action'|@translate}
+          {'Action'|translate}
           <select name="types[]" class="elem-type-select user-action-select advanced-filter-select">
             <option value=""></option>
-            <option value="visited">{'Visited'|@translate} </option>
-            <option value="downloaded">{'Downloaded'|@translate} </option>
+            <option value="visited">{'Visited'|translate} </option>
+            <option value="downloaded">{'Downloaded'|translate} </option>
           </select>
         </label>
       </div>
@@ -118,7 +118,7 @@
 
 {if isset($search_summary)}
   <fieldset>
-    <legend>{'Summary'|@translate}</legend>
+    <legend>{'Summary'|translate}</legend>
 
     <ul>
       <li>{$search_summary.NB_LINES}, {$search_summary.FILESIZE}</li>
@@ -164,13 +164,13 @@
   </div>
 </div>
 
-{if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+{if !empty($navbar) }{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}
 
 <div class="loading hide">
   <span class="icon-spin6 animate-spin"> </span>
 </div>
 <div class="noResults">
-  {'No results'|@translate}
+  {'No results'|translate}
 </div>
 <div class="container">
   <div class="tab-title">
@@ -210,7 +210,7 @@
       <span class="icon-ellipsis-vert toggle-img-option">
         <div class="img-option">
           <a class="add-img-as-filter icon-filter"> {'Add as filter'|translate} </a>
-          <a class="edit-img icon-pencil" href="" target="_blank">{'Edit'|@translate}</a>
+          <a class="edit-img icon-pencil" href="" target="_blank">{'Edit'|translate}</a>
         </div>
       </span>
 
@@ -249,7 +249,7 @@
   </div>
 </div>
 
-{if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+{if !empty($navbar) }{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}
 
 {combine_script id='jquery.geoip' load='async' path='admin/themes/default/js/jquery.geoip.js'}
 

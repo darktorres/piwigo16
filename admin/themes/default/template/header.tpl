@@ -75,7 +75,7 @@
           {/if}
         </a>
 
-        <a class="tiptip" href="{$U_FAQ}" title="{'Instructions to use Piwigo'|@translate}"><i
+        <a class="tiptip" href="{$U_FAQ}" title="{'Instructions to use Piwigo'|translate}"><i
             class="icon-help-circled"></i><span>{'Help Me'|translate}</span></a>
         <a href="{$U_LOGOUT}"><i class="icon-logout"></i><span>{'Logout'|translate}</span></a>
       </div>

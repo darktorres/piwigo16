@@ -2,9 +2,9 @@
 {combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
 {combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
 {footer_script}<script>
-  const title_msg = '{'Are you sure you want to restore to default settings?'|@translate|@escape:javascript}';
-  const confirm_msg = '{'Yes, I am sure'|@translate|@escape}';
-  const cancel_msg = '{'No, I have changed my mind'|@translate|@escape}';
+  const title_msg = '{'Are you sure you want to restore to default settings?'|translate|escape:javascript}';
+  const confirm_msg = '{'Yes, I am sure'|translate|escape}';
+  const cancel_msg = '{'No, I have changed my mind'|translate|escape}';
 
   $(".restore-settings-button").each(function() {
     $(this).pwg_jconfirm_follow_href({
@@ -260,7 +260,7 @@
 
   <p class="formButtons">
     <button name="submit" type="submit" class="buttonLike" {if $isWebmaster != 1}disabled{/if}>
-      <i class="icon-floppy"></i> {'Save Settings'|@translate}
+      <i class="icon-floppy"></i> {'Save Settings'|translate}
     </button>
   </p>
 

@@ -29,7 +29,7 @@ var error_icon = "{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png", max_reques
                 {if $derivative->is_cached()}src="{$derivative->get_url()}"
                 {else}src="{$ROOT_URL}themes/bootstrap_darkroom/img/transparent.png" data-src="{$derivative->get_url()}"
                 {/if} alt="{$cat.TN_ALT}"
-                title="{$cat.NAME|@replace:'"':' '|@strip_tags:false} - {'display this album'|@translate}">
+                title="{$cat.NAME|replace:'"':' '|strip_tags:false} - {'display this album'|translate}">
         </a>
         <div class="card-body">
           <h5 class="card-title ellipsis {if !empty($cat.icon_ts)} recent{/if}">

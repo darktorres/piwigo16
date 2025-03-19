@@ -63,18 +63,18 @@
 <form action="{$F_ACTION}" method="GET">
 	<fieldset>
 		<noscript>
-			<label>{'Sort by'|@translate}
+			<label>{'Sort by'|translate}
 				<select name="order_by">
 					{html_options options=$order_by_options selected=$order_by_options_selected}
 				</select>
 			</label>
 		</noscript>
-		<label>{'Number of rates'|@translate}&gt;
+		<label>{'Number of rates'|translate}&gt;
 			<input type="text" size="5" name="f_min_rates" value="{$F_MIN_RATES}">
 		</label>
-		<label>{'Consensus deviation'|@translate}
+		<label>{'Consensus deviation'|translate}
 			<input type="text" size="5" name="consensus_top_number" value="{$CONSENSUS_TOP_NUMBER}">
-			{'Best rated'|@translate}
+			{'Best rated'|translate}
 
 		</label>
 
@@ -151,9 +151,9 @@
 	$(document).ready(function() {
 		$("#rateTable").on("click", ".del", function(e) {
 				e.preventDefault();
-				const title_msg  = '{'Are you sure you want to delete the ratings of the user "%s"?'|@translate|@escape:'javascript'}';
-				const confirm_msg = '{"Yes, I am sure"|@translate}';
-				const cancel_msg = "{"No, I have changed my mind"|@translate}";
+				const title_msg  = '{'Are you sure you want to delete the ratings of the user "%s"?'|translate|escape:'javascript'}';
+				const confirm_msg = '{"Yes, I am sure"|translate}';
+				const cancel_msg = "{"No, I have changed my mind"|translate}";
 				let usr_name = $(this).closest("tr").find(".usr").html();
 				$.confirm({
 						title: title_msg.replace("%s", usr_name),
@@ -167,7 +167,7 @@
 									while (tr.nodeName != "TR") tr = tr.parentNode;
 									tr = jQuery(tr).fadeTo(1000, 0.4);
 									var data = uidFromCell(cell);
-									(new PwgWS('{$ROOT_URL|@escape:javascript}')).callService(
+									(new PwgWS('{$ROOT_URL|escape:javascript}')).callService(
 									'pwg.rates.delete', {
 										user_id: data.uid,
 										anonymous_id: data
@@ -201,13 +201,13 @@
 <table id="rateTable">
 	<thead>
 		<tr class="throw">
-			<th class="dtc_user">{'Username'|@translate}</th>
-			<th class="dtc_date">{'Last'|@translate}</th>
-			<th class="dtc_stat">{'Number of rates'|@translate}</th>
-			<th class="dtc_stat">{'Average rate'|@translate}</th>
-			<th class="dtc_stat">{'Variation'|@translate}</th>
-			<th class="dtc_stat">{'Consensus deviation'|@translate|@replace:' ':'<br>'}</th>
-			<th class="dtc_stat">{'Consensus deviation'|@translate|@replace:' ':'<br>'} {$CONSENSUS_TOP_NUMBER}</th>
+			<th class="dtc_user">{'Username'|translate}</th>
+			<th class="dtc_date">{'Last'|translate}</th>
+			<th class="dtc_stat">{'Number of rates'|translate}</th>
+			<th class="dtc_stat">{'Average rate'|translate}</th>
+			<th class="dtc_stat">{'Variation'|translate}</th>
+			<th class="dtc_stat">{'Consensus deviation'|translate|replace:' ':'<br>'}</th>
+			<th class="dtc_stat">{'Consensus deviation'|translate|replace:' ':'<br>'} {$CONSENSUS_TOP_NUMBER}</th>
 			{foreach from=$available_rates item=rate}
 				<th class="dtc_rate">{$rate}</th>
 			{/foreach}
@@ -219,10 +219,10 @@
 			<td class=usr>{$user}</td>
 			<td title="First: {$rating.first_date}">{$rating.last_date}</td>
 			<td>{$rating.count}</td>
-			<td>{$rating.avg|@number_format:2}</td>
-			<td>{$rating.cv|@number_format:3}</td>
-			<td>{$rating.cd|@number_format:3}</td>
-			<td>{if !empty($rating.cdtop)}{$rating.cdtop|@number_format:3}{/if}</td>
+			<td>{$rating.avg|number_format:2}</td>
+			<td>{$rating.cv|number_format:3}</td>
+			<td>{$rating.cd|number_format:3}</td>
+			<td>{if !empty($rating.cdtop)}{$rating.cdtop|number_format:3}{/if}</td>
 			{foreach from=$rating.rates item=rates key=rate}
 				<td>{if !empty($rates)}
 						{capture assign=rate_over}
@@ -232,7 +232,7 @@
 								{/if}<img src="{$image_urls[$rate_arr.id].tn}" alt="thumb-{$rate_arr.id}" width="{$TN_WIDTH}"
 								height="{$TN_WIDTH}">{/foreach}
 						{/capture}
-						<a title="{$rate_over|@htmlspecialchars}">{$rates|@count}</a>
+						<a title="{$rate_over|htmlspecialchars}">{$rates|count}</a>
 					{/if}
 				</td>
 			{/foreach}

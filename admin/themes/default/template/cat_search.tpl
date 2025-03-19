@@ -136,19 +136,19 @@
 
 <div class="search-album">
   <div class="search-album-cont">
-    <div class="search-album-label">{'Search albums'|@translate}</div>
+    <div class="search-album-label">{'Search albums'|translate}</div>
     <div class="search-album-input-container" style="position:relative">
       <span class="icon-search search-icon"></span>
       <span class="icon-cancel search-cancel"></span>
       <input class='search-input' type="text" placeholder="{$placeholder|escape:html}">
     </div>
-    <span class="search-album-help icon-help-circled" title="{'Enter a term to search for album'|@translate}"></span>
+    <span class="search-album-help icon-help-circled" title="{'Enter a term to search for album'|translate}"></span>
     <span class="search-album-num-result"></span>
   </div>
 </div>
 
 <div class="search-album-ghost">
-  <span>{'No research in progress'|@translate}</span>
+  <span>{'No research in progress'|translate}</span>
 </div>
 
 <div class="search-album-elem-template" style="display:none">

@@ -3,8 +3,8 @@
 {combine_script id='jquery.cluetip' load='async' require='jquery' path='node_modules/cluetip/jquery.cluetip.js'}
 
 {footer_script require='jquery.cluetip'}<script>
-  var piwigo_need_update_msg = '<a href="admin.php?page=updates">{'A new version of Piwigo is available.'|@translate|@escape:"javascript"} <i class="icon-right"></i></a>';
-  var ext_need_update_msg = '<a href="admin.php?page=updates&amp;tab=ext">{'Some upgrades are available for extensions.'|@translate|@escape:"javascript"} <i class="icon-right"></i></a>';
+  var piwigo_need_update_msg = '<a href="admin.php?page=updates">{'A new version of Piwigo is available.'|translate|escape:"javascript"} <i class="icon-right"></i></a>';
+  var ext_need_update_msg = '<a href="admin.php?page=updates&amp;tab=ext">{'Some upgrades are available for extensions.'|translate|escape:"javascript"} <i class="icon-right"></i></a>';
   const str_gb_used = "{'%s GB used'|translate}";
   const str_mb_used = "{'%s MB used'|translate}";
   const str_gb = "{'%sGB'|translate}".replace(' ', '&nbsp;');
@@ -188,7 +188,7 @@
   }
 </style>{/html_style}
 
-<h2>{'Piwigo Administration'|@translate}</h2>
+<h2>{'Piwigo Administration'|translate}</h2>
 
 <div class="intro-page-container">
   <div class="stat-boxes">
@@ -267,11 +267,11 @@
 
   <div class="intro-charts">
 
-    <div class="chart-title"> {"Activity peak in the last weeks"|@translate}</div>
+    <div class="chart-title"> {"Activity peak in the last weeks"|translate}</div>
     <div class="activity-chart" style="grid-template-rows: repeat({count($ACTIVITY_CHART_DATA) + 1}, 5vw);">
       {foreach from=$ACTIVITY_CHART_DATA item=WEEK_ACTIVITY key=WEEK_NUMBER}
         <div id="week-{$WEEK_NUMBER}-legend" class="row-legend">
-          <div>{'Week %d'|@translate:$ACTIVITY_WEEK_NUMBER[$WEEK_NUMBER]}</div>
+          <div>{'Week %d'|translate:$ACTIVITY_WEEK_NUMBER[$WEEK_NUMBER]}</div>
         </div>
         {foreach from=$WEEK_ACTIVITY item=SIZE key=DAY_NUMBER}
           <span>
@@ -301,17 +301,17 @@
 
                         {foreach from=$actions item=number key=action}
                           {if $action == "Edit"} <span class="icon-pencil tooltip-detail"
-                              title="{"%s editions"|@translate:$number}">{$number}</span>
+                              title="{"%s editions"|translate:$number}">{$number}</span>
                           {elseif $action == "Add"} <span class="icon-plus tooltip-detail"
-                              title="{"%s additions"|@translate:$number}">{$number}</span>
+                              title="{"%s additions"|translate:$number}">{$number}</span>
                           {elseif $action == "Delete"} <span class="icon-trash tooltip-detail"
-                              title="{"%s deletions"|@translate:$number}">{$number}</span>
+                              title="{"%s deletions"|translate:$number}">{$number}</span>
                           {elseif $action == "Login"} <span class="icon-key tooltip-detail"
-                              title="{"%s login"|@translate:$number}">{$number}</span>
+                              title="{"%s login"|translate:$number}">{$number}</span>
                           {elseif $action == "Logout"} <span class="icon-logout tooltip-detail"
-                              title="{"%s logout"|@translate:$number}">{$number} </span>
+                              title="{"%s logout"|translate:$number}">{$number} </span>
                           {elseif $action == "Move"} <span class="icon-move tooltip-detail"
-                              title="{"%s movement"|@translate:$number}">{$number} </span>
+                              title="{"%s movement"|translate:$number}">{$number} </span>
                           {else} <span> ({$action|translate}) {$number} </span>
                           {/if}
                         {/foreach}
@@ -378,7 +378,7 @@
   {if isset($SUBSCRIBE_BASE_URL)}
     <br><span class="newsletter-subscription"><a href="{$SUBSCRIBE_BASE_URL}{$EMAIL}" id="newsletterSubscribe"
         class="externalLink cluetip icon-mail-alt"
-        title="{'Piwigo Announcements Newsletter'|@translate}|{'Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it\'s important to know and upgrade) and when major events happen to the project. Only a few emails a year.'|@translate|@htmlspecialchars|@nl2br}">{'Subscribe %s to Piwigo Announcements Newsletter'|@translate:$EMAIL}</a>
+        title="{'Piwigo Announcements Newsletter'|translate}|{'Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it\'s important to know and upgrade) and when major events happen to the project. Only a few emails a year.'|translate|htmlspecialchars|nl2br}">{'Subscribe %s to Piwigo Announcements Newsletter'|translate:$EMAIL}</a>
       <a href="#" class="newsletter-hide">{'... or hide this link'|translate}</a></span>
   {/if}
 </p>

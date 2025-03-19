@@ -17,7 +17,7 @@
 
 		<div class="mcs-no-result">
 			<div class="text">
-				<span class="top">{'No results are available.'|@translate}</span>
+				<span class="top">{'No results are available.'|translate}</span>
 				<span class="bot">{'You can try to edit your filters and perform a new search.'|translate}</span>
 			</div>
 		</div>

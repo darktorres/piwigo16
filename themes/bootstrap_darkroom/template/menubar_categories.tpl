@@ -1,5 +1,5 @@
 <li id="categoriesDropdownMenu" class="nav-item dropdown">
-  <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{'Albums'|@translate}</a>
+  <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{'Albums'|translate}</a>
   <div class="dropdown-menu dropdown-menu-right" role="menu">
     {assign var='ref_level' value=0}
     {foreach from=$block->data.MENU_CATEGORIES item=cat}
@@ -16,7 +16,7 @@
       </a>
     {/foreach}
     <div class="dropdown-divider"></div>
-    <div class="dropdown-header">{$block->data.NB_PICTURE|@translate_dec:'%d photo':'%d photos'}</div>
+    <div class="dropdown-header">{$block->data.NB_PICTURE|translate_dec:'%d photo':'%d photos'}</div>
   </div>
 </li>
 {footer_script require='jquery'}<script>

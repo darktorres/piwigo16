@@ -31,7 +31,7 @@
 
   {if !isset($ORDER_BY_IS_CUSTOM)}
     (function() {
-      var max_fields = Math.ceil({$main.order_by_options|@count}/2);
+      var max_fields = Math.ceil({$main.order_by_options|count}/2);
 
       function updateFilters() {
         var $selects = jQuery('#order_filters select');
@@ -177,8 +177,8 @@
                     {html_options options=$group_options selected=$main.email_admin_on_new_user_filter_group}
                   </select>
                 {else}
-                  {'There is no group in this gallery.'|@translate} <a href="admin.php?page=group_list"
-                    class="externalLink">{'Group management'|@translate}</a>
+                  {'There is no group in this gallery.'|translate} <a href="admin.php?page=group_list"
+                    class="externalLink">{'Group management'|translate}</a>
                 {/if}
               </span>
 
@@ -302,7 +302,7 @@
 
   <p class="formButtons">
     <button name="submit" type="submit" class="buttonLike" {if $isWebmaster != 1}disabled{/if}>
-      <i class="icon-floppy"></i> {'Save Settings'|@translate}
+      <i class="icon-floppy"></i> {'Save Settings'|translate}
     </button>
   </p>
 

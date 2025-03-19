@@ -61,7 +61,7 @@
             <input type="file" size="60" id="watermarkImage" name="watermarkImage" {if isset($ferrors.watermarkImage)}
               class="dError" {/if}> (png)
             {if isset($ferrors.watermarkImage)}<span class="dErrorDesc"
-              title="{$ferrors.watermarkImage|@htmlspecialchars}">!</span>{/if}
+              title="{$ferrors.watermarkImage|htmlspecialchars}">!</span>{/if}
           </span>
         </li>
 
@@ -157,7 +157,7 @@
 
   <p class="formButtons">
     <button name="submit" type="submit" class="buttonLike" {if $isWebmaster != 1}disabled{/if}>
-      <i class="icon-floppy"></i> {'Save Settings'|@translate}
+      <i class="icon-floppy"></i> {'Save Settings'|translate}
     </button>
   </p>
 

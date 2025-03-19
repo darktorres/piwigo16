@@ -65,7 +65,7 @@
           <div class="thumbnailCategory">
             <div class="illustration">
               <a href="{$cat.URL}">
-                <img src="{$cat.TN_SRC}" alt="{$cat.ALT}" title="{'display this album'|@translate}">
+                <img src="{$cat.TN_SRC}" alt="{$cat.ALT}" title="{'display this album'|translate}">
               </a>
             </div>
             <div class="description">

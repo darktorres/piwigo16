@@ -9,7 +9,7 @@
 {combine_css path="node_modules/plupload/js/jquery.plupload.queue/css/jquery.plupload.queue.css"}
 
 {assign var="plupload_i18n" value="node_modules/plupload/js/i18n/`$lang_info.plupload_code`.js"}
-{if "PHPWG_ROOT_PATH"|@constant|@cat:$plupload_i18n|@file_exists}
+{if "PHPWG_ROOT_PATH"|constant|cat:$plupload_i18n|file_exists}
   {combine_script id="plupload_i18n-`$lang_info.plupload_code`" load="footer" path=$plupload_i18n require="jquery.plupload.queue"}
 {/if}
 
@@ -602,7 +602,7 @@
   </div>
 
   <p class="afterUploadActions" style="margin:10px; display:none;"><a
-      href="{$another_upload_link}">{'Add another set of photos'|@translate}</a></p>
+      href="{$another_upload_link}">{'Add another set of photos'|translate}</a></p>
 
   {if count($setup_errors) > 0}
     <div class="errors">
@@ -621,14 +621,14 @@
             <li>{$warning}</li>
           {/foreach}
         </ul>
-        <div class="hideButton" style="text-align:center"><a href="{$hide_warnings_link}">{'Hide'|@translate}</a></div>
+        <div class="hideButton" style="text-align:center"><a href="{$hide_warnings_link}">{'Hide'|translate}</a></div>
       </div>
     {/if}
 
 
     {if !empty($thumbnails)}
       <fieldset>
-        <legend>{'Uploaded Photos'|@translate}</legend>
+        <legend>{'Uploaded Photos'|translate}</legend>
         <div>
           {foreach from=$thumbnails item=thumbnail}
             <a href="{$thumbnail.link}" class="{if isset($thumbnail.lightbox)}colorboxThumb{else}externalLink{/if}">
@@ -637,21 +637,21 @@
           {/foreach}
         </div>
       </fieldset>
-      <p style="margin:10px"><a href="{$another_upload_link}">{'Add another set of photos'|@translate}</a></p>
+      <p style="margin:10px"><a href="{$another_upload_link}">{'Add another set of photos'|translate}</a></p>
     {else}
 
       <div id="formErrors" class="errors" style="display:none">
         <ul>
-          <li id="noAlbum">{'Select an album'|@translate}</li>
-          <li id="noPhoto">{'Select at least one photo'|@translate}</li>
+          <li id="noAlbum">{'Select an album'|translate}</li>
+          <li id="noPhoto">{'Select at least one photo'|translate}</li>
         </ul>
-        <div class="hideButton" style="text-align:center"><a href="#" id="hideErrors">{'Hide'|@translate}</a></div>
+        <div class="hideButton" style="text-align:center"><a href="#" id="hideErrors">{'Hide'|translate}</a></div>
       </div>
 
       <div style="display:none">
         <div id="addAlbumForm" style="text-align:left;padding:1em;">
           <form>
-            {'Parent album'|@translate}<br>
+            {'Parent album'|translate}<br>
             <select id="category_parent" name="category_parent">
               {if $create_whole_gallery}
                 <option value="0">------------</option>
@@ -659,9 +659,9 @@
               {html_options options=$category_parent_options selected=$category_parent_options_selected}
             </select>
 
-            <br><br>{'Album name'|@translate}<br><input name="category_name" type="text"> <span
+            <br><br>{'Album name'|translate}<br><input name="category_name" type="text"> <span
               id="categoryNameError"></span>
-            <br><br><br><input type="submit" value="{'Create'|@translate}"> <span id="albumCreationLoading"
+            <br><br><br><input type="submit" value="{'Create'|translate}"> <span id="albumCreationLoading"
               style="display:none"><img src="themes/default/images/ajax-loader-small.gif"></span>
           </form>
         </div>
@@ -673,7 +673,7 @@
         {/if}
 
         <fieldset class="selectAlbum form-group">
-          <legend>{'Drop into album'|@translate}</legend>
+          <legend>{'Drop into album'|translate}</legend>
 
           <span class="albumSelection" {if count($category_options) == 0} style="display:none" {/if}>
             <select id="albumSelect" name="category" class="form-control">
@@ -682,28 +682,28 @@
           </span>
           {if $create_subcategories}
             <div id="linkToCreate">
-              <span class="albumSelection">{'... or '|@translate}</span>
+              <span class="albumSelection">{'... or '|translate}</span>
               <a href="#" class="addAlbumOpen btn btn-sm btn-primary"
-                title="{'create a new album'|@translate}">{'create a new album'|@translate}</a>
+                title="{'create a new album'|translate}">{'create a new album'|translate}</a>
             </div>
           {/if}
         </fieldset>
 
         <fieldset class="selectFiles form-group">
-          <legend>{'Select files'|@translate}</legend>
+          <legend>{'Select files'|translate}</legend>
           <button id="addFiles" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> {'Add Photos'|translate}</button>
 
           <p id="uploadWarningsSummary">{$upload_max_filesize_shorthand}B. {$upload_file_types}.
             {if isset($max_upload_resolution)}{$max_upload_resolution}Mpx.{/if}
             {if isset($quota_summary)}{$quota_summary}{/if}
-            <a class="showInfo" href="#" title="{'Learn more'|@translate}"><i class="fas fa-info-circle"></i></a>
+            <a class="showInfo" href="#" title="{'Learn more'|translate}"><i class="fas fa-info-circle"></i></a>
           </p>
 
           <p id="uploadWarnings">
-            {'Maximum file size: %sB.'|@translate|@sprintf:$upload_max_filesize_shorthand}
-            {'Allowed file types: %s.'|@translate|@sprintf:$upload_file_types}
+            {'Maximum file size: %sB.'|translate|sprintf:$upload_max_filesize_shorthand}
+            {'Allowed file types: %s.'|translate|sprintf:$upload_file_types}
             {if isset($max_upload_resolution)}
-              {'Approximate maximum resolution: %dM pixels (that\'s %dx%d pixels).'|@translate|@sprintf:$max_upload_resolution:$max_upload_width:$max_upload_height}
+              {'Approximate maximum resolution: %dM pixels (that\'s %dx%d pixels).'|translate|sprintf:$max_upload_resolution:$max_upload_width:$max_upload_height}
             {/if}
             {$quota_details}
           </p>
@@ -713,25 +713,25 @@
       </div>
     </fieldset>
 
-    <p class="showFieldset"><a id="showPhotoProperties" href="#">{'Set Photo Properties'|@translate}</a></p>
+    <p class="showFieldset"><a id="showPhotoProperties" href="#">{'Set Photo Properties'|translate}</a></p>
 
     <fieldset id="photoProperties" class="form-group" style="display:none">
-      <legend>{'Photo Properties'|@translate}</legend>
+      <legend>{'Photo Properties'|translate}</legend>
 
       <input type="checkbox" name="set_photo_properties" style="display:none">
 
       <p>
-        {'Title'|@translate}<br>
+        {'Title'|translate}<br>
         <input type="text" class="large" name="name" value="">
       </p>
 
       <p>
-        {'Author'|@translate}<br>
+        {'Author'|translate}<br>
         <input type="text" class="large" name="author" value="">
       </p>
 
       <p>
-        {'Description'|@translate}<br>
+        {'Description'|translate}<br>
         <textarea name="description" id="description" class="description" style="margin:0"></textarea>
       </p>
 
@@ -751,7 +751,7 @@
   </form>
 
   <fieldset class="form-group" style="display:none">
-    <legend>{'Uploaded Photos'|@translate}</legend>
+    <legend>{'Uploaded Photos'|translate}</legend>
         <div id="uploadedPhotos"></div>
       </fieldset>
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $lines = file('changelog.txt');
 $show = false;
 $first = true;

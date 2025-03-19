@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 Plugin Name: gdThumb
 Version: 1.0.26

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 Plugin Name: Take A Tour of Your Piwigo
 Version: 14.5.0

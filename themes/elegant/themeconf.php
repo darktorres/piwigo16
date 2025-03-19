@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 Theme Name: elegant
 Version: 14.5.0

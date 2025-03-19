@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;

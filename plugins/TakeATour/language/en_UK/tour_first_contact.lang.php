@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $lang['first_contact_title1'] = 'Welcome in your Piwigo gallery';
 $lang['first_contact_stp1'] = 'Hello! I will be your guide to discovering Piwigo. Please follow my instructions, and click Next (or use the arrows of your keyboard) to navigate. If you go to another page of the administration, you will be redirected to the current page of the Tour. If you are stuck and can\'t end the tour, going to <em>Plugins » Take A Tour</em> will end the tour.<br>Let\'s start by adding photos!';
 $lang['first_contact_title2'] = '';

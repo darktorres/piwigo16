@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Piwigo\themes\smartpocket\admin;
 
 use Piwigo\inc\functions;

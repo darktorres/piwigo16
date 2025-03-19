@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 Theme Name: Smart Pocket
 Version: 14.5.0

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $lang['modus_theme'] = 'modus_theme';
 $lang['Explore'] = 'Explore';
 $lang['%d album'] = '%d album';

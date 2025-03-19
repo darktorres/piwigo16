@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 Plugin Name: Admin Tools
 Version: 14.5.0

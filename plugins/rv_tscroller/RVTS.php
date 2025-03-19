@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 Plugin Name: RV Thumb Scroller
 Version: 12.a

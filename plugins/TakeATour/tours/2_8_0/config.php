@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**********************************
  * REQUIRED PATH TO THE TPL FILE */
 

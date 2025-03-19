@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $lang['Start the Tour'] = 'Start the Tour';
 $lang['Visit your Piwigo!'] = 'Visit your Piwigo!';
 $lang['Take a tour and discover the features of your Piwigo gallery » Go to the available tours'] = 'Take a tour and discover the features of your Piwigo gallery » Go to the available tours';

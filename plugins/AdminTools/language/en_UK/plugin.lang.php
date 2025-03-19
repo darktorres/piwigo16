@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $lang['Combine JS&CSS'] = 'Combine JS&amp;CSS';
 $lang['Debug languages'] = 'Debug languages';
 $lang['Debug template'] = 'Debug template';

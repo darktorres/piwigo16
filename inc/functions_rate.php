@@ -26,7 +26,7 @@ class functions_rate
 
         if (! isset($rate) or
             ! $conf['rate'] or
-            ! preg_match('/^[0-9]+$/', $rate) or
+            ! preg_match('/^[0-9]+$/', (string) $rate) or
             ! in_array($rate, $conf['rate_items'])
         ) {
             return false;

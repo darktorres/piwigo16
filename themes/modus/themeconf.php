@@ -67,7 +67,7 @@ if (! $conf['compiled_template_cache_language']) {
 }
 
 if (isset($_COOKIE['caps'])) {
-    setcookie('caps', false, 0, functions_cookie::cookie_path());
+    setcookie('caps', '', 0, functions_cookie::cookie_path());
     functions_session::pwg_set_session_var('caps', explode('x', $_COOKIE['caps']));
     /*file_put_contents(PHPWG_ROOT_PATH.$conf['data_location'].'tmp/modus.log', implode("\t", array(
         date("Y-m-d H:i:s"), $_COOKIE['caps'], $_SERVER['HTTP_USER_AGENT']

@@ -67,6 +67,6 @@ class derivative_params
      */
     public static function fraction_to_char($f)
     {
-        return chr(ord('a') + round($f * 25));
+        return chr(ord('a') + (int) round($f * 25));
     }
 }

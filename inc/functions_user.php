@@ -987,8 +987,8 @@ class functions_user
                     time() + $conf['remember_me_length'],
                     functions_cookie::cookie_path(),
                     ini_get('session.cookie_domain'),
-                    ini_get('session.cookie_secure'),
-                    ini_get('session.cookie_httponly')
+                    (bool) ini_get('session.cookie_secure'),
+                    (bool) ini_get('session.cookie_httponly')
                 );
             }
         } else { // make sure we clean any remember me ...

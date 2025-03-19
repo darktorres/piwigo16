@@ -2418,7 +2418,7 @@ class functions_admin
 
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter != restriction)
-        if (in_array($category_id, explode(',', $user['forbidden_categories']))) {
+        if (in_array($category_id, explode(',', $user['forbidden_categories'] ?? ''))) {
             return false;
         }
 
@@ -3176,7 +3176,7 @@ class functions_admin
                     functions::mkgetdir($trash_path, functions::MKGETDIR_RECURSIVE | functions::MKGETDIR_DIE_ON_ERROR | functions::MKGETDIR_PROTECT_HTACCESS);
                 }
 
-                while ($r = $trash_path . '/' . md5(uniqid(mt_rand(), true))) {
+                while ($r = $trash_path . '/' . md5(uniqid((string) mt_rand(), true))) {
                     if (! is_dir($r)) {
                         rename($path, $r);
                         break;

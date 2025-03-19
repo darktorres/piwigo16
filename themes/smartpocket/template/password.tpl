@@ -7,19 +7,19 @@
 
       {if $action eq 'lost'}
         <div data-role="fieldcontain">
-          <label for="username">{'Username or email'|@translate}</label>
+          <label for="username">{'Username or email'|translate}</label>
           <input type="text" id="username_or_email" name="username_or_email" size="40" maxlength="40"
             {if isset($username_or_email)} value="{$username_or_email}" {/if}>
-          <input type="submit" name="submit" value="{'Change my password'|@translate}">
+          <input type="submit" name="submit" value="{'Change my password'|translate}">
         </div>
 
       {elseif $action eq 'reset'}
         <div data-role="fieldcontain">
-          <label for="password">{'New password'|@translate}</label>
+          <label for="password">{'New password'|translate}</label>
           <input type="password" name="use_new_pwd" id="use_new_pwd" value="">
-          <label for="passwordConf">{'Confirm Password'|@translate}</label>
+          <label for="passwordConf">{'Confirm Password'|translate}</label>
           <input type="password" name="passwordConf" id="passwordConf" value="">
-          <input type="submit" name="submit" value="{'Submit'|@translate}">
+          <input type="submit" name="submit" value="{'Submit'|translate}">
         </div>
       {/if}
 

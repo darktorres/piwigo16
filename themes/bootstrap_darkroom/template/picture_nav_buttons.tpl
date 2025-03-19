@@ -2,7 +2,7 @@
     	{if $DISPLAY_NAV_BUTTONS or isset($slideshow)}
 	    	{if isset($slideshow)}
 		    	{if isset($slideshow.U_INC_PERIOD)}
-			    	<a href="{$slideshow.U_INC_PERIOD}" title="{'Reduce slideshow speed'|@translate}"
+			    	<a href="{$slideshow.U_INC_PERIOD}" title="{'Reduce slideshow speed'|translate}"
 			    		class="pwg-state-default pwg-button">
 			    		<i class="fas fa-minus" aria-hiden="true"></i>
 			    	</a>
@@ -10,7 +10,7 @@
 			    	<i class="fas fa-minus" aria-hiden="true"></i>
 		    	{/if}
 		    	{if isset($slideshow.U_DEC_PERIOD)}
-			    	<a href="{$slideshow.U_DEC_PERIOD}" title="{'Accelerate slideshow speed'|@translate}"
+			    	<a href="{$slideshow.U_DEC_PERIOD}" title="{'Accelerate slideshow speed'|translate}"
 			    		class="pwg-state-default pwg-button">
 			    		<i class="fas fa-plus" aria-hidden="true"></i>
 			    	</a>
@@ -19,55 +19,55 @@
 		    	{/if}
 	    	{/if}
 	    	{if isset($slideshow.U_START_REPEAT)}
-		    	<a href="{$slideshow.U_START_REPEAT}" title="{'Repeat the slideshow'|@translate}"
+		    	<a href="{$slideshow.U_START_REPEAT}" title="{'Repeat the slideshow'|translate}"
 		    		class="pwg-state-default pwg-button">
 		    		<i class="fas fa-repeat" aria-hidden="true"></i>
 		    	</a>
 	    	{/if}
 	    	{* TODO need an icon for this
 {if isset($slideshow.U_STOP_REPEAT)}
-	<a href="{$slideshow.U_STOP_REPEAT}" title="{'Not repeat the slideshow'|@translate}" class="pwg-state-default pwg-button">
+	<a href="{$slideshow.U_STOP_REPEAT}" title="{'Not repeat the slideshow'|translate}" class="pwg-state-default pwg-button">
 	    <span class="pwg-icon pwg-icon-repeat-stop"></span>
 	</a>
 {/if} *}
 	    	{*<!--{if isset($first)}
-	<a href="{$first.U_IMG}" title="{'First'|@translate} : {$first.TITLE}" class="pwg-state-default pwg-button">
-	    <span class="pwg-icon pwg-icon-arrowstop-w">&nbsp;</span><span class="pwg-button-text">{'First'|@translate}</span>
+	<a href="{$first.U_IMG}" title="{'First'|translate} : {$first.TITLE}" class="pwg-state-default pwg-button">
+	    <span class="pwg-icon pwg-icon-arrowstop-w">&nbsp;</span><span class="pwg-button-text">{'First'|translate}</span>
 	</a>
 {else}
 	<span class="pwg-state-disabled pwg-button">
-	    <span class="pwg-icon pwg-icon-arrowstop-w">&nbsp;</span><span class="pwg-button-text">{'First'|@translate}</span>
+	    <span class="pwg-icon pwg-icon-arrowstop-w">&nbsp;</span><span class="pwg-button-text">{'First'|translate}</span>
 	</span>
 {/if}-->*}
 	    	{if isset($previous)}
-		    	<a href="{$previous.U_IMG}" title="{'Previous'|@translate} : {$previous.TITLE_ESC}" id="navPrevPicture">
+		    	<a href="{$previous.U_IMG}" title="{'Previous'|translate} : {$previous.TITLE_ESC}" id="navPrevPicture">
 		    		<i class="fas fa-chevron-left" aria-hidden="true"></i>
 		    	</a>
 	    	{else}
 		    	<i class="fas fa-chevron-left" aria-hidden="true"></i>
 	    	{/if}
 	    	{if isset($U_UP) and !isset($slideshow)}
-		    	<a href="{$U_UP}" title="{'Thumbnails'|@translate}">
+		    	<a href="{$U_UP}" title="{'Thumbnails'|translate}">
 		    		<i class="fas fa-chevron-up"></i>
 		    	</a>
 	    	{/if}
 	    	{if !isset($slideshow) && ($theme_config->photoswipe && !empty($thumbnails))}
-		    	<a href="javascript:;" title="{'Fullscreen'|@translate}" id="startPhotoSwipe">
+		    	<a href="javascript:;" title="{'Fullscreen'|translate}" id="startPhotoSwipe">
 		    		<i class="fas fa-expand-arrows-alt" aria-hidden="true"></i>
 		    	</a>
 	    	{/if}
 	    	{if isset($slideshow.U_START_PLAY)}
-		    	<a href="{$slideshow.U_START_PLAY}" title="{'Play of slideshow'|@translate}">
+		    	<a href="{$slideshow.U_START_PLAY}" title="{'Play of slideshow'|translate}">
 		    		<i class="fas fa-play" aria-hidden="true"></i>
 		    	</a>
 	    	{/if}
 	    	{if isset($slideshow.U_STOP_PLAY)}
-		    	<a href="{$slideshow.U_STOP_PLAY}" title="{'Pause of slideshow'|@translate}">
+		    	<a href="{$slideshow.U_STOP_PLAY}" title="{'Pause of slideshow'|translate}">
 		    		<i class="fas fa-pause" aria-hidden="true"></i>
 		    	</a>
 	    	{/if}
 	    	{if isset($U_SLIDESHOW_STOP) }
-		    	<a href="{$U_SLIDESHOW_STOP}" title="{'stop the slideshow'|@translate}">
+		    	<a href="{$U_SLIDESHOW_STOP}" title="{'stop the slideshow'|translate}">
 		    		<i class="fas fa-stop" aria-hidden="true"></i>
 		    	</a>
 	    	{/if}
@@ -75,19 +75,19 @@
 		    	{html_head}
 		    	<link rel="prerender" href="{$next.U_IMG}">
 		    	{/html_head}
-		    	<a href="{$next.U_IMG}" title="{'Next'|@translate} : {$next.TITLE_ESC}" id="navNextPicture">
+		    	<a href="{$next.U_IMG}" title="{'Next'|translate} : {$next.TITLE_ESC}" id="navNextPicture">
 		    		<i class="fas fa-chevron-right" aria-hidden="true"></i>
 		    	</a>
 	    	{else}
 		    	<i class="fas fa-chevron-right" aria-hidden="true"></i>
 	    	{/if}
 	    	{*<!--{if isset($last)}
-	<a href="{$last.U_IMG}" title="{'Last'|@translate} : {$last.TITLE}" class="pwg-state-default pwg-button pwg-button-icon-right">
-	    <span class="pwg-icon pwg-icon-arrowstop-e"></span><span class="pwg-button-text">{'Last'|@translate}</span>
+	<a href="{$last.U_IMG}" title="{'Last'|translate} : {$last.TITLE}" class="pwg-state-default pwg-button pwg-button-icon-right">
+	    <span class="pwg-icon pwg-icon-arrowstop-e"></span><span class="pwg-button-text">{'Last'|translate}</span>
 	</a>
 {else}
 	<span class="pwg-state-disabled pwg-button pwg-button-icon-right">
-	    <span class="pwg-icon pwg-icon-arrowstop-e">&nbsp;</span><span class="pwg-button-text">{'Last'|@translate}</span>
+	    <span class="pwg-icon pwg-icon-arrowstop-e">&nbsp;</span><span class="pwg-button-text">{'Last'|translate}</span>
 	</span>
 {/if}-->*}
     	{/if}

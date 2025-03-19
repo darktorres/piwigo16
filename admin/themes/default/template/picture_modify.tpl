@@ -49,15 +49,15 @@
 
   str_are_you_sure = '{'Are you sure?'|translate|escape:javascript}';
   str_yes = '{'Yes, delete'|translate|escape:javascript}';
-  str_no = '{'No, I have changed my mind'|translate|@escape:'javascript'}';
+  str_no = '{'No, I have changed my mind'|translate|escape:'javascript'}';
   url_delete = '{$U_DELETE}';
   str_albums_found = '{"<b>%d</b> albums found"|translate|escape:javascript}';
   str_album_found = '{"<b>1</b> album found"|translate|escape:javascript}';
   str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|translate|escape:javascript}';
-  str_orphan = '{'This photo is an orphan'|@translate|escape:javascript}';
-  str_no_search_in_progress = '{'No search in progress'|@translate|escape:javascript}';
+  str_orphan = '{'This photo is an orphan'|translate|escape:javascript}';
+  str_no_search_in_progress = '{'No search in progress'|translate|escape:javascript}';
 
-  related_categories_ids = {$related_categories_ids|@json_encode};
+  related_categories_ids = {$related_categories_ids|json_encode};
   str_already_in_related_cats = '{'This albums is already in related categories list'|translate|escape:javascript}';
 
   $('#action-delete-picture').on('click', function() {
@@ -106,13 +106,13 @@
         <a class="icon-download" href="{$U_DOWNLOAD}" title="{'Download'|translate}"></a>
         <a class="icon-signal" href="{$U_HISTORY}" title="{'Visit history'|translate}"></a>
         {if !functions_url::url_is_remote($PATH)}
-          <a class="icon-arrows-cw" href="{$U_SYNC}" title="{'Synchronize metadata'|@translate}"></a>
-          <a class="icon-trash" title="{'delete photo'|@translate}" id='action-delete-picture'></a>
+          <a class="icon-arrows-cw" href="{$U_SYNC}" title="{'Synchronize metadata'|translate}"></a>
+          <a class="icon-trash" title="{'delete photo'|translate}" id='action-delete-picture'></a>
         {/if}
       </div>
       {if isset($U_JUMPTO)}
         <a class="see-out" href="{$U_JUMPTO}">
-          <p><i class="icon-left-open"></i>{'Open in gallery'|@translate}</p>
+          <p><i class="icon-left-open"></i>{'Open in gallery'|translate}</p>
         {else}
           <a class="see-out disabled" href="#">
             <p class="tiptip" title="{'You don\'t have access to this photo'|translate}"><i
@@ -156,19 +156,19 @@
 
 
       <p>
-        <strong>{'Title'|@translate}</strong>
+        <strong>{'Title'|translate}</strong>
         <br>
-        <input type="text" class="large" name="name" value="{$NAME|@escape}">
+        <input type="text" class="large" name="name" value="{$NAME|escape}">
       </p>
 
       <p>
-        <strong>{'Author'|@translate}</strong>
+        <strong>{'Author'|translate}</strong>
         <br>
         <input type="text" class="large" name="author" value="{$AUTHOR}">
       </p>
 
       <p>
-        <strong>{'Creation date'|@translate}</strong>
+        <strong>{'Creation date'|translate}</strong>
         <br>
         <input type="hidden" name="date_creation" value="{$DATE_CREATION}">
         <label class="date-input">
@@ -179,11 +179,11 @@
       </p>
 
       <p>
-        <strong>{'Linked albums'|@translate} <span
-            class="linked-albums-badge {if $related_categories|@count < 1 } badge-red {/if}">
-            {$related_categories|@count} </span></strong>
-        {if $related_categories|@count < 1}
-          <span class="orphan-photo">{'This photo is an orphan'|@translate}</span>
+        <strong>{'Linked albums'|translate} <span
+            class="linked-albums-badge {if $related_categories|count < 1 } badge-red {/if}">
+            {$related_categories|count} </span></strong>
+        {if $related_categories|count < 1}
+          <span class="orphan-photo">{'This photo is an orphan'|translate}</span>
         {else}
           <span class="orphan-photo"></span>
         {/if}
@@ -202,34 +202,34 @@
           </div>
         {/foreach}
       </div>
-      <div class="breadcrumb-item linked-albums add-item {if $related_categories|@count < 1 } highlight {/if}"><span
+      <div class="breadcrumb-item linked-albums add-item {if $related_categories|count < 1 } highlight {/if}"><span
           class="icon-plus-circled"></span>{'Add'|translate}</div>
       </p>
 
       <p>
-        <strong>{'Representation of albums'|@translate}</strong>
+        <strong>{'Representation of albums'|translate}</strong>
         <br>
-        <select data-selectize="categories" data-value="{$represented_albums|@json_encode|escape:html}"
+        <select data-selectize="categories" data-value="{$represented_albums|json_encode|escape:html}"
           placeholder="{'Type in a search term'|translate}" name="represent[]" multiple
           style="width:calc(100% + 2px);"></select>
       </p>
 
       <p>
-        <strong>{'Tags'|@translate}</strong>
+        <strong>{'Tags'|translate}</strong>
         <br>
-        <select data-selectize="tags" data-value="{$tag_selection|@json_encode|escape:html}"
+        <select data-selectize="tags" data-value="{$tag_selection|json_encode|escape:html}"
           placeholder="{'Type in a search term'|translate}" data-create="true" name="tags[]" multiple
           style="width:calc(100% + 2px);"></select>
       </p>
 
       <p>
-        <strong>{'Description'|@translate}</strong>
+        <strong>{'Description'|translate}</strong>
         <br>
         <textarea name="description" id="description" class="description">{$DESCRIPTION}</textarea>
       </p>
 
       <p>
-        <strong>{'Who can see this photo?'|@translate}</strong> ({'Privacy level'|translate})
+        <strong>{'Who can see this photo?'|translate}</strong> ({'Privacy level'|translate})
         <br>
       <div class='select-icon icon-down-open'> </div>
       <select name="level" size="1">
@@ -239,15 +239,15 @@
 
       <p>
         <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
-        <input class="submit" type="submit" value="{'Save Settings'|@translate}" name="submit">
+        <input class="submit" type="submit" value="{'Save Settings'|translate}" name="submit">
       </p>
     </div>
 
 </form>
 
 {include file='inc/album_selector.inc.tpl' 
-  title={'Associate to album'|@translate}
-searchPlaceholder={'Search'|@translate}
+  title={'Associate to album'|translate}
+searchPlaceholder={'Search'|translate}
 }
 
 <style>

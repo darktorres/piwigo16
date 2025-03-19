@@ -40,10 +40,10 @@
 <form action="{$F_ACTION}" method="POST">
   <div style="margin: 30px 0; display: flex; justify-content: space-between;">
     <div style="margin-left: 22px;">
-      {if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+      {if !empty($navbar) }{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}
     </div>
     <div style="margin-right: 21px;" class="pagination-per-page">
-      <span style="font-weight: bold;color: unset;">{'photos per page'|@translate} :</span>
+      <span style="font-weight: bold;color: unset;">{'photos per page'|translate} :</span>
       <a href="{$U_ELEMENTS_PAGE}&amp;display=5">5</a>
       <a href="{$U_ELEMENTS_PAGE}&amp;display=10">10</a>
       <a href="{$U_ELEMENTS_PAGE}&amp;display=50">50</a>
@@ -58,27 +58,27 @@
         <legend>{$element.LEGEND}</legend>
 
         <span class="thumb">
-          <a href="{$element.FILE_SRC}" class="preview-box icon-zoom-in" title="{$element.LEGEND|@htmlspecialchars}"><img
+          <a href="{$element.FILE_SRC}" class="preview-box icon-zoom-in" title="{$element.LEGEND|htmlspecialchars}"><img
               src="{$element.TN_SRC}" alt=""
               {if $element.is_svg}style="{if $current.width < 100}min-width: 100px;{/if}{if $current.height < 100} min-height: 100px; {/if}"
             {/if}></a>
-        <a href="{$element.U_EDIT}" class="icon-pencil">{'Edit'|@translate}</a>
+        <a href="{$element.U_EDIT}" class="icon-pencil">{'Edit'|translate}</a>
       </span>
 
       <table>
 
         <tr>
-          <td><strong>{'Title'|@translate}</strong></td>
+          <td><strong>{'Title'|translate}</strong></td>
           <td><input type="text" class="large" name="name-{$element.id}" value="{$element.NAME}"></td>
         </tr>
 
         <tr>
-          <td><strong>{'Author'|@translate}</strong></td>
+          <td><strong>{'Author'|translate}</strong></td>
           <td><input type="text" class="large" name="author-{$element.id}" value="{$element.AUTHOR}"></td>
         </tr>
 
         <tr>
-          <td><strong>{'Creation date'|@translate}</strong></td>
+          <td><strong>{'Creation date'|translate}</strong></td>
           <td>
             <input type="hidden" name="date_creation-{$element.id}" value="{$element.DATE_CREATION}">
             <label>
@@ -90,7 +90,7 @@
           </td>
         </tr>
         <tr>
-          <td><strong>{'Who can see this photo?'|@translate}</strong><br>({'Privacy level'|translate})</td>
+          <td><strong>{'Who can see this photo?'|translate}</strong><br>({'Privacy level'|translate})</td>
           <td>
             <select name="level-{$element.id}">
               {html_options options=$level_options selected=$element.LEVEL}
@@ -99,16 +99,16 @@
         </tr>
 
         <tr>
-          <td><strong>{'Tags'|@translate}</strong></td>
+          <td><strong>{'Tags'|translate}</strong></td>
           <td>
-            <select data-selectize="tags" data-value="{$element.TAGS|@json_encode|escape:html}"
+            <select data-selectize="tags" data-value="{$element.TAGS|json_encode|escape:html}"
               placeholder="{'Type in a search term'|translate}" data-create="true" name="tags-{$element.id}[]" multiple
               style="width:500px;"></select>
           </td>
         </tr>
 
         <tr>
-          <td><strong>{'Description'|@translate}</strong></td>
+          <td><strong>{'Description'|translate}</strong></td>
           <td><textarea cols="50" rows="5" name="description-{$element.id}" id="description-{$element.id}"
               class="description">{$element.DESCRIPTION}</textarea></td>
         </tr>
@@ -118,16 +118,16 @@
     </fieldset>
   {/foreach}
 
-  {if !empty($navbar)}{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+  {if !empty($navbar)}{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}
 
   <p>
     <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
-    <button class="buttonLike" type="submit" value="{'Submit'|@translate}" name="submit"><i
-        class="icon-floppy"></i>{'Submit'|@translate}</button>
-    <button class="resetButton" type="reset" value="{'Reset'|@translate}" name="reset">{'Reset'|@translate}</button>
+    <button class="buttonLike" type="submit" value="{'Submit'|translate}" name="submit"><i
+        class="icon-floppy"></i>{'Submit'|translate}</button>
+    <button class="resetButton" type="reset" value="{'Reset'|translate}" name="reset">{'Reset'|translate}</button>
 
-    {* <span class="buttonLike" type="submit" name="submit"> {'Submit'|@translate}</span> *}
-    {* <input type="reset" value="{'Reset'|@translate}"> *}
+    {* <span class="buttonLike" type="submit" name="submit"> {'Submit'|translate}</span> *}
+    {* <input type="reset" value="{'Reset'|translate}"> *}
   </p>
   {/if}
 

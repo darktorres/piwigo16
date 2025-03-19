@@ -28,21 +28,21 @@
 {include file='infos_errors.tpl'}
 <div data-role="content">
   <ul data-role="listview" data-inset="true">
-    <li data-role="list-divider">{'Search'|@translate}</li>
+    <li data-role="list-divider">{'Search'|translate}</li>
   </ul>
 
 
   <form class="filter" method="post" name="search" action="{$F_SEARCH_ACTION}">
     <fieldset data-role="controlgroup">
-      <legend>{'Search for words'|@translate}</legend>
+      <legend>{'Search for words'|translate}</legend>
 
       <input type="text" name="search_allwords">
 
       <input type="radio" name="mode" id="mode_and" value="AND" checked="checked">
-      <label for="mode_and">{'Search for all terms'|@translate}</label>
+      <label for="mode_and">{'Search for all terms'|translate}</label>
 
       <input type="radio" name="mode" id="mode_or" value="OR">
-      <label for="mode_or">{'Search for any term'|@translate}</label>
+      <label for="mode_or">{'Search for any term'|translate}</label>
     </fieldset>
 
     <fieldset data-role="controlgroup">
@@ -65,7 +65,7 @@
 
     {if count($AUTHORS)>=1}
       <fieldset data-role="controlgroup">
-        <legend>{'Search for Author'|@translate}</legend>
+        <legend>{'Search for Author'|translate}</legend>
         <select id="authors" placeholder="{'Type in a search term'|translate}" name="authors[]" multiple>
           {foreach from=$AUTHORS item=author}
             <option value="{$author.author|strip_tags:false|escape:html}">{$author.author|strip_tags:false}
@@ -77,33 +77,33 @@
 
     {if isset($TAGS)}
       <fieldset data-role="controlgroup">
-        <legend>{'Search tags'|@translate}</legend>
+        <legend>{'Search tags'|translate}</legend>
         <select id="tags" placeholder="{'Type in a search term'|translate}" name="tags[]" multiple>
           {foreach from=$TAGS item=tag}
             <option value="{$tag.id}">{$tag.name} ({$tag.counter|translate_dec:'%d photo':'%d photos'})</option>
           {/foreach}
         </select>
         <input type="radio" name="tag_mode" id="tag_mode_and" value="AND" checked="checked">
-        <label for="tag_mode_and">{'All tags'|@translate}</label>
+        <label for="tag_mode_and">{'All tags'|translate}</label>
 
         <input type="radio" name="tag_mode" id="tag_mode_or" value="OR">
-        <label for="tag_mode_or">{'Any tag'|@translate}</label>
+        <label for="tag_mode_or">{'Any tag'|translate}</label>
       </fieldset>
     {/if}
 
     <fieldset data-role="controlgroup">
-      <legend>{'Search in albums'|@translate}</legend>
+      <legend>{'Search in albums'|translate}</legend>
       <select id="categories" placeholder="{'Type in a search term'|translate}" name="cat[]" multiple>
         {html_options options=$category_options selected=$category_options_selected}
       </select>
 
       <input type="checkbox" name="subcats-included" value="1" checked="checked" id="subcats-included">
-      <label for="subcats-included">{'Search in sub-albums'|@translate}</label>
+      <label for="subcats-included">{'Search in sub-albums'|translate}</label>
     </fieldset>
 
 
     <div class="form-actions">
-      <input class="submit" type="submit" name="submit" value="{'Submit'|@translate}">
+      <input class="submit" type="submit" name="submit" value="{'Submit'|translate}">
     </div>
 
   </form>

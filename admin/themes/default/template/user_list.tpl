@@ -15,24 +15,24 @@
 
 {footer_script}<script>
   /* Translates */
-  const title_msg = '{'Are you sure you want to delete the user "%s"?'|@translate|escape:'javascript'}';
-  const are_you_sure_msg  = '{'Are you sure?'|@translate|@escape:'javascript'}';
-  const confirm_msg = '{'Yes, I am sure'|@translate|@escape}';
-  const cancel_msg = '{'No, I have changed my mind'|@translate|@escape}';
-  const str_and_others_tags = '{'and %s others'|@translate|escape:javascript}';
+  const title_msg = '{'Are you sure you want to delete the user "%s"?'|translate|escape:'javascript'}';
+  const are_you_sure_msg  = '{'Are you sure?'|translate|escape:'javascript'}';
+  const confirm_msg = '{'Yes, I am sure'|translate|escape}';
+  const cancel_msg = '{'No, I have changed my mind'|translate|escape}';
+  const str_and_others_tags = '{'and %s others'|translate|escape:javascript}';
   const missingConfirm = "{'You need to confirm deletion'|translate|escape:javascript}";
   const missingUsername = "{'Please, enter a login'|translate|escape:javascript}";
-  const fieldNotEmpty = "{'Name field must not be empty'|@translate|escape:javascript}"
+  const fieldNotEmpty = "{'Name field must not be empty'|translate|escape:javascript}"
 
-  const registered_str = '{"Registered"|@translate|escape:javascript}';
-  const last_visit_str = '{"Last visit"|@translate|escape:javascript}';
+  const registered_str = '{"Registered"|translate|escape:javascript}';
+  const last_visit_str = '{"Last visit"|translate|escape:javascript}';
   const dates_infos = '{'between %s and %s'|translate|escape:javascript}'
-  const hide_str = '{'Hide'|@translate|escape:javascript}';
-  const show_str = '{'Show'|@translate|escape:javascript}';
-  const user_added_str = '{'User %s added'|@translate|escape:javascript}';
-  const str_popin_update_btn = '{'Update'|@translate|escape:javascript}';
-  const filtered_users = '{'<b>%d</b> filtered users'|@translate|escape:javascript}';
-  const filtered_user = '{'<b>%d</b> filtered user'|@translate|escape:javascript}';
+  const hide_str = '{'Hide'|translate|escape:javascript}';
+  const show_str = '{'Show'|translate|escape:javascript}';
+  const user_added_str = '{'User %s added'|translate|escape:javascript}';
+  const str_popin_update_btn = '{'Update'|translate|escape:javascript}';
+  const filtered_users = '{'<b>%d</b> filtered users'|translate|escape:javascript}';
+  const filtered_user = '{'<b>%d</b> filtered user'|translate|escape:javascript}';
   const history_base_url = "{$U_HISTORY}";
 
   const status_to_str = {
@@ -47,18 +47,18 @@
   const pagination = '{$pagination}';
 
   months = [
-    "{'Jan'|@translate}",
-    "{'Feb'|@translate}",
-    "{'Mar'|@translate}",
-    "{'Apr'|@translate}",
-    "{'May'|@translate}",
-    "{'Jun'|@translate}",
-    "{'Jul'|@translate}",
-    "{'Aug'|@translate}",
-    "{'Sep'|@translate}",
-    "{'Oct'|@translate}",
-    "{'Nov'|@translate}",
-    "{'Dec'|@translate}"
+    "{'Jan'|translate}",
+    "{'Feb'|translate}",
+    "{'Mar'|translate}",
+    "{'Apr'|translate}",
+    "{'May'|translate}",
+    "{'Jun'|translate}",
+    "{'Jul'|translate}",
+    "{'Aug'|translate}",
+    "{'Sep'|translate}",
+    "{'Oct'|translate}",
+    "{'Nov'|translate}",
+    "{'Dec'|translate}"
   ];
 
   /* Template variables */
@@ -69,10 +69,10 @@
   let groups_arr_id = [{$groups_arr_id}];
   groups_arr = groups_arr_id.map((elem, index) => [elem, groups_arr_name[index]]);
   guest_id = {$guest_id};
-  nb_days = "{'%d days'|@translate}";
+  nb_days = "{'%d days'|translate}";
   //per page is too long for the popin
-  nb_photos = "{'%d photos'|@translate}";
-  nb_photos_per_page = "{'%d photos per page'|@translate}";
+  nb_photos = "{'%d photos'|translate}";
+  nb_photos_per_page = "{'%d photos per page'|translate}";
   pwg_token = '{$PWG_TOKEN}';
   has_group = "{$filter_group}";
 
@@ -200,7 +200,7 @@
     <input type="checkbox" id="toggleSelectionMode">
     <span class="slider round"></span>
   </label>
-  <p>{'Selection mode'|@translate}</p>
+  <p>{'Selection mode'|translate}</p>
 </div>
 
 
@@ -223,28 +223,28 @@
         <div style="display:flex; align-items: center;">
           <div class="not-in-selection-mode user-header-button add-user-button" style="margin: auto;">
             <label class="head-button-2 icon-plus-circled">
-              <p>{'Add a user'|@translate}</p>
+              <p>{'Add a user'|translate}</p>
             </label>
           </div>
 
           <div class="not-in-selection-mode user-header-button" style="margin: auto;">
             <label class="head-button-2 icon-user-secret edit-guest-user-button">
-              <p>{'Edit guest user'|@translate}</p>
+              <p>{'Edit guest user'|translate}</p>
             </label>
           </div>
           <div id="AddUserSuccess">
             <label class="icon-ok">
-              <span>{'New user added'|@translate}</span><span class="icon-pencil edit-now">{'Edit'|@translate}</span>
+              <span>{'New user added'|translate}</span><span class="icon-pencil edit-now">{'Edit'|translate}</span>
             </label>
           </div>
           <div class="in-selection-mode">
             <div id="checkActions">
-              <span>{'Select'|@translate}</span>
-              <a href="#" id="selectAllPage">{'The whole page'|@translate}</a>
-              <a href="#" id="selectSet">{'The whole set'|@translate}</a><span class="loading" style="display:none"><img
+              <span>{'Select'|translate}</span>
+              <a href="#" id="selectAllPage">{'The whole page'|translate}</a>
+              <a href="#" id="selectSet">{'The whole set'|translate}</a><span class="loading" style="display:none"><img
                   src="themes/default/images/ajax-loader-small.gif"></span>
-              <a href="#" id="selectNone">{'None'|@translate}</a>
-              <a href="#" id="selectInvert">{'Invert'|@translate}</a>
+              <a href="#" id="selectNone">{'None'|translate}</a>
+              <a href="#" id="selectInvert">{'Invert'|translate}</a>
               <span id="selectedMessage"></span>
             </div>
           </div>
@@ -257,25 +257,25 @@
     </div>
     <div class="filtered-users"></div>
     <div class="advanced-filter-btn icon-filter">
-      <span>{'Filters'|@translate}</span>
+      <span>{'Filters'|translate}</span>
       <span class="filter-counter"></span>
     </div>
     <div id='search-user'>
       <div class='search-info'> </div>
       {*This input (#user_search2) is used to bait the chrome autocomplete tool. It is hidden in navigator and is not meant to be seen.*}
-      <input id="user_search2" class='search-input2' type='text' placeholder='{'Search'|@translate}'>
+      <input id="user_search2" class='search-input2' type='text' placeholder='{'Search'|translate}'>
       <span class='icon-search search-icon'> </span>
       <span class="icon-cancel search-cancel"></span>
-      <input id="user_search" class='search-input' type='text' placeholder='{'Search'|@translate}'>
+      <input id="user_search" class='search-input' type='text' placeholder='{'Search'|translate}'>
     </div>
     <div class="advanced-filter">
       <div class="advanced-filter-header">
-        <span class="advanced-filter-title">{'Advanced filters'|@translate}</span>
+        <span class="advanced-filter-title">{'Advanced filters'|translate}</span>
         <span class="advanced-filter-close icon-cancel"></span>
       </div>
       <div class="advanced-filter-container">
         <div class="advanced-filter-status advanced-filter-item">
-          <label class="advanced-filter-item-label">{'Status'|@translate}</label>
+          <label class="advanced-filter-item-label">{'Status'|translate}</label>
           <div class="advanced-filter-select-container advanced-filter-item-container">
             <select class="user-action-select advanced-filter-select" name="filter_status">
               <option value="" label="" selected></option>
@@ -284,7 +284,7 @@
           </div>
         </div>
         <div class="advanced-filter-level advanced-filter-item">
-          <label class="advanced-filter-item-label">{'Privacy level'|@translate}</label>
+          <label class="advanced-filter-item-label">{'Privacy level'|translate}</label>
           <div class="advanced-filter-select-container advanced-filter-item-container">
             <select class="user-action-select advanced-filter-select" name="filter_level" size="1">
               <option value="" label="" selected></option>
@@ -293,7 +293,7 @@
           </div>
         </div>
         <div class="advanced-filter-group advanced-filter-item">
-          <label class="advanced-filter-item-label">{'Group'|@translate}</label>
+          <label class="advanced-filter-item-label">{'Group'|translate}</label>
           <div class="advanced-filter-select-container advanced-filter-item-container">
             <select class="user-action-select advanced-filter-select" name="filter_group">
               <option value="" label="" selected></option>
@@ -303,7 +303,7 @@
         </div>
         <div class="advanced-filter-date advanced-filter-item">
           <div class="advanced-filter-date-title" style="display:flex">
-            <span class="advanced-filter-item-label">{'Registered'|@translate}</span>
+            <span class="advanced-filter-item-label">{'Registered'|translate}</span>
             <span class='dates-infos'></span>
           </div>
           <div class="dates-select-bar">
@@ -323,27 +323,27 @@
       </div>
       <!-- username -->
       <div class="user-header-col user-header-username">
-        <span>{'Username'|@translate}</span>
+        <span>{'Username'|translate}</span>
       </div>
       <!-- status -->
       <div class="user-header-col user-header-status">
-        <span>{'Status'|@translate}</span>
+        <span>{'Status'|translate}</span>
       </div>
       <!-- email address -->
       <div class="user-header-col user-header-email not-in-selection-mode">
-        <span>{'Email Address'|@translate}</span>
+        <span>{'Email Address'|translate}</span>
       </div>
       {* <!-- groups -->
       <div class="user-header-col user-header-groups">
-        <span>{'Groups'|@translate}</span>
+        <span>{'Groups'|translate}</span>
       </div> *}
       <!-- registration date -->
       <div class="user-header-col user-header-registration">
-        <span>{'Registered'|@translate}</span>
+        <span>{'Registered'|translate}</span>
       </div>
       <!-- groups -->
       <div class="user-header-col user-header-groups">
-        <span>{'Groups'|@translate}</span>
+        <span>{'Groups'|translate}</span>
       </div>
     </div>
     <div class="user-update-spinner icon-spin6 animate-spin"></div>
@@ -352,7 +352,7 @@
     <!-- Pagination -->
     <div class="user-pagination">
       <div class="pagination-per-page">
-        <span class="thumbnailsActionsShow" style="font-weight: bold;">{'Display'|@translate}</span>
+        <span class="thumbnailsActionsShow" style="font-weight: bold;">{'Display'|translate}</span>
         <a id="pagination-per-page-5">5</a>
         <a id="pagination-per-page-10">10</a>
         <a id="pagination-per-page-25">25</a>
@@ -376,36 +376,36 @@
     style="width: 250px; min-width:250px;display: block;position:relative">
     <div class="user-selection-content">
       <div class="selection-mode-ul">
-        <p>{'Your selection'|@translate}</p>
+        <p>{'Your selection'|translate}</p>
         <div class="user-selected-list">
         </div>
         <div class="selection-other-users"></div>
       </div>
       <fieldset id="action">
-        <legend>{'Action'|@translate}</legend>
+        <legend>{'Action'|translate}</legend>
 
-        <div id="forbidAction">{'No users selected, no actions possible.'|@translate}</div>
+        <div id="forbidAction">{'No users selected, no actions possible.'|translate}</div>
         <div id="permitActionUserList" style="display:block">
 
           <div class="user-action-select-container">
             <select class="user-action-select" name="selectAction">
-              <option value="-1">{'Choose an action'|@translate}</option>
+              <option value="-1">{'Choose an action'|translate}</option>
               <optgroup label="Actions">
-                <option value="delete" class="icon-trash">{'Delete selected users'|@translate}</option>
-                <option value="status">{'Status'|@translate}</option>
+                <option value="delete" class="icon-trash">{'Delete selected users'|translate}</option>
+                <option value="status">{'Status'|translate}</option>
                 <option value="group_associate">{'associate to group'|translate}</option>
-                <option value="group_dissociate">{'dissociate from group'|@translate}</option>
-                <option value="enabled_high">{'High definition enabled'|@translate}</option>
-                <option value="level">{'Privacy level'|@translate}</option>
-                <option value="nb_image_page">{'Number of photos per page'|@translate}</option>
-                <option value="theme">{'Theme'|@translate}</option>
-                <option value="language">{'Language'|@translate}</option>
-                <option value="recent_period">{'Recent period'|@translate}</option>
-                <option value="expand">{'Expand all albums'|@translate}</option>
+                <option value="group_dissociate">{'dissociate from group'|translate}</option>
+                <option value="enabled_high">{'High definition enabled'|translate}</option>
+                <option value="level">{'Privacy level'|translate}</option>
+                <option value="nb_image_page">{'Number of photos per page'|translate}</option>
+                <option value="theme">{'Theme'|translate}</option>
+                <option value="language">{'Language'|translate}</option>
+                <option value="recent_period">{'Recent period'|translate}</option>
+                <option value="expand">{'Expand all albums'|translate}</option>
                 {if $ACTIVATE_COMMENTS}
-                  <option value="show_nb_comments">{'Show number of comments'|@translate}</option>
+                  <option value="show_nb_comments">{'Show number of comments'|translate}</option>
                 {/if}
-                <option value="show_nb_hits">{'Show number of hits'|@translate}</option>
+                <option value="show_nb_hits">{'Show number of hits'|translate}</option>
               </optgroup>
             </select>
           </div>
@@ -415,7 +415,7 @@
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
-              <span class="user-list-checkbox-label">{'Are you sure?'|@translate}</span>
+              <span class="user-list-checkbox-label">{'Are you sure?'|translate}</span>
             </div>
           </div>
 
@@ -452,13 +452,13 @@
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
-              <span class="user-list-checkbox-label">{'Yes'|@translate}</span>
+              <span class="user-list-checkbox-label">{'Yes'|translate}</span>
             </span>
             <span class="user-list-checkbox" data-selected="1" name="enabled_high_no">
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
-              <span class="user-list-checkbox-label">{'No'|@translate}</span>
+              <span class="user-list-checkbox-label">{'No'|translate}</span>
             </span>
           </div>
 
@@ -519,13 +519,13 @@
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
-              <span class="user-list-checkbox-label">{'Yes'|@translate}</span>
+              <span class="user-list-checkbox-label">{'Yes'|translate}</span>
             </span>
             <span class="user-list-checkbox" data-selected="1" name="expand_no">
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
-              <span class="user-list-checkbox-label">{'No'|@translate}</span>
+              <span class="user-list-checkbox-label">{'No'|translate}</span>
             </span>
           </div>
 
@@ -535,13 +535,13 @@
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
-              <span class="user-list-checkbox-label">{'Yes'|@translate}</span>
+              <span class="user-list-checkbox-label">{'Yes'|translate}</span>
             </span>
             <span class="user-list-checkbox" data-selected="1" name="show_nb_comments_no">
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
-              <span class="user-list-checkbox-label">{'No'|@translate}</span>
+              <span class="user-list-checkbox-label">{'No'|translate}</span>
             </span>
           </div>
 
@@ -551,18 +551,18 @@
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
-              <span class="user-list-checkbox-label">{'Yes'|@translate}</span>
+              <span class="user-list-checkbox-label">{'Yes'|translate}</span>
             </span>
             <span class="user-list-checkbox" data-selected="1" name="show_nb_hits_no">
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
               </span>
-              <span class="user-list-checkbox-label">{'No'|@translate}</span>
+              <span class="user-list-checkbox-label">{'No'|translate}</span>
             </span>
           </div>
 
           <p id="applyActionBlock" style="display:none" class="actionButtons">
-            <input id="applyAction" class="submit" type="submit" value="{'Apply action'|@translate}" name="submit">
+            <input id="applyAction" class="submit" type="submit" value="{'Apply action'|translate}" name="submit">
             <span id="applyOnDetails"></span></input>
             <span id="applyActionLoading" style="display:none"><img
                 src="themes/default/images/ajax-loader-small.gif"></span>
@@ -666,7 +666,7 @@
           <div class="user-property-username-change">
             <div class="summary-input-container">
               <input class="user-property-input user-property-input-username" value=""
-                placeholder="{'Username'|@translate}" />
+                placeholder="{'Username'|translate}" />
             </div>
             <span class="icon-ok edit-username-validate"></span>
             <span class="icon-cancel-circled edit-username-cancel"></span>
@@ -674,24 +674,24 @@
           <div class="user-property-password-container">
             <div class="user-property-password edit-password">
               <p class="user-property-button"><span class="icon-key user-edit-icon">
-                </span>{'Change Password'|@translate}</p>
+                </span>{'Change Password'|translate}</p>
             </div>
             <div class="user-property-password-change">
               <div class="summary-input-container">
                 <input class="user-property-input user-property-input-password" value=""
-                  placeholder="{'Password'|@translate}" />
+                  placeholder="{'Password'|translate}" />
               </div>
               <span class="icon-ok edit-password-validate"></span>
               <span class="icon-cancel-circled edit-password-cancel"></span>
             </div>
             <div class="user-property-permissions">
               <p class="user-property-button"> <span class="icon-lock user-edit-icon"> </span><a
-                  href="#">{'Permissions'|@translate}</a></p>
+                  href="#">{'Permissions'|translate}</a></p>
             </div>
             <div class="user-stats">
               <div class="user-property-history">
                 <p class="user-property-button"> <span class="icon-signal user-edit-icon"> </span><a
-                    href="">{'Visit history'|@translate}</a></p>
+                    href="">{'Visit history'|translate}</a></p>
               </div>
             </div>
           </div>
@@ -707,14 +707,14 @@
         </div>
         <div class="properties-container">
           <div class="user-property-column-title">
-            <p>{'Properties'|@translate}</p>
+            <p>{'Properties'|translate}</p>
           </div>
           <div class="user-property-email">
-            <p class="user-property-label">{'Email Address'|@translate}</p>
+            <p class="user-property-label">{'Email Address'|translate}</p>
             <input type="text" class="user-property-input" value="contact@jessy-pinkman.com" disabled="false" />
           </div>
           <div class="user-property-status">
-            <p class="user-property-label">{'Status'|@translate}
+            <p class="user-property-label">{'Status'|translate}
               <span class="icon-help-circled" title="<div class='tooltip-status-content'>
                     <div class='tooltip-status-row'><span class='tooltip-col1'>{'user_status_webmaster'|translate}</span><span class='tooltip-col2'>{'Has access to all administration functionalities. Can manage both configuration and content.'|translate}</span></div>
                     <div class='tooltip-status-row'><span class='tooltip-col1'>{'user_status_admin'|translate}</span><span class='tooltip-col2'>{'Has access to administration. Can only manage content: photos/albums/users/tags/groups.'|translate}</span></div>
@@ -726,28 +726,28 @@
             </p>
             <div class="user-property-select-container">
               <select name="status" class="user-property-select">
-                <option value="webmaster">{'user_status_webmaster'|@translate}</option>
-                <option value="admin">{'user_status_admin'|@translate}</option>
-                <option value="normal">{'user_status_normal'|@translate}</option>
-                <option value="generic">{'user_status_generic'|@translate}</option>
-                <option value="guest">{'user_status_guest'|@translate} ({'Deactivated'|@translate})</option>
+                <option value="webmaster">{'user_status_webmaster'|translate}</option>
+                <option value="admin">{'user_status_admin'|translate}</option>
+                <option value="normal">{'user_status_normal'|translate}</option>
+                <option value="generic">{'user_status_generic'|translate}</option>
+                <option value="guest">{'user_status_guest'|translate} ({'Deactivated'|translate})</option>
               </select>
             </div>
           </div>
           <div class="user-property-level">
-            <p class="user-property-label">{'Privacy level'|@translate}</p>
+            <p class="user-property-label">{'Privacy level'|translate}</p>
             <div class="user-property-select-container">
               <select name="privacy" class="user-property-select">
-                <option value="0">{'Level 0'|@translate}</option>
-                <option value="1">{'Level 1'|@translate}</option>
-                <option value="2">{'Level 2'|@translate}</option>
-                <option value="4">{'Level 4'|@translate}</option>
-                <option value="8">{'Level 8'|@translate}</option>
+                <option value="0">{'Level 0'|translate}</option>
+                <option value="1">{'Level 1'|translate}</option>
+                <option value="2">{'Level 2'|translate}</option>
+                <option value="4">{'Level 4'|translate}</option>
+                <option value="8">{'Level 8'|translate}</option>
               </select>
             </div>
           </div>
           <div class="user-property-group-container">
-            <p class="user-property-label">{'Groups'|@translate}</p>
+            <p class="user-property-label">{'Groups'|translate}</p>
             <div class="user-property-select-container user-property-group">
               <select class="user-property-select" data-selectize="groups"
                 placeholder="{'Select groups or type them'|translate}" name="group_id[]" multiple
@@ -766,13 +766,13 @@
       <div class="update-container" style="display:flex;flex-direction:column">
         <div style="display:flex;justify-content:space-between;margin-bottom: 10px;">
           <div>
-            <span class="update-user-button"><i class='icon-floppy'></i>{'Update'|@translate}</span>
-            <span class="close-update-button">{'Close'|@translate}</span>
-            <span class="update-user-success icon-green icon-ok">{'User updated'|@translate}</span>
+            <span class="update-user-button"><i class='icon-floppy'></i>{'Update'|translate}</span>
+            <span class="close-update-button">{'Close'|translate}</span>
+            <span class="update-user-success icon-green icon-ok">{'User updated'|translate}</span>
             <span class="update-user-fail icon-cancel"></span>
           </div>
           <div>
-            <span class="delete-user-button icon-trash">{'Delete'|@translate}</span>
+            <span class="delete-user-button icon-trash">{'Delete'|translate}</span>
           </div>
         </div>
         <div>
@@ -791,7 +791,7 @@
         <input name="recent_period" />
       </div>
       <div class="user-property-theme" style="margin-top: 37px;">
-        <p class="user-property-label">{'Theme'|@translate}</p>
+        <p class="user-property-label">{'Theme'|translate}</p>
         <div class="user-property-select-container">
           <select name="privacy" class="user-property-select">
             {html_options options=$theme_options selected=$theme_selected}
@@ -799,7 +799,7 @@
         </div>
       </div>
       <div class="user-property-lang">
-        <p class="user-property-label">{'Language'|@translate}</p>
+        <p class="user-property-label">{'Language'|translate}</p>
         <div class="user-property-select-container">
           <select name="privacy" class="user-property-select">
             {html_options options=$language_options selected=$language_selected}
@@ -844,7 +844,7 @@
     <div id="guest-msg"
       style="background-color:#B9E2F8;padding:5;border-left:3px solid blue;display:flex;align-items:center;margin-bottom:30px">
       <span class="icon-info-circled-1" style="background-color:#B9E2F8;color:#26409D;font-size:3em"></span><span
-        style="font-size:1.1em;color:#26409D;font-weight:bold;">{'Users not logged in will have these settings applied, these settings are used by default for new users'|@translate}</span>
+        style="font-size:1.1em;color:#26409D;font-weight:bold;">{'Users not logged in will have these settings applied, these settings are used by default for new users'|translate}</span>
     </div>
     <div style='display:flex;'>
       <div class="summary-properties-update-container">
@@ -866,7 +866,7 @@
             <div class="user-property-username-change">
               <div class="summary-input-container">
                 <input class="user-property-input user-property-input-username" value=""
-                  placeholder="{'Username'|@translate}" />
+                  placeholder="{'Username'|translate}" />
               </div>
               <span class="icon-ok edit-username-validate"></span>
               <span class="icon-cancel-circled edit-username-cancel"></span>
@@ -874,52 +874,52 @@
             <div class="user-property-password-container">
               <div class="user-property-password edit-password">
                 <p class="user-property-button unavailable"><span
-                    class="icon-key user-edit-icon"></span>{'Change Password'|@translate}</p>
+                    class="icon-key user-edit-icon"></span>{'Change Password'|translate}</p>
               </div>
               <div class="user-property-password-change">
                 <div class="summary-input-container">
                   <input class="user-property-input user-property-input-password" value=""
-                    placeholder="{'Password'|@translate}" />
+                    placeholder="{'Password'|translate}" />
                 </div>
                 <span class="icon-ok edit-password-validate"></span>
                 <span class="icon-cancel-circled edit-password-cancel"></span>
               </div>
               <div class="user-property-permissions">
                 <p class="user-property-button"><span class="icon-lock user-edit-icon"></span><a
-                    href="admin.php?page=user_perm&user_id={$guest_id}">{'Permissions'|@translate}</a></p>
+                    href="admin.php?page=user_perm&user_id={$guest_id}">{'Permissions'|translate}</a></p>
               </div>
             </div>
           </div>
           <div class="properties-container">
             <div class="user-property-column-title">
-              <p>{'Properties'|@translate}</p>
+              <p>{'Properties'|translate}</p>
             </div>
             <div class="user-property-email">
-              <p class="user-property-label">{'Email Address'|@translate}</p>
+              <p class="user-property-label">{'Email Address'|translate}</p>
               <input type="text" class="user-property-input" value="N/A" readonly />
             </div>
             <div class="user-property-status">
-              <p class="user-property-label">{'Status'|@translate}</p>
+              <p class="user-property-label">{'Status'|translate}</p>
               <div class="user-property-select-container notClickableBefore">
                 <select name="status" class="user-property-select notClickable">
-                  <option value="guest">{'Guest'|@translate}</option>
+                  <option value="guest">{'Guest'|translate}</option>
                 </select>
               </div>
             </div>
             <div class="user-property-level">
-              <p class="user-property-label">{'Privacy Level'|@translate}</p>
+              <p class="user-property-label">{'Privacy Level'|translate}</p>
               <div class="user-property-select-container">
                 <select name="privacy" class="user-property-select">
-                  <option value="0">{'Level 0'|@translate}</option>
-                  <option value="1">{'Level 1'|@translate}</option>
-                  <option value="2">{'Level 2'|@translate}</option>
-                  <option value="4">{'Level 4'|@translate}</option>
-                  <option value="8">{'Level 8'|@translate}</option>
+                  <option value="0">{'Level 0'|translate}</option>
+                  <option value="1">{'Level 1'|translate}</option>
+                  <option value="2">{'Level 2'|translate}</option>
+                  <option value="4">{'Level 4'|translate}</option>
+                  <option value="8">{'Level 8'|translate}</option>
                 </select>
               </div>
             </div>
             <div class="user-property-group-container">
-              <p class="user-property-label">{'Groups'|@translate}</p>
+              <p class="user-property-label">{'Groups'|translate}</p>
               <div class="user-property-select-container user-property-group">
                 <select class="user-property-select" data-selectize="groups"
                   placeholder="{'Select groups or type them'|translate}" name="group_id[]" multiple
@@ -938,9 +938,9 @@
         <div class="update-container">
           <div style="display:flex;flex-direction:column">
             <div style="display:flex;">
-              <span class="update-user-button"><i class='icon-floppy'></i>{'Update'|@translate}</span>
-              <span class="close-update-button">{'Close'|@translate}</span>
-              <span class="update-user-success icon-green">{'User updated'|@translate}</span>
+              <span class="update-user-button"><i class='icon-floppy'></i>{'Update'|translate}</span>
+              <span class="close-update-button">{'Close'|translate}</span>
+              <span class="update-user-success icon-green">{'User updated'|translate}</span>
               <span class="update-user-fail  icon-cancel"></span>
             </div>
             <div>
@@ -960,7 +960,7 @@
           <input name="recent_period" />
         </div>
         <div class="user-property-theme">
-          <p class="user-property-label">{'Theme'|@translate}</p>
+          <p class="user-property-label">{'Theme'|translate}</p>
           <div class="user-property-select-container">
             <select name="privacy" class="user-property-select">
               {html_options options=$theme_options selected=$theme_selected}
@@ -968,7 +968,7 @@
           </div>
         </div>
         <div class="user-property-lang">
-          <p class="user-property-label">{'Language'|@translate}</p>
+          <p class="user-property-label">{'Language'|translate}</p>
           <div class="user-property-select-container">
             <select name="privacy" class="user-property-select">
               {html_options options=$language_options selected=$language_selected}
@@ -1015,28 +1015,28 @@
       <span class="AddIcon icon-blue icon-plus-circled"></span>
     </div>
     <div class="AddIconTitle">
-      <span>{'Add a new user'|@translate}</span>
+      <span>{'Add a new user'|translate}</span>
     </div>
     <div class="AddUserInputContainer">
-      <label class="user-property-label AddUserLabelUsername">{'Username'|@translate}
+      <label class="user-property-label AddUserLabelUsername">{'Username'|translate}
         <input class="user-property-input" />
       </label>
     </div>
 
     <div class="AddUserInputContainer">
       <div class="AddUserPasswordWrapper">
-        <label for="AddUserPassword" class="user-property-label AddUserLabelPassword">{'Password'|@translate}</label>
+        <label for="AddUserPassword" class="user-property-label AddUserLabelPassword">{'Password'|translate}</label>
         <span id="show_password" class="icon-eye"></span>
       </div>
       <input id="AddUserPassword" class="user-property-input" type="password" />
 
       <div class="AddUserGenPassword">
-        <span class="icon-dice-solid"></span><span>{'Generate random password'|@translate}</span>
+        <span class="icon-dice-solid"></span><span>{'Generate random password'|translate}</span>
       </div>
     </div>
 
     <div class="AddUserInputContainer">
-      <label class="user-property-label AddUserLabelEmail">{'Email'|@translate}
+      <label class="user-property-label AddUserLabelEmail">{'Email'|translate}
         <input class="user-property-input" />
       </label>
     </div>
@@ -1052,11 +1052,11 @@
     </div>
 
     <div class="AddUserSubmit">
-      <span class="icon-plus"></span><span>{'Add User'|@translate}</span>
+      <span class="icon-plus"></span><span>{'Add User'|translate}</span>
     </div>
 
     <div class="AddUserCancel" style="display:none;">
-      <span>{'Cancel'|@translate}</span>
+      <span>{'Cancel'|translate}</span>
     </div>
   </div>
 </div>

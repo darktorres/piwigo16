@@ -22,7 +22,7 @@
     const page_ellipsis = '<span>...</span>'
     const page_item = '<a data-page="%d">%d</a>';
     var create_selector = true;
-    const users_key = "{"Users"|@translate}";
+    const users_key = "{"Users"|translate}";
 
     const line_key = "{'%s line'|translate}";
     const lines_key = "{'%s lines'|translate}";

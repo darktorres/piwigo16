@@ -16,7 +16,7 @@
     {/foreach}
     {* The data.nbPictures is always empty, no need to display anything
         <div class="dropdown-divider"></div>
-        <div class="dropdown-header">{$block->data.nbPictures|@translate_dec:'%d photo':'%d photos'}</div>
+        <div class="dropdown-header">{$block->data.nbPictures|translate_dec:'%d photo':'%d photos'}</div>
 *}
   </div>
 </li>

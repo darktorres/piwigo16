@@ -5,7 +5,7 @@
 			{if isset($U_SLIDESHOW_STOP)}
 				<a href="{$U_SLIDESHOW_STOP}" title="{'stop the slideshow'|translate}" style="font-size:22px">◼</a>&nbsp;
 			{/if}
-			<a href="#" onclick="return fotoramaTogglePause();" title="{'slideshow'|@translate}"
+			<a href="#" onclick="return fotoramaTogglePause();" title="{'slideshow'|translate}"
 				class="pwg-state-default pwg-button" rel="nofollow">
 				<span class="pwg-icon pwg-icon-{if $Fotorama.autoplay}pause{else}play{/if}" id="togglePause"></span>
 			</a>

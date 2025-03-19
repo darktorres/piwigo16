@@ -4,20 +4,20 @@
 	<div class="titrePage">
 		<ul class="categoryActions">
 			{if $display_mode == 'letters'}
-				<li><a href="{$U_CLOUD}" title="{'show tag cloud'|@translate}" class="pwg-state-default pwg-button">
+				<li><a href="{$U_CLOUD}" title="{'show tag cloud'|translate}" class="pwg-state-default pwg-button">
 						<span class="pwg-icon pwg-icon-cloud"></span><span
-							class="pwg-button-text">{'cloud'|@translate}</span>
+							class="pwg-button-text">{'cloud'|translate}</span>
 					</a></li>
 			{/if}
 			{if $display_mode == 'cloud'}
-				<li><a href="{$U_LETTERS}" title="{'group by letters'|@translate}" class="pwg-state-default pwg-button"
+				<li><a href="{$U_LETTERS}" title="{'group by letters'|translate}" class="pwg-state-default pwg-button"
 						rel="nofollow">
 						<span class="pwg-icon pwg-icon-letters"></span><span
-							class="pwg-button-text">{'letters'|@translate}</span>
+							class="pwg-button-text">{'letters'|translate}</span>
 					</a></li>
 			{/if}
 		</ul>
-		<h2><a href="{$U_HOME}">{'Home'|@translate}</a>{$LEVEL_SEPARATOR}{'Tags'|@translate}</h2>
+		<h2><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}{'Tags'|translate}</h2>
 	</div>
 
 	{include file='infos_errors.tpl'}
@@ -27,7 +27,7 @@
 		<div id="fullTagCloud">
 			{foreach from=$tags item=tag}
 				<span><a href="{$tag.URL}" class="tagLevel{$tag.level}"
-						title="{$tag.counter|@translate_dec:'%d photo':'%d photos'}">{$tag.name}</a></span>
+						title="{$tag.counter|translate_dec:'%d photo':'%d photos'}">{$tag.name}</a></span>
 			{/foreach}
 		</div>
 	{/if}
@@ -43,7 +43,7 @@
 								{foreach from=$letter.tags item=tag}
 									<tr class="tagLine">
 										<td><a href="{$tag.URL}" title="{$tag.name}">{$tag.name}</a></td>
-										<td class="nbEntries">{$tag.counter|@translate_dec:'%d photo':'%d photos'}</td>
+										<td class="nbEntries">{$tag.counter|translate_dec:'%d photo':'%d photos'}</td>
 									</tr>
 								{/foreach}
 							</table>

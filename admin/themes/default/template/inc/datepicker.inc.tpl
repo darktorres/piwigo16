@@ -3,13 +3,13 @@
 
 {$require='jquery-ui-timepicker-addon'}
 {assign var="datepicker_language" value="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/i18n/jquery.ui.datepicker-`$lang_info.jquery_code`.js"}
-{if "PHPWG_ROOT_PATH"|@constant|@cat:$datepicker_language|@file_exists}
+{if "PHPWG_ROOT_PATH"|constant|cat:$datepicker_language|file_exists}
     {combine_script id="jquery.ui.datepicker-`$lang_info.jquery_code`" load=$load_mode require='jquery.ui' path=$datepicker_language}
     {$require=$require|cat:",jquery.ui.datepicker-`$lang_info.jquery_code`"}
 {/if}
 
 {assign var="timepicker_language" value="node_modules/jQuery-Timepicker-Addon/dist/i18n/jquery-ui-timepicker-`$lang_info.jquery_code`.js"}
-{if "PHPWG_ROOT_PATH"|@constant|@cat:$datepicker_language|@file_exists}
+{if "PHPWG_ROOT_PATH"|constant|cat:$datepicker_language|file_exists}
     {combine_script id="jquery.ui.timepicker-`$lang_info.jquery_code`" load=$load_mode require='jquery-ui-timepicker-addon' path=$timepicker_language}
     {$require=$require|cat:",jquery.ui.timepicker-`$lang_info.jquery_code`"}
 {/if}

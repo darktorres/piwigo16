@@ -24,7 +24,7 @@
     deleteProgressMessage: "{'Deletion in progress'|translate|escape:'javascript'}",
     syncProgressMessage: "{'Synchronization in progress'|translate|escape:'javascript'}",
     AreYouSure: "{'Are you sure?'|translate|escape:'javascript'}",
-    generateMsg: "{'Generate multiple size images'|@translate}"
+    generateMsg: "{'Generate multiple size images'|translate}"
   };
 
   jQuery(document).ready(function() {
@@ -49,7 +49,7 @@
       rootUrl: '{$ROOT_URL}'
     });
 
-    var associated_categories = {$associated_categories|@json_encode};
+    var associated_categories = {$associated_categories|json_encode};
 
     categoriesCache.selectize(jQuery('[data-selectize=categories]'), {
       filter: function(categories, options) {
@@ -73,12 +73,12 @@
 
   var nb_thumbs_page = {$nb_thumbs_page};
   var nb_thumbs_set = {$nb_thumbs_set};
-  var applyOnDetails_pattern = "{'on the %d selected photos'|@translate}";
-  var all_elements = [{if !empty($all_elements)}{','|@implode:$all_elements}{/if}];
+  var applyOnDetails_pattern = "{'on the %d selected photos'|translate}";
+  var all_elements = [{if !empty($all_elements)}{','|implode:$all_elements}{/if}];
 
-  var selectedMessage_pattern = "{'%d of %d photos selected'|@translate}";
-  var selectedMessage_none = "{'No photo selected, %d photos in current set'|@translate}";
-  var selectedMessage_all = "{'All %d photos are selected'|@translate}";
+  var selectedMessage_pattern = "{'%d of %d photos selected'|translate}";
+  var selectedMessage_none = "{'No photo selected, %d photos in current set'|translate}";
+  var selectedMessage_all = "{'All %d photos are selected'|translate}";
 
   $(document).ready(function() {
     jQuery('.help-popin-search').colorbox({ width: "600px" });
@@ -354,15 +354,15 @@
     <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
 
     <fieldset>
-      <legend><span class='icon-filter icon-green'></span>{'Filter'|@translate}</legend>
+      <legend><span class='icon-filter icon-green'></span>{'Filter'|translate}</legend>
 
       <div class="filterBlock">
         <ul id="filterList">
           <li id="filter_prefilter" {if !isset($filter.prefilter)}style="display:none" {/if}>
             <input type="checkbox" name="filter_prefilter_use" class="useFilterCheckbox"
               {if isset($filter.prefilter)}checked="checked" {/if}>
-            <p>{'Predefined filter'|@translate}</p>
-            <a href="#" class="removeFilter" title="{'remove this filter'|@translate}"><span>[x]</span></a>
+            <p>{'Predefined filter'|translate}</p>
+            <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
             <select name="filter_prefilter">
               {foreach from=$prefilters item=prefilter}
                 {assign 'optionClass' ''}
@@ -428,43 +428,43 @@
           <li id="filter_category" {if !isset($filter.category)}style="display:none" {/if}>
             <input type="checkbox" name="filter_category_use" class="useFilterCheckbox"
               {if isset($filter.category)}checked="checked" {/if}>
-            <p>{'Album'|@translate}</p>
+            <p>{'Album'|translate}</p>
             <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
-            <select data-selectize="categories" data-value="{$filter_category_selected|@json_encode|escape:html}"
+            <select data-selectize="categories" data-value="{$filter_category_selected|json_encode|escape:html}"
               data-default="first" name="filter_category"></select>
             <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox"
                 name="filter_category_recursive" {if isset($filter.category_recursive)}checked="checked" {/if}>
-              {'include child albums'|@translate}</label>
+              {'include child albums'|translate}</label>
           </li>
 
           <li id="filter_tags" {if !isset($filter.tags)}style="display:none" {/if}>
             <input type="checkbox" name="filter_tags_use" class="useFilterCheckbox"
               {if isset($filter.tags)}checked="checked" {/if}>
-            <p>{'Tags'|@translate}</p>
+            <p>{'Tags'|translate}</p>
             <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
-            <select data-selectize="tags" data-value="{$filter_tags|@json_encode|escape:html}"
+            <select data-selectize="tags" data-value="{$filter_tags|json_encode|escape:html}"
               placeholder="{'Type in a search term'|translate}" name="filter_tags[]" multiple
               style="width:600px;"></select>
             <label class="font-checkbox"><span class="icon-circle-empty"></span><span><input type="radio"
                   name="tag_mode" value="AND"
                   {if !isset($filter.tag_mode) or $filter.tag_mode eq 'AND'}checked="checked" {/if}>
-                {'All tags'|@translate}</span></label>
+                {'All tags'|translate}</span></label>
             <label class="font-checkbox"><span class="icon-circle-empty"></span><span><input type="radio"
                   name="tag_mode" value="OR" {if isset($filter.tag_mode) and $filter.tag_mode eq 'OR'}checked="checked"
-                  {/if}> {'Any tag'|@translate}</span></label>
+                  {/if}> {'Any tag'|translate}</span></label>
           </li>
 
           <li id="filter_level" {if !isset($filter.level)}style="display:none" {/if}>
             <input type="checkbox" name="filter_level_use" class="useFilterCheckbox"
               {if isset($filter.level)}checked="checked" {/if}>
-            <p>{'Privacy level'|@translate}</p>
+            <p>{'Privacy level'|translate}</p>
             <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
             <select name="filter_level" size="1">
               {html_options options=$filter_level_options selected=$filter_level_options_selected}
             </select>
             <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox"
                 name="filter_level_include_lower" {if isset($filter.level_include_lower)}checked="checked" {/if}>
-              {'include photos with lower privacy level'|@translate}</label>
+              {'include photos with lower privacy level'|translate}</label>
           </li>
 
           <li id="filter_dimension" {if !isset($filter.dimension)}style="display:none" {/if}>
@@ -509,7 +509,7 @@
 
               <div data-slider="ratios" class="dimensionSlidersBlocks">
                 <div style="margin-bottom: 11px;">
-                  <span>{'Ratio'|translate} ({'Width'|@translate}/{'Height'|@translate})</span>
+                  <span>{'Ratio'|translate} ({'Width'|translate}/{'Height'|translate})</span>
                   <span
                     class="slider-info">{'between %.2f and %.2f'|translate:$dimensions.selected.min_ratio:$dimensions.selected.max_ratio}</span>
                 </div>
@@ -546,15 +546,15 @@
           <li id="filter_search" {if !isset($filter.search)} style="display:none" {/if}>
             <input type="checkbox" name="filter_search_use" class="useFilterCheckbox" {if isset($filter.search)}
               checked="checked" {/if}>
-            <p>{'Search'|@translate}</p>
+            <p>{'Search'|translate}</p>
             <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
             <input name="q" size=40
               value="{if isset($filter.search)} {$filter.search.q|stripslashes|htmlspecialchars}{/if}">
-            <a href="admin/popuphelp.php?page=quick_search&amp;output=content_only" title="{'Help'|@translate}"
+            <a href="admin/popuphelp.php?page=quick_search&amp;output=content_only" title="{'Help'|translate}"
               class="help-popin-search"><span class="icon-help-circled">{'Search tips'|translate}</span></a>
             {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
             {if (isset($no_search_results))}
-              <div>{'No results for'|@translate} :
+              <div>{'No results for'|translate} :
                 <em><strong>
                     {foreach $no_search_results as $res}
                       {if !$res@first} &mdash; {/if}
@@ -585,31 +585,31 @@
           </li>
         </ul>
 
-        <div class='noFilter'>{'No filter, add one'|@translate}</div>
+        <div class='noFilter'>{'No filter, add one'|translate}</div>
 
         <div class="filterActions">
           <div id="addFilter">
             <div class="addFilter-button icon-plus" onclick="$('.addFilter-dropdown').slideToggle()">
-              {'Add a filter'|@translate}</div>
+              {'Add a filter'|translate}</div>
             <div class="addFilter-dropdown">
               <a data-value="filter_prefilter" {if isset($filter.prefilter)}class="disabled"
-                {/if}>{'Predefined filter'|@translate}</a>
+                {/if}>{'Predefined filter'|translate}</a>
               <a data-value="filter_category" {if isset($filter.category)}class="disabled"
-                {/if}>{'Album'|@translate}</a>
-              <a data-value="filter_tags" {if isset($filter.tags)}class="disabled" {/if}>{'Tags'|@translate}</a>
+                {/if}>{'Album'|translate}</a>
+              <a data-value="filter_tags" {if isset($filter.tags)}class="disabled" {/if}>{'Tags'|translate}</a>
               <a data-value="filter_level" {if isset($filter.level)}class="disabled"
-                {/if}>{'Privacy level'|@translate}</a>
+                {/if}>{'Privacy level'|translate}</a>
               <a data-value="filter_dimension" {if isset($filter.dimension)}class="disabled"
-                {/if}>{'Dimensions'|@translate}</a>
+                {/if}>{'Dimensions'|translate}</a>
               <a data-value="filter_filesize" {if isset($filter.filesize)}class="disabled"
-                {/if}>{'Filesize'|@translate}</a>
-              <a data-value="filter_search" {if isset($filter.search)} class="disabled" {/if}>{'Search'|@translate}</a>
+                {/if}>{'Filesize'|translate}</a>
+              <a data-value="filter_search" {if isset($filter.search)} class="disabled" {/if}>{'Search'|translate}</a>
             </div>
-            <a id="removeFilters" class="icon-cancel" style="display: none;">{'Remove all filters'|@translate}</a>
+            <a id="removeFilters" class="icon-cancel" style="display: none;">{'Remove all filters'|translate}</a>
           </div>
 
           <button id="applyFilter" name="submitFilter" type="submit">
-            <i class="icon-arrows-cw"></i> {'Refresh photo set'|@translate}
+            <i class="icon-arrows-cw"></i> {'Refresh photo set'|translate}
           </button>
         </div>
       </div>
@@ -618,18 +618,18 @@
 
     <fieldset>
 
-      <legend><span class='icon-check icon-blue '></span>{'Selection'|@translate}</legend>
+      <legend><span class='icon-check icon-blue '></span>{'Selection'|translate}</legend>
 
       {if !empty($thumbnails)}
         <p id="checkActions">
           {if $nb_thumbs_set > $nb_thumbs_page}
-            <a href="#" id="selectAll">{'The whole page'|@translate}</a>
-            <a href="#" id="selectSet">{'The whole set'|@translate}</a>
+            <a href="#" id="selectAll">{'The whole page'|translate}</a>
+            <a href="#" id="selectSet">{'The whole set'|translate}</a>
           {else}
-            <a href="#" id="selectAll">{'All'|@translate}</a>
+            <a href="#" id="selectAll">{'All'|translate}</a>
           {/if}
-          <a href="#" id="selectNone">{'None'|@translate}</a>
-          <a href="#" id="selectInvert">{'Invert'|@translate}</a>
+          <a href="#" id="selectNone">{'None'|translate}</a>
+          <a href="#" id="selectInvert">{'Invert'|translate}</a>
 
           <span id="selectedMessage"></span>
 
@@ -649,7 +649,7 @@
             }
           </style>{/html_style}
           {foreach from=$thumbnails item=thumbnail}
-            {assign var='isSelected' value=$thumbnail.id|@in_array:$selection}
+            {assign var='isSelected' value=$thumbnail.id|in_array:$selection}
             <li{if $isSelected} class="thumbSelected" {/if}>
               <span class="wrap1">
                 <label class="font-checkbox">
@@ -658,15 +658,15 @@
                   <span class="wrap2">
                     <div class="actions">
                       <a href="{$thumbnail.U_EDIT}" target="_blank" class="icon-pencil"
-                        title="{'Edit photo'|@translate}"></a>
-                      <a href="{$thumbnail.FILE_SRC}" class="preview-box icon-zoom-square" title="{'Zoom'|@translate}"></a>
+                        title="{'Edit photo'|translate}"></a>
+                      <a href="{$thumbnail.FILE_SRC}" class="preview-box icon-zoom-square" title="{'Zoom'|translate}"></a>
                     </div>
                     {if $thumbnail.level > 0}
                       <em class="levelIndicatorF"
-                        title="{'Who can see these photos?'|@translate} : ">{'Level %d'|@sprintf:$thumbnail.level|@translate}</em>
+                        title="{'Who can see these photos?'|translate} : ">{'Level %d'|sprintf:$thumbnail.level|translate}</em>
                     {/if}
                     <img src="{$thumbnail.thumb->get_url()}" alt="{$thumbnail.file}"
-                      title="{$thumbnail.TITLE|@escape:'html'}" {$thumbnail.thumb->get_size_htm()}>
+                      title="{$thumbnail.TITLE|escape:'html'}" {$thumbnail.thumb->get_size_htm()}>
                   </span>
                 </label>
               </span>
@@ -677,57 +677,57 @@
         {if !empty($navbar) }
           <div class="batchManager-pagination">
             <div class="pagination-per-page">
-              <span>{'display'|@translate}</span>
+              <span>{'display'|translate}</span>
               <a href="{$U_DISPLAY}&amp;display=20">20</a>
               <a href="{$U_DISPLAY}&amp;display=50">50</a>
               <a href="{$U_DISPLAY}&amp;display=100">100</a>
-              <a href="{$U_DISPLAY}&amp;display=all">{'all'|@translate}</a>
+              <a href="{$U_DISPLAY}&amp;display=all">{'all'|translate}</a>
             </div>
 
-            {include file='navigation_bar.tpl'|@get_extent:'navbar'}
+            {include file='navigation_bar.tpl'|get_extent:'navbar'}
           </div>
         {/if}
 
       {else}
-        <div class="selectionEmptyBlock">{'No photo in the current set.'|@translate}</div>
+        <div class="selectionEmptyBlock">{'No photo in the current set.'|translate}</div>
       {/if}
     </fieldset>
 
     <fieldset id="action">
 
-      <legend><span class='icon-cog icon-red'></span>{'Action'|@translate}</legend>
+      <legend><span class='icon-cog icon-red'></span>{'Action'|translate}</legend>
       <div id="forbidAction" {if count($selection) != 0} style="display:none" {/if}>
-        {'No photos selected, no actions possible.'|@translate}</div>
+        {'No photos selected, no actions possible.'|translate}</div>
       <div id="permitAction" {if count($selection) == 0} style="display:none" {/if}>
 
         <div class="permitActionListButton">
           <div>
             <select name="selectAction">
-              <option value="-1">{'Choose an action'|@translate}</option>
+              <option value="-1">{'Choose an action'|translate}</option>
               <option disabled="disabled">------------------</option>
-              <option value="delete" class="icon-trash">{'Delete selected photos'|@translate}</option>
-              <option value="associate">{'Associate to album'|@translate}</option>
-              <option value="move">{'Move to album'|@translate}</option>
+              <option value="delete" class="icon-trash">{'Delete selected photos'|translate}</option>
+              <option value="associate">{'Associate to album'|translate}</option>
+              <option value="move">{'Move to album'|translate}</option>
               {if !empty($associated_categories)}
-                <option value="dissociate">{'Dissociate from album'|@translate}</option>
+                <option value="dissociate">{'Dissociate from album'|translate}</option>
               {/if}
-              <option value="add_tags">{'Add tags'|@translate}</option>
+              <option value="add_tags">{'Add tags'|translate}</option>
               {if !empty($associated_tags)}
-                <option value="del_tags">{'remove tags'|@translate}</option>
+                <option value="del_tags">{'remove tags'|translate}</option>
               {/if}
-              <option value="author">{'Set author'|@translate}</option>
-              <option value="title">{'Set title'|@translate}</option>
-              <option value="date_creation">{'Set creation date'|@translate}</option>
-              <option value="level" class="icon-lock">{'Who can see these photos?'|@translate}
+              <option value="author">{'Set author'|translate}</option>
+              <option value="title">{'Set title'|translate}</option>
+              <option value="date_creation">{'Set creation date'|translate}</option>
+              <option value="level" class="icon-lock">{'Who can see these photos?'|translate}
                 ({'Privacy level'|translate})</option>
-              <option value="metadata">{'Synchronize metadata'|@translate}</option>
+              <option value="metadata">{'Synchronize metadata'|translate}</option>
               {if ($IN_CADDIE)}
-                <option value="remove_from_caddie">{'Remove from caddie'|@translate}</option>
+                <option value="remove_from_caddie">{'Remove from caddie'|translate}</option>
               {else}
-                <option value="add_to_caddie">{'Add to caddie'|@translate}</option>
+                <option value="add_to_caddie">{'Add to caddie'|translate}</option>
               {/if}
-              <option value="delete_derivatives">{'Delete multiple size images'|@translate}</option>
-              <option value="generate_derivatives">{'Generate multiple size images'|@translate}</option>
+              <option value="delete_derivatives">{'Delete multiple size images'|translate}</option>
+              <option value="generate_derivatives">{'Generate multiple size images'|translate}</option>
               {if !empty($element_set_global_plugins_actions)}
                 {foreach from=$element_set_global_plugins_actions item=action}
                   <option value="{$action.ID}">{$action.NAME}</option>
@@ -738,7 +738,7 @@
           <p id="confirmDel" style="visibility:hidden">
             <label class="font-checkbox">
               <span class="icon-check"></span>
-              <input type="checkbox" name="confirm_deletion" value="1"> {'Are you sure?'|@translate}</input>
+              <input type="checkbox" name="confirm_deletion" value="1"> {'Are you sure?'|translate}</input>
             </label><br /><br />
             <span class="errors" style="visibility:hidden;margin:0;">{"You need to confirm deletion"|translate}</span>
           </p>
@@ -758,8 +758,8 @@
           <!-- associate -->{* also used for "move" action *}
           <div id="action_associate" class="bulkAction">
             <select data-selectize="categories" data-default="" name="associate" style="width:600px"
-              placeholder="{'Select an album... or type it!'|@translate}"></select>
-            <a href="#" data-add-album="associate" title="{'create a new album'|@translate}" class="icon-plus"></a>
+              placeholder="{'Select an album... or type it!'|translate}"></select>
+            <a href="#" data-add-album="associate" title="{'create a new album'|translate}" class="icon-plus"></a>
           </div>
 
           <!-- dissociate -->
@@ -789,22 +789,22 @@
 
           <!-- author -->
           <div id="action_author" class="bulkAction">
-            <input type="text" class="large" name="author" placeholder="{'Type here the author name'|@translate}">
+            <input type="text" class="large" name="author" placeholder="{'Type here the author name'|translate}">
             <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_author">
-              {'remove author'|@translate}</label>
+              {'remove author'|translate}</label>
           </div>
 
           <!-- title -->
           <div id="action_title" class="bulkAction">
-            <input type="text" class="large" name="title" placeholder="{'Type here the title'|@translate}">
+            <input type="text" class="large" name="title" placeholder="{'Type here the title'|translate}">
             <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_title">
-              {'remove title'|@translate}</label>
+              {'remove title'|translate}</label>
           </div>
 
           <!-- date_creation -->
           <div id="action_date_creation" class="bulkAction">
             <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox"
-                name="remove_date_creation"> {'remove creation date'|@translate}</label><br>
+                name="remove_date_creation"> {'remove creation date'|translate}</label><br>
             <div id="set_date_creation">
               <input type="hidden" name="date_creation" value="{$DATE_CREATION}">
               <label>
@@ -828,8 +828,8 @@
           <!-- generate derivatives -->
           <div id="action_generate_derivatives" class="bulkAction">
             <div class="deleteDerivButtons">
-              <a href="javascript:selectGenerateDerivAll()">{'All'|@translate}</a>
-              <a href="javascript:selectGenerateDerivNone()">{'None'|@translate}</a>
+              <a href="javascript:selectGenerateDerivAll()">{'All'|translate}</a>
+              <a href="javascript:selectGenerateDerivNone()">{'None'|translate}</a>
             </div>
             <br>
             {foreach from=$generate_derivatives_types key=type item=disp}
@@ -841,8 +841,8 @@
           <!-- delete derivatives -->
           <div id="action_delete_derivatives" class="bulkAction">
             <div class="deleteDerivButtons">
-              <a href="javascript:selectDelDerivAll()">{'All'|@translate}</a>
-              <a href="javascript:selectDelDerivNone()">{'None'|@translate}</a>
+              <a href="javascript:selectDelDerivAll()">{'All'|translate}</a>
+              <a href="javascript:selectDelDerivNone()">{'None'|translate}</a>
             </div>
             <br>
             {foreach from=$del_derivatives_types key=type item=disp}
@@ -863,7 +863,7 @@
       </div> <!-- #permitAction -->
       <div id="regenerationMsg" class="bulkAction" style="display:none;margin-left:0;">
         <div id="regenerationStatus" style="margin-bottom:10px;">
-          <span id="regenerationText">{'Generate multiple size images'|@translate}</span>
+          <span id="regenerationText">{'Generate multiple size images'|translate}</span>
           <span class="badge-number" style="font-size:12.8px"></span>
         </div>
         <input type="hidden" name="regenerateSuccess" value="0">

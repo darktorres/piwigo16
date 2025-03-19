@@ -1,4 +1,4 @@
-<h3>{'Albums'|@translate}</h3>
+<h3>{'Albums'|translate}</h3>
 <ul data-role="listview">
   {foreach from=$block->data.MENU_CATEGORIES item=cat}
     <li><a href="{$cat.URL}" {if $cat.IS_UPPERCAT}rel="up" {/if} title="{$cat.TITLE}">{$cat.NAME}</a>

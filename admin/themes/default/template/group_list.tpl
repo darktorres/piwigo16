@@ -1,26 +1,26 @@
 {include file='inc/colorbox.inc.tpl'}
 {footer_script}<script>
   var pwg_token = "{$PWG_TOKEN}";
-  var str_member_default = "{'member'|@translate|@escape:'javascript'}"
-  var str_members_default = "{'members'|@translate|@escape:'javascript'}"
-  var str_group_created = "{'Group added'|@translate|@escape:'javascript'}"
-  var str_renaming_done = "{'Group renamed'|@translate|@escape:'javascript'}"
-  var str_name_taken = "{'Name is already taken'|@translate|@escape:'javascript'}"
-  var str_name_not_empty = "{'Name field must not be empty'|@translate|@escape:'javascript'}"
-  var str_group_deleted = '{'Group "%s" successfully deleted'|@translate|@escape:'javascript'}'
-  var str_groups_deleted = '{'Groups \{%s\} successfully deleted'|@translate}'
-  var str_set_default = "{'Set as group for new users'|@translate|@escape:'javascript'}"
-  var str_unset_default = "{'Unset as group for new users'|@translate|@escape:'javascript'}"
-  var str_delete = '{'Are you sure you want to delete group "%s"?'|@translate|@escape:'javascript'}'
-  var str_yes_delete_confirmation = "{'Yes, delete'|@translate|@escape:'javascript'}"
-  var str_no_delete_confirmation = "{"No, I have changed my mind"|@translate|@escape:'javascript'}"
-  var str_user_associated = "{"User associated"|@translate|@escape:'javascript'}"
-  var str_user_dissociate = "{'Dissociate user from this group'|translate|@escape:'javascript'}"
-  var str_user_dissociated = '{'User "%s" dissociated from this group'|@translate|@escape:'javascript'}'
-  var str_user_list = "{'Manage the members'|translate|@escape:'javascript'}"
-  var str_merged_into = '{'Group(s) \{%s1\} successfully merged into "%s2"'|@translate}'
-  var str_copy = '{' (copy)'|@translate|@escape:'javascript'}'
-  var str_other_copy = '{' (copy %s)'|@translate|@escape:'javascript'}'
+  var str_member_default = "{'member'|translate|escape:'javascript'}"
+  var str_members_default = "{'members'|translate|escape:'javascript'}"
+  var str_group_created = "{'Group added'|translate|escape:'javascript'}"
+  var str_renaming_done = "{'Group renamed'|translate|escape:'javascript'}"
+  var str_name_taken = "{'Name is already taken'|translate|escape:'javascript'}"
+  var str_name_not_empty = "{'Name field must not be empty'|translate|escape:'javascript'}"
+  var str_group_deleted = '{'Group "%s" successfully deleted'|translate|escape:'javascript'}'
+  var str_groups_deleted = '{'Groups \{%s\} successfully deleted'|translate}'
+  var str_set_default = "{'Set as group for new users'|translate|escape:'javascript'}"
+  var str_unset_default = "{'Unset as group for new users'|translate|escape:'javascript'}"
+  var str_delete = '{'Are you sure you want to delete group "%s"?'|translate|escape:'javascript'}'
+  var str_yes_delete_confirmation = "{'Yes, delete'|translate|escape:'javascript'}"
+  var str_no_delete_confirmation = "{"No, I have changed my mind"|translate|escape:'javascript'}"
+  var str_user_associated = "{"User associated"|translate|escape:'javascript'}"
+  var str_user_dissociate = "{'Dissociate user from this group'|translate|escape:'javascript'}"
+  var str_user_dissociated = '{'User "%s" dissociated from this group'|translate|escape:'javascript'}'
+  var str_user_list = "{'Manage the members'|translate|escape:'javascript'}"
+  var str_merged_into = '{'Group(s) \{%s1\} successfully merged into "%s2"'|translate}'
+  var str_copy = '{' (copy)'|translate|escape:'javascript'}'
+  var str_other_copy = '{' (copy %s)'|translate|escape:'javascript'}'
 
   var serverKey = '{$CACHE_KEYS.users}'
   var serverId = '{$CACHE_KEYS._hash}'
@@ -86,8 +86,8 @@
 
         <div class="icon-ellipsis-vert group-dropdown-options not-in-selection-mode">
           <div id="GroupOptions" class="dropdown">
-            <div class="icon-docs dropdown-option" id="GroupDuplicate" value="duplicate">{'Duplicate'|@translate}</div>
-            <div class="icon-trash dropdown-option" id="GroupDelete" value="delete">{'Delete'|@translate}</div>
+            <div class="icon-docs dropdown-option" id="GroupDuplicate" value="duplicate">{'Duplicate'|translate}</div>
+            <div class="icon-trash dropdown-option" id="GroupDelete" value="delete">{'Delete'|translate}</div>
             <div class="icon-star dropdown-option" id="GroupDefault" value="delete"></div>
           </div>
         </div>
@@ -111,7 +111,7 @@
           <input class="input-edit-group-name" type="text" name="username" maxlength="50" size="20"
             placeholder="{$grp_name}">
           <button class="icon-ok submit" name="submit_add" id="EditGroupNameSubmit" type="submit">Change group name</button>
-          <a id="EditGroupcancel">{'Cancel'|@translate}</a>
+          <a id="EditGroupcancel">{'Cancel'|translate}</a>
         </div>
 
         <p class="group_number_users">{$grp_members}</p>
@@ -131,14 +131,14 @@
     <input type="checkbox" id="toggleSelectionMode">
     <span class="slider round"></span>
   </label>
-  <p>{'Selection mode'|@translate}</p>
+  <p>{'Selection mode'|translate}</p>
 </div>
 
 <div id="selection-mode-block" class="in-selection-mode">
   <div class="Selection-mode-content">
-    <p id="nothing-selected">{'No groups selected, no actions possible.'|@translate}</p>
+    <p id="nothing-selected">{'No groups selected, no actions possible.'|translate}</p>
     <div class="SelectionModeGroup">
-      <p>{'Your selection'|@translate}</p>
+      <p>{'Your selection'|translate}</p>
       <div class="SelectionModeGroupList">
 
         <div class="DeleteGroupList">
@@ -147,27 +147,27 @@
 
       </div>
       <button id="MergeSelectionMode" class="icon-object-group unavailable"
-        title="{'At least 2 selected groups are needed to merge'|@translate}">{'Merge'|@translate}</button>
-      <button id="DeleteSelectionMode" class="icon-trash-1 unavailable">{'Delete'|@translate}</button>
+        title="{'At least 2 selected groups are needed to merge'|translate}">{'Merge'|translate}</button>
+      <button id="DeleteSelectionMode" class="icon-trash-1 unavailable">{'Delete'|translate}</button>
     </div>
 
     <div id="MergeOptionsBlock">
-      <p>{'Choose which group to merge these groups into'|@translate}</p>
-      <p class="ItalicTextInfo">{'The other groups will be removed'|@translate}</p>
+      <p>{'Choose which group to merge these groups into'|translate}</p>
+      <p class="ItalicTextInfo">{'The other groups will be removed'|translate}</p>
       <div class="MergeOptionsContainer">
         <select id="MergeOptionsChoices">
         </select>
       </div>
 
-      <button class="icon-ok ConfirmMergeButton">{'Confirm merge'|@translate}</button>
-      <a id="CancelMerge" onclick="updateSelectionPanel('Selection')">{'Cancel'|@translate}</a>
+      <button class="icon-ok ConfirmMergeButton">{'Confirm merge'|translate}</button>
+      <a id="CancelMerge" onclick="updateSelectionPanel('Selection')">{'Cancel'|translate}</a>
     </div>
 
 
     <div id="ConfirmGroupAction">
       <p>You are about to delete <span class="number-Selected">0</span> groups, are you sure?</p>
-      <button class="icon-ok ConfirmDeleteButton">{'Yes, delete'|@translate}</button>
-      <a id="CancelDelete" onclick="updateSelectionPanel('Selection')">{"No, I have changed my mind"|@translate}</a>
+      <button class="icon-ok ConfirmDeleteButton">{'Yes, delete'|translate}</button>
+      <a id="CancelDelete" onclick="updateSelectionPanel('Selection')">{"No, I have changed my mind"|translate}</a>
     </div>
 
   </div>
@@ -195,7 +195,7 @@
               <i class='icon-plus'> </i> {'Add'|translate}
             </button>
             <br />
-            <a id="addGroupClose" onclick="hideAddGroupForm()">{'Cancel'|@translate}</a>
+            <a id="addGroupClose" onclick="hideAddGroupForm()">{'Cancel'|translate}</a>
           </div>
           <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
         </fieldset>
@@ -241,7 +241,7 @@
             <span class="icon-filter search-icon"></span>
             <span class="icon-cancel search-cancel"></span>
             <input class="input-user-name search-input" type="text" name="username" maxlength="50" size="20"
-              placeholder="{'Filter'|@translate}">
+              placeholder="{'Filter'|translate}">
           </div>
         </div>
       </div>

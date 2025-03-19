@@ -152,7 +152,7 @@
   </script>{/footer_script}
 
 
-  <title>Piwigo {$RELEASE} - {'Installation'|@translate}</title>
+  <title>Piwigo {$RELEASE} - {'Installation'|translate}</title>
 </head>
 
 <body>
@@ -160,26 +160,26 @@
     <div id="theHeader"></div>
     <div id="content" class="content">
 
-      <h2>{'Version'|@translate} {$RELEASE} - {'Installation'|@translate}</h2>
+      <h2>{'Version'|translate} {$RELEASE} - {'Installation'|translate}</h2>
 
       {if isset($config_creation_failed)}
         <div class="errors">
           <p style="margin-left:30px;">
-            <strong>{'Creation of config file local/config/database.php failed.'|@translate}</strong>
+            <strong>{'Creation of config file local/config/database.php failed.'|translate}</strong>
           </p>
           <ul>
             <li>
               <p>
-                {'You can download the config file and upload it to local/config directory of your installation.'|@translate}
+                {'You can download the config file and upload it to local/config directory of your installation.'|translate}
               </p>
               <p style="text-align:center">
-                <input type="button" value="{'Download the config file'|@translate}"
+                <input type="button" value="{'Download the config file'|translate}"
                   onClick="window.open('{$config_url}');">
               </p>
             </li>
             <li>
               <p>
-                {'An alternate solution is to copy the text in the box above and paste it into the file "local/config/database.php" (Warning : database.php must only contain what is in the textarea, no line return or space character)'|@translate}
+                {'An alternate solution is to copy the text in the box above and paste it into the file "local/config/database.php" (Warning : database.php must only contain what is in the textarea, no line return or space character)'|translate}
               </p>
               <textarea rows="15" cols="70">{$config_file_content}</textarea>
             </li>
@@ -211,11 +211,11 @@
         <form method="POST" action="{$F_ACTION}" name="install_form">
 
           <fieldset>
-            <legend>{'Basic configuration'|@translate}</legend>
+            <legend>{'Basic configuration'|translate}</legend>
 
             <table class="table2">
               <tr>
-                <td style="width: 30%">{'Default gallery language'|@translate}</td>
+                <td style="width: 30%">{'Default gallery language'|translate}</td>
                 <td>
                   <select name="language"
                     onchange="document.location = 'install.php?language='+this.options[this.selectedIndex].value;">
@@ -227,71 +227,71 @@
           </fieldset>
 
           <fieldset>
-            <legend>{'Database configuration'|@translate}</legend>
+            <legend>{'Database configuration'|translate}</legend>
 
             <table class="table2">
               <tr>
-                <td style="width: 30%;" class="fieldname">{'Host:Port'|@translate}</td>
+                <td style="width: 30%;" class="fieldname">{'Host:Port'|translate}</td>
                 <td><input type="text" name="dbhost" value="127.0.0.1" required></td>
-                <td class="fielddesc">{'localhost or other, supplied by your host provider'|@translate}</td>
+                <td class="fielddesc">{'localhost or other, supplied by your host provider'|translate}</td>
               </tr>
               <tr>
-                <td class="fieldname">{'User'|@translate}</td>
+                <td class="fieldname">{'User'|translate}</td>
                 <td><input type="text" name="dbuser" value="root" required></td>
-                <td class="fielddesc">{'user login given by your host provider'|@translate}</td>
+                <td class="fielddesc">{'user login given by your host provider'|translate}</td>
               </tr>
               <tr>
-                <td class="fieldname">{'Password'|@translate}</td>
+                <td class="fieldname">{'Password'|translate}</td>
                 <td><input type="password" name="dbpasswd" value="1234"></td>
-                <td class="fielddesc">{'user password given by your host provider'|@translate}</td>
+                <td class="fielddesc">{'user password given by your host provider'|translate}</td>
               </tr>
               <tr>
-                <td class="fieldname">{'Database name'|@translate}</td>
+                <td class="fieldname">{'Database name'|translate}</td>
                 <td><input type="text" name="dbname" value="piwigo_fork" required></td>
-                <td class="fielddesc">{'also given by your host provider'|@translate}</td>
+                <td class="fielddesc">{'also given by your host provider'|translate}</td>
               </tr>
             </table>
 
           </fieldset>
           <fieldset>
-            <legend>{'Admin configuration'|@translate}</legend>
+            <legend>{'Admin configuration'|translate}</legend>
 
             <table class="table2">
               <tr>
-                <td style="width: 30%;" class="fieldname">{'Username'|@translate}</td>
+                <td style="width: 30%;" class="fieldname">{'Username'|translate}</td>
                 <td><input type="text" name="admin_name" value="darktorres" required></td>
                 <td class="fielddesc">
-                  {'It will be shown to the visitors. It is necessary for website administration'|@translate}</td>
+                  {'It will be shown to the visitors. It is necessary for website administration'|translate}</td>
               </tr>
               <tr>
-                <td class="fieldname">{'Password'|@translate}</td>
+                <td class="fieldname">{'Password'|translate}</td>
                 <td><input type="password" name="admin_pass1" value="1234" required></td>
-                <td class="fielddesc">{'Keep it confidential, it enables you to access administration panel'|@translate}
+                <td class="fielddesc">{'Keep it confidential, it enables you to access administration panel'|translate}
                 </td>
               </tr>
               <tr>
-                <td class="fieldname">{'Password [confirm]'|@translate}</td>
+                <td class="fieldname">{'Password [confirm]'|translate}</td>
                 <td><input type="password" name="admin_pass2" value="1234" required></td>
-                <td class="fielddesc">{'verification'|@translate}</td>
+                <td class="fielddesc">{'verification'|translate}</td>
               </tr>
               <tr>
-                <td class="fieldname">{'Email address'|@translate}</td>
+                <td class="fieldname">{'Email address'|translate}</td>
                 <td><input type="text" name="admin_mail" id="admin_mail" value="torres.dark@gmail.com" required></td>
-                <td class="fielddesc">{'Visitors will be able to contact site administrator with this mail'|@translate}
+                <td class="fielddesc">{'Visitors will be able to contact site administrator with this mail'|translate}
                 </td>
               </tr>
               <tr>
-                <td>{'Options'|@translate}</options>
+                <td>{'Options'|translate}</options>
                 <td colspan="2">
                   <label>
                     <input type="checkbox" name="newsletter_subscribe" {if $F_NEWSLETTER_SUBSCRIBE}{/if}>
                     <span class="cluetip"
-                      title="{'Piwigo Announcements Newsletter'|@translate}|{'Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it\'s important to know and upgrade) and when major events happen to the project. Only a few emails a year.'|@translate|@htmlspecialchars|@nl2br}">{'Subscribe %s to Piwigo Announcements Newsletter'|@translate:$EMAIL}</span>
+                      title="{'Piwigo Announcements Newsletter'|translate}|{'Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it\'s important to know and upgrade) and when major events happen to the project. Only a few emails a year.'|translate|htmlspecialchars|nl2br}">{'Subscribe %s to Piwigo Announcements Newsletter'|translate:$EMAIL}</span>
                   </label>
                   <br>
                   <label>
                     <input type="checkbox" name="send_credentials_by_mail">
-                    {'Send my connection settings by email'|@translate}
+                    {'Send my connection settings by email'|translate}
                   </label>
                 </td>
               </tr>
@@ -300,12 +300,12 @@
           </fieldset>
 
           <div style="text-align:center; margin:20px 0 10px 0">
-            <input class="submit" type="submit" name="install" value="{'Start Install'|@translate}">
+            <input class="submit" type="submit" name="install" value="{'Start Install'|translate}">
           </div>
         </form>
       {else}
         <p>
-          <a class="bigButton" href="index.php">{'Visit Gallery'|@translate}</a>
+          <a class="bigButton" href="index.php">{'Visit Gallery'|translate}</a>
         </p>
       {/if}
     </div> {* content *}

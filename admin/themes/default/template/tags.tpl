@@ -1,34 +1,34 @@
 {footer_script}<script>
   var pwg_token = "{$PWG_TOKEN}";
   var orphan_tag_names = {$orphan_tag_names_array};
-  var str_delete = '{'Delete tag "%s"?'|@translate}';
-  var str_delete_tags = '{'Delete tags \{%s\}?'|@translate}';
-  var str_yes_delete_confirmation = "{'Yes, delete'|@translate}";
-  var str_no_delete_confirmation = "{"No, I have changed my mind"|@translate}";
-  var str_yes_rename_confirmation = "{'Yes, rename'|@translate}";
-  var str_tag_deleted = '{'Tag "%s" successfully deleted'|@translate}';
-  var str_tags_deleted = '{'Tags \{%s\} successfully deleted'|@translate}';
-  var str_already_exist = '{'Tag "%s" already exists'|@translate}';
-  var str_tag_created = '{'Tag "%s" created'|@translate}';
-  var str_tag_renamed = '{'Tag "%s1" renamed in "%s2"'|@translate}';
-  var str_tag_rename = '{'Rename "%s"'|@translate}';
-  var str_delete_orphan_tags = '{'Delete orphan tags ?'|@translate}';
-  var str_orphan_tags = '{'You have %s1 orphan : %s2'|@translate}';
-  var str_delete_them = '{'Delete them'|@translate}';
-  var str_keep_them = '{'Keep them'|@translate}';
-  var str_copy = '{' (copy)'|@translate}';
-  var str_other_copy = '{' (copy %s)'|@translate}';
-  var str_merged_into = '{'Tag(s) \{%s1\} successfully merged into "%s2"'|@translate}';
-  var str_and_others_tags = '{'and %s others'|@translate}';
-  var str_others_tags_available = '{'%s other tags available...'|@translate}'
+  var str_delete = '{'Delete tag "%s"?'|translate}';
+  var str_delete_tags = '{'Delete tags \{%s\}?'|translate}';
+  var str_yes_delete_confirmation = "{'Yes, delete'|translate}";
+  var str_no_delete_confirmation = "{"No, I have changed my mind"|translate}";
+  var str_yes_rename_confirmation = "{'Yes, rename'|translate}";
+  var str_tag_deleted = '{'Tag "%s" successfully deleted'|translate}';
+  var str_tags_deleted = '{'Tags \{%s\} successfully deleted'|translate}';
+  var str_already_exist = '{'Tag "%s" already exists'|translate}';
+  var str_tag_created = '{'Tag "%s" created'|translate}';
+  var str_tag_renamed = '{'Tag "%s1" renamed in "%s2"'|translate}';
+  var str_tag_rename = '{'Rename "%s"'|translate}';
+  var str_delete_orphan_tags = '{'Delete orphan tags ?'|translate}';
+  var str_orphan_tags = '{'You have %s1 orphan : %s2'|translate}';
+  var str_delete_them = '{'Delete them'|translate}';
+  var str_keep_them = '{'Keep them'|translate}';
+  var str_copy = '{' (copy)'|translate}';
+  var str_other_copy = '{' (copy %s)'|translate}';
+  var str_merged_into = '{'Tag(s) \{%s1\} successfully merged into "%s2"'|translate}';
+  var str_and_others_tags = '{'and %s others'|translate}';
+  var str_others_tags_available = '{'%s other tags available...'|translate}'
   var str_number_photos = '{'%d photos'}'
   var str_no_photos = '{'no photo'}'
-  var str_select_all_tag = '{'Select all %d tags'|@translate}';
-  var str_clear_selection = '{'Clear Selection'|@translate}';
-  var str_selection_done = '{'The %d tags on this page are selected'|@translate}';
-  var str_tag_selected = '{'<b>%d</b> tag selected'|@translate}';
-  var str_tags_found = '{'<b>%d</b> tags found'|@translate}';
-  var str_tag_found = '{'<b>%d</b> tag found'|@translate}';
+  var str_select_all_tag = '{'Select all %d tags'|translate}';
+  var str_clear_selection = '{'Clear Selection'|translate}';
+  var str_selection_done = '{'The %d tags on this page are selected'|translate}';
+  var str_tag_selected = '{'<b>%d</b> tag selected'|translate}';
+  var str_tags_found = '{'<b>%d</b> tags found'|translate}';
+  var str_tag_found = '{'<b>%d</b> tag found'|translate}';
 
   $(document).ready(function() {
     $("h1").append('<span class="badge-number">{$total}</span>');
@@ -61,15 +61,15 @@
       <div class="dropdown-content">
         <div class='tag-dropdown-header'>
           <b>{$tag_name}</b>
-          <i>{if !$has_image}{'no photo'|@translate}{else}{'%d photos'|@translate:$tag_count}{/if}</i>
+          <i>{if !$has_image}{'no photo'|translate}{else}{'%d photos'|translate:$tag_count}{/if}</i>
         </div>
         <a class='dropdown-option icon-eye view' href="{$tag_U_VIEW}" {if !$has_image} style='display:none' {/if}>
-          {'View in gallery'|@translate}</a>
+          {'View in gallery'|translate}</a>
         <a class='dropdown-option icon-picture manage' href="{$tag_U_EDIT}" {if !$has_image} style='display:none' {/if}>
-          {'Manage photos'|@translate}</a>
-        <a class='dropdown-option icon-pencil edit'> {'Edit'|@translate}</a>
-        <a class='dropdown-option icon-docs duplicate'> {'Duplicate'|@translate}</a>
-        <a class='dropdown-option icon-trash delete'> {'Delete'|@translate}</a>
+          {'Manage photos'|translate}</a>
+        <a class='dropdown-option icon-pencil edit'> {'Edit'|translate}</a>
+        <a class='dropdown-option icon-docs duplicate'> {'Duplicate'|translate}</a>
+        <a class='dropdown-option icon-trash delete'> {'Delete'|translate}</a>
       </div>
     </div>
     <span class="select-checkbox">
@@ -83,28 +83,28 @@
     <input type="checkbox" id="toggleSelectionMode">
     <span class="slider round"></span>
   </label>
-  <p>{'Selection mode'|@translate}</p>
+  <p>{'Selection mode'|translate}</p>
 </div>
 
 <div id="selection-mode-block" class="in-selection-mode tag-selection">
   <div class="tag-selection-content">
 
-    <p id="nothing-selected">{'No tags selected, no actions possible.'|@translate}</p>
+    <p id="nothing-selected">{'No tags selected, no actions possible.'|translate}</p>
 
     <div class="selection-mode-tag">
-      <p>{'Your selection'|@translate}</p>
+      <p>{'Your selection'|translate}</p>
       <div class="tag-list" data-list='[]'>
 
       </div>
       <div class="selection-other-tags"></div>
       <button id="MergeSelectionMode" class="icon-object-group unavailable"
-        title="{'At least 2 selected tags are needed to merge'|@translate}">{'Merge'|@translate}</button>
-      <button id="DeleteSelectionMode" class="icon-trash-1">{'Delete'|@translate}</button>
+        title="{'At least 2 selected tags are needed to merge'|translate}">{'Merge'|translate}</button>
+      <button id="DeleteSelectionMode" class="icon-trash-1">{'Delete'|translate}</button>
     </div>
 
     <div id="MergeOptionsBlock">
-      <p>{'Choose which tag to merge these tags into'|@translate}</p>
-      <p class="ItalicTextInfo">{'The other tags will be removed'|@translate}</p>
+      <p>{'Choose which tag to merge these tags into'|translate}</p>
+      <p class="ItalicTextInfo">{'The other tags will be removed'|translate}</p>
       <div class="MergeOptionsContainer">
         <select id="MergeOptionsChoices">
         </select>
@@ -121,24 +121,24 @@
     <div class='search-info'> </div>
     <span class='icon-search search-icon'> </span>
     <span class="icon-cancel search-cancel"></span>
-    <input class='search-input' type='text' placeholder='{'Search'|@translate}'>
+    <input class='search-input' type='text' placeholder='{'Search'|translate}'>
   </div>
   <form id='add-tag' class='not-in-selection-mode'>
     <span class='icon-cancel-circled'></span>
     <label class='add-tag-label icon-plus-circled {if $total == 0} head-button-1 {else} head-button-2 {/if}'>
-      <p>{'Add a tag'|@translate}</p>
+      <p>{'Add a tag'|translate}</p>
       <div class='add-tag-container'>
-        <input type='text' id='add-tag-input' placeholder="{'New tag'|@translate}">
+        <input type='text' id='add-tag-input' placeholder="{'New tag'|translate}">
         <input type='submit' hidden>
         <span class='icon-plus icon-validate'></span>
       </div>
     </label>
   </form>
   <div class='selection-controller in-selection-mode'>
-    <p>{'Select'|@translate}</p>
-    <a id="selectAll">{'All'|@translate}</a>
-    <a id="selectNone">{'None'|@translate}</a>
-    <a id="selectInvert">{'Invert'|@translate}</a>
+    <p>{'Select'|translate}</p>
+    <a id="selectAll">{'All'|translate}</a>
+    <a id="selectNone">{'None'|translate}</a>
+    <a id="selectInvert">{'Invert'|translate}</a>
   </div>
   {if $warning_tags != ""}
     <div class='info-warning tag-info icon-attention not-in-selection-mode'>
@@ -168,10 +168,10 @@
       <span class="AddIcon icon-blue icon-tags"></span>
     </div>
     <div class="AddIconTitle">
-      <span>{'Rename "%s"'|@translate}</span>
+      <span>{'Rename "%s"'|translate}</span>
     </div>
     <div class="RenameTagInputContainer">
-      <label class="tag-property-label TagRenameLabelUsername">{'Tag name'|@translate}
+      <label class="tag-property-label TagRenameLabelUsername">{'Tag name'|translate}
         <input type="text" class="tag-property-input" />
       </label>
     </div>
@@ -181,7 +181,7 @@
 
     <div class="TagSubmitOptions">
       <div class="TagSubmit">
-        <span>{'Rename Tag'|@translate}</span>
+        <span>{'Rename Tag'|translate}</span>
       </div>
 
       <div class="TagLoading">
@@ -189,28 +189,28 @@
       </div>
 
       <div class="TagCancel">
-        <span>{'Cancel'|@translate}</span>
+        <span>{'Cancel'|translate}</span>
       </div>
     </div>
   </div>
 </div>
 
-<div class='tag-container' data-tags='{$data|@json_encode|escape:html}' data-per_page={$per_page}>
+<div class='tag-container' data-tags='{$data|json_encode|escape:html}' data-per_page={$per_page}>
   {foreach from=$first_tags item=tag}
     <div class='tag-box' data-id='{$tag.id}' data-selected='0'>
       {if isset($tag.counter)}
-        {tagContent tag_name = $tag.name tag_U_VIEW = 'index.php?/tags/%s-%s'|@sprintf:$tag['id']:$tag['url_name'] tag_U_EDIT = 'admin.php?page=batch_manager&amp;filter=tag-%s'|@sprintf:$tag['id'] has_image = ($tag.counter > 0) tag_count = $tag.counter tag_raw_name = $tag.raw_name}
+        {tagContent tag_name = $tag.name tag_U_VIEW = 'index.php?/tags/%s-%s'|sprintf:$tag['id']:$tag['url_name'] tag_U_EDIT = 'admin.php?page=batch_manager&amp;filter=tag-%s'|sprintf:$tag['id'] has_image = ($tag.counter > 0) tag_count = $tag.counter tag_raw_name = $tag.raw_name}
       {else}
-        {tagContent tag_name = $tag.name tag_U_VIEW = 'index.php?/tags/%s-%s'|@sprintf:$tag['id']:$tag['url_name'] tag_U_EDIT = 'admin.php?page=batch_manager&amp;filter=tag-%s'|@sprintf:$tag['id'] has_image = false tag_count = 0 tag_raw_name = $tag.raw_name}
+        {tagContent tag_name = $tag.name tag_U_VIEW = 'index.php?/tags/%s-%s'|sprintf:$tag['id']:$tag['url_name'] tag_U_EDIT = 'admin.php?page=batch_manager&amp;filter=tag-%s'|sprintf:$tag['id'] has_image = false tag_count = 0 tag_raw_name = $tag.raw_name}
       {/if}
 
     </div>
   {/foreach}
 </div>
-<div class="emptyResearch"> {'No tag found'|@translate} </div>
+<div class="emptyResearch"> {'No tag found'|translate} </div>
 <div class="tag-pagination">
   <div class="pagination-per-page">
-    <span class="thumbnailsActionsShow" style="font-weight: bold;">{'Display'|@translate}</span>
+    <span class="thumbnailsActionsShow" style="font-weight: bold;">{'Display'|translate}</span>
     <a id="100"
       {if !isset($smarty.cookies.pwg_tags_per_page) || !$smarty.cookies.pwg_tags_per_page || $smarty.cookies.pwg_tags_per_page == 100}
       class="selected" {/if}>100</a>

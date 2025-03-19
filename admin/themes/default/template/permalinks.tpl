@@ -36,13 +36,13 @@
   }
 </style>{/html_style}
 
-<p id="showAddPermalink"><a href="#" id="addPermalinkOpen">{'Add/delete a permalink'|@translate}</a></p>
+<p id="showAddPermalink"><a href="#" id="addPermalinkOpen">{'Add/delete a permalink'|translate}</a></p>
 
 <form method="post" action="" id="addPermalink" style="display:none">
   <fieldset>
-    <legend>{'Add/delete a permalink'|@translate}</legend>
+    <legend>{'Add/delete a permalink'|translate}</legend>
     <p>
-      <strong>{'Album'|@translate}</strong>
+      <strong>{'Album'|translate}</strong>
       <br>
       <select name="cat_id">
         <option value="0">------</option>
@@ -51,30 +51,30 @@
     </p>
 
     <p>
-      <strong>{'Permalink'|@translate}</strong>
+      <strong>{'Permalink'|translate}</strong>
       <br><input name="permalink">
     </p>
 
     <p>
       <label><input type="checkbox" name="save" checked="checked">
-        <strong>{'Save to permalink history'|@translate}</strong></label>
+        <strong>{'Save to permalink history'|translate}</strong></label>
     </p>
 
     <p class="actionButtons">
-      <input type="submit" class="submit" name="set_permalink" value="{'Submit'|@translate}">
-      <a href="#" id="addPermalinkClose">{'Cancel'|@translate}</a>
+      <input type="submit" class="submit" name="set_permalink" value="{'Submit'|translate}">
+      <a href="#" id="addPermalinkClose">{'Cancel'|translate}</a>
     </p>
   </fieldset>
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
 </form>
 
 <fieldset>
-  <legend><span class="icon-lock icon-blue"></span>{'Permalinks'|@translate}</legend>
+  <legend><span class="icon-lock icon-blue"></span>{'Permalinks'|translate}</legend>
   <table class="table2" style="margin:0">
     <tr class="throw">
       <td>Id {$SORT_ID}</td>
-      <td>{'Album'|@translate} {$SORT_NAME}</td>
-      <td>{'Permalink'|@translate} {$SORT_PERMALINK}</td>
+      <td>{'Album'|translate} {$SORT_NAME}</td>
+      <td>{'Permalink'|translate} {$SORT_PERMALINK}</td>
     </tr>
     {foreach from=$permalinks item=permalink name="permalink_loop"}
       <tr class="{if $smarty.foreach.permalink_loop.index is odd}row1{else}row2{/if}" style="line-height:1.5em;">
@@ -87,16 +87,16 @@
 </fieldset>
 
 <fieldset>
-  <legend><span class="icon-lock icon-red"></span>{'Permalink history'|@translate} <a name="old_permalinks"></a>
+  <legend><span class="icon-lock icon-red"></span>{'Permalink history'|translate} <a name="old_permalinks"></a>
   </legend>
   <table class="table2" style="margin:0">
     <tr class="throw">
       <td>Id {$SORT_OLD_CAT_ID}</td>
-      <td>{'Album'|@translate}</td>
-      <td>{'Permalink'|@translate} {$SORT_OLD_PERMALINK}</td>
-      <td>{'Deleted on'|@translate} {$SORT_OLD_DATE_DELETED}</td>
-      <td>{'Last hit'|@translate} {$SORT_OLD_LAST_HIT}</td>
-      <td>{'Hit'|@translate} {$SORT_OLD_HIT}</td>
+      <td>{'Album'|translate}</td>
+      <td>{'Permalink'|translate} {$SORT_OLD_PERMALINK}</td>
+      <td>{'Deleted on'|translate} {$SORT_OLD_DATE_DELETED}</td>
+      <td>{'Last hit'|translate} {$SORT_OLD_LAST_HIT}</td>
+      <td>{'Hit'|translate} {$SORT_OLD_HIT}</td>
       <td style="width:5px;"></td>
     </tr>
     {foreach from=$deleted_permalinks item=permalink}
@@ -108,7 +108,7 @@
         <td>{$permalink.last_hit}</td>
         <td>{$permalink.hit}</td>
         <td><a href="{$permalink.U_DELETE}"><img src="{$ROOT_URL}{$themeconf.admin_icon_dir}/delete.png"
-              alt="[{'Delete'|@translate}]"></a></td>
+              alt="[{'Delete'|translate}]"></a></td>
       </tr>
     {/foreach}
   </table>

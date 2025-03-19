@@ -7,15 +7,15 @@
 					<div class=albLegend>
 						<h4>{$item.NAME}</h4>
 						{if !empty($item.icon_ts)}<div class=albLegendRight><span class=albSymbol
-									title="{if $item.icon_ts.IS_CHILD_DATE}{'Recent albums'|@translate} {$item.icon_ts.TITLE}">✻
-									{else}{'Recent photos'|@translate}
+									title="{if $item.icon_ts.IS_CHILD_DATE}{'Recent albums'|translate} {$item.icon_ts.TITLE}">✻
+									{else}{'Recent photos'|translate}
 										{$item.icon_ts.TITLE}">✽{/if}</span></div>{/if}
 				<div>
-					{if $item.nb_images}{$item.nb_images|@translate_dec:'%d photo':'%d photos'}{if $item.nb_categories},
+					{if $item.nb_images}{$item.nb_images|translate_dec:'%d photo':'%d photos'}{if $item.nb_categories},
 					{/if}{/if}
 					{if $item.nb_categories}
 					<span
-						title="{$item.count_images|@translate_dec:'%d photo':'%d photos'} {$item.count_categories|@translate_dec:'in %d sub-album':'in %d sub-albums'}">{$item.nb_categories|@translate_dec:'%d album':'%d albums'}</span>
+						title="{$item.count_images|translate_dec:'%d photo':'%d photos'} {$item.count_categories|translate_dec:'in %d sub-album':'in %d sub-albums'}">{$item.nb_categories|translate_dec:'%d album':'%d albums'}</span>
 					{/if}
 				</div>
 			</div>
@@ -65,7 +65,7 @@
 			<div class="illustration">
 				<a href="{$cat.URL}">
 					<img src="{$derivative->get_url()}" alt="{$cat.TN_ALT}"
-						title="{$cat.NAME|@replace:'"':' '|@strip_tags:false} - {'display this album'|@translate}">
+						title="{$cat.NAME|replace:'"':' '|strip_tags:false} - {'display this album'|translate}">
 				</a>
 			</div>
 			<div class="description">

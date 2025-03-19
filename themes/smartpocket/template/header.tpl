@@ -6,7 +6,7 @@
   <meta name="generator" content="Piwigo (aka PWG), see piwigo.org">
   {if isset($meta_ref) }
     {if isset($INFO_AUTHOR)}
-      <meta name="author" content="{$INFO_AUTHOR|@strip_tags:false|@replace:'"':' '}">
+      <meta name="author" content="{$INFO_AUTHOR|strip_tags:false|replace:'"':' '}">
   {/if}
   {if isset($related_tags)}
   <meta name="keywords"
@@ -14,7 +14,7 @@
   {/if}
   {if isset($COMMENT_IMG)}
   <meta name="description"
-    content="{$COMMENT_IMG|@strip_tags:false|@replace:'"':' '}{if isset($INFO_FILE)} - {$INFO_FILE}{/if}">
+    content="{$COMMENT_IMG|strip_tags:false|replace:'"':' '}{if isset($INFO_FILE)} - {$INFO_FILE}{/if}">
     {else}
       <meta name="description" content="{$PAGE_TITLE}{if isset($INFO_FILE)} - {$INFO_FILE}{/if}">
     {/if}
@@ -25,7 +25,7 @@
   {if (isset($REVERSE) and $REVERSE and $PAGE_TITLE == functions::l10n('Home'))}
   <title>{$GALLERY_TITLE} | {$PAGE_TITLE}</title>{else}
   <title>{$PAGE_TITLE} | {$GALLERY_TITLE}</title>{/if}
-  <link rel="start" title="{'Home'|@translate}" href="{$U_HOME}">
+  <link rel="start" title="{'Home'|translate}" href="{$U_HOME}">
 
   {get_combined_css}
   {foreach from=$themes item=theme}

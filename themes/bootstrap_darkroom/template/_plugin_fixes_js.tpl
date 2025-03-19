@@ -183,7 +183,7 @@
 {if isset($loaded_plugins['Contact1menu'])}
   {footer_script require='jquery'}<script>
     $(document).ready(function() {
-      $('#navbar-menubar a[title="{'Contact'|@translate}"]').addClass('nav-link').closest('dt').addClass('nav-item').attr('id', 'Contact1menu').changeElementType('li');
+      $('#navbar-menubar a[title="{'Contact'|translate}"]').addClass('nav-link').closest('dt').addClass('nav-item').attr('id', 'Contact1menu').changeElementType('li');
     });
   </script>{/footer_script}
 {/if}

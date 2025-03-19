@@ -1,4 +1,4 @@
-<dt>{'Menu'|@translate}</dt>
+<dt>{'Menu'|translate}</dt>
 <dd>
 	{if isset($block->data.qsearch) and  $block->data.qsearch==true}
 		<form action="{$ROOT_URL}qsearch.php" method="get" id="quicksearch"
@@ -10,7 +10,7 @@
 			</p>
 		</form>
 		<script type="text/javascript">
-			var qsearch_prompt="{'Quick search'|@translate|@escape:'javascript'}";{if empty($QUERY_SEARCH)}document.getElementById('qsearchInput').value=qsearch_prompt;{/if}
+			var qsearch_prompt="{'Quick search'|translate|escape:'javascript'}";{if empty($QUERY_SEARCH)}document.getElementById('qsearchInput').value=qsearch_prompt;{/if}
 		</script>
 	{/if}
 	<ul>

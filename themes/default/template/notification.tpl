@@ -1,7 +1,7 @@
 {html_head}
-<link rel="alternate" type="application/rss+xml" title="{'Photos only RSS feed'|@translate}"
+<link rel="alternate" type="application/rss+xml" title="{'Photos only RSS feed'|translate}"
   href="{$U_FEED_IMAGE_ONLY}">
-<link rel="alternate" type="application/rss+xml" title="{'Complete RSS feed (photos, comments)'|@translate}"
+<link rel="alternate" type="application/rss+xml" title="{'Complete RSS feed (photos, comments)'|translate}"
   href="{$U_FEED}">
 {/html_head}
 
@@ -11,22 +11,22 @@
   <div class="titrePage">
     <ul class="categoryActions">
     </ul>
-    <h2><a href="{$U_HOME}">{'Home'|@translate}</a>{$LEVEL_SEPARATOR}{'Notification'|@translate}</h2>
+    <h2><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}{'Notification'|translate}</h2>
   </div>
 
   {include file='infos_errors.tpl'}
 
   <div class="notification">
     <p>
-      {'The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader.'|@translate}
+      {'The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader.'|translate}
     </p>
 
     <dl>
       <dt>
-        <a href="{$U_FEED_IMAGE_ONLY}">{'Photos only RSS feed'|@translate}</a><br><br>
+        <a href="{$U_FEED_IMAGE_ONLY}">{'Photos only RSS feed'|translate}</a><br><br>
       </dt>
       <dt>
-        <a href="{$U_FEED}">{'Complete RSS feed (photos, comments)'|@translate}</a>
+        <a href="{$U_FEED}">{'Complete RSS feed (photos, comments)'|translate}</a>
       </dt>
     </dl>
   </div>

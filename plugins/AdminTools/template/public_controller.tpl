@@ -192,7 +192,7 @@
             </select>
 
             {if isset($available_permission_levels)}
-              <label for="quick_edit_level">{'Who can see this photo?'|@translate}</label>
+              <label for="quick_edit_level">{'Who can see this photo?'|translate}</label>
               <select name="level" size="1">
                 {html_options options=$available_permission_levels selected=$ato.QUICK_EDIT.level}
               </select>

@@ -1,10 +1,10 @@
-<li id="languageSwitch"><a id="languageSwitchLink" title="{'Language'|@translate}" class="pwg-state-default pwg-button"
+<li id="languageSwitch"><a id="languageSwitchLink" title="{'Language'|translate}" class="pwg-state-default pwg-button"
     rel="nofollow">
     <span class="pwg-icon langflag-{$lang_switch.Active.code}">&nbsp;</span><span
-      class="pwg-button-text">{'Language'|@translate}</span>
+      class="pwg-button-text">{'Language'|translate}</span>
   </a>
   <div id="languageSwitchBox" class="switchBox">
-    <div class="switchBoxTitle">{'Language'|@translate}</div>
+    <div class="switchBoxTitle">{'Language'|translate}</div>
     {foreach from=$lang_switch.flags item=flag name=f}
       <a rel="nofollow" href="{$flag.url}">
         {if $lang_info.direction=="ltr"}<span
@@ -30,8 +30,8 @@
 
 {* <!-- stylish for themes missing .switchBox styles --> *}
 {if $LANGUAGE_SWITCH_LOAD_STYLE}
-  {combine_css path=$LANGUAGE_SWITCH_PATH|@cat:"style.css"}
+  {combine_css path=$LANGUAGE_SWITCH_PATH|cat:"style.css"}
 {/if}
 
 {* <!-- common style specific for LanguageSwitch --> *}
-{combine_css path=$LANGUAGE_SWITCH_PATH|@cat:"language_switch.css"}
+{combine_css path=$LANGUAGE_SWITCH_PATH|cat:"language_switch.css"}

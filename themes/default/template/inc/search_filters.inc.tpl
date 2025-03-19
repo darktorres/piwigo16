@@ -18,15 +18,15 @@
     search_id = '{$SEARCH_ID}';
   {/if}
 
-  str_word_widget_label = "{'Search for words'|@translate|escape:javascript}";
-  str_tags_widget_label = "{'Tag'|@translate|escape:javascript}";
-  str_album_widget_label = "{'Album'|@translate|escape:javascript}";
-  str_author_widget_label = "{'Author'|@translate|escape:javascript}";
-  str_added_by_widget_label = "{'Added by'|@translate|escape:javascript}";
-  str_filetypes_widget_label = "{'File type'|@translate|escape:javascript}";
+  str_word_widget_label = "{'Search for words'|translate|escape:javascript}";
+  str_tags_widget_label = "{'Tag'|translate|escape:javascript}";
+  str_album_widget_label = "{'Album'|translate|escape:javascript}";
+  str_author_widget_label = "{'Author'|translate|escape:javascript}";
+  str_added_by_widget_label = "{'Added by'|translate|escape:javascript}";
+  str_filetypes_widget_label = "{'File type'|translate|escape:javascript}";
 
-  str_empty_search_top_alt = "{'Fill in the filters to start a search'|@translate|escape:javascript}";
-  str_empty_search_bot_alt = "{'Pre-established filters are proposed, but you can add or remove them using the "Choose filters" button.'|@translate|escape:javascript}";
+  str_empty_search_top_alt = "{'Fill in the filters to start a search'|translate|escape:javascript}";
+  str_empty_search_bot_alt = "{'Pre-established filters are proposed, but you can add or remove them using the "Choose filters" button.'|translate|escape:javascript}";
 
   const prefix_icon = 'gallery-icon-';
 </script>{/footer_script}
@@ -37,52 +37,52 @@
     <div class="filter-manager-popin-container">
       <span class="gallery-icon-cancel filter-manager-close"></span>
 
-      <div class="mcs-popin-title">{'Choose filters'|@translate}</div>
+      <div class="mcs-popin-title">{'Choose filters'|translate}</div>
 
       <div class="filter-manager-controller-container">
         <label>
           <input data-wid='word' class="filter-manager-controller word" type="checkbox" />
-          <span class="mcs-icon gallery-icon-search">{'Search for words'|@translate}</span>
+          <span class="mcs-icon gallery-icon-search">{'Search for words'|translate}</span>
         </label>
         <label>
           <input data-wid='tag' class="filter-manager-controller tags" type="checkbox" />
-          <span class="mcs-icon gallery-icon-tag">{'Tag'|@translate}</span>
+          <span class="mcs-icon gallery-icon-tag">{'Tag'|translate}</span>
         </label>
         <label>
           <input data-wid='date_posted' class="filter-manager-controller date_posted" type="checkbox" />
-          <span class="mcs-icon gallery-icon-calendar-plus">{'Post date'|@translate}</span>
+          <span class="mcs-icon gallery-icon-calendar-plus">{'Post date'|translate}</span>
         </label>
         <label>
           <input data-wid='album' class="filter-manager-controller album" type="checkbox" />
-          <span class="mcs-icon gallery-icon-album">{'Album'|@translate}</span>
+          <span class="mcs-icon gallery-icon-album">{'Album'|translate}</span>
         </label>
         <label>
           <input data-wid='authors' class="filter-manager-controller author" type="checkbox" />
-          <span class="mcs-icon gallery-icon-user-edit">{'Author'|@translate}</span>
+          <span class="mcs-icon gallery-icon-user-edit">{'Author'|translate}</span>
         </label>
         <label>
           <input data-wid='added_by' class="filter-manager-controller added_by" type="checkbox" />
-          <span class="mcs-icon gallery-icon-user">{'Added by'|@translate}</span>
+          <span class="mcs-icon gallery-icon-user">{'Added by'|translate}</span>
         </label>
         <label>
           <input data-wid='filetypes' class="filter-manager-controller filetypes" type="checkbox" />
-          <span class="mcs-icon gallery-icon-file-image">{'File type'|@translate}</span>
+          <span class="mcs-icon gallery-icon-file-image">{'File type'|translate}</span>
         </label>
       </div>
 
       <div class="filter-manager-actions">
         <div class="filter-cancel">
-          {'Cancel'|@translate}
+          {'Cancel'|translate}
         </div>
         <div class="filter-validate">
           <i class="loading gallery-icon-spin6 animate-spin"></i>
-          <span class="validate-text">{'Validate'|@translate}</span>
+          <span class="validate-text">{'Validate'|translate}</span>
         </div>
       </div>
     </div>
   </div>
   <div class="filter-manager">
-    <span class="mcs-icon gallery-icon-selecters"></span>{'Choose filters'|@translate}
+    <span class="mcs-icon gallery-icon-selecters"></span>{'Choose filters'|translate}
   </div>
   <i class="filter-spinner gallery-icon-spin6 animate-spin"></i>
 
@@ -92,27 +92,27 @@
     <span class="filter-arrow gallery-icon-up-open"></span>
 
     <div class="filter-form filter-word-form">
-      <div class="filter-form-title gallery-icon-search">{'Search for words'|@translate}</div>
+      <div class="filter-form-title gallery-icon-search">{'Search for words'|translate}</div>
       <div class="filter-actions">
-        <span class="delete mcs-icon gallery-icon-trash">{'Delete'|@translate}</span>
-        <span class="clear mcs-icon gallery-icon-arrow-rotate-left">{'Clear'|@translate}</span>
+        <span class="delete mcs-icon gallery-icon-trash">{'Delete'|translate}</span>
+        <span class="clear mcs-icon gallery-icon-arrow-rotate-left">{'Clear'|translate}</span>
       </div>
       {* <span class="word-help"><i class="gallery-icon-help-circled"></i>Conseils de recherche</span> *}
       <div class="word-search-options">
-        <label><input type="radio" name="mode" value="AND" checked> {'Search for all terms'|@translate}</label>
-        <label><input type="radio" name="mode" value="OR"> {'Search for any term'|@translate}</label>
+        <label><input type="radio" name="mode" value="AND" checked> {'Search for all terms'|translate}</label>
+        <label><input type="radio" name="mode" value="OR"> {'Search for any term'|translate}</label>
       </div>
 
       <input type="text" id="word-search" name="word">
-      <span class="search-params-title">{'Search in :'|@translate}</span>
+      <span class="search-params-title">{'Search in :'|translate}</span>
       <div class="search-params">
         <div>
           <input type="checkbox" id="name" name="name">
-          <label for="name">{'Photo title'|@translate}</label>
+          <label for="name">{'Photo title'|translate}</label>
         </div>
         <div>
           <input type="checkbox" id="file" name="file">
-          <label for="file">{'File name'|@translate}</label>
+          <label for="file">{'File name'|translate}</label>
         </div>
         <div>
           <input type="checkbox" id="author" name="author">
@@ -120,24 +120,24 @@
         </div>
         <div>
           <input type="checkbox" id="comment" name="comment">
-          <label for="comment">{'Photo description'|@translate}</label>
+          <label for="comment">{'Photo description'|translate}</label>
         </div>
         <div>
           <input type="checkbox" id="tags" name="tags">
-          <label for="tags">{'Tags'|@translate}</label>
+          <label for="tags">{'Tags'|translate}</label>
         </div>
         <div>
           <input type="checkbox" id="cat-title" name="cat-title">
-          <label for="cat-title">{'Album title'|@translate}</label>
+          <label for="cat-title">{'Album title'|translate}</label>
         </div>
         <div>
           <input type="checkbox" id="cat-desc" name="cat-desc">
-          <label for="cat-desc">{'Album description'|@translate}</label>
+          <label for="cat-desc">{'Album description'|translate}</label>
         </div>
       </div>
       <div class="filter-validate">
         <i class="loading gallery-icon-spin6 animate-spin"></i>
-        <span class="validate-text">{'Validate'|@translate}</span>
+        <span class="validate-text">{'Validate'|translate}</span>
       </div>
     </div>
   </div>
@@ -148,19 +148,19 @@
       <span class="filter-arrow gallery-icon-up-open"></span>
 
       <div class="filter-form filter-tag-form">
-        <div class="filter-form-title gallery-icon-tag">{'Tag'|@translate}</div>
+        <div class="filter-form-title gallery-icon-tag">{'Tag'|translate}</div>
         <div class="filter-actions">
-          <span class="delete mcs-icon gallery-icon-trash">{'Delete'|@translate}</span>
-          <span class="clear mcs-icon gallery-icon-arrow-rotate-left">{'Clear'|@translate}</span>
+          <span class="delete mcs-icon gallery-icon-trash">{'Delete'|translate}</span>
+          <span class="clear mcs-icon gallery-icon-arrow-rotate-left">{'Clear'|translate}</span>
         </div>
         <div class="search-params">
           <div>
             <input type="radio" id="tag-all" name="tag_mode" value="AND" checked>
-            <label for="tag-all">{'All tags'|@translate}</label>
+            <label for="tag-all">{'All tags'|translate}</label>
           </div>
           <div>
             <input type="radio" id="tag-one" name="tag_mode" value="OR">
-            <label for="tag-one">{'Any tag'|@translate}</label>
+            <label for="tag-one">{'Any tag'|translate}</label>
           </div>
         </div>
         <div class="form-container">
@@ -171,7 +171,7 @@
           </select>
           <div class="filter-validate">
             <i class="loading gallery-icon-spin6 animate-spin"></i>
-            <span class="validate-text">{'Validate'|@translate}</span>
+            <span class="validate-text">{'Validate'|translate}</span>
           </div>
         </div>
       </div>
@@ -181,14 +181,14 @@
   {if isset($DATE_POSTED)}
     <div class="filter filter-date_posted">
       <span class="mcs-icon gallery-icon-calendar-plus filter-icon"></span>
-      <span class="search-words">{'Post date'|@translate}</span>
+      <span class="search-words">{'Post date'|translate}</span>
       <span class="filter-arrow gallery-icon-up-open"></span>
 
       <div class="filter-form filter-date_posted-form">
-        <div class="filter-form-title gallery-icon-calendar-plus">{'Post date'|@translate}</div>
+        <div class="filter-form-title gallery-icon-calendar-plus">{'Post date'|translate}</div>
         <div class="filter-actions">
-          <span class="delete mcs-icon gallery-icon-trash" title="{'Delete'|@translate}"></span>
-          <span class="clear mcs-icon gallery-icon-arrow-rotate-left" title="{'Clear'|@translate}"></span>
+          <span class="delete mcs-icon gallery-icon-trash" title="{'Delete'|translate}"></span>
+          <span class="clear mcs-icon gallery-icon-arrow-rotate-left" title="{'Clear'|translate}"></span>
         </div>
 
         <div class="date_posted-option-container">
@@ -205,7 +205,7 @@
         </div>
         <div class="filter-validate">
           <i class="loading gallery-icon-spin6 animate-spin"></i>
-          <span class="validate-text">{'Validate'|@translate}</span>
+          <span class="validate-text">{'Validate'|translate}</span>
         </div>
       </div>
     </div>
@@ -217,10 +217,10 @@
     <span class="filter-arrow gallery-icon-up-open"></span>
 
     <div class="filter-form filter-album-form">
-      <div class="filter-form-title gallery-icon-album"> {'Album'|@translate}</div>
+      <div class="filter-form-title gallery-icon-album"> {'Album'|translate}</div>
       <div class="filter-actions">
-        <span class="delete mcs-icon gallery-icon-trash">{'Delete'|@translate}</span>
-        <span class="clear mcs-icon gallery-icon-arrow-rotate-left">{'Clear'|@translate}</span>
+        <span class="delete mcs-icon gallery-icon-trash">{'Delete'|translate}</span>
+        <span class="clear mcs-icon gallery-icon-arrow-rotate-left">{'Clear'|translate}</span>
       </div>
       <div class="search-params">
       </div>
@@ -228,22 +228,22 @@
       </div>
       <div class="add-album-button">
         <label class="head-button-2 icon-add-album">
-          <p class="mcs-icon gallery-icon-plus-circled">{'Add Album'|@translate}</p>
+          <p class="mcs-icon gallery-icon-plus-circled">{'Add Album'|translate}</p>
         </label>
       </div>
       <div class="search-sub-cats">
         <input type="checkbox" id="search-sub-cats" name="search-sub-cats">
-        <label for="search-sub-cats">{'Search in sub-albums'|@translate}</label>
+        <label for="search-sub-cats">{'Search in sub-albums'|translate}</label>
       </div>
       <div class="filter-validate">
         <i class="loading gallery-icon-spin6 animate-spin"></i>
-        <span class="validate-text">{'Validate'|@translate}</span>
+        <span class="validate-text">{'Validate'|translate}</span>
       </div>
     </div>
   </div>
   {include file='admin/themes/default/template/inc/album_selector.inc.tpl' 
-    title={'Search in albums'|@translate}
-  searchPlaceholder={'Search'|@translate}
+    title={'Search in albums'|translate}
+  searchPlaceholder={'Search'|translate}
   show_root_btn=false
   api_method='pwg.categories.getList'
   }
@@ -254,10 +254,10 @@
       <span class="filter-arrow gallery-icon-up-open"></span>
 
       <div class="filter-form filter-author-form">
-        <div class="filter-form-title gallery-icon-user-edit"> {'Author'|@translate}</div>
+        <div class="filter-form-title gallery-icon-user-edit"> {'Author'|translate}</div>
         <div class="filter-actions">
-          <span class="delete mcs-icon gallery-icon-trash">{'Delete'|@translate}</span>
-          <span class="clear mcs-icon gallery-icon-arrow-rotate-left">{'Clear'|@translate}</span>
+          <span class="delete mcs-icon gallery-icon-trash">{'Delete'|translate}</span>
+          <span class="clear mcs-icon gallery-icon-arrow-rotate-left">{'Clear'|translate}</span>
         </div>
         <div class="form-container">
           <select id="authors" placeholder="{'Type in a search term'|translate}" name="authors[]" multiple>
@@ -269,7 +269,7 @@
 
           <div class="filter-validate">
             <i class="loading gallery-icon-spin6 animate-spin"></i>
-            <span class="validate-text">{'Validate'|@translate}</span>
+            <span class="validate-text">{'Validate'|translate}</span>
           </div>
         </div>
       </div>
@@ -285,8 +285,8 @@
       <div class="filter-form filter-added_by-form">
         <div class="filter-form-title gallery-icon-user">{'Added by'|translate}</div>
         <div class="filter-actions">
-          <span class="delete mcs-icon gallery-icon-trash tiptip" title="{'Delete'|@translate}"></span>
-          <span class="clear mcs-icon gallery-icon-arrow-rotate-left tiptip" title="{'Clear'|@translate}"></span>
+          <span class="delete mcs-icon gallery-icon-trash tiptip" title="{'Delete'|translate}"></span>
+          <span class="clear mcs-icon gallery-icon-arrow-rotate-left tiptip" title="{'Clear'|translate}"></span>
         </div>
 
         <div class="form-container">
@@ -305,7 +305,7 @@
         </div>
         <div class="filter-validate">
           <i class="loading gallery-icon-spin6 animate-spin"></i>
-          <span class="validate-text">{'Validate'|@translate}</span>
+          <span class="validate-text">{'Validate'|translate}</span>
         </div>
       </div>
     </div>
@@ -318,10 +318,10 @@
       <span class="filter-arrow gallery-icon-up-open"></span>
 
       <div class="filter-form filter-filetypes-form">
-        <div class="filter-form-title gallery-icon-file-image">{'File type'|@translate}</div>
+        <div class="filter-form-title gallery-icon-file-image">{'File type'|translate}</div>
         <div class="filter-actions">
-          <span class="delete mcs-icon gallery-icon-trash tiptip" title="{'Delete'|@translate}"></span>
-          <span class="clear mcs-icon gallery-icon-arrow-rotate-left tiptip" title="{'Clear'|@translate}"></span>
+          <span class="delete mcs-icon gallery-icon-trash tiptip" title="{'Delete'|translate}"></span>
+          <span class="clear mcs-icon gallery-icon-arrow-rotate-left tiptip" title="{'Clear'|translate}"></span>
         </div>
         <div class="form-container">
           <div class="filetypes-option-container">
@@ -339,13 +339,13 @@
         </div>
         <div class="filter-validate">
           <i class="loading gallery-icon-spin6 animate-spin"></i>
-          <span class="validate-text">{'Validate'|@translate}</span>
+          <span class="validate-text">{'Validate'|translate}</span>
         </div>
       </div>
     </div>
   {/if}
   <div>
-    <span class="mcs-icon gallery-icon-arrow-rotate-left clear-all">{'Empty filters'|@translate}</span>
+    <span class="mcs-icon gallery-icon-arrow-rotate-left clear-all">{'Empty filters'|translate}</span>
   </div>
 </div>
 
@@ -354,13 +354,13 @@
     {if isset($TAGS_FOUND)}
       <div class="mcs-tags-found">
         <span class="mcs-side-badge">{count($TAGS_FOUND)}</span>
-        <p>{'Tags found'|@translate}</p>
+        <p>{'Tags found'|translate}</p>
       </div>
     {/if}
     {if isset($ALBUMS_FOUND)}
       <div class="mcs-albums-found">
         <span class="mcs-side-badge">{count($ALBUMS_FOUND)}</span>
-        <p>{'Albums found'|@translate}</p>
+        <p>{'Albums found'|translate}</p>
       </div>
     {/if}
   </div>
@@ -369,7 +369,7 @@
     <div class="tags-found-popin">
       <div class="tags-found-popin-container">
         <span class="gallery-icon-cancel tags-found-close"></span>
-        <div class="mcs-popin-title">{'Tags found'|@translate}</div>
+        <div class="mcs-popin-title">{'Tags found'|translate}</div>
         <div class="mcs-popin-desc">{'Tags listed here match your search by word. Click on one to browse by tag.'|translate}
         </div>
         <div class="tags-found-container">
@@ -386,7 +386,7 @@
     <div class="albums-found-popin">
       <div class="albums-found-popin-container">
         <span class="gallery-icon-cancel albums-found-close"></span>
-        <div class="mcs-popin-title">{'Albums found'|@translate}</div>
+        <div class="mcs-popin-title">{'Albums found'|translate}</div>
         <div class="mcs-popin-desc">
           {'Albums listed here match your search by word. Click on one to browse by album.'|translate}</div>
         <div class="albums-found-container">

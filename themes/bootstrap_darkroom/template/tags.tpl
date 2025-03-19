@@ -1,30 +1,30 @@
 <nav
     class="navbar navbar-contextual navbar-expand-lg {$theme_config->navbar_contextual_style} {$theme_config->navbar_contextual_bg} sticky-top mb-5">
     <div class="container{if $theme_config->fluid_width}-fluid{/if}">
-        <div class="navbar-brand mr-auto"><a href="{$U_HOME}">{'Home'|@translate}</a>{$LEVEL_SEPARATOR}<a
-                href>{'Tags'|@translate}</a></div>
+        <div class="navbar-brand mr-auto"><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}<a
+                href>{'Tags'|translate}</a></div>
         <ul class="navbar-nav justify-content-end">
             {if $display_mode != 'cloud'}
                 <li class="nav-item">
-                    <a class="nav-link" href="{$U_CLOUD}" title="{'show tag cloud'|@translate}">
+                    <a class="nav-link" href="{$U_CLOUD}" title="{'show tag cloud'|translate}">
                         <i class="fas fa-cloud fa-fw" aria-hidden="true"></i><span class="d-lg-none">
-                            {'show tag cloud'|@translate}</span>
+                            {'show tag cloud'|translate}</span>
                     </a>
                 </li>
             {/if}
             {if $display_mode != 'letters'}
                 <li class="nav-item">
-                    <a class="nav-link" href="{$U_LETTERS}" title="{'group by letters'|@translate}" rel="nofollow">
+                    <a class="nav-link" href="{$U_LETTERS}" title="{'group by letters'|translate}" rel="nofollow">
                         <i class="fas fa-sort-alpha-down fa-fw" aria-hidden="true"></i><span class="d-lg-none">
-                            {'group by letters'|@translate}</span>
+                            {'group by letters'|translate}</span>
                     </a>
                 </li>
             {/if}
             {if isset($loaded_plugins['tag_groups']) && $display_mode != 'groups'}
                 <li class="nav-item">
-                    <a class="nav-link" href="{$U_TAG_GROUPS}" title="{'show tag groups'|@translate}" rel="nofollow">
+                    <a class="nav-link" href="{$U_TAG_GROUPS}" title="{'show tag groups'|translate}" rel="nofollow">
                         <i class="fas fa-tags fa-fw" aria-hidden="true"></i><span class="d-lg-none">
-                            {'show tag groups'|@translate}</span>
+                            {'show tag groups'|translate}</span>
                     </a>
                 </li>
             {/if}
@@ -42,7 +42,7 @@
             <div id="tagCloud">
                 {foreach from=$tags item=tag}
                     <span><a href="{$tag.URL}" class="tagLevel{$tag.level}"
-                            title="{$tag.counter|@translate_dec:'%d photo':'%d photos'}">{$tag.name}</a></span>
+                            title="{$tag.counter|translate_dec:'%d photo':'%d photos'}">{$tag.name}</a></span>
                 {/foreach}
             </div>
         {else}
@@ -86,7 +86,7 @@
                     <div class="list-group list-group-flush">
                         {foreach from=$letter.tags item=tag}
                             <a href="{$tag.URL}" class="list-group-item list-group-item-action" title="{$tag.name}">{$tag.name}<span
-                                    class="badge badge-secondary ml-2">{$tag.counter|@translate_dec:'%d photo':'%d photos'}</span></a>
+                                    class="badge badge-secondary ml-2">{$tag.counter|translate_dec:'%d photo':'%d photos'}</span></a>
                         {/foreach}
                     </div>
                 </div>

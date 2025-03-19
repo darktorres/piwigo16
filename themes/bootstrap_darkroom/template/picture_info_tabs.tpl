@@ -3,17 +3,17 @@
       <ul class="nav nav-tabs nav-justified flex-column flex-sm-row" role="tablist">
         {if $theme_config->picture_info == 'tabs' || (functions::get_device() != 'desktop' && $theme_config->picture_info != 'disabled')}
           <li class="nav-item"><a class="flex-sm-fill text-sm-center nav-link active" href="#tab_info"
-              aria-controls="tab_info" role="tab" data-toggle="tab">{'Information'|@translate}</a></li>
+              aria-controls="tab_info" role="tab" data-toggle="tab">{'Information'|translate}</a></li>
           {if isset($metadata)}
             <li class="nav-item"><a class="flex-sm-fill text-sm-center nav-link" href="#tab_metadata"
-                aria-controls="tab_metadata" role="tab" data-toggle="tab">{'EXIF Metadata'|@translate}</a></li>
+                aria-controls="tab_metadata" role="tab" data-toggle="tab">{'EXIF Metadata'|translate}</a></li>
           {/if}
         {/if}
         {if isset($comment_add) || !empty($COMMENT_COUNT)}
           <li
             class="nav-item{if $theme_config->picture_info == 'disabled' || ($theme_config->picture_info != 'tabs' && functions::get_device() == 'desktop')} active{/if}">
             <a class="flex-sm-fill text-sm-center nav-link" href="#tab_comments" aria-controls="tab_comments" role="tab"
-              data-toggle="tab">{'Comments'|@translate} <span class="badge badge-secondary">{$COMMENT_COUNT}</span></a>
+              data-toggle="tab">{'Comments'|translate} <span class="badge badge-secondary">{$COMMENT_COUNT}</span></a>
           </li>
         {/if}
       </ul>
@@ -32,7 +32,7 @@
                   <tbody>
                     {if $display_info.author and isset($INFO_AUTHOR)}
                       <tr>
-                        <th scope="row">{'Author'|@translate}</th>
+                        <th scope="row">{'Author'|translate}</th>
                         <td>
                           <div id="Author" class="imageInfo">{$INFO_AUTHOR}</div>
                         </td>
@@ -40,7 +40,7 @@
                     {/if}
                     {if isset($CR_INFO_NAME) && !empty($CR_INFO_NAME)}
                       <tr>
-                        <th scope="row">{'Copyright'|@translate}</th>
+                        <th scope="row">{'Copyright'|translate}</th>
                         <td>
                           <div id="Copyright" class="imageInfo">{if isset($CR_INFO_URL)}<a
                               href="{$CR_INFO_URL}">{$CR_INFO_NAME}</a>{else}{$CR_INFO_NAME}
@@ -50,14 +50,14 @@
                     {/if}
                     {if $display_info.rating_score and isset($rate_summary)}
                       <tr>
-                        <th scope="row">{'Rating score'|@translate}</th>
+                        <th scope="row">{'Rating score'|translate}</th>
                         <td>
                           <div id="Average" class="imageInfo">
                             {if $rate_summary.count}
                               <span id="ratingScore">{$rate_summary.score}</span> <span
-                                id="ratingCount">({$rate_summary.count|@translate_dec:'%d rate':'%d rates'})</span>
+                                id="ratingCount">({$rate_summary.count|translate_dec:'%d rate':'%d rates'})</span>
                             {else}
-                              <span id="ratingScore">{'no rate'|@translate}</span> <span id="ratingCount"></span>
+                              <span id="ratingScore">{'no rate'|translate}</span> <span id="ratingCount"></span>
                             {/if}
                           </div>
                         </td>
@@ -66,7 +66,7 @@
                     {if isset($rating)}
                       <tr>
                         <th scope="row" id="updateRate">
-                          {if isset($rating.USER_RATE)}{'Update your rating'|@translate}{else}{'Rate this photo'|@translate}{/if}
+                          {if isset($rating.USER_RATE)}{'Update your rating'|translate}{else}{'Rate this photo'|translate}{/if}
                         </th>
                         <td>
                           <div id="rating" class="imageInfo">
@@ -86,15 +86,15 @@
                                   _pwgRatingAutoQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
                                   onSuccess: function(rating) {
                                   var e = document.getElementById("updateRate");
-                                  if (e) e.innerHTML = "{'Update your rating'|@translate|@escape:'javascript'}";
+                                  if (e) e.innerHTML = "{'Update your rating'|translate|escape:'javascript'}";
                                   e = document.getElementById("ratingScore");
                                   if (e) e.innerHTML = rating.score;
                                   e = document.getElementById("ratingCount");
                                   if (e) {
                                     if (rating.count == 1) {
-                                      e.innerHTML = "({'%d rate'|@translate|@escape:'javascript'})".replace( "%d", rating.count);
+                                      e.innerHTML = "({'%d rate'|translate|escape:'javascript'})".replace( "%d", rating.count);
                                     } else {
-                                      e.innerHTML = "({'%d rates'|@translate|@escape:'javascript'})".replace( "%d", rating.count);
+                                      e.innerHTML = "({'%d rates'|translate|escape:'javascript'})".replace( "%d", rating.count);
                                     }
                                   }
                                   $('#averageRate').find('span').each(function() {
@@ -114,7 +114,7 @@
                     {/if}
                     {if $display_info.created_on and isset($INFO_CREATION_DATE)}
                       <tr>
-                        <th scope="row">{'Created on'|@translate}</th>
+                        <th scope="row">{'Created on'|translate}</th>
                         <td>
                           <div id="datecreate" class="imageInfo">{$INFO_CREATION_DATE}</div>
                         </td>
@@ -122,7 +122,7 @@
                     {/if}
                     {if $display_info.posted_on}
                       <tr>
-                        <th scope="row">{'Posted on'|@translate}</th>
+                        <th scope="row">{'Posted on'|translate}</th>
                         <td>
                           <div id="datepost" class="imageInfo">{$INFO_POSTED_DATE}</div>
                         </td>
@@ -130,7 +130,7 @@
                     {/if}
                     {if $display_info.visits}
                       <tr>
-                        <th scope="row">{'Visits'|@translate}</th>
+                        <th scope="row">{'Visits'|translate}</th>
                         <td>
                           <div id="visits" class="imageInfo">{$INFO_VISITS}</div>
                         </td>
@@ -138,7 +138,7 @@
                     {/if}
                     {if $display_info.dimensions and isset($INFO_DIMENSIONS)}
                       <tr>
-                        <th scope="row">{'Dimensions'|@translate}</th>
+                        <th scope="row">{'Dimensions'|translate}</th>
                         <td>
                           <div id="Dimensions" class="imageInfo">{$INFO_DIMENSIONS}</div>
                         </td>
@@ -146,7 +146,7 @@
                     {/if}
                     {if $display_info.file}
                       <tr>
-                        <th scope="row">{'File'|@translate}</th>
+                        <th scope="row">{'File'|translate}</th>
                         <td>
                           <div id="File" class="imageInfo">{$INFO_FILE}</div>
                         </td>
@@ -154,7 +154,7 @@
                     {/if}
                     {if $display_info.filesize and isset($INFO_FILESIZE)}
                       <tr>
-                        <th scope="row">{'Filesize'|@translate}</th>
+                        <th scope="row">{'Filesize'|translate}</th>
                         <td>
                           <div id="Filesize" class="imageInfo">{$INFO_FILESIZE}</div>
                         </td>
@@ -162,7 +162,7 @@
                     {/if}
                     {if $display_info.tags and isset($related_tags)}
                       <tr>
-                        <th scope="row">{'Tags'|@translate}</th>
+                        <th scope="row">{'Tags'|translate}</th>
                         <td>
                           <div id="Tags" class="imageInfo">
                             {foreach from=$related_tags item=tag name=tag_loop}
@@ -175,7 +175,7 @@
                     {/if}
                     {if $display_info.categories and isset($related_categories)}
                       <tr>
-                        <th scope="row">{'Albums'|@translate}</th>
+                        <th scope="row">{'Albums'|translate}</th>
                         <td>
                           <div id="Categories" class="imageInfo">
                             {foreach from=$related_categories item=cat name=cat_loop}
@@ -205,7 +205,7 @@
                         }
                       </script>{/footer_script}
                       <tr>
-                        <th scope="row">{'Who can see this photo?'|@translate}</th>
+                        <th scope="row">{'Who can see this photo?'|translate}</th>
                         <td>
                           <div id="Privacy" class="imageInfo">
                             <div class="dropdown">

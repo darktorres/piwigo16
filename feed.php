@@ -35,15 +35,19 @@ SELECT user_id,
   WHERE id = \'' . $feed_id . '\'
 ;';
     $feed_row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+
     if (empty($feed_row)) {
         functions_html::page_not_found(functions::l10n('Unknown feed identifier'));
     }
+
     if ($feed_row['user_id'] != $user['id']) { // new user
         $user = functions_user::build_user($feed_row['user_id'], true);
     }
+
 } else {
     $image_only = true;
-    if (! functions_user::is_a_guest()) {// auto session was created - so switch to guest
+
+    if (! functions_user::is_a_guest()) { // auto session was created - so switch to guest
         $user = functions_user::build_user($conf['guest_id'], true);
     }
 }
@@ -76,9 +80,11 @@ if (! $image_only) {
 
         // content creation
         $item->description = '<ul>';
+
         foreach ($news as $line) {
             $item->description .= '<li>' . $line . '</li>';
         }
+
         $item->description .= '</ul>';
         $item->descriptionHtmlSyndicated = true;
 
@@ -97,9 +103,12 @@ UPDATE ' . USER_FEED_TABLE . '
     }
 }
 
-if (! empty($feed_id) and empty($news)) {// update the last check from time to time to avoid deletion by maintenance tasks
-    if (! isset($feed_row['last_check'])
-      or time() - functions::datetime_to_ts($feed_row['last_check']) > 30 * 24 * 3600) {
+if (! empty($feed_id) and
+    empty($news)
+) { // update the last check from time to time to avoid deletion by maintenance tasks
+    if (! isset($feed_row['last_check']) or
+        time() - functions::datetime_to_ts($feed_row['last_check']) > 30 * 24 * 3600
+    ) {
         $query = '
 UPDATE ' . USER_FEED_TABLE . '
   SET last_check = ' . functions_mysqli::pwg_db_get_recent_period_expression(-15, $dbnow) . '
@@ -124,9 +133,7 @@ foreach ($dates as $date_detail) { // for each recent post date we create a feed
         ]
     );
 
-    $item->description .=
-      '<a href="' . functions_url::make_index_url() . '">' . $conf['gallery_title'] . '</a><br> ';
-
+    $item->description .= '<a href="' . functions_url::make_index_url() . '">' . $conf['gallery_title'] . '</a><br> ';
     $item->description .= functions_notification::get_html_description_recent_post_date($date_detail);
 
     $item->descriptionHtmlSyndicated = true;

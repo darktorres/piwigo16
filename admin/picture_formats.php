@@ -48,6 +48,7 @@ foreach ($formats as &$format) {
 
     $format['label'] = strtoupper($format['ext']);
     $lang_key = 'format ' . strtoupper($format['ext']);
+
     if (isset($lang[$lang_key])) {
         $format['label'] = $lang[$lang_key];
     }

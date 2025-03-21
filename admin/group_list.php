@@ -34,7 +34,10 @@ $tabsheet->assign();
 // +-----------------------------------------------------------------------+
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-if (! empty($_POST) or isset($_GET['delete']) or isset($_GET['toggle_is_default'])) {
+if (! empty($_POST) or
+    isset($_GET['delete']) or
+    isset($_GET['toggle_is_default'])
+) {
     functions::check_pwg_token();
 }
 
@@ -84,9 +87,11 @@ SELECT u.' . $conf['user_fields']['username'] . ' AS username
 ;';
     $members = [];
     $res = functions_mysqli::pwg_query($query);
+
     while ($us = functions_mysqli::pwg_db_fetch_assoc($res)) {
         $members[] = $us['username'];
     }
+
     $template->append(
         'groups',
         [

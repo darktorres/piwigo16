@@ -36,6 +36,7 @@ abstract class PwgResponseEncoder
                 return true;
             }
         }
+
         return false;
     }
 

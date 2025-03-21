@@ -46,7 +46,9 @@ class themes
     {
         global $conf;
 
-        if (! $conf['enable_extensions_install'] and $action == 'delete') {
+        if (! $conf['enable_extensions_install'] and
+            $action == 'delete'
+        ) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -74,6 +76,7 @@ class themes
                 }
 
                 $missing_parent = $this->missing_parent_theme($theme_id);
+
                 if (isset($missing_parent)) {
                     $errors[] = functions::l10n(
                         'Impossible to activate this theme, the parent theme is missing: %s',
@@ -83,9 +86,10 @@ class themes
                     break;
                 }
 
-                if ($this->fs_themes[$theme_id]['mobile']
-                    and ! empty($conf['mobile_theme'])
-                    and $conf['mobile_theme'] != $theme_id) {
+                if ($this->fs_themes[$theme_id]['mobile'] and
+                    ! empty($conf['mobile_theme']) and
+                    $conf['mobile_theme'] != $theme_id
+                ) {
                     $errors[] = functions::l10n('You can activate only one mobile theme.');
                     break;
                 }
@@ -108,6 +112,7 @@ INSERT INTO ' . THEMES_TABLE . '
                         functions::conf_update_param('mobile_theme', $theme_id);
                     }
                 }
+
                 break;
 
             case 'deactivate':
@@ -132,6 +137,7 @@ SELECT id
   WHERE id != \'' . $theme_id . '\'
 ;';
                     $result = functions_mysqli::pwg_query($query);
+
                     if (functions_mysqli::pwg_db_num_rows($result) == 0) {
                         $new_theme = 'default';
                     } else {
@@ -153,6 +159,7 @@ DELETE
                 if ($this->fs_themes[$theme_id]['mobile']) {
                     functions::conf_update_param('mobile_theme', '');
                 }
+
                 break;
 
             case 'delete':
@@ -160,12 +167,14 @@ DELETE
                     $errors[] = 'CANNOT DELETE - THEME IS INSTALLED';
                     break;
                 }
+
                 if (! isset($this->fs_themes[$theme_id])) {
                     // nothing to do here
                     break;
                 }
 
                 $children = $this->get_children_themes($theme_id);
+
                 if (count($children) > 0) {
                     $errors[] = functions::l10n(
                         'Impossible to delete this theme. Other themes depends on it: %s',
@@ -214,7 +223,9 @@ DELETE
         $children = [];
 
         foreach ($this->fs_themes as $test_child) {
-            if (isset($test_child['parent']) and $test_child['parent'] == $theme_id) {
+            if (isset($test_child['parent']) and
+                $test_child['parent'] == $theme_id
+            ) {
                 $children[] = $test_child['name'];
             }
         }
@@ -261,9 +272,11 @@ SELECT
   FROM ' . THEMES_TABLE;
 
         $clauses = [];
+
         if (! empty($id)) {
             $clauses[] = 'id = \'' . $id . '\'';
         }
+
         if (count($clauses) > 0) {
             $query .= '
   WHERE ' . implode(' AND ', $clauses);
@@ -271,9 +284,11 @@ SELECT
 
         $result = functions_mysqli::pwg_query($query);
         $themes = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $themes[] = $row;
         }
+
         return $themes;
     }
 
@@ -285,11 +300,14 @@ SELECT
         $dir = opendir(PHPWG_THEMES_PATH);
 
         while ($file = readdir($dir)) {
-            if ($file != '.' and $file != '..') {
+            if ($file != '.' and
+                $file != '..'
+            ) {
                 $path = PHPWG_THEMES_PATH . $file;
-                if (is_dir($path)
-                    and preg_match('/^[a-zA-Z0-9-_]+$/', $file)
-                    and file_exists($path . '/themeconf.php')
+
+                if (is_dir($path) and
+                    preg_match('/^[a-zA-Z0-9-_]+$/', $file) and
+                    file_exists($path . '/themeconf.php')
                 ) {
                     $theme = [
                         'id' => $file,
@@ -305,12 +323,15 @@ SELECT
                     if (preg_match('|Theme Name:\\s*(.+)|', $theme_data, $val)) {
                         $theme['name'] = trim($val[1]);
                     }
+
                     if (preg_match('|Version:\\s*([\\w.-]+)|', $theme_data, $val)) {
                         $theme['version'] = trim($val[1]);
                     }
+
                     if (preg_match('|Theme URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
                         $theme['uri'] = trim($val[1]);
                     }
+
                     if ($desc = functions::load_language('description.txt', $path . '/', [
                         'return' => true,
                     ])) {
@@ -318,30 +339,40 @@ SELECT
                     } elseif (preg_match('|Description:\\s*(.+)|', $theme_data, $val)) {
                         $theme['description'] = trim($val[1]);
                     }
+
                     if (preg_match('|Author:\\s*(.+)|', $theme_data, $val)) {
                         $theme['author'] = trim($val[1]);
                     }
+
                     if (preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
                         $theme['author uri'] = trim($val[1]);
                     }
-                    if (! empty($theme['uri']) and strpos($theme['uri'], 'extension_view.php?eid=')) {
+
+                    if (! empty($theme['uri']) and
+                        strpos($theme['uri'], 'extension_view.php?eid=')
+                    ) {
                         list(, $extension) = explode('extension_view.php?eid=', $theme['uri']);
+
                         if (is_numeric($extension)) {
                             $theme['extension'] = $extension;
                         }
                     }
+
                     if (preg_match('/["\']parent["\'][^"\']+["\']([^"\']+)["\']/', $theme_data, $val)) {
                         $theme['parent'] = $val[1];
                     }
+
                     if (preg_match('/["\']activatable["\'].*?(true|false)/i', $theme_data, $val)) {
                         $theme['activatable'] = functions_mysqli::get_boolean($val[1]);
                     }
+
                     if (preg_match('/["\']mobile["\'].*?(true|false)/i', $theme_data, $val)) {
                         $theme['mobile'] = functions_mysqli::get_boolean($val[1]);
                     }
 
                     // screenshot
                     $screenshot_path = $path . '/screenshot.png';
+
                     if (file_exists($screenshot_path)) {
                         $theme['screenshot'] = $screenshot_path;
                     } else {
@@ -354,6 +385,7 @@ SELECT
                     }
 
                     $admin_file = $path . '/admin/admin.php';
+
                     if (file_exists($admin_file)) {
                         $theme['admin_uri'] = functions_url::get_root_url() . 'admin.php?page=theme&theme=' . $file;
                     }
@@ -364,6 +396,7 @@ SELECT
                 }
             }
         }
+
         closedir($dir);
     }
 
@@ -376,12 +409,15 @@ SELECT
             case 'name':
                 uasort($this->fs_themes, functions_html::name_compare(...));
                 break;
+
             case 'status':
                 $this->sort_themes_by_state();
                 break;
+
             case 'author':
                 uasort($this->fs_themes, $this->theme_author_compare(...));
                 break;
+
             case 'id':
                 uksort($this->fs_themes, strcasecmp(...));
                 break;
@@ -404,23 +440,32 @@ SELECT
         $version = PHPWG_VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (functions_admin::fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
-            if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
-                $version = $pem_versions[0]['name'];
-            }
-            $branch = functions::get_branch_from_version($version);
-            foreach ($pem_versions as $pem_version) {
-                if (strpos($pem_version['name'], $branch) === 0) {
-                    $versions_to_check[] = $pem_version['id'];
+
+        if (functions_admin::fetchRemote($url, $result, $get_data)) {
+            $pem_versions = @unserialize($result);
+
+            if ($pem_versions) {
+                if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
+                    $version = $pem_versions[0]['name'];
+                }
+
+                $branch = functions::get_branch_from_version($version);
+
+                foreach ($pem_versions as $pem_version) {
+                    if (strpos($pem_version['name'], $branch) === 0) {
+                        $versions_to_check[] = $pem_version['id'];
+                    }
                 }
             }
         }
+
         if (empty($versions_to_check)) {
             return false;
         }
 
         // Themes to check
         $themes_to_check = [];
+
         foreach ($this->fs_themes as $fs_theme) {
             if (isset($fs_theme['extension'])) {
                 $themes_to_check[] = $fs_theme['extension'];
@@ -446,16 +491,21 @@ SELECT
                 $get_data['extension_include'] = implode(',', $themes_to_check);
             }
         }
+
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
             $pem_themes = @unserialize($result);
+
             if (! is_array($pem_themes)) {
                 return false;
             }
+
             foreach ($pem_themes as $theme) {
                 $this->server_themes[$theme['extension_id']] = $theme;
             }
+
             return true;
         }
+
         return false;
     }
 
@@ -468,15 +518,19 @@ SELECT
             case 'date':
                 krsort($this->server_themes);
                 break;
+
             case 'revision':
                 usort($this->server_themes, $this->extension_revision_compare(...));
                 break;
+
             case 'name':
                 uasort($this->server_themes, $this->extension_name_compare(...));
                 break;
+
             case 'author':
                 uasort($this->server_themes, $this->extension_author_compare(...));
                 break;
+
             case 'downloads':
                 usort($this->server_themes, $this->extension_downloads_compare(...));
                 break;
@@ -494,22 +548,29 @@ SELECT
     {
         global $logger;
 
-        if ($archive = tempnam(PHPWG_THEMES_PATH, 'zip')) {
+        $archive = tempnam(PHPWG_THEMES_PATH, 'zip');
+
+        if ($archive) {
             $url = PEM_URL . '/download.php';
             $get_data = [
                 'rid' => $revision,
                 'origin' => 'piwigo_' . $action,
             ];
+            $handle = @fopen($archive, 'wb');
 
-            if ($handle = @fopen($archive, 'wb') and functions_admin::fetchRemote($url, $handle, $get_data)) {
+            if ($handle and
+                functions_admin::fetchRemote($url, $handle, $get_data)
+            ) {
                 fclose($handle);
                 $zip = new PclZip($archive);
-                if ($list = $zip->listContent()) {
+                $list = $zip->listContent();
+
+                if ($list) {
                     foreach ($list as $file) {
                         // we search main.php in archive
-                        if (basename($file['filename']) == 'themeconf.inc.php'
-                          and (! isset($main_filepath)
-                          or strlen($file['filename']) < strlen($main_filepath))) {
+                        if (basename($file['filename']) == 'themeconf.inc.php' and
+                           (! isset($main_filepath) or strlen($file['filename']) < strlen($main_filepath))
+                        ) {
                             $main_filepath = $file['filename'];
                         }
                     }
@@ -518,60 +579,61 @@ SELECT
 
                     if (isset($main_filepath)) {
                         $root = dirname($main_filepath); // main.php path in archive
+
                         if ($action == 'upgrade') {
                             $theme_id = $dest;
                         } else {
                             $theme_id = ($root == '.' ? 'extension_' . $dest : basename($root));
                         }
+
                         $extract_path = PHPWG_THEMES_PATH . $theme_id;
                         $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
+                        $result = $zip->extract(PCLZIP_OPT_PATH, $extract_path, PCLZIP_OPT_REMOVE_PATH, $root, PCLZIP_OPT_REPLACE_NEWER);
 
-                        if (
-                            $result = $zip->extract(
-                                PCLZIP_OPT_PATH,
-                                $extract_path,
-                                PCLZIP_OPT_REMOVE_PATH,
-                                $root,
-                                PCLZIP_OPT_REPLACE_NEWER
-                            )
-                        ) {
+                        if ($result) {
                             foreach ($result as $file) {
                                 if ($file['stored_filename'] == $main_filepath) {
                                     $status = $file['status'];
                                     break;
                                 }
                             }
-                            if (file_exists($extract_path . '/obsolete.list')
-                              and $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)
-                              and ! empty($old_files)) {
-                                $old_files[] = 'obsolete.list';
 
-                                $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
+                            if (file_exists($extract_path . '/obsolete.list')) {
+                                $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES);
 
-                                $extract_path_realpath = realpath($extract_path);
+                                if (! empty($old_files)) {
+                                    $old_files[] = 'obsolete.list';
 
-                                foreach ($old_files as $old_file) {
-                                    $old_file = trim($old_file);
-                                    $old_file = trim($old_file, '/'); // prevent path starting with a "/"
+                                    $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
 
-                                    if (empty($old_file)) { // empty here means the extension itself
-                                        continue;
-                                    }
+                                    $extract_path_realpath = realpath($extract_path);
 
-                                    $path = $extract_path . '/' . $old_file;
+                                    foreach ($old_files as $old_file) {
+                                        $old_file = trim($old_file);
+                                        $old_file = trim($old_file, '/'); // prevent path starting with a "/"
 
-                                    // make sure the obsolete file is withing the extension directory, prevent traversal path
-                                    $realpath = realpath($path);
-                                    if ($realpath === false or strpos($realpath, $extract_path_realpath) !== 0) {
-                                        continue;
-                                    }
+                                        if (empty($old_file)) { // empty here means the extension itself
+                                            continue;
+                                        }
 
-                                    $logger->debug(__FUNCTION__ . ', to delete = ' . $path);
+                                        $path = $extract_path . '/' . $old_file;
 
-                                    if (is_file($path)) {
-                                        @unlink($path);
-                                    } elseif (is_dir($path)) {
-                                        functions_admin::deltree($path, PHPWG_THEMES_PATH . 'trash');
+                                        // make sure the obsolete file is withing the extension directory, prevent traversal path
+                                        $realpath = realpath($path);
+
+                                        if ($realpath === false or
+                                            strpos($realpath, $extract_path_realpath) !== 0
+                                        ) {
+                                            continue;
+                                        }
+
+                                        $logger->debug(__FUNCTION__ . ', to delete = ' . $path);
+
+                                        if (is_file($path)) {
+                                            @unlink($path);
+                                        } elseif (is_dir($path)) {
+                                            functions_admin::deltree($path, PHPWG_THEMES_PATH . 'trash');
+                                        }
                                     }
                                 }
                             }
@@ -603,6 +665,7 @@ SELECT
         if ($a['revision_date'] < $b['revision_date']) {
             return 1;
         }
+
         return -1;
     }
 
@@ -614,18 +677,22 @@ SELECT
     public function extension_author_compare($a, $b)
     {
         $r = strcasecmp($a['author_name'], $b['author_name']);
+
         if ($r == 0) {
             return $this->extension_name_compare($a, $b);
         }
+
         return $r;
     }
 
     public function theme_author_compare($a, $b)
     {
         $r = strcasecmp($a['author'], $b['author']);
+
         if ($r == 0) {
             return functions_html::name_compare($a, $b);
         }
+
         return $r;
     }
 
@@ -634,6 +701,7 @@ SELECT
         if ($a['extension_nb_downloads'] < $b['extension_nb_downloads']) {
             return 1;
         }
+
         return -1;
     }
 
@@ -648,11 +716,13 @@ SELECT
         foreach ($this->fs_themes as $theme_id => $theme) {
             if (isset($this->db_themes_by_id[$theme_id])) {
                 $this->db_themes_by_id[$theme_id]['state'] == 'active' ?
-                  $active_themes[$theme_id] = $theme : $inactive_themes[$theme_id] = $theme;
+                  $active_themes[$theme_id] = $theme :
+                  $inactive_themes[$theme_id] = $theme;
             } else {
                 $not_installed[$theme_id] = $theme;
             }
         }
+
         $this->fs_themes = $active_themes + $inactive_themes + $not_installed;
     }
 

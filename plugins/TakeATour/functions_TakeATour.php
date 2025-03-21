@@ -39,13 +39,16 @@ class functions_TakeATour
         $template->assign('ADMIN_THEME', $conf['admin_theme']);
         $template->parse('TAT_js_css');
 
-        if (isset($TAT_restart) and $TAT_restart) {
+        if (isset($TAT_restart) and
+            $TAT_restart
+        ) {
             $TAT_restart = false;
             $template->assign('TAT_restart', true);
         }
+
         $tat_path = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME']);
         $template->assign('TAT_path', $tat_path);
-        $template->assign('ABS_U_ADMIN', functions_url::get_absolute_root_url()); // absolute one due to public pages and $conf['question_mark_in_urls'] = false+$conf['php_extension_in_urls'] = false;
+        $template->assign('ABS_U_ADMIN', functions_url::get_absolute_root_url()); // absolute one due to public pages and $conf['question_mark_in_urls'] = false + $conf['php_extension_in_urls'] = false;
 
         // some tours may need admin functions (like 2_8_0 needs get_orphans)
 
@@ -68,11 +71,17 @@ class functions_TakeATour
     {
 
         $search = '<div id="helpContent">';
-        $replacement = '<div id="helpContent">
-  <fieldset>
-  <legend>{\'Visit your Piwigo!\'|@translate}</legend>
-  <p class="nextStepLink"><a href="admin.php?page=plugin-TakeATour">{\'Take a tour and discover the features of your Piwigo gallery » Go to the available tours\'|@translate}</a></p>
-  </fieldset>';
+        $replacement = <<<HTML
+            <div id="helpContent">
+              <fieldset>
+                <legend>{'Visit your Piwigo!'|@translate}</legend>
+                <p class="nextStepLink">
+                  <a href="admin.php?page=plugin-TakeATour">
+                    {'Take a tour and discover the features of your Piwigo gallery » Go to the available tours'|@translate}
+                  </a>
+                </p>
+              </fieldset>
+            HTML;
         return str_replace($search, $replacement, $content);
 
     }

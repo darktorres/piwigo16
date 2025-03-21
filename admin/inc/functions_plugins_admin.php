@@ -22,6 +22,7 @@ class functions_plugins_admin
         global $page;
         $real_file = realpath($file);
         $url = functions_url::get_root_url() . 'admin.php?page=plugin';
+
         if ($real_file !== false) {
             $real_plugin_path = rtrim(realpath(PHPWG_PLUGINS_PATH), '\\/');
             $file = substr($real_file, strlen($real_plugin_path) + 1);
@@ -30,6 +31,7 @@ class functions_plugins_admin
         } elseif (isset($page['errors'])) {
             $page['errors'][] = 'PLUGIN ERROR: "' . $file . '" is not a valid file';
         }
+
         return $url;
     }
 }

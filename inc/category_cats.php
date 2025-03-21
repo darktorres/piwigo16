@@ -91,7 +91,9 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $image_id = $row['representative_picture_id'];
     } elseif ($conf['allow_random_representative']) { // searching a random representative among elements in sub-categories
         $image_id = functions_category::get_random_image_in_category($row);
-    } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) { // at this point, $row['count_images'] should always be >0 (used as condition in SQL)
+    } elseif ($row['count_categories'] > 0 and
+              $row['count_images'] > 0
+    ) { // at this point, $row['count_images'] should always be >0 (used as condition in SQL)
         // searching a random representative among representative of sub-categories
         $query = '
 SELECT representative_picture_id
@@ -109,13 +111,16 @@ SELECT representative_picture_id
   LIMIT 1
 ;';
         $subresult = functions_mysqli::pwg_query($query);
+
         if (functions_mysqli::pwg_db_num_rows($subresult) > 0) {
             list($image_id) = functions_mysqli::pwg_db_fetch_row($subresult);
         }
     }
 
     if (isset($image_id)) {
-        if ($conf['representative_cache_on_subcats'] and $row['user_representative_picture_id'] != $image_id) {
+        if ($conf['representative_cache_on_subcats'] and
+            $row['user_representative_picture_id'] != $image_id
+        ) {
             $user_representative_updates_for[$row['id']] = $image_id;
         }
 
@@ -132,6 +137,7 @@ SELECT representative_picture_id
             )
         );
     }
+
     unset($image_id);
 }
 
@@ -172,6 +178,7 @@ SELECT *
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
     $result = functions_mysqli::pwg_query($query);
+
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         if ($row['level'] <= $user['level']) {
             $infos_of_image[$row['id']] = $row;
@@ -189,7 +196,9 @@ SELECT *
                     // searching a random representative among elements in sub-categories
                     $image_id = functions_category::get_random_image_in_category($category);
 
-                    if (isset($image_id) and ! in_array($image_id, $image_ids)) {
+                    if (isset($image_id) and
+                        ! in_array($image_id, $image_ids)
+                    ) {
                         $new_image_ids[] = $image_id;
                     }
 
@@ -200,6 +209,7 @@ SELECT *
                     $category['representative_picture_id'] = $image_id;
                 }
             }
+
             unset($category);
         }
     }
@@ -211,6 +221,7 @@ SELECT *
   WHERE id IN (' . implode(',', $new_image_ids) . ')
 ;';
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $infos_of_image[$row['id']] = $row;
         }
@@ -219,6 +230,7 @@ SELECT *
     foreach ($infos_of_image as &$info) {
         $info['src_image'] = new SrcImage($info);
     }
+
     unset($info);
 }
 
@@ -303,6 +315,7 @@ if (count($categories) > 0) {
               ),
             'NAME' => $name,
         ]);
+
         if ($conf['index_new_icon']) {
             $tpl_var['icon_ts'] = functions::get_icon($category['max_date_last'], $category['is_child_date_last']);
         }
@@ -336,6 +349,7 @@ if (count($categories) > 0) {
 
     // navigation bar
     $page['cats_navigation_bar'] = [];
+
     if ($page['total_categories'] > $conf['nb_categories_page']) {
         $page['cats_navigation_bar'] = functions::create_navigation_bar(
             functions_url::duplicate_index_url([], ['startcat']),

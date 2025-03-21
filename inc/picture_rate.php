@@ -21,6 +21,7 @@ if ($conf['rate']) {
         'score' => $picture['current']['rating_score'],
         'average' => null,
     ];
+
     if ($rate_summary['score'] != null) {
         $query = '
 SELECT COUNT(rate) AS count
@@ -30,10 +31,14 @@ SELECT COUNT(rate) AS count
 ;';
         list($rate_summary['count'], $rate_summary['average']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
     }
+
     $template->assign('rate_summary', $rate_summary);
 
     $user_rate = null;
-    if ($conf['rate_anonymous'] or functions_user::is_authorized_status(ACCESS_CLASSIC)) {
+
+    if ($conf['rate_anonymous'] or
+        functions_user::is_authorized_status(ACCESS_CLASSIC)
+    ) {
         if ($rate_summary['count'] > 0) {
             $query = 'SELECT rate
       FROM ' . RATE_TABLE . '
@@ -42,14 +47,17 @@ SELECT COUNT(rate) AS count
 
             if (! functions_user::is_authorized_status(ACCESS_CLASSIC)) {
                 $ip_components = explode('.', $_SERVER['REMOTE_ADDR']);
+
                 if (count($ip_components) > 3) {
                     array_pop($ip_components);
                 }
+
                 $anonymous_id = implode('.', $ip_components);
                 $query .= ' AND anonymous_id = \'' . $anonymous_id . '\'';
             }
 
             $result = functions_mysqli::pwg_query($query);
+
             if (functions_mysqli::pwg_db_num_rows($result) > 0) {
                 $row = functions_mysqli::pwg_db_fetch_assoc($result);
                 $user_rate = $row['rate'];

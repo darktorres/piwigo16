@@ -23,11 +23,15 @@ class RVTS
     {
         global $page;
         $page['nb_image_page'] *= functions_session::pwg_get_session_var('rvts_mult', 1);
+
         if (count($page['items']) < $page['nb_image_page'] + 3) {
-            if (! @$page['start'] || functions::script_basename() == 'picture') {
+            if (! @$page['start'] ||
+                functions::script_basename() == 'picture'
+            ) {
                 $page['nb_image_page'] = max($page['nb_image_page'], count($page['items']));
             }
         }
+
         functions_plugins::add_event_handler('loc_begin_index', self::on_index_begin(...), EVENT_HANDLER_PRIORITY_NEUTRAL + 10);
     }
 
@@ -35,6 +39,7 @@ class RVTS
     {
         global $page;
         $is_ajax = isset($_GET['rvts']);
+
         if (! $is_ajax) {
             if (empty($page['items'])) {
                 functions_plugins::add_event_handler('loc_end_index', self::on_end_index(...));
@@ -43,15 +48,23 @@ class RVTS
             }
         } else {
             $adj = (int) @$_GET['adj'];
+
             if ($adj) {
                 $mult = functions_session::pwg_get_session_var('rvts_mult', 1);
-                if ($adj > 0 && $mult < 5) {
+
+                if ($adj > 0 &&
+                    $mult < 5
+                ) {
                     functions_session::pwg_set_session_var('rvts_mult', ++$mult);
                 }
-                if ($adj < 0 && $mult > 1) {
+
+                if ($adj < 0 &&
+                    $mult > 1
+                ) {
                     functions_session::pwg_set_session_var('rvts_mult', --$mult);
                 }
             }
+
             $page['nb_image_page'] = (int) $_GET['rvts'];
             functions_plugins::add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails_ajax(...), EVENT_HANDLER_PRIORITY_NEUTRAL + 5, 1);
             $page['root_path'] = functions_url::get_absolute_root_url(false);
@@ -65,10 +78,12 @@ class RVTS
     {
         global $page, $template;
         $total = count($page['items']);
+
         if (count($thumbs) >= $total) {
             functions_plugins::add_event_handler('loc_end_index', self::on_end_index(...));
             return $thumbs;
         }
+
         $url_model = str_replace('123456789', '%start%', functions_url::duplicate_index_url([
             'start' => 123456789,
         ]));
@@ -96,27 +111,38 @@ class RVTS
         $start = (int) $page['start'];
         $per_page = $page['nb_image_page'];
         $moreMsg = 'See the remaining %d photos';
+
         if ($GLOBALS['lang_info']['code'] != 'en') {
             functions::load_language('lang', dirname(__FILE__) . '/');
             $moreMsg = functions::l10n($moreMsg);
         }
 
         // the String.fromCharCode comes from google bot which somehow manage to get these urls
+        $ajax_url_model_0 = ord($ajax_url_model[0]);
+        $ajax_url_model_rest = substr($ajax_url_model, 1);
+        $url_model_0 = ord($url_model[0]);
+        $url_model_rest = substr($url_model, 1);
+        $next = $start + $per_page;
+        $prevMsg = functions::l10n('Previous');
+
         $template->block_footer_script(
             null,
-            'var RVTS = {
-ajaxUrlModel: String.fromCharCode(' . ord($ajax_url_model[0]) . ")+'" . substr($ajax_url_model, 1) . "',
-start: {$start},
-perPage: {$per_page},
-next: " . ($start + $per_page) . ",
-total: {$total},
-urlModel: String.fromCharCode(" . ord($url_model[0]) . ")+'" . substr($url_model, 1) . "',
-moreMsg: '{$moreMsg}',
-prevMsg: '" . functions::l10n('Previous') . "',
-ajaxLoaderImage: '{$ajax_loader_image}'
-};
-jQuery('.navigationBar').hide();"
+            <<<JS
+                var RVTS = {
+                    ajaxUrlModel: String.fromCharCode({$ajax_url_model_0})+'{$ajax_url_model_rest}',
+                    start: {$start},
+                    perPage: {$per_page},
+                    next: {$next},
+                    total: {$total},
+                    urlModel: String.fromCharCode({$url_model_0})+'{$url_model_rest}',
+                    moreMsg: '{$moreMsg}',
+                    prevMsg: '{$prevMsg}',
+                    ajaxLoaderImage: '{$ajax_loader_image}'
+                };
+                jQuery('.navigationBar').hide();
+                JS
         );
+
         return $thumbs;
     }
 
@@ -133,11 +159,16 @@ jQuery('.navigationBar').hide();"
     {
         global $template;
         $req = null;
+
         foreach ($template->scriptLoader->get_all() as $script) {
-            if ($script->load_mode == 2 && ! $script->is_remote() && count($script->precedents) == 0) {
+            if ($script->load_mode == 2 &&
+                ! $script->is_remote() &&
+                count($script->precedents) == 0
+            ) {
                 $req = $script->id;
             }
         }
+
         if ($req != null) {
             $my_base_name = basename(dirname(__FILE__));
             $template->func_combine_script([
@@ -148,6 +179,7 @@ jQuery('.navigationBar').hide();"
                 'version' => RVTS_VERSION,
             ], $template->smarty);
         }
+
         //var_export($template->scriptLoader);
     }
 }

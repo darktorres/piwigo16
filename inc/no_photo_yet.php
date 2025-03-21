@@ -17,14 +17,13 @@ use Piwigo\inc\Template;
 // The "No Photo Yet" feature: if you have no photo yet in your gallery, the
 // gallery displays only a big box to show you the way for adding your first
 // photos
-if (
-    ! (defined('IN_ADMIN') and IN_ADMIN)   // no message inside administration
-    and functions::script_basename() != 'identification' // keep the ability to login
-    and functions::script_basename() != 'password'       // keep the ability to reset password
-    and functions::script_basename() != 'ws'             // keep the ability to discuss with web API
-    and functions::script_basename() != 'popuphelp'      // keep the ability to display help popups
-    and (functions_user::is_a_guest() or functions_user::is_admin())          // normal users are not concerned by no_photo_yet
-    and ! isset($_SESSION['no_photo_yet'])     // temporary hide
+if (! (defined('IN_ADMIN') and IN_ADMIN) and          // no message inside administration
+    functions::script_basename() != 'identification' and             // keep the ability to login
+    functions::script_basename() != 'password' and                   // keep the ability to reset password
+    functions::script_basename() != 'ws' and                         // keep the ability to discuss with web API
+    functions::script_basename() != 'popuphelp' and                  // keep the ability to display help popups
+    (functions_user::is_a_guest() or functions_user::is_admin()) and // normal users are not concerned by no_photo_yet
+    ! isset($_SESSION['no_photo_yet'])                               // temporary hide
 ) {
     $query = '
 SELECT
@@ -32,6 +31,7 @@ SELECT
   FROM ' . IMAGES_TABLE . '
 ;';
     list($nb_photos) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
     if ($nb_photos == 0) {
         // make sure we don't use the mobile theme, which is not compatible with
         // the "no photo yet" feature
@@ -58,6 +58,7 @@ SELECT
 
         if (functions_user::is_admin()) {
             $url = $conf['no_photo_yet_url'];
+
             if (substr($url, 0, 4) != 'http') {
                 $url = functions_url::get_root_url() . $url;
             }
@@ -74,7 +75,6 @@ SELECT
                 ]
             );
         } else {
-
             $template->assign(
                 [
                     'step' => 1,
@@ -91,5 +91,4 @@ SELECT
     }
 
     functions::conf_update_param('no_photo_yet', 'false');
-
 }

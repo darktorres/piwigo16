@@ -20,6 +20,7 @@ define('TAB_ABOUT', 'about');
 
 // Get current tab
 $page['tab'] = isset($_GET['tab']) ? $_GET['tab'] : $page['tab'] = TAB_SETTINGS;
+
 if (! in_array($page['tab'], [TAB_SETTINGS, TAB_ABOUT])) {
     $page['tab'] = TAB_SETTINGS;
 }
@@ -33,6 +34,7 @@ if ($page['tab'] == TAB_SETTINGS) {
         $themeconfig->save();
     }
 }
+
 // TabSheet
 $tabsheet = new tabsheet();
 $tabsheet->set_id('bsdark');

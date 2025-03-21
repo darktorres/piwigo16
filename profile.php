@@ -20,7 +20,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 use Piwigo\inc\menubar;
 
-if (! defined('PHPWG_ROOT_PATH')) {//direct script access
+if (! defined('PHPWG_ROOT_PATH')) { //direct script access
     define('PHPWG_ROOT_PATH', './');
     include_once(PHPWG_ROOT_PATH . 'inc/common.php');
 
@@ -71,7 +71,10 @@ SELECT ' . implode(',', $fields) . '
 
     // include menubar
     $themeconf = $template->get_template_vars('themeconf');
-    if (! isset($themeconf['hide_menu_on']) or ! in_array('theProfilePage', $themeconf['hide_menu_on'])) {
+
+    if (! isset($themeconf['hide_menu_on']) or
+        ! in_array('theProfilePage', $themeconf['hide_menu_on'])
+    ) {
         menubar::initialize_menu();
     }
 

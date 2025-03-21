@@ -39,9 +39,11 @@ $menu->load_registered_blocks();
 $reg_blocks = $menu->get_registered_blocks();
 
 $mb_conf = @$conf['blk_' . $menu->get_id()];
+
 if (is_string($mb_conf)) {
     $mb_conf = unserialize($mb_conf);
 }
+
 if (! is_array($mb_conf)) {
     $mb_conf = [];
 }
@@ -53,23 +55,29 @@ foreach ($mb_conf as $id => $pos) {
 }
 
 $idx = 1;
+
 foreach ($reg_blocks as $id => $block) {
     if (! isset($mb_conf[$id])) {
         $mb_conf[$id] = $idx * 50;
     }
+
     $idx++;
 }
 
-if (isset($_POST['submit']) and functions_user::is_webmaster()) {
+if (isset($_POST['submit']) and
+    functions_user::is_webmaster()
+) {
     foreach ($mb_conf as $id => $pos) {
         $hide = isset($_POST['hide_' . $id]);
         $mb_conf[$id] = ($hide ? -1 : +1) * abs($pos);
 
         $pos = (int) @$_POST['pos_' . $id];
+
         if ($pos > 0) {
             $mb_conf[$id] = $mb_conf[$id] > 0 ? $pos : -$pos;
         }
     }
+
     functions_admin::make_consecutive($mb_conf);
 
     // BEGIN OPTIM - DONT ASK ABOUT THIS ALGO - but optimizes the size of the array we save in DB

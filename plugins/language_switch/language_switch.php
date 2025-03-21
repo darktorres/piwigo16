@@ -41,12 +41,17 @@ function language_controller_switch()
 
     if (isset($_GET['lang'])) {
         $languages = new languages();
+
         if (! in_array($_GET['lang'], array_keys($languages->fs_languages))) {
             $_GET['lang'] = PHPWG_DEFAULT_LANGUAGE;
         }
 
-        if (! empty($_GET['lang']) and file_exists(PHPWG_ROOT_PATH . 'language/' . $_GET['lang'] . '/common.lang.php')) {
-            if (functions_user::is_a_guest() or functions_user::is_generic()) {
+        if (! empty($_GET['lang']) and
+            file_exists(PHPWG_ROOT_PATH . 'language/' . $_GET['lang'] . '/common.lang.php')
+        ) {
+            if (functions_user::is_a_guest() or
+                functions_user::is_generic()
+            ) {
                 functions_session::pwg_set_session_var('lang_switch', $_GET['lang']);
             } else {
                 $query = '
@@ -63,7 +68,9 @@ UPDATE ' . USER_INFOS_TABLE . '
         if (isset($_GET['redirect_to_home'])) {
             functions::redirect(functions_url::get_absolute_root_url());
         }
-    } elseif ((functions_user::is_a_guest() or functions_user::is_generic())) {
+    } elseif ((functions_user::is_a_guest() or
+               functions_user::is_generic())
+    ) {
         $user['language'] = functions_session::pwg_get_session_var('lang_switch', $user['language']);
     }
 
@@ -83,7 +90,9 @@ UPDATE ' . USER_INFOS_TABLE . '
             ]
         );
 
-        if (defined('IN_ADMIN') and IN_ADMIN) {
+        if (defined('IN_ADMIN') and
+            IN_ADMIN
+        ) {
             // Never currently
             functions::load_language('admin.lang', '', [
                 'language' => $user['language'],
@@ -104,7 +113,10 @@ function language_controller_flags()
 
     $url_starting = functions_url::get_query_string_diff(['lang']);
 
-    if (isset($page['section']) and $page['section'] == 'additional_page' and isset($page['additional_page'])) {
+    if (isset($page['section']) and
+        $page['section'] == 'additional_page' and
+        isset($page['additional_page'])
+    ) {
         $base_url = functions_url::make_index_url([
             'section' => 'page',
         ]) . '/' . (isset($page['additional_page']['permalink']) ? $page['additional_page']['permalink'] : $page['additional_page']['id']);
@@ -116,6 +128,7 @@ function language_controller_flags()
     // the full height banner (if configured this way). We need to force a redirect (after language
     // has switched) in this specific case.
     $url_options = [];
+
     if (preg_match('/^index(\.php\?)?\?\/categories$/', $base_url)) {
         $url_options['redirect_to_home'] = 1;
     }

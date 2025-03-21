@@ -17,7 +17,9 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 
-defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
+}
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('rating');
@@ -25,11 +27,13 @@ $tabsheet->select('rating_user');
 $tabsheet->assign();
 
 $filter_min_rates = 2;
+
 if (isset($_GET['f_min_rates'])) {
     $filter_min_rates = (int) $_GET['f_min_rates'];
 }
 
 $consensus_top_number = $conf['top_number'];
+
 if (isset($_GET['consensus_top_number'])) {
     $consensus_top_number = (int) $_GET['consensus_top_number'];
 }
@@ -45,6 +49,7 @@ $query = 'SELECT DISTINCT
 
 $users_by_id = [];
 $result = functions_mysqli::pwg_query($query);
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $users_by_id[(int) $row['id']] = [
         'name' => $row['name'],
@@ -55,6 +60,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 $by_user_rating_model = [
     'rates' => [],
 ];
+
 foreach ($conf['rate_items'] as $rate) {
     $by_user_rating_model['rates'][$rate] = [];
 }
@@ -65,6 +71,7 @@ $by_user_ratings = [];
 $query = '
 SELECT * FROM ' . RATE_TABLE . ' ORDER by date DESC';
 $result = functions_mysqli::pwg_query($query);
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     if (! isset($users_by_id[$row['user_id']])) {
         $users_by_id[$row['user_id']] = [
@@ -72,13 +79,17 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             'anon' => false,
         ];
     }
+
     $usr = $users_by_id[$row['user_id']];
+
     if ($usr['anon']) {
         $user_key = $usr['name'] . '(' . $row['anonymous_id'] . ')';
     } else {
         $user_key = $usr['name'];
     }
+
     $rating = &$by_user_ratings[$user_key];
+
     if ($rating === null) {
         $rating = $by_user_rating_model;
         $rating['uid'] = (int) $row['user_id'];
@@ -98,12 +109,14 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 
 // get image tn urls
 $image_urls = [];
+
 if (count($image_ids) > 0) {
     $query = 'SELECT id, name, file, path, representative_ext, level
   FROM ' . IMAGES_TABLE . '
   WHERE id IN (' . implode(',', array_keys($image_ids)) . ')';
     $result = functions_mysqli::pwg_query($query);
     $params = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE);
+
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $image_urls[$row['id']] = [
             'tn' => DerivativeImage::url($params, $row),
@@ -122,6 +135,7 @@ $query = 'SELECT element_id,
   GROUP BY element_id';
 $all_img_sum = [];
 $result = functions_mysqli::pwg_query($query);
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $all_img_sum[(int) $row['element_id']] = [
         'avg' => (float) $row['avg'],
@@ -142,14 +156,17 @@ foreach ($by_user_ratings as $id => &$rating) {
     $consensus_dev = 0;
     $consensus_dev_top = 0;
     $consensus_dev_top_count = 0;
+
     foreach ($rating['rates'] as $rate => $rates) {
         $ct = count($rates);
         $c += $ct;
         $s += $ct * $rate;
         $ss += $ct * $rate * $rate;
+
         foreach ($rates as $id_date) {
             $dev = abs($rate - $all_img_sum[$id_date['id']]['avg']);
             $consensus_dev += $dev;
+
             if (isset($best_rated[$id_date['id']])) {
                 $consensus_dev_top += $dev;
                 $consensus_dev_top_count++;
@@ -158,6 +175,7 @@ foreach ($by_user_ratings as $id => &$rating) {
     }
 
     $consensus_dev /= $c;
+
     if ($consensus_dev_top_count) {
         $consensus_dev_top /= $consensus_dev_top_count;
     }
@@ -172,6 +190,7 @@ foreach ($by_user_ratings as $id => &$rating) {
         'cdtop' => $consensus_dev_top_count ? $consensus_dev_top : '',
     ];
 }
+
 unset($rating);
 
 // filter
@@ -182,7 +201,10 @@ foreach ($by_user_ratings as $id => $rating) {
 }
 
 $order_by_index = 4;
-if (isset($_GET['order_by']) and is_numeric($_GET['order_by'])) {
+
+if (isset($_GET['order_by']) and
+    is_numeric($_GET['order_by'])
+) {
     $order_by_index = $_GET['order_by'];
 }
 
@@ -200,6 +222,7 @@ for ($i = 0; $i < count($available_order_by); $i++) {
         $available_order_by[$i][0]
     );
 }
+
 $template->assign('order_by_options_selected', [$order_by_index]);
 
 $x = uasort($by_user_ratings, $available_order_by[$order_by_index][1]);

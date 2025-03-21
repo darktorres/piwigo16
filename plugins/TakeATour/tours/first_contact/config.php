@@ -12,7 +12,9 @@ $TOUR_PATH = PHPWG_PLUGINS_PATH . 'TakeATour/tours/first_contact/tour.tpl';
 
 /*********************************/
 
-if (defined('IN_ADMIN') and IN_ADMIN) {
+if (defined('IN_ADMIN') and
+    IN_ADMIN
+) {
     /* first contact */
     functions_plugins::add_event_handler('loc_end_photo_add_direct', TAT_FC_6(...));
     functions_plugins::add_event_handler('loc_end_photo_add_direct', TAT_FC_7(...));
@@ -28,6 +30,7 @@ function TAT_FC_7()
     global $template;
     $template->set_prefilter('photos_add', TAT_FC_7_prefilter(...));
 }
+
 function TAT_FC_7_prefilter($content)
 {
     $search = 'UploadComplete: function(up, files) {';
@@ -39,11 +42,13 @@ function TAT_FC_7_prefilter($content)
 ';
     return str_replace($search, $replacement, $content);
 }
+
 function TAT_FC_6()
 {
     global $template;
     $template->set_prefilter('photos_add', TAT_FC_6_prefilter(...));
 }
+
 function TAT_FC_6_prefilter($content)
 {
     $search = 'BeforeUpload:';
@@ -57,11 +62,13 @@ function TAT_FC_6_prefilter($content)
   BeforeUpload:';
     return str_replace($search, $replacement, $content);
 }
+
 function TAT_FC_14()
 {
     global $template;
     $template->set_prefilter('batch_manager_global', TAT_FC_14_prefilter(...));
 }
+
 function TAT_FC_14_prefilter($content)
 {
     $search = '<span class="wrap2';
@@ -71,44 +78,52 @@ function TAT_FC_14_prefilter($content)
     $replacement = '>{\'Edit\'';
     return str_replace($search, $replacement, $content);
 }
+
 function TAT_FC_16()
 {
     global $template;
     $template->set_prefilter('picture_modify', TAT_FC_16_prefilter(...));
 }
+
 function TAT_FC_16_prefilter($content)
 {
     $search = '<strong>{\'Linked albums\'|@translate}</strong>';
     $replacement = '<span id="TAT_FC_16"><strong>{\'Linked albums\'|@translate}</strong></span>';
     return str_replace($search, $replacement, $content);
 }
+
 function TAT_FC_17()
 {
     global $template;
     $template->set_prefilter('picture_modify', TAT_FC_17_prefilter(...));
 }
+
 function TAT_FC_17_prefilter($content)
 {
     $search = '<strong>{\'Representation of albums\'|@translate}</strong>';
     $replacement = '<span id="TAT_FC_17"><strong>{\'Representation of albums\'|@translate}</strong></span>';
     return str_replace($search, $replacement, $content);
 }
+
 function TAT_FC_23()
 {
     global $template;
     $template->set_prefilter('album_properties', TAT_FC_23_prefilter(...));
 }
+
 function TAT_FC_23_prefilter($content)
 {
     $search = '<strong>{\'Lock\'|@translate}</strong>';
     $replacement = '<span id="TAT_FC_23"><strong>{\'Lock\'|@translate}</strong></span>';
     return str_replace($search, $replacement, $content);
 }
+
 function TAT_FC_35()
 {
     global $template;
     $template->set_prefilter('themes', TAT_FC_35_prefilter(...));
 }
+
 function TAT_FC_35_prefilter($content)
 {
     $search = '<a href="{$set_default_baseurl}{$theme.ID}" class="tiptip"';
@@ -120,11 +135,17 @@ function TAT_FC_35_prefilter($content)
  *    Preparse part   *
  **********************/
 //picture id
-if (isset($_GET['page']) and preg_match('/^photo-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)) {
+if (isset($_GET['page']) and
+    preg_match('/^photo-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)
+) {
     $_GET['image_id'] = $matches[1];
 }
+
 functions::check_input_parameter('image_id', $_GET, false, PATTERN_ID);
-if (isset($_GET['image_id']) and functions_session::pwg_get_session_var('TAT_image_id') == null) {
+
+if (isset($_GET['image_id']) and
+    functions_session::pwg_get_session_var('TAT_image_id') == null
+) {
     $template->assign('TAT_image_id', $_GET['image_id']);
     functions_session::pwg_set_session_var('TAT_image_id', $_GET['image_id']);
 } elseif (is_numeric(functions_session::pwg_get_session_var('TAT_image_id'))) {
@@ -139,12 +160,19 @@ if (isset($_GET['image_id']) and functions_session::pwg_get_session_var('TAT_ima
     $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
     $template->assign('TAT_image_id', $row['id']);
 }
+
 //album id
-if (isset($_GET['page']) and preg_match('/^album-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)) {
+if (isset($_GET['page']) and
+    preg_match('/^album-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)
+) {
     $_GET['cat_id'] = $matches[1];
 }
+
 functions::check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
-if (isset($_GET['cat_id']) and functions_session::pwg_get_session_var('TAT_cat_id') == null) {
+
+if (isset($_GET['cat_id']) and
+    functions_session::pwg_get_session_var('TAT_cat_id') == null
+) {
     $template->assign('TAT_cat_id', $_GET['cat_id']);
     functions_session::pwg_set_session_var('TAT_cat_id', $_GET['cat_id']);
 } elseif (is_numeric(functions_session::pwg_get_session_var('TAT_cat_id'))) {
@@ -159,7 +187,9 @@ if (isset($_GET['cat_id']) and functions_session::pwg_get_session_var('TAT_cat_i
     $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
     $template->assign('TAT_cat_id', $row['id']);
 }
+
 global $conf;
+
 if (isset($conf['enable_synchronization'])) {
     $template->assign('TAT_FTP', $conf['enable_synchronization']);
 }

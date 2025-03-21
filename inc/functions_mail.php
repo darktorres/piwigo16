@@ -92,7 +92,7 @@ class functions_mail
         $cvt_name = trim(preg_replace('#[\n\r]+#s', '', $name));
 
         if ($cvt_name != '') {
-            $cvt_name = '"' . addcslashes($cvt_name, '"') . '"' . ' ';
+            $cvt_name = '"' . addcslashes($cvt_name, '"') . '" ';
         }
 
         if (strpos($cvt_email, '<') === false) {
@@ -100,7 +100,6 @@ class functions_mail
         }
 
         return $cvt_name . $cvt_email;
-
     }
 
     /**
@@ -115,6 +114,7 @@ class functions_mail
             if (! isset($input['name'])) {
                 $input['name'] = '';
             }
+
             return $input;
         }
 
@@ -129,7 +129,6 @@ class functions_mail
             'email' => trim($input),
             'name' => '',
         ];
-
     }
 
     /**
@@ -149,8 +148,10 @@ class functions_mail
             return [];
         } elseif (is_array($data)) {
             $values = array_values($data);
+
             if (! is_array($values[0])) {
                 $keys = array_keys($data);
+
                 if (is_int($keys[0])) { // simple array of emails
                     foreach ($data as &$item) {
                         $item = [
@@ -158,6 +159,7 @@ class functions_mail
                             'name' => '',
                         ];
                     }
+
                     unset($item);
                 } else { // hashmap of one recipient
                     $data = [self::unformat_email($data)];
@@ -171,6 +173,7 @@ class functions_mail
         }
 
         $existing = [];
+
         foreach ($data as $i => $entry) {
             if (isset($existing[$entry['email']])) {
                 unset($data[$i]);
@@ -198,6 +201,7 @@ class functions_mail
             if (strpos($email, '<') !== false) {
                 $email = preg_replace('/.*<(.*)>.*/i', '$1', $email);
             }
+
             $result[] = trim($email);
         }
 
@@ -245,7 +249,9 @@ class functions_mail
 
         // Treatment with current user
         // Language of current user is saved (it's considered OK on first call)
-        if (! isset($switch_lang['initialisation']) and ! isset($switch_lang['language'][$user['language']])) {
+        if (! isset($switch_lang['initialisation']) and
+            ! isset($switch_lang['language'][$user['language']])
+        ) {
             $switch_lang['initialisation'] = true;
             $switch_lang['language'][$user['language']]['lang_info'] = $lang_info;
             $switch_lang['language'][$user['language']]['lang'] = $lang;
@@ -318,6 +324,7 @@ class functions_mail
                 $lang_info = $switch_lang['language'][$language]['lang_info'];
                 $lang = $switch_lang['language'][$language]['lang'];
             }
+
             $user['language'] = $language;
         }
     }
@@ -334,18 +341,23 @@ class functions_mail
      */
     public static function pwg_mail_notification_admins($subject, $content, $send_technical_details = true, $group_id = null)
     {
-        if (empty($subject) or empty($content)) {
+        if (empty($subject) or
+            empty($content)
+        ) {
             return false;
         }
 
         global $conf, $user;
 
-        if (is_array($subject) or is_array($content)) {
+        if (is_array($subject) or
+            is_array($content)
+        ) {
             self::switch_lang_to(functions_user::get_default_language());
 
             if (is_array($subject)) {
                 $subject = functions::l10n_args($subject);
             }
+
             if (is_array($content)) {
                 $content = functions::l10n_args($content);
             }
@@ -354,6 +366,7 @@ class functions_mail
         }
 
         $tpl_vars = [];
+
         if ($send_technical_details) {
             $tpl_vars['TECHNICAL'] = [
                 'username' => stripslashes($user['username']),
@@ -391,7 +404,9 @@ class functions_mail
      */
     public static function pwg_mail_admins($args = [], $tpl = [], $exclude_current_user = true, $only_webmasters = false, $group_id = null)
     {
-        if (empty($args['content']) and empty($tpl)) {
+        if (empty($args['content']) and
+            empty($tpl)
+        ) {
             return false;
         }
 
@@ -399,6 +414,7 @@ class functions_mail
         $return = true;
 
         $user_statuses = ['webmaster'];
+
         if (! $only_webmasters) {
             $user_statuses[] = 'admin';
         }
@@ -430,7 +446,7 @@ class functions_mail
 
         if ($exclude_current_user) {
             $query .= '
-      AND i.user_id <> ' . $user['id'];
+      AND i.user_id != ' . $user['id'];
         }
 
         $query .= '
@@ -463,7 +479,9 @@ class functions_mail
      */
     public static function pwg_mail_group($group_id, $args = [], $tpl = [])
     {
-        if (empty($group_id) or (empty($args['content']) and empty($tpl))) {
+        if (empty($group_id) or
+           (empty($args['content']) and empty($tpl))
+        ) {
             return false;
         }
 
@@ -479,7 +497,8 @@ class functions_mail
       INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
       ON ui.user_id = ug.user_id
     WHERE group_id = ' . $group_id . '
-      AND ' . $conf['user_fields']['email'] . ' <> ""';
+      AND ' . $conf['user_fields']['email'] . ' != ""';
+
         if (! empty($args['language_selected'])) {
             $query .= '
       AND language = \'' . $args['language_selected'] . '\'';
@@ -507,7 +526,7 @@ class functions_mail
       INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
       ON ui.user_id = ug.user_id
     WHERE group_id = ' . $group_id . '
-      AND ' . $conf['user_fields']['email'] . ' <> ""
+      AND ' . $conf['user_fields']['email'] . ' != ""
       AND language = \'' . $language . '\'
   ;';
             $users = functions::array_from_query($query);
@@ -539,6 +558,7 @@ class functions_mail
                 }
 
                 $user_args = $args;
+
                 if ($authkey !== false) {
                     $user_args['auth_key'] = $authkey['auth_key'];
                 }
@@ -580,7 +600,10 @@ class functions_mail
     {
         global $conf, $conf_mail, $lang_info, $page;
 
-        if (empty($to) and empty($args['Cc']) and empty($args['Bcc'])) {
+        if (empty($to) and
+            empty($args['Cc']) and
+            empty($args['Bcc'])
+        ) {
             return true;
         }
 
@@ -608,6 +631,7 @@ class functions_mail
         } else {
             $from = self::unformat_email($args['from']);
         }
+
         $mail->setFrom($from['email'], $from['name']);
         $mail->addReplyTo($from['email'], $from['name']);
 
@@ -615,6 +639,7 @@ class functions_mail
         if (empty($args['subject'])) {
             $args['subject'] = 'Piwigo';
         }
+
         $args['subject'] = trim(preg_replace('#[\n\r]+#s', '', $args['subject']));
         $mail->Subject = $args['subject'];
 
@@ -627,12 +652,14 @@ class functions_mail
 
         // Bcc
         $Bcc = self::get_clean_recipients_list(@$args['Bcc']);
+
         if ($conf_mail['send_bcc_mail_webmaster']) {
             $Bcc[] = [
                 'email' => functions::get_webmaster_mail_address(),
                 'name' => '',
             ];
         }
+
         if (! empty($Bcc)) {
             foreach ($Bcc as $recipient) {
                 $mail->addBCC($recipient['email'], $recipient['name']);
@@ -640,7 +667,9 @@ class functions_mail
         }
 
         // theme
-        if (empty($args['theme']) or ! in_array($args['theme'], ['clear', 'dark'])) {
+        if (empty($args['theme']) or
+            ! in_array($args['theme'], ['clear', 'dark'])
+        ) {
             $args['theme'] = $conf_mail['mail_theme'];
         }
 
@@ -650,15 +679,19 @@ class functions_mail
         }
 
         // try to decompose subject like "[....] ...."
-        if (! isset($args['mail_title']) and ! isset($args['mail_subtitle'])) {
+        if (! isset($args['mail_title']) and
+            ! isset($args['mail_subtitle'])
+        ) {
             if (preg_match('#^\[(.*)\](.*)$#', $args['subject'], $matches)) {
                 $args['mail_title'] = $matches[1];
                 $args['mail_subtitle'] = $matches[2];
             }
         }
+
         if (! isset($args['mail_title'])) {
             $args['mail_title'] = $conf['gallery_title'];
         }
+
         if (! isset($args['mail_subtitle'])) {
             $args['mail_subtitle'] = $args['subject'];
         }
@@ -669,15 +702,20 @@ class functions_mail
         }
 
         $content_type_list = [];
-        if ($conf_mail['mail_allow_html'] and @$args['email_format'] != 'text/plain') {
+        if ($conf_mail['mail_allow_html'] and
+            @$args['email_format'] != 'text/plain'
+        ) {
             $content_type_list[] = 'text/html';
         }
+
         $content_type_list[] = 'text/plain';
 
         $contents = [];
+
         foreach ($content_type_list as $content_type) {
             // key compose of indexes witch allow to cache mail data
             $cache_key = $content_type . '-' . $lang_info['code'];
+
             if (! empty($args['auth_key'])) {
                 $cache_key .= '-' . $args['auth_key'];
             }
@@ -688,12 +726,14 @@ class functions_mail
                     $conf_mail[$cache_key]['theme'] = self::get_mail_template($content_type);
                     functions_plugins::trigger_notify('before_parse_mail_template', $cache_key, $content_type);
                 }
+
                 $template = &$conf_mail[$cache_key]['theme'];
 
                 $template->set_filename('mail_header', 'header.tpl');
                 $template->set_filename('mail_footer', 'footer.tpl');
 
                 $add_url_params = [];
+
                 if (! empty($args['auth_key'])) {
                     $add_url_params['auth'] = $args['auth_key'];
                 }
@@ -736,7 +776,9 @@ class functions_mail
             // Content
             // Stored in a temp variable, if a content template is used it will be assigned
             // to the $CONTENT template variable, otherwise it will be appended to the mail
-            if ($args['content_format'] == 'text/plain' and $content_type == 'text/html') {
+            if ($args['content_format'] == 'text/plain' and
+                $content_type == 'text/html'
+            ) {
                 // convert plain text to html
                 $mail_content =
                   '<p>' .
@@ -748,7 +790,9 @@ class functions_mail
                       )
                   ) .
                   '</p>';
-            } elseif ($args['content_format'] == 'text/html' and $content_type == 'text/plain') {
+            } elseif ($args['content_format'] == 'text/html' and
+                      $content_type == 'text/plain'
+            ) {
                 // convert html text to plain text
                 $mail_content = strip_tags($args['content']);
             } else {
@@ -760,11 +804,14 @@ class functions_mail
                 if (isset($tpl['dirname'])) {
                     $template->set_template_dir($tpl['dirname'] . '/' . $content_type);
                 }
+
                 if ($template->smarty->templateExists($tpl['filename'] . '.tpl')) {
                     $template->set_filename($tpl['filename'], $tpl['filename'] . '.tpl');
+
                     if (! empty($tpl['assign'])) {
                         $template->assign($tpl['assign']);
                     }
+
                     $template->assign('CONTENT', $mail_content);
                     $contents[$content_type] .= $template->parse($tpl['filename'], true);
                 } else {
@@ -803,7 +850,7 @@ class functions_mail
                 $smtp_port = 25;
             }
 
-            $mail->IsSMTP();
+            $mail->isSMTP();
 
             // enables SMTP debug information (for testing) 2 - debug, 0 - no message
             $mail->SMTPDebug = 0;
@@ -811,7 +858,9 @@ class functions_mail
             $mail->Host = $smtp_host;
             $mail->Port = $smtp_port;
 
-            if (! empty($conf_mail['smtp_secure']) and in_array($conf_mail['smtp_secure'], ['ssl', 'tls'])) {
+            if (! empty($conf_mail['smtp_secure']) and
+                in_array($conf_mail['smtp_secure'], ['ssl', 'tls'])
+            ) {
                 $mail->SMTPSecure = $conf_mail['smtp_secure'];
             }
 
@@ -827,9 +876,13 @@ class functions_mail
 
         if ($pre_result) {
             $ret = $mail->send();
-            if (! $ret and (! ini_get('display_errors') or functions_user::is_admin())) {
+
+            if (! $ret and
+               (! ini_get('display_errors') or functions_user::is_admin())
+            ) {
                 trigger_error('Mailer Error: ' . $mail->ErrorInfo, E_USER_WARNING);
             }
+
             if ($conf['debug_mail']) {
                 self::pwg_send_mail_test($ret, $mail, $args);
             }
@@ -855,7 +908,6 @@ class functions_mail
         }
 
         return $result;
-
     }
 
     /**
@@ -883,8 +935,10 @@ class functions_mail
         global $conf, $user, $lang_info;
 
         $dir = PHPWG_ROOT_PATH . $conf['data_location'] . 'tmp';
+
         if (functions::mkgetdir($dir, functions::MKGETDIR_DEFAULT & ~functions::MKGETDIR_DIE_ON_ERROR)) {
             $filename = $dir . '/mail.' . stripslashes($user['username']) . '.' . $lang_info['code'] . '-' . date('YmdHis') . ($success ? '' : '.ERROR');
+
             if ($args['content_format'] == 'text/plain') {
                 $filename .= '.txt';
             } else {
@@ -892,9 +946,11 @@ class functions_mail
             }
 
             $file = fopen($filename, 'w+');
+
             if (! $success) {
                 fwrite($file, 'ERROR: ' . $mail->ErrorInfo . "\n\n");
             }
+
             fwrite($file, $mail->getSentMIMEMessage());
             fclose($file);
         }

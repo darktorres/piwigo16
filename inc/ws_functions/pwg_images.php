@@ -59,6 +59,7 @@ class pwg_images
         $search_current_ranks = false;
 
         $tokens = explode(';', $categories_string);
+
         foreach ($tokens as $token) {
             @list($cat_id, $rank) = explode(',', $token);
 
@@ -71,6 +72,7 @@ class pwg_images
             if (! isset($rank)) {
                 $rank = 'auto';
             }
+
             $rank_on_category[$cat_id] = $rank;
 
             if ($rank == 'auto') {
@@ -95,6 +97,7 @@ class pwg_images
         $db_cat_ids = functions_mysqli::query2array($query, null, 'id');
 
         $unknown_cat_ids = array_diff($cat_ids, $db_cat_ids);
+
         if (count($unknown_cat_ids) != 0) {
             return new PwgError(
                 500,
@@ -114,6 +117,7 @@ class pwg_images
 
         if ($replace_mode) {
             $to_remove_cat_ids = array_diff($existing_cat_ids, $cat_ids);
+
             if (count($to_remove_cat_ids) > 0) {
                 $query = '
   DELETE
@@ -127,6 +131,7 @@ class pwg_images
         }
 
         $new_cat_ids = array_diff($cat_ids, $existing_cat_ids);
+
         if (count($new_cat_ids) == 0) {
             return true;
         }
@@ -198,14 +203,16 @@ class pwg_images
         $upload_dir = $conf['upload_dir'] . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
+        $handle = opendir($upload_dir);
 
-        if ($handle = opendir($upload_dir)) {
+        if ($handle) {
             while (false !== ($file = readdir($handle))) {
                 if (preg_match($pattern, $file)) {
                     $logger->debug($file);
                     $chunks[] = $upload_dir . '/' . $file;
                 }
             }
+
             closedir($handle);
         }
 
@@ -255,13 +262,15 @@ class pwg_images
         $upload_dir = $conf['upload_dir'] . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
+        $handle = opendir($upload_dir);
 
-        if ($handle = opendir($upload_dir)) {
+        if ($handle) {
             while (false !== ($file = readdir($handle))) {
                 if (preg_match($pattern, $file)) {
                     $chunks[] = $upload_dir . '/' . $file;
                 }
             }
+
             closedir($handle);
         }
 
@@ -388,10 +397,12 @@ class pwg_images
 
         $is_commentable = false;
         $related_categories = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             if ($row['commentable'] == 'true') {
                 $is_commentable = true;
             }
+
             unset($row['commentable']);
 
             $row['url'] = functions_url::make_index_url(
@@ -411,9 +422,12 @@ class pwg_images
             $row['id'] = (int) $row['id'];
             $related_categories[] = $row;
         }
+
         usort($related_categories, functions_category::global_rank_compare(...));
 
-        if (empty($related_categories) and ! functions_user::is_admin()) {
+        if (empty($related_categories) and
+            ! functions_user::is_admin()
+        ) {
             // photo might be in the lounge? or simply orphan. A standard user should not get
             // info. An admin should still be able to get info.
             return new PwgError(401, 'Access denied');
@@ -421,6 +435,7 @@ class pwg_images
 
         //-------------------------------------------------------------- related tags
         $related_tags = functions_tag::get_common_tags([$image_row['id']], -1);
+
         foreach ($related_tags as $i => $tag) {
             $tag['url'] = functions_url::make_index_url(
                 [
@@ -446,6 +461,7 @@ class pwg_images
             'count' => 0,
             'average' => null,
         ];
+
         if (isset($rating['score'])) {
             $query = '
   SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
@@ -463,6 +479,7 @@ class pwg_images
         $related_comments = [];
 
         $where_comments = 'image_id = ' . $image_row['id'];
+
         if (! functions_user::is_admin()) {
             $where_comments .= ' AND validated="true"';
         }
@@ -475,7 +492,9 @@ class pwg_images
         list($nb_comments) = functions_mysqli::query2array($query, null, 'nb_comments');
         $nb_comments = (int) $nb_comments;
 
-        if ($nb_comments > 0 and $params['comments_per_page'] > 0) {
+        if ($nb_comments > 0 and
+            $params['comments_per_page'] > 0
+        ) {
             $query = '
   SELECT id, date, author, content
     FROM ' . COMMENTS_TABLE . '
@@ -493,21 +512,23 @@ class pwg_images
         }
 
         $comment_post_data = null;
+
         if ($is_commentable and
-            (! functions_user::is_a_guest()
-              or (functions_user::is_a_guest() and $conf['comments_forall'])
-            )
+           (! functions_user::is_a_guest() or
+           (functions_user::is_a_guest() and $conf['comments_forall']))
         ) {
             $comment_post_data['author'] = stripslashes($user['username']);
             $comment_post_data['key'] = functions::get_ephemeral_key(2, $params['image_id']);
         }
 
         $ret = $image_row;
+
         foreach (['id', 'width', 'height', 'hit', 'filesize'] as $k) {
             if (isset($ret[$k])) {
                 $ret[$k] = (int) $ret[$k];
             }
         }
+
         foreach (['path', 'storage_category_id'] as $k) {
             unset($ret[$k]);
         }
@@ -525,11 +546,13 @@ class pwg_images
             'tag',
             ws_functions::ws_std_get_tag_xml_attributes()
         );
+
         if (isset($comment_post_data)) {
             $ret['comment_post'] = [
                 WS_XML_ATTRIBUTES => $comment_post_data,
             ];
         }
+
         $ret['comments_paging'] = new PwgNamedStruct(
             [
                 'page' => $params['comments_page'],
@@ -588,6 +611,7 @@ class pwg_images
             global $conf;
             return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $conf['rate_items']));
         }
+
         return $res;
     }
 
@@ -608,6 +632,7 @@ class pwg_images
         $order_by = ws_functions::ws_std_image_sql_order($params, 'i.');
 
         $super_order_by = false;
+
         if (! empty($order_by)) {
             global $conf;
             $conf['order_by'] = 'ORDER BY ' . $order_by;
@@ -641,11 +666,13 @@ class pwg_images
             while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 $image = [];
                 $image['is_favorite'] = isset($favorite_ids[$row['id']]);
+
                 foreach (['id', 'width', 'height', 'hit'] as $k) {
                     if (isset($row[$k])) {
                         $image[$k] = (int) $row[$k];
                     }
                 }
+
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
                     $image[$k] = $row[$k];
                 }
@@ -653,6 +680,7 @@ class pwg_images
                 $image = array_merge($image, ws_functions::ws_std_get_urls($row));
                 $images[$image_ids[$image['id']]] = $image;
             }
+
             ksort($images, SORT_NUMERIC);
             $images = array_values($images);
         }
@@ -704,6 +732,7 @@ class pwg_images
             }
 
             $search_info = functions_search::get_search_info($params['search_id']);
+
             if (empty($search_info)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'This search does not exist.');
             }
@@ -720,20 +749,25 @@ class pwg_images
             if (! isset($params['allwords_mode'])) {
                 $params['allwords_mode'] = 'AND';
             }
+
             if (! preg_match('/^(OR|AND)$/', $params['allwords_mode'])) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter allwords_mode');
             }
+
             $search['fields']['allwords']['mode'] = $params['allwords_mode'];
 
             $allwords_fields_available = ['name', 'comment', 'file', 'author', 'tags', 'cat-title', 'cat-desc'];
+
             if (! isset($params['allwords_fields'])) {
                 $params['allwords_fields'] = $allwords_fields_available;
             }
+
             foreach ($params['allwords_fields'] as $field) {
                 if (! in_array($field, $allwords_fields_available)) {
                     return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter allwords_fields');
                 }
             }
+
             $search['fields']['allwords']['fields'] = $params['allwords_fields'];
 
             $search['fields']['allwords']['words'] = functions_search::split_allwords($params['allwords']);
@@ -749,6 +783,7 @@ class pwg_images
             if (! isset($params['tags_mode'])) {
                 $params['tags_mode'] = 'AND';
             }
+
             if (! preg_match('/^(OR|AND)$/', $params['tags_mode'])) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter tags_mode');
             }
@@ -847,9 +882,11 @@ class pwg_images
         functions::pwg_activity('photo', $params['image_id'], 'edit');
 
         $affected_rows = functions_mysqli::pwg_db_changes($result);
+
         if ($affected_rows) {
             functions_admin::invalidate_user_cache();
         }
+
         return $affected_rows;
     }
 
@@ -900,6 +937,7 @@ class pwg_images
     WHERE id = ' . $params['image_id'] . '
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
         }
@@ -912,6 +950,7 @@ class pwg_images
       AND category_id = ' . $params['category_id'] . '
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count == 0) {
             return new PwgError(404, 'This image is not associated to this category');
         }
@@ -1055,6 +1094,7 @@ class pwg_images
 
         // since Piwigo 2.4 and derivatives, we only care about the "original"
         $original_type = 'file';
+
         if ($params['type'] == 'high') {
             $original_type = 'high';
         }
@@ -1143,6 +1183,7 @@ class pwg_images
             if ($conf['uniqueness_mode'] == 'md5sum') {
                 $where_clause = "md5sum = '" . $params['original_sum'] . "'";
             }
+
             if ($conf['uniqueness_mode'] == 'filename') {
                 $where_clause = "file = '" . $params['original_filename'] . "'";
             }
@@ -1153,6 +1194,7 @@ class pwg_images
     WHERE ' . $where_clause . '
   ;';
             list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
             if ($counter != 0) {
                 return new PwgError(500, 'file already exists');
             }
@@ -1195,6 +1237,7 @@ class pwg_images
         ];
 
         $update = [];
+
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
                 $update[$key] = $params[$key];
@@ -1236,7 +1279,9 @@ class pwg_images
         }
 
         // and now, let's create tag associations
-        if (isset($params['tag_ids']) and ! empty($params['tag_ids'])) {
+        if (isset($params['tag_ids']) and
+            ! empty($params['tag_ids'])
+        ) {
             functions_admin::set_tags(
                 explode(',', $params['tag_ids']),
                 $image_id
@@ -1272,31 +1317,40 @@ class pwg_images
             return new PwgError(405, 'The image (file) is missing');
         }
 
-        if (isset($_FILES['image']['error']) && $_FILES['image']['error'] != 0) {
+        if (isset($_FILES['image']['error']) &&
+            $_FILES['image']['error'] != 0
+        ) {
             switch ($_FILES['image']['error']) {
                 case UPLOAD_ERR_INI_SIZE:
                     $message = 'The uploaded file exceeds the upload_max_filesize directive in php.ini.';
                     break;
+
                 case UPLOAD_ERR_FORM_SIZE:
                     $message = 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.';
                     break;
+
                 case UPLOAD_ERR_PARTIAL:
                     $message = 'The uploaded file was only partially uploaded.';
                     break;
+
                 case UPLOAD_ERR_NO_FILE:
                     $message = 'No file was uploaded.';
                     break;
+
                 case UPLOAD_ERR_NO_TMP_DIR:
                     $message = 'Missing a temporary folder.';
                     break;
+
                 case UPLOAD_ERR_CANT_WRITE:
                     $message = 'Failed to write file to disk.';
                     break;
+
                 case UPLOAD_ERR_EXTENSION:
                     $message = 'A PHP extension stopped the file upload. ' .
                     'PHP does not provide a way to ascertain which extension caused the file ' .
                     'upload to stop; examining the list of loaded extensions with phpinfo() may help.';
                     break;
+
                 default:
                     $message = "Error number {$_FILES['image']['error']} occurred while uploading a file.";
             }
@@ -1312,6 +1366,7 @@ class pwg_images
     WHERE id = ' . $params['image_id'] . '
   ;';
             list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
             if ($count == 0) {
                 return new PwgError(404, 'image_id not found');
             }
@@ -1336,6 +1391,7 @@ class pwg_images
         ];
 
         $update = [];
+
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
                 $update[$key] = $params[$key];
@@ -1350,14 +1406,18 @@ class pwg_images
             ]
         );
 
-        if (isset($params['tags']) and ! empty($params['tags'])) {
+        if (isset($params['tags']) and
+            ! empty($params['tags'])
+        ) {
             $tag_ids = [];
+
             if (is_array($params['tags'])) {
                 foreach ($params['tags'] as $tag_name) {
                     $tag_ids[] = functions_admin::tag_id_from_tag_name($tag_name);
                 }
             } else {
                 $tag_names = preg_split('~(?<!\\\),~', $params['tags']);
+
                 foreach ($tag_names as $tag_name) {
                     $tag_ids[] = functions_admin::tag_id_from_tag_name(preg_replace('#\\\\*,#', ',', $tag_name));
                 }
@@ -1474,21 +1534,29 @@ class pwg_images
         // file_put_contents('/tmp/plupload.log', "[".date('c')."] ".__FUNCTION__.', '.$fileName.' '.($chunk+1).'/'.$chunks."\n", FILE_APPEND);
 
         // Open temp file
-        if (! $out = @fopen("{$filePath}.part", $chunks ? 'ab' : 'wb')) {
+        $out = @fopen("{$filePath}.part", $chunks ? 'ab' : 'wb');
+
+        if (! $out) {
             die('{"jsonrpc" : "2.0", "error" : {"code": 102, "message": "Failed to open output stream."}, "id" : "id"}');
         }
 
         if (! empty($_FILES)) {
-            if ($_FILES['file']['error'] || ! is_uploaded_file($_FILES['file']['tmp_name'])) {
+            if ($_FILES['file']['error'] ||
+                ! is_uploaded_file($_FILES['file']['tmp_name'])
+            ) {
                 die('{"jsonrpc" : "2.0", "error" : {"code": 103, "message": "Failed to move uploaded file."}, "id" : "id"}');
             }
 
             // Read binary input stream and append it to temp file
-            if (! $in = @fopen($_FILES['file']['tmp_name'], 'rb')) {
+            $in = @fopen($_FILES['file']['tmp_name'], 'rb');
+
+            if (! $in) {
                 die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
             }
         } else {
-            if (! $in = @fopen('php://input', 'rb')) {
+            $in = @fopen('php://input', 'rb');
+
+            if (! $in) {
                 die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
             }
         }
@@ -1501,7 +1569,9 @@ class pwg_images
         @fclose($in);
 
         // Check if file has been uploaded
-        if (! $chunks || $chunk == $chunks - 1) {
+        if (! $chunks ||
+            $chunk == $chunks - 1
+        ) {
             // Strip the temp .part suffix off
             rename("{$filePath}.part", $filePath);
 
@@ -1514,6 +1584,7 @@ class pwg_images
     WHERE id = ' . $params['format_of'] . '
   ;';
                 $images = functions_mysqli::query2array($query);
+
                 if (count($images) == 0) {
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
                 }
@@ -1621,6 +1692,7 @@ class pwg_images
     WHERE id = ' . $params['image_id'] . '
   ;';
             list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
             if ($count == 0) {
                 return new PwgError(404, __FUNCTION__ . ' : image_id not found');
             }
@@ -1638,6 +1710,7 @@ class pwg_images
         if (! functions::mkgetdir(dirname($chunkfile_path), functions::MKGETDIR_DEFAULT & ~functions::MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
+
         functions::secure_directory(dirname($chunkfile_path));
 
         // move uploaded file
@@ -1646,6 +1719,7 @@ class pwg_images
 
         // MD5 checksum
         $chunk_md5 = md5_file($chunkfile_path);
+
         if ($chunk_md5 != $params['chunk_sum']) {
             unlink($chunkfile_path);
             $logger->error(__FUNCTION__ . ' ' . $chunkfile_path . ' MD5 checksum mismatched');
@@ -1654,11 +1728,17 @@ class pwg_images
 
         // are all chunks uploaded?
         $chunk_ids_uploaded = [];
+
         for ($i = 1; $i <= $params['chunks']; $i++) {
             $chunkfile = sprintf($chunkfile_path_pattern, $i, $params['chunks']);
-            if (file_exists($chunkfile) && ($fp = fopen($chunkfile, 'rb')) !== false) {
-                $chunk_ids_uploaded[] = $i;
-                fclose($fp);
+
+            if (file_exists($chunkfile)) {
+                $fp = fopen($chunkfile, 'rb');
+
+                if ($fp !== false) {
+                    $chunk_ids_uploaded[] = $i;
+                    fclose($fp);
+                }
             }
         }
 
@@ -1675,17 +1755,22 @@ class pwg_images
         $output_filepath = $output_filepath_prefix . '.merged';
 
         // chunks already being merged?
-        if (file_exists($output_filepath) && ($fp = fopen($output_filepath, 'rb')) !== false) {
-            // merge file already exists
-            fclose($fp);
-            $logger->error(__FUNCTION__ . ' ' . $output_filepath . ' already exists, another merge is under process');
-            return [
-                'message' => 'chunks uploaded = ' . implode(',', $chunk_ids_uploaded),
-            ];
+        if (file_exists($output_filepath)) {
+            $fp = fopen($output_filepath, 'rb');
+
+            if ($fp !== false) {
+                // merge file already exists
+                fclose($fp);
+                $logger->error(__FUNCTION__ . ' ' . $output_filepath . ' already exists, another merge is under process');
+                return [
+                    'message' => 'chunks uploaded = ' . implode(',', $chunk_ids_uploaded),
+                ];
+            }
         }
 
         // create merged and open it for writing only
         $fp = fopen($output_filepath, 'wb');
+
         if (! $fp) {
             // unable to create file and open it for writing only
             $logger->error(__FUNCTION__ . ' ' . $chunkfile_path . ' unable to create merge file');
@@ -1767,7 +1852,9 @@ class pwg_images
         $logger->debug(__FUNCTION__ . ' image_id after add_uploaded_file = ' . $image_id);
 
         // and now, let's create tag associations
-        if (isset($params['tag_ids']) and ! empty($params['tag_ids'])) {
+        if (isset($params['tag_ids']) and
+            ! empty($params['tag_ids'])
+        ) {
             functions_admin::set_tags(
                 explode(',', $params['tag_ids']),
                 $image_id
@@ -1783,6 +1870,7 @@ class pwg_images
         ];
 
         $update = [];
+
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
                 $update[$key] = $params[$key];
@@ -1803,14 +1891,17 @@ class pwg_images
         functions_admin::invalidate_user_cache();
 
         // trick to bypass get_sql_condition_FandF
-        if (! empty($params['level']) and $params['level'] > $user['level']) {
+        if (! empty($params['level']) and
+            $params['level'] > $user['level']
+        ) {
             // this will not persist
             $user['level'] = $params['level'];
         }
 
         // delete chunks older than a week
         $now = time();
-        foreach (glob($conf['upload_dir'] . '/buffer/' . '*.chunk') as $file) {
+
+        foreach (glob($conf['upload_dir'] . '/buffer/*.chunk') as $file) {
             if (is_file($file)) {
                 if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                     $logger->info(__FUNCTION__ . ' delete ' . $file);
@@ -1822,7 +1913,7 @@ class pwg_images
         }
 
         // delete merged older than a week
-        foreach (glob($conf['upload_dir'] . '/buffer/' . '*.merged') as $file) {
+        foreach (glob($conf['upload_dir'] . '/buffer/*.merged') as $file) {
             if (is_file($file)) {
                 if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                     $logger->info(__FUNCTION__ . ' delete ' . $file);
@@ -1873,6 +1964,7 @@ class pwg_images
 
             foreach ($md5sums as $md5sum) {
                 $result[$md5sum] = null;
+
                 if (isset($id_of_md5[$md5sum])) {
                     $result[$md5sum] = $id_of_md5[$md5sum];
                 }
@@ -1896,6 +1988,7 @@ class pwg_images
 
             foreach ($filenames as $filename) {
                 $result[$filename] = null;
+
                 if (isset($id_of_filename[$filename])) {
                     $result[$filename] = $id_of_filename[$filename];
                 }
@@ -1931,6 +2024,7 @@ class pwg_images
     FROM ' . IMAGES_TABLE . '
   ;';
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $filename_wo_ext = functions::get_filename_wo_extension($row['file']);
             @$unique_filenames_db[$filename_wo_ext][] = $row['id'];
@@ -2003,9 +2097,11 @@ class pwg_images
                 PREG_SPLIT_NO_EMPTY
             );
         }
+
         $params['format_id'] = array_map(intval(...), $params['format_id']);
 
         $format_ids = [];
+
         foreach ($params['format_id'] as $format_id) {
             if ($format_id >= 0) {
                 $format_ids[] = $format_id;
@@ -2026,8 +2122,8 @@ class pwg_images
     WHERE format_id IN (' . implode(',', $format_ids) . ')
   ;';
         $result = functions_mysqli::pwg_query($query);
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 
+        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             if (! isset($formats_of[$row['image_id']])) {
                 $image_ids[] = $row['image_id'];
                 $formats_of[$row['image_id']] = [];
@@ -2049,6 +2145,7 @@ class pwg_images
     WHERE id IN (' . implode(',', $image_ids) . ')
   ;';
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             if (functions_url::url_is_remote($row['path'])) {
                 continue;
@@ -2064,7 +2161,9 @@ class pwg_images
             }
 
             foreach ($files as $path) {
-                if (is_file($path) and ! unlink($path)) {
+                if (is_file($path) and
+                    ! unlink($path)
+                ) {
                     $ok = false;
                     trigger_error('"' . $path . '" cannot be removed', E_USER_WARNING);
                     break;
@@ -2131,6 +2230,7 @@ class pwg_images
 
         if (isset($compare_type)) {
             $logger->debug(__FUNCTION__ . ', md5_file($path) = ' . md5_file($path));
+
             if (md5_file($path) != $params[$compare_type . '_sum']) {
                 $ret[$compare_type] = 'differs';
             } else {
@@ -2166,7 +2266,9 @@ class pwg_images
     {
         global $conf;
 
-        if (isset($params['pwg_token']) and functions::get_pwg_token() != $params['pwg_token']) {
+        if (isset($params['pwg_token']) and
+            functions::get_pwg_token() != $params['pwg_token']
+        ) {
             return new PwgError(403, 'Invalid security token');
         }
 
@@ -2196,7 +2298,9 @@ class pwg_images
 
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
-                if (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) {
+                if (! $conf['allow_html_descriptions'] or
+                    ! isset($params['pwg_token'])
+                ) {
                     $params[$key] = strip_tags($params[$key], '<b><strong><em><i>');
                 }
 
@@ -2227,6 +2331,7 @@ class pwg_images
 
             // prevent XSS, remove HTML tags
             $update['file'] = strip_tags($params['file']);
+
             if (empty($update['file'])) {
                 unset($update['file']);
             }
@@ -2311,9 +2416,11 @@ class pwg_images
                 PREG_SPLIT_NO_EMPTY
             );
         }
+
         $params['image_id'] = array_map(intval(...), $params['image_id']);
 
         $image_ids = [];
+
         foreach ($params['image_id'] as $image_id) {
             if ($image_id > 0) {
                 $image_ids[] = $image_id;
@@ -2337,6 +2444,7 @@ class pwg_images
 
         $ret['message'] = functions_upload::ready_for_upload_message();
         $ret['ready_for_upload'] = true;
+
         if (! empty($ret['message'])) {
             $ret['ready_for_upload'] = false;
         }
@@ -2379,9 +2487,11 @@ class pwg_images
                 PREG_SPLIT_NO_EMPTY
             );
         }
+
         $params['image_id'] = array_map(intval(...), $params['image_id']);
 
         $image_ids = [];
+
         foreach ($params['image_id'] as $image_id) {
             if ($image_id > 0) {
                 $image_ids[] = $image_id;

@@ -49,6 +49,7 @@ final class DerivativeImage
     public function __construct($type, SrcImage $src_image)
     {
         $this->src_image = $src_image;
+
         if (is_string($type)) {
             $this->params = ImageStdParams::get_by_type($type);
         } else {
@@ -82,9 +83,11 @@ final class DerivativeImage
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
         $params = is_string($type) ? ImageStdParams::get_by_type($type) : $type;
         self::build($src_image, $params, $rel_path, $rel_url);
+
         if ($params == null) {
             return $src_image->get_url();
         }
+
         return functions_url::embellish_url(
             functions_plugins::trigger_change(
                 'get_derivative_url',
@@ -118,6 +121,7 @@ final class DerivativeImage
             $derivative = new self($params, $src_image);
             $ret[$type] = $derivative;
         }
+
         // disabled types, fallback to enabled types
         foreach (ImageStdParams::get_undefined_type_map() as $type => $type2) {
             $ret[$type] = $ret[$type2];
@@ -141,11 +145,13 @@ final class DerivativeImage
         }
 
         $defined = ImageStdParams::get_defined_type_map();
+
         if (isset($defined[$type])) {
             return new self($defined[$type], $src_image);
         }
 
         $undefined = ImageStdParams::get_undefined_type_map();
+
         if (isset($undefined[$type])) {
             return new self($defined[$undefined[$type]], $src_image);
         }
@@ -169,6 +175,7 @@ final class DerivativeImage
         if ($this->params == null) {
             return $this->src_image->get_url();
         }
+
         return functions_url::embellish_url(
             functions_plugins::trigger_change(
                 'get_derivative_url',
@@ -196,6 +203,7 @@ final class DerivativeImage
         if ($this->params == null) {
             return 'Original';
         }
+
         return $this->params->type;
     }
 
@@ -207,6 +215,7 @@ final class DerivativeImage
         if ($this->params == null) {
             return $this->src_image->get_size();
         }
+
         return $this->params->compute_final_size($this->src_image->get_size());
     }
 
@@ -218,6 +227,7 @@ final class DerivativeImage
     public function get_size_css()
     {
         $size = $this->get_size();
+
         if ($size) {
             return 'width:' . $size[0] . 'px; height:' . $size[1] . 'px';
         }
@@ -231,6 +241,7 @@ final class DerivativeImage
     public function get_size_htm()
     {
         $size = $this->get_size();
+
         if ($size) {
             return 'width="' . $size[0] . '" height="' . $size[1] . '"';
         }
@@ -244,6 +255,7 @@ final class DerivativeImage
     public function get_size_hr()
     {
         $size = $this->get_size();
+
         if ($size) {
             return $size[0] . ' x ' . $size[1];
         }
@@ -257,10 +269,14 @@ final class DerivativeImage
     public function get_scaled_size($maxw, $maxh)
     {
         $size = $this->get_size();
+
         if ($size) {
             $ratio_w = $size[0] / $maxw;
             $ratio_h = $size[1] / $maxh;
-            if ($ratio_w > 1 || $ratio_h > 1) {
+
+            if ($ratio_w > 1 ||
+                $ratio_h > 1
+            ) {
                 if ($ratio_w > $ratio_h) {
                     $size[0] = $maxw;
                     $size[1] = floor($size[1] / $ratio_w);
@@ -270,6 +286,7 @@ final class DerivativeImage
                 }
             }
         }
+
         return $size;
     }
 
@@ -283,6 +300,7 @@ final class DerivativeImage
     public function get_scaled_size_htm($maxw = 9999, $maxh = 9999)
     {
         $size = $this->get_scaled_size($maxw, $maxh);
+
         if ($size) {
             return 'width="' . $size[0] . '" height="' . $size[1] . '"';
         }
@@ -297,27 +315,37 @@ final class DerivativeImage
     }
 
     /**
-     * @todo : documentation of DerivativeImage::build
+     * @todo: documentation of DerivativeImage::build
      */
     private static function build($src, &$params, &$rel_path, &$rel_url, &$is_cached = null)
     {
-        if ($src->has_size() && $params->is_identity($src->get_size())) {// the source image is smaller than what we should do - we do not upsample
-            if (! $params->will_watermark($src->get_size()) && ! $src->rotation) {// no watermark, no rotation required -> we will use the source image
+        if ($src->has_size() &&
+            $params->is_identity($src->get_size())
+        ) { // the source image is smaller than what we should do - we do not upsample
+            if (! $params->will_watermark($src->get_size()) &&
+                ! $src->rotation
+            ) { // no watermark, no rotation required -> we will use the source image
                 $params = null;
                 $rel_path = $rel_url = $src->rel_path;
                 return;
             }
+
             $defined_types = array_keys(ImageStdParams::get_defined_type_map());
+
             for ($i = 0; $i < count($defined_types); $i++) {
                 if ($defined_types[$i] == $params->type) {
                     for ($i--; $i >= 0; $i--) {
                         $smaller = ImageStdParams::get_by_type($defined_types[$i]);
-                        if ($smaller->sizing->max_crop == $params->sizing->max_crop && $smaller->is_identity($src->get_size())) {
+
+                        if ($smaller->sizing->max_crop == $params->sizing->max_crop &&
+                            $smaller->is_identity($src->get_size())
+                        ) {
                             $params = $smaller;
                             self::build($src, $params, $rel_path, $rel_url, $is_cached);
                             return;
                         }
                     }
+
                     break;
                 }
             }
@@ -331,20 +359,26 @@ final class DerivativeImage
         }
 
         $loc = $src->rel_path;
+
         if (substr_compare($loc, './', 0, 2) == 0) {
             $loc = substr($loc, 2);
         } elseif (substr_compare($loc, '../', 0, 3) == 0) {
             $loc = substr($loc, 3);
         }
+
         $loc = substr_replace($loc, '-' . implode('_', $tokens), strrpos($loc, '.'), 0);
 
         $rel_path = PWG_DERIVATIVE_DIR . $loc;
 
         global $conf;
         $url_style = $conf['derivative_url_style'];
+
         if (! $url_style) {
             $mtime = @filemtime(PHPWG_ROOT_PATH . $rel_path);
-            if ($mtime === false or $mtime < $params->last_mod_time) {
+
+            if ($mtime === false or
+                $mtime < $params->last_mod_time
+            ) {
                 $is_cached = false;
                 $url_style = 2;
             } else {
@@ -354,12 +388,15 @@ final class DerivativeImage
 
         if ($url_style == 2) {
             $rel_url = 'i';
+
             if ($conf['php_extension_in_urls']) {
                 $rel_url .= '.php';
             }
+
             if ($conf['question_mark_in_urls']) {
                 $rel_url .= '?';
             }
+
             $rel_url .= '/' . $loc;
         } else {
             $rel_url = $rel_path;

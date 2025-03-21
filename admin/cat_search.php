@@ -65,6 +65,7 @@ SELECT
 ;';
 $lines = functions_mysqli::query2array($query);
 $placeholder = null;
+
 foreach ($lines as $line) {
     $name = functions_plugins::trigger_change('render_category_name', $line['name']);
 

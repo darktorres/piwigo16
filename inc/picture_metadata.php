@@ -14,8 +14,11 @@
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_metadata;
 
-if (($conf['show_exif']) and (function_exists('exif_read_data'))) {
+if ($conf['show_exif'] and
+    function_exists('exif_read_data')
+) {
     $exif_mapping = [];
+
     foreach ($conf['show_exif_fields'] as $field) {
         $exif_mapping[$field] = $field;
     }
@@ -31,25 +34,35 @@ if (($conf['show_exif']) and (function_exists('exif_read_data'))) {
         foreach ($conf['show_exif_fields'] as $field) {
             if (strpos($field, ';') === false) {
                 // template cannot deal with an array as value, we skip it
-                if (isset($exif[$field]) and ! is_array($exif[$field])) {
+                if (isset($exif[$field]) and
+                    ! is_array($exif[$field])
+                ) {
                     $key = $field;
+
                     if (isset($lang['exif_field_' . $field])) {
                         $key = $lang['exif_field_' . $field];
                     }
+
                     $tpl_meta['lines'][$key] = $exif[$field];
                 }
             } else {
                 $tokens = explode(';', $field);
+
                 // template cannot deal with an array as value, we skip it
-                if (isset($exif[$field]) and ! is_array($exif[$field])) {
+                if (isset($exif[$field]) and
+                    ! is_array($exif[$field])
+                ) {
                     $key = $tokens[1];
+
                     if (isset($lang['exif_field_' . $key])) {
                         $key = $lang['exif_field_' . $key];
                     }
+
                     $tpl_meta['lines'][$key] = $exif[$field];
                 }
             }
         }
+
         $template->append('metadata', $tpl_meta);
     }
 }
@@ -65,11 +78,14 @@ if ($conf['show_iptc']) {
 
         foreach ($iptc as $field => $value) {
             $key = $field;
+
             if (isset($lang[$field])) {
                 $key = $lang[$field];
             }
+
             $tpl_meta['lines'][$key] = $value;
         }
+
         $template->append('metadata', $tpl_meta);
     }
 }

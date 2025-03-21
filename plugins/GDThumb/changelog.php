@@ -15,6 +15,7 @@ foreach ($lines as $line_num => $line) {
                 } else {
                     echo '</ul>';
                 }
+
                 echo '<h3>' . htmlspecialchars(str_replace('version ', '', $line)) . "</h3>\n<ul>";
             } else {
                 echo '<li>' . htmlspecialchars($line) . "</li>\n";
@@ -24,4 +25,5 @@ foreach ($lines as $line_num => $line) {
         }
     }
 }
+
 echo '</ul></div>';

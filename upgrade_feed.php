@@ -20,7 +20,10 @@ define('PHPWG_ROOT_PATH', './');
 
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
 @include(PHPWG_ROOT_PATH . 'local/config/config.php');
-defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
+
+if (! defined('PWG_LOCAL_DIR')) {
+    define('PWG_LOCAL_DIR', 'local/');
+}
 
 include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php');
 include_once(PHPWG_ROOT_PATH . 'inc/functions.php');

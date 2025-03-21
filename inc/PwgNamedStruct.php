@@ -32,13 +32,19 @@ class PwgNamedStruct
     public function __construct($content, $xmlAttributes = null, $xmlElements = null)
     {
         $this->_content = $content;
+
         if (isset($xmlAttributes)) {
             $this->_xmlAttributes = array_flip($xmlAttributes);
         } else {
             $this->_xmlAttributes = [];
+
             foreach ($this->_content as $key => $value) {
-                if (! empty($key) and (is_scalar($value) or $value === null)) {
-                    if (empty($xmlElements) or ! in_array($key, $xmlElements)) {
+                if (! empty($key) and
+                   (is_scalar($value) or $value === null)
+                ) {
+                    if (empty($xmlElements) or
+                        ! in_array($key, $xmlElements)
+                    ) {
                         $this->_xmlAttributes[$key] = 1;
                     }
                 }

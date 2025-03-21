@@ -21,6 +21,7 @@ class functions_tag
     public static function get_nb_available_tags()
     {
         global $user;
+
         if (! isset($user['nb_available_tags'])) {
             $user['nb_available_tags'] = count(self::get_available_tags());
             functions_mysqli::single_update(
@@ -33,6 +34,7 @@ class functions_tag
                 ]
             );
         }
+
         return $user['nb_available_tags'];
     }
 
@@ -61,7 +63,9 @@ class functions_tag
             ' AND '
         );
 
-        if (is_array($tag_ids) and count($tag_ids) > 0) {
+        if (is_array($tag_ids) and
+            count($tag_ids) > 0
+        ) {
             $query .= '
       AND tag_id IN (' . implode(',', $tag_ids) . ')
   ';
@@ -82,14 +86,17 @@ class functions_tag
         $result = functions_mysqli::pwg_query($query);
 
         $tags = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $counter = intval(@$tag_counters[$row['id']]);
+
             if ($counter) {
                 $row['counter'] = $counter;
                 $row['name'] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
                 $tags[] = $row;
             }
         }
+
         return $tags;
     }
 
@@ -106,6 +113,7 @@ class functions_tag
   ;';
         $result = functions_mysqli::pwg_query($query);
         $tags = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $row['name'] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
             $tags[] = $row;
@@ -163,6 +171,7 @@ class functions_tag
                 }
             }
         }
+
         unset($tag);
 
         return $tags;
@@ -182,6 +191,7 @@ class functions_tag
     public static function get_image_ids_for_tags($tag_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', $use_permissions = true)
     {
         global $conf;
+
         if (empty($tag_ids)) {
             return [];
         }
@@ -213,10 +223,13 @@ class functions_tag
         $query .= (empty($extra_images_where_sql) ? '' : " \nAND (" . $extra_images_where_sql . ')') . '
     GROUP BY id';
 
-        if ($mode == 'AND' and count($tag_ids) > 1) {
+        if ($mode == 'AND' and
+            count($tag_ids) > 1
+        ) {
             $query .= '
     HAVING COUNT(DISTINCT tag_id)=' . count($tag_ids);
         }
+
         $query .= "\n" . (empty($order_by) ? $conf['order_by'] : $order_by);
 
         return functions_mysqli::query2array($query, null, 'id');
@@ -235,18 +248,22 @@ class functions_tag
         if (empty($items)) {
             return [];
         }
+
         $query = '
   SELECT t.*, count(*) AS counter
     FROM ' . IMAGE_TAG_TABLE . '
       INNER JOIN ' . TAGS_TABLE . ' t ON tag_id = id
     WHERE image_id IN (' . implode(',', $items) . ')';
+
         if (! empty($excluded_tag_ids)) {
             $query .= '
       AND tag_id NOT IN (' . implode(',', $excluded_tag_ids) . ')';
         }
+
         $query .= '
     GROUP BY t.id
     ORDER BY ';
+
         if ($max_tags > 0) { // TODO : why ORDER field is in the if ?
             $query .= 'counter DESC
     LIMIT ' . $max_tags;
@@ -256,10 +273,12 @@ class functions_tag
 
         $result = functions_mysqli::pwg_query($query);
         $tags = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $row['name'] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
             $tags[] = $row;
         }
+
         usort($tags, functions_html::tag_alpha_compare(...));
         return $tags;
     }
@@ -275,17 +294,21 @@ class functions_tag
     public static function find_tags($ids = [], $url_names = [], $names = [])
     {
         $where_clauses = [];
+
         if (! empty($ids)) {
             $where_clauses[] = 'id IN (' . implode(',', $ids) . ')';
         }
+
         if (! empty($url_names)) {
             $where_clauses[] =
               'url_name IN (\'' . implode('\', \'', $url_names) . '\')';
         }
+
         if (! empty($names)) {
             $where_clauses[] =
               'name IN (\'' . implode('\', \'', $names) . '\')';
         }
+
         if (empty($where_clauses)) {
             return [];
         }

@@ -2,7 +2,9 @@
 
 use Piwigo\inc\functions;
 
-defined('ADMINTOOLS_PATH') or die('Hacking attempt!');
+if (! defined('ADMINTOOLS_PATH')) {
+    die('Hacking attempt!');
+}
 
 if (isset($_POST['save_config'])) {
     $conf['AdminTools'] = [

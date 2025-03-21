@@ -34,6 +34,7 @@ class pwg_tags
     public static function ws_tags_getList($params, &$service)
     {
         $tags = functions_tag::get_available_tags();
+
         if ($params['sort_by_counter']) {
             usort($tags, function ($a, $b) {  return -$a['counter'] + $b['counter']; });
         } else {
@@ -97,22 +98,27 @@ class pwg_tags
         // first build all the tag_ids we are interested in
         $tags = functions_tag::find_tags($params['tag_id'], $params['tag_url_name'], $params['tag_name']);
         $tags_by_id = [];
+
         foreach ($tags as $tag) {
             $tags['id'] = (int) $tag['id'];
             $tags_by_id[$tag['id']] = $tag;
         }
+
         unset($tags);
         $tag_ids = array_keys($tags_by_id);
 
         $where_clauses = ws_functions::ws_std_image_sql_filter($params);
+
         if (! empty($where_clauses)) {
             $where_clauses = implode(' AND ', $where_clauses);
         }
 
         $order_by = ws_functions::ws_std_image_sql_order($params, 'i.');
+
         if (! empty($order_by)) {
             $order_by = 'ORDER BY ' . $order_by;
         }
+
         $image_ids = functions_tag::get_image_ids_for_tags(
             $tag_ids,
             $params['tag_mode_and'] ? 'AND' : 'OR',
@@ -125,7 +131,10 @@ class pwg_tags
 
         $image_tag_map = [];
         // build list of image ids with associated tags per image
-        if (! empty($image_ids) and ! $params['tag_mode_and']) {
+
+        if (! empty($image_ids) and
+            ! $params['tag_mode_and']
+        ) {
             $query = '
   SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
     FROM ' . IMAGE_TAG_TABLE . '
@@ -142,6 +151,7 @@ class pwg_tags
         }
 
         $images = [];
+
         if (! empty($image_ids)) {
             $rank_of = array_flip($image_ids);
             $favorite_ids = functions_url::get_user_favorites();
@@ -163,13 +173,16 @@ class pwg_tags
                         $image[$k] = (int) $row[$k];
                     }
                 }
+
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
                     $image[$k] = $row[$k];
                 }
+
                 $image = array_merge($image, ws_functions::ws_std_get_urls($row));
 
                 $image_tag_ids = ($params['tag_mode_and']) ? $tag_ids : $image_tag_map[$image['id']];
                 $image_tags = [];
+
                 foreach ($image_tag_ids as $tag_id) {
                     $url = functions_url::make_index_url(
                         [
@@ -261,6 +274,7 @@ class pwg_tags
     WHERE id in (' . implode(',', $params['tag_id']) . ')
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count != count($params['tag_id'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
         }
@@ -273,6 +287,7 @@ class pwg_tags
                 'id' => $tag_ids,
             ];
         }
+
         return [
             'id' => [],
         ];
@@ -295,6 +310,7 @@ class pwg_tags
     WHERE id = ' . $tag_id . '
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
         }
@@ -342,7 +358,6 @@ class pwg_tags
 
     public static function ws_tags_duplicate($params, &$service)
     {
-
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -357,6 +372,7 @@ class pwg_tags
     WHERE id = ' . $tag_id . '
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
         }
@@ -367,6 +383,7 @@ class pwg_tags
     WHERE name = "' . $copy_name . '"
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count != 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already taken.');
         }
@@ -422,7 +439,6 @@ class pwg_tags
 
     public static function ws_tags_merge($params, &$service)
     {
-
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -439,6 +455,7 @@ class pwg_tags
     WHERE id in (' . implode(',', $all_tags) . ')
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count != count($all_tags)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
         }
@@ -466,6 +483,7 @@ class pwg_tags
         $image_to_add = array_diff($image_in_merge_tags, $image_in_dest);
 
         $inserts = [];
+
         foreach ($image_to_add as $image) {
             $inserts[] = [
                 'tag_id' => $params['destination_tag_id'],
@@ -483,6 +501,7 @@ class pwg_tags
         );
 
         functions::pwg_activity('tag', $params['destination_tag_id'], 'edit');
+
         foreach ($image_to_add as $image_id) {
             functions::pwg_activity('photo', $image_id, 'edit', [
                 'tag-add' => $params['destination_tag_id'],

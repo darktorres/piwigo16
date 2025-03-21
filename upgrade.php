@@ -28,14 +28,20 @@ define('PHPWG_ROOT_PATH', './');
 // load config file
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
 @include(PHPWG_ROOT_PATH . 'local/config/config.php');
-defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
+
+if (! defined('PWG_LOCAL_DIR')) {
+    define('PWG_LOCAL_DIR', 'local/');
+}
 
 $config_file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php';
 $config_file_contents = @file_get_contents($config_file);
+
 if ($config_file_contents === false) {
     die('Cannot load ' . $config_file);
 }
-$php_end_tag = strrpos($config_file_contents, '?' . '>');
+
+$php_end_tag = strrpos($config_file_contents, '?>');
+
 if ($php_end_tag === false) {
     die('Cannot find php end tag in ' . $config_file);
 }
@@ -67,6 +73,7 @@ include_once(PHPWG_ROOT_PATH . 'inc/Template.php');
 // |                             language                                  |
 // +-----------------------------------------------------------------------+
 $languages = new languages('utf-8');
+
 if (isset($_GET['language'])) {
     $language = strip_tags($_GET['language']);
 
@@ -109,6 +116,7 @@ if ($language == 'fr_FR') {
 } else {
     define('PHPWG_DOMAIN', 'piwigo.org');
 }
+
 define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
 functions::load_language('common.lang', '', [
@@ -165,6 +173,7 @@ $has_remote_site = false;
 
 $query = 'SELECT galleries_url FROM ' . SITES_TABLE . ';';
 $result = functions_mysqli::pwg_query($query);
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     if (functions_url::url_is_remote($row['galleries_url'])) {
         $has_remote_site = true;
@@ -178,9 +187,11 @@ if ($has_remote_site) {
 
     if (! empty($page['errors'])) {
         echo '<ul>';
+
         foreach ($page['errors'] as $error) {
             echo '<li>' . $error . '</li>';
         }
+
         echo '</ul>';
     }
 
@@ -275,9 +286,11 @@ if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
 
 functions_upgrade::check_upgrade_access_rights();
 
-if ((isset($_POST['submit']) or isset($_GET['now']))
-  and functions_upgrade::check_upgrade()) {
+if ((isset($_POST['submit']) or isset($_GET['now'])) and
+     functions_upgrade::check_upgrade()
+) {
     $upgrade_file = PHPWG_ROOT_PATH . 'install/upgrade_' . $current_release . '.php';
+
     if (is_file($upgrade_file)) {
         // reset SQL counters
         $page['queries_time'] = 0;
@@ -374,7 +387,6 @@ REPLACE INTO ' . PLUGINS_TABLE . '
         // Restore $page['infos'] in order to hide information messages from function calls
         // error messages are not hidden
         $page['infos'] = $page['infos_sav'];
-
     }
 }
 
@@ -392,8 +404,10 @@ else {
         if ($language == $language_code) {
             $template->assign('language_selection', $language_code);
         }
+
         $languages_options[$language_code] = $fs_language['name'];
     }
+
     $template->assign('language_options', $languages_options);
 
     $template->assign('introduction', [

@@ -9,7 +9,9 @@ use Piwigo\inc\functions_mail;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
-defined('ADMINTOOLS_PATH') or die('Hacking attempt!');
+if (! defined('ADMINTOOLS_PATH')) {
+    die('Hacking attempt!');
+}
 
 /**
  * Add main toolbar to current page
@@ -19,7 +21,9 @@ function admintools_add_public_controller()
 {
     global $MultiView, $conf, $template, $page, $user, $picture;
 
-    if (functions::script_basename() == 'picture' and empty($picture['current'])) {
+    if (functions::script_basename() == 'picture' and
+        empty($picture['current'])
+    ) {
         return;
     }
 
@@ -32,13 +36,16 @@ function admintools_add_public_controller()
         $tpl_vars['USER'] = $MultiView->get_user();
         $tpl_vars['CURRENT_USERNAME'] = $user['id'] == $conf['guest_id'] ? functions::l10n('guest') : $user['username'];
         $tpl_vars['DELETE_CACHE'] = isset($conf['multiview_invalidate_cache']);
+        $admin_lang = $MultiView->get_user_language();
 
-        if (($admin_lang = $MultiView->get_user_language()) !== false) {
+        if ($admin_lang !== false) {
             include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
             functions_mail::switch_lang_to($admin_lang);
         }
     } elseif ($conf['AdminTools']['public_quick_edit'] and
-        functions::script_basename() == 'picture' and $picture['current']['added_by'] == $user['id'] and ! functions_user::is_a_guest()
+              functions::script_basename() == 'picture' and
+              $picture['current']['added_by'] == $user['id'] and
+              ! functions_user::is_a_guest()
     ) { // only "edit" button for photo owner
     } else {
         return;
@@ -111,7 +118,10 @@ SELECT id, name
 ;';
         $tag_selection = functions_admin::get_taglist($query);
 
-        (! isset($picture['current']['date_creation'])) ? $picture['current']['date_creation'] = '' : false;
+        if (! isset($picture['current']['date_creation'])) {
+            $picture['current']['date_creation'] = '';
+        }
+
         $tpl_vars['QUICK_EDIT'] = [
             'img' => $picture['current']['derivatives']['square']->get_url(),
             'name' => $picture['current']['name'],
@@ -124,7 +134,10 @@ SELECT id, name
         ];
     }
     // album page (admin only)
-    elseif ($MultiView->is_admin() and @$page['section'] == 'categories' and isset($page['category'])) {
+    elseif ($MultiView->is_admin() and
+            @$page['section'] == 'categories' and
+            isset($page['category'])
+    ) {
         $url_self = functions_url::duplicate_index_url();
 
         $tpl_vars['IS_CATEGORY'] = true;
@@ -172,7 +185,9 @@ SELECT * FROM ' . IMAGES_TABLE . '
     $template->set_filename('ato_public_controller', realpath(ADMINTOOLS_PATH . 'template/public_controller.tpl'));
     $template->parse('ato_public_controller');
 
-    if ($MultiView->is_admin() && @$admin_lang !== false) {
+    if ($MultiView->is_admin() &&
+        @$admin_lang !== false
+    ) {
         functions_mail::switch_lang_back();
     }
 }
@@ -191,8 +206,9 @@ function admintools_add_admin_controller()
     $tpl_vars['MULTIVIEW'] = $MultiView->get_data();
     $tpl_vars['DELETE_CACHE'] = isset($conf['multiview_invalidate_cache']);
     $tpl_vars['U_SELF'] = $MultiView->get_clean_admin_url(true);
+    $admin_lang = $MultiView->get_user_language();
 
-    if (($admin_lang = $MultiView->get_user_language()) !== false) {
+    if ($admin_lang !== false) {
         include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
         functions_mail::switch_lang_to($admin_lang);
     }
@@ -205,7 +221,9 @@ function admintools_add_admin_controller()
     $template->set_filename('ato_admin_controller', realpath(ADMINTOOLS_PATH . 'template/admin_controller.tpl'));
     $template->parse('ato_admin_controller');
 
-    if ($MultiView->is_admin() && @$admin_lang !== false) {
+    if ($MultiView->is_admin() &&
+        @$admin_lang !== false
+    ) {
         functions_mail::switch_lang_back();
     }
 }
@@ -247,7 +265,10 @@ function admintools_save_picture()
 {
     global $page, $conf, $MultiView, $user, $picture;
 
-    if (! isset($_GET['delete']) and ! isset($_POST['action']) and @$_POST['action'] != 'quick_edit') {
+    if (! isset($_GET['delete']) and
+        ! isset($_POST['action']) and
+        @$_POST['action'] != 'quick_edit'
+    ) {
         return;
     }
 
@@ -258,11 +279,15 @@ function admintools_save_picture()
     $query = 'SELECT added_by FROM ' . IMAGES_TABLE . ' WHERE id = ' . $page['image_id'] . ';';
     list($added_by) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-    if (! $MultiView->is_admin() and $user['id'] != $added_by) {
+    if (! $MultiView->is_admin() and
+        $user['id'] != $added_by
+    ) {
         return;
     }
 
-    if (isset($_GET['delete']) and functions::get_pwg_token() == @$_GET['pwg_token']) {
+    if (isset($_GET['delete']) and
+        functions::get_pwg_token() == @$_GET['pwg_token']
+    ) {
         functions_admin::delete_elements([$page['image_id']], true);
         functions_admin::invalidate_user_cache();
 
@@ -293,13 +318,17 @@ function admintools_save_picture()
             $data['level'] = $_POST['level'];
         }
 
-        if (functions_user::is_admin() and $conf['allow_html_descriptions']) {
+        if (functions_user::is_admin() and
+            $conf['allow_html_descriptions']
+        ) {
             $data['comment'] = @$_POST['comment'];
         } else {
             $data['comment'] = strip_tags(@$_POST['comment']);
         }
 
-        if (! empty($_POST['date_creation']) and strtotime($_POST['date_creation']) !== false) {
+        if (! empty($_POST['date_creation']) and
+            strtotime($_POST['date_creation']) !== false
+        ) {
             $data['date_creation'] = $_POST['date_creation'] . ' ' . $_POST['date_creation_time'];
         }
 
@@ -312,9 +341,11 @@ function admintools_save_picture()
         );
 
         $tag_ids = [];
+
         if (! empty($_POST['tags'])) {
             $tag_ids = functions_admin::get_tag_ids($_POST['tags']);
         }
+
         functions_admin::set_tags($tag_ids, $page['image_id']);
     }
 }
@@ -338,7 +369,9 @@ function admintools_save_category()
             'name' => (functions_user::is_admin() and $conf['allow_html_descriptions']) ? $_POST['name'] : strip_tags($_POST['name']),
         ];
 
-        if (functions_user::is_admin() and $conf['allow_html_descriptions']) {
+        if (functions_user::is_admin() and
+            $conf['allow_html_descriptions']
+        ) {
             $data['comment'] = @$_POST['comment'];
         } else {
             $data['comment'] = strip_tags(@$_POST['comment']);

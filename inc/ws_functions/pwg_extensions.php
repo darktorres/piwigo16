@@ -71,7 +71,9 @@ class pwg_extensions
             return new PwgError(403, functions::l10n('Webmaster status is required.'));
         }
 
-        if (! $conf['enable_extensions_install'] and $params['action'] == 'delete') {
+        if (! $conf['enable_extensions_install'] and
+            $params['action'] == 'delete'
+        ) {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -87,8 +89,8 @@ class pwg_extensions
         if (in_array($params['action'], ['activate', 'deactivate'])) {
             $template->delete_compiled_templates();
         }
-        return true;
 
+        return true;
     }
 
     /**
@@ -108,7 +110,9 @@ class pwg_extensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! $conf['enable_extensions_install'] and $params['action'] == 'delete') {
+        if (! $conf['enable_extensions_install'] and
+            $params['action'] == 'delete'
+        ) {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -124,8 +128,8 @@ class pwg_extensions
         if (in_array($params['action'], ['activate', 'deactivate'])) {
             $template->delete_compiled_templates();
         }
-        return true;
 
+        return true;
     }
 
     /**
@@ -168,9 +172,8 @@ class pwg_extensions
         $extension = new $class();
 
         if ($type == 'plugins') {
-            if (
-                isset($extension->db_plugins_by_id[$extension_id])
-                and $extension->db_plugins_by_id[$extension_id]['state'] == 'active'
+            if (isset($extension->db_plugins_by_id[$extension_id]) and
+                $extension->db_plugins_by_id[$extension_id]['state'] == 'active'
             ) {
                 $extension->perform_action('deactivate', $extension_id);
 
@@ -266,7 +269,9 @@ class pwg_extensions
 
         // Reset ignored extension
         if ($params['reset']) {
-            if (! empty($params['type']) and isset($conf['updates_ignored'][$params['type']])) {
+            if (! empty($params['type']) and
+                isset($conf['updates_ignored'][$params['type']])
+            ) {
                 $conf['updates_ignored'][$params['type']] = [];
             } else {
                 $conf['updates_ignored'] = [
@@ -281,7 +286,10 @@ class pwg_extensions
             return true;
         }
 
-        if (empty($params['id']) or empty($params['type']) or ! in_array($params['type'], ['plugins', 'themes', 'languages'])) {
+        if (empty($params['id']) or
+            empty($params['type']) or
+            ! in_array($params['type'], ['plugins', 'themes', 'languages'])
+        ) {
             return new PwgError(403, 'Invalid parameters');
         }
 

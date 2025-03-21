@@ -57,6 +57,7 @@ class functions_comment
             $_POST['cr'][] = 'links';
             return $my_action;
         }
+
         return $action;
     }
 
@@ -82,7 +83,10 @@ class functions_comment
         );
 
         $infos = [];
-        if (! $conf['comments_validation'] or functions_user::is_admin()) {
+
+        if (! $conf['comments_validation'] or
+            functions_user::is_admin()
+        ) {
             $comment_action = 'validate'; //one of validate, moderate, reject
         } else {
             $comment_action = 'moderate'; //one of validate, moderate, reject
@@ -95,8 +99,10 @@ class functions_comment
                     $infos[] = functions::l10n('Username is mandatory');
                     $comment_action = 'reject';
                 }
+
                 $comm['author'] = 'guest';
             }
+
             $comm['author_id'] = $conf['guest_id'];
             // if a guest try to use the name of an already existing user, he must be
             // rejected
@@ -106,6 +112,7 @@ class functions_comment
     FROM ' . USERS_TABLE . '
     WHERE ' . $conf['user_fields']['username'] . " = '" . addslashes($comm['author']) . "'";
                 $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+
                 if ($row['user_exists'] == 1) {
                     $infos[] = functions::l10n('This login is already used by another user');
                     $comment_action = 'reject';
@@ -132,9 +139,11 @@ class functions_comment
                 $_POST['cr'][] = 'website_url';
             } else {
                 $comm['website_url'] = strip_tags($comm['website_url']);
+
                 if (! preg_match('/^https?/i', $comm['website_url'])) {
                     $comm['website_url'] = 'http://' . $comm['website_url'];
                 }
+
                 if (! functions::url_check_format($comm['website_url'])) {
                     $infos[] = functions::l10n('Your website URL is invalid');
                     $comment_action = 'reject';
@@ -157,26 +166,34 @@ class functions_comment
 
         // anonymous id = ip address
         $ip_components = explode('.', $comm['ip']);
+
         if (count($ip_components) > 3) {
             array_pop($ip_components);
         }
+
         $anonymous_id = implode('.', $ip_components);
 
-        if ($comment_action != 'reject' and $conf['anti-flood_time'] > 0 and ! functions_user::is_admin()) { // anti-flood system
+        if ($comment_action != 'reject' and
+            $conf['anti-flood_time'] > 0 and
+            ! functions_user::is_admin()
+        ) { // anti-flood system
             $reference_date = functions_mysqli::pwg_db_get_flood_period_expression($conf['anti-flood_time']);
 
             $query = '
   SELECT count(1) FROM ' . COMMENTS_TABLE . '
     WHERE date > ' . $reference_date . '
       AND author_id = ' . $comm['author_id'];
+
             if (! functions_user::is_classic_user()) {
                 $query .= '
         AND anonymous_id LIKE "' . $anonymous_id . '.%"';
             }
+
             $query .= '
   ;';
 
             list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
             if ($counter > 0) {
                 $infos[] = functions::l10n('Anti-flood system : please wait for a moment before trying to post another comment');
                 $comment_action = 'reject';
@@ -213,8 +230,9 @@ class functions_comment
 
             self::invalidate_user_cache_nb_comments();
 
-            if (($conf['email_admin_on_comment'] && $comment_action == 'validate')
-                or ($conf['email_admin_on_comment_validation'] and $comment_action == 'moderate')) {
+            if (($conf['email_admin_on_comment'] && $comment_action == 'validate') or
+                ($conf['email_admin_on_comment_validation'] and $comment_action == 'moderate')
+            ) {
                 include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
 
                 $comment_url = functions_url::get_absolute_root_url() . 'comments.php?comment_id=' . $comm['id'];
@@ -253,6 +271,7 @@ class functions_comment
     public static function delete_user_comment($comment_id)
     {
         $user_where_clause = '';
+
         if (! functions_user::is_admin()) {
             $user_where_clause = '   AND author_id = \'' . $GLOBALS['user']['id'] . '\'';
         }
@@ -268,8 +287,9 @@ class functions_comment
     WHERE ' . $where_clause .
   $user_where_clause . '
   ;';
+        functions_mysqli::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_changes(functions_mysqli::pwg_query($query))) {
+        if (functions_mysqli::pwg_db_changes()) {
             self::invalidate_user_cache_nb_comments();
 
             self::email_admin(
@@ -305,7 +325,9 @@ class functions_comment
 
         if (! functions::verify_ephemeral_key($post_key, $comment['image_id'])) {
             $comment_action = 'reject';
-        } elseif (! $conf['comments_validation'] or functions_user::is_admin()) { // should the updated comment must be validated
+        } elseif (! $conf['comments_validation'] or
+                  functions_user::is_admin()
+        ) { // should the updated comment must be validated
             $comment_action = 'validate'; //one of validate, moderate, reject
         } else {
             $comment_action = 'moderate'; //one of validate, moderate, reject
@@ -327,9 +349,11 @@ class functions_comment
         // website
         if (! empty($comment['website_url'])) {
             $comm['website_url'] = strip_tags($comm['website_url']);
+
             if (! preg_match('/^https?/i', $comment['website_url'])) {
                 $comment['website_url'] = 'http://' . $comment['website_url'];
             }
+
             if (! functions::url_check_format($comment['website_url'])) {
                 $page['errors'][] = functions::l10n('Your website URL is invalid');
                 $comment_action = 'reject';
@@ -338,6 +362,7 @@ class functions_comment
 
         if ($comment_action != 'reject') {
             $user_where_clause = '';
+
             if (! functions_user::is_admin()) {
                 $user_where_clause = '   AND author_id = \'' .
     $GLOBALS['user']['id'] . '\'';
@@ -355,7 +380,10 @@ class functions_comment
             $result = functions_mysqli::pwg_query($query);
 
             // mail admin and ask to validate the comment
-            if ($result and $conf['email_admin_on_comment_validation'] and $comment_action == 'moderate') {
+            if ($result and
+                $conf['email_admin_on_comment_validation'] and
+                $comment_action == 'moderate'
+            ) {
                 include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
 
                 $comment_url = functions_url::get_absolute_root_url() . 'comments.php?comment_id=' . $comment['comment_id'];
@@ -397,9 +425,10 @@ class functions_comment
     {
         global $conf;
 
-        if (! in_array($action, ['edit', 'delete'])
-            or (($action == 'edit') and ! $conf['email_admin_on_comment_edition'])
-            or (($action == 'delete') and ! $conf['email_admin_on_comment_deletion'])) {
+        if (! in_array($action, ['edit', 'delete']) or
+          ($action == 'edit' and ! $conf['email_admin_on_comment_edition']) or
+          ($action == 'delete' and ! $conf['email_admin_on_comment_deletion'])
+        ) {
             return;
         }
 
@@ -438,6 +467,7 @@ class functions_comment
     WHERE id = ' . $comment_id . '
   ;';
         $result = functions_mysqli::pwg_query($query);
+
         if (functions_mysqli::pwg_db_num_rows($result) == 0) {
             if ($die_on_error) {
                 functions_html::fatal_error('Unknown comment identifier');

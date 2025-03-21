@@ -32,11 +32,13 @@ functions::load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
 // +-----------------------------------------------------------------------+
 // | Main                                                                  |
 // +-----------------------------------------------------------------------+
-if (isset($_GET['subscribe'])
-    and preg_match('/^[A-Za-z0-9]{16}$/', $_GET['subscribe'])) {
+if (isset($_GET['subscribe']) and
+    preg_match('/^[A-Za-z0-9]{16}$/', $_GET['subscribe'])
+) {
     functions_notification_by_mail::subscribe_notification_by_mail(false, [$_GET['subscribe']]);
-} elseif (isset($_GET['unsubscribe'])
-    and preg_match('/^[A-Za-z0-9]{16}$/', $_GET['unsubscribe'])) {
+} elseif (isset($_GET['unsubscribe']) and
+          preg_match('/^[A-Za-z0-9]{16}$/', $_GET['unsubscribe'])
+) {
     functions_notification_by_mail::unsubscribe_notification_by_mail(false, [$_GET['unsubscribe']]);
 } else {
     $page['errors'][] = functions::l10n('Unknown identifier');
@@ -54,7 +56,10 @@ $template->set_filenames([
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! isset($themeconf['hide_menu_on']) or ! in_array('theNBMPage', $themeconf['hide_menu_on'])) {
+
+if (! isset($themeconf['hide_menu_on']) or
+    ! in_array('theNBMPage', $themeconf['hide_menu_on'])
+) {
     menubar::initialize_menu();
 }
 

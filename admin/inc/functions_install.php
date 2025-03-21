@@ -29,26 +29,32 @@ class functions_install
     {
         $sql_lines = file($filepath);
         $query = '';
+
         foreach ($sql_lines as $sql_line) {
             $sql_line = trim($sql_line);
+
             if (preg_match('/(^--|^$)/', $sql_line)) {
                 continue;
             }
+
             $query .= ' ' . $sql_line;
-            // if we reached the end of query, we execute it and reinitialize the
-            // variable "query"
+
+            // if we reached the end of query, we execute it and reinitialize the variable "query"
             if (preg_match('/;$/', $sql_line)) {
                 $query = trim($query);
                 $query = str_replace($replaced, $replacing, $query);
+
                 // we don't execute "DROP TABLE" queries
                 if (! preg_match('/^DROP TABLE/i', $query)) {
                     if ($dblayer == 'mysql') {
                         if (preg_match('/^(CREATE TABLE .*)[\s]*;[\s]*/im', $query, $matches)) {
-                            $query = $matches[1] . ' DEFAULT CHARACTER SET utf8' . ';';
+                            $query = $matches[1] . ' DEFAULT CHARACTER SET utf8;';
                         }
                     }
+
                     functions_mysqli::pwg_query($query);
                 }
+
                 $query = '';
             }
         }
@@ -60,6 +66,7 @@ class functions_install
     public static function activate_core_themes()
     {
         $themes = new themes();
+
         foreach ($themes->fs_themes as $theme_id => $fs_theme) {
             if (in_array($theme_id, ['modus', 'smartpocket'])) {
                 $themes->perform_action('activate', $theme_id);

@@ -35,6 +35,7 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 if (! is_numeric($_GET['site'])) {
     die('site param missing or invalid');
 }
+
 $site_id = $_GET['site'];
 
 $query = '
@@ -42,9 +43,11 @@ SELECT galleries_url
   FROM ' . SITES_TABLE . '
   WHERE id = ' . $site_id;
 list($site_url) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
 if (! isset($site_url)) {
     die('site ' . $site_id . ' does not exist');
 }
+
 $site_is_remote = functions_url::url_is_remote($site_url);
 
 list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
@@ -102,14 +105,16 @@ if (isset($_GET['quick_sync'])) {
 }
 
 $general_failure = true;
-if (isset($_POST['submit'])) {
 
+if (isset($_POST['submit'])) {
     if ($site_reader->open()) {
         $general_failure = false;
     }
 
     // shall we simulate only
-    if (isset($_POST['simulate']) and $_POST['simulate'] == 1) {
+    if (isset($_POST['simulate']) and
+        $_POST['simulate'] == 1
+    ) {
         $simulate = true;
     } else {
         $simulate = false;
@@ -119,8 +124,9 @@ if (isset($_POST['submit'])) {
 // +-----------------------------------------------------------------------+
 // |                      directories / categories                         |
 // +-----------------------------------------------------------------------+
-if (isset($_POST['submit'])
-    and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')) {
+if (isset($_POST['submit']) and
+   ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')
+) {
     $counts['new_categories'] = 0;
     $counts['del_categories'] = 0;
     $counts['del_elements'] = 0;
@@ -128,9 +134,10 @@ if (isset($_POST['submit'])
     $counts['upd_elements'] = 0;
 }
 
-if (isset($_POST['submit'])
-    and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')
-    and ! $general_failure) {
+if (isset($_POST['submit']) and
+   ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files') and
+    ! $general_failure
+) {
     $start = functions::get_moment();
     // which categories to update ?
     $query = '
@@ -138,8 +145,13 @@ SELECT id, uppercats, global_rank, status, visible
   FROM ' . CATEGORIES_TABLE . '
   WHERE dir IS NOT NULL
     AND site_id = ' . $site_id;
-    if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
-        if (isset($_POST['subcats-included']) and $_POST['subcats-included'] == 1) {
+
+    if (isset($_POST['cat']) and
+        is_numeric($_POST['cat'])
+    ) {
+        if (isset($_POST['subcats-included']) and
+            $_POST['subcats-included'] == 1
+        ) {
             $query .= '
     AND uppercats ' . functions_mysqli::DB_REGEX_OPERATOR . ' \'(^|,)' . $_POST['cat'] . '(,|$)\'
 ';
@@ -149,6 +161,7 @@ SELECT id, uppercats, global_rank, status, visible
 ';
         }
     }
+
     $db_categories = functions::hash_from_query($query, 'id');
 
     // get category full directories in an array for comparison with file
@@ -156,7 +169,9 @@ SELECT id, uppercats, global_rank, status, visible
     $db_fulldirs = functions_admin::get_fulldirs(array_keys($db_categories));
 
     // what is the base directory to search file system sub-directories ?
-    if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
+    if (isset($_POST['cat']) and
+        is_numeric($_POST['cat'])
+    ) {
         $basedir = $db_fulldirs[$_POST['cat']];
     } else {
         $basedir = preg_replace('#/*$#', '', $site_url);
@@ -173,6 +188,7 @@ SELECT id, uppercats, global_rank, status, visible
 SELECT id
   FROM ' . CATEGORIES_TABLE;
     $result = functions_mysqli::pwg_query($query);
+
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $next_rank[$row['id']] = 1;
     }
@@ -183,11 +199,15 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
   FROM ' . CATEGORIES_TABLE . '
   GROUP BY id_uppercat';
     $result = functions_mysqli::pwg_query($query);
+
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         // for the id_uppercat NULL, we write 'NULL' and not the empty string
-        if (! isset($row['id_uppercat']) or $row['id_uppercat'] == '') {
+        if (! isset($row['id_uppercat']) or
+            $row['id_uppercat'] == ''
+        ) {
             $row['id_uppercat'] = 'NULL';
         }
+
         $next_rank[$row['id_uppercat']] = $row['next_rank'];
     }
 
@@ -202,17 +222,22 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
     if (isset($_POST['cat'])) {
         $fs_fulldirs[] = $basedir;
     }
+
     // If $_POST['subcats-included'] != 1 ("Search in sub-albums" is unchecked)
     // $db_fulldirs doesn't include any subdirectories and $fs_fulldirs does
     // So $fs_fulldirs will be limited to the selected basedir
     // (if that one is in $fs_fulldirs)
-    if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] != 1) {
+    if (! isset($_POST['subcats-included']) or
+        $_POST['subcats-included'] != 1
+    ) {
         $fs_fulldirs = array_intersect($fs_fulldirs, array_keys($db_fulldirs));
     }
+
     $inserts = [];
     // new categories are the directories not present yet in the database
     foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
         $dir = basename($fulldir);
+
         if (preg_match($conf['sync_chars_regex'], $dir)) {
             $insert = [
                 'id' => $next_id++,
@@ -229,14 +254,14 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 $parent = $db_fulldirs[dirname($fulldir)];
 
                 $insert['id_uppercat'] = $parent;
-                $insert['uppercats'] =
-                  $db_categories[$parent]['uppercats'] . ',' . $insert['id'];
+                $insert['uppercats'] = $db_categories[$parent]['uppercats'] . ',' . $insert['id'];
                 $insert['rank'] = $next_rank[$parent]++;
-                $insert['global_rank'] =
-                  $db_categories[$parent]['global_rank'] . '.' . $insert['rank'];
+                $insert['global_rank'] = $db_categories[$parent]['global_rank'] . '.' . $insert['rank'];
+
                 if ($db_categories[$parent]['status'] == 'private') {
                     $insert['status'] = 'private';
                 }
+
                 if ($db_categories[$parent]['visible'] == 'false') {
                     $insert['visible'] = 'false';
                 }
@@ -283,8 +308,10 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             // add default permissions to categories
             $category_ids = [];
             $category_up = [];
+
             foreach ($inserts as $category) {
                 $category_ids[] = $category['id'];
+
                 if (! empty($category['id_uppercat'])) {
                     $category_up[] = $category['id_uppercat'];
                 }
@@ -295,19 +322,25 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             ]);
 
             $category_up = implode(',', array_unique($category_up));
-            if ($conf['inheritance_by_default'] and ! empty($category_up)) {
+
+            if ($conf['inheritance_by_default'] and
+                ! empty($category_up)
+            ) {
                 $query = '
           SELECT *
           FROM ' . GROUP_ACCESS_TABLE . '
           WHERE cat_id IN (' . $category_up . ')
         ;';
                 $result = functions_mysqli::pwg_query($query);
+
                 if (! empty($result)) {
                     $granted_grps = [];
+
                     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
                         if (! isset($granted_grps[$row['cat_id']])) {
                             $granted_grps[$row['cat_id']] = [];
                         }
+
                         // TODO: explanation
                         array_push(
                             $granted_grps,
@@ -317,18 +350,22 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         );
                     }
                 }
+
                 $query = '
           SELECT *
           FROM ' . USER_ACCESS_TABLE . '
           WHERE cat_id IN (' . $category_up . ')
         ;';
                 $result = functions_mysqli::pwg_query($query);
+
                 if (! empty($result)) {
                     $granted_users = [];
+
                     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
                         if (! isset($granted_users[$row['cat_id']])) {
                             $granted_users[$row['cat_id']] = [];
                         }
+
                         // TODO: explanation
                         array_push(
                             $granted_users,
@@ -338,14 +375,20 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         );
                     }
                 }
+
                 $insert_granted_users = [];
                 $insert_granted_grps = [];
+
                 foreach ($category_ids as $ids) {
                     $parent_id = $db_categories[$ids]['parent'];
+
                     while (in_array($parent_id, $category_ids)) {
                         $parent_id = $db_categories[$parent_id]['parent'];
                     }
-                    if ($db_categories[$ids]['status'] == 'private' and $parent_id !== null) {
+
+                    if ($db_categories[$ids]['status'] == 'private' and
+                        $parent_id !== null
+                    ) {
                         if (isset($granted_grps[$parent_id])) {
                             foreach ($granted_grps[$parent_id] as $granted_grp) {
                                 $insert_granted_grps[] = [
@@ -354,6 +397,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                                 ];
                             }
                         }
+
                         if (isset($granted_users[$parent_id])) {
                             foreach ($granted_users[$parent_id] as $granted_user) {
                                 $insert_granted_users[] = [
@@ -364,6 +408,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         }
                     }
                 }
+
                 functions_mysqli::mass_inserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $insert_granted_grps);
                 $insert_granted_users = array_unique($insert_granted_users, SORT_REGULAR);
                 functions_mysqli::mass_inserts(USER_ACCESS_TABLE, ['user_id', 'cat_id'], $insert_granted_users);
@@ -391,18 +436,21 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
         if (substr_compare($fulldir, '../', 0, 3) == 0) {
             $fulldir = substr($fulldir, 3);
         }
+
         $to_delete_derivative_dirs[] = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $fulldir;
     }
 
     if (count($to_delete) > 0) {
         if (! $simulate) {
             functions_admin::delete_categories($to_delete);
+
             foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                 if (is_dir($to_delete_dir)) {
                     functions_admin::clear_derivative_cache_rec($to_delete_dir, '#.+#');
                 }
             }
         }
+
         $counts['del_categories'] = count($to_delete);
     }
 
@@ -410,11 +458,14 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
       . functions::get_elapsed_time($start, functions::get_moment())
       . ' -->');
 }
+
 // +-----------------------------------------------------------------------+
 // |                           files / elements                            |
 // +-----------------------------------------------------------------------+
-if (isset($_POST['submit']) and $_POST['sync'] == 'files'
-      and ! $general_failure) {
+if (isset($_POST['submit']) and
+    $_POST['sync'] == 'files' and
+    ! $general_failure
+) {
     $start_files = functions::get_moment();
     $start = $start_files;
 
@@ -455,10 +506,13 @@ SELECT id, path
         $insert = [];
         // storage category must exist
         $dirname = dirname($path);
+
         if (! isset($db_fulldirs[$dirname])) {
             continue;
         }
+
         $filename = basename($path);
+
         if (! preg_match($conf['sync_chars_regex'], $filename)) {
             $errors[] = [
                 'path' => $path,
@@ -535,6 +589,7 @@ SELECT *
   WHERE image_id IN (' . implode(',', $existing_ids) . ')
 ;';
             $result = functions_mysqli::pwg_query($query);
+
             while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 if (! isset($db_formats[$row['image_id']])) {
                     $db_formats[$row['image_id']] = [];
@@ -547,6 +602,7 @@ SELECT *
             foreach ($db_formats as $image_id => $formats) {
                 $image_formats_to_delete = array_diff_key($formats, $fs[$db_elements[$image_id]]['formats']);
                 $logger->debug('image_formats_to_delete', $image_formats_to_delete);
+
                 foreach ($image_formats_to_delete as $ext => $format_id) {
                     $formats_to_delete[] = $format_id;
 
@@ -562,12 +618,14 @@ SELECT *
                 $path = $db_elements[$image_id];
 
                 $formats = [];
+
                 if (isset($db_formats[$image_id])) {
                     $formats = $db_formats[$image_id];
                 }
 
                 $image_formats_to_insert = array_diff_key($fs[$path]['formats'], $formats);
                 $logger->debug('image_formats_to_insert', $image_formats_to_insert);
+
                 foreach ($image_formats_to_insert as $ext => $filesize) {
                     $insert_formats[] = [
                         'image_id' => $image_id,
@@ -605,7 +663,9 @@ SELECT *
             ]);
 
             // add new photos to caddie
-            if (isset($_POST['add_to_caddie']) and $_POST['add_to_caddie'] == 1) {
+            if (isset($_POST['add_to_caddie']) and
+                $_POST['add_to_caddie'] == 1
+            ) {
                 functions::fill_caddie($caddiables);
             }
         }
@@ -633,6 +693,7 @@ DELETE
 
     // delete elements that are in database but not in the filesystem
     $to_delete_elements = [];
+
     foreach (array_diff($db_elements, array_keys($fs)) as $path) {
         $to_delete_elements[] = array_search($path, $db_elements);
         $infos[] = [
@@ -640,10 +701,12 @@ DELETE
             'info' => functions::l10n('deleted'),
         ];
     }
+
     if (count($to_delete_elements) > 0) {
         if (! $simulate) {
             functions_admin::delete_elements($to_delete_elements);
         }
+
         $counts['del_elements'] = count($to_delete_elements);
     }
 
@@ -655,9 +718,10 @@ DELETE
 // +-----------------------------------------------------------------------+
 // |                          synchronize files                            |
 // +-----------------------------------------------------------------------+
-if (isset($_POST['submit'])
-    and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')
-    and ! $general_failure) {
+if (isset($_POST['submit']) and
+   ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files') and
+    ! $general_failure
+) {
     if (! $simulate) {
         $start = functions::get_moment();
         functions_admin::update_category('all');
@@ -675,12 +739,17 @@ if (isset($_POST['submit'])
         $start = functions::get_moment();
         $opts['category_id'] = '';
         $opts['recursive'] = true;
+
         if (isset($_POST['cat'])) {
             $opts['category_id'] = $_POST['cat'];
-            if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] != 1) {
+
+            if (! isset($_POST['subcats-included']) or
+                $_POST['subcats-included'] != 1
+            ) {
                 $opts['recursive'] = false;
             }
         }
+
         $files = functions_metadata_admin::get_filelist(
             $opts['category_id'],
             $site_id,
@@ -693,9 +762,11 @@ if (isset($_POST['submit'])
         $start = functions::get_moment();
 
         $datas = [];
+
         foreach ($files as $id => $file) {
             $file = $file['path'];
             $data = $site_reader->get_element_update_attributes($file);
+
             if (! is_array($data)) {
                 continue;
             }
@@ -705,7 +776,10 @@ if (isset($_POST['submit'])
         }
 
         $counts['upd_elements'] = count($datas);
-        if (! $simulate and count($datas) > 0) {
+
+        if (! $simulate and
+            count($datas) > 0
+        ) {
             functions_mysqli::mass_updates(
                 IMAGES_TABLE,
                 // fields
@@ -716,6 +790,7 @@ if (isset($_POST['submit'])
                 $datas
             );
         }
+
         $template->append('footer_elements', '<!-- update files : '
           . functions::get_elapsed_time($start, functions::get_moment())
           . ' -->');
@@ -725,8 +800,10 @@ if (isset($_POST['submit'])
 // +-----------------------------------------------------------------------+
 // |                          synchronize files                            |
 // +-----------------------------------------------------------------------+
-if (isset($_POST['submit'])
-    and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')) {
+if (isset($_POST['submit']) and
+   ($_POST['sync'] == 'dirs' or
+    $_POST['sync'] == 'files')
+) {
     $template->assign(
         'update_result',
         [
@@ -743,8 +820,10 @@ if (isset($_POST['submit'])
 // +-----------------------------------------------------------------------+
 // |                          synchronize metadata                         |
 // +-----------------------------------------------------------------------+
-if (isset($_POST['submit']) and isset($_POST['sync_meta'])
-         and ! $general_failure) {
+if (isset($_POST['submit']) and
+    isset($_POST['sync_meta']) and
+    ! $general_failure
+) {
     // sync only never synchronized files ?
     $opts['only_new'] = isset($_POST['meta_all']) ? false : true;
     $opts['category_id'] = '';
@@ -753,10 +832,13 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
     if (isset($_POST['cat'])) {
         $opts['category_id'] = $_POST['cat'];
         // recursive ?
-        if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] != 1) {
+        if (! isset($_POST['subcats-included']) or
+            $_POST['subcats-included'] != 1
+        ) {
             $opts['recursive'] = false;
         }
     }
+
     $start = functions::get_moment();
     $files = functions_metadata_admin::get_filelist(
         $opts['category_id'],
@@ -822,6 +904,7 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
                 isset($_POST['meta_empty_overrides']) ? 0 : functions_mysqli::MASS_UPDATES_SKIP_EMPTY
             );
         }
+
         functions_admin::set_tags_of($tags_of);
     }
 
@@ -846,14 +929,20 @@ $template->set_filenames([
     'update' => 'site_update.tpl',
 ]);
 $result_title = '';
-if (isset($simulate) and $simulate) {
+
+if (isset($simulate) and
+    $simulate
+) {
     $result_title .= '[' . functions::l10n('Simulation') . '] ';
 }
 
 // used_metadata string is displayed to inform admin which metadata will be
 // used from files for synchronization
 $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
-if ($site_is_remote and ! isset($_POST['submit'])) {
+
+if ($site_is_remote and
+    ! isset($_POST['submit'])
+) {
     $used_metadata .= ' + ...';
 }
 
@@ -884,7 +973,9 @@ if (isset($_POST['submit'])) {
         'meta_empty_overrides' => isset($_POST['meta_empty_overrides']) ? true : false,
     ];
 
-    if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
+    if (isset($_POST['cat']) and
+        is_numeric($_POST['cat'])
+    ) {
         $cat_selected = [$_POST['cat']];
     } else {
         $cat_selected = [];
@@ -948,9 +1039,10 @@ if (count($errors) > 0) {
     }
 }
 
-if (count($infos) > 0
-    and isset($_POST['display_info'])
-    and $_POST['display_info'] == 1) {
+if (count($infos) > 0 and
+    isset($_POST['display_info']) and
+    $_POST['display_info'] == 1
+) {
     foreach ($infos as $info) {
         $template->append(
             'sync_infos',

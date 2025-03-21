@@ -57,9 +57,11 @@ class functions_mysqli
         $dbname = '';
 
         $mysqli = new mysqli($host, $user, $password, $dbname, $port, $socket);
+
         if (mysqli_connect_error()) {
             throw new Exception("Can't connect to server");
         }
+
         if (! $mysqli->select_db($database)) {
             throw new Exception('Connection to server succeed, but it was impossible to connect to database');
         }
@@ -85,9 +87,13 @@ class functions_mysqli
         global $mysqli;
 
         $db_charset = 'utf8';
-        if (defined('DB_CHARSET') and DB_CHARSET != '') {
+
+        if (defined('DB_CHARSET') and
+            DB_CHARSET != ''
+        ) {
             $db_charset = DB_CHARSET;
         }
+
         $mysqli->set_charset($db_charset);
     }
 
@@ -97,6 +103,7 @@ class functions_mysqli
     public static function pwg_db_check_version()
     {
         $current_mysql = self::pwg_get_db_version();
+
         if (version_compare($current_mysql, self::REQUIRED_MYSQL_VERSION, '<')) {
             functions_html::fatal_error(
                 sprintf(
@@ -141,7 +148,11 @@ class functions_mysqli
 
         file_put_contents($log_file, $query . "\n\n", FILE_APPEND | LOCK_EX);
 
-        ($result = $mysqli->query($query)) or self::my_error($query, $conf['die_on_sql_error']);
+        $result = $mysqli->query($query);
+
+        if ($result === false) {
+            self::my_error($query, $conf['die_on_sql_error']);
+        }
 
         $time = microtime(true) - $start;
 
@@ -163,14 +174,19 @@ class functions_mysqli
             $output .= number_format($page['queries_time'], 3, '.', ' ') . ' s)';
             $output .= "\n" . '(total time      : ';
             $output .= number_format(($time + $start - $t2), 3, '.', ' ') . ' s)';
-            if ($result != null and preg_match('/\s*SELECT\s+/i', $query)) {
+
+            if ($result != null and
+                preg_match('/\s*SELECT\s+/i', $query)
+            ) {
                 $output .= "\n" . '(num rows        : ';
                 $output .= self::pwg_db_num_rows($result) . ' )';
-            } elseif ($result != null
-              and preg_match('/\s*INSERT|UPDATE|REPLACE|DELETE\s+/i', $query)) {
+            } elseif ($result != null and
+                      preg_match('/\s*INSERT|UPDATE|REPLACE|DELETE\s+/i', $query)
+            ) {
                 $output .= "\n" . '(affected rows   : ';
                 $output .= self::pwg_db_changes() . ' )';
             }
+
             $output .= "</pre>\n";
 
             $debug .= $output;
@@ -293,31 +309,38 @@ class functions_mysqli
                 foreach ($dbfields['update'] as $key) {
                     $separator = $is_first ? '' : ",\n    ";
 
-                    if (isset($data[$key]) and $data[$key] != '') {
+                    if (isset($data[$key]) and
+                        $data[$key] != ''
+                    ) {
                         $query .= $separator . self::protect_column_name($key) . ' = \'' . $data[$key] . '\'';
                     } else {
                         if ($flags & self::MASS_UPDATES_SKIP_EMPTY) {
                             continue; // next field
                         }
+
                         $query .= $separator . self::protect_column_name($key) . ' = NULL';
                     }
+
                     $is_first = false;
                 }
 
-                if (! $is_first) {// only if one field at least updated
+                if (! $is_first) { // only if one field at least updated
                     $is_first = true;
 
                     $query .= '
     WHERE ';
+
                     foreach ($dbfields['primary'] as $key) {
                         if (! $is_first) {
                             $query .= ' AND ';
                         }
+
                         if (isset($data[$key])) {
                             $query .= self::protect_column_name($key) . ' = \'' . $data[$key] . '\'';
                         } else {
                             $query .= self::protect_column_name($key) . ' IS NULL';
                         }
+
                         $is_first = false;
                     }
 
@@ -336,18 +359,27 @@ class functions_mysqli
                     $column .= ' ' . $row['Type'];
 
                     $nullable = true;
-                    if (! isset($row['Null']) or $row['Null'] == '' or $row['Null'] == 'NO') {
+
+                    if (! isset($row['Null']) or
+                        $row['Null'] == '' or
+                        $row['Null'] == 'NO'
+                    ) {
                         $column .= ' NOT NULL';
                         $nullable = false;
                     }
+
                     if (isset($row['Default'])) {
                         $column .= " default '" . $row['Default'] . "'";
                     } elseif ($nullable) {
                         $column .= ' default NULL';
                     }
-                    if (isset($row['Collation']) and $row['Collation'] != 'NULL') {
+
+                    if (isset($row['Collation']) and
+                        $row['Collation'] != 'NULL'
+                    ) {
                         $column .= " collate '" . $row['Collation'] . "'";
                     }
+
                     $columns[] = $column;
                 }
             }
@@ -415,18 +447,22 @@ class functions_mysqli
         foreach ($datas as $key => $value) {
             $separator = $is_first ? '' : ",\n    ";
 
-            if (isset($value) and $value !== '') {
+            if (isset($value) and
+                $value !== ''
+            ) {
                 $query .= $separator . self::protect_column_name($key) . ' = \'' . $value . '\'';
             } else {
                 if ($flags & self::MASS_UPDATES_SKIP_EMPTY) {
                     continue; // next field
                 }
+
                 $query .= $separator . self::protect_column_name($key) . ' = NULL';
             }
+
             $is_first = false;
         }
 
-        if (! $is_first) {// only if one field at least updated
+        if (! $is_first) { // only if one field at least updated
             $is_first = true;
 
             $query .= '
@@ -436,11 +472,13 @@ class functions_mysqli
                 if (! $is_first) {
                     $query .= ' AND ';
                 }
+
                 if (isset($value)) {
                     $query .= self::protect_column_name($key) . ' = \'' . $value . '\'';
                 } else {
                     $query .= self::protect_column_name($key) . ' IS NULL';
                 }
+
                 $is_first = false;
             }
 
@@ -461,7 +499,10 @@ class functions_mysqli
     public static function mass_inserts($table_name, $dbfields, $datas, $options = [])
     {
         $ignore = '';
-        if (isset($options['ignore']) and $options['ignore']) {
+
+        if (isset($options['ignore']) and
+            $options['ignore']
+        ) {
             $ignore = 'IGNORE';
         }
 
@@ -491,17 +532,21 @@ class functions_mysqli
                 }
 
                 $query .= '(';
+
                 foreach ($dbfields as $field_id => $dbfield) {
                     if ($field_id > 0) {
                         $query .= ',';
                     }
 
-                    if (! isset($insert[$dbfield]) or $insert[$dbfield] === '') {
+                    if (! isset($insert[$dbfield]) or
+                        $insert[$dbfield] === ''
+                    ) {
                         $query .= 'NULL';
                     } else {
                         $query .= "'" . $insert[$dbfield] . "'";
                     }
                 }
+
                 $query .= ')';
             }
 
@@ -521,7 +566,10 @@ class functions_mysqli
     public static function single_insert($table_name, $data, $options = [])
     {
         $ignore = '';
-        if (isset($options['ignore']) and $options['ignore']) {
+
+        if (isset($options['ignore']) and
+            $options['ignore']
+        ) {
             $ignore = 'IGNORE';
         }
 
@@ -533,6 +581,7 @@ class functions_mysqli
 
             $query .= '(';
             $is_first = true;
+
             foreach ($data as $key => $value) {
                 if (! $is_first) {
                     $query .= ',';
@@ -540,12 +589,15 @@ class functions_mysqli
                     $is_first = false;
                 }
 
-                if ($value === '' || $value === null) {
+                if ($value === '' ||
+                    $value === null
+                ) {
                     $query .= 'NULL';
                 } else {
                     $query .= "'" . $value . "'";
                 }
             }
+
             $query .= ')';
 
             self::pwg_query($query);
@@ -573,6 +625,7 @@ class functions_mysqli
         // List all tables
         $query = 'SHOW TABLES LIKE \'' . $prefixTable . '%\'';
         $result = self::pwg_query($query);
+
         while ($row = self::pwg_db_fetch_row($result)) {
             $all_tables[] = $row[0];
         }
@@ -587,6 +640,7 @@ class functions_mysqli
 
             $query = 'DESC ' . $table_name . ';';
             $result = self::pwg_query($query);
+
             while ($row = self::pwg_db_fetch_assoc($result)) {
                 if ($row['Key'] == 'PRI') {
                     $all_primary_key[] = $row['Field'];
@@ -602,6 +656,7 @@ class functions_mysqli
         // Optimize all tables
         $query = 'OPTIMIZE TABLE ' . implode(', ', $all_tables);
         $mysqli_rc = $mysqli_rc && self::pwg_query($query);
+
         if ($mysqli_rc) {
             $page['infos'][] = functions::l10n('All optimizations have been successfully completed.');
         } else {
@@ -636,10 +691,12 @@ class functions_mysqli
     public static function get_enums($table, $field)
     {
         $result = self::pwg_query('DESC ' . $table);
+
         while ($row = self::pwg_db_fetch_assoc($result)) {
             if ($row['Field'] == $field) {
                 // parse enum('blue','green','black')
                 $options = explode(',', substr($row['Type'], 5, -1));
+
                 foreach ($options as $i => $option) {
                     $options[$i] = str_replace("'", '', $option);
                 }
@@ -679,7 +736,6 @@ class functions_mysqli
         }
 
         return $var;
-
     }
 
     public static function pwg_db_get_recent_period_expression($period, $date = 'CURRENT_DATE')
@@ -737,7 +793,6 @@ class functions_mysqli
         }
 
         return 'WEEK(' . $date . ')';
-
     }
 
     public static function pwg_db_get_dayofmonth($date)
@@ -774,6 +829,7 @@ class functions_mysqli
         if ($die) {
             functions_html::fatal_error($error);
         }
+
         echo '<pre>';
         trigger_error($error, E_USER_WARNING);
         echo '</pre>';

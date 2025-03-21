@@ -49,6 +49,7 @@ class pwg
             $types = array_keys(ImageStdParams::get_defined_type_map());
         } else {
             $types = array_intersect(array_keys(ImageStdParams::get_defined_type_map()), $params['types']);
+
             if (count($types) == 0) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid types');
             }
@@ -63,13 +64,15 @@ class pwg
         }
 
         $start_id = $params['prev_page'];
+
         if ($start_id <= 0) {
             $start_id = $max_id;
         }
 
         $uid = '&b=' . time();
 
-        $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
+        $conf['question_mark_in_urls'] = true;
+        $conf['php_extension_in_urls'] = true;
         $conf['derivative_url_style'] = 2; //script
 
         $qlimit = min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
@@ -89,6 +92,7 @@ class pwg
   ;';
 
         $urls = [];
+
         do {
             $result = functions_mysqli::pwg_query(str_replace('start_id', $start_id, $query_model));
             $is_last = functions_mysqli::pwg_db_num_rows($result) < $qlimit;
@@ -96,33 +100,41 @@ class pwg
             while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 $start_id = $row['id'];
                 $src_image = new SrcImage($row);
+
                 if ($src_image->is_mimetype()) {
                     continue;
                 }
 
                 foreach ($types as $type) {
                     $derivative = new DerivativeImage($type, $src_image);
+
                     if ($type != $derivative->get_type()) {
                         continue;
                     }
+
                     if (@filemtime($derivative->get_path()) === false) {
                         $urls[] = $derivative->get_url() . $uid;
                     }
                 }
 
-                if (count($urls) >= $max_urls and ! $is_last) {
+                if (count($urls) >= $max_urls and
+                    ! $is_last
+                ) {
                     break;
                 }
             }
+
             if ($is_last) {
                 $start_id = 0;
             }
         } while (count($urls) < $max_urls and $start_id);
 
         $ret = [];
+
         if ($start_id) {
             $ret['next_page'] = $start_id;
         }
+
         $ret['urls'] = $urls;
         return $ret;
     }
@@ -198,6 +210,7 @@ class pwg
                 'value' => $value,
             ];
         }
+
         return [
             'infos' => new PwgNamedArray($output, 'item'),
         ];
@@ -216,12 +229,13 @@ class pwg
         // Cache size
         $path_cache = $conf['data_location'];
         $infos['cache_size'] = null;
+
         if (function_exists('exec')) {
             @exec('du -sk ' . $path_cache, $return_array_cache);
-            if (
-                is_array($return_array_cache)
-                and ! empty($return_array_cache[0])
-                and preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
+
+            if (is_array($return_array_cache) and
+                ! empty($return_array_cache[0]) and
+                preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
             ) {
                 $infos['cache_size'] = $matches_cache[1] * 1024;
             }
@@ -239,17 +253,19 @@ class pwg
             $infos['msizes'][$size_type] += @$msizes[derivative_params::derivative_to_url($size_type)];
             $all += $infos['msizes'][$size_type];
         }
+
         $infos['msizes']['all'] = $all;
 
         // Compiled templates size
         $path_template_c = $conf['data_location'] . 'templates_c';
         $infos['tsizes'] = null;
+
         if (function_exists('exec')) {
             @exec('du -sk ' . $path_template_c, $return_array_template_c);
-            if (
-                is_array($return_array_template_c)
-                and ! empty($return_array_template_c[0])
-                and preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
+
+            if (is_array($return_array_template_c) and
+                ! empty($return_array_template_c[0]) and
+                preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
             ) {
                 $infos['tsizes'] = $matches_template_c[1] * 1024;
             }
@@ -293,12 +309,14 @@ class pwg
         $result = functions::array_from_query($query, 'id');
 
         $datas = [];
+
         foreach ($result as $id) {
             $datas[] = [
                 'element_id' => $id,
                 'user_id' => $user['id'],
             ];
         }
+
         if (count($datas)) {
             functions_mysqli::mass_inserts(
                 CADDIE_TABLE,
@@ -306,6 +324,7 @@ class pwg
                 $datas
             );
         }
+
         return count($datas);
     }
 
@@ -327,14 +346,18 @@ class pwg
         if (! empty($params['anonymous_id'])) {
             $query .= ' AND anonymous_id=\'' . $params['anonymous_id'] . '\'';
         }
+
         if (! empty($params['image_id'])) {
             $query .= ' AND element_id=' . $params['image_id'];
         }
 
-        $changes = functions_mysqli::pwg_db_changes(functions_mysqli::pwg_query($query));
+        functions_mysqli::pwg_query($query);
+        $changes = functions_mysqli::pwg_db_changes();
+
         if ($changes) {
             functions_rate::update_rating_score();
         }
+
         return $changes;
     }
 
@@ -351,6 +374,7 @@ class pwg
         if (functions_user::try_log_user($params['username'], $params['password'], false)) {
             return true;
         }
+
         return new PwgError(999, 'Invalid username/password');
     }
 
@@ -364,6 +388,7 @@ class pwg
         if (! functions_user::is_a_guest()) {
             functions_user::logout_user();
         }
+
         return true;
     }
 
@@ -377,9 +402,11 @@ class pwg
         global $user, $conf;
 
         $res['username'] = functions_user::is_a_guest() ? 'guest' : stripslashes($user['username']);
+
         foreach (['status', 'theme', 'language'] as $k) {
             $res[$k] = $user[$k];
         }
+
         $res['pwg_token'] = functions::get_pwg_token();
         $res['charset'] = functions::get_pwg_charset();
 
@@ -389,13 +416,18 @@ class pwg
         $res['save_visits'] = functions::do_log();
 
         // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
-        if (isset($_SERVER['HTTP_USER_AGENT']) and preg_match('/^PiwigoRemoteSync/', $_SERVER['HTTP_USER_AGENT'])) {
+        if (isset($_SERVER['HTTP_USER_AGENT']) and
+            preg_match('/^PiwigoRemoteSync/', $_SERVER['HTTP_USER_AGENT'])
+        ) {
             unset($res['save_visits']);
         }
 
         // Piwigo Remote Sync does not support receiving the available sizes
         $piwigo_remote_sync_agent = 'Apache-HttpClient/';
-        if (! isset($_SERVER['HTTP_USER_AGENT']) or substr($_SERVER['HTTP_USER_AGENT'], 0, strlen($piwigo_remote_sync_agent)) !== $piwigo_remote_sync_agent) {
+
+        if (! isset($_SERVER['HTTP_USER_AGENT']) or
+            substr($_SERVER['HTTP_USER_AGENT'], 0, strlen($piwigo_remote_sync_agent)) !== $piwigo_remote_sync_agent
+        ) {
             $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
         }
 
@@ -467,6 +499,7 @@ class pwg
 
         $line_id = 0;
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $row['details'] = str_replace('`groups`', 'groups', $row['details']);
             $row['details'] = str_replace('`rank`', 'rank', $row['details']);
@@ -479,6 +512,7 @@ class pwg
             if (isset($details['method'])) {
                 $detailsType = 'method';
             }
+
             if (isset($details['script'])) {
                 $detailsType = 'script';
             }
@@ -507,6 +541,7 @@ class pwg
                 ];
 
                 $user_ids[$row['performed_by']] = 1;
+
                 if ($row['object'] == 'user') {
                     $user_ids[$row['object_id']] = 1;
                 }
@@ -518,6 +553,7 @@ class pwg
 
         $username_of = [];
         $user_id_list = [];
+
         if (count($user_ids) > 0) {
             $query = '
   SELECT
@@ -541,6 +577,7 @@ class pwg
             }
 
             $output_lines[$idx]['username'] = 'user#' . $output_lines[$idx]['user_id'];
+
             if (isset($username_of[$output_lines[$idx]['user_id']])) {
                 $output_lines[$idx]['username'] = $username_of[$output_lines[$idx]['user_id']];
             }
@@ -578,7 +615,9 @@ class pwg
     {
         global $logger, $page;
 
-        if (! empty($params['section']) and in_array($params['section'], functions_mysqli::get_enums(HISTORY_TABLE, 'section'))) {
+        if (! empty($params['section']) and
+            in_array($params['section'], functions_mysqli::get_enums(HISTORY_TABLE, 'section'))
+        ) {
             $page['section'] = $params['section'];
         }
 
@@ -588,7 +627,9 @@ class pwg
             ];
         }
 
-        if (! empty($params['tags_string']) and preg_match('/^\d+(,\d+)*$/', $params['tags_string'])) {
+        if (! empty($params['tags_string']) and
+            preg_match('/^\d+(,\d+)*$/', $params['tags_string'])
+        ) {
             $page['tag_ids'] = explode(',', $params['tags_string']);
         }
 
@@ -599,6 +640,7 @@ class pwg
         }
 
         $image_type = 'picture';
+
         if ($params['is_download']) {
             $image_type = 'high';
         }
@@ -612,12 +654,13 @@ class pwg
      */
     public static function ws_history_search($param, &$service)
     {
-
         include_once(PHPWG_ROOT_PATH . 'admin/inc/functions_history.php');
 
         global $conf;
 
-        if (isset($_GET['start']) and is_numeric($_GET['start'])) {
+        if (isset($_GET['start']) and
+            is_numeric($_GET['start'])
+        ) {
             $page['start'] = $_GET['start'];
         } else {
             $page['start'] = 0;
@@ -689,8 +732,9 @@ class pwg
 
         $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
         // Display choice are also save to one cookie
-        if (! empty($param['display_thumbnail'])
-            and isset($display_thumbnails[$param['display_thumbnail']])) {
+        if (! empty($param['display_thumbnail']) and
+            isset($display_thumbnails[$param['display_thumbnail']])
+        ) {
             $cookie_val = $param['display_thumbnail'];
         } else {
             $cookie_val = null;
@@ -784,6 +828,7 @@ class pwg
 
             foreach ($search_details as $id_search => $rules_search) {
                 $rules_search = functions::safe_unserialize($rules_search)['fields'];
+
                 if (! empty($rules_search['tags']['words'])) {
                     $has_tags = true;
                 }
@@ -812,6 +857,7 @@ class pwg
             $result = functions_mysqli::pwg_query($query);
 
             $username_of = [];
+
             while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 $username_of[$row['id']] = stripslashes($row['username']);
             }
@@ -867,6 +913,7 @@ class pwg
             global $name_of_tag; // used for preg_replace
             $name_of_tag = [];
             $result = functions_mysqli::pwg_query($query);
+
             while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 $name_of_tag[$row['id']] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
             }
@@ -883,7 +930,9 @@ class pwg
         $sorted_members = [];
 
         foreach ($history_lines as $line) {
-            if (isset($line['image_type']) and $line['image_type'] == 'high') {
+            if (isset($line['image_type']) and
+                $line['image_type'] == 'high'
+            ) {
                 $summary['total_filesize'] += @intval($image_infos[$line['image_id']]['filesize']);
             }
 
@@ -897,18 +946,22 @@ class pwg
 
             $i++;
 
-            if ($i <= $first_line and $i >= $last_line) {
+            if ($i <= $first_line and
+                $i >= $last_line
+            ) {
                 continue;
             }
 
             $user_name = '#unknown';
             $user_string = '';
+
             if (isset($username_of[$line['user_id']])) {
                 $user_name = $username_of[$line['user_id']];
                 $user_string .= $username_of[$line['user_id']];
             } else {
                 $user_string .= $line['user_id'];
             }
+
             $user_string .= '&nbsp;<a href="';
             $user_string .= PHPWG_ROOT_PATH . 'admin.php?page=history';
             $user_string .= '&amp;search_id=' . $search_id;
@@ -917,6 +970,7 @@ class pwg
 
             $tag_names = '';
             $tag_ids = '';
+
             if (isset($line['tag_ids'])) {
                 $tag_names = preg_replace_callback(
                     '/(\d+)/',
@@ -931,6 +985,7 @@ class pwg
             $image_edit_string = '';
             $image_id = '';
             $cat_name = '';
+
             if (isset($line['image_id'])) {
                 $image_edit_string = PHPWG_ROOT_PATH . 'admin.php?page=photo-' . $line['image_id'];
                 $picture_url = functions_url::make_picture_url(
@@ -1014,6 +1069,7 @@ class pwg
         $result = array_slice($result, $param['pageNumber'] * 300, 300);
 
         $summary['nb_guests'] = 0;
+
         if (count(array_keys($summary['guests_IP'])) > 0) {
             $summary['nb_guests'] = count(array_keys($summary['guests_IP']));
 
@@ -1025,6 +1081,7 @@ class pwg
         $summary['nb_members'] = count($username_of);
 
         $member_strings = [];
+
         foreach ($username_of as $user_id => $user_name) {
             $member_string = $user_name;
             $member_strings[] = [

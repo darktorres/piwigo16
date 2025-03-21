@@ -34,6 +34,7 @@ use Piwigo\inc\functions_user;
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
+
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 $tpl_extension = isset($conf['extents_for_templates']) ?
@@ -119,23 +120,30 @@ $available_templates = array_merge(
 if (isset($_POST['submit'])) {
     $replacements = [];
     $i = 0;
+
     while (isset($_POST['reptpl'][$i])) {
         $newtpl = $_POST['reptpl'][$i];
         $original = $_POST['original'][$i];
         $handle = $eligible_templates[$original];
         $url_keyword = $_POST['url'][$i];
+
         if ($url_keyword == '----------') {
             $url_keyword = 'N/A';
         }
+
         $bound_tpl = $_POST['bound'][$i];
+
         if ($bound_tpl == '----------') {
             $bound_tpl = 'N/A';
         }
+
         if ($handle != 'N/A') {
             $replacements[$newtpl] = [$handle, $url_keyword, $bound_tpl];
         }
+
         $i++;
     }
+
     $conf['extents_for_templates'] = serialize($replacements);
     $tpl_extension = $replacements;
     /* ecrire la nouvelle conf */
@@ -143,6 +151,7 @@ if (isset($_POST['submit'])) {
 UPDATE ' . CONFIG_TABLE . '
   SET value = \'' . $conf['extents_for_templates'] . '\'
 WHERE param = \'extents_for_templates\';';
+
     if (functions_mysqli::pwg_query($query)) {
         $page['infos'][] = functions::l10n('Templates configuration has been recorded.');
     }
@@ -160,6 +169,7 @@ foreach ($tpl_extension as $file => $conditions) {
         $new_extensions = array_diff($new_extensions, [$file]);
     }
 }
+
 foreach ($new_extensions as $file) {
     $tpl_extension[$file] = ['N/A', 'N/A', 'N/A'];
 }
@@ -177,6 +187,7 @@ $template->assign(
     ]
 );
 ksort($tpl_extension);
+
 foreach ($tpl_extension as $file => $conditions) {
     $handle = $conditions[0];
     $url_keyword = $conditions[1];
@@ -196,6 +207,7 @@ foreach ($tpl_extension as $file => $conditions) {
     );
 
 }
+
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+

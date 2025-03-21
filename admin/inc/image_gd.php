@@ -30,7 +30,10 @@ class image_gd implements imageInterface
             $this->image = imagecreatefromjpeg($source_filepath);
         } elseif ($extension == 'png') {
             $this->image = imagecreatefrompng($source_filepath);
-        } elseif ($extension == 'gif' and $gd_info['GIF Read Support'] and $gd_info['GIF Create Support']) {
+        } elseif ($extension == 'gif' and
+                  $gd_info['GIF Read Support'] and
+                  $gd_info['GIF Create Support']
+        ) {
             $this->image = imagecreatefromgif($source_filepath);
         } else {
             die('[Image GD] unsupported file extension');
@@ -53,6 +56,7 @@ class image_gd implements imageInterface
 
         imagealphablending($dest, false);
         imagesavealpha($dest, true);
+
         if (function_exists('imageantialias')) {
             imageantialias($dest, true);
         }
@@ -65,6 +69,7 @@ class image_gd implements imageInterface
         } else {
             imagedestroy($dest);
         }
+
         return $result;
     }
 
@@ -93,6 +98,7 @@ class image_gd implements imageInterface
 
         imagealphablending($dest, false);
         imagesavealpha($dest, true);
+
         if (function_exists('imageantialias')) {
             imageantialias($dest, true);
         }
@@ -105,6 +111,7 @@ class image_gd implements imageInterface
         } else {
             imagedestroy($dest);
         }
+
         return $result;
     }
 

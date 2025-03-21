@@ -20,7 +20,9 @@ class QDateRangeScope extends QSearchScope
     {
         $str = $token->term;
         $strict = [0, 0];
-        if (($pos = strpos($str, '..')) !== false) {
+        $pos = strpos($str, '..');
+
+        if ($pos !== false) {
             $range = [substr($str, 0, $pos), substr($str, $pos + 2)];
         } elseif (@$str[0] == '>') {
             $range = [substr($str, 1), ''];
@@ -39,13 +41,17 @@ class QDateRangeScope extends QSearchScope
         foreach ($range as $i => &$val) {
             if (preg_match('/([0-9]{4})-?((?:1[0-2])|(?:0?[1-9]))?-?((?:(?:[1-3][0-9])|(?:0?[1-9])))?/', $val, $matches)) {
                 array_shift($matches);
+
                 if (! isset($matches[1])) {
                     $matches[1] = ($i ^ $strict[$i]) ? 12 : 1;
                 }
+
                 if (! isset($matches[2])) {
                     $matches[2] = ($i ^ $strict[$i]) ? 31 : 1;
                 }
+
                 $val = implode('-', $matches);
+
                 if ($i ^ $strict[$i]) {
                     $val .= ' 23:59:59';
                 }
@@ -54,7 +60,10 @@ class QDateRangeScope extends QSearchScope
             }
         }
 
-        if (! $this->nullable && $range[0] == '' && $range[1] == '') {
+        if (! $this->nullable &&
+            $range[0] == '' &&
+            $range[1] == ''
+        ) {
             return false;
         }
 
@@ -65,9 +74,11 @@ class QDateRangeScope extends QSearchScope
     public function get_sql($field, $token)
     {
         $clauses = [];
+
         if ($token->scope_data[0] != '') {
             $clauses[] = $field . ' >= \'' . $token->scope_data[0] . '\'';
         }
+
         if ($token->scope_data[1] != '') {
             $clauses[] = $field . ' <= \'' . $token->scope_data[1] . '\'';
         }
@@ -79,6 +90,7 @@ class QDateRangeScope extends QSearchScope
 
             return $field . ' IS NULL';
         }
+
         return '(' . implode(' AND ', $clauses) . ')';
     }
 }

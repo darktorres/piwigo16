@@ -24,23 +24,28 @@ class functions_rate
     {
         global $conf, $user;
 
-        if (! isset($rate)
-            or ! $conf['rate']
-            or ! preg_match('/^[0-9]+$/', $rate)
-            or ! in_array($rate, $conf['rate_items'])) {
+        if (! isset($rate) or
+            ! $conf['rate'] or
+            ! preg_match('/^[0-9]+$/', $rate) or
+            ! in_array($rate, $conf['rate_items'])
+        ) {
             return false;
         }
 
         $user_anonymous = functions_user::is_authorized_status(ACCESS_CLASSIC) ? false : true;
 
-        if ($user_anonymous and ! $conf['rate_anonymous']) {
+        if ($user_anonymous and
+            ! $conf['rate_anonymous']
+        ) {
             return false;
         }
 
         $ip_components = explode('.', $_SERVER['REMOTE_ADDR']);
+
         if (count($ip_components) > 3) {
             array_pop($ip_components);
         }
+
         $anonymous_id = implode('.', $ip_components);
 
         if ($user_anonymous) {
@@ -87,6 +92,7 @@ class functions_rate
         if ($user_anonymous) {
             $query .= ' AND anonymous_id = \'' . $anonymous_id . '\'';
         }
+
         functions_mysqli::pwg_query($query);
         $query = '
   INSERT
@@ -116,7 +122,9 @@ class functions_rate
      */
     public static function update_rating_score($element_id = false)
     {
-        if (($alt_result = functions_plugins::trigger_change('update_rating_score', false, $element_id)) !== false) {
+        $alt_result = functions_plugins::trigger_change('update_rating_score', false, $element_id);
+
+        if ($alt_result !== false) {
             return $alt_result;
         }
 
@@ -133,6 +141,7 @@ class functions_rate
         $by_item = [];
 
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $all_rates_count += $row['rcount'];
             $all_rates_avg += $row['rsum'];
@@ -145,9 +154,11 @@ class functions_rate
         }
 
         $updates = [];
+
         foreach ($by_item as $id => $rate_summary) {
             $score = ($item_ratecount_avg * $all_rates_avg + $rate_summary['rsum']) / ($item_ratecount_avg + $rate_summary['rcount']);
             $score = round($score, 2);
+
             if ($id == $element_id) {
                 $return = [
                     'score' => $score,
@@ -155,11 +166,13 @@ class functions_rate
                     'count' => $rate_summary['rcount'],
                 ];
             }
+
             $updates[] = [
                 'id' => $id,
                 'rating_score' => $score,
             ];
         }
+
         functions_mysqli::mass_updates(
             IMAGES_TABLE,
             [

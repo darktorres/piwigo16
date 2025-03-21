@@ -34,10 +34,9 @@ class functions_html
         $is_first = true;
 
         foreach ($cat_information as $cat) {
-            is_array($cat) or trigger_error(
-                'get_cat_display_name wrong type for category ',
-                E_USER_WARNING
-            );
+            if (! is_array($cat)) {
+                trigger_error('get_cat_display_name wrong type for category ', E_USER_WARNING);
+            }
 
             $cat['name'] = functions_plugins::trigger_change(
                 'render_category_name',
@@ -67,6 +66,7 @@ class functions_html
                 $output .= $cat['name'] . '</a>';
             }
         }
+
         return $output;
     }
 
@@ -90,6 +90,7 @@ class functions_html
         global $cache, $conf;
 
         $add_url_params = [];
+
         if (isset($auth_key)) {
             $add_url_params['auth'] = $auth_key;
         }
@@ -103,16 +104,21 @@ class functions_html
         }
 
         $output = '';
+
         if ($single_link) {
             $uppercats_array = explode(',', $uppercats);
             $single_url = functions_url::add_url_params(functions_url::get_root_url() . $url . array_pop($uppercats_array), $add_url_params);
             $output .= '<a href="' . $single_url . '"';
+
             if (isset($link_class)) {
                 $output .= ' class="' . $link_class . '"';
             }
+
             $output .= '>';
         }
+
         $is_first = true;
+
         foreach (explode(',', $uppercats) as $category_id) {
             $cat = $cache['cat_names'][$category_id];
 
@@ -128,27 +134,32 @@ class functions_html
                 $output .= '<span>' . $conf['level_separator'] . '</span>';
             }
 
-            if (! isset($url) or $single_link) {
+            if (! isset($url) or
+                $single_link
+            ) {
                 $output .= $cat['name'];
             } elseif ($url == '') {
-                $output .= '
-  <a href="'
-                . functions_url::add_url_params(
-                    functions_url::make_index_url(
-                        [
-                            'category' => $cat,
-                        ]
-                    ),
+                $href = functions_url::add_url_params(
+                    functions_url::make_index_url([
+                        'category' => $cat,
+                    ]),
                     $add_url_params
-                )
-                . '">' . $cat['name'] . '</a>';
+                );
+
+                $output .= <<<HTML
+                    <a href="{$href}">{$cat['name']}</a>
+                    HTML;
             } else {
-                $output .= '
-  <a href="' . PHPWG_ROOT_PATH . $url . $category_id . '">' . $cat['name'] . '</a>';
+                $href = PHPWG_ROOT_PATH . $url . $category_id;
+                $output .= <<<HTML
+                    <a href="{$href}">{$cat['name']}</a>
+                    HTML;
             }
         }
 
-        if ($single_link and isset($single_url)) {
+        if ($single_link and
+            isset($single_url)
+        ) {
             $output .= '</a>';
         }
 
@@ -200,7 +211,7 @@ class functions_html
         $content = preg_replace($pattern, $replacement, $content);
 
         // replace /word/ by an italic word
-        $pattern = "/\/(\S*)\/(\s)/";
+        $pattern = '/\/(\S*)\/(\s)/';
         $replacement = '<span style="font-style:italic;">$1$2</span>';
         $content = preg_replace($pattern, $replacement, $content);
 
@@ -244,7 +255,9 @@ class functions_html
             functions_url::get_root_url() . 'identification.php?redirect='
             . urlencode(urlencode($_SERVER['REQUEST_URI']));
 
-        if (isset($user) and ! functions_user::is_a_guest()) {
+        if (isset($user) and
+            ! functions_user::is_a_guest()
+        ) {
             self::set_status_header(401);
 
             echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
@@ -253,7 +266,9 @@ class functions_html
             echo '<a href="' . functions_url::make_index_url() . '">' . functions::l10n('Home') . '</a></div>';
             echo str_repeat(' ', 512); //IE6 doesn't error output if below a size
             exit();
-        } elseif (! $conf['guest_access'] and functions_user::is_a_guest()) {
+        } elseif (! $conf['guest_access'] and
+                  functions_user::is_a_guest()
+        ) {
             functions::redirect_http($login_url);
         } else {
             functions::redirect_html($login_url);
@@ -270,16 +285,21 @@ class functions_html
     public static function page_forbidden($msg, $alternate_url = null)
     {
         self::set_status_header(403);
+
         if ($alternate_url == null) {
             $alternate_url = functions_url::make_index_url();
         }
-        functions::redirect_html(
-            $alternate_url,
-            '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-  <h1 style="text-align:left; font-size:36px;">' . functions::l10n('Forbidden') . '</h1><br>'
-  . $msg . '</div>',
-            5
-        );
+
+        $l10n_forbidden = functions::l10n('Forbidden');
+
+        $html_content = <<<HTML
+            <div style="text-align:left; margin-left:5em; margin-bottom:5em;">
+              <h1 style="text-align:left; font-size:36px;">{$l10n_forbidden}</h1><br>
+              {$msg}
+            </div>
+            HTML;
+
+        functions::redirect_html($alternate_url, $html_content, 5);
     }
 
     /**
@@ -292,16 +312,21 @@ class functions_html
     public static function bad_request($msg, $alternate_url = null)
     {
         self::set_status_header(400);
+
         if ($alternate_url == null) {
             $alternate_url = functions_url::make_index_url();
         }
-        functions::redirect_html(
-            $alternate_url,
-            '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-  <h1 style="text-align:left; font-size:36px;">' . functions::l10n('Bad request') . '</h1><br>'
-  . $msg . '</div>',
-            5
-        );
+
+        $l10n_bad_request = functions::l10n('Bad request');
+
+        $html_content = <<<HTML
+            <div style="text-align:left; margin-left:5em; margin-bottom:5em;">
+              <h1 style="text-align:left; font-size:36px;">{$l10n_bad_request}</h1><br>
+              {$msg}
+            </div>
+            HTML;
+
+        functions::redirect_html($alternate_url, $html_content, 5);
     }
 
     /**
@@ -314,16 +339,21 @@ class functions_html
     public static function page_not_found($msg, $alternate_url = null)
     {
         self::set_status_header(404);
+
         if ($alternate_url == null) {
             $alternate_url = functions_url::make_index_url();
         }
-        functions::redirect_html(
-            $alternate_url,
-            '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-  <h1 style="text-align:left; font-size:36px;">' . functions::l10n('Page not found') . '</h1><br>'
-  . $msg . '</div>',
-            5
-        );
+
+        $l10n_page_not_found = functions::l10n('Page not found');
+
+        $html_content = <<<HTML
+            <div style="text-align:left; margin-left:5em; margin-bottom:5em;">
+              <h1 style="text-align:left; font-size:36px;">{$l10n_page_not_found}</h1><br>
+              {$msg}
+            </div>
+            HTML;
+
+        functions::redirect_html($alternate_url, $html_content, 5);
     }
 
     /**
@@ -341,29 +371,37 @@ class functions_html
         }
 
         $btrace_msg = '';
-        if ($show_trace and function_exists('debug_backtrace')) {
+
+        if ($show_trace and
+            function_exists('debug_backtrace')
+        ) {
             $bt = debug_backtrace();
+
             for ($i = 1; $i < count($bt); $i++) {
                 $class = isset($bt[$i]['class']) ? (@$bt[$i]['class'] . '::') : '';
                 $btrace_msg .= "#{$i}\t" . $class . @$bt[$i]['function'] . ' ' . @$bt[$i]['file'] . '(' . @$bt[$i]['line'] . ")\n";
             }
+
             $btrace_msg = trim($btrace_msg);
             $msg .= "\n";
         }
 
-        $display = "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
-  <h1>{$title}</h1>
-  <pre style='font-size:larger;background:white;color:red;padding:1em;margin:0;clear:both;display:block;width:auto;height:auto;overflow:auto'>
-  <b>{$msg}</b>
-  {$btrace_msg}
-  </pre>\n";
+        $display = <<<HTML
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+            <h1>{$title}</h1>
+            <pre style="font-size: larger; background: white; color: red; padding: 1em; margin: 0; clear: both; display: block; width: auto; height: auto; overflow: auto;">
+              <b>{$msg}</b>
+              {$btrace_msg}
+            </pre>
+            HTML;
 
         @self::set_status_header(500);
-        echo $display . str_repeat(' ', 300); //IE6 doesn't error output if below a size
+        echo $display . str_repeat(' ', 300); // IE6 doesn't error output if below a size
 
-        if (function_exists('ini_set')) {// if possible turn off error display (we display it)
+        if (function_exists('ini_set')) { // if possible turn off error display (we display it)
             ini_set('display_errors', false);
         }
+
         error_reporting(E_ALL);
         trigger_error(strip_tags($msg) . $btrace_msg, E_USER_ERROR);
         die(0); // just in case
@@ -417,6 +455,7 @@ class functions_html
                   . '</a>';
             }
         }
+
         return $title;
     }
 
@@ -433,6 +472,7 @@ class functions_html
 
         $is_first = true;
         $all_categories = array_merge([$page['category']], $page['combined_categories']);
+
         foreach ($all_categories as $idx => $category) {
             $title .= $is_first ? '' : ' + ';
             $is_first = false;
@@ -450,6 +490,7 @@ class functions_html
                 if (count($other_cats) > 0) {
                     $params['combined_categories'] = $other_cats;
                 }
+
                 $remove_url = functions_url::make_index_url($params);
 
                 $title .=
@@ -477,30 +518,44 @@ class functions_html
             switch ($code) {
                 case 200: $text = 'OK';
                     break;
+
                 case 301: $text = 'Moved permanently';
                     break;
+
                 case 302: $text = 'Moved temporarily';
                     break;
+
                 case 304: $text = 'Not modified';
                     break;
+
                 case 400: $text = 'Bad request';
                     break;
+
                 case 401: $text = 'Authorization required';
                     break;
+
                 case 403: $text = 'Forbidden';
                     break;
+
                 case 404: $text = 'Not found';
                     break;
+
                 case 500: $text = 'Server error';
                     break;
+
                 case 501: $text = 'Not implemented';
                     break;
+
                 case 503: $text = 'Service unavailable';
                     break;
             }
         }
+
         $protocol = $_SERVER['SERVER_PROTOCOL'];
-        if (($protocol != 'HTTP/1.1') && ($protocol != 'HTTP/1.0')) {
+
+        if ($protocol != 'HTTP/1.1' &&
+            $protocol != 'HTTP/1.0'
+        ) {
             $protocol = 'HTTP/1.0';
         }
 
@@ -517,7 +572,10 @@ class functions_html
      */
     public static function render_category_literal_description($desc)
     {
-        ! isset($desc) ? $desc = '' : false;
+        if (! isset($desc)) {
+            $desc = '';
+        }
+
         return strip_tags($desc, '<span><p><a><br><b><i><small><big><strong><em>');
     }
 
@@ -530,9 +588,11 @@ class functions_html
     public static function register_default_menubar_blocks($menu_ref_arr)
     {
         $menu = &$menu_ref_arr[0];
+
         if ($menu->get_id() != 'menubar') {
             return;
         }
+
         $menu->register_block(new RegisteredBlock('mbLinks', 'Links', 'piwigo'));
         $menu->register_block(new RegisteredBlock('mbCategories', 'Albums', 'piwigo'));
         $menu->register_block(new RegisteredBlock('mbTags', 'Related tags', 'piwigo'));
@@ -559,6 +619,7 @@ class functions_html
         if (! empty($info['name'])) {
             return functions_plugins::trigger_change('render_element_name', $info['name'], $info);
         }
+
         return functions::get_name_from_file($info['file']);
     }
 
@@ -574,6 +635,7 @@ class functions_html
         if (! empty($info['comment'])) {
             return functions_plugins::trigger_change('render_element_description', $info['comment'], $param);
         }
+
         return '';
     }
 
@@ -595,11 +657,15 @@ class functions_html
             $details[] = functions::l10n('%d visits', $info['hit']);
         }
 
-        if ($conf['rate'] and ! empty($info['rating_score'])) {
+        if ($conf['rate'] and
+            ! empty($info['rating_score'])
+        ) {
             $details[] = functions::l10n('rating score %s', $info['rating_score']);
         }
 
-        if (isset($info['nb_comments']) and $info['nb_comments'] != 0) {
+        if (isset($info['nb_comments']) and
+            $info['nb_comments'] != 0
+        ) {
             $details[] = functions::l10n_dec('%d comment', '%d comments', $info['nb_comments']);
         }
 
@@ -640,12 +706,15 @@ class functions_html
     public static function get_element_url_protection_handler($url, $infos)
     {
         global $conf;
-        if ($conf['original_url_protection'] == 'images') {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
+
+        if ($conf['original_url_protection'] == 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
             $ext = functions::get_extension($infos['path']);
+
             if (! in_array($ext, $conf['picture_ext'])) {
                 return $url;
             }
         }
+
         return functions_url::get_action_url($infos['id'], 'e', false);
     }
 
@@ -655,6 +724,7 @@ class functions_html
     public static function flush_page_messages()
     {
         global $template, $page;
+
         if ($template->get_template_vars('page_refresh') === null) {
             foreach (['errors', 'infos', 'warnings', 'messages'] as $mode) {
                 if (isset($_SESSION['page_' . $mode])) {

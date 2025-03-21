@@ -5,7 +5,9 @@ namespace Piwigo\plugins\AdminTools;
 use Piwigo\inc\functions;
 use Piwigo\inc\PluginMaintain;
 
-defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
+}
 
 class AdminTools_maintain extends PluginMaintain
 {

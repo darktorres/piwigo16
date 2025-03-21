@@ -89,6 +89,7 @@ class pwg_groups
     WHERE name = \'' . $params['name'] . '\'
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count != 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
         }
@@ -151,7 +152,9 @@ class pwg_groups
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (isset($params['name']) && strlen(str_replace(' ', '', $params['name'])) == 0) {
+        if (isset($params['name']) &&
+            strlen(str_replace(' ', '', $params['name'])) == 0
+        ) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
         }
 
@@ -164,6 +167,7 @@ class pwg_groups
     WHERE id = ' . $params['group_id'] . '
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
         }
@@ -179,6 +183,7 @@ class pwg_groups
     AND id != ' . $params['group_id'] . '
   ;';
             list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
             if ($count != 0) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
             }
@@ -186,7 +191,9 @@ class pwg_groups
             $updates['name'] = $params['name'];
         }
 
-        if (! empty($params['is_default']) or @$params['is_default'] === false) {
+        if (! empty($params['is_default']) or
+            @$params['is_default'] === false
+        ) {
             $updates['is_default'] = functions_mysqli::boolean_to_string($params['is_default']);
         }
 
@@ -227,11 +234,13 @@ class pwg_groups
     WHERE id = ' . $params['group_id'] . '
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
         }
 
         $inserts = [];
+
         foreach ($params['user_id'] as $user_id) {
             $inserts[] = [
                 'group_id' => $params['group_id'],
@@ -266,7 +275,6 @@ class pwg_groups
      */
     public static function ws_groups_merge($params, &$service)
     {
-
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -286,6 +294,7 @@ class pwg_groups
     WHERE id in (' . implode(',', $all_groups) . ')
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count != count($all_groups)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'All groups does not exist.');
         }
@@ -313,6 +322,7 @@ class pwg_groups
         $user_to_add = array_diff($user_in_merge_groups, $user_in_dest);
 
         $inserts = [];
+
         foreach ($user_to_add as $user) {
             $inserts[] = [
                 'group_id' => $params['destination_group_id'],
@@ -332,6 +342,7 @@ class pwg_groups
         functions_admin::invalidate_user_cache();
 
         functions::pwg_activity('group', $params['destination_group_id'], 'edit');
+
         foreach ($user_to_add as $user_id) {
             functions::pwg_activity('user', $user_id, 'edit', [
                 'associated' => $params['destination_group_id'],
@@ -359,7 +370,6 @@ class pwg_groups
      */
     public static function ws_groups_duplicate($params, &$service)
     {
-
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -370,6 +380,7 @@ class pwg_groups
     WHERE name = \'' . functions_mysqli::pwg_db_real_escape_string($params['copy_name']) . '\'
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count != 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
         }
@@ -380,6 +391,7 @@ class pwg_groups
     WHERE id = ' . $params['group_id'] . '
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
         }
@@ -413,6 +425,7 @@ class pwg_groups
         $users = functions_mysqli::query2array($query, null, 'user_id');
 
         $inserts = [];
+
         foreach ($users as $user) {
             $inserts[] = [
                 'group_id' => $inserted_id,
@@ -464,6 +477,7 @@ class pwg_groups
     WHERE id = ' . $params['group_id'] . '
   ;';
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
         }

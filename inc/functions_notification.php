@@ -54,86 +54,96 @@ class functions_notification
 
         switch ($type) {
             case 'new_comments':
-
                 $query = '
     FROM ' . COMMENTS_TABLE . ' AS c
       INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON c.image_id = ic.image_id
     WHERE 1=1';
+
                 if (! empty($start)) {
                     $query .= '
       AND c.validation_date > \'' . $start . '\'';
                 }
+
                 if (! empty($end)) {
                     $query .= '
       AND c.validation_date <= \'' . $end . '\'';
                 }
+
                 $query .= self::get_std_sql_where_restrict_filter('AND');
                 break;
 
             case 'unvalidated_comments':
-
                 $query = '
     FROM ' . COMMENTS_TABLE . '
     WHERE 1=1';
+
                 if (! empty($start)) {
                     $query .= '
       AND date > \'' . $start . '\'';
                 }
+
                 if (! empty($end)) {
                     $query .= '
       AND date <= \'' . $end . '\'';
                 }
+
                 $query .= '
       AND validated = \'false\'';
                 break;
 
             case 'new_elements':
-
                 $query = '
     FROM ' . IMAGES_TABLE . '
       INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON image_id = id
     WHERE 1=1';
+
                 if (! empty($start)) {
                     $query .= '
       AND date_available > \'' . $start . '\'';
                 }
+
                 if (! empty($end)) {
                     $query .= '
       AND date_available <= \'' . $end . '\'';
                 }
+
                 $query .= self::get_std_sql_where_restrict_filter('AND', 'id');
                 break;
 
             case 'updated_categories':
-
                 $query = '
     FROM ' . IMAGES_TABLE . '
       INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON image_id = id
     WHERE 1=1';
+
                 if (! empty($start)) {
                     $query .= '
       AND date_available > \'' . $start . '\'';
                 }
+
                 if (! empty($end)) {
                     $query .= '
       AND date_available <= \'' . $end . '\'';
                 }
+
                 $query .= self::get_std_sql_where_restrict_filter('AND', 'id');
                 break;
 
             case 'new_users':
-
                 $query = '
     FROM ' . USER_INFOS_TABLE . '
     WHERE 1=1';
+
                 if (! empty($start)) {
                     $query .= '
       AND registration_date > \'' . $start . '\'';
                 }
+
                 if (! empty($end)) {
                     $query .= '
       AND registration_date <= \'' . $end . '\'';
                 }
+
                 break;
 
             default:
@@ -142,48 +152,56 @@ class functions_notification
 
         switch ($action) {
             case 'count':
-
                 switch ($type) {
                     case 'new_comments':
                         $field_id = 'c.id';
                         break;
+
                     case 'unvalidated_comments':
                         $field_id = 'id';
                         break;
+
                     case 'new_elements':
                         $field_id = 'image_id';
                         break;
+
                     case 'updated_categories':
                         $field_id = 'category_id';
                         break;
+
                     case 'new_users':
                         $field_id = 'user_id';
                         break;
                 }
+
                 $query = 'SELECT COUNT(DISTINCT ' . $field_id . ') ' . $query . ';';
                 list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
                 return $count;
                 break;
 
             case 'info':
-
                 switch ($type) {
                     case 'new_comments':
                         $field_id = 'c.id';
                         break;
+
                     case 'unvalidated_comments':
                         $field_id = 'id';
                         break;
+
                     case 'new_elements':
                         $field_id = 'image_id';
                         break;
+
                     case 'updated_categories':
                         $field_id = 'category_id';
                         break;
+
                     case 'new_users':
                         $field_id = 'user_id';
                         break;
                 }
+
                 $query = 'SELECT DISTINCT ' . $field_id . ' ' . $query . ';';
                 $infos = functions_mysqli::query2array($query);
                 return $infos;
@@ -317,10 +335,10 @@ class functions_notification
     public static function news_exists($start = null, $end = null)
     {
         return (self::nb_new_comments($start, $end) > 0) or
-                (self::nb_new_elements($start, $end) > 0) or
-                (self::nb_updated_categories($start, $end) > 0) or
-                ((functions_user::is_admin()) and (self::nb_unvalidated_comments($start, $end) > 0)) or
-                ((functions_user::is_admin()) and (self::nb_new_users($start, $end) > 0));
+               (self::nb_new_elements($start, $end) > 0) or
+               (self::nb_updated_categories($start, $end) > 0) or
+               (functions_user::is_admin() and self::nb_unvalidated_comments($start, $end) > 0) or
+               (functions_user::is_admin() and self::nb_new_users($start, $end) > 0);
     }
 
     /**
@@ -337,9 +355,13 @@ class functions_notification
     {
         if ($count > 0) {
             $line = functions::l10n_dec($singular_key, $plural_key, $count);
-            if ($add_url and ! empty($url)) {
+
+            if ($add_url and
+                ! empty($url)
+            ) {
                 $line = '<a href="' . $url . '">' . $line . '</a>';
             }
+
             $news[] = $line;
         }
     }
@@ -363,6 +385,7 @@ class functions_notification
         $news = [];
 
         $add_url_params = [];
+
         if (isset($auth_key)) {
             $add_url_params['auth'] = $auth_key;
         }
@@ -436,9 +459,11 @@ class functions_notification
         global $conf, $user, $persistent_cache;
 
         $cache_key = $persistent_cache->make_key('recent_posts' . $user['id'] . $user['cache_update_time'] . $max_dates . $max_elements . $max_cats);
+
         if ($persistent_cache->get($cache_key, $cached)) {
             return $cached;
         }
+
         $where_sql = self::get_std_sql_where_restrict_filter('WHERE', 'i.id', true);
 
         $query = '
@@ -468,7 +493,7 @@ class functions_notification
                 $dates[$i]['elements'] = functions_mysqli::query2array($query);
             }
 
-            if ($max_cats > 0) {// get some categories ...
+            if ($max_cats > 0) { // get some categories ...
                 $query = '
   SELECT
       DISTINCT c.uppercats,
@@ -519,6 +544,7 @@ class functions_notification
         global $conf;
 
         $add_url_params = [];
+
         if (isset($auth_key)) {
             $add_url_params['auth'] = $auth_key;
         }
@@ -550,6 +576,7 @@ class functions_notification
               )
               . '"><img src="' . $tn_src . '"></a>';
         }
+
         $description .= '...<br>';
 
         $description .=
@@ -558,6 +585,7 @@ class functions_notification
               . '</li>';
 
         $description .= '<ul>';
+
         foreach ($date_detail['categories'] as $cat) {
             $description .=
                   '<li>'
@@ -566,6 +594,7 @@ class functions_notification
                   functions::l10n_dec('%d new photo', '%d new photos', $cat['img_count']) . ')'
                   . '</li>';
         }
+
         $description .= '</ul>';
 
         $description .= '</ul>';

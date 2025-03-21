@@ -8,14 +8,18 @@ class functions_GDThumb
 {
     public static function int_delete_gdthumb_cache($pattern)
     {
-        if ($contents = @opendir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR)) {
+        $contents = @opendir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR);
+
+        if ($contents) {
             while (($node = readdir($contents)) !== false) {
-                if ($node != '.'
-                    and $node != '..'
-                    and is_dir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $node)) {
+                if ($node != '.' and
+                    $node != '..' and
+                    is_dir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $node)
+                ) {
                     functions_admin::clear_derivative_cache_rec(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $node, $pattern);
                 }
             }
+
             closedir($contents);
         }
     }

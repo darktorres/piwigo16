@@ -57,11 +57,14 @@ $sort_orders = [
     'natural_order ASC',
 ];
 
-if (isset($_POST['simpleAutoOrder']) || isset($_POST['recursiveAutoOrder'])) {
+if (isset($_POST['simpleAutoOrder']) ||
+    isset($_POST['recursiveAutoOrder'])
+) {
 
     if (! in_array($_POST['order'], $sort_orders)) {
         die('Invalid sort order');
     }
+
     functions::check_input_parameter('id', $_POST, false, '/^-?\d+$/');
 
     $query = '
@@ -82,6 +85,7 @@ SELECT id
     list($order_by_field, $order_by_asc) = explode(' ', $_POST['order']);
 
     $order_by_date = false;
+
     if (strpos($order_by_field, 'date_') === 0) {
         $order_by_date = true;
 
@@ -98,6 +102,7 @@ SELECT id, name, id_uppercat
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
     $result = functions_mysqli::pwg_query($query);
+
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $row['name'] = functions_plugins::trigger_change('render_category_name', $row['name'], 'admin_cat_list');
 
@@ -163,9 +168,11 @@ foreach ($allAlbum as $album) {
 
     $parents = explode(',', $album['uppercats']);
     $the_place = &$associatedTree[strval($parents[0])];
+
     for ($i = 1; $i < count($parents); $i++) {
         $the_place = &$the_place['children'][strval($parents[$i])];
     }
+
     $the_place['cat'] = $album;
 }
 
@@ -204,8 +211,10 @@ foreach ($all_categories as $id => $uppercats) {
 }
 
 $nb_sub_photos = [];
+
 foreach ($subcats_of as $cat_id => $subcat_ids) {
     $nb_photos = 0;
+
     foreach ($subcat_ids as $id) {
         if (isset($nb_photos_in[$id])) {
             $nb_photos += $nb_photos_in[$id];

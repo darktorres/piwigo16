@@ -45,6 +45,7 @@ class functions_calendar
                 if (empty($sub_ids)) {
                     return; // nothing to do
                 }
+
                 $inner_sql .= '
   WHERE category_id IN (' . implode(',', $sub_ids) . ')';
                 $inner_sql .= '
@@ -71,6 +72,7 @@ class functions_calendar
             if (empty($page['items'])) {
                 return; // nothing to do
             }
+
             $inner_sql .= '
   WHERE id IN (' . implode(',', $page['items']) . ')';
         }
@@ -105,12 +107,15 @@ class functions_calendar
         $views = [self::CAL_VIEW_LIST, self::CAL_VIEW_CALENDAR];
 
         // Retrieve calendar field
-        isset($fields[$page['chronology_field']]) or functions_html::fatal_error('bad chronology field');
+        if (! isset($fields[$page['chronology_field']])) {
+            functions_html::fatal_error('bad chronology field');
+        }
 
         // Retrieve style
         if (! isset($styles[$page['chronology_style']])) {
             $page['chronology_style'] = 'monthly';
         }
+
         $cal_style = $page['chronology_style'];
         $classname = '\\Piwigo\\inc\\' . $styles[$cal_style]['classname'];
 
@@ -119,12 +124,14 @@ class functions_calendar
         // Retrieve view
 
         if (! isset($page['chronology_view']) or
-            ! in_array($page['chronology_view'], $views)) {
+            ! in_array($page['chronology_view'], $views)
+        ) {
             $page['chronology_view'] = self::CAL_VIEW_LIST;
         }
 
         if ($page['chronology_view'] == self::CAL_VIEW_CALENDAR and
-              ! $styles[$cal_style]['view_calendar']) {
+            ! $styles[$cal_style]['view_calendar']
+        ) {
 
             $page['chronology_view'] = self::CAL_VIEW_LIST;
         }
@@ -133,19 +140,23 @@ class functions_calendar
         if (! isset($page['chronology_date'])) {
             $page['chronology_date'] = [];
         }
+
         while (count($page['chronology_date']) > 3) {
             array_pop($page['chronology_date']);
         }
 
         $any_count = 0;
+
         for ($i = 0; $i < count($page['chronology_date']); $i++) {
             if ($page['chronology_date'][$i] == 'any') {
-                if ($page['chronology_view'] == self::CAL_VIEW_CALENDAR) {// we dont allow any in calendar view
+                if ($page['chronology_view'] == self::CAL_VIEW_CALENDAR) { // we dont allow any in calendar view
                     while ($i < count($page['chronology_date'])) {
                         array_pop($page['chronology_date']);
                     }
+
                     break;
                 }
+
                 $any_count++;
             } elseif ($page['chronology_date'][$i] == '') {
                 while ($i < count($page['chronology_date'])) {
@@ -155,15 +166,17 @@ class functions_calendar
                 $page['chronology_date'][$i] = (int) $page['chronology_date'][$i];
             }
         }
+
         if ($any_count == 3) {
             array_pop($page['chronology_date']);
         }
 
         $calendar->initialize($inner_sql);
 
-        //echo ('<pre>'. var_export($calendar, true) . '</pre>');
+        // echo ('<pre>'. var_export($calendar, true) . '</pre>');
 
         $must_show_list = true; // true until calendar generates its own display
+
         if (functions::script_basename() != 'picture') { // basename without file extension
             if ($calendar->generate_category_content()) {
                 $page['items'] = [];
@@ -175,17 +188,21 @@ class functions_calendar
 
             foreach ($styles as $style => $style_data) {
                 foreach ($views as $view) {
-                    if ($style_data['view_calendar'] or $view != self::CAL_VIEW_CALENDAR) {
+                    if ($style_data['view_calendar'] or
+                        $view != self::CAL_VIEW_CALENDAR
+                    ) {
                         $selected = false;
 
                         if ($style != $cal_style) {
                             $chronology_date = [];
+
                             if (isset($page['chronology_date'][0])) {
                                 $chronology_date[] = $page['chronology_date'][0];
                             }
                         } else {
                             $chronology_date = $page['chronology_date'];
                         }
+
                         $url = functions_url::duplicate_index_url(
                             [
                                 'chronology_style' => $style,
@@ -194,7 +211,9 @@ class functions_calendar
                             ]
                         );
 
-                        if ($style == $cal_style and $view == $page['chronology_view']) {
+                        if ($style == $cal_style and
+                            $view == $page['chronology_view']
+                        ) {
                             $selected = true;
                         }
 
@@ -209,12 +228,12 @@ class functions_calendar
                     }
                 }
             }
+
             $url = functions_url::duplicate_index_url(
                 [],
                 ['start', 'chronology_date']
             );
-            $calendar_title = '<a href="' . $url . '">'
-                . $fields[$page['chronology_field']]['label'] . '</a>';
+            $calendar_title = '<a href="' . $url . '">' . $fields[$page['chronology_field']]['label'] . '</a>';
             $calendar_title .= $calendar->get_display_name();
             $template->assign(
                 'chronology',
@@ -228,12 +247,14 @@ class functions_calendar
             if (isset($page['super_order_by'])) {
                 $order_by = $conf['order_by'];
             } else {
-                if (count($page['chronology_date']) == 0
-                    or in_array('any', $page['chronology_date'])) {// selected period is very big so we show newest first
+                if (count($page['chronology_date']) == 0 or
+                    in_array('any', $page['chronology_date'])
+                ) { // selected period is very big so we show newest first
                     $order = ' DESC, ';
-                } else {// selected period is small (month,week) so we show oldest first
+                } else { // selected period is small (month,week) so we show oldest first
                     $order = ' ASC, ';
                 }
+
                 $order_by = str_replace(
                     'ORDER BY ',
                     'ORDER BY ' . $calendar->date_field . $order,
@@ -241,25 +262,28 @@ class functions_calendar
                 );
             }
 
-            if ($page['section'] == 'categories' && ! isset($page['category'])
-              && (count($page['chronology_date']) == 0
-                    or ($page['chronology_date'][0] == 'any' && count($page['chronology_date']) == 1))
+            if ($page['section'] == 'categories' &&
+                ! isset($page['category']) &&
+                (count($page['chronology_date']) == 0 or ($page['chronology_date'][0] == 'any' && count($page['chronology_date']) == 1))
             ) {
-                $cache_key = $persistent_cache->make_key($user['id'] . $user['cache_update_time']
-                  . $calendar->date_field . $order_by);
+                $cache_key = $persistent_cache->make_key($user['id'] . $user['cache_update_time'] . $calendar->date_field . $order_by);
             }
 
-            if (! isset($cache_key) || ! $persistent_cache->get($cache_key, $page['items'])) {
+            if (! isset($cache_key) ||
+                ! $persistent_cache->get($cache_key, $page['items'])
+            ) {
                 $query = 'SELECT DISTINCT id '
                   . $calendar->inner_sql . '
     ' . $calendar->get_date_where() . '
     ' . $order_by;
                 $page['items'] = functions::array_from_query($query, 'id');
+
                 if (isset($cache_key)) {
                     $persistent_cache->set($cache_key, $page['items']);
                 }
             }
         }
+
         functions::pwg_debug('end initialize_calendar');
     }
 }

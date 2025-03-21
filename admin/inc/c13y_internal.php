@@ -72,7 +72,9 @@ class c13y_internal
         global $conf;
 
         foreach (['show_exif', 'use_exif'] as $value) {
-            if (($conf[$value]) and (! function_exists('exif_read_data'))) {
+            if ($conf[$value] and
+                ! function_exists('exif_read_data')
+            ) {
                 $c13y->add_anomaly(
                     sprintf(functions::l10n('%s value is not correct file because exif are not supported'), '$conf[\'' . $value . '\']'),
                     null,
@@ -126,6 +128,7 @@ class c13y_internal
         $status = [];
 
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $status[$row['id']] = $row['status'];
         }
@@ -183,8 +186,10 @@ class c13y_internal
 
                     if (isset($name)) {
                         $name_ok = false;
+
                         while (! $name_ok) {
                             $name_ok = (functions_user::get_userid($name) === false);
+
                             if (! $name_ok) {
                                 $name .= functions_session::generate_key(1);
                             }
@@ -197,6 +202,7 @@ class c13y_internal
                                 'password' => $password,
                             ],
                         ];
+
                         functions_mysqli::mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
 
                         functions_user::create_user_infos($id);
@@ -205,7 +211,9 @@ class c13y_internal
 
                         $result = true;
                     }
+
                     break;
+
                 case 'status':
                     if ($id == $conf['guest_id']) {
                         $status = 'guest';
@@ -235,6 +243,7 @@ class c13y_internal
 
                         $result = true;
                     }
+
                     break;
             }
         }

@@ -75,6 +75,7 @@ class functions_metadata_admin
             if (in_array($pwg_key, ['date_creation', 'date_available'])) {
                 if (preg_match('/^(\d{4}).(\d{2}).(\d{2}) (\d{2}).(\d{2}).(\d{2})/', $value, $matches)) {
                     $exif[$pwg_key] = $matches[1] . '-' . $matches[2] . '-' . $matches[3] . ' ' . $matches[4] . ':' . $matches[5] . ':' . $matches[6];
+
                     if ($exif[$pwg_key] == '0000-00-00 00:00:00') {
                         $exif[$pwg_key] = null;
                     }
@@ -148,10 +149,14 @@ class functions_metadata_admin
         $is_tiff = false;
 
         if (isset($infos['representative_ext'])) {
-            if ($image_size = @getimagesize($file)) {
+            $image_size = @getimagesize($file);
+
+            if ($image_size) {
                 $type = $image_size[2];
 
-                if ($type == IMAGETYPE_TIFF_MM or $type == IMAGETYPE_TIFF_II) {
+                if ($type == IMAGETYPE_TIFF_MM or
+                    $type == IMAGETYPE_TIFF_II
+                ) {
                     // in case of TIFF files, we want to use the original file and not
                     // the representative for EXIF/IPTC, but we need the representative
                     // for width/height (to compute the multiple size dimensions)
@@ -162,7 +167,9 @@ class functions_metadata_admin
             $file = functions::original_to_representative($file, $infos['representative_ext']);
         }
 
-        if (function_exists('mime_content_type') && in_array(mime_content_type($file), ['image/svg+xml', 'image/svg'])) {
+        if (function_exists('mime_content_type') &&
+            in_array(mime_content_type($file), ['image/svg+xml', 'image/svg'])
+        ) {
             $xml = file_get_contents($file);
 
             $xmlget = simplexml_load_string($xml);
@@ -171,20 +178,26 @@ class functions_metadata_admin
             $height = (int) $xmlattributes->height;
             $vb = (string) $xmlattributes->viewBox;
 
-            if (isset($width) and $width != '') {
+            if (isset($width) and
+                $width != ''
+            ) {
                 $infos['width'] = $width;
             } elseif (isset($vb)) {
                 $infos['width'] = explode(' ', $vb)[2];
             }
 
-            if (isset($height) and $height != '') {
+            if (isset($height) and
+                $height != ''
+            ) {
                 $infos['height'] = $height;
             } elseif (isset($vb)) {
                 $infos['height'] = explode(' ', $vb)[3];
             }
         }
 
-        if ($image_size = @getimagesize($file)) {
+        $image_size = @getimagesize($file);
+
+        if ($image_size) {
             $infos['width'] = $image_size[0];
             $infos['height'] = $image_size[1];
         }
@@ -241,13 +254,17 @@ class functions_metadata_admin
   ;';
 
         $result = functions_mysqli::pwg_query($query);
+
         while ($data = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $data = self::get_sync_metadata($data);
+
             if ($data === false) {
                 continue;
             }
+
             // print_r($data);
             $id = $data['id'];
+
             foreach (['keywords', 'tags'] as $key) {
                 if (isset($data[$key])) {
                     if (! isset($tags_of[$id])) {
@@ -312,6 +329,7 @@ class functions_metadata_admin
     FROM ' . CATEGORIES_TABLE . '
     WHERE site_id = ' . $site_id . '
       AND dir IS NOT NULL';
+
         if (is_numeric($category_id)) {
             if ($recursive) {
                 $query .= '
@@ -323,9 +341,11 @@ class functions_metadata_admin
   ';
             }
         }
+
         $query .= '
   ;';
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $cat_ids[] = $row['id'];
         }
@@ -338,11 +358,13 @@ class functions_metadata_admin
   SELECT id, path, representative_ext
     FROM ' . IMAGES_TABLE . '
     WHERE storage_category_id IN (' . implode(',', $cat_ids) . ')';
+
         if ($only_new) {
             $query .= '
       AND date_metadata_update IS NULL
   ';
         }
+
         $query .= '
   ;';
         return functions::hash_from_query($query, 'id');

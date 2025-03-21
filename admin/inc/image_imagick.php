@@ -63,9 +63,10 @@ class image_imagick implements imageInterface
         $this->image->setInterlaceScheme(Imagick::INTERLACE_LINE);
 
         // TODO need to explain this condition
-        if ($this->get_width() % 2 == 0
-            && $this->get_height() % 2 == 0
-            && $this->get_width() > 3 * $width) {
+        if ($this->get_width() % 2 == 0 &&
+            $this->get_height() % 2 == 0 &&
+            $this->get_width() > 3 * $width
+        ) {
             $this->image->scaleImage($this->get_width() / 2, $this->get_height() / 2);
         }
 
@@ -88,7 +89,10 @@ class image_imagick implements imageInterface
         }*/
 
         global $dirty_trick_xrepeat;
-        if (! isset($dirty_trick_xrepeat) && $opacity < 100) {// NOTE: Using setImageOpacity will destroy current alpha channels!
+
+        if (! isset($dirty_trick_xrepeat) &&
+            $opacity < 100
+        ) { // NOTE: Using setImageOpacity will destroy current alpha channels!
             $ioverlay->evaluateImage(Imagick::EVALUATE_MULTIPLY, $opacity / 100, Imagick::CHANNEL_ALPHA);
             $dirty_trick_xrepeat = true;
         }

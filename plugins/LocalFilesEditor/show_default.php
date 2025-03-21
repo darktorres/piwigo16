@@ -36,6 +36,7 @@ functions::check_input_parameter('file', $_GET, false, '/^(include\/config_defau
 
 if (isset($_GET['file'])) {
     $path = $_GET['file'];
+
     if (! functions_user::is_admin()) {
         die('Hacking attempt!');
     }

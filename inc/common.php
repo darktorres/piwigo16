@@ -18,7 +18,9 @@ use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\PersistentFileCache;
 use Piwigo\inc\Template;
 
-defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
+if (! defined('PHPWG_ROOT_PATH')) {
+    trigger_error('Hacking attempt!', E_USER_ERROR);
+}
 
 error_log("Page loaded: {$_SERVER['REQUEST_URI']}");
 
@@ -35,21 +37,27 @@ $t2 = microtime(true);
 // but function get_magic_quotes_gpc was always replying false.
 // Since php 8 the function get_magic_quotes_gpc is also removed
 // but we still want to sanitize user input variables.
-if (! function_exists('get_magic_quotes_gpc') or ! @get_magic_quotes_gpc()) {
+if (! function_exists('get_magic_quotes_gpc') or
+    ! @get_magic_quotes_gpc()
+) {
     function sanitize_mysql_kv(&$v, $k)
     {
         $v = addslashes($v);
     }
+
     if (is_array($_GET)) {
         array_walk_recursive($_GET, sanitize_mysql_kv(...));
     }
+
     if (is_array($_POST)) {
         array_walk_recursive($_POST, sanitize_mysql_kv(...));
     }
+
     if (is_array($_COOKIE)) {
         array_walk_recursive($_COOKIE, sanitize_mysql_kv(...));
     }
 }
+
 if (! empty($_SERVER['PATH_INFO'])) {
     $_SERVER['PATH_INFO'] = addslashes($_SERVER['PATH_INFO']);
 }
@@ -76,16 +84,22 @@ $filter = [];
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
 @include(PHPWG_ROOT_PATH . 'local/config/config.php');
 
-defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
+if (! defined('PWG_LOCAL_DIR')) {
+    define('PWG_LOCAL_DIR', 'local/');
+}
 
 @include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php');
+
 if (! defined('PHPWG_INSTALLED')) {
     header('Location: install.php');
     exit;
 }
 
-if (isset($conf['show_php_errors']) && ! empty($conf['show_php_errors'])) {
+if (isset($conf['show_php_errors']) &&
+    ! empty($conf['show_php_errors'])
+) {
     @ini_set('error_reporting', $conf['show_php_errors']);
+
     if ($conf['show_php_errors_on_frontend']) {
         @ini_set('display_errors', true);
     }
@@ -126,7 +140,9 @@ $logger = new Katzgrau\KLogger\Logger(PHPWG_ROOT_PATH . $conf['data_location'] .
 ]);
 
 if (! $conf['check_upgrade_feed']) {
-    if (! isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != functions::get_branch_from_version(PHPWG_VERSION)) {
+    if (! isset($conf['piwigo_db_version']) or
+        $conf['piwigo_db_version'] != functions::get_branch_from_version(PHPWG_VERSION)
+    ) {
         functions::redirect(functions_url::get_root_url() . 'upgrade.php');
     }
 }
@@ -151,9 +167,11 @@ if (! isset($conf['piwigo_installed_version'])) {
 // TODO remove this data update as soon as 2025 arrives
 if (preg_match('/(, )?`rank` ASC/', $conf['order_by'])) {
     $order_by = preg_replace('/(, )?`rank` ASC/', '', $conf['order_by']);
+
     if ($order_by == 'ORDER BY ') {
         $order_by = 'ORDER BY id ASC';
     }
+
     functions::conf_update_param('order_by', $order_by, true);
 }
 
@@ -161,6 +179,7 @@ if (preg_match('/(, )?`rank` ASC/', $conf['order_by'])) {
 if (isset($conf['order_by_custom'])) {
     $conf['order_by'] = $conf['order_by_custom'];
 }
+
 if (isset($conf['order_by_inside_category_custom'])) {
     $conf['order_by_inside_category'] = $conf['order_by_inside_category_custom'];
 }
@@ -178,9 +197,12 @@ if (in_array(substr($user['language'], 0, 2), ['fr', 'it', 'de', 'es', 'pl', 'ru
 } else {
     define('PHPWG_DOMAIN', 'piwigo.org');
 }
+
 define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
-if (isset($conf['alternative_pem_url']) and $conf['alternative_pem_url'] != '') {
+if (isset($conf['alternative_pem_url']) and
+    $conf['alternative_pem_url'] != ''
+) {
     define('PEM_URL', $conf['alternative_pem_url']);
 } else {
     define('PEM_URL', 'https://' . PHPWG_DOMAIN . '/ext');
@@ -188,9 +210,13 @@ if (isset($conf['alternative_pem_url']) and $conf['alternative_pem_url'] != '') 
 
 // language files
 functions::load_language('common.lang');
-if (functions_user::is_admin() || (defined('IN_ADMIN') and IN_ADMIN)) {
+
+if (functions_user::is_admin() ||
+   (defined('IN_ADMIN') and IN_ADMIN)
+) {
     functions::load_language('admin.lang');
 }
+
 functions_plugins::trigger_notify('loading_lang');
 functions::load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
     'no_fallback' => true,
@@ -205,7 +231,9 @@ if (functions_user::is_a_guest()) {
 
 // in case an auth key was provided and is no longer valid, we must wait to
 // be here, with language loaded, to prepare the message
-if (isset($page['auth_key_invalid']) and $page['auth_key_invalid']) {
+if (isset($page['auth_key_invalid']) and
+    $page['auth_key_invalid']
+) {
     $page['errors'][] =
       functions::l10n('Your authentication key is no longer valid.')
       . sprintf(' <a href="%s">%s</a>', functions_url::get_root_url() . 'identification.php', functions::l10n('Login'))
@@ -213,13 +241,19 @@ if (isset($page['auth_key_invalid']) and $page['auth_key_invalid']) {
 }
 
 // template instance
-if (defined('IN_ADMIN') and IN_ADMIN) {// Admin template
+if (defined('IN_ADMIN') and
+    IN_ADMIN
+) { // Admin template
     $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', functions_user::userprefs_get_param('admin_theme', 'roma'));
 } else { // Classic template
     $theme = $user['theme'];
-    if (functions::script_basename() != 'ws' and functions::mobile_theme()) {
+
+    if (functions::script_basename() != 'ws' and
+        functions::mobile_theme()
+    ) {
         $theme = $conf['mobile_theme'];
     }
+
     $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
 }
 
@@ -227,16 +261,18 @@ if (! isset($conf['no_photo_yet'])) {
     include(PHPWG_ROOT_PATH . 'inc/no_photo_yet.php');
 }
 
-if (isset($user['internal_status']['guest_must_be_guest'])
-    and
-    $user['internal_status']['guest_must_be_guest'] === true) {
+if (isset($user['internal_status']['guest_must_be_guest']) and
+    $user['internal_status']['guest_must_be_guest'] === true
+) {
     $header_msgs[] = functions::l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
 }
 
 if ($conf['gallery_locked']) {
     $header_msgs[] = functions::l10n('The gallery is locked for maintenance. Please, come back later.');
 
-    if (functions::script_basename() != 'identification' and ! functions_user::is_admin()) {
+    if (functions::script_basename() != 'identification' and
+        ! functions_user::is_admin()
+    ) {
         functions_html::set_status_header(503, 'Service Unavailable');
         @header('Retry-After: 900');
         header('Content-Type: text/html; charset=' . functions::get_pwg_charset());
@@ -258,7 +294,9 @@ if (count($header_msgs) > 0) {
     $header_msgs = [];
 }
 
-if (! empty($conf['filter_pages']) and functions::get_filter_page_value('used')) {
+if (! empty($conf['filter_pages']) and
+    functions::get_filter_page_value('used')
+) {
     include(PHPWG_ROOT_PATH . 'inc/filter.php');
 } else {
     $filter['enabled'] = false;
@@ -270,15 +308,19 @@ if (isset($conf['header_notes'])) {
 
 // default event handlers
 functions_plugins::add_event_handler('render_category_literal_description', functions_html::render_category_literal_description(...));
+
 if (! $conf['allow_html_descriptions']) {
     functions_plugins::add_event_handler('render_category_description', nl2br(...));
 }
+
 functions_plugins::add_event_handler('render_comment_content', functions_html::render_comment_content(...));
 functions_plugins::add_event_handler('render_comment_author', strip_tags(...));
 functions_plugins::add_event_handler('render_tag_url', functions::str2url(...));
 functions_plugins::add_event_handler('blockmanager_register_blocks', functions_html::register_default_menubar_blocks(...), EVENT_HANDLER_PRIORITY_NEUTRAL - 1);
+
 if (! empty($conf['original_url_protection'])) {
     functions_plugins::add_event_handler('get_element_url', functions_html::get_element_url_protection_handler(...));
     functions_plugins::add_event_handler('get_src_image_url', functions_html::get_src_image_url_protection_handler(...));
 }
+
 functions_plugins::trigger_notify('init');

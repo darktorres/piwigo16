@@ -56,6 +56,7 @@ ORDER BY registration_date
 $result = functions_mysqli::pwg_query($query);
 
 $register_dates = [];
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $register_dates[] = $row['registration_year'] . '-' . sprintf('%02u', $row['registration_month']);
 }
@@ -150,6 +151,7 @@ $template->assign('pref_status_selected', 'normal');
 foreach ($conf['available_permission_levels'] as $level) {
     $level_options[$level] = functions::l10n(sprintf('Level %d', $level));
 }
+
 $template->assign('level_options', $level_options);
 $template->assign('level_selected', $default_user['level']);
 
@@ -162,6 +164,7 @@ $result = functions_mysqli::pwg_query($query);
 
 $groups_arr_id = [];
 $groups_arr_name = [];
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $groups_arr_name[] = '"' . functions_mysqli::pwg_db_real_escape_string($row['name']) . '"';
     $groups_arr_id[] = $row['id'];
@@ -180,6 +183,7 @@ if (functions_user::userprefs_get_param('user-manager-view', 'line') == 'line') 
     //Show 10 users by default
     $template->assign('pagination', functions_user::userprefs_get_param('user-manager-pagination', 10));
 }
+
 // +-----------------------------------------------------------------------+
 // | html code display                                                     |
 // +-----------------------------------------------------------------------+

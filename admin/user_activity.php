@@ -28,7 +28,9 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 $page['tab'] = 'user_activity';
 include(PHPWG_ROOT_PATH . 'admin/inc/user_tabs.php');
 
-if (isset($_GET['type']) && $_GET['type'] == 'download_logs') {
+if (isset($_GET['type']) &&
+    $_GET['type'] == 'download_logs'
+) {
     $output_lines = [];
 
     $query = '
@@ -49,6 +51,7 @@ SELECT
 
     $result = functions_mysqli::pwg_query($query);
     array_push($output_lines, ['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']);
+
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $row['details'] = str_replace('`groups`', 'groups', $row['details']);
         $row['details'] = str_replace('`rank`', 'rank', $row['details']);
@@ -73,9 +76,11 @@ SELECT
     header('Content-Transfer-Encoding: UTF-8');
 
     $f = fopen('php://output', 'w');
+
     foreach ($output_lines as $line) {
         fputcsv($f, $line, ';');
     }
+
     fclose($f);
 
     exit();
@@ -130,6 +135,7 @@ foreach ($nb_lines_for_user as $id => $nb_line) {
         ]
     );
 }
+
 $template->assign('ulist', $filterable_users);
 
 $query = '

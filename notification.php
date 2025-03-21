@@ -43,6 +43,7 @@ INSERT INTO ' . USER_FEED_TABLE . '
 functions_mysqli::pwg_query($query);
 
 $feed_url = PHPWG_ROOT_PATH . 'feed.php';
+
 if (functions_user::is_a_guest()) {
     $feed_image_only_url = $feed_url;
     $feed_url .= '?feed=' . $page['feed'];
@@ -75,7 +76,10 @@ $template->assign(
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! isset($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'])) {
+
+if (! isset($themeconf['hide_menu_on']) or
+    ! in_array('theNotificationPage', $themeconf['hide_menu_on'])
+) {
     menubar::initialize_menu();
 }
 

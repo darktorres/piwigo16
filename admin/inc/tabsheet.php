@@ -51,11 +51,14 @@ class tabsheet
                 'caption' => $caption,
                 'url' => $url,
             ];
+
             if ($selected) {
                 $this->selected = $name;
             }
+
             return true;
         }
+
         return false;
     }
 
@@ -70,8 +73,10 @@ class tabsheet
             if ($this->selected == $name) {
                 $this->selected = '';
             }
+
             return true;
         }
+
         return false;
     }
 
@@ -81,10 +86,12 @@ class tabsheet
     public function select($name)
     {
         $this->sheets = functions_plugins::trigger_change('tabsheet_before_select', $this->sheets, $this->uniqid);
+
         if (! array_key_exists($name, $this->sheets)) {
             $keys = array_keys($this->sheets);
             $name = $keys[0];
         }
+
         $this->selected = $name;
     }
 
@@ -115,7 +122,6 @@ class tabsheet
         }
 
         return null;
-
     }
 
     /**

@@ -47,36 +47,46 @@ SELECT id, file, level
   WHERE ';
     if ($page['image_id'] > 0) {
         $query .= 'id = ' . $page['image_id'];
-    } else {// url given by file name
+    } else { // url given by file name
         assert(! empty($page['image_file']));
         $query .= 'file LIKE \'' .
           str_replace(['_', '%'], ['/_', '/%'], $page['image_file']) .
           '.%\' ESCAPE \'/\' LIMIT 1';
     }
-    if (! ($row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query)))) {// element does not exist
+
+    $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+
+    if (! $row) { // element does not exist
         functions_html::page_not_found(
             'The requested image does not exist',
             functions_url::duplicate_index_url()
         );
     }
+
     if ($row['level'] > $user['level']) {
         functions_html::access_denied();
     }
 
     $page['image_id'] = $row['id'];
     $page['image_file'] = $row['file'];
-    if (! isset($page['rank_of'][$page['image_id']])) {// the image can still be non accessible (filter/cat perm) and/or not in the set
+
+    if (! isset($page['rank_of'][$page['image_id']])) { // the image can still be non accessible (filter/cat perm) and/or not in the set
         global $filter;
+
         if (! empty($filter['visible_images']) and
-          ! in_array($page['image_id'], explode(',', $filter['visible_images']))) {
+            ! in_array($page['image_id'], explode(',', $filter['visible_images']))
+        ) {
             functions_html::page_not_found(
                 'The requested image is filtered',
                 functions_url::duplicate_index_url()
             );
         }
-        if ($page['section'] == 'categories' and ! isset($page['category'])) {// flat view - all items
+
+        if ($page['section'] == 'categories' and
+            ! isset($page['category'])
+        ) { // flat view - all items
             functions_html::access_denied();
-        } else {// try to see if we can access it differently
+        } else { // try to see if we can access it differently
             $query = '
 SELECT id
   FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id
@@ -88,6 +98,7 @@ SELECT id
                   ' AND'
               ) . '
   LIMIT 1';
+
             if (functions_mysqli::pwg_db_num_rows(functions_mysqli::pwg_query($query)) == 0) {
                 functions_html::access_denied();
             } else {
@@ -179,7 +190,6 @@ $url_self = functions_url::duplicate_picture_url();
 if (isset($_GET['action'])) {
     switch ($_GET['action']) {
         case 'add_to_favorites':
-
             $query = '
 INSERT INTO ' . FAVORITES_TABLE . '
   (image_id,user_id)
@@ -187,13 +197,10 @@ INSERT INTO ' . FAVORITES_TABLE . '
   (' . $page['image_id'] . ',' . $user['id'] . ')
 ;';
             functions_mysqli::pwg_query($query);
-
             functions::redirect($url_self);
-
             break;
 
         case 'remove_from_favorites':
-
             $query = '
 DELETE FROM ' . FAVORITES_TABLE . '
   WHERE user_id = ' . $user['id'] . '
@@ -210,8 +217,9 @@ DELETE FROM ' . FAVORITES_TABLE . '
             break;
 
         case 'set_as_representative':
-
-            if (functions_user::is_admin() and isset($page['category'])) {
+            if (functions_user::is_admin() and
+                isset($page['category'])
+            ) {
                 $query = '
 UPDATE ' . CATEGORIES_TABLE . '
   SET representative_picture_id = ' . $page['image_id'] . '
@@ -227,23 +235,19 @@ UPDATE ' . CATEGORIES_TABLE . '
             }
 
             functions::redirect($url_self);
-
             break;
 
         case 'add_to_caddie':
-
             functions::fill_caddie([$page['image_id']]);
             functions::redirect($url_self);
             break;
 
         case 'rate':
-
             functions_rate::rate_picture($page['image_id'], $_POST['rate']);
             functions::redirect($url_self);
-
             // no break
-        case 'edit_comment':
 
+        case 'edit_comment':
             include_once(PHPWG_ROOT_PATH . 'inc/functions_comment.php');
             functions::check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
             $author_id = functions_comment::get_comment_author_id($_GET['comment_to_edit']);
@@ -262,17 +266,21 @@ UPDATE ' . CATEGORIES_TABLE . '
                     );
 
                     $perform_redirect = false;
+
                     switch ($comment_action) {
                         case 'moderate':
                             $_SESSION['page_infos'][] = functions::l10n('An administrator must authorize your comment before it is visible.');
                             // no break
+
                         case 'validate':
                             $_SESSION['page_infos'][] = functions::l10n('Your comment has been registered');
                             $perform_redirect = true;
                             break;
+
                         case 'reject':
                             $_SESSION['page_errors'][] = functions::l10n('Your comment has NOT been registered because it did not pass the validation rules');
                             break;
+
                         default:
                             trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
                     }
@@ -280,15 +288,16 @@ UPDATE ' . CATEGORIES_TABLE . '
                     if ($perform_redirect) {
                         functions::redirect($url_self);
                     }
+
                     unset($_POST['content']);
                 }
 
                 $edit_comment = $_GET['comment_to_edit'];
             }
+
             break;
 
         case 'delete_comment':
-
             functions::check_pwg_token();
 
             include_once(PHPWG_ROOT_PATH . 'inc/functions_comment.php');
@@ -302,10 +311,9 @@ UPDATE ' . CATEGORIES_TABLE . '
             }
 
             functions::redirect($url_self);
-
             // no break
-        case 'validate_comment':
 
+        case 'validate_comment':
             functions::check_pwg_token();
 
             include_once(PHPWG_ROOT_PATH . 'inc/functions_comment.php');
@@ -319,20 +327,22 @@ UPDATE ' . CATEGORIES_TABLE . '
             }
 
             functions::redirect($url_self);
-
     }
 }
 
 //---------- incrementation of the number of hits
 $inc_hit_count = ! isset($_POST['content']);
 // don't increment counter if in the Mozilla Firefox prefetch
-if (isset($_SERVER['HTTP_X_MOZ']) and $_SERVER['HTTP_X_MOZ'] == 'prefetch') {
+if (isset($_SERVER['HTTP_X_MOZ']) and
+    $_SERVER['HTTP_X_MOZ'] == 'prefetch'
+) {
     $inc_hit_count = false;
 } else {
     // don't increment counter if coming from the same picture (actions)
     if (functions_session::pwg_get_session_var('referer_image_id', 0) == $page['image_id']) {
         $inc_hit_count = false;
     }
+
     functions_session::pwg_set_session_var('referer_image_id', $page['image_id']);
 }
 
@@ -361,10 +371,12 @@ usort($related_categories, functions_category::global_rank_compare(...));
 $picture = [];
 
 $ids = [$page['image_id']];
+
 if (isset($page['previous_item'])) {
     $ids[] = $page['previous_item'];
     $ids[] = $page['first_item'];
 }
+
 if (isset($page['next_item'])) {
     $ids[] = $page['next_item'];
     $ids[] = $page['last_item'];
@@ -379,13 +391,21 @@ SELECT *
 $result = functions_mysqli::pwg_query($query);
 
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
-    if (isset($page['previous_item']) and $row['id'] == $page['previous_item']) {
+    if (isset($page['previous_item']) and
+        $row['id'] == $page['previous_item']
+    ) {
         $i = 'previous';
-    } elseif (isset($page['next_item']) and $row['id'] == $page['next_item']) {
+    } elseif (isset($page['next_item']) and
+              $row['id'] == $page['next_item']
+    ) {
         $i = 'next';
-    } elseif (isset($page['first_item']) and $row['id'] == $page['first_item']) {
+    } elseif (isset($page['first_item']) and
+              $row['id'] == $page['first_item']
+    ) {
         $i = 'first';
-    } elseif (isset($page['last_item']) and $row['id'] == $page['last_item']) {
+    } elseif (isset($page['last_item']) and
+              $row['id'] == $page['last_item']
+    ) {
         $i = 'last';
     } else {
         $i = 'current';
@@ -401,7 +421,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     if ($i == 'current') {
         $row['element_path'] = functions::get_element_path($row);
 
-        if ($row['src_image']->is_original()) {// we have a photo
+        if ($row['src_image']->is_original()) { // we have a photo
             if ($user['enabled_high'] == 'true') {
                 $row['element_url'] = $row['src_image']->get_url();
                 $row['download_url'] = functions_url::get_action_url($row['id'], 'e', true);
@@ -426,10 +446,15 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $picture[$i]['TITLE'] = functions_html::render_element_name($row);
     $picture[$i]['TITLE_ESC'] = str_replace('"', '&quot;', $picture[$i]['TITLE']);
 
-    if ($i == 'previous' and $page['previous_item'] == $page['first_item']) {
+    if ($i == 'previous' and
+        $page['previous_item'] == $page['first_item']
+    ) {
         $picture['first'] = $picture[$i];
     }
-    if ($i == 'next' and $page['next_item'] == $page['last_item']) {
+
+    if ($i == 'next' and
+        $page['next_item'] == $page['last_item']
+    ) {
         $picture['last'] = $picture[$i];
     }
 }
@@ -449,10 +474,13 @@ if (isset($_GET['slideshow'])) {
 
     if ($slideshow_params['play']) {
         $id_pict_redirect = '';
+
         if (isset($page['next_item'])) {
             $id_pict_redirect = 'next';
         } else {
-            if ($slideshow_params['repeat'] and isset($page['first_item'])) {
+            if ($slideshow_params['repeat'] and
+                isset($page['first_item'])
+            ) {
                 $id_pict_redirect = 'first';
             }
         }
@@ -470,7 +498,10 @@ if (isset($_GET['slideshow'])) {
 } else {
     $page['slideshow'] = false;
 }
-if ($page['slideshow'] and $conf['light_slideshow']) {
+
+if ($page['slideshow'] and
+    $conf['light_slideshow']
+) {
     $template->set_filenames([
         'slideshow' => 'slideshow.tpl',
     ]);
@@ -492,14 +523,13 @@ $url_metadata = functions_url::add_url_params($url_metadata, [
 // do we have a plugin that can show metadata for something else than images?
 $metadata_showable = functions_plugins::trigger_change(
     'get_element_metadata_available',
-    (
-        ($conf['show_exif'] or $conf['show_iptc'])
-    and ! $picture['current']['src_image']->is_mimetype()
-    ),
+    ($conf['show_exif'] or $conf['show_iptc']) and ! $picture['current']['src_image']->is_mimetype(),
     $picture['current']
 );
 
-if ($metadata_showable and functions_session::pwg_get_session_var('show_metadata')) {
+if ($metadata_showable and
+    functions_session::pwg_get_session_var('show_metadata')
+) {
     $page['meta_robots'] = [
         'noindex' => 1,
         'nofollow' => 1,
@@ -530,7 +560,11 @@ foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
         );
     }
 }
-if ($conf['picture_download_icon'] and ! empty($picture['current']['download_url']) and $user['enabled_high'] == 'true') {
+
+if ($conf['picture_download_icon'] and
+    ! empty($picture['current']['download_url']) and
+    $user['enabled_high'] == 'true'
+) {
     $template->append('current', [
         'U_DOWNLOAD' => $picture['current']['download_url'],
     ], true);
@@ -561,6 +595,7 @@ SELECT *
 
             $format['label'] = strtoupper($format['ext']);
             $lang_key = 'format ' . strtoupper($format['ext']);
+
             if (isset($lang[$lang_key])) {
                 $format['label'] = $lang[$lang_key];
             }
@@ -608,7 +643,7 @@ if ($page['slideshow']) {
     }
 
     foreach (['dec', 'inc'] as $op) {
-        $new_period = $slideshow_params['period'] + ((($op == 'dec') ? -1 : 1) * $conf['slideshow_period_step']);
+        $new_period = $slideshow_params['period'] + (($op == 'dec') ? -1 : 1) * $conf['slideshow_period_step'];
         $new_slideshow_params =
           functions_picture::correct_slideshow_params(
               array_merge(
@@ -630,7 +665,9 @@ if ($page['slideshow']) {
                   );
         }
     }
+
     $template->assign('slideshow', $tpl_slideshow);
+
 } elseif ($conf['picture_slideshow_icon']) {
     $template->assign(
         [
@@ -667,7 +704,9 @@ if ($conf['picture_metadata_icon']) {
 
 // admin links
 if (functions_user::is_admin()) {
-    if (isset($page['category']) and $conf['picture_representative_icon']) {
+    if (isset($page['category']) and
+        $conf['picture_representative_icon']
+    ) {
         $template->assign(
             [
                 'U_SET_AS_REPRESENTATIVE' => functions_url::add_url_params(
@@ -681,11 +720,7 @@ if (functions_user::is_admin()) {
     }
 
     if ($conf['picture_edit_icon']) {
-        $url_admin =
-          functions_url::get_root_url() . 'admin.php?page=photo-' . $page['image_id']
-          . (isset($page['category']) ? '&amp;cat_id=' . $page['category']['id'] : '')
-        ;
-
+        $url_admin = functions_url::get_root_url() . 'admin.php?page=photo-' . $page['image_id'] . (isset($page['category']) ? '&amp;cat_id=' . $page['category']['id'] : '');
         $template->assign('U_PHOTO_ADMIN', $url_admin);
     }
 
@@ -702,7 +737,9 @@ if (functions_user::is_admin()) {
 }
 
 // favorite manipulation
-if (! functions_user::is_a_guest() and $conf['picture_favorite_icon']) {
+if (! functions_user::is_a_guest() and
+    $conf['picture_favorite_icon']
+) {
     // verify if the picture is already in the favorite of the user
     $query = '
 SELECT COUNT(*) AS nb_fav
@@ -729,8 +766,9 @@ SELECT COUNT(*) AS nb_fav
 
 //--------------------------------------------------------- picture information
 // legend
-if (isset($picture['current']['comment'])
-    and ! empty($picture['current']['comment'])) {
+if (isset($picture['current']['comment']) and
+    ! empty($picture['current']['comment'])
+) {
     $template->assign(
         'COMMENT_IMG',
         functions_plugins::trigger_change(
@@ -757,8 +795,7 @@ if (! empty($picture['current']['date_creation'])) {
             'chronology_date' => explode('-', substr($picture['current']['date_creation'], 0, 10)),
         ]
     );
-    $infos['INFO_CREATION_DATE'] =
-      '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
+    $infos['INFO_CREATION_DATE'] = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
 }
 
 // date of availability
@@ -777,9 +814,10 @@ $url = functions_url::make_index_url(
 $infos['INFO_POSTED_DATE'] = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
 
 // size in pixels
-if ($picture['current']['src_image']->is_original() and isset($picture['current']['width'])) {
-    $infos['INFO_DIMENSIONS'] =
-      $picture['current']['width'] . '*' . $picture['current']['height'];
+if ($picture['current']['src_image']->is_original() and
+    isset($picture['current']['width'])
+) {
+    $infos['INFO_DIMENSIONS'] = $picture['current']['width'] . '*' . $picture['current']['height'];
 }
 
 // filesize
@@ -798,6 +836,7 @@ $template->assign('display_info', unserialize($conf['picture_information']));
 
 // related tags
 $tags = functions_tag::get_common_tags([$page['image_id']], -1);
+
 if (count($tags)) {
     foreach ($tags as $tag) {
         $template->append(
@@ -825,27 +864,33 @@ if (count($tags)) {
 // related categories
 if (count($related_categories) == 1 and
     isset($page['category']) and
-    $related_categories[0]['id'] == $page['category']['id']) { // no need to go to db, we have all the info
+    $related_categories[0]['id'] == $page['category']['id']
+) { // no need to go to db, we have all the info
     $template->append(
         'related_categories',
         functions_html::get_cat_display_name($page['category']['upper_names'])
     );
 } else { // use only 1 sql query to get names for all related categories
     $ids = [];
-    foreach ($related_categories as $category) {// add all uppercats to $ids
+
+    foreach ($related_categories as $category) { // add all uppercats to $ids
         $ids = array_merge($ids, explode(',', $category['uppercats']));
     }
+
     $ids = array_unique($ids);
     $query = '
 SELECT id, name, permalink
   FROM ' . CATEGORIES_TABLE . '
   WHERE id IN (' . implode(',', $ids) . ')';
     $cat_map = functions::hash_from_query($query, 'id');
+
     foreach ($related_categories as $category) {
         $cats = [];
+
         foreach (explode(',', $category['uppercats']) as $id) {
             $cats[] = $cat_map[$id];
         }
+
         $template->append('related_categories', functions_html::get_cat_display_name($cats));
     }
 }
@@ -859,10 +904,11 @@ $element_content = functions_plugins::trigger_change(
 );
 $template->assign('ELEMENT_CONTENT', $element_content);
 
-if (isset($picture['next'])
-    and $picture['next']['src_image']->is_original()
-    and $template->get_template_vars('U_PREFETCH') == null
-    and strpos(@$_SERVER['HTTP_USER_AGENT'], 'Chrome/') === false) {
+if (isset($picture['next']) and
+    $picture['next']['src_image']->is_original() and
+    $template->get_template_vars('U_PREFETCH') == null and
+    strpos(@$_SERVER['HTTP_USER_AGENT'], 'Chrome/') === false
+) {
     $template->assign(
         'U_PREFETCH',
         $picture['next']['derivatives'][functions_session::pwg_get_session_var('picture_deriv', $conf['derivative_default_size'])]->get_url()
@@ -884,31 +930,43 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 include(PHPWG_ROOT_PATH . 'inc/picture_rate.php');
+
 if ($conf['activate_comments']) {
     include(PHPWG_ROOT_PATH . 'inc/picture_comment.php');
 }
-if ($metadata_showable and functions_session::pwg_get_session_var('show_metadata') <> null) {
+
+if ($metadata_showable and
+    functions_session::pwg_get_session_var('show_metadata') != null
+) {
     include(PHPWG_ROOT_PATH . 'inc/picture_metadata.php');
 }
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if ($conf['picture_menu'] and (! isset($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on']))) {
+
+if ($conf['picture_menu'] and
+   (! isset($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on']))
+) {
     if (! isset($page['start'])) {
         $page['start'] = 0;
     }
+
     menubar::initialize_menu();
 }
 
 include(PHPWG_ROOT_PATH . 'inc/page_header.php');
 functions_plugins::trigger_notify('loc_end_picture');
 functions_html::flush_page_messages();
-if ($page['slideshow'] and $conf['light_slideshow']) {
+
+if ($page['slideshow'] and
+    $conf['light_slideshow']
+) {
     $template->pparse('slideshow');
 } else {
     $template->parse_picture_buttons();
     $template->pparse('picture');
 }
+
 //------------------------------------------------------------ log information
 functions::pwg_log($picture['current']['id'], 'picture');
 include(PHPWG_ROOT_PATH . 'inc/page_tail.php');

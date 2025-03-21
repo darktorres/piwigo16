@@ -34,7 +34,10 @@ $languages->get_db_languages();
 functions::check_input_parameter('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
 functions::check_input_parameter('language', $_GET, false, '/^(' . join('|', array_keys($languages->fs_languages)) . ')$/');
 
-if (isset($_GET['action']) and isset($_GET['language']) and functions_user::is_webmaster()) {
+if (isset($_GET['action']) and
+    isset($_GET['language']) and
+    functions_user::is_webmaster()
+) {
     $page['errors'] = $languages->perform_action($_GET['action'], $_GET['language']);
 
     if (empty($page['errors'])) {

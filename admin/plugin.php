@@ -16,6 +16,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 $sections = explode('/', $_GET['section']);
+
 for ($i = 0; $i < count($sections); $i++) {
     if (empty($sections[$i])) {
         unset($sections[$i]);
@@ -23,7 +24,9 @@ for ($i = 0; $i < count($sections); $i++) {
         continue;
     }
 
-    if ($sections[$i] == '..' or ! preg_match('/^[a-zA-Z0-9_\.-]+$/', $sections[$i])) {
+    if ($sections[$i] == '..' or
+        ! preg_match('/^[a-zA-Z0-9_\.-]+$/', $sections[$i])
+    ) {
         die('invalid section token [' . htmlentities($sections[$i]) . ']');
     }
 }
@@ -43,6 +46,7 @@ if (! isset($pwg_loaded_plugins[$plugin_id])) {
 }
 
 $filename = PHPWG_PLUGINS_PATH . implode('/', $sections);
+
 if (is_file($filename)) {
     include_once($filename);
 } else {

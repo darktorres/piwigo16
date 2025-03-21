@@ -47,7 +47,9 @@ class plugins
     {
         global $conf;
 
-        if (! $conf['enable_extensions_install'] and $action == 'delete') {
+        if (! $conf['enable_extensions_install'] and
+            $action == 'delete'
+        ) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -67,7 +69,9 @@ class plugins
 
         switch ($action) {
             case 'install':
-                if (! empty($crt_db_plugin) or ! isset($this->fs_plugins[$plugin_id])) {
+                if (! empty($crt_db_plugin) or
+                    ! isset($this->fs_plugins[$plugin_id])
+                ) {
                     break;
                 }
 
@@ -83,6 +87,7 @@ INSERT INTO ' . PLUGINS_TABLE . ' (id,version)
                 } else {
                     $activity_details['result'] = 'error';
                 }
+
                 break;
 
             case 'update':
@@ -136,10 +141,13 @@ UPDATE ' . PLUGINS_TABLE . '
                 } else {
                     $activity_details['result'] = 'error';
                 }
+
                 break;
 
             case 'deactivate':
-                if (! isset($crt_db_plugin) or $crt_db_plugin['state'] != 'active') {
+                if (! isset($crt_db_plugin) or
+                    $crt_db_plugin['state'] != 'active'
+                ) {
                     $activity_details['result'] = 'error';
                     break;
                 }
@@ -197,6 +205,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
                     $this->perform_action('uninstall', $plugin_id);
                 }
+
                 if (! isset($this->fs_plugins[$plugin_id])) {
                     break;
                 }
@@ -218,13 +227,17 @@ DELETE FROM ' . PLUGINS_TABLE . '
     public function get_fs_plugins()
     {
         $dir = opendir(PHPWG_PLUGINS_PATH);
+
         while ($file = readdir($dir)) {
-            if ($file != '.' and $file != '..') {
+            if ($file != '.' and
+                $file != '..'
+            ) {
                 if (preg_match('/^[a-zA-Z0-9-_]+$/', $file)) {
                     $this->get_fs_plugin($file);
                 }
             }
         }
+
         closedir($dir);
     }
 
@@ -237,8 +250,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
     {
         $path = PHPWG_PLUGINS_PATH . $plugin_id;
 
-        if (is_dir($path) and ! is_link($path)
-            and file_exists($path . '/main.php')
+        if (is_dir($path) and
+            ! is_link($path) and
+            file_exists($path . '/main.php')
         ) {
             $plugin = [
                 'name' => $plugin_id,
@@ -253,12 +267,15 @@ DELETE FROM ' . PLUGINS_TABLE . '
             if (preg_match('|Plugin Name:\\s*(.+)|', $plg_data, $val)) {
                 $plugin['name'] = trim($val[1]);
             }
+
             if (preg_match('|Version:\\s*([\\w.-]+)|', $plg_data, $val)) {
                 $plugin['version'] = trim($val[1]);
             }
+
             if (preg_match('|Plugin URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                 $plugin['uri'] = trim($val[1]);
             }
+
             if ($desc = functions::load_language('description.txt', $path . '/', [
                 'return' => true,
             ])) {
@@ -266,25 +283,34 @@ DELETE FROM ' . PLUGINS_TABLE . '
             } elseif (preg_match('|Description:\\s*(.+)|', $plg_data, $val)) {
                 $plugin['description'] = trim($val[1]);
             }
+
             if (preg_match('|Author:\\s*(.+)|', $plg_data, $val)) {
                 $plugin['author'] = trim($val[1]);
             }
+
             if (preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                 $plugin['author uri'] = trim($val[1]);
             }
+
             if (preg_match('/Has Settings:\\s*([Tt]rue|[Ww]ebmaster)/', $plg_data, $val)) {
                 if (strtolower($val[1]) == 'webmaster') {
                     global $user;
 
-                    if (isset($user) and $user['status'] == 'webmaster') {
+                    if (isset($user) and
+                        $user['status'] == 'webmaster'
+                    ) {
                         $plugin['hasSettings'] = true;
                     }
                 } else {
                     $plugin['hasSettings'] = true;
                 }
             }
-            if (! empty($plugin['uri']) and strpos($plugin['uri'], 'extension_view.php?eid=')) {
+
+            if (! empty($plugin['uri']) and
+                strpos($plugin['uri'], 'extension_view.php?eid=')
+            ) {
                 list(, $extension) = explode('extension_view.php?eid=', $plugin['uri']);
+
                 if (is_numeric($extension)) {
                     $plugin['extension'] = $extension;
                 }
@@ -309,12 +335,15 @@ DELETE FROM ' . PLUGINS_TABLE . '
             case 'name':
                 uasort($this->fs_plugins, functions_html::name_compare(...));
                 break;
+
             case 'status':
                 $this->sort_plugins_by_state();
                 break;
+
             case 'author':
                 uasort($this->fs_plugins, $this->plugin_author_compare(...));
                 break;
+
             case 'id':
                 uksort($this->fs_plugins, strcasecmp(...));
                 break;
@@ -329,47 +358,59 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id=' . $conf['pem_plugins_category'] . '&format=php';
-        if (functions_admin::fetchRemote($url, $result) and $pem_versions = @unserialize($result)) {
-            $i = 0;
 
-            // If the actual version exist, put the PEM id in $versions_to_check
-            while ($i < count($pem_versions) && count($versions_to_check) == 0) {
-                if (functions::get_branch_from_version($pem_versions[$i]['name']) == functions::get_branch_from_version($version)) {
-                    $versions_to_check[] = $pem_versions[$i]['id'];
+        if (functions_admin::fetchRemote($url, $result)) {
+            $pem_versions = @unserialize($result);
+
+            if ($pem_versions) {
+                $i = 0;
+
+                // If the actual version exist, put the PEM id in $versions_to_check
+                while ($i < count($pem_versions) &&
+                       count($versions_to_check) == 0
+                ) {
+                    if (functions::get_branch_from_version($pem_versions[$i]['name']) == functions::get_branch_from_version($version)) {
+                        $versions_to_check[] = $pem_versions[$i]['id'];
+                    }
+
+                    $i++;
                 }
-                $i++;
-            }
 
-            // If $beta_test is true, search the previous version
-            if ($beta_test) {
-                // If the actual version is not in PEM, put the latest PEM version
-                if (count($versions_to_check) == 0) {
-                    $versions_to_check[] = $pem_versions[0]['id'];
-                } else { // Else search the next version in PEM
-                    $has_found_previous_version = false;
-                    while ($i < count($pem_versions) && ! $has_found_previous_version) {
-                        if ($pem_versions[$i]['id'] != $versions_to_check[0]) {
-                            $versions_to_check[] = $pem_versions[$i]['id'];
-                            $has_found_previous_version = true;
+                // If $beta_test is true, search the previous version
+                if ($beta_test) {
+                    // If the actual version is not in PEM, put the latest PEM version
+                    if (count($versions_to_check) == 0) {
+                        $versions_to_check[] = $pem_versions[0]['id'];
+                    } else { // Else search the next version in PEM
+                        $has_found_previous_version = false;
+
+                        while ($i < count($pem_versions) &&
+                               ! $has_found_previous_version
+                        ) {
+                            if ($pem_versions[$i]['id'] != $versions_to_check[0]) {
+                                $versions_to_check[] = $pem_versions[$i]['id'];
+                                $has_found_previous_version = true;
+                            }
+
+                            $i++;
                         }
-                        $i++;
                     }
                 }
-            }
 
-            // if (!preg_match('/^\d+\.\d+\.\d+$/', $version))
-            // {
-            //   $version = $pem_versions[0]['name'];
-            // }
-            // $branch = \Piwigo\inc\functions::get_branch_from_version($version);
-            // foreach ($pem_versions as $pem_version)
-            // {
-            //   if (strpos($pem_version['name'], $branch) === 0)
-            //   {
-            //     $versions_to_check[] = $pem_version['id'];
-            //   }
-            // }
+                // if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
+                //   $version = $pem_versions[0]['name'];
+                // }
+
+                // $branch = \Piwigo\inc\functions::get_branch_from_version($version);
+
+                // foreach ($pem_versions as $pem_version) {
+                //   if (strpos($pem_version['name'], $branch) === 0) {
+                //     $versions_to_check[] = $pem_version['id'];
+                //   }
+                // }
+            }
         }
+
         return $versions_to_check;
     }
 
@@ -382,12 +423,14 @@ DELETE FROM ' . PLUGINS_TABLE . '
         global $user, $conf;
 
         $versions_to_check = $this->get_versions_to_check($beta_test);
+
         if (empty($versions_to_check)) {
             return true;
         }
 
         // Plugins to check
         $plugins_to_check = [];
+
         foreach ($this->fs_plugins as $fs_plugin) {
             if (isset($fs_plugin['extension'])) {
                 $plugins_to_check[] = $fs_plugin['extension'];
@@ -412,23 +455,30 @@ DELETE FROM ' . PLUGINS_TABLE . '
                 $get_data['extension_include'] = implode(',', $plugins_to_check);
             }
         }
+
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
             $pem_plugins = @unserialize($result);
+
             if (! is_array($pem_plugins)) {
                 return false;
             }
+
             foreach ($pem_plugins as $plugin) {
                 $this->server_plugins[$plugin['extension_id']] = $plugin;
             }
+
             return true;
         }
+
         return false;
     }
 
     public function get_incompatible_plugins($actualize = false)
     {
-        if (isset($_SESSION['incompatible_plugins']) and ! $actualize
-          and $_SESSION['incompatible_plugins']['~~expire~~'] > time()) {
+        if (isset($_SESSION['incompatible_plugins']) and
+            ! $actualize and
+            $_SESSION['incompatible_plugins']['~~expire~~'] > time()
+        ) {
             return $_SESSION['incompatible_plugins'];
         }
 
@@ -437,6 +487,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
         ];
 
         $versions_to_check = $this->get_versions_to_check();
+
         if (empty($versions_to_check)) {
             return false;
         }
@@ -445,6 +496,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
         // Plugins to check
         $plugins_to_check = [];
+
         foreach ($this->fs_plugins as $fs_plugin) {
             if (isset($fs_plugin['extension'])) {
                 $plugins_to_check[] = $fs_plugin['extension'];
@@ -462,28 +514,34 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
             $pem_plugins = @unserialize($result);
+
             if (! is_array($pem_plugins)) {
                 return false;
             }
 
             $server_plugins = [];
+
             foreach ($pem_plugins as $plugin) {
                 if (! isset($server_plugins[$plugin['extension_id']])) {
                     $server_plugins[$plugin['extension_id']] = [];
                 }
+
                 $server_plugins[$plugin['extension_id']][] = $plugin['revision_name'];
             }
 
             foreach ($this->fs_plugins as $plugin_id => $fs_plugin) {
-                if (isset($fs_plugin['extension'])
-                  and ! in_array($plugin_id, $this->default_plugins)
-                  and $fs_plugin['version'] != 'auto'
-                  and (! isset($server_plugins[$fs_plugin['extension']]) or ! in_array($fs_plugin['version'], $server_plugins[$fs_plugin['extension']]))) {
+                if (isset($fs_plugin['extension']) and
+                    ! in_array($plugin_id, $this->default_plugins) and
+                    $fs_plugin['version'] != 'auto' and
+                    (! isset($server_plugins[$fs_plugin['extension']]) or ! in_array($fs_plugin['version'], $server_plugins[$fs_plugin['extension']]))
+                ) {
                     $_SESSION['incompatible_plugins'][$plugin_id] = $fs_plugin['version'];
                 }
             }
+
             return $_SESSION['incompatible_plugins'];
         }
+
         return false;
     }
 
@@ -496,15 +554,19 @@ DELETE FROM ' . PLUGINS_TABLE . '
             case 'date':
                 krsort($this->server_plugins);
                 break;
+
             case 'revision':
                 usort($this->server_plugins, $this->extension_revision_compare(...));
                 break;
+
             case 'name':
                 uasort($this->server_plugins, $this->extension_name_compare(...));
                 break;
+
             case 'author':
                 uasort($this->server_plugins, $this->extension_author_compare(...));
                 break;
+
             case 'downloads':
                 usort($this->server_plugins, $this->extension_downloads_compare(...));
                 break;
@@ -521,22 +583,29 @@ DELETE FROM ' . PLUGINS_TABLE . '
     {
         global $logger;
 
-        if ($archive = tempnam(PHPWG_PLUGINS_PATH, 'zip')) {
+        $archive = tempnam(PHPWG_PLUGINS_PATH, 'zip');
+
+        if ($archive) {
             $url = PEM_URL . '/download.php';
             $get_data = [
                 'rid' => $revision,
                 'origin' => 'piwigo_' . $action,
             ];
+            $handle = @fopen($archive, 'wb');
 
-            if ($handle = @fopen($archive, 'wb') and functions_admin::fetchRemote($url, $handle, $get_data)) {
+            if ($handle and
+                functions_admin::fetchRemote($url, $handle, $get_data)
+            ) {
                 fclose($handle);
                 $zip = new PclZip($archive);
-                if ($list = $zip->listContent()) {
+                $list = $zip->listContent();
+
+                if ($list) {
                     foreach ($list as $file) {
                         // we search main.inc.php in archive
-                        if (basename($file['filename']) == 'main.inc.php'
-                          and (! isset($main_filepath)
-                          or strlen($file['filename']) < strlen($main_filepath))) {
+                        if (basename($file['filename']) == 'main.inc.php' and
+                           (! isset($main_filepath) or strlen($file['filename']) < strlen($main_filepath))
+                        ) {
                             $main_filepath = $file['filename'];
                         }
                     }
@@ -545,57 +614,62 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
                     if (isset($main_filepath)) {
                         $root = dirname($main_filepath); // main.inc.php path in archive
+
                         if ($action == 'upgrade') {
                             $plugin_id = $dest;
                         } else {
                             $plugin_id = ($root == '.' ? 'extension_' . $dest : basename($root));
                         }
+
                         $extract_path = PHPWG_PLUGINS_PATH . $plugin_id;
                         $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
+                        $result = $zip->extract(PCLZIP_OPT_PATH, $extract_path, PCLZIP_OPT_REMOVE_PATH, $root, PCLZIP_OPT_REPLACE_NEWER);
 
-                        if ($result = $zip->extract(
-                            PCLZIP_OPT_PATH,
-                            $extract_path,
-                            PCLZIP_OPT_REMOVE_PATH,
-                            $root,
-                            PCLZIP_OPT_REPLACE_NEWER
-                        )) {
+                        if ($result) {
                             foreach ($result as $file) {
                                 if ($file['stored_filename'] == $main_filepath) {
                                     $status = $file['status'];
                                     break;
                                 }
                             }
-                            if (file_exists($extract_path . '/obsolete.list')
-                              and $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)
-                              and ! empty($old_files)) {
-                                $old_files[] = 'obsolete.list';
-                                $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
 
-                                $extract_path_realpath = realpath($extract_path);
+                            if (file_exists($extract_path . '/obsolete.list')) {
+                                $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES);
 
-                                foreach ($old_files as $old_file) {
-                                    $old_file = trim($old_file);
-                                    $old_file = trim($old_file, '/'); // prevent path starting with a "/"
+                                if ($old_files and
+                                    ! empty($old_files)
+                                ) {
+                                    $old_files[] = 'obsolete.list';
+                                    $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
 
-                                    if (empty($old_file)) { // empty here means the extension itself
-                                        continue;
-                                    }
+                                    $extract_path_realpath = realpath($extract_path);
 
-                                    $path = $extract_path . '/' . $old_file;
+                                    foreach ($old_files as $old_file) {
+                                        $old_file = trim($old_file);
+                                        $old_file = trim($old_file, '/'); // prevent path starting with a "/"
 
-                                    // make sure the obsolete file is withing the extension directory, prevent traversal path
-                                    $realpath = realpath($path);
-                                    if ($realpath === false or strpos($realpath, $extract_path_realpath) !== 0) {
-                                        continue;
-                                    }
+                                        if (empty($old_file)) { // empty here means the extension itself
+                                            continue;
+                                        }
 
-                                    $logger->debug(__FUNCTION__ . ', to delete = ' . $path);
+                                        $path = $extract_path . '/' . $old_file;
 
-                                    if (is_file($path)) {
-                                        @unlink($path);
-                                    } elseif (is_dir($path)) {
-                                        functions_admin::deltree($path, PHPWG_PLUGINS_PATH . 'trash');
+                                        // make sure the obsolete file is withing the extension directory, prevent traversal path
+                                        $realpath = realpath($path);
+
+                                        if ($realpath === false or
+                                            strpos($realpath, $extract_path_realpath) !== 0
+                                        ) {
+                                            continue;
+                                        }
+
+                                        $logger->debug(__FUNCTION__ . ', to delete = ' . $path);
+
+                                        if (is_file($path)) {
+                                            @unlink($path);
+                                        } elseif (is_dir($path)) {
+                                            functions_admin::deltree($path, PHPWG_PLUGINS_PATH . 'trash');
+                                        }
                                     }
                                 }
                             }
@@ -624,13 +698,20 @@ DELETE FROM ' . PLUGINS_TABLE . '
         $file = PHPWG_ROOT_PATH . 'install/obsolete_extensions.list';
         $merged_extensions = [];
 
-        if (file_exists($file) and $obsolete_ext = file($file, FILE_IGNORE_NEW_LINES) and ! empty($obsolete_ext)) {
-            foreach ($obsolete_ext as $ext) {
-                if (preg_match('/^(\d+) ?: ?(.*?)$/', $ext, $matches)) {
-                    $merged_extensions[$matches[1]] = $matches[2];
+        if (file_exists($file)) {
+            $obsolete_ext = file($file, FILE_IGNORE_NEW_LINES);
+
+            if ($obsolete_ext and
+                ! empty($obsolete_ext)
+            ) {
+                foreach ($obsolete_ext as $ext) {
+                    if (preg_match('/^(\d+) ?: ?(.*?)$/', $ext, $matches)) {
+                        $merged_extensions[$matches[1]] = $matches[2];
+                    }
                 }
             }
         }
+
         return $merged_extensions;
     }
 
@@ -642,6 +723,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
         if ($a['revision_date'] < $b['revision_date']) {
             return 1;
         }
+
         return -1;
     }
 
@@ -653,18 +735,22 @@ DELETE FROM ' . PLUGINS_TABLE . '
     public function extension_author_compare($a, $b)
     {
         $r = strcasecmp($a['author_name'], $b['author_name']);
+
         if ($r == 0) {
             return $this->extension_name_compare($a, $b);
         }
+
         return $r;
     }
 
     public function plugin_author_compare($a, $b)
     {
         $r = strcasecmp($a['author'], $b['author']);
+
         if ($r == 0) {
             return functions_html::name_compare($a, $b);
         }
+
         return $r;
     }
 
@@ -673,6 +759,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
         if ($a['extension_nb_downloads'] < $b['extension_nb_downloads']) {
             return 1;
         }
+
         return -1;
     }
 
@@ -686,12 +773,13 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
         foreach ($this->fs_plugins as $plugin_id => $plugin) {
             if (isset($this->db_plugins_by_id[$plugin_id])) {
-                $this->db_plugins_by_id[$plugin_id]['state'] == 'active' ?
-                  $active_plugins[$plugin_id] = $plugin : $inactive_plugins[$plugin_id] = $plugin;
+                $this->db_plugins_by_id[$plugin_id]['state'] == 'active' ? $active_plugins[$plugin_id] = $plugin
+                                                                         : $inactive_plugins[$plugin_id] = $plugin;
             } else {
                 $not_installed[$plugin_id] = $plugin;
             }
         }
+
         $this->fs_plugins = $active_plugins + $inactive_plugins + $not_installed;
     }
 

@@ -20,7 +20,9 @@ class PwgError
 
     public function __construct($code, $codeText)
     {
-        if ($code >= 400 and $code < 600) {
+        if ($code >= 400 and
+            $code < 600
+        ) {
             functions_html::set_status_header($code, $codeText);
         }
 

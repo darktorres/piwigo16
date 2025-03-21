@@ -55,7 +55,9 @@ DELETE FROM ' . CADDIE_TABLE . '
         functions::redirect(functions_url::get_root_url() . 'admin.php?page=' . $_GET['page']);
     }
 
-    if ($_GET['action'] == 'delete_orphans' and isset($_GET['nb_orphans_deleted'])) {
+    if ($_GET['action'] == 'delete_orphans' and
+        isset($_GET['nb_orphans_deleted'])
+    ) {
         functions::check_input_parameter('nb_orphans_deleted', $_GET, false, '/^\d+$/');
 
         if ($_GET['nb_orphans_deleted'] > 0) {
@@ -69,8 +71,11 @@ DELETE FROM ' . CADDIE_TABLE . '
         }
     }
 
-    if ($_GET['action'] == 'sync_md5sum' and isset($_GET['nb_md5sum_added'])) {
+    if ($_GET['action'] == 'sync_md5sum' and
+        isset($_GET['nb_md5sum_added'])
+    ) {
         functions::check_input_parameter('nb_md5sum_added', $_GET, false, '/^\d+$/');
+
         if ($_GET['nb_md5sum_added'] > 0) {
             $_SESSION['page_infos'][] = functions::l10n_dec(
                 '%d checksums were added',
@@ -82,6 +87,7 @@ DELETE FROM ' . CADDIE_TABLE . '
         }
     }
 }
+
 // +-----------------------------------------------------------------------+
 // |                      initialize current set                           |
 // +-----------------------------------------------------------------------+
@@ -113,7 +119,9 @@ if (isset($_POST['submitFilter'])) {
                 $has_options = true;
             }
 
-            if (! $has_options or isset($_POST['filter_duplicates_filename'])) {
+            if (! $has_options or
+                isset($_POST['filter_duplicates_filename'])
+            ) {
                 $_SESSION['bulk_manager_filter']['duplicates_filename'] = true;
             }
         }
@@ -132,7 +140,9 @@ if (isset($_POST['submitFilter'])) {
     if (isset($_POST['filter_tags_use'])) {
         $_SESSION['bulk_manager_filter']['tags'] = functions_admin::get_tag_ids($_POST['filter_tags'], false);
 
-        if (isset($_POST['tag_mode']) and in_array($_POST['tag_mode'], ['AND', 'OR'])) {
+        if (isset($_POST['tag_mode']) and
+            in_array($_POST['tag_mode'], ['AND', 'OR'])
+        ) {
             $_SESSION['bulk_manager_filter']['tag_mode'] = $_POST['tag_mode'];
         }
     }
@@ -155,6 +165,7 @@ if (isset($_POST['submitFilter'])) {
                 $_SESSION['bulk_manager_filter']['dimension'][$type] = $_POST['filter_dimension_' . $type];
             }
         }
+
         foreach (['min_ratio', 'max_ratio'] as $type) {
             if (filter_var($_POST['filter_dimension_' . $type], FILTER_VALIDATE_FLOAT) !== false) {
                 $_SESSION['bulk_manager_filter']['dimension'][$type] = $_POST['filter_dimension_' . $type];
@@ -199,12 +210,16 @@ elseif (isset($_GET['filter'])) {
                 } else {
                     $_SESSION['bulk_manager_filter']['prefilter'] = $value;
                 }
+
                 break;
 
-            case 'album': case 'category': case 'cat':
+            case 'album':
+            case 'category':
+            case 'cat':
                 if (is_numeric($value)) {
                     $_SESSION['bulk_manager_filter']['category'] = $value;
                 }
+
                 break;
 
             case 'tag':
@@ -212,12 +227,16 @@ elseif (isset($_GET['filter'])) {
                     $_SESSION['bulk_manager_filter']['tags'] = [$value];
                     $_SESSION['bulk_manager_filter']['tag_mode'] = 'AND';
                 }
+
                 break;
 
             case 'level':
-                if (is_numeric($value) && in_array($value, $conf['available_permission_levels'])) {
+                if (is_numeric($value) &&
+                    in_array($value, $conf['available_permission_levels'])
+                ) {
                     $_SESSION['bulk_manager_filter']['level'] = $value;
                 }
+
                 break;
 
             case 'search':
@@ -230,8 +249,10 @@ elseif (isset($_GET['filter'])) {
                     'h' => 'height',
                     'r' => 'ratio',
                 ];
+
                 foreach (explode('-', $value) as $part) {
                     $values = explode('..', substr($part, 1));
+
                     if (isset($dim_map[$part[0]])) {
                         $type = $dim_map[$part[0]];
                         list(
@@ -240,6 +261,7 @@ elseif (isset($_GET['filter'])) {
                         ) = $values;
                     }
                 }
+
                 break;
 
             case 'filesize':
@@ -266,6 +288,7 @@ if (empty($_SESSION['bulk_manager_filter'])) {
 
 // depending on the current filter (in session), we find the appropriate photos
 $filter_sets = [];
+
 if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
     switch ($_SESSION['bulk_manager_filter']['prefilter']) {
         case 'caddie':
@@ -275,7 +298,6 @@ SELECT element_id
   WHERE user_id = ' . $user['id'] . '
 ;';
             $filter_sets[] = functions_mysqli::query2array($query, null, 'element_id');
-
             break;
 
         case 'favorites':
@@ -285,7 +307,6 @@ SELECT image_id
   WHERE user_id = ' . $user['id'] . '
 ;';
             $filter_sets[] = functions_mysqli::query2array($query, null, 'image_id');
-
             break;
 
         case 'last_import':
@@ -294,6 +315,7 @@ SELECT MAX(date_available) AS date
   FROM ' . IMAGES_TABLE . '
 ;';
             $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+
             if (! empty($row['date'])) {
                 $query = '
 SELECT id
@@ -321,6 +343,7 @@ SELECT id
    WHERE dir IS NULL
  ;';
             $virtual_categories = functions_mysqli::query2array($query, null, 'id');
+
             if (! empty($virtual_categories)) {
                 $query = '
  SELECT DISTINCT(image_id)
@@ -331,12 +354,12 @@ SELECT id
             }
 
             $filter_sets[] = array_diff($all_elements, $linked_to_virtual);
-
             break;
 
         case 'no_album':
             $filter_sets[] = functions_admin::get_orphans();
             break;
+
         case 'no_sync_md5sum':
             $filter_sets[] = functions_admin::get_photos_no_md5sum();
             break;
@@ -350,7 +373,6 @@ SELECT
   WHERE tag_id is null
 ;';
             $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
-
             break;
 
         case 'duplicates':
@@ -403,11 +425,10 @@ SELECT
             }
 
             $filter_sets[] = $ids;
-
             break;
 
         case 'all_photos':
-            if (count($_SESSION['bulk_manager_filter']) == 1) {// make the query only if this is the only filter
+            if (count($_SESSION['bulk_manager_filter']) == 1) { // make the query only if this is the only filter
                 $query = '
 SELECT id
   FROM ' . IMAGES_TABLE . '
@@ -415,6 +436,7 @@ SELECT id
 
                 $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
             }
+
             break;
 
         default:
@@ -433,6 +455,7 @@ SELECT COUNT(*)
   WHERE id = ' . $_SESSION['bulk_manager_filter']['category'] . '
 ;';
     list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
     if ($counter == 0) {
         unset($_SESSION['bulk_manager_filter']);
         functions::redirect(functions_url::get_root_url() . 'admin.php?page=' . $_GET['page']);
@@ -454,6 +477,7 @@ SELECT COUNT(*)
 
 if (isset($_SESSION['bulk_manager_filter']['level'])) {
     $operator = '=';
+
     if (isset($_SESSION['bulk_manager_filter']['level_include_lower'])) {
         $operator = '<=';
     }
@@ -479,21 +503,27 @@ if (! empty($_SESSION['bulk_manager_filter']['tags'])) {
 
 if (isset($_SESSION['bulk_manager_filter']['dimension'])) {
     $where_clauses = [];
+
     if (isset($_SESSION['bulk_manager_filter']['dimension']['min_width'])) {
         $where_clause[] = 'width >= ' . $_SESSION['bulk_manager_filter']['dimension']['min_width'];
     }
+
     if (isset($_SESSION['bulk_manager_filter']['dimension']['max_width'])) {
         $where_clause[] = 'width <= ' . $_SESSION['bulk_manager_filter']['dimension']['max_width'];
     }
+
     if (isset($_SESSION['bulk_manager_filter']['dimension']['min_height'])) {
         $where_clause[] = 'height >= ' . $_SESSION['bulk_manager_filter']['dimension']['min_height'];
     }
+
     if (isset($_SESSION['bulk_manager_filter']['dimension']['max_height'])) {
         $where_clause[] = 'height <= ' . $_SESSION['bulk_manager_filter']['dimension']['max_height'];
     }
+
     if (isset($_SESSION['bulk_manager_filter']['dimension']['min_ratio'])) {
         $where_clause[] = 'width/height >= ' . $_SESSION['bulk_manager_filter']['dimension']['min_ratio'];
     }
+
     if (isset($_SESSION['bulk_manager_filter']['dimension']['max_ratio'])) {
         // max_ratio is a floor value, so must be a bit increased
         $where_clause[] = 'width/height < ' . ($_SESSION['bulk_manager_filter']['dimension']['max_ratio'] + 0.01);
@@ -529,22 +559,29 @@ SELECT id
 }
 
 if (isset($_SESSION['bulk_manager_filter']['search']) &&
-    strlen($_SESSION['bulk_manager_filter']['search']['q'])) {
+    strlen($_SESSION['bulk_manager_filter']['search']['q'])
+) {
     $res = functions_search::get_quick_search_results_no_cache($_SESSION['bulk_manager_filter']['search']['q'], [
         'permissions' => false,
     ]);
-    if (! empty($res['items']) && ! empty($res['qs']['unmatched_terms'])) {
+
+    if (! empty($res['items']) &&
+        ! empty($res['qs']['unmatched_terms'])
+    ) {
         $template->assign('no_search_results', array_map(htmlspecialchars(...), $res['qs']['unmatched_terms']));
     }
+
     $filter_sets[] = $res['items'];
 }
 
 $filter_sets = functions_plugins::trigger_change('batch_manager_perform_filters', $filter_sets, $_SESSION['bulk_manager_filter']);
 
 $current_set = array_shift($filter_sets);
+
 foreach ($filter_sets as $set) {
     $current_set = array_intersect($current_set, $set);
 }
+
 $page['cat_elements_id'] = empty($current_set) ? [] : $current_set;
 
 // +-----------------------------------------------------------------------+
@@ -555,10 +592,11 @@ $page['cat_elements_id'] = empty($current_set) ? [] : $current_set;
 // category. For example, $page['start'] = 12 means we must show elements #12
 // and $page['nb_images'] next elements
 
-if (! isset($_REQUEST['start'])
-    or ! is_numeric($_REQUEST['start'])
-    or $_REQUEST['start'] < 0
-    or (isset($_REQUEST['display']) and $_REQUEST['display'] == 'all')) {
+if (! isset($_REQUEST['start']) or
+    ! is_numeric($_REQUEST['start']) or
+    $_REQUEST['start'] < 0 or
+    (isset($_REQUEST['display']) and $_REQUEST['display'] == 'all')
+) {
     $page['start'] = 0;
 } else {
     $page['start'] = $_REQUEST['start'];
@@ -602,13 +640,16 @@ $result = functions_mysqli::pwg_query($query);
 
 if (functions_mysqli::pwg_db_num_rows($result)) {
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
-        if ($row['width'] > 0 && $row['height'] > 0) {
+        if ($row['width'] > 0 &&
+            $row['height'] > 0
+        ) {
             $widths[] = $row['width'];
             $heights[] = $row['height'];
             $ratios[] = floor($row['width'] / $row['height'] * 100) / 100;
         }
     }
 }
+
 if (empty($widths)) { // arbitrary values, only used when no photos on the gallery
     $widths = [600, 1920, 3500];
     $heights = [480, 1080, 2300];
@@ -641,9 +682,13 @@ $ratio_categories = [
 foreach ($ratios as $ratio) {
     if ($ratio < 0.95) {
         $ratio_categories['portrait'][] = $ratio;
-    } elseif ($ratio >= 0.95 and $ratio <= 1.05) {
+    } elseif ($ratio >= 0.95 and
+              $ratio <= 1.05
+    ) {
         $ratio_categories['square'][] = $ratio;
-    } elseif ($ratio > 1.05 and $ratio < 2) {
+    } elseif ($ratio > 1.05 and
+              $ratio < 2
+    ) {
         $ratio_categories['landscape'][] = $ratio;
     } elseif ($ratio >= 2) {
         $ratio_categories['panorama'][] = $ratio;

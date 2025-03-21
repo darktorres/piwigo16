@@ -75,6 +75,7 @@ class functions_history
             foreach ($types as $type) {
                 if (in_array($type, $search['fields']['types'])) {
                     $clause = 'image_type ';
+
                     if ($type == 'none') {
                         $clause .= 'IS NULL';
                     } else {
@@ -90,8 +91,9 @@ class functions_history
             }
         }
 
-        if (isset($search['fields']['user'])
-            and $search['fields']['user'] != -1) {
+        if (isset($search['fields']['user']) and
+            $search['fields']['user'] != -1
+        ) {
             $clauses[] = 'user_id = ' . $search['fields']['user'];
         }
 
@@ -166,6 +168,7 @@ class functions_history
         $summary_lines = functions_mysqli::query2array($query);
 
         $history_min_id = 0;
+
         if (count($summary_lines) > 0) {
             $last_summary = $summary_lines[0];
             $history_min_id = $last_summary['history_id_to'];
@@ -179,6 +182,7 @@ class functions_history
     FROM ' . HISTORY_TABLE . '
   ;';
             $history_lines = functions_mysqli::query2array($query);
+
             if (count($history_lines) > 0) {
                 $history_min_id = $history_lines[0]['min_id'] - 1;
             }
@@ -234,6 +238,7 @@ class functions_history
                         'history_id_to' => $row['max_id'],
                     ];
                 }
+
                 $need_update[$time_key]['nb_pages'] += $row['nb_pages'];
 
                 if ($row['min_id'] < $need_update[$time_key]['history_id_from']) {
@@ -287,12 +292,16 @@ class functions_history
       )
   ;';
             $result = functions_mysqli::pwg_query($query);
+
             while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 $key = sprintf('%4u', $row['year']);
+
                 if (isset($row['month'])) {
                     $key .= sprintf('-%02u', $row['month']);
+
                     if (isset($row['day'])) {
                         $key .= sprintf('-%02u', $row['day']);
+
                         if (isset($row['hour'])) {
                             $key .= sprintf('-%02u', $row['hour']);
                         }
@@ -377,6 +386,7 @@ class functions_history
     LIMIT 1
   ;';
         $summary_lines = functions_mysqli::query2array($query);
+
         if (count($summary_lines) == 0) {
             return; // lines not summarized, no purge
         }
@@ -392,6 +402,7 @@ class functions_history
     LIMIT 1
   ;';
         $history_lines = functions_mysqli::query2array($query);
+
         if (count($history_lines) == 0) {
             return;
         }
@@ -433,7 +444,9 @@ class functions_history
     {
         global $conf;
 
-        if (isset($conf['history_summarized_dropped']) and $conf['history_summarized_dropped']) {
+        if (isset($conf['history_summarized_dropped']) and
+            $conf['history_summarized_dropped']
+        ) {
             return;
         }
 
@@ -450,6 +463,7 @@ class functions_history
         }
 
         $result = functions_mysqli::pwg_query('SHOW COLUMNS FROM `' . HISTORY_TABLE . '` LIKE "summarized";');
+
         if (functions_mysqli::pwg_db_num_rows($result)) {
             functions_mysqli::pwg_query('ALTER TABLE `' . HISTORY_TABLE . '` DROP COLUMN `summarized`;');
         }

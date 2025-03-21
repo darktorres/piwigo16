@@ -20,7 +20,9 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-if (isset($_GET['start']) and is_numeric($_GET['start'])) {
+if (isset($_GET['start']) and
+    is_numeric($_GET['start'])
+) {
     $page['start'] = $_GET['start'];
 } else {
     $page['start'] = 0;
@@ -105,6 +107,7 @@ SELECT
   GROUP BY validated
 ;';
 $result = functions_mysqli::pwg_query($query);
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $nb_total += $row['counter'];
 
@@ -113,13 +116,17 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     }
 }
 
-if (! isset($_GET['filter']) and $nb_pending > 0) {
+if (! isset($_GET['filter']) and
+    $nb_pending > 0
+) {
     $page['filter'] = 'pending';
 } else {
     $page['filter'] = 'all';
 }
 
-if (isset($_GET['filter']) and $_GET['filter'] == 'pending') {
+if (isset($_GET['filter']) and
+    $_GET['filter'] == 'pending'
+) {
     $page['filter'] = $_GET['filter'];
 }
 
@@ -159,6 +166,7 @@ SELECT
   LIMIT ' . $page['start'] . ', ' . $conf['comments_page_nb_comments'] . '
 ;';
 $result = functions_mysqli::pwg_query($query);
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $thumb = DerivativeImage::thumb_url(
         [
@@ -167,11 +175,13 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             'representative_ext' => $row['representative_ext'],
         ]
     );
+
     if (empty($row['author_id'])) {
         $author_name = $row['author'];
     } else {
         $author_name = stripslashes($row['username']);
     }
+
     $template->append(
         'comments',
         [

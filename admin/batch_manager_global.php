@@ -52,6 +52,7 @@ functions::check_input_parameter('dissociate', $_POST, false, PATTERN_ID);
 // +-----------------------------------------------------------------------+
 
 $collection = [];
+
 if (isset($_POST['nb_photos_deleted'])) {
     functions::check_input_parameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
 
@@ -84,6 +85,7 @@ if (isset($_POST['nb_photos_deleted'])) {
 // given prefilter. The idea is to make conditions simpler to write in the
 // code.
 $page['prefilter'] = 'none';
+
 if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
     $page['prefilter'] = $_SESSION['bulk_manager_filter']['prefilter'];
 }
@@ -123,7 +125,9 @@ DELETE
             }
         }
     } elseif ($action == 'del_tags') {
-        if (isset($_POST['del_tags']) and count($_POST['del_tags']) > 0) {
+        if (isset($_POST['del_tags']) and
+            count($_POST['del_tags']) > 0
+        ) {
             $taglist_before = functions_admin::get_image_tag_ids($collection);
 
             $query = '
@@ -139,7 +143,8 @@ DELETE
             functions_admin::update_images_lastmodified($images_to_update);
 
             if (isset($_SESSION['bulk_manager_filter']['tags']) &&
-              count(array_intersect($_SESSION['bulk_manager_filter']['tags'], $_POST['del_tags']))) {
+                count(array_intersect($_SESSION['bulk_manager_filter']['tags'], $_POST['del_tags']))
+            ) {
                 $redirect = true;
             }
         } else {
@@ -162,6 +167,7 @@ DELETE
             $redirect = true;
         } elseif ($page['prefilter'] == 'no_virtual_album') {
             $category_info = functions_category::get_cat_info($_POST['associate']);
+
             if (empty($category_info['dir'])) {
                 $redirect = true;
             }
@@ -178,11 +184,13 @@ DELETE
             $redirect = true;
         } elseif ($page['prefilter'] == 'no_virtual_album') {
             $category_info = functions_category::get_cat_info($_POST['associate']);
+
             if (empty($category_info['dir'])) {
                 $redirect = true;
             }
-        } elseif (isset($_SESSION['bulk_manager_filter']['category'])
-            and $_POST['move'] != $_SESSION['bulk_manager_filter']['category']) {
+        } elseif (isset($_SESSION['bulk_manager_filter']['category']) and
+                  $_POST['move'] != $_SESSION['bulk_manager_filter']['category']
+        ) {
             $redirect = true;
         }
     } elseif ($action == 'dissociate') {
@@ -205,6 +213,7 @@ DELETE
         }
 
         $datas = [];
+
         foreach ($collection as $image_id) {
             $datas[] = [
                 'id' => $image_id,
@@ -233,6 +242,7 @@ DELETE
         }
 
         $datas = [];
+
         foreach ($collection as $image_id) {
             $datas[] = [
                 'id' => $image_id,
@@ -256,13 +266,16 @@ DELETE
 
     // date_creation
     elseif ($action == 'date_creation') {
-        if (isset($_POST['remove_date_creation']) || empty($_POST['date_creation'])) {
+        if (isset($_POST['remove_date_creation']) ||
+            empty($_POST['date_creation'])
+        ) {
             $date_creation = null;
         } else {
             $date_creation = $_POST['date_creation'];
         }
 
         $datas = [];
+
         foreach ($collection as $image_id) {
             $datas[] = [
                 'id' => $image_id,
@@ -287,6 +300,7 @@ DELETE
     // privacy_level
     elseif ($action == 'level') {
         $datas = [];
+
         foreach ($collection as $image_id) {
             $datas[] = [
                 'id' => $image_id,
@@ -321,7 +335,9 @@ DELETE
 
     // delete
     elseif ($action == 'delete') {
-        if (isset($_POST['confirm_deletion']) and $_POST['confirm_deletion'] == 1) {
+        if (isset($_POST['confirm_deletion']) and
+            $_POST['confirm_deletion'] == 1
+        ) {
             // now done with ajax calls, with blocks
             // $deleted_count = \Piwigo\admin\inc\functions::delete_elements($collection, true);
             if (count($collection) > 0) {
@@ -344,10 +360,13 @@ DELETE
     // synchronize metadata
     elseif ($action == 'metadata') {
         $page['infos'][] = functions::l10n('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>';
-    } elseif ($action == 'delete_derivatives' && ! empty($_POST['del_derivatives_type'])) {
+    } elseif ($action == 'delete_derivatives' &&
+              ! empty($_POST['del_derivatives_type'])
+    ) {
         $query = 'SELECT path,representative_ext FROM ' . IMAGES_TABLE . '
   WHERE id IN (' . implode(',', $collection) . ')';
         $result = functions_mysqli::pwg_query($query);
+
         while ($info = functions_mysqli::pwg_db_fetch_assoc($result)) {
             foreach ($_POST['del_derivatives_type'] as $type) {
                 functions_admin::delete_element_derivatives($info, $type);
@@ -357,6 +376,7 @@ DELETE
         if ($_POST['regenerateSuccess'] != '0') {
             $page['infos'][] = functions::l10n('%s photos have been regenerated', $_POST['regenerateSuccess']);
         }
+
         if ($_POST['regenerateError'] != '0') {
             $page['warnings'][] = functions::l10n('%s photos can not be regenerated', $_POST['regenerateError']);
         }
@@ -473,6 +493,7 @@ foreach ($conf['available_permission_levels'] as $level) {
         $level_options[$level] = functions::l10n('Everybody');
     }
 }
+
 $template->assign(
     [
         'filter_level_options' => $level_options,
@@ -513,6 +534,7 @@ SELECT category_id
   LIMIT 1
 ;';
     $result = functions_mysqli::pwg_query($query);
+
     if (functions_mysqli::pwg_db_num_rows($result) > 0) {
         $row = functions_mysqli::pwg_db_fetch_assoc($result);
         $selected_category[] = $row['category_id'];
@@ -575,9 +597,11 @@ $template->assign(
 
 //derivatives
 $del_deriv_map = [];
+
 foreach (ImageStdParams::get_defined_type_map() as $params) {
     $del_deriv_map[$params->type] = functions::l10n($params->type);
 }
+
 $gen_deriv_map = $del_deriv_map;
 $del_deriv_map[derivative_std_params::IMG_CUSTOM] = functions::l10n(derivative_std_params::IMG_CUSTOM);
 $template->assign(
@@ -616,16 +640,19 @@ if (count($page['cat_elements_id']) > 0) {
     $template->assign('navbar', $nav_bar);
 
     $is_category = false;
-    if (isset($_SESSION['bulk_manager_filter']['category'])
-        and ! isset($_SESSION['bulk_manager_filter']['category_recursive'])) {
+
+    if (isset($_SESSION['bulk_manager_filter']['category']) and
+        ! isset($_SESSION['bulk_manager_filter']['category_recursive'])
+    ) {
         $is_category = true;
     }
 
     // If using the 'duplicates' filter,
     // order by the fields that are used to find duplicates.
-    if (isset($_SESSION['bulk_manager_filter']['prefilter'])
-        and $_SESSION['bulk_manager_filter']['prefilter'] === 'duplicates'
-        and isset($duplicates_on_fields)) {
+    if (isset($_SESSION['bulk_manager_filter']['prefilter']) and
+        $_SESSION['bulk_manager_filter']['prefilter'] === 'duplicates' and
+        isset($duplicates_on_fields)
+    ) {
         // The $duplicates_on_fields variable is defined in ./batch_manager.php
         $order_by_fields = array_merge($duplicates_on_fields, ['id']);
         $conf['order_by'] = ' ORDER BY ' . join(', ', $order_by_fields);
@@ -639,6 +666,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
         $category_info = functions_category::get_cat_info($_SESSION['bulk_manager_filter']['category']);
 
         $conf['order_by'] = $conf['order_by_inside_category'];
+
         if (! empty($category_info['image_order'])) {
             $conf['order_by'] = ' ORDER BY ' . $category_info['image_order'];
         }
@@ -662,12 +690,14 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
     $result = functions_mysqli::pwg_query($query);
 
     $thumb_params = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE);
+
     // template thumbnail initialization
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $nb_thumbs_page++;
         $src_image = new SrcImage($row);
 
         $ttitle = functions_html::render_element_name($row);
+
         if ($ttitle != functions::get_name_from_file($row['file'])) {
             $ttitle .= ' (' . $row['file'] . ')';
         }
@@ -687,6 +717,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
             )
         );
     }
+
     $template->assign('thumb_params', $thumb_params);
 }
 

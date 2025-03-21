@@ -20,6 +20,7 @@ class functions_upgrade
         if (defined('PHPWG_IN_UPGRADE')) {
             return PHPWG_IN_UPGRADE;
         }
+
         return false;
     }
 
@@ -83,6 +84,7 @@ class functions_upgrade
 
         $result = functions_mysqli::pwg_query($query);
         $plugins = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $plugins[] = $row['id'];
         }
@@ -121,6 +123,7 @@ class functions_upgrade
         $result = functions_mysqli::pwg_query($query);
         $theme_ids = [];
         $theme_names = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $theme_ids[] = $row['id'];
             $theme_names[] = $row['name'];
@@ -155,6 +158,7 @@ class functions_upgrade
     WHERE id = \'' . PHPWG_DEFAULT_TEMPLATE . '\'
   ;';
                 list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
                 if ($counter < 1) {
                     // we need to activate theme first
                     $themes = new themes();
@@ -183,7 +187,9 @@ class functions_upgrade
     {
         global $conf, $page, $current_release;
 
-        if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
+        if (version_compare($current_release, '2.0', '>=') and
+            isset($_COOKIE[session_name()])
+        ) {
             // Check if user is already connected as webmaster
             session_start();
             if (! empty($_SESSION['pwg_uid'])) {
@@ -195,21 +201,28 @@ class functions_upgrade
                 functions_mysqli::pwg_query($query);
 
                 $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
-                if (isset($row['status']) and $row['status'] == 'webmaster') {
+
+                if (isset($row['status']) and
+                    $row['status'] == 'webmaster'
+                ) {
                     define('PHPWG_IN_UPGRADE', true);
                     return;
                 }
             }
         }
 
-        if (! isset($_POST['username']) or ! isset($_POST['password'])) {
+        if (! isset($_POST['username']) or
+            ! isset($_POST['password'])
+        ) {
             return;
         }
 
         $username = $_POST['username'];
         $password = $_POST['password'];
 
-        if (function_exists('get_magic_quotes_gpc') && ! @get_magic_quotes_gpc()) {
+        if (function_exists('get_magic_quotes_gpc') &&
+            ! @get_magic_quotes_gpc()
+        ) {
             $username = functions_mysqli::pwg_db_real_escape_string($username);
         }
 
@@ -233,11 +246,14 @@ class functions_upgrade
   WHERE ' . $conf['user_fields']['username'] . '=\'' . $username . '\'
   ;';
         }
+
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
         if (! $conf['password_verify']($password, $row['password'])) {
             $page['errors'][] = functions::l10n('Invalid password!');
-        } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
+        } elseif ($row['status'] != 'admin' and
+                  $row['status'] != 'webmaster'
+        ) {
             $page['errors'][] = functions::l10n('You do not have access rights to run upgrade');
         } else {
             define('PHPWG_IN_UPGRADE', true);
@@ -254,8 +270,9 @@ class functions_upgrade
         // $upgrades_path = PHPWG_ROOT_PATH.'install/db';
 
         // $available_upgrade_ids = array();
+        // $contents = opendir($upgrades_path);
 
-        // if ($contents = opendir($upgrades_path))
+        // if ($contents)
         // {
         //   while (($node = readdir($contents)) !== false)
         //   {

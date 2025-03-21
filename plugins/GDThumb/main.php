@@ -28,11 +28,12 @@ if (functions::mobile_theme()) {
 }
 
 // +-----------------------------------------------------------------------+
-// | Plugin constants                                               |
+// | Plugin constants                                                      |
 // +-----------------------------------------------------------------------+
 define('GDTHUMB_VERSION', '1.0.26');
 define('GDTHUMB_ID', basename(dirname(__FILE__)));
 define('GDTHUMB_PATH', PHPWG_PLUGINS_PATH . GDTHUMB_ID . '/');
+
 if (! defined('GDTHEME_PATH')) {
     define('GDTHEME_PATH', PHPWG_THEMES_PATH . 'greydragon/');
 }
@@ -79,9 +80,12 @@ function GDThumb_index()
 
 function GDThumb_endsWith($needles, $haystack)
 {
-    if (empty($needles) || empty($haystack)) {
+    if (empty($needles) ||
+        empty($haystack)
+    ) {
         return false;
     }
+
     $arr_needles = explode(',', $needles);
 
     foreach ((array) $arr_needles as $needle) {
@@ -89,6 +93,7 @@ function GDThumb_endsWith($needles, $haystack)
             return true;
         }
     }
+
     return false;
 
 }
@@ -100,21 +105,27 @@ function GDThumb_media_type($params, $smarty)
     }
 
     $file = $params['file'];
+
     if (GDThumb_endsWith('webm,webmv,ogv,m4v,flv,mp4', $file)) {
         return 'video';
     }
+
     if (GDThumb_endsWith('mp3,ogg,oga,m4a,webma,fla,wav', $file)) {
         return 'music';
     }
+
     if (GDThumb_endsWith('pdf', $file)) {
         return 'pdf';
     }
+
     if (GDThumb_endsWith('doc,docx,odt', $file)) {
         return 'doc';
     }
+
     if (GDThumb_endsWith('xls,xlsx,ods', $file)) {
         return 'xls';
     }
+
     if (GDThumb_endsWith('ppt,pptx,odp', $file)) {
         return 'ppt';
     }
@@ -128,24 +139,33 @@ function GDThumb_process_thumb($tpl_vars, $pictures)
     $confTemp = $conf['gdThumb'];
     $confTemp['GDTHUMB_ROOT'] = 'plugins/' . GDTHUMB_ID;
     $confTemp['big_thumb_noinpw'] = (isset($confTemp['big_thumb_noinpw']) && ($confTemp['big_thumb_noinpw'])) ? 1 : 0;
+
     if ($confTemp['normalize_title'] == '1') {
         $confTemp['normalize_title'] = 'on';
     }
 
     $template->set_filename('index_thumbnails', dirname(__FILE__) . '/template/gdthumb_thumb.tpl');
     $template->assign('GDThumb', $confTemp);
-    if (($confTemp['method'] == 'slide') || ($confTemp['method'] == 'square')) {
+
+    if (($confTemp['method'] == 'slide') ||
+        ($confTemp['method'] == 'square')
+    ) {
         $template->assign('GDThumb_derivative_params', ImageStdParams::get_custom($confTemp['height'], 9999));
     } else {
         $template->assign('GDThumb_derivative_params', ImageStdParams::get_custom(9999, $confTemp['height']));
     }
 
-    if ($confTemp['big_thumb'] and ! empty($tpl_vars[0])) {
-        if (($confTemp['method'] == 'slide') || ($confTemp['method'] == 'square')) {
+    if ($confTemp['big_thumb'] and
+        ! empty($tpl_vars[0])
+    ) {
+        if (($confTemp['method'] == 'slide') ||
+            ($confTemp['method'] == 'square')
+        ) {
             $derivative_params = ImageStdParams::get_custom(2 * $confTemp['height'] + $confTemp['margin'], 9999);
         } else {
             $derivative_params = ImageStdParams::get_custom(9999, 2 * $confTemp['height'] + $confTemp['margin']);
         }
+
         $template->assign('GDThumb_big', new DerivativeImage($derivative_params, $tpl_vars[0]['src_image']));
     }
 
@@ -154,7 +174,6 @@ function GDThumb_process_thumb($tpl_vars, $pictures)
 
 function GDThumb_process_category($tpl_vars)
 {
-
     global $template, $conf;
     $confTemp = $conf['gdThumb'];
     $confTemp['GDTHUMB_ROOT'] = 'plugins/' . GDTHUMB_ID;
@@ -162,20 +181,31 @@ function GDThumb_process_category($tpl_vars)
 
     $template->set_filename('index_category_thumbnails', dirname(__FILE__) . '/template/gdthumb_cat.tpl');
     $template->assign('GDThumb', $confTemp);
-    if (($confTemp['method'] == 'slide') || ($confTemp['method'] == 'square')) {
+
+    if (($confTemp['method'] == 'slide') ||
+        ($confTemp['method'] == 'square')
+    ) {
         $template->assign('GDThumb_derivative_params', ImageStdParams::get_custom($confTemp['height'], 9999));
     } else {
         $template->assign('GDThumb_derivative_params', ImageStdParams::get_custom(9999, $confTemp['height']));
     }
 
-    if ($confTemp['big_thumb'] and ! empty($tpl_vars[0])) {
+    if ($confTemp['big_thumb'] and
+        ! empty($tpl_vars[0])
+    ) {
         $id = $tpl_vars[0]['representative_picture_id'];
-        if (($id) && ($rep = $tpl_vars[0]['representative'])) {
-            if (($confTemp['method'] == 'slide') || ($confTemp['method'] == 'square')) {
+
+        if (($id) &&
+            ($rep = $tpl_vars[0]['representative'])
+        ) {
+            if (($confTemp['method'] == 'slide') ||
+                ($confTemp['method'] == 'square')
+            ) {
                 $derivative_params = ImageStdParams::get_custom(2 * $confTemp['height'] + $confTemp['margin'], 9999);
             } else {
                 $derivative_params = ImageStdParams::get_custom(9999, 2 * $confTemp['height'] + $confTemp['margin']);
             }
+
             $template->assign('GDThumb_big', new DerivativeImage($derivative_params, $rep['src_image']));
         }
     }

@@ -63,7 +63,9 @@ if (isset($_GET['delete'])) {
     // 2. else use the first reachable linked category
     // 3. redirect to gallery root
 
-    if (isset($_GET['cat_id']) and ! empty($_GET['cat_id'])) {
+    if (isset($_GET['cat_id']) and
+        ! empty($_GET['cat_id'])
+    ) {
         functions::redirect(
             functions_url::make_index_url(
                 [
@@ -140,15 +142,18 @@ if (isset($_POST['submit'])) {
 
     // time to deal with tags
     $tag_ids = [];
+
     if (! empty($_POST['tags'])) {
         $tag_ids = functions_admin::get_tag_ids($_POST['tags']);
     }
+
     functions_admin::set_tags($tag_ids, $_GET['image_id']);
 
     // association to albums
     if (! isset($_POST['associate'])) {
         $_POST['associate'] = [];
     }
+
     functions::check_input_parameter('associate', $_POST, true, PATTERN_ID);
     functions_admin::move_images_to_categories([$_GET['image_id']], $_POST['associate']);
 
@@ -158,14 +163,17 @@ if (isset($_POST['submit'])) {
     if (! isset($_POST['represent'])) {
         $_POST['represent'] = [];
     }
+
     functions::check_input_parameter('represent', $_POST, true, PATTERN_ID);
 
     $no_longer_thumbnail_for = array_diff($represented_albums, $_POST['represent']);
+
     if (count($no_longer_thumbnail_for) > 0) {
         functions_admin::set_random_representative($no_longer_thumbnail_for);
     }
 
     $new_thumbnail_for = array_diff($_POST['represent'], $represented_albums);
+
     if (count($new_thumbnail_for) > 0) {
         $query = '
 UPDATE ' . CATEGORIES_TABLE . '
@@ -202,6 +210,7 @@ if (isset($data['date_creation'])) {
 }
 
 $storage_category_id = null;
+
 if (! empty($row['storage_category_id'])) {
     $storage_category_id = $row['storage_category_id'];
 }
@@ -280,6 +289,7 @@ SELECT ' . $conf['user_fields']['username'] . ' AS username
   WHERE ' . $conf['user_fields']['id'] . ' = ' . $row['added_by'] . '
 ;';
 $result = functions_mysqli::pwg_query($query);
+
 while ($user_row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $row['added_by'] = $user_row['username'];
 }
@@ -298,7 +308,9 @@ $intro_vars = [
     'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
 ];
 
-if ($conf['rate'] and ! empty($row['rating_score'])) {
+if ($conf['rate'] and
+    ! empty($row['rating_score'])
+) {
     $query = '
 SELECT
     COUNT(*)
@@ -399,8 +411,9 @@ $authorizeds = array_diff(
     )
 );
 
-if (isset($_GET['cat_id'])
-    and in_array($_GET['cat_id'], $authorizeds)) {
+if (isset($_GET['cat_id']) and
+    in_array($_GET['cat_id'], $authorizeds)
+) {
     $url_img = functions_url::make_picture_url(
         [
             'image_id' => $_GET['image_id'],
@@ -421,7 +434,9 @@ if (isset($_GET['cat_id'])
     }
 }
 
-if (isset($url_img) and $user['level'] >= $page['image']['level']) {
+if (isset($url_img) and
+    $user['level'] >= $page['image']['level']
+) {
     $template->assign('U_JUMPTO', $url_img);
 }
 

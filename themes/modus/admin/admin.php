@@ -16,6 +16,7 @@ $default_conf = functions_modus::modus_get_default_config();
 functions::load_language('theme.lang', dirname(__FILE__) . '/../');
 
 $my_conf = @$conf['modus_theme'];
+
 if (! isset($my_conf)) {
     $my_conf = $default_conf;
 } elseif (! is_array($my_conf)) {
@@ -31,6 +32,7 @@ if (isset($_POST[$text_values[0]])) {
     foreach ($text_values as $k) {
         $my_conf[$k] = stripslashes($_POST[$k]);
     }
+
     foreach ($bool_values as $k) {
         $my_conf[$k] = isset($_POST[$k]) ? true : false;
     }
@@ -62,13 +64,16 @@ $tab_codes = array_map(
     $tabs
 );
 
-if (isset($_GET['tab']) and in_array($_GET['tab'], $tab_codes)) {
+if (isset($_GET['tab']) and
+    in_array($_GET['tab'], $tab_codes)
+) {
     $page['tab'] = $_GET['tab'];
 } else {
     $page['tab'] = $tabs[0]['code'];
 }
 
 $tabsheet = new tabsheet();
+
 foreach ($tabs as $tab) {
     $tabsheet->add(
         $tab['code'],
@@ -76,6 +81,7 @@ foreach ($tabs as $tab) {
         'admin.php?page=theme&amp;theme=modus'
     );
 }
+
 $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
@@ -84,6 +90,7 @@ $tabsheet->assign();
 foreach ($text_values as $k) {
     $template->assign(strtoupper($k), $my_conf[$k]);
 }
+
 foreach ($bool_values as $k) {
     $template->assign(strtoupper($k), $my_conf[$k]);
 }
@@ -96,6 +103,7 @@ if ($my_conf['album_thumb_size'] == 0) {
 }
 
 $available_derivatives = [];
+
 foreach (array_keys(ImageStdParams::get_defined_type_map()) as $type) {
     $available_derivatives[$type] = functions::l10n($type);
 }
@@ -103,6 +111,7 @@ foreach (array_keys(ImageStdParams::get_defined_type_map()) as $type) {
 $available_skins = [];
 $skin_dir = dirname(dirname(__FILE__)) . '/skins/';
 $skin_suffix = '.php';
+
 foreach (glob($skin_dir . '*' . $skin_suffix) as $file) {
     $skin = substr($file, strlen($skin_dir), -strlen($skin_suffix));
     $available_skins[$skin] = ucwords(str_replace('_', ' ', $skin));

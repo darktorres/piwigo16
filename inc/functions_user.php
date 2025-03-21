@@ -30,7 +30,8 @@ class functions_user
 
         if (empty($mail_address) and
             ! ($conf['obligatory_user_mail_address'] and
-            in_array(functions::script_basename(), ['register', 'profile']))) {
+            in_array(functions::script_basename(), ['register', 'profile']))
+        ) {
             return '';
         }
 
@@ -38,7 +39,9 @@ class functions_user
             return functions::l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
-        if (defined('PHPWG_INSTALLED') and ! empty($mail_address)) {
+        if (defined('PHPWG_INSTALLED') and
+            ! empty($mail_address)
+        ) {
             $query = '
   SELECT count(*)
   FROM ' . USERS_TABLE . '
@@ -46,6 +49,7 @@ class functions_user
   ' . (is_numeric($user_id) ? 'AND ' . $conf['user_fields']['id'] . ' != \'' . $user_id . '\'' : '') . '
   ;';
             list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
             if ($count != 0) {
                 return functions::l10n('this email address is already in use');
             }
@@ -96,9 +100,11 @@ class functions_user
       SELECT ' . $conf['user_fields']['username'] . ' AS username
       FROM `' . USERS_TABLE . '`;
     ');
+
         while ($r = functions_mysqli::pwg_db_fetch_assoc($q)) {
             $SCU_users[$r['username']] = strtolower($r['username']);
         }
+
         // $SCU_users is now an associative table where the key is the account as
         // registered in the DB, and the value is this same account, in lower case
 
@@ -131,25 +137,32 @@ class functions_user
         if ($login == '') {
             $errors[] = functions::l10n('Please, enter a login');
         }
+
         if (preg_match('/^.* $/', $login)) {
             $errors[] = functions::l10n('login mustn\'t end with a space character');
         }
+
         if (preg_match('/^ .*$/', $login)) {
             $errors[] = functions::l10n('login mustn\'t start with a space character');
         }
+
         if (self::get_userid($login)) {
             $errors[] = functions::l10n('this login is already used');
         }
+
         if ($login != strip_tags($login)) {
             $errors[] = functions::l10n('html tags are not allowed in login');
         }
+
         $mail_error = self::validate_mail_address(null, $mail_address);
+
         if ($mail_error != '') {
             $errors[] = $mail_error;
         }
 
         if ($conf['insensitive_case_logon'] == true) {
             $login_error = self::validate_login_case($login);
+
             if ($login_error != '') {
                 $errors[] = $login_error;
             }
@@ -186,6 +199,7 @@ class functions_user
             $result = functions_mysqli::pwg_query($query);
 
             $inserts = [];
+
             while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 $inserts[] = [
                     'user_id' => $user_id,
@@ -198,13 +212,20 @@ class functions_user
             }
 
             $override = [];
-            if ($conf['browser_language'] and $language = self::get_browser_language()) {
-                $override['language'] = $language;
+
+            if ($conf['browser_language']) {
+                $language = self::get_browser_language();
+
+                if ($language) {
+                    $override['language'] = $language;
+                }
             }
 
             self::create_user_infos($user_id, $override);
 
-            if ($notify_admin and $conf['email_admin_on_new_user'] != 'none') {
+            if ($notify_admin and
+                $conf['email_admin_on_new_user'] != 'none'
+            ) {
                 include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
                 $admin_url = functions_url::get_absolute_root_url() . 'admin.php?page=user_list&username=' . $login;
 
@@ -216,6 +237,7 @@ class functions_user
                 ];
 
                 $group_id = null;
+
                 if (preg_match('/^group:(\d+)$/', $conf['email_admin_on_new_user'], $matches)) {
                     $group_id = $matches[1];
                 }
@@ -228,7 +250,9 @@ class functions_user
                 );
             }
 
-            if ($notify_user and functions::email_check_format($mail_address)) {
+            if ($notify_user and
+                functions::email_check_format($mail_address)
+            ) {
                 include_once(PHPWG_ROOT_PATH . 'inc/functions_mail.php');
 
                 $keyargs_content = [
@@ -270,7 +294,6 @@ class functions_user
         }
 
         return false;
-
     }
 
     /**
@@ -288,7 +311,9 @@ class functions_user
         $user['id'] = $user_id;
         $user = array_merge($user, self::getuserdata($user_id, $use_cache));
 
-        if ($user['id'] == $conf['guest_id'] and $user['status'] <> 'guest') {
+        if ($user['id'] == $conf['guest_id'] and
+            $user['status'] != 'guest'
+        ) {
             $user['status'] = 'guest';
             $user['internal_status']['guest_must_be_guest'] = true;
         }
@@ -296,7 +321,9 @@ class functions_user
         // Check user theme. 2 possible problems:
         // 1. the user_infos.theme was not found in the themes table, thus themes.name is null
         // 2. the theme is not really installed on the filesystem
-        if (! isset($user['theme_name']) or ! functions::check_theme_installed($user['theme'])) {
+        if (! isset($user['theme_name']) or
+            ! functions::check_theme_installed($user['theme'])
+        ) {
             $user['theme'] = self::get_default_theme();
             $user['theme_name'] = $user['theme'];
         }
@@ -319,6 +346,7 @@ class functions_user
         $query = '
   SELECT ';
         $is_first = true;
+
         foreach ($conf['user_fields'] as $pwgfield => $dbfield) {
             if ($is_first) {
                 $is_first = false;
@@ -326,8 +354,10 @@ class functions_user
                 $query .= '
       , ';
             }
+
             $query .= $dbfield . ' AS ' . $pwgfield;
         }
+
         $query .= '
     FROM ' . USERS_TABLE . '
     WHERE ' . $conf['user_fields']['id'] . ' = \'' . $user_id . '\'';
@@ -346,6 +376,7 @@ class functions_user
     GROUP BY ui.user_id
   ;';
             list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
             if ($counter != 1) {
                 self::create_user_infos($user_id);
             }
@@ -377,21 +408,22 @@ class functions_user
                 $value = false;
             }
         }
+
         unset($value);
 
         $userdata['preferences'] = empty($userdata['preferences']) ? [] : unserialize($userdata['preferences']);
 
         if ($use_cache) {
-            if (! isset($userdata['need_update'])
-                or ! is_bool($userdata['need_update'])
-                or $userdata['need_update'] == true) {
+            if (! isset($userdata['need_update']) or
+                ! is_bool($userdata['need_update']) or
+                $userdata['need_update'] == true
+            ) {
                 $userdata['cache_update_time'] = time();
 
                 // Set need update are done
                 $userdata['need_update'] = false;
 
-                $userdata['forbidden_categories'] =
-                  self::calculate_permissions($userdata['id'], $userdata['status']);
+                $userdata['forbidden_categories'] = self::calculate_permissions($userdata['id'], $userdata['status']);
 
                 /* now we build the list of forbidden images (this list does not contain
                 images that are not in at least an authorized category)*/
@@ -405,6 +437,7 @@ class functions_user
                 if (empty($forbidden_ids)) {
                     $forbidden_ids[] = 0;
                 }
+
                 $userdata['image_access_type'] = 'NOT IN'; //TODO maybe later
                 $userdata['image_access_list'] = implode(',', $forbidden_ids);
 
@@ -417,14 +450,17 @@ class functions_user
 
                 // now we update user cache categories
                 $user_cache_cats = functions_category::get_computed_categories($userdata, null);
+
                 if (! self::is_admin($userdata['status'])) { // for non admins we forbid categories with no image (feature 1053)
                     $forbidden_ids = [];
+
                     foreach ($user_cache_cats as $cat) {
                         if ($cat['count_images'] == 0) {
                             $forbidden_ids[] = $cat['cat_id'];
                             functions_category::remove_computed_category($user_cache_cats, $cat);
                         }
                     }
+
                     if (! empty($forbidden_ids)) {
                         if (empty($userdata['forbidden_categories'])) {
                             $userdata['forbidden_categories'] = implode(',', $forbidden_ids);
@@ -493,7 +529,7 @@ class functions_user
         }
 
         // $filter['visible_categories'] and $filter['visible_images']
-        // must be not used because filter <> restriction
+        // must be not used because filter != restriction
         // retrieving images allowed : belonging to at least one authorized
         // category
         $query = '
@@ -518,6 +554,7 @@ class functions_user
         $favorites = functions_mysqli::query2array($query, null, 'image_id');
 
         $to_deletes = array_diff($favorites, $authorizeds);
+
         if (count($to_deletes) > 0) {
             $query = '
   DELETE FROM ' . FAVORITES_TABLE . '
@@ -588,7 +625,7 @@ class functions_user
             $forbidden_array = array_unique($forbidden_array);
         }
 
-        if (empty($forbidden_array)) {// at least, the list contains 0 value. This category does not exists so
+        if (empty($forbidden_array)) { // at least, the list contains 0 value. This category does not exists so
             // where clauses such as "WHERE category_id NOT IN(0)" will always be
             // true.
             $forbidden_array[] = 0;
@@ -622,7 +659,6 @@ class functions_user
 
         list($user_id) = functions_mysqli::pwg_db_fetch_row($result);
         return $user_id;
-
     }
 
     /**
@@ -651,7 +687,6 @@ class functions_user
 
         list($user_id) = functions_mysqli::pwg_db_fetch_row($result);
         return $user_id;
-
     }
 
     /**
@@ -684,8 +719,11 @@ class functions_user
             }
         }
 
-        if (is_array($cache['default_user']) and $convert_str) {
+        if (is_array($cache['default_user']) and
+            $convert_str
+        ) {
             $default_user = $cache['default_user'];
+
             foreach ($default_user as &$value) {
                 // If the field is true or false, the variable is transformed into a boolean value.
                 if ($value == 'true') {
@@ -694,11 +732,11 @@ class functions_user
                     $value = false;
                 }
             }
+
             return $default_user;
         }
 
         return $cache['default_user'];
-
     }
 
     /**
@@ -711,12 +749,14 @@ class functions_user
     public static function get_default_user_value($value_name, $default)
     {
         $default_user = self::get_default_user_info(true);
-        if ($default_user === false or empty($default_user[$value_name])) {
+
+        if ($default_user === false or
+            empty($default_user[$value_name])
+        ) {
             return $default;
         }
 
         return $default_user[$value_name];
-
     }
 
     /**
@@ -728,6 +768,7 @@ class functions_user
     public static function get_default_theme()
     {
         $theme = self::get_default_user_value('theme', PHPWG_DEFAULT_TEMPLATE);
+
         if (functions::check_theme_installed($theme)) {
             return $theme;
         }
@@ -755,6 +796,7 @@ class functions_user
     public static function get_browser_language()
     {
         $language_header = @$_SERVER['HTTP_ACCEPT_LANGUAGE'];
+
         if ($language_header == '') {
             return false;
         }
@@ -767,12 +809,14 @@ class functions_user
         preg_match_all($match_pattern, $language_header, $matches);
         $accept_languages_full = $matches[1];  // ['en-us', 'fr-ch', 'kok-in']
         $accept_languages_short = $matches[2];  // ['en', 'fr', 'kok']
+
         if (! count($accept_languages_full)) {
             return false;
         }
 
         // if the quality value is absent for an language, use 1 as the default
         $q_values = $matches[3];  // ['0.9', '', '0.7']
+
         foreach ($q_values as $i => $q_value) {
             $q_values[$i] = ($q_values[$i] === '') ? 1 : floatval($q_values[$i]);
         }
@@ -794,6 +838,7 @@ class functions_user
         // list all enabled language codes in the Piwigo installation
         // in both full and short forms, and case insensitive
         $languages_available = [];
+
         foreach (functions::get_languages() as $language_code => $language_name) {
             $lowercase_full = strtolower($language_code);
             $lowercase_parts = explode('_', $lowercase_full, 2);
@@ -838,6 +883,7 @@ class functions_user
             list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 
             $default_user = self::get_default_user_info(false);
+
             if ($default_user === false) {
                 // Default on structure are used
                 $default_user = [];
@@ -849,11 +895,13 @@ class functions_user
 
             foreach ($user_ids as $user_id) {
                 $level = isset($default_user['level']) ? $default_user['level'] : 0;
+
                 if ($user_id == $conf['webmaster_id']) {
                     $status = 'webmaster';
                     $level = max($conf['available_permission_levels']);
-                } elseif (($user_id == $conf['guest_id']) or
-                        ($user_id == $conf['default_user_id'])) {
+                } elseif ($user_id == $conf['guest_id'] or
+                          $user_id == $conf['default_user_id']
+                ) {
                     $status = 'guest';
                 } else {
                     $status = 'normal';
@@ -893,6 +941,7 @@ class functions_user
   FROM ' . USERS_TABLE . '
   WHERE ' . $conf['user_fields']['id'] . ' = ' . $user_id;
         $result = functions_mysqli::pwg_query($query);
+
         if (functions_mysqli::pwg_db_num_rows($result) > 0) {
             $row = functions_mysqli::pwg_db_fetch_assoc($result);
             $username = stripslashes($row['username']);
@@ -900,6 +949,7 @@ class functions_user
             $key = base64_encode(hash_hmac('sha1', $data, $conf['secret_key'] . $row['password'], true));
             return $key;
         }
+
         return false;
     }
 
@@ -913,9 +963,12 @@ class functions_user
     {
         global $conf, $user;
 
-        if ($remember_me and $conf['authorize_remembering']) {
+        if ($remember_me and
+            $conf['authorize_remembering']
+        ) {
             $now = time();
             $key = self::calculate_auto_login_key($user_id, $now, $username);
+
             if ($key !== false) {
                 $cookie = $user_id . '-' . $now . '-' . $key;
                 setcookie(
@@ -931,12 +984,14 @@ class functions_user
         } else { // make sure we clean any remember me ...
             setcookie($conf['remember_me_name'], '', 0, functions_cookie::cookie_path(), ini_get('session.cookie_domain'));
         }
+
         if (session_id() != '') { // we regenerate the session for security reasons
             // see http://www.acros.si/papers/session_fixation.pdf
             session_regenerate_id(true);
         } else {
             session_start();
         }
+
         $_SESSION['pwg_uid'] = (int) $user_id;
 
         $user['id'] = $_SESSION['pwg_uid'];
@@ -955,20 +1010,27 @@ class functions_user
 
         if (isset($_COOKIE[$conf['remember_me_name']])) {
             $cookie = explode('-', stripslashes($_COOKIE[$conf['remember_me_name']]));
-            if (count($cookie) === 3
-                and is_numeric(@$cookie[0]) /*user id*/
-                and is_numeric(@$cookie[1]) /*time*/
-                and time() - $conf['remember_me_length'] <= @$cookie[1]
-                and time() >= @$cookie[1] /*cookie generated in the past*/) {
+
+            if (count($cookie) === 3 and
+                is_numeric(@$cookie[0]) and /*user id*/
+                is_numeric(@$cookie[1]) and /*time*/
+                time() - $conf['remember_me_length'] <= @$cookie[1] and
+                time() >= @$cookie[1] /*cookie generated in the past*/
+            ) {
                 $key = self::calculate_auto_login_key($cookie[0], $cookie[1], $username);
-                if ($key !== false and $key === $cookie[2]) {
+
+                if ($key !== false and
+                    $key === $cookie[2]
+                ) {
                     self::log_user($cookie[0], true);
                     functions_plugins::trigger_notify('login_success', stripslashes($username));
                     return true;
                 }
             }
+
             setcookie($conf['remember_me_name'], '', 0, functions_cookie::cookie_path(), ini_get('session.cookie_domain'));
         }
+
         return false;
     }
 
@@ -1038,7 +1100,10 @@ class functions_user
   ;';
 
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
-        if (isset($row['id']) and $conf['password_verify']($password, $row['password'], $row['id'])) {
+
+        if (isset($row['id']) and
+            $conf['password_verify']($password, $row['password'], $row['id'])
+        ) {
             $user_found = true;
         }
 
@@ -1052,7 +1117,10 @@ class functions_user
       ;';
 
             $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
-            if (isset($row['id']) and $conf['password_verify']($password, $row['password'], $row['id'])) {
+
+            if (isset($row['id']) and
+                $conf['password_verify']($password, $row['password'], $row['id'])
+            ) {
                 $user_found = true;
             }
         }
@@ -1069,6 +1137,7 @@ class functions_user
     WHERE user_id = ' . $row['id'] . '
   ;';
             $result = functions_mysqli::pwg_query($query);
+
             while ($user_infos_row = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 $status = $user_infos_row['status'];
             }
@@ -1079,6 +1148,7 @@ class functions_user
                 return true;
             }
         }
+
         functions_plugins::trigger_notify('login_failure', stripslashes($username));
         return false;
     }
@@ -1124,6 +1194,7 @@ class functions_user
                 $user_status = '';
             }
         }
+
         return $user_status;
     }
 
@@ -1139,36 +1210,28 @@ class functions_user
 
         switch (self::get_user_status($user_status)) {
             case 'guest':
-
-                $access_type_status =
-                  ($conf['guest_access'] ? ACCESS_GUEST : ACCESS_FREE);
+                $access_type_status = ($conf['guest_access'] ? ACCESS_GUEST : ACCESS_FREE);
                 break;
 
             case 'generic':
-
                 $access_type_status = ACCESS_GUEST;
                 break;
 
             case 'normal':
-
                 $access_type_status = ACCESS_CLASSIC;
                 break;
 
             case 'admin':
-
                 $access_type_status = ACCESS_ADMINISTRATOR;
                 break;
 
             case 'webmaster':
-
                 $access_type_status = ACCESS_WEBMASTER;
                 break;
 
             default:
-
                 $access_type_status = ACCESS_FREE;
                 break;
-
         }
 
         return $access_type_status;
@@ -1277,13 +1340,17 @@ class functions_user
             return true;
         }
 
-        if ($action == 'edit' and $conf['user_can_edit_comment']) {
+        if ($action == 'edit' and
+            $conf['user_can_edit_comment']
+        ) {
             if ($comment_author_id == $user['id']) {
                 return true;
             }
         }
 
-        if ($action == 'delete' and $conf['user_can_delete_comment']) {
+        if ($action == 'delete' and
+            $conf['user_can_delete_comment']
+        ) {
             if ($comment_author_id == $user['id']) {
                 return true;
             }
@@ -1317,52 +1384,52 @@ class functions_user
         foreach ($condition_fields as $condition => $field_name) {
             switch ($condition) {
                 case 'forbidden_categories':
-
                     if (! empty($user['forbidden_categories'])) {
-                        $sql_list[] =
-                          $field_name . ' NOT IN (' . $user['forbidden_categories'] . ')';
+                        $sql_list[] = $field_name . ' NOT IN (' . $user['forbidden_categories'] . ')';
                     }
+
                     break;
 
                 case 'visible_categories':
-
                     if (! empty($filter['visible_categories'])) {
-                        $sql_list[] =
-                          $field_name . ' IN (' . $filter['visible_categories'] . ')';
+                        $sql_list[] = $field_name . ' IN (' . $filter['visible_categories'] . ')';
                     }
+
                     break;
 
                 case 'visible_images':
                     if (! empty($filter['visible_images'])) {
-                        $sql_list[] =
-                          $field_name . ' IN (' . $filter['visible_images'] . ')';
+                        $sql_list[] = $field_name . ' IN (' . $filter['visible_images'] . ')';
                     }
                     // note there is no break - visible include forbidden
                     // no break
+
                 case 'forbidden_images':
-                    if (
-                        ! empty($user['image_access_list'])
-                        or $user['image_access_type'] != 'NOT IN'
+                    if (! empty($user['image_access_list']) or
+                        $user['image_access_type'] != 'NOT IN'
                     ) {
                         $table_prefix = null;
+
                         if ($field_name == 'id') {
                             $table_prefix = '';
                         } elseif ($field_name == 'i.id') {
                             $table_prefix = 'i.';
                         }
+
                         if (isset($table_prefix)) {
                             $sql_list[] = $table_prefix . 'level<=' . $user['level'];
-                        } elseif (! empty($user['image_access_list']) and ! empty($user['image_access_type'])) {
-                            $sql_list[] = $field_name . ' ' . $user['image_access_type']
-                                . ' (' . $user['image_access_list'] . ')';
+                        } elseif (! empty($user['image_access_list']) and
+                                  ! empty($user['image_access_type'])
+                        ) {
+                            $sql_list[] = $field_name . ' ' . $user['image_access_type'] . ' (' . $user['image_access_list'] . ')';
                         }
                     }
-                    break;
-                default:
 
+                    break;
+
+                default:
                     die('Unknown condition');
                     break;
-
             }
         }
 
@@ -1372,7 +1439,9 @@ class functions_user
             $sql = $force_one_condition ? '1 = 1' : '';
         }
 
-        if (isset($prefix_condition) and ! empty($sql)) {
+        if (isset($prefix_condition) and
+            ! empty($sql)
+        ) {
             $sql = $prefix_condition . ' ' . $sql;
         }
 
@@ -1388,9 +1457,11 @@ class functions_user
     public static function get_recent_photos_sql($db_field)
     {
         global $user;
+
         if (! isset($user['last_photo_date'])) {
             return '0=1';
         }
+
         return $db_field . '>=LEAST('
           . functions_mysqli::pwg_db_get_recent_period_expression($user['recent_period'])
           . ',' . functions_mysqli::pwg_db_get_recent_period_expression(1, $user['last_photo_date']) . ')';
@@ -1495,6 +1566,7 @@ class functions_user
     WHERE auth_key = \'' . $candidate . '\'
   ;';
         list($counter, $now, $expiration) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($counter == 0) {
             $key = [
                 'auth_key' => $candidate,
@@ -1512,7 +1584,6 @@ class functions_user
         }
 
         return self::create_user_auth_key($user_id, $user_status);
-
     }
 
     /**
@@ -1571,6 +1642,7 @@ class functions_user
     LIMIT 1
   ;';
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $last_visit = $row['date'] . ' ' . $row['time'];
         }
@@ -1640,6 +1712,7 @@ class functions_user
         if (! is_array($params)) {
             $params = [$params];
         }
+
         if (empty($params)) {
             return;
         }

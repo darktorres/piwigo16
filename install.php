@@ -27,18 +27,22 @@ define('PHPWG_ROOT_PATH', './');
 // addslashes to vars if magic_quotes_gpc is off this is a security
 // precaution to prevent someone trying to break out of a SQL statement.
 //
-if (function_exists('get_magic_quotes_gpc') && ! @get_magic_quotes_gpc()) {
+if (function_exists('get_magic_quotes_gpc') &&
+    ! @get_magic_quotes_gpc()
+) {
     if (is_array($_POST)) {
         foreach ($_POST as $k => $v) {
             if (is_array($_POST[$k])) {
                 foreach ($_POST[$k] as $k2 => $v2) {
                     $_POST[$k][$k2] = addslashes($v2);
                 }
+
                 @reset($_POST[$k]);
             } else {
                 $_POST[$k] = addslashes($v);
             }
         }
+
         @reset($_POST);
     }
 
@@ -48,11 +52,13 @@ if (function_exists('get_magic_quotes_gpc') && ! @get_magic_quotes_gpc()) {
                 foreach ($_GET[$k] as $k2 => $v2) {
                     $_GET[$k][$k2] = addslashes($v2);
                 }
+
                 @reset($_GET[$k]);
             } else {
                 $_GET[$k] = addslashes($v);
             }
         }
+
         @reset($_GET);
     }
 
@@ -62,11 +68,13 @@ if (function_exists('get_magic_quotes_gpc') && ! @get_magic_quotes_gpc()) {
                 foreach ($_COOKIE[$k] as $k2 => $v2) {
                     $_COOKIE[$k][$k2] = addslashes($v2);
                 }
+
                 @reset($_COOKIE[$k]);
             } else {
                 $_COOKIE[$k] = addslashes($v);
             }
         }
+
         @reset($_COOKIE);
     }
 }
@@ -83,7 +91,10 @@ if (isset($_POST['install'])) {
 
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
 @include(PHPWG_ROOT_PATH . 'local/config/config.php');
-defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
+
+if (! defined('PWG_LOCAL_DIR')) {
+    define('PWG_LOCAL_DIR', 'local/');
+}
 
 include(PHPWG_ROOT_PATH . 'inc/functions.php');
 include(PHPWG_ROOT_PATH . 'inc/Template.php');
@@ -91,7 +102,9 @@ include(PHPWG_ROOT_PATH . 'inc/Template.php');
 // download database config file if exists
 functions::check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
 
-if (! empty($_GET['dl']) && file_exists(PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $_GET['dl'])) {
+if (! empty($_GET['dl']) &&
+    file_exists(PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $_GET['dl'])
+) {
     $filename = PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $_GET['dl'];
     header('Cache-Control: no-cache, must-revalidate');
     header('Pragma: no-cache');
@@ -118,6 +131,7 @@ $admin_pass2 = (! empty($_POST['admin_pass2'])) ? $_POST['admin_pass2'] : '';
 $admin_mail = (! empty($_POST['admin_mail'])) ? $_POST['admin_mail'] : '';
 
 $is_newsletter_subscribe = true;
+
 if (isset($_POST['install'])) {
     $is_newsletter_subscribe = isset($_POST['newsletter_subscribe']);
 }
@@ -126,6 +140,7 @@ $infos = [];
 $errors = [];
 
 $config_file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php';
+
 if (@file_exists($config_file)) {
     include($config_file);
     // Is Piwigo already installed ?
@@ -182,6 +197,7 @@ if ($language == 'fr_FR') {
 } else {
     define('PHPWG_DOMAIN', 'piwigo.org');
 }
+
 define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
 functions::load_language('common.lang', '', [
@@ -208,9 +224,11 @@ $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', 'roma');
 $template->set_filenames([
     'install' => 'install.tpl',
 ]);
+
 if (! isset($step)) {
     $step = 1;
 }
+
 //---------------------------------------------------------------- form analyze
 
 if (isset($_POST['install'])) {
@@ -223,18 +241,24 @@ if (isset($_POST['install'])) {
     functions_mysqli::pwg_db_check_charset();
 
     $webmaster = trim(preg_replace('/\s{2,}/', ' ', $admin_name));
+
     if (empty($webmaster)) {
         $errors[] = functions::l10n('enter a login for webmaster');
     } elseif (preg_match('/[\'"]/', $webmaster)) {
         $errors[] = functions::l10n('webmaster login can\'t contain characters \' or "');
     }
-    if ($admin_pass1 != $admin_pass2 || empty($admin_pass1)) {
+
+    if ($admin_pass1 != $admin_pass2 ||
+        empty($admin_pass1)
+    ) {
         $errors[] = functions::l10n('please enter your password again');
     }
+
     if (empty($admin_mail)) {
         $errors[] = functions::l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
     } else {
         $error_mail_address = functions_user::validate_mail_address(null, $admin_mail);
+
         if (! empty($error_mail_address)) {
             $errors[] = $error_mail_address;
         }
@@ -283,6 +307,7 @@ INSERT INTO ' . $prefixTable . 'config (param,value,comment)
         if (! defined('PWG_CHARSET')) {
             define('PWG_CHARSET', 'utf-8');
         }
+
         functions_install::activate_core_themes();
         functions_install::activate_core_plugins();
 
@@ -331,25 +356,29 @@ INSERT INTO ' . $prefixTable . 'config (param,value,comment)
         //   $datas
         //   );
 
-        $file_content = '<?php
-$conf[\'dblayer\'] = \'' . $dblayer . '\';
-$conf[\'db_base\'] = \'' . $dbname . '\';
-$conf[\'db_user\'] = \'' . $dbuser . '\';
-$conf[\'db_password\'] = \'' . $dbpasswd . '\';
-$conf[\'db_host\'] = \'' . $dbhost . '\';
+        $file_content = <<<PHP
+            <?php
 
-$prefixTable = \'' . $prefixTable . '\';
+            \$conf['dblayer'] = '{$dblayer}';
+            \$conf['db_base'] = '{$dbname}';
+            \$conf['db_user'] = '{$dbuser}';
+            \$conf['db_password'] = '{$dbpasswd}';
+            \$conf['db_host'] = '{$dbhost}';
 
-define(\'PHPWG_INSTALLED\', true);
-define(\'PWG_CHARSET\', \'utf-8\');
-define(\'DB_CHARSET\', \'utf8\');
-define(\'DB_COLLATE\', \'\');
+            \$prefixTable = '{$prefixTable}';
 
-?' . '>';
+            define('PHPWG_INSTALLED', true);
+            define('PWG_CHARSET', 'utf-8');
+            define('DB_CHARSET', 'utf8');
+            define('DB_COLLATE', '');
+
+            PHP;
 
         @umask(0111);
         // writing the configuration file
-        if (! ($fp = @fopen($config_file, 'w'))) {
+        $fp = @fopen($config_file, 'w');
+
+        if (! $fp) {
             // make sure nobody can list files of _data directory
             functions::secure_directory(PHPWG_ROOT_PATH . $conf['data_location']);
 
@@ -366,6 +395,7 @@ define(\'DB_COLLATE\', \'\');
                 ]
             );
         }
+
         @fputs($fp, $file_content, strlen($file_content));
         @fclose($fp);
     }
@@ -376,8 +406,10 @@ foreach ($languages->fs_languages as $language_code => $fs_language) {
     if ($language == $language_code) {
         $template->assign('language_selection', $language_code);
     }
+
     $languages_options[$language_code] = $fs_language['name'];
 }
+
 $template->assign('language_options', $languages_options);
 
 $template->assign(
@@ -417,12 +449,14 @@ if ($step == 1) {
             functions_session::pwg_session_destroy(...),
             functions_session::pwg_session_gc(...)
         );
+
         if (function_exists('ini_set')) {
             ini_set('session.use_cookies', $conf['session_use_cookies']);
             ini_set('session.use_only_cookies', $conf['session_use_only_cookies']);
             ini_set('session.use_trans_sid', intval($conf['session_use_trans_sid']));
             ini_set('session.cookie_httponly', 1);
         }
+
         session_name($conf['session_name']);
         session_set_cookie_params(0, functions_cookie::cookie_path());
         register_shutdown_function('session_write_close');
@@ -473,6 +507,7 @@ if ($step == 1) {
         }
     }
 }
+
 if (count($errors) != 0) {
     $template->assign('errors', $errors);
 }

@@ -21,18 +21,27 @@ class menubar
         $menu = new BlockManager('menubar');
 
         // if guest_access is disabled, we only display the menus if the user is identified
-        if ($conf['guest_access'] or ! functions_user::is_a_guest()) {
+        if ($conf['guest_access'] or
+            ! functions_user::is_a_guest()
+        ) {
             $menu->load_registered_blocks();
         }
+
         $menu->prepare_display();
 
-        if (@$page['section'] == 'search' and isset($page['qsearch_details'])) {
+        if (@$page['section'] == 'search' and
+            isset($page['qsearch_details'])
+        ) {
             $template->assign('QUERY_SEARCH', htmlspecialchars($page['qsearch_details']['q']));
         }
 
         //--------------------------------------------------------------- external links
-        if (($block = $menu->get_block('mbLinks')) and ! empty($conf['links'])) {
+        $block = $menu->get_block('mbLinks');
+        if ($block and
+            ! empty($conf['links'])
+        ) {
             $block->data = [];
+
             foreach ($conf['links'] as $url => $url_data) {
                 if (! is_array($url_data)) {
                     $url_data = [
@@ -40,26 +49,28 @@ class menubar
                     ];
                 }
 
-                if (
-                    (! isset($url_data['eval_visible']))
-                    or
-                    (eval($url_data['eval_visible']))
+                if (! isset($url_data['eval_visible']) or
+                    eval($url_data['eval_visible'])
                 ) {
                     $tpl_var = [
                         'URL' => $url,
                         'LABEL' => $url_data['label'],
                     ];
 
-                    if (! isset($url_data['new_window']) or $url_data['new_window']) {
+                    if (! isset($url_data['new_window']) or
+                        $url_data['new_window']
+                    ) {
                         $tpl_var['new_window'] =
                           [
                               'NAME' => (isset($url_data['nw_name']) ? $url_data['nw_name'] : ''),
                               'FEATURES' => (isset($url_data['nw_features']) ? $url_data['nw_features'] : ''),
                           ];
                     }
+
                     $block->data[] = $tpl_var;
                 }
             }
+
             if (! empty($block->data)) {
                 $block->template = 'menubar_links.tpl';
             }
@@ -67,8 +78,12 @@ class menubar
 
         //-------------------------------------------------------------- categories
         $block = $menu->get_block('mbCategories');
+
         //------------------------------------------------------------------------ filter
-        if ($conf['menubar_filter_icon'] and ! empty($conf['filter_pages']) and functions::get_filter_page_value('used')) {
+        if ($conf['menubar_filter_icon'] and
+            ! empty($conf['filter_pages']) and
+            functions::get_filter_page_value('used')
+        ) {
             if ($filter['enabled']) {
                 $template->assign(
                     'U_STOP_FILTER',
@@ -100,15 +115,16 @@ class menubar
         //------------------------------------------------------------ related categories
         $block = $menu->get_block('mbRelatedCategories');
 
-        if (
-            isset($page['items'])
-            and count($page['items']) < $conf['related_albums_maximum_items_to_compute']
-            and $block != null
-            and ! empty($page['items'])
+        if (isset($page['items']) and
+            count($page['items']) < $conf['related_albums_maximum_items_to_compute'] and
+            $block != null and
+            ! empty($page['items'])
         ) {
             $exclude_cat_ids = [];
+
             if (isset($page['category'])) {
                 $exclude_cat_ids = [$page['category']['id']];
+
                 if (isset($page['combined_categories'])) {
                     foreach ($page['combined_categories'] as $cat) {
                         $exclude_cat_ids[] = $cat['id'];
@@ -127,7 +143,10 @@ class menubar
 
         //------------------------------------------------------------------------ tags
         $block = $menu->get_block('mbTags');
-        if ($block != null and functions::script_basename() != 'picture') {
+
+        if ($block != null and
+            functions::script_basename() != 'picture'
+        ) {
             if (@$page['section'] == 'tags') {
                 $tags = functions_tag::get_common_tags(
                     $page['items'],
@@ -156,13 +175,17 @@ class menubar
                         ]
                     );
                 }
+
                 $template->assign('IS_RELATED', false);
             }
             //displays all tags available for the current user
-            elseif ($conf['menubar_tag_cloud_content'] == 'always_all' or ($conf['menubar_tag_cloud_content'] == 'all_or_current' and empty($page['items']))) {
+            elseif ($conf['menubar_tag_cloud_content'] == 'always_all' or
+                   ($conf['menubar_tag_cloud_content'] == 'all_or_current' and empty($page['items']))
+            ) {
                 $tags = functions_tag::get_available_tags();
                 usort($tags, functions_tag::tags_counter_compare(...));
                 $tags = array_slice($tags, 0, $conf['menubar_tag_cloud_items_number']);
+
                 foreach ($tags as $tag) {
                     $block->data[] = array_merge(
                         $tag,
@@ -173,12 +196,16 @@ class menubar
                         ]
                     );
                 }
+
                 $template->assign('IS_RELATED', false);
             }
-            //displays only the tags available from the current thumbnails displayed
-            elseif (! empty($page['items']) and ($conf['menubar_tag_cloud_content'] == 'current_only' or $conf['menubar_tag_cloud_content'] == 'all_or_current')) {
+            // displays only the tags available from the current thumbnails displayed
+            elseif (! empty($page['items']) and
+                   ($conf['menubar_tag_cloud_content'] == 'current_only' or $conf['menubar_tag_cloud_content'] == 'all_or_current')
+            ) {
                 $selection = array_slice($page['items'], $page['start'], $page['nb_image_page']);
                 $tags = functions_tag::add_level_to_tags(functions_tag::get_common_tags($selection, $conf['content_tag_cloud_items_number']));
+
                 foreach ($tags as $tag) {
                     $block->data[] =
                     array_merge(
@@ -190,16 +217,20 @@ class menubar
                         ]
                     );
                 }
+
                 $template->assign('IS_RELATED', true);
             }
+
             if (! empty($block->data)) {
                 $block->template = 'menubar_tags.tpl';
             }
         }
 
         //----------------------------------------------------------- special categories
-        if (($block = $menu->get_block('mbSpecials')) != null) {
-            if (! functions_user::is_a_guest()) {// favorites
+        $block = $menu->get_block('mbSpecials');
+
+        if ($block != null) {
+            if (! functions_user::is_a_guest()) { // favorites
                 $block->data['favorites'] =
                   [
                       'URL' => functions_url::make_index_url([
@@ -275,7 +306,9 @@ class menubar
         }
 
         //---------------------------------------------------------------------- summary
-        if (($block = $menu->get_block('mbMenu')) != null) {
+        $block = $menu->get_block('mbMenu');
+
+        if ($block != null) {
             // quick search block will be displayed only if data['qsearch'] is set
             // to "yes"
             $block->data['qsearch'] = true;
@@ -337,11 +370,13 @@ class menubar
                     'AUTHORIZE_REMEMBERING' => $conf['authorize_remembering'],
                 ]
             );
+
             if ($conf['allow_user_registration']) {
                 $template->assign('U_REGISTER', functions_url::get_root_url() . 'register.php');
             }
         } else {
             $template->assign('USERNAME', stripslashes($user['username']));
+
             if (functions_user::is_authorized_status(ACCESS_CLASSIC)) {
                 $template->assign('U_PROFILE', functions_url::get_root_url() . 'profile.php');
             }
@@ -351,13 +386,18 @@ class menubar
             if (! $conf['apache_authentication']) {
                 $template->assign('U_LOGOUT', functions_url::get_root_url() . '?act=logout');
             }
+
             if (functions_user::is_admin()) {
                 $template->assign('U_ADMIN', functions_url::get_root_url() . 'admin.php');
             }
         }
-        if (($block = $menu->get_block('mbIdentification')) != null) {
+
+        $block = $menu->get_block('mbIdentification');
+
+        if ($block != null) {
             $block->template = 'menubar_identification.tpl';
         }
+
         $menu->apply('MENUBAR', 'menubar.tpl');
     }
 }

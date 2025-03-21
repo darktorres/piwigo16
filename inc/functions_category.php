@@ -40,7 +40,7 @@ class functions_category
         global $user;
 
         // $filter['visible_categories'] and $filter['visible_images']
-        // are not used because it's not necessary (filter <> restriction)
+        // are not used because it's not necessary (filter != restriction)
         if (in_array($category_id, explode(',', $user['forbidden_categories']))) {
             functions_html::access_denied();
         }
@@ -70,12 +70,16 @@ class functions_category
     ON id = cat_id and user_id = ' . $user['id'];
 
         // Always expand when filter is activated
-        if (! $user['expand'] and ! $filter['enabled']) {
+        if (! $user['expand'] and
+            ! $filter['enabled']
+        ) {
             $where = '
   (id_uppercat is NULL';
+
             if (isset($page['category'])) {
                 $where .= ' OR id_uppercat IN (' . $page['category']['uppercats'] . ')';
             }
+
             $where .= ')';
         } else {
             $where = '
@@ -102,6 +106,7 @@ class functions_category
         $result = functions_mysqli::pwg_query($query);
         $cats = [];
         $selected_category = isset($page['category']) ? $page['category'] : null;
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $child_date_last = @$row['max_date_last'] > @$row['date_last'];
             $row = array_merge(
@@ -127,14 +132,18 @@ class functions_category
                     'IS_UPPERCAT' => ($selected_category !== null && $selected_category['id_uppercat'] == $row['id']) ? true : false,
                 ]
             );
+
             if ($conf['index_new_icon']) {
                 $row['icon_ts'] = functions::get_icon($row['max_date_last'], $child_date_last);
             }
+
             $cats[] = $row;
+
             if ($row['id'] == @$page['category']['id']) { //save the number of subcats for later optim
                 $page['category']['count_categories'] = $row['count_categories'];
             }
         }
+
         usort($cats, self::global_rank_compare(...));
 
         // Update filtered data
@@ -159,6 +168,7 @@ class functions_category
     WHERE id = ' . $id . '
   ;';
         $cat = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+
         if (empty($cat)) {
             return null;
         }
@@ -166,13 +176,16 @@ class functions_category
         foreach ($cat as $k => $v) {
             // If the field is true or false, the variable is transformed into a
             // boolean value.
-            if ($cat[$k] == 'true' or $cat[$k] == 'false') {
+            if ($cat[$k] == 'true' or
+                $cat[$k] == 'false'
+            ) {
                 $cat[$k] = functions_mysqli::get_boolean($cat[$k]);
             }
         }
 
         $upper_ids = explode(',', $cat['uppercats']);
-        if (count($upper_ids) == 1) {// no need to make a query for level 1
+
+        if (count($upper_ids) == 1) { // no need to make a query for level 1
             $cat['upper_names'] = [
                 [
                     'id' => $cat['id'],
@@ -190,10 +203,12 @@ class functions_category
 
             // category names must be in the same order than uppercats list
             $cat['upper_names'] = [];
+
             foreach ($upper_ids as $cat_id) {
                 $cat['upper_names'][] = $names[$cat_id];
             }
         }
+
         return $cat;
     }
 
@@ -243,6 +258,7 @@ class functions_category
         global $template;
 
         $tpl_cats = [];
+
         foreach ($categories as $category) {
             if ($fullname) {
                 $option = strip_tags(
@@ -265,6 +281,7 @@ class functions_category
                     )
                 );
             }
+
             $tpl_cats[$category['id']] = $option;
         }
 
@@ -299,18 +316,20 @@ class functions_category
   SELECT DISTINCT(id)
     FROM ' . CATEGORIES_TABLE . '
     WHERE ';
+
         foreach ($ids as $num => $category_id) {
-            is_numeric($category_id)
-              or trigger_error(
-                  'get_subcat_ids expecting numeric, not ' . gettype($category_id),
-                  E_USER_WARNING
-              );
+            if (! is_numeric($category_id)) {
+                trigger_error('get_subcat_ids expecting numeric, not ' . gettype($category_id), E_USER_WARNING);
+            }
+
             if ($num > 0) {
                 $query .= '
       OR ';
             }
+
             $query .= 'uppercats ' . functions_mysqli::DB_REGEX_OPERATOR . ' \'(^|,)' . $category_id . '(,|$)\'';
         }
+
         $query .= '
   ;';
         return functions_mysqli::query2array($query, null, 'id');
@@ -326,12 +345,15 @@ class functions_category
     public static function get_cat_id_from_permalinks($permalinks, &$idx)
     {
         $in = '';
+
         foreach ($permalinks as $permalink) {
             if (! empty($in)) {
                 $in .= ', ';
             }
+
             $in .= '\'' . $permalink . '\'';
         }
+
         $query = '
   SELECT cat_id AS id, permalink, 1 AS is_old
     FROM ' . OLD_PERMALINKS_TABLE . '
@@ -346,10 +368,12 @@ class functions_category
         if (empty($perma_hash)) {
             return null;
         }
+
         for ($i = count($permalinks) - 1; $i >= 0; $i--) {
             if (isset($perma_hash[$permalinks[$i]])) {
                 $idx = $i;
                 $cat_id = $perma_hash[$permalinks[$i]]['id'];
+
                 if ($perma_hash[$permalinks[$i]]['is_old']) {
                     $query = '
   UPDATE ' . OLD_PERMALINKS_TABLE . ' SET last_hit=NOW(), hit=hit+1
@@ -357,9 +381,11 @@ class functions_category
     LIMIT 1';
                     functions_mysqli::pwg_query($query);
                 }
+
                 return $cat_id;
             }
         }
+
         return null;
     }
 
@@ -378,7 +404,9 @@ class functions_category
         $display_text = '';
 
         if ($cat_count_images > 0) {
-            if ($cat_nb_images > 0 and $cat_nb_images < $cat_count_images) {
+            if ($cat_nb_images > 0 and
+                $cat_nb_images < $cat_count_images
+            ) {
                 $display_text .= self::get_display_images_count($cat_nb_images, $cat_nb_images, 0, $short_message, $separator) . $separator;
                 $cat_count_images -= $cat_nb_images;
                 $cat_nb_images = 0;
@@ -387,7 +415,9 @@ class functions_category
             //at least one image direct or indirect
             $display_text .= functions::l10n_dec('%d photo', '%d photos', $cat_count_images);
 
-            if ($cat_count_categories == 0 or $cat_nb_images == $cat_count_images) {
+            if ($cat_count_categories == 0 or
+                $cat_nb_images == $cat_count_images
+            ) {
                 //no descendant categories or descendants do not contain images
                 if (! $short_message) {
                     $display_text .= ' ' . functions::l10n('in this album');
@@ -410,12 +440,14 @@ class functions_category
     public static function get_random_image_in_category($category, $recursive = true)
     {
         $image_id = null;
+
         if ($category['count_images'] > 0) {
             $query = '
   SELECT image_id
     FROM ' . CATEGORIES_TABLE . ' AS c
       INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.category_id = c.id
     WHERE ';
+
             if ($recursive) {
                 $query .= '
       (c.id=' . $category['id'] . ' OR uppercats LIKE \'' . $category['uppercats'] . ',%\')';
@@ -423,6 +455,7 @@ class functions_category
                 $query .= '
       c.id=' . $category['id'];
             }
+
             $query .= '
       ' . functions_user::get_sql_condition_FandF(
                 [
@@ -436,6 +469,7 @@ class functions_category
     LIMIT 1
   ;';
             $result = functions_mysqli::pwg_query($query);
+
             if (functions_mysqli::pwg_db_num_rows($result) > 0) {
                 list($image_id) = functions_mysqli::pwg_db_fetch_row($result);
             }
@@ -481,12 +515,14 @@ class functions_category
 
         $userdata['last_photo_date'] = null;
         $cats = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $row['user_id'] = $userdata['id'];
             $row['nb_categories'] = 0;
             $row['count_categories'] = 0;
             $row['count_images'] = (int) $row['nb_images'];
             $row['max_date_last'] = $row['date_last'];
+
             if ($row['date_last'] > $userdata['last_photo_date']) {
                 $userdata['last_photo_date'] = $row['date_last'];
             }
@@ -521,15 +557,19 @@ class functions_category
                 $parent['count_images'] += $cat['nb_images'];
                 $parent['count_categories']++;
 
-                if ((empty($parent['max_date_last'])) or ($parent['max_date_last'] < $cat['date_last'])) {
+                if (empty($parent['max_date_last']) or
+                    $parent['max_date_last'] < $cat['date_last']
+                ) {
                     $parent['max_date_last'] = $cat['date_last'];
                 }
 
                 if (! isset($parent['id_uppercat'])) {
                     break;
                 }
+
                 $parent = &$cats[$parent['id_uppercat']];
             } while (true);
+
             unset($parent);
         }
 
@@ -563,6 +603,7 @@ class functions_category
                 if (! isset($cats[$parent['id_uppercat']])) {
                     break;
                 }
+
                 $parent = &$cats[$parent['id_uppercat']];
             } while (true);
         }
@@ -609,10 +650,13 @@ class functions_category
         $query .= (empty($extra_images_where_sql) ? '' : " \nAND (" . $extra_images_where_sql . ')') . '
     GROUP BY id';
 
-        if ($mode == 'AND' and count($cat_ids) > 1) {
+        if ($mode == 'AND' and
+            count($cat_ids) > 1
+        ) {
             $query .= '
     HAVING COUNT(DISTINCT category_id)=' . count($cat_ids);
         }
+
         $query .= "\n" . (empty($order_by) ? $conf['order_by'] : $order_by);
 
         return functions_mysqli::query2array($query, null, 'id');
@@ -659,6 +703,7 @@ class functions_category
         $query .= '
     GROUP BY c.id
     ORDER BY ';
+
         if (isset($max)) {
             $query .= 'counter DESC
     LIMIT ' . $max;
@@ -668,6 +713,7 @@ class functions_category
 
         $result = functions_mysqli::pwg_query($query);
         $cats = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $cats[$row['id']] = $row;
         }
@@ -720,10 +766,12 @@ class functions_category
                 $cats[$idx]['count_images'] = $common_cats[$cat['id']]['counter'];
 
                 $url_params = [];
+
                 if (isset($page['category'])) {
                     $url_params['category'] = $page['category'];
 
                     $url_params['combined_categories'] = [$cat];
+
                     if (isset($page['combined_categories'])) {
                         $url_params['combined_categories'] = array_merge($page['combined_categories'], [$cat]);
                     }
@@ -740,7 +788,9 @@ class functions_category
             // 3. number of sub-albums containing photos
             //
             // Option 3 seems more appropriate here.
-            if (! empty($cat['id_uppercat']) and @$cats[$idx]['count_images'] > 0) {
+            if (! empty($cat['id_uppercat']) and
+                @$cats[$idx]['count_images'] > 0
+            ) {
                 foreach (array_slice(explode(',', $cat['uppercats']), 0, -1) as $uppercat_id) {
                     @$cats[$index_of_cat[$uppercat_id]]['count_categories']++;
                 }

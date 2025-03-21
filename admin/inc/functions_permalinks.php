@@ -23,9 +23,11 @@ class functions_permalinks
   SELECT id FROM ' . CATEGORIES_TABLE . '
     WHERE permalink=\'' . $permalink . '\'';
         $ids = functions::array_from_query($query, 'id');
+
         if (! empty($ids)) {
             return $ids[0];
         }
+
         return null;
     }
 
@@ -42,9 +44,11 @@ class functions_permalinks
     LIMIT 1';
         $result = functions_mysqli::pwg_query($query);
         $cat_id = null;
+
         if (functions_mysqli::pwg_db_num_rows($result)) {
             list($cat_id) = functions_mysqli::pwg_db_fetch_row($result);
         }
+
         return $cat_id;
     }
 
@@ -63,15 +67,21 @@ class functions_permalinks
     WHERE id=\'' . $cat_id . '\'
   ;';
         $result = functions_mysqli::pwg_query($query);
+
         if (functions_mysqli::pwg_db_num_rows($result)) {
             list($permalink) = functions_mysqli::pwg_db_fetch_row($result);
         }
-        if (! isset($permalink)) {// no permalink; nothing to do
+
+        if (! isset($permalink)) { // no permalink; nothing to do
             return true;
         }
+
         if ($save) {
             $old_cat_id = self::get_cat_id_from_old_permalink($permalink);
-            if (isset($old_cat_id) and $old_cat_id != $cat_id) {
+
+            if (isset($old_cat_id) and
+                $old_cat_id != $cat_id
+            ) {
                 $page['errors'][] =
                   sprintf(
                       functions::l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
@@ -81,6 +91,7 @@ class functions_permalinks
                 return false;
             }
         }
+
         $query = '
   UPDATE ' . CATEGORIES_TABLE . '
     SET permalink=NULL
@@ -89,6 +100,7 @@ class functions_permalinks
         functions_mysqli::pwg_query($query);
 
         unset($cache['cat_names']); //force regeneration
+
         if ($save) {
             if (isset($old_cat_id)) {
                 $query = '
@@ -102,8 +114,10 @@ class functions_permalinks
   VALUES
     ( \'' . $permalink . '\',' . $cat_id . ',NOW() )';
             }
+
             functions_mysqli::pwg_query($query);
         }
+
         return true;
     }
 
@@ -121,16 +135,19 @@ class functions_permalinks
         $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', $permalink);
         $sanitized_permalink = trim($sanitized_permalink, '/');
         $sanitized_permalink = str_replace('//', '/', $sanitized_permalink);
-        if ($sanitized_permalink != $permalink
-            or preg_match('#^(\d)+(-.*)?$#', $permalink)) {
+
+        if ($sanitized_permalink != $permalink or
+            preg_match('#^(\d)+(-.*)?$#', $permalink)
+        ) {
             $page['errors'][] = '{' . $permalink . '} ' . functions::l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"');
             return false;
         }
 
         // check if the new permalink is actively used
         $existing_cat_id = self::get_cat_id_from_permalink($permalink);
+
         if (isset($existing_cat_id)) {
-            if ($existing_cat_id == $cat_id) {// no change required
+            if ($existing_cat_id == $cat_id) { // no change required
                 return true;
             }
 
@@ -146,7 +163,10 @@ class functions_permalinks
 
         // check if the new permalink was historically used
         $old_cat_id = self::get_cat_id_from_old_permalink($permalink);
-        if (isset($old_cat_id) and $old_cat_id != $cat_id) {
+
+        if (isset($old_cat_id) and
+            $old_cat_id != $cat_id
+        ) {
             $page['errors'][] =
               sprintf(
                   functions::l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
@@ -160,7 +180,7 @@ class functions_permalinks
             return false;
         }
 
-        if (isset($old_cat_id)) {// the new permalink must not be active and old at the same time
+        if (isset($old_cat_id)) { // the new permalink must not be active and old at the same time
             assert($old_cat_id == $cat_id);
             $query = '
   DELETE FROM ' . OLD_PERMALINKS_TABLE . '

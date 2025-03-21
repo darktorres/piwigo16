@@ -34,7 +34,8 @@ class ws_functions
         }
 
         if (! functions_user::is_authorized_status(ACCESS_GUEST) and
-            strpos($methodName, 'pwg.session.') !== 0) {
+            strpos($methodName, 'pwg.session.') !== 0
+        ) {
             return new PwgError(401, 'Access denied');
         }
 
@@ -48,39 +49,51 @@ class ws_functions
     public static function ws_std_image_sql_filter($params, $tbl_name = '')
     {
         $clauses = [];
+
         if (is_numeric($params['f_min_rate'])) {
             $clauses[] = $tbl_name . 'rating_score>=' . $params['f_min_rate'];
         }
+
         if (is_numeric($params['f_max_rate'])) {
             $clauses[] = $tbl_name . 'rating_score<=' . $params['f_max_rate'];
         }
+
         if (is_numeric($params['f_min_hit'])) {
             $clauses[] = $tbl_name . 'hit>=' . $params['f_min_hit'];
         }
+
         if (is_numeric($params['f_max_hit'])) {
             $clauses[] = $tbl_name . 'hit<=' . $params['f_max_hit'];
         }
+
         if (isset($params['f_min_date_available'])) {
             $clauses[] = $tbl_name . "date_available>='" . $params['f_min_date_available'] . "'";
         }
+
         if (isset($params['f_max_date_available'])) {
             $clauses[] = $tbl_name . "date_available<'" . $params['f_max_date_available'] . "'";
         }
+
         if (isset($params['f_min_date_created'])) {
             $clauses[] = $tbl_name . "date_creation>='" . $params['f_min_date_created'] . "'";
         }
+
         if (isset($params['f_max_date_created'])) {
             $clauses[] = $tbl_name . "date_creation<'" . $params['f_max_date_created'] . "'";
         }
+
         if (is_numeric($params['f_min_ratio'])) {
             $clauses[] = $tbl_name . 'width/' . $tbl_name . 'height>=' . $params['f_min_ratio'];
         }
+
         if (is_numeric($params['f_max_ratio'])) {
             $clauses[] = $tbl_name . 'width/' . $tbl_name . 'height<=' . $params['f_max_ratio'];
         }
+
         if (is_numeric($params['f_max_level'])) {
             $clauses[] = $tbl_name . 'level <= ' . $params['f_max_level'];
         }
+
         return $clauses;
     }
 
@@ -90,40 +103,51 @@ class ws_functions
     public static function ws_std_image_sql_order($params, $tbl_name = '')
     {
         $ret = '';
+
         if (empty($params['order'])) {
             return $ret;
         }
+
         $matches = [];
         preg_match_all(
             '/([a-z_]+) *(?:(asc|desc)(?:ending)?)? *(?:, *|$)/i',
             $params['order'],
             $matches
         );
+
         for ($i = 0; $i < count($matches[1]); $i++) {
             switch ($matches[1][$i]) {
                 case 'date_created':
                     $matches[1][$i] = 'date_creation';
                     break;
+
                 case 'date_posted':
                     $matches[1][$i] = 'date_available';
                     break;
-                case 'rand': case 'random':
+
+                case 'rand':
+                case 'random':
                     $matches[1][$i] = functions_mysqli::DB_RANDOM_FUNCTION . '()';
                     break;
             }
+
             $sortable_fields = ['id', 'file', 'name', 'hit', 'rating_score',
                 'date_creation', 'date_available', functions_mysqli::DB_RANDOM_FUNCTION . '()'];
+
             if (in_array($matches[1][$i], $sortable_fields)) {
                 if (! empty($ret)) {
                     $ret .= ', ';
                 }
+
                 if ($matches[1][$i] != functions_mysqli::DB_RANDOM_FUNCTION . '()') {
                     $ret .= $tbl_name;
                 }
+
                 $ret .= $matches[1][$i];
                 $ret .= ' ' . $matches[2][$i];
             }
         }
+
         return $ret;
     }
 
@@ -146,8 +170,9 @@ class ws_functions
 
         $provide_download_url = false;
 
-        if ($src_image->is_original()) {// we have a photo
+        if ($src_image->is_original()) { // we have a photo
             global $user;
+
             if ($user['enabled_high']) {
                 $ret['element_url'] = $src_image->get_url();
                 $provide_download_url = true;
@@ -158,21 +183,28 @@ class ws_functions
         }
 
         $ret['download_url'] = null;
+
         if ($provide_download_url) {
             $ret['download_url'] = str_replace('&amp;', '&', functions_url::get_action_url($image_row['id'], 'e', true));
         }
 
         $derivatives = DerivativeImage::get_all($src_image);
         $derivatives_arr = [];
+
         foreach ($derivatives as $type => $derivative) {
             $size = $derivative->get_size();
-            $size != null or $size = [null, null];
+
+            if ($size == null) {
+                $size = [null, null];
+            }
+
             $derivatives_arr[$type] = [
                 'url' => $derivative->get_url(),
                 'width' => $size[0],
                 'height' => $size[1],
             ];
         }
+
         $ret['derivatives'] = $derivatives_arr;
         return $ret;
     }
@@ -375,8 +407,8 @@ class ws_functions
                 ],
             ], $f_params),
             'Returns elements for the corresponding categories.
-  <br><b>cat_id</b> can be empty if <b>recursive</b> is true.
-  <br><b>order</b> comma separated fields for sorting',
+            <br><b>cat_id</b> can be empty if <b>recursive</b> is true.
+            <br><b>order</b> comma separated fields for sorting',
             $ws_functions_root . 'pwg_categories.php'
         );
 
@@ -601,11 +633,11 @@ class ws_functions
                 ],
             ],
             'Sets the rank of a photo for a given album.
-  <br><br>If you provide a list for image_id:
-  <ul>
-  <li>rank becomes useless, only the order of the image_id list matters</li>
-  <li>you are supposed to provide the list of all image_ids belonging to the album.
-  </ul>',
+            <br><br>If you provide a list for image_id:
+            <ul>
+            <li>rank becomes useless, only the order of the image_id list matters</li>
+            <li>you are supposed to provide the list of all image_ids belonging to the album.
+            </ul>',
             $ws_functions_root . 'pwg_images.php',
             [
                 'admin_only' => true,
@@ -779,7 +811,7 @@ class ws_functions
                 'sum' => [],
             ],
             'Add or update a file for an existing photo.
-  <br>pwg.images.addChunk must have been called before (maybe several times).',
+            <br>pwg.images.addChunk must have been called before (maybe several times).',
             $ws_functions_root . 'pwg_images.php',
             [
                 'admin_only' => true,
@@ -836,8 +868,8 @@ class ws_functions
                 ],
             ],
             'Add an image.
-  <br>pwg.images.addChunk must have been called before (maybe several times).
-  <br>Don\'t use "thumbnail_sum" and "high_sum", these parameters are here for backward compatibility.',
+            <br>pwg.images.addChunk must have been called before (maybe several times).
+            <br>Don\'t use "thumbnail_sum" and "high_sum", these parameters are here for backward compatibility.',
             $ws_functions_root . 'pwg_images.php',
             [
                 'admin_only' => true,
@@ -877,9 +909,9 @@ class ws_functions
                 ],
             ],
             'Add an image.
-  <br>Use the <b>$_FILES[image]</b> field for uploading file.
-  <br>Set the form encoding to "form-data".
-  <br>You can update an existing photo if you define an existing image_id.',
+            <br>Use the <b>$_FILES[image]</b> field for uploading file.
+            <br>Set the form encoding to "form-data".
+            <br>You can update an existing photo if you define an existing image_id.',
             $ws_functions_root . 'pwg_images.php',
             [
                 'admin_only' => true,
@@ -912,8 +944,8 @@ class ws_functions
                 'pwg_token' => [],
             ],
             'Add an image.
-  <br>Use the <b>$_FILES[image]</b> field for uploading file.
-  <br>Set the form encoding to "form-data".',
+            <br>Use the <b>$_FILES[image]</b> field for uploading file.
+            <br>Set the form encoding to "form-data".',
             $ws_functions_root . 'pwg_images.php',
             [
                 'admin_only' => true,
@@ -970,11 +1002,11 @@ class ws_functions
                 ],
             ],
             'Upload photo by chunks in a random order.
-  <br>Use the <b>$_FILES[file]</b> field for uploading file.
-  <br>Start with chunk 0 (zero).
-  <br>Set the form encoding to "form-data".
-  <br>You can update an existing photo if you define an existing image_id.
-  <br>Requires <b>admin</b> credentials.',
+            <br>Use the <b>$_FILES[file]</b> field for uploading file.
+            <br>Start with chunk 0 (zero).
+            <br>Set the form encoding to "form-data".
+            <br>You can update an existing photo if you define an existing image_id.
+            <br>Requires <b>admin</b> credentials.',
             $ws_functions_root . 'pwg_images.php',
             [
                 'admin_only' => true,
@@ -1083,8 +1115,8 @@ class ws_functions
                 ],
             ],
             'Get albums list as displayed on admin page. <br>
-        <b>additional_output</b> controls which data are returned, possible values are:<br>
-        null, full_name_with_admin_links<br>',
+            <b>additional_output</b> controls which data are returned, possible values are:<br>
+            null, full_name_with_admin_links<br>',
             $ws_functions_root . 'pwg_categories.php',
             [
                 'admin_only' => true,
@@ -1143,8 +1175,8 @@ class ws_functions
                 'pwg_token' => [],
             ],
             'Deletes album(s).
-  <br><b>photo_deletion_mode</b> can be "no_delete" (may create orphan photos), "delete_orphans"
-  (default mode, only deletes photos linked to no other album) or "force_delete" (delete all photos, even those linked to other albums)',
+            <br><b>photo_deletion_mode</b> can be "no_delete" (may create orphan photos), "delete_orphans"
+            (default mode, only deletes photos linked to no other album) or "force_delete" (delete all photos, even those linked to other albums)',
             $ws_functions_root . 'pwg_categories.php',
             [
                 'admin_only' => true,
@@ -1165,7 +1197,7 @@ class ws_functions
                 'pwg_token' => [],
             ],
             'Move album(s).
-  <br>Set parent as 0 to move to gallery root. Only virtual categories can be moved.',
+            <br>Set parent as 0 to move to gallery root. Only virtual categories can be moved.',
             $ws_functions_root . 'pwg_categories.php',
             [
                 'admin_only' => true,
@@ -1334,7 +1366,7 @@ class ws_functions
                 ],
             ],
             'Checks existence of images.
-  <br>Give <b>md5sum_list</b> if $conf[uniqueness_mode]==md5sum. Give <b>filename_list</b> if $conf[uniqueness_mode]==filename.',
+            <br>Give <b>md5sum_list</b> if $conf[uniqueness_mode]==md5sum. Give <b>filename_list</b> if $conf[uniqueness_mode]==filename.',
             $ws_functions_root . 'pwg_images.php',
             [
                 'admin_only' => true,
@@ -1359,7 +1391,7 @@ class ws_functions
                 ],
             ],
             'Checks if you have updated version of your files for a given photo, the answer can be "missing", "equals" or "differs".
-  <br>Don\'t use "thumbnail_sum" and "high_sum", these parameters are here for backward compatibility.',
+            <br>Don\'t use "thumbnail_sum" and "high_sum", these parameters are here for backward compatibility.',
             $ws_functions_root . 'pwg_images.php',
             [
                 'admin_only' => true,
@@ -1454,10 +1486,10 @@ class ws_functions
                 ],
             ],
             'Changes properties of an image.
-  <br><b>single_value_mode</b> can be "fill_if_empty" (only use the input value if the corresponding values is currently empty) or "replace"
-  (overwrite any existing value) and applies to single values properties like name/author/date_creation/comment.
-  <br><b>multiple_value_mode</b> can be "append" (no change on existing values, add the new values) or "replace" and applies to multiple values properties like tag_ids/categories.
-  <br><b>pwg_token</b> required if you want to use HTML in name/comment/author.',
+            <br><b>single_value_mode</b> can be "fill_if_empty" (only use the input value if the corresponding values is currently empty) or "replace"
+            (overwrite any existing value) and applies to single values properties like name/author/date_creation/comment.
+            <br><b>multiple_value_mode</b> can be "append" (no change on existing values, add the new values) or "replace" and applies to multiple values properties like tag_ids/categories.
+            <br><b>pwg_token</b> required if you want to use HTML in name/comment/author.',
             $ws_functions_root . 'pwg_images.php',
             [
                 'admin_only' => true,
@@ -1525,11 +1557,11 @@ class ws_functions
                 ],
             ],
             'Changes the rank of an album
-          <br><br>If you provide a list for category_id:
-          <ul>
-          <li>rank becomes useless, only the order of the image_id list matters</li>
-          <li>you are supposed to provide the list of all categories_ids belonging to the album.
-          </ul>.',
+            <br><br>If you provide a list for category_id:
+            <ul>
+            <li>rank becomes useless, only the order of the image_id list matters</li>
+            <li>you are supposed to provide the list of all categories_ids belonging to the album.
+            </ul>.',
             $ws_functions_root . 'pwg_categories.php',
             [
                 'admin_only' => true,
@@ -1872,14 +1904,14 @@ class ws_functions
                 ],
             ],
             'Retrieves a list of all the users.<br>
-  <br>
-  <b>display</b> controls which data are returned, possible values are:<br>
-  all, basics, none,<br>
-  username, email, status, level, groups,<br>
-  language, theme, nb_image_page, recent_period, expand, show_nb_comments, show_nb_hits,<br>
-  enabled_high, registration_date, registration_date_string, registration_date_since, last_visit, last_visit_string, last_visit_since<br>
-  <b>basics</b> stands for "username,email,status,level,groups"<br>
-  <b>min_register</b> and <b>max_register</b> filter users by their registration date expecting format "YYYY" or "YYYY-mm" or "YYYY-mm-dd".',
+            <br>
+            <b>display</b> controls which data are returned, possible values are:<br>
+            all, basics, none,<br>
+            username, email, status, level, groups,<br>
+            language, theme, nb_image_page, recent_period, expand, show_nb_comments, show_nb_hits,<br>
+            enabled_high, registration_date, registration_date_string, registration_date_since, last_visit, last_visit_string, last_visit_since<br>
+            <b>basics</b> stands for "username,email,status,level,groups"<br>
+            <b>min_register</b> and <b>max_register</b> filter users by their registration date expecting format "YYYY" or "YYYY-mm" or "YYYY-mm-dd".',
             $ws_functions_root . 'pwg_users.php',
             [
                 'admin_only' => true,
@@ -2013,8 +2045,8 @@ class ws_functions
                 'pwg_token' => [],
             ],
             'Updates a user. Leave a field blank to keep the current value.
-  <br>"username", "password" and "email" are ignored if "user_id" is an array.
-  <br>set "group_id" to -1 if you want to dissociate users from all groups',
+            <br>"username", "password" and "email" are ignored if "user_id" is an array.
+            <br>set "group_id" to -1 if you want to dissociate users from all groups',
             $ws_functions_root . 'pwg_users.php',
             [
                 'admin_only' => true,
@@ -2040,7 +2072,7 @@ class ws_functions
                 ],
             ],
             'Returns permissions: user ids and group ids having access to each album ; this list can be filtered.
-  <br>Provide only one parameter!',
+            <br>Provide only one parameter!',
             $ws_functions_root . 'pwg_permissions.php',
             [
                 'admin_only' => true,
@@ -2233,9 +2265,9 @@ class ws_functions
                 ],
             ],
             'Gives an history of who has visited the gallery and the actions done in it. Receives parameter.
-        <br> <strong>Types </strong> can be : \'none\', \'picture\', \'high\', \'other\'
-        <br> <strong>Date format</strong> is yyyy-mm-dd
-        <br> <strong>display_thumbnail</strong> can be : \'no_display_thumbnail\', \'display_thumbnail_classic\', \'display_thumbnail_hoverbox\'',
+            <br> <strong>Types </strong> can be : \'none\', \'picture\', \'high\', \'other\'
+            <br> <strong>Date format</strong> is yyyy-mm-dd
+            <br> <strong>display_thumbnail</strong> can be : \'no_display_thumbnail\', \'display_thumbnail_classic\', \'display_thumbnail_hoverbox\'',
             $ws_functions_root . 'pwg.php'
         );
 

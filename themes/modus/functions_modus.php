@@ -20,11 +20,11 @@ class functions_modus
             $gs = trim($gradient[0], '#');
             $ge = trim($gradient[1], '#');
             return "filter: progid:DXImageTransform.Microsoft.gradient(startColorStr=#FF{$gs},endColorStr=#FF{$ge}); /* IE to 9*/
-		background-image: -moz-linear-gradient(top,{$std}); /* FF 3.16 to 15 */
-		background-image: -webkit-linear-gradient(top,{$std}); /* Chrome, Safari */
-		background-image: -ms-linear-gradient(top,{$std}); /* IE ? to 9 */
-		background-image: -o-linear-gradient(top,{$std}); /* Opera 11 to 12 */
-		background-image: linear-gradient(to bottom,{$std}); /* Standard must be last */";
+                background-image: -moz-linear-gradient(top,{$std}); /* FF 3.16 to 15 */
+                background-image: -webkit-linear-gradient(top,{$std}); /* Chrome, Safari */
+                background-image: -ms-linear-gradient(top,{$std}); /* IE ? to 9 */
+                background-image: -o-linear-gradient(top,{$std}); /* Opera 11 to 12 */
+                background-image: linear-gradient(to bottom,{$std}); /* Standard must be last */";
         }
     }
 
@@ -51,10 +51,15 @@ class functions_modus
         }
 
         // picture page actionButtons wrap for mobile
-        if (strpos($source, '<div id="imageToolBar">') !== false || strpos($source, '<div id=imageToolBar>') !== false) {
-            if (! ($pos = strpos($source, '<div class="actionButtons">'))) {
+        if (strpos($source, '<div id="imageToolBar">') !== false ||
+            strpos($source, '<div id=imageToolBar>') !== false
+        ) {
+            $pos = strpos($source, '<div class="actionButtons">');
+
+            if (! $pos) {
                 $pos = strpos($source, '<div class=actionButtons>');
             }
+
             if ($pos !== false) {
                 $source = substr_replace($source, '<div class=actionButtonsWrapper><a id=imageActionsSwitch class=pwg-button><span class="pwg-icon pwg-icon-ellipsis"></span></a>{combine_script version=1 id=\'modus.async\' path="themes/`$themeconf.id`/js/modus.async.js" load=\'async\'}', $pos, 0);
                 $pos = strpos($source, 'caddie', $pos + 1);
@@ -64,15 +69,21 @@ class functions_modus
         }
 
         /* move imageNumber from imageToolBar to imageHeaderBar*/
-        if (preg_match('#<div[ a-zA-Z"=]+id="?imageHeaderBar"?>#', $source, $matches, PREG_OFFSET_CAPTURE)
-            && preg_match('#<div class="?imageNumber"?>{\\$PHOTO}</div>#', $source, $matches2, PREG_OFFSET_CAPTURE, $matches[0][1] + 20)) {
+        if (preg_match('#<div[ a-zA-Z"=]+id="?imageHeaderBar"?>#', $source, $matches, PREG_OFFSET_CAPTURE) &&
+            preg_match('#<div class="?imageNumber"?>{\\$PHOTO}</div>#', $source, $matches2, PREG_OFFSET_CAPTURE, $matches[0][1] + 20)
+        ) {
             $source = substr_replace($source, '', $matches2[0][1], strlen($matches2[0][0]));
             $source = substr_replace($source, $matches2[0][0], $matches[0][1] + strlen($matches[0][0]), 0);
         }
 
-        if (($pos = strpos($source, '<ul class="categoryActions">')) !== false || ($pos = strpos($source, '<ul class=categoryActions>')) !== false) {
-            if (($pos2 = strpos($source, '</ul>', $pos)) !== false
-                && (substr_count($source, '<li>', $pos, $pos2 - $pos) > 2)) {
+        $pos = strpos($source, '<ul class="categoryActions">') ?? strpos($source, '<ul class=categoryActions>');
+
+        if ($pos !== false) {
+            $pos2 = strpos($source, '</ul>', $pos);
+
+            if ($pos2 !== false &&
+                substr_count($source, '<li>', $pos, $pos2 - $pos) > 2
+            ) {
                 $source = substr_replace($source, '<a id=albumActionsSwitcher class=pwg-button><span class="pwg-icon pwg-icon-ellipsis"></span></a>{combine_script version=1 id=\'modus.async\' path="themes/`$themeconf.id`/js/modus.async.js" load=\'async\'}', $pos, 0);
             }
         }
@@ -108,7 +119,7 @@ class functions_modus
     public static function rv_cdn_prefilter($source, &$smarty)
     {
         $source = str_replace('src="{$ROOT_URL}{$themeconf.icon_dir}/', 'src="' . RVCDN_ROOT_URL . '{$themeconf.icon_dir}/', $source);
-        $source = str_replace('url({$' . 'ROOT_URL}', 'url(' . RVCDN_ROOT_URL, $source);
+        $source = str_replace('url({$ROOT_URL}', 'url(' . RVCDN_ROOT_URL, $source);
         return $source;
     }
 
@@ -138,13 +149,16 @@ class functions_modus
         if (! $script->is_remote()) {
             $url = RVCDN_ROOT_URL . $script->path;
         }
+
         return $url;
     }
 
     public static function modus_loc_begin_page_header()
     {
         $all = $GLOBALS['template']->scriptLoader->get_all();
-        if (($jq = @$all['jquery'])) {
+        $jq = @$all['jquery'];
+
+        if ($jq) {
             $jq->set_path(RVPT_JQUERY_SRC);
         }
     }
@@ -176,25 +190,31 @@ class functions_modus
         $max = @$params['max'];
 
         $rules = [];
+
         if (! empty($base)) {
             $rules[] = $base;
         }
+
         foreach (['min', 'max'] as $type) {
             if (! empty(${$type})) {
                 $rules[] = '(-webkit-' . $type . '-device-pixel-ratio:' . ${$type} . ')';
             }
         }
+
         $res = implode(' and ', $rules);
 
         $rules = [];
+
         if (! empty($base)) {
             $rules[] = $base;
         }
+
         foreach (['min', 'max'] as $type) {
             if (! empty(${$type})) {
                 $rules[] = '(' . $type . '-resolution:' . round(96 * ${$type}, 1) . 'dpi)';
             }
         }
+
         $res .= ',' . implode(' and ', $rules);
 
         return $res;
@@ -217,12 +237,17 @@ class functions_modus
         } else {
             $horizontal_margin = floor(0.02 * $row_height);
         }
+
         $vertical_margin = $horizontal_margin + 1;
 
         $candidates = [$default_params];
+
         foreach (ImageStdParams::get_defined_type_map() as $params) {
-            if ($params->max_height() > $row_height && $params->sizing->max_crop == $default_params->sizing->max_crop) {
+            if ($params->max_height() > $row_height &&
+                $params->sizing->max_crop == $default_params->sizing->max_crop
+            ) {
                 $candidates[] = $params;
+
                 if (count($candidates) == 3) {
                     break;
                 }
@@ -238,6 +263,7 @@ class functions_modus
             $new = ! empty($item['icon_ts']) ? sprintf($new_icon, functions::format_date($item['date_available'])) : '';
 
             $idx = 0;
+
             do {
                 $cparams = $candidates[$idx];
                 $c = new DerivativeImage($cparams, $src_image);
@@ -246,26 +272,67 @@ class functions_modus
             } while ($csize[1] < $row_height - 2 && $idx < count($candidates));
 
             $a_style = '';
+
             if ($csize[1] < $row_height) {
                 $a_style = ' style="top:' . floor(($row_height - $csize[1]) / 2) . 'px"';
             } elseif ($csize[1] > $row_height) {
                 $csize = $c->get_scaled_size(9999, $row_height);
             }
-            if ($do_over) {?>
-	<li class="path-ext-<?= $item['path_ext']?> file-ext-<?= $item['file_ext']?>" style=width:<?= $csize[0]?>px;height:<?= $row_height?>px><a href="<?= $item['URL']?>"<?= $a_style?>><img src="<?= $c->get_url()?>" width=<?= $csize[0]?> height=<?= $csize[1]?> alt="<?= $item['TN_ALT']?>"></a><div class=overDesc><?= $item['NAME']?><?= $new?></div></li>
-	<?php
-            } else {?>
-	<li class="path-ext-<?= $item['path_ext']?> file-ext-<?= $item['file_ext']?>" style=width:<?= $csize[0]?>px;height:<?= $row_height?>px><a href="<?= $item['URL']?>"<?= $a_style?>><img src="<?= $c->get_url()?>" width=<?= $csize[0]?> height=<?= $csize[1]?> alt="<?= $item['TN_ALT']?>"></a></li>
-	<?php
-            }
+
+            // Create class names and styles
+            $li_class = 'path-ext-' . $item['path_ext'] . ' file-ext-' . $item['file_ext'];
+            $li_style = 'width:' . $csize[0] . 'px; height:' . $row_height . 'px;';
+            $img_src = $c->get_url();
+            $img_width = $csize[0];
+            $img_height = $csize[1];
+            $img_alt = $item['TN_ALT'];
+            $item_name = $item['NAME'];
+            $item_url = $item['URL'];
+
+            // Render the HTML block
+            ?>
+            <li class="<?= $li_class ?>" style="<?= $li_style ?>">
+                <a href="<?= $item_url ?>"<?= $a_style ?>>
+                    <img src="<?= $img_src ?>" width="<?= $img_width ?>" height="<?= $img_height ?>" alt="<?= $img_alt ?>">
+                </a>
+            <?php if ($do_over): ?>
+                <div class="overDesc"><?= $item_name . $new ?></div>
+            <?php endif; ?>
+            </li>
+            <?php
         }
 
         $template->block_html_style(
             null,
-            '#thumbnails{text-align:justify;overflow:hidden;margin-left:' . ($container_margin - $horizontal_margin) . 'px;margin-right:' . $container_margin . 'px}
-	#thumbnails>li{float:left;overflow:hidden;position:relative;margin-bottom:' . $vertical_margin . 'px;margin-left:' . $horizontal_margin . 'px}#thumbnails>li>a{position:absolute;border:0}'
+            '
+            #thumbnails {
+                text-align: justify;
+                overflow: hidden;
+                margin-left: ' . ($container_margin - $horizontal_margin) . 'px;
+                margin-right: ' . $container_margin . 'px;
+            }
+
+            #thumbnails > li {
+                float: left;
+                overflow: hidden;
+                position: relative;
+                margin-bottom: ' . $vertical_margin . 'px;
+                margin-left: ' . $horizontal_margin . 'px;
+            }
+
+            #thumbnails > li > a {
+                position: absolute;
+                border: 0;
+            }'
         );
-        $template->block_footer_script(null, 'rvgtProcessor=new RVGThumbs({hMargin:' . $horizontal_margin . ',rowHeight:' . $row_height . '});');
+        $template->block_footer_script(
+            null,
+            '
+            rvgtProcessor = new RVGThumbs({
+                hMargin: ' . $horizontal_margin . ',
+                rowHeight: ' . $row_height . '
+            });'
+        );
 
         $my_base_name = basename(dirname(__FILE__));
         // not async to avoid visible flickering reflow
@@ -275,8 +342,21 @@ class functions_modus
     public static function modus_on_end_index()
     {
         global $template;
+
         if (! functions_session::pwg_get_session_var('caps')) {
-            $template->block_footer_script(null, 'try{document.cookie="caps="+(window.devicePixelRatio?window.devicePixelRatio:1)+"x"+document.documentElement.clientWidth+"x"+document.documentElement.clientHeight+";path=' . functions_cookie::cookie_path() . '"}catch(er){document.cookie="caps=1x1x1x"+err.message;}');
+            $template->block_footer_script(
+                null,
+                '
+                try {
+                    document.cookie = "caps=" +
+                        (window.devicePixelRatio ? window.devicePixelRatio : 1) + "x" +
+                        document.documentElement.clientWidth + "x" +
+                        document.documentElement.clientHeight +
+                        ";path=' . functions_cookie::cookie_path() . '";
+                } catch (er) {
+                    document.cookie = "caps=1x1x1x" + er.message;
+                }'
+            );
         }
 
     }
@@ -284,34 +364,46 @@ class functions_modus
     public static function modus_get_index_photo_derivative_params($default)
     {
         global $conf;
-        if (isset($conf['modus_theme']) && functions_session::pwg_get_session_var('index_deriv') === null) {
+
+        if (isset($conf['modus_theme']) &&
+            functions_session::pwg_get_session_var('index_deriv') === null
+        ) {
             $type = $conf['modus_theme']['index_photo_deriv'];
-            if ($caps = functions_session::pwg_get_session_var('caps')) {
-                if (($caps[0] >= 2 && $caps[1] >= 768) /*Ipad3 always has clientWidth 768 independently of orientation*/
-                    || $caps[0] >= 3
-                ) {
+            $caps = functions_session::pwg_get_session_var('caps');
+
+            if ($caps) {
+                if (($caps[0] >= 2 && $caps[1] >= 768) ||
+                     $caps[0] >= 3
+                ) { /*Ipad3 always has clientWidth 768 independently of orientation*/
                     $type = $conf['modus_theme']['index_photo_deriv_hdpi'];
                 }
             }
+
             $new = @ImageStdParams::get_by_type($type);
+
             if ($new) {
                 return $new;
             }
         }
+
         return $default;
     }
 
     public static function modus_index_category_thumbnails($items)
     {
         global $page, $template, $conf;
+        $wh = @$conf['modus_theme']['album_thumb_size'];
 
-        if ($page['section'] != 'categories' || ! ($wh = @$conf['modus_theme']['album_thumb_size'])) {
+        if ($page['section'] != 'categories' ||
+            ! $wh
+        ) {
             return $items;
         }
 
         $template->assign('album_thumb_size', $wh);
 
         $def_params = ImageStdParams::get_custom($wh, $wh, 1, $wh, $wh);
+
         foreach (ImageStdParams::get_defined_type_map() as $params) {
             if ($params->max_height() == $wh) {
                 $alt_params = $params;
@@ -326,9 +418,15 @@ class functions_modus
             $item['file_ext'] = strtolower(functions::get_extension($item['representative']['file']));
 
             $deriv = null;
-            if (isset($alt_params) && $src_size[0] >= $src_size[1]) {
+
+            if (isset($alt_params) &&
+                $src_size[0] >= $src_size[1]
+            ) {
                 $dsize = $alt_params->compute_final_size($src_size);
-                if ($dsize[0] >= $wh && $dsize[1] >= $wh) {
+
+                if ($dsize[0] >= $wh &&
+                    $dsize[1] >= $wh
+                ) {
                     $deriv = new DerivativeImage($alt_params, $src_image);
                     $rect = new ImageRect($dsize);
                     $rect->crop_h($dsize[0] - $wh, $item['representative']['coi']);
@@ -344,6 +442,7 @@ class functions_modus
                 $l = intval($wh - $dsize[0]) / 2;
                 $t = intval($wh - $dsize[1]) / 2;
             }
+
             $item['modus_deriv'] = $deriv;
 
             if (! empty($item['icon_ts'])) {
@@ -351,18 +450,25 @@ class functions_modus
             }
 
             $styles = [];
-            if ($l < -1 || $l > 1) {
+
+            if ($l < -1 ||
+                $l > 1
+            ) {
                 $styles[] = 'left:' . (100 * $l / $wh) . '%';
             }
 
-            if ($t < -1 || $t > 1) {
+            if ($t < -1 ||
+                $t > 1
+            ) {
                 $styles[] = 'top:' . $t . 'px';
             }
+
             if (count($styles)) {
                 $styles = ' style=' . implode(';', $styles);
             } else {
                 $styles = '';
             }
+
             $item['MODUS_STYLE'] = $styles;
         }
 
@@ -372,6 +478,7 @@ class functions_modus
     public static function modus_loc_begin_picture()
     {
         global $conf, $template;
+
         if (isset($_GET['slideshow'])) {
             $conf['picture_menu'] = false;
             return;
@@ -380,7 +487,15 @@ class functions_modus
         if (isset($_GET['map'])) {
             return;
         }
-        $template->append('head_elements', '<script>if(document.documentElement.offsetWidth>1270)document.documentElement.className=\'wide\'</script>');
+
+        $template->append(
+            '
+                <script>
+                    if (document.documentElement.offsetWidth > 1270) {
+                        document.documentElement.className = \'wide\';
+                    }
+                </script>'
+        );
     }
 
     public static function modus_picture_content($content, $element_info)
@@ -394,17 +509,24 @@ class functions_modus
         $unique_derivatives = [];
         $show_original = isset($element_info['element_url']);
         $added = [];
+
         foreach ($element_info['derivatives'] as $type => $derivative) {
-            if ($type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB) {
+            if ($type == derivative_std_params::IMG_SQUARE ||
+                $type == derivative_std_params::IMG_THUMB
+            ) {
                 continue;
             }
+
             if (! array_key_exists($type, ImageStdParams::get_defined_type_map())) {
                 continue;
             }
+
             $url = $derivative->get_url();
+
             if (isset($added[$url])) {
                 continue;
             }
+
             $added[$url] = 1;
             $show_original &= ! ($derivative->same_as_source());
             $unique_derivatives[$type] = $derivative;
@@ -415,33 +537,50 @@ class functions_modus
         }
 
         $selected_derivative = null;
+
         if (isset($_COOKIE['phavsz'])) {
             $available_size = explode('x', $_COOKIE['phavsz']);
-        } elseif (($caps = functions_session::pwg_get_session_var('caps')) && $caps[0] > 1) {
-            $available_size = [$caps[0] * $caps[1], $caps[0] * ($caps[2] - 100), $caps[0]];
+        } else {
+            $caps = functions_session::pwg_get_session_var('caps');
+
+            if ($caps &&
+                $caps[0] > 1
+            ) {
+                $available_size = [$caps[0] * $caps[1], $caps[0] * ($caps[2] - 100), $caps[0]];
+            }
         }
 
         if (isset($available_size)) {
             foreach ($unique_derivatives as $derivative) {
                 $size = $derivative->get_size();
+
                 if (! $size) {
                     break;
                 }
 
-                if ($size[0] <= $available_size[0] and $size[1] <= $available_size[1]) {
+                if ($size[0] <= $available_size[0] and
+                    $size[1] <= $available_size[1]
+                ) {
                     $selected_derivative = $derivative;
                 } else {
-                    if ($available_size[2] > 1 || ! $selected_derivative) {
+                    if ($available_size[2] > 1 ||
+                        ! $selected_derivative
+                    ) {
                         $selected_derivative = $derivative;
                     }
                     break;
                 }
             }
 
-            if ($available_size[2] > 1 && $selected_derivative) {
+            if ($available_size[2] > 1 &&
+                $selected_derivative
+            ) {
                 $ratio_w = $size[0] / $available_size[0];
                 $ratio_h = $size[1] / $available_size[1];
-                if ($ratio_w > 1 || $ratio_h > 1) {
+
+                if ($ratio_w > 1 ||
+                    $ratio_h > 1
+                ) {
                     if ($ratio_w > $ratio_h) {
                         $display_size = [$available_size[0] / $available_size[2], floor($size[1] / $ratio_w / $available_size[2])];
                     } else {
@@ -457,18 +596,26 @@ class functions_modus
                 ]);
             }
 
-            if (isset($picture['next'])
-                and $picture['next']['src_image']->is_original()) {
+            if (isset($picture['next']) and
+                $picture['next']['src_image']->is_original()
+            ) {
                 $next_best = null;
+
                 foreach ($picture['next']['derivatives'] as $derivative) {
                     $size = $derivative->get_size();
+
                     if (! $size) {
                         break;
                     }
-                    if ($size[0] <= $available_size[0] and $size[1] <= $available_size[1]) {
+
+                    if ($size[0] <= $available_size[0] and
+                        $size[1] <= $available_size[1]
+                    ) {
                         $next_best = $derivative;
                     } else {
-                        if ($available_size[2] > 1 || ! $next_best) {
+                        if ($available_size[2] > 1 ||
+                            ! $next_best
+                        ) {
                             $next_best = $derivative;
                         }
                         break;
@@ -482,6 +629,7 @@ class functions_modus
         }
 
         $as_pending = false;
+
         if (! $selected_derivative) {
             $as_pending = true;
             $selected_derivative = $element_info['derivatives'][functions_session::pwg_get_session_var('picture_deriv', $conf['derivative_default_size'])];
@@ -509,6 +657,7 @@ class functions_modus
                 'RVAS_PENDING' => $as_pending,
             ]
         );
+
         return $template->parse('default_content', true);
     }
 }

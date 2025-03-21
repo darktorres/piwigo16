@@ -46,9 +46,10 @@ $page['group'] = $_GET['group_id'];
 // |                                updates                                |
 // +-----------------------------------------------------------------------+
 
-if (isset($_POST['falsify'])
-    and isset($_POST['cat_true'])
-    and count($_POST['cat_true']) > 0) {
+if (isset($_POST['falsify']) and
+    isset($_POST['cat_true']) and
+    count($_POST['cat_true']) > 0
+) {
     // if you forbid access to a category, all sub-categories become
     // automatically forbidden
     $subcats = functions_category::get_subcat_ids($_POST['cat_true']);
@@ -59,9 +60,10 @@ DELETE
   AND cat_id IN (' . implode(',', $subcats) . ')
 ;';
     functions_mysqli::pwg_query($query);
-} elseif (isset($_POST['truthify'])
-         and isset($_POST['cat_false'])
-         and count($_POST['cat_false']) > 0) {
+} elseif (isset($_POST['truthify']) and
+          isset($_POST['cat_false']) and
+          count($_POST['cat_false']) > 0
+) {
     $uppercats = functions_admin::get_uppercat_ids($_POST['cat_false']);
     $private_uppercats = [];
 
@@ -72,6 +74,7 @@ SELECT id
   AND status = \'private\'
 ;';
     $result = functions_mysqli::pwg_query($query);
+
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $private_uppercats[] = $row['id'];
     }
@@ -94,6 +97,7 @@ SELECT cat_id
 
     $inserts = [];
     $to_authorize_ids = array_diff($private_uppercats, $authorized_ids);
+
     foreach ($to_authorize_ids as $to_authorize_id) {
         $inserts[] = [
             'group_id' => $page['group'],
@@ -144,6 +148,7 @@ functions_category::display_select_cat_wrapper($query_true, [], 'category_option
 
 $result = functions_mysqli::pwg_query($query_true);
 $authorized_ids = [];
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $authorized_ids[] = $row['id'];
 }
@@ -152,10 +157,12 @@ $query_false = '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
   WHERE status = \'private\'';
+
 if (count($authorized_ids) > 0) {
     $query_false .= '
     AND id NOT IN (' . implode(',', $authorized_ids) . ')';
 }
+
 $query_false .= '
 ;';
 functions_category::display_select_cat_wrapper($query_false, [], 'category_option_false');

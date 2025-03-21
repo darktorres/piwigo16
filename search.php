@@ -37,18 +37,24 @@ $search = [
 // list of filters in user preferences
 // allwords, cat, tags, author, added_by, filetypes, date_posted
 $default_fields = ['allwords', 'cat', 'tags', 'author'];
-if (functions_user::is_a_guest() or functions_user::is_generic()) {
+
+if (functions_user::is_a_guest() or
+    functions_user::is_generic()
+) {
     $fields = $default_fields;
 } else {
     $fields = functions_user::userprefs_get_param('gallery_search_filters', $default_fields);
 }
 
 $words = [];
+
 if (! empty($_GET['q'])) {
     $words = functions_search::split_allwords($_GET['q']);
 }
 
-if (count($words) > 0 or in_array('allwords', $fields)) {
+if (count($words) > 0 or
+    in_array('allwords', $fields)
+) {
     $search['fields']['allwords'] = [
         'words' => $words,
         'mode' => 'AND',
@@ -57,12 +63,15 @@ if (count($words) > 0 or in_array('allwords', $fields)) {
 }
 
 $cat_ids = [];
+
 if (isset($_GET['cat_id'])) {
     functions::check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
     $cat_ids = [$_GET['cat_id']];
 }
 
-if (count($cat_ids) > 0 or in_array('cat', $fields)) {
+if (count($cat_ids) > 0 or
+    in_array('cat', $fields)
+) {
     $search['fields']['cat'] = [
         'words' => $cat_ids,
         'sub_inc' => true,
@@ -71,12 +80,15 @@ if (count($cat_ids) > 0 or in_array('cat', $fields)) {
 
 if (count(functions_tag::get_available_tags()) > 0) {
     $tag_ids = [];
+
     if (isset($_GET['tag_id'])) {
         functions::check_input_parameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
         $tag_ids = explode(',', $_GET['tag_id']);
     }
 
-    if (count($tag_ids) > 0 or in_array('tags', $fields)) {
+    if (count($tag_ids) > 0 or
+        in_array('tags', $fields)
+    ) {
         $search['fields']['tags'] = [
             'words' => $tag_ids,
             'mode' => 'AND',

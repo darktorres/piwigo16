@@ -56,7 +56,11 @@ class image_ext_imagick implements imageInterface
 
         $command = $this->imagickdir . 'identify -format "%wx%h" "' . realpath($source_filepath) . '"';
         @exec($command, $returnarray);
-        if (! is_array($returnarray) or empty($returnarray[0]) or ! preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
+
+        if (! is_array($returnarray) or
+            empty($returnarray[0]) or
+            ! preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)
+        ) {
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
         }
 
@@ -101,11 +105,14 @@ class image_ext_imagick implements imageInterface
             return true;
         }
 
-        if ($rotation == 90 || $rotation == 270) {
+        if ($rotation == 90 ||
+            $rotation == 270
+        ) {
             $tmp = $this->width;
             $this->width = $this->height;
             $this->height = $tmp;
         }
+
         $this->add_command('rotate', -$rotation);
         $this->add_command('orient', 'top-left');
         return true;
@@ -141,10 +148,12 @@ class image_ext_imagick implements imageInterface
         $m = pwg_image::get_sharpen_matrix($amount);
 
         $param = 'convolve "' . count($m) . ':';
+
         foreach ($m as $line) {
             $param .= ' ';
             $param .= implode(',', $line);
         }
+
         $param .= '"';
         $this->add_command('morphology', $param);
         return true;
@@ -181,6 +190,7 @@ class image_ext_imagick implements imageInterface
 
         foreach ($this->commands as $command => $params) {
             $exec .= ' -' . $command;
+
             if (! empty($params)) {
                 $exec .= ' ' . $params;
             }
@@ -193,10 +203,12 @@ class image_ext_imagick implements imageInterface
 
         if (is_array($returnarray) && (count($returnarray) > 0)) {
             $logger->error('', $returnarray);
+
             foreach ($returnarray as $line) {
                 trigger_error($line, E_USER_WARNING);
             }
         }
+
         return is_array($returnarray);
     }
 }

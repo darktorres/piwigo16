@@ -29,6 +29,7 @@ $themes = new themes();
 // +-----------------------------------------------------------------------+
 
 $themes_dir = PHPWG_ROOT_PATH . 'themes';
+
 if (! is_writable($themes_dir)) {
     $page['errors'][] = functions::l10n('Add write access to the "%s" directory', 'themes');
 }
@@ -37,7 +38,9 @@ if (! is_writable($themes_dir)) {
 // |                       perform installation                            |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['revision']) and isset($_GET['extension'])) {
+if (isset($_GET['revision']) and
+    isset($_GET['extension'])
+) {
     if (! functions_user::is_webmaster()) {
         $page['errors'][] = functions::l10n('Webmaster status is required.');
     } else {
@@ -74,6 +77,7 @@ if (isset($_GET['installstatus'])) {
                     ]
                 );
             }
+
             break;
 
         case 'temp_path_error':

@@ -22,12 +22,14 @@ SELECT
   LIMIT 1
 ;';
     $rows = functions_mysqli::query2array($query);
+
     if (count($rows) == 0) {
         $_SESSION['TAT_tour29_delete_cat_id'] = -1;
     } else {
         $_SESSION['TAT_tour29_delete_cat_id'] = $rows[0]['category_id'];
     }
 }
+
 if ($_SESSION['TAT_tour29_delete_cat_id'] > 0) {
     $template->assign('TAT_tour29_delete_cat_id', $_SESSION['TAT_tour29_delete_cat_id']);
 }
@@ -41,6 +43,7 @@ SELECT
   LIMIT 1
 ;';
     $images = functions_mysqli::query2array($query);
+
     if (count($images) == 0) {
         $_SESSION['TAT_tour29_image_id'] = -1;
     } else {
@@ -60,6 +63,7 @@ SELECT
   FROM ' . TAGS_TABLE . '
 ;';
 list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
 if ($counter > 0) {
     $template->assign('TAT_tour29_has_tags', true);
 }

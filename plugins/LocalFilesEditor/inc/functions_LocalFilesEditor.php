@@ -37,8 +37,10 @@ class functions_LocalFilesEditor
     public static function eval_syntax($code)
     {
         $code = str_replace(['<?php', '?>'], '', $code);
+
         if (function_exists('token_get_all')) {
             $b = 0;
+
             foreach (token_get_all($code) as $token) {
                 if ($token == '{') {
                     ++$b;
@@ -46,6 +48,7 @@ class functions_LocalFilesEditor
                     --$b;
                 }
             }
+
             if ($b) {
                 return false;
             }
@@ -53,11 +56,13 @@ class functions_LocalFilesEditor
             ob_start();
             $eval = eval('if(0){' . $code . '}');
             ob_end_clean();
+
             if ($eval === false) {
                 return false;
             }
 
         }
+
         return '<?php' . $code . '?>';
     }
 
@@ -102,17 +107,26 @@ class functions_LocalFilesEditor
     public static function get_rec_dirs($path = '')
     {
         $options = [];
+
         if (is_dir($path)) {
             $fh = opendir($path);
+
             while ($file = readdir($fh)) {
                 $pathfile = $path . '/' . $file;
-                if ($file != '.' and $file != '..' and $file != '.svn' and is_dir($pathfile)) {
+
+                if ($file != '.' and
+                    $file != '..' and
+                    $file != '.svn' and
+                    is_dir($pathfile)
+                ) {
                     $options[$pathfile] = str_replace(['./', '/'], ['', ' / '], $pathfile);
                     $options = array_merge($options, self::get_rec_dirs($pathfile));
                 }
             }
+
             closedir($fh);
         }
+
         return $options;
     }
 }

@@ -20,8 +20,13 @@ define('PHPWG_ROOT_PATH', './');
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
 @include(PHPWG_ROOT_PATH . 'local/config/config.php');
 
-defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
-defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $conf['data_location'] . 'i/');
+if (! defined('PWG_LOCAL_DIR')) {
+    define('PWG_LOCAL_DIR', 'local/');
+}
+
+if (! defined('PWG_DERIVATIVE_DIR')) {
+    define('PWG_DERIVATIVE_DIR', $conf['data_location'] . 'i/');
+}
 
 @include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php');
 
@@ -37,6 +42,7 @@ $logger = new Katzgrau\KLogger\Logger(PHPWG_ROOT_PATH . $conf['data_location'] .
 $page = [];
 $begin = $step = microtime(true);
 $timing = [];
+
 foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $k) {
     $timing[$k] = '';
 }
@@ -51,6 +57,7 @@ try {
 } catch (Exception $e) {
     $logger->error($e->getMessage());
 }
+
 functions_mysqli::pwg_db_check_charset();
 
 list($conf['derivatives']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT value FROM ' . $prefixTable . 'config WHERE param=\'derivatives\''));
@@ -62,53 +69,63 @@ functions::parse_request();
 $params = $page['derivative_params'];
 
 $src_mtime = @filemtime($page['src_path']);
+
 if ($src_mtime === false) {
     functions::ierror('Source not found', 404);
 }
 
 $need_generate = false;
 $derivative_mtime = @filemtime($page['derivative_path']);
+
 if ($derivative_mtime === false or
     $derivative_mtime < $src_mtime or
-    $derivative_mtime < $params->last_mod_time) {
+    $derivative_mtime < $params->last_mod_time
+) {
     $need_generate = true;
 }
 
 $expires = false;
 $now = time();
+
 if (isset($_GET['b'])) {
     $expires = $now + 100;
     header('Cache-control: no-store, max-age=100');
-} elseif ($now > (max($src_mtime, $params->last_mod_time) + 24 * 3600)) {// somehow arbitrary - if derivative params or src didn't change for the last 24 hours, we send an expire header for several days
+} elseif ($now > (max($src_mtime, $params->last_mod_time) + 24 * 3600)) { // somehow arbitrary - if derivative params or src didn't change for the last 24 hours, we send an expire header for several days
     $expires = $now + 10 * 24 * 3600;
 }
 
 if (! $need_generate) {
-    if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])
-      and strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $derivative_mtime) {// send the last mod time of the file back
+    if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) and
+        strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $derivative_mtime
+    ) { // send the last mod time of the file back
         header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $derivative_mtime) . ' GMT', true, 304);
         header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 10 * 24 * 3600) . ' GMT', true, 304);
         exit;
     }
+
     functions::send_derivative($expires);
     exit;
 }
 
 $page['coi'] = null;
-if (strpos($page['src_location'], '/pwg_representative/') === false
-    && strpos($page['src_location'], 'themes/') === false
-    && strpos($page['src_location'], 'plugins/') === false) {
+
+if (strpos($page['src_location'], '/pwg_representative/') === false &&
+    strpos($page['src_location'], 'themes/') === false &&
+    strpos($page['src_location'], 'plugins/') === false
+) {
     try {
         $query = '
 SELECT *
   FROM ' . $prefixTable . 'images
   WHERE path=\'' . addslashes($page['src_location']) . '\'
 ;';
+        $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
-        if (($row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query)))) {
+        if ($row) {
             if (isset($row['width'])) {
                 $page['original_size'] = [$row['width'], $row['height']];
             }
+
             $page['coi'] = $row['coi'];
 
             if (! isset($row['rotation'])) {
@@ -127,22 +144,29 @@ SELECT *
                 $page['rotation_angle'] = pwg_image::get_rotation_angle_from_code($row['rotation']);
             }
         }
+
         if (! $row) {
             functions::ierror('Db file path not found', 404);
         }
+
     } catch (Exception $e) {
         $logger->error($e->getMessage());
     }
 } else {
     $page['rotation_angle'] = 0;
 }
+
 functions_mysqli::pwg_db_close();
 
-if (! functions::try_switch_source($params, $src_mtime) && $params->type == derivative_std_params::IMG_CUSTOM) {
+if (! functions::try_switch_source($params, $src_mtime) &&
+    $params->type == derivative_std_params::IMG_CUSTOM
+) {
     $sharpen = 0;
+
     foreach (ImageStdParams::get_defined_type_map() as $std_params) {
         $sharpen += $std_params->sharpen;
     }
+
     $params->sharpen = round($sharpen / count(ImageStdParams::get_defined_type_map()));
 }
 
@@ -168,6 +192,7 @@ if ($page['rotation_angle'] != 0) {
 // Crop & scale
 $o_size = $d_size = [$image->get_width(), $image->get_height()];
 $params->sizing->compute($o_size, $page['coi'], $crop_rect, $scaled_size);
+
 if ($crop_rect) {
     $changes++;
     $image->crop($crop_rect->width(), $crop_rect->height(), $crop_rect->l, $crop_rect->t);
@@ -190,17 +215,25 @@ if ($params->will_watermark($d_size)) {
     $wm = ImageStdParams::get_watermark();
     $wm_image = new pwg_image(PHPWG_ROOT_PATH . $wm->file);
     $wm_size = [$wm_image->get_width(), $wm_image->get_height()];
-    if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
+
+    if ($d_size[0] < $wm_size[0] or
+        $d_size[1] < $wm_size[1]
+    ) {
         $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);
         $wm_scaling_params->compute($wm_size, null, $tmp, $wm_scaled_size);
         $wm_size = $wm_scaled_size;
         $wm_image->resize($wm_scaled_size[0], $wm_scaled_size[1]);
     }
+
     $x = round(($wm->xpos / 100) * ($d_size[0] - $wm_size[0]));
     $y = round(($wm->ypos / 100) * ($d_size[1] - $wm_size[1]));
+
     if ($image->compose($wm_image, $x, $y, $wm->opacity)) {
         $changes++;
-        if ($wm->xrepeat || $wm->yrepeat) {
+
+        if ($wm->xrepeat ||
+            $wm->yrepeat
+        ) {
             $xpad = $wm_size[0] + max(30, round($wm_size[0] / 4));
             $ypad = $wm_size[1] + max(30, round($wm_size[1] / 4));
 
@@ -209,10 +242,13 @@ if ($params->will_watermark($d_size)) {
                     if (! $i && ! $j) {
                         continue;
                     }
+
                     $x2 = $x + $i * $xpad;
                     $y2 = $y + $j * $ypad;
+
                     if ($x2 >= 0 && $x2 + $wm_size[0] < $d_size[0] &&
-                        $y2 >= 0 && $y2 + $wm_size[1] < $d_size[1]) {
+                        $y2 >= 0 && $y2 + $wm_size[1] < $d_size[1]
+                    ) {
                         if (! $image->compose($wm_image, $x2, $y2, $wm->opacity)) {
                             break;
                         }
@@ -221,6 +257,7 @@ if ($params->will_watermark($d_size)) {
             }
         }
     }
+
     $wm_image->destroy();
     $timing['watermark'] = functions::time_step($step);
 }
@@ -231,7 +268,7 @@ if (! $changes) {
     functions::ierror($page['src_url'], 301);
 }
 
-if ($conf['derivatives_strip_metadata_threshold'] > $d_size[0] * $d_size[1]) {// strip metadata for small images
+if ($conf['derivatives_strip_metadata_threshold'] > $d_size[0] * $d_size[1]) { // strip metadata for small images
     $image->strip();
 }
 

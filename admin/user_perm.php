@@ -33,7 +33,9 @@ if (! empty($_POST)) {
 // |                            variables init                             |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['user_id']) and is_numeric($_GET['user_id'])) {
+if (isset($_GET['user_id']) and
+    is_numeric($_GET['user_id'])
+) {
     $page['user'] = $_GET['user_id'];
 } else {
     die('user_id URL parameter is missing');
@@ -43,9 +45,10 @@ if (isset($_GET['user_id']) and is_numeric($_GET['user_id'])) {
 // |                                updates                                |
 // +-----------------------------------------------------------------------+
 
-if (isset($_POST['falsify'])
-    and isset($_POST['cat_true'])
-    and count($_POST['cat_true']) > 0) {
+if (isset($_POST['falsify']) and
+    isset($_POST['cat_true']) and
+    count($_POST['cat_true']) > 0
+) {
     // if you forbid access to a category, all sub-categories become
     // automatically forbidden
     $subcats = functions_category::get_subcat_ids($_POST['cat_true']);
@@ -55,9 +58,10 @@ DELETE FROM ' . USER_ACCESS_TABLE . '
     AND cat_id IN (' . implode(',', $subcats) . ')
 ;';
     functions_mysqli::pwg_query($query);
-} elseif (isset($_POST['truthify'])
-    and isset($_POST['cat_false'])
-    and count($_POST['cat_false']) > 0) {
+} elseif (isset($_POST['truthify']) and
+          isset($_POST['cat_false']) and
+          count($_POST['cat_false']) > 0
+) {
     functions_admin::add_permission_on_category($_POST['cat_false'], $page['user']);
 }
 
@@ -105,10 +109,12 @@ $result = functions_mysqli::pwg_query($query);
 
 if (functions_mysqli::pwg_db_num_rows($result) > 0) {
     $cats = [];
+
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $cats[] = $row;
         $group_authorized[] = $row['cat_id'];
     }
+
     usort($cats, functions_category::global_rank_compare(...));
 
     foreach ($cats as $category) {
@@ -125,16 +131,19 @@ SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_ACCESS_TABLE . ' ON cat_id = id
   WHERE status = \'private\'
     AND user_id = ' . $page['user'];
+
 if (count($group_authorized) > 0) {
     $query_true .= '
     AND cat_id NOT IN (' . implode(',', $group_authorized) . ')';
 }
+
 $query_true .= '
 ;';
 functions_category::display_select_cat_wrapper($query_true, [], 'category_option_true');
 
 $result = functions_mysqli::pwg_query($query_true);
 $authorized_ids = [];
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $authorized_ids[] = $row['id'];
 }
@@ -143,14 +152,17 @@ $query_false = '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
   WHERE status = \'private\'';
+
 if (count($authorized_ids) > 0) {
     $query_false .= '
     AND id NOT IN (' . implode(',', $authorized_ids) . ')';
 }
+
 if (count($group_authorized) > 0) {
     $query_false .= '
     AND id NOT IN (' . implode(',', $group_authorized) . ')';
 }
+
 $query_false .= '
 ;';
 functions_category::display_select_cat_wrapper($query_false, [], 'category_option_false');

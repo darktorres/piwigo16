@@ -5,7 +5,9 @@ namespace Piwigo\plugins\GDThumb;
 use Piwigo\inc\functions;
 use Piwigo\inc\PluginMaintain;
 
-defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
+}
 
 class GDThumb_maintain extends PluginMaintain
 {
@@ -15,6 +17,7 @@ class GDThumb_maintain extends PluginMaintain
     {
         include(dirname(__FILE__) . '/config_default.php');
         global $conf;
+
         if (empty($conf['gdThumb'])) {
             functions::conf_update_param('gdThumb', $config_default, true);
         }
@@ -52,9 +55,13 @@ class GDThumb_maintain extends PluginMaintain
     {
         if (is_dir($path)) {
             $fh = opendir($path);
+
             while ($file = readdir($fh)) {
-                if ($file != '.' and $file != '..') {
+                if ($file != '.' and
+                    $file != '..'
+                ) {
                     $pathfile = $path . '/' . $file;
+
                     if (is_dir($pathfile)) {
                         self::gtdeltree($pathfile);
                     } else {
@@ -62,6 +69,7 @@ class GDThumb_maintain extends PluginMaintain
                     }
                 }
             }
+
             closedir($fh);
             return @rmdir($path);
         }

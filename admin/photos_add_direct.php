@@ -35,12 +35,14 @@ DELETE FROM ' . CADDIE_TABLE . '
     functions_mysqli::pwg_query($query);
 
     $inserts = [];
+
     foreach (explode(',', $_GET['batch']) as $image_id) {
         $inserts[] = [
             'user_id' => $user['id'],
             'element_id' => $image_id,
         ];
     }
+
     functions_mysqli::mass_inserts(
         CADDIE_TABLE,
         array_keys($inserts[0]),
@@ -74,7 +76,10 @@ SELECT COUNT(*)
 
     $uagent_obj = new uagent_info();
     // To see the mobile app promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
-    $template->assign('PROMOTE_MOBILE_APPS', (! $uagent_obj->DetectIos() and strtotime($register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30));
+    $template->assign('PROMOTE_MOBILE_APPS', ! $uagent_obj->DetectIos() and
+                                                             strtotime($register_date) < strtotime('2 weeks ago') and
+                                                             $nb_cats >= 3 and
+                                                             $nb_images >= 30);
 } else {
     $template->assign('PROMOTE_MOBILE_APPS', false);
 }
@@ -91,10 +96,13 @@ $have_formats_original = false;
 $formats_original_info = [];
 
 // If URL parameter isn't empty
-if ($display_formats && $_GET['formats']) {
+if ($display_formats &&
+    $_GET['formats']
+) {
     functions::check_input_parameter('formats', $_GET, false, PATTERN_ID, false);
 
     $formats_original_info = functions_admin::get_image_infos($_GET['formats']);
+
     if ($formats_original_info) {
         $src_image = new SrcImage($formats_original_info);
 

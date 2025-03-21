@@ -32,12 +32,10 @@ $register_activity = true;
 
 switch ($action) {
     case 'phpinfo':
-
         phpinfo();
         exit();
 
     case 'lock_gallery':
-
         functions::conf_update_param('gallery_locked', 'true');
         functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', [
             'maintenance_action' => $action,
@@ -46,7 +44,6 @@ switch ($action) {
         break;
 
     case 'unlock_gallery':
-
         functions::conf_update_param('gallery_locked', 'false');
         $_SESSION['page_infos'] = [functions::l10n('Gallery unlocked')];
         functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', [
@@ -56,7 +53,6 @@ switch ($action) {
         break;
 
     case 'categories':
-
         functions_admin::images_integrity();
         functions_admin::categories_integrity();
         functions_admin::update_uppercats();
@@ -67,7 +63,6 @@ switch ($action) {
         break;
 
     case 'images':
-
         functions_admin::images_integrity();
         functions_admin::update_path();
         functions_rate::update_rating_score();
@@ -76,19 +71,16 @@ switch ($action) {
         break;
 
     case 'delete_orphan_tags':
-
         functions_admin::delete_orphan_tags();
         $page['infos'][] = sprintf('%s : %s', functions::l10n('Delete orphan tags'), functions::l10n('action successfully performed.'));
         break;
 
     case 'user_cache':
-
         functions_admin::invalidate_user_cache();
         $page['infos'][] = sprintf('%s : %s', functions::l10n('Purge user cache'), functions::l10n('action successfully performed.'));
         break;
 
     case 'history_detail':
-
         $query = '
 DELETE
   FROM ' . HISTORY_TABLE . '
@@ -98,7 +90,6 @@ DELETE
         break;
 
     case 'history_summary':
-
         $query = '
 DELETE
   FROM ' . HISTORY_SUMMARY_TABLE . '
@@ -108,7 +99,6 @@ DELETE
         break;
 
     case 'sessions':
-
         functions_session::pwg_session_gc();
 
         // delete all sessions associated to invalid user ids (it should never happen)
@@ -145,11 +135,11 @@ DELETE
 ;';
             functions_mysqli::pwg_query($query);
         }
+
         $page['infos'][] = sprintf('%s : %s', functions::l10n('Purge sessions'), functions::l10n('action successfully performed.'));
         break;
 
     case 'feeds':
-
         $query = '
 DELETE
   FROM ' . USER_FEED_TABLE . '
@@ -160,19 +150,16 @@ DELETE
         break;
 
     case 'database':
-
         functions_mysqli::do_maintenance_all_tables();
         break;
 
     case 'c13y':
-
         $c13y = new check_integrity();
         $c13y->maintenance();
         $page['infos'][] = sprintf('%s : %s', functions::l10n('Reinitialize check integrity'), functions::l10n('action successfully performed.'));
         break;
 
     case 'search':
-
         $query = '
 DELETE
   FROM ' . SEARCH_TABLE . '
@@ -182,7 +169,6 @@ DELETE
         break;
 
     case 'compiled-templates':
-
         $template->delete_compiled_templates();
         FileCombiner::clear_combined_files();
         $persistent_cache->purge(true);
@@ -190,8 +176,8 @@ DELETE
         break;
 
     case 'derivatives':
-
         $types_str = $_GET['type'];
+
         if ($types_str == 'all') {
             functions_admin::clear_derivative_cache($_GET['type']);
         } else {
@@ -200,11 +186,11 @@ DELETE
                 functions_admin::clear_derivative_cache($type_to_clear);
             }
         }
+
         $page['infos'][] = functions::l10n('action successfully performed.');
         break;
 
     case 'check_upgrade':
-
         if (! functions_admin::fetchRemote(PHPWG_URL . '/download/latest_version', $result)) {
             $page['errors'][] = functions::l10n('Unable to check for upgrade.');
         } else {
@@ -221,8 +207,7 @@ DELETE
                 // because integer are limited to 4,294,967,296 we need to split BSF
                 // versions in date.time
                 foreach ($versions as $key => $value) {
-                    $versions[$key] =
-                      preg_replace('/BSF_(\d{8})(\d{4})/', '$1.$2', $value);
+                    $versions[$key] = preg_replace('/BSF_(\d{8})(\d{4})/', '$1.$2', $value);
                 }
             } else {
                 $versions['latest'] = trim($lines[1]);
@@ -233,7 +218,7 @@ DELETE
             }
             // concatenation needed to avoid automatic transformation by release
             // script generator
-            elseif ('%' . 'PWGVERSION' . '%' == $versions['current']) {
+            elseif ($versions['current'] == '%PWGVERSION%') {
                 $page['infos'][] = functions::l10n('You are running on development sources, no check possible.');
             } elseif (version_compare($versions['current'], $versions['latest']) < 0) {
                 $page['infos'][] = functions::l10n('A new version of Piwigo is available.');
@@ -241,11 +226,12 @@ DELETE
                 $page['infos'][] = functions::l10n('You are running the latest version of Piwigo.');
             }
         }
+
         $page['infos'][] = functions::l10n('action successfully performed.');
 
         // no break
-    default:
 
+    default:
         $register_activity = false;
         break;
 
@@ -272,9 +258,11 @@ if (! functions_user::is_webmaster()) {
 }
 
 $purge_urls[functions::l10n('All')] = 'all';
+
 foreach (ImageStdParams::get_defined_type_map() as $params) {
     $purge_urls[functions::l10n($params->type)] = $params->type;
 }
+
 $purge_urls[functions::l10n(derivative_std_params::IMG_CUSTOM)] = derivative_std_params::IMG_CUSTOM;
 
 $php_current_timestamp = date('Y-m-d H:i:s');
@@ -321,18 +309,22 @@ switch (pwg_image::get_library()) {
         $library = 'ImageMagick';
         $img = new Imagick();
         $version = $img->getVersion();
+
         if (preg_match('/ImageMagick \d+\.\d+\.\d+-?\d*/', $version['versionString'], $match)) {
             $library = $match[0];
         }
+
         $template->assign('GRAPHICS_LIBRARY', $library);
         break;
 
     case 'ext_imagick':
         $library = 'External ImageMagick';
         exec($conf['ext_imagick_dir'] . 'convert -version', $returnarray);
+
         if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
             $library .= ' ' . $match[1];
         }
+
         $template->assign('GRAPHICS_LIBRARY', $library);
         break;
 

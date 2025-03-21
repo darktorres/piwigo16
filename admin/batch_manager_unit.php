@@ -77,9 +77,11 @@ SELECT id, date_creation
 
         // tags management
         $tag_ids = [];
+
         if (! empty($_POST['tags-' . $row['id']])) {
             $tag_ids = functions_admin::get_tag_ids($_POST['tags-' . $row['id']]);
         }
+
         functions_admin::set_tags($tag_ids, $row['id']);
     }
 
@@ -145,13 +147,16 @@ if (count($page['cat_elements_id']) > 0) {
     $element_ids = [];
 
     $is_category = false;
-    if (isset($_SESSION['bulk_manager_filter']['category'])
-        and ! isset($_SESSION['bulk_manager_filter']['category_recursive'])) {
+
+    if (isset($_SESSION['bulk_manager_filter']['category']) and
+        ! isset($_SESSION['bulk_manager_filter']['category_recursive'])
+    ) {
         $is_category = true;
     }
 
-    if (isset($_SESSION['bulk_manager_filter']['prefilter'])
-        and $_SESSION['bulk_manager_filter']['prefilter'] == 'duplicates') {
+    if (isset($_SESSION['bulk_manager_filter']['prefilter']) and
+        $_SESSION['bulk_manager_filter']['prefilter'] == 'duplicates'
+    ) {
         $conf['order_by'] = ' ORDER BY file, id';
     }
 
@@ -163,6 +168,7 @@ SELECT *
         $category_info = functions_category::get_cat_info($_SESSION['bulk_manager_filter']['category']);
 
         $conf['order_by'] = $conf['order_by_inside_category'];
+
         if (! empty($category_info['image_order'])) {
             $conf['order_by'] = ' ORDER BY ' . $category_info['image_order'];
         }
@@ -201,9 +207,11 @@ SELECT
         $tag_selection = functions_admin::get_taglist($query);
 
         $legend = functions_html::render_element_name($row);
+
         if ($legend != functions::get_name_from_file($row['file'])) {
             $legend .= ' (' . $row['file'] . ')';
         }
+
         $extTab = explode('.', $row['path']);
 
         $template->append(

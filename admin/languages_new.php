@@ -34,6 +34,7 @@ $languages->get_db_languages();
 // +-----------------------------------------------------------------------+
 
 $languages_dir = PHPWG_ROOT_PATH . 'language';
+
 if (! is_writable($languages_dir)) {
     $page['errors'][] = functions::l10n('Add write access to the "%s" directory', 'language');
 }
@@ -107,6 +108,7 @@ if ($languages->get_server_languages(true)) {
 } else {
     $page['errors'][] = functions::l10n('Can\'t connect to server.');
 }
+
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Languages'));
 $template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
 

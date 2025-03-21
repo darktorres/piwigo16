@@ -26,7 +26,9 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 functions_plugins::trigger_notify('loc_begin_cat_list');
 
-if (! empty($_POST) or isset($_GET['delete'])) {
+if (! empty($_POST) or
+    isset($_GET['delete'])
+) {
     functions::check_pwg_token();
 }
 
@@ -63,11 +65,15 @@ include(PHPWG_ROOT_PATH . 'admin/inc/albums_tab.php');
 // |                    virtual categories management                      |
 // +-----------------------------------------------------------------------+
 // request to delete a virtual category
-if (isset($_GET['delete']) and is_numeric($_GET['delete'])) {
+if (isset($_GET['delete']) and
+    is_numeric($_GET['delete'])
+) {
     $photo_deletion_mode = 'no_delete';
+
     if (isset($_GET['photo_deletion_mode'])) {
         $photo_deletion_mode = $_GET['photo_deletion_mode'];
     }
+
     functions_admin::delete_categories([$_GET['delete']], $photo_deletion_mode);
 
     $_SESSION['page_infos'] = [functions::l10n('Virtual album deleted')];
@@ -75,9 +81,11 @@ if (isset($_GET['delete']) and is_numeric($_GET['delete'])) {
     functions_admin::invalidate_user_cache();
 
     $redirect_url = functions_url::get_root_url() . 'admin.php?page=cat_list';
+
     if (isset($_GET['parent_id'])) {
         $redirect_url .= '&parent_id=' . $_GET['parent_id'];
     }
+
     functions::redirect($redirect_url);
 }
 // request to add a virtual category
@@ -88,6 +96,7 @@ elseif (isset($_POST['submitAdd'])) {
     );
 
     functions_admin::invalidate_user_cache();
+
     if (isset($output_create['error'])) {
         $page['errors'][] = $output_create['error'];
     } else {
@@ -95,6 +104,7 @@ elseif (isset($_POST['submitAdd'])) {
         $page['infos'][] = $output_create['info'] . ' <a class="icon-pencil" href="' . $edit_url . '">' . functions::l10n('Edit album') . '</a>';
     }
 }
+
 // +-----------------------------------------------------------------------+
 // |                            Navigation path                            |
 // +-----------------------------------------------------------------------+
@@ -107,15 +117,18 @@ if (isset($_GET['parent_id'])) {
         $base_url . '&amp;parent_id='
     );
 }
+
 // +-----------------------------------------------------------------------+
 // |                       template initialization                         |
 // +-----------------------------------------------------------------------+
 $template->set_filename('categories', 'cat_list.tpl');
 
 $form_action = PHPWG_ROOT_PATH . 'admin.php?page=cat_list';
+
 if (isset($_GET['parent_id'])) {
     $form_action .= '&amp;parent_id=' . $_GET['parent_id'];
 }
+
 $sort_orders_checked = array_keys($sort_orders);
 
 $template->assign([
@@ -136,6 +149,7 @@ $categories = [];
 $query = '
 SELECT id, name, permalink, dir, `rank`, status
   FROM ' . CATEGORIES_TABLE;
+
 if (! isset($_GET['parent_id'])) {
     $query .= '
   WHERE id_uppercat IS NULL';
@@ -143,6 +157,7 @@ if (! isset($_GET['parent_id'])) {
     $query .= '
   WHERE id_uppercat = ' . $_GET['parent_id'];
 }
+
 $query .= '
   ORDER BY `rank` ASC
 ;';
@@ -150,6 +165,7 @@ $categories = functions::hash_from_query($query, 'id');
 
 // get the categories containing images directly
 $categories_with_images = [];
+
 if (count($categories)) {
     $query = '
 SELECT
@@ -178,8 +194,10 @@ SELECT
     }
 
     $nb_sub_photos = [];
+
     foreach ($subcats_of as $cat_id => $subcat_ids) {
         $nb_photos = 0;
+
         foreach ($subcat_ids as $id) {
             if (isset($nb_photos_in[$id])) {
                 $nb_photos += $nb_photos_in[$id];
@@ -204,6 +222,7 @@ foreach ($categories as $category) {
     $cat_list_url = $base_url . 'cat_list';
 
     $self_url = $cat_list_url;
+
     if (isset($_GET['parent_id'])) {
         $self_url .= '&amp;parent_id=' . $_GET['parent_id'];
     }

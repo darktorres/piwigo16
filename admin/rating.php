@@ -35,33 +35,45 @@ $tabsheet->assign();
 // +-----------------------------------------------------------------------+
 // |                            initialization                             |
 // +-----------------------------------------------------------------------+
-if (isset($_GET['start']) and is_numeric($_GET['start'])) {
+if (isset($_GET['start']) and
+    is_numeric($_GET['start'])
+) {
     $start = $_GET['start'];
 } else {
     $start = 0;
 }
 
 $elements_per_page = 10;
-if (isset($_GET['display']) and is_numeric($_GET['display'])) {
+
+if (isset($_GET['display']) and
+    is_numeric($_GET['display'])
+) {
     $elements_per_page = $_GET['display'];
 }
 
 $order_by_index = 0;
-if (isset($_GET['order_by']) and is_numeric($_GET['order_by'])) {
+
+if (isset($_GET['order_by']) and
+    is_numeric($_GET['order_by'])
+) {
     $order_by_index = $_GET['order_by'];
 }
 
 $page['user_filter'] = '';
+
 if (isset($_GET['users'])) {
     if ($_GET['users'] == 'user') {
-        $page['user_filter'] = ' AND r.user_id <> ' . $conf['guest_id'];
+        $page['user_filter'] = ' AND r.user_id != ' . $conf['guest_id'];
     } elseif ($_GET['users'] == 'guest') {
         $page['user_filter'] = ' AND r.user_id = ' . $conf['guest_id'];
     }
 }
 
 $page['cat_filter'] = '';
-if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
+
+if (isset($_GET['cat']) and
+    is_numeric($_GET['cat'])
+) {
     $cat_ids = functions_category::get_subcat_ids([$_GET['cat']]);
 
     if (count($cat_ids) > 0) {
@@ -75,6 +87,7 @@ SELECT ' . $conf['user_fields']['username'] . ' as username, ' . $conf['user_fie
   FROM ' . USERS_TABLE . '
 ;';
 $result = functions_mysqli::pwg_query($query);
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $users[$row['id']] = stripslashes($row['username']);
 }
@@ -140,6 +153,7 @@ for ($i = 0; $i < count($available_order_by); $i++) {
         $available_order_by[$i][0]
     );
 }
+
 $template->assign('order_by_options_selected', [$order_by_index]);
 
 $user_options = [
@@ -184,11 +198,13 @@ $query .= '
 
 $images = [];
 $result = functions_mysqli::pwg_query($query);
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $images[] = $row;
 }
 
 $template->assign('images', []);
+
 foreach ($images as $image) {
     $thumbnail_src = DerivativeImage::thumb_url($image);
 
@@ -221,6 +237,7 @@ ORDER BY date DESC;';
         } else {
             $user_rate = '? ' . $row['user_id'];
         }
+
         if (strlen($row['anonymous_id']) > 0) {
             $user_rate .= '(' . $row['anonymous_id'] . ')';
         }
@@ -228,6 +245,7 @@ ORDER BY date DESC;';
         $row['USER'] = $user_rate;
         $tpl_image['rates'][] = $row;
     }
+
     $template->append('images', $tpl_image);
 }
 

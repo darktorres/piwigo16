@@ -38,7 +38,9 @@ $new_versions = $updates->get_piwigo_new_versions();
 // |                                Step 0                                 |
 // +-----------------------------------------------------------------------+
 if ($step == 0) {
-    if (isset($new_versions['minor']) and isset($new_versions['major'])) {
+    if (isset($new_versions['minor']) and
+        isset($new_versions['major'])
+    ) {
         $step = 1;
         $upgrade_to = $new_versions['major'];
     } elseif (isset($new_versions['minor'])) {
@@ -63,8 +65,12 @@ if ($step == 1) {
 // +-----------------------------------------------------------------------+
 // |                                Step 2                                 |
 // +-----------------------------------------------------------------------+
-if ($step == 2 and functions_user::is_webmaster()) {
-    if (isset($_POST['submit']) and isset($_POST['upgrade_to'])) {
+if ($step == 2 and
+    functions_user::is_webmaster()
+) {
+    if (isset($_POST['submit']) and
+        isset($_POST['upgrade_to'])
+    ) {
         updates::upgrade_to($_POST['upgrade_to'], $step);
     }
 }
@@ -72,8 +78,12 @@ if ($step == 2 and functions_user::is_webmaster()) {
 // +-----------------------------------------------------------------------+
 // |                                Step 3                                 |
 // +-----------------------------------------------------------------------+
-if ($step == 3 and functions_user::is_webmaster()) {
-    if (isset($_POST['submit']) and isset($_POST['upgrade_to'])) {
+if ($step == 3 and
+    functions_user::is_webmaster()
+) {
+    if (isset($_POST['submit']) and
+        isset($_POST['upgrade_to'])
+    ) {
         updates::upgrade_to($_POST['upgrade_to'], $step);
     }
 
@@ -86,11 +96,15 @@ if ($step == 3 and functions_user::is_webmaster()) {
 // | Check for requirements                                                |
 // +-----------------------------------------------------------------------+
 
-if (isset($new_versions['minor_php']) and version_compare(PHP_VERSION, $new_versions['minor_php'], '<')) {
+if (isset($new_versions['minor_php']) and
+    version_compare(PHP_VERSION, $new_versions['minor_php'], '<')
+) {
     $template->assign('MINOR_RELEASE_PHP_REQUIRED', $new_versions['minor_php']);
 }
 
-if (isset($new_versions['major_php']) and version_compare(PHP_VERSION, $new_versions['major_php'], '<')) {
+if (isset($new_versions['major_php']) and
+    version_compare(PHP_VERSION, $new_versions['major_php'], '<')
+) {
     $template->assign('MAJOR_RELEASE_PHP_REQUIRED', $new_versions['major_php']);
 }
 

@@ -10,10 +10,8 @@ class smartpocket_maintain extends ThemeMaintain
     private $installed = false;
 
     private $default_conf = [
-        'loop' => true,
-        //true - false
-        'autohide' => 5000,
-        //5000 - 0
+        'loop' => true, //true - false
+        'autohide' => 5000, //5000 - 0
     ];
 
     public function activate($theme_version, &$errors = [])
@@ -32,6 +30,7 @@ class smartpocket_maintain extends ThemeMaintain
 
             functions::conf_update_param('smartpocket', $config, true);
         }
+
         $this->installed = true;
     }
 

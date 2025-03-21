@@ -31,6 +31,7 @@ functions::check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
 if (isset($_POST['submit'])) {
     $query = 'UPDATE ' . IMAGES_TABLE;
+
     if (strlen($_POST['l']) == 0) {
         $query .= ' SET coi=NULL';
     } else {
@@ -40,6 +41,7 @@ if (isset($_POST['submit'])) {
           . derivative_params::fraction_to_char($_POST['b']);
         $query .= ' SET coi=\'' . $coi . '\'';
     }
+
     $query .= ' WHERE id=' . $_GET['image_id'];
     functions_mysqli::pwg_query($query);
 }
@@ -53,9 +55,12 @@ if (isset($_POST['submit'])) {
             functions_admin::delete_element_derivatives($row, $params->type);
         }
     }
+
     functions_admin::delete_element_derivatives($row, derivative_std_params::IMG_CUSTOM);
     $uid = '&b=' . time();
-    $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
+    $conf['question_mark_in_urls'] = true;
+    $conf['php_extension_in_urls'] = true;
+
     if ($conf['derivative_url_style'] == 1) {
         $conf['derivative_url_style'] = 0; //auto
     }

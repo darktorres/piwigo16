@@ -50,8 +50,7 @@ class PwgServer
         if ($this->_responseEncoder === null) {
             functions_html::set_status_header(400);
             @header('Content-Type: text/plain');
-            echo 'Cannot process your request. Unknown response format.
-Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_responseFormat . "\n";
+            echo "Cannot process your request. Unknown response format.\nRequest format: " . @$this->_requestFormat . ' Response format: ' . @$this->_responseFormat . "\n";
             var_export($this);
             die(0);
         }
@@ -128,12 +127,15 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
                 if (! isset($data['flags'])) {
                     $data['flags'] = 0;
                 }
+
                 if (array_key_exists('default', $data)) {
                     $data['flags'] |= WS_PARAM_OPTIONAL;
                 }
+
                 if (! isset($data['type'])) {
                     $data['type'] = 0;
                 }
+
                 $params[$param] = $data;
             }
         }
@@ -172,7 +174,8 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
     public static function isPost()
     {
-        return isset($HTTP_RAW_POST_DATA) or ! empty($_POST);
+        return isset($HTTP_RAW_POST_DATA) or
+               ! empty($_POST);
     }
 
     public static function makeArrayParam(&$param)
@@ -190,6 +193,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     {
         $opts = [];
         $msg = '';
+
         if (self::hasFlag($type, WS_TYPE_POSITIVE | WS_TYPE_NOTNULL)) {
             $opts['options']['min_range'] = 1;
             $msg = ' positive and not null';
@@ -201,42 +205,55 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         if (is_array($param)) {
             if (self::hasFlag($type, WS_TYPE_BOOL)) {
                 foreach ($param as &$value) {
-                    if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
+                    $value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+                    if ($value === null) {
                         return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must only contain booleans');
                     }
                 }
+
                 unset($value);
             } elseif (self::hasFlag($type, WS_TYPE_INT)) {
                 foreach ($param as &$value) {
-                    if (($value = filter_var($value, FILTER_VALIDATE_INT, $opts)) === false) {
+                    $value = filter_var($value, FILTER_VALIDATE_INT, $opts);
+
+                    if ($value === false) {
                         return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must only contain' . $msg . ' integers');
                     }
                 }
+
                 unset($value);
             } elseif (self::hasFlag($type, WS_TYPE_FLOAT)) {
                 foreach ($param as &$value) {
-                    if (
-                        ($value = filter_var($value, FILTER_VALIDATE_FLOAT)) === false
-                        or (isset($opts['options']['min_range']) and $value < $opts['options']['min_range'])
+                    $value = filter_var($value, FILTER_VALIDATE_FLOAT);
+
+                    if ($value === false or
+                       (isset($opts['options']['min_range']) and $value < $opts['options']['min_range'])
                     ) {
                         return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must only contain' . $msg . ' floats');
                     }
                 }
+
                 unset($value);
             }
         } elseif ($param !== '') {
             if (self::hasFlag($type, WS_TYPE_BOOL)) {
-                if (($param = filter_var($param, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
+                $param = filter_var($param, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+                if ($param === null) {
                     return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must be a boolean');
                 }
             } elseif (self::hasFlag($type, WS_TYPE_INT)) {
-                if (($param = filter_var($param, FILTER_VALIDATE_INT, $opts)) === false) {
+                $param = filter_var($param, FILTER_VALIDATE_INT, $opts);
+
+                if ($param === false) {
                     return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must be an' . $msg . ' integer');
                 }
             } elseif (self::hasFlag($type, WS_TYPE_FLOAT)) {
-                if (
-                    ($param = filter_var($param, FILTER_VALIDATE_FLOAT)) === false
-                    or (isset($opts['options']['min_range']) and $param < $opts['options']['min_range'])
+                $param = filter_var($param, FILTER_VALIDATE_FLOAT);
+
+                if ($param === false or
+                   (isset($opts['options']['min_range']) and $param < $opts['options']['min_range'])
                 ) {
                     return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must be a' . $msg . ' float');
                 }
@@ -265,11 +282,17 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             return new PwgError(WS_ERR_INVALID_METHOD, 'Method name is not valid');
         }
 
-        if (isset($method['options']['post_only']) and $method['options']['post_only'] and ! self::isPost()) {
+        if (isset($method['options']['post_only']) and
+            $method['options']['post_only'] and
+            ! self::isPost()
+        ) {
             return new PwgError(405, 'This method requires HTTP POST');
         }
 
-        if (isset($method['options']['admin_only']) and $method['options']['admin_only'] and ! functions_user::is_admin()) {
+        if (isset($method['options']['admin_only']) and
+            $method['options']['admin_only'] and
+            ! functions_user::is_admin()
+        ) {
             return new PwgError(401, 'Access denied');
         }
 
@@ -286,20 +309,25 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
                     $missing_params[] = $name;
                 } elseif (array_key_exists('default', $options)) {
                     $params[$name] = $options['default'];
+
                     if (self::hasFlag($flags, WS_PARAM_FORCE_ARRAY)) {
                         self::makeArrayParam($params[$name]);
                     }
                 }
             }
             // parameter provided but empty
-            elseif ($params[$name] === '' and ! self::hasFlag($flags, WS_PARAM_OPTIONAL)) {
+            elseif ($params[$name] === '' and
+                    ! self::hasFlag($flags, WS_PARAM_OPTIONAL)
+            ) {
                 $missing_params[] = $name;
             }
             // parameter provided - do some basic checks
             else {
                 $the_param = $params[$name];
 
-                if (is_array($the_param) and ! self::hasFlag($flags, WS_PARAM_ACCEPT_ARRAY)) {
+                if (is_array($the_param) and
+                    ! self::hasFlag($flags, WS_PARAM_ACCEPT_ARRAY)
+                ) {
                     return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must be scalar');
                 }
 
@@ -308,12 +336,16 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
                 }
 
                 if ($options['type'] > 0) {
-                    if (($ret = self::checkType($the_param, $options['type'], $name)) !== null) {
+                    $ret = self::checkType($the_param, $options['type'], $name);
+
+                    if ($ret !== null) {
                         return $ret;
                     }
                 }
 
-                if (isset($options['maxValue']) and $the_param > $options['maxValue']) {
+                if (isset($options['maxValue']) and
+                    $the_param > $options['maxValue']
+                ) {
                     $the_param = $options['maxValue'];
                 }
 
@@ -328,6 +360,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         $result = functions_plugins::trigger_change('ws_invoke_allowed', true, $methodName, $params);
 
         $is_error = false;
+
         if ($result instanceof PwgError) {
             $is_error = true;
         }
@@ -336,6 +369,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             if (! empty($method['include'])) {
                 include_once($method['include']);
             }
+
             $result = call_user_func_array($method['callback'], [$params, &$this]);
         }
 
@@ -385,9 +419,11 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             if (isset($options['default'])) {
                 $param_data['defaultValue'] = $options['default'];
             }
+
             if (isset($options['maxValue'])) {
                 $param_data['maxValue'] = $options['maxValue'];
             }
+
             if (isset($options['info'])) {
                 $param_data['info'] = $options['info'];
             }
@@ -399,15 +435,18 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             } elseif (self::hasFlag($options['type'], WS_TYPE_FLOAT)) {
                 $param_data['type'] = 'float';
             }
+
             if (self::hasFlag($options['type'], WS_TYPE_POSITIVE)) {
                 $param_data['type'] .= ' positive';
             }
+
             if (self::hasFlag($options['type'], WS_TYPE_NOTNULL)) {
                 $param_data['type'] .= ' notnull';
             }
 
             $res['params'][] = $param_data;
         }
+
         return $res;
     }
 }

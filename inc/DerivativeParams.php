@@ -98,9 +98,11 @@ final class DerivativeParams
     public function is_identity($in_size)
     {
         if ($in_size[0] > $this->sizing->ideal_size[0] or
-            $in_size[1] > $this->sizing->ideal_size[1]) {
+            $in_size[1] > $this->sizing->ideal_size[1]
+        ) {
             return false;
         }
+
         return true;
     }
 
@@ -111,9 +113,10 @@ final class DerivativeParams
     {
         if ($this->use_watermark) {
             $min_size = ImageStdParams::get_watermark()->min_size;
-            return $min_size[0] <= $out_size[0]
-              || $min_size[1] <= $out_size[1];
+            return $min_size[0] <= $out_size[0] ||
+                   $min_size[1] <= $out_size[1];
         }
+
         return false;
     }
 }

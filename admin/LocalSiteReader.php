@@ -23,9 +23,11 @@ class LocalSiteReader
     {
         $this->site_url = $url;
         global $conf;
+
         if (! isset($conf['flip_file_ext'])) {
             $conf['flip_file_ext'] = array_flip($conf['file_ext']);
         }
+
         if (! isset($conf['flip_picture_ext'])) {
             $conf['flip_picture_ext'] = array_flip($conf['picture_ext']);
         }
@@ -71,9 +73,14 @@ class LocalSiteReader
 
         $subdirs = [];
         $fs = [];
-        if (is_dir($path) && $contents = opendir($path)) {
+
+        if (is_dir($path) &&
+            $contents = opendir($path)
+        ) {
             while (($node = readdir($contents)) !== false) {
-                if ($node == '.' or $node == '..') {
+                if ($node == '.' or
+                    $node == '..'
+                ) {
                     continue;
                 }
 
@@ -83,6 +90,7 @@ class LocalSiteReader
 
                     if (isset($conf['flip_file_ext'][$extension])) {
                         $representative_ext = null;
+
                         if (! isset($conf['flip_picture_ext'][$extension])) {
                             $representative_ext = $this->get_representative_ext($path, $filename_wo_ext);
                         }
@@ -95,22 +103,26 @@ class LocalSiteReader
                             $fs[$path . '/' . $node]['formats'] = $this->get_formats($path, $filename_wo_ext);
                         }
                     }
-                } elseif (is_dir($path . '/' . $node)
-                         and $node != 'pwg_high'
-                         and $node != 'pwg_representative'
-                         and $node != 'pwg_format'
-                         and $node != 'thumbnail') {
+                } elseif (is_dir($path . '/' . $node) and
+                          $node != 'pwg_high' and
+                          $node != 'pwg_representative' and
+                          $node != 'pwg_format' and
+                          $node != 'thumbnail'
+                ) {
                     $subdirs[] = $node;
                 }
             }
+
             closedir($contents);
 
             foreach ($subdirs as $subdir) {
                 $tmp_fs = $this->get_elements($path . '/' . $subdir);
                 $fs = array_merge($fs, $tmp_fs);
             }
+
             ksort($fs);
         }
+
         return $fs;
     }
 
@@ -130,6 +142,7 @@ class LocalSiteReader
         $extension = functions::get_extension($filename);
 
         $representative_ext = null;
+
         if (! isset($conf['flip_picture_ext'][$extension])) {
             $dirname = dirname($file);
             $filename_wo_ext = functions::get_filename_wo_extension($filename);
@@ -158,12 +171,15 @@ class LocalSiteReader
     {
         global $conf;
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';
+
         foreach ($conf['picture_ext'] as $ext) {
             $test = $base_test . $ext;
+
             if (is_file($test)) {
                 return $ext;
             }
         }
+
         return null;
     }
 

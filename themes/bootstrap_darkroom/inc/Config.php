@@ -207,16 +207,20 @@ class Config
         $loaded = json_decode($conf[self::CONF_PARAM], true);
 
         // Check for current version
-        if (isset($loaded[self::KEY_VERSION]) && $loaded[self::KEY_VERSION] == self::CONF_VERSION) {
+        if (isset($loaded[self::KEY_VERSION]) &&
+            $loaded[self::KEY_VERSION] == self::CONF_VERSION
+        ) {
             $this->config = $loaded;
             return;
         }
 
         // Invalid or old config, recreate
         $this->createDefaultConfig();
+
         if (is_array($loaded)) {
             $this->populateConfig($loaded);
         }
+
         $this->save();
     }
 
@@ -227,12 +231,15 @@ class Config
                 case self::TYPE_STRING:
                     $this->config[$key] = ! empty($value) ? $value : null;
                     break;
+
                 case self::TYPE_BOOL:
                     $this->config[$key] = $value ? true : false;
                     break;
+
                 case self::TYPE_NUM:
                     $this->config[$key] = is_numeric($value) ? $value : $this->defaults[$key];
                     break;
+
                 case self::TYPE_FILE:
                     $this->saveFile($key, $value);
                     break;
@@ -292,10 +299,14 @@ class Config
     {
         $file = $this->files[$key];
         $dir = dirname($file);
+
         if (! file_exists($dir)) {
             mkdir($dir, 0755, true);
         }
-        if (empty($content) && file_exists($file)) {
+
+        if (empty($content) &&
+            file_exists($file)
+        ) {
             unlink($file);
         } else {
             file_put_contents($file, $content);
@@ -305,9 +316,11 @@ class Config
     private function loadFile($key)
     {
         $file = $this->files[$key];
+
         if (file_exists($file)) {
             return file_get_contents($file);
         }
+
         return null;
 
     }

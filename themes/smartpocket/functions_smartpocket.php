@@ -41,9 +41,13 @@ class functions_smartpocket
     public static function mobile_link()
     {
         global $template, $conf;
+
         $config = functions::safe_unserialize($conf['smartpocket']);
         $template->assign('smartpocket', $config);
-        if (! empty($conf['mobile_theme']) && (functions::get_device() != 'desktop' || functions::mobile_theme())) {
+
+        if (! empty($conf['mobile_theme']) &&
+           (functions::get_device() != 'desktop' || functions::mobile_theme())
+        ) {
             $template->assign([
                 'TOGGLE_MOBILE_THEME_URL' => functions_url::add_url_params(htmlspecialchars($_SERVER['REQUEST_URI']), [
                     'mobile' => functions::mobile_theme() ? 'false' : 'true',
@@ -56,9 +60,14 @@ class functions_smartpocket
     {
         if (function_exists('initialize_menu')) {
             return false;
-        } # The current page has already the menu
+            # The current page has already the menu
+        }
+
         global $template, $page, $conf;
-        if (isset($page['body_id']) and $page['body_id'] == 'thePicturePage') {
+
+        if (isset($page['body_id']) and
+            $page['body_id'] == 'thePicturePage'
+        ) {
             $template->set_filenames([
                 'add_menu_on_public_pages' => dirname(__FILE__) . '/template/add_menu_on_public_pages.tpl',
             ]);

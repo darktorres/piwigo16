@@ -62,6 +62,7 @@ class Combinable
      */
     public function is_remote()
     {
-        return functions_url::url_is_remote($this->path) || strncmp($this->path, '//', 2) == 0;
+        return functions_url::url_is_remote($this->path) ||
+               strncmp($this->path, '//', 2) == 0;
     }
 }

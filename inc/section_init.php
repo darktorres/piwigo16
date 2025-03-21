@@ -44,13 +44,16 @@ $page['start'] = $page['startcat'] = 0;
 // some ISPs set PATH_INFO to empty string or to SCRIPT_FILENAME while in the
 // default apache implementation it is not set
 if ($conf['question_mark_in_urls'] == false and
-     isset($_SERVER['PATH_INFO']) and ! empty($_SERVER['PATH_INFO'])) {
+    isset($_SERVER['PATH_INFO']) and
+    ! empty($_SERVER['PATH_INFO'])
+) {
     $rewritten = $_SERVER['PATH_INFO'];
     $rewritten = str_replace('//', '/', $rewritten);
     $path_count = count(explode('/', $rewritten));
     $page['root_path'] = PHPWG_ROOT_PATH . str_repeat('../', $path_count - 1);
 } else {
     $rewritten = '';
+
     foreach (array_keys($_GET) as $keynum => $key) {
         $rewritten = $key;
         break;
@@ -82,20 +85,27 @@ $next_token = 0;
 if (functions::script_basename() == 'picture') {
     $token = $tokens[$next_token];
     $next_token++;
+
     if (is_numeric($token)) {
         $page['image_id'] = $token;
+
         if ($page['image_id'] == 0) {
             functions_html::bad_request('invalid picture identifier');
         }
     } else {
         preg_match('/^(\d+-)?(.*)?$/', $token, $matches);
-        if (isset($matches[1]) and is_numeric($matches[1] = rtrim($matches[1], '-'))) {
+
+        if (isset($matches[1]) and
+            is_numeric($matches[1] = rtrim($matches[1], '-'))
+        ) {
             $page['image_id'] = $matches[1];
+
             if (! empty($matches[2])) {
                 $page['image_file'] = $matches[2];
             }
         } else {
             $page['image_id'] = 0; // more work in picture.php
+
             if (! empty($matches[2])) {
                 $page['image_file'] = $matches[2];
             } else {
@@ -113,20 +123,27 @@ if (! isset($page['section'])) {
     switch (functions::script_basename()) {
         case 'picture':
             break;
-        case 'index':
 
+        case 'index':
             // No section defined, go to random url
-            if (! empty($conf['random_index_redirect']) and empty($tokens[$next_token])) {
+            if (! empty($conf['random_index_redirect']) and
+                empty($tokens[$next_token])
+            ) {
                 $random_index_redirect = [];
+
                 foreach ($conf['random_index_redirect'] as $random_url => $random_url_condition) {
-                    if (empty($random_url_condition) or eval($random_url_condition)) {
+                    if (empty($random_url_condition) or
+                        eval($random_url_condition)
+                    ) {
                         $random_index_redirect[] = $random_url;
                     }
                 }
+
                 if (! empty($random_index_redirect)) {
                     functions::redirect($random_index_redirect[mt_rand(0, count($random_index_redirect) - 1)]);
                 }
             }
+
             $page['is_homepage'] = true;
             break;
 
@@ -141,8 +158,11 @@ if (! isset($page['section'])) {
 $page = array_merge($page, functions_url::parse_well_known_params_url($tokens, $next_token));
 
 //access a picture only by id, file or id-file without given section
-if (functions::script_basename() == 'picture' and $page['section'] == 'categories' and
-      ! isset($page['category']) and ! isset($page['chronology_field'])) {
+if (functions::script_basename() == 'picture' and
+    $page['section'] == 'categories' and
+    ! isset($page['category']) and
+    ! isset($page['chronology_field'])
+) {
     $page['flat'] = true;
 }
 
@@ -153,7 +173,9 @@ $page['nb_image_page'] = $user['nb_image_page'];
 // if flat mode is active, we must consider the image set as a standard set
 // and not as a category set because we can't use the #image_category.rank :
 // displayed images are not directly linked to the displayed category
-if ($page['section'] == 'categories' and ! isset($page['flat'])) {
+if ($page['section'] == 'categories' and
+    ! isset($page['flat'])
+) {
     $conf['order_by'] = $conf['order_by_inside_category'];
 }
 
@@ -214,20 +236,19 @@ if ($page['section'] == 'categories') {
     // GET IMAGES LIST
     if (isset($page['combined_categories'])) {
         $cat_ids = [$page['category']['id']];
+
         foreach ($page['combined_categories'] as $category) {
             $cat_ids[] = $category['id'];
         }
 
         $page['items'] = functions_category::get_image_ids_for_categories($cat_ids);
-    } elseif (
-        $page['startcat'] == 0 and
-        (! isset($page['chronology_field'])) and // otherwise the calendar will requery all subitems
-        (
-            (isset($page['category'])) or
-            (isset($page['flat']))
-        )
+    } elseif ($page['startcat'] == 0 and
+             (! isset($page['chronology_field'])) and // otherwise the calendar will requery all subitems
+             (isset($page['category']) or isset($page['flat']))
     ) {
-        if (! empty($page['category']['image_order']) and ! isset($page['super_order_by'])) {
+        if (! empty($page['category']['image_order']) and
+            ! isset($page['super_order_by'])
+        ) {
             $conf['order_by'] = ' ORDER BY ' . $page['category']['image_order'];
         }
 
@@ -269,7 +290,9 @@ SELECT id
             $where_sql = 'category_id = ' . $page['category']['id'];
         }
 
-        if (! isset($cache_key) || ! $persistent_cache->get($cache_key, $page['items'])) {
+        if (! isset($cache_key) ||
+            ! $persistent_cache->get($cache_key, $page['items'])
+        ) {
             // main query
             $query = '
 SELECT DISTINCT(image_id)
@@ -296,6 +319,7 @@ else {
     // +-----------------------------------------------------------------------+
     if ($page['section'] == 'tags') {
         $page['tag_ids'] = [];
+
         foreach ($page['tags'] as $tag) {
             $page['tag_ids'][] = $tag['id'];
         }
@@ -358,7 +382,9 @@ else {
             ]
         );
 
-        if (! empty($_GET['action']) && ($_GET['action'] == 'remove_all_from_favorites')) {
+        if (! empty($_GET['action']) &&
+           ($_GET['action'] == 'remove_all_from_favorites')
+        ) {
             $query = '
 DELETE FROM ' . FAVORITES_TABLE . '
   WHERE user_id = ' . $user['id'] . '
@@ -544,6 +570,7 @@ if (isset($page['chronology_field'])) {
 // title update
 if (isset($page['title'])) {
     $page['section_title'] = '<a href="' . functions_url::get_gallery_home_url() . '">' . functions::l10n('Home') . '</a>';
+
     if (! empty($page['title'])) {
         $page['section_title'] .= $conf['level_separator'] . $page['title'];
     } else {
@@ -553,9 +580,12 @@ if (isset($page['title'])) {
 
 // add meta robots noindex, nofollow to avoid unnecessary robot crawls
 $page['meta_robots'] = [];
-if (isset($page['chronology_field'])
-      or (isset($page['flat']) and isset($page['category']))
-      or $page['section'] == 'list' or $page['section'] == 'recent_pics') {
+
+if (isset($page['chronology_field']) or
+   (isset($page['flat']) and isset($page['category'])) or
+    $page['section'] == 'list' or
+    $page['section'] == 'recent_pics'
+) {
     $page['meta_robots'] = [
         'noindex' => 1,
         'nofollow' => 1,
@@ -572,16 +602,22 @@ if (isset($page['chronology_field'])
 } elseif ($page['section'] == 'search') {
     $page['meta_robots']['nofollow'] = 1;
 }
+
 if ($filter['enabled']) {
     $page['meta_robots']['noindex'] = 1;
 }
 
 // see if we need a redirect because of a permalink
-if ($page['section'] == 'categories' and isset($page['category']) and ! isset($page['combined_categories'])) {
+if ($page['section'] == 'categories' and
+    isset($page['category']) and
+    ! isset($page['combined_categories'])
+) {
     $need_redirect = false;
+
     if (empty($page['category']['permalink'])) {
         if ($conf['category_url_style'] == 'id-name' and
-            @$page['hit_by']['cat_url_name'] !== functions::str2url($page['category']['name'])) {
+            @$page['hit_by']['cat_url_name'] !== functions::str2url($page['category']['name'])
+        ) {
             $need_redirect = true;
         }
     } else {
@@ -598,20 +634,25 @@ if ($page['section'] == 'categories' and isset($page['category']) and ! isset($p
             functions_html::set_status_header(301);
             functions::redirect_http($redirect_url);
         }
+
         functions::redirect($redirect_url);
     }
+
     unset($need_redirect, $page['hit_by']);
 }
 
 array_push($page['body_classes'], 'section-' . $page['section']);
 $page['body_data']['section'] = $page['section'];
 
-if ($page['section'] == 'categories' && isset($page['category'])) {
+if ($page['section'] == 'categories' &&
+    isset($page['category'])
+) {
     array_push($page['body_classes'], 'category-' . $page['category']['id']);
     $page['body_data']['category_id'] = $page['category']['id'];
 
     if (isset($page['combined_categories'])) {
         $page['body_data']['combined_category_ids'] = [];
+
         foreach ($page['combined_categories'] as $combined_categories) {
             array_push($page['body_classes'], 'category-' . $combined_categories['id']);
             array_push($page['body_data']['combined_category_ids'], $combined_categories['id']);
@@ -619,11 +660,11 @@ if ($page['section'] == 'categories' && isset($page['category'])) {
     }
 } elseif (isset($page['tags'])) {
     $page['body_data']['tag_ids'] = [];
+
     foreach ($page['tags'] as $tag) {
         array_push($page['body_classes'], 'tag-' . $tag['id']);
         array_push($page['body_data']['tag_ids'], $tag['id']);
     }
-
 } elseif (isset($page['search'])) {
     array_push($page['body_classes'], 'search-' . $page['search']);
     $page['body_data']['search_id'] = $page['search'];

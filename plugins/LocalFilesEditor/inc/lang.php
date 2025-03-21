@@ -17,7 +17,9 @@ if (isset($_POST['language'])) {
     $page['language'] = $_POST['language'];
 }
 
-if (! isset($page['language']) or ! in_array($page['language'], array_keys($languages))) {
+if (! isset($page['language']) or
+    ! in_array($page['language'], array_keys($languages))
+) {
     $page['language'] = functions_user::get_default_language();
 }
 
@@ -32,6 +34,7 @@ if (file_exists($edited_file)) {
 }
 
 $selected = 0;
+
 foreach (functions::get_languages() as $language_code => $language_name) {
     $file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'language/' . $language_code . '.lang.php';
 

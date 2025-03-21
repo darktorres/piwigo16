@@ -101,6 +101,7 @@ SELECT id, uppercats
   WHERE id = ' . $_GET['album'] . '
 ;';
     $result = functions_mysqli::pwg_query($query);
+
     if (functions_mysqli::pwg_db_num_rows($result) == 1) {
         $selected_category = [$_GET['album']];
 
@@ -121,6 +122,7 @@ SELECT category_id
 ;
 ';
     $result = functions_mysqli::pwg_query($query);
+
     if (functions_mysqli::pwg_db_num_rows($result) > 0) {
         $row = functions_mysqli::pwg_db_fetch_assoc($result);
         $selected_category = [$row['category_id']];
@@ -157,6 +159,7 @@ $template->assign(
 $setup_errors = [];
 
 $error_message = functions_upload::ready_for_upload_message();
+
 if (! empty($error_message)) {
     $setup_errors[] = $error_message;
 }
@@ -178,7 +181,9 @@ if (isset($_GET['hide_warnings'])) {
 if (! isset($_SESSION['upload_hide_warnings'])) {
     $setup_warnings = [];
 
-    if ($conf['use_exif'] and ! function_exists('exif_read_data')) {
+    if ($conf['use_exif'] and
+        ! function_exists('exif_read_data')
+    ) {
         $setup_warnings[] = functions::l10n('Exif extension not available, admin should disable exif use');
     }
 

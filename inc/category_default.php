@@ -42,6 +42,7 @@ SELECT *
   WHERE id IN (' . implode(',', $selection) . ')
 ;';
     $result = functions_mysqli::pwg_query($query);
+
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $row['rank'] = $rank_of[$row['id']];
         $pictures[] = $row;
@@ -70,7 +71,9 @@ if (count($pictures) > 0) {
           ]
       );
 
-    if ($conf['activate_comments'] and $user['show_nb_comments']) {
+    if ($conf['activate_comments'] and
+        $user['show_nb_comments']
+    ) {
         $query = '
 SELECT image_id, COUNT(*) AS nb_comments
   FROM ' . COMMENTS_TABLE . '
@@ -127,18 +130,17 @@ foreach ($pictures as $row) {
 
     switch ($page['section']) {
         case 'best_rated':
-
             $name = '(' . $row['rating_score'] . ') ' . $name;
             break;
 
         case 'most_visited':
-
             if (! $user['show_nb_hits']) {
                 $name = '(' . $row['hit'] . ') ' . $name;
             }
-            break;
 
+            break;
     }
+
     $tpl_var['NAME'] = $name;
     $tpl_thumbnails_var[] = $tpl_var;
 }

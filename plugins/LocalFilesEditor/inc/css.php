@@ -14,7 +14,9 @@ if (isset($_POST['edit'])) {
     $_POST['theme'] = $_POST['theme_select'];
 }
 
-if (isset($_POST['theme']) and $_POST['theme'] == '~common~') {
+if (isset($_POST['theme']) and
+    $_POST['theme'] == '~common~'
+) {
     $page['theme'] = $_POST['theme'];
     $edited_file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'css/rules.css';
 } else {
@@ -24,7 +26,9 @@ if (isset($_POST['theme']) and $_POST['theme'] == '~common~') {
         $page['theme'] = $_POST['theme'];
     }
 
-    if (! isset($page['theme']) or ! in_array($page['theme'], array_keys($themes->fs_themes))) {
+    if (! isset($page['theme']) or
+        ! in_array($page['theme'], array_keys($themes->fs_themes))
+    ) {
         $page['theme'] = functions_user::get_default_theme();
     }
 
@@ -44,6 +48,7 @@ $value = '~common~';
 $file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'css/rules.css';
 
 $options[$value] = (file_exists($file) ? '&#x2714;' : '&#x2718;') . ' local / css / rules.css';
+
 if ($page['theme'] == $value) {
     $selected = $value;
 }
@@ -56,6 +61,7 @@ $default_theme = functions_user::get_default_theme();
 $db_themes = $themes->get_db_themes();
 
 $db_theme_ids = [];
+
 foreach ($db_themes as $db_theme) {
     $db_theme_ids[] = $db_theme['id'];
 }
@@ -80,6 +86,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
 }
 
 $active_theme_options = [];
+
 foreach ($active_themes as $theme) {
     $file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'css/' . $theme['id'] . '-rules.css';
 
@@ -101,6 +108,7 @@ if (count($active_theme_options) > 0) {
 }
 
 $inactive_theme_options = [];
+
 foreach ($inactive_themes as $theme) {
     $file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'css/' . $theme['id'] . '-rules.css';
 

@@ -153,27 +153,32 @@ if (isset($_POST['submit'])) {
 
     switch ($page['section']) {
         case 'main':
-
-            if (! isset($conf['order_by_custom']) and ! isset($conf['order_by_inside_category_custom'])) {
+            if (! isset($conf['order_by_custom']) and
+                ! isset($conf['order_by_inside_category_custom'])
+            ) {
                 if (! empty($_POST['order_by'])) {
                     functions::check_input_parameter('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
 
                     $used = [];
                     foreach ($_POST['order_by'] as $i => $val) {
-                        if (empty($val) or isset($used[$val])) {
+                        if (empty($val) or
+                            isset($used[$val])
+                        ) {
                             unset($_POST['order_by'][$i]);
                         } else {
                             $used[$val] = true;
                         }
                     }
+
                     if (! count($_POST['order_by'])) {
                         $page['errors'][] = functions::l10n('No order field selected');
                     } else {
                         // limit to the number of available parameters
                         $order_by = $order_by_inside_category = array_slice($_POST['order_by'], 0, ceil(count($sort_fields) / 2));
+                        $i = array_search('`rank` ASC', $order_by);
 
                         // there is no rank outside categories
-                        if (($i = array_search('`rank` ASC', $order_by)) !== false) {
+                        if ($i !== false) {
                             unset($order_by[$i]);
                         }
 
@@ -205,59 +210,64 @@ if (isset($_POST['submit'])) {
             foreach ($main_checkboxes as $checkbox) {
                 $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
             }
+
             break;
 
         case 'watermark':
-
             include(PHPWG_ROOT_PATH . 'admin/inc/configuration_watermark_process.php');
             break;
 
         case 'sizes':
-
             include(PHPWG_ROOT_PATH . 'admin/inc/configuration_sizes_process.php');
             break;
 
         case 'comments':
-
             // the number of comments per page must be an integer between 5 and 50
             // included
-            if (! preg_match($int_pattern, $_POST['nb_comment_page'])
-                 or $_POST['nb_comment_page'] < 5
-                 or $_POST['nb_comment_page'] > 50) {
+            if (! preg_match($int_pattern, $_POST['nb_comment_page']) or
+                $_POST['nb_comment_page'] < 5 or
+                $_POST['nb_comment_page'] > 50
+            ) {
                 $page['errors'][] = functions::l10n('The number of comments a page must be between 5 and 50 included.');
             }
+
             foreach ($comments_checkboxes as $checkbox) {
                 $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
             }
+
             break;
 
         case 'default':
-
             // Never go here
             break;
 
         case 'display':
-
-            if (! preg_match($int_pattern, $_POST['nb_categories_page'])
-                  or $_POST['nb_categories_page'] < 4) {
+            if (! preg_match($int_pattern, $_POST['nb_categories_page']) or
+                $_POST['nb_categories_page'] < 4
+            ) {
                 $page['errors'][] = functions::l10n('The number of albums a page must be above 4.');
             }
+
             foreach ($display_checkboxes as $checkbox) {
                 $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
             }
+
             foreach ($display_info_checkboxes as $checkbox) {
-                $_POST['picture_information'][$checkbox] =
-                  empty($_POST['picture_information'][$checkbox]) ? false : true;
+                $_POST['picture_information'][$checkbox] = empty($_POST['picture_information'][$checkbox]) ? false : true;
             }
+
             $_POST['picture_information'] = addslashes(serialize($_POST['picture_information']));
             break;
-
     }
 
     // updating configuration if no error found
-    if (! in_array($page['section'], ['sizes', 'watermark']) and count($page['errors']) == 0 and functions_user::is_webmaster()) {
+    if (! in_array($page['section'], ['sizes', 'watermark']) and
+        count($page['errors']) == 0 and
+        functions_user::is_webmaster()
+    ) {
         //echo '<pre>'; print_r($_POST); echo '</pre>';
         $result = functions_mysqli::pwg_query('SELECT param FROM ' . CONFIG_TABLE);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             if (isset($_POST[$row['param']])) {
                 $value = $_POST[$row['param']];
@@ -276,6 +286,7 @@ WHERE param = \'' . $row['param'] . '\'
                 functions_mysqli::pwg_query($query);
             }
         }
+
         $page['infos'][] = functions::l10n('Your configuration settings are saved');
         functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', [
             'config_section' => $page['section'],
@@ -287,7 +298,10 @@ WHERE param = \'' . $row['param'] . '\'
 }
 
 // restore default derivatives settings
-if ($page['section'] == 'sizes' and isset($_GET['action']) and $_GET['action'] == 'restore_settings') {
+if ($page['section'] == 'sizes' and
+    isset($_GET['action']) and
+    $_GET['action'] == 'restore_settings'
+) {
     ImageStdParams::set_and_save(ImageStdParams::get_default_sizes());
     functions_mysqli::pwg_query('DELETE FROM ' . CONFIG_TABLE . ' WHERE param = \'disabled_derivatives\'');
     functions_admin::clear_derivative_cache();
@@ -321,12 +335,13 @@ $template->assign(
 
 switch ($page['section']) {
     case 'main':
-
         if (functions_admin::order_by_is_local()) {
             $page['warnings'][] = functions::l10n('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !');
         }
 
-        if (isset($conf['order_by_custom']) or isset($conf['order_by_inside_category_custom'])) {
+        if (isset($conf['order_by_custom']) or
+            isset($conf['order_by_inside_category_custom'])
+        ) {
             $order_by = [''];
             $template->assign('ORDER_BY_IS_CUSTOM', true);
         } else {
@@ -381,10 +396,10 @@ switch ($page['section']) {
                 true
             );
         }
+
         break;
 
     case 'comments':
-
         $template->assign(
             'comments',
             [
@@ -403,19 +418,21 @@ switch ($page['section']) {
                 true
             );
         }
+
         break;
 
     case 'default':
-
         $edit_user = functions_user::build_user($conf['guest_id'], false);
         include_once(PHPWG_ROOT_PATH . 'profile.php');
 
         $errors = [];
+
         if (functions::save_profile_from_post($edit_user, $errors)) {
             // Reload user
             $edit_user = functions_user::build_user($conf['guest_id'], false);
             $page['infos'][] = functions::l10n('Information data registered in database');
         }
+
         $page['errors'] = array_merge($page['errors'], $errors);
 
         functions::load_profile_in_template(
@@ -428,7 +445,6 @@ switch ($page['section']) {
         break;
 
     case 'display':
-
         foreach ($display_checkboxes as $checkbox) {
             $template->append(
                 'display',
@@ -438,6 +454,7 @@ switch ($page['section']) {
                 true
             );
         }
+
         $template->append(
             'display',
             [
@@ -449,7 +466,6 @@ switch ($page['section']) {
         break;
 
     case 'sizes':
-
         // we only load the derivatives if it was not already loaded: it occurs
         // when submitting the form and an error remains
         if (! isset($page['sizes_loaded_in_tpl'])) {
@@ -477,18 +493,21 @@ switch ($page['section']) {
             // derivatives = multiple size
             $enabled = ImageStdParams::get_defined_type_map();
             $disabled = @unserialize(@$conf['disabled_derivatives']);
+
             if ($disabled === false) {
                 $disabled = [];
             }
 
             $tpl_vars = [];
+
             foreach (ImageStdParams::get_all_types() as $type) {
                 $tpl_var = [];
 
                 $tpl_var['must_square'] = ($type == derivative_std_params::IMG_SQUARE ? true : false);
                 $tpl_var['must_enable'] = ($type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB || $type == $conf['derivative_default_size']) ? true : false;
+                $params = @$enabled[$type];
 
-                if ($params = @$enabled[$type]) {
+                if ($params) {
                     $tpl_var['enabled'] = true;
                 } else {
                     $tpl_var['enabled'] = false;
@@ -497,69 +516,99 @@ switch ($page['section']) {
 
                 if ($params) {
                     list($tpl_var['w'], $tpl_var['h']) = $params->sizing->ideal_size;
-                    if (($tpl_var['crop'] = round(100 * $params->sizing->max_crop)) > 0) {
+                    $tpl_var['crop'] = round(100 * $params->sizing->max_crop);
+
+                    if ($tpl_var['crop'] > 0) {
                         list($tpl_var['minw'], $tpl_var['minh']) = $params->sizing->min_size;
                     } else {
                         $tpl_var['minw'] = $tpl_var['minh'] = '';
                     }
+
                     $tpl_var['sharpen'] = $params->sharpen;
                 }
+
                 $tpl_vars[$type] = $tpl_var;
             }
+
             $template->assign('derivatives', $tpl_vars);
             $template->assign('resize_quality', ImageStdParams::$quality);
 
             $tpl_vars = [];
             $now = time();
+
             foreach (ImageStdParams::$custom as $custom => $time) {
                 $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? functions::l10n('today') : functions::time_since($time, 'day');
             }
+
             $template->assign('custom_derivatives', $tpl_vars);
         }
 
         break;
 
     case 'watermark':
-
         $watermark_files = [];
+
         foreach (glob(PHPWG_ROOT_PATH . 'themes/default/watermarks/*.png') as $file) {
             $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
         }
-        if (($glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
+
+        $glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png');
+
+        if ($glob !== false) {
             foreach ($glob as $file) {
                 $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
             }
         }
+
         $watermark_filemap = [
             '' => '---',
         ];
+
         foreach ($watermark_files as $file) {
             $display = basename($file);
             $watermark_filemap[$file] = $display;
         }
+
         $template->assign('watermark_files', $watermark_filemap);
 
         if ($template->get_template_vars('watermark') === null) {
             $wm = ImageStdParams::get_watermark();
 
             $position = 'custom';
-            if ($wm->xpos == 0 and $wm->ypos == 0) {
+
+            if ($wm->xpos == 0 and
+                $wm->ypos == 0
+            ) {
                 $position = 'topleft';
             }
-            if ($wm->xpos == 100 and $wm->ypos == 0) {
+
+            if ($wm->xpos == 100 and
+                $wm->ypos == 0
+            ) {
                 $position = 'topright';
             }
-            if ($wm->xpos == 50 and $wm->ypos == 50) {
+
+            if ($wm->xpos == 50 and
+                $wm->ypos == 50
+            ) {
                 $position = 'middle';
             }
-            if ($wm->xpos == 0 and $wm->ypos == 100) {
+
+            if ($wm->xpos == 0 and
+                $wm->ypos == 100
+            ) {
                 $position = 'bottomleft';
             }
-            if ($wm->xpos == 100 and $wm->ypos == 100) {
+
+            if ($wm->xpos == 100 and
+                $wm->ypos == 100
+            ) {
                 $position = 'bottomright';
             }
 
-            if ($wm->xrepeat != 0 || $wm->yrepeat != 0) {
+            if ($wm->xrepeat != 0 ||
+                $wm->yrepeat != 0
+            ) {
                 $position = 'custom';
             }
 

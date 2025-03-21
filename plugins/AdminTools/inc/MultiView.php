@@ -10,7 +10,9 @@ use Piwigo\inc\functions_session;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
-defined('ADMINTOOLS_PATH') or die('Hacking attempt!');
+if (! defined('ADMINTOOLS_PATH')) {
+    die('Hacking attempt!');
+}
 
 /**
  * Class managing multi views system
@@ -118,7 +120,10 @@ class MultiView
 
         $get = $_GET;
         unset($get['page'], $get['section'], $get['tag']);
-        if (count($get) == 0 and ! empty($_SERVER['QUERY_STRING'])) {
+
+        if (count($get) == 0 and
+            ! empty($_SERVER['QUERY_STRING'])
+        ) {
             $url .= '?' . str_replace('&', '&amp;', $_SERVER['QUERY_STRING']);
         }
 
@@ -146,19 +151,24 @@ class MultiView
         ];
 
         // inactive on ws.php to allow AJAX admin tasks
-        if ($this->is_admin && functions::script_basename() != 'ws') {
+        if ($this->is_admin &&
+            functions::script_basename() != 'ws'
+        ) {
             // show_queries
             if (isset($_GET['ato_show_queries'])) {
                 $this->data['show_queries'] = (bool) $_GET['ato_show_queries'];
             }
+
             $conf['show_queries'] = $this->data['show_queries'];
 
             if ($this->data['view_as'] == 0) {
                 $this->data['view_as'] = $user['id'];
             }
+
             if (empty($this->data['lang'])) {
                 $this->data['lang'] = $user['language'];
             }
+
             if (empty($this->data['theme'])) {
                 $this->data['theme'] = $user['theme'];
             }
@@ -168,8 +178,10 @@ class MultiView
                 if (isset($_GET['ato_view_as'])) {
                     $this->data['view_as'] = (int) $_GET['ato_view_as'];
                 }
+
                 if ($this->data['view_as'] != $user['id']) {
                     $user = functions_user::build_user($this->data['view_as'], true);
+
                     if (isset($_GET['ato_view_as'])) {
                         $this->data['theme'] = $user['theme'];
                         $this->data['lang'] = $user['language'];
@@ -181,6 +193,7 @@ class MultiView
             if (isset($_GET['ato_theme'])) {
                 $this->data['theme'] = $_GET['ato_theme'];
             }
+
             $user['theme'] = $this->data['theme'];
 
             // lang
@@ -188,30 +201,35 @@ class MultiView
                 functions::check_input_parameter('ato_lang', $_GET, false, '/^[a-z]{2,3}_[A-Z]{2}$/');
                 $this->data['lang'] = $_GET['ato_lang'];
             }
+
             $user['language'] = $this->data['lang'];
 
             // debug_l10n
             if (isset($_GET['ato_debug_l10n'])) {
                 $this->data['debug_l10n'] = (bool) $_GET['ato_debug_l10n'];
             }
+
             $conf['debug_l10n'] = $this->data['debug_l10n'];
 
             // debug_template
             if (isset($_GET['ato_debug_template'])) {
                 $this->data['debug_template'] = (bool) $_GET['ato_debug_template'];
             }
+
             $conf['debug_template'] = $this->data['debug_template'];
 
             // template_combine_files
             if (isset($_GET['ato_template_combine_files'])) {
                 $this->data['template_combine_files'] = (bool) $_GET['ato_template_combine_files'];
             }
+
             $conf['template_combine_files'] = $this->data['template_combine_files'];
 
             // no_history
             if (isset($_GET['ato_no_history'])) {
                 $this->data['no_history'] = (bool) $_GET['ato_no_history'];
             }
+
             if ($this->data['no_history']) {
                 $ret_false = function () {return false; };
                 functions_plugins::add_event_handler('pwg_log_allowed', $ret_false);
@@ -228,11 +246,13 @@ class MultiView
      */
     public function get_user_language()
     {
-        if (isset($this->user['language']) && isset($this->data['lang'])
-            && $this->user['language'] != $this->data['lang']
+        if (isset($this->user['language']) &&
+            isset($this->data['lang']) &&
+            $this->user['language'] != $this->data['lang']
         ) {
             return $this->user['language'];
         }
+
         return false;
     }
 
@@ -302,6 +322,7 @@ FROM ' . USERS_TABLE . ' AS u
 
         // get themes
         $themes = new themes();
+
         foreach (array_keys($themes->db_themes_by_id) as $theme) {
             if (! empty($theme)) {
                 $out['themes'][] = $theme;

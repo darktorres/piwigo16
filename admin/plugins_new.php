@@ -30,7 +30,9 @@ $base_url = functions_url::get_root_url() . 'admin.php?page=' . $page['page'] . 
 $plugins = new plugins();
 
 //------------------------------------------------------automatic installation
-if (isset($_GET['revision']) and isset($_GET['extension'])) {
+if (isset($_GET['revision']) and
+    isset($_GET['extension'])
+) {
     if (! functions_user::is_webmaster()) {
         $page['errors'][] = functions::l10n('Webmaster status is required.');
     } else {
@@ -66,6 +68,7 @@ if (isset($_GET['installstatus'])) {
                     ]
                 );
             }
+
             break;
 
         case 'temp_path_error':
@@ -106,7 +109,9 @@ $template->assign(
 // If the current version in known, give the current and last version's compatible plugins
 $beta_test = false;
 
-if (isset($_GET['beta-test']) && $_GET['beta-test'] == 'true') {
+if (isset($_GET['beta-test']) &&
+    $_GET['beta-test'] == 'true'
+) {
     $beta_test = true;
 }
 
@@ -157,6 +162,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
         } elseif ($last_revision_diff->y > 3) { // 3 years or less
             $certification = 0;
         }
+
         // Between 6 month and 3 years : certification = 1
 
         $template->append('plugins', [
@@ -183,9 +189,12 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
     $page['errors'][] = functions::l10n('Can\'t connect to server.');
 }
 
-if (! $beta_test and preg_match('/(beta|RC)/', PHPWG_VERSION)) {
+if (! $beta_test and
+    preg_match('/(beta|RC)/', PHPWG_VERSION)
+) {
     $template->assign('BETA_URL', $base_url . '&amp;beta-test=true');
 }
+
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Plugins'));
 $template->assign('BETA_TEST', $beta_test);
 $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');

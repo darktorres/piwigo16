@@ -31,6 +31,7 @@ class functions_search
     public static function get_search_id_pattern($candidate)
     {
         $clause_pattern = null;
+
         if (preg_match('/^psk-\d{8}-[a-z0-9]{10}$/i', $candidate)) {
             $clause_pattern = 'search_uuid = \'%s\'';
         } elseif (preg_match('/^\d+$/', $candidate)) {
@@ -67,11 +68,16 @@ class functions_search
             // there is no uuid.
             //
             // We also don't want to die if we're in the API.
-            if (functions::script_basename() != 'ws' and $clause_pattern == 'id = %u' and isset($searches[0]['search_uuid'])) {
+            if (functions::script_basename() != 'ws' and
+                $clause_pattern == 'id = %u' and
+                isset($searches[0]['search_uuid'])
+            ) {
                 functions_html::fatal_error('this search is not reachable with its id, need the search_uuid instead');
             }
 
-            if (isset($page['section']) and $page['section'] == 'search') {
+            if (isset($page['section']) and
+                $page['section'] == 'search'
+            ) {
                 // to be used later in pwg_log
                 $page['search_id'] = $searches[0]['id'];
             }
@@ -119,6 +125,7 @@ class functions_search
         foreach (['file', 'name', 'comment', 'author'] as $textfield) {
             if (isset($search['fields'][$textfield])) {
                 $local_clauses = [];
+
                 foreach ($search['fields'][$textfield]['words'] as $word) {
                     if ($textfield == 'author') {
                         $local_clauses[] = $textfield . "='" . $word . "'";
@@ -139,11 +146,16 @@ class functions_search
             }
         }
 
-        if (isset($search['fields']['allwords']) and ! empty($search['fields']['allwords']['words']) and count($search['fields']['allwords']['fields']) > 0) {
+        if (isset($search['fields']['allwords']) and
+            ! empty($search['fields']['allwords']['words']) and
+            count($search['fields']['allwords']['fields']) > 0
+        ) {
             // 1) we search in regular fields (ie, the ones in the piwigo_images table)
             $fields = ['file', 'name', 'comment', 'author'];
 
-            if (isset($search['fields']['allwords']['fields']) and count($search['fields']['allwords']['fields']) > 0) {
+            if (isset($search['fields']['allwords']['fields']) and
+                count($search['fields']['allwords']['fields']) > 0
+            ) {
                 $fields = array_intersect($fields, $search['fields']['allwords']['fields']);
             }
 
@@ -162,8 +174,10 @@ class functions_search
             // AND (field1 LIKE '%word2%' OR field2 LIKE '%word2%'))
             $word_clauses = [];
             $cat_ids_by_word = $tag_ids_by_word = [];
+
             foreach ($search['fields']['allwords']['words'] as $word) {
                 $field_clauses = [];
+
                 foreach ($fields as $field) {
                     $field_clauses[] = $field . " LIKE '%" . $word . "%'";
                 }
@@ -171,6 +185,7 @@ class functions_search
                 if (count($cat_fields) > 0) {
                     $cat_word_clauses = [];
                     $cat_field_clauses = [];
+
                     foreach ($cat_fields as $cat_field) {
                         $cat_field_clauses[] = $cat_fields_dictionary[$cat_field] . " LIKE '%" . $word . "%'";
                     }
@@ -186,6 +201,7 @@ class functions_search
   ;';
                     $cat_ids = functions_mysqli::query2array($query, null, 'id');
                     $cat_ids_by_word[$word] = $cat_ids;
+
                     if (count($cat_ids) > 0) {
                         $query = '
   SELECT
@@ -211,6 +227,7 @@ class functions_search
   ;';
                     $tag_ids = functions_mysqli::query2array($query, null, 'id');
                     $tag_ids_by_word[$word] = $tag_ids;
+
                     if (count($tag_ids) > 0) {
                         $query = '
   SELECT
@@ -254,6 +271,7 @@ class functions_search
 
             if (count($cat_ids_by_word) > 0) {
                 $matching_cat_ids = null;
+
                 foreach ($cat_ids_by_word as $idx => $cat_ids) {
                     if ($matching_cat_ids === null) {
                         // first iteration
@@ -268,6 +286,7 @@ class functions_search
 
             if (count($tag_ids_by_word) > 0) {
                 $matching_tag_ids = null;
+
                 foreach ($tag_ids_by_word as $idx => $tag_ids) {
                     if ($matching_tag_ids === null) {
                         // first iteration
@@ -318,9 +337,11 @@ class functions_search
 
         if (! empty($search['fields']['filetypes'])) {
             $filetypes_clauses = [];
+
             foreach ($search['fields']['filetypes'] as $ext) {
                 $filetypes_clauses[] = 'path LIKE \'%.' . $ext . '\'';
             }
+
             $clauses[] = implode(' OR ', $filetypes_clauses);
         }
 
@@ -328,7 +349,9 @@ class functions_search
             $clauses[] = 'added_by IN (' . implode(',', $search['fields']['added_by']) . ')';
         }
 
-        if (isset($search['fields']['cat']) and ! empty($search['fields']['cat']['words'])) {
+        if (isset($search['fields']['cat']) and
+            ! empty($search['fields']['cat']['words'])
+        ) {
             if ($search['fields']['cat']['sub_inc']) {
                 // searching all the categories id of sub-categories
                 $cat_ids = functions_category::get_subcat_ids($search['fields']['cat']['words']);
@@ -409,9 +432,11 @@ class functions_search
       INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
       LEFT JOIN ' . IMAGE_TAG_TABLE . ' AS it ON id = it.image_id
     WHERE ' . $search_clause;
+
             if (! empty($images_where)) {
                 $query .= "\n  AND " . $images_where;
             }
+
             $query .= $forbidden . '
     ' . $conf['order_by'];
             $items = functions::array_from_query($query, 'id');
@@ -422,12 +447,16 @@ class functions_search
         if (! empty($tag_items)) {
             switch ($search['mode']) {
                 case 'AND':
-                    if (empty($search_clause) and ! isset($search_in_tags_items)) {
+                    if (empty($search_clause) and
+                        ! isset($search_in_tags_items)
+                    ) {
                         $items = $tag_items;
                     } else {
                         $items = array_values(array_intersect($items, $tag_items));
                     }
+
                     break;
+
                 case 'OR':
                     $items = array_values(
                         array_unique(
@@ -458,11 +487,14 @@ class functions_search
         $clauses = [];
         $variants = array_merge([$token->term], $token->variants);
         $fts = [];
+
         foreach ($variants as $variant) {
             $use_ft = mb_strlen($variant) > 3;
+
             if ($token->modifier & self::QST_WILDCARD_BEGIN) {
                 $use_ft = false;
             }
+
             if ($token->modifier & (self::QST_QUOTED | self::QST_WILDCARD_END) == (self::QST_QUOTED | self::QST_WILDCARD_END)) {
                 $use_ft = false;
             }
@@ -472,35 +504,43 @@ class functions_search
                     mb_strlen(...),
                     preg_split('/[' . preg_quote('-\'!"#$%&()*+,./:;<=>?@[\]^`{|}~', '/') . ']+/', $variant)
                 ));
+
                 if ($max < 4) {
                     $use_ft = false;
                 }
             }
 
-            if (! $use_ft) {// odd term or too short for full text search; fallback to regex but unfortunately this is diacritic/accent sensitive
+            if (! $use_ft) { // odd term or too short for full text search; fallback to regex but unfortunately this is diacritic/accent sensitive
                 if (! isset($page['use_regexp_ICU'])) {
                     // Prior to MySQL 8.0.4, MySQL used the Henry Spencer regular expression library to support
                     // regular expression operations, rather than International Components for Unicode (ICU)
                     $page['use_regexp_ICU'] = false;
                     $db_version = functions_mysqli::pwg_get_db_version();
-                    if (! preg_match('/mariadb/i', $db_version) and version_compare($db_version, '8.0.4', '>')) {
+
+                    if (! preg_match('/mariadb/i', $db_version) and
+                        version_compare($db_version, '8.0.4', '>')
+                    ) {
                         $page['use_regexp_ICU'] = true;
                     }
                 }
 
                 $pre = ($token->modifier & self::QST_WILDCARD_BEGIN) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:<:]]');
                 $post = ($token->modifier & self::QST_WILDCARD_END) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
+
                 foreach ($fields as $field) {
                     $clauses[] = $field . ' REGEXP \'' . $pre . addslashes(preg_quote($variant)) . $post . '\'';
                 }
             } else {
                 $ft = $variant;
+
                 if ($token->modifier & self::QST_QUOTED) {
                     $ft = '"' . $ft . '"';
                 }
+
                 if ($token->modifier & self::QST_WILDCARD_END) {
                     $ft .= '*';
                 }
+
                 $fts[] = $ft;
             }
         }
@@ -508,6 +548,7 @@ class functions_search
         if (count($fts)) {
             $clauses[] = 'MATCH(' . implode(', ', $fields) . ') AGAINST( \'' . addslashes(implode(' ', $fts)) . '\' IN BOOLEAN MODE)';
         }
+
         return $clauses;
     }
 
@@ -535,6 +576,7 @@ class functions_search
                 case 'file':
                     $clauses[] = $file_like;
                     break;
+
                 case 'author':
                     if (strlen($token->term)) {
                         $clauses = array_merge($clauses, self::qsearch_get_text_token_search_sql($token, ['author']));
@@ -543,40 +585,52 @@ class functions_search
                     } else {
                         $clauses[] = 'author IS NULL';
                     }
+
                     break;
+
                 case 'width':
                 case 'height':
                     $clauses[] = $token->scope->get_sql($scope_id, $token);
                     break;
+
                 case 'ratio':
                     $clauses[] = $token->scope->get_sql('width/height', $token);
                     break;
+
                 case 'size':
                     $clauses[] = $token->scope->get_sql('width*height', $token);
                     break;
+
                 case 'hits':
                     $clauses[] = $token->scope->get_sql('hit', $token);
                     break;
+
                 case 'score':
                     $clauses[] = $token->scope->get_sql('rating_score', $token);
                     break;
+
                 case 'filesize':
                     $clauses[] = $token->scope->get_sql('1024*filesize', $token);
                     break;
+
                 case 'created':
                     $clauses[] = $token->scope->get_sql('date_creation', $token);
                     break;
+
                 case 'posted':
                     $clauses[] = $token->scope->get_sql('date_available', $token);
                     break;
+
                 case 'id':
                     $clauses[] = $token->scope->get_sql($scope_id, $token);
                     break;
+
                 default:
                     // allow plugins to have their own scope with columns added in db by themselves
                     $clauses = functions_plugins::trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
                     break;
             }
+
             if (! empty($clauses)) {
                 $query = $query_base . '(' . implode("\n OR ", $clauses) . ')';
                 $qsr->images_iids[$i] = functions_mysqli::query2array($query, null, 'id');
@@ -591,9 +645,13 @@ class functions_search
 
         for ($i = 0; $i < count($expr->stokens); $i++) {
             $token = $expr->stokens[$i];
-            if (isset($token->scope) && $token->scope->id != 'tag') {
+
+            if (isset($token->scope) &&
+                $token->scope->id != 'tag'
+            ) {
                 continue;
             }
+
             if (empty($token->term)) {
                 continue;
             }
@@ -602,6 +660,7 @@ class functions_search
             $query = 'SELECT * FROM ' . TAGS_TABLE . '
   WHERE (' . implode("\n OR ", $clauses) . ')';
             $result = functions_mysqli::pwg_query($query);
+
             while ($tag = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 $token_tag_ids[$i][] = $tag['id'];
                 $all_tags[$tag['id']] = $tag;
@@ -610,10 +669,12 @@ class functions_search
 
         // check adjacent short words
         for ($i = 0; $i < count($expr->stokens) - 1; $i++) {
-            if ((strlen($expr->stokens[$i]->term) <= 3 || strlen($expr->stokens[$i + 1]->term) <= 3)
-              && (($expr->stoken_modifiers[$i] & (self::QST_QUOTED | self::QST_WILDCARD)) == 0)
-              && (($expr->stoken_modifiers[$i + 1] & (self::QST_BREAK | self::QST_QUOTED | self::QST_WILDCARD)) == 0)) {
+            if ((strlen($expr->stokens[$i]->term) <= 3 || strlen($expr->stokens[$i + 1]->term) <= 3) &&
+               (($expr->stoken_modifiers[$i] & (self::QST_QUOTED | self::QST_WILDCARD)) == 0) &&
+                (($expr->stoken_modifiers[$i + 1] & (self::QST_BREAK | self::QST_QUOTED | self::QST_WILDCARD)) == 0)
+            ) {
                 $common = array_intersect($token_tag_ids[$i], $token_tag_ids[$i + 1]);
+
                 if (count($common)) {
                     $token_tag_ids[$i] = $token_tag_ids[$i + 1] = $common;
                 }
@@ -622,6 +683,7 @@ class functions_search
 
         // get images
         $positive_ids = $not_ids = [];
+
         for ($i = 0; $i < count($expr->stokens); $i++) {
             $tag_ids = $token_tag_ids[$i];
             $token = $expr->stokens[$i];
@@ -632,17 +694,22 @@ class functions_search
     WHERE tag_id IN (' . implode(',', $tag_ids) . ')
     GROUP BY image_id';
                 $qsr->tag_iids[$i] = functions_mysqli::query2array($query, null, 'image_id');
+
                 if ($expr->stoken_modifiers[$i] & self::QST_NOT) {
                     $not_ids = array_merge($not_ids, $tag_ids);
                 } else {
-                    if (strlen($token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (self::QST_WILDCARD | self::QST_QUOTED))) {// add tag ids to list only if the word is not too short (such as de / la /les ...)
+                    if (strlen($token->term) > 2 ||
+                        count($expr->stokens) == 1 ||
+                        isset($token->scope) ||
+                       ($token->modifier & (self::QST_WILDCARD | self::QST_QUOTED))
+                    ) { // add tag ids to list only if the word is not too short (such as de / la /les ...)
                         $positive_ids = array_merge($positive_ids, $tag_ids);
                     }
                 }
             } elseif (isset($token->scope) && $token->scope->id == 'tag' && strlen($token->term) == 0) {
-                if ($token->modifier & self::QST_WILDCARD) {// eg. 'tag:*' returns all tagged images
+                if ($token->modifier & self::QST_WILDCARD) { // eg. 'tag:*' returns all tagged images
                     $qsr->tag_iids[$i] = functions_mysqli::query2array('SELECT DISTINCT image_id FROM ' . IMAGE_TAG_TABLE, null, 'image_id');
-                } else {// eg. 'tag:' returns all untagged images
+                } else { // eg. 'tag:' returns all untagged images
                     $qsr->tag_iids[$i] = functions_mysqli::query2array('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_TAG_TABLE . ' ON id=image_id WHERE image_id IS NULL', null, 'id');
                 }
             }
@@ -650,9 +717,11 @@ class functions_search
 
         $all_tags = array_intersect_key($all_tags, array_flip(array_diff($positive_ids, $not_ids)));
         usort($all_tags, functions_html::tag_alpha_compare(...));
+
         foreach ($all_tags as &$tag) {
             $tag['name'] = functions_plugins::trigger_change('render_tag_name', $tag['name'], $tag);
         }
+
         $qsr->all_tags = $all_tags;
         $qsr->tag_ids = $token_tag_ids;
     }
@@ -666,9 +735,11 @@ class functions_search
 
         for ($i = 0; $i < count($expr->stokens); $i++) {
             $token = $expr->stokens[$i];
+
             if (isset($token->scope) && $token->scope->id != 'category') { // not relevant yet
                 continue;
             }
+
             if (empty($token->term)) {
                 continue;
             }
@@ -681,6 +752,7 @@ class functions_search
       INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id and user_id = ' . $user['id'] . '
     WHERE (' . implode("\n OR ", $clauses) . ')';
             $result = functions_mysqli::pwg_query($query);
+
             while ($cat = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 $token_cat_ids[$i][] = $cat['id'];
                 $all_cats[$cat['id']] = $cat;
@@ -689,10 +761,12 @@ class functions_search
 
         // check adjacent short words
         for ($i = 0; $i < count($expr->stokens) - 1; $i++) {
-            if ((strlen($expr->stokens[$i]->term) <= 3 || strlen($expr->stokens[$i + 1]->term) <= 3)
-              && (($expr->stoken_modifiers[$i] & (self::QST_QUOTED | self::QST_WILDCARD)) == 0)
-              && (($expr->stoken_modifiers[$i + 1] & (self::QST_BREAK | self::QST_QUOTED | self::QST_WILDCARD)) == 0)) {
+            if ((strlen($expr->stokens[$i]->term) <= 3 || strlen($expr->stokens[$i + 1]->term) <= 3) &&
+               (($expr->stoken_modifiers[$i] & (self::QST_QUOTED | self::QST_WILDCARD)) == 0) &&
+               (($expr->stoken_modifiers[$i + 1] & (self::QST_BREAK | self::QST_QUOTED | self::QST_WILDCARD)) == 0)
+            ) {
                 $common = array_intersect($token_cat_ids[$i], $token_cat_ids[$i + 1]);
+
                 if (count($common)) {
                     $token_cat_ids[$i] = $token_cat_ids[$i + 1] = $common;
                 }
@@ -701,6 +775,7 @@ class functions_search
 
         // get images
         $positive_ids = $not_ids = [];
+
         for ($i = 0; $i < count($expr->stokens); $i++) {
             $cat_ids = $token_cat_ids[$i];
             $token = $expr->stokens[$i];
@@ -722,17 +797,25 @@ class functions_search
     WHERE category_id IN (' . implode(',', $cat_ids) . ')
     GROUP BY image_id';
                 $qsr->cat_iids[$i] = functions_mysqli::query2array($query, null, 'image_id');
+
                 if ($expr->stoken_modifiers[$i] & self::QST_NOT) {
                     $not_ids = array_merge($not_ids, $cat_ids);
                 } else {
-                    if (strlen($token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (self::QST_WILDCARD | self::QST_QUOTED))) {// add cat ids to list only if the word is not too short (such as de / la /les ...)
+                    if (strlen($token->term) > 2 ||
+                        count($expr->stokens) == 1 ||
+                        isset($token->scope) ||
+                        ($token->modifier & (self::QST_WILDCARD | self::QST_QUOTED))
+                    ) { // add cat ids to list only if the word is not too short (such as de / la /les ...)
                         $positive_ids = array_merge($positive_ids, $cat_ids);
                     }
                 }
-            } elseif (isset($token->scope) && $token->scope->id == 'category' && strlen($token->term) == 0) {
-                if ($token->modifier & self::QST_WILDCARD) {// eg. 'category:*' returns all images associated to an album
+            } elseif (isset($token->scope) &&
+                      $token->scope->id == 'category' &&
+                      strlen($token->term) == 0
+            ) {
+                if ($token->modifier & self::QST_WILDCARD) { // eg. 'category:*' returns all images associated to an album
                     $qsr->cat_iids[$i] = functions_mysqli::query2array('SELECT DISTINCT image_id FROM ' . IMAGE_CATEGORY_TABLE, null, 'image_id');
-                } else {// eg. 'category:' returns all orphan images
+                } else { // eg. 'category:' returns all orphan images
                     $qsr->cat_iids[$i] = functions_mysqli::query2array('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE image_id IS NULL', null, 'id');
                 }
             }
@@ -740,9 +823,11 @@ class functions_search
 
         $all_cats = array_intersect_key($all_cats, array_flip(array_diff($positive_ids, $not_ids)));
         usort($all_cats, functions_html::tag_alpha_compare(...));
+
         foreach ($all_cats as &$cat) {
             $cat['name'] = functions_plugins::trigger_change('render_category_name', $cat['name'], $cat);
         }
+
         $qsr->all_cats = $all_cats;
         $qsr->cat_ids = $token_cat_ids;
     }
@@ -756,6 +841,7 @@ class functions_search
 
         for ($i = 0; $i < count($expr->tokens); $i++) {
             $crt = $expr->tokens[$i];
+
             if ($crt->is_single) {
                 $crt_ids = $qsr->iids[$crt->idx] = array_unique(
                     array_merge(
@@ -771,10 +857,12 @@ class functions_search
             }
 
             $modifier = $crt->modifier;
+
             if ($modifier & self::QST_NOT) {
                 $not_ids = array_unique(array_merge($not_ids, $crt_ids));
             } else {
                 $ignored_terms = array_merge($ignored_terms, $crt_ignored_terms);
+
                 if ($modifier & self::QST_OR) {
                     $ids = array_unique(array_merge($ids, $crt_ids));
                     $qualifies |= $crt_qualifies;
@@ -784,6 +872,7 @@ class functions_search
                     } else {
                         $ids = $crt_ids;
                     }
+
                     $qualifies = true;
                 }
             }
@@ -792,6 +881,7 @@ class functions_search
         if (count($not_ids)) {
             $ids = array_diff($ids, $not_ids);
         }
+
         return $ids;
     }
 
@@ -828,15 +918,17 @@ class functions_search
             isset($options['permissions']) ? (bool) $options['permissions'] : true,
             isset($options['images_where']) ? $options['images_where'] : '',
         ]);
+
         if ($persistent_cache->get($cache_key, $res)) {
             return $res;
         }
 
         $res = self::get_quick_search_results_no_cache($q, $options);
 
-        if (count($res['items'])) {// cache the results only if not empty - otherwise it is useless
+        if (count($res['items'])) { // cache the results only if not empty - otherwise it is useless
             $persistent_cache->set($cache_key, $res, 300);
         }
+
         return $res;
     }
 
@@ -874,11 +966,13 @@ class functions_search
 
         $createdDateAliases = ['taken', 'shot'];
         $postedDateAliases = ['added'];
+
         if ($conf['calendar_datefield'] == 'date_creation') {
             $createdDateAliases[] = 'date';
         } else {
             $postedDateAliases[] = 'date';
         }
+
         $scopes[] = new QDateRangeScope('created', $createdDateAliases, true);
         $scopes[] = new QDateRangeScope('posted', $postedDateAliases);
 
@@ -891,15 +985,21 @@ class functions_search
         $lang_code = substr(functions_user::get_default_language(), 0, 2);
         @include_once(PHPWG_ROOT_PATH . 'inc/inflectors/Inflector_' . $lang_code . '.php');
         $class_name = 'Inflector_' . $lang_code;
+
         if (class_exists($class_name)) {
             $inflector = new $class_name();
+
             foreach ($expression->stokens as $token) {
-                if (isset($token->scope) && ! $token->scope->is_text) {
+                if (isset($token->scope) &&
+                    ! $token->scope->is_text
+                ) {
                     continue;
                 }
-                if (strlen($token->term) > 2
-                  && ($token->modifier & (self::QST_QUOTED | self::QST_WILDCARD)) == 0
-                  && strcspn($token->term, '\'0123456789') == strlen($token->term)) {
+
+                if (strlen($token->term) > 2 &&
+                   ($token->modifier & (self::QST_QUOTED | self::QST_WILDCARD)) == 0 &&
+                    strcspn($token->term, '\'0123456789') == strlen($token->term)
+                ) {
                     $token->variants = array_unique(array_diff($inflector->get_variants($token->term), [$token->term]));
                 }
             }
@@ -911,6 +1011,7 @@ class functions_search
         if (count($expression->stokens) == 0) {
             return $search_results;
         }
+
         $qsr = new QResults();
         self::qsearch_get_tags($expression, $qsr);
         self::qsearch_get_categories($expression, $qsr);
@@ -923,16 +1024,19 @@ class functions_search
 
         $debug[] = "<!--\nparsed: " . htmlspecialchars($expression);
         $debug[] = count($expression->stokens) . ' tokens';
+
         for ($i = 0; $i < count($expression->stokens); $i++) {
             $debug[] = htmlspecialchars($expression->stokens[$i]) . ': ' . count($qsr->tag_ids[$i]) . ' tags, ' . count($qsr->tag_iids[$i]) . ' tiids, ' . count($qsr->images_iids[$i]) . ' iiids, ' . count($qsr->iids[$i]) . ' iids'
               . ' modifier:' . dechex($expression->stoken_modifiers[$i])
               . (! empty($expression->stokens[$i]->variants) ? ' variants: ' . htmlspecialchars(implode(', ', $expression->stokens[$i]->variants)) : '');
         }
+
         $debug[] = 'before perms ' . count($ids);
 
         $search_results['qs']['matching_tags'] = $qsr->all_tags;
         $search_results['qs']['matching_cats'] = $qsr->all_cats;
         $search_results = functions_plugins::trigger_change('qsearch_results', $search_results, $expression, $qsr);
+
         if (isset($search_results['items'])) {
             $ids = array_merge($ids, $search_results['items']);
         }
@@ -949,9 +1053,11 @@ class functions_search
 
         $where_clauses = [];
         $where_clauses[] = 'i.id IN (' . implode(',', $ids) . ')';
+
         if (! empty($options['images_where'])) {
             $where_clauses[] = '(' . $options['images_where'] . ')';
         }
+
         if ($permissions) {
             $where_clauses[] = functions_user::get_sql_condition_FandF(
                 [
@@ -965,10 +1071,12 @@ class functions_search
 
         $query = '
   SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' i';
+
         if ($permissions) {
             $query .= '
       INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id';
         }
+
         $query .= '
     WHERE ' . implode("\n AND ", $where_clauses) . "\n" .
         $conf['order_by'];
@@ -995,6 +1103,7 @@ class functions_search
     public static function get_search_results($search_id, $super_order_by, $images_where = '')
     {
         $search = self::get_search_array($search_id);
+
         if (! isset($search['q'])) {
             return self::get_regular_search_results($search, $images_where);
         }
@@ -1045,12 +1154,12 @@ class functions_search
     WHERE search_uuid = \'' . $candidate . '\'
   ;';
         list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
         if ($counter == 0) {
             return $candidate;
         }
 
         return self::get_available_search_uuid();
-
     }
 
     public static function save_search($rules, $forked_from = null)
@@ -1071,7 +1180,9 @@ class functions_search
             ]
         );
 
-        if (! functions_user::is_a_guest() and ! functions_user::is_generic()) {
+        if (! functions_user::is_a_guest() and
+            ! functions_user::is_generic()
+        ) {
             functions_user::userprefs_update_param('gallery_search_filters', array_keys($rules['fields'] ?? []));
         }
 

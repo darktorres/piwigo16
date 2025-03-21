@@ -12,6 +12,7 @@ function theme_activate($id, $version, &$errors)
 
     $my_conf = @$conf['modus_theme'];
     $my_conf = @unserialize($my_conf);
+
     if (empty($my_conf)) {
         $my_conf = $default_conf;
     }

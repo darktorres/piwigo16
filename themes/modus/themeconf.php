@@ -26,11 +26,15 @@ $themeconf = [
 define('MODUS_STR_RECENT', "\xe2\x9c\xbd"); //HEAVY TEARDROP-SPOKED ASTERISK
 define('MODUS_STR_RECENT_CHILD', "\xe2\x9c\xbb"); //TEARDROP-SPOKED ASTERISK
 
-if (isset($conf['modus_theme']) && ! is_array($conf['modus_theme'])) {
+if (isset($conf['modus_theme']) &&
+    ! is_array($conf['modus_theme'])
+) {
     $conf['modus_theme'] = unserialize($conf['modus_theme']);
 }
 
-if (! empty($_GET['skin']) && ! preg_match('/[^a-zA-Z0-9_-]/', $_GET['skin'])) {
+if (! empty($_GET['skin']) &&
+    ! preg_match('/[^a-zA-Z0-9_-]/', $_GET['skin'])
+) {
     $conf['modus_theme']['skin'] = $_GET['skin'];
 }
 
@@ -78,7 +82,9 @@ if (functions::get_device() == 'mobile') {
 
 $this->smarty->registerFilter('pre', functions_modus::modus_smarty_prefilter_wrap(...));
 
-if (! defined('IN_ADMIN') && defined('RVCDN')) {
+if (! defined('IN_ADMIN') &&
+    defined('RVCDN')
+) {
     $this->smarty->registerFilter('pre', functions_modus::rv_cdn_prefilter(...));
     functions_plugins::add_event_handler('combined_script', functions_modus::rv_cdn_combined_script(...), EVENT_HANDLER_PRIORITY_NEUTRAL, 2);
 }

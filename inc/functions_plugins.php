@@ -70,21 +70,24 @@ class functions_plugins
         if (! isset($pwg_event_handlers[$event][$priority])) {
             return false;
         }
+
         for ($i = 0; $i < count($pwg_event_handlers[$event][$priority]); $i++) {
             if ($pwg_event_handlers[$event][$priority][$i]['function'] == $func) {
                 unset($pwg_event_handlers[$event][$priority][$i]);
-                $pwg_event_handlers[$event][$priority] =
-                  array_values($pwg_event_handlers[$event][$priority]);
+                $pwg_event_handlers[$event][$priority] = array_values($pwg_event_handlers[$event][$priority]);
 
                 if (empty($pwg_event_handlers[$event][$priority])) {
                     unset($pwg_event_handlers[$event][$priority]);
+
                     if (empty($pwg_event_handlers[$event])) {
                         unset($pwg_event_handlers[$event]);
                     }
                 }
+
                 return true;
             }
         }
+
         return false;
     }
 
@@ -102,7 +105,7 @@ class functions_plugins
     {
         global $pwg_event_handlers;
 
-        if (isset($pwg_event_handlers['trigger'])) {// debugging
+        if (isset($pwg_event_handlers['trigger'])) { // debugging
             self::trigger_notify(
                 'trigger',
                 [
@@ -116,6 +119,7 @@ class functions_plugins
         if (! isset($pwg_event_handlers[$event])) {
             return $data;
         }
+
         $args = func_get_args();
         array_shift($args);
 
@@ -131,7 +135,7 @@ class functions_plugins
             }
         }
 
-        if (isset($pwg_event_handlers['trigger'])) {// debugging
+        if (isset($pwg_event_handlers['trigger'])) { // debugging
             self::trigger_notify(
                 'trigger',
                 [
@@ -155,7 +159,9 @@ class functions_plugins
     {
         global $pwg_event_handlers;
 
-        if (isset($pwg_event_handlers['trigger']) and $event != 'trigger') {// debugging - avoid recursive calls
+        if (isset($pwg_event_handlers['trigger']) and
+            $event != 'trigger'
+        ) { // debugging - avoid recursive calls
             self::trigger_notify(
                 'trigger',
                 [
@@ -169,6 +175,7 @@ class functions_plugins
         if (! isset($pwg_event_handlers[$event])) {
             return;
         }
+
         $args = func_get_args();
         array_shift($args);
 
@@ -195,10 +202,12 @@ class functions_plugins
     public static function set_plugin_data($plugin_id, &$data)
     {
         global $pwg_loaded_plugins;
+
         if (isset($pwg_loaded_plugins[$plugin_id])) {
             $pwg_loaded_plugins[$plugin_id]['plugin_data'] = &$data;
             return true;
         }
+
         return false;
     }
 
@@ -213,9 +222,11 @@ class functions_plugins
     public static function &get_plugin_data($plugin_id)
     {
         global $pwg_loaded_plugins;
+
         if (isset($pwg_loaded_plugins[$plugin_id]['plugin_data'])) {
             return $pwg_loaded_plugins[$plugin_id]['plugin_data'];
         }
+
         return null;
     }
 
@@ -231,12 +242,15 @@ class functions_plugins
         $query = '
   SELECT * FROM ' . PLUGINS_TABLE;
         $clauses = [];
+
         if (! empty($state)) {
             $clauses[] = 'state=\'' . $state . '\'';
         }
+
         if (! empty($id)) {
             $clauses[] = 'id="' . $id . '"';
         }
+
         if (count($clauses)) {
             $query .= '
     WHERE ' . implode(' AND ', $clauses);
@@ -254,6 +268,7 @@ class functions_plugins
     public static function load_plugin($plugin)
     {
         $file_name = PHPWG_PLUGINS_PATH . $plugin['id'] . '/main.php';
+
         if (file_exists($file_name)) {
             self::autoupdate_plugin($plugin);
             global $pwg_loaded_plugins;
@@ -275,8 +290,12 @@ class functions_plugins
         $fs_version = null;
         $i = -1;
 
-        while (($line = fgets($fh)) !== false && $fs_version == null && $i < 10) {
+        while (($line = fgets($fh)) !== false &&
+                $fs_version == null &&
+                $i < 10
+        ) {
             $i++;
+
             if ($i < 2) {
                 continue;
             } // first lines are typically "<?php" and "/*"
@@ -289,10 +308,8 @@ class functions_plugins
         fclose($fh);
 
         // if version is auto (dev) or superior
-        if ($fs_version != null && (
-            $fs_version == 'auto' || $plugin['version'] == 'auto' ||
-              functions::safe_version_compare($plugin['version'], $fs_version, '<')
-        )
+        if ($fs_version != null &&
+           ($fs_version == 'auto' || $plugin['version'] == 'auto' || functions::safe_version_compare($plugin['version'], $fs_version, '<'))
         ) {
             $old_version = $plugin['version'];
             $new_version = $fs_version;
@@ -344,11 +361,14 @@ class functions_plugins
     {
         global $conf, $pwg_loaded_plugins;
         $pwg_loaded_plugins = [];
+
         if ($conf['enable_plugins']) {
             $plugins = self::get_db_plugins('active');
-            foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
+
+            foreach ($plugins as $plugin) { // include main from a function to avoid using same function context
                 self::load_plugin($plugin);
             }
+
             self::trigger_notify('plugins_loaded');
         }
     }

@@ -38,10 +38,10 @@ class check_integrity
 
         // Ignore list
         $conf_c13y_ignore = unserialize($conf['c13y_ignore']);
-        if (
-            is_array($conf_c13y_ignore) and
+
+        if (is_array($conf_c13y_ignore) and
             isset($conf_c13y_ignore['version']) and
-            ($conf_c13y_ignore['version'] == PHPWG_VERSION) and
+            $conf_c13y_ignore['version'] == PHPWG_VERSION and
             is_array($conf_c13y_ignore['list'])
         ) {
             $ignore_list_changed = false;
@@ -67,14 +67,17 @@ class check_integrity
         }
 
         // Treatments
-        if (isset($_POST['c13y_submit_correction']) and isset($_POST['c13y_selection'])) {
+        if (isset($_POST['c13y_submit_correction']) and
+            isset($_POST['c13y_selection'])
+        ) {
             $corrected_count = 0;
             $not_corrected_count = 0;
 
             foreach ($this->retrieve_list as $i => $c13y) {
                 if (! empty($c13y['correction_fct']) and
                     $c13y['is_callable'] and
-                    in_array($c13y['id'], $_POST['c13y_selection'])) {
+                    in_array($c13y['id'], $_POST['c13y_selection'])
+                ) {
                     if (is_array($c13y['correction_fct_args'])) {
                         $args = $c13y['correction_fct_args'];
                     } elseif ($c13y['correction_fct_args'] !== null) {
@@ -82,6 +85,7 @@ class check_integrity
                     } else {
                         $args = [];
                     }
+
                     $this->retrieve_list[$i]['corrected'] = call_user_func_array($c13y['correction_fct'], $args);
 
                     if ($this->retrieve_list[$i]['corrected']) {
@@ -99,6 +103,7 @@ class check_integrity
                     $corrected_count
                 );
             }
+
             if ($not_corrected_count > 0) {
                 $page['errors'][] = functions::l10n_dec(
                     '%d anomaly has not been corrected.',
@@ -107,7 +112,9 @@ class check_integrity
                 );
             }
         } else {
-            if (isset($_POST['c13y_submit_ignore']) and isset($_POST['c13y_selection'])) {
+            if (isset($_POST['c13y_submit_ignore']) and
+                isset($_POST['c13y_selection'])
+            ) {
                 $ignored_count = 0;
 
                 foreach ($this->retrieve_list as $i => $c13y) {
@@ -128,12 +135,11 @@ class check_integrity
             }
         }
 
-        $ignore_list_changed =
-          (
-              ($ignore_list_changed) or
-        (count(array_diff($this->ignore_list, $this->build_ignore_list)) > 0) or
-        (count(array_diff($this->build_ignore_list, $this->ignore_list)) > 0)
-          );
+        if (! $ignore_list_changed) {
+            $ignore_list_changed =
+                count(array_diff($this->ignore_list, $this->build_ignore_list)) > 0 or
+                count(array_diff($this->build_ignore_list, $this->ignore_list)) > 0;
+        }
 
         if ($ignore_list_changed) {
             $this->update_conf($this->build_ignore_list);
@@ -153,7 +159,9 @@ class check_integrity
         $submit_automatic_correction = false;
         $submit_ignore = false;
 
-        if (isset($this->retrieve_list) and count($this->retrieve_list) > 0) {
+        if (isset($this->retrieve_list) and
+            count($this->retrieve_list) > 0
+        ) {
             $template->set_filenames([
                 'check_integrity' => 'check_integrity.tpl',
             ]);
@@ -199,12 +207,15 @@ class check_integrity
                         $can_select = true;
                     }
 
-                    if (! empty($c13y['correction_msg']) and ! isset($c13y['corrected'])) {
+                    if (! empty($c13y['correction_msg']) and
+                        ! isset($c13y['corrected'])
+                    ) {
                         $c13y_display['correction_msg'] = $c13y['correction_msg'];
                     }
                 }
 
                 $c13y_display['can_select'] = $can_select;
+
                 if ($can_select) {
                     $submit_ignore = true;
                 }
@@ -216,7 +227,6 @@ class check_integrity
             $template->assign('c13y_show_submit_ignore', $submit_ignore);
 
             $template->concat('ADMIN_CONTENT', $template->parse('check_integrity', true));
-
         }
     }
 

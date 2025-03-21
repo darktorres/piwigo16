@@ -33,9 +33,8 @@ $page['meta_robots'] = [
 ];
 include(PHPWG_ROOT_PATH . 'inc/page_header.php');
 
-if (
-    isset($_GET['page'])
-    and preg_match('/^[a-z_]*$/', $_GET['page'])
+if (isset($_GET['page']) and
+    preg_match('/^[a-z_]*$/', $_GET['page'])
 ) {
     $help_content =
       functions::load_language('help/' . $_GET['page'] . '.html', '', [

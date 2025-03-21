@@ -32,9 +32,12 @@ class QSearchScope
 
     public function parse($token)
     {
-        if (! $this->nullable && strlen($token->term) == 0) {
+        if (! $this->nullable &&
+            strlen($token->term) == 0
+        ) {
             return false;
         }
+
         return true;
     }
 

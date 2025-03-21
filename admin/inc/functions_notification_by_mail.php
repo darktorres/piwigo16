@@ -25,10 +25,9 @@ $env_nbm =
               'is_sendmail_timeout' => false,
         ];
 
-if (
-    (! isset($env_nbm['sendmail_timeout'])) or
-    (! is_numeric($env_nbm['sendmail_timeout'])) or
-    ($env_nbm['sendmail_timeout'] <= 0)
+if (! isset($env_nbm['sendmail_timeout']) or
+    ! is_numeric($env_nbm['sendmail_timeout']) or
+    $env_nbm['sendmail_timeout'] <= 0
 ) {
     $env_nbm['sendmail_timeout'] = $conf['nbm_treatment_timeout_default'];
 }
@@ -55,6 +54,7 @@ class functions_notification_by_mail
     check_key = \'' . $key . '\';';
 
             list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
             if ($count == 0) {
                 return $key;
             }
@@ -100,6 +100,7 @@ class functions_notification_by_mail
 
         if (in_array($action, ['subscribe', 'send'])) {
             $quoted_check_key_list = self::quote_check_key_list($check_key_list);
+
             if (count($quoted_check_key_list) != 0) {
                 $query_and_check_key = ' and
       check_key in (' . implode(',', $quoted_check_key_list) . ') ';
@@ -130,7 +131,9 @@ class functions_notification_by_mail
 
             $query .= $query_and_check_key;
 
-            if (isset($enabled_filter_value) and ($enabled_filter_value != '')) {
+            if (isset($enabled_filter_value) and
+                $enabled_filter_value != ''
+            ) {
                 $query .= ' and
           N.enabled = \'' . functions_mysqli::boolean_to_string($enabled_filter_value) . '\'';
             }
@@ -149,12 +152,14 @@ class functions_notification_by_mail
             $query .= ';';
 
             $result = functions_mysqli::pwg_query($query);
+
             if (! empty($result)) {
                 while ($nbm_user = functions_mysqli::pwg_db_fetch_assoc($result)) {
                     $data_users[] = $nbm_user;
                 }
             }
         }
+
         return $data_users;
     }
 
@@ -374,6 +379,7 @@ class functions_notification_by_mail
                 $check_key_treated[] = $nbm_user['check_key'];
 
                 $do_update = true;
+
                 if ($nbm_user['mail_address'] != '') {
                     // set env nbm user
                     self::set_user_on_env_nbm($nbm_user, true);

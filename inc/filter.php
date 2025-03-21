@@ -22,8 +22,7 @@ use Piwigo\inc\functions_session;
 if (! functions::get_filter_page_value('cancel')) {
     if (isset($_GET['filter'])) {
         $filter['matches'] = [];
-        $filter['enabled'] =
-          preg_match('/^start-recent-(\d+)$/', $_GET['filter'], $filter['matches']) === 1;
+        $filter['enabled'] = preg_match('/^start-recent-(\d+)$/', $_GET['filter'], $filter['matches']) === 1;
     } else {
         $filter['enabled'] = functions_session::pwg_get_session_var('filter_enabled', false);
     }
@@ -45,12 +44,8 @@ if ($filter['enabled']) {
         $filter['recent_period'] = $filter_key['recent_period'] > 0 ? $filter_key['recent_period'] : $user['recent_period'];
     }
 
-    if (
-        // New filter
-        ! functions_session::pwg_get_session_var('filter_enabled', false) or
-        // Cache data updated
+    if (! functions_session::pwg_get_session_var('filter_enabled', false) or
         $filter_key['time'] <= $user['cache_update_time'] or
-        // Date, period, user are changed
         $filter_key['user'] != $user['id'] or
         $filter_key['recent_period'] != $filter['recent_period'] or
         $filter_key['date'] != date('Ymd')
@@ -66,6 +61,7 @@ if ($filter['enabled']) {
         $filter['categories'] = functions_category::get_computed_categories($user, (int) $filter['recent_period']);
 
         $filter['visible_categories'] = implode(',', array_keys($filter['categories']));
+
         if (empty($filter['visible_categories'])) {
             // Must be not empty
             $filter['visible_categories'] = -1;
@@ -77,10 +73,12 @@ SELECT
 FROM ' .
   IMAGE_CATEGORY_TABLE . ' INNER JOIN ' . IMAGES_TABLE . ' ON image_id = id
 WHERE ';
+
         if (! empty($filter['visible_categories'])) {
             $query .= '
   category_id  IN (' . $filter['visible_categories'] . ') and';
         }
+
         $query .= '
     date_available >= ' . functions_mysqli::pwg_db_get_recent_period_expression($filter['recent_period']);
 
@@ -103,7 +101,9 @@ WHERE ';
         $filter['visible_categories'] = functions_session::pwg_get_session_var('filter_visible_categories', '');
         $filter['visible_images'] = functions_session::pwg_get_session_var('filter_visible_images', '');
     }
+
     unset($filter_key);
+
     if (functions::get_filter_page_value('add_notes')) {
         $header_notes[] = functions::l10n_dec(
             'Photos posted within the last %d day.',
@@ -111,6 +111,7 @@ WHERE ';
             $filter['recent_period']
         );
     }
+
 } else {
     if (functions_session::pwg_get_session_var('filter_enabled', false)) {
         functions_session::pwg_unset_session_var('filter_enabled');

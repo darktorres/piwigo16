@@ -25,6 +25,7 @@ class PwgJsonEncoder extends PwgResponseEncoder
                 ]
             );
         }
+
         parent::flattenResponse($response);
         return json_encode(
             [

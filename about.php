@@ -40,13 +40,17 @@ $template->assign('ABOUT_MESSAGE', functions::load_language('about.html', '', [
 $theme_about = functions::load_language('about.html', PHPWG_THEMES_PATH . $user['theme'] . '/', [
     'return' => true,
 ]);
+
 if ($theme_about !== false) {
     $template->assign('THEME_ABOUT', $theme_about);
 }
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! isset($themeconf['hide_menu_on']) or ! in_array('theAboutPage', $themeconf['hide_menu_on'])) {
+
+if (! isset($themeconf['hide_menu_on']) or
+    ! in_array('theAboutPage', $themeconf['hide_menu_on'])
+) {
     menubar::initialize_menu();
 }
 

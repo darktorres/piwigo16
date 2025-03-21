@@ -23,6 +23,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 $page['show_comments'] = false;
+
 foreach ($related_categories as $category) {
     if ($category['commentable'] == 'true') {
         $page['show_comments'] = true;
@@ -30,8 +31,12 @@ foreach ($related_categories as $category) {
     }
 }
 
-if ($page['show_comments'] and isset($_POST['content'])) {
-    if (functions_user::is_a_guest() and ! $conf['comments_forall']) {
+if ($page['show_comments'] and
+    isset($_POST['content'])
+) {
+    if (functions_user::is_a_guest() and
+        ! $conf['comments_forall']
+    ) {
         die('Session expired');
     }
 
@@ -51,13 +56,16 @@ if ($page['show_comments'] and isset($_POST['content'])) {
         case 'moderate':
             $page['infos'][] = functions::l10n('An administrator must authorize your comment before it is visible.');
             // no break
+
         case 'validate':
             $page['infos'][] = functions::l10n('Your comment has been registered');
             break;
+
         case 'reject':
             functions_html::set_status_header(403);
             $page['errors'][] = functions::l10n('Your comment has NOT been registered because it did not pass the validation rules');
             break;
+
         default:
             trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
     }
@@ -114,9 +122,12 @@ SELECT
 
     if ($row['nb_comments'] > 0) {
         // comments order (get, session, conf)
-        if (! empty($_GET['comments_order']) && in_array(strtoupper($_GET['comments_order']), ['ASC', 'DESC'])) {
+        if (! empty($_GET['comments_order']) &&
+            in_array(strtoupper($_GET['comments_order']), ['ASC', 'DESC'])
+        ) {
             functions_session::pwg_set_session_var('comments_order', $_GET['comments_order']);
         }
+
         $comments_order = functions_session::pwg_get_session_var('comments_order', $conf['comments_order']);
 
         $template->assign([
@@ -154,6 +165,7 @@ SELECT
             }
 
             $email = null;
+
             if (! empty($row['user_email'])) {
                 $email = $row['user_email'];
             } elseif (! empty($row['email'])) {
@@ -179,6 +191,7 @@ SELECT
                     ]
                 );
             }
+
             if (functions_user::can_manage_comment('edit', $row['author_id'])) {
                 $tpl_comment['U_EDIT'] = functions_url::add_url_params(
                     $url_self,
@@ -187,7 +200,10 @@ SELECT
                         'comment_to_edit' => $row['id'],
                     ]
                 );
-                if (isset($edit_comment) and ($row['id'] == $edit_comment)) {
+
+                if (isset($edit_comment) and
+                    $row['id'] == $edit_comment
+                ) {
                     $tpl_comment['IN_EDIT'] = true;
                     $key = functions::get_ephemeral_key(2, $page['image_id']);
                     $tpl_comment['KEY'] = $key;
@@ -196,6 +212,7 @@ SELECT
                     $tpl_comment['U_CANCEL'] = $url_self;
                 }
             }
+
             if (functions_user::is_admin()) {
                 $tpl_comment['EMAIL'] = $email;
 
@@ -210,15 +227,20 @@ SELECT
                     );
                 }
             }
+
             $template->append('comments', $tpl_comment);
         }
     }
 
     $show_add_comment_form = true;
+
     if (isset($edit_comment)) {
         $show_add_comment_form = false;
     }
-    if (functions_user::is_a_guest() and ! $conf['comments_forall']) {
+
+    if (functions_user::is_a_guest() and
+        ! $conf['comments_forall']
+    ) {
         $show_add_comment_form = false;
     }
 
@@ -244,8 +266,10 @@ SELECT
                 $tpl_var[strtoupper($k)] = isset($_POST[$k]) ? htmlspecialchars(stripslashes(@$_POST[$k])) : '';
             }
         }
+
         $template->assign('comment_add', $tpl_var);
     }
+
     $template->set_filenames([
         'comment_list' => 'comment_list.tpl',
     ]);

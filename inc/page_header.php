@@ -21,7 +21,10 @@ $template->set_filenames([
 functions_plugins::trigger_notify('loc_begin_page_header');
 
 $show_mobile_app_banner = functions::conf_get_param('show_mobile_app_banner_in_gallery', false);
-if (defined('IN_ADMIN') and IN_ADMIN) {
+
+if (defined('IN_ADMIN') and
+    IN_ADMIN
+) {
     $show_mobile_app_banner = functions::conf_get_param('show_mobile_app_banner_in_admin', true);
 }
 
@@ -79,13 +82,16 @@ if (! empty($page['meta_robots'])) {
           . '">'
     );
 }
+
 if (! isset($page['meta_robots']['noindex'])) {
     $template->assign('meta_ref', 1);
 }
 
 // refresh
-if (isset($refresh) and intval($refresh) >= 0
-    and isset($url_link)) {
+if (isset($refresh) and
+    intval($refresh) >= 0 and
+    isset($url_link)
+) {
     $template->assign(
         [
             'page_refresh' => [

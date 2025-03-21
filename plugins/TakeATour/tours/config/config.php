@@ -9,14 +9,18 @@ $TOUR_PATH = PHPWG_PLUGINS_PATH . 'TakeATour/tours/config/tour.tpl';
 
 /*********************************/
 
-if (defined('IN_ADMIN') and IN_ADMIN) {
+if (defined('IN_ADMIN') and
+    IN_ADMIN
+) {
     functions_plugins::add_event_handler('loc_end_themes_installed', TAT_FC_35(...));
 }
+
 function TAT_FC_35()
 {
     global $template;
     $template->set_prefilter('themes', TAT_FC_35_prefilter(...));
 }
+
 function TAT_FC_35_prefilter($content)
 {
     $search = '<a href="{$set_default_baseurl}{$theme.ID}" class="tiptip"';

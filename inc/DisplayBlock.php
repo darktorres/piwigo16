@@ -88,7 +88,6 @@ class DisplayBlock
         }
 
         return $this->_registeredBlock->get_name();
-
     }
 
     /**

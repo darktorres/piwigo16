@@ -25,6 +25,7 @@ class CalendarWeekly extends CalendarBase
         parent::initialize($inner_sql);
         global $lang, $conf;
         $week_no_labels = [];
+
         for ($i = 1; $i <= 53; $i++) {
             $week_no_labels[$i] = functions::l10n('Week %d', $i);
             //$week_no_labels[$i] = $i;
@@ -65,12 +66,15 @@ class CalendarWeekly extends CalendarBase
         if (count($page['chronology_date']) == 0) {
             $this->build_nav_bar(CalendarBase::CYEAR); // years
         }
+
         if (count($page['chronology_date']) == 1) {
             $this->build_nav_bar(CalendarBase::CWEEK, []); // week nav bar 1-53
         }
+
         if (count($page['chronology_date']) == 2) {
             $this->build_nav_bar(CalendarBase::CDAY); // days nav bar Mon-Sun
         }
+
         $this->build_next_prev();
         return false;
     }
@@ -85,24 +89,36 @@ class CalendarWeekly extends CalendarBase
     {
         global $page;
         $date = $page['chronology_date'];
+
         while (count($date) > $max_levels) {
             array_pop($date);
         }
+
         $res = '';
-        if (isset($date[CalendarBase::CYEAR]) and $date[CalendarBase::CYEAR] !== 'any') {
+
+        if (isset($date[CalendarBase::CYEAR]) and
+            $date[CalendarBase::CYEAR] !== 'any'
+        ) {
             $y = $date[CalendarBase::CYEAR];
             $res = " AND {$this->date_field} BETWEEN '{$y}-01-01' AND '{$y}-12-31 23:59:59'";
         }
 
-        if (isset($date[CalendarBase::CWEEK]) and $date[CalendarBase::CWEEK] !== 'any') {
+        if (isset($date[CalendarBase::CWEEK]) and
+            $date[CalendarBase::CWEEK] !== 'any'
+        ) {
             $res .= ' AND ' . $this->calendar_levels[CalendarBase::CWEEK]['sql'] . '=' . $date[CalendarBase::CWEEK];
         }
-        if (isset($date[CalendarBase::CDAY]) and $date[CalendarBase::CDAY] !== 'any') {
+
+        if (isset($date[CalendarBase::CDAY]) and
+            $date[CalendarBase::CDAY] !== 'any'
+        ) {
             $res .= ' AND ' . $this->calendar_levels[CalendarBase::CDAY]['sql'] . '=' . $date[CalendarBase::CDAY];
         }
+
         if (empty($res)) {
             $res = ' AND ' . $this->date_field . ' IS NOT NULL';
         }
+
         return $res;
     }
 }

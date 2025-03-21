@@ -69,7 +69,9 @@ class functions_upload
 
     public static function save_upload_form_config($data, &$errors = [], &$form_errors = [])
     {
-        if (! is_array($data) or empty($data)) {
+        if (! is_array($data) or
+            empty($data)
+        ) {
             return false;
         }
 
@@ -80,6 +82,7 @@ class functions_upload
             if (! isset($upload_form_config[$field])) {
                 continue;
             }
+
             if (is_bool($upload_form_config[$field]['default'])) {
                 if (isset($value)) {
                     $value = true;
@@ -91,7 +94,9 @@ class functions_upload
                     'param' => $field,
                     'value' => functions_mysqli::boolean_to_string($value),
                 ];
-            } elseif ($upload_form_config[$field]['can_be_null'] and empty($value)) {
+            } elseif ($upload_form_config[$field]['can_be_null'] and
+                      empty($value)
+            ) {
                 $updates[] = [
                     'param' => $field,
                     'value' => 'false',
@@ -101,7 +106,10 @@ class functions_upload
                 $max = $upload_form_config[$field]['max'];
                 $pattern = $upload_form_config[$field]['pattern'];
 
-                if (preg_match($pattern, $value) and $value >= $min and $value <= $max) {
+                if (preg_match($pattern, $value) and
+                    $value >= $min and
+                    $value <= $max
+                ) {
                     $updates[] = [
                         'param' => $field,
                         'value' => $value,
@@ -154,7 +162,9 @@ class functions_upload
         }
 
         // we only try to detect duplicate on a new image, not when updating an existing image
-        if (! isset($image_id) and $conf['upload_detect_duplicate']) {
+        if (! isset($image_id) and
+            $conf['upload_detect_duplicate']
+        ) {
             $query = '
   SELECT
       id
@@ -189,6 +199,7 @@ class functions_upload
     WHERE id = ' . $image_id . '
   ;';
             $result = functions_mysqli::pwg_query($query);
+
             while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 $file_path = $row['path'];
             }
@@ -230,7 +241,9 @@ class functions_upload
                 $file_path .= 'jpg';
             } elseif ($type == IMAGETYPE_WEBP) {
                 $file_path .= 'webp';
-            } elseif (isset($conf['upload_form_all_types']) and $conf['upload_form_all_types']) {
+            } elseif (isset($conf['upload_form_all_types']) and
+                      $conf['upload_form_all_types']
+            ) {
                 $original_extension = strtolower(functions::get_extension($original_filename));
 
                 if (in_array($original_extension, $conf['file_ext'])) {
@@ -252,6 +265,7 @@ class functions_upload
         } else {
             rename($source_filepath, $file_path);
         }
+
         @chmod($file_path, 0644);
 
         // handle the uploaded file type by potentially making a
@@ -351,9 +365,12 @@ class functions_upload
         self::add_uploaded_file_add_to_categories($image_id, $categories);
 
         // update metadata from the uploaded file (exif/iptc)
-        if ($conf['use_exif'] and ! function_exists('exif_read_data')) {
+        if ($conf['use_exif'] and
+            ! function_exists('exif_read_data')
+        ) {
             $conf['use_exif'] = false;
         }
+
         functions_metadata_admin::sync_metadata([$image_id]);
 
         // cache a derivative
@@ -393,12 +410,15 @@ class functions_upload
         if (! $conf['lounge_active']) {
             // check if we need to use the lounge from now
             list($nb_photos) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT COUNT(*) FROM ' . IMAGES_TABLE . ';'));
+
             if ($nb_photos >= $conf['lounge_activate_threshold']) {
                 functions::conf_update_param('lounge_active', true, true);
             }
         }
 
-        if (isset($categories) and count($categories) > 0) {
+        if (isset($categories) and
+            count($categories) > 0
+        ) {
             if ($conf['lounge_active']) {
                 functions_admin::fill_lounge([$image_id], $categories);
             } else {
@@ -450,6 +470,7 @@ class functions_upload
         } else {
             rename($source_filepath, $format_path);
         }
+
         @chmod($format_path, 0644);
 
         $file_infos = self::pwg_image_infos($format_path);
@@ -503,9 +524,11 @@ class functions_upload
         self::prepare_directory(dirname($representative_file_path));
 
         $exec = $conf['ext_imagick_dir'] . 'convert';
+
         if ($ext == 'jpg') {
             $exec .= ' -quality ' . $jpg_quality;
         }
+
         $exec .= ' "' . realpath($file_path) . '"[0]';
         $exec .= ' "' . $representative_file_path . '"';
         $exec .= ' 2>&1';
@@ -607,6 +630,7 @@ class functions_upload
         // sometimes ImageMagick creates file-0.jpg (full size) + file-1.jpg
         // (thumbnail). I don't know how to avoid it.
         $representative_file_abspath = realpath($dest['dirname']) . '/' . $dest['basename'];
+
         if (! file_exists($representative_file_abspath)) {
             $first_file_abspath = preg_replace(
                 '/\.' . $representative_ext . '$/',
@@ -668,6 +692,7 @@ class functions_upload
         $ffmpeg .= ' "' . $representative_file_path . '"'; // Output file
 
         @exec($ffmpeg . ' 2>&1', $FO, $FS);
+
         if (! empty($FO[0])) {
             $logger->debug(__FUNCTION__ . ', Tried ' . $ffmpeg);
             $logger->debug($FO[0]);
@@ -722,6 +747,7 @@ class functions_upload
         // sometimes ImageMagick creates file-0.png + file-1.png + file-2.png...
         // It seems we can't avoid it.
         $representative_file_abspath = realpath($dest['dirname']) . '/' . $dest['basename'];
+
         if (! file_exists($representative_file_abspath)) {
             $first_file_abspath = preg_replace(
                 '/\.' . $representative_ext . '$/',
@@ -787,8 +813,10 @@ class functions_upload
             if (substr(PHP_OS, 0, 3) == 'WIN') {
                 $directory = str_replace('/', DIRECTORY_SEPARATOR, $directory);
             }
+
             umask(0000);
             $recursive = true;
+
             if (! @mkdir($directory, 0777, $recursive)) {
                 die('[prepare_directory] cannot create directory "' . $directory . '"');
             }
@@ -808,12 +836,14 @@ class functions_upload
 
     public static function need_resize($image_filepath, $max_width, $max_height)
     {
-        // TODO : the resize check should take the orientation into account. If a
+        // TODO: the resize check should take the orientation into account. If a
         // rotation must be applied to the resized photo, then we should test
         // invert width and height.
         list($width, $height) = getimagesize($image_filepath);
 
-        if ($width > $max_width or $height > $max_height) {
+        if ($width > $max_width or
+            $height > $max_height
+        ) {
             return true;
         }
 
@@ -836,7 +866,9 @@ class functions_upload
     {
         global $conf;
 
-        if (isset($conf['upload_form_all_types']) and $conf['upload_form_all_types']) {
+        if (isset($conf['upload_form_all_types']) and
+            $conf['upload_form_all_types']
+        ) {
             $extensions = $conf['file_ext'];
         } else {
             $extensions = $conf['picture_ext'];
@@ -853,18 +885,25 @@ class functions_upload
                     functions::l10n('The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB'),
                     self::get_ini_size('upload_max_filesize', false)
                 );
+
             case UPLOAD_ERR_FORM_SIZE:
                 return functions::l10n('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form');
+
             case UPLOAD_ERR_PARTIAL:
                 return functions::l10n('The uploaded file was only partially uploaded');
+
             case UPLOAD_ERR_NO_FILE:
                 return functions::l10n('No file was uploaded');
+
             case UPLOAD_ERR_NO_TMP_DIR:
                 return functions::l10n('Missing a temporary folder');
+
             case UPLOAD_ERR_CANT_WRITE:
                 return functions::l10n('Failed to write file to disk');
+
             case UPLOAD_ERR_EXTENSION:
                 return functions::l10n('File upload stopped by extension');
+
             default:
                 return functions::l10n('Unknown upload error');
         }
@@ -948,6 +987,7 @@ class functions_upload
 
         $enabled = ImageStdParams::get_defined_type_map();
         $disabled = @unserialize(@$conf['disabled_derivatives']);
+
         if ($disabled === false) {
             $disabled = [];
         }

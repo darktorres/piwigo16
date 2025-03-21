@@ -73,6 +73,7 @@ class BlockManager
         if (isset($this->registered_blocks[$block->get_id()])) {
             return false;
         }
+
         $this->registered_blocks[$block->get_id()] = $block;
         return true;
     }
@@ -87,19 +88,24 @@ class BlockManager
         global $conf;
         $conf_id = 'blk_' . $this->id;
         $mb_conf = isset($conf[$conf_id]) ? $conf[$conf_id] : [];
+
         if (! is_array($mb_conf)) {
             $mb_conf = @unserialize($mb_conf);
         }
 
         $idx = 1;
+
         foreach ($this->registered_blocks as $id => $block) {
             $pos = isset($mb_conf[$id]) ? $mb_conf[$id] : $idx * 50;
+
             if ($pos > 0) {
                 $this->display_blocks[$id] = new DisplayBlock($block);
                 $this->display_blocks[$id]->set_position($pos);
             }
+
             $idx++;
         }
+
         $this->sort_blocks();
         functions_plugins::trigger_notify('blockmanager_prepare_display', [$this]);
         $this->sort_blocks();
@@ -137,6 +143,7 @@ class BlockManager
         if (isset($this->display_blocks[$block_id])) {
             return $this->display_blocks[$block_id];
         }
+
         return null;
     }
 
@@ -168,10 +175,13 @@ class BlockManager
         functions_plugins::trigger_notify('blockmanager_apply', [$this]);
 
         foreach ($this->display_blocks as $id => $block) {
-            if (empty($block->raw_content) and empty($block->template)) {
+            if (empty($block->raw_content) and
+                empty($block->template)
+            ) {
                 $this->hide_block($id);
             }
         }
+
         $this->sort_blocks();
         $template->assign('blocks', $this->display_blocks);
         $template->assign_var_from_handle($var, 'menubar');

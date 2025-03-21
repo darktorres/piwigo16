@@ -29,13 +29,18 @@ $themes = new themes();
 // |                          perform actions                              |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['action']) and isset($_GET['theme'])) {
+if (isset($_GET['action']) and
+    isset($_GET['theme'])
+) {
     $page['errors'] = $themes->perform_action($_GET['action'], $_GET['theme']);
 
     if (empty($page['errors'])) {
-        if ($_GET['action'] == 'activate' or $_GET['action'] == 'deactivate') {
+        if ($_GET['action'] == 'activate' or
+            $_GET['action'] == 'deactivate'
+        ) {
             $template->delete_compiled_templates();
         }
+
         functions::redirect($base_url);
     }
 }
@@ -50,6 +55,7 @@ $default_theme = functions_user::get_default_theme();
 
 $db_themes = $themes->get_db_themes();
 $db_theme_ids = [];
+
 foreach ($db_themes as $db_theme) {
     $db_theme_ids[] = $db_theme['id'];
 }
@@ -84,6 +90,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
             $tpl_theme['DEACTIVATABLE'] = false;
             $tpl_theme['DEACTIVATE_TOOLTIP'] = functions::l10n('Impossible to deactivate this theme, you need at least one theme.');
         }
+
         if ($tpl_theme['IS_DEFAULT']) {
             $tpl_theme['DEACTIVATABLE'] = false;
             $tpl_theme['DEACTIVATE_TOOLTIP'] = functions::l10n('Impossible to deactivate the default theme.');
@@ -92,7 +99,9 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
         $tpl_theme['STATE'] = 'inactive';
 
         // is the theme "activatable" ?
-        if (isset($fs_theme['activatable']) and ! $fs_theme['activatable']) {
+        if (isset($fs_theme['activatable']) and
+            ! $fs_theme['activatable']
+        ) {
             $tpl_theme['ACTIVATABLE'] = false;
             $tpl_theme['ACTIVATABLE_TOOLTIP'] = functions::l10n('This theme was not designed to be directly activated');
         } else {
@@ -100,6 +109,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
         }
 
         $missing_parent = $themes->missing_parent_theme($theme_id);
+
         if (isset($missing_parent)) {
             $tpl_theme['ACTIVATABLE'] = false;
 
@@ -137,6 +147,7 @@ usort($tpl_themes, function ($a, $b) {
     if (@$a['IS_DEFAULT']) {
         return -1;
     }
+
     if (@$b['IS_DEFAULT']) {
         return 1;
     }

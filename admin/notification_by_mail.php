@@ -64,7 +64,9 @@ functions_plugins::trigger_notify('nbm_event_handler_added');
 // +-----------------------------------------------------------------------+
 // | Insert new users with mails                                           |
 // +-----------------------------------------------------------------------+
-if (! isset($_POST) or (count($_POST) == 0)) {
+if (! isset($_POST) or
+    count($_POST) == 0
+) {
     // No insert data in post mode
     functions_admin::insert_new_data_user_mail_notification();
 }
@@ -79,7 +81,6 @@ if (! empty($_POST)) {
 
 switch ($page['mode']) {
     case 'param':
-
         if (isset($_POST['param_submit'])) {
             $_POST['nbm_send_mail_as'] = strip_tags($_POST['nbm_send_mail_as']);
 
@@ -90,6 +91,7 @@ switch ($page['mode']) {
             $updated_param_count = 0;
             // Update param
             $result = functions_mysqli::pwg_query('select param, value from ' . CONFIG_TABLE . ' where param like \'nbm\\_%\'');
+
             while ($nbm_user = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 if (isset($_POST[$nbm_user['param']])) {
                     functions::conf_update_param($nbm_user['param'], $_POST[$nbm_user['param']], true);
@@ -105,24 +107,30 @@ switch ($page['mode']) {
         }
 
         // no break
-    case 'subscribe':
 
-        if (isset($_POST['falsify']) and isset($_POST['cat_true'])) {
+    case 'subscribe':
+        if (isset($_POST['falsify']) and
+            isset($_POST['cat_true'])
+        ) {
             $check_key_treated = functions_notification_by_mail::unsubscribe_notification_by_mail(true, $_POST['cat_true']);
             functions_admin::do_timeout_treatment('cat_true', $check_key_treated);
-        } elseif (isset($_POST['truthify']) and isset($_POST['cat_false'])) {
+        } elseif (isset($_POST['truthify']) and
+                  isset($_POST['cat_false'])
+        ) {
             $check_key_treated = functions_notification_by_mail::subscribe_notification_by_mail(true, $_POST['cat_false']);
             functions_admin::do_timeout_treatment('cat_false', $check_key_treated);
         }
+
         break;
 
     case 'send':
-
-        if (isset($_POST['send_submit']) and isset($_POST['send_selection']) and isset($_POST['send_customize_mail_content'])) {
+        if (isset($_POST['send_submit']) and
+            isset($_POST['send_selection']) and
+            isset($_POST['send_customize_mail_content'])
+        ) {
             $check_key_treated = functions_admin::do_action_send_mail_notification('send', $_POST['send_selection'], stripslashes($_POST['send_customize_mail_content']));
             functions_admin::do_timeout_treatment('send_selection', $check_key_treated);
         }
-
 }
 
 // +-----------------------------------------------------------------------+
@@ -167,7 +175,6 @@ if ($must_repost) {
 
 switch ($page['mode']) {
     case 'param':
-
         $template->assign(
             $page['mode'],
             [
@@ -181,7 +188,6 @@ switch ($page['mode']) {
         break;
 
     case 'subscribe':
-
         $template->assign($page['mode'], true);
 
         $template->assign(
@@ -197,19 +203,29 @@ switch ($page['mode']) {
         $opt_true_selected = [];
         $opt_false = [];
         $opt_false_selected = [];
+
         foreach ($data_users as $nbm_user) {
             if (functions_mysqli::get_boolean($nbm_user['enabled'])) {
                 $opt_true[$nbm_user['check_key']] = stripslashes($nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
-                if ((isset($_POST['falsify']) and isset($_POST['cat_true']) and in_array($nbm_user['check_key'], $_POST['cat_true']))) {
+
+                if (isset($_POST['falsify']) and
+                    isset($_POST['cat_true']) and
+                    in_array($nbm_user['check_key'], $_POST['cat_true'])
+                ) {
                     $opt_true_selected[] = $nbm_user['check_key'];
                 }
             } else {
                 $opt_false[$nbm_user['check_key']] = stripslashes($nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
-                if (isset($_POST['truthify']) and isset($_POST['cat_false']) and in_array($nbm_user['check_key'], $_POST['cat_false'])) {
+
+                if (isset($_POST['truthify']) and
+                    isset($_POST['cat_false']) and
+                    in_array($nbm_user['check_key'], $_POST['cat_false'])
+                ) {
                     $opt_false_selected[] = $nbm_user['check_key'];
                 }
             }
         }
+
         $template->assign(
             [
                 'category_option_true' => $opt_true,
@@ -222,7 +238,6 @@ switch ($page['mode']) {
         break;
 
     case 'send':
-
         $tpl_var = [
             'users' => [],
         ];
@@ -236,9 +251,8 @@ switch ($page['mode']) {
 
         if (count($data_users)) {
             foreach ($data_users as $nbm_user) {
-                if (
-                    (! $must_repost) or // Not timeout, normal treatment
-                    (($must_repost) and in_array($nbm_user['check_key'], $_POST['send_selection']))  // Must be repost, show only user to send
+                if (! $must_repost or // Not timeout, normal treatment
+                    ($must_repost and in_array($nbm_user['check_key'], $_POST['send_selection']))  // Must be repost, show only user to send
                 ) {
                     $tpl_var['users'][] =
                       [
@@ -254,6 +268,7 @@ switch ($page['mode']) {
                 }
             }
         }
+
         $template->assign($page['mode'], $tpl_var);
 
         if ($conf['auth_key_duration'] > 0) {
@@ -269,7 +284,6 @@ switch ($page['mode']) {
         }
 
         break;
-
 }
 
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Send mail to users'));

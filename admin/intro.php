@@ -31,7 +31,9 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['action']) and $_GET['action'] == 'hide_newsletter_subscription') {
+if (isset($_GET['action']) and
+    $_GET['action'] == 'hide_newsletter_subscription'
+) {
     functions_user::userprefs_update_param('show_newsletter_subscription', 'false');
     exit();
 }
@@ -80,6 +82,7 @@ SELECT COUNT(*)
   WHERE visible =\'false\'
 ;';
 list($locked_album) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
 if ($locked_album > 0) {
     $locked_album_url = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&section=visible';
 
@@ -100,7 +103,9 @@ $template->set_filenames([
     'intro' => 'intro.tpl',
 ]);
 
-if ($conf['show_newsletter_subscription'] and functions_user::userprefs_get_param('show_newsletter_subscription', true)) {
+if ($conf['show_newsletter_subscription'] and
+    functions_user::userprefs_get_param('show_newsletter_subscription', true)
+) {
     $template->assign(
         [
             'EMAIL' => $user['email'],
@@ -177,6 +182,7 @@ $disk_usage += $formats_disk_usage;
 
 $du_decimals = 1;
 $du_gb = $disk_usage / (1024 * 1024);
+
 if ($du_gb > 100) {
     $du_decimals = 0;
 }
@@ -212,7 +218,9 @@ SELECT COUNT(*)
 if ($conf['show_piwigo_latest_news']) {
     $latest_news = functions_admin::get_piwigo_news();
 
-    if (isset($latest_news['id']) and $latest_news['posted_on'] > time() - 60 * 60 * 24 * 30) {
+    if (isset($latest_news['id']) and
+        $latest_news['posted_on'] > time() - 60 * 60 * 24 * 30
+    ) {
         $page['messages'][] = sprintf(
             '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
             functions::l10n('Latest Piwigo news'),
@@ -254,7 +262,9 @@ while ($mondays < $nb_weeks) {
 $week_number = array_reverse($week_number);
 $date_string = $date->format('Y-m-d');
 
-if (! isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity_last_weeks']['calculated_on'] < strtotime('5 minutes ago')) {
+if (! isset($_SESSION['cache_activity_last_weeks']) or
+    $_SESSION['cache_activity_last_weeks']['calculated_on'] < strtotime('5 minutes ago')
+) {
     $start_time = functions::get_moment();
 
     $query = '
@@ -274,11 +284,13 @@ if (! isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity
         $day_date = new DateTime($action['activity_day'] . ' 12:00:00');
 
         $week = 0;
+
         for ($i = 0; $i < $nb_weeks; $i++) {
             if ($week_number[$i] == $day_date->format('W')) {
                 $week = $i;
             }
         }
+
         $day_nb = $day_date->format('N');
 
         @$activity_last_weeks[$week][$day_nb]['details'][ucfirst($action['object'])][ucfirst($action['action'])] = $action['activity_counter'];
@@ -301,6 +313,7 @@ foreach ($activity_last_weeks as $week => $i) {
         $details = $j['details'];
         ksort($details);
         $activity_last_weeks[$week][$day]['details'] = $details;
+
         if ($j['number'] > 0) {
             $temp_data[] = [
                 'x' => $j['number'],
@@ -321,6 +334,7 @@ usort($temp_data, function ($a, $b) {
     if ($a['x'] == $b['x']) {
         return 0;
     }
+
     return ($a['x'] < $b['x']) ? -1 : 1;
 });
 
@@ -359,6 +373,7 @@ for ($i = 1; $i < count($temp_data); $i++) {
     if ($diff_x[$i - 1] == -1) {
         $size++;
     }
+
     $chart_data[$temp_data[$i]['w']][$temp_data[$i]['d']] = $size;
 }
 
@@ -369,10 +384,12 @@ $template->assign('ACTIVITY_CHART_DATA', $chart_data);
 $template->assign('ACTIVITY_CHART_NUMBER_SIZES', $size);
 
 $day_labels = [];
+
 for ($i = 0; $i <= 6; $i++) {
     // first 3 letters of day name
     $day_labels[] = mb_substr($lang['day'][($i + 1) % 7], 0, 3);
 }
+
 $template->assign('DAY_LABELS', $day_labels);
 
 // +-----------------------------------------------------------------------+
@@ -396,6 +413,7 @@ $file_extensions = functions_mysqli::query2array($query, 'ext');
 
 foreach ($file_extensions as $ext => $ext_details) {
     $type = null;
+
     if (in_array(strtolower($ext), $conf['picture_ext'])) {
         $type = 'Photos';
     } elseif (in_array(strtolower($ext), $video_format)) {
@@ -424,6 +442,7 @@ SELECT
 ;';
 
 $file_extensions = functions_mysqli::query2array($query, 'ext');
+
 foreach ($file_extensions as $ext => $ext_details) {
     $type = 'Formats';
 
@@ -437,10 +456,15 @@ foreach ($file_extensions as $ext => $ext_details) {
 }
 
 // Add cache size if requested and known.
-if ($conf['add_cache_to_storage_chart'] && isset($conf['cache_sizes'])) {
+if ($conf['add_cache_to_storage_chart'] &&
+    isset($conf['cache_sizes'])
+) {
     $cache_sizes = unserialize($conf['cache_sizes']);
+
     if (isset($cache_sizes)) {
-        if (isset($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
+        if (isset($cache_sizes[0]) &&
+            isset($cache_sizes[0]['value'])
+        ) {
             @$data_storage['Cache']['total']['filesize'] = $cache_sizes[0]['value'] / 1024;
         }
     }
@@ -448,6 +472,7 @@ if ($conf['add_cache_to_storage_chart'] && isset($conf['cache_sizes'])) {
 
 //Calculate total storage
 $total_storage = 0;
+
 foreach ($data_storage as $value) {
     $total_storage += $value['total']['filesize'];
 }

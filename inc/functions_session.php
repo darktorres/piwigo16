@@ -12,9 +12,10 @@ namespace Piwigo\inc;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Random\RandomException;
 
-if (isset($conf['session_save_handler'])
-  and ($conf['session_save_handler'] == 'db')
-  and defined('PHPWG_INSTALLED')) {
+if (isset($conf['session_save_handler']) and
+    $conf['session_save_handler'] == 'db' and
+    defined('PHPWG_INSTALLED')
+) {
     session_set_save_handler(
         functions_session::pwg_session_open(...),
         functions_session::pwg_session_close(...),
@@ -48,7 +49,6 @@ class functions_session
      */
     public static function generate_key($size)
     {
-
         $bytes = random_bytes($size + 10);
 
         return substr(
@@ -97,12 +97,13 @@ class functions_session
             return '';
         }
 
-        if (strpos($_SERVER['REMOTE_ADDR'], ':') === false) {//ipv4
+        if (strpos($_SERVER['REMOTE_ADDR'], ':') === false) { //ipv4
             return vsprintf(
                 '%02X%02X',
                 explode('.', $_SERVER['REMOTE_ADDR'])
             );
         }
+
         return ''; //ipv6 not yet
     }
 
@@ -120,9 +121,12 @@ class functions_session
     WHERE id = \'' . self::get_remote_addr_session_hash() . $session_id . '\'
   ;';
         $result = functions_mysqli::pwg_query($query);
-        if (($row = functions_mysqli::pwg_db_fetch_assoc($result))) {
+        $row = functions_mysqli::pwg_db_fetch_assoc($result);
+
+        if ($row) {
             return $row['data'];
         }
+
         return '';
     }
 
@@ -192,6 +196,7 @@ class functions_session
         if (! isset($_SESSION)) {
             return false;
         }
+
         $_SESSION['pwg_' . $var] = $value;
         return true;
     }
@@ -208,6 +213,7 @@ class functions_session
         if (isset($_SESSION['pwg_' . $var])) {
             return $_SESSION['pwg_' . $var];
         }
+
         return $default;
     }
 
@@ -222,6 +228,7 @@ class functions_session
         if (! isset($_SESSION)) {
             return false;
         }
+
         unset($_SESSION['pwg_' . $var]);
         return true;
     }

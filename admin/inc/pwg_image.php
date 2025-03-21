@@ -44,7 +44,9 @@ class pwg_image
             die('[Image] unsupported file extension');
         }
 
-        if (! ($this->library = self::get_library($library, $extension))) {
+        $this->library = self::get_library($library, $extension);
+
+        if (! $this->library) {
             die('No image library available on your server.');
         }
 
@@ -68,14 +70,18 @@ class pwg_image
         $source_height = $this->image->get_height();
 
         $rotation = null;
+
         if ($automatic_rotation) {
             $rotation = self::get_rotation_angle($this->source_filepath);
         }
+
         $resize_dimensions = self::get_resize_dimensions($source_width, $source_height, $max_width, $max_height, $rotation, $crop, $follow_orientation);
 
         // testing on height is useless in theory: if width is unchanged, there
         // should be no resize, because width/height ratio is not modified.
-        if ($resize_dimensions['width'] == $source_width and $resize_dimensions['height'] == $source_height) {
+        if ($resize_dimensions['width'] == $source_width and
+            $resize_dimensions['height'] == $source_height
+        ) {
             // the image doesn't need any resize! We just copy it to the destination
             copy($this->source_filepath, $destination_filepath);
             return $this->get_resize_result($destination_filepath, $resize_dimensions['width'], $resize_dimensions['height'], $starttime);
@@ -107,7 +113,10 @@ class pwg_image
     public static function get_resize_dimensions($width, $height, $max_width, $max_height, $rotation = null, $crop = false, $follow_orientation = true)
     {
         $rotate_for_dimensions = false;
-        if (isset($rotation) and in_array(abs($rotation), [90, 270])) {
+
+        if (isset($rotation) and
+            in_array(abs($rotation), [90, 270])
+        ) {
             $rotate_for_dimensions = true;
         }
 
@@ -119,7 +128,9 @@ class pwg_image
             $x = 0;
             $y = 0;
 
-            if ($width < $height and $follow_orientation) {
+            if ($width < $height and
+                $follow_orientation
+            ) {
                 list($max_width, $max_height) = [$max_height, $max_width];
             }
 
@@ -143,7 +154,9 @@ class pwg_image
         $destination_height = $height;
 
         // maximal size exceeded ?
-        if ($ratio_width > 1 or $ratio_height > 1) {
+        if ($ratio_width > 1 or
+            $ratio_height > 1
+        ) {
             if ($ratio_width < $ratio_height) {
                 $destination_width = round($width / $ratio_height);
                 $destination_height = $max_height;
@@ -162,7 +175,9 @@ class pwg_image
             'height' => $destination_height,
         ];
 
-        if ($crop and ($x or $y)) {
+        if ($crop and
+           ($x or $y)
+        ) {
             $result['crop'] = [
                 'width' => $width,
                 'height' => $height,
@@ -170,6 +185,7 @@ class pwg_image
                 'y' => $y,
             ];
         }
+
         return $result;
     }
 
@@ -183,9 +199,11 @@ class pwg_image
         // https://stackoverflow.com/questions/61221874/detect-if-a-webp-image-is-transparent-in-php
 
         $fp = fopen($source_filepath, 'rb');
+
         if (! $fp) {
             throw new Exception("webp_info(): fopen({$f}): Failed");
         }
+
         $buf = fread($fp, 25);
         fclose($fp);
 
@@ -209,15 +227,15 @@ class pwg_image
                 return [
                     'type' => 'VP8L',
                     'has-animation' => false,
-                    'has-transparent' => (bool) (! ! (ord($buf[24]) & 0x00000010)),
+                    'has-transparent' => (bool) (ord($buf[24]) & 0x10),
                 ];
 
             case $buf[15] == 'X':
                 // Extended File Format
                 return [
                     'type' => 'VP8X',
-                    'has-animation' => (bool) (! ! (ord($buf[20]) & 0x00000002)),
-                    'has-transparent' => (bool) (! ! (ord($buf[20]) & 0x00000010)),
+                    'has-animation' => (bool) (ord($buf[20]) & 0x2),
+                    'has-transparent' => (bool) (ord($buf[20]) & 0x10),
                 ];
 
             default:
@@ -228,6 +246,7 @@ class pwg_image
     public static function get_rotation_angle($source_filepath)
     {
         list($width, $height, $type) = getimagesize($source_filepath);
+
         if ($type != IMAGETYPE_JPEG) {
             return null;
         }
@@ -240,8 +259,11 @@ class pwg_image
 
         $exif = @exif_read_data($source_filepath);
 
-        if (isset($exif['Orientation']) and preg_match('/^\s*(\d)/', $exif['Orientation'], $matches)) {
+        if (isset($exif['Orientation']) and
+            preg_match('/^\s*(\d)/', $exif['Orientation'], $matches)
+        ) {
             $orientation = $matches[1];
+
             if (in_array($orientation, [3, 4])) {
                 $rotation = 180;
             } elseif (in_array($orientation, [5, 6])) {
@@ -301,7 +323,8 @@ class pwg_image
 
     public static function is_imagick()
     {
-        return extension_loaded('imagick') and class_exists('Imagick');
+        return extension_loaded('imagick') and
+               class_exists('Imagick');
     }
 
     public static function is_ext_imagick()
@@ -311,13 +334,20 @@ class pwg_image
         if (! function_exists('exec')) {
             return false;
         }
+
         @exec($conf['ext_imagick_dir'] . 'convert -version', $returnarray);
-        if (is_array($returnarray) and ! empty($returnarray[0]) and preg_match('/ImageMagick/i', $returnarray[0])) {
+
+        if (is_array($returnarray) and
+            ! empty($returnarray[0]) and
+            preg_match('/ImageMagick/i', $returnarray[0])
+        ) {
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];
             }
+
             return true;
         }
+
         return false;
     }
 
@@ -343,31 +373,40 @@ class pwg_image
         switch (strtolower($library)) {
             case 'auto':
             case 'imagick':
-                if ($extension != 'gif' and self::is_imagick()) {
+                if ($extension != 'gif' and
+                    self::is_imagick()
+                ) {
                     return 'imagick';
                 }
                 // no break
+
             case 'ext_imagick':
-                if ($extension != 'gif' and self::is_ext_imagick()) {
+                if ($extension != 'gif' and
+                    self::is_ext_imagick()
+                ) {
                     return 'ext_imagick';
                 }
                 // no break
+
             case 'gd':
                 if (self::is_gd()) {
                     return 'gd';
                 }
                 // no break
+
             case 'vips':
                 if (self::is_vips()) {
                     return 'vips';
                 }
                 // no break
+
             default:
                 if ($library != 'auto') {
                     // Requested library not available. Try another library
                     return self::get_library('auto', $extension);
                 }
         }
+
         return false;
     }
 
@@ -376,6 +415,7 @@ class pwg_image
         if (method_exists($this->image, 'destroy')) {
             return $this->image->destroy();
         }
+
         return true;
     }
 

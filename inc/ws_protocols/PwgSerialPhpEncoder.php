@@ -25,6 +25,7 @@ class PwgSerialPhpEncoder extends PwgResponseEncoder
                 ]
             );
         }
+
         parent::flattenResponse($response);
         return serialize(
             [

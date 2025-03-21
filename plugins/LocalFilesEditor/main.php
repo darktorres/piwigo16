@@ -38,6 +38,7 @@ use Piwigo\inc\functions_plugins;
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
+
 define('LOCALEDIT_PATH', PHPWG_PLUGINS_PATH . basename(dirname(__FILE__)) . '/');
 
 functions_plugins::add_event_handler('loc_end_themes_installed', localfiles_css_link(...));

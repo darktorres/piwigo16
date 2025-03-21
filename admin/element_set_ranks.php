@@ -32,7 +32,9 @@ if (! defined('PHPWG_ROOT_PATH')) {
 // +-----------------------------------------------------------------------+
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-if (! isset($_GET['cat_id']) or ! is_numeric($_GET['cat_id'])) {
+if (! isset($_GET['cat_id']) or
+    ! is_numeric($_GET['cat_id'])
+) {
     trigger_error('missing cat_id param', E_USER_ERROR);
 }
 
@@ -57,24 +59,28 @@ if (isset($_POST['submit'])) {
         $page['infos'][] = functions::l10n('Images manual order was saved');
     }
 
-    if (! empty($_POST['image_order_choice'])
-        && in_array($_POST['image_order_choice'], $image_order_choices)) {
+    if (! empty($_POST['image_order_choice']) &&
+        in_array($_POST['image_order_choice'], $image_order_choices)
+    ) {
         $image_order_choice = $_POST['image_order_choice'];
     }
 
     $image_order = null;
+
     if ($image_order_choice == 'user_define') {
         for ($i = 0; $i < 3; $i++) {
             if (! empty($_POST['image_order'][$i])) {
                 if (! empty($image_order)) {
                     $image_order .= ',';
                 }
+
                 $image_order .= $_POST['image_order'][$i];
             }
         }
     } elseif ($image_order_choice == 'rank') {
         $image_order = '`rank` ASC';
     }
+
     $query = '
 UPDATE ' . CATEGORIES_TABLE . '
   SET image_order = ' . (isset($image_order) ? '\'' . $image_order . '\'' : 'NULL') . '
@@ -112,7 +118,9 @@ SELECT *
 ;';
 $category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
-if ($category['image_order'] == 'rank ASC' or $category['image_order'] == '`rank` ASC') {
+if ($category['image_order'] == 'rank ASC' or
+    $category['image_order'] == '`rank` ASC'
+) {
     $image_order_choice = 'rank';
 } elseif ($category['image_order'] != '') {
     $image_order_choice = 'user_define';
@@ -150,10 +158,12 @@ SELECT
   ORDER BY `rank`
 ;';
 $result = functions_mysqli::pwg_query($query);
+
 if (functions_mysqli::pwg_db_num_rows($result) > 0) {
     // template thumbnail initialization
     $current_rank = 1;
     $derivativeParams = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE);
+
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
 
@@ -163,6 +173,7 @@ if (functions_mysqli::pwg_db_num_rows($result) > 0) {
             $file_wo_ext = functions::get_filename_wo_extension($row['file']);
             $thumbnail_name = str_replace('_', ' ', $file_wo_ext);
         }
+
         $current_rank++;
         $template->append(
             'thumbnails',
@@ -176,6 +187,7 @@ if (functions_mysqli::pwg_db_num_rows($result) > 0) {
         );
     }
 }
+
 // image order management
 $sort_fields = [
     '' => '',

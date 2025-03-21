@@ -60,6 +60,7 @@ final class SrcImage
         $ext = strtolower(functions::get_extension($infos['path']));
         $infos['file_ext'] = @strtolower(functions::get_extension($infos['file']));
         $infos['path_ext'] = $ext;
+
         if (in_array($ext, $conf['picture_ext'])) {
             $this->rel_path = $infos['path'];
             $this->flags |= self::IS_ORIGINAL;
@@ -68,19 +69,25 @@ final class SrcImage
         } else {
             $this->rel_path = functions_plugins::trigger_change('get_mimetype_location', functions::get_themeconf('mime_icon_dir') . $ext . '.png', $ext);
             $this->flags |= self::IS_MIMETYPE;
-            if (($size = @getimagesize(PHPWG_ROOT_PATH . $this->rel_path)) === false) {
+            $size = @getimagesize(PHPWG_ROOT_PATH . $this->rel_path);
+
+            if ($size === false) {
                 if ($ext == 'svg') {
                     $this->rel_path = $infos['path'];
                 } else {
                     $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
                 }
+
                 $size = getimagesize(PHPWG_ROOT_PATH . $this->rel_path);
             }
+
             $this->size = @[$size[0], $size[1]];
         }
 
         if (! $this->size) {
-            if (isset($infos['width']) && isset($infos['height'])) {
+            if (isset($infos['width']) &&
+                isset($infos['height'])
+            ) {
                 $width = $infos['width'];
                 $height = $infos['height'];
 
@@ -129,9 +136,11 @@ final class SrcImage
     public function get_url()
     {
         $url = functions_url::get_root_url() . $this->rel_path;
+
         if (! ($this->flags & self::IS_MIMETYPE)) {
             $url = functions_plugins::trigger_change('get_src_image_url', $url, $this);
         }
+
         return functions_url::embellish_url($url);
     }
 
@@ -152,12 +161,16 @@ final class SrcImage
             if ($this->flags & self::DIM_NOT_GIVEN) {
                 functions_html::fatal_error('SrcImage dimensions required but not provided');
             }
+
             // probably not metadata synced
-            if (($size = getimagesize($this->get_path())) !== false) {
+            $size = getimagesize($this->get_path());
+
+            if ($size !== false) {
                 $this->size = [$size[0], $size[1]];
                 functions_mysqli::pwg_query('UPDATE ' . IMAGES_TABLE . ' SET width=' . $size[0] . ', height=' . $size[1] . ' WHERE id=' . $this->id);
             }
         }
+
         return $this->size;
     }
 }

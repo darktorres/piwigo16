@@ -39,12 +39,17 @@ functions_plugins::trigger_notify('loc_begin_identification');
 if (isset($_POST['redirect'])) {
     $_POST['redirect_decoded'] = urldecode($_POST['redirect']);
 }
+
 functions::check_input_parameter('redirect_decoded', $_POST, false, '{^' . preg_quote(functions_cookie::cookie_path()) . '}');
 
 $redirect_to = '';
+
 if (! empty($_GET['redirect'])) {
     $redirect_to = urldecode($_GET['redirect']);
-    if ($conf['guest_access'] and ! isset($_GET['hide_redirect_error'])) {
+
+    if ($conf['guest_access'] and
+        ! isset($_GET['hide_redirect_error'])
+    ) {
         $page['errors'][] = functions::l10n('You are not authorized to access the requested page');
     }
 }
@@ -104,7 +109,9 @@ $template->assign(
     ]
 );
 
-if (! $conf['gallery_locked'] && $conf['allow_user_registration']) {
+if (! $conf['gallery_locked'] &&
+    $conf['allow_user_registration']
+) {
     $template->assign('U_REGISTER', functions_url::get_root_url() . 'register.php');
 }
 
@@ -114,7 +121,10 @@ if (! $conf['gallery_locked']) {
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! $conf['gallery_locked'] && (! isset($themeconf['hide_menu_on']) or ! in_array('theIdentificationPage', $themeconf['hide_menu_on']))) {
+
+if (! $conf['gallery_locked'] &&
+   (! isset($themeconf['hide_menu_on']) or ! in_array('theIdentificationPage', $themeconf['hide_menu_on']))
+) {
     menubar::initialize_menu();
 }
 

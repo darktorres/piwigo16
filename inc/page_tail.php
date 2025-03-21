@@ -38,6 +38,7 @@ if (! functions_user::is_a_guest()) {
 //--------------------------------------------------------- update notification
 // if ($conf['update_notify_check_period'] > 0) {
 //     $check_for_updates = false;
+
 //     if (isset($conf['update_notify_last_check'])) {
 //         if (strtotime($conf['update_notify_last_check']) < strtotime($conf['update_notify_check_period'] . ' seconds ago')) {
 //             $check_for_updates = true;
@@ -66,6 +67,7 @@ if ($conf['show_gt']) {
         $page['count_queries'] = 0;
         $page['queries_time'] = 0;
     }
+
     $time = functions::get_elapsed_time($t2, functions::get_moment());
 
     $debug_vars = array_merge(
@@ -81,7 +83,9 @@ if ($conf['show_gt']) {
 $template->assign('debug', $debug_vars);
 
 //------------------------------------------------------------- mobile version
-if (! empty($conf['mobile_theme']) && (functions::get_device() != 'desktop' || functions::mobile_theme())) {
+if (! empty($conf['mobile_theme']) &&
+   (functions::get_device() != 'desktop' || functions::mobile_theme())
+) {
     $template->assign(
         'TOGGLE_MOBILE_THEME_URL',
         functions_url::add_url_params(

@@ -142,15 +142,18 @@ class Template
         $this->cssLoader = new CssLoader();
         $this->smarty = new Smarty();
         $this->smarty->debugging = $conf['debug_template'];
+
         if (! $this->smarty->debugging) {
             $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
         }
+
         $this->smarty->compile_check = $conf['template_compile_check'];
         $this->smarty->force_compile = $conf['template_force_compile'];
 
         if (! isset($conf['data_dir_checked'])) {
             $dir = PHPWG_ROOT_PATH . $conf['data_location'];
             functions::mkgetdir($dir, functions::MKGETDIR_DEFAULT & ~functions::MKGETDIR_DIE_ON_ERROR);
+
             if (! is_writable($dir)) {
                 functions::load_language('admin.lang');
                 functions_html::fatal_error(
@@ -162,6 +165,7 @@ class Template
                     false // show trace
                 );
             }
+
             if (class_exists(functions_mysqli::class, false)) {
                 functions::conf_update_param('data_dir_checked', 1);
             }
@@ -208,13 +212,16 @@ class Template
         $this->smarty->registerPlugin('compiler', 'get_combined_css', $this->func_get_combined_css(...));
         $this->smarty->registerPlugin('block', 'footer_script', $this->block_footer_script(...));
         $this->smarty->registerFilter('pre', self::prefilter_white_space(...));
+
         if ($conf['compiled_template_cache_language']) {
             $this->smarty->registerFilter('post', self::postfilter_language(...));
         }
 
         $this->smarty->setTemplateDir([]);
+
         if (! empty($theme)) {
             $this->set_theme($root, $theme, $path);
+
             if (! defined('IN_ADMIN')) {
                 $this->set_prefilter('header', self::prefilter_local_css(...));
             }
@@ -222,17 +229,23 @@ class Template
             $this->set_template_dir($root);
         }
 
-        if (isset($lang_info['code']) and ! isset($lang_info['jquery_code'])) {
+        if (isset($lang_info['code']) and
+            ! isset($lang_info['jquery_code'])
+        ) {
             $lang_info['jquery_code'] = $lang_info['code'];
         }
 
-        if (isset($lang_info['jquery_code']) and ! isset($lang_info['plupload_code'])) {
+        if (isset($lang_info['jquery_code']) and
+            ! isset($lang_info['plupload_code'])
+        ) {
             $lang_info['plupload_code'] = str_replace('-', '_', $lang_info['jquery_code']);
         }
 
         $this->smarty->assign('lang_info', $lang_info);
 
-        if (! defined('IN_ADMIN') and isset($conf['extents_for_templates'])) {
+        if (! defined('IN_ADMIN') and
+            isset($conf['extents_for_templates'])
+        ) {
             $tpl_extents = unserialize($conf['extents_for_templates']);
             $this->set_extents($tpl_extents, './template-extension/', true, $theme);
         }
@@ -253,7 +266,9 @@ class Template
 
         $themeconf = $this->load_themeconf($root . '/' . $theme);
 
-        if (isset($themeconf['parent']) and $themeconf['parent'] != $theme) {
+        if (isset($themeconf['parent']) and
+            $themeconf['parent'] != $theme
+        ) {
             $this->set_theme(
                 $root,
                 $themeconf['parent'],
@@ -267,9 +282,13 @@ class Template
             'id' => $theme,
             'load_css' => $load_css,
         ];
-        if (! empty($themeconf['local_head']) and $load_local_head) {
+
+        if (! empty($themeconf['local_head']) and
+            $load_local_head
+        ) {
             $tpl_var['local_head'] = realpath($root . '/' . $theme . '/' . $themeconf['local_head']);
         }
+
         $themeconf['id'] = $theme;
 
         if (! isset($themeconf['colorscheme'])) {
@@ -356,7 +375,9 @@ class Template
         if (! is_array($filename_array)) {
             return false;
         }
+
         reset($filename_array);
+
         foreach ($filename_array as $handle => $filename) {
             if ($filename === null) {
                 unset($this->files[$handle]);
@@ -364,6 +385,7 @@ class Template
                 $this->files[$handle] = $this->get_extent($filename, $handle);
             }
         }
+
         return true;
     }
 
@@ -398,6 +420,7 @@ class Template
         if (! is_array($filename_array)) {
             return false;
         }
+
         foreach ($filename_array as $filename => $value) {
             if (is_array($value)) {
                 $handle = $value[0];
@@ -411,13 +434,15 @@ class Template
                 return false;
             }
 
-            if ((stripos(implode('', array_keys($_GET)), '/' . $param) !== false or $param == 'N/A')
-              and ($thm == $theme or $thm == 'N/A')
-              and (! isset($this->extents[$handle]) or $overwrite)
-              and file_exists($dir . $filename)) {
+            if ((stripos(implode('', array_keys($_GET)), '/' . $param) !== false or $param == 'N/A') and
+                ($thm == $theme or $thm == 'N/A') and
+                (! isset($this->extents[$handle]) or $overwrite) and
+                file_exists($dir . $filename)
+            ) {
                 $this->extents[$handle] = realpath($dir . $filename);
             }
         }
+
         return true;
     }
 
@@ -433,6 +458,7 @@ class Template
         if (isset($this->extents[$handle])) {
             $filename = $this->extents[$handle];
         }
+
         return $filename;
     }
 
@@ -535,7 +561,10 @@ class Template
         $this->load_external_filters($handle);
 
         global $conf, $lang_info;
-        if ($conf['compiled_template_cache_language'] and isset($lang_info['code'])) {
+
+        if ($conf['compiled_template_cache_language'] and
+            isset($lang_info['code'])
+        ) {
             $this->smarty->compile_id .= '_' . $lang_info['code'];
         }
 
@@ -547,6 +576,7 @@ class Template
         if ($return) {
             return $v;
         }
+
         $this->output .= $v;
     }
 
@@ -570,9 +600,11 @@ class Template
     {
         if (! $this->scriptLoader->did_head()) {
             $pos = strpos($this->output, self::COMBINED_SCRIPTS_TAG);
+
             if ($pos !== false) {
                 $scripts = $this->scriptLoader->get_head_scripts();
                 $content = [];
+
                 foreach ($scripts as $script) {
                     $content[] =
                         '<script type="text/javascript" src="'
@@ -587,15 +619,19 @@ class Template
         $css = $this->cssLoader->get_css();
 
         $content = [];
+
         foreach ($css as $combi) {
             $href = functions_url::embellish_url(functions_url::get_root_url() . $combi->path);
+
             if ($combi->version !== false) {
                 $href .= '?v' . ($combi->version ? $combi->version : PHPWG_VERSION);
             }
+
             // trigger the event for eventual use of a cdn
             $href = functions_plugins::trigger_change('combined_css', $href, $combi);
             $content[] = '<link rel="stylesheet" type="text/css" href="' . $href . '">';
         }
+
         $this->output = str_replace(
             self::COMBINED_CSS_TAG,
             implode("\n", $content),
@@ -603,16 +639,22 @@ class Template
         );
         $this->cssLoader->clear();
 
-        if (count($this->html_head_elements) || strlen($this->html_style)) {
+        if (count($this->html_head_elements) ||
+            strlen($this->html_style)
+        ) {
             $search = "\n</head>";
             $pos = strpos($this->output, $search);
+
             if ($pos !== false) {
                 $rep = "\n" . implode("\n", $this->html_head_elements);
+
                 if (strlen($this->html_style)) {
                     $rep .= '<style type="text/css">' . $this->html_style . '</style>';
                 }
+
                 $this->output = substr_replace($this->output, $rep, $pos, 0);
             }
+
             $this->html_head_elements = [];
             $this->html_style = '';
         }
@@ -622,12 +664,15 @@ class Template
         if (! empty($custom_error_log)) {
             $search = "\n</body>";
             $pos = strpos($this->output, $search);
+
             if ($pos !== false) {
-                $rep = '<script>
-              window.addEventListener("load", function() {
-                  ' . $custom_error_log . '
-              });
-          </script>';
+                $rep = <<<JS
+                <script>
+                    window.addEventListener("load", function() {
+                        {$custom_error_log}
+                    });
+                </script>
+                JS;
                 $this->output = substr_replace($this->output, $rep, $pos, 0);
             }
         }
@@ -663,13 +708,17 @@ class Template
      */
     public static function get_php_str_val($str)
     {
-        if (is_string($str) && strlen($str) > 1) {
-            if (($str[0] == '\'' && $str[strlen($str) - 1] == '\'')
-              || ($str[0] == '"' && $str[strlen($str) - 1] == '"')) {
+        if (is_string($str) &&
+            strlen($str) > 1
+        ) {
+            if (($str[0] == '\'' && $str[strlen($str) - 1] == '\'') ||
+                ($str[0] == '"' && $str[strlen($str) - 1] == '"')
+            ) {
                 eval('$tmp=' . $str . ';');
                 return $tmp;
             }
         }
+
         return null;
     }
 
@@ -689,12 +738,14 @@ class Template
 
         switch (count($params)) {
             case 1:
-                if ($conf['compiled_template_cache_language']
-                  && ($key = self::get_php_str_val($params[0])) !== null
-                  && isset($lang[$key])
-                ) {
-                    return var_export($lang[$key], true);
+                if ($conf['compiled_template_cache_language']) {
+                    $key = self::get_php_str_val($params[0]);
+
+                    if ($key !== null && isset($lang[$key])) {
+                        return var_export($lang[$key], true);
+                    }
                 }
+
                 return '\Piwigo\inc\functions::l10n(' . $params[0] . ')';
 
             default:
@@ -705,6 +756,7 @@ class Template
                     $ret .= ')';
                     return $ret;
                 }
+
                 return '\Piwigo\inc\functions::l10n(' . $params[0] . ',' . implode(',', array_slice($params, 1)) . ')';
         }
     }
@@ -721,13 +773,16 @@ class Template
     public static function modcompiler_translate_dec($params)
     {
         global $conf, $lang, $lang_info;
+
         if ($conf['compiled_template_cache_language']) {
             $ret = 'sprintf(';
+
             if ($lang_info['zero_plural']) {
                 $ret .= '($tmp=(' . $params[0] . '))>1||$tmp==0';
             } else {
                 $ret .= '($tmp=(' . $params[0] . '))>1';
             }
+
             $ret .= '?';
             $ret .= self::modcompiler_translate([$params[2]]);
             $ret .= ':';
@@ -736,6 +791,7 @@ class Template
             $ret .= ')';
             return $ret;
         }
+
         return '\Piwigo\inc\functions::l10n_dec(' . $params[1] . ',' . $params[2] . ',' . $params[0] . ')';
     }
 
@@ -778,6 +834,7 @@ class Template
     public function block_html_head($params, $content)
     {
         $content = isset($content) ? trim($content) : '';
+
         if (! empty($content)) { // second call
             $this->html_head_elements[] = $content;
         }
@@ -793,6 +850,7 @@ class Template
     public function block_html_style($params, $content)
     {
         $content = isset($content) ? trim($content) : '';
+
         if (! empty($content)) { // second call
             $this->html_style .= "\n" . $content;
         }
@@ -816,14 +874,23 @@ class Template
      */
     public function func_define_derivative($params, $smarty)
     {
-        ! empty($params['name']) or functions_html::fatal_error('define_derivative missing name');
+        if (empty($params['name'])) {
+            functions_html::fatal_error('define_derivative missing name');
+        }
+
         if (isset($params['type'])) {
             $derivative = ImageStdParams::get_by_type($params['type']);
             $smarty->assign($params['name'], $derivative);
             return;
         }
-        ! empty($params['width']) or functions_html::fatal_error('define_derivative missing width');
-        ! empty($params['height']) or functions_html::fatal_error('define_derivative missing height');
+
+        if (empty($params['width'])) {
+            functions_html::fatal_error('define_derivative missing width');
+        }
+
+        if (empty($params['height'])) {
+            functions_html::fatal_error('define_derivative missing height');
+        }
 
         $w = intval($params['width']);
         $h = intval($params['height']);
@@ -840,9 +907,16 @@ class Template
 
             if ($crop) {
                 $minw = empty($params['min_width']) ? $w : intval($params['min_width']);
-                $minw <= $w or functions_html::fatal_error('define_derivative invalid min_width');
+
+                if ($minw <= $w) {
+                    functions_html::fatal_error('define_derivative invalid min_width');
+                }
+
                 $minh = empty($params['min_height']) ? $h : intval($params['min_height']);
-                $minh <= $h or functions_html::fatal_error('define_derivative invalid min_height');
+
+                if ($minh <= $h) {
+                    functions_html::fatal_error('define_derivative invalid min_height');
+                }
             }
         }
 
@@ -867,14 +941,20 @@ class Template
         if (! isset($params['id'])) {
             trigger_error("combine_script: missing 'id' parameter", E_USER_ERROR);
         }
+
         $load = 0;
+
         if (isset($params['load'])) {
             switch ($params['load']) {
-                case 'header': break;
+                case 'header':
+                    break;
+
                 case 'footer': $load = 1;
                     break;
+
                 case 'async': $load = 2;
                     break;
+
                 default: trigger_error("combine_script: invalid 'load' parameter", E_USER_ERROR);
             }
         }
@@ -903,6 +983,7 @@ class Template
         if (! isset($params['load'])) {
             trigger_error("get_combined_scripts: missing 'load' parameter", E_USER_ERROR);
         }
+
         $load = $params['load'] == 'header' ? 0 : 1;
         $content = [];
 
@@ -911,30 +992,34 @@ class Template
         }
 
         $scripts = $this->scriptLoader->get_footer_scripts();
+
         foreach ($scripts[0] as $script) {
             $content[] =
               '<script type="text/javascript" src="'
               . self::make_script_src($script)
               . '"></script>';
         }
+
         if (count($this->scriptLoader->inline_scripts)) {
-            $content[] = '<script type="text/javascript">//<![CDATA[
-';
+            $content[] = '<script type="text/javascript">//<![CDATA[' . "\n";
             $content = array_merge($content, $this->scriptLoader->inline_scripts);
             $content[] = '//]]></script>';
         }
 
         if (count($scripts[1])) {
             $content[] = '<script type="text/javascript">';
-            $content[] = '(function() {
-var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTagName(\'script\').length-1];';
+            $content[] =
+              "(function() {\n"
+              . "var s, after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length - 1];\n";
+
             foreach ($scripts[1] as $id => $script) {
                 $content[] =
-                  's=document.createElement(\'script\'); s.type=\'text/javascript\'; s.async=true; s.src=\''
+                  "s = document.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = '"
                   . self::make_script_src($script)
-                  . '\';';
-                $content[] = 'after = after.parentNode.insertBefore(s, after);';
+                  . "';\n";
+                $content[] = "after = after.parentNode.insertBefore(s, after);\n";
             }
+
             $content[] = '})();';
             $content[] = '</script>';
         }
@@ -953,8 +1038,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     public function block_footer_script($params, $content)
     {
         $content = isset($content) ? trim($content) : '';
-        if (! empty($content)) { // second call
 
+        if (! empty($content)) { // second call
             $this->scriptLoader->add_inline(
                 $content,
                 empty($params['require']) ? [] : explode(',', $params['require'])
@@ -1054,6 +1139,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     {
         if (isset($this->external_filters[$handle])) {
             $compile_id = '';
+
             foreach ($this->external_filters[$handle] as $filters) {
                 foreach ($filters as $filter) {
                     list($type, $callback) = $filter;
@@ -1070,6 +1156,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
                     $this->smarty->registerFilter($type, $callback);
                 }
             }
+
             $this->smarty->compile_id .= '.' . base_convert(hash('crc32b', $compile_id), 16, 36);
         }
     }
@@ -1107,14 +1194,18 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
 
         $regex = [];
         $tags = ['if', 'foreach', 'section', 'footer_script'];
+
         foreach ($tags as $tag) {
             $regex[] = "#^[ \t]+({$ldq}{$tag}" . "[^{$ld}{$rd}]*{$rdq})\s*$#m";
             $regex[] = "#^[ \t]+({$ldq}/{$tag}{$rdq})\s*$#m";
         }
+
         $tags = ['include', 'else', 'combine_script', 'html_head'];
+
         foreach ($tags as $tag) {
             $regex[] = "#^[ \t]+({$ldq}{$tag}" . "[^{$ld}{$rd}]*{$rdq})\s*$#m";
         }
+
         $source = preg_replace($regex, '$1', $source);
         return $source;
     }
@@ -1150,13 +1241,17 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     public static function prefilter_local_css($source, $smarty)
     {
         $css = [];
+
         foreach ($smarty->getTemplateVars('themes') as $theme) {
             $f = PWG_LOCAL_DIR . 'css/' . $theme['id'] . '-rules.css';
+
             if (file_exists(PHPWG_ROOT_PATH . $f)) {
                 $css[] = "{combine_css path='{$f}' order=10}";
             }
         }
+
         $f = PWG_LOCAL_DIR . 'css/rules.css';
+
         if (file_exists(PHPWG_ROOT_PATH . $f)) {
             $css[] = "{combine_css path='{$f}' order=10}";
         }
@@ -1179,12 +1274,14 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         global $themeconfs, $conf;
 
         $dir = realpath($dir);
+
         if (! isset($themeconfs[$dir])) {
             $themeconf = [];
             include($dir . '/themeconf.php');
             // Put themeconf in cache
             $themeconfs[$dir] = $themeconf;
         }
+
         return $themeconfs[$dir];
     }
 
@@ -1218,9 +1315,11 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         if (! empty($this->picture_buttons)) {
             ksort($this->picture_buttons);
             $buttons = [];
+
             foreach ($this->picture_buttons as $k => $row) {
                 $buttons = array_merge($buttons, $row);
             }
+
             $this->assign('PLUGIN_PICTURE_BUTTONS', $buttons);
 
             // only for PHP 5.3
@@ -1241,9 +1340,11 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         if (! empty($this->index_buttons)) {
             ksort($this->index_buttons);
             $buttons = [];
+
             foreach ($this->index_buttons as $k => $row) {
                 $buttons = array_merge($buttons, $row);
             }
+
             $this->assign('PLUGIN_INDEX_BUTTONS', $buttons);
 
             // only for PHP 5.3
@@ -1265,14 +1366,17 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     private static function make_script_src($script)
     {
         $ret = '';
+
         if ($script->is_remote()) {
             $ret = $script->path;
         } else {
             $ret = functions_url::get_root_url() . $script->path;
+
             if ($script->version !== false) {
                 $ret .= '?v' . ($script->version ? $script->version : PHPWG_VERSION);
             }
         }
+
         // trigger the event for eventual use of a cdn
         $ret = functions_plugins::trigger_change('combined_script', $ret, $script);
         return functions_url::embellish_url($ret);

@@ -30,7 +30,9 @@ if (! $conf['enable_synchronization']) {
 
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-if (! empty($_POST) or isset($_GET['action'])) {
+if (! empty($_POST) or
+    isset($_GET['action'])
+) {
     functions::check_pwg_token();
 }
 
@@ -55,13 +57,18 @@ $tabsheet->assign();
 // +-----------------------------------------------------------------------+
 // |                        new site creation form                         |
 // +-----------------------------------------------------------------------+
-if (isset($_POST['submit']) and ! empty($_POST['galleries_url'])) {
+if (isset($_POST['submit']) and
+    ! empty($_POST['galleries_url'])
+) {
     $is_remote = functions_url::url_is_remote($_POST['galleries_url']);
+
     if ($is_remote) {
         functions_html::fatal_error('remote sites not supported');
     }
+
     $url = preg_replace('/[\/]*$/', '', $_POST['galleries_url']);
     $url .= '/';
+
     if (! (strpos($url, '.') === 0)) {
         $url = './' . $url;
     }
@@ -73,9 +80,11 @@ SELECT COUNT(id) AS count
   WHERE galleries_url = \'' . $url . '\'
 ;';
     $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+
     if ($row['count'] > 0) {
         $page['errors'][] = functions::l10n('This site already exists') . ' [' . $url . ']';
     }
+
     if (count($page['errors']) == 0) {
         if (! file_exists($url)) {
             $page['errors'][] = functions::l10n('Directory does not exist') . ' [' . $url . ']';
@@ -97,23 +106,27 @@ INSERT INTO ' . SITES_TABLE . '
 // +-----------------------------------------------------------------------+
 // |                            actions on site                            |
 // +-----------------------------------------------------------------------+
-if (isset($_GET['site']) and is_numeric($_GET['site'])) {
+if (isset($_GET['site']) and
+    is_numeric($_GET['site'])
+) {
     $page['site'] = $_GET['site'];
 }
-if (isset($_GET['action']) and isset($page['site'])) {
+
+if (isset($_GET['action']) and
+    isset($page['site'])
+) {
     $query = '
 SELECT galleries_url
   FROM ' . SITES_TABLE . '
   WHERE id = ' . $page['site'] . '
 ;';
     list($galleries_url) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
     switch ($_GET['action']) {
         case 'delete':
-
             functions_admin::delete_site($page['site']);
             $page['infos'][] = $galleries_url . ' ' . functions::l10n('deleted');
             break;
-
     }
 }
 

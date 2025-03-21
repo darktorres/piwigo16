@@ -28,6 +28,7 @@ $conf['updates_ignored'] = unserialize($conf['updates_ignored']);
 $autoupdate = new updates($page['page']);
 
 $show_reset = false;
+
 if (! $autoupdate->get_server_extensions()) {
     $page['errors'][] = functions::l10n('Can\'t connect to server.');
     return; // TODO: remove this return and add a proper "page killer"
@@ -48,7 +49,9 @@ foreach ($autoupdate->types as $type) {
     $updates_extension[$type] = [];
 
     foreach ($fs_ext as $ext_id => $fs_ext) {
-        if (! isset($fs_ext['extension']) or ! isset($server_ext[$fs_ext['extension']])) {
+        if (! isset($fs_ext['extension']) or
+            ! isset($server_ext[$fs_ext['extension']])
+        ) {
             continue;
         }
 

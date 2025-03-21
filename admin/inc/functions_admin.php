@@ -87,7 +87,9 @@ class functions_admin
         self::delete_elements($element_ids);
 
         // now, should we delete photos that are virtually linked to the category?
-        if ($photo_deletion_mode == 'delete_orphans' or $photo_deletion_mode == 'force_delete') {
+        if ($photo_deletion_mode == 'delete_orphans' or
+            $photo_deletion_mode == 'force_delete'
+        ) {
             $query = '
   SELECT
       DISTINCT(image_id)
@@ -173,6 +175,7 @@ class functions_admin
     public static function delete_element_files($ids)
     {
         global $conf;
+
         if (count($ids) == 0) {
             return 0;
         }
@@ -188,6 +191,7 @@ class functions_admin
     WHERE image_id IN (' . implode(',', $ids) . ')
   ;';
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             if (! isset($formats_of[$row['image_id']])) {
                 $formats_of[$row['image_id']] = [];
@@ -205,6 +209,7 @@ class functions_admin
     WHERE id IN (' . implode(',', $ids) . ')
   ;';
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             if (functions_url::url_is_remote($row['path'])) {
                 continue;
@@ -224,9 +229,12 @@ class functions_admin
             }
 
             $ok = true;
+
             if (! isset($conf['never_delete_originals'])) {
                 foreach ($files as $path) {
-                    if (is_file($path) and ! unlink($path)) {
+                    if (is_file($path) and
+                        ! unlink($path)
+                    ) {
                         $ok = false;
                         trigger_error('"' . $path . '" cannot be removed', E_USER_WARNING);
                         break;
@@ -241,6 +249,7 @@ class functions_admin
                 break;
             }
         }
+
         return $new_ids;
     }
 
@@ -261,10 +270,12 @@ class functions_admin
         if (count($ids) == 0) {
             return 0;
         }
+
         functions_plugins::trigger_notify('begin_delete_elements', $ids);
 
         if ($physical_deletion) {
             $ids = self::delete_element_files($ids);
+
             if (count($ids) == 0) {
                 return 0;
             }
@@ -336,6 +347,7 @@ class functions_admin
     WHERE representative_picture_id IN (' . $ids_str . ')
   ;';
         $category_ids = functions_mysqli::query2array($query, null, 'id');
+
         if (count($category_ids) > 0) {
             self::update_category($category_ids);
         }
@@ -408,6 +420,7 @@ class functions_admin
 
         if (count($orphan_tags) > 0) {
             $orphan_tag_ids = [];
+
             foreach ($orphan_tags as $tag) {
                 $orphan_tag_ids[] = $tag['id'];
             }
@@ -451,6 +464,7 @@ class functions_admin
             if (count($ids) == 0) {
                 return false;
             }
+
             $where_cats = '%s IN(' . wordwrap(implode(', ', $ids), 120, "\n") . ')';
         }
 
@@ -488,6 +502,7 @@ class functions_admin
       AND ' . sprintf($where_cats, 'category_id') . '
   ;';
             $to_rand = functions_mysqli::query2array($query, null, 'id');
+
             if (count($to_rand) > 0) {
                 self::set_random_representative($to_rand);
             }
@@ -584,15 +599,21 @@ class functions_admin
         $exclude_folders = array_flip($exclude_folders);
 
         if (is_dir($path)) {
-            if ($contents = opendir($path)) {
+            $contents = opendir($path);
+
+            if ($contents) {
                 while (($node = readdir($contents)) !== false) {
-                    if (is_dir($path . '/' . $node) and ! isset($exclude_folders[$node])) {
+                    if (is_dir($path . '/' . $node) and
+                        ! isset($exclude_folders[$node])
+                    ) {
                         $dirs[] = $path . '/' . $node;
+
                         if ($recursive) {
                             $dirs = array_merge($dirs, self::get_fs_directories($path . '/' . $node));
                         }
                     }
                 }
+
                 closedir($contents);
             }
         }
@@ -614,6 +635,7 @@ class functions_admin
         $current_rank = 0;
 
         $datas = [];
+
         foreach ($categories as $category) {
             if (is_array($category)) {
                 $id = $category['id'];
@@ -622,6 +644,7 @@ class functions_admin
                 if (! isset($current_rank_for_id_uppercat[$id_uppercat])) {
                     $current_rank_for_id_uppercat[$id_uppercat] = 0;
                 }
+
                 $current_rank = ++$current_rank_for_id_uppercat[$id_uppercat];
             } else {
                 $id = $category;
@@ -633,6 +656,7 @@ class functions_admin
                 'rank' => $current_rank,
             ];
         }
+
         $fields = [
             'primary' => ['id'],
             'update' => ['rank'],
@@ -660,11 +684,13 @@ class functions_admin
         $current_uppercat = '';
 
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             if ($row['id_uppercat'] != $current_uppercat) {
                 $current_rank = 0;
                 $current_uppercat = $row['id_uppercat'];
             }
+
             ++$current_rank;
             $cat =
               [
@@ -687,7 +713,9 @@ class functions_admin
                 str_replace(',', '.', $cat['uppercats'])
             );
 
-            if ($cat['rank_changed'] or $new_global_rank !== $cat['global_rank']) {
+            if ($cat['rank_changed'] or
+                $new_global_rank !== $cat['global_rank']
+            ) {
                 $datas[] = [
                     'id' => $id,
                     'rank' => $cat['rank'],
@@ -718,7 +746,9 @@ class functions_admin
      */
     public static function set_cat_visible($categories, $value, $unlock_child = false)
     {
-        if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
+        $value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+        if ($value === null) {
             trigger_error("set_cat_visible invalid param {$value}", E_USER_WARNING);
             return false;
         }
@@ -726,9 +756,11 @@ class functions_admin
         // unlocking a category => all its parent categories become unlocked
         if ($value) {
             $cats = self::get_uppercat_ids($categories);
+
             if ($unlock_child) {
                 $cats = array_merge($cats, functions_category::get_subcat_ids($categories));
             }
+
             $query = '
   UPDATE ' . CATEGORIES_TABLE . '
     SET visible = \'true\'
@@ -876,9 +908,10 @@ class functions_admin
                 // if it is private, else the album itself
                 $ref_cat_id = $top_category['id'];
 
-                if (! empty($top_category['id_uppercat'])
-                    and isset($parent_cats[$top_category['id_uppercat']])
-                    and $parent_cats[$top_category['id_uppercat']]['status'] == 'private') {
+                if (! empty($top_category['id_uppercat']) and
+                    isset($parent_cats[$top_category['id_uppercat']]) and
+                    $parent_cats[$top_category['id_uppercat']]['status'] == 'private'
+                ) {
                     $ref_cat_id = $top_category['id_uppercat'];
                 }
 
@@ -918,7 +951,9 @@ class functions_admin
      */
     public static function get_uppercat_ids($cat_ids)
     {
-        if (! is_array($cat_ids) or count($cat_ids) < 1) {
+        if (! is_array($cat_ids) or
+            count($cat_ids) < 1
+        ) {
             return [];
         }
 
@@ -930,12 +965,14 @@ class functions_admin
     WHERE id IN (' . implode(',', $cat_ids) . ')
   ;';
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $uppercats = array_merge(
                 $uppercats,
                 explode(',', $row['uppercats'])
             );
         }
+
         $uppercats = array_unique($uppercats);
 
         return $uppercats;
@@ -950,11 +987,13 @@ class functions_admin
   ;';
 
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+
         if ($size == null) {
             $src = DerivativeImage::thumb_url($row);
         } else {
             $src = DerivativeImage::url($size, $row);
         }
+
         $url = functions_url::get_root_url() . 'admin.php?page=photo-' . $image_id;
 
         return [
@@ -971,6 +1010,7 @@ class functions_admin
     public static function set_random_representative($categories)
     {
         $datas = [];
+
         foreach ($categories as $category_id) {
             $query = '
   SELECT image_id
@@ -1039,6 +1079,7 @@ class functions_admin
         $cat_dirs_callback = function ($m) use ($cat_dirs) { return $cat_dirs[$m[1]]; };
 
         $cat_fulldirs = [];
+
         foreach ($categories as $category) {
             $uppercats = str_replace(',', '/', $category['uppercats']);
             $cat_fulldirs[$category['id']] = $galleries_url[$category['site_id']];
@@ -1071,6 +1112,7 @@ class functions_admin
         if (! isset($conf['flip_picture_ext'])) {
             $conf['flip_picture_ext'] = array_flip($conf['picture_ext']);
         }
+
         if (! isset($conf['flip_file_ext'])) {
             $conf['flip_file_ext'] = array_flip($conf['file_ext']);
         }
@@ -1081,9 +1123,13 @@ class functions_admin
         $subdirs = [];
 
         if (is_dir($path)) {
-            if ($contents = opendir($path)) {
+            $contents = opendir($path);
+
+            if ($contents) {
                 while (($node = readdir($contents)) !== false) {
-                    if ($node == '.' or $node == '..') {
+                    if ($node == '.' or
+                        $node == '..'
+                    ) {
                         continue;
                     }
 
@@ -1101,11 +1147,15 @@ class functions_admin
                         } elseif (isset($conf['flip_file_ext'][$extension])) {
                             $fs['elements'][] = $path . '/' . $node;
                         }
-                    } elseif (is_dir($path . '/' . $node) and $node != 'pwg_high' and $recursive) {
+                    } elseif (is_dir($path . '/' . $node) and
+                              $node != 'pwg_high' and
+                              $recursive
+                    ) {
                         $subdirs[] = $node;
                     }
                 }
             }
+
             closedir($contents);
 
             foreach ($subdirs as $subdir) {
@@ -1127,6 +1177,7 @@ class functions_admin
                 );
             }
         }
+
         return $fs;
     }
 
@@ -1206,16 +1257,19 @@ class functions_admin
         $cat_map = functions_mysqli::query2array($query, 'id');
 
         $datas = [];
+
         foreach ($cat_map as $id => $cat) {
             $upper_list = [];
 
             $uppercat = $id;
+
             while ($uppercat) {
                 $upper_list[] = $uppercat;
                 $uppercat = $cat_map[$uppercat]['id_uppercat'];
             }
 
             $new_uppercats = implode(',', array_reverse($upper_list));
+
             if ($new_uppercats != $cat['uppercats']) {
                 $datas[] = [
                     'id' => $id,
@@ -1223,6 +1277,7 @@ class functions_admin
                 ];
             }
         }
+
         $fields = [
             'primary' => ['id'],
             'update' => ['uppercats'],
@@ -1278,6 +1333,7 @@ class functions_admin
     WHERE id IN (' . implode(',', $category_ids) . ')
   ;';
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $categories[$row['id']] =
               [
@@ -1375,6 +1431,7 @@ class functions_admin
         }
 
         $rank = 0;
+
         if ($conf['newcat_default_position'] == 'last') {
             //what is the current higher rank for this parent?
             $query = '
@@ -1396,25 +1453,33 @@ class functions_admin
         ];
 
         // is the album commentable?
-        if (isset($options['commentable']) and is_bool($options['commentable'])) {
+        if (isset($options['commentable']) and
+            is_bool($options['commentable'])
+        ) {
             $insert['commentable'] = $options['commentable'];
         } else {
             $insert['commentable'] = $conf['newcat_default_commentable'];
         }
+
         $insert['commentable'] = functions_mysqli::boolean_to_string($insert['commentable']);
 
         // is the album temporarily locked? (only visible by administrators,
         // whatever permissions) (may be overwritten if parent album is not
         // visible)
-        if (isset($options['visible']) and is_bool($options['visible'])) {
+        if (isset($options['visible']) and
+            is_bool($options['visible'])
+        ) {
             $insert['visible'] = $options['visible'];
         } else {
             $insert['visible'] = $conf['newcat_default_visible'];
         }
+
         $insert['visible'] = functions_mysqli::boolean_to_string($insert['visible']);
 
         // is the album private? (may be overwritten if parent album is private)
-        if (isset($options['status']) and $options['status'] == 'private') {
+        if (isset($options['status']) and
+            $options['status'] == 'private'
+        ) {
             $insert['status'] = 'private';
         } else {
             $insert['status'] = $conf['newcat_default_status'];
@@ -1425,7 +1490,9 @@ class functions_admin
             $insert['comment'] = $conf['allow_html_descriptions'] ? $options['comment'] : strip_tags($options['comment']);
         }
 
-        if (! empty($parent_id) and is_numeric($parent_id)) {
+        if (! empty($parent_id) and
+            is_numeric($parent_id)
+        ) {
             $query = '
   SELECT id, uppercats, global_rank, visible, status
     FROM ' . CATEGORIES_TABLE . '
@@ -1471,7 +1538,10 @@ class functions_admin
 
         self::update_global_rank();
 
-        if ($insert['status'] == 'private' and ! empty($insert['id_uppercat']) and ((isset($options['inherit']) and $options['inherit']) or $conf['inheritance_by_default'])) {
+        if ($insert['status'] == 'private' and
+            ! empty($insert['id_uppercat']) and
+            ((isset($options['inherit']) and $options['inherit']) or $conf['inheritance_by_default'])
+        ) {
             $query = '
         SELECT group_id
         FROM ' . GROUP_ACCESS_TABLE . '
@@ -1479,12 +1549,14 @@ class functions_admin
       ;';
             $granted_grps = functions_mysqli::query2array($query, null, 'group_id');
             $inserts = [];
+
             foreach ($granted_grps as $granted_grp) {
                 $inserts[] = [
                     'group_id' => $granted_grp,
                     'cat_id' => $inserted_id,
                 ];
             }
+
             functions_mysqli::mass_inserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $inserts);
 
             $query = '
@@ -1531,7 +1603,9 @@ class functions_admin
      */
     public static function add_tags($tags, $images)
     {
-        if (count($tags) == 0 or count($images) == 0) {
+        if (count($tags) == 0 or
+            count($images) == 0
+        ) {
             return;
         }
 
@@ -1548,6 +1622,7 @@ class functions_admin
         functions_mysqli::pwg_query($query);
 
         $inserts = [];
+
         foreach ($images as $image_id) {
             foreach (array_unique($tags) as $tag_id) {
                 $inserts[] = [
@@ -1556,6 +1631,7 @@ class functions_admin
                 ];
             }
         }
+
         functions_mysqli::mass_inserts(
             IMAGE_TAG_TABLE,
             array_keys($inserts[0]),
@@ -1625,6 +1701,7 @@ class functions_admin
         global $page;
 
         $tag_name = trim($tag_name);
+
         if (isset($page['tag_id_from_tag_name_cache'][$tag_name])) {
             return $page['tag_id_from_tag_name_cache'][$tag_name];
         }
@@ -1635,7 +1712,9 @@ class functions_admin
     FROM ' . TAGS_TABLE . '
     WHERE name = \'' . $tag_name . '\'
   ;';
-        if (count($existing_tags = functions_mysqli::query2array($query, null, 'id')) == 0) {
+        $existing_tags = functions_mysqli::query2array($query, null, 'id');
+
+        if (count($existing_tags) == 0) {
             $url_name = functions_plugins::trigger_change('render_tag_url', $tag_name);
             // search existing by url name
             $query = '
@@ -1643,9 +1722,12 @@ class functions_admin
     FROM ' . TAGS_TABLE . '
     WHERE url_name = \'' . $url_name . '\'
   ;';
-            if (count($existing_tags = functions_mysqli::query2array($query, null, 'id')) == 0) {
+            $existing_tags = functions_mysqli::query2array($query, null, 'id');
+
+            if (count($existing_tags) == 0) {
                 // search by extended description (plugin sub name)
                 $sub_name_where = functions_plugins::trigger_change('get_tag_name_like_where', [], $tag_name);
+
                 if (count($sub_name_where)) {
                     $query = '
   SELECT id
@@ -1655,7 +1737,7 @@ class functions_admin
                     $existing_tags = functions_mysqli::query2array($query, null, 'id');
                 }
 
-                if (count($existing_tags) == 0) {// finally create the tag
+                if (count($existing_tags) == 0) { // finally create the tag
                     functions_mysqli::mass_inserts(
                         TAGS_TABLE,
                         ['name', 'url_name'],
@@ -1739,7 +1821,9 @@ class functions_admin
      */
     public static function get_image_tag_ids($image_ids)
     {
-        if (! is_array($image_ids) and is_int($image_ids)) {
+        if (! is_array($image_ids) and
+            is_int($image_ids)
+        ) {
             $images_ids = [$image_ids];
         }
 
@@ -1757,6 +1841,7 @@ class functions_admin
 
         $tags_of = array_fill_keys($image_ids, []);
         $image_tags = functions_mysqli::query2array($query);
+
         foreach ($image_tags as $image_tag) {
             $tags_of[$image_tag['image_id']][] = $image_tag['tag_id'];
         }
@@ -1798,6 +1883,7 @@ class functions_admin
     public static function fill_lounge($images, $categories)
     {
         $inserts = [];
+
         foreach ($categories as $category_id) {
             foreach ($images as $image_id) {
                 $inserts[] = [
@@ -1832,6 +1918,7 @@ class functions_admin
 
         if (isset($conf['empty_lounge_running'])) {
             list($running_exec_id, $running_exec_start_time) = explode('-', $conf['empty_lounge_running']);
+
             if (time() - $running_exec_start_time > 60) {
                 $logger->debug(__FUNCTION__ . ', exec=' . $running_exec_id . ', timeout stopped by another call to the function');
                 functions::conf_delete_param('empty_lounge_running');
@@ -1857,6 +1944,7 @@ class functions_admin
             $logger->debug(__FUNCTION__ . ', exec=' . $exec_id . ', skip');
             return;
         }
+
         $logger->debug(__FUNCTION__ . ', exec=' . $exec_id . ' wins the race and gets the token!');
 
         $max_image_id = 0;
@@ -1872,6 +1960,7 @@ class functions_admin
         $rows = functions_mysqli::query2array($query);
 
         $images = [];
+
         foreach ($rows as $idx => $row) {
             if ($row['image_id'] > $max_image_id) {
                 $max_image_id = $row['image_id'];
@@ -1879,7 +1968,9 @@ class functions_admin
 
             $images[] = $row['image_id'];
 
-            if (! isset($rows[$idx + 1]) or $rows[$idx + 1]['category_id'] != $row['category_id']) {
+            if (! isset($rows[$idx + 1]) or
+                $rows[$idx + 1]['category_id'] != $row['category_id']
+            ) {
                 // if we're at the end of the loop OR if category changes
                 self::associate_images_to_categories($images, [$row['category_id']]);
                 $images = [];
@@ -1915,8 +2006,9 @@ class functions_admin
      */
     public static function associate_images_to_categories($images, $categories)
     {
-        if (count($images) == 0
-            or count($categories) == 0) {
+        if (count($images) == 0 or
+            count($categories) == 0
+        ) {
             return false;
         }
 
@@ -1932,6 +2024,7 @@ class functions_admin
         $result = functions_mysqli::pwg_query($query);
 
         $existing = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $existing[$row['category_id']][] = $row['image_id'];
         }
@@ -1955,10 +2048,12 @@ class functions_admin
 
         // associate only not already associated images
         $inserts = [];
+
         foreach ($categories as $category_id) {
             if (! isset($current_rank_of[$category_id])) {
                 $current_rank_of[$category_id] = 0;
             }
+
             if (! isset($existing[$category_id])) {
                 $existing[$category_id] = [];
             }
@@ -2045,7 +2140,9 @@ class functions_admin
     WHERE id IN (' . implode(',', $images) . ')
   ';
 
-        if (is_array($categories) and count($categories) > 0) {
+        if (is_array($categories) and
+            count($categories) > 0
+        ) {
             $query .= '
       AND category_id NOT IN (' . implode(',', $categories) . ')
   ';
@@ -2056,7 +2153,9 @@ class functions_admin
   ;';
         functions_mysqli::pwg_query($query);
 
-        if (is_array($categories) and count($categories) > 0) {
+        if (is_array($categories) and
+            count($categories) > 0
+        ) {
             self::associate_images_to_categories($images, $categories);
         }
     }
@@ -2120,6 +2219,7 @@ class functions_admin
     SET need_update = \'true\';';
             functions_mysqli::pwg_query($query);
         }
+
         functions::conf_delete_param('count_orphans');
         functions_plugins::trigger_notify('invalidate_user_cache', $full);
     }
@@ -2147,34 +2247,45 @@ class functions_admin
      */
     public static function create_table_add_character_set($query)
     {
-        defined('DB_CHARSET') or functions_html::fatal_error('create_table_add_character_set DB_CHARSET undefined');
+        if (! defined('DB_CHARSET')) {
+            functions_html::fatal_error('create_table_add_character_set DB_CHARSET undefined');
+        }
+
         if ('DB_CHARSET' != '') {
             if (version_compare(functions_mysqli::pwg_get_db_version(), '4.1.0', '<')) {
                 return $query;
             }
+
             $charset_collate = ' DEFAULT CHARACTER SET ' . DB_CHARSET;
+
             if (DB_COLLATE != '') {
                 $charset_collate .= ' COLLATE ' . DB_COLLATE;
             }
+
             if (is_array($query)) {
                 foreach ($query as $id => $q) {
                     $q = trim($q);
                     $q = trim($q, ';');
+
                     if (preg_match('/^CREATE\s+TABLE/i', $q)) {
                         $q .= $charset_collate;
                     }
+
                     $q .= ';';
                     $query[$id] = $q;
                 }
             } else {
                 $query = trim($query);
                 $query = trim($query, ';');
+
                 if (preg_match('/^CREATE\s+TABLE/i', $query)) {
                     $query .= $charset_collate;
                 }
+
                 $query .= ';';
             }
         }
+
         return $query;
     }
 
@@ -2188,9 +2299,11 @@ class functions_admin
     public static function get_user_access_level_html_options($MinLevelAccess = ACCESS_FREE, $MaxLevelAccess = ACCESS_CLOSED)
     {
         $tpl_options = [];
+
         for ($level = $MinLevelAccess; $level <= $MaxLevelAccess; $level++) {
             $tpl_options[$level] = functions::l10n(sprintf('ACCESS_%d', $level));
         }
+
         return $tpl_options;
     }
 
@@ -2206,21 +2319,30 @@ class functions_admin
         if ($start == '') {
             $start = './template-extension';
         }
+
         $dir = opendir($start);
         $extents = [];
 
         while (($file = readdir($dir)) !== false) {
-            if ($file == '.' or $file == '..' or $file == '.svn') {
+            if ($file == '.' or
+                $file == '..' or
+                $file == '.svn'
+            ) {
                 continue;
             }
+
             $path = $start . '/' . $file;
+
             if (is_dir($path)) {
                 $extents = array_merge($extents, self::get_extents($path));
-            } elseif (! is_link($path) and file_exists($path)
-                    and functions::get_extension($path) == 'tpl') {
+            } elseif (! is_link($path) and
+                      file_exists($path) and
+                      functions::get_extension($path) == 'tpl'
+            ) {
                 $extents[] = substr($path, 21);
             }
         }
+
         return $extents;
     }
 
@@ -2263,7 +2385,6 @@ class functions_admin
         return [
             'error' => functions::l10n('Tag "%s" already exists', stripslashes($tag_name)),
         ];
-
     }
 
     /**
@@ -2279,10 +2400,11 @@ class functions_admin
         global $user;
 
         // $filter['visible_categories'] and $filter['visible_images']
-        // are not used because it's not necessary (filter <> restriction)
+        // are not used because it's not necessary (filter != restriction)
         if (in_array($category_id, @explode(',', $user['forbidden_categories']))) {
             return false;
         }
+
         return true;
     }
 
@@ -2304,6 +2426,7 @@ class functions_admin
         // Try to retrieve data from local file?
         if (! functions_url::url_is_remote($src)) {
             $content = @file_get_contents($src);
+
             if ($content !== false) {
                 is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
                 return true;
@@ -2321,23 +2444,33 @@ class functions_admin
         // Initialization
         $method = empty($post_data) ? 'GET' : 'POST';
         $request = empty($post_data) ? '' : http_build_query($post_data, '', '&');
+
         if (! empty($get_data)) {
             $src .= strpos($src, '?') === false ? '?' : '&';
             $src .= http_build_query($get_data, '', '&');
         }
 
         // Initialize $dest
-        is_resource($dest) or $dest = '';
+        if (! is_resource($dest)) {
+            $dest = '';
+        }
 
         // Try curl to read remote file
         // TODO : remove all these @
-        if (function_exists('curl_init') && function_exists('curl_exec')) {
+        if (function_exists('curl_init') &&
+            function_exists('curl_exec')
+        ) {
             $ch = @curl_init();
 
-            if (isset($conf['use_proxy']) && $conf['use_proxy']) {
+            if (isset($conf['use_proxy']) &&
+                $conf['use_proxy']
+            ) {
                 @curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, 0);
                 @curl_setopt($ch, CURLOPT_PROXY, $conf['proxy_server']);
-                if (isset($conf['proxy_auth']) && ! empty($conf['proxy_auth'])) {
+
+                if (isset($conf['proxy_auth']) &&
+                    ! empty($conf['proxy_auth'])
+                ) {
                     @curl_setopt($ch, CURLOPT_PROXYUSERPWD, $conf['proxy_auth']);
                 }
             }
@@ -2346,18 +2479,25 @@ class functions_admin
             @curl_setopt($ch, CURLOPT_HEADER, 1);
             @curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
             @curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
             if ($method == 'POST') {
                 @curl_setopt($ch, CURLOPT_POST, 1);
                 @curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
             }
+
             $content = @curl_exec($ch);
             $header_length = @curl_getinfo($ch, CURLINFO_HEADER_SIZE);
             $status = @curl_getinfo($ch, CURLINFO_HTTP_CODE);
             @curl_close($ch);
-            if ($content !== false and $status >= 200 and $status < 400) {
+
+            if ($content !== false and
+                $status >= 200 and
+                $status < 400
+            ) {
                 if (preg_match('/Location:\s+?(.+)/', substr($content, 0, $header_length), $m)) {
                     return self::fetchRemote($m[1], $dest, [], [], $user_agent, $step + 1);
                 }
+
                 $content = substr($content, $header_length);
                 is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
                 return true;
@@ -2372,11 +2512,14 @@ class functions_admin
                     'user_agent' => $user_agent,
                 ],
             ];
+
             if ($method == 'POST') {
                 $opts['http']['content'] = $request;
             }
+
             $context = @stream_context_create($opts);
             $content = @file_get_contents($src, false, $context);
+
             if ($content !== false) {
                 is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
                 return true;
@@ -2388,17 +2531,20 @@ class functions_admin
         $host = $src['host'];
         $path = isset($src['path']) ? $src['path'] : '/';
         $path .= isset($src['query']) ? '?' . $src['query'] : '';
+        $s = @fsockopen($host, 80, $errno, $errstr, 5);
 
-        if (($s = @fsockopen($host, 80, $errno, $errstr, 5)) === false) {
+        if ($s === false) {
             return false;
         }
 
         $http_request = $method . ' ' . $path . " HTTP/1.0\r\n";
         $http_request .= 'Host: ' . $host . "\r\n";
+
         if ($method == 'POST') {
             $http_request .= "Content-Type: application/x-www-form-urlencoded;\r\n";
             $http_request .= 'Content-Length: ' . strlen($request) . "\r\n";
         }
+
         $http_request .= 'User-Agent: ' . $user_agent . "\r\n";
         $http_request .= "Accept: */*\r\n";
         $http_request .= "\r\n";
@@ -2408,36 +2554,48 @@ class functions_admin
 
         $i = 0;
         $in_content = false;
+
         while (! feof($s)) {
             $line = fgets($s);
 
-            if (rtrim($line, "\r\n") == '' && ! $in_content) {
+            if (rtrim($line, "\r\n") == '' &&
+                ! $in_content
+            ) {
                 $in_content = true;
                 $i++;
                 continue;
             }
+
             if ($i == 0) {
                 if (! preg_match('/HTTP\/(\\d\\.\\d)\\s*(\\d+)\\s*(.*)/', rtrim($line, "\r\n"), $m)) {
                     fclose($s);
                     return false;
                 }
+
                 $status = (int) $m[2];
-                if ($status < 200 || $status >= 400) {
+
+                if ($status < 200 ||
+                    $status >= 400
+                ) {
                     fclose($s);
                     return false;
                 }
             }
+
             if (! $in_content) {
                 if (preg_match('/Location:\s+?(.+)$/', rtrim($line, "\r\n"), $m)) {
                     fclose($s);
                     return self::fetchRemote(trim($m[1]), $dest, [], [], $user_agent, $step + 1);
                 }
+
                 $i++;
                 continue;
             }
+
             is_resource($dest) ? @fwrite($dest, $line) : $dest .= $line;
             $i++;
         }
+
         fclose($s);
         return true;
     }
@@ -2456,6 +2614,7 @@ class functions_admin
     WHERE id = ' . intval($group_id) . '
   ;';
         $result = functions_mysqli::pwg_query($query);
+
         if (functions_mysqli::pwg_db_num_rows($result) > 0) {
             list($groupname) = functions_mysqli::pwg_db_fetch_row($result);
         } else {
@@ -2467,7 +2626,6 @@ class functions_admin
 
     public static function delete_groups($group_ids)
     {
-
         if (count($group_ids) == 0) {
             trigger_error('There is no group to delete', E_USER_WARNING);
             return false;
@@ -2538,6 +2696,7 @@ class functions_admin
     WHERE ' . $conf['user_fields']['id'] . ' = ' . intval($user_id) . '
   ;';
         $result = functions_mysqli::pwg_query($query);
+
         if (functions_mysqli::pwg_db_num_rows($result) > 0) {
             list($username) = functions_mysqli::pwg_db_fetch_row($result);
         } else {
@@ -2633,6 +2792,7 @@ class functions_admin
 
         $taglist = [];
         $altlist = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $raw_name = $row['name'];
             $name = functions_plugins::trigger_change('render_tag_name', $raw_name, $row);
@@ -2655,6 +2815,7 @@ class functions_admin
         }
 
         usort($taglist, functions_html::tag_alpha_compare(...));
+
         if (count($altlist)) {
             usort($altlist, functions_html::tag_alpha_compare(...));
             $taglist = array_merge($taglist, $altlist);
@@ -2678,6 +2839,7 @@ class functions_admin
     public static function get_tag_ids($raw_tags, $allow_create = true)
     {
         $tag_ids = [];
+
         if (! is_array($raw_tags)) {
             $raw_tags = explode(',', $raw_tags);
         }
@@ -2706,10 +2868,12 @@ class functions_admin
     public static function order_by_name($element_ids, $name)
     {
         $ordered_element_ids = [];
+
         foreach ($element_ids as $k_id => $element_id) {
             $key = strtolower($name[$element_id]) . '-' . $name[$element_id] . '-' . $k_id;
             $ordered_element_ids[$key] = $element_id;
         }
+
         ksort($ordered_element_ids);
         return $ordered_element_ids;
     }
@@ -2725,17 +2889,21 @@ class functions_admin
         if (! is_array($category_ids)) {
             $category_ids = [$category_ids];
         }
+
         if (! is_array($user_ids)) {
             $user_ids = [$user_ids];
         }
 
         // check for emptiness
-        if (count($category_ids) == 0 or count($user_ids) == 0) {
+        if (count($category_ids) == 0 or
+            count($user_ids) == 0
+        ) {
             return;
         }
 
         // make sure categories are private and select uppercats or subcats
         $cat_ids = self::get_uppercat_ids($category_ids);
+
         if (isset($_POST['apply_on_sub'])) {
             $cat_ids = array_merge($cat_ids, functions_category::get_subcat_ids($category_ids));
         }
@@ -2753,6 +2921,7 @@ class functions_admin
         }
 
         $inserts = [];
+
         foreach ($private_cats as $cat_id) {
             foreach ($user_ids as $user_id) {
                 $inserts[] = [
@@ -2812,32 +2981,39 @@ class functions_admin
 
         for ($i = 0; $i < count($types); $i++) {
             $type = $types[$i];
+
             if ($type == derivative_std_params::IMG_CUSTOM) {
                 $type = derivative_params::derivative_to_url($type) . '_[a-zA-Z0-9]+';
             } elseif (in_array($type, ImageStdParams::get_all_types())) {
                 $type = derivative_params::derivative_to_url($type);
-            } else {//assume a custom type
+            } else { //assume a custom type
                 $type = derivative_params::derivative_to_url(derivative_std_params::IMG_CUSTOM) . '_' . $type;
             }
+
             $types[$i] = $type;
         }
 
         $pattern = '#.*-';
+
         if (count($types) > 1) {
             $pattern .= '(' . implode('|', $types) . ')';
         } else {
             $pattern .= $types[0];
         }
-        $pattern .= '\.[a-zA-Z0-9]{3,4}$#';
 
-        if ($contents = @opendir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR)) {
+        $pattern .= '\.[a-zA-Z0-9]{3,4}$#';
+        $contents = @opendir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR);
+
+        if ($contents) {
             while (($node = readdir($contents)) !== false) {
-                if ($node != '.'
-                    and $node != '..'
-                    and is_dir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $node)) {
+                if ($node != '.' and
+                    $node != '..' and
+                    is_dir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $node)
+                ) {
                     self::clear_derivative_cache_rec(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $node, $pattern);
                 }
             }
+
             closedir($contents);
         }
     }
@@ -2849,12 +3025,16 @@ class functions_admin
     {
         $rmdir = true;
         $rm_index = false;
+        $contents = opendir($path);
 
-        if ($contents = opendir($path)) {
+        if ($contents) {
             while (($node = readdir($contents)) !== false) {
-                if ($node == '.' or $node == '..') {
+                if ($node == '.' or
+                    $node == '..'
+                ) {
                     continue;
                 }
+
                 if (is_dir($path . '/' . $node)) {
                     $rmdir &= self::clear_derivative_cache_rec($path . '/' . $node, $pattern);
                 } else {
@@ -2867,15 +3047,18 @@ class functions_admin
                     }
                 }
             }
+
             closedir($contents);
 
             if ($rmdir) {
                 if ($rm_index) {
                     unlink($path . '/index.htm');
                 }
+
                 clearstatcache();
                 @rmdir($path);
             }
+
             return $rmdir;
         }
     }
@@ -2889,20 +3072,27 @@ class functions_admin
     public static function delete_element_derivatives($infos, $type = 'all')
     {
         $path = $infos['path'];
+
         if (! empty($infos['representative_ext'])) {
             $path = functions::original_to_representative($path, $infos['representative_ext']);
         }
+
         if (substr_compare($path, '../', 0, 3) == 0) {
             $path = substr($path, 3);
         }
+
         $dot = strrpos($path, '.');
+
         if ($type == 'all') {
             $pattern = '-*';
         } else {
             $pattern = '-' . derivative_params::derivative_to_url($type) . '*';
         }
+
         $path = substr_replace($path, $pattern, $dot, 0);
-        if (($glob = glob(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $path)) !== false) {
+        $glob = glob(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $path);
+
+        if ($glob !== false) {
             foreach ($glob as $file) {
                 @unlink($file);
             }
@@ -2918,17 +3108,22 @@ class functions_admin
     public static function get_dirs($directory)
     {
         $sub_dirs = [];
-        if ($opendir = opendir($directory)) {
+        $opendir = opendir($directory);
+
+        if ($opendir) {
             while ($file = readdir($opendir)) {
-                if ($file != '.'
-                    and $file != '..'
-                    and is_dir($directory . '/' . $file)
-                    and $file != '.svn') {
+                if ($file != '.' and
+                    $file != '..' and
+                    is_dir($directory . '/' . $file) and
+                    $file != '.svn'
+                ) {
                     $sub_dirs[] = $file;
                 }
             }
+
             closedir($opendir);
         }
+
         return $sub_dirs;
     }
 
@@ -2942,9 +3137,13 @@ class functions_admin
     {
         if (is_dir($path)) {
             $fh = opendir($path);
+
             while ($file = readdir($fh)) {
-                if ($file != '.' and $file != '..') {
+                if ($file != '.' and
+                    $file != '..'
+                ) {
                     $pathfile = $path . '/' . $file;
+
                     if (is_dir($pathfile)) {
                         self::deltree($pathfile, $trash_path);
                     } else {
@@ -2952,6 +3151,7 @@ class functions_admin
                     }
                 }
             }
+
             closedir($fh);
 
             if (@rmdir($path)) {
@@ -2960,6 +3160,7 @@ class functions_admin
                 if (! is_dir($trash_path)) {
                     @functions::mkgetdir($trash_path, functions::MKGETDIR_RECURSIVE | functions::MKGETDIR_DIE_ON_ERROR | functions::MKGETDIR_PROTECT_HTACCESS);
                 }
+
                 while ($r = $trash_path . '/' . md5(uniqid(mt_rand(), true))) {
                     if (! is_dir($r)) {
                         @rename($path, $r);
@@ -2994,6 +3195,7 @@ class functions_admin
         if (! is_array($requested)) {
             $requested = [$requested];
         }
+
         if (empty($requested)) {
             $requested = array_keys($tables);
         } else {
@@ -3049,6 +3251,7 @@ class functions_admin
         $paths = functions_mysqli::query2array($query, null, 'path');
         $imgs_ids_paths = array_combine($ids, $paths);
         $updates = [];
+
         foreach ($ids as $id) {
             $file = PHPWG_ROOT_PATH . $imgs_ids_paths[$id];
             $md5sum = md5_file($file);
@@ -3057,6 +3260,7 @@ class functions_admin
                 'md5sum' => $md5sum,
             ];
         }
+
         functions_mysqli::mass_updates(
             IMAGES_TABLE,
             [
@@ -3141,6 +3345,7 @@ class functions_admin
     {
         $current_rank = 0;
         $datas = [];
+
         foreach ($images as $id) {
             $datas[] = [
                 'category_id' => $category_id,
@@ -3148,6 +3353,7 @@ class functions_admin
                 'rank' => ++$current_rank,
             ];
         }
+
         $fields = [
             'primary' => ['image_id', 'category_id'],
             'update' => ['rank'],
@@ -3162,7 +3368,9 @@ class functions_admin
      */
     public static function update_images_lastmodified($image_ids)
     {
-        if (! is_array($image_ids) and is_int($image_ids)) {
+        if (! is_array($image_ids) and
+            is_int($image_ids)
+        ) {
             $images_ids = [$image_ids];
         }
 
@@ -3185,7 +3393,7 @@ class functions_admin
      */
     public static function number_format_human_readable($numbers)
     {
-        $readable = ['',  'k', 'M'];
+        $readable = ['', 'k', 'M'];
         $index = 0;
         $numbers = empty($numbers) ? 0 : $numbers;
 
@@ -3200,6 +3408,7 @@ class functions_admin
         }
 
         $decimals = 1;
+
         if ($readable[$index] == '') {
             $decimals = 0;
         }
@@ -3225,6 +3434,7 @@ class functions_admin
     WHERE id = ' . $image_id . '
   ;';
         $images = functions_mysqli::query2array($query);
+
         if (count($images) == 0) {
             if ($die_on_missing) {
                 functions_html::fatal_error('photo ' . $image_id . ' does not exist');
@@ -3247,27 +3457,36 @@ class functions_admin
         $subdirs = []; //sous-rep
 
         if (is_dir($path)) {
-            if ($contents = opendir($path)) {
+            $contents = opendir($path);
+
+            if ($contents) {
                 while (($node = readdir($contents)) !== false) {
-                    if ($node == '.' or $node == '..') {
+                    if ($node == '.' or
+                        $node == '..'
+                    ) {
                         continue;
                     }
 
                     if (is_file($path . '/' . $node)) {
-                        if ($split = explode('-', $node)) {
+                        $split = explode('-', $node);
+
+                        if ($split) {
                             $size_code = substr(end($split), 0, 2);
                             @$msizes[$size_code] += filesize($path . '/' . $node);
                         }
                     } elseif (is_dir($path . '/' . $node)) {
                         $tmp_msizes = self::get_cache_size_derivatives($path . '/' . $node);
+
                         foreach ($tmp_msizes as $size_key => $value) {
                             @$msizes[$size_key] += $value;
                         }
                     }
                 }
             }
+
             closedir($contents);
         }
+
         return $msizes;
     }
 
@@ -3352,7 +3571,10 @@ class functions_admin
         $news = null;
 
         $cache_path = PHPWG_ROOT_PATH . functions::conf_get_param('data_location') . 'cache/piwigo_latest_news-' . $lang_info['code'] . '.cache.php';
-        if (! is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {
+
+        if (! is_file($cache_path) or
+            filemtime($cache_path) < strtotime('24 hours ago')
+        ) {
             $url = PHPWG_URL . '/ws.php?method=porg.news.getLatest&format=json';
 
             if (self::fetchRemote($url, $content)) {
@@ -3404,17 +3626,21 @@ class functions_admin
             $orderedCat['last_updates'] = $cat['cat']['lastmodified'];
             $orderedCat['has_not_access'] = isset($is_forbidden[$cat['cat']['id']]);
             $orderedCat['nb_sub_photos'] = isset($nb_sub_photos[$cat['cat']['id']]) ? $nb_sub_photos[$cat['cat']['id']] : 0;
+
             if (isset($cat['children'])) {
                 //Does not update when moving a node
                 $orderedCat['nb_subcats'] = count($cat['children']);
                 $orderedCat['children'] = self::assocToOrderedTree($cat['children']);
             }
+
             array_push($orderedTree, $orderedCat);
         }
+
         usort($orderedTree, function ($a, $b) {
             if ($a['rank'] == $b['rank']) {
                 return 0;
             }
+
             return ($a['rank'] < $b['rank']) ? -1 : 1;
         });
         return $orderedTree;
@@ -3460,6 +3686,7 @@ class functions_admin
             }
 
             $to_compare = [];
+
             foreach ($subcat_ids as $id) {
                 if (isset($ref_dates[$id])) {
                     $to_compare[] = $ref_dates[$id];
@@ -3475,6 +3702,7 @@ class functions_admin
 
         // only return the list of $ids, not the sub-categories
         $return = [];
+
         foreach ($ids as $id) {
             $return[$id] = $ref_dates[$id];
         }
@@ -3525,9 +3753,11 @@ class functions_admin
         $query .= ' FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . $uppercats . ')';
         $query .= ';';
         $result = functions_mysqli::pwg_query($query);
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $database_dirs[$row['id']] = $row['dir'];
         }
+
         foreach ($upper_array as $id) {
             $local_dir .= $database_dirs[$id] . '/';
         }
@@ -3554,6 +3784,7 @@ class functions_admin
     public static function get_min_local_dir($local_dir)
     {
         $full_dir = explode('/', $local_dir);
+
         if (count($full_dir) <= 3) {
             return $local_dir;
         }
@@ -3570,11 +3801,13 @@ class functions_admin
         $conf = [];
         include(PHPWG_ROOT_PATH . 'inc/config_default.php');
         @include(PHPWG_ROOT_PATH . 'local/config/config.php');
+
         if (isset($conf['local_dir_site'])) {
             @include(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.php');
         }
 
-        return isset($conf['order_by']) or isset($conf['order_by_inside_category']);
+        return isset($conf['order_by']) or
+               isset($conf['order_by_inside_category']);
     }
 
     public static function make_consecutive(&$orders, $step = 50)
@@ -3582,7 +3815,9 @@ class functions_admin
         uasort($orders, function ($a, $b) {
             return abs($a) - abs($b);
         });
+
         $crt = 1;
+
         foreach ($orders as $id => $pos) {
             $orders[$id] = $step * ($pos < 0 ? -$crt : $crt);
             $crt++;
@@ -3603,11 +3838,13 @@ class functions_admin
             if (isset($_POST[$post_keyname])) {
                 $post_count = count($_POST[$post_keyname]);
                 $treated_count = count($check_key_treated);
+
                 if ($treated_count != 0) {
                     $time_refresh = ceil((functions::get_moment() - $env_nbm['start_time']) * $post_count / $treated_count);
                 } else {
                     $time_refresh = 0;
                 }
+
                 $_POST[$post_keyname] = array_diff($_POST[$post_keyname], $check_key_treated);
 
                 $must_repost = true;
@@ -3628,18 +3865,22 @@ class functions_admin
     public static function get_tab_status($mode)
     {
         $result = ACCESS_WEBMASTER;
+
         switch ($mode) {
             case 'param':
             case 'subscribe':
                 $result = ACCESS_WEBMASTER;
                 break;
+
             case 'send':
                 $result = ACCESS_ADMINISTRATOR;
                 break;
+
             default:
                 $result = ACCESS_WEBMASTER;
                 break;
         }
+
         return $result;
     }
 
@@ -3713,6 +3954,7 @@ class functions_admin
             // On timeout simulate like tabsheet send
             if ($env_nbm['is_sendmail_timeout']) {
                 $quoted_check_key_list = functions_notification_by_mail::quote_check_key_list(array_diff($check_key_list, $check_key_treated));
+
                 if (count($quoted_check_key_list) != 0) {
                     $query = 'delete from ' . USER_MAIL_NOTIFICATION_TABLE . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
                     $result = functions_mysqli::pwg_query($query);
@@ -3731,7 +3973,9 @@ class functions_admin
     {
         global $conf;
 
-        if ($conf['nbm_send_html_mail'] and ! (strpos($customize_mail_content, '<') === 0)) {
+        if ($conf['nbm_send_html_mail'] and
+            ! (strpos($customize_mail_content, '<') === 0)
+        ) {
             // On HTML mail, detects if the content are HTML format.
             // If it's plain text format, convert content to readable HTML
             return nl2br(htmlspecialchars($customize_mail_content));
@@ -3763,7 +4007,9 @@ class functions_admin
             $is_list_all_without_test = ($env_nbm['is_sendmail_timeout'] or $conf['nbm_list_all_enabled_users_to_send']);
 
             // Check if exist news to list user or send mails
-            if ((! $is_list_all_without_test) or ($is_action_send)) {
+            if (! $is_list_all_without_test or
+                $is_action_send
+            ) {
                 if (count($data_users) > 0) {
                     $datas = [];
 
@@ -3785,12 +4031,17 @@ class functions_admin
                     functions_notification_by_mail::begin_users_env_nbm($is_action_send);
 
                     foreach ($data_users as $nbm_user) {
-                        if ((! $is_action_send) and functions_notification_by_mail::check_sendmail_timeout()) {
+                        if (! $is_action_send and
+                            functions_notification_by_mail::check_sendmail_timeout()
+                        ) {
                             // Stop fill list on 'list_to_send', if the quota is override
                             $page['infos'][] = $msg_break_timeout;
                             break;
                         }
-                        if (($is_action_send) and functions_notification_by_mail::check_sendmail_timeout()) {
+
+                        if ($is_action_send and
+                            functions_notification_by_mail::check_sendmail_timeout()
+                        ) {
                             // Stop fill list on 'send', if the quota is override
                             $page['errors'][] = $msg_break_timeout;
                             break;
@@ -3854,6 +4105,7 @@ class functions_admin
                                       $customize_mail_content,
                                       $nbm_user
                                   );
+
                                 if (! empty($nbm_user_customize_mail_content)) {
                                     $env_nbm['mail_template']->assign(
                                         'custom_mail_content',
@@ -3861,10 +4113,13 @@ class functions_admin
                                     );
                                 }
 
-                                if ($conf['nbm_send_html_mail'] and $conf['nbm_send_recent_post_dates']) {
+                                if ($conf['nbm_send_html_mail'] and
+                                    $conf['nbm_send_recent_post_dates']
+                                ) {
                                     $recent_post_dates = functions_notification::get_recent_post_dates_array(
                                         $conf['recent_post_dates']['NBM']
                                     );
+
                                     foreach ($recent_post_dates as $date_detail) {
                                         $env_nbm['mail_template']->append(
                                             'recent_posts',
@@ -3971,8 +4226,11 @@ class functions_admin
 
         parse_str($url_components['query'], $vars);
         $is_first = true;
+
         foreach ($vars as $key => $value) {
-            if (! in_array($key, $get_rejects) and $key != $get_param) {
+            if (! in_array($key, $get_rejects) and
+                $key != $get_param
+            ) {
                 $base_url .= $is_first ? '?' : '&amp;';
                 $is_first = false;
 
@@ -3985,16 +4243,21 @@ class functions_admin
         }
 
         $ret = [];
+
         foreach ($sortable_by as $field) {
             $url = $base_url;
             $disp = '↓'; // TODO: an small image is better
 
             if ($field !== @$_GET[$get_param]) {
-                if (! isset($default_field) or $default_field != $field) { // the first should be the default
+                if (! isset($default_field) or
+                    $default_field != $field
+                ) { // the first should be the default
                     $url = functions_url::add_url_params($url, [
                         $get_param => $field,
                     ]);
-                } elseif (isset($default_field) and ! isset($_GET[$get_param])) {
+                } elseif (isset($default_field) and
+                          ! isset($_GET[$get_param])
+                ) {
                     $ret[] = $field;
                     $disp = '<em>' . $disp . '</em>';
                 }
@@ -4002,6 +4265,7 @@ class functions_admin
                 $ret[] = $field;
                 $disp = '<em>' . $disp . '</em>';
             }
+
             if (isset($template_var)) {
                 $template->assign(
                     $template_var . strtoupper($field),
@@ -4009,6 +4273,7 @@ class functions_admin
                 );
             }
         }
+
         return $ret;
     }
 
@@ -4101,6 +4366,7 @@ class functions_admin
         $result = functions_mysqli::pwg_query($query);
 
         $output = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $output[] = $row;
         }
@@ -4110,7 +4376,6 @@ class functions_admin
 
     public static function get_month_of_last_years($last = 'all')
     {
-
         $query = '
   SELECT
     year,
@@ -4138,6 +4403,7 @@ class functions_admin
         if (count(functions_mysqli::query2array($query . ';')) > 1) {
             return self::set_missing_values('month', functions_mysqli::query2array($query . ';'));
         }
+
         $last_year_date = new DateTime();
         return self::set_missing_values(
             'month',
@@ -4145,7 +4411,6 @@ class functions_admin
             $last_year_date->sub(new DateInterval('P1Y')),
             new DateTime()
         );
-
     }
 
     public static function get_month_stats()
@@ -4185,6 +4450,7 @@ class functions_admin
         }
 
         $actual_date = new DateTime();
+
         if (! isset($months[$actual_date->format('Y/m/1')])) {
             @$months[$actual_date->format('Y/m/1')][] = [
                 'year' => $actual_date->format('Y'),
@@ -4199,9 +4465,11 @@ class functions_admin
             $lastDate = new DateTime($key);
             $lastDate = $lastDate->add(new DateInterval('P1M'));
             $lastDate = $lastDate->sub(new DateInterval('P1D'));
+
             if ($lastDate > new DateTime()) {
                 $lastDate = new DateTime();
             }
+
             $result['month'][] = self::set_missing_values('day', $val, new DateTime($key), $lastDate);
         }
 
@@ -4236,6 +4504,7 @@ class functions_admin
         } else {
             $date = $firstDate;
         }
+
         if ($lastDate == null) {
             $date_end = self::get_date_object($data[0]);
         } else {
@@ -4266,6 +4535,7 @@ class functions_admin
         //Overload with database rows
         foreach ($data as $value) {
             $str = self::get_date_object($value)->format($date_format);
+
             if (isset($result[$str])) {
                 $result[$str] += $value['nb_pages'];
             }
@@ -4278,10 +4548,13 @@ class functions_admin
     public static function get_date_object($row)
     {
         $date_string = $row['year'];
+
         if ($row['month'] != null) {
             $date_string = $date_string . '-' . $row['month'];
+
             if ($row['day'] != null) {
                 $date_string = $date_string . '-' . $row['day'];
+
                 if ($row['hour'] != null) {
                     $date_string = $date_string . ' ' . $row['hour'] . ':00';
                 }
@@ -4297,12 +4570,15 @@ class functions_admin
     {
         global $change_name;
         $change_name = $candidate;
+
         if ($step != 0) {
             $change_name .= '-' . $step;
         }
+
         if (in_array($change_name, $list)) {
             return self::get_watermark_filename($list, $candidate, $step + 1);
         }
+
         return $change_name . '.png';
     }
 }

@@ -31,14 +31,20 @@ class ThemeController
         functions_plugins::add_event_handler('init', $this->assignConfig(...));
         functions_plugins::add_event_handler('init', $this->setInitValues(...));
 
-        if ($this->config->bootstrap_theme === 'darkroom' || $this->config->bootstrap_theme === 'material' || $this->config->bootstrap_theme === 'bootswatch') {
+        if ($this->config->bootstrap_theme === 'darkroom' ||
+            $this->config->bootstrap_theme === 'material' ||
+            $this->config->bootstrap_theme === 'bootswatch'
+        ) {
             $this->config->bootstrap_theme = 'bootstrap-darkroom';
             $this->config->save();
             functions_plugins::add_event_handler('loc_begin_page_header', $this->showUpgradeWarning(...));
         }
 
         $shortname = $this->config->comments_disqus_shortname;
-        if ($this->config->comments_type == 'disqus' && ! empty($shortname)) {
+
+        if ($this->config->comments_type == 'disqus' &&
+            ! empty($shortname)
+        ) {
             functions_plugins::add_event_handler('blockmanager_apply', $this->hideMenus(...));
         }
 
@@ -48,7 +54,9 @@ class ThemeController
         functions_plugins::add_event_handler('loc_end_picture', $this->registerPictureTemplates(...), 1000);
         functions_plugins::add_event_handler('loc_begin_index_thumbnails', $this->returnPageStart(...));
 
-        if ($this->config->slick_enabled === true || $this->config->photoswipe === true) {
+        if ($this->config->slick_enabled === true ||
+            $this->config->photoswipe === true
+        ) {
             functions_plugins::add_event_handler('loc_end_picture', $this->getAllThumbnailsInCategory(...));
             // also needed on index.tpl for compatibility with GThumb+/GDThumb
             functions_plugins::add_event_handler('loc_end_index', $this->getAllThumbnailsInCategory(...));
@@ -59,16 +67,27 @@ class ThemeController
     {
         global $template, $conf;
 
-        if (array_key_exists('bootstrap_darkroom_navbar_main_style', $conf) && ! empty($conf['bootstrap_darkroom_navbar_main_style'])) {
+        if (array_key_exists('bootstrap_darkroom_navbar_main_style', $conf) &&
+            ! empty($conf['bootstrap_darkroom_navbar_main_style'])
+        ) {
             $this->config->navbar_main_style = $conf['bootstrap_darkroom_navbar_main_style'];
         }
-        if (array_key_exists('bootstrap_darkroom_navbar_main_bg', $conf) && ! empty($conf['bootstrap_darkroom_navbar_main_bg'])) {
+
+        if (array_key_exists('bootstrap_darkroom_navbar_main_bg', $conf) &&
+            ! empty($conf['bootstrap_darkroom_navbar_main_bg'])
+        ) {
             $this->config->navbar_main_bg = $conf['bootstrap_darkroom_navbar_main_bg'];
         }
-        if (array_key_exists('bootstrap_darkroom_navbar_contextual_style', $conf) && ! empty($conf['bootstrap_darkroom_navbar_contextual_style'])) {
+
+        if (array_key_exists('bootstrap_darkroom_navbar_contextual_style', $conf) &&
+            ! empty($conf['bootstrap_darkroom_navbar_contextual_style'])
+        ) {
             $this->config->navbar_contextual_style = $conf['bootstrap_darkroom_navbar_contextual_style'];
         }
-        if (array_key_exists('bootstrap_darkroom_navbar_contextual_bg', $conf) && ! empty($conf['bootstrap_darkroom_navbar_contextual_bg'])) {
+
+        if (array_key_exists('bootstrap_darkroom_navbar_contextual_bg', $conf) &&
+            ! empty($conf['bootstrap_darkroom_navbar_contextual_bg'])
+        ) {
             $this->config->navbar_contextual_bg = $conf['bootstrap_darkroom_navbar_contextual_bg'];
         }
 
@@ -100,7 +119,9 @@ class ThemeController
     {
         global $template, $page;
 
-        if (isset($page['is_homepage']) and $page['is_homepage']) {
+        if (isset($page['is_homepage']) and
+            $page['is_homepage']
+        ) {
             $template->assign('is_homepage', true);
         } else {
             $template->assign('is_homepage', false);
@@ -115,6 +136,7 @@ class ThemeController
             'loaded_plugins' => $GLOBALS['pwg_loaded_plugins'],
             'meta_ref_enabled' => $conf['meta_ref'],
         ]);
+
         if (array_key_exists('bootstrap_darkroom_core_js_in_header', $conf)) {
             $template->assign('bootstrap_darkroom_core_js_in_header', $conf['bootstrap_darkroom_core_js_in_header']);
         } else {
@@ -141,11 +163,14 @@ class ThemeController
 
         if (array_key_exists('bootstrap_darkroom_ps_exif_replacements', $conf)) {
             foreach ($conf['bootstrap_darkroom_ps_exif_replacements'] as $tag => $replacement) {
-                if (is_array($exif) && array_key_exists($tag, $exif)) {
+                if (is_array($exif) &&
+                    array_key_exists($tag, $exif)
+                ) {
                     $exif[$tag] = str_replace($replacement[0], $replacement[1], $exif[$tag]);
                 }
             }
         }
+
         return $exif;
     }
 
@@ -169,11 +194,14 @@ class ThemeController
         $l_sep = $template->get_template_vars('LEVEL_SEPARATOR');
         $title = $template->get_template_vars('TITLE');
         $section_title = $template->get_template_vars('SECTION_TITLE');
+
         if (empty($title)) {
             $title = $section_title;
         }
+
         if (! empty($title)) {
             $splt = strpos($title, '[');
+
             if ($splt) {
                 $title_links = substr($title, 0, $splt);
                 $title = $title_links;
@@ -181,11 +209,15 @@ class ThemeController
 
             $title = str_replace('<a href', '<a class="nav-breadcrumb-item" href', $title);
             $title = str_replace($l_sep, '', $title);
-            if ($page['section'] == 'recent_cats' or $page['section'] == 'favorites') {
+
+            if ($page['section'] == 'recent_cats' or
+                $page['section'] == 'favorites'
+            ) {
                 $title = preg_replace('/<\/a>([a-zA-Z0-9]+)/', '</a><a class="nav-breadcrumb-item" href="' . functions_url::make_index_url([
                     'section' => $page['section'],
                 ]) . '">${1}', $title) . '</a>';
             }
+
             if (empty($section_title)) {
                 $template->assign('TITLE', $title);
             } else {
@@ -198,7 +230,9 @@ class ThemeController
     {
         global $template, $conf, $user, $page;
 
-        if (! $page['items'] || ($page['section'] == 'categories' && ! isset($page['category']) && ! isset($page['chronology_field']) && ! isset($page['flat']))) {
+        if (! $page['items'] ||
+           ($page['section'] == 'categories' && ! isset($page['category']) && ! isset($page['chronology_field']) && ! isset($page['flat']))
+        ) {
             return;
         }
 
@@ -230,6 +264,7 @@ class ThemeController
         $result = functions_mysqli::pwg_query($query);
 
         $pictures = [];
+
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $pictures[] = $row;
         }

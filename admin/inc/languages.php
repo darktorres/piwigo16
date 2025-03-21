@@ -41,7 +41,9 @@ class languages
     {
         global $conf;
 
-        if (! $conf['enable_extensions_install'] and $action == 'delete') {
+        if (! $conf['enable_extensions_install'] and
+            $action == 'delete'
+        ) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -92,6 +94,7 @@ DELETE
                     $errors[] = 'CANNOT DELETE - LANGUAGE IS ACTIVATED';
                     break;
                 }
+
                 if (! isset($this->fs_languages[$language_id])) {
                     $errors[] = 'CANNOT DELETE - LANGUAGE DOES NOT EXIST';
                     break;
@@ -117,6 +120,7 @@ UPDATE ' . USER_INFOS_TABLE . '
                 functions_mysqli::pwg_query($query);
                 break;
         }
+
         return $errors;
     }
 
@@ -128,15 +132,21 @@ UPDATE ' . USER_INFOS_TABLE . '
         if (empty($target_charset)) {
             $target_charset = functions::get_pwg_charset();
         }
+
         $target_charset = strtolower($target_charset);
 
         $dir = opendir(PHPWG_ROOT_PATH . 'language');
+
         while ($file = readdir($dir)) {
-            if ($file != '.' and $file != '..') {
+            if ($file != '.' and
+                $file != '..'
+            ) {
                 $path = PHPWG_ROOT_PATH . 'language/' . $file;
-                if (is_dir($path) and ! is_link($path)
-                    and preg_match('/^[a-zA-Z0-9-_]+$/', $file)
-                    and file_exists($path . '/common.lang.php')
+
+                if (is_dir($path) and
+                    ! is_link($path) and
+                    preg_match('/^[a-zA-Z0-9-_]+$/', $file) and
+                    file_exists($path . '/common.lang.php')
                 ) {
                     $language = [
                         'name' => $file,
@@ -151,20 +161,28 @@ UPDATE ' . USER_INFOS_TABLE . '
                         $language['name'] = trim($val[1]);
                         $language['name'] = functions::convert_charset($language['name'], 'utf-8', $target_charset);
                     }
+
                     if (preg_match('|Version:\\s*([\\w.-]+)|', $plg_data, $val)) {
                         $language['version'] = trim($val[1]);
                     }
+
                     if (preg_match('|Language URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                         $language['uri'] = trim($val[1]);
                     }
+
                     if (preg_match('|Author:\\s*(.+)|', $plg_data, $val)) {
                         $language['author'] = trim($val[1]);
                     }
+
                     if (preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                         $language['author uri'] = trim($val[1]);
                     }
-                    if (! empty($language['uri']) and strpos($language['uri'], 'extension_view.php?eid=')) {
+
+                    if (! empty($language['uri']) and
+                        strpos($language['uri'], 'extension_view.php?eid=')
+                    ) {
                         list(, $extension) = explode('extension_view.php?eid=', $language['uri']);
+
                         if (is_numeric($extension)) {
                             $language['extension'] = $extension;
                         }
@@ -176,6 +194,7 @@ UPDATE ' . USER_INFOS_TABLE . '
                 }
             }
         }
+
         closedir($dir);
         @uasort($this->fs_languages, functions_html::name_compare(...));
     }
@@ -210,23 +229,30 @@ UPDATE ' . USER_INFOS_TABLE . '
         $version = PHPWG_VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (functions_admin::fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
+
+        if (functions_admin::fetchRemote($url, $result, $get_data) and
+            $pem_versions = @unserialize($result)
+        ) {
             if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $version = $pem_versions[0]['name'];
             }
+
             $branch = functions::get_branch_from_version($version);
+
             foreach ($pem_versions as $pem_version) {
                 if (strpos($pem_version['name'], $branch) === 0) {
                     $versions_to_check[] = $pem_version['id'];
                 }
             }
         }
+
         if (empty($versions_to_check)) {
             return false;
         }
 
         // Languages to check
         $languages_to_check = [];
+
         foreach ($this->fs_languages as $fs_language) {
             if (isset($fs_language['extension'])) {
                 $languages_to_check[] = $fs_language['extension'];
@@ -244,6 +270,7 @@ UPDATE ' . USER_INFOS_TABLE . '
                 'get_nb_downloads' => 'true',
             ]
         );
+
         if (! empty($languages_to_check)) {
             if ($new) {
                 $get_data['extension_exclude'] = implode(',', $languages_to_check);
@@ -254,17 +281,21 @@ UPDATE ' . USER_INFOS_TABLE . '
 
         if (functions_admin::fetchRemote($url, $result, $get_data)) {
             $pem_languages = @unserialize($result);
+
             if (! is_array($pem_languages)) {
                 return false;
             }
+
             foreach ($pem_languages as $language) {
                 if (preg_match('/^.*? \[[A-Z]{2}\]$/', $language['extension_name'])) {
                     $this->server_languages[$language['extension_id']] = $language;
                 }
             }
+
             @uasort($this->server_languages, $this->extension_name_compare(...));
             return true;
         }
+
         return false;
     }
 
@@ -279,22 +310,29 @@ UPDATE ' . USER_INFOS_TABLE . '
     {
         global $logger;
 
-        if ($archive = tempnam(PHPWG_ROOT_PATH . 'language', 'zip')) {
+        $archive = tempnam(PHPWG_ROOT_PATH . 'language', 'zip');
+
+        if ($archive) {
             $url = PEM_URL . '/download.php';
             $get_data = [
                 'rid' => $revision,
                 'origin' => 'piwigo_' . $action,
             ];
+            $handle = @fopen($archive, 'wb');
 
-            if ($handle = @fopen($archive, 'wb') and functions_admin::fetchRemote($url, $handle, $get_data)) {
+            if ($handle and
+                functions_admin::fetchRemote($url, $handle, $get_data)
+            ) {
                 fclose($handle);
                 $zip = new PclZip($archive);
-                if ($list = $zip->listContent()) {
+                $list = $zip->listContent();
+
+                if ($list) {
                     foreach ($list as $file) {
                         // we search common.lang.php in archive
-                        if (basename($file['filename']) == 'common.lang.php'
-                          and (! isset($main_filepath)
-                          or strlen($file['filename']) < strlen($main_filepath))) {
+                        if (basename($file['filename']) == 'common.lang.php' and
+                           (! isset($main_filepath) or strlen($file['filename']) < strlen($main_filepath))
+                        ) {
                             $main_filepath = $file['filename'];
                         }
                     }
@@ -303,65 +341,71 @@ UPDATE ' . USER_INFOS_TABLE . '
 
                     if (isset($main_filepath)) {
                         $root = basename(dirname($main_filepath)); // common.lang.php path in archive
+
                         if (preg_match('/^[a-z]{2}_[A-Z]{2}$/', $root)) {
                             if ($action == 'install') {
                                 $dest = $root;
                             }
+
                             $extract_path = PHPWG_ROOT_PATH . 'language/' . $dest;
 
                             $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
 
-                            if (
-                                $result = $zip->extract(
-                                    PCLZIP_OPT_PATH,
-                                    $extract_path,
-                                    PCLZIP_OPT_REMOVE_PATH,
-                                    $root,
-                                    PCLZIP_OPT_REPLACE_NEWER
-                                )
-                            ) {
+                            $result = $zip->extract(PCLZIP_OPT_PATH, $extract_path, PCLZIP_OPT_REMOVE_PATH, $root, PCLZIP_OPT_REPLACE_NEWER);
+
+                            if ($result) {
                                 foreach ($result as $file) {
                                     if ($file['stored_filename'] == $main_filepath) {
                                         $status = $file['status'];
                                         break;
                                     }
                                 }
+
                                 if ($status == 'ok') {
                                     $this->get_fs_languages();
+
                                     if ($action == 'install') {
                                         $this->perform_action('activate', $dest);
                                     }
                                 }
-                                if (file_exists($extract_path . '/obsolete.list')
-                                  and $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)
-                                  and ! empty($old_files)) {
-                                    $old_files[] = 'obsolete.list';
-                                    $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
 
-                                    $extract_path_realpath = realpath($extract_path);
+                                if (file_exists($extract_path . '/obsolete.list')) {
+                                    $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES);
 
-                                    foreach ($old_files as $old_file) {
-                                        $old_file = trim($old_file);
-                                        $old_file = trim($old_file, '/'); // prevent path starting with a "/"
+                                    if ($old_files and
+                                        ! empty($old_files)
+                                    ) {
+                                        $old_files[] = 'obsolete.list';
+                                        $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
 
-                                        if (empty($old_file)) { // empty here means the extension itself
-                                            continue;
-                                        }
+                                        $extract_path_realpath = realpath($extract_path);
 
-                                        $path = $extract_path . '/' . $old_file;
+                                        foreach ($old_files as $old_file) {
+                                            $old_file = trim($old_file);
+                                            $old_file = trim($old_file, '/'); // prevent path starting with a "/"
 
-                                        // make sure the obsolete file is withing the extension directory, prevent traversal path
-                                        $realpath = realpath($path);
-                                        if ($realpath === false or strpos($realpath, $extract_path_realpath) !== 0) {
-                                            continue;
-                                        }
+                                            if (empty($old_file)) { // empty here means the extension itself
+                                                continue;
+                                            }
 
-                                        $logger->debug(__FUNCTION__ . ', to delete = ' . $path);
+                                            $path = $extract_path . '/' . $old_file;
 
-                                        if (is_file($path)) {
-                                            @unlink($path);
-                                        } elseif (is_dir($path)) {
-                                            functions_admin::deltree($path, PHPWG_ROOT_PATH . 'language/trash');
+                                            // make sure the obsolete file is withing the extension directory, prevent traversal path
+                                            $realpath = realpath($path);
+
+                                            if ($realpath === false or
+                                                strpos($realpath, $extract_path_realpath) !== 0
+                                            ) {
+                                                continue;
+                                            }
+
+                                            $logger->debug(__FUNCTION__ . ', to delete = ' . $path);
+
+                                            if (is_file($path)) {
+                                                @unlink($path);
+                                            } elseif (is_dir($path)) {
+                                                functions_admin::deltree($path, PHPWG_ROOT_PATH . 'language/trash');
+                                            }
                                         }
                                     }
                                 }

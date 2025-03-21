@@ -37,11 +37,15 @@ $page['cat'] = $category['id'];
 if (! empty($_POST)) {
     functions::check_pwg_token();
 
-    if ($category['status'] != $_POST['status'] or ($category['status'] != 'public' and isset($_POST['apply_on_sub']))) {
+    if ($category['status'] != $_POST['status'] or
+       ($category['status'] != 'public' and isset($_POST['apply_on_sub']))
+    ) {
         $cat_ids = [$page['cat']];
+
         if (isset($_POST['apply_on_sub'])) {
             $cat_ids = array_merge($cat_ids, functions_category::get_subcat_ids([$page['cat']]));
         }
+
         functions_admin::set_cat_status($cat_ids, $_POST['status']);
         $category['status'] = $_POST['status'];
     }
@@ -65,6 +69,7 @@ SELECT group_id
         // remove permissions to groups
         //
         $deny_groups = array_diff($groups_granted, $_POST['groups']);
+
         if (count($deny_groups) > 0) {
             // if you forbid access to an album, all sub-albums become
             // automatically forbidden
@@ -81,8 +86,10 @@ DELETE
         // add permissions to groups
         //
         $grant_groups = $_POST['groups'];
+
         if (count($grant_groups) > 0) {
             $cat_ids = functions_admin::get_uppercat_ids([$page['cat']]);
+
             if (isset($_POST['apply_on_sub'])) {
                 $cat_ids = array_merge($cat_ids, functions_category::get_subcat_ids([$page['cat']]));
             }
@@ -96,6 +103,7 @@ SELECT id
             $private_cats = functions::array_from_query($query, 'id');
 
             $inserts = [];
+
             foreach ($private_cats as $cat_id) {
                 foreach ($grant_groups as $group_id) {
                     $inserts[] = [
@@ -133,6 +141,7 @@ SELECT user_id
         // remove permissions to users
         //
         $deny_users = array_diff($users_granted, $_POST['users']);
+
         if (count($deny_users) > 0) {
             // if you forbid access to an album, all sub-album become automatically
             // forbidden
@@ -149,6 +158,7 @@ DELETE
         // add permissions to users
         //
         $grant_users = $_POST['users'];
+
         if (count($grant_users) > 0) {
             functions_admin::add_permission_on_category($page['cat'], $grant_users);
         }
@@ -222,6 +232,7 @@ $user_granted_direct_ids = functions::array_from_query($query, 'user_id');
 $template->assign('users_selected', $user_granted_direct_ids);
 
 $user_granted_indirect_ids = [];
+
 if (count($group_granted_ids) > 0) {
     $granted_groups = [];
 
@@ -231,10 +242,12 @@ SELECT user_id, group_id
   WHERE group_id IN (' . implode(',', $group_granted_ids) . ')
 ';
     $result = functions_mysqli::pwg_query($query);
+
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         if (! isset($granted_groups[$row['group_id']])) {
             $granted_groups[$row['group_id']] = [];
         }
+
         $granted_groups[$row['group_id']][] = $row['user_id'];
     }
 
@@ -255,6 +268,7 @@ SELECT user_id, group_id
 
     foreach ($granted_groups as $group_id => $group_users) {
         $group_usernames = [];
+
         foreach ($group_users as $user_id) {
             if (in_array($user_id, $user_granted_indirect_ids)) {
                 $group_usernames[] = $users[$user_id];

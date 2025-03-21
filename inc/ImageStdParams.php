@@ -108,10 +108,12 @@ final class ImageStdParams
         $key = [];
         $params->add_url_tokens($key);
         $key = implode('_', $key);
+
         if (@self::$custom[$key] < time() - 24 * 3600) {
             self::$custom[$key] = time();
             self::save();
         }
+
         return $params;
     }
 
@@ -130,16 +132,21 @@ final class ImageStdParams
     {
         global $conf;
         $arr = @unserialize($conf['derivatives']);
+
         if ($arr !== false) {
             self::$type_map = $arr['d'];
             self::$watermark = @$arr['w'];
+
             if (! self::$watermark) {
                 self::$watermark = new WatermarkParams();
             }
+
             self::$custom = @$arr['c'];
+
             if (! self::$custom) {
                 self::$custom = [];
             }
+
             if (isset($arr['q'])) {
                 self::$quality = $arr['q'];
             }
@@ -148,6 +155,7 @@ final class ImageStdParams
             self::$type_map = self::get_default_sizes();
             self::save();
         }
+
         self::build_maps();
     }
 
@@ -202,9 +210,11 @@ final class ImageStdParams
             derivative_std_params::IMG_XXLARGE => new DerivativeParams(SizingParams::classic(1656, 1242)),
         ];
         $now = time();
+
         foreach ($arr as $params) {
             $params->last_mod_time = $now;
         }
+
         return $arr;
     }
 
@@ -216,8 +226,8 @@ final class ImageStdParams
     public static function apply_global($params)
     {
         $params->use_watermark = ! empty(self::$watermark->file) &&
-            (self::$watermark->min_size[0] <= $params->sizing->ideal_size[0]
-            or self::$watermark->min_size[1] <= $params->sizing->ideal_size[1]);
+            (self::$watermark->min_size[0] <= $params->sizing->ideal_size[0] or
+             self::$watermark->min_size[1] <= $params->sizing->ideal_size[1]);
     }
 
     /**
@@ -229,13 +239,16 @@ final class ImageStdParams
             $params->type = $type;
             self::apply_global($params);
         }
+
         self::$all_type_map = self::$type_map;
 
         for ($i = 0; $i < count(self::$all_types); $i++) {
             $tocheck = self::$all_types[$i];
+
             if (! isset(self::$type_map[$tocheck])) {
                 for ($j = $i - 1; $j >= 0; $j--) {
                     $target = self::$all_types[$j];
+
                     if (isset(self::$type_map[$target])) {
                         self::$all_type_map[$tocheck] = self::$type_map[$target];
                         self::$undefined_type_map[$tocheck] = $target;

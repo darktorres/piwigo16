@@ -35,6 +35,7 @@ class Inflector_en
         ];
 
         $this->exceptions = $tmp;
+
         foreach ($tmp as $k => $v) {
             $this->exceptions[$v] = $k;
         }
@@ -106,24 +107,30 @@ class Inflector_en
         $lword = strtolower($word);
 
         $rc = @$this->exceptions[$lword];
+
         if (isset($rc)) {
             if (! empty($rc)) {
                 $res[] = $rc;
             }
+
             return $res;
         }
 
         self::run($this->pluralizers, $word, $res);
         self::run($this->singularizers, $word, $res);
+
         if (strlen($word) > 4) {
             self::run($this->er2ing, $word, $res);
         }
+
         if (strlen($word) > 5) {
             $rc = self::run($this->ing2er, $word, $res);
+
             if ($rc !== false) {
                 self::run($this->pluralizers, $rc, $res);
             }
         }
+
         return $res;
     }
 
@@ -131,14 +138,17 @@ class Inflector_en
     {
         foreach ($rules as $rule => $replacement) {
             $rc = preg_replace($rule . 'i', $replacement, $word, -1, $count);
+
             if ($count) {
                 if ($rc !== $word) {
                     $res[] = $rc;
                     return $rc;
                 }
+
                 break;
             }
         }
+
         return false;
     }
 }

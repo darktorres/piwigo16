@@ -22,15 +22,21 @@ if (! defined('PHPWG_ROOT_PATH')) {
 functions::check_input_parameter('cat_id', $_POST, false, PATTERN_ID);
 
 $selected_cat = [];
-if (isset($_POST['set_permalink']) and $_POST['cat_id'] > 0) {
+
+if (isset($_POST['set_permalink']) and
+    $_POST['cat_id'] > 0
+) {
     functions::check_pwg_token();
     $permalink = $_POST['permalink'];
+
     if (empty($permalink)) {
         functions_permalinks::delete_cat_permalink($_POST['cat_id'], isset($_POST['save']));
     } else {
         functions_permalinks::set_cat_permalink($_POST['cat_id'], $permalink, isset($_POST['save']));
     }
+
     $selected_cat = [$_POST['cat_id']];
+
 } elseif (isset($_GET['delete_permanent'])) {
     functions::check_pwg_token();
     $query = '
@@ -38,6 +44,7 @@ DELETE FROM ' . OLD_PERMALINKS_TABLE . '
   WHERE permalink=\'' . functions_mysqli::pwg_db_real_escape_string($_GET['delete_permanent']) . '\'
   LIMIT 1';
     $result = functions_mysqli::pwg_query($query);
+
     if (functions_mysqli::pwg_db_changes($result) == 0) {
         $page['errors'][] = functions::l10n('Cannot delete the old permalink !');
     }
@@ -77,11 +84,16 @@ SELECT id, permalink, uppercats, global_rank
   FROM ' . CATEGORIES_TABLE . '
   WHERE permalink IS NOT NULL
 ';
-if ($sort_by[0] == 'id' or $sort_by[0] == 'permalink') {
+
+if ($sort_by[0] == 'id' or
+    $sort_by[0] == 'permalink'
+) {
     $query .= ' ORDER BY ' . $sort_by[0];
 }
+
 $categories = [];
 $result = functions_mysqli::pwg_query($query);
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $row['name'] = functions_html::get_cat_display_name_cache($row['uppercats']);
     $categories[] = $row;
@@ -90,6 +102,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 if ($sort_by[0] == 'name') {
     usort($categories, functions_category::global_rank_compare(...));
 }
+
 $template->assign('permalinks', $categories);
 
 // --- generate display of old permalinks --------------------------------------
@@ -105,11 +118,14 @@ $sort_by = functions_admin::parse_sort_variables(
 
 $url_del_base = functions_url::get_root_url() . 'admin.php?page=permalinks';
 $query = 'SELECT * FROM ' . OLD_PERMALINKS_TABLE;
+
 if (count($sort_by)) {
     $query .= ' ORDER BY ' . $sort_by[0];
 }
+
 $result = functions_mysqli::pwg_query($query);
 $deleted_permalinks = [];
+
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $row['name'] = functions_html::get_cat_display_name_cache($row['cat_id']);
     $row['U_DELETE'] =

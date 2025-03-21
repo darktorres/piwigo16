@@ -103,18 +103,21 @@ function add_core_tabs($sheets, $tab_id)
                 'caption' => '<span class="icon-block"></span>' . functions::l10n('Lock'),
                 'url' => $link_start . 'cat_options&amp;section=visible',
             ];
+
             if ($conf['activate_comments']) {
                 $sheets['comments'] = [
                     'caption' => '<span class="icon-chat"></span>' . functions::l10n('Comments'),
                     'url' => $link_start . 'cat_options&amp;section=comments',
                 ];
             }
+
             if ($conf['allow_random_representative']) {
                 $sheets['representative'] = [
                     'caption' => functions::l10n('Representative'),
                     'url' => $link_start . 'cat_options&amp;section=representative',
                 ];
             }
+
             break;
 
         case 'comments':
@@ -208,6 +211,7 @@ function add_core_tabs($sheets, $tab_id)
                 'caption' => '<span class="icon-menu"></span>' . functions::l10n('List'),
                 'url' => $my_base_url . '&amp;tab=installed',
             ];
+
             if ($conf['enable_extensions_install']) {
                 $sheets['update'] = [
                     'caption' => '<span class="icon-arrows-cw"></span>' . functions::l10n('Check for updates'),
@@ -218,6 +222,7 @@ function add_core_tabs($sheets, $tab_id)
                     'url' => $my_base_url . '&amp;tab=new',
                 ];
             }
+
             break;
 
         case 'menus':
@@ -254,12 +259,14 @@ function add_core_tabs($sheets, $tab_id)
                 'caption' => '<span class="icon-crop"></span>' . functions::l10n('Center of interest'),
                 'url' => $admin_photo_base_url . '-coi',
             ];
+
             if ($conf['enable_formats']) {
                 $sheets['formats'] = [
                     'caption' => '<span class="icon-docs"></span>' . functions::l10n('Formats'),
                     'url' => $admin_photo_base_url . '-formats',
                 ];
             }
+
             break;
 
         case 'photos_add':
@@ -271,12 +278,14 @@ function add_core_tabs($sheets, $tab_id)
                 'caption' => '<span class="icon-network"></span>' . functions::l10n('Applications'),
                 'url' => PHOTOS_ADD_BASE_URL . '&amp;section=applications',
             ];
+
             if ($conf['enable_synchronization']) {
                 $sheets['ftp'] = [
                     'caption' => '<span class="icon-exchange"></span>' . functions::l10n('FTP + Synchronization'),
                     'url' => PHOTOS_ADD_BASE_URL . '&amp;section=ftp',
                 ];
             }
+
             break;
 
         case 'plugins':
@@ -285,6 +294,7 @@ function add_core_tabs($sheets, $tab_id)
                 'caption' => '<span class="icon-menu"></span>' . functions::l10n('List'),
                 'url' => $my_base_url . '&amp;tab=installed',
             ];
+
             if ($conf['enable_extensions_install']) {
                 $sheets['update'] = [
                     'caption' => '<span class="icon-arrows-cw"></span>' . functions::l10n('Check for updates'),
@@ -295,6 +305,7 @@ function add_core_tabs($sheets, $tab_id)
                     'url' => $my_base_url . '&amp;tab=new',
                 ];
             }
+
             break;
 
         case 'rating':
@@ -314,6 +325,7 @@ function add_core_tabs($sheets, $tab_id)
                 'caption' => '<span class="icon-menu"></span>' . functions::l10n('List'),
                 'url' => $my_base_url . '&amp;tab=installed',
             ];
+
             if ($conf['enable_extensions_install']) {
                 $sheets['update'] = [
                     'caption' => '<span class="icon-arrows-cw"></span>' . functions::l10n('Check for updates'),
@@ -324,6 +336,7 @@ function add_core_tabs($sheets, $tab_id)
                     'url' => $my_base_url . '&amp;tab=new',
                 ];
             }
+
             break;
 
         case 'updates':
@@ -342,7 +355,9 @@ function add_core_tabs($sheets, $tab_id)
                     'url' => $my_base_url . '&amp;tab=ext',
                 ];
             }
+
             break;
+
         case 'site_update':
             global $my_base_url;
             $sheets['synchronization'] = [
@@ -354,6 +369,7 @@ function add_core_tabs($sheets, $tab_id)
                 'url' => $my_base_url . 'site_manager',
             ];
             break;
+
         case 'maintenance':
             global $my_base_url;
             $sheets['actions'] = [

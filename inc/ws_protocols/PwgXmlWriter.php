@@ -42,15 +42,21 @@ class PwgXmlWriter
     public function start_element($name)
     {
         $this->_end_prev(false);
+
         if (! empty($this->_elementStack)) {
             $this->_eol_indent();
         }
+
         $this->_indentLevel++;
         $this->_indent();
         $diff = ord($name[0]) - ord('0');
-        if ($diff >= 0 && $diff <= 9) {
+
+        if ($diff >= 0 &&
+            $diff <= 9
+        ) {
             $name = '_' . $name;
         }
+
         $this->_output('<' . $name);
         $this->_lastTagOpen = true;
         $this->_elementStack[] = $name;
@@ -60,6 +66,7 @@ class PwgXmlWriter
     {
         $close_tag = $this->_end_prev(true);
         $name = array_pop($this->_elementStack);
+
         if ($close_tag) {
             $this->_indentLevel--;
             $this->_indent();
@@ -99,6 +106,7 @@ class PwgXmlWriter
     public function _end_prev($done)
     {
         $ret = true;
+
         if ($this->_lastTagOpen) {
             if ($done) {
                 $this->_indentLevel--;
@@ -108,8 +116,10 @@ class PwgXmlWriter
             } else {
                 $this->_output('>');
             }
+
             $this->_lastTagOpen = false;
         }
+
         return $ret;
     }
 
@@ -123,7 +133,8 @@ class PwgXmlWriter
     public function _indent()
     {
         if ($this->_indent and
-            $this->_indentLevel > count($this->_elementStack)) {
+            $this->_indentLevel > count($this->_elementStack)
+        ) {
             $this->_output(
                 str_repeat($this->_indentStr, count($this->_elementStack))
             );

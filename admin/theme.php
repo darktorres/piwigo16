@@ -21,11 +21,13 @@ if (empty($_GET['theme'])) {
 }
 
 $themes = new themes();
+
 if (! in_array($_GET['theme'], array_keys($themes->fs_themes))) {
     die('Invalid theme');
 }
 
 $filename = PHPWG_THEMES_PATH . $_GET['theme'] . '/admin/admin.php';
+
 if (is_file($filename)) {
     include_once($filename);
 } else {

@@ -17,20 +17,24 @@ functions::load_language('plugin.lang', PHPWG_PLUGINS_PATH . 'TakeATour/', [
 $page['tab'] = 'list';
 
 $tabsheet = new tabsheet();
-$tabsheet->add('list', '<span class="icon-menu"></span>' . 'Take a Tour', functions_url::get_root_url() . 'admin.php?page=plugin-TakeATour');
+$tabsheet->add('list', '<span class="icon-menu"></span>Take a Tour', functions_url::get_root_url() . 'admin.php?page=plugin-TakeATour');
 $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
 $tat_28url = 'http://';
+
 if (substr($user['language'], 0, 2) == 'fr') {
     $tat_28url .= 'fr.';
 }
+
 $tat_28url .= 'piwigo.org/releases/2.8.0';
 
 $tat_29url = 'http://';
+
 if (substr($user['language'], 0, 2) == 'fr') {
     $tat_28url .= 'fr.';
 }
+
 $tat_29url .= 'piwigo.org/releases/2.9.0';
 
 $template->assign(
@@ -82,16 +86,20 @@ foreach ($tours as $tour_id) {
         case 'first_contact':
             $tour['name'] = functions::l10n('First Contact');
             break;
+
         case 'privacy':
             $tour['name'] = functions::l10n('Privacy');
             break;
+
         case '2_9_0':
             $tour['desc'] = functions::l10n($tour_id . '_descrp', $tat_29url);
             break;
+
         case '2_8_0':
             $tour['name'] = functions::l10n('2.8 Tour');
             $tour['desc'] = functions::l10n($tour_id . '_descrp', $tat_28url);
             break;
+
         case '2_7_0':
             $tour['name'] = functions::l10n('2.7 Tour');
             break;

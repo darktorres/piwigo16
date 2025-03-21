@@ -40,7 +40,7 @@ if (isset($_GET['show_details'])) {
 
 $base_url = functions_url::get_root_url() . 'admin.php?page=' . $page['page'];
 $pwg_token = functions::get_pwg_token();
-$action_url = $base_url . '&amp;plugin=' . '%s' . '&amp;pwg_token=' . $pwg_token;
+$action_url = $base_url . '&amp;plugin=%s&amp;pwg_token=' . $pwg_token;
 
 $plugins = new plugins();
 
@@ -59,9 +59,11 @@ if (isset($_GET['incompatible_plugins'])) {
         if ($plugin == '~~expire~~') {
             continue;
         }
+
         $incompatible_plugins[] = $plugin;
 
     }
+
     echo json_encode($incompatible_plugins);
     exit;
 }
@@ -96,13 +98,15 @@ $count_types_plugins = [
 ];
 
 foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
-    if (isset($_SESSION['incompatible_plugins'][$plugin_id])
-      and $fs_plugin['version'] != $_SESSION['incompatible_plugins'][$plugin_id]) {
+    if (isset($_SESSION['incompatible_plugins'][$plugin_id]) and
+        $fs_plugin['version'] != $_SESSION['incompatible_plugins'][$plugin_id]
+    ) {
         // Incompatible plugins must be reinitialized
         unset($_SESSION['incompatible_plugins']);
     }
 
     $setting_url = '';
+
     if (isset($settings_url_for_plugin_deprec[$plugin_id])) { //old version
         $setting_url = $settings_url_for_plugin_deprec[$plugin_id];
     } elseif ($fs_plugin['hasSettings']) { // new version
@@ -131,7 +135,9 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
         $tpl_plugin['STATE'] = 'inactive';
     }
 
-    if (isset($fs_plugin['extension']) and isset($merged_extensions[$fs_plugin['extension']])) {
+    if (isset($fs_plugin['extension']) and
+        isset($merged_extensions[$fs_plugin['extension']])
+    ) {
         // Deactivate manually plugin from database
         $query = 'UPDATE ' . PLUGINS_TABLE . ' SET state=\'inactive\' WHERE id=\'' . $plugin_id . '\'';
         functions_mysqli::pwg_query($query);
@@ -170,6 +176,7 @@ if (count($missing_plugin_ids) > 0) {
         ];
         $count_types_plugins['missing']++;
     }
+
     $template->append('plugin_states', 'missing');
 }
 

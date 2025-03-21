@@ -56,12 +56,17 @@ if (isset($_POST['submit'])) {
 // +-----------------------------------------------------------------------+
 
 // a connected user can't reset the password from a mail
-if (isset($_GET['key']) and ! functions_user::is_a_guest()) {
+if (isset($_GET['key']) and
+    ! functions_user::is_a_guest()
+) {
     unset($_GET['key']);
 }
 
-if (isset($_GET['key']) and ! isset($_POST['submit'])) {
+if (isset($_GET['key']) and
+    ! isset($_POST['submit'])
+) {
     $user_id = functions::check_password_reset_key($_GET['key']);
+
     if (is_numeric($user_id)) {
         $userdata = functions_user::getuserdata($user_id, false);
         $page['username'] = $userdata['username'];
@@ -83,11 +88,16 @@ if (! isset($page['action'])) {
     }
 }
 
-if ($page['action'] == 'reset' and ! isset($_GET['key']) and (functions_user::is_a_guest() or functions_user::is_generic())) {
+if ($page['action'] == 'reset' and
+    ! isset($_GET['key']) and
+    (functions_user::is_a_guest() or functions_user::is_generic())
+) {
     functions::redirect(functions_url::get_gallery_home_url());
 }
 
-if ($page['action'] == 'lost' and ! functions_user::is_a_guest()) {
+if ($page['action'] == 'lost' and
+    ! functions_user::is_a_guest()
+) {
     functions::redirect(functions_url::get_gallery_home_url());
 }
 
@@ -96,6 +106,7 @@ if ($page['action'] == 'lost' and ! functions_user::is_a_guest()) {
 // +-----------------------------------------------------------------------+
 
 $title = functions::l10n('Password Reset');
+
 if ($page['action'] == 'lost') {
     $title = functions::l10n('Forgot your password?');
 
@@ -121,7 +132,10 @@ $template->assign(
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! isset($themeconf['hide_menu_on']) or ! in_array('thePasswordPage', $themeconf['hide_menu_on'])) {
+
+if (! isset($themeconf['hide_menu_on']) or
+    ! in_array('thePasswordPage', $themeconf['hide_menu_on'])
+) {
     menubar::initialize_menu();
 }
 

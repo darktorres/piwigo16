@@ -35,12 +35,12 @@ if (! empty($_POST)) {
 // |                       modification registration                       |
 // +-----------------------------------------------------------------------+
 
-if (isset($_POST['falsify'])
-    and isset($_POST['cat_true'])
-    and count($_POST['cat_true']) > 0) {
+if (isset($_POST['falsify']) and
+    isset($_POST['cat_true']) and
+    count($_POST['cat_true']) > 0
+) {
     switch ($_GET['section']) {
         case 'comments':
-
             $query = '
 UPDATE ' . CATEGORIES_TABLE . '
   SET commentable = \'false\'
@@ -50,17 +50,14 @@ UPDATE ' . CATEGORIES_TABLE . '
             break;
 
         case 'visible':
-
             functions_admin::set_cat_visible($_POST['cat_true'], 'false');
             break;
 
         case 'status':
-
             functions_admin::set_cat_status($_POST['cat_true'], 'private');
             break;
 
         case 'representative':
-
             $query = '
 UPDATE ' . CATEGORIES_TABLE . '
   SET representative_picture_id = NULL
@@ -68,19 +65,18 @@ UPDATE ' . CATEGORIES_TABLE . '
 ;';
             functions_mysqli::pwg_query($query);
             break;
-
     }
 
     functions::pwg_activity('album', $_POST['cat_true'], 'edit', [
         'section' => $_GET['section'],
         'action' => 'falsify',
     ]);
-} elseif (isset($_POST['truthify'])
-         and isset($_POST['cat_false'])
-         and count($_POST['cat_false']) > 0) {
+} elseif (isset($_POST['truthify']) and
+          isset($_POST['cat_false']) and
+          count($_POST['cat_false']) > 0
+) {
     switch ($_GET['section']) {
         case 'comments':
-
             $query = '
 UPDATE ' . CATEGORIES_TABLE . '
   SET commentable = \'true\'
@@ -90,22 +86,18 @@ UPDATE ' . CATEGORIES_TABLE . '
             break;
 
         case 'visible':
-
             functions_admin::set_cat_visible($_POST['cat_false'], 'true');
             break;
 
         case 'status':
-
             functions_admin::set_cat_status($_POST['cat_false'], 'public');
             break;
 
         case 'representative':
-
             // theoretically, all categories in $_POST['cat_false'] contain at
             // least one element, so Piwigo can find a representative.
             functions_admin::set_random_representative($_POST['cat_false']);
             break;
-
     }
 
     functions::pwg_activity('album', $_POST['cat_false'], 'edit', [
@@ -156,9 +148,9 @@ $tabsheet->assign();
 // option
 $cats_true = [];
 $cats_false = [];
+
 switch ($page['section']) {
     case 'comments':
-
         $query_true = '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
@@ -179,7 +171,6 @@ SELECT id,name,uppercats,global_rank
         break;
 
     case 'visible':
-
         $query_true = '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
@@ -200,7 +191,6 @@ SELECT id,name,uppercats,global_rank
         break;
 
     case 'status':
-
         $query_true = '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
@@ -221,7 +211,6 @@ SELECT id,name,uppercats,global_rank
         break;
 
     case 'representative':
-
         $query_true = '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
@@ -240,8 +229,8 @@ SELECT DISTINCT id,name,uppercats,global_rank
             ]
         );
         break;
-
 }
+
 functions_category::display_select_cat_wrapper($query_true, [], 'category_option_true');
 functions_category::display_select_cat_wrapper($query_false, [], 'category_option_false');
 $template->assign('PWG_TOKEN', functions::get_pwg_token());

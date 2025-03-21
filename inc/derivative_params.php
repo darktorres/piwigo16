@@ -33,6 +33,7 @@ class derivative_params
         if ($s[0] == $s[1]) {
             return $s[0];
         }
+
         return $s[0] . 'x' . $s[1];
     }
 
@@ -43,7 +44,8 @@ class derivative_params
      */
     public static function size_equals($s1, $s2)
     {
-        return $s1[0] == $s2[0] && $s1[1] == $s2[1];
+        return $s1[0] == $s2[0] &&
+               $s1[1] == $s2[1];
     }
 
     /**

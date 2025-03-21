@@ -31,7 +31,9 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 functions_plugins::trigger_notify('loc_begin_cat_modify');
 
 //---------------------------------------------------------------- verification
-if (! isset($_GET['cat_id']) || ! is_numeric($_GET['cat_id'])) {
+if (! isset($_GET['cat_id']) ||
+    ! is_numeric($_GET['cat_id'])
+) {
     trigger_error('missing cat_id param', E_USER_ERROR);
 }
 
@@ -70,6 +72,7 @@ $navigation = functions_html::get_cat_display_name_cache(
 
 // Parent navigation path
 $uppercats_array = explode(',', $category['uppercats']);
+
 if (count($uppercats_array) > 1) {
     array_pop($uppercats_array);
     $parent_navigation = functions_html::get_cat_display_name_cache(
@@ -87,6 +90,7 @@ $base_url = functions_url::get_root_url() . 'admin.php?page=';
 $cat_list_url = $base_url . 'albums';
 
 $self_url = $cat_list_url;
+
 if (! empty($category['id_uppercat'])) {
     $self_url .= '&amp;parent_id=' . $category['id_uppercat'];
 }
@@ -125,6 +129,7 @@ if ($conf['activate_comments']) {
 // manage album elements link
 $image_count = 0;
 $info_title = '';
+
 if ($category['has_images']) {
     $template->assign(
         'U_MANAGE_ELEMENTS',
@@ -158,6 +163,7 @@ SELECT
     }
 
 }
+
 $info_photos = functions::l10n('%d photos', $image_count);
 
 $template->assign(
@@ -260,7 +266,9 @@ if (! $category['is_virtual']) {
 }
 
 // representative management
-if ($category['has_images'] or ! empty($category['representative_picture_id'])) {
+if ($category['has_images'] or
+    ! empty($category['representative_picture_id'])
+) {
     $tpl_representative = [];
 
     // picture to display : the identified representative or the generic random
@@ -273,14 +281,13 @@ if ($category['has_images'] or ! empty($category['representative_picture_id'])) 
     $tpl_representative['ALLOW_SET_RANDOM'] = ($category['has_images'] ? true : false);
 
     // can the admin delete the current representative ?
-    if (
-        ($category['has_images']
-         and $conf['allow_random_representative'])
-        or
-        (! $category['has_images']
-         and ! empty($category['representative_picture_id']))) {
+    if (($category['has_images'] and
+         $conf['allow_random_representative']) or
+        (! $category['has_images'] and ! empty($category['representative_picture_id']))
+    ) {
         $tpl_representative['ALLOW_DELETE'] = true;
     }
+
     $template->assign('representative', $tpl_representative);
 }
 

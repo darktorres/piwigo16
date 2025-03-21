@@ -25,14 +25,17 @@ class functions_metadata
         $result = [];
 
         $imginfo = [];
+
         if (@getimagesize($filename, $imginfo) == false) {
             return $result;
         }
 
         if (isset($imginfo['APP13'])) {
             $iptc = iptcparse($imginfo['APP13']);
+
             if (is_array($iptc)) {
                 $rmap = array_flip($map);
+
                 foreach (array_keys($rmap) as $iptc_key) {
                     if (isset($iptc[$iptc_key][0])) {
                         if ($iptc_key == '2#025') {
@@ -58,6 +61,7 @@ class functions_metadata
                 }
             }
         }
+
         return $result;
     }
 
@@ -70,9 +74,12 @@ class functions_metadata
     public static function clean_iptc_value($value)
     {
         // strip leading zeros (weird Kodak Scanner software)
-        while (isset($value[0]) and $value[0] == chr(0)) {
+        while (isset($value[0]) and
+               $value[0] == chr(0)
+        ) {
             $value = substr($value, 1);
         }
+
         // remove binary nulls
         $value = str_replace(chr(0x00), ' ', $value);
 
@@ -80,12 +87,17 @@ class functions_metadata
             // apparently mac uses some MacRoman crap encoding. I don't know
             // how to detect it so a plugin should do the trick.
             $value = functions_plugins::trigger_change('clean_iptc_value', $value);
-            if (($qual = functions::qualify_utf8($value)) != 0) {// has non ascii chars
+            $qual = functions::qualify_utf8($value);
+
+            if ($qual != 0) { // has non ascii chars
                 if ($qual > 0) {
                     $input_encoding = 'utf-8';
                 } else {
                     $input_encoding = 'iso-8859-1';
-                    if (function_exists('iconv') or function_exists('mb_convert_encoding')) {
+
+                    if (function_exists('iconv') or
+                        function_exists('mb_convert_encoding')
+                    ) {
                         // using windows-1252 because it supports additional characters
                         // such as "oe" in a single character (ligature). About the
                         // difference between Windows-1252 and ISO-8859-1: the characters
@@ -98,6 +110,7 @@ class functions_metadata
                 $value = functions::convert_charset($value, $input_encoding, functions::get_pwg_charset());
             }
         }
+
         return $value;
     }
 
@@ -119,7 +132,15 @@ class functions_metadata
         }
 
         // Read EXIF data
-        if ($exif = @exif_read_data($filename) or $exif2 = functions_plugins::trigger_change('format_exif_data', $exif = null, $filename, $map)) {
+        $exif = @exif_read_data($filename);
+
+        if (! $exif) {
+            $exif2 = functions_plugins::trigger_change('format_exif_data', $exif = null, $filename, $map);
+        }
+
+        if ($exif or
+            $exif2
+        ) {
             if (! empty($exif2)) {
                 $exif = $exif2;
             } else {
@@ -134,6 +155,7 @@ class functions_metadata
                     }
                 } else {
                     $tokens = explode(';', $field);
+
                     if (isset($exif[$tokens[0]][$tokens[1]])) {
                         $result[$key] = $exif[$tokens[0]][$tokens[1]];
                     }
@@ -142,15 +164,21 @@ class functions_metadata
 
             // GPS data
             $gps_exif = array_intersect_key($exif, array_flip(['GPSLatitudeRef', 'GPSLatitude', 'GPSLongitudeRef', 'GPSLongitude']));
+
             if (count($gps_exif) == 4) {
-                if (
-                    is_array($gps_exif['GPSLatitude']) and in_array($gps_exif['GPSLatitudeRef'], ['S', 'N']) and
-                    is_array($gps_exif['GPSLongitude']) and in_array($gps_exif['GPSLongitudeRef'], ['W', 'E'])
+                if (is_array($gps_exif['GPSLatitude']) and
+                    in_array($gps_exif['GPSLatitudeRef'], ['S', 'N']) and
+                    is_array($gps_exif['GPSLongitude']) and
+                    in_array($gps_exif['GPSLongitudeRef'], ['W', 'E'])
                 ) {
                     $latitude = self::parse_exif_gps_data($gps_exif['GPSLatitude'], $gps_exif['GPSLatitudeRef']);
                     $longitude = self::parse_exif_gps_data($gps_exif['GPSLongitude'], $gps_exif['GPSLongitudeRef']);
 
-                    if ($latitude >= -90.0 && $latitude <= 90.0 && $longitude >= -180.0 && $longitude <= 180.0) {
+                    if ($latitude >= -90.0 &&
+                        $latitude <= 90.0 &&
+                        $longitude >= -180.0 &&
+                        $longitude <= 180.0
+                    ) {
                         $result['latitude'] = $latitude;
                         $result['longitude'] = $longitude;
                     } else {
@@ -196,12 +224,16 @@ class functions_metadata
             $i = explode('/', $i);
             $i = $i[1] == 0 ? 0 : $i[0] / $i[1];
         }
+
         unset($i);
 
         $v = $raw[0] + $raw[1] / 60 + $raw[2] / 3600;
 
         $ref = strtoupper($ref);
-        if ($ref == 'S' or $ref == 'W') {
+
+        if ($ref == 'S' or
+            $ref == 'W'
+        ) {
             $v = -$v;
         }
 

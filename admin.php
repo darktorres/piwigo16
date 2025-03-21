@@ -43,6 +43,7 @@ functions::check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.
 
 if ($conf['fs_quick_check_period'] > 0) {
     $perform_fsqc = false;
+
     if (isset($conf['fs_quick_check_last_check'])) {
         if (strtotime($conf['fs_quick_check_last_check']) < strtotime($conf['fs_quick_check_period'] . ' seconds ago')) {
             $perform_fsqc = true;
@@ -82,6 +83,7 @@ if (isset($_GET['change_theme'])) {
     functions_user::userprefs_update_param('admin_theme', $new_admin_theme);
 
     $url_params = [];
+
     foreach (['page', 'tab', 'section'] as $url_param) {
         if (isset($_GET[$url_param])) {
             $url_params[] = $url_param . '=' . $_GET[$url_param];
@@ -89,6 +91,7 @@ if (isset($_GET['change_theme'])) {
     }
 
     $redirect_url = 'admin.php';
+
     if (count($url_params) > 0) {
         $redirect_url .= '?' . implode('&amp;', $url_params);
     }
@@ -114,14 +117,20 @@ $test_get = $_GET;
 unset($test_get['page']);
 unset($test_get['section']);
 unset($test_get['tag']);
-if (count($test_get) == 0 and ! empty($_SERVER['QUERY_STRING'])) {
+
+if (count($test_get) == 0 and
+    ! empty($_SERVER['QUERY_STRING'])
+) {
     $change_theme_url .= str_replace('&', '&amp;', $_SERVER['QUERY_STRING']) . '&amp;';
 }
+
 $change_theme_url .= 'change_theme=1';
 
 // ?page=plugin-community-pendings is an clean alias of
 // ?page=plugin&section=community/admin.php&tab=pendings
-if (isset($_GET['page']) and preg_match('/^plugin-([^-]*)(?:-(.*))?$/', $_GET['page'], $matches)) {
+if (isset($_GET['page']) and
+    preg_match('/^plugin-([^-]*)(?:-(.*))?$/', $_GET['page'], $matches)
+) {
     $_GET['page'] = 'plugin';
 
     if (preg_match('/^piwigo_(videojs|openstreetmap)$/', $matches[1])) {
@@ -129,6 +138,7 @@ if (isset($_GET['page']) and preg_match('/^plugin-([^-]*)(?:-(.*))?$/', $_GET['p
     }
 
     $_GET['section'] = $matches[1] . '/admin.php';
+
     if (isset($matches[2])) {
         $_GET['tab'] = $matches[2];
     }
@@ -136,9 +146,12 @@ if (isset($_GET['page']) and preg_match('/^plugin-([^-]*)(?:-(.*))?$/', $_GET['p
 
 // ?page=album-134-properties is an clean alias of
 // ?page=album&cat_id=134&tab=properties
-if (isset($_GET['page']) and preg_match('/^album-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)) {
+if (isset($_GET['page']) and
+    preg_match('/^album-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)
+) {
     $_GET['page'] = 'album';
     $_GET['cat_id'] = $matches[1];
+
     if (isset($matches[2])) {
         $_GET['tab'] = $matches[2];
     }
@@ -146,17 +159,21 @@ if (isset($_GET['page']) and preg_match('/^album-(\d+)(?:-(.*))?$/', $_GET['page
 
 // ?page=photo-1234-properties is an clean alias of
 // ?page=photo&image_id=1234&tab=properties
-if (isset($_GET['page']) and preg_match('/^photo-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)) {
+if (isset($_GET['page']) and
+    preg_match('/^photo-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)
+) {
     $_GET['page'] = 'photo';
     $_GET['image_id'] = $matches[1];
+
     if (isset($matches[2])) {
         $_GET['tab'] = $matches[2];
     }
 }
 
-if (isset($_GET['page'])
-    and preg_match('/^[a-z_]*$/', $_GET['page'])
-    and is_file(PHPWG_ROOT_PATH . 'admin/' . $_GET['page'] . '.php')) {
+if (isset($_GET['page']) and
+    preg_match('/^[a-z_]*$/', $_GET['page']) and
+    is_file(PHPWG_ROOT_PATH . 'admin/' . $_GET['page'] . '.php')
+) {
     $page['page'] = $_GET['page'];
 } else {
     $page['page'] = 'intro';
@@ -280,6 +297,7 @@ if (in_array($page['page'], ['site_update', 'batch_manager'])) {
 $page['nb_orphans'] = 0;
 
 list($page['nb_photos_total']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT COUNT(*) FROM ' . IMAGES_TABLE));
+
 if ($page['nb_photos_total'] < 100000) { // 100k is already a big gallery
     $page['nb_orphans'] = functions_admin::count_orphans();
 }
@@ -296,15 +314,12 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 // Only for pages which change permissions
-if (
-    in_array(
-        $page['page'],
-        [
-            'site_manager', // delete site
-            'site_update',  // ?only POST
-        ]
-    )
-    or (! empty($_POST) and in_array(
+if (in_array($page['page'], [
+    'site_manager', // delete site
+    'site_update',  // ?only POST
+])
+    or
+    (! empty($_POST) and in_array(
         $page['page'],
         [
             'album',        // public/private; lock/unlock, permissions

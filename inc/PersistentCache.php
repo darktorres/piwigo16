@@ -26,6 +26,7 @@ abstract class PersistentCache
         if (is_array($key)) {
             $key = implode('&', $key);
         }
+
         $key .= $this->instance_key;
         return md5($key);
     }

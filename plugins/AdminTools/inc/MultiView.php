@@ -100,7 +100,7 @@ class MultiView
     public function get_clean_admin_url(
         bool $with_amp = false
     ): string {
-        $url = PHPWG_ROOT_PATH . 'admin.php';
+        $url = './admin.php';
 
         $get = $_GET;
         unset($get['page'], $get['section'], $get['tag']);

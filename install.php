@@ -83,26 +83,26 @@ if (function_exists('get_magic_quotes_gpc') &&
 
 //----------------------------------------------------- variable initialization
 
-require PHPWG_ROOT_PATH . 'inc/config_default.php';
+require __DIR__ . '/inc/config_default.php';
 
-if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
-    require PHPWG_ROOT_PATH . 'local/config/config.php';
+if (file_exists(__DIR__ . '/local/config/config.php')) {
+    require __DIR__ . '/local/config/config.php';
 }
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
-require PHPWG_ROOT_PATH . 'inc/functions.php';
-require PHPWG_ROOT_PATH . 'inc/Template.php';
+require __DIR__ . '/inc/functions.php';
+require __DIR__ . '/inc/Template.php';
 
 // download database config file if exists
 functions::check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
 
 if (! empty($_GET['dl']) &&
-    file_exists(PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $_GET['dl'])
+    file_exists('./' . $conf['data_location'] . 'pwg_' . $_GET['dl'])
 ) {
-    $filename = PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $_GET['dl'];
+    $filename = './' . $conf['data_location'] . 'pwg_' . $_GET['dl'];
     header('Cache-Control: no-cache, must-revalidate');
     header('Pragma: no-cache');
     header('Content-Disposition: attachment; filename="database.php"');
@@ -136,7 +136,7 @@ if (isset($_POST['install'])) {
 $infos = [];
 $errors = [];
 
-$config_file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php';
+$config_file = './' . PWG_LOCAL_DIR . 'config/database.php';
 
 if (file_exists($config_file)) {
     require $config_file;
@@ -146,7 +146,7 @@ if (file_exists($config_file)) {
     }
 }
 
-require PHPWG_ROOT_PATH . 'inc/constants.php';
+require __DIR__ . '/inc/constants.php';
 
 $languages = new languages('utf-8');
 
@@ -217,7 +217,7 @@ if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
 }
 
 //----------------------------------------------------- template initialization
-$template = new Template(PHPWG_ROOT_PATH . 'admin/themes', 'roma');
+$template = new Template('./admin/themes', 'roma');
 $template->set_filenames([
     'install' => 'install.tpl',
 ]);
@@ -266,12 +266,12 @@ if (isset($_POST['install'])) {
 
         // tables creation, based on piwigo_structure.sql
         functions_install::execute_sqlfile(
-            PHPWG_ROOT_PATH . 'install/piwigo_structure-mysql.sql',
+            './install/piwigo_structure-mysql.sql',
             'mysql'
         );
         // We fill the tables with basic information
         functions_install::execute_sqlfile(
-            PHPWG_ROOT_PATH . 'install/config.sql',
+            './install/config.sql',
             'mysql'
         );
 
@@ -309,7 +309,7 @@ if (isset($_POST['install'])) {
 
         $insert = [
             'id' => 1,
-            'galleries_url' => PHPWG_ROOT_PATH . 'galleries/',
+            'galleries_url' => './galleries/',
         ];
         functions_mysqli::mass_inserts('sites', array_keys($insert), [$insert]);
 
@@ -374,10 +374,10 @@ if (isset($_POST['install'])) {
 
         if (! $fp) {
             // make sure nobody can list files of _data directory
-            functions::secure_directory(PHPWG_ROOT_PATH . $conf['data_location']);
+            functions::secure_directory('./' . $conf['data_location']);
 
             $tmp_filename = md5(uniqid((string) time()));
-            $fh = fopen(PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $tmp_filename, 'w');
+            $fh = fopen('./' . $conf['data_location'] . 'pwg_' . $tmp_filename, 'w');
             fputs($fh, $file_content, strlen($file_content));
             fclose($fh);
 
@@ -466,7 +466,7 @@ if ($step == 1) {
 
         // email notification
         if (isset($_POST['send_credentials_by_mail'])) {
-            require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
+            require_once __DIR__ . '/inc/functions_mail.php';
 
             $keyargs_content = [
                 functions::get_l10n_args('Hello %s,', $admin_name),

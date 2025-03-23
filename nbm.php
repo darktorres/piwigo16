@@ -18,15 +18,15 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\menubar;
 
 define('PHPWG_ROOT_PATH', './');
-require_once PHPWG_ROOT_PATH . 'inc/common.php';
+require_once __DIR__ . '/inc/common.php';
 functions_user::check_status(ACCESS_FREE);
-require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
-require_once PHPWG_ROOT_PATH . 'admin/inc/functions_notification_by_mail.php';
+require_once __DIR__ . '/inc/functions_mail.php';
+require_once __DIR__ . '/admin/inc/functions_notification_by_mail.php';
 // Translations are in admin file too
 functions::load_language('admin.lang');
 // Need to update a second time
 functions_plugins::trigger_notify('loading_lang');
-functions::load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
+functions::load_language('lang', './' . PWG_LOCAL_DIR, [
     'no_fallback' => true,
     'local' => true,
 ]);
@@ -68,7 +68,7 @@ if (! isset($themeconf['hide_menu_on']) or
 // +-----------------------------------------------------------------------+
 // | html code display                                                     |
 // +-----------------------------------------------------------------------+
-require PHPWG_ROOT_PATH . 'inc/page_header.php';
+require __DIR__ . '/inc/page_header.php';
 functions_html::flush_page_messages();
 $template->parse('nbm');
-require PHPWG_ROOT_PATH . 'inc/page_tail.php';
+require __DIR__ . '/inc/page_tail.php';

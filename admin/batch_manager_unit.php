@@ -111,7 +111,7 @@ $template->set_filenames(
     ]
 );
 
-$base_url = PHPWG_ROOT_PATH . 'admin.php';
+$base_url = './admin.php';
 
 $template->assign(
     [

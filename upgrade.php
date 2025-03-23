@@ -28,17 +28,17 @@ if (function_exists('ini_set')) {
 define('PHPWG_ROOT_PATH', './');
 
 // load config file
-require PHPWG_ROOT_PATH . 'inc/config_default.php';
+require __DIR__ . '/inc/config_default.php';
 
-if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
-    require PHPWG_ROOT_PATH . 'local/config/config.php';
+if (file_exists(__DIR__ . '/local/config/config.php')) {
+    require __DIR__ . '/local/config/config.php';
 }
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
-$config_file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php';
+$config_file = './' . PWG_LOCAL_DIR . 'config/database.php';
 $config_file_contents = file_get_contents($config_file);
 
 if ($config_file_contents === false) {
@@ -53,11 +53,11 @@ if ($php_end_tag === false) {
 
 require $config_file;
 
-require_once PHPWG_ROOT_PATH . 'inc/constants.php';
-define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
+require_once __DIR__ . '/inc/constants.php';
+define('UPGRADES_PATH', './install/db');
 
-require_once PHPWG_ROOT_PATH . 'inc/functions.php';
-require_once PHPWG_ROOT_PATH . 'inc/Template.php';
+require_once __DIR__ . '/inc/functions.php';
+require_once __DIR__ . '/inc/Template.php';
 
 // +-----------------------------------------------------------------------+
 // |                             playing zone                              |
@@ -156,7 +156,7 @@ define('CURRENT_DATE', $dbnow);
 // |                        template initialization                        |
 // +-----------------------------------------------------------------------+
 
-$template = new Template(PHPWG_ROOT_PATH . 'admin/themes', 'roma');
+$template = new Template('./admin/themes', 'roma');
 $template->set_filenames([
     'upgrade' => 'upgrade.tpl',
 ]);
@@ -293,7 +293,7 @@ functions_upgrade::check_upgrade_access_rights();
 if ((isset($_POST['submit']) or isset($_GET['now'])) and
      functions_upgrade::check_upgrade()
 ) {
-    $upgrade_file = PHPWG_ROOT_PATH . 'install/upgrade_' . $current_release . '.php';
+    $upgrade_file = './install/upgrade_' . $current_release . '.php';
 
     if (is_file($upgrade_file)) {
         // reset SQL counters

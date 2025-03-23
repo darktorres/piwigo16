@@ -59,7 +59,7 @@ $template->set_filenames([
 
 $template->assign(
     [
-        'F_ACTION' => PHPWG_ROOT_PATH . 'admin.php?page=tags',
+        'F_ACTION' => './admin.php?page=tags',
         'PWG_TOKEN' => functions::get_pwg_token(),
     ]
 );

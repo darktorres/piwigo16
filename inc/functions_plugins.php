@@ -14,7 +14,7 @@ namespace Piwigo\inc;
 use Piwigo\inc\dblayer\functions_mysqli;
 
 /** base directory of plugins */
-define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH . 'plugins/');
+define('PHPWG_PLUGINS_PATH', './plugins/');
 /** default priority for plugins handlers */
 define('EVENT_HANDLER_PRIORITY_NEUTRAL', 50);
 

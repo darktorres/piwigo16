@@ -720,7 +720,7 @@ final class plugins
     public function get_merged_extensions(
         string $version = PHPWG_VERSION
     ): array {
-        $file = PHPWG_ROOT_PATH . 'install/obsolete_extensions.list';
+        $file = './install/obsolete_extensions.list';
         $merged_extensions = [];
 
         if (file_exists($file)) {

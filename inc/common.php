@@ -85,18 +85,18 @@ $header_msgs = [];
 $header_notes = [];
 $filter = [];
 
-require PHPWG_ROOT_PATH . 'inc/config_default.php';
+require __DIR__ . '/../inc/config_default.php';
 
-if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
-    require PHPWG_ROOT_PATH . 'local/config/config.php';
+if (file_exists(__DIR__ . '/../local/config/config.php')) {
+    require __DIR__ . '/../local/config/config.php';
 }
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
-if (file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php')) {
-    require PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php';
+if (file_exists(__DIR__ . '/../' . PWG_LOCAL_DIR . 'config/database.php')) {
+    require __DIR__ . '/../' . PWG_LOCAL_DIR . 'config/database.php';
 }
 
 if (! defined('PHPWG_INSTALLED')) {
@@ -119,9 +119,9 @@ if ($conf['session_gc_probability'] > 0) {
     ini_set('session.gc_probability', min((int) $conf['session_gc_probability'], 100));
 }
 
-require PHPWG_ROOT_PATH . 'inc/constants.php';
-require PHPWG_ROOT_PATH . 'inc/functions.php';
-require PHPWG_ROOT_PATH . 'inc/Template.php';
+require __DIR__ . '/../inc/constants.php';
+require __DIR__ . '/../inc/functions.php';
+require __DIR__ . '/../inc/Template.php';
 
 $persistent_cache = new PersistentFileCache();
 
@@ -141,7 +141,7 @@ functions_mysqli::pwg_db_check_charset();
 
 functions::load_conf_from_db();
 
-$logger = new Katzgrau\KLogger\Logger(PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'], $conf['log_level'], [
+$logger = new Katzgrau\KLogger\Logger('./' . $conf['data_location'] . $conf['log_dir'], $conf['log_level'], [
     // we use an hashed filename to prevent direct file access, and we salt with
     // the db_password instead of secret_key because the log must be usable in i.php
     // (secret_key is in the database)
@@ -195,7 +195,7 @@ if (isset($conf['order_by_inside_category_custom'])) {
 
 functions::check_lounge();
 
-require PHPWG_ROOT_PATH . 'inc/user.php';
+require __DIR__ . '/../inc/user.php';
 
 if (in_array(substr($user['language'], 0, 2), ['fr', 'it', 'de', 'es', 'pl', 'ru', 'nl', 'tr', 'da'])) {
     define('PHPWG_DOMAIN', substr($user['language'], 0, 2) . '.piwigo.org');
@@ -227,7 +227,7 @@ if (functions_user::is_admin() ||
 }
 
 functions_plugins::trigger_notify('loading_lang');
-functions::load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
+functions::load_language('lang', './' . PWG_LOCAL_DIR, [
     'no_fallback' => true,
     'local' => true,
 ]);
@@ -253,7 +253,7 @@ if (isset($page['auth_key_invalid']) and
 if (defined('IN_ADMIN') and
     IN_ADMIN
 ) { // Admin template
-    $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', functions_user::userprefs_get_param('admin_theme', 'roma'));
+    $template = new Template('./admin/themes', functions_user::userprefs_get_param('admin_theme', 'roma'));
 } else { // Classic template
     $theme = $user['theme'];
 
@@ -263,11 +263,11 @@ if (defined('IN_ADMIN') and
         $theme = $conf['mobile_theme'];
     }
 
-    $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
+    $template = new Template('./themes', $theme);
 }
 
 if (! isset($conf['no_photo_yet'])) {
-    require PHPWG_ROOT_PATH . 'inc/no_photo_yet.php';
+    require __DIR__ . '/../inc/no_photo_yet.php';
 }
 
 if (isset($user['internal_status']['guest_must_be_guest']) and
@@ -306,7 +306,7 @@ if (count($header_msgs) > 0) {
 if (! empty($conf['filter_pages']) and
     functions::get_filter_page_value('used')
 ) {
-    require PHPWG_ROOT_PATH . 'inc/filter.php';
+    require __DIR__ . '/../inc/filter.php';
 } else {
     $filter['enabled'] = false;
 }

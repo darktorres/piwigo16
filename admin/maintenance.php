@@ -46,7 +46,7 @@ $tabsheet->set_id('maintenance');
 $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
-require PHPWG_ROOT_PATH . 'admin/maintenance_' . $page['tab'] . '.php';
+require __DIR__ . '/../admin/maintenance_' . $page['tab'] . '.php';
 
 $template->assign(
     [

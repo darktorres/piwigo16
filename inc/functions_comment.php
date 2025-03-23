@@ -239,7 +239,7 @@ final class functions_comment
             if (($conf['email_admin_on_comment'] && $comment_action == 'validate') or
                 ($conf['email_admin_on_comment_validation'] and $comment_action == 'moderate')
             ) {
-                require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
+                require_once __DIR__ . '/../inc/functions_mail.php';
 
                 $comment_url = functions_url::get_absolute_root_url() . 'comments.php?comment_id=' . $comm['id'];
 
@@ -404,7 +404,7 @@ final class functions_comment
                 $conf['email_admin_on_comment_validation'] and
                 $comment_action == 'moderate'
             ) {
-                require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
+                require_once __DIR__ . '/../inc/functions_mail.php';
 
                 $comment_url = functions_url::get_absolute_root_url() . 'comments.php?comment_id=' . $comment['comment_id'];
 
@@ -453,7 +453,7 @@ final class functions_comment
             return;
         }
 
-        require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
+        require_once __DIR__ . '/../inc/functions_mail.php';
 
         $keyargs_content = [
             functions::get_l10n_args('Author: %s', $comment['author']),

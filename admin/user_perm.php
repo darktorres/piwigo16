@@ -90,8 +90,7 @@ $template->assign(
         'L_CAT_OPTIONS_FALSE' => functions::l10n('Forbidden'),
 
         'F_ACTION' =>
-            PHPWG_ROOT_PATH .
-            'admin.php?page=user_perm' .
+            './admin.php?page=user_perm' .
             '&amp;user_id=' . $page['user'],
     ]
 );

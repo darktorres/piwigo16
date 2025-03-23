@@ -3060,15 +3060,15 @@ final class functions_admin
         }
 
         $pattern .= '\.[a-zA-Z0-9]{3,4}$#';
-        $contents = opendir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR);
+        $contents = opendir('./' . PWG_DERIVATIVE_DIR);
 
         if ($contents) {
             while (($node = readdir($contents)) !== false) {
                 if ($node != '.' and
                     $node != '..' and
-                    is_dir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $node)
+                    is_dir('./' . PWG_DERIVATIVE_DIR . $node)
                 ) {
-                    self::clear_derivative_cache_rec(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $node, $pattern);
+                    self::clear_derivative_cache_rec('./' . PWG_DERIVATIVE_DIR . $node, $pattern);
                 }
             }
 
@@ -3153,7 +3153,7 @@ final class functions_admin
         }
 
         $path = substr_replace($path, $pattern, $dot, 0);
-        $glob = glob(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $path);
+        $glob = glob('./' . PWG_DERIVATIVE_DIR . $path);
 
         if ($glob !== false) {
             foreach ($glob as $file) {
@@ -3318,7 +3318,7 @@ final class functions_admin
         $updates = [];
 
         foreach ($ids as $id) {
-            $file = PHPWG_ROOT_PATH . $imgs_ids_paths[$id];
+            $file = './' . $imgs_ids_paths[$id];
             $md5sum = md5_file($file);
             $updates[] = [
                 'id' => $id,
@@ -3633,7 +3633,7 @@ final class functions_admin
 
         $news = null;
 
-        $cache_path = PHPWG_ROOT_PATH . functions::conf_get_param('data_location') . 'cache/piwigo_latest_news-' . $lang_info['code'] . '.cache.php';
+        $cache_path = './' . functions::conf_get_param('data_location') . 'cache/piwigo_latest_news-' . $lang_info['code'] . '.cache.php';
 
         if (! is_file($cache_path) or
             filemtime($cache_path) < strtotime('24 hours ago')
@@ -3874,13 +3874,13 @@ final class functions_admin
     public static function order_by_is_local(): bool
     {
         $conf = [];
-        require PHPWG_ROOT_PATH . 'inc/config_default.php';
+        require __DIR__ . '/../../inc/config_default.php';
 
-        if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
-            require PHPWG_ROOT_PATH . 'local/config/config.php';
+        if (file_exists(__DIR__ . '/../../local/config/config.php')) {
+            require __DIR__ . '/../../local/config/config.php';
         }
 
-        if (isset($conf['local_dir_site']) && file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.php')) {
+        if (isset($conf['local_dir_site']) && file_exists('./' . PWG_LOCAL_DIR . 'config/config.php')) {
             require PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.php';
         }
 

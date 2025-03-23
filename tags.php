@@ -22,7 +22,7 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\menubar;
 
 define('PHPWG_ROOT_PATH', './');
-require_once PHPWG_ROOT_PATH . 'inc/common.php';
+require_once __DIR__ . '/inc/common.php';
 
 functions_user::check_status(ACCESS_GUEST);
 
@@ -170,8 +170,8 @@ if (! isset($themeconf['hide_menu_on']) or
     menubar::initialize_menu();
 }
 
-require PHPWG_ROOT_PATH . 'inc/page_header.php';
+require __DIR__ . '/inc/page_header.php';
 functions_plugins::trigger_notify('loc_end_tags');
 functions_html::flush_page_messages();
 $template->pparse('tags');
-require PHPWG_ROOT_PATH . 'inc/page_tail.php';
+require __DIR__ . '/inc/page_tail.php';

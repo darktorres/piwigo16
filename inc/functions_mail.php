@@ -213,7 +213,7 @@ final class functions_mail
     public static function &get_mail_template(
         string $email_format
     ): Template {
-        $template = new Template(PHPWG_ROOT_PATH . 'themes', 'default', 'template/mail/' . $email_format);
+        $template = new Template('./themes', 'default', 'template/mail/' . $email_format);
         return $template;
     }
 
@@ -283,7 +283,7 @@ final class functions_mail
             functions_plugins::trigger_notify('loading_lang');
             functions::load_language(
                 'lang',
-                PHPWG_ROOT_PATH . PWG_LOCAL_DIR,
+                './' . PWG_LOCAL_DIR,
                 [
                     'language' => $language,
                     'no_fallback' => true,
@@ -938,7 +938,7 @@ final class functions_mail
     ): void {
         global $conf, $user, $lang_info;
 
-        $dir = PHPWG_ROOT_PATH . $conf['data_location'] . 'tmp';
+        $dir = './' . $conf['data_location'] . 'tmp';
 
         if (functions::mkgetdir($dir, functions::MKGETDIR_DEFAULT & ~functions::MKGETDIR_DIE_ON_ERROR)) {
             $filename = $dir . '/mail.' . stripslashes($user['username']) . '.' . $lang_info['code'] . '-' . date('YmdHis') . ($success ? '' : '.ERROR');

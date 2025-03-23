@@ -54,9 +54,9 @@ final class functions_cookie
             $scr .= '/';
         }
 
-        if (substr(PHPWG_ROOT_PATH, 0, 3) == '../') { // this is maybe a plugin inside pwg directory
+        if (substr('./', 0, 3) == '../') { // this is maybe a plugin inside pwg directory
             // TODO - what if it is an external script outside PWG ?
-            $scr = $scr . PHPWG_ROOT_PATH;
+            $scr = $scr . './';
 
             while (1) {
                 $new = preg_replace('#[^/]+/\.\.(/|$)#', '', $scr);

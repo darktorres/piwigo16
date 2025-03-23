@@ -129,12 +129,12 @@ $template->set_filename('rating', 'rating.tpl');
 $template->assign(
     [
         'navbar' => functions::create_navigation_bar(
-            PHPWG_ROOT_PATH . 'admin.php' . functions_url::get_query_string_diff(['start', 'del']),
+            './admin.php' . functions_url::get_query_string_diff(['start', 'del']),
             $nb_images,
             $start,
             $elements_per_page
         ),
-        'F_ACTION' => PHPWG_ROOT_PATH . 'admin.php',
+        'F_ACTION' => './admin.php',
         'DISPLAY' => $elements_per_page,
         'NB_ELEMENTS' => $nb_elements,
         'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []),

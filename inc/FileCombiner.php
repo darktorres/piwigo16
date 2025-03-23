@@ -50,13 +50,13 @@ final class FileCombiner
      */
     public static function clear_combined_files(): void
     {
-        $dir = opendir(PHPWG_ROOT_PATH . PWG_COMBINED_DIR);
+        $dir = opendir('./' . PWG_COMBINED_DIR);
 
         while ($file = readdir($dir)) {
             if (functions::get_extension($file) == 'js' ||
                 functions::get_extension($file) == 'css'
             ) {
-                unlink(PHPWG_ROOT_PATH . PWG_COMBINED_DIR . $file);
+                unlink('./' . PWG_COMBINED_DIR . $file);
             }
         }
 
@@ -112,7 +112,7 @@ final class FileCombiner
             $key[] = $combinable->version;
 
             if ($conf['template_compile_check']) {
-                $key[] = filemtime(PHPWG_ROOT_PATH . $combinable->path);
+                $key[] = filemtime('./' . $combinable->path);
             }
 
             $pending[] = $combinable;
@@ -139,7 +139,7 @@ final class FileCombiner
             $file = PWG_COMBINED_DIR . base_convert(hash('crc32b', $key), 16, 36) . '.' . $this->type;
 
             if ($force ||
-                ! file_exists(PHPWG_ROOT_PATH . $file)
+                ! file_exists('./' . $file)
             ) {
                 $output = '';
                 $header = '';
@@ -151,9 +151,9 @@ final class FileCombiner
                 }
 
                 $output = "/*BEGIN header */\n" . $header . "\n" . $output;
-                functions::mkgetdir(dirname(PHPWG_ROOT_PATH . $file));
-                file_put_contents(PHPWG_ROOT_PATH . $file, $output);
-                chmod(PHPWG_ROOT_PATH . $file, 0644);
+                functions::mkgetdir(dirname('./' . $file));
+                file_put_contents('./' . $file, $output);
+                chmod('./' . $file, 0644);
             }
 
             $result[] = new Combinable('combi', $file, false);
@@ -188,13 +188,13 @@ final class FileCombiner
                 $key = [$combinable->path, $combinable->version];
 
                 if ($conf['template_compile_check']) {
-                    $key[] = filemtime(PHPWG_ROOT_PATH . $combinable->path);
+                    $key[] = filemtime('./' . $combinable->path);
                 }
 
                 $file = PWG_COMBINED_DIR . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;
 
                 if (! $force &&
-                    file_exists(PHPWG_ROOT_PATH . $file)
+                    file_exists('./' . $file)
                 ) {
                     $combinable->path = $file;
                     $combinable->version = false;
@@ -204,7 +204,7 @@ final class FileCombiner
 
             global $template;
             $handle = $this->type . '.' . $combinable->id;
-            $template->set_filename($handle, realpath(PHPWG_ROOT_PATH . $combinable->path));
+            $template->set_filename($handle, realpath('./' . $combinable->path));
             functions_plugins::trigger_notify('combinable_preparse', $template, $combinable, $this); //allow themes and plugins to set their own vars to template ...
             $content = $template->parse($handle, true);
 
@@ -218,14 +218,14 @@ final class FileCombiner
                 return $content;
             }
 
-            if (! file_exists(dirname(PHPWG_ROOT_PATH . $file))) {
-                functions::mkgetdir(dirname(PHPWG_ROOT_PATH . $file));
+            if (! file_exists(dirname('./' . $file))) {
+                functions::mkgetdir(dirname('./' . $file));
             }
 
-            file_put_contents(PHPWG_ROOT_PATH . $file, $content);
+            file_put_contents('./' . $file, $content);
             $combinable->path = $file;
         } elseif ($return_content) {
-            $content = file_get_contents(PHPWG_ROOT_PATH . $combinable->path);
+            $content = file_get_contents('./' . $combinable->path);
 
             if ($this->is_css) {
                 $content = self::process_css($content, $combinable->path, $header);
@@ -325,7 +325,7 @@ final class FileCombiner
 
                 if (strpos($match[1], '..') !== false or // Possible attempt to get out of Piwigo's dir
                     strpos($match[1], '://') !== false or // Remote URL
-                    ! is_readable(PHPWG_ROOT_PATH . $dir . '/' . $match[1])
+                    ! is_readable('./' . $dir . '/' . $match[1])
                 ) {
                     // If anything is suspicious, don't try to process the
                     // @import. Since @import need to be first and we are
@@ -334,7 +334,7 @@ final class FileCombiner
                     $header .= $match[0];
                     $replace[] = '';
                 } else {
-                    $sub_css = file_get_contents(PHPWG_ROOT_PATH . $dir . "/{$match[1]}");
+                    $sub_css = file_get_contents('./' . $dir . "/{$match[1]}");
                     $replace[] = self::process_css_rec($sub_css, dirname($dir . "/{$match[1]}"), $header);
                 }
             }

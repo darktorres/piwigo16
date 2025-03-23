@@ -76,20 +76,20 @@ if (isset($_POST['create_tpl'])) {
 if ($newfile_page) {
     $filename = isset($_POST['tpl_name']) ? $_POST['tpl_name'] : '';
     $selected['model'] = isset($_POST['tpl_model']) ? $_POST['tpl_model'] : '0';
-    $selected['parent'] = isset($_POST['tpl_parent']) ? $_POST['tpl_parent'] : PHPWG_ROOT_PATH . 'template-extension';
+    $selected['parent'] = isset($_POST['tpl_parent']) ? $_POST['tpl_parent'] : './template-extension';
 
     // Parent directories list
     $options['parent'] = [
-        PHPWG_ROOT_PATH . 'template-extension' => 'template-extension',
+        './template-extension' => 'template-extension',
     ];
-    $options['parent'] = array_merge($options['parent'], functions_LocalFilesEditor::get_rec_dirs(PHPWG_ROOT_PATH . 'template-extension'));
+    $options['parent'] = array_merge($options['parent'], functions_LocalFilesEditor::get_rec_dirs('./template-extension'));
 
     $options['model'][] = functions::l10n('locfiledit_empty_page');
     $options['model'][] = '----------------------';
     $i = 0;
 
     foreach (functions_admin::get_extents() as $pwg_template) {
-        $value = PHPWG_ROOT_PATH . 'template-extension/' . $pwg_template;
+        $value = './template-extension/' . $pwg_template;
         $options['model'][$value] = 'template-extension / ' . str_replace('/', ' / ', $pwg_template);
         $i++;
     }

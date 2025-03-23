@@ -28,7 +28,7 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'user_activity';
-require PHPWG_ROOT_PATH . 'admin/inc/user_tabs.php';
+require __DIR__ . '/../admin/inc/user_tabs.php';
 
 if (isset($_GET['type']) &&
     $_GET['type'] == 'download_logs'

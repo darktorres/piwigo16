@@ -21,7 +21,7 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\menubar;
 
 define('PHPWG_ROOT_PATH', './');
-require_once PHPWG_ROOT_PATH . 'inc/common.php';
+require_once __DIR__ . '/inc/common.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -44,7 +44,7 @@ $query = <<<SQL
     SQL;
 functions_mysqli::pwg_query($query);
 
-$feed_url = PHPWG_ROOT_PATH . 'feed.php';
+$feed_url = './feed.php';
 
 if (functions_user::is_a_guest()) {
     $feed_image_only_url = $feed_url;
@@ -88,8 +88,8 @@ if (! isset($themeconf['hide_menu_on']) or
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+
-require PHPWG_ROOT_PATH . 'inc/page_header.php';
+require __DIR__ . '/inc/page_header.php';
 functions_plugins::trigger_notify('loc_end_notification');
 functions_html::flush_page_messages();
 $template->pparse('notification');
-require PHPWG_ROOT_PATH . 'inc/page_tail.php';
+require __DIR__ . '/inc/page_tail.php';

@@ -62,7 +62,7 @@ final class functions_html
                       . '">';
                 $output .= $cat['name'] . '</a>';
             } else {
-                $output .= '<a href="' . PHPWG_ROOT_PATH . $url . $cat['id'] . '">';
+                $output .= '<a href="' . './' . $url . $cat['id'] . '">';
                 $output .= $cat['name'] . '</a>';
             }
         }
@@ -144,7 +144,7 @@ final class functions_html
                     <a href="{$href}">{$cat['name']}</a>
                     HTML;
             } else {
-                $href = PHPWG_ROOT_PATH . $url . $category_id;
+                $href = './' . $url . $category_id;
                 $output .= <<<HTML
                     <a href="{$href}">{$cat['name']}</a>
                     HTML;

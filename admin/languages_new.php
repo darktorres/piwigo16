@@ -35,7 +35,7 @@ $languages->get_db_languages();
 // |                           setup check                                 |
 // +-----------------------------------------------------------------------+
 
-$languages_dir = PHPWG_ROOT_PATH . 'language';
+$languages_dir = './language';
 
 if (! is_writable($languages_dir)) {
     $page['errors'][] = functions::l10n('Add write access to the "%s" directory', 'language');

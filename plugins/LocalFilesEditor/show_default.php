@@ -29,7 +29,7 @@ use Piwigo\inc\functions_user;
 
 define('PHPWG_ROOT_PATH', '../../');
 define('IN_ADMIN', true);
-require_once PHPWG_ROOT_PATH . 'inc/common.php';
+require_once __DIR__ . '/../../inc/common.php';
 require_once LOCALEDIT_PATH . 'inc/functions_LocalFilesEditor.php';
 functions::load_language('plugin.lang', LOCALEDIT_PATH);
 functions_user::check_status(ACCESS_WEBMASTER);
@@ -45,7 +45,7 @@ if (isset($_GET['file'])) {
 
     $template->set_filename('show_default', dirname(__FILE__) . '/template/show_default.tpl');
 
-    $file = file_get_contents(PHPWG_ROOT_PATH . $path);
+    $file = file_get_contents('../../' . $path);
     $title = str_replace('/', ' / ', $path);
 
     $template->assign(
@@ -57,9 +57,9 @@ if (isset($_GET['file'])) {
 
     $page['body_id'] = 'thePopuphelpPage';
 
-    require PHPWG_ROOT_PATH . 'inc/page_header.php';
+    require __DIR__ . '/../../inc/page_header.php';
 
     $template->pparse('show_default');
 
-    require PHPWG_ROOT_PATH . 'inc/page_tail.php';
+    require __DIR__ . '/../../inc/page_tail.php';
 }

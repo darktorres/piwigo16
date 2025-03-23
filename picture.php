@@ -27,8 +27,8 @@ use Piwigo\inc\menubar;
 use Piwigo\inc\SrcImage;
 
 define('PHPWG_ROOT_PATH', './');
-require_once PHPWG_ROOT_PATH . 'inc/common.php';
-require PHPWG_ROOT_PATH . 'inc/section_init.php';
+require_once __DIR__ . '/inc/common.php';
+require __DIR__ . '/inc/section_init.php';
 
 // Check Access and exit when user status is not ok
 functions_user::check_status(ACCESS_GUEST);
@@ -254,7 +254,7 @@ if (isset($_GET['action'])) {
             // no break
 
         case 'edit_comment':
-            require_once PHPWG_ROOT_PATH . 'inc/functions_comment.php';
+            require_once __DIR__ . '/inc/functions_comment.php';
             functions::check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
             $author_id = functions_comment::get_comment_author_id($_GET['comment_to_edit']);
 
@@ -306,7 +306,7 @@ if (isset($_GET['action'])) {
         case 'delete_comment':
             functions::check_pwg_token();
 
-            require_once PHPWG_ROOT_PATH . 'inc/functions_comment.php';
+            require_once __DIR__ . '/inc/functions_comment.php';
 
             functions::check_input_parameter('comment_to_delete', $_GET, false, PATTERN_ID);
 
@@ -322,7 +322,7 @@ if (isset($_GET['action'])) {
         case 'validate_comment':
             functions::check_pwg_token();
 
-            require_once PHPWG_ROOT_PATH . 'inc/functions_comment.php';
+            require_once __DIR__ . '/inc/functions_comment.php';
 
             functions::check_input_parameter('comment_to_validate', $_GET, false, PATTERN_ID);
 
@@ -939,16 +939,16 @@ $template->assign(
 // |                               sub pages                               |
 // +-----------------------------------------------------------------------+
 
-require PHPWG_ROOT_PATH . 'inc/picture_rate.php';
+require __DIR__ . '/inc/picture_rate.php';
 
 if ($conf['activate_comments']) {
-    require PHPWG_ROOT_PATH . 'inc/picture_comment.php';
+    require __DIR__ . '/inc/picture_comment.php';
 }
 
 if ($metadata_showable and
     functions_session::pwg_get_session_var('show_metadata') != null
 ) {
-    require PHPWG_ROOT_PATH . 'inc/picture_metadata.php';
+    require __DIR__ . '/inc/picture_metadata.php';
 }
 
 // include menubar
@@ -964,7 +964,7 @@ if ($conf['picture_menu'] and
     menubar::initialize_menu();
 }
 
-require PHPWG_ROOT_PATH . 'inc/page_header.php';
+require __DIR__ . '/inc/page_header.php';
 functions_plugins::trigger_notify('loc_end_picture');
 functions_html::flush_page_messages();
 
@@ -979,4 +979,4 @@ if ($page['slideshow'] and
 
 //------------------------------------------------------------ log information
 functions::pwg_log($picture['current']['id'], 'picture');
-require PHPWG_ROOT_PATH . 'inc/page_tail.php';
+require __DIR__ . '/inc/page_tail.php';

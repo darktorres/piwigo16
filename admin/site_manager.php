@@ -157,13 +157,13 @@ $result = functions_mysqli::pwg_query($query);
 
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $is_remote = functions_url::url_is_remote($row['galleries_url']);
-    $base_url = PHPWG_ROOT_PATH . 'admin.php';
+    $base_url = './admin.php';
     $base_url .= '?page=site_manager';
     $base_url .= '&amp;site=' . $row['id'];
     $base_url .= '&amp;pwg_token=' . functions::get_pwg_token();
     $base_url .= '&amp;action=';
 
-    $update_url = PHPWG_ROOT_PATH . 'admin.php';
+    $update_url = './admin.php';
     $update_url .= '?page=site_update';
     $update_url .= '&amp;site=' . $row['id'];
 

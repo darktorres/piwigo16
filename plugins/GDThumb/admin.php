@@ -220,7 +220,7 @@ $template->assign(
         'GDTHUMB_PATH' => 'plugins/' . GDTHUMB_ID,
         'GDTHEME_PATH' => GDTHEME_PATH,
         'GDTHUMB_VERSION' => GDTHUMB_VERSION,
-        'PHPWG_ROOT_PATH' => PHPWG_ROOT_PATH,
+        'PHPWG_ROOT_PATH' => './',
 
         'HEIGHT' => $params['height'],
         'MARGIN' => $params['margin'],

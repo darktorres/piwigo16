@@ -52,7 +52,7 @@ try {
         $conf['db_base']
     );
 } catch (Exception $e) {
-    functions_mysqli::my_error(functions::l10n($e->getMessage(), true));
+    functions_mysqli::my_error(functions::l10n($e->getMessage()), true);
 }
 
 functions_mysqli::pwg_db_check_charset();

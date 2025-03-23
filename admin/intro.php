@@ -451,7 +451,7 @@ foreach ($file_extensions as $ext => $ext_details) {
 if ($conf['add_cache_to_storage_chart'] &&
     isset($conf['cache_sizes'])
 ) {
-    $cache_sizes = unserialize($conf['cache_sizes']);
+    $cache_sizes = $conf['cache_sizes'];
 
     if (isset($cache_sizes)) {
         if (isset($cache_sizes[0]) &&

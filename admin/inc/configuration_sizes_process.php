@@ -146,11 +146,7 @@ if (count($errors) == 0) {
     ImageStdParams::$quality = intval($_POST['resize_quality']);
 
     $enabled = ImageStdParams::get_defined_type_map();
-    $disabled = unserialize(($conf['disabled_derivatives'] ?? ''));
-
-    if ($disabled === false) {
-        $disabled = [];
-    }
+    $disabled = $conf['disabled_derivatives'] ?? [];
 
     $changed_types = [];
 

@@ -46,8 +46,6 @@ if (! isset($conf['gdThumb'])) {
     functions::load_conf_from_db();
 }
 
-$conf['gdThumb'] = unserialize($conf['gdThumb']);
-
 // RV Thumbnails Scroller
 if (isset($_GET['rvts'])) {
     $conf['gdThumb']['big_thumb'] = false;

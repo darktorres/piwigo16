@@ -56,7 +56,6 @@ if (! defined('IN_ADMIN')) {
 function admintools_init(): void
 {
     global $conf;
-    $conf['AdminTools'] = functions::safe_unserialize($conf['AdminTools']);
 
     functions::load_language('plugin.lang', ADMINTOOLS_PATH);
 }

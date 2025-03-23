@@ -662,6 +662,7 @@ class functions_mysqli
         }
 
         // Repair all tables
+        $all_tables = array_map(self::protect_column_name(...), $all_tables);
         $allTablesList = implode(', ', $all_tables);
         $query = <<<SQL
             REPAIR TABLE {$allTablesList};

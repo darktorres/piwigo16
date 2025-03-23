@@ -185,7 +185,6 @@ final class updates
         if (! isset($conf['update_notify_last_notification'])) {
             $notify = true;
         } else {
-            $conf['update_notify_last_notification'] = functions::safe_unserialize($conf['update_notify_last_notification']);
             $last_notification = $conf['update_notify_last_notification']['notified_on'];
 
             if ($new_versions_string != $conf['update_notify_last_notification']['version']) {

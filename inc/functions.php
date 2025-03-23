@@ -592,8 +592,6 @@ final class functions
                 self::conf_update_param('history_sections_cache', functions_mysqli::get_enums('history', 'section'), true);
             }
 
-            $conf['history_sections_cache'] = self::safe_unserialize($conf['history_sections_cache']);
-
             if (in_array($page['section'], ($conf['history_sections_cache'] ?: [])) ||
                 in_array(strtolower($page['section']), array_map(strtolower(...), $conf['history_sections_cache'] ?: []))
             ) {
@@ -1459,11 +1457,14 @@ final class functions
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $val = isset($row['value']) ? $row['value'] : '';
 
-            // If the field is true or false, the variable is transformed into a boolean value.
-            if ($val == 'true') {
+            if ($val === 'true') {
                 $val = true;
-            } elseif ($val == 'false') {
+            } elseif ($val === 'false') {
                 $val = false;
+            } elseif (self::is_serialized($val)) {
+                $val = unserialize($val);
+            } elseif (is_numeric($val)) {
+                $val = str_contains($val, '.') ? (float) $val : (int) $val;
             }
 
             $conf[$row['param']] = $val;

@@ -46,7 +46,7 @@ final class functions_smartpocket
     {
         global $template, $conf;
 
-        $config = functions::safe_unserialize($conf['smartpocket']);
+        $config = $conf['smartpocket'];
         $template->assign('smartpocket', $config);
 
         if (! empty($conf['mobile_theme']) &&

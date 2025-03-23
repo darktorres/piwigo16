@@ -18,8 +18,8 @@ if (! isset($conf['elegant'])) {
     ];
 
     functions::conf_update_param('elegant', $config, true);
-} elseif (count(functions::safe_unserialize($conf['elegant'])) != 3) {
-    $conff = functions::safe_unserialize($conf['elegant']);
+} elseif (count($conf['elegant']) != 3) {
+    $conff = $conf['elegant'];
     $config = [
         'p_main_menu' => (isset($conff['p_main_menu'])) ? $conff['p_main_menu'] : 'on',
         'p_pict_descr' => (isset($conff['p_pict_descr'])) ? $conff['p_pict_descr'] : 'on',

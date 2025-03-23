@@ -277,8 +277,6 @@ final class pwg_extensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        $conf['updates_ignored'] = unserialize($conf['updates_ignored']);
-
         // Reset ignored extension
         if ($params['reset']) {
             if (! empty($params['type']) &&
@@ -333,8 +331,6 @@ final class pwg_extensions
         }
 
         $result['piwigo_need_update'] = $_SESSION['need_update' . PHPWG_VERSION];
-
-        $conf['updates_ignored'] = unserialize($conf['updates_ignored']);
 
         if (! isset($_SESSION['extensions_need_update'])) {
             $update->check_extensions();

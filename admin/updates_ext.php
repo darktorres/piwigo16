@@ -25,8 +25,6 @@ if (! functions_user::is_webmaster()) {
     $page['warnings'][] = str_replace('%s', functions::l10n('user_status_webmaster'), functions::l10n('%s status is required to edit parameters.'));
 }
 
-$conf['updates_ignored'] = unserialize($conf['updates_ignored']);
-
 $autoupdate = new updates($page['page']);
 
 $show_reset = false;

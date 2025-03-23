@@ -11,7 +11,6 @@ Author: Piwigo team
 Author URI: http://piwigo.org
 */
 
-use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 
 $themeconf = [
@@ -27,6 +26,6 @@ functions_plugins::add_event_handler('init', set_config_values_elegant(...));
 function set_config_values_elegant(): void
 {
     global $conf, $template;
-    $config = functions::safe_unserialize($conf['elegant']);
+    $config = $conf['elegant'];
     $template->assign('elegant', $config);
 }

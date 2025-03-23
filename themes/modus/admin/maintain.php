@@ -16,7 +16,6 @@ function theme_activate(
     $default_conf = functions_modus::modus_get_default_config();
 
     $my_conf = $conf['modus_theme'];
-    $my_conf = unserialize($my_conf);
 
     if (empty($my_conf)) {
         $my_conf = $default_conf;

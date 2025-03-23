@@ -73,6 +73,7 @@ $query = <<<SQL
     WHERE param = 'derivatives';
     SQL;
 list($conf['derivatives']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+$conf['derivatives'] = unserialize($conf['derivatives']);
 ImageStdParams::load_from_db();
 
 functions::parse_request();

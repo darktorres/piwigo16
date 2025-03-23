@@ -22,9 +22,9 @@ use SmartyException;
 use stdClass;
 use uagent_info;
 
-require_once PHPWG_ROOT_PATH . 'inc/functions_plugins.php';
-require_once PHPWG_ROOT_PATH . 'inc/functions_user.php';
-require_once PHPWG_ROOT_PATH . 'inc/functions_session.php';
+require_once __DIR__ . '/../inc/functions_plugins.php';
+require_once __DIR__ . '/../inc/functions_user.php';
+require_once __DIR__ . '/../inc/functions_session.php';
 
 final class functions
 {
@@ -503,7 +503,7 @@ final class functions
         $languages = [];
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
-            if (is_dir(PHPWG_ROOT_PATH . 'language/' . $row['id'])) {
+            if (is_dir('./language/' . $row['id'])) {
                 $languages[$row['id']] = $row['name'];
             }
         }
@@ -639,14 +639,14 @@ final class functions
         $history_id = functions_mysqli::pwg_db_insert_id('history');
 
         if ($history_id % 1000 == 0) {
-            require_once PHPWG_ROOT_PATH . 'admin/inc/functions_history.php';
+            require_once __DIR__ . '/../admin/inc/functions_history.php';
             functions_history::history_summarize(50000);
         }
 
         if ($conf['history_autopurge_every'] > 0 and
             $history_id % $conf['history_autopurge_every'] == 0
         ) {
-            require_once PHPWG_ROOT_PATH . 'admin/inc/functions_history.php';
+            require_once __DIR__ . '/../admin/inc/functions_history.php';
             functions_history::history_autopurge();
         }
 
@@ -1167,15 +1167,15 @@ final class functions
             $user = functions_user::build_user($conf['guest_id'], true);
             self::load_language('common.lang');
             functions_plugins::trigger_notify('loading_lang');
-            self::load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
+            self::load_language('lang', './' . PWG_LOCAL_DIR, [
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(PHPWG_ROOT_PATH . 'themes', functions_user::get_default_theme());
+            $template = new Template('./themes', functions_user::get_default_theme());
         } elseif (defined('IN_ADMIN') and
                   IN_ADMIN
         ) {
-            $template = new Template(PHPWG_ROOT_PATH . 'themes', functions_user::get_default_theme());
+            $template = new Template('./themes', functions_user::get_default_theme());
         }
 
         if (empty($msg)) {
@@ -1190,7 +1190,7 @@ final class functions
             'redirect' => 'redirect.tpl',
         ]);
 
-        require PHPWG_ROOT_PATH . 'inc/page_header.php';
+        require __DIR__ . '/../inc/page_header.php';
 
         $template->set_filenames([
             'redirect' => 'redirect.tpl',
@@ -1199,7 +1199,7 @@ final class functions
 
         $template->parse('redirect');
 
-        require PHPWG_ROOT_PATH . 'inc/page_tail.php';
+        require __DIR__ . '/../inc/page_tail.php';
 
         exit();
     }
@@ -1314,7 +1314,7 @@ final class functions
         $path = $element_info['path'];
 
         if (! functions_url::url_is_remote($path)) {
-            $path = PHPWG_ROOT_PATH . $path;
+            $path = './' . $path;
         }
 
         return $path;
@@ -1889,7 +1889,7 @@ final class functions
             return ! empty($lang_info['parent']) ? $lang_info['parent'] : null;
         }
 
-        $f = PHPWG_ROOT_PATH . 'language/' . $lang_id . '/common.lang.php';
+        $f = './language/' . $lang_id . '/common.lang.php';
 
         if (file_exists($f)) {
             require $f;
@@ -1935,7 +1935,7 @@ final class functions
         }
 
         if (empty($dirname)) {
-            $dirname = PHPWG_ROOT_PATH;
+            $dirname = './';
         }
 
         $dirname .= 'language/';
@@ -2755,7 +2755,7 @@ final class functions
             $req = $_SERVER['PATH_INFO'];
             $req = str_replace('//', '/', $req);
             $path_count = count(explode('/', $req));
-            $page['root_path'] = PHPWG_ROOT_PATH . str_repeat('../', $path_count - 1);
+            $page['root_path'] = './' . str_repeat('../', $path_count - 1);
         } else {
             $req = $_SERVER['QUERY_STRING'];
             $pos = strpos($req, '&');
@@ -2770,7 +2770,7 @@ final class functions
               $req = $key;
               break;
             }*/
-            $page['root_path'] = PHPWG_ROOT_PATH;
+            $page['root_path'] = './';
         }
 
         $req = ltrim($req, '/');
@@ -2781,7 +2781,7 @@ final class functions
             }
         }
 
-        $page['derivative_path'] = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $req;
+        $page['derivative_path'] = './' . PWG_DERIVATIVE_DIR . $req;
 
         $pos = strrpos($req, '.');
 
@@ -2849,9 +2849,9 @@ final class functions
             }
         }
 
-        if (is_file(PHPWG_ROOT_PATH . $req . $ext)) {
+        if (is_file('./' . $req . $ext)) {
             $req = './' . $req; // will be used to match #iamges.path
-        } elseif (is_file(PHPWG_ROOT_PATH . '../' . $req . $ext)) {
+        } elseif (is_file('../' . $req . $ext)) {
             $req = '../' . $req;
         }
 
@@ -2953,7 +2953,7 @@ final class functions
             $params->use_watermark = false;
             $params->sharpen = min(1, $params->sharpen);
             $page['src_path'] = $candidate_path;
-            $page['src_url'] = $page['root_path'] . substr($candidate_path, strlen(PHPWG_ROOT_PATH));
+            $page['src_url'] = $page['root_path'] . substr($candidate_path, strlen('./'));
             $page['rotation_angle'] = 0;
             return true;
         }
@@ -3515,7 +3515,7 @@ final class functions
 
                         // send email to the user
                         if ($_POST['username'] != $userdata['username']) {
-                            require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
+                            require_once __DIR__ . '/../inc/functions_mail.php';
                             functions_mail::switch_lang_to($userdata['language']);
 
                             $keyargs_content = [

@@ -27,7 +27,7 @@ if (! functions_user::is_webmaster()) {
     $page['warnings'][] = str_replace('%s', functions::l10n('user_status_webmaster'), functions::l10n('%s status is required to edit parameters.'));
 }
 
-require_once PHPWG_ROOT_PATH . 'admin/inc/functions_upload.php';
+require_once __DIR__ . '/../admin/inc/functions_upload.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -216,11 +216,11 @@ if (isset($_POST['submit'])) {
             break;
 
         case 'watermark':
-            require PHPWG_ROOT_PATH . 'admin/inc/configuration_watermark_process.php';
+            require __DIR__ . '/../admin/inc/configuration_watermark_process.php';
             break;
 
         case 'sizes':
-            require PHPWG_ROOT_PATH . 'admin/inc/configuration_sizes_process.php';
+            require __DIR__ . '/../admin/inc/configuration_sizes_process.php';
             break;
 
         case 'comments':
@@ -427,7 +427,7 @@ switch ($page['section']) {
 
     case 'default':
         $edit_user = functions_user::build_user($conf['guest_id'], false);
-        require_once PHPWG_ROOT_PATH . 'profile.php';
+        require_once __DIR__ . '/../profile.php';
 
         $errors = [];
 
@@ -552,15 +552,15 @@ switch ($page['section']) {
     case 'watermark':
         $watermark_files = [];
 
-        foreach (glob(PHPWG_ROOT_PATH . 'themes/default/watermarks/*.png') as $file) {
-            $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
+        foreach (glob('./themes/default/watermarks/*.png') as $file) {
+            $watermark_files[] = substr($file, strlen('./'));
         }
 
-        $glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png');
+        $glob = glob('./' . PWG_LOCAL_DIR . 'watermarks/*.png');
 
         if ($glob !== false) {
             foreach ($glob as $file) {
-                $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
+                $watermark_files[] = substr($file, strlen('./'));
             }
         }
 

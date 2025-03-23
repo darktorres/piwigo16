@@ -35,4 +35,4 @@ $tabsheet->set_id('updates');
 $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
-require PHPWG_ROOT_PATH . 'admin/updates_' . $page['tab'] . '.php';
+require __DIR__ . '/../admin/updates_' . $page['tab'] . '.php';

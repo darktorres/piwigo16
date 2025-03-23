@@ -69,13 +69,13 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 if ($page['tab'] == 'properties') {
-    require PHPWG_ROOT_PATH . 'admin/picture_modify.php';
+    require __DIR__ . '/../admin/picture_modify.php';
 } elseif ($page['tab'] == 'coi') {
-    require PHPWG_ROOT_PATH . 'admin/picture_coi.php';
+    require __DIR__ . '/../admin/picture_coi.php';
 } elseif ($page['tab'] == 'formats' &&
           $conf['enable_formats']
 ) {
-    require PHPWG_ROOT_PATH . 'admin/picture_formats.php';
+    require __DIR__ . '/../admin/picture_formats.php';
 } else {
-    require PHPWG_ROOT_PATH . 'admin/photo_' . $page['tab'] . '.php';
+    require __DIR__ . '/../admin/photo_' . $page['tab'] . '.php';
 }

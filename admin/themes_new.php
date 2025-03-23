@@ -31,7 +31,7 @@ $themes = new themes();
 // |                           setup check                                 |
 // +-----------------------------------------------------------------------+
 
-$themes_dir = PHPWG_ROOT_PATH . 'themes';
+$themes_dir = './themes';
 
 if (! is_writable($themes_dir)) {
     $page['errors'][] = functions::l10n('Add write access to the "%s" directory', 'themes');

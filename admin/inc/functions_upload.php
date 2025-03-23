@@ -984,7 +984,7 @@ final class functions_upload
     {
         global $conf;
 
-        $relative_dir = preg_replace('#^' . PHPWG_ROOT_PATH . '#', '', $conf['upload_dir']);
+        $relative_dir = preg_replace('#^./#', '', $conf['upload_dir']);
 
         if (! is_dir($conf['upload_dir'])) {
             if (! is_writable(dirname($conf['upload_dir']))) {

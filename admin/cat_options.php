@@ -123,7 +123,7 @@ $template->set_filenames(
 );
 
 $page['section'] = isset($_GET['section']) ? $_GET['section'] : 'status';
-$base_url = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&amp;section=';
+$base_url = './admin.php?page=cat_options&amp;section=';
 
 $template->assign(
     [

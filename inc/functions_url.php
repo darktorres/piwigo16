@@ -26,7 +26,7 @@ final class functions_url
         $root_url = ($page['root_path'] ?? null);
 
         if ($root_url == null) { // TODO - add HERE the possibility to call PWG functions from external scripts
-            $root_url = PHPWG_ROOT_PATH;
+            $root_url = './';
 
             if (strncmp($root_url, './', 2) == 0) {
                 return substr($root_url, 2);

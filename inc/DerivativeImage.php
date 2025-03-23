@@ -154,7 +154,7 @@ final class DerivativeImage
 
     public function get_path(): string
     {
-        return PHPWG_ROOT_PATH . $this->rel_path;
+        return './' . $this->rel_path;
     }
 
     public function get_url(): string
@@ -360,7 +360,7 @@ final class DerivativeImage
         $url_style = $conf['derivative_url_style'];
 
         if (! $url_style) {
-            $mtime = file_exists(PHPWG_ROOT_PATH . $rel_path) ? filemtime(PHPWG_ROOT_PATH . $rel_path) : false;
+            $mtime = file_exists('./' . $rel_path) ? filemtime('./' . $rel_path) : false;
 
             if ($mtime === false or
                 $mtime < $params->last_mod_time

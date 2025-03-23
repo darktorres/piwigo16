@@ -19,10 +19,10 @@ use Piwigo\inc\SizingParams;
 define('PHPWG_ROOT_PATH', './');
 
 // fast bootstrap - no db connection
-require PHPWG_ROOT_PATH . 'inc/config_default.php';
+require __DIR__ . '/inc/config_default.php';
 
-if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
-    require PHPWG_ROOT_PATH . 'local/config/config.php';
+if (file_exists(__DIR__ . '/local/config/config.php')) {
+    require __DIR__ . '/local/config/config.php';
 }
 
 if (! defined('PWG_LOCAL_DIR')) {
@@ -33,11 +33,11 @@ if (! defined('PWG_DERIVATIVE_DIR')) {
     define('PWG_DERIVATIVE_DIR', $conf['data_location'] . 'i/');
 }
 
-if (file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php')) {
-    require PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php';
+if (file_exists(__DIR__ . PWG_LOCAL_DIR . '/config/database.php')) {
+    require __DIR__ . PWG_LOCAL_DIR . '/config/database.php';
 }
 
-$logger = new Katzgrau\KLogger\Logger(PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'], $conf['log_level'], [
+$logger = new Katzgrau\KLogger\Logger('./' . $conf['data_location'] . $conf['log_dir'], $conf['log_level'], [
     // we use an hashed filename to prevent direct file access, and we salt with
     // the db_password instead of secret_key because the log must be usable in i.php
     // (secret_key is in the database)
@@ -227,7 +227,7 @@ if ($params->sharpen) {
 
 if ($params->will_watermark($d_size)) {
     $wm = ImageStdParams::get_watermark();
-    $wm_image = new pwg_image(PHPWG_ROOT_PATH . $wm->file);
+    $wm_image = new pwg_image('./' . $wm->file);
     $wm_size = [$wm_image->get_width(), $wm_image->get_height()];
 
     if ($d_size[0] < $wm_size[0] or

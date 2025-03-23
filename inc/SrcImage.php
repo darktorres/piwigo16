@@ -59,7 +59,7 @@ final class SrcImage
         } else {
             $this->rel_path = functions_plugins::trigger_change('get_mimetype_location', functions::get_themeconf('mime_icon_dir') . $ext . '.png', $ext);
             $this->flags |= self::IS_MIMETYPE;
-            $size = getimagesize(PHPWG_ROOT_PATH . $this->rel_path);
+            $size = getimagesize('./' . $this->rel_path);
 
             if ($size === false) {
                 if ($ext == 'svg') {
@@ -68,7 +68,7 @@ final class SrcImage
                     $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
                 }
 
-                $size = getimagesize(PHPWG_ROOT_PATH . $this->rel_path);
+                $size = getimagesize('./' . $this->rel_path);
             }
 
             $this->size = [$size[0], $size[1]];
@@ -108,7 +108,7 @@ final class SrcImage
 
     public function get_path(): string
     {
-        return PHPWG_ROOT_PATH . $this->rel_path;
+        return './' . $this->rel_path;
     }
 
     public function get_url(): string

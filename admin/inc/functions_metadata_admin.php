@@ -167,7 +167,7 @@ final class functions_metadata_admin
         array $infos
     ): array|bool {
         global $conf;
-        $file = PHPWG_ROOT_PATH . $infos['path'];
+        $file = './' . $infos['path'];
         $fs = filesize($file);
 
         if ($fs === false) {
@@ -234,7 +234,7 @@ final class functions_metadata_admin
 
         if ($is_tiff) {
             // back to original file
-            $file = PHPWG_ROOT_PATH . $infos['path'];
+            $file = './' . $infos['path'];
         }
 
         if ($conf['use_exif']) {

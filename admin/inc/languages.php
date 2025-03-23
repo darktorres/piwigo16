@@ -112,7 +112,7 @@ final class languages
                     SQL;
                 functions_mysqli::pwg_query($query);
 
-                functions_admin::deltree(PHPWG_ROOT_PATH . 'language/' . $language_id, PHPWG_ROOT_PATH . 'language/trash');
+                functions_admin::deltree('./language/' . $language_id, './language/trash');
                 break;
 
             case 'set_default':
@@ -140,13 +140,13 @@ final class languages
 
         $target_charset = strtolower($target_charset);
 
-        $dir = opendir(PHPWG_ROOT_PATH . 'language');
+        $dir = opendir('./language');
 
         while ($file = readdir($dir)) {
             if ($file != '.' and
                 $file != '..'
             ) {
-                $path = PHPWG_ROOT_PATH . 'language/' . $file;
+                $path = './language/' . $file;
 
                 if (is_dir($path) and
                     ! is_link($path) and
@@ -319,7 +319,7 @@ final class languages
     ): string {
         global $logger;
 
-        $archive = tempnam(PHPWG_ROOT_PATH . 'language', 'zip');
+        $archive = tempnam('./language', 'zip');
 
         if ($archive) {
             $url = PEM_URL . '/download.php';
@@ -356,7 +356,7 @@ final class languages
                                 $dest = $root;
                             }
 
-                            $extract_path = PHPWG_ROOT_PATH . 'language/' . $dest;
+                            $extract_path = './language/' . $dest;
 
                             $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
 
@@ -416,7 +416,7 @@ final class languages
                                             if (is_file($path)) {
                                                 unlink($path);
                                             } elseif (is_dir($path)) {
-                                                functions_admin::deltree($path, PHPWG_ROOT_PATH . 'language/trash');
+                                                functions_admin::deltree($path, './language/trash');
                                             }
                                         }
                                     }

@@ -25,7 +25,7 @@ if (! empty($_POST)) {
     functions::check_pwg_token();
 }
 
-require_once PHPWG_ROOT_PATH . 'profile.php';
+require_once __DIR__ . '/../profile.php';
 
 $errors = [];
 functions::save_profile_from_post($edit_user, $errors);

@@ -199,7 +199,7 @@ final class updates
 
         if ($notify) {
             // send email
-            require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
+            require_once __DIR__ . '/../../inc/functions_mail.php';
 
             functions_mail::switch_lang_to(functions_user::get_default_language());
 
@@ -442,8 +442,8 @@ final class updates
     public static function process_obsolete_list(
         string $file
     ): void {
-        if (file_exists(PHPWG_ROOT_PATH . $file)) {
-            $old_files = file(PHPWG_ROOT_PATH . $file, FILE_IGNORE_NEW_LINES);
+        if (file_exists('./' . $file)) {
+            $old_files = file('./' . $file, FILE_IGNORE_NEW_LINES);
 
             if ($old_files and
                 ! empty($old_files)
@@ -451,12 +451,12 @@ final class updates
                 $old_files[] = $file;
 
                 foreach ($old_files as $old_file) {
-                    $path = PHPWG_ROOT_PATH . $old_file;
+                    $path = './' . $old_file;
 
                     if (is_file($path)) {
                         unlink($path);
                     } elseif (is_dir($path)) {
-                        functions_admin::deltree($path, PHPWG_ROOT_PATH . '_trash');
+                        functions_admin::deltree($path, './_trash');
                     }
                 }
             }
@@ -490,11 +490,11 @@ final class updates
             $code = $upgrade_to;
             $dl_code = $code;
             $remove_path = version_compare($code, '2.0.8', '>=') ? 'piwigo' : 'piwigo-' . $code;
-            $obsolete_list = PHPWG_ROOT_PATH . 'install/obsolete.list';
+            $obsolete_list = './install/obsolete.list';
         }
 
         if (empty($page['errors'])) {
-            $path = PHPWG_ROOT_PATH . $conf['data_location'] . 'update';
+            $path = './' . $conf['data_location'] . 'update';
             $filename = $path . '/' . $code . '.zip';
             functions::mkgetdir($path);
 
@@ -522,7 +522,7 @@ final class updates
 
             if (filesize($filename)) {
                 $zip = new PclZip($filename);
-                $result = $zip->extract(PCLZIP_OPT_PATH, PHPWG_ROOT_PATH, PCLZIP_OPT_REMOVE_PATH, $remove_path, PCLZIP_OPT_SET_CHMOD, 0755, PCLZIP_OPT_REPLACE_NEWER);
+                $result = $zip->extract(PCLZIP_OPT_PATH, './', PCLZIP_OPT_REMOVE_PATH, $remove_path, PCLZIP_OPT_SET_CHMOD, 0755, PCLZIP_OPT_REPLACE_NEWER);
 
                 if ($result) {
                     //Check if all files were extracted
@@ -531,8 +531,8 @@ final class updates
                     foreach ($result as $extract) {
                         if (! in_array($extract['status'], ['ok', 'filtered', 'already_a_directory'])) {
                             // Try to change chmod and extract
-                            if (chmod(PHPWG_ROOT_PATH . $extract['filename'], 0777)) {
-                                $res = $zip->extract(PCLZIP_OPT_BY_NAME, $remove_path . '/' . $extract['filename'], PCLZIP_OPT_PATH, PHPWG_ROOT_PATH, PCLZIP_OPT_REMOVE_PATH, $remove_path, PCLZIP_OPT_SET_CHMOD, 0755, PCLZIP_OPT_REPLACE_NEWER);
+                            if (chmod('./' . $extract['filename'], 0777)) {
+                                $res = $zip->extract(PCLZIP_OPT_BY_NAME, $remove_path . '/' . $extract['filename'], PCLZIP_OPT_PATH, './', PCLZIP_OPT_REMOVE_PATH, $remove_path, PCLZIP_OPT_SET_CHMOD, 0755, PCLZIP_OPT_REPLACE_NEWER);
 
                                 if ($res and
                                     isset($res[0]['status']) and
@@ -551,7 +551,7 @@ final class updates
                             self::process_obsolete_list($obsolete_list);
                         }
 
-                        functions_admin::deltree(PHPWG_ROOT_PATH . $conf['data_location'] . 'update');
+                        functions_admin::deltree('./' . $conf['data_location'] . 'update');
                         functions_admin::invalidate_user_cache(true);
                         functions::conf_update_param('piwigo_installed_version', $upgrade_to);
                         functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'update', [
@@ -572,10 +572,10 @@ final class updates
                             $page['updated_version'] = $upgrade_to;
                             $step = -1;
                         } else {
-                            functions::redirect(PHPWG_ROOT_PATH . 'upgrade.php?now=');
+                            functions::redirect('./upgrade.php?now=');
                         }
                     } else {
-                        file_put_contents(PHPWG_ROOT_PATH . $conf['data_location'] . 'update/log_error.txt', $error);
+                        file_put_contents('./' . $conf['data_location'] . 'update/log_error.txt', $error);
 
                         $page['errors'][] = functions::l10n(
                             'An error has occurred during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
@@ -583,7 +583,7 @@ final class updates
                         );
                     }
                 } else {
-                    functions_admin::deltree(PHPWG_ROOT_PATH . $conf['data_location'] . 'update');
+                    functions_admin::deltree('./' . $conf['data_location'] . 'update');
                     $page['errors'][] = functions::l10n('An error has occurred during upgrade.');
                 }
             } else {

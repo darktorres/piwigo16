@@ -50,7 +50,7 @@ if ($page['show_comments'] and
         'image_id' => $page['image_id'],
     ];
 
-    require_once PHPWG_ROOT_PATH . 'inc/functions_comment.php';
+    require_once __DIR__ . '/../inc/functions_comment.php';
 
     $comment_action = functions_comment::insert_user_comment($comm, $_POST['key'], $page['errors']);
 

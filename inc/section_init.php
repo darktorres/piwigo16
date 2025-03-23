@@ -52,7 +52,7 @@ if ($conf['question_mark_in_urls'] == false and
     $rewritten = $_SERVER['PATH_INFO'];
     $rewritten = str_replace('//', '/', $rewritten);
     $path_count = count(explode('/', $rewritten));
-    $page['root_path'] = PHPWG_ROOT_PATH . str_repeat('../', $path_count - 1);
+    $page['root_path'] = './' . str_repeat('../', $path_count - 1);
 } else {
     $rewritten = '';
 
@@ -63,7 +63,7 @@ if ($conf['question_mark_in_urls'] == false and
 
     // the $_GET keys are not protected in inc/common.php, only the values
     $rewritten = functions_mysqli::pwg_db_real_escape_string($rewritten);
-    $page['root_path'] = PHPWG_ROOT_PATH;
+    $page['root_path'] = './';
 }
 
 if (strncmp($page['root_path'], './', 2) == 0) {

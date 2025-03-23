@@ -41,7 +41,7 @@ function admintools_add_public_controller(): void
         $admin_lang = $MultiView->get_user_language();
 
         if ($admin_lang !== false) {
-            require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
+            require_once __DIR__ . '/../../../inc/functions_mail.php';
             functions_mail::switch_lang_to($admin_lang);
         }
     } elseif ($conf['AdminTools']['public_quick_edit'] and
@@ -211,7 +211,7 @@ function admintools_add_admin_controller(): void
     $admin_lang = $MultiView->get_user_language();
 
     if ($admin_lang !== false) {
-        require_once PHPWG_ROOT_PATH . 'inc/functions_mail.php';
+        require_once __DIR__ . '/../../../inc/functions_mail.php';
         functions_mail::switch_lang_to($admin_lang);
     }
 

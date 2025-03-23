@@ -44,7 +44,7 @@ if (! empty($_POST)) {
     if (empty($_POST['comments'])) {
         $page['errors'][] = functions::l10n('Select at least one comment');
     } else {
-        require_once PHPWG_ROOT_PATH . 'inc/functions_comment.php';
+        require_once __DIR__ . '/../inc/functions_comment.php';
         functions::check_input_parameter('comments', $_POST, true, PATTERN_ID);
 
         if (isset($_POST['validate'])) {

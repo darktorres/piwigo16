@@ -19,7 +19,7 @@ use Piwigo\inc\functions_user;
 
 define('PHPWG_ROOT_PATH', './');
 define('PWG_HELP', true);
-require_once PHPWG_ROOT_PATH . 'inc/common.php';
+require_once __DIR__ . '/inc/common.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -33,7 +33,7 @@ $page['meta_robots'] = [
     'noindex' => 1,
     'nofollow' => 1,
 ];
-require PHPWG_ROOT_PATH . 'inc/page_header.php';
+require __DIR__ . '/inc/page_header.php';
 
 if (isset($_GET['page']) and
     preg_match('/^[a-z_]*$/', $_GET['page'])
@@ -70,4 +70,4 @@ $template->assign(
 
 $template->pparse('popuphelp');
 
-require PHPWG_ROOT_PATH . 'inc/page_tail.php';
+require __DIR__ . '/inc/page_tail.php';

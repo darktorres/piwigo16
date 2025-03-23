@@ -25,8 +25,8 @@ use Piwigo\inc\functions_user;
 define('PHPWG_ROOT_PATH', './');
 define('IN_ADMIN', true);
 
-require_once PHPWG_ROOT_PATH . 'inc/common.php';
-require_once PHPWG_ROOT_PATH . 'admin/inc/add_core_tabs.php';
+require_once __DIR__ . '/inc/common.php';
+require_once __DIR__ . '/admin/inc/add_core_tabs.php';
 
 functions_plugins::trigger_notify('loc_begin_admin');
 
@@ -114,7 +114,7 @@ if ($conf['external_authentication']) {
 // | Variables init                                                        |
 // +-----------------------------------------------------------------------+
 
-$change_theme_url = PHPWG_ROOT_PATH . 'admin.php?';
+$change_theme_url = './admin.php?';
 $test_get = $_GET;
 unset($test_get['page']);
 unset($test_get['section']);
@@ -174,14 +174,14 @@ if (isset($_GET['page']) and
 
 if (isset($_GET['page']) and
     preg_match('/^[a-z_]*$/', $_GET['page']) and
-    is_file(PHPWG_ROOT_PATH . 'admin/' . $_GET['page'] . '.php')
+    is_file('./admin/' . $_GET['page'] . '.php')
 ) {
     $page['page'] = $_GET['page'];
 } else {
     $page['page'] = 'intro';
 }
 
-$link_start = PHPWG_ROOT_PATH . 'admin.php?page=';
+$link_start = './admin.php?page=';
 $conf_link = $link_start . 'configuration&amp;section=';
 
 // $_GET['tab'] is often used to perform and
@@ -229,8 +229,8 @@ $template->assign(
         'U_USERS' => $link_start . 'user_list',
         'U_GROUPS' => $link_start . 'group_list',
         'U_RETURN' => functions_url::get_gallery_home_url(),
-        'U_ADMIN' => PHPWG_ROOT_PATH . 'admin.php',
-        'U_LOGOUT' => PHPWG_ROOT_PATH . 'index.php?act=logout',
+        'U_ADMIN' => './admin.php',
+        'U_LOGOUT' => './index.php?act=logout',
         'U_PLUGINS' => $link_start . 'plugins',
         'U_ADD_PHOTOS' => $link_start . 'photos_add',
         'U_CHANGE_THEME' => $change_theme_url,
@@ -343,7 +343,7 @@ if (in_array($page['page'], [
 // +-----------------------------------------------------------------------+
 
 functions_plugins::trigger_notify('loc_begin_admin_page');
-require PHPWG_ROOT_PATH . 'admin/' . $page['page'] . '.php';
+require __DIR__ . '/admin/' . $page['page'] . '.php';
 
 $template->assign('ACTIVE_MENU', functions_admin::get_active_menu($page['page']));
 
@@ -354,7 +354,7 @@ $template->assign('ACTIVE_MENU', functions_admin::get_active_menu($page['page'])
 // Add the Piwigo Official menu
 $template->assign('pwgmenu', functions_admin::pwg_URL());
 
-require PHPWG_ROOT_PATH . 'inc/page_header.php';
+require __DIR__ . '/inc/page_header.php';
 
 functions_plugins::trigger_notify('loc_end_admin');
 
@@ -362,4 +362,4 @@ functions_html::flush_page_messages();
 
 $template->pparse('admin');
 
-require PHPWG_ROOT_PATH . 'inc/page_tail.php';
+require __DIR__ . '/inc/page_tail.php';

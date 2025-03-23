@@ -448,7 +448,7 @@ if (isset($_POST['submit']) and
             $fulldir = substr($fulldir, 3);
         }
 
-        $to_delete_derivative_dirs[] = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $fulldir;
+        $to_delete_derivative_dirs[] = './' . PWG_DERIVATIVE_DIR . $fulldir;
     }
 
     if (count($to_delete) > 0) {

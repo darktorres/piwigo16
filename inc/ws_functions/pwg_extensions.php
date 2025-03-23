@@ -188,7 +188,7 @@ final class pwg_extensions
                 $extension->perform_action('deactivate', $extension_id);
 
                 functions::redirect(
-                    PHPWG_ROOT_PATH
+                    './'
           . 'ws.php'
           . '?method=pwg.extensions.update'
           . '&type=plugins'

@@ -112,7 +112,7 @@ $available_templates = array_merge(
     [
         'N/A' => '----------',
     ],
-    functions_admin::get_dirs(PHPWG_ROOT_PATH . 'themes')
+    functions_admin::get_dirs('./themes')
 );
 
 // +-----------------------------------------------------------------------+
@@ -182,7 +182,7 @@ $template->set_filenames([
          => 'extend_for_templates.tpl',
 ]);
 
-$base_url = PHPWG_ROOT_PATH . 'admin.php?page=extend_for_templates';
+$base_url = './admin.php?page=extend_for_templates';
 
 $template->assign(
     [

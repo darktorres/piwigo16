@@ -61,7 +61,7 @@ $navigation .= '</a>';
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'list';
-require PHPWG_ROOT_PATH . 'admin/inc/albums_tab.php';
+require __DIR__ . '/../admin/inc/albums_tab.php';
 
 // +-----------------------------------------------------------------------+
 // |                    virtual categories management                      |
@@ -125,7 +125,7 @@ if (isset($_GET['parent_id'])) {
 // +-----------------------------------------------------------------------+
 $template->set_filename('categories', 'cat_list.tpl');
 
-$form_action = PHPWG_ROOT_PATH . 'admin.php?page=cat_list';
+$form_action = './admin.php?page=cat_list';
 
 if (isset($_GET['parent_id'])) {
     $form_action .= '&amp;parent_id=' . $_GET['parent_id'];

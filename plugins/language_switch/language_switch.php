@@ -49,7 +49,7 @@ function language_controller_switch(): void
         }
 
         if (! empty($_GET['lang']) and
-            file_exists(PHPWG_ROOT_PATH . 'language/' . $_GET['lang'] . '/common.lang.php')
+            file_exists('./language/' . $_GET['lang'] . '/common.lang.php')
         ) {
             if (functions_user::is_a_guest() or
                 functions_user::is_generic()
@@ -84,7 +84,7 @@ function language_controller_switch(): void
 
         functions::load_language(
             'lang',
-            PHPWG_ROOT_PATH . PWG_LOCAL_DIR,
+            './' . PWG_LOCAL_DIR,
             [
                 'language' => $user['language'],
                 'no_fallback' => true,

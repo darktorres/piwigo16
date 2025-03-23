@@ -62,7 +62,7 @@ if (file_exists(dirname(__FILE__) . '/skins/' . $conf['modus_theme']['skin'] . '
 
 if (! $conf['compiled_template_cache_language']) {
     functions::load_language('theme.lang', dirname(__FILE__) . '/');
-    functions::load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
+    functions::load_language('lang', './' . PWG_LOCAL_DIR, [
         'no_fallback' => true,
         'local' => true,
     ]);
@@ -71,7 +71,7 @@ if (! $conf['compiled_template_cache_language']) {
 if (isset($_COOKIE['caps'])) {
     setcookie('caps', '', 0, functions_cookie::cookie_path());
     functions_session::pwg_set_session_var('caps', explode('x', $_COOKIE['caps']));
-    /*file_put_contents(PHPWG_ROOT_PATH.$conf['data_location'].'tmp/modus.log', implode("\t", array(
+    /*file_put_contents('./'.$conf['data_location'].'tmp/modus.log', implode("\t", array(
         date("Y-m-d H:i:s"), $_COOKIE['caps'], $_SERVER['HTTP_USER_AGENT']
         ))."\n", FILE_APPEND);*/
 }

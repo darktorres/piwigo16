@@ -26,8 +26,8 @@ use Piwigo\inc\SrcImage;
 // |                           initialization                              |
 // +-----------------------------------------------------------------------+
 define('PHPWG_ROOT_PATH', './');
-require_once PHPWG_ROOT_PATH . 'inc/common.php';
-require_once PHPWG_ROOT_PATH . 'inc/functions_comment.php';
+require_once __DIR__ . '/inc/common.php';
+require_once __DIR__ . '/inc/functions_comment.php';
 
 if (! $conf['activate_comments']) {
     functions_html::page_not_found(null);
@@ -38,7 +38,7 @@ if (! $conf['activate_comments']) {
 // +-----------------------------------------------------------------------+
 functions_user::check_status(ACCESS_GUEST);
 
-$url_self = PHPWG_ROOT_PATH . 'comments.php' . functions_url::get_query_string_diff(['delete', 'edit', 'validate', 'pwg_token']);
+$url_self = './comments.php' . functions_url::get_query_string_diff(['delete', 'edit', 'validate', 'pwg_token']);
 
 $sort_order = [
     'DESC' => functions::l10n('descending'),
@@ -296,7 +296,7 @@ $template->set_filenames([
 ]);
 $template->assign(
     [
-        'F_ACTION' => PHPWG_ROOT_PATH . 'comments.php',
+        'F_ACTION' => './comments.php',
         'F_KEYWORD' => isset($_GET['keyword']) ? htmlspecialchars(stripslashes($_GET['keyword'])) : '',
         'F_AUTHOR' => isset($_GET['author']) ? htmlspecialchars(stripslashes($_GET['author'])) : '',
     ]
@@ -403,7 +403,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 
 list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
 
-$url = PHPWG_ROOT_PATH . 'comments.php' . functions_url::get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
+$url = './comments.php' . functions_url::get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
 
 $navbar = functions::create_navigation_bar(
     $url,
@@ -538,7 +538,7 @@ if (! isset($themeconf['hide_menu_on']) or
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+
-require PHPWG_ROOT_PATH . 'inc/page_header.php';
+require __DIR__ . '/inc/page_header.php';
 functions_plugins::trigger_notify('loc_end_comments');
 functions_html::flush_page_messages();
 
@@ -547,4 +547,4 @@ if (count($comments) > 0) {
 }
 
 $template->pparse('comments');
-require PHPWG_ROOT_PATH . 'inc/page_tail.php';
+require __DIR__ . '/inc/page_tail.php';

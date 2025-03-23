@@ -72,7 +72,7 @@ final class RVTS
             $page['root_path'] = functions_url::get_absolute_root_url(false);
             $page['body_id'] = 'scroll';
             global $user, $template, $conf;
-            require PHPWG_ROOT_PATH . 'inc/category_default.php';
+            require __DIR__ . '/../../inc/category_default.php';
         }
     }
 

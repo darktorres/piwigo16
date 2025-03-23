@@ -149,7 +149,7 @@ if (! empty($edited_file)) {
 
 $template->assign(
     [
-        'F_ACTION' => PHPWG_ROOT_PATH . 'admin.php?page=plugin-LocalFilesEditor-' . $page['tab'],
+        'F_ACTION' => './admin.php?page=plugin-LocalFilesEditor-' . $page['tab'],
         'LOCALEDIT_PATH' => LOCALEDIT_PATH,
         'PWG_TOKEN' => functions::get_pwg_token(),
         'CODEMIRROR_MODE' => $codemirror_mode,

@@ -38,7 +38,7 @@ if (isset($_FILES['watermarkImage']) and
             'PNG'
         );
     } else {
-        $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks';
+        $upload_dir = './' . PWG_LOCAL_DIR . 'watermarks';
 
         if (functions::mkgetdir($upload_dir, functions::MKGETDIR_DEFAULT & ~functions::MKGETDIR_DIE_ON_ERROR)) {
             // file name may include exotic chars like single quote, we need a safe name
@@ -46,12 +46,12 @@ if (isset($_FILES['watermarkImage']) and
 
             // we need existing watermarks to avoid overwriting one
             $watermark_files = [];
-            $glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png');
+            $glob = glob('./' . PWG_LOCAL_DIR . 'watermarks/*.png');
 
             if ($glob !== false) {
                 foreach ($glob as $file) {
                     $watermark_files[] = functions::get_filename_wo_extension(
-                        substr($file, strlen(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/'))
+                        substr($file, strlen('./' . PWG_LOCAL_DIR . 'watermarks/'))
                     );
                 }
             }
@@ -59,7 +59,7 @@ if (isset($_FILES['watermarkImage']) and
             $file_path = $upload_dir . '/' . functions_admin::get_watermark_filename($watermark_files, $new_name);
 
             if (move_uploaded_file($_FILES['watermarkImage']['tmp_name'], $file_path)) {
-                $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
+                $pwatermark['file'] = substr($file_path, strlen('./'));
             } else {
                 $page['errors'][] = $errors['watermarkImage'] = "{$file_path} " . functions::l10n('no write access');
             }

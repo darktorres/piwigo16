@@ -28,7 +28,7 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'search';
-require PHPWG_ROOT_PATH . 'admin/inc/albums_tab.php';
+require __DIR__ . '/../admin/inc/albums_tab.php';
 
 // +-----------------------------------------------------------------------+
 // | Get Categories                                                        |

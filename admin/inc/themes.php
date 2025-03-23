@@ -395,7 +395,7 @@ final class themes
                     } else {
                         global $conf;
                         $theme['screenshot'] =
-                          PHPWG_ROOT_PATH . 'admin/themes/'
+                          './admin/themes/'
                           . functions_user::userprefs_get_param('admin_theme', 'roma')
                           . '/images/missing_screenshot.png'
                         ;

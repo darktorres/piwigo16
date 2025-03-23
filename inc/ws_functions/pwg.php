@@ -709,7 +709,7 @@ final class pwg
         array $param,
         PwgServer &$service
     ): array {
-        require_once PHPWG_ROOT_PATH . 'admin/inc/functions_history.php';
+        require_once __DIR__ . '/../../admin/inc/functions_history.php';
 
         global $conf;
 
@@ -818,7 +818,7 @@ final class pwg
 
             // Remove redirect for ajax //
             // \Piwigo\inc\functions::redirect(
-            //   PHPWG_ROOT_PATH.'admin.php?page=history&search_id='.$search_id
+            //   './admin.php?page=history&search_id='.$search_id
             //   );
         } else {
             $page['errors'][] = functions::l10n('Empty query. No criteria has been entered.');
@@ -1013,7 +1013,7 @@ final class pwg
             }
 
             $user_string .= '&nbsp;<a href="';
-            $user_string .= PHPWG_ROOT_PATH . 'admin.php?page=history';
+            $user_string .= './admin.php?page=history';
             $user_string .= '&amp;search_id=' . $search_id;
             $user_string .= '&amp;user_id=' . $line['user_id'];
             $user_string .= '">+</a>';
@@ -1037,7 +1037,7 @@ final class pwg
             $cat_name = '';
 
             if (isset($line['image_id'])) {
-                $image_edit_string = PHPWG_ROOT_PATH . 'admin.php?page=photo-' . $line['image_id'];
+                $image_edit_string = './admin.php?page=photo-' . $line['image_id'];
                 $picture_url = functions_url::make_picture_url(
                     [
                         'image_id' => $line['image_id'],

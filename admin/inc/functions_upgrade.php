@@ -229,7 +229,7 @@ final class functions_upgrade
      */
     public static function get_available_upgrade_ids(): array
     {
-        // $upgrades_path = PHPWG_ROOT_PATH.'install/db';
+        // $upgrades_path = './install/db';
 
         // $available_upgrade_ids = array();
         // $contents = opendir($upgrades_path);

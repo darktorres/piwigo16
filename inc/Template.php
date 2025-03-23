@@ -135,7 +135,7 @@ final class Template
         $this->smarty->force_compile = $conf['template_force_compile'];
 
         if (! isset($conf['data_dir_checked'])) {
-            $dir = PHPWG_ROOT_PATH . $conf['data_location'];
+            $dir = './' . $conf['data_location'];
             functions::mkgetdir($dir, functions::MKGETDIR_DEFAULT & ~functions::MKGETDIR_DIE_ON_ERROR);
 
             if (! is_writable($dir)) {
@@ -155,7 +155,7 @@ final class Template
             }
         }
 
-        $compile_dir = PHPWG_ROOT_PATH . $conf['data_location'] . 'templates_c';
+        $compile_dir = './' . $conf['data_location'] . 'templates_c';
         functions::mkgetdir($compile_dir);
 
         $this->smarty->setCompileDir($compile_dir);
@@ -1205,14 +1205,14 @@ final class Template
         foreach ($smarty->getTemplateVars('themes') as $theme) {
             $f = PWG_LOCAL_DIR . 'css/' . $theme['id'] . '-rules.css';
 
-            if (file_exists(PHPWG_ROOT_PATH . $f)) {
+            if (file_exists('./' . $f)) {
                 $css[] = "{combine_css path='{$f}' order=10}";
             }
         }
 
         $f = PWG_LOCAL_DIR . 'css/rules.css';
 
-        if (file_exists(PHPWG_ROOT_PATH . $f)) {
+        if (file_exists('./' . $f)) {
             $css[] = "{combine_css path='{$f}' order=10}";
         }
 

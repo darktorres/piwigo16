@@ -20,7 +20,7 @@ if (isset($_POST['theme']) and
     $_POST['theme'] == '~common~'
 ) {
     $page['theme'] = $_POST['theme'];
-    $edited_file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'css/rules.css';
+    $edited_file = './' . PWG_LOCAL_DIR . 'css/rules.css';
 } else {
     if (isset($_GET['theme'])) {
         $page['theme'] = $_GET['theme'];
@@ -34,7 +34,7 @@ if (isset($_POST['theme']) and
         $page['theme'] = functions_user::get_default_theme();
     }
 
-    $edited_file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'css/' . $page['theme'] . '-rules.css';
+    $edited_file = './' . PWG_LOCAL_DIR . 'css/' . $page['theme'] . '-rules.css';
 }
 
 $template->assign('theme', $page['theme']);
@@ -47,7 +47,7 @@ if (file_exists($edited_file)) {
 
 $selected = 0;
 $value = '~common~';
-$file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'css/rules.css';
+$file = './' . PWG_LOCAL_DIR . 'css/rules.css';
 
 $options[$value] = (file_exists($file) ? '&#x2714;' : '&#x2718;') . ' local / css / rules.css';
 
@@ -90,7 +90,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
 $active_theme_options = [];
 
 foreach ($active_themes as $theme) {
-    $file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'css/' . $theme['id'] . '-rules.css';
+    $file = './' . PWG_LOCAL_DIR . 'css/' . $theme['id'] . '-rules.css';
 
     $label = (file_exists($file) ? '&#x2714;' : '&#x2718;') . ' ' . $theme['name'];
 
@@ -112,7 +112,7 @@ if (count($active_theme_options) > 0) {
 $inactive_theme_options = [];
 
 foreach ($inactive_themes as $theme) {
-    $file = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'css/' . $theme['id'] . '-rules.css';
+    $file = './' . PWG_LOCAL_DIR . 'css/' . $theme['id'] . '-rules.css';
 
     $inactive_theme_options[$theme['id']] = (file_exists($file) ? '&#x2714;' : '&#x2718;') . ' ' . $theme['name'];
 

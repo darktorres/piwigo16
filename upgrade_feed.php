@@ -20,18 +20,18 @@ if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
 
 define('PHPWG_ROOT_PATH', './');
 
-require PHPWG_ROOT_PATH . 'inc/config_default.php';
+require __DIR__ . '/inc/config_default.php';
 
-if (file_exists(PHPWG_ROOT_PATH . 'local/config/config.php')) {
-    require PHPWG_ROOT_PATH . 'local/config/config.php';
+if (file_exists(__DIR__ . '/local/config/config.php')) {
+    require __DIR__ . '/local/config/config.php';
 }
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
-require PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.php';
-require_once PHPWG_ROOT_PATH . 'inc/functions.php';
+require __DIR__ . PWG_LOCAL_DIR . '/config/database.php';
+require_once __DIR__ . '/inc/functions.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when it is not ok                               |
@@ -41,7 +41,7 @@ if (! $conf['check_upgrade_feed']) {
     die('upgrade feed is not active');
 }
 
-define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
+define('UPGRADES_PATH', './install/db');
 
 // +-----------------------------------------------------------------------+
 // |                         Database connection                           |

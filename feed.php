@@ -17,7 +17,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 define('PHPWG_ROOT_PATH', './');
-require_once PHPWG_ROOT_PATH . 'inc/common.php';
+require_once __DIR__ . '/inc/common.php';
 
 // +-----------------------------------------------------------------------+
 // |                            initialization                             |
@@ -147,7 +147,7 @@ foreach ($dates as $date_detail) { // for each recent post date we create a feed
     $rss->addItem($item);
 }
 
-$fileName = PHPWG_ROOT_PATH . $conf['data_location'] . 'tmp';
+$fileName = './' . $conf['data_location'] . 'tmp';
 functions::mkgetdir($fileName); // just in case
 $fileName .= '/feed.xml';
 // send XML feed

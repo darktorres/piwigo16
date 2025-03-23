@@ -283,7 +283,7 @@ final class ws_functions
          */
         $service = &$arr[0];
 
-        $ws_functions_root = PHPWG_ROOT_PATH . 'inc/ws_functions/';
+        $ws_functions_root = './inc/ws_functions/';
 
         $f_params = [
             'f_min_rate' => [

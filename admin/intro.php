@@ -68,7 +68,7 @@ if ($page['nb_photos_total'] >= 100000) { // but has not been calculated on a bi
 }
 
 if ($nb_orphans > 0) {
-    $orphans_url = PHPWG_ROOT_PATH . 'admin.php?page=batch_manager&amp;filter=prefilter-no_album';
+    $orphans_url = './admin.php?page=batch_manager&amp;filter=prefilter-no_album';
 
     $message = '<a href="' . $orphans_url . '"><i class="icon-heart-broken"></i>';
     $message .= functions::l10n('Orphans') . '</a>';
@@ -86,7 +86,7 @@ $query = <<<SQL
 list($locked_album) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 if ($locked_album > 0) {
-    $locked_album_url = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&section=visible';
+    $locked_album_url = './admin.php?page=cat_options&section=visible';
 
     $message = '<a href="' . $locked_album_url . '"><i class="icon-cone"></i>';
     $message .= functions::l10n('Locked album') . '</a>';
@@ -198,7 +198,7 @@ $template->assign(
         'NB_VIEWS' => functions_admin::number_format_human_readable($nb_views),
         'NB_PLUGINS' => count($pwg_loaded_plugins),
         'STORAGE_USED' => str_replace(' ', '&nbsp;', functions::l10n('%sGB', number_format($du_gb, $du_decimals))),
-        'U_QUICK_SYNC' => PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . functions::get_pwg_token(),
+        'U_QUICK_SYNC' => './admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . functions::get_pwg_token(),
         'CHECK_FOR_UPDATES' => $conf['dashboard_check_for_updates'],
     ]
 );

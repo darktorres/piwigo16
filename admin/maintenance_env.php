@@ -201,7 +201,7 @@ switch ($action) {
             } elseif (version_compare($versions['current'], $versions['latest']) < 0) {
                 $page['infos'][] = functions::l10n('A new version of Piwigo is available.');
 
-                $update_url = PHPWG_ROOT_PATH . 'admin.php?page=updates';
+                $update_url = './admin.php?page=updates';
                 $page['infos'][] = '<a href="' . $update_url . '">' . functions::l10n('Update to Piwigo %s', $versions['latest']) . '</a>';
             } else {
                 $page['infos'][] = functions::l10n('You are running the latest version of Piwigo.');

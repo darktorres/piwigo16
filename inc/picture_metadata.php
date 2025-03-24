@@ -34,7 +34,7 @@ if ($conf['show_exif']) {
         foreach ($conf['show_exif_fields'] as $field) {
             if (strpos($field, ';') === false) {
                 // template cannot deal with an array as value, we skip it
-                if (isset($exif[$field]) and
+                if (isset($exif[$field]) &&
                     ! is_array($exif[$field])
                 ) {
                     $key = $field;
@@ -49,7 +49,7 @@ if ($conf['show_exif']) {
                 $tokens = explode(';', $field);
 
                 // template cannot deal with an array as value, we skip it
-                if (isset($exif[$field]) and
+                if (isset($exif[$field]) &&
                     ! is_array($exif[$field])
                 ) {
                     $key = $tokens[1];

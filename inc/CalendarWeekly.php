@@ -102,20 +102,20 @@ final class CalendarWeekly extends CalendarBase
 
         $res = '';
 
-        if (isset($date[CalendarBase::CYEAR]) and
+        if (isset($date[CalendarBase::CYEAR]) &&
             $date[CalendarBase::CYEAR] !== 'any'
         ) {
             $y = $date[CalendarBase::CYEAR];
             $res = " AND {$this->date_field} BETWEEN '{$y}-01-01' AND '{$y}-12-31 23:59:59'";
         }
 
-        if (isset($date[CalendarBase::CWEEK]) and
+        if (isset($date[CalendarBase::CWEEK]) &&
             $date[CalendarBase::CWEEK] !== 'any'
         ) {
             $res .= ' AND ' . $this->calendar_levels[CalendarBase::CWEEK]['sql'] . '=' . $date[CalendarBase::CWEEK];
         }
 
-        if (isset($date[CalendarBase::CDAY]) and
+        if (isset($date[CalendarBase::CDAY]) &&
             $date[CalendarBase::CDAY] !== 'any'
         ) {
             $res .= ' AND ' . $this->calendar_levels[CalendarBase::CDAY]['sql'] . '=' . $date[CalendarBase::CDAY];

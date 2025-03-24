@@ -540,7 +540,7 @@ final class functions
 
         $update_last_visit = false;
 
-        if (empty($user['last_visit']) or
+        if (empty($user['last_visit']) ||
             strtotime($user['last_visit']) < time() - $conf['session_length']
         ) {
             $update_last_visit = true;
@@ -579,7 +579,7 @@ final class functions
         // It would be "cleaner" to increase length of history.IP to 50 chars, but
         // the alter table is very long on such a big table. We should plan this
         // for a future version, once history table is kept "smaller".
-        if (strpos($ip, ':') !== false and
+        if (strpos($ip, ':') !== false &&
             strlen($ip) > 15
         ) {
             $ip = substr($ip, 0, 15);
@@ -594,7 +594,7 @@ final class functions
 
             $conf['history_sections_cache'] = self::safe_unserialize($conf['history_sections_cache']);
 
-            if (in_array($page['section'], ($conf['history_sections_cache'] ?: [])) or
+            if (in_array($page['section'], ($conf['history_sections_cache'] ?: [])) ||
                 in_array(strtolower($page['section']), array_map(strtolower(...), $conf['history_sections_cache'] ?: []))
             ) {
                 $section = $page['section'];
@@ -636,7 +636,7 @@ final class functions
             functions_history::history_summarize(50000);
         }
 
-        if ($conf['history_autopurge_every'] > 0 and
+        if ($conf['history_autopurge_every'] > 0 &&
             $history_id % $conf['history_autopurge_every'] == 0
         ) {
             require_once __DIR__ . '/../admin/inc/functions_history.php';
@@ -655,15 +655,15 @@ final class functions
         global $user;
 
         // in case of uploadAsync, do not log the automatic login as an independent activity
-        if (isset($_REQUEST['method']) and
-            $_REQUEST['method'] == 'pwg.images.uploadAsync' and
+        if (isset($_REQUEST['method']) &&
+            $_REQUEST['method'] == 'pwg.images.uploadAsync' &&
             $action == 'login'
         ) {
             return;
         }
 
-        if (isset($_REQUEST['method']) and
-            $_REQUEST['method'] == 'pwg.plugins.performAction' and
+        if (isset($_REQUEST['method']) &&
+            $_REQUEST['method'] == 'pwg.plugins.performAction' &&
             $_REQUEST['action'] != $action
         ) {
             // for example, if you "restore" a plugin, the internal sequence will perform deactivate/uninstall/install/activate.
@@ -682,7 +682,7 @@ final class functions
         } else {
             $details['script'] = self::script_basename();
 
-            if ($details['script'] == 'admin' and
+            if ($details['script'] == 'admin' &&
                 isset($_GET['page'])
             ) {
                 $details['script'] .= '/' . $_GET['page'];
@@ -697,36 +697,36 @@ final class functions
 
         $user_agent = null;
 
-        if ($object == 'user' and
-            $action == 'login' and
+        if ($object == 'user' &&
+            $action == 'login' &&
             isset($_SERVER['HTTP_USER_AGENT'])
         ) {
             $user_agent = strip_tags($_SERVER['HTTP_USER_AGENT']);
         }
 
-        if ($object == 'photo' and
-            $action == 'add' and
+        if ($object == 'photo' &&
+            $action == 'add' &&
             ! isset($details['sync'])
         ) {
             $details['added_with'] = 'app';
 
-            if (isset($_SERVER['HTTP_REFERER']) and
+            if (isset($_SERVER['HTTP_REFERER']) &&
                 preg_match('/page=photos_add/', $_SERVER['HTTP_REFERER'])
             ) {
                 $details['added_with'] = 'browser';
             }
         }
 
-        if (in_array($object, ['album', 'photo']) and
-            $action == 'delete' and
-            isset($_GET['page']) and
+        if (in_array($object, ['album', 'photo']) &&
+            $action == 'delete' &&
+            isset($_GET['page']) &&
             $_GET['page'] == 'site_update'
         ) {
             $details['sync'] = true;
         }
 
-        if ($object == 'tag' and
-            $action == 'delete' and
+        if ($object == 'tag' &&
+            $action == 'delete' &&
             isset($_POST['destination_tag'])
         ) {
             $details['action'] = 'merge';
@@ -1101,7 +1101,7 @@ final class functions
                 'local' => true,
             ]);
             $template = new Template('./themes', functions_user::get_default_theme());
-        } elseif (defined('IN_ADMIN') and
+        } elseif (defined('IN_ADMIN') &&
                   IN_ADMIN
         ) {
             $template = new Template('./themes', functions_user::get_default_theme());
@@ -1148,8 +1148,8 @@ final class functions
         global $conf;
 
         // with RefreshTime != 0, only html must be used
-        if ($conf['default_redirect_method'] == 'http' and
-            $refresh_time == 0 and
+        if ($conf['default_redirect_method'] == 'http' &&
+            $refresh_time == 0 &&
             ! headers_sent()
         ) {
             self::redirect_http($url);
@@ -1307,8 +1307,8 @@ final class functions
         $val = ($lang[$key] ?? null);
 
         if ($val === null) {
-            if ($conf['debug_l10n'] and
-                ! isset($lang[$key]) and
+            if ($conf['debug_l10n'] &&
+                ! isset($lang[$key]) &&
                 ! empty($key)
             ) {
                 trigger_error('[l10n] language key "' . $key . '" not defined', E_USER_WARNING);
@@ -1338,7 +1338,7 @@ final class functions
 
         return sprintf(
             self::l10n((
-                ($decimal > 1 or ($decimal == 0 and $lang_info['zero_plural']))
+                ($decimal > 1 || ($decimal == 0 && $lang_info['zero_plural']))
                 ? $plural_key
                 : $singular_key
             )),
@@ -1450,7 +1450,7 @@ final class functions
         $query = trim($query) . ';';
         $result = functions_mysqli::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_num_rows($result) == 0 and
+        if (functions_mysqli::pwg_db_num_rows($result) == 0 &&
             ! empty($condition)
         ) {
             functions_html::fatal_error('No configuration data');
@@ -1756,7 +1756,7 @@ final class functions
             if (! empty($_SERVER[$value])) {
                 $filename = strtolower($_SERVER[$value]);
 
-                if ($conf['php_extension_in_urls'] and
+                if ($conf['php_extension_in_urls'] &&
                     self::get_extension($filename) !== 'php'
                 ) {
                     continue;
@@ -1869,7 +1869,7 @@ final class functions
 
         $dirname .= 'language/';
 
-        $default_language = (defined('PHPWG_INSTALLED') and ! defined('UPGRADES_PATH')) ?
+        $default_language = (defined('PHPWG_INSTALLED') && ! defined('UPGRADES_PATH')) ?
             functions_user::get_default_language() : PHPWG_DEFAULT_LANGUAGE;
 
         // construct list of potential languages
@@ -1994,13 +1994,13 @@ final class functions
             return $str;
         }
 
-        if ($source_charset == 'iso-8859-1' and
+        if ($source_charset == 'iso-8859-1' &&
             $dest_charset == 'utf-8'
         ) {
             return mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
         }
 
-        if ($source_charset == 'utf-8' and
+        if ($source_charset == 'utf-8' &&
             $dest_charset == 'iso-8859-1'
         ) {
             return mb_convert_encoding($str, 'ISO-8859-1', 'UTF-8');
@@ -2052,9 +2052,9 @@ final class functions
         $time = microtime(true);
         $key = explode(':', $key);
 
-        if (count($key) != 3 or
-            $key[0] > $time - (float) $key[1] or // page must have been retrieved more than X sec ago
-            $key[0] < $time - 3600 or // 60 minutes expiration
+        if (count($key) != 3 ||
+            $key[0] > $time - (float) $key[1] || // page must have been retrieved more than X sec ago
+            $key[0] < $time - 3600 || // 60 minutes expiration
             hash_hmac(
                 'md5',
                 $key[0] . substr($_SERVER['REMOTE_ADDR'], 0, 5) . $key[1] . $additional_data_to_hash,
@@ -2086,9 +2086,9 @@ final class functions
         $pages_around = $conf['paginate_pages_around'];
         $start_str = $clean_url ? '/' . $param_name . '-' : (strpos($url, '?') === false ? '?' : '&amp;') . $param_name . '=';
 
-        if (! isset($start) or
-            ! is_numeric($start) or
-            (is_numeric($start) and $start < 0)
+        if (! isset($start) ||
+            ! is_numeric($start) ||
+            (is_numeric($start) && $start < 0)
         ) {
             $start = 0;
         }
@@ -2232,7 +2232,7 @@ final class functions
             }
 
             foreach ($param_value as $key => $item_to_check) {
-                if (! preg_match(PATTERN_ID, (string) $key) or
+                if (! preg_match(PATTERN_ID, (string) $key) ||
                     ! preg_match($pattern, $item_to_check)
                 ) {
                     functions_html::fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"');
@@ -2352,7 +2352,7 @@ final class functions
             return false;
         }
 
-        if (strncmp($url, 'http://', 7) !== 0 and
+        if (strncmp($url, 'http://', 7) !== 0 &&
             strncmp($url, 'https://', 8) !== 0
         ) {
             return false;
@@ -2450,13 +2450,13 @@ final class functions
     {
         global $conf;
 
-        if (! isset($conf['lounge_active']) or
+        if (! isset($conf['lounge_active']) ||
             ! $conf['lounge_active']
         ) {
             return;
         }
 
-        if (isset($_REQUEST['method']) and
+        if (isset($_REQUEST['method']) &&
             in_array($_REQUEST['method'], ['pwg.images.upload', 'pwg.images.uploadAsync'])
         ) {
             return;
@@ -2669,8 +2669,8 @@ final class functions
     {
         global $conf, $page;
 
-        if ($conf['question_mark_in_urls'] == false and
-            isset($_SERVER['PATH_INFO']) and
+        if ($conf['question_mark_in_urls'] == false &&
+            isset($_SERVER['PATH_INFO']) &&
             ! empty($_SERVER['PATH_INFO'])
         ) {
             $req = $_SERVER['PATH_INFO'];
@@ -2747,13 +2747,13 @@ final class functions
             $params = $page['derivative_params'] = self::parse_custom_params($deriv);
             ImageStdParams::apply_global($params);
 
-            if ($params->sizing->ideal_size[0] < 20 or
+            if ($params->sizing->ideal_size[0] < 20 ||
                 $params->sizing->ideal_size[1] < 20
             ) {
                 self::ierror('Invalid size', 400);
             }
 
-            if ($params->sizing->max_crop < 0 or
+            if ($params->sizing->max_crop < 0 ||
                 $params->sizing->max_crop > 1
             ) {
                 self::ierror('Invalid crop', 400);
@@ -2887,7 +2887,7 @@ final class functions
     ): void {
         global $page;
 
-        if (isset($_GET['ajaxload']) and
+        if (isset($_GET['ajaxload']) &&
             $_GET['ajaxload'] == 'true'
         ) {
             echo json_encode([
@@ -2984,7 +2984,7 @@ final class functions
         // password request is not possible for guest/generic users
         $status = $userdata['status'];
 
-        if (functions_user::is_a_guest($status) or
+        if (functions_user::is_a_guest($status) ||
             functions_user::is_generic($status)
         ) {
             $page['errors'][] = self::l10n('Password reset is not allowed for this user');
@@ -3100,7 +3100,7 @@ final class functions
                     return false;
                 }
 
-                if (functions_user::is_a_guest($row['status']) or
+                if (functions_user::is_a_guest($row['status']) ||
                     functions_user::is_generic($row['status'])
                 ) {
                     $page['errors'][] = self::l10n('Password reset is not allowed for this user');
@@ -3221,7 +3221,7 @@ final class functions
             $show_original &= ! ($derivative->same_as_source());
 
             // in case we do not display the sizes icon, we only add the selected size to unique_derivatives
-            if ($conf['picture_sizes_icon'] or
+            if ($conf['picture_sizes_icon'] ||
                 $type == $deriv_type
             ) {
                 $unique_derivatives[$type] = $derivative;
@@ -3344,19 +3344,19 @@ final class functions
             unset($_POST['username']);
         }
 
-        if ($conf['allow_user_customization'] or
+        if ($conf['allow_user_customization'] ||
             defined('IN_ADMIN')
         ) {
             $int_pattern = '/^\d+$/';
 
-            if (empty($_POST['nb_image_page']) or
+            if (empty($_POST['nb_image_page']) ||
                 ! preg_match($int_pattern, $_POST['nb_image_page'])
             ) {
                 $errors[] = self::l10n('The number of photos per page must be a not null scalar');
             }
 
             // periods must be integer values, they represents number of days
-            if (! preg_match($int_pattern, $_POST['recent_period']) or
+            if (! preg_match($int_pattern, $_POST['recent_period']) ||
                 $_POST['recent_period'] < 0
             ) {
                 $errors[] = self::l10n('Recent period must be a positive integer value');
@@ -3425,7 +3425,7 @@ final class functions
 
                 // username is updated only if allowed
                 if (! empty($_POST['username'])) {
-                    if ($_POST['username'] != $userdata['username'] and
+                    if ($_POST['username'] != $userdata['username'] &&
                         functions_user::get_userid($_POST['username'])
                     ) {
                         $page['errors'][] = self::l10n('this login is already used');
@@ -3474,7 +3474,7 @@ final class functions
                 $activity_details_tables[] = 'users';
             }
 
-            if ($conf['allow_user_customization'] or
+            if ($conf['allow_user_customization'] ||
                 defined('IN_ADMIN')
             ) {
                 // update user "additional" information (specific to Piwigo)
@@ -3562,7 +3562,7 @@ final class functions
         $template->assign('template_options', self::get_pwg_themes());
 
         foreach (self::get_languages() as $language_code => $language_name) {
-            if (isset($_POST['submit']) or
+            if (isset($_POST['submit']) ||
                 $userdata['language'] == $language_code
             ) {
                 $template->assign('language_selection', $language_code);

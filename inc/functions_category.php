@@ -73,7 +73,7 @@ final class functions_category
             SQL;
 
         // Always expand when filter is activated
-        if (! $user['expand'] and
+        if (! $user['expand'] &&
             ! $filter['enabled']
         ) {
             $where = '(id_uppercat IS NULL';
@@ -173,7 +173,7 @@ final class functions_category
         foreach ($cat as $k => $v) {
             // If the field is true or false, the variable is transformed into a
             // boolean value.
-            if ($cat[$k] == 'true' or
+            if ($cat[$k] == 'true' ||
                 $cat[$k] == 'false'
             ) {
                 $cat[$k] = functions_mysqli::get_boolean($cat[$k]);
@@ -409,7 +409,7 @@ final class functions_category
         $display_text = '';
 
         if ($cat_count_images > 0) {
-            if ($cat_nb_images > 0 and
+            if ($cat_nb_images > 0 &&
                 $cat_nb_images < $cat_count_images
             ) {
                 $display_text .= self::get_display_images_count($cat_nb_images, $cat_nb_images, 0, $short_message, $separator) . $separator;
@@ -420,7 +420,7 @@ final class functions_category
             //at least one image direct or indirect
             $display_text .= functions::l10n_dec('%d photo', '%d photos', $cat_count_images);
 
-            if ($cat_count_categories == 0 or
+            if ($cat_count_categories == 0 ||
                 $cat_nb_images == $cat_count_images
             ) {
                 //no descendant categories or descendants do not contain images
@@ -571,7 +571,7 @@ final class functions_category
                 $parent['count_images'] += $cat['nb_images'];
                 $parent['count_categories']++;
 
-                if (empty($parent['max_date_last']) or
+                if (empty($parent['max_date_last']) ||
                     $parent['max_date_last'] < $cat['date_last']
                 ) {
                     $parent['max_date_last'] = $cat['date_last'];
@@ -670,7 +670,7 @@ final class functions_category
         $query .= (empty($extra_images_where_sql) ? '' : " AND ({$extra_images_where_sql})\n");
         $query .= "GROUP BY id\n";
 
-        if ($mode == 'AND' and
+        if ($mode == 'AND' &&
             count($cat_ids) > 1
         ) {
             $count_cat_ids = count($cat_ids);
@@ -818,7 +818,7 @@ final class functions_category
             // 3. number of sub-albums containing photos
             //
             // Option 3 seems more appropriate here.
-            if (! empty($cat['id_uppercat']) and
+            if (! empty($cat['id_uppercat']) &&
                 $cats[$idx]['count_images'] > 0
             ) {
                 foreach (array_slice(explode(',', $cat['uppercats']), 0, -1) as $uppercat_id) {

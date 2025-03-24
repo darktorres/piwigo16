@@ -555,7 +555,7 @@ final class functions_modus
                     break;
                 }
 
-                if ($size[0] <= $available_size[0] and
+                if ($size[0] <= $available_size[0] &&
                     $size[1] <= $available_size[1]
                 ) {
                     $selected_derivative = $derivative;
@@ -593,7 +593,7 @@ final class functions_modus
                 ]);
             }
 
-            if (isset($picture['next']) and
+            if (isset($picture['next']) &&
                 $picture['next']['src_image']->is_original()
             ) {
                 $next_best = null;
@@ -605,7 +605,7 @@ final class functions_modus
                         break;
                     }
 
-                    if ($size[0] <= $available_size[0] and
+                    if ($size[0] <= $available_size[0] &&
                         $size[1] <= $available_size[1]
                     ) {
                         $next_best = $derivative;

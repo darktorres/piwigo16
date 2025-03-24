@@ -35,7 +35,7 @@ $page['meta_robots'] = [
 ];
 require __DIR__ . '/inc/page_header.php';
 
-if (isset($_GET['page']) and
+if (isset($_GET['page']) &&
     preg_match('/^[a-z_]*$/', $_GET['page'])
 ) {
     $help_content =

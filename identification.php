@@ -49,7 +49,7 @@ $redirect_to = '';
 if (! empty($_GET['redirect'])) {
     $redirect_to = urldecode($_GET['redirect']);
 
-    if ($conf['guest_access'] and
+    if ($conf['guest_access'] &&
         ! isset($_GET['hide_redirect_error'])
     ) {
         $page['errors'][] = functions::l10n('You are not authorized to access the requested page');
@@ -65,7 +65,7 @@ if (isset($_POST['login'])) {
         }
 
         $redirect_to = isset($_POST['redirect']) ? urldecode($_POST['redirect']) : '';
-        $remember_me = isset($_POST['remember_me']) and $_POST['remember_me'] == 1;
+        $remember_me = isset($_POST['remember_me']) && $_POST['remember_me'] == 1;
 
         if (functions_user::try_log_user($_POST['username'], $_POST['password'], $remember_me)) {
             // security (level 2): force redirect within Piwigo. We redirect to
@@ -125,7 +125,7 @@ if (! $conf['gallery_locked']) {
 $themeconf = $template->get_template_vars('themeconf');
 
 if (! $conf['gallery_locked'] &&
-   (! isset($themeconf['hide_menu_on']) or ! in_array('theIdentificationPage', $themeconf['hide_menu_on']))
+   (! isset($themeconf['hide_menu_on']) || ! in_array('theIdentificationPage', $themeconf['hide_menu_on']))
 ) {
     menubar::initialize_menu();
 }

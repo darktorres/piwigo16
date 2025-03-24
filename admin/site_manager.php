@@ -32,7 +32,7 @@ if (! $conf['enable_synchronization']) {
 
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-if (! empty($_POST) or
+if (! empty($_POST) ||
     isset($_GET['action'])
 ) {
     functions::check_pwg_token();
@@ -59,7 +59,7 @@ $tabsheet->assign();
 // +-----------------------------------------------------------------------+
 // |                        new site creation form                         |
 // +-----------------------------------------------------------------------+
-if (isset($_POST['submit']) and
+if (isset($_POST['submit']) &&
     ! empty($_POST['galleries_url'])
 ) {
     $is_remote = functions_url::url_is_remote($_POST['galleries_url']);
@@ -108,13 +108,13 @@ if (isset($_POST['submit']) and
 // +-----------------------------------------------------------------------+
 // |                            actions on site                            |
 // +-----------------------------------------------------------------------+
-if (isset($_GET['site']) and
+if (isset($_GET['site']) &&
     is_numeric($_GET['site'])
 ) {
     $page['site'] = $_GET['site'];
 }
 
-if (isset($_GET['action']) and
+if (isset($_GET['action']) &&
     isset($page['site'])
 ) {
     $query = <<<SQL

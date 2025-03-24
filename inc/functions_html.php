@@ -128,7 +128,7 @@ final class functions_html
                 $output .= '<span>' . $conf['level_separator'] . '</span>';
             }
 
-            if (! isset($url) or
+            if (! isset($url) ||
                 $single_link
             ) {
                 $output .= $cat['name'];
@@ -151,7 +151,7 @@ final class functions_html
             }
         }
 
-        if ($single_link and
+        if ($single_link &&
             isset($single_url)
         ) {
             $output .= '</a>';
@@ -249,7 +249,7 @@ final class functions_html
             functions_url::get_root_url() . 'identification.php?redirect='
             . urlencode(urlencode($_SERVER['REQUEST_URI']));
 
-        if (isset($user) and
+        if (isset($user) &&
             ! functions_user::is_a_guest()
         ) {
             self::set_status_header(401);
@@ -260,7 +260,7 @@ final class functions_html
             echo '<a href="' . functions_url::make_index_url() . '">' . functions::l10n('Home') . '</a></div>';
             echo str_repeat(' ', 512); //IE6 doesn't error output if below a size
             exit();
-        } elseif (! $conf['guest_access'] and
+        } elseif (! $conf['guest_access'] &&
                   functions_user::is_a_guest()
         ) {
             functions::redirect_http($login_url);
@@ -646,13 +646,13 @@ final class functions_html
             $details[] = functions::l10n('%d visits', $info['hit']);
         }
 
-        if ($conf['rate'] and
+        if ($conf['rate'] &&
             ! empty($info['rating_score'])
         ) {
             $details[] = functions::l10n('rating score %s', $info['rating_score']);
         }
 
-        if (isset($info['nb_comments']) and
+        if (isset($info['nb_comments']) &&
             $info['nb_comments'] != 0
         ) {
             $details[] = functions::l10n_dec('%d comment', '%d comments', $info['nb_comments']);

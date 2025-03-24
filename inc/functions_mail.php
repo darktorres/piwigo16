@@ -243,7 +243,7 @@ final class functions_mail
 
         // Treatment with current user
         // Language of current user is saved (it's considered OK on first call)
-        if (! isset($switch_lang['initialisation']) and
+        if (! isset($switch_lang['initialisation']) &&
             ! isset($switch_lang['language'][$user['language']])
         ) {
             $switch_lang['initialisation'] = true;
@@ -336,7 +336,7 @@ final class functions_mail
         bool $send_technical_details = true,
         string|null $group_id = null
     ): bool {
-        if (empty($subject) or
+        if (empty($subject) ||
             empty($content)
         ) {
             return false;
@@ -344,7 +344,7 @@ final class functions_mail
 
         global $conf, $user;
 
-        if (is_array($subject) or
+        if (is_array($subject) ||
             is_array($content)
         ) {
             self::switch_lang_to(functions_user::get_default_language());
@@ -403,7 +403,7 @@ final class functions_mail
         bool $only_webmasters = false,
         ?string $group_id = null
     ): bool {
-        if (empty($args['content']) and
+        if (empty($args['content']) &&
             empty($tpl)
         ) {
             return false;
@@ -485,8 +485,8 @@ final class functions_mail
         array $args = [],
         array $tpl = []
     ): bool|int {
-        if (empty($group_id) or
-           (empty($args['content']) and empty($tpl))
+        if (empty($group_id) ||
+           (empty($args['content']) && empty($tpl))
         ) {
             return false;
         }
@@ -602,8 +602,8 @@ final class functions_mail
     ): bool {
         global $conf, $conf_mail, $lang_info, $page;
 
-        if (empty($to) and
-            empty($args['Cc']) and
+        if (empty($to) &&
+            empty($args['Cc']) &&
             empty($args['Bcc'])
         ) {
             return true;
@@ -669,7 +669,7 @@ final class functions_mail
         }
 
         // theme
-        if (empty($args['theme']) or
+        if (empty($args['theme']) ||
             ! in_array($args['theme'], ['clear', 'dark'])
         ) {
             $args['theme'] = $conf_mail['mail_theme'];
@@ -681,7 +681,7 @@ final class functions_mail
         }
 
         // try to decompose subject like "[....] ...."
-        if (! isset($args['mail_title']) and
+        if (! isset($args['mail_title']) &&
             ! isset($args['mail_subtitle'])
         ) {
             if (preg_match('#^\[(.*)\](.*)$#', $args['subject'], $matches)) {
@@ -704,7 +704,7 @@ final class functions_mail
         }
 
         $content_type_list = [];
-        if ($conf_mail['mail_allow_html'] and
+        if ($conf_mail['mail_allow_html'] &&
             ($args['email_format'] ?? null) != 'text/plain'
         ) {
             $content_type_list[] = 'text/html';
@@ -778,7 +778,7 @@ final class functions_mail
             // Content
             // Stored in a temp variable, if a content template is used it will be assigned
             // to the $CONTENT template variable, otherwise it will be appended to the mail
-            if ($args['content_format'] == 'text/plain' and
+            if ($args['content_format'] == 'text/plain' &&
                 $content_type == 'text/html'
             ) {
                 // convert plain text to html
@@ -792,7 +792,7 @@ final class functions_mail
                       )
                   ) .
                   '</p>';
-            } elseif ($args['content_format'] == 'text/html' and
+            } elseif ($args['content_format'] == 'text/html' &&
                       $content_type == 'text/plain'
             ) {
                 // convert html text to plain text
@@ -860,7 +860,7 @@ final class functions_mail
             $mail->Host = $smtp_host;
             $mail->Port = $smtp_port;
 
-            if (! empty($conf_mail['smtp_secure']) and
+            if (! empty($conf_mail['smtp_secure']) &&
                 in_array($conf_mail['smtp_secure'], ['ssl', 'tls'])
             ) {
                 $mail->SMTPSecure = $conf_mail['smtp_secure'];
@@ -879,8 +879,8 @@ final class functions_mail
         if ($pre_result) {
             $ret = $mail->send();
 
-            if (! $ret and
-               (! ini_get('display_errors') or functions_user::is_admin())
+            if (! $ret &&
+               (! ini_get('display_errors') || functions_user::is_admin())
             ) {
                 trigger_error('Mailer Error: ' . $mail->ErrorInfo, E_USER_WARNING);
             }

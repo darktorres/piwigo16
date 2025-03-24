@@ -89,9 +89,7 @@ if ($src_mtime === false) {
 $need_generate = false;
 $derivative_mtime = file_exists($page['derivative_path']) ? filemtime($page['derivative_path']) : false;
 
-if ($derivative_mtime === false or
-    $derivative_mtime < $src_mtime or
-    $derivative_mtime < $params->last_mod_time
+if ($derivative_mtime === false || $derivative_mtime < $src_mtime || $derivative_mtime < $params->last_mod_time
 ) {
     $need_generate = true;
 }
@@ -107,7 +105,7 @@ if (isset($_GET['b'])) {
 }
 
 if (! $need_generate) {
-    if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) and
+    if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
         strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $derivative_mtime
     ) { // send the last mod time of the file back
         header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $derivative_mtime) . ' GMT', true, 304);
@@ -230,7 +228,7 @@ if ($params->will_watermark($d_size)) {
     $wm_image = new pwg_image('./' . $wm->file);
     $wm_size = [$wm_image->get_width(), $wm_image->get_height()];
 
-    if ($d_size[0] < $wm_size[0] or
+    if ($d_size[0] < $wm_size[0] ||
         $d_size[1] < $wm_size[1]
     ) {
         $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);

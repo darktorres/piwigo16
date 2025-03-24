@@ -362,7 +362,7 @@ final class DerivativeImage
         if (! $url_style) {
             $mtime = file_exists('./' . $rel_path) ? filemtime('./' . $rel_path) : false;
 
-            if ($mtime === false or
+            if ($mtime === false ||
                 $mtime < $params->last_mod_time
             ) {
                 $is_cached = false;

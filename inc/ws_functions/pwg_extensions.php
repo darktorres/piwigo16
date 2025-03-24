@@ -77,7 +77,7 @@ final class pwg_extensions
             return new PwgError(403, functions::l10n('Webmaster status is required.'));
         }
 
-        if (! $conf['enable_extensions_install'] and
+        if (! $conf['enable_extensions_install'] &&
             $params['action'] == 'delete'
         ) {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
@@ -118,7 +118,7 @@ final class pwg_extensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! $conf['enable_extensions_install'] and
+        if (! $conf['enable_extensions_install'] &&
             $params['action'] == 'delete'
         ) {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
@@ -182,7 +182,7 @@ final class pwg_extensions
         $extension = new $class();
 
         if ($type == 'plugins') {
-            if (isset($extension->db_plugins_by_id[$extension_id]) and
+            if (isset($extension->db_plugins_by_id[$extension_id]) &&
                 $extension->db_plugins_by_id[$extension_id]['state'] == 'active'
             ) {
                 $extension->perform_action('deactivate', $extension_id);
@@ -281,7 +281,7 @@ final class pwg_extensions
 
         // Reset ignored extension
         if ($params['reset']) {
-            if (! empty($params['type']) and
+            if (! empty($params['type']) &&
                 isset($conf['updates_ignored'][$params['type']])
             ) {
                 $conf['updates_ignored'][$params['type']] = [];
@@ -298,8 +298,8 @@ final class pwg_extensions
             return true;
         }
 
-        if (empty($params['id']) or
-            empty($params['type']) or
+        if (empty($params['id']) ||
+            empty($params['type']) ||
             ! in_array($params['type'], ['plugins', 'themes', 'languages'])
         ) {
             return new PwgError(403, 'Invalid parameters');

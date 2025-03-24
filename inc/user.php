@@ -19,7 +19,7 @@ use Piwigo\inc\PwgError;
 $user['id'] = $conf['guest_id'];
 
 if (isset($_COOKIE[session_name()])) {
-    if (isset($_GET['act']) and
+    if (isset($_GET['act']) &&
         $_GET['act'] == 'logout'
     ) { // logout
         functions_user::logout_user();
@@ -59,10 +59,10 @@ if (isset($_GET['auth'])) {
     functions_user::auth_key_login($_GET['auth']);
 }
 
-if (defined('IN_WS') and
-    isset($_REQUEST['method']) and
-    $_REQUEST['method'] == 'pwg.images.uploadAsync' and
-    isset($_POST['username']) and
+if (defined('IN_WS') &&
+    isset($_REQUEST['method']) &&
+    $_REQUEST['method'] == 'pwg.images.uploadAsync' &&
+    isset($_POST['username']) &&
     isset($_POST['password'])
 ) {
     if (! functions_user::try_log_user($_POST['username'], $_POST['password'], false)) {
@@ -74,11 +74,11 @@ if (defined('IN_WS') and
 
 $user = functions_user::build_user(
     $user['id'],
-    (defined('IN_ADMIN') and IN_ADMIN) ? false : true // use cache ?
+    (defined('IN_ADMIN') && IN_ADMIN) ? false : true // use cache ?
 );
 
-if ($conf['browser_language'] and
-   (functions_user::is_a_guest() or functions_user::is_generic()) and
+if ($conf['browser_language'] &&
+   (functions_user::is_a_guest() || functions_user::is_generic()) &&
     $language = functions_user::get_browser_language()
 ) {
     $user['language'] = $language;

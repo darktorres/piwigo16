@@ -116,7 +116,7 @@ final class c13y_internal
                         'action' => 'creation',
                     ]
                 );
-            } elseif (! empty($data['status']) and $status[$id] != $data['status']) {
+            } elseif (! empty($data['status']) && $status[$id] != $data['status']) {
                 $c13y->add_anomaly(
                     functions::l10n($data['l10n_bad_status']),
                     'c13y_correction_user',

@@ -32,7 +32,7 @@ $base_url = functions_url::get_root_url() . 'admin.php?page=' . $page['page'] . 
 $plugins = new plugins();
 
 //------------------------------------------------------automatic installation
-if (isset($_GET['revision']) and
+if (isset($_GET['revision']) &&
     isset($_GET['extension'])
 ) {
     if (! functions_user::is_webmaster()) {
@@ -191,7 +191,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
     $page['errors'][] = functions::l10n('Can\'t connect to server.');
 }
 
-if (! $beta_test and
+if (! $beta_test &&
     preg_match('/(beta|RC)/', PHPWG_VERSION)
 ) {
     $template->assign('BETA_URL', $base_url . '&amp;beta-test=true');

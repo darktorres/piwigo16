@@ -127,7 +127,7 @@ final class pwg
                     }
                 }
 
-                if (count($urls) >= $max_urls and
+                if (count($urls) >= $max_urls &&
                     ! $is_last
                 ) {
                     break;
@@ -137,7 +137,7 @@ final class pwg
             if ($is_last) {
                 $start_id = 0;
             }
-        } while (count($urls) < $max_urls and $start_id);
+        } while (count($urls) < $max_urls && $start_id);
 
         $ret = [];
 
@@ -268,8 +268,8 @@ final class pwg
 
         exec('du -sk ' . $path_cache, $return_array_cache);
 
-        if (is_array($return_array_cache) and
-            ! empty($return_array_cache[0]) and
+        if (is_array($return_array_cache) &&
+            ! empty($return_array_cache[0]) &&
             preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
         ) {
             $infos['cache_size'] = $matches_cache[1] * 1024;
@@ -297,8 +297,8 @@ final class pwg
 
         exec('du -sk ' . $path_template_c, $return_array_template_c);
 
-        if (is_array($return_array_template_c) and
-            ! empty($return_array_template_c[0]) and
+        if (is_array($return_array_template_c) &&
+            ! empty($return_array_template_c[0]) &&
             preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
         ) {
             $infos['tsizes'] = $matches_template_c[1] * 1024;
@@ -465,7 +465,7 @@ final class pwg
         $res['save_visits'] = functions::do_log();
 
         // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
-        if (isset($_SERVER['HTTP_USER_AGENT']) and
+        if (isset($_SERVER['HTTP_USER_AGENT']) &&
             preg_match('/^PiwigoRemoteSync/', $_SERVER['HTTP_USER_AGENT'])
         ) {
             unset($res['save_visits']);
@@ -474,7 +474,7 @@ final class pwg
         // Piwigo Remote Sync does not support receiving the available sizes
         $piwigo_remote_sync_agent = 'Apache-HttpClient/';
 
-        if (! isset($_SERVER['HTTP_USER_AGENT']) or
+        if (! isset($_SERVER['HTTP_USER_AGENT']) ||
             substr($_SERVER['HTTP_USER_AGENT'], 0, strlen($piwigo_remote_sync_agent)) !== $piwigo_remote_sync_agent
         ) {
             $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
@@ -664,7 +664,7 @@ final class pwg
     ): void {
         global $logger, $page;
 
-        if (! empty($params['section']) and
+        if (! empty($params['section']) &&
             in_array($params['section'], functions_mysqli::get_enums('history', 'section'))
         ) {
             $page['section'] = $params['section'];
@@ -676,7 +676,7 @@ final class pwg
             ];
         }
 
-        if (! empty($params['tags_string']) and
+        if (! empty($params['tags_string']) &&
             preg_match('/^\d+(,\d+)*$/', $params['tags_string'])
         ) {
             $page['tag_ids'] = explode(',', $params['tags_string']);
@@ -709,7 +709,7 @@ final class pwg
 
         global $conf;
 
-        if (isset($_GET['start']) and
+        if (isset($_GET['start']) &&
             is_numeric($_GET['start'])
         ) {
             $page['start'] = $_GET['start'];
@@ -783,7 +783,7 @@ final class pwg
 
         $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
         // Display choice are also save to one cookie
-        if (! empty($param['display_thumbnail']) and
+        if (! empty($param['display_thumbnail']) &&
             isset($display_thumbnails[$param['display_thumbnail']])
         ) {
             $cookie_val = $param['display_thumbnail'];
@@ -976,7 +976,7 @@ final class pwg
         $sorted_members = [];
 
         foreach ($history_lines as $line) {
-            if (isset($line['image_type']) and
+            if (isset($line['image_type']) &&
                 $line['image_type'] == 'high'
             ) {
                 $summary['total_filesize'] += intval($image_infos[$line['image_id']]['filesize']);
@@ -992,7 +992,7 @@ final class pwg
 
             $i++;
 
-            if ($i <= $first_line and
+            if ($i <= $first_line &&
                 $i >= $last_line
             ) {
                 continue;

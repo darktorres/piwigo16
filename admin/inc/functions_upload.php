@@ -74,7 +74,7 @@ final class functions_upload
         array &$errors = [],
         array &$form_errors = []
     ): bool {
-        if (! is_array($data) or
+        if (! is_array($data) ||
             empty($data)
         ) {
             return false;
@@ -99,7 +99,7 @@ final class functions_upload
                     'param' => $field,
                     'value' => functions_mysqli::boolean_to_string($value),
                 ];
-            } elseif ($upload_form_config[$field]['can_be_null'] and
+            } elseif ($upload_form_config[$field]['can_be_null'] &&
                       empty($value)
             ) {
                 $updates[] = [
@@ -111,8 +111,8 @@ final class functions_upload
                 $max = $upload_form_config[$field]['max'];
                 $pattern = $upload_form_config[$field]['pattern'];
 
-                if (preg_match($pattern, $value) and
-                    $value >= $min and
+                if (preg_match($pattern, $value) &&
+                    $value >= $min &&
                     $value <= $max
                 ) {
                     $updates[] = [
@@ -173,7 +173,7 @@ final class functions_upload
         }
 
         // we only try to detect duplicate on a new image, not when updating an existing image
-        if (! isset($image_id) and
+        if (! isset($image_id) &&
             $conf['upload_detect_duplicate']
         ) {
             $query = <<<SQL
@@ -250,7 +250,7 @@ final class functions_upload
                 $file_path .= 'jpg';
             } elseif ($type == IMAGETYPE_WEBP) {
                 $file_path .= 'webp';
-            } elseif (isset($conf['upload_form_all_types']) and
+            } elseif (isset($conf['upload_form_all_types']) &&
                       $conf['upload_form_all_types']
             ) {
                 $original_extension = strtolower(functions::get_extension($original_filename));
@@ -418,7 +418,7 @@ final class functions_upload
             }
         }
 
-        if (isset($categories) and
+        if (isset($categories) &&
             count($categories) > 0
         ) {
             if ($conf['lounge_active']) {
@@ -857,7 +857,7 @@ final class functions_upload
         // invert width and height.
         list($width, $height) = getimagesize($image_filepath);
 
-        if ($width > $max_width or
+        if ($width > $max_width ||
             $height > $max_height
         ) {
             return true;
@@ -884,7 +884,7 @@ final class functions_upload
     ): array {
         global $conf;
 
-        if (isset($conf['upload_form_all_types']) and
+        if (isset($conf['upload_form_all_types']) &&
             $conf['upload_form_all_types']
         ) {
             $extensions = $conf['file_ext'];

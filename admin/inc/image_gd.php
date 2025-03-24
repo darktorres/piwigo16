@@ -34,8 +34,8 @@ final class image_gd implements imageInterface
             $this->image = imagecreatefromjpeg($source_filepath);
         } elseif ($extension == 'png') {
             $this->image = imagecreatefrompng($source_filepath);
-        } elseif ($extension == 'gif' and
-                  $gd_info['GIF Read Support'] and
+        } elseif ($extension == 'gif' &&
+                  $gd_info['GIF Read Support'] &&
                   $gd_info['GIF Create Support']
         ) {
             $this->image = imagecreatefromgif($source_filepath);

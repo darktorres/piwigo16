@@ -16,7 +16,7 @@ if (isset($_POST['edit'])) {
     $_POST['theme'] = $_POST['theme_select'];
 }
 
-if (isset($_POST['theme']) and
+if (isset($_POST['theme']) &&
     $_POST['theme'] == '~common~'
 ) {
     $page['theme'] = $_POST['theme'];
@@ -28,7 +28,7 @@ if (isset($_POST['theme']) and
         $page['theme'] = $_POST['theme'];
     }
 
-    if (! isset($page['theme']) or
+    if (! isset($page['theme']) ||
         ! in_array($page['theme'], array_keys($themes->fs_themes))
     ) {
         $page['theme'] = functions_user::get_default_theme();

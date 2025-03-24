@@ -27,7 +27,7 @@ require_once __DIR__ . '/../inc/common.php';
 // +-----------------------------------------------------------------------+
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-if (! isset($_GET['output']) or
+if (! isset($_GET['output']) ||
     $_GET['output'] != 'content_only'
 ) {
     // Note on 2023-09-28 : calling popuphelp.php without output=content_only no longer occurs in Piwigo core.
@@ -53,7 +53,7 @@ if (! isset($_GET['output']) or
     require __DIR__ . '/../inc/page_header.php';
 }
 
-if (isset($_GET['page']) and
+if (isset($_GET['page']) &&
     preg_match('/^[a-z_]*$/', $_GET['page'])
 ) {
     $help_content = functions::load_language(
@@ -82,7 +82,7 @@ $template->assign(
     ]
 );
 
-if (isset($_GET['output']) and
+if (isset($_GET['output']) &&
     $_GET['output'] == 'content_only'
 ) {
     echo $help_content;

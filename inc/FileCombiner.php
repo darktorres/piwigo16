@@ -248,7 +248,7 @@ final class FileCombiner
         string $js,
         string $file
     ): string {
-        if (strpos($file, '.min') === false and
+        if (strpos($file, '.min') === false &&
             strpos($file, '.packed') === false
         ) {
             try {
@@ -321,8 +321,8 @@ final class FileCombiner
             foreach ($matches as $match) {
                 $search[] = $match[0];
 
-                if (strpos($match[1], '..') !== false or // Possible attempt to get out of Piwigo's dir
-                    strpos($match[1], '://') !== false or // Remote URL
+                if (strpos($match[1], '..') !== false || // Possible attempt to get out of Piwigo's dir
+                    strpos($match[1], '://') !== false || // Remote URL
                     ! is_readable('./' . $dir . '/' . $match[1])
                 ) {
                     // If anything is suspicious, don't try to process the

@@ -33,10 +33,10 @@ foreach ($related_categories as $category) {
     }
 }
 
-if ($page['show_comments'] and
+if ($page['show_comments'] &&
     isset($_POST['content'])
 ) {
-    if (functions_user::is_a_guest() and
+    if (functions_user::is_a_guest() &&
         ! $conf['comments_forall']
     ) {
         exit('Session expired');
@@ -192,7 +192,7 @@ if ($page['show_comments']) {
                     ]
                 );
 
-                if (isset($edit_comment) and
+                if (isset($edit_comment) &&
                     $row['id'] == $edit_comment
                 ) {
                     $tpl_comment['IN_EDIT'] = true;
@@ -229,7 +229,7 @@ if ($page['show_comments']) {
         $show_add_comment_form = false;
     }
 
-    if (functions_user::is_a_guest() and
+    if (functions_user::is_a_guest() &&
         ! $conf['comments_forall']
     ) {
         $show_add_comment_form = false;
@@ -246,7 +246,7 @@ if ($page['show_comments']) {
             'AUTHOR_MANDATORY' => $conf['comments_author_mandatory'],
             'AUTHOR' => '',
             'WEBSITE_URL' => '',
-            'SHOW_EMAIL' => ! functions_user::is_classic_user() or empty($user['email']),
+            'SHOW_EMAIL' => ! functions_user::is_classic_user() || empty($user['email']),
             'EMAIL_MANDATORY' => $conf['comments_email_mandatory'],
             'EMAIL' => '',
             'SHOW_WEBSITE' => $conf['comments_enable_website'],

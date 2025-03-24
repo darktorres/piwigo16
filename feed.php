@@ -104,10 +104,10 @@ if (! $image_only) {
     }
 }
 
-if (! empty($feed_id) and
+if (! empty($feed_id) &&
     empty($news)
 ) { // update the last check from time to time to avoid deletion by maintenance tasks
-    if (! isset($feed_row['last_check']) or
+    if (! isset($feed_row['last_check']) ||
         time() - functions::datetime_to_ts($feed_row['last_check']) > 30 * 24 * 3600
     ) {
         $last_check_expr = functions_mysqli::pwg_db_get_recent_period_expression(-15, $dbnow);

@@ -85,7 +85,7 @@ final class functions_permalinks
         if ($save) {
             $old_cat_id = self::get_cat_id_from_old_permalink($permalink);
 
-            if (isset($old_cat_id) and
+            if (isset($old_cat_id) &&
                 $old_cat_id != $cat_id
             ) {
                 $page['errors'][] =
@@ -149,7 +149,7 @@ final class functions_permalinks
         $sanitized_permalink = trim($sanitized_permalink, '/');
         $sanitized_permalink = str_replace('//', '/', $sanitized_permalink);
 
-        if ($sanitized_permalink != $permalink or
+        if ($sanitized_permalink != $permalink ||
             preg_match('#^(\d)+(-.*)?$#', $permalink)
         ) {
             $page['errors'][] = '{' . $permalink . '} ' . functions::l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"');
@@ -177,7 +177,7 @@ final class functions_permalinks
         // check if the new permalink was historically used
         $old_cat_id = self::get_cat_id_from_old_permalink($permalink);
 
-        if (isset($old_cat_id) and
+        if (isset($old_cat_id) &&
             $old_cat_id != $cat_id
         ) {
             $page['errors'][] =

@@ -153,7 +153,7 @@ final class functions_plugins
     ): void {
         global $pwg_event_handlers;
 
-        if (isset($pwg_event_handlers['trigger']) and
+        if (isset($pwg_event_handlers['trigger']) &&
             $event != 'trigger'
         ) { // debugging - avoid recursive calls
             self::trigger_notify(

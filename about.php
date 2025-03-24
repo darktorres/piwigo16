@@ -50,7 +50,7 @@ if ($theme_about !== false) {
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
 
-if (! isset($themeconf['hide_menu_on']) or
+if (! isset($themeconf['hide_menu_on']) ||
     ! in_array('theAboutPage', $themeconf['hide_menu_on'])
 ) {
     menubar::initialize_menu();

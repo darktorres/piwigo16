@@ -86,7 +86,7 @@ final class LocalSiteReader
             $contents = opendir($path)
         ) {
             while (($node = readdir($contents)) !== false) {
-                if ($node == '.' or
+                if ($node == '.' ||
                     $node == '..'
                 ) {
                     continue;
@@ -111,10 +111,10 @@ final class LocalSiteReader
                             $fs[$path . '/' . $node]['formats'] = $this->get_formats($path, $filename_wo_ext);
                         }
                     }
-                } elseif (is_dir($path . '/' . $node) and
-                          $node != 'pwg_high' and
-                          $node != 'pwg_representative' and
-                          $node != 'pwg_format' and
+                } elseif (is_dir($path . '/' . $node) &&
+                          $node != 'pwg_high' &&
+                          $node != 'pwg_representative' &&
+                          $node != 'pwg_format' &&
                           $node != 'thumbnail'
                 ) {
                     $subdirs[] = $node;

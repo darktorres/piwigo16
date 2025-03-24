@@ -40,7 +40,7 @@ $search = [
 // allwords, cat, tags, author, added_by, filetypes, date_posted
 $default_fields = ['allwords', 'cat', 'tags', 'author'];
 
-if (functions_user::is_a_guest() or
+if (functions_user::is_a_guest() ||
     functions_user::is_generic()
 ) {
     $fields = $default_fields;
@@ -54,7 +54,7 @@ if (! empty($_GET['q'])) {
     $words = functions_search::split_allwords($_GET['q']);
 }
 
-if (count($words) > 0 or
+if (count($words) > 0 ||
     in_array('allwords', $fields)
 ) {
     $search['fields']['allwords'] = [
@@ -71,7 +71,7 @@ if (isset($_GET['cat_id'])) {
     $cat_ids = [$_GET['cat_id']];
 }
 
-if (count($cat_ids) > 0 or
+if (count($cat_ids) > 0 ||
     in_array('cat', $fields)
 ) {
     $search['fields']['cat'] = [
@@ -88,7 +88,7 @@ if (count(functions_tag::get_available_tags()) > 0) {
         $tag_ids = explode(',', $_GET['tag_id']);
     }
 
-    if (count($tag_ids) > 0 or
+    if (count($tag_ids) > 0 ||
         in_array('tags', $fields)
     ) {
         $search['fields']['tags'] = [

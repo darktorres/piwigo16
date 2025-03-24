@@ -21,16 +21,16 @@ final class functions_cookie
      */
     public static function cookie_path(): string|null
     {
-        if (isset($_SERVER['REDIRECT_SCRIPT_NAME']) and
+        if (isset($_SERVER['REDIRECT_SCRIPT_NAME']) &&
             ! empty($_SERVER['REDIRECT_SCRIPT_NAME'])
         ) {
             $scr = $_SERVER['REDIRECT_SCRIPT_NAME'];
         } elseif (isset($_SERVER['REDIRECT_URL'])) {
             // mod_rewrite is activated for upper level directories. we must set the
             // cookie to the path shown in the browser otherwise it will be discarded.
-            if (isset($_SERVER['PATH_INFO']) and
-                ! empty($_SERVER['PATH_INFO']) and
-                $_SERVER['REDIRECT_URL'] !== $_SERVER['PATH_INFO'] and
+            if (isset($_SERVER['PATH_INFO']) &&
+                ! empty($_SERVER['PATH_INFO']) &&
+                $_SERVER['REDIRECT_URL'] !== $_SERVER['PATH_INFO'] &&
                 substr($_SERVER['REDIRECT_URL'], -strlen($_SERVER['PATH_INFO'])) == $_SERVER['PATH_INFO']
             ) {
                 $scr = substr(
@@ -48,7 +48,7 @@ final class functions_cookie
         $scr = substr($scr, 0, strrpos($scr, '/'));
 
         // add a trailing '/' if needed
-        if (strlen($scr) == 0 or
+        if (strlen($scr) == 0 ||
             $scr[strlen($scr) - 1] !== '/'
         ) {
             $scr .= '/';
@@ -81,7 +81,7 @@ final class functions_cookie
         string $value,
         ?int $expire = null
     ): bool {
-        if ($value == null or
+        if ($value == null ||
             $expire === 0
         ) {
             unset($_COOKIE['pwg_' . $var]);

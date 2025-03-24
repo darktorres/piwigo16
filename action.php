@@ -26,7 +26,7 @@ require_once __DIR__ . '/inc/common.php';
 // Check Access and exit when user status is not ok
 functions_user::check_status(ACCESS_GUEST);
 
-if ($conf['enable_formats'] and
+if ($conf['enable_formats'] &&
     isset($_GET['format'])
 ) {
     functions::check_input_parameter('format', $_GET, false, PATTERN_ID);
@@ -48,9 +48,9 @@ if ($conf['enable_formats'] and
     $_GET['part'] = 'f'; // "f" for "format"
 }
 
-if (! isset($_GET['id']) or
-    ! is_numeric($_GET['id']) or
-    ! isset($_GET['part']) or
+if (! isset($_GET['id']) ||
+    ! is_numeric($_GET['id']) ||
+    ! isset($_GET['part']) ||
     ! in_array($_GET['part'], ['e', 'r', 'f'])
 ) {
     functions::do_error(400, 'Invalid request - id/part');
@@ -71,8 +71,8 @@ if (empty($element_info)) {
 // special download action for admins
 $is_admin_download = false;
 
-if (functions_user::is_admin() and
-    isset($_GET['pwg_token']) and
+if (functions_user::is_admin() &&
+    isset($_GET['pwg_token']) &&
     functions::get_pwg_token() == $_GET['pwg_token']
 ) {
     $is_admin_download = true;
@@ -100,7 +100,7 @@ $query = <<<SQL
     LIMIT 1;
     SQL;
 
-if (! $is_admin_download and
+if (! $is_admin_download &&
     functions_mysqli::pwg_db_num_rows(functions_mysqli::pwg_query($query)) < 1
 ) {
     functions::do_error(401, 'Access denied');
@@ -110,7 +110,7 @@ $file = '';
 
 switch ($_GET['part']) {
     case 'e':
-        if ($src_image->is_original() and
+        if ($src_image->is_original() &&
             ! $user['enabled_high']
         ) { // we have a photo and the user has no access to HD
             $deriv = new DerivativeImage(derivative_std_params::IMG_XXLARGE, $src_image);
@@ -168,7 +168,7 @@ if (! functions_url::url_is_remote($file)) {
     // HTTP/1.1 only
     $http_headers[] = 'Cache-Control: private, must-revalidate, max-age='.$max_age;*/
 
-    if ($_GET['part'] != 'f' and
+    if ($_GET['part'] != 'f' &&
         isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])
     ) {
         functions_html::set_status_header(304);

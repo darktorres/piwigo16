@@ -383,11 +383,11 @@ final class functions_notification
         ?string $start = null,
         ?string $end = null
     ): bool {
-        return (self::nb_new_comments($start, $end) > 0) or
-               (self::nb_new_elements($start, $end) > 0) or
-               (self::nb_updated_categories($start, $end) > 0) or
-               (functions_user::is_admin() and self::nb_unvalidated_comments($start, $end) > 0) or
-               (functions_user::is_admin() and self::nb_new_users($start, $end) > 0);
+        return (self::nb_new_comments($start, $end) > 0) ||
+               (self::nb_new_elements($start, $end) > 0) ||
+               (self::nb_updated_categories($start, $end) > 0) ||
+               (functions_user::is_admin() && self::nb_unvalidated_comments($start, $end) > 0) ||
+               (functions_user::is_admin() && self::nb_new_users($start, $end) > 0);
     }
 
     /**
@@ -404,7 +404,7 @@ final class functions_notification
         if ($count > 0) {
             $line = functions::l10n_dec($singular_key, $plural_key, $count);
 
-            if ($add_url and
+            if ($add_url &&
                 ! empty($url)
             ) {
                 $line = '<a href="' . $url . '">' . $line . '</a>';

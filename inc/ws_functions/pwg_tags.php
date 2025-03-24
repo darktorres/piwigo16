@@ -141,7 +141,7 @@ final class pwg_tags
         $image_tag_map = [];
         // build list of image ids with associated tags per image
 
-        if (! empty($image_ids) and
+        if (! empty($image_ids) &&
             ! $params['tag_mode_and']
         ) {
             $tagIds = implode(', ', $tag_ids);

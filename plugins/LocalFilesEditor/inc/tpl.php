@@ -54,7 +54,7 @@ if (isset($_POST['create_tpl'])) {
         $page['errors'][] = functions::l10n('locfiledit_filename_error');
     }
 
-    if (is_numeric($_POST['tpl_model']) and
+    if (is_numeric($_POST['tpl_model']) &&
         $_POST['tpl_model'] != '0'
     ) {
         $page['errors'][] = functions::l10n('locfiledit_model_error');
@@ -102,11 +102,11 @@ if ($newfile_page) {
 
         $dir = $conf['themes_dir'] . '/' . $theme_id . '/template/';
 
-        if (is_dir($dir) and
+        if (is_dir($dir) &&
             $content = opendir($dir)
         ) {
             while ($node = readdir($content)) {
-                if (is_file($dir . $node) and
+                if (is_file($dir . $node) &&
                     functions::get_extension($node) == 'tpl'
                 ) {
                     $value = $dir . $node;
@@ -147,7 +147,7 @@ if ($newfile_page) {
         }
     }
 
-    if ($selected == 0 and
+    if ($selected == 0 &&
         ! empty($edited_file)
     ) {
         $options[$edited_file] = str_replace(['./template-extension/', '/'], ['', ' / '], $edited_file);

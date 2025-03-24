@@ -69,7 +69,7 @@ final class functions_smartpocket
 
         global $template, $page, $conf;
 
-        if (isset($page['body_id']) and
+        if (isset($page['body_id']) &&
             $page['body_id'] == 'thePicturePage'
         ) {
             $template->set_filenames([

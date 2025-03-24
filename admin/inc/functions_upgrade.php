@@ -152,7 +152,7 @@ final class functions_upgrade
     {
         global $conf, $page, $current_release;
 
-        if (version_compare($current_release, '2.0', '>=') and
+        if (version_compare($current_release, '2.0', '>=') &&
             isset($_COOKIE[session_name()])
         ) {
             // Check if user is already connected as webmaster
@@ -167,7 +167,7 @@ final class functions_upgrade
 
                 $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
-                if (isset($row['status']) and
+                if (isset($row['status']) &&
                     $row['status'] == 'webmaster'
                 ) {
                     define('PHPWG_IN_UPGRADE', true);
@@ -176,7 +176,7 @@ final class functions_upgrade
             }
         }
 
-        if (! isset($_POST['username']) or
+        if (! isset($_POST['username']) ||
             ! isset($_POST['password'])
         ) {
             return;
@@ -211,7 +211,7 @@ final class functions_upgrade
 
         if (! $conf['password_verify']($password, $row['password'])) {
             $page['errors'][] = functions::l10n('Invalid password!');
-        } elseif ($row['status'] != 'admin' and
+        } elseif ($row['status'] != 'admin' &&
                   $row['status'] != 'webmaster'
         ) {
             $page['errors'][] = functions::l10n('You do not have access rights to run upgrade');

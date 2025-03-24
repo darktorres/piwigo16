@@ -75,7 +75,7 @@ if (! defined('PHPWG_ROOT_PATH')) { //direct script access
     // include menubar
     $themeconf = $template->get_template_vars('themeconf');
 
-    if (! isset($themeconf['hide_menu_on']) or
+    if (! isset($themeconf['hide_menu_on']) ||
         ! in_array('theProfilePage', $themeconf['hide_menu_on'])
     ) {
         menubar::initialize_menu();

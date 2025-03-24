@@ -66,7 +66,7 @@ final class functions_tag
 
             SQL;
 
-        if (is_array($tag_ids) and
+        if (is_array($tag_ids) &&
             count($tag_ids) > 0
         ) {
             $tags_list = implode(', ', $tag_ids);

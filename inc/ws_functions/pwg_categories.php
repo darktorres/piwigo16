@@ -121,8 +121,8 @@ final class pwg_categories
 
             $order_by = ws_functions::ws_std_image_sql_order($params, 'i.');
 
-            if (empty($order_by) and
-                count($params['cat_id']) == 1 and
+            if (empty($order_by) &&
+                count($params['cat_id']) == 1 &&
                 isset($cats[$params['cat_id'][0]]['image_order'])
             ) {
                 $order_by = $cats[$params['cat_id'][0]]['image_order'];
@@ -322,7 +322,7 @@ final class pwg_categories
 
             SQL;
 
-        if (isset($params['search']) and
+        if (isset($params['search']) &&
             $params['search'] != ''
         ) {
             $search_escaped = functions_mysqli::pwg_db_real_escape_string($params['search']);
@@ -394,7 +394,7 @@ final class pwg_categories
                 // searching a random representative among elements in sub-categories
                 $image_id = functions_category::get_random_image_in_category($row);
             } else { // searching a random representative among representative of sub-categories
-                if ($row['count_categories'] > 0 and
+                if ($row['count_categories'] > 0 &&
                     $row['count_images'] > 0
                 ) {
                     $sql_condition = functions_user::get_sql_condition_FandF(
@@ -423,7 +423,7 @@ final class pwg_categories
             }
 
             if (isset($image_id)) {
-                if ($conf['representative_cache_on_subcats'] and
+                if ($conf['representative_cache_on_subcats'] &&
                     $row['user_representative_picture_id'] != $image_id
                 ) {
                     $user_representative_updates_for[$row['id']] = $image_id;
@@ -475,7 +475,7 @@ final class pwg_categories
                             // searching a random representative among elements in sub-categories
                             $image_id = functions_category::get_random_image_in_category($category);
 
-                            if (isset($image_id) and
+                            if (isset($image_id) &&
                                 ! in_array($image_id, $image_ids)
                             ) {
                                 $new_image_ids[] = $image_id;
@@ -511,7 +511,7 @@ final class pwg_categories
         // compared to code in inc/category_cats, we only persist the new
         // user_representative if we have used $user['id'] and not the guest id,
         // or else the real guest may see thumbnail that he should not
-        if (! $params['public'] and
+        if (! $params['public'] &&
             count($user_representative_updates_for)
         ) {
             $updates = [];
@@ -536,7 +536,7 @@ final class pwg_categories
 
         foreach ($cats as &$cat) {
             foreach ($categories as $category) {
-                if ($category['id'] == $cat['id'] and
+                if ($category['id'] == $cat['id'] &&
                     isset($category['representative_picture_id'])
                 ) {
                     $cat['tn_url'] = $thumbnail_src_of[$category['representative_picture_id']];
@@ -598,7 +598,7 @@ final class pwg_categories
 
             SQL;
 
-        if (isset($params['search']) and
+        if (isset($params['search']) &&
             $params['search'] != ''
         ) {
             $search_term = functions_mysqli::pwg_db_real_escape_string($params['search']);
@@ -695,13 +695,13 @@ final class pwg_categories
     ): PwgError|array {
         global $conf;
 
-        if (isset($params['pwg_token']) and
+        if (isset($params['pwg_token']) &&
             functions::get_pwg_token() != $params['pwg_token']
         ) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! empty($params['position']) and
+        if (! empty($params['position']) &&
             in_array($params['position'], ['first', 'last'])
         ) {
             //TODO make persistent with user prefs
@@ -710,18 +710,18 @@ final class pwg_categories
 
         $options = [];
 
-        if (! empty($params['status']) and
+        if (! empty($params['status']) &&
             in_array($params['status'], ['private', 'public'])
         ) {
             $options['status'] = $params['status'];
         }
 
         if (! empty($params['comment'])) {
-            $options['comment'] = (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
+            $options['comment'] = (! $conf['allow_html_descriptions'] || ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
         }
 
         $creation_output = functions_admin::create_virtual_category(
-            (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
+            (! $conf['allow_html_descriptions'] || ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
             $params['parent'],
             $options
         );
@@ -838,7 +838,7 @@ final class pwg_categories
     ): ?PwgError {
         global $conf;
 
-        if (isset($params['pwg_token']) and
+        if (isset($params['pwg_token']) &&
             functions::get_pwg_token() != $params['pwg_token']
         ) {
             return new PwgError(403, 'Invalid security token');
@@ -873,14 +873,14 @@ final class pwg_categories
         ];
 
         foreach (['visible', 'commentable'] as $param_name) {
-            if (isset($params[$param_name]) and
+            if (isset($params[$param_name]) &&
                 ! preg_match('/^(true|false)$/i', $params[$param_name])
             ) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param ' . $param_name . ' : ' . $params[$param_name]);
             }
         }
 
-        if (! empty($params['visible']) and
+        if (! empty($params['visible']) &&
            ($params['visible'] != $category['visible'])
         ) {
             functions_admin::set_cat_visible([$params['category_id']], $params['visible']);
@@ -893,7 +893,7 @@ final class pwg_categories
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
                 $perform_update = true;
-                $update[$key] = (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags($params[$key]) : $params[$key];
+                $update[$key] = (! $conf['allow_html_descriptions'] || ! isset($params['pwg_token'])) ? strip_tags($params[$key]) : $params[$key];
             }
         }
 
@@ -1022,7 +1022,7 @@ final class pwg_categories
             SQL;
         list($nb_images) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        if (! $conf['allow_random_representative'] and
+        if (! $conf['allow_random_representative'] &&
             $nb_images != 0
         ) {
             return new PwgError(401, 'not permitted');

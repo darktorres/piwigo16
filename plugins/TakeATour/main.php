@@ -22,16 +22,16 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 /** Tour sent via $_POST or $_GET**/
-if (isset($_REQUEST['submitted_tour_path']) and
-    defined('IN_ADMIN') and
+if (isset($_REQUEST['submitted_tour_path']) &&
+    defined('IN_ADMIN') &&
     IN_ADMIN
 ) {
     functions::check_pwg_token();
     functions_session::pwg_set_session_var('tour_to_launch', $_REQUEST['submitted_tour_path']);
     global $TAT_restart;
     $TAT_restart = true;
-} elseif (isset($_GET['tour_ended']) and
-          defined('IN_ADMIN') and
+} elseif (isset($_GET['tour_ended']) &&
+          defined('IN_ADMIN') &&
           IN_ADMIN
 ) {
     functions_session::pwg_unset_session_var('tour_to_launch');
@@ -43,8 +43,8 @@ if (isset($_REQUEST['submitted_tour_path']) and
 $version_=str_replace('.','_',PHPWG_VERSION);*/
 $version_ = '2_8_0';
 /***/
-if (functions_session::pwg_get_session_var('tour_to_launch') != 'tours/' . $version_ and
-    isset($_GET['page']) and
+if (functions_session::pwg_get_session_var('tour_to_launch') != 'tours/' . $version_ &&
+    isset($_GET['page']) &&
     $_GET['page'] == 'plugin-TakeATour'
 ) {
     functions_session::pwg_unset_session_var('tour_to_launch');

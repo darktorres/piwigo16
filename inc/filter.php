@@ -46,10 +46,10 @@ if ($filter['enabled']) {
         $filter['recent_period'] = $filter_key['recent_period'] > 0 ? $filter_key['recent_period'] : $user['recent_period'];
     }
 
-    if (! functions_session::pwg_get_session_var('filter_enabled', false) or
-        $filter_key['time'] <= $user['cache_update_time'] or
-        $filter_key['user'] != $user['id'] or
-        $filter_key['recent_period'] != $filter['recent_period'] or
+    if (! functions_session::pwg_get_session_var('filter_enabled', false) ||
+        $filter_key['time'] <= $user['cache_update_time'] ||
+        $filter_key['user'] != $user['id'] ||
+        $filter_key['recent_period'] != $filter['recent_period'] ||
         $filter_key['date'] != date('Ymd')
     ) {
         // Need to compute dats

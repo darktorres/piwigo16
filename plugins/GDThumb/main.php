@@ -163,7 +163,7 @@ function GDThumb_process_thumb(
         $template->assign('GDThumb_derivative_params', ImageStdParams::get_custom(9999, $confTemp['height']));
     }
 
-    if ($confTemp['big_thumb'] and
+    if ($confTemp['big_thumb'] &&
         ! empty($tpl_vars[0])
     ) {
         if (($confTemp['method'] == 'slide') ||
@@ -199,7 +199,7 @@ function GDThumb_process_category(
         $template->assign('GDThumb_derivative_params', ImageStdParams::get_custom(9999, $confTemp['height']));
     }
 
-    if ($confTemp['big_thumb'] and
+    if ($confTemp['big_thumb'] &&
         ! empty($tpl_vars[0])
     ) {
         $id = $tpl_vars[0]['representative_picture_id'];

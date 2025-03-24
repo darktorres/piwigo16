@@ -34,7 +34,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 // +-----------------------------------------------------------------------+
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-if (! isset($_GET['cat_id']) or
+if (! isset($_GET['cat_id']) ||
     ! is_numeric($_GET['cat_id'])
 ) {
     trigger_error('missing cat_id param', E_USER_ERROR);
@@ -124,7 +124,7 @@ $query = <<<SQL
     SQL;
 $category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
-if ($category['image_order'] == 'rank ASC' or
+if ($category['image_order'] == 'rank ASC' ||
     $category['image_order'] == '`rank` ASC'
 ) {
     $image_order_choice = 'rank';

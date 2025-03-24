@@ -151,13 +151,13 @@ if (count($page['cat_elements_id']) > 0) {
 
     $is_category = false;
 
-    if (isset($_SESSION['bulk_manager_filter']['category']) and
+    if (isset($_SESSION['bulk_manager_filter']['category']) &&
         ! isset($_SESSION['bulk_manager_filter']['category_recursive'])
     ) {
         $is_category = true;
     }
 
-    if (isset($_SESSION['bulk_manager_filter']['prefilter']) and
+    if (isset($_SESSION['bulk_manager_filter']['prefilter']) &&
         $_SESSION['bulk_manager_filter']['prefilter'] == 'duplicates'
     ) {
         $conf['order_by'] = ' ORDER BY file, id';

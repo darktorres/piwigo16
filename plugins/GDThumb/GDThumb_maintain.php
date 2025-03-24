@@ -72,7 +72,7 @@ final class GDThumb_maintain extends PluginMaintain
             $fh = opendir($path);
 
             while ($file = readdir($fh)) {
-                if ($file != '.' and
+                if ($file != '.' &&
                     $file != '..'
                 ) {
                     $pathfile = $path . '/' . $file;

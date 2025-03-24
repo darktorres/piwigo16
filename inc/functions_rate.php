@@ -26,9 +26,9 @@ final class functions_rate
     ): false|array {
         global $conf, $user;
 
-        if (! isset($rate) or
-            ! $conf['rate'] or
-            ! preg_match('/^[0-9]+$/', (string) $rate) or
+        if (! isset($rate) ||
+            ! $conf['rate'] ||
+            ! preg_match('/^[0-9]+$/', (string) $rate) ||
             ! in_array($rate, $conf['rate_items'])
         ) {
             return false;
@@ -36,7 +36,7 @@ final class functions_rate
 
         $user_anonymous = functions_user::is_authorized_status(ACCESS_CLASSIC) ? false : true;
 
-        if ($user_anonymous and
+        if ($user_anonymous &&
             ! $conf['rate_anonymous']
         ) {
             return false;

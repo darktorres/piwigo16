@@ -86,7 +86,7 @@ if ($page['display_mode'] == 'letters') {
 
         //lettre precedente differente de la lettre suivante
         if ($tag_letter !== $current_letter) {
-            if ($current_column < $conf['tag_letters_column_number'] and
+            if ($current_column < $conf['tag_letters_column_number'] &&
                 $current_tag_idx > $current_column * $nb_tags / $conf['tag_letters_column_number']
             ) {
                 $letter['CHANGE_COLUMN'] = true;
@@ -164,7 +164,7 @@ if ($page['display_mode'] == 'letters') {
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
 
-if (! isset($themeconf['hide_menu_on']) or
+if (! isset($themeconf['hide_menu_on']) ||
     ! in_array('theTagsPage', $themeconf['hide_menu_on'])
 ) {
     menubar::initialize_menu();

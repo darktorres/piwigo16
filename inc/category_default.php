@@ -74,7 +74,7 @@ if (count($pictures) > 0) {
           ]
       );
 
-    if ($conf['activate_comments'] and
+    if ($conf['activate_comments'] &&
         $user['show_nb_comments']
     ) {
         $implodedSelection = implode(', ', $selection);

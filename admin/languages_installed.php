@@ -36,8 +36,8 @@ $languages->get_db_languages();
 functions::check_input_parameter('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
 functions::check_input_parameter('language', $_GET, false, '/^(' . implode('|', array_keys($languages->fs_languages)) . ')$/');
 
-if (isset($_GET['action']) and
-    isset($_GET['language']) and
+if (isset($_GET['action']) &&
+    isset($_GET['language']) &&
     functions_user::is_webmaster()
 ) {
     $page['errors'] = $languages->perform_action($_GET['action'], $_GET['language']);

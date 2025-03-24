@@ -168,7 +168,7 @@ final class pwg_users
 
             // if registration_date_string or registration_date_since is requested,
             // then registration_date is automatically added
-            if (isset($params['display']['registration_date_string']) or
+            if (isset($params['display']['registration_date_string']) ||
                 isset($params['display']['registration_date_since'])
             ) {
                 $params['display']['registration_date'] = true;
@@ -176,7 +176,7 @@ final class pwg_users
 
             // if last_visit_string or last_visit_since is requested, then
             // last_visit is automatically added
-            if (isset($params['display']['last_visit_string']) or
+            if (isset($params['display']['last_visit_string']) ||
                 isset($params['display']['last_visit_since'])
             ) {
                 $params['display']['last_visit'] = true;
@@ -308,7 +308,7 @@ final class pwg_users
                     $last_visit = $cur_user['last_visit'];
                     $users[$cur_user['id']]['last_visit'] = $last_visit;
 
-                    if (! functions_mysqli::get_boolean($cur_user['last_visit_from_history']) and
+                    if (! functions_mysqli::get_boolean($cur_user['last_visit_from_history']) &&
                         empty($last_visit)
                     ) {
                         $last_visit = functions_user::get_user_last_visit_from_history($cur_user['id'], true);
@@ -516,7 +516,7 @@ final class pwg_users
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (isset($params['username']) and
+        if (isset($params['username']) &&
             strlen(str_replace(' ', '', $params['username'])) == 0
         ) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
@@ -534,7 +534,7 @@ final class pwg_users
 
             if (! empty($params['username'])) {
                 $user_id = functions_user::get_userid($params['username']);
-                if ($user_id and
+                if ($user_id &&
                     $user_id != $params['user_id'][0]
                 ) {
                     return new PwgError(WS_ERR_INVALID_PARAM, functions::l10n('this login is already used'));
@@ -581,7 +581,7 @@ final class pwg_users
         }
 
         if (! empty($params['status'])) {
-            if (in_array($params['status'], ['webmaster', 'admin']) and
+            if (in_array($params['status'], ['webmaster', 'admin']) &&
                 ! functions_user::is_webmaster()
             ) {
                 return new PwgError(403, 'Only webmasters can grant "webmaster/admin" status');
@@ -614,7 +614,7 @@ final class pwg_users
             $update_status = $params['status'];
         }
 
-        if (! empty($params['level']) or
+        if (! empty($params['level']) ||
             $params['level'] === 0
         ) {
             if (! in_array($params['level'], $conf['available_permission_levels'])) {
@@ -644,31 +644,31 @@ final class pwg_users
             $updates_infos['nb_image_page'] = $params['nb_image_page'];
         }
 
-        if (! empty($params['recent_period']) or
+        if (! empty($params['recent_period']) ||
             $params['recent_period'] === 0
         ) {
             $updates_infos['recent_period'] = $params['recent_period'];
         }
 
-        if (! empty($params['expand']) or
+        if (! empty($params['expand']) ||
             $params['expand'] === false
         ) {
             $updates_infos['expand'] = functions_mysqli::boolean_to_string($params['expand']);
         }
 
-        if (! empty($params['show_nb_comments']) or
+        if (! empty($params['show_nb_comments']) ||
             $params['show_nb_comments'] === false
         ) {
             $updates_infos['show_nb_comments'] = functions_mysqli::boolean_to_string($params['show_nb_comments']);
         }
 
-        if (! empty($params['show_nb_hits']) or
+        if (! empty($params['show_nb_hits']) ||
             $params['show_nb_hits'] === false
         ) {
             $updates_infos['show_nb_hits'] = functions_mysqli::boolean_to_string($params['show_nb_hits']);
         }
 
-        if (! empty($params['enabled_high']) or
+        if (! empty($params['enabled_high']) ||
             $params['enabled_high'] === false
         ) {
             $updates_infos['enabled_high'] = functions_mysqli::boolean_to_string($params['enabled_high']);
@@ -691,7 +691,7 @@ final class pwg_users
             functions_user::deactivate_password_reset_key($params['user_id'][0]);
         }
 
-        if (isset($update_status) and
+        if (isset($update_status) &&
             count($params['user_id_for_status']) > 0
         ) {
             $userIdsForStatus = implode(', ', $params['user_id_for_status']);

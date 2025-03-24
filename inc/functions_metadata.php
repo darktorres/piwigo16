@@ -73,7 +73,7 @@ final class functions_metadata
         string $value
     ): string {
         // strip leading zeros (weird Kodak Scanner software)
-        while (isset($value[0]) and
+        while (isset($value[0]) &&
                $value[0] == chr(0)
         ) {
             $value = substr($value, 1);
@@ -133,7 +133,7 @@ final class functions_metadata
             $exif2 = functions_plugins::trigger_change('format_exif_data', $exif = null, $filename, $map);
         }
 
-        if ($exif or
+        if ($exif ||
             $exif2
         ) {
             if (! empty($exif2)) {
@@ -161,9 +161,9 @@ final class functions_metadata
             $gps_exif = array_intersect_key($exif, array_flip(['GPSLatitudeRef', 'GPSLatitude', 'GPSLongitudeRef', 'GPSLongitude']));
 
             if (count($gps_exif) == 4) {
-                if (is_array($gps_exif['GPSLatitude']) and
-                    in_array($gps_exif['GPSLatitudeRef'], ['S', 'N']) and
-                    is_array($gps_exif['GPSLongitude']) and
+                if (is_array($gps_exif['GPSLatitude']) &&
+                    in_array($gps_exif['GPSLatitudeRef'], ['S', 'N']) &&
+                    is_array($gps_exif['GPSLongitude']) &&
                     in_array($gps_exif['GPSLongitudeRef'], ['W', 'E'])
                 ) {
                     $latitude = self::parse_exif_gps_data($gps_exif['GPSLatitude'], $gps_exif['GPSLatitudeRef']);
@@ -229,7 +229,7 @@ final class functions_metadata
 
         $ref = strtoupper($ref);
 
-        if ($ref == 'S' or
+        if ($ref == 'S' ||
             $ref == 'W'
         ) {
             $v = -$v;

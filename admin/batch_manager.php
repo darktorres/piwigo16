@@ -57,7 +57,7 @@ if (isset($_GET['action'])) {
         functions::redirect(functions_url::get_root_url() . 'admin.php?page=' . $_GET['page']);
     }
 
-    if ($_GET['action'] == 'delete_orphans' and
+    if ($_GET['action'] == 'delete_orphans' &&
         isset($_GET['nb_orphans_deleted'])
     ) {
         functions::check_input_parameter('nb_orphans_deleted', $_GET, false, '/^\d+$/');
@@ -73,7 +73,7 @@ if (isset($_GET['action'])) {
         }
     }
 
-    if ($_GET['action'] == 'sync_md5sum' and
+    if ($_GET['action'] == 'sync_md5sum' &&
         isset($_GET['nb_md5sum_added'])
     ) {
         functions::check_input_parameter('nb_md5sum_added', $_GET, false, '/^\d+$/');
@@ -121,7 +121,7 @@ if (isset($_POST['submitFilter'])) {
                 $has_options = true;
             }
 
-            if (! $has_options or
+            if (! $has_options ||
                 isset($_POST['filter_duplicates_filename'])
             ) {
                 $_SESSION['bulk_manager_filter']['duplicates_filename'] = true;
@@ -142,7 +142,7 @@ if (isset($_POST['submitFilter'])) {
     if (isset($_POST['filter_tags_use'])) {
         $_SESSION['bulk_manager_filter']['tags'] = functions_admin::get_tag_ids($_POST['filter_tags'], false);
 
-        if (isset($_POST['tag_mode']) and
+        if (isset($_POST['tag_mode']) &&
             in_array($_POST['tag_mode'], ['AND', 'OR'])
         ) {
             $_SESSION['bulk_manager_filter']['tag_mode'] = $_POST['tag_mode'];
@@ -605,10 +605,10 @@ $page['cat_elements_id'] = empty($current_set) ? [] : $current_set;
 // category. For example, $page['start'] = 12 means we must show elements #12
 // and $page['nb_images'] next elements
 
-if (! isset($_REQUEST['start']) or
-    ! is_numeric($_REQUEST['start']) or
-    $_REQUEST['start'] < 0 or
-    (isset($_REQUEST['display']) and $_REQUEST['display'] == 'all')
+if (! isset($_REQUEST['start']) ||
+    ! is_numeric($_REQUEST['start']) ||
+    $_REQUEST['start'] < 0 ||
+    (isset($_REQUEST['display']) && $_REQUEST['display'] == 'all')
 ) {
     $page['start'] = 0;
 } else {
@@ -694,11 +694,11 @@ $ratio_categories = [
 foreach ($ratios as $ratio) {
     if ($ratio < 0.95) {
         $ratio_categories['portrait'][] = $ratio;
-    } elseif ($ratio >= 0.95 and
+    } elseif ($ratio >= 0.95 &&
               $ratio <= 1.05
     ) {
         $ratio_categories['square'][] = $ratio;
-    } elseif ($ratio > 1.05 and
+    } elseif ($ratio > 1.05 &&
               $ratio < 2
     ) {
         $ratio_categories['landscape'][] = $ratio;

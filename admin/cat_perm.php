@@ -39,8 +39,8 @@ $page['cat'] = $category['id'];
 if (! empty($_POST)) {
     functions::check_pwg_token();
 
-    if ($category['status'] != $_POST['status'] or
-       ($category['status'] != 'public' and isset($_POST['apply_on_sub']))
+    if ($category['status'] != $_POST['status'] ||
+       ($category['status'] != 'public' && isset($_POST['apply_on_sub']))
     ) {
         $cat_ids = [$page['cat']];
 

@@ -345,7 +345,7 @@ final class pwg
             WHERE id IN ({$imageIdsList})
                 AND element_id IS NULL;
             SQL;
-        $result = functions::array_from_query($query, 'id');
+        $result = functions_mysqli::query2array($query, null, 'id');
 
         $datas = [];
 

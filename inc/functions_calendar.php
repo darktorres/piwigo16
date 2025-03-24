@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
+use Piwigo\inc\dblayer\functions_mysqli;
+
 final class functions_calendar
 {
     /**
@@ -280,7 +282,7 @@ final class functions_calendar
                     {$calendar->get_date_where()}
                     {$order_by};
                     SQL;
-                $page['items'] = functions::array_from_query($query, 'id');
+                $page['items'] = functions_mysqli::query2array($query, null, 'id');
 
                 if (isset($cache_key)) {
                     $persistent_cache->set($cache_key, $page['items']);

@@ -155,11 +155,8 @@
     </p>
   </form>
 
-  <script type="text/javascript">
-    <!--
+  <script>
     document.search.search_allwords.focus();
-    //
-    -->
   </script>
 
 </div> <!-- content -->

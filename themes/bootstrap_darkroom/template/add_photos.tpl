@@ -367,7 +367,7 @@
   });
 </script>{/footer_script}
 
-<style type="text/css">
+<style>
   /*
 #photosAddContent form p {
   text-align:left;

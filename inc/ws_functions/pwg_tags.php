@@ -339,7 +339,7 @@ final class pwg_tags
             FROM tags
             WHERE id != {$tag_id};
             SQL;
-        $existing_names = functions::array_from_query($query, 'name');
+        $existing_names = functions_mysqli::query2array($query, null, 'name');
 
         $update = [];
 
@@ -425,7 +425,7 @@ final class pwg_tags
             FROM image_tag
             WHERE tag_id = {$tag_id};
             SQL;
-        $destination_tag_image_ids = functions::array_from_query($query, 'image_id');
+        $destination_tag_image_ids = functions_mysqli::query2array($query, null, 'image_id');
 
         $inserts = [];
 

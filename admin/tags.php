@@ -131,7 +131,7 @@ $query = <<<SQL
     FROM image_tag
     GROUP BY tag_id;
     SQL;
-$tag_counters = functions::simple_hash_from_query($query, 'tag_id', 'counter');
+$tag_counters = functions_mysqli::query2array($query, 'tag_id', 'counter');
 
 // all tags
 $query = <<<SQL

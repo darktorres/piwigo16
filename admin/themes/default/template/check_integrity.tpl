@@ -55,7 +55,7 @@
           </table>
 
           <p>
-            <script type="text/javascript">
+            <script>
               jQuery(document).ready(function() {
 
                 jQuery("#checkAllLink").click(function() {

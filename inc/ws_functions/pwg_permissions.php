@@ -167,7 +167,7 @@ final class pwg_permissions
                 WHERE id IN ({$cat_ids_imploded})
                     AND status = 'private';
                 SQL;
-            $private_cats = functions::array_from_query($query, 'id');
+            $private_cats = functions_mysqli::query2array($query, null, 'id');
 
             $inserts = [];
 

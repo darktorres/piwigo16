@@ -72,9 +72,6 @@
     </form>
 </div>
 
-<script type="text/javascript">
-    <!--
+<script>
     document.getElementById('username').focus();
-    //
-    -->
 </script>

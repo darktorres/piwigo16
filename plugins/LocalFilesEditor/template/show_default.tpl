@@ -16,7 +16,7 @@
 </script>{/footer_script}
 
 {html_head}
-<style type="text/css">
+<style>
   #headbranch,
   #theHeader,
   #copyright {

@@ -55,5 +55,5 @@ $query = <<<SQL
 // +-----------------------------------------------------------------------+
 
 functions::redirect(functions_url::make_index_url([
-    'list' => functions::array_from_query($query, 'id'),
+    'list' => functions_mysqli::query2array($query, null, 'id'),
 ]));

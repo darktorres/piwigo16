@@ -1151,7 +1151,7 @@ final class pwg_categories
             FROM categories
             WHERE id IN ({$category_ids_imploded});
             SQL;
-        $category_ids = functions::array_from_query($query, 'id');
+        $category_ids = functions_mysqli::query2array($query, null, 'id');
 
         if (count($category_ids) == 0) {
             return null;

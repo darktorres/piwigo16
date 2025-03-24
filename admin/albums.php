@@ -74,7 +74,7 @@ if (isset($_POST['simpleAutoOrder']) ||
         FROM categories
         WHERE id_uppercat {$id_condition};
         SQL;
-    $category_ids = functions::array_from_query($query, 'id');
+    $category_ids = functions_mysqli::query2array($query, null, 'id');
 
     if (isset($_POST['recursiveAutoOrder'])) {
         $category_ids = functions_category::get_subcat_ids($category_ids);

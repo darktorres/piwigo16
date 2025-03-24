@@ -578,7 +578,7 @@ final class Template
 
                 foreach ($scripts as $script) {
                     $content[] =
-                        '<script type="text/javascript" src="'
+                        '<script src="'
                         . self::make_script_src($script)
                         . '"></script>';
                 }
@@ -600,7 +600,7 @@ final class Template
 
             // trigger the event for eventual use of a cdn
             $href = functions_plugins::trigger_change('combined_css', $href, $combi);
-            $content[] = '<link rel="stylesheet" type="text/css" href="' . $href . '">';
+            $content[] = '<link rel="stylesheet" href="' . $href . '">';
         }
 
         $this->output = str_replace(
@@ -961,7 +961,7 @@ final class Template
 
         foreach ($scripts[0] as $script) {
             $content[] =
-              '<script type="text/javascript" src="'
+              '<script src="'
               . self::make_script_src($script)
               . '"></script>';
         }
@@ -971,14 +971,14 @@ final class Template
         }
 
         if (count($scripts[1])) {
-            $content[] = '<script type="text/javascript">';
+            $content[] = '<script>';
             $content[] =
               "(function() {\n"
               . "var s, after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length - 1];\n";
 
             foreach ($scripts[1] as $id => $script) {
                 $content[] =
-                  "s = document.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = '"
+                  "s = document.createElement('script'); s.async = true; s.src = '"
                   . self::make_script_src($script)
                   . "';\n";
                 $content[] = "after = after.parentNode.insertBefore(s, after);\n";

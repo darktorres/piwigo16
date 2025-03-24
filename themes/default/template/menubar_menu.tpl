@@ -9,7 +9,7 @@
 					value="{$QUERY_SEARCH}" {/if}>
 			</p>
 		</form>
-		<script type="text/javascript">
+		<script>
 			var qsearch_prompt="{'Quick search'|translate|escape:'javascript'}";{if empty($QUERY_SEARCH)}document.getElementById('qsearchInput').value=qsearch_prompt;{/if}
 		</script>
 	{/if}

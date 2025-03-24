@@ -398,7 +398,7 @@ final class functions_metadata_admin
         }
 
         $query = trim($query) . ';';
-        return functions::hash_from_query($query, 'id');
+        return functions_mysqli::query2array($query, 'id');
     }
 
     /**

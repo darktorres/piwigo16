@@ -19,7 +19,7 @@
   <!-- END get_combined_scripts -->
 
   {combine_script id='jquery'}
-  <script type="text/javascript">
+  <script>
     $(document).ready(function() {
       $("a.externalLink").click(function() {
         window.open($(this).attr("href"));
@@ -32,7 +32,7 @@
     });
   </script>
 
-  <style type="text/css">
+  <style>
     body {
       font-size: 12px;
     }

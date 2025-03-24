@@ -266,7 +266,7 @@ final class themes
             SQL;
         $user_ids = array_unique(
             array_merge(
-                functions::array_from_query($query, 'user_id'),
+                functions_mysqli::query2array($query, null, 'user_id'),
                 [$conf['guest_id'], $conf['default_user_id']]
             )
         );

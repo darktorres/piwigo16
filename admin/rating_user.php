@@ -155,7 +155,7 @@ $query = <<<SQL
     ORDER BY rating_score DESC
     LIMIT {$consensus_top_number};
     SQL;
-$best_rated = array_flip(functions::array_from_query($query, 'id'));
+$best_rated = array_flip(functions_mysqli::query2array($query, null, 'id'));
 
 // by user stats
 foreach ($by_user_ratings as $id => &$rating) {

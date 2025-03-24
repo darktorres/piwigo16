@@ -17,34 +17,34 @@ namespace Piwigo\inc;
  */
 final class PwgTemplateAdapter
 {
-    /**
-     * @deprecated use "translate" modifier
-     */
-    public function l10n(
-        string $text
-    ): string {
-        return functions::l10n($text);
-    }
+    // /**
+    //  * @deprecated use "translate" modifier
+    //  */
+    // public function l10n(
+    //     string $text
+    // ): string {
+    //     return functions::l10n($text);
+    // }
 
-    /**
-     * @deprecated use "translate_dec" modifier
-     */
-    public function l10n_dec(
-        string $s,
-        string $p,
-        int|string $v
-    ): string {
-        return functions::l10n_dec($s, $p, $v);
-    }
+    // /**
+    //  * @deprecated use "translate_dec" modifier
+    //  */
+    // public function l10n_dec(
+    //     string $s,
+    //     string $p,
+    //     int|string $v
+    // ): string {
+    //     return functions::l10n_dec($s, $p, $v);
+    // }
 
-    /**
-     * @deprecated use "translate" or "sprintf" modifier
-     */
-    public function sprintf(): string
-    {
-        $args = func_get_args();
-        return call_user_func_array(sprintf(...), $args);
-    }
+    // /**
+    //  * @deprecated use "translate" or "sprintf" modifier
+    //  */
+    // public function sprintf(): string
+    // {
+    //     $args = func_get_args();
+    //     return call_user_func_array(sprintf(...), $args);
+    // }
 
     public function derivative(
         DerivativeParams|string $type,

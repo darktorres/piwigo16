@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html lang="{$lang_info.code}" dir="{$lang_info.direction}">
 
 <head>
@@ -18,7 +18,7 @@
   {get_combined_scripts load='header'}
   <!-- END get_combined_scripts -->
 
-  <style type="text/css">
+  <style>
     body {
       font-size: 12px;
     }

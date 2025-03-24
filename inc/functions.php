@@ -1704,47 +1704,47 @@ final class functions
         return $array;
     }
 
-    /**
-     * creates an simple hashmap based on a SQL query.
-     * choose one to be the key, another one to be the value.
-     * @deprecated 2.6
-     */
-    public static function simple_hash_from_query(
-        string $query,
-        string $keyname,
-        string $valuename
-    ): array {
-        return functions_mysqli::query2array($query, $keyname, $valuename);
-    }
+    // /**
+    //  * creates an simple hashmap based on a SQL query.
+    //  * choose one to be the key, another one to be the value.
+    //  * @deprecated 2.6
+    //  */
+    // public static function simple_hash_from_query(
+    //     string $query,
+    //     string $keyname,
+    //     string $valuename
+    // ): array {
+    //     return functions_mysqli::query2array($query, $keyname, $valuename);
+    // }
 
-    /**
-     * creates an associative array based on a SQL query.
-     * choose one to be the key
-     * @deprecated 2.6
-     */
-    public static function hash_from_query(
-        string $query,
-        string $keyname
-    ): array {
-        return functions_mysqli::query2array($query, $keyname);
-    }
+    // /**
+    //  * creates an associative array based on a SQL query.
+    //  * choose one to be the key
+    //  * @deprecated 2.6
+    //  */
+    // public static function hash_from_query(
+    //     string $query,
+    //     string $keyname
+    // ): array {
+    //     return functions_mysqli::query2array($query, $keyname);
+    // }
 
-    /**
-     * creates a numeric array based on a SQL query.
-     * if _$fieldname_ is empty the returned value will be an array of arrays
-     * if _$fieldname_ is provided the returned value will be a one dimension array
-     * @deprecated 2.6
-     */
-    public static function array_from_query(
-        string $query,
-        bool|string $fieldname = false
-    ): array {
-        if ($fieldname === false) {
-            return functions_mysqli::query2array($query);
-        }
+    // /**
+    //  * creates a numeric array based on a SQL query.
+    //  * if _$fieldname_ is empty the returned value will be an array of arrays
+    //  * if _$fieldname_ is provided the returned value will be a one dimension array
+    //  * @deprecated 2.6
+    //  */
+    // public static function array_from_query(
+    //     string $query,
+    //     bool|string $fieldname = false
+    // ): array {
+    //     if ($fieldname === false) {
+    //         return functions_mysqli::query2array($query);
+    //     }
 
-        return functions_mysqli::query2array($query, null, $fieldname);
-    }
+    //     return functions_mysqli::query2array($query, null, $fieldname);
+    // }
 
     /**
      * Return the basename of the current script.
@@ -1999,13 +1999,13 @@ final class functions
         if ($source_charset == 'iso-8859-1' and
             $dest_charset == 'utf-8'
         ) {
-            return utf8_encode($str);
+            return mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
         }
 
         if ($source_charset == 'utf-8' and
             $dest_charset == 'iso-8859-1'
         ) {
-            return utf8_decode($str);
+            return mb_convert_encoding($str, 'ISO-8859-1', 'UTF-8');
         }
 
         if (function_exists('iconv')) {

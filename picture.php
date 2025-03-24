@@ -372,7 +372,7 @@ $query = <<<SQL
     WHERE image_id = {$page['image_id']} {$sql_condition}
     SQL;
 $query = trim($query) . ';';
-$related_categories = functions::array_from_query($query);
+$related_categories = functions_mysqli::query2array($query);
 usort($related_categories, functions_category::global_rank_compare(...));
 //-------------------------first, prev, current, next & last picture management
 $picture = [];
@@ -892,7 +892,7 @@ if (count($related_categories) == 1 and
         FROM categories
         WHERE id IN ({$imploded_ids});
         SQL;
-    $cat_map = functions::hash_from_query($query, 'id');
+    $cat_map = functions_mysqli::query2array($query, 'id');
 
     foreach ($related_categories as $category) {
         $cats = [];

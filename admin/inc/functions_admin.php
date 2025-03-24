@@ -1119,89 +1119,89 @@ final class functions_admin
         return $cat_fulldirs;
     }
 
-    /**
-     * Returns an array with all file system files according to $conf['file_ext']
-     *
-     * @deprecated 2.4
-     */
-    public static function get_fs(
-        string $path,
-        bool $recursive = true
-    ): array {
-        global $conf;
+    // /**
+    //  * Returns an array with all file system files according to $conf['file_ext']
+    //  *
+    //  * @deprecated 2.4
+    //  */
+    // public static function get_fs(
+    //     string $path,
+    //     bool $recursive = true
+    // ): array {
+    //     global $conf;
 
-        // because isset is faster than in_array...
-        if (! isset($conf['flip_picture_ext'])) {
-            $conf['flip_picture_ext'] = array_flip($conf['picture_ext']);
-        }
+    //     // because isset is faster than in_array...
+    //     if (! isset($conf['flip_picture_ext'])) {
+    //         $conf['flip_picture_ext'] = array_flip($conf['picture_ext']);
+    //     }
 
-        if (! isset($conf['flip_file_ext'])) {
-            $conf['flip_file_ext'] = array_flip($conf['file_ext']);
-        }
+    //     if (! isset($conf['flip_file_ext'])) {
+    //         $conf['flip_file_ext'] = array_flip($conf['file_ext']);
+    //     }
 
-        $fs['elements'] = [];
-        $fs['thumbnails'] = [];
-        $fs['representatives'] = [];
-        $subdirs = [];
+    //     $fs['elements'] = [];
+    //     $fs['thumbnails'] = [];
+    //     $fs['representatives'] = [];
+    //     $subdirs = [];
 
-        if (is_dir($path)) {
-            $contents = opendir($path);
+    //     if (is_dir($path)) {
+    //         $contents = opendir($path);
 
-            if ($contents) {
-                while (($node = readdir($contents)) !== false) {
-                    if ($node == '.' or
-                        $node == '..'
-                    ) {
-                        continue;
-                    }
+    //         if ($contents) {
+    //             while (($node = readdir($contents)) !== false) {
+    //                 if ($node == '.' or
+    //                     $node == '..'
+    //                 ) {
+    //                     continue;
+    //                 }
 
-                    if (is_file($path . '/' . $node)) {
-                        $extension = functions::get_extension($node);
+    //                 if (is_file($path . '/' . $node)) {
+    //                     $extension = functions::get_extension($node);
 
-                        if (isset($conf['flip_picture_ext'][$extension])) {
-                            if (basename($path) == 'thumbnail') {
-                                $fs['thumbnails'][] = $path . '/' . $node;
-                            } elseif (basename($path) == 'pwg_representative') {
-                                $fs['representatives'][] = $path . '/' . $node;
-                            } else {
-                                $fs['elements'][] = $path . '/' . $node;
-                            }
-                        } elseif (isset($conf['flip_file_ext'][$extension])) {
-                            $fs['elements'][] = $path . '/' . $node;
-                        }
-                    } elseif (is_dir($path . '/' . $node) and
-                              $node != 'pwg_high' and
-                              $recursive
-                    ) {
-                        $subdirs[] = $node;
-                    }
-                }
-            }
+    //                     if (isset($conf['flip_picture_ext'][$extension])) {
+    //                         if (basename($path) == 'thumbnail') {
+    //                             $fs['thumbnails'][] = $path . '/' . $node;
+    //                         } elseif (basename($path) == 'pwg_representative') {
+    //                             $fs['representatives'][] = $path . '/' . $node;
+    //                         } else {
+    //                             $fs['elements'][] = $path . '/' . $node;
+    //                         }
+    //                     } elseif (isset($conf['flip_file_ext'][$extension])) {
+    //                         $fs['elements'][] = $path . '/' . $node;
+    //                     }
+    //                 } elseif (is_dir($path . '/' . $node) and
+    //                           $node != 'pwg_high' and
+    //                           $recursive
+    //                 ) {
+    //                     $subdirs[] = $node;
+    //                 }
+    //             }
+    //         }
 
-            closedir($contents);
+    //         closedir($contents);
 
-            foreach ($subdirs as $subdir) {
-                $tmp_fs = self::get_fs($path . '/' . $subdir);
+    //         foreach ($subdirs as $subdir) {
+    //             $tmp_fs = self::get_fs($path . '/' . $subdir);
 
-                $fs['elements'] = array_merge(
-                    $fs['elements'],
-                    $tmp_fs['elements']
-                );
+    //             $fs['elements'] = array_merge(
+    //                 $fs['elements'],
+    //                 $tmp_fs['elements']
+    //             );
 
-                $fs['thumbnails'] = array_merge(
-                    $fs['thumbnails'],
-                    $tmp_fs['thumbnails']
-                );
+    //             $fs['thumbnails'] = array_merge(
+    //                 $fs['thumbnails'],
+    //                 $tmp_fs['thumbnails']
+    //             );
 
-                $fs['representatives'] = array_merge(
-                    $fs['representatives'],
-                    $tmp_fs['representatives']
-                );
-            }
-        }
+    //             $fs['representatives'] = array_merge(
+    //                 $fs['representatives'],
+    //                 $tmp_fs['representatives']
+    //             );
+    //         }
+    //     }
 
-        return $fs;
-    }
+    //     return $fs;
+    // }
 
     /**
      * Synchronize base users list and related users list.
@@ -2145,7 +2145,7 @@ final class functions_admin
                 AND id IN ({$image_ids})
                 AND (category_id != storage_category_id OR storage_category_id IS NULL);
             SQL;
-        $dissociables = functions::array_from_query($query, 'id');
+        $dissociables = functions_mysqli::query2array($query, null, 'id');
 
         if (! empty($dissociables)) {
             $dissociable_ids = implode(', ', $dissociables);

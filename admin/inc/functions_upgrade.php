@@ -185,15 +185,11 @@ final class functions_upgrade
         $username = $_POST['username'];
         $password = $_POST['password'];
 
-        if (function_exists('get_magic_quotes_gpc') &&
-            ! get_magic_quotes_gpc()
-        ) {
-            $username = functions_mysqli::pwg_db_real_escape_string($username);
-        }
+        $username = functions_mysqli::pwg_db_real_escape_string($username);
 
         if (version_compare($current_release, '2.0', '<')) {
-            $username = utf8_decode($username);
-            $password = utf8_decode($password);
+            $username = mb_convert_encoding($username, 'ISO-8859-1', 'UTF-8');
+            $password = mb_convert_encoding($password, 'ISO-8859-1', 'UTF-8');
         }
 
         if (version_compare($current_release, '1.5', '<')) {
@@ -261,7 +257,7 @@ final class functions_upgrade
             SELECT id
             FROM upgrade;
             SQL;
-        $applied = functions::array_from_query($query, 'id');
+        $applied = functions_mysqli::query2array($query, null, 'id');
 
         // retrieve existing upgrades
         $existing = self::get_available_upgrade_ids();

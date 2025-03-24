@@ -184,41 +184,41 @@ final class functions_plugins
         }
     }
 
-    /**
-     * Saves some data with the associated plugin id, data are only available
-     * during script lifetime.
-     * @deprecated 2.6
-     */
-    public static function set_plugin_data(
-        string $plugin_id,
-        array|bool|string|int|float|null|object &$data
-    ): bool {
-        global $pwg_loaded_plugins;
+    // /**
+    //  * Saves some data with the associated plugin id, data are only available
+    //  * during script lifetime.
+    //  * @deprecated 2.6
+    //  */
+    // public static function set_plugin_data(
+    //     string $plugin_id,
+    //     array|bool|string|int|float|null|object &$data
+    // ): bool {
+    //     global $pwg_loaded_plugins;
 
-        if (isset($pwg_loaded_plugins[$plugin_id])) {
-            $pwg_loaded_plugins[$plugin_id]['plugin_data'] = &$data;
-            return true;
-        }
+    //     if (isset($pwg_loaded_plugins[$plugin_id])) {
+    //         $pwg_loaded_plugins[$plugin_id]['plugin_data'] = &$data;
+    //         return true;
+    //     }
 
-        return false;
-    }
+    //     return false;
+    // }
 
-    /**
-     * Retrieves plugin data saved previously with set_plugin_data.
-     * @see set_plugin_data()
-     * @deprecated 2.6
-     */
-    public static function &get_plugin_data(
-        string $plugin_id
-    ): array|bool|string|int|float|null|object {
-        global $pwg_loaded_plugins;
+    // /**
+    //  * Retrieves plugin data saved previously with set_plugin_data.
+    //  * @see set_plugin_data()
+    //  * @deprecated 2.6
+    //  */
+    // public static function &get_plugin_data(
+    //     string $plugin_id
+    // ): array|bool|string|int|float|null|object {
+    //     global $pwg_loaded_plugins;
 
-        if (isset($pwg_loaded_plugins[$plugin_id]['plugin_data'])) {
-            return $pwg_loaded_plugins[$plugin_id]['plugin_data'];
-        }
+    //     if (isset($pwg_loaded_plugins[$plugin_id]['plugin_data'])) {
+    //         return $pwg_loaded_plugins[$plugin_id]['plugin_data'];
+    //     }
 
-        return null;
-    }
+    //     return null;
+    // }
 
     /**
      * Returns an array of plugins defined in the database.

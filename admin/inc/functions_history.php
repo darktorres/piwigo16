@@ -58,7 +58,7 @@ final class functions_history
                 FROM images
                 WHERE file LIKE '{$search['fields']['filename']}';
                 SQL;
-            $search['image_ids'] = functions::array_from_query($query, 'id');
+            $search['image_ids'] = functions_mysqli::query2array($query, null, 'id');
         }
 
         // echo '<pre>'; print_r($search); echo '</pre>';

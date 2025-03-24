@@ -12,7 +12,7 @@
   <meta charset="{$CONTENT_ENCODING}">
   <title>{$GALLERY_TITLE} :: {$PAGE_TITLE}</title>
   <link rel="icon" type="image/svg+xml" href="{$ROOT_URL}{$themeconf.icon_dir}/piwigo.org-icon 1.svg">
-  <link rel="stylesheet" type="text/css" href="{$ROOT_URL}admin/themes/default/fonts/open-sans/open-sans.css">
+  <link rel="stylesheet" href="{$ROOT_URL}admin/themes/default/fonts/open-sans/open-sans.css">
 
   {combine_css path="admin/themes/default/fontello/css/fontello.css" order=-10}
   {assign "theme_id" ""}

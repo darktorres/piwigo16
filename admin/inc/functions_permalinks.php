@@ -25,7 +25,7 @@ final class functions_permalinks
             SELECT id FROM categories
             WHERE permalink = '{$permalink}';
             SQL;
-        $ids = functions::array_from_query($query, 'id');
+        $ids = functions_mysqli::query2array($query, null, 'id');
 
         if (! empty($ids)) {
             return $ids[0];

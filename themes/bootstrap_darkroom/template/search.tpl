@@ -221,9 +221,6 @@
     </form>
 </div>
 
-<script type="text/javascript">
-    <!--
+<script>
     document.getElementById('search_allwords').focus();
-    //
-    -->
 </script>

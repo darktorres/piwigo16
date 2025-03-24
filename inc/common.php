@@ -29,36 +29,23 @@ error_log("Page loaded: {$_SERVER['REQUEST_URI']}");
 // determine the initial instant to indicate the generation time of this page
 $t2 = microtime(true);
 
-// set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
+// this is a security precaution to prevent someone trying to break out of a SQL statement.
+function sanitize_mysql_kv(
+    string &$v
+): void {
+    $v = addslashes($v);
+}
 
-//
-// addslashes to vars if magic_quotes_gpc is off this is a security
-// precaution to prevent someone trying to break out of a SQL statement.
-//
-// The magic quote feature has been disabled since php 5.4
-// but function get_magic_quotes_gpc was always replying false.
-// Since php 8 the function get_magic_quotes_gpc is also removed
-// but we still want to sanitize user input variables.
-if (! function_exists('get_magic_quotes_gpc') or
-    ! get_magic_quotes_gpc()
-) {
-    function sanitize_mysql_kv(
-        string &$v
-    ): void {
-        $v = addslashes($v);
-    }
+if (is_array($_GET)) {
+    array_walk_recursive($_GET, sanitize_mysql_kv(...));
+}
 
-    if (is_array($_GET)) {
-        array_walk_recursive($_GET, sanitize_mysql_kv(...));
-    }
+if (is_array($_POST)) {
+    array_walk_recursive($_POST, sanitize_mysql_kv(...));
+}
 
-    if (is_array($_POST)) {
-        array_walk_recursive($_POST, sanitize_mysql_kv(...));
-    }
-
-    if (is_array($_COOKIE)) {
-        array_walk_recursive($_COOKIE, sanitize_mysql_kv(...));
-    }
+if (is_array($_COOKIE)) {
+    array_walk_recursive($_COOKIE, sanitize_mysql_kv(...));
 }
 
 if (! empty($_SERVER['PATH_INFO'])) {

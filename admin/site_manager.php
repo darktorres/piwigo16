@@ -147,7 +147,7 @@ $query = <<<SQL
     WHERE c.site_id IS NOT NULL
     GROUP BY c.site_id;
     SQL;
-$sites_detail = functions::hash_from_query($query, 'site_id');
+$sites_detail = functions_mysqli::query2array($query, 'site_id');
 
 $query = <<<SQL
     SELECT *

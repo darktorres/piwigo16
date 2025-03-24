@@ -62,7 +62,7 @@ final class pwg_groups
             LIMIT {$params['per_page']} OFFSET {$offset};
             SQL;
 
-        $groups = functions::array_from_query($query);
+        $groups = functions_mysqli::query2array($query);
 
         return [
             'paging' => new PwgNamedStruct([

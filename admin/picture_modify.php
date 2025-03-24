@@ -84,7 +84,7 @@ if (isset($_GET['delete'])) {
         SQL;
 
     $authorizeds = array_diff(
-        functions::array_from_query($query, 'category_id'),
+        functions_mysqli::query2array($query, null, 'category_id'),
         explode(',', functions_user::calculate_permissions($user['id'], $user['status']))
     );
 
@@ -403,7 +403,7 @@ $query = <<<SQL
     SQL;
 
 $authorizeds = array_diff(
-    functions::array_from_query($query, 'category_id'),
+    functions_mysqli::query2array($query, null, 'category_id'),
     explode(
         ',',
         functions_user::calculate_permissions($user['id'], $user['status'])

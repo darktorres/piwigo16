@@ -5,7 +5,7 @@
 *}
 {if !empty($category_thumbnails)}
   {html_head}
-  <style media="screen,handheld,projection,tv" type="text/css">
+  <style media="screen,handheld,projection,tv">
     #content ul.thumbnailCategories li {
       width: 100%;
       z-index: 55;

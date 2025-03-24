@@ -7,7 +7,7 @@
 </script>{/footer_script}
 
 {html_head}
-<style type="text/css">
+<style>
   .applicationContainer {
     width: 100%;
     display: flex;

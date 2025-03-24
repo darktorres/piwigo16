@@ -751,7 +751,7 @@ final class pwg_users
                 FROM `groups`
                 WHERE id IN ({$groupIds});
                 SQL;
-            $group_ids = functions::array_from_query($query, 'id');
+            $group_ids = functions_mysqli::query2array($query, null, 'id');
 
             // if only -1 (a group id that can't exist) is in the list, then no
             // group is associated

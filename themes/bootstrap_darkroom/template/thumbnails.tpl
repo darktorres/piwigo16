@@ -63,12 +63,12 @@
                                 <div class="card-text">
                                     {if isset($thumbnail.NB_COMMENTS)}
                                         <p class="text-muted {if 0==$thumbnail.NB_COMMENTS}zero {/if}nb-comments">
-                                            {$pwg->l10n_dec('%d comment', '%d comments',$thumbnail.NB_COMMENTS)}
+                                            {$thumbnail.NB_COMMENTS|translate_dec:'%d comment':'%d comments'}
                                         </p>
                                     {/if}
                                     {if isset($thumbnail.NB_HITS)}
                                         <p class="text-muted {if 0==$thumbnail.NB_HITS}zero {/if}nb-hits">
-                                            {$pwg->l10n_dec('%d hit', '%d hits',$thumbnail.NB_HITS)}
+                                            {$thumbnail.NB_HITS|translate_dec:'%d hit':'%d hits'}
                                         </p>
                                     {/if}
                                 </div>

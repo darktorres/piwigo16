@@ -13,7 +13,7 @@
 </script>{/footer_script}
 
 {html_head}
-<style type="text/css">
+<style>
   form {
     width: 750px;
   }

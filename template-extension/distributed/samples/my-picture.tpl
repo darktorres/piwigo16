@@ -82,7 +82,7 @@
 			</a>
 		{/if}
 		{if isset($U_CADDIE)}{*caddie management BEGIN*}
-			<script type="text/javascript">
+			<script>
 				function addToCadie(aElement, rootUrl, id) {
 					if (aElement.disabled) return;
 					aElement.disabled = true;

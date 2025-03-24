@@ -87,17 +87,17 @@ final class PwgXmlWriter
         $this->_output(htmlspecialchars($value));
     }
 
-    public function write_cdata(
-        string|int|float|bool $value
-    ): void {
-        $this->_end_prev(false);
-        $value = (string) $value;
-        $this->_output(
-            '<![CDATA['
-      . str_replace(']]>', ']]&gt;', $value)
-      . ']]>'
-        );
-    }
+    // public function write_cdata(
+    //     string|int|float|bool $value
+    // ): void {
+    //     $this->_end_prev(false);
+    //     $value = (string) $value;
+    //     $this->_output(
+    //         '<![CDATA['
+    //   . str_replace(']]>', ']]&gt;', $value)
+    //   . ']]>'
+    //     );
+    // }
 
     public function write_attribute(
         string $name,

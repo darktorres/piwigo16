@@ -447,7 +447,7 @@ final class functions_search
                 {$forbidden}
                 {$conf['order_by']};
                 SQL;
-            $items = functions::array_from_query($query, 'id');
+            $items = functions_mysqli::query2array($query, null, 'id');
 
             $logger->debug(__FUNCTION__ . ' ' . count($items) . ' items in $items');
         }

@@ -16,7 +16,7 @@
             {if $block->data.NB_COL == 0}
                 {'You have no collection'|translate}
             {else}
-                {$pwg->l10n_dec('You have %d collection', 'You have %d collections', $block->data.NB_COL)}
+                {$block->data.NB_COL|translate_dec:'You have %d collection':'You have %d collections'}
             {/if}
         </a>
         <div class="divider"></div>

@@ -24,61 +24,53 @@ use Piwigo\inc\Template;
 //----------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
 
-// set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
-//
-// addslashes to vars if magic_quotes_gpc is off this is a security
-// precaution to prevent someone trying to break out of a SQL statement.
-//
-if (function_exists('get_magic_quotes_gpc') &&
-    ! get_magic_quotes_gpc()
-) {
-    if (is_array($_POST)) {
-        foreach ($_POST as $k => $v) {
-            if (is_array($_POST[$k])) {
-                foreach ($_POST[$k] as $k2 => $v2) {
-                    $_POST[$k][$k2] = addslashes($v2);
-                }
-
-                reset($_POST[$k]);
-            } else {
-                $_POST[$k] = addslashes($v);
+// this is a security precaution to prevent someone trying to break out of a SQL statement.
+if (is_array($_POST)) {
+    foreach ($_POST as $k => $v) {
+        if (is_array($_POST[$k])) {
+            foreach ($_POST[$k] as $k2 => $v2) {
+                $_POST[$k][$k2] = addslashes($v2);
             }
-        }
 
-        reset($_POST);
+            reset($_POST[$k]);
+        } else {
+            $_POST[$k] = addslashes($v);
+        }
     }
 
-    if (is_array($_GET)) {
-        foreach ($_GET as $k => $v) {
-            if (is_array($_GET[$k])) {
-                foreach ($_GET[$k] as $k2 => $v2) {
-                    $_GET[$k][$k2] = addslashes($v2);
-                }
+    reset($_POST);
+}
 
-                reset($_GET[$k]);
-            } else {
-                $_GET[$k] = addslashes($v);
+if (is_array($_GET)) {
+    foreach ($_GET as $k => $v) {
+        if (is_array($_GET[$k])) {
+            foreach ($_GET[$k] as $k2 => $v2) {
+                $_GET[$k][$k2] = addslashes($v2);
             }
-        }
 
-        reset($_GET);
+            reset($_GET[$k]);
+        } else {
+            $_GET[$k] = addslashes($v);
+        }
     }
 
-    if (is_array($_COOKIE)) {
-        foreach ($_COOKIE as $k => $v) {
-            if (is_array($_COOKIE[$k])) {
-                foreach ($_COOKIE[$k] as $k2 => $v2) {
-                    $_COOKIE[$k][$k2] = addslashes($v2);
-                }
+    reset($_GET);
+}
 
-                reset($_COOKIE[$k]);
-            } else {
-                $_COOKIE[$k] = addslashes($v);
+if (is_array($_COOKIE)) {
+    foreach ($_COOKIE as $k => $v) {
+        if (is_array($_COOKIE[$k])) {
+            foreach ($_COOKIE[$k] as $k2 => $v2) {
+                $_COOKIE[$k][$k2] = addslashes($v2);
             }
-        }
 
-        reset($_COOKIE);
+            reset($_COOKIE[$k]);
+        } else {
+            $_COOKIE[$k] = addslashes($v);
+        }
     }
+
+    reset($_COOKIE);
 }
 
 //----------------------------------------------------- variable initialization

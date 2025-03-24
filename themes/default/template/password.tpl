@@ -56,7 +56,7 @@
     </form>
   {/if} {* $action ne 'none' *}
 
-  <script type="text/javascript">
+  <script>
     {if $action eq 'lost'}
       try { document.getElementById('username_or_email').focus(); } catch (e) {}
     {elseif $action eq 'reset'}

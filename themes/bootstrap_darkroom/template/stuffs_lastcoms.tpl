@@ -1,6 +1,6 @@
 {if !empty($block.MAX_WIDTH) or !empty($block.MAX_HEIGHT) or !empty($block.NB_COMMENTS_LINE)}
     {html_head}
-    <style type="text/css">
+    <style>
         {if !empty($block.MAX_WIDTH)}
             .stuffs #comments img { max-width:{$block.MAX_WIDTH}px; }
         {/if}

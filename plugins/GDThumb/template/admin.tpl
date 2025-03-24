@@ -171,7 +171,7 @@
   {combine_script id='greydragon.admin' load='footer' require='jquery' path=$GDTHEME_PATH|cat:"admin/js/admin.js" }
 {else}
   {html_head}
-  <style type="text/css">
+  <style>
     .gd-checkbox {
       display: none;
     }

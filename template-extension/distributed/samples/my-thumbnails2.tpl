@@ -1,7 +1,7 @@
 <!-- This is a sample of template extensions -->
 {if !empty($thumbnails)}
 	{html_head}
-	<link rel="stylesheet" type="text/css" href="./template-extension/distributed/samples/my-thumbnails2.css">{/html_head}
+	<link rel="stylesheet" href="./template-extension/distributed/samples/my-thumbnails2.css">{/html_head}
 	<ul class="thumbnails">
 		{foreach $thumbnails as $thumbnail}
 			<li>

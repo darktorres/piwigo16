@@ -15,6 +15,7 @@ use Exception;
 use InvalidArgumentException;
 use Pelago\Emogrifier\CssInliner;
 use PHPMailer\PHPMailer\PHPMailer;
+use Piwigo\inc\dblayer\functions_mysqli;
 use Random\RandomException;
 use SmartyException;
 use Symfony\Component\CssSelector\Exception\ParseException;
@@ -181,28 +182,28 @@ final class functions_mail
         return array_values($data);
     }
 
-    /**
-     * Returns an email address list with minimal email string.
-     * @deprecated 2.6
-     *
-     * @param string $email_list - comma separated
-     */
-    public static function get_strict_email_list(
-        string $email_list
-    ): string {
-        $result = [];
-        $list = explode(',', $email_list);
+    // /**
+    //  * Returns an email address list with minimal email string.
+    //  * @deprecated 2.6
+    //  *
+    //  * @param string $email_list - comma separated
+    //  */
+    // public static function get_strict_email_list(
+    //     string $email_list
+    // ): string {
+    //     $result = [];
+    //     $list = explode(',', $email_list);
 
-        foreach ($list as $email) {
-            if (strpos($email, '<') !== false) {
-                $email = preg_replace('/.*<(.*)>.*/i', '$1', $email);
-            }
+    //     foreach ($list as $email) {
+    //         if (strpos($email, '<') !== false) {
+    //             $email = preg_replace('/.*<(.*)>.*/i', '$1', $email);
+    //         }
 
-            $result[] = trim($email);
-        }
+    //         $result[] = trim($email);
+    //     }
 
-        return implode(',', array_unique($result));
-    }
+    //     return implode(',', array_unique($result));
+    // }
 
     /**
      * Return an new mail template.
@@ -456,7 +457,7 @@ final class functions_mail
         $query .= <<<SQL
             ORDER BY name;
             SQL;
-        $admins = functions::array_from_query($query);
+        $admins = functions_mysqli::query2array($query);
 
         if (empty($admins)) {
             return $return;
@@ -512,7 +513,7 @@ final class functions_mail
         }
 
         $query = trim($query) . ';';
-        $languages = functions::array_from_query($query, 'language');
+        $languages = functions_mysqli::query2array($query, null, 'language');
 
         if (empty($languages)) {
             return $return;
@@ -529,7 +530,7 @@ final class functions_mail
                     AND {$conf['user_fields']['email']} != ""
                     AND language = '{$language}';
                 SQL;
-            $users = functions::array_from_query($query);
+            $users = functions_mysqli::query2array($query);
 
             if (empty($users)) {
                 continue;
@@ -892,29 +893,29 @@ final class functions_mail
         return $ret;
     }
 
-    /**
-     * @deprecated 2.6
-     */
-    public static function pwg_send_mail(
-        bool $result,
-        array|string $to,
-        string $subject,
-        string $content,
-        array|string $headers
-    ): bool {
-        if (functions_user::is_admin()) {
-            trigger_error('pwg_send_mail function is deprecated', E_USER_NOTICE);
-        }
+    // /**
+    //  * @deprecated 2.6
+    //  */
+    // public static function pwg_send_mail(
+    //     bool $result,
+    //     array|string $to,
+    //     string $subject,
+    //     string $content,
+    //     array|string $headers
+    // ): bool {
+    //     if (functions_user::is_admin()) {
+    //         trigger_error('pwg_send_mail function is deprecated', E_USER_NOTICE);
+    //     }
 
-        if (! $result) {
-            return self::pwg_mail($to, [
-                'content' => $content,
-                'subject' => $subject,
-            ]);
-        }
+    //     if (! $result) {
+    //         return self::pwg_mail($to, [
+    //             'content' => $content,
+    //             'subject' => $subject,
+    //         ]);
+    //     }
 
-        return $result;
-    }
+    //     return $result;
+    // }
 
     /**
      * Moves CSS rules contained in the <style> tag to inline CSS.

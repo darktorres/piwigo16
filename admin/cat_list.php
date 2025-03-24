@@ -158,7 +158,7 @@ $query = <<<SQL
     {$parentIdCondition}
     ORDER BY `rank` ASC;
     SQL;
-$categories = functions::hash_from_query($query, 'id');
+$categories = functions_mysqli::query2array($query, 'id');
 
 // get the categories containing images directly
 $categories_with_images = [];

@@ -89,7 +89,7 @@ if ($filter['enabled']) {
             date_available >= {$recent_period_expression};
             SQL;
 
-        $filter['visible_images'] = implode(',', functions::array_from_query($query, 'image_id'));
+        $filter['visible_images'] = implode(',', functions_mysqli::query2array($query, null, 'image_id'));
 
         if (empty($filter['visible_images'])) {
             // Must be not empty

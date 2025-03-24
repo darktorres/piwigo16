@@ -60,7 +60,7 @@ final class functions_rate
                     WHERE user_id = {$user['id']}
                         AND anonymous_id = '{$anonymous_id}';
                     SQL;
-                $already_there = functions::array_from_query($query, 'element_id');
+                $already_there = functions_mysqli::query2array($query, null, 'element_id');
 
                 if (count($already_there) > 0) {
                     $already_there_imploded = implode(', ', $already_there);
@@ -186,7 +186,7 @@ final class functions_rate
                 WHERE element_id IS NULL AND rating_score IS NOT NULL;
                 SQL;
 
-            $to_update = functions::array_from_query($query, 'id');
+            $to_update = functions_mysqli::query2array($query, null, 'id');
 
             if (! empty($to_update)) {
                 $to_update_imploded = implode(', ', $to_update);

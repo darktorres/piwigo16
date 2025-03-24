@@ -1,12 +1,11 @@
-<!DOCTYPE html
-  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html lang="{$lang_info.code}" dir="{$lang_info.direction}">
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset={$CONTENT_ENCODING}" />
   <title>Piwigo Mail</title>
 
-  <style type="text/css">
+  <style>
     {if isset($GLOBAL_MAIL_CSS)}{$GLOBAL_MAIL_CSS}{/if}
     {if isset($MAIL_CSS)}{$MAIL_CSS}{/if}
   </style>

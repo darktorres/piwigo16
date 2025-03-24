@@ -171,7 +171,7 @@ if (isset($_POST['submit']) and
     }
 
     $query = trim($query) . ';';
-    $db_categories = functions::hash_from_query($query, 'id');
+    $db_categories = functions_mysqli::query2array($query, 'id');
 
     // get category full directories in an array for comparison with file
     // system directory tree
@@ -502,7 +502,7 @@ if (isset($_POST['submit']) and
             FROM images
             WHERE storage_category_id IN ({$wrappedCatIds});
             SQL;
-        $db_elements = functions::simple_hash_from_query($query, 'id', 'path');
+        $db_elements = functions_mysqli::query2array($query, 'id', 'path');
     }
 
     // next element id available

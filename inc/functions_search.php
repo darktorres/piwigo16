@@ -535,7 +535,7 @@ final class functions_search
                 $post = (($token->modifier & self::QST_WILDCARD_END) !== 0) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
 
                 foreach ($fields as $field) {
-                    $clauses[] = $field . " REGEXP '" . $pre . addslashes(preg_quote($variant)) . $post . "'";
+                    $clauses[] = $field . ' ' . functions_mysqli::DB_REGEX_OPERATOR . " '" . $pre . addslashes(preg_quote($variant)) . $post . "'";
                 }
             } else {
                 $ft = $variant;

@@ -25,7 +25,7 @@ final class functions_mysqli
 
     public const string DB_REGEX_OPERATOR = 'REGEXP';
 
-    public const string DB_RANDOM_FUNCTION = 'RAND';
+    public const string DB_RANDOM_FUNCTION = 'RAND()';
 
     public const int MASS_UPDATES_SKIP_EMPTY = 1;
 

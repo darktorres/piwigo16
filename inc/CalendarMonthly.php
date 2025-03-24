@@ -407,7 +407,7 @@ final class CalendarMonthly extends CalendarBase
                 SELECT id, file, representative_ext, path, width, height, rotation, {$day_of_week} - 1 AS dow
                 {$this->inner_sql}
                 {$this->get_date_where()}
-                ORDER BY {$random_function}()
+                ORDER BY {$random_function}
                 LIMIT 1;
                 SQL;
 

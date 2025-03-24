@@ -59,10 +59,11 @@ foreach ($result as $cat) {
 // +-----------------------------------------------------------------------+
 
 // let's find a custom placeholder
+$random_function = functions_mysqli::DB_RANDOM_FUNCTION;
 $query = <<<SQL
     SELECT name
     FROM categories
-    ORDER BY RAND()
+    ORDER BY {$random_function}
     LIMIT 1;
     SQL;
 $lines = functions_mysqli::query2array($query);

@@ -137,19 +137,19 @@ final class ws_functions
 
                 case 'rand':
                 case 'random':
-                    $matches[1][$i] = functions_mysqli::DB_RANDOM_FUNCTION . '()';
+                    $matches[1][$i] = functions_mysqli::DB_RANDOM_FUNCTION;
                     break;
             }
 
             $sortable_fields = ['id', 'file', 'name', 'hit', 'rating_score',
-                'date_creation', 'date_available', functions_mysqli::DB_RANDOM_FUNCTION . '()'];
+                'date_creation', 'date_available', functions_mysqli::DB_RANDOM_FUNCTION];
 
             if (in_array($matches[1][$i], $sortable_fields)) {
                 if (! empty($ret)) {
                     $ret .= ', ';
                 }
 
-                if ($matches[1][$i] !== functions_mysqli::DB_RANDOM_FUNCTION . '()') {
+                if ($matches[1][$i] !== functions_mysqli::DB_RANDOM_FUNCTION) {
                     $ret .= $tbl_name;
                 }
 

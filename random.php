@@ -46,7 +46,7 @@ $query = <<<SQL
     FROM images
     INNER JOIN image_category AS ic ON id = ic.image_id
     {$sql_conditions}
-    ORDER BY {$db_random_function}()
+    ORDER BY {$db_random_function}
     LIMIT {$limit_value};
     SQL;
 

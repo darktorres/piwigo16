@@ -479,7 +479,7 @@ final class functions_category
             $db_random_function = functions_mysqli::DB_RANDOM_FUNCTION;
             $query .= <<<SQL
                 {$get_sql_condition_FandF}
-                ORDER BY {$db_random_function}()
+                ORDER BY {$db_random_function}
                 LIMIT 1;
                 SQL;
             $result = functions_mysqli::pwg_query($query);

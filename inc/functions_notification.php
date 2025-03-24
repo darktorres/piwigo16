@@ -515,7 +515,7 @@ final class functions_notification
                     INNER JOIN image_category AS ic ON id = image_id
                     {$where_sql}
                         AND date_available = '{$dates[$i]['date_available']}'
-                    ORDER BY {$randomFunction}()
+                    ORDER BY {$randomFunction}
                     LIMIT {$max_elements};
                     SQL;
                 $dates[$i]['elements'] = functions_mysqli::query2array($query);

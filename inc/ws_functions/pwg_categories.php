@@ -409,7 +409,7 @@ final class pwg_categories
                         INNER JOIN user_cache_categories ON id = cat_id AND user_id = {$user['id']}
                         WHERE uppercats LIKE '{$row['uppercats']},%'
                             AND representative_picture_id IS NOT NULL {$sql_condition}
-                        ORDER BY {$random_function}()
+                        ORDER BY {$random_function}
                         LIMIT 1;
                         SQL;
                 $subresult = functions_mysqli::pwg_query($query);

@@ -1029,7 +1029,7 @@ final class functions_admin
         $datas = [];
 
         foreach ($categories as $category_id) {
-            $random_function = functions_mysqli::DB_RANDOM_FUNCTION . '()';
+            $random_function = functions_mysqli::DB_RANDOM_FUNCTION;
             $query = <<<SQL
                 SELECT image_id
                 FROM image_category

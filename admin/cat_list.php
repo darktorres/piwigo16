@@ -28,7 +28,7 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 functions_plugins::trigger_notify('loc_begin_cat_list');
 
-if (! empty($_POST) or
+if (! empty($_POST) ||
     isset($_GET['delete'])
 ) {
     functions::check_pwg_token();
@@ -67,7 +67,7 @@ require __DIR__ . '/../admin/inc/albums_tab.php';
 // |                    virtual categories management                      |
 // +-----------------------------------------------------------------------+
 // request to delete a virtual category
-if (isset($_GET['delete']) and
+if (isset($_GET['delete']) &&
     is_numeric($_GET['delete'])
 ) {
     $photo_deletion_mode = 'no_delete';

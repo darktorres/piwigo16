@@ -155,7 +155,7 @@ if (isset($_POST['submit'])) {
 
     switch ($page['section']) {
         case 'main':
-            if (! isset($conf['order_by_custom']) and
+            if (! isset($conf['order_by_custom']) &&
                 ! isset($conf['order_by_inside_category_custom'])
             ) {
                 if (! empty($_POST['order_by'])) {
@@ -163,7 +163,7 @@ if (isset($_POST['submit'])) {
 
                     $used = [];
                     foreach ($_POST['order_by'] as $i => $val) {
-                        if (empty($val) or
+                        if (empty($val) ||
                             isset($used[$val])
                         ) {
                             unset($_POST['order_by'][$i]);
@@ -226,8 +226,8 @@ if (isset($_POST['submit'])) {
         case 'comments':
             // the number of comments per page must be an integer between 5 and 50
             // included
-            if (! preg_match($int_pattern, $_POST['nb_comment_page']) or
-                $_POST['nb_comment_page'] < 5 or
+            if (! preg_match($int_pattern, $_POST['nb_comment_page']) ||
+                $_POST['nb_comment_page'] < 5 ||
                 $_POST['nb_comment_page'] > 50
             ) {
                 $page['errors'][] = functions::l10n('The number of comments a page must be between 5 and 50 included.');
@@ -244,7 +244,7 @@ if (isset($_POST['submit'])) {
             break;
 
         case 'display':
-            if (! preg_match($int_pattern, $_POST['nb_categories_page']) or
+            if (! preg_match($int_pattern, $_POST['nb_categories_page']) ||
                 $_POST['nb_categories_page'] < 4
             ) {
                 $page['errors'][] = functions::l10n('The number of albums a page must be above 4.');
@@ -263,8 +263,8 @@ if (isset($_POST['submit'])) {
     }
 
     // updating configuration if no error found
-    if (! in_array($page['section'], ['sizes', 'watermark']) and
-        count($page['errors']) == 0 and
+    if (! in_array($page['section'], ['sizes', 'watermark']) &&
+        count($page['errors']) == 0 &&
         functions_user::is_webmaster()
     ) {
         //echo '<pre>'; print_r($_POST); echo '</pre>';
@@ -301,8 +301,8 @@ if (isset($_POST['submit'])) {
 }
 
 // restore default derivatives settings
-if ($page['section'] == 'sizes' and
-    isset($_GET['action']) and
+if ($page['section'] == 'sizes' &&
+    isset($_GET['action']) &&
     $_GET['action'] == 'restore_settings'
 ) {
     ImageStdParams::set_and_save(ImageStdParams::get_default_sizes());
@@ -345,7 +345,7 @@ switch ($page['section']) {
             $page['warnings'][] = functions::l10n('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !');
         }
 
-        if (isset($conf['order_by_custom']) or
+        if (isset($conf['order_by_custom']) ||
             isset($conf['order_by_inside_category_custom'])
         ) {
             $order_by = [''];
@@ -580,31 +580,31 @@ switch ($page['section']) {
 
             $position = 'custom';
 
-            if ($wm->xpos == 0 and
+            if ($wm->xpos == 0 &&
                 $wm->ypos == 0
             ) {
                 $position = 'topleft';
             }
 
-            if ($wm->xpos == 100 and
+            if ($wm->xpos == 100 &&
                 $wm->ypos == 0
             ) {
                 $position = 'topright';
             }
 
-            if ($wm->xpos == 50 and
+            if ($wm->xpos == 50 &&
                 $wm->ypos == 50
             ) {
                 $position = 'middle';
             }
 
-            if ($wm->xpos == 0 and
+            if ($wm->xpos == 0 &&
                 $wm->ypos == 100
             ) {
                 $position = 'bottomleft';
             }
 
-            if ($wm->xpos == 100 and
+            if ($wm->xpos == 100 &&
                 $wm->ypos == 100
             ) {
                 $position = 'bottomright';

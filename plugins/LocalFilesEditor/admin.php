@@ -92,7 +92,7 @@ if (isset($_POST['submit'])) {
         if ($content_file === false) {
             $page['errors'][] = functions::l10n('locfiledit_syntax_error');
         } else {
-            if ($page['tab'] == 'plug' and
+            if ($page['tab'] == 'plug' &&
                 ! is_dir(PHPWG_PLUGINS_PATH . 'PersonalPlugin')
             ) {
                 mkdir(PHPWG_PLUGINS_PATH . 'PersonalPlugin');

@@ -52,7 +52,7 @@ final class themes
     ): array {
         global $conf;
 
-        if (! $conf['enable_extensions_install'] and
+        if (! $conf['enable_extensions_install'] &&
             $action == 'delete'
         ) {
             exit('Piwigo extensions install/update/delete system is disabled');
@@ -92,8 +92,8 @@ final class themes
                     break;
                 }
 
-                if ($this->fs_themes[$theme_id]['mobile'] and
-                    ! empty($conf['mobile_theme']) and
+                if ($this->fs_themes[$theme_id]['mobile'] &&
+                    ! empty($conf['mobile_theme']) &&
                     $conf['mobile_theme'] != $theme_id
                 ) {
                     $errors[] = functions::l10n('You can activate only one mobile theme.');
@@ -241,7 +241,7 @@ final class themes
         $children = [];
 
         foreach ($this->fs_themes as $test_child) {
-            if (isset($test_child['parent']) and
+            if (isset($test_child['parent']) &&
                 $test_child['parent'] == $theme_id
             ) {
                 $children[] = $test_child['name'];
@@ -317,13 +317,13 @@ final class themes
         $dir = opendir(PHPWG_THEMES_PATH);
 
         while ($file = readdir($dir)) {
-            if ($file != '.' and
+            if ($file != '.' &&
                 $file != '..'
             ) {
                 $path = PHPWG_THEMES_PATH . $file;
 
-                if (is_dir($path) and
-                    preg_match('/^[a-zA-Z0-9-_]+$/', $file) and
+                if (is_dir($path) &&
+                    preg_match('/^[a-zA-Z0-9-_]+$/', $file) &&
                     file_exists($path . '/themeconf.php')
                 ) {
                     $theme = [
@@ -365,7 +365,7 @@ final class themes
                         $theme['author uri'] = trim($val[1]);
                     }
 
-                    if (! empty($theme['uri']) and
+                    if (! empty($theme['uri']) &&
                         strpos($theme['uri'], 'extension_view.php?eid=')
                     ) {
                         list(, $extension) = explode('extension_view.php?eid=', $theme['uri']);
@@ -582,7 +582,7 @@ final class themes
             ];
             $handle = fopen($archive, 'wb');
 
-            if ($handle and
+            if ($handle &&
                 functions_admin::fetchRemote($url, $handle, $get_data)
             ) {
                 fclose($handle);
@@ -592,8 +592,8 @@ final class themes
                 if ($list) {
                     foreach ($list as $file) {
                         // we search main.php in archive
-                        if (basename($file['filename']) == 'themeconf.inc.php' and
-                           (! isset($main_filepath) or strlen($file['filename']) < strlen($main_filepath))
+                        if (basename($file['filename']) == 'themeconf.inc.php' &&
+                           (! isset($main_filepath) || strlen($file['filename']) < strlen($main_filepath))
                         ) {
                             $main_filepath = $file['filename'];
                         }
@@ -648,7 +648,7 @@ final class themes
                                         // make sure the obsolete file is withing the extension directory, prevent traversal path
                                         $realpath = realpath($path);
 
-                                        if ($realpath === false or
+                                        if ($realpath === false ||
                                             strpos($realpath, $extract_path_realpath) !== 0
                                         ) {
                                             continue;

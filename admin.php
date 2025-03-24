@@ -120,7 +120,7 @@ unset($test_get['page']);
 unset($test_get['section']);
 unset($test_get['tag']);
 
-if (count($test_get) == 0 and
+if (count($test_get) == 0 &&
     ! empty($_SERVER['QUERY_STRING'])
 ) {
     $change_theme_url .= str_replace('&', '&amp;', $_SERVER['QUERY_STRING']) . '&amp;';
@@ -130,7 +130,7 @@ $change_theme_url .= 'change_theme=1';
 
 // ?page=plugin-community-pendings is an clean alias of
 // ?page=plugin&section=community/admin.php&tab=pendings
-if (isset($_GET['page']) and
+if (isset($_GET['page']) &&
     preg_match('/^plugin-([^-]*)(?:-(.*))?$/', $_GET['page'], $matches)
 ) {
     $_GET['page'] = 'plugin';
@@ -148,7 +148,7 @@ if (isset($_GET['page']) and
 
 // ?page=album-134-properties is an clean alias of
 // ?page=album&cat_id=134&tab=properties
-if (isset($_GET['page']) and
+if (isset($_GET['page']) &&
     preg_match('/^album-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)
 ) {
     $_GET['page'] = 'album';
@@ -161,7 +161,7 @@ if (isset($_GET['page']) and
 
 // ?page=photo-1234-properties is an clean alias of
 // ?page=photo&image_id=1234&tab=properties
-if (isset($_GET['page']) and
+if (isset($_GET['page']) &&
     preg_match('/^photo-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)
 ) {
     $_GET['page'] = 'photo';
@@ -172,8 +172,8 @@ if (isset($_GET['page']) and
     }
 }
 
-if (isset($_GET['page']) and
-    preg_match('/^[a-z_]*$/', $_GET['page']) and
+if (isset($_GET['page']) &&
+    preg_match('/^[a-z_]*$/', $_GET['page']) &&
     is_file('./admin/' . $_GET['page'] . '.php')
 ) {
     $page['page'] = $_GET['page'];
@@ -321,18 +321,18 @@ $template->assign(
 if (in_array($page['page'], [
     'site_manager', // delete site
     'site_update',  // ?only POST
-])
-    or
-    (! empty($_POST) and in_array(
-        $page['page'],
-        [
-            'album',        // public/private; lock/unlock, permissions
-            'albums',
-            'cat_options',  // public/private; lock/unlock
-            'user_list',    // group assoc; user level
-            'user_perm',
-        ]
-    )
+]) ||
+    (
+        ! empty($_POST) && in_array(
+            $page['page'],
+            [
+                'album',        // public/private; lock/unlock, permissions
+                'albums',
+                'cat_options',  // public/private; lock/unlock
+                'user_list',    // group assoc; user level
+                'user_perm',
+            ]
+        )
     )
 ) {
     functions_admin::invalidate_user_cache();

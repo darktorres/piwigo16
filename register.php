@@ -58,7 +58,7 @@ if (isset($_POST['submit'])) {
 
     if (count($page['errors']) == 0) {
         // email notification
-        if (isset($_POST['send_password_by_mail']) and
+        if (isset($_POST['send_password_by_mail']) &&
             functions::email_check_format($_POST['mail_address'])
         ) {
             $_SESSION['page_infos'][] = functions::l10n('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
@@ -100,7 +100,7 @@ $template->assign([
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
 
-if (! isset($themeconf['hide_menu_on']) or
+if (! isset($themeconf['hide_menu_on']) ||
     ! in_array('theRegisterPage', $themeconf['hide_menu_on'])
 ) {
     menubar::initialize_menu();

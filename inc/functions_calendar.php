@@ -127,13 +127,13 @@ final class functions_calendar
 
         // Retrieve view
 
-        if (! isset($page['chronology_view']) or
+        if (! isset($page['chronology_view']) ||
             ! in_array($page['chronology_view'], $views)
         ) {
             $page['chronology_view'] = self::CAL_VIEW_LIST;
         }
 
-        if ($page['chronology_view'] == self::CAL_VIEW_CALENDAR and
+        if ($page['chronology_view'] == self::CAL_VIEW_CALENDAR &&
             ! $styles[$cal_style]['view_calendar']
         ) {
 
@@ -192,7 +192,7 @@ final class functions_calendar
 
             foreach ($styles as $style => $style_data) {
                 foreach ($views as $view) {
-                    if ($style_data['view_calendar'] or
+                    if ($style_data['view_calendar'] ||
                         $view != self::CAL_VIEW_CALENDAR
                     ) {
                         $selected = false;
@@ -215,7 +215,7 @@ final class functions_calendar
                             ]
                         );
 
-                        if ($style == $cal_style and
+                        if ($style == $cal_style &&
                             $view == $page['chronology_view']
                         ) {
                             $selected = true;
@@ -251,7 +251,7 @@ final class functions_calendar
             if (isset($page['super_order_by'])) {
                 $order_by = $conf['order_by'];
             } else {
-                if (count($page['chronology_date']) == 0 or
+                if (count($page['chronology_date']) == 0 ||
                     in_array('any', $page['chronology_date'])
                 ) { // selected period is very big so we show newest first
                     $order = ' DESC, ';
@@ -268,7 +268,7 @@ final class functions_calendar
 
             if ($page['section'] == 'categories' &&
                 ! isset($page['category']) &&
-                (count($page['chronology_date']) == 0 or ($page['chronology_date'][0] == 'any' && count($page['chronology_date']) == 1))
+                (count($page['chronology_date']) == 0 || ($page['chronology_date'][0] == 'any' && count($page['chronology_date']) == 1))
             ) {
                 $cache_key = $persistent_cache->make_key($user['id'] . $user['cache_update_time'] . $calendar->date_field . $order_by);
             }

@@ -37,7 +37,7 @@ if ($conf['rate']) {
 
     $user_rate = null;
 
-    if ($conf['rate_anonymous'] or
+    if ($conf['rate_anonymous'] ||
         functions_user::is_authorized_status(ACCESS_CLASSIC)
     ) {
         if ($rate_summary['count'] > 0) {

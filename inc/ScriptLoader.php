@@ -261,7 +261,7 @@ final class ScriptLoader
 
                     if ($load == 2 &&
                         $scripts[$precedent]->load_mode == 2 &&
-                        ($scripts[$precedent]->is_remote() or ! $conf['template_combine_files'])
+                        ($scripts[$precedent]->is_remote() || ! $conf['template_combine_files'])
                     ) { // we are async -> a predecessor cannot be async unless it can be merged; otherwise script execution order is not guaranteed
                         $scripts[$precedent]->load_mode = 1;
                         $changed = true;
@@ -370,7 +370,7 @@ final class ScriptLoader
             return $ret;
         }
 
-        if ($s1->extra['order'] == 0 and
+        if ($s1->extra['order'] == 0 &&
            ($s1->is_remote() xor $s2->is_remote())
         ) {
             return $s1->is_remote() ? -1 : 1;

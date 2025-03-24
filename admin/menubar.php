@@ -66,7 +66,7 @@ foreach ($reg_blocks as $id => $block) {
     $idx++;
 }
 
-if (isset($_POST['submit']) and
+if (isset($_POST['submit']) &&
     functions_user::is_webmaster()
 ) {
     foreach ($mb_conf as $id => $pos) {

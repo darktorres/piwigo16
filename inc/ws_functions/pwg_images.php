@@ -440,7 +440,7 @@ final class pwg_images
 
         usort($related_categories, functions_category::global_rank_compare(...));
 
-        if (empty($related_categories) and
+        if (empty($related_categories) &&
             ! functions_user::is_admin()
         ) {
             // photo might be in the lounge? or simply orphan. A standard user should not get
@@ -507,7 +507,7 @@ final class pwg_images
         list($nb_comments) = functions_mysqli::query2array($query, null, 'nb_comments');
         $nb_comments = (int) $nb_comments;
 
-        if ($nb_comments > 0 and
+        if ($nb_comments > 0 &&
             $params['comments_per_page'] > 0
         ) {
             $offset = $params['comments_per_page'] * $params['comments_page'];
@@ -528,9 +528,9 @@ final class pwg_images
 
         $comment_post_data = null;
 
-        if ($is_commentable and
-           (! functions_user::is_a_guest() or
-           (functions_user::is_a_guest() and $conf['comments_forall']))
+        if ($is_commentable &&
+           (! functions_user::is_a_guest() ||
+           (functions_user::is_a_guest() && $conf['comments_forall']))
         ) {
             $comment_post_data['author'] = stripslashes($user['username']);
             $comment_post_data['key'] = functions::get_ephemeral_key(2, $params['image_id']);
@@ -1315,7 +1315,7 @@ final class pwg_images
         }
 
         // and now, let's create tag associations
-        if (isset($params['tag_ids']) and
+        if (isset($params['tag_ids']) &&
             ! empty($params['tag_ids'])
         ) {
             functions_admin::set_tags(
@@ -1444,7 +1444,7 @@ final class pwg_images
             ]
         );
 
-        if (isset($params['tags']) and
+        if (isset($params['tags']) &&
             ! empty($params['tags'])
         ) {
             $tag_ids = [];
@@ -1890,7 +1890,7 @@ final class pwg_images
         $logger->debug(__FUNCTION__ . ' image_id after add_uploaded_file = ' . $image_id);
 
         // and now, let's create tag associations
-        if (isset($params['tag_ids']) and
+        if (isset($params['tag_ids']) &&
             ! empty($params['tag_ids'])
         ) {
             functions_admin::set_tags(
@@ -1929,7 +1929,7 @@ final class pwg_images
         functions_admin::invalidate_user_cache();
 
         // trick to bypass get_sql_condition_FandF
-        if (! empty($params['level']) and
+        if (! empty($params['level']) &&
             $params['level'] > $user['level']
         ) {
             // this will not persist
@@ -2202,7 +2202,7 @@ final class pwg_images
             }
 
             foreach ($files as $path) {
-                if (is_file($path) and
+                if (is_file($path) &&
                     ! unlink($path)
                 ) {
                     $ok = false;
@@ -2312,7 +2312,7 @@ final class pwg_images
     ): ?PwgError {
         global $conf;
 
-        if (isset($params['pwg_token']) and
+        if (isset($params['pwg_token']) &&
             functions::get_pwg_token() != $params['pwg_token']
         ) {
             return new PwgError(403, 'Invalid security token');
@@ -2344,7 +2344,7 @@ final class pwg_images
 
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
-                if (! $conf['allow_html_descriptions'] or
+                if (! $conf['allow_html_descriptions'] ||
                     ! isset($params['pwg_token'])
                 ) {
                     $params[$key] = strip_tags($params[$key], '<b><strong><em><i>');

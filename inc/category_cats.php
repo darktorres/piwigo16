@@ -92,7 +92,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $image_id = $row['representative_picture_id'];
     } elseif ($conf['allow_random_representative']) { // searching a random representative among elements in sub-categories
         $image_id = functions_category::get_random_image_in_category($row);
-    } elseif ($row['count_categories'] > 0 and
+    } elseif ($row['count_categories'] > 0 &&
               $row['count_images'] > 0
     ) { // at this point, $row['count_images'] should always be >0 (used as condition in SQL)
         // searching a random representative among representative of sub-categories
@@ -121,7 +121,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     }
 
     if (isset($image_id)) {
-        if ($conf['representative_cache_on_subcats'] and
+        if ($conf['representative_cache_on_subcats'] &&
             $row['user_representative_picture_id'] != $image_id
         ) {
             $user_representative_updates_for[$row['id']] = $image_id;
@@ -200,7 +200,7 @@ if (count($categories) > 0) {
                     // searching a random representative among elements in sub-categories
                     $image_id = functions_category::get_random_image_in_category($category);
 
-                    if (isset($image_id) and
+                    if (isset($image_id) &&
                         ! in_array($image_id, $image_ids)
                     ) {
                         $new_image_ids[] = $image_id;

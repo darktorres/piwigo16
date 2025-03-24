@@ -100,7 +100,7 @@ $count_types_plugins = [
 ];
 
 foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
-    if (isset($_SESSION['incompatible_plugins'][$plugin_id]) and
+    if (isset($_SESSION['incompatible_plugins'][$plugin_id]) &&
         $fs_plugin['version'] != $_SESSION['incompatible_plugins'][$plugin_id]
     ) {
         // Incompatible plugins must be reinitialized
@@ -137,7 +137,7 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
         $tpl_plugin['STATE'] = 'inactive';
     }
 
-    if (isset($fs_plugin['extension']) and
+    if (isset($fs_plugin['extension']) &&
         isset($merged_extensions[$fs_plugin['extension']])
     ) {
         // Deactivate manually plugin from database

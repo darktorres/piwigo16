@@ -61,8 +61,8 @@ final class image_ext_imagick implements imageInterface
         $command = $this->imagickdir . 'identify -format "%wx%h" "' . realpath($source_filepath) . '"';
         exec($command, $returnarray);
 
-        if (! is_array($returnarray) or
-            empty($returnarray[0]) or
+        if (! is_array($returnarray) ||
+            empty($returnarray[0]) ||
             ! preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)
         ) {
             exit("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));

@@ -47,7 +47,7 @@ final class functions_url
         // TODO - add HERE the possibility to call PWG functions from external scripts
 
         // Support X-Forwarded-Proto header for HTTPS detection in PHP
-        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) and
+        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
             $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
         ) {
             $_SERVER['HTTPS'] = 'on';
@@ -59,7 +59,7 @@ final class functions_url
             $is_https = false;
 
             if (isset($_SERVER['HTTPS']) &&
-               (strtolower($_SERVER['HTTPS']) == 'on' or $_SERVER['HTTPS'] == 1)
+               (strtolower($_SERVER['HTTPS']) == 'on' || $_SERVER['HTTPS'] == 1)
             ) {
                 $is_https = true;
                 $url .= 'https://';
@@ -88,7 +88,7 @@ final class functions_url
                     $url_port = ':' . $conf['url_port'];
                 }
 
-                if (! empty($url_port) and
+                if (! empty($url_port) &&
                     strrchr($url, ':') != $url_port
                 ) {
                     $url .= $url_port;
@@ -259,7 +259,7 @@ final class functions_url
                 if (isset($params['image_file'])) {
                     $fname_wo_ext = functions::get_filename_wo_extension($params['image_file']);
 
-                    if (ord($fname_wo_ext) > ord('9') or
+                    if (ord($fname_wo_ext) > ord('9') ||
                         ! preg_match('/^\d+(-|$)/', $fname_wo_ext)
                     ) {
                         $url .= $fname_wo_ext;
@@ -305,7 +305,7 @@ final class functions_url
             $url .= '/flat';
         }
 
-        if (isset($params['start']) and
+        if (isset($params['start']) &&
             $params['start'] > 0
         ) {
             $url .= '/start-' . $params['start'];
@@ -451,7 +451,7 @@ final class functions_url
     ): array {
         $page = [];
 
-        if (isset($tokens[$next_token]) and
+        if (isset($tokens[$next_token]) &&
             strncmp($tokens[$next_token], 'categor', 7) == 0
         ) {
             $page['section'] = 'categories';
@@ -465,10 +465,10 @@ final class functions_url
                     exit('infinite loop?');
                 }
 
-                if (strpos($tokens[$next_token], 'created-') === 0 or
-                    strpos($tokens[$next_token], 'posted-') === 0 or
-                    strpos($tokens[$next_token], 'start-') === 0 or
-                    strpos($tokens[$next_token], 'startcat-') === 0 or
+                if (strpos($tokens[$next_token], 'created-') === 0 ||
+                    strpos($tokens[$next_token], 'posted-') === 0 ||
+                    strpos($tokens[$next_token], 'start-') === 0 ||
+                    strpos($tokens[$next_token], 'startcat-') === 0 ||
                     $tokens[$next_token] == 'flat'
                 ) {
                     break;
@@ -490,11 +490,11 @@ final class functions_url
                     $maybe_permalinks = [];
                     $current_token = $next_token;
 
-                    while (isset($tokens[$current_token]) and
-                           strpos($tokens[$current_token], 'created-') !== 0 and
-                           strpos($tokens[$current_token], 'posted-') !== 0 and
-                           strpos($tokens[$next_token], 'start-') !== 0 and
-                           strpos($tokens[$next_token], 'startcat-') !== 0 and
+                    while (isset($tokens[$current_token]) &&
+                           strpos($tokens[$current_token], 'created-') !== 0 &&
+                           strpos($tokens[$current_token], 'posted-') !== 0 &&
+                           strpos($tokens[$next_token], 'start-') !== 0 &&
+                           strpos($tokens[$next_token], 'startcat-') !== 0 &&
                            $tokens[$current_token] != 'flat'
                     ) {
                         if (empty($maybe_permalinks)) {
@@ -563,14 +563,14 @@ final class functions_url
             $requested_tag_url_names = [];
 
             while (isset($tokens[$i])) {
-                if (strpos($tokens[$i], 'created-') === 0 or
-                    strpos($tokens[$i], 'posted-') === 0 or
+                if (strpos($tokens[$i], 'created-') === 0 ||
+                    strpos($tokens[$i], 'posted-') === 0 ||
                     strpos($tokens[$i], 'start-') === 0
                 ) {
                     break;
                 }
 
-                if ($conf['tag_url_style'] != 'tag' and
+                if ($conf['tag_url_style'] != 'tag' &&
                     preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)
                 ) {
                     $requested_tag_ids[] = $matches[1];
@@ -667,7 +667,7 @@ final class functions_url
             if ($tokens[$i] == 'flat') {
                 // indicate a special list of images
                 $page['flat'] = true;
-            } elseif (strpos($tokens[$i], 'created-') === 0 or
+            } elseif (strpos($tokens[$i], 'created-') === 0 ||
                       strpos($tokens[$i], 'posted-') === 0
             ) {
                 $chronology_tokens = explode('-', $tokens[$i]);
@@ -684,7 +684,7 @@ final class functions_url
                 array_shift($chronology_tokens);
 
                 if (count($chronology_tokens) > 0) {
-                    if ($chronology_tokens[0] == 'list' or
+                    if ($chronology_tokens[0] == 'list' ||
                         $chronology_tokens[0] == 'calendar'
                     ) {
                         $page['chronology_view'] = $chronology_tokens[0];
@@ -821,7 +821,7 @@ final class functions_url
         global $conf;
 
         if (! empty($conf['gallery_url'])) {
-            if (self::url_is_remote($conf['gallery_url']) or
+            if (self::url_is_remote($conf['gallery_url']) ||
                 $conf['gallery_url'][0] == '/'
             ) {
                 return $conf['gallery_url'];
@@ -860,7 +860,7 @@ final class functions_url
     public static function url_is_remote(
         string $url
     ): bool {
-        if (strncmp($url, 'http://', 7) == 0 or
+        if (strncmp($url, 'http://', 7) == 0 ||
             strncmp($url, 'https://', 8) == 0
         ) {
             return true;

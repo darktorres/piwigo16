@@ -288,7 +288,7 @@ if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
 
 functions_upgrade::check_upgrade_access_rights();
 
-if ((isset($_POST['submit']) or isset($_GET['now'])) and
+if ((isset($_POST['submit']) || isset($_GET['now'])) &&
      functions_upgrade::check_upgrade()
 ) {
     $upgrade_file = './install/upgrade_' . $current_release . '.php';

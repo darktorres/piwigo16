@@ -81,7 +81,7 @@ final class DerivativeParams
     public function is_identity(
         array $in_size
     ): bool {
-        if ($in_size[0] > $this->sizing->ideal_size[0] or
+        if ($in_size[0] > $this->sizing->ideal_size[0] ||
             $in_size[1] > $this->sizing->ideal_size[1]
         ) {
             return false;

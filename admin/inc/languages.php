@@ -46,7 +46,7 @@ final class languages
     ): array {
         global $conf;
 
-        if (! $conf['enable_extensions_install'] and
+        if (! $conf['enable_extensions_install'] &&
             $action == 'delete'
         ) {
             exit('Piwigo extensions install/update/delete system is disabled');
@@ -143,14 +143,14 @@ final class languages
         $dir = opendir('./language');
 
         while ($file = readdir($dir)) {
-            if ($file != '.' and
+            if ($file != '.' &&
                 $file != '..'
             ) {
                 $path = './language/' . $file;
 
-                if (is_dir($path) and
-                    ! is_link($path) and
-                    preg_match('/^[a-zA-Z0-9-_]+$/', $file) and
+                if (is_dir($path) &&
+                    ! is_link($path) &&
+                    preg_match('/^[a-zA-Z0-9-_]+$/', $file) &&
                     file_exists($path . '/common.lang.php')
                 ) {
                     $language = [
@@ -183,7 +183,7 @@ final class languages
                         $language['author uri'] = trim($val[1]);
                     }
 
-                    if (! empty($language['uri']) and
+                    if (! empty($language['uri']) &&
                         strpos($language['uri'], 'extension_view.php?eid=')
                     ) {
                         list(, $extension) = explode('extension_view.php?eid=', $language['uri']);
@@ -236,7 +236,7 @@ final class languages
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
 
-        if (functions_admin::fetchRemote($url, $result, $get_data) and
+        if (functions_admin::fetchRemote($url, $result, $get_data) &&
             $pem_versions = functions::safe_unserialize($result)
         ) {
             if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
@@ -329,7 +329,7 @@ final class languages
             ];
             $handle = fopen($archive, 'wb');
 
-            if ($handle and
+            if ($handle &&
                 functions_admin::fetchRemote($url, $handle, $get_data)
             ) {
                 fclose($handle);
@@ -339,8 +339,8 @@ final class languages
                 if ($list) {
                     foreach ($list as $file) {
                         // we search common.lang.php in archive
-                        if (basename($file['filename']) == 'common.lang.php' and
-                           (! isset($main_filepath) or strlen($file['filename']) < strlen($main_filepath))
+                        if (basename($file['filename']) == 'common.lang.php' &&
+                           (! isset($main_filepath) || strlen($file['filename']) < strlen($main_filepath))
                         ) {
                             $main_filepath = $file['filename'];
                         }
@@ -384,7 +384,7 @@ final class languages
                                 if (file_exists($extract_path . '/obsolete.list')) {
                                     $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES);
 
-                                    if ($old_files and
+                                    if ($old_files &&
                                         ! empty($old_files)
                                     ) {
                                         $old_files[] = 'obsolete.list';
@@ -405,7 +405,7 @@ final class languages
                                             // make sure the obsolete file is withing the extension directory, prevent traversal path
                                             $realpath = realpath($path);
 
-                                            if ($realpath === false or
+                                            if ($realpath === false ||
                                                 strpos($realpath, $extract_path_realpath) !== 0
                                             ) {
                                                 continue;

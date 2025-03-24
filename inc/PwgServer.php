@@ -191,7 +191,7 @@ final class PwgServer
 
     public static function isPost(): bool
     {
-        return isset($HTTP_RAW_POST_DATA) or
+        return isset($HTTP_RAW_POST_DATA) ||
                ! empty($_POST);
     }
 
@@ -248,8 +248,8 @@ final class PwgServer
                 foreach ($param as &$value) {
                     $value = filter_var($value, FILTER_VALIDATE_FLOAT);
 
-                    if ($value === false or
-                       (isset($opts['options']['min_range']) and $value < $opts['options']['min_range'])
+                    if ($value === false ||
+                       (isset($opts['options']['min_range']) && $value < $opts['options']['min_range'])
                     ) {
                         return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must only contain' . $msg . ' floats');
                     }
@@ -273,8 +273,8 @@ final class PwgServer
             } elseif (self::hasFlag($type, WS_TYPE_FLOAT)) {
                 $param = filter_var($param, FILTER_VALIDATE_FLOAT);
 
-                if ($param === false or
-                   (isset($opts['options']['min_range']) and $param < $opts['options']['min_range'])
+                if ($param === false ||
+                   (isset($opts['options']['min_range']) && $param < $opts['options']['min_range'])
                 ) {
                     return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must be a' . $msg . ' float');
                 }
@@ -307,15 +307,15 @@ final class PwgServer
             return new PwgError(WS_ERR_INVALID_METHOD, 'Method name is not valid');
         }
 
-        if (isset($method['options']['post_only']) and
-            $method['options']['post_only'] and
+        if (isset($method['options']['post_only']) &&
+            $method['options']['post_only'] &&
             ! self::isPost()
         ) {
             return new PwgError(405, 'This method requires HTTP POST');
         }
 
-        if (isset($method['options']['admin_only']) and
-            $method['options']['admin_only'] and
+        if (isset($method['options']['admin_only']) &&
+            $method['options']['admin_only'] &&
             ! functions_user::is_admin()
         ) {
             return new PwgError(401, 'Access denied');
@@ -341,7 +341,7 @@ final class PwgServer
                 }
             }
             // parameter provided but empty
-            elseif ($params[$name] === '' and
+            elseif ($params[$name] === '' &&
                     ! self::hasFlag($flags, WS_PARAM_OPTIONAL)
             ) {
                 $missing_params[] = $name;
@@ -350,7 +350,7 @@ final class PwgServer
             else {
                 $the_param = $params[$name];
 
-                if (is_array($the_param) and
+                if (is_array($the_param) &&
                     ! self::hasFlag($flags, WS_PARAM_ACCEPT_ARRAY)
                 ) {
                     return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must be scalar');
@@ -368,7 +368,7 @@ final class PwgServer
                     }
                 }
 
-                if (isset($options['maxValue']) and
+                if (isset($options['maxValue']) &&
                     $the_param > $options['maxValue']
                 ) {
                     $the_param = $options['maxValue'];

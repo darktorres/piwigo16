@@ -161,7 +161,7 @@ final class BlockManager
         functions_plugins::trigger_notify('blockmanager_apply', [$this]);
 
         foreach ($this->display_blocks as $id => $block) {
-            if (empty($block->raw_content) and
+            if (empty($block->raw_content) &&
                 empty($block->template)
             ) {
                 $this->hide_block($id);

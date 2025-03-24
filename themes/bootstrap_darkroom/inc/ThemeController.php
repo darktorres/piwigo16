@@ -122,7 +122,7 @@ readonly class ThemeController
     {
         global $template, $page;
 
-        if (isset($page['is_homepage']) and
+        if (isset($page['is_homepage']) &&
             $page['is_homepage']
         ) {
             $template->assign('is_homepage', true);
@@ -214,7 +214,7 @@ readonly class ThemeController
             $title = str_replace('<a href', '<a class="nav-breadcrumb-item" href', $title);
             $title = str_replace($l_sep, '', $title);
 
-            if ($page['section'] == 'recent_cats' or
+            if ($page['section'] == 'recent_cats' ||
                 $page['section'] == 'favorites'
             ) {
                 $title = preg_replace('/<\/a>([a-zA-Z0-9]+)/', '</a><a class="nav-breadcrumb-item" href="' . functions_url::make_index_url([

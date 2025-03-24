@@ -41,7 +41,7 @@ if (! is_writable($themes_dir)) {
 // |                       perform installation                            |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['revision']) and
+if (isset($_GET['revision']) &&
     isset($_GET['extension'])
 ) {
     if (! functions_user::is_webmaster()) {

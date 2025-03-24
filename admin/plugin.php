@@ -26,7 +26,7 @@ for ($i = 0; $i < count($sections); $i++) {
         continue;
     }
 
-    if ($sections[$i] == '..' or
+    if ($sections[$i] == '..' ||
         ! preg_match('/^[a-zA-Z0-9_\.-]+$/', $sections[$i])
     ) {
         exit('invalid section token [' . htmlentities($sections[$i]) . ']');

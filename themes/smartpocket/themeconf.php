@@ -50,7 +50,7 @@ if (! empty($_COOKIE['screen_size'])) {
     $screen_size = explode('x', $_COOKIE['screen_size']);
 
     foreach (ImageStdParams::get_all_type_map() as $type => $map) {
-        if (max($map->sizing->ideal_size) >= max($screen_size) and
+        if (max($map->sizing->ideal_size) >= max($screen_size) &&
             min($map->sizing->ideal_size) >= min($screen_size)
         ) {
             break;
@@ -67,7 +67,7 @@ functions_plugins::add_event_handler('loc_end_section_init', functions_smartpock
 functions_plugins::add_event_handler('init', functions_smartpocket::mobile_link(...));
 
 if (! function_exists('add_menu_on_public_pages')) {
-    if (defined('IN_ADMIN') and
+    if (defined('IN_ADMIN') &&
         IN_ADMIN
     ) {
         return false;

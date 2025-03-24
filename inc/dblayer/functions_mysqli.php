@@ -91,7 +91,7 @@ final class functions_mysqli
 
         $db_charset = 'utf8';
 
-        if (defined('DB_CHARSET') and
+        if (defined('DB_CHARSET') &&
             DB_CHARSET != ''
         ) {
             $db_charset = DB_CHARSET;
@@ -174,12 +174,12 @@ final class functions_mysqli
             $output .= "\n" . '(total time      : ';
             $output .= number_format(($time + $start - $t2), 3, '.', ' ') . ' s)';
 
-            if ($result != null and
+            if ($result != null &&
                 preg_match('/\s*SELECT\s+/i', $query)
             ) {
                 $output .= "\n" . '(num rows        : ';
                 $output .= self::pwg_db_num_rows($result) . ' )';
-            } elseif ($result != null and
+            } elseif ($result != null &&
                       preg_match('/\s*INSERT|UPDATE|REPLACE|DELETE\s+/i', $query)
             ) {
                 $output .= "\n" . '(affected rows   : ';
@@ -322,7 +322,7 @@ final class functions_mysqli
                     $separator = $is_first ? '' : ",\n";
                     $escapedKey = self::protect_column_name($key);
 
-                    if (isset($data[$key]) and
+                    if (isset($data[$key]) &&
                         $data[$key] != ''
                     ) {
                         $query .= "{$separator}{$escapedKey} = '{$data[$key]}'";
@@ -375,8 +375,8 @@ final class functions_mysqli
 
                     $nullable = true;
 
-                    if (! isset($row['Null']) or
-                        $row['Null'] == '' or
+                    if (! isset($row['Null']) ||
+                        $row['Null'] == '' ||
                         $row['Null'] == 'NO'
                     ) {
                         $column .= ' NOT NULL';
@@ -389,7 +389,7 @@ final class functions_mysqli
                         $column .= ' default NULL';
                     }
 
-                    if (isset($row['Collation']) and
+                    if (isset($row['Collation']) &&
                         $row['Collation'] != 'NULL'
                     ) {
                         $column .= " collate '{$row['Collation']}'";
@@ -474,7 +474,7 @@ final class functions_mysqli
             $separator = $is_first ? '' : ",\n";
             $escapedKey = self::protect_column_name($key);
 
-            if (isset($value) and
+            if (isset($value) &&
                 $value !== ''
             ) {
                 $query .= "{$separator}{$escapedKey} = '{$value}'";
@@ -531,7 +531,7 @@ final class functions_mysqli
     ): void {
         $ignore = '';
 
-        if (isset($options['ignore']) and
+        if (isset($options['ignore']) &&
             $options['ignore']
         ) {
             $ignore = 'IGNORE';
@@ -604,7 +604,7 @@ final class functions_mysqli
     ): void {
         $ignore = '';
 
-        if (isset($options['ignore']) and
+        if (isset($options['ignore']) &&
             $options['ignore']
         ) {
             $ignore = 'IGNORE';

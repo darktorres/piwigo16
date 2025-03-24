@@ -51,7 +51,7 @@ foreach ($autoupdate->types as $type) {
     $updates_extension[$type] = [];
 
     foreach ($fs_ext as $ext_id => $fs_ext) {
-        if (! isset($fs_ext['extension']) or
+        if (! isset($fs_ext['extension']) ||
             ! isset($server_ext[$fs_ext['extension']])
         ) {
             continue;

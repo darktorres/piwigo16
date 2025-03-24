@@ -11,7 +11,7 @@ $TOUR_PATH = PHPWG_PLUGINS_PATH . 'TakeATour/tours/config/tour.tpl';
 
 /*********************************/
 
-if (defined('IN_ADMIN') and
+if (defined('IN_ADMIN') &&
     IN_ADMIN
 ) {
     functions_plugins::add_event_handler('loc_end_themes_installed', TAT_FC_35(...));

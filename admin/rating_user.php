@@ -211,7 +211,7 @@ foreach ($by_user_ratings as $id => $rating) {
 
 $order_by_index = 4;
 
-if (isset($_GET['order_by']) and
+if (isset($_GET['order_by']) &&
     is_numeric($_GET['order_by'])
 ) {
     $order_by_index = $_GET['order_by'];

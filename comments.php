@@ -61,8 +61,8 @@ if (! in_array($conf['comments_page_nb_comments'], $items_number)) {
     $is_inserted = false;
 
     foreach ($items_number as $number) {
-        if ($number > $conf['comments_page_nb_comments'] or
-           ($number == 'all' and ! $is_inserted)
+        if ($number > $conf['comments_page_nb_comments'] ||
+           ($number == 'all' && ! $is_inserted)
         ) {
             $items_number_new[] = $conf['comments_page_nb_comments'];
             $is_inserted = true;
@@ -107,7 +107,7 @@ if (! empty($_GET['since'])) {
 //
 $page['sort_by'] = 'date';
 // if the form was submitted, it overloads default behaviour
-if (isset($_GET['sort_by']) and
+if (isset($_GET['sort_by']) &&
     isset($sort_by[$_GET['sort_by']])
 ) {
     $page['sort_by'] = $_GET['sort_by'];
@@ -117,7 +117,7 @@ if (isset($_GET['sort_by']) and
 //
 $page['sort_order'] = 'DESC';
 // if the form was submitted, it overloads default behaviour
-if (isset($_GET['sort_order']) and
+if (isset($_GET['sort_order']) &&
     isset($sort_order[$_GET['sort_order']])
 ) {
     $page['sort_order'] = $_GET['sort_order'];
@@ -131,7 +131,7 @@ if (isset($_GET['items_number'])) {
     $page['items_number'] = $_GET['items_number'];
 }
 
-if (! is_numeric($page['items_number']) and
+if (! is_numeric($page['items_number']) &&
     $page['items_number'] != 'all'
 ) {
     $page['items_number'] = 10;
@@ -140,7 +140,7 @@ if (! is_numeric($page['items_number']) and
 $page['where_clauses'] = [];
 
 // which category to filter on ?
-if (isset($_GET['cat']) and
+if (isset($_GET['cat']) &&
     $_GET['cat'] != 0
 ) {
     functions::check_input_parameter('cat', $_GET, false, PATTERN_ID);
@@ -494,7 +494,7 @@ if (count($comments) > 0) {
                 ]
             );
 
-            if (isset($edit_comment) and
+            if (isset($edit_comment) &&
                 $comment['comment_id'] == $edit_comment
             ) {
                 $tpl_comment['IN_EDIT'] = true;
@@ -529,7 +529,7 @@ $template->assign('comment_derivative_params', $derivative_params);
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
 
-if (! isset($themeconf['hide_menu_on']) or
+if (! isset($themeconf['hide_menu_on']) ||
     ! in_array('theCommentsPage', $themeconf['hide_menu_on'])
 ) {
     menubar::initialize_menu();

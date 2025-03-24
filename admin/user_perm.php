@@ -35,7 +35,7 @@ if (! empty($_POST)) {
 // |                            variables init                             |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['user_id']) and
+if (isset($_GET['user_id']) &&
     is_numeric($_GET['user_id'])
 ) {
     $page['user'] = $_GET['user_id'];
@@ -47,8 +47,8 @@ if (isset($_GET['user_id']) and
 // |                                updates                                |
 // +-----------------------------------------------------------------------+
 
-if (isset($_POST['falsify']) and
-    isset($_POST['cat_true']) and
+if (isset($_POST['falsify']) &&
+    isset($_POST['cat_true']) &&
     count($_POST['cat_true']) > 0
 ) {
     // if you forbid access to a category, all sub-categories become
@@ -61,8 +61,8 @@ if (isset($_POST['falsify']) and
             AND cat_id IN ({$subcat_ids});
         SQL;
     functions_mysqli::pwg_query($query);
-} elseif (isset($_POST['truthify']) and
-          isset($_POST['cat_false']) and
+} elseif (isset($_POST['truthify']) &&
+          isset($_POST['cat_false']) &&
           count($_POST['cat_false']) > 0
 ) {
     functions_admin::add_permission_on_category($_POST['cat_false'], $page['user']);

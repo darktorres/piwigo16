@@ -55,7 +55,7 @@ final class plugins
     ): array {
         global $conf;
 
-        if (! $conf['enable_extensions_install'] and
+        if (! $conf['enable_extensions_install'] &&
             $action == 'delete'
         ) {
             exit('Piwigo extensions install/update/delete system is disabled');
@@ -77,7 +77,7 @@ final class plugins
 
         switch ($action) {
             case 'install':
-                if (! empty($crt_db_plugin) or
+                if (! empty($crt_db_plugin) ||
                     ! isset($this->fs_plugins[$plugin_id])
                 ) {
                     break;
@@ -155,7 +155,7 @@ final class plugins
                 break;
 
             case 'deactivate':
-                if (! isset($crt_db_plugin) or
+                if (! isset($crt_db_plugin) ||
                     $crt_db_plugin['state'] != 'active'
                 ) {
                     $activity_details['result'] = 'error';
@@ -239,7 +239,7 @@ final class plugins
         $dir = opendir(PHPWG_PLUGINS_PATH);
 
         while ($file = readdir($dir)) {
-            if ($file != '.' and
+            if ($file != '.' &&
                 $file != '..'
             ) {
                 if (preg_match('/^[a-zA-Z0-9-_]+$/', $file)) {
@@ -260,8 +260,8 @@ final class plugins
     ): array|bool {
         $path = PHPWG_PLUGINS_PATH . $plugin_id;
 
-        if (is_dir($path) and
-            ! is_link($path) and
+        if (is_dir($path) &&
+            ! is_link($path) &&
             file_exists($path . '/main.php')
         ) {
             $plugin = [
@@ -306,7 +306,7 @@ final class plugins
                 if (strtolower($val[1]) == 'webmaster') {
                     global $user;
 
-                    if (isset($user) and
+                    if (isset($user) &&
                         $user['status'] == 'webmaster'
                     ) {
                         $plugin['hasSettings'] = true;
@@ -316,7 +316,7 @@ final class plugins
                 }
             }
 
-            if (! empty($plugin['uri']) and
+            if (! empty($plugin['uri']) &&
                 strpos($plugin['uri'], 'extension_view.php?eid=')
             ) {
                 list(, $extension) = explode('extension_view.php?eid=', $plugin['uri']);
@@ -491,8 +491,8 @@ final class plugins
     public function get_incompatible_plugins(
         bool $actualize = false
     ): array|false {
-        if (isset($_SESSION['incompatible_plugins']) and
-            ! $actualize and
+        if (isset($_SESSION['incompatible_plugins']) &&
+            ! $actualize &&
             $_SESSION['incompatible_plugins']['~~expire~~'] > time()
         ) {
             return $_SESSION['incompatible_plugins'];
@@ -546,10 +546,10 @@ final class plugins
             }
 
             foreach ($this->fs_plugins as $plugin_id => $fs_plugin) {
-                if (isset($fs_plugin['extension']) and
-                    ! in_array($plugin_id, $this->default_plugins) and
-                    $fs_plugin['version'] != 'auto' and
-                    (! isset($server_plugins[$fs_plugin['extension']]) or ! in_array($fs_plugin['version'], $server_plugins[$fs_plugin['extension']]))
+                if (isset($fs_plugin['extension']) &&
+                    ! in_array($plugin_id, $this->default_plugins) &&
+                    $fs_plugin['version'] != 'auto' &&
+                    (! isset($server_plugins[$fs_plugin['extension']]) || ! in_array($fs_plugin['version'], $server_plugins[$fs_plugin['extension']]))
                 ) {
                     $_SESSION['incompatible_plugins'][$plugin_id] = $fs_plugin['version'];
                 }
@@ -614,7 +614,7 @@ final class plugins
             ];
             $handle = fopen($archive, 'wb');
 
-            if ($handle and
+            if ($handle &&
                 functions_admin::fetchRemote($url, $handle, $get_data)
             ) {
                 fclose($handle);
@@ -624,8 +624,8 @@ final class plugins
                 if ($list) {
                     foreach ($list as $file) {
                         // we search main.inc.php in archive
-                        if (basename($file['filename']) == 'main.inc.php' and
-                           (! isset($main_filepath) or strlen($file['filename']) < strlen($main_filepath))
+                        if (basename($file['filename']) == 'main.inc.php' &&
+                           (! isset($main_filepath) || strlen($file['filename']) < strlen($main_filepath))
                         ) {
                             $main_filepath = $file['filename'];
                         }
@@ -660,7 +660,7 @@ final class plugins
                             if (file_exists($extract_path . '/obsolete.list')) {
                                 $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES);
 
-                                if ($old_files and
+                                if ($old_files &&
                                     ! empty($old_files)
                                 ) {
                                     $old_files[] = 'obsolete.list';
@@ -681,7 +681,7 @@ final class plugins
                                         // make sure the obsolete file is withing the extension directory, prevent traversal path
                                         $realpath = realpath($path);
 
-                                        if ($realpath === false or
+                                        if ($realpath === false ||
                                             strpos($realpath, $extract_path_realpath) !== 0
                                         ) {
                                             continue;
@@ -726,7 +726,7 @@ final class plugins
         if (file_exists($file)) {
             $obsolete_ext = file($file, FILE_IGNORE_NEW_LINES);
 
-            if ($obsolete_ext and
+            if ($obsolete_ext &&
                 ! empty($obsolete_ext)
             ) {
                 foreach ($obsolete_ext as $ext) {

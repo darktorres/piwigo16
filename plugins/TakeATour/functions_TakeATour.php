@@ -41,7 +41,7 @@ final class functions_TakeATour
         $template->assign('ADMIN_THEME', $conf['admin_theme']);
         $template->parse('TAT_js_css');
 
-        if (isset($TAT_restart) and
+        if (isset($TAT_restart) &&
             $TAT_restart
         ) {
             $TAT_restart = false;

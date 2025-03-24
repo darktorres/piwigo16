@@ -98,8 +98,8 @@ if (isset($_POST['submitEmail'])) {
         ],
     ];
 
-    if ($_POST['who'] == 'users' and
-        isset($_POST['users']) and
+    if ($_POST['who'] == 'users' &&
+        isset($_POST['users']) &&
         count($_POST['users']) > 0
     ) {
         functions::check_input_parameter('users', $_POST, true, PATTERN_ID);
@@ -159,7 +159,7 @@ if (isset($_POST['submitEmail'])) {
         $message .= ' (' . implode(', ', $usernames) . ')';
 
         $page['infos'][] = $message;
-    } elseif ($_POST['who'] == 'group' and
+    } elseif ($_POST['who'] == 'group' &&
               ! empty($_POST['group'])
     ) {
         functions::check_input_parameter('group', $_POST, false, PATTERN_ID);
@@ -267,7 +267,7 @@ $all_user_ids = functions_mysqli::query2array($query, null, 'user_id');
 if ($category['status'] == 'private') {
     $user_ids_access_indirect = [];
 
-    if (isset($group_ids) and
+    if (isset($group_ids) &&
         count($group_ids) > 0
     ) {
         $group_ids_list = implode(', ', $group_ids);

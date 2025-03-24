@@ -28,8 +28,8 @@ $env_nbm =
               'is_sendmail_timeout' => false,
         ];
 
-if (! isset($env_nbm['sendmail_timeout']) or
-    ! is_numeric($env_nbm['sendmail_timeout']) or
+if (! isset($env_nbm['sendmail_timeout']) ||
+    ! is_numeric($env_nbm['sendmail_timeout']) ||
     $env_nbm['sendmail_timeout'] <= 0
 ) {
     $env_nbm['sendmail_timeout'] = $conf['nbm_treatment_timeout_default'];
@@ -134,7 +134,7 @@ final class functions_notification_by_mail
 
             $query .= $query_and_check_key;
 
-            if (isset($enabled_filter_value) and
+            if (isset($enabled_filter_value) &&
                 $enabled_filter_value != ''
             ) {
                 $filter_value = functions_mysqli::boolean_to_string($enabled_filter_value);
@@ -188,7 +188,7 @@ final class functions_notification_by_mail
         if ($is_to_send_mail) {
             // Init mail configuration
             $env_nbm['email_format'] = functions_mail::get_str_email_format($conf['nbm_send_html_mail']);
-            $env_nbm['send_as_name'] = ((isset($conf['nbm_send_mail_as']) and ! empty($conf['nbm_send_mail_as'])) ? $conf['nbm_send_mail_as'] : functions_mail::get_mail_sender_name());
+            $env_nbm['send_as_name'] = ((isset($conf['nbm_send_mail_as']) && ! empty($conf['nbm_send_mail_as'])) ? $conf['nbm_send_mail_as'] : functions_mail::get_mail_sender_name());
             $env_nbm['send_as_mail_address'] = functions::get_webmaster_mail_address();
             $env_nbm['send_as_mail_formated'] = functions_mail::format_email($env_nbm['send_as_name'], $env_nbm['send_as_mail_address']);
             // Init mail counter

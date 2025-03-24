@@ -15,8 +15,8 @@ final class functions_GDThumb
 
         if ($contents) {
             while (($node = readdir($contents)) !== false) {
-                if ($node != '.' and
-                    $node != '..' and
+                if ($node != '.' &&
+                    $node != '..' &&
                     is_dir('./' . PWG_DERIVATIVE_DIR . $node)
                 ) {
                     functions_admin::clear_derivative_cache_rec('./' . PWG_DERIVATIVE_DIR . $node, $pattern);

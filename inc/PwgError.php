@@ -24,7 +24,7 @@ final readonly class PwgError
         ?int $code,
         array|string $codeText
     ) {
-        if ($code >= 400 and
+        if ($code >= 400 &&
             $code < 600
         ) {
             functions_html::set_status_header($code, $codeText);

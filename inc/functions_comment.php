@@ -89,7 +89,7 @@ final class functions_comment
 
         $infos = [];
 
-        if (! $conf['comments_validation'] or
+        if (! $conf['comments_validation'] ||
             functions_user::is_admin()
         ) {
             $comment_action = 'validate'; //one of validate, moderate, reject
@@ -180,8 +180,8 @@ final class functions_comment
 
         $anonymous_id = implode('.', $ip_components);
 
-        if ($comment_action != 'reject' and
-            $conf['anti-flood_time'] > 0 and
+        if ($comment_action != 'reject' &&
+            $conf['anti-flood_time'] > 0 &&
             ! functions_user::is_admin()
         ) { // anti-flood system
             $reference_date = functions_mysqli::pwg_db_get_flood_period_expression($conf['anti-flood_time']);
@@ -236,8 +236,8 @@ final class functions_comment
 
             self::invalidate_user_cache_nb_comments();
 
-            if (($conf['email_admin_on_comment'] && $comment_action == 'validate') or
-                ($conf['email_admin_on_comment_validation'] and $comment_action == 'moderate')
+            if (($conf['email_admin_on_comment'] && $comment_action == 'validate') ||
+                ($conf['email_admin_on_comment_validation'] && $comment_action == 'moderate')
             ) {
                 require_once __DIR__ . '/../inc/functions_mail.php';
 
@@ -343,7 +343,7 @@ final class functions_comment
 
         if (! functions::verify_ephemeral_key($post_key, $comment['image_id'])) {
             $comment_action = 'reject';
-        } elseif (! $conf['comments_validation'] or
+        } elseif (! $conf['comments_validation'] ||
                   functions_user::is_admin()
         ) { // should the updated comment must be validated
             $comment_action = 'validate'; //one of validate, moderate, reject
@@ -400,8 +400,8 @@ final class functions_comment
             $result = functions_mysqli::pwg_query($query);
 
             // mail admin and ask to validate the comment
-            if ($result and
-                $conf['email_admin_on_comment_validation'] and
+            if ($result &&
+                $conf['email_admin_on_comment_validation'] &&
                 $comment_action == 'moderate'
             ) {
                 require_once __DIR__ . '/../inc/functions_mail.php';
@@ -446,9 +446,9 @@ final class functions_comment
     ): void {
         global $conf;
 
-        if (! in_array($action, ['edit', 'delete']) or
-          ($action == 'edit' and ! $conf['email_admin_on_comment_edition']) or
-          ($action == 'delete' and ! $conf['email_admin_on_comment_deletion'])
+        if (! in_array($action, ['edit', 'delete']) ||
+          ($action == 'edit' && ! $conf['email_admin_on_comment_edition']) ||
+          ($action == 'delete' && ! $conf['email_admin_on_comment_deletion'])
         ) {
             return;
         }

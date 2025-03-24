@@ -14,7 +14,7 @@ $TOUR_PATH = PHPWG_PLUGINS_PATH . 'TakeATour/tours/first_contact/tour.tpl';
 
 /*********************************/
 
-if (defined('IN_ADMIN') and
+if (defined('IN_ADMIN') &&
     IN_ADMIN
 ) {
     /* first contact */
@@ -144,7 +144,7 @@ function TAT_FC_35_prefilter(
  *    Preparse part   *
  **********************/
 //picture id
-if (isset($_GET['page']) and
+if (isset($_GET['page']) &&
     preg_match('/^photo-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)
 ) {
     $_GET['image_id'] = $matches[1];
@@ -152,7 +152,7 @@ if (isset($_GET['page']) and
 
 functions::check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
-if (isset($_GET['image_id']) and
+if (isset($_GET['image_id']) &&
     functions_session::pwg_get_session_var('TAT_image_id') == null
 ) {
     $template->assign('TAT_image_id', $_GET['image_id']);
@@ -171,7 +171,7 @@ if (isset($_GET['image_id']) and
 }
 
 //album id
-if (isset($_GET['page']) and
+if (isset($_GET['page']) &&
     preg_match('/^album-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)
 ) {
     $_GET['cat_id'] = $matches[1];
@@ -179,7 +179,7 @@ if (isset($_GET['page']) and
 
 functions::check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 
-if (isset($_GET['cat_id']) and
+if (isset($_GET['cat_id']) &&
     functions_session::pwg_get_session_var('TAT_cat_id') == null
 ) {
     $template->assign('TAT_cat_id', $_GET['cat_id']);

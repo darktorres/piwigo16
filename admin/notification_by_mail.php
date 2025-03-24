@@ -66,7 +66,7 @@ functions_plugins::trigger_notify('nbm_event_handler_added');
 // +-----------------------------------------------------------------------+
 // | Insert new users with mails                                           |
 // +-----------------------------------------------------------------------+
-if (! isset($_POST) or
+if (! isset($_POST) ||
     count($_POST) == 0
 ) {
     // No insert data in post mode
@@ -114,12 +114,12 @@ switch ($page['mode']) {
         // no break
 
     case 'subscribe':
-        if (isset($_POST['falsify']) and
+        if (isset($_POST['falsify']) &&
             isset($_POST['cat_true'])
         ) {
             $check_key_treated = functions_notification_by_mail::unsubscribe_notification_by_mail(true, $_POST['cat_true']);
             functions_admin::do_timeout_treatment('cat_true', $check_key_treated);
-        } elseif (isset($_POST['truthify']) and
+        } elseif (isset($_POST['truthify']) &&
                   isset($_POST['cat_false'])
         ) {
             $check_key_treated = functions_notification_by_mail::subscribe_notification_by_mail(true, $_POST['cat_false']);
@@ -129,8 +129,8 @@ switch ($page['mode']) {
         break;
 
     case 'send':
-        if (isset($_POST['send_submit']) and
-            isset($_POST['send_selection']) and
+        if (isset($_POST['send_submit']) &&
+            isset($_POST['send_selection']) &&
             isset($_POST['send_customize_mail_content'])
         ) {
             $check_key_treated = functions_admin::do_action_send_mail_notification('send', $_POST['send_selection'], stripslashes($_POST['send_customize_mail_content']));
@@ -213,8 +213,8 @@ switch ($page['mode']) {
             if (functions_mysqli::get_boolean($nbm_user['enabled'])) {
                 $opt_true[$nbm_user['check_key']] = stripslashes($nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
 
-                if (isset($_POST['falsify']) and
-                    isset($_POST['cat_true']) and
+                if (isset($_POST['falsify']) &&
+                    isset($_POST['cat_true']) &&
                     in_array($nbm_user['check_key'], $_POST['cat_true'])
                 ) {
                     $opt_true_selected[] = $nbm_user['check_key'];
@@ -222,8 +222,8 @@ switch ($page['mode']) {
             } else {
                 $opt_false[$nbm_user['check_key']] = stripslashes($nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
 
-                if (isset($_POST['truthify']) and
-                    isset($_POST['cat_false']) and
+                if (isset($_POST['truthify']) &&
+                    isset($_POST['cat_false']) &&
                     in_array($nbm_user['check_key'], $_POST['cat_false'])
                 ) {
                     $opt_false_selected[] = $nbm_user['check_key'];
@@ -256,14 +256,14 @@ switch ($page['mode']) {
 
         if (count($data_users)) {
             foreach ($data_users as $nbm_user) {
-                if (! $must_repost or // Not timeout, normal treatment
-                    ($must_repost and in_array($nbm_user['check_key'], $_POST['send_selection']))  // Must be repost, show only user to send
+                if (! $must_repost || // Not timeout, normal treatment
+                    ($must_repost && in_array($nbm_user['check_key'], $_POST['send_selection']))  // Must be repost, show only user to send
                 ) {
                     $tpl_var['users'][] =
                       [
                           'ID' => $nbm_user['check_key'],
                           'CHECKED' => ( // not check if not selected,  on init select<all
-                              isset($_POST['send_selection']) and // not init
+                              isset($_POST['send_selection']) && // not init
                               ! in_array($nbm_user['check_key'], $_POST['send_selection']) // not selected
                           ) ? '' : 'checked="checked"',
                           'USERNAME' => stripslashes($nbm_user['username']),

@@ -265,7 +265,7 @@ if (! $category['is_virtual']) {
 }
 
 // representative management
-if ($category['has_images'] or
+if ($category['has_images'] ||
     ! empty($category['representative_picture_id'])
 ) {
     $tpl_representative = [];
@@ -280,9 +280,9 @@ if ($category['has_images'] or
     $tpl_representative['ALLOW_SET_RANDOM'] = ($category['has_images'] ? true : false);
 
     // can the admin delete the current representative ?
-    if (($category['has_images'] and
-         $conf['allow_random_representative']) or
-        (! $category['has_images'] and ! empty($category['representative_picture_id']))
+    if (($category['has_images'] &&
+         $conf['allow_random_representative']) ||
+        (! $category['has_images'] && ! empty($category['representative_picture_id']))
     ) {
         $tpl_representative['ALLOW_DELETE'] = true;
     }

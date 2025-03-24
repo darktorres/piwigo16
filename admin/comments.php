@@ -22,7 +22,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     exit('Hacking attempt!');
 }
 
-if (isset($_GET['start']) and
+if (isset($_GET['start']) &&
     is_numeric($_GET['start'])
 ) {
     $page['start'] = $_GET['start'];
@@ -116,7 +116,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     }
 }
 
-if (! isset($_GET['filter']) and
+if (! isset($_GET['filter']) &&
     $nb_pending > 0
 ) {
     $page['filter'] = 'pending';
@@ -124,7 +124,7 @@ if (! isset($_GET['filter']) and
     $page['filter'] = 'all';
 }
 
-if (isset($_GET['filter']) and
+if (isset($_GET['filter']) &&
     $_GET['filter'] == 'pending'
 ) {
     $page['filter'] = $_GET['filter'];

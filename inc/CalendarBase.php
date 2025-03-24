@@ -181,8 +181,8 @@ abstract class CalendarBase
 
         $nav_bar_datas = [];
 
-        if ($conf['calendar_show_empty'] and
-            $show_empty and
+        if ($conf['calendar_show_empty'] &&
+            $show_empty &&
             ! empty($labels)
         ) {
             foreach ($labels as $item => $label) {
@@ -226,9 +226,9 @@ abstract class CalendarBase
 
         }
 
-        if ($conf['calendar_show_any'] and
-            $show_any and
-            count($items) > 1 and
+        if ($conf['calendar_show_any'] &&
+            $show_any &&
+            count($items) > 1 &&
             count($date_components) < count($this->calendar_levels) - 1
         ) {
             $url = functions_url::duplicate_index_url(
@@ -266,14 +266,14 @@ abstract class CalendarBase
 
         $level_items = functions_mysqli::query2array($query, 'period', 'nb_images');
 
-        if (count($level_items) == 1 and
+        if (count($level_items) == 1 &&
             count($page['chronology_date']) < count($this->calendar_levels) - 1
         ) {
             if (! isset($page['chronology_date'][$level])) {
                 list($key) = array_keys($level_items);
                 $page['chronology_date'][$level] = (int) $key;
 
-                if ($level < count($page['chronology_date']) and
+                if ($level < count($page['chronology_date']) &&
                     $level != count($this->calendar_levels) - 1
                 ) {
                     return;

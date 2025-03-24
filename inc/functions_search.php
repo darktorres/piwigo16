@@ -73,14 +73,14 @@ final class functions_search
             // there is no uuid.
             //
             // We also don't want to die if we're in the API.
-            if (functions::script_basename() != 'ws' and
-                $clause_pattern == 'id = %u' and
+            if (functions::script_basename() != 'ws' &&
+                $clause_pattern == 'id = %u' &&
                 isset($searches[0]['search_uuid'])
             ) {
                 functions_html::fatal_error('this search is not reachable with its id, need the search_uuid instead');
             }
 
-            if (isset($page['section']) and
+            if (isset($page['section']) &&
                 $page['section'] == 'search'
             ) {
                 // to be used later in pwg_log
@@ -148,14 +148,14 @@ final class functions_search
             }
         }
 
-        if (isset($search['fields']['allwords']) and
-            ! empty($search['fields']['allwords']['words']) and
+        if (isset($search['fields']['allwords']) &&
+            ! empty($search['fields']['allwords']['words']) &&
             count($search['fields']['allwords']['fields']) > 0
         ) {
             // 1) we search in regular fields (ie, the ones in the piwigo_images table)
             $fields = ['file', 'name', 'comment', 'author'];
 
-            if (isset($search['fields']['allwords']['fields']) and
+            if (isset($search['fields']['allwords']['fields']) &&
                 count($search['fields']['allwords']['fields']) > 0
             ) {
                 $fields = array_intersect($fields, $search['fields']['allwords']['fields']);
@@ -350,7 +350,7 @@ final class functions_search
             $clauses[] = 'added_by IN (' . implode(', ', $search['fields']['added_by']) . ')';
         }
 
-        if (isset($search['fields']['cat']) and
+        if (isset($search['fields']['cat']) &&
             ! empty($search['fields']['cat']['words'])
         ) {
             if ($search['fields']['cat']['sub_inc']) {
@@ -455,7 +455,7 @@ final class functions_search
         if (! empty($tag_items)) {
             switch ($search['mode']) {
                 case 'AND':
-                    if (empty($search_clause) and
+                    if (empty($search_clause) &&
                         ! isset($search_in_tags_items)
                     ) {
                         $items = $tag_items;
@@ -527,7 +527,7 @@ final class functions_search
                     $page['use_regexp_ICU'] = false;
                     $db_version = functions_mysqli::pwg_get_db_version();
 
-                    if (! preg_match('/mariadb/i', $db_version) and
+                    if (! preg_match('/mariadb/i', $db_version) &&
                         version_compare($db_version, '8.0.4', '>')
                     ) {
                         $page['use_regexp_ICU'] = true;
@@ -1227,7 +1227,7 @@ final class functions_search
             ]
         );
 
-        if (! functions_user::is_a_guest() and
+        if (! functions_user::is_a_guest() &&
             ! functions_user::is_generic()
         ) {
             functions_user::userprefs_update_param('gallery_search_filters', array_keys($rules['fields'] ?? []));

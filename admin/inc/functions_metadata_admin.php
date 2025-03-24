@@ -184,7 +184,7 @@ final class functions_metadata_admin
             if ($image_size) {
                 $type = $image_size[2];
 
-                if ($type == IMAGETYPE_TIFF_MM or
+                if ($type == IMAGETYPE_TIFF_MM ||
                     $type == IMAGETYPE_TIFF_II
                 ) {
                     // in case of TIFF files, we want to use the original file and not
@@ -208,7 +208,7 @@ final class functions_metadata_admin
             $height = (int) $xmlattributes->height;
             $vb = (string) $xmlattributes->viewBox;
 
-            if (isset($width) and
+            if (isset($width) &&
                 $width != ''
             ) {
                 $infos['width'] = $width;
@@ -216,7 +216,7 @@ final class functions_metadata_admin
                 $infos['width'] = explode(' ', $vb)[2];
             }
 
-            if (isset($height) and
+            if (isset($height) &&
                 $height != ''
             ) {
                 $infos['height'] = $height;

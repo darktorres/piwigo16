@@ -19,7 +19,7 @@ if (isset($_POST['language'])) {
     $page['language'] = $_POST['language'];
 }
 
-if (! isset($page['language']) or
+if (! isset($page['language']) ||
     ! in_array($page['language'], array_keys($languages))
 ) {
     $page['language'] = functions_user::get_default_language();

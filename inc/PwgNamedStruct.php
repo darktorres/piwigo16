@@ -44,10 +44,10 @@ final class PwgNamedStruct
             $this->_xmlAttributes = [];
 
             foreach ($this->_content as $key => $value) {
-                if (! empty($key) and
-                   (is_scalar($value) or $value === null)
+                if (! empty($key) &&
+                   (is_scalar($value) || $value === null)
                 ) {
-                    if (empty($xmlElements) or
+                    if (empty($xmlElements) ||
                         ! in_array($key, $xmlElements)
                     ) {
                         $this->_xmlAttributes[$key] = 1;

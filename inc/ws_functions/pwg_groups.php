@@ -201,7 +201,7 @@ final class pwg_groups
             $updates['name'] = $params['name'];
         }
 
-        if (! empty($params['is_default']) or
+        if (! empty($params['is_default']) ||
             $params['is_default'] === false
         ) {
             $updates['is_default'] = functions_mysqli::boolean_to_string($params['is_default']);

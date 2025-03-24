@@ -66,7 +66,7 @@ final class updates
     {
         $_SESSION['need_update' . PHPWG_VERSION] = null;
 
-        if (preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches) and
+        if (preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches) &&
             functions_admin::fetchRemote(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true)), $result)
         ) {
             $all_versions = explode("\n", $result);
@@ -106,7 +106,7 @@ final class updates
             if (functions_admin::fetchRemote($url, $result)) {
                 $all_versions = explode("\n", $result);
 
-                if ($all_versions and is_array($all_versions)) {
+                if ($all_versions && is_array($all_versions)) {
                     $new_versions['piwigo.org-checked'] = true;
                     $last_version = trim($all_versions[0]);
                     list($last_version_number, $last_version_php) = explode('/', trim($all_versions[0]));
@@ -190,7 +190,7 @@ final class updates
 
             if ($new_versions_string != $conf['update_notify_last_notification']['version']) {
                 $notify = true;
-            } elseif ($conf['update_notify_reminder_period'] > 0 and
+            } elseif ($conf['update_notify_reminder_period'] > 0 &&
                       strtotime($last_notification) < strtotime($conf['update_notify_reminder_period'] . ' seconds ago')
             ) {
                 $notify = true;
@@ -251,7 +251,7 @@ final class updates
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
 
-        if (functions_admin::fetchRemote($url, $result, $get_data) and
+        if (functions_admin::fetchRemote($url, $result, $get_data) &&
             $pem_versions = functions::safe_unserialize($result)
         ) {
             if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
@@ -359,7 +359,7 @@ final class updates
             $need_upgrade = [];
 
             foreach ($fs_ext as $ext_id => $fs_ext) {
-                if (isset($fs_ext['extension']) and
+                if (isset($fs_ext['extension']) &&
                     isset($server_ext[$fs_ext['extension']])
                 ) {
                     $ext_info = $server_ext[$fs_ext['extension']];
@@ -390,7 +390,7 @@ final class updates
                 $fs = 'fs_' . $type;
 
                 foreach ($this->{$type}->{$fs} as $ext_id => $fs_ext) {
-                    if (isset($_SESSION['extensions_need_update'][$type][$ext_id]) and
+                    if (isset($_SESSION['extensions_need_update'][$type][$ext_id]) &&
                         functions::safe_version_compare($fs_ext['version'], $_SESSION['extensions_need_update'][$type][$ext_id], '>=')
                     ) {
                         // Extension have been upgraded
@@ -410,9 +410,8 @@ final class updates
             $default = 'default_' . $type;
 
             foreach ($this->{$type}->{$fs} as $ext_id => $ext) {
-                if (isset($ext['extension']) and
-                    $id == $ext['extension'] and
-                    ! in_array($ext_id, $this->{$default}) and
+                if (isset($ext['extension']) && $id == $ext['extension'] &&
+                    ! in_array($ext_id, $this->{$default}) &&
                     ! in_array($ext['extension'], $this->merged_extensions)
                 ) {
                     $this->missing[$type][] = $ext;
@@ -445,7 +444,7 @@ final class updates
         if (file_exists('./' . $file)) {
             $old_files = file('./' . $file, FILE_IGNORE_NEW_LINES);
 
-            if ($old_files and
+            if ($old_files &&
                 ! empty($old_files)
             ) {
                 $old_files[] = $file;
@@ -470,7 +469,7 @@ final class updates
     ): void {
         global $page, $conf, $template;
 
-        if ($check_current_version and
+        if ($check_current_version &&
             ! version_compare($upgrade_to, PHPWG_VERSION, '>')
         ) {
             // TODO why redirect to a plugin page? maybe a remaining code from when
@@ -505,7 +504,7 @@ final class updates
             while (! $end) {
                 $chunk_num++;
 
-                if (functions_admin::fetchRemote(PHPWG_URL . '/download/dlcounter.php?code=' . $dl_code . '&chunk_num=' . $chunk_num, $result) and
+                if (functions_admin::fetchRemote(PHPWG_URL . '/download/dlcounter.php?code=' . $dl_code . '&chunk_num=' . $chunk_num, $result) &&
                     $input = functions::safe_unserialize($result)
                 ) {
                     if ($input['remaining'] == 0) {
@@ -534,8 +533,8 @@ final class updates
                             if (chmod('./' . $extract['filename'], 0777)) {
                                 $res = $zip->extract(PCLZIP_OPT_BY_NAME, $remove_path . '/' . $extract['filename'], PCLZIP_OPT_PATH, './', PCLZIP_OPT_REMOVE_PATH, $remove_path, PCLZIP_OPT_SET_CHMOD, 0755, PCLZIP_OPT_REPLACE_NEWER);
 
-                                if ($res and
-                                    isset($res[0]['status']) and
+                                if ($res &&
+                                    isset($res[0]['status']) &&
                                     $res[0]['status'] == 'ok'
                                 ) {
                                     continue;

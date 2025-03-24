@@ -37,7 +37,7 @@ $tabsheet->assign();
 // +-----------------------------------------------------------------------+
 // |                            initialization                             |
 // +-----------------------------------------------------------------------+
-if (isset($_GET['start']) and
+if (isset($_GET['start']) &&
     is_numeric($_GET['start'])
 ) {
     $start = $_GET['start'];
@@ -47,7 +47,7 @@ if (isset($_GET['start']) and
 
 $elements_per_page = 10;
 
-if (isset($_GET['display']) and
+if (isset($_GET['display']) &&
     is_numeric($_GET['display'])
 ) {
     $elements_per_page = $_GET['display'];
@@ -55,7 +55,7 @@ if (isset($_GET['display']) and
 
 $order_by_index = 0;
 
-if (isset($_GET['order_by']) and
+if (isset($_GET['order_by']) &&
     is_numeric($_GET['order_by'])
 ) {
     $order_by_index = $_GET['order_by'];
@@ -73,7 +73,7 @@ if (isset($_GET['users'])) {
 
 $page['cat_filter'] = '';
 
-if (isset($_GET['cat']) and
+if (isset($_GET['cat']) &&
     is_numeric($_GET['cat'])
 ) {
     $cat_ids = functions_category::get_subcat_ids([$_GET['cat']]);

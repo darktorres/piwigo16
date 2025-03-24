@@ -106,7 +106,7 @@ class MultiView
         $get = $_GET;
         unset($get['page'], $get['section'], $get['tag']);
 
-        if (count($get) == 0 and
+        if (count($get) == 0 &&
             ! empty($_SERVER['QUERY_STRING'])
         ) {
             $url .= '?' . str_replace('&', '&amp;', $_SERVER['QUERY_STRING']);

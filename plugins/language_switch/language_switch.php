@@ -48,10 +48,10 @@ function language_controller_switch(): void
             $_GET['lang'] = PHPWG_DEFAULT_LANGUAGE;
         }
 
-        if (! empty($_GET['lang']) and
+        if (! empty($_GET['lang']) &&
             file_exists('./language/' . $_GET['lang'] . '/common.lang.php')
         ) {
-            if (functions_user::is_a_guest() or
+            if (functions_user::is_a_guest() ||
                 functions_user::is_generic()
             ) {
                 functions_session::pwg_set_session_var('lang_switch', $_GET['lang']);
@@ -70,7 +70,7 @@ function language_controller_switch(): void
         if (isset($_GET['redirect_to_home'])) {
             functions::redirect(functions_url::get_absolute_root_url());
         }
-    } elseif ((functions_user::is_a_guest() or
+    } elseif ((functions_user::is_a_guest() ||
                functions_user::is_generic())
     ) {
         $user['language'] = functions_session::pwg_get_session_var('lang_switch', $user['language']);
@@ -92,7 +92,7 @@ function language_controller_switch(): void
             ]
         );
 
-        if (defined('IN_ADMIN') and
+        if (defined('IN_ADMIN') &&
             IN_ADMIN
         ) {
             // Never currently
@@ -115,8 +115,8 @@ function language_controller_flags(): void
 
     $url_starting = functions_url::get_query_string_diff(['lang']);
 
-    if (isset($page['section']) and
-        $page['section'] == 'additional_page' and
+    if (isset($page['section']) &&
+        $page['section'] == 'additional_page' &&
         isset($page['additional_page'])
     ) {
         $base_url = functions_url::make_index_url([

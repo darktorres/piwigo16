@@ -79,7 +79,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
                 continue;
             }
 
-            if ($skip_underscore and
+            if ($skip_underscore &&
                 $name[0] == '_'
             ) {
                 continue;
@@ -107,7 +107,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
                 continue;
             }
 
-            if ($skip_underscore and
+            if ($skip_underscore &&
                 $name[0] == '_'
             ) {
                 continue;

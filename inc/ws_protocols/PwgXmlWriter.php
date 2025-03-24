@@ -142,7 +142,7 @@ final class PwgXmlWriter
 
     public function _indent(): void
     {
-        if ($this->_indent and
+        if ($this->_indent &&
             $this->_indentLevel > count($this->_elementStack)
         ) {
             $this->_output(

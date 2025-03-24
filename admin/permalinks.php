@@ -25,7 +25,7 @@ functions::check_input_parameter('cat_id', $_POST, false, PATTERN_ID);
 
 $selected_cat = [];
 
-if (isset($_POST['set_permalink']) and
+if (isset($_POST['set_permalink']) &&
     $_POST['cat_id'] > 0
 ) {
     functions::check_pwg_token();
@@ -88,7 +88,7 @@ $query = <<<SQL
 
     SQL;
 
-if ($sort_by[0] == 'id' or
+if ($sort_by[0] == 'id' ||
     $sort_by[0] == 'permalink'
 ) {
     $query .= " ORDER BY {$sort_by[0]}";

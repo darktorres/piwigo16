@@ -215,13 +215,13 @@ final class Template
             $this->set_template_dir($root);
         }
 
-        if (isset($lang_info['code']) and
+        if (isset($lang_info['code']) &&
             ! isset($lang_info['jquery_code'])
         ) {
             $lang_info['jquery_code'] = $lang_info['code'];
         }
 
-        if (isset($lang_info['jquery_code']) and
+        if (isset($lang_info['jquery_code']) &&
             ! isset($lang_info['plupload_code'])
         ) {
             $lang_info['plupload_code'] = str_replace('-', '_', $lang_info['jquery_code']);
@@ -229,7 +229,7 @@ final class Template
 
         $this->smarty->assign('lang_info', $lang_info);
 
-        if (! defined('IN_ADMIN') and
+        if (! defined('IN_ADMIN') &&
             isset($conf['extents_for_templates'])
         ) {
             $tpl_extents = unserialize($conf['extents_for_templates']);
@@ -252,7 +252,7 @@ final class Template
 
         $themeconf = $this->load_themeconf($root . '/' . $theme);
 
-        if (isset($themeconf['parent']) and
+        if (isset($themeconf['parent']) &&
             $themeconf['parent'] != $theme
         ) {
             $this->set_theme(
@@ -269,7 +269,7 @@ final class Template
             'load_css' => $load_css,
         ];
 
-        if (! empty($themeconf['local_head']) and
+        if (! empty($themeconf['local_head']) &&
             $load_local_head
         ) {
             $tpl_var['local_head'] = realpath($root . '/' . $theme . '/' . $themeconf['local_head']);
@@ -411,9 +411,9 @@ final class Template
                 return false;
             }
 
-            if ((stripos(implode('', array_keys($_GET)), '/' . $param) !== false or $param == 'N/A') and
-                ($thm == $theme or $thm == 'N/A') and
-                (! isset($this->extents[$handle]) or $overwrite) and
+            if ((stripos(implode('', array_keys($_GET)), '/' . $param) !== false || $param == 'N/A') &&
+                ($thm == $theme || $thm == 'N/A') &&
+                (! isset($this->extents[$handle]) || $overwrite) &&
                 file_exists($dir . $filename)
             ) {
                 $this->extents[$handle] = realpath($dir . $filename);
@@ -532,7 +532,7 @@ final class Template
 
         global $conf, $lang_info;
 
-        if ($conf['compiled_template_cache_language'] and
+        if ($conf['compiled_template_cache_language'] &&
             isset($lang_info['code'])
         ) {
             $this->smarty->compile_id .= '_' . $lang_info['code'];

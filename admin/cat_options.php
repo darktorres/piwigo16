@@ -37,8 +37,8 @@ if (! empty($_POST)) {
 // |                       modification registration                       |
 // +-----------------------------------------------------------------------+
 
-if (isset($_POST['falsify']) and
-    isset($_POST['cat_true']) and
+if (isset($_POST['falsify']) &&
+    isset($_POST['cat_true']) &&
     count($_POST['cat_true']) > 0
 ) {
     switch ($_GET['section']) {
@@ -75,8 +75,8 @@ if (isset($_POST['falsify']) and
         'section' => $_GET['section'],
         'action' => 'falsify',
     ]);
-} elseif (isset($_POST['truthify']) and
-          isset($_POST['cat_false']) and
+} elseif (isset($_POST['truthify']) &&
+          isset($_POST['cat_false']) &&
           count($_POST['cat_false']) > 0
 ) {
     switch ($_GET['section']) {

@@ -135,7 +135,7 @@ $logger = new Katzgrau\KLogger\Logger('./' . $conf['data_location'] . $conf['log
 ]);
 
 if (! $conf['check_upgrade_feed']) {
-    if (! isset($conf['piwigo_db_version']) or
+    if (! isset($conf['piwigo_db_version']) ||
         $conf['piwigo_db_version'] != functions::get_branch_from_version(PHPWG_VERSION)
     ) {
         functions::redirect(functions_url::get_root_url() . 'upgrade.php');
@@ -195,7 +195,7 @@ if (in_array(substr($user['language'], 0, 2), ['fr', 'it', 'de', 'es', 'pl', 'ru
 
 define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
-if (isset($conf['alternative_pem_url']) and
+if (isset($conf['alternative_pem_url']) &&
     $conf['alternative_pem_url'] != ''
 ) {
     define('PEM_URL', $conf['alternative_pem_url']);
@@ -207,7 +207,7 @@ if (isset($conf['alternative_pem_url']) and
 functions::load_language('common.lang');
 
 if (functions_user::is_admin() ||
-   (defined('IN_ADMIN') and IN_ADMIN)
+   (defined('IN_ADMIN') && IN_ADMIN)
 ) {
     functions::load_language('admin.lang');
 }
@@ -226,7 +226,7 @@ if (functions_user::is_a_guest()) {
 
 // in case an auth key was provided and is no longer valid, we must wait to
 // be here, with language loaded, to prepare the message
-if (isset($page['auth_key_invalid']) and
+if (isset($page['auth_key_invalid']) &&
     $page['auth_key_invalid']
 ) {
     $page['errors'][] =
@@ -236,14 +236,14 @@ if (isset($page['auth_key_invalid']) and
 }
 
 // template instance
-if (defined('IN_ADMIN') and
+if (defined('IN_ADMIN') &&
     IN_ADMIN
 ) { // Admin template
     $template = new Template('./admin/themes', functions_user::userprefs_get_param('admin_theme', 'roma'));
 } else { // Classic template
     $theme = $user['theme'];
 
-    if (functions::script_basename() != 'ws' and
+    if (functions::script_basename() != 'ws' &&
         functions::mobile_theme()
     ) {
         $theme = $conf['mobile_theme'];
@@ -256,7 +256,7 @@ if (! isset($conf['no_photo_yet'])) {
     require __DIR__ . '/../inc/no_photo_yet.php';
 }
 
-if (isset($user['internal_status']['guest_must_be_guest']) and
+if (isset($user['internal_status']['guest_must_be_guest']) &&
     $user['internal_status']['guest_must_be_guest'] === true
 ) {
     $header_msgs[] = functions::l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
@@ -265,7 +265,7 @@ if (isset($user['internal_status']['guest_must_be_guest']) and
 if ($conf['gallery_locked']) {
     $header_msgs[] = functions::l10n('The gallery is locked for maintenance. Please, come back later.');
 
-    if (functions::script_basename() != 'identification' and
+    if (functions::script_basename() != 'identification' &&
         ! functions_user::is_admin()
     ) {
         functions_html::set_status_header(503, 'Service Unavailable');
@@ -289,7 +289,7 @@ if (count($header_msgs) > 0) {
     $header_msgs = [];
 }
 
-if (! empty($conf['filter_pages']) and
+if (! empty($conf['filter_pages']) &&
     functions::get_filter_page_value('used')
 ) {
     require __DIR__ . '/../inc/filter.php';

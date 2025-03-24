@@ -14,8 +14,8 @@ namespace Piwigo\inc;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Random\RandomException;
 
-if (isset($conf['session_save_handler']) and
-    $conf['session_save_handler'] == 'db' and
+if (isset($conf['session_save_handler']) &&
+    $conf['session_save_handler'] == 'db' &&
     defined('PHPWG_INSTALLED')
 ) {
     session_set_save_handler(new PwgSessionHandler(), true);

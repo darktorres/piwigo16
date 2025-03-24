@@ -95,7 +95,7 @@ final class functions_history
             }
         }
 
-        if (isset($search['fields']['user']) and
+        if (isset($search['fields']['user']) &&
             $search['fields']['user'] != -1
         ) {
             $clauses[] = 'user_id = ' . $search['fields']['user'];
@@ -420,7 +420,7 @@ final class functions_history
     {
         global $conf;
 
-        if (isset($conf['history_summarized_dropped']) and
+        if (isset($conf['history_summarized_dropped']) &&
             $conf['history_summarized_dropped']
         ) {
             return;

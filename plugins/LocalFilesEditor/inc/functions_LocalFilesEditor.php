@@ -112,9 +112,9 @@ class functions_LocalFilesEditor
             while ($file = readdir($fh)) {
                 $pathfile = $path . '/' . $file;
 
-                if ($file != '.' and
-                    $file != '..' and
-                    $file != '.svn' and
+                if ($file != '.' &&
+                    $file != '..' &&
+                    $file != '.svn' &&
                     is_dir($pathfile)
                 ) {
                     $options[$pathfile] = str_replace(['./', '/'], ['', ' / '], $pathfile);

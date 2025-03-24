@@ -38,7 +38,7 @@ final class ws_functions
             return $res;
         }
 
-        if (! functions_user::is_authorized_status(ACCESS_GUEST) and
+        if (! functions_user::is_authorized_status(ACCESS_GUEST) &&
             strpos($methodName, 'pwg.session.') !== 0
         ) {
             return new PwgError(401, 'Access denied');

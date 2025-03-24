@@ -90,7 +90,7 @@ final class functions_admin
         self::delete_elements($element_ids);
 
         // now, should we delete photos that are virtually linked to the category?
-        if ($photo_deletion_mode == 'delete_orphans' or
+        if ($photo_deletion_mode == 'delete_orphans' ||
             $photo_deletion_mode == 'force_delete'
         ) {
             $ids_str = implode(', ', $ids);
@@ -238,7 +238,7 @@ final class functions_admin
 
             if (! isset($conf['never_delete_originals'])) {
                 foreach ($files as $path) {
-                    if (is_file($path) and
+                    if (is_file($path) &&
                         ! unlink($path)
                     ) {
                         $ok = false;
@@ -611,7 +611,7 @@ final class functions_admin
 
             if ($contents) {
                 while (($node = readdir($contents)) !== false) {
-                    if (is_dir($path . '/' . $node) and
+                    if (is_dir($path . '/' . $node) &&
                         ! isset($exclude_folders[$node])
                     ) {
                         $dirs[] = $path . '/' . $node;
@@ -721,7 +721,7 @@ final class functions_admin
                 str_replace(',', '.', $cat['uppercats'])
             );
 
-            if ($cat['rank_changed'] or
+            if ($cat['rank_changed'] ||
                 $new_global_rank !== $cat['global_rank']
             ) {
                 $datas[] = [
@@ -922,8 +922,8 @@ final class functions_admin
                 // if it is private, else the album itself
                 $ref_cat_id = $top_category['id'];
 
-                if (! empty($top_category['id_uppercat']) and
-                    isset($parent_cats[$top_category['id_uppercat']]) and
+                if (! empty($top_category['id_uppercat']) &&
+                    isset($parent_cats[$top_category['id_uppercat']]) &&
                     $parent_cats[$top_category['id_uppercat']]['status'] == 'private'
                 ) {
                     $ref_cat_id = $top_category['id_uppercat'];
@@ -969,7 +969,7 @@ final class functions_admin
     public static function get_uppercat_ids(
         array $cat_ids
     ): array {
-        if (! is_array($cat_ids) or
+        if (! is_array($cat_ids) ||
             count($cat_ids) < 1
         ) {
             return [];
@@ -1482,7 +1482,7 @@ final class functions_admin
         ];
 
         // is the album commentable?
-        if (isset($options['commentable']) and
+        if (isset($options['commentable']) &&
             is_bool($options['commentable'])
         ) {
             $insert['commentable'] = $options['commentable'];
@@ -1495,7 +1495,7 @@ final class functions_admin
         // is the album temporarily locked? (only visible by administrators,
         // whatever permissions) (may be overwritten if parent album is not
         // visible)
-        if (isset($options['visible']) and
+        if (isset($options['visible']) &&
             is_bool($options['visible'])
         ) {
             $insert['visible'] = $options['visible'];
@@ -1506,7 +1506,7 @@ final class functions_admin
         $insert['visible'] = functions_mysqli::boolean_to_string($insert['visible']);
 
         // is the album private? (may be overwritten if parent album is private)
-        if (isset($options['status']) and
+        if (isset($options['status']) &&
             $options['status'] == 'private'
         ) {
             $insert['status'] = 'private';
@@ -1519,7 +1519,7 @@ final class functions_admin
             $insert['comment'] = $conf['allow_html_descriptions'] ? $options['comment'] : strip_tags($options['comment']);
         }
 
-        if (! empty($parent_id) and
+        if (! empty($parent_id) &&
             is_numeric($parent_id)
         ) {
             $query = <<<SQL
@@ -1567,9 +1567,9 @@ final class functions_admin
 
         self::update_global_rank();
 
-        if ($insert['status'] == 'private' and
-            ! empty($insert['id_uppercat']) and
-            ((isset($options['inherit']) and $options['inherit']) or $conf['inheritance_by_default'])
+        if ($insert['status'] == 'private' &&
+            ! empty($insert['id_uppercat']) &&
+            ((isset($options['inherit']) && $options['inherit']) || $conf['inheritance_by_default'])
         ) {
             $query = <<<SQL
                 SELECT group_id
@@ -1635,7 +1635,7 @@ final class functions_admin
         array $tags,
         array $images
     ): void {
-        if (count($tags) == 0 or
+        if (count($tags) == 0 ||
             count($images) == 0
         ) {
             return;
@@ -1857,7 +1857,7 @@ final class functions_admin
     public static function get_image_tag_ids(
         array $image_ids
     ): array {
-        if (! is_array($image_ids) and
+        if (! is_array($image_ids) &&
             is_int($image_ids)
         ) {
             $images_ids = [$image_ids];
@@ -2009,7 +2009,7 @@ final class functions_admin
 
             $images[] = $row['image_id'];
 
-            if (! isset($rows[$idx + 1]) or
+            if (! isset($rows[$idx + 1]) ||
                 $rows[$idx + 1]['category_id'] != $row['category_id']
             ) {
                 // if we're at the end of the loop OR if category changes
@@ -2048,7 +2048,7 @@ final class functions_admin
         array $images,
         array $categories
     ): ?bool {
-        if (count($images) == 0 or
+        if (count($images) == 0 ||
             count($categories) == 0
         ) {
             return false;
@@ -2185,7 +2185,7 @@ final class functions_admin
 
             SQL;
 
-        if (is_array($categories) and
+        if (is_array($categories) &&
             count($categories) > 0
         ) {
             $category_ids = implode(', ', $categories);
@@ -2200,7 +2200,7 @@ final class functions_admin
             SQL;
         functions_mysqli::pwg_query($query);
 
-        if (is_array($categories) and
+        if (is_array($categories) &&
             count($categories) > 0
         ) {
             self::associate_images_to_categories($images, $categories);
@@ -2380,8 +2380,8 @@ final class functions_admin
         $extents = [];
 
         while (($file = readdir($dir)) !== false) {
-            if ($file == '.' or
-                $file == '..' or
+            if ($file == '.' ||
+                $file == '..' ||
                 $file == '.svn'
             ) {
                 continue;
@@ -2391,8 +2391,8 @@ final class functions_admin
 
             if (is_dir($path)) {
                 $extents = array_merge($extents, self::get_extents($path));
-            } elseif (! is_link($path) and
-                      file_exists($path) and
+            } elseif (! is_link($path) &&
+                      file_exists($path) &&
                       functions::get_extension($path) == 'tpl'
             ) {
                 $extents[] = substr($path, 21);
@@ -2543,8 +2543,8 @@ final class functions_admin
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($content !== false and
-            $status >= 200 and
+        if ($content !== false &&
+            $status >= 200 &&
             $status < 400
         ) {
             if (preg_match('/Location:\s+?(.+)/', substr($content, 0, $header_length), $m)) {
@@ -2947,7 +2947,7 @@ final class functions_admin
         }
 
         // check for emptiness
-        if (count($category_ids) == 0 or
+        if (count($category_ids) == 0 ||
             count($user_ids) == 0
         ) {
             return;
@@ -3060,8 +3060,8 @@ final class functions_admin
 
         if ($contents) {
             while (($node = readdir($contents)) !== false) {
-                if ($node != '.' and
-                    $node != '..' and
+                if ($node != '.' &&
+                    $node != '..' &&
                     is_dir('./' . PWG_DERIVATIVE_DIR . $node)
                 ) {
                     self::clear_derivative_cache_rec('./' . PWG_DERIVATIVE_DIR . $node, $pattern);
@@ -3085,7 +3085,7 @@ final class functions_admin
 
         if ($contents) {
             while (($node = readdir($contents)) !== false) {
-                if ($node == '.' or
+                if ($node == '.' ||
                     $node == '..'
                 ) {
                     continue;
@@ -3171,9 +3171,9 @@ final class functions_admin
 
         if ($opendir) {
             while ($file = readdir($opendir)) {
-                if ($file != '.' and
-                    $file != '..' and
-                    is_dir($directory . '/' . $file) and
+                if ($file != '.' &&
+                    $file != '..' &&
+                    is_dir($directory . '/' . $file) &&
                     $file != '.svn'
                 ) {
                     $sub_dirs[] = $file;
@@ -3199,7 +3199,7 @@ final class functions_admin
             $fh = opendir($path);
 
             while ($file = readdir($fh)) {
-                if ($file != '.' and
+                if ($file != '.' &&
                     $file != '..'
                 ) {
                     $pathfile = $path . '/' . $file;
@@ -3430,7 +3430,7 @@ final class functions_admin
     public static function update_images_lastmodified(
         array $image_ids
     ): void {
-        if (! is_array($image_ids) and
+        if (! is_array($image_ids) &&
             is_int($image_ids)
         ) {
             $images_ids = [$image_ids];
@@ -3521,7 +3521,7 @@ final class functions_admin
 
             if ($contents) {
                 while (($node = readdir($contents)) !== false) {
-                    if ($node == '.' or
+                    if ($node == '.' ||
                         $node == '..'
                     ) {
                         continue;
@@ -3631,7 +3631,7 @@ final class functions_admin
 
         $cache_path = './' . functions::conf_get_param('data_location') . 'cache/piwigo_latest_news-' . $lang_info['code'] . '.cache.php';
 
-        if (! is_file($cache_path) or
+        if (! is_file($cache_path) ||
             filemtime($cache_path) < strtotime('24 hours ago')
         ) {
             $url = PHPWG_URL . '/ws.php?method=porg.news.getLatest&format=json';
@@ -3876,7 +3876,7 @@ final class functions_admin
             require __DIR__ . '/../../local/config/config.php';
         }
 
-        return isset($conf['order_by']) or
+        return isset($conf['order_by']) ||
                isset($conf['order_by_inside_category']);
     }
 
@@ -4047,7 +4047,7 @@ final class functions_admin
     ): string {
         global $conf;
 
-        if ($conf['nbm_send_html_mail'] and
+        if ($conf['nbm_send_html_mail'] &&
             ! (strpos($customize_mail_content, '<') === 0)
         ) {
             // On HTML mail, detects if the content are HTML format.
@@ -4081,10 +4081,10 @@ final class functions_admin
             $data_users = functions_notification_by_mail::get_user_notifications('send', $check_key_list);
 
             // List all if it's define on options or on timeout
-            $is_list_all_without_test = ($env_nbm['is_sendmail_timeout'] or $conf['nbm_list_all_enabled_users_to_send']);
+            $is_list_all_without_test = ($env_nbm['is_sendmail_timeout'] || $conf['nbm_list_all_enabled_users_to_send']);
 
             // Check if exist news to list user or send mails
-            if (! $is_list_all_without_test or
+            if (! $is_list_all_without_test ||
                 $is_action_send
             ) {
                 if (count($data_users) > 0) {
@@ -4108,7 +4108,7 @@ final class functions_admin
                     functions_notification_by_mail::begin_users_env_nbm($is_action_send);
 
                     foreach ($data_users as $nbm_user) {
-                        if (! $is_action_send and
+                        if (! $is_action_send &&
                             functions_notification_by_mail::check_sendmail_timeout()
                         ) {
                             // Stop fill list on 'list_to_send', if the quota is override
@@ -4116,7 +4116,7 @@ final class functions_admin
                             break;
                         }
 
-                        if ($is_action_send and
+                        if ($is_action_send &&
                             functions_notification_by_mail::check_sendmail_timeout()
                         ) {
                             // Stop fill list on 'send', if the quota is override
@@ -4190,7 +4190,7 @@ final class functions_admin
                                     );
                                 }
 
-                                if ($conf['nbm_send_html_mail'] and
+                                if ($conf['nbm_send_html_mail'] &&
                                     $conf['nbm_send_recent_post_dates']
                                 ) {
                                     $recent_post_dates = functions_notification::get_recent_post_dates_array(
@@ -4305,7 +4305,7 @@ final class functions_admin
         $is_first = true;
 
         foreach ($vars as $key => $value) {
-            if (! in_array($key, $get_rejects) and
+            if (! in_array($key, $get_rejects) &&
                 $key != $get_param
             ) {
                 $base_url .= $is_first ? '?' : '&amp;';
@@ -4326,13 +4326,13 @@ final class functions_admin
             $disp = '↓'; // TODO: an small image is better
 
             if ($field !== ($_GET[$get_param] ?? null)) {
-                if (! isset($default_field) or
+                if (! isset($default_field) ||
                     $default_field != $field
                 ) { // the first should be the default
                     $url = functions_url::add_url_params($url, [
                         $get_param => $field,
                     ]);
-                } elseif (isset($default_field) and
+                } elseif (isset($default_field) &&
                           ! isset($_GET[$get_param])
                 ) {
                     $ret[] = $field;

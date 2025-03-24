@@ -93,7 +93,7 @@ final class pwg_image
 
         // testing on height is useless in theory: if width is unchanged, there
         // should be no resize, because width/height ratio is not modified.
-        if ($resize_dimensions['width'] == $source_width and
+        if ($resize_dimensions['width'] == $source_width &&
             $resize_dimensions['height'] == $source_height
         ) {
             // the image doesn't need any resize! We just copy it to the destination
@@ -135,7 +135,7 @@ final class pwg_image
     ): array {
         $rotate_for_dimensions = false;
 
-        if (isset($rotation) and
+        if (isset($rotation) &&
             in_array(abs($rotation), [90, 270])
         ) {
             $rotate_for_dimensions = true;
@@ -149,7 +149,7 @@ final class pwg_image
             $x = 0;
             $y = 0;
 
-            if ($width < $height and
+            if ($width < $height &&
                 $follow_orientation
             ) {
                 list($max_width, $max_height) = [$max_height, $max_width];
@@ -175,7 +175,7 @@ final class pwg_image
         $destination_height = $height;
 
         // maximal size exceeded ?
-        if ($ratio_width > 1 or
+        if ($ratio_width > 1 ||
             $ratio_height > 1
         ) {
             if ($ratio_width < $ratio_height) {
@@ -196,8 +196,8 @@ final class pwg_image
             'height' => $destination_height,
         ];
 
-        if ($crop and
-           ($x or $y)
+        if ($crop &&
+           ($x || $y)
         ) {
             $result['crop'] = [
                 'width' => $width,
@@ -286,7 +286,7 @@ final class pwg_image
         // https://github.com/php/php-src/issues/11020
         $exif = @exif_read_data($source_filepath);
 
-        if (isset($exif['Orientation']) and
+        if (isset($exif['Orientation']) &&
             preg_match('/^\s*(\d)/', (string) $exif['Orientation'], $matches)
         ) {
             $orientation = $matches[1];
@@ -355,7 +355,7 @@ final class pwg_image
 
     public static function is_imagick(): bool
     {
-        return extension_loaded('imagick') and
+        return extension_loaded('imagick') &&
                class_exists('Imagick');
     }
 
@@ -369,8 +369,8 @@ final class pwg_image
 
         exec($conf['ext_imagick_dir'] . 'convert -version', $returnarray);
 
-        if (is_array($returnarray) and
-            ! empty($returnarray[0]) and
+        if (is_array($returnarray) &&
+            ! empty($returnarray[0]) &&
             preg_match('/ImageMagick/i', $returnarray[0])
         ) {
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
@@ -407,7 +407,7 @@ final class pwg_image
         switch (strtolower($library)) {
             case 'auto':
             case 'imagick':
-                if ($extension != 'gif' and
+                if ($extension != 'gif' &&
                     self::is_imagick()
                 ) {
                     return 'imagick';
@@ -415,7 +415,7 @@ final class pwg_image
                 // no break
 
             case 'ext_imagick':
-                if ($extension != 'gif' and
+                if ($extension != 'gif' &&
                     self::is_ext_imagick()
                 ) {
                     return 'ext_imagick';

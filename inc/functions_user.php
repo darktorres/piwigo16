@@ -30,8 +30,8 @@ final class functions_user
     ): ?string {
         global $conf;
 
-        if (empty($mail_address) and
-            ! ($conf['obligatory_user_mail_address'] and
+        if (empty($mail_address) &&
+            ! ($conf['obligatory_user_mail_address'] &&
             in_array(functions::script_basename(), ['register', 'profile']))
         ) {
             return '';
@@ -41,7 +41,7 @@ final class functions_user
             return functions::l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
-        if (defined('PHPWG_INSTALLED') and
+        if (defined('PHPWG_INSTALLED') &&
             ! empty($mail_address)
         ) {
             $exclude_user_condition = is_numeric($user_id) ? "AND {$conf['user_fields']['id']} != '{$user_id}'" : '';
@@ -234,7 +234,7 @@ final class functions_user
 
             self::create_user_infos($user_id, $override);
 
-            if ($notify_admin and
+            if ($notify_admin &&
                 $conf['email_admin_on_new_user'] != 'none'
             ) {
                 require_once __DIR__ . '/../inc/functions_mail.php';
@@ -261,7 +261,7 @@ final class functions_user
                 );
             }
 
-            if ($notify_user and
+            if ($notify_user &&
                 functions::email_check_format($mail_address)
             ) {
                 require_once __DIR__ . '/../inc/functions_mail.php';
@@ -320,7 +320,7 @@ final class functions_user
         $user['id'] = $user_id;
         $user = array_merge($user, self::getuserdata($user_id, $use_cache));
 
-        if ($user['id'] == $conf['guest_id'] and
+        if ($user['id'] == $conf['guest_id'] &&
             $user['status'] != 'guest'
         ) {
             $user['status'] = 'guest';
@@ -330,7 +330,7 @@ final class functions_user
         // Check user theme. 2 possible problems:
         // 1. the user_infos.theme was not found in the themes table, thus themes.name is null
         // 2. the theme is not really installed on the filesystem
-        if (! isset($user['theme_name']) or
+        if (! isset($user['theme_name']) ||
             ! functions::check_theme_installed($user['theme'])
         ) {
             $user['theme'] = self::get_default_theme();
@@ -419,8 +419,8 @@ final class functions_user
         $userdata['preferences'] = empty($userdata['preferences']) ? [] : unserialize($userdata['preferences']);
 
         if ($use_cache) {
-            if (! isset($userdata['need_update']) or
-                ! is_bool($userdata['need_update']) or
+            if (! isset($userdata['need_update']) ||
+                ! is_bool($userdata['need_update']) ||
                 $userdata['need_update'] == true
             ) {
                 $userdata['cache_update_time'] = time();
@@ -729,7 +729,7 @@ final class functions_user
             }
         }
 
-        if (is_array($cache['default_user']) and
+        if (is_array($cache['default_user']) &&
             $convert_str
         ) {
             $default_user = $cache['default_user'];
@@ -758,7 +758,7 @@ final class functions_user
     ): string {
         $default_user = self::get_default_user_info(true);
 
-        if ($default_user === false or
+        if ($default_user === false ||
             empty($default_user[$value_name])
         ) {
             return $default;
@@ -903,7 +903,7 @@ final class functions_user
                 if ($user_id == $conf['webmaster_id']) {
                     $status = 'webmaster';
                     $level = max($conf['available_permission_levels']);
-                } elseif ($user_id == $conf['guest_id'] or
+                } elseif ($user_id == $conf['guest_id'] ||
                           $user_id == $conf['default_user_id']
                 ) {
                     $status = 'guest';
@@ -966,7 +966,7 @@ final class functions_user
     ): void {
         global $conf, $user;
 
-        if ($remember_me and
+        if ($remember_me &&
             $conf['authorize_remembering']
         ) {
             $now = time();
@@ -1012,15 +1012,15 @@ final class functions_user
         if (isset($_COOKIE[$conf['remember_me_name']])) {
             $cookie = explode('-', stripslashes($_COOKIE[$conf['remember_me_name']]));
 
-            if (count($cookie) === 3 and
-                is_numeric($cookie[0]) and /*user id*/
-                is_numeric($cookie[1]) and /*time*/
-                time() - $conf['remember_me_length'] <= $cookie[1] and
+            if (count($cookie) === 3 &&
+                is_numeric($cookie[0]) &&
+                is_numeric($cookie[1]) &&
+                time() - $conf['remember_me_length'] <= $cookie[1] &&
                 time() >= $cookie[1] /*cookie generated in the past*/
             ) {
                 $key = self::calculate_auto_login_key($cookie[0], $cookie[1], $username);
 
-                if ($key !== false and
+                if ($key !== false &&
                     $key === $cookie[2]
                 ) {
                     self::log_user($cookie[0], true);
@@ -1100,7 +1100,7 @@ final class functions_user
 
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
-        if (isset($row['id']) and
+        if (isset($row['id']) &&
             $conf['password_verify']($password, $row['password'], $row['id'])
         ) {
             $user_found = true;
@@ -1117,7 +1117,7 @@ final class functions_user
 
             $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
-            if (isset($row['id']) and
+            if (isset($row['id']) &&
                 $conf['password_verify']($password, $row['password'], $row['id'])
             ) {
                 $user_found = true;
@@ -1342,7 +1342,7 @@ final class functions_user
             return true;
         }
 
-        if ($action == 'edit' and
+        if ($action == 'edit' &&
             $conf['user_can_edit_comment']
         ) {
             if ($comment_author_id == $user['id']) {
@@ -1350,7 +1350,7 @@ final class functions_user
             }
         }
 
-        if ($action == 'delete' and
+        if ($action == 'delete' &&
             $conf['user_can_delete_comment']
         ) {
             if ($comment_author_id == $user['id']) {
@@ -1407,7 +1407,7 @@ final class functions_user
                     // no break
 
                 case 'forbidden_images':
-                    if (! empty($user['image_access_list']) or
+                    if (! empty($user['image_access_list']) ||
                         $user['image_access_type'] != 'NOT IN'
                     ) {
                         $table_prefix = null;
@@ -1420,7 +1420,7 @@ final class functions_user
 
                         if (isset($table_prefix)) {
                             $sql_list[] = $table_prefix . 'level<=' . $user['level'];
-                        } elseif (! empty($user['image_access_list']) and
+                        } elseif (! empty($user['image_access_list']) &&
                                   ! empty($user['image_access_type'])
                         ) {
                             $sql_list[] = $field_name . ' ' . $user['image_access_type'] . ' (' . $user['image_access_list'] . ')';
@@ -1440,7 +1440,7 @@ final class functions_user
             $sql = $force_one_condition ? '1 = 1' : '';
         }
 
-        if (isset($prefix_condition) and
+        if (isset($prefix_condition) &&
             ! empty($sql)
         ) {
             $sql = $prefix_condition . ' ' . $sql;

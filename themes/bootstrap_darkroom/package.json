@@ -1,5 +1,6 @@
 {
   "name": "piwigo-bootstrap-darkroom",
+  "private": true,
   "description": "A Piwigo theme based on Bootstrap 4",
   "version": "2.4.1",
   "keywords": [
@@ -26,6 +27,8 @@
   "license": "APACHE-2.0",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.11.2",
+    "bootstrap": "4.3.1",
+    "bootstrap-material-design": "4.1.2",
     "bootstrap-social": "^5.1.1",
     "jQuery-Touch-Events": "benmajor/jQuery-Touch-Events#2.0.0",
     "jquery": ">=3.3.0",
@@ -39,15 +42,12 @@
   },
   "devDependencies": {
     "autoprefixer": "^9.4.7",
-    "bootstrap": "4.3.1",
-    "bootstrap-material-design": "4.1.2",
     "bootswatch": "thomaspark/bootswatch#v4.3.1",
     "clean-css-cli": "^4.2.1",
     "node-sass": "^4.11.0",
     "node-sass-tilde-importer": "^1.0.0",
     "npm-run-all": "^4.1.5",
     "postcss-cli": "^6.1.1",
-    "uglify-js": "^3.4.9",
-    "yarn": "~1.19"
+    "uglify-js": "^3.4.9"
   }
 }

@@ -1,8 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "preinstall": "cd tests && bun install",
-    "reinstall": "bunx rimraf node_modules tests/node_modules && bun install && cd tests && bun install",
+    "preinstall": "cd tests && bun install && cd ../themes/bootstrap_darkroom && bun install --omit=dev",
+    "reinstall": "bunx rimraf node_modules tests/node_modules themes/bootstrap_darkroom/node_modules && bun install && cd tests && bun install && cd ../themes/bootstrap_darkroom && bun install --omit=dev",
     "tests": "cd tests && bun tests"
   },
   "dependencies": {

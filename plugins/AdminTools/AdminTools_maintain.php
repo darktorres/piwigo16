@@ -11,7 +11,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-class AdminTools_maintain extends PluginMaintain
+final class AdminTools_maintain extends PluginMaintain
 {
     private array $default_conf = [
         'default_open' => true,

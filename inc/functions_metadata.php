@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-class functions_metadata
+final class functions_metadata
 {
     /**
      * returns information from IPTC metadata, mapping is done in this function.

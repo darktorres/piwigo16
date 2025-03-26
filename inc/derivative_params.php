@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-class derivative_params
+final class derivative_params
 {
     /**
      * Formats a size name into a 2 chars identifier usable in filename.

@@ -14,7 +14,7 @@ namespace Piwigo\inc;
 use Piwigo\inc\dblayer\functions_mysqli;
 use SmartyException;
 
-class functions_search
+final class functions_search
 {
     public const int QST_QUOTED = 0x01;
 

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-class QNumericRangeScope extends QSearchScope
+final class QNumericRangeScope extends QSearchScope
 {
     private float|int $epsilon;
 

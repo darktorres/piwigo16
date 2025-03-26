@@ -61,7 +61,7 @@ define('BUTTONS_RANK_NEUTRAL', 50);
 /**
  * This a wrapper around Smarty classes proving various custom mechanisms for templates.
  */
-class Template
+final class Template
 {
     public const string COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
 

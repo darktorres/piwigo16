@@ -16,19 +16,19 @@ use SmartyException;
 /**
  * Manages a set of RegisteredBlock and DisplayBlock.
  */
-class BlockManager
+final class BlockManager
 {
-    protected string $id;
+    private string $id;
 
     /**
      * @var array<RegisteredBlock>
      */
-    protected array $registered_blocks = [];
+    private array $registered_blocks = [];
 
     /**
      * @var array<DisplayBlock>
      */
-    protected array $display_blocks = [];
+    private array $display_blocks = [];
 
     public function __construct(
         string $id
@@ -176,7 +176,7 @@ class BlockManager
     /**
      * Sorts the blocks.
      */
-    protected function sort_blocks(): void
+    private function sort_blocks(): void
     {
         uasort($this->display_blocks, self::cmp_by_position(...));
     }
@@ -184,7 +184,7 @@ class BlockManager
     /**
      * Callback for blocks sorting.
      */
-    protected static function cmp_by_position(
+    private static function cmp_by_position(
         DisplayBlock $a,
         DisplayBlock $b
     ): int {

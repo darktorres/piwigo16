@@ -16,7 +16,7 @@ use SmartyException;
 /**
  * Manages a list of CSS files and combining them in a unique file.
  */
-class CssLoader
+final class CssLoader
 {
     /**
      * @var array<Css>

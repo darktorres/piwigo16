@@ -18,7 +18,7 @@ use Piwigo\inc\DerivativeParams;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\SrcImage;
 
-class SPThumbPicker
+final class SPThumbPicker
 {
     public array $candidates;
 

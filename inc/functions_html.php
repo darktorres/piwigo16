@@ -14,7 +14,7 @@ namespace Piwigo\inc;
 use Piwigo\inc\dblayer\functions_mysqli;
 use SmartyException;
 
-class functions_html
+final class functions_html
 {
     /**
      * Generates breadcrumb from categories list.

@@ -21,7 +21,7 @@ use Piwigo\inc\ws_functions\pwg_permissions;
 use Piwigo\inc\ws_functions\pwg_tags;
 use Piwigo\inc\ws_functions\pwg_users;
 
-class ws_functions
+final class ws_functions
 {
     /**
      * Event handler for method invocation security check. Should return a PwgError

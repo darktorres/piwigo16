@@ -19,7 +19,7 @@ use Random\RandomException;
 use SmartyException;
 use Symfony\Component\CssSelector\Exception\ParseException;
 
-class functions_mail
+final class functions_mail
 {
     /**
      * Returns the name of the mail sender

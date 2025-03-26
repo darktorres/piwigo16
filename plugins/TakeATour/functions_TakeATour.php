@@ -10,7 +10,7 @@ use Piwigo\inc\functions_session;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
-class functions_TakeATour
+final class functions_TakeATour
 {
     public static function TAT_tour_setup(): void
     {

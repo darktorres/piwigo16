@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-class derivative_std_params
+final class derivative_std_params
 {
     public const string IMG_SQUARE = 'square';
 

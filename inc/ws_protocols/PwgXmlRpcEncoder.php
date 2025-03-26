@@ -14,7 +14,7 @@ namespace Piwigo\inc\ws_protocols;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgResponseEncoder;
 
-class PwgXmlRpcEncoder extends PwgResponseEncoder
+final class PwgXmlRpcEncoder extends PwgResponseEncoder
 {
     public static function xmlrpc_encode(
         array|bool|string|int|float|object|null $data

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-class PwgServer
+final class PwgServer
 {
     public PwgRequestHandler $_requestHandler;
 

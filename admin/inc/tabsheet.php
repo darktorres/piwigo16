@@ -13,7 +13,7 @@ namespace Piwigo\admin\inc;
 
 use Piwigo\inc\functions_plugins;
 
-class tabsheet
+final class tabsheet
 {
     public array $sheets;
 

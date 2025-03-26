@@ -26,7 +26,7 @@ use Piwigo\inc\PwgServer;
 use Piwigo\inc\ws_functions;
 use Random\RandomException;
 
-class pwg_users
+final class pwg_users
 {
     /**
      * API method

@@ -14,7 +14,7 @@ namespace Piwigo\inc;
 use Piwigo\inc\dblayer\functions_mysqli;
 use SmartyException;
 
-class functions_url
+final class functions_url
 {
     /**
      * returns a prefix for each url link on displayed page

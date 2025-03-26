@@ -29,7 +29,7 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 use Random\RandomException;
 
-class functions_admin
+final class functions_admin
 {
     /**
      * Deletes a site and call delete_categories for each primary category of the site

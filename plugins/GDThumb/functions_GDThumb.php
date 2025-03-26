@@ -6,7 +6,7 @@ namespace Piwigo\plugins\GDThumb;
 
 use Piwigo\admin\inc\functions_admin;
 
-class functions_GDThumb
+final class functions_GDThumb
 {
     public static function int_delete_gdthumb_cache(
         string $pattern

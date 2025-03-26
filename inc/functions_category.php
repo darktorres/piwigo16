@@ -13,7 +13,7 @@ namespace Piwigo\inc;
 
 use Piwigo\inc\dblayer\functions_mysqli;
 
-class functions_category
+final class functions_category
 {
     /**
      * Callback used for sorting by global_rank

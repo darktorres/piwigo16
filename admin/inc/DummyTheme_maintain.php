@@ -16,7 +16,7 @@ use Piwigo\inc\ThemeMaintain;
 /**
  * used when a theme uses the old procedural declaration of maintenance methods
  */
-class DummyTheme_maintain extends ThemeMaintain
+final class DummyTheme_maintain extends ThemeMaintain
 {
     public function activate(
         string $theme_version,

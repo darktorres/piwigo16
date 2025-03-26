@@ -14,7 +14,7 @@ namespace Piwigo\inc;
 /**
  * Represents a menu block ready for display in the BlockManager object.
  */
-class DisplayBlock
+final class DisplayBlock
 {
     public array $data = [];
 
@@ -24,11 +24,11 @@ class DisplayBlock
 
     public string|int|null $id;
 
-    protected RegisteredBlock $_registeredBlock;
+    private RegisteredBlock $_registeredBlock;
 
-    protected int $_position;
+    private int $_position;
 
-    protected string $_title;
+    private string $_title;
 
     public function __construct(
         RegisteredBlock $block

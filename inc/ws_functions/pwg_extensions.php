@@ -21,7 +21,7 @@ use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgServer;
 use SmartyException;
 
-class pwg_extensions
+final class pwg_extensions
 {
     /**
      * API method

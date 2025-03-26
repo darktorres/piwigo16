@@ -27,7 +27,7 @@ functions_plugins::add_event_handler('upload_file', functions_upload::upload_fil
 functions_plugins::add_event_handler('upload_file', functions_upload::upload_file_psd(...));
 functions_plugins::add_event_handler('upload_file', functions_upload::upload_file_eps(...));
 
-class functions_upload
+final class functions_upload
 {
     public static function get_upload_form_config(): array
     {

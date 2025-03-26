@@ -14,7 +14,7 @@ namespace Piwigo\inc;
 /**
  * Structure of results being filled from different tables
  */
-class QResults
+final class QResults
 {
     public array $all_tags;
 

@@ -17,7 +17,7 @@ use SmartyException;
  * Manage a list of required scripts for a page, by optimizing their loading location (head, footer, async)
  * and later on by combining them in a unique file respecting at the same time dependencies.
  */
-class ScriptLoader
+final class ScriptLoader
 {
     /**
      * @var array<string>

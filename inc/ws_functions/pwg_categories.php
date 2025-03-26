@@ -28,7 +28,7 @@ use Piwigo\inc\PwgNamedStruct;
 use Piwigo\inc\PwgServer;
 use Piwigo\inc\ws_functions;
 
-class pwg_categories
+final class pwg_categories
 {
     /**
      * API method

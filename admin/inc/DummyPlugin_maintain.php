@@ -16,7 +16,7 @@ use Piwigo\inc\PluginMaintain;
 /**
  * used when a plugin uses the old procedural declaration of maintenance methods
  */
-class DummyPlugin_maintain extends PluginMaintain
+final class DummyPlugin_maintain extends PluginMaintain
 {
     public function install(
         string $plugin_version,

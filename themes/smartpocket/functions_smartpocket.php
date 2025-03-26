@@ -8,7 +8,7 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\menubar;
 
-class functions_smartpocket
+final class functions_smartpocket
 {
     public static function sp_select_all_thumbnails(
         array $selection

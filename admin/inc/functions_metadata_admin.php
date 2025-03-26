@@ -15,7 +15,7 @@ use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_metadata;
 
-class functions_metadata_admin
+final class functions_metadata_admin
 {
     /**
      * Returns IPTC metadata to sync from a file, depending on IPTC mapping.

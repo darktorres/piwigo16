@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-class functions_cookie
+final class functions_cookie
 {
     /**
      * Returns the path to use for the Piwigo cookie.

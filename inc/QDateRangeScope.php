@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-class QDateRangeScope extends QSearchScope
+final class QDateRangeScope extends QSearchScope
 {
     public function __construct(
         string $id,

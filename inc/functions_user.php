@@ -17,7 +17,7 @@ use Random\RandomException;
 
 functions_plugins::add_event_handler('try_log_user', functions_user::pwg_login(...));
 
-class functions_user
+final class functions_user
 {
     /**
      * Checks if an email is well formed and not already in use.

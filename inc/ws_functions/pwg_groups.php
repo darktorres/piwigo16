@@ -19,7 +19,7 @@ use Piwigo\inc\PwgNamedArray;
 use Piwigo\inc\PwgNamedStruct;
 use Piwigo\inc\PwgServer;
 
-class pwg_groups
+final class pwg_groups
 {
     /**
      * API method

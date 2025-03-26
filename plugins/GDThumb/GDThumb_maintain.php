@@ -11,7 +11,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-class GDThumb_maintain extends PluginMaintain
+final class GDThumb_maintain extends PluginMaintain
 {
     private bool $installed = false;
 

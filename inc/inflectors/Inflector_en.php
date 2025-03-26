@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc\inflectors;
 
-class Inflector_en
+final class Inflector_en
 {
     private array $exceptions;
 

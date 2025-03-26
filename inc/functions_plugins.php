@@ -18,7 +18,7 @@ define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH . 'plugins/');
 /** default priority for plugins handlers */
 define('EVENT_HANDLER_PRIORITY_NEUTRAL', 50);
 
-class functions_plugins
+final class functions_plugins
 {
     /**
      * Register an event handler.

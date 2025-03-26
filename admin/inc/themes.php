@@ -20,7 +20,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 use Piwigo\inc\ThemeMaintain;
 
-class themes
+final class themes
 {
     use ExtensionFunctionUpdater;
 

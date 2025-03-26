@@ -14,7 +14,7 @@ namespace Piwigo\admin\inc;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 
-class functions_permalinks
+final class functions_permalinks
 {
     /** returns a category id that corresponds to the given permalink (or null)
      */

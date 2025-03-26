@@ -13,7 +13,7 @@ namespace Piwigo\inc;
 
 use Piwigo\inc\dblayer\functions_mysqli;
 
-class functions_rate
+final class functions_rate
 {
     /**
      * Rate a picture by the current user.

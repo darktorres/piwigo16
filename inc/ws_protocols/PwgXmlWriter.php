@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc\ws_protocols;
 
-class PwgXmlWriter
+final class PwgXmlWriter
 {
     public bool $_indent;
 

@@ -35,7 +35,7 @@ if (! isset($env_nbm['sendmail_timeout']) or
     $env_nbm['sendmail_timeout'] = $conf['nbm_treatment_timeout_default'];
 }
 
-class functions_notification_by_mail
+final class functions_notification_by_mail
 {
     /**
      * Search an available check_key

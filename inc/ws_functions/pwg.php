@@ -32,7 +32,7 @@ use Piwigo\inc\PwgServer;
 use Piwigo\inc\SrcImage;
 use Piwigo\inc\ws_functions;
 
-class pwg
+final class pwg
 {
     /**
      * API method

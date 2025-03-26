@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-class menubar
+final class menubar
 {
     /**
      * Setups each block the main menubar.

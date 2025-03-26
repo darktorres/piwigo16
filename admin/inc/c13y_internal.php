@@ -18,7 +18,7 @@ use Piwigo\inc\functions_session;
 use Piwigo\inc\functions_user;
 use Random\RandomException;
 
-class c13y_internal
+final class c13y_internal
 {
     public function __construct()
     {

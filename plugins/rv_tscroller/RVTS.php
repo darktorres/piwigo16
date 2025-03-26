@@ -19,7 +19,7 @@ use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_session;
 use Piwigo\inc\functions_url;
 
-class RVTS
+final class RVTS
 {
     public static function on_end_section_init(): void
     {

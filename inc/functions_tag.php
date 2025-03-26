@@ -13,7 +13,7 @@ namespace Piwigo\inc;
 
 use Piwigo\inc\dblayer\functions_mysqli;
 
-class functions_tag
+final class functions_tag
 {
     /**
      * Returns the number of available tags for the connected user.

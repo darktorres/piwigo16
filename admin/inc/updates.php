@@ -22,7 +22,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-class updates
+final class updates
 {
     public array $types = [];
 

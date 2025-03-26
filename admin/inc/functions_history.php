@@ -15,7 +15,7 @@ use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 
-class functions_history
+final class functions_history
 {
     /**
      * Init tabsheet for history pages

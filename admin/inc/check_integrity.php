@@ -16,7 +16,7 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use SmartyException;
 
-class check_integrity
+final class check_integrity
 {
     public array $ignore_list;
 

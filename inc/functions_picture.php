@@ -13,7 +13,7 @@ namespace Piwigo\inc;
 
 use Piwigo\inc\dblayer\functions_mysqli;
 
-class functions_picture
+final class functions_picture
 {
     /**
      * Returns slideshow default params.

@@ -26,7 +26,7 @@ include_once(PHPWG_ROOT_PATH . 'inc/functions_plugins.php');
 include_once(PHPWG_ROOT_PATH . 'inc/functions_user.php');
 include_once(PHPWG_ROOT_PATH . 'inc/functions_session.php');
 
-class functions
+final class functions
 {
     /**
      * no option for mkgetdir()

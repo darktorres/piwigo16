@@ -18,7 +18,7 @@ namespace Piwigo\admin\inc;
 use Imagick;
 use ImagickPixel;
 
-class image_imagick implements imageInterface
+final class image_imagick implements imageInterface
 {
     public Imagick $image;
 

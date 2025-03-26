@@ -17,7 +17,7 @@ use Piwigo\inc\functions;
 
 // provides data for site synchronization from the local file system
 
-class LocalSiteReader
+final class LocalSiteReader
 {
     public string $site_url;
 

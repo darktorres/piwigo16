@@ -15,7 +15,7 @@ use Exception;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 
-class functions_install
+final class functions_install
 {
     /**
      * Loads a SQL file and executes all queries.

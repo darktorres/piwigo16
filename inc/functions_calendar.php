@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-class functions_calendar
+final class functions_calendar
 {
     /**
      * URL keyword for list view

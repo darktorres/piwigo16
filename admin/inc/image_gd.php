@@ -17,7 +17,7 @@ namespace Piwigo\admin\inc;
 
 use Piwigo\inc\functions;
 
-class image_gd implements imageInterface
+final class image_gd implements imageInterface
 {
     public bool|\GdImage $image;
 

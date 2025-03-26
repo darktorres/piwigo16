@@ -19,7 +19,7 @@ use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgNamedArray;
 use Piwigo\inc\PwgServer;
 
-class pwg_permissions
+final class pwg_permissions
 {
     /**
      * API method

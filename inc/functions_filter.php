@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-class functions_filter
+final class functions_filter
 {
     /**
      * Updates data of categories with filtered values

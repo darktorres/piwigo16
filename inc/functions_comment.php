@@ -16,7 +16,7 @@ use Piwigo\inc\dblayer\functions_mysqli;
 
 functions_plugins::add_event_handler('user_comment_check', functions_comment::user_comment_check(...));
 
-class functions_comment
+final class functions_comment
 {
     /**
      * Does basic check on comment and returns action to perform.

@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\inc;
 
 /** Represents a single word or quoted phrase to be searched.*/
-class QSingleToken
+final class QSingleToken
 {
     public bool $is_single = true;
 

@@ -32,7 +32,7 @@ if (isset($conf['session_save_handler']) and
     register_shutdown_function('session_write_close');
 }
 
-class functions_session
+final class functions_session
 {
     /**
      * Generates a pseudo random string.

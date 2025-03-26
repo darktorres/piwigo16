@@ -13,7 +13,7 @@ namespace Piwigo\inc;
 
 use Piwigo\inc\dblayer\functions_mysqli;
 
-class functions_notification
+final class functions_notification
 {
     /**
      * Get standard sql where in order to restrict and filter categories and images.

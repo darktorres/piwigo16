@@ -16,7 +16,7 @@ namespace Piwigo\inc;
  * integers starting at 0). Provides naming clues for xml output (what is xml
  * attributes and what is element)
  */
-class PwgNamedStruct
+final class PwgNamedStruct
 {
     public array $_content;
 

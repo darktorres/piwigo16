@@ -15,7 +15,7 @@ use Exception;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 
-class functions_upgrade
+final class functions_upgrade
 {
     public static function check_upgrade(): bool
     {

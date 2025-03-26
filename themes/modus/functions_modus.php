@@ -15,7 +15,7 @@ use Piwigo\inc\Script;
 use Piwigo\inc\Template;
 use Smarty_Internal_Template;
 
-class functions_modus
+final class functions_modus
 {
     public static function modus_css_gradient(
         array $gradient

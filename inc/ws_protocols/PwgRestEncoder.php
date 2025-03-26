@@ -17,7 +17,7 @@ use Piwigo\inc\PwgNamedArray;
 use Piwigo\inc\PwgNamedStruct;
 use Piwigo\inc\PwgResponseEncoder;
 
-class PwgRestEncoder extends PwgResponseEncoder
+final class PwgRestEncoder extends PwgResponseEncoder
 {
     private PwgXmlWriter $_writer;
 

@@ -36,7 +36,7 @@ use Piwigo\inc\PwgServer;
 use Piwigo\inc\ws_functions;
 use Random\RandomException;
 
-class pwg_images
+final class pwg_images
 {
     // +-----------------------------------------------------------------------+
     // | UTILITIES                                                             |

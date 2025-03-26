@@ -25,7 +25,7 @@ use Piwigo\inc\PwgNamedStruct;
 use Piwigo\inc\PwgServer;
 use Piwigo\inc\ws_functions;
 
-class pwg_tags
+final class pwg_tags
 {
     /**
      * API method

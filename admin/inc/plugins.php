@@ -18,7 +18,7 @@ use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\PluginMaintain;
 
-class plugins
+final class plugins
 {
     use ExtensionFunctionUpdater;
 

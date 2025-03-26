@@ -15,7 +15,7 @@ namespace Piwigo\inc;
  * This class contains basic functions that can be called directly from the
  * templates in the form $pwg->l10n('edit')
  */
-class PwgTemplateAdapter
+final class PwgTemplateAdapter
 {
     /**
      * @deprecated use "translate" modifier

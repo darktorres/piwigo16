@@ -17,7 +17,7 @@ namespace Piwigo\admin\inc;
 
 use Piwigo\inc\functions;
 
-class image_ext_imagick implements imageInterface
+final class image_ext_imagick implements imageInterface
 {
     public string $imagickdir = '';
 

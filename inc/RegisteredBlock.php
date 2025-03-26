@@ -14,13 +14,13 @@ namespace Piwigo\inc;
 /**
  * Represents a menu block registered in a BlockManager object.
  */
-class RegisteredBlock
+final class RegisteredBlock
 {
-    protected string $id;
+    private string $id;
 
-    protected string $name;
+    private string $name;
 
-    protected string $owner;
+    private string $owner;
 
     public function __construct(
         string $id,

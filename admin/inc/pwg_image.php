@@ -19,7 +19,7 @@ use Exception;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 
-class pwg_image
+final class pwg_image
 {
     public ?imageInterface $image = null;
 

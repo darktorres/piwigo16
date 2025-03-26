@@ -17,7 +17,7 @@ use mysqli_result;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 
-class functions_mysqli
+final class functions_mysqli
 {
     public const string DB_ENGINE = 'MySQL';
 

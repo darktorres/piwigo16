@@ -17,7 +17,7 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_user;
 
-class languages
+final class languages
 {
     use ExtensionFunctionUpdater;
 

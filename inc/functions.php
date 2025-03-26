@@ -2447,6 +2447,10 @@ class functions
         if (isset($_GET['mobile'])) {
             $is_mobile_theme = functions_mysqli::get_boolean($_GET['mobile']);
             functions_session::pwg_set_session_var('mobile_theme', $is_mobile_theme);
+        } elseif (isset($_GET['ato_theme'])) {
+            $theme = $_GET['ato_theme'];
+            $is_mobile_theme = $theme == $conf['mobile_theme'];
+            functions_session::pwg_set_session_var('mobile_theme', $is_mobile_theme);
         } else {
             $is_mobile_theme = functions_session::pwg_get_session_var('mobile_theme');
         }

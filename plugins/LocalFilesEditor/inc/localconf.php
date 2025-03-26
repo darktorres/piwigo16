@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\inc\functions;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 $edited_file = './local/config/config.php';

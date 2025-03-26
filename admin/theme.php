@@ -13,19 +13,19 @@ use Piwigo\admin\inc\themes;
 use Piwigo\inc\functions_user;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 if (empty($_GET['theme'])) {
-    die('Invalid theme URL');
+    exit('Invalid theme URL');
 }
 
 $themes = new themes();
 
 if (! in_array($_GET['theme'], array_keys($themes->fs_themes))) {
-    die('Invalid theme');
+    exit('Invalid theme');
 }
 
 $filename = PHPWG_THEMES_PATH . $_GET['theme'] . '/admin/admin.php';
@@ -33,5 +33,5 @@ $filename = PHPWG_THEMES_PATH . $_GET['theme'] . '/admin/admin.php';
 if (is_file($filename)) {
     require_once $filename;
 } else {
-    die('Missing file ' . $filename);
+    exit('Missing file ' . $filename);
 }

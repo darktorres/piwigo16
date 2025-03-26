@@ -53,7 +53,7 @@ final class functions_search
         $clause_pattern = self::get_search_id_pattern($candidate);
 
         if (empty($clause_pattern)) {
-            die('Invalid search identifier');
+            exit('Invalid search identifier');
         }
 
         $clause = sprintf($clause_pattern, $candidate);

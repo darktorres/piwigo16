@@ -9,7 +9,7 @@ use Piwigo\themes\bootstrap_darkroom\inc\Config;
 
 // Check whether we are indeed included by Piwigo.
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 functions::load_language('theme.lang', PHPWG_THEMES_PATH . 'bootstrap_darkroom/');

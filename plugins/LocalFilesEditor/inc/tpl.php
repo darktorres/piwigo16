@@ -7,7 +7,7 @@ use Piwigo\inc\functions;
 use Piwigo\plugins\LocalFilesEditor\inc\functions_LocalFilesEditor;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 $edited_file = '';
@@ -18,11 +18,11 @@ if (isset($_POST['edit'])) {
 
 if (! empty($_POST['template'])) {
     if (preg_match('#\.\./#', $_POST['template'])) {
-        die('Hacking attempt! template extension must be in template-extension directory');
+        exit('Hacking attempt! template extension must be in template-extension directory');
     }
 
     if (! preg_match('#\.tpl$#', $_POST['template'])) {
-        die('Hacking attempt! template extension must be a *.tpl file');
+        exit('Hacking attempt! template extension must be a *.tpl file');
     }
 
     $template->assign('template', $_POST['template']);

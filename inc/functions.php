@@ -3363,11 +3363,11 @@ final class functions
             }
 
             if (! in_array($_POST['language'], array_keys(self::get_languages()))) {
-                die('Hacking attempt, incorrect language value');
+                exit('Hacking attempt, incorrect language value');
             }
 
             if (! in_array($_POST['theme'], array_keys(self::get_pwg_themes()))) {
-                die('Hacking attempt, incorrect theme value');
+                exit('Hacking attempt, incorrect theme value');
             }
         }
 

@@ -16,7 +16,7 @@ use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\WatermarkParams;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 if (! functions_user::is_webmaster()) {

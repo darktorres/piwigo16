@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\inc\functions;
 
 if (! defined('ADMINTOOLS_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 if (isset($_POST['save_config'])) {

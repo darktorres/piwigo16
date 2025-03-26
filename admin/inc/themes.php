@@ -55,7 +55,7 @@ final class themes
         if (! $conf['enable_extensions_install'] and
             $action == 'delete'
         ) {
-            die('Piwigo extensions install/update/delete system is disabled');
+            exit('Piwigo extensions install/update/delete system is disabled');
         }
 
         if (isset($this->db_themes_by_id[$theme_id])) {
@@ -631,7 +631,7 @@ final class themes
                                 if (! empty($old_files)) {
                                     $old_files[] = 'obsolete.list';
 
-                                    $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
+                                    $logger->debug(__FUNCTION__ . ', $old_files = {' . implode('},{', $old_files) . '}');
 
                                     $extract_path_realpath = realpath($extract_path);
 

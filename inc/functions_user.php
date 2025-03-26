@@ -1430,7 +1430,7 @@ final class functions_user
                     break;
 
                 default:
-                    die('Unknown condition');
+                    exit('Unknown condition');
             }
         }
 

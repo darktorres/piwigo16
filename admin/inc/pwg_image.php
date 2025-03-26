@@ -45,13 +45,13 @@ final class pwg_image
         $extension = strtolower(functions::get_extension($source_filepath));
 
         if (! in_array($extension, $conf['picture_ext'])) {
-            die('[Image] unsupported file extension');
+            exit('[Image] unsupported file extension');
         }
 
         $this->library = self::get_library($library, $extension);
 
         if (! $this->library) {
-            die('No image library available on your server.');
+            exit('No image library available on your server.');
         }
 
         $class = '\Piwigo\admin\inc\image_' . $this->library;

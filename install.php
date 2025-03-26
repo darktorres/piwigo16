@@ -134,7 +134,7 @@ if (file_exists($config_file)) {
     require $config_file;
     // Is Piwigo already installed ?
     if (defined('PHPWG_INSTALLED')) {
-        die('Piwigo is already installed');
+        exit('Piwigo is already installed');
     }
 }
 

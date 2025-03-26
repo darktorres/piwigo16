@@ -65,7 +65,7 @@ final class image_ext_imagick implements imageInterface
             empty($returnarray[0]) or
             ! preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)
         ) {
-            die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
+            exit("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
         }
 
         $this->width = $match[1];

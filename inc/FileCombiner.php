@@ -135,7 +135,7 @@ final class FileCombiner
         bool $force
     ): void {
         if (count($pending) > 1) {
-            $key = join('>', $key);
+            $key = implode('>', $key);
             $file = PWG_COMBINED_DIR . base_convert(hash('crc32b', $key), 16, 36) . '.' . $this->type;
 
             if ($force ||

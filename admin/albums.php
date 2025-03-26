@@ -18,7 +18,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 $query = <<<SQL
@@ -63,7 +63,7 @@ if (isset($_POST['simpleAutoOrder']) ||
 ) {
 
     if (! in_array($_POST['order'], $sort_orders)) {
-        die('Invalid sort order');
+        exit('Invalid sort order');
     }
 
     functions::check_input_parameter('id', $_POST, false, '/^-?\d+$/');

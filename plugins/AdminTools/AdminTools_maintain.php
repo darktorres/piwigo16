@@ -9,7 +9,7 @@ use Piwigo\inc\functions;
 use Piwigo\inc\PluginMaintain;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 final class AdminTools_maintain extends PluginMaintain

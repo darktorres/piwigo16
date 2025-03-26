@@ -12,7 +12,7 @@ declare(strict_types=1);
 use Piwigo\inc\functions;
 
 if (! defined('PHOTOS_ADD_BASE_URL')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+

@@ -22,7 +22,7 @@ use Piwigo\inc\ImageStdParams;
 global $conf;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 if (functions::mobile_theme()) {

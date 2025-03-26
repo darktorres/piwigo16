@@ -155,7 +155,7 @@
           {/foreach}
       </div>
     {/if}
-    {if $theme_config->slick_enabled && sizeOf($thumbnails) > 1}
+    {if $theme_config->slick_enabled && count($thumbnails) > 1}
       {include file="_slick_js.tpl"}
     {/if}
     {if $theme_config->photoswipe && !$theme_config->slick_infinite}

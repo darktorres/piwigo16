@@ -36,7 +36,7 @@ Author URI: http://piwigo.org
 use Piwigo\inc\functions_plugins;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 define('LANGUAGE_SWITCH_PATH', PHPWG_PLUGINS_PATH . basename(dirname(__FILE__)) . '/');

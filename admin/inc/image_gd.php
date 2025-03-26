@@ -40,7 +40,7 @@ final class image_gd implements imageInterface
         ) {
             $this->image = imagecreatefromgif($source_filepath);
         } else {
-            die('[Image GD] unsupported file extension');
+            exit('[Image GD] unsupported file extension');
         }
     }
 

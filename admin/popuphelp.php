@@ -71,7 +71,7 @@ if (isset($_GET['page']) and
 
     $help_content = functions_plugins::trigger_change('get_popup_help_content', $help_content, $_GET['page']);
 } else {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 $template->set_filename('popuphelp', 'popuphelp.tpl');

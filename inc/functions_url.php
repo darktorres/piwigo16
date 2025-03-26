@@ -462,7 +462,7 @@ final class functions_url
 
             while (isset($tokens[$next_token])) {
                 if ($loop_counter++ > count($tokens) + 10) {
-                    die('infinite loop?');
+                    exit('infinite loop?');
                 }
 
                 if (strpos($tokens[$next_token], 'created-') === 0 or

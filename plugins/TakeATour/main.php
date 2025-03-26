@@ -18,7 +18,7 @@ use Piwigo\inc\functions_session;
 use Piwigo\plugins\TakeATour\functions_TakeATour;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 /** Tour sent via $_POST or $_GET**/

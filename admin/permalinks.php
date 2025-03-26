@@ -18,7 +18,7 @@ use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_url;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 functions::check_input_parameter('cat_id', $_POST, false, PATTERN_ID);

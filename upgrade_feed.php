@@ -15,7 +15,7 @@ use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 
 if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
-    die(functions::l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION));
+    exit(functions::l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION));
 }
 
 define('PHPWG_ROOT_PATH', './');
@@ -38,7 +38,7 @@ require_once __DIR__ . '/inc/functions.php';
 // +-----------------------------------------------------------------------+
 
 if (! $conf['check_upgrade_feed']) {
-    die('upgrade feed is not active');
+    exit('upgrade feed is not active');
 }
 
 define('UPGRADES_PATH', './install/db');

@@ -31,7 +31,7 @@ use Piwigo\inc\functions_user;
 use Piwigo\plugins\LocalFilesEditor\inc\functions_LocalFilesEditor;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 require_once LOCALEDIT_PATH . 'inc/functions_LocalFilesEditor.php';
@@ -51,7 +51,7 @@ if (empty($conf['LocalFilesEditor_tabs'])) {
 $page['tab'] = isset($_GET['tab']) ? $_GET['tab'] : $conf['LocalFilesEditor_tabs'][0];
 
 if (! in_array($page['tab'], $conf['LocalFilesEditor_tabs'])) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 $tabsheet = new tabsheet();

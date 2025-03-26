@@ -12,7 +12,6 @@ namespace Piwigo\inc;
 use Closure;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Smarty;
-use Smarty_Internal_Debug;
 use SmartyException;
 
 set_error_handler(function (
@@ -702,7 +701,7 @@ class Template
                     'AAAA_DEBUG_TOTAL_TIME__' => functions::get_elapsed_time($t2, functions::get_moment()),
                 ]
             );
-            Smarty_Internal_Debug::display_debug($this->smarty);
+            $this->smarty->display(__DIR__ . '/../vendor/smarty/smarty/libs/debug.tpl');
         }
     }
 

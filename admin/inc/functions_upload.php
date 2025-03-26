@@ -214,7 +214,7 @@ final class functions_upload
             }
 
             if (! isset($file_path)) {
-                die('[' . __FUNCTION__ . '] this photo does not exist in the database');
+                exit('[' . __FUNCTION__ . '] this photo does not exist in the database');
             }
 
             // delete all physical files related to the photo (thumbnail, web site, HD)
@@ -259,11 +259,11 @@ final class functions_upload
                     $file_path .= $original_extension;
                 } else {
                     unlink($source_filepath);
-                    die('unexpected file type');
+                    exit('unexpected file type');
                 }
             } else {
                 unlink($source_filepath);
-                die('forbidden file type');
+                exit('forbidden file type');
             }
 
             self::prepare_directory($upload_dir);
@@ -445,11 +445,11 @@ final class functions_upload
         // 3) register in database
 
         if (! functions::conf_get_param('enable_formats', false)) {
-            die('[' . __FUNCTION__ . '] formats are disabled');
+            exit('[' . __FUNCTION__ . '] formats are disabled');
         }
 
         if (! in_array($format_ext, functions::conf_get_param('format_ext', ['cr2']))) {
-            die('[' . __FUNCTION__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', functions::conf_get_param('format_ext', ['cr2'])) . ')');
+            exit('[' . __FUNCTION__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', functions::conf_get_param('format_ext', ['cr2'])) . ')');
         }
 
         $query = <<<SQL
@@ -460,7 +460,7 @@ final class functions_upload
         $images = functions_mysqli::query2array($query);
 
         if (! isset($images[0])) {
-            die('[' . __FUNCTION__ . '] this photo does not exist in the database');
+            exit('[' . __FUNCTION__ . '] this photo does not exist in the database');
         }
 
         $format_path = dirname($images[0]['path']) . '/pwg_format/';
@@ -831,7 +831,7 @@ final class functions_upload
             $recursive = true;
 
             if (! mkdir($directory, 0777, $recursive)) {
-                die('[prepare_directory] cannot create directory "' . $directory . '"');
+                exit('[prepare_directory] cannot create directory "' . $directory . '"');
             }
         }
 
@@ -840,7 +840,7 @@ final class functions_upload
             chmod($directory, 0777);
 
             if (! is_writable($directory)) {
-                die('[prepare_directory] directory "' . $directory . '" has no write access');
+                exit('[prepare_directory] directory "' . $directory . '" has no write access');
             }
         }
 

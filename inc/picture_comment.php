@@ -39,7 +39,7 @@ if ($page['show_comments'] and
     if (functions_user::is_a_guest() and
         ! $conf['comments_forall']
     ) {
-        die('Session expired');
+        exit('Session expired');
     }
 
     $comm = [
@@ -81,7 +81,7 @@ if ($page['show_comments'] and
     );
 } elseif (isset($_POST['content'])) {
     functions_html::set_status_header(403);
-    die('ugly spammer');
+    exit('ugly spammer');
 }
 
 if ($page['show_comments']) {

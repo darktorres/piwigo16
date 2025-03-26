@@ -40,13 +40,13 @@ $config_file = './local/config/database.php';
 $config_file_contents = file_get_contents($config_file);
 
 if ($config_file_contents === false) {
-    die('Cannot load ' . $config_file);
+    exit('Cannot load ' . $config_file);
 }
 
 $php_end_tag = strrpos($config_file_contents, '?>');
 
 if ($php_end_tag === false) {
-    die('Cannot find php end tag in ' . $config_file);
+    exit('Cannot find php end tag in ' . $config_file);
 }
 
 require $config_file;

@@ -17,7 +17,7 @@ use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_user;
 
 if (! defined('IN_ADMIN')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+
@@ -40,7 +40,7 @@ if (isset($_GET['user_id']) and
 ) {
     $page['user'] = $_GET['user_id'];
 } else {
-    die('user_id URL parameter is missing');
+    exit('user_id URL parameter is missing');
 }
 
 // +-----------------------------------------------------------------------+

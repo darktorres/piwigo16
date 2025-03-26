@@ -14,11 +14,11 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_user;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 if (! $conf['enable_core_update']) {
-    die('Piwigo core update system is disabled');
+    exit('Piwigo core update system is disabled');
 }
 
 /*

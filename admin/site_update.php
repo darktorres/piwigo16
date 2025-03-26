@@ -21,7 +21,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+
@@ -29,13 +29,13 @@ if (! defined('PHPWG_ROOT_PATH')) {
 // +-----------------------------------------------------------------------+
 
 if (! $conf['enable_synchronization']) {
-    die('synchronization is disabled');
+    exit('synchronization is disabled');
 }
 
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 if (! is_numeric($_GET['site'])) {
-    die('site param missing or invalid');
+    exit('site param missing or invalid');
 }
 
 $site_id = $_GET['site'];
@@ -48,7 +48,7 @@ $query = <<<SQL
 list($site_url) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 if (! isset($site_url)) {
-    die('site ' . $site_id . ' does not exist');
+    exit('site ' . $site_id . ' does not exist');
 }
 
 $site_is_remote = functions_url::url_is_remote($site_url);

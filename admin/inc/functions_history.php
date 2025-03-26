@@ -405,7 +405,7 @@ final class functions_history
 
         $history_id_delete_before = min($search_min);
 
-        $logger->debug(__FUNCTION__ . ', ' . join('/', $search_min));
+        $logger->debug(__FUNCTION__ . ', ' . implode('/', $search_min));
 
         $query = <<<SQL
             DELETE FROM history

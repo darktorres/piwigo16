@@ -8,7 +8,7 @@ use Piwigo\inc\ImageStdParams;
 use Piwigo\themes\modus\functions_modus;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 global $template;

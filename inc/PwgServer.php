@@ -58,7 +58,7 @@ final class PwgServer
             header('Content-Type: text/plain');
             echo "Cannot process your request. Unknown response format.\nRequest format: " . $this->_requestFormat . ' Response format: ' . $this->_responseFormat . "\n";
             var_export($this);
-            die(0);
+            exit(0);
         }
 
         if ($this->_requestHandler === null) {

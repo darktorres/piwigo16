@@ -10,7 +10,7 @@ use Piwigo\inc\SrcImage;
 use Piwigo\plugins\GDThumb\functions_GDThumb;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 global $template, $conf, $page;

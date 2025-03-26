@@ -19,7 +19,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 final class updates
@@ -163,7 +163,7 @@ final class updates
             return;
         }
 
-        $new_versions_string = join(
+        $new_versions_string = implode(
             ' & ',
             array_intersect_key(
                 $new_versions,

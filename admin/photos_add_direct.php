@@ -20,7 +20,7 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\SrcImage;
 
 if (! defined('PHOTOS_ADD_BASE_URL')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+

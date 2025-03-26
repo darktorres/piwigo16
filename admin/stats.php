@@ -16,7 +16,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 require_once __DIR__ . '/../admin/inc/functions_history.php';
@@ -107,7 +107,7 @@ $template->assign([
     'lastMonths' => $last_months,
     'lastYears' => $last_years,
     'langCode' => strval($user['language']),
-    'month_labels' => join('~', $lang['month']),
+    'month_labels' => implode('~', $lang['month']),
     'ADMIN_PAGE_TITLE' => functions::l10n('History'),
 ]);
 

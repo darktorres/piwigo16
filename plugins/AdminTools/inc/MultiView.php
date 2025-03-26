@@ -14,7 +14,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 if (! defined('ADMINTOOLS_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 /**

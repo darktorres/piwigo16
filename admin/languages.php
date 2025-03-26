@@ -14,7 +14,7 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 $my_base_url = functions_url::get_root_url() . 'admin.php?page=languages';

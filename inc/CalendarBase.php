@@ -386,7 +386,7 @@ abstract class CalendarBase
             $existing = $template->smarty->getTemplateVars('chronology_navigation_bars');
 
             if (! empty($existing)) {
-                $existing[sizeof($existing) - 1] = array_merge($existing[sizeof($existing) - 1], $tpl_var);
+                $existing[count($existing) - 1] = array_merge($existing[count($existing) - 1], $tpl_var);
                 $template->assign('chronology_navigation_bars', $existing);
             } else {
                 $template->append('chronology_navigation_bars', $tpl_var);

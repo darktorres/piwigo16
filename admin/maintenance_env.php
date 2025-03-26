@@ -24,7 +24,7 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+

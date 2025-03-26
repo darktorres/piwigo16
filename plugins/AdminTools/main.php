@@ -18,7 +18,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\plugins\AdminTools\inc\MultiView;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 define('ADMINTOOLS_ID', basename(dirname(__FILE__)));

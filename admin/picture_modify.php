@@ -23,7 +23,7 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\SrcImage;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+

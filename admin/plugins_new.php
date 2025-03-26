@@ -16,11 +16,11 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 if (! $conf['enable_extensions_install']) {
-    die('Piwigo extensions install/update system is disabled');
+    exit('Piwigo extensions install/update system is disabled');
 }
 
 $template->set_filenames([

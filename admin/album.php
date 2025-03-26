@@ -17,7 +17,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+
@@ -38,7 +38,7 @@ $query = <<<SQL
 $category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
 if (! isset($category['id'])) {
-    die('unknown album');
+    exit('unknown album');
 }
 
 // +-----------------------------------------------------------------------+

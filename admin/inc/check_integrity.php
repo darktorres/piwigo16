@@ -185,7 +185,7 @@ final class check_integrity
                     if ($c13y['ignored']) {
                         $c13y_display['show_ignore_msg'] = true;
                     } else {
-                        die('$c13y[\'ignored\'] cannot be false');
+                        exit('$c13y[\'ignored\'] cannot be false');
                     }
                 } else {
                     if (! empty($c13y['correction_fct'])) {

@@ -30,7 +30,7 @@ use Piwigo\inc\SrcImage;
  */
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+
@@ -658,7 +658,7 @@ if (count($page['cat_elements_id']) > 0) {
     ) {
         // The $duplicates_on_fields variable is defined in ./batch_manager.php
         $order_by_fields = array_merge($duplicates_on_fields, ['id']);
-        $conf['order_by'] = ' ORDER BY ' . join(', ', $order_by_fields);
+        $conf['order_by'] = ' ORDER BY ' . implode(', ', $order_by_fields);
     }
 
     $query = <<<SQL

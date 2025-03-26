@@ -40,7 +40,7 @@ if (isset($_GET['file'])) {
     $path = $_GET['file'];
 
     if (! functions_user::is_admin()) {
-        die('Hacking attempt!');
+        exit('Hacking attempt!');
     }
 
     $template->set_filename('show_default', dirname(__FILE__) . '/template/show_default.tpl');

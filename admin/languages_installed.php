@@ -16,7 +16,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 if (! functions_user::is_webmaster()) {
@@ -34,7 +34,7 @@ $languages->get_db_languages();
 
 //--------------------------------------------------perform requested actions
 functions::check_input_parameter('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
-functions::check_input_parameter('language', $_GET, false, '/^(' . join('|', array_keys($languages->fs_languages)) . ')$/');
+functions::check_input_parameter('language', $_GET, false, '/^(' . implode('|', array_keys($languages->fs_languages)) . ')$/');
 
 if (isset($_GET['action']) and
     isset($_GET['language']) and

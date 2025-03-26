@@ -7,7 +7,7 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 global $template, $conf, $user, $page;

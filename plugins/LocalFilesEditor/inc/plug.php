@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\inc\functions;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 $edited_file = PHPWG_PLUGINS_PATH . 'PersonalPlugin/main.php';

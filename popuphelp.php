@@ -53,7 +53,7 @@ if (isset($_GET['page']) and
         $_GET['page']
     );
 } else {
-    die('Hacking attempt!');
+    exit('Hacking attempt!');
 }
 
 $template->set_filename('popuphelp', 'popuphelp.tpl');

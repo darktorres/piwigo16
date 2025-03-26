@@ -1577,27 +1577,27 @@ final class pwg_images
         $out = fopen("{$filePath}.part", $chunks ? 'ab' : 'wb');
 
         if (! $out) {
-            die('{"jsonrpc" : "2.0", "error" : {"code": 102, "message": "Failed to open output stream."}, "id" : "id"}');
+            exit('{"jsonrpc" : "2.0", "error" : {"code": 102, "message": "Failed to open output stream."}, "id" : "id"}');
         }
 
         if (! empty($_FILES)) {
             if ($_FILES['file']['error'] ||
                 ! is_uploaded_file($_FILES['file']['tmp_name'])
             ) {
-                die('{"jsonrpc" : "2.0", "error" : {"code": 103, "message": "Failed to move uploaded file."}, "id" : "id"}');
+                exit('{"jsonrpc" : "2.0", "error" : {"code": 103, "message": "Failed to move uploaded file."}, "id" : "id"}');
             }
 
             // Read binary input stream and append it to temp file
             $in = fopen($_FILES['file']['tmp_name'], 'rb');
 
             if (! $in) {
-                die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
+                exit('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
             }
         } else {
             $in = fopen('php://input', 'rb');
 
             if (! $in) {
-                die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
+                exit('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
             }
         }
 

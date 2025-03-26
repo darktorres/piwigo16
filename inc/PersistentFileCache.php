@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
+use Override;
+
 /**
  * Implementation of a persistent cache using files.
  */
@@ -24,6 +26,7 @@ final class PersistentFileCache extends PersistentCache
         $this->dir = PHPWG_ROOT_PATH . $conf['data_location'] . 'cache/';
     }
 
+    #[Override]
     public function get(
         string $key,
         array|bool|string|int|float|null|object &$value
@@ -44,6 +47,7 @@ final class PersistentFileCache extends PersistentCache
         return false;
     }
 
+    #[Override]
     public function set(
         string $key,
         array|bool|string|int|float|null|object $value,
@@ -69,6 +73,7 @@ final class PersistentFileCache extends PersistentCache
         return file_put_contents($this->dir . $key . '.cache', $serialized) !== false;
     }
 
+    #[Override]
     public function purge(
         bool $all
     ): void {

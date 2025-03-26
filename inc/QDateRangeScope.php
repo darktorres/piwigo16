@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
+use Override;
+
 final class QDateRangeScope extends QSearchScope
 {
     public function __construct(
@@ -21,6 +23,7 @@ final class QDateRangeScope extends QSearchScope
         parent::__construct($id, $aliases, $nullable, false);
     }
 
+    #[Override]
     public function parse(
         QSingleToken $token
     ): bool {

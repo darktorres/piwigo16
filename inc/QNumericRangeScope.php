@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
+use Override;
+
 final class QNumericRangeScope extends QSearchScope
 {
     private float|int $epsilon;
@@ -25,6 +27,7 @@ final class QNumericRangeScope extends QSearchScope
         $this->epsilon = $epsilon;
     }
 
+    #[Override]
     public function parse(
         QSingleToken $token
     ): bool {

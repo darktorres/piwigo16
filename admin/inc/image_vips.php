@@ -16,6 +16,7 @@ namespace Piwigo\admin\inc;
 // +-----------------------------------------------------------------------+
 
 use Jcupitt\Vips\Image;
+use Override;
 
 final class image_vips implements imageInterface
 {
@@ -40,16 +41,19 @@ final class image_vips implements imageInterface
         ?array $params = null
     ): void {}
 
+    #[Override]
     public function get_width(): int
     {
         return $this->image->width;
     }
 
+    #[Override]
     public function get_height(): int
     {
         return $this->image->height;
     }
 
+    #[Override]
     public function crop(
         int $width,
         int $height,
@@ -60,11 +64,13 @@ final class image_vips implements imageInterface
         return true;
     }
 
+    #[Override]
     public function strip(): true
     {
         return true;
     }
 
+    #[Override]
     public function rotate(
         int $rotation
     ): true {
@@ -72,6 +78,7 @@ final class image_vips implements imageInterface
         return true;
     }
 
+    #[Override]
     public function set_compression_quality(
         int $quality
     ): true {
@@ -79,6 +86,7 @@ final class image_vips implements imageInterface
         return true;
     }
 
+    #[Override]
     public function resize(
         int $width,
         int $height
@@ -89,12 +97,14 @@ final class image_vips implements imageInterface
         return true;
     }
 
+    #[Override]
     public function sharpen(
         int $amount
     ): true {
         return true;
     }
 
+    #[Override]
     public function compose(
         pwg_image $overlay,
         int $x,
@@ -104,6 +114,7 @@ final class image_vips implements imageInterface
         return true;
     }
 
+    #[Override]
     public function write(
         string $destination_filepath
     ): true {

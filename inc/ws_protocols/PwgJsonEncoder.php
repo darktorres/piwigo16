@@ -11,12 +11,13 @@ declare(strict_types=1);
 
 namespace Piwigo\inc\ws_protocols;
 
+use Override;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgResponseEncoder;
 
 final class PwgJsonEncoder extends PwgResponseEncoder
 {
-    #[\Override]
+    #[Override]
     public function encodeResponse(
         array|bool|PwgError|null $response
     ): bool|string {
@@ -39,7 +40,7 @@ final class PwgJsonEncoder extends PwgResponseEncoder
         );
     }
 
-    #[\Override]
+    #[Override]
     public function getContentType(): string
     {
         return 'text/plain';

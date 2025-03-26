@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\inc\ws_protocols;
 
+use Override;
 use Piwigo\inc\functions;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgNamedArray;
@@ -21,7 +22,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
 {
     private PwgXmlWriter $_writer;
 
-    #[\Override]
+    #[Override]
     public function encodeResponse(
         array|bool|PwgError|null $response
     ): string {
@@ -50,7 +51,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
         return $ret;
     }
 
-    #[\Override]
+    #[Override]
     public function getContentType(): string
     {
         return 'text/xml';

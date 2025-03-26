@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\plugins\GDThumb;
 
+use Override;
 use Piwigo\inc\functions;
 use Piwigo\inc\PluginMaintain;
 
@@ -15,6 +16,7 @@ final class GDThumb_maintain extends PluginMaintain
 {
     private bool $installed = false;
 
+    #[Override]
     public function install(
         string $plugin_version,
         array &$errors = []
@@ -29,6 +31,7 @@ final class GDThumb_maintain extends PluginMaintain
         $this->installed = true;
     }
 
+    #[Override]
     public function update(
         string $old_version,
         string $new_version,
@@ -37,6 +40,7 @@ final class GDThumb_maintain extends PluginMaintain
         $this->install($new_version, $errors);
     }
 
+    #[Override]
     public function activate(
         string $plugin_version,
         array &$errors = []
@@ -47,6 +51,7 @@ final class GDThumb_maintain extends PluginMaintain
         }
     }
 
+    #[Override]
     public function uninstall(): void
     {
         $this->cleanUp();

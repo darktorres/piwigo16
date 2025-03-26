@@ -15,6 +15,7 @@ namespace Piwigo\admin\inc;
 // |            Class for ImageMagick external installation                |
 // +-----------------------------------------------------------------------+
 
+use Override;
 use Piwigo\inc\functions;
 
 final class image_ext_imagick implements imageInterface
@@ -78,16 +79,19 @@ final class image_ext_imagick implements imageInterface
         $this->commands[$command] = $params;
     }
 
+    #[Override]
     public function get_width(): int
     {
         return $this->width;
     }
 
+    #[Override]
     public function get_height(): int
     {
         return $this->height;
     }
 
+    #[Override]
     public function crop(
         int $width,
         int $height,
@@ -102,12 +106,14 @@ final class image_ext_imagick implements imageInterface
         return true;
     }
 
+    #[Override]
     public function strip(): true
     {
         $this->add_command('strip');
         return true;
     }
 
+    #[Override]
     public function rotate(
         int $rotation
     ): true {
@@ -128,6 +134,7 @@ final class image_ext_imagick implements imageInterface
         return true;
     }
 
+    #[Override]
     public function set_compression_quality(
         int $quality
     ): true {
@@ -144,6 +151,7 @@ final class image_ext_imagick implements imageInterface
         return true;
     }
 
+    #[Override]
     public function resize(
         int $width,
         int $height
@@ -156,6 +164,7 @@ final class image_ext_imagick implements imageInterface
         return true;
     }
 
+    #[Override]
     public function sharpen(
         int $amount
     ): true {
@@ -173,6 +182,7 @@ final class image_ext_imagick implements imageInterface
         return true;
     }
 
+    #[Override]
     public function compose(
         mixed $overlay,
         int $x,
@@ -187,6 +197,7 @@ final class image_ext_imagick implements imageInterface
         return true;
     }
 
+    #[Override]
     public function write(
         string $destination_filepath
     ): bool {

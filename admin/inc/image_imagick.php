@@ -17,6 +17,7 @@ namespace Piwigo\admin\inc;
 
 use Imagick;
 use ImagickPixel;
+use Override;
 
 final class image_imagick implements imageInterface
 {
@@ -29,22 +30,26 @@ final class image_imagick implements imageInterface
         $this->image = new Imagick($source_filepath);
     }
 
+    #[Override]
     public function get_width(): int
     {
         return $this->image->getImageWidth();
     }
 
+    #[Override]
     public function get_height(): int
     {
         return $this->image->getImageHeight();
     }
 
+    #[Override]
     public function set_compression_quality(
         int $quality
     ): bool {
         return $this->image->setImageCompressionQuality($quality);
     }
 
+    #[Override]
     public function crop(
         int $width,
         int $height,
@@ -54,11 +59,13 @@ final class image_imagick implements imageInterface
         return $this->image->cropImage($width, $height, $x, $y);
     }
 
+    #[Override]
     public function strip(): bool
     {
         return $this->image->stripImage();
     }
 
+    #[Override]
     public function rotate(
         int $rotation
     ): true {
@@ -67,6 +74,7 @@ final class image_imagick implements imageInterface
         return true;
     }
 
+    #[Override]
     public function resize(
         int $width,
         int $height
@@ -84,6 +92,7 @@ final class image_imagick implements imageInterface
         return $this->image->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 0.9);
     }
 
+    #[Override]
     public function sharpen(
         int $amount
     ): bool {
@@ -91,6 +100,7 @@ final class image_imagick implements imageInterface
         return $this->image->convolveImage($m);
     }
 
+    #[Override]
     public function compose(
         pwg_image $overlay,
         int $x,
@@ -116,6 +126,7 @@ final class image_imagick implements imageInterface
         return $this->image->compositeImage($ioverlay, Imagick::COMPOSITE_DISSOLVE, $x, $y);
     }
 
+    #[Override]
     public function write(
         string $destination_filepath
     ): bool {

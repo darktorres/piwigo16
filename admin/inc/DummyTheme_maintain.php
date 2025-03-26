@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\admin\inc;
 
+use Override;
 use Piwigo\inc\ThemeMaintain;
 
 /**
@@ -18,6 +19,7 @@ use Piwigo\inc\ThemeMaintain;
  */
 final class DummyTheme_maintain extends ThemeMaintain
 {
+    #[Override]
     public function activate(
         string $theme_version,
         array &$errors = []
@@ -27,6 +29,7 @@ final class DummyTheme_maintain extends ThemeMaintain
         }
     }
 
+    #[Override]
     public function deactivate(): void
     {
         if (is_callable('theme_deactivate')) {
@@ -34,6 +37,7 @@ final class DummyTheme_maintain extends ThemeMaintain
         }
     }
 
+    #[Override]
     public function delete(): void
     {
         if (is_callable('theme_delete')) {

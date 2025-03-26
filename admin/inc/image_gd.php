@@ -15,6 +15,7 @@ namespace Piwigo\admin\inc;
 // |                       Class for GD library                            |
 // +-----------------------------------------------------------------------+
 
+use Override;
 use Piwigo\inc\functions;
 
 final class image_gd implements imageInterface
@@ -43,16 +44,19 @@ final class image_gd implements imageInterface
         }
     }
 
+    #[Override]
     public function get_width(): int
     {
         return imagesx($this->image);
     }
 
+    #[Override]
     public function get_height(): int
     {
         return imagesy($this->image);
     }
 
+    #[Override]
     public function crop(
         int $width,
         int $height,
@@ -80,11 +84,13 @@ final class image_gd implements imageInterface
         return $result;
     }
 
+    #[Override]
     public function strip(): true
     {
         return true;
     }
 
+    #[Override]
     public function rotate(
         int $rotation
     ): true {
@@ -94,6 +100,7 @@ final class image_gd implements imageInterface
         return true;
     }
 
+    #[Override]
     public function set_compression_quality(
         int $quality
     ): true {
@@ -101,6 +108,7 @@ final class image_gd implements imageInterface
         return true;
     }
 
+    #[Override]
     public function resize(
         int $width,
         int $height
@@ -126,6 +134,7 @@ final class image_gd implements imageInterface
         return $result;
     }
 
+    #[Override]
     public function sharpen(
         int $amount
     ): bool {
@@ -133,6 +142,7 @@ final class image_gd implements imageInterface
         return imageconvolution($this->image, $m, 1, 0);
     }
 
+    #[Override]
     public function compose(
         pwg_image $overlay,
         int $x,
@@ -159,6 +169,7 @@ final class image_gd implements imageInterface
         return true;
     }
 
+    #[Override]
     public function write(
         string $destination_filepath
     ): bool {

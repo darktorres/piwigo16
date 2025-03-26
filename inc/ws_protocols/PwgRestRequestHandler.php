@@ -11,13 +11,14 @@ declare(strict_types=1);
 
 namespace Piwigo\inc\ws_protocols;
 
+use Override;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgRequestHandler;
 use Piwigo\inc\PwgServer;
 
 final class PwgRestRequestHandler extends PwgRequestHandler
 {
-    #[\Override]
+    #[Override]
     public function handleRequest(
         PwgServer &$service
     ): void {

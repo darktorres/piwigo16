@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\admin\inc;
 
+use Override;
 use Piwigo\inc\PluginMaintain;
 
 /**
@@ -18,6 +19,7 @@ use Piwigo\inc\PluginMaintain;
  */
 final class DummyPlugin_maintain extends PluginMaintain
 {
+    #[Override]
     public function install(
         string $plugin_version,
         array &$errors = []
@@ -27,6 +29,7 @@ final class DummyPlugin_maintain extends PluginMaintain
         }
     }
 
+    #[Override]
     public function activate(
         string $plugin_version,
         array &$errors = []
@@ -36,6 +39,7 @@ final class DummyPlugin_maintain extends PluginMaintain
         }
     }
 
+    #[Override]
     public function deactivate(): void
     {
         if (is_callable('plugin_deactivate')) {
@@ -43,6 +47,7 @@ final class DummyPlugin_maintain extends PluginMaintain
         }
     }
 
+    #[Override]
     public function uninstall(): void
     {
         if (is_callable('plugin_uninstall')) {
@@ -50,6 +55,7 @@ final class DummyPlugin_maintain extends PluginMaintain
         }
     }
 
+    #[Override]
     public function update(
         string $old_version,
         string $new_version,

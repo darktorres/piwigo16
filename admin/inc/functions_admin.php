@@ -2513,51 +2513,47 @@ final class functions_admin
         }
 
         // Try curl to read remote file
-        if (function_exists('curl_init') &&
-            function_exists('curl_exec')
+        $ch = curl_init();
+
+        if (isset($conf['use_proxy']) &&
+            $conf['use_proxy']
         ) {
-            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, 0);
+            curl_setopt($ch, CURLOPT_PROXY, $conf['proxy_server']);
 
-            if (isset($conf['use_proxy']) &&
-                $conf['use_proxy']
+            if (isset($conf['proxy_auth']) &&
+                ! empty($conf['proxy_auth'])
             ) {
-                curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, 0);
-                curl_setopt($ch, CURLOPT_PROXY, $conf['proxy_server']);
+                curl_setopt($ch, CURLOPT_PROXYUSERPWD, $conf['proxy_auth']);
+            }
+        }
 
-                if (isset($conf['proxy_auth']) &&
-                    ! empty($conf['proxy_auth'])
-                ) {
-                    curl_setopt($ch, CURLOPT_PROXYUSERPWD, $conf['proxy_auth']);
-                }
+        curl_setopt($ch, CURLOPT_URL, $src);
+        curl_setopt($ch, CURLOPT_HEADER, 1);
+        curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+        if ($method == 'POST') {
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+        }
+
+        $content = curl_exec($ch);
+        $header_length = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($content !== false and
+            $status >= 200 and
+            $status < 400
+        ) {
+            if (preg_match('/Location:\s+?(.+)/', substr($content, 0, $header_length), $m)) {
+                return self::fetchRemote($m[1], $dest, [], [], $user_agent, $step + 1);
             }
 
-            curl_setopt($ch, CURLOPT_URL, $src);
-            curl_setopt($ch, CURLOPT_HEADER, 1);
-            curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-            if ($method == 'POST') {
-                curl_setopt($ch, CURLOPT_POST, 1);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
-            }
-
-            $content = curl_exec($ch);
-            $header_length = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-            $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
-
-            if ($content !== false and
-                $status >= 200 and
-                $status < 400
-            ) {
-                if (preg_match('/Location:\s+?(.+)/', substr($content, 0, $header_length), $m)) {
-                    return self::fetchRemote($m[1], $dest, [], [], $user_agent, $step + 1);
-                }
-
-                $content = substr($content, $header_length);
-                is_resource($dest) ? fwrite($dest, $content) : $dest = $content;
-                return true;
-            }
+            $content = substr($content, $header_length);
+            is_resource($dest) ? fwrite($dest, $content) : $dest = $content;
+            return true;
         }
 
         // Try file_get_contents to read remote file

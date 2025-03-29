@@ -226,18 +226,14 @@ final class pwg_images
 
         sort($chunks);
 
-        if (function_exists('memory_get_usage')) {
-            $logger->debug('[merge_chunks] memory_get_usage before loading chunks: ' . memory_get_usage());
-        }
+        $logger->debug('[merge_chunks] memory_get_usage before loading chunks: ' . memory_get_usage());
 
         $i = 0;
 
         foreach ($chunks as $chunk) {
             $string = file_get_contents($chunk);
 
-            if (function_exists('memory_get_usage')) {
-                $logger->debug('[merge_chunks] memory_get_usage on chunk ' . ++$i . ': ' . memory_get_usage());
-            }
+            $logger->debug('[merge_chunks] memory_get_usage on chunk ' . ++$i . ': ' . memory_get_usage());
 
             if (! file_put_contents($output_filepath, $string, FILE_APPEND)) {
                 return new PwgError(500, '[merge_chunks] error while writing chunks for ' . $output_filepath);
@@ -246,9 +242,7 @@ final class pwg_images
             unlink($chunk);
         }
 
-        if (function_exists('memory_get_usage')) {
-            $logger->debug('[merge_chunks] memory_get_usage after loading chunks: ' . memory_get_usage());
-        }
+        $logger->debug('[merge_chunks] memory_get_usage after loading chunks: ' . memory_get_usage());
 
         return null;
     }

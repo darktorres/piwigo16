@@ -374,12 +374,6 @@ final class functions_upload
         self::add_uploaded_file_add_to_categories($image_id, $categories);
 
         // update metadata from the uploaded file (exif/iptc)
-        if ($conf['use_exif'] and
-            ! function_exists('exif_read_data')
-        ) {
-            $conf['use_exif'] = false;
-        }
-
         functions_metadata_admin::sync_metadata([$image_id]);
 
         // cache a derivative

@@ -266,15 +266,13 @@ final class pwg
         $path_cache = $conf['data_location'];
         $infos['cache_size'] = null;
 
-        if (function_exists('exec')) {
-            exec('du -sk ' . $path_cache, $return_array_cache);
+        exec('du -sk ' . $path_cache, $return_array_cache);
 
-            if (is_array($return_array_cache) and
-                ! empty($return_array_cache[0]) and
-                preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
-            ) {
-                $infos['cache_size'] = $matches_cache[1] * 1024;
-            }
+        if (is_array($return_array_cache) and
+            ! empty($return_array_cache[0]) and
+            preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
+        ) {
+            $infos['cache_size'] = $matches_cache[1] * 1024;
         }
 
         // Multiples sizes size
@@ -297,15 +295,13 @@ final class pwg
         $path_template_c = $conf['data_location'] . 'templates_c';
         $infos['tsizes'] = null;
 
-        if (function_exists('exec')) {
-            exec('du -sk ' . $path_template_c, $return_array_template_c);
+        exec('du -sk ' . $path_template_c, $return_array_template_c);
 
-            if (is_array($return_array_template_c) and
-                ! empty($return_array_template_c[0]) and
-                preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
-            ) {
-                $infos['tsizes'] = $matches_template_c[1] * 1024;
-            }
+        if (is_array($return_array_template_c) and
+            ! empty($return_array_template_c[0]) and
+            preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
+        ) {
+            $infos['tsizes'] = $matches_template_c[1] * 1024;
         }
 
         $infos['last_date_calc'] = date('Y-m-d H:i:s');

@@ -157,11 +157,8 @@ if (! functions_url::url_is_remote($file)) {
     }
 
     $http_headers[] = 'Content-Length: ' . filesize($file);
-
-    if (function_exists('mime_content_type')) {
-        $ctype = mime_content_type($file);
-    }
-
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $ctype = $finfo->file($file);
     $gmt_mtime = gmdate('D, d M Y H:i:s', filemtime($file)) . ' GMT';
     $http_headers[] = 'Last-Modified: ' . $gmt_mtime;
 

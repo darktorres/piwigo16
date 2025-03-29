@@ -41,29 +41,26 @@ class functions_LocalFilesEditor
     ): false|string {
         $code = str_replace(['<?php', '?>'], '', $code);
 
-        if (function_exists('token_get_all')) {
-            $b = 0;
+        $b = 0;
 
-            foreach (token_get_all($code) as $token) {
-                if ($token == '{') {
-                    ++$b;
-                } elseif ($token == '}') {
-                    --$b;
-                }
+        foreach (token_get_all($code) as $token) {
+            if ($token == '{') {
+                ++$b;
+            } elseif ($token == '}') {
+                --$b;
             }
+        }
 
-            if ($b) {
-                return false;
-            }
+        if ($b) {
+            return false;
+        }
 
-            ob_start();
-            $eval = eval('if(0){' . $code . '}');
-            ob_end_clean();
+        ob_start();
+        $eval = eval('if(0){' . $code . '}');
+        ob_end_clean();
 
-            if ($eval === false) {
-                return false;
-            }
-
+        if ($eval === false) {
+            return false;
         }
 
         return '<?php' . $code . '?>';

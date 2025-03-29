@@ -148,9 +148,7 @@ final class functions_category
         usort($cats, self::global_rank_compare(...));
 
         // Update filtered data
-        if (function_exists('\Piwigo\inc\functions_filter::update_cats_with_filtered_data')) {
-            functions_filter::update_cats_with_filtered_data($cats);
-        }
+        functions_filter::update_cats_with_filtered_data($cats);
 
         return $cats;
     }

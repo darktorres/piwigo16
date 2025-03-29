@@ -454,9 +454,7 @@ final class functions
     public static function pwg_transliterate(
         string $term
     ): string {
-        if (function_exists('mb_strtolower') &&
-            defined('PWG_CHARSET')
-        ) {
+        if (defined('PWG_CHARSET')) {
             return self::remove_accents(mb_strtolower($term, PWG_CHARSET));
         }
 
@@ -2008,15 +2006,7 @@ final class functions
             return mb_convert_encoding($str, 'ISO-8859-1', 'UTF-8');
         }
 
-        if (function_exists('iconv')) {
-            return iconv($source_charset, $dest_charset . '//TRANSLIT', $str);
-        }
-
-        if (function_exists('mb_convert_encoding')) {
-            return mb_convert_encoding($str, $dest_charset, $source_charset);
-        }
-
-        return $str; // TODO
+        return iconv($source_charset, $dest_charset . '//TRANSLIT', $str);
     }
 
     /**

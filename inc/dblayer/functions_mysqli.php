@@ -148,10 +148,10 @@ class functions_mysqli
 
         file_put_contents($log_file, $query . "\n\n", FILE_APPEND | LOCK_EX);
 
-        $result = $mysqli->query($query);
-
-        if ($result === false) {
-            self::my_error($query, $conf['die_on_sql_error']);
+        try {
+            $result = $mysqli->query($query);
+        } catch (Exception $exception) {
+            self::my_error($exception->getMessage() . "\n" . $query, $conf['die_on_sql_error']);
         }
 
         $time = microtime(true) - $start;

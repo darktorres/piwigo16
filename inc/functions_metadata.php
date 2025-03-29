@@ -92,18 +92,12 @@ final class functions_metadata
                 if ($qual > 0) {
                     $input_encoding = 'utf-8';
                 } else {
-                    $input_encoding = 'iso-8859-1';
-
-                    if (function_exists('iconv') or
-                        function_exists('mb_convert_encoding')
-                    ) {
-                        // using windows-1252 because it supports additional characters
-                        // such as "oe" in a single character (ligature). About the
-                        // difference between Windows-1252 and ISO-8859-1: the characters
-                        // 0x80-0x9F will not convert correctly. But these are control
-                        // characters which are almost never used.
-                        $input_encoding = 'windows-1252';
-                    }
+                    // using windows-1252 because it supports additional characters
+                    // such as "oe" in a single character (ligature). About the
+                    // difference between Windows-1252 and ISO-8859-1: the characters
+                    // 0x80-0x9F will not convert correctly. But these are control
+                    // characters which are almost never used.
+                    $input_encoding = 'windows-1252';
                 }
 
                 $value = functions::convert_charset($value, $input_encoding, functions::get_pwg_charset());
@@ -123,10 +117,6 @@ final class functions_metadata
         global $conf, $logger;
 
         $result = [];
-
-        if (! function_exists('exif_read_data')) {
-            die('Exif extension not available, admin should disable exif use');
-        }
 
         getimagesize($filename, $info);
 

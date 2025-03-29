@@ -263,9 +263,7 @@ if (count($user_representative_updates_for)) {
 
 if (count($categories) > 0) {
     // Update filtered data
-    if (function_exists('\Piwigo\inc\functions_filter::update_cats_with_filtered_data')) {
-        functions_filter::update_cats_with_filtered_data($categories);
-    }
+    functions_filter::update_cats_with_filtered_data($categories);
 
     $template->set_filename('index_category_thumbnails', 'mainpage_categories.tpl');
 

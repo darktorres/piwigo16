@@ -274,10 +274,6 @@ final class pwg_image
             return null;
         }
 
-        if (! function_exists('exif_read_data')) {
-            return null;
-        }
-
         $rotation = 0;
 
         getimagesize($source_filepath, $info);
@@ -367,7 +363,7 @@ final class pwg_image
     {
         global $conf;
 
-        if (! function_exists('exec') || empty($conf['ext_imagick_dir'])) {
+        if (empty($conf['ext_imagick_dir'])) {
             return false;
         }
 

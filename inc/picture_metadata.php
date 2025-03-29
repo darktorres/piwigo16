@@ -16,9 +16,7 @@ declare(strict_types=1);
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_metadata;
 
-if ($conf['show_exif'] and
-    function_exists('exif_read_data')
-) {
+if ($conf['show_exif']) {
     $exif_mapping = [];
 
     foreach ($conf['show_exif_fields'] as $field) {

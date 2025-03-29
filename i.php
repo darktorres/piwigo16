@@ -303,7 +303,7 @@ if ($conf['log_level'] >= Psr\Log\LogLevel::DEBUG) {
         'derivative_path' => basename($page['derivative_path']),
         'o_size' => $o_size[0] . ' ' . $o_size[1] . ' ' . ($o_size[0] * $o_size[1]),
         'd_size' => $d_size[0] . ' ' . $d_size[1] . ' ' . ($d_size[0] * $d_size[1]),
-        'mem_usage' => function_exists('memory_get_peak_usage') ? round(memory_get_peak_usage() / (1024 * 1024), 1) : '',
+        'mem_usage' => round(memory_get_peak_usage() / (1024 * 1024), 1),
         'timing' => $timing,
     ]);
 }

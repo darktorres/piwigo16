@@ -197,9 +197,9 @@ final class functions_metadata_admin
             $file = functions::original_to_representative($file, $infos['representative_ext']);
         }
 
-        if (function_exists('mime_content_type') &&
-            in_array(mime_content_type($file), ['image/svg+xml', 'image/svg'])
-        ) {
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+
+        if (in_array($finfo->file($file), ['image/svg+xml', 'image/svg'])) {
             $xml = file_get_contents($file);
 
             $xmlget = simplexml_load_string($xml);

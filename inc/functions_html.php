@@ -368,9 +368,7 @@ final class functions_html
 
         $btrace_msg = '';
 
-        if ($show_trace and
-            function_exists('debug_backtrace')
-        ) {
+        if ($show_trace) {
             $bt = debug_backtrace();
 
             for ($i = 1; $i < count($bt); $i++) {
@@ -394,9 +392,7 @@ final class functions_html
         self::set_status_header(500);
         echo $display . str_repeat(' ', 300); // IE6 doesn't error output if below a size
 
-        if (function_exists('ini_set')) { // if possible turn off error display (we display it)
-            ini_set('display_errors', false);
-        }
+        ini_set('display_errors', false); // if possible turn off error display (we display it)
 
         error_reporting(E_ALL);
         trigger_error(strip_tags($msg) . $btrace_msg, E_USER_ERROR);

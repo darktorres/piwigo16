@@ -23,7 +23,6 @@ final class c13y_internal
     public function __construct()
     {
         functions_plugins::add_event_handler('list_check_integrity', $this->c13y_version(...));
-        functions_plugins::add_event_handler('list_check_integrity', $this->c13y_exif(...));
         functions_plugins::add_event_handler('list_check_integrity', $this->c13y_user(...));
     }
 
@@ -56,30 +55,6 @@ final class c13y_internal
                     null,
                     null,
                     functions::l10n('You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all')
-          . '<br>' .
-          $c13y->get_html_links_more_info()
-                );
-            }
-        }
-    }
-
-    /**
-     * Check exif
-     */
-    public function c13y_exif(
-        check_integrity $c13y
-    ): void {
-        global $conf;
-
-        foreach (['show_exif', 'use_exif'] as $value) {
-            if ($conf[$value] and
-                ! function_exists('exif_read_data')
-            ) {
-                $c13y->add_anomaly(
-                    sprintf(functions::l10n('%s value is not correct file because exif are not supported'), '$conf[\'' . $value . '\']'),
-                    null,
-                    null,
-                    sprintf(functions::l10n('%s must be to set to false in your local/config/config.php file'), '$conf[\'' . $value . '\']')
           . '<br>' .
           $c13y->get_html_links_more_info()
                 );

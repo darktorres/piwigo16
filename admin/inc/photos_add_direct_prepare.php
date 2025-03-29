@@ -164,10 +164,6 @@ if (! empty($error_message)) {
     $setup_errors[] = $error_message;
 }
 
-if (! function_exists('gd_info')) {
-    $setup_errors[] = functions::l10n('GD library is missing');
-}
-
 $template->assign([
     'setup_errors' => $setup_errors,
     'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(['categories']),
@@ -180,12 +176,6 @@ if (isset($_GET['hide_warnings'])) {
 
 if (! isset($_SESSION['upload_hide_warnings'])) {
     $setup_warnings = [];
-
-    if ($conf['use_exif'] and
-        ! function_exists('exif_read_data')
-    ) {
-        $setup_warnings[] = functions::l10n('Exif extension not available, admin should disable exif use');
-    }
 
     if (functions_upload::get_ini_size('upload_max_filesize') > functions_upload::get_ini_size('post_max_size')) {
         $setup_warnings[] = functions::l10n(

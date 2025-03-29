@@ -67,10 +67,7 @@ final class image_gd implements imageInterface
 
         imagealphablending($dest, false);
         imagesavealpha($dest, true);
-
-        if (function_exists('imageantialias')) {
-            imageantialias($dest, true);
-        }
+        imageantialias($dest, true);
 
         $result = imagecopymerge($dest, $this->image, 0, 0, $x, $y, $width, $height, 100);
 
@@ -117,10 +114,7 @@ final class image_gd implements imageInterface
 
         imagealphablending($dest, false);
         imagesavealpha($dest, true);
-
-        if (function_exists('imageantialias')) {
-            imageantialias($dest, true);
-        }
+        imageantialias($dest, true);
 
         $result = imagecopyresampled($dest, $this->image, 0, 0, 0, 0, $width, $height, $this->get_width(), $this->get_height());
 

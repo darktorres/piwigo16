@@ -12,8 +12,8 @@ use Piwigo\admin\inc\functions_upgrade;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 
-if (version_compare(PHP_VERSION, '5', '<')) {
-    die('Piwigo requires PHP 5 or above.');
+if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
+    die(functions::l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION));
 }
 
 define('PHPWG_ROOT_PATH', './');

@@ -18,7 +18,7 @@ use Override;
  */
 final class PersistentFileCache extends PersistentCache
 {
-    private string $dir;
+    private readonly string $dir;
 
     public function __construct()
     {

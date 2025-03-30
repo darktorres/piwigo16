@@ -18,7 +18,7 @@ use SmartyException;
  */
 final class BlockManager
 {
-    private string $id;
+    private readonly string $id;
 
     /**
      * @var array<RegisteredBlock>

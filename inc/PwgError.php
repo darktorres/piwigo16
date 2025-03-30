@@ -14,7 +14,7 @@ namespace Piwigo\inc;
 /**
  * PwgError object can be returned from any web service function implementation.
  */
-final class PwgError
+final readonly class PwgError
 {
     private int $_code;
 

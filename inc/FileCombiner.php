@@ -23,9 +23,9 @@ final class FileCombiner
     /**
      * 'js' or 'css'
      */
-    private string $type;
+    private readonly string $type;
 
-    private bool $is_css;
+    private readonly bool $is_css;
 
     /**
      * @var array<Combinable>

@@ -14,7 +14,7 @@ namespace Piwigo\inc;
 /**
  * Represents a menu block registered in a BlockManager object.
  */
-final class RegisteredBlock
+final readonly class RegisteredBlock
 {
     private string $id;
 

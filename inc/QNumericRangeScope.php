@@ -15,7 +15,7 @@ use Override;
 
 final class QNumericRangeScope extends QSearchScope
 {
-    private float|int $epsilon;
+    private readonly float|int $epsilon;
 
     public function __construct(
         string $id,

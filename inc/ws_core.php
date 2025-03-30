@@ -178,17 +178,10 @@ abstract class PwgResponseEncoder
 
   private static function flatten(&$value)
   {
-    if (is_object($value))
-    {
-      $class = strtolower( @get_class($value) );
-      if ($class == 'pwgnamedarray')
-      {
-        $value = $value->_content;
-      }
-      if ($class == 'pwgnamedstruct')
-      {
-        $value = $value->_content;
-      }
+    if ($value instanceof PwgNamedArray) {
+      $value = $value->_content;
+    } elseif ($value instanceof PwgNamedStruct) {
+      $value = $value->_content;
     }
 
     if (!is_array($value))

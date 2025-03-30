@@ -247,21 +247,16 @@ class PwgRestEncoder extends PwgResponseEncoder
         }
         break;
       case 'object':
-        switch ( strtolower(@get_class($data)) )
-        {
-          case 'pwgnamedarray':
-            $this->encode_array($data->_content, $data->_itemName, $data->_xmlAttributes);
-            break;
-          case 'pwgnamedstruct':
-						$this->encode_struct($data->_content, false, $data->_xmlAttributes);
-            break;
-          default:
-            $this->encode_struct(get_object_vars($data), true);
-            break;
+        if ($data instanceof PwgNamedArray) {
+          $this->encode_array($data->_content, $data->_itemName, $data->_xmlAttributes);
+        } elseif ($data instanceof PwgNamedStruct) {
+          $this->encode_struct($data->_content, false, $data->_xmlAttributes);
+        } else {
+          $this->encode_struct(get_object_vars($data), true);
         }
         break;
       default:
-        trigger_error("Invalid type ". gettype($data)." ".@get_class($data), E_USER_WARNING );
+        trigger_error("Invalid type ". gettype($data)." ".(is_object($data) ? $data::class : ""), E_USER_WARNING );
     }
   }
 }

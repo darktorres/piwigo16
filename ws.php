@@ -95,15 +95,6 @@ function ws_addDefaultMethods( $arr )
   );
 
   $service->addMethod(
-    'pwg.activity.downloadLog',
-    ws_activity_downloadLog(...),
-    null,
-    'Returns general informations.',
-    $ws_functions_root . 'pwg.php',
-    array('admin_only'=>true)
-  );
-
-  $service->addMethod(
       'pwg.caddie.add',
       ws_caddie_add(...),
       array(

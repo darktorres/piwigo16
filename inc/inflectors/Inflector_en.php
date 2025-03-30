@@ -15,13 +15,13 @@ final class Inflector_en
 {
     private array $exceptions;
 
-    private array $pluralizers;
+    private readonly array $pluralizers;
 
-    private array $singularizers;
+    private readonly array $singularizers;
 
-    private array $ing2er;
+    private readonly array $ing2er;
 
-    private array $er2ing;
+    private readonly array $er2ing;
 
     public function __construct()
     {

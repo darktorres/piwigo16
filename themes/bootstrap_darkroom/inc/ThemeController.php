@@ -13,7 +13,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\SrcImage;
 
-class ThemeController
+readonly class ThemeController
 {
     private Config $config;
 

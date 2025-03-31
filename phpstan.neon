@@ -1,6 +1,7 @@
 # phpstan.neon
 includes:
     - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+    - phpstan-baseline.neon
 
 parameters:
     level: 0

@@ -1,0 +1,2995 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="6.9.6@61488aa2849793acfb72411829d114b4aa670941">
+  <file src="about.php">
+    <UnusedVariable>
+      <code><![CDATA[$title]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="action.php">
+    <ParadoxicalCondition>
+      <code><![CDATA[$_GET['part'] == 'e']]></code>
+    </ParadoxicalCondition>
+  </file>
+  <file src="admin.php">
+    <UnusedVariable>
+      <code><![CDATA[$title]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/LocalSiteReader.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[get_element_metadata]]></code>
+      <code><![CDATA[get_element_update_attributes]]></code>
+      <code><![CDATA[get_elements]]></code>
+      <code><![CDATA[get_full_directories]]></code>
+      <code><![CDATA[get_update_attributes]]></code>
+      <code><![CDATA[open]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="admin/album.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$admin_album_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/album_notification.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$admin_album_base_url]]></code>
+      <code><![CDATA[$admin_album_base_url]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/albums.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$associatedTree[strval($parents[0])]]]></code>
+    </EmptyArrayAccess>
+    <NoValue>
+      <code><![CDATA[$the_place]]></code>
+    </NoValue>
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$is_forbidden]]></code>
+      <code><![CDATA[$nb_photos]]></code>
+      <code><![CDATA[$nb_photos]]></code>
+      <code><![CDATA[$nb_sub_photos]]></code>
+      <code><![CDATA[$page]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/batch_manager.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$categories]]></code>
+      <code><![CDATA[$manager_link]]></code>
+      <code><![CDATA[$where_clauses]]></code>
+      <code><![CDATA[$where_clauses]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/batch_manager_global.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/batch_manager_unit.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/cat_list.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$categories]]></code>
+      <code><![CDATA[$categories]]></code>
+      <code><![CDATA[$categories_with_images]]></code>
+      <code><![CDATA[$edit_url]]></code>
+      <code><![CDATA[$nb_photos]]></code>
+      <code><![CDATA[$nb_photos]]></code>
+      <code><![CDATA[$page]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/cat_modify.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$admin_album_base_url]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$self_url]]></code>
+      <code><![CDATA[$self_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/cat_options.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$cats_false]]></code>
+      <code><![CDATA[$cats_true]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/cat_perm.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$admin_album_base_url]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$category]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$groups]]></code>
+      <code><![CDATA[$user_granted_indirect_ids]]></code>
+      <code><![CDATA[$users]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/cat_search.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$page]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/comments.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/configuration.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$edit_user]]></code>
+      <code><![CDATA[$out]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/element_set_ranks.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/extend_for_templates.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedForeachValue>
+      <code><![CDATA[$conditions]]></code>
+    </UnusedForeachValue>
+    <UnusedVariable>
+      <code><![CDATA[$base_url]]></code>
+      <code><![CDATA[$page]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/group_list.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/group_perm.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/help.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$help_link]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$selected]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/history.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/inc/DummyPlugin_maintain.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function activate($plugin_version, &$errors=array())]]></code>
+      <code><![CDATA[function deactivate()]]></code>
+      <code><![CDATA[function install($plugin_version, &$errors=array())]]></code>
+      <code><![CDATA[function uninstall()]]></code>
+      <code><![CDATA[function update($old_version, $new_version, &$errors=array()) {}]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="admin/inc/DummyTheme_maintain.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function activate($theme_version, &$errors=array())]]></code>
+      <code><![CDATA[function deactivate()]]></code>
+      <code><![CDATA[function delete()]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="admin/inc/add_core_tabs.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $admin_album_base_url;]]></code>
+      <code><![CDATA[global $admin_photo_base_url, $conf;]]></code>
+      <code><![CDATA[global $base_url;]]></code>
+      <code><![CDATA[global $conf_link;]]></code>
+      <code><![CDATA[global $help_link;]]></code>
+      <code><![CDATA[global $link_start;]]></code>
+      <code><![CDATA[global $link_start;]]></code>
+      <code><![CDATA[global $manager_link;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+      <code><![CDATA[global $my_base_url;]]></code>
+    </InvalidGlobal>
+    <ParadoxicalCondition>
+      <code><![CDATA['users']]></code>
+    </ParadoxicalCondition>
+  </file>
+  <file src="admin/inc/albums_tab.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/c13y_internal.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[c13y_correction_user]]></code>
+    </PossiblyUnusedMethod>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/check_integrity.php">
+    <DuplicateArrayKey>
+      <code><![CDATA['correction_error_fct' => '']]></code>
+    </DuplicateArrayKey>
+    <NoValue>
+      <code><![CDATA[$this->retrieve_list]]></code>
+    </NoValue>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[add_anomaly]]></code>
+    </PossiblyUnusedMethod>
+    <UndefinedDocblockClass>
+      <code><![CDATA[html]]></code>
+    </UndefinedDocblockClass>
+    <UnusedVariable>
+      <code><![CDATA[$check_automatic_correction]]></code>
+      <code><![CDATA[$i]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/configuration_sizes_process.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$page]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/configuration_watermark_process.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$height]]></code>
+      <code><![CDATA[$width]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/functions_admin.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $logger;]]></code>
+      <code><![CDATA[global $logger;]]></code>
+      <code><![CDATA[global $logger;]]></code>
+      <code><![CDATA[global $template;]]></code>
+    </InvalidGlobal>
+    <MissingFile>
+      <code><![CDATA[include(PHPWG_ROOT_PATH . 'inc/config_default.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH. 'local/config/config.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH. 'local/config/config.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR. 'config/config.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR. 'config/config.php')]]></code>
+      <code><![CDATA[include_once(PHPWG_ROOT_PATH.'admin/inc/functions_metadata_admin.php')]]></code>
+    </MissingFile>
+    <NoValue>
+      <code><![CDATA[$dest]]></code>
+      <code><![CDATA[$dest]]></code>
+      <code><![CDATA[$dest]]></code>
+      <code><![CDATA[$dest]]></code>
+      <code><![CDATA[$image_id]]></code>
+    </NoValue>
+    <NullReference>
+      <code><![CDATA[$content]]></code>
+    </NullReference>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[UC_name_compare]]></code>
+      <code><![CDATA[associate_categories_to_categories]]></code>
+      <code><![CDATA[cat_admin_access]]></code>
+      <code><![CDATA[create_table_add_character_set]]></code>
+      <code><![CDATA[get_fs]]></code>
+      <code><![CDATA[get_user_access_level_html_options]]></code>
+      <code><![CDATA[order_by_name]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$language]]></code>
+    </PossiblyUnusedParam>
+    <UndefinedDocblockClass>
+      <code><![CDATA[associative]]></code>
+      <code><![CDATA[string|Ressource]]></code>
+    </UndefinedDocblockClass>
+    <UndefinedVariable>
+      <code><![CDATA[$base_url]]></code>
+      <code><![CDATA[$conf]]></code>
+    </UndefinedVariable>
+    <UnusedVariable>
+      <code><![CDATA[$all_news]]></code>
+      <code><![CDATA[$base_url]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$id]]></code>
+      <code><![CDATA[$images_ids]]></code>
+      <code><![CDATA[$images_ids]]></code>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$lang_info]]></code>
+      <code><![CDATA[$limit]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$subdirs]]></code>
+      <code><![CDATA[$tables]]></code>
+      <code><![CDATA[$uppercats]]></code>
+      <code><![CDATA[$user]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/functions_history.php">
+    <UnusedVariable>
+      <code><![CDATA[$link_start]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/functions_install.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $mysqli;]]></code>
+    </InvalidGlobal>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$infos]]></code>
+    </PossiblyUnusedParam>
+    <UnusedForeachValue>
+      <code><![CDATA[$fs_plugin]]></code>
+      <code><![CDATA[$fs_theme]]></code>
+    </UnusedForeachValue>
+  </file>
+  <file src="admin/inc/functions_metadata_admin.php">
+    <InvalidParamDefault>
+      <code><![CDATA[int]]></code>
+    </InvalidParamDefault>
+    <UnusedForeachValue>
+      <code><![CDATA[$value]]></code>
+    </UnusedForeachValue>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/functions_notification_by_mail.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$lang_info]]></code>
+      <code><![CDATA[$lang_info]]></code>
+      <code><![CDATA[$lang_info]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/functions_plugins_admin.php">
+    <UnusedClass>
+      <code><![CDATA[functions_plugins_admin]]></code>
+    </UnusedClass>
+  </file>
+  <file src="admin/inc/functions_upload.php">
+    <NullReference>
+      <code><![CDATA[$dest]]></code>
+    </NullReference>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[add_upload_error]]></code>
+      <code><![CDATA[file_upload_error_message]]></code>
+      <code><![CDATA[is_valid_image_extension]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$extension]]></code>
+    </PossiblyUnusedParam>
+    <UnusedVariable>
+      <code><![CDATA[$height]]></code>
+      <code><![CDATA[$width]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/imageInterface.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[compose]]></code>
+      <code><![CDATA[crop]]></code>
+      <code><![CDATA[resize]]></code>
+      <code><![CDATA[rotate]]></code>
+      <code><![CDATA[set_compression_quality]]></code>
+      <code><![CDATA[sharpen]]></code>
+      <code><![CDATA[strip]]></code>
+      <code><![CDATA[write]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="admin/inc/image_ext_imagick.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function compose($overlay, $x, $y, $opacity)]]></code>
+      <code><![CDATA[function crop($width, $height, $x, $y)]]></code>
+      <code><![CDATA[function get_height()]]></code>
+      <code><![CDATA[function get_width()]]></code>
+      <code><![CDATA[function resize($width, $height)]]></code>
+      <code><![CDATA[function rotate($rotation)]]></code>
+      <code><![CDATA[function set_compression_quality($quality)]]></code>
+      <code><![CDATA[function sharpen($amount)]]></code>
+      <code><![CDATA[function strip()]]></code>
+      <code><![CDATA[function write($destination_filepath)]]></code>
+    </MissingOverrideAttribute>
+    <NoValue>
+      <code><![CDATA[$returnarray]]></code>
+    </NoValue>
+    <UnusedClass>
+      <code><![CDATA[image_ext_imagick]]></code>
+    </UnusedClass>
+  </file>
+  <file src="admin/inc/image_gd.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function compose($overlay, $x, $y, $opacity)]]></code>
+      <code><![CDATA[function crop($width, $height, $x, $y)]]></code>
+      <code><![CDATA[function get_height()]]></code>
+      <code><![CDATA[function get_width()]]></code>
+      <code><![CDATA[function resize($width, $height)]]></code>
+      <code><![CDATA[function rotate($rotation)]]></code>
+      <code><![CDATA[function set_compression_quality($quality)]]></code>
+      <code><![CDATA[function sharpen($amount)]]></code>
+      <code><![CDATA[function strip()]]></code>
+      <code><![CDATA[function write($destination_filepath)]]></code>
+    </MissingOverrideAttribute>
+    <UnusedClass>
+      <code><![CDATA[image_gd]]></code>
+    </UnusedClass>
+  </file>
+  <file src="admin/inc/image_imagick.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function compose($overlay, $x, $y, $opacity)]]></code>
+      <code><![CDATA[function crop($width, $height, $x, $y)]]></code>
+      <code><![CDATA[function get_height()]]></code>
+      <code><![CDATA[function get_width()]]></code>
+      <code><![CDATA[function resize($width, $height)]]></code>
+      <code><![CDATA[function rotate($rotation)]]></code>
+      <code><![CDATA[function set_compression_quality($quality)]]></code>
+      <code><![CDATA[function sharpen($amount)]]></code>
+      <code><![CDATA[function strip()]]></code>
+      <code><![CDATA[function write($destination_filepath)]]></code>
+    </MissingOverrideAttribute>
+    <UndefinedClass>
+      <code><![CDATA[Imagick]]></code>
+      <code><![CDATA[Imagick]]></code>
+      <code><![CDATA[Imagick]]></code>
+      <code><![CDATA[Imagick]]></code>
+      <code><![CDATA[Imagick]]></code>
+      <code><![CDATA[Imagick]]></code>
+      <code><![CDATA[Imagick]]></code>
+      <code><![CDATA[ImagickPixel]]></code>
+    </UndefinedClass>
+    <UnusedClass>
+      <code><![CDATA[image_imagick]]></code>
+    </UnusedClass>
+  </file>
+  <file src="admin/inc/image_vips.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function compose($overlay, $x, $y, $opacity)]]></code>
+      <code><![CDATA[public function crop($width, $height, $x, $y)]]></code>
+      <code><![CDATA[public function get_height()]]></code>
+      <code><![CDATA[public function get_width()]]></code>
+      <code><![CDATA[public function resize($width, $height)]]></code>
+      <code><![CDATA[public function rotate($rotation)]]></code>
+      <code><![CDATA[public function set_compression_quality($quality)]]></code>
+      <code><![CDATA[public function sharpen($amount)]]></code>
+      <code><![CDATA[public function strip()]]></code>
+      <code><![CDATA[public function write($destination_filepath)]]></code>
+    </MissingOverrideAttribute>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$command]]></code>
+      <code><![CDATA[$params]]></code>
+    </PossiblyUnusedParam>
+    <UnusedClass>
+      <code><![CDATA[image_vips]]></code>
+    </UnusedClass>
+  </file>
+  <file src="admin/inc/languages.php">
+    <NullReference>
+      <code><![CDATA[$result]]></code>
+    </NullReference>
+    <UndefinedVariable>
+      <code><![CDATA[$main_filepath]]></code>
+    </UndefinedVariable>
+    <UnusedVariable>
+      <code><![CDATA[$crt_db_language]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/photos_add_direct_prepare.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/inc/plugins.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $user;]]></code>
+    </InvalidGlobal>
+    <NullReference>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$result]]></code>
+    </NullReference>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$version]]></code>
+    </PossiblyUnusedParam>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[false|array]]></code>
+    </PossiblyUnusedReturnValue>
+    <UndefinedVariable>
+      <code><![CDATA[$main_filepath]]></code>
+    </UndefinedVariable>
+  </file>
+  <file src="admin/inc/pwg_image.php">
+    <UndefinedVariable>
+      <code><![CDATA[$f]]></code>
+    </UndefinedVariable>
+    <UnusedVariable>
+      <code><![CDATA[$height]]></code>
+      <code><![CDATA[$width]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/tabsheet.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[delete]]></code>
+      <code><![CDATA[get_titlename]]></code>
+      <code><![CDATA[set_titlename]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="admin/inc/themes.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $conf;]]></code>
+    </InvalidGlobal>
+    <NullReference>
+      <code><![CDATA[$result]]></code>
+    </NullReference>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[sort_server_themes]]></code>
+    </PossiblyUnusedMethod>
+    <UndefinedVariable>
+      <code><![CDATA[$main_filepath]]></code>
+    </UndefinedVariable>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$crt_db_theme]]></code>
+      <code><![CDATA[$new_theme]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/updates.php">
+    <NullReference>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$result]]></code>
+    </NullReference>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[notify_piwigo_new_versions]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedProperty>
+      <code><![CDATA[$default_languages]]></code>
+      <code><![CDATA[$default_plugins]]></code>
+      <code><![CDATA[$default_themes]]></code>
+      <code><![CDATA[$languages]]></code>
+      <code><![CDATA[$plugins]]></code>
+      <code><![CDATA[$themes]]></code>
+    </PossiblyUnusedProperty>
+    <UnusedVariable>
+      <code><![CDATA[$last_version]]></code>
+      <code><![CDATA[$need_upgrade]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/inc/user_tabs.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$page]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/intro.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$link_start]]></code>
+      <code><![CDATA[$logger]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$pwg_loaded_plugins]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+      <code><![CDATA[$split]]></code>
+      <code><![CDATA[$split]]></code>
+      <code><![CDATA[$type]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/languages.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/languages_installed.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/languages_new.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/maintenance.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/maintenance_actions.php">
+    <NullReference>
+      <code><![CDATA[$result]]></code>
+    </NullReference>
+    <UndefinedClass>
+      <code><![CDATA[Imagick]]></code>
+    </UndefinedClass>
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$persistent_cache]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedFunctionCall>
+      <code><![CDATA[sprintf]]></code>
+    </UnusedFunctionCall>
+  </file>
+  <file src="admin/maintenance_env.php">
+    <NullReference>
+      <code><![CDATA[$result]]></code>
+    </NullReference>
+    <UndefinedClass>
+      <code><![CDATA[Imagick]]></code>
+    </UndefinedClass>
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$persistent_cache]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$update_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/menubar.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedForeachValue>
+      <code><![CDATA[$block]]></code>
+      <code><![CDATA[$pos]]></code>
+    </UnusedForeachValue>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/permalinks.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/photo.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$admin_photo_base_url]]></code>
+      <code><![CDATA[$category]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/photos_add.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$upload_form_config]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/photos_add_applications.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/photos_add_direct.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$page]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/photos_add_ftp.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/picture_coi.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/picture_formats.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/picture_modify.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$admin_photo_base_url]]></code>
+      <code><![CDATA[$cache]]></code>
+      <code><![CDATA[$cache]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$added_by]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/plugins.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/plugins_installed.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedForeachValue>
+      <code><![CDATA[$version]]></code>
+    </UnusedForeachValue>
+  </file>
+  <file src="admin/plugins_new.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$activate_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/popuphelp.php">
+    <UnusedVariable>
+      <code><![CDATA[$title]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/profile.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$page]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/rating.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/rating_user.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$by_user_ratings[$user_key]]]></code>
+    </EmptyArrayAccess>
+    <InvalidGlobal>
+      <code><![CDATA[global $conf;]]></code>
+    </InvalidGlobal>
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$x]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/site_manager.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/site_update.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$logger]]></code>
+      <code><![CDATA[$logger]]></code>
+      <code><![CDATA[$logger]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedForeachValue>
+      <code><![CDATA[$existing]]></code>
+    </UnusedForeachValue>
+    <UnusedVariable>
+      <code><![CDATA[$insert]]></code>
+      <code><![CDATA[$my_base_url]]></code>
+      <code><![CDATA[$start]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/stats.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/tags.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/themes.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/themes_installed.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/themes_new.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/updates.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$my_base_url]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/updates_ext.php">
+    <ParadoxicalCondition>
+      <code><![CDATA[!defined("PHPWG_ROOT_PATH")]]></code>
+    </ParadoxicalCondition>
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/updates_pwg.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="admin/user_activity.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$page]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/user_list.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$page]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="admin/user_perm.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="comments.php">
+    <UnusedVariable>
+      <code><![CDATA[$blockname]]></code>
+      <code><![CDATA[$title]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="i.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$page['derivative_params']]]></code>
+      <code><![CDATA[$page['derivative_path']]]></code>
+      <code><![CDATA[$page['src_path']]]></code>
+    </EmptyArrayAccess>
+    <MissingFile>
+      <code><![CDATA[include(PHPWG_ROOT_PATH. 'local/config/config.php')]]></code>
+    </MissingFile>
+    <NullReference>
+      <code><![CDATA[$crop_rect]]></code>
+      <code><![CDATA[$scaled_size]]></code>
+      <code><![CDATA[$tmp]]></code>
+      <code><![CDATA[$wm_scaled_size]]></code>
+    </NullReference>
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="identification.php">
+    <UnusedVariable>
+      <code><![CDATA[$title]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/BlockManager.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[is_hidden]]></code>
+      <code><![CDATA[set_block_position]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="inc/CalendarBase.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[generate_category_content]]></code>
+      <code><![CDATA[get_display_name]]></code>
+    </PossiblyUnusedMethod>
+    <UnusedForeachValue>
+      <code><![CDATA[$label]]></code>
+    </UnusedForeachValue>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$next]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$prev]]></code>
+      <code><![CDATA[$template]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/CalendarMonthly.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $template;]]></code>
+    </InvalidGlobal>
+    <MissingOverrideAttribute>
+      <code><![CDATA[function generate_category_content()]]></code>
+      <code><![CDATA[function get_date_where($max_levels=3)]]></code>
+      <code><![CDATA[function initialize($inner_sql)]]></code>
+    </MissingOverrideAttribute>
+    <UnusedClass>
+      <code><![CDATA[CalendarMonthly]]></code>
+    </UnusedClass>
+    <UnusedForeachValue>
+      <code><![CDATA[$data]]></code>
+    </UnusedForeachValue>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/CalendarWeekly.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function generate_category_content()]]></code>
+      <code><![CDATA[function get_date_where($max_levels=3)]]></code>
+      <code><![CDATA[function initialize($inner_sql)]]></code>
+    </MissingOverrideAttribute>
+    <UnusedClass>
+      <code><![CDATA[CalendarWeekly]]></code>
+    </UnusedClass>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/Combinable.php">
+    <InvalidParamDefault>
+      <code><![CDATA[string]]></code>
+    </InvalidParamDefault>
+  </file>
+  <file src="inc/Css.php">
+    <InvalidParamDefault>
+      <code><![CDATA[string]]></code>
+    </InvalidParamDefault>
+    <PossiblyUnusedProperty>
+      <code><![CDATA[$order]]></code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="inc/CssLoader.php">
+    <InvalidParamDefault>
+      <code><![CDATA[string]]></code>
+    </InvalidParamDefault>
+  </file>
+  <file src="inc/DerivativeImage.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[get_one]]></code>
+      <code><![CDATA[get_scaled_size_htm]]></code>
+      <code><![CDATA[get_size_css]]></code>
+      <code><![CDATA[get_size_hr]]></code>
+      <code><![CDATA[is_cached]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="inc/DerivativeParams.php">
+    <NullReference>
+      <code><![CDATA[$crop_rect]]></code>
+      <code><![CDATA[$scale_size]]></code>
+    </NullReference>
+  </file>
+  <file src="inc/DisplayBlock.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[get_block]]></code>
+      <code><![CDATA[get_position]]></code>
+      <code><![CDATA[get_title]]></code>
+      <code><![CDATA[set_title]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedProperty>
+      <code><![CDATA[$id]]></code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="inc/FileCombiner.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $template;]]></code>
+    </InvalidGlobal>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[add]]></code>
+    </PossiblyUnusedMethod>
+    <UnusedVariable>
+      <code><![CDATA[$key]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/ImageRect.php">
+    <UndefinedDocblockClass>
+      <code><![CDATA[stirng]]></code>
+    </UndefinedDocblockClass>
+    <UnusedParam>
+      <code><![CDATA[$coi]]></code>
+      <code><![CDATA[$pixels]]></code>
+    </UnusedParam>
+  </file>
+  <file src="inc/PersistentCache.php">
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[false]]></code>
+    </PossiblyUnusedReturnValue>
+    <UndefinedDocblockClass>
+      <code><![CDATA[a]]></code>
+    </UndefinedDocblockClass>
+  </file>
+  <file src="inc/PersistentFileCache.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function get($key, &$value)]]></code>
+      <code><![CDATA[function purge($all)]]></code>
+      <code><![CDATA[function set($key, $value, $lifetime=null)]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="inc/PluginMaintain.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[activate]]></code>
+      <code><![CDATA[autoUpdate]]></code>
+      <code><![CDATA[deactivate]]></code>
+      <code><![CDATA[uninstall]]></code>
+      <code><![CDATA[update]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="inc/PwgRequestHandler.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[handleRequest]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="inc/PwgResponseEncoder.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[encodeResponse]]></code>
+      <code><![CDATA[getContentType]]></code>
+    </PossiblyUnusedMethod>
+    <UnusedVariable>
+      <code><![CDATA[$key]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/PwgServer.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[getMethodDescription]]></code>
+      <code><![CDATA[getMethodOptions]]></code>
+      <code><![CDATA[getMethodSignature]]></code>
+      <code><![CDATA[hasMethod]]></code>
+      <code><![CDATA[invoke]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$encoder]]></code>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$requestHandler]]></code>
+    </PossiblyUnusedParam>
+    <UndefinedVariable>
+      <code><![CDATA[$HTTP_RAW_POST_DATA]]></code>
+    </UndefinedVariable>
+  </file>
+  <file src="inc/PwgTemplateAdapter.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[derivative]]></code>
+      <code><![CDATA[derivative_url]]></code>
+      <code><![CDATA[l10n]]></code>
+      <code><![CDATA[l10n_dec]]></code>
+      <code><![CDATA[sprintf]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="inc/QDateRangeScope.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function parse($token)]]></code>
+    </MissingOverrideAttribute>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[get_sql]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="inc/QMultiToken.php">
+    <UnusedVariable>
+      <code><![CDATA[$stop]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/QNumericRangeScope.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function parse($token)]]></code>
+    </MissingOverrideAttribute>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[get_sql]]></code>
+    </PossiblyUnusedMethod>
+    <UnusedVariable>
+      <code><![CDATA[$mult]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/QResults.php">
+    <PossiblyUnusedProperty>
+      <code><![CDATA[$cat_ids]]></code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="inc/QSearchScope.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[parse]]></code>
+      <code><![CDATA[process_char]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$ch]]></code>
+      <code><![CDATA[$crt_token]]></code>
+    </PossiblyUnusedParam>
+    <PossiblyUnusedProperty>
+      <code><![CDATA[$aliases]]></code>
+      <code><![CDATA[$id]]></code>
+      <code><![CDATA[$is_text]]></code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="inc/QSingleToken.php">
+    <PossiblyUnusedProperty>
+      <code><![CDATA[$idx]]></code>
+      <code><![CDATA[$is_single]]></code>
+      <code><![CDATA[$scope_data]]></code>
+      <code><![CDATA[$variants]]></code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="inc/RegisteredBlock.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[get_owner]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="inc/Script.php">
+    <InvalidParamDefault>
+      <code><![CDATA[string]]></code>
+    </InvalidParamDefault>
+  </file>
+  <file src="inc/ScriptLoader.php">
+    <InvalidParamDefault>
+      <code><![CDATA[string]]></code>
+    </InvalidParamDefault>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[get_all]]></code>
+    </PossiblyUnusedMethod>
+    <UnusedParam>
+      <code><![CDATA[$load_mode]]></code>
+    </UnusedParam>
+    <UnusedReturnValue>
+      <code><![CDATA[int]]></code>
+    </UnusedReturnValue>
+    <UnusedVariable>
+      <code><![CDATA[$id]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/SrcImage.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[has_size]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="inc/Template.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$lang[$key]]]></code>
+    </EmptyArrayAccess>
+    <InvalidGlobal>
+      <code><![CDATA[global $t2;]]></code>
+    </InvalidGlobal>
+    <InvalidStaticInvocation>
+      <code><![CDATA[Smarty_Internal_Debug::display_debug($this->smarty)]]></code>
+    </InvalidStaticInvocation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[add_index_button]]></code>
+      <code><![CDATA[add_picture_button]]></code>
+      <code><![CDATA[concat]]></code>
+      <code><![CDATA[get_template_dir]]></code>
+      <code><![CDATA[get_themeconf]]></code>
+      <code><![CDATA[set_extent]]></code>
+      <code><![CDATA[set_outputfilter]]></code>
+      <code><![CDATA[set_postfilter]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$smarty]]></code>
+      <code><![CDATA[$theme]]></code>
+    </PossiblyUnusedParam>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[bool]]></code>
+      <code><![CDATA[true]]></code>
+    </PossiblyUnusedReturnValue>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$id]]></code>
+      <code><![CDATA[$k]]></code>
+      <code><![CDATA[$k]]></code>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$ret]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/ThemeMaintain.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[activate]]></code>
+      <code><![CDATA[deactivate]]></code>
+      <code><![CDATA[delete]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedProperty>
+      <code><![CDATA[$theme_id]]></code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="inc/category_cats.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$logger]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="inc/category_default.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="inc/common.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$conf['check_upgrade_feed']]]></code>
+      <code><![CDATA[$conf['data_location']]]></code>
+      <code><![CDATA[$conf['db_base']]]></code>
+      <code><![CDATA[$conf['db_host']]]></code>
+      <code><![CDATA[$conf['db_password']]]></code>
+      <code><![CDATA[$conf['db_password']]]></code>
+      <code><![CDATA[$conf['db_user']]]></code>
+      <code><![CDATA[$conf['dblayer']]]></code>
+      <code><![CDATA[$conf['log_dir']]]></code>
+      <code><![CDATA[$conf['log_level']]]></code>
+      <code><![CDATA[$conf['order_by']]]></code>
+      <code><![CDATA[$conf['order_by_custom']]]></code>
+      <code><![CDATA[$conf['piwigo_db_version']]]></code>
+      <code><![CDATA[$conf['piwigo_installed_version']]]></code>
+      <code><![CDATA[$conf['session_gc_probability']]]></code>
+      <code><![CDATA[$conf['show_php_errors_on_frontend']]]></code>
+      <code><![CDATA[$user['language']]]></code>
+    </EmptyArrayAccess>
+    <MissingFile>
+      <code><![CDATA[include(PHPWG_ROOT_PATH . 'inc/Template.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH . 'inc/config_default.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH . 'inc/constants.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH . 'inc/functions.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH. 'local/config/config.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH. 'local/config/config.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH. 'local/config/config.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH.'inc/filter.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH.'inc/no_photo_yet.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH.'inc/user.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.php')]]></code>
+      <code><![CDATA[include_once(PHPWG_ROOT_PATH.'admin/inc/functions_upgrade.php')]]></code>
+    </MissingFile>
+    <NoValue>
+      <code><![CDATA[$conf['alternative_pem_url']]]></code>
+      <code><![CDATA[$conf['show_php_errors']]]></code>
+    </NoValue>
+    <UnusedParam>
+      <code><![CDATA[$k]]></code>
+    </UnusedParam>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$filter]]></code>
+      <code><![CDATA[$header_msgs]]></code>
+      <code><![CDATA[$header_notes]]></code>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$logger]]></code>
+      <code><![CDATA[$persistent_cache]]></code>
+      <code><![CDATA[$t2]]></code>
+      <code><![CDATA[$user]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/constants.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="inc/dblayer/functions_mysqli.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[pwg_db_errno]]></code>
+      <code><![CDATA[pwg_db_error]]></code>
+      <code><![CDATA[pwg_db_fetch_array]]></code>
+      <code><![CDATA[pwg_db_fetch_object]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$date]]></code>
+    </PossiblyUnusedParam>
+    <UnusedVariable>
+      <code><![CDATA[$key]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/filter.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$filter['matches'][1]]]></code>
+    </EmptyArrayAccess>
+    <NullReference>
+      <code><![CDATA[$user]]></code>
+    </NullReference>
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$header_notes]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/functions.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$lang[$key]]]></code>
+      <code><![CDATA[$lang['day']]]></code>
+      <code><![CDATA[$lang['month']]]></code>
+      <code><![CDATA[$user['id']]]></code>
+      <code><![CDATA[$user['id']]]></code>
+      <code><![CDATA[$user['id']]]></code>
+      <code><![CDATA[$user['id']]]></code>
+      <code><![CDATA[$user['nb_available_comments']]]></code>
+      <code><![CDATA[$user['recent_period']]]></code>
+      <code><![CDATA[$user['recent_period']]]></code>
+    </EmptyArrayAccess>
+    <InvalidGlobal>
+      <code><![CDATA[global $conf;]]></code>
+      <code><![CDATA[global $conf;]]></code>
+      <code><![CDATA[global $lang, $lang_info;]]></code>
+      <code><![CDATA[global $lang_info;]]></code>
+    </InvalidGlobal>
+    <InvalidParamDefault>
+      <code><![CDATA[string]]></code>
+    </InvalidParamDefault>
+    <NoValue>
+      <code><![CDATA[$user['last_visit']]]></code>
+    </NoValue>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[print_time]]></code>
+      <code><![CDATA[safe_json_decode]]></code>
+      <code><![CDATA[transform_date]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$refresh_time]]></code>
+      <code><![CDATA[$url]]></code>
+    </PossiblyUnusedParam>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[bool]]></code>
+    </PossiblyUnusedReturnValue>
+    <UndefinedVariable>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$lang_info]]></code>
+      <code><![CDATA[$lang_info]]></code>
+    </UndefinedVariable>
+    <UnusedClosureParam>
+      <code><![CDATA[$key]]></code>
+    </UnusedClosureParam>
+    <UnusedVariable>
+      <code><![CDATA[$R]]></code>
+      <code><![CDATA[$debug]]></code>
+      <code><![CDATA[$greatest]]></code>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$r]]></code>
+      <code><![CDATA[$refresh]]></code>
+      <code><![CDATA[$t2]]></code>
+      <code><![CDATA[$title]]></code>
+      <code><![CDATA[$url_link]]></code>
+      <code><![CDATA[$user_ids]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/functions_calendar.php">
+    <UnusedVariable>
+      <code><![CDATA[$filter]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/functions_category.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$filter['enabled']]]></code>
+      <code><![CDATA[$filter['enabled']]]></code>
+      <code><![CDATA[$user['expand']]]></code>
+      <code><![CDATA[$user['forbidden_categories']]]></code>
+      <code><![CDATA[$user['id']]]></code>
+    </EmptyArrayAccess>
+    <UnusedForeachValue>
+      <code><![CDATA[$v]]></code>
+    </UnusedForeachValue>
+    <UnusedVariable>
+      <code><![CDATA[$page]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/functions_comment.php">
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[bool]]></code>
+    </PossiblyUnusedReturnValue>
+    <UndefinedVariable>
+      <code><![CDATA[$comm]]></code>
+    </UndefinedVariable>
+    <UnusedVariable>
+      <code><![CDATA[$comm]]></code>
+      <code><![CDATA[$comment_action]]></code>
+      <code><![CDATA[$user]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/functions_cookie.php">
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[bool]]></code>
+    </PossiblyUnusedReturnValue>
+  </file>
+  <file src="inc/functions_html.php">
+    <PossiblyUnusedParam>
+      <code><![CDATA[$url]]></code>
+    </PossiblyUnusedParam>
+    <UnevaluatedCode>
+      <code><![CDATA[die(0);]]></code>
+    </UnevaluatedCode>
+    <UnusedVariable>
+      <code><![CDATA[$user]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/functions_mail.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[get_strict_email_list]]></code>
+      <code><![CDATA[pwg_send_mail]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$headers]]></code>
+    </PossiblyUnusedParam>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[boolean]]></code>
+      <code><![CDATA[boolean]]></code>
+    </PossiblyUnusedReturnValue>
+  </file>
+  <file src="inc/functions_metadata.php">
+    <PossiblyUnusedParam>
+      <code><![CDATA[$k]]></code>
+    </PossiblyUnusedParam>
+    <UndefinedVariable>
+      <code><![CDATA[$exif2]]></code>
+    </UndefinedVariable>
+  </file>
+  <file src="inc/functions_notification.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$lang['month']]]></code>
+    </EmptyArrayAccess>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[new_comments]]></code>
+      <code><![CDATA[new_elements]]></code>
+      <code><![CDATA[new_users]]></code>
+      <code><![CDATA[updated_categories]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$action]]></code>
+    </PossiblyUnusedParam>
+    <UnevaluatedCode>
+      <code><![CDATA[switch($action)
+    {
+      case 'count':
+      {
+        switch($type)
+        {
+          case 'new_comments':
+            $field_id = 'c.id';
+            break;
+          case 'unvalidated_comments':
+            $field_id = 'id';
+            break;
+          case 'new_elements':
+            $field_id = 'image_id';
+            break;
+          case 'updated_categories':
+            $field_id = 'category_id';
+            break;
+          case 'new_users':
+            $field_id = 'user_id';
+            break;
+        }
+        $query = 'SELECT COUNT(DISTINCT '.$field_id.') '.$query.';';
+        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        return $count;
+        break;
+      }
+
+      case 'info':
+      {
+        switch($type)
+        {
+          case 'new_comments':
+            $field_id = 'c.id';
+            break;
+          case 'unvalidated_comments':
+            $field_id = 'id';
+            break;
+          case 'new_elements':
+            $field_id = 'image_id';
+            break;
+          case 'updated_categories':
+            $field_id = 'category_id';
+            break;
+          case 'new_users':
+            $field_id = 'user_id';
+            break;
+        }
+        $query = 'SELECT DISTINCT '.$field_id.' '.$query.';';
+        $infos = functions_mysqli::query2array($query);
+        return $infos;
+        break;
+      }
+
+      default:
+        return null; // stop and return nothing
+    }]]></code>
+    </UnevaluatedCode>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$query]]></code>
+      <code><![CDATA[$user]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/functions_picture.php">
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/functions_plugins.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $page;]]></code>
+      <code><![CDATA[global $pwg_loaded_plugins;]]></code>
+    </InvalidGlobal>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[get_plugin_data]]></code>
+      <code><![CDATA[remove_event_handler]]></code>
+      <code><![CDATA[set_plugin_data]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$data]]></code>
+    </PossiblyUnusedParam>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[bool]]></code>
+    </PossiblyUnusedReturnValue>
+    <UnusedVariable>
+      <code><![CDATA[$priority]]></code>
+      <code><![CDATA[$priority]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/functions_search.php">
+    <UndefinedVariable>
+      <code><![CDATA[$search_in_tags_items]]></code>
+    </UndefinedVariable>
+    <UnusedVariable>
+      <code><![CDATA[$idx]]></code>
+      <code><![CDATA[$idx]]></code>
+      <code><![CDATA[$inflector]]></code>
+      <code><![CDATA[$user]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/functions_session.php">
+    <PossiblyUnusedParam>
+      <code><![CDATA[$name]]></code>
+      <code><![CDATA[$path]]></code>
+    </PossiblyUnusedParam>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[bool]]></code>
+      <code><![CDATA[bool]]></code>
+      <code><![CDATA[null]]></code>
+    </PossiblyUnusedReturnValue>
+    <UndefinedDocblockClass>
+      <code><![CDATA[sring]]></code>
+      <code><![CDATA[sring]]></code>
+    </UndefinedDocblockClass>
+  </file>
+  <file src="inc/functions_url.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$user['id']]]></code>
+    </EmptyArrayAccess>
+    <InvalidGlobal>
+      <code><![CDATA[global $conf;]]></code>
+    </InvalidGlobal>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[null]]></code>
+      <code><![CDATA[null]]></code>
+    </PossiblyUnusedReturnValue>
+    <UnusedVariable>
+      <code><![CDATA[$i]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/functions_user.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$user['forbidden_categories']]]></code>
+      <code><![CDATA[$user['id']]]></code>
+      <code><![CDATA[$user['id']]]></code>
+      <code><![CDATA[$user['id']]]></code>
+      <code><![CDATA[$user['id']]]></code>
+      <code><![CDATA[$user['image_access_type']]]></code>
+      <code><![CDATA[$user['last_photo_date']]]></code>
+      <code><![CDATA[$user['level']]]></code>
+      <code><![CDATA[$user['preferences']]]></code>
+      <code><![CDATA[$user['recent_period']]]></code>
+      <code><![CDATA[$user['status']]]></code>
+    </EmptyArrayAccess>
+    <NullReference>
+      <code><![CDATA[$username]]></code>
+      <code><![CDATA[$username]]></code>
+    </NullReference>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[userprefs_delete_param]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[bool]]></code>
+      <code><![CDATA[bool]]></code>
+      <code><![CDATA[int]]></code>
+      <code><![CDATA[null]]></code>
+      <code><![CDATA[null]]></code>
+    </PossiblyUnusedReturnValue>
+    <UnevaluatedCode>
+      <code><![CDATA[break;]]></code>
+    </UnevaluatedCode>
+    <UnusedDocblockParam>
+      <code><![CDATA[$updateGlobal]]></code>
+    </UnusedDocblockParam>
+    <UnusedForeachValue>
+      <code><![CDATA[$language_name]]></code>
+      <code><![CDATA[$q_value]]></code>
+      <code><![CDATA[$q_value]]></code>
+    </UnusedForeachValue>
+  </file>
+  <file src="inc/inflectors/Inflector_en.php">
+    <UnusedClass>
+      <code><![CDATA[Inflector_en]]></code>
+    </UnusedClass>
+  </file>
+  <file src="inc/no_photo_yet.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="inc/page_header.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$title]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="inc/page_tail.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$debug]]></code>
+      <code><![CDATA[$t2]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="inc/picture_comment.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$related_categories]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$url_self]]></code>
+      <code><![CDATA[$url_self]]></code>
+      <code><![CDATA[$url_self]]></code>
+      <code><![CDATA[$url_self]]></code>
+      <code><![CDATA[$url_self]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="inc/picture_metadata.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$lang['exif_field_'.$field]]]></code>
+      <code><![CDATA[$lang['exif_field_'.$key]]]></code>
+    </EmptyArrayAccess>
+    <NoValue>
+      <code><![CDATA[$key]]></code>
+      <code><![CDATA[$key]]></code>
+    </NoValue>
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$picture]]></code>
+      <code><![CDATA[$picture]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="inc/picture_rate.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$picture]]></code>
+      <code><![CDATA[$picture]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$url_self]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="inc/section_init.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$filter]]></code>
+      <code><![CDATA[$logger]]></code>
+      <code><![CDATA[$persistent_cache]]></code>
+      <code><![CDATA[$persistent_cache]]></code>
+      <code><![CDATA[$persistent_cache]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$keynum]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/user.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="inc/ws_functions.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $user;]]></code>
+    </InvalidGlobal>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$params]]></code>
+    </PossiblyUnusedParam>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/ws_functions/pwg.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $name_of_tag;]]></code>
+    </InvalidGlobal>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+    </PossiblyUnusedParam>
+    <UnusedVariable>
+      <code><![CDATA[$cat_name]]></code>
+      <code><![CDATA[$image_string]]></code>
+      <code><![CDATA[$logger]]></code>
+      <code><![CDATA[$picture_url]]></code>
+      <code><![CDATA[$thumbnail_display]]></code>
+      <code><![CDATA[$thumbnail_display]]></code>
+      <code><![CDATA[$user_id_list]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/ws_functions/pwg_categories.php">
+    <PossiblyUnusedParam>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+    </PossiblyUnusedParam>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$user]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/ws_functions/pwg_extensions.php">
+    <PossiblyUnusedParam>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+    </PossiblyUnusedParam>
+  </file>
+  <file src="inc/ws_functions/pwg_groups.php">
+    <PossiblyUnusedParam>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+    </PossiblyUnusedParam>
+    <UnusedVariable>
+      <code><![CDATA[$user_in_dest]]></code>
+      <code><![CDATA[$user_in_merge_groups]]></code>
+      <code><![CDATA[$user_to_add]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/ws_functions/pwg_images.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $conf;]]></code>
+      <code><![CDATA[global $conf;]]></code>
+    </InvalidGlobal>
+    <NullReference>
+      <code><![CDATA[$infos]]></code>
+    </NullReference>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+    </PossiblyUnusedParam>
+    <UndefinedVariable>
+      <code><![CDATA[$type]]></code>
+    </UndefinedVariable>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$image_id]]></code>
+      <code><![CDATA[$to_update_cat_ids]]></code>
+      <code><![CDATA[$user]]></code>
+      <code><![CDATA[$user]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/ws_functions/pwg_permissions.php">
+    <PossiblyUnusedParam>
+      <code><![CDATA[$service]]></code>
+    </PossiblyUnusedParam>
+  </file>
+  <file src="inc/ws_functions/pwg_tags.php">
+    <PossiblyUnusedParam>
+      <code><![CDATA[$params]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+    </PossiblyUnusedParam>
+    <UnusedVariable>
+      <code><![CDATA[$image_in_dest]]></code>
+      <code><![CDATA[$image_in_merge_tags]]></code>
+      <code><![CDATA[$image_to_add]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/ws_functions/pwg_users.php">
+    <NullReference>
+      <code><![CDATA[$errors]]></code>
+    </NullReference>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+      <code><![CDATA[$service]]></code>
+    </PossiblyUnusedParam>
+  </file>
+  <file src="inc/ws_init.php">
+    <UnusedVariable>
+      <code><![CDATA[$handler]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="inc/ws_protocols/PwgJsonEncoder.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function encodeResponse($response)]]></code>
+      <code><![CDATA[function getContentType()]]></code>
+    </MissingOverrideAttribute>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[encodeResponse]]></code>
+      <code><![CDATA[getContentType]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="inc/ws_protocols/PwgRestEncoder.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function encodeResponse($response)]]></code>
+      <code><![CDATA[function getContentType()]]></code>
+    </MissingOverrideAttribute>
+    <ParadoxicalCondition>
+      <code><![CDATA[is_object($data)]]></code>
+    </ParadoxicalCondition>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[encodeResponse]]></code>
+      <code><![CDATA[getContentType]]></code>
+    </PossiblyUnusedMethod>
+    <UnevaluatedCode>
+      <code><![CDATA['null']]></code>
+    </UnevaluatedCode>
+  </file>
+  <file src="inc/ws_protocols/PwgRestRequestHandler.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function handleRequest(&$service)]]></code>
+    </MissingOverrideAttribute>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[handleRequest]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="inc/ws_protocols/PwgSerialPhpEncoder.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function encodeResponse($response)]]></code>
+      <code><![CDATA[function getContentType()]]></code>
+    </MissingOverrideAttribute>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[encodeResponse]]></code>
+      <code><![CDATA[getContentType]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="inc/ws_protocols/PwgXmlRpcEncoder.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function encodeResponse($response)]]></code>
+      <code><![CDATA[function getContentType()]]></code>
+    </MissingOverrideAttribute>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[encodeResponse]]></code>
+      <code><![CDATA[getContentType]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="inc/ws_protocols/PwgXmlWriter.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[end_element]]></code>
+      <code><![CDATA[start_element]]></code>
+      <code><![CDATA[write_attribute]]></code>
+      <code><![CDATA[write_cdata]]></code>
+      <code><![CDATA[write_content]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$x]]></code>
+    </PossiblyUnusedParam>
+  </file>
+  <file src="index.php">
+    <UnusedVariable>
+      <code><![CDATA[$filter_tags]]></code>
+      <code><![CDATA[$title]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="install.php">
+    <MissingFile>
+      <code><![CDATA[include(PHPWG_ROOT_PATH. 'local/config/config.php')]]></code>
+    </MissingFile>
+    <NullReference>
+      <code><![CDATA[$result]]></code>
+    </NullReference>
+  </file>
+  <file src="language/en_UK/admin.lang.php">
+    <UnusedVariable>
+      <code><![CDATA[$lang]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="language/en_UK/common.lang.php">
+    <UnusedVariable>
+      <code><![CDATA[$lang]]></code>
+      <code><![CDATA[$lang_info]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="language/en_UK/install.lang.php">
+    <UnusedVariable>
+      <code><![CDATA[$lang]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="language/en_UK/upgrade.lang.php">
+    <UnusedVariable>
+      <code><![CDATA[$lang]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="local/config/database.php">
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="nbm.php">
+    <UnusedVariable>
+      <code><![CDATA[$title]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="notification.php">
+    <UnusedVariable>
+      <code><![CDATA[$title]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="picture.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $filter;]]></code>
+    </InvalidGlobal>
+    <UnusedVariable>
+      <code><![CDATA[$edit_comment]]></code>
+      <code><![CDATA[$extTab]]></code>
+      <code><![CDATA[$refresh]]></code>
+      <code><![CDATA[$title]]></code>
+      <code><![CDATA[$url_link]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="plugins/AdminTools/AdminTools_maintain.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function install($plugin_version, &$errors=array())]]></code>
+      <code><![CDATA[function uninstall()]]></code>
+      <code><![CDATA[function update($old_version, $new_version, &$errors=array())]]></code>
+    </MissingOverrideAttribute>
+    <UnusedClass>
+      <code><![CDATA[AdminTools_maintain]]></code>
+    </UnusedClass>
+  </file>
+  <file src="plugins/AdminTools/admin.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$page]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="plugins/AdminTools/main.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $MultiView;]]></code>
+    </InvalidGlobal>
+    <UndefinedFunction>
+      <code><![CDATA[admintools_add_admin_controller(...)]]></code>
+      <code><![CDATA[admintools_add_admin_controller_setprefilter(...)]]></code>
+      <code><![CDATA[admintools_add_public_controller(...)]]></code>
+      <code><![CDATA[admintools_save_category(...)]]></code>
+      <code><![CDATA[admintools_save_picture(...)]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="plugins/GDThumb/GDThumb_maintain.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[function activate($plugin_version, &$errors=array()) {]]></code>
+      <code><![CDATA[function install($plugin_version, &$errors=array()) {]]></code>
+      <code><![CDATA[function uninstall() {]]></code>
+      <code><![CDATA[function update($old_version, $new_version, &$errors=array()) {]]></code>
+    </MissingOverrideAttribute>
+    <UnusedClass>
+      <code><![CDATA[GDThumb_maintain]]></code>
+    </UnusedClass>
+  </file>
+  <file src="plugins/GDThumb/admin.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $conf;]]></code>
+      <code><![CDATA[global $template, $conf, $page;]]></code>
+    </InvalidGlobal>
+  </file>
+  <file src="plugins/GDThumb/changelog.php">
+    <UnusedVariable>
+      <code><![CDATA[$line_num]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="plugins/GDThumb/config_default.php">
+    <UnusedVariable>
+      <code><![CDATA[$config_default]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="plugins/GDThumb/main.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $conf;]]></code>
+    </InvalidGlobal>
+    <UnusedParam>
+      <code><![CDATA[$pictures]]></code>
+      <code><![CDATA[$smarty]]></code>
+    </UnusedParam>
+  </file>
+  <file src="plugins/LocalFilesEditor/LocalFilesEditor_maintain.php">
+    <UnusedVariable>
+      <code><![CDATA[$prefixeTable]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="plugins/LocalFilesEditor/admin.php">
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$codemirror_mode]]></code>
+      <code><![CDATA[$edited_file]]></code>
+      <code><![CDATA[$edited_file]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$template]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+  <file src="plugins/TakeATour/admin.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $template, $conf, $user, $page;]]></code>
+    </InvalidGlobal>
+  </file>
+  <file src="plugins/TakeATour/main.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $TAT_restart;]]></code>
+    </InvalidGlobal>
+  </file>
+  <file src="plugins/language_switch/language_switch.php">
+    <UnusedVariable>
+      <code><![CDATA[$url_starting]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="plugins/rv_tscroller/RVTS.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $user, $template, $conf;]]></code>
+    </InvalidGlobal>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$user]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="popuphelp.php">
+    <UnusedVariable>
+      <code><![CDATA[$title]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="profile.php">
+    <UnusedVariable>
+      <code><![CDATA[$title]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="register.php">
+    <UnusedVariable>
+      <code><![CDATA[$title]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="search.php">
+    <UnusedVariable>
+      <code><![CDATA[$search_uuid]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="tags.php">
+    <UnusedVariable>
+      <code><![CDATA[$title]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="themes/bootstrap_darkroom/themeconf.php">
+    <InaccessibleProperty>
+      <code><![CDATA[$controller->config]]></code>
+    </InaccessibleProperty>
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$conf]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$themeconf]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="themes/default/themeconf.php">
+    <UnusedVariable>
+      <code><![CDATA[$themeconf]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="themes/elegant/themeconf.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $conf;]]></code>
+    </InvalidGlobal>
+    <UnusedVariable>
+      <code><![CDATA[$themeconf]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="themes/modus/functions_modus.php">
+    <PossiblyUnusedParam>
+      <code><![CDATA[$smarty]]></code>
+      <code><![CDATA[$template]]></code>
+      <code><![CDATA[$x]]></code>
+    </PossiblyUnusedParam>
+    <UndefinedConstant>
+      <code><![CDATA[RVCDN_ROOT_URL]]></code>
+      <code><![CDATA[RVCDN_ROOT_URL]]></code>
+      <code><![CDATA[RVCDN_ROOT_URL]]></code>
+      <code><![CDATA[RVPT_JQUERY_SRC]]></code>
+    </UndefinedConstant>
+    <UndefinedVariable>
+      <code><![CDATA[$skin]]></code>
+    </UndefinedVariable>
+    <UnusedClass>
+      <code><![CDATA[functions_modus]]></code>
+    </UnusedClass>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$conf]]></code>
+      <code><![CDATA[$max]]></code>
+      <code><![CDATA[$min]]></code>
+      <code><![CDATA[$page]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="themes/modus/themeconf.php">
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+  </file>
+  <file src="themes/smartpocket/SPThumbPicker.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[init]]></code>
+      <code><![CDATA[pick]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedProperty>
+      <code><![CDATA[$height]]></code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="themes/smartpocket/functions_smartpocket.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[add_menu_on_public_pages]]></code>
+      <code><![CDATA[mobile_link]]></code>
+      <code><![CDATA[sp_end_section_init]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$selection]]></code>
+    </PossiblyUnusedParam>
+    <UnusedVariable>
+      <code><![CDATA[$conf]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="themes/smartpocket/themeconf.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $conf;]]></code>
+    </InvalidGlobal>
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+  </file>
+  <file src="upgrade.php">
+    <MissingFile>
+      <code><![CDATA[include(PHPWG_ROOT_PATH. 'local/config/config.php')]]></code>
+    </MissingFile>
+    <NoValue>
+      <code><![CDATA[$mysql_changes]]></code>
+      <code><![CDATA[$mysql_changes]]></code>
+    </NoValue>
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixeTable]]></code>
+    </UndefinedGlobalVariable>
+    <UnusedForeachValue>
+      <code><![CDATA[$fs_language]]></code>
+    </UnusedForeachValue>
+  </file>
+  <file src="upgrade_feed.php">
+    <MissingFile>
+      <code><![CDATA[include(PHPWG_ROOT_PATH. 'local/config/config.php')]]></code>
+    </MissingFile>
+    <TooFewArguments>
+      <code><![CDATA[functions_mysqli::my_error(functions::l10n($e->getMessage(), true))]]></code>
+    </TooFewArguments>
+    <UndefinedGlobalVariable>
+      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$upgrade_description]]></code>
+      <code><![CDATA[$upgrade_description]]></code>
+    </UndefinedGlobalVariable>
+  </file>
+</files>

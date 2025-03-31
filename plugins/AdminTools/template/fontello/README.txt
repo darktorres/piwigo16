@@ -9,7 +9,7 @@ webfont pack. Details available in LICENSE.txt file.
   site in "About" section.
 
 - If your project is open-source, usually, it will be ok to make LICENSE.txt
-  file publically available in your repository.
+  file publicly available in your repository.
 
 - Fonts, used in Fontello, don't require to make clickable links on your site.
   But any kind of additional authors crediting is welcome.
@@ -38,7 +38,7 @@ Why so many CSS files ?
 
 Because we like to fit all your needs :)
 
-- basic file, <your_font_name>.css - is usually enougth, in contains @font-face
+- basic file, <your_font_name>.css - is usually enough, in contains @font-face
   and character codes definition
 
 - *-ie7.css - if you need IE7 support, but still don't wish to put char codes
@@ -67,7 +67,7 @@ You MUST setup server to reply with proper `mime-types` for font files. In other
 case, some browsers will fail to show fonts.
 
 Usually, `apache` already has necessary settings, but `nginx` and other
-webservers should be tuned. Here is list of mime types for our file extentions:
+webservers should be tuned. Here is list of mime types for our file extensions:
 
 - `application/vnd.ms-fontobject` - eot
 - `application/x-font-woff` - woff

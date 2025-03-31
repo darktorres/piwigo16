@@ -279,10 +279,10 @@ if (isset($_POST['submit']))
       }
       foreach( $display_info_checkboxes as $checkbox)
       {
-        $_POST['picture_informations'][$checkbox] =
-          empty($_POST['picture_informations'][$checkbox])? false : true;
+        $_POST['picture_information'][$checkbox] =
+          empty($_POST['picture_information'][$checkbox])? false : true;
       }
-      $_POST['picture_informations'] = addslashes(serialize($_POST['picture_informations']));
+      $_POST['picture_information'] = addslashes(serialize($_POST['picture_information']));
       break;
     }
   }
@@ -483,7 +483,7 @@ switch ($page['section'])
     $template->append(
         'display',
         array(
-          'picture_informations' => unserialize($conf['picture_informations']),
+          'picture_information' => unserialize($conf['picture_information']),
           'NB_CATEGORIES_PAGE' => $conf['nb_categories_page'],
           ),
         true

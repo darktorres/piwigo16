@@ -171,7 +171,7 @@ SELECT id, uppercats, global_rank, status, visible
   }
   $db_categories = functions::hash_from_query($query, 'id');
 
-  // get categort full directories in an array for comparison with file
+  // get category full directories in an array for comparison with file
   // system directory tree
   $db_fulldirs = functions_admin::get_fulldirs(array_keys($db_categories));
 
@@ -351,7 +351,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             {
               $granted_grps[$row['cat_id']]=array();
             }
-            // TODO: explanaition
+            // TODO: explanation
             array_push(
               $granted_grps,
               array(
@@ -375,7 +375,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             {
               $granted_users[$row['cat_id']]=array();
             }
-            // TODO: explanaition
+            // TODO: explanation
             array_push(
               $granted_users,
               array(

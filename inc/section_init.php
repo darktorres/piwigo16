@@ -8,7 +8,7 @@
 
 /**
  * This included page checks section related parameter and provides
- * following informations:
+ * following information:
  *
  * - $page['title']
  *
@@ -599,7 +599,7 @@ if (isset($page['title']))
   }
 }
 
-// add meta robots noindex, nofollow to avoid unnecesary robot crawls
+// add meta robots noindex, nofollow to avoid unnecessary robot crawls
 $page['meta_robots']=array();
 if ( isset($page['chronology_field'])
       or ( isset($page['flat']) and isset($page['category']) )

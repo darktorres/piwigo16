@@ -24,7 +24,7 @@ $(document).ready(function () {
     },
     error: function () {
       $(".badge-number").append(0);
-      $("#pluginList ul").append("<p>" + error_occured +"</p>");
+      $("#pluginList ul").append("<p>" + error_occurred +"</p>");
       $("#pluginList ul i").hide();
     }
   });

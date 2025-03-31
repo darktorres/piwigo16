@@ -239,7 +239,7 @@ class functions_notification_by_mail
   }
 
   /*
-  * Set user on nbm enviromnent
+  * Set user on nbm environment
   *
   * Return none
   */
@@ -259,7 +259,7 @@ class functions_notification_by_mail
   }
 
   /*
-  * Unset user on nbm enviromnent
+  * Unset user on nbm environment
   *
   * Return none
   */

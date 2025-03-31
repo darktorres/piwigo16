@@ -52,7 +52,7 @@ catch (Exception $e)
 }
 functions_mysqli::pwg_db_check_charset();
 
-list($conf['derivatives']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT value FROM '.$prefixeTable.'config WHERE param=\'derivatives\''));
+list($conf['derivatives']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT value FROM '.$prefixTable.'config WHERE param=\'derivatives\''));
 ImageStdParams::load_from_db();
 
 
@@ -110,7 +110,7 @@ if (strpos($page['src_location'], '/pwg_representative/')===false
   {
     $query = '
 SELECT *
-  FROM '.$prefixeTable.'images
+  FROM '.$prefixTable.'images
   WHERE path=\''.addslashes($page['src_location']).'\'
 ;';
 
@@ -127,7 +127,7 @@ SELECT *
         $page['rotation_angle'] = pwg_image::get_rotation_angle($page['src_path']);
 
         functions_mysqli::single_update(
-          $prefixeTable.'images',
+          $prefixTable.'images',
           array('rotation' => pwg_image::get_rotation_code_from_angle($page['rotation_angle'])),
           array('id' => $row['id'])
           );

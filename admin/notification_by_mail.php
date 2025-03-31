@@ -122,7 +122,7 @@ switch ($page['mode'])
       functions_admin::do_timeout_treatment('cat_true', $check_key_treated);
     }
     else
-    if (isset($_POST['trueify']) and isset($_POST['cat_false']))
+    if (isset($_POST['truthify']) and isset($_POST['cat_false']))
     {
       $check_key_treated = functions_notification_by_mail::subscribe_notification_by_mail(true, $_POST['cat_false']);
       functions_admin::do_timeout_treatment('cat_false', $check_key_treated);
@@ -162,7 +162,7 @@ $template->assign
   )
 );
 
-if (functions_user::is_autorize_status(ACCESS_WEBMASTER))
+if (functions_user::is_authorized_status(ACCESS_WEBMASTER))
 {
   // TabSheet
   $tabsheet = new tabsheet();
@@ -179,9 +179,9 @@ if ($must_repost)
   {
     $repost_submit_name = 'falsify';
   }
-  elseif (isset($_POST['trueify']))
+  elseif (isset($_POST['truthify']))
   {
-    $repost_submit_name = 'trueify';
+    $repost_submit_name = 'truthify';
   }
   elseif (isset($_POST['send_submit']))
   {
@@ -237,7 +237,7 @@ switch ($page['mode'])
       else
       {
         $opt_false[ $nbm_user['check_key'] ] = stripslashes($nbm_user['username']).'['.$nbm_user['mail_address'].']';
-        if (isset($_POST['trueify']) and isset($_POST['cat_false']) and in_array($nbm_user['check_key'], $_POST['cat_false']))
+        if (isset($_POST['truthify']) and isset($_POST['cat_false']) and in_array($nbm_user['check_key'], $_POST['cat_false']))
         {
           $opt_false_selected[] = $nbm_user['check_key'];
         }

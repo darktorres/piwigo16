@@ -1467,9 +1467,9 @@
       <code><![CDATA[$wm_scaled_size]]></code>
     </NullReference>
     <UndefinedGlobalVariable>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
     </UndefinedGlobalVariable>
   </file>
   <file src="identification.php">
@@ -1897,40 +1897,40 @@
       <code><![CDATA[$conf]]></code>
       <code><![CDATA[$conf]]></code>
       <code><![CDATA[$conf]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
     </UndefinedGlobalVariable>
   </file>
   <file src="inc/dblayer/functions_mysqli.php">
@@ -2810,7 +2810,7 @@
   </file>
   <file src="plugins/LocalFilesEditor/LocalFilesEditor_maintain.php">
     <UnusedVariable>
-      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
     </UnusedVariable>
   </file>
   <file src="plugins/LocalFilesEditor/admin.php">
@@ -2972,8 +2972,8 @@
       <code><![CDATA[$mysql_changes]]></code>
     </NoValue>
     <UndefinedGlobalVariable>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
     </UndefinedGlobalVariable>
     <UnusedForeachValue>
       <code><![CDATA[$fs_language]]></code>
@@ -2987,7 +2987,7 @@
       <code><![CDATA[functions_mysqli::my_error(functions::l10n($e->getMessage(), true))]]></code>
     </TooFewArguments>
     <UndefinedGlobalVariable>
-      <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$prefixTable]]></code>
       <code><![CDATA[$upgrade_description]]></code>
       <code><![CDATA[$upgrade_description]]></code>
     </UndefinedGlobalVariable>

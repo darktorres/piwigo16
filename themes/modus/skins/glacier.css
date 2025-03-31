@@ -53,10 +53,10 @@ a:hover{
   background-image: linear-gradient(#1E3259, #223D73, #27498C);
 }
 
-#comentAdd INPUT[type="text"],
+#commentAdd INPUT[type="text"],
 INPUT[type="password"],
-#comentAdd SELECT,
-#comentAdd TEXTAREA,
+#commentAdd SELECT,
+#commentAdd TEXTAREA,
 #comments input[type="text"],
 #comments TEXTAREA{
   background-color:#2D2D2D;

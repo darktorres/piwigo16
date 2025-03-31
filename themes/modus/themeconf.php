@@ -82,7 +82,7 @@ if (!defined('IN_ADMIN') && defined('RVCDN') )
 }
 
 // Add prefilter to remove fontello loaded by piwigo 14 search, 
-// this avoids conflicts of loading 2 fontellos
+// this avoids conflicts of loading 2 fontello
 functions_plugins::add_event_handler('loc_begin_index', functions_modus::modus_loc_begin_index(...), 60);
 
 if (defined('RVPT_JQUERY_SRC'))

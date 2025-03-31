@@ -231,7 +231,7 @@
 		font-weight: normal;
 	}
 
-	#menubar DL:hover > DD { /*reset large wifth hover effect*/
+	#menubar DL:hover > DD { /*reset large width hover effect*/
 		display: none;
 	}
 	

@@ -2,7 +2,7 @@
 jQuery(document).ready(function(){
   $("h1").append("<span class='badge-number'>"+{$nb_total}+"</span>");
 
-  function highlighComments() {
+  function highlightComments() {
     jQuery(".checkComment").each(function() {
       var parent = jQuery(this).parent('tr');
       if (jQuery(this).children("input[type=checkbox]").is(':checked')) {
@@ -19,18 +19,18 @@ jQuery(document).ready(function(){
     if (event.target.type !== 'checkbox') {
       jQuery(checkbox).prop('checked', !jQuery(checkbox).prop('checked'));
     }
-    highlighComments();
+    highlightComments();
   });
 
   jQuery("#commentSelectAll").click(function () {
     jQuery(".checkComment input[type=checkbox]").prop('checked', true);
-    highlighComments();
+    highlightComments();
     return false;
   });
 
   jQuery("#commentSelectNone").click(function () {
     jQuery(".checkComment input[type=checkbox]").prop('checked', false);
-    highlighComments();
+    highlightComments();
     return false;
   });
 
@@ -38,7 +38,7 @@ jQuery(document).ready(function(){
     jQuery(".checkComment input[type=checkbox]").each(function() {
       jQuery(this).prop('checked', !$(this).prop('checked'));
     });
-    highlighComments();
+    highlightComments();
     return false;
   });
 

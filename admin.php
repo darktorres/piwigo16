@@ -107,11 +107,11 @@ if (isset($_GET['change_theme']))
 }
 
 // +-----------------------------------------------------------------------+
-// | Synchronize user informations                                         |
+// | Synchronize user information                                          |
 // +-----------------------------------------------------------------------+
 
 // sync_user() is only useful when external authentication is activated
-if ($conf['external_authentification'])
+if ($conf['external_authentication'])
 {
   functions_admin::sync_users();
 }
@@ -322,7 +322,7 @@ $template->assign(
 // | Refresh permissions                                                   |
 // +-----------------------------------------------------------------------+
 
-// Only for pages witch change permissions
+// Only for pages which change permissions
 if (
     in_array($page['page'],
       array(

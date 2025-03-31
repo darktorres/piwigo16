@@ -13,7 +13,7 @@
     <form method="post" action="{$F_ACTION}" class="form-horizontal" name="register_form">
         <div class="panel panel-primary">
             <div class="panel-heading">
-                {'Enter your personnal informations'|@translate}
+                {'Enter your personal information'|@translate}
             </div>
             <div class="panel-body">
               <fieldset>

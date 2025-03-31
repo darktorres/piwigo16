@@ -281,7 +281,7 @@ $this->get_date_where($level).'
 
   /**
    * Assigns the next/previous link to the template with regards to
-   * the currently choosen date.
+   * the currently chosen date.
    */
   protected function build_next_prev()
   {

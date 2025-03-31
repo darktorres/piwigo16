@@ -6,8 +6,8 @@ var str_delete_tags = '{'Delete tags \{%s\}?'|@translate}';
 var str_yes_delete_confirmation = "{'Yes, delete'|@translate}";
 var str_no_delete_confirmation = "{"No, I have changed my mind"|@translate}";
 var str_yes_rename_confirmation = "{'Yes, rename'|@translate}";
-var str_tag_deleted = '{'Tag "%s" succesfully deleted'|@translate}';
-var str_tags_deleted = '{'Tags \{%s\} succesfully deleted'|@translate}';
+var str_tag_deleted = '{'Tag "%s" successfully deleted'|@translate}';
+var str_tags_deleted = '{'Tags \{%s\} successfully deleted'|@translate}';
 var str_already_exist = '{'Tag "%s" already exists'|@translate}';
 var str_tag_created = '{'Tag "%s" created'|@translate}';
 var str_tag_renamed = '{'Tag "%s1" renamed in "%s2"'|@translate}';
@@ -18,7 +18,7 @@ var str_delete_them = '{'Delete them'|@translate}';
 var str_keep_them = '{'Keep them'|@translate}';
 var str_copy = '{' (copy)'|@translate}';
 var str_other_copy = '{' (copy %s)'|@translate}';
-var str_merged_into = '{'Tag(s) \{%s1\} succesfully merged into "%s2"'|@translate}';
+var str_merged_into = '{'Tag(s) \{%s1\} successfully merged into "%s2"'|@translate}';
 var str_and_others_tags = '{'and %s others'|@translate}';
 var str_others_tags_available = '{'%s other tags available...'|@translate}'
 var str_number_photos = '{'%d photos'}'
@@ -245,7 +245,7 @@ if (!$.cookie("pwg_tags_per_page")) {
     </div>
     <div class="pagination-item-container">
     </div>
-    <div class="pagination-arrow rigth">
+    <div class="pagination-arrow right">
       <span class="icon-left-open"></span>
     </div>
   </div>

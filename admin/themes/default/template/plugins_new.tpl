@@ -26,7 +26,7 @@ const str_x_month = "{"%d month"|@translate}";
 const str_x_months = "{"%d months"|@translate}";
 const str_x_year = "{"%d year"|@translate}";
 const str_x_years = "{"%d years"|@translate}";
-const str_from_begining = "{"since the beginning"|@translate}";
+const str_from_beginning = "{"since the beginning"|@translate}";
 {/footer_script}
 
 <div class="titrePage">

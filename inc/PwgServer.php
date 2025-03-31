@@ -103,7 +103,7 @@ Request format: ".@$this->_requestFormat." Response format: ".@$this->_responseF
    *                       WS_TYPE_POSITIVE, WS_TYPE_NOTNULL
    *    @option int|float maxValue (optional)
    * @param description string - a description of the method.
-   * @param include_file string - a file to be included befaore the callback is executed
+   * @param include_file string - a file to be included before the callback is executed
    * @param options array
    *    @option bool hidden (optional) - if true, this method won't be visible by reflection.getMethodList
    *    @option bool admin_only (optional)

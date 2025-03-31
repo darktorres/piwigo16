@@ -357,7 +357,7 @@ if (isset($_SERVER['HTTP_X_MOZ']) and $_SERVER['HTTP_X_MOZ'] == 'prefetch')
 }
 else
 {
-  // don't increment counter if comming from the same picture (actions)
+  // don't increment counter if coming from the same picture (actions)
   if (functions_session::pwg_get_session_var('referer_image_id',0) == $page['image_id'])
   {
     $inc_hit_count = false;
@@ -846,7 +846,7 @@ $infos['INFO_VISITS'] = $picture['current']['hit'];
 $infos['INFO_FILE'] = $picture['current']['file'];
 
 $template->assign($infos);
-$template->assign('display_info', unserialize($conf['picture_informations']));
+$template->assign('display_info', unserialize($conf['picture_information']));
 
 // related tags
 $tags = functions_tag::get_common_tags( array($page['image_id']), -1);
@@ -972,7 +972,7 @@ else
   $template->parse_picture_buttons();
   $template->pparse('picture');
 }
-//------------------------------------------------------------ log informations
+//------------------------------------------------------------ log information
 functions::pwg_log($picture['current']['id'], 'picture');
 include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 ?>

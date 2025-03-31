@@ -82,7 +82,7 @@ if (isset($_GET['installstatus']))
       break;
 
     default:
-      $page['errors'][] = functions::l10n('An error occured during extraction (%s).', htmlspecialchars($_GET['installstatus']));
+      $page['errors'][] = functions::l10n('An error occurred during extraction (%s).', htmlspecialchars($_GET['installstatus']));
   }  
 }
 

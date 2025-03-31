@@ -22,7 +22,7 @@ class ws_functions
 {
   /**
    * Event handler for method invocation security check. Should return a PwgError
-   * if the preconditions are not satifsied for method invocation.
+   * if the preconditions are not satisfied for method invocation.
    */
   static function ws_isInvokeAllowed($res, $methodName, $params)
   {
@@ -33,7 +33,7 @@ class ws_functions
       return $res;
     }
 
-    if ( !functions_user::is_autorize_status(ACCESS_GUEST) and
+    if ( !functions_user::is_authorized_status(ACCESS_GUEST) and
         strpos($methodName,'pwg.session.')!==0 )
     {
       return new PwgError(401, 'Access denied');
@@ -214,7 +214,7 @@ class ws_functions
   }
 
   /**
-   * create a tree from a flat list of categories, no recursivity for high speed
+   * create a tree from a flat list of categories, no recursion for high speed
    */
   static function categories_flatlist_to_tree($categories)
   {
@@ -287,7 +287,7 @@ class ws_functions
         'pwg.getInfos',
         pwg::ws_getInfos(...),
         null,
-        'Returns general informations.',
+        'Returns general information.',
         $ws_functions_root . 'pwg.php',
         array('admin_only'=>true)
       );
@@ -296,7 +296,7 @@ class ws_functions
         'pwg.getCacheSize',
         pwg::ws_getCacheSize(...),
         null,
-        'Returns general informations.',
+        'Returns general information.',
         $ws_functions_root . 'pwg.php',
         array('admin_only'=>true)
       );
@@ -310,7 +310,7 @@ class ws_functions
         'uid' => array('default'=>NULL,
                       'type'=>WS_TYPE_INT|WS_TYPE_POSITIVE),
         ),
-      'Returns general informations.',
+      'Returns general information.',
       $ws_functions_root . 'pwg.php',
       array('admin_only'=>true)
     );
@@ -539,7 +539,7 @@ class ws_functions
         'pwg.session.getStatus',
         pwg::ws_session_getStatus(...),
         null,
-        'Gets information about the current session. Also provides a token useable with admin methods.',
+        'Gets information about the current session. Also provides a token usable with admin methods.',
         $ws_functions_root . 'pwg.php'
       );
 
@@ -606,7 +606,7 @@ class ws_functions
           'data' =>         array(),
           'original_sum' => array(),
           'type' =>         array('default'=>'file',
-                                  'info'=>'Must be "file", for backward compatiblity "high" and "thumb" are allowed.'),
+                                  'info'=>'Must be "file", for backward compatibility "high" and "thumb" are allowed.'),
           'position' =>     array()
           ),
         'Add a chunk of a file.',
@@ -620,7 +620,7 @@ class ws_functions
         array(
           'image_id' => array('type'=>WS_TYPE_ID),
           'type' =>     array('default'=>'file',
-                              'info'=>'Must be "file", for backward compatiblity "high" and "thumb" are allowed.'),
+                              'info'=>'Must be "file", for backward compatibility "high" and "thumb" are allowed.'),
           'sum' =>      array(),
           ),
         'Add or update a file for an existing photo.
@@ -815,7 +815,7 @@ class ws_functions
         array(
           'search' => array('default' => null),
           'additional_output' =>    array('default'=>null,
-                                'info'=>'Comma saparated list (see method description)'),
+                                'info'=>'Comma separated list (see method description)'),
         ),
         'Get albums list as displayed on admin page. <br>
         <b>additional_output</b> controls which data are returned, possible values are:<br>
@@ -1037,7 +1037,7 @@ class ws_functions
           'pwg_token' => array(),
           'category_id' => array('type'=>WS_TYPE_ID),
           ),
-        'Notifiy Piwigo you have finished to upload a set of photos. It will empty the lounge, if any.',
+        'Notify Piwigo you have finished to upload a set of photos. It will empty the lounge, if any.',
         $ws_functions_root . 'pwg_images.php',
         array('admin_only'=>true)
       );
@@ -1176,7 +1176,7 @@ class ws_functions
           'id' =>         array('default'=>null),
           'reset' =>      array('default'=>false,
                                 'type'=>WS_TYPE_BOOL,
-                                'info'=>'If true, all ignored extensions will be reinitilized.'),
+                                'info'=>'If true, all ignored extensions will be reinitialized.'),
           'pwg_token' =>  array(),
         ),
         '<b>Webmaster only.</b> Ignores an extension if it needs update.',
@@ -1337,7 +1337,7 @@ class ws_functions
                                 'type'=>WS_TYPE_ID,
                                 'info'=>'Expects a user_id as value.'),
           'display' =>    array('default'=>'basics',
-                                'info'=>'Comma saparated list (see method description)'),
+                                'info'=>'Comma separated list (see method description)'),
           'filter' =>     array('flags'=>WS_PARAM_OPTIONAL,
                                 'info'=>'Filter by username, email, group'),
           'min_register' => array('flags'=>WS_PARAM_OPTIONAL,
@@ -1599,7 +1599,7 @@ class ws_functions
             'type' => WS_TYPE_INT|WS_TYPE_POSITIVE,
           ),
         ),
-        'Gives an history of who has visited the galery and the actions done in it. Receives parameter.
+        'Gives an history of who has visited the gallery and the actions done in it. Receives parameter.
         <br> <strong>Types </strong> can be : \'none\', \'picture\', \'high\', \'other\' 
         <br> <strong>Date format</strong> is yyyy-mm-dd
         <br> <strong>display_thumbnail</strong> can be : \'no_display_thumbnail\', \'display_thumbnail_classic\', \'display_thumbnail_hoverbox\'',

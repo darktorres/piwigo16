@@ -209,7 +209,7 @@ jQuery(document).ready(function() {
           },
           error: function(message) {
             console.log(message);
-            self.setContent("An error has occured while calculating orphans")
+            self.setContent("An error has occurred while calculating orphans")
           }
         });
       },

@@ -46,7 +46,7 @@ $(document).ready(function () {
   });
   $(window).on('beforeunload', function () {
     if (form_unsaved) {
-      return 'Somes changes are not registered';
+      return 'Some changes are not registered';
     }
   });
   $('#pictureModify').on('submit', function () {

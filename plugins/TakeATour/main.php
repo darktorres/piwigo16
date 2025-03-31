@@ -19,11 +19,11 @@ if (!defined('PHPWG_ROOT_PATH'))
   die('Hacking attempt!');
 }
 
-/** Tour sended via $_POST or $_GET**/
-if ( isset($_REQUEST['submited_tour_path']) and defined('IN_ADMIN') and IN_ADMIN )
+/** Tour sent via $_POST or $_GET**/
+if ( isset($_REQUEST['submitted_tour_path']) and defined('IN_ADMIN') and IN_ADMIN )
 {
   functions::check_pwg_token();
-  functions_session::pwg_set_session_var('tour_to_launch', $_REQUEST['submited_tour_path']);
+  functions_session::pwg_set_session_var('tour_to_launch', $_REQUEST['submitted_tour_path']);
   global $TAT_restart;
   $TAT_restart=true;
 }

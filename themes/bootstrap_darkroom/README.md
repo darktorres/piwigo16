@@ -93,7 +93,7 @@ There is built-in support for a custom Sass build.
 * Select "Custom" style in the theme's configuration
 
 ### Thanks
-* Phil Bayfield for his work on the Bootstrap Default theme, which this theme was initiallly based on as a child theme. It's grown up now.
+* Phil Bayfield for his work on the Bootstrap Default theme, which this theme was initially based on as a child theme. It's grown up now.
 * The Piwigo Team for a great gallery software
 * The Piwigo translation team
 

@@ -58,9 +58,9 @@ jQuery(document).ready(function(){
       <a href="{$category.U_CHILDREN}" class="actionTitle" {*title="{'sub-albums'|@translate}"*}><span class="icon-sitemap tiptip" title="{'sub-albums'|@translate}"></span><span class="iconLegend">{'sub-albums'|@translate}</span></a>
       <a href="{$category.U_MOVE}" class="actionMove"><span class="icon-move tiptip" title="{'Move'|@translate}"></span><span class="iconLegend">{'Move'|@translate}</span></a>
       {if functions_admin::cat_admin_access($category.ID)}
-      <a href="{$category.U_JUMPTO}" class="actionGalery" {*title="{'Visit Gallery'|@translate}"*}><span class="icon-eye tiptip" title="{'Visit Gallery'|@translate}"></span><span class="iconLegend">{'Visit Gallery'|@translate}</span></a>
+      <a href="{$category.U_JUMPTO}" class="actionGallery" {*title="{'Visit Gallery'|@translate}"*}><span class="icon-eye tiptip" title="{'Visit Gallery'|@translate}"></span><span class="iconLegend">{'Visit Gallery'|@translate}</span></a>
       {else}
-      <span href="{$category.U_JUMPTO}" class="actionGalery" {*title="{'This album is private'|@translate}"*}><span class="icon-eye tiptip" title="{'This album is private'|@translate}"></span><span class="iconLegend">{'Visit Gallery'|@translate}</span></span>
+      <span href="{$category.U_JUMPTO}" class="actionGallery" {*title="{'This album is private'|@translate}"*}><span class="icon-eye tiptip" title="{'This album is private'|@translate}"></span><span class="iconLegend">{'Visit Gallery'|@translate}</span></span>
       {/if}
       <a href="{$category.U_ADD_PHOTOS_ALBUM}" class="actionAdd" {*title="{'Add Photos'|@translate}"*}><span class="icon-plus tiptip" title="{'Add Photos'|@translate}"></span><span class="iconLegend">{'Add Photos'|@translate}</span></a>
     </div>

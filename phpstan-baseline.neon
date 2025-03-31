@@ -16603,7 +16603,7 @@ parameters:
 			path: admin/languages_installed.php
 
 		-
-			message: '#^Cannot access offset ''deactivable'' on mixed\.$#'
+			message: '#^Cannot access offset ''deactivatable'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
 			path: admin/languages_installed.php
@@ -51170,7 +51170,7 @@ parameters:
 			path: language/en_UK/admin.lang.php
 
 		-
-			message: '#^Cannot access offset ''Group "%%s" succesfully deleted'' on mixed\.$#'
+			message: '#^Cannot access offset ''Group "%%s" successfully deleted'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: language/en_UK/admin.lang.php
@@ -51206,13 +51206,13 @@ parameters:
 			path: language/en_UK/admin.lang.php
 
 		-
-			message: '#^Cannot access offset ''Group\(s\) \\\\\{%%s1\\\\\} succesfully merged into "%%s2"'' on mixed\.$#'
+			message: '#^Cannot access offset ''Group\(s\) \\\\\{%%s1\\\\\} successfully merged into "%%s2"'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: language/en_UK/admin.lang.php
 
 		-
-			message: '#^Cannot access offset ''Groups \\\\\{%%s\\\\\} succesfully deleted'' on mixed\.$#'
+			message: '#^Cannot access offset ''Groups \\\\\{%%s\\\\\} successfully deleted'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: language/en_UK/admin.lang.php
@@ -51254,7 +51254,7 @@ parameters:
 			path: language/en_UK/admin.lang.php
 
 		-
-			message: '#^Cannot access offset ''Has access to all administration functionnalities\. Can manage both configuration and content\.'' on mixed\.$#'
+			message: '#^Cannot access offset ''Has access to all administration functionalities\. Can manage both configuration and content\.'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: language/en_UK/admin.lang.php
@@ -53984,7 +53984,7 @@ parameters:
 			path: language/en_UK/admin.lang.php
 
 		-
-			message: '#^Cannot access offset ''Tag "%%s" succesfully deleted'' on mixed\.$#'
+			message: '#^Cannot access offset ''Tag "%%s" successfully deleted'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: language/en_UK/admin.lang.php
@@ -54020,7 +54020,7 @@ parameters:
 			path: language/en_UK/admin.lang.php
 
 		-
-			message: '#^Cannot access offset ''Tag\(s\) \\\\\{%%s1\\\\\} succesfully merged into "%%s2"'' on mixed\.$#'
+			message: '#^Cannot access offset ''Tag\(s\) \\\\\{%%s1\\\\\} successfully merged into "%%s2"'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: language/en_UK/admin.lang.php
@@ -54032,7 +54032,7 @@ parameters:
 			path: language/en_UK/admin.lang.php
 
 		-
-			message: '#^Cannot access offset ''Tags \\\\\{%%s\\\\\} succesfully deleted'' on mixed\.$#'
+			message: '#^Cannot access offset ''Tags \\\\\{%%s\\\\\} successfully deleted'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: language/en_UK/admin.lang.php
@@ -56366,7 +56366,7 @@ parameters:
 			path: language/en_UK/common.lang.php
 
 		-
-			message: '#^Cannot access offset ''Accelerate diaporama speed'' on mixed\.$#'
+			message: '#^Cannot access offset ''Accelerate slideshow speed'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: language/en_UK/common.lang.php
@@ -56846,7 +56846,7 @@ parameters:
 			path: language/en_UK/common.lang.php
 
 		-
-			message: '#^Cannot access offset ''Enter your personnal informations'' on mixed\.$#'
+			message: '#^Cannot access offset ''Enter your personal informations'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: language/en_UK/common.lang.php
@@ -57512,7 +57512,7 @@ parameters:
 			path: language/en_UK/common.lang.php
 
 		-
-			message: '#^Cannot access offset ''Reduce diaporama speed'' on mixed\.$#'
+			message: '#^Cannot access offset ''Reduce slideshow speed'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: language/en_UK/common.lang.php
@@ -59006,13 +59006,13 @@ parameters:
 			path: language/en_UK/upgrade.lang.php
 
 		-
-			message: '#^Cannot access offset ''As a precaution, following plugins have been deactivated\. You must check for plugins upgrade before reactiving them\:'' on mixed\.$#'
+			message: '#^Cannot access offset ''As a precaution, following plugins have been deactivated\. You must check for plugins upgrade before reactivating them\:'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: language/en_UK/upgrade.lang.php
 
 		-
-			message: '#^Cannot access offset ''As a precaution, following themes have been deactivated\. You must check for themes upgrade before reactiving them\:'' on mixed\.$#'
+			message: '#^Cannot access offset ''As a precaution, following themes have been deactivated\. You must check for themes upgrade before reactivating them\:'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: language/en_UK/upgrade.lang.php

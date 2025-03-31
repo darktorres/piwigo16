@@ -13,7 +13,7 @@
 
 <form method="post" action="{$F_ACTION}" class="properties" name="register_form">
   <fieldset>
-    <legend>{'Enter your personnal informations'|@translate}</legend>
+    <legend>{'Enter your personal information'|@translate}</legend>
 
     <ul>
       <li>

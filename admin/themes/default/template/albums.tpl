@@ -33,7 +33,7 @@ var delay_autoOpen = {$delay_before_autoOpen}
 const delete_album_with_name = '{'Delete album "%s".'|@translate|escape:javascript}';
 const delete_album_with_subs = '{'Delete album "%s" and its %d sub-albums.'|@translate|escape:javascript}'
 const has_images_associated_outside = '{"delete album and all %d photos, even the %d associated to other albums"|@translate|escape:javascript}';
-const has_images_becomming_orphans = '{'delete album and the %d orphan photos'|@translate|escape:javascript}';
+const has_images_becoming_orphans = '{'delete album and the %d orphan photos'|@translate|escape:javascript}';
 const has_images_recursives = '{'delete only album, not photos'|@translate|escape:javascript}';
 const rename_item = '{'Rename "%s"'|@translate|escape:javascript}';
 
@@ -532,7 +532,7 @@ input[name="position"] {
   pointer-events: none;
 }
 
-.dragging .move-cat-container .move-cat-toogler,
+.dragging .move-cat-container .move-cat-toggler,
 .dragging .move-cat-container .move-cat-action-cont a,
 .dragging .move-cat-container .move-cat-title-container{
   pointer-events: all;

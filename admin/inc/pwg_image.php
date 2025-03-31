@@ -51,7 +51,7 @@ class pwg_image
     $this->image = new $class($source_filepath);
   }
 
-  // Unknow methods will be redirected to image object
+  // Unknown methods will be redirected to image object
   function __call($method, $arguments)
   {
     return call_user_func_array(array($this->image, $method), $arguments);

@@ -631,12 +631,12 @@ class functions_mysqli
    */
   static function do_maintenance_all_tables()
   {
-    global $prefixeTable, $page;
+    global $prefixTable, $page;
 
     $all_tables = array();
 
     // List all tables
-    $query = 'SHOW TABLES LIKE \''.$prefixeTable.'%\'';
+    $query = 'SHOW TABLES LIKE \''.$prefixTable.'%\'';
     $result = self::pwg_query($query);
     while ($row = self::pwg_db_fetch_row($result))
     {
@@ -844,7 +844,7 @@ class functions_mysqli
 
   /**
    * Returns (or send to standard output) the message concerning the 
-   * error occured for the last mysql query.
+   * error occurred for the last mysql query.
    */
   static function my_error($header, $die)
   {

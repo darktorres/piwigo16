@@ -7,7 +7,7 @@
 
 {footer_script}
 const has_images_associated_outside = '{"delete album and all %d photos, even the %d associated to other albums"|@translate|escape:javascript}';
-const has_images_becomming_orphans = '{'delete album and the %d orphan photos'|@translate|escape:javascript}';
+const has_images_becoming_orphans = '{'delete album and the %d orphan photos'|@translate|escape:javascript}';
 const has_images_recursives = '{'delete only album, not photos'|@translate|escape:javascript}';
 const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
 const album_id = {$CAT_ID}
@@ -111,20 +111,20 @@ str_root = '{'Root'|@translate|escape:javascript}';
     </div>
 
     <div 
-      class="cat-modify-representative {if !isset($representant)}icon-file-image{elseif !isset($representant.picture)}icon-dice-solid{/if}" 
-      {if !isset($representant)}title="{'No photos in the current album, no thumbnail available'|@translate}"{/if} 
-      {if isset($representant) && isset($representant.picture)}style="background-image:url('{$representant.picture.src}')"{/if}
+      class="cat-modify-representative {if !isset($representative)}icon-file-image{elseif !isset($representative.picture)}icon-dice-solid{/if}" 
+      {if !isset($representative)}title="{'No photos in the current album, no thumbnail available'|@translate}"{/if} 
+      {if isset($representative) && isset($representative.picture)}style="background-image:url('{$representative.picture.src}')"{/if}
       >
-      {if isset($representant) and ($representant.ALLOW_SET_RANDOM || $representant.ALLOW_SET_RANDOM)}
+      {if isset($representative) and ($representative.ALLOW_SET_RANDOM || $representative.ALLOW_SET_RANDOM)}
       <div class="cat-modify-representative-actions">
-        {if $representant.ALLOW_SET_RANDOM }
-          <a class="refreshRepresentative buttonLike" id="refreshRepresentative" title="{'Find a new representant by random'|@translate}">
+        {if $representative.ALLOW_SET_RANDOM }
+          <a class="refreshRepresentative buttonLike" id="refreshRepresentative" title="{'Find a new representative by random'|@translate}">
             <i class="icon-ccw"></i>
             {'Refresh thumbnail'|@translate}
           </a>
         {/if}
-        {if isset($representant.ALLOW_DELETE)}
-          <a class="deleteRepresentative buttonLike" id="deleteRepresentative" title="{'Delete Representant'|@translate}" style="{if !isset($representant.picture)}display:none{/if}">
+        {if isset($representative.ALLOW_DELETE)}
+          <a class="deleteRepresentative buttonLike" id="deleteRepresentative" title="{'Delete Representative'|@translate}" style="{if !isset($representative.picture)}display:none{/if}">
             <i class="icon-cancel"></i>
             {'Remove thumbnail'|translate}
           </a>
@@ -190,7 +190,7 @@ str_root = '{'Root'|@translate|escape:javascript}';
    </div>
    <div class="cat-modify-footer-end">
     <div class="info-message icon-ok">{'Album updated'|@translate}</div>
-    <div class="info-error icon-cancel">{'An error has occured while saving album settings'|@translate}</div>
+    <div class="info-error icon-cancel">{'An error has occurred while saving album settings'|@translate}</div>
     <span class="buttonLike" id="cat-properties-save"><i class="icon-floppy"></i> {'Save Settings'|@translate}</span>
    </div>
   </div>

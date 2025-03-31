@@ -145,12 +145,12 @@ jQuery.fn.pwgDatepicker = function(settings) {
 
     // set value from linked input
     if (linked) {
-      var splitted = originalValue.split(' ');
-      if (splitted.length == 2 && options.showTimepicker) {
+      var split = originalValue.split(' ');
+      if (split.length == 2 && options.showTimepicker) {
         set(jQuery.datepicker.parseDateTime('yy-mm-dd', 'HH:mm:ss', originalValue), true);
       }
-      else if (splitted[0].length == 10) {
-        set(jQuery.datepicker.parseDate('yy-mm-dd', splitted[0]), true);
+      else if (split[0].length == 10) {
+        set(jQuery.datepicker.parseDate('yy-mm-dd', split[0]), true);
       }
       else {
         set(null, true);

@@ -28,7 +28,7 @@ $('#menubar').lightAccordion({
 
 /* in case we have several infos/errors/warnings display bullets */
 jQuery(document).ready(function() {
-  var eiw = ["infos","erros","warnings", "messages"];
+  var eiw = ["infos","errors","warnings", "messages"];
 
   for (var i = 0; i < eiw.length; i++) {
     var boxType = eiw[i];

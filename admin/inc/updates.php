@@ -598,7 +598,7 @@ class updates
             file_put_contents(PHPWG_ROOT_PATH.$conf['data_location'].'update/log_error.txt', $error);
             
             $page['errors'][] = functions::l10n(
-              'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
+              'An error has occurred during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
               functions_url::get_root_url().$conf['data_location'].'update/log_error.txt'
               );
           }
@@ -606,7 +606,7 @@ class updates
         else
         {
           functions_admin::deltree(PHPWG_ROOT_PATH.$conf['data_location'].'update');
-          $page['errors'][] = functions::l10n('An error has occured during upgrade.');
+          $page['errors'][] = functions::l10n('An error has occurred during upgrade.');
         }
       }
       else

@@ -239,7 +239,7 @@ const guest_id = {$guest_id};
     <div class="pagination-item-container">
     
     </div>
-    <div class="pagination-arrow rigth">
+    <div class="pagination-arrow right">
       <span class="icon-left-open"></span>
     </div>
   </div>

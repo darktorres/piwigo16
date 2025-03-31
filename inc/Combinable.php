@@ -9,7 +9,7 @@
 namespace Piwigo\inc;
 
 /**
- * A Combinable represents a JS or CSS file ready for cobination and minification.
+ * A Combinable represents a JS or CSS file ready for combination and minification.
  */
 class Combinable
 {

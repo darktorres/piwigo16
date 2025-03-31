@@ -9,7 +9,7 @@
 namespace Piwigo\inc;
 
 /**
- * Paramaters for derivative scaling and cropping.
+ * Parameters for derivative scaling and cropping.
  * Instance of this class contained by DerivativeParams class.
  */
 final class SizingParams

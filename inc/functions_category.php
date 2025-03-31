@@ -147,7 +147,7 @@ class functions_category
   }
 
   /**
-   * Retrieves informations about a category.
+   * Retrieves information about a category.
    *
    * @param int $id
    * @return array
@@ -208,7 +208,7 @@ class functions_category
    * Each entry is an array containing
    *  0: name
    *  1: SQL ORDER command
-   *  2: visiblity (true or false)
+   *  2: visibility (true or false)
    *
    * @return array[]
    */
@@ -233,7 +233,7 @@ class functions_category
   }
 
   /**
-   * Assign a template var useable with {html_options} from a list of categories
+   * Assign a template var usable with {html_options} from a list of categories
    *
    * @param array[] $categories (at least id,name,global_rank,uppercats for each)
    * @param int[] $selected ids of selected items

@@ -12,7 +12,7 @@ ul.categoryActions { margin: 0 2px; width: auto; list-style-position:outside;
   padding: 0; text-indent: 0; list-style: none; text-align: center; }
 .content div.titrePage { padding: 0 0 3px; }
 .content div.comment { margin: 0 0 0.5em 0; padding: 0;
-  overflow: hidden; width: 100%;	/* don't ask why. It's a very usefull trick  */ }
+  overflow: hidden; width: 100%;	/* don't ask why. It's a very useful trick  */ }
 
 .content DIV.comment A.illustration {
 	display: block;
@@ -937,7 +937,7 @@ LI.menuLi {
   margin: 5px;
 }
 
-.pagination-arrow.rigth {
+.pagination-arrow.right {
   -moz-transform: scale(-1, 1);
   -webkit-transform: scale(-1, 1);
   -o-transform: scale(-1, 1);
@@ -1187,7 +1187,7 @@ INPUT, SELECT {
 	font-size: 1em;	/* <= some browsers don't set it correctly */
 }
 UL, DL, OL { text-align: left;}
-TABLE { /* horizontaly centered */
+TABLE { /* horizontally centered */
 	margin-left: auto;
 	margin-right: auto;
 }
@@ -1233,7 +1233,7 @@ SELECT.categoryList {
 DIV.comment BLOCKQUOTE {
 	padding: 0.5em;
 	overflow: auto;	/* no solution for IE6 */
-	min-height: 2.75em;	/* fix a Gecko bug whith scrollbar and 1 line only */
+	min-height: 2.75em;	/* fix a Gecko bug with scrollbar and 1 line only */
 }
 
 
@@ -2017,7 +2017,7 @@ a.admin-main:hover {color:#fff;}
 	}
 }
 
-/* Set the width of the menubar for the galery */
+/* Set the width of the menubar for the gallery */
 #menubar {
   width: 205px;
   margin: 0;
@@ -2230,7 +2230,7 @@ h2:lang(en) { text-transform:capitalize; }
 #helpContent P.nextStepLink {text-align:center; font-weight:bold; margin-bottom:20px;}
 
 /**
- * Informations box in administration
+ * Information box in administration
  */
 .infos, .errors, .warnings, .messages {
   text-align: left;
@@ -4459,7 +4459,7 @@ FORM#categoryOrdering p.albumActions .userSeparator {margin:0 5px;}
   display: flex !important;
 }
 
-.move-cat-container .move-cat-toogler {
+.move-cat-container .move-cat-toggler {
   display: flex;
   color: #FFBD4D;
   margin-left: 5px;
@@ -4469,10 +4469,10 @@ FORM#categoryOrdering p.albumActions .userSeparator {margin:0 5px;}
   font-weight: 600;
 }
 
-.move-cat-container .move-cat-toogler .icon-left-open{
+.move-cat-container .move-cat-toggler .icon-left-open{
   transform: rotate(180deg);
 }
-.move-cat-container .move-cat-toogler{
+.move-cat-container .move-cat-toggler{
   color: #ff7700;
   transform: scale(1.4);
 }
@@ -5000,11 +5000,11 @@ input:checked + .slider:before, input:checked + .slider::after {
   }
 }
 
-.notUsable input:checked + .slider.desactivate_disabled:before {
-  animation: desactivate_disabled .4s linear;
+.notUsable input:checked + .slider.deactivate_disabled:before {
+  animation: deactivate_disabled .4s linear;
 }
 
-@keyframes desactivate_disabled {
+@keyframes deactivate_disabled {
   50% {
     -webkit-transform: translateX(28px);
     -ms-transform: translateX(28px);
@@ -6312,7 +6312,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important;
   font-weight:600;
 }
 
-.disabledToggle .move-cat-toogler{
+.disabledToggle .move-cat-toggler{
   color: gray;
   opacity: 0.5;
   pointer-events: none;
@@ -6648,7 +6648,7 @@ color:#FF7B00;
     white-space: nowrap;
 }
 
-.acivity-time-text {
+.activity-time-text {
   font-size: 13px;
   font-weight: bold;
 }
@@ -6730,7 +6730,7 @@ color:#FF7B00;
   border: solid 2px #D4D4D4;
 }
 
-.AddAlbumCancel, .RebameAlbumCancel {
+.AddAlbumCancel, .RenameAlbumCancel {
   color: #3F3E40;
   background-color: #f3f3f3;
 }

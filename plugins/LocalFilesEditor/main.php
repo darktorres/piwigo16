@@ -49,7 +49,7 @@ function localfiles_css_link()
 
 function localfiles_css_link_prefilter($content)
 {
-  $search = '{if isset($theme.DEACTIVABLE) and $theme.DEACTIVABLE}';
+  $search = '{if isset($theme.DEACTIVATABLE) and $theme.DEACTIVATABLE}';
   $replacement = '{if $theme.STATE eq "active"}<a href="admin.php?page=plugin-LocalFilesEditor-css&amp;theme={$theme.ID}" class="dropdown-option icon-brush">{\'Customize CSS\'|translate}</a>{/if}'.$search;
 
   return str_replace($search, $replacement, $content);

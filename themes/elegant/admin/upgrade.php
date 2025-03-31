@@ -4,7 +4,7 @@ use Piwigo\inc\functions;
 
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
-global $prefixeTable, $conf;
+global $prefixTable, $conf;
 
 if (!isset($conf['elegant']))
 {

@@ -28,7 +28,7 @@ $('#syncFiles label').click(function () {
 {if isset($metadata_result)}
 <h3>{$L_RESULT_METADATA}</h3>
 <ul>
-  <li>{$metadata_result.NB_ELEMENTS_DONE} {'photos informations synchronized with files metadata'|@translate}</li>
+  <li>{$metadata_result.NB_ELEMENTS_DONE} {'photos information synchronized with files metadata'|@translate}</li>
   <li>{$metadata_result.NB_ELEMENTS_CANDIDATES} {'photos candidates for metadata synchronization'|@translate}</li>
   <li>{'Used metadata'|@translate} : {$METADATA_LIST}</li>
 </ul>
@@ -53,7 +53,7 @@ $('#syncFiles label').click(function () {
 {/if}
 
 {if not empty($sync_infos)}
-<h3>{'Detailed informations'|@translate}</h3>
+<h3>{'Detailed information'|@translate}</h3>
 <div class="infos">
 <ul>
   {foreach from=$sync_infos item=info}
@@ -74,7 +74,7 @@ $('#syncFiles label').click(function () {
 
 			<li><label><input type="radio" name="sync" value="files" {if 'files'==$introduction.sync}checked="checked"{/if}> {'directories + files'|@translate}</label>
 				<ul style="display:none;padding-left:3em">
-					<li><label><input type="checkbox" name="display_info" value="1" {if $introduction.display_info}checked="checked"{/if}> {'display maximum informations (added albums and photos, deleted albums and photos)'|@translate}</label></li>
+					<li><label><input type="checkbox" name="display_info" value="1" {if $introduction.display_info}checked="checked"{/if}> {'display maximum information (added albums and photos, deleted albums and photos)'|@translate}</label></li>
 					<li><label><input type="checkbox" name="add_to_caddie" value="1" {if $introduction.add_to_caddie}checked="checked"{/if}> {'add new photos to caddie'|@translate}</label></li>
 					<li><label>{'Who can see these photos?'|@translate} <select name="privacy_level">{html_options options=$introduction.privacy_level_options selected=$introduction.privacy_level_selected}</select></label></li>
 				</ul>
@@ -83,7 +83,7 @@ $('#syncFiles label').click(function () {
 	</fieldset>
 
 	<fieldset id="syncMetadata">
-		<legend><span class="icon-hdd icon-red"></span>{'synchronize files metadata with database photos informations'|@translate}</legend>
+		<legend><span class="icon-hdd icon-red"></span>{'synchronize files metadata with database photos information'|@translate}</legend>
 		<label><input type="checkbox" name="sync_meta" {if $introduction.sync_meta}checked="checked"{/if}> {'Synchronize metadata'|@translate} ({$METADATA_LIST})</label>
 		<ul style="padding-left:3em">
 	  		<li>

@@ -33,7 +33,7 @@ $t2 = microtime(true);
 // The magic quote feature has been disabled since php 5.4
 // but function get_magic_quotes_gpc was always replying false.
 // Since php 8 the function get_magic_quotes_gpc is also removed
-// but we stil want to sanitize user input variables.
+// but we still want to sanitize user input variables.
 if(!function_exists('get_magic_quotes_gpc') or !@get_magic_quotes_gpc() )
 {
   function sanitize_mysql_kv(&$v, $k)
@@ -60,7 +60,7 @@ if ( !empty($_SERVER["PATH_INFO"]) )
 
 //
 // Define some basic configuration arrays this also prevents malicious
-// rewriting of language and otherarray values via URI params
+// rewriting of language and other array values via URI params
 //
 $conf = array();
 $page = array(

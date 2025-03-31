@@ -622,7 +622,7 @@ $page['cat_elements_id'] = empty($current_set) ? array() : $current_set;
 // +-----------------------------------------------------------------------+
 
 // $page['start'] contains the number of the first element in its
-// category. For exampe, $page['start'] = 12 means we must show elements #12
+// category. For example, $page['start'] = 12 means we must show elements #12
 // and $page['nb_images'] next elements
 
 if (!isset($_REQUEST['start'])

@@ -30,7 +30,7 @@ use Piwigo\inc\functions_user;
 
 if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
 
-function language_controler_switch()
+function language_controller_switch()
 {
   global $user;
     
@@ -96,7 +96,7 @@ UPDATE '.USER_INFOS_TABLE.'
   }
 }
 
-function language_controler_flags()
+function language_controller_flags()
 {
   global $user, $template, $conf, $page;
   

@@ -88,7 +88,7 @@
                     <label class="font-checkbox">
                         <span class="icon-check"></span>
                         <input type="checkbox" name="fluid_width_col_xxl"{if $theme_config->fluid_width_col_xxl} checked="checked"{/if}>
-                        {'Use 6 colums for viewports >= 1680px'|@translate}
+                        {'Use 6 columns for viewports >= 1680px'|@translate}
                     </label>
                 </li>
             </ul>
@@ -127,9 +127,9 @@
                 <li id="page_header_image">
                     <label>
                         {'Background image'|@translate}
-                        <input type="text" name="page_header_image" size="50" {if $theme_config->page_header_image != ""}value="{$theme_config->page_header_image}"{else}placeholder="{'URL or releative path to the image'|@translate}"{/if}>
+                        <input type="text" name="page_header_image" size="50" {if $theme_config->page_header_image != ""}value="{$theme_config->page_header_image}"{else}placeholder="{'URL or relative path to the image'|@translate}"{/if}>
                     </label>
-                    <span class="info">{'URL or releative path to the image'|@translate}</span>
+                    <span class="info">{'URL or relative path to the image'|@translate}</span>
                 </li>
                 <li id="page_header_navbars">
                     <label class="font-checkbox">

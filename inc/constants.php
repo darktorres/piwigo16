@@ -41,72 +41,72 @@ define('PATTERN_ORDER', '/^(rand(om)?|[a-z_]+(\s+(asc|desc))?)(\s*,\s*(rand(om)?
 
 // Table names
 if (!defined('CATEGORIES_TABLE'))
-  define('CATEGORIES_TABLE', $prefixeTable.'categories');
+  define('CATEGORIES_TABLE', $prefixTable.'categories');
 if (!defined('COMMENTS_TABLE'))
-  define('COMMENTS_TABLE', $prefixeTable.'comments');
+  define('COMMENTS_TABLE', $prefixTable.'comments');
 if (!defined('CONFIG_TABLE'))
-  define('CONFIG_TABLE', $prefixeTable.'config');
+  define('CONFIG_TABLE', $prefixTable.'config');
 if (!defined('FAVORITES_TABLE'))
-  define('FAVORITES_TABLE', $prefixeTable.'favorites');
+  define('FAVORITES_TABLE', $prefixTable.'favorites');
 if (!defined('GROUP_ACCESS_TABLE'))
-  define('GROUP_ACCESS_TABLE', $prefixeTable.'group_access');
+  define('GROUP_ACCESS_TABLE', $prefixTable.'group_access');
 if (!defined('GROUPS_TABLE'))
-  define('GROUPS_TABLE', $prefixeTable.'groups');
+  define('GROUPS_TABLE', $prefixTable.'groups');
 if (!defined('HISTORY_TABLE'))
-  define('HISTORY_TABLE', $prefixeTable.'history');
+  define('HISTORY_TABLE', $prefixTable.'history');
 if (!defined('HISTORY_SUMMARY_TABLE'))
-  define('HISTORY_SUMMARY_TABLE', $prefixeTable.'history_summary');
+  define('HISTORY_SUMMARY_TABLE', $prefixTable.'history_summary');
 if (!defined('IMAGE_CATEGORY_TABLE'))
-  define('IMAGE_CATEGORY_TABLE', $prefixeTable.'image_category');
+  define('IMAGE_CATEGORY_TABLE', $prefixTable.'image_category');
 if (!defined('IMAGES_TABLE'))
-  define('IMAGES_TABLE', $prefixeTable.'images');
+  define('IMAGES_TABLE', $prefixTable.'images');
 if (!defined('SESSIONS_TABLE'))
-  define('SESSIONS_TABLE', $prefixeTable.'sessions');
+  define('SESSIONS_TABLE', $prefixTable.'sessions');
 if (!defined('SITES_TABLE'))
-  define('SITES_TABLE', $prefixeTable.'sites');
+  define('SITES_TABLE', $prefixTable.'sites');
 if (!defined('USER_ACCESS_TABLE'))
-  define('USER_ACCESS_TABLE', $prefixeTable.'user_access');
+  define('USER_ACCESS_TABLE', $prefixTable.'user_access');
 if (!defined('USER_GROUP_TABLE'))
-  define('USER_GROUP_TABLE', $prefixeTable.'user_group');
+  define('USER_GROUP_TABLE', $prefixTable.'user_group');
 if (!defined('USERS_TABLE'))
-  define('USERS_TABLE', isset($conf['users_table']) ? $conf['users_table'] : $prefixeTable.'users' );
+  define('USERS_TABLE', isset($conf['users_table']) ? $conf['users_table'] : $prefixTable.'users' );
 if (!defined('USER_INFOS_TABLE'))
-  define('USER_INFOS_TABLE', $prefixeTable.'user_infos');
+  define('USER_INFOS_TABLE', $prefixTable.'user_infos');
 if (!defined('USER_FEED_TABLE'))
-  define('USER_FEED_TABLE', $prefixeTable.'user_feed');
+  define('USER_FEED_TABLE', $prefixTable.'user_feed');
 if (!defined('RATE_TABLE'))
-  define('RATE_TABLE', $prefixeTable.'rate');
+  define('RATE_TABLE', $prefixTable.'rate');
 if (!defined('USER_AUTH_KEYS_TABLE'))
-  define('USER_AUTH_KEYS_TABLE', $prefixeTable.'user_auth_keys');
+  define('USER_AUTH_KEYS_TABLE', $prefixTable.'user_auth_keys');
 if (!defined('USER_CACHE_TABLE'))
-  define('USER_CACHE_TABLE', $prefixeTable.'user_cache');
+  define('USER_CACHE_TABLE', $prefixTable.'user_cache');
 if (!defined('USER_CACHE_CATEGORIES_TABLE'))
-  define('USER_CACHE_CATEGORIES_TABLE', $prefixeTable.'user_cache_categories');
+  define('USER_CACHE_CATEGORIES_TABLE', $prefixTable.'user_cache_categories');
 if (!defined('CADDIE_TABLE'))
-  define('CADDIE_TABLE', $prefixeTable.'caddie');
+  define('CADDIE_TABLE', $prefixTable.'caddie');
 if (!defined('UPGRADE_TABLE'))
-  define('UPGRADE_TABLE', $prefixeTable.'upgrade');
+  define('UPGRADE_TABLE', $prefixTable.'upgrade');
 if (!defined('SEARCH_TABLE'))
-  define('SEARCH_TABLE', $prefixeTable.'search');
+  define('SEARCH_TABLE', $prefixTable.'search');
 if (!defined('USER_MAIL_NOTIFICATION_TABLE'))
-  define('USER_MAIL_NOTIFICATION_TABLE', $prefixeTable.'user_mail_notification');
+  define('USER_MAIL_NOTIFICATION_TABLE', $prefixTable.'user_mail_notification');
 if (!defined('TAGS_TABLE'))
-  define('TAGS_TABLE', $prefixeTable.'tags');
+  define('TAGS_TABLE', $prefixTable.'tags');
 if (!defined('IMAGE_TAG_TABLE'))
-  define('IMAGE_TAG_TABLE', $prefixeTable.'image_tag');
+  define('IMAGE_TAG_TABLE', $prefixTable.'image_tag');
 if (!defined('PLUGINS_TABLE'))
-  define('PLUGINS_TABLE', $prefixeTable.'plugins');
+  define('PLUGINS_TABLE', $prefixTable.'plugins');
 if (!defined('OLD_PERMALINKS_TABLE'))
-  define('OLD_PERMALINKS_TABLE', $prefixeTable.'old_permalinks');
+  define('OLD_PERMALINKS_TABLE', $prefixTable.'old_permalinks');
 if (!defined('THEMES_TABLE'))
-  define('THEMES_TABLE', $prefixeTable.'themes');
+  define('THEMES_TABLE', $prefixTable.'themes');
 if (!defined('LANGUAGES_TABLE'))
-  define('LANGUAGES_TABLE', $prefixeTable.'languages');
+  define('LANGUAGES_TABLE', $prefixTable.'languages');
 if (!defined('IMAGE_FORMAT_TABLE'))
-  define('IMAGE_FORMAT_TABLE', $prefixeTable.'image_format');
+  define('IMAGE_FORMAT_TABLE', $prefixTable.'image_format');
 if (!defined('ACTIVITY_TABLE'))
-  define('ACTIVITY_TABLE', $prefixeTable.'activity');
+  define('ACTIVITY_TABLE', $prefixTable.'activity');
 if (!defined('LOUNGE_TABLE'))
-  define('LOUNGE_TABLE', $prefixeTable.'lounge');
+  define('LOUNGE_TABLE', $prefixTable.'lounge');
 
 ?>

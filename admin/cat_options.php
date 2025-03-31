@@ -77,7 +77,7 @@ UPDATE '.CATEGORIES_TABLE.'
 
   functions::pwg_activity('album', $_POST['cat_true'], 'edit', array('section'=>$_GET['section'], 'action'=>'falsify'));
 }
-else if (isset($_POST['trueify'])
+else if (isset($_POST['truthify'])
          and isset($_POST['cat_false'])
          and count($_POST['cat_false']) > 0)
 {
@@ -106,13 +106,13 @@ UPDATE '.CATEGORIES_TABLE.'
     case 'representative' :
     {
       // theoretically, all categories in $_POST['cat_false'] contain at
-      // least one element, so Piwigo can find a representant.
-      functions_admin::set_random_representant($_POST['cat_false']);
+      // least one element, so Piwigo can find a representative.
+      functions_admin::set_random_representative($_POST['cat_false']);
       break;
     }
   }
 
-  functions::pwg_activity('album', $_POST['cat_false'], 'edit', array('section'=>$_GET['section'], 'action'=>'trueify'));
+  functions::pwg_activity('album', $_POST['cat_false'], 'edit', array('section'=>$_GET['section'], 'action'=>'truthify'));
 }
 
 // +-----------------------------------------------------------------------+
@@ -247,7 +247,7 @@ SELECT DISTINCT id,name,uppercats,global_rank
 functions_category::display_select_cat_wrapper($query_true,array(),'category_option_true');
 functions_category::display_select_cat_wrapper($query_false,array(),'category_option_false');
 $template->assign('PWG_TOKEN',functions::get_pwg_token());
-$template->assign('ADMIN_PAGE_TITLE', functions::l10n('Properties of abums'));
+$template->assign('ADMIN_PAGE_TITLE', functions::l10n('Properties of albums'));
 
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |

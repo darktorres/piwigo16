@@ -128,7 +128,7 @@ $(".delete-size-check").click( function () {
 {else}
     <a href="{$U_MAINT_UNLOCK_GALLERY}" class="lock-gallery-button icon-lock maintenance-action">{'Unlock gallery'|@translate}</a>
 {/if}
-    <a href="{$U_MAINT_CATEGORIES}" class="icon-folder-open maintenance-action">{'Update albums informations'|@translate}</a>
+    <a href="{$U_MAINT_CATEGORIES}" class="icon-folder-open maintenance-action">{'Update albums information'|@translate}</a>
     <a href="{$U_MAINT_IMAGES}" class="icon-info-circled-1 maintenance-action">{'Update photos information'|@translate}</a>
     <a href="{$U_MAINT_DATABASE}" class="icon-database maintenance-action">{'Repair and optimize database'|@translate}</a>
     <a href="{$U_MAINT_C13Y}" class="icon-ok maintenance-action">{'Reinitialize check integrity'|@translate}</a>

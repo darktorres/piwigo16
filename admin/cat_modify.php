@@ -195,7 +195,7 @@ SELECT DISTINCT
 
 // date creation
 $query = '
-SELECT occured_on
+SELECT occurred_on
   FROM `'.ACTIVITY_TABLE.'`
   WHERE object_id = '.$category['id'].' 
     AND object = "album"
@@ -206,8 +206,8 @@ $result = functions_mysqli::query2array($query);
 if (count($result) > 0) {
   $template->assign(
     array(
-      'INFO_CREATION_SINCE' => functions::time_since($result[0]['occured_on'], 'day', $format=null, $with_text=true, $with_week=true, $only_last_unit=true),
-      'INFO_CREATION' => functions::format_date($result[0]['occured_on'], array('day', 'month','year'))
+      'INFO_CREATION_SINCE' => functions::time_since($result[0]['occurred_on'], 'day', $format=null, $with_text=true, $with_week=true, $only_last_unit=true),
+      'INFO_CREATION' => functions::format_date($result[0]['occurred_on'], array('day', 'month','year'))
       )
     );
 }
@@ -274,22 +274,22 @@ if (!$category['is_virtual'])
 
 }
 
-// representant management
+// representative management
 if ($category['has_images'] or !empty($category['representative_picture_id']))
 {
-  $tpl_representant = array();
+  $tpl_representative = array();
 
-  // picture to display : the identified representant or the generic random
-  // representant ?
+  // picture to display : the identified representative or the generic random
+  // representative ?
   if (!empty($category['representative_picture_id']))
   {
-    $tpl_representant['picture'] = functions_admin::get_category_representant_properties($category['representative_picture_id'], derivative_std_params::IMG_MEDIUM);
+    $tpl_representative['picture'] = functions_admin::get_category_representative_properties($category['representative_picture_id'], derivative_std_params::IMG_MEDIUM);
   }
 
-  // can the admin choose to set a new random representant ?
-  $tpl_representant['ALLOW_SET_RANDOM'] = ($category['has_images'] ? true : false);
+  // can the admin choose to set a new random representative ?
+  $tpl_representative['ALLOW_SET_RANDOM'] = ($category['has_images'] ? true : false);
 
-  // can the admin delete the current representant ?
+  // can the admin delete the current representative ?
   if (
     ($category['has_images']
      and $conf['allow_random_representative'])
@@ -297,9 +297,9 @@ if ($category['has_images'] or !empty($category['representative_picture_id']))
     (!$category['has_images']
      and !empty($category['representative_picture_id'])))
   {
-    $tpl_representant['ALLOW_DELETE'] = true;
+    $tpl_representative['ALLOW_DELETE'] = true;
   }
-  $template->assign('representant', $tpl_representant);
+  $template->assign('representative', $tpl_representative);
 }
 
 if ($category['is_virtual'])

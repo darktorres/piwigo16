@@ -111,7 +111,7 @@ if (isset($_GET['sync_metadata']))
   $page['infos'][] = functions::l10n('Metadata synchronized from file');
 }
 
-//--------------------------------------------------------- update informations
+//--------------------------------------------------------- update information
 if (isset($_POST['submit']))
 {
   functions::check_pwg_token();
@@ -176,7 +176,7 @@ if (isset($_POST['submit']))
   $no_longer_thumbnail_for = array_diff($represented_albums, $_POST['represent']);
   if (count($no_longer_thumbnail_for) > 0)
   {
-    functions_admin::set_random_representant($no_longer_thumbnail_for);
+    functions_admin::set_random_representative($no_longer_thumbnail_for);
   }
 
   $new_thumbnail_for = array_diff($_POST['represent'], $represented_albums);
@@ -192,7 +192,7 @@ UPDATE '.CATEGORIES_TABLE.'
 
   $represented_albums = $_POST['represent'];
 
-  $page['infos'][] = functions::l10n('Photo informations updated');
+  $page['infos'][] = functions::l10n('Photo information updated');
   functions::pwg_activity('photo', $_GET['image_id'], 'edit');
 
   // refresh page cache

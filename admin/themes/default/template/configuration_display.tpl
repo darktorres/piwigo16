@@ -236,7 +236,7 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="picture_informations[author]" {if ($display.picture_informations.author)}checked="checked"{/if}>
+          <input type="checkbox" name="picture_information[author]" {if ($display.picture_information.author)}checked="checked"{/if}>
           {'Author'|translate}
         </label>
       </li>
@@ -244,7 +244,7 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="picture_informations[created_on]" {if ($display.picture_informations.created_on)}checked="checked"{/if}>
+          <input type="checkbox" name="picture_information[created_on]" {if ($display.picture_information.created_on)}checked="checked"{/if}>
           {'Created on'|translate}
         </label>
       </li>
@@ -252,7 +252,7 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="picture_informations[posted_on]" {if ($display.picture_informations.posted_on)}checked="checked"{/if}>
+          <input type="checkbox" name="picture_information[posted_on]" {if ($display.picture_information.posted_on)}checked="checked"{/if}>
           {'Posted on'|translate}
         </label>
       </li>
@@ -260,7 +260,7 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="picture_informations[dimensions]" {if ($display.picture_informations.dimensions)}checked="checked"{/if}>
+          <input type="checkbox" name="picture_information[dimensions]" {if ($display.picture_information.dimensions)}checked="checked"{/if}>
           {'Dimensions'|translate}
         </label>
       </li>
@@ -268,7 +268,7 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="picture_informations[file]" {if ($display.picture_informations.file)}checked="checked"{/if}>
+          <input type="checkbox" name="picture_information[file]" {if ($display.picture_information.file)}checked="checked"{/if}>
           {'File'|translate}
         </label>
       </li>
@@ -276,7 +276,7 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="picture_informations[filesize]" {if ($display.picture_informations.filesize)}checked="checked"{/if}>
+          <input type="checkbox" name="picture_information[filesize]" {if ($display.picture_information.filesize)}checked="checked"{/if}>
           {'Filesize'|translate}
         </label>
       </li>
@@ -284,7 +284,7 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="picture_informations[tags]" {if ($display.picture_informations.tags)}checked="checked"{/if}>
+          <input type="checkbox" name="picture_information[tags]" {if ($display.picture_information.tags)}checked="checked"{/if}>
           {'Tags'|translate}
         </label>
       </li>
@@ -292,7 +292,7 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="picture_informations[categories]" {if ($display.picture_informations.categories)}checked="checked"{/if}>
+          <input type="checkbox" name="picture_information[categories]" {if ($display.picture_information.categories)}checked="checked"{/if}>
           {'Albums'|translate}
         </label>
       </li>
@@ -300,7 +300,7 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="picture_informations[visits]" {if ($display.picture_informations.visits)}checked="checked"{/if}>
+          <input type="checkbox" name="picture_information[visits]" {if ($display.picture_information.visits)}checked="checked"{/if}>
           {'Visits'|translate}
         </label>
       </li>
@@ -308,7 +308,7 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="picture_informations[rating_score]" {if ($display.picture_informations.rating_score)}checked="checked"{/if}>
+          <input type="checkbox" name="picture_information[rating_score]" {if ($display.picture_information.rating_score)}checked="checked"{/if}>
           {'Rating score'|translate}
         </label>
       </li>
@@ -316,7 +316,7 @@
       <li>
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="picture_informations[privacy_level]" {if ($display.picture_informations.privacy_level)}checked="checked"{/if}>
+          <input type="checkbox" name="picture_information[privacy_level]" {if ($display.picture_information.privacy_level)}checked="checked"{/if}>
           {'Who can see this photo?'|translate} <span class="adminOnlyIcon tiptip" title="{'available for administrators only'|translate}"><i class="icon-users"></i> {'administrators'}</span>
         </label>
       </li>

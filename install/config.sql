@@ -28,7 +28,7 @@ INSERT INTO piwigo_config (param,value,comment) VALUES ('nbm_send_mail_as','','S
 INSERT INTO piwigo_config (param,value,comment) VALUES ('nbm_send_detailed_content','true','Send detailed content for notification by mail');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('nbm_complementary_mail_content','','Complementary mail content for notification by mail');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('nbm_send_recent_post_dates','true','Send recent post by dates for notification by mail');
-INSERT INTO piwigo_config (param,value,comment) VALUES ('email_admin_on_new_user','none','Send an email to theadministrators when a user registers');
+INSERT INTO piwigo_config (param,value,comment) VALUES ('email_admin_on_new_user','none','Send an email to the administrators when a user registers');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('email_admin_on_comment','false','Send an email to the administrators when a valid comment is entered');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('email_admin_on_comment_validation','true','Send an email to the administrators when a comment requires validation');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('obligatory_user_mail_address','false','Mail address is obligatory for users');
@@ -51,7 +51,7 @@ INSERT INTO piwigo_config (param,value,comment) VALUES ('picture_navigation_thum
 INSERT INTO piwigo_config (param,value,comment) VALUES ('picture_menu','false','Show menubar on picture page');
 INSERT INTO piwigo_config (param,value,comment)
   VALUES (
-    'picture_informations',
+    'picture_information',
     'a:11:{s:6:"author";b:1;s:10:"created_on";b:1;s:9:"posted_on";b:1;s:10:"dimensions";b:0;s:4:"file";b:0;s:8:"filesize";b:0;s:4:"tags";b:1;s:10:"categories";b:1;s:6:"visits";b:1;s:12:"rating_score";b:1;s:13:"privacy_level";b:1;}',
     'Information displayed on picture page'
   );

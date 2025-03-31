@@ -95,11 +95,11 @@ define('DEFAULT_PREFIX_TABLE', 'piwigo_');
 
 if (isset($_POST['install']))
 {
-  $prefixeTable = $_POST['prefix'];
+  $prefixTable = $_POST['prefix'];
 }
 else
 {
-  $prefixeTable = DEFAULT_PREFIX_TABLE;
+  $prefixTable = DEFAULT_PREFIX_TABLE;
 }
 
 include(PHPWG_ROOT_PATH . 'inc/config_default.php');
@@ -289,19 +289,19 @@ if (isset($_POST['install']))
     functions_install::execute_sqlfile(
       PHPWG_ROOT_PATH.'install/piwigo_structure-mysql.sql',
       DEFAULT_PREFIX_TABLE,
-      $prefixeTable,
+      $prefixTable,
       'mysql'
       );
-    // We fill the tables with basic informations
+    // We fill the tables with basic information
     functions_install::execute_sqlfile(
       PHPWG_ROOT_PATH.'install/config.sql',
       DEFAULT_PREFIX_TABLE,
-      $prefixeTable,
+      $prefixTable,
       'mysql'
       );
 
     $query = '
-INSERT INTO '.$prefixeTable.'config (param,value,comment) 
+INSERT INTO '.$prefixTable.'config (param,value,comment) 
    VALUES (\'secret_key\',md5('.functions_mysqli::pwg_db_cast_to_text(functions_mysqli::DB_RANDOM_FUNCTION.'()').'),
    \'a secret key specific to the gallery for internal use\');';
     functions_mysqli::pwg_query($query);
@@ -379,7 +379,7 @@ $conf[\'db_user\'] = \''.$dbuser.'\';
 $conf[\'db_password\'] = \''.$dbpasswd.'\';
 $conf[\'db_host\'] = \''.$dbhost.'\';
 
-$prefixeTable = \''.$prefixeTable.'\';
+$prefixTable = \''.$prefixTable.'\';
 
 define(\'PHPWG_INSTALLED\', true);
 define(\'PWG_CHARSET\', \'utf-8\');
@@ -432,7 +432,7 @@ $template->assign(
     'F_DB_HOST' => $dbhost,
     'F_DB_USER' => $dbuser,
     'F_DB_NAME' => $dbname,
-    'F_DB_PREFIX' => $prefixeTable,
+    'F_DB_PREFIX' => $prefixTable,
     'F_ADMIN' => $admin_name,
     'F_ADMIN_EMAIL' => $admin_mail,
     'EMAIL' => '<span class="adminEmail">'.$admin_mail.'</span>',

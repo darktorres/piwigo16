@@ -50,7 +50,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result))
 {
   $users_by_id[(int)$row['id']] = array(
     'name' => $row['name'],
-    'anon' => functions_user::is_autorize_status(ACCESS_CLASSIC, $row['status']) ? false : true
+    'anon' => functions_user::is_authorized_status(ACCESS_CLASSIC, $row['status']) ? false : true
   );
 }
 

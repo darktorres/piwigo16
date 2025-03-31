@@ -36,7 +36,7 @@ class functions
   }
 
   /**
-   * returns a float value coresponding to the number of seconds since
+   * returns a float value corresponding to the number of seconds since
    * the unix epoch (1st January 1970) and the microseconds are precised
    * e.g. 1052343429.89276600
    *
@@ -553,7 +553,7 @@ class functions
   {
     global $user;
 
-    // in case of uploadAsync, do not log the automatic login as an independant activity
+    // in case of uploadAsync, do not log the automatic login as an independent activity
     if (isset($_REQUEST['method']) and 'pwg.images.uploadAsync' == $_REQUEST['method'] and 'login' == $action)
     {
       return;
@@ -588,7 +588,7 @@ class functions
 
     if ('autoupdate' == $action)
     {
-      // autoupdate on a plugin can happen anywhere, the "script/method" is not meaningfull
+      // autoupdate on a plugin can happen anywhere, the "script/method" is not meaningful
       unset($details['method']);
       unset($details['script']);
     }
@@ -666,7 +666,7 @@ class functions
 
     $diff = new stdClass();
 
-    //Make sure $date1 is ealier
+    //Make sure $date1 is earlier
     $diff->invert = $date2 < $date1;
     if ($diff->invert)
     {
@@ -1071,7 +1071,7 @@ class functions
   {
     global $conf;
 
-    // with RefeshTime <> 0, only html must be used
+    // with RefreshTime <> 0, only html must be used
     if ($conf['default_redirect_method']=='http'
         and $refresh_time==0
         and !headers_sent()
@@ -1128,7 +1128,7 @@ class functions
   }
 
   /**
-   * check if a theme is installed (directory exsists)
+   * check if a theme is installed (directory exists)
    *
    * @param string $theme_id
    * @return bool
@@ -1309,11 +1309,11 @@ class functions
 
   /**
    * returns a string formated with l10n elements.
-   * it is usefull to "prepare" a text and translate it later
+   * it is useful to "prepare" a text and translate it later
    * @see get_l10n_args()
    *
    * @param array $key_args one l10n_args element or array of l10n_args elements
-   * @param string $sep used when translated elements are concatened
+   * @param string $sep used when translated elements are concatenated
    * @return string
    */
   static function l10n_args($key_args, $sep = "\n")
@@ -1423,7 +1423,7 @@ class functions
   }
 
   /**
-   * Is the config table currentable writeable?
+   * Is the config table currently writeable?
    *
    * @since 14
    *
@@ -1914,17 +1914,17 @@ class functions
    * returns a "secret key" that is to be sent back when a user posts a form
    *
    * @param int $valid_after_seconds - key validity start time from now
-   * @param string $aditionnal_data_to_hash
+   * @param string $additional_data_to_hash
    * @return string
    */
-  static function get_ephemeral_key($valid_after_seconds, $aditionnal_data_to_hash = '')
+  static function get_ephemeral_key($valid_after_seconds, $additional_data_to_hash = '')
   {
     global $conf;
     $time = round(microtime(true), 1);
     return $time.':'.$valid_after_seconds.':'
       .hash_hmac(
         'md5',
-        $time.substr($_SERVER['REMOTE_ADDR'],0,5).$valid_after_seconds.$aditionnal_data_to_hash,
+        $time.substr($_SERVER['REMOTE_ADDR'],0,5).$valid_after_seconds.$additional_data_to_hash,
         $conf['secret_key']);
   }
 
@@ -1932,10 +1932,10 @@ class functions
    * verify a key sent back with a form
    *
    * @param string $key
-   * @param string $aditionnal_data_to_hash
+   * @param string $additional_data_to_hash
    * @return bool
    */
-  static function verify_ephemeral_key($key, $aditionnal_data_to_hash = '')
+  static function verify_ephemeral_key($key, $additional_data_to_hash = '')
   {
     global $conf;
     $time = microtime(true);
@@ -1944,7 +1944,7 @@ class functions
       or $key[0]>$time-(float)$key[1] // page must have been retrieved more than X sec ago
       or $key[0]<$time-3600 // 60 minutes expiration
       or hash_hmac(
-          'md5', $key[0].substr($_SERVER['REMOTE_ADDR'],0,5).$key[1].$aditionnal_data_to_hash, $conf['secret_key']
+          'md5', $key[0].substr($_SERVER['REMOTE_ADDR'],0,5).$key[1].$additional_data_to_hash, $conf['secret_key']
         ) != $key[2]
       )
     {
@@ -2063,7 +2063,7 @@ class functions
   }
 
   /**
-   * check token comming from form posted or get params to prevent csrf attacks.
+   * check token coming from form posted or get params to prevent csrf attacks.
    * if pwg_token is empty action doesn't require token
    * else pwg_token is compare to server token
    *
@@ -3243,7 +3243,7 @@ class functions
   
       if (isset($_POST['mail_address']))
       {
-        // update common user informations
+        // update common user information
         $fields = array($conf['user_fields']['email']);
   
         $data = array();
@@ -3315,7 +3315,7 @@ class functions
   
       if ($conf['allow_user_customization'] or defined('IN_ADMIN'))
       {
-        // update user "additional" informations (specific to Piwigo)
+        // update user "additional" information (specific to Piwigo)
         $fields = array(
           'nb_image_page', 'language',
           'expand', 'show_nb_hits', 'recent_period', 'theme'
@@ -3361,7 +3361,7 @@ class functions
    * @param string $url_redirect
    * @param array $userdata
    */
-  static function load_profile_in_template($url_action, $url_redirect, $userdata, $template_prefixe=null)
+  static function load_profile_in_template($url_action, $url_redirect, $userdata, $template_prefix=null)
   {
     global $template, $conf;
   
@@ -3372,17 +3372,17 @@ class functions
   
     $template->assign(
       array(
-        $template_prefixe.'USERNAME'=>stripslashes($userdata['username']),
-        $template_prefixe.'EMAIL'=>@$userdata['email'],
-        $template_prefixe.'ALLOW_USER_CUSTOMIZATION'=>$conf['allow_user_customization'],
-        $template_prefixe.'ACTIVATE_COMMENTS'=>$conf['activate_comments'],
-        $template_prefixe.'NB_IMAGE_PAGE'=>$userdata['nb_image_page'],
-        $template_prefixe.'RECENT_PERIOD'=>$userdata['recent_period'],
-        $template_prefixe.'EXPAND' =>$userdata['expand'] ? 'true' : 'false',
-        $template_prefixe.'NB_COMMENTS'=>$userdata['show_nb_comments'] ? 'true' : 'false',
-        $template_prefixe.'NB_HITS'=>$userdata['show_nb_hits'] ? 'true' : 'false',
-        $template_prefixe.'REDIRECT' => $url_redirect,
-        $template_prefixe.'F_ACTION'=>$url_action,
+        $template_prefix.'USERNAME'=>stripslashes($userdata['username']),
+        $template_prefix.'EMAIL'=>@$userdata['email'],
+        $template_prefix.'ALLOW_USER_CUSTOMIZATION'=>$conf['allow_user_customization'],
+        $template_prefix.'ACTIVATE_COMMENTS'=>$conf['activate_comments'],
+        $template_prefix.'NB_IMAGE_PAGE'=>$userdata['nb_image_page'],
+        $template_prefix.'RECENT_PERIOD'=>$userdata['recent_period'],
+        $template_prefix.'EXPAND' =>$userdata['expand'] ? 'true' : 'false',
+        $template_prefix.'NB_COMMENTS'=>$userdata['show_nb_comments'] ? 'true' : 'false',
+        $template_prefix.'NB_HITS'=>$userdata['show_nb_hits'] ? 'true' : 'false',
+        $template_prefix.'REDIRECT' => $url_redirect,
+        $template_prefix.'F_ACTION'=>$url_action,
         ));
   
     $template->assign('template_selection', $userdata['theme']);

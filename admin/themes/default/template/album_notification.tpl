@@ -41,7 +41,7 @@ jQuery(document).ready(function() {
     }
     else {
       jQuery(".actionButtons .errors").hide();
-      console.log("form can be submited");
+      console.log("form can be submitted");
     }
   });
 });

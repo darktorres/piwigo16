@@ -531,7 +531,7 @@ INPUT, SELECT {
 	font-size: 1em;	/* <= some browsers don't set it correctly */
 }
 
-TABLE {	/* horizontaly centered */
+TABLE {	/* horizontally centered */
 	margin-left: auto;
 	margin-right: auto;
 }
@@ -737,7 +737,7 @@ INPUT[type="radio"], INPUT[type="checkbox"] {
 	padding: 10px 50px 10px 10px;
 }
 
-/* Informations box */
+/* Information box */
 .infos {
 	color: #002000;
 	background: #98fb98 url(icon/infos.png) no-repeat center right;
@@ -837,7 +837,7 @@ LEGEND {
 }
 
 /* Search in this set button CSS, 
-Needs to be loaded herre because we don't use it on the search pages but on other pages
+Needs to be loaded here because we don't use it on the search pages but on other pages
 it won't be loaded if it goes in the search specific css
 because of this it needs to specifically be added to each theme */
 .mcs-side-results.search-in-set-button {

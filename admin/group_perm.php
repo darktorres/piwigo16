@@ -63,7 +63,7 @@ DELETE
 ;';
   functions_mysqli::pwg_query($query);
 }
-else if (isset($_POST['trueify'])
+else if (isset($_POST['truthify'])
          and isset($_POST['cat_false'])
          and count($_POST['cat_false']) > 0)
 {
@@ -84,7 +84,7 @@ SELECT id
 
   // retrying to authorize a category which is already authorized may cause
   // an error (in SQL statement), so we need to know which categories are
-  // accesible
+  // accessible
   $authorized_ids = array();
 
   $query = '
@@ -100,12 +100,12 @@ SELECT cat_id
   }
 
   $inserts = array();
-  $to_autorize_ids = array_diff($private_uppercats, $authorized_ids);
-  foreach ($to_autorize_ids as $to_autorize_id)
+  $to_authorize_ids = array_diff($private_uppercats, $authorized_ids);
+  foreach ($to_authorize_ids as $to_authorize_id)
   {
     $inserts[] = array(
       'group_id' => $page['group'],
-      'cat_id' => $to_autorize_id
+      'cat_id' => $to_authorize_id
       );
   }
 

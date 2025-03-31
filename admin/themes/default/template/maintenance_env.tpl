@@ -5,7 +5,7 @@
 {footer_script}
 const no_time_elapsed = "{"right now"|@translate}";
 const no_active_plugin = "{"No plugin activated"|@translate}";
-const error_occured = "{"an error happened"|@translate}";
+const error_occurred = "{"an error happened"|@translate}";
 const unit_MB = "{"%s MB"|@translate}"
 {/footer_script}
 

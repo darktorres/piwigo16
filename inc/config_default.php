@@ -114,7 +114,7 @@ $conf['comment_spam_reject'] = true;
 $conf['comment_spam_max_links'] = 3;
 
 // calendar_datefield : date field of table "images" used for calendar
-// catgory
+// category
 $conf['calendar_datefield'] = 'date_creation';
 
 // calendar_show_any : the calendar shows an additional 'any' button in the
@@ -240,7 +240,7 @@ $conf['show_thumbnail_caption'] = true;
 //
 // Warning : setting this parameter to true is CPU consuming. Each time you
 // change the value of this parameter from false to true, an administrator
-// must update categories informations in screen [Admin > General >
+// must update categories information in screen [Admin > General >
 // Maintenance].
 $conf['allow_random_representative'] = false;
 
@@ -286,7 +286,7 @@ $conf['double_password_type_in_admin'] = false;
 // new user account.
 $conf['insensitive_case_logon'] = false;
 
-// how should we check for unicity when adding a photo. Can be 'md5sum' or
+// how should we check for uniqueness when adding a photo. Can be 'md5sum' or
 // 'filename'
 $conf['uniqueness_mode'] = 'md5sum';
 
@@ -352,7 +352,7 @@ $conf['mail_allow_html'] = true;
 // smtp_host: smtp server host
 //  if null, regular mail function is used
 //   format: hoststring[:port]
-//   exemple: smtp.pwg.net:21
+//   example: smtp.pwg.net:21
 // smtp_user/smtp_password: user & password for smtp authentication
 $conf['smtp_host'] = '';
 $conf['smtp_user'] = '';
@@ -577,13 +577,13 @@ $conf['apache_authentication'] = false;
 // delete from piwigo_caddie;
 // delete from piwigo_favorites;
 //
-// All informations contained in these tables and column are related to
+// All information contained in these tables and column are related to
 // piwigo_users table.
 $conf['users_table'] = null;
 
 // If you decide to use external authentication
-// change conf below by $conf['external_authentification'] = true;
-$conf['external_authentification'] = false;
+// change conf below by $conf['external_authentication'] = true;
+$conf['external_authentication'] = false;
 
 // Other tables can be changed, if you define associated constants
 // Example:
@@ -806,7 +806,7 @@ $conf['dashboard_activity_nb_weeks'] = 4;
 // 'none' = don't even display connections of admin users
 $conf['activity_display_connections'] = 'admins_only';
 
-// On album mover page, number of seconds before auto openning album when
+// On album mover page, number of seconds before auto opening album when
 // dragging an album. In milliseconds. 3 seconds by default.
 $conf['album_move_delay_before_auto_opening'] = 3*1000;
 

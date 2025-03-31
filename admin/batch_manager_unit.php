@@ -102,7 +102,7 @@ SELECT id, date_creation
     $datas
     );
 
-  $page['infos'][] = functions::l10n('Photo informations updated');
+  $page['infos'][] = functions::l10n('Photo information updated');
   functions_admin::invalidate_user_cache();
 }
 

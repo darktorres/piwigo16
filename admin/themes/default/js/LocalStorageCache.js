@@ -93,7 +93,7 @@
    * @param $target {jQuery} may have some data attributes (create, default, value)
    * @param options {object}
    *    - value (optional) list of preselected items (ids, or objects with "id" attribute")
-   *    - default (optional) default value which will be forced if the select is emptyed
+   *    - default (optional) default value which will be forced if the select is emptied
    *    - create (optional) allow item user creation
    *    - filter (optional) function called for each select before applying the data
    *      takes two parameters: cache data, options

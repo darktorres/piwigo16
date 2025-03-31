@@ -49,7 +49,7 @@ $my_base_url = functions_url::get_root_url().'admin.php?page=';
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('site_update');
-$tabsheet->select('site_maager');
+$tabsheet->select('site_manager');
 $tabsheet->assign();  
 
 // +-----------------------------------------------------------------------+

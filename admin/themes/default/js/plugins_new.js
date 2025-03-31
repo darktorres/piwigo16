@@ -166,12 +166,12 @@ $(function () {
                 return [60, str_x_years.replace('%d', 5)];
                 break;
             default:
-                return [Number.MAX_SAFE_INTEGER, str_from_begining];
+                return [Number.MAX_SAFE_INTEGER, str_from_beginning];
                 break;
         }
     }
 
-    // The certification filter dosen't include incompatible if the beta-test option is not checked
+    // The certification filter doesn't include incompatible if the beta-test option is not checked
     let minCertification = betaTestPlugins ? -1 : 0;
 
     $('.certification-filter-slider').slider({
@@ -185,7 +185,7 @@ $(function () {
         }
     });
 
-    // Diffrence between two dates, in months
+    // Difference between two dates, in months
     function monthDiff(d1, d2) {
         var months;
         months = (d2.getFullYear() - d1.getFullYear()) * 12;

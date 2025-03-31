@@ -423,7 +423,7 @@ class functions_history
 
     $history_id_last_summarized = $summary_lines[0]['history_id_to'];
 
-    // 2) find the latest history line (and substract the number of lines to keep)
+    // 2) find the latest history line (and subtract the number of lines to keep)
     $query = '
   SELECT
       id

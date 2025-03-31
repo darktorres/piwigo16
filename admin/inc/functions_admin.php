@@ -346,7 +346,7 @@ class functions_admin
   ;';
     functions_mysqli::pwg_query($query);
 
-    // are the photo used as category representant?
+    // are the photo used as category representative?
     $query = '
   SELECT
       id
@@ -391,7 +391,7 @@ class functions_admin
       FAVORITES_TABLE,
       // destruction of the caddie associated with the user
       CADDIE_TABLE,
-      // deletion of piwigo specific informations
+      // deletion of piwigo specific information
       USER_INFOS_TABLE,
       USER_AUTH_KEYS_TABLE
       );
@@ -482,7 +482,7 @@ class functions_admin
       $where_cats = '%s IN('.wordwrap(implode(', ', $ids), 120, "\n").')';
     }
 
-    // find all categories where the setted representative is not possible :
+    // find all categories where the set representative is not possible :
     // the picture does not exist
     $query = '
   SELECT DISTINCT c.id
@@ -492,24 +492,24 @@ class functions_admin
       AND '.sprintf($where_cats, 'c.id').'
       AND i.id IS NULL
   ;';
-    $wrong_representant = functions_mysqli::query2array($query, null, 'id');
+    $wrong_representative = functions_mysqli::query2array($query, null, 'id');
 
-    if (count($wrong_representant) > 0)
+    if (count($wrong_representative) > 0)
     {
       $query = '
   UPDATE '.CATEGORIES_TABLE.'
     SET representative_picture_id = NULL
-    WHERE id IN ('.wordwrap(implode(', ', $wrong_representant), 120, "\n").')
+    WHERE id IN ('.wordwrap(implode(', ', $wrong_representative), 120, "\n").')
   ;';
       functions_mysqli::pwg_query($query);
     }
 
     if (!$conf['allow_random_representative'])
     {
-      // If the random representant is not allowed, we need to find
-      // categories with elements and with no representant. Those categories
+      // If the random representative is not allowed, we need to find
+      // categories with elements and with no representative. Those categories
       // must be added to the list of categories to set to a random
-      // representant.
+      // representative.
       $query = '
   SELECT DISTINCT id
     FROM '.CATEGORIES_TABLE.' INNER JOIN '.IMAGE_CATEGORY_TABLE.'
@@ -520,7 +520,7 @@ class functions_admin
       $to_rand = functions_mysqli::query2array($query, null, 'id');
       if (count($to_rand) > 0)
       {
-        self::set_random_representant($to_rand);
+        self::set_random_representative($to_rand);
       }
     }
   }
@@ -829,10 +829,10 @@ class functions_admin
     WHERE id IN ('.implode(',', $subcats).')';
       functions_mysqli::pwg_query($query);
 
-      // We have to keep permissions consistant: a sub-album can't be
+      // We have to keep permissions consistent: a sub-album can't be
       // permitted to a user or group if its parent album is not permitted to
       // the same user or group. Let's remove all permissions on sub-albums if
-      // it is not consistant. Let's take the following example:
+      // it is not consistent. Let's take the following example:
       //
       // A1        permitted to U1,G1
       // A1/A2     permitted to U1,U2,G1,G2
@@ -842,7 +842,7 @@ class functions_admin
       // A6        permitted to U4
       // A6/A7     permitted to G1
       //
-      // (we consider that it can be possible to start with inconsistant
+      // (we consider that it can be possible to start with inconsistent
       // permission, given that public albums can have hidden permissions,
       // revealed once the album returns to private status)
       //
@@ -859,7 +859,7 @@ class functions_admin
       //
       // 1) we must extract "top albums": A2, A5 and A6
       // 2) for each top album, decide which album is the reference for permissions
-      // 3) remove all inconsistant permissions from sub-albums of each top-album
+      // 3) remove all inconsistent permissions from sub-albums of each top-album
 
       // step 1, search top albums
       $top_categories = array();
@@ -957,7 +957,7 @@ class functions_admin
             $ref_access[] = -1;
           }
 
-          // step 3, remove the inconsistant permissions from sub-albums
+          // step 3, remove the inconsistent permissions from sub-albums
           $query = '
   DELETE
     FROM '.$table.'
@@ -1003,7 +1003,7 @@ class functions_admin
 
   /**
    */
-  static function get_category_representant_properties($image_id, $size = NULL)
+  static function get_category_representative_properties($image_id, $size = NULL)
   {
     $query = '
   SELECT id,representative_ext,path
@@ -1026,11 +1026,11 @@ class functions_admin
   }
 
   /**
-   * Set a new random representant to the categories.
+   * Set a new random representative to the categories.
    *
    * @param int[] $categories
    */
-  static function set_random_representant($categories)
+  static function set_random_representative($categories)
   {
     $datas = array();
     foreach ($categories as $category_id)
@@ -1608,7 +1608,7 @@ class functions_admin
 
   /**
    * Set tags to an image.
-   * Warning: given tags are all tags associated to the image, not additionnal tags.
+   * Warning: given tags are all tags associated to the image, not additional tags.
    *
    * @param int[] $tags
    * @param int $image_id
@@ -2277,7 +2277,7 @@ class functions_admin
   }
 
   /**
-   * Adds the caracter set to a create table sql query.
+   * Adds the character set to a create table sql query.
    * All CREATE TABLE queries must call this function
    *
    * @param string $query
@@ -2441,7 +2441,7 @@ class functions_admin
    * Retrieve data from external URL.
    *
    * @param string $src
-   * @param string|Ressource $dest - can be a file ressource or string
+   * @param string|resource $dest - can be a file resource or string
    * @param array $get_data - data added to request url
    * @param array $post_data - data transmitted with POST
    * @param string $user_agent

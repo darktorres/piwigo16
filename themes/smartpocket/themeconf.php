@@ -36,10 +36,10 @@ if (isset($_GET['slideshow']))
   unset($_GET['slideshow']);
 }
 
-//Retrive all pictures on thumbnails page
+//Retrieve all pictures on thumbnails page
 functions_plugins::add_event_handler('loc_index_thumbnails_selection', functions_smartpocket::sp_select_all_thumbnails(...));
 
-// Retrive all categories on thumbnails page
+// Retrieve all categories on thumbnails page
 functions_plugins::add_event_handler('loc_end_index_category_thumbnails', functions_smartpocket::sp_select_all_categories(...));
 
 // Get better derive parameters for screen size

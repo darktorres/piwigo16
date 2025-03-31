@@ -482,7 +482,7 @@ input:focus + .slider {
   border-left:1px solid #e6e6e6;
 }
 
-.GroupBackgroudSelected{
+.GroupBackgroundSelected{
   background-color:#ffd7ad!important;
 }
 

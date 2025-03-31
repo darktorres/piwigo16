@@ -26,12 +26,12 @@ details. You should have received a copy of the GNU General Public License along
 
 === Changelog ===
 version 1.0.26
-- Removed antiflicker logic as not working in some browsers
+- Removed anti-flicker logic as not working in some browsers
 
 version 1.0.25
 + Support for PIWIGO 13 verified
 + ADMIN: Updated reference to styles from GreyDragon Theme
-+ Added antiflicker logic to improve CLS
++ Added anti-flicker logic to improve CLS
 
 version 1.0.24
 - Removed smarty reference in prefilter function
@@ -48,7 +48,7 @@ version 1.0.22
 version 1.0.21
 + Support for PIWIGO 2.9 and 2.10 verified
 + Deprecated maintain.inc.php
-+ Switched to use FantAwesome from GreyDragon when used
++ Switched to use FontAwesome from GreyDragon when used
 
 version 1.0.20
 + Added "album" class to <li> elements for albums
@@ -144,7 +144,7 @@ version 1.0.3
 - Fixed issue caption overlay partially visible in "stripped" theme
 
 version 1.0.2
-- Fixed issue with save of "Scale thumbnails" settign
+- Fixed issue with save of "Scale thumbnails" setting
 
 version 1.0.1
 - Fixed issue with plugin initialization procedure not being called on first activation

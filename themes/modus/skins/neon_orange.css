@@ -80,7 +80,7 @@ a:hover{
   color:black;
 }
 
-#comentAdd INPUT[type="text"], INPUT[type="password"], #comentAdd SELECT, #comentAdd TEXTAREA, #comments input[type="text"], #comments TEXTAREA{
+#commentAdd INPUT[type="text"], INPUT[type="password"], #commentAdd SELECT, #commentAdd TEXTAREA, #comments input[type="text"], #comments TEXTAREA{
   background-color:#f2f2f2;
   color:black;
 }

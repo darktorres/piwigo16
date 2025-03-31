@@ -342,7 +342,7 @@ a.stat-box:hover {
 .languageDefault {background-color:#555; color:#aaa;}
 .groupError {color: #ffd5dc;background-color: #f22;}
 .group-rename input {color: #999;}
-.GroupBackgroudSelected .Group-name {color: #333 !important;}
+.GroupBackgroundSelected .Group-name {color: #333 !important;}
 .GroupContainer .group_name-editable {background-color: #323232 !important; border: 1px solid #666 !important;}
 .GroupContainer .group-rename .icon-ok {color: #222;}
 
@@ -446,12 +446,12 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {background-co
   background: #111;
 }
 
-.disabledToggle .move-cat-toogler{
+.disabledToggle .move-cat-toggler{
   color: gray !important;
   opacity: 0.5;
   pointer-events: none;
 }
-.move-cat-container.disabledToggle:hover .move-cat-toogler{
+.move-cat-container.disabledToggle:hover .move-cat-toggler{
   opacity: 0.5;
   pointer-events: none;
 }
@@ -702,7 +702,7 @@ input:focus + .slider {
   border-left:1px solid #1a1a1a;
 }
 
-.GroupBackgroudSelected{
+.GroupBackgroundSelected{
   background-color:#f9852c!important;
   box-shadow: none !important;
 }
@@ -1464,7 +1464,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important;
   color:#ccc;
 }
 
-.move-cat-container .move-cat-toogler{
+.move-cat-container .move-cat-toggler{
   color:#ededed;
 }
 
@@ -1726,7 +1726,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important;
     color: #bbbbbb;
 }
 
-.acivity-time-text {
+.activity-time-text {
   font-size: 13px;
   font-weight: bold;
   color: #bbbbbb;

@@ -153,7 +153,7 @@ class pwg
 
   /**
    * API method
-   * Returns general informations about the installation
+   * Returns general information about the installation
    * @param mixed[] $params
    */
   static function ws_getInfos($params, &$service)
@@ -453,7 +453,7 @@ class pwg
   {
     global $conf;
 
-    /* Test Lantency */ 
+    /* Test Latency */ 
     // sleep(1);
     
     $output_lines = array();
@@ -472,7 +472,7 @@ class pwg
       action,
       session_idx,
       ip_address,
-      occured_on,
+      occurred_on,
       details,
       user_agent
     FROM '.ACTIVITY_TABLE.'
@@ -531,7 +531,7 @@ class pwg
       }
       else
       {
-        list($date, $hour) = explode(' ', $row['occured_on']);
+        list($date, $hour) = explode(' ', $row['occurred_on']);
         // New line
         $output_lines[] = array(
           'id' => $line_id,
@@ -751,7 +751,7 @@ class pwg
     functions::check_input_parameter('display_thumbnail', $param, false, '/^('.implode('|', array_keys($display_thumbnails)).')$/');
 
     $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
-    // Display choise are also save to one cookie
+    // Display choice are also save to one cookie
     if (!empty($param['display_thumbnail'])
         and isset($display_thumbnails[$param['display_thumbnail']]))
     {
@@ -767,7 +767,7 @@ class pwg
     // TODO manage inconsistency of having $_POST['image_id'] and
     // $_POST['filename'] simultaneously
 
-    // store seach in database
+    // store search in database
     if (!empty($search))
     {
       // register search rules in database, then they will be available on

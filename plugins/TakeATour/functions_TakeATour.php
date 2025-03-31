@@ -90,7 +90,7 @@ class functions_TakeATour
   static function TAT_no_photo_yet_prefilter($content)
   {
     $search = '<div class="bigButton"><a href="{$next_step_url}">{\'I want to add photos\'|@translate}</a></div>';
-    $replacement = '<div class="bigButton"><a href="{$F_ACTION}?submited_tour_path=tours/first_contact&pwg_token={$pwg_token}">{\'Start the Tour\'|@translate}</a></div>';
+    $replacement = '<div class="bigButton"><a href="{$F_ACTION}?submitted_tour_path=tours/first_contact&pwg_token={$pwg_token}">{\'Start the Tour\'|@translate}</a></div>';
     return(str_replace($search, $replacement, $content));
   }
 }

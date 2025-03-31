@@ -61,7 +61,7 @@ function admintools_add_public_controller()
     $url_self = functions_url::duplicate_picture_url();
     $tpl_vars['IS_PICTURE'] = true;
 
-    // admin can add to caddie and set representattive
+    // admin can add to caddie and set representative
     if ($MultiView->is_admin())
     {
       $template->clear_assign(array(

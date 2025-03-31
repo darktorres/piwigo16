@@ -1,6 +1,6 @@
     <div id="infopanel-left" class="col-lg-6 col-12">
       <!-- Picture infos -->
-      <div id="card-informations" class="card mb-2">
+      <div id="card-information" class="card mb-2">
         <div class="card-body">
           <h5 class="card-title">{'Information'|@translate}</h5>
           <div id="info-content" class="d-flex flex-column">

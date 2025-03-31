@@ -75,7 +75,7 @@ class functions_search
 
   /**
    * Returns search rules stored into a serialized array in "search"
-   * table. Each search rules set is numericaly identified.
+   * table. Each search rules set is numerically identified.
    *
    * @param int $search_id
    * @return array
@@ -147,11 +147,11 @@ class functions_search
         $fields = array_intersect($fields, $search['fields']['allwords']['fields']);
       }
 
-      $cat_fields_dictionnary = array(
+      $cat_fields_dictionary = array(
         'cat-title' => 'name',
         'cat-desc' => 'comment',
       );
-      $cat_fields = array_intersect(array_keys($cat_fields_dictionnary), $search['fields']['allwords']['fields']);
+      $cat_fields = array_intersect(array_keys($cat_fields_dictionary), $search['fields']['allwords']['fields']);
 
       // in the OR mode, request bust be :
       // ((field1 LIKE '%word1%' OR field2 LIKE '%word1%')
@@ -176,7 +176,7 @@ class functions_search
           $cat_field_clauses = array();
           foreach ($cat_fields as $cat_field)
           {
-            $cat_field_clauses[] = $cat_fields_dictionnary[$cat_field]." LIKE '%".$word."%'";
+            $cat_field_clauses[] = $cat_fields_dictionary[$cat_field]." LIKE '%".$word."%'";
           }
 
           // adds brackets around where clauses
@@ -1087,7 +1087,7 @@ class functions_search
    *
    * @param int $search_id
    * @param bool $super_order_by
-   * @param string $images_where optional aditional restriction on images table
+   * @param string $images_where optional additional restriction on images table
    * @return array
    */
   static function get_search_results($search_id, $super_order_by, $images_where='')

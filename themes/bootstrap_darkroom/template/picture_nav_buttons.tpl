@@ -2,14 +2,14 @@
 {if $DISPLAY_NAV_BUTTONS or isset($slideshow)}
 {if isset($slideshow)}
 {if isset($slideshow.U_INC_PERIOD)}
-	<a href="{$slideshow.U_INC_PERIOD}" title="{'Reduce diaporama speed'|@translate}" class="pwg-state-default pwg-button">
+	<a href="{$slideshow.U_INC_PERIOD}" title="{'Reduce slideshow speed'|@translate}" class="pwg-state-default pwg-button">
 	    <i class="fas fa-minus" aria-hiden="true"></i>
 	</a>
 {else}
         <i class="fas fa-minus" aria-hiden="true"></i>
 {/if}
 {if isset($slideshow.U_DEC_PERIOD)}
-	<a href="{$slideshow.U_DEC_PERIOD}" title="{'Accelerate diaporama speed'|@translate}" class="pwg-state-default pwg-button">
+	<a href="{$slideshow.U_DEC_PERIOD}" title="{'Accelerate slideshow speed'|@translate}" class="pwg-state-default pwg-button">
 	    <i class="fas fa-plus" aria-hidden="true"></i>
 	</a>
 {else}

@@ -399,9 +399,9 @@ SELECT
           {
             $theme['parent'] = $val[1];
           }
-          if (preg_match('/["\']activable["\'].*?(true|false)/i', $theme_data, $val))
+          if (preg_match('/["\']activatable["\'].*?(true|false)/i', $theme_data, $val))
           {
-            $theme['activable'] = functions_mysqli::get_boolean($val[1]);
+            $theme['activatable'] = functions_mysqli::get_boolean($val[1]);
           }
           if (preg_match('/["\']mobile["\'].*?(true|false)/i', $theme_data, $val))
           {

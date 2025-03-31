@@ -21,7 +21,7 @@ let max_page = 1;
 let uid_filter;
 const page_ellipsis = '<span>...</span>'
 const page_item = '<a data-page="%d">%d</a>';
-var create_selecter = true;
+var create_selector = true;
 const users_key = "{"Users"|@translate}";
 
 const line_key = "{'%s line'|translate}";
@@ -114,7 +114,7 @@ function get_user_activity(page, uid) {
         beforeSend: () => {
           $('.tab').contents(':not(#-1):not(.loading)').remove();
           $(".loading").show();
-          $('.pagination-arrow.rigth').addClass('unavailable');
+          $('.pagination-arrow.right').addClass('unavailable');
           $('.pagination-arrow.left').addClass('unavailable');
           $(".pagination-item-container").hide();
           $(".user-update-spinner").addClass("icon-spin6");
@@ -599,7 +599,7 @@ function move_to_page(page) {
     get_user_activity(page, uid_filter);
 }
 
-$('.pagination-arrow.rigth').on('click', () => {
+$('.pagination-arrow.right').on('click', () => {
     move_to_page(actual_page + 1);
 })
 
@@ -625,9 +625,9 @@ function updateArrows() {
         $('.pagination-arrow.left').removeClass('unavailable');
     }   
     if (actual_page == max_page) {
-        $('.pagination-arrow.rigth').addClass('unavailable');
+        $('.pagination-arrow.right').addClass('unavailable');
     } else {
-        $('.pagination-arrow.rigth').removeClass('unavailable');
+        $('.pagination-arrow.right').removeClass('unavailable');
     }
 }
 
@@ -676,11 +676,11 @@ $(document).ready(function () {
         }
     });
 
-    jQuery('.user-selecter').selectize();
-    jQuery(".user-selecter")[0].selectize.setValue(null);
+    jQuery('.user-selector').selectize();
+    jQuery(".user-selector")[0].selectize.setValue(null);
 
     jQuery(".cancel-icon").click(function() {
-      jQuery(".user-selecter")[0].selectize.clear(true);
+      jQuery(".user-selector")[0].selectize.clear(true);
       $(".line").css('display', 'flex');
     });
 });
@@ -693,7 +693,7 @@ $(document).ready(function () {
         <div class="select-user">
             <span class="select-user-title"> {'Selected user'|translate} </span>
             
-            <select class="user-selecter" placeholder="{'none'|translate}" single style="width:250px; height: 10px;">
+            <select class="user-selector" placeholder="{'none'|translate}" single style="width:250px; height: 10px;">
             {foreach from=$ulist item=$user}
             <option value="{$user.id}"> <span class='username_filter'>{$user.username}</span><span class='nb_lines_str'> ({if $user.nb_lines == 1}{'%d Activity'|translate:$user.nb_lines}{else}{'%d Activities'|translate:$user.nb_lines}{/if}) </span></option>
             {/foreach}
@@ -701,12 +701,12 @@ $(document).ready(function () {
             
             <span class="icon-cancel cancel-icon"> </span>
         </div>
-        <div class="acivity-time">
-            <span class="acivity-time-text"> {'Activity time from'|translate}</span>
+        <div class="activity-time">
+            <span class="activity-time-text"> {'Activity time from'|translate}</span>
             <span class="start-date">
                 <span class="icon-spin6 animate-spin"></span>
             </span>
-            <span class="acivity-time-text"> {'to'|translate}</span>
+            <span class="activity-time-text"> {'to'|translate}</span>
             <span class="end-date">
                 <span class="icon-spin6 animate-spin"></span>
             </span>
@@ -723,7 +723,7 @@ $(document).ready(function () {
       <div class="pagination-item-container">
       </div>
       <div class="user-update-spinner icon-spin6 animate-spin"></div>
-      <div class="pagination-arrow rigth">
+      <div class="pagination-arrow right">
         <span class="icon-left-open"></span>
       </div>
     </div>
@@ -950,17 +950,17 @@ $(document).ready(function () {
     margin-right: 20px;
 }
 
-.acivity-time {
+.activity-time {
     margin: 0 25px;
 }
 
-.user-selecter {
+.user-selector {
     width: 150px;
 }
 
 
 /* Selectize */
-.selectize-control.single.user-selecter {
+.selectize-control.single.user-selector {
     height: 30px;
 }
 

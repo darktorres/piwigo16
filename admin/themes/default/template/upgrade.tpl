@@ -204,7 +204,7 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
 </fieldset>
 
 <fieldset>
-<legend>{'Upgrade informations'|@translate}</legend>
+<legend>{'Upgrade information'|@translate}</legend>
 <ul>
   {foreach from=$infos item=info}
   <li>{$info}</li>

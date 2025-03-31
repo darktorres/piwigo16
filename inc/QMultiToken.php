@@ -56,7 +56,7 @@ class QMultiToken
 
   /**
   * Parses the input query string by tokenizing the input, generating the modifiers (and/or/not/quotation/wildcards...).
-  * Recursivity occurs when parsing ()
+  * Recursion occurs when parsing ()
   * @param string $q the actual query to be parsed
   * @param int $qi the character index in $q where to start parsing
   * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
@@ -282,7 +282,7 @@ class QMultiToken
         $sub = new QMultiToken;
         $sub->tokens = array_splice($this->tokens, $i, $term_count);
 
-        // rewrite ourseleves as a (b c d)
+        // rewrite ourselves as a (b c d)
         array_splice($this->tokens, $i, 0, array($sub));
         $sub->modifier = $sub->tokens[0]->modifier & functions_search::QST_OR;
         $sub->tokens[0]->modifier &= ~functions_search::QST_OR;

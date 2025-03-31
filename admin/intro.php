@@ -270,12 +270,12 @@ if (!isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity_
 
   $query = '
   SELECT
-      DATE_FORMAT(occured_on , \'%Y-%m-%d\') AS activity_day,
+      DATE_FORMAT(occurred_on , \'%Y-%m-%d\') AS activity_day,
       object,
       action,
       COUNT(*) AS activity_counter
     FROM `'.ACTIVITY_TABLE.'`
-    WHERE occured_on >= \''.$date_string.'\'
+    WHERE occurred_on >= \''.$date_string.'\'
     GROUP BY activity_day, object, action
   ;';
   $activity_actions = functions_mysqli::query2array($query);

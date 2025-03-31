@@ -11,7 +11,7 @@ namespace Piwigo\inc;
 class functions_metadata
 {
   /**
-   * returns informations from IPTC metadata, mapping is done in this function.
+   * returns information from IPTC metadata, mapping is done in this function.
    *
    * @param string $filename
    * @param array $map
@@ -116,7 +116,7 @@ class functions_metadata
   }
 
   /**
-   * returns informations from EXIF metadata, mapping is done in this function.
+   * returns information from EXIF metadata, mapping is done in this function.
    *
    * @param string $filename
    * @param array $map

@@ -353,7 +353,7 @@ class menubar
     else
     {
       $template->assign('USERNAME', stripslashes($user['username']));
-      if (functions_user::is_autorize_status(ACCESS_CLASSIC))
+      if (functions_user::is_authorized_status(ACCESS_CLASSIC))
       {
         $template->assign('U_PROFILE', functions_url::get_root_url().'profile.php');
       }

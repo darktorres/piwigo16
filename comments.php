@@ -426,7 +426,7 @@ $template->assign('navbar', $navbar);
 
 if (count($comments) > 0)
 {
-  // retrieving element informations
+  // retrieving element information
   $query = '
 SELECT *
   FROM '.IMAGES_TABLE.'
@@ -434,7 +434,7 @@ SELECT *
 ;';
   $elements = functions_mysqli::query2array($query, 'id');
 
-  // retrieving category informations
+  // retrieving category information
   $query = 'SELECT id, name, permalink, uppercats
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $category_ids).')';

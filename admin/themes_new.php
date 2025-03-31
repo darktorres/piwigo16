@@ -100,7 +100,7 @@ if (isset($_GET['installstatus']))
 
     default:
       $page['errors'][] = functions::l10n(
-        'An error occured during extraction (%s).',
+        'An error occurred during extraction (%s).',
         htmlspecialchars($_GET['installstatus'])
         );
   }  

@@ -14,7 +14,7 @@ $(window).bind("load", function() {
       screenImage.css('width', (imageW * size / imageH)+'px');
     } else {
       screenImage.css('width', size+'px');
-      screenImage.css('heigth', (imageH * size / imageW)+'px');
+      screenImage.css('height', (imageH * size / imageW)+'px');
     }
   })
 })

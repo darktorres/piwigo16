@@ -310,7 +310,7 @@ final class DerivativeImage
   }
 
   /**
-   * Returns literal size: $widthx$height.
+   * Returns literal size: $width x $height.
    *
    * @return string
    */
@@ -325,7 +325,7 @@ final class DerivativeImage
 
   /**
    * @param int $maxw
-   * @param int $mawh
+   * @param int $maxh
    * @return int[]
    */
   function get_scaled_size($maxw, $maxh)

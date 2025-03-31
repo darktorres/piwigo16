@@ -31,7 +31,7 @@ SELECT COUNT(rate) AS count
   $template->assign('rate_summary', $rate_summary);
 
   $user_rate = null;
-  if ($conf['rate_anonymous'] or functions_user::is_autorize_status(ACCESS_CLASSIC) )
+  if ($conf['rate_anonymous'] or functions_user::is_authorized_status(ACCESS_CLASSIC) )
   {
     if ($rate_summary['count']>0)
     {
@@ -40,7 +40,7 @@ SELECT COUNT(rate) AS count
       WHERE element_id = '.$page['image_id'] . '
       AND user_id = '.$user['id'] ;
 
-      if ( !functions_user::is_autorize_status(ACCESS_CLASSIC) )
+      if ( !functions_user::is_authorized_status(ACCESS_CLASSIC) )
       {
         $ip_components = explode('.', $_SERVER['REMOTE_ADDR']);
         if ( count($ip_components)>3 )

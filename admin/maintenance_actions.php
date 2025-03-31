@@ -59,7 +59,7 @@ switch ($action)
     functions_admin::update_category('all');
     functions_admin::update_global_rank();
     functions_admin::invalidate_user_cache(true);
-    $page['infos'][] = sprintf('%s : %s', functions::l10n('Update albums informations'), functions::l10n('action successfully performed.'));
+    $page['infos'][] = sprintf('%s : %s', functions::l10n('Update albums information'), functions::l10n('action successfully performed.'));
     break;
   }
   case 'images' :

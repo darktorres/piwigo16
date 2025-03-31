@@ -7,7 +7,7 @@ var AdminTools = function($) {
 
   var $ato = $('#ato_header'),
       $ato_closed = $('#ato_header_closed'),
-      ato_height = 28; // normal height, real height conputed on init()
+      ato_height = 28; // normal height, real height computed on init()
 
   // move to whole page down or up
   function moveBody(dir, anim) {
@@ -106,7 +106,7 @@ var AdminTools = function($) {
 
   // attach jquery handlers
   this.init = function(open) {
-    $('body').prepend($ato); // ensure the bar is at the begining
+    $('body').prepend($ato); // ensure the bar is at the beginning
     
     $ato.show();
     ato_height = $ato.height();

@@ -94,7 +94,7 @@ class functions_LocalFilesEditor
 
   /**
    * returns dirs and subdirs
-   * retun array
+   * return array
    * @param string
    */
   static function get_rec_dirs($path='')

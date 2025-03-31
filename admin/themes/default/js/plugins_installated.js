@@ -93,7 +93,7 @@ function activatePlugin(id) {
     })
 }
 
-function disactivatePlugin(id) {
+function deactivatePlugin(id) {
     $("#"+id+" .switch").attr("disabled", true);
 
     $.ajax({
@@ -316,7 +316,7 @@ $(document).ready(function () {
                 $(this).parent().parent().find(".pluginUnavailableAction").removeClass("pluginUnavailableAction").addClass("pluginActionLevel1");
             }
         } else {
-            disactivatePlugin($(this).parent().parent().attr("id"))
+            deactivatePlugin($(this).parent().parent().attr("id"))
 
             $(this).parent().parent().removeClass("plugin-active").addClass("plugin-inactive");
             $(this).parent().parent().find(".pluginActionLevel1").removeClass("pluginActionLevel1").addClass("pluginUnavailableAction");
@@ -326,7 +326,7 @@ $(document).ready(function () {
       })
     } else {
       $(".pluginMiniBox").addClass("notUsable");
-      $(".plugin-active").find(".slider").addClass("desactivate_disabled");
+      $(".plugin-active").find(".slider").addClass("deactivate_disabled");
       $(".plugin-inactive").find(".slider").addClass("activate_disabled");
       $(".switch input").on("click", function (event) {
         $(this).addClass("disabled");
@@ -341,7 +341,7 @@ $(document).ready(function () {
 
         setTimeout(function(){
           $(".switch input").removeClass("disabled");
-        }, 400); //Same duration as the animation "desactivate_disabled" in css
+        }, 400); //Same duration as the animation "deactivate_disabled" in css
       });
     }
 

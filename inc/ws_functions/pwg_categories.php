@@ -396,11 +396,11 @@ class pwg_categories
       }
       elseif ($conf['allow_random_representative'])
       {
-        // searching a random representant among elements in sub-categories
+        // searching a random representative among elements in sub-categories
         $image_id = functions_category::get_random_image_in_category($row);
       }
       else
-      { // searching a random representant among representant of sub-categories
+      { // searching a random representative among representative of sub-categories
         if ($row['count_categories']>0 and $row['count_images']>0)
         {
           $query = '
@@ -481,7 +481,7 @@ class pwg_categories
           {
             if ($row['id'] == $category['representative_picture_id'])
             {
-              // searching a random representant among elements in sub-categories
+              // searching a random representative among elements in sub-categories
               $image_id = functions_category::get_random_image_in_category($category);
 
               if (isset($image_id) and !in_array($image_id, $image_ids))
@@ -1047,7 +1047,7 @@ class pwg_categories
       return new PwgError(401, 'not permitted');
     }
 
-    functions_admin::set_random_representant(array($params['category_id']));
+    functions_admin::set_random_representative(array($params['category_id']));
 
     functions::pwg_activity('album', $params['category_id'], 'edit');
 
@@ -1059,7 +1059,7 @@ class pwg_categories
   ;';
     $category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
-    return functions_admin::get_category_representant_properties($category['representative_picture_id'], derivative_std_params::IMG_SMALL);
+    return functions_admin::get_category_representative_properties($category['representative_picture_id'], derivative_std_params::IMG_SMALL);
   }
 
   /**

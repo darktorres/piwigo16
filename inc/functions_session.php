@@ -66,7 +66,7 @@ class functions_session
    * Called by PHP session manager, always return true.
    *
    * @param string $path
-   * @param sring $name
+   * @param string $name
    * @return true
    */
   static function pwg_session_open($path, $name)
@@ -133,7 +133,7 @@ class functions_session
    * Called by PHP session manager, writes data in the sessions table.
    *
    * @param string $session_id
-   * @param sring $data
+   * @param string $data
    * @return true
    */
   static function pwg_session_write($session_id, $data)

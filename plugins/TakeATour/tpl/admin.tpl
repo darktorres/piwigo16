@@ -54,7 +54,7 @@ jQuery(".showDetails a").click(function() {
     </div>
     <div class="pluginActions">
       <div>
-        <a href="{$F_ACTION}?submited_tour_path=tours/{$tour.id}&amp;pwg_token={$pwg_token}">{'Start the Tour'|translate} <i class="icon-right"></i></a>
+        <a href="{$F_ACTION}?submitted_tour_path=tours/{$tour.id}&amp;pwg_token={$pwg_token}">{'Start the Tour'|translate} <i class="icon-right"></i></a>
       </div>
     </div>
   </div> {*<!-- pluginMiniBox -->*}
@@ -69,7 +69,7 @@ jQuery(".showDetails a").click(function() {
       </tr>
       <tr class="pluginActions">
         <td>
-          <a href="{$F_ACTION}?submited_tour_path=tours/{$tour.id}&amp;pwg_token={$pwg_token}">{'Start the Tour'|translate} <i class="icon-right"></i></a>
+          <a href="{$F_ACTION}?submitted_tour_path=tours/{$tour.id}&amp;pwg_token={$pwg_token}">{'Start the Tour'|translate} <i class="icon-right"></i></a>
         </td>
       </tr>
     </table>

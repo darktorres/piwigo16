@@ -57,17 +57,17 @@ foreach($languages->fs_languages as $language_id => $language)
   if (in_array($language_id, array_keys($languages->db_languages)))
   {
     $language['state'] = 'active';
-    $language['deactivable'] = true;
+    $language['deactivatable'] = true;
 
     if (count($languages->db_languages) <= 1)
     {
-      $language['deactivable'] = false;
+      $language['deactivatable'] = false;
       $language['deactivate_tooltip'] = functions::l10n('Impossible to deactivate this language, you need at least one language.');
     }
 
     if ($language_id == $default_language)
     {
-      $language['deactivable'] = false;
+      $language['deactivatable'] = false;
       $language['deactivate_tooltip'] = functions::l10n('Impossible to deactivate this language, first set another language as default.');
     }
   }

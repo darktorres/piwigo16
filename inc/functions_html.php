@@ -15,15 +15,15 @@ class functions_html
   /**
    * Generates breadcrumb from categories list.
    * Categories string returned contains categories as given in the input
-   * array $cat_informations. $cat_informations array must be an array
+   * array $cat_information. $cat_information array must be an array
    * of array( id=>?, name=>?, permalink=>?). If url input parameter is null,
    * returns only the categories name without links.
    *
-   * @param array $cat_informations
+   * @param array $cat_information
    * @param string|null $url
    * @return string
    */
-  static function get_cat_display_name($cat_informations, $url='')
+  static function get_cat_display_name($cat_information, $url='')
   {
     global $conf;
 
@@ -31,7 +31,7 @@ class functions_html
     $output = '';
     $is_first=true;
 
-    foreach ($cat_informations as $cat)
+    foreach ($cat_information as $cat)
     {
       is_array($cat) or trigger_error(
           'get_cat_display_name wrong type for category ', E_USER_WARNING

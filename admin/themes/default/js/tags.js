@@ -318,7 +318,7 @@ function removeTag(id, name) {
             updateSearchInfo();
             updatePaginationMenu();
           } else {
-            showError('A problem has occured')
+            showError('A problem has occurred')
           }
         }
       })
@@ -941,9 +941,9 @@ function updateArrows() {
   }
 
   if (actualPage == getNumberPages()) {
-    $('.pagination-arrow.rigth').addClass('unavailable');
+    $('.pagination-arrow.right').addClass('unavailable');
   } else {
-    $('.pagination-arrow.rigth').removeClass('unavailable');
+    $('.pagination-arrow.right').removeClass('unavailable');
   }
 }
 
@@ -952,9 +952,9 @@ function getNumberPages() {
   return Math.floor((dataVisible - 1) / per_page) + 1;
 }
 
-function movePage(toRigth = true) {
+function movePage(toRight = true) {
   $(".tag-box").removeClass("edit-name");
-  if (toRigth) {
+  if (toRight) {
     if (actualPage < getNumberPages()) {
       actualPage++;
       updatePaginationMenu();
@@ -1023,7 +1023,7 @@ function tagToDisplay() {
       .slice((actualPage-1)*per_page, (actualPage)*per_page);
 } 
 
-$('.pagination-arrow.rigth').on('click', () => {
+$('.pagination-arrow.right').on('click', () => {
   movePage();
 })
 

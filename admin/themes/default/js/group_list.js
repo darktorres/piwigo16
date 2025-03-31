@@ -162,7 +162,7 @@ var setupGroupBox = function (groupBox) {
 
   /* Change background color of group block if checked in selection mode */
   groupBox.find(".Group-checkbox input[type='checkbox']").change(function () {
-    toogleSelection(id, groupBox.find(".Group-checkbox input[type='checkbox']").is(":checked"));
+    toggleSelection(id, groupBox.find(".Group-checkbox input[type='checkbox']").is(":checked"));
   });
   groupBox.find(".Group-checkbox input[type='checkbox']").attr("checked", false)
 
@@ -224,11 +224,11 @@ var setupGroupBox = function (groupBox) {
 
 };
 
-var toogleSelection = function(group_id, toggle) {
+var toggleSelection = function(group_id, toggle) {
   groupBox = $("#group-"+group_id);
   if (toggle) {
     groupBox.find(".Group-checkbox input").attr("checked", true);
-    groupBox.addClass("GroupBackgroudSelected");
+    groupBox.addClass("GroupBackgroundSelected");
     groupBox.find(".icon-users-1").addClass("OrangeIcon");
     groupBox.find(".group_number_users").addClass("OrangeFont");
 
@@ -245,14 +245,14 @@ var toogleSelection = function(group_id, toggle) {
     item.appendTo(".DeleteGroupList");
     item.find("a").on("click", function () {
       groupBox.find(".Group-checkbox input").attr("checked", false);
-      toogleSelection(group_id);
+      toggleSelection(group_id);
     });
     updateSelectionPanel();
     option = $('<option value="'+group_id+'">'+groupBox.find("#group_name").html()+'</option>')
     option.appendTo("#MergeOptionsChoices");
   } else {
     groupBox.find(".Group-checkbox input").attr("checked", false);
-    groupBox.removeClass("GroupBackgroudSelected");
+    groupBox.removeClass("GroupBackgroundSelected");
     groupBox.find(".icon-users-1").removeClass("OrangeIcon");
     groupBox.find(".group_number_users").removeClass("OrangeFont");
     $(".DeleteGroupList div").each(function () {
@@ -583,7 +583,7 @@ var buttonUnavailable = function(button) {
 }
 
 /*-------
- Merge function on button's pannel
+ Merge function on button's panel
  -------*/
 
 $('.ConfirmMergeButton').on("click", function() {
@@ -622,7 +622,7 @@ $('.ConfirmMergeButton').on("click", function() {
             $(this).remove();
           }))
         })
-        toogleSelection(dest_grp, false)
+        toggleSelection(dest_grp, false)
         $(".DeleteGroupList").html("");
         $("#MergeOptionsChoices").html("");
 
@@ -654,7 +654,7 @@ $('.ConfirmMergeButton').on("click", function() {
 })
 
 /*-------
- Delete function on button's pannel
+ Delete function on button's panel
  -------*/
 
 $('.ConfirmDeleteButton').on("click", function() {

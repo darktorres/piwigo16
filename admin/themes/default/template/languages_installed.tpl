@@ -35,7 +35,7 @@ $(".delete-lang-button").each(function() {
     <div class="languageActions">
       <div>
       {if $language_state == 'active'}
-        {if $language.deactivable}
+        {if $language.deactivatable}
       <a href="{$language.u_action}&amp;action=deactivate" class="tiptip" title="{'Forbid this language to users'|@translate}">{'Deactivate'|@translate}</a>
         {else}
       <span title="{$language.deactivate_tooltip}">{'Deactivate'|@translate}</span>

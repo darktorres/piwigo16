@@ -110,12 +110,12 @@ class ThemeController {
         }
 
         if (isset($pwg_loaded_plugins['language_switch'])) {
-            functions_plugins::add_event_handler('loc_end_search', language_controler_flags(...), 95 );
-            functions_plugins::add_event_handler('loc_end_identification', language_controler_flags(...), 95 );
-            functions_plugins::add_event_handler('loc_end_tags', language_controler_flags(...), 95 );
-            functions_plugins::add_event_handler('loc_begin_about', language_controler_flags(...), 95 );
-            functions_plugins::add_event_handler('loc_end_register', language_controler_flags(...), 95 );
-            functions_plugins::add_event_handler('loc_end_password', language_controler_flags(...), 95 );
+            functions_plugins::add_event_handler('loc_end_search', language_controller_flags(...), 95 );
+            functions_plugins::add_event_handler('loc_end_identification', language_controller_flags(...), 95 );
+            functions_plugins::add_event_handler('loc_end_tags', language_controller_flags(...), 95 );
+            functions_plugins::add_event_handler('loc_begin_about', language_controller_flags(...), 95 );
+            functions_plugins::add_event_handler('loc_end_register', language_controller_flags(...), 95 );
+            functions_plugins::add_event_handler('loc_end_password', language_controller_flags(...), 95 );
         }
 
         if (isset($pwg_loaded_plugins['exif_view'])) {

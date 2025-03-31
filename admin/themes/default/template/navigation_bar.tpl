@@ -23,11 +23,11 @@
   </div>
 
   {if isset($navbar.URL_NEXT)}
-  <a href="{$navbar.URL_NEXT}" class='pagination-arrow rigth' rel="next">
+  <a href="{$navbar.URL_NEXT}" class='pagination-arrow right' rel="next">
     <span class="icon-left-open"></span>
   </a>
   {else}
-  <a class='pagination-arrow rigth unavailable'>
+  <a class='pagination-arrow right unavailable'>
     <span class="icon-left-open"></span>
   </a>
   {/if}

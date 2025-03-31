@@ -241,7 +241,7 @@ class pwg_images
 
       if (!file_put_contents($output_filepath, $string, FILE_APPEND))
       {
-        return new PwgError(500, '[merge_chunks] error while writting chunks for '.$output_filepath);
+        return new PwgError(500, '[merge_chunks] error while writing chunks for '.$output_filepath);
       }
 
       unlink($chunk);
@@ -1067,7 +1067,7 @@ class pwg_images
     if (false === $bytes_written)
     {
       return new PwgError(500,
-        'an error has occured while writting chunk '.$params['position'].' for '.$params['type']
+        'an error has occurred while writing chunk '.$params['position'].' for '.$params['type']
         );
     }
   }
@@ -2552,7 +2552,7 @@ class pwg_images
     }
 
     // the list of images moved from the lounge might not be the same than
-    // $image_ids (canbe a subset or more image_ids from another upload too)
+    // $image_ids (can be a subset or more image_ids from another upload too)
     $moved_from_lounge = functions_admin::empty_lounge();
 
     $query = '

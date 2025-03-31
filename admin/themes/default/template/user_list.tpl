@@ -320,9 +320,9 @@ $(document).ready(function() {
       <div class="user-header-col user-header-status">
         <span>{'Status'|@translate}</span>
       </div>
-      <!-- email adress -->
+      <!-- email address -->
       <div class="user-header-col user-header-email not-in-selection-mode">
-        <span>{'Email Adress'|@translate}</span>
+        <span>{'Email Address'|@translate}</span>
       </div>
       {* <!-- groups -->
       <div class="user-header-col user-header-groups">
@@ -357,7 +357,7 @@ $(document).ready(function() {
         <div class="pagination-item-container">
         </div>
         <div class="user-update-spinner icon-spin6 animate-spin"></div> 
-        <div class="pagination-arrow rigth">
+        <div class="pagination-arrow right">
           <span class="icon-left-open"></span>
         </div>
       </div>
@@ -631,7 +631,7 @@ $(document).ready(function() {
           </div>
           <div class="user-property-username">
             <span class="edit-username-title"><!-- Name (Jessy Pinkman) --></span>
-            <span class="edit-username-specifier"><!-- You specifire (you) --></span>
+            <span class="edit-username-specifier"><!-- You specifier (you) --></span>
             <span class="edit-username icon-pencil"></span>
           </div>
           <div class="user-property-username-change">
@@ -672,14 +672,14 @@ $(document).ready(function() {
             <p>{'Properties'|@translate}</p>
           </div>
           <div class="user-property-email">
-            <p class="user-property-label">{'Email Adress'|@translate}</p>
+            <p class="user-property-label">{'Email Address'|@translate}</p>
             <input type="text" class="user-property-input" value="contact@jessy-pinkman.com" disabled="false"/>
           </div>
           <div class="user-property-status">
             <p class="user-property-label">{'Status'|@translate}
                 <span class="icon-help-circled" 
                   title="<div class='tooltip-status-content'>
-                    <div class='tooltip-status-row'><span class='tooltip-col1'>{'user_status_webmaster'|translate}</span><span class='tooltip-col2'>{'Has access to all administration functionnalities. Can manage both configuration and content.'|translate}</span></div>
+                    <div class='tooltip-status-row'><span class='tooltip-col1'>{'user_status_webmaster'|translate}</span><span class='tooltip-col2'>{'Has access to all administration functionalities. Can manage both configuration and content.'|translate}</span></div>
                     <div class='tooltip-status-row'><span class='tooltip-col1'>{'user_status_admin'|translate}</span><span class='tooltip-col2'>{'Has access to administration. Can only manage content: photos/albums/users/tags/groups.'|translate}</span></div>
                     <div class='tooltip-status-row'><span class='tooltip-col1'>{'user_status_normal'|translate}</span><span class='tooltip-col2'>{'No access to administration, can see private content with appropriate permissions.'|translate}</span></div>
                     <div class='tooltip-status-row'><span class='tooltip-col1'>{'user_status_generic'|translate}</span><span class='tooltip-col2'>{'Can be shared by several individuals without conflict (they cannot change the password).'|translate}</span></div>
@@ -847,7 +847,7 @@ $(document).ready(function() {
             <p>{'Properties'|@translate}</p>
           </div>
           <div class="user-property-email">
-            <p class="user-property-label">{'Email Adress'|@translate}</p>
+            <p class="user-property-label">{'Email Address'|@translate}</p>
             <input type="text" class="user-property-input" value="N/A" readonly />
           </div>
           <div class="user-property-status">

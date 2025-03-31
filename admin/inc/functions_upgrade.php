@@ -26,40 +26,40 @@ class functions_upgrade
   // concerning upgrade, we use the default tables
   static function prepare_conf_upgrade()
   {
-    global $prefixeTable;
+    global $prefixTable;
 
     // $conf is not used for users tables
     // define cannot be re-defined
-    define('CATEGORIES_TABLE', $prefixeTable.'categories');
-    define('COMMENTS_TABLE', $prefixeTable.'comments');
-    define('CONFIG_TABLE', $prefixeTable.'config');
-    define('FAVORITES_TABLE', $prefixeTable.'favorites');
-    define('GROUP_ACCESS_TABLE', $prefixeTable.'group_access');
-    define('GROUPS_TABLE', $prefixeTable.'groups');
-    define('HISTORY_TABLE', $prefixeTable.'history');
-    define('HISTORY_SUMMARY_TABLE', $prefixeTable.'history_summary');
-    define('IMAGE_CATEGORY_TABLE', $prefixeTable.'image_category');
-    define('IMAGES_TABLE', $prefixeTable.'images');
-    define('SESSIONS_TABLE', $prefixeTable.'sessions');
-    define('SITES_TABLE', $prefixeTable.'sites');
-    define('USER_ACCESS_TABLE', $prefixeTable.'user_access');
-    define('USER_GROUP_TABLE', $prefixeTable.'user_group');
-    define('USERS_TABLE', $prefixeTable.'users');
-    define('USER_INFOS_TABLE', $prefixeTable.'user_infos');
-    define('USER_FEED_TABLE', $prefixeTable.'user_feed');
-    define('RATE_TABLE', $prefixeTable.'rate');
-    define('USER_CACHE_TABLE', $prefixeTable.'user_cache');
-    define('USER_CACHE_CATEGORIES_TABLE', $prefixeTable.'user_cache_categories');
-    define('CADDIE_TABLE', $prefixeTable.'caddie');
-    define('UPGRADE_TABLE', $prefixeTable.'upgrade');
-    define('SEARCH_TABLE', $prefixeTable.'search');
-    define('USER_MAIL_NOTIFICATION_TABLE', $prefixeTable.'user_mail_notification');
-    define('TAGS_TABLE', $prefixeTable.'tags');
-    define('IMAGE_TAG_TABLE', $prefixeTable.'image_tag');
-    define('PLUGINS_TABLE', $prefixeTable.'plugins');
-    define('OLD_PERMALINKS_TABLE', $prefixeTable.'old_permalinks');
-    define('THEMES_TABLE', $prefixeTable.'themes');
-    define('LANGUAGES_TABLE', $prefixeTable.'languages');
+    define('CATEGORIES_TABLE', $prefixTable.'categories');
+    define('COMMENTS_TABLE', $prefixTable.'comments');
+    define('CONFIG_TABLE', $prefixTable.'config');
+    define('FAVORITES_TABLE', $prefixTable.'favorites');
+    define('GROUP_ACCESS_TABLE', $prefixTable.'group_access');
+    define('GROUPS_TABLE', $prefixTable.'groups');
+    define('HISTORY_TABLE', $prefixTable.'history');
+    define('HISTORY_SUMMARY_TABLE', $prefixTable.'history_summary');
+    define('IMAGE_CATEGORY_TABLE', $prefixTable.'image_category');
+    define('IMAGES_TABLE', $prefixTable.'images');
+    define('SESSIONS_TABLE', $prefixTable.'sessions');
+    define('SITES_TABLE', $prefixTable.'sites');
+    define('USER_ACCESS_TABLE', $prefixTable.'user_access');
+    define('USER_GROUP_TABLE', $prefixTable.'user_group');
+    define('USERS_TABLE', $prefixTable.'users');
+    define('USER_INFOS_TABLE', $prefixTable.'user_infos');
+    define('USER_FEED_TABLE', $prefixTable.'user_feed');
+    define('RATE_TABLE', $prefixTable.'rate');
+    define('USER_CACHE_TABLE', $prefixTable.'user_cache');
+    define('USER_CACHE_CATEGORIES_TABLE', $prefixTable.'user_cache_categories');
+    define('CADDIE_TABLE', $prefixTable.'caddie');
+    define('UPGRADE_TABLE', $prefixTable.'upgrade');
+    define('SEARCH_TABLE', $prefixTable.'search');
+    define('USER_MAIL_NOTIFICATION_TABLE', $prefixTable.'user_mail_notification');
+    define('TAGS_TABLE', $prefixTable.'tags');
+    define('IMAGE_TAG_TABLE', $prefixTable.'image_tag');
+    define('PLUGINS_TABLE', $prefixTable.'plugins');
+    define('OLD_PERMALINKS_TABLE', $prefixTable.'old_permalinks');
+    define('THEMES_TABLE', $prefixTable.'themes');
+    define('LANGUAGES_TABLE', $prefixTable.'languages');
   }
 
   // Deactivate all non-standard plugins
@@ -97,7 +97,7 @@ class functions_upgrade
   ;';
       functions_mysqli::pwg_query($query);
 
-      $page['infos'][] = functions::l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
+      $page['infos'][] = functions::l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactivating them:')
                           .'<p><i>'.implode(', ', $plugins).'</i></p>';
     }
   }
@@ -138,7 +138,7 @@ class functions_upgrade
   ;';
       functions_mysqli::pwg_query($query);
 
-      $page['infos'][] = functions::l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
+      $page['infos'][] = functions::l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactivating them:')
                           .'<p><i>'.implode(', ', $theme_names).'</i></p>';
 
       // what is the default theme?

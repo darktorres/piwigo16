@@ -55,7 +55,7 @@ $(window).bind("load", function() {
       screenImage.css('width', (imageW * size / imageH)+'px');
     } else {
       screenImage.css('width', size+'px');
-      screenImage.css('heigth', (imageH * size / imageW)+'px');
+      screenImage.css('height', (imageH * size / imageW)+'px');
     }
   })
 })
@@ -121,7 +121,7 @@ $(window).bind("load", function() {
             <span class="dropdown-option icon-trash delete-plugin-button"title="{$theme.DELETE_TOOLTIP}">{'Delete'|@translate}</span>
         {/if}
       {/if}
-      {if isset($theme.DEACTIVABLE) and $theme.DEACTIVABLE}
+      {if isset($theme.DEACTIVATABLE) and $theme.DEACTIVATABLE}
         <a href="{$deactivate_baseurl}{$theme.ID}" class="showInfo-dropdown-action tiptip icon-cancel-circled" title="{'Forbid this theme to users'|@translate}">{'Deactivate'|@translate}</a>
       {/if}
     </div>
@@ -139,10 +139,10 @@ $(window).bind("load", function() {
         <span class="tiptip icon-star" title="{'This is already the default theme'|@translate}">{'Set as default'|@translate}</span>
   {/if}
 {else}
-  {if $theme.ACTIVABLE}
+  {if $theme.ACTIVATABLE}
       <a href="{$activate_baseurl}{$theme.ID}" title="{'Make this theme available to users'|@translate}" class="icon-plus tiptip">{'Activate'|@translate}</a>
   {else}
-      <span title="{$theme.ACTIVABLE_TOOLTIP}" class="icon-plus tiptip">{'Activate'|@translate}</span>
+      <span title="{$theme.ACTIVATABLE_TOOLTIP}" class="icon-plus tiptip">{'Activate'|@translate}</span>
   {/if}
 {/if}
     </div> <!-- themeActions -->

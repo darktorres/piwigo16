@@ -46,7 +46,7 @@ INPUT, SELECT {
 	font-size: 1em;	/* <= some browsers don't set it correctly */
 }
 
-TABLE {	/* horizontaly centered */
+TABLE {	/* horizontally centered */
 	margin-left: auto;
 	margin-right: auto;
 }
@@ -412,7 +412,7 @@ A.wiki { cursor:help; }
 	padding: 10px 50px 10px 10px;
 }
 
-/* Informations box */
+/* Information box */
 .infos {
 	color: #002000;
 	background: #98fb98 url(../../default/icon/infos.png) no-repeat center right;

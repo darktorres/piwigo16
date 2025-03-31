@@ -45,9 +45,9 @@ if ($php_end_tag === false)
 include($config_file);
 
 // $conf is not used for users tables - define cannot be re-defined
-define('USERS_TABLE', $prefixeTable.'users');
+define('USERS_TABLE', $prefixTable.'users');
 include_once(PHPWG_ROOT_PATH.'inc/constants.php');
-define('PREFIX_TABLE', $prefixeTable);
+define('PREFIX_TABLE', $prefixTable);
 define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 
 include_once(PHPWG_ROOT_PATH.'inc/functions.php');
@@ -419,7 +419,7 @@ REPLACE INTO '.PLUGINS_TABLE.'
         $template->assign(
           array(
             'button_label' => functions::l10n('Discover what\'s new in Piwigo %s', functions::get_branch_from_version(PHPWG_VERSION)),
-            'button_link' => 'admin.php?submited_tour_path=tours/'.$version_.'&amp;pwg_token='.functions::get_pwg_token(),
+            'button_link' => 'admin.php?submitted_tour_path=tours/'.$version_.'&amp;pwg_token='.functions::get_pwg_token(),
             )
           );
       }
@@ -429,8 +429,8 @@ REPLACE INTO '.PLUGINS_TABLE.'
     functions_admin::invalidate_user_cache(true);
     $template->delete_compiled_templates();
 
-    // Restore $page['infos'] in order to hide informations messages from functions calles
-    // errors messages are not hide
+    // Restore $page['infos'] in order to hide information messages from function calls
+    // error messages are not hidden
     $page['infos'] = $page['infos_sav'];
 
   }

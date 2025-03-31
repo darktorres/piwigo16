@@ -73,7 +73,7 @@ if (isset($_GET['incompatible_plugins']))
   exit;
 }
 
-//--------------------------------------------------------Get the menu with the depreciated version
+//--------------------------------------------------------Get the menu with the deprecated version
 
 $plugin_menu_links_deprec = functions_plugins::trigger_change('get_admin_plugin_menu_links', array());
 
@@ -103,7 +103,7 @@ foreach($plugins->fs_plugins as $plugin_id => $fs_plugin)
   if (isset($_SESSION['incompatible_plugins'][$plugin_id])
     and $fs_plugin['version'] != $_SESSION['incompatible_plugins'][$plugin_id])
   {
-    // Incompatible plugins must be reinitilized
+    // Incompatible plugins must be reinitialized
     unset($_SESSION['incompatible_plugins']);
   }
 
@@ -186,7 +186,7 @@ if (count($missing_plugin_ids) > 0)
   $template->append('plugin_states', 'missing');
 }
 
-// Stoped plugin sorting for new plugin manager
+// Stopped plugin sorting for new plugin manager
 // usort($tpl_plugins, function ($a, $b) {
 //   // sort plugins by state then by name
 //   $s = array('merged' => 0, 'missing' => 1, 'active' => 2, 'inactive' => 3);

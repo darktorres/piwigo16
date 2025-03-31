@@ -13,7 +13,7 @@ $(document).ready(() => {
     onCanSelectNode: function(node) {return false}
   });
 
-  $('.tree').on( 'click', '.move-cat-toogler', function(e) {
+  $('.tree').on( 'click', '.move-cat-toggler', function(e) {
     var node_id = $(this).attr('data-id');
     var node = $('.tree').tree('getNodeById', node_id);
     if (node) {
@@ -31,14 +31,14 @@ $(document).ready(() => {
   $('.tree').on(
     'tree.open',
     function(e) {
-      $('.move-cat-toogler[data-id='+e.node.id+']').html(toggler_open);
+      $('.move-cat-toggler[data-id='+e.node.id+']').html(toggler_open);
     }
   );
 
   $('.tree').on(
     'tree.close',
     function(e) {
-      $('.move-cat-toogler[data-id='+e.node.id+']').html(toggler_close);
+      $('.move-cat-toggler[data-id='+e.node.id+']').html(toggler_close);
     }
   );
 
@@ -145,7 +145,7 @@ $(document).ready(() => {
       },
       success: function (raw_data) {
         data = jQuery.parseJSON(raw_data);
-        const node_id = $("#cat-"+catToEdit).find('.move-cat-toogler').attr('data-id');
+        const node_id = $("#cat-"+catToEdit).find('.move-cat-toggler').attr('data-id');
         const node = $('.tree').tree('getNodeById', node_id);
         node.name = $(".RenameAlbumLabelUsername input").val();
         $('.tree').tree('updateNode', node, $(".RenameAlbumLabelUsername input").val());
@@ -234,7 +234,7 @@ $(document).ready(() => {
           if (parent_node) {
             setSubcatsBadge(parent_node);
   
-            $("#cat-"+parent_node.id).on( 'click', '.move-cat-toogler', function(e) {
+            $("#cat-"+parent_node.id).on( 'click', '.move-cat-toggler', function(e) {
               var node_id = parent_node.id;
               var node = $('.tree').tree('getNodeById', node_id);
               if (node) {
@@ -319,7 +319,7 @@ function createAlbumNode(node, li) {
     title += '<span class="tiptip icon-cone" title="'+ tiptip_locked_album +'" style="font-size: 16px"></span>';
   }
   title += '<p class="move-cat-title" title="'+node.name+'">%name%</p> <span class="icon-pencil"></span> </span>';
-  toggler_cont = "<div class='move-cat-toogler' data-id=%id%>%content%</div>";
+  toggler_cont = "<div class='move-cat-toggler' data-id=%id%>%content%</div>";
   toggler_close = "<span class='icon-left-open'></span>";
   toggler_open = "<span class='icon-down-open'></span>";
   actions = 
@@ -502,7 +502,7 @@ function triggerDeleteAlbum(cat_id) {
           $("#IMAGES_BECOMING_ORPHAN").hide();
         } else {
           $("#IMAGES_BECOMING_ORPHAN .innerText").html("");
-          $("#IMAGES_BECOMING_ORPHAN .innerText").append(has_images_becomming_orphans.replace('%d', data.nb_images_becoming_orphan));
+          $("#IMAGES_BECOMING_ORPHAN .innerText").append(has_images_becoming_orphans.replace('%d', data.nb_images_becoming_orphan));
         }
       }
     },
@@ -608,23 +608,23 @@ function goToNode(node, firstNode) {
       $(".tree").tree('openNode', node);
       // console.log("parent id : " + node.parent.id);
       $("#cat-"+node.parent.id).show();
-      $("#cat-"+node.parent.id).addClass("imune");
+      $("#cat-"+node.parent.id).addClass("immune");
     }
   } else {
     $(".tree").tree('openNode', node);
     $("#cat-"+firstNode.id).addClass("animateFocus");
 
-    showNodeChildrens(firstNode);
+    showNodeChildren(firstNode);
   }
 }
 
-function showNodeChildrens(node) {
+function showNodeChildren(node) {
   if (node.children) {
-    // console.log("childrens : " + node.children);
+    // console.log("children : " + node.children);
     node.children.forEach(child => {
       // console.log("children : " + child.id, child.name);
-      $("#cat-"+child.id).addClass("imune");
-      showNodeChildrens(child);
+      $("#cat-"+child.id).addClass("immune");
+      showNodeChildren(child);
     });
     
   }
@@ -716,7 +716,7 @@ function applyMove(event) {
     });
   })
     .catch(function (message) {
-      console.log('An error has occured : ' + message );
+      console.log('An error has occurred : ' + message );
       $(".move-cat-add").unbind("click").on("click", function () {
         openAddAlbumPopIn($(this).data("aid"));
         $(".AddAlbumSubmit").data("a-parent", $(this).data("aid"));

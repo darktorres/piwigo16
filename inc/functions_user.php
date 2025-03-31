@@ -55,7 +55,7 @@ class functions_user
 
   /**
    * Checks if a login is not already in use.
-   * Comparision is case insensitive.
+   * Comparison is case insensitive.
    *
    * @param string $login
    * @return string|void error message or nothing
@@ -117,7 +117,7 @@ class functions_user
    *
    * @param string $login
    * @param string $password
-   * @param string $mail_adress
+   * @param string $mail_address
    * @param bool $notify_admin
    * @param array &$errors populated with error messages
    * @param bool $notify_user
@@ -322,7 +322,7 @@ class functions_user
   }
 
   /**
-   * Finds informations related to the user identifier.
+   * Finds information related to the user identifier.
    *
    * @param int $user_id
    * @param boolean $use_cache
@@ -356,7 +356,7 @@ class functions_user
     $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
     // retrieve additional user data ?
-    if ($conf['external_authentification'])
+    if ($conf['external_authentication'])
     {
       $query = '
   SELECT
@@ -610,7 +610,7 @@ class functions_user
         functions_mysqli::query2array($query,null, 'cat_id')
         );
 
-    // uniquify ids : some private categories might be authorized for the
+    // deduplicate ids : some private categories might be authorized for the
     // groups and for the user
     $authorized_array = array_unique($authorized_array);
 
@@ -701,9 +701,9 @@ class functions_user
   }
 
   /**
-   * Returns a array with default user valuees.
+   * Returns a array with default user values.
    *
-   * @param convert_str ceonferts 'true' and 'false' into booleans
+   * @param convert_str converts 'true' and 'false' into booleans
    * @return array
    */
   static function get_default_user_info($convert_str=true)
@@ -882,7 +882,7 @@ class functions_user
   }
 
   /**
-   * Creates user informations based on default values.
+   * Creates user information based on default values.
    *
    * @param int|int[] $user_ids
    * @param array $override_values values used to override default user values
@@ -952,7 +952,7 @@ class functions_user
    *
    * @param int $user_id
    * @param int $time
-   * @param string &$username fille with corresponding username
+   * @param string &$username file with corresponding username
    * @return string|false
    */
   static function calculate_auto_login_key($user_id, $time, &$username)
@@ -1209,7 +1209,7 @@ class functions_user
       }
       else
       {
-        // swicth to default value
+        // switch to default value
         $user_status = '';
       }
     }
@@ -1271,20 +1271,20 @@ class functions_user
    * @param string $user_status used if $user not initialized
    * @return bool
    */
-  static function is_autorize_status($access_type, $user_status='')
+  static function is_authorized_status($access_type, $user_status='')
   {
     return (self::get_access_type_status($user_status) >= $access_type);
   }
 
   /**
-   * Abord script if user has no access to a particular ACCESS_*
+   * Abort script if user has no access to a particular ACCESS_*
    *
    * @return int $access_type one of ACCESS_* constants
    * @param string $user_status used if $user not initialized
    */
   static function check_status($access_type, $user_status='')
   {
-    if (!self::is_autorize_status($access_type, $user_status))
+    if (!self::is_authorized_status($access_type, $user_status))
     {
       functions_html::access_denied();
     }
@@ -1320,7 +1320,7 @@ class functions_user
    */
   static function is_classic_user($user_status='')
   {
-    return self::is_autorize_status(ACCESS_CLASSIC, $user_status);
+    return self::is_authorized_status(ACCESS_CLASSIC, $user_status);
   }
 
   /**
@@ -1331,7 +1331,7 @@ class functions_user
    */
   static function is_admin($user_status='')
   {
-    return self::is_autorize_status(ACCESS_ADMINISTRATOR, $user_status);
+    return self::is_authorized_status(ACCESS_ADMINISTRATOR, $user_status);
   }
 
   /**
@@ -1342,7 +1342,7 @@ class functions_user
    */
   static function is_webmaster($user_status='')
   {
-    return self::is_autorize_status(ACCESS_WEBMASTER, $user_status);
+    return self::is_authorized_status(ACCESS_WEBMASTER, $user_status);
   }
 
   /**
@@ -1468,7 +1468,7 @@ class functions_user
           break;
         default:
         {
-          die('Unknow condition');
+          die('Unknown condition');
           break;
         }
       }

@@ -252,7 +252,7 @@ class pwg_extensions
         return new PwgError(null, functions::l10n('Can\'t read or extract archive.'));
 
       default:
-        return new PwgError(null, functions::l10n('An error occured during extraction (%s).', $upgrade_status));
+        return new PwgError(null, functions::l10n('An error occurred during extraction (%s).', $upgrade_status));
     }
   }
 

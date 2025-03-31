@@ -39,7 +39,7 @@ $page['cat'] = $category['id'];
 // |                           form submission                             |
 // +-----------------------------------------------------------------------+
 
-// info by email to an access granted group of category informations
+// info by email to an access granted group of category information
 if (isset($_POST['submitEmail']))
 {
   functions_url::set_make_full_url();
@@ -268,7 +268,7 @@ SELECT
   }
 }
 
-// all users with status != guest and permitted to this this album (for a
+// all users with status != guest and permitted to this album (for a
 // perfect search, we should also check that album is not only filled with
 // private photos)
 $query = '

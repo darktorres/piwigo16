@@ -266,7 +266,7 @@ class functions_mail
     // $switch_lang['initialisation'] allow to know if it's first call
 
     // Treatment with current user
-    // Language of current user is saved (it's considered OK on firt call)
+    // Language of current user is saved (it's considered OK on first call)
     if (!isset($switch_lang['initialisation']) and !isset($switch_lang['language'][$user['language']]))
     {
       $switch_lang['initialisation'] = true;
@@ -590,7 +590,7 @@ class functions_mail
   }
 
   /**
-   * Sends an email, using Piwigo specific informations.
+   * Sends an email, using Piwigo specific information.
    *
    * @param string|array $to
    * @param array $args
@@ -742,7 +742,7 @@ class functions_mail
 
       if (!isset($conf_mail[$cache_key]))
       {
-        // instanciate a new Template
+        // instantiate a new Template
         if (!isset($conf_mail[$cache_key]['theme']))
         {
           $conf_mail[$cache_key]['theme'] = self::get_mail_template($content_type);
@@ -799,7 +799,7 @@ class functions_mail
 
       // Content
       // Stored in a temp variable, if a content template is used it will be assigned
-      // to the $CONTENT template variable, otherwise it will be appened to the mail
+      // to the $CONTENT template variable, otherwise it will be appended to the mail
       if ($args['content_format'] == 'text/plain' and $content_type == 'text/html')
       {
         // convert plain text to html

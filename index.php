@@ -190,7 +190,7 @@ if ( empty($page['is_external']) )
 
   // we add isset($page['search_details']) in this condition because it only
   // applies to regular search, not the legacy qsearch. As Piwigo 14 will still
-  // be able to show an old quicksearch result, we must check this condtion too.
+  // be able to show an old quicksearch result, we must check this condition too.
   if ('search' == $page['section'] and isset($page['search_details']))
   {
     $my_search = functions_search::get_search_array($page['search']);
@@ -710,7 +710,7 @@ SELECT
   }
 
   // slideshow
-  // execute after init thumbs in order to have all picture informations
+  // execute after init thumbs in order to have all picture information
   if (!empty($page['cat_slideshow_url']))
   {
     if (isset($_GET['slideshow']))
@@ -731,7 +731,7 @@ functions_html::flush_page_messages();
 $template->parse_index_buttons();
 $template->pparse('index');
 
-//------------------------------------------------------------ log informations
+//------------------------------------------------------------ log information
 functions::pwg_log();
 include(PHPWG_ROOT_PATH.'inc/page_tail.php');
 ?>

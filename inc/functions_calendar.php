@@ -184,7 +184,7 @@ class functions_calendar
     //echo ('<pre>'. var_export($calendar, true) . '</pre>');
 
     $must_show_list = true; // true until calendar generates its own display
-    if (functions::script_basename() != 'picture') // basename without file extention
+    if (functions::script_basename() != 'picture') // basename without file extension
     {
       if ($calendar->generate_category_content())
       {

@@ -61,7 +61,7 @@ DELETE FROM '.USER_ACCESS_TABLE.'
 ;';
   functions_mysqli::pwg_query($query);
 }
-elseif (isset($_POST['trueify'])
+elseif (isset($_POST['truthify'])
     and isset($_POST['cat_false'])
     and count($_POST['cat_false']) > 0)
 {

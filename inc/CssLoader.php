@@ -48,7 +48,7 @@ class CssLoader
   }
 
   /**
-   * Adds a new file, if a file with the same $id already exsists, the one with
+   * Adds a new file, if a file with the same $id already exists, the one with
    * the higher $order or higher $version is kept.
    *
    * @param string $id
@@ -61,7 +61,7 @@ class CssLoader
   {
     if (!isset($this->registered_css[$id]))
     {
-      // costum order as an higher impact than declaration order
+      // custom order as an higher impact than declaration order
       $css = new Css($id, $path, $version, $order*1000+$this->counter);
       $css->is_template = $is_template;
       $this->registered_css[$id] = $css;

@@ -535,7 +535,7 @@ function move_to_page(page) {
     update_user_list();
 }
 
-$('.pagination-arrow.rigth').on('click', () => {
+$('.pagination-arrow.right').on('click', () => {
     move_to_page(actual_page + 1);
 })
 
@@ -618,9 +618,9 @@ function updateArrows() {
         $('.pagination-arrow.left').removeClass('unavailable');
     }   
     if (actual_page == max_page) {
-        $('.pagination-arrow.rigth').addClass('unavailable');
+        $('.pagination-arrow.right').addClass('unavailable');
     } else {
-        $('.pagination-arrow.rigth').removeClass('unavailable');
+        $('.pagination-arrow.right').removeClass('unavailable');
     }
 }
 

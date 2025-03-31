@@ -890,7 +890,7 @@ class functions_url
   }
 
   /**
-   * returns $_SERVER['QUERY_STRING'] whithout keys given in parameters
+   * returns $_SERVER['QUERY_STRING'] without keys given in parameters
    *
    * @param string[] $rejects
    * @param boolean $escape escape *&* to *&amp;*

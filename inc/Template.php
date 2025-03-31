@@ -56,7 +56,7 @@ set_error_handler(function (
 define('BUTTONS_RANK_NEUTRAL', 50);
 
 /**
- * This a wrapper arround Smarty classes proving various custom mechanisms for templates.
+ * This a wrapper around Smarty classes proving various custom mechanisms for templates.
  */
 class Template
 {
@@ -350,7 +350,7 @@ class Template
   }
 
   /**
-   * Sets template extention filename for handles.
+   * Sets template extension filename for handles.
    *
    * @param string $filename
    * @param mixed $param
@@ -365,7 +365,7 @@ class Template
   }
 
   /**
-   * Sets template extentions filenames for handles.
+   * Sets template extensions filenames for handles.
    *
    * @param string[] $filename_array hashmap of handle=>filename
    * @param string $dir

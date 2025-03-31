@@ -86,16 +86,16 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme)
   {
     $tpl_theme['STATE'] = 'active';
     $tpl_theme['IS_DEFAULT'] = ($theme_id == $default_theme);
-    $tpl_theme['DEACTIVABLE'] = true;
+    $tpl_theme['DEACTIVATABLE'] = true;
 
     if (count($db_theme_ids) <= 1)
     {
-      $tpl_theme['DEACTIVABLE'] = false;
+      $tpl_theme['DEACTIVATABLE'] = false;
       $tpl_theme['DEACTIVATE_TOOLTIP'] = functions::l10n('Impossible to deactivate this theme, you need at least one theme.');
     }
     if ($tpl_theme['IS_DEFAULT'])
     {
-      $tpl_theme['DEACTIVABLE'] = false;
+      $tpl_theme['DEACTIVATABLE'] = false;
       $tpl_theme['DEACTIVATE_TOOLTIP'] = functions::l10n('Impossible to deactivate the default theme.');
     }
   }
@@ -103,23 +103,23 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme)
   {
     $tpl_theme['STATE'] = 'inactive';
     
-    // is the theme "activable" ?
-    if (isset($fs_theme['activable']) and !$fs_theme['activable'])
+    // is the theme "activatable" ?
+    if (isset($fs_theme['activatable']) and !$fs_theme['activatable'])
     {
-      $tpl_theme['ACTIVABLE'] = false;
-      $tpl_theme['ACTIVABLE_TOOLTIP'] = functions::l10n('This theme was not designed to be directly activated');
+      $tpl_theme['ACTIVATABLE'] = false;
+      $tpl_theme['ACTIVATABLE_TOOLTIP'] = functions::l10n('This theme was not designed to be directly activated');
     }
     else
     {
-      $tpl_theme['ACTIVABLE'] = true;
+      $tpl_theme['ACTIVATABLE'] = true;
     }
 
     $missing_parent = $themes->missing_parent_theme($theme_id);
     if (isset($missing_parent))
     {
-      $tpl_theme['ACTIVABLE'] = false;
+      $tpl_theme['ACTIVATABLE'] = false;
 
-      $tpl_theme['ACTIVABLE_TOOLTIP'] = functions::l10n(
+      $tpl_theme['ACTIVATABLE_TOOLTIP'] = functions::l10n(
         'Impossible to activate this theme, the parent theme is missing: %s',
         $missing_parent
         );

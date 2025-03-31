@@ -39,7 +39,7 @@ jQuery.fn.fontCheckbox = function() {
   });
 };
 
-// init fontChecbox everywhere
+// init fontCheckbox everywhere
 jQuery('.font-checkbox').fontCheckbox();
 
 function array_delete(arr, item) {
@@ -150,7 +150,7 @@ class TemporaryState {
   }
 
   /**
-   * Change temporaly an attribute of an object
+   * Change temporarily an attribute of an object
    * @param {Jquery Object(s)} obj HTML Object(s)
    * @param {String} attr Attribute
    * @param {String} tempVal Temporary value of the attribute 
@@ -207,7 +207,7 @@ class TemporaryState {
   }
 
   /**
-   * Change temporaly the html of objects (remove event handlers on the actual content)
+   * Change temporarily the html of objects (remove event handlers on the actual content)
    * @param {Jquery Object(s)} obj 
    * @param {string} temphtml 
    */

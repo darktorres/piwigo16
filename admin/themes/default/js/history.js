@@ -79,7 +79,7 @@ $(document).ready(() => {
   });
 
 
-  $('.pagination-arrow.rigth').on('click', () => {
+  $('.pagination-arrow.right').on('click', () => {
     current_param.pageNumber += 1;
     fillHistoryResult(current_param);
   });
@@ -660,9 +660,9 @@ function updateArrows(actualPage, maxPage) {
   }
 
   if (actualPage == maxPage-1) {
-    $('.pagination-arrow.rigth').addClass('unavailable');
+    $('.pagination-arrow.right').addClass('unavailable');
   } else {
-    $('.pagination-arrow.rigth').removeClass('unavailable');
+    $('.pagination-arrow.right').removeClass('unavailable');
   }
 }
 

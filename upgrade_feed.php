@@ -36,7 +36,7 @@ if (!$conf['check_upgrade_feed'])
 
 functions_upgrade::prepare_conf_upgrade();
 
-define('PREFIX_TABLE', $prefixeTable);
+define('PREFIX_TABLE', $prefixTable);
 define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 
 // +-----------------------------------------------------------------------+

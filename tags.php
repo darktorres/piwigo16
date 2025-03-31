@@ -61,7 +61,7 @@ $tags = functions_tag::get_available_tags();
 // +-----------------------------------------------------------------------+
 
 if ($page['display_mode'] == 'letters') {
-  // we want tags diplayed in alphabetic order
+  // we want tags displayed in alphabetic order
   usort($tags, functions_html::tag_alpha_compare(...));
 
   $current_letter = null;
@@ -140,7 +140,7 @@ else
   // depending on its counter and the other tags counter, each tag has a level
   $tags = functions_tag::add_level_to_tags($tags);
 
-  // we want tags diplayed in alphabetic order
+  // we want tags displayed in alphabetic order
   usort($tags, functions_html::tag_alpha_compare(...));
 
   // display sorted tags

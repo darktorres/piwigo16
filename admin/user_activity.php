@@ -41,7 +41,7 @@ SELECT
     object_id,
     action,
     ip_address,
-    occured_on,
+    occurred_on,
     details,
     '.$conf['user_fields']['username'].' AS username
   FROM '.ACTIVITY_TABLE.'
@@ -56,7 +56,7 @@ SELECT
     $row['details'] = str_replace('`groups`', 'groups', $row['details']);
     $row['details'] = str_replace('`rank`', 'rank', $row['details']);
 
-    list($date, $hour) = explode(' ', $row['occured_on']);
+    list($date, $hour) = explode(' ', $row['occurred_on']);
 
     $output_lines[] = array(
       'username' => $row['username'],

@@ -17,6 +17,8 @@ use Piwigo\inc\functions_user;
 
 class languages
 {
+    use ExtensionFunctionUpdater;
+
     public $fs_languages = [];
 
     public $db_languages = [];
@@ -353,6 +355,9 @@ class languages
                             $result = $zip->extract(PCLZIP_OPT_PATH, $extract_path, PCLZIP_OPT_REMOVE_PATH, $root, PCLZIP_OPT_REPLACE_NEWER);
 
                             if ($result) {
+                                $this->rename_files_and_folders($extract_path);
+                                $this->update_function_calls($extract_path);
+
                                 foreach ($result as $file) {
                                     if ($file['stored_filename'] == $main_filepath) {
                                         $status = $file['status'];

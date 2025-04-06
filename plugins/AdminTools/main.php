@@ -37,6 +37,11 @@ functions_plugins::add_event_handler('ws_add_methods', MultiView::register_ws(..
 functions_plugins::add_event_handler('delete_user', MultiView::invalidate_cache(...));
 functions_plugins::add_event_handler('register_user', MultiView::invalidate_cache(...));
 
+functions_plugins::add_event_handler('theme_installed', MultiView::invalidate_cache(...));
+functions_plugins::add_event_handler('theme_deleted', MultiView::invalidate_cache(...));
+functions_plugins::add_event_handler('theme_activated', MultiView::invalidate_cache(...));
+functions_plugins::add_event_handler('theme_deactivated', MultiView::invalidate_cache(...));
+
 if (! defined('IN_ADMIN')) {
     functions_plugins::add_event_handler('loc_after_page_header', admintools_add_public_controller(...));
     functions_plugins::add_event_handler('loc_begin_picture', admintools_save_picture(...));

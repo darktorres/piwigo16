@@ -9,6 +9,7 @@
 
 use Piwigo\admin\inc\themes;
 use Piwigo\inc\functions;
+use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
@@ -76,6 +77,10 @@ if (isset($_GET['installstatus'])) {
                         'version' => $themes->fs_themes[$_GET['theme_id']]['version'],
                     ]
                 );
+
+                functions_plugins::trigger_notify('theme_installed', [
+                    'theme_id' => $_GET['theme_id'],
+                ]);
             }
 
             break;

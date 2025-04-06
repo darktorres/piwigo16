@@ -13,6 +13,7 @@ use PclZip;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
+use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
@@ -105,6 +106,10 @@ class themes
                         SQL;
                     functions_mysqli::pwg_query($query);
 
+                    functions_plugins::trigger_notify('theme_activated', [
+                        'theme_id' => $theme_id,
+                    ]);
+
                     $activity_details['version'] = $this->fs_themes[$theme_id]['version'];
 
                     if ($this->fs_themes[$theme_id]['mobile']) {
@@ -154,6 +159,10 @@ class themes
                     SQL;
                 functions_mysqli::pwg_query($query);
 
+                functions_plugins::trigger_notify('theme_deactivated', [
+                    'theme_id' => $theme_id,
+                ]);
+
                 if ($this->fs_themes[$theme_id]['mobile']) {
                     functions::conf_update_param('mobile_theme', '');
                 }
@@ -182,6 +191,10 @@ class themes
                 }
 
                 $theme_maintain->delete();
+
+                functions_plugins::trigger_notify('theme_deleted', [
+                    'theme_id' => $theme_id,
+                ]);
 
                 functions_admin::deltree(PHPWG_THEMES_PATH . $theme_id, PHPWG_THEMES_PATH . 'trash');
                 break;

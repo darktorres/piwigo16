@@ -95,8 +95,8 @@ if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
-if (file_exists(__DIR__ . '/../' . PWG_LOCAL_DIR . 'config/database.php')) {
-    require __DIR__ . '/../' . PWG_LOCAL_DIR . 'config/database.php';
+if (file_exists(__DIR__ . '/../local/config/database.php')) {
+    require __DIR__ . '/../local/config/database.php';
 }
 
 if (! defined('PHPWG_INSTALLED')) {
@@ -227,7 +227,7 @@ if (functions_user::is_admin() ||
 }
 
 functions_plugins::trigger_notify('loading_lang');
-functions::load_language('lang', './' . PWG_LOCAL_DIR, [
+functions::load_language('lang', './local/', [
     'no_fallback' => true,
     'local' => true,
 ]);

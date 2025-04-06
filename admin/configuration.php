@@ -556,7 +556,7 @@ switch ($page['section']) {
             $watermark_files[] = substr($file, strlen('./'));
         }
 
-        $glob = glob('./' . PWG_LOCAL_DIR . 'watermarks/*.png');
+        $glob = glob('./local/watermarks/*.png');
 
         if ($glob !== false) {
             foreach ($glob as $file) {

@@ -62,7 +62,7 @@ if (file_exists(dirname(__FILE__) . '/skins/' . $conf['modus_theme']['skin'] . '
 
 if (! $conf['compiled_template_cache_language']) {
     functions::load_language('theme.lang', dirname(__FILE__) . '/');
-    functions::load_language('lang', './' . PWG_LOCAL_DIR, [
+    functions::load_language('lang', './local/', [
         'no_fallback' => true,
         'local' => true,
     ]);

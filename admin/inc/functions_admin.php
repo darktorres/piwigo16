@@ -3880,10 +3880,6 @@ final class functions_admin
             require __DIR__ . '/../../local/config/config.php';
         }
 
-        if (isset($conf['local_dir_site']) && file_exists('./' . PWG_LOCAL_DIR . 'config/config.php')) {
-            require PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.php';
-        }
-
         return isset($conf['order_by']) or
                isset($conf['order_by_inside_category']);
     }

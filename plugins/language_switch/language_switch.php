@@ -84,7 +84,7 @@ function language_controller_switch(): void
 
         functions::load_language(
             'lang',
-            './' . PWG_LOCAL_DIR,
+            './local/',
             [
                 'language' => $user['language'],
                 'no_fallback' => true,

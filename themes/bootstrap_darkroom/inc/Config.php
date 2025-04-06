@@ -283,7 +283,7 @@ class Config
 
     private function initFiles(): void
     {
-        $this->files[self::KEY_CUSTOM_CSS] = './' . PWG_LOCAL_DIR . 'bootstrap_darkroom/custom.css';
+        $this->files[self::KEY_CUSTOM_CSS] = './local/bootstrap_darkroom/custom.css';
     }
 
     private function createDefaultConfig(): void

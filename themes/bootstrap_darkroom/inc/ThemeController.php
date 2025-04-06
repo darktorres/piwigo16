@@ -25,7 +25,7 @@ readonly class ThemeController
     public function init(): void
     {
         functions::load_language('theme.lang', PHPWG_THEMES_PATH . 'bootstrap_darkroom/');
-        functions::load_language('lang', './' . PWG_LOCAL_DIR, [
+        functions::load_language('lang', './local/', [
             'no_fallback' => true,
             'local' => true,
         ]);

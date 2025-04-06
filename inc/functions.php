@@ -1167,7 +1167,7 @@ final class functions
             $user = functions_user::build_user($conf['guest_id'], true);
             self::load_language('common.lang');
             functions_plugins::trigger_notify('loading_lang');
-            self::load_language('lang', './' . PWG_LOCAL_DIR, [
+            self::load_language('lang', './local/', [
                 'no_fallback' => true,
                 'local' => true,
             ]);

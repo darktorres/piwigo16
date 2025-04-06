@@ -26,7 +26,7 @@ require_once __DIR__ . '/admin/inc/functions_notification_by_mail.php';
 functions::load_language('admin.lang');
 // Need to update a second time
 functions_plugins::trigger_notify('loading_lang');
-functions::load_language('lang', './' . PWG_LOCAL_DIR, [
+functions::load_language('lang', './local/', [
     'no_fallback' => true,
     'local' => true,
 ]);

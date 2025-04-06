@@ -38,7 +38,7 @@ if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
-$config_file = './' . PWG_LOCAL_DIR . 'config/database.php';
+$config_file = './local/config/database.php';
 $config_file_contents = file_get_contents($config_file);
 
 if ($config_file_contents === false) {
@@ -315,7 +315,7 @@ if ((isset($_POST['submit']) or isset($_GET['now'])) and
             if (! file_put_contents($config_file, $config_file_contents)) {
                 $page['infos'][] = functions::l10n(
                     'In <i>%s</i>, before <b>?></b>, insert:',
-                    PWG_LOCAL_DIR . 'config/database.php'
+                    'local/config/database.php'
                 )
                 . '<p><textarea rows="4" cols="40">'
                 . implode("\r\n", $mysql_changes) . '</textarea></p>';

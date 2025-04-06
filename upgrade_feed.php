@@ -30,7 +30,7 @@ if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
-require __DIR__ . PWG_LOCAL_DIR . '/config/database.php';
+require __DIR__ . '/local/config/database.php';
 require_once __DIR__ . '/inc/functions.php';
 
 // +-----------------------------------------------------------------------+

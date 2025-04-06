@@ -33,8 +33,8 @@ if (! defined('PWG_DERIVATIVE_DIR')) {
     define('PWG_DERIVATIVE_DIR', $conf['data_location'] . 'i/');
 }
 
-if (file_exists(__DIR__ . PWG_LOCAL_DIR . '/config/database.php')) {
-    require __DIR__ . PWG_LOCAL_DIR . '/config/database.php';
+if (file_exists(__DIR__ . '/local/config/database.php')) {
+    require __DIR__ . '/local/config/database.php';
 }
 
 $logger = new Katzgrau\KLogger\Logger('./' . $conf['data_location'] . $conf['log_dir'], $conf['log_level'], [

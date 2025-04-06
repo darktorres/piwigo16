@@ -283,7 +283,7 @@ final class functions_mail
             functions_plugins::trigger_notify('loading_lang');
             functions::load_language(
                 'lang',
-                './' . PWG_LOCAL_DIR,
+                './local/',
                 [
                     'language' => $language,
                     'no_fallback' => true,

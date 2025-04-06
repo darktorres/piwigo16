@@ -136,7 +136,7 @@ if (isset($_POST['install'])) {
 $infos = [];
 $errors = [];
 
-$config_file = './' . PWG_LOCAL_DIR . 'config/database.php';
+$config_file = './local/config/database.php';
 
 if (file_exists($config_file)) {
     require $config_file;

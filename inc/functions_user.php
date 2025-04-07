@@ -1187,12 +1187,7 @@ final class functions_user
         global $user;
 
         if (empty($user_status)) {
-            if (isset($user['status'])) {
-                $user_status = $user['status'];
-            } else {
-                // switch to default value
-                $user_status = '';
-            }
+            $user_status = $user['status'] ?? '';
         }
 
         return $user_status;

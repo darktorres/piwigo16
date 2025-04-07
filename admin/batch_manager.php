@@ -198,12 +198,12 @@ elseif (isset($_GET['filter'])) {
     $_SESSION['bulk_manager_filter'] = [];
 
     foreach ($_GET['filter'] as $filter) {
-        list($type, $value) = explode('-', $filter, 2);
+        [$type, $value] = explode('-', $filter, 2);
 
         switch ($type) {
             case 'prefilter':
                 if (preg_match('/^duplicates-?/', $value)) {
-                    list(, $duplicate_field) = explode('-', $value, 2);
+                    [, $duplicate_field] = explode('-', $value, 2);
                     $_SESSION['bulk_manager_filter']['prefilter'] = 'duplicates';
 
                     if (in_array($duplicate_field, ['filename', 'checksum', 'date', 'dimensions'])) {
@@ -257,20 +257,14 @@ elseif (isset($_GET['filter'])) {
 
                     if (isset($dim_map[$part[0]])) {
                         $type = $dim_map[$part[0]];
-                        list(
-                            $_SESSION['bulk_manager_filter']['dimension']['min_' . $type],
-                            $_SESSION['bulk_manager_filter']['dimension']['max_' . $type]
-                        ) = $values;
+                        [$_SESSION['bulk_manager_filter']['dimension']['min_' . $type], $_SESSION['bulk_manager_filter']['dimension']['max_' . $type]] = $values;
                     }
                 }
 
                 break;
 
             case 'filesize':
-                list(
-                    $_SESSION['bulk_manager_filter']['filesize']['min'],
-                    $_SESSION['bulk_manager_filter']['filesize']['max']
-                ) = explode('..', $value);
+                [$_SESSION['bulk_manager_filter']['filesize']['min'], $_SESSION['bulk_manager_filter']['filesize']['max']] = explode('..', $value);
                 break;
 
             default:
@@ -461,7 +455,7 @@ if (isset($_SESSION['bulk_manager_filter']['category'])) {
         FROM categories
         WHERE id = {$_SESSION['bulk_manager_filter']['category']};
         SQL;
-    list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     if ($counter == 0) {
         unset($_SESSION['bulk_manager_filter']);
@@ -718,9 +712,7 @@ foreach (array_keys($ratio_categories) as $type) {
 
 // selected=bound if nothing selected
 foreach (array_keys($dimensions['bounds']) as $type) {
-    $dimensions['selected'][$type] = isset($_SESSION['bulk_manager_filter']['dimension'][$type])
-      ? $_SESSION['bulk_manager_filter']['dimension'][$type]
-      : $dimensions['bounds'][$type]
+    $dimensions['selected'][$type] = $_SESSION['bulk_manager_filter']['dimension'][$type] ?? $dimensions['bounds'][$type]
     ;
 }
 
@@ -765,9 +757,7 @@ $filesize['bounds'] = [
 
 // selected=bound if nothing selected
 foreach (array_keys($filesize['bounds']) as $type) {
-    $filesize['selected'][$type] = isset($_SESSION['bulk_manager_filter']['filesize'][$type])
-      ? $_SESSION['bulk_manager_filter']['filesize'][$type]
-      : $filesize['bounds'][$type]
+    $filesize['selected'][$type] = $_SESSION['bulk_manager_filter']['filesize'][$type] ?? $filesize['bounds'][$type]
     ;
 }
 

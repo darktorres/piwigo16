@@ -130,7 +130,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
 
     foreach ($plugins->server_plugins as $plugin) {
         $ext_desc = trim($plugin['extension_description'], " \n\r");
-        list($small_desc) = explode("\n", wordwrap($ext_desc, 200));
+        [$small_desc] = explode("\n", wordwrap($ext_desc, 200));
 
         $url_auto_install = htmlentities($base_url)
           . '&amp;revision=' . $plugin['revision_id']

@@ -41,7 +41,7 @@ if (isset($_GET['action'])) {
 // |                                actions                                |
 // +-----------------------------------------------------------------------+
 
-$action = isset($_GET['action']) ? $_GET['action'] : '';
+$action = $_GET['action'] ?? '';
 
 switch ($action) {
     case 'phpinfo':
@@ -235,7 +235,7 @@ $purge_urls[functions::l10n(derivative_std_params::IMG_CUSTOM)] = sprintf($url_f
 
 $php_current_timestamp = date('Y-m-d H:i:s');
 $db_version = functions_mysqli::pwg_get_db_version();
-list($db_current_date) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+[$db_current_date] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 
 $template->assign(
     [

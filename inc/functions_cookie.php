@@ -31,7 +31,7 @@ final class functions_cookie
             if (isset($_SERVER['PATH_INFO']) &&
                 ! empty($_SERVER['PATH_INFO']) &&
                 $_SERVER['REDIRECT_URL'] !== $_SERVER['PATH_INFO'] &&
-                substr($_SERVER['REDIRECT_URL'], -strlen($_SERVER['PATH_INFO'])) == $_SERVER['PATH_INFO']
+                str_ends_with($_SERVER['REDIRECT_URL'], $_SERVER['PATH_INFO'])
             ) {
                 $scr = substr(
                     $_SERVER['REDIRECT_URL'],
@@ -54,7 +54,7 @@ final class functions_cookie
             $scr .= '/';
         }
 
-        if (substr('./', 0, 3) == '../') { // this is maybe a plugin inside pwg directory
+        if (str_starts_with('./', '../')) { // this is maybe a plugin inside pwg directory
             // TODO - what if it is an external script outside PWG ?
             $scr = $scr . './';
 
@@ -85,12 +85,18 @@ final class functions_cookie
             $expire === 0
         ) {
             unset($_COOKIE['pwg_' . $var]);
-            return setcookie('pwg_' . $var, '', 0, self::cookie_path());
+            return setcookie('pwg_' . $var, '', [
+                'expires' => 0,
+                'path' => self::cookie_path(),
+            ]);
         }
 
         $_COOKIE['pwg_' . $var] = $value;
         $expire = is_numeric($expire) ? $expire : strtotime('+10 years');
-        return setcookie('pwg_' . $var, $value, $expire, self::cookie_path());
+        return setcookie('pwg_' . $var, $value, [
+            'expires' => $expire,
+            'path' => self::cookie_path(),
+        ]);
     }
 
     /**
@@ -101,10 +107,6 @@ final class functions_cookie
         string $var,
         string|null $default = null
     ): string|null {
-        if (isset($_COOKIE['pwg_' . $var])) {
-            return $_COOKIE['pwg_' . $var];
-        }
-
-        return $default;
+        return $_COOKIE['pwg_' . $var] ?? $default;
     }
 }

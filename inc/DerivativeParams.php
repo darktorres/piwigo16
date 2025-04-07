@@ -16,8 +16,6 @@ namespace Piwigo\inc;
  */
 final class DerivativeParams
 {
-    public SizingParams $sizing;
-
     /**
      * among IMG_*
      */
@@ -36,10 +34,8 @@ final class DerivativeParams
     public int|float $sharpen = 0;
 
     public function __construct(
-        SizingParams $sizing
-    ) {
-        $this->sizing = $sizing;
-    }
+        public SizingParams $sizing
+    ) {}
 
     public function __sleep(): array
     {

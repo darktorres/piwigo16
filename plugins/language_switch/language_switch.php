@@ -121,7 +121,7 @@ function language_controller_flags(): void
     ) {
         $base_url = functions_url::make_index_url([
             'section' => 'page',
-        ]) . '/' . (isset($page['additional_page']['permalink']) ? $page['additional_page']['permalink'] : $page['additional_page']['id']);
+        ]) . '/' . ($page['additional_page']['permalink'] ?? $page['additional_page']['id']);
     } else {
         $base_url = functions_url::duplicate_index_url();
     }
@@ -160,7 +160,7 @@ function language_controller_flags(): void
         'LANGUAGE_SWITCH_LOAD_STYLE' => ! in_array($user['theme'], $safe_themes),
     ]);
 
-    $template->set_template_dir(realpath(dirname(__FILE__)));
+    $template->set_template_dir(realpath(__DIR__));
     $template->set_filename('language_flags', 'language_switch_flags.tpl');
     $template->concat('PLUGIN_INDEX_ACTIONS', $template->parse('language_flags', true));
     $template->clear_assign('lang_switch');

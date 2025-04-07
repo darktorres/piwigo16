@@ -16,25 +16,12 @@ namespace Piwigo\inc;
  */
 class QSearchScope
 {
-    public string $id;
-
-    public array $aliases;
-
-    public bool $is_text;
-
-    public bool $nullable;
-
     public function __construct(
-        string $id,
-        array $aliases,
-        bool $nullable = false,
-        bool $is_text = true
-    ) {
-        $this->id = $id;
-        $this->aliases = $aliases;
-        $this->is_text = $is_text;
-        $this->nullable = $nullable;
-    }
+        public string $id,
+        public array $aliases,
+        public bool $nullable = false,
+        public bool $is_text = true
+    ) {}
 
     public function parse(
         QSingleToken $token

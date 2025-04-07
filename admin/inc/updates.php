@@ -109,7 +109,7 @@ final class updates
                 if ($all_versions && is_array($all_versions)) {
                     $new_versions['piwigo.org-checked'] = true;
                     $last_version = trim($all_versions[0]);
-                    list($last_version_number, $last_version_php) = explode('/', trim($all_versions[0]));
+                    [$last_version_number, $last_version_php] = explode('/', trim($all_versions[0]));
 
                     if (version_compare(PHPWG_VERSION, $last_version_number, '<')) {
                         $last_branch = functions::get_branch_from_version($last_version_number);
@@ -123,7 +123,7 @@ final class updates
 
                             // Check if new version exists in same branch
                             foreach ($all_versions as $version) {
-                                list($version_number, $version_php) = explode('/', trim($version));
+                                [$version_number, $version_php] = explode('/', trim($version));
                                 $branch = functions::get_branch_from_version($version_number);
 
                                 if ($branch == $actual_branch) {
@@ -260,7 +260,7 @@ final class updates
             $branch = functions::get_branch_from_version($version);
 
             foreach ($pem_versions as $pem_version) {
-                if (strpos($pem_version['name'], $branch) === 0) {
+                if (str_starts_with($pem_version['name'], $branch)) {
                     $versions_to_check[] = $pem_version['id'];
                 }
             }
@@ -473,7 +473,7 @@ final class updates
         ) {
             // TODO why redirect to a plugin page? maybe a remaining code from when
             // the update system was provided as a plugin?
-            functions::redirect(functions_url::get_root_url() . 'admin.php?page=plugin-' . basename(dirname(__FILE__)));
+            functions::redirect(functions_url::get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__));
         }
 
         $obsolete_list = null;

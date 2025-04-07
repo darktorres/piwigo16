@@ -31,7 +31,7 @@ if (! (defined('IN_ADMIN') && IN_ADMIN) &&           // no message inside admini
         SELECT COUNT(*)
         FROM images;
         SQL;
-    list($nb_photos) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$nb_photos] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     if ($nb_photos == 0) {
         // make sure we don't use the mobile theme, which is not compatible with
@@ -60,7 +60,7 @@ if (! (defined('IN_ADMIN') && IN_ADMIN) &&           // no message inside admini
         if (functions_user::is_admin()) {
             $url = $conf->no_photo_yet_url;
 
-            if (substr($url, 0, 4) != 'http') {
+            if (! str_starts_with($url, 'http')) {
                 $url = functions_url::get_root_url() . $url;
             }
 

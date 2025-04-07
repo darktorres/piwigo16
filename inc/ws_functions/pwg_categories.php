@@ -165,7 +165,7 @@ final class pwg_categories
                 $images[] = $image;
             }
 
-            list($total_images) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
+            [$total_images] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
 
             // let's take care of adding the related albums to each photo
             if (count($image_ids) > 0) {
@@ -417,7 +417,7 @@ final class pwg_categories
                     $subresult = functions_mysqli::pwg_query($query);
 
                     if (functions_mysqli::pwg_db_num_rows($subresult) > 0) {
-                        list($image_id) = functions_mysqli::pwg_db_fetch_row($subresult);
+                        [$image_id] = functions_mysqli::pwg_db_fetch_row($subresult);
                     }
                 }
             }
@@ -612,13 +612,13 @@ final class pwg_categories
         $query = trim($query) . ';';
         $result = functions_mysqli::pwg_query($query);
 
-        list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
+        [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
 
         $cats = [];
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $id = $row['id'];
-            $row['nb_images'] = isset($nb_images_of[$id]) ? $nb_images_of[$id] : 0;
+            $row['nb_images'] = $nb_images_of[$id] ?? 0;
 
             $cat_display_name = functions_html::get_cat_display_name_cache(
                 $row['uppercats'],
@@ -782,7 +782,7 @@ final class pwg_categories
                 return new PwgError(WS_ERR_INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
             }
         } else {
-            $params['category_id'] = implode($params['category_id']);
+            $params['category_id'] = implode('', $params['category_id']);
 
             $id_uppercat_condition = empty($category['id_uppercat']) ? 'IS NULL' : "= {$category['id_uppercat']}";
             $query = <<<SQL
@@ -948,7 +948,7 @@ final class pwg_categories
             FROM categories
             WHERE id = {$params['category_id']};
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(404, 'category_id not found');
@@ -960,7 +960,7 @@ final class pwg_categories
             FROM images
             WHERE id = {$params['image_id']};
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
@@ -1020,7 +1020,7 @@ final class pwg_categories
             FROM image_category
             WHERE category_id = {$params['category_id']};
             SQL;
-        list($nb_images) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$nb_images] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if (! $conf->allow_random_representative &&
             $nb_images != 0
@@ -1306,7 +1306,7 @@ final class pwg_categories
             $sub_cat_without_parent = array_diff(functions_category::get_subcat_ids([$update_cat]), [$update_cat]);
 
             foreach ($sub_cat_without_parent as $id_sub_cat) {
-                $nb_sub_photos += isset($nb_photos_in[$id_sub_cat]) ? $nb_photos_in[$id_sub_cat] : 0;
+                $nb_sub_photos += $nb_photos_in[$id_sub_cat] ?? 0;
             }
 
             $update_cats[] = [

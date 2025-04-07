@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\inc;
 
 /** Represents an expression of several words or sub expressions to be searched.*/
-class QMultiToken
+class QMultiToken implements \Stringable
 {
     public bool $is_single = false;
 
@@ -170,7 +170,7 @@ class QMultiToken
                         if (! $crt_scope ||
                             ! $crt_scope->process_char($ch, $crt_token)
                         ) {
-                            if (strpos(' ,.;!?', $ch) !== false) { // white space
+                            if (str_contains(' ,.;!?', $ch)) { // white space
                                 $this->push($crt_token, $crt_modifier, $crt_scope);
                             } else {
                                 $crt_token .= $ch;
@@ -203,7 +203,7 @@ class QMultiToken
 
             if ($token->is_single) {
                 if (($token->modifier & functions_search::QST_QUOTED) == 0 &&
-                     substr($token->term, -1) == '*'
+                     str_ends_with($token->term, '*')
                 ) {
                     $token->term = rtrim($token->term, '*');
                     $token->modifier |= functions_search::QST_WILDCARD_END;

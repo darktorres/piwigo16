@@ -61,7 +61,7 @@ $query = <<<SQL
     SELECT COUNT(*)
     FROM tags;
     SQL;
-list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 if ($counter > 0) {
     $template->assign('TAT_tour29_has_tags', true);

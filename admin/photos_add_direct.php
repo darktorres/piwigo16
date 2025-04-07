@@ -62,19 +62,19 @@ if (functions_user::userprefs_get_param('promote-mobile-apps', true)) {
         ORDER BY user_id ASC
         LIMIT 1;
         SQL;
-    list($register_date) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$register_date] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     $query = <<<SQL
         SELECT COUNT(*)
         FROM categories;
         SQL;
-    list($nb_cats) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$nb_cats] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     $query = <<<SQL
         SELECT COUNT(*)
         FROM images;
         SQL;
-    list($nb_images) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$nb_images] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     $uagent_obj = new uagent_info();
     // To see the mobile app promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded

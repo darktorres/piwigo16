@@ -18,32 +18,16 @@ namespace Piwigo\inc;
 final class SizingParams
 {
     /**
-     * @var array<int>
-     */
-    public array $ideal_size;
-
-    public float|int $max_crop;
-
-    /**
-     * @var array<int>
-     */
-    public ?array $min_size;
-
-    /**
      * @param array<int> $ideal_size - two element array of maximum output dimensions (width, height)
      * @param float|int $max_crop - from 0=no cropping to 1= max cropping (100% of width/height);
      *    expressed as a factor of the input width/height
      * @param ?array<int> $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height)
      */
     public function __construct(
-        array $ideal_size,
-        float|int $max_crop = 0,
-        ?array $min_size = null
-    ) {
-        $this->ideal_size = $ideal_size;
-        $this->max_crop = $max_crop;
-        $this->min_size = $min_size;
-    }
+        public array $ideal_size,
+        public float|int $max_crop = 0,
+        public ?array $min_size = null
+    ) {}
 
     /**
      * Returns a simple SizingParams object.

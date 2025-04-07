@@ -110,7 +110,7 @@ final class functions_upgrade
                 FROM user_infos
                 WHERE user_id = {$conf->default_user_id};
                 SQL;
-            list($default_theme) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$default_theme] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             // if the default theme has just been deactivated, let's set another core theme as default
             if (in_array($default_theme, $theme_ids)) {
@@ -121,7 +121,7 @@ final class functions_upgrade
                     FROM themes
                     WHERE id = '{$defaultTemplate}';
                     SQL;
-                list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+                [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
                 if ($counter < 1) {
                     // we need to activate theme first

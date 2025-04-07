@@ -130,7 +130,7 @@ final class plugins
             case 'activate':
                 if (! isset($crt_db_plugin)) {
                     $errors = $this->perform_action('install', $plugin_id);
-                    list($crt_db_plugin) = functions_plugins::get_db_plugins(null, $plugin_id);
+                    [$crt_db_plugin] = functions_plugins::get_db_plugins(null, $plugin_id);
                     functions::load_conf_from_db();
                 } elseif ($crt_db_plugin['state'] == 'active') {
                     break;
@@ -319,7 +319,7 @@ final class plugins
             if (! empty($plugin['uri']) &&
                 strpos($plugin['uri'], 'extension_view.php?eid=')
             ) {
-                list(, $extension) = explode('extension_view.php?eid=', $plugin['uri']);
+                [, $extension] = explode('extension_view.php?eid=', $plugin['uri']);
 
                 if (is_numeric($extension)) {
                     $plugin['extension'] = $extension;
@@ -682,7 +682,7 @@ final class plugins
                                         $realpath = realpath($path);
 
                                         if ($realpath === false ||
-                                            strpos($realpath, $extract_path_realpath) !== 0
+                                            ! str_starts_with($realpath, $extract_path_realpath)
                                         ) {
                                             continue;
                                         }

@@ -25,7 +25,7 @@ $tabsheet->assign();
 
 $tat_28url = 'http://';
 
-if (substr($user['language'], 0, 2) == 'fr') {
+if (str_starts_with($user['language'], 'fr')) {
     $tat_28url .= 'fr.';
 }
 
@@ -33,7 +33,7 @@ $tat_28url .= 'piwigo.org/releases/2.8.0';
 
 $tat_29url = 'http://';
 
-if (substr($user['language'], 0, 2) == 'fr') {
+if (str_starts_with($user['language'], 'fr')) {
     $tat_28url .= 'fr.';
 }
 
@@ -111,5 +111,5 @@ foreach ($tours as $tour_id) {
 }
 
 $template->assign('tours', $tpl_tours);
-$template->set_filename('plugin_admin_content', dirname(__FILE__) . '/tpl/admin.tpl');
+$template->set_filename('plugin_admin_content', __DIR__ . '/tpl/admin.tpl');
 $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');

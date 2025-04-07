@@ -16,21 +16,11 @@ namespace Piwigo\inc;
  */
 final readonly class RegisteredBlock
 {
-    private string $id;
-
-    private string $name;
-
-    private string $owner;
-
     public function __construct(
-        string $id,
-        string $name,
-        string $owner
-    ) {
-        $this->id = $id;
-        $this->name = $name;
-        $this->owner = $owner;
-    }
+        private string $id,
+        private string $name,
+        private string $owner
+    ) {}
 
     public function get_id(): string
     {

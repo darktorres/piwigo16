@@ -32,7 +32,7 @@ if ($conf->show_exif) {
         ];
 
         foreach ($conf->show_exif_fields as $field) {
-            if (strpos($field, ';') === false) {
+            if (! str_contains($field, ';')) {
                 // template cannot deal with an array as value, we skip it
                 if (isset($exif[$field]) &&
                     ! is_array($exif[$field])

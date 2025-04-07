@@ -24,7 +24,7 @@ if (isset($_POST['submit_elegant'])) {
 }
 
 $template->set_filenames([
-    'theme_admin_content' => dirname(__FILE__) . '/admin.tpl',
+    'theme_admin_content' => __DIR__ . '/admin.tpl',
 ]);
 
 $template->assign('options', $conf->elegant);

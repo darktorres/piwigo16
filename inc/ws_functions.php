@@ -34,12 +34,12 @@ final class ws_functions
     ): PwgError|string {
         global $conf;
 
-        if (strpos($methodName, 'reflection.') === 0) { // OK for reflection
+        if (str_starts_with($methodName, 'reflection.')) { // OK for reflection
             return $res;
         }
 
         if (! functions_user::is_authorized_status(ACCESS_GUEST) &&
-            strpos($methodName, 'pwg.session.') !== 0
+            ! str_starts_with($methodName, 'pwg.session.')
         ) {
             return new PwgError(401, 'Access denied');
         }

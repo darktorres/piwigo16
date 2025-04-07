@@ -422,7 +422,7 @@ final class functions_search
             $logger->debug(__FUNCTION__ . ' ' . count($tag_items) . ' items in $tag_items');
         }
 
-        list($search_clause, $matching_cat_ids, $matching_tag_ids) = self::get_sql_search_clause($search);
+        [$search_clause, $matching_cat_ids, $matching_tag_ids] = self::get_sql_search_clause($search);
 
         if (! empty($search_clause)) {
             $has_filters_filled = true;
@@ -949,7 +949,7 @@ final class functions_search
             $conf->order_by,
             $user['id'], $user['cache_update_time'],
             isset($options['permissions']) ? (bool) $options['permissions'] : true,
-            isset($options['images_where']) ? $options['images_where'] : '',
+            $options['images_where'] ?? '',
         ]);
 
         if ($persistent_cache->get($cache_key, $res)) {
@@ -1198,7 +1198,7 @@ final class functions_search
             FROM search
             WHERE search_uuid = '{$candidate}';
             SQL;
-        list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($counter == 0) {
             return $candidate;
@@ -1213,7 +1213,7 @@ final class functions_search
     ): array {
         global $user;
 
-        list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+        [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
         $search_uuid = self::get_available_search_uuid();
 
         functions_mysqli::single_insert(

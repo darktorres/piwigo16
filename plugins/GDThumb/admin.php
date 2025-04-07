@@ -16,11 +16,11 @@ if (! defined('PHPWG_ROOT_PATH')) {
 global $template, $conf, $page;
 
 functions::load_language('plugin.lang', GDTHUMB_PATH);
-require dirname(__FILE__) . '/config_default.php';
+require __DIR__ . '/config_default.php';
 $params = $conf->gdThumb;
 
 if (isset($_GET['getMissingDerivative'])) {
-    list($max_id, $image_count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT MAX(id) + 1, COUNT(*) FROM images;'));
+    [$max_id, $image_count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT MAX(id) + 1, COUNT(*) FROM images;'));
     $start_id = intval($_POST['prev_page']);
     $max_urls = intval($_POST['max_urls']);
 
@@ -200,7 +200,7 @@ if (isset($_POST['submit'])) {
 }
 
 // Try to find GreyDragon Theme and use Theme's styles for admin area
-$css_file = str_replace('/./', '/', dirname(dirname(dirname(__FILE__))) . '/' . GDTHEME_PATH . 'admin/css/styles.css');
+$css_file = str_replace('/./', '/', dirname(__FILE__, 3) . '/' . GDTHEME_PATH . 'admin/css/styles.css');
 
 if (file_exists($css_file)) {
     $custom_css = 'yes';
@@ -242,6 +242,6 @@ $template->assign(
 );
 
 $template->set_filenames([
-    'plugin_admin_content' => dirname(__FILE__) . '/template/admin.tpl',
+    'plugin_admin_content' => __DIR__ . '/template/admin.tpl',
 ]);
 $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');

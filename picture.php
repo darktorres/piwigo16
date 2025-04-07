@@ -917,7 +917,7 @@ $template->assign('ELEMENT_CONTENT', $element_content);
 if (isset($picture['next']) &&
     $picture['next']['src_image']->is_original() &&
     $template->get_template_vars('U_PREFETCH') == null &&
-    strpos($_SERVER['HTTP_USER_AGENT'], 'Chrome/') === false
+    ! str_contains($_SERVER['HTTP_USER_AGENT'], 'Chrome/')
 ) {
     $template->assign(
         'U_PREFETCH',

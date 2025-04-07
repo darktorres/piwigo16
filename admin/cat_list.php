@@ -228,8 +228,8 @@ foreach ($categories as $category) {
                 $category['name'],
                 'admin_cat_list'
             ),
-          'NB_PHOTOS' => isset($nb_photos_in[$category['id']]) ? $nb_photos_in[$category['id']] : 0,
-          'NB_SUB_PHOTOS' => isset($nb_sub_photos[$category['id']]) ? $nb_sub_photos[$category['id']] : 0,
+          'NB_PHOTOS' => $nb_photos_in[$category['id']] ?? 0,
+          'NB_SUB_PHOTOS' => $nb_sub_photos[$category['id']] ?? 0,
           'NB_SUB_ALBUMS' => isset($subcats_of[$category['id']]) ? count($subcats_of[$category['id']]) : 0,
           'ID' => $category['id'],
           'RANK' => $category['rank'] * 10,

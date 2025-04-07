@@ -15,7 +15,7 @@ global $template;
 
 $default_conf = functions_modus::modus_get_default_config();
 
-functions::load_language('theme.lang', dirname(__FILE__) . '/../');
+functions::load_language('theme.lang', __DIR__ . '/../');
 
 $my_conf = $conf->modus_theme;
 
@@ -62,7 +62,7 @@ $tabs = [
 ];
 
 $tab_codes = array_map(
-    function (array $a): string { return $a['code']; },
+    fn (array $a): string => $a['code'],
     $tabs
 );
 
@@ -111,7 +111,7 @@ foreach (array_keys(ImageStdParams::get_defined_type_map()) as $type) {
 }
 
 $available_skins = [];
-$skin_dir = dirname(dirname(__FILE__)) . '/skins/';
+$skin_dir = dirname(__FILE__, 2) . '/skins/';
 $skin_suffix = '.php';
 
 foreach (glob($skin_dir . '*' . $skin_suffix) as $file) {
@@ -124,5 +124,5 @@ $template->assign([
     'available_skins' => $available_skins,
 ]);
 
-$template->set_filename('modus_content', dirname(__FILE__) . '/modus_admin.tpl');
+$template->set_filename('modus_content', __DIR__ . '/modus_admin.tpl');
 $template->assign_var_from_handle('ADMIN_CONTENT', 'modus_content');

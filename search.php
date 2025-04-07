@@ -133,5 +133,5 @@ foreach (['added_by', 'filetypes', 'date_posted'] as $field) {
     }
 }
 
-list($search_uuid, $search_url) = functions_search::save_search($search);
+[$search_uuid, $search_url] = functions_search::save_search($search);
 functions::redirect($search_url);

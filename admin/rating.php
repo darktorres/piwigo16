@@ -112,13 +112,13 @@ $query .= <<<SQL
     WHERE 1 = 1 {$page['user_filter']}
     SQL;
 $query = trim($query) . ';';
-list($nb_images) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_images] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*)
     FROM rate;
     SQL;
-list($nb_elements) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_elements] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 // +-----------------------------------------------------------------------+
 // |                             template init                             |

@@ -45,7 +45,7 @@ $query = <<<SQL
     FROM sites
     WHERE id = {$site_id};
     SQL;
-list($site_url) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$site_url] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 if (! isset($site_url)) {
     exit('site ' . $site_id . ' does not exist');
@@ -53,7 +53,7 @@ if (! isset($site_url)) {
 
 $site_is_remote = functions_url::url_is_remote($site_url);
 
-list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+[$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 define('CURRENT_DATE', $dbnow);
 
 $error_labels = [
@@ -292,7 +292,7 @@ if (isset($_POST['submit']) &&
             $db_categories[$insert['id']] =
               [
                   'id' => $insert['id'],
-                  'parent' => (isset($parent)) ? $parent : null,
+                  'parent' => $parent ?? null,
                   'status' => $insert['status'],
                   'visible' => $insert['visible'],
                   'uppercats' => $insert['uppercats'],

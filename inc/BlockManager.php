@@ -18,8 +18,6 @@ use SmartyException;
  */
 final class BlockManager
 {
-    private readonly string $id;
-
     /**
      * @var array<RegisteredBlock>
      */
@@ -31,10 +29,8 @@ final class BlockManager
     private array $display_blocks = [];
 
     public function __construct(
-        string $id
-    ) {
-        $this->id = $id;
-    }
+        private readonly string $id
+    ) {}
 
     /**
      * Triggers a notice that allows plugins of menu blocks to register the blocks.
@@ -80,7 +76,7 @@ final class BlockManager
     {
         global $conf;
         $conf_id = 'blk_' . $this->id;
-        $mb_conf = isset($conf->{$conf_id}) ? $conf->{$conf_id} : [];
+        $mb_conf = $conf->{$conf_id} ?? [];
 
         if (! is_array($mb_conf)) {
             $mb_conf = unserialize($mb_conf);
@@ -89,7 +85,7 @@ final class BlockManager
         $idx = 1;
 
         foreach ($this->registered_blocks as $id => $block) {
-            $pos = isset($mb_conf[$id]) ? $mb_conf[$id] : $idx * 50;
+            $pos = $mb_conf[$id] ?? $idx * 50;
 
             if ($pos > 0) {
                 $this->display_blocks[$id] = new DisplayBlock($block);
@@ -128,11 +124,7 @@ final class BlockManager
     public function get_block(
         string $block_id
     ): ?DisplayBlock {
-        if (isset($this->display_blocks[$block_id])) {
-            return $this->display_blocks[$block_id];
-        }
-
-        return null;
+        return $this->display_blocks[$block_id] ?? null;
     }
 
     /**

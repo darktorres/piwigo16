@@ -284,7 +284,7 @@ function admintools_save_picture(): void
         FROM images
         WHERE id = {$page['image_id']};
         SQL;
-    list($added_by) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$added_by] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     if (! $MultiView->is_admin() &&
         $user['id'] != $added_by

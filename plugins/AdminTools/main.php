@@ -21,7 +21,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     exit('Hacking attempt!');
 }
 
-define('ADMINTOOLS_ID', basename(dirname(__FILE__)));
+define('ADMINTOOLS_ID', basename(__DIR__));
 define('ADMINTOOLS_PATH', PHPWG_PLUGINS_PATH . ADMINTOOLS_ID . '/');
 define('ADMINTOOLS_ADMIN', functions_url::get_root_url() . 'admin.php?page=plugin-' . ADMINTOOLS_ID);
 

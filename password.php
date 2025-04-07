@@ -127,7 +127,7 @@ $template->assign(
         'title' => $title,
         'form_action' => functions_url::get_root_url() . 'password.php',
         'action' => $page['action'],
-        'username' => isset($page['username']) ? $page['username'] : $user['username'],
+        'username' => $page['username'] ?? $user['username'],
         'PWG_TOKEN' => functions::get_pwg_token(),
     ]
 );

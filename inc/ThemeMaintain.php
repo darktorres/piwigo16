@@ -16,13 +16,9 @@ namespace Piwigo\inc;
  */
 class ThemeMaintain
 {
-    protected string $theme_id;
-
     public function __construct(
-        string $id
-    ) {
-        $this->theme_id = $id;
-    }
+        protected string $theme_id
+    ) {}
 
     /**
      * @param array $errors - used to return error messages

@@ -16,13 +16,6 @@ namespace Piwigo\inc;
  */
 final class Script extends Combinable
 {
-    /**
-     * 0,1,2
-     */
-    public int $load_mode;
-
-    public array $precedents;
-
     public array $extra;
 
     /**
@@ -30,15 +23,13 @@ final class Script extends Combinable
      * @param array<int, string> $precedents
      */
     public function __construct(
-        int $load_mode,
+        public int $load_mode,
         string $id,
         ?string $path,
         int|string $version = 0,
-        array $precedents = []
+        public array $precedents = []
     ) {
         parent::__construct($id, $path, $version);
-        $this->load_mode = $load_mode;
-        $this->precedents = $precedents;
         $this->extra = [];
     }
 }

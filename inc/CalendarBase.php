@@ -270,7 +270,7 @@ abstract class CalendarBase
             count($page['chronology_date']) < count($this->calendar_levels) - 1
         ) {
             if (! isset($page['chronology_date'][$level])) {
-                list($key) = array_keys($level_items);
+                [$key] = array_keys($level_items);
                 $page['chronology_date'][$level] = (int) $key;
 
                 if ($level < count($page['chronology_date']) &&
@@ -292,7 +292,7 @@ abstract class CalendarBase
             $level_items,
             true,
             true,
-            isset($labels) ? $labels : $this->calendar_levels[$level]['labels']
+            $labels ?? $this->calendar_levels[$level]['labels']
         );
 
         $template->append(

@@ -28,7 +28,7 @@ final class functions_url
         if ($root_url == null) { // TODO - add HERE the possibility to call PWG functions from external scripts
             $root_url = './';
 
-            if (strncmp($root_url, './', 2) == 0) {
+            if (str_starts_with($root_url, './')) {
                 return substr($root_url, 2);
             }
         }
@@ -117,7 +117,7 @@ final class functions_url
             foreach ($params as $param => $val) {
                 if ($is_first) {
                     $is_first = false;
-                    $url .= (strpos($url, '?') === false) ? '?' : $arg_separator;
+                    $url .= (! str_contains($url, '?')) ? '?' : $arg_separator;
                 } else {
                     $url .= $arg_separator;
                 }
@@ -452,7 +452,7 @@ final class functions_url
         $page = [];
 
         if (isset($tokens[$next_token]) &&
-            strncmp($tokens[$next_token], 'categor', 7) == 0
+            str_starts_with($tokens[$next_token], 'categor')
         ) {
             $page['section'] = 'categories';
             $next_token++;
@@ -465,10 +465,10 @@ final class functions_url
                     exit('infinite loop?');
                 }
 
-                if (strpos($tokens[$next_token], 'created-') === 0 ||
-                    strpos($tokens[$next_token], 'posted-') === 0 ||
-                    strpos($tokens[$next_token], 'start-') === 0 ||
-                    strpos($tokens[$next_token], 'startcat-') === 0 ||
+                if (str_starts_with($tokens[$next_token], 'created-') ||
+                    str_starts_with($tokens[$next_token], 'posted-') ||
+                    str_starts_with($tokens[$next_token], 'start-') ||
+                    str_starts_with($tokens[$next_token], 'startcat-') ||
                     $tokens[$next_token] == 'flat'
                 ) {
                     break;
@@ -491,10 +491,10 @@ final class functions_url
                     $current_token = $next_token;
 
                     while (isset($tokens[$current_token]) &&
-                           strpos($tokens[$current_token], 'created-') !== 0 &&
-                           strpos($tokens[$current_token], 'posted-') !== 0 &&
-                           strpos($tokens[$next_token], 'start-') !== 0 &&
-                           strpos($tokens[$next_token], 'startcat-') !== 0 &&
+                           ! str_starts_with($tokens[$current_token], 'created-') &&
+                           ! str_starts_with($tokens[$current_token], 'posted-') &&
+                           ! str_starts_with($tokens[$next_token], 'start-') &&
+                           ! str_starts_with($tokens[$next_token], 'startcat-') &&
                            $tokens[$current_token] != 'flat'
                     ) {
                         if (empty($maybe_permalinks)) {
@@ -563,9 +563,9 @@ final class functions_url
             $requested_tag_url_names = [];
 
             while (isset($tokens[$i])) {
-                if (strpos($tokens[$i], 'created-') === 0 ||
-                    strpos($tokens[$i], 'posted-') === 0 ||
-                    strpos($tokens[$i], 'start-') === 0
+                if (str_starts_with($tokens[$i], 'created-') ||
+                    str_starts_with($tokens[$i], 'posted-') ||
+                    str_starts_with($tokens[$i], 'start-')
                 ) {
                     break;
                 }
@@ -667,8 +667,8 @@ final class functions_url
             if ($tokens[$i] == 'flat') {
                 // indicate a special list of images
                 $page['flat'] = true;
-            } elseif (strpos($tokens[$i], 'created-') === 0 ||
-                      strpos($tokens[$i], 'posted-') === 0
+            } elseif (str_starts_with($tokens[$i], 'created-') ||
+                      str_starts_with($tokens[$i], 'posted-')
             ) {
                 $chronology_tokens = explode('-', $tokens[$i]);
 
@@ -860,8 +860,8 @@ final class functions_url
     public static function url_is_remote(
         string $url
     ): bool {
-        if (strncmp($url, 'http://', 7) == 0 ||
-            strncmp($url, 'https://', 8) == 0
+        if (str_starts_with($url, 'http://') ||
+            str_starts_with($url, 'https://')
         ) {
             return true;
         }

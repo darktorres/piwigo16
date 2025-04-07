@@ -52,7 +52,7 @@ final class functions_comment
             $matches
         );
 
-        if (strpos($comment['author'], 'http://') !== false) {
+        if (str_contains($comment['author'], 'http://')) {
             $link_count++;
         }
 
@@ -201,7 +201,7 @@ final class functions_comment
             }
 
             $query = trim($query) . ';';
-            list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             if ($counter > 0) {
                 $infos[] = functions::l10n('Anti-flood system : please wait for a moment before trying to post another comment');
@@ -494,7 +494,7 @@ final class functions_comment
             }
         }
 
-        list($author_id) = functions_mysqli::pwg_db_fetch_row($result);
+        [$author_id] = functions_mysqli::pwg_db_fetch_row($result);
 
         return $author_id;
     }

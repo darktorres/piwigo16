@@ -279,7 +279,8 @@ $filter_->includeFiles(
 );
 
 $coverage_ = new CodeCoverage(
-    (new Selector())->forLineCoverage($filter_),
+    new Selector()
+        ->forLineCoverage($filter_),
     $filter_
 );
 $coverage_->excludeUncoveredFiles();
@@ -290,7 +291,8 @@ function save_coverage(): void
 {
     global $coverage_;
     $coverage_->stop();
-    (new PhpReport())->process($coverage_, 'C:/Apache24/logs/xdebug/coverage/' . bin2hex(random_bytes(16)) . '.cov');
+    new PhpReport()
+        ->process($coverage_, 'C:/Apache24/logs/xdebug/coverage/' . bin2hex(random_bytes(16)) . '.cov');
 }
 
 register_shutdown_function('save_coverage');

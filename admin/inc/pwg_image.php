@@ -25,16 +25,13 @@ final class pwg_image
 
     public bool|string $library = '';
 
-    public string $source_filepath = '';
-
     public static string $ext_imagick_version = '';
 
     public function __construct(
-        string $source_filepath,
+        public string $source_filepath,
         ?string $library = null
     ) {
         global $conf;
-        $this->source_filepath = $source_filepath;
 
         functions_plugins::trigger_notify('load_image_library', [&$this]);
 
@@ -42,7 +39,7 @@ final class pwg_image
             return; // A plugin may have load its own library
         }
 
-        $extension = strtolower(functions::get_extension($source_filepath));
+        $extension = strtolower(functions::get_extension($this->source_filepath));
 
         if (! in_array($extension, $conf->picture_ext)) {
             exit('[Image] unsupported file extension');
@@ -55,7 +52,7 @@ final class pwg_image
         }
 
         $class = '\Piwigo\admin\inc\image_' . $this->library;
-        $this->image = new $class($source_filepath);
+        $this->image = new $class($this->source_filepath);
     }
 
     // Unknown methods will be redirected to image object
@@ -142,7 +139,7 @@ final class pwg_image
         }
 
         if ($rotate_for_dimensions) {
-            list($width, $height) = [$height, $width];
+            [$width, $height] = [$height, $width];
         }
 
         if ($crop) {
@@ -152,7 +149,7 @@ final class pwg_image
             if ($width < $height &&
                 $follow_orientation
             ) {
-                list($max_width, $max_height) = [$max_height, $max_width];
+                [$max_width, $max_height] = [$max_height, $max_width];
             }
 
             $img_ratio = $width / $height;
@@ -188,7 +185,7 @@ final class pwg_image
         }
 
         if ($rotate_for_dimensions) {
-            list($destination_width, $destination_height) = [$destination_height, $destination_width];
+            [$destination_width, $destination_height] = [$destination_height, $destination_width];
         }
 
         $result = [
@@ -232,7 +229,7 @@ final class pwg_image
         switch (true) {
             case ! is_string($buf):
             case strlen($buf) < 25:
-            case substr($buf, 0, 4) != 'RIFF':
+            case ! str_starts_with($buf, 'RIFF'):
             case substr($buf, 8, 4) != 'WEBP':
             case substr($buf, 12, 3) != 'VP8':
                 throw new Exception('webp_info(): not a valid webp image');
@@ -268,7 +265,7 @@ final class pwg_image
     public static function get_rotation_angle(
         string $source_filepath
     ): ?int {
-        list($width, $height, $type) = getimagesize($source_filepath);
+        [$width, $height, $type] = getimagesize($source_filepath);
 
         if ($type != IMAGETYPE_JPEG) {
             return null;
@@ -306,25 +303,25 @@ final class pwg_image
     public static function get_rotation_code_from_angle(
         ?int $rotation_angle
     ): int {
-        switch ($rotation_angle) {
-            case 0:   return 0;
-            case 90:  return 1;
-            case 180: return 2;
-            case 270: return 3;
-            default:  return 0;
-        }
+        return match ($rotation_angle) {
+            0 => 0,
+            90 => 1,
+            180 => 2,
+            270 => 3,
+            default => 0,
+        };
     }
 
     public static function get_rotation_angle_from_code(
         string $rotation_code
     ): int {
-        switch ($rotation_code % 4) {
-            case 0:  return 0;
-            case 1:  return 90;
-            case 2:  return 180;
-            case 3:  return 270;
-            default: return 0;
-        }
+        return match ($rotation_code % 4) {
+            0 => 0,
+            1 => 90,
+            2 => 180,
+            3 => 270,
+            default => 0,
+        };
     }
 
     /**

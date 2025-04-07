@@ -515,11 +515,11 @@ switch ($page['section']) {
                 }
 
                 if ($params) {
-                    list($tpl_var['w'], $tpl_var['h']) = $params->sizing->ideal_size;
+                    [$tpl_var['w'], $tpl_var['h']] = $params->sizing->ideal_size;
                     $tpl_var['crop'] = round(100 * $params->sizing->max_crop);
 
                     if ($tpl_var['crop'] > 0) {
-                        list($tpl_var['minw'], $tpl_var['minh']) = $params->sizing->min_size;
+                        [$tpl_var['minw'], $tpl_var['minh']] = $params->sizing->min_size;
                     } else {
                         $tpl_var['minw'] = $tpl_var['minh'] = '';
                     }

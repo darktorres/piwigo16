@@ -74,9 +74,9 @@ if (isset($_POST['create_tpl'])) {
 }
 
 if ($newfile_page) {
-    $filename = isset($_POST['tpl_name']) ? $_POST['tpl_name'] : '';
-    $selected['model'] = isset($_POST['tpl_model']) ? $_POST['tpl_model'] : '0';
-    $selected['parent'] = isset($_POST['tpl_parent']) ? $_POST['tpl_parent'] : './template-extension';
+    $filename = $_POST['tpl_name'] ?? '';
+    $selected['model'] = $_POST['tpl_model'] ?? '0';
+    $selected['parent'] = $_POST['tpl_parent'] ?? './template-extension';
 
     // Parent directories list
     $options['parent'] = [

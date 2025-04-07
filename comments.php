@@ -182,7 +182,7 @@ if (! empty($_GET['keyword'])) {
       implode(
           ' AND ',
           array_map(
-              function (string $s): string {return "content LIKE '%{$s}%'"; },
+              fn (string $s): string => "content LIKE '%{$s}%'",
               preg_split('/[\s,;]+/', $_GET['keyword'])
           )
       ) .
@@ -401,7 +401,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $category_ids[] = $row['category_id'];
 }
 
-list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
+[$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
 
 $url = './comments.php' . functions_url::get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
 

@@ -41,7 +41,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     exit('Hacking attempt!');
 }
 
-define('LOCALEDIT_PATH', PHPWG_PLUGINS_PATH . basename(dirname(__FILE__)) . '/');
+define('LOCALEDIT_PATH', PHPWG_PLUGINS_PATH . basename(__DIR__) . '/');
 
 functions_plugins::add_event_handler('loc_end_themes_installed', localfiles_css_link(...));
 function localfiles_css_link(): void

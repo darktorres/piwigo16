@@ -50,7 +50,7 @@ final class functions_permalinks
         $cat_id = null;
 
         if (functions_mysqli::pwg_db_num_rows($result)) {
-            list($cat_id) = functions_mysqli::pwg_db_fetch_row($result);
+            [$cat_id] = functions_mysqli::pwg_db_fetch_row($result);
         }
 
         return $cat_id;
@@ -75,7 +75,7 @@ final class functions_permalinks
         $result = functions_mysqli::pwg_query($query);
 
         if (functions_mysqli::pwg_db_num_rows($result)) {
-            list($permalink) = functions_mysqli::pwg_db_fetch_row($result);
+            [$permalink] = functions_mysqli::pwg_db_fetch_row($result);
         }
 
         if (! isset($permalink)) { // no permalink; nothing to do

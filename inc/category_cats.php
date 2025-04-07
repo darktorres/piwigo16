@@ -76,7 +76,7 @@ $query .= <<<SQL
 $query = functions_plugins::trigger_change('loc_begin_index_category_thumbnails_query', $query);
 
 $result = functions_mysqli::pwg_query($query);
-list($page['total_categories']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
+[$page['total_categories']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
 
 $categories = [];
 $category_ids = [];
@@ -116,7 +116,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $subresult = functions_mysqli::pwg_query($query);
 
         if (functions_mysqli::pwg_db_num_rows($subresult) > 0) {
-            list($image_id) = functions_mysqli::pwg_db_fetch_row($subresult);
+            [$image_id] = functions_mysqli::pwg_db_fetch_row($subresult);
         }
     }
 

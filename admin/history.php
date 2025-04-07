@@ -107,9 +107,9 @@ if (isset($page['search'])) {
       functions_cookie::pwg_get_cookie_var('display_thumbnail', 'no_display_thumbnail');
 }
 
-$form_param['ip'] = isset($_GET['filter_ip']) ? $_GET['filter_ip'] : ($form['ip'] ?? null);
-$form_param['image_id'] = isset($_GET['filter_image_id']) ? $_GET['filter_image_id'] : ($form['image_id'] ?? null);
-$form_param['user_id'] = isset($_GET['filter_user_id']) ? $_GET['filter_user_id'] : '-1';
+$form_param['ip'] = $_GET['filter_ip'] ?? $form['ip'] ?? null;
+$form_param['image_id'] = $_GET['filter_image_id'] ?? $form['image_id'] ?? null;
+$form_param['user_id'] = $_GET['filter_user_id'] ?? '-1';
 
 if (isset($_GET['filter_ip']) ||
     isset($_GET['filter_image_id']) ||
@@ -125,7 +125,7 @@ if ($form_param['user_id'] != '-1') {
         WHERE id = {$form_param['user_id']};
         SQL;
 
-    list($form_param['user_name']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$form_param['user_name']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
     $form_param['user_id'] = empty(functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query))) ? '-1' : $form_param['user_id'];
 }
 

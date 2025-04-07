@@ -33,7 +33,7 @@ if (functions::mobile_theme()) {
 // | Plugin constants                                                      |
 // +-----------------------------------------------------------------------+
 define('GDTHUMB_VERSION', '1.0.26');
-define('GDTHUMB_ID', basename(dirname(__FILE__)));
+define('GDTHUMB_ID', basename(__DIR__));
 define('GDTHUMB_PATH', PHPWG_PLUGINS_PATH . GDTHUMB_ID . '/');
 
 if (! defined('GDTHEME_PATH')) {
@@ -41,7 +41,7 @@ if (! defined('GDTHEME_PATH')) {
 }
 
 if (! isset($conf->gdThumb)) {
-    require dirname(__FILE__) . '/config_default.php';
+    require __DIR__ . '/config_default.php';
     functions::conf_update_param('gdThumb', $config_default);
     functions::load_conf_from_db();
 }
@@ -150,7 +150,7 @@ function GDThumb_process_thumb(
         $confTemp['normalize_title'] = 'on';
     }
 
-    $template->set_filename('index_thumbnails', dirname(__FILE__) . '/template/gdthumb_thumb.tpl');
+    $template->set_filename('index_thumbnails', __DIR__ . '/template/gdthumb_thumb.tpl');
     $template->assign('GDThumb', $confTemp);
 
     if (($confTemp['method'] == 'slide') ||
@@ -186,7 +186,7 @@ function GDThumb_process_category(
     $confTemp['GDTHUMB_ROOT'] = 'plugins/' . GDTHUMB_ID;
     $confTemp['big_thumb_noinpw'] = isset($confTemp['big_thumb_noinpw']) ? 1 : 0;
 
-    $template->set_filename('index_category_thumbnails', dirname(__FILE__) . '/template/gdthumb_cat.tpl');
+    $template->set_filename('index_category_thumbnails', __DIR__ . '/template/gdthumb_cat.tpl');
     $template->assign('GDThumb', $confTemp);
 
     if (($confTemp['method'] == 'slide') ||
@@ -236,7 +236,7 @@ function GDThumb_admin_menu(
         $menu,
         [
             'NAME' => 'gdThumb',
-            'URL' => functions_url::get_root_url() . 'admin.php?page=plugin-' . basename(dirname(__FILE__)),
+            'URL' => functions_url::get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__),
         ]
     );
     return $menu;

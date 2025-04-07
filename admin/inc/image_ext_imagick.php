@@ -22,8 +22,6 @@ final class image_ext_imagick implements imageInterface
 {
     public string $imagickdir = '';
 
-    public string $source_filepath = '';
-
     public int $width;
 
     public int $height;
@@ -33,18 +31,17 @@ final class image_ext_imagick implements imageInterface
     public array $commands = [];
 
     public function __construct(
-        string $source_filepath
+        public string $source_filepath
     ) {
         global $conf;
-        $this->source_filepath = $source_filepath;
         $this->imagickdir = $conf->ext_imagick_dir;
 
-        if (strpos($_SERVER['SCRIPT_FILENAME'], '/kunden/') === 0) {  // 1and1
+        if (str_starts_with($_SERVER['SCRIPT_FILENAME'], '/kunden/')) {  // 1and1
             putenv('MAGICK_THREAD_LIMIT=1');
         }
 
-        if (strtolower(functions::get_extension($source_filepath)) == 'webp') {
-            $webp_info = pwg_image::webp_info($source_filepath);
+        if (strtolower(functions::get_extension($this->source_filepath)) == 'webp') {
+            $webp_info = pwg_image::webp_info($this->source_filepath);
 
             if ($webp_info['has-animation']) {
                 $this->is_animated_webp = true;
@@ -53,12 +50,12 @@ final class image_ext_imagick implements imageInterface
                 // frame, such as "400x300400x300400x300" (3 frames of 400x300), as a big
                 // string, impossible to parse :-/ So let's use the PHP embedded function
                 // getimagesize here.
-                list($this->width, $this->height) = getimagesize($source_filepath);
+                [$this->width, $this->height] = getimagesize($this->source_filepath);
                 return;
             }
         }
 
-        $command = $this->imagickdir . 'identify -format "%wx%h" "' . realpath($source_filepath) . '"';
+        $command = $this->imagickdir . 'identify -format "%wx%h" "' . realpath($this->source_filepath) . '"';
         exec($command, $returnarray);
 
         if (! is_array($returnarray) ||

@@ -1061,7 +1061,7 @@ class Config
 
     public array $bootstrap_darkroom_ps_exif_replacements;
 
-    public ?array $c13y_ignore;
+    public ?array $c13y_ignore = null;
 
     public array $cache_sizes;
 

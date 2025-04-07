@@ -122,7 +122,7 @@ $template->set_filenames(
     ]
 );
 
-$page['section'] = isset($_GET['section']) ? $_GET['section'] : 'status';
+$page['section'] = $_GET['section'] ?? 'status';
 $base_url = './admin.php?page=cat_options&amp;section=';
 
 $template->assign(

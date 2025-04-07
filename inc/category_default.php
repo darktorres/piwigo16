@@ -69,8 +69,7 @@ if (count($pictures) > 0) {
           ),
           [
               'slideshow' =>
-                      (isset($_GET['slideshow']) ? $_GET['slideshow']
-                                                 : ''),
+                      ($_GET['slideshow'] ?? ''),
           ]
       );
 

@@ -199,7 +199,7 @@ final class functions_rate
             }
         }
 
-        return isset($return) ? $return : [
+        return $return ?? [
             'score' => null,
             'average' => null,
             'count' => 0,

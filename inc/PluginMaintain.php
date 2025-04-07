@@ -16,13 +16,9 @@ namespace Piwigo\inc;
  */
 class PluginMaintain
 {
-    protected string $plugin_id;
-
     public function __construct(
-        string $id
-    ) {
-        $this->plugin_id = $id;
-    }
+        protected string $plugin_id
+    ) {}
 
     /**
      * @param array $errors - used to return error messages

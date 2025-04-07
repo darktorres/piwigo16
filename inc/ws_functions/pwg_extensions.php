@@ -200,7 +200,7 @@ final class pwg_extensions
                 );
             }
 
-            list($upgrade_status) = $extension->perform_action('update', $extension_id, [
+            [$upgrade_status] = $extension->perform_action('update', $extension_id, [
                 'revision' => $revision,
             ]);
             $extension_name = $extension->fs_plugins[$extension_id]['name'];
@@ -233,22 +233,13 @@ final class pwg_extensions
         global $template;
         $template->delete_compiled_templates();
 
-        switch ($upgrade_status) {
-            case 'ok':
-                return functions::l10n('%s has been successfully updated.', $extension_name);
-
-            case 'temp_path_error':
-                return new PwgError(null, functions::l10n('Can\'t create temporary file.'));
-
-            case 'dl_archive_error':
-                return new PwgError(null, functions::l10n('Can\'t download archive.'));
-
-            case 'archive_error':
-                return new PwgError(null, functions::l10n('Can\'t read or extract archive.'));
-
-            default:
-                return new PwgError(null, functions::l10n('An error occurred during extraction (%s).', $upgrade_status));
-        }
+        return match ($upgrade_status) {
+            'ok' => functions::l10n('%s has been successfully updated.', $extension_name),
+            'temp_path_error' => new PwgError(null, functions::l10n('Can\'t create temporary file.')),
+            'dl_archive_error' => new PwgError(null, functions::l10n('Can\'t download archive.')),
+            'archive_error' => new PwgError(null, functions::l10n('Can\'t read or extract archive.')),
+            default => new PwgError(null, functions::l10n('An error occurred during extraction (%s).', $upgrade_status)),
+        };
     }
 
     /**

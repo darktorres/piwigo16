@@ -271,7 +271,7 @@ final class CalendarMonthly extends CalendarBase
 
         // echo ('<pre>'. var_export($items, true) . '</pre>');
         if (count($items) == 1) { // only one year exists so bail out to year view
-            list($y) = array_keys($items);
+            [$y] = array_keys($items);
             $page['chronology_date'][CalendarBase::CYEAR] = $y;
             return false;
         }
@@ -342,7 +342,7 @@ final class CalendarMonthly extends CalendarBase
         }
 
         if (count($items) == 1) { // only one month exists so bail out to month view
-            list($m) = array_keys($items);
+            [$m] = array_keys($items);
             $page['chronology_date'][CalendarBase::CMONTH] = $m;
             return false;
         }
@@ -422,7 +422,7 @@ final class CalendarMonthly extends CalendarBase
         }
 
         if (! empty($items)) {
-            list($known_day) = array_keys($items);
+            [$known_day] = array_keys($items);
             $known_dow = $items[$known_day]['dow'];
             $first_day_dow = ($known_dow - ($known_day - 1)) % 7;
 
@@ -443,7 +443,7 @@ final class CalendarMonthly extends CalendarBase
                 $wday_labels[] = array_shift($wday_labels);
             }
 
-            list($cell_width, $cell_height) = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE)->sizing->ideal_size;
+            [$cell_width, $cell_height] = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE)->sizing->ideal_size;
 
             $tpl_weeks = [];
             $tpl_crt_week = [];

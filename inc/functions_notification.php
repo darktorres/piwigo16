@@ -210,7 +210,7 @@ final class functions_notification
                 $query = <<<SQL
                     SELECT COUNT(DISTINCT {$field_id}) {$query};
                     SQL;
-                list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+                [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
                 return $count;
 
             case 'info':

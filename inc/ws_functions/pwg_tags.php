@@ -41,7 +41,7 @@ final class pwg_tags
         $tags = functions_tag::get_available_tags();
 
         if ($params['sort_by_counter']) {
-            usort($tags, function (array $a, array $b): int|float {  return -$a['counter'] + $b['counter']; });
+            usort($tags, fn (array $a, array $b): int|float => -$a['counter'] + $b['counter']);
         } else {
             usort($tags, functions_html::tag_alpha_compare(...));
         }
@@ -290,7 +290,7 @@ final class pwg_tags
             FROM tags
             WHERE id IN ({$tag_ids});
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count != count($params['tag_id'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
@@ -328,7 +328,7 @@ final class pwg_tags
             FROM tags
             WHERE id = {$tag_id};
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
@@ -389,7 +389,7 @@ final class pwg_tags
             FROM tags
             WHERE id = {$tag_id};
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
@@ -400,7 +400,7 @@ final class pwg_tags
             FROM tags
             WHERE name = "{$copy_name}";
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count != 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already taken.');
@@ -475,7 +475,7 @@ final class pwg_tags
             FROM tags
             WHERE id IN ({$all_tags_imploded});
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count != count($all_tags)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');

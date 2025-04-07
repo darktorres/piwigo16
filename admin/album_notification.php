@@ -171,7 +171,7 @@ if (isset($_POST['submitEmail'])) {
             FROM `groups`
             WHERE id = {$_POST['group']};
             SQL;
-        list($group_name) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$group_name] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $page['infos'][] = functions::l10n('An information email was sent to group "%s"', $group_name);
     }

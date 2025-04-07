@@ -25,7 +25,7 @@ $query = <<<SQL
     SELECT COUNT(*)
     FROM categories;
     SQL;
-list($albums_counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$albums_counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -83,11 +83,11 @@ if (isset($_POST['simpleAutoOrder']) ||
     $categories = [];
     $sort = [];
 
-    list($order_by_field, $order_by_asc) = explode(' ', $_POST['order']);
+    [$order_by_field, $order_by_asc] = explode(' ', $_POST['order']);
 
     $order_by_date = false;
 
-    if (strpos($order_by_field, 'date_') === 0) {
+    if (str_starts_with($order_by_field, 'date_')) {
         $order_by_date = true;
 
         $ref_dates = functions_admin::get_categories_ref_date(

@@ -209,7 +209,7 @@ final class functions_metadata_admin
             $vb = (string) $xmlattributes->viewBox;
 
             if (isset($width) &&
-                $width != ''
+                $width != 0
             ) {
                 $infos['width'] = $width;
             } elseif (isset($vb)) {
@@ -217,7 +217,7 @@ final class functions_metadata_admin
             }
 
             if (isset($height) &&
-                $height != ''
+                $height != 0
             ) {
                 $infos['height'] = $height;
             } elseif (isset($vb)) {

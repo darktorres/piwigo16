@@ -223,8 +223,8 @@ final class functions_upload
             // this photo is new
 
             // current date
-            list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
-            list($year, $month, $day) = preg_split('/[^\d]/', $dbnow, 4);
+            [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+            [$year, $month, $day] = preg_split('/[^\d]/', $dbnow, 4);
 
             // upload directory hierarchy
             $upload_dir = sprintf(
@@ -240,7 +240,7 @@ final class functions_upload
             $filename_wo_ext = $date_string . '-' . $random_string;
             $file_path = $upload_dir . '/' . $filename_wo_ext . '.';
 
-            list($width, $height, $type) = getimagesize($source_filepath);
+            [$width, $height, $type] = getimagesize($source_filepath);
 
             if ($type == IMAGETYPE_PNG) {
                 $file_path .= 'png';
@@ -321,7 +321,7 @@ final class functions_upload
 
         if (isset($image_id)) {
             $update = [
-                'file' => functions_mysqli::pwg_db_real_escape_string(isset($original_filename) ? $original_filename : basename($file_path)),
+                'file' => functions_mysqli::pwg_db_real_escape_string($original_filename ?? basename($file_path)),
                 'filesize' => $file_infos['filesize'],
                 'width' => $file_infos['width'],
                 'height' => $file_infos['height'],
@@ -343,7 +343,7 @@ final class functions_upload
             );
         } else {
             // database registration
-            $file = functions_mysqli::pwg_db_real_escape_string(isset($original_filename) ? $original_filename : basename($file_path));
+            $file = functions_mysqli::pwg_db_real_escape_string($original_filename ?? basename($file_path));
             $insert = [
                 'file' => $file,
                 'name' => functions::get_name_from_file($file),
@@ -411,7 +411,7 @@ final class functions_upload
 
         if (! $conf->lounge_active) {
             // check if we need to use the lounge from now
-            list($nb_photos) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT COUNT(*) FROM images;'));
+            [$nb_photos] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT COUNT(*) FROM images;'));
 
             if ($nb_photos >= $conf->lounge_activate_threshold) {
                 functions::conf_update_param('lounge_active', true, true);
@@ -574,7 +574,7 @@ final class functions_upload
         $representative_file_path = functions::original_to_representative($file_path, $ext);
         self::prepare_directory(dirname($representative_file_path));
 
-        list($w, $h) = self::get_optimal_dimensions_for_representative();
+        [$w, $h] = self::get_optimal_dimensions_for_representative();
 
         $exec = $conf->ext_imagick_dir . 'convert';
         $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "' . $w . 'x' . $h . '>"';
@@ -855,7 +855,7 @@ final class functions_upload
         // TODO: the resize check should take the orientation into account. If a
         // rotation must be applied to the resized photo, then we should test
         // invert width and height.
-        list($width, $height) = getimagesize($image_filepath);
+        [$width, $height] = getimagesize($image_filepath);
 
         if ($width > $max_width ||
             $height > $max_height
@@ -869,7 +869,7 @@ final class functions_upload
     public static function pwg_image_infos(
         string $path
     ): array {
-        list($width, $height) = getimagesize($path);
+        [$width, $height] = getimagesize($path);
         $filesize = floor(filesize($path) / 1024);
 
         return [
@@ -898,34 +898,19 @@ final class functions_upload
     public static function file_upload_error_message(
         string $error_code
     ): string {
-        switch ($error_code) {
-            case UPLOAD_ERR_INI_SIZE:
-                return sprintf(
-                    functions::l10n('The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB'),
-                    self::get_ini_size('upload_max_filesize', false)
-                );
-
-            case UPLOAD_ERR_FORM_SIZE:
-                return functions::l10n('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form');
-
-            case UPLOAD_ERR_PARTIAL:
-                return functions::l10n('The uploaded file was only partially uploaded');
-
-            case UPLOAD_ERR_NO_FILE:
-                return functions::l10n('No file was uploaded');
-
-            case UPLOAD_ERR_NO_TMP_DIR:
-                return functions::l10n('Missing a temporary folder');
-
-            case UPLOAD_ERR_CANT_WRITE:
-                return functions::l10n('Failed to write file to disk');
-
-            case UPLOAD_ERR_EXTENSION:
-                return functions::l10n('File upload stopped by extension');
-
-            default:
-                return functions::l10n('Unknown upload error');
-        }
+        return match ((int) $error_code) {
+            UPLOAD_ERR_INI_SIZE => sprintf(
+                functions::l10n('The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB'),
+                self::get_ini_size('upload_max_filesize', false)
+            ),
+            UPLOAD_ERR_FORM_SIZE => functions::l10n('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'),
+            UPLOAD_ERR_PARTIAL => functions::l10n('The uploaded file was only partially uploaded'),
+            UPLOAD_ERR_NO_FILE => functions::l10n('No file was uploaded'),
+            UPLOAD_ERR_NO_TMP_DIR => functions::l10n('Missing a temporary folder'),
+            UPLOAD_ERR_CANT_WRITE => functions::l10n('Failed to write file to disk'),
+            UPLOAD_ERR_EXTENSION => functions::l10n('File upload stopped by extension'),
+            default => functions::l10n('Unknown upload error'),
+        };
     }
 
     public static function get_ini_size(
@@ -1022,7 +1007,7 @@ final class functions_upload
             $params = $enabled[$type] ?? $disabled[$type];
 
             if ($params) {
-                list($w, $h) = $params->sizing->ideal_size;
+                [$w, $h] = $params->sizing->ideal_size;
             }
         }
 

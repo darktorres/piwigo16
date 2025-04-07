@@ -87,11 +87,11 @@ final class QDateRangeScope extends QSearchScope
         $clauses = [];
 
         if ($token->scope_data[0] != '') {
-            $clauses[] = $field . ' >= \'' . $token->scope_data[0] . '\'';
+            $clauses[] = $field . " >= '" . $token->scope_data[0] . "'";
         }
 
         if ($token->scope_data[1] != '') {
-            $clauses[] = $field . ' <= \'' . $token->scope_data[1] . '\'';
+            $clauses[] = $field . " <= '" . $token->scope_data[1] . "'";
         }
 
         if (empty($clauses)) {

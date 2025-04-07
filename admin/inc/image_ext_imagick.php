@@ -228,7 +228,7 @@ final class image_ext_imagick implements imageInterface
         $logger->debug($exec);
         exec($exec, $returnarray);
 
-        if (is_array($returnarray) && (count($returnarray) > 0)) {
+        if (is_array($returnarray) && ($returnarray !== [])) {
             $logger->error('', $returnarray);
 
             foreach ($returnarray as $line) {

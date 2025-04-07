@@ -336,9 +336,9 @@ for ($i = 1; $i < count($temp_data); $i++) {
 
 $split = 0;
 //Split (split represented by -1)
-if (count($diff_x) > 0) {
+if ($diff_x !== []) {
     while (max($diff_x) > 120) {
-        $diff_x[array_search(max($diff_x), $diff_x)] = -1;
+        $diff_x[array_search(max($diff_x), $diff_x, true)] = -1;
         $split++;
     }
 }

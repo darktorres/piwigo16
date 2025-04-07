@@ -12,7 +12,7 @@ $TOUR_PATH = PHPWG_PLUGINS_PATH . 'TakeATour/tours/2_9_0/tour.tpl';
 
 /*********************************/
 
-$template->assign('TAT_HAS_ORPHANS', count(functions_admin::get_orphans()) > 0 ? true : false);
+$template->assign('TAT_HAS_ORPHANS', functions_admin::get_orphans() !== [] ? true : false);
 
 // category id for example of delete options. To illustrate the new
 // features, we need an album with photos.

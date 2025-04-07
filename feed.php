@@ -74,7 +74,7 @@ $news = [];
 if (! $image_only) {
     $news = functions_notification::news($feed_row['last_check'], $dbnow, true, true);
 
-    if (count($news) > 0) {
+    if ($news !== []) {
         $item = new FeedItem();
         $item->title = functions::l10n('New on %s', functions::format_date($dbnow));
         $item->link = functions_url::get_gallery_home_url();

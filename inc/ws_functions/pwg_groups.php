@@ -43,7 +43,7 @@ final class pwg_groups
         $where_clauses = ['1 = 1'];
 
         if (! empty($params['name'])) {
-            $where_clauses[] = 'LOWER(name) LIKE \'' . functions_mysqli::pwg_db_real_escape_string($params['name']) . '\'';
+            $where_clauses[] = "LOWER(name) LIKE '" . functions_mysqli::pwg_db_real_escape_string($params['name']) . "'";
         }
 
         if (! empty($params['group_id'])) {

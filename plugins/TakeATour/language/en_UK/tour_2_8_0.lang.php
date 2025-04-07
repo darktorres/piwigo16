@@ -9,7 +9,7 @@ $lang['2_8_0_title2'] = 'Notify a user';
 $lang['2_8_0_stp2'] = 'When notifying an album by email, Piwigo 2.8 gives you the power to select users, not only groups.';
 
 $lang['2_8_0_title3'] = 'Authentication keys';
-$lang['2_8_0_stp3'] = 'Simply said, authentication keys mean your users won\'t have to remember their password anymore.<br><br>They will access your private content directly and securely.';
+$lang['2_8_0_stp3'] = "Simply said, authentication keys mean your users won't have to remember their password anymore.<br><br>They will access your private content directly and securely.";
 
 $lang['2_8_0_title4'] = 'Watermark';
 $lang['2_8_0_stp4'] = 'It is now possible to repeat the watermark on several lines.<br><br>Set the <em>Y repeat</em> setting to 1 or 2 to get repetition.';

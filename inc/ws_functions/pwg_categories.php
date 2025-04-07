@@ -49,7 +49,7 @@ final class pwg_categories
 
         $params['cat_id'] = array_unique($params['cat_id']);
 
-        if (count($params['cat_id']) > 0) {
+        if ($params['cat_id'] !== []) {
             // do the categories really exist?
             $cat_ids_list = implode(', ', $params['cat_id']);
             $query = <<<SQL
@@ -60,7 +60,7 @@ final class pwg_categories
             $db_cat_ids = functions_mysqli::query2array($query, null, 'id');
             $missing_cat_ids = array_diff($params['cat_id'], $db_cat_ids);
 
-            if (count($missing_cat_ids) > 0) {
+            if ($missing_cat_ids !== []) {
                 return new PwgError(404, 'cat_id {' . implode(', ', $missing_cat_ids) . '} not found');
             }
         }
@@ -74,7 +74,7 @@ final class pwg_categories
 
         foreach ($params['cat_id'] as $cat_id) {
             if ($params['recursive']) {
-                $where_clauses[] = 'uppercats ' . functions_mysqli::DB_REGEX_OPERATOR . ' \'(^|,)' . $cat_id . '(,|$)\'';
+                $where_clauses[] = 'uppercats ' . functions_mysqli::DB_REGEX_OPERATOR . " '(^|,)" . $cat_id . '(,|$)\'';
             } else {
                 $where_clauses[] = 'id=' . $cat_id;
             }
@@ -168,7 +168,7 @@ final class pwg_categories
             [$total_images] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
 
             // let's take care of adding the related albums to each photo
-            if (count($image_ids) > 0) {
+            if ($image_ids !== []) {
                 $category_ids = [];
 
                 // find the complete list (given permissions) of albums linked to photos
@@ -190,7 +190,7 @@ final class pwg_categories
                     $categories_of_image[$row['image_id']][] = $row['category_id'];
                 }
 
-                if (count($category_ids) > 0) {
+                if ($category_ids !== []) {
                     // find details (for URL generation) about each album
                     $category_ids_imploded = implode(', ', $category_ids);
                     $query = <<<SQL
@@ -447,7 +447,7 @@ final class pwg_categories
         usort($cats, functions_category::global_rank_compare(...));
 
         // management of the album thumbnail -- starts here
-        if (count($categories) > 0) {
+        if ($categories !== []) {
             $thumbnail_src_of = [];
             $new_image_ids = [];
 
@@ -493,7 +493,7 @@ final class pwg_categories
                 }
             }
 
-            if (count($new_image_ids) > 0) {
+            if ($new_image_ids !== []) {
                 $image_ids_str = implode(', ', $new_image_ids);
                 $query = <<<SQL
                     SELECT id, path, representative_ext
@@ -903,7 +903,7 @@ final class pwg_categories
         ) {
             $subcats = functions_category::get_subcat_ids([$params['category_id']]);
 
-            if (count($subcats) > 0) {
+            if ($subcats !== []) {
                 $subcats_str = implode(', ', $subcats);
                 $query = <<<SQL
                     UPDATE categories

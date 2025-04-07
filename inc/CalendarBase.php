@@ -310,8 +310,8 @@ abstract class CalendarBase
     protected function build_next_prev(): void
     {
         global $template, $page;
-
-        $prev = $next = null;
+        $prev = null;
+        $next = null;
 
         if (empty($page['chronology_date'])) {
             return;
@@ -322,7 +322,7 @@ abstract class CalendarBase
 
         for ($i = 0; $i < $nb_elements; $i++) {
             if ($page['chronology_date'][$i] === 'any') {
-                $sub_queries[] = '\'any\'';
+                $sub_queries[] = "'any'";
             } else {
                 $sub_queries[] = $this->calendar_levels[$i]['sql'];
             }

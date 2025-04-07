@@ -352,7 +352,7 @@ final class pwg
             ];
         }
 
-        if (count($datas)) {
+        if ($datas !== []) {
             functions_mysqli::mass_inserts(
                 'caddie',
                 ['element_id', 'user_id'],
@@ -604,7 +604,7 @@ final class pwg
         $username_of = [];
         $user_id_list = [];
 
-        if (count($user_ids) > 0) {
+        if ($user_ids !== []) {
             $imploded_user_ids = implode(', ', array_keys($user_ids));
             $query = <<<SQL
                 SELECT {$conf->user_fields['id']} AS user_id, {$conf->user_fields['username']} AS username
@@ -868,7 +868,7 @@ final class pwg
         }
 
         // prepare reference data (users, tags, categories...)
-        if (count($search_ids) > 0) {
+        if ($search_ids !== []) {
             $searchIds = implode(', ', $search_ids);
             $query = <<<SQL
                 SELECT id, rules
@@ -898,7 +898,7 @@ final class pwg
             }
         }
 
-        if (count($user_ids) > 0) {
+        if ($user_ids !== []) {
             $userIds = implode(', ', array_keys($user_ids));
             $query = <<<SQL
                 SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['username']} AS username
@@ -914,7 +914,7 @@ final class pwg
             }
         }
 
-        if (count($category_ids) > 0) {
+        if ($category_ids !== []) {
             $categoryIds = implode(', ', array_values($category_ids));
             $query = <<<SQL
                 SELECT id, uppercats
@@ -940,7 +940,7 @@ final class pwg
             }
         }
 
-        if (count($image_ids) > 0) {
+        if ($image_ids !== []) {
             $image_ids_imploded = implode(', ', array_keys($image_ids));
             $query = <<<SQL
                 SELECT id, IF(name IS NULL, file, name) AS label, filesize, file, path, representative_ext
@@ -1117,7 +1117,7 @@ final class pwg
 
         $summary['nb_guests'] = 0;
 
-        if (count(array_keys($summary['guests_IP'])) > 0) {
+        if (array_keys($summary['guests_IP']) !== []) {
             $summary['nb_guests'] = count(array_keys($summary['guests_IP']));
 
             // we delete the "guest" from the $username_of hash so that it is

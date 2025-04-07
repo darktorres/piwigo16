@@ -223,7 +223,7 @@ if (! isset($step)) {
 if (isset($_POST['install'])) {
     functions_install::install_db_connect($infos, $errors);
 
-    if (count($errors) > 0) {
+    if ($errors !== []) {
         print_r($errors);
     }
 
@@ -469,7 +469,7 @@ if ($step == 1) {
                 functions::get_l10n_args('Password: ********** (no copy by email)', ''),
                 functions::get_l10n_args('Email: %s', $admin_mail),
                 functions::get_l10n_args('', ''),
-                functions::get_l10n_args('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
+                functions::get_l10n_args("Don't hesitate to consult our forums for any help: %s", PHPWG_URL),
             ];
 
             functions_mail::pwg_mail(

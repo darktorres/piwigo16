@@ -71,7 +71,7 @@ if (isset($_GET['cat_id'])) {
     $cat_ids = [$_GET['cat_id']];
 }
 
-if (count($cat_ids) > 0 ||
+if ($cat_ids !== [] ||
     in_array('cat', $fields)
 ) {
     $search['fields']['cat'] = [
@@ -80,7 +80,7 @@ if (count($cat_ids) > 0 ||
     ];
 }
 
-if (count(functions_tag::get_available_tags()) > 0) {
+if (functions_tag::get_available_tags() !== []) {
     $tag_ids = [];
 
     if (isset($_GET['tag_id'])) {
@@ -88,7 +88,7 @@ if (count(functions_tag::get_available_tags()) > 0) {
         $tag_ids = explode(',', $_GET['tag_id']);
     }
 
-    if (count($tag_ids) > 0 ||
+    if ($tag_ids !== [] ||
         in_array('tags', $fields)
     ) {
         $search['fields']['tags'] = [
@@ -119,7 +119,7 @@ if (in_array('author', $fields)) {
         SQL;
     $first_author = functions_mysqli::query2array($query);
 
-    if (count($first_author) > 0) {
+    if ($first_author !== []) {
         $search['fields']['author'] = [
             'words' => [],
             'mode' => 'OR',

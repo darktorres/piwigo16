@@ -109,8 +109,8 @@ final class functions_install
             functions_mysqli::pwg_query("CREATE DATABASE {$_POST['dbname']};");
             global $mysqli;
             $mysqli->select_db($_POST['dbname']);
-        } catch (Exception $e) {
-            $errors[] = functions::l10n($e->getMessage());
+        } catch (Exception $exception) {
+            $errors[] = functions::l10n($exception->getMessage());
         }
     }
 }

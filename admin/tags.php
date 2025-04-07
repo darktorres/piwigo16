@@ -79,7 +79,7 @@ foreach ($orphan_tags as $tag) {
     $orphan_tag_names[] = functions_plugins::trigger_change('render_tag_name', $tag['name'], $tag);
 }
 
-if (count($orphan_tag_names) > 0) {
+if ($orphan_tag_names !== []) {
     $url = functions_url::get_root_url() . 'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token=' . functions::get_pwg_token();
     $review = functions::l10n('Review');
     $warning_tags = sprintf(
@@ -154,7 +154,7 @@ while ($tag = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $alt_names = functions_plugins::trigger_change('get_tag_alt_names', [], $raw_name);
     $alt_names = array_diff(array_unique($alt_names), [$tag['name']]);
 
-    if (count($alt_names)) {
+    if ($alt_names !== []) {
         $tag['alt_names'] = implode(', ', $alt_names);
     }
 

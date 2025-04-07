@@ -62,7 +62,7 @@ final class functions_rate
                     SQL;
                 $already_there = functions_mysqli::query2array($query, null, 'element_id');
 
-                if (count($already_there) > 0) {
+                if ($already_there !== []) {
                     $already_there_imploded = implode(', ', $already_there);
                     $query = <<<SQL
                         DELETE FROM rate

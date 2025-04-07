@@ -254,7 +254,7 @@ switch ($page['mode']) {
             ? stripslashes($_POST['send_customize_mail_content'])
             : $conf->nbm_complementary_mail_content;
 
-        if (count($data_users)) {
+        if ($data_users !== []) {
             foreach ($data_users as $nbm_user) {
                 if (! $must_repost || // Not timeout, normal treatment
                     ($must_repost && in_array($nbm_user['check_key'], $_POST['send_selection']))  // Must be repost, show only user to send

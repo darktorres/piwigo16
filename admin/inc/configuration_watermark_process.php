@@ -179,7 +179,7 @@ if (count($errors) == 0) {
 
     ImageStdParams::save();
 
-    if (count($changed_types)) {
+    if ($changed_types !== []) {
         functions_admin::clear_derivative_cache($changed_types);
     }
 

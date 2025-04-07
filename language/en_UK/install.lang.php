@@ -17,7 +17,7 @@ $lang['Admin configuration'] = 'Administration configuration';
 $lang['Start Install'] = 'Start installation';
 $lang['It will be shown to the visitors. It is necessary for website administration'] = 'It will be shown to visitors. It is necessary for website administration';
 $lang['Connection to server succeed, but it was impossible to connect to database'] = 'Connection to server successful, but the connection to the database was not possible.';
-$lang['Can\'t connect to server'] = 'Cannot connect to server';
+$lang["Can't connect to server"] = 'Cannot connect to server';
 $lang['Host:Port'] = 'Host:Port';
 $lang['localhost or other, supplied by your host provider'] = 'localhost or other, supplied by your host provider';
 $lang['User'] = 'User';
@@ -41,7 +41,7 @@ $lang['Note you can change your configuration by yourself and restart Piwigo aft
 $lang['Try to configure PHP 5'] = 'Try to configure PHP 5.3';
 $lang['Sorry!'] = 'Sorry!';
 $lang['Piwigo was not able to configure PHP 5.'] = 'Piwigo was not able to configure PHP 5.3';
-$lang['You may referer to your hosting provider\'s support and see how you could switch to PHP 5 by yourself.'] = 'You should refer to your hosting provider\'s support and see how you can switch to PHP 5.3 by yourself.';
+$lang["You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."] = "You should refer to your hosting provider's support and see how you can switch to PHP 5.3 by yourself.";
 $lang['Hope to see you back soon.'] = 'Hope to see you back soon.';
 $lang['Congratulations, Piwigo installation is completed'] = 'Congratulations, Piwigo installation is completed';
 $lang['An alternate solution is to copy the text in the box above and paste it into the file "local/config/database.php" (Warning : database.php must only contain what is in the textarea, no line return or space character)'] = 'An alternate solution is to copy the text in the box above and paste it into the file "local/config/database.php" (Warning: database.php must only contain what is in the textarea, no line return or space character)';
@@ -51,4 +51,4 @@ $lang['You can download the config file and upload it to local/config directory 
 $lang['Just another Piwigo gallery'] = 'Just another Piwigo gallery';
 $lang['Welcome to my photo gallery'] = 'Welcome to my photo gallery';
 $lang['Welcome to your new installation of Piwigo!'] = 'Welcome to your new installation of Piwigo!';
-$lang['Don\'t hesitate to consult our forums for any help : %s'] = 'Don\'t hesitate to consult our forums for any help: %s';
+$lang["Don't hesitate to consult our forums for any help : %s"] = "Don't hesitate to consult our forums for any help: %s";

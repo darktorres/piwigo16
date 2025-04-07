@@ -67,7 +67,7 @@ final class functions_tag
             SQL;
 
         if (is_array($tag_ids) &&
-            count($tag_ids) > 0
+            $tag_ids !== []
         ) {
             $tags_list = implode(', ', $tag_ids);
             $query .= <<<SQL
@@ -335,12 +335,12 @@ final class functions_tag
 
         if (! empty($url_names)) {
             $where_clauses[] =
-              'url_name IN (\'' . implode('\', \'', $url_names) . '\')';
+              "url_name IN ('" . implode("', '", $url_names) . "')";
         }
 
         if (! empty($names)) {
             $where_clauses[] =
-              'name IN (\'' . implode('\', \'', $names) . '\')';
+              "name IN ('" . implode("', '", $names) . "')";
         }
 
         if (empty($where_clauses)) {

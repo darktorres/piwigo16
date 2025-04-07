@@ -183,7 +183,7 @@ final class functions_upload
                 SQL;
             $images_found = functions_mysqli::query2array($query);
 
-            if (count($images_found) > 0) {
+            if ($images_found !== []) {
                 $image_id = $images_found[0]['id'];
                 $logger->info('[' . __FUNCTION__ . '] image already exist #' . $image_id . ', we delete the newly uploaded file : ' . $source_filepath);
                 unlink($source_filepath);
@@ -419,7 +419,7 @@ final class functions_upload
         }
 
         if (isset($categories) &&
-            count($categories) > 0
+            $categories !== []
         ) {
             if ($conf->lounge_active) {
                 functions_admin::fill_lounge([$image_id], $categories);
@@ -1001,7 +1001,8 @@ final class functions_upload
             $disabled = [];
         }
 
-        $w = $h = 2000; // safe default values
+        $w = 2000;
+        $h = 2000; // safe default values
 
         foreach (ImageStdParams::get_all_types() as $type) {
             $params = $enabled[$type] ?? $disabled[$type];

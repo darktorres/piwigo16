@@ -102,7 +102,7 @@ final class functions_admin
                 SQL;
             $image_ids_linked = functions_mysqli::query2array($query, null, 'image_id');
 
-            if (count($image_ids_linked) > 0) {
+            if ($image_ids_linked !== []) {
                 if ($photo_deletion_mode == 'delete_orphans') {
                     $image_ids_list = implode(', ', $image_ids_linked);
                     $category_ids_list = implode(', ', $ids);
@@ -355,7 +355,7 @@ final class functions_admin
             SQL;
         $category_ids = functions_mysqli::query2array($query, null, 'id');
 
-        if (count($category_ids) > 0) {
+        if ($category_ids !== []) {
             self::update_category($category_ids);
         }
 
@@ -424,7 +424,7 @@ final class functions_admin
     {
         $orphan_tags = self::get_orphan_tags();
 
-        if (count($orphan_tags) > 0) {
+        if ($orphan_tags !== []) {
             $orphan_tag_ids = [];
 
             foreach ($orphan_tags as $tag) {
@@ -486,7 +486,7 @@ final class functions_admin
             SQL;
         $wrong_representative = functions_mysqli::query2array($query, null, 'id');
 
-        if (count($wrong_representative) > 0) {
+        if ($wrong_representative !== []) {
             $wrong_representative_list = wordwrap(implode(', ', $wrong_representative), 120, "\n");
             $query = <<<SQL
                 UPDATE categories
@@ -510,7 +510,7 @@ final class functions_admin
                 SQL;
             $to_rand = functions_mysqli::query2array($query, null, 'id');
 
-            if (count($to_rand) > 0) {
+            if ($to_rand !== []) {
                 self::set_random_representative($to_rand);
             }
         }
@@ -532,7 +532,7 @@ final class functions_admin
             SQL;
         $orphan_image_ids = functions_mysqli::query2array($query, null, 'image_id');
 
-        if (count($orphan_image_ids) > 0) {
+        if ($orphan_image_ids !== []) {
             $orphan_image_ids_list = implode(', ', $orphan_image_ids);
             $query = <<<SQL
                 DELETE FROM image_category
@@ -567,7 +567,7 @@ final class functions_admin
                 SQL;
             $orphans = array_unique(functions_mysqli::query2array($query, null, $column));
 
-            if (count($orphans) > 0) {
+            if ($orphans !== []) {
                 $orphans_list = implode(', ', $orphans);
                 $query = <<<SQL
                     DELETE FROM {$table}
@@ -903,7 +903,7 @@ final class functions_admin
             // to find the reference of each top album, we will need the parent albums
             $parent_cats = [];
 
-            if (count($parent_ids) > 0) {
+            if ($parent_ids !== []) {
                 $parent_ids_list = implode(', ', $parent_ids);
                 $query = <<<SQL
                     SELECT id, status
@@ -1231,7 +1231,7 @@ final class functions_admin
         // users present in $base_users and not in $infos_users must be added
         $to_create = array_diff($base_users, $infos_users);
 
-        if (count($to_create) > 0) {
+        if ($to_create !== []) {
             functions_user::create_user_infos($to_create);
         }
 
@@ -1257,7 +1257,7 @@ final class functions_admin
                 $base_users
             );
 
-            if (count($to_delete) > 0) {
+            if ($to_delete !== []) {
                 $to_delete_list = implode(', ', $to_delete);
                 $query = <<<SQL
                     DELETE FROM {$table}
@@ -1806,7 +1806,7 @@ final class functions_admin
     public static function set_tags_of(
         array $tags_of
     ): void {
-        if (count($tags_of) > 0) {
+        if ($tags_of !== []) {
             $taglist_before = self::get_image_tag_ids(array_keys($tags_of));
             global $logger;
             $logger->debug('taglist_before', $taglist_before);
@@ -1829,7 +1829,7 @@ final class functions_admin
                 }
             }
 
-            if (count($inserts)) {
+            if ($inserts !== []) {
                 functions_mysqli::mass_inserts(
                     'image_tag',
                     array_keys($inserts[0]),
@@ -1933,7 +1933,7 @@ final class functions_admin
             }
         }
 
-        if (count($inserts)) {
+        if ($inserts !== []) {
             functions_mysqli::mass_inserts(
                 'lounge',
                 array_keys($inserts[0]),
@@ -2113,7 +2113,7 @@ final class functions_admin
             }
         }
 
-        if (count($inserts)) {
+        if ($inserts !== []) {
             functions_mysqli::mass_inserts(
                 'image_category',
                 array_keys($inserts[0]),
@@ -2187,7 +2187,7 @@ final class functions_admin
             SQL;
 
         if (is_array($categories) &&
-            count($categories) > 0
+            $categories !== []
         ) {
             $category_ids = implode(', ', $categories);
             $query .= <<<SQL
@@ -2202,7 +2202,7 @@ final class functions_admin
         functions_mysqli::pwg_query($query);
 
         if (is_array($categories) &&
-            count($categories) > 0
+            $categories !== []
         ) {
             self::associate_images_to_categories($images, $categories);
         }
@@ -2821,7 +2821,7 @@ final class functions_admin
 
         usort($taglist, functions_html::tag_alpha_compare(...));
 
-        if (count($altlist)) {
+        if ($altlist !== []) {
             usort($altlist, functions_html::tag_alpha_compare(...));
             $taglist = array_merge($taglist, $altlist);
         }
@@ -3337,7 +3337,7 @@ final class functions_admin
 
             SQL;
 
-        if (count($lounged_ids) > 0) {
+        if ($lounged_ids !== []) {
             $imploded_lounged_ids = implode(', ', $lounged_ids);
             $query .= <<<SQL
                 AND id NOT IN ({$imploded_lounged_ids})
@@ -3706,7 +3706,7 @@ final class functions_admin
                 }
             }
 
-            if (count($to_compare) > 0) {
+            if ($to_compare !== []) {
                 $ref_dates[$cat_id] = $minmax == 'max' ? max($to_compare) : min($to_compare);
             } else {
                 $ref_dates[$cat_id] = null;
@@ -4031,7 +4031,7 @@ final class functions_admin
             if (! $is_list_all_without_test ||
                 $is_action_send
             ) {
-                if (count($data_users) > 0) {
+                if ($data_users !== []) {
                     $datas = [];
 
                     if (! isset($customize_mail_content)) {
@@ -4088,7 +4088,7 @@ final class functions_admin
 
                             if ($conf->nbm_send_detailed_content) {
                                 $news = functions_notification::news($nbm_user['last_send'], $dbnow, false, $conf->nbm_send_html_mail, $auth);
-                                $exist_data = count($news) > 0;
+                                $exist_data = $news !== [];
                             } else {
                                 $exist_data = functions_notification::news_exists($nbm_user['last_send'], $dbnow);
                             }

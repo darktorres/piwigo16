@@ -378,7 +378,7 @@ final class PwgServer
             }
         }
 
-        if (count($missing_params)) {
+        if ($missing_params !== []) {
             return new PwgError(WS_ERR_MISSING_PARAM, 'Missing parameters: ' . implode(',', $missing_params));
         }
 

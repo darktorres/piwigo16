@@ -94,7 +94,7 @@ if (isset($_GET['change_theme'])) {
 
     $redirect_url = 'admin.php';
 
-    if (count($url_params) > 0) {
+    if ($url_params !== []) {
         $redirect_url .= '?' . implode('&amp;', $url_params);
     }
 

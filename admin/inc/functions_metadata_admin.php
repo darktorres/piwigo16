@@ -312,7 +312,7 @@ final class functions_metadata_admin
             $datas[] = $data;
         }
 
-        if (count($datas) > 0) {
+        if ($datas !== []) {
             $update_fields = self::get_sync_metadata_attributes();
             $update_fields[] = 'date_metadata_update';
 

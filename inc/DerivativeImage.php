@@ -308,7 +308,8 @@ final class DerivativeImage
                 ! $src->rotation
             ) { // no watermark, no rotation required -> we will use the source image
                 $params = null;
-                $rel_path = $rel_url = $src->rel_path;
+                $rel_path = $src->rel_path;
+                $rel_url = $src->rel_path;
                 return;
             }
 

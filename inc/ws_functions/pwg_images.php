@@ -124,7 +124,7 @@ final class pwg_images
         if ($replace_mode) {
             $to_remove_cat_ids = array_diff($existing_cat_ids, $cat_ids);
 
-            if (count($to_remove_cat_ids) > 0) {
+            if ($to_remove_cat_ids !== []) {
                 $category_ids_to_remove = implode(', ', $to_remove_cat_ids);
                 $query = <<<SQL
                     DELETE FROM image_category
@@ -674,7 +674,7 @@ final class pwg_images
             $params['per_page']
         );
 
-        if (count($image_ids)) {
+        if ($image_ids !== []) {
             $image_ids_list = implode(', ', $image_ids);
             $query = <<<SQL
                 SELECT *
@@ -1280,7 +1280,7 @@ final class pwg_images
             }
         }
 
-        if (count(array_keys($update)) > 0) {
+        if (array_keys($update) !== []) {
             functions_mysqli::single_update(
                 'images',
                 $update,
@@ -1893,7 +1893,7 @@ final class pwg_images
             }
         }
 
-        if (count(array_keys($update)) > 0) {
+        if (array_keys($update) !== []) {
             functions_mysqli::single_update(
                 'images',
                 $update,
@@ -2359,7 +2359,7 @@ final class pwg_images
             }
         }
 
-        if (count(array_keys($update)) > 0) {
+        if (array_keys($update) !== []) {
             $update['id'] = $params['image_id'];
 
             functions_mysqli::single_update(

@@ -25,7 +25,7 @@ if ($conf->show_exif) {
 
     $exif = functions_metadata::get_exif_data($picture['current']['src_image']->get_path(), $exif_mapping);
 
-    if (count($exif) > 0) {
+    if ($exif !== []) {
         $tpl_meta = [
             'TITLE' => functions::l10n('EXIF Metadata'),
             'lines' => [],
@@ -70,7 +70,7 @@ if ($conf->show_exif) {
 if ($conf->show_iptc) {
     $iptc = functions_metadata::get_iptc_data($picture['current']['src_image']->get_path(), $conf->show_iptc_mapping, ', ');
 
-    if (count($iptc) > 0) {
+    if ($iptc !== []) {
         $tpl_meta = [
             'TITLE' => functions::l10n('IPTC Metadata'),
             'lines' => [],

@@ -90,7 +90,7 @@ final class functions_history
                 }
             }
 
-            if (count($local_clauses) > 0) {
+            if ($local_clauses !== []) {
                 $clauses[] = implode(' OR ', $local_clauses);
             }
         }
@@ -163,7 +163,7 @@ final class functions_history
 
         $history_min_id = 0;
 
-        if (count($summary_lines) > 0) {
+        if ($summary_lines !== []) {
             $last_summary = $summary_lines[0];
             $history_min_id = $last_summary['history_id_to'];
         } else {
@@ -176,7 +176,7 @@ final class functions_history
                 SQL;
             $history_lines = functions_mysqli::query2array($query);
 
-            if (count($history_lines) > 0) {
+            if ($history_lines !== []) {
                 $history_min_id = $history_lines[0]['min_id'] - 1;
             }
         }
@@ -312,7 +312,7 @@ final class functions_history
             ];
         }
 
-        if (count($updates) > 0) {
+        if ($updates !== []) {
             functions_mysqli::mass_updates(
                 'history_summary',
                 [
@@ -323,7 +323,7 @@ final class functions_history
             );
         }
 
-        if (count($inserts) > 0) {
+        if ($inserts !== []) {
             functions_mysqli::mass_inserts(
                 'history_summary',
                 array_keys($inserts[0]),

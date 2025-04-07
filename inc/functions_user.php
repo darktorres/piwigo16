@@ -150,11 +150,11 @@ final class functions_user
         }
 
         if (preg_match('/^.* $/', $login)) {
-            $errors[] = functions::l10n('login mustn\'t end with a space character');
+            $errors[] = functions::l10n("login mustn't end with a space character");
         }
 
         if (preg_match('/^ .*$/', $login)) {
-            $errors[] = functions::l10n('login mustn\'t start with a space character');
+            $errors[] = functions::l10n("login mustn't start with a space character");
         }
 
         if (self::get_userid($login)) {
@@ -277,7 +277,7 @@ final class functions_user
                     functions::get_l10n_args('Password: %s', stripslashes($password)),
                     functions::get_l10n_args('Email: %s', $mail_address),
                     functions::get_l10n_args('', ''),
-                    functions::get_l10n_args('If you think you\'ve received this email in error, please contact us at %s', functions::get_webmaster_mail_address()),
+                    functions::get_l10n_args("If you think you've received this email in error, please contact us at %s", functions::get_webmaster_mail_address()),
                 ];
 
                 functions_mail::pwg_mail(
@@ -569,7 +569,7 @@ final class functions_user
 
         $to_deletes = array_diff($favorites, $authorizeds);
 
-        if (count($to_deletes) > 0) {
+        if ($to_deletes !== []) {
             $to_deletes_imploded = implode(', ', $to_deletes);
             $query = <<<SQL
                 DELETE FROM favorites
@@ -812,7 +812,7 @@ final class functions_user
         $accept_languages_full = $matches[1];  // ['en-us', 'fr-ch', 'kok-in']
         $accept_languages_short = $matches[2];  // ['en', 'fr', 'kok']
 
-        if (! count($accept_languages_full)) {
+        if ($accept_languages_full === []) {
             return false;
         }
 
@@ -1433,7 +1433,7 @@ final class functions_user
             }
         }
 
-        if (count($sql_list) > 0) {
+        if ($sql_list !== []) {
             $sql = '(' . implode(' AND ', $sql_list) . ')';
         } else {
             $sql = $force_one_condition ? '1 = 1' : '';

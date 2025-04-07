@@ -103,7 +103,7 @@ $query = <<<SQL
 
 $nb_lines_for_user = functions_mysqli::query2array($query, 'performed_by', 'counter');
 
-if (count($nb_lines_for_user) > 0) {
+if ($nb_lines_for_user !== []) {
     $ids = implode(', ', array_keys($nb_lines_for_user));
     $query = <<<SQL
         SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['username']} AS username

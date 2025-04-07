@@ -118,8 +118,8 @@ try {
         $conf->db_password,
         $conf->db_base
     );
-} catch (Exception $e) {
-    functions_mysqli::my_error(functions::l10n($e->getMessage()), true);
+} catch (Exception $exception) {
+    functions_mysqli::my_error(functions::l10n($exception->getMessage()), true);
 }
 
 functions_mysqli::pwg_db_check_charset();
@@ -283,7 +283,7 @@ if ($conf->check_upgrade_feed) {
     }
 }
 
-if (count($header_msgs) > 0) {
+if ($header_msgs !== []) {
     $template->assign('header_msgs', $header_msgs);
     $header_msgs = [];
 }

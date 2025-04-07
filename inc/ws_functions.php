@@ -1231,7 +1231,7 @@ final class ws_functions
                     'type' => WS_TYPE_ID,
                 ],
             ],
-            'Sets the representative photo for an album. The photo doesn\'t have to belong to the album.',
+            "Sets the representative photo for an album. The photo doesn't have to belong to the album.",
             $ws_functions_root . 'pwg_categories.php',
             [
                 'admin_only' => true,
@@ -2175,7 +2175,7 @@ final class ws_functions
                     'type' => WS_TYPE_ID,
                 ],
             ],
-            'Adds the indicated image to the current user\'s favorite images.',
+            "Adds the indicated image to the current user's favorite images.",
             $ws_functions_root . 'pwg_users.php'
         );
 
@@ -2187,7 +2187,7 @@ final class ws_functions
                     'type' => WS_TYPE_ID,
                 ],
             ],
-            'Removes the indicated image from the current user\'s favorite images.',
+            "Removes the indicated image from the current user's favorite images.",
             $ws_functions_root . 'pwg_users.php'
         );
 

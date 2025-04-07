@@ -680,7 +680,7 @@ final class Template
         if (is_string($str) &&
             strlen($str) > 1
         ) {
-            if (($str[0] == '\'' && $str[strlen($str) - 1] == '\'') ||
+            if (($str[0] == "'" && $str[strlen($str) - 1] == "'") ||
                 ($str[0] == '"' && $str[strlen($str) - 1] == '"')
             ) {
                 eval('$tmp=' . $str . ';');
@@ -966,7 +966,7 @@ final class Template
               . '"></script>';
         }
 
-        if (count($this->scriptLoader->inline_scripts)) {
+        if ($this->scriptLoader->inline_scripts !== []) {
             $content = array_merge($content, $this->scriptLoader->inline_scripts);
         }
 

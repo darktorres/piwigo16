@@ -78,7 +78,7 @@ if (isset($_GET['cat']) &&
 ) {
     $cat_ids = functions_category::get_subcat_ids([$_GET['cat']]);
 
-    if (count($cat_ids) > 0) {
+    if ($cat_ids !== []) {
         $page['cat_filter'] = ' AND ic.category_id IN (' . implode(', ', $cat_ids) . ')';
     }
 }

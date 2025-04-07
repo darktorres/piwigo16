@@ -88,15 +88,15 @@ if (isset($_GET['installstatus'])) {
             break;
 
         case 'temp_path_error':
-            $page['errors'][] = functions::l10n('Can\'t create temporary file.');
+            $page['errors'][] = functions::l10n("Can't create temporary file.");
             break;
 
         case 'dl_archive_error':
-            $page['errors'][] = functions::l10n('Can\'t download archive.');
+            $page['errors'][] = functions::l10n("Can't download archive.");
             break;
 
         case 'archive_error':
-            $page['errors'][] = functions::l10n('Can\'t read or extract archive.');
+            $page['errors'][] = functions::l10n("Can't read or extract archive.");
             break;
 
         default:
@@ -134,7 +134,7 @@ if ($themes->get_server_themes(true)) { // only new themes
         );
     }
 } else {
-    $page['errors'][] = functions::l10n('Can\'t connect to server.');
+    $page['errors'][] = functions::l10n("Can't connect to server.");
 }
 
 $template->assign(

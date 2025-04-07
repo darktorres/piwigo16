@@ -123,7 +123,7 @@ switch ($action) {
             }
         }
 
-        if (count($sessions_to_delete) > 0) {
+        if ($sessions_to_delete !== []) {
             $sessions_to_delete_imploded = implode("','", $sessions_to_delete);
             $query = <<<SQL
                 DELETE FROM sessions
@@ -327,7 +327,7 @@ $query = <<<SQL
     SQL;
 $users = functions_mysqli::query2array($query);
 
-if (count($users) > 0) {
+if ($users !== []) {
     $installed_on = $users[0]['registration_date'];
 
     if (! empty($installed_on)) {

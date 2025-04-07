@@ -195,7 +195,7 @@ $query = <<<SQL
     SQL;
 $result = functions_mysqli::query2array($query);
 
-if (count($result) > 0) {
+if ($result !== []) {
     $template->assign(
         [
             'INFO_CREATION_SINCE' => functions::time_since($result[0]['occurred_on'], 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),

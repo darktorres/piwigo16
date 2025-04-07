@@ -229,7 +229,7 @@ if (empty($page['is_external'])) {
                 // have to "force" them in the list.
                 $missing_tag_ids = array_diff($my_search['fields']['tags']['words'], array_column($filter_tags, 'id'));
 
-                if (count($missing_tag_ids) > 0) {
+                if ($missing_tag_ids !== []) {
                     $filter_tags = array_merge(functions_tag::get_available_tags($missing_tag_ids), $filter_tags);
                 }
             } else {
@@ -239,7 +239,7 @@ if (empty($page['is_external'])) {
 
             $template->assign('TAGS', $filter_tags);
 
-            $filter_tag_ids = count($filter_tags) > 0 ? array_column($filter_tags, 'id') : [];
+            $filter_tag_ids = $filter_tags !== [] ? array_column($filter_tags, 'id') : [];
 
             // in case the search has forbidden tags for current user, we need to filter the search rule
             $my_search['fields']['tags']['words'] = array_intersect($my_search['fields']['tags']['words'], $filter_tag_ids);
@@ -382,7 +382,7 @@ if (empty($page['is_external'])) {
             $added_by = functions_mysqli::query2array($query);
             $user_ids = [];
 
-            if (count($added_by) > 0) {
+            if ($added_by !== []) {
                 // now let's find the usernames of added_by users
                 foreach ($added_by as $i) {
                     $user_ids[] = $i['added_by_id'];
@@ -495,7 +495,7 @@ if (empty($page['is_external'])) {
                         );
                     }
 
-                    if (count($albums_found) > 0) {
+                    if ($albums_found !== []) {
                         $template->assign('ALBUMS_FOUND', $albums_found);
                     }
                 }
@@ -518,7 +518,7 @@ if (empty($page['is_external'])) {
                         $tags_found[] = sprintf('<a href="%s">%s</a>', $url, $tag['name']);
                     }
 
-                    if (count($tags_found) > 0) {
+                    if ($tags_found !== []) {
                         $template->assign('TAGS_FOUND', $tags_found);
                     }
                 }
@@ -581,7 +581,7 @@ if (empty($page['is_external'])) {
             (array) $page['qsearch_details']['matching_cats']
         );
 
-        if (count($cats)) {
+        if ($cats !== []) {
             usort($cats, functions_html::name_compare(...));
             $hints = [];
 

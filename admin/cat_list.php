@@ -163,7 +163,7 @@ $categories = functions_mysqli::query2array($query, 'id');
 // get the categories containing images directly
 $categories_with_images = [];
 
-if (count($categories)) {
+if ($categories !== []) {
     $query = <<<SQL
         SELECT category_id, COUNT(*) AS nb_photos
         FROM image_category

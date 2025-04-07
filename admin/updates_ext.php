@@ -30,7 +30,7 @@ $autoupdate = new updates($page['page']);
 $show_reset = false;
 
 if (! $autoupdate->get_server_extensions()) {
-    $page['errors'][] = functions::l10n('Can\'t connect to server.');
+    $page['errors'][] = functions::l10n("Can't connect to server.");
     return; // TODO: remove this return and add a proper "page killer"
 }
 

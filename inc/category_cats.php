@@ -145,7 +145,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 }
 
 if ($conf->display_fromto) {
-    if (count($category_ids) > 0) {
+    if ($category_ids !== []) {
         $category_ids_list = implode(', ', $category_ids);
         $sql_condition = functions_user::get_sql_condition_FandF(
             [
@@ -171,7 +171,7 @@ if ($page['section'] == 'recent_cats') {
     usort($categories, functions_category::global_rank_compare(...));
 }
 
-if (count($categories) > 0) {
+if ($categories !== []) {
     $infos_of_image = [];
     $new_image_ids = [];
 
@@ -218,7 +218,7 @@ if (count($categories) > 0) {
         }
     }
 
-    if (count($new_image_ids) > 0) {
+    if ($new_image_ids !== []) {
         $image_ids_list = implode(', ', $new_image_ids);
         $query = <<<SQL
             SELECT *
@@ -239,7 +239,7 @@ if (count($categories) > 0) {
     unset($info);
 }
 
-if (count($user_representative_updates_for)) {
+if ($user_representative_updates_for !== []) {
     $updates = [];
 
     foreach ($user_representative_updates_for as $cat_id => $image_id) {
@@ -261,7 +261,7 @@ if (count($user_representative_updates_for)) {
     );
 }
 
-if (count($categories) > 0) {
+if ($categories !== []) {
     // Update filtered data
     functions_filter::update_cats_with_filtered_data($categories);
 

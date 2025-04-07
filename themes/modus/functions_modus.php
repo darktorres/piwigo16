@@ -458,7 +458,7 @@ final class functions_modus
                 $styles[] = 'top:' . $t . 'px';
             }
 
-            if (count($styles)) {
+            if ($styles !== []) {
                 $styles = ' style=' . implode(';', $styles);
             } else {
                 $styles = '';

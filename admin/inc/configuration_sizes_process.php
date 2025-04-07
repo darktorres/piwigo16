@@ -80,9 +80,9 @@ foreach ($pderivatives as $type => &$pderivative) {
 }
 
 unset($pderivative);
-
 // step 2 - check validity
-$prev_w = $prev_h = 0;
+$prev_w = 0;
+$prev_h = 0;
 
 foreach (ImageStdParams::get_all_types() as $type) {
     $pderivative = $pderivatives[$type];
@@ -238,7 +238,7 @@ if (count($errors) == 0) {
 
     $conf->disabled_derivatives = serialize($disabled);
 
-    if (count($changed_types)) {
+    if ($changed_types !== []) {
         functions_admin::clear_derivative_cache($changed_types);
     }
 

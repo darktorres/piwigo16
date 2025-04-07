@@ -308,7 +308,7 @@ if (isset($_POST['submit']) &&
         }
     }
 
-    if (count($inserts) > 0) {
+    if ($inserts !== []) {
         if (! $simulate) {
             $dbfields = [
                 'id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable',
@@ -451,7 +451,7 @@ if (isset($_POST['submit']) &&
         $to_delete_derivative_dirs[] = './' . PWG_DERIVATIVE_DIR . $fulldir;
     }
 
-    if (count($to_delete) > 0) {
+    if ($to_delete !== []) {
         if (! $simulate) {
             functions_admin::delete_categories($to_delete);
 
@@ -490,7 +490,7 @@ if (isset($_POST['submit']) &&
 
     $db_elements = [];
 
-    if (count($cat_ids) > 0) {
+    if ($cat_ids !== []) {
         $wrappedCatIds = wordwrap(
             implode(', ', $cat_ids),
             160,
@@ -592,7 +592,7 @@ if (isset($_POST['submit']) &&
 
         $logger->debug('existing_ids', $existing_ids);
 
-        if (count($existing_ids) > 0) {
+        if ($existing_ids !== []) {
             $db_formats = [];
 
             // find formats for existing photos (already in database)
@@ -658,7 +658,7 @@ if (isset($_POST['submit']) &&
 
     if (! $simulate) {
         // inserts all new elements
-        if (count($inserts) > 0) {
+        if ($inserts !== []) {
             functions_mysqli::mass_inserts(
                 'images',
                 array_keys($inserts[0]),
@@ -685,7 +685,7 @@ if (isset($_POST['submit']) &&
         }
 
         // inserts all formats
-        if (count($insert_formats) > 0) {
+        if ($insert_formats !== []) {
             functions_mysqli::mass_inserts(
                 'image_format',
                 array_keys($insert_formats[0]),
@@ -693,7 +693,7 @@ if (isset($_POST['submit']) &&
             );
         }
 
-        if (count($formats_to_delete) > 0) {
+        if ($formats_to_delete !== []) {
             $formatsToDeleteList = implode(', ', $formats_to_delete);
             $query = <<<SQL
                 DELETE FROM image_format
@@ -709,14 +709,14 @@ if (isset($_POST['submit']) &&
     $to_delete_elements = [];
 
     foreach (array_diff($db_elements, array_keys($fs)) as $path) {
-        $to_delete_elements[] = array_search($path, $db_elements);
+        $to_delete_elements[] = array_search($path, $db_elements, true);
         $infos[] = [
             'path' => $path,
             'info' => functions::l10n('deleted'),
         ];
     }
 
-    if (count($to_delete_elements) > 0) {
+    if ($to_delete_elements !== []) {
         if (! $simulate) {
             functions_admin::delete_elements($to_delete_elements);
         }
@@ -792,7 +792,7 @@ if (isset($_POST['submit']) &&
         $counts['upd_elements'] = count($datas);
 
         if (! $simulate &&
-            count($datas) > 0
+            $datas !== []
         ) {
             functions_mysqli::mass_updates(
                 'images',
@@ -897,7 +897,7 @@ if (isset($_POST['submit']) &&
     }
 
     if (! $simulate) {
-        if (count($datas) > 0) {
+        if ($datas !== []) {
             functions_mysqli::mass_updates(
                 'images',
                 // fields
@@ -1032,7 +1032,7 @@ functions_category::display_select_cat_wrapper(
     false
 );
 
-if (count($errors) > 0) {
+if ($errors !== []) {
     foreach ($errors as $error) {
         $template->append(
             'sync_errors',
@@ -1054,7 +1054,7 @@ if (count($errors) > 0) {
     }
 }
 
-if (count($infos) > 0 &&
+if ($infos !== [] &&
     isset($_POST['display_info']) &&
     $_POST['display_info'] == 1
 ) {

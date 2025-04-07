@@ -170,13 +170,13 @@ if (isset($_POST['submit'])) {
 
     $no_longer_thumbnail_for = array_diff($represented_albums, $_POST['represent']);
 
-    if (count($no_longer_thumbnail_for) > 0) {
+    if ($no_longer_thumbnail_for !== []) {
         functions_admin::set_random_representative($no_longer_thumbnail_for);
     }
 
     $new_thumbnail_for = array_diff($_POST['represent'], $represented_albums);
 
-    if (count($new_thumbnail_for) > 0) {
+    if ($new_thumbnail_for !== []) {
         $image_ids = implode(', ', $new_thumbnail_for);
         $query = <<<SQL
             UPDATE categories

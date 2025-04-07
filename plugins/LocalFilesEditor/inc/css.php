@@ -105,7 +105,7 @@ foreach ($active_themes as $theme) {
     }
 }
 
-if (count($active_theme_options) > 0) {
+if ($active_theme_options !== []) {
     $options[functions::l10n('Active Themes')] = $active_theme_options;
 }
 
@@ -121,7 +121,7 @@ foreach ($inactive_themes as $theme) {
     }
 }
 
-if (count($inactive_theme_options) > 0) {
+if ($inactive_theme_options !== []) {
     $options[functions::l10n('Inactive Themes')] = $inactive_theme_options;
 }
 

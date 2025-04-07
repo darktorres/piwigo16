@@ -786,10 +786,8 @@ final class pwg_images
                 $params['allwords_fields'] = $allwords_fields_available;
             }
 
-            foreach ($params['allwords_fields'] as $field) {
-                if (! in_array($field, $allwords_fields_available)) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter allwords_fields');
-                }
+            if (array_any($params['allwords_fields'], fn ($field): bool => ! in_array($field, $allwords_fields_available))) {
+                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter allwords_fields');
             }
 
             $search['fields']['allwords']['fields'] = $params['allwords_fields'];
@@ -798,10 +796,8 @@ final class pwg_images
         }
 
         if (isset($params['tags'])) {
-            foreach ($params['tags'] as $tag_id) {
-                if (! preg_match('/^\d+$/', $tag_id)) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter tags');
-                }
+            if (array_any($params['tags'], fn ($tag_id): bool => ! preg_match('/^\d+$/', $tag_id))) {
+                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter tags');
             }
 
             if (! isset($params['tags_mode'])) {
@@ -819,10 +815,8 @@ final class pwg_images
         }
 
         if (isset($params['categories'])) {
-            foreach ($params['categories'] as $cat_id) {
-                if (! preg_match('/^\d+$/', (string) $cat_id)) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter categories');
-                }
+            if (array_any($params['categories'], fn ($cat_id): bool => ! preg_match('/^\d+$/', (string) $cat_id))) {
+                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter categories');
             }
 
             $search['fields']['cat'] = [
@@ -845,20 +839,16 @@ final class pwg_images
         }
 
         if (isset($params['filetypes'])) {
-            foreach ($params['filetypes'] as $ext) {
-                if (! preg_match('/^[a-z0-9]+$/i', $ext)) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter filetypes');
-                }
+            if (array_any($params['filetypes'], fn ($ext): bool => ! preg_match('/^[a-z0-9]+$/i', $ext))) {
+                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter filetypes');
             }
 
             $search['fields']['filetypes'] = $params['filetypes'];
         }
 
         if (isset($params['added_by'])) {
-            foreach ($params['added_by'] as $user_id) {
-                if (! preg_match('/^\d+$/', (string) $user_id)) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter added_by');
-                }
+            if (array_any($params['added_by'], fn ($user_id): bool => ! preg_match('/^\d+$/', (string) $user_id))) {
+                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter added_by');
             }
 
             $search['fields']['added_by'] = $params['added_by'];

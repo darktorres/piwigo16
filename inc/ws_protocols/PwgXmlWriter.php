@@ -74,7 +74,6 @@ final class PwgXmlWriter
         string $value
     ): void {
         $this->_end_prev(false);
-        $value = (string) $value;
         $this->_output(htmlspecialchars($value));
     }
 
@@ -100,7 +99,7 @@ final class PwgXmlWriter
     public function encode_attribute(
         string $value
     ): string {
-        return htmlspecialchars((string) $value);
+        return htmlspecialchars($value);
     }
 
     public function _end_prev(

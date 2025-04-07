@@ -118,7 +118,7 @@ final class image_vips implements imageInterface
     public function write(
         string $destination_filepath
     ): true {
-        $dest = pathinfo((string) $destination_filepath);
+        $dest = pathinfo($destination_filepath);
         $this->image->writeToFile(realpath($dest['dirname']) . '/' . $dest['basename']);
         return true;
     }

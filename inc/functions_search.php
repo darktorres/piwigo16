@@ -945,7 +945,7 @@ final class functions_search
             strtolower($q),
             $conf->order_by,
             $user['id'], $user['cache_update_time'],
-            isset($options['permissions']) ? (bool) $options['permissions'] : true,
+            $options['permissions'] ?? true,
             $options['images_where'] ?? '',
         ]);
 

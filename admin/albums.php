@@ -165,11 +165,11 @@ foreach ($allAlbum as $album) {
     $album['lastmodified'] = functions::time_since($album['lastmodified'], 'year');
 
     $parents = explode(',', $album['uppercats']);
-    $the_place = &$associatedTree[strval($parents[0])];
+    $the_place = &$associatedTree[$parents[0]];
     $counter = count($parents);
 
     for ($i = 1; $i < $counter; $i++) {
-        $the_place = &$the_place['children'][strval($parents[$i])];
+        $the_place = &$the_place['children'][$parents[$i]];
     }
 
     $the_place['cat'] = $album;

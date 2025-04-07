@@ -35,12 +35,8 @@ final class functions_plugins
     ): bool {
         global $pwg_event_handlers;
 
-        if (isset($pwg_event_handlers[$event][$priority])) {
-            foreach ($pwg_event_handlers[$event][$priority] as $handler) {
-                if ($handler['function'] == $func) {
-                    return false;
-                }
-            }
+        if (isset($pwg_event_handlers[$event][$priority]) && array_any($pwg_event_handlers[$event][$priority], fn ($handler): bool => $handler['function'] == $func)) {
+            return false;
         }
 
         $pwg_event_handlers[$event][$priority][] = [

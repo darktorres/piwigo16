@@ -17,9 +17,9 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_user;
 
-define('PHPWG_ROOT_PATH', '../');
-define('PWG_HELP', true);
-define('IN_ADMIN', true);
+const PHPWG_ROOT_PATH = '../';
+const PWG_HELP = true;
+const IN_ADMIN = true;
 require_once __DIR__ . '/../inc/common.php';
 
 // +-----------------------------------------------------------------------+

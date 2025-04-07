@@ -25,8 +25,8 @@ $themeconf = [
     'colorscheme' => 'dark',
 ];
 
-define('MODUS_STR_RECENT', "\xe2\x9c\xbd"); //HEAVY TEARDROP-SPOKED ASTERISK
-define('MODUS_STR_RECENT_CHILD', "\xe2\x9c\xbb"); //TEARDROP-SPOKED ASTERISK
+const MODUS_STR_RECENT = "\xe2\x9c\xbd"; //HEAVY TEARDROP-SPOKED ASTERISK
+const MODUS_STR_RECENT_CHILD = "\xe2\x9c\xbb"; //TEARDROP-SPOKED ASTERISK
 
 if (! empty($_GET['skin']) &&
     ! preg_match('/[^a-zA-Z0-9_-]/', $_GET['skin'])

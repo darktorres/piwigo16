@@ -19,7 +19,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 use Piwigo\inc\SrcImage;
 
-define('PHPWG_ROOT_PATH', './');
+const PHPWG_ROOT_PATH = './';
 session_cache_limiter('public');
 require_once __DIR__ . '/inc/common.php';
 

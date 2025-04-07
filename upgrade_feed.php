@@ -18,7 +18,7 @@ if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
     exit(functions::l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION));
 }
 
-define('PHPWG_ROOT_PATH', './');
+const PHPWG_ROOT_PATH = './';
 
 require __DIR__ . '/inc/config_default.php';
 
@@ -41,7 +41,7 @@ if (! $conf->check_upgrade_feed) {
     exit('upgrade feed is not active');
 }
 
-define('UPGRADES_PATH', './install/db');
+const UPGRADES_PATH = './install/db';
 
 // +-----------------------------------------------------------------------+
 // |                         Database connection                           |

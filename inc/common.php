@@ -188,7 +188,7 @@ if (in_array(substr($user['language'], 0, 2), ['fr', 'it', 'de', 'es', 'pl', 'ru
     define('PHPWG_DOMAIN', 'piwigo.org');
 }
 
-define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
+const PHPWG_URL = 'https://' . PHPWG_DOMAIN;
 
 if (isset($conf->alternative_pem_url) &&
     $conf->alternative_pem_url != ''

@@ -15,6 +15,6 @@ Has Settings: false
 use Piwigo\inc\functions_plugins;
 use Piwigo\plugins\rv_tscroller\RVTS;
 
-define('RVTS_VERSION', '12.a');
+const RVTS_VERSION = '12.a';
 
 functions_plugins::add_event_handler('loc_end_section_init', RVTS::on_end_section_init(...));

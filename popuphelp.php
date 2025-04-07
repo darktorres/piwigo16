@@ -17,8 +17,8 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_user;
 
-define('PHPWG_ROOT_PATH', './');
-define('PWG_HELP', true);
+const PHPWG_ROOT_PATH = './';
+const PWG_HELP = true;
 require_once __DIR__ . '/inc/common.php';
 
 // +-----------------------------------------------------------------------+

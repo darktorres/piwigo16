@@ -23,7 +23,7 @@ use Piwigo\inc\Template;
 // force reload of all application files. Thus we disable opcache.
 ini_set('opcache.enable', 0);
 
-define('PHPWG_ROOT_PATH', './');
+const PHPWG_ROOT_PATH = './';
 
 // load config file
 require __DIR__ . '/inc/config_default.php';
@@ -52,7 +52,7 @@ if ($php_end_tag === false) {
 require $config_file;
 
 require_once __DIR__ . '/inc/constants.php';
-define('UPGRADES_PATH', './install/db');
+const UPGRADES_PATH = './install/db';
 
 require_once __DIR__ . '/inc/functions.php';
 require_once __DIR__ . '/inc/Template.php';
@@ -117,7 +117,7 @@ if ($language == 'fr_FR') {
     define('PHPWG_DOMAIN', 'piwigo.org');
 }
 
-define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
+const PHPWG_URL = 'https://' . PHPWG_DOMAIN;
 
 functions::load_language('common.lang', '', [
     'language' => $language,

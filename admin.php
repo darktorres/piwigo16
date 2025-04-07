@@ -22,8 +22,8 @@ use Piwigo\inc\functions_session;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
-define('PHPWG_ROOT_PATH', './');
-define('IN_ADMIN', true);
+const PHPWG_ROOT_PATH = './';
+const IN_ADMIN = true;
 
 require_once __DIR__ . '/inc/common.php';
 require_once __DIR__ . '/admin/inc/add_core_tabs.php';

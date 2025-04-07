@@ -12,8 +12,8 @@ declare(strict_types=1);
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_user;
 
-define('PHPWG_ROOT_PATH', './');
-define('IN_WS', true);
+const PHPWG_ROOT_PATH = './';
+const IN_WS = true;
 
 require_once __DIR__ . '/inc/common.php';
 functions_user::check_status(ACCESS_FREE);

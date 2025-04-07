@@ -32,9 +32,9 @@ if (functions::mobile_theme()) {
 // +-----------------------------------------------------------------------+
 // | Plugin constants                                                      |
 // +-----------------------------------------------------------------------+
-define('GDTHUMB_VERSION', '1.0.26');
+const GDTHUMB_VERSION = '1.0.26';
 define('GDTHUMB_ID', basename(__DIR__));
-define('GDTHUMB_PATH', PHPWG_PLUGINS_PATH . GDTHUMB_ID . '/');
+const GDTHUMB_PATH = PHPWG_PLUGINS_PATH . GDTHUMB_ID . '/';
 
 if (! defined('GDTHEME_PATH')) {
     define('GDTHEME_PATH', PHPWG_THEMES_PATH . 'greydragon/');

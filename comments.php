@@ -25,7 +25,7 @@ use Piwigo\inc\SrcImage;
 // +-----------------------------------------------------------------------+
 // |                           initialization                              |
 // +-----------------------------------------------------------------------+
-define('PHPWG_ROOT_PATH', './');
+const PHPWG_ROOT_PATH = './';
 require_once __DIR__ . '/inc/common.php';
 require_once __DIR__ . '/inc/functions_comment.php';
 

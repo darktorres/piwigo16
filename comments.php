@@ -321,11 +321,8 @@ $query = <<<SQL
 functions_category::display_select_cat_wrapper($query, [$_GET['cat']], $blockname, true);
 
 // Filter on recent comments...
-$tpl_var = [];
 
-foreach ($since_options as $id => $option) {
-    $tpl_var[$id] = $option['label'];
-}
+$tpl_var = array_map(fn (array $option): string => $option['label'], $since_options);
 
 $template->assign('since_options', $tpl_var);
 $template->assign('since_options_selected', $page['since']);

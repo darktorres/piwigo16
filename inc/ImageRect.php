@@ -30,7 +30,8 @@ final class ImageRect
     public function __construct(
         array $l
     ) {
-        $this->l = $this->t = 0;
+        $this->l = 0;
+        $this->t = 0;
         $this->r = $l[0];
         $this->b = $l[1];
     }

@@ -170,7 +170,7 @@ $missing_plugin_ids = array_diff(
     array_keys($plugins->fs_plugins)
 );
 
-if (count($missing_plugin_ids) > 0) {
+if ($missing_plugin_ids !== []) {
     foreach ($missing_plugin_ids as $plugin_id) {
         $tpl_plugins[] = [
             'NAME' => $plugin_id,

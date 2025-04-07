@@ -154,7 +154,7 @@ if (isset($_POST['submit'])) {
         WHERE param = 'extents_for_templates';
         SQL;
 
-    if (functions_mysqli::pwg_query($query)) {
+    if (functions_mysqli::pwg_query($query) !== null) {
         $page['infos'][] = functions::l10n('Templates configuration has been recorded.');
     }
 }

@@ -36,7 +36,7 @@ final class functions_search
         $clause_pattern = null;
 
         if (preg_match('/^psk-\d{8}-[a-z0-9]{10}$/i', $candidate)) {
-            $clause_pattern = 'search_uuid = \'%s\'';
+            $clause_pattern = "search_uuid = '%s'";
         } elseif (preg_match('/^\d+$/', $candidate)) {
             $clause_pattern = 'id = %u';
         }
@@ -64,7 +64,7 @@ final class functions_search
             SQL;
         $searches = functions_mysqli::query2array($query);
 
-        if (count($searches) > 0) {
+        if ($searches !== []) {
             // we don't want spies to be able to see the search rules of any prior search (performed
             // by any user). We don't want them to be try index.php?/search/123 then index.php?/search/124
             // and so on. That's why we have implemented search_uuid with random characters.
@@ -136,7 +136,7 @@ final class functions_search
                     }
                 }
 
-                if (count($local_clauses) > 0) {
+                if ($local_clauses !== []) {
                     // adds brackets around where clauses
                     $local_clauses = functions::prepend_append_array_items($local_clauses, '(', ')');
 
@@ -175,7 +175,8 @@ final class functions_search
             // ((field1 LIKE '%word1%' OR field2 LIKE '%word1%')
             // AND (field1 LIKE '%word2%' OR field2 LIKE '%word2%'))
             $word_clauses = [];
-            $cat_ids_by_word = $tag_ids_by_word = [];
+            $cat_ids_by_word = [];
+            $tag_ids_by_word = [];
 
             foreach ($search['fields']['allwords']['words'] as $word) {
                 $field_clauses = [];
@@ -184,7 +185,7 @@ final class functions_search
                     $field_clauses[] = $field . " LIKE '%" . $word . "%'";
                 }
 
-                if (count($cat_fields) > 0) {
+                if ($cat_fields !== []) {
                     $cat_word_clauses = [];
                     $cat_field_clauses = [];
 
@@ -204,7 +205,7 @@ final class functions_search
                     $cat_ids = functions_mysqli::query2array($query, null, 'id');
                     $cat_ids_by_word[$word] = $cat_ids;
 
-                    if (count($cat_ids) > 0) {
+                    if ($cat_ids !== []) {
                         $catIdsList = implode(', ', $cat_ids);
                         $query = <<<SQL
                             SELECT image_id
@@ -213,7 +214,7 @@ final class functions_search
                             SQL;
                         $cat_image_ids = functions_mysqli::query2array($query, null, 'image_id');
 
-                        if (count($cat_image_ids) > 0) {
+                        if ($cat_image_ids !== []) {
                             $field_clauses[] = 'id IN (' . implode(', ', $cat_image_ids) . ')';
                         }
                     }
@@ -229,7 +230,7 @@ final class functions_search
                     $tag_ids = functions_mysqli::query2array($query, null, 'id');
                     $tag_ids_by_word[$word] = $tag_ids;
 
-                    if (count($tag_ids) > 0) {
+                    if ($tag_ids !== []) {
                         $tagIdsList = implode(', ', $tag_ids);
                         $query = <<<SQL
                             SELECT image_id
@@ -238,13 +239,13 @@ final class functions_search
                             SQL;
                         $tag_image_ids = functions_mysqli::query2array($query, null, 'image_id');
 
-                        if (count($tag_image_ids) > 0) {
+                        if ($tag_image_ids !== []) {
                             $field_clauses[] = 'id IN (' . implode(', ', $tag_image_ids) . ')';
                         }
                     }
                 }
 
-                if (count($field_clauses) > 0) {
+                if ($field_clauses !== []) {
                     // adds brackets around where clauses
                     $word_clauses[] = implode(
                         "\n          OR ",
@@ -253,7 +254,7 @@ final class functions_search
                 }
             }
 
-            if (count($word_clauses) > 0) {
+            if ($word_clauses !== []) {
                 array_walk(
                     $word_clauses,
                     function (string &$s): void { $s = '(' . $s . ')'; }
@@ -270,7 +271,7 @@ final class functions_search
                 $word_clauses
             );
 
-            if (count($cat_ids_by_word) > 0) {
+            if ($cat_ids_by_word !== []) {
                 $matching_cat_ids = null;
 
                 foreach ($cat_ids_by_word as $idx => $cat_ids) {
@@ -285,7 +286,7 @@ final class functions_search
                 $matching_cat_ids = array_unique($matching_cat_ids);
             }
 
-            if (count($tag_ids_by_word) > 0) {
+            if ($tag_ids_by_word !== []) {
                 $matching_tag_ids = null;
 
                 foreach ($tag_ids_by_word as $idx => $tag_ids) {
@@ -340,7 +341,7 @@ final class functions_search
             $filetypes_clauses = [];
 
             foreach ($search['fields']['filetypes'] as $ext) {
-                $filetypes_clauses[] = 'path LIKE \'%.' . $ext . '\'';
+                $filetypes_clauses[] = "path LIKE '%." . $ext . "'";
             }
 
             $clauses[] = implode(' OR ', $filetypes_clauses);
@@ -538,7 +539,7 @@ final class functions_search
                 $post = ($token->modifier & self::QST_WILDCARD_END) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
 
                 foreach ($fields as $field) {
-                    $clauses[] = $field . ' REGEXP \'' . $pre . addslashes(preg_quote($variant)) . $post . '\'';
+                    $clauses[] = $field . " REGEXP '" . $pre . addslashes(preg_quote($variant)) . $post . "'";
                 }
             } else {
                 $ft = $variant;
@@ -555,8 +556,8 @@ final class functions_search
             }
         }
 
-        if (count($fts)) {
-            $clauses[] = 'MATCH(' . implode(', ', $fields) . ') AGAINST( \'' . addslashes(implode(' ', $fts)) . '\' IN BOOLEAN MODE)';
+        if ($fts !== []) {
+            $clauses[] = 'MATCH(' . implode(', ', $fields) . ") AGAINST( '" . addslashes(implode(' ', $fts)) . "' IN BOOLEAN MODE)";
         }
 
         return $clauses;
@@ -582,7 +583,7 @@ final class functions_search
 
             $like = addslashes($token->term);
             $like = str_replace(['%', '_'], ['\\%', '\\_'], $like); // escape LIKE specials %_
-            $file_like = 'CONVERT(file, CHAR) LIKE \'%' . $like . '%\'';
+            $file_like = "CONVERT(file, CHAR) LIKE '%" . $like . "%'";
 
             switch ($scope_id) {
                 case 'photo':
@@ -659,7 +660,8 @@ final class functions_search
         QExpression $expr,
         QResults $qsr
     ): void {
-        $token_tag_ids = $qsr->tag_iids = array_fill(0, count($expr->stokens), []);
+        $token_tag_ids = array_fill(0, count($expr->stokens), []);
+        $qsr->tag_iids = $token_tag_ids;
         $all_tags = [];
 
         for ($i = 0; $i < count($expr->stokens); $i++) {
@@ -697,14 +699,15 @@ final class functions_search
             ) {
                 $common = array_intersect($token_tag_ids[$i], $token_tag_ids[$i + 1]);
 
-                if (count($common)) {
+                if ($common !== []) {
                     $token_tag_ids[$i] = $token_tag_ids[$i + 1] = $common;
                 }
             }
         }
 
         // get images
-        $positive_ids = $not_ids = [];
+        $positive_ids = [];
+        $not_ids = [];
 
         for ($i = 0; $i < count($expr->stokens); $i++) {
             $tag_ids = $token_tag_ids[$i];
@@ -755,8 +758,8 @@ final class functions_search
         QResults $qsr
     ): void {
         global $user, $conf;
-
-        $token_cat_ids = $qsr->cat_iids = array_fill(0, count($expr->stokens), []);
+        $token_cat_ids = array_fill(0, count($expr->stokens), []);
+        $qsr->cat_iids = $token_cat_ids;
         $all_cats = [];
 
         for ($i = 0; $i < count($expr->stokens); $i++) {
@@ -794,14 +797,15 @@ final class functions_search
             ) {
                 $common = array_intersect($token_cat_ids[$i], $token_cat_ids[$i + 1]);
 
-                if (count($common)) {
+                if ($common !== []) {
                     $token_cat_ids[$i] = $token_cat_ids[$i + 1] = $common;
                 }
             }
         }
 
         // get images
-        $positive_ids = $not_ids = [];
+        $positive_ids = [];
+        $not_ids = [];
 
         for ($i = 0; $i < count($expr->stokens); $i++) {
             $cat_ids = $token_cat_ids[$i];
@@ -869,8 +873,8 @@ final class functions_search
     ): array {
         $qualifies = false; // until we find at least one positive term
         $ignored_terms = [];
-
-        $ids = $not_ids = [];
+        $ids = [];
+        $not_ids = [];
 
         for ($i = 0; $i < count($expr->tokens); $i++) {
             $crt = $expr->tokens[$i];
@@ -883,7 +887,7 @@ final class functions_search
                         $qsr->tag_iids[$crt->idx]
                     )
                 );
-                $crt_qualifies = count($crt_ids) > 0 || count($qsr->tag_ids[$crt->idx]) > 0;
+                $crt_qualifies = $crt_ids !== [] || count($qsr->tag_ids[$crt->idx]) > 0;
                 $crt_ignored_terms = $crt_qualifies ? [] : [(string) $crt];
             } else {
                 $crt_ids = self::qsearch_eval($crt, $qsr, $crt_qualifies, $crt_ignored_terms);
@@ -911,7 +915,7 @@ final class functions_search
             }
         }
 
-        if (count($not_ids)) {
+        if ($not_ids !== []) {
             $ids = array_diff($ids, $not_ids);
         }
 
@@ -1037,7 +1041,7 @@ final class functions_search
 
                 if (strlen($token->term) > 2 &&
                    ($token->modifier & (self::QST_QUOTED | self::QST_WILDCARD)) == 0 &&
-                    strcspn($token->term, '\'0123456789') == strlen($token->term)
+                    strcspn($token->term, "'0123456789") == strlen($token->term)
                 ) {
                     $token->variants = array_unique(array_diff($inflector->get_variants($token->term), [$token->term]));
                 }
@@ -1170,7 +1174,7 @@ final class functions_search
         $raw_allwords = trim($raw_allwords, " \n\r\t\v\x00.");
 
         if (! preg_match('/^\s*$/', $raw_allwords)) {
-            $drop_char_match = [';', '&', '(', ')', '<', '>', '`', '\'', '"', '|', ',', '@', '?', '%', '. ', '[', ']', '{', '}', ':', '\\', '/', '=', '\'', '!', '*'];
+            $drop_char_match = [';', '&', '(', ')', '<', '>', '`', "'", '"', '|', ',', '@', '?', '%', '. ', '[', ']', '{', '}', ':', '\\', '/', '=', "'", '!', '*'];
             $drop_char_replace = [' ', ' ', ' ', ' ', ' ', ' ', '', '', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '', ' ', ' ', ' ', ' ', ' '];
 
             // Split words

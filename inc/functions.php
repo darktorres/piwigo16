@@ -467,9 +467,11 @@ final class functions
     public static function str2url(
         string $str
     ): string {
-        $str = $safe = self::pwg_transliterate($str);
+        $str = self::pwg_transliterate($str);
+        $safe = $str;
         $str = preg_replace('/[^\x80-\xffa-z0-9_\s\'\:\/\[\],-]/', '', $str);
         $str = preg_replace('/[\s\'\:\/\[\],-]+/', ' ', trim($str));
+
         $res = str_replace(' ', '_', $str);
 
         if (empty($res)) {
@@ -601,7 +603,7 @@ final class functions
                 $history_sections[] = $page['section'];
 
                 // alter history table structure, to include a new section
-                functions_mysqli::pwg_query('ALTER TABLE history CHANGE section section enum(\'' . implode("','", array_unique($history_sections)) . '\') DEFAULT NULL;');
+                functions_mysqli::pwg_query("ALTER TABLE history CHANGE section section enum('" . implode("','", array_unique($history_sections)) . "') DEFAULT NULL;");
 
                 // and refresh cache
                 self::conf_update_param('history_sections_cache', functions_mysqli::get_enums('history', 'section'), true);
@@ -961,7 +963,7 @@ final class functions
             $chunks['day'] = $chunks['day'] - $chunks['week'] * 7;
         }
 
-        $j = array_search($stop, array_keys($chunks));
+        $j = array_search($stop, array_keys($chunks), true);
 
         $print = '';
         $i = 0;
@@ -1047,6 +1049,7 @@ final class functions
         $now = explode(' ', microtime());
         $now2 = explode('.', $now[0]);
         $now2 = $now[1] . '.' . $now2[1];
+
         $time = number_format($now2 - $t2, 3, '.', ' ') . ' s';
         $debug .= '<p>';
         $debug .= '[' . $time . ', ';
@@ -1275,7 +1278,7 @@ final class functions
             ];
         }
 
-        if (count($caddiables) > 0) {
+        if ($caddiables !== []) {
             functions_mysqli::mass_inserts('caddie', ['element_id', 'user_id'], $datas);
         }
     }
@@ -1446,6 +1449,7 @@ final class functions
             {$condition}
             SQL;
         $query = trim($query) . ';';
+
         $result = functions_mysqli::pwg_query($query);
 
         if (functions_mysqli::pwg_db_num_rows($result) == 0 &&
@@ -2380,7 +2384,7 @@ final class functions
             $where = [];
 
             if (! functions_user::is_admin()) {
-                $where[] = 'validated=\'true\'';
+                $where[] = "validated='true'";
             }
 
             $where[] = functions_user::get_sql_condition_FandF(
@@ -2471,7 +2475,7 @@ final class functions
             SQL;
         $voyagers = functions_mysqli::query2array($query);
 
-        if (count($voyagers)) {
+        if ($voyagers !== []) {
             $voyager = $voyagers[0];
             $age = strtotime($voyager['dbnow']) - strtotime($voyager['date_available']);
 
@@ -2621,7 +2625,8 @@ final class functions
             $size = self::url_to_size(substr($token, 1));
         } elseif ($token[0] == 'e') {
             $crop = 1;
-            $size = $min_size = self::url_to_size(substr($token, 1));
+            $size = self::url_to_size(substr($token, 1));
+            $min_size = $size;
         } else {
             $size = self::url_to_size($token);
 

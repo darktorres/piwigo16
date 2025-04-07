@@ -85,7 +85,7 @@ final class functions_notification_by_mail
     public static function quote_check_key_list(
         array $check_key_list = []
     ): array {
-        return array_map(fn (string $s): string => '\'' . $s . '\'', $check_key_list);
+        return array_map(fn (string $s): string => "'" . $s . "'", $check_key_list);
     }
 
     /**

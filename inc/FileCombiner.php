@@ -287,8 +287,8 @@ final class FileCombiner
         static $PATTERN_IMPORT = "#@import\s*['|\"]{0,1}(.*?)['|\"]{0,1};#";
 
         if (preg_match_all($PATTERN_URL, $css, $matches, PREG_SET_ORDER)) {
-            $search = $replace = [];
-
+            $search = [];
+            $replace = [];
             foreach ($matches as $match) {
                 if (! functions_url::url_is_remote($match[1]) &&
                     $match[1][0] != '/' &&
@@ -304,8 +304,8 @@ final class FileCombiner
         }
 
         if (preg_match_all($PATTERN_IMPORT, $css, $matches, PREG_SET_ORDER)) {
-            $search = $replace = [];
-
+            $search = [];
+            $replace = [];
             foreach ($matches as $match) {
                 $search[] = $match[0];
 

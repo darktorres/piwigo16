@@ -164,7 +164,7 @@ $query_false = <<<SQL
 
     SQL;
 
-if (count($authorized_ids) > 0) {
+if ($authorized_ids !== []) {
     $ids_list = implode(', ', $authorized_ids);
     $query_false .= <<<SQL
         AND id NOT IN ({$ids_list})

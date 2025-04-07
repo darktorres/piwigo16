@@ -33,6 +33,7 @@ final class pwg_extensions
     ): array {
         $plugins = new plugins();
         $plugins->sort_fs_plugins('name');
+
         $plugin_list = [];
 
         foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
@@ -235,9 +236,9 @@ final class pwg_extensions
 
         return match ($upgrade_status) {
             'ok' => functions::l10n('%s has been successfully updated.', $extension_name),
-            'temp_path_error' => new PwgError(null, functions::l10n('Can\'t create temporary file.')),
-            'dl_archive_error' => new PwgError(null, functions::l10n('Can\'t download archive.')),
-            'archive_error' => new PwgError(null, functions::l10n('Can\'t read or extract archive.')),
+            'temp_path_error' => new PwgError(null, functions::l10n("Can't create temporary file.")),
+            'dl_archive_error' => new PwgError(null, functions::l10n("Can't download archive.")),
+            'archive_error' => new PwgError(null, functions::l10n("Can't read or extract archive.")),
             default => new PwgError(null, functions::l10n('An error occurred during extraction (%s).', $upgrade_status)),
         };
     }

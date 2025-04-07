@@ -475,7 +475,7 @@ final class functions_html
                     'category' => array_shift($other_cats),
                 ];
 
-                if (count($other_cats) > 0) {
+                if ($other_cats !== []) {
                     $params['combined_categories'] = $other_cats;
                 }
 
@@ -658,7 +658,7 @@ final class functions_html
             $details[] = functions::l10n_dec('%d comment', '%d comments', $info['nb_comments']);
         }
 
-        if (count($details) > 0) {
+        if ($details !== []) {
             $title .= ' (' . implode(', ', $details) . ')';
         }
 

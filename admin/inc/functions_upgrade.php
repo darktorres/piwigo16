@@ -38,7 +38,7 @@ final class functions_upgrade
             'LocalFilesEditor',
         ];
 
-        $implodedStandardPlugins = implode('\',\'', $standard_plugins);
+        $implodedStandardPlugins = implode("','", $standard_plugins);
         $query = <<<SQL
             SELECT id
             FROM plugins
@@ -54,7 +54,7 @@ final class functions_upgrade
         }
 
         if (! empty($plugins)) {
-            $implodedPlugins = implode('\',\'', $plugins);
+            $implodedPlugins = implode("','", $plugins);
             $query = <<<SQL
                 UPDATE plugins
                 SET state = 'inactive'
@@ -263,7 +263,7 @@ final class functions_upgrade
         $existing = self::get_available_upgrade_ids();
 
         // which upgrades need to be applied?
-        return count(array_diff($existing, $applied)) > 0;
+        return array_diff($existing, $applied) !== [];
     }
 
     public static function upgrade_db_connect(): void
@@ -278,8 +278,8 @@ final class functions_upgrade
                 $conf->db_base
             );
             functions_mysqli::pwg_db_check_version();
-        } catch (Exception $e) {
-            functions_mysqli::my_error(functions::l10n($e->getMessage()), true);
+        } catch (Exception $exception) {
+            functions_mysqli::my_error(functions::l10n($exception->getMessage()), true);
         }
     }
 }

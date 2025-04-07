@@ -47,7 +47,8 @@ $logger = new Katzgrau\KLogger\Logger('./' . $conf->data_location . $conf->log_d
 // end fast bootstrap
 
 $page = [];
-$begin = $step = microtime(true);
+$begin = microtime(true);
+$step = $begin;
 $timing = [];
 
 foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $k) {
@@ -61,8 +62,8 @@ try {
         $conf->db_password,
         $conf->db_base
     );
-} catch (Exception $e) {
-    $logger->error($e->getMessage());
+} catch (Exception $exception) {
+    $logger->error($exception->getMessage());
 }
 
 functions_mysqli::pwg_db_check_charset();
@@ -203,7 +204,8 @@ if ($page['rotation_angle'] != 0) {
 }
 
 // Crop & scale
-$o_size = $d_size = [$image->get_width(), $image->get_height()];
+$o_size = [$image->get_width(), $image->get_height()];
+$d_size = [$image->get_width(), $image->get_height()];
 $params->sizing->compute($o_size, $page['coi'], $crop_rect, $scaled_size);
 
 if ($crop_rect) {

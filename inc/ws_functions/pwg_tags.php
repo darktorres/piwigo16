@@ -439,7 +439,7 @@ final class pwg_tags
             ]);
         }
 
-        if (count($inserts) > 0) {
+        if ($inserts !== []) {
             functions_mysqli::mass_inserts(
                 'image_tag',
                 array_keys($inserts[0]),

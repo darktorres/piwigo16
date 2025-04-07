@@ -141,7 +141,7 @@ $template->assign(
 $where_clauses = ['1 = 1'];
 
 if ($page['filter'] == 'pending') {
-    $where_clauses[] = 'validated=\'false\'';
+    $where_clauses[] = "validated='false'";
 }
 
 $where_clause = implode(' AND ', $where_clauses);

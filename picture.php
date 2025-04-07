@@ -845,7 +845,7 @@ $template->assign('display_info', $conf->picture_information);
 // related tags
 $tags = functions_tag::get_common_tags([$page['image_id']], -1);
 
-if (count($tags)) {
+if ($tags !== []) {
     foreach ($tags as $tag) {
         $template->append(
             'related_tags',

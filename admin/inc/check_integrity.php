@@ -60,7 +60,7 @@ final class check_integrity
         functions_plugins::trigger_notify('list_check_integrity', $this);
 
         // Information
-        if (count($this->retrieve_list) > 0) {
+        if ($this->retrieve_list !== []) {
             $header_notes[] = functions::l10n_dec(
                 '%d anomaly has been detected.',
                 '%d anomalies have been detected.',
@@ -139,8 +139,8 @@ final class check_integrity
 
         if (! $ignore_list_changed) {
             $ignore_list_changed =
-                count(array_diff($this->ignore_list, $this->build_ignore_list)) > 0 ||
-                count(array_diff($this->build_ignore_list, $this->ignore_list)) > 0;
+                array_diff($this->ignore_list, $this->build_ignore_list) !== [] ||
+                array_diff($this->build_ignore_list, $this->ignore_list) !== [];
         }
 
         if ($ignore_list_changed) {
@@ -162,7 +162,7 @@ final class check_integrity
         $submit_ignore = false;
 
         if (isset($this->retrieve_list) &&
-            count($this->retrieve_list) > 0
+            $this->retrieve_list !== []
         ) {
             $template->set_filenames([
                 'check_integrity' => 'check_integrity.tpl',

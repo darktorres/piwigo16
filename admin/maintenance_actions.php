@@ -124,7 +124,7 @@ switch ($action) {
             }
         }
 
-        if (count($sessions_to_delete) > 0) {
+        if ($sessions_to_delete !== []) {
             $sessions_to_delete_str = implode("','", $sessions_to_delete);
             $query = <<<SQL
                 DELETE FROM sessions

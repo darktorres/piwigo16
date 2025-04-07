@@ -136,7 +136,7 @@ if ($display_formats &&
 
         $have_formats_original = true;
     } else {
-        $page['errors'][] = functions::l10n('The original picture selected doesn\'t exists.');
+        $page['errors'][] = functions::l10n("The original picture selected doesn't exists.");
     }
 
 }

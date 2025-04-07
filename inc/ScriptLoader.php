@@ -51,7 +51,8 @@ final class ScriptLoader
         $this->registered_scripts = [];
         $this->inline_scripts = [];
         $this->head_done_scripts = [];
-        $this->did_head = $this->did_footer = false;
+        $this->did_head = false;
+        $this->did_footer = false;
     }
 
     public function did_head(): bool
@@ -131,7 +132,7 @@ final class ScriptLoader
         } else {
             $script = $this->registered_scripts[$id];
 
-            if (count($require)) {
+            if ($require !== []) {
                 $script->precedents = array_unique(array_merge($script->precedents, $require));
             }
 

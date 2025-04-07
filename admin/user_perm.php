@@ -135,7 +135,7 @@ $query_true = <<<SQL
 
     SQL;
 
-if (count($group_authorized) > 0) {
+if ($group_authorized !== []) {
     $groupAuthorizedImplode = implode(', ', $group_authorized);
     $query_true .= " AND cat_id NOT IN ({$groupAuthorizedImplode})\n";
 }
@@ -157,12 +157,12 @@ $query_false = <<<SQL
 
     SQL;
 
-if (count($authorized_ids) > 0) {
+if ($authorized_ids !== []) {
     $authorizedIdsImplode = implode(', ', $authorized_ids);
     $query_false .= " AND id NOT IN ({$authorizedIdsImplode})\n";
 }
 
-if (count($group_authorized) > 0) {
+if ($group_authorized !== []) {
     $groupAuthorizedImplode = implode(', ', $group_authorized);
     $query_false .= " AND id NOT IN ({$groupAuthorizedImplode})\n";
 }

@@ -376,7 +376,7 @@ if ((isset($_POST['submit']) || isset($_GET['now'])) &&
 
                 $template->assign(
                     [
-                        'button_label' => functions::l10n('Discover what\'s new in Piwigo %s', functions::get_branch_from_version(PHPWG_VERSION)),
+                        'button_label' => functions::l10n("Discover what's new in Piwigo %s", functions::get_branch_from_version(PHPWG_VERSION)),
                         'button_link' => 'admin.php?submitted_tour_path=tours/' . $version_ . '&amp;pwg_token=' . functions::get_pwg_token(),
                     ]
                 );

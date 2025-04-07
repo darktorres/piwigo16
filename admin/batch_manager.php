@@ -702,7 +702,7 @@ foreach ($ratios as $ratio) {
 }
 
 foreach (array_keys($ratio_categories) as $type) {
-    if (count($ratio_categories[$type]) > 0) {
+    if ($ratio_categories[$type] !== []) {
         $dimensions['ratio_' . $type] = [
             'min' => $ratio_categories[$type][0],
             'max' => end($ratio_categories[$type]),

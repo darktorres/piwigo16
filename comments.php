@@ -193,7 +193,7 @@ $page['where_clauses'][] = $since_options[$page['since']]['clause'];
 
 // which status to filter on ?
 if (! functions_user::is_admin()) {
-    $page['where_clauses'][] = 'validated=\'true\'';
+    $page['where_clauses'][] = "validated='true'";
 }
 
 $page['where_clauses'][] = functions_user::get_sql_condition_FandF(
@@ -415,7 +415,7 @@ $navbar = functions::create_navigation_bar(
 
 $template->assign('navbar', $navbar);
 
-if (count($comments) > 0) {
+if ($comments !== []) {
     // retrieving element information
     $element_ids_str = implode(', ', $element_ids);
     $query = <<<SQL
@@ -542,7 +542,7 @@ require __DIR__ . '/inc/page_header.php';
 functions_plugins::trigger_notify('loc_end_comments');
 functions_html::flush_page_messages();
 
-if (count($comments) > 0) {
+if ($comments !== []) {
     $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');
 }
 

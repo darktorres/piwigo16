@@ -126,7 +126,7 @@ $query = <<<SQL
 
     SQL;
 
-if (count($sort_by)) {
+if ($sort_by !== []) {
     $query .= " ORDER BY {$sort_by[0]}";
 }
 

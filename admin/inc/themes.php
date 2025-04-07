@@ -187,7 +187,7 @@ final class themes
 
                 $children = $this->get_children_themes($theme_id);
 
-                if (count($children) > 0) {
+                if ($children !== []) {
                     $errors[] = functions::l10n(
                         'Impossible to delete this theme. Other themes depends on it: %s',
                         implode(', ', $children)
@@ -299,6 +299,7 @@ final class themes
             SQL;
 
         $query = trim($query) . ';';
+
         $result = functions_mysqli::pwg_query($query);
         $themes = [];
 

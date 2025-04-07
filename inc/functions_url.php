@@ -506,7 +506,7 @@ final class functions_url
                         $current_token++;
                     }
 
-                    if (count($maybe_permalinks)) {
+                    if ($maybe_permalinks !== []) {
                         $cat_id = functions_category::get_cat_id_from_permalinks($maybe_permalinks, $perma_index);
 
                         if (isset($cat_id)) {
@@ -683,7 +683,7 @@ final class functions_url
 
                 array_shift($chronology_tokens);
 
-                if (count($chronology_tokens) > 0) {
+                if ($chronology_tokens !== []) {
                     if ($chronology_tokens[0] == 'list' ||
                         $chronology_tokens[0] == 'calendar'
                     ) {

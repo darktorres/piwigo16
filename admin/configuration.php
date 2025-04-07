@@ -176,8 +176,9 @@ if (isset($_POST['submit'])) {
                         $page['errors'][] = functions::l10n('No order field selected');
                     } else {
                         // limit to the number of available parameters
-                        $order_by = $order_by_inside_category = array_slice($_POST['order_by'], 0, (int) ceil(count($sort_fields) / 2));
-                        $i = array_search('`rank` ASC', $order_by);
+                        $order_by = array_slice($_POST['order_by'], 0, (int) ceil(count($sort_fields) / 2));
+                        $order_by_inside_category = $order_by;
+                        $i = array_search('`rank` ASC', $order_by, true);
 
                         // there is no rank outside categories
                         if ($i !== false) {

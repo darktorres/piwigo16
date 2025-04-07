@@ -86,7 +86,7 @@ if ($page['show_comments'] &&
 
 if ($page['show_comments']) {
     if (! functions_user::is_admin()) {
-        $validated_clause = '  AND validated = \'true\'';
+        $validated_clause = "  AND validated = 'true'";
     } else {
         $validated_clause = '';
     }

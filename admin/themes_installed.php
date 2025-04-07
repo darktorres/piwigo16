@@ -126,7 +126,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
 
         $tpl_theme['DELETABLE'] = true;
 
-        if (count($children) > 0) {
+        if ($children !== []) {
             $tpl_theme['DELETABLE'] = false;
 
             $tpl_theme['DELETE_TOOLTIP'] = functions::l10n(

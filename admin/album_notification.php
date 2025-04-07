@@ -239,7 +239,7 @@ if (count($all_group_ids) == 0) {
         $group_ids = $all_group_ids;
     }
 
-    if (count($group_ids) > 0) {
+    if ($group_ids !== []) {
         $imploded_group_ids = implode(', ', $group_ids);
         $query = <<<SQL
             SELECT id, name
@@ -293,7 +293,7 @@ if ($category['status'] == 'private') {
     $user_ids = $all_user_ids;
 }
 
-if (count($user_ids) > 0) {
+if ($user_ids !== []) {
     $user_ids_imploded = implode(', ', $user_ids);
     $query = <<<SQL
         SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['username']} AS username

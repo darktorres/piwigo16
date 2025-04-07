@@ -113,7 +113,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 // get image tn urls
 $image_urls = [];
 
-if (count($image_ids) > 0) {
+if ($image_ids !== []) {
     $ids = implode(', ', array_keys($image_ids));
     $query = <<<SQL
         SELECT id, name, file, path, representative_ext, level

@@ -72,7 +72,7 @@ if (! empty($_POST)) {
         //
         $deny_groups = array_diff($groups_granted, $_POST['groups']);
 
-        if (count($deny_groups) > 0) {
+        if ($deny_groups !== []) {
             // if you forbid access to an album, all sub-albums become
             // automatically forbidden
             $imploded_deny_groups = implode(', ', $deny_groups);
@@ -146,7 +146,7 @@ if (! empty($_POST)) {
         //
         $deny_users = array_diff($users_granted, $_POST['users']);
 
-        if (count($deny_users) > 0) {
+        if ($deny_users !== []) {
             // if you forbid access to an album, all sub-album become automatically
             // forbidden
             $deny_users_imploded = implode(', ', $deny_users);
@@ -237,7 +237,7 @@ $template->assign('users_selected', $user_granted_direct_ids);
 
 $user_granted_indirect_ids = [];
 
-if (count($group_granted_ids) > 0) {
+if ($group_granted_ids !== []) {
     $granted_groups = [];
 
     $group_granted_ids_imploded = implode(', ', $group_granted_ids);

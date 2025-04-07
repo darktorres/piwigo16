@@ -351,7 +351,7 @@ final class functions_category
                 $in .= ', ';
             }
 
-            $in .= '\'' . $permalink . '\'';
+            $in .= "'" . $permalink . "'";
         }
 
         $query = <<<SQL

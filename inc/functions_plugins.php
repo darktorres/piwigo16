@@ -242,7 +242,7 @@ final class functions_plugins
 
         $where_clause = '';
 
-        if (count($clauses)) {
+        if ($clauses !== []) {
             $where_clause = 'WHERE ' . implode(' AND ', $clauses);
         }
 

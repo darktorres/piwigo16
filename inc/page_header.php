@@ -33,8 +33,7 @@ if (defined('IN_ADMIN') &&
 $template->assign(
     [
         'GALLERY_TITLE' =>
-          isset($page['gallery_title']) ?
-            $page['gallery_title'] : $conf->gallery_title,
+          $page['gallery_title'] ?? $conf->gallery_title,
 
         'PAGE_BANNER' =>
           functions_plugins::trigger_change(
@@ -42,13 +41,12 @@ $template->assign(
               str_replace(
                   '%gallery_title%',
                   $conf->gallery_title,
-                  isset($page['page_banner']) ? $page['page_banner'] : $conf->page_banner
+                  $page['page_banner'] ?? $conf->page_banner
               )
           ),
 
         'BODY_ID' =>
-          isset($page['body_id']) ?
-            $page['body_id'] : '',
+          $page['body_id'] ?? '',
 
         'CONTENT_ENCODING' => functions::get_pwg_charset(),
         'PAGE_TITLE' => strip_tags($title),

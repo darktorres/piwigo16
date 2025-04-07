@@ -64,7 +64,7 @@ final class pwg
         $query = <<<SQL
             SELECT MAX(id) + 1, COUNT(*) FROM images;
             SQL;
-        list($max_id, $image_count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$max_id, $image_count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($image_count == 0) {
             return [];
@@ -173,59 +173,59 @@ final class pwg
         $query = <<<SQL
             SELECT COUNT(*) FROM images;
             SQL;
-        list($infos['nb_elements']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_elements']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) FROM categories;
             SQL;
-        list($infos['nb_categories']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_categories']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) FROM categories WHERE dir IS NULL;
             SQL;
-        list($infos['nb_virtual']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_virtual']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) FROM categories WHERE dir IS NOT NULL;
             SQL;
-        list($infos['nb_physical']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_physical']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) FROM image_category;
             SQL;
-        list($infos['nb_image_category']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_image_category']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) FROM tags;
             SQL;
-        list($infos['nb_tags']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_tags']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) FROM image_tag;
             SQL;
-        list($infos['nb_image_tag']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_image_tag']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) FROM users;
             SQL;
-        list($infos['nb_users']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_users']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) FROM `groups`;
             SQL;
-        list($infos['nb_groups']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_groups']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) FROM comments;
             SQL;
-        list($infos['nb_comments']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_comments']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         // first element
         if ($infos['nb_elements'] > 0) {
             $query = <<<SQL
                 SELECT MIN(date_available) FROM images;
                 SQL;
-            list($infos['first_date']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$infos['first_date']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         }
 
         // unvalidated comments
@@ -233,7 +233,7 @@ final class pwg
             $query = <<<SQL
                 SELECT COUNT(*) FROM comments WHERE validated = 'false';
                 SQL;
-            list($infos['nb_unvalidated_comments']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$infos['nb_unvalidated_comments']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         }
 
         // Cache size
@@ -459,7 +459,7 @@ final class pwg
         $res['pwg_token'] = functions::get_pwg_token();
         $res['charset'] = functions::get_pwg_charset();
 
-        list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+        [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
         $res['current_datetime'] = $dbnow;
         $res['version'] = PHPWG_VERSION;
         $res['save_visits'] = functions::do_log();
@@ -475,7 +475,7 @@ final class pwg
         $piwigo_remote_sync_agent = 'Apache-HttpClient/';
 
         if (! isset($_SERVER['HTTP_USER_AGENT']) ||
-            substr($_SERVER['HTTP_USER_AGENT'], 0, strlen($piwigo_remote_sync_agent)) !== $piwigo_remote_sync_agent
+            ! str_starts_with($_SERVER['HTTP_USER_AGENT'], $piwigo_remote_sync_agent)
         ) {
             $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
         }
@@ -574,7 +574,7 @@ final class pwg
                 $output_lines[count($output_lines) - 1]['counter']++;
                 $output_lines[count($output_lines) - 1]['object_id'][] = $row['object_id'];
             } else {
-                list($date, $hour) = explode(' ', $row['occurred_on']);
+                [$date, $hour] = explode(' ', $row['occurred_on']);
                 // New line
                 $output_lines[] = [
                     'id' => $line_id,
@@ -617,7 +617,7 @@ final class pwg
         foreach ($output_lines as $idx => $output_line) {
             if ($output_line['object'] == 'user') {
                 foreach ($output_line['object_id'] as $user_id) {
-                    $output_lines[$idx]['details']['users'][] = isset($username_of[$user_id]) ? $username_of[$user_id] : 'user#' . $user_id;
+                    $output_lines[$idx]['details']['users'][] = $username_of[$user_id] ?? 'user#' . $user_id;
                 }
 
                 if (isset($output_lines[$idx]['details']['users'])) {
@@ -826,7 +826,7 @@ final class pwg
             FROM search
             WHERE id = {$search_id};
             SQL;
-        list($serialized_rules) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$serialized_rules] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $page['search'] = unserialize($serialized_rules);
 
@@ -1020,7 +1020,7 @@ final class pwg
             if (isset($line['tag_ids'])) {
                 $tag_names = preg_replace_callback(
                     '/(\d+)/',
-                    function (array $m) use ($name_of_tag): string { return isset($name_of_tag[$m[1]]) ? $name_of_tag[$m[1]] : $m[1]; },
+                    fn (array $m): string => $name_of_tag[$m[1]] ?? $m[1],
                     $line['tag_ids']
                 );
                 $tag_ids = $line['tag_ids'];
@@ -1102,7 +1102,7 @@ final class pwg
                     'TYPE' => $line['image_type'],
                     'SECTION' => $line['section'],
                     'FULL_CATEGORY_PATH' => isset($full_cat_path[$line['category_id']]) ? strip_tags($full_cat_path[$line['category_id']]) : functions::l10n('Root') . $line['category_id'],
-                    'CATEGORY' => isset($name_of_category[$line['category_id']]) ? $name_of_category[$line['category_id']] : functions::l10n('Root') . $line['category_id'],
+                    'CATEGORY' => $name_of_category[$line['category_id']] ?? functions::l10n('Root') . $line['category_id'],
                     'SEARCH_ID' => $line['search_id'] ?? null,
                     'TAGS' => explode(',', $tag_names),
                     'TAGIDS' => explode(',', $tag_ids),

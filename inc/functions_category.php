@@ -106,7 +106,7 @@ final class functions_category
 
         $result = functions_mysqli::pwg_query($query);
         $cats = [];
-        $selected_category = isset($page['category']) ? $page['category'] : null;
+        $selected_category = $page['category'] ?? null;
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $child_date_last = $row['max_date_last'] > $row['date_last'];
@@ -485,7 +485,7 @@ final class functions_category
             $result = functions_mysqli::pwg_query($query);
 
             if (functions_mysqli::pwg_db_num_rows($result) > 0) {
-                list($image_id) = functions_mysqli::pwg_db_fetch_row($result);
+                [$image_id] = functions_mysqli::pwg_db_fetch_row($result);
             }
         }
 

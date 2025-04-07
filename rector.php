@@ -24,18 +24,18 @@ return RectorConfig::configure()
     ])
     ->withSkip([
         __DIR__ . '/themes/bootstrap_darkroom/node_modules',
-        // ClassOnObjectRector::class,
+        ClassOnObjectRector::class,
         // DisallowedEmptyRuleFixerRector::class,
         // EncapsedStringsToSprintfRector::class,
-        // NullToStrictStringFuncCallArgRector::class,
-        // RemoveExtraParametersRector::class,
-        // SensitiveHereNowDocRector::class,
-        // StringClassNameToClassConstantRector::class,
+        NullToStrictStringFuncCallArgRector::class,
+        RemoveExtraParametersRector::class,
+        SensitiveHereNowDocRector::class,
+        StringClassNameToClassConstantRector::class,
         // UnnecessaryTernaryExpressionRector::class,
         // UseClassKeywordForClassNameResolutionRector::class,
     ])
     ->withRootFiles()
-    // ->withPhpSets()
+    ->withPhpSets()
     ->withPreparedSets(
         // codeQuality: true,
         // codingStyle: true,

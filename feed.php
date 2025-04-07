@@ -25,7 +25,7 @@ require_once __DIR__ . '/inc/common.php';
 
 functions::check_input_parameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
-$feed_id = isset($_GET['feed']) ? $_GET['feed'] : '';
+$feed_id = $_GET['feed'] ?? '';
 $image_only = isset($_GET['image_only']);
 
 // echo '<pre>'.\Piwigo\inc\functions_session::generate_key(50).'</pre>';
@@ -56,7 +56,7 @@ if (! empty($feed_id)) {
 // Check the status now after the user has been loaded
 functions_user::check_status(ACCESS_GUEST);
 
-list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+[$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 
 functions_url::set_make_full_url();
 

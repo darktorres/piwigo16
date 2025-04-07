@@ -74,14 +74,11 @@ class functions_LocalFilesEditor
     public static function editarea_quote(
         string $value
     ): string {
-        switch (gettype($value)) {
-            case 'boolean':
-                return $value ? 'true' : 'false';
-            case 'integer':
-                return $value;
-            default:
-                return '"' . $value . '"';
-        }
+        return match (gettype($value)) {
+            'boolean' => $value ? 'true' : 'false',
+            'integer' => $value,
+            default => '"' . $value . '"',
+        };
     }
 
     /**

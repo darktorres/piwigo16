@@ -235,7 +235,7 @@ $src_image = new SrcImage($row);
 
 // in case the photo needs a rotation of 90 degrees (clockwise or counterclockwise), we switch width and height
 if (in_array($row['rotation'], [1, 3])) {
-    list($row['width'], $row['height']) = [$row['height'], $row['width']];
+    [$row['width'], $row['height']] = [$row['height'], $row['width']];
 }
 
 $template->assign(
@@ -317,7 +317,7 @@ if ($conf->rate &&
         FROM rate
         WHERE element_id = {$_GET['image_id']};
         SQL;
-    list($row['nb_rates']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$row['nb_rates']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     $intro_vars['stats'] .= ', ' . sprintf(functions::l10n('Rated %d times, score : %.2f'), $row['nb_rates'], $row['rating_score']);
 }
@@ -346,7 +346,7 @@ if (in_array(functions::get_extension($row['path']), $conf->picture_ext)) {
 }
 
 // image level options
-$selected_level = isset($_POST['level']) ? $_POST['level'] : $row['level'];
+$selected_level = $_POST['level'] ?? $row['level'];
 $template->assign(
     [
         'level_options' => functions::get_privacy_level_options(),

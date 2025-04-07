@@ -240,7 +240,7 @@ $query = <<<SQL
     SELECT COUNT(*)
     FROM rate;
     SQL;
-list($nb_elements) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_elements] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $template->assign([
     'F_ACTION' => functions_url::get_root_url() . 'admin.php',

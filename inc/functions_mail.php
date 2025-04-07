@@ -91,7 +91,7 @@ final class functions_mail
             $cvt_name = '"' . addcslashes($cvt_name, '"') . '" ';
         }
 
-        if (strpos($cvt_email, '<') === false) {
+        if (! str_contains($cvt_email, '<')) {
             return $cvt_name . '<' . $cvt_email . '>';
         }
 
@@ -743,7 +743,7 @@ final class functions_mail
                 $template->assign(
                     [
                         'GALLERY_URL' => functions_url::add_url_params(functions_url::get_gallery_home_url(), $add_url_params),
-                        'GALLERY_TITLE' => isset($page['gallery_title']) ? $page['gallery_title'] : $conf->gallery_title,
+                        'GALLERY_TITLE' => $page['gallery_title'] ?? $conf->gallery_title,
                         'VERSION' => $conf->show_version ? PHPWG_VERSION : '',
                         'PHPWG_URL' => defined('PHPWG_URL') ? PHPWG_URL : '',
                         'CONTENT_ENCODING' => functions::get_pwg_charset(),
@@ -845,8 +845,8 @@ final class functions_mail
 
         if ($conf_mail['use_smtp']) {
             // now we need to split port number
-            if (strpos($conf_mail['smtp_host'], ':') !== false) {
-                list($smtp_host, $smtp_port) = explode(':', $conf_mail['smtp_host']);
+            if (str_contains($conf_mail['smtp_host'], ':')) {
+                [$smtp_host, $smtp_port] = explode(':', $conf_mail['smtp_host']);
             } else {
                 $smtp_host = $conf_mail['smtp_host'];
                 $smtp_port = 25;

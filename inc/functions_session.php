@@ -83,7 +83,7 @@ final class functions_session
             return '';
         }
 
-        if (strpos($_SERVER['REMOTE_ADDR'], ':') === false) { //ipv4
+        if (! str_contains($_SERVER['REMOTE_ADDR'], ':')) { //ipv4
             return vsprintf(
                 '%02X%02X',
                 explode('.', $_SERVER['REMOTE_ADDR'])
@@ -194,11 +194,7 @@ final class functions_session
         string $var,
         array|int|string|bool|float|null $default = null
     ): array|int|string|bool|float|null {
-        if (isset($_SESSION['pwg_' . $var])) {
-            return $_SESSION['pwg_' . $var];
-        }
-
-        return $default;
+        return $_SESSION['pwg_' . $var] ?? $default;
     }
 
     /**

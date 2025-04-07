@@ -50,11 +50,11 @@ final class functions_mysqli
         $port = null;
         $socket = null;
 
-        if (strpos($host, '/') === 0) {
+        if (str_starts_with($host, '/')) {
             $socket = $host;
             $host = null;
-        } elseif (strpos($host, ':') !== false) {
-            list($host, $port) = explode(':', $host);
+        } elseif (str_contains($host, ':')) {
+            [$host, $port] = explode(':', $host);
         }
 
         $dbname = '';
@@ -72,7 +72,7 @@ final class functions_mysqli
         // MySQL 5.7 default settings forbid to select a colum that is not in the
         // group by. We've used that in Piwigo, for years. As an immediate solution
         // we can remove this constraint in the current MySQL session.
-        list($sql_mode_current) = self::pwg_db_fetch_row(self::pwg_query('SELECT @@SESSION.sql_mode;'));
+        [$sql_mode_current] = self::pwg_db_fetch_row(self::pwg_query('SELECT @@SESSION.sql_mode;'));
 
         // remove ONLY_FULL_GROUP_BY from the list
         $sql_mode_altered = implode(',', array_diff(explode(',', $sql_mode_current), ['ONLY_FULL_GROUP_BY']));
@@ -205,7 +205,7 @@ final class functions_mysqli
             SELECT IF(MAX({$column}) + 1 IS NULL, 1, MAX({$column}) + 1)
             FROM {$table};
             SQL;
-        list($next) = self::pwg_db_fetch_row(self::pwg_query($query));
+        [$next] = self::pwg_db_fetch_row(self::pwg_query($query));
 
         return $next;
     }
@@ -415,9 +415,9 @@ final class functions_mysqli
             self::mass_inserts($temporary_tablename, $all_fields, $datas);
 
             if ($flags & self::MASS_UPDATES_SKIP_EMPTY) {
-                $func_set = function (string $s): string { return "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})"; };
+                $func_set = (fn (string $s): string => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
             } else {
-                $func_set = function (string $s): string { return "t1.{$s} = t2.{$s}"; };
+                $func_set = (fn (string $s): string => "t1.{$s} = t2.{$s}");
             }
 
             // update of table by joining with temporary table
@@ -430,7 +430,7 @@ final class functions_mysqli
             $primaryConditions = implode(
                 "\n    AND ",
                 array_map(
-                    function (string $s): string { return "t1.{$s} = t2.{$s}"; },
+                    fn (string $s): string => "t1.{$s} = t2.{$s}",
                     $dbfields['primary']
                 )
             );
@@ -544,7 +544,7 @@ final class functions_mysqli
         $query = <<<SQL
             SELECT @@max_allowed_packet;
             SQL;
-        list($packet_size) = self::pwg_db_fetch_row(self::pwg_query($query));
+        [$packet_size] = self::pwg_db_fetch_row(self::pwg_query($query));
         $escapedTablename = self::protect_column_name($table_name);
         $escapeddbfields = implode(', ', array_map(self::protect_column_name(...), $dbfields));
 
@@ -816,7 +816,7 @@ final class functions_mysqli
         $query = <<<SQL
             SELECT {$recentPeriodExpression};
             SQL;
-        list($d) = self::pwg_db_fetch_row(self::pwg_query($query));
+        [$d] = self::pwg_db_fetch_row(self::pwg_query($query));
 
         return $d;
     }

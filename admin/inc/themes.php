@@ -150,7 +150,7 @@ final class themes
                     if (functions_mysqli::pwg_db_num_rows($result) == 0) {
                         $new_theme = 'default';
                     } else {
-                        list($new_theme) = functions_mysqli::pwg_db_fetch_row($result);
+                        [$new_theme] = functions_mysqli::pwg_db_fetch_row($result);
                     }
 
                     $this->set_default_theme($new_theme);
@@ -368,7 +368,7 @@ final class themes
                     if (! empty($theme['uri']) &&
                         strpos($theme['uri'], 'extension_view.php?eid=')
                     ) {
-                        list(, $extension) = explode('extension_view.php?eid=', $theme['uri']);
+                        [, $extension] = explode('extension_view.php?eid=', $theme['uri']);
 
                         if (is_numeric($extension)) {
                             $theme['extension'] = $extension;
@@ -471,7 +471,7 @@ final class themes
                 $branch = functions::get_branch_from_version($version);
 
                 foreach ($pem_versions as $pem_version) {
-                    if (strpos($pem_version['name'], $branch) === 0) {
+                    if (str_starts_with($pem_version['name'], $branch)) {
                         $versions_to_check[] = $pem_version['id'];
                     }
                 }
@@ -649,7 +649,7 @@ final class themes
                                         $realpath = realpath($path);
 
                                         if ($realpath === false ||
-                                            strpos($realpath, $extract_path_realpath) !== 0
+                                            ! str_starts_with($realpath, $extract_path_realpath)
                                         ) {
                                             continue;
                                         }

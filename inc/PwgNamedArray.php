@@ -18,26 +18,20 @@ namespace Piwigo\inc;
  */
 final class PwgNamedArray
 {
-    public array $_content;
-
-    public string $_itemName;
-
     public array $_xmlAttributes;
 
     /**
      * Constructs a named array
-     * @param array<array<string, string>> $content (keys must be consecutive integers starting at 0)
-     * @param string $itemName xml element name for values of arr (e.g. image)
+     * @param array<array<string, string>> $_content (keys must be consecutive integers starting at 0)
+     * @param string $_itemName xml element name for values of arr (e.g. image)
      * @param array<int, string> $xmlAttributes of sub-item attributes that will be encoded as
      *      xml attributes instead of xml child elements
      */
     public function __construct(
-        array $content,
-        string $itemName,
+        public array $_content,
+        public string $_itemName,
         array $xmlAttributes = []
     ) {
-        $this->_content = $content;
-        $this->_itemName = $itemName;
         $this->_xmlAttributes = array_flip($xmlAttributes);
     }
 }

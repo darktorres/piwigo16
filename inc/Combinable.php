@@ -16,22 +16,16 @@ namespace Piwigo\inc;
  */
 class Combinable
 {
-    public string $id;
-
     public string $path = '';
-
-    public bool|int|string $version;
 
     public ?bool $is_template;
 
     public function __construct(
-        string $id,
+        public string $id,
         ?string $path,
-        bool|int|string $version = 0
+        public bool|int|string $version = 0
     ) {
-        $this->id = $id;
         $this->set_path($path);
-        $this->version = $version;
         $this->is_template = false;
     }
 
@@ -46,6 +40,6 @@ class Combinable
     public function is_remote(): bool
     {
         return functions_url::url_is_remote($this->path) ||
-               strncmp($this->path, '//', 2) == 0;
+               str_starts_with($this->path, '//');
     }
 }

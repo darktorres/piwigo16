@@ -49,7 +49,7 @@ if (isset($_GET['type']) &&
         $row['details'] = str_replace('`groups`', 'groups', $row['details']);
         $row['details'] = str_replace('`rank`', 'rank', $row['details']);
 
-        list($date, $hour) = explode(' ', $row['occurred_on']);
+        [$date, $hour] = explode(' ', $row['occurred_on']);
 
         $output_lines[] = [
             'username' => $row['username'],
@@ -71,7 +71,7 @@ if (isset($_GET['type']) &&
     $f = fopen('php://output', 'w');
 
     foreach ($output_lines as $line) {
-        fputcsv($f, $line, ';');
+        fputcsv($f, $line, ';', escape: '\\');
     }
 
     fclose($f);
@@ -121,7 +121,7 @@ foreach ($nb_lines_for_user as $id => $nb_line) {
         $filterable_users,
         [
             'id' => $id,
-            'username' => isset($username_of[$id]) ? $username_of[$id] : 'user#' . $id,
+            'username' => $username_of[$id] ?? 'user#' . $id,
             'nb_lines' => $nb_line,
         ]
     );
@@ -134,7 +134,7 @@ $query = <<<SQL
     FROM users;
     SQL;
 
-list($nb_users) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_users] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 $template->assign('nb_users', $nb_users);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'user_activity');

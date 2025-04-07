@@ -24,7 +24,7 @@ final class functions_TakeATour
             'force_fallback' => 'en_UK',
         ]);
 
-        list(, $tour_name) = explode('/', $tour_to_launch);
+        [, $tour_name] = explode('/', $tour_to_launch);
         functions::load_language('tour_' . $tour_name . '.lang', PHPWG_PLUGINS_PATH . 'TakeATour/', [
             'force_fallback' => 'en_UK',
         ]);

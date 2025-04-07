@@ -15,16 +15,13 @@ use Override;
 
 final class QNumericRangeScope extends QSearchScope
 {
-    private readonly float|int $epsilon;
-
     public function __construct(
         string $id,
         array $aliases,
         bool $nullable = false,
-        float|int $epsilon = 0
+        private readonly float|int $epsilon = 0
     ) {
         parent::__construct($id, $aliases, $nullable, false);
-        $this->epsilon = $epsilon;
     }
 
     #[Override]
@@ -79,7 +76,7 @@ final class QNumericRangeScope extends QSearchScope
 
                         if ($dot_pos !== false) {
                             $requested_precision = strlen($matches[1]) - $dot_pos - 1;
-                            $mult /= pow(10, $requested_precision);
+                            $mult /= 10 ** $requested_precision;
                         }
 
                         if ($mult > 1) {

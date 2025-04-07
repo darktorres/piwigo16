@@ -144,7 +144,7 @@ final class functions_metadata
 
             // configured fields
             foreach ($map as $key => $field) {
-                if (strpos($field, ';') === false) {
+                if (! str_contains($field, ';')) {
                     if (isset($exif[$field])) {
                         $result[$key] = $exif[$field];
                     }

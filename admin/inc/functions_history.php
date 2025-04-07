@@ -264,7 +264,7 @@ final class functions_history
         $inserts = [];
 
         if (isset($first_time_key)) {
-            list($year, $month, $day, $hour) = explode('-', $first_time_key);
+            [$year, $month, $day, $hour] = explode('-', $first_time_key);
 
             $query = <<<SQL
                 SELECT *
@@ -349,7 +349,7 @@ final class functions_history
             SELECT COUNT(*)
             FROM history;
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count <= $conf->history_autopurge_keep_lines) {
             self::history_remove_summarized_column();
@@ -430,7 +430,7 @@ final class functions_history
             SELECT COUNT(*)
             FROM history;
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count > $conf->history_autopurge_keep_lines + $conf->history_autopurge_blocksize) {
             // it's not yet time to remove history.summarized

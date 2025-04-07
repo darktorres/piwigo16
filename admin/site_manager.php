@@ -71,7 +71,7 @@ if (isset($_POST['submit']) &&
     $url = preg_replace('/[\/]*$/', '', $_POST['galleries_url']);
     $url .= '/';
 
-    if (! (strpos($url, '.') === 0)) {
+    if (! (str_starts_with($url, '.'))) {
         $url = './' . $url;
     }
 
@@ -122,7 +122,7 @@ if (isset($_GET['action']) &&
         FROM sites
         WHERE id = {$page['site']};
         SQL;
-    list($galleries_url) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$galleries_url] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     switch ($_GET['action']) {
         case 'delete':

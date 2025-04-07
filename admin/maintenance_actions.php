@@ -29,7 +29,7 @@ functions_admin::fs_quick_check();
 // |                                actions                                |
 // +-----------------------------------------------------------------------+
 
-$action = isset($_GET['action']) ? $_GET['action'] : '';
+$action = $_GET['action'] ?? '';
 $register_activity = true;
 
 switch ($action) {
@@ -262,7 +262,7 @@ $purge_urls[functions::l10n(derivative_std_params::IMG_CUSTOM)] = derivative_std
 
 $php_current_timestamp = date('Y-m-d H:i:s');
 $db_version = functions_mysqli::pwg_get_db_version();
-list($db_current_date) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+[$db_current_date] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 
 $template->assign(
     [

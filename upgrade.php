@@ -147,7 +147,7 @@ functions::load_language('upgrade.lang', '', [
 functions_upgrade::upgrade_db_connect();
 functions_mysqli::pwg_db_check_charset();
 
-list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+[$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 define('CURRENT_DATE', $dbnow);
 
 // +-----------------------------------------------------------------------+

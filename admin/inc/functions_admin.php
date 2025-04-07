@@ -557,7 +557,7 @@ final class functions_admin
         ];
 
         foreach ($related_columns as $fullcol) {
-            list($table, $column) = explode('.', $fullcol);
+            [$table, $column] = explode('.', $fullcol);
 
             $query = <<<SQL
                 SELECT {$column}
@@ -713,7 +713,7 @@ final class functions_admin
 
         $datas = [];
 
-        $cat_map_callback = function (array $m) use ($cat_map): int {  return $cat_map[$m[1]]['rank']; };
+        $cat_map_callback = (fn (array $m): int => $cat_map[$m[1]]['rank']);
 
         foreach ($cat_map as $id => $cat) {
             $new_global_rank = preg_replace_callback(
@@ -1043,7 +1043,7 @@ final class functions_admin
                 ORDER BY {$random_function}
                 LIMIT 1;
                 SQL;
-            list($representative) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$representative] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             $datas[] = [
                 'id' => $category_id,
@@ -1101,7 +1101,7 @@ final class functions_admin
         $categories = functions_mysqli::query2array($query);
 
         // filling $cat_fulldirs
-        $cat_dirs_callback = function (array $m) use ($cat_dirs): string { return $cat_dirs[$m[1]]; };
+        $cat_dirs_callback = (fn (array $m): string => $cat_dirs[$m[1]]);
 
         $cat_fulldirs = [];
 
@@ -1378,7 +1378,7 @@ final class functions_admin
                 FROM categories
                 WHERE id = {$new_parent};
                 SQL;
-            list($new_parent_uppercats) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$new_parent_uppercats] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             foreach ($categories as $category) {
                 // technically, you can't move a category with uppercats 12,125,13,14
@@ -1415,7 +1415,7 @@ final class functions_admin
                 FROM categories
                 WHERE id = {$new_parent};
                 SQL;
-            list($parent_status) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$parent_status] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         }
 
         if ($parent_status == 'private') {
@@ -1901,7 +1901,7 @@ final class functions_admin
         foreach ($taglist_after as $image_id => $list_after) {
             sort($list_after);
 
-            $list_before = isset($taglist_before[$image_id]) ? $taglist_before[$image_id] : [];
+            $list_before = $taglist_before[$image_id] ?? [];
             sort($list_before);
 
             if ($list_after != $list_before) {
@@ -1957,7 +1957,7 @@ final class functions_admin
         global $logger;
 
         if (isset($conf->empty_lounge_running)) {
-            list($running_exec_id, $running_exec_start_time) = explode('-', $conf->empty_lounge_running);
+            [$running_exec_id, $running_exec_start_time] = explode('-', $conf->empty_lounge_running);
 
             if (time() - $running_exec_start_time > 60) {
                 $logger->debug(__FUNCTION__ . ', exec=' . $running_exec_id . ', timeout stopped by another call to the function');
@@ -1981,8 +1981,8 @@ final class functions_admin
         $query = <<<SQL
             SELECT value FROM config WHERE param = "empty_lounge_running";
             SQL;
-        list($empty_lounge_running) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
-        list($running_exec_id) = explode('-', $empty_lounge_running);
+        [$empty_lounge_running] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$running_exec_id] = explode('-', $empty_lounge_running);
 
         if ($running_exec_id != $exec_id) {
             $logger->debug(__FUNCTION__ . ', exec=' . $exec_id . ', skip');
@@ -2504,7 +2504,7 @@ final class functions_admin
         $request = empty($post_data) ? '' : http_build_query($post_data, '', '&');
 
         if (! empty($get_data)) {
-            $src .= strpos($src, '?') === false ? '?' : '&';
+            $src .= ! str_contains($src, '?') ? '?' : '&';
             $src .= http_build_query($get_data, '', '&');
         }
 
@@ -2583,7 +2583,7 @@ final class functions_admin
         // Try fsockopen to read remote file
         $src = parse_url($src);
         $host = $src['host'];
-        $path = isset($src['path']) ? $src['path'] : '/';
+        $path = $src['path'] ?? '/';
         $path .= isset($src['query']) ? '?' . $src['query'] : '';
         $s = fsockopen($host, 80, $errno, $errstr, 5);
 
@@ -2668,7 +2668,7 @@ final class functions_admin
         $result = functions_mysqli::pwg_query($query);
 
         if (functions_mysqli::pwg_db_num_rows($result) > 0) {
-            list($groupname) = functions_mysqli::pwg_db_fetch_row($result);
+            [$groupname] = functions_mysqli::pwg_db_fetch_row($result);
         } else {
             return false;
         }
@@ -2746,7 +2746,7 @@ final class functions_admin
         $result = functions_mysqli::pwg_query($query);
 
         if (functions_mysqli::pwg_db_num_rows($result) > 0) {
-            list($username) = functions_mysqli::pwg_db_fetch_row($result);
+            [$username] = functions_mysqli::pwg_db_fetch_row($result);
         } else {
             return false;
         }
@@ -2772,57 +2772,14 @@ final class functions_admin
         string $menu_page
     ): int {
         global $page;
-
-        if (isset($page['active_menu'])) {
-            return $page['active_menu'];
-        }
-
-        switch ($menu_page) {
-            case 'photo':
-            case 'photos_add':
-            case 'rating':
-            case 'rating_user':
-            case 'tags':
-            case 'batch_manager':
-                return 0;
-
-            case 'album':
-            case 'cat_list':
-            case 'albums':
-            case 'cat_options':
-            case 'cat_search':
-            case 'permalinks':
-                return 1;
-
-            case 'user_list':
-            case 'user_perm':
-            case 'group_list':
-            case 'group_perm':
-            case 'notification_by_mail':
-            case 'user_activity':
-                return 2;
-
-            case 'site_manager':
-            case 'site_update':
-            case 'stats':
-            case 'history':
-            case 'maintenance':
-            case 'comments':
-            case 'updates':
-                return 3;
-
-            case 'configuration':
-            case 'derivatives':
-            case 'extend_for_templates':
-            case 'menubar':
-            case 'themes':
-            case 'theme':
-            case 'languages':
-                return 4;
-
-            default:
-                return -1;
-        }
+        return $page['active_menu'] ?? match ($menu_page) {
+            'photo', 'photos_add', 'rating', 'rating_user', 'tags', 'batch_manager' => 0,
+            'album', 'cat_list', 'albums', 'cat_options', 'cat_search', 'permalinks' => 1,
+            'user_list', 'user_perm', 'group_list', 'group_perm', 'notification_by_mail', 'user_activity' => 2,
+            'site_manager', 'site_update', 'stats', 'history', 'maintenance', 'comments', 'updates' => 3,
+            'configuration', 'derivatives', 'extend_for_templates', 'menubar', 'themes', 'theme', 'languages' => 4,
+            default => -1,
+        };
     }
 
     /**
@@ -3275,7 +3232,7 @@ final class functions_admin
                 SELECT CONCAT(UNIX_TIMESTAMP(MAX(lastmodified)), "_", COUNT(*))
                 FROM `{$tables[$item]}`;
                 SQL;
-            list($keys[$item]) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$keys[$item]] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         }
 
         return $keys;
@@ -3343,13 +3300,13 @@ final class functions_admin
                 SELECT COUNT(*)
                 FROM images;
                 SQL;
-            list($image_counter_all) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$image_counter_all] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             $query = <<<SQL
                 SELECT COUNT(DISTINCT image_id)
                 FROM image_category;
                 SQL;
-            list($image_counter_in_categories) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$image_counter_in_categories] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             $counter = $image_counter_all - $image_counter_in_categories;
             functions::conf_update_param('count_orphans', $counter, true);
@@ -3683,10 +3640,10 @@ final class functions_admin
             $orderedCat['status'] = $cat['cat']['status'];
             $orderedCat['id'] = $cat['cat']['id'];
             $orderedCat['visible'] = $cat['cat']['visible'];
-            $orderedCat['nb_images'] = isset($nb_photos_in[$cat['cat']['id']]) ? $nb_photos_in[$cat['cat']['id']] : 0;
+            $orderedCat['nb_images'] = $nb_photos_in[$cat['cat']['id']] ?? 0;
             $orderedCat['last_updates'] = $cat['cat']['lastmodified'];
             $orderedCat['has_not_access'] = isset($is_forbidden[$cat['cat']['id']]);
-            $orderedCat['nb_sub_photos'] = isset($nb_sub_photos[$cat['cat']['id']]) ? $nb_sub_photos[$cat['cat']['id']] : 0;
+            $orderedCat['nb_sub_photos'] = $nb_sub_photos[$cat['cat']['id']] ?? 0;
 
             if (isset($cat['children'])) {
                 //Does not update when moving a node
@@ -3697,13 +3654,7 @@ final class functions_admin
             array_push($orderedTree, $orderedCat);
         }
 
-        usort($orderedTree, function (array $a, array $b): int {
-            if ($a['rank'] == $b['rank']) {
-                return 0;
-            }
-
-            return ($a['rank'] < $b['rank']) ? -1 : 1;
-        });
+        usort($orderedTree, fn (array $a, array $b): int => $a['rank'] <=> $b['rank']);
         return $orderedTree;
     }
 
@@ -3888,9 +3839,7 @@ final class functions_admin
         array &$orders,
         int $step = 50
     ): void {
-        uasort($orders, function (float|int $a, float|int $b): float|int {
-            return abs($a) - abs($b);
-        });
+        uasort($orders, fn (float|int $a, float|int $b): float|int => abs($a) - abs($b));
 
         $crt = 1;
 
@@ -3945,20 +3894,11 @@ final class functions_admin
     ): int {
         $result = ACCESS_WEBMASTER;
 
-        switch ($mode) {
-            case 'param':
-            case 'subscribe':
-                $result = ACCESS_WEBMASTER;
-                break;
-
-            case 'send':
-                $result = ACCESS_ADMINISTRATOR;
-                break;
-
-            default:
-                $result = ACCESS_WEBMASTER;
-                break;
-        }
+        $result = match ($mode) {
+            'param', 'subscribe' => ACCESS_WEBMASTER,
+            'send' => ACCESS_ADMINISTRATOR,
+            default => ACCESS_WEBMASTER,
+        };
 
         return $result;
     }
@@ -4052,7 +3992,7 @@ final class functions_admin
         global $conf;
 
         if ($conf->nbm_send_html_mail &&
-            ! (strpos($customize_mail_content, '<') === 0)
+            ! (str_starts_with($customize_mail_content, '<'))
         ) {
             // On HTML mail, detects if the content are HTML format.
             // If it's plain text format, convert content to readable HTML
@@ -4077,7 +4017,7 @@ final class functions_admin
         $return_list = [];
 
         if (in_array($action, ['list_to_send', 'send'])) {
-            list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+            [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 
             $is_action_send = ($action == 'send');
 
@@ -4559,7 +4499,7 @@ final class functions_admin
             ORDER BY year DESC, month DESC;
             SQL;
 
-        list($result['avg']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$result['avg']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         return $result;
     }

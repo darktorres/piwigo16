@@ -72,7 +72,7 @@ $query = <<<SQL
     FROM config
     WHERE param = 'derivatives';
     SQL;
-list($tmp) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$tmp] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 $conf->derivatives = unserialize($tmp);
 ImageStdParams::load_from_db();
 
@@ -120,9 +120,9 @@ if (! $need_generate) {
 
 $page['coi'] = null;
 
-if (strpos($page['src_location'], '/pwg_representative/') === false &&
-    strpos($page['src_location'], 'themes/') === false &&
-    strpos($page['src_location'], 'plugins/') === false
+if (! str_contains($page['src_location'], '/pwg_representative/') &&
+    ! str_contains($page['src_location'], 'themes/') &&
+    ! str_contains($page['src_location'], 'plugins/')
 ) {
     try {
         // Extract the function result

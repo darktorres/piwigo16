@@ -146,7 +146,7 @@ if ($category['has_images']) {
         JOIN image_category ON image_id = id
         WHERE category_id = {$category['id']};
         SQL;
-    list($image_count, $min_date, $max_date) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$image_count, $min_date, $max_date] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     if ($min_date == $max_date) {
         $info_title = functions::l10n(

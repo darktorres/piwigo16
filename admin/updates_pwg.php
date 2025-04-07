@@ -28,10 +28,10 @@ STEP:
 2 = upgrade on same branch
 3 = upgrade on different branch
 */
-$step = isset($_GET['step']) ? $_GET['step'] : 0;
+$step = $_GET['step'] ?? 0;
 
 functions::check_input_parameter('to', $_GET, false, '/^\d+\.\d+\.\d+$/');
-$upgrade_to = isset($_GET['to']) ? $_GET['to'] : '';
+$upgrade_to = $_GET['to'] ?? '';
 
 $updates = new updates();
 $new_versions = $updates->get_piwigo_new_versions();
@@ -121,7 +121,7 @@ if (! functions_user::is_webmaster()) {
 $template->assign(
     [
         'STEP' => $step,
-        'PIWIGO_CURRENT_VERSION' => isset($page['updated_version']) ? $page['updated_version'] : PHPWG_VERSION,
+        'PIWIGO_CURRENT_VERSION' => $page['updated_version'] ?? PHPWG_VERSION,
         'UPGRADE_TO' => $upgrade_to,
     ]
 );

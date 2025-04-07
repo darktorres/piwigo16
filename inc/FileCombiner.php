@@ -20,29 +20,17 @@ use tubalmartin\CssMin\Minifier;
  */
 final class FileCombiner
 {
-    /**
-     * 'js' or 'css'
-     */
-    private readonly string $type;
-
     private readonly bool $is_css;
-
-    /**
-     * @var array<Combinable>
-     */
-    private array $combinables;
 
     /**
      * @param string $type 'js' or 'css'
      * @param array<Combinable> $combinables
      */
     public function __construct(
-        string $type,
-        array $combinables = []
+        private readonly string $type,
+        private array $combinables = []
     ) {
-        $this->type = $type;
-        $this->is_css = $type == 'css';
-        $this->combinables = $combinables;
+        $this->is_css = $this->type == 'css';
     }
 
     /**
@@ -88,7 +76,7 @@ final class FileCombiner
         if (functions_user::is_admin() &&
            ($this->is_css || ! $conf->template_compile_check)
         ) {
-            $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && strpos($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0') !== false) ||
+            $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0')) ||
                            (isset($_SERVER['HTTP_PRAGMA']) && strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }
 
@@ -248,12 +236,12 @@ final class FileCombiner
         string $js,
         string $file
     ): string {
-        if (strpos($file, '.min') === false &&
-            strpos($file, '.packed') === false
+        if (! str_contains($file, '.min') &&
+            ! str_contains($file, '.packed')
         ) {
             try {
                 $js = \JShrink\Minifier::minify($js);
-            } catch (Exception $e) {
+            } catch (Exception) {
             }
         }
 
@@ -274,7 +262,7 @@ final class FileCombiner
     ): string {
         $css = self::process_css_rec($css, dirname($file), $header);
 
-        if (strpos($file, '.min') === false) {
+        if (! str_contains($file, '.min')) {
             $cssMin = new Minifier();
             $css = $cssMin->run($css);
         }
@@ -304,7 +292,7 @@ final class FileCombiner
             foreach ($matches as $match) {
                 if (! functions_url::url_is_remote($match[1]) &&
                     $match[1][0] != '/' &&
-                    strpos($match[1], 'data:image/') === false
+                    ! str_contains($match[1], 'data:image/')
                 ) {
                     $relative = $dir . "/{$match[1]}";
                     $search[] = $match[0];
@@ -321,8 +309,8 @@ final class FileCombiner
             foreach ($matches as $match) {
                 $search[] = $match[0];
 
-                if (strpos($match[1], '..') !== false || // Possible attempt to get out of Piwigo's dir
-                    strpos($match[1], '://') !== false || // Remote URL
+                if (str_contains($match[1], '..') || // Possible attempt to get out of Piwigo's dir
+                    str_contains($match[1], '://') || // Remote URL
                     ! is_readable('./' . $dir . '/' . $match[1])
                 ) {
                     // If anything is suspicious, don't try to process the

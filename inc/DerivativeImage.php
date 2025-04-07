@@ -18,8 +18,6 @@ namespace Piwigo\inc;
  */
 final class DerivativeImage
 {
-    public SrcImage $src_image;
-
     private string|DerivativeParams|null $params;
 
     private ?string $rel_path = null;
@@ -35,17 +33,15 @@ final class DerivativeImage
      */
     public function __construct(
         string|DerivativeParams $type,
-        SrcImage $src_image
+        public SrcImage $src_image
     ) {
-        $this->src_image = $src_image;
-
         if (is_string($type)) {
             $this->params = ImageStdParams::get_by_type($type);
         } else {
             $this->params = $type;
         }
 
-        self::build($src_image, $this->params, $this->rel_path, $this->rel_url, $this->is_cached);
+        self::build($this->src_image, $this->params, $this->rel_path, $this->rel_url, $this->is_cached);
     }
 
     /**

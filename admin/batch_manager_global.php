@@ -454,9 +454,7 @@ if ($conf->enable_synchronization) {
 $prefilters = functions_plugins::trigger_change('get_batch_manager_prefilters', $prefilters);
 
 // Sort prefilters by localized name.
-usort($prefilters, function (array $a, array $b): int {
-    return strcmp(strtolower($a['NAME']), strtolower($b['NAME']));
-});
+usort($prefilters, fn (array $a, array $b): int => strcmp(strtolower($a['NAME']), strtolower($b['NAME'])));
 
 $template->assign(
     [
@@ -504,9 +502,7 @@ foreach ($conf->available_permission_levels as $level) {
 $template->assign(
     [
         'filter_level_options' => $level_options,
-        'filter_level_options_selected' => isset($_SESSION['bulk_manager_filter']['level'])
-        ? $_SESSION['bulk_manager_filter']['level']
-        : 0,
+        'filter_level_options_selected' => $_SESSION['bulk_manager_filter']['level'] ?? 0,
     ]
 );
 

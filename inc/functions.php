@@ -579,7 +579,7 @@ final class functions
         // It would be "cleaner" to increase length of history.IP to 50 chars, but
         // the alter table is very long on such a big table. We should plan this
         // for a future version, once history table is kept "smaller".
-        if (strpos($ip, ':') !== false &&
+        if (str_contains($ip, ':') &&
             strlen($ip) > 15
         ) {
             $ip = substr($ip, 0, 15);
@@ -733,7 +733,7 @@ final class functions
 
         $inserts = [];
         $details_insert = functions_mysqli::pwg_db_real_escape_string(serialize($details));
-        $ip_address = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
+        $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
         $session_id = ! empty(session_id()) ? session_id() : 'none';
 
         foreach ($object_ids as $loop_object_id) {
@@ -1422,7 +1422,7 @@ final class functions
             FROM users
             WHERE {$conf->user_fields['id']} = {$conf->webmaster_id};
             SQL;
-        list($email) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$email] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $email = functions_plugins::trigger_change('get_webmaster_mail_address', $email);
 
@@ -1482,10 +1482,10 @@ final class functions
      */
     public static function pwg_is_dbconf_writeable(): bool
     {
-        list($param, $value) = ['pwg_is_dbconf_writeable_' . functions_session::generate_key(12), date('c') . ' ' . functions_session::generate_key(20)];
+        [$param, $value] = ['pwg_is_dbconf_writeable_' . functions_session::generate_key(12), date('c') . ' ' . functions_session::generate_key(20)];
 
         self::conf_update_param($param, $value);
-        list($dbvalue) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query("SELECT value FROM config WHERE param = '{$param}';"));
+        [$dbvalue] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query("SELECT value FROM config WHERE param = '{$param}';"));
 
         if ($dbvalue != $value) {
             return false;
@@ -1578,11 +1578,7 @@ final class functions
     ): array|bool|string|int|float|null|object {
         global $conf;
 
-        if (isset($conf->{$param})) {
-            return $conf->{$param};
-        }
-
-        return $default_value;
+        return $conf->{$param} ?? $default_value;
     }
 
     public static function is_serialized(
@@ -2087,7 +2083,7 @@ final class functions
 
         $navbar = [];
         $pages_around = $conf->paginate_pages_around;
-        $start_str = $clean_url ? '/' . $param_name . '-' : (strpos($url, '?') === false ? '?' : '&amp;') . $param_name . '=';
+        $start_str = $clean_url ? '/' . $param_name . '-' : (! str_contains($url, '?') ? '?' : '&amp;') . $param_name . '=';
 
         if (! isset($start) ||
             ! is_numeric($start) ||
@@ -2351,12 +2347,12 @@ final class functions
     public static function url_check_format(
         string $url
     ): bool {
-        if (strpos($url, '"') !== false) {
+        if (str_contains($url, '"')) {
             return false;
         }
 
-        if (strncmp($url, 'http://', 7) !== 0 &&
-            strncmp($url, 'https://', 8) !== 0
+        if (! str_starts_with($url, 'http://') &&
+            ! str_starts_with($url, 'https://')
         ) {
             return false;
         }
@@ -2403,7 +2399,7 @@ final class functions
                 INNER JOIN comments AS com ON ic.image_id = com.image_id
                 WHERE {$whereClause};
                 SQL;
-            list($user['nb_available_comments']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$user['nb_available_comments']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             functions_mysqli::single_update(
                 'user_cache',
@@ -2429,7 +2425,7 @@ final class functions
         string $b,
         ?string $op = null
     ): bool|int {
-        $replace_chars = function ($m): int { return ord(strtolower($m[1])); };
+        $replace_chars = (fn ($m): int => ord(strtolower($m[1])));
 
         // add dot before groups of letters (version_compare does the same thing)
         $a = preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $a);
@@ -2488,45 +2484,20 @@ final class functions
     public static function guess_mime_type(
         string $ext
     ): string {
-        switch (strtolower($ext)) {
-            case 'jpe': case 'jpeg':
-            case 'jpg': $ctype = 'image/jpeg';
-                break;
-
-            case 'png': $ctype = 'image/png';
-                break;
-
-            case 'gif': $ctype = 'image/gif';
-                break;
-
-            case 'webp': $ctype = 'image/webp';
-                break;
-
-            case 'tiff':
-            case 'tif': $ctype = 'image/tiff';
-                break;
-
-            case 'txt': $ctype = 'text/plain';
-                break;
-
-            case 'html':
-            case 'htm': $ctype = 'text/html';
-                break;
-
-            case 'xml': $ctype = 'text/xml';
-                break;
-
-            case 'pdf': $ctype = 'application/pdf';
-                break;
-
-            case 'zip': $ctype = 'application/zip';
-                break;
-
-            case 'ogg': $ctype = 'application/ogg';
-                break;
-
-            default: $ctype = 'application/octet-stream';
-        }
+        $ctype = match (strtolower($ext)) {
+            'jpe', 'jpeg', 'jpg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'tiff', 'tif' => 'image/tiff',
+            'txt' => 'text/plain',
+            'html', 'htm' => 'text/html',
+            'xml' => 'text/xml',
+            'pdf' => 'application/pdf',
+            'zip' => 'application/zip',
+            'ogg' => 'application/ogg',
+            default => 'application/octet-stream',
+        };
 
         return $ctype;
     }
@@ -2947,7 +2918,7 @@ final class functions
                 FROM user_feed
                 WHERE id = '{$key}';
                 SQL;
-            list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             if ($count == 0) {
                 return $key;
@@ -3004,7 +2975,7 @@ final class functions
 
         $activation_key = functions_session::generate_key(20);
 
-        list($expire) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 HOUR);'));
+        [$expire] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 HOUR);'));
 
         functions_mysqli::single_update(
             'user_infos',
@@ -3063,7 +3034,7 @@ final class functions
     ): int|false {
         global $page, $conf;
 
-        list($key, $email) = explode('-', $reset_key, 2);
+        [$key, $email] = explode('-', $reset_key, 2);
 
         if (! preg_match('/^[a-z0-9]{20}$/i', $key)) {
             $page['errors'][] = self::l10n('Invalid key');
@@ -3193,7 +3164,10 @@ final class functions
                 functions_session::pwg_set_session_var('picture_deriv', $_COOKIE['picture_deriv']);
             }
 
-            setcookie('picture_deriv', '', 0, functions_cookie::cookie_path());
+            setcookie('picture_deriv', '', [
+                'expires' => 0,
+                'path' => functions_cookie::cookie_path(),
+            ]);
         }
 
         $deriv_type = functions_session::pwg_get_session_var('picture_deriv', $conf->derivative_default_size);
@@ -3396,7 +3370,7 @@ final class functions
                     FROM users
                     WHERE {$conf->user_fields['id']} = '{$userdata['id']}';
                     SQL;
-                list($current_password) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+                [$current_password] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
                 if (! ($conf->password_verify)($_POST['password'], $current_password)) {
                     $errors[] = self::l10n('Current password is wrong');

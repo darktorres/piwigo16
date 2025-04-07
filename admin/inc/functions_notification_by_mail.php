@@ -55,7 +55,7 @@ final class functions_notification_by_mail
                 WHERE check_key = '{$key}';
                 SQL;
 
-            list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             if ($count == 0) {
                 return $key;
@@ -85,7 +85,7 @@ final class functions_notification_by_mail
     public static function quote_check_key_list(
         array $check_key_list = []
     ): array {
-        return array_map(function (string $s): string { return '\'' . $s . '\''; }, $check_key_list);
+        return array_map(fn (string $s): string => '\'' . $s . '\'', $check_key_list);
     }
 
     /**

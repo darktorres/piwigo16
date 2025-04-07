@@ -16,15 +16,12 @@ namespace Piwigo\inc;
  */
 final class Css extends Combinable
 {
-    public int $order;
-
     public function __construct(
         string $id,
         string $path,
         int|string $version = 0,
-        int $order = 0
+        public int $order = 0
     ) {
         parent::__construct($id, $path, $version);
-        $this->order = $order;
     }
 }

@@ -35,7 +35,7 @@ if (! empty($_GET['skin']) &&
 }
 
 // we're mainly interested in an override of the colorscheme
-require dirname(__FILE__) . '/skins/' . $conf->modus_theme['skin'] . '.php';
+require __DIR__ . '/skins/' . $conf->modus_theme['skin'] . '.php';
 
 $this->assign(
     [
@@ -50,12 +50,12 @@ $this->assign(
     ]
 );
 
-if (file_exists(dirname(__FILE__) . '/skins/' . $conf->modus_theme['skin'] . '.css')) {
+if (file_exists(__DIR__ . '/skins/' . $conf->modus_theme['skin'] . '.css')) {
     $this->assign('MODUS_CSS_SKIN', $conf->modus_theme['skin']);
 }
 
 if (! $conf->compiled_template_cache_language) {
-    functions::load_language('theme.lang', dirname(__FILE__) . '/');
+    functions::load_language('theme.lang', __DIR__ . '/');
     functions::load_language('lang', './local/', [
         'no_fallback' => true,
         'local' => true,
@@ -63,7 +63,10 @@ if (! $conf->compiled_template_cache_language) {
 }
 
 if (isset($_COOKIE['caps'])) {
-    setcookie('caps', '', 0, functions_cookie::cookie_path());
+    setcookie('caps', '', [
+        'expires' => 0,
+        'path' => functions_cookie::cookie_path(),
+    ]);
     functions_session::pwg_set_session_var('caps', explode('x', $_COOKIE['caps']));
     /*file_put_contents('./'.$conf->data_location.'tmp/modus.log', implode("\t", array(
         date("Y-m-d H:i:s"), $_COOKIE['caps'], $_SERVER['HTTP_USER_AGENT']

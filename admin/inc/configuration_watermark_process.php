@@ -30,7 +30,7 @@ $pwatermark = $_POST['w'];
 if (isset($_FILES['watermarkImage']) &&
     ! empty($_FILES['watermarkImage']['tmp_name'])
 ) {
-    list($width, $height, $type) = getimagesize($_FILES['watermarkImage']['tmp_name']);
+    [$width, $height, $type] = getimagesize($_FILES['watermarkImage']['tmp_name']);
 
     if ($type != IMAGETYPE_PNG) {
         $errors['watermarkImage'] = sprintf(

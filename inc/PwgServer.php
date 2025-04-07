@@ -172,21 +172,21 @@ final class PwgServer
         string $methodName
     ): string {
         $desc = $this->_methods[$methodName]['description'];
-        return isset($desc) ? $desc : '';
+        return $desc ?? '';
     }
 
     public function getMethodSignature(
         string $methodName
     ): array {
         $signature = $this->_methods[$methodName]['signature'];
-        return isset($signature) ? $signature : [];
+        return $signature ?? [];
     }
 
     public function getMethodOptions(
         string $methodName
     ): array|string {
         $options = $this->_methods[$methodName]['options'];
-        return isset($options) ? $options : [];
+        return $options ?? [];
     }
 
     public static function isPost(): bool
@@ -410,7 +410,7 @@ final class PwgServer
     ): array {
         $methods = array_filter(
             $service->_methods,
-            function (array $m): bool { return empty($m['options']['hidden']) || ! $m['options']['hidden']; }
+            fn (array $m): bool => empty($m['options']['hidden']) || ! $m['options']['hidden']
         );
         return [
             'methods' => new PwgNamedArray(array_keys($methods), 'method'),

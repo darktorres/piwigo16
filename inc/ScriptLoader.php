@@ -286,7 +286,7 @@ final class ScriptLoader
             $script->path = self::$known_paths[$id];
         }
 
-        if (strncmp($id, 'jquery.', 7) == 0) {
+        if (str_starts_with($id, 'jquery.')) {
             $required_ids = ['jquery'];
 
             foreach ($required_ids as $required_id) {

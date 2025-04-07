@@ -19,10 +19,6 @@ final class tabsheet
 
     public ?string $uniqid;
 
-    public string $name;
-
-    public string $titlename;
-
     public string $selected = '';
 
     /**
@@ -30,13 +26,11 @@ final class tabsheet
      * @param string $titlename in the template is affected by $titlename value
      */
     public function __construct(
-        string $name = 'TABSHEET',
-        string $titlename = 'TABSHEET_TITLE'
+        public string $name = 'TABSHEET',
+        public string $titlename = 'TABSHEET_TITLE'
     ) {
         $this->sheets = [];
         $this->uniqid = null;
-        $this->name = $name;
-        $this->titlename = $titlename;
         $this->selected = '';
     }
 

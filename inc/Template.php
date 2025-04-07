@@ -259,8 +259,8 @@ final class Template
                 $root,
                 $themeconf['parent'],
                 $path,
-                isset($themeconf['load_parent_css']) ? $themeconf['load_parent_css'] : $load_css,
-                isset($themeconf['load_parent_local_head']) ? $themeconf['load_parent_local_head'] : $load_local_head
+                $themeconf['load_parent_css'] ?? $load_css,
+                $themeconf['load_parent_local_head'] ?? $load_local_head
             );
         }
 
@@ -328,7 +328,7 @@ final class Template
         string $val
     ): array|bool|string {
         $tc = $this->smarty->getTemplateVars('themeconf');
-        return isset($tc[$val]) ? $tc[$val] : '';
+        return $tc[$val] ?? '';
     }
 
     /**
@@ -595,7 +595,7 @@ final class Template
             $href = functions_url::embellish_url(functions_url::get_root_url() . $combi->path);
 
             if ($combi->version !== false) {
-                $href .= '?v' . ($combi->version ? $combi->version : PHPWG_VERSION);
+                $href .= '?v' . ($combi->version ?: PHPWG_VERSION);
             }
 
             // trigger the event for eventual use of a cdn
@@ -929,7 +929,7 @@ final class Template
             $load,
             empty($params['require']) ? [] : explode(',', $params['require']),
             ($params['path'] ?? null),
-            isset($params['version']) ? $params['version'] : 0,
+            $params['version'] ?? 0,
             ($params['template'] ?? null)
         );
     }
@@ -1035,7 +1035,7 @@ final class Template
             $params['id'] = md5($params['path']);
         }
 
-        $this->cssLoader->add($params['id'], $params['path'], isset($params['version']) ? $params['version'] : 0, (int) ($params['order'] ?? null), (bool) ($params['template'] ?? null));
+        $this->cssLoader->add($params['id'], $params['path'], $params['version'] ?? 0, (int) ($params['order'] ?? null), (bool) ($params['template'] ?? null));
     }
 
     /**
@@ -1105,7 +1105,7 @@ final class Template
 
             foreach ($this->external_filters[$handle] as $filters) {
                 foreach ($filters as $filter) {
-                    list($type, $callback) = $filter;
+                    [$type, $callback] = $filter;
 
                     if (is_array($callback)) {
                         $callbackString = implode('', $callback);
@@ -1133,7 +1133,7 @@ final class Template
         if (isset($this->external_filters[$handle])) {
             foreach ($this->external_filters[$handle] as $filters) {
                 foreach ($filters as $filter) {
-                    list($type, $callback) = $filter;
+                    [$type, $callback] = $filter;
                     $this->smarty->unregisterFilter($type, $callback);
                 }
             }
@@ -1307,7 +1307,7 @@ final class Template
             $ret = functions_url::get_root_url() . $script->path;
 
             if ($script->version !== false) {
-                $ret .= '?v' . ($script->version ? $script->version : PHPWG_VERSION);
+                $ret .= '?v' . ($script->version ?: PHPWG_VERSION);
             }
         }
 

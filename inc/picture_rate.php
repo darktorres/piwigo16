@@ -30,7 +30,7 @@ if ($conf->rate) {
             FROM rate
             WHERE element_id = {$picture['current']['id']};
             SQL;
-        list($rate_summary['count'], $rate_summary['average']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$rate_summary['count'], $rate_summary['average']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
     }
 
     $template->assign('rate_summary', $rate_summary);

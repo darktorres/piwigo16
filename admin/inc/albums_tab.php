@@ -25,7 +25,7 @@ $query = <<<SQL
     FROM categories;
     SQL;
 
-list($nb_cats) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_cats] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 $template->assign(
     [
         'nb_cats' => $nb_cats,

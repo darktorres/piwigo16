@@ -51,7 +51,7 @@ final class functions_user
                 WHERE UPPER({$conf->user_fields['email']}) = UPPER('{$mail_address}')
                     {$exclude_user_condition};
                 SQL;
-            list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             if ($count != 0) {
                 return functions::l10n('this email address is already in use');
@@ -383,7 +383,7 @@ final class functions_user
                 WHERE ui.user_id = {$user_id}
                 GROUP BY ui.user_id;
                 SQL;
-            list($counter) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             if ($counter != 1) {
                 self::create_user_infos($user_id);
@@ -453,7 +453,7 @@ final class functions_user
                     WHERE category_id NOT IN ({$userdata['forbidden_categories']})
                         AND image_id {$userdata['image_access_type']} ({$userdata['image_access_list']});
                     SQL;
-                list($userdata['nb_total_images']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+                [$userdata['nb_total_images']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
                 // now we update user cache categories
                 $user_cache_cats = functions_category::get_computed_categories($userdata, null);
@@ -670,7 +670,7 @@ final class functions_user
             return false;
         }
 
-        list($user_id) = functions_mysqli::pwg_db_fetch_row($result);
+        [$user_id] = functions_mysqli::pwg_db_fetch_row($result);
         return $user_id;
     }
 
@@ -695,7 +695,7 @@ final class functions_user
             return false;
         }
 
-        list($user_id) = functions_mysqli::pwg_db_fetch_row($result);
+        [$user_id] = functions_mysqli::pwg_db_fetch_row($result);
         return $user_id;
     }
 
@@ -781,7 +781,7 @@ final class functions_user
 
         // let's find the first available theme
         $active_themes = array_keys(functions::get_pwg_themes());
-        return isset($active_themes[0]) ? $active_themes[0] : 'default';
+        return $active_themes[0] ?? 'default';
     }
 
     /**
@@ -884,7 +884,7 @@ final class functions_user
 
         if (! empty($user_ids)) {
             $inserts = [];
-            list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+            [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 
             $default_user = self::get_default_user_info(false);
 
@@ -898,7 +898,7 @@ final class functions_user
             }
 
             foreach ($user_ids as $user_id) {
-                $level = isset($default_user['level']) ? $default_user['level'] : 0;
+                $level = $default_user['level'] ?? 0;
 
                 if ($user_id == $conf->webmaster_id) {
                     $status = 'webmaster';
@@ -977,15 +977,21 @@ final class functions_user
                 setcookie(
                     $conf->remember_me_name,
                     $cookie,
-                    time() + $conf->remember_me_length,
-                    functions_cookie::cookie_path(),
-                    ini_get('session.cookie_domain'),
-                    (bool) ini_get('session.cookie_secure'),
-                    (bool) ini_get('session.cookie_httponly')
+                    [
+                        'expires' => time() + $conf->remember_me_length,
+                        'path' => functions_cookie::cookie_path(),
+                        'domain' => ini_get('session.cookie_domain'),
+                        'secure' => (bool) ini_get('session.cookie_secure'),
+                        'httponly' => (bool) ini_get('session.cookie_httponly'),
+                    ]
                 );
             }
         } else { // make sure we clean any remember me ...
-            setcookie($conf->remember_me_name, '', 0, functions_cookie::cookie_path(), ini_get('session.cookie_domain'));
+            setcookie($conf->remember_me_name, '', [
+                'expires' => 0,
+                'path' => functions_cookie::cookie_path(),
+                'domain' => ini_get('session.cookie_domain'),
+            ]);
         }
 
         if (session_id() != '') { // we regenerate the session for security reasons
@@ -1029,7 +1035,11 @@ final class functions_user
                 }
             }
 
-            setcookie($conf->remember_me_name, '', 0, functions_cookie::cookie_path(), ini_get('session.cookie_domain'));
+            setcookie($conf->remember_me_name, '', [
+                'expires' => 0,
+                'path' => functions_cookie::cookie_path(),
+                'domain' => ini_get('session.cookie_domain'),
+            ]);
         }
 
         return false;
@@ -1167,11 +1177,17 @@ final class functions_user
         setcookie(
             session_name(),
             '',
-            0,
-            ini_get('session.cookie_path'),
-            ini_get('session.cookie_domain')
+            [
+                'expires' => 0,
+                'path' => ini_get('session.cookie_path'),
+                'domain' => ini_get('session.cookie_domain'),
+            ]
         );
-        setcookie($conf->remember_me_name, '', 0, functions_cookie::cookie_path(), ini_get('session.cookie_domain'));
+        setcookie($conf->remember_me_name, '', [
+            'expires' => 0,
+            'path' => functions_cookie::cookie_path(),
+            'domain' => ini_get('session.cookie_domain'),
+        ]);
     }
 
     /**
@@ -1207,31 +1223,14 @@ final class functions_user
     ): int {
         global $conf;
 
-        switch (self::get_user_status($user_status)) {
-            case 'guest':
-                $access_type_status = ($conf->guest_access ? ACCESS_GUEST : ACCESS_FREE);
-                break;
-
-            case 'generic':
-                $access_type_status = ACCESS_GUEST;
-                break;
-
-            case 'normal':
-                $access_type_status = ACCESS_CLASSIC;
-                break;
-
-            case 'admin':
-                $access_type_status = ACCESS_ADMINISTRATOR;
-                break;
-
-            case 'webmaster':
-                $access_type_status = ACCESS_WEBMASTER;
-                break;
-
-            default:
-                $access_type_status = ACCESS_FREE;
-                break;
-        }
+        $access_type_status = match (self::get_user_status($user_status)) {
+            'guest' => $conf->guest_access ? ACCESS_GUEST : ACCESS_FREE,
+            'generic' => ACCESS_GUEST,
+            'normal' => ACCESS_CLASSIC,
+            'admin' => ACCESS_ADMINISTRATOR,
+            'webmaster' => ACCESS_WEBMASTER,
+            default => ACCESS_FREE,
+        };
 
         return $access_type_status;
     }
@@ -1557,7 +1556,7 @@ final class functions_user
             FROM user_auth_keys
             WHERE auth_key = '{$candidate}';
             SQL;
-        list($counter, $now, $expiration) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$counter, $now, $expiration] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($counter == 0) {
             $key = [
@@ -1727,10 +1726,6 @@ final class functions_user
     ): array|bool|int|string|null {
         global $user;
 
-        if (isset($user['preferences'][$param])) {
-            return $user['preferences'][$param];
-        }
-
-        return $default_value;
+        return $user['preferences'][$param] ?? $default_value;
     }
 }

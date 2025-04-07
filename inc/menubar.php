@@ -64,8 +64,8 @@ final class menubar
                     ) {
                         $tpl_var['new_window'] =
                           [
-                              'NAME' => (isset($url_data['nw_name']) ? $url_data['nw_name'] : ''),
-                              'FEATURES' => (isset($url_data['nw_features']) ? $url_data['nw_features'] : ''),
+                              'NAME' => ($url_data['nw_name'] ?? ''),
+                              'FEATURES' => ($url_data['nw_features'] ?? ''),
                           ];
                     }
 

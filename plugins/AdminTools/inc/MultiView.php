@@ -52,7 +52,7 @@ class MultiView
         );
 
         $this->data_url_params = array_keys($this->data);
-        $this->data_url_params = array_map(function (string $d): string { return 'ato_' . $d; }, $this->data_url_params);
+        $this->data_url_params = array_map(fn (string $d): string => 'ato_' . $d, $this->data_url_params);
     }
 
     public function is_admin(): bool
@@ -87,7 +87,7 @@ class MultiView
         }
 
         if ($with_amp) {
-            $url .= strpos($url, '?') !== false ? '&' : '?';
+            $url .= str_contains($url, '?') ? '&' : '?';
         }
 
         return $url;
@@ -113,7 +113,7 @@ class MultiView
         }
 
         if ($with_amp) {
-            $url .= strpos($url, '?') !== false ? '&' : '?';
+            $url .= str_contains($url, '?') ? '&' : '?';
         }
 
         return $url;
@@ -216,7 +216,7 @@ class MultiView
             }
 
             if ($this->data['no_history']) {
-                $ret_false = function (): bool {return false; };
+                $ret_false = (fn (): bool => false);
                 functions_plugins::add_event_handler('pwg_log_allowed', $ret_false);
                 functions_plugins::add_event_handler('pwg_log_update_last_visit', $ret_false);
             }

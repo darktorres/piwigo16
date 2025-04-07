@@ -94,7 +94,7 @@ final class pwg_groups
             FROM `groups`
             WHERE name = '{$params['name']}';
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count != 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
@@ -176,7 +176,7 @@ final class pwg_groups
             FROM `groups`
             WHERE id = {$params['group_id']};
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
@@ -192,7 +192,7 @@ final class pwg_groups
                 WHERE name = '{$params['name']}'
                     AND id != {$params['group_id']};
                 SQL;
-            list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
             if ($count != 0) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
@@ -245,7 +245,7 @@ final class pwg_groups
             FROM `groups`
             WHERE id = {$params['group_id']};
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
@@ -308,7 +308,7 @@ final class pwg_groups
             FROM `groups`
             WHERE id IN ({$allGroupsList});
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count != count($all_groups)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'All groups does not exist.');
@@ -397,7 +397,7 @@ final class pwg_groups
             FROM `groups`
             WHERE name = '{$escapedCopyName}';
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count != 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
@@ -408,7 +408,7 @@ final class pwg_groups
             FROM `groups`
             WHERE id = {$params['group_id']};
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
@@ -420,7 +420,7 @@ final class pwg_groups
             WHERE id = {$params['group_id']};
             SQL;
 
-        list($is_default) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$is_default] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         // creating the group
         functions_mysqli::single_insert(
@@ -496,7 +496,7 @@ final class pwg_groups
             FROM `groups`
             WHERE id = {$params['group_id']};
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');

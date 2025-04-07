@@ -36,7 +36,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 
 require_once LOCALEDIT_PATH . 'inc/functions_LocalFilesEditor.php';
 functions::load_language('plugin.lang', LOCALEDIT_PATH);
-$my_base_url = functions_url::get_root_url() . 'admin.php?page=plugin-' . basename(dirname(__FILE__));
+$my_base_url = functions_url::get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__);
 
 functions_user::check_status(ACCESS_WEBMASTER);
 
@@ -48,7 +48,7 @@ if (empty($conf->LocalFilesEditor_tabs)) {
     $conf->LocalFilesEditor_tabs = ['localconf', 'css', 'tpl', 'lang', 'plug'];
 }
 
-$page['tab'] = isset($_GET['tab']) ? $_GET['tab'] : $conf->LocalFilesEditor_tabs[0];
+$page['tab'] = $_GET['tab'] ?? $conf->LocalFilesEditor_tabs[0];
 
 if (! in_array($page['tab'], $conf->LocalFilesEditor_tabs)) {
     exit('Hacking attempt!');
@@ -121,7 +121,7 @@ if (isset($_POST['submit'])) {
 // |                            template initialization
 // +-----------------------------------------------------------------------+
 $template->set_filenames([
-    'plugin_admin_content' => dirname(__FILE__) . '/template/admin.tpl',
+    'plugin_admin_content' => __DIR__ . '/template/admin.tpl',
 ]);
 
 if (! empty($edited_file)) {

@@ -73,7 +73,7 @@ final class functions_smartpocket
             $page['body_id'] == 'thePicturePage'
         ) {
             $template->set_filenames([
-                'add_menu_on_public_pages' => dirname(__FILE__) . '/template/add_menu_on_public_pages.tpl',
+                'add_menu_on_public_pages' => __DIR__ . '/template/add_menu_on_public_pages.tpl',
             ]);
             menubar::initialize_menu();
             $template->parse('add_menu_on_public_pages');

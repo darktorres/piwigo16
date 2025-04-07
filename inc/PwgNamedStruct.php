@@ -18,26 +18,22 @@ namespace Piwigo\inc;
  */
 final class PwgNamedStruct
 {
-    public array $_content;
-
     public array $_xmlAttributes;
 
     /**
      * Constructs a named struct (usually returned by web service function
      * implementation)
-     * @param array<string, int> $content - the actual content (php array)
+     * @param array<string, int> $_content - the actual content (php array)
      * @param ?array $xmlAttributes - containing xml element name
      * @param ?array $xmlElements - name of the keys in $content that will be
      *    encoded as xml attributes (if null - automatically prefer xml attributes
      *    whenever possible)
      */
     public function __construct(
-        array $content,
+        public array $_content,
         ?array $xmlAttributes = null,
         ?array $xmlElements = null
     ) {
-        $this->_content = $content;
-
         if (isset($xmlAttributes)) {
             $this->_xmlAttributes = array_flip($xmlAttributes);
         } else {

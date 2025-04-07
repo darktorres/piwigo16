@@ -138,12 +138,12 @@ $query = <<<SQL
     SELECT COUNT(*)
     FROM categories;
     SQL;
-list($nb_albums) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_albums] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 // $nb_albums = 0;
 $template->assign('NB_ALBUMS', $nb_albums);
 
 // image level options
-$selected_level = isset($_POST['level']) ? $_POST['level'] : 0;
+$selected_level = $_POST['level'] ?? 0;
 $template->assign(
     [
         'level_options' => functions::get_privacy_level_options(),

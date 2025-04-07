@@ -186,7 +186,7 @@ final class languages
                     if (! empty($language['uri']) &&
                         strpos($language['uri'], 'extension_view.php?eid=')
                     ) {
-                        list(, $extension) = explode('extension_view.php?eid=', $language['uri']);
+                        [, $extension] = explode('extension_view.php?eid=', $language['uri']);
 
                         if (is_numeric($extension)) {
                             $language['extension'] = $extension;
@@ -246,7 +246,7 @@ final class languages
             $branch = functions::get_branch_from_version($version);
 
             foreach ($pem_versions as $pem_version) {
-                if (strpos($pem_version['name'], $branch) === 0) {
+                if (str_starts_with($pem_version['name'], $branch)) {
                     $versions_to_check[] = $pem_version['id'];
                 }
             }
@@ -406,7 +406,7 @@ final class languages
                                             $realpath = realpath($path);
 
                                             if ($realpath === false ||
-                                                strpos($realpath, $extract_path_realpath) !== 0
+                                                ! str_starts_with($realpath, $extract_path_realpath)
                                             ) {
                                                 continue;
                                             }

@@ -83,7 +83,7 @@ $query = <<<SQL
     FROM categories
     WHERE visible = 'false';
     SQL;
-list($locked_album) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$locked_album] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 if ($locked_album > 0) {
     $locked_album_url = './admin.php?page=cat_options&section=visible';
@@ -120,62 +120,62 @@ $query = <<<SQL
     SELECT COUNT(*)
     FROM images;
     SQL;
-list($nb_photos) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_photos] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*)
     FROM categories;
     SQL;
-list($nb_categories) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_categories] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*)
     FROM tags;
     SQL;
-list($nb_tags) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_tags] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*)
     FROM image_tag;
     SQL;
-list($nb_image_tag) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_image_tag] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*)
     FROM users;
     SQL;
-list($nb_users) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_users] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*)
     FROM `groups`;
     SQL;
-list($nb_groups) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_groups] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*)
     FROM rate;
     SQL;
-list($nb_rates) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_rates] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
     SELECT SUM(nb_pages)
     FROM history_summary
     WHERE month IS NULL;
     SQL;
-list($nb_views) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_views] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
     SELECT SUM(filesize)
     FROM images;
     SQL;
-list($disk_usage) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$disk_usage] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
     SELECT SUM(filesize)
     FROM image_format;
     SQL;
-list($formats_disk_usage) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$formats_disk_usage] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $disk_usage += $formats_disk_usage;
 
@@ -208,7 +208,7 @@ if ($conf->activate_comments) {
         SELECT COUNT(*)
         FROM comments;
         SQL;
-    list($nb_comments) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$nb_comments] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
     $template->assign('NB_COMMENTS', $nb_comments);
 } else {
     $template->assign('NB_COMMENTS', 0);
@@ -325,14 +325,7 @@ foreach ($activity_last_weeks as $week => $i) {
 //  * Split days max $circle_sizes time on the biggest difference (but not below 120%)
 //  * Set the sizes according to the groups created
 
-usort($temp_data, function (array $a, array $b): int {
-    //Function to sort days by number of activity
-    if ($a['x'] == $b['x']) {
-        return 0;
-    }
-
-    return ($a['x'] < $b['x']) ? -1 : 1;
-});
+usort($temp_data, fn (array $a, array $b): int => $a['x'] <=> $b['x']);
 
 //Get the percent difference
 $diff_x = [];

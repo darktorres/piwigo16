@@ -12,31 +12,21 @@ declare(strict_types=1);
 namespace Piwigo\inc;
 
 /** Represents a single word or quoted phrase to be searched.*/
-final class QSingleToken
+final class QSingleToken implements \Stringable
 {
-    public bool $is_single = true;
-
-    public int $modifier;
-
-    public string $term; /* the actual word/phrase string*/
+    public bool $is_single = true; /* the actual word/phrase string*/
 
     public array $variants = [];
-
-    public QSearchScope $scope;
 
     public array $scope_data;
 
     public int $idx;
 
     public function __construct(
-        string $term,
-        int $modifier,
-        QSearchScope $scope
-    ) {
-        $this->term = $term;
-        $this->modifier = $modifier;
-        $this->scope = $scope;
-    }
+        public string $term,
+        public int $modifier,
+        public QSearchScope $scope
+    ) {}
 
     public function __toString(): string
     {

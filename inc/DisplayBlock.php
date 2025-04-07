@@ -22,17 +22,13 @@ final class DisplayBlock
 
     public string $raw_content;
 
-    private readonly RegisteredBlock $_registeredBlock;
-
     private int $_position;
 
     private string $_title;
 
     public function __construct(
-        RegisteredBlock $block
-    ) {
-        $this->_registeredBlock = $block;
-    }
+        private readonly RegisteredBlock $_registeredBlock
+    ) {}
 
     public function get_block(): RegisteredBlock
     {
@@ -52,11 +48,7 @@ final class DisplayBlock
 
     public function get_title(): string
     {
-        if (isset($this->_title)) {
-            return $this->_title;
-        }
-
-        return $this->_registeredBlock->get_name();
+        return $this->_title ?? $this->_registeredBlock->get_name();
     }
 
     public function set_title(

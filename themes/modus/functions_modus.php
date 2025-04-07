@@ -54,12 +54,12 @@ final class functions_modus
         $source = str_replace('<div id=imageHeaderBar>', '<div class=titrePage id=imageHeaderBar>', $source);
 
         if (! isset($lang['modus_theme'])) {
-            functions::load_language('theme.lang', dirname(__FILE__) . '/');
+            functions::load_language('theme.lang', __DIR__ . '/');
         }
 
         // picture page actionButtons wrap for mobile
-        if (strpos($source, '<div id="imageToolBar">') !== false ||
-            strpos($source, '<div id=imageToolBar>') !== false
+        if (str_contains($source, '<div id="imageToolBar">') ||
+            str_contains($source, '<div id=imageToolBar>')
         ) {
             $pos = strpos($source, '<div class="actionButtons">');
 
@@ -156,7 +156,7 @@ final class functions_modus
             $template->smarty->registerPlugin('modifier', 'cssGradient', self::modus_css_gradient(...));
         }
 
-        require dirname(__FILE__) . '/skins/' . $conf->modus_theme['skin'] . '.php';
+        require __DIR__ . '/skins/' . $conf->modus_theme['skin'] . '.php';
 
         $template->assign([
             'conf' => $conf,
@@ -325,7 +325,7 @@ final class functions_modus
                 </script>'
         );
 
-        $my_base_name = basename(dirname(__FILE__));
+        $my_base_name = basename(__DIR__);
         // not async to avoid visible flickering reflow
         $template->scriptLoader->add('modus.arange', 1, ['jquery'], 'themes/' . $my_base_name . '/js/thumb.arrange.js', 0);
     }
@@ -530,7 +530,10 @@ final class functions_modus
         }
 
         if (isset($_COOKIE['picture_deriv'])) { // ignore persistence
-            setcookie('picture_deriv', '', 0, functions_cookie::cookie_path());
+            setcookie('picture_deriv', '', [
+                'expires' => 0,
+                'path' => functions_cookie::cookie_path(),
+            ]);
         }
 
         $selected_derivative = null;

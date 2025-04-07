@@ -19,12 +19,9 @@ use Piwigo\inc\functions;
 
 final class LocalSiteReader
 {
-    public string $site_url;
-
     public function __construct(
-        string $url
+        public string $site_url
     ) {
-        $this->site_url = $url;
         global $conf;
 
         if (! isset($conf->flip_file_ext)) {

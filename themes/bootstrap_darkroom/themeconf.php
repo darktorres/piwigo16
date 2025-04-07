@@ -12,7 +12,6 @@ Author URI: https://github.com/tkuther/piwigo-bootstrap-darkroom
 */
 
 use Piwigo\inc\functions_session;
-use Piwigo\themes\bootstrap_darkroom\inc\Config;
 use Piwigo\themes\bootstrap_darkroom\inc\ThemeController;
 
 $themeconf = [

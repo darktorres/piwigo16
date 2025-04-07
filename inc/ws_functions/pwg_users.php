@@ -264,7 +264,7 @@ final class pwg_users
         /* GET THE RESULT OF SQL_CALC_FOUND_ROWS if display total_count is requested*/
         if (isset($params['display']['total_count'])) {
             $total_count_query_result = functions_mysqli::pwg_query('SELECT FOUND_ROWS();');
-            list($total_count) = functions_mysqli::pwg_db_fetch_row($total_count_query_result);
+            [$total_count] = functions_mysqli::pwg_db_fetch_row($total_count_query_result);
         }
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
@@ -835,7 +835,7 @@ final class pwg_users
             FROM images
             WHERE id = {$params['image_id']};
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
@@ -878,7 +878,7 @@ final class pwg_users
             FROM images
             WHERE id = {$params['image_id']};
             SQL;
-        list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');

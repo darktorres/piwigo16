@@ -193,13 +193,8 @@ final class ScriptLoader
         }
 
         $this->did_footer = true;
-        $todo = [];
 
-        foreach ($this->registered_scripts as $id => $script) {
-            if (! isset($this->head_done_scripts[$id])) {
-                $todo[$id] = $script;
-            }
-        }
+        $todo = array_filter($this->registered_scripts, fn ($id): bool => ! isset($this->head_done_scripts[$id]), ARRAY_FILTER_USE_KEY);
 
         foreach (array_keys($todo) as $id) {
             $this->compute_script_topological_order($id);

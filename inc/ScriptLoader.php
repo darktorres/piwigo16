@@ -357,7 +357,7 @@ final class ScriptLoader
         Script $s1,
         Script $s2
     ): int|float {
-        $ret = intval($s1->load_mode) - intval($s2->load_mode);
+        $ret = $s1->load_mode - $s2->load_mode;
 
         if ($ret !== 0) {
             return $ret;

@@ -101,7 +101,7 @@ if (isset($conf->show_php_errors) &&
 
 if ($conf->session_gc_probability > 0) {
     ini_set('session.gc_divisor', 100);
-    ini_set('session.gc_probability', min((int) $conf->session_gc_probability, 100));
+    ini_set('session.gc_probability', min($conf->session_gc_probability, 100));
 }
 
 require __DIR__ . '/../inc/constants.php';

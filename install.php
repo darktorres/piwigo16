@@ -22,7 +22,7 @@ use Piwigo\inc\PwgSessionHandler;
 use Piwigo\inc\Template;
 
 //----------------------------------------------------------- include
-define('PHPWG_ROOT_PATH', './');
+const PHPWG_ROOT_PATH = './';
 
 // this is a security precaution to prevent someone trying to break out of a SQL statement.
 if (is_array($_POST)) {
@@ -187,7 +187,7 @@ if ($language === 'fr_FR') {
     define('PHPWG_DOMAIN', 'piwigo.org');
 }
 
-define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
+const PHPWG_URL = 'https://' . PHPWG_DOMAIN;
 
 functions::load_language('common.lang', '', [
     'language' => $language,
@@ -353,10 +353,10 @@ if (isset($_POST['install'])) {
             \$conf->db_password = '{$dbpasswd}';
             \$conf->db_host = '{$dbhost}';
 
-            define('PHPWG_INSTALLED', true);
-            define('PWG_CHARSET', 'utf-8');
-            define('DB_CHARSET', 'utf8');
-            define('DB_COLLATE', '');
+            const PHPWG_INSTALLED = true;
+            const PWG_CHARSET = 'utf-8';
+            const DB_CHARSET = 'utf8';
+            const DB_COLLATE = '';
 
             PHP;
 

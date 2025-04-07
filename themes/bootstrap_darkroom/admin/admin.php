@@ -17,8 +17,8 @@ functions::load_language('theme.lang', PHPWG_THEMES_PATH . 'bootstrap_darkroom/'
 // Constants
 define('THEME_ID', basename(dirname(__FILE__, 2)));
 define('ADMIN_PATH', functions_url::get_root_url() . 'admin.php?page=theme&theme=' . THEME_ID);
-define('TAB_SETTINGS', 'settings');
-define('TAB_ABOUT', 'about');
+const TAB_SETTINGS = 'settings';
+const TAB_ABOUT = 'about';
 
 // Get current tab
 $page['tab'] = $_GET['tab'] ?? $page['tab'] = TAB_SETTINGS;

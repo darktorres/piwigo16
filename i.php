@@ -16,7 +16,7 @@ use Piwigo\inc\functions;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\SizingParams;
 
-define('PHPWG_ROOT_PATH', './');
+const PHPWG_ROOT_PATH = './';
 
 // fast bootstrap - no db connection
 require __DIR__ . '/inc/config_default.php';

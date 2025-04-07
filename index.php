@@ -24,7 +24,7 @@ use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\menubar;
 
 //--------------------------------------------------------------------- include
-define('PHPWG_ROOT_PATH', './');
+const PHPWG_ROOT_PATH = './';
 require_once __DIR__ . '/inc/common.php';
 require __DIR__ . '/inc/section_init.php';
 

@@ -22,7 +22,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 define('ADMINTOOLS_ID', basename(__DIR__));
-define('ADMINTOOLS_PATH', PHPWG_PLUGINS_PATH . ADMINTOOLS_ID . '/');
+const ADMINTOOLS_PATH = PHPWG_PLUGINS_PATH . ADMINTOOLS_ID . '/';
 define('ADMINTOOLS_ADMIN', functions_url::get_root_url() . 'admin.php?page=plugin-' . ADMINTOOLS_ID);
 
 require_once ADMINTOOLS_PATH . 'inc/events.php';

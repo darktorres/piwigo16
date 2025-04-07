@@ -16,7 +16,7 @@ use Piwigo\inc\functions_notification;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
-define('PHPWG_ROOT_PATH', './');
+const PHPWG_ROOT_PATH = './';
 require_once __DIR__ . '/inc/common.php';
 
 // +-----------------------------------------------------------------------+

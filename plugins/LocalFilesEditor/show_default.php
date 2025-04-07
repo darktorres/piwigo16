@@ -27,8 +27,8 @@ declare(strict_types=1);
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_user;
 
-define('PHPWG_ROOT_PATH', '../../');
-define('IN_ADMIN', true);
+const PHPWG_ROOT_PATH = '../../';
+const IN_ADMIN = true;
 require_once __DIR__ . '/../../inc/common.php';
 require_once LOCALEDIT_PATH . 'inc/functions_LocalFilesEditor.php';
 functions::load_language('plugin.lang', LOCALEDIT_PATH);

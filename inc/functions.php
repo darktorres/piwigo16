@@ -125,7 +125,7 @@ final class functions
             global $conf;
 
             $umask = umask(0);
-            $mkd = mkdir($dir, $conf->chmod_value, (($flags & self::MKGETDIR_RECURSIVE) !== 0) ? true : false);
+            $mkd = mkdir($dir, $conf->chmod_value, ($flags & self::MKGETDIR_RECURSIVE) !== 0);
             umask($umask);
 
             if (! $mkd) {

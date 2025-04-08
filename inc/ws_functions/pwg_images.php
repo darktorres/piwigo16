@@ -2360,7 +2360,7 @@ final class pwg_images
             self::ws_add_image_category_relations(
                 $params['image_id'],
                 $params['categories'],
-                ($params['multiple_value_mode'] === 'replace' ? true : false)
+                $params['multiple_value_mode'] === 'replace'
             );
         }
 

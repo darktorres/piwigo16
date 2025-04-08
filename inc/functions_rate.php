@@ -34,7 +34,7 @@ final class functions_rate
             return false;
         }
 
-        $user_anonymous = functions_user::is_authorized_status(ACCESS_CLASSIC) ? false : true;
+        $user_anonymous = ! functions_user::is_authorized_status(ACCESS_CLASSIC);
 
         if ($user_anonymous &&
             ! $conf->rate_anonymous

@@ -27,7 +27,7 @@ $template->set_filenames([
 
 // should we display details on plugins?
 if (isset($_GET['show_details'])) {
-    $show_details = $_GET['show_details'] == 1 ? true : false;
+    $show_details = $_GET['show_details'] == 1;
     functions_session::pwg_set_session_var('plugins_show_details', $show_details);
 } elseif (functions_session::pwg_get_session_var('plugins_show_details') != null) {
     $show_details = functions_session::pwg_get_session_var('plugins_show_details');

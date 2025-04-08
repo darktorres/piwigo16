@@ -52,7 +52,7 @@ foreach (['comment', 'dir', 'site_id', 'id_uppercat'] as $nullable) {
     }
 }
 
-$category['is_virtual'] = empty($category['dir']) ? true : false;
+$category['is_virtual'] = empty($category['dir']);
 
 $query = <<<SQL
     SELECT DISTINCT category_id
@@ -61,7 +61,7 @@ $query = <<<SQL
     LIMIT 1;
     SQL;
 $result = functions_mysqli::pwg_query($query);
-$category['has_images'] = functions_mysqli::pwg_db_num_rows($result) > 0 ? true : false;
+$category['has_images'] = functions_mysqli::pwg_db_num_rows($result) > 0;
 
 // number of sub-categories
 $subcat_ids = functions_category::get_subcat_ids([$category['id']]);
@@ -277,7 +277,7 @@ if ($category['has_images'] ||
     }
 
     // can the admin choose to set a new random representative ?
-    $tpl_representative['ALLOW_SET_RANDOM'] = ($category['has_images'] ? true : false);
+    $tpl_representative['ALLOW_SET_RANDOM'] = $category['has_images'];
 
     // can the admin delete the current representative ?
     if (($category['has_images'] &&

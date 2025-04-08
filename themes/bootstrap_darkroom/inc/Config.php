@@ -237,7 +237,7 @@ class Config
                     break;
 
                 case self::TYPE_BOOL:
-                    $this->config[$key] = $value ? true : false;
+                    $this->config[$key] = (bool) $value;
                     break;
 
                 case self::TYPE_NUM:

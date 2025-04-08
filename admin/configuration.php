@@ -250,7 +250,7 @@ if (isset($_POST['submit'])) {
             }
 
             foreach ($display_info_checkboxes as $checkbox) {
-                $_POST['picture_information'][$checkbox] = empty($_POST['picture_information'][$checkbox]) ? false : true;
+                $_POST['picture_information'][$checkbox] = ! empty($_POST['picture_information'][$checkbox]);
             }
 
             $_POST['picture_information'] = addslashes(serialize($_POST['picture_information']));
@@ -466,7 +466,7 @@ switch ($page['section']) {
         // we only load the derivatives if it was not already loaded: it occurs
         // when submitting the form and an error remains
         if (! isset($page['sizes_loaded_in_tpl'])) {
-            $is_gd = (pwg_image::get_library() == 'gd') ? true : false;
+            $is_gd = pwg_image::get_library() == 'gd';
             $template->assign('is_gd', $is_gd);
             $template->assign(
                 'sizes',
@@ -496,8 +496,8 @@ switch ($page['section']) {
             foreach (ImageStdParams::get_all_types() as $type) {
                 $tpl_var = [];
 
-                $tpl_var['must_square'] = ($type == derivative_std_params::IMG_SQUARE ? true : false);
-                $tpl_var['must_enable'] = ($type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB || $type == $conf->derivative_default_size) ? true : false;
+                $tpl_var['must_square'] = $type == derivative_std_params::IMG_SQUARE;
+                $tpl_var['must_enable'] = $type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB || $type == $conf->derivative_default_size;
                 $params = $enabled[$type];
 
                 if ($params) {

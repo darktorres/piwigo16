@@ -57,7 +57,7 @@ $pderivatives = $_POST['d'];
 
 // step 1 - sanitize HTML input
 foreach ($pderivatives as $type => &$pderivative) {
-    $pderivative['must_square'] = ($type == derivative_std_params::IMG_SQUARE ? true : false);
+    $pderivative['must_square'] = $type == derivative_std_params::IMG_SQUARE;
 
     if ($pderivative['must_square']) {
         $pderivative['h'] = $pderivative['w'];
@@ -65,8 +65,8 @@ foreach ($pderivatives as $type => &$pderivative) {
         $pderivative['crop'] = 100;
     }
 
-    $pderivative['must_enable'] = ($type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB || $type == $conf->derivative_default_size) ? true : false;
-    $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'] ? true : false;
+    $pderivative['must_enable'] = $type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB || $type == $conf->derivative_default_size;
+    $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'];
 
     if (isset($pderivative['crop'])) {
         $pderivative['crop'] = 100;

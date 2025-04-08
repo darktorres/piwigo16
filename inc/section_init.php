@@ -45,7 +45,7 @@ $page['start'] = $page['startcat'] = 0;
 
 // some ISPs set PATH_INFO to empty string or to SCRIPT_FILENAME while in the
 // default apache implementation it is not set
-if ($conf->question_mark_in_urls == false &&
+if (! $conf->question_mark_in_urls &&
     isset($_SERVER['PATH_INFO']) &&
     ! empty($_SERVER['PATH_INFO'])
 ) {

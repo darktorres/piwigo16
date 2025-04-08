@@ -626,7 +626,7 @@ final class pwg_images
 
         $res = functions_rate::rate_picture($params['image_id'], (int) $params['rate']);
 
-        if ($res == false) {
+        if (! $res) {
             global $conf;
             return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $conf->rate_items));
         }

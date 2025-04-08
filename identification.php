@@ -60,7 +60,7 @@ if (isset($_POST['login'])) {
     if (! isset($_COOKIE[session_name()])) {
         $page['errors'][] = functions::l10n('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
     } else {
-        if ($conf->insensitive_case_logon == true) {
+        if ($conf->insensitive_case_logon) {
             $_POST['username'] = functions_user::search_case_username($_POST['username']);
         }
 

@@ -65,7 +65,7 @@ if (isset($_GET['page']) &&
         ]
     );
 
-    if ($help_content == false) {
+    if (! $help_content) {
         $help_content = '';
     }
 

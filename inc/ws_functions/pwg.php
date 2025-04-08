@@ -466,7 +466,7 @@ final class pwg
 
         // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
         if (isset($_SERVER['HTTP_USER_AGENT']) &&
-            preg_match('/^PiwigoRemoteSync/', $_SERVER['HTTP_USER_AGENT'])
+            str_starts_with($_SERVER['HTTP_USER_AGENT'], 'PiwigoRemoteSync')
         ) {
             unset($res['save_visits']);
         }

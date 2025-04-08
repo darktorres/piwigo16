@@ -1160,8 +1160,7 @@ final class Template
             $regex[] = "#^[ \t]+({$ldq}{$tag}" . "[^{$ld}{$rd}]*{$rdq})\s*$#m";
         }
 
-        $source = preg_replace($regex, '$1', $source);
-        return $source;
+        return preg_replace($regex, '$1', $source);
     }
 
     /**
@@ -1172,7 +1171,7 @@ final class Template
         Smarty_Internal_Template $smarty
     ): string|null {
         // replaces echo PHP_STRING_LITERAL; with the string literal value
-        $source = preg_replace_callback(
+        return preg_replace_callback(
             '/\\<\\?php echo ((?:\'(?:(?:\\\\.)|[^\'])*\')|(?:"(?:(?:\\\\.)|[^"])*"));\\?\\>\\n/',
             function (array $matches): string {
                 eval('$tmp=' . $matches[1] . ';');
@@ -1180,7 +1179,6 @@ final class Template
             },
             $source
         );
-        return $source;
     }
 
     /**

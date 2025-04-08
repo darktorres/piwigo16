@@ -203,11 +203,9 @@ final class functions_html
         // replace /word/ by an italic word
         $pattern = '/\/(\S*)\/(\s)/';
         $replacement = '<span style="font-style:italic;">$1$2</span>';
-        $content = preg_replace($pattern, $replacement, $content);
-
         // TODO : add a trigger
 
-        return $content;
+        return preg_replace($pattern, $replacement, $content);
     }
 
     /**
@@ -669,9 +667,7 @@ final class functions_html
         }
 
         $title = htmlspecialchars(strip_tags($title));
-        $title = functions_plugins::trigger_change('get_thumbnail_title', $title, $info);
-
-        return $title;
+        return functions_plugins::trigger_change('get_thumbnail_title', $title, $info);
     }
 
     /**

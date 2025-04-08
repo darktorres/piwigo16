@@ -277,8 +277,7 @@ final class functions_url
         }
 
         $url .= self::make_section_in_url($params);
-        $url = self::add_well_known_params_in_url($url, $params);
-        return $url;
+        return self::add_well_known_params_in_url($url, $params);
     }
 
     /**

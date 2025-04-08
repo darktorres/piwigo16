@@ -32,7 +32,7 @@ final class functions_upload
     public static function get_upload_form_config(): array
     {
         // default configuration for upload
-        $upload_form_config = [
+        return [
             'original_resize' => [
                 'default' => false,
                 'can_be_null' => false,
@@ -65,8 +65,6 @@ final class functions_upload
                 'error_message' => functions::l10n('The original image quality must be a number between %d and %d'),
             ],
         ];
-
-        return $upload_form_config;
     }
 
     public static function save_upload_form_config(

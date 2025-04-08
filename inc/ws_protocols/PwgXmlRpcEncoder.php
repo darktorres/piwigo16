@@ -70,7 +70,7 @@ final class PwgXmlRpcEncoder extends PwgResponseEncoder
         if ($response instanceof PwgError) {
             $code = $response->code();
             $msg = htmlspecialchars($response->message());
-            $ret = <<<XML
+            return <<<XML
                 <methodResponse>
                   <fault>
                     <value>
@@ -88,12 +88,11 @@ final class PwgXmlRpcEncoder extends PwgResponseEncoder
                   </fault>
                 </methodResponse>
                 XML;
-            return $ret;
         }
 
         parent::flattenResponse($response);
         $ret = self::xmlrpc_encode($response);
-        $ret = <<<XML
+        return <<<XML
             <methodResponse>
               <params>
                 <param>
@@ -104,7 +103,6 @@ final class PwgXmlRpcEncoder extends PwgResponseEncoder
               </params>
             </methodResponse>
             XML;
-        return $ret;
     }
 
     #[Override]

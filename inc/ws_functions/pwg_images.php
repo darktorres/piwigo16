@@ -2470,11 +2470,9 @@ final class pwg_images
         array $params,
         PwgServer $service
     ): array {
-        $ret = [
+        return [
             'rows' => functions_admin::empty_lounge(),
         ];
-
-        return $ret;
     }
 
     /**

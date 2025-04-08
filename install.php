@@ -70,7 +70,6 @@ if (is_array($_COOKIE)) {
         }
     }
 
-    reset($_COOKIE);
 }
 
 //----------------------------------------------------- variable initialization

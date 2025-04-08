@@ -20,7 +20,7 @@ final class PwgRestRequestHandler extends PwgRequestHandler
 {
     #[Override]
     public function handleRequest(
-        PwgServer &$service
+        PwgServer $service
     ): void {
         $params = [];
 

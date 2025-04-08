@@ -33,7 +33,7 @@ abstract class PwgResponseEncoder
      * returns true if the parameter is a 'struct' (php array type whose keys are
      * NOT consecutive integers starting with 0)
      */
-    public static function is_struct(array &$data): bool
+    public static function is_struct(array $data): bool
     {
         # string keys, unordered, non-incremental keys, .. - whatever, make object
         return is_array($data) && range(0, count($data) - 1) !== array_keys($data);

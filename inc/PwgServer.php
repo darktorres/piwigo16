@@ -404,7 +404,7 @@ final class PwgServer
      */
     public static function ws_getMethodList(
         string $params,
-        self &$service
+        self $service
     ): array {
         $methods = array_filter(
             $service->_methods,
@@ -420,7 +420,7 @@ final class PwgServer
      */
     public static function ws_getMethodDetails(
         array $params,
-        self &$service
+        self $service
     ): PwgError|array {
         $methodName = $params['methodName'];
 

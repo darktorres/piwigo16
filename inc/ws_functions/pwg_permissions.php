@@ -139,7 +139,7 @@ final class pwg_permissions
      */
     public static function ws_permissions_add(
         array $params,
-        PwgServer &$service
+        PwgServer $service
     ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -207,7 +207,7 @@ final class pwg_permissions
      */
     public static function ws_permissions_remove(
         array $params,
-        PwgServer &$service
+        PwgServer $service
     ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');

@@ -21,6 +21,6 @@ abstract class PwgRequestHandler
      * method invocation as well as response sending.
      */
     abstract public function handleRequest(
-        PwgServer &$service
+        PwgServer $service
     ): void;
 }

@@ -233,7 +233,7 @@ final class functions_notification_by_mail
      * Set user on nbm environment
      */
     public static function set_user_on_env_nbm(
-        array &$nbm_user,
+        array $nbm_user,
         bool $is_action_send
     ): void {
         global $user, $lang, $lang_info, $env_nbm;

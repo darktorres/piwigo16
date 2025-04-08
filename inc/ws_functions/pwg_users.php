@@ -371,7 +371,7 @@ final class pwg_users
      */
     public static function ws_users_add(
         array $params,
-        PwgServer &$service
+        PwgServer $service
     ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -508,7 +508,7 @@ final class pwg_users
      */
     public static function ws_users_setInfo(
         array $params,
-        PwgServer &$service
+        PwgServer $service
     ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');

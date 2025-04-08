@@ -172,13 +172,7 @@ if (isset($_POST['submit']) &&
     $db_fulldirs = functions_admin::get_fulldirs(array_keys($db_categories));
 
     // what is the base directory to search file system sub-directories ?
-    if (isset($_POST['cat']) &&
-        is_numeric($_POST['cat'])
-    ) {
-        $basedir = $db_fulldirs[$_POST['cat']];
-    } else {
-        $basedir = preg_replace('#/*$#', '', $site_url);
-    }
+    $basedir = isset($_POST['cat']) && is_numeric($_POST['cat']) ? $db_fulldirs[$_POST['cat']] : rtrim($site_url, '/');
 
     // we need to have fulldirs as keys to make efficient comparison
     $db_fulldirs = array_flip($db_fulldirs);

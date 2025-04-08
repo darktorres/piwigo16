@@ -9,8 +9,6 @@ use Piwigo\inc\ThemeMaintain;
 
 class smartpocket_maintain extends ThemeMaintain
 {
-    private bool $installed = false;
-
     private array $default_conf = [
         'loop' => true, //true - false
         'autohide' => 5000, //5000 - 0
@@ -34,8 +32,6 @@ class smartpocket_maintain extends ThemeMaintain
 
             functions::conf_update_param('smartpocket', $config, true);
         }
-
-        $this->installed = true;
     }
 
     public function deactivate(): void {}

@@ -87,7 +87,6 @@ final class GDThumb_maintain extends PluginMaintain
 
             closedir($fh);
             rmdir($path);
-            return;
         }
 
     }

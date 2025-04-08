@@ -220,7 +220,7 @@ if (! isset($step)) {
 //---------------------------------------------------------------- form analyze
 
 if (isset($_POST['install'])) {
-    functions_install::install_db_connect($infos, $errors);
+    functions_install::install_db_connect($errors);
 
     if ($errors !== []) {
         print_r($errors);

@@ -106,32 +106,8 @@ final class functions_notification
                     SQL;
                 break;
 
-            case 'new_elements':
-                $query = <<<SQL
-                    FROM images
-                    INNER JOIN image_category AS ic ON image_id = id
-                    WHERE 1 = 1
-
-                    SQL;
-
-                if (! empty($start)) {
-                    $query .= <<<SQL
-                        AND date_available > '{$start}'
-
-                        SQL;
-                }
-
-                if (! empty($end)) {
-                    $query .= <<<SQL
-                        AND date_available <= '{$end}'
-
-                        SQL;
-                }
-
-                $query .= self::get_std_sql_where_restrict_filter('AND', 'id');
-                break;
-
             case 'updated_categories':
+            case 'new_elements':
                 $query = <<<SQL
                     FROM images
                     INNER JOIN image_category AS ic ON image_id = id

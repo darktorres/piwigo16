@@ -777,7 +777,6 @@ final class functions_admin
                 SET visible = 'true'
                 WHERE id IN ({$cats_list});
                 SQL;
-            functions_mysqli::pwg_query($query);
         }
         // locking a category   => all its child categories become locked
         else {
@@ -788,8 +787,9 @@ final class functions_admin
                 SET visible = 'false'
                 WHERE id IN ({$subcats_list});
                 SQL;
-            functions_mysqli::pwg_query($query);
         }
+
+        functions_mysqli::pwg_query($query);
 
         return null;
     }
@@ -2266,14 +2266,14 @@ final class functions_admin
             $query = <<<SQL
                 TRUNCATE TABLE user_cache;
                 SQL;
-            functions_mysqli::pwg_query($query);
         } else {
             $query = <<<SQL
                 UPDATE user_cache
                 SET need_update = 'true';
                 SQL;
-            functions_mysqli::pwg_query($query);
         }
+
+        functions_mysqli::pwg_query($query);
 
         functions::conf_delete_param('count_orphans');
         functions_plugins::trigger_notify('invalidate_user_cache', $full);

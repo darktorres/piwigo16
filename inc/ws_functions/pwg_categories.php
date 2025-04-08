@@ -1374,7 +1374,6 @@ final class pwg_categories
                 $category['nb_images_associated_outside'] = count($image_ids_associated_outside);
 
                 $image_ids_becoming_orphan = array_diff($image_ids_recursive, $image_ids_associated_outside);
-                $category['nb_images_becoming_orphan'] = count($image_ids_becoming_orphan);
             }
             // else it's better to avoid sending a huge SQL request, we compute the orphan list with PHP
             else {
@@ -1397,8 +1396,9 @@ final class pwg_categories
 
                 $category['nb_images_associated_outside'] = count(array_unique($image_ids_not_orphan));
                 $image_ids_becoming_orphan = array_diff($image_ids_recursive, $image_ids_not_orphan);
-                $category['nb_images_becoming_orphan'] = count($image_ids_becoming_orphan);
             }
+
+            $category['nb_images_becoming_orphan'] = count($image_ids_becoming_orphan);
         }
 
         $output[] = [

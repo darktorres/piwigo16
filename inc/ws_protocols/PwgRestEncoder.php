@@ -139,11 +139,8 @@ final class PwgRestEncoder extends PwgResponseEncoder
                 break;
 
             case 'integer':
-            case 'double':
-                $this->_writer->write_content($data);
-                break;
-
             case 'string':
+            case 'double':
                 $this->_writer->write_content($data);
                 break;
 

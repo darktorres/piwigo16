@@ -171,7 +171,7 @@ final class functions_user
             $errors[] = $mail_error;
         }
 
-        if ($conf->insensitive_case_logon == true) {
+        if ($conf->insensitive_case_logon) {
             $login_error = self::validate_login_case($login);
 
             if ($login_error != '') {
@@ -418,7 +418,7 @@ final class functions_user
 
         $userdata['preferences'] = empty($userdata['preferences']) ? [] : unserialize($userdata['preferences']);
 
-        if ($use_cache && (! isset($userdata['need_update']) || ! is_bool($userdata['need_update']) || $userdata['need_update'] == true)) {
+        if ($use_cache && (! isset($userdata['need_update']) || ! is_bool($userdata['need_update']) || $userdata['need_update'])) {
             $userdata['cache_update_time'] = time();
             // Set need update are done
             $userdata['need_update'] = false;

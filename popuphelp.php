@@ -43,7 +43,7 @@ if (isset($_GET['page']) &&
           'return' => true,
       ]);
 
-    if ($help_content == false) {
+    if (! $help_content) {
         $help_content = '';
     }
 

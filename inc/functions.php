@@ -128,7 +128,7 @@ final class functions
             $mkd = mkdir($dir, $conf->chmod_value, (($flags & self::MKGETDIR_RECURSIVE) !== 0) ? true : false);
             umask($umask);
 
-            if ($mkd == false) {
+            if (! $mkd) {
                 if (($flags & self::MKGETDIR_DIE_ON_ERROR) !== 0) {
                     functions_html::fatal_error("{$dir} " . self::l10n('no write access'));
                 }
@@ -2638,7 +2638,7 @@ final class functions
     {
         global $conf, $page;
 
-        if ($conf->question_mark_in_urls == false &&
+        if (! $conf->question_mark_in_urls &&
             isset($_SERVER['PATH_INFO']) &&
             ! empty($_SERVER['PATH_INFO'])
         ) {

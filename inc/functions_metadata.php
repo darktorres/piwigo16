@@ -27,7 +27,7 @@ final class functions_metadata
 
         $imginfo = [];
 
-        if (getimagesize($filename, $imginfo) == false) {
+        if (! getimagesize($filename, $imginfo)) {
             return $result;
         }
 

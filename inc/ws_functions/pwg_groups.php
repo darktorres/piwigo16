@@ -84,7 +84,7 @@ final class pwg_groups
      */
     public static function ws_groups_add(
         array $params,
-        PwgServer &$service
+        PwgServer $service
     ): array|bool|PwgError|string|null {
         $params['name'] = functions_mysqli::pwg_db_real_escape_string(strip_tags(stripslashes($params['name'])));
 
@@ -156,7 +156,7 @@ final class pwg_groups
      */
     public static function ws_groups_setInfo(
         array $params,
-        PwgServer &$service
+        PwgServer $service
     ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -233,7 +233,7 @@ final class pwg_groups
      */
     public static function ws_groups_addUser(
         array $params,
-        PwgServer &$service
+        PwgServer $service
     ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -287,7 +287,7 @@ final class pwg_groups
      */
     public static function ws_groups_merge(
         array $params,
-        PwgServer &$service
+        PwgServer $service
     ): PwgError|array {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -385,7 +385,7 @@ final class pwg_groups
      */
     public static function ws_groups_duplicate(
         array $params,
-        PwgServer &$service
+        PwgServer $service
     ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -484,7 +484,7 @@ final class pwg_groups
      */
     public static function ws_groups_deleteUser(
         array $params,
-        PwgServer &$service
+        PwgServer $service
     ): array|bool|PwgError|string|null {
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');

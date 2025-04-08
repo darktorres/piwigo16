@@ -1676,7 +1676,7 @@ final class pwg_images
      */
     public static function ws_images_uploadAsync(
         array $params,
-        PwgServer &$service
+        PwgServer $service
     ): array|bool|PwgError|string|null {
         global $conf, $user, $logger;
 

@@ -512,28 +512,28 @@ if (isset($_SESSION['bulk_manager_filter']['dimension'])) {
     $where_clauses = [];
 
     if (isset($_SESSION['bulk_manager_filter']['dimension']['min_width'])) {
-        $where_clause[] = 'width >= ' . $_SESSION['bulk_manager_filter']['dimension']['min_width'];
+        $where_clauses[] = 'width >= ' . $_SESSION['bulk_manager_filter']['dimension']['min_width'];
     }
 
     if (isset($_SESSION['bulk_manager_filter']['dimension']['max_width'])) {
-        $where_clause[] = 'width <= ' . $_SESSION['bulk_manager_filter']['dimension']['max_width'];
+        $where_clauses[] = 'width <= ' . $_SESSION['bulk_manager_filter']['dimension']['max_width'];
     }
 
     if (isset($_SESSION['bulk_manager_filter']['dimension']['min_height'])) {
-        $where_clause[] = 'height >= ' . $_SESSION['bulk_manager_filter']['dimension']['min_height'];
+        $where_clauses[] = 'height >= ' . $_SESSION['bulk_manager_filter']['dimension']['min_height'];
     }
 
     if (isset($_SESSION['bulk_manager_filter']['dimension']['max_height'])) {
-        $where_clause[] = 'height <= ' . $_SESSION['bulk_manager_filter']['dimension']['max_height'];
+        $where_clauses[] = 'height <= ' . $_SESSION['bulk_manager_filter']['dimension']['max_height'];
     }
 
     if (isset($_SESSION['bulk_manager_filter']['dimension']['min_ratio'])) {
-        $where_clause[] = 'width/height >= ' . $_SESSION['bulk_manager_filter']['dimension']['min_ratio'];
+        $where_clauses[] = 'width/height >= ' . $_SESSION['bulk_manager_filter']['dimension']['min_ratio'];
     }
 
     if (isset($_SESSION['bulk_manager_filter']['dimension']['max_ratio'])) {
         // max_ratio is a floor value, so must be a bit increased
-        $where_clause[] = 'width/height < ' . ($_SESSION['bulk_manager_filter']['dimension']['max_ratio'] + 0.01);
+        $where_clauses[] = 'width/height < ' . ($_SESSION['bulk_manager_filter']['dimension']['max_ratio'] + 0.01);
     }
 
     $where_clauses_imploded = implode(' AND ', $where_clauses);

@@ -67,7 +67,7 @@ final class GDThumb_maintain extends PluginMaintain
 
     private function gtdeltree(
         string $path
-    ): ?bool {
+    ): void {
         if (is_dir($path)) {
             $fh = opendir($path);
 
@@ -86,9 +86,9 @@ final class GDThumb_maintain extends PluginMaintain
             }
 
             closedir($fh);
-            return rmdir($path);
+            rmdir($path);
+            return;
         }
 
-        return null;
     }
 }

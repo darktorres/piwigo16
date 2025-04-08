@@ -57,9 +57,7 @@ final class functions_mysqli
             [$host, $port] = explode(':', $host);
         }
 
-        $dbname = '';
-
-        $mysqli = new mysqli($host, $user, $password, $dbname, $port, $socket);
+        $mysqli = new mysqli($host, $user, $password, '', $port, $socket);
 
         if (mysqli_connect_error()) {
             throw new Exception("Can't connect to server");

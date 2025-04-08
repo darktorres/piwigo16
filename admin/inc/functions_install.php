@@ -88,11 +88,9 @@ final class functions_install
     /**
      * Connect to database during installation. Uses $_POST.
      *
-     * @param array $infos - populated with infos
      * @param array<string> $errors - populated with errors
      */
     public static function install_db_connect(
-        array &$infos,
         array &$errors
     ): void {
         try {

@@ -48,7 +48,6 @@ $clear_skins = [
     'material-light-green',
     'material-lime',
     'material-purple',
-    'material-indigo',
     'material-red',
     'material-teal',
     'bootswatch-cerulean',

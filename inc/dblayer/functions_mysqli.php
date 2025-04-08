@@ -164,8 +164,7 @@ final class functions_mysqli
         $page['queries_time'] += $time;
 
         if ($conf->show_queries) {
-            $output = '';
-            $output .= '<pre>[' . $page['count_queries'] . '] ';
+            $output = '<pre>[' . $page['count_queries'] . '] ';
             $output .= "\n" . $query;
             $output .= "\n" . '(this query time : ';
             $output .= '<b>' . number_format($time, 3, '.', ' ') . ' s)</b>';

@@ -67,7 +67,7 @@ if (defined('IN_WS') && isset($_REQUEST['method']) && $_REQUEST['method'] == 'pw
 
 $user = functions_user::build_user(
     $user['id'],
-    (defined('IN_ADMIN') && IN_ADMIN) ? false : true // use cache ?
+    ! ((defined('IN_ADMIN') && IN_ADMIN)) // use cache ?
 );
 
 if ($conf->browser_language &&

@@ -12,7 +12,7 @@ $TOUR_PATH = PHPWG_PLUGINS_PATH . 'TakeATour/tours/2_8_0/tour.tpl';
 
 /*********************************/
 
-$template->assign('TAT_HAS_ORPHANS', functions_admin::get_orphans() !== [] ? true : false);
+$template->assign('TAT_HAS_ORPHANS', functions_admin::get_orphans() !== []);
 
 // category id for notification new features
 if (! isset($_SESSION['TAT_cat_id'])) {

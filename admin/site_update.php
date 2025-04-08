@@ -115,7 +115,7 @@ if (isset($_POST['submit'])) {
     }
 
     // shall we simulate only
-    $simulate = isset($_POST['simulate']) && $_POST['simulate'] == 1 ? true : false;
+    $simulate = isset($_POST['simulate']) && $_POST['simulate'] == 1;
 }
 
 // +-----------------------------------------------------------------------+
@@ -819,7 +819,7 @@ if (isset($_POST['submit']) &&
     ! $general_failure
 ) {
     // sync only never synchronized files ?
-    $opts['only_new'] = isset($_POST['meta_all']) ? false : true;
+    $opts['only_new'] = ! isset($_POST['meta_all']);
     $opts['category_id'] = '';
     $opts['recursive'] = true;
 
@@ -958,13 +958,13 @@ $template->assign(
 if (isset($_POST['submit'])) {
     $tpl_introduction = [
         'sync' => $_POST['sync'],
-        'sync_meta' => isset($_POST['sync_meta']) ? true : false,
+        'sync_meta' => isset($_POST['sync_meta']),
         'display_info' => isset($_POST['display_info']) && $_POST['display_info'] == 1,
         'add_to_caddie' => isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1,
         'subcats_included' => isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1,
         'privacy_level_selected' => (int) $_POST['privacy_level'],
-        'meta_all' => isset($_POST['meta_all']) ? true : false,
-        'meta_empty_overrides' => isset($_POST['meta_empty_overrides']) ? true : false,
+        'meta_all' => isset($_POST['meta_all']),
+        'meta_empty_overrides' => isset($_POST['meta_empty_overrides']),
     ];
 
     $cat_selected = isset($_POST['cat']) && is_numeric($_POST['cat']) ? [$_POST['cat']] : [];

@@ -36,7 +36,7 @@ if (isset($_POST[$text_values[0]])) {
     }
 
     foreach ($bool_values as $k) {
-        $my_conf[$k] = isset($_POST[$k]) ? true : false;
+        $my_conf[$k] = isset($_POST[$k]);
     }
 
     if (! isset($_POST['use_album_square_thumbs'])) {

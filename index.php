@@ -697,7 +697,7 @@ if (empty($page['is_external'])) {
                     [
                         'DISPLAY' => functions::l10n($params->type),
                         'URL' => $url . $params->type,
-                        'SELECTED' => ($params->type == $selected_type ? true : false),
+                        'SELECTED' => $params->type == $selected_type,
                     ]
                 );
             }

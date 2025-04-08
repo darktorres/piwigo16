@@ -1069,7 +1069,7 @@ final class pwg_categories
             LIMIT 1;
             SQL;
         $result = functions_mysqli::pwg_query($query);
-        $has_images = functions_mysqli::pwg_db_num_rows($result) > 0 ? true : false;
+        $has_images = functions_mysqli::pwg_db_num_rows($result) > 0;
 
         if (! $has_images) {
             return new PwgError(401, 'not permitted');
@@ -1336,7 +1336,7 @@ final class pwg_categories
             LIMIT 1;
             SQL;
         $result = functions_mysqli::pwg_query($query);
-        $category['has_images'] = functions_mysqli::pwg_db_num_rows($result) > 0 ? true : false;
+        $category['has_images'] = functions_mysqli::pwg_db_num_rows($result) > 0;
 
         // number of sub-categories
         $subcat_ids = functions_category::get_subcat_ids([$category_id]);

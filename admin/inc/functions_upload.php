@@ -89,7 +89,7 @@ final class functions_upload
             }
 
             if (is_bool($upload_form_config[$field]['default'])) {
-                $value = isset($value) ? true : false;
+                $value = isset($value);
                 $updates[] = [
                     'param' => $field,
                     'value' => functions_mysqli::boolean_to_string($value),

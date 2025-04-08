@@ -1,0 +1,14 @@
+# Add patterns to ignore here, one per line
+# Example:
+# *.log
+# tmp/
+phpstan-baseline.neon
+psalm-baseline.xml
+eslint_jquery.txt
+eslint.txt
+**/open-sans/
+**/*.css.map
+**/*.css
+**/language/
+**/*.png
+**/*.svg

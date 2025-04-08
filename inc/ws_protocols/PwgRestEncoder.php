@@ -129,7 +129,6 @@ final class PwgRestEncoder extends PwgResponseEncoder
         array $xml_attributes = []
     ): void {
         switch (gettype($data)) {
-            case 'null':
             case 'NULL':
                 $this->_writer->write_content('');
                 break;

@@ -2108,7 +2108,7 @@ final class functions
 
             // link on next page and last page?
             if ($cur_page != $maximum) {
-                $navbar['URL_NEXT'] = $url_start . ($next < $last ? $next : $last);
+                $navbar['URL_NEXT'] = $url_start . (min($next, $last));
                 $navbar['URL_LAST'] = $url_start . $last;
             }
 

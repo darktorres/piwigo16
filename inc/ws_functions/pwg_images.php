@@ -1558,15 +1558,13 @@ final class pwg_images
             // Read binary input stream and append it to temp file
             $in = fopen($_FILES['file']['tmp_name'], 'rb');
 
-            if (! $in) {
-                exit('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
-            }
         } else {
             $in = fopen('php://input', 'rb');
 
-            if (! $in) {
-                exit('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
-            }
+        }
+
+        if (! $in) {
+            exit('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
         }
 
         while ($buff = fread($in, 4096)) {

@@ -137,7 +137,7 @@ if (empty($file)) {
 
 if ($_GET['part'] == 'e') {
     functions::pwg_log($_GET['id'], 'high');
-} elseif ($_GET['part'] == 'e') {
+} elseif ($_GET['part'] == 'r') {
     functions::pwg_log($_GET['id'], 'other');
 } elseif ($_GET['part'] == 'f') {
     functions::pwg_log($_GET['id'], 'high', $format['format_id']);

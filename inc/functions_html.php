@@ -397,7 +397,6 @@ final class functions_html
 
         error_reporting(E_ALL);
         trigger_error(strip_tags($msg) . $btrace_msg, E_USER_ERROR);
-        exit(0); // just in case
     }
 
     /**

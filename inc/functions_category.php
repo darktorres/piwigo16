@@ -173,10 +173,10 @@ final class functions_category
         foreach ($cat as $k => $v) {
             // If the field is true or false, the variable is transformed into a
             // boolean value.
-            if ($cat[$k] == 'true' ||
-                $cat[$k] == 'false'
+            if ($v == 'true' ||
+                $v == 'false'
             ) {
-                $cat[$k] = functions_mysqli::get_boolean($cat[$k]);
+                $cat[$k] = functions_mysqli::get_boolean($v);
             }
         }
 

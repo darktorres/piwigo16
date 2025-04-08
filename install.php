@@ -27,8 +27,8 @@ const PHPWG_ROOT_PATH = './';
 // this is a security precaution to prevent someone trying to break out of a SQL statement.
 if (is_array($_POST)) {
     foreach ($_POST as $k => $v) {
-        if (is_array($_POST[$k])) {
-            foreach ($_POST[$k] as $k2 => $v2) {
+        if (is_array($v)) {
+            foreach ($v as $k2 => $v2) {
                 $_POST[$k][$k2] = addslashes($v2);
             }
 
@@ -43,8 +43,8 @@ if (is_array($_POST)) {
 
 if (is_array($_GET)) {
     foreach ($_GET as $k => $v) {
-        if (is_array($_GET[$k])) {
-            foreach ($_GET[$k] as $k2 => $v2) {
+        if (is_array($v)) {
+            foreach ($v as $k2 => $v2) {
                 $_GET[$k][$k2] = addslashes($v2);
             }
 
@@ -59,8 +59,8 @@ if (is_array($_GET)) {
 
 if (is_array($_COOKIE)) {
     foreach ($_COOKIE as $k => $v) {
-        if (is_array($_COOKIE[$k])) {
-            foreach ($_COOKIE[$k] as $k2 => $v2) {
+        if (is_array($v)) {
+            foreach ($v as $k2 => $v2) {
                 $_COOKIE[$k][$k2] = addslashes($v2);
             }
 

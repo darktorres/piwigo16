@@ -84,8 +84,8 @@ final class functions_mail
         string $name,
         string $email
     ): string {
-        $cvt_email = trim(preg_replace('#[\n\r]+#s', '', $email));
-        $cvt_name = trim(preg_replace('#[\n\r]+#s', '', $name));
+        $cvt_email = trim(preg_replace('#[\n\r]+#', '', $email));
+        $cvt_name = trim(preg_replace('#[\n\r]+#', '', $name));
 
         if ($cvt_name !== '') {
             $cvt_name = '"' . addcslashes($cvt_name, '"') . '" ';
@@ -642,7 +642,7 @@ final class functions_mail
             $args['subject'] = 'Piwigo';
         }
 
-        $args['subject'] = trim(preg_replace('#[\n\r]+#s', '', $args['subject']));
+        $args['subject'] = trim(preg_replace('#[\n\r]+#', '', $args['subject']));
         $mail->Subject = $args['subject'];
 
         // Cc

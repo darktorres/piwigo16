@@ -40,7 +40,7 @@ final class functions_install
             $query .= ' ' . $sql_line;
 
             // if we reached the end of query, we execute it and reinitialize the variable "query"
-            if (preg_match('/;$/', $sql_line)) {
+            if (str_ends_with($sql_line, ';')) {
                 $query = trim($query);
 
                 // we don't execute "DROP TABLE" queries

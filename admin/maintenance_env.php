@@ -177,7 +177,7 @@ switch ($action) {
 
             // if the current version is a BSF (development branch) build, we check
             // the first line, for stable versions, we check the second line
-            if (preg_match('/^BSF/', $versions['current'])) {
+            if (str_starts_with($versions['current'], 'BSF')) {
                 $versions['latest'] = trim($lines[0]);
 
                 // because integer are limited to 4,294,967,296 we need to split BSF

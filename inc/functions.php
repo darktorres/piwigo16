@@ -711,7 +711,7 @@ final class functions
             $details['added_with'] = 'app';
 
             if (isset($_SERVER['HTTP_REFERER']) &&
-                preg_match('/page=photos_add/', $_SERVER['HTTP_REFERER'])
+                str_contains($_SERVER['HTTP_REFERER'], 'page=photos_add')
             ) {
                 $details['added_with'] = 'browser';
             }

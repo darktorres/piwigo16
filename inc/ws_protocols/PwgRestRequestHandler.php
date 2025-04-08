@@ -24,7 +24,7 @@ final class PwgRestRequestHandler extends PwgRequestHandler
     ): void {
         $params = [];
 
-        $param_array = $service->isPost() ? $_POST : $_GET;
+        $param_array = $service::isPost() ? $_POST : $_GET;
 
         foreach ($param_array as $name => $value) {
             if ($name == 'format') {

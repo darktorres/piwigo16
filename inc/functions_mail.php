@@ -828,7 +828,7 @@ final class functions_mail
 
         // Send content to PHPMailer
         if (isset($contents['text/html'])) {
-            $mail->isHTML(true);
+            $mail->isHTML();
             $mail->Body = self::move_css_to_body($contents['text/html']);
 
             if (isset($contents['text/plain'])) {

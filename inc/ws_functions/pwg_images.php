@@ -1611,8 +1611,7 @@ final class pwg_images
                 $filePath,
                 stripslashes($params['name']), // function add_uploaded_file will secure before insert
                 $params['category'],
-                $params['level'],
-                null // image_id = not provided, this is a new photo
+                $params['level']
             );
 
             $query = <<<SQL

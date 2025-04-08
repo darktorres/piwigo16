@@ -376,7 +376,7 @@ if ((isset($_POST['submit']) || isset($_GET['now'])) &&
         }
 
         // Delete cache data
-        functions_admin::invalidate_user_cache(true);
+        functions_admin::invalidate_user_cache();
         $template->delete_compiled_templates();
 
         // Restore $page['infos'] in order to hide information messages from function calls

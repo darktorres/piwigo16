@@ -32,7 +32,7 @@ final class pwg_extensions
         PwgServer $service
     ): array {
         $plugins = new plugins();
-        $plugins->sort_fs_plugins('name');
+        $plugins->sort_fs_plugins();
 
         $plugin_list = [];
 

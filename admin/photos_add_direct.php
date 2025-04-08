@@ -101,7 +101,7 @@ $formats_original_info = [];
 if ($display_formats &&
     $_GET['formats']
 ) {
-    functions::check_input_parameter('formats', $_GET, false, PATTERN_ID, false);
+    functions::check_input_parameter('formats', $_GET, false, PATTERN_ID);
 
     $formats_original_info = functions_admin::get_image_infos($_GET['formats']);
 

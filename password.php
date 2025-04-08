@@ -66,7 +66,7 @@ if (isset($_GET['key']) &&
     $user_id = functions::check_password_reset_key($_GET['key']);
 
     if (is_numeric($user_id)) {
-        $userdata = functions_user::getuserdata($user_id, false);
+        $userdata = functions_user::getuserdata($user_id);
         $page['username'] = $userdata['username'];
         $template->assign('key', $_GET['key']);
 

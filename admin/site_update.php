@@ -475,8 +475,7 @@ if (isset($_POST['submit']) &&
     if ($cat_ids !== []) {
         $wrappedCatIds = wordwrap(
             implode(', ', $cat_ids),
-            160,
-            "\n"
+            160
         );
 
         $query = <<<SQL
@@ -720,7 +719,7 @@ if (isset($_POST['submit']) &&
 ) {
     if (! $simulate) {
         $start = functions::get_moment();
-        functions_admin::update_category('all');
+        functions_admin::update_category();
         $template->append('footer_elements', '<!-- \Piwigo\admin\inc\functions::update_category(all) : '
           . functions::get_elapsed_time($start, functions::get_moment())
           . ' -->');
@@ -749,8 +748,7 @@ if (isset($_POST['submit']) &&
         $files = functions_metadata_admin::get_filelist(
             $opts['category_id'],
             $site_id,
-            $opts['recursive'],
-            false
+            $opts['recursive']
         );
         $template->append('footer_elements', '<!-- get_filelist : '
           . functions::get_elapsed_time($start, functions::get_moment())

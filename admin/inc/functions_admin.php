@@ -81,7 +81,7 @@ final class functions_admin
 
         // destruction of all photos physically linked to the category
         $ids_str = implode(', ', $ids);
-        $wrapped_ids = wordwrap($ids_str, 80, "\n");
+        $wrapped_ids = wordwrap($ids_str, 80);
         $query = <<<SQL
             SELECT id
             FROM images
@@ -125,7 +125,7 @@ final class functions_admin
         }
 
         // destruction of the links between images and this category
-        $category_ids_list = wordwrap(implode(', ', $ids), 80, "\n");
+        $category_ids_list = wordwrap(implode(', ', $ids), 80);
         $query = <<<SQL
             DELETE FROM image_category
             WHERE category_id IN ({$category_ids_list});
@@ -133,14 +133,14 @@ final class functions_admin
         functions_mysqli::pwg_query($query);
 
         // destruction of the access linked to the category
-        $cat_ids_list = wordwrap(implode(', ', $ids), 80, "\n");
+        $cat_ids_list = wordwrap(implode(', ', $ids), 80);
         $query = <<<SQL
             DELETE FROM user_access
             WHERE cat_id IN ({$cat_ids_list});
             SQL;
         functions_mysqli::pwg_query($query);
 
-        $cat_ids_list = wordwrap(implode(', ', $ids), 80, "\n");
+        $cat_ids_list = wordwrap(implode(', ', $ids), 80);
         $query = <<<SQL
             DELETE FROM group_access
             WHERE cat_id IN ({$cat_ids_list});
@@ -148,7 +148,7 @@ final class functions_admin
         functions_mysqli::pwg_query($query);
 
         // destruction of the category
-        $category_ids_list = wordwrap(implode(', ', $ids), 80, "\n");
+        $category_ids_list = wordwrap(implode(', ', $ids), 80);
         $query = <<<SQL
             DELETE FROM categories
             WHERE id IN ({$category_ids_list});
@@ -289,7 +289,7 @@ final class functions_admin
             }
         }
 
-        $ids_str = wordwrap(implode(', ', $ids), 80, "\n");
+        $ids_str = wordwrap(implode(', ', $ids), 80);
 
         // destruction of the comments on the image
         $query = <<<SQL
@@ -470,7 +470,7 @@ final class functions_admin
                 return false;
             }
 
-            $where_cats = '%s IN (' . wordwrap(implode(', ', $ids), 120, "\n") . ')';
+            $where_cats = '%s IN (' . wordwrap(implode(', ', $ids), 120) . ')';
         }
 
         // find all categories where the set representative is not possible :
@@ -487,7 +487,7 @@ final class functions_admin
         $wrong_representative = functions_mysqli::query2array($query, null, 'id');
 
         if ($wrong_representative !== []) {
-            $wrong_representative_list = wordwrap(implode(', ', $wrong_representative), 120, "\n");
+            $wrong_representative_list = wordwrap(implode(', ', $wrong_representative), 120);
             $query = <<<SQL
                 UPDATE categories
                 SET representative_picture_id = NULL
@@ -1087,7 +1087,7 @@ final class functions_admin
         $galleries_url = functions_mysqli::query2array($query, 'id', 'galleries_url');
 
         // categories : id, site_id, uppercats
-        $cat_ids_list = wordwrap(implode(', ', $cat_ids), 80, "\n");
+        $cat_ids_list = wordwrap(implode(', ', $cat_ids), 80);
         $query = <<<SQL
             SELECT id, uppercats, site_id
             FROM categories

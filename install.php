@@ -436,7 +436,7 @@ if ($step == 1) {
         session_set_cookie_params(0, functions_cookie::cookie_path());
         register_shutdown_function('session_write_close');
 
-        $user = functions_user::build_user(1, true);
+        $user = functions_user::build_user(1);
         functions_user::log_user($user['id'], false);
 
         // newsletter subscription
@@ -459,15 +459,15 @@ if ($step == 1) {
 
             $keyargs_content = [
                 functions::get_l10n_args('Hello %s,', $admin_name),
-                functions::get_l10n_args('Welcome to your new installation of Piwigo!', ''),
-                functions::get_l10n_args('', ''),
-                functions::get_l10n_args('Here are your connection settings', ''),
-                functions::get_l10n_args('', ''),
+                functions::get_l10n_args('Welcome to your new installation of Piwigo!'),
+                functions::get_l10n_args(''),
+                functions::get_l10n_args('Here are your connection settings'),
+                functions::get_l10n_args(''),
                 functions::get_l10n_args('Link: %s', functions_url::get_absolute_root_url()),
                 functions::get_l10n_args('Username: %s', $admin_name),
-                functions::get_l10n_args('Password: ********** (no copy by email)', ''),
+                functions::get_l10n_args('Password: ********** (no copy by email)'),
                 functions::get_l10n_args('Email: %s', $admin_mail),
-                functions::get_l10n_args('', ''),
+                functions::get_l10n_args(''),
                 functions::get_l10n_args("Don't hesitate to consult our forums for any help: %s", PHPWG_URL),
             ];
 

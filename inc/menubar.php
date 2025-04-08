@@ -89,14 +89,14 @@ final class menubar
             if ($filter['enabled']) {
                 $template->assign(
                     'U_STOP_FILTER',
-                    functions_url::add_url_params(functions_url::make_index_url([]), [
+                    functions_url::add_url_params(functions_url::make_index_url(), [
                         'filter' => 'stop',
                     ])
                 );
             } else {
                 $template->assign(
                     'U_START_FILTER',
-                    functions_url::add_url_params(functions_url::make_index_url([]), [
+                    functions_url::add_url_params(functions_url::make_index_url(), [
                         'filter' => 'start-recent-' . $user['recent_period'],
                     ])
                 );

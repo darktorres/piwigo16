@@ -273,7 +273,7 @@ final class functions_metadata_admin
         $datas = [];
         $tags_of = [];
 
-        $wrapped_ids = wordwrap(implode(', ', $ids), 160, "\n");
+        $wrapped_ids = wordwrap(implode(', ', $ids), 160);
         $query = <<<SQL
             SELECT id, path, representative_ext
             FROM images

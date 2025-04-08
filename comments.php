@@ -318,7 +318,7 @@ $query = <<<SQL
     FROM categories
     {$sql_condition};
     SQL;
-functions_category::display_select_cat_wrapper($query, [$_GET['cat']], $blockname, true);
+functions_category::display_select_cat_wrapper($query, [$_GET['cat']], $blockname);
 
 // Filter on recent comments...
 

@@ -42,7 +42,7 @@ final class RVTS
             if (empty($page['items'])) {
                 functions_plugins::add_event_handler('loc_end_index', self::on_end_index(...));
             } else {
-                functions_plugins::add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails(...), EVENT_HANDLER_PRIORITY_NEUTRAL);
+                functions_plugins::add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails(...));
             }
         } else {
             $adj = (int) ($_GET['adj'] ?? null);

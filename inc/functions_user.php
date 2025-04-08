@@ -269,14 +269,14 @@ final class functions_user
                 $keyargs_content = [
                     functions::get_l10n_args('Hello %s,', stripslashes($login)),
                     functions::get_l10n_args('Thank you for registering at %s!', $conf->gallery_title),
-                    functions::get_l10n_args('', ''),
-                    functions::get_l10n_args('Here are your connection settings', ''),
-                    functions::get_l10n_args('', ''),
+                    functions::get_l10n_args(''),
+                    functions::get_l10n_args('Here are your connection settings'),
+                    functions::get_l10n_args(''),
                     functions::get_l10n_args('Link: %s', functions_url::get_absolute_root_url()),
                     functions::get_l10n_args('Username: %s', stripslashes($login)),
                     functions::get_l10n_args('Password: %s', stripslashes($password)),
                     functions::get_l10n_args('Email: %s', $mail_address),
-                    functions::get_l10n_args('', ''),
+                    functions::get_l10n_args(''),
                     functions::get_l10n_args("If you think you've received this email in error, please contact us at %s", functions::get_webmaster_mail_address()),
                 ];
 
@@ -447,7 +447,7 @@ final class functions_user
                     SQL;
             [$userdata['nb_total_images']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
             // now we update user cache categories
-            $user_cache_cats = functions_category::get_computed_categories($userdata, null);
+            $user_cache_cats = functions_category::get_computed_categories($userdata);
             if (! self::is_admin($userdata['status'])) { // for non admins we forbid categories with no image (feature 1053)
                 $forbidden_ids = [];
 
@@ -742,7 +742,7 @@ final class functions_user
         string $value_name,
         string $default
     ): string {
-        $default_user = self::get_default_user_info(true);
+        $default_user = self::get_default_user_info();
 
         if ($default_user === false ||
             empty($default_user[$value_name])

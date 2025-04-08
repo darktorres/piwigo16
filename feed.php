@@ -42,14 +42,14 @@ if (! empty($feed_id)) {
     }
 
     if ($feed_row['user_id'] != $user['id']) { // new user
-        $user = functions_user::build_user($feed_row['user_id'], true);
+        $user = functions_user::build_user($feed_row['user_id']);
     }
 
 } else {
     $image_only = true;
 
     if (! functions_user::is_a_guest()) { // auto session was created - so switch to guest
-        $user = functions_user::build_user($conf->guest_id, true);
+        $user = functions_user::build_user($conf->guest_id);
     }
 }
 
@@ -146,4 +146,4 @@ $fileName = './' . $conf->data_location . 'tmp';
 functions::mkgetdir($fileName); // just in case
 $fileName .= '/feed.xml';
 // send XML feed
-echo $rss->saveFeed('RSS2.0', $fileName, true);
+echo $rss->saveFeed('RSS2.0', $fileName);

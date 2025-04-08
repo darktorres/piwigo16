@@ -124,7 +124,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
         $plugins->sort_server_plugins($order_selected);
         $template->assign('order_selected', $order_selected);
     } else {
-        $plugins->sort_server_plugins('date');
+        $plugins->sort_server_plugins();
         $template->assign('order_selected', 'date');
     }
 

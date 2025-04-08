@@ -228,7 +228,7 @@ if ($page['section'] == 'categories') {
                     $page['category']['comment'],
                     'main_page_category_description'
                 ),
-                'title' => functions_html::get_cat_display_name($page['category']['upper_names'], ''),
+                'title' => functions_html::get_cat_display_name($page['category']['upper_names']),
             ]
         );
     } else {

@@ -64,8 +64,7 @@ final class functions
     {
         $t1 = explode(' ', microtime());
         $t2 = explode('.', $t1[0]);
-        $t2 = $t1[1] . substr($t2[1], 0, 6);
-        return $t2;
+        return $t1[1] . substr($t2[1], 0, 6);
     }
 
     /**
@@ -525,9 +524,7 @@ final class functions
             $do_log = $conf->history_guest;
         }
 
-        $do_log = functions_plugins::trigger_change('pwg_log_allowed', $do_log, $image_id, $image_type);
-
-        return $do_log;
+        return functions_plugins::trigger_change('pwg_log_allowed', $do_log, $image_id, $image_type);
     }
 
     /**
@@ -1187,9 +1184,7 @@ final class functions
         }
 
         // plugins want remove some themes based on user status maybe?
-        $themes = functions_plugins::trigger_change('get_pwg_themes', $themes);
-
-        return $themes;
+        return functions_plugins::trigger_change('get_pwg_themes', $themes);
     }
 
     /**
@@ -1419,9 +1414,7 @@ final class functions
             SQL;
         [$email] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        $email = functions_plugins::trigger_change('get_webmaster_mail_address', $email);
-
-        return $email;
+        return functions_plugins::trigger_change('get_webmaster_mail_address', $email);
     }
 
     /**
@@ -1969,9 +1962,8 @@ final class functions
                 return true;
             }
 
-            $content = file_get_contents($source_file);
             //Note: target charset is always utf-8 $content = convert_charset($content, 'utf-8', $target_charset);
-            return $content;
+            return file_get_contents($source_file);
         }
 
         return false;
@@ -2478,7 +2470,7 @@ final class functions
     public static function guess_mime_type(
         string $ext
     ): string {
-        $ctype = match (strtolower($ext)) {
+        return match (strtolower($ext)) {
             'jpe', 'jpeg', 'jpg' => 'image/jpeg',
             'png' => 'image/png',
             'gif' => 'image/gif',
@@ -2492,8 +2484,6 @@ final class functions
             'ogg' => 'application/ogg',
             default => 'application/octet-stream',
         };
-
-        return $ctype;
     }
 
     public static function do_error(

@@ -936,8 +936,7 @@ final class functions_user
             $row = functions_mysqli::pwg_db_fetch_assoc($result);
             $username = stripslashes($row['username']);
             $data = $time . $user_id . $username;
-            $key = base64_encode(hash_hmac('sha1', $data, $conf->secret_key . $row['password'], true));
-            return $key;
+            return base64_encode(hash_hmac('sha1', $data, $conf->secret_key . $row['password'], true));
         }
 
         return false;
@@ -1204,7 +1203,7 @@ final class functions_user
     ): int {
         global $conf;
 
-        $access_type_status = match (self::get_user_status($user_status)) {
+        return match (self::get_user_status($user_status)) {
             'guest' => $conf->guest_access ? ACCESS_GUEST : ACCESS_FREE,
             'generic' => ACCESS_GUEST,
             'normal' => ACCESS_CLASSIC,
@@ -1212,8 +1211,6 @@ final class functions_user
             'webmaster' => ACCESS_WEBMASTER,
             default => ACCESS_FREE,
         };
-
-        return $access_type_status;
     }
 
     /**

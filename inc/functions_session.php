@@ -167,9 +167,7 @@ final class functions_session
             return false;
         }
 
-        $affected_rows = functions_mysqli::pwg_db_changes();
-
-        return $affected_rows;
+        return functions_mysqli::pwg_db_changes();
     }
 
     /**

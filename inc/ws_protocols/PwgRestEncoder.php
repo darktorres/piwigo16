@@ -28,27 +28,24 @@ final class PwgRestEncoder extends PwgResponseEncoder
     ): string {
         if ($response instanceof PwgError) {
             $escapedMessage = htmlspecialchars($response->message());
-            $ret = <<<XML
+            return <<<XML
                 <?xml version="1.0"?>
                 <rsp stat="fail">
                     <err code="{$response->code()}" msg="{$escapedMessage}" />
                 </rsp>
                 XML;
-            return $ret;
         }
 
         $this->_writer = new PwgXmlWriter();
         $this->encode($response);
         $ret = $this->_writer->getOutput();
         $charset = functions::get_pwg_charset();
-        $ret = <<<XML
+        return <<<XML
             <?xml version="1.0" encoding="{$charset}"?>
             <rsp stat="ok">
                 {$ret}
             </rsp>
             XML;
-
-        return $ret;
     }
 
     #[Override]

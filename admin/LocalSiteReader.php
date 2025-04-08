@@ -61,8 +61,7 @@ final class LocalSiteReader
     public function get_full_directories(
         string $basedir
     ): array {
-        $fs_fulldirs = functions_admin::get_fs_directories($basedir);
-        return $fs_fulldirs;
+        return functions_admin::get_fs_directories($basedir);
     }
 
     /**

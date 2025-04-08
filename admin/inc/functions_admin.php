@@ -993,9 +993,7 @@ final class functions_admin
             );
         }
 
-        $uppercats = array_unique($uppercats);
-
-        return $uppercats;
+        return array_unique($uppercats);
     }
 
     public static function get_category_representative_properties(
@@ -2241,7 +2239,7 @@ final class functions_admin
      */
     public static function pwg_URL(): array
     {
-        $urls = [
+        return [
             'HOME' => PHPWG_URL,
             'WIKI' => PHPWG_URL . '/doc',
             'DEMO' => PHPWG_URL . '/demo',
@@ -2249,7 +2247,6 @@ final class functions_admin
             'BUGS' => PHPWG_URL . '/bugs',
             'EXTENSIONS' => PHPWG_URL . '/ext',
         ];
-        return $urls;
     }
 
     /**
@@ -3797,8 +3794,7 @@ final class functions_admin
 
         $start = $full_dir[0] . '/' . $full_dir[1];
         $end = end($full_dir);
-        $concat = $start . '/&hellip;/' . $end;
-        return $concat;
+        return $start . '/&hellip;/' . $end;
 
     }
 
@@ -3873,13 +3869,11 @@ final class functions_admin
     ): int {
         $result = ACCESS_WEBMASTER;
 
-        $result = match ($mode) {
+        return match ($mode) {
             'param', 'subscribe' => ACCESS_WEBMASTER,
             'send' => ACCESS_ADMINISTRATOR,
             default => ACCESS_WEBMASTER,
         };
-
-        return $result;
     }
 
     /**

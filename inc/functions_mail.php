@@ -58,7 +58,7 @@ final class functions_mail
     {
         global $conf;
 
-        $conf_mail = [
+        return [
             'send_bcc_mail_webmaster' => $conf->send_bcc_mail_webmaster,
             'mail_allow_html' => $conf->mail_allow_html,
             'mail_theme' => $conf->mail_theme,
@@ -70,8 +70,6 @@ final class functions_mail
             'email_webmaster' => self::get_mail_sender_email(),
             'name_webmaster' => self::get_mail_sender_name(),
         ];
-
-        return $conf_mail;
     }
 
     /**

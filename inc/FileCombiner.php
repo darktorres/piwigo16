@@ -267,8 +267,7 @@ final class FileCombiner
             $css = $cssMin->run($css);
         }
 
-        $css = functions_plugins::trigger_change('combined_css_postfilter', $css);
-        return $css;
+        return functions_plugins::trigger_change('combined_css_postfilter', $css);
     }
 
     /**

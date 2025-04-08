@@ -413,7 +413,7 @@ final class functions_metadata_admin
         $keywords_string = preg_replace('/,+/', ',', $keywords_string);
         $keywords_string = trim($keywords_string, ',');
 
-        $keywords_string = implode(
+        return implode(
             ',',
             array_unique(
                 explode(
@@ -422,7 +422,5 @@ final class functions_metadata_admin
                 )
             )
         );
-
-        return $keywords_string;
     }
 }

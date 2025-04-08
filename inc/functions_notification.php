@@ -215,8 +215,7 @@ final class functions_notification
                 $query = <<<SQL
                     SELECT DISTINCT {$field_id} {$query};
                     SQL;
-                $infos = functions_mysqli::query2array($query);
-                return $infos;
+                return functions_mysqli::query2array($query);
 
             default:
                 return null; // stop and return nothing

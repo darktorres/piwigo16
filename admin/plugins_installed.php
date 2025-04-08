@@ -83,7 +83,7 @@ foreach ($plugin_menu_links_deprec as $value) {
 // |                     start template output                             |
 // +-----------------------------------------------------------------------+
 
-$plugins->sort_fs_plugins('name');
+$plugins->sort_fs_plugins();
 $merged_extensions = $plugins->get_merged_extensions();
 $merged_plugins = false;
 $tpl_plugins = [];

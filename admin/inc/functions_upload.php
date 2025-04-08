@@ -292,8 +292,7 @@ final class functions_upload
                     $conf->original_resize_maxwidth,
                     $conf->original_resize_maxheight,
                     $conf->original_resize_quality,
-                    $conf->upload_form_automatic_rotation,
-                    false
+                    $conf->upload_form_automatic_rotation
                 );
 
                 $img->destroy();

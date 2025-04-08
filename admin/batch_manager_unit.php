@@ -112,7 +112,7 @@ $base_url = './admin.php';
 $template->assign(
     [
         'U_ELEMENTS_PAGE' => $base_url . functions_url::get_query_string_diff(['display', 'start']),
-        'F_ACTION' => $base_url . functions_url::get_query_string_diff([]),
+        'F_ACTION' => $base_url . functions_url::get_query_string_diff(),
         'level_options' => functions::get_privacy_level_options(),
         'ADMIN_PAGE_TITLE' => functions::l10n('Batch Manager'),
         'PWG_TOKEN' => functions::get_pwg_token(),

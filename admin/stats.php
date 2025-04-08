@@ -82,16 +82,16 @@ $last_months = functions_admin::set_missing_values(
     $actual_date
 );
 
-if (count(functions_admin::get_last(60, 'year')) > 1) {
+if (count(functions_admin::get_last()) > 1) {
     $last_years = functions_admin::set_missing_values(
         'year',
-        functions_admin::get_last(60, 'year')
+        functions_admin::get_last()
     );
 } else {
     $last_year_date = new DateTime();
     $last_years = functions_admin::set_missing_values(
         'year',
-        functions_admin::get_last(60, 'year'),
+        functions_admin::get_last(),
         $last_year_date->sub(new DateInterval('P1Y')),
         new DateTime()
     );

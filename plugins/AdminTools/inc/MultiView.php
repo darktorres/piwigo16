@@ -165,7 +165,7 @@ class MultiView
                 }
 
                 if ($this->data['view_as'] != $user['id']) {
-                    $user = functions_user::build_user($this->data['view_as'], true);
+                    $user = functions_user::build_user($this->data['view_as']);
 
                     if (isset($_GET['ato_view_as'])) {
                         $this->data['theme'] = $user['theme'];

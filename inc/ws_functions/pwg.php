@@ -83,7 +83,7 @@ final class pwg
         $conf->derivative_url_style = 2; //script
 
         $qlimit = min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
-        $where_clauses = ws_functions::ws_std_image_sql_filter($params, '');
+        $where_clauses = ws_functions::ws_std_image_sql_filter($params);
         $where_clauses[] = 'id<start_id';
 
         if (! empty($params['ids'])) {

@@ -148,7 +148,7 @@ $template->assign(
     [
         'PWG_TOKEN' => functions::get_pwg_token(),
         'U_HELP' => functions_url::get_root_url() . 'admin/popuphelp.php?page=notification_by_mail',
-        'F_ACTION' => $base_url . functions_url::get_query_string_diff([]),
+        'F_ACTION' => $base_url . functions_url::get_query_string_diff(),
     ]
 );
 
@@ -243,7 +243,7 @@ switch ($page['mode']) {
             'users' => [],
         ];
 
-        $data_users = functions_admin::do_action_send_mail_notification('list_to_send');
+        $data_users = functions_admin::do_action_send_mail_notification();
 
         $tpl_var['CUSTOMIZE_MAIL_CONTENT'] =
           isset($_POST['send_customize_mail_content'])

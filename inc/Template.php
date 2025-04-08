@@ -560,7 +560,7 @@ final class Template
     public function pparse(
         string $handle
     ): void {
-        $this->parse($handle, false);
+        $this->parse($handle);
         $this->flush();
     }
 

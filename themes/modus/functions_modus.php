@@ -327,7 +327,7 @@ final class functions_modus
 
         $my_base_name = basename(__DIR__);
         // not async to avoid visible flickering reflow
-        $template->scriptLoader->add('modus.arange', 1, ['jquery'], 'themes/' . $my_base_name . '/js/thumb.arrange.js', 0);
+        $template->scriptLoader->add('modus.arange', 1, ['jquery'], 'themes/' . $my_base_name . '/js/thumb.arrange.js');
     }
 
     public static function modus_on_end_index(): void

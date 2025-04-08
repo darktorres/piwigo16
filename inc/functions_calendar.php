@@ -57,8 +57,7 @@ final class functions_calendar
                     [
                         'visible_images' => 'id',
                     ],
-                    'AND',
-                    false
+                    'AND'
                 );
             } else {
                 $inner_sql .= '

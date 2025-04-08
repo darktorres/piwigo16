@@ -58,9 +58,9 @@ switch ($action) {
         functions_admin::images_integrity();
         functions_admin::categories_integrity();
         functions_admin::update_uppercats();
-        functions_admin::update_category('all');
+        functions_admin::update_category();
         functions_admin::update_global_rank();
-        functions_admin::invalidate_user_cache(true);
+        functions_admin::invalidate_user_cache();
         $page['infos'][] = sprintf('%s : %s', functions::l10n('Update albums information'), functions::l10n('action successfully performed.'));
         break;
 
@@ -112,7 +112,7 @@ switch ($action) {
             SELECT {$conf->user_fields['id']} AS id
             FROM users;
             SQL;
-        $all_user_ids = functions_mysqli::query2array($query, 'id', null);
+        $all_user_ids = functions_mysqli::query2array($query, 'id');
 
         $sessions_to_delete = [];
 

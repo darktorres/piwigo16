@@ -546,7 +546,7 @@ final class updates
                         }
 
                         functions_admin::deltree('./' . $conf->data_location . 'update');
-                        functions_admin::invalidate_user_cache(true);
+                        functions_admin::invalidate_user_cache();
                         functions::conf_update_param('piwigo_installed_version', $upgrade_to);
                         functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'update', [
                             'from_version' => PHPWG_VERSION,

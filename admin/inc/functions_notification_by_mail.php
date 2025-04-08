@@ -238,7 +238,7 @@ final class functions_notification_by_mail
     ): void {
         global $user, $lang, $lang_info, $env_nbm;
 
-        $user = functions_user::build_user($nbm_user['user_id'], true);
+        $user = functions_user::build_user($nbm_user['user_id']);
 
         functions_mail::switch_lang_to($user['language']);
 

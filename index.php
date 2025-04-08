@@ -80,8 +80,7 @@ if (count($page['items']) > $page['nb_image_page']) {
         count($page['items']),
         $page['start'],
         $page['nb_image_page'],
-        true,
-        'start'
+        true
     );
 }
 
@@ -581,7 +580,7 @@ if (empty($page['is_external'])) {
             $hints = [];
 
             foreach ($cats as $cat) {
-                $hints[] = functions_html::get_cat_display_name([$cat], '');
+                $hints[] = functions_html::get_cat_display_name([$cat]);
             }
 
             $template->assign('category_search_results', $hints);

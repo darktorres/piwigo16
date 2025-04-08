@@ -1090,7 +1090,7 @@ final class functions
         if (! isset($lang_info) ||
             ! isset($template)
         ) {
-            $user = functions_user::build_user($conf->guest_id, true);
+            $user = functions_user::build_user($conf->guest_id);
             self::load_language('common.lang');
             functions_plugins::trigger_notify('loading_lang');
             self::load_language('lang', './local/', [
@@ -2948,7 +2948,7 @@ final class functions
             return false;
         }
 
-        $userdata = functions_user::getuserdata($user_id, false);
+        $userdata = functions_user::getuserdata($user_id);
 
         // password request is not possible for guest/generic users
         $status = $userdata['status'];
@@ -3412,7 +3412,7 @@ final class functions
                             functions_mail::switch_lang_to($userdata['language']);
 
                             $keyargs_content = [
-                                self::get_l10n_args('Hello', ''),
+                                self::get_l10n_args('Hello'),
                                 self::get_l10n_args('Your username has been successfully changed to : %s', $_POST['username']),
                             ];
 

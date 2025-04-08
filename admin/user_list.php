@@ -78,7 +78,7 @@ $template->set_filenames([
     'user_list' => 'user_list.tpl',
 ]);
 
-$default_user = functions_user::get_default_user_info(true);
+$default_user = functions_user::get_default_user_info();
 
 $protected_users = [
     $user['id'],

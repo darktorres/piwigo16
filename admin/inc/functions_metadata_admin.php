@@ -411,7 +411,7 @@ final class functions_metadata_admin
         // new lines are always considered as keyword separators
         $keywords_string = str_replace(["\r\n", "\n"], ',', $keywords_string);
         $keywords_string = preg_replace('/,+/', ',', $keywords_string);
-        $keywords_string = preg_replace('/^,+|,+$/', '', $keywords_string);
+        $keywords_string = trim($keywords_string, ',');
 
         $keywords_string = implode(
             ',',

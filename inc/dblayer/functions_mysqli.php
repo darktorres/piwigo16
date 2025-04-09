@@ -654,44 +654,12 @@ final class functions_mysqli
             $all_tables[] = $row[0];
         }
 
-        // Repair all tables
-        $allTablesList = implode(', ', $all_tables);
-        $query = <<<SQL
-            REPAIR TABLE {$allTablesList};
-            SQL;
-        $mysqli_rc = self::pwg_query($query);
-
-        // Re-Order all tables
-        foreach ($all_tables as $table_name) {
-            $all_primary_key = [];
-
-            $query = <<<SQL
-                DESC {$table_name};
-                SQL;
-            $result = self::pwg_query($query);
-
-            while ($row = self::pwg_db_fetch_assoc($result)) {
-                if ($row['Key'] == 'PRI') {
-                    $all_primary_key[] = $row['Field'];
-                }
-            }
-
-            if (count($all_primary_key) != 0) {
-                $allPrimaryKeyList = implode(', ', $all_primary_key);
-                $query = <<<SQL
-                    ALTER TABLE {$table_name}
-                    ORDER BY {$allPrimaryKeyList};
-                    SQL;
-                $mysqli_rc = $mysqli_rc && self::pwg_query($query);
-            }
-        }
-
         // Optimize all tables
         $allTablesList = implode(', ', $all_tables);
         $query = <<<SQL
             OPTIMIZE TABLE {$allTablesList};
             SQL;
-        $mysqli_rc = $mysqli_rc && self::pwg_query($query);
+        $mysqli_rc = self::pwg_query($query);
 
         if ($mysqli_rc) {
             $page['infos'][] = functions::l10n('All optimizations have been successfully completed.');

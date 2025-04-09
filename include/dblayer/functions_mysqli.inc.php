@@ -11,7 +11,7 @@
  */
 
 define('DB_ENGINE', 'MySQL');
-define('REQUIRED_MYSQL_VERSION', '5.0.0');
+define('REQUIRED_MYSQL_VERSION', '8.4.4');
 
 define('DB_REGEX_OPERATOR', 'REGEXP');
 define('DB_RANDOM_FUNCTION', 'RAND');

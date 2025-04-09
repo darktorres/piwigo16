@@ -32,7 +32,7 @@ final class functions_category
         array $a,
         array $b
     ): int|float {
-        return $a['rank'] - $b['rank'];
+        return $a['sort_rank'] - $b['sort_rank'];
     }
 
     /**

@@ -153,10 +153,10 @@ $parentIdCondition = isset($_GET['parent_id'])
     : 'WHERE id_uppercat IS NULL';
 
 $query = <<<SQL
-    SELECT id, name, permalink, dir, `rank`, status
+    SELECT id, name, permalink, dir, sort_rank, status
     FROM categories
     {$parentIdCondition}
-    ORDER BY `rank` ASC;
+    ORDER BY sort_rank ASC;
     SQL;
 $categories = functions_mysqli::query2array($query, 'id');
 
@@ -232,7 +232,7 @@ foreach ($categories as $category) {
           'NB_SUB_PHOTOS' => $nb_sub_photos[$category['id']] ?? 0,
           'NB_SUB_ALBUMS' => isset($subcats_of[$category['id']]) ? count($subcats_of[$category['id']]) : 0,
           'ID' => $category['id'],
-          'RANK' => $category['rank'] * 10,
+          'RANK' => $category['sort_rank'] * 10,
 
           'U_JUMPTO' => functions_url::make_index_url(
               [

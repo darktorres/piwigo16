@@ -188,7 +188,7 @@ $category['nb_images_recursive'] = count($image_ids_recursive);
 // date creation
 $query = <<<SQL
     SELECT occurred_on
-    FROM `activity`
+    FROM activity
     WHERE object_id = {$category['id']}
         AND object = "album"
         AND action = "add";
@@ -207,7 +207,7 @@ if ($result !== []) {
 // Sub Albums
 $query = <<<SQL
     SELECT COUNT(*)
-    FROM `categories`
+    FROM categories
     WHERE id_uppercat = {$category['id']};
     SQL;
 $result = functions_mysqli::query2array($query);

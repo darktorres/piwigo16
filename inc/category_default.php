@@ -47,7 +47,7 @@ if (count($selection) > 0) {
     $result = functions_mysqli::pwg_query($query);
 
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
-        $row['rank'] = $rank_of[$row['id']];
+        $row['sort_rank'] = $rank_of[$row['id']];
         $pictures[] = $row;
     }
 

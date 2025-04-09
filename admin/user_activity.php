@@ -46,9 +46,6 @@ if (isset($_GET['type']) &&
     $output_lines[] = ['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details'];
 
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
-        $row['details'] = str_replace('`groups`', 'groups', $row['details']);
-        $row['details'] = str_replace('`rank`', 'rank', $row['details']);
-
         [$date, $hour] = explode(' ', $row['occurred_on']);
 
         $output_lines[] = [

@@ -736,7 +736,7 @@ final class pwg_categories
      * Set the rank of a category
      * @param array{
      *     category_id: array<int>|int,
-     *     rank: int,
+     *     sort_rank: int,
      * } $params
      */
     public static function ws_categories_setRank(
@@ -746,7 +746,7 @@ final class pwg_categories
         // does the category really exist?
         $category_ids_str = implode(', ', $params['category_id']);
         $query = <<<SQL
-            SELECT id, id_uppercat, `rank`
+            SELECT id, id_uppercat, sort_rank
             FROM categories
             WHERE id IN ({$category_ids_str});
             SQL;
@@ -786,7 +786,7 @@ final class pwg_categories
                 FROM categories
                 WHERE id_uppercat {$id_uppercat_condition}
                     AND id != {$params['category_id']}
-                ORDER BY `rank` ASC;
+                ORDER BY sort_rank ASC;
                 SQL;
 
             $order_old = functions_mysqli::query2array($query, null, 'id');
@@ -795,7 +795,7 @@ final class pwg_categories
             $i = 1;
 
             foreach ($order_old as $category_id) {
-                if ($i == $params['rank']) {
+                if ($i == $params['sort_rank']) {
                     $order_new[] = $params['category_id'];
                     $was_inserted = true;
                 }

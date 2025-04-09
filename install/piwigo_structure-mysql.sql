@@ -42,7 +42,7 @@ CREATE TABLE `categories`
     `id_uppercat`               SMALLINT(5) UNSIGNED                DEFAULT NULL,
     `comment`                   TEXT,
     `dir`                       VARCHAR(255)                        DEFAULT NULL,
-    `rank`                      SMALLINT(5) UNSIGNED                DEFAULT NULL,
+    `sort_rank`                 SMALLINT(5) UNSIGNED                DEFAULT NULL,
     `status`                    ENUM ('public', 'private') NOT NULL DEFAULT 'public',
     `site_id`                   TINYINT(4) UNSIGNED                 DEFAULT NULL,
     `visible`                   ENUM ('true', 'false')     NOT NULL DEFAULT 'true',
@@ -120,11 +120,11 @@ CREATE TABLE `group_access`
 ) ENGINE = MYISAM;
 
 --
--- Table structure for table `groups`
+-- Table structure for table `user_groups`
 --
 
 DROP TABLE IF EXISTS `groups`;
-CREATE TABLE `groups`
+CREATE TABLE `user_groups`
 (
     `id`           SMALLINT(5) UNSIGNED   NOT NULL AUTO_INCREMENT,
     `name`         VARCHAR(255)           NOT NULL DEFAULT '',
@@ -184,7 +184,7 @@ CREATE TABLE `image_category`
 (
     `image_id`    MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT '0',
     `category_id` SMALLINT(5) UNSIGNED  NOT NULL DEFAULT '0',
-    `rank`        MEDIUMINT(8) UNSIGNED          DEFAULT NULL,
+    `sort_rank`   MEDIUMINT(8) UNSIGNED          DEFAULT NULL,
     PRIMARY KEY (`image_id`, `category_id`),
     KEY `image_category_i1` (`category_id`)
 ) ENGINE = MYISAM;

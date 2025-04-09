@@ -661,13 +661,13 @@ final class functions_admin
 
             $datas[] = [
                 'id' => $id,
-                'rank' => $current_rank,
+                'sort_rank' => $current_rank,
             ];
         }
 
         $fields = [
             'primary' => ['id'],
-            'update' => ['rank'],
+            'update' => ['sort_rank'],
         ];
         functions_mysqli::mass_updates('categories', $fields, $datas);
 
@@ -681,9 +681,9 @@ final class functions_admin
     public static function update_global_rank(): int
     {
         $query = <<<SQL
-            SELECT id, id_uppercat, uppercats, `rank`, global_rank
+            SELECT id, id_uppercat, uppercats, sort_rank, global_rank
             FROM categories
-            ORDER BY id_uppercat, `rank`, name;
+            ORDER BY id_uppercat, sort_rank, name;
             SQL;
 
         global $cat_map; // used in preg_replace callback
@@ -703,8 +703,8 @@ final class functions_admin
             ++$current_rank;
             $cat =
               [
-                  'rank' => $current_rank,
-                  'rank_changed' => $current_rank != $row['rank'],
+                  'sort_rank' => $current_rank,
+                  'rank_changed' => $current_rank != $row['sort_rank'],
                   'global_rank' => $row['global_rank'],
                   'uppercats' => $row['uppercats'],
               ];
@@ -713,7 +713,7 @@ final class functions_admin
 
         $datas = [];
 
-        $cat_map_callback = (fn (array $m): int => $cat_map[$m[1]]['rank']);
+        $cat_map_callback = (fn (array $m): int => $cat_map[$m[1]]['sort_rank']);
 
         foreach ($cat_map as $id => $cat) {
             $new_global_rank = preg_replace_callback(
@@ -727,7 +727,7 @@ final class functions_admin
             ) {
                 $datas[] = [
                     'id' => $id,
-                    'rank' => $cat['rank'],
+                    'sort_rank' => $cat['sort_rank'],
                     'global_rank' => $new_global_rank,
                 ];
             }
@@ -739,7 +739,7 @@ final class functions_admin
             'categories',
             [
                 'primary' => ['id'],
-                'update' => ['rank', 'global_rank'],
+                'update' => ['sort_rank', 'global_rank'],
             ],
             $datas
         );
@@ -1459,7 +1459,7 @@ final class functions_admin
             //what is the current higher rank for this parent?
             $parent_condition = empty($parent_id) ? 'IS NULL' : "= {$parent_id}";
             $query = <<<SQL
-                SELECT MAX(`rank`) AS max_rank
+                SELECT MAX(sort_rank) AS max_rank
                 FROM categories
                 WHERE id_uppercat {$parent_condition};
                 SQL;
@@ -1472,7 +1472,7 @@ final class functions_admin
 
         $insert = [
             'name' => $category_name,
-            'rank' => $rank,
+            'sort_rank' => $rank,
             'global_rank' => 0,
         ];
 
@@ -1525,7 +1525,7 @@ final class functions_admin
             $parent = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
             $insert['id_uppercat'] = $parent['id'];
-            $insert['global_rank'] = $parent['global_rank'] . '.' . $insert['rank'];
+            $insert['global_rank'] = $parent['global_rank'] . '.' . $insert['sort_rank'];
 
             // at creation, must a category be visible or not ? Warning : if the
             // parent category is invisible, the category is automatically create
@@ -2069,9 +2069,9 @@ final class functions_admin
         // get max rank of each categories
         $category_ids = implode(', ', $categories);
         $query = <<<SQL
-            SELECT category_id, MAX(`rank`) AS max_rank
+            SELECT category_id, MAX(sort_rank) AS max_rank
             FROM image_category
-            WHERE `rank` IS NOT NULL
+            WHERE sort_rank IS NOT NULL
                 AND category_id IN ({$category_ids})
             GROUP BY category_id;
             SQL;
@@ -2101,7 +2101,7 @@ final class functions_admin
                     $inserts[] = [
                         'image_id' => $image_id,
                         'category_id' => $category_id,
-                        'rank' => $rank,
+                        'sort_rank' => $rank,
                     ];
                 }
             }
@@ -2650,7 +2650,7 @@ final class functions_admin
     ): false|string {
         $query = <<<SQL
             SELECT name
-            FROM `groups`
+            FROM user_groups
             WHERE id = {$group_id};
             SQL;
         $result = functions_mysqli::pwg_query($query);
@@ -2698,7 +2698,7 @@ final class functions_admin
 
         $query = <<<SQL
             SELECT id, name
-            FROM `groups`
+            FROM user_groups
             WHERE id IN ({$group_id_string});
             SQL;
 
@@ -2707,7 +2707,7 @@ final class functions_admin
 
         // destruction of the group
         $query = <<<SQL
-            DELETE FROM `groups`
+            DELETE FROM user_groups
             WHERE id IN ({$group_id_string});
             SQL;
         functions_mysqli::pwg_query($query);
@@ -3191,7 +3191,7 @@ final class functions_admin
     ): array {
         $tables = [
             'categories' => 'categories',
-            'groups' => 'groups',
+            'user_groups' => 'user_groups',
             'images' => 'images',
             'tags' => 'tags',
             'users' => 'user_infos',
@@ -3210,7 +3210,7 @@ final class functions_admin
         foreach ($requested as $item) {
             $query = <<<SQL
                 SELECT CONCAT(UNIX_TIMESTAMP(MAX(lastmodified)), "_", COUNT(*))
-                FROM `{$tables[$item]}`;
+                FROM {$tables[$item]};
                 SQL;
             [$keys[$item]] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         }
@@ -3351,13 +3351,13 @@ final class functions_admin
             $datas[] = [
                 'category_id' => $category_id,
                 'image_id' => $id,
-                'rank' => ++$current_rank,
+                'sort_rank' => ++$current_rank,
             ];
         }
 
         $fields = [
             'primary' => ['image_id', 'category_id'],
-            'update' => ['rank'],
+            'update' => ['sort_rank'],
         ];
         functions_mysqli::mass_updates('image_category', $fields, $datas);
     }
@@ -3615,7 +3615,7 @@ final class functions_admin
 
         foreach ($assocT as $cat) {
             $orderedCat = [];
-            $orderedCat['rank'] = $cat['cat']['rank'];
+            $orderedCat['sort_rank'] = $cat['cat']['sort_rank'];
             $orderedCat['name'] = $cat['cat']['name'];
             $orderedCat['status'] = $cat['cat']['status'];
             $orderedCat['id'] = $cat['cat']['id'];
@@ -3634,7 +3634,7 @@ final class functions_admin
             $orderedTree[] = $orderedCat;
         }
 
-        usort($orderedTree, fn (array $a, array $b): int => $a['rank'] <=> $b['rank']);
+        usort($orderedTree, fn (array $a, array $b): int => $a['sort_rank'] <=> $b['sort_rank']);
         return $orderedTree;
     }
 

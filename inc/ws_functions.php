@@ -643,7 +643,7 @@ final class ws_functions
                 'category_id' => [
                     'type' => WS_TYPE_ID,
                 ],
-                'rank' => [
+                'sort_rank' => [
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE | WS_TYPE_NOTNULL,
                     'default' => null,
                 ],
@@ -1567,7 +1567,7 @@ final class ws_functions
                     'type' => WS_TYPE_ID,
                     'flags' => WS_PARAM_FORCE_ARRAY,
                 ],
-                'rank' => [
+                'sort_rank' => [
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE | WS_TYPE_NOTNULL,
                     'flags' => WS_PARAM_OPTIONAL,
                 ],

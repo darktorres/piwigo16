@@ -211,7 +211,7 @@ final class pwg
         [$infos['nb_users']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
-            SELECT COUNT(*) FROM `groups`;
+            SELECT COUNT(*) FROM user_groups;
             SQL;
         [$infos['nb_groups']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
@@ -551,8 +551,6 @@ final class pwg
         $result = functions_mysqli::pwg_query($query);
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
-            $row['details'] = str_replace('`groups`', 'groups', $row['details']);
-            $row['details'] = str_replace('`rank`', 'rank', $row['details']);
             $details = unserialize($row['details']);
 
             if (isset($row['user_agent'])) {

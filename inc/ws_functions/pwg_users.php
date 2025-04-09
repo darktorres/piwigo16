@@ -74,7 +74,7 @@ final class pwg_users
         $filtered_groups = [];
 
         if (! empty($params['filter'])) {
-            $filter_query = "SELECT id FROM `groups` WHERE name LIKE '%{$params['filter']}%';";
+            $filter_query = "SELECT id FROM user_groups WHERE name LIKE '%{$params['filter']}%';";
             $filtered_groups_res = functions_mysqli::pwg_query($filter_query);
 
             while ($row = functions_mysqli::pwg_db_fetch_assoc($filtered_groups_res)) {
@@ -746,7 +746,7 @@ final class pwg_users
             $groupIds = implode(', ', $params['group_id']);
             $query = <<<SQL
                 SELECT id
-                FROM `groups`
+                FROM user_groups
                 WHERE id IN ({$groupIds});
                 SQL;
             $group_ids = functions_mysqli::query2array($query, null, 'id');

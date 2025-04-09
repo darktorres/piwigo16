@@ -145,9 +145,9 @@ final class pwg_images
         if ($search_current_ranks) {
             $category_ids = implode(', ', $new_cat_ids);
             $query = <<<SQL
-                SELECT category_id, MAX(`rank`) AS max_rank
+                SELECT category_id, MAX(sort_rank) AS max_rank
                 FROM image_category
-                WHERE `rank` IS NOT NULL
+                WHERE sort_rank IS NOT NULL
                     AND category_id IN ({$category_ids})
                 GROUP BY category_id;
                 SQL;
@@ -174,7 +174,7 @@ final class pwg_images
             $inserts[] = [
                 'image_id' => $image_id,
                 'category_id' => $cat_id,
-                'rank' => $rank_on_category[$cat_id],
+                'sort_rank' => $rank_on_category[$cat_id],
             ];
         }
 
@@ -913,7 +913,7 @@ final class pwg_images
      * @param array{
      *     image_id: array<int>|int,
      *     category_id: int,
-     *     rank: int,
+     *     sort_rank: int,
      * } $params
      */
     public static function ws_images_setRank(
@@ -930,7 +930,7 @@ final class pwg_images
                 SELECT image_id
                 FROM image_category
                 WHERE category_id = {$params['category_id']}
-                ORDER BY `rank` ASC;
+                ORDER BY sort_rank ASC;
                 SQL;
             $image_ids = functions_mysqli::query2array($query, null, 'image_id');
 
@@ -944,7 +944,7 @@ final class pwg_images
         // turns image_id into a simple int instead of array
         $params['image_id'] = array_shift($params['image_id']);
 
-        if (empty($params['rank'])) {
+        if (empty($params['sort_rank'])) {
             return new PwgError(WS_ERR_MISSING_PARAM, 'rank is missing');
         }
 
@@ -975,34 +975,34 @@ final class pwg_images
 
         // what is the current higher rank for this category?
         $query = <<<SQL
-            SELECT MAX(`rank`) AS max_rank
+            SELECT MAX(sort_rank) AS max_rank
             FROM image_category
             WHERE category_id = {$params['category_id']};
             SQL;
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
         if (is_numeric($row['max_rank'])) {
-            if ($params['rank'] > $row['max_rank']) {
-                $params['rank'] = $row['max_rank'] + 1;
+            if ($params['sort_rank'] > $row['max_rank']) {
+                $params['sort_rank'] = $row['max_rank'] + 1;
             }
         } else {
-            $params['rank'] = 1;
+            $params['sort_rank'] = 1;
         }
 
         // update rank for all other photos in the same category
         $query = <<<SQL
             UPDATE image_category
-            SET `rank` = `rank` + 1
+            SET sort_rank = sort_rank + 1
             WHERE category_id = {$params['category_id']}
-                AND `rank` IS NOT NULL
-                AND `rank` >= {$params['rank']};
+                AND sort_rank IS NOT NULL
+                AND sort_rank >= {$params['sort_rank']};
             SQL;
         functions_mysqli::pwg_query($query);
 
         // set the new rank for the photo
         $query = <<<SQL
             UPDATE image_category
-            SET `rank` = {$params['rank']}
+            SET sort_rank = {$params['sort_rank']}
             WHERE image_id = {$params['image_id']}
                 AND category_id = {$params['category_id']};
             SQL;
@@ -1012,7 +1012,7 @@ final class pwg_images
         return [
             'image_id' => $params['image_id'],
             'category_id' => $params['category_id'],
-            'rank' => $params['rank'],
+            'sort_rank' => $params['sort_rank'],
         ];
     }
 

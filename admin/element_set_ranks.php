@@ -46,7 +46,7 @@ $page['category_id'] = $_GET['cat_id'];
 // |                       global mode form submission                     |
 // +-----------------------------------------------------------------------+
 
-$image_order_choices = ['default', 'rank', 'user_define'];
+$image_order_choices = ['default', 'sort_rank', 'user_define'];
 $image_order_choice = 'default';
 
 if (isset($_POST['submit'])) {
@@ -79,8 +79,8 @@ if (isset($_POST['submit'])) {
                 $image_order .= $_POST['image_order'][$i];
             }
         }
-    } elseif ($image_order_choice == 'rank') {
-        $image_order = '`rank` ASC';
+    } elseif ($image_order_choice == 'sort_rank') {
+        $image_order = 'sort_rank ASC';
     }
 
     $image_order_value = isset($image_order) ? "'{$image_order}'" : 'NULL';
@@ -125,9 +125,9 @@ $query = <<<SQL
 $category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
 if ($category['image_order'] == 'rank ASC' ||
-    $category['image_order'] == '`rank` ASC'
+    $category['image_order'] == 'sort_rank ASC'
 ) {
-    $image_order_choice = 'rank';
+    $image_order_choice = 'sort_rank';
 } elseif ($category['image_order'] != '') {
     $image_order_choice = 'user_define';
 }
@@ -150,11 +150,11 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 $query = <<<SQL
-    SELECT id, file, path, representative_ext, width, height, rotation, name, `rank`
+    SELECT id, file, path, representative_ext, width, height, rotation, name, sort_rank
     FROM images
     JOIN image_category ON image_id = id
     WHERE category_id = {$page['category_id']}
-    ORDER BY `rank`;
+    ORDER BY sort_rank;
     SQL;
 $result = functions_mysqli::pwg_query($query);
 

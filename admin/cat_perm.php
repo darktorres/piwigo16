@@ -202,7 +202,7 @@ $groups = [];
 
 $query = <<<SQL
     SELECT id, name
-    FROM `groups`
+    FROM user_groups
     ORDER BY name ASC;
     SQL;
 $groups = functions_mysqli::query2array($query, 'id', 'name');

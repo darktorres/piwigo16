@@ -178,7 +178,7 @@ final class pwg_tags
 
             while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
                 $image = [];
-                $image['rank'] = $rank_of[$row['id']];
+                $image['sort_rank'] = $rank_of[$row['id']];
                 $image['is_favorite'] = isset($favorite_ids[$row['id']]);
 
                 foreach (['id', 'width', 'height', 'hit'] as $k) {

@@ -193,7 +193,7 @@ if (isset($_POST['submit']) &&
 
     // let's see if some categories already have some sub-categories...
     $query = <<<SQL
-        SELECT id_uppercat, MAX(`rank`) + 1 AS next_rank
+        SELECT id_uppercat, MAX(sort_rank) + 1 AS next_rank
         FROM categories
         GROUP BY id_uppercat;
         SQL;
@@ -254,8 +254,8 @@ if (isset($_POST['submit']) &&
 
                 $insert['id_uppercat'] = $parent;
                 $insert['uppercats'] = $db_categories[$parent]['uppercats'] . ',' . $insert['id'];
-                $insert['rank'] = $next_rank[$parent]++;
-                $insert['global_rank'] = $db_categories[$parent]['global_rank'] . '.' . $insert['rank'];
+                $insert['sort_rank'] = $next_rank[$parent]++;
+                $insert['global_rank'] = $db_categories[$parent]['global_rank'] . '.' . $insert['sort_rank'];
 
                 if ($db_categories[$parent]['status'] == 'private') {
                     $insert['status'] = 'private';
@@ -266,8 +266,8 @@ if (isset($_POST['submit']) &&
                 }
             } else {
                 $insert['uppercats'] = $insert['id'];
-                $insert['rank'] = $next_rank['NULL']++;
-                $insert['global_rank'] = $insert['rank'];
+                $insert['sort_rank'] = $next_rank['NULL']++;
+                $insert['global_rank'] = $insert['sort_rank'];
             }
 
             $inserts[] = $insert;
@@ -300,7 +300,7 @@ if (isset($_POST['submit']) &&
         if (! $simulate) {
             $dbfields = [
                 'id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable',
-                'visible', 'status', 'rank', 'global_rank',
+                'visible', 'status', 'sort_rank', 'global_rank',
             ];
             functions_mysqli::mass_inserts('categories', $dbfields, $inserts);
 

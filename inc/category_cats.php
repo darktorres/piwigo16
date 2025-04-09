@@ -63,7 +63,7 @@ $query .= ' -- after conditions';
 if ($page['section'] != 'recent_cats') {
     $query .= <<<SQL
 
-        ORDER BY `rank`
+        ORDER BY sort_rank
 
         SQL;
 }

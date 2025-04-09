@@ -148,7 +148,7 @@ $query = <<<SQL
 
 $query = <<<SQL
     SELECT COUNT(*)
-    FROM `groups`;
+    FROM user_groups;
     SQL;
 [$nb_groups] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
@@ -268,7 +268,7 @@ if (! isset($_SESSION['cache_activity_last_weeks']) ||
 
     $query = <<<SQL
         SELECT DATE_FORMAT(occurred_on , '%Y-%m-%d') AS activity_day, object, action, COUNT(*) AS activity_counter
-        FROM `activity`
+        FROM activity
         WHERE occurred_on >= '{$date_string}'
         GROUP BY activity_day, object, action;
         SQL;
@@ -395,7 +395,7 @@ $data_storage = [];
 //Select files in Image_Table
 $query = <<<SQL
     SELECT COUNT(*) AS ext_counter, SUBSTRING_INDEX(path, ".", -1) AS ext, SUM(filesize) AS filesize
-    FROM `images`
+    FROM images
     GROUP BY ext;
     SQL;
 
@@ -426,7 +426,7 @@ foreach ($file_extensions as $ext => $ext_details) {
 //Select files from format table
 $query = <<<SQL
     SELECT COUNT(*) AS ext_counter, ext, SUM(filesize) AS filesize
-    FROM `image_format`
+    FROM image_format
     GROUP BY ext;
     SQL;
 

@@ -35,7 +35,7 @@ $groups = [];
 
 $query = <<<SQL
     SELECT id, name
-    FROM `groups`
+    FROM user_groups
     ORDER BY name ASC;
     SQL;
 $result = functions_mysqli::pwg_query($query);
@@ -156,7 +156,7 @@ $template->assign('level_selected', $default_user['level']);
 
 $query = <<<SQL
     SELECT id, name, is_default
-    FROM `groups`
+    FROM user_groups
     ORDER BY name ASC;
     SQL;
 $result = functions_mysqli::pwg_query($query);

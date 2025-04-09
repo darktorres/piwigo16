@@ -54,7 +54,7 @@ final class pwg_groups
         $offset = $params['per_page'] * $params['page'];
         $query = <<<SQL
             SELECT g.*, COUNT(user_id) AS nb_users
-            FROM `groups` AS g
+            FROM user_groups AS g
             LEFT JOIN user_group AS ug ON ug.group_id = g.id
             WHERE {$whereClause}
             GROUP BY id
@@ -91,7 +91,7 @@ final class pwg_groups
         // is the name not already used ?
         $query = <<<SQL
             SELECT COUNT(*)
-            FROM `groups`
+            FROM user_groups
             WHERE name = '{$params['name']}';
             SQL;
         [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -173,7 +173,7 @@ final class pwg_groups
         // does the group exist ?
         $query = <<<SQL
             SELECT COUNT(*)
-            FROM `groups`
+            FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;
         [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -188,7 +188,7 @@ final class pwg_groups
             // is the name not already used ?
             $query = <<<SQL
                 SELECT COUNT(*)
-                FROM `groups`
+                FROM user_groups
                 WHERE name = '{$params['name']}'
                     AND id != {$params['group_id']};
                 SQL;
@@ -242,7 +242,7 @@ final class pwg_groups
         // does the group exist ?
         $query = <<<SQL
             SELECT COUNT(*)
-            FROM `groups`
+            FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;
         [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -305,7 +305,7 @@ final class pwg_groups
         $allGroupsList = implode(', ', $all_groups);
         $query = <<<SQL
             SELECT COUNT(*)
-            FROM `groups`
+            FROM user_groups
             WHERE id IN ({$allGroupsList});
             SQL;
         [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -394,7 +394,7 @@ final class pwg_groups
         $escapedCopyName = functions_mysqli::pwg_db_real_escape_string($params['copy_name']);
         $query = <<<SQL
             SELECT COUNT(*)
-            FROM `groups`
+            FROM user_groups
             WHERE name = '{$escapedCopyName}';
             SQL;
         [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -405,7 +405,7 @@ final class pwg_groups
 
         $query = <<<SQL
             SELECT COUNT(*)
-            FROM `groups`
+            FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;
         [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -416,7 +416,7 @@ final class pwg_groups
 
         $query = <<<SQL
             SELECT is_default
-            FROM `groups`
+            FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;
 
@@ -493,7 +493,7 @@ final class pwg_groups
         // does the group exist ?
         $query = <<<SQL
             SELECT COUNT(*)
-            FROM `groups`
+            FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;
         [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));

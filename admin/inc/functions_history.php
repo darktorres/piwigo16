@@ -437,10 +437,10 @@ final class functions_history
             return;
         }
 
-        $result = functions_mysqli::pwg_query('SHOW COLUMNS FROM `history` LIKE "summarized";');
+        $result = functions_mysqli::pwg_query('SHOW COLUMNS FROM history LIKE "summarized";');
 
         if (functions_mysqli::pwg_db_num_rows($result)) {
-            functions_mysqli::pwg_query('ALTER TABLE `history` DROP COLUMN `summarized`;');
+            functions_mysqli::pwg_query('ALTER TABLE history DROP COLUMN summarized;');
         }
 
         functions::conf_update_param('history_summarized_dropped', true);

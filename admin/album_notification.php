@@ -168,7 +168,7 @@ if (isset($_POST['submitEmail'])) {
 
         $query = <<<SQL
             SELECT name
-            FROM `groups`
+            FROM user_groups
             WHERE id = {$_POST['group']};
             SQL;
         [$group_name] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -217,7 +217,7 @@ if ($conf->auth_key_duration > 0) {
 
 $query = <<<SQL
     SELECT id AS group_id
-    FROM `groups`;
+    FROM user_groups;
     SQL;
 $all_group_ids = functions_mysqli::query2array($query, null, 'group_id');
 
@@ -243,7 +243,7 @@ if (count($all_group_ids) == 0) {
         $imploded_group_ids = implode(', ', $group_ids);
         $query = <<<SQL
             SELECT id, name
-            FROM `groups`
+            FROM user_groups
             WHERE id IN ({$imploded_group_ids})
             ORDER BY name ASC;
             SQL;

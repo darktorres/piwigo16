@@ -308,27 +308,25 @@ final class functions_mysqli
             foreach ($datas as $data) {
                 $is_first = true;
 
-                $escapedTablename = self::protect_column_name($tablename);
                 $query = <<<SQL
-                    UPDATE {$escapedTablename}
+                    UPDATE {$tablename}
                     SET
 
                     SQL;
 
                 foreach ($dbfields['update'] as $key) {
                     $separator = $is_first ? '' : ",\n";
-                    $escapedKey = self::protect_column_name($key);
 
                     if (isset($data[$key]) &&
                         $data[$key] != ''
                     ) {
-                        $query .= "{$separator}{$escapedKey} = '{$data[$key]}'";
+                        $query .= "{$separator}{$key} = '{$data[$key]}'";
                     } else {
                         if (($flags & self::MASS_UPDATES_SKIP_EMPTY) !== 0) {
                             continue; // next field
                         }
 
-                        $query .= "{$separator}{$escapedKey} = NULL";
+                        $query .= "{$separator}{$key} = NULL";
                     }
 
                     $is_first = false;
@@ -340,16 +338,14 @@ final class functions_mysqli
                     $query .= "\nWHERE\n";
 
                     foreach ($dbfields['primary'] as $key) {
-                        $escapedKey = self::protect_column_name($key);
-
                         if (! $is_first) {
                             $query .= ' AND ';
                         }
 
                         if (isset($data[$key])) {
-                            $query .= "{$escapedKey} = '{$data[$key]}'\n";
+                            $query .= "{$key} = '{$data[$key]}'\n";
                         } else {
-                            $query .= "{$escapedKey} IS NULL\n";
+                            $query .= "{$key} IS NULL\n";
                         }
 
                         $is_first = false;
@@ -361,13 +357,13 @@ final class functions_mysqli
             }
         } else {
             // creation of the temporary table
-            $result = self::pwg_query('SHOW FULL COLUMNS FROM ' . self::protect_column_name($tablename) . ';');
+            $result = self::pwg_query("SHOW FULL COLUMNS FROM {$tablename};");
             $columns = [];
             $all_fields = array_merge($dbfields['primary'], $dbfields['update']);
 
             while ($row = self::pwg_db_fetch_assoc($result)) {
                 if (in_array($row['Field'], $all_fields)) {
-                    $column = "`{$row['Field']}`";
+                    $column = "{$row['Field']}";
                     $column .= " {$row['Type']}";
 
                     $nullable = true;
@@ -418,7 +414,6 @@ final class functions_mysqli
             }
 
             // update of table by joining with temporary table
-            $escapedTablename = self::protect_column_name($tablename);
             $updateFields = implode(
                 ",\n    ",
                 array_map($func_set, $dbfields['update'])
@@ -433,7 +428,7 @@ final class functions_mysqli
             );
 
             $query = <<<SQL
-                UPDATE {$escapedTablename} AS t1, {$temporary_tablename} AS t2
+                UPDATE {$tablename} AS t1, {$temporary_tablename} AS t2
                 SET {$updateFields}
                 WHERE {$primaryConditions};
                 SQL;
@@ -459,28 +454,26 @@ final class functions_mysqli
         }
 
         $is_first = true;
-        $escapedTablename = self::protect_column_name($tablename);
 
         $query = <<<SQL
-            UPDATE {$escapedTablename}
+            UPDATE {$tablename}
             SET
 
             SQL;
 
         foreach ($datas as $key => $value) {
             $separator = $is_first ? '' : ",\n";
-            $escapedKey = self::protect_column_name($key);
 
             if (isset($value) &&
                 $value !== ''
             ) {
-                $query .= "{$separator}{$escapedKey} = '{$value}'";
+                $query .= "{$separator}{$key} = '{$value}'";
             } else {
                 if (($flags & self::MASS_UPDATES_SKIP_EMPTY) !== 0) {
                     continue; // next field
                 }
 
-                $query .= "{$separator}{$escapedKey} = NULL";
+                $query .= "{$separator}{$key} = NULL";
             }
 
             $is_first = false;
@@ -492,16 +485,14 @@ final class functions_mysqli
             $query .= "\nWHERE\n";
 
             foreach ($where as $key => $value) {
-                $escapedKey = self::protect_column_name($key);
-
                 if (! $is_first) {
                     $query .= ' AND ';
                 }
 
                 if (isset($value)) {
-                    $query .= "{$escapedKey} = '{$value}'\n";
+                    $query .= "{$key} = '{$value}'\n";
                 } else {
-                    $query .= "{$escapedKey} IS NULL\n";
+                    $query .= "{$key} IS NULL\n";
                 }
 
                 $is_first = false;
@@ -542,11 +533,10 @@ final class functions_mysqli
             SELECT @@max_allowed_packet;
             SQL;
         [$packet_size] = self::pwg_db_fetch_row(self::pwg_query($query));
-        $escapedTablename = self::protect_column_name($table_name);
-        $escapeddbfields = implode(', ', array_map(self::protect_column_name(...), $dbfields));
+        $dbfields_str = implode(', ', $dbfields);
 
         $insert_ignore = 'INSERT' . ($ignore !== '' ? " {$ignore}" : '');
-        $queryBase = "{$insert_ignore} INTO {$escapedTablename} ({$escapeddbfields}) VALUES\n";
+        $queryBase = "{$insert_ignore} INTO {$table_name} ({$dbfields_str}) VALUES\n";
         $query = '';
 
         foreach ($datas as $insert) {
@@ -613,11 +603,10 @@ final class functions_mysqli
             $ignore = 'IGNORE';
         }
 
-        $escapedTablename = self::protect_column_name($table_name);
-        $columns = implode(', ', array_map(self::protect_column_name(...), array_keys($data)));
+        $columns = implode(', ', array_keys($data));
         $insert_ignore = 'INSERT' . ($ignore !== '' ? " {$ignore}" : '');
         $query = <<<SQL
-            {$insert_ignore} INTO {$escapedTablename}
+            {$insert_ignore} INTO {$table_name}
                 ({$columns})
             VALUES
 
@@ -648,16 +637,6 @@ final class functions_mysqli
         self::pwg_query($query);
     }
 
-    public static function protect_column_name(
-        string $column_name
-    ): string {
-        if ($column_name[0] !== '`') {
-            $column_name = '`' . $column_name . '`';
-        }
-
-        return $column_name;
-    }
-
     /**
      * Do maintenance on all Piwigo tables
      */
@@ -676,7 +655,6 @@ final class functions_mysqli
         }
 
         // Repair all tables
-        $all_tables = array_map(self::protect_column_name(...), $all_tables);
         $allTablesList = implode(', ', $all_tables);
         $query = <<<SQL
             REPAIR TABLE {$allTablesList};

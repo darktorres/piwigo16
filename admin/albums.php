@@ -151,7 +151,7 @@ $template->assign('POS_PREF', $conf->newcat_default_position); //TODO use user p
 
 //Get all albums
 $query = <<<SQL
-    SELECT id, name, `rank`, status, visible, uppercats, lastmodified
+    SELECT id, name, sort_rank, status, visible, uppercats, lastmodified
     FROM categories;
     SQL;
 

@@ -66,7 +66,7 @@ $template->assign(
 
 $query = <<<SQL
     SELECT id, name, is_default
-    FROM `groups`
+    FROM user_groups
     ORDER BY name ASC;
     SQL;
 $result = functions_mysqli::pwg_query($query);

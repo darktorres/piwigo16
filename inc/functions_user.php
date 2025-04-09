@@ -203,7 +203,7 @@ final class functions_user
             // Assign by default groups
             $query = <<<SQL
                 SELECT id
-                FROM `groups`
+                FROM user_groups
                 WHERE is_default = 'true'
                 ORDER BY id ASC;
                 SQL;

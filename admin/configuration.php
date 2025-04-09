@@ -131,7 +131,7 @@ $sort_fields = [
     'hit ASC' => functions::l10n('Visits, low &rarr; high'),
     'id ASC' => functions::l10n('Numeric identifier, 1 &rarr; 9'),
     'id DESC' => functions::l10n('Numeric identifier, 9 &rarr; 1'),
-    '`rank` ASC' => functions::l10n('Manual sort order'),
+    'sort_rank ASC' => functions::l10n('Manual sort order'),
 ];
 
 $comments_order = [
@@ -174,7 +174,7 @@ if (isset($_POST['submit'])) {
                         // limit to the number of available parameters
                         $order_by = array_slice($_POST['order_by'], 0, (int) ceil(count($sort_fields) / 2));
                         $order_by_inside_category = $order_by;
-                        $i = array_search('`rank` ASC', $order_by, true);
+                        $i = array_search('sort_rank ASC', $order_by, true);
 
                         // there is no rank outside categories
                         if ($i !== false) {
@@ -373,7 +373,7 @@ switch ($page['section']) {
         // list of groups
         $query = <<<SQL
             SELECT id, name
-            FROM `groups`;
+            FROM user_groups;
             SQL;
         $groups = functions_mysqli::query2array($query, 'id', 'name');
         natcasesort($groups);

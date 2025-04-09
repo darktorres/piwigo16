@@ -440,7 +440,6 @@ trait ExtensionFunctionUpdater
             'mass_inserts' => '\Piwigo\inc\dblayer\functions_mysqli::mass_inserts',
             'mass_updates' => '\Piwigo\inc\dblayer\functions_mysqli::mass_updates',
             'my_error' => '\Piwigo\inc\dblayer\functions_mysqli::my_error',
-            'protect_column_name' => '\Piwigo\inc\dblayer\functions_mysqli::protect_column_name',
             'pwg_db_cast_to_text' => '\Piwigo\inc\dblayer\functions_mysqli::pwg_db_cast_to_text',
             'pwg_db_changes' => '\Piwigo\inc\dblayer\functions_mysqli::pwg_db_changes',
             'pwg_db_check_charset' => '\Piwigo\inc\dblayer\functions_mysqli::pwg_db_check_charset',

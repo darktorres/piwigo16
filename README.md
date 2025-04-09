@@ -9,8 +9,8 @@ The [piwigo.org](https://piwigo.org) website introduces you to Piwigo. You'll fi
 ## Requirements
 
  * A webserver (Apache or nginx recommended)
- * PHP 7.4+. Piwigo can run with PHP 7.0+ but these end-of-life versions are no longer maintained and may expose your site to security vulnerabilities.
- * MySQL 5 or greater or MariaDB equivalent
+ * PHP 8.4+
+ * MySQL 8.4+ or MariaDB equivalent
  * ImageMagick (recommended) or PHP GD
 
 ## Quick start install

@@ -61,17 +61,13 @@
         </span>
       {/if}
       <a href="{$thumbnail.URL}">
-        <img class="thumbnail" {if $derivative->is_cached()}src="{$derivative->get_url()}"
-          {else}src="{$ROOT_URL}{$themeconf.icon_dir|default:null}/img_small.png" data-src="{$derivative->get_url()}" 
-          {/if}
+        <img class="thumbnail" src="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
           alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}" {$derivative->get_size_htm()}>
       </a>
     </li>
   {/foreach}
 
   {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css" version=1}
-  {combine_script id='jquery.ajaxmanager' path='https://rawcdn.githack.com/aFarkas/Ajaxmanager/refs/heads/master/jquery.ajaxmanager.js' load='footer'}
-  {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' require='jquery.ajaxmanager' load='footer'}
   {combine_script id='jquery.ba-resize'  path=$GDThumb.GDTHUMB_ROOT|cat:"/js/jquery.ba-resize.js" load="footer"}
   {combine_script id='gdthumb' require='jquery,jquery.ba-resize' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
 

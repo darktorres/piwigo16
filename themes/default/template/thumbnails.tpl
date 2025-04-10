@@ -31,23 +31,14 @@
 			{/if}
 		{/if}
 	</style>{/html_style}
-	{footer_script}
-	var error_icon = "{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png", max_requests = {$maxRequests};
-	{/footer_script}
 	{foreach $thumbnails as $thumbnail}
 		{assign var=derivative value=$pwg->derivative($derivative_params, $thumbnail.src_image)}
-		{if !$derivative->is_cached()}
-			{combine_script id='jquery.ajaxmanager' path='https://rawcdn.githack.com/aFarkas/Ajaxmanager/refs/heads/master/jquery.ajaxmanager.js' load='footer'}
-			{combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' require='jquery.ajaxmanager' load='footer'}
-		{/if}
 		<li>
 			<span class="wrap1">
 				<span class="wrap2">
 					<a href="{$thumbnail.URL}">
-						<img class="thumbnail" {if $derivative->is_cached()}src="{$derivative->get_url()}"
-							{else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->get_url()}" 
-							{/if}
-							alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}">
+						<img class="thumbnail" src="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy"
+							decoding="async" alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}">
 					</a>
 				</span>
 				{if $SHOW_THUMBNAIL_CAPTION }

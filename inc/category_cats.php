@@ -336,7 +336,6 @@ if ($categories !== []) {
     $derivative_params = functions_plugins::trigger_change('get_index_album_derivative_params', ImageStdParams::get_by_type(derivative_std_params::IMG_THUMB));
     $tpl_thumbnails_var_selection = functions_plugins::trigger_change('loc_end_index_category_thumbnails', $tpl_thumbnails_var_selection);
     $template->assign([
-        'maxRequests' => $conf->max_requests,
         'category_thumbnails' => $tpl_thumbnails_var_selection,
         'derivative_params' => $derivative_params,
     ]);

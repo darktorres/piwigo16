@@ -8,9 +8,6 @@
             min-height:{$comment_derivative_params->max_height()+5}px
         }
     </style>{/html_style}
-    {footer_script}<script>
-        var error_icon = "{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png";
-    </script>{/footer_script}
 {/if}
 <div id="commentList">
     {foreach $comments as $comment}
@@ -23,14 +20,8 @@
                         {define_derivative name='cropped_derivative_params' width=$derivative_params->sizing->ideal_size[0] height=$derivative_params->sizing->ideal_size[0] crop=true}
                     {/if}
                     {assign var=derivative value=$pwg->derivative($cropped_derivative_params, $comment.src_image)}
-                    {if !$derivative->is_cached()}
-                        {combine_script id='jquery.ajaxmanager' path='https://rawcdn.githack.com/aFarkas/Ajaxmanager/refs/heads/master/jquery.ajaxmanager.js' load='footer'}
-                        {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' require='jquery.ajaxmanager' load='footer'}
-                    {/if}
                     <a href="{$comment.U_PICTURE}">
-                        <img {if $derivative->is_cached()}src="{$derivative->get_url()}"
-                            {else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->get_url()}" 
-                            {/if}
+                        <img src="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
                             alt="{$comment.ALT}">
                     </a>
                 {else}

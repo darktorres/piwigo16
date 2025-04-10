@@ -919,9 +919,6 @@ class Config
     // different from derivatives.resize_quality
     public int $animated_webp_compression_quality = 70;
 
-    //Maximum Ajax requests at once, for thumbnails on-the-fly generation
-    public int $max_requests = 3;
-
     // one of '', 'images', 'all'
     //TODO: Put this in admin and also manage .htaccess in #sites and upload folders
     public string $original_url_protection = '';

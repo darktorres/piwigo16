@@ -82,24 +82,6 @@ final class functions_mysqli
     }
 
     /**
-     * Set charset for database connection.
-     */
-    public static function pwg_db_check_charset(): void
-    {
-        global $mysqli;
-
-        $db_charset = 'utf8';
-
-        if (defined('DB_CHARSET') &&
-            DB_CHARSET != ''
-        ) {
-            $db_charset = DB_CHARSET;
-        }
-
-        $mysqli->set_charset($db_charset);
-    }
-
-    /**
      * Check MySQL version. Can call fatal_error().
      */
     public static function pwg_db_check_version(): void

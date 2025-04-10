@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\inc\ws_protocols;
 
 use Override;
-use Piwigo\inc\functions;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgNamedArray;
 use Piwigo\inc\PwgNamedStruct;
@@ -39,9 +38,8 @@ final class PwgRestEncoder extends PwgResponseEncoder
         $this->_writer = new PwgXmlWriter();
         $this->encode($response);
         $ret = $this->_writer->getOutput();
-        $charset = functions::get_pwg_charset();
         return <<<XML
-            <?xml version="1.0" encoding="{$charset}"?>
+            <?xml version="1.0" encoding="utf-8"?>
             <rsp stat="ok">
                 {$ret}
             </rsp>

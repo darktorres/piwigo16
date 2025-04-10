@@ -226,8 +226,6 @@ if (isset($_POST['install'])) {
         print_r($errors);
     }
 
-    functions_mysqli::pwg_db_check_charset();
-
     $webmaster = trim(preg_replace('/\s{2,}/', ' ', $admin_name));
 
     if (empty($webmaster)) {
@@ -257,13 +255,11 @@ if (isset($_POST['install'])) {
 
         // tables creation, based on piwigo_structure.sql
         functions_install::execute_sqlfile(
-            './install/piwigo_structure-mysql.sql',
-            'mysql'
+            './install/piwigo_structure-mysql.sql'
         );
         // We fill the tables with basic information
         functions_install::execute_sqlfile(
-            './install/config.sql',
-            'mysql'
+            './install/config.sql'
         );
 
         $random_function = functions_mysqli::DB_RANDOM_FUNCTION;
@@ -288,12 +284,6 @@ if (isset($_POST['install'])) {
 
         // fill $conf global
         functions::load_conf_from_db();
-
-        // PWG_CHARSET is required for building the fs_themes array in the
-        // themes class
-        if (! defined('PWG_CHARSET')) {
-            define('PWG_CHARSET', 'utf-8');
-        }
 
         functions_install::activate_core_themes();
         functions_install::activate_core_plugins();
@@ -353,9 +343,6 @@ if (isset($_POST['install'])) {
             \$conf->db_host = '{$dbhost}';
 
             const PHPWG_INSTALLED = true;
-            const PWG_CHARSET = 'utf-8';
-            const DB_CHARSET = 'utf8';
-            const DB_COLLATE = '';
 
             PHP;
 

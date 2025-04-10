@@ -135,7 +135,7 @@ final class languages
         ?string $target_charset = null
     ): void {
         if (empty($target_charset)) {
-            $target_charset = functions::get_pwg_charset();
+            $target_charset = 'utf-8';
         }
 
         $target_charset = strtolower($target_charset);

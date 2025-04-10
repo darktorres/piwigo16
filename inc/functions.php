@@ -453,11 +453,7 @@ final class functions
     public static function pwg_transliterate(
         string $term
     ): string {
-        if (defined('PWG_CHARSET')) {
-            return self::remove_accents(mb_strtolower($term, PWG_CHARSET));
-        }
-
-        return self::remove_accents(strtolower($term));
+        return self::remove_accents(mb_strtolower($term, 'utf-8'));
     }
 
     /**
@@ -1778,20 +1774,6 @@ final class functions
         }
 
         return null;
-    }
-
-    /**
-     * return the character set used by Piwigo
-     */
-    public static function get_pwg_charset(): string
-    {
-        $pwg_charset = 'utf-8';
-
-        if (defined('PWG_CHARSET')) {
-            $pwg_charset = PWG_CHARSET;
-        }
-
-        return $pwg_charset;
     }
 
     /**

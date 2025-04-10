@@ -91,7 +91,7 @@ final class PwgServer
         $encodedResponse = $this->_responseEncoder->encodeResponse($response);
         $contentType = $this->_responseEncoder->getContentType();
 
-        header('Content-Type: ' . $contentType . '; charset=' . functions::get_pwg_charset());
+        header('Content-Type: ' . $contentType . '; charset=utf-8');
         print_r($encodedResponse);
         functions_plugins::trigger_notify('sendResponse', $encodedResponse);
     }

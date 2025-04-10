@@ -57,8 +57,6 @@ try {
     functions_mysqli::my_error(functions::l10n($exception->getMessage()), true);
 }
 
-functions_mysqli::pwg_db_check_charset();
-
 // +-----------------------------------------------------------------------+
 // |                              Upgrades                                 |
 // +-----------------------------------------------------------------------+

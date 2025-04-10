@@ -102,7 +102,8 @@ class functions
      */
     public static function get_extension($filename)
     {
-        return substr(strrchr(($filename ?? ''), '.'), 1, strlen(($filename ?? '')));
+        $pos = strrpos((string) $filename, '.');
+        return ($pos !== false) ? substr($filename, $pos + 1) : '';
     }
 
     /**

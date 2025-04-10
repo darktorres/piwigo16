@@ -297,23 +297,22 @@ if ($page['section'] == 'categories') {
         $cleaned_order_by = str_replace(['ORDER BY ', ' ASC', ' DESC'], '', $order_by_clause);
         $column_names = ', ' . $cleaned_order_by;
 
-        if (! isset($cache_key) ||
-            ! $persistent_cache->get($cache_key, $page['items'])
-        ) {
-            // main query
-            $query = <<<SQL
-                SELECT DISTINCT image_id {$column_names}
-                FROM image_category
-                INNER JOIN images ON id = image_id
-                WHERE {$where_sql} {$forbidden}
-                {$conf->order_by};
-                SQL;
+        // main query
+        // FIXME: this query fetches all photos of an album everytime rvtscroller asks for few more photos on scroll
+        $query = <<<SQL
+            SELECT DISTINCT image_id {$column_names}
+            FROM image_category
+            INNER JOIN images ON id = image_id
+            WHERE {$where_sql} {$forbidden}
+            {$conf->order_by};
+            SQL;
+        $cache_key = md5($query);
 
+        if (! $persistent_cache->get($cache_key, $page['items'])) {
             $page['items'] = $conf->sql_backend::query2array($query, null, 'image_id');
 
-            if (isset($cache_key)) {
-                $persistent_cache->set($cache_key, $page['items']);
-            }
+            // TODO: invalidate this cache on album sync
+            $persistent_cache->set($cache_key, $page['items']);
         }
     }
 } elseif ($page['section'] == 'tags') {

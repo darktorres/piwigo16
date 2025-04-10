@@ -31,6 +31,10 @@ if (! extension_loaded('iconv')) {
     exit('PHP extension "iconv" is not loaded');
 }
 
+if (! extension_loaded('intl')) {
+    die('PHP extension "intl" is not loaded');
+}
+
 if (! extension_loaded('mbstring')) {
     exit('PHP extension "mbstring" is not loaded');
 }

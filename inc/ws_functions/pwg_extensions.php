@@ -18,7 +18,6 @@ use Piwigo\inc\functions;
 use Piwigo\inc\functions_user;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgServer;
-use SmartyException;
 
 final class pwg_extensions
 {
@@ -146,7 +145,7 @@ final class pwg_extensions
      *     pwg_token: string,
      *     reactivate?: bool,
      * } $params
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public static function ws_extensions_update(
         array $params,

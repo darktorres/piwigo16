@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use SmartyException;
-
 /**
  * Manages a list of CSS files and combining them in a unique file.
  */
@@ -41,7 +39,7 @@ final class CssLoader
 
     /**
      * @return Combinable[] array of combined CSS.
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public function get_css(): array
     {

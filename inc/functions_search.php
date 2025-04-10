@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use SmartyException;
-
 final class functions_search
 {
     public const int QST_QUOTED = 0x01;
@@ -97,7 +95,7 @@ final class functions_search
      * Returns search rules stored into a serialized array in "search"
      * table. Each search rules set is numerically identified.
      *
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public static function get_search_array(
         int|string $search_id
@@ -1148,7 +1146,7 @@ final class functions_search
      * It can be either a quick search or a regular search.
      *
      * @param string $images_where optional additional restriction on images table
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public static function get_search_results(
         int|string $search_id,

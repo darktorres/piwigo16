@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use SmartyException;
-
 final class functions_url
 {
     /**
@@ -441,7 +439,7 @@ final class functions_url
      *
      * @param array<int, string> $tokens of url tokens to parse
      * @param int $next_token the index in the array of url tokens; in/out
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public static function parse_section_url(
         array $tokens,

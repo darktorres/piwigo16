@@ -2664,12 +2664,6 @@ final class functions
 
         $req = ltrim($req, '/');
 
-        foreach (preg_split('#/+#', $req) as $token) {
-            if (! preg_match($conf->sync_chars_regex, $token)) {
-                self::ierror('Invalid chars in request', 400);
-            }
-        }
-
         $page['derivative_path'] = './' . PWG_DERIVATIVE_DIR . $req;
 
         $pos = strrpos($req, '.');

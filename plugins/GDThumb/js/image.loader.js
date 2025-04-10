@@ -1,7 +1,7 @@
 function ImageLoader(opts) {
     this.opts = jQuery.extend(
         {
-            maxRequests: 6,
+            maxRequests: 30,
             onChanged: jQuery.noop,
         },
         opts || {},

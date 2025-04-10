@@ -10,7 +10,7 @@
             $("div.infos").hide();
         });
 
-    var loader = new ImageLoader({ onChanged: loaderChanged, maxRequests: 1 });
+    var loader = new ImageLoader({ onChanged: loaderChanged });
     var pending_next_page = null;
     var last_image_show_time = 0;
     var allDoneDfd;

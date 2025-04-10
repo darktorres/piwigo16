@@ -334,8 +334,8 @@ final class functions_plugins
             if ($new_version != $old_version) {
                 $query = <<<SQL
                     UPDATE plugins
-                    SET version = "{$plugin['version']}"
-                    WHERE id = "{$plugin['id']}";
+                    SET version = '{$plugin['version']}'
+                    WHERE id = '{$plugin['id']}';
                     SQL;
                 functions_mysqli::pwg_query($query);
 

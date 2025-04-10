@@ -68,17 +68,7 @@ final class functions_mysqli
             throw new Exception('Connection to server succeed, but it was impossible to connect to database');
         }
 
-        // MySQL 5.7 default settings forbid to select a colum that is not in the
-        // group by. We've used that in Piwigo, for years. As an immediate solution
-        // we can remove this constraint in the current MySQL session.
-        [$sql_mode_current] = self::pwg_db_fetch_row(self::pwg_query('SELECT @@SESSION.sql_mode;'));
-
-        // remove ONLY_FULL_GROUP_BY from the list
-        $sql_mode_altered = implode(',', array_diff(explode(',', $sql_mode_current), ['ONLY_FULL_GROUP_BY']));
-
-        if ($sql_mode_altered != $sql_mode_current) {
-            self::pwg_query("SET SESSION sql_mode = '{$sql_mode_altered}';");
-        }
+        self::pwg_query("SET SESSION sql_mode = 'ANSI,TRADITIONAL,NO_ENGINE_SUBSTITUTION';");
     }
 
     /**

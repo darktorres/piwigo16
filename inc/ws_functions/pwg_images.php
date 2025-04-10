@@ -316,7 +316,7 @@ final class pwg_images
             SELECT DISTINCT image_id
             FROM image_category
             INNER JOIN categories ON category_id=id
-            WHERE commentable = "true"
+            WHERE commentable = 'true'
                 AND image_id = {$params['image_id']}
                 {$sql_conditions};
             SQL;

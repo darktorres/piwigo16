@@ -400,7 +400,7 @@ final class pwg_tags
         $query = <<<SQL
             SELECT COUNT(*)
             FROM tags
-            WHERE name = "{$copy_name}";
+            WHERE name = '{$copy_name}';
             SQL;
         [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 

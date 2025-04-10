@@ -1967,13 +1967,13 @@ final class functions_admin
         $query = <<<SQL
             INSERT IGNORE
             INTO config
-            SET param = "empty_lounge_running",
-                value = "{$exec_id}-{$current_time}";
+            SET param = 'empty_lounge_running',
+                value = '{$exec_id}-{$current_time}';
             SQL;
         functions_mysqli::pwg_query($query);
 
         $query = <<<SQL
-            SELECT value FROM config WHERE param = "empty_lounge_running";
+            SELECT value FROM config WHERE param = 'empty_lounge_running';
             SQL;
         [$empty_lounge_running] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         [$running_exec_id] = explode('-', $empty_lounge_running);
@@ -3160,7 +3160,7 @@ final class functions_admin
 
         foreach ($requested as $item) {
             $query = <<<SQL
-                SELECT CONCAT(UNIX_TIMESTAMP(MAX(lastmodified)), "_", COUNT(*))
+                SELECT CONCAT(UNIX_TIMESTAMP(MAX(lastmodified)), '_', COUNT(*))
                 FROM {$tables[$item]};
                 SQL;
             [$keys[$item]] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));

@@ -190,8 +190,8 @@ $query = <<<SQL
     SELECT occurred_on
     FROM activity
     WHERE object_id = {$category['id']}
-        AND object = "album"
-        AND action = "add";
+        AND object = 'album'
+        AND action = 'add';
     SQL;
 $result = functions_mysqli::query2array($query);
 

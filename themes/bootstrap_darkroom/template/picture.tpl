@@ -97,10 +97,6 @@
               {assign var=derivative_large value=$pwg->derivative($derivative_params_large, $thumbnail.src_image)}
               {assign var=derivative_xxlarge value=$pwg->derivative($derivative_params_xxlarge, $thumbnail.src_image)}
             {/if}
-            {if !$derivative->is_cached()}
-              {combine_script id='jquery.ajaxmanager' path='https://rawcdn.githack.com/aFarkas/Ajaxmanager/refs/heads/master/jquery.ajaxmanager.js' load='footer'}
-              {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' require='jquery.ajaxmanager' load='footer'}
-            {/if}
             {if $theme_config->photoswipe && !$theme_config->slick_infinite}
               <div
                 class="text-center{if $thumbnail.id eq $current.id && !$theme_config->slick_infinite} thumbnail-active{/if}">
@@ -113,9 +109,7 @@
                       data-src-original="{$U_HOME}{$thumbnail.PATH}" data-size-original="{$thumbnail.SIZE}" data-video="true"
                     {/if} 
                   {/if}>
-                  <img {if $derivative->is_cached()}data-lazy="{$derivative->get_url()}"
-                    {else}data-lazy="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->get_url()}" 
-                    {/if}
+                  <img data-lazy="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
                     alt="{$thumbnail.TN_ALT}" title="{if isset($thumbnail.TN_TITLE)}{$thumbnail.TN_TITLE}{/if}"
                     class="img-fluid {if isset($thumbnail.path_ext)}path-ext-{$thumbnail.path_ext}{/if} {if isset($thumbnail.file_ext)}file-ext-{$thumbnail.file_ext}{/if}">
                 </a>
@@ -123,9 +117,7 @@
             {else}
               <div class="text-center{if $thumbnail.id eq $current.id} thumbnail-active{/if}">
                 <a href="{$thumbnail.URL}">
-                  <img {if $derivative->is_cached()}data-lazy="{$derivative->get_url()}"
-                    {else}data-lazy="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->get_url()}" 
-                    {/if}
+                  <img data-lazy="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
                     alt="{$thumbnail.TN_ALT}" title="{if isset($thumbnail.TN_TITLE)}{$thumbnail.TN_TITLE}{/if}"
                     class="img-fluid {if isset($thumbnail.path_ext)}path-ext-{$thumbnail.path_ext}{/if} {if isset($thumbnail.file_ext)}file-ext-{$thumbnail.file_ext}{/if}">
                 </a>

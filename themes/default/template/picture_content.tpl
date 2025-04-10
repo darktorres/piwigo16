@@ -1,15 +1,8 @@
-{if !$current.selected_derivative->is_cached()}
-    {combine_script id='jquery.ajaxmanager' path='https://rawcdn.githack.com/aFarkas/Ajaxmanager/refs/heads/master/jquery.ajaxmanager.js' load='footer'}
-    {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' require='jquery.ajaxmanager' load='footer'}
-    {footer_script}var error_icon = "{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png"{/footer_script}
-{/if}
-
 <img class="file-ext-{if isset($current.file_ext)}{$current.file_ext}{/if} path-ext-{if isset($current.path_ext)}{$current.path_ext}{/if}"
     {if (isset($current.path_ext) and $current.path_ext == 'svg')} src="{$current.path}"
-    {elseif $current.selected_derivative->is_cached()}src="{$current.selected_derivative->get_url()}"
-    {$current.selected_derivative->get_size_htm()}{else}src="{$ROOT_URL}{$themeconf.img_dir}/ajax_loader.gif"
-    data-src="{$current.selected_derivative->get_url()}" {/if} alt="{$ALT_IMG}" id="theMainImage"
-    usemap="#map{$current.selected_derivative->get_type()}"
+    {else}src="{$current.selected_derivative->get_url()}" {$current.selected_derivative->get_size_htm()} 
+    {/if}
+    alt="{$ALT_IMG}" id="theMainImage" usemap="#map{$current.selected_derivative->get_type()}"
     title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|strip_tags:false|replace:'"':' '}{else}{$current.TITLE_ESC} - {$ALT_IMG}{/if}">
 
 {foreach $current.unique_derivatives as $derivative_type => $derivative}

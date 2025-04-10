@@ -132,8 +132,8 @@
 					<span class="wrap2">
 						<a href="{$thumbnail.URL}">
 							{assign var=derivative value=$pwg->derivative($derivative_params, $thumbnail.src_image)}
-							<img src="{$derivative->get_url()}" {* {$derivative->get_size_htm()}*} alt="{$thumbnail.TN_ALT}"
-								title="{$thumbnail.TN_TITLE}">
+							<img src="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
+								alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}">
 						</a>
 					</span>
 					{if $SHOW_THUMBNAIL_CAPTION }

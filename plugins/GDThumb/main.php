@@ -96,7 +96,7 @@ function GDThumb_endsWith(
 
 function GDThumb_media_type(
     array $params,
-    Smarty_Internal_Template $smarty
+    \Smarty\Template $smarty
 ): string {
     if (empty($params['file'])) {
         return 'image';

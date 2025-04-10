@@ -17,7 +17,6 @@ use DateTime;
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_history;
 use Random\RandomException;
-use SmartyException;
 use uagent_info;
 
 require_once __DIR__ . '/../inc/functions_plugins.php';
@@ -1075,7 +1074,7 @@ final class functions
      * once this function called, the execution doesn't go further
      * (presence of an exit() instruction.
      *
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public static function redirect_html(
         string $url,
@@ -1132,7 +1131,7 @@ final class functions
      * once this function called, the execution doesn't go further
      * (presence of an exit() instruction.
      *
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public static function redirect(
         string $url,
@@ -2172,7 +2171,7 @@ final class functions
      * if pwg_token is empty action doesn't require token
      * else pwg_token is compare to server token
      *
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public static function check_pwg_token(): void
     {

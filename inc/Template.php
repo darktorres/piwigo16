@@ -13,8 +13,6 @@ namespace Piwigo\inc;
 
 use Closure;
 use Smarty;
-use Smarty_Internal_Template;
-use SmartyException;
 
 set_error_handler(function (
     int $errno,
@@ -66,7 +64,7 @@ final class Template
 
     public const string COMBINED_CSS_TAG = '<!-- COMBINED_CSS -->';
 
-    public Smarty $smarty;
+    public Smarty\Smarty $smarty;
 
     public string $output = '';
 
@@ -110,7 +108,7 @@ final class Template
     private string $html_style = '';
 
     /**
-     * @throws SmartyException
+     * @throws Smarty\Exception
      */
     public function __construct(
         string $root = '.',
@@ -119,11 +117,9 @@ final class Template
     ) {
         global $conf, $lang_info;
 
-        SmartyException::$escape = false;
-
         $this->scriptLoader = new ScriptLoader();
         $this->cssLoader = new CssLoader();
-        $this->smarty = new Smarty();
+        $this->smarty = new Smarty\Smarty();
         $this->smarty->debugging = $conf->debug_template;
 
         if (! $this->smarty->debugging) {
@@ -456,7 +452,7 @@ final class Template
      * Defines _$varname_ as the compiled result of _$handle_.
      * This can be used to effectively include a template in another template.
      * This is equivalent to assign($varname, $this->parse($handle, true)).
-     * @throws SmartyException
+     * @throws Smarty\Exception
      */
     public function assign_var_from_handle(
         string $varname,
@@ -514,7 +510,7 @@ final class Template
     /**
      * Loads the template file of the handle, compiles it and appends the result to the output
      * (or returns it if _$return_ is true).
-     * @throws SmartyException
+     * @throws Smarty\Exception
      */
     public function parse(
         string $handle,
@@ -554,7 +550,7 @@ final class Template
     /**
      * Loads the template file of the handle, compiles it and appends the result to the output,
      * then sends the output to the browser.
-     * @throws SmartyException
+     * @throws Smarty\Exception
      */
     public function pparse(
         string $handle
@@ -666,7 +662,7 @@ final class Template
                     'AAAA_DEBUG_TOTAL_TIME__' => functions::get_elapsed_time($t2, functions::get_moment()),
                 ]
             );
-            $this->smarty->display(__DIR__ . '/../vendor/smarty/smarty/libs/debug.tpl');
+            $this->smarty->display(__DIR__ . '/../vendor/smarty/smarty/src/debug.tpl');
         }
     }
 
@@ -829,7 +825,7 @@ final class Template
      */
     public function func_define_derivative(
         array $params,
-        Smarty $smarty
+        Smarty\Template $smarty
     ): void {
         if (empty($params['name'])) {
             functions_html::fatal_error('define_derivative missing name');
@@ -934,7 +930,7 @@ final class Template
      * @param array{
      *     load: mixed,
      * } $params
-     * @throws SmartyException
+     * @throws Smarty\Exception
      */
     public function func_get_combined_scripts(
         array $params
@@ -1088,7 +1084,7 @@ final class Template
 
     /**
      * Register the filters for the tpl file.
-     * @throws SmartyException
+     * @throws Smarty\Exception
      */
     public function load_external_filters(
         string $handle
@@ -1138,10 +1134,10 @@ final class Template
      */
     public static function prefilter_white_space(
         string $source,
-        Smarty_Internal_Template $smarty
+        Smarty\Template $smarty
     ): string|null {
-        $ld = $smarty->left_delimiter;
-        $rd = $smarty->right_delimiter;
+        $ld = $smarty->getLeftDelimiter();
+        $rd = $smarty->getRightDelimiter();
         $ldq = preg_quote($ld, '#');
         $rdq = preg_quote($rd, '#');
 
@@ -1167,7 +1163,7 @@ final class Template
      */
     public static function postfilter_language(
         string $source,
-        Smarty_Internal_Template $smarty
+        Smarty\Template $smarty
     ): string|null {
         // replaces echo PHP_STRING_LITERAL; with the string literal value
         return preg_replace_callback(
@@ -1185,7 +1181,7 @@ final class Template
      */
     public static function prefilter_local_css(
         string $source,
-        Smarty_Internal_Template $smarty
+        Smarty\Template $smarty
     ): string {
         $css = [];
 

@@ -13,7 +13,6 @@ namespace Piwigo\admin\inc;
 
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
-use SmartyException;
 
 final class check_integrity
 {
@@ -139,7 +138,7 @@ final class check_integrity
     /**
      * Display anomalies list
      *
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public function display(): void
     {

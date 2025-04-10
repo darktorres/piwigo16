@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use SmartyException;
-
 final class functions_html
 {
     /**
@@ -269,7 +267,7 @@ final class functions_html
     /**
      * Exits the current script with 403 code.
      * @param ?string $alternate_url redirect to this url
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      * @todo nice display if $template loaded
      */
     public static function page_forbidden(
@@ -297,7 +295,7 @@ final class functions_html
     /**
      * Exits the current script with 400 code.
      * @param ?string $alternate_url redirect to this url
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      * @todo nice display if $template loaded
      */
     public static function bad_request(
@@ -325,7 +323,7 @@ final class functions_html
     /**
      * Exits the current script with 404 code.
      * @param ?string $alternate_url redirect to this url
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      * @todo nice display if $template loaded
      */
     public static function page_not_found(

@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use SmartyException;
-
 /**
  * Manages a set of RegisteredBlock and DisplayBlock.
  */
@@ -141,7 +139,7 @@ final class BlockManager
 
     /**
      * Parse the menu and assign the result in a template variable.
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public function apply(
         string $var,

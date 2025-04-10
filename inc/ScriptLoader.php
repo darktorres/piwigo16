@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use SmartyException;
-
 /**
  * Manage a list of required scripts for a page, by optimizing their loading location (head, footer, async)
  * and later on by combining them in a unique file respecting at the same time dependencies.
@@ -152,7 +150,7 @@ final class ScriptLoader
      * Returns combined scripts loaded in header.
      *
      * @return Combinable[]
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public function get_head_scripts(): array
     {
@@ -184,7 +182,7 @@ final class ScriptLoader
      * Returns combined scripts loaded in footer.
      *
      * @return Combinable[][]
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public function get_footer_scripts(): array
     {
@@ -216,7 +214,7 @@ final class ScriptLoader
     /**
      * @param Script[] $scripts
      * @return Combinable[]
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     private function do_combine(
         array $scripts,

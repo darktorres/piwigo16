@@ -1,12 +1,12 @@
 {
-    "_hash": "5504a09971fdb6d7d88dcfddcc1df96a160dcd6a4f45bc3a5570b6a9addf9bd1",
+    "_hash": "62c1ae9ea0563b037c3c32a8174a1c5e45adf67e51c913cea35796ee92e94f32",
     "patches": {
         "smarty/smarty": [
             {
                 "package": "smarty/smarty",
                 "description": "Patch strftime",
                 "url": "patches/strftime.patch",
-                "sha256": "bf219ebcd5caffb19bcae0e59d6aec1d8c6f97eb064c8e01b6333e282a78d14d",
+                "sha256": "f7708851bc9399b421d3cb9c3df5a764b7668884fd2cbaf65032fdc905ad4690",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

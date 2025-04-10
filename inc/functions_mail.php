@@ -16,7 +16,6 @@ use InvalidArgumentException;
 use Pelago\Emogrifier\CssInliner;
 use PHPMailer\PHPMailer\PHPMailer;
 use Random\RandomException;
-use SmartyException;
 use Symfony\Component\CssSelector\Exception\ParseException;
 
 final class functions_mail
@@ -206,7 +205,7 @@ final class functions_mail
      * Return an new mail template.
      *
      * @param string $email_format - text/html or text/plain
-     * @throws SmartyException
+     * @throws \Smarty\Exception
      */
     public static function &get_mail_template(
         string $email_format

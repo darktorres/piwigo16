@@ -12,7 +12,6 @@ use Piwigo\inc\functions_session;
 use Piwigo\inc\ImageRect;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\Template;
-use Smarty_Internal_Template;
 
 final class functions_modus
 {
@@ -205,7 +204,7 @@ final class functions_modus
 
     public static function modus_thumbs(
         array $x,
-        Smarty_Internal_Template $smarty
+        \Smarty\Template $smarty
     ): void {
         global $template, $page, $conf;
 

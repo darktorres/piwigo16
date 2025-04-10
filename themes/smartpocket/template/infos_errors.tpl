@@ -2,7 +2,7 @@
   <div class="ui-bar ui-bar-e errors">
     <h3>{'Error'|translate}</h3>
     <div><a href="#" data-role="button" data-icon="delete" data-iconpos="notext" class="close-button">Button</a></div>
-    <p>{'<br>'|implode:$errors}</p>
+    <p>{$errors|join:'<br>'}</p>
   </div>
 {/if}
 
@@ -10,7 +10,7 @@
   <div class="ui-bar ui-bar-b infos">
     <h3>{'Info'|translate}</h3>
     <div><a href="#" data-role="button" data-icon="delete" data-iconpos="notext" class="close-button">Button</a></div>
-    <p>{'<br>'|implode:$infos}</p>
+    <p>{$infos|join:'<br>'}</p>
   </div>
 {/if}
 

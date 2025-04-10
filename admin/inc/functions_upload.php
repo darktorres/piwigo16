@@ -217,7 +217,7 @@ class functions_upload
 
             // upload directory hierarchy
             $upload_dir = sprintf(
-                PHPWG_ROOT_PATH . $conf['upload_dir'] . '/%s/%s/%s',
+                $conf['upload_dir'] . '/%s/%s/%s',
                 $year,
                 $month,
                 $day
@@ -337,7 +337,7 @@ class functions_upload
                 'file' => $file,
                 'name' => functions::get_name_from_file($file),
                 'date_available' => $dbnow,
-                'path' => preg_replace('#^' . preg_quote(PHPWG_ROOT_PATH) . '#', '', $file_path),
+                'path' => $file_path,
                 'filesize' => $file_infos['filesize'],
                 'width' => $file_infos['width'],
                 'height' => $file_infos['height'],

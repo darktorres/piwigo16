@@ -81,25 +81,25 @@ if (window.jQuery && window.RVTS)
 
                         if (!event.isDefaultPrevented())
                             RVTS.$thumbs.append(htm);
-                        if (
-                            RVTS.next - RVTS.start > 500 &&
-                            RVTS.total - RVTS.next > 50
-                        ) {
-                            RVTS.$thumbs.after(
-                                '<div style="text-align:center;font-size:180%;margin:0 0 20px"><a href="' +
-                                    RVTS.urlModel.replace(
-                                        "%start%",
-                                        RVTS.next,
-                                    ) +
-                                    '">' +
-                                    RVTS.moreMsg.replace(
-                                        "%d",
-                                        RVTS.total - RVTS.next,
-                                    ) +
-                                    "</a></div>",
-                            );
-                            RVTS.total = 0;
-                        }
+                        // if (
+                        //     RVTS.next - RVTS.start > 500 &&
+                        //     RVTS.total - RVTS.next > 50
+                        // ) {
+                        //     RVTS.$thumbs.after(
+                        //         '<div style="text-align:center;font-size:180%;margin:0 0 20px"><a href="' +
+                        //             RVTS.urlModel.replace(
+                        //                 "%start%",
+                        //                 RVTS.next,
+                        //             ) +
+                        //             '">' +
+                        //             RVTS.moreMsg.replace(
+                        //                 "%d",
+                        //                 RVTS.total - RVTS.next,
+                        //             ) +
+                        //             "</a></div>",
+                        //     );
+                        //     RVTS.total = 0;
+                        // }
                     },
                     complete: function () {
                         RVTS.loading = 0;

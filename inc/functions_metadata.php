@@ -100,7 +100,7 @@ final class functions_metadata
                     $input_encoding = 'windows-1252';
                 }
 
-                $value = functions::convert_charset($value, $input_encoding, functions::get_pwg_charset());
+                $value = functions::convert_charset($value, $input_encoding, 'utf-8');
             }
         }
 

@@ -48,7 +48,7 @@ $template->assign(
         'BODY_ID' =>
           $page['body_id'] ?? '',
 
-        'CONTENT_ENCODING' => functions::get_pwg_charset(),
+        'CONTENT_ENCODING' => 'utf-8',
         'PAGE_TITLE' => strip_tags($title),
 
         'U_HOME' => functions_url::get_gallery_home_url(),
@@ -104,7 +104,7 @@ if (isset($refresh) &&
 
 functions_plugins::trigger_notify('loc_end_page_header');
 
-header('Content-Type: text/html; charset=' . functions::get_pwg_charset());
+header('Content-Type: text/html; charset=utf-8');
 $template->parse('header');
 
 functions_plugins::trigger_notify('loc_after_page_header');

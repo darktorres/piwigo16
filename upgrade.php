@@ -145,7 +145,6 @@ functions::load_language('upgrade.lang', '', [
 // +-----------------------------------------------------------------------+
 
 functions_upgrade::upgrade_db_connect();
-functions_mysqli::pwg_db_check_charset();
 
 [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 define('CURRENT_DATE', $dbnow);
@@ -259,7 +258,7 @@ if (! in_array('param', $columns_of['config'])) {
         // confirm that the database is in the same version as source code files
         functions::conf_update_param('piwigo_db_version', functions::get_branch_from_version(PHPWG_VERSION));
 
-        header('Content-Type: text/html; charset=' . functions::get_pwg_charset());
+        header('Content-Type: text/html; charset=utf-8');
         echo 'No upgrade required, the database structure is up to date';
         echo '<br><a href="index.php">← back to gallery</a>';
         exit();
@@ -389,10 +388,6 @@ if ((isset($_POST['submit']) || isset($_GET['now'])) &&
 // |                          start template output                        |
 // +-----------------------------------------------------------------------+
 else {
-    if (! defined('PWG_CHARSET')) {
-        define('PWG_CHARSET', 'utf-8');
-    }
-
     $languages = new languages();
 
     foreach ($languages->fs_languages as $language_code => $fs_language) {

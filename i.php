@@ -66,8 +66,6 @@ try {
     $logger->error($exception->getMessage());
 }
 
-functions_mysqli::pwg_db_check_charset();
-
 $query = <<<SQL
     SELECT value
     FROM config

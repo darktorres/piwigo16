@@ -24,8 +24,7 @@ final class functions_install
      * not executed.
      */
     public static function execute_sqlfile(
-        string $filepath,
-        string $dblayer
+        string $filepath
     ): void {
         $sql_lines = file($filepath);
         $query = '';
@@ -45,10 +44,6 @@ final class functions_install
 
                 // we don't execute "DROP TABLE" queries
                 if (! preg_match('/^DROP TABLE/i', $query)) {
-                    if ($dblayer === 'mysql' && preg_match('/^(CREATE TABLE .*)[\s]*;[\s]*/im', $query, $matches)) {
-                        $query = $matches[1] . ' DEFAULT CHARACTER SET utf8;';
-                    }
-
                     functions_mysqli::pwg_query($query);
                 }
 

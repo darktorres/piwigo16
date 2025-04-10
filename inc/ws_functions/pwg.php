@@ -457,7 +457,7 @@ final class pwg
         }
 
         $res['pwg_token'] = functions::get_pwg_token();
-        $res['charset'] = functions::get_pwg_charset();
+        $res['charset'] = 'utf-8';
 
         [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
         $res['current_datetime'] = $dbnow;

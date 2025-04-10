@@ -152,7 +152,7 @@ final class RVTS
     ): never {
         global $template;
         $template->assign('thumbnails', $thumbs);
-        header('Content-Type: text/html; charset=' . functions::get_pwg_charset());
+        header('Content-Type: text/html; charset=utf-8');
         $template->pparse('index_thumbnails');
         exit;
     }

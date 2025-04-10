@@ -52,7 +52,7 @@ if (! (defined('IN_ADMIN') && IN_ADMIN) &&           // no message inside admini
             }
         }
 
-        header('Content-Type: text/html; charset=' . functions::get_pwg_charset());
+        header('Content-Type: text/html; charset=utf-8');
         $template->set_filenames([
             'no_photo_yet' => 'no_photo_yet.tpl',
         ]);

@@ -2292,55 +2292,6 @@ final class functions_admin
     }
 
     /**
-     * Adds the character set to a create table sql query.
-     * All CREATE TABLE queries must call this function
-     */
-    public static function create_table_add_character_set(
-        string $query
-    ): string {
-        if (! defined('DB_CHARSET')) {
-            functions_html::fatal_error('create_table_add_character_set DB_CHARSET undefined');
-        }
-
-        if ('DB_CHARSET' !== '') {
-            if (version_compare(functions_mysqli::pwg_get_db_version(), '4.1.0', '<')) {
-                return $query;
-            }
-
-            $charset_collate = ' DEFAULT CHARACTER SET ' . DB_CHARSET;
-
-            if (DB_COLLATE != '') {
-                $charset_collate .= ' COLLATE ' . DB_COLLATE;
-            }
-
-            if (is_array($query)) {
-                foreach ($query as $id => $q) {
-                    $q = trim($q);
-                    $q = trim($q, ';');
-
-                    if (preg_match('/^CREATE\s+TABLE/i', $q)) {
-                        $q .= $charset_collate;
-                    }
-
-                    $q .= ';';
-                    $query[$id] = $q;
-                }
-            } else {
-                $query = trim($query);
-                $query = trim($query, ';');
-
-                if (preg_match('/^CREATE\s+TABLE/i', $query)) {
-                    $query .= $charset_collate;
-                }
-
-                $query .= ';';
-            }
-        }
-
-        return $query;
-    }
-
-    /**
      * Returns access levels as array used on template with html_options functions.
      */
     public static function get_user_access_level_html_options(

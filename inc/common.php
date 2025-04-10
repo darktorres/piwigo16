@@ -122,8 +122,6 @@ try {
     functions_mysqli::my_error(functions::l10n($exception->getMessage()), true);
 }
 
-functions_mysqli::pwg_db_check_charset();
-
 functions::load_conf_from_db();
 
 $logger = new Katzgrau\KLogger\Logger('./' . $conf->data_location . $conf->log_dir, $conf->log_level, [
@@ -252,7 +250,7 @@ if ($conf->gallery_locked) {
     ) {
         functions_html::set_status_header(503, 'Service Unavailable');
         header('Retry-After: 900');
-        header('Content-Type: text/html; charset=' . functions::get_pwg_charset());
+        header('Content-Type: text/html; charset=utf-8');
         echo '<a href="' . functions_url::get_absolute_root_url(false) . 'identification.php">' . functions::l10n('The gallery is locked for maintenance. Please, come back later.') . '</a>';
         echo str_repeat(' ', 512); //IE6 doesn't error output if below a size
         exit();

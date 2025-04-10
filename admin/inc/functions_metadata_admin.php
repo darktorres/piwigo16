@@ -73,14 +73,35 @@ class functions_metadata_admin
 
         foreach ($exif as $pwg_key => $value) {
             if (in_array($pwg_key, ['date_creation', 'date_available'])) {
-                if (preg_match('/^(\d{4}).(\d{2}).(\d{2}) (\d{2}).(\d{2}).(\d{2})/', $value, $matches)) {
+                if (is_numeric($value) &&
+                    (int) $value == $value
+                ) {
+                    // UNIX timestamp
+                    $exif[$pwg_key] = \DateTime::createFromFormat('U', (string) $value)->format('Y-m-d H:i:s');
+
+                    if ($exif[$pwg_key] === '0000-00-00' ||
+                        ! self::validateDate($exif[$pwg_key])
+                    ) {
+                        $exif[$pwg_key] = null;
+                    }
+                } elseif (preg_match('/^(\d{4}).(\d{2}).(\d{2}).(\d{2}).(\d{2}).(\d{2})/', (string) $value, $matches)) {
+                    // YYYY-MM-DDTHH:MM:SS
                     $exif[$pwg_key] = $matches[1] . '-' . $matches[2] . '-' . $matches[3] . ' ' . $matches[4] . ':' . $matches[5] . ':' . $matches[6];
 
-                    if ($exif[$pwg_key] == '0000-00-00 00:00:00') {
+                    if ($exif[$pwg_key] == '0000-00-00 00:00:00' ||
+                        ! self::validateDate($exif[$pwg_key])
+                    ) {
                         $exif[$pwg_key] = null;
                     }
                 } elseif (preg_match('/^(\d{4}).(\d{2}).(\d{2})/', $value, $matches)) {
+                    // YYYY-MM-DD
                     $exif[$pwg_key] = $matches[1] . '-' . $matches[2] . '-' . $matches[3];
+
+                    if ($exif[$pwg_key] === '0000-00-00' ||
+                        ! self::validateDate($exif[$pwg_key], 'Y-m-d')
+                    ) {
+                        $exif[$pwg_key] = null;
+                    }
                 } else {
                     unset($exif[$pwg_key]);
                     continue;
@@ -91,10 +112,20 @@ class functions_metadata_admin
                 $exif[$pwg_key] = self::metadata_normalize_keywords_string($exif[$pwg_key]);
             }
 
-            $exif[$pwg_key] = addslashes($exif[$pwg_key]);
+            if ($exif[$pwg_key] !== null &&
+                ! is_numeric($exif[$pwg_key])
+            ) {
+                $exif[$pwg_key] = addslashes((string) $exif[$pwg_key]);
+            }
         }
 
         return $exif;
+    }
+
+    public static function validateDate($date, $format = 'Y-m-d H:i:s'): bool
+    {
+        $d = \DateTime::createFromFormat($format, $date);
+        return $d && $d->format($format) == $date;
     }
 
     /**

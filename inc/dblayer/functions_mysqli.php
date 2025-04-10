@@ -174,7 +174,7 @@ final class functions_mysqli
         string $table
     ): array|bool|string|null {
         $query = <<<SQL
-            SELECT IF(MAX({$column}) + 1 IS NULL, 1, MAX({$column}) + 1)
+            SELECT COALESCE(MAX({$column}) + 1, 1)
             FROM {$table};
             SQL;
         [$next] = self::pwg_db_fetch_row(self::pwg_query($query));

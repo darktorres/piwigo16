@@ -1,5 +1,5 @@
-{include file='infos_errors.tpl'}
 <div data-role="content">
+  {include file='infos_errors.tpl'}
   <h3>{'Identification'|translate}</h3>
   <form action="{$F_LOGIN_ACTION}" method="post" name="login_form" class="properties">
 

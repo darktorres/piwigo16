@@ -230,7 +230,7 @@ if (isset($_POST['submit']) &&
     $inserts = [];
     // new categories are the directories not present yet in the database
     foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
-        $dir = basename($fulldir);
+        $dir = $conf->sql_backend::pwg_db_real_escape_string(basename($fulldir));
         $insert = [
             'id' => $next_id++,
             'dir' => $dir,

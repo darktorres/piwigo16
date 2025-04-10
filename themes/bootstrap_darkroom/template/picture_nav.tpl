@@ -18,7 +18,21 @@
                             if (theImg) {
                                 theImg.removeAttribute("width");
                                 theImg.removeAttribute("height");
-                                theImg.src = url;
+                                var parts = url.split('/');
+                                var encodedParts = parts.map(function(part, index) {
+                                    if (index === 0) {
+                                        return part;
+                                    }
+                                    if (index === 1 && part.startsWith("i.php?")) {
+                                        var rest = parts.slice(1).join('/');
+                                        var restEncoded = encodeURIComponent(rest);
+                                        return "i.php?" + restEncoded;
+                                    } else {
+                                        return encodeURIComponent(part);
+                                    }
+                                })
+                                var encodedUrl = encodedParts.join('/');
+                                theImg.src = encodedUrl;
                                 theImg.useMap = "#map" + typeMap;
                             }
                             jQuery('.derivative-li').removeClass('active');

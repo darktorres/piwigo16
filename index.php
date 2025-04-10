@@ -443,7 +443,7 @@ if (empty($page['is_external'])) {
             );
 
             $query = <<<SQL
-                SELECT SUBSTRING_INDEX(path, ".", -1) AS ext, COUNT(DISTINCT id) AS counter
+                SELECT SUBSTRING_INDEX(path, '.', -1) AS ext, COUNT(DISTINCT id) AS counter
                 FROM images AS i
                 JOIN image_category AS ic ON ic.image_id = i.id
                 WHERE {$search_items_clause}

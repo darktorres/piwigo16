@@ -394,7 +394,7 @@ $data_storage = [];
 
 //Select files in Image_Table
 $query = <<<SQL
-    SELECT COUNT(*) AS ext_counter, SUBSTRING_INDEX(path, ".", -1) AS ext, SUM(filesize) AS filesize
+    SELECT COUNT(*) AS ext_counter, SUBSTRING_INDEX(path, '.', -1) AS ext, SUM(filesize) AS filesize
     FROM images
     GROUP BY ext;
     SQL;

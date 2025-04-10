@@ -499,7 +499,7 @@ final class functions_mail
             INNER JOIN users AS u ON {$conf->user_fields['id']} = ug.user_id
             INNER JOIN user_infos AS ui ON ui.user_id = ug.user_id
             WHERE group_id = {$group_id}
-                AND {$conf->user_fields['email']} != ""
+                AND {$conf->user_fields['email']} != ''
 
             SQL;
 
@@ -525,7 +525,7 @@ final class functions_mail
                 INNER JOIN users AS u ON {$conf->user_fields['id']} = ug.user_id
                 INNER JOIN user_infos AS ui ON ui.user_id = ug.user_id
                 WHERE group_id = {$group_id}
-                    AND {$conf->user_fields['email']} != ""
+                    AND {$conf->user_fields['email']} != ''
                     AND language = '{$language}';
                 SQL;
             $users = functions_mysqli::query2array($query);

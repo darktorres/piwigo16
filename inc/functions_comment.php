@@ -195,7 +195,7 @@ final class functions_comment
 
             if (! functions_user::is_classic_user()) {
                 $query .= <<<SQL
-                    AND anonymous_id LIKE "{$anonymous_id}.%"
+                    AND anonymous_id LIKE '{$anonymous_id}.%'
 
                     SQL;
             }

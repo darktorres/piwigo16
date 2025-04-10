@@ -527,55 +527,55 @@ class functions_mysqli
         }
 
         if (count($datas) != 0) {
-            $first = true;
-
             $query = <<<SQL
                 SELECT @@max_allowed_packet;
                 SQL;
             list($packet_size) = self::pwg_db_fetch_row(self::pwg_query($query));
-            $packet_size = $packet_size - 2000; // The last list of values MUST not exceed 2000 character*/
+            $escapedTablename = self::protect_column_name($table_name);
+            $escapeddbfields = implode(', ', array_map(self::protect_column_name(...), $dbfields));
+
+            $insert_ignore = 'INSERT' . ($ignore ? " {$ignore}" : '');
+            $queryBase = "{$insert_ignore} INTO {$escapedTablename} ({$escapeddbfields}) VALUES\n";
             $query = '';
 
             foreach ($datas as $insert) {
-                if (strlen($query) >= $packet_size) {
-                    self::pwg_query($query . ';');
-                    $first = true;
-                }
-
-                if ($first) {
-                    $escapedTablename = self::protect_column_name($table_name);
-                    $columns = implode(', ', array_map(self::protect_column_name(...), $dbfields));
-                    $insert_ignore = 'INSERT' . ($ignore ? " {$ignore}" : '');
-                    $query = <<<SQL
-                        {$insert_ignore} INTO {$escapedTablename} ({$columns}) VALUES
-
-                        SQL;
-                    $first = false;
-                } else {
-                    $query .= ",\n";
-                }
-
-                $query .= '(';
+                $queryTemp = '(';
 
                 foreach ($dbfields as $field_id => $dbfield) {
                     if ($field_id > 0) {
-                        $query .= ', ';
+                        $queryTemp .= ', ';
                     }
 
-                    if (! isset($insert[$dbfield]) or
+                    if (! isset($insert[$dbfield]) ||
                         $insert[$dbfield] === ''
                     ) {
-                        $query .= 'NULL';
+                        $queryTemp .= 'NULL';
                     } else {
-                        $query .= "'{$insert[$dbfield]}'";
+                        $queryTemp .= "'{$insert[$dbfield]}'";
                     }
                 }
 
-                $query .= ')';
+                $queryTemp .= ')';
+
+                $len = strlen($queryBase . $query . ', ' . $queryTemp);
+
+                if ($len >= $packet_size) { // delay $insert to next query
+                    $query = trim($query) . ';';
+                    self::pwg_query($queryBase . $query);
+                    $query = $queryTemp;
+                } else {
+                    if ($query !== '' &&
+                        $query !== '0'
+                    ) {
+                        $query .= ",\n";
+                    }
+
+                    $query .= $queryTemp;
+                }
             }
 
             $query = trim($query) . ';';
-            self::pwg_query($query);
+            self::pwg_query($queryBase . $query);
         }
     }
 

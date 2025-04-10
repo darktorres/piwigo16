@@ -235,6 +235,7 @@ final class functions_category
             [functions::l10n('Visits, high &rarr; low'),        'hit DESC',             true],
             [functions::l10n('Visits, low &rarr; high'),        'hit ASC',              true],
             [functions::l10n('Permissions'),                    'level DESC',           functions_user::is_admin()],
+            [functions::l10n('Filesize'),                       'filesize DESC',        true],
         ]);
     }
 

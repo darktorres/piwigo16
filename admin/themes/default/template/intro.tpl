@@ -336,8 +336,13 @@
 
     <div class="storage-chart">
       {foreach from=$STORAGE_CHART_DATA key=type item=details}
-        <span data-type="storage-{$type}" style="width:{$details.total.filesize/$STORAGE_TOTAL*100}%">
-          <p>{round($details.total.filesize/$STORAGE_TOTAL*100)}%</p>
+        {if $STORAGE_TOTAL > 0}
+          {assign var=percent value=$details.total.filesize / $STORAGE_TOTAL * 100}
+        {else}
+          {assign var=percent value=0}
+        {/if}
+        <span data-type="storage-{$type}" style="width:{$percent}%">
+          <p>{round($percent)}%</p>
         </span>
       {/foreach}
     </div>

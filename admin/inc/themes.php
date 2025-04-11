@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\admin\inc;
 
 use PclZip;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_plugins;
@@ -109,7 +108,7 @@ final class themes
                         VALUES
                             ('{$theme_id}', '{$this->fs_themes[$theme_id]['version']}', '{$this->fs_themes[$theme_id]['name']}');
                         SQL;
-                    functions_mysqli::pwg_query($query);
+                    $conf->sql_backend::pwg_query($query);
 
                     functions_plugins::trigger_notify('theme_activated', [
                         'theme_id' => $theme_id,
@@ -145,12 +144,12 @@ final class themes
                         FROM themes
                         WHERE id != '{$theme_id}';
                         SQL;
-                    $result = functions_mysqli::pwg_query($query);
+                    $result = $conf->sql_backend::pwg_query($query);
 
-                    if (functions_mysqli::pwg_db_num_rows($result) == 0) {
+                    if ($conf->sql_backend::pwg_db_num_rows($result) == 0) {
                         $new_theme = 'default';
                     } else {
-                        [$new_theme] = functions_mysqli::pwg_db_fetch_row($result);
+                        [$new_theme] = $conf->sql_backend::pwg_db_fetch_row($result);
                     }
 
                     $this->set_default_theme($new_theme);
@@ -162,7 +161,7 @@ final class themes
                     DELETE FROM themes
                     WHERE id = '{$theme_id}';
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
 
                 functions_plugins::trigger_notify('theme_deactivated', [
                     'theme_id' => $theme_id,
@@ -266,7 +265,7 @@ final class themes
             SQL;
         $user_ids = array_unique(
             array_merge(
-                functions_mysqli::query2array($query, null, 'user_id'),
+                $conf->sql_backend::query2array($query, null, 'user_id'),
                 [$conf->guest_id, $conf->default_user_id]
             )
         );
@@ -280,12 +279,14 @@ final class themes
             SET theme = '{$theme_id}'
             WHERE user_id IN ({$users});
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
     }
 
     public function get_db_themes(
         string $id = ''
     ): array {
+        global $conf;
+
         $where = '';
 
         if (! empty($id)) {
@@ -300,10 +301,10 @@ final class themes
 
         $query = trim($query) . ';';
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
         $themes = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $themes[] = $row;
         }
 
@@ -381,11 +382,11 @@ final class themes
                     }
 
                     if (preg_match('/["\']activatable["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['activatable'] = functions_mysqli::get_boolean($val[1]);
+                        $theme['activatable'] = $conf->sql_backend::get_boolean($val[1]);
                     }
 
                     if (preg_match('/["\']mobile["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['mobile'] = functions_mysqli::get_boolean($val[1]);
+                        $theme['mobile'] = $conf->sql_backend::get_boolean($val[1]);
                     }
 
                     // screenshot

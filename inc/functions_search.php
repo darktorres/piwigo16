@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use SmartyException;
 
 final class functions_search
@@ -48,6 +47,7 @@ final class functions_search
         string $candidate
     ): array|null {
         global $page;
+        global $conf;
 
         // $candidate might be a search.id or a search_uuid
         $clause_pattern = self::get_search_id_pattern($candidate);
@@ -62,7 +62,7 @@ final class functions_search
             FROM search
             WHERE {$clause};
             SQL;
-        $searches = functions_mysqli::query2array($query);
+        $searches = $conf->sql_backend::query2array($query);
 
         if ($searches !== []) {
             // we don't want spies to be able to see the search rules of any prior search (performed
@@ -120,6 +120,8 @@ final class functions_search
     public static function get_sql_search_clause(
         array $search
     ): array {
+        global $conf;
+
         // SQL where clauses are stored in $clauses array during query
         // construction
         $clauses = [];
@@ -198,7 +200,7 @@ final class functions_search
                         FROM categories
                         WHERE {$catWordClauses};
                         SQL;
-                    $cat_ids = functions_mysqli::query2array($query, null, 'id');
+                    $cat_ids = $conf->sql_backend::query2array($query, null, 'id');
                     $cat_ids_by_word[$word] = $cat_ids;
 
                     if ($cat_ids !== []) {
@@ -208,7 +210,7 @@ final class functions_search
                             FROM image_category
                             WHERE category_id IN ({$catIdsList});
                             SQL;
-                        $cat_image_ids = functions_mysqli::query2array($query, null, 'image_id');
+                        $cat_image_ids = $conf->sql_backend::query2array($query, null, 'image_id');
 
                         if ($cat_image_ids !== []) {
                             $field_clauses[] = 'id IN (' . implode(', ', $cat_image_ids) . ')';
@@ -223,7 +225,7 @@ final class functions_search
                         FROM tags
                         WHERE name LIKE '%{$word}%';
                         SQL;
-                    $tag_ids = functions_mysqli::query2array($query, null, 'id');
+                    $tag_ids = $conf->sql_backend::query2array($query, null, 'id');
                     $tag_ids_by_word[$word] = $tag_ids;
 
                     if ($tag_ids !== []) {
@@ -233,7 +235,7 @@ final class functions_search
                             FROM image_tag
                             WHERE tag_id IN ({$tagIdsList});
                             SQL;
-                        $tag_image_ids = functions_mysqli::query2array($query, null, 'image_id');
+                        $tag_image_ids = $conf->sql_backend::query2array($query, null, 'image_id');
 
                         if ($tag_image_ids !== []) {
                             $field_clauses[] = 'id IN (' . implode(', ', $tag_image_ids) . ')';
@@ -447,7 +449,7 @@ final class functions_search
                 {$forbidden}
                 {$conf->order_by};
                 SQL;
-            $items = functions_mysqli::query2array($query, null, 'id');
+            $items = $conf->sql_backend::query2array($query, null, 'id');
 
             $logger->debug(__FUNCTION__ . ' ' . count($items) . ' items in $items');
         }
@@ -493,6 +495,7 @@ final class functions_search
         array $fields
     ): array {
         global $page;
+        global $conf;
 
         $clauses = [];
         $variants = array_merge([$token->term], $token->variants);
@@ -525,7 +528,7 @@ final class functions_search
                     // Prior to MySQL 8.0.4, MySQL used the Henry Spencer regular expression library to support
                     // regular expression operations, rather than International Components for Unicode (ICU)
                     $page['use_regexp_ICU'] = false;
-                    $db_version = functions_mysqli::pwg_get_db_version();
+                    $db_version = $conf->sql_backend::pwg_get_db_version();
 
                     if (! preg_match('/mariadb/i', $db_version) &&
                         version_compare($db_version, '8.0.4', '>')
@@ -538,7 +541,7 @@ final class functions_search
                 $post = (($token->modifier & self::QST_WILDCARD_END) !== 0) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
 
                 foreach ($fields as $field) {
-                    $clauses[] = $field . ' ' . functions_mysqli::DB_REGEX_OPERATOR . " '" . $pre . addslashes(preg_quote($variant)) . $post . "'";
+                    $clauses[] = $field . ' ' . $conf->sql_backend::DB_REGEX_OPERATOR . " '" . $pre . addslashes(preg_quote($variant)) . $post . "'";
                 }
             } else {
                 $ft = $variant;
@@ -566,6 +569,8 @@ final class functions_search
         QExpression $expr,
         QResults $qsr
     ): void {
+        global $conf;
+
         $qsr->images_iids = array_fill(0, count($expr->stokens), []);
 
         $query_base = <<<SQL
@@ -651,7 +656,7 @@ final class functions_search
 
             if (! empty($clauses)) {
                 $query = $query_base . '(' . implode("\n OR ", $clauses) . ')';
-                $qsr->images_iids[$i] = functions_mysqli::query2array($query, null, 'id');
+                $qsr->images_iids[$i] = $conf->sql_backend::query2array($query, null, 'id');
             }
         }
     }
@@ -660,6 +665,8 @@ final class functions_search
         QExpression $expr,
         QResults $qsr
     ): void {
+        global $conf;
+
         $token_tag_ids = array_fill(0, count($expr->stokens), []);
         $qsr->tag_iids = $token_tag_ids;
         $all_tags = [];
@@ -684,9 +691,9 @@ final class functions_search
                 SELECT * FROM tags
                 WHERE ({$clausesList});
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($tag = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($tag = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $token_tag_ids[$i][] = $tag['id'];
                 $all_tags[$tag['id']] = $tag;
             }
@@ -722,7 +729,7 @@ final class functions_search
                     WHERE tag_id IN ({$tagIdsList})
                     GROUP BY image_id;
                     SQL;
-                $qsr->tag_iids[$i] = functions_mysqli::query2array($query, null, 'image_id');
+                $qsr->tag_iids[$i] = $conf->sql_backend::query2array($query, null, 'image_id');
 
                 if (($expr->stoken_modifiers[$i] & self::QST_NOT) !== 0) {
                     $not_ids = array_merge($not_ids, $tag_ids);
@@ -735,9 +742,9 @@ final class functions_search
                 }
             } elseif (isset($token->scope) && $token->scope->id == 'tag' && strlen($token->term) == 0) {
                 if (($token->modifier & self::QST_WILDCARD) !== 0) { // eg. 'tag:*' returns all tagged images
-                    $qsr->tag_iids[$i] = functions_mysqli::query2array('SELECT DISTINCT image_id FROM image_tag;', null, 'image_id');
+                    $qsr->tag_iids[$i] = $conf->sql_backend::query2array('SELECT DISTINCT image_id FROM image_tag;', null, 'image_id');
                 } else { // eg. 'tag:' returns all untagged images
-                    $qsr->tag_iids[$i] = functions_mysqli::query2array('SELECT id FROM images LEFT JOIN image_tag ON id = image_id WHERE image_id IS NULL;', null, 'id');
+                    $qsr->tag_iids[$i] = $conf->sql_backend::query2array('SELECT id FROM images LEFT JOIN image_tag ON id = image_id WHERE image_id IS NULL;', null, 'id');
                 }
             }
         }
@@ -782,9 +789,9 @@ final class functions_search
                 INNER JOIN user_cache_categories ON id = cat_id AND user_id = {$user['id']}
                 WHERE ({$clausesList});
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($cat = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($cat = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $token_cat_ids[$i][] = $cat['id'];
                 $all_cats[$cat['id']] = $cat;
             }
@@ -822,7 +829,7 @@ final class functions_search
                         INNER JOIN user_cache_categories ON id = cat_id AND user_id = {$user['id']}
                         WHERE id IN ({$subcatIdsList});
                         SQL;
-                    $cat_ids = functions_mysqli::query2array($query, null, 'id');
+                    $cat_ids = $conf->sql_backend::query2array($query, null, 'id');
                 }
 
                 $catIdsList = implode(', ', $cat_ids);
@@ -831,7 +838,7 @@ final class functions_search
                     WHERE category_id IN ({$catIdsList})
                     GROUP BY image_id;
                     SQL;
-                $qsr->cat_iids[$i] = functions_mysqli::query2array($query, null, 'image_id');
+                $qsr->cat_iids[$i] = $conf->sql_backend::query2array($query, null, 'image_id');
 
                 if (($expr->stoken_modifiers[$i] & self::QST_NOT) !== 0) {
                     $not_ids = array_merge($not_ids, $cat_ids);
@@ -847,9 +854,9 @@ final class functions_search
                       strlen($token->term) == 0
             ) {
                 if (($token->modifier & self::QST_WILDCARD) !== 0) { // eg. 'category:*' returns all images associated to an album
-                    $qsr->cat_iids[$i] = functions_mysqli::query2array('SELECT DISTINCT image_id FROM image_category;', null, 'image_id');
+                    $qsr->cat_iids[$i] = $conf->sql_backend::query2array('SELECT DISTINCT image_id FROM image_category;', null, 'image_id');
                 } else { // eg. 'category:' returns all orphan images
-                    $qsr->cat_iids[$i] = functions_mysqli::query2array('SELECT id FROM images LEFT JOIN image_category ON id = image_id WHERE image_id IS NULL;', null, 'id');
+                    $qsr->cat_iids[$i] = $conf->sql_backend::query2array('SELECT id FROM images LEFT JOIN image_category ON id = image_id WHERE image_id IS NULL;', null, 'id');
                 }
             }
         }
@@ -1127,7 +1134,7 @@ final class functions_search
             {$conf->order_by};
             SQL;
 
-        $ids = functions_mysqli::query2array($query, null, 'id');
+        $ids = $conf->sql_backend::query2array($query, null, 'id');
 
         $debug[] = count($ids) . ' final photo count -->';
         $template->append('footer_elements', implode("\n", $debug));
@@ -1192,6 +1199,8 @@ final class functions_search
 
     public static function get_available_search_uuid(): string
     {
+        global $conf;
+
         $candidate = 'psk-' . date('Ymd') . '-' . functions_session::generate_key(10);
 
         $query = <<<SQL
@@ -1199,7 +1208,7 @@ final class functions_search
             FROM search
             WHERE search_uuid = '{$candidate}';
             SQL;
-        [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$counter] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($counter == 0) {
             return $candidate;
@@ -1213,14 +1222,15 @@ final class functions_search
         ?string $forked_from = null
     ): array {
         global $user;
+        global $conf;
 
-        [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+        [$dbnow] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT NOW();'));
         $search_uuid = self::get_available_search_uuid();
 
-        functions_mysqli::single_insert(
+        $conf->sql_backend::single_insert(
             'search',
             [
-                'rules' => functions_mysqli::pwg_db_real_escape_string(serialize($rules)),
+                'rules' => $conf->sql_backend::pwg_db_real_escape_string(serialize($rules)),
                 'created_on' => $dbnow,
                 'created_by' => $user['user_id'],
                 'search_uuid' => $search_uuid,

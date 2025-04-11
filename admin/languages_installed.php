@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\languages;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
@@ -105,13 +104,13 @@ foreach ($missing_language_ids as $language_id) {
         SET language = '{$default_language}'
         WHERE language = '{$language_id}';
         SQL;
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
 
     $query = <<<SQL
         DELETE FROM languages
         WHERE id = '{$language_id}';
         SQL;
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
 }
 
 $template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);

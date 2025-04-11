@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
 use Piwigo\inc\functions_plugins;
@@ -25,7 +24,7 @@ $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
     FROM categories;
     SQL;
-[$albums_counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$albums_counter] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -74,7 +73,7 @@ if (isset($_POST['simpleAutoOrder']) ||
         FROM categories
         WHERE id_uppercat {$id_condition};
         SQL;
-    $category_ids = functions_mysqli::query2array($query, null, 'id');
+    $category_ids = $conf->sql_backend::query2array($query, null, 'id');
 
     if (isset($_POST['recursiveAutoOrder'])) {
         $category_ids = functions_category::get_subcat_ids($category_ids);
@@ -103,9 +102,9 @@ if (isset($_POST['simpleAutoOrder']) ||
         FROM categories
         WHERE id IN ({$category_ids_str});
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $row['name'] = functions_plugins::trigger_change('render_category_name', $row['name'], 'admin_cat_list');
 
         $sort[] = $order_by_date ? $ref_dates[$row['id']] : functions::remove_accents($row['name']);
@@ -155,7 +154,7 @@ $query = <<<SQL
     FROM categories;
     SQL;
 
-$allAlbum = functions_mysqli::query2array($query);
+$allAlbum = $conf->sql_backend::query2array($query);
 
 //Make an id tree
 $associatedTree = [];
@@ -189,13 +188,13 @@ $query = <<<SQL
     GROUP BY category_id;
     SQL;
 
-$nb_photos_in = functions_mysqli::query2array($query, 'category_id', 'nb_photos');
+$nb_photos_in = $conf->sql_backend::query2array($query, 'category_id', 'nb_photos');
 
 $query = <<<SQL
     SELECT id, uppercats
     FROM categories;
     SQL;
-$all_categories = functions_mysqli::query2array($query, 'id', 'uppercats');
+$all_categories = $conf->sql_backend::query2array($query, 'id', 'uppercats');
 
 $subcats_of = [];
 

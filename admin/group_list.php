@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
@@ -69,7 +68,7 @@ $query = <<<SQL
     FROM user_groups
     ORDER BY name ASC;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
 $admin_url = functions_url::get_root_url() . 'admin.php?page=';
 $perm_url = $admin_url . 'group_perm&amp;group_id=';
@@ -79,7 +78,7 @@ $toggle_is_default_url = $admin_url . 'group_list&amp;toggle_is_default=';
 
 $group_counter = 0;
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $query = <<<SQL
         SELECT u.{$conf->user_fields['username']} AS username
         FROM users AS u
@@ -87,9 +86,9 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         WHERE ug.group_id = {$row['id']};
         SQL;
     $members = [];
-    $res = functions_mysqli::pwg_query($query);
+    $res = $conf->sql_backend::pwg_query($query);
 
-    while ($us = functions_mysqli::pwg_db_fetch_assoc($res)) {
+    while ($us = $conf->sql_backend::pwg_db_fetch_assoc($res)) {
         $members[] = $us['username'];
     }
 
@@ -98,7 +97,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         [
             'NAME' => $row['name'],
             'ID' => $row['id'],
-            'IS_DEFAULT' => (functions_mysqli::get_boolean($row['is_default']) ? ' [' . functions::l10n('default') . ']' : ''),
+            'IS_DEFAULT' => ($conf->sql_backend::get_boolean($row['is_default']) ? ' [' . functions::l10n('default') . ']' : ''),
             'NB_MEMBERS' => count($members),
             'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
             'MEMBERS' => functions::l10n_dec('%d member', '%d members', count($members)),

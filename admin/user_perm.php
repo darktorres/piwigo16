@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
 use Piwigo\inc\functions_html;
@@ -60,7 +59,7 @@ if (isset($_POST['falsify']) &&
         WHERE user_id = {$page['user']}
             AND cat_id IN ({$subcat_ids});
         SQL;
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
 } elseif (isset($_POST['truthify']) &&
           isset($_POST['cat_false']) &&
           count($_POST['cat_false']) > 0
@@ -105,12 +104,12 @@ $query = <<<SQL
     INNER JOIN categories AS c ON c.id = ga.cat_id
     WHERE ug.user_id = {$page['user']};
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-if (functions_mysqli::pwg_db_num_rows($result) > 0) {
+if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
     $cats = [];
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $cats[] = $row;
         $group_authorized[] = $row['cat_id'];
     }
@@ -143,10 +142,10 @@ if ($group_authorized !== []) {
 $query_true .= ';';
 functions_category::display_select_cat_wrapper($query_true, [], 'category_option_true');
 
-$result = functions_mysqli::pwg_query($query_true);
+$result = $conf->sql_backend::pwg_query($query_true);
 $authorized_ids = [];
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $authorized_ids[] = $row['id'];
 }
 

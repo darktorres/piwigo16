@@ -28,7 +28,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
@@ -65,7 +64,7 @@ $query = <<<SQL
     SQL;
 
 /* Add active permalinks */
-$permalinks = functions_mysqli::query2array($query, null, 'permalink');
+$permalinks = $conf->sql_backend::query2array($query, null, 'permalink');
 $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
 /* Link all supported templates to their respective handle */
@@ -154,7 +153,7 @@ if (isset($_POST['submit'])) {
         WHERE param = 'extents_for_templates';
         SQL;
 
-    if (functions_mysqli::pwg_query($query) !== null) {
+    if ($conf->sql_backend::pwg_query($query) !== null) {
         $page['infos'][] = functions::l10n('Templates configuration has been recorded.');
     }
 }

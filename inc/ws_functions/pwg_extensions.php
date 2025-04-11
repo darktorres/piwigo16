@@ -14,7 +14,6 @@ namespace Piwigo\inc\ws_functions;
 use Piwigo\admin\inc\plugins;
 use Piwigo\admin\inc\themes;
 use Piwigo\admin\inc\updates;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_user;
 use Piwigo\inc\PwgError;
@@ -279,7 +278,7 @@ final class pwg_extensions
                 ];
             }
 
-            functions::conf_update_param('updates_ignored', functions_mysqli::pwg_db_real_escape_string(serialize($conf->updates_ignored)));
+            functions::conf_update_param('updates_ignored', $conf->sql_backend::pwg_db_real_escape_string(serialize($conf->updates_ignored)));
             unset($_SESSION['extensions_need_update']);
             return true;
         }
@@ -296,7 +295,7 @@ final class pwg_extensions
             $conf->updates_ignored[$params['type']][] = $params['id'];
         }
 
-        functions::conf_update_param('updates_ignored', functions_mysqli::pwg_db_real_escape_string(serialize($conf->updates_ignored)));
+        functions::conf_update_param('updates_ignored', $conf->sql_backend::pwg_db_real_escape_string(serialize($conf->updates_ignored)));
         unset($_SESSION['extensions_need_update']);
         return true;
     }

@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\inc;
 
 use Closure;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Smarty;
 use Smarty_Internal_Template;
 use SmartyException;
@@ -150,7 +149,7 @@ final class Template
                 );
             }
 
-            if (class_exists(functions_mysqli::class, false)) {
+            if (class_exists($conf->sql_backend, false)) {
                 functions::conf_update_param('data_dir_checked', 1);
             }
         }

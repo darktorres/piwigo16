@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 //--------------------------------------------------------------------- include
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_search;
@@ -117,7 +116,7 @@ if (in_array('author', $fields)) {
         AND author IS NOT NULL
         LIMIT 1;
         SQL;
-    $first_author = functions_mysqli::query2array($query);
+    $first_author = $conf->sql_backend::query2array($query);
 
     if ($first_author !== []) {
         $search['fields']['author'] = [

@@ -9,7 +9,6 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_url;
@@ -31,7 +30,7 @@ if (! (defined('IN_ADMIN') && IN_ADMIN) &&           // no message inside admini
         SELECT COUNT(*) AS "COUNT(*)"
         FROM images;
         SQL;
-    [$nb_photos] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$nb_photos] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
     if ($nb_photos == 0) {
         // make sure we don't use the mobile theme, which is not compatible with

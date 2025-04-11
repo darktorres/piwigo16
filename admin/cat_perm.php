@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
 use Piwigo\inc\functions_html;
@@ -61,7 +60,7 @@ if (! empty($_POST)) {
             FROM group_access
             WHERE cat_id = {$page['cat']};
             SQL;
-        $groups_granted = functions_mysqli::query2array($query, null, 'group_id');
+        $groups_granted = $conf->sql_backend::query2array($query, null, 'group_id');
 
         if (! isset($_POST['groups'])) {
             $_POST['groups'] = [];
@@ -82,7 +81,7 @@ if (! empty($_POST)) {
                 WHERE group_id IN ({$imploded_deny_groups})
                     AND cat_id IN ({$imploded_subcat_ids});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
 
         //
@@ -104,7 +103,7 @@ if (! empty($_POST)) {
                 WHERE id IN ({$imploded_cat_ids})
                     AND status = 'private';
                 SQL;
-            $private_cats = functions_mysqli::query2array($query, null, 'id');
+            $private_cats = $conf->sql_backend::query2array($query, null, 'id');
 
             $inserts = [];
 
@@ -117,7 +116,7 @@ if (! empty($_POST)) {
                 }
             }
 
-            functions_mysqli::mass_inserts(
+            $conf->sql_backend::mass_inserts(
                 'group_access',
                 ['group_id', 'cat_id'],
                 $inserts,
@@ -135,7 +134,7 @@ if (! empty($_POST)) {
             FROM user_access
             WHERE cat_id = {$page['cat']};
             SQL;
-        $users_granted = functions_mysqli::query2array($query, null, 'user_id');
+        $users_granted = $conf->sql_backend::query2array($query, null, 'user_id');
 
         if (! isset($_POST['users'])) {
             $_POST['users'] = [];
@@ -156,7 +155,7 @@ if (! empty($_POST)) {
                 WHERE user_id IN ({$deny_users_imploded})
                     AND cat_id IN ({$subcat_ids_imploded});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
 
         //
@@ -205,7 +204,7 @@ $query = <<<SQL
     FROM user_groups
     ORDER BY name ASC;
     SQL;
-$groups = functions_mysqli::query2array($query, 'id', 'name');
+$groups = $conf->sql_backend::query2array($query, 'id', 'name');
 $template->assign('groups', $groups);
 
 // groups granted to access the category
@@ -214,7 +213,7 @@ $query = <<<SQL
     FROM group_access
     WHERE cat_id = {$page['cat']};
     SQL;
-$group_granted_ids = functions_mysqli::query2array($query, null, 'group_id');
+$group_granted_ids = $conf->sql_backend::query2array($query, null, 'group_id');
 $template->assign('groups_selected', $group_granted_ids);
 
 // users...
@@ -224,7 +223,7 @@ $query = <<<SQL
     SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['username']} AS username
     FROM users;
     SQL;
-$users = functions_mysqli::query2array($query, 'id', 'username');
+$users = $conf->sql_backend::query2array($query, 'id', 'username');
 $template->assign('users', $users);
 
 $query = <<<SQL
@@ -232,7 +231,7 @@ $query = <<<SQL
     FROM user_access
     WHERE cat_id = {$page['cat']};
     SQL;
-$user_granted_direct_ids = functions_mysqli::query2array($query, null, 'user_id');
+$user_granted_direct_ids = $conf->sql_backend::query2array($query, null, 'user_id');
 $template->assign('users_selected', $user_granted_direct_ids);
 
 $user_granted_indirect_ids = [];
@@ -246,9 +245,9 @@ if ($group_granted_ids !== []) {
         FROM user_group
         WHERE group_id IN ({$group_granted_ids_imploded});
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         if (! isset($granted_groups[$row['group_id']])) {
             $granted_groups[$row['group_id']] = [];
         }

@@ -13,7 +13,6 @@ use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_metadata_admin;
 use Piwigo\admin\inc\tabsheet;
 use Piwigo\admin\LocalSiteReader;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
 use Piwigo\inc\functions_html;
@@ -45,7 +44,7 @@ $query = <<<SQL
     FROM sites
     WHERE id = {$site_id};
     SQL;
-[$site_url] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$site_url] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 if (! isset($site_url)) {
     exit('site ' . $site_id . ' does not exist');
@@ -53,7 +52,7 @@ if (! isset($site_url)) {
 
 $site_is_remote = functions_url::url_is_remote($site_url);
 
-[$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+[$dbnow] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT NOW();'));
 define('CURRENT_DATE', $dbnow);
 
 $error_labels = [
@@ -151,7 +150,7 @@ if (isset($_POST['submit']) &&
         if (isset($_POST['subcats-included']) &&
             $_POST['subcats-included'] == 1
         ) {
-            $db_regex = functions_mysqli::DB_REGEX_OPERATOR;
+            $db_regex = $conf->sql_backend::DB_REGEX_OPERATOR;
             $query .= <<<SQL
                 AND uppercats {$db_regex} '(^|,){$_POST['cat']}(,|$)'
 
@@ -165,7 +164,7 @@ if (isset($_POST['submit']) &&
     }
 
     $query = trim($query) . ';';
-    $db_categories = functions_mysqli::query2array($query, 'id');
+    $db_categories = $conf->sql_backend::query2array($query, 'id');
 
     // get category full directories in an array for comparison with file
     // system directory tree
@@ -185,9 +184,9 @@ if (isset($_POST['submit']) &&
         SELECT id
         FROM categories;
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $next_rank[$row['id']] = 1;
     }
 
@@ -197,9 +196,9 @@ if (isset($_POST['submit']) &&
         FROM categories
         GROUP BY id_uppercat;
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         // for the id_uppercat NULL, we write 'NULL' and not the empty string
         if (! isset($row['id_uppercat']) ||
             $row['id_uppercat'] == ''
@@ -211,7 +210,7 @@ if (isset($_POST['submit']) &&
     }
 
     // next category id available
-    $next_id = functions_mysqli::pwg_db_nextval('id', 'categories');
+    $next_id = $conf->sql_backend::pwg_db_nextval('id', 'categories');
 
     // retrieve sub-directories fulldirs from the site reader
     $fs_fulldirs = $site_reader->get_full_directories($basedir);
@@ -244,9 +243,9 @@ if (isset($_POST['submit']) &&
                 'name' => str_replace('_', ' ', $dir),
                 'site_id' => $site_id,
                 'commentable' =>
-                  functions_mysqli::boolean_to_string($conf->newcat_default_commentable),
+                  $conf->sql_backend::boolean_to_string($conf->newcat_default_commentable),
                 'status' => $conf->newcat_default_status,
-                'visible' => functions_mysqli::boolean_to_string($conf->newcat_default_visible),
+                'visible' => $conf->sql_backend::boolean_to_string($conf->newcat_default_visible),
             ];
 
             if (isset($db_fulldirs[dirname($fulldir)])) {
@@ -302,7 +301,7 @@ if (isset($_POST['submit']) &&
                 'id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable',
                 'visible', 'status', 'sort_rank', 'global_rank',
             ];
-            functions_mysqli::mass_inserts('categories', $dbfields, $inserts);
+            $conf->sql_backend::mass_inserts('categories', $dbfields, $inserts);
 
             // add default permissions to categories
             $category_ids = [];
@@ -330,12 +329,12 @@ if (isset($_POST['submit']) &&
                     FROM group_access
                     WHERE cat_id IN ({$category_up});
                     SQL;
-                $result = functions_mysqli::pwg_query($query);
+                $result = $conf->sql_backend::pwg_query($query);
 
                 if (! empty($result)) {
                     $granted_grps = [];
 
-                    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+                    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                         if (! isset($granted_grps[$row['cat_id']])) {
                             $granted_grps[$row['cat_id']] = [];
                         }
@@ -352,12 +351,12 @@ if (isset($_POST['submit']) &&
                     FROM user_access
                     WHERE cat_id IN ({$category_up});
                     SQL;
-                $result = functions_mysqli::pwg_query($query);
+                $result = $conf->sql_backend::pwg_query($query);
 
                 if (! empty($result)) {
                     $granted_users = [];
 
-                    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+                    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                         if (! isset($granted_users[$row['cat_id']])) {
                             $granted_users[$row['cat_id']] = [];
                         }
@@ -402,9 +401,9 @@ if (isset($_POST['submit']) &&
                     }
                 }
 
-                functions_mysqli::mass_inserts('group_access', ['group_id', 'cat_id'], $insert_granted_grps);
+                $conf->sql_backend::mass_inserts('group_access', ['group_id', 'cat_id'], $insert_granted_grps);
                 $insert_granted_users = array_unique($insert_granted_users, SORT_REGULAR);
-                functions_mysqli::mass_inserts('user_access', ['user_id', 'cat_id'], $insert_granted_users);
+                $conf->sql_backend::mass_inserts('user_access', ['user_id', 'cat_id'], $insert_granted_users);
             } else {
                 functions_admin::add_permission_on_category($category_ids, functions_admin::get_admins());
             }
@@ -483,11 +482,11 @@ if (isset($_POST['submit']) &&
             FROM images
             WHERE storage_category_id IN ({$wrappedCatIds});
             SQL;
-        $db_elements = functions_mysqli::query2array($query, 'id', 'path');
+        $db_elements = $conf->sql_backend::query2array($query, 'id', 'path');
     }
 
     // next element id available
-    $next_element_id = functions_mysqli::pwg_db_nextval('id', 'images');
+    $next_element_id = $conf->sql_backend::pwg_db_nextval('id', 'images');
 
     $start = functions::get_moment();
 
@@ -518,10 +517,10 @@ if (isset($_POST['submit']) &&
 
         $insert = [
             'id' => $next_element_id++,
-            'file' => functions_mysqli::pwg_db_real_escape_string($filename),
-            'name' => functions_mysqli::pwg_db_real_escape_string(functions::get_name_from_file($filename)),
+            'file' => $conf->sql_backend::pwg_db_real_escape_string($filename),
+            'name' => $conf->sql_backend::pwg_db_real_escape_string(functions::get_name_from_file($filename)),
             'date_available' => CURRENT_DATE,
-            'path' => functions_mysqli::pwg_db_real_escape_string($path),
+            'path' => $conf->sql_backend::pwg_db_real_escape_string($path),
             'representative_ext' => $fs[$path]['representative_ext'],
             'storage_category_id' => $db_fulldirs[$dirname],
             'added_by' => $user['id'],
@@ -583,9 +582,9 @@ if (isset($_POST['submit']) &&
                 FROM image_format
                 WHERE image_id IN ({$existingIdsList});
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 if (! isset($db_formats[$row['image_id']])) {
                     $db_formats[$row['image_id']] = [];
                 }
@@ -640,14 +639,14 @@ if (isset($_POST['submit']) &&
     if (! $simulate) {
         // inserts all new elements
         if ($inserts !== []) {
-            functions_mysqli::mass_inserts(
+            $conf->sql_backend::mass_inserts(
                 'images',
                 array_keys($inserts[0]),
                 $inserts
             );
 
             // inserts all links between new elements and their storage category
-            functions_mysqli::mass_inserts(
+            $conf->sql_backend::mass_inserts(
                 'image_category',
                 array_keys($insert_links[0]),
                 $insert_links
@@ -667,7 +666,7 @@ if (isset($_POST['submit']) &&
 
         // inserts all formats
         if ($insert_formats !== []) {
-            functions_mysqli::mass_inserts(
+            $conf->sql_backend::mass_inserts(
                 'image_format',
                 array_keys($insert_formats[0]),
                 $insert_formats
@@ -680,7 +679,7 @@ if (isset($_POST['submit']) &&
                 DELETE FROM image_format
                 WHERE format_id IN ({$formatsToDeleteList});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
     }
 
@@ -774,7 +773,7 @@ if (isset($_POST['submit']) &&
         if (! $simulate &&
             $datas !== []
         ) {
-            functions_mysqli::mass_updates(
+            $conf->sql_backend::mass_updates(
                 'images',
                 // fields
                 [
@@ -878,7 +877,7 @@ if (isset($_POST['submit']) &&
 
     if (! $simulate) {
         if ($datas !== []) {
-            functions_mysqli::mass_updates(
+            $conf->sql_backend::mass_updates(
                 'images',
                 // fields
                 [
@@ -895,7 +894,7 @@ if (isset($_POST['submit']) &&
                     ),
                 ],
                 $datas,
-                isset($_POST['meta_empty_overrides']) ? 0 : functions_mysqli::MASS_UPDATES_SKIP_EMPTY
+                isset($_POST['meta_empty_overrides']) ? 0 : $conf->sql_backend::MASS_UPDATES_SKIP_EMPTY
             );
         }
 

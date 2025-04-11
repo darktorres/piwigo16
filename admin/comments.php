@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_comment;
@@ -100,9 +99,9 @@ $query = <<<SQL
     FROM comments
     GROUP BY validated;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $nb_total += $row['counter'];
 
     if ($row['validated'] == 'false') {
@@ -143,9 +142,9 @@ $query = <<<SQL
     ORDER BY c.date DESC
     LIMIT {$page['start']}, {$conf->comments_page_nb_comments};
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $thumb = DerivativeImage::thumb_url(
         [
             'id' => $row['image_id'],

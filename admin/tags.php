@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_plugins;
@@ -131,17 +130,17 @@ $query = <<<SQL
     FROM image_tag
     GROUP BY tag_id;
     SQL;
-$tag_counters = functions_mysqli::query2array($query, 'tag_id', 'counter');
+$tag_counters = $conf->sql_backend::query2array($query, 'tag_id', 'counter');
 
 // all tags
 $query = <<<SQL
     SELECT name, id, url_name
     FROM tags;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 $all_tags = [];
 
-while ($tag = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($tag = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $raw_name = $tag['name'];
     $tag['raw_name'] = $raw_name;
     $tag['name'] = functions_plugins::trigger_change('render_tag_name', $raw_name, $tag);

@@ -9,7 +9,6 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
@@ -79,15 +78,15 @@ if (! in_array($conf->comments_page_nb_comments, $items_number)) {
 $since_options = [
     1 => [
         'label' => functions::l10n('today'),
-        'clause' => 'date > ' . functions_mysqli::pwg_db_get_recent_period_expression(1),
+        'clause' => 'date > ' . $conf->sql_backend::pwg_db_get_recent_period_expression(1),
     ],
     2 => [
         'label' => functions::l10n('last %d days', 7),
-        'clause' => 'date > ' . functions_mysqli::pwg_db_get_recent_period_expression(7),
+        'clause' => 'date > ' . $conf->sql_backend::pwg_db_get_recent_period_expression(7),
     ],
     3 => [
         'label' => functions::l10n('last %d days', 30),
-        'clause' => 'date > ' . functions_mysqli::pwg_db_get_recent_period_expression(30),
+        'clause' => 'date > ' . $conf->sql_backend::pwg_db_get_recent_period_expression(30),
     ],
     4 => [
         'label' => functions::l10n('the beginning'),
@@ -382,9 +381,9 @@ if ($page['items_number'] != 'all') {
 }
 
 $query = trim($query) . ';';
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $counter = $row['total_count'];
     $comments[] = $row;
     $element_ids[] = $row['image_id'];
@@ -411,7 +410,7 @@ if ($comments !== []) {
         FROM images
         WHERE id IN ({$element_ids_str});
         SQL;
-    $elements = functions_mysqli::query2array($query, 'id');
+    $elements = $conf->sql_backend::query2array($query, 'id');
 
     // retrieving category information
     $category_ids_str = implode(', ', $category_ids);
@@ -420,7 +419,7 @@ if ($comments !== []) {
         FROM categories
         WHERE id IN ({$category_ids_str});
         SQL;
-    $categories = functions_mysqli::query2array($query, 'id');
+    $categories = $conf->sql_backend::query2array($query, 'id');
 
     foreach ($comments as $comment) {
         if (! empty($elements[$comment['image_id']]['name'])) {

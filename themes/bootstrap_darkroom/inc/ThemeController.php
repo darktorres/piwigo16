@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\themes\bootstrap_darkroom\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
@@ -252,11 +251,11 @@ readonly class ThemeController
             ORDER BY FIELD(id, {$items});
             SQL;
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
         $pictures = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $pictures[] = $row;
         }
 

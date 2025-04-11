@@ -15,7 +15,6 @@ declare(strict_types=1);
 
 // the picture is commentable if it belongs at least to one category which
 // is commentable
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_comment;
 use Piwigo\inc\functions_html;
@@ -93,7 +92,7 @@ if ($page['show_comments']) {
         WHERE image_id = {$page['image_id']}
             {$validated_clause};
         SQL;
-    $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+    $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
     // navigation bar creation
     if (! isset($page['start'])) {
         $page['start'] = 0;
@@ -140,9 +139,9 @@ if ($page['show_comments']) {
             ORDER BY c.date {$comments_order}
             LIMIT {$conf->nb_comment_page} OFFSET {$page['start']};
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             if ($row['author'] == 'guest') {
                 $row['author'] = functions::l10n('guest');
             }

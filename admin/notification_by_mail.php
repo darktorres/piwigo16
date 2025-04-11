@@ -12,7 +12,6 @@ declare(strict_types=1);
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_notification_by_mail;
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_url;
@@ -91,9 +90,9 @@ switch ($page['mode']) {
             $query = <<<SQL
                 SELECT param, value FROM config WHERE param LIKE 'nbm\_%';
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($nbm_user = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($nbm_user = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 if (isset($_POST[$nbm_user['param']])) {
                     functions::conf_update_param($nbm_user['param'], $_POST[$nbm_user['param']], true);
                     $updated_param_count++;
@@ -206,7 +205,7 @@ switch ($page['mode']) {
         $opt_false_selected = [];
 
         foreach ($data_users as $nbm_user) {
-            if (functions_mysqli::get_boolean($nbm_user['enabled'])) {
+            if ($conf->sql_backend::get_boolean($nbm_user['enabled'])) {
                 $opt_true[$nbm_user['check_key']] = stripslashes($nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
 
                 if (isset($_POST['falsify']) &&

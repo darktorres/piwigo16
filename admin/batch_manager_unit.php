@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
@@ -54,9 +53,9 @@ if (isset($_POST['submit'])) {
         FROM images
         WHERE id IN ({$imploded_collection});
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $data = [];
 
         $data['id'] = $row['id'];
@@ -84,7 +83,7 @@ if (isset($_POST['submit'])) {
         functions_admin::set_tags($tag_ids, $row['id']);
     }
 
-    functions_mysqli::mass_updates(
+    $conf->sql_backend::mass_updates(
         'images',
         [
             'primary' => ['id'],
@@ -197,9 +196,9 @@ if (count($page['cat_elements_id']) > 0) {
         {$conf->order_by}
         LIMIT {$page['nb_images']} OFFSET {$page['start']};
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $element_ids[] = $row['id'];
 
         $src_image = new SrcImage($row);

@@ -14,7 +14,6 @@ namespace Piwigo\inc\ws_functions;
 use DateMalformedStringException;
 use Exception;
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_session;
@@ -67,7 +66,7 @@ final class pwg_users
         }
 
         if (! empty($params['username'])) {
-            $escaped_username = functions_mysqli::pwg_db_real_escape_string($params['username']);
+            $escaped_username = $conf->sql_backend::pwg_db_real_escape_string($params['username']);
             $where_clauses[] = "u.{$conf->user_fields['username']} LIKE '{$escaped_username}'"; // TODO: why no wildcard? this is the same as comparing with =
         }
 
@@ -75,13 +74,13 @@ final class pwg_users
 
         if (! empty($params['filter'])) {
             $filter_query = "SELECT id FROM user_groups WHERE name LIKE '%{$params['filter']}%';";
-            $filtered_groups_res = functions_mysqli::pwg_query($filter_query);
+            $filtered_groups_res = $conf->sql_backend::pwg_query($filter_query);
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($filtered_groups_res)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($filtered_groups_res)) {
                 $filtered_groups[] = $row['id'];
             }
 
-            $escaped_filter = functions_mysqli::pwg_db_real_escape_string($params['filter']);
+            $escaped_filter = $conf->sql_backend::pwg_db_real_escape_string($params['filter']);
             $filter_where_clause = "(u.{$conf->user_fields['username']} LIKE '%{$escaped_filter}%' OR u.{$conf->user_fields['email']} LIKE '%{$escaped_filter}%'";
 
             if ($filtered_groups !== []) {
@@ -110,7 +109,7 @@ final class pwg_users
         }
 
         if (! empty($params['status'])) {
-            $params['status'] = array_intersect($params['status'], functions_mysqli::get_enums('user_infos', 'status'));
+            $params['status'] = array_intersect($params['status'], $conf->sql_backend::get_enums('user_infos', 'status'));
 
             if ($params['status'] !== []) {
                 $where_clauses[] = 'ui.status IN ("' . implode('", "', $params['status']) . '")';
@@ -250,10 +249,10 @@ final class pwg_users
             SQL;
 
         $query = trim($query) . ';';
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
         $users = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $total_count = $row['total_count'];
             $row['id'] = intval($row['id']);
 
@@ -274,9 +273,9 @@ final class pwg_users
                     FROM user_group
                     WHERE user_id IN ({$user_ids});
                     SQL;
-                $result = functions_mysqli::pwg_query($query);
+                $result = $conf->sql_backend::pwg_query($query);
 
-                while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+                while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                     $users[$row['user_id']]['groups'][] = intval($row['group_id']);
                 }
             }
@@ -295,7 +294,7 @@ final class pwg_users
                     $last_visit = $cur_user['last_visit'];
                     $users[$cur_user['id']]['last_visit'] = $last_visit;
 
-                    if (! functions_mysqli::get_boolean($cur_user['last_visit_from_history']) &&
+                    if (! $conf->sql_backend::get_boolean($cur_user['last_visit_from_history']) &&
                         empty($last_visit)
                     ) {
                         $last_visit = functions_user::get_user_last_visit_from_history($cur_user['id'], true);
@@ -450,7 +449,7 @@ final class pwg_users
                 FROM user_infos
                 WHERE status IN ('webmaster', 'admin');
                 SQL;
-            $protected_users = array_merge($protected_users, functions_mysqli::query2array($query, null, 'user_id'));
+            $protected_users = array_merge($protected_users, $conf->sql_backend::query2array($query, null, 'user_id'));
         }
 
         // protect some users
@@ -551,7 +550,7 @@ final class pwg_users
                         FROM user_infos
                         WHERE status IN ('webmaster', 'admin');
                         SQL;
-                    $admin_ids = functions_mysqli::query2array($query, null, 'user_id');
+                    $admin_ids = $conf->sql_backend::query2array($query, null, 'user_id');
 
                     // we add all admin+webmaster users BUT the user herself
                     $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$user['id']]));
@@ -589,7 +588,7 @@ final class pwg_users
                     FROM user_infos
                     WHERE status IN ('webmaster', 'admin');
                     SQL;
-                $protected_users = array_merge($protected_users, functions_mysqli::query2array($query, null, 'user_id'));
+                $protected_users = array_merge($protected_users, $conf->sql_backend::query2array($query, null, 'user_id'));
             }
 
             // status update query is separated from the rest as not applying to the same
@@ -638,29 +637,29 @@ final class pwg_users
         if (! empty($params['expand']) ||
             $params['expand'] === false
         ) {
-            $updates_infos['expand'] = functions_mysqli::boolean_to_string($params['expand']);
+            $updates_infos['expand'] = $conf->sql_backend::boolean_to_string($params['expand']);
         }
 
         if (! empty($params['show_nb_comments']) ||
             $params['show_nb_comments'] === false
         ) {
-            $updates_infos['show_nb_comments'] = functions_mysqli::boolean_to_string($params['show_nb_comments']);
+            $updates_infos['show_nb_comments'] = $conf->sql_backend::boolean_to_string($params['show_nb_comments']);
         }
 
         if (! empty($params['show_nb_hits']) ||
             $params['show_nb_hits'] === false
         ) {
-            $updates_infos['show_nb_hits'] = functions_mysqli::boolean_to_string($params['show_nb_hits']);
+            $updates_infos['show_nb_hits'] = $conf->sql_backend::boolean_to_string($params['show_nb_hits']);
         }
 
         if (! empty($params['enabled_high']) ||
             $params['enabled_high'] === false
         ) {
-            $updates_infos['enabled_high'] = functions_mysqli::boolean_to_string($params['enabled_high']);
+            $updates_infos['enabled_high'] = $conf->sql_backend::boolean_to_string($params['enabled_high']);
         }
 
         // perform updates
-        functions_mysqli::single_update(
+        $conf->sql_backend::single_update(
             'users',
             $updates,
             [
@@ -685,7 +684,7 @@ final class pwg_users
                 SET status = '{$update_status}'
                 WHERE user_id IN ({$userIdsForStatus});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
 
             // we delete sessions, ie disconnect, for users if status becomes "guest".
             // It's like deactivating the user.
@@ -717,7 +716,7 @@ final class pwg_users
                 SET {$updates}
                 WHERE user_id IN ({$userIds});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
 
         // manage association to groups
@@ -727,7 +726,7 @@ final class pwg_users
                 DELETE FROM user_group
                 WHERE user_id IN ({$userIds});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
 
             // we remove all provided groups that do not really exist
             $groupIds = implode(', ', $params['group_id']);
@@ -736,7 +735,7 @@ final class pwg_users
                 FROM user_groups
                 WHERE id IN ({$groupIds});
                 SQL;
-            $group_ids = functions_mysqli::query2array($query, null, 'id');
+            $group_ids = $conf->sql_backend::query2array($query, null, 'id');
 
             // if only -1 (a group id that can't exist) is in the list, then no
             // group is associated
@@ -753,7 +752,7 @@ final class pwg_users
                     }
                 }
 
-                functions_mysqli::mass_inserts('user_group', array_keys($inserts[0]), $inserts);
+                $conf->sql_backend::mass_inserts('user_group', array_keys($inserts[0]), $inserts);
             }
         }
 
@@ -809,6 +808,7 @@ final class pwg_users
         PwgServer &$service
     ): PwgError|true {
         global $user;
+        global $conf;
 
         if (functions_user::is_a_guest()) {
             return new PwgError(403, 'User must be logged in.');
@@ -820,13 +820,13 @@ final class pwg_users
             FROM images
             WHERE id = {$params['image_id']};
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
         }
 
-        functions_mysqli::single_insert(
+        $conf->sql_backend::single_insert(
             'favorites',
             [
                 'image_id' => $params['image_id'],
@@ -852,6 +852,7 @@ final class pwg_users
         PwgServer &$service
     ): PwgError|true {
         global $user;
+        global $conf;
 
         if (functions_user::is_a_guest()) {
             return new PwgError(403, 'User must be logged in.');
@@ -863,7 +864,7 @@ final class pwg_users
             FROM images
             WHERE id = {$params['image_id']};
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
@@ -875,7 +876,7 @@ final class pwg_users
                 AND image_id = {$params['image_id']};
             SQL;
 
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         return true;
     }
@@ -920,9 +921,9 @@ final class pwg_users
             {$order_by};
             SQL;
         $images = [];
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $image = [];
 
             foreach (['id', 'width', 'height', 'hit'] as $k) {

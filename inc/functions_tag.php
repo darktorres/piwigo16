@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
-
 final class functions_tag
 {
     /**
@@ -21,10 +19,11 @@ final class functions_tag
     public static function get_nb_available_tags(): int|string
     {
         global $user;
+        global $conf;
 
         if (! isset($user['nb_available_tags'])) {
             $user['nb_available_tags'] = count(self::get_available_tags());
-            functions_mysqli::single_update(
+            $conf->sql_backend::single_update(
                 'user_cache',
                 [
                     'nb_available_tags' => $user['nb_available_tags'],
@@ -48,6 +47,8 @@ final class functions_tag
     public static function get_available_tags(
         array $tag_ids = []
     ): array {
+        global $conf;
+
         // we can find top fatter tags among reachable images
         $permissions_conditions = functions_user::get_sql_condition_FandF(
             [
@@ -79,7 +80,7 @@ final class functions_tag
         $query .= <<<SQL
             GROUP BY tag_id;
             SQL;
-        $tag_counters = functions_mysqli::query2array($query, 'tag_id', 'counter');
+        $tag_counters = $conf->sql_backend::query2array($query, 'tag_id', 'counter');
 
         if ($tag_counters === []) {
             return [];
@@ -89,11 +90,11 @@ final class functions_tag
             SELECT *
             FROM tags;
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
         $tags = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $counter = intval($tag_counters[$row['id']]);
 
             if ($counter !== 0) {
@@ -113,14 +114,16 @@ final class functions_tag
      */
     public static function get_all_tags(): array
     {
+        global $conf;
+
         $query = <<<SQL
             SELECT *
             FROM tags;
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
         $tags = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $row['name'] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
             $tags[] = $row;
         }
@@ -253,7 +256,7 @@ final class functions_tag
         $query .= <<<SQL
             {$order_clause};
             SQL;
-        return functions_mysqli::query2array($query, null, 'id');
+        return $conf->sql_backend::query2array($query, null, 'id');
     }
 
     /**
@@ -268,6 +271,8 @@ final class functions_tag
         int $max_tags,
         array $excluded_tag_ids = []
     ): array {
+        global $conf;
+
         if ($items === []) {
             return [];
         }
@@ -302,10 +307,10 @@ final class functions_tag
         }
 
         $query = trim($query) . ';';
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
         $tags = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $row['name'] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
             $tags[] = $row;
         }
@@ -327,6 +332,8 @@ final class functions_tag
         array $url_names = [],
         array $names = []
     ): array {
+        global $conf;
+
         $where_clauses = [];
 
         if ($ids !== []) {
@@ -354,7 +361,7 @@ final class functions_tag
             WHERE {$where_conditions};
             SQL;
 
-        return functions_mysqli::query2array($query);
+        return $conf->sql_backend::query2array($query);
     }
 
     public static function tags_id_compare(

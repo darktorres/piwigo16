@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\admin\inc;
 
 use Exception;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 
 final class functions_upgrade
@@ -30,6 +29,7 @@ final class functions_upgrade
     public static function deactivate_non_standard_plugins(): void
     {
         global $page;
+        global $conf;
 
         $standard_plugins = [
             'AdminTools',
@@ -46,10 +46,10 @@ final class functions_upgrade
                 AND id NOT IN ('{$implodedStandardPlugins}');
             SQL;
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
         $plugins = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $plugins[] = $row['id'];
         }
 
@@ -60,7 +60,7 @@ final class functions_upgrade
                 SET state = 'inactive'
                 WHERE id IN ('{$implodedPlugins}');
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
 
             $page['infos'][] = functions::l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactivating them:')
                                 . '<p><i>' . implode(', ', $plugins) . '</i></p>';
@@ -84,11 +84,11 @@ final class functions_upgrade
             FROM themes
             WHERE id NOT IN ('{$implodedStandardThemes}');
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
         $theme_ids = [];
         $theme_names = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $theme_ids[] = $row['id'];
             $theme_names[] = $row['name'];
         }
@@ -99,7 +99,7 @@ final class functions_upgrade
                 DELETE FROM themes
                 WHERE id IN ('{$implodedThemeIds}');
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
 
             $page['infos'][] = functions::l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactivating them:')
                                 . '<p><i>' . implode(', ', $theme_names) . '</i></p>';
@@ -110,7 +110,7 @@ final class functions_upgrade
                 FROM user_infos
                 WHERE user_id = {$conf->default_user_id};
                 SQL;
-            [$default_theme] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$default_theme] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
             // if the default theme has just been deactivated, let's set another core theme as default
             if (in_array($default_theme, $theme_ids)) {
@@ -121,7 +121,7 @@ final class functions_upgrade
                     FROM themes
                     WHERE id = '{$defaultTemplate}';
                     SQL;
-                [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+                [$counter] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
                 if ($counter < 1) {
                     // we need to activate theme first
@@ -136,7 +136,7 @@ final class functions_upgrade
                     SET theme = '{$defaultTemplate}'
                     WHERE user_id = {$conf->default_user_id};
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
             }
         }
     }
@@ -163,9 +163,9 @@ final class functions_upgrade
                     FROM user_infos
                     WHERE user_id = {$_SESSION['pwg_uid']};
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
 
-                $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+                $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
                 if (isset($row['status']) &&
                     $row['status'] == 'webmaster'
@@ -185,7 +185,7 @@ final class functions_upgrade
         $username = $_POST['username'];
         $password = $_POST['password'];
 
-        $username = functions_mysqli::pwg_db_real_escape_string($username);
+        $username = $conf->sql_backend::pwg_db_real_escape_string($username);
 
         if (version_compare($current_release, '2.0', '<')) {
             $username = mb_convert_encoding($username, 'ISO-8859-1', 'UTF-8');
@@ -207,7 +207,7 @@ final class functions_upgrade
                 SQL;
         }
 
-        $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+        $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
         if (! ($conf->password_verify)($password, $row['password'])) {
             $page['errors'][] = functions::l10n('Invalid password!');
@@ -252,12 +252,14 @@ final class functions_upgrade
      */
     public static function check_upgrade_feed(): bool
     {
+        global $conf;
+
         // retrieve already applied upgrades
         $query = <<<SQL
             SELECT id
             FROM upgrade;
             SQL;
-        $applied = functions_mysqli::query2array($query, null, 'id');
+        $applied = $conf->sql_backend::query2array($query, null, 'id');
 
         // retrieve existing upgrades
         $existing = self::get_available_upgrade_ids();
@@ -271,15 +273,15 @@ final class functions_upgrade
         global $conf;
 
         try {
-            functions_mysqli::pwg_db_connect(
+            $conf->sql_backend::pwg_db_connect(
                 $conf->db_host,
                 $conf->db_user,
                 $conf->db_password,
                 $conf->db_base
             );
-            functions_mysqli::pwg_db_check_version();
+            $conf->sql_backend::pwg_db_check_version();
         } catch (Exception $exception) {
-            functions_mysqli::my_error(functions::l10n($exception->getMessage()), true);
+            $conf->sql_backend::my_error(functions::l10n($exception->getMessage()), true);
         }
     }
 }

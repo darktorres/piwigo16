@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\inc;
 
 use Override;
-use Piwigo\inc\dblayer\functions_mysqli;
 
 /**
  * Monthly calendar style (composed of years/months and days)
@@ -28,17 +27,18 @@ final class CalendarMonthly extends CalendarBase
     ): void {
         parent::initialize($inner_sql);
         global $lang;
+        global $conf;
         $this->calendar_levels = [
             [
-                'sql' => functions_mysqli::pwg_db_get_year($this->date_field),
+                'sql' => $conf->sql_backend::pwg_db_get_year($this->date_field),
                 'labels' => null,
             ],
             [
-                'sql' => functions_mysqli::pwg_db_get_month($this->date_field),
+                'sql' => $conf->sql_backend::pwg_db_get_month($this->date_field),
                 'labels' => $lang['month'],
             ],
             [
-                'sql' => functions_mysqli::pwg_db_get_dayofmonth($this->date_field),
+                'sql' => $conf->sql_backend::pwg_db_get_dayofmonth($this->date_field),
                 'labels' => null,
             ],
         ];
@@ -236,12 +236,13 @@ final class CalendarMonthly extends CalendarBase
         array &$tpl_var
     ): bool {
         global $page;
+        global $conf;
 
         assert(count($page['chronology_date']) == 0);
 
-        $period = functions_mysqli::pwg_db_get_date_YYYYMM($this->date_field);
-        $year = functions_mysqli::pwg_db_get_year($this->date_field);
-        $month = functions_mysqli::pwg_db_get_month($this->date_field);
+        $period = $conf->sql_backend::pwg_db_get_date_YYYYMM($this->date_field);
+        $year = $conf->sql_backend::pwg_db_get_year($this->date_field);
+        $month = $conf->sql_backend::pwg_db_get_month($this->date_field);
         $query = <<<SQL
             SELECT {$period} AS period, COUNT(DISTINCT id) AS count
             {$this->inner_sql}
@@ -250,10 +251,10 @@ final class CalendarMonthly extends CalendarBase
             ORDER BY period DESC;
             SQL;
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
         $items = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $y = substr($row['period'], 0, 4);
             $m = (int) substr($row['period'], 4, 2);
 
@@ -310,10 +311,11 @@ final class CalendarMonthly extends CalendarBase
         array &$tpl_var
     ): bool {
         global $page;
+        global $conf;
 
         assert(count($page['chronology_date']) == 1);
 
-        $period = functions_mysqli::pwg_db_get_date_MMDD($this->date_field);
+        $period = $conf->sql_backend::pwg_db_get_date_MMDD($this->date_field);
         $query = <<<SQL
             SELECT {$period} AS period, COUNT(DISTINCT id) AS count
             {$this->inner_sql}
@@ -322,10 +324,10 @@ final class CalendarMonthly extends CalendarBase
             ORDER BY period ASC;
             SQL;
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
         $items = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $m = (int) substr($row['period'], 0, 2);
             $d = substr($row['period'], 2, 2);
 
@@ -380,7 +382,7 @@ final class CalendarMonthly extends CalendarBase
     ): bool {
         global $page, $lang, $conf;
 
-        $period = functions_mysqli::pwg_db_get_dayofmonth($this->date_field);
+        $period = $conf->sql_backend::pwg_db_get_dayofmonth($this->date_field);
         $query = <<<SQL
             SELECT {$period} AS period, COUNT(DISTINCT id) AS count
             {$this->inner_sql}
@@ -390,9 +392,9 @@ final class CalendarMonthly extends CalendarBase
             SQL;
 
         $items = [];
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $d = (int) $row['period'];
             $items[$d] = [
                 'nb_images' => $row['count'],
@@ -401,8 +403,8 @@ final class CalendarMonthly extends CalendarBase
 
         foreach (array_keys($items) as $day) {
             $page['chronology_date'][CalendarBase::CDAY] = $day;
-            $day_of_week = functions_mysqli::pwg_db_get_dayofweek($this->date_field);
-            $random_function = functions_mysqli::DB_RANDOM_FUNCTION;
+            $day_of_week = $conf->sql_backend::pwg_db_get_dayofweek($this->date_field);
+            $random_function = $conf->sql_backend::DB_RANDOM_FUNCTION;
             $query = <<<SQL
                 SELECT id, file, representative_ext, path, width, height, rotation, {$day_of_week} - 1 AS dow
                 {$this->inner_sql}
@@ -413,7 +415,7 @@ final class CalendarMonthly extends CalendarBase
 
             unset($page['chronology_date'][CalendarBase::CDAY]);
 
-            $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+            $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
             $derivative = new DerivativeImage(derivative_std_params::IMG_SQUARE, new SrcImage($row));
             $items[$day]['derivative'] = $derivative;
             $items[$day]['file'] = $row['file'];

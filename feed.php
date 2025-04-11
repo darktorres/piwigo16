@@ -9,7 +9,6 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_notification;
@@ -35,7 +34,7 @@ if (! empty($feed_id)) {
         FROM user_feed
         WHERE id = '{$feed_id}';
         SQL;
-    $feed_row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+    $feed_row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
     if (empty($feed_row)) {
         functions_html::page_not_found(functions::l10n('Unknown feed identifier'));
@@ -56,7 +55,7 @@ if (! empty($feed_id)) {
 // Check the status now after the user has been loaded
 functions_user::check_status(ACCESS_GUEST);
 
-[$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+[$dbnow] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT NOW();'));
 
 functions_url::set_make_full_url();
 
@@ -100,19 +99,19 @@ if (! $image_only) {
             SET last_check = '{$dbnow}'
             WHERE id = '{$feed_id}';
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
     }
 }
 
 // update the last check from time to time to avoid deletion by maintenance tasks
 if (! empty($feed_id) && $news === [] && (! isset($feed_row['last_check']) || time() - functions::datetime_to_ts($feed_row['last_check']) > 30 * 24 * 3600)) {
-    $last_check_expr = functions_mysqli::pwg_db_get_recent_period_expression(-15, $dbnow);
+    $last_check_expr = $conf->sql_backend::pwg_db_get_recent_period_expression(-15, $dbnow);
     $query = <<<SQL
             UPDATE user_feed
             SET last_check = {$last_check_expr}
             WHERE id = '{$feed_id}';
             SQL;
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
 }
 
 $dates = functions_notification::get_recent_post_dates_array($conf->recent_post_dates['RSS']);

@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
@@ -40,7 +39,7 @@ if (isset($_GET['cat_id'])) {
         FROM categories
         WHERE id = {$_GET['cat_id']};
         SQL;
-    $category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+    $category = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 }
 
 // +-----------------------------------------------------------------------+

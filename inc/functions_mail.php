@@ -15,7 +15,6 @@ use Exception;
 use InvalidArgumentException;
 use Pelago\Emogrifier\CssInliner;
 use PHPMailer\PHPMailer\PHPMailer;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Random\RandomException;
 use SmartyException;
 use Symfony\Component\CssSelector\Exception\ParseException;
@@ -455,7 +454,7 @@ final class functions_mail
         $query .= <<<SQL
             ORDER BY name;
             SQL;
-        $admins = functions_mysqli::query2array($query);
+        $admins = $conf->sql_backend::query2array($query);
 
         if ($admins === []) {
             return $return;
@@ -511,7 +510,7 @@ final class functions_mail
         }
 
         $query = trim($query) . ';';
-        $languages = functions_mysqli::query2array($query, null, 'language');
+        $languages = $conf->sql_backend::query2array($query, null, 'language');
 
         if ($languages === []) {
             return $return;
@@ -528,7 +527,7 @@ final class functions_mail
                     AND {$conf->user_fields['email']} != ''
                     AND language = '{$language}';
                 SQL;
-            $users = functions_mysqli::query2array($query);
+            $users = $conf->sql_backend::query2array($query);
 
             if ($users === []) {
                 continue;

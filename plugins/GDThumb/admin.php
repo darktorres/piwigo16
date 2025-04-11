@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
 use Piwigo\inc\ImageStdParams;
@@ -20,7 +19,7 @@ require __DIR__ . '/config_default.php';
 $params = $conf->gdThumb;
 
 if (isset($_GET['getMissingDerivative'])) {
-    [$max_id, $image_count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT MAX(id) + 1, COUNT(*) FROM images;'));
+    [$max_id, $image_count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT MAX(id) + 1, COUNT(*) FROM images;'));
     $start_id = intval($_POST['prev_page']);
     $max_urls = intval($_POST['max_urls']);
 
@@ -46,10 +45,10 @@ if (isset($_GET['getMissingDerivative'])) {
     $urls = [];
 
     do {
-        $result = functions_mysqli::pwg_query(str_replace('start_id', $start_id, $query_model));
-        $is_last = functions_mysqli::pwg_db_num_rows($result) < $qlimit;
+        $result = $conf->sql_backend::pwg_query(str_replace('start_id', $start_id, $query_model));
+        $is_last = $conf->sql_backend::pwg_db_num_rows($result) < $qlimit;
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $start_id = $row['id'];
             $src_image = new SrcImage($row);
 

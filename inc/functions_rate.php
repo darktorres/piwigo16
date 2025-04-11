@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
-
 final class functions_rate
 {
     /**
@@ -60,7 +58,7 @@ final class functions_rate
                     WHERE user_id = {$user['id']}
                         AND anonymous_id = '{$anonymous_id}';
                     SQL;
-                $already_there = functions_mysqli::query2array($query, null, 'element_id');
+                $already_there = $conf->sql_backend::query2array($query, null, 'element_id');
 
                 if ($already_there !== []) {
                     $already_there_imploded = implode(', ', $already_there);
@@ -70,7 +68,7 @@ final class functions_rate
                             AND anonymous_id = '{$save_anonymous_id}'
                             AND element_id IN ({$already_there_imploded});
                         SQL;
-                    functions_mysqli::pwg_query($query);
+                    $conf->sql_backend::pwg_query($query);
                 }
 
                 $query = <<<SQL
@@ -79,7 +77,7 @@ final class functions_rate
                     WHERE user_id = {$user['id']}
                         AND anonymous_id = '{$save_anonymous_id}';
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
             }
 
             functions_cookie::pwg_set_cookie_var('anonymous_rater', $anonymous_id);
@@ -95,14 +93,14 @@ final class functions_rate
             $query .= " AND anonymous_id = '{$anonymous_id}'\n";
         }
 
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
         $query = <<<SQL
             INSERT INTO rate
                 (user_id, anonymous_id, element_id, rate, date)
             VALUES
                 ({$user['id']}, '{$anonymous_id}', {$image_id}, {$rate}, NOW());
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         return self::update_rating_score($image_id);
     }
@@ -119,6 +117,8 @@ final class functions_rate
     public static function update_rating_score(
         false|int $element_id = false
     ): array {
+        global $conf;
+
         $alt_result = functions_plugins::trigger_change('update_rating_score', false, $element_id);
 
         if ($alt_result !== false) {
@@ -136,9 +136,9 @@ final class functions_rate
         $item_ratecount_avg = 0;
         $by_item = [];
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $all_rates_count += $row['rcount'];
             $all_rates_avg += $row['rsum'];
             $by_item[$row['element_id']] = $row;
@@ -169,7 +169,7 @@ final class functions_rate
             ];
         }
 
-        functions_mysqli::mass_updates(
+        $conf->sql_backend::mass_updates(
             'images',
             [
                 'primary' => ['id'],
@@ -186,7 +186,7 @@ final class functions_rate
                 WHERE element_id IS NULL AND rating_score IS NOT NULL;
                 SQL;
 
-            $to_update = functions_mysqli::query2array($query, null, 'id');
+            $to_update = $conf->sql_backend::query2array($query, null, 'id');
 
             if ($to_update !== []) {
                 $to_update_imploded = implode(', ', $to_update);
@@ -195,7 +195,7 @@ final class functions_rate
                     SET rating_score = NULL
                     WHERE id IN ({$to_update_imploded});
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
             }
         }
 

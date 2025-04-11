@@ -9,7 +9,6 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
@@ -258,7 +257,7 @@ if (empty($page['is_external'])) {
                     AND author IS NOT NULL
                 GROUP BY author;
                 SQL;
-            $authors = functions_mysqli::query2array($query);
+            $authors = $conf->sql_backend::query2array($query);
             $author_names = [];
 
             foreach ($authors as $author) {
@@ -280,7 +279,7 @@ if (empty($page['is_external'])) {
                     SUBDATE(NOW(), INTERVAL 3 MONTH) AS 3m,
                     SUBDATE(NOW(), INTERVAL 6 MONTH) AS 6m;
                 SQL;
-            $thresholds = functions_mysqli::query2array($query)[0];
+            $thresholds = $conf->sql_backend::query2array($query)[0];
 
             $sql_condition = functions_user::get_sql_condition_FandF(
                 [
@@ -298,7 +297,7 @@ if (empty($page['is_external'])) {
                 WHERE {$search_items_clause}
                     {$sql_condition};
                 SQL;
-            $dates = functions_mysqli::query2array($query);
+            $dates = $conf->sql_backend::query2array($query);
             $pre_counters = array_fill_keys(array_keys($thresholds), []);
 
             foreach ($dates as $date_row) {
@@ -373,7 +372,7 @@ if (empty($page['is_external'])) {
                 GROUP BY added_by_id
                 ORDER BY counter DESC;
                 SQL;
-            $added_by = functions_mysqli::query2array($query);
+            $added_by = $conf->sql_backend::query2array($query);
             $user_ids = [];
 
             if ($added_by !== []) {
@@ -388,7 +387,7 @@ if (empty($page['is_external'])) {
                     FROM users
                     WHERE {$conf->user_fields['id']} IN ({$user_ids_str});
                     SQL;
-                $username_of = functions_mysqli::query2array($query, 'id', 'username');
+                $username_of = $conf->sql_backend::query2array($query, 'id', 'username');
 
                 foreach (array_keys($added_by) as $added_by_idx) {
                     $added_by_id = $added_by[$added_by_idx]['added_by_id'];
@@ -414,9 +413,9 @@ if (empty($page['is_external'])) {
                 INNER JOIN user_cache_categories ON id = cat_id AND user_id = {$user['id']}
                 WHERE id IN ({$cat_words});
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $cat_display_name = functions_html::get_cat_display_name_cache(
                     $row['uppercats'],
                     'admin.php?page=album-' // TODO not sure it's relevant to link to admin pages
@@ -451,7 +450,7 @@ if (empty($page['is_external'])) {
                 GROUP BY ext
                 ORDER BY counter DESC;
                 SQL;
-            $template->assign('FILETYPES', functions_mysqli::query2array($query, 'ext', 'counter'));
+            $template->assign('FILETYPES', $conf->sql_backend::query2array($query, 'ext', 'counter'));
         }
 
         $template->assign(
@@ -476,7 +475,7 @@ if (empty($page['is_external'])) {
                         INNER JOIN user_cache_categories ON c.id = cat_id AND user_id = {$user['id']}
                         WHERE id IN ({$cat_ids_str});
                         SQL;
-                    $cats = functions_mysqli::query2array($query);
+                    $cats = $conf->sql_backend::query2array($query);
                     usort($cats, functions_html::name_compare(...));
                     $albums_found = [];
 

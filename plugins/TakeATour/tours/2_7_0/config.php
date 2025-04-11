@@ -5,7 +5,6 @@ declare(strict_types=1);
 /**********************************
  * REQUIRED PATH TO THE TPL FILE */
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_session;
 use Piwigo\inc\functions_url;
@@ -39,13 +38,13 @@ if (isset($_GET['image_id']) &&
 } elseif (is_numeric(functions_session::pwg_get_session_var('TAT_image_id'))) {
     $template->assign('TAT_image_id', functions_session::pwg_get_session_var('TAT_image_id'));
 } else {
-    $random_function = functions_mysqli::DB_RANDOM_FUNCTION;
+    $random_function = $conf->sql_backend::DB_RANDOM_FUNCTION;
     $query = <<<SQL
         SELECT id
         FROM images
         ORDER BY {$random_function}
         LIMIT 1;
         SQL;
-    $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+    $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
     $template->assign('TAT_image_id', $row['id']);
 }

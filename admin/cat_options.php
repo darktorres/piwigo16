@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
 use Piwigo\inc\functions_url;
@@ -49,7 +48,7 @@ if (isset($_POST['falsify']) &&
                 SET commentable = 'false'
                 WHERE id IN ({$cat_true_str});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
             break;
 
         case 'visible':
@@ -67,7 +66,7 @@ if (isset($_POST['falsify']) &&
                 SET representative_picture_id = NULL
                 WHERE id IN ({$cat_true_str});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
             break;
     }
 
@@ -87,7 +86,7 @@ if (isset($_POST['falsify']) &&
                 SET commentable = 'true'
                 WHERE id IN ({$cat_false_str});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
             break;
 
         case 'visible':

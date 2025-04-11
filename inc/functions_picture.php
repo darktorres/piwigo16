@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
-
 final class functions_picture
 {
     /**
@@ -76,7 +74,7 @@ final class functions_picture
                 $matchcount = count($matches[1]);
 
                 for ($i = 0; $i < $matchcount; $i++) {
-                    $result[$matches[1][$i]] = functions_mysqli::get_boolean($matches[2][$i]);
+                    $result[$matches[1][$i]] = $conf->sql_backend::get_boolean($matches[2][$i]);
                 }
             }
         }
@@ -97,7 +95,7 @@ final class functions_picture
 
         foreach ($params as $name => $value) {
             // boolean_to_string return $value, if it's not a bool
-            $result .= '+' . $name . '-' . functions_mysqli::boolean_to_string($value);
+            $result .= '+' . $name . '-' . $conf->sql_backend::boolean_to_string($value);
         }
 
         return $result;
@@ -111,12 +109,14 @@ final class functions_picture
     public static function increase_image_visit_counter(
         int|string $image_id
     ): void {
+        global $conf;
+
         // avoiding auto update of "lastmodified" field
         $query = <<<SQL
             UPDATE images
             SET hit = hit + 1, lastmodified = lastmodified
             WHERE id = {$image_id};
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
     }
 }

@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
@@ -60,8 +59,8 @@ $query = <<<SQL
     WHERE category_id = {$_GET['cat_id']}
     LIMIT 1;
     SQL;
-$result = functions_mysqli::pwg_query($query);
-$category['has_images'] = functions_mysqli::pwg_db_num_rows($result) > 0;
+$result = $conf->sql_backend::pwg_query($query);
+$category['has_images'] = $conf->sql_backend::pwg_db_num_rows($result) > 0;
 
 // number of sub-categories
 $subcat_ids = functions_category::get_subcat_ids([$category['id']]);
@@ -110,7 +109,7 @@ $template->assign(
         'CAT_ID' => $category['id'],
         'CAT_NAME' => htmlspecialchars($category['name']),
         'CAT_COMMENT' => htmlspecialchars($category['comment']),
-        'IS_VISIBLE' => functions_mysqli::boolean_to_string($category['visible']),
+        'IS_VISIBLE' => $conf->sql_backend::boolean_to_string($category['visible']),
 
         'U_DELETE' => $base_url . 'albums',
 
@@ -127,7 +126,7 @@ $template->assign(
 );
 
 if ($conf->activate_comments) {
-    $template->assign('CAT_COMMENTABLE', functions_mysqli::boolean_to_string($category['commentable']));
+    $template->assign('CAT_COMMENTABLE', $conf->sql_backend::boolean_to_string($category['commentable']));
 }
 
 // manage album elements link
@@ -146,7 +145,7 @@ if ($category['has_images']) {
         JOIN image_category ON image_id = id
         WHERE category_id = {$category['id']};
         SQL;
-    [$image_count, $min_date, $max_date] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$image_count, $min_date, $max_date] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
     if ($min_date == $max_date) {
         $info_title = functions::l10n(
@@ -181,7 +180,7 @@ $query = <<<SQL
     FROM image_category
     WHERE category_id IN ({$subcat_ids_str});
     SQL;
-$image_ids_recursive = functions_mysqli::query2array($query, null, 'image_id');
+$image_ids_recursive = $conf->sql_backend::query2array($query, null, 'image_id');
 
 $category['nb_images_recursive'] = count($image_ids_recursive);
 
@@ -193,7 +192,7 @@ $query = <<<SQL
         AND object = 'album'
         AND action = 'add';
     SQL;
-$result = functions_mysqli::query2array($query);
+$result = $conf->sql_backend::query2array($query);
 
 if ($result !== []) {
     $template->assign(
@@ -210,7 +209,7 @@ $query = <<<SQL
     FROM categories
     WHERE id_uppercat = {$category['id']};
     SQL;
-$result = functions_mysqli::query2array($query);
+$result = $conf->sql_backend::query2array($query);
 
 $template->assign(
     [

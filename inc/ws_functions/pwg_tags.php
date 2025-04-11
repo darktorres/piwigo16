@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\inc\ws_functions;
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
 use Piwigo\inc\functions_html;
@@ -106,6 +105,8 @@ final class pwg_tags
         array $params,
         PwgServer &$service
     ): array {
+        global $conf;
+
         // first build all the tag_ids we are interested in
         $tags = functions_tag::find_tags($params['tag_id'], $params['tag_url_name'], $params['tag_name']);
         $tags_by_id = [];
@@ -154,9 +155,9 @@ final class pwg_tags
                 WHERE tag_id IN ({$tagIds}) AND image_id IN ({$imageIds})
                 GROUP BY image_id;
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $row['image_id'] = (int) $row['image_id'];
                 $image_tag_map[$row['image_id']] = explode(',', $row['tag_ids']);
             }
@@ -174,9 +175,9 @@ final class pwg_tags
                 FROM images
                 WHERE id IN ({$imageIds});
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $image = [];
                 $image['sort_rank'] = $rank_of[$row['id']];
                 $image['is_favorite'] = isset($favorite_ids[$row['id']]);
@@ -254,6 +255,8 @@ final class pwg_tags
         array $params,
         PwgServer &$service
     ): PwgError|array {
+        global $conf;
+
         $creation_output = functions_admin::create_tag($params['name']);
 
         if (isset($creation_output['error'])) {
@@ -268,7 +271,7 @@ final class pwg_tags
             WHERE id = {$creation_output['id']};
             SQL;
 
-        $new_tag = functions_mysqli::query2array($query);
+        $new_tag = $conf->sql_backend::query2array($query);
 
         return [
             'info' => $creation_output['info'],
@@ -282,6 +285,8 @@ final class pwg_tags
         array $params,
         PwgServer &$service
     ): PwgError|array {
+        global $conf;
+
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -292,7 +297,7 @@ final class pwg_tags
             FROM tags
             WHERE id IN ({$tag_ids});
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count != count($params['tag_id'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
@@ -317,6 +322,8 @@ final class pwg_tags
         array $params,
         PwgServer &$service
     ): array|PwgError {
+        global $conf;
+
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -330,7 +337,7 @@ final class pwg_tags
             FROM tags
             WHERE id = {$tag_id};
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
@@ -341,7 +348,7 @@ final class pwg_tags
             FROM tags
             WHERE id != {$tag_id};
             SQL;
-        $existing_names = functions_mysqli::query2array($query, null, 'name');
+        $existing_names = $conf->sql_backend::query2array($query, null, 'name');
 
         $update = [];
 
@@ -349,7 +356,7 @@ final class pwg_tags
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already token');
         } elseif (! empty($tag_name)) {
             $update = [
-                'name' => functions_mysqli::pwg_db_real_escape_string($tag_name),
+                'name' => $conf->sql_backend::pwg_db_real_escape_string($tag_name),
                 'url_name' => functions_plugins::trigger_change('render_tag_url', $tag_name),
             ];
 
@@ -357,7 +364,7 @@ final class pwg_tags
 
         functions::pwg_activity('tag', $tag_id, 'edit');
 
-        functions_mysqli::single_update(
+        $conf->sql_backend::single_update(
             'tags',
             $update,
             [
@@ -371,13 +378,15 @@ final class pwg_tags
             WHERE id = {$tag_id};
             SQL;
 
-        return functions_mysqli::query2array($query)[0];
+        return $conf->sql_backend::query2array($query)[0];
     }
 
     public static function ws_tags_duplicate(
         array $params,
         PwgServer &$service
     ): PwgError|array {
+        global $conf;
+
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -391,7 +400,7 @@ final class pwg_tags
             FROM tags
             WHERE id = {$tag_id};
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
@@ -402,20 +411,20 @@ final class pwg_tags
             FROM tags
             WHERE name = '{$copy_name}';
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count != 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already taken.');
         }
 
-        functions_mysqli::single_insert(
+        $conf->sql_backend::single_insert(
             'tags',
             [
                 'name' => $copy_name,
                 'url_name' => functions_plugins::trigger_change('render_tag_url', $copy_name),
             ]
         );
-        $destination_tag_id = functions_mysqli::pwg_db_insert_id();
+        $destination_tag_id = $conf->sql_backend::pwg_db_insert_id();
 
         functions::pwg_activity('tag', $destination_tag_id, 'add', [
             'action' => 'duplicate',
@@ -427,7 +436,7 @@ final class pwg_tags
             FROM image_tag
             WHERE tag_id = {$tag_id};
             SQL;
-        $destination_tag_image_ids = functions_mysqli::query2array($query, null, 'image_id');
+        $destination_tag_image_ids = $conf->sql_backend::query2array($query, null, 'image_id');
 
         $inserts = [];
 
@@ -442,7 +451,7 @@ final class pwg_tags
         }
 
         if ($inserts !== []) {
-            functions_mysqli::mass_inserts(
+            $conf->sql_backend::mass_inserts(
                 'image_tag',
                 array_keys($inserts[0]),
                 $inserts
@@ -461,6 +470,8 @@ final class pwg_tags
         array $params,
         PwgServer &$service
     ): PwgError|array {
+        global $conf;
+
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -477,7 +488,7 @@ final class pwg_tags
             FROM tags
             WHERE id IN ({$all_tags_imploded});
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count != count($all_tags)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
@@ -493,7 +504,7 @@ final class pwg_tags
             FROM image_tag
             WHERE tag_id IN ({$merge_tag_imploded});
             SQL;
-        $image_in_merge_tags = functions_mysqli::query2array($query, null, 'image_id');
+        $image_in_merge_tags = $conf->sql_backend::query2array($query, null, 'image_id');
 
         $query = <<<SQL
             SELECT image_id
@@ -501,7 +512,7 @@ final class pwg_tags
             WHERE tag_id = {$params['destination_tag_id']};
             SQL;
 
-        $image_in_dest = functions_mysqli::query2array($query, null, 'image_id');
+        $image_in_dest = $conf->sql_backend::query2array($query, null, 'image_id');
 
         $image_to_add = array_diff($image_in_merge_tags, $image_in_dest);
 
@@ -514,7 +525,7 @@ final class pwg_tags
             ];
         }
 
-        functions_mysqli::mass_inserts(
+        $conf->sql_backend::mass_inserts(
             'image_tag',
             ['tag_id', 'image_id'],
             $inserts,

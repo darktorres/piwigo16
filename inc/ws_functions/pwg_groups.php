@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\inc\ws_functions;
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\PwgError;
 use Piwigo\inc\PwgNamedArray;
@@ -36,6 +35,8 @@ final class pwg_groups
         array $params,
         PwgServer &$service
     ): PwgError|array {
+        global $conf;
+
         if (! preg_match(PATTERN_ORDER, $params['order'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
         }
@@ -43,7 +44,7 @@ final class pwg_groups
         $where_clauses = ['1 = 1'];
 
         if (! empty($params['name'])) {
-            $where_clauses[] = "LOWER(name) LIKE '" . functions_mysqli::pwg_db_real_escape_string($params['name']) . "'";
+            $where_clauses[] = "LOWER(name) LIKE '" . $conf->sql_backend::pwg_db_real_escape_string($params['name']) . "'";
         }
 
         if (! empty($params['group_id'])) {
@@ -62,7 +63,7 @@ final class pwg_groups
             LIMIT {$params['per_page']} OFFSET {$offset};
             SQL;
 
-        $groups = functions_mysqli::query2array($query);
+        $groups = $conf->sql_backend::query2array($query);
 
         return [
             'paging' => new PwgNamedStruct([
@@ -86,7 +87,9 @@ final class pwg_groups
         array $params,
         PwgServer $service
     ): array|bool|PwgError|string|null {
-        $params['name'] = functions_mysqli::pwg_db_real_escape_string(strip_tags(stripslashes($params['name'])));
+        global $conf;
+
+        $params['name'] = $conf->sql_backend::pwg_db_real_escape_string(strip_tags(stripslashes($params['name'])));
 
         // is the name not already used ?
         $query = <<<SQL
@@ -94,7 +97,7 @@ final class pwg_groups
             FROM user_groups
             WHERE name = '{$params['name']}';
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count != 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
@@ -105,14 +108,14 @@ final class pwg_groups
         }
 
         // creating the group
-        functions_mysqli::single_insert(
+        $conf->sql_backend::single_insert(
             'groups',
             [
                 'name' => $params['name'],
-                'is_default' => functions_mysqli::boolean_to_string($params['is_default']),
+                'is_default' => $conf->sql_backend::boolean_to_string($params['is_default']),
             ]
         );
-        $inserted_id = functions_mysqli::pwg_db_insert_id();
+        $inserted_id = $conf->sql_backend::pwg_db_insert_id();
 
         functions::pwg_activity('group', $inserted_id, 'add');
 
@@ -158,6 +161,8 @@ final class pwg_groups
         array $params,
         PwgServer $service
     ): array|bool|PwgError|string|null {
+        global $conf;
+
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -176,14 +181,14 @@ final class pwg_groups
             FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
         }
 
         if (! empty($params['name'])) {
-            $params['name'] = functions_mysqli::pwg_db_real_escape_string(strip_tags(stripslashes($params['name'])));
+            $params['name'] = $conf->sql_backend::pwg_db_real_escape_string(strip_tags(stripslashes($params['name'])));
 
             // is the name not already used ?
             $query = <<<SQL
@@ -192,7 +197,7 @@ final class pwg_groups
                 WHERE name = '{$params['name']}'
                     AND id != {$params['group_id']};
                 SQL;
-            [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
             if ($count != 0) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
@@ -204,10 +209,10 @@ final class pwg_groups
         if (! empty($params['is_default']) ||
             $params['is_default'] === false
         ) {
-            $updates['is_default'] = functions_mysqli::boolean_to_string($params['is_default']);
+            $updates['is_default'] = $conf->sql_backend::boolean_to_string($params['is_default']);
         }
 
-        functions_mysqli::single_update(
+        $conf->sql_backend::single_update(
             'groups',
             $updates,
             [
@@ -235,6 +240,8 @@ final class pwg_groups
         array $params,
         PwgServer $service
     ): array|bool|PwgError|string|null {
+        global $conf;
+
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -245,7 +252,7 @@ final class pwg_groups
             FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
@@ -260,7 +267,7 @@ final class pwg_groups
             ];
         }
 
-        functions_mysqli::mass_inserts(
+        $conf->sql_backend::mass_inserts(
             'user_group',
             ['group_id', 'user_id'],
             $inserts
@@ -289,6 +296,8 @@ final class pwg_groups
         array $params,
         PwgServer $service
     ): PwgError|array {
+        global $conf;
+
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -308,7 +317,7 @@ final class pwg_groups
             FROM user_groups
             WHERE id IN ({$allGroupsList});
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count != count($all_groups)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'All groups does not exist.');
@@ -324,7 +333,7 @@ final class pwg_groups
             FROM user_group
             WHERE group_id IN ({$mergeGroupList});
             SQL;
-        $user_in_merge_groups = functions_mysqli::query2array($query, null, 'user_id');
+        $user_in_merge_groups = $conf->sql_backend::query2array($query, null, 'user_id');
 
         $query = <<<SQL
             SELECT user_id
@@ -332,7 +341,7 @@ final class pwg_groups
             WHERE group_id = {$params['destination_group_id']};
             SQL;
 
-        $user_in_dest = functions_mysqli::query2array($query, null, 'user_id');
+        $user_in_dest = $conf->sql_backend::query2array($query, null, 'user_id');
 
         $user_to_add = array_diff($user_in_merge_groups, $user_in_dest);
 
@@ -345,7 +354,7 @@ final class pwg_groups
             ];
         }
 
-        functions_mysqli::mass_inserts(
+        $conf->sql_backend::mass_inserts(
             'user_group',
             ['group_id', 'user_id'],
             $inserts,
@@ -387,17 +396,19 @@ final class pwg_groups
         array $params,
         PwgServer $service
     ): array|bool|PwgError|string|null {
+        global $conf;
+
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $escapedCopyName = functions_mysqli::pwg_db_real_escape_string($params['copy_name']);
+        $escapedCopyName = $conf->sql_backend::pwg_db_real_escape_string($params['copy_name']);
         $query = <<<SQL
             SELECT COUNT(*) AS "COUNT(*)"
             FROM user_groups
             WHERE name = '{$escapedCopyName}';
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count != 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
@@ -408,7 +419,7 @@ final class pwg_groups
             FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
@@ -420,17 +431,17 @@ final class pwg_groups
             WHERE id = {$params['group_id']};
             SQL;
 
-        [$is_default] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$is_default] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         // creating the group
-        functions_mysqli::single_insert(
+        $conf->sql_backend::single_insert(
             'groups',
             [
                 'name' => $params['copy_name'],
-                'is_default' => functions_mysqli::boolean_to_string($is_default),
+                'is_default' => $conf->sql_backend::boolean_to_string($is_default),
             ]
         );
-        $inserted_id = functions_mysqli::pwg_db_insert_id();
+        $inserted_id = $conf->sql_backend::pwg_db_insert_id();
 
         functions::pwg_activity('group', $inserted_id, 'add');
 
@@ -440,7 +451,7 @@ final class pwg_groups
             WHERE group_id = {$params['group_id']};
             SQL;
 
-        $users = functions_mysqli::query2array($query, null, 'user_id');
+        $users = $conf->sql_backend::query2array($query, null, 'user_id');
 
         $inserts = [];
 
@@ -451,7 +462,7 @@ final class pwg_groups
             ];
         }
 
-        functions_mysqli::mass_inserts(
+        $conf->sql_backend::mass_inserts(
             'user_group',
             ['group_id', 'user_id'],
             $inserts,
@@ -486,6 +497,8 @@ final class pwg_groups
         array $params,
         PwgServer $service
     ): array|bool|PwgError|string|null {
+        global $conf;
+
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -496,7 +509,7 @@ final class pwg_groups
             FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
@@ -508,7 +521,7 @@ final class pwg_groups
             WHERE group_id = {$params['group_id']}
                 AND user_id IN ({$userIdsList});
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         functions_admin::invalidate_user_cache();
 

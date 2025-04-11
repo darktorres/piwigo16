@@ -13,7 +13,6 @@ namespace Piwigo\admin\inc;
 
 /* nbm_global_var */
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_mail;
 use Piwigo\inc\functions_session;
@@ -47,6 +46,8 @@ final class functions_notification_by_mail
      */
     public static function find_available_check_key(): string
     {
+        global $conf;
+
         while (true) {
             $key = functions_session::generate_key(16);
             $query = <<<SQL
@@ -55,7 +56,7 @@ final class functions_notification_by_mail
                 WHERE check_key = '{$key}';
                 SQL;
 
-            [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
             if ($count == 0) {
                 return $key;
@@ -137,7 +138,7 @@ final class functions_notification_by_mail
             if (isset($enabled_filter_value) &&
                 $enabled_filter_value != ''
             ) {
-                $filter_value = functions_mysqli::boolean_to_string($enabled_filter_value);
+                $filter_value = $conf->sql_backend::boolean_to_string($enabled_filter_value);
                 $query .= <<<SQL
                     AND n.enabled = '{$filter_value}'
 
@@ -157,10 +158,10 @@ final class functions_notification_by_mail
             }
 
             $query = trim($query) . ';';
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
             if (! empty($result)) {
-                while ($nbm_user = functions_mysqli::pwg_db_fetch_assoc($result)) {
+                while ($nbm_user = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                     $data_users[] = $nbm_user;
                 }
             }
@@ -372,7 +373,7 @@ final class functions_notification_by_mail
 
         if (count($check_key_list) != 0) {
             $updates = [];
-            $enabled_value = functions_mysqli::boolean_to_string($is_subscribe);
+            $enabled_value = $conf->sql_backend::boolean_to_string($is_subscribe);
             $data_users = self::get_user_notifications('subscribe', $check_key_list, ! $is_subscribe);
 
             // Prepare message after change language
@@ -457,7 +458,7 @@ final class functions_notification_by_mail
 
             self::display_counter_info();
 
-            functions_mysqli::mass_updates(
+            $conf->sql_backend::mass_updates(
                 'user_mail_notification',
                 [
                     'primary' => ['check_key'],

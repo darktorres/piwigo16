@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\admin\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use SmartyException;
@@ -256,6 +255,8 @@ final class check_integrity
     public function update_conf(
         array $conf_ignore_list = []
     ): void {
+        global $conf;
+
         $conf_c13y_ignore = [];
         $conf_c13y_ignore['version'] = PHPWG_VERSION;
         $conf_c13y_ignore['list'] = $conf_ignore_list;
@@ -265,7 +266,7 @@ final class check_integrity
             SET value = '{$serialized_conf_c13y_ignore}'
             WHERE param = 'c13y_ignore';
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
     }
 
     /**

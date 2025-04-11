@@ -9,7 +9,6 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
@@ -75,14 +74,14 @@ $query .= <<<SQL
 
 $query = functions_plugins::trigger_change('loc_begin_index_category_thumbnails_query', $query);
 
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
 $categories = [];
 $category_ids = [];
 $image_ids = [];
 $user_representative_updates_for = [];
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $page['total_categories'] = $row['total_count'];
     $row['is_child_date_last'] = $row['max_date_last'] > $row['date_last'];
 
@@ -103,7 +102,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             'AND'
         );
 
-        $random_function = functions_mysqli::DB_RANDOM_FUNCTION;
+        $random_function = $conf->sql_backend::DB_RANDOM_FUNCTION;
         $query = <<<SQL
             SELECT representative_picture_id
             FROM categories
@@ -113,10 +112,10 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             ORDER BY {$random_function}
             LIMIT 1;
             SQL;
-        $subresult = functions_mysqli::pwg_query($query);
+        $subresult = $conf->sql_backend::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_num_rows($subresult) > 0) {
-            [$image_id] = functions_mysqli::pwg_db_fetch_row($subresult);
+        if ($conf->sql_backend::pwg_db_num_rows($subresult) > 0) {
+            [$image_id] = $conf->sql_backend::pwg_db_fetch_row($subresult);
         }
     }
 
@@ -161,7 +160,7 @@ if ($conf->display_fromto && $category_ids !== []) {
                 {$sql_condition}
             GROUP BY category_id;
             SQL;
-    $dates_of_category = functions_mysqli::query2array($query, 'category_id');
+    $dates_of_category = $conf->sql_backend::query2array($query, 'category_id');
 }
 
 if ($page['section'] == 'recent_cats') {
@@ -178,9 +177,9 @@ if ($categories !== []) {
         FROM images
         WHERE id IN ({$image_ids_list});
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         if ($row['level'] <= $user['level']) {
             $infos_of_image[$row['id']] = $row;
         } else {
@@ -222,9 +221,9 @@ if ($categories !== []) {
             FROM images
             WHERE id IN ({$image_ids_list});
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $infos_of_image[$row['id']] = $row;
         }
     }
@@ -248,7 +247,7 @@ if ($user_representative_updates_for !== []) {
           ];
     }
 
-    functions_mysqli::mass_updates(
+    $conf->sql_backend::mass_updates(
         'user_cache_categories',
         [
             'primary' => ['user_id', 'cat_id'],

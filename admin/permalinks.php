@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_permalinks;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
 use Piwigo\inc\functions_html;
@@ -41,15 +40,15 @@ if (isset($_POST['set_permalink']) &&
 
 } elseif (isset($_GET['delete_permanent'])) {
     functions::check_pwg_token();
-    $escaped_permalink = functions_mysqli::pwg_db_real_escape_string($_GET['delete_permanent']);
+    $escaped_permalink = $conf->sql_backend::pwg_db_real_escape_string($_GET['delete_permanent']);
     $query = <<<SQL
         DELETE FROM old_permalinks
         WHERE permalink = '{$escaped_permalink}'
         LIMIT 1;
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    if (functions_mysqli::pwg_db_changes() == 0) {
+    if ($conf->sql_backend::pwg_db_changes() == 0) {
         $page['errors'][] = functions::l10n('Cannot delete the old permalink !');
     }
 }
@@ -96,9 +95,9 @@ if ($sort_by[0] == 'id' ||
 
 $query = trim($query) . ';';
 $categories = [];
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $row['name'] = functions_html::get_cat_display_name_cache($row['uppercats']);
     $categories[] = $row;
 }
@@ -131,10 +130,10 @@ if ($sort_by !== []) {
 }
 
 $query = trim($query) . ';';
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 $deleted_permalinks = [];
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $row['name'] = functions_html::get_cat_display_name_cache($row['cat_id']);
     $row['U_DELETE'] =
         functions_url::add_url_params(

@@ -16,7 +16,6 @@ declare(strict_types=1);
 //  List of visible categories (count(visible) < count(forbidden) more often)
 // $filter['visible_images']: List of visible images
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
 use Piwigo\inc\functions_session;
@@ -83,12 +82,12 @@ if ($filter['enabled']) {
                 SQL;
         }
 
-        $recent_period_expression = functions_mysqli::pwg_db_get_recent_period_expression($filter['recent_period']);
+        $recent_period_expression = $conf->sql_backend::pwg_db_get_recent_period_expression($filter['recent_period']);
         $query .= <<<SQL
             date_available >= {$recent_period_expression};
             SQL;
 
-        $filter['visible_images'] = implode(',', functions_mysqli::query2array($query, null, 'image_id'));
+        $filter['visible_images'] = implode(',', $conf->sql_backend::query2array($query, null, 'image_id'));
 
         if (empty($filter['visible_images'])) {
             // Must be not empty

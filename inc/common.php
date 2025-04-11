@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_upgrade;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_plugins;
@@ -112,14 +111,14 @@ $persistent_cache = new PersistentFileCache();
 
 // Database connection
 try {
-    functions_mysqli::pwg_db_connect(
+    $conf->sql_backend::pwg_db_connect(
         $conf->db_host,
         $conf->db_user,
         $conf->db_password,
         $conf->db_base
     );
 } catch (Exception $exception) {
-    functions_mysqli::my_error(functions::l10n($exception->getMessage()), true);
+    $conf->sql_backend::my_error(functions::l10n($exception->getMessage()), true);
 }
 
 functions::load_conf_from_db();

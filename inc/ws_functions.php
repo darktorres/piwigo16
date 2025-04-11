@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\ws_functions\pwg;
 use Piwigo\inc\ws_functions\pwg_categories;
 use Piwigo\inc\ws_functions\pwg_extensions;
@@ -111,6 +110,8 @@ final class ws_functions
         array $params,
         string $tbl_name = ''
     ): string {
+        global $conf;
+
         $ret = '';
 
         if (empty($params['order'])) {
@@ -137,19 +138,19 @@ final class ws_functions
 
                 case 'rand':
                 case 'random':
-                    $matches[1][$i] = functions_mysqli::DB_RANDOM_FUNCTION;
+                    $matches[1][$i] = $conf->sql_backend::DB_RANDOM_FUNCTION;
                     break;
             }
 
             $sortable_fields = ['id', 'file', 'name', 'hit', 'rating_score',
-                'date_creation', 'date_available', functions_mysqli::DB_RANDOM_FUNCTION];
+                'date_creation', 'date_available', $conf->sql_backend::DB_RANDOM_FUNCTION];
 
             if (in_array($matches[1][$i], $sortable_fields)) {
                 if (! empty($ret)) {
                     $ret .= ', ';
                 }
 
-                if ($matches[1][$i] !== functions_mysqli::DB_RANDOM_FUNCTION) {
+                if ($matches[1][$i] !== $conf->sql_backend::DB_RANDOM_FUNCTION) {
                     $ret .= $tbl_name;
                 }
 

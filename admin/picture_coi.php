@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_params;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
@@ -48,13 +47,13 @@ if (isset($_POST['submit'])) {
     }
 
     $query .= " WHERE id = {$_GET['image_id']};";
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
 }
 
 $query = <<<SQL
     SELECT * FROM images WHERE id = {$_GET['image_id']};
     SQL;
-$row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+$row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
 if (isset($_POST['submit'])) {
     foreach (ImageStdParams::get_defined_type_map() as $params) {

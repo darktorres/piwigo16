@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_upload;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_params;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeParams;
@@ -229,7 +228,7 @@ if (count($errors) == 0) {
             DELETE FROM config
             WHERE param = 'disabled_derivatives';
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
     } else {
         functions::conf_update_param('disabled_derivatives', addslashes(serialize($disabled)));
     }

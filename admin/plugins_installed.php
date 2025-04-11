@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\plugins;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_session;
@@ -141,7 +140,7 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
             SET state = 'inactive'
             WHERE id = '{$plugin_id}';
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         $tpl_plugin['STATE'] = 'merged';
         $tpl_plugin['DESC'] = functions::l10n('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\themes\modus\functions_modus;
 
@@ -28,9 +27,11 @@ function theme_activate(
 
 function theme_delete(): void
 {
+    global $conf;
+
     $query = <<<SQL
         DELETE FROM config
         WHERE param = 'modus_theme';
         SQL;
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
 }

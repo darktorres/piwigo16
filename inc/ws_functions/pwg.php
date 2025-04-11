@@ -13,7 +13,6 @@ namespace Piwigo\inc\ws_functions;
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_history;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_params;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
@@ -64,7 +63,7 @@ final class pwg
         $query = <<<SQL
             SELECT MAX(id) + 1, COUNT(*) FROM images;
             SQL;
-        [$max_id, $image_count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$max_id, $image_count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($image_count == 0) {
             return [];
@@ -102,10 +101,10 @@ final class pwg
         $urls = [];
 
         do {
-            $result = functions_mysqli::pwg_query(str_replace('start_id', $start_id, $query_model));
-            $is_last = functions_mysqli::pwg_db_num_rows($result) < $qlimit;
+            $result = $conf->sql_backend::pwg_query(str_replace('start_id', $start_id, $query_model));
+            $is_last = $conf->sql_backend::pwg_db_num_rows($result) < $qlimit;
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $start_id = $row['id'];
                 $src_image = new SrcImage($row);
 
@@ -168,64 +167,66 @@ final class pwg
         array $params,
         PwgServer &$service
     ): array {
+        global $conf;
+
         $infos['version'] = PHPWG_VERSION;
 
         $query = <<<SQL
             SELECT COUNT(*) AS "COUNT(*)" FROM images;
             SQL;
-        [$infos['nb_elements']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_elements']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) AS "COUNT(*)" FROM categories;
             SQL;
-        [$infos['nb_categories']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_categories']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) AS "COUNT(*)" FROM categories WHERE dir IS NULL;
             SQL;
-        [$infos['nb_virtual']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_virtual']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) AS "COUNT(*)" FROM categories WHERE dir IS NOT NULL;
             SQL;
-        [$infos['nb_physical']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_physical']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) AS "COUNT(*)" FROM image_category;
             SQL;
-        [$infos['nb_image_category']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_image_category']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) AS "COUNT(*)" FROM tags;
             SQL;
-        [$infos['nb_tags']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_tags']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) AS "COUNT(*)" FROM image_tag;
             SQL;
-        [$infos['nb_image_tag']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_image_tag']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) AS "COUNT(*)" FROM users;
             SQL;
-        [$infos['nb_users']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_users']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) AS "COUNT(*)" FROM user_groups;
             SQL;
-        [$infos['nb_groups']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_groups']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         $query = <<<SQL
             SELECT COUNT(*) AS "COUNT(*)" FROM comments;
             SQL;
-        [$infos['nb_comments']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$infos['nb_comments']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         // first element
         if ($infos['nb_elements'] > 0) {
             $query = <<<SQL
                 SELECT MIN(date_available) FROM images;
                 SQL;
-            [$infos['first_date']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$infos['first_date']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
         }
 
         // unvalidated comments
@@ -233,7 +234,7 @@ final class pwg
             $query = <<<SQL
                 SELECT COUNT(*) AS "COUNT(*)" FROM comments WHERE validated = 'false';
                 SQL;
-            [$infos['nb_unvalidated_comments']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$infos['nb_unvalidated_comments']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
         }
 
         // Cache size
@@ -332,6 +333,7 @@ final class pwg
         PwgServer &$service
     ): ?int {
         global $user;
+        global $conf;
 
         $imageIdsList = implode(', ', $params['image_id']);
         $query = <<<SQL
@@ -341,7 +343,7 @@ final class pwg
             WHERE id IN ({$imageIdsList})
                 AND element_id IS NULL;
             SQL;
-        $result = functions_mysqli::query2array($query, null, 'id');
+        $result = $conf->sql_backend::query2array($query, null, 'id');
 
         $datas = [];
 
@@ -353,7 +355,7 @@ final class pwg
         }
 
         if ($datas !== []) {
-            functions_mysqli::mass_inserts(
+            $conf->sql_backend::mass_inserts(
                 'caddie',
                 ['element_id', 'user_id'],
                 $datas
@@ -376,6 +378,8 @@ final class pwg
         array $params,
         PwgServer &$service
     ): int|string {
+        global $conf;
+
         $query = <<<SQL
             DELETE FROM rate
             WHERE user_id = {$params['user_id']}
@@ -396,8 +400,8 @@ final class pwg
                 SQL;
         }
 
-        functions_mysqli::pwg_query($query);
-        $changes = functions_mysqli::pwg_db_changes();
+        $conf->sql_backend::pwg_query($query);
+        $changes = $conf->sql_backend::pwg_db_changes();
 
         if ($changes) {
             functions_rate::update_rating_score();
@@ -459,7 +463,7 @@ final class pwg
         $res['pwg_token'] = functions::get_pwg_token();
         $res['charset'] = 'utf-8';
 
-        [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+        [$dbnow] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT NOW();'));
         $res['current_datetime'] = $dbnow;
         $res['version'] = PHPWG_VERSION;
         $res['save_visits'] = functions::do_log();
@@ -548,9 +552,9 @@ final class pwg
             SQL;
 
         $line_id = 0;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $details = unserialize($row['details']);
 
             if (isset($row['user_agent'])) {
@@ -609,7 +613,7 @@ final class pwg
                 FROM users
                 WHERE {$conf->user_fields['id']} IN ({$imploded_user_ids});
                 SQL;
-            $username_of = functions_mysqli::query2array($query, 'user_id', 'username');
+            $username_of = $conf->sql_backend::query2array($query, 'user_id', 'username');
         }
 
         foreach ($output_lines as $idx => $output_line) {
@@ -643,7 +647,7 @@ final class pwg
                 SQL;
         }
 
-        $result = (functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query))[0]) / $page_size;
+        $result = ($conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query))[0]) / $page_size;
 
         return [
             'result_lines' => $output_lines,
@@ -661,9 +665,10 @@ final class pwg
         PwgServer &$service
     ): void {
         global $logger, $page;
+        global $conf;
 
         if (! empty($params['section']) &&
-            in_array($params['section'], functions_mysqli::get_enums('history', 'section'))
+            in_array($params['section'], $conf->sql_backend::get_enums('history', 'section'))
         ) {
             $page['section'] = $params['section'];
         }
@@ -709,7 +714,7 @@ final class pwg
 
         $page['start'] = isset($_GET['start']) && is_numeric($_GET['start']) ? $_GET['start'] : 0;
 
-        $types = array_merge(['none'], functions_mysqli::get_enums('history', 'image_type'));
+        $types = array_merge(['none'], $conf->sql_backend::get_enums('history', 'image_type'));
 
         $display_thumbnails = [
             'no_display_thumbnail' => functions::l10n('No display'),
@@ -757,7 +762,7 @@ final class pwg
             $search['fields']['filename'] = str_replace(
                 '*',
                 '%',
-                functions_mysqli::pwg_db_real_escape_string($param['filename'])
+                $conf->sql_backend::pwg_db_real_escape_string($param['filename'])
             );
         }
 
@@ -766,7 +771,7 @@ final class pwg
             $search['fields']['ip'] = str_replace(
                 '*',
                 '%',
-                functions_mysqli::pwg_db_real_escape_string($param['ip'])
+                $conf->sql_backend::pwg_db_real_escape_string($param['ip'])
             );
         }
 
@@ -792,7 +797,7 @@ final class pwg
         if (! empty($search)) {
             // register search rules in database, then they will be available on
             // thumbnails page and picture page.
-            $escapedSearch = functions_mysqli::pwg_db_real_escape_string(serialize($search));
+            $escapedSearch = $conf->sql_backend::pwg_db_real_escape_string(serialize($search));
             $query = <<<SQL
                 INSERT INTO search
                     (rules)
@@ -800,9 +805,9 @@ final class pwg
                     ('{$escapedSearch}');
                 SQL;
 
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
 
-            $search_id = functions_mysqli::pwg_db_insert_id();
+            $search_id = $conf->sql_backend::pwg_db_insert_id();
 
             // Remove redirect for ajax //
             // \Piwigo\inc\functions::redirect(
@@ -818,7 +823,7 @@ final class pwg
             FROM search
             WHERE id = {$search_id};
             SQL;
-        [$serialized_rules] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$serialized_rules] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         $page['search'] = unserialize($serialized_rules);
 
@@ -867,7 +872,7 @@ final class pwg
                 FROM search
                 WHERE id IN ({$searchIds});
                 SQL;
-            $search_details = functions_mysqli::query2array($query, 'id', 'rules');
+            $search_details = $conf->sql_backend::query2array($query, 'id', 'rules');
 
             foreach ($search_details as $id_search => $rules_search) {
                 $rules_search = functions::safe_unserialize($rules_search)['fields'];
@@ -897,11 +902,11 @@ final class pwg
                 FROM users
                 WHERE id IN ({$userIds});
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
             $username_of = [];
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $username_of[$row['id']] = stripslashes($row['username']);
             }
         }
@@ -913,7 +918,7 @@ final class pwg
                 FROM categories
                 WHERE id IN ({$categoryIds});
                 SQL;
-            $uppercats_of = functions_mysqli::query2array($query, 'id', 'uppercats');
+            $uppercats_of = $conf->sql_backend::query2array($query, 'id', 'uppercats');
 
             $full_cat_path = [];
             $name_of_category = [];
@@ -939,7 +944,7 @@ final class pwg
                 FROM images
                 WHERE id IN ({$image_ids_imploded});
                 SQL;
-            $image_infos = functions_mysqli::query2array($query, 'id');
+            $image_infos = $conf->sql_backend::query2array($query, 'id');
         }
 
         if ($has_tags > 0) {
@@ -950,9 +955,9 @@ final class pwg
 
             global $name_of_tag; // used for preg_replace
             $name_of_tag = [];
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $name_of_tag[$row['id']] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
             }
         }

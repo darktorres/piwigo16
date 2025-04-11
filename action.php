@@ -9,7 +9,6 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
@@ -36,7 +35,7 @@ if ($conf->enable_formats &&
         FROM image_format
         WHERE format_id = {$_GET['format']};
         SQL;
-    $formats = functions_mysqli::query2array($query);
+    $formats = $conf->sql_backend::query2array($query);
 
     if (count($formats) == 0) {
         functions::do_error(400, 'Invalid request - format');
@@ -62,7 +61,7 @@ $query = <<<SQL
     WHERE id = {$_GET['id']};
     SQL;
 
-$element_info = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+$element_info = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
 if (empty($element_info)) {
     functions::do_error(404, 'Requested id not found');
@@ -101,7 +100,7 @@ $query = <<<SQL
     SQL;
 
 if (! $is_admin_download &&
-    functions_mysqli::pwg_db_num_rows(functions_mysqli::pwg_query($query)) < 1
+    $conf->sql_backend::pwg_db_num_rows($conf->sql_backend::pwg_query($query)) < 1
 ) {
     functions::do_error(401, 'Access denied');
 }

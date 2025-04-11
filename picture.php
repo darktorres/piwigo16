@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
@@ -57,7 +56,7 @@ if (! isset($page['rank_of'][$page['image_id']])) {
         $query .= "file LIKE '{$escaped_file}.%' ESCAPE '/' LIMIT 1";
     }
 
-    $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+    $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
     if (! $row) { // element does not exist
         functions_html::page_not_found(
@@ -103,7 +102,7 @@ if (! isset($page['rank_of'][$page['image_id']])) {
                 WHERE id = {$page['image_id']} {$conditions}
                 LIMIT 1;
                 SQL;
-            if (functions_mysqli::pwg_db_num_rows(functions_mysqli::pwg_query($query)) == 0) {
+            if ($conf->sql_backend::pwg_db_num_rows($conf->sql_backend::pwg_query($query)) == 0) {
                 functions_html::access_denied();
             } elseif ($page['section'] == 'best_rated') {
                 $page['rank_of'][$page['image_id']] = count($page['items']);
@@ -199,7 +198,7 @@ if (isset($_GET['action'])) {
                 VALUES
                     ({$page['image_id']}, {$user['id']});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
             functions::redirect($url_self);
             break;
 
@@ -210,7 +209,7 @@ if (isset($_GET['action'])) {
                 WHERE user_id = {$user['id']}
                     AND image_id = {$page['image_id']};
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
 
             if ($page['section'] == 'favorites') {
                 functions::redirect($url_up);
@@ -229,7 +228,7 @@ if (isset($_GET['action'])) {
                     SET representative_picture_id = {$page['image_id']}
                     WHERE id = {$page['category']['id']};
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
                 functions::pwg_activity('album', $page['category']['id'], 'edit', [
                     'action' => $_GET['action'],
                     'image_id' => $page['image_id'],
@@ -370,7 +369,7 @@ $query = <<<SQL
     WHERE image_id = {$page['image_id']} {$sql_condition}
     SQL;
 $query = trim($query) . ';';
-$related_categories = functions_mysqli::query2array($query);
+$related_categories = $conf->sql_backend::query2array($query);
 usort($related_categories, functions_category::global_rank_compare(...));
 //-------------------------first, prev, current, next & last picture management
 $picture = [];
@@ -394,9 +393,9 @@ $query = <<<SQL
     WHERE id IN ({$ids_list});
     SQL;
 
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     if (isset($page['previous_item']) &&
         $row['id'] == $page['previous_item']
     ) {
@@ -578,7 +577,7 @@ if ($conf->picture_download_icon &&
             FROM image_format
             WHERE image_id = {$picture['current']['id']};
             SQL;
-        $formats = functions_mysqli::query2array($query);
+        $formats = $conf->sql_backend::query2array($query);
 
         // let's add the original as a format among others. It will just have a
         // specific download URL
@@ -750,7 +749,7 @@ if (! functions_user::is_a_guest() &&
         WHERE image_id = {$page['image_id']}
             AND user_id = {$user['id']};
         SQL;
-    $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+    $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
     $is_favorite = $row['nb_fav'] != 0;
 
     $template->assign(
@@ -887,7 +886,7 @@ if (count($related_categories) == 1 &&
         FROM categories
         WHERE id IN ({$imploded_ids});
         SQL;
-    $cat_map = functions_mysqli::query2array($query, 'id');
+    $cat_map = $conf->sql_backend::query2array($query, 'id');
 
     foreach ($related_categories as $category) {
         $cats = [];

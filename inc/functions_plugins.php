@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
-
 /** base directory of plugins */
 define('PHPWG_PLUGINS_PATH', './plugins/');
 /** default priority for plugins handlers */
@@ -228,6 +226,8 @@ final class functions_plugins
         ?string $state = '',
         string $id = ''
     ): array {
+        global $conf;
+
         $clauses = [];
 
         if (! empty($state)) {
@@ -250,7 +250,7 @@ final class functions_plugins
             SQL;
 
         $query = trim($query) . ';';
-        return functions_mysqli::query2array($query);
+        return $conf->sql_backend::query2array($query);
     }
 
     /**
@@ -337,7 +337,7 @@ final class functions_plugins
                     SET version = '{$plugin['version']}'
                     WHERE id = '{$plugin['id']}';
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
 
                 functions::pwg_activity('system', ACTIVITY_SYSTEM_PLUGIN, 'autoupdate', [
                     'plugin_id' => $plugin['id'],

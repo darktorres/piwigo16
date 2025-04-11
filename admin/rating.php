@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
@@ -82,9 +81,9 @@ $query = <<<SQL
     SELECT {$conf->user_fields['username']} AS username, {$conf->user_fields['id']} AS id
     FROM users;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $users[$row['id']] = stripslashes($row['username']);
 }
 
@@ -106,13 +105,13 @@ $query .= <<<SQL
     WHERE 1 = 1 {$page['user_filter']}
     SQL;
 $query = trim($query) . ';';
-[$nb_images] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_images] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
     FROM rate;
     SQL;
-[$nb_elements] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_elements] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 // +-----------------------------------------------------------------------+
 // |                             template init                             |
@@ -190,9 +189,9 @@ $query .= <<<SQL
     SQL;
 
 $images = [];
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $images[] = $row;
 }
 
@@ -209,8 +208,8 @@ foreach ($images as $image) {
         WHERE r.element_id = {$image['id']}
         ORDER BY date DESC;
         SQL;
-    $result = functions_mysqli::pwg_query($query);
-    $nb_rates = functions_mysqli::pwg_db_num_rows($result);
+    $result = $conf->sql_backend::pwg_query($query);
+    $nb_rates = $conf->sql_backend::pwg_db_num_rows($result);
 
     $tpl_image =
       [
@@ -226,7 +225,7 @@ foreach ($images as $image) {
           'rates' => [],
       ];
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $user_rate = $users[$row['user_id']] ?? '? ' . $row['user_id'];
 
         if (strlen($row['anonymous_id']) > 0) {

@@ -9,7 +9,6 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_user;
@@ -41,7 +40,7 @@ $query = <<<SQL
     FROM categories;
     SQL;
 
-$result = functions_mysqli::query2array($query);
+$result = $conf->sql_backend::query2array($query);
 
 foreach ($result as $cat) {
     $cat['name'] = functions_plugins::trigger_change('render_category_name', $cat['name'], 'admin_cat_list');
@@ -59,14 +58,14 @@ foreach ($result as $cat) {
 // +-----------------------------------------------------------------------+
 
 // let's find a custom placeholder
-$random_function = functions_mysqli::DB_RANDOM_FUNCTION;
+$random_function = $conf->sql_backend::DB_RANDOM_FUNCTION;
 $query = <<<SQL
     SELECT name
     FROM categories
     ORDER BY {$random_function}
     LIMIT 1;
     SQL;
-$lines = functions_mysqli::query2array($query);
+$lines = $conf->sql_backend::query2array($query);
 $placeholder = null;
 
 foreach ($lines as $line) {

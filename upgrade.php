@@ -13,7 +13,6 @@ use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_upgrade;
 use Piwigo\admin\inc\languages;
 use Piwigo\admin\inc\updates;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\Template;
@@ -146,7 +145,7 @@ functions::load_language('upgrade.lang', '', [
 
 functions_upgrade::upgrade_db_connect();
 
-[$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+[$dbnow] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT NOW();'));
 define('CURRENT_DATE', $dbnow);
 
 // +-----------------------------------------------------------------------+
@@ -173,9 +172,9 @@ $has_remote_site = false;
 $query = <<<SQL
     SELECT galleries_url FROM sites;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     if (functions_url::url_is_remote($row['galleries_url'])) {
         $has_remote_site = true;
     }
@@ -244,7 +243,7 @@ if (! in_array('param', $columns_of['config'])) {
         SELECT id
         FROM upgrade;
         SQL;
-    $applied_upgrades = functions_mysqli::query2array($query, null, 'id');
+    $applied_upgrades = $conf->sql_backend::query2array($query, null, 'id');
 
     if (! in_array(159, $applied_upgrades)) {
         $current_release = '2.10.0';
@@ -360,7 +359,7 @@ if ((isset($_POST['submit']) || isset($_GET['now'])) &&
                     VALUES
                         ('TakeATour', 'active');
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
 
                 // we need the secret key for get_pwg_token()
                 functions::load_conf_from_db();

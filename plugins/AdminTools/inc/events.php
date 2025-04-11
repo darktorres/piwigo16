@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
@@ -83,7 +82,7 @@ function admintools_add_public_controller(): void
                 SELECT element_id FROM caddie
                 WHERE element_id = {$page['image_id']};
                 SQL;
-            $tpl_vars['IS_IN_CADDIE'] = functions_mysqli::pwg_db_num_rows(functions_mysqli::pwg_query($query)) > 0;
+            $tpl_vars['IS_IN_CADDIE'] = $conf->sql_backend::pwg_db_num_rows($conf->sql_backend::pwg_query($query)) > 0;
 
             if (isset($page['category'])) {
                 $tpl_vars['CATEGORY_ID'] = $page['category']['id'];
@@ -172,7 +171,7 @@ function admintools_add_public_controller(): void
                 SELECT * FROM images
                 WHERE id = {$page['category']['representative_picture_id']};
                 SQL;
-            $image_infos = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+            $image_infos = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
             $tpl_vars['QUICK_EDIT']['img'] = DerivativeImage::get_one(derivative_std_params::IMG_SQUARE, $image_infos)->get_url();
         }
@@ -284,7 +283,7 @@ function admintools_save_picture(): void
         FROM images
         WHERE id = {$page['image_id']};
         SQL;
-    [$added_by] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$added_by] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
     if (! $MultiView->is_admin() &&
         $user['id'] != $added_by
@@ -339,7 +338,7 @@ function admintools_save_picture(): void
             $data['date_creation'] = $_POST['date_creation'] . ' ' . $_POST['date_creation_time'];
         }
 
-        functions_mysqli::single_update(
+        $conf->sql_backend::single_update(
             'images',
             $data,
             [
@@ -384,7 +383,7 @@ function admintools_save_category(): void
             $data['comment'] = strip_tags($_POST['comment']);
         }
 
-        functions_mysqli::single_update(
+        $conf->sql_backend::single_update(
             'categories',
             $data,
             [

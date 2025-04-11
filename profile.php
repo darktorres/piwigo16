@@ -14,7 +14,6 @@ declare(strict_types=1);
 // |                           initialization                              |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_plugins;
@@ -53,8 +52,8 @@ if (! defined('PHPWG_ROOT_PATH')) { //direct script access
             FROM user_infos
             WHERE user_id = {$conf->default_user_id};
             SQL;
-        $result = functions_mysqli::pwg_query($query);
-        $default_user = functions_mysqli::pwg_db_fetch_assoc($result);
+        $result = $conf->sql_backend::pwg_query($query);
+        $default_user = $conf->sql_backend::pwg_db_fetch_assoc($result);
         $userdata = array_merge($userdata, $default_user);
     }
 

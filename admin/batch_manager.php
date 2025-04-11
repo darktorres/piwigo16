@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
 use Piwigo\inc\functions_plugins;
@@ -48,7 +47,7 @@ if (isset($_GET['action'])) {
             DELETE FROM caddie
             WHERE user_id = {$user['id']};
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         $_SESSION['page_infos'] = [
             functions::l10n('Information data registered in database'),
@@ -293,7 +292,7 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
                 FROM caddie
                 WHERE user_id = {$user['id']};
                 SQL;
-            $filter_sets[] = functions_mysqli::query2array($query, null, 'element_id');
+            $filter_sets[] = $conf->sql_backend::query2array($query, null, 'element_id');
             break;
 
         case 'favorites':
@@ -302,7 +301,7 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
                 FROM favorites
                 WHERE user_id = {$user['id']};
                 SQL;
-            $filter_sets[] = functions_mysqli::query2array($query, null, 'image_id');
+            $filter_sets[] = $conf->sql_backend::query2array($query, null, 'image_id');
             break;
 
         case 'last_import':
@@ -310,16 +309,16 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
                 SELECT MAX(date_available) AS date
                 FROM images;
                 SQL;
-            $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+            $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
             if (! empty($row['date'])) {
-                $recent_period = functions_mysqli::pwg_db_get_recent_period_expression(1, $row['date']);
+                $recent_period = $conf->sql_backend::pwg_db_get_recent_period_expression(1, $row['date']);
                 $query = <<<SQL
                     SELECT id
                     FROM images
                     WHERE date_available BETWEEN {$recent_period} AND '{$row['date']}';
                     SQL;
-                $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
+                $filter_sets[] = $conf->sql_backend::query2array($query, null, 'id');
             }
 
             break;
@@ -330,7 +329,7 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
                 SELECT id
                 FROM images;
                 SQL;
-            $all_elements = functions_mysqli::query2array($query, null, 'id');
+            $all_elements = $conf->sql_backend::query2array($query, null, 'id');
 
             $linked_to_virtual = [];
 
@@ -339,7 +338,7 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
                 FROM categories
                 WHERE dir IS NULL;
                 SQL;
-            $virtual_categories = functions_mysqli::query2array($query, null, 'id');
+            $virtual_categories = $conf->sql_backend::query2array($query, null, 'id');
 
             if ($virtual_categories !== []) {
                 $category_ids = implode(', ', $virtual_categories);
@@ -348,7 +347,7 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
                     FROM image_category
                     WHERE category_id IN ({$category_ids});
                     SQL;
-                $linked_to_virtual = functions_mysqli::query2array($query, null, 'image_id');
+                $linked_to_virtual = $conf->sql_backend::query2array($query, null, 'image_id');
             }
 
             $filter_sets[] = array_diff($all_elements, $linked_to_virtual);
@@ -369,7 +368,7 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
                 LEFT JOIN image_tag ON id = image_id
                 WHERE tag_id is null;
                 SQL;
-            $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
+            $filter_sets[] = $conf->sql_backend::query2array($query, null, 'id');
             break;
 
         case 'duplicates':
@@ -415,7 +414,7 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
                 GROUP BY {$imploded_fields}
                 HAVING COUNT(*) > 1;
                 SQL;
-            $array_of_ids_string = functions_mysqli::query2array($query, null, 'ids');
+            $array_of_ids_string = $conf->sql_backend::query2array($query, null, 'ids');
 
             $ids = [];
 
@@ -435,7 +434,7 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
                     {$conf->order_by};
                     SQL;
 
-                $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
+                $filter_sets[] = $conf->sql_backend::query2array($query, null, 'id');
             }
 
             break;
@@ -455,7 +454,7 @@ if (isset($_SESSION['bulk_manager_filter']['category'])) {
         FROM categories
         WHERE id = {$_SESSION['bulk_manager_filter']['category']};
         SQL;
-    [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$counter] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
     if ($counter == 0) {
         unset($_SESSION['bulk_manager_filter']);
@@ -474,7 +473,7 @@ if (isset($_SESSION['bulk_manager_filter']['category'])) {
         FROM image_category
         WHERE category_id IN ({$categoriesString});
         SQL;
-    $filter_sets[] = functions_mysqli::query2array($query, null, 'image_id');
+    $filter_sets[] = $conf->sql_backend::query2array($query, null, 'image_id');
 }
 
 if (isset($_SESSION['bulk_manager_filter']['level'])) {
@@ -491,7 +490,7 @@ if (isset($_SESSION['bulk_manager_filter']['level'])) {
         {$conf->order_by};
         SQL;
 
-    $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
+    $filter_sets[] = $conf->sql_backend::query2array($query, null, 'id');
 }
 
 if (! empty($_SESSION['bulk_manager_filter']['tags'])) {
@@ -540,7 +539,7 @@ if (isset($_SESSION['bulk_manager_filter']['dimension'])) {
         {$conf->order_by};
         SQL;
 
-    $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
+    $filter_sets[] = $conf->sql_backend::query2array($query, null, 'id');
 }
 
 if (isset($_SESSION['bulk_manager_filter']['filesize'])) {
@@ -562,7 +561,7 @@ if (isset($_SESSION['bulk_manager_filter']['filesize'])) {
         {$conf->order_by};
         SQL;
 
-    $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
+    $filter_sets[] = $conf->sql_backend::query2array($query, null, 'id');
 }
 
 if (isset($_SESSION['bulk_manager_filter']['search']) &&
@@ -642,10 +641,10 @@ $query = <<<SQL
     WHERE width IS NOT NULL
         AND height IS NOT NULL;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-if (functions_mysqli::pwg_db_num_rows($result)) {
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+if ($conf->sql_backend::pwg_db_num_rows($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         if ($row['width'] > 0 &&
             $row['height'] > 0
         ) {
@@ -731,9 +730,9 @@ $query = <<<SQL
     WHERE filesize IS NOT NULL
     GROUP BY filesize;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $filesizes[] = sprintf('%.1f', $row['filesize'] / 1024);
 }
 

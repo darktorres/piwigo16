@@ -13,7 +13,6 @@ declare(strict_types=1);
  * This file is included by the picture page to manage rates
  */
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
@@ -30,7 +29,7 @@ if ($conf->rate) {
             FROM rate
             WHERE element_id = {$picture['current']['id']};
             SQL;
-        [$rate_summary['count'], $rate_summary['average']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$rate_summary['count'], $rate_summary['average']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
     }
 
     $template->assign('rate_summary', $rate_summary);
@@ -64,10 +63,10 @@ if ($conf->rate) {
             }
 
             $query = trim($query) . ';';
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            if (functions_mysqli::pwg_db_num_rows($result) > 0) {
-                $row = functions_mysqli::pwg_db_fetch_assoc($result);
+            if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
+                $row = $conf->sql_backend::pwg_db_fetch_assoc($result);
                 $user_rate = $row['rate'];
             }
         }

@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_metadata_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
@@ -47,7 +46,7 @@ $query = <<<SQL
     FROM categories
     WHERE representative_picture_id = {$_GET['image_id']};
     SQL;
-$represented_albums = functions_mysqli::query2array($query, null, 'id');
+$represented_albums = $conf->sql_backend::query2array($query, null, 'id');
 
 // +-----------------------------------------------------------------------+
 // |                             delete photo                              |
@@ -84,7 +83,7 @@ if (isset($_GET['delete'])) {
         SQL;
 
     $authorizeds = array_diff(
-        functions_mysqli::query2array($query, null, 'category_id'),
+        $conf->sql_backend::query2array($query, null, 'category_id'),
         explode(',', functions_user::calculate_permissions($user['id'], $user['status']))
     );
 
@@ -126,7 +125,7 @@ if (isset($_POST['submit'])) {
 
     $data = functions_plugins::trigger_change('picture_modify_before_update', $data);
 
-    functions_mysqli::single_update(
+    $conf->sql_backend::single_update(
         'images',
         $data,
         [
@@ -175,7 +174,7 @@ if (isset($_POST['submit'])) {
             SET representative_picture_id = {$_GET['image_id']}
             WHERE id IN ({$image_ids});
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
     }
 
     $represented_albums = $_POST['represent'];
@@ -281,9 +280,9 @@ $query = <<<SQL
     FROM users
     WHERE {$conf->user_fields['id']} = {$row['added_by']};
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($user_row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($user_row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $row['added_by'] = $user_row['username'];
 }
 
@@ -309,7 +308,7 @@ if ($conf->rate &&
         FROM rate
         WHERE element_id = {$_GET['image_id']};
         SQL;
-    [$row['nb_rates']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$row['nb_rates']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
     $intro_vars['stats'] .= ', ' . sprintf(functions::l10n('Rated %d times, score : %.2f'), $row['nb_rates'], $row['rating_score']);
 }
@@ -319,7 +318,7 @@ $query = <<<SQL
     FROM image_format
     WHERE image_id = {$row['id']};
     SQL;
-$formats = functions_mysqli::query2array($query);
+$formats = $conf->sql_backend::query2array($query);
 
 if ($formats !== []) {
     $format_strings = [];
@@ -353,12 +352,12 @@ $query = <<<SQL
     INNER JOIN categories AS c ON c.id = ic.category_id
     WHERE image_id = {$_GET['image_id']};
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
 $related_categories = [];
 $related_categories_ids = [];
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $name =
       functions_html::get_cat_display_name_cache(
           $row['uppercats'],
@@ -395,7 +394,7 @@ $query = <<<SQL
     SQL;
 
 $authorizeds = array_diff(
-    functions_mysqli::query2array($query, null, 'category_id'),
+    $conf->sql_backend::query2array($query, null, 'category_id'),
     explode(
         ',',
         functions_user::calculate_permissions($user['id'], $user['status'])
@@ -438,7 +437,7 @@ $query = <<<SQL
     INNER JOIN image_category ON id = category_id
     WHERE image_id = {$_GET['image_id']};
     SQL;
-$associated_albums = functions_mysqli::query2array($query, null, 'id');
+$associated_albums = $conf->sql_backend::query2array($query, null, 'id');
 
 $template->assign([
     'associated_albums' => $associated_albums,

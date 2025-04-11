@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
-
 /**
  * A source image is used to get a derivative image. It is either
  * the original file for a jpg/png/... or a 'representative' image
@@ -127,6 +125,8 @@ final class SrcImage
      */
     public function get_size(): ?array
     {
+        global $conf;
+
         if ($this->size == null) {
             if (($this->flags & self::DIM_NOT_GIVEN) !== 0) {
                 functions_html::fatal_error('SrcImage dimensions required but not provided');
@@ -137,7 +137,7 @@ final class SrcImage
 
             if ($size !== false) {
                 $this->size = [$size[0], $size[1]];
-                functions_mysqli::pwg_query("UPDATE images SET width = {$size[0]}, height = {$size[1]} WHERE id = {$this->id};");
+                $conf->sql_backend::pwg_query("UPDATE images SET width = {$size[0]}, height = {$size[1]} WHERE id = {$this->id};");
             }
         }
 

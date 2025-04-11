@@ -12,7 +12,6 @@ declare(strict_types=1);
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
 use Piwigo\inc\BlockManager;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
@@ -132,7 +131,7 @@ if (isset($_POST['submit']) &&
         SET value = '{$serialized_value}'
         WHERE param = 'blk_{$menu_id}';
         SQL;
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
 
     $page['infos'][] = functions::l10n('Order of menubar items has been updated successfully.');
 }

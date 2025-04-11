@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\inc\ws_functions;
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
 use Piwigo\inc\PwgError;
@@ -34,6 +33,8 @@ final class pwg_permissions
         array $params,
         PwgServer &$service
     ): PwgError|array {
+        global $conf;
+
         $my_params = array_intersect(array_keys($params), ['cat_id', 'group_id', 'user_id']);
 
         if (count($my_params) > 1) {
@@ -54,9 +55,9 @@ final class pwg_permissions
             FROM user_access
             {$cat_filter};
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             if (! isset($perms[$row['cat_id']])) {
                 $perms[$row['cat_id']]['id'] = intval($row['cat_id']);
             }
@@ -72,9 +73,9 @@ final class pwg_permissions
             {$cat_filter}
 
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             if (! isset($perms[$row['cat_id']])) {
                 $perms[$row['cat_id']]['id'] = intval($row['cat_id']);
             }
@@ -88,9 +89,9 @@ final class pwg_permissions
             FROM group_access
             {$cat_filter};
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             if (! isset($perms[$row['cat_id']])) {
                 $perms[$row['cat_id']]['id'] = intval($row['cat_id']);
             }
@@ -141,6 +142,8 @@ final class pwg_permissions
         array $params,
         PwgServer $service
     ): array|bool|PwgError|string|null {
+        global $conf;
+
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -159,7 +162,7 @@ final class pwg_permissions
                 WHERE id IN ({$cat_ids_imploded})
                     AND status = 'private';
                 SQL;
-            $private_cats = functions_mysqli::query2array($query, null, 'id');
+            $private_cats = $conf->sql_backend::query2array($query, null, 'id');
 
             $inserts = [];
 
@@ -172,7 +175,7 @@ final class pwg_permissions
                 }
             }
 
-            functions_mysqli::mass_inserts(
+            $conf->sql_backend::mass_inserts(
                 'group_access',
                 ['group_id', 'cat_id'],
                 $inserts,
@@ -209,6 +212,8 @@ final class pwg_permissions
         array $params,
         PwgServer $service
     ): array|bool|PwgError|string|null {
+        global $conf;
+
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -223,7 +228,7 @@ final class pwg_permissions
                 WHERE group_id IN ({$group_ids_imploded})
                     AND cat_id IN ({$cat_ids_imploded});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
 
         if (! empty($params['user_id'])) {
@@ -234,7 +239,7 @@ final class pwg_permissions
                 WHERE user_id IN ({$user_ids_imploded})
                     AND cat_id IN ({$cat_ids_imploded});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
 
         return $service->invoke('pwg.permissions.getList', [

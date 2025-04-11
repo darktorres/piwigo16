@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Random\RandomException;
 
 if (isset($conf->session_save_handler) &&
@@ -99,14 +98,16 @@ final class functions_session
     public static function pwg_session_read(
         string $session_id
     ): string {
+        global $conf;
+
         $session_hash = self::get_remote_addr_session_hash() . $session_id;
         $query = <<<SQL
             SELECT data
             FROM sessions
             WHERE id = '{$session_hash}';
             SQL;
-        $result = functions_mysqli::pwg_query($query);
-        $row = functions_mysqli::pwg_db_fetch_assoc($result);
+        $result = $conf->sql_backend::pwg_query($query);
+        $row = $conf->sql_backend::pwg_db_fetch_assoc($result);
 
         if ($row) {
             return $row['data'];
@@ -139,7 +140,7 @@ final class functions_session
         }
 
         $session_hash = self::get_remote_addr_session_hash() . $session_id;
-        $escaped_data = functions_mysqli::pwg_db_real_escape_string($data);
+        $escaped_data = $conf->sql_backend::pwg_db_real_escape_string($data);
         $query .= <<<SQL
             (id, data, expiration)
             VALUES ('{$session_hash}', '{$escaped_data}', NOW())
@@ -153,7 +154,7 @@ final class functions_session
         }
 
         $query .= ';';
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
         return true;
     }
 
@@ -163,12 +164,14 @@ final class functions_session
     public static function pwg_session_destroy(
         string $session_id
     ): true {
+        global $conf;
+
         $session_id_hash = self::get_remote_addr_session_hash() . $session_id;
         $query = <<<SQL
             DELETE FROM sessions
             WHERE id = '{$session_id_hash}';
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
         return true;
     }
 
@@ -179,20 +182,20 @@ final class functions_session
     {
         global $conf;
 
-        $now_ts = functions_mysqli::pwg_db_date_to_ts('NOW()');
-        $expiration_ts = functions_mysqli::pwg_db_date_to_ts('expiration');
+        $now_ts = $conf->sql_backend::pwg_db_date_to_ts('NOW()');
+        $expiration_ts = $conf->sql_backend::pwg_db_date_to_ts('expiration');
         $query = <<<SQL
             DELETE FROM sessions
             WHERE {$now_ts} - {$expiration_ts} > {$conf->session_length};
             SQL;
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
         if ($result === false) {
             return false;
         }
 
-        return functions_mysqli::pwg_db_changes();
+        return $conf->sql_backend::pwg_db_changes();
     }
 
     /**
@@ -240,10 +243,12 @@ final class functions_session
     public static function delete_user_sessions(
         int $user_id
     ): void {
+        global $conf;
+
         $query = <<<SQL
             DELETE FROM sessions
             WHERE data LIKE '%pwg_uid|i:{$user_id};%';
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
     }
 }

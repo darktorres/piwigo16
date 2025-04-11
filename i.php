@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\pwg_image;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\functions;
 use Piwigo\inc\ImageStdParams;
@@ -56,7 +55,7 @@ foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $
 }
 
 try {
-    functions_mysqli::pwg_db_connect(
+    $conf->sql_backend::pwg_db_connect(
         $conf->db_host,
         $conf->db_user,
         $conf->db_password,
@@ -71,7 +70,7 @@ $query = <<<SQL
     FROM config
     WHERE param = 'derivatives';
     SQL;
-[$tmp] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$tmp] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 if ($conf->dblayer === 'pgsql') {
     $tmp = stripslashes((string) $tmp);
@@ -136,7 +135,7 @@ if (! str_contains($page['src_location'], '/pwg_representative/') &&
             FROM images
             WHERE path = '{$escaped_path}';
             SQL;
-        $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+        $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
         if ($row) {
             if (isset($row['width'])) {
@@ -148,7 +147,7 @@ if (! str_contains($page['src_location'], '/pwg_representative/') &&
             if (! isset($row['rotation'])) {
                 $page['rotation_angle'] = pwg_image::get_rotation_angle($page['src_path']);
 
-                functions_mysqli::single_update(
+                $conf->sql_backend::single_update(
                     'images',
                     [
                         'rotation' => pwg_image::get_rotation_code_from_angle($page['rotation_angle']),
@@ -173,7 +172,7 @@ if (! str_contains($page['src_location'], '/pwg_representative/') &&
     $page['rotation_angle'] = 0;
 }
 
-functions_mysqli::pwg_db_close();
+$conf->sql_backend::pwg_db_close();
 
 if (! functions::try_switch_source($params, $src_mtime) &&
     $params->type == derivative_std_params::IMG_CUSTOM

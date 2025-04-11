@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions_url;
 
 $my_base_url = functions_url::get_root_url() . 'admin.php?page=';
@@ -25,7 +24,7 @@ $query = <<<SQL
     FROM categories;
     SQL;
 
-[$nb_cats] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_cats] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 $template->assign(
     [
         'nb_cats' => $nb_cats,

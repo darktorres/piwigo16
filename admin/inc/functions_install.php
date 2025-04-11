@@ -12,8 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\admin\inc;
 
 use Exception;
-use Piwigo\inc\Config;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 
 final class functions_install
@@ -151,11 +149,13 @@ final class functions_install
     public static function execute_sqlfile(
         string $filepath
     ): void {
+        global $conf;
+
         $queries = self::parse_sql_file($filepath);
 
         foreach ($queries as $query) {
             if (! preg_match('/^DROP TABLE/i', $query)) {
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
             }
         }
     }
@@ -200,22 +200,22 @@ final class functions_install
 
         try {
             // first connect to default database
-            functions_mysqli::pwg_db_connect(
+            $conf->sql_backend::pwg_db_connect(
                 $_POST['dbhost'],
                 $_POST['dbuser'],
                 $_POST['dbpasswd'],
                 ''
             );
-            functions_mysqli::pwg_db_check_version();
+            $conf->sql_backend::pwg_db_check_version();
 
             if ($conf->dblayer === 'pgsql') {
-                functions_mysqli::pwg_query("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{$_POST['dbname']}' AND pid <> pg_backend_pid();");
+                $conf->sql_backend::pwg_query("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{$_POST['dbname']}' AND pid <> pg_backend_pid();");
             }
 
-            functions_mysqli::pwg_query("DROP DATABASE IF EXISTS {$_POST['dbname']};");
-            functions_mysqli::pwg_query("CREATE DATABASE {$_POST['dbname']};");
+            $conf->sql_backend::pwg_query("DROP DATABASE IF EXISTS {$_POST['dbname']};");
+            $conf->sql_backend::pwg_query("CREATE DATABASE {$_POST['dbname']};");
             // then connect to Piwigo database
-            functions_mysqli::pwg_db_connect(
+            $conf->sql_backend::pwg_db_connect(
                 $_POST['dbhost'],
                 $_POST['dbuser'],
                 $_POST['dbpasswd'],

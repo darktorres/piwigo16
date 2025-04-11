@@ -12,7 +12,6 @@ declare(strict_types=1);
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_install;
 use Piwigo\admin\inc\languages;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_cookie;
 use Piwigo\inc\functions_mail;
@@ -263,21 +262,21 @@ if (isset($_POST['install'])) {
             './install/config.sql'
         );
 
-        $random_function = functions_mysqli::DB_RANDOM_FUNCTION;
+        $random_function = $conf->sql_backend::DB_RANDOM_FUNCTION;
         $query = <<<SQL
             INSERT INTO config
                 (param, value, comment)
             VALUES
                 ('secret_key', md5({$random_function}), 'a secret key specific to the gallery for internal use');
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         functions::conf_update_param('piwigo_db_version', functions::get_branch_from_version(PHPWG_VERSION));
-        functions::conf_update_param('gallery_title', functions_mysqli::pwg_db_real_escape_string(functions::l10n('Just another Piwigo gallery')));
+        functions::conf_update_param('gallery_title', $conf->sql_backend::pwg_db_real_escape_string(functions::l10n('Just another Piwigo gallery')));
 
         functions::conf_update_param(
             'page_banner',
-            '<h1>%gallery_title%</h1>' . "\n\n<p>" . functions_mysqli::pwg_db_real_escape_string(functions::l10n('Welcome to my photo gallery')) . '</p>'
+            '<h1>%gallery_title%</h1>' . "\n\n<p>" . $conf->sql_backend::pwg_db_real_escape_string(functions::l10n('Welcome to my photo gallery')) . '</p>'
         );
 
         // fill languages table, only activate the current language
@@ -293,7 +292,7 @@ if (isset($_POST['install'])) {
             'id' => 1,
             'galleries_url' => './galleries/',
         ];
-        functions_mysqli::mass_inserts('sites', array_keys($insert), [$insert]);
+        $conf->sql_backend::mass_inserts('sites', array_keys($insert), [$insert]);
 
         // webmaster admin user
         $inserts = [
@@ -308,7 +307,7 @@ if (isset($_POST['install'])) {
                 'username' => 'guest',
             ],
         ];
-        functions_mysqli::mass_inserts('users', array_keys($inserts[0]), $inserts);
+        $conf->sql_backend::mass_inserts('users', array_keys($inserts[0]), $inserts);
 
         functions_user::create_user_infos([1, 2], [
             'language' => $language,
@@ -317,7 +316,7 @@ if (isset($_POST['install'])) {
         // Available upgrades must be ignored after a fresh installation. To
         // make PWG avoid upgrading, we must tell it upgrades have already been
         // made.
-        // list($dbnow) = \Piwigo\inc\dblayer\functions_mysqli::pwg_db_fetch_row(\Piwigo\inc\dblayer\functions_mysqli::pwg_query('SELECT NOW();'));
+        // list($dbnow) = \Piwigo\inc\dblayer\$conf->sql_backend::pwg_db_fetch_row(\Piwigo\inc\dblayer\$conf->sql_backend::pwg_query('SELECT NOW();'));
         // define('CURRENT_DATE', $dbnow);
         // $datas = array();
         // foreach (\Piwigo\admin\inc\functions_upgrade::get_available_upgrade_ids() as $upgrade_id)
@@ -328,7 +327,7 @@ if (isset($_POST['install'])) {
         //     'description' => 'upgrade included in installation',
         //     );
         // }
-        // \Piwigo\inc\dblayer\functions_mysqli::mass_inserts(
+        // \Piwigo\inc\dblayer\$conf->sql_backend::mass_inserts(
         //   'upgrade',
         //   array_keys($datas[0]),
         //   $datas

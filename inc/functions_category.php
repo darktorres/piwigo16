@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
-
 final class functions_category
 {
     /**
@@ -104,11 +102,11 @@ final class functions_category
             WHERE {$where};
             SQL;
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
         $cats = [];
         $selected_category = $page['category'] ?? null;
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $child_date_last = $row['max_date_last'] > $row['date_last'];
             $row = array_merge(
                 $row,
@@ -159,12 +157,14 @@ final class functions_category
     public static function get_cat_info(
         int|string $id
     ): array|bool|null {
+        global $conf;
+
         $query = <<<SQL
             SELECT *
             FROM categories
             WHERE id = {$id};
             SQL;
-        $cat = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+        $cat = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
         if (empty($cat)) {
             return null;
@@ -176,7 +176,7 @@ final class functions_category
             if ($v == 'true' ||
                 $v == 'false'
             ) {
-                $cat[$k] = functions_mysqli::get_boolean($v);
+                $cat[$k] = $conf->sql_backend::get_boolean($v);
             }
         }
 
@@ -196,7 +196,7 @@ final class functions_category
                 FROM categories
                 WHERE id IN ({$cat['uppercats']});
                 SQL;
-            $names = functions_mysqli::query2array($query, 'id');
+            $names = $conf->sql_backend::query2array($query, 'id');
 
             // category names must be in the same order than uppercats list
             $cat['upper_names'] = [];
@@ -296,7 +296,9 @@ final class functions_category
         string $blockname,
         bool $fullname = true
     ): void {
-        $categories = functions_mysqli::query2array($query);
+        global $conf;
+
+        $categories = $conf->sql_backend::query2array($query);
         usort($categories, self::global_rank_compare(...));
         self::display_select_categories($categories, $selecteds, $blockname, $fullname);
     }
@@ -310,6 +312,8 @@ final class functions_category
     public static function get_subcat_ids(
         array $ids
     ): array {
+        global $conf;
+
         $query = <<<SQL
             SELECT DISTINCT id
             FROM categories
@@ -326,12 +330,12 @@ final class functions_category
                 $query .= "\n    OR ";
             }
 
-            $regex_operator = functions_mysqli::DB_REGEX_OPERATOR;
+            $regex_operator = $conf->sql_backend::DB_REGEX_OPERATOR;
             $query .= "uppercats {$regex_operator} '(^|,){$category_id}(,|$)'\n";
         }
 
         $query = trim($query) . ';';
-        return functions_mysqli::query2array($query, null, 'id');
+        return $conf->sql_backend::query2array($query, null, 'id');
     }
 
     /**
@@ -344,6 +348,8 @@ final class functions_category
         array $permalinks,
         int &$idx
     ): ?int {
+        global $conf;
+
         $in = '';
 
         foreach ($permalinks as $permalink) {
@@ -363,7 +369,7 @@ final class functions_category
             FROM categories
             WHERE permalink IN ({$in});
             SQL;
-        $perma_hash = functions_mysqli::query2array($query, 'permalink');
+        $perma_hash = $conf->sql_backend::query2array($query, 'permalink');
 
         if ($perma_hash === []) {
             return null;
@@ -381,7 +387,7 @@ final class functions_category
                         WHERE permalink = '{$permalinks[$i]}' AND cat_id = {$cat_id}
                         LIMIT 1;
                         SQL;
-                    functions_mysqli::pwg_query($query);
+                    $conf->sql_backend::pwg_query($query);
                 }
 
                 return $cat_id;
@@ -444,6 +450,8 @@ final class functions_category
         array $category,
         bool $recursive = true
     ): ?int {
+        global $conf;
+
         $image_id = null;
 
         if ($category['count_images'] > 0) {
@@ -476,16 +484,16 @@ final class functions_category
                 'AND'
             );
 
-            $db_random_function = functions_mysqli::DB_RANDOM_FUNCTION;
+            $db_random_function = $conf->sql_backend::DB_RANDOM_FUNCTION;
             $query .= <<<SQL
                 {$get_sql_condition_FandF}
                 ORDER BY {$db_random_function}
                 LIMIT 1;
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            if (functions_mysqli::pwg_db_num_rows($result) > 0) {
-                [$image_id] = functions_mysqli::pwg_db_fetch_row($result);
+            if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
+                [$image_id] = $conf->sql_backend::pwg_db_fetch_row($result);
             }
         }
 
@@ -502,6 +510,8 @@ final class functions_category
         array &$userdata,
         ?int $filter_days = null
     ): array {
+        global $conf;
+
         // Count by date_available to avoid count null
         $query = <<<SQL
             SELECT c.id AS cat_id, id_uppercat, global_rank, MAX(date_available) AS date_last, COUNT(date_available) AS nb_images
@@ -511,7 +521,7 @@ final class functions_category
 
             SQL;
         if (isset($filter_days)) {
-            $query .= ' AND i.date_available > ' . functions_mysqli::pwg_db_get_recent_period_expression($filter_days);
+            $query .= ' AND i.date_available > ' . $conf->sql_backend::pwg_db_get_recent_period_expression($filter_days);
         }
 
         if (! empty($userdata['forbidden_categories'])) {
@@ -525,12 +535,12 @@ final class functions_category
             GROUP BY c.id;
             SQL;
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
         $userdata['last_photo_date'] = null;
         $cats = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $row['user_id'] = $userdata['id'];
             $row['nb_categories'] = 0;
             $row['count_categories'] = 0;
@@ -682,7 +692,7 @@ final class functions_category
 
         $query .= "\n" . (empty($order_by) ? $conf->order_by : $order_by);
 
-        return functions_mysqli::query2array($query, null, 'id');
+        return $conf->sql_backend::query2array($query, null, 'id');
     }
 
     /**
@@ -698,6 +708,8 @@ final class functions_category
         array $excluded_cat_ids = [],
         bool $use_permissions = true
     ): array {
+        global $conf;
+
         if ($items === []) {
             return [];
         }
@@ -743,10 +755,10 @@ final class functions_category
         }
 
         $query = trim($query) . ';';
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
         $cats = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $cats[$row['id']] = $row;
         }
 
@@ -781,7 +793,7 @@ final class functions_category
             FROM categories
             WHERE id IN ({$cat_ids_keys});
             SQL;
-        $cats = functions_mysqli::query2array($query);
+        $cats = $conf->sql_backend::query2array($query);
         usort($cats, self::global_rank_compare(...));
 
         $index_of_cat = [];

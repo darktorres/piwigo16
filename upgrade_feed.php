@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 //check php version
 use Piwigo\admin\inc\functions_upgrade;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 
 if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
@@ -47,14 +46,14 @@ const UPGRADES_PATH = './install/db';
 // |                         Database connection                           |
 // +-----------------------------------------------------------------------+
 try {
-    functions_mysqli::pwg_db_connect(
+    $conf->sql_backend::pwg_db_connect(
         $conf->db_host,
         $conf->db_user,
         $conf->db_password,
         $conf->db_base
     );
 } catch (Exception $exception) {
-    functions_mysqli::my_error(functions::l10n($exception->getMessage()), true);
+    $conf->sql_backend::my_error(functions::l10n($exception->getMessage()), true);
 }
 
 // +-----------------------------------------------------------------------+
@@ -66,7 +65,7 @@ $query = <<<SQL
     SELECT id
     FROM upgrade;
     SQL;
-$applied = functions_mysqli::query2array($query, null, 'id');
+$applied = $conf->sql_backend::query2array($query, null, 'id');
 
 // retrieve existing upgrades
 $existing = functions_upgrade::get_available_upgrade_ids();
@@ -95,7 +94,7 @@ foreach ($to_apply as $upgrade_id) {
         VALUES
             ('{$upgrade_id}', NOW(), '{$upgrade_description}');
         SQL;
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
 }
 
 echo '</pre>';

@@ -16,7 +16,6 @@ use DateMalformedStringException;
 use DateTime;
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_history;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Random\RandomException;
 use SmartyException;
 use uagent_info;
@@ -462,6 +461,8 @@ final class functions
     public static function str2url(
         string $str
     ): string {
+        global $conf;
+
         $str = self::pwg_transliterate($str);
         $safe = $str;
         $str = preg_replace('/[^\x80-\xffa-z0-9_\s\'\:\/\[\],-]/', '', $str);
@@ -483,16 +484,18 @@ final class functions
      */
     public static function get_languages(): array
     {
+        global $conf;
+
         $query = <<<SQL
             SELECT id, name
             FROM languages
             ORDER BY name ASC;
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
         $languages = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             if (is_dir('./language/' . $row['id'])) {
                 $languages[$row['id']] = $row['name'];
             }
@@ -549,7 +552,7 @@ final class functions
                 SET last_visit = NOW(), lastmodified = lastmodified
                 WHERE user_id = {$user['id']};
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
 
         if (! self::do_log($image_id, $image_type)) {
@@ -584,7 +587,7 @@ final class functions
         if (isset($page['section'])) {
             // set cache if not available
             if (! isset($conf->history_sections_cache)) {
-                self::conf_update_param('history_sections_cache', functions_mysqli::get_enums('history', 'section'), true);
+                self::conf_update_param('history_sections_cache', $conf->sql_backend::get_enums('history', 'section'), true);
             }
 
             if (in_array($page['section'], ($conf->history_sections_cache ?: [])) ||
@@ -592,14 +595,14 @@ final class functions
             ) {
                 $section = $page['section'];
             } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page['section'])) {
-                $history_sections = functions_mysqli::get_enums('history', 'section');
+                $history_sections = $conf->sql_backend::get_enums('history', 'section');
                 $history_sections[] = $page['section'];
 
                 // alter history table structure, to include a new section
-                functions_mysqli::pwg_query("ALTER TABLE history CHANGE section section enum('" . implode("','", array_unique($history_sections)) . "') DEFAULT NULL;");
+                $conf->sql_backend::pwg_query("ALTER TABLE history CHANGE section section enum('" . implode("','", array_unique($history_sections)) . "') DEFAULT NULL;");
 
                 // and refresh cache
-                self::conf_update_param('history_sections_cache', functions_mysqli::get_enums('history', 'section'), true);
+                self::conf_update_param('history_sections_cache', $conf->sql_backend::get_enums('history', 'section'), true);
 
                 $section = $page['section'];
             }
@@ -620,9 +623,9 @@ final class functions
                 (CURRENT_DATE, CURRENT_TIME, {$user['id']}, '{$ip}', {$sectionValue}, {$categoryIdValue}, {$searchIdValue},
                 {$imageIdValue}, {$imageTypeValue}, {$formatIdValue}, {$authKeyIdValue}, {$tagsStringValue});
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
-        $history_id = functions_mysqli::pwg_db_insert_id();
+        $history_id = $conf->sql_backend::pwg_db_insert_id();
 
         if ($history_id % 1000 == 0) {
             require_once __DIR__ . '/../admin/inc/functions_history.php';
@@ -646,6 +649,7 @@ final class functions
         array $details = []
     ): void {
         global $user;
+        global $conf;
 
         // in case of uploadAsync, do not log the automatic login as an independent activity
         if (isset($_REQUEST['method']) &&
@@ -727,7 +731,7 @@ final class functions
         }
 
         $inserts = [];
-        $details_insert = functions_mysqli::pwg_db_real_escape_string(serialize($details));
+        $details_insert = $conf->sql_backend::pwg_db_real_escape_string(serialize($details));
         $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
         $session_id = empty(session_id()) ? 'none' : session_id();
 
@@ -746,11 +750,11 @@ final class functions
                 'session_idx' => $session_id,
                 'ip_address' => $ip_address,
                 'details' => $details_insert,
-                'user_agent' => functions_mysqli::pwg_db_real_escape_string($user_agent),
+                'user_agent' => $conf->sql_backend::pwg_db_real_escape_string($user_agent),
             ];
         }
 
-        functions_mysqli::mass_inserts('activity', array_keys($inserts[0]), $inserts);
+        $conf->sql_backend::mass_inserts('activity', array_keys($inserts[0]), $inserts);
     }
 
     /**
@@ -1163,9 +1167,9 @@ final class functions
             FROM themes
             ORDER BY name ASC;
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             if ($row['id'] == $conf->mobile_theme) {
                 if (! $show_mobile) {
                     continue;
@@ -1246,13 +1250,14 @@ final class functions
         array $elements_id
     ): void {
         global $user;
+        global $conf;
 
         $query = <<<SQL
             SELECT element_id
             FROM caddie
             WHERE user_id = {$user['id']};
             SQL;
-        $in_caddie = functions_mysqli::query2array($query, null, 'element_id');
+        $in_caddie = $conf->sql_backend::query2array($query, null, 'element_id');
 
         $caddiables = array_diff($elements_id, $in_caddie);
 
@@ -1266,7 +1271,7 @@ final class functions
         }
 
         if ($caddiables !== []) {
-            functions_mysqli::mass_inserts('caddie', ['element_id', 'user_id'], $datas);
+            $conf->sql_backend::mass_inserts('caddie', ['element_id', 'user_id'], $datas);
         }
     }
 
@@ -1408,7 +1413,7 @@ final class functions
             FROM users
             WHERE {$conf->user_fields['id']} = {$conf->webmaster_id};
             SQL;
-        [$email] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$email] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         return functions_plugins::trigger_change('get_webmaster_mail_address', $email);
     }
@@ -1431,15 +1436,15 @@ final class functions
             SQL;
         $query = trim($query) . ';';
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_num_rows($result) == 0 &&
+        if ($conf->sql_backend::pwg_db_num_rows($result) == 0 &&
             ! empty($condition)
         ) {
             functions_html::fatal_error('No configuration data');
         }
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $val = $row['value'];
 
             if ($val === 'true') {
@@ -1471,10 +1476,12 @@ final class functions
      */
     public static function pwg_is_dbconf_writeable(): bool
     {
+        global $conf;
+
         [$param, $value] = ['pwg_is_dbconf_writeable_' . functions_session::generate_key(12), date('c') . ' ' . functions_session::generate_key(20)];
 
         self::conf_update_param($param, $value);
-        [$dbvalue] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query("SELECT value FROM config WHERE param = '{$param}';"));
+        [$dbvalue] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query("SELECT value FROM config WHERE param = '{$param}';"));
 
         if ($dbvalue != $value) {
             return false;
@@ -1506,7 +1513,7 @@ final class functions
         ) {
             $dbValue = addslashes(serialize($value));
         } else {
-            $dbValue = functions_mysqli::boolean_to_string($value);
+            $dbValue = $conf->sql_backend::boolean_to_string($value);
         }
 
         $query = <<<SQL
@@ -1530,7 +1537,7 @@ final class functions
         }
 
         $query .= ';';
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         if ($updateGlobal) {
             global $conf;
@@ -1561,7 +1568,7 @@ final class functions
             DELETE FROM config
             WHERE param IN ('{$implodedParams}');
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         foreach ($params as $param) {
             unset($conf->{$param});
@@ -1714,7 +1721,7 @@ final class functions
     //     string $keyname,
     //     string $valuename
     // ): array {
-    //     return functions_mysqli::query2array($query, $keyname, $valuename);
+    //     return $conf->sql_backend::query2array($query, $keyname, $valuename);
     // }
 
     // /**
@@ -1726,7 +1733,7 @@ final class functions
     //     string $query,
     //     string $keyname
     // ): array {
-    //     return functions_mysqli::query2array($query, $keyname);
+    //     return $conf->sql_backend::query2array($query, $keyname);
     // }
 
     // /**
@@ -1740,10 +1747,10 @@ final class functions
     //     bool|string $fieldname = false
     // ): array {
     //     if ($fieldname === false) {
-    //         return functions_mysqli::query2array($query);
+    //         return $conf->sql_backend::query2array($query);
     //     }
 
-    //     return functions_mysqli::query2array($query, null, $fieldname);
+    //     return $conf->sql_backend::query2array($query, null, $fieldname);
     // }
 
     /**
@@ -2128,6 +2135,7 @@ final class functions
         bool $is_child_date = false
     ): false|array {
         global $cache, $user;
+        global $conf;
 
         if (empty($date)) {
             return false;
@@ -2151,7 +2159,7 @@ final class functions
 
         if (! isset($cache['get_icon']['sql_recent_date'])) {
             // Use MySql date in order to standardize all recent "actions/queries"
-            $cache['get_icon']['sql_recent_date'] = functions_mysqli::pwg_db_get_recent_period($user['recent_period']);
+            $cache['get_icon']['sql_recent_date'] = $conf->sql_backend::pwg_db_get_recent_period($user['recent_period']);
         }
 
         $cache['get_icon'][$date] = $date > $cache['get_icon']['sql_recent_date'];
@@ -2309,7 +2317,7 @@ final class functions
         }
 
         if (isset($_GET['mobile'])) {
-            $is_mobile_theme = functions_mysqli::get_boolean($_GET['mobile']);
+            $is_mobile_theme = $conf->sql_backend::get_boolean($_GET['mobile']);
             functions_session::pwg_set_session_var('mobile_theme', $is_mobile_theme);
         } elseif (isset($_GET['ato_theme'])) {
             $theme = $_GET['ato_theme'];
@@ -2361,6 +2369,7 @@ final class functions
     public static function get_nb_available_comments(): int
     {
         global $user;
+        global $conf;
 
         if (! isset($user['nb_available_comments'])) {
             $where = [];
@@ -2385,9 +2394,9 @@ final class functions
                 INNER JOIN comments AS com ON ic.image_id = com.image_id
                 WHERE {$whereClause};
                 SQL;
-            [$user['nb_available_comments']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$user['nb_available_comments']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
-            functions_mysqli::single_update(
+            $conf->sql_backend::single_update(
                 'user_cache',
                 [
                     'nb_available_comments' => $user['nb_available_comments'],
@@ -2455,7 +2464,7 @@ final class functions
             ORDER BY image_id ASC
             LIMIT 1;
             SQL;
-        $voyagers = functions_mysqli::query2array($query);
+        $voyagers = $conf->sql_backend::query2array($query);
 
         if ($voyagers !== []) {
             $voyager = $voyagers[0];
@@ -2896,6 +2905,8 @@ final class functions
      */
     public static function find_available_feed_id(): string
     {
+        global $conf;
+
         while (true) {
             $key = functions_session::generate_key(50);
             $query = <<<SQL
@@ -2903,7 +2914,7 @@ final class functions
                 FROM user_feed
                 WHERE id = '{$key}';
                 SQL;
-            [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
             if ($count == 0) {
                 return $key;
@@ -2960,9 +2971,9 @@ final class functions
 
         $activation_key = functions_session::generate_key(20);
 
-        [$expire] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 HOUR);'));
+        [$expire] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 HOUR);'));
 
-        functions_mysqli::single_update(
+        $conf->sql_backend::single_update(
             'user_infos',
             [
                 'activation_key' => functions_user::pwg_password_hash($activation_key),
@@ -3028,13 +3039,13 @@ final class functions
 
         $user_ids = [];
 
-        $escaped_email = functions_mysqli::pwg_db_real_escape_string($email);
+        $escaped_email = $conf->sql_backend::pwg_db_real_escape_string($email);
         $query = <<<SQL
             SELECT {$conf->user_fields['id']} AS id
             FROM users
             WHERE {$conf->user_fields['email']} = '{$escaped_email}';
             SQL;
-        $user_ids = functions_mysqli::query2array($query, null, 'id');
+        $user_ids = $conf->sql_backend::query2array($query, null, 'id');
 
         if (count($user_ids) == 0) {
             $page['errors'][] = self::l10n('Invalid username or email');
@@ -3049,9 +3060,9 @@ final class functions
             FROM user_infos
             WHERE user_id IN ({$imploded_user_ids});
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             if (functions_user::pwg_password_verify($key, $row['activation_key'])) {
                 if (strtotime($row['dbnow']) > strtotime($row['activation_key_expire'])) {
                     // key has expired
@@ -3103,7 +3114,7 @@ final class functions
             return false;
         }
 
-        functions_mysqli::single_update(
+        $conf->sql_backend::single_update(
             'users',
             [
                 $conf->user_fields['password'] => ($conf->password_hash)($_POST['use_new_pwd']),
@@ -3222,14 +3233,16 @@ final class functions
      */
     public static function get_tables(): array
     {
+        global $conf;
+
         $tables = [];
 
         $query = <<<SQL
             SHOW TABLES;
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_row($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_row($result)) {
             $tables[] = $row[0];
         }
 
@@ -3244,17 +3257,19 @@ final class functions
     public static function get_columns_of(
         array $tables
     ): array {
+        global $conf;
+
         $columns_of = [];
 
         foreach ($tables as $table) {
             $query = <<<SQL
                 DESC {$table};
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
             $columns_of[$table] = [];
 
-            while ($row = functions_mysqli::pwg_db_fetch_row($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_row($result)) {
                 $columns_of[$table][] = $row[0];
             }
         }
@@ -3355,7 +3370,7 @@ final class functions
                     FROM users
                     WHERE {$conf->user_fields['id']} = '{$userdata['id']}';
                     SQL;
-                [$current_password] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+                [$current_password] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
                 if (! ($conf->password_verify)($_POST['password'], $current_password)) {
                     $errors[] = self::l10n('Current password is wrong');
@@ -3420,7 +3435,7 @@ final class functions
                     }
                 }
 
-                functions_mysqli::mass_updates(
+                $conf->sql_backend::mass_updates(
                     'users',
                     [
                         'primary' => [$conf->user_fields['id']],
@@ -3458,7 +3473,7 @@ final class functions
                     }
                 }
 
-                functions_mysqli::mass_updates(
+                $conf->sql_backend::mass_updates(
                     'user_infos',
                     [
                         'primary' => ['user_id'],

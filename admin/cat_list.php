@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_plugins;
@@ -158,7 +157,7 @@ $query = <<<SQL
     {$parentIdCondition}
     ORDER BY sort_rank ASC;
     SQL;
-$categories = functions_mysqli::query2array($query, 'id');
+$categories = $conf->sql_backend::query2array($query, 'id');
 
 // get the categories containing images directly
 $categories_with_images = [];
@@ -171,13 +170,13 @@ if ($categories !== []) {
         SQL;
     // WHERE category_id IN ('.implode(', ', array_keys($categories)).')
 
-    $nb_photos_in = functions_mysqli::query2array($query, 'category_id', 'nb_photos');
+    $nb_photos_in = $conf->sql_backend::query2array($query, 'category_id', 'nb_photos');
 
     $query = <<<SQL
         SELECT id, uppercats
         FROM categories;
         SQL;
-    $all_categories = functions_mysqli::query2array($query, 'id', 'uppercats');
+    $all_categories = $conf->sql_backend::query2array($query, 'id', 'uppercats');
     $subcats_of = [];
 
     foreach ($all_categories as $id => $uppercats) {

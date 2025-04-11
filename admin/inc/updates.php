@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\admin\inc;
 
 use PclZip;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_mail;
 use Piwigo\inc\functions_url;
@@ -374,7 +373,7 @@ final class updates
             $conf->updates_ignored[$type] = $ignore_list;
         }
 
-        functions::conf_update_param('updates_ignored', functions_mysqli::pwg_db_real_escape_string(serialize($conf->updates_ignored)));
+        functions::conf_update_param('updates_ignored', $conf->sql_backend::pwg_db_real_escape_string(serialize($conf->updates_ignored)));
 
         return null;
     }

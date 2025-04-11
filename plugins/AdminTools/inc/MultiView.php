@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\plugins\AdminTools\inc;
 
 use Piwigo\admin\inc\themes;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\FileCombiner;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
@@ -299,7 +298,7 @@ class MultiView
             INNER JOIN user_infos AS i ON {$conf->user_fields['id']} = user_id
             ORDER BY CAST({$conf->user_fields['username']} AS CHAR);
             SQL;
-        $out['users'] = functions_mysqli::query2array($query);
+        $out['users'] = $conf->sql_backend::query2array($query);
 
         // get themes
         $themes = new themes();

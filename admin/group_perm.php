@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
 use Piwigo\inc\functions_html;
@@ -61,7 +60,7 @@ if (isset($_POST['falsify']) &&
         WHERE group_id = {$page['group']}
             AND cat_id IN ({$subcat_list});
         SQL;
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
 } elseif (isset($_POST['truthify']) &&
           isset($_POST['cat_false']) &&
           count($_POST['cat_false']) > 0
@@ -76,9 +75,9 @@ if (isset($_POST['falsify']) &&
         WHERE id IN ({$uppercat_list})
             AND status = 'private';
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $private_uppercats[] = $row['id'];
     }
 
@@ -92,9 +91,9 @@ if (isset($_POST['falsify']) &&
         FROM group_access
         WHERE group_id = {$page['group']};
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $authorized_ids[] = $row['cat_id'];
     }
 
@@ -108,7 +107,7 @@ if (isset($_POST['falsify']) &&
         ];
     }
 
-    functions_mysqli::mass_inserts('group_access', ['group_id', 'cat_id'], $inserts);
+    $conf->sql_backend::mass_inserts('group_access', ['group_id', 'cat_id'], $inserts);
     functions_admin::invalidate_user_cache();
 }
 
@@ -150,10 +149,10 @@ $query_true = <<<SQL
     SQL;
 functions_category::display_select_cat_wrapper($query_true, [], 'category_option_true');
 
-$result = functions_mysqli::pwg_query($query_true);
+$result = $conf->sql_backend::pwg_query($query_true);
 $authorized_ids = [];
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $authorized_ids[] = $row['id'];
 }
 

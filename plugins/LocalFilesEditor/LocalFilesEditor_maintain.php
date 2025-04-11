@@ -24,14 +24,14 @@ declare(strict_types=1);
 // | USA.                                                                  |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
-
 function plugin_uninstall(): void
 {
+    global $conf;
+
     $query = <<<SQL
         DELETE FROM config
         WHERE param = 'LocalFilesEditor'
         LIMIT 1;
         SQL;
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
 }

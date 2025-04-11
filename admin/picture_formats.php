@@ -9,7 +9,6 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
@@ -33,7 +32,7 @@ $query = <<<SQL
     FROM images
     WHERE id = {$_GET['image_id']};
     SQL;
-$images = functions_mysqli::query2array($query);
+$images = $conf->sql_backend::query2array($query);
 $image = $images[0];
 
 $query = <<<SQL
@@ -42,7 +41,7 @@ $query = <<<SQL
     WHERE image_id = {$_GET['image_id']};
     SQL;
 
-$formats = functions_mysqli::query2array($query);
+$formats = $conf->sql_backend::query2array($query);
 
 foreach ($formats as &$format) {
     $format['download_url'] = 'action.php?format=' . $format['format_id'] . '&amp;download';

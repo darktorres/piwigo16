@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\LocalSiteReader;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
@@ -111,7 +110,7 @@ if (isset($_POST['submit'])) {
             WHERE element_id IN ({$collection_str})
                 AND user_id = {$user['id']};
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         // remove from caddie action available only in caddie so reload content
         $redirect = true;
@@ -139,7 +138,7 @@ if (isset($_POST['submit'])) {
                 WHERE image_id IN ({$collection_str})
                     AND tag_id IN ({$del_tags_str});
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
 
             $taglist_after = functions_admin::get_image_tag_ids($collection);
             $images_to_update = functions_admin::compare_image_tag_lists($taglist_before, $taglist_after);
@@ -224,7 +223,7 @@ if (isset($_POST['submit'])) {
             ];
         }
 
-        functions_mysqli::mass_updates(
+        $conf->sql_backend::mass_updates(
             'images',
             [
                 'primary' => ['id'],
@@ -253,7 +252,7 @@ if (isset($_POST['submit'])) {
             ];
         }
 
-        functions_mysqli::mass_updates(
+        $conf->sql_backend::mass_updates(
             'images',
             [
                 'primary' => ['id'],
@@ -286,7 +285,7 @@ if (isset($_POST['submit'])) {
             ];
         }
 
-        functions_mysqli::mass_updates(
+        $conf->sql_backend::mass_updates(
             'images',
             [
                 'primary' => ['id'],
@@ -311,7 +310,7 @@ if (isset($_POST['submit'])) {
             ];
         }
 
-        functions_mysqli::mass_updates(
+        $conf->sql_backend::mass_updates(
             'images',
             [
                 'primary' => ['id'],
@@ -370,9 +369,9 @@ if (isset($_POST['submit'])) {
             FROM images
             WHERE id IN ({$collection_str});
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($info = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($info = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             foreach ($_POST['del_derivatives_type'] as $type) {
                 functions_admin::delete_element_derivatives($info, $type);
             }
@@ -533,10 +532,10 @@ if (isset($_SESSION['bulk_manager_filter']['category'])) {
         ORDER BY image_id DESC
         LIMIT 1;
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    if (functions_mysqli::pwg_db_num_rows($result) > 0) {
-        $row = functions_mysqli::pwg_db_fetch_assoc($result);
+    if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
+        $row = $conf->sql_backend::pwg_db_fetch_assoc($result);
         $selected_category[] = $row['category_id'];
     }
 }
@@ -558,7 +557,7 @@ if (count($page['cat_elements_id']) > 0) {
             AND (ic.category_id != i.storage_category_id OR i.storage_category_id IS NULL);
         SQL;
 
-    $associated_categories = functions_mysqli::query2array($query, 'id', 'id');
+    $associated_categories = $conf->sql_backend::query2array($query, 'id', 'id');
 }
 
 $template->assign('associated_categories', $associated_categories);
@@ -689,12 +688,12 @@ if (count($page['cat_elements_id']) > 0) {
         {$conf->order_by}
         LIMIT {$page['nb_images']} OFFSET {$page['start']};
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
     $thumb_params = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE);
 
     // template thumbnail initialization
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $nb_thumbs_page++;
         $src_image = new SrcImage($row);
 

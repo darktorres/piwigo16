@@ -25,7 +25,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\languages;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_session;
 use Piwigo\inc\functions_url;
@@ -38,6 +37,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 function language_controller_switch(): void
 {
     global $user;
+    global $conf;
 
     $same = $user['language'];
 
@@ -61,7 +61,7 @@ function language_controller_switch(): void
                     SET language = '{$_GET['lang']}'
                     WHERE user_id = {$user['id']};
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
             }
 
             $user['language'] = $_GET['lang'];

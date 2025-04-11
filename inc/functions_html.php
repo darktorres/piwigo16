@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use SmartyException;
 
 final class functions_html
@@ -94,7 +93,7 @@ final class functions_html
                 SELECT id, name, permalink
                 FROM categories;
                 SQL;
-            $cache['cat_names'] = functions_mysqli::query2array($query, 'id');
+            $cache['cat_names'] = $conf->sql_backend::query2array($query, 'id');
         }
 
         $output = '';

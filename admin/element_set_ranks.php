@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
@@ -89,7 +88,7 @@ if (isset($_POST['submit'])) {
         SET image_order = {$image_order_value}
         WHERE id = {$page['category_id']};
         SQL;
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
 
     if (isset($_POST['image_order_subcats'])) {
         $cat_info = functions_category::get_cat_info($page['category_id']);
@@ -100,7 +99,7 @@ if (isset($_POST['submit'])) {
             SET image_order = {$image_order_value}
             WHERE uppercats LIKE '{$cat_info['uppercats']},%';
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
     }
 
     $page['infos'][] = functions::l10n('Your configuration settings are saved');
@@ -122,7 +121,7 @@ $query = <<<SQL
     FROM categories
     WHERE id = {$page['category_id']};
     SQL;
-$category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+$category = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
 if ($category['image_order'] == 'rank ASC' ||
     $category['image_order'] == 'sort_rank ASC'
@@ -156,14 +155,14 @@ $query = <<<SQL
     WHERE category_id = {$page['category_id']}
     ORDER BY sort_rank;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-if (functions_mysqli::pwg_db_num_rows($result) > 0) {
+if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
     // template thumbnail initialization
     $current_rank = 1;
     $derivativeParams = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE);
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
 
         if (! empty($row['name'])) {

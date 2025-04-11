@@ -22,7 +22,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_history;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_cookie;
 use Piwigo\inc\functions_url;
@@ -34,7 +33,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 
 require_once __DIR__ . '/../admin/inc/functions_history.php';
 
-$types = array_merge(['none'], functions_mysqli::get_enums('history', 'image_type'));
+$types = array_merge(['none'], $conf->sql_backend::get_enums('history', 'image_type'));
 
 $display_thumbnails = [
     'no_display_thumbnail' => functions::l10n('No display'),
@@ -125,8 +124,8 @@ if ($form_param['user_id'] != '-1') {
         WHERE id = {$form_param['user_id']};
         SQL;
 
-    [$form_param['user_name']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
-    $form_param['user_id'] = empty(functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query))) ? '-1' : $form_param['user_id'];
+    [$form_param['user_name']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
+    $form_param['user_id'] = empty($conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query))) ? '-1' : $form_param['user_id'];
 }
 
 $template->assign(

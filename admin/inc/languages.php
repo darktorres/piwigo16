@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\admin\inc;
 
 use PclZip;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_user;
@@ -71,7 +70,7 @@ final class languages
                     VALUES
                         ('{$language_id}', '{$this->fs_languages[$language_id]['version']}', '{$this->fs_languages[$language_id]['name']}');
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
                 break;
 
             case 'deactivate':
@@ -89,7 +88,7 @@ final class languages
                     DELETE FROM languages
                     WHERE id = '{$language_id}';
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
                 break;
 
             case 'delete':
@@ -110,7 +109,7 @@ final class languages
                     SET language = '{$default_language}'
                     WHERE language = '{$language_id}';
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
 
                 functions_admin::deltree('./language/' . $language_id, './language/trash');
                 break;
@@ -121,7 +120,7 @@ final class languages
                     SET language = '{$language_id}'
                     WHERE user_id IN ({$conf->default_user_id}, {$conf->guest_id});
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
                 break;
         }
 
@@ -206,14 +205,16 @@ final class languages
 
     public function get_db_languages(): void
     {
+        global $conf;
+
         $query = <<<SQL
             SELECT id, name
             FROM languages
             ORDER BY name ASC;
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $this->db_languages[$row['id']] = $row['name'];
         }
     }

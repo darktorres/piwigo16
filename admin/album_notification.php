@@ -9,7 +9,6 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
@@ -56,10 +55,10 @@ if (isset($_POST['submitEmail'])) {
             WHERE id = {$category['representative_picture_id']};
             SQL;
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_num_rows($result) > 0) {
-            $element = functions_mysqli::pwg_db_fetch_assoc($result);
+        if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
+            $element = $conf->sql_backend::pwg_db_fetch_assoc($result);
 
             $img = [
                 'link' => functions_url::make_picture_url(
@@ -119,7 +118,7 @@ if (isset($_POST['submitEmail'])) {
             JOIN users AS u ON u.{$conf->user_fields['id']} = ui.user_id
             WHERE ui.user_id IN ({$user_ids});
             SQL;
-        $users = functions_mysqli::query2array($query);
+        $users = $conf->sql_backend::query2array($query);
         $usernames = [];
 
         foreach ($users as $u) {
@@ -171,7 +170,7 @@ if (isset($_POST['submitEmail'])) {
             FROM user_groups
             WHERE id = {$_POST['group']};
             SQL;
-        [$group_name] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$group_name] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         $page['infos'][] = functions::l10n('An information email was sent to group "%s"', $group_name);
     }
@@ -219,7 +218,7 @@ $query = <<<SQL
     SELECT id AS group_id
     FROM user_groups;
     SQL;
-$all_group_ids = functions_mysqli::query2array($query, null, 'group_id');
+$all_group_ids = $conf->sql_backend::query2array($query, null, 'group_id');
 
 if (count($all_group_ids) == 0) {
     $template->assign('no_group_in_gallery', true);
@@ -230,7 +229,7 @@ if (count($all_group_ids) == 0) {
             FROM group_access
             WHERE cat_id = {$category['id']};
             SQL;
-        $group_ids = functions_mysqli::query2array($query, null, 'group_id');
+        $group_ids = $conf->sql_backend::query2array($query, null, 'group_id');
 
         if (count($group_ids) == 0) {
             $template->assign('permission_url', $admin_album_base_url . '-permissions');
@@ -249,7 +248,7 @@ if (count($all_group_ids) == 0) {
             SQL;
         $template->assign(
             'group_mail_options',
-            functions_mysqli::query2array($query, 'id', 'name')
+            $conf->sql_backend::query2array($query, 'id', 'name')
         );
     }
 }
@@ -262,7 +261,7 @@ $query = <<<SQL
     FROM user_infos
     WHERE status != 'guest';
     SQL;
-$all_user_ids = functions_mysqli::query2array($query, null, 'user_id');
+$all_user_ids = $conf->sql_backend::query2array($query, null, 'user_id');
 
 if ($category['status'] == 'private') {
     $user_ids_access_indirect = [];
@@ -276,7 +275,7 @@ if ($category['status'] == 'private') {
             FROM user_group
             WHERE group_id IN ({$group_ids_list});
             SQL;
-        $user_ids_access_indirect = functions_mysqli::query2array($query, null, 'user_id');
+        $user_ids_access_indirect = $conf->sql_backend::query2array($query, null, 'user_id');
     }
 
     $query = <<<SQL
@@ -284,7 +283,7 @@ if ($category['status'] == 'private') {
         FROM user_access
         WHERE cat_id = {$category['id']};
         SQL;
-    $user_ids_access_direct = functions_mysqli::query2array($query, null, 'user_id');
+    $user_ids_access_direct = $conf->sql_backend::query2array($query, null, 'user_id');
 
     $user_ids_access = array_unique(array_merge($user_ids_access_direct, $user_ids_access_indirect));
 
@@ -301,7 +300,7 @@ if ($user_ids !== []) {
         WHERE id IN ({$user_ids_imploded});
         SQL;
 
-    $users = functions_mysqli::query2array($query, 'id', 'username');
+    $users = $conf->sql_backend::query2array($query, 'id', 'username');
 
     $template->assign('user_options', $users);
 }

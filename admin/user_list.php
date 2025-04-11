@@ -13,7 +13,6 @@ declare(strict_types=1);
  * Add users and manage users list
  */
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
@@ -38,9 +37,9 @@ $query = <<<SQL
     FROM user_groups
     ORDER BY name ASC;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $groups[$row['id']] = $row['name'];
 }
 
@@ -71,11 +70,11 @@ $query .= <<<SQL
     FROM user_infos
     ORDER BY registration_date;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
 $register_dates = [];
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $register_dates[] = $row['registration_year'] . '-' . sprintf('%02u', $row['registration_month']);
 }
 
@@ -114,7 +113,7 @@ if ($user['status'] == 'admin') {
         FROM user_infos
         WHERE status IN ('webmaster', 'admin');
         SQL;
-    $admin_ids = functions_mysqli::query2array($query, null, 'user_id');
+    $admin_ids = $conf->sql_backend::query2array($query, null, 'user_id');
 
     $protected_users = array_merge($protected_users, $admin_ids);
 
@@ -148,7 +147,7 @@ if (isset($_GET['show_add_user'])) {
 }
 
 // Status options
-foreach (functions_mysqli::get_enums('user_infos', 'status') as $status) {
+foreach ($conf->sql_backend::get_enums('user_infos', 'status') as $status) {
     $label_of_status[$status] = functions::l10n('user_status_' . $status);
 }
 
@@ -177,13 +176,13 @@ $query = <<<SQL
     FROM user_groups
     ORDER BY name ASC;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
 $groups_arr_id = [];
 $groups_arr_name = [];
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
-    $groups_arr_name[] = '"' . functions_mysqli::pwg_db_real_escape_string($row['name']) . '"';
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
+    $groups_arr_name[] = '"' . $conf->sql_backend::pwg_db_real_escape_string($row['name']) . '"';
     $groups_arr_id[] = $row['id'];
 }
 

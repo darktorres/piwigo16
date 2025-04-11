@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_plugins;
@@ -81,7 +80,7 @@ if (isset($_POST['submit']) &&
         FROM sites
         WHERE galleries_url = '{$url}';
         SQL;
-    $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+    $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
     if ($row['count'] > 0) {
         $page['errors'][] = functions::l10n('This site already exists') . ' [' . $url . ']';
@@ -98,7 +97,7 @@ if (isset($_POST['submit']) &&
             VALUES
                 ('{$url}');
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
         $page['infos'][] = $url . ' ' . functions::l10n('created');
     }
 }
@@ -120,7 +119,7 @@ if (isset($_GET['action']) &&
         FROM sites
         WHERE id = {$page['site']};
         SQL;
-    [$galleries_url] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$galleries_url] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
     if ($_GET['action'] === 'delete') {
         functions_admin::delete_site($page['site']);
@@ -143,15 +142,15 @@ $query = <<<SQL
     WHERE c.site_id IS NOT NULL
     GROUP BY c.site_id;
     SQL;
-$sites_detail = functions_mysqli::query2array($query, 'site_id');
+$sites_detail = $conf->sql_backend::query2array($query, 'site_id');
 
 $query = <<<SQL
     SELECT *
     FROM sites;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $is_remote = functions_url::url_is_remote($row['galleries_url']);
     $base_url = './admin.php';
     $base_url .= '?page=site_manager';

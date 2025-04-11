@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\admin\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_metadata;
 
@@ -280,9 +279,9 @@ final class functions_metadata_admin
             WHERE id IN ({$wrapped_ids});
             SQL;
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($data = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($data = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $data = self::get_sync_metadata($data);
 
             if ($data === false) {
@@ -318,14 +317,14 @@ final class functions_metadata_admin
                 ['tags', 'keywords']
             );
 
-            functions_mysqli::mass_updates(
+            $conf->sql_backend::mass_updates(
                 'images',
                 [
                     'primary' => ['id'],
                     'update' => $update_fields,
                 ],
                 $datas,
-                functions_mysqli::MASS_UPDATES_SKIP_EMPTY
+                $conf->sql_backend::MASS_UPDATES_SKIP_EMPTY
             );
         }
 
@@ -342,6 +341,8 @@ final class functions_metadata_admin
         bool $recursive = false,
         bool $only_new = false
     ): array {
+        global $conf;
+
         // filling $cat_ids : all categories required
         $cat_ids = [];
 
@@ -355,7 +356,7 @@ final class functions_metadata_admin
 
         if (is_numeric($category_id)) {
             if ($recursive) {
-                $regex_operator = functions_mysqli::DB_REGEX_OPERATOR;
+                $regex_operator = $conf->sql_backend::DB_REGEX_OPERATOR;
                 $query .= <<<SQL
                     AND uppercats {$regex_operator} '(^|,){$category_id}(,|$)'
 
@@ -369,9 +370,9 @@ final class functions_metadata_admin
         }
 
         $query = trim($query) . ';';
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $cat_ids[] = $row['id'];
         }
 
@@ -395,7 +396,7 @@ final class functions_metadata_admin
         }
 
         $query = trim($query) . ';';
-        return functions_mysqli::query2array($query, 'id');
+        return $conf->sql_backend::query2array($query, 'id');
     }
 
     /**

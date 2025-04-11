@@ -12,7 +12,6 @@ declare(strict_types=1);
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\pwg_image;
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
@@ -263,9 +262,9 @@ if (isset($_POST['submit'])) {
         functions_user::is_webmaster()
     ) {
         //echo '<pre>'; print_r($_POST); echo '</pre>';
-        $result = functions_mysqli::pwg_query('SELECT param FROM config;');
+        $result = $conf->sql_backend::pwg_query('SELECT param FROM config;');
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             if (isset($_POST[$row['param']])) {
                 $value = $_POST[$row['param']];
 
@@ -279,7 +278,7 @@ if (isset($_POST['submit'])) {
                     SET value = '{$escaped_value}'
                     WHERE param = '{$row['param']}';
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
             }
         }
 
@@ -302,7 +301,7 @@ if ($page['section'] == 'sizes' &&
     $query = <<<SQL
         DELETE FROM config WHERE param = 'disabled_derivatives';
         SQL;
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
     functions_admin::clear_derivative_cache();
 
     $page['infos'][] = functions::l10n('Your configuration settings are saved');
@@ -375,7 +374,7 @@ switch ($page['section']) {
             SELECT id, name
             FROM user_groups;
             SQL;
-        $groups = functions_mysqli::query2array($query, 'id', 'name');
+        $groups = $conf->sql_backend::query2array($query, 'id', 'name');
         natcasesort($groups);
 
         $template->assign(

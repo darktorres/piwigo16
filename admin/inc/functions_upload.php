@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\admin\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
@@ -72,6 +71,8 @@ final class functions_upload
         array &$errors = [],
         array &$form_errors = []
     ): bool {
+        global $conf;
+
         if (! is_array($data) ||
             $data === []
         ) {
@@ -90,7 +91,7 @@ final class functions_upload
                 $value = isset($value);
                 $updates[] = [
                     'param' => $field,
-                    'value' => functions_mysqli::boolean_to_string($value),
+                    'value' => $conf->sql_backend::boolean_to_string($value),
                 ];
             } elseif ($upload_form_config[$field]['can_be_null'] &&
                       empty($value)
@@ -125,7 +126,7 @@ final class functions_upload
         }
 
         if (count($errors) == 0) {
-            functions_mysqli::mass_updates(
+            $conf->sql_backend::mass_updates(
                 'config',
                 [
                     'primary' => ['param'],
@@ -170,7 +171,7 @@ final class functions_upload
                 FROM images
                 WHERE md5sum = '{$md5sum}';
                 SQL;
-            $images_found = functions_mysqli::query2array($query);
+            $images_found = $conf->sql_backend::query2array($query);
 
             if ($images_found !== []) {
                 $image_id = $images_found[0]['id'];
@@ -196,9 +197,9 @@ final class functions_upload
                 FROM images
                 WHERE id = {$image_id};
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $file_path = $row['path'];
             }
 
@@ -212,7 +213,7 @@ final class functions_upload
             // this photo is new
 
             // current date
-            [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+            [$dbnow] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT NOW();'));
             [$year, $month, $day] = preg_split('/[^\d]/', $dbnow, 4);
 
             // upload directory hierarchy
@@ -306,7 +307,7 @@ final class functions_upload
 
         if (isset($image_id)) {
             $update = [
-                'file' => functions_mysqli::pwg_db_real_escape_string($original_filename ?? basename($file_path)),
+                'file' => $conf->sql_backend::pwg_db_real_escape_string($original_filename ?? basename($file_path)),
                 'filesize' => $file_infos['filesize'],
                 'width' => $file_infos['width'],
                 'height' => $file_infos['height'],
@@ -319,7 +320,7 @@ final class functions_upload
                 $update['level'] = $level;
             }
 
-            functions_mysqli::single_update(
+            $conf->sql_backend::single_update(
                 'images',
                 $update,
                 [
@@ -328,7 +329,7 @@ final class functions_upload
             );
         } else {
             // database registration
-            $file = functions_mysqli::pwg_db_real_escape_string($original_filename ?? basename($file_path));
+            $file = $conf->sql_backend::pwg_db_real_escape_string($original_filename ?? basename($file_path));
             $insert = [
                 'file' => $file,
                 'name' => functions::get_name_from_file($file),
@@ -350,9 +351,9 @@ final class functions_upload
                 $insert['representative_ext'] = $representative_ext;
             }
 
-            functions_mysqli::single_insert('images', $insert);
+            $conf->sql_backend::single_insert('images', $insert);
 
-            $image_id = functions_mysqli::pwg_db_insert_id();
+            $image_id = $conf->sql_backend::pwg_db_insert_id();
             functions::pwg_activity('photo', $image_id, 'add');
         }
 
@@ -367,7 +368,7 @@ final class functions_upload
             FROM images
             WHERE id = {$image_id};
             SQL;
-        $image_infos = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+        $image_infos = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
         $src_image = new SrcImage($image_infos);
 
         functions_url::set_make_full_url();
@@ -396,7 +397,7 @@ final class functions_upload
 
         if (! $conf->lounge_active) {
             // check if we need to use the lounge from now
-            [$nb_photos] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT COUNT(*) AS "COUNT(*)" FROM images;'));
+            [$nb_photos] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT COUNT(*) AS "COUNT(*)" FROM images;'));
 
             if ($nb_photos >= $conf->lounge_activate_threshold) {
                 functions::conf_update_param('lounge_active', true, true);
@@ -423,6 +424,8 @@ final class functions_upload
         string $format_ext,
         string $format_of
     ): int|string {
+        global $conf;
+
         // 1) find infos about the extended image
         //
         // 2) move uploaded file to upload/2022/05/16/pwg_format/20100122003814-449ada00.cr2
@@ -442,7 +445,7 @@ final class functions_upload
             FROM images
             WHERE id = {$format_of};
             SQL;
-        $images = functions_mysqli::query2array($query);
+        $images = $conf->sql_backend::query2array($query);
 
         if (! isset($images[0])) {
             exit('[' . __FUNCTION__ . '] this photo does not exist in the database');
@@ -470,8 +473,8 @@ final class functions_upload
             'filesize' => $file_infos['filesize'],
         ];
 
-        functions_mysqli::single_insert('image_format', $insert);
-        $format_id = functions_mysqli::pwg_db_insert_id();
+        $conf->sql_backend::single_insert('image_format', $insert);
+        $format_id = $conf->sql_backend::pwg_db_insert_id();
 
         functions::pwg_activity('photo', $format_of, 'edit', [
             'action' => 'add format',

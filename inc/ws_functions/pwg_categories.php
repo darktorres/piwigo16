@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\inc\ws_functions;
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
@@ -57,7 +56,7 @@ final class pwg_categories
                 FROM categories
                 WHERE id IN ({$cat_ids_list});
                 SQL;
-            $db_cat_ids = functions_mysqli::query2array($query, null, 'id');
+            $db_cat_ids = $conf->sql_backend::query2array($query, null, 'id');
             $missing_cat_ids = array_diff($params['cat_id'], $db_cat_ids);
 
             if ($missing_cat_ids !== []) {
@@ -74,7 +73,7 @@ final class pwg_categories
 
         foreach ($params['cat_id'] as $cat_id) {
             if ($params['recursive']) {
-                $where_clauses[] = 'uppercats ' . functions_mysqli::DB_REGEX_OPERATOR . " '(^|,)" . $cat_id . '(,|$)\'';
+                $where_clauses[] = 'uppercats ' . $conf->sql_backend::DB_REGEX_OPERATOR . " '(^|,)" . $cat_id . '(,|$)\'';
             } else {
                 $where_clauses[] = 'id=' . $cat_id;
             }
@@ -98,11 +97,11 @@ final class pwg_categories
             FROM categories
             WHERE {$where_condition};
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
         $cats = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $row['id'] = (int) $row['id'];
             $cats[$row['id']] = $row;
         }
@@ -142,9 +141,9 @@ final class pwg_categories
                 {$order_by}
                 LIMIT {$params['per_page']} OFFSET {$offset};
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $total_images = $row['total_count'];
                 $image_ids[] = $row['id'];
 
@@ -182,9 +181,9 @@ final class pwg_categories
                     WHERE image_id IN ({$image_ids_imploded})
                         AND {$sql_condition};
                     SQL;
-                $result = functions_mysqli::pwg_query($query);
+                $result = $conf->sql_backend::pwg_query($query);
 
-                while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+                while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                     $category_ids[] = $row['category_id'];
                     $categories_of_image[$row['image_id']][] = $row['category_id'];
                 }
@@ -197,7 +196,7 @@ final class pwg_categories
                         FROM categories
                         WHERE id IN ({$category_ids_imploded});
                         SQL;
-                    $details_for_category = functions_mysqli::query2array($query, 'id');
+                    $details_for_category = $conf->sql_backend::query2array($query, 'id');
                 }
 
                 foreach ($images as $idx => $image) {
@@ -289,7 +288,7 @@ final class pwg_categories
                 $where[] = 'id_uppercat IS NULL';
             }
         } elseif ($params['cat_id'] > 0) {
-            $where[] = 'uppercats ' . functions_mysqli::DB_REGEX_OPERATOR . " '(^|,){$params['cat_id']}(,|$)'";
+            $where[] = 'uppercats ' . $conf->sql_backend::DB_REGEX_OPERATOR . " '(^|,){$params['cat_id']}(,|$)'";
 
         }
 
@@ -324,7 +323,7 @@ final class pwg_categories
         if (isset($params['search']) &&
             $params['search'] != ''
         ) {
-            $search_escaped = functions_mysqli::pwg_db_real_escape_string($params['search']);
+            $search_escaped = $conf->sql_backend::pwg_db_real_escape_string($params['search']);
             $query .= <<<SQL
                 AND name LIKE '%{$search_escaped}%'
                 LIMIT {$conf->linked_album_search_limit}
@@ -333,7 +332,7 @@ final class pwg_categories
         }
 
         $query = trim($query) . ';';
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
         // management of the album thumbnail -- starts here
         $image_ids = [];
@@ -343,7 +342,7 @@ final class pwg_categories
 
         $cats = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $row['url'] = functions_url::make_index_url(
                 [
                     'category' => $row,
@@ -401,7 +400,7 @@ final class pwg_categories
                     ],
                     'AND'
                 );
-                $random_function = functions_mysqli::DB_RANDOM_FUNCTION;
+                $random_function = $conf->sql_backend::DB_RANDOM_FUNCTION;
                 $query = <<<SQL
                         SELECT representative_picture_id
                         FROM categories
@@ -411,9 +410,9 @@ final class pwg_categories
                         ORDER BY {$random_function}
                         LIMIT 1;
                         SQL;
-                $subresult = functions_mysqli::pwg_query($query);
-                if (functions_mysqli::pwg_db_num_rows($subresult) > 0) {
-                    [$image_id] = functions_mysqli::pwg_db_fetch_row($subresult);
+                $subresult = $conf->sql_backend::pwg_query($query);
+                if ($conf->sql_backend::pwg_db_num_rows($subresult) > 0) {
+                    [$image_id] = $conf->sql_backend::pwg_db_fetch_row($subresult);
                 }
             }
 
@@ -452,9 +451,9 @@ final class pwg_categories
                 FROM images
                 WHERE id IN ({$image_ids_str});
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 if ($row['level'] <= $user['level']) {
                     $thumbnail_src_of[$row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
                 } else {
@@ -495,9 +494,9 @@ final class pwg_categories
                     FROM images
                     WHERE id IN ({$image_ids_str});
                     SQL;
-                $result = functions_mysqli::pwg_query($query);
+                $result = $conf->sql_backend::pwg_query($query);
 
-                while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+                while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                     $thumbnail_src_of[$row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
                 }
             }
@@ -519,7 +518,7 @@ final class pwg_categories
                 ];
             }
 
-            functions_mysqli::mass_updates(
+            $conf->sql_backend::mass_updates(
                 'user_cache_categories',
                 [
                     'primary' => ['user_id', 'cat_id'],
@@ -583,7 +582,7 @@ final class pwg_categories
             FROM image_category
             GROUP BY category_id;
             SQL;
-        $nb_images_of = functions_mysqli::query2array($query, 'category_id', 'counter');
+        $nb_images_of = $conf->sql_backend::query2array($query, 'category_id', 'counter');
 
         // pwg_db_real_escape_string
 
@@ -596,7 +595,7 @@ final class pwg_categories
         if (isset($params['search']) &&
             $params['search'] != ''
         ) {
-            $search_term = functions_mysqli::pwg_db_real_escape_string($params['search']);
+            $search_term = $conf->sql_backend::pwg_db_real_escape_string($params['search']);
             $query .= <<<SQL
                 WHERE name LIKE '%{$search_term}%'
                 LIMIT {$conf->linked_album_search_limit}
@@ -605,11 +604,11 @@ final class pwg_categories
         }
 
         $query = trim($query) . ';';
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
         $cats = [];
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $counter = $row['total_count'];
             $id = $row['id'];
             $row['nb_images'] = $nb_images_of[$id] ?? 0;
@@ -741,6 +740,8 @@ final class pwg_categories
         array $params,
         PwgServer &$service
     ): ?PwgError {
+        global $conf;
+
         // does the category really exist?
         $category_ids_str = implode(', ', $params['category_id']);
         $query = <<<SQL
@@ -748,7 +749,7 @@ final class pwg_categories
             FROM categories
             WHERE id IN ({$category_ids_str});
             SQL;
-        $categories = functions_mysqli::query2array($query);
+        $categories = $conf->sql_backend::query2array($query);
 
         if (count($categories) == 0) {
             return new PwgError(404, 'category_id not found');
@@ -770,7 +771,7 @@ final class pwg_categories
                 ORDER BY id ASC;
                 SQL;
 
-            $cat_asc = functions_mysqli::query2array($query, null, 'id');
+            $cat_asc = $conf->sql_backend::query2array($query, null, 'id');
 
             if (strcmp(implode(',', $cat_asc), implode(',', $order_new_by_id)) !== 0) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
@@ -787,7 +788,7 @@ final class pwg_categories
                 ORDER BY sort_rank ASC;
                 SQL;
 
-            $order_old = functions_mysqli::query2array($query, null, 'id');
+            $order_old = $conf->sql_backend::query2array($query, null, 'id');
             $order_new = [];
             $was_inserted = false;
             $i = 1;
@@ -844,7 +845,7 @@ final class pwg_categories
             FROM categories
             WHERE id = {$params['category_id']};
             SQL;
-        $categories = functions_mysqli::query2array($query);
+        $categories = $conf->sql_backend::query2array($query);
 
         if (count($categories) == 0) {
             return new PwgError(404, 'category_id not found');
@@ -904,12 +905,12 @@ final class pwg_categories
                     SET commentable = '{$params['commentable']}'
                     WHERE id IN ({$subcats_str});
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
             }
         }
 
         if ($perform_update) {
-            functions_mysqli::single_update(
+            $conf->sql_backend::single_update(
                 'categories',
                 $update,
                 [
@@ -936,13 +937,15 @@ final class pwg_categories
         array $params,
         PwgServer &$service
     ): ?PwgError {
+        global $conf;
+
         // does the category really exist?
         $query = <<<SQL
             SELECT COUNT(*) AS "COUNT(*)"
             FROM categories
             WHERE id = {$params['category_id']};
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(404, 'category_id not found');
@@ -954,7 +957,7 @@ final class pwg_categories
             FROM images
             WHERE id = {$params['image_id']};
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
@@ -966,14 +969,14 @@ final class pwg_categories
             SET representative_picture_id = {$params['image_id']}
             WHERE id = {$params['category_id']};
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         $query = <<<SQL
             UPDATE user_cache_categories
             SET user_representative_picture_id = NULL
             WHERE cat_id = {$params['category_id']};
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         functions::pwg_activity('album', $params['category_id'], 'edit', [
             'image_id' => $params['image_id'],
@@ -1003,9 +1006,9 @@ final class pwg_categories
             FROM categories
             WHERE id = {$params['category_id']};
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_num_rows($result) == 0) {
+        if ($conf->sql_backend::pwg_db_num_rows($result) == 0) {
             return new PwgError(404, 'category_id not found');
         }
 
@@ -1014,7 +1017,7 @@ final class pwg_categories
             FROM image_category
             WHERE category_id = {$params['category_id']};
             SQL;
-        [$nb_images] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$nb_images] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if (! $conf->allow_random_representative &&
             $nb_images != 0
@@ -1027,7 +1030,7 @@ final class pwg_categories
             SET representative_picture_id = NULL
             WHERE id = {$params['category_id']};
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         functions::pwg_activity('album', $params['category_id'], 'edit');
         return null;
@@ -1054,9 +1057,9 @@ final class pwg_categories
             FROM categories
             WHERE id = {$params['category_id']};
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_num_rows($result) == 0) {
+        if ($conf->sql_backend::pwg_db_num_rows($result) == 0) {
             return new PwgError(404, 'category_id not found');
         }
 
@@ -1066,8 +1069,8 @@ final class pwg_categories
             WHERE category_id = {$params['category_id']}
             LIMIT 1;
             SQL;
-        $result = functions_mysqli::pwg_query($query);
-        $has_images = functions_mysqli::pwg_db_num_rows($result) > 0;
+        $result = $conf->sql_backend::pwg_query($query);
+        $has_images = $conf->sql_backend::pwg_db_num_rows($result) > 0;
 
         if (! $has_images) {
             return new PwgError(401, 'not permitted');
@@ -1083,7 +1086,7 @@ final class pwg_categories
             FROM categories
             WHERE id = {$params['category_id']};
             SQL;
-        $category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+        $category = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
         return functions_admin::get_category_representative_properties($category['representative_picture_id'], derivative_std_params::IMG_SMALL);
     }
@@ -1101,6 +1104,8 @@ final class pwg_categories
         array $params,
         PwgServer &$service
     ): ?PwgError {
+        global $conf;
+
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -1145,7 +1150,7 @@ final class pwg_categories
             FROM categories
             WHERE id IN ({$category_ids_imploded});
             SQL;
-        $category_ids = functions_mysqli::query2array($query, null, 'id');
+        $category_ids = $conf->sql_backend::query2array($query, null, 'id');
 
         if (count($category_ids) == 0) {
             return null;
@@ -1171,6 +1176,7 @@ final class pwg_categories
         PwgServer &$service
     ): PwgError|array {
         global $page;
+        global $conf;
 
         if (functions::get_pwg_token() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -1209,9 +1215,9 @@ final class pwg_categories
             FROM categories
             WHERE id IN ({$category_ids_imploded});
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $categories_in_db[$row['id']] = $row;
             $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row['uppercats']), 0, -1));
 
@@ -1275,9 +1281,9 @@ final class pwg_categories
             FROM categories
             WHERE id IN ({$category_ids_imploded});
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $cat_display_name = functions_html::get_cat_display_name_cache(
                 $row['uppercats'],
                 'admin.php?page=album-'
@@ -1291,7 +1297,7 @@ final class pwg_categories
             GROUP BY category_id;
             SQL;
 
-        $nb_photos_in = functions_mysqli::query2array($query, 'category_id', 'nb_photos');
+        $nb_photos_in = $conf->sql_backend::query2array($query, 'category_id', 'nb_photos');
 
         $update_cats = [];
 
@@ -1333,8 +1339,8 @@ final class pwg_categories
             WHERE category_id = {$category_id}
             LIMIT 1;
             SQL;
-        $result = functions_mysqli::pwg_query($query);
-        $category['has_images'] = functions_mysqli::pwg_db_num_rows($result) > 0;
+        $result = $conf->sql_backend::pwg_query($query);
+        $category['has_images'] = $conf->sql_backend::pwg_db_num_rows($result) > 0;
 
         // number of sub-categories
         $subcat_ids = functions_category::get_subcat_ids([$category_id]);
@@ -1348,7 +1354,7 @@ final class pwg_categories
             FROM image_category
             WHERE category_id IN ({$subcat_ids_list});
             SQL;
-        $image_ids_recursive = functions_mysqli::query2array($query, null, 'image_id');
+        $image_ids_recursive = $conf->sql_backend::query2array($query, null, 'image_id');
 
         $category['nb_images_recursive'] = count($image_ids_recursive);
 
@@ -1368,7 +1374,7 @@ final class pwg_categories
                         AND image_id IN ({$image_ids_recursive_list});
                     SQL;
 
-                $image_ids_associated_outside = functions_mysqli::query2array($query, null, 'image_id');
+                $image_ids_associated_outside = $conf->sql_backend::query2array($query, null, 'image_id');
                 $category['nb_images_associated_outside'] = count($image_ids_associated_outside);
 
                 $image_ids_becoming_orphan = array_diff($image_ids_recursive, $image_ids_associated_outside);
@@ -1383,7 +1389,7 @@ final class pwg_categories
                     FROM image_category
                     WHERE category_id NOT IN ({$subcat_ids_list});
                     SQL;
-                $image_ids_associated_outside = functions_mysqli::query2array($query, null, 'image_id');
+                $image_ids_associated_outside = $conf->sql_backend::query2array($query, null, 'image_id');
                 $image_ids_not_orphan = [];
 
                 foreach ($image_ids_associated_outside as $image_id) {

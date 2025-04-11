@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
-
 /**
  * Base class for monthly and weekly calendar styles
  */
@@ -261,7 +259,7 @@ abstract class CalendarBase
             GROUP BY period;
             SQL;
 
-        $level_items = functions_mysqli::query2array($query, 'period', 'nb_images');
+        $level_items = $conf->sql_backend::query2array($query, 'period', 'nb_images');
 
         if (count($level_items) == 1 && count($page['chronology_date']) < count($this->calendar_levels) - 1 && ! isset($page['chronology_date'][$level])) {
             [$key] = array_keys($level_items);
@@ -302,6 +300,7 @@ abstract class CalendarBase
     protected function build_next_prev(): void
     {
         global $template, $page;
+        global $conf;
         $prev = null;
         $next = null;
 
@@ -316,7 +315,7 @@ abstract class CalendarBase
             $sub_queries[] = $page['chronology_date'][$i] === 'any' ? "'any'" : $this->calendar_levels[$i]['sql'];
         }
 
-        $period = functions_mysqli::pwg_db_concat_ws($sub_queries, '-');
+        $period = $conf->sql_backend::pwg_db_concat_ws($sub_queries, '-');
         $query = <<<SQL
             SELECT {$period} AS period
             {$this->inner_sql}
@@ -325,7 +324,7 @@ abstract class CalendarBase
             SQL;
 
         $current = implode('-', $page['chronology_date']);
-        $upper_items = functions_mysqli::query2array($query, null, 'period');
+        $upper_items = $conf->sql_backend::query2array($query, null, 'period');
 
         usort($upper_items, version_compare(...));
         $upper_items_rank = array_flip($upper_items);

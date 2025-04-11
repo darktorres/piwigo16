@@ -9,7 +9,6 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
@@ -44,9 +43,9 @@ if (count($selection) > 0) {
         FROM images
         WHERE id IN ({$implodedSelection});
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $row['sort_rank'] = $rank_of[$row['id']];
         $pictures[] = $row;
     }
@@ -84,7 +83,7 @@ if ($pictures !== []) {
                 AND image_id IN ({$implodedSelection})
             GROUP BY image_id;
             SQL;
-        $nb_comments_of = functions_mysqli::query2array($query, 'image_id', 'nb_comments');
+        $nb_comments_of = $conf->sql_backend::query2array($query, 'image_id', 'nb_comments');
     }
 }
 

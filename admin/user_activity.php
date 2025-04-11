@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_user;
 
@@ -42,10 +41,10 @@ if (isset($_GET['type']) &&
         ORDER BY activity_id DESC;
         SQL;
 
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
     $output_lines[] = ['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details'];
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         [$date, $hour] = explode(' ', $row['occurred_on']);
 
         $output_lines[] = [
@@ -98,7 +97,7 @@ $query = <<<SQL
     GROUP BY performed_by;
     SQL;
 
-$nb_lines_for_user = functions_mysqli::query2array($query, 'performed_by', 'counter');
+$nb_lines_for_user = $conf->sql_backend::query2array($query, 'performed_by', 'counter');
 
 if ($nb_lines_for_user !== []) {
     $ids = implode(', ', array_keys($nb_lines_for_user));
@@ -109,7 +108,7 @@ if ($nb_lines_for_user !== []) {
         SQL;
 }
 
-$username_of = functions_mysqli::query2array($query, 'id', 'username');
+$username_of = $conf->sql_backend::query2array($query, 'id', 'username');
 
 $filterable_users = [];
 
@@ -128,7 +127,7 @@ $query = <<<SQL
     FROM users;
     SQL;
 
-[$nb_users] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_users] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 $template->assign('nb_users', $nb_users);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'user_activity');

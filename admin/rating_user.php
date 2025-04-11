@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
@@ -49,9 +48,9 @@ $query = <<<SQL
     SQL;
 
 $users_by_id = [];
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $users_by_id[(int) $row['id']] = [
         'name' => $row['name'],
         'anon' => ! functions_user::is_authorized_status(ACCESS_CLASSIC, $row['status']),
@@ -73,9 +72,9 @@ $query = <<<SQL
     SELECT * FROM rate
     ORDER BY date DESC;
     SQL;
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     if (! isset($users_by_id[$row['user_id']])) {
         $users_by_id[$row['user_id']] = [
             'name' => '???' . $row['user_id'],
@@ -116,10 +115,10 @@ if ($image_ids !== []) {
         FROM images
         WHERE id IN ({$ids});
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
     $params = ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE);
 
-    while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $image_urls[$row['id']] = [
             'tn' => DerivativeImage::url($params, $row),
             'page' => functions_url::make_picture_url([
@@ -137,9 +136,9 @@ $query = <<<SQL
     GROUP BY element_id;
     SQL;
 $all_img_sum = [];
-$result = functions_mysqli::pwg_query($query);
+$result = $conf->sql_backend::pwg_query($query);
 
-while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $all_img_sum[(int) $row['element_id']] = [
         'avg' => (float) $row['avg'],
     ];
@@ -151,7 +150,7 @@ $query = <<<SQL
     ORDER BY rating_score DESC
     LIMIT {$consensus_top_number};
     SQL;
-$best_rated = array_flip(functions_mysqli::query2array($query, null, 'id'));
+$best_rated = array_flip($conf->sql_backend::query2array($query, null, 'id'));
 
 // by user stats
 foreach ($by_user_ratings as $id => &$rating) {
@@ -237,7 +236,7 @@ $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
     FROM rate;
     SQL;
-[$nb_elements] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_elements] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 $template->assign([
     'F_ACTION' => functions_url::get_root_url() . 'admin.php',

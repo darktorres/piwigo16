@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\admin\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 
@@ -52,13 +51,15 @@ final class functions_history
         array $search,
         array $types
     ): array {
+        global $conf;
+
         if (isset($search['fields']['filename'])) {
             $query = <<<SQL
                 SELECT id
                 FROM images
                 WHERE file LIKE '{$search['fields']['filename']}';
                 SQL;
-            $search['image_ids'] = functions_mysqli::query2array($query, null, 'id');
+            $search['image_ids'] = $conf->sql_backend::query2array($query, null, 'id');
         }
 
         // echo '<pre>'; print_r($search); echo '</pre>';
@@ -134,9 +135,9 @@ final class functions_history
 
         // LIMIT '.$conf->nb_logs_page.' OFFSET '.$page['start'].'
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $data[] = $row;
         }
 
@@ -151,6 +152,8 @@ final class functions_history
     public static function history_summarize(
         ?int $max_lines = null
     ): void {
+        global $conf;
+
         // we need to know which was the last line "summarized"
         $query = <<<SQL
             SELECT *
@@ -159,7 +162,7 @@ final class functions_history
             ORDER BY history_id_to DESC
             LIMIT 1;
             SQL;
-        $summary_lines = functions_mysqli::query2array($query);
+        $summary_lines = $conf->sql_backend::query2array($query);
 
         $history_min_id = 0;
 
@@ -174,14 +177,14 @@ final class functions_history
                 SELECT MIN(id) AS min_id
                 FROM history;
                 SQL;
-            $history_lines = functions_mysqli::query2array($query);
+            $history_lines = $conf->sql_backend::query2array($query);
 
             if ($history_lines !== []) {
                 $history_min_id = $history_lines[0]['min_id'] - 1;
             }
         }
 
-        $hourFunction = functions_mysqli::pwg_db_get_hour('time');
+        $hourFunction = $conf->sql_backend::pwg_db_get_hour('time');
         $query = <<<SQL
             SELECT date, {$hourFunction} AS hour, MIN(id) AS min_id, MAX(id) AS max_id, COUNT(*) AS nb_pages
             FROM history
@@ -200,14 +203,14 @@ final class functions_history
             GROUP BY date, hour
             ORDER BY date ASC, hour ASC;
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
         $need_update = [];
 
         $is_first = true;
         $first_time_key = null;
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $time_keys = [
                 substr($row['date'], 0, 4), //yyyy
                 substr($row['date'], 0, 7), //yyyy-mm
@@ -272,9 +275,9 @@ final class functions_history
                 WHERE year = {$year}
                     AND (month IS NULL OR (month = {$month} AND (day IS NULL OR (day = {$day} AND (hour IS NULL OR hour = {$hour})))));
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $key = sprintf('%4u', $row['year']);
 
                 if (isset($row['month'])) {
@@ -313,7 +316,7 @@ final class functions_history
         }
 
         if ($updates !== []) {
-            functions_mysqli::mass_updates(
+            $conf->sql_backend::mass_updates(
                 'history_summary',
                 [
                     'primary' => ['year', 'month', 'day', 'hour'],
@@ -324,7 +327,7 @@ final class functions_history
         }
 
         if ($inserts !== []) {
-            functions_mysqli::mass_inserts(
+            $conf->sql_backend::mass_inserts(
                 'history_summary',
                 array_keys($inserts[0]),
                 $inserts
@@ -349,7 +352,7 @@ final class functions_history
             SELECT COUNT(*) AS "COUNT(*)"
             FROM history;
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count <= $conf->history_autopurge_keep_lines) {
             self::history_remove_summarized_column();
@@ -364,7 +367,7 @@ final class functions_history
             ORDER BY history_id_to DESC
             LIMIT 1;
             SQL;
-        $summary_lines = functions_mysqli::query2array($query);
+        $summary_lines = $conf->sql_backend::query2array($query);
 
         if (count($summary_lines) == 0) {
             return; // lines not summarized, no purge
@@ -379,7 +382,7 @@ final class functions_history
             ORDER BY id DESC
             LIMIT 1;
             SQL;
-        $history_lines = functions_mysqli::query2array($query);
+        $history_lines = $conf->sql_backend::query2array($query);
 
         if (count($history_lines) == 0) {
             return;
@@ -394,7 +397,7 @@ final class functions_history
             ORDER BY id ASC
             LIMIT 1;
             SQL;
-        $history_lines = functions_mysqli::query2array($query);
+        $history_lines = $conf->sql_backend::query2array($query);
         $history_id_oldest = $history_lines[0]['id'];
 
         $search_min = [
@@ -411,7 +414,7 @@ final class functions_history
             DELETE FROM history
             WHERE id < {$history_id_delete_before};
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         self::history_remove_summarized_column();
     }
@@ -430,17 +433,17 @@ final class functions_history
             SELECT COUNT(*) AS "COUNT(*)"
             FROM history;
             SQL;
-        [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($count > $conf->history_autopurge_keep_lines + $conf->history_autopurge_blocksize) {
             // it's not yet time to remove history.summarized
             return;
         }
 
-        $result = functions_mysqli::pwg_query('SHOW COLUMNS FROM history LIKE "summarized";');
+        $result = $conf->sql_backend::pwg_query('SHOW COLUMNS FROM history LIKE "summarized";');
 
-        if (functions_mysqli::pwg_db_num_rows($result)) {
-            functions_mysqli::pwg_query('ALTER TABLE history DROP COLUMN summarized;');
+        if ($conf->sql_backend::pwg_db_num_rows($result)) {
+            $conf->sql_backend::pwg_query('ALTER TABLE history DROP COLUMN summarized;');
         }
 
         functions::conf_update_param('history_summarized_dropped', true);

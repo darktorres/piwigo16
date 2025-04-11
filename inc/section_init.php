@@ -28,7 +28,6 @@ declare(strict_types=1);
 //   'start'    => 24
 //   );
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_calendar;
 use Piwigo\inc\functions_category;
@@ -62,7 +61,7 @@ if (! $conf->question_mark_in_urls &&
     }
 
     // the $_GET keys are not protected in inc/common.php, only the values
-    $rewritten = functions_mysqli::pwg_db_real_escape_string($rewritten);
+    $rewritten = $conf->sql_backend::pwg_db_real_escape_string($rewritten);
     $page['root_path'] = './';
 }
 
@@ -273,7 +272,7 @@ if ($page['section'] == 'categories') {
                         {$sql_condition};
                     SQL;
 
-                $subcat_ids = functions_mysqli::query2array($query, null, 'id');
+                $subcat_ids = $conf->sql_backend::query2array($query, null, 'id');
                 $subcat_ids[] = $page['category']['id'];
                 $where_sql = 'category_id IN (' . implode(', ', $subcat_ids) . ')';
                 // remove categories from forbidden because just checked above
@@ -310,7 +309,7 @@ if ($page['section'] == 'categories') {
                 {$conf->order_by};
                 SQL;
 
-            $page['items'] = functions_mysqli::query2array($query, null, 'image_id');
+            $page['items'] = $conf->sql_backend::query2array($query, null, 'image_id');
 
             if (isset($cache_key)) {
                 $persistent_cache->set($cache_key, $page['items']);
@@ -382,7 +381,7 @@ if ($page['section'] == 'categories') {
                 DELETE FROM favorites
                 WHERE user_id = {$user['id']};
                 SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
         functions::redirect(functions_url::make_index_url([
             'section' => 'favorites',
         ]));
@@ -406,7 +405,7 @@ if ($page['section'] == 'categories') {
         $page = array_merge(
             $page,
             [
-                'items' => functions_mysqli::query2array($query, null, 'image_id'),
+                'items' => $conf->sql_backend::query2array($query, null, 'image_id'),
             ]
         );
 
@@ -452,7 +451,7 @@ if ($page['section'] == 'categories') {
                 'start' => 0,
             ]) . '">'
                         . functions::l10n('Recent photos') . '</a>',
-            'items' => functions_mysqli::query2array($query, null, 'id'),
+            'items' => $conf->sql_backend::query2array($query, null, 'id'),
         ]
     );
 } elseif ($page['section'] == 'recent_cats') {
@@ -485,7 +484,7 @@ if ($page['section'] == 'categories') {
                 'start' => 0,
             ]) . '">'
                         . $conf->top_number . ' ' . functions::l10n('Most visited') . '</a>',
-            'items' => functions_mysqli::query2array($query, null, 'id'),
+            'items' => $conf->sql_backend::query2array($query, null, 'id'),
         ]
     );
 } elseif ($page['section'] == 'best_rated') {
@@ -509,7 +508,7 @@ if ($page['section'] == 'categories') {
                 'start' => 0,
             ]) . '">'
                         . $conf->top_number . ' ' . functions::l10n('Best rated') . '</a>',
-            'items' => functions_mysqli::query2array($query, null, 'id'),
+            'items' => $conf->sql_backend::query2array($query, null, 'id'),
         ]
     );
 } elseif ($page['section'] == 'list') {
@@ -530,7 +529,7 @@ if ($page['section'] == 'categories') {
                 'start' => 0,
             ]) . '">'
                         . functions::l10n('Random photos') . '</a>',
-            'items' => functions_mysqli::query2array($query, null, 'id'),
+            'items' => $conf->sql_backend::query2array($query, null, 'id'),
         ]
     );
 }

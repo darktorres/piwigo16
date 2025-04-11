@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\admin\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
-use Piwigo\inc\dblayer\functions_pgsql;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_session;
@@ -46,16 +44,16 @@ final class c13y_internal
         if ($conf->dblayer === 'mysqli') {
             $check_list[] = [
                 'type' => 'MySQL',
-                'current' => functions_mysqli::pwg_get_db_version(),
-                'required' => functions_mysqli::REQUIRED_MYSQL_VERSION,
+                'current' => $conf->sql_backend::pwg_get_db_version(),
+                'required' => $conf->sql_backend::REQUIRED_MYSQL_VERSION,
             ];
         }
 
         if ($conf->dblayer === 'pgsql') {
             $check_list[] = [
                 'type' => 'PostgreSQL',
-                'current' => functions_pgsql::pwg_get_db_version(),
-                'required' => functions_pgsql::REQUIRED_POSTGRESQL_VERSION,
+                'current' => $conf->sql_backend::pwg_get_db_version(),
+                'required' => $conf->sql_backend::REQUIRED_POSTGRESQL_VERSION,
             ];
         }
 
@@ -111,9 +109,9 @@ final class c13y_internal
 
         $status = [];
 
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $status[$row['id']] = $row['status'];
         }
 
@@ -187,7 +185,7 @@ final class c13y_internal
                             ],
                         ];
 
-                        functions_mysqli::mass_inserts('users', array_keys($inserts[0]), $inserts);
+                        $conf->sql_backend::mass_inserts('users', array_keys($inserts[0]), $inserts);
 
                         functions_user::create_user_infos($id);
 
@@ -214,7 +212,7 @@ final class c13y_internal
                                 'status' => $status,
                             ],
                         ];
-                        functions_mysqli::mass_updates(
+                        $conf->sql_backend::mass_updates(
                             'user_infos',
                             [
                                 'primary' => ['user_id'],

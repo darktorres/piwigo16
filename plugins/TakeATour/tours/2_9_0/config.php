@@ -6,7 +6,6 @@ declare(strict_types=1);
  * REQUIRED PATH TO THE TPL FILE */
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 
 $TOUR_PATH = PHPWG_PLUGINS_PATH . 'TakeATour/tours/2_9_0/tour.tpl';
 
@@ -22,7 +21,7 @@ if (! isset($_SESSION['TAT_tour29_delete_cat_id'])) {
         FROM image_category
         LIMIT 1;
         SQL;
-    $rows = functions_mysqli::query2array($query);
+    $rows = $conf->sql_backend::query2array($query);
 
     $_SESSION['TAT_tour29_delete_cat_id'] = count($rows) == 0 ? -1 : $rows[0]['category_id'];
 }
@@ -38,7 +37,7 @@ if (! isset($_SESSION['TAT_tour29_image_id'])) {
         ORDER BY id DESC
         LIMIT 1;
         SQL;
-    $images = functions_mysqli::query2array($query);
+    $images = $conf->sql_backend::query2array($query);
 
     $_SESSION['TAT_tour29_image_id'] = count($images) == 0 ? -1 : $images[0]['id'];
 }
@@ -53,7 +52,7 @@ $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
     FROM tags;
     SQL;
-[$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$counter] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 if ($counter > 0) {
     $template->assign('TAT_tour29_has_tags', true);

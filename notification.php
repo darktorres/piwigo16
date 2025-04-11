@@ -13,7 +13,6 @@ declare(strict_types=1);
 // |                           initialization                              |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_plugins;
@@ -42,7 +41,7 @@ $query = <<<SQL
     VALUES
         ('{$page['feed']}', {$user['id']}, NULL);
     SQL;
-functions_mysqli::pwg_query($query);
+$conf->sql_backend::pwg_query($query);
 
 $feed_url = './feed.php';
 

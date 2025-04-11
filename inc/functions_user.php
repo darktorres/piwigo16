@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\inc;
 
 use Exception;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Random\RandomException;
 
 functions_plugins::add_event_handler('try_log_user', functions_user::pwg_login(...));
@@ -51,7 +50,7 @@ final class functions_user
                 WHERE UPPER({$conf->user_fields['email']}) = UPPER('{$mail_address}')
                     {$exclude_user_condition};
                 SQL;
-            [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
             if ($count != 0) {
                 return functions::l10n('this email address is already in use');
@@ -81,7 +80,7 @@ final class functions_user
                 WHERE LOWER({$escaped_username_field}) = '{$lowered_login}';
                 SQL;
 
-            $count = functions_mysqli::pwg_db_num_rows(functions_mysqli::pwg_query($query));
+            $count = $conf->sql_backend::pwg_db_num_rows($conf->sql_backend::pwg_query($query));
 
             if ($count > 0) {
                 return functions::l10n('this login is already used');
@@ -106,12 +105,12 @@ final class functions_user
 
         $SCU_users = [];
 
-        $q = functions_mysqli::pwg_query(<<<SQL
+        $q = $conf->sql_backend::pwg_query(<<<SQL
             SELECT {$conf->user_fields['username']} AS username
             FROM users;
             SQL);
 
-        while ($r = functions_mysqli::pwg_db_fetch_assoc($q)) {
+        while ($r = $conf->sql_backend::pwg_db_fetch_assoc($q)) {
             $SCU_users[$r['username']] = strtolower($r['username']);
         }
 
@@ -197,8 +196,8 @@ final class functions_user
                 $conf->user_fields['email'] => $mail_address,
             ];
 
-            functions_mysqli::single_insert('users', $insert);
-            $user_id = functions_mysqli::pwg_db_insert_id();
+            $conf->sql_backend::single_insert('users', $insert);
+            $user_id = $conf->sql_backend::pwg_db_insert_id();
 
             // Assign by default groups
             $query = <<<SQL
@@ -207,11 +206,11 @@ final class functions_user
                 WHERE is_default = 'true'
                 ORDER BY id ASC;
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
             $inserts = [];
 
-            while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $inserts[] = [
                     'user_id' => $user_id,
                     'group_id' => $row['id'],
@@ -219,7 +218,7 @@ final class functions_user
             }
 
             if (count($inserts) != 0) {
-                functions_mysqli::mass_inserts('user_group', ['user_id', 'group_id'], $inserts);
+                $conf->sql_backend::mass_inserts('user_group', ['user_id', 'group_id'], $inserts);
             }
 
             $override = [];
@@ -371,7 +370,7 @@ final class functions_user
             FROM users
             WHERE {$conf->user_fields['id']} = {$user_id};
             SQL;
-        $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+        $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
         // retrieve additional user data ?
         if ($conf->external_authentication) {
@@ -383,7 +382,7 @@ final class functions_user
                 WHERE ui.user_id = {$user_id}
                 GROUP BY ui.user_id;
                 SQL;
-            [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$counter] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
             if ($counter != 1) {
                 self::create_user_infos($user_id);
@@ -399,8 +398,8 @@ final class functions_user
             WHERE ui.user_id = {$user_id};
             SQL;
 
-        $result = functions_mysqli::pwg_query($query);
-        $user_infos_row = functions_mysqli::pwg_db_fetch_assoc($result);
+        $result = $conf->sql_backend::pwg_query($query);
+        $user_infos_row = $conf->sql_backend::pwg_db_fetch_assoc($result);
 
         // then merge basic + additional user data
         $userdata = array_merge($row, $user_infos_row);
@@ -431,7 +430,7 @@ final class functions_user
                     WHERE category_id NOT IN ({$userdata['forbidden_categories']})
                         AND level > {$userdata['level']};
                     SQL;
-            $forbidden_ids = functions_mysqli::query2array($query, null, 'id');
+            $forbidden_ids = $conf->sql_backend::query2array($query, null, 'id');
             if ($forbidden_ids === []) {
                 $forbidden_ids[] = 0;
             }
@@ -445,7 +444,7 @@ final class functions_user
                     WHERE category_id NOT IN ({$userdata['forbidden_categories']})
                         AND image_id {$userdata['image_access_type']} ({$userdata['image_access_list']});
                     SQL;
-            [$userdata['nb_total_images']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$userdata['nb_total_images']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
             // now we update user cache categories
             $user_cache_cats = functions_category::get_computed_categories($userdata);
             if (! self::is_admin($userdata['status'])) { // for non admins we forbid categories with no image (feature 1053)
@@ -472,11 +471,11 @@ final class functions_user
                     DELETE FROM user_cache_categories
                     WHERE user_id = {$userdata['id']};
                     SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
             // Due to concurrency issues, we ask MySQL to ignore errors on
             // insert. This may happen when cache needs refresh and that Piwigo is
             // called "very simultaneously".
-            functions_mysqli::mass_inserts(
+            $conf->sql_backend::mass_inserts(
                 'user_cache_categories',
                 [
                     'user_id', 'cat_id',
@@ -492,10 +491,10 @@ final class functions_user
                     DELETE FROM user_cache
                     WHERE user_id = {$userdata['id']};
                     SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
             // for the same reason as user_cache_categories, we ignore error on
             // this insert
-            $boolean_to_string = functions_mysqli::boolean_to_string($userdata['need_update']);
+            $boolean_to_string = $conf->sql_backend::boolean_to_string($userdata['need_update']);
             $empty_last_photo_date = empty($userdata['last_photo_date']) ? 'NULL' : "'{$userdata['last_photo_date']}'";
 
             if ($conf->dblayer === 'mysqli') {
@@ -532,7 +531,7 @@ final class functions_user
             }
 
             $query .= ';';
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
 
         return $userdata;
@@ -544,6 +543,7 @@ final class functions_user
     public static function check_user_favorites(): void
     {
         global $user;
+        global $conf;
 
         if ($user['forbidden_categories'] == '') {
             return;
@@ -567,14 +567,14 @@ final class functions_user
             WHERE f.user_id = {$user['id']}
                 {$sql_condition};
             SQL;
-        $authorizeds = functions_mysqli::query2array($query, null, 'image_id');
+        $authorizeds = $conf->sql_backend::query2array($query, null, 'image_id');
 
         $query = <<<SQL
             SELECT image_id
             FROM favorites
             WHERE user_id = {$user['id']};
             SQL;
-        $favorites = functions_mysqli::query2array($query, null, 'image_id');
+        $favorites = $conf->sql_backend::query2array($query, null, 'image_id');
 
         $to_deletes = array_diff($favorites, $authorizeds);
 
@@ -585,7 +585,7 @@ final class functions_user
                 WHERE image_id IN ({$to_deletes_imploded})
                     AND user_id = {$user['id']};
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
     }
 
@@ -603,12 +603,14 @@ final class functions_user
         int|string $user_id,
         string $user_status
     ): string {
+        global $conf;
+
         $query = <<<SQL
             SELECT id
             FROM categories
             WHERE status = 'private';
             SQL;
-        $private_array = functions_mysqli::query2array($query, null, 'id');
+        $private_array = $conf->sql_backend::query2array($query, null, 'id');
 
         // retrieve category ids directly authorized to the user
         $query = <<<SQL
@@ -616,7 +618,7 @@ final class functions_user
             FROM user_access
             WHERE user_id = {$user_id};
             SQL;
-        $authorized_array = functions_mysqli::query2array($query, null, 'cat_id');
+        $authorized_array = $conf->sql_backend::query2array($query, null, 'cat_id');
 
         // retrieve category ids authorized to the groups the user belongs to
         $query = <<<SQL
@@ -628,7 +630,7 @@ final class functions_user
         $authorized_array =
           array_merge(
               $authorized_array,
-              functions_mysqli::query2array($query, null, 'cat_id')
+              $conf->sql_backend::query2array($query, null, 'cat_id')
           );
 
         // deduplicate ids : some private categories might be authorized for the
@@ -645,7 +647,7 @@ final class functions_user
                 FROM categories
                 WHERE visible = 'false';
                 SQL;
-            $forbidden_array = array_merge($forbidden_array, functions_mysqli::query2array($query, null, 'id'));
+            $forbidden_array = array_merge($forbidden_array, $conf->sql_backend::query2array($query, null, 'id'));
             $forbidden_array = array_unique($forbidden_array);
         }
 
@@ -666,20 +668,20 @@ final class functions_user
     ): false|int {
         global $conf;
 
-        $username = functions_mysqli::pwg_db_real_escape_string($username);
+        $username = $conf->sql_backend::pwg_db_real_escape_string($username);
 
         $query = <<<SQL
             SELECT {$conf->user_fields['id']}
             FROM users
             WHERE {$conf->user_fields['username']} = '{$username}';
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_num_rows($result) == 0) {
+        if ($conf->sql_backend::pwg_db_num_rows($result) == 0) {
             return false;
         }
 
-        [$user_id] = functions_mysqli::pwg_db_fetch_row($result);
+        [$user_id] = $conf->sql_backend::pwg_db_fetch_row($result);
         return $user_id;
     }
 
@@ -691,20 +693,20 @@ final class functions_user
     ): false|int {
         global $conf;
 
-        $email = functions_mysqli::pwg_db_real_escape_string($email);
+        $email = $conf->sql_backend::pwg_db_real_escape_string($email);
 
         $query = <<<SQL
             SELECT {$conf->user_fields['id']}
             FROM users
             WHERE UPPER({$conf->user_fields['email']}) = UPPER('{$email}');
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_num_rows($result) == 0) {
+        if ($conf->sql_backend::pwg_db_num_rows($result) == 0) {
             return false;
         }
 
-        [$user_id] = functions_mysqli::pwg_db_fetch_row($result);
+        [$user_id] = $conf->sql_backend::pwg_db_fetch_row($result);
         return $user_id;
     }
 
@@ -725,10 +727,10 @@ final class functions_user
                 WHERE user_id = {$conf->default_user_id};
                 SQL;
 
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            if (functions_mysqli::pwg_db_num_rows($result) > 0) {
-                $cache['default_user'] = functions_mysqli::pwg_db_fetch_assoc($result);
+            if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
+                $cache['default_user'] = $conf->sql_backend::pwg_db_fetch_assoc($result);
 
                 unset($cache['default_user']['user_id']);
                 unset($cache['default_user']['status']);
@@ -893,7 +895,7 @@ final class functions_user
 
         if ($user_ids !== []) {
             $inserts = [];
-            [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+            [$dbnow] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT NOW();'));
 
             $default_user = self::get_default_user_info(false);
 
@@ -921,7 +923,7 @@ final class functions_user
                 }
 
                 $insert = array_merge(
-                    array_map(functions_mysqli::pwg_db_real_escape_string(...), $default_user),
+                    array_map($conf->sql_backend::pwg_db_real_escape_string(...), $default_user),
                     [
                         'user_id' => $user_id,
                         'status' => $status,
@@ -933,7 +935,7 @@ final class functions_user
                 $inserts[] = $insert;
             }
 
-            functions_mysqli::mass_inserts('user_infos', array_keys($inserts[0]), $inserts);
+            $conf->sql_backend::mass_inserts('user_infos', array_keys($inserts[0]), $inserts);
         }
     }
 
@@ -953,10 +955,10 @@ final class functions_user
             FROM users
             WHERE {$conf->user_fields['id']} = {$user_id};
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_num_rows($result) > 0) {
-            $row = functions_mysqli::pwg_db_fetch_assoc($result);
+        if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
+            $row = $conf->sql_backend::pwg_db_fetch_assoc($result);
             $username = stripslashes($row['username']);
             $data = $time . $user_id . $username;
             return base64_encode(hash_hmac('sha1', $data, $conf->secret_key . $row['password'], true));
@@ -1109,14 +1111,14 @@ final class functions_user
 
         $user_found = false;
         // retrieving the encrypted password of the login submitted
-        $escaped_username = functions_mysqli::pwg_db_real_escape_string($username);
+        $escaped_username = $conf->sql_backend::pwg_db_real_escape_string($username);
         $query = <<<SQL
             SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['password']} AS password
             FROM users
             WHERE {$conf->user_fields['username']} = '{$escaped_username}';
             SQL;
 
-        $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+        $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
         if (isset($row['id']) &&
             ($conf->password_verify)($password, $row['password'], $row['id'])
@@ -1126,14 +1128,14 @@ final class functions_user
 
         // If we didn't find a matching user name, we search for email address
         if (! $user_found) {
-            $escaped_username = functions_mysqli::pwg_db_real_escape_string($username);
+            $escaped_username = $conf->sql_backend::pwg_db_real_escape_string($username);
             $query = <<<SQL
                 SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['password']} AS password
                 FROM users
                 WHERE {$conf->user_fields['email']} = '{$escaped_username}';
                 SQL;
 
-            $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+            $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
             if (isset($row['id']) &&
                 ($conf->password_verify)($password, $row['password'], $row['id'])
@@ -1152,9 +1154,9 @@ final class functions_user
                 FROM user_infos
                 WHERE user_id = {$row['id']};
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
-            while ($user_infos_row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            while ($user_infos_row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
                 $status = $user_infos_row['status'];
             }
 
@@ -1445,13 +1447,14 @@ final class functions_user
         string $db_field
     ): string {
         global $user;
+        global $conf;
 
         if (! isset($user['last_photo_date'])) {
             return '0 = 1';
         }
 
-        $recent_period = functions_mysqli::pwg_db_get_recent_period_expression($user['recent_period']);
-        $last_photo_date = functions_mysqli::pwg_db_get_recent_period_expression(1, $user['last_photo_date']);
+        $recent_period = $conf->sql_backend::pwg_db_get_recent_period_expression($user['recent_period']);
+        $last_photo_date = $conf->sql_backend::pwg_db_get_recent_period_expression(1, $user['last_photo_date']);
 
         return "{$db_field} >= LEAST({$recent_period}, {$last_photo_date})";
     }
@@ -1475,7 +1478,7 @@ final class functions_user
             JOIN users AS u ON u.{$conf->user_fields['id']} = ui.user_id
             WHERE auth_key = '{$auth_key}';
             SQL;
-        $keys = functions_mysqli::query2array($query);
+        $keys = $conf->sql_backend::query2array($query);
 
         if (count($keys) == 0) {
             return false;
@@ -1526,7 +1529,7 @@ final class functions_user
                 FROM user_infos
                 WHERE user_id = {$user_id};
                 SQL;
-            $user_infos = functions_mysqli::query2array($query);
+            $user_infos = $conf->sql_backend::query2array($query);
 
             if (count($user_infos) == 0) {
                 return false;
@@ -1546,7 +1549,7 @@ final class functions_user
             FROM user_auth_keys
             WHERE auth_key = '{$candidate}';
             SQL;
-        [$counter, $now, $expiration] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+        [$counter, $now, $expiration] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
         if ($counter == 0) {
             $key = [
@@ -1557,9 +1560,9 @@ final class functions_user
                 'expired_on' => $expiration,
             ];
 
-            functions_mysqli::single_insert('user_auth_keys', $key);
+            $conf->sql_backend::single_insert('user_auth_keys', $key);
 
-            $key['auth_key_id'] = functions_mysqli::pwg_db_insert_id();
+            $key['auth_key_id'] = $conf->sql_backend::pwg_db_insert_id();
 
             return $key;
         }
@@ -1573,13 +1576,15 @@ final class functions_user
     public static function deactivate_user_auth_keys(
         int $user_id
     ): void {
+        global $conf;
+
         $query = <<<SQL
             UPDATE user_auth_keys
             SET expired_on = NOW()
             WHERE user_id = {$user_id}
                 AND expired_on > NOW();
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
     }
 
     /**
@@ -1588,7 +1593,9 @@ final class functions_user
     public static function deactivate_password_reset_key(
         int $user_id
     ): void {
-        functions_mysqli::single_update(
+        global $conf;
+
+        $conf->sql_backend::single_update(
             'user_infos',
             [
                 'activation_key' => null,
@@ -1610,6 +1617,8 @@ final class functions_user
         int $user_id,
         bool $save_in_user_infos = false
     ): ?string {
+        global $conf;
+
         $last_visit = null;
 
         $query = <<<SQL
@@ -1619,9 +1628,9 @@ final class functions_user
             ORDER BY id DESC
             LIMIT 1;
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $last_visit = $row['date'] . ' ' . $row['time'];
         }
 
@@ -1632,7 +1641,7 @@ final class functions_user
                 SET last_visit = {$last_visit_}, last_visit_from_history = 'true', lastmodified = lastmodified
                 WHERE user_id = {$user_id};
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
 
         return $last_visit;
@@ -1644,15 +1653,16 @@ final class functions_user
     public static function userprefs_save(): void
     {
         global $user;
+        global $conf;
 
-        $dbValue = functions_mysqli::pwg_db_real_escape_string(serialize($user['preferences']));
+        $dbValue = $conf->sql_backend::pwg_db_real_escape_string(serialize($user['preferences']));
 
         $query = <<<SQL
             UPDATE user_infos
             SET preferences = '{$dbValue}'
             WHERE user_id = {$user['id']};
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
     }
 
     /**

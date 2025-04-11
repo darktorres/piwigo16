@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
-
 final class functions_notification
 {
     /**
@@ -52,6 +50,7 @@ final class functions_notification
         ?string $end = null
     ): int|array|string|null {
         global $user;
+        global $conf;
 
         switch ($type) {
             case 'new_comments':
@@ -186,7 +185,7 @@ final class functions_notification
                 $query = <<<SQL
                     SELECT COUNT(DISTINCT {$field_id}) {$query};
                     SQL;
-                [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+                [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
                 return $count;
 
             case 'info':
@@ -215,7 +214,7 @@ final class functions_notification
                 $query = <<<SQL
                     SELECT DISTINCT {$field_id} {$query};
                     SQL;
-                return functions_mysqli::query2array($query);
+                return $conf->sql_backend::query2array($query);
 
             default:
                 return null; // stop and return nothing
@@ -503,12 +502,12 @@ final class functions_notification
             ORDER BY date_available DESC
             LIMIT {$max_dates};
             SQL;
-        $dates = functions_mysqli::query2array($query);
+        $dates = $conf->sql_backend::query2array($query);
         $counter = count($dates);
 
         for ($i = 0; $i < $counter; $i++) {
             if ($max_elements > 0) { // get some thumbnails ...
-                $randomFunction = functions_mysqli::DB_RANDOM_FUNCTION;
+                $randomFunction = $conf->sql_backend::DB_RANDOM_FUNCTION;
                 $query = <<<SQL
                     SELECT DISTINCT i.*, {$randomFunction}
                     FROM images i
@@ -518,7 +517,7 @@ final class functions_notification
                     ORDER BY {$randomFunction}
                     LIMIT {$max_elements};
                     SQL;
-                $dates[$i]['elements'] = functions_mysqli::query2array($query);
+                $dates[$i]['elements'] = $conf->sql_backend::query2array($query);
             }
 
             if ($max_cats > 0) { // get some categories ...
@@ -533,7 +532,7 @@ final class functions_notification
                     ORDER BY img_count DESC
                     LIMIT {$max_cats};
                     SQL;
-                $dates[$i]['categories'] = functions_mysqli::query2array($query);
+                $dates[$i]['categories'] = $conf->sql_backend::query2array($query);
             }
         }
 

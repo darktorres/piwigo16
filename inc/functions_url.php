@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use SmartyException;
 
 final class functions_url
@@ -867,6 +866,7 @@ final class functions_url
     public static function get_user_favorites(): array
     {
         global $user;
+        global $conf;
 
         if (functions_user::is_a_guest()) {
             return [];
@@ -878,6 +878,6 @@ final class functions_url
             WHERE user_id = {$user['id']};
             SQL;
 
-        return functions_mysqli::query2array($query, 'image_id', 'fake_value');
+        return $conf->sql_backend::query2array($query, 'image_id', 'fake_value');
     }
 }

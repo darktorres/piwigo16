@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\inc;
 
 use Exception;
-use Piwigo\inc\dblayer\functions_mysqli;
 
 functions_plugins::add_event_handler('user_comment_check', functions_comment::user_comment_check(...));
 
@@ -118,7 +117,7 @@ final class functions_comment
                     FROM users
                     WHERE {$conf->user_fields['username']} = '{$author}';
                     SQL;
-                $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+                $row = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
                 if ($row['user_exists'] == 1) {
                     $infos[] = functions::l10n('This login is already used by another user');
@@ -184,7 +183,7 @@ final class functions_comment
             $conf->anti_flood_time > 0 &&
             ! functions_user::is_admin()
         ) { // anti-flood system
-            $reference_date = functions_mysqli::pwg_db_get_flood_period_expression($conf->anti_flood_time);
+            $reference_date = $conf->sql_backend::pwg_db_get_flood_period_expression($conf->anti_flood_time);
 
             $query = <<<SQL
                 SELECT COUNT(1) FROM comments
@@ -201,7 +200,7 @@ final class functions_comment
             }
 
             $query = trim($query) . ';';
-            [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$counter] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
             if ($counter > 0) {
                 $infos[] = functions::l10n('Anti-flood system : please wait for a moment before trying to post another comment');
@@ -231,8 +230,8 @@ final class functions_comment
                     '{$validated}', {$validation_date}, {$comm['image_id']}, {$website_url}, {$email}
                 );
                 SQL;
-            functions_mysqli::pwg_query($query);
-            $comm['id'] = functions_mysqli::pwg_db_insert_id();
+            $conf->sql_backend::pwg_query($query);
+            $comm['id'] = $conf->sql_backend::pwg_db_insert_id();
 
             self::invalidate_user_cache_nb_comments();
 
@@ -277,6 +276,8 @@ final class functions_comment
     public static function delete_user_comment(
         array|int $comment_id
     ): bool {
+        global $conf;
+
         $user_where_clause = '';
 
         if (! functions_user::is_admin()) {
@@ -304,9 +305,9 @@ final class functions_comment
             WHERE {$where_clause}
                 {$user_where_clause};
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_changes()) {
+        if ($conf->sql_backend::pwg_db_changes()) {
             self::invalidate_user_cache_nb_comments();
 
             self::email_admin(
@@ -397,7 +398,7 @@ final class functions_comment
                 WHERE id = {$comment['comment_id']}
                     {$user_where_clause};
                 SQL;
-            $result = functions_mysqli::pwg_query($query);
+            $result = $conf->sql_backend::pwg_query($query);
 
             // mail admin and ask to validate the comment
             if ($result &&
@@ -479,14 +480,16 @@ final class functions_comment
         int $comment_id,
         bool $die_on_error = true
     ): false|int {
+        global $conf;
+
         $query = <<<SQL
             SELECT author_id
             FROM comments
             WHERE id = {$comment_id};
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_num_rows($result) == 0) {
+        if ($conf->sql_backend::pwg_db_num_rows($result) == 0) {
             if ($die_on_error) {
                 functions_html::fatal_error('Unknown comment identifier');
             } else {
@@ -494,7 +497,7 @@ final class functions_comment
             }
         }
 
-        [$author_id] = functions_mysqli::pwg_db_fetch_row($result);
+        [$author_id] = $conf->sql_backend::pwg_db_fetch_row($result);
 
         return $author_id;
     }
@@ -507,6 +510,8 @@ final class functions_comment
     public static function validate_user_comment(
         array|int $comment_id
     ): void {
+        global $conf;
+
         $where_clause = is_array($comment_id) ? 'id IN (' . implode(', ', $comment_id) . ')' : 'id = ' . $comment_id;
 
         $query = <<<SQL
@@ -515,7 +520,7 @@ final class functions_comment
                 validation_date = NOW()
             WHERE {$where_clause};
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         self::invalidate_user_cache_nb_comments();
         functions_plugins::trigger_notify('user_comment_validation', $comment_id);
@@ -527,6 +532,7 @@ final class functions_comment
     public static function invalidate_user_cache_nb_comments(): void
     {
         global $user;
+        global $conf;
 
         unset($user['nb_available_comments']);
 
@@ -534,6 +540,6 @@ final class functions_comment
             UPDATE user_cache
             SET nb_available_comments = NULL;
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
     }
 }

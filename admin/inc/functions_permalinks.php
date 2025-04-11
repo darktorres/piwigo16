@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\admin\inc;
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 
 final class functions_permalinks
@@ -21,11 +20,13 @@ final class functions_permalinks
     public static function get_cat_id_from_permalink(
         string $permalink
     ): ?int {
+        global $conf;
+
         $query = <<<SQL
             SELECT id FROM categories
             WHERE permalink = '{$permalink}';
             SQL;
-        $ids = functions_mysqli::query2array($query, null, 'id');
+        $ids = $conf->sql_backend::query2array($query, null, 'id');
 
         if ($ids !== []) {
             return $ids[0];
@@ -39,6 +40,8 @@ final class functions_permalinks
     public static function get_cat_id_from_old_permalink(
         string $permalink
     ): array|bool|null {
+        global $conf;
+
         $query = <<<SQL
             SELECT c.id
             FROM old_permalinks op
@@ -46,11 +49,11 @@ final class functions_permalinks
             WHERE op.permalink = '{$permalink}'
             LIMIT 1;
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
         $cat_id = null;
 
-        if (functions_mysqli::pwg_db_num_rows($result)) {
-            [$cat_id] = functions_mysqli::pwg_db_fetch_row($result);
+        if ($conf->sql_backend::pwg_db_num_rows($result)) {
+            [$cat_id] = $conf->sql_backend::pwg_db_fetch_row($result);
         }
 
         return $cat_id;
@@ -67,15 +70,16 @@ final class functions_permalinks
         bool $save
     ): bool {
         global $page, $cache;
+        global $conf;
         $query = <<<SQL
             SELECT permalink
             FROM categories
             WHERE id = '{$cat_id}';
             SQL;
-        $result = functions_mysqli::pwg_query($query);
+        $result = $conf->sql_backend::pwg_query($query);
 
-        if (functions_mysqli::pwg_db_num_rows($result)) {
-            [$permalink] = functions_mysqli::pwg_db_fetch_row($result);
+        if ($conf->sql_backend::pwg_db_num_rows($result)) {
+            [$permalink] = $conf->sql_backend::pwg_db_fetch_row($result);
         }
 
         if (! isset($permalink)) { // no permalink; nothing to do
@@ -104,7 +108,7 @@ final class functions_permalinks
             WHERE id = {$cat_id}
             LIMIT 1;
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         unset($cache['cat_names']); //force regeneration
 
@@ -125,7 +129,7 @@ final class functions_permalinks
                     SQL;
             }
 
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
 
         return true;
@@ -144,6 +148,7 @@ final class functions_permalinks
         bool $save
     ): bool {
         global $page, $cache;
+        global $conf;
 
         $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', $permalink);
         $sanitized_permalink = trim($sanitized_permalink, '/');
@@ -200,7 +205,7 @@ final class functions_permalinks
                 WHERE cat_id = {$old_cat_id}
                     AND permalink = '{$permalink}';
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
 
         $query = <<<SQL
@@ -209,7 +214,7 @@ final class functions_permalinks
             WHERE id = {$cat_id};
             SQL;
         //  LIMIT 1';
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
 
         unset($cache['cat_names']); //force regeneration
 

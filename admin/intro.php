@@ -13,7 +13,6 @@ use Piwigo\admin\inc\c13y_internal;
 use Piwigo\admin\inc\check_integrity;
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_url;
@@ -83,7 +82,7 @@ $query = <<<SQL
     FROM categories
     WHERE visible = 'false';
     SQL;
-[$locked_album] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$locked_album] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 if ($locked_album > 0) {
     $locked_album_url = './admin.php?page=cat_options&section=visible';
@@ -120,62 +119,62 @@ $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
     FROM images;
     SQL;
-[$nb_photos] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_photos] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
     FROM categories;
     SQL;
-[$nb_categories] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_categories] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
     FROM tags;
     SQL;
-[$nb_tags] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_tags] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
     FROM image_tag;
     SQL;
-[$nb_image_tag] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_image_tag] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
     FROM users;
     SQL;
-[$nb_users] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_users] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
     FROM user_groups;
     SQL;
-[$nb_groups] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_groups] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
     FROM rate;
     SQL;
-[$nb_rates] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_rates] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 $query = <<<SQL
     SELECT SUM(nb_pages)
     FROM history_summary
     WHERE month IS NULL;
     SQL;
-[$nb_views] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_views] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 $query = <<<SQL
     SELECT SUM(filesize)
     FROM images;
     SQL;
-[$disk_usage] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$disk_usage] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 $query = <<<SQL
     SELECT SUM(filesize)
     FROM image_format;
     SQL;
-[$formats_disk_usage] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$formats_disk_usage] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
 $disk_usage += $formats_disk_usage;
 
@@ -208,7 +207,7 @@ if ($conf->activate_comments) {
         SELECT COUNT(*) AS "COUNT(*)"
         FROM comments;
         SQL;
-    [$nb_comments] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$nb_comments] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
     $template->assign('NB_COMMENTS', $nb_comments);
 } else {
     $template->assign('NB_COMMENTS', 0);
@@ -284,7 +283,7 @@ if (! isset($_SESSION['cache_activity_last_weeks']) ||
         WHERE occurred_on >= '{$date_string}'
         GROUP BY activity_day, object, action;
         SQL;
-    $activity_actions = functions_mysqli::query2array($query);
+    $activity_actions = $conf->sql_backend::query2array($query);
 
     foreach ($activity_actions as $action) {
         // set the time to 12:00 (midday) so that it doesn't goes to previous/next day due to timezone offset
@@ -423,7 +422,7 @@ $query = <<<SQL
     GROUP BY ext;
     SQL;
 
-$file_extensions = functions_mysqli::query2array($query, 'ext');
+$file_extensions = $conf->sql_backend::query2array($query, 'ext');
 
 foreach ($file_extensions as $ext => $ext_details) {
     $type = null;
@@ -454,7 +453,7 @@ $query = <<<SQL
     GROUP BY ext;
     SQL;
 
-$file_extensions = functions_mysqli::query2array($query, 'ext');
+$file_extensions = $conf->sql_backend::query2array($query, 'ext');
 
 foreach ($file_extensions as $ext => $ext_details) {
     $type = 'Formats';

@@ -13,7 +13,6 @@ declare(strict_types=1);
 // |                          define and include                           |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
@@ -38,7 +37,7 @@ $sql_conditions = functions_user::get_sql_condition_FandF(
     ],
     'WHERE'
 );
-$db_random_function = functions_mysqli::DB_RANDOM_FUNCTION;
+$db_random_function = $conf->sql_backend::DB_RANDOM_FUNCTION;
 $limit_value = min(50, $conf->top_number, $user['nb_image_page']);
 
 $query = <<<SQL
@@ -55,5 +54,5 @@ $query = <<<SQL
 // +-----------------------------------------------------------------------+
 
 functions::redirect(functions_url::make_index_url([
-    'list' => functions_mysqli::query2array($query, null, 'id'),
+    'list' => $conf->sql_backend::query2array($query, null, 'id'),
 ]));

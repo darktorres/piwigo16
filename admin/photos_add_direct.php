@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\functions_admin;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
@@ -34,7 +33,7 @@ if (isset($_GET['batch'])) {
         DELETE FROM caddie
         WHERE user_id = {$user['id']};
         SQL;
-    functions_mysqli::pwg_query($query);
+    $conf->sql_backend::pwg_query($query);
 
     $inserts = [];
 
@@ -45,7 +44,7 @@ if (isset($_GET['batch'])) {
         ];
     }
 
-    functions_mysqli::mass_inserts(
+    $conf->sql_backend::mass_inserts(
         'caddie',
         array_keys($inserts[0]),
         $inserts
@@ -62,19 +61,19 @@ if (functions_user::userprefs_get_param('promote-mobile-apps', true)) {
         ORDER BY user_id ASC
         LIMIT 1;
         SQL;
-    [$register_date] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$register_date] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
     $query = <<<SQL
         SELECT COUNT(*) AS "COUNT(*)"
         FROM categories;
         SQL;
-    [$nb_cats] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$nb_cats] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
     $query = <<<SQL
         SELECT COUNT(*) AS "COUNT(*)"
         FROM images;
         SQL;
-    [$nb_images] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+    [$nb_images] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
     $uagent_obj = new uagent_info();
     // To see the mobile app promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
@@ -116,7 +115,7 @@ if ($display_formats &&
             FROM image_format
             WHERE image_id = {$formats_original_info['id']};
             SQL;
-        $formats = functions_mysqli::query2array($query);
+        $formats = $conf->sql_backend::query2array($query);
 
         if ($formats !== []) {
             $format_strings = [];

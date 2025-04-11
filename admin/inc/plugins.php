@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\admin\inc;
 
 use PclZip;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_plugins;
@@ -93,7 +92,7 @@ final class plugins
                         VALUES
                             ('{$plugin_id}', '{$this->fs_plugins[$plugin_id]['version']}');
                         SQL;
-                    functions_mysqli::pwg_query($query);
+                    $conf->sql_backend::pwg_query($query);
                 } else {
                     $activity_details['result'] = 'error';
                 }
@@ -119,7 +118,7 @@ final class plugins
                             SET version = '{$new_version}'
                             WHERE id = '{$plugin_id}';
                             SQL;
-                        functions_mysqli::pwg_query($query);
+                        $conf->sql_backend::pwg_query($query);
                     }
                 } else {
                     $activity_details['result'] = 'error';
@@ -147,7 +146,7 @@ final class plugins
                         SET state = 'active'
                         WHERE id = '{$plugin_id}';
                         SQL;
-                    functions_mysqli::pwg_query($query);
+                    $conf->sql_backend::pwg_query($query);
                 } else {
                     $activity_details['result'] = 'error';
                 }
@@ -167,7 +166,7 @@ final class plugins
                     SET state = 'inactive'
                     WHERE id = '{$plugin_id}';
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
 
                 $plugin_maintain->deactivate();
 
@@ -196,7 +195,7 @@ final class plugins
                     DELETE FROM plugins
                     WHERE id = '{$plugin_id}';
                     SQL;
-                functions_mysqli::pwg_query($query);
+                $conf->sql_backend::pwg_query($query);
 
                 $plugin_maintain->uninstall();
                 break;

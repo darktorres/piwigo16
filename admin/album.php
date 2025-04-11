@@ -10,7 +10,6 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_url;
@@ -35,7 +34,7 @@ $query = <<<SQL
     FROM categories
     WHERE id = {$_GET['cat_id']};
     SQL;
-$category = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
+$category = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
 if (! isset($category['id'])) {
     exit('unknown album');

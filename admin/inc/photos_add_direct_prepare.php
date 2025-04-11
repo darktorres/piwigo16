@@ -16,7 +16,6 @@ declare(strict_types=1);
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_upload;
 use Piwigo\admin\inc\pwg_image;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 
@@ -102,12 +101,12 @@ if (isset($_GET['album'])) {
         FROM categories
         WHERE id = {$_GET['album']};
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    if (functions_mysqli::pwg_db_num_rows($result) == 1) {
+    if ($conf->sql_backend::pwg_db_num_rows($result) == 1) {
         $selected_category = [$_GET['album']];
 
-        $cat = functions_mysqli::pwg_db_fetch_assoc($result);
+        $cat = $conf->sql_backend::pwg_db_fetch_assoc($result);
         $template->assign('ADD_TO_ALBUM', functions_html::get_cat_display_name_cache($cat['uppercats'], null));
     } else {
         functions_html::fatal_error('[Hacking attempt] the album id = "' . $_GET['album'] . '" is not valid');
@@ -122,10 +121,10 @@ if (isset($_GET['album'])) {
         ORDER BY i.id DESC
         LIMIT 1;
         SQL;
-    $result = functions_mysqli::pwg_query($query);
+    $result = $conf->sql_backend::pwg_query($query);
 
-    if (functions_mysqli::pwg_db_num_rows($result) > 0) {
-        $row = functions_mysqli::pwg_db_fetch_assoc($result);
+    if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
+        $row = $conf->sql_backend::pwg_db_fetch_assoc($result);
         $selected_category = [$row['category_id']];
     }
 }
@@ -138,7 +137,7 @@ $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
     FROM categories;
     SQL;
-[$nb_albums] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+[$nb_albums] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 // $nb_albums = 0;
 $template->assign('NB_ALBUMS', $nb_albums);
 

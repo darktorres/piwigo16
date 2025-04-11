@@ -12,7 +12,6 @@ declare(strict_types=1);
 use Piwigo\admin\inc\check_integrity;
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\pwg_image;
-use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\FileCombiner;
 use Piwigo\inc\functions;
@@ -87,14 +86,14 @@ switch ($action) {
         $query = <<<SQL
             DELETE FROM history;
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
         break;
 
     case 'history_summary':
         $query = <<<SQL
             DELETE FROM history_summary;
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
         break;
 
     case 'sessions':
@@ -105,13 +104,13 @@ switch ($action) {
             SELECT id, data
             FROM sessions;
             SQL;
-        $sessions = functions_mysqli::query2array($query);
+        $sessions = $conf->sql_backend::query2array($query);
 
         $query = <<<SQL
             SELECT {$conf->user_fields['id']} AS id
             FROM users;
             SQL;
-        $all_user_ids = functions_mysqli::query2array($query, 'id');
+        $all_user_ids = $conf->sql_backend::query2array($query, 'id');
 
         $sessions_to_delete = [];
 
@@ -127,7 +126,7 @@ switch ($action) {
                 DELETE FROM sessions
                 WHERE id IN ('{$sessions_to_delete_imploded}');
                 SQL;
-            functions_mysqli::pwg_query($query);
+            $conf->sql_backend::pwg_query($query);
         }
 
         break;
@@ -137,11 +136,11 @@ switch ($action) {
             DELETE FROM user_feed
             WHERE last_check IS NULL;
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
         break;
 
     case 'database':
-        functions_mysqli::do_maintenance_all_tables();
+        $conf->sql_backend::do_maintenance_all_tables();
         break;
 
     case 'c13y':
@@ -153,7 +152,7 @@ switch ($action) {
         $query = <<<SQL
             DELETE FROM search;
             SQL;
-        functions_mysqli::pwg_query($query);
+        $conf->sql_backend::pwg_query($query);
         break;
 
     case 'compiled-templates':
@@ -232,8 +231,8 @@ foreach (ImageStdParams::get_defined_type_map() as $params) {
 $purge_urls[functions::l10n(derivative_std_params::IMG_CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type=' . derivative_std_params::IMG_CUSTOM;
 
 $php_current_timestamp = date('Y-m-d H:i:s');
-$db_version = functions_mysqli::pwg_get_db_version();
-[$db_current_date] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
+$db_version = $conf->sql_backend::pwg_get_db_version();
+[$db_current_date] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT NOW();'));
 
 $template->assign(
     [
@@ -258,7 +257,7 @@ $template->assign(
         'U_CHECK_UPGRADE' => sprintf($url_format, 'check_upgrade'),
         'OS' => PHP_OS,
         'PHP_VERSION' => PHP_VERSION,
-        'DB_ENGINE' => 'MySQL',
+        'DB_ENGINE' => $conf->sql_backend::DB_ENGINE,
         'DB_VERSION' => $db_version,
         'U_PHPINFO' => sprintf($url_format, 'phpinfo'),
         'PHP_DATATIME' => $php_current_timestamp,
@@ -323,7 +322,7 @@ $query = <<<SQL
     FROM user_infos
     WHERE user_id = 2;
     SQL;
-$users = functions_mysqli::query2array($query);
+$users = $conf->sql_backend::query2array($query);
 
 if ($users !== []) {
     $installed_on = $users[0]['registration_date'];

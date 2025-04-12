@@ -110,7 +110,7 @@ final class functions_metadata_admin
             if ($exif[$pwg_key] !== null &&
                 ! is_numeric($exif[$pwg_key])
             ) {
-                $exif[$pwg_key] = addslashes((string) $exif[$pwg_key]);
+                $exif[$pwg_key] = addslashes($exif[$pwg_key]);
             }
         }
 

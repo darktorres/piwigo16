@@ -30,7 +30,7 @@ final class FileCombiner
         private readonly string $type,
         private array $combinables = []
     ) {
-        $this->is_css = $this->type == 'css';
+        $this->is_css = $this->type === 'css';
     }
 
     /**
@@ -41,8 +41,8 @@ final class FileCombiner
         $dir = opendir('./' . PWG_COMBINED_DIR);
 
         while ($file = readdir($dir)) {
-            if (functions::get_extension($file) == 'js' ||
-                functions::get_extension($file) == 'css'
+            if (functions::get_extension($file) === 'js' ||
+                functions::get_extension($file) === 'css'
             ) {
                 unlink('./' . PWG_COMBINED_DIR . $file);
             }
@@ -197,9 +197,9 @@ final class FileCombiner
             $content = $template->parse($handle, true);
 
             if ($this->is_css) {
-                $content = self::process_css($content, $combinable->path, $header);
+                $content = $this->process_css($content, $combinable->path, $header);
             } else {
-                $content = self::process_js($content, $combinable->path);
+                $content = $this->process_js($content, $combinable->path);
             }
 
             if ($return_content) {
@@ -216,9 +216,9 @@ final class FileCombiner
             $content = file_get_contents('./' . $combinable->path);
 
             if ($this->is_css) {
-                $content = self::process_css($content, $combinable->path, $header);
+                $content = $this->process_css($content, $combinable->path, $header);
             } else {
-                $content = self::process_js($content, $combinable->path);
+                $content = $this->process_js($content, $combinable->path);
             }
 
             return $content;
@@ -232,7 +232,7 @@ final class FileCombiner
      *
      * @param string $js file content
      */
-    private static function process_js(
+    private function process_js(
         string $js,
         string $file
     ): string {
@@ -255,7 +255,7 @@ final class FileCombiner
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function process_css(
+    private function process_css(
         string $css,
         string $file,
         string &$header
@@ -291,7 +291,7 @@ final class FileCombiner
             $replace = [];
             foreach ($matches as $match) {
                 if (! functions_url::url_is_remote($match[1]) &&
-                    $match[1][0] != '/' &&
+                    $match[1][0] !== '/' &&
                     ! str_contains($match[1], 'data:image/')
                 ) {
                     $relative = $dir . "/{$match[1]}";

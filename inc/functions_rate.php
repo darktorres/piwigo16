@@ -28,7 +28,7 @@ final class functions_rate
 
         if (! isset($rate) ||
             ! $conf->rate ||
-            ! preg_match('/^[0-9]+$/', (string) $rate) ||
+            ! preg_match('/^\d+$/', (string) $rate) ||
             ! in_array($rate, $conf->rate_items)
         ) {
             return false;
@@ -188,7 +188,7 @@ final class functions_rate
 
             $to_update = functions_mysqli::query2array($query, null, 'id');
 
-            if (! empty($to_update)) {
+            if ($to_update !== []) {
                 $to_update_imploded = implode(', ', $to_update);
                 $query = <<<SQL
                     UPDATE images

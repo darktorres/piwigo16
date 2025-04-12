@@ -161,7 +161,7 @@ readonly class ThemeController
     ): array {
         global $conf;
 
-        if (! empty($conf->bootstrap_darkroom_ps_exif_replacements)) {
+        if ($conf->bootstrap_darkroom_ps_exif_replacements !== []) {
             foreach ($conf->bootstrap_darkroom_ps_exif_replacements as $tag => $replacement) {
                 if (is_array($exif) &&
                     array_key_exists($tag, $exif)

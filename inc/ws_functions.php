@@ -123,8 +123,9 @@ final class ws_functions
             $params['order'],
             $matches
         );
+        $counter = count($matches[1]);
 
-        for ($i = 0; $i < count($matches[1]); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             switch ($matches[1][$i]) {
                 case 'date_created':
                     $matches[1][$i] = 'date_creation';
@@ -148,7 +149,7 @@ final class ws_functions
                     $ret .= ', ';
                 }
 
-                if ($matches[1][$i] != functions_mysqli::DB_RANDOM_FUNCTION . '()') {
+                if ($matches[1][$i] !== functions_mysqli::DB_RANDOM_FUNCTION . '()') {
                     $ret .= $tbl_name;
                 }
 
@@ -180,7 +181,7 @@ final class ws_functions
 
         $provide_download_url = false;
 
-        if ($src_image->is_original()) { // we have a photo
+        if ($src_image->is_original() !== 0) { // we have a photo
             global $user;
 
             if ($user['enabled_high']) {

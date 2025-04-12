@@ -53,7 +53,7 @@ final class functions_upgrade
             $plugins[] = $row['id'];
         }
 
-        if (! empty($plugins)) {
+        if ($plugins !== []) {
             $implodedPlugins = implode("','", $plugins);
             $query = <<<SQL
                 UPDATE plugins
@@ -93,7 +93,7 @@ final class functions_upgrade
             $theme_names[] = $row['name'];
         }
 
-        if (! empty($theme_ids)) {
+        if ($theme_ids !== []) {
             $implodedThemeIds = implode("','", $theme_ids);
             $query = <<<SQL
                 DELETE FROM themes

@@ -16,9 +16,9 @@ namespace Piwigo\inc;
  */
 final class ImageRect
 {
-    public int|float $l;
+    public int|float $l = 0;
 
-    public int|float $t;
+    public int|float $t = 0;
 
     public int|float|string $r;
 
@@ -30,8 +30,6 @@ final class ImageRect
     public function __construct(
         array $l
     ) {
-        $this->l = 0;
-        $this->t = 0;
         $this->r = $l[0];
         $this->b = $l[1];
     }

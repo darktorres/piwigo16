@@ -24,7 +24,7 @@ final class GDThumb_maintain extends PluginMaintain
         require __DIR__ . '/config_default.php';
         global $conf;
 
-        if (empty($conf->gdThumb)) {
+        if ($conf->gdThumb === []) {
             functions::conf_update_param('gdThumb', $config_default, true);
         }
 
@@ -72,8 +72,8 @@ final class GDThumb_maintain extends PluginMaintain
             $fh = opendir($path);
 
             while ($file = readdir($fh)) {
-                if ($file != '.' &&
-                    $file != '..'
+                if ($file !== '.' &&
+                    $file !== '..'
                 ) {
                     $pathfile = $path . '/' . $file;
 

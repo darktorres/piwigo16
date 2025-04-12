@@ -80,7 +80,7 @@ final class pwg_categories
             }
         }
 
-        if (! empty($where_clauses)) {
+        if ($where_clauses !== []) {
             $where_clauses = ['(' . implode("\n    OR ", $where_clauses) . ')'];
         }
 
@@ -108,7 +108,7 @@ final class pwg_categories
         }
 
         //-------------------------------------------------------- get the images
-        if (! empty($cats)) {
+        if ($cats !== []) {
             $where_clauses = ws_functions::ws_std_image_sql_filter($params, 'i.');
             $where_clauses[] = 'category_id IN (' . implode(', ', array_keys($cats)) . ')';
             $where_clauses[] = functions_user::get_sql_condition_FandF(
@@ -393,19 +393,17 @@ final class pwg_categories
             } elseif ($conf->allow_random_representative) {
                 // searching a random representative among elements in sub-categories
                 $image_id = functions_category::get_random_image_in_category($row);
-            } else { // searching a random representative among representative of sub-categories
-                if ($row['count_categories'] > 0 &&
-                    $row['count_images'] > 0
-                ) {
-                    $sql_condition = functions_user::get_sql_condition_FandF(
-                        [
-                            'visible_categories' => 'id',
-                        ],
-                        'AND'
-                    );
-
-                    $random_function = functions_mysqli::DB_RANDOM_FUNCTION;
-                    $query = <<<SQL
+            } elseif ($row['count_categories'] > 0 &&
+                $row['count_images'] > 0) {
+                // searching a random representative among representative of sub-categories
+                $sql_condition = functions_user::get_sql_condition_FandF(
+                    [
+                        'visible_categories' => 'id',
+                    ],
+                    'AND'
+                );
+                $random_function = functions_mysqli::DB_RANDOM_FUNCTION;
+                $query = <<<SQL
                         SELECT representative_picture_id
                         FROM categories
                         INNER JOIN user_cache_categories ON id = cat_id AND user_id = {$user['id']}
@@ -414,11 +412,9 @@ final class pwg_categories
                         ORDER BY {$random_function}()
                         LIMIT 1;
                         SQL;
-                    $subresult = functions_mysqli::pwg_query($query);
-
-                    if (functions_mysqli::pwg_db_num_rows($subresult) > 0) {
-                        [$image_id] = functions_mysqli::pwg_db_fetch_row($subresult);
-                    }
+                $subresult = functions_mysqli::pwg_query($query);
+                if (functions_mysqli::pwg_db_num_rows($subresult) > 0) {
+                    [$image_id] = functions_mysqli::pwg_db_fetch_row($subresult);
                 }
             }
 
@@ -696,7 +692,7 @@ final class pwg_categories
         global $conf;
 
         if (isset($params['pwg_token']) &&
-            functions::get_pwg_token() != $params['pwg_token']
+            functions::get_pwg_token() !== $params['pwg_token']
         ) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -839,7 +835,7 @@ final class pwg_categories
         global $conf;
 
         if (isset($params['pwg_token']) &&
-            functions::get_pwg_token() != $params['pwg_token']
+            functions::get_pwg_token() !== $params['pwg_token']
         ) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -1271,7 +1267,7 @@ final class pwg_categories
         functions_admin::move_categories($category_ids, $params['parent']);
         functions_admin::invalidate_user_cache();
 
-        if (count($page['errors']) != 0) {
+        if ($page['errors'] !== []) {
             return new PwgError(403, implode('; ', $page['errors']));
         }
 

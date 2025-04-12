@@ -37,13 +37,7 @@ $tabsheet->assign();
 // +-----------------------------------------------------------------------+
 // |                            initialization                             |
 // +-----------------------------------------------------------------------+
-if (isset($_GET['start']) &&
-    is_numeric($_GET['start'])
-) {
-    $start = $_GET['start'];
-} else {
-    $start = 0;
-}
+$start = isset($_GET['start']) && is_numeric($_GET['start']) ? $_GET['start'] : 0;
 
 $elements_per_page = 10;
 
@@ -152,8 +146,9 @@ $available_order_by = [
     [functions::l10n('Creation date'), 'date_creation DESC'],
     [functions::l10n('Post date'), 'date_available DESC'],
 ];
+$counter = count($available_order_by);
 
-for ($i = 0; $i < count($available_order_by); $i++) {
+for ($i = 0; $i < $counter; $i++) {
     $template->append(
         'order_by_options',
         $available_order_by[$i][0]
@@ -232,11 +227,7 @@ foreach ($images as $image) {
       ];
 
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
-        if (isset($users[$row['user_id']])) {
-            $user_rate = $users[$row['user_id']];
-        } else {
-            $user_rate = '? ' . $row['user_id'];
-        }
+        $user_rate = $users[$row['user_id']] ?? '? ' . $row['user_id'];
 
         if (strlen($row['anonymous_id']) > 0) {
             $user_rate .= '(' . $row['anonymous_id'] . ')';

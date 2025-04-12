@@ -420,7 +420,7 @@ final class functions_history
     {
         global $conf;
 
-        if (isset($conf->history_summarized_dropped) &&
+        if ($conf->history_summarized_dropped !== null &&
             $conf->history_summarized_dropped
         ) {
             return;

@@ -230,10 +230,10 @@ final class pwg_image
             case ! is_string($buf):
             case strlen($buf) < 25:
             case ! str_starts_with($buf, 'RIFF'):
-            case substr($buf, 8, 4) != 'WEBP':
-            case substr($buf, 12, 3) != 'VP8':
+            case substr($buf, 8, 4) !== 'WEBP':
+            case substr($buf, 12, 3) !== 'VP8':
                 throw new Exception('webp_info(): not a valid webp image');
-            case $buf[15] == ' ':
+            case $buf[15] === ' ':
                 // Simple File Format (Lossy)
                 return [
                     'type' => 'VP8',
@@ -241,7 +241,7 @@ final class pwg_image
                     'has-transparent' => false,
                 ];
 
-            case $buf[15] == 'L':
+            case $buf[15] === 'L':
                 // Simple File Format (Lossless)
                 return [
                     'type' => 'VP8L',
@@ -249,7 +249,7 @@ final class pwg_image
                     'has-transparent' => (bool) (ord($buf[24]) & 0x10),
                 ];
 
-            case $buf[15] == 'X':
+            case $buf[15] === 'X':
                 // Extended File Format
                 return [
                     'type' => 'VP8X',
@@ -432,7 +432,7 @@ final class pwg_image
                 // no break
 
             default:
-                if ($library != 'auto') {
+                if ($library !== 'auto') {
                     // Requested library not available. Try another library
                     return self::get_library('auto', $extension);
                 }

@@ -85,11 +85,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 
     $usr = $users_by_id[$row['user_id']];
 
-    if ($usr['anon']) {
-        $user_key = $usr['name'] . '(' . $row['anonymous_id'] . ')';
-    } else {
-        $user_key = $usr['name'];
-    }
+    $user_key = $usr['anon'] ? $usr['name'] . '(' . $row['anonymous_id'] . ')' : $usr['name'];
 
     $rating = &$by_user_ratings[$user_key];
 
@@ -185,7 +181,7 @@ foreach ($by_user_ratings as $id => &$rating) {
 
     $consensus_dev /= $c;
 
-    if ($consensus_dev_top_count) {
+    if ($consensus_dev_top_count !== 0) {
         $consensus_dev_top /= $consensus_dev_top_count;
     }
 
@@ -196,7 +192,7 @@ foreach ($by_user_ratings as $id => &$rating) {
         'avg' => $s / $c,
         'cv' => $s == 0 ? -1 : sqrt($var) / ($s / $c), // http://en.wikipedia.org/wiki/Coefficient_of_variation
         'cd' => $consensus_dev,
-        'cdtop' => $consensus_dev_top_count ? $consensus_dev_top : '',
+        'cdtop' => $consensus_dev_top_count !== 0 ? $consensus_dev_top : '',
     ];
 }
 
@@ -224,8 +220,9 @@ $available_order_by = [
     [functions::l10n('Consensus deviation'), functions_admin::consensus_dev_compare(...)],
     [functions::l10n('Last'), functions_admin::last_rate_compare(...)],
 ];
+$counter = count($available_order_by);
 
-for ($i = 0; $i < count($available_order_by); $i++) {
+for ($i = 0; $i < $counter; $i++) {
     $template->append(
         'order_by_options',
         $available_order_by[$i][0]

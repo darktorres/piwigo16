@@ -27,7 +27,7 @@ final class functions_permalinks
             SQL;
         $ids = functions_mysqli::query2array($query, null, 'id');
 
-        if (! empty($ids)) {
+        if ($ids !== []) {
             return $ids[0];
         }
 
@@ -160,7 +160,7 @@ final class functions_permalinks
         $existing_cat_id = self::get_cat_id_from_permalink($permalink);
 
         if (isset($existing_cat_id)) {
-            if ($existing_cat_id == $cat_id) { // no change required
+            if ($existing_cat_id === $cat_id) { // no change required
                 return true;
             }
 

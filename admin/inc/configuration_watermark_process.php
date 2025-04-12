@@ -135,12 +135,12 @@ if (count($errors) == 0) {
 
     $old_watermark = ImageStdParams::get_watermark();
     $watermark_changed =
-      $watermark->file != $old_watermark->file ||
-      $watermark->xpos != $old_watermark->xpos ||
-      $watermark->ypos != $old_watermark->ypos ||
-      $watermark->xrepeat != $old_watermark->xrepeat ||
-      $watermark->yrepeat != $old_watermark->yrepeat ||
-      $watermark->opacity != $old_watermark->opacity;
+      $watermark->file !== $old_watermark->file ||
+      $watermark->xpos !== $old_watermark->xpos ||
+      $watermark->ypos !== $old_watermark->ypos ||
+      $watermark->xrepeat !== $old_watermark->xrepeat ||
+      $watermark->yrepeat !== $old_watermark->yrepeat ||
+      $watermark->opacity !== $old_watermark->opacity;
 
     // save the new watermark configuration
     ImageStdParams::set_watermark($watermark);

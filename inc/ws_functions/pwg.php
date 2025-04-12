@@ -109,7 +109,7 @@ final class pwg
                 $start_id = $row['id'];
                 $src_image = new SrcImage($row);
 
-                if ($src_image->is_mimetype()) {
+                if ($src_image->is_mimetype() !== 0) {
                     continue;
                 }
 
@@ -529,12 +529,12 @@ final class pwg
                 AND performed_by = {$param['uid']}
 
                 SQL;
-        } elseif ($conf->activity_display_connections == 'none') {
+        } elseif ($conf->activity_display_connections === 'none') {
             $query .= <<<SQL
                 AND action NOT IN ('login', 'logout')
 
                 SQL;
-        } elseif ($conf->activity_display_connections == 'admins_only') {
+        } elseif ($conf->activity_display_connections === 'admins_only') {
             $admin_ids = implode(', ', functions_admin::get_admins());
             $query .= <<<SQL
                 AND NOT (action IN ('login', 'logout') AND object_id NOT IN ({$admin_ids}))
@@ -709,13 +709,7 @@ final class pwg
 
         global $conf;
 
-        if (isset($_GET['start']) &&
-            is_numeric($_GET['start'])
-        ) {
-            $page['start'] = $_GET['start'];
-        } else {
-            $page['start'] = 0;
-        }
+        $page['start'] = isset($_GET['start']) && is_numeric($_GET['start']) ? $_GET['start'] : 0;
 
         $types = array_merge(['none'], functions_mysqli::get_enums('history', 'image_type'));
 
@@ -849,7 +843,7 @@ final class pwg
             $user_ids[$row['user_id']] = 1;
 
             if (isset($row['category_id'])) {
-                array_push($category_ids, $row['category_id']);
+                $category_ids[] = $row['category_id'];
             }
 
             if (isset($row['image_id'])) {
@@ -861,7 +855,7 @@ final class pwg
             }
 
             if (isset($row['search_id'])) {
-                array_push($search_ids, $row['search_id']);
+                $search_ids[] = $row['search_id'];
             }
 
             $history_lines[] = $row;
@@ -1071,13 +1065,13 @@ final class pwg
 
             if (isset($line['search_id'])) {
                 $search_detail = [
-                    'allwords' => ! empty($search_details[$line['search_id']]['allwords']['words']) ? $search_details[$line['search_id']]['allwords']['words'] : null,
-                    'tags' => ! empty($search_details[$line['search_id']]['tags']['words']) ? array_intersect_key($name_of_tag, array_flip($search_details[$line['search_id']]['tags']['words'])) : null,
-                    'date_posted' => ! empty($search_details[$line['search_id']]['date_posted']) ? $search_details[$line['search_id']]['date_posted'] : null,
-                    'cat' => ! empty($search_details[$line['search_id']]['cat']['words']) ? array_intersect_key($name_of_category, array_flip($search_details[$line['search_id']]['cat']['words'])) : null,
-                    'author' => ! empty($search_details[$line['search_id']]['author']['words']) ? $search_details[$line['search_id']]['author']['words'] : null,
-                    'added_by' => ! empty($search_details[$line['search_id']]['added_by']) ? array_intersect_key($username_of, array_flip($search_details[$line['search_id']]['added_by'])) : null,
-                    'filetypes' => ! empty($search_details[$line['search_id']]['filetypes']) ? $search_details[$line['search_id']]['filetypes'] : null,
+                    'allwords' => empty($search_details[$line['search_id']]['allwords']['words']) ? null : $search_details[$line['search_id']]['allwords']['words'],
+                    'tags' => empty($search_details[$line['search_id']]['tags']['words']) ? null : array_intersect_key($name_of_tag, array_flip($search_details[$line['search_id']]['tags']['words'])),
+                    'date_posted' => empty($search_details[$line['search_id']]['date_posted']) ? null : $search_details[$line['search_id']]['date_posted'],
+                    'cat' => empty($search_details[$line['search_id']]['cat']['words']) ? null : array_intersect_key($name_of_category, array_flip($search_details[$line['search_id']]['cat']['words'])),
+                    'author' => empty($search_details[$line['search_id']]['author']['words']) ? null : $search_details[$line['search_id']]['author']['words'],
+                    'added_by' => empty($search_details[$line['search_id']]['added_by']) ? null : array_intersect_key($username_of, array_flip($search_details[$line['search_id']]['added_by'])),
+                    'filetypes' => empty($search_details[$line['search_id']]['filetypes']) ? null : $search_details[$line['search_id']]['filetypes'],
                 ];
             } else {
                 $search_detail = null;
@@ -1086,29 +1080,26 @@ final class pwg
             $sorted_members[$user_name] ??= 0;
             ++$sorted_members[$user_name];
 
-            array_push(
-                $result,
-                [
-                    'DATE' => functions::format_date($line['date']),
-                    'TIME' => $line['time'],
-                    'USER' => $user_string,
-                    'USERNAME' => $user_name,
-                    'USERID' => $line['user_id'],
-                    'IP' => $line['IP'],
-                    'IMAGE' => $image_string,
-                    'IMAGENAME' => $image_title,
-                    'IMAGEID' => $image_id,
-                    'EDIT_IMAGE' => $image_edit_string,
-                    'TYPE' => $line['image_type'],
-                    'SECTION' => $line['section'],
-                    'FULL_CATEGORY_PATH' => isset($full_cat_path[$line['category_id']]) ? strip_tags($full_cat_path[$line['category_id']]) : functions::l10n('Root') . $line['category_id'],
-                    'CATEGORY' => $name_of_category[$line['category_id']] ?? functions::l10n('Root') . $line['category_id'],
-                    'SEARCH_ID' => $line['search_id'] ?? null,
-                    'TAGS' => explode(',', $tag_names),
-                    'TAGIDS' => explode(',', $tag_ids),
-                    'SEARCH_DETAILS' => $search_detail,
-                ]
-            );
+            $result[] = [
+                'DATE' => functions::format_date($line['date']),
+                'TIME' => $line['time'],
+                'USER' => $user_string,
+                'USERNAME' => $user_name,
+                'USERID' => $line['user_id'],
+                'IP' => $line['IP'],
+                'IMAGE' => $image_string,
+                'IMAGENAME' => $image_title,
+                'IMAGEID' => $image_id,
+                'EDIT_IMAGE' => $image_edit_string,
+                'TYPE' => $line['image_type'],
+                'SECTION' => $line['section'],
+                'FULL_CATEGORY_PATH' => isset($full_cat_path[$line['category_id']]) ? strip_tags($full_cat_path[$line['category_id']]) : functions::l10n('Root') . $line['category_id'],
+                'CATEGORY' => $name_of_category[$line['category_id']] ?? functions::l10n('Root') . $line['category_id'],
+                'SEARCH_ID' => $line['search_id'] ?? null,
+                'TAGS' => explode(',', $tag_names),
+                'TAGIDS' => explode(',', $tag_ids),
+                'SEARCH_DETAILS' => $search_detail,
+            ];
         }
 
         $max_page = ceil(count($result) / 300);

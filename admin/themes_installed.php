@@ -157,7 +157,7 @@ usort($tpl_themes, function (
         return 1;
     }
 
-    if ($a['STATE'] == $b['STATE']) {
+    if ($a['STATE'] === $b['STATE']) {
         return strcasecmp($a['NAME'], $b['NAME']);
     }
 

@@ -73,9 +73,9 @@ if (isset($_COOKIE['caps'])) {
         ))."\n", FILE_APPEND);*/
 }
 
-if (functions::get_device() == 'mobile') {
+if (functions::get_device() === 'mobile') {
     $conf->tag_letters_column_number = 1;
-} elseif (functions::get_device() == 'tablet') {
+} elseif (functions::get_device() === 'tablet') {
     $conf->tag_letters_column_number = min($conf->tag_letters_column_number, 3);
 }
 

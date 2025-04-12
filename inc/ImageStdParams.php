@@ -224,8 +224,9 @@ final class ImageStdParams
         }
 
         self::$all_type_map = self::$type_map;
+        $counter = count(self::$all_types);
 
-        for ($i = 0; $i < count(self::$all_types); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             $tocheck = self::$all_types[$i];
 
             if (! isset(self::$type_map[$tocheck])) {

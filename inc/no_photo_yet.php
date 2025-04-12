@@ -20,10 +20,10 @@ use Piwigo\inc\Template;
 // gallery displays only a big box to show you the way for adding your first
 // photos
 if (! (defined('IN_ADMIN') && IN_ADMIN) &&           // no message inside administration
-    functions::script_basename() != 'identification' &&             // keep the ability to login
-    functions::script_basename() != 'password' &&                   // keep the ability to reset password
-    functions::script_basename() != 'ws' &&                         // keep the ability to discuss with web API
-    functions::script_basename() != 'popuphelp' &&                  // keep the ability to display help popups
+    functions::script_basename() !== 'identification' &&             // keep the ability to login
+    functions::script_basename() !== 'password' &&                   // keep the ability to reset password
+    functions::script_basename() !== 'ws' &&                         // keep the ability to discuss with web API
+    functions::script_basename() !== 'popuphelp' &&                  // keep the ability to display help popups
     (functions_user::is_a_guest() || functions_user::is_admin()) && // normal users are not concerned by no_photo_yet
     ! isset($_SESSION['no_photo_yet'])                               // temporary hide
 ) {

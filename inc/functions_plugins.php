@@ -66,7 +66,9 @@ final class functions_plugins
             return false;
         }
 
-        for ($i = 0; $i < count($pwg_event_handlers[$event][$priority]); $i++) {
+        $counter = count($pwg_event_handlers[$event][$priority]);
+
+        for ($i = 0; $i < $counter; $i++) {
             if ($pwg_event_handlers[$event][$priority][$i]['function'] == $func) {
                 unset($pwg_event_handlers[$event][$priority][$i]);
                 $pwg_event_handlers[$event][$priority] = array_values($pwg_event_handlers[$event][$priority]);
@@ -154,7 +156,7 @@ final class functions_plugins
         global $pwg_event_handlers;
 
         if (isset($pwg_event_handlers['trigger']) &&
-            $event != 'trigger'
+            $event !== 'trigger'
         ) { // debugging - avoid recursive calls
             self::trigger_notify(
                 'trigger',
@@ -305,7 +307,7 @@ final class functions_plugins
 
         // if version is auto (dev) or superior
         if ($fs_version != null &&
-           ($fs_version == 'auto' || $plugin['version'] == 'auto' || functions::safe_version_compare($plugin['version'], $fs_version, '<'))
+           ($fs_version === 'auto' || $plugin['version'] == 'auto' || functions::safe_version_compare($plugin['version'], $fs_version, '<'))
         ) {
             $old_version = $plugin['version'];
             $new_version = $fs_version;

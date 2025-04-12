@@ -46,7 +46,9 @@ final class pwg_tags
             usort($tags, functions_html::tag_alpha_compare(...));
         }
 
-        for ($i = 0; $i < count($tags); $i++) {
+        $counter = count($tags);
+
+        for ($i = 0; $i < $counter; $i++) {
             $tags[$i]['id'] = (int) $tags[$i]['id'];
             $tags[$i]['counter'] = (int) $tags[$i]['counter'];
             $tags[$i]['url'] = functions_url::make_index_url(
@@ -118,7 +120,7 @@ final class pwg_tags
 
         $where_clauses = ws_functions::ws_std_image_sql_filter($params);
 
-        if (! empty($where_clauses)) {
+        if ($where_clauses !== []) {
             $where_clauses = implode(' AND ', $where_clauses);
         }
 
@@ -141,7 +143,7 @@ final class pwg_tags
         $image_tag_map = [];
         // build list of image ids with associated tags per image
 
-        if (! empty($image_ids) &&
+        if ($image_ids !== [] &&
             ! $params['tag_mode_and']
         ) {
             $tagIds = implode(', ', $tag_ids);
@@ -162,7 +164,7 @@ final class pwg_tags
 
         $images = [];
 
-        if (! empty($image_ids)) {
+        if ($image_ids !== []) {
             $rank_of = array_flip($image_ids);
             $favorite_ids = functions_url::get_user_favorites();
 
@@ -464,7 +466,7 @@ final class pwg_tags
         }
 
         $all_tags = $params['merge_tag_id'];
-        array_push($all_tags, $params['destination_tag_id']);
+        $all_tags[] = $params['destination_tag_id'];
 
         $all_tags = array_unique($all_tags);
         $merge_tag = array_diff($params['merge_tag_id'], [$params['destination_tag_id']]);

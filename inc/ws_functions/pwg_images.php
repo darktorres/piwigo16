@@ -80,7 +80,7 @@ final class pwg_images
 
             $rank_on_category[$cat_id] = $rank;
 
-            if ($rank == 'auto') {
+            if ($rank === 'auto') {
                 $search_current_ranks = true;
             }
         }
@@ -344,7 +344,7 @@ final class pwg_images
             case 'moderate':
                 $ret = [
                     'id' => $comm['id'],
-                    'validation' => $comment_action == 'validate',
+                    'validation' => $comment_action === 'validate',
                 ];
                 return [
                     'comment' => new PwgNamedStruct($ret),
@@ -440,7 +440,7 @@ final class pwg_images
 
         usort($related_categories, functions_category::global_rank_compare(...));
 
-        if (empty($related_categories) &&
+        if ($related_categories === [] &&
             ! functions_user::is_admin()
         ) {
             // photo might be in the lounge? or simply orphan. A standard user should not get
@@ -582,7 +582,7 @@ final class pwg_images
             ['id', 'date']
         );
 
-        if ($service->_responseFormat != 'rest') {
+        if ($service->_responseFormat !== 'rest') {
             return $ret; // for backward compatibility only
         }
 
@@ -1216,11 +1216,11 @@ final class pwg_images
 
         // does the image already exists ?
         if ($params['check_uniqueness']) {
-            if ($conf->uniqueness_mode == 'md5sum') {
+            if ($conf->uniqueness_mode === 'md5sum') {
                 $where_clause = "md5sum = '" . $params['original_sum'] . "'";
             }
 
-            if ($conf->uniqueness_mode == 'filename') {
+            if ($conf->uniqueness_mode === 'filename') {
                 $where_clause = "file = '" . $params['original_filename'] . "'";
             }
 
@@ -1552,7 +1552,7 @@ final class pwg_images
         // file_put_contents('/tmp/plupload.log', "[".date('c')."] ".__FUNCTION__.', '.$fileName.' '.($chunk+1).'/'.$chunks."\n", FILE_APPEND);
 
         // Open temp file
-        $out = fopen("{$filePath}.part", $chunks ? 'ab' : 'wb');
+        $out = fopen("{$filePath}.part", $chunks !== 0 ? 'ab' : 'wb');
 
         if (! $out) {
             exit('{"jsonrpc" : "2.0", "error" : {"code": 102, "message": "Failed to open output stream."}, "id" : "id"}');
@@ -1964,7 +1964,7 @@ final class pwg_images
         $split_pattern = '/[\s,;\|]/';
         $result = [];
 
-        if ($conf->uniqueness_mode == 'md5sum') {
+        if ($conf->uniqueness_mode === 'md5sum') {
             // search among photos the list of photos already added, based on md5sum list
             $md5sums = preg_split(
                 $split_pattern,
@@ -1988,7 +1988,7 @@ final class pwg_images
                     $result[$md5sum] = $id_of_md5[$md5sum];
                 }
             }
-        } elseif ($conf->uniqueness_mode == 'filename') {
+        } elseif ($conf->uniqueness_mode === 'filename') {
             // search among photos the list of photos already added, based on
             // filename list
             $filenames = preg_split(
@@ -2251,11 +2251,7 @@ final class pwg_images
         if (isset($compare_type)) {
             $logger->debug(__FUNCTION__ . ', md5_file($path) = ' . md5_file($path));
 
-            if (md5_file($path) != $params[$compare_type . '_sum']) {
-                $ret[$compare_type] = 'differs';
-            } else {
-                $ret[$compare_type] = 'equals';
-            }
+            $ret[$compare_type] = md5_file($path) != $params[$compare_type . '_sum'] ? 'differs' : 'equals';
         }
 
         $logger->debug(__FUNCTION__, $ret);
@@ -2289,7 +2285,7 @@ final class pwg_images
         global $conf;
 
         if (isset($params['pwg_token']) &&
-            functions::get_pwg_token() != $params['pwg_token']
+            functions::get_pwg_token() !== $params['pwg_token']
         ) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -2326,11 +2322,11 @@ final class pwg_images
                     $params[$key] = strip_tags($params[$key], '<b><strong><em><i>');
                 }
 
-                if ($params['single_value_mode'] == 'fill_if_empty') {
+                if ($params['single_value_mode'] === 'fill_if_empty') {
                     if (empty($image_row[$key])) {
                         $update[$key] = $params[$key];
                     }
-                } elseif ($params['single_value_mode'] == 'replace') {
+                } elseif ($params['single_value_mode'] === 'replace') {
                     $update[$key] = $params[$key];
                 } else {
                     return new PwgError(
@@ -2377,7 +2373,7 @@ final class pwg_images
             self::ws_add_image_category_relations(
                 $params['image_id'],
                 $params['categories'],
-                ($params['multiple_value_mode'] == 'replace' ? true : false)
+                ($params['multiple_value_mode'] === 'replace' ? true : false)
             );
         }
 
@@ -2393,12 +2389,12 @@ final class pwg_images
                 }
             }
 
-            if ($params['multiple_value_mode'] == 'replace') {
+            if ($params['multiple_value_mode'] === 'replace') {
                 functions_admin::set_tags(
                     $tag_ids,
                     $params['image_id']
                 );
-            } elseif ($params['multiple_value_mode'] == 'append') {
+            } elseif ($params['multiple_value_mode'] === 'append') {
                 functions_admin::add_tags(
                     $tag_ids,
                     [$params['image_id']]

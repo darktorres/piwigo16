@@ -78,9 +78,9 @@ class MultiView
     public function get_clean_url(
         bool $with_amp = false
     ): string {
-        if (functions::script_basename() == 'picture') {
+        if (functions::script_basename() === 'picture') {
             $url = functions_url::duplicate_picture_url([], $this->data_url_params);
-        } elseif (functions::script_basename() == 'index') {
+        } elseif (functions::script_basename() === 'index') {
             $url = functions_url::duplicate_index_url([], $this->data_url_params);
         } else {
             $url = functions_url::get_query_string_diff($this->data_url_params);
@@ -137,7 +137,7 @@ class MultiView
 
         // inactive on ws.php to allow AJAX admin tasks
         if ($this->is_admin &&
-            functions::script_basename() != 'ws'
+            functions::script_basename() !== 'ws'
         ) {
             // show_queries
             if (isset($_GET['ato_show_queries'])) {
@@ -246,12 +246,10 @@ class MultiView
      */
     public function init(): void
     {
-        if ($this->is_admin) {
-            if (isset($_GET['ato_purge_template'])) {
-                global $template;
-                $template->delete_compiled_templates();
-                FileCombiner::clear_combined_files();
-            }
+        if ($this->is_admin && isset($_GET['ato_purge_template'])) {
+            global $template;
+            $template->delete_compiled_templates();
+            FileCombiner::clear_combined_files();
         }
     }
 

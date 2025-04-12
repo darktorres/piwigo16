@@ -35,15 +35,15 @@ final class QNumericRangeScope extends QSearchScope
 
         if ($pos !== false) {
             $range = [substr($str, 0, $pos), substr($str, $pos + 2)];
-        } elseif ($str[0] == '>') { // ratio:>1
+        } elseif ($str[0] === '>') { // ratio:>1
             $range = [substr($str, 1), ''];
             $strict[0] = 1;
-        } elseif ($str[0] == '<') { // size:<5mp
+        } elseif ($str[0] === '<') { // size:<5mp
             $range = ['', substr($str, 1)];
             $strict[1] = 1;
-        } elseif (($token->modifier & functions_search::QST_WILDCARD_BEGIN)) {
+        } elseif ((($token->modifier & functions_search::QST_WILDCARD_BEGIN) !== 0)) {
             $range = ['', $str];
-        } elseif (($token->modifier & functions_search::QST_WILDCARD_END)) {
+        } elseif ((($token->modifier & functions_search::QST_WILDCARD_END) !== 0)) {
             $range = [$str, ''];
         } else {
             $range = [$str, $str];
@@ -59,13 +59,7 @@ final class QNumericRangeScope extends QSearchScope
                 if (isset($matches[2])) {
                     $mult = 1;
 
-                    if ($matches[2] == 'k' ||
-                        $matches[2] == 'K'
-                    ) {
-                        $mult = 1000;
-                    } else {
-                        $mult = 1000000;
-                    }
+                    $mult = $matches[2] === 'k' || $matches[2] === 'K' ? 1000 : 1000000;
 
                     $val *= $mult;
 
@@ -89,7 +83,7 @@ final class QNumericRangeScope extends QSearchScope
             }
 
             if (is_numeric($val)) {
-                if ($i ^ $strict[$i]) {
+                if (($i ^ $strict[$i]) !== 0) {
                     $val += $this->epsilon;
                 } else {
                     $val -= $this->epsilon;
@@ -125,8 +119,8 @@ final class QNumericRangeScope extends QSearchScope
             $clauses[] = $field . ' <' . ($token->scope_data['strict'][1] ? '' : '=') . $token->scope_data['range'][1] . ' ';
         }
 
-        if (empty($clauses)) {
-            if ($token->modifier & functions_search::QST_WILDCARD) {
+        if ($clauses === []) {
+            if (($token->modifier & functions_search::QST_WILDCARD) !== 0) {
                 return $field . ' IS NOT NULL';
             }
 

@@ -40,7 +40,7 @@ final class menubar
         //--------------------------------------------------------------- external links
         $block = $menu->get_block('mbLinks');
         if ($block &&
-            ! empty($conf->links)
+            $conf->links !== []
         ) {
             $block->data = [];
 
@@ -73,7 +73,7 @@ final class menubar
                 }
             }
 
-            if (! empty($block->data)) {
+            if ($block->data !== []) {
                 $block->template = 'menubar_links.tpl';
             }
         }
@@ -83,7 +83,7 @@ final class menubar
 
         //------------------------------------------------------------------------ filter
         if ($conf->menubar_filter_icon &&
-            ! empty($conf->filter_pages) &&
+            $conf->filter_pages !== [] &&
             functions::get_filter_page_value('used')
         ) {
             if ($filter['enabled']) {
@@ -147,7 +147,7 @@ final class menubar
         $block = $menu->get_block('mbTags');
 
         if ($block != null &&
-            functions::script_basename() != 'picture'
+            functions::script_basename() !== 'picture'
         ) {
             if (($page['section'] ?? null) == 'tags') {
                 $tags = functions_tag::get_common_tags(
@@ -181,8 +181,8 @@ final class menubar
                 $template->assign('IS_RELATED', false);
             }
             //displays all tags available for the current user
-            elseif ($conf->menubar_tag_cloud_content == 'always_all' ||
-                   ($conf->menubar_tag_cloud_content == 'all_or_current' && empty($page['items']))
+            elseif ($conf->menubar_tag_cloud_content === 'always_all' ||
+                   ($conf->menubar_tag_cloud_content === 'all_or_current' && empty($page['items']))
             ) {
                 $tags = functions_tag::get_available_tags();
                 usort($tags, functions_tag::tags_counter_compare(...));
@@ -203,7 +203,7 @@ final class menubar
             }
             // displays only the tags available from the current thumbnails displayed
             elseif (! empty($page['items']) &&
-                   ($conf->menubar_tag_cloud_content == 'current_only' || $conf->menubar_tag_cloud_content == 'all_or_current')
+                   ($conf->menubar_tag_cloud_content === 'current_only' || $conf->menubar_tag_cloud_content === 'all_or_current')
             ) {
                 $selection = array_slice($page['items'], (int) $page['start'], (int) $page['nb_image_page']);
                 $tags = functions_tag::add_level_to_tags(functions_tag::get_common_tags($selection, $conf->content_tag_cloud_items_number));
@@ -223,7 +223,7 @@ final class menubar
                 $template->assign('IS_RELATED', true);
             }
 
-            if (! empty($block->data)) {
+            if ($block->data !== []) {
                 $block->template = 'menubar_tags.tpl';
             }
         }
@@ -294,7 +294,7 @@ final class menubar
                   'URL' =>
                     functions_url::make_index_url(
                         [
-                            'chronology_field' => ($conf->calendar_datefield == 'date_available'
+                            'chronology_field' => ($conf->calendar_datefield === 'date_available'
                                                     ? 'posted' : 'created'),
                             'chronology_style' => 'monthly',
                             'chronology_view' => 'calendar',

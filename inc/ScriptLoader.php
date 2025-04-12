@@ -79,12 +79,10 @@ final class ScriptLoader
             trigger_error('Attempt to add inline script but the footer has been written', E_USER_WARNING);
         }
 
-        if (! empty($require)) {
+        if ($require !== []) {
             foreach ($require as $id) {
-                if (! isset($this->registered_scripts[$id])) {
-                    if (! $this->load_known_required_script($id, 1)) {
-                        functions_html::fatal_error("inline script not found require {$id}");
-                    }
+                if (! isset($this->registered_scripts[$id]) && ! $this->load_known_required_script($id, 1)) {
+                    functions_html::fatal_error("inline script not found require {$id}");
                 }
 
                 $s = $this->registered_scripts[$id];
@@ -120,7 +118,7 @@ final class ScriptLoader
         if (! isset($this->registered_scripts[$id])) {
             $script = new Script($load_mode, $id, $path, $version, $require);
             $script->is_template = $is_template;
-            self::fill_well_known($id, $script);
+            $this->fill_well_known($id, $script);
             $this->registered_scripts[$id] = $script;
 
             // Try to load undefined required script
@@ -158,13 +156,13 @@ final class ScriptLoader
      */
     public function get_head_scripts(): array
     {
-        self::check_load_dep($this->registered_scripts);
+        $this->check_load_dep($this->registered_scripts);
 
         foreach (array_keys($this->registered_scripts) as $id) {
             $this->compute_script_topological_order($id);
         }
 
-        uasort($this->registered_scripts, self::cmp_by_mode_and_order(...));
+        uasort($this->registered_scripts, $this->cmp_by_mode_and_order(...));
 
         foreach ($this->registered_scripts as $id => $script) {
             if ($script->load_mode > 0) {
@@ -179,7 +177,7 @@ final class ScriptLoader
         }
 
         $this->did_head = true;
-        return self::do_combine($this->head_done_scripts, 0);
+        return $this->do_combine($this->head_done_scripts, 0);
     }
 
     /**
@@ -191,7 +189,7 @@ final class ScriptLoader
     public function get_footer_scripts(): array
     {
         if (! $this->did_head) {
-            self::check_load_dep($this->registered_scripts);
+            $this->check_load_dep($this->registered_scripts);
         }
 
         $this->did_footer = true;
@@ -207,7 +205,7 @@ final class ScriptLoader
             $this->compute_script_topological_order($id);
         }
 
-        uasort($todo, self::cmp_by_mode_and_order(...));
+        uasort($todo, $this->cmp_by_mode_and_order(...));
 
         $result = [[], []];
 
@@ -217,7 +215,7 @@ final class ScriptLoader
             }
         }
 
-        return [self::do_combine($result[0], 1), self::do_combine($result[1], 2)];
+        return [$this->do_combine($result[0], 1), $this->do_combine($result[1], 2)];
     }
 
     /**
@@ -225,7 +223,7 @@ final class ScriptLoader
      * @return Combinable[]
      * @throws SmartyException
      */
-    private static function do_combine(
+    private function do_combine(
         array $scripts,
         int $load_mode
     ): array {
@@ -239,7 +237,7 @@ final class ScriptLoader
      *
      * @param Script[] $scripts
      */
-    private static function check_load_dep(
+    private function check_load_dep(
         array $scripts
     ): void {
         global $conf;
@@ -277,7 +275,7 @@ final class ScriptLoader
      *
      * @param string $id in FileCombiner::$known_paths
      */
-    private static function fill_well_known(
+    private function fill_well_known(
         string $id,
         Script $script
     ): void {
@@ -355,13 +353,13 @@ final class ScriptLoader
     /**
      * Callback for scripts sorter.
      */
-    private static function cmp_by_mode_and_order(
+    private function cmp_by_mode_and_order(
         Script $s1,
         Script $s2
     ): int|float {
         $ret = intval($s1->load_mode) - intval($s2->load_mode);
 
-        if ($ret) {
+        if ($ret !== 0) {
             return $ret;
         }
 

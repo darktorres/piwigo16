@@ -327,7 +327,7 @@ final class functions_mysqli
                     ) {
                         $query .= "{$separator}{$escapedKey} = '{$data[$key]}'";
                     } else {
-                        if ($flags & self::MASS_UPDATES_SKIP_EMPTY) {
+                        if (($flags & self::MASS_UPDATES_SKIP_EMPTY) !== 0) {
                             continue; // next field
                         }
 
@@ -414,7 +414,7 @@ final class functions_mysqli
             self::pwg_query($query);
             self::mass_inserts($temporary_tablename, $all_fields, $datas);
 
-            if ($flags & self::MASS_UPDATES_SKIP_EMPTY) {
+            if (($flags & self::MASS_UPDATES_SKIP_EMPTY) !== 0) {
                 $func_set = (fn (string $s): string => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
             } else {
                 $func_set = (fn (string $s): string => "t1.{$s} = t2.{$s}");
@@ -479,7 +479,7 @@ final class functions_mysqli
             ) {
                 $query .= "{$separator}{$escapedKey} = '{$value}'";
             } else {
-                if ($flags & self::MASS_UPDATES_SKIP_EMPTY) {
+                if (($flags & self::MASS_UPDATES_SKIP_EMPTY) !== 0) {
                     continue; // next field
                 }
 
@@ -548,7 +548,7 @@ final class functions_mysqli
         $escapedTablename = self::protect_column_name($table_name);
         $escapeddbfields = implode(', ', array_map(self::protect_column_name(...), $dbfields));
 
-        $insert_ignore = 'INSERT' . ($ignore ? " {$ignore}" : '');
+        $insert_ignore = 'INSERT' . ($ignore !== '' ? " {$ignore}" : '');
         $queryBase = "{$insert_ignore} INTO {$escapedTablename} ({$escapeddbfields}) VALUES\n";
         $query = '';
 
@@ -618,7 +618,7 @@ final class functions_mysqli
 
         $escapedTablename = self::protect_column_name($table_name);
         $columns = implode(', ', array_map(self::protect_column_name(...), array_keys($data)));
-        $insert_ignore = 'INSERT' . ($ignore ? " {$ignore}" : '');
+        $insert_ignore = 'INSERT' . ($ignore !== '' ? " {$ignore}" : '');
         $query = <<<SQL
             {$insert_ignore} INTO {$escapedTablename}
                 ({$columns})
@@ -654,7 +654,7 @@ final class functions_mysqli
     public static function protect_column_name(
         string $column_name
     ): string {
-        if ($column_name[0] != '`') {
+        if ($column_name[0] !== '`') {
             $column_name = '`' . $column_name . '`';
         }
 
@@ -799,7 +799,7 @@ final class functions_mysqli
         string|int $period,
         string $date = 'CURRENT_DATE'
     ): string {
-        if ($date != 'CURRENT_DATE') {
+        if ($date !== 'CURRENT_DATE') {
             $date = "'{$date}'";
         }
 

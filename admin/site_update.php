@@ -115,13 +115,7 @@ if (isset($_POST['submit'])) {
     }
 
     // shall we simulate only
-    if (isset($_POST['simulate']) &&
-        $_POST['simulate'] == 1
-    ) {
-        $simulate = true;
-    } else {
-        $simulate = false;
-    }
+    $simulate = isset($_POST['simulate']) && $_POST['simulate'] == 1 ? true : false;
 }
 
 // +-----------------------------------------------------------------------+
@@ -353,12 +347,9 @@ if (isset($_POST['submit']) &&
                         }
 
                         // TODO: explanation
-                        array_push(
-                            $granted_grps,
-                            [
-                                $row['cat_id'] => array_push($granted_grps[$row['cat_id']], $row['group_id']),
-                            ]
-                        );
+                        $granted_grps[] = [
+                            $row['cat_id'] => array_push($granted_grps[$row['cat_id']], $row['group_id']),
+                        ];
                     }
                 }
 
@@ -378,12 +369,9 @@ if (isset($_POST['submit']) &&
                         }
 
                         // TODO: explanation
-                        array_push(
-                            $granted_users,
-                            [
-                                $row['cat_id'] => array_push($granted_users[$row['cat_id']], $row['user_id']),
-                            ]
-                        );
+                        $granted_users[] = [
+                            $row['cat_id'] => array_push($granted_users[$row['cat_id']], $row['user_id']),
+                        ];
                     }
                 }
 
@@ -586,7 +574,7 @@ if (isset($_POST['submit']) &&
 
         $existing_ids = [];
 
-        foreach (array_intersect_key($fs, $db_elements_flip) as $path => $existing) {
+        foreach (array_keys(array_intersect_key($fs, $db_elements_flip)) as $path) {
             $existing_ids[] = $db_elements_flip[$path];
         }
 
@@ -987,13 +975,7 @@ if (isset($_POST['submit'])) {
         'meta_empty_overrides' => isset($_POST['meta_empty_overrides']) ? true : false,
     ];
 
-    if (isset($_POST['cat']) &&
-        is_numeric($_POST['cat'])
-    ) {
-        $cat_selected = [$_POST['cat']];
-    } else {
-        $cat_selected = [];
-    }
+    $cat_selected = isset($_POST['cat']) && is_numeric($_POST['cat']) ? [$_POST['cat']] : [];
 } else {
     $tpl_introduction = [
         'sync' => 'dirs',

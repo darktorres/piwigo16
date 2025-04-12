@@ -46,7 +46,7 @@ final class functions_calendar
                     explode(',', $user['forbidden_categories'])
                 );
 
-                if (empty($sub_ids)) {
+                if ($sub_ids === []) {
                     return; // nothing to do
                 }
 
@@ -150,8 +150,9 @@ final class functions_calendar
         }
 
         $any_count = 0;
+        $counter = count($page['chronology_date']);
 
-        for ($i = 0; $i < count($page['chronology_date']); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             if ($page['chronology_date'][$i] == 'any') {
                 if ($page['chronology_view'] == self::CAL_VIEW_CALENDAR) { // we dont allow any in calendar view
                     while ($i < count($page['chronology_date'])) {
@@ -181,7 +182,7 @@ final class functions_calendar
 
         $must_show_list = true; // true until calendar generates its own display
 
-        if (functions::script_basename() != 'picture') { // basename without file extension
+        if (functions::script_basename() !== 'picture') { // basename without file extension
             if ($calendar->generate_category_content()) {
                 $page['items'] = [];
                 $must_show_list = false;
@@ -193,11 +194,11 @@ final class functions_calendar
             foreach ($styles as $style => $style_data) {
                 foreach ($views as $view) {
                     if ($style_data['view_calendar'] ||
-                        $view != self::CAL_VIEW_CALENDAR
+                        $view !== self::CAL_VIEW_CALENDAR
                     ) {
                         $selected = false;
 
-                        if ($style != $cal_style) {
+                        if ($style !== $cal_style) {
                             $chronology_date = [];
 
                             if (isset($page['chronology_date'][0])) {
@@ -215,7 +216,7 @@ final class functions_calendar
                             ]
                         );
 
-                        if ($style == $cal_style &&
+                        if ($style === $cal_style &&
                             $view == $page['chronology_view']
                         ) {
                             $selected = true;

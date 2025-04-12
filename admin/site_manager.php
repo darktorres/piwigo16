@@ -87,10 +87,8 @@ if (isset($_POST['submit']) &&
         $page['errors'][] = functions::l10n('This site already exists') . ' [' . $url . ']';
     }
 
-    if (count($page['errors']) == 0) {
-        if (! file_exists($url)) {
-            $page['errors'][] = functions::l10n('Directory does not exist') . ' [' . $url . ']';
-        }
+    if (count($page['errors']) == 0 && ! file_exists($url)) {
+        $page['errors'][] = functions::l10n('Directory does not exist') . ' [' . $url . ']';
     }
 
     if (count($page['errors']) == 0) {
@@ -124,11 +122,9 @@ if (isset($_GET['action']) &&
         SQL;
     [$galleries_url] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-    switch ($_GET['action']) {
-        case 'delete':
-            functions_admin::delete_site($page['site']);
-            $page['infos'][] = $galleries_url . ' ' . functions::l10n('deleted');
-            break;
+    if ($_GET['action'] === 'delete') {
+        functions_admin::delete_site($page['site']);
+        $page['infos'][] = $galleries_url . ' ' . functions::l10n('deleted');
     }
 }
 

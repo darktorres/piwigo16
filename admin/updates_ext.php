@@ -58,21 +58,18 @@ foreach ($autoupdate->types as $type) {
         $ext_info = $server_ext[$fs_ext['extension']];
 
         if (! functions::safe_version_compare($fs_ext['version'], $ext_info['revision_name'], '>=')) {
-            array_push(
-                $updates_extension[$type],
-                [
-                    'ID' => $ext_info['extension_id'],
-                    'REVISION_ID' => $ext_info['revision_id'],
-                    'EXT_ID' => $ext_id,
-                    'EXT_NAME' => $fs_ext['name'],
-                    'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . $ext_info['extension_id'] . '#changelog',
-                    'REV_DESC' => trim($ext_info['revision_description'], " \n\r"),
-                    'CURRENT_VERSION' => $fs_ext['version'],
-                    'NEW_VERSION' => $ext_info['revision_name'],
-                    'URL_DOWNLOAD' => $ext_info['download_url'] . '&amp;origin=piwigo_download',
-                    'IGNORED' => in_array($ext_id, $conf->updates_ignored[$type]),
-                ]
-            );
+            $updates_extension[$type][] = [
+                'ID' => $ext_info['extension_id'],
+                'REVISION_ID' => $ext_info['revision_id'],
+                'EXT_ID' => $ext_id,
+                'EXT_NAME' => $fs_ext['name'],
+                'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . $ext_info['extension_id'] . '#changelog',
+                'REV_DESC' => trim($ext_info['revision_description'], " \n\r"),
+                'CURRENT_VERSION' => $fs_ext['version'],
+                'NEW_VERSION' => $ext_info['revision_name'],
+                'URL_DOWNLOAD' => $ext_info['download_url'] . '&amp;origin=piwigo_download',
+                'IGNORED' => in_array($ext_id, $conf->updates_ignored[$type]),
+            ];
         }
     }
 

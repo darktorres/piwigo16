@@ -233,7 +233,7 @@ class Config
         if (array_key_exists($key, $this->defaults)) {
             switch ($this->types[$key]) {
                 case self::TYPE_STRING:
-                    $this->config[$key] = ! empty($value) ? $value : null;
+                    $this->config[$key] = empty($value) ? null : $value;
                     break;
 
                 case self::TYPE_BOOL:

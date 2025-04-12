@@ -17,7 +17,7 @@ function theme_activate(
 
     $my_conf = $conf->modus_theme;
 
-    if (empty($my_conf)) {
+    if ($my_conf === []) {
         $my_conf = $default_conf;
     }
 

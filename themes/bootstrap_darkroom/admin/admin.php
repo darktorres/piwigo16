@@ -30,11 +30,9 @@ if (! in_array($page['tab'], [TAB_SETTINGS, TAB_ABOUT])) {
 $themeconfig = new Config();
 
 // Save settings
-if ($page['tab'] == TAB_SETTINGS) {
-    if (isset($_POST['boostrap_darkroom_settings'])) {
-        $themeconfig->fromPost($_POST);
-        $themeconfig->save();
-    }
+if ($page['tab'] == TAB_SETTINGS && isset($_POST['boostrap_darkroom_settings'])) {
+    $themeconfig->fromPost($_POST);
+    $themeconfig->save();
 }
 
 // TabSheet

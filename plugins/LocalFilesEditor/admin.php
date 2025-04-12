@@ -85,7 +85,7 @@ if (isset($_POST['submit'])) {
     } else {
         $content_file = stripslashes($_POST['text']);
 
-        if (functions::get_extension($edited_file) == 'php') {
+        if (functions::get_extension($edited_file) === 'php') {
             $content_file = functions_LocalFilesEditor::eval_syntax($content_file);
         }
 

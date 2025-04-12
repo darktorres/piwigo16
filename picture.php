@@ -105,22 +105,20 @@ if (! isset($page['rank_of'][$page['image_id']])) {
                 SQL;
             if (functions_mysqli::pwg_db_num_rows(functions_mysqli::pwg_query($query)) == 0) {
                 functions_html::access_denied();
+            } elseif ($page['section'] == 'best_rated') {
+                $page['rank_of'][$page['image_id']] = count($page['items']);
+                $page['items'][] = $page['image_id'];
             } else {
-                if ($page['section'] == 'best_rated') {
-                    $page['rank_of'][$page['image_id']] = count($page['items']);
-                    $page['items'][] = $page['image_id'];
-                } else {
-                    $url = functions_url::make_picture_url(
-                        [
-                            'image_id' => $page['image_id'],
-                            'image_file' => $page['image_file'],
-                            'section' => 'categories',
-                            'flat' => true,
-                        ]
-                    );
-                    functions_html::set_status_header($page['section'] == 'recent_pics' ? 301 : 302);
-                    functions::redirect_http($url);
-                }
+                $url = functions_url::make_picture_url(
+                    [
+                        'image_id' => $page['image_id'],
+                        'image_file' => $page['image_file'],
+                        'section' => 'categories',
+                        'flat' => true,
+                    ]
+                );
+                functions_html::set_status_header($page['section'] == 'recent_pics' ? 301 : 302);
+                functions::redirect_http($url);
             }
         }
     }
@@ -426,10 +424,10 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $row['path_ext'] = strtolower(functions::get_extension($row['path']));
     $row['file_ext'] = strtolower(functions::get_extension($row['file']));
 
-    if ($i == 'current') {
+    if ($i === 'current') {
         $row['element_path'] = functions::get_element_path($row);
 
-        if ($row['src_image']->is_original()) { // we have a photo
+        if ($row['src_image']->is_original() !== 0) { // we have a photo
             if ($user['enabled_high'] == 'true') {
                 $row['element_url'] = $row['src_image']->get_url();
                 $row['download_url'] = functions_url::get_action_url($row['id'], 'e', true);
@@ -454,13 +452,13 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $picture[$i]['TITLE'] = functions_html::render_element_name($row);
     $picture[$i]['TITLE_ESC'] = str_replace('"', '&quot;', $picture[$i]['TITLE']);
 
-    if ($i == 'previous' &&
+    if ($i === 'previous' &&
         $page['previous_item'] == $page['first_item']
     ) {
         $picture['first'] = $picture[$i];
     }
 
-    if ($i == 'next' &&
+    if ($i === 'next' &&
         $page['next_item'] == $page['last_item']
     ) {
         $picture['last'] = $picture[$i];
@@ -485,12 +483,9 @@ if (isset($_GET['slideshow'])) {
 
         if (isset($page['next_item'])) {
             $id_pict_redirect = 'next';
-        } else {
-            if ($slideshow_params['repeat'] &&
-                isset($page['first_item'])
-            ) {
-                $id_pict_redirect = 'first';
-            }
+        } elseif ($slideshow_params['repeat'] &&
+            isset($page['first_item'])) {
+            $id_pict_redirect = 'first';
         }
 
         if (! empty($id_pict_redirect)) {
@@ -651,7 +646,7 @@ if ($page['slideshow']) {
     }
 
     foreach (['dec', 'inc'] as $op) {
-        $new_period = $slideshow_params['period'] + (($op == 'dec') ? -1 : 1) * $conf->slideshow_period_step;
+        $new_period = $slideshow_params['period'] + (($op === 'dec') ? -1 : 1) * $conf->slideshow_period_step;
         $new_slideshow_params =
           functions_picture::correct_slideshow_params(
               array_merge(
@@ -765,7 +760,7 @@ if (! functions_user::is_a_guest() &&
             'U_FAVORITE' => functions_url::add_url_params(
                 $url_self,
                 [
-                    'action' => ! $is_favorite ? 'add_to_favorites' : 'remove_from_favorites',
+                    'action' => $is_favorite ? 'remove_from_favorites' : 'add_to_favorites',
                 ]
             ),
         ]

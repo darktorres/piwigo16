@@ -116,10 +116,8 @@ switch ($action) {
         $sessions_to_delete = [];
 
         foreach ($sessions as $session) {
-            if (preg_match('/pwg_uid\|i:(\d+);/', $session['data'], $matches)) {
-                if (! isset($all_user_ids[$matches[1]])) {
-                    $sessions_to_delete[] = $session['id'];
-                }
+            if (preg_match('/pwg_uid\|i:(\d+);/', $session['data'], $matches) && ! isset($all_user_ids[$matches[1]])) {
+                $sessions_to_delete[] = $session['id'];
             }
         }
 

@@ -36,21 +36,21 @@ final class QSingleToken implements \Stringable
             $s .= $this->scope->id . ':';
         }
 
-        if ($this->modifier & functions_search::QST_WILDCARD_BEGIN) {
+        if (($this->modifier & functions_search::QST_WILDCARD_BEGIN) !== 0) {
             $s .= '*';
         }
 
-        if ($this->modifier & functions_search::QST_QUOTED) {
+        if (($this->modifier & functions_search::QST_QUOTED) !== 0) {
             $s .= '"';
         }
 
         $s .= $this->term;
 
-        if ($this->modifier & functions_search::QST_QUOTED) {
+        if (($this->modifier & functions_search::QST_QUOTED) !== 0) {
             $s .= '"';
         }
 
-        if ($this->modifier & functions_search::QST_WILDCARD_END) {
+        if (($this->modifier & functions_search::QST_WILDCARD_END) !== 0) {
             $s .= '*';
         }
 

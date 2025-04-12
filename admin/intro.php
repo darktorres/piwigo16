@@ -250,7 +250,7 @@ $date = new DateTime();
 
 //Get data from $nb_weeks last weeks
 while ($mondays < $nb_weeks) {
-    if ($date->format('D') == 'Mon') {
+    if ($date->format('D') === 'Mon') {
         $week_number[] = $date->format('W');
         ++$mondays;
     }
@@ -329,8 +329,9 @@ usort($temp_data, fn (array $a, array $b): int => $a['x'] <=> $b['x']);
 
 //Get the percent difference
 $diff_x = [];
+$counter = count($temp_data);
 
-for ($i = 1; $i < count($temp_data); $i++) {
+for ($i = 1; $i < $counter; $i++) {
     $diff_x[] = $temp_data[$i]['x'] / $temp_data[$i - 1]['x'] * 100;
 }
 
@@ -358,7 +359,10 @@ if (isset($temp_data[0])) {
 }
 
 //Set sizes in chart data
-for ($i = 1; $i < count($temp_data); $i++) {
+$counter = count($temp_data);
+
+//Set sizes in chart data
+for ($i = 1; $i < $counter; $i++) {
     if ($diff_x[$i - 1] == -1) {
         $size++;
     }
@@ -446,12 +450,8 @@ if ($conf->add_cache_to_storage_chart &&
 ) {
     $cache_sizes = $conf->cache_sizes;
 
-    if (isset($cache_sizes)) {
-        if (isset($cache_sizes[0]) &&
-            isset($cache_sizes[0]['value'])
-        ) {
-            $data_storage['Cache']['total']['filesize'] = $cache_sizes[0]['value'] / 1024;
-        }
+    if (isset($cache_sizes) && (isset($cache_sizes[0]) && isset($cache_sizes[0]['value']))) {
+        $data_storage['Cache']['total']['filesize'] = $cache_sizes[0]['value'] / 1024;
     }
 }
 

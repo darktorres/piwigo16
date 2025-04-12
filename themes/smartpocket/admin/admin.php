@@ -19,7 +19,7 @@ if (isset($_POST['submit_smartpocket'])) {
 
     functions::conf_update_param('smartpocket', $config_send, true);
 
-    array_push($page['infos'], functions::l10n('Information data registered in database'));
+    $page['infos'][] = functions::l10n('Information data registered in database');
 }
 
 $template->set_filenames([

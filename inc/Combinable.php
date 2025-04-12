@@ -18,7 +18,7 @@ class Combinable
 {
     public string $path = '';
 
-    public ?bool $is_template;
+    public ?bool $is_template = false;
 
     public function __construct(
         public string $id,
@@ -26,7 +26,6 @@ class Combinable
         public bool|int|string $version = 0
     ) {
         $this->set_path($path);
-        $this->is_template = false;
     }
 
     public function set_path(

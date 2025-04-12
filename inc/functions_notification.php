@@ -529,8 +529,9 @@ final class functions_notification
             LIMIT {$max_dates};
             SQL;
         $dates = functions_mysqli::query2array($query);
+        $counter = count($dates);
 
-        for ($i = 0; $i < count($dates); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             if ($max_elements > 0) { // get some thumbnails ...
                 $randomFunction = functions_mysqli::DB_RANDOM_FUNCTION;
                 $query = <<<SQL

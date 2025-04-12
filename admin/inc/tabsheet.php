@@ -15,9 +15,9 @@ use Piwigo\inc\functions_plugins;
 
 final class tabsheet
 {
-    public array $sheets;
+    public array $sheets = [];
 
-    public ?string $uniqid;
+    public ?string $uniqid = null;
 
     public string $selected = '';
 
@@ -28,11 +28,7 @@ final class tabsheet
     public function __construct(
         public string $name = 'TABSHEET',
         public string $titlename = 'TABSHEET_TITLE'
-    ) {
-        $this->sheets = [];
-        $this->uniqid = null;
-        $this->selected = '';
-    }
+    ) {}
 
     public function set_id(
         string $id
@@ -74,7 +70,7 @@ final class tabsheet
         if (isset($this->sheets[$name])) {
             array_splice($this->sheets, (int) $name, 1);
 
-            if ($this->selected == $name) {
+            if ($this->selected === $name) {
                 $this->selected = '';
             }
 

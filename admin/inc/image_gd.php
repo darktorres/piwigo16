@@ -32,9 +32,9 @@ final class image_gd implements imageInterface
 
         if (in_array($extension, ['jpg', 'jpeg'])) {
             $this->image = imagecreatefromjpeg($source_filepath);
-        } elseif ($extension == 'png') {
+        } elseif ($extension === 'png') {
             $this->image = imagecreatefrompng($source_filepath);
-        } elseif ($extension == 'gif' &&
+        } elseif ($extension === 'gif' &&
                   $gd_info['GIF Read Support'] &&
                   $gd_info['GIF Create Support']
         ) {
@@ -71,7 +71,7 @@ final class image_gd implements imageInterface
 
         $result = imagecopymerge($dest, $this->image, 0, 0, $x, $y, $width, $height, 100);
 
-        if ($result !== false) {
+        if ($result) {
             imagedestroy($this->image);
             $this->image = $dest;
         } else {
@@ -118,7 +118,7 @@ final class image_gd implements imageInterface
 
         $result = imagecopyresampled($dest, $this->image, 0, 0, 0, 0, $width, $height, $this->get_width(), $this->get_height());
 
-        if ($result !== false) {
+        if ($result) {
             imagedestroy($this->image);
             $this->image = $dest;
         } else {
@@ -169,9 +169,9 @@ final class image_gd implements imageInterface
     ): bool {
         $extension = strtolower(functions::get_extension($destination_filepath));
 
-        if ($extension == 'png') {
+        if ($extension === 'png') {
             return imagepng($this->image, $destination_filepath);
-        } elseif ($extension == 'gif') {
+        } elseif ($extension === 'gif') {
             return imagegif($this->image, $destination_filepath);
         }
 

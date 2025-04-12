@@ -35,11 +35,7 @@ final class DerivativeImage
         string|DerivativeParams $type,
         public SrcImage $src_image
     ) {
-        if (is_string($type)) {
-            $this->params = ImageStdParams::get_by_type($type);
-        } else {
-            $this->params = $type;
-        }
+        $this->params = is_string($type) ? ImageStdParams::get_by_type($type) : $type;
 
         self::build($this->src_image, $this->params, $this->rel_path, $this->rel_url, $this->is_cached);
     }
@@ -279,7 +275,7 @@ final class DerivativeImage
     ): ?string {
         $size = $this->get_scaled_size($maxw, $maxh);
 
-        if ($size) {
+        if ($size !== []) {
             return 'width="' . $size[0] . '" height="' . $size[1] . '"';
         }
 
@@ -314,13 +310,14 @@ final class DerivativeImage
             }
 
             $defined_types = array_keys(ImageStdParams::get_defined_type_map());
+            $counter = count($defined_types);
 
-            for ($i = 0; $i < count($defined_types); $i++) {
+            for ($i = 0; $i < $counter; $i++) {
                 if ($defined_types[$i] == $params->type) {
                     for ($i--; $i >= 0; $i--) {
                         $smaller = ImageStdParams::get_by_type($defined_types[$i]);
 
-                        if ($smaller->sizing->max_crop == $params->sizing->max_crop &&
+                        if ($smaller->sizing->max_crop === $params->sizing->max_crop &&
                             $smaller->is_identity($src->get_size())
                         ) {
                             $params = $smaller;
@@ -337,7 +334,7 @@ final class DerivativeImage
         $tokens = [];
         $tokens[] = substr($params->type, 0, 2);
 
-        if ($params->type == derivative_std_params::IMG_CUSTOM) {
+        if ($params->type === derivative_std_params::IMG_CUSTOM) {
             $params->add_url_tokens($tokens);
         }
 
@@ -356,7 +353,7 @@ final class DerivativeImage
         global $conf;
         $url_style = $conf->derivative_url_style;
 
-        if (! $url_style) {
+        if ($url_style === 0) {
             $mtime = file_exists('./' . $rel_path) ? filemtime('./' . $rel_path) : false;
 
             if ($mtime === false ||

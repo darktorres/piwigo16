@@ -59,17 +59,10 @@ if (isset($_GET['auth'])) {
     functions_user::auth_key_login($_GET['auth']);
 }
 
-if (defined('IN_WS') &&
-    isset($_REQUEST['method']) &&
-    $_REQUEST['method'] == 'pwg.images.uploadAsync' &&
-    isset($_POST['username']) &&
-    isset($_POST['password'])
-) {
-    if (! functions_user::try_log_user($_POST['username'], $_POST['password'], false)) {
-        require_once __DIR__ . '/../inc/ws_init.php';
-        $service->sendResponse(new PwgError(999, 'Invalid username/password'));
-        exit();
-    }
+if (defined('IN_WS') && isset($_REQUEST['method']) && $_REQUEST['method'] == 'pwg.images.uploadAsync' && isset($_POST['username']) && isset($_POST['password']) && ! functions_user::try_log_user($_POST['username'], $_POST['password'], false)) {
+    require_once __DIR__ . '/../inc/ws_init.php';
+    $service->sendResponse(new PwgError(999, 'Invalid username/password'));
+    exit();
 }
 
 $user = functions_user::build_user(

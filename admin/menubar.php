@@ -58,7 +58,7 @@ foreach ($mb_conf as $id => $pos) {
 
 $idx = 1;
 
-foreach ($reg_blocks as $id => $block) {
+foreach (array_keys($reg_blocks) as $id) {
     if (! isset($mb_conf[$id])) {
         $mb_conf[$id] = $idx * 50;
     }

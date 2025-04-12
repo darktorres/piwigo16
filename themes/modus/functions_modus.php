@@ -19,7 +19,7 @@ final class functions_modus
     public static function modus_css_gradient(
         array $gradient
     ): ?string {
-        if (! empty($gradient)) {
+        if ($gradient !== []) {
             $std = implode(',', $gradient);
             $gs = trim($gradient[0], '#');
             $ge = trim($gradient[1], '#');
@@ -216,10 +216,10 @@ final class functions_modus
         $device = functions::get_device();
         $container_margin = 5;
 
-        if ($device == 'mobile') {
+        if ($device === 'mobile') {
             $horizontal_margin = floor(0.01 * $row_height);
             $container_margin = 0;
-        } elseif ($device == 'tablet') {
+        } elseif ($device === 'tablet') {
             $horizontal_margin = floor(0.015 * $row_height);
         } else {
             $horizontal_margin = floor(0.02 * $row_height);
@@ -241,13 +241,13 @@ final class functions_modus
             }
         }
 
-        $do_over = $device == 'desktop';
+        $do_over = $device === 'desktop';
 
         $new_icon = ' <span class=albSymbol title="' . functions::l10n('posted on %s') . '">' . MODUS_STR_RECENT . '</span>';
 
         foreach ($smarty->getTemplateVars('thumbnails') as $item) {
             $src_image = $item['src_image'];
-            $new = ! empty($item['icon_ts']) ? sprintf($new_icon, functions::format_date($item['date_available'])) : '';
+            $new = empty($item['icon_ts']) ? '' : sprintf($new_icon, functions::format_date($item['date_available']));
 
             $idx = 0;
 
@@ -365,12 +365,9 @@ final class functions_modus
             $type = $conf->modus_theme['index_photo_deriv'];
             $caps = functions_session::pwg_get_session_var('caps');
 
-            if ($caps) {
-                if (($caps[0] >= 2 && $caps[1] >= 768) ||
-                     $caps[0] >= 3
-                ) { /*Ipad3 always has clientWidth 768 independently of orientation*/
-                    $type = $conf->modus_theme['index_photo_deriv_hdpi'];
-                }
+            if ($caps && ($caps[0] >= 2 && $caps[1] >= 768 || $caps[0] >= 3)) {
+                /*Ipad3 always has clientWidth 768 independently of orientation*/
+                $type = $conf->modus_theme['index_photo_deriv_hdpi'];
             }
 
             $new = ImageStdParams::get_by_type($type);
@@ -458,11 +455,7 @@ final class functions_modus
                 $styles[] = 'top:' . $t . 'px';
             }
 
-            if ($styles !== []) {
-                $styles = ' style=' . implode(';', $styles);
-            } else {
-                $styles = '';
-            }
+            $styles = $styles !== [] ? ' style=' . implode(';', $styles) : '';
 
             $item['MODUS_STYLE'] = $styles;
         }

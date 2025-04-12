@@ -38,11 +38,7 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 functions::check_input_parameter('section', $_GET, false, '/^[a-z]+$/i');
 
-if (! isset($_GET['section'])) {
-    $page['section'] = 'main';
-} else {
-    $page['section'] = $_GET['section'];
-}
+$page['section'] = $_GET['section'] ?? 'main';
 
 $main_checkboxes = [
     'allow_user_registration',
@@ -172,7 +168,7 @@ if (isset($_POST['submit'])) {
                         }
                     }
 
-                    if (! count($_POST['order_by'])) {
+                    if (count($_POST['order_by']) === 0) {
                         $page['errors'][] = functions::l10n('No order field selected');
                     } else {
                         // limit to the number of available parameters
@@ -202,12 +198,10 @@ if (isset($_POST['submit'])) {
                 $_POST['email_admin_on_new_user'] = 'none';
             } elseif ($_POST['email_admin_on_new_user_filter'] == 'all') {
                 $_POST['email_admin_on_new_user'] = 'all';
+            } elseif (empty($_POST['email_admin_on_new_user_filter_group'])) {
+                $_POST['email_admin_on_new_user'] = 'all';
             } else {
-                if (empty($_POST['email_admin_on_new_user_filter_group'])) {
-                    $_POST['email_admin_on_new_user'] = 'all';
-                } else {
-                    $_POST['email_admin_on_new_user'] = 'group:' . $_POST['email_admin_on_new_user_filter_group'];
-                }
+                $_POST['email_admin_on_new_user'] = 'group:' . $_POST['email_admin_on_new_user_filter_group'];
             }
 
             foreach ($main_checkboxes as $checkbox) {
@@ -275,10 +269,8 @@ if (isset($_POST['submit'])) {
             if (isset($_POST[$row['param']])) {
                 $value = $_POST[$row['param']];
 
-                if ($row['param'] == 'gallery_title') {
-                    if (! $conf->allow_html_descriptions) {
-                        $value = strip_tags($value);
-                    }
+                if ($row['param'] == 'gallery_title' && ! $conf->allow_html_descriptions) {
+                    $value = strip_tags($value);
                 }
 
                 $escaped_value = str_replace("\'", "''", $value);

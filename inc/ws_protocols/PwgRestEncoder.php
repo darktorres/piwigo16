@@ -80,7 +80,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
             }
 
             if ($skip_underscore &&
-                $name[0] == '_'
+                $name[0] === '_'
             ) {
                 continue;
             }
@@ -90,7 +90,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
                 // null means we dont put it
             }
 
-            if ($name == WS_XML_ATTRIBUTES) {
+            if ($name === WS_XML_ATTRIBUTES) {
                 foreach ($value as $attr_name => $attr_value) {
                     $this->_writer->write_attribute($attr_name, $attr_value);
                 }
@@ -108,7 +108,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
             }
 
             if ($skip_underscore &&
-                $name[0] == '_'
+                $name[0] === '_'
             ) {
                 continue;
             }

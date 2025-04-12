@@ -60,19 +60,18 @@ final class CalendarMonthly extends CalendarBase
             global $template;
             $tpl_var = [];
 
-            if (count($page['chronology_date']) == 0) { //case A: no year given - display all years+months
-                if ($this->build_global_calendar($tpl_var)) {
-                    $template->assign('chronology_calendar', $tpl_var);
-                    return true;
-                }
+            //case A: no year given - display all years+months
+            if (count($page['chronology_date']) == 0 && $this->build_global_calendar($tpl_var)) {
+                $template->assign('chronology_calendar', $tpl_var);
+                return true;
             }
 
-            if (count($page['chronology_date']) == 1) { //case B: year given - display all days in given year
-                if ($this->build_year_calendar($tpl_var)) {
-                    $template->assign('chronology_calendar', $tpl_var);
-                    $this->build_nav_bar(CalendarBase::CYEAR); // years
-                    return true;
-                }
+            //case B: year given - display all days in given year
+            if (count($page['chronology_date']) == 1 && $this->build_year_calendar($tpl_var)) {
+                $template->assign('chronology_calendar', $tpl_var);
+                $this->build_nav_bar(CalendarBase::CYEAR);
+                // years
+                return true;
             }
 
             if (count($page['chronology_date']) == 2) { //case C: year+month given - display a nice month calendar
@@ -400,7 +399,7 @@ final class CalendarMonthly extends CalendarBase
             ];
         }
 
-        foreach ($items as $day => $data) {
+        foreach (array_keys($items) as $day) {
             $page['chronology_date'][CalendarBase::CDAY] = $day;
             $day_of_week = functions_mysqli::pwg_db_get_dayofweek($this->date_field);
             $random_function = functions_mysqli::DB_RANDOM_FUNCTION;
@@ -421,7 +420,7 @@ final class CalendarMonthly extends CalendarBase
             $items[$day]['dow'] = $row['dow'];
         }
 
-        if (! empty($items)) {
+        if ($items !== []) {
             [$known_day] = array_keys($items);
             $known_dow = $items[$known_day]['dow'];
             $first_day_dow = ($known_dow - ($known_day - 1)) % 7;
@@ -433,7 +432,7 @@ final class CalendarMonthly extends CalendarBase
             //first_day_dow = week day corresponding to the first day of this month
             $wday_labels = $lang['day'];
 
-            if ($conf->week_starts_on == 'monday') {
+            if ($conf->week_starts_on === 'monday') {
                 if ($first_day_dow == 0) {
                     $first_day_dow = 6;
                 } else {

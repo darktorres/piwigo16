@@ -365,7 +365,7 @@ final class functions_category
             SQL;
         $perma_hash = functions_mysqli::query2array($query, 'permalink');
 
-        if (empty($perma_hash)) {
+        if ($perma_hash === []) {
             return null;
         }
 
@@ -643,7 +643,7 @@ final class functions_category
     ): array {
         global $conf;
 
-        if (empty($cat_ids)) {
+        if ($cat_ids === []) {
             return [];
         }
 
@@ -670,7 +670,7 @@ final class functions_category
         $query .= (empty($extra_images_where_sql) ? '' : " AND ({$extra_images_where_sql})\n");
         $query .= "GROUP BY id\n";
 
-        if ($mode == 'AND' &&
+        if ($mode === 'AND' &&
             count($cat_ids) > 1
         ) {
             $count_cat_ids = count($cat_ids);
@@ -698,7 +698,7 @@ final class functions_category
         array $excluded_cat_ids = [],
         bool $use_permissions = true
     ): array {
-        if (empty($items)) {
+        if ($items === []) {
             return [];
         }
 
@@ -721,7 +721,7 @@ final class functions_category
             );
         }
 
-        if (! empty($excluded_cat_ids)) {
+        if ($excluded_cat_ids !== []) {
             $excluded_cat_ids_imploded = implode(', ', $excluded_cat_ids);
             $query .= <<<SQL
                 AND category_id NOT IN ({$excluded_cat_ids_imploded})

@@ -18,15 +18,16 @@ if (! defined('PHPWG_ROOT_PATH')) {
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 $sections = explode('/', $_GET['section']);
+$counter = count($sections);
 
-for ($i = 0; $i < count($sections); $i++) {
+for ($i = 0; $i < $counter; $i++) {
     if (empty($sections[$i])) {
         unset($sections[$i]);
         $i--;
         continue;
     }
 
-    if ($sections[$i] == '..' ||
+    if ($sections[$i] === '..' ||
         ! preg_match('/^[a-zA-Z0-9_\.-]+$/', $sections[$i])
     ) {
         exit('invalid section token [' . htmlentities($sections[$i]) . ']');

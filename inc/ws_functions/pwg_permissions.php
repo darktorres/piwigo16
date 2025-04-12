@@ -100,27 +100,19 @@ final class pwg_permissions
 
         // filter by group and user
         foreach ($perms as $cat_id => &$cat) {
-            if (isset($params['group_id'])) {
-                if (empty($cat['groups']) ||
-                    count(array_intersect($cat['groups'], $params['group_id'])) == 0
-                ) {
-                    unset($perms[$cat_id]);
-                    continue;
-                }
+            if (isset($params['group_id']) && (empty($cat['groups']) || count(array_intersect($cat['groups'], $params['group_id'])) == 0)) {
+                unset($perms[$cat_id]);
+                continue;
             }
 
-            if (isset($params['user_id'])) {
-                if ((empty($cat['users_indirect']) || count(array_intersect($cat['users_indirect'], $params['user_id'])) == 0) &&
-                    (empty($cat['users']) || count(array_intersect($cat['users'], $params['user_id'])) == 0)
-                ) {
-                    unset($perms[$cat_id]);
-                    continue;
-                }
+            if (isset($params['user_id']) && ((empty($cat['users_indirect']) || count(array_intersect($cat['users_indirect'], $params['user_id'])) == 0) && (empty($cat['users']) || count(array_intersect($cat['users'], $params['user_id'])) == 0))) {
+                unset($perms[$cat_id]);
+                continue;
             }
 
-            $cat['groups'] = ! empty($cat['groups']) ? array_values(array_unique($cat['groups'])) : [];
-            $cat['users'] = ! empty($cat['users']) ? array_values(array_unique($cat['users'])) : [];
-            $cat['users_indirect'] = ! empty($cat['users_indirect']) ? array_values(array_unique($cat['users_indirect'])) : [];
+            $cat['groups'] = empty($cat['groups']) ? [] : array_values(array_unique($cat['groups']));
+            $cat['users'] = empty($cat['users']) ? [] : array_values(array_unique($cat['users']));
+            $cat['users_indirect'] = empty($cat['users_indirect']) ? [] : array_values(array_unique($cat['users_indirect']));
         }
 
         unset($cat);

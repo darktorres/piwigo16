@@ -261,12 +261,9 @@ if ($params->will_watermark($d_size)) {
                     $x2 = $x + $i * $xpad;
                     $y2 = $y + $j * $ypad;
 
-                    if ($x2 >= 0 && $x2 + $wm_size[0] < $d_size[0] &&
-                        $y2 >= 0 && $y2 + $wm_size[1] < $d_size[1]
+                    if ($x2 >= 0 && $x2 + $wm_size[0] < $d_size[0] && $y2 >= 0 && $y2 + $wm_size[1] < $d_size[1] && ! $image->compose($wm_image, $x2, $y2, $wm->opacity)
                     ) {
-                        if (! $image->compose($wm_image, $x2, $y2, $wm->opacity)) {
-                            break;
-                        }
+                        break;
                     }
                 }
             }

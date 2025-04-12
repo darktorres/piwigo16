@@ -294,7 +294,7 @@ final class Template
     ): void {
         $this->smarty->addTemplateDir($dir);
 
-        if (! isset($this->smarty->compile_id)) {
+        if ($this->smarty->compile_id === null) {
             $compile_id = '1';
             $compile_id .= ($real_dir = realpath($dir)) === false ? $dir : $real_dir;
             $this->smarty->compile_id = base_convert(hash('crc32b', $compile_id), 16, 36);
@@ -411,8 +411,8 @@ final class Template
                 return false;
             }
 
-            if ((stripos(implode('', array_keys($_GET)), '/' . $param) !== false || $param == 'N/A') &&
-                ($thm == $theme || $thm == 'N/A') &&
+            if ((stripos(implode('', array_keys($_GET)), '/' . $param) !== false || $param === 'N/A') &&
+                ($thm === $theme || $thm === 'N/A') &&
                 (! isset($this->extents[$handle]) || $overwrite) &&
                 file_exists($dir . $filename)
             ) {
@@ -579,7 +579,7 @@ final class Template
                 foreach ($scripts as $script) {
                     $content[] =
                         '<script src="'
-                        . self::make_script_src($script)
+                        . $this->make_script_src($script)
                         . '"></script>';
                 }
 
@@ -619,7 +619,7 @@ final class Template
             if ($pos !== false) {
                 $rep = "\n" . implode("\n", $this->html_head_elements);
 
-                if (strlen($this->html_style)) {
+                if (strlen($this->html_style) !== 0) {
                     $rep .= $this->html_style;
                 }
 
@@ -677,15 +677,9 @@ final class Template
     public static function get_php_str_val(
         string $str
     ): string|null {
-        if (is_string($str) &&
-            strlen($str) > 1
-        ) {
-            if (($str[0] == "'" && $str[strlen($str) - 1] == "'") ||
-                ($str[0] == '"' && $str[strlen($str) - 1] == '"')
-            ) {
-                eval('$tmp=' . $str . ';');
-                return $tmp;
-            }
+        if (is_string($str) && strlen($str) > 1 && ($str[0] === "'" && $str[strlen($str) - 1] === "'" || $str[0] === '"' && $str[strlen($str) - 1] === '"')) {
+            eval('$tmp=' . $str . ';');
+            return $tmp;
         }
 
         return null;
@@ -962,7 +956,7 @@ final class Template
         foreach ($scripts[0] as $script) {
             $content[] =
               '<script src="'
-              . self::make_script_src($script)
+              . $this->make_script_src($script)
               . '"></script>';
         }
 
@@ -979,7 +973,7 @@ final class Template
             foreach ($scripts[1] as $id => $script) {
                 $content[] =
                   "s = document.createElement('script'); s.async = true; s.src = '"
-                  . self::make_script_src($script)
+                  . $this->make_script_src($script)
                   . "';\n";
                 $content[] = "after = after.parentNode.insertBefore(s, after);\n";
             }
@@ -1212,7 +1206,7 @@ final class Template
             $css[] = "{combine_css path='{$f}' order=10}";
         }
 
-        if (! empty($css)) {
+        if ($css !== []) {
             $source = str_replace('{get_combined_css}', implode("\n", $css) . "\n{get_combined_css}", $source);
         }
 
@@ -1264,7 +1258,7 @@ final class Template
      */
     public function parse_picture_buttons(): void
     {
-        if (! empty($this->picture_buttons)) {
+        if ($this->picture_buttons !== []) {
             ksort($this->picture_buttons);
             $buttons = [];
 
@@ -1281,7 +1275,7 @@ final class Template
      */
     public function parse_index_buttons(): void
     {
-        if (! empty($this->index_buttons)) {
+        if ($this->index_buttons !== []) {
             ksort($this->index_buttons);
             $buttons = [];
 
@@ -1296,7 +1290,7 @@ final class Template
     /**
      * Returns clean relative URL to script file.
      */
-    private static function make_script_src(
+    private function make_script_src(
         Combinable $script
     ): string {
         $ret = '';

@@ -53,7 +53,7 @@ if (isset($_GET['getMissingDerivative'])) {
             $start_id = $row['id'];
             $src_image = new SrcImage($row);
 
-            if ($src_image->is_mimetype()) {
+            if ($src_image->is_mimetype() !== 0) {
                 continue;
             }
 
@@ -104,34 +104,22 @@ if (isset($_POST['cachedelete'])) {
 
 // Save configuration
 if (isset($_POST['submit'])) {
-
-    if (empty($_POST['method'])) {
-        $method = 'resize';
-    } else {
-        $method = $_POST['method'];
-    }
-
-    if (empty($_POST['normalize_title'])) {
-        $normalize = 'off';
-    } else {
-        $normalize = $_POST['normalize_title'];
-    }
-
+    $method = empty($_POST['method']) ? 'resize' : $_POST['method'];
+    $normalize = empty($_POST['normalize_title']) ? 'off' : $_POST['normalize_title'];
     $big_thumb = ! empty($_POST['big_thumb']);
     $big_thumb_noinpw = ! empty($_POST['big_thumb_noinpw']);
     $thumb_animate = ! empty($_POST['thumb_animate']);
     $thumb_mode_album = $_POST['thumb_mode_album'];
     $thumb_mode_photo = $_POST['thumb_mode_photo'];
-
     if ($method == 'slide') {
         if ($big_thumb) {
             $big_thumb = false;
-            array_push($page['warnings'], functions::l10n('Big thumb cannot be used in Slide mode. Disabled'));
+            $page['warnings'][] = functions::l10n('Big thumb cannot be used in Slide mode. Disabled');
         }
 
         if ($thumb_animate) {
             $thumb_animate = false;
-            array_push($page['warnings'], functions::l10n('Thumb animation cannot be used in Slide mode. Disabled'));
+            $page['warnings'][] = functions::l10n('Thumb animation cannot be used in Slide mode. Disabled');
         }
 
         if ($thumb_mode_album == 'overlay-ex' ||
@@ -140,7 +128,7 @@ if (isset($_POST['submit'])) {
             $thumb_mode_album == 'bottom'
         ) {
             $thumb_mode_album = 'bottom_static';
-            array_push($page['warnings'], functions::l10n('This Thumb mode cannot be used in Slide mode. Changed to default'));
+            $page['warnings'][] = functions::l10n('This Thumb mode cannot be used in Slide mode. Changed to default');
         }
 
         if ($thumb_mode_photo == 'overlay-ex' ||
@@ -149,7 +137,7 @@ if (isset($_POST['submit'])) {
             $thumb_mode_photo == 'bottom'
         ) {
             $thumb_mode_photo = 'bottom_static';
-            array_push($page['warnings'], functions::l10n('This Thumb mode cannot be used in Slide mode. Changed to default'));
+            $page['warnings'][] = functions::l10n('This Thumb mode cannot be used in Slide mode. Changed to default');
         }
     }
 
@@ -174,17 +162,16 @@ if (isset($_POST['submit'])) {
         'no_wordwrap' => ! empty($_POST['no_wordwrap']),
         'thumb_animate' => $thumb_animate,
     ];
-
     if (! is_numeric($params['height'])) {
-        array_push($page['errors'], functions::l10n('Thumbnails max height must be an integer'));
+        $page['errors'][] = functions::l10n('Thumbnails max height must be an integer');
     }
 
     if (! is_numeric($params['margin'])) {
-        array_push($page['errors'], functions::l10n('Margin between thumbnails must be an integer'));
+        $page['errors'][] = functions::l10n('Margin between thumbnails must be an integer');
     }
 
     if (! is_numeric($params['nb_image_page'])) {
-        array_push($page['errors'], functions::l10n('Number of photos per page must be an integer'));
+        $page['errors'][] = functions::l10n('Number of photos per page must be an integer');
     }
 
     if ($params['height'] != $conf->gdThumb['height']) {
@@ -195,18 +182,14 @@ if (isset($_POST['submit'])) {
 
     if (empty($page['errors'])) {
         functions::conf_update_param('gdThumb', $params);
-        array_push($page['infos'], functions::l10n('Information data registered in database'));
+        $page['infos'][] = functions::l10n('Information data registered in database');
     }
 }
 
 // Try to find GreyDragon Theme and use Theme's styles for admin area
 $css_file = str_replace('/./', '/', dirname(__FILE__, 3) . '/' . GDTHEME_PATH . 'admin/css/styles.css');
 
-if (file_exists($css_file)) {
-    $custom_css = 'yes';
-} else {
-    $custom_css = 'no';
-}
+$custom_css = file_exists($css_file) ? 'yes' : 'no';
 
 if (! isset($params['normalize_title'])) {
     $params['normalize_title'] = 'off';

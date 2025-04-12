@@ -70,11 +70,7 @@ if (isset($_POST['submit'])) {
             $data['comment'] = strip_tags($_POST['description-' . $row['id']]);
         }
 
-        if (! empty($_POST['date_creation-' . $row['id']])) {
-            $data['date_creation'] = $_POST['date_creation-' . $row['id']];
-        } else {
-            $data['date_creation'] = null;
-        }
+        $data['date_creation'] = empty($_POST['date_creation-' . $row['id']]) ? null : $_POST['date_creation-' . $row['id']];
 
         $datas[] = $data;
 
@@ -218,7 +214,7 @@ if (count($page['cat_elements_id']) > 0) {
 
         $legend = functions_html::render_element_name($row);
 
-        if ($legend != functions::get_name_from_file($row['file'])) {
+        if ($legend !== functions::get_name_from_file($row['file'])) {
             $legend .= ' (' . $row['file'] . ')';
         }
 
@@ -236,11 +232,11 @@ if (count($page['cat_elements_id']) > 0) {
                     'U_EDIT' => functions_url::get_root_url() . 'admin.php?page=photo-' . $row['id'],
                     'NAME' => htmlspecialchars($row['name'] ?? ''),
                     'AUTHOR' => htmlspecialchars($row['author'] ?? ''),
-                    'LEVEL' => ! empty($row['level']) ? $row['level'] : '0',
+                    'LEVEL' => empty($row['level']) ? '0' : $row['level'],
                     'DESCRIPTION' => htmlspecialchars($row['comment'] ?? ''),
                     'DATE_CREATION' => $row['date_creation'],
                     'TAGS' => $tag_selection,
-                    'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
+                    'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
                 ]
             )
         );

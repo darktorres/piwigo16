@@ -97,11 +97,7 @@ $since_options = [
 
 functions_plugins::trigger_notify('loc_begin_comments');
 
-if (! empty($_GET['since'])) {
-    $page['since'] = intval($_GET['since']);
-} else {
-    $page['since'] = 4;
-}
+$page['since'] = empty($_GET['since']) ? 4 : intval($_GET['since']);
 
 // on which field sorting
 //
@@ -147,7 +143,7 @@ if (isset($_GET['cat']) &&
 
     $category_ids = functions_category::get_subcat_ids([$_GET['cat']]);
 
-    if (empty($category_ids)) {
+    if ($category_ids === []) {
         $category_ids = [-1];
     }
 
@@ -230,19 +226,19 @@ if (isset($action)) {
     if (functions_user::can_manage_comment($action, $comment_author_id)) {
         $perform_redirect = false;
 
-        if ($action == 'delete') {
+        if ($action === 'delete') {
             functions::check_pwg_token();
             functions_comment::delete_user_comment($comment_id);
             $perform_redirect = true;
         }
 
-        if ($action == 'validate') {
+        if ($action === 'validate') {
             functions::check_pwg_token();
             functions_comment::validate_user_comment($comment_id);
             $perform_redirect = true;
         }
 
-        if ($action == 'edit') {
+        if ($action === 'edit') {
             if (! empty($_POST['content'])) {
                 functions::check_pwg_token();
                 $comment_action = functions_comment::update_user_comment(
@@ -357,11 +353,7 @@ $template->assign('item_number_options_selected', $page['items_number']);
 // |                            navigation bar                             |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['start'])) {
-    $start = intval($_GET['start']);
-} else {
-    $start = 0;
-}
+$start = isset($_GET['start']) ? intval($_GET['start']) : 0;
 
 // +-----------------------------------------------------------------------+
 // |                        last comments display                          |
@@ -507,16 +499,14 @@ if ($comments !== []) {
             }
         }
 
-        if (functions_user::can_manage_comment('validate', $comment['author_id'])) {
-            if ($comment['validated'] != 'true') {
-                $tpl_comment['U_VALIDATE'] = functions_url::add_url_params(
-                    $url_self,
-                    [
-                        'validate' => $comment['comment_id'],
-                        'pwg_token' => functions::get_pwg_token(),
-                    ]
-                );
-            }
+        if (functions_user::can_manage_comment('validate', $comment['author_id']) && $comment['validated'] != 'true') {
+            $tpl_comment['U_VALIDATE'] = functions_url::add_url_params(
+                $url_self,
+                [
+                    'validate' => $comment['comment_id'],
+                    'pwg_token' => functions::get_pwg_token(),
+                ]
+            );
         }
 
         $template->append('comments', $tpl_comment);

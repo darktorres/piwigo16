@@ -123,7 +123,7 @@ final class functions_notification_by_mail
 
                 SQL;
 
-            if ($action == 'send') {
+            if ($action === 'send') {
                 // No mail empty and all users enabled
                 $query .= <<<SQL
                     AND n.enabled = 'true'
@@ -144,7 +144,7 @@ final class functions_notification_by_mail
                     SQL;
             }
 
-            if ($action == 'send') {
+            if ($action === 'send') {
                 $query .= <<<SQL
                     ORDER BY last_send, username
 
@@ -296,7 +296,6 @@ final class functions_notification_by_mail
                 '%d mails were not sent.',
                 $env_nbm['error_on_mail_count']
             );
-
             if ($env_nbm['sent_mail_count'] != 0) {
                 $page['infos'][] = functions::l10n_dec(
                     '%d mail was sent.',
@@ -304,16 +303,14 @@ final class functions_notification_by_mail
                     $env_nbm['sent_mail_count']
                 );
             }
+        } elseif ($env_nbm['sent_mail_count'] == 0) {
+            $page['infos'][] = functions::l10n('No mail to send.');
         } else {
-            if ($env_nbm['sent_mail_count'] == 0) {
-                $page['infos'][] = functions::l10n('No mail to send.');
-            } else {
-                $page['infos'][] = functions::l10n_dec(
-                    '%d mail was sent.',
-                    '%d mails were sent.',
-                    $env_nbm['sent_mail_count']
-                );
-            }
+            $page['infos'][] = functions::l10n_dec(
+                '%d mail was sent.',
+                '%d mails were sent.',
+                $env_nbm['sent_mail_count']
+            );
         }
     }
 

@@ -40,7 +40,7 @@ if (! defined('GDTHEME_PATH')) {
     define('GDTHEME_PATH', PHPWG_THEMES_PATH . 'greydragon/');
 }
 
-if (! isset($conf['gdThumb'])) {
+if (! isset($conf->gdThumb)) {
     require dirname(__FILE__) . '/config_default.php';
     functions::conf_update_param('gdThumb', $config_default);
     functions::load_conf_from_db();
@@ -48,7 +48,7 @@ if (! isset($conf['gdThumb'])) {
 
 // RV Thumbnails Scroller
 if (isset($_GET['rvts'])) {
-    $conf['gdThumb']['big_thumb'] = false;
+    $conf->gdThumb['big_thumb'] = false;
     functions_plugins::add_event_handler('loc_end_index_thumbnails', GDThumb_process_thumb(...), 50);
 }
 
@@ -62,7 +62,7 @@ function GDThumb_init(): void
 {
     global $conf, $user, $page, $stripped;
 
-    $confTemp = $conf['gdThumb'];
+    $confTemp = $conf->gdThumb;
     $user['nb_image_page'] = $confTemp['nb_image_page'];
     $page['nb_image_page'] = $confTemp['nb_image_page'];
     $stripped['maxThumb'] = $confTemp['nb_image_page'];
@@ -142,7 +142,7 @@ function GDThumb_process_thumb(
     array $pictures
 ): array {
     global $template, $conf;
-    $confTemp = $conf['gdThumb'];
+    $confTemp = $conf->gdThumb;
     $confTemp['GDTHUMB_ROOT'] = 'plugins/' . GDTHUMB_ID;
     $confTemp['big_thumb_noinpw'] = (isset($confTemp['big_thumb_noinpw']) && ($confTemp['big_thumb_noinpw'])) ? 1 : 0;
 
@@ -182,7 +182,7 @@ function GDThumb_process_category(
     array $tpl_vars
 ): array {
     global $template, $conf;
-    $confTemp = $conf['gdThumb'];
+    $confTemp = $conf->gdThumb;
     $confTemp['GDTHUMB_ROOT'] = 'plugins/' . GDTHUMB_ID;
     $confTemp['big_thumb_noinpw'] = isset($confTemp['big_thumb_noinpw']) ? 1 : 0;
 

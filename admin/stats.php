@@ -100,7 +100,7 @@ if (count(functions_admin::get_last(60, 'year')) > 1) {
 ksort($lang['month']);
 
 $template->assign([
-    'compareYears' => functions_admin::get_month_of_last_years($conf['stat_compare_year_displayed']),
+    'compareYears' => functions_admin::get_month_of_last_years($conf->stat_compare_year_displayed),
     'monthStats' => functions_admin::get_month_stats(),
     'lastHours' => $last_hours,
     'lastDays' => $last_days,

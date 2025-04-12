@@ -23,7 +23,7 @@ final class menubar
         $menu = new BlockManager('menubar');
 
         // if guest_access is disabled, we only display the menus if the user is identified
-        if ($conf['guest_access'] ||
+        if ($conf->guest_access ||
             ! functions_user::is_a_guest()
         ) {
             $menu->load_registered_blocks();
@@ -40,11 +40,11 @@ final class menubar
         //--------------------------------------------------------------- external links
         $block = $menu->get_block('mbLinks');
         if ($block &&
-            ! empty($conf['links'])
+            ! empty($conf->links)
         ) {
             $block->data = [];
 
-            foreach ($conf['links'] as $url => $url_data) {
+            foreach ($conf->links as $url => $url_data) {
                 if (! is_array($url_data)) {
                     $url_data = [
                         'label' => $url_data,
@@ -82,8 +82,8 @@ final class menubar
         $block = $menu->get_block('mbCategories');
 
         //------------------------------------------------------------------------ filter
-        if ($conf['menubar_filter_icon'] &&
-            ! empty($conf['filter_pages']) &&
+        if ($conf->menubar_filter_icon &&
+            ! empty($conf->filter_pages) &&
             functions::get_filter_page_value('used')
         ) {
             if ($filter['enabled']) {
@@ -118,7 +118,7 @@ final class menubar
         $block = $menu->get_block('mbRelatedCategories');
 
         if (isset($page['items']) &&
-            count($page['items']) < $conf['related_albums_maximum_items_to_compute'] &&
+            count($page['items']) < $conf->related_albums_maximum_items_to_compute &&
             $block != null &&
             ! empty($page['items'])
         ) {
@@ -152,7 +152,7 @@ final class menubar
             if (($page['section'] ?? null) == 'tags') {
                 $tags = functions_tag::get_common_tags(
                     $page['items'],
-                    $conf['menubar_tag_cloud_items_number'],
+                    $conf->menubar_tag_cloud_items_number,
                     $page['tag_ids']
                 );
                 $tags = functions_tag::add_level_to_tags($tags);
@@ -181,12 +181,12 @@ final class menubar
                 $template->assign('IS_RELATED', false);
             }
             //displays all tags available for the current user
-            elseif ($conf['menubar_tag_cloud_content'] == 'always_all' ||
-                   ($conf['menubar_tag_cloud_content'] == 'all_or_current' && empty($page['items']))
+            elseif ($conf->menubar_tag_cloud_content == 'always_all' ||
+                   ($conf->menubar_tag_cloud_content == 'all_or_current' && empty($page['items']))
             ) {
                 $tags = functions_tag::get_available_tags();
                 usort($tags, functions_tag::tags_counter_compare(...));
-                $tags = array_slice($tags, 0, $conf['menubar_tag_cloud_items_number']);
+                $tags = array_slice($tags, 0, $conf->menubar_tag_cloud_items_number);
 
                 foreach ($tags as $tag) {
                     $block->data[] = array_merge(
@@ -203,10 +203,10 @@ final class menubar
             }
             // displays only the tags available from the current thumbnails displayed
             elseif (! empty($page['items']) &&
-                   ($conf['menubar_tag_cloud_content'] == 'current_only' || $conf['menubar_tag_cloud_content'] == 'all_or_current')
+                   ($conf->menubar_tag_cloud_content == 'current_only' || $conf->menubar_tag_cloud_content == 'all_or_current')
             ) {
                 $selection = array_slice($page['items'], (int) $page['start'], (int) $page['nb_image_page']);
-                $tags = functions_tag::add_level_to_tags(functions_tag::get_common_tags($selection, $conf['content_tag_cloud_items_number']));
+                $tags = functions_tag::add_level_to_tags(functions_tag::get_common_tags($selection, $conf->content_tag_cloud_items_number));
 
                 foreach ($tags as $tag) {
                     $block->data[] =
@@ -252,7 +252,7 @@ final class menubar
                   'NAME' => functions::l10n('Most visited'),
               ];
 
-            if ($conf['rate']) {
+            if ($conf->rate) {
                 $block->data['best_rated'] =
                   [
                       'URL' => functions_url::make_index_url([
@@ -294,7 +294,7 @@ final class menubar
                   'URL' =>
                     functions_url::make_index_url(
                         [
-                            'chronology_field' => ($conf['calendar_datefield'] == 'date_available'
+                            'chronology_field' => ($conf->calendar_datefield == 'date_available'
                                                     ? 'posted' : 'created'),
                             'chronology_style' => 'monthly',
                             'chronology_view' => 'calendar',
@@ -333,7 +333,7 @@ final class menubar
                   'REL' => 'rel="search"',
               ];
 
-            if ($conf['activate_comments']) {
+            if ($conf->activate_comments) {
                 // comments link
                 $block->data['comments'] =
                   [
@@ -369,11 +369,11 @@ final class menubar
                 [
                     'U_LOGIN' => functions_url::get_root_url() . 'identification.php',
                     'U_LOST_PASSWORD' => functions_url::get_root_url() . 'password.php',
-                    'AUTHORIZE_REMEMBERING' => $conf['authorize_remembering'],
+                    'AUTHORIZE_REMEMBERING' => $conf->authorize_remembering,
                 ]
             );
 
-            if ($conf['allow_user_registration']) {
+            if ($conf->allow_user_registration) {
                 $template->assign('U_REGISTER', functions_url::get_root_url() . 'register.php');
             }
         } else {
@@ -385,7 +385,7 @@ final class menubar
 
             // the logout link has no meaning with Apache authentication : it is not
             // possible to logout with this kind of authentication.
-            if (! $conf['apache_authentication']) {
+            if (! $conf->apache_authentication) {
                 $template->assign('U_LOGOUT', functions_url::get_root_url() . '?act=logout');
             }
 

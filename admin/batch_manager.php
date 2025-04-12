@@ -152,7 +152,7 @@ if (isset($_POST['submitFilter'])) {
     if (isset($_POST['filter_level_use'])) {
         functions::check_input_parameter('filter_level', $_POST, false, '/^\d+$/');
 
-        if (in_array($_POST['filter_level'], $conf['available_permission_levels'])) {
+        if (in_array($_POST['filter_level'], $conf->available_permission_levels)) {
             $_SESSION['bulk_manager_filter']['level'] = $_POST['filter_level'];
 
             if (isset($_POST['filter_level_include_lower'])) {
@@ -234,7 +234,7 @@ elseif (isset($_GET['filter'])) {
 
             case 'level':
                 if (is_numeric($value) &&
-                    in_array($value, $conf['available_permission_levels'])
+                    in_array($value, $conf->available_permission_levels)
                 ) {
                     $_SESSION['bulk_manager_filter']['level'] = $value;
                 }
@@ -438,7 +438,7 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
                 $query = <<<SQL
                     SELECT id
                     FROM images
-                    {$conf['order_by']};
+                    {$conf->order_by};
                     SQL;
 
                 $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
@@ -494,7 +494,7 @@ if (isset($_SESSION['bulk_manager_filter']['level'])) {
         SELECT id
         FROM images
         WHERE level {$operator} {$_SESSION['bulk_manager_filter']['level']}
-        {$conf['order_by']};
+        {$conf->order_by};
         SQL;
 
     $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
@@ -543,7 +543,7 @@ if (isset($_SESSION['bulk_manager_filter']['dimension'])) {
         SELECT id
         FROM images
         WHERE {$where_clauses_imploded}
-        {$conf['order_by']};
+        {$conf->order_by};
         SQL;
 
     $filter_sets[] = functions_mysqli::query2array($query, null, 'id');
@@ -565,7 +565,7 @@ if (isset($_SESSION['bulk_manager_filter']['filesize'])) {
         SELECT id
         FROM images
         WHERE {$where_clauses_imploded}
-        {$conf['order_by']};
+        {$conf->order_by};
         SQL;
 
     $filter_sets[] = functions_mysqli::query2array($query, null, 'id');

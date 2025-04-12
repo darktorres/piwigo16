@@ -51,7 +51,7 @@ final class functions_metadata
                         foreach (array_keys($map, $iptc_key) as $pwg_key) {
                             $result[$pwg_key] = $value;
 
-                            if (! $conf['allow_html_in_metadata']) {
+                            if (! $conf->allow_html_in_metadata) {
                                 // in case the origin of the photo is unsecure (user upload), we
                                 // remove HTML tags to avoid XSS (malicious execution of
                                 // javascript)
@@ -183,7 +183,7 @@ final class functions_metadata
             }
         }
 
-        if (! $conf['allow_html_in_metadata']) {
+        if (! $conf->allow_html_in_metadata) {
             foreach ($result as $key => $value) {
                 // in case the origin of the photo is unsecure (user upload), we remove
                 // HTML tags to avoid XSS (malicious execution of javascript)

@@ -30,8 +30,8 @@ cursor:pointer;
 .pwg-icon-slideshow:before { content: '\25b6';}
 .pwg-icon-favorite-del:before { content: '\2661\2d'; letter-spacing: -2px}
 
-{if $conf.index_posted_date_icon}
-	{if $conf.index_created_date_icon}
+{if $conf->index_posted_date_icon}
+	{if $conf->index_created_date_icon}
 		.pwg-icon-calendar:before { content: '\f133'; }
 		.pwg-icon-camera-calendar:before { content: '\e804'; }
 	{else}

@@ -208,7 +208,7 @@ final class pwg_images
             }
         }
 
-        $upload_dir = $conf['upload_dir'] . '/buffer';
+        $upload_dir = $conf->upload_dir . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
         $handle = opendir($upload_dir);
@@ -264,7 +264,7 @@ final class pwg_images
     ): void {
         global $conf;
 
-        $upload_dir = $conf['upload_dir'] . '/buffer';
+        $upload_dir = $conf->upload_dir . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
         $handle = opendir($upload_dir);
@@ -530,7 +530,7 @@ final class pwg_images
 
         if ($is_commentable &&
            (! functions_user::is_a_guest() ||
-           (functions_user::is_a_guest() && $conf['comments_forall']))
+           (functions_user::is_a_guest() && $conf->comments_forall))
         ) {
             $comment_post_data['author'] = stripslashes($user['username']);
             $comment_post_data['key'] = functions::get_ephemeral_key(2, $params['image_id']);
@@ -628,7 +628,7 @@ final class pwg_images
 
         if ($res == false) {
             global $conf;
-            return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $conf['rate_items']));
+            return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $conf->rate_items));
         }
 
         return $res;
@@ -656,7 +656,7 @@ final class pwg_images
 
         if (! empty($order_by)) {
             global $conf;
-            $conf['order_by'] = 'ORDER BY ' . $order_by;
+            $conf->order_by = 'ORDER BY ' . $order_by;
             $super_order_by = true; // quick_search_result might be faster
         }
 
@@ -894,7 +894,7 @@ final class pwg_images
     ): int|string|PwgError {
         global $conf;
 
-        if (! in_array($params['level'], $conf['available_permission_levels'])) {
+        if (! in_array($params['level'], $conf->available_permission_levels)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
         }
 
@@ -1055,7 +1055,7 @@ final class pwg_images
             ));
         }
 
-        $upload_dir = $conf['upload_dir'] . '/buffer';
+        $upload_dir = $conf->upload_dir . '/buffer';
 
         // create the upload directory tree if not exists
         if (! functions::mkgetdir($upload_dir, functions::MKGETDIR_DEFAULT & ~functions::MKGETDIR_DIE_ON_ERROR)) {
@@ -1131,7 +1131,7 @@ final class pwg_images
             $original_type = 'high';
         }
 
-        $file_path = $conf['upload_dir'] . '/buffer/' . $image['md5sum'] . '-original';
+        $file_path = $conf->upload_dir . '/buffer/' . $image['md5sum'] . '-original';
 
         self::merge_chunks($file_path, $image['md5sum'], $original_type);
         chmod($file_path, 0644);
@@ -1216,11 +1216,11 @@ final class pwg_images
 
         // does the image already exists ?
         if ($params['check_uniqueness']) {
-            if ($conf['uniqueness_mode'] == 'md5sum') {
+            if ($conf->uniqueness_mode == 'md5sum') {
                 $where_clause = "md5sum = '" . $params['original_sum'] . "'";
             }
 
-            if ($conf['uniqueness_mode'] == 'filename') {
+            if ($conf->uniqueness_mode == 'filename') {
                 $where_clause = "file = '" . $params['original_filename'] . "'";
             }
 
@@ -1249,7 +1249,7 @@ final class pwg_images
             $original_type = 'file';
         }
 
-        $file_path = $conf['upload_dir'] . '/buffer/' . $params['original_sum'] . '-original';
+        $file_path = $conf->upload_dir . '/buffer/' . $params['original_sum'] . '-original';
 
         self::merge_chunks($file_path, $params['original_sum'], $original_type);
         chmod($file_path, 0644);
@@ -1520,17 +1520,17 @@ final class pwg_images
             $format_ext = null;
 
             // are formats enabled?
-            if (! $conf['enable_formats']) {
+            if (! $conf->enable_formats) {
                 return new PwgError(401, 'formats are disabled');
             }
 
             // We must check if the extension is in the authorized list.
-            if (preg_match('/\.(' . implode('|', $conf['format_ext']) . ')$/', $params['name'], $matches)) {
+            if (preg_match('/\.(' . implode('|', $conf->format_ext) . ')$/', $params['name'], $matches)) {
                 $format_ext = $matches[1];
             }
 
             if (empty($format_ext)) {
-                return new PwgError(401, 'unexpected format extension of file "' . $params['name'] . '" (authorized extensions: ' . implode(', ', $conf['format_ext']) . ')');
+                return new PwgError(401, 'unexpected format extension of file "' . $params['name'] . '" (authorized extensions: ' . implode(', ', $conf->format_ext) . ')');
             }
         }
 
@@ -1545,7 +1545,7 @@ final class pwg_images
         // file_put_contents('/tmp/plupload.log', '$_FILES = '.var_export($_FILES, true)."\n", FILE_APPEND);
         // file_put_contents('/tmp/plupload.log', '$_POST = '.var_export($_POST, true)."\n", FILE_APPEND);
 
-        $upload_dir = $conf['upload_dir'] . '/buffer';
+        $upload_dir = $conf->upload_dir . '/buffer';
 
         // create the upload directory tree if not exists
         if (! functions::mkgetdir($upload_dir, functions::MKGETDIR_DEFAULT & ~functions::MKGETDIR_DIE_ON_ERROR)) {
@@ -1739,7 +1739,7 @@ final class pwg_images
         // handle upload error as in ws_images_addSimple
         // if (isset($_FILES['image']['error']) && $_FILES['image']['error'] != 0)
 
-        $output_filepath_prefix = $conf['upload_dir'] . '/buffer/' . $params['original_sum'] . '-u' . $user['id'];
+        $output_filepath_prefix = $conf->upload_dir . '/buffer/' . $params['original_sum'] . '-u' . $user['id'];
         $chunkfile_path_pattern = $output_filepath_prefix . '-%03uof%03u.chunk';
 
         $chunkfile_path = sprintf($chunkfile_path_pattern, $params['chunk'] + 1, $params['chunks']);
@@ -1939,7 +1939,7 @@ final class pwg_images
         // delete chunks older than a week
         $now = time();
 
-        foreach (glob($conf['upload_dir'] . '/buffer/*.chunk') as $file) {
+        foreach (glob($conf->upload_dir . '/buffer/*.chunk') as $file) {
             if (is_file($file)) {
                 if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                     $logger->info(__FUNCTION__ . ' delete ' . $file);
@@ -1951,7 +1951,7 @@ final class pwg_images
         }
 
         // delete merged older than a week
-        foreach (glob($conf['upload_dir'] . '/buffer/*.merged') as $file) {
+        foreach (glob($conf->upload_dir . '/buffer/*.merged') as $file) {
             if (is_file($file)) {
                 if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                     $logger->info(__FUNCTION__ . ' delete ' . $file);
@@ -1986,7 +1986,7 @@ final class pwg_images
         $split_pattern = '/[\s,;\|]/';
         $result = [];
 
-        if ($conf['uniqueness_mode'] == 'md5sum') {
+        if ($conf->uniqueness_mode == 'md5sum') {
             // search among photos the list of photos already added, based on md5sum list
             $md5sums = preg_split(
                 $split_pattern,
@@ -2010,7 +2010,7 @@ final class pwg_images
                     $result[$md5sum] = $id_of_md5[$md5sum];
                 }
             }
-        } elseif ($conf['uniqueness_mode'] == 'filename') {
+        } elseif ($conf->uniqueness_mode == 'filename') {
             // search among photos the list of photos already added, based on
             // filename list
             $filenames = preg_split(
@@ -2073,7 +2073,7 @@ final class pwg_images
         }
 
         // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
-        usort($conf['format_ext'], function (string $a, string $b): int {
+        usort($conf->format_ext, function (string $a, string $b): int {
             return strlen($b) - strlen($a);
         });
 
@@ -2082,7 +2082,7 @@ final class pwg_images
         foreach ($candidates as $format_external_id => $format_filename) {
             $candidate_filename_wo_ext = null;
 
-            if (preg_match('/^(.*?)\.(' . implode('|', $conf['format_ext']) . ')$/', $format_filename, $matches)) {
+            if (preg_match('/^(.*?)\.(' . implode('|', $conf->format_ext) . ')$/', $format_filename, $matches)) {
                 $candidate_filename_wo_ext = $matches[1];
             }
 
@@ -2344,7 +2344,7 @@ final class pwg_images
 
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
-                if (! $conf['allow_html_descriptions'] ||
+                if (! $conf->allow_html_descriptions ||
                     ! isset($params['pwg_token'])
                 ) {
                     $params[$key] = strip_tags($params[$key], '<b><strong><em><i>');

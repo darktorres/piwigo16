@@ -29,7 +29,7 @@ final class functions_html
     ): string {
         global $conf;
 
-        //$output = '<a href="'.\Piwigo\inc\functions_url::get_absolute_root_url().$conf['home_page'].'">'.\Piwigo\inc\functions::l10n('Home').'</a>';
+        //$output = '<a href="'.\Piwigo\inc\functions_url::get_absolute_root_url().$conf->home_page.'">'.\Piwigo\inc\functions::l10n('Home').'</a>';
         $output = '';
         $is_first = true;
 
@@ -47,7 +47,7 @@ final class functions_html
             if ($is_first) {
                 $is_first = false;
             } else {
-                $output .= $conf['level_separator'];
+                $output .= $conf->level_separator;
             }
 
             if (! isset($url)) {
@@ -125,7 +125,7 @@ final class functions_html
             if ($is_first) {
                 $is_first = false;
             } else {
-                $output .= '<span>' . $conf['level_separator'] . '</span>';
+                $output .= '<span>' . $conf->level_separator . '</span>';
             }
 
             if (! isset($url) ||
@@ -260,7 +260,7 @@ final class functions_html
             echo '<a href="' . functions_url::make_index_url() . '">' . functions::l10n('Home') . '</a></div>';
             echo str_repeat(' ', 512); //IE6 doesn't error output if below a size
             exit();
-        } elseif (! $conf['guest_access'] &&
+        } elseif (! $conf->guest_access &&
                   functions_user::is_a_guest()
         ) {
             functions::redirect_http($login_url);
@@ -646,7 +646,7 @@ final class functions_html
             $details[] = functions::l10n('%d visits', $info['hit']);
         }
 
-        if ($conf['rate'] &&
+        if ($conf->rate &&
             ! empty($info['rating_score'])
         ) {
             $details[] = functions::l10n('rating score %s', $info['rating_score']);
@@ -694,10 +694,10 @@ final class functions_html
     ): string {
         global $conf;
 
-        if ($conf['original_url_protection'] == 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
+        if ($conf->original_url_protection == 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
             $ext = functions::get_extension($infos['path']);
 
-            if (! in_array($ext, $conf['picture_ext'])) {
+            if (! in_array($ext, $conf->picture_ext)) {
                 return $url;
             }
         }

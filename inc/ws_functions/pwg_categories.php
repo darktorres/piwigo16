@@ -128,7 +128,7 @@ final class pwg_categories
                 $order_by = $cats[$params['cat_id'][0]]['image_order'];
             }
 
-            $order_by = empty($order_by) ? $conf['order_by'] : 'ORDER BY ' . $order_by;
+            $order_by = empty($order_by) ? $conf->order_by : 'ORDER BY ' . $order_by;
             $favorite_ids = functions_url::get_user_favorites();
 
             $where_condition = implode("\n    AND ", $where_clauses);
@@ -298,7 +298,7 @@ final class pwg_categories
             $where[] = 'status = "public"';
             $where[] = 'visible = "true"';
 
-            $join_user = $conf['guest_id'];
+            $join_user = $conf->guest_id;
         } elseif (functions_user::is_admin()) {
             // in this very specific case, we don't want to hide empty
             // categories. Function calculate_permissions will only return
@@ -328,7 +328,7 @@ final class pwg_categories
             $search_escaped = functions_mysqli::pwg_db_real_escape_string($params['search']);
             $query .= <<<SQL
                 AND name LIKE '%{$search_escaped}%'
-                LIMIT {$conf['linked_album_search_limit']}
+                LIMIT {$conf->linked_album_search_limit}
 
                 SQL;
         }
@@ -390,7 +390,7 @@ final class pwg_categories
                 $image_id = $row['user_representative_picture_id'];
             } elseif (! empty($row['representative_picture_id'])) { // if a representative picture is set, it has priority
                 $image_id = $row['representative_picture_id'];
-            } elseif ($conf['allow_random_representative']) {
+            } elseif ($conf->allow_random_representative) {
                 // searching a random representative among elements in sub-categories
                 $image_id = functions_category::get_random_image_in_category($row);
             } else { // searching a random representative among representative of sub-categories
@@ -423,7 +423,7 @@ final class pwg_categories
             }
 
             if (isset($image_id)) {
-                if ($conf['representative_cache_on_subcats'] &&
+                if ($conf->representative_cache_on_subcats &&
                     $row['user_representative_picture_id'] != $image_id
                 ) {
                     $user_representative_updates_for[$row['id']] = $image_id;
@@ -438,7 +438,7 @@ final class pwg_categories
             // management of the album thumbnail -- stops here
 
             if (empty($row['image_order'])) {
-                $row['image_order'] = str_replace('ORDER BY ', '', $conf['order_by']);
+                $row['image_order'] = str_replace('ORDER BY ', '', $conf->order_by);
             }
 
             $cats[] = $row;
@@ -481,7 +481,7 @@ final class pwg_categories
                                 $new_image_ids[] = $image_id;
                             }
 
-                            if ($conf['representative_cache_on_level']) {
+                            if ($conf->representative_cache_on_level) {
                                 $user_representative_updates_for[$category['id']] = $image_id;
                             }
 
@@ -604,7 +604,7 @@ final class pwg_categories
             $search_term = functions_mysqli::pwg_db_real_escape_string($params['search']);
             $query .= <<<SQL
                 WHERE name LIKE '%{$search_term}%'
-                LIMIT {$conf['linked_album_search_limit']}
+                LIMIT {$conf->linked_album_search_limit}
 
                 SQL;
         }
@@ -647,7 +647,7 @@ final class pwg_categories
             );
 
             if (empty($row['image_order'])) {
-                $row['image_order'] = str_replace('ORDER BY ', '', $conf['order_by']);
+                $row['image_order'] = str_replace('ORDER BY ', '', $conf->order_by);
             }
 
             if (in_array('full_name_with_admin_links', $params['additional_output'])) {
@@ -659,7 +659,7 @@ final class pwg_categories
 
         $limit_reached = false;
 
-        if ($counter > $conf['linked_album_search_limit']) {
+        if ($counter > $conf->linked_album_search_limit) {
             $limit_reached = true;
         }
 
@@ -670,7 +670,7 @@ final class pwg_categories
                 'category',
                 ['id', 'nb_images', 'name', 'uppercats', 'global_rank', 'status', 'test']
             ),
-            'limit' => $conf['linked_album_search_limit'],
+            'limit' => $conf->linked_album_search_limit,
             'limit_reached' => $limit_reached,
         ];
     }
@@ -705,7 +705,7 @@ final class pwg_categories
             in_array($params['position'], ['first', 'last'])
         ) {
             //TODO make persistent with user prefs
-            $conf['newcat_default_position'] = $params['position'];
+            $conf->newcat_default_position = $params['position'];
         }
 
         $options = [];
@@ -717,11 +717,11 @@ final class pwg_categories
         }
 
         if (! empty($params['comment'])) {
-            $options['comment'] = (! $conf['allow_html_descriptions'] || ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
+            $options['comment'] = (! $conf->allow_html_descriptions || ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
         }
 
         $creation_output = functions_admin::create_virtual_category(
-            (! $conf['allow_html_descriptions'] || ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
+            (! $conf->allow_html_descriptions || ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
             $params['parent'],
             $options
         );
@@ -893,7 +893,7 @@ final class pwg_categories
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
                 $perform_update = true;
-                $update[$key] = (! $conf['allow_html_descriptions'] || ! isset($params['pwg_token'])) ? strip_tags($params[$key]) : $params[$key];
+                $update[$key] = (! $conf->allow_html_descriptions || ! isset($params['pwg_token'])) ? strip_tags($params[$key]) : $params[$key];
             }
         }
 
@@ -991,7 +991,7 @@ final class pwg_categories
      * API method
      *
      * Deletes the album thumbnail. Only possible if
-     * $conf['allow_random_representative'] or if the album has no direct photos.
+     * $conf->allow_random_representative or if the album has no direct photos.
      *
      * @param array{
      *     category_id: int,
@@ -1022,7 +1022,7 @@ final class pwg_categories
             SQL;
         list($nb_images) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        if (! $conf['allow_random_representative'] &&
+        if (! $conf->allow_random_representative &&
             $nb_images != 0
         ) {
             return new PwgError(401, 'not permitted');

@@ -52,7 +52,7 @@ final class themes
     ): array {
         global $conf;
 
-        if (! $conf['enable_extensions_install'] &&
+        if (! $conf->enable_extensions_install &&
             $action == 'delete'
         ) {
             exit('Piwigo extensions install/update/delete system is disabled');
@@ -93,8 +93,8 @@ final class themes
                 }
 
                 if ($this->fs_themes[$theme_id]['mobile'] &&
-                    ! empty($conf['mobile_theme']) &&
-                    $conf['mobile_theme'] != $theme_id
+                    ! empty($conf->mobile_theme) &&
+                    $conf->mobile_theme != $theme_id
                 ) {
                     $errors[] = functions::l10n('You can activate only one mobile theme.');
                     break;
@@ -267,7 +267,7 @@ final class themes
         $user_ids = array_unique(
             array_merge(
                 functions_mysqli::query2array($query, null, 'user_id'),
-                [$conf['guest_id'], $conf['default_user_id']]
+                [$conf->guest_id, $conf->default_user_id]
             )
         );
 
@@ -451,7 +451,7 @@ final class themes
         global $user, $conf;
 
         $get_data = [
-            'category_id' => $conf['pem_themes_category'],
+            'category_id' => $conf->pem_themes_category,
             'format' => 'php',
         ];
 

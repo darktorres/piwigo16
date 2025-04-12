@@ -26,8 +26,8 @@ final class functions_picture
         global $conf;
 
         return [
-            'period' => $conf['slideshow_period'],
-            'repeat' => $conf['slideshow_repeat'],
+            'period' => $conf->slideshow_period,
+            'repeat' => $conf->slideshow_repeat,
             'play' => true,
         ];
     }
@@ -40,10 +40,10 @@ final class functions_picture
     ): array {
         global $conf;
 
-        if ($params['period'] < $conf['slideshow_period_min']) {
-            $params['period'] = $conf['slideshow_period_min'];
-        } elseif ($params['period'] > $conf['slideshow_period_max']) {
-            $params['period'] = $conf['slideshow_period_max'];
+        if ($params['period'] < $conf->slideshow_period_min) {
+            $params['period'] = $conf->slideshow_period_min;
+        } elseif ($params['period'] > $conf->slideshow_period_max) {
+            $params['period'] = $conf->slideshow_period_max;
         }
 
         return $params;

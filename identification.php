@@ -49,7 +49,7 @@ $redirect_to = '';
 if (! empty($_GET['redirect'])) {
     $redirect_to = urldecode($_GET['redirect']);
 
-    if ($conf['guest_access'] &&
+    if ($conf->guest_access &&
         ! isset($_GET['hide_redirect_error'])
     ) {
         $page['errors'][] = functions::l10n('You are not authorized to access the requested page');
@@ -60,7 +60,7 @@ if (isset($_POST['login'])) {
     if (! isset($_COOKIE[session_name()])) {
         $page['errors'][] = functions::l10n('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
     } else {
-        if ($conf['insensitive_case_logon'] == true) {
+        if ($conf->insensitive_case_logon == true) {
             $_POST['username'] = functions_user::search_case_username($_POST['username']);
         }
 
@@ -107,24 +107,24 @@ $template->assign(
         'U_REDIRECT' => $redirect_to,
 
         'F_LOGIN_ACTION' => functions_url::get_root_url() . 'identification.php',
-        'authorize_remembering' => $conf['authorize_remembering'],
+        'authorize_remembering' => $conf->authorize_remembering,
     ]
 );
 
-if (! $conf['gallery_locked'] &&
-    $conf['allow_user_registration']
+if (! $conf->gallery_locked &&
+    $conf->allow_user_registration
 ) {
     $template->assign('U_REGISTER', functions_url::get_root_url() . 'register.php');
 }
 
-if (! $conf['gallery_locked']) {
+if (! $conf->gallery_locked) {
     $template->assign('U_LOST_PASSWORD', functions_url::get_root_url() . 'password.php');
 }
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
 
-if (! $conf['gallery_locked'] &&
+if (! $conf->gallery_locked &&
    (! isset($themeconf['hide_menu_on']) || ! in_array('theIdentificationPage', $themeconf['hide_menu_on']))
 ) {
     menubar::initialize_menu();

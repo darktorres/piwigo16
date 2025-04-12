@@ -16,7 +16,7 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\PwgError;
 
 // by default we start with guest
-$user['id'] = $conf['guest_id'];
+$user['id'] = $conf->guest_id;
 
 if (isset($_COOKIE[session_name()])) {
     if (isset($_GET['act']) &&
@@ -30,12 +30,12 @@ if (isset($_COOKIE[session_name()])) {
 }
 
 // Now check the auto-login
-if ($user['id'] == $conf['guest_id']) {
+if ($user['id'] == $conf->guest_id) {
     functions_user::auto_login();
 }
 
 // using Apache authentication override the above user search
-if ($conf['apache_authentication']) {
+if ($conf->apache_authentication) {
     $remote_user = null;
 
     foreach (['REMOTE_USER', 'REDIRECT_REMOTE_USER'] as $server_key) {
@@ -77,7 +77,7 @@ $user = functions_user::build_user(
     (defined('IN_ADMIN') && IN_ADMIN) ? false : true // use cache ?
 );
 
-if ($conf['browser_language'] &&
+if ($conf->browser_language &&
    (functions_user::is_a_guest() || functions_user::is_generic()) &&
     $language = functions_user::get_browser_language()
 ) {

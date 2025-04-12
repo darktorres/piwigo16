@@ -183,11 +183,11 @@ switch ($page['mode']) {
         $template->assign(
             $page['mode'],
             [
-                'SEND_HTML_MAIL' => $conf['nbm_send_html_mail'],
-                'SEND_MAIL_AS' => $conf['nbm_send_mail_as'],
-                'SEND_DETAILED_CONTENT' => $conf['nbm_send_detailed_content'],
-                'COMPLEMENTARY_MAIL_CONTENT' => $conf['nbm_complementary_mail_content'],
-                'SEND_RECENT_POST_DATES' => $conf['nbm_send_recent_post_dates'],
+                'SEND_HTML_MAIL' => $conf->nbm_send_html_mail,
+                'SEND_MAIL_AS' => $conf->nbm_send_mail_as,
+                'SEND_DETAILED_CONTENT' => $conf->nbm_send_detailed_content,
+                'COMPLEMENTARY_MAIL_CONTENT' => $conf->nbm_complementary_mail_content,
+                'SEND_RECENT_POST_DATES' => $conf->nbm_send_recent_post_dates,
             ]
         );
         break;
@@ -252,7 +252,7 @@ switch ($page['mode']) {
         $tpl_var['CUSTOMIZE_MAIL_CONTENT'] =
           isset($_POST['send_customize_mail_content'])
             ? stripslashes($_POST['send_customize_mail_content'])
-            : $conf['nbm_complementary_mail_content'];
+            : $conf->nbm_complementary_mail_content;
 
         if (count($data_users)) {
             foreach ($data_users as $nbm_user) {
@@ -276,11 +276,11 @@ switch ($page['mode']) {
 
         $template->assign($page['mode'], $tpl_var);
 
-        if ($conf['auth_key_duration'] > 0) {
+        if ($conf->auth_key_duration > 0) {
             $template->assign(
                 'auth_key_duration',
                 functions::time_since(
-                    strtotime('now -' . $conf['auth_key_duration'] . ' second'),
+                    strtotime('now -' . $conf->auth_key_duration . ' second'),
                     'second',
                     null,
                     false

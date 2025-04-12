@@ -35,7 +35,7 @@ final class functions_comment
             return $action;
         }
 
-        $my_action = $conf['comment_spam_reject'] ? 'reject' : 'moderate';
+        $my_action = $conf->comment_spam_reject ? 'reject' : 'moderate';
 
         if ($action == $my_action) {
             return $action;
@@ -56,7 +56,7 @@ final class functions_comment
             $link_count++;
         }
 
-        if ($link_count > $conf['comment_spam_max_links']) {
+        if ($link_count > $conf->comment_spam_max_links) {
             $_POST['cr'][] = 'links';
             return $my_action;
         }
@@ -89,7 +89,7 @@ final class functions_comment
 
         $infos = [];
 
-        if (! $conf['comments_validation'] ||
+        if (! $conf->comments_validation ||
             functions_user::is_admin()
         ) {
             $comment_action = 'validate'; //one of validate, moderate, reject
@@ -100,7 +100,7 @@ final class functions_comment
         // display author field if the user status is guest or generic
         if (! functions_user::is_classic_user()) {
             if (empty($comm['author'])) {
-                if ($conf['comments_author_mandatory']) {
+                if ($conf->comments_author_mandatory) {
                     $infos[] = functions::l10n('Username is mandatory');
                     $comment_action = 'reject';
                 }
@@ -108,7 +108,7 @@ final class functions_comment
                 $comm['author'] = 'guest';
             }
 
-            $comm['author_id'] = $conf['guest_id'];
+            $comm['author_id'] = $conf->guest_id;
             // if a guest try to use the name of an already existing user, he must be
             // rejected
             if ($comm['author'] != 'guest') {
@@ -116,7 +116,7 @@ final class functions_comment
                 $query = <<<SQL
                     SELECT COUNT(*) AS user_exists
                     FROM users
-                    WHERE {$conf['user_fields']['username']} = '{$author}';
+                    WHERE {$conf->user_fields['username']} = '{$author}';
                     SQL;
                 $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
@@ -141,7 +141,7 @@ final class functions_comment
 
         // website
         if (! empty($comm['website_url'])) {
-            if (! $conf['comments_enable_website']) { // honeypot: if the field is disabled, it should be empty !
+            if (! $conf->comments_enable_website) { // honeypot: if the field is disabled, it should be empty !
                 $comment_action = 'reject';
                 $_POST['cr'][] = 'website_url';
             } else {
@@ -162,7 +162,7 @@ final class functions_comment
         if (empty($comm['email'])) {
             if (! empty($user['email'])) {
                 $comm['email'] = $user['email'];
-            } elseif ($conf['comments_email_mandatory']) {
+            } elseif ($conf->comments_email_mandatory) {
                 $infos[] = functions::l10n('Email address is missing. Please specify an email address.');
                 $comment_action = 'reject';
             }
@@ -181,10 +181,10 @@ final class functions_comment
         $anonymous_id = implode('.', $ip_components);
 
         if ($comment_action != 'reject' &&
-            $conf['anti-flood_time'] > 0 &&
+            $conf->anti_flood_time > 0 &&
             ! functions_user::is_admin()
         ) { // anti-flood system
-            $reference_date = functions_mysqli::pwg_db_get_flood_period_expression($conf['anti-flood_time']);
+            $reference_date = functions_mysqli::pwg_db_get_flood_period_expression($conf->anti_flood_time);
 
             $query = <<<SQL
                 SELECT COUNT(1) FROM comments
@@ -236,8 +236,8 @@ final class functions_comment
 
             self::invalidate_user_cache_nb_comments();
 
-            if (($conf['email_admin_on_comment'] && $comment_action == 'validate') ||
-                ($conf['email_admin_on_comment_validation'] && $comment_action == 'moderate')
+            if (($conf->email_admin_on_comment && $comment_action == 'validate') ||
+                ($conf->email_admin_on_comment_validation && $comment_action == 'moderate')
             ) {
                 require_once __DIR__ . '/../inc/functions_mail.php';
 
@@ -343,7 +343,7 @@ final class functions_comment
 
         if (! functions::verify_ephemeral_key($post_key, $comment['image_id'])) {
             $comment_action = 'reject';
-        } elseif (! $conf['comments_validation'] ||
+        } elseif (! $conf->comments_validation ||
                   functions_user::is_admin()
         ) { // should the updated comment must be validated
             $comment_action = 'validate'; //one of validate, moderate, reject
@@ -401,7 +401,7 @@ final class functions_comment
 
             // mail admin and ask to validate the comment
             if ($result &&
-                $conf['email_admin_on_comment_validation'] &&
+                $conf->email_admin_on_comment_validation &&
                 $comment_action == 'moderate'
             ) {
                 require_once __DIR__ . '/../inc/functions_mail.php';
@@ -447,8 +447,8 @@ final class functions_comment
         global $conf;
 
         if (! in_array($action, ['edit', 'delete']) ||
-          ($action == 'edit' && ! $conf['email_admin_on_comment_edition']) ||
-          ($action == 'delete' && ! $conf['email_admin_on_comment_deletion'])
+          ($action == 'edit' && ! $conf->email_admin_on_comment_edition) ||
+          ($action == 'delete' && ! $conf->email_admin_on_comment_deletion)
         ) {
             return;
         }

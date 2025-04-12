@@ -74,9 +74,9 @@ final class functions_url
 
                 $url_port = null;
 
-                if ($conf['url_port'] == 'none') {
+                if ($conf->url_port == 'none') {
                     // do nothing
-                } elseif ($conf['url_port'] == 'auto') {
+                } elseif ($conf->url_port == 'auto') {
                     if ((! $is_https &&
                          $_SERVER['SERVER_PORT'] != 80) ||
                          ($is_https && $_SERVER['SERVER_PORT'] != 443)
@@ -85,7 +85,7 @@ final class functions_url
                     }
                 } else {
                     // we have a custom port
-                    $url_port = ':' . $conf['url_port'];
+                    $url_port = ':' . $conf->url_port;
                 }
 
                 if (! empty($url_port) &&
@@ -142,11 +142,11 @@ final class functions_url
         global $conf;
         $url = self::get_root_url() . 'index';
 
-        if ($conf['php_extension_in_urls']) {
+        if ($conf->php_extension_in_urls) {
             $url .= '.php';
         }
 
-        if ($conf['question_mark_in_urls']) {
+        if ($conf->question_mark_in_urls) {
             $url .= '?';
         }
 
@@ -235,17 +235,17 @@ final class functions_url
 
         $url = self::get_root_url() . 'picture';
 
-        if ($conf['php_extension_in_urls']) {
+        if ($conf->php_extension_in_urls) {
             $url .= '.php';
         }
 
-        if ($conf['question_mark_in_urls']) {
+        if ($conf->question_mark_in_urls) {
             $url .= '?';
         }
 
         $url .= '/';
 
-        switch ($conf['picture_url_style']) {
+        switch ($conf->picture_url_style) {
             case 'id-file':
                 $url .= $params['image_id'];
 
@@ -364,7 +364,7 @@ final class functions_url
                     if (empty($params['category']['permalink'])) {
                         $section_string .= $params['category']['id'];
 
-                        if ($conf['category_url_style'] == 'id-name') {
+                        if ($conf->category_url_style == 'id-name') {
                             $section_string .= '-' . functions::str2url($params['category']['name']);
                         }
                     } else {
@@ -378,7 +378,7 @@ final class functions_url
                             if (empty($category['permalink'])) {
                                 $section_string .= $category['id'];
 
-                                if ($conf['category_url_style'] == 'id-name') {
+                                if ($conf->category_url_style == 'id-name') {
                                     $section_string .= '-' . functions::str2url($category['name']);
                                 }
                             } else {
@@ -394,7 +394,7 @@ final class functions_url
                 $section_string .= '/tags';
 
                 foreach ($params['tags'] as $tag) {
-                    switch ($conf['tag_url_style']) {
+                    switch ($conf->tag_url_style) {
                         case 'id':
                             $section_string .= '/' . $tag['id'];
                             break;
@@ -570,7 +570,7 @@ final class functions_url
                     break;
                 }
 
-                if ($conf['tag_url_style'] != 'tag' &&
+                if ($conf->tag_url_style != 'tag' &&
                     preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)
                 ) {
                     $requested_tag_ids[] = $matches[1];
@@ -820,14 +820,14 @@ final class functions_url
     {
         global $conf;
 
-        if (! empty($conf['gallery_url'])) {
-            if (self::url_is_remote($conf['gallery_url']) ||
-                $conf['gallery_url'][0] == '/'
+        if (! empty($conf->gallery_url)) {
+            if (self::url_is_remote($conf->gallery_url) ||
+                $conf->gallery_url[0] == '/'
             ) {
-                return $conf['gallery_url'];
+                return $conf->gallery_url;
             }
 
-            return self::get_root_url() . $conf['gallery_url'];
+            return self::get_root_url() . $conf->gallery_url;
         }
 
         return self::make_index_url();

@@ -67,12 +67,12 @@ if (file_exists(PHPWG_PLUGINS_PATH . 'TakeATour/tours/' . $version_tour . '/conf
     $tours[] = $version_tour;
 }
 
-if (isset($conf['TakeATour_tour_ignored'])) {
-    if (! is_array($conf['TakeATour_tour_ignored'])) {
-        $conf['TakeATour_tour_ignored'] = [$conf['TakeATour_tour_ignored']];
+if (isset($conf->TakeATour_tour_ignored)) {
+    if (! is_array($conf->TakeATour_tour_ignored)) {
+        $conf->TakeATour_tour_ignored = [$conf->TakeATour_tour_ignored];
     }
 
-    $tours = array_diff($tours, $conf['TakeATour_tour_ignored']);
+    $tours = array_diff($tours, $conf->TakeATour_tour_ignored);
 }
 
 $tpl_tours = [];

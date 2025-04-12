@@ -36,15 +36,15 @@ function admintools_add_public_controller(): void
         $tpl_vars['U_SITE_ADMIN'] = $url_root . 'admin.php?page=';
         $tpl_vars['MULTIVIEW'] = $MultiView->get_data();
         $tpl_vars['USER'] = $MultiView->get_user();
-        $tpl_vars['CURRENT_USERNAME'] = $user['id'] == $conf['guest_id'] ? functions::l10n('guest') : $user['username'];
-        $tpl_vars['DELETE_CACHE'] = isset($conf['multiview_invalidate_cache']);
+        $tpl_vars['CURRENT_USERNAME'] = $user['id'] == $conf->guest_id ? functions::l10n('guest') : $user['username'];
+        $tpl_vars['DELETE_CACHE'] = isset($conf->multiview_invalidate_cache);
         $admin_lang = $MultiView->get_user_language();
 
         if ($admin_lang !== false) {
             require_once __DIR__ . '/../../../inc/functions_mail.php';
             functions_mail::switch_lang_to($admin_lang);
         }
-    } elseif ($conf['AdminTools']['public_quick_edit'] &&
+    } elseif ($conf->AdminTools['public_quick_edit'] &&
               functions::script_basename() == 'picture' &&
               $picture['current']['added_by'] == $user['id'] &&
               ! functions_user::is_a_guest()
@@ -53,8 +53,8 @@ function admintools_add_public_controller(): void
         return;
     }
 
-    $tpl_vars['POSITION'] = $conf['AdminTools']['closed_position'];
-    $tpl_vars['DEFAULT_OPEN'] = $conf['AdminTools']['default_open'];
+    $tpl_vars['POSITION'] = $conf->AdminTools['closed_position'];
+    $tpl_vars['DEFAULT_OPEN'] = $conf->AdminTools['default_open'];
     $tpl_vars['U_SELF'] = $MultiView->get_clean_url(true);
 
     // photo page
@@ -206,7 +206,7 @@ function admintools_add_admin_controller(): void
     $tpl_vars = [];
 
     $tpl_vars['MULTIVIEW'] = $MultiView->get_data();
-    $tpl_vars['DELETE_CACHE'] = isset($conf['multiview_invalidate_cache']);
+    $tpl_vars['DELETE_CACHE'] = isset($conf->multiview_invalidate_cache);
     $tpl_vars['U_SELF'] = $MultiView->get_clean_admin_url(true);
     $admin_lang = $MultiView->get_user_language();
 
@@ -317,8 +317,8 @@ function admintools_save_picture(): void
         functions::check_pwg_token();
 
         $data = [
-            'name' => (functions_user::is_admin() && $conf['allow_html_descriptions']) ? $_POST['name'] : strip_tags($_POST['name']),
-            'author' => (functions_user::is_admin() && $conf['allow_html_descriptions']) ? $_POST['author'] : strip_tags($_POST['author']),
+            'name' => (functions_user::is_admin() && $conf->allow_html_descriptions) ? $_POST['name'] : strip_tags($_POST['name']),
+            'author' => (functions_user::is_admin() && $conf->allow_html_descriptions) ? $_POST['author'] : strip_tags($_POST['author']),
         ];
 
         if ($MultiView->is_admin()) {
@@ -326,7 +326,7 @@ function admintools_save_picture(): void
         }
 
         if (functions_user::is_admin() &&
-            $conf['allow_html_descriptions']
+            $conf->allow_html_descriptions
         ) {
             $data['comment'] = $_POST['comment'];
         } else {
@@ -373,11 +373,11 @@ function admintools_save_category(): void
         functions::check_pwg_token();
 
         $data = [
-            'name' => (functions_user::is_admin() && $conf['allow_html_descriptions']) ? $_POST['name'] : strip_tags($_POST['name']),
+            'name' => (functions_user::is_admin() && $conf->allow_html_descriptions) ? $_POST['name'] : strip_tags($_POST['name']),
         ];
 
         if (functions_user::is_admin() &&
-            $conf['allow_html_descriptions']
+            $conf->allow_html_descriptions
         ) {
             $data['comment'] = $_POST['comment'];
         } else {

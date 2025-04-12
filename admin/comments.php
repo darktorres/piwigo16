@@ -146,14 +146,14 @@ if ($page['filter'] == 'pending') {
 
 $where_clause = implode(' AND ', $where_clauses);
 $query = <<<SQL
-    SELECT c.id, c.image_id, c.date, c.author, {$conf['user_fields']['username']} AS username, c.content,
+    SELECT c.id, c.image_id, c.date, c.author, {$conf->user_fields['username']} AS username, c.content,
         i.path, i.representative_ext, validated, c.anonymous_id
     FROM comments AS c
     INNER JOIN images AS i ON i.id = c.image_id
-    LEFT JOIN users AS u ON u.{$conf['user_fields']['id']} = c.author_id
+    LEFT JOIN users AS u ON u.{$conf->user_fields['id']} = c.author_id
     WHERE {$where_clause}
     ORDER BY c.date DESC
-    LIMIT {$page['start']}, {$conf['comments_page_nb_comments']};
+    LIMIT {$page['start']}, {$conf->comments_page_nb_comments};
     SQL;
 $result = functions_mysqli::pwg_query($query);
 
@@ -197,7 +197,7 @@ $navbar = functions::create_navigation_bar(
     functions_url::get_root_url() . 'admin.php' . functions_url::get_query_string_diff(['start']),
     ($page['filter'] == 'pending' ? $nb_pending : $nb_total),
     $page['start'],
-    $conf['comments_page_nb_comments']
+    $conf->comments_page_nb_comments
 );
 
 $template->assign('navbar', $navbar);

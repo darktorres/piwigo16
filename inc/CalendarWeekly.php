@@ -51,7 +51,7 @@ final class CalendarWeekly extends CalendarBase
         ];
         //Comment next lines for week starting on Sunday or if MySQL version<4.0.17
         //WEEK(date,5) = "0-53 - Week 1=the first week with a Monday in this year"
-        if ($conf['week_starts_on'] == 'monday') {
+        if ($conf->week_starts_on == 'monday') {
             $this->calendar_levels[CalendarBase::CWEEK]['sql'] = functions_mysqli::pwg_db_get_week($this->date_field, 5) . '+1';
             $this->calendar_levels[CalendarBase::CDAY]['sql'] = functions_mysqli::pwg_db_get_weekday($this->date_field);
             $this->calendar_levels[CalendarBase::CDAY]['labels'][] = array_shift($this->calendar_levels[CalendarBase::CDAY]['labels']);

@@ -132,7 +132,7 @@ final class functions_history
             WHERE {$where_separator}
             SQL;
 
-        // LIMIT '.$conf['nb_logs_page'].' OFFSET '.$page['start'].'
+        // LIMIT '.$conf->nb_logs_page.' OFFSET '.$page['start'].'
 
         $result = functions_mysqli::pwg_query($query);
 
@@ -339,7 +339,7 @@ final class functions_history
     {
         global $conf, $logger;
 
-        if ($conf['history_autopurge_keep_lines'] == 0) {
+        if ($conf->history_autopurge_keep_lines == 0) {
             return;
         }
 
@@ -351,7 +351,7 @@ final class functions_history
             SQL;
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        if ($count <= $conf['history_autopurge_keep_lines']) {
+        if ($count <= $conf->history_autopurge_keep_lines) {
             self::history_remove_summarized_column();
             return; // no need to purge for now
         }
@@ -399,8 +399,8 @@ final class functions_history
 
         $search_min = [
             $history_id_last_summarized,
-            $history_id_latest - $conf['history_autopurge_keep_lines'],
-            $history_id_oldest + $conf['history_autopurge_blocksize'],
+            $history_id_latest - $conf->history_autopurge_keep_lines,
+            $history_id_oldest + $conf->history_autopurge_blocksize,
         ];
 
         $history_id_delete_before = min($search_min);
@@ -420,8 +420,8 @@ final class functions_history
     {
         global $conf;
 
-        if (isset($conf['history_summarized_dropped']) &&
-            $conf['history_summarized_dropped']
+        if (isset($conf->history_summarized_dropped) &&
+            $conf->history_summarized_dropped
         ) {
             return;
         }
@@ -432,7 +432,7 @@ final class functions_history
             SQL;
         list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-        if ($count > $conf['history_autopurge_keep_lines'] + $conf['history_autopurge_blocksize']) {
+        if ($count > $conf->history_autopurge_keep_lines + $conf->history_autopurge_blocksize) {
             // it's not yet time to remove history.summarized
             return;
         }

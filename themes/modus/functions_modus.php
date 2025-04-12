@@ -156,12 +156,12 @@ final class functions_modus
             $template->smarty->registerPlugin('modifier', 'cssGradient', self::modus_css_gradient(...));
         }
 
-        require dirname(__FILE__) . '/skins/' . $conf['modus_theme']['skin'] . '.php';
+        require dirname(__FILE__) . '/skins/' . $conf->modus_theme['skin'] . '.php';
 
         $template->assign([
             'conf' => $conf,
             'skin' => $skin,
-            'MODUS_ALBUM_THUMB_SIZE' => intval($conf['modus_theme']['album_thumb_size']),
+            'MODUS_ALBUM_THUMB_SIZE' => intval($conf->modus_theme['album_thumb_size']),
             'SQUARE_WIDTH' => ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE)->max_width(),
             'loaded_plugins' => $GLOBALS['pwg_loaded_plugins'],
         ]);
@@ -359,17 +359,17 @@ final class functions_modus
     ): DerivativeParams {
         global $conf;
 
-        if (isset($conf['modus_theme']) &&
+        if (isset($conf->modus_theme) &&
             functions_session::pwg_get_session_var('index_deriv') === null
         ) {
-            $type = $conf['modus_theme']['index_photo_deriv'];
+            $type = $conf->modus_theme['index_photo_deriv'];
             $caps = functions_session::pwg_get_session_var('caps');
 
             if ($caps) {
                 if (($caps[0] >= 2 && $caps[1] >= 768) ||
                      $caps[0] >= 3
                 ) { /*Ipad3 always has clientWidth 768 independently of orientation*/
-                    $type = $conf['modus_theme']['index_photo_deriv_hdpi'];
+                    $type = $conf->modus_theme['index_photo_deriv_hdpi'];
                 }
             }
 
@@ -387,7 +387,7 @@ final class functions_modus
         array $items
     ): array {
         global $page, $template, $conf;
-        $wh = $conf['modus_theme']['album_thumb_size'];
+        $wh = $conf->modus_theme['album_thumb_size'];
 
         if ($page['section'] != 'categories' ||
             ! $wh
@@ -475,7 +475,7 @@ final class functions_modus
         global $conf, $template;
 
         if (isset($_GET['slideshow'])) {
-            $conf['picture_menu'] = false;
+            $conf->picture_menu = false;
             return;
         }
 
@@ -629,7 +629,7 @@ final class functions_modus
 
         if (! $selected_derivative) {
             $as_pending = true;
-            $selected_derivative = $element_info['derivatives'][functions_session::pwg_get_session_var('picture_deriv', $conf['derivative_default_size'])];
+            $selected_derivative = $element_info['derivatives'][functions_session::pwg_get_session_var('picture_deriv', $conf->derivative_default_size)];
         }
 
         if ($show_original) {

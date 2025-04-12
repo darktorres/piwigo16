@@ -409,7 +409,7 @@ final class ws_functions
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $conf['ws_max_images_per_page'],
+                    'maxValue' => $conf->ws_max_images_per_page,
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'page' => [
@@ -526,8 +526,8 @@ final class ws_functions
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'comments_per_page' => [
-                    'default' => $conf['nb_comment_page'],
-                    'maxValue' => 2 * $conf['nb_comment_page'],
+                    'default' => $conf->nb_comment_page,
+                    'maxValue' => 2 * $conf->nb_comment_page,
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
             ],
@@ -557,7 +557,7 @@ final class ws_functions
                 'query' => [],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $conf['ws_max_images_per_page'],
+                    'maxValue' => $conf->ws_max_images_per_page,
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'page' => [
@@ -582,7 +582,7 @@ final class ws_functions
                     'type' => WS_TYPE_ID,
                 ],
                 'level' => [
-                    'maxValue' => max($conf['available_permission_levels']),
+                    'maxValue' => max($conf->available_permission_levels),
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
             ],
@@ -776,7 +776,7 @@ final class ws_functions
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $conf['ws_max_images_per_page'],
+                    'maxValue' => $conf->ws_max_images_per_page,
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'page' => [
@@ -846,7 +846,7 @@ final class ws_functions
                 'original_sum' => [],
                 'original_filename' => [
                     'default' => null,
-                    'Provide it if "check_uniqueness" is true and $conf["uniqueness_mode"] is "filename".',
+                    'Provide it if "check_uniqueness" is true and $conf->uniqueness_mode is "filename".',
                 ],
                 'name' => [
                     'default' => null,
@@ -870,7 +870,7 @@ final class ws_functions
                 ],
                 'level' => [
                     'default' => 0,
-                    'maxValue' => max($conf['available_permission_levels']),
+                    'maxValue' => max($conf->available_permission_levels),
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'check_uniqueness' => [
@@ -911,7 +911,7 @@ final class ws_functions
                 ],
                 'level' => [
                     'default' => 0,
-                    'maxValue' => max($conf['available_permission_levels']),
+                    'maxValue' => max($conf->available_permission_levels),
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'tags' => [
@@ -948,7 +948,7 @@ final class ws_functions
                 ],
                 'level' => [
                     'default' => 0,
-                    'maxValue' => max($conf['available_permission_levels']),
+                    'maxValue' => max($conf->available_permission_levels),
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'format_of' => [
@@ -1004,7 +1004,7 @@ final class ws_functions
                 ],
                 'level' => [
                     'default' => 0,
-                    'maxValue' => max($conf['available_permission_levels']),
+                    'maxValue' => max($conf->available_permission_levels),
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'tag_ids' => [
@@ -1051,7 +1051,7 @@ final class ws_functions
             pwg_images::ws_images_setMd5sum(...),
             [
                 'block_size' => [
-                    'default' => $conf['checksum_compute_blocksize'],
+                    'default' => $conf->checksum_compute_blocksize,
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'pwg_token' => [],
@@ -1247,7 +1247,7 @@ final class ws_functions
                     'type' => WS_TYPE_ID,
                 ],
             ],
-            'Deletes the album thumbnail. Only possible if $conf[\'allow_random_representative\']',
+            'Deletes the album thumbnail. Only possible if $conf->allow_random_representative',
             $ws_functions_root . 'pwg_categories.php',
             [
                 'admin_only' => true,
@@ -1381,7 +1381,7 @@ final class ws_functions
                 ],
             ],
             'Checks existence of images.
-            <br>Give <b>md5sum_list</b> if $conf[uniqueness_mode]==md5sum. Give <b>filename_list</b> if $conf[uniqueness_mode]==filename.',
+            <br>Give <b>md5sum_list</b> if $conf->uniqueness_mode==md5sum. Give <b>filename_list</b> if $conf->uniqueness_mode==filename.',
             $ws_functions_root . 'pwg_images.php',
             [
                 'admin_only' => true,
@@ -1487,7 +1487,7 @@ final class ws_functions
                 ],
                 'level' => [
                     'default' => null,
-                    'maxValue' => max($conf['available_permission_levels']),
+                    'maxValue' => max($conf->available_permission_levels),
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'single_value_mode' => [
@@ -1697,7 +1697,7 @@ final class ws_functions
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $conf['ws_max_users_per_page'],
+                    'maxValue' => $conf->ws_max_users_per_page,
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'page' => [
@@ -1876,7 +1876,7 @@ final class ws_functions
                 ],
                 'min_level' => [
                     'default' => 0,
-                    'maxValue' => max($conf['available_permission_levels']),
+                    'maxValue' => max($conf->available_permission_levels),
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'group_id' => [
@@ -1885,7 +1885,7 @@ final class ws_functions
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $conf['ws_max_users_per_page'],
+                    'maxValue' => $conf->ws_max_users_per_page,
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'page' => [
@@ -2019,7 +2019,7 @@ final class ws_functions
                 ],
                 'level' => [
                     'flags' => WS_PARAM_OPTIONAL,
-                    'maxValue' => max($conf['available_permission_levels']),
+                    'maxValue' => max($conf->available_permission_levels),
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'language' => [
@@ -2197,7 +2197,7 @@ final class ws_functions
             [
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $conf['ws_max_images_per_page'],
+                    'maxValue' => $conf->ws_max_images_per_page,
                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
                 ],
                 'page' => [

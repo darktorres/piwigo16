@@ -95,7 +95,7 @@ abstract class CalendarBase
         $res = '';
 
         for ($i = 0; $i < count($page['chronology_date']); $i++) {
-            $res .= $conf['level_separator'];
+            $res .= $conf->level_separator;
 
             if (isset($page['chronology_date'][$i + 1])) {
                 $chronology_date = array_slice($page['chronology_date'], 0, $i + 1);
@@ -181,7 +181,7 @@ abstract class CalendarBase
 
         $nav_bar_datas = [];
 
-        if ($conf['calendar_show_empty'] &&
+        if ($conf->calendar_show_empty &&
             $show_empty &&
             ! empty($labels)
         ) {
@@ -226,7 +226,7 @@ abstract class CalendarBase
 
         }
 
-        if ($conf['calendar_show_any'] &&
+        if ($conf->calendar_show_any &&
             $show_any &&
             count($items) > 1 &&
             count($date_components) < count($this->calendar_levels) - 1

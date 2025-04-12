@@ -28,7 +28,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-if (! $conf['enable_synchronization']) {
+if (! $conf->enable_synchronization) {
     exit('synchronization is disabled');
 }
 
@@ -249,16 +249,16 @@ if (isset($_POST['submit']) &&
     foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
         $dir = basename($fulldir);
 
-        if (preg_match($conf['sync_chars_regex'], $dir)) {
+        if (preg_match($conf->sync_chars_regex, $dir)) {
             $insert = [
                 'id' => $next_id++,
                 'dir' => $dir,
                 'name' => str_replace('_', ' ', $dir),
                 'site_id' => $site_id,
                 'commentable' =>
-                  functions_mysqli::boolean_to_string($conf['newcat_default_commentable']),
-                'status' => $conf['newcat_default_status'],
-                'visible' => functions_mysqli::boolean_to_string($conf['newcat_default_visible']),
+                  functions_mysqli::boolean_to_string($conf->newcat_default_commentable),
+                'status' => $conf->newcat_default_status,
+                'visible' => functions_mysqli::boolean_to_string($conf->newcat_default_visible),
             ];
 
             if (isset($db_fulldirs[dirname($fulldir)])) {
@@ -334,7 +334,7 @@ if (isset($_POST['submit']) &&
 
             $category_up = implode(', ', array_unique($category_up));
 
-            if ($conf['inheritance_by_default'] &&
+            if ($conf->inheritance_by_default &&
                 ! empty($category_up)
             ) {
                 $query = <<<SQL
@@ -526,7 +526,7 @@ if (isset($_POST['submit']) &&
 
         $filename = basename($path);
 
-        if (! preg_match($conf['sync_chars_regex'], $filename)) {
+        if (! preg_match($conf->sync_chars_regex, $filename)) {
             $errors[] = [
                 'path' => $path,
                 'type' => 'PWG-UPDATE-1',
@@ -562,7 +562,7 @@ if (isset($_POST['submit']) &&
             'info' => functions::l10n('added'),
         ];
 
-        if ($conf['enable_formats']) {
+        if ($conf->enable_formats) {
             foreach ($fs[$path]['formats'] as $ext => $filesize) {
                 $insert_formats[] = [
                     'image_id' => $insert['id'],
@@ -581,7 +581,7 @@ if (isset($_POST['submit']) &&
     }
 
     // search new/removed formats on photos already registered in database
-    if ($conf['enable_formats']) {
+    if ($conf->enable_formats) {
         $db_elements_flip = array_flip($db_elements);
 
         $existing_ids = [];

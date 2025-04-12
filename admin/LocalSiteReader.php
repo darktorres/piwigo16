@@ -27,12 +27,12 @@ final class LocalSiteReader
         $this->site_url = $url;
         global $conf;
 
-        if (! isset($conf['flip_file_ext'])) {
-            $conf['flip_file_ext'] = array_flip($conf['file_ext']);
+        if (! isset($conf->flip_file_ext)) {
+            $conf->flip_file_ext = array_flip($conf->file_ext);
         }
 
-        if (! isset($conf['flip_picture_ext'])) {
-            $conf['flip_picture_ext'] = array_flip($conf['picture_ext']);
+        if (! isset($conf->flip_picture_ext)) {
+            $conf->flip_picture_ext = array_flip($conf->picture_ext);
         }
     }
 
@@ -69,8 +69,8 @@ final class LocalSiteReader
     }
 
     /**
-     * Returns an array with all file system files according to $conf['file_ext']
-     * and $conf['picture_ext']
+     * Returns an array with all file system files according to $conf->file_ext
+     * and $conf->picture_ext
      * @param string $path recurse in this directory
      * @return array like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
@@ -96,10 +96,10 @@ final class LocalSiteReader
                     $extension = strtolower(functions::get_extension($node));
                     $filename_wo_ext = functions::get_filename_wo_extension($node);
 
-                    if (isset($conf['flip_file_ext'][$extension])) {
+                    if (isset($conf->flip_file_ext[$extension])) {
                         $representative_ext = null;
 
-                        if (! isset($conf['flip_picture_ext'][$extension])) {
+                        if (! isset($conf->flip_picture_ext[$extension])) {
                             $representative_ext = $this->get_representative_ext($path, $filename_wo_ext);
                         }
 
@@ -107,7 +107,7 @@ final class LocalSiteReader
                             'representative_ext' => $representative_ext,
                         ];
 
-                        if ($conf['enable_formats']) {
+                        if ($conf->enable_formats) {
                             $fs[$path . '/' . $node]['formats'] = $this->get_formats($path, $filename_wo_ext);
                         }
                     }
@@ -152,7 +152,7 @@ final class LocalSiteReader
 
         $representative_ext = null;
 
-        if (! isset($conf['flip_picture_ext'][$extension])) {
+        if (! isset($conf->flip_picture_ext[$extension])) {
             $dirname = dirname($file);
             $filename_wo_ext = functions::get_filename_wo_extension($filename);
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
@@ -184,7 +184,7 @@ final class LocalSiteReader
         global $conf;
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';
 
-        foreach ($conf['picture_ext'] as $ext) {
+        foreach ($conf->picture_ext as $ext) {
             $test = $base_test . $ext;
 
             if (is_file($test)) {
@@ -205,7 +205,7 @@ final class LocalSiteReader
 
         $base_test = $path . '/pwg_format/' . $filename_wo_ext . '.';
 
-        foreach ($conf['format_ext'] as $ext) {
+        foreach ($conf->format_ext as $ext) {
             $test = $base_test . $ext;
 
             if (is_file($test)) {

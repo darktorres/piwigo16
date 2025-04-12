@@ -26,7 +26,7 @@ require_once __DIR__ . '/inc/common.php';
 // Check Access and exit when user status is not ok
 functions_user::check_status(ACCESS_GUEST);
 
-if ($conf['enable_formats'] &&
+if ($conf->enable_formats &&
     isset($_GET['format'])
 ) {
     functions::check_input_parameter('format', $_GET, false, PATTERN_ID);

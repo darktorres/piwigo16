@@ -51,7 +51,7 @@ final class SrcImage
         $ext = strtolower(functions::get_extension($infos['path']));
         $infos['path_ext'] = $ext;
 
-        if (in_array($ext, $conf['picture_ext'])) {
+        if (in_array($ext, $conf->picture_ext)) {
             $this->rel_path = $infos['path'];
             $this->flags |= self::IS_ORIGINAL;
         } elseif (! empty($infos['representative_ext'])) {

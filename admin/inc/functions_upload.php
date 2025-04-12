@@ -174,7 +174,7 @@ final class functions_upload
 
         // we only try to detect duplicate on a new image, not when updating an existing image
         if (! isset($image_id) &&
-            $conf['upload_detect_duplicate']
+            $conf->upload_detect_duplicate
         ) {
             $query = <<<SQL
                 SELECT id
@@ -228,7 +228,7 @@ final class functions_upload
 
             // upload directory hierarchy
             $upload_dir = sprintf(
-                $conf['upload_dir'] . '/%s/%s/%s',
+                $conf->upload_dir . '/%s/%s/%s',
                 $year,
                 $month,
                 $day
@@ -250,12 +250,12 @@ final class functions_upload
                 $file_path .= 'jpg';
             } elseif ($type == IMAGETYPE_WEBP) {
                 $file_path .= 'webp';
-            } elseif (isset($conf['upload_form_all_types']) &&
-                      $conf['upload_form_all_types']
+            } elseif (isset($conf->upload_form_all_types) &&
+                      $conf->upload_form_all_types
             ) {
                 $original_extension = strtolower(functions::get_extension($original_filename));
 
-                if (in_array($original_extension, $conf['file_ext'])) {
+                if (in_array($original_extension, $conf->file_ext)) {
                     $file_path .= $original_extension;
                 } else {
                     unlink($source_filepath);
@@ -292,18 +292,18 @@ final class functions_upload
         }
 
         if (pwg_image::get_library() != 'gd') {
-            if ($conf['original_resize']) {
-                $need_resize = self::need_resize($file_path, $conf['original_resize_maxwidth'], $conf['original_resize_maxheight']);
+            if ($conf->original_resize) {
+                $need_resize = self::need_resize($file_path, $conf->original_resize_maxwidth, $conf->original_resize_maxheight);
 
                 if ($need_resize) {
                     $img = new pwg_image($file_path);
 
                     $img->pwg_resize(
                         $file_path,
-                        $conf['original_resize_maxwidth'],
-                        $conf['original_resize_maxheight'],
-                        $conf['original_resize_quality'],
-                        $conf['upload_form_automatic_rotation'],
+                        $conf->original_resize_maxwidth,
+                        $conf->original_resize_maxheight,
+                        $conf->original_resize_quality,
+                        $conf->upload_form_automatic_rotation,
                         false
                     );
 
@@ -405,15 +405,15 @@ final class functions_upload
     ): void {
         global $conf;
 
-        if (! isset($conf['lounge_active'])) {
+        if (! isset($conf->lounge_active)) {
             functions::conf_update_param('lounge_active', false, true);
         }
 
-        if (! $conf['lounge_active']) {
+        if (! $conf->lounge_active) {
             // check if we need to use the lounge from now
             list($nb_photos) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT COUNT(*) FROM images;'));
 
-            if ($nb_photos >= $conf['lounge_activate_threshold']) {
+            if ($nb_photos >= $conf->lounge_activate_threshold) {
                 functions::conf_update_param('lounge_active', true, true);
             }
         }
@@ -421,14 +421,14 @@ final class functions_upload
         if (isset($categories) &&
             count($categories) > 0
         ) {
-            if ($conf['lounge_active']) {
+            if ($conf->lounge_active) {
                 functions_admin::fill_lounge([$image_id], $categories);
             } else {
                 functions_admin::associate_images_to_categories([$image_id], $categories);
             }
         }
 
-        if (! $conf['lounge_active']) {
+        if (! $conf->lounge_active) {
             functions_admin::invalidate_user_cache();
         }
     }
@@ -529,7 +529,7 @@ final class functions_upload
         $representative_file_path = functions::original_to_representative($file_path, $ext);
         self::prepare_directory(dirname($representative_file_path));
 
-        $exec = $conf['ext_imagick_dir'] . 'convert';
+        $exec = $conf->ext_imagick_dir . 'convert';
 
         if ($ext == 'jpg') {
             $exec .= ' -quality ' . $jpg_quality;
@@ -576,7 +576,7 @@ final class functions_upload
 
         list($w, $h) = self::get_optimal_dimensions_for_representative();
 
-        $exec = $conf['ext_imagick_dir'] . 'convert';
+        $exec = $conf->ext_imagick_dir . 'convert';
         $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "' . $w . 'x' . $h . '>"';
         $exec .= ' "' . realpath($file_path) . '"';
         $exec .= ' "' . $representative_file_path . '"';
@@ -618,14 +618,14 @@ final class functions_upload
         $representative_file_path = dirname($file_path) . '/pwg_representative/';
         $representative_file_path .= functions::get_filename_wo_extension(basename($file_path)) . '.';
 
-        $representative_ext = $conf['tiff_representative_ext'];
+        $representative_ext = $conf->tiff_representative_ext;
         $representative_file_path .= $representative_ext;
 
         self::prepare_directory(dirname($representative_file_path));
 
-        $exec = $conf['ext_imagick_dir'] . 'convert';
+        $exec = $conf->ext_imagick_dir . 'convert';
 
-        if ($conf['tiff_representative_ext'] == 'jpg') {
+        if ($conf->tiff_representative_ext == 'jpg') {
             $exec .= ' -quality 98';
         }
 
@@ -697,7 +697,7 @@ final class functions_upload
         $logger->info(__FUNCTION__ . ', Poster at ' . $second . 's');
 
         // Generate poster, see https://trac.ffmpeg.org/wiki/Seeking
-        $ffmpeg = $conf['ffmpeg_dir'] . 'ffmpeg';
+        $ffmpeg = $conf->ffmpeg_dir . 'ffmpeg';
         $ffmpeg .= ' -ss ' . $second;  // Fast seeking
         $ffmpeg .= ' -i "' . $file_path . '"'; // Video file
         $ffmpeg .= ' -frames:v 1';  // Extract one frame
@@ -747,7 +747,7 @@ final class functions_upload
 
         self::prepare_directory(dirname($representative_file_path));
 
-        $exec = $conf['ext_imagick_dir'] . 'convert';
+        $exec = $conf->ext_imagick_dir . 'convert';
 
         $exec .= ' "' . realpath($file_path) . '"';
 
@@ -806,7 +806,7 @@ final class functions_upload
 
         // convert -density 300 image.eps -resize 2048x2048 image.png
 
-        $exec = $conf['ext_imagick_dir'] . 'convert';
+        $exec = $conf->ext_imagick_dir . 'convert';
         $exec .= ' -density 300';
         $exec .= ' "' . realpath($file_path) . '"';
         $exec .= ' -resize 2048x2048';
@@ -884,12 +884,12 @@ final class functions_upload
     ): array {
         global $conf;
 
-        if (isset($conf['upload_form_all_types']) &&
-            $conf['upload_form_all_types']
+        if (isset($conf->upload_form_all_types) &&
+            $conf->upload_form_all_types
         ) {
-            $extensions = $conf['file_ext'];
+            $extensions = $conf->file_ext;
         } else {
-            $extensions = $conf['picture_ext'];
+            $extensions = $conf->picture_ext;
         }
 
         return array_unique(array_map(strtolower(...), $extensions));
@@ -974,20 +974,20 @@ final class functions_upload
     {
         global $conf;
 
-        $relative_dir = preg_replace('#^./#', '', $conf['upload_dir']);
+        $relative_dir = preg_replace('#^./#', '', $conf->upload_dir);
 
-        if (! is_dir($conf['upload_dir'])) {
-            if (! is_writable(dirname($conf['upload_dir']))) {
+        if (! is_dir($conf->upload_dir)) {
+            if (! is_writable(dirname($conf->upload_dir))) {
                 return sprintf(
                     functions::l10n('Create the "%s" directory at the root of your Piwigo installation'),
                     $relative_dir
                 );
             }
         } else {
-            if (! is_writable($conf['upload_dir'])) {
-                chmod($conf['upload_dir'], 0777);
+            if (! is_writable($conf->upload_dir)) {
+                chmod($conf->upload_dir, 0777);
 
-                if (! is_writable($conf['upload_dir'])) {
+                if (! is_writable($conf->upload_dir)) {
                     return sprintf(
                         functions::l10n('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation'),
                         $relative_dir
@@ -1010,7 +1010,7 @@ final class functions_upload
         global $conf;
 
         $enabled = ImageStdParams::get_defined_type_map();
-        $disabled = unserialize($conf['disabled_derivatives']);
+        $disabled = unserialize($conf->disabled_derivatives);
 
         if ($disabled === false) {
             $disabled = [];

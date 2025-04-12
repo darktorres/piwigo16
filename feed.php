@@ -49,7 +49,7 @@ if (! empty($feed_id)) {
     $image_only = true;
 
     if (! functions_user::is_a_guest()) { // auto session was created - so switch to guest
-        $user = functions_user::build_user($conf['guest_id'], true);
+        $user = functions_user::build_user($conf->guest_id, true);
     }
 }
 
@@ -61,7 +61,7 @@ list($dbnow) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('S
 functions_url::set_make_full_url();
 
 $rss = new UniversalFeedCreator();
-$rss->title = $conf['gallery_title'];
+$rss->title = $conf->gallery_title;
 $rss->title .= ' (as ' . stripslashes($user['username']) . ')';
 
 $rss->link = functions_url::get_gallery_home_url();
@@ -90,7 +90,7 @@ if (! $image_only) {
         $item->descriptionHtmlSyndicated = true;
 
         $item->date = functions::ts_to_iso8601(functions::datetime_to_ts($dbnow));
-        $item->author = $conf['rss_feed_author'];
+        $item->author = $conf->rss_feed_author;
         $item->guid = sprintf('%s', $dbnow);
 
         $rss->addItem($item);
@@ -120,7 +120,7 @@ if (! empty($feed_id) &&
     }
 }
 
-$dates = functions_notification::get_recent_post_dates_array($conf['recent_post_dates']['RSS']);
+$dates = functions_notification::get_recent_post_dates_array($conf->recent_post_dates['RSS']);
 
 foreach ($dates as $date_detail) { // for each recent post date we create a feed item
     $item = new FeedItem();
@@ -135,19 +135,19 @@ foreach ($dates as $date_detail) { // for each recent post date we create a feed
         ]
     );
 
-    $item->description .= '<a href="' . functions_url::make_index_url() . '">' . $conf['gallery_title'] . '</a><br> ';
+    $item->description .= '<a href="' . functions_url::make_index_url() . '">' . $conf->gallery_title . '</a><br> ';
     $item->description .= functions_notification::get_html_description_recent_post_date($date_detail);
 
     $item->descriptionHtmlSyndicated = true;
 
     $item->date = functions::ts_to_iso8601(functions::datetime_to_ts($date));
-    $item->author = $conf['rss_feed_author'];
+    $item->author = $conf->rss_feed_author;
     $item->guid = sprintf('%s', 'pics-' . $date);
 
     $rss->addItem($item);
 }
 
-$fileName = './' . $conf['data_location'] . 'tmp';
+$fileName = './' . $conf->data_location . 'tmp';
 functions::mkgetdir($fileName); // just in case
 $fileName .= '/feed.xml';
 // send XML feed

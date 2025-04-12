@@ -141,7 +141,7 @@ if (empty($page['is_external'])) {
         );
     }
 
-    if ($conf['index_flat_icon'] &&
+    if ($conf->index_flat_icon &&
         ! isset($page['flat']) &&
         $page['section'] == 'categories'
     ) {
@@ -160,14 +160,14 @@ if (empty($page['is_external'])) {
             'chronology_view' => 'list',
         ];
 
-        if ($conf['index_created_date_icon']) {
+        if ($conf->index_created_date_icon) {
             $template->assign(
                 'U_MODE_CREATED',
                 functions_url::duplicate_index_url($chronology_params, ['start', 'flat'])
             );
         }
 
-        if ($conf['index_posted_date_icon']) {
+        if ($conf->index_posted_date_icon) {
             $chronology_params['chronology_field'] = 'posted';
             $template->assign(
                 'U_MODE_POSTED',
@@ -181,7 +181,7 @@ if (empty($page['is_external'])) {
             $chronology_field = 'created';
         }
 
-        if ($conf['index_' . $chronology_field . '_date_icon']) {
+        if ($conf->{'index_' . $chronology_field . '_date_icon'}) {
             $url = functions_url::duplicate_index_url(
                 [
                     'chronology_field' => $chronology_field,
@@ -390,9 +390,9 @@ if (empty($page['is_external'])) {
 
                 $user_ids_str = implode(', ', $user_ids);
                 $query = <<<SQL
-                    SELECT {$conf['user_fields']['id']} AS id, {$conf['user_fields']['username']} AS username
+                    SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['username']} AS username
                     FROM users
-                    WHERE {$conf['user_fields']['id']} IN ({$user_ids_str});
+                    WHERE {$conf->user_fields['id']} IN ({$user_ids_str});
                     SQL;
                 $username_of = functions_mysqli::query2array($query, 'id', 'username');
 
@@ -532,8 +532,8 @@ if (empty($page['is_external'])) {
     ) {
         $template->assign(
             [
-                'SEARCH_IN_SET_BUTTON' => $conf['index_search_in_set_button'],
-                'SEARCH_IN_SET_ACTION' => $conf['index_search_in_set_action'],
+                'SEARCH_IN_SET_BUTTON' => $conf->index_search_in_set_button,
+                'SEARCH_IN_SET_ACTION' => $conf->index_search_in_set_action,
                 'SEARCH_IN_SET_URL' => functions_url::get_root_url() . 'search.php?cat_id=' . $page['category']['id'],
             ]
         );
@@ -542,8 +542,8 @@ if (empty($page['is_external'])) {
     if (isset($page['body_data']['tag_ids'])) {
         $template->assign(
             [
-                'SEARCH_IN_SET_BUTTON' => $conf['index_search_in_set_button'],
-                'SEARCH_IN_SET_ACTION' => $conf['index_search_in_set_action'],
+                'SEARCH_IN_SET_BUTTON' => $conf->index_search_in_set_button,
+                'SEARCH_IN_SET_ACTION' => $conf->index_search_in_set_action,
                 'SEARCH_IN_SET_URL' => functions_url::get_root_url() . 'search.php?tag_id=' . implode(',', $page['body_data']['tag_ids']),
             ]
         );
@@ -551,7 +551,7 @@ if (empty($page['is_external'])) {
 
     if (isset($page['category']) &&
         functions_user::is_admin() &&
-        $conf['index_edit_icon']
+        $conf->index_edit_icon
     ) {
         $template->assign(
             'U_EDIT',
@@ -561,7 +561,7 @@ if (empty($page['is_external'])) {
 
     if (functions_user::is_admin() &&
         ! empty($page['items']) &&
-        $conf['index_caddie_icon']
+        $conf->index_caddie_icon
     ) {
         $template->assign(
             'U_CADDIE',
@@ -609,7 +609,7 @@ if (empty($page['is_external'])) {
     }
 
     // image order
-    if ($conf['index_sort_order_input'] &&
+    if ($conf->index_sort_order_input &&
         count($page['items']) > 0 &&
         $page['section'] != 'most_visited' &&
         $page['section'] != 'best_rated'
@@ -618,7 +618,7 @@ if (empty($page['is_external'])) {
         $order_idx = functions_session::pwg_get_session_var('image_order', 0);
 
         // get first order field and direction
-        $first_order = substr($conf['order_by'], 9);
+        $first_order = substr($conf->order_by, 9);
         $pos = strpos($first_order, ',');
 
         if ($pos !== false) {
@@ -657,7 +657,7 @@ if (empty($page['is_external'])) {
     }
 
     // category comment
-    if (($page['start'] == 0 || $conf['album_description_on_all_pages']) &&
+    if (($page['start'] == 0 || $conf->album_description_on_all_pages) &&
          ! isset($page['chronology_field']) &&
          ! empty($page['comment'])
     ) {
@@ -683,7 +683,7 @@ if (empty($page['is_external'])) {
     if (! empty($page['items'])) {
         require __DIR__ . '/inc/category_default.php';
 
-        if ($conf['index_sizes_icon']) {
+        if ($conf->index_sizes_icon) {
             $url = functions_url::add_url_params(
                 functions_url::duplicate_index_url(),
                 [
@@ -715,7 +715,7 @@ if (empty($page['is_external'])) {
     if (! empty($page['cat_slideshow_url'])) {
         if (isset($_GET['slideshow'])) {
             functions::redirect($page['cat_slideshow_url']);
-        } elseif ($conf['index_slideshow_icon']) {
+        } elseif ($conf->index_slideshow_icon) {
             $template->assign('U_SLIDESHOW', $page['cat_slideshow_url']);
         }
     }

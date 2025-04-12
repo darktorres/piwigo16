@@ -299,7 +299,7 @@ if ((isset($_POST['submit']) || isset($_GET['now'])) &&
         $page['count_queries'] = 0;
 
         $page['upgrade_start'] = functions::get_moment();
-        $conf['die_on_sql_error'] = false;
+        $conf->die_on_sql_error = false;
         require $upgrade_file;
         functions::conf_update_param('piwigo_db_version', functions::get_branch_from_version(PHPWG_VERSION));
 

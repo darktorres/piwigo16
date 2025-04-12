@@ -77,7 +77,7 @@ final class pwg_extensions
             return new PwgError(403, functions::l10n('Webmaster status is required.'));
         }
 
-        if (! $conf['enable_extensions_install'] &&
+        if (! $conf->enable_extensions_install &&
             $params['action'] == 'delete'
         ) {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
@@ -118,7 +118,7 @@ final class pwg_extensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! $conf['enable_extensions_install'] &&
+        if (! $conf->enable_extensions_install &&
             $params['action'] == 'delete'
         ) {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
@@ -158,7 +158,7 @@ final class pwg_extensions
     ): PwgError|string {
         global $conf;
 
-        if (! $conf['enable_extensions_install']) {
+        if (! $conf->enable_extensions_install) {
             return new PwgError(401, 'Piwigo extensions install/update system is disabled');
         }
 
@@ -280,18 +280,18 @@ final class pwg_extensions
         // Reset ignored extension
         if ($params['reset']) {
             if (! empty($params['type']) &&
-                isset($conf['updates_ignored'][$params['type']])
+                isset($conf->updates_ignored[$params['type']])
             ) {
-                $conf['updates_ignored'][$params['type']] = [];
+                $conf->updates_ignored[$params['type']] = [];
             } else {
-                $conf['updates_ignored'] = [
+                $conf->updates_ignored = [
                     'plugins' => [],
                     'themes' => [],
                     'languages' => [],
                 ];
             }
 
-            functions::conf_update_param('updates_ignored', functions_mysqli::pwg_db_real_escape_string(serialize($conf['updates_ignored'])));
+            functions::conf_update_param('updates_ignored', functions_mysqli::pwg_db_real_escape_string(serialize($conf->updates_ignored)));
             unset($_SESSION['extensions_need_update']);
             return true;
         }
@@ -304,11 +304,11 @@ final class pwg_extensions
         }
 
         // Add or remove extension from ignore list
-        if (! in_array($params['id'], $conf['updates_ignored'][$params['type']])) {
-            $conf['updates_ignored'][$params['type']][] = $params['id'];
+        if (! in_array($params['id'], $conf->updates_ignored[$params['type']])) {
+            $conf->updates_ignored[$params['type']][] = $params['id'];
         }
 
-        functions::conf_update_param('updates_ignored', functions_mysqli::pwg_db_real_escape_string(serialize($conf['updates_ignored'])));
+        functions::conf_update_param('updates_ignored', functions_mysqli::pwg_db_real_escape_string(serialize($conf->updates_ignored)));
         unset($_SESSION['extensions_need_update']);
         return true;
     }

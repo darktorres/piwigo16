@@ -109,8 +109,8 @@ function language_controller_flags(): void
 
     $available_lang = functions::get_languages();
 
-    if (isset($conf['no_flag_languages'])) {
-        $available_lang = array_diff_key($available_lang, array_flip($conf['no_flag_languages']));
+    if (isset($conf->no_flag_languages)) {
+        $available_lang = array_diff_key($available_lang, array_flip($conf->no_flag_languages));
     }
 
     $url_starting = functions_url::get_query_string_diff(['lang']);

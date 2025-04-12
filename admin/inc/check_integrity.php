@@ -39,7 +39,7 @@ final class check_integrity
         global $page, $header_notes, $conf;
 
         // Ignore list
-        $conf_c13y_ignore = $conf['c13y_ignore'];
+        $conf_c13y_ignore = $conf->c13y_ignore;
 
         if (is_array($conf_c13y_ignore) &&
             isset($conf_c13y_ignore['version']) &&

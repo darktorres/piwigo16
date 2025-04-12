@@ -46,7 +46,7 @@ final class languages
     ): array {
         global $conf;
 
-        if (! $conf['enable_extensions_install'] &&
+        if (! $conf->enable_extensions_install &&
             $action == 'delete'
         ) {
             exit('Piwigo extensions install/update/delete system is disabled');
@@ -119,7 +119,7 @@ final class languages
                 $query = <<<SQL
                     UPDATE user_infos
                     SET language = '{$language_id}'
-                    WHERE user_id IN ({$conf['default_user_id']}, {$conf['guest_id']});
+                    WHERE user_id IN ({$conf->default_user_id}, {$conf->guest_id});
                     SQL;
                 functions_mysqli::pwg_query($query);
                 break;
@@ -227,7 +227,7 @@ final class languages
         global $user, $conf;
 
         $get_data = [
-            'category_id' => $conf['pem_languages_category'],
+            'category_id' => $conf->pem_languages_category,
             'format' => 'php',
         ];
 

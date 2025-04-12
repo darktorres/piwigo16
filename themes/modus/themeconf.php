@@ -31,30 +31,30 @@ define('MODUS_STR_RECENT_CHILD', "\xe2\x9c\xbb"); //TEARDROP-SPOKED ASTERISK
 if (! empty($_GET['skin']) &&
     ! preg_match('/[^a-zA-Z0-9_-]/', $_GET['skin'])
 ) {
-    $conf['modus_theme']['skin'] = $_GET['skin'];
+    $conf->modus_theme['skin'] = $_GET['skin'];
 }
 
 // we're mainly interested in an override of the colorscheme
-require dirname(__FILE__) . '/skins/' . $conf['modus_theme']['skin'] . '.php';
+require dirname(__FILE__) . '/skins/' . $conf->modus_theme['skin'] . '.php';
 
 $this->assign(
     [
         'MODUS_CSS_VERSION' => crc32(implode(',', [
-            'a' . $conf['modus_theme']['skin'],
-            $conf['modus_theme']['album_thumb_size'],
+            'a' . $conf->modus_theme['skin'],
+            $conf->modus_theme['album_thumb_size'],
             ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE)->max_width(),
-            $conf['index_created_date_icon'],
-            $conf['index_posted_date_icon'],
+            $conf->index_created_date_icon,
+            $conf->index_posted_date_icon,
         ])),
-        'MODUS_DISPLAY_PAGE_BANNER' => $conf['modus_theme']['display_page_banner'],
+        'MODUS_DISPLAY_PAGE_BANNER' => $conf->modus_theme['display_page_banner'],
     ]
 );
 
-if (file_exists(dirname(__FILE__) . '/skins/' . $conf['modus_theme']['skin'] . '.css')) {
-    $this->assign('MODUS_CSS_SKIN', $conf['modus_theme']['skin']);
+if (file_exists(dirname(__FILE__) . '/skins/' . $conf->modus_theme['skin'] . '.css')) {
+    $this->assign('MODUS_CSS_SKIN', $conf->modus_theme['skin']);
 }
 
-if (! $conf['compiled_template_cache_language']) {
+if (! $conf->compiled_template_cache_language) {
     functions::load_language('theme.lang', dirname(__FILE__) . '/');
     functions::load_language('lang', './local/', [
         'no_fallback' => true,
@@ -65,15 +65,15 @@ if (! $conf['compiled_template_cache_language']) {
 if (isset($_COOKIE['caps'])) {
     setcookie('caps', '', 0, functions_cookie::cookie_path());
     functions_session::pwg_set_session_var('caps', explode('x', $_COOKIE['caps']));
-    /*file_put_contents('./'.$conf['data_location'].'tmp/modus.log', implode("\t", array(
+    /*file_put_contents('./'.$conf->data_location.'tmp/modus.log', implode("\t", array(
         date("Y-m-d H:i:s"), $_COOKIE['caps'], $_SERVER['HTTP_USER_AGENT']
         ))."\n", FILE_APPEND);*/
 }
 
 if (functions::get_device() == 'mobile') {
-    $conf['tag_letters_column_number'] = 1;
+    $conf->tag_letters_column_number = 1;
 } elseif (functions::get_device() == 'tablet') {
-    $conf['tag_letters_column_number'] = min($conf['tag_letters_column_number'], 3);
+    $conf->tag_letters_column_number = min($conf->tag_letters_column_number, 3);
 }
 
 $this->smarty->registerFilter('pre', functions_modus::modus_smarty_prefilter_wrap(...));

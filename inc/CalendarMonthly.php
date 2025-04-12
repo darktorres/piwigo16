@@ -433,7 +433,7 @@ final class CalendarMonthly extends CalendarBase
             //first_day_dow = week day corresponding to the first day of this month
             $wday_labels = $lang['day'];
 
-            if ($conf['week_starts_on'] == 'monday') {
+            if ($conf->week_starts_on == 'monday') {
                 if ($first_day_dow == 0) {
                     $first_day_dow = 6;
                 } else {

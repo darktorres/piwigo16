@@ -70,7 +70,7 @@ if ($page['section'] != 'recent_cats') {
 
 $offset = $page['startcat'] ?? 0;
 $query .= <<<SQL
-    LIMIT {$conf['nb_categories_page']} OFFSET {$offset};
+    LIMIT {$conf->nb_categories_page} OFFSET {$offset};
     SQL;
 
 $query = functions_plugins::trigger_change('loc_begin_index_category_thumbnails_query', $query);
@@ -90,7 +90,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $image_id = $row['user_representative_picture_id'];
     } elseif (! empty($row['representative_picture_id'])) { // if a representative picture is set, it has priority
         $image_id = $row['representative_picture_id'];
-    } elseif ($conf['allow_random_representative']) { // searching a random representative among elements in sub-categories
+    } elseif ($conf->allow_random_representative) { // searching a random representative among elements in sub-categories
         $image_id = functions_category::get_random_image_in_category($row);
     } elseif ($row['count_categories'] > 0 &&
               $row['count_images'] > 0
@@ -121,7 +121,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     }
 
     if (isset($image_id)) {
-        if ($conf['representative_cache_on_subcats'] &&
+        if ($conf->representative_cache_on_subcats &&
             $row['user_representative_picture_id'] != $image_id
         ) {
             $user_representative_updates_for[$row['id']] = $image_id;
@@ -144,7 +144,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     unset($image_id);
 }
 
-if ($conf['display_fromto']) {
+if ($conf->display_fromto) {
     if (count($category_ids) > 0) {
         $category_ids_list = implode(', ', $category_ids);
         $sql_condition = functions_user::get_sql_condition_FandF(
@@ -206,7 +206,7 @@ if (count($categories) > 0) {
                         $new_image_ids[] = $image_id;
                     }
 
-                    if ($conf['representative_cache_on_level']) {
+                    if ($conf->representative_cache_on_level) {
                         $user_representative_updates_for[$category['id']] = $image_id;
                     }
 
@@ -319,11 +319,11 @@ if (count($categories) > 0) {
             'NAME' => $name,
         ]);
 
-        if ($conf['index_new_icon']) {
+        if ($conf->index_new_icon) {
             $tpl_var['icon_ts'] = functions::get_icon($category['max_date_last'], $category['is_child_date_last']);
         }
 
-        if ($conf['display_fromto']) {
+        if ($conf->display_fromto) {
             if (isset($dates_of_category[$category['id']])) {
                 $from = $dates_of_category[$category['id']]['from'];
                 $to = $dates_of_category[$category['id']]['to'];
@@ -343,7 +343,7 @@ if (count($categories) > 0) {
     $derivative_params = functions_plugins::trigger_change('get_index_album_derivative_params', ImageStdParams::get_by_type(derivative_std_params::IMG_THUMB));
     $tpl_thumbnails_var_selection = functions_plugins::trigger_change('loc_end_index_category_thumbnails', $tpl_thumbnails_var_selection);
     $template->assign([
-        'maxRequests' => $conf['max_requests'],
+        'maxRequests' => $conf->max_requests,
         'category_thumbnails' => $tpl_thumbnails_var_selection,
         'derivative_params' => $derivative_params,
     ]);
@@ -353,12 +353,12 @@ if (count($categories) > 0) {
     // navigation bar
     $page['cats_navigation_bar'] = [];
 
-    if ($page['total_categories'] > $conf['nb_categories_page']) {
+    if ($page['total_categories'] > $conf->nb_categories_page) {
         $page['cats_navigation_bar'] = functions::create_navigation_bar(
             functions_url::duplicate_index_url([], ['startcat']),
             $page['total_categories'],
             $page['startcat'],
-            $conf['nb_categories_page'],
+            $conf->nb_categories_page,
             true,
             'startcat'
         );

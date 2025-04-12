@@ -55,7 +55,7 @@ final class plugins
     ): array {
         global $conf;
 
-        if (! $conf['enable_extensions_install'] &&
+        if (! $conf->enable_extensions_install &&
             $action == 'delete'
         ) {
             exit('Piwigo extensions install/update/delete system is disabled');
@@ -370,7 +370,7 @@ final class plugins
         global $conf;
 
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php?category_id=' . $conf['pem_plugins_category'] . '&format=php';
+        $url = PEM_URL . '/api/get_version_list.php?category_id=' . $conf->pem_plugins_category . '&format=php';
 
         if (functions_admin::fetchRemote($url, $result)) {
             $pem_versions = functions::safe_unserialize($result);
@@ -455,7 +455,7 @@ final class plugins
         // Retrieve PEM plugins infos
         $url = PEM_URL . '/api/get_revision_list-next.php';
         $get_data = [
-            'category_id' => $conf['pem_plugins_category'],
+            'category_id' => $conf->pem_plugins_category,
             'format' => 'php',
             'last_revision_only' => 'true',
             'version' => implode(',', $versions_to_check),
@@ -522,7 +522,7 @@ final class plugins
         // Retrieve PEM plugins infos
         $url = PEM_URL . '/api/get_revision_list.php';
         $get_data = [
-            'category_id' => $conf['pem_plugins_category'],
+            'category_id' => $conf->pem_plugins_category,
             'format' => 'php',
             'version' => implode(',', $versions_to_check),
             'extension_include' => implode(',', $plugins_to_check),

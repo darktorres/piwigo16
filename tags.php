@@ -39,7 +39,7 @@ $template->set_filenames([
     'tags' => 'tags.tpl',
 ]);
 
-$page['display_mode'] = $conf['tags_default_display_mode'];
+$page['display_mode'] = $conf->tags_default_display_mode;
 
 if (isset($_GET['display_mode'])) {
     if (in_array($_GET['display_mode'], ['cloud', 'letters'])) {
@@ -50,7 +50,7 @@ if (isset($_GET['display_mode'])) {
 foreach (['cloud', 'letters'] as $mode) {
     $template->assign(
         'U_' . strtoupper($mode),
-        functions_url::get_root_url() . 'tags.php' . ($conf['tags_default_display_mode'] == $mode ? '' : '?display_mode=' . $mode)
+        functions_url::get_root_url() . 'tags.php' . ($conf->tags_default_display_mode == $mode ? '' : '?display_mode=' . $mode)
     );
 }
 
@@ -86,8 +86,8 @@ if ($page['display_mode'] == 'letters') {
 
         //lettre precedente differente de la lettre suivante
         if ($tag_letter !== $current_letter) {
-            if ($current_column < $conf['tag_letters_column_number'] &&
-                $current_tag_idx > $current_column * $nb_tags / $conf['tag_letters_column_number']
+            if ($current_column < $conf->tag_letters_column_number &&
+                $current_tag_idx > $current_column * $nb_tags / $conf->tag_letters_column_number
             ) {
                 $letter['CHANGE_COLUMN'] = true;
                 $current_column++;
@@ -135,7 +135,7 @@ if ($page['display_mode'] == 'letters') {
     // we want only the first most represented tags, so we sort them by counter
     // and take the first tags
     usort($tags, functions_tag::tags_counter_compare(...));
-    $tags = array_slice($tags, 0, $conf['full_tag_cloud_items_number']);
+    $tags = array_slice($tags, 0, $conf->full_tag_cloud_items_number);
 
     // depending on its counter and the other tags counter, each tag has a level
     $tags = functions_tag::add_level_to_tags($tags);

@@ -26,7 +26,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-if (! $conf['enable_synchronization']) {
+if (! $conf->enable_synchronization) {
     exit('synchronization is disabled');
 }
 

@@ -161,9 +161,9 @@ final class functions_tag
 
         // tag levels threshold calculation: a tag with an average rate must have
         // the middle level.
-        for ($i = 1; $i < $conf['tags_levels']; $i++) {
+        for ($i = 1; $i < $conf->tags_levels; $i++) {
             $threshold_of_level[$i] =
-              2 * $i * $tag_average_count / $conf['tags_levels'];
+              2 * $i * $tag_average_count / $conf->tags_levels;
         }
 
         // display sorted tags
@@ -171,7 +171,7 @@ final class functions_tag
             $tag['level'] = 1;
 
             // based on threshold, determine current tag level
-            for ($i = $conf['tags_levels'] - 1; $i >= 1; $i--) {
+            for ($i = $conf->tags_levels - 1; $i >= 1; $i--) {
                 if ($tag['counter'] > $threshold_of_level[$i]) {
                     $tag['level'] = $i + 1;
                     break;
@@ -220,7 +220,7 @@ final class functions_tag
             $mode === 'AND' &&
             count($tag_ids) > 1
         ) ? 'HAVING COUNT(DISTINCT tag_id) = ' . count($tag_ids) : '';
-        $order_clause = ! empty($order_by) ? $order_by : $conf['order_by'];
+        $order_clause = ! empty($order_by) ? $order_by : $conf->order_by;
         $query = <<<SQL
             SELECT id
             FROM images i

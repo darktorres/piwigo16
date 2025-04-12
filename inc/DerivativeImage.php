@@ -357,7 +357,7 @@ final class DerivativeImage
         $rel_path = PWG_DERIVATIVE_DIR . $loc;
 
         global $conf;
-        $url_style = $conf['derivative_url_style'];
+        $url_style = $conf->derivative_url_style;
 
         if (! $url_style) {
             $mtime = file_exists('./' . $rel_path) ? filemtime('./' . $rel_path) : false;
@@ -375,11 +375,11 @@ final class DerivativeImage
         if ($url_style == 2) {
             $rel_url = 'i';
 
-            if ($conf['php_extension_in_urls']) {
+            if ($conf->php_extension_in_urls) {
                 $rel_url .= '.php';
             }
 
-            if ($conf['question_mark_in_urls']) {
+            if ($conf->question_mark_in_urls) {
                 $rel_url .= '?';
             }
 

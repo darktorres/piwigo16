@@ -211,7 +211,7 @@ $template->assign(
         'isWebmaster' => (functions_user::is_webmaster()) ? 1 : 0,
         'ADMIN_PAGE_TITLE' => functions::l10n('Plugins'),
         'view_selector' => functions_user::userprefs_get_param('plugin-manager-view', 'classic'),
-        'CONF_ENABLE_EXTENSIONS_INSTALL' => $conf['enable_extensions_install'],
+        'CONF_ENABLE_EXTENSIONS_INSTALL' => $conf->enable_extensions_install,
     ]
 );
 

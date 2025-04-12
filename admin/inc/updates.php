@@ -101,7 +101,7 @@ final class updates
             $url = PHPWG_URL . '/download/all_versions.php';
             $url .= '?rand=' . md5(uniqid((string) mt_rand(), true)); // Avoid server cache
             $url .= '&show_requirements';
-            $url .= '&origin_hash=' . sha1($conf['secret_key'] . functions_url::get_absolute_root_url());
+            $url .= '&origin_hash=' . sha1($conf->secret_key . functions_url::get_absolute_root_url());
 
             if (functions_admin::fetchRemote($url, $result)) {
                 $all_versions = explode("\n", $result);
@@ -146,7 +146,7 @@ final class updates
 
     /**
      * Checks for new versions of Piwigo. Notify webmasters if new versions are available, but not too often, see
-     * $conf['update_notify_reminder_period'] parameter.
+     * $conf->update_notify_reminder_period parameter.
      */
     public function notify_piwigo_new_versions(): void
     {
@@ -182,15 +182,15 @@ final class updates
 
         $notify = false;
 
-        if (! isset($conf['update_notify_last_notification'])) {
+        if (! isset($conf->update_notify_last_notification)) {
             $notify = true;
         } else {
-            $last_notification = $conf['update_notify_last_notification']['notified_on'];
+            $last_notification = $conf->update_notify_last_notification['notified_on'];
 
-            if ($new_versions_string != $conf['update_notify_last_notification']['version']) {
+            if ($new_versions_string != $conf->update_notify_last_notification['version']) {
                 $notify = true;
-            } elseif ($conf['update_notify_reminder_period'] > 0 &&
-                      strtotime($last_notification) < strtotime($conf['update_notify_reminder_period'] . ' seconds ago')
+            } elseif ($conf->update_notify_reminder_period > 0 &&
+                      strtotime($last_notification) < strtotime($conf->update_notify_reminder_period . ' seconds ago')
             ) {
                 $notify = true;
             }
@@ -364,7 +364,7 @@ final class updates
                     $ext_info = $server_ext[$fs_ext['extension']];
 
                     if (! functions::safe_version_compare($fs_ext['version'], $ext_info['revision_name'], '>=')) {
-                        if (in_array($ext_id, $conf['updates_ignored'][$type])) {
+                        if (in_array($ext_id, $conf->updates_ignored[$type])) {
                             $ignore_list[] = $ext_id;
                         } else {
                             $_SESSION['extensions_need_update'][$type][$ext_id] = $ext_info['revision_name'];
@@ -373,10 +373,10 @@ final class updates
                 }
             }
 
-            $conf['updates_ignored'][$type] = $ignore_list;
+            $conf->updates_ignored[$type] = $ignore_list;
         }
 
-        functions::conf_update_param('updates_ignored', functions_mysqli::pwg_db_real_escape_string(serialize($conf['updates_ignored'])));
+        functions::conf_update_param('updates_ignored', functions_mysqli::pwg_db_real_escape_string(serialize($conf->updates_ignored)));
 
         return null;
     }
@@ -492,7 +492,7 @@ final class updates
         }
 
         if (empty($page['errors'])) {
-            $path = './' . $conf['data_location'] . 'update';
+            $path = './' . $conf->data_location . 'update';
             $filename = $path . '/' . $code . '.zip';
             functions::mkgetdir($path);
 
@@ -549,7 +549,7 @@ final class updates
                             self::process_obsolete_list($obsolete_list);
                         }
 
-                        functions_admin::deltree('./' . $conf['data_location'] . 'update');
+                        functions_admin::deltree('./' . $conf->data_location . 'update');
                         functions_admin::invalidate_user_cache(true);
                         functions::conf_update_param('piwigo_installed_version', $upgrade_to);
                         functions::pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'update', [
@@ -573,15 +573,15 @@ final class updates
                             functions::redirect('./upgrade.php?now=');
                         }
                     } else {
-                        file_put_contents('./' . $conf['data_location'] . 'update/log_error.txt', $error);
+                        file_put_contents('./' . $conf->data_location . 'update/log_error.txt', $error);
 
                         $page['errors'][] = functions::l10n(
                             'An error has occurred during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
-                            functions_url::get_root_url() . $conf['data_location'] . 'update/log_error.txt'
+                            functions_url::get_root_url() . $conf->data_location . 'update/log_error.txt'
                         );
                     }
                 } else {
-                    functions_admin::deltree('./' . $conf['data_location'] . 'update');
+                    functions_admin::deltree('./' . $conf->data_location . 'update');
                     $page['errors'][] = functions::l10n('An error has occurred during upgrade.');
                 }
             } else {

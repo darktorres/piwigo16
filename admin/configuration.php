@@ -155,8 +155,8 @@ if (isset($_POST['submit'])) {
 
     switch ($page['section']) {
         case 'main':
-            if (! isset($conf['order_by_custom']) &&
-                ! isset($conf['order_by_inside_category_custom'])
+            if (! isset($conf->order_by_custom) &&
+                ! isset($conf->order_by_inside_category_custom)
             ) {
                 if (! empty($_POST['order_by'])) {
                     functions::check_input_parameter('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
@@ -275,7 +275,7 @@ if (isset($_POST['submit'])) {
                 $value = $_POST[$row['param']];
 
                 if ($row['param'] == 'gallery_title') {
-                    if (! $conf['allow_html_descriptions']) {
+                    if (! $conf->allow_html_descriptions) {
                         $value = strip_tags($value);
                     }
                 }
@@ -342,17 +342,17 @@ $template->assign(
 switch ($page['section']) {
     case 'main':
         if (functions_admin::order_by_is_local()) {
-            $page['warnings'][] = functions::l10n('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !');
+            $page['warnings'][] = functions::l10n('You have specified <i>$conf->order_by</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf->order_by_custom</i> !');
         }
 
-        if (isset($conf['order_by_custom']) ||
-            isset($conf['order_by_inside_category_custom'])
+        if (isset($conf->order_by_custom) ||
+            isset($conf->order_by_inside_category_custom)
         ) {
             $order_by = [''];
             $template->assign('ORDER_BY_IS_CUSTOM', true);
         } else {
             $out = [];
-            $order_by = trim($conf['order_by_inside_category']);
+            $order_by = trim($conf->order_by_inside_category);
             $order_by = str_replace('ORDER BY ', '', $order_by);
             $order_by = explode(', ', $order_by);
         }
@@ -360,20 +360,20 @@ switch ($page['section']) {
         $template->assign(
             'main',
             [
-                'CONF_GALLERY_TITLE' => htmlspecialchars($conf['gallery_title']),
-                'CONF_PAGE_BANNER' => htmlspecialchars($conf['page_banner']),
+                'CONF_GALLERY_TITLE' => htmlspecialchars($conf->gallery_title),
+                'CONF_PAGE_BANNER' => htmlspecialchars($conf->page_banner),
                 'week_starts_on_options' => [
                     'sunday' => $lang['day'][0],
                     'monday' => $lang['day'][1],
                 ],
-                'week_starts_on_options_selected' => $conf['week_starts_on'],
-                'mail_theme' => $conf['mail_theme'],
+                'week_starts_on_options_selected' => $conf->week_starts_on,
+                'mail_theme' => $conf->mail_theme,
                 'mail_theme_options' => $mail_themes,
                 'order_by' => $order_by,
                 'order_by_options' => $sort_fields,
-                'email_admin_on_new_user' => $conf['email_admin_on_new_user'] != 'none',
-                'email_admin_on_new_user_filter' => in_array($conf['email_admin_on_new_user'], ['none', 'all']) ? 'all' : 'group',
-                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', $conf['email_admin_on_new_user'], $matches) ? $matches[1] : -1,
+                'email_admin_on_new_user' => $conf->email_admin_on_new_user != 'none',
+                'email_admin_on_new_user_filter' => in_array($conf->email_admin_on_new_user, ['none', 'all']) ? 'all' : 'group',
+                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', $conf->email_admin_on_new_user, $matches) ? $matches[1] : -1,
             ]
         );
 
@@ -395,7 +395,7 @@ switch ($page['section']) {
             $template->append(
                 'main',
                 [
-                    $checkbox => $conf[$checkbox],
+                    $checkbox => $conf->{$checkbox},
                 ],
                 true
             );
@@ -407,8 +407,8 @@ switch ($page['section']) {
         $template->assign(
             'comments',
             [
-                'NB_COMMENTS_PAGE' => $conf['nb_comment_page'],
-                'comments_order' => $conf['comments_order'],
+                'NB_COMMENTS_PAGE' => $conf->nb_comment_page,
+                'comments_order' => $conf->comments_order,
                 'comments_order_options' => $comments_order,
             ]
         );
@@ -417,7 +417,7 @@ switch ($page['section']) {
             $template->append(
                 'comments',
                 [
-                    $checkbox => $conf[$checkbox],
+                    $checkbox => $conf->{$checkbox},
                 ],
                 true
             );
@@ -426,14 +426,14 @@ switch ($page['section']) {
         break;
 
     case 'default':
-        $edit_user = functions_user::build_user($conf['guest_id'], false);
+        $edit_user = functions_user::build_user($conf->guest_id, false);
         require_once __DIR__ . '/../profile.php';
 
         $errors = [];
 
         if (functions::save_profile_from_post($edit_user, $errors)) {
             // Reload user
-            $edit_user = functions_user::build_user($conf['guest_id'], false);
+            $edit_user = functions_user::build_user($conf->guest_id, false);
             $page['infos'][] = functions::l10n('Information data registered in database');
         }
 
@@ -453,7 +453,7 @@ switch ($page['section']) {
             $template->append(
                 'display',
                 [
-                    $checkbox => $conf[$checkbox],
+                    $checkbox => $conf->{$checkbox},
                 ],
                 true
             );
@@ -462,8 +462,8 @@ switch ($page['section']) {
         $template->append(
             'display',
             [
-                'picture_information' => $conf['picture_information'],
-                'NB_CATEGORIES_PAGE' => $conf['nb_categories_page'],
+                'picture_information' => $conf->picture_information,
+                'NB_CATEGORIES_PAGE' => $conf->nb_categories_page,
             ],
             true
         );
@@ -478,9 +478,9 @@ switch ($page['section']) {
             $template->assign(
                 'sizes',
                 [
-                    'original_resize_maxwidth' => $conf['original_resize_maxwidth'],
-                    'original_resize_maxheight' => $conf['original_resize_maxheight'],
-                    'original_resize_quality' => $conf['original_resize_quality'],
+                    'original_resize_maxwidth' => $conf->original_resize_maxwidth,
+                    'original_resize_maxheight' => $conf->original_resize_maxheight,
+                    'original_resize_quality' => $conf->original_resize_quality,
                 ]
             );
 
@@ -488,7 +488,7 @@ switch ($page['section']) {
                 $template->append(
                     'sizes',
                     [
-                        $checkbox => $conf[$checkbox],
+                        $checkbox => $conf->{$checkbox},
                     ],
                     true
                 );
@@ -496,7 +496,7 @@ switch ($page['section']) {
 
             // derivatives = multiple size
             $enabled = ImageStdParams::get_defined_type_map();
-            $disabled = $conf['disabled_derivatives'] ?? [];
+            $disabled = $conf->disabled_derivatives ?? [];
 
             $tpl_vars = [];
 
@@ -504,7 +504,7 @@ switch ($page['section']) {
                 $tpl_var = [];
 
                 $tpl_var['must_square'] = ($type == derivative_std_params::IMG_SQUARE ? true : false);
-                $tpl_var['must_enable'] = ($type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB || $type == $conf['derivative_default_size']) ? true : false;
+                $tpl_var['must_enable'] = ($type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB || $type == $conf->derivative_default_size) ? true : false;
                 $params = $enabled[$type];
 
                 if ($params) {

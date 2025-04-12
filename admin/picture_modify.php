@@ -120,7 +120,7 @@ if (isset($_POST['submit'])) {
     $data['author'] = $_POST['author'];
     $data['level'] = $_POST['level'];
 
-    if ($conf['allow_html_descriptions']) {
+    if ($conf->allow_html_descriptions) {
         $data['comment'] = $_POST['description'];
     } else {
         $data['comment'] = strip_tags($_POST['description']);
@@ -285,9 +285,9 @@ $template->assign(
 
 $added_by = 'N/A';
 $query = <<<SQL
-    SELECT {$conf['user_fields']['username']} AS username
+    SELECT {$conf->user_fields['username']} AS username
     FROM users
-    WHERE {$conf['user_fields']['id']} = {$row['added_by']};
+    WHERE {$conf->user_fields['id']} = {$row['added_by']};
     SQL;
 $result = functions_mysqli::pwg_query($query);
 
@@ -309,7 +309,7 @@ $intro_vars = [
     'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
 ];
 
-if ($conf['rate'] &&
+if ($conf->rate &&
     ! empty($row['rating_score'])
 ) {
     $query = <<<SQL
@@ -341,7 +341,7 @@ if (! empty($formats)) {
 
 $template->assign('INTRO', $intro_vars);
 
-if (in_array(functions::get_extension($row['path']), $conf['picture_ext'])) {
+if (in_array(functions::get_extension($row['path']), $conf->picture_ext)) {
     $template->assign('U_COI', functions_url::get_root_url() . 'admin.php?page=picture_coi&amp;image_id=' . $_GET['image_id']);
 }
 

@@ -86,7 +86,7 @@ final class FileCombiner
         $force = false;
 
         if (functions_user::is_admin() &&
-           ($this->is_css || ! $conf['template_compile_check'])
+           ($this->is_css || ! $conf->template_compile_check)
         ) {
             $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && strpos($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0') !== false) ||
                            (isset($_SERVER['HTTP_PRAGMA']) && strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
@@ -103,7 +103,7 @@ final class FileCombiner
                 $key = $ini_key;
                 $result[] = $combinable;
                 continue;
-            } elseif (! $conf['template_combine_files']) {
+            } elseif (! $conf->template_combine_files) {
                 $this->flush_pending($result, $pending, $key, $force);
                 $key = $ini_key;
             }
@@ -111,7 +111,7 @@ final class FileCombiner
             $key[] = $combinable->path;
             $key[] = $combinable->version;
 
-            if ($conf['template_compile_check']) {
+            if ($conf->template_compile_check) {
                 $key[] = filemtime('./' . $combinable->path);
             }
 
@@ -187,7 +187,7 @@ final class FileCombiner
             if (! $return_content) {
                 $key = [$combinable->path, $combinable->version];
 
-                if ($conf['template_compile_check']) {
+                if ($conf->template_compile_check) {
                     $key[] = filemtime('./' . $combinable->path);
                 }
 

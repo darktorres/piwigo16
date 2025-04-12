@@ -24,7 +24,7 @@ final class GDThumb_maintain extends PluginMaintain
         require dirname(__FILE__) . '/config_default.php';
         global $conf;
 
-        if (empty($conf['gdThumb'])) {
+        if (empty($conf->gdThumb)) {
             functions::conf_update_param('gdThumb', $config_default, true);
         }
 

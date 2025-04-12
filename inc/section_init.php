@@ -45,7 +45,7 @@ $page['start'] = $page['startcat'] = 0;
 
 // some ISPs set PATH_INFO to empty string or to SCRIPT_FILENAME while in the
 // default apache implementation it is not set
-if ($conf['question_mark_in_urls'] == false &&
+if ($conf->question_mark_in_urls == false &&
     isset($_SERVER['PATH_INFO']) &&
     ! empty($_SERVER['PATH_INFO'])
 ) {
@@ -128,12 +128,12 @@ if (! isset($page['section'])) {
 
         case 'index':
             // No section defined, go to random url
-            if (! empty($conf['random_index_redirect']) &&
+            if (! empty($conf->random_index_redirect) &&
                 empty($tokens[$next_token])
             ) {
                 $random_index_redirect = [];
 
-                foreach ($conf['random_index_redirect'] as $random_url => $random_url_condition) {
+                foreach ($conf->random_index_redirect as $random_url => $random_url_condition) {
                     if (empty($random_url_condition) ||
                         eval($random_url_condition)
                     ) {
@@ -178,7 +178,7 @@ $page['nb_image_page'] = $user['nb_image_page'];
 if ($page['section'] == 'categories' &&
     ! isset($page['flat'])
 ) {
-    $conf['order_by'] = $conf['order_by_inside_category'];
+    $conf->order_by = $conf->order_by_inside_category;
 }
 
 if (functions_session::pwg_get_session_var('image_order', 0) > 0) {
@@ -192,10 +192,10 @@ if (functions_session::pwg_get_session_var('image_order', 0) > 0) {
     //
     // In case of incompatibility, the session stored image_order is removed.
     if ($orders[$image_order_id][2]) {
-        $conf['order_by'] = str_replace(
+        $conf->order_by = str_replace(
             'ORDER BY ',
             'ORDER BY ' . $orders[$image_order_id][1] . ',',
-            $conf['order_by']
+            $conf->order_by
         );
         $page['super_order_by'] = true;
     } else {
@@ -251,7 +251,7 @@ if ($page['section'] == 'categories') {
         if (! empty($page['category']['image_order']) &&
             ! isset($page['super_order_by'])
         ) {
-            $conf['order_by'] = ' ORDER BY ' . $page['category']['image_order'];
+            $conf->order_by = ' ORDER BY ' . $page['category']['image_order'];
         }
 
         // flat categories mode
@@ -284,7 +284,7 @@ if ($page['section'] == 'categories') {
                     'AND'
                 );
             } else {
-                $cache_key = $persistent_cache->make_key('all_iids' . $user['id'] . $user['cache_update_time'] . $conf['order_by']);
+                $cache_key = $persistent_cache->make_key('all_iids' . $user['id'] . $user['cache_update_time'] . $conf->order_by);
                 unset($page['is_homepage']);
                 $where_sql = '1 = 1';
             }
@@ -303,7 +303,7 @@ if ($page['section'] == 'categories') {
                 FROM image_category
                 INNER JOIN images ON id = image_id
                 WHERE {$where_sql} {$forbidden}
-                {$conf['order_by']};
+                {$conf->order_by};
                 SQL;
 
             $page['items'] = functions_mysqli::query2array($query, null, 'image_id');
@@ -409,7 +409,7 @@ else {
                 INNER JOIN images ON image_id = id
                 WHERE user_id = '{$user['id']}'
                     {$sql_condition}
-                {$conf['order_by']};
+                {$conf->order_by};
                 SQL;
 
             $page = array_merge(
@@ -441,10 +441,10 @@ else {
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'recent_pics') {
         if (! isset($page['super_order_by'])) {
-            $conf['order_by'] = str_replace(
+            $conf->order_by = str_replace(
                 'ORDER BY ',
                 'ORDER BY date_available DESC, ',
-                $conf['order_by']
+                $conf->order_by
             );
         }
 
@@ -455,7 +455,7 @@ else {
             INNER JOIN image_category AS ic ON id = ic.image_id
             WHERE {$recent_photos_sql}
                 {$forbidden}
-            {$conf['order_by']};
+            {$conf->order_by};
             SQL;
 
         $page = array_merge(
@@ -488,15 +488,15 @@ else {
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'most_visited') {
         $page['super_order_by'] = true;
-        $conf['order_by'] = ' ORDER BY hit DESC, id DESC';
+        $conf->order_by = ' ORDER BY hit DESC, id DESC';
 
         $query = <<<SQL
             SELECT DISTINCT id
             FROM images
             INNER JOIN image_category AS ic ON id = ic.image_id
             WHERE hit > 0 {$forbidden}
-            {$conf['order_by']}
-            LIMIT {$conf['top_number']};
+            {$conf->order_by}
+            LIMIT {$conf->top_number};
             SQL;
 
         $page = array_merge(
@@ -505,7 +505,7 @@ else {
                 'title' => '<a href="' . functions_url::duplicate_index_url([
                     'start' => 0,
                 ]) . '">'
-                            . $conf['top_number'] . ' ' . functions::l10n('Most visited') . '</a>',
+                            . $conf->top_number . ' ' . functions::l10n('Most visited') . '</a>',
                 'items' => functions_mysqli::query2array($query, null, 'id'),
             ]
         );
@@ -515,7 +515,7 @@ else {
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'best_rated') {
         $page['super_order_by'] = true;
-        $conf['order_by'] = ' ORDER BY rating_score DESC, id DESC';
+        $conf->order_by = ' ORDER BY rating_score DESC, id DESC';
 
         $query = <<<SQL
             SELECT DISTINCT id
@@ -523,8 +523,8 @@ else {
             INNER JOIN image_category AS ic ON id = ic.image_id
             WHERE rating_score IS NOT NULL
                 {$forbidden}
-            {$conf['order_by']}
-            LIMIT {$conf['top_number']};
+            {$conf->order_by}
+            LIMIT {$conf->top_number};
             SQL;
 
         $page = array_merge(
@@ -533,7 +533,7 @@ else {
                 'title' => '<a href="' . functions_url::duplicate_index_url([
                     'start' => 0,
                 ]) . '">'
-                            . $conf['top_number'] . ' ' . functions::l10n('Best rated') . '</a>',
+                            . $conf->top_number . ' ' . functions::l10n('Best rated') . '</a>',
                 'items' => functions_mysqli::query2array($query, null, 'id'),
             ]
         );
@@ -549,7 +549,7 @@ else {
             INNER JOIN image_category AS ic ON id = ic.image_id
             WHERE image_id IN ({$image_ids})
                 {$forbidden}
-            {$conf['order_by']};
+            {$conf->order_by};
             SQL;
 
         $page = array_merge(
@@ -578,7 +578,7 @@ if (isset($page['title'])) {
     $page['section_title'] = '<a href="' . functions_url::get_gallery_home_url() . '">' . functions::l10n('Home') . '</a>';
 
     if (! empty($page['title'])) {
-        $page['section_title'] .= $conf['level_separator'] . $page['title'];
+        $page['section_title'] .= $conf->level_separator . $page['title'];
     } else {
         $page['title'] = $page['section_title'];
     }
@@ -621,7 +621,7 @@ if ($page['section'] == 'categories' &&
     $need_redirect = false;
 
     if (empty($page['category']['permalink'])) {
-        if ($conf['category_url_style'] == 'id-name' &&
+        if ($conf->category_url_style == 'id-name' &&
             $page['hit_by']['cat_url_name'] !== functions::str2url($page['category']['name'])
         ) {
             $need_redirect = true;

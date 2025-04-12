@@ -27,7 +27,7 @@ final class AdminTools_maintain extends PluginMaintain
     ): void {
         global $conf;
 
-        if (empty($conf['AdminTools'])) {
+        if (empty($conf->AdminTools)) {
             functions::conf_update_param('AdminTools', $this->default_conf, true);
         }
     }

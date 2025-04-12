@@ -125,17 +125,17 @@ final class Template
         $this->scriptLoader = new ScriptLoader();
         $this->cssLoader = new CssLoader();
         $this->smarty = new Smarty();
-        $this->smarty->debugging = $conf['debug_template'];
+        $this->smarty->debugging = $conf->debug_template;
 
         if (! $this->smarty->debugging) {
             $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
         }
 
-        $this->smarty->compile_check = $conf['template_compile_check'];
-        $this->smarty->force_compile = $conf['template_force_compile'];
+        $this->smarty->compile_check = $conf->template_compile_check;
+        $this->smarty->force_compile = $conf->template_force_compile;
 
-        if (! isset($conf['data_dir_checked'])) {
-            $dir = './' . $conf['data_location'];
+        if (! isset($conf->data_dir_checked)) {
+            $dir = './' . $conf->data_location;
             functions::mkgetdir($dir, functions::MKGETDIR_DEFAULT & ~functions::MKGETDIR_DIE_ON_ERROR);
 
             if (! is_writable($dir)) {
@@ -143,7 +143,7 @@ final class Template
                 functions_html::fatal_error(
                     functions::l10n(
                         'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',
-                        $conf['data_location']
+                        $conf->data_location
                     ),
                     functions::l10n('an error happened'),
                     false // show trace
@@ -155,7 +155,7 @@ final class Template
             }
         }
 
-        $compile_dir = './' . $conf['data_location'] . 'templates_c';
+        $compile_dir = './' . $conf->data_location . 'templates_c';
         functions::mkgetdir($compile_dir);
 
         $this->smarty->setCompileDir($compile_dir);
@@ -199,7 +199,7 @@ final class Template
         $this->smarty->registerPlugin('block', 'footer_script', $this->block_footer_script(...));
         $this->smarty->registerFilter('pre', self::prefilter_white_space(...));
 
-        if ($conf['compiled_template_cache_language']) {
+        if ($conf->compiled_template_cache_language) {
             $this->smarty->registerFilter('post', self::postfilter_language(...));
         }
 
@@ -230,9 +230,9 @@ final class Template
         $this->smarty->assign('lang_info', $lang_info);
 
         if (! defined('IN_ADMIN') &&
-            isset($conf['extents_for_templates'])
+            isset($conf->extents_for_templates)
         ) {
-            $tpl_extents = $conf['extents_for_templates'];
+            $tpl_extents = $conf->extents_for_templates;
             $this->set_extents($tpl_extents, './template-extension/', true, $theme);
         }
     }
@@ -532,7 +532,7 @@ final class Template
 
         global $conf, $lang_info;
 
-        if ($conf['compiled_template_cache_language'] &&
+        if ($conf->compiled_template_cache_language &&
             isset($lang_info['code'])
         ) {
             $this->smarty->compile_id .= '_' . $lang_info['code'];
@@ -705,7 +705,7 @@ final class Template
 
         switch (count($params)) {
             case 1:
-                if ($conf['compiled_template_cache_language']) {
+                if ($conf->compiled_template_cache_language) {
                     $key = self::get_php_str_val($params[0]);
 
                     if ($key !== null && isset($lang[$key])) {
@@ -716,7 +716,7 @@ final class Template
                 return '\Piwigo\inc\functions::l10n(' . $params[0] . ')';
 
             default:
-                if ($conf['compiled_template_cache_language']) {
+                if ($conf->compiled_template_cache_language) {
                     $ret = 'sprintf(';
                     $ret .= self::modcompiler_translate([$params[0]]);
                     $ret .= ',' . implode(',', array_slice($params, 1));
@@ -739,7 +739,7 @@ final class Template
     ): string {
         global $conf, $lang, $lang_info;
 
-        if ($conf['compiled_template_cache_language']) {
+        if ($conf->compiled_template_cache_language) {
             $ret = 'sprintf(';
 
             if ($lang_info['zero_plural']) {
@@ -1171,7 +1171,7 @@ final class Template
     }
 
     /**
-     * Postfilter used when $conf['compiled_template_cache_language'] is true.
+     * Postfilter used when $conf->compiled_template_cache_language is true.
      */
     public static function postfilter_language(
         string $source,

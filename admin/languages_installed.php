@@ -116,6 +116,6 @@ foreach ($missing_language_ids as $language_id) {
 
 $template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Languages'));
-$template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $conf['enable_extensions_install']);
+$template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $conf->enable_extensions_install);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');

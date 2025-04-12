@@ -92,7 +92,7 @@ $template->assign('PHPWG_URL', PHPWG_URL);
 // |                             Formats Mode                              |
 // +-----------------------------------------------------------------------+
 
-$display_formats = $conf['enable_formats'] && isset($_GET['formats']);
+$display_formats = $conf->enable_formats && isset($_GET['formats']);
 
 $have_formats_original = false;
 $formats_original_info = [];
@@ -154,13 +154,13 @@ require_once __DIR__ . '/../admin/inc/photos_add_direct_prepare.php';
 functions_plugins::trigger_notify('loc_end_photo_add_direct');
 
 $template->assign([
-    'ENABLE_FORMATS' => $conf['enable_formats'],
+    'ENABLE_FORMATS' => $conf->enable_formats,
     'DISPLAY_FORMATS' => $display_formats,
     'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
     'FORMATS_ORIGINAL_INFO' => $formats_original_info,
     'SWITCH_MODE_URL' => functions_url::get_root_url() . 'admin.php?page=photos_add' . ($display_formats ? '' : '&formats'),
-    'format_ext' => implode(',', $conf['format_ext']),
-    'str_format_ext' => implode(', ', $conf['format_ext']),
+    'format_ext' => implode(',', $conf->format_ext),
+    'str_format_ext' => implode(', ', $conf->format_ext),
 ]);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');

@@ -221,7 +221,7 @@ $template->assign('groups_selected', $group_granted_ids);
 $users = [];
 
 $query = <<<SQL
-    SELECT {$conf['user_fields']['id']} AS id, {$conf['user_fields']['username']} AS username
+    SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['username']} AS username
     FROM users;
     SQL;
 $users = functions_mysqli::query2array($query, 'id', 'username');
@@ -295,7 +295,7 @@ if (count($group_granted_ids) > 0) {
 // +-----------------------------------------------------------------------+
 $template->assign([
     'PWG_TOKEN' => functions::get_pwg_token(),
-    'INHERIT' => $conf['inheritance_by_default'],
+    'INHERIT' => $conf->inheritance_by_default,
     'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(['groups', 'users']),
 ]);
 

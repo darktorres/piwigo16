@@ -75,7 +75,7 @@ if (isset($_POST['submitEmail'])) {
     }
 
     $args = [
-        'subject' => functions::l10n('[%s] Visit album %s', $conf['gallery_title'], functions_plugins::trigger_change('render_category_name', $category['name'], 'admin_cat_list')),
+        'subject' => functions::l10n('[%s] Visit album %s', $conf->gallery_title, functions_plugins::trigger_change('render_category_name', $category['name'], 'admin_cat_list')),
         // TODO : change this language variable to 'Visit album %s'
         // TODO : 'language_selected' => ....
     ];
@@ -114,9 +114,9 @@ if (isset($_POST['submitEmail'])) {
 
         $user_ids = implode(', ', $_POST['users']);
         $query = <<<SQL
-            SELECT ui.user_id, ui.status, ui.language, u.{$conf['user_fields']['email']} AS email, u.{$conf['user_fields']['username']} AS username
+            SELECT ui.user_id, ui.status, ui.language, u.{$conf->user_fields['email']} AS email, u.{$conf->user_fields['username']} AS username
             FROM user_infos AS ui
-            JOIN users AS u ON u.{$conf['user_fields']['id']} = ui.user_id
+            JOIN users AS u ON u.{$conf->user_fields['id']} = ui.user_id
             WHERE ui.user_id IN ({$user_ids});
             SQL;
         $users = functions_mysqli::query2array($query);
@@ -199,11 +199,11 @@ $template->assign(
     ]
 );
 
-if ($conf['auth_key_duration'] > 0) {
+if ($conf->auth_key_duration > 0) {
     $template->assign(
         'auth_key_duration',
         functions::time_since(
-            strtotime('now -' . $conf['auth_key_duration'] . ' second'),
+            strtotime('now -' . $conf->auth_key_duration . ' second'),
             'second',
             null,
             false
@@ -296,7 +296,7 @@ if ($category['status'] == 'private') {
 if (count($user_ids) > 0) {
     $user_ids_imploded = implode(', ', $user_ids);
     $query = <<<SQL
-        SELECT {$conf['user_fields']['id']} AS id, {$conf['user_fields']['username']} AS username
+        SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['username']} AS username
         FROM users
         WHERE id IN ({$user_ids_imploded});
         SQL;

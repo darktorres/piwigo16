@@ -125,7 +125,7 @@ final class functions
             global $conf;
 
             $umask = umask(0);
-            $mkd = mkdir($dir, $conf['chmod_value'], ($flags & self::MKGETDIR_RECURSIVE) ? true : false);
+            $mkd = mkdir($dir, $conf->chmod_value, ($flags & self::MKGETDIR_RECURSIVE) ? true : false);
             umask($umask);
 
             if ($mkd == false) {
@@ -513,14 +513,14 @@ final class functions
     ): bool {
         global $conf;
 
-        $do_log = $conf['log'];
+        $do_log = $conf->log;
 
         if (functions_user::is_admin()) {
-            $do_log = $conf['history_admin'];
+            $do_log = $conf->history_admin;
         }
 
         if (functions_user::is_a_guest()) {
-            $do_log = $conf['history_guest'];
+            $do_log = $conf->history_guest;
         }
 
         $do_log = functions_plugins::trigger_change('pwg_log_allowed', $do_log, $image_id, $image_type);
@@ -541,7 +541,7 @@ final class functions
         $update_last_visit = false;
 
         if (empty($user['last_visit']) ||
-            strtotime($user['last_visit']) < time() - $conf['session_length']
+            strtotime($user['last_visit']) < time() - $conf->session_length
         ) {
             $update_last_visit = true;
         }
@@ -588,12 +588,12 @@ final class functions
         // If plugin developers add their own sections, Piwigo will automatically add it in the history.section enum column
         if (isset($page['section'])) {
             // set cache if not available
-            if (! isset($conf['history_sections_cache'])) {
+            if (! isset($conf->history_sections_cache)) {
                 self::conf_update_param('history_sections_cache', functions_mysqli::get_enums('history', 'section'), true);
             }
 
-            if (in_array($page['section'], ($conf['history_sections_cache'] ?: [])) ||
-                in_array(strtolower($page['section']), array_map(strtolower(...), $conf['history_sections_cache'] ?: []))
+            if (in_array($page['section'], ($conf->history_sections_cache ?: [])) ||
+                in_array(strtolower($page['section']), array_map(strtolower(...), $conf->history_sections_cache ?: []))
             ) {
                 $section = $page['section'];
             } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page['section'])) {
@@ -634,8 +634,8 @@ final class functions
             functions_history::history_summarize(50000);
         }
 
-        if ($conf['history_autopurge_every'] > 0 &&
-            $history_id % $conf['history_autopurge_every'] == 0
+        if ($conf->history_autopurge_every > 0 &&
+            $history_id % $conf->history_autopurge_every == 0
         ) {
             require_once __DIR__ . '/../admin/inc/functions_history.php';
             functions_history::history_autopurge();
@@ -1091,7 +1091,7 @@ final class functions
         if (! isset($lang_info) ||
             ! isset($template)
         ) {
-            $user = functions_user::build_user($conf['guest_id'], true);
+            $user = functions_user::build_user($conf->guest_id, true);
             self::load_language('common.lang');
             functions_plugins::trigger_notify('loading_lang');
             self::load_language('lang', './local/', [
@@ -1146,7 +1146,7 @@ final class functions
         global $conf;
 
         // with RefreshTime != 0, only html must be used
-        if ($conf['default_redirect_method'] == 'http' &&
+        if ($conf->default_redirect_method == 'http' &&
             $refresh_time == 0 &&
             ! headers_sent()
         ) {
@@ -1174,7 +1174,7 @@ final class functions
         $result = functions_mysqli::pwg_query($query);
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
-            if ($row['id'] == $conf['mobile_theme']) {
+            if ($row['id'] == $conf->mobile_theme) {
                 if (! $show_mobile) {
                     continue;
                 }
@@ -1201,7 +1201,7 @@ final class functions
     ): bool {
         global $conf;
 
-        return file_exists($conf['themes_dir'] . '/' . $theme_id . '/themeconf.php');
+        return file_exists($conf->themes_dir . '/' . $theme_id . '/themeconf.php');
     }
 
     /**
@@ -1305,7 +1305,7 @@ final class functions
         $val = ($lang[$key] ?? null);
 
         if ($val === null) {
-            if ($conf['debug_l10n'] &&
+            if ($conf->debug_l10n &&
                 ! isset($lang[$key]) &&
                 ! empty($key)
             ) {
@@ -1411,16 +1411,16 @@ final class functions
     }
 
     /**
-     * Returns webmaster mail address depending on $conf['webmaster_id']
+     * Returns webmaster mail address depending on $conf->webmaster_id
      */
     public static function get_webmaster_mail_address(): string
     {
         global $conf;
 
         $query = <<<SQL
-            SELECT {$conf['user_fields']['email']}
+            SELECT {$conf->user_fields['email']}
             FROM users
-            WHERE {$conf['user_fields']['id']} = {$conf['webmaster_id']};
+            WHERE {$conf->user_fields['id']} = {$conf->webmaster_id};
             SQL;
         list($email) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
@@ -1455,19 +1455,21 @@ final class functions
         }
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
-            $val = isset($row['value']) ? $row['value'] : '';
+            $val = $row['value'];
 
             if ($val === 'true') {
                 $val = true;
             } elseif ($val === 'false') {
                 $val = false;
+            } elseif ($val === null) {
+                $val = null;
             } elseif (self::is_serialized($val)) {
                 $val = unserialize($val);
             } elseif (is_numeric($val)) {
                 $val = str_contains($val, '.') ? (float) $val : (int) $val;
             }
 
-            $conf[$row['param']] = $val;
+            $conf->{$row['param']} = $val;
         }
 
         functions_plugins::trigger_notify('load_conf', $condition);
@@ -1529,7 +1531,7 @@ final class functions
 
         if ($updateGlobal) {
             global $conf;
-            $conf[$param] = $value;
+            $conf->{$param} = $value;
         }
     }
 
@@ -1559,7 +1561,7 @@ final class functions
         functions_mysqli::pwg_query($query);
 
         foreach ($params as $param) {
-            unset($conf[$param]);
+            unset($conf->{$param});
         }
     }
 
@@ -1576,8 +1578,8 @@ final class functions
     ): array|bool|string|int|float|null|object {
         global $conf;
 
-        if (isset($conf[$param])) {
-            return $conf[$param];
+        if (isset($conf->{$param})) {
+            return $conf->{$param};
         }
 
         return $default_value;
@@ -1757,7 +1759,7 @@ final class functions
             if (! empty($_SERVER[$value])) {
                 $filename = strtolower($_SERVER[$value]);
 
-                if ($conf['php_extension_in_urls'] &&
+                if ($conf->php_extension_in_urls &&
                     self::get_extension($filename) !== 'php'
                 ) {
                     continue;
@@ -1775,7 +1777,7 @@ final class functions
     }
 
     /**
-     * Return $conf['filter_pages'] value for the current page
+     * Return $conf->filter_pages value for the current page
      */
     public static function get_filter_page_value(
         string $value_name
@@ -1784,10 +1786,10 @@ final class functions
 
         $page_name = self::script_basename();
 
-        if (isset($conf['filter_pages'][$page_name][$value_name])) {
-            return $conf['filter_pages'][$page_name][$value_name];
-        } elseif (isset($conf['filter_pages']['default'][$value_name])) {
-            return $conf['filter_pages']['default'][$value_name];
+        if (isset($conf->filter_pages[$page_name][$value_name])) {
+            return $conf->filter_pages[$page_name][$value_name];
+        } elseif (isset($conf->filter_pages['default'][$value_name])) {
+            return $conf->filter_pages['default'][$value_name];
         }
 
         return null;
@@ -2038,7 +2040,7 @@ final class functions
           . hash_hmac(
               'md5',
               $time . substr($_SERVER['REMOTE_ADDR'], 0, 5) . $valid_after_seconds . $additional_data_to_hash,
-              $conf['secret_key']
+              $conf->secret_key
           );
     }
 
@@ -2059,7 +2061,7 @@ final class functions
             hash_hmac(
                 'md5',
                 $key[0] . substr($_SERVER['REMOTE_ADDR'], 0, 5) . $key[1] . $additional_data_to_hash,
-                $conf['secret_key']
+                $conf->secret_key
             ) != $key[2]
         ) {
             return false;
@@ -2084,7 +2086,7 @@ final class functions
         global $conf;
 
         $navbar = [];
-        $pages_around = $conf['paginate_pages_around'];
+        $pages_around = $conf->paginate_pages_around;
         $start_str = $clean_url ? '/' . $param_name . '-' : (strpos($url, '?') === false ? '?' : '&amp;') . $param_name . '=';
 
         if (! isset($start) ||
@@ -2198,7 +2200,7 @@ final class functions
     {
         global $conf;
 
-        return hash_hmac('md5', session_id(), $conf['secret_key']);
+        return hash_hmac('md5', session_id(), $conf->secret_key);
     }
 
     /**
@@ -2260,7 +2262,7 @@ final class functions
         $options = [];
         $label = '';
 
-        foreach (array_reverse($conf['available_permission_levels']) as $level) {
+        foreach (array_reverse($conf->available_permission_levels) as $level) {
             if ($level == 0) {
                 $label = self::l10n('Everybody');
             } else {
@@ -2320,7 +2322,7 @@ final class functions
     {
         global $conf;
 
-        if (empty($conf['mobile_theme'])) {
+        if (empty($conf->mobile_theme)) {
             return false;
         }
 
@@ -2329,7 +2331,7 @@ final class functions
             functions_session::pwg_set_session_var('mobile_theme', $is_mobile_theme);
         } elseif (isset($_GET['ato_theme'])) {
             $theme = $_GET['ato_theme'];
-            $is_mobile_theme = $theme == $conf['mobile_theme'];
+            $is_mobile_theme = $theme == $conf->mobile_theme;
             functions_session::pwg_set_session_var('mobile_theme', $is_mobile_theme);
         } else {
             $is_mobile_theme = functions_session::pwg_get_session_var('mobile_theme');
@@ -2451,8 +2453,8 @@ final class functions
     {
         global $conf;
 
-        if (! isset($conf['lounge_active']) ||
-            ! $conf['lounge_active']
+        if (! isset($conf->lounge_active) ||
+            ! $conf->lounge_active
         ) {
             return;
         }
@@ -2477,7 +2479,7 @@ final class functions
             $voyager = $voyagers[0];
             $age = strtotime($voyager['dbnow']) - strtotime($voyager['date_available']);
 
-            if ($age > $conf['lounge_max_duration']) {
+            if ($age > $conf->lounge_max_duration) {
                 functions_admin::empty_lounge();
             }
         }
@@ -2670,7 +2672,7 @@ final class functions
     {
         global $conf, $page;
 
-        if ($conf['question_mark_in_urls'] == false &&
+        if ($conf->question_mark_in_urls == false &&
             isset($_SERVER['PATH_INFO']) &&
             ! empty($_SERVER['PATH_INFO'])
         ) {
@@ -2698,7 +2700,7 @@ final class functions
         $req = ltrim($req, '/');
 
         foreach (preg_split('#/+#', $req) as $token) {
-            if (! preg_match($conf['sync_chars_regex'], $token)) {
+            if (! preg_match($conf->sync_chars_regex, $token)) {
                 self::ierror('Invalid chars in request', 400);
             }
         }
@@ -3036,7 +3038,7 @@ final class functions
         $message = functions_plugins::trigger_change('render_lost_password_mail_content', $message);
 
         $email_params = [
-            'subject' => '[' . $conf['gallery_title'] . '] ' . self::l10n('Password Reset'),
+            'subject' => '[' . $conf->gallery_title . '] ' . self::l10n('Password Reset'),
             'content' => $message,
             'email_format' => 'text/plain',
         ];
@@ -3072,9 +3074,9 @@ final class functions
 
         $escaped_email = functions_mysqli::pwg_db_real_escape_string($email);
         $query = <<<SQL
-            SELECT {$conf['user_fields']['id']} AS id
+            SELECT {$conf->user_fields['id']} AS id
             FROM users
-            WHERE {$conf['user_fields']['email']} = '{$escaped_email}';
+            WHERE {$conf->user_fields['email']} = '{$escaped_email}';
             SQL;
         $user_ids = functions_mysqli::query2array($query, null, 'id');
 
@@ -3148,10 +3150,10 @@ final class functions
         functions_mysqli::single_update(
             'users',
             [
-                $conf['user_fields']['password'] => $conf['password_hash']($_POST['use_new_pwd']),
+                $conf->user_fields['password'] => ($conf->password_hash)($_POST['use_new_pwd']),
             ],
             [
-                $conf['user_fields']['id'] => $user_id,
+                $conf->user_fields['id'] => $user_id,
             ]
         );
 
@@ -3194,7 +3196,7 @@ final class functions
             setcookie('picture_deriv', '', 0, functions_cookie::cookie_path());
         }
 
-        $deriv_type = functions_session::pwg_get_session_var('picture_deriv', $conf['derivative_default_size']);
+        $deriv_type = functions_session::pwg_get_session_var('picture_deriv', $conf->derivative_default_size);
         $selected_derivative = $element_info['derivatives'][$deriv_type];
 
         $unique_derivatives = [];
@@ -3222,7 +3224,7 @@ final class functions
             $show_original &= ! ($derivative->same_as_source());
 
             // in case we do not display the sizes icon, we only add the selected size to unique_derivatives
-            if ($conf['picture_sizes_icon'] ||
+            if ($conf->picture_sizes_icon ||
                 $type == $deriv_type
             ) {
                 $unique_derivatives[$type] = $derivative;
@@ -3325,7 +3327,7 @@ final class functions
             return false;
         }
 
-        $special_user = in_array($userdata['id'], [$conf['guest_id'], $conf['default_user_id']]);
+        $special_user = in_array($userdata['id'], [$conf->guest_id, $conf->default_user_id]);
 
         if ($special_user) {
             unset(
@@ -3345,7 +3347,7 @@ final class functions
             unset($_POST['username']);
         }
 
-        if ($conf['allow_user_customization'] ||
+        if ($conf->allow_user_customization ||
             defined('IN_ADMIN')
         ) {
             $int_pattern = '/^\d+$/';
@@ -3390,13 +3392,13 @@ final class functions
 
             if (! defined('IN_ADMIN')) { // changing password requires old password
                 $query = <<<SQL
-                    SELECT {$conf['user_fields']['password']} AS password
+                    SELECT {$conf->user_fields['password']} AS password
                     FROM users
-                    WHERE {$conf['user_fields']['id']} = '{$userdata['id']}';
+                    WHERE {$conf->user_fields['id']} = '{$userdata['id']}';
                     SQL;
                 list($current_password) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
-                if (! $conf['password_verify']($_POST['password'], $current_password)) {
+                if (! ($conf->password_verify)($_POST['password'], $current_password)) {
                     $errors[] = self::l10n('Current password is wrong');
                 }
             }
@@ -3409,17 +3411,17 @@ final class functions
 
             if (isset($_POST['mail_address'])) {
                 // update common user information
-                $fields = [$conf['user_fields']['email']];
+                $fields = [$conf->user_fields['email']];
 
                 $data = [];
-                $data[$conf['user_fields']['id']] = $userdata['id'];
-                $data[$conf['user_fields']['email']] = $_POST['mail_address'];
+                $data[$conf->user_fields['id']] = $userdata['id'];
+                $data[$conf->user_fields['email']] = $_POST['mail_address'];
 
                 // password is updated only if filled
                 if (! empty($_POST['use_new_pwd'])) {
-                    $fields[] = $conf['user_fields']['password'];
-                    // password is hashed with function $conf['password_hash']
-                    $data[$conf['user_fields']['password']] = $conf['password_hash']($_POST['use_new_pwd']);
+                    $fields[] = $conf->user_fields['password'];
+                    // password is hashed with function $conf->password_hash
+                    $data[$conf->user_fields['password']] = ($conf->password_hash)($_POST['use_new_pwd']);
 
                     functions_user::deactivate_user_auth_keys($userdata['id']);
                 }
@@ -3432,8 +3434,8 @@ final class functions
                         $page['errors'][] = self::l10n('this login is already used');
                         unset($_POST['redirect']);
                     } else {
-                        $fields[] = $conf['user_fields']['username'];
-                        $data[$conf['user_fields']['username']] = $_POST['username'];
+                        $fields[] = $conf->user_fields['username'];
+                        $data[$conf->user_fields['username']] = $_POST['username'];
 
                         // send email to the user
                         if ($_POST['username'] != $userdata['username']) {
@@ -3448,7 +3450,7 @@ final class functions
                             functions_mail::pwg_mail(
                                 $_POST['mail_address'],
                                 [
-                                    'subject' => '[' . $conf['gallery_title'] . '] ' . self::l10n('Username modification'),
+                                    'subject' => '[' . $conf->gallery_title . '] ' . self::l10n('Username modification'),
                                     'content' => self::l10n_args($keyargs_content),
                                     'content_format' => 'text/plain',
                                 ]
@@ -3462,7 +3464,7 @@ final class functions
                 functions_mysqli::mass_updates(
                     'users',
                     [
-                        'primary' => [$conf['user_fields']['id']],
+                        'primary' => [$conf->user_fields['id']],
                         'update' => $fields,
                     ],
                     [$data]
@@ -3475,7 +3477,7 @@ final class functions
                 $activity_details_tables[] = 'users';
             }
 
-            if ($conf['allow_user_customization'] ||
+            if ($conf->allow_user_customization ||
                 defined('IN_ADMIN')
             ) {
                 // update user "additional" information (specific to Piwigo)
@@ -3484,7 +3486,7 @@ final class functions
                     'expand', 'show_nb_hits', 'recent_period', 'theme',
                 ];
 
-                if ($conf['activate_comments']) {
+                if ($conf->activate_comments) {
                     $fields[] = 'show_nb_comments';
                 }
 
@@ -3547,8 +3549,8 @@ final class functions
             [
                 $template_prefix . 'USERNAME' => stripslashes($userdata['username']),
                 $template_prefix . 'EMAIL' => $userdata['email'],
-                $template_prefix . 'ALLOW_USER_CUSTOMIZATION' => $conf['allow_user_customization'],
-                $template_prefix . 'ACTIVATE_COMMENTS' => $conf['activate_comments'],
+                $template_prefix . 'ALLOW_USER_CUSTOMIZATION' => $conf->allow_user_customization,
+                $template_prefix . 'ACTIVATE_COMMENTS' => $conf->activate_comments,
                 $template_prefix . 'NB_IMAGE_PAGE' => $userdata['nb_image_page'],
                 $template_prefix . 'RECENT_PERIOD' => $userdata['recent_period'],
                 $template_prefix . 'EXPAND' => $userdata['expand'] ? 'true' : 'false',
@@ -3574,7 +3576,7 @@ final class functions
 
         $template->assign('language_options', $language_options);
 
-        $special_user = in_array($userdata['id'], [$conf['guest_id'], $conf['default_user_id']]);
+        $special_user = in_array($userdata['id'], [$conf->guest_id, $conf->default_user_id]);
         $template->assign('SPECIAL_USER', $special_user);
         $template->assign('IN_ADMIN', defined('IN_ADMIN'));
 

@@ -17,7 +17,7 @@ use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
-if ($conf['rate']) {
+if ($conf->rate) {
     $rate_summary = [
         'count' => 0,
         'score' => $picture['current']['rating_score'],
@@ -37,7 +37,7 @@ if ($conf['rate']) {
 
     $user_rate = null;
 
-    if ($conf['rate_anonymous'] ||
+    if ($conf->rate_anonymous ||
         functions_user::is_authorized_status(ACCESS_CLASSIC)
     ) {
         if ($rate_summary['count'] > 0) {
@@ -82,7 +82,7 @@ if ($conf['rate']) {
                     ]
                 ),
                 'USER_RATE' => $user_rate,
-                'marks' => $conf['rate_items'],
+                'marks' => $conf->rate_items,
             ]
         );
     }

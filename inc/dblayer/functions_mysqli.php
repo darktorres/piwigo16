@@ -150,7 +150,7 @@ final class functions_mysqli
         try {
             $result = $mysqli->query($query);
         } catch (Exception $exception) {
-            self::my_error($exception->getMessage() . "\n" . $query, $conf['die_on_sql_error']);
+            self::my_error($exception->getMessage() . "\n" . $query, $conf->die_on_sql_error);
         }
 
         $time = microtime(true) - $start;
@@ -163,7 +163,7 @@ final class functions_mysqli
         $page['count_queries']++;
         $page['queries_time'] += $time;
 
-        if ($conf['show_queries']) {
+        if ($conf->show_queries) {
             $output = '';
             $output .= '<pre>[' . $page['count_queries'] . '] ';
             $output .= "\n" . $query;

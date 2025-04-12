@@ -92,9 +92,9 @@ require __DIR__ . '/inc/Template.php';
 functions::check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
 
 if (! empty($_GET['dl']) &&
-    file_exists('./' . $conf['data_location'] . 'pwg_' . $_GET['dl'])
+    file_exists('./' . $conf->data_location . 'pwg_' . $_GET['dl'])
 ) {
-    $filename = './' . $conf['data_location'] . 'pwg_' . $_GET['dl'];
+    $filename = './' . $conf->data_location . 'pwg_' . $_GET['dl'];
     header('Cache-Control: no-cache, must-revalidate');
     header('Pragma: no-cache');
     header('Content-Disposition: attachment; filename="database.php"');
@@ -287,7 +287,7 @@ if (isset($_POST['install'])) {
         // fill languages table, only activate the current language
         $languages->perform_action('activate', $language);
 
-        // fill $conf global array
+        // fill $conf global
         functions::load_conf_from_db();
 
         // PWG_CHARSET is required for building the fs_themes array in the
@@ -347,11 +347,11 @@ if (isset($_POST['install'])) {
         $file_content = <<<PHP
             <?php
 
-            \$conf['dblayer'] = '{$dblayer}';
-            \$conf['db_base'] = '{$dbname}';
-            \$conf['db_user'] = '{$dbuser}';
-            \$conf['db_password'] = '{$dbpasswd}';
-            \$conf['db_host'] = '{$dbhost}';
+            \$conf->dblayer = '{$dblayer}';
+            \$conf->db_base = '{$dbname}';
+            \$conf->db_user = '{$dbuser}';
+            \$conf->db_password = '{$dbpasswd}';
+            \$conf->db_host = '{$dbhost}';
 
             define('PHPWG_INSTALLED', true);
             define('PWG_CHARSET', 'utf-8');
@@ -366,10 +366,10 @@ if (isset($_POST['install'])) {
 
         if (! $fp) {
             // make sure nobody can list files of _data directory
-            functions::secure_directory('./' . $conf['data_location']);
+            functions::secure_directory('./' . $conf->data_location);
 
             $tmp_filename = md5(uniqid((string) time()));
-            $fh = fopen('./' . $conf['data_location'] . 'pwg_' . $tmp_filename, 'w');
+            $fh = fopen('./' . $conf->data_location . 'pwg_' . $tmp_filename, 'w');
             fputs($fh, $file_content, strlen($file_content));
             fclose($fh);
 
@@ -428,12 +428,12 @@ if ($step == 1) {
     } else {
         session_set_save_handler(new PwgSessionHandler(), true);
 
-        ini_set('session.use_cookies', $conf['session_use_cookies']);
-        ini_set('session.use_only_cookies', $conf['session_use_only_cookies']);
-        ini_set('session.use_trans_sid', intval($conf['session_use_trans_sid']));
+        ini_set('session.use_cookies', $conf->session_use_cookies);
+        ini_set('session.use_only_cookies', $conf->session_use_only_cookies);
+        ini_set('session.use_trans_sid', intval($conf->session_use_trans_sid));
         ini_set('session.cookie_httponly', 1);
 
-        session_name($conf['session_name']);
+        session_name($conf->session_name);
         session_set_cookie_params(0, functions_cookie::cookie_path());
         register_shutdown_function('session_write_close');
 

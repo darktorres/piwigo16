@@ -36,9 +36,9 @@ if (isset($_GET['type']) &&
     $output_lines = [];
 
     $query = <<<SQL
-        SELECT activity_id, performed_by, object, object_id, action, ip_address, occurred_on, details, {$conf['user_fields']['username']} AS username
+        SELECT activity_id, performed_by, object, object_id, action, ip_address, occurred_on, details, {$conf->user_fields['username']} AS username
         FROM activity
-        JOIN users AS u ON performed_by = u.{$conf['user_fields']['id']}
+        JOIN users AS u ON performed_by = u.{$conf->user_fields['id']}
         ORDER BY activity_id DESC;
         SQL;
 
@@ -90,7 +90,7 @@ $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Users'));
 // +-----------------------------------------------------------------------+
 $template->assign([
     'PWG_TOKEN' => functions::get_pwg_token(),
-    'INHERIT' => $conf['inheritance_by_default'],
+    'INHERIT' => $conf->inheritance_by_default,
     'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(['users']),
 ]);
 
@@ -106,9 +106,9 @@ $nb_lines_for_user = functions_mysqli::query2array($query, 'performed_by', 'coun
 if (count($nb_lines_for_user) > 0) {
     $ids = implode(', ', array_keys($nb_lines_for_user));
     $query = <<<SQL
-        SELECT {$conf['user_fields']['id']} AS id, {$conf['user_fields']['username']} AS username
+        SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['username']} AS username
         FROM users
-        WHERE {$conf['user_fields']['id']} IN ({$ids});
+        WHERE {$conf->user_fields['id']} IN ({$ids});
         SQL;
 }
 

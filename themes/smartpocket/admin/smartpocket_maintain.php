@@ -22,10 +22,10 @@ class smartpocket_maintain extends ThemeMaintain
     ): void {
         global $conf;
 
-        if (empty($conf['smartpocket'])) {
+        if (empty($conf->smartpocket)) {
             functions::conf_update_param('smartpocket', $this->default_conf, true);
-        } elseif (count($conf['smartpocket']) != 2) {
-            $conff = $conf['smartpocket'];
+        } elseif (count($conf->smartpocket) != 2) {
+            $conff = $conf->smartpocket;
 
             $config = [
                 'loop' => (! empty($conff['loop'])) ? $conff['loop'] : true,

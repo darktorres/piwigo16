@@ -78,9 +78,9 @@ final class pwg
 
         $uid = '&b=' . time();
 
-        $conf['question_mark_in_urls'] = true;
-        $conf['php_extension_in_urls'] = true;
-        $conf['derivative_url_style'] = 2; //script
+        $conf->question_mark_in_urls = true;
+        $conf->php_extension_in_urls = true;
+        $conf->derivative_url_style = 2; //script
 
         $qlimit = min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
         $where_clauses = ws_functions::ws_std_image_sql_filter($params, '');
@@ -263,7 +263,7 @@ final class pwg
         global $conf;
 
         // Cache size
-        $path_cache = $conf['data_location'];
+        $path_cache = $conf->data_location;
         $infos['cache_size'] = null;
 
         exec('du -sk ' . $path_cache, $return_array_cache);
@@ -276,7 +276,7 @@ final class pwg
         }
 
         // Multiples sizes size
-        $path_msizes = $conf['data_location'] . 'i';
+        $path_msizes = $conf->data_location . 'i';
         $msizes = functions_admin::get_cache_size_derivatives($path_msizes);
 
         $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::get_defined_type_map()), 0);
@@ -292,7 +292,7 @@ final class pwg
         $infos['msizes']['all'] = $all;
 
         // Compiled templates size
-        $path_template_c = $conf['data_location'] . 'templates_c';
+        $path_template_c = $conf->data_location . 'templates_c';
         $infos['tsizes'] = null;
 
         exec('du -sk ' . $path_template_c, $return_array_template_c);
@@ -486,12 +486,12 @@ final class pwg
                 array_unique(
                     array_map(
                         strtolower(...),
-                        $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext']
+                        $conf->upload_form_all_types ? $conf->file_ext : $conf->picture_ext
                     )
                 )
             );
 
-            $res['upload_form_chunk_size'] = $conf['upload_form_chunk_size'];
+            $res['upload_form_chunk_size'] = $conf->upload_form_chunk_size;
         }
 
         return $res;
@@ -529,12 +529,12 @@ final class pwg
                 AND performed_by = {$param['uid']}
 
                 SQL;
-        } elseif ($conf['activity_display_connections'] == 'none') {
+        } elseif ($conf->activity_display_connections == 'none') {
             $query .= <<<SQL
                 AND action NOT IN ('login', 'logout')
 
                 SQL;
-        } elseif ($conf['activity_display_connections'] == 'admins_only') {
+        } elseif ($conf->activity_display_connections == 'admins_only') {
             $admin_ids = implode(', ', functions_admin::get_admins());
             $query .= <<<SQL
                 AND NOT (action IN ('login', 'logout') AND object_id NOT IN ({$admin_ids}))
@@ -607,9 +607,9 @@ final class pwg
         if (count($user_ids) > 0) {
             $imploded_user_ids = implode(', ', array_keys($user_ids));
             $query = <<<SQL
-                SELECT {$conf['user_fields']['id']} AS user_id, {$conf['user_fields']['username']} AS username
+                SELECT {$conf->user_fields['id']} AS user_id, {$conf->user_fields['username']} AS username
                 FROM users
-                WHERE {$conf['user_fields']['id']} IN ({$imploded_user_ids});
+                WHERE {$conf->user_fields['id']} IN ({$imploded_user_ids});
                 SQL;
             $username_of = functions_mysqli::query2array($query, 'user_id', 'username');
         }
@@ -901,7 +901,7 @@ final class pwg
         if (count($user_ids) > 0) {
             $userIds = implode(', ', array_keys($user_ids));
             $query = <<<SQL
-                SELECT {$conf['user_fields']['id']} AS id, {$conf['user_fields']['username']} AS username
+                SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['username']} AS username
                 FROM users
                 WHERE id IN ({$userIds});
                 SQL;
@@ -967,7 +967,7 @@ final class pwg
 
         $i = 0;
         $first_line = $page['start'] + 1;
-        $last_line = $page['start'] + $conf['nb_logs_page'];
+        $last_line = $page['start'] + $conf->nb_logs_page;
 
         $summary['total_filesize'] = 0;
         $summary['guests_IP'] = [];
@@ -982,7 +982,7 @@ final class pwg
                 $summary['total_filesize'] += intval($image_infos[$line['image_id']]['filesize']);
             }
 
-            if ($line['user_id'] == $conf['guest_id']) {
+            if ($line['user_id'] == $conf->guest_id) {
                 if (! isset($summary['guests_IP'][$line['IP']])) {
                     $summary['guests_IP'][$line['IP']] = 0;
                 }
@@ -1122,7 +1122,7 @@ final class pwg
 
             // we delete the "guest" from the $username_of hash so that it is
             // avoided in next steps
-            unset($username_of[$conf['guest_id']]);
+            unset($username_of[$conf->guest_id]);
         }
 
         $summary['nb_members'] = count($username_of);

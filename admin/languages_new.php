@@ -18,7 +18,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     exit('Hacking attempt!');
 }
 
-if (! $conf['enable_extensions_install']) {
+if (! $conf->enable_extensions_install) {
     exit('Piwigo extensions install/update system is disabled');
 }
 

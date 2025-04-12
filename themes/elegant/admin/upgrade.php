@@ -10,7 +10,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 
 global $conf;
 
-if (! isset($conf['elegant'])) {
+if (! isset($conf->elegant)) {
     $config = [
         'p_main_menu' => 'on', //on - off - disabled
         'p_pict_descr' => 'on', //on - off - disabled
@@ -18,8 +18,8 @@ if (! isset($conf['elegant'])) {
     ];
 
     functions::conf_update_param('elegant', $config, true);
-} elseif (count($conf['elegant']) != 3) {
-    $conff = $conf['elegant'];
+} elseif (count($conf->elegant) != 3) {
+    $conff = $conf->elegant;
     $config = [
         'p_main_menu' => (isset($conff['p_main_menu'])) ? $conff['p_main_menu'] : 'on',
         'p_pict_descr' => (isset($conff['p_pict_descr'])) ? $conff['p_pict_descr'] : 'on',

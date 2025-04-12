@@ -24,7 +24,7 @@ use Random\RandomException;
 $env_nbm =
           [
             'start_time' => functions::get_moment(),
-              'sendmail_timeout' => (intval(ini_get('max_execution_time')) * $conf['nbm_max_treatment_timeout_percent']),
+              'sendmail_timeout' => (intval(ini_get('max_execution_time')) * $conf->nbm_max_treatment_timeout_percent),
               'is_sendmail_timeout' => false,
         ];
 
@@ -32,7 +32,7 @@ if (! isset($env_nbm['sendmail_timeout']) ||
     ! is_numeric($env_nbm['sendmail_timeout']) ||
     $env_nbm['sendmail_timeout'] <= 0
 ) {
-    $env_nbm['sendmail_timeout'] = $conf['nbm_treatment_timeout_default'];
+    $env_nbm['sendmail_timeout'] = $conf->nbm_treatment_timeout_default;
 }
 
 final class functions_notification_by_mail
@@ -114,10 +114,10 @@ final class functions_notification_by_mail
             }
 
             $query = <<<SQL
-                SELECT n.user_id, n.check_key, u.{$conf['user_fields']['username']} AS username, u.{$conf['user_fields']['email']} AS mail_address,
+                SELECT n.user_id, n.check_key, u.{$conf->user_fields['username']} AS username, u.{$conf->user_fields['email']} AS mail_address,
                     n.enabled, n.last_send, ui.status
                 FROM user_mail_notification AS n
-                JOIN users AS u ON n.user_id = u.{$conf['user_fields']['id']}
+                JOIN users AS u ON n.user_id = u.{$conf->user_fields['id']}
                 JOIN user_infos AS ui ON ui.user_id = n.user_id
                 WHERE 1 = 1
 
@@ -127,7 +127,7 @@ final class functions_notification_by_mail
                 // No mail empty and all users enabled
                 $query .= <<<SQL
                     AND n.enabled = 'true'
-                    AND u.{$conf['user_fields']['email']} IS NOT NULL
+                    AND u.{$conf->user_fields['email']} IS NOT NULL
 
                     SQL;
             }
@@ -187,8 +187,8 @@ final class functions_notification_by_mail
 
         if ($is_to_send_mail) {
             // Init mail configuration
-            $env_nbm['email_format'] = functions_mail::get_str_email_format($conf['nbm_send_html_mail']);
-            $env_nbm['send_as_name'] = ((isset($conf['nbm_send_mail_as']) && ! empty($conf['nbm_send_mail_as'])) ? $conf['nbm_send_mail_as'] : functions_mail::get_mail_sender_name());
+            $env_nbm['email_format'] = functions_mail::get_str_email_format($conf->nbm_send_html_mail);
+            $env_nbm['send_as_name'] = ((isset($conf->nbm_send_mail_as) && ! empty($conf->nbm_send_mail_as)) ? $conf->nbm_send_mail_as : functions_mail::get_mail_sender_name());
             $env_nbm['send_as_mail_address'] = functions::get_webmaster_mail_address();
             $env_nbm['send_as_mail_formated'] = functions_mail::format_email($env_nbm['send_as_name'], $env_nbm['send_as_mail_address']);
             // Init mail counter
@@ -400,7 +400,7 @@ final class functions_notification_by_mail
                     // set env nbm user
                     self::set_user_on_env_nbm($nbm_user, true);
 
-                    $subject = '[' . $conf['gallery_title'] . '] ' . ($is_subscribe ? functions::l10n('Subscribe to notification by mail') : functions::l10n('Unsubscribe from notification by mail'));
+                    $subject = '[' . $conf->gallery_title . '] ' . ($is_subscribe ? functions::l10n('Subscribe to notification by mail') : functions::l10n('Unsubscribe from notification by mail'));
 
                     // Assign current var for nbm mail
                     self::assign_vars_nbm_mail_content($nbm_user);
@@ -410,7 +410,7 @@ final class functions_notification_by_mail
                     $env_nbm['mail_template']->assign(
                         [
                             $section_action_by => true,
-                            'GOTO_GALLERY_TITLE' => $conf['gallery_title'],
+                            'GOTO_GALLERY_TITLE' => $conf->gallery_title,
                             'GOTO_GALLERY_URL' => functions_url::get_gallery_home_url(),
                         ]
                     );

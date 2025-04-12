@@ -91,8 +91,8 @@ final class functions_admin
         self::delete_elements($element_ids);
 
         // now, should we delete photos that are virtually linked to the category?
-        if ($photo_deletion_mode == 'delete_orphans' ||
-            $photo_deletion_mode == 'force_delete'
+        if ($photo_deletion_mode === 'delete_orphans' ||
+            $photo_deletion_mode === 'force_delete'
         ) {
             $ids_str = implode(', ', $ids);
             $query = <<<SQL
@@ -103,7 +103,7 @@ final class functions_admin
             $image_ids_linked = functions_mysqli::query2array($query, null, 'image_id');
 
             if ($image_ids_linked !== []) {
-                if ($photo_deletion_mode == 'delete_orphans') {
+                if ($photo_deletion_mode === 'delete_orphans') {
                     $image_ids_list = implode(', ', $image_ids_linked);
                     $category_ids_list = implode(', ', $ids);
                     $query = <<<SQL
@@ -116,7 +116,7 @@ final class functions_admin
                     $image_ids_to_delete = array_diff($image_ids_linked, $image_ids_not_orphans);
                 }
 
-                if ($photo_deletion_mode == 'force_delete') {
+                if ($photo_deletion_mode === 'force_delete') {
                     $image_ids_to_delete = $image_ids_linked;
                 }
 
@@ -237,7 +237,7 @@ final class functions_admin
 
             $ok = true;
 
-            if (! isset($conf->never_delete_originals)) {
+            if ($conf->never_delete_originals === null) {
                 foreach ($files as $path) {
                     if (is_file($path) &&
                         ! unlink($path)
@@ -809,7 +809,7 @@ final class functions_admin
         }
 
         // make public a category => all its parent categories become public
-        if ($value == 'public') {
+        if ($value === 'public') {
             $uppercats = self::get_uppercat_ids($categories);
             $uppercats_list = implode(', ', $uppercats);
             $query = <<<SQL
@@ -821,7 +821,7 @@ final class functions_admin
         }
 
         // make a category private => all its child categories become private
-        if ($value == 'private') {
+        if ($value === 'private') {
             $subcats = functions_category::get_subcat_ids($categories);
 
             $subcats_list = implode(', ', $subcats);
@@ -1010,11 +1010,7 @@ final class functions_admin
 
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
-        if ($size == null) {
-            $src = DerivativeImage::thumb_url($row);
-        } else {
-            $src = DerivativeImage::url($size, $row);
-        }
+        $src = $size == null ? DerivativeImage::thumb_url($row) : DerivativeImage::url($size, $row);
 
         $url = functions_url::get_root_url() . 'admin.php?page=photo-' . $image_id;
 
@@ -1461,7 +1457,7 @@ final class functions_admin
 
         $rank = 0;
 
-        if ($conf->newcat_default_position == 'last') {
+        if ($conf->newcat_default_position === 'last') {
             //what is the current higher rank for this parent?
             $parent_condition = empty($parent_id) ? 'IS NULL' : "= {$parent_id}";
             $query = <<<SQL
@@ -1508,7 +1504,7 @@ final class functions_admin
 
         // is the album private? (may be overwritten if parent album is private)
         if (isset($options['status']) &&
-            $options['status'] == 'private'
+            $options['status'] === 'private'
         ) {
             $insert['status'] = 'private';
         } else {
@@ -1568,7 +1564,7 @@ final class functions_admin
 
         self::update_global_rank();
 
-        if ($insert['status'] == 'private' &&
+        if ($insert['status'] === 'private' &&
             ! empty($insert['id_uppercat']) &&
             ((isset($options['inherit']) && $options['inherit']) || $conf->inheritance_by_default)
         ) {
@@ -1596,7 +1592,7 @@ final class functions_admin
                 SQL;
             $granted_users = functions_mysqli::query2array($query, null, 'user_id');
             self::add_permission_on_category($inserted_id, $granted_users);
-        } elseif ($insert['status'] == 'private') {
+        } elseif ($insert['status'] === 'private') {
             self::add_permission_on_category($inserted_id, array_unique(array_merge(self::get_admins(), [$user['id']])));
         }
 
@@ -1956,7 +1952,7 @@ final class functions_admin
     ): ?array {
         global $logger;
 
-        if (isset($conf->empty_lounge_running)) {
+        if ($conf->empty_lounge_running !== null) {
             [$running_exec_id, $running_exec_start_time] = explode('-', $conf->empty_lounge_running);
 
             if (time() - $running_exec_start_time > 60) {
@@ -1984,7 +1980,7 @@ final class functions_admin
         [$empty_lounge_running] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         [$running_exec_id] = explode('-', $empty_lounge_running);
 
-        if ($running_exec_id != $exec_id) {
+        if ($running_exec_id !== $exec_id) {
             $logger->debug(__FUNCTION__ . ', exec=' . $exec_id . ', skip');
             return null;
         }
@@ -2148,7 +2144,7 @@ final class functions_admin
             SQL;
         $dissociables = functions_mysqli::query2array($query, null, 'id');
 
-        if (! empty($dissociables)) {
+        if ($dissociables !== []) {
             $dissociable_ids = implode(', ', $dissociables);
             $query = <<<SQL
                 DELETE FROM image_category
@@ -2309,7 +2305,7 @@ final class functions_admin
             functions_html::fatal_error('create_table_add_character_set DB_CHARSET undefined');
         }
 
-        if ('DB_CHARSET' != '') {
+        if ('DB_CHARSET' !== '') {
             if (version_compare(functions_mysqli::pwg_get_db_version(), '4.1.0', '<')) {
                 return $query;
             }
@@ -2373,7 +2369,7 @@ final class functions_admin
     public static function get_extents(
         string $start = ''
     ): array {
-        if ($start == '') {
+        if ($start === '') {
             $start = './template-extension';
         }
 
@@ -2381,9 +2377,9 @@ final class functions_admin
         $extents = [];
 
         while (($file = readdir($dir)) !== false) {
-            if ($file == '.' ||
-                $file == '..' ||
-                $file == '.svn'
+            if ($file === '.' ||
+                $file === '..' ||
+                $file === '.svn'
             ) {
                 continue;
             }
@@ -2394,7 +2390,7 @@ final class functions_admin
                 $extents = array_merge($extents, self::get_extents($path));
             } elseif (! is_link($path) &&
                       file_exists($path) &&
-                      functions::get_extension($path) == 'tpl'
+                      functions::get_extension($path) === 'tpl'
             ) {
                 $extents[] = substr($path, 21);
             }
@@ -2453,14 +2449,9 @@ final class functions_admin
         int $category_id
     ): bool {
         global $user;
-
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter != restriction)
-        if (in_array($category_id, explode(',', $user['forbidden_categories'] ?? ''))) {
-            return false;
-        }
-
-        return true;
+        return ! in_array($category_id, explode(',', $user['forbidden_categories'] ?? ''));
     }
 
     /**
@@ -2500,11 +2491,11 @@ final class functions_admin
         }
 
         // Initialization
-        $method = empty($post_data) ? 'GET' : 'POST';
-        $request = empty($post_data) ? '' : http_build_query($post_data, '', '&');
+        $method = $post_data === [] ? 'GET' : 'POST';
+        $request = $post_data === [] ? '' : http_build_query($post_data, '', '&');
 
-        if (! empty($get_data)) {
-            $src .= ! str_contains($src, '?') ? '?' : '&';
+        if ($get_data !== []) {
+            $src .= str_contains($src, '?') ? '&' : '?';
             $src .= http_build_query($get_data, '', '&');
         }
 
@@ -2534,7 +2525,7 @@ final class functions_admin
         curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
-        if ($method == 'POST') {
+        if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
         }
@@ -2567,7 +2558,7 @@ final class functions_admin
                 ],
             ];
 
-            if ($method == 'POST') {
+            if ($method === 'POST') {
                 $opts['http']['content'] = $request;
             }
 
@@ -2594,7 +2585,7 @@ final class functions_admin
         $http_request = $method . ' ' . $path . " HTTP/1.0\r\n";
         $http_request .= 'Host: ' . $host . "\r\n";
 
-        if ($method == 'POST') {
+        if ($method === 'POST') {
             $http_request .= "Content-Type: application/x-www-form-urlencoded;\r\n";
             $http_request .= 'Content-Length: ' . strlen($request) . "\r\n";
         }
@@ -2612,7 +2603,7 @@ final class functions_admin
         while (! feof($s)) {
             $line = fgets($s);
 
-            if (rtrim($line, "\r\n") == '' &&
+            if (rtrim($line, "\r\n") === '' &&
                 ! $in_content
             ) {
                 $in_content = true;
@@ -2991,7 +2982,9 @@ final class functions_admin
             $types = [$types];
         }
 
-        for ($i = 0; $i < count($types); $i++) {
+        $counter = count($types);
+
+        for ($i = 0; $i < $counter; $i++) {
             $type = $types[$i];
 
             if ($type == derivative_std_params::IMG_CUSTOM) {
@@ -3018,8 +3011,8 @@ final class functions_admin
 
         if ($contents) {
             while (($node = readdir($contents)) !== false) {
-                if ($node != '.' &&
-                    $node != '..' &&
+                if ($node !== '.' &&
+                    $node !== '..' &&
                     is_dir('./' . PWG_DERIVATIVE_DIR . $node)
                 ) {
                     self::clear_derivative_cache_rec('./' . PWG_DERIVATIVE_DIR . $node, $pattern);
@@ -3043,22 +3036,20 @@ final class functions_admin
 
         if ($contents) {
             while (($node = readdir($contents)) !== false) {
-                if ($node == '.' ||
-                    $node == '..'
+                if ($node === '.' ||
+                    $node === '..'
                 ) {
                     continue;
                 }
 
                 if (is_dir($path . '/' . $node)) {
                     $rmdir &= self::clear_derivative_cache_rec($path . '/' . $node, $pattern);
+                } elseif (preg_match($pattern, $node)) {
+                    unlink($path . '/' . $node);
+                } elseif ($node === 'index.htm') {
+                    $rm_index = true;
                 } else {
-                    if (preg_match($pattern, $node)) {
-                        unlink($path . '/' . $node);
-                    } elseif ($node == 'index.htm') {
-                        $rm_index = true;
-                    } else {
-                        $rmdir = false;
-                    }
+                    $rmdir = false;
                 }
             }
 
@@ -3100,11 +3091,7 @@ final class functions_admin
 
         $dot = strrpos($path, '.');
 
-        if ($type == 'all') {
-            $pattern = '-*';
-        } else {
-            $pattern = '-' . derivative_params::derivative_to_url($type) . '*';
-        }
+        $pattern = $type == 'all' ? '-*' : '-' . derivative_params::derivative_to_url($type) . '*';
 
         $path = substr_replace($path, $pattern, $dot, 0);
         $glob = glob('./' . PWG_DERIVATIVE_DIR . $path);
@@ -3129,10 +3116,10 @@ final class functions_admin
 
         if ($opendir) {
             while ($file = readdir($opendir)) {
-                if ($file != '.' &&
-                    $file != '..' &&
+                if ($file !== '.' &&
+                    $file !== '..' &&
                     is_dir($directory . '/' . $file) &&
-                    $file != '.svn'
+                    $file !== '.svn'
                 ) {
                     $sub_dirs[] = $file;
                 }
@@ -3157,8 +3144,8 @@ final class functions_admin
             $fh = opendir($path);
 
             while ($file = readdir($fh)) {
-                if ($file != '.' &&
-                    $file != '..'
+                if ($file !== '.' &&
+                    $file !== '..'
                 ) {
                     $pathfile = $path . '/' . $file;
 
@@ -3217,11 +3204,7 @@ final class functions_admin
             $requested = [$requested];
         }
 
-        if (empty($requested)) {
-            $requested = array_keys($tables);
-        } else {
-            $requested = array_intersect($requested, array_keys($tables));
-        }
+        $requested = $requested === [] ? array_keys($tables) : array_intersect($requested, array_keys($tables));
 
         $keys = [
             '_hash' => md5(functions_url::get_absolute_root_url()),
@@ -3429,7 +3412,7 @@ final class functions_admin
 
         $decimals = 1;
 
-        if ($readable[$index] == '') {
+        if ($readable[$index] === '') {
             $decimals = 0;
         }
 
@@ -3479,8 +3462,8 @@ final class functions_admin
 
             if ($contents) {
                 while (($node = readdir($contents)) !== false) {
-                    if ($node == '.' ||
-                        $node == '..'
+                    if ($node === '.' ||
+                        $node === '..'
                     ) {
                         continue;
                     }
@@ -3488,7 +3471,7 @@ final class functions_admin
                     if (is_file($path . '/' . $node)) {
                         $split = explode('-', $node);
 
-                        if ($split) {
+                        if ($split !== []) {
                             $size_code = substr(end($split), 0, 2);
                             $msizes[$size_code] ??= 0;
                             $msizes[$size_code] += filesize($path . '/' . $node);
@@ -3651,7 +3634,7 @@ final class functions_admin
                 $orderedCat['children'] = self::assocToOrderedTree($cat['children']);
             }
 
-            array_push($orderedTree, $orderedCat);
+            $orderedTree[] = $orderedCat;
         }
 
         usort($orderedTree, fn (array $a, array $b): int => $a['rank'] <=> $b['rank']);
@@ -3707,7 +3690,7 @@ final class functions_admin
             }
 
             if ($to_compare !== []) {
-                $ref_dates[$cat_id] = $minmax == 'max' ? max($to_compare) : min($to_compare);
+                $ref_dates[$cat_id] = $minmax === 'max' ? max($to_compare) : min($to_compare);
             } else {
                 $ref_dates[$cat_id] = null;
             }
@@ -3861,26 +3844,22 @@ final class functions_admin
     ): void {
         global $env_nbm, $base_url, $page, $must_repost;
 
-        if ($env_nbm['is_sendmail_timeout']) {
-            if (isset($_POST[$post_keyname])) {
-                $post_count = count($_POST[$post_keyname]);
-                $treated_count = count($check_key_treated);
-
-                if ($treated_count != 0) {
-                    $time_refresh = ceil((functions::get_moment() - $env_nbm['start_time']) * $post_count / $treated_count);
-                } else {
-                    $time_refresh = 0;
-                }
-
-                $_POST[$post_keyname] = array_diff($_POST[$post_keyname], $check_key_treated);
-
-                $must_repost = true;
-                $page['errors'][] = functions::l10n_dec(
-                    'Execution time is out, treatment must be continue [Estimated time: %d second].',
-                    'Execution time is out, treatment must be continue [Estimated time: %d seconds].',
-                    $time_refresh
-                );
+        if ($env_nbm['is_sendmail_timeout'] && isset($_POST[$post_keyname])) {
+            $post_count = count($_POST[$post_keyname]);
+            $treated_count = count($check_key_treated);
+            if ($treated_count != 0) {
+                $time_refresh = ceil((functions::get_moment() - $env_nbm['start_time']) * $post_count / $treated_count);
+            } else {
+                $time_refresh = 0;
             }
+
+            $_POST[$post_keyname] = array_diff($_POST[$post_keyname], $check_key_treated);
+            $must_repost = true;
+            $page['errors'][] = functions::l10n_dec(
+                'Execution time is out, treatment must be continue [Estimated time: %d second].',
+                'Execution time is out, treatment must be continue [Estimated time: %d seconds].',
+                $time_refresh
+            );
         }
 
     }
@@ -4019,7 +3998,7 @@ final class functions_admin
         if (in_array($action, ['list_to_send', 'send'])) {
             [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 
-            $is_action_send = ($action == 'send');
+            $is_action_send = ($action === 'send');
 
             // disabled and null mail_address are not selected in the list
             $data_users = functions_notification_by_mail::get_user_notifications('send', $check_key_list);
@@ -4033,14 +4012,12 @@ final class functions_admin
             ) {
                 if ($data_users !== []) {
                     $datas = [];
-
                     if (! isset($customize_mail_content)) {
                         $customize_mail_content = $conf->nbm_complementary_mail_content;
                     }
 
                     $customize_mail_content =
                       functions_plugins::trigger_change('nbm_render_global_customize_mail_content', $customize_mail_content);
-
                     // Prepare message after change language
                     if ($is_action_send) {
                         $msg_break_timeout = functions::l10n('Time to send mail is limited. Others mails are skipped.');
@@ -4050,7 +4027,6 @@ final class functions_admin
 
                     // Begin nbm users environment
                     functions_notification_by_mail::begin_users_env_nbm($is_action_send);
-
                     foreach ($data_users as $nbm_user) {
                         if (! $is_action_send &&
                             functions_notification_by_mail::check_sendmail_timeout()
@@ -4074,9 +4050,7 @@ final class functions_admin
                         if ($is_action_send) {
                             $auth = null;
                             $add_url_params = [];
-
                             $auth_key = functions_user::create_user_auth_key($nbm_user['user_id'], $nbm_user['status']);
-
                             if ($auth_key !== false) {
                                 $auth = $auth_key['auth_key'];
                                 $add_url_params['auth'] = $auth;
@@ -4085,7 +4059,6 @@ final class functions_admin
                             functions_url::set_make_full_url();
                             // Fill return list of "treated" check_key for 'send'
                             $return_list[] = $nbm_user['check_key'];
-
                             if ($conf->nbm_send_detailed_content) {
                                 $news = functions_notification::news($nbm_user['last_send'], $dbnow, false, $conf->nbm_send_html_mail, $auth);
                                 $exist_data = $news !== [];
@@ -4188,11 +4161,9 @@ final class functions_admin
 
                                 functions_url::unset_make_full_url();
                             }
-                        } else {
-                            if (functions_notification::news_exists($nbm_user['last_send'], $dbnow)) {
-                                // Fill return list of "selected" users for 'list_to_send'
-                                $return_list[] = $nbm_user;
-                            }
+                        } elseif (functions_notification::news_exists($nbm_user['last_send'], $dbnow)) {
+                            // Fill return list of "selected" users for 'list_to_send'
+                            $return_list[] = $nbm_user;
                         }
 
                         // unset env nbm user
@@ -4201,7 +4172,6 @@ final class functions_admin
 
                     // Restore nbm environment
                     functions_notification_by_mail::end_users_env_nbm();
-
                     if ($is_action_send) {
                         functions_mysqli::mass_updates(
                             'user_mail_notification',
@@ -4214,10 +4184,8 @@ final class functions_admin
 
                         functions_notification_by_mail::display_counter_info();
                     }
-                } else {
-                    if ($is_action_send) {
-                        $page['errors'][] = functions::l10n('No user to send notifications by mail.');
-                    }
+                } elseif ($is_action_send) {
+                    $page['errors'][] = functions::l10n('No user to send notifications by mail.');
                 }
             } else {
                 // Quick List, don't check news
@@ -4513,29 +4481,21 @@ final class functions_admin
         $limit = count($data);
         $result = [];
 
-        if ($firstDate == null) {
-            $date = self::get_date_object($data[count($data) - 1]);
-        } else {
-            $date = $firstDate;
-        }
+        $date = $firstDate == null ? self::get_date_object($data[count($data) - 1]) : $firstDate;
 
-        if ($lastDate == null) {
-            $date_end = self::get_date_object($data[0]);
-        } else {
-            $date_end = $lastDate;
-        }
+        $date_end = $lastDate == null ? self::get_date_object($data[0]) : $lastDate;
 
         //Declare variable according the unit
-        if ($unit == 'year') {
+        if ($unit === 'year') {
             $date_format = 'Y';
             $date_add = 'P1Y';
-        } elseif ($unit == 'month') {
+        } elseif ($unit === 'month') {
             $date_format = 'Y-m';
             $date_add = 'P1M';
-        } elseif ($unit == 'day') {
+        } elseif ($unit === 'day') {
             $date_format = 'Y-m-d';
             $date_add = 'P1D';
-        } elseif ($unit == 'hour') {
+        } elseif ($unit === 'hour') {
             $date_format = 'Y-m-d\TH:00';
             $date_add = 'PT1H';
         }

@@ -20,7 +20,7 @@ if (isset($_POST['submit_elegant'])) {
 
     functions::conf_update_param('elegant', $config_send, true);
 
-    array_push($page['infos'], functions::l10n('Information data registered in database'));
+    $page['infos'][] = functions::l10n('Information data registered in database');
 }
 
 $template->set_filenames([

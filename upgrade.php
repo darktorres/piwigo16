@@ -83,8 +83,8 @@ if (isset($_GET['language'])) {
 } else {
     $language = 'en_UK';
     // Try to get browser language
-    foreach ($languages->fs_languages as $language_code => $fs_language) {
-        if (substr($language_code, 0, 2) == substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) {
+    foreach (array_keys($languages->fs_languages) as $language_code) {
+        if (substr($language_code, 0, 2) === substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) {
             $language = $language_code;
             break;
         }
@@ -210,21 +210,13 @@ $columns_of = functions::get_columns_of($tables);
 // find the current release
 if (! in_array('param', $columns_of['config'])) {
     // we're in branch 1.3, important upgrade, isn't it?
-    if (in_array('user_category', $tables)) {
-        $current_release = '1.3.1';
-    } else {
-        $current_release = '1.3.0';
-    }
+    $current_release = in_array('user_category', $tables) ? '1.3.1' : '1.3.0';
 } elseif (! in_array('user_cache', $tables)) {
     $current_release = '1.4.0';
 } elseif (! in_array('tags', $tables)) {
     $current_release = '1.5.0';
 } elseif (! in_array('plugins', $tables)) {
-    if (! in_array('auto_login_key', $columns_of['user_infos'])) {
-        $current_release = '1.6.0';
-    } else {
-        $current_release = '1.6.2';
-    }
+    $current_release = in_array('auto_login_key', $columns_of['user_infos']) ? '1.6.2' : '1.6.0';
 } elseif (! in_array('md5sum', $columns_of['images'])) {
     $current_release = '1.7.0';
 } elseif (! in_array('themes', $tables)) {
@@ -304,7 +296,7 @@ if ((isset($_POST['submit']) || isset($_GET['now'])) &&
         functions::conf_update_param('piwigo_db_version', functions::get_branch_from_version(PHPWG_VERSION));
 
         // Something to add in database.php?
-        if (! empty($mysql_changes)) {
+        if ($mysql_changes !== []) {
             $config_file_contents =
               substr($config_file_contents, 0, $php_end_tag) . "\r\n"
               . implode("\r\n", $mysql_changes) . "\r\n"
@@ -404,7 +396,7 @@ else {
     $languages = new languages();
 
     foreach ($languages->fs_languages as $language_code => $fs_language) {
-        if ($language == $language_code) {
+        if ($language === $language_code) {
             $template->assign('language_selection', $language_code);
         }
 

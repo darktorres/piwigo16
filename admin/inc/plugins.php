@@ -56,7 +56,7 @@ final class plugins
         global $conf;
 
         if (! $conf->enable_extensions_install &&
-            $action == 'delete'
+            $action === 'delete'
         ) {
             exit('Piwigo extensions install/update/delete system is disabled');
         }
@@ -66,7 +66,7 @@ final class plugins
         }
 
         if ($action !== 'update') { // wait for files to be updated
-            $plugin_maintain = self::build_maintain_class($plugin_id);
+            $plugin_maintain = $this->build_maintain_class($plugin_id);
         }
 
         $activity_details = [
@@ -86,7 +86,7 @@ final class plugins
                 $plugin_maintain->install($this->fs_plugins[$plugin_id]['version'], $errors);
                 $activity_details['version'] = $this->fs_plugins[$plugin_id]['version'];
 
-                if (empty($errors)) {
+                if ($errors === []) {
                     $query = <<<SQL
                         INSERT INTO plugins
                             (id, version)
@@ -110,7 +110,7 @@ final class plugins
                     $new_version = $this->fs_plugins[$plugin_id]['version'];
                     $activity_details['to_version'] = $new_version;
 
-                    $plugin_maintain = self::build_maintain_class($plugin_id);
+                    $plugin_maintain = $this->build_maintain_class($plugin_id);
                     $plugin_maintain->update($previous_version, $new_version, $errors);
 
                     if ($new_version != 'auto') {
@@ -136,12 +136,12 @@ final class plugins
                     break;
                 }
 
-                if (empty($errors)) {
+                if ($errors === []) {
                     $plugin_maintain->activate($crt_db_plugin['version'], $errors);
                     $activity_details['version'] = $crt_db_plugin['version'];
                 }
 
-                if (empty($errors)) {
+                if ($errors === []) {
                     $query = <<<SQL
                         UPDATE plugins
                         SET state = 'active'
@@ -239,12 +239,9 @@ final class plugins
         $dir = opendir(PHPWG_PLUGINS_PATH);
 
         while ($file = readdir($dir)) {
-            if ($file != '.' &&
-                $file != '..'
+            if ($file !== '.' && $file !== '..' && preg_match('/^[a-zA-Z0-9-_]+$/', $file)
             ) {
-                if (preg_match('/^[a-zA-Z0-9-_]+$/', $file)) {
-                    $this->get_fs_plugin($file);
-                }
+                $this->get_fs_plugin($file);
             }
         }
 
@@ -303,7 +300,7 @@ final class plugins
             }
 
             if (preg_match('/Has Settings:\\s*([Tt]rue|[Ww]ebmaster)/', $plg_data, $val)) {
-                if (strtolower($val[1]) == 'webmaster') {
+                if (strtolower($val[1]) === 'webmaster') {
                     global $user;
 
                     if (isset($user) &&
@@ -382,7 +379,7 @@ final class plugins
                 while ($i < count($pem_versions) &&
                        count($versions_to_check) == 0
                 ) {
-                    if (functions::get_branch_from_version($pem_versions[$i]['name']) == functions::get_branch_from_version($version)) {
+                    if (functions::get_branch_from_version($pem_versions[$i]['name']) === functions::get_branch_from_version($version)) {
                         $versions_to_check[] = $pem_versions[$i]['id'];
                     }
 
@@ -439,7 +436,7 @@ final class plugins
 
         $versions_to_check = $this->get_versions_to_check($beta_test);
 
-        if (empty($versions_to_check)) {
+        if ($versions_to_check === []) {
             return true;
         }
 
@@ -463,7 +460,7 @@ final class plugins
             'get_nb_downloads' => 'true',
         ];
 
-        if (! empty($plugins_to_check)) {
+        if ($plugins_to_check !== []) {
             if ($new) {
                 $get_data['extension_exclude'] = implode(',', $plugins_to_check);
             } else {
@@ -504,7 +501,7 @@ final class plugins
 
         $versions_to_check = $this->get_versions_to_check();
 
-        if (empty($versions_to_check)) {
+        if ($versions_to_check === []) {
             return false;
         }
 
@@ -624,7 +621,7 @@ final class plugins
                 if ($list) {
                     foreach ($list as $file) {
                         // we search main.inc.php in archive
-                        if (basename($file['filename']) == 'main.inc.php' &&
+                        if (basename($file['filename']) === 'main.inc.php' &&
                            (! isset($main_filepath) || strlen($file['filename']) < strlen($main_filepath))
                         ) {
                             $main_filepath = $file['filename'];
@@ -636,10 +633,10 @@ final class plugins
                     if (isset($main_filepath)) {
                         $root = dirname($main_filepath); // main.inc.php path in archive
 
-                        if ($action == 'upgrade') {
+                        if ($action === 'upgrade') {
                             $plugin_id = $dest;
                         } else {
-                            $plugin_id = ($root == '.' ? 'extension_' . $dest : basename($root));
+                            $plugin_id = ($root === '.' ? 'extension_' . $dest : basename($root));
                         }
 
                         $extract_path = PHPWG_PLUGINS_PATH . $plugin_id;
@@ -661,7 +658,7 @@ final class plugins
                                 $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES);
 
                                 if ($old_files &&
-                                    ! empty($old_files)
+                                    $old_files !== []
                                 ) {
                                     $old_files[] = 'obsolete.list';
                                     $logger->debug(__FUNCTION__ . ', $old_files = {' . implode('},{', $old_files) . '}');
@@ -727,7 +724,7 @@ final class plugins
             $obsolete_ext = file($file, FILE_IGNORE_NEW_LINES);
 
             if ($obsolete_ext &&
-                ! empty($obsolete_ext)
+                $obsolete_ext !== []
             ) {
                 foreach ($obsolete_ext as $ext) {
                     if (preg_match('/^(\d+) ?: ?(.*?)$/', $ext, $matches)) {
@@ -822,7 +819,7 @@ final class plugins
      * Returns the maintain class of a plugin
      * or build a new class with the procedural methods
      */
-    private static function build_maintain_class(
+    private function build_maintain_class(
         string $plugin_id
     ): DummyPlugin_maintain|PluginMaintain {
         $file_to_include = PHPWG_PLUGINS_PATH . $plugin_id . '/' . $plugin_id . '_maintain.php';

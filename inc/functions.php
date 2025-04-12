@@ -125,18 +125,18 @@ final class functions
             global $conf;
 
             $umask = umask(0);
-            $mkd = mkdir($dir, $conf->chmod_value, ($flags & self::MKGETDIR_RECURSIVE) ? true : false);
+            $mkd = mkdir($dir, $conf->chmod_value, (($flags & self::MKGETDIR_RECURSIVE) !== 0) ? true : false);
             umask($umask);
 
             if ($mkd == false) {
-                if ($flags & self::MKGETDIR_DIE_ON_ERROR) {
+                if (($flags & self::MKGETDIR_DIE_ON_ERROR) !== 0) {
                     functions_html::fatal_error("{$dir} " . self::l10n('no write access'));
                 }
 
                 return false;
             }
 
-            if ($flags & self::MKGETDIR_PROTECT_HTACCESS) {
+            if (($flags & self::MKGETDIR_PROTECT_HTACCESS) !== 0) {
                 $file = $dir . '/.htaccess';
 
                 if (! file_exists($file)) {
@@ -144,7 +144,7 @@ final class functions
                 }
             }
 
-            if ($flags & self::MKGETDIR_PROTECT_INDEX) {
+            if (($flags & self::MKGETDIR_PROTECT_INDEX) !== 0) {
                 $file = $dir . '/index.htm';
 
                 if (! file_exists($file)) {
@@ -154,7 +154,7 @@ final class functions
         }
 
         if (! is_writable($dir)) {
-            if ($flags & self::MKGETDIR_DIE_ON_ERROR) {
+            if (($flags & self::MKGETDIR_DIE_ON_ERROR) !== 0) {
                 functions_html::fatal_error("{$dir} " . self::l10n('no write access'));
             }
 
@@ -203,7 +203,7 @@ final class functions
             }
 
             for ($j = 0; $j < $n; $j++) { # n bytes matching 10bbbbbb follow ?
-                if (++$i == strlen($Str) ||
+                if (++$i === strlen($Str) ||
                    (ord($Str[$i]) & 0xC0) != 0x80
                 ) {
                     return -1;
@@ -657,7 +657,7 @@ final class functions
         // in case of uploadAsync, do not log the automatic login as an independent activity
         if (isset($_REQUEST['method']) &&
             $_REQUEST['method'] == 'pwg.images.uploadAsync' &&
-            $action == 'login'
+            $action === 'login'
         ) {
             return;
         }
@@ -682,14 +682,14 @@ final class functions
         } else {
             $details['script'] = self::script_basename();
 
-            if ($details['script'] == 'admin' &&
+            if ($details['script'] === 'admin' &&
                 isset($_GET['page'])
             ) {
                 $details['script'] .= '/' . $_GET['page'];
             }
         }
 
-        if ($action == 'autoupdate') {
+        if ($action === 'autoupdate') {
             // autoupdate on a plugin can happen anywhere, the "script/method" is not meaningful
             unset($details['method']);
             unset($details['script']);
@@ -697,15 +697,15 @@ final class functions
 
         $user_agent = null;
 
-        if ($object == 'user' &&
-            $action == 'login' &&
+        if ($object === 'user' &&
+            $action === 'login' &&
             isset($_SERVER['HTTP_USER_AGENT'])
         ) {
             $user_agent = strip_tags($_SERVER['HTTP_USER_AGENT']);
         }
 
-        if ($object == 'photo' &&
-            $action == 'add' &&
+        if ($object === 'photo' &&
+            $action === 'add' &&
             ! isset($details['sync'])
         ) {
             $details['added_with'] = 'app';
@@ -718,15 +718,15 @@ final class functions
         }
 
         if (in_array($object, ['album', 'photo']) &&
-            $action == 'delete' &&
+            $action === 'delete' &&
             isset($_GET['page']) &&
             $_GET['page'] == 'site_update'
         ) {
             $details['sync'] = true;
         }
 
-        if ($object == 'tag' &&
-            $action == 'delete' &&
+        if ($object === 'tag' &&
+            $action === 'delete' &&
             isset($_POST['destination_tag'])
         ) {
             $details['action'] = 'merge';
@@ -736,12 +736,12 @@ final class functions
         $inserts = [];
         $details_insert = functions_mysqli::pwg_db_real_escape_string(serialize($details));
         $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
-        $session_id = ! empty(session_id()) ? session_id() : 'none';
+        $session_id = empty(session_id()) ? 'none' : session_id();
 
         foreach ($object_ids as $loop_object_id) {
             $performed_by = $user['id'] ?? 0; // on a plugin autoupdate, $user is not yet loaded
 
-            if ($action == 'logout') {
+            if ($action === 'logout') {
                 $performed_by = $loop_object_id;
             }
 
@@ -960,7 +960,7 @@ final class functions
         // DateInterval does not contain the number of weeks
         if ($with_week) {
             $chunks['week'] = (int) floor($chunks['day'] / 7);
-            $chunks['day'] = $chunks['day'] - $chunks['week'] * 7;
+            $chunks['day'] -= $chunks['week'] * 7;
         }
 
         $j = array_search($stop, array_keys($chunks), true);
@@ -985,7 +985,7 @@ final class functions
         } else {
             $reversed_chunks_names = array_keys($chunks);
 
-            while ($print == '' && $i < count($reversed_chunks_names)) {
+            while ($print === '' && $i < count($reversed_chunks_names)) {
                 $name = $reversed_chunks_names[$i];
                 $value = $chunks[$name];
 
@@ -1006,11 +1006,7 @@ final class functions
         $print = trim($print);
 
         if ($with_text) {
-            if ($diff->invert) {
-                $print = self::l10n('%s ago', $print);
-            } else {
-                $print = self::l10n('%s in the future', $print);
-            }
+            $print = $diff->invert ? self::l10n('%s ago', $print) : self::l10n('%s in the future', $print);
         }
 
         return $print;
@@ -1149,7 +1145,7 @@ final class functions
         global $conf;
 
         // with RefreshTime != 0, only html must be used
-        if ($conf->default_redirect_method == 'http' &&
+        if ($conf->default_redirect_method === 'http' &&
             $refresh_time == 0 &&
             ! headers_sent()
         ) {
@@ -1359,11 +1355,7 @@ final class functions
         string $key,
         array|string $args = ''
     ): array {
-        if (is_array($args)) {
-            $key_arg = array_merge([$key], $args);
-        } else {
-            $key_arg = [$key, $args];
-        }
+        $key_arg = is_array($args) ? array_merge([$key], $args) : [$key, $args];
 
         return [
             'key_args' => $key_arg,
@@ -1442,7 +1434,7 @@ final class functions
     ): void {
         global $conf;
 
-        $condition = ! empty($condition) ? "WHERE {$condition}" : '';
+        $condition = empty($condition) ? '' : "WHERE {$condition}";
         $query = <<<SQL
             SELECT param, value
             FROM config
@@ -1553,7 +1545,7 @@ final class functions
             $params = [$params];
         }
 
-        if (empty($params)) {
+        if ($params === []) {
             return;
         }
 
@@ -1818,14 +1810,14 @@ final class functions
     ): ?string {
         if (empty($lang_id)) {
             global $lang_info;
-            return ! empty($lang_info['parent']) ? $lang_info['parent'] : null;
+            return empty($lang_info['parent']) ? null : $lang_info['parent'];
         }
 
         $f = './language/' . $lang_id . '/common.lang.php';
 
         if (file_exists($f)) {
             require $f;
-            return ! empty($lang_info['parent']) ? $lang_info['parent'] : null;
+            return empty($lang_info['parent']) ? null : $lang_info['parent'];
         }
 
         return null;
@@ -1993,18 +1985,18 @@ final class functions
         string $source_charset,
         string $dest_charset
     ): array|false|string|null {
-        if ($source_charset == $dest_charset) {
+        if ($source_charset === $dest_charset) {
             return $str;
         }
 
-        if ($source_charset == 'iso-8859-1' &&
-            $dest_charset == 'utf-8'
+        if ($source_charset === 'iso-8859-1' &&
+            $dest_charset === 'utf-8'
         ) {
             return mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
         }
 
-        if ($source_charset == 'utf-8' &&
-            $dest_charset == 'iso-8859-1'
+        if ($source_charset === 'utf-8' &&
+            $dest_charset === 'iso-8859-1'
         ) {
             return mb_convert_encoding($str, 'ISO-8859-1', 'UTF-8');
         }
@@ -2062,7 +2054,7 @@ final class functions
                 'md5',
                 $key[0] . substr($_SERVER['REMOTE_ADDR'], 0, 5) . $key[1] . $additional_data_to_hash,
                 $conf->secret_key
-            ) != $key[2]
+            ) !== $key[2]
         ) {
             return false;
         }
@@ -2087,7 +2079,7 @@ final class functions
 
         $navbar = [];
         $pages_around = $conf->paginate_pages_around;
-        $start_str = $clean_url ? '/' . $param_name . '-' : (! str_contains($url, '?') ? '?' : '&amp;') . $param_name . '=';
+        $start_str = $clean_url ? '/' . $param_name . '-' : (str_contains($url, '?') ? '&amp;' : '?') . $param_name . '=';
 
         if (! isset($start) ||
             ! is_numeric($start) ||
@@ -2241,10 +2233,8 @@ final class functions
                     functions_html::fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"');
                 }
             }
-        } else {
-            if (! preg_match($pattern, $param_value)) {
-                functions_html::fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid');
-            }
+        } elseif (! preg_match($pattern, $param_value)) {
+            functions_html::fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid');
         }
 
         return null;
@@ -2266,7 +2256,7 @@ final class functions
             if ($level == 0) {
                 $label = self::l10n('Everybody');
             } else {
-                if (strlen($label)) {
+                if (strlen($label) !== 0) {
                     $label .= ', ';
                 }
 
@@ -2338,7 +2328,7 @@ final class functions
         }
 
         if ($is_mobile_theme === null) {
-            $is_mobile_theme = (self::get_device() == 'mobile');
+            $is_mobile_theme = (self::get_device() === 'mobile');
             functions_session::pwg_set_session_var('mobile_theme', $is_mobile_theme);
         }
 
@@ -2705,7 +2695,7 @@ final class functions
         $deriv = explode('_', $deriv);
 
         foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
-            if (derivative_params::derivative_to_url($type) == $deriv[0]) {
+            if (derivative_params::derivative_to_url($type) === $deriv[0]) {
                 $page['derivative_type'] = $type;
                 $page['derivative_params'] = $params;
                 break;
@@ -2713,7 +2703,7 @@ final class functions
         }
 
         if (! isset($page['derivative_type'])) {
-            if (derivative_params::derivative_to_url(derivative_std_params::IMG_CUSTOM) == $deriv[0]) {
+            if (derivative_params::derivative_to_url(derivative_std_params::IMG_CUSTOM) === $deriv[0]) {
                 $page['derivative_type'] = derivative_std_params::IMG_CUSTOM;
             } else {
                 self::ierror('Unknown parsing type', 400);
@@ -2807,7 +2797,7 @@ final class functions
 
             $candidate_size = $candidate->compute_final_size($original_size);
 
-            if ($dsize != $params->compute_final_size($candidate_size)) {
+            if ($dsize !== $params->compute_final_size($candidate_size)) {
                 continue;
             }
 

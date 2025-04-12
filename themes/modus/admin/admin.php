@@ -66,13 +66,7 @@ $tab_codes = array_map(
     $tabs
 );
 
-if (isset($_GET['tab']) &&
-    in_array($_GET['tab'], $tab_codes)
-) {
-    $page['tab'] = $_GET['tab'];
-} else {
-    $page['tab'] = $tabs[0]['code'];
-}
+$page['tab'] = isset($_GET['tab']) && in_array($_GET['tab'], $tab_codes) ? $_GET['tab'] : $tabs[0]['code'];
 
 $tabsheet = new tabsheet();
 

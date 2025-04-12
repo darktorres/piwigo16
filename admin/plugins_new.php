@@ -147,7 +147,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
         // Check if the current version is in the compatible version (not necessary if we are in beta test)
         if ($beta_test) {
             foreach ($plugin['compatible_with_versions'] as $vers) {
-                if (functions::get_branch_from_version($vers) == functions::get_branch_from_version(PHPWG_VERSION)) {
+                if (functions::get_branch_from_version($vers) === functions::get_branch_from_version(PHPWG_VERSION)) {
                     $has_compatible_version = true;
                 }
             }
@@ -182,7 +182,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
             'CERTIFICATION' => $certification,
             'RATING' => $plugin['rating_score'],
             'NB_RATINGS' => $plugin['nb_ratings'],
-            'SCREENSHOT' => (key_exists('screenshot_url', $plugin)) ? $plugin['screenshot_url'] : '',
+            'SCREENSHOT' => (array_key_exists('screenshot_url', $plugin)) ? $plugin['screenshot_url'] : '',
             'TAGS' => $plugin['tags'],
         ]);
     }

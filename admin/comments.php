@@ -22,13 +22,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     exit('Hacking attempt!');
 }
 
-if (isset($_GET['start']) &&
-    is_numeric($_GET['start'])
-) {
-    $page['start'] = $_GET['start'];
-} else {
-    $page['start'] = 0;
-}
+$page['start'] = isset($_GET['start']) && is_numeric($_GET['start']) ? $_GET['start'] : 0;
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -116,13 +110,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     }
 }
 
-if (! isset($_GET['filter']) &&
-    $nb_pending > 0
-) {
-    $page['filter'] = 'pending';
-} else {
-    $page['filter'] = 'all';
-}
+$page['filter'] = ! isset($_GET['filter']) && $nb_pending > 0 ? 'pending' : 'all';
 
 if (isset($_GET['filter']) &&
     $_GET['filter'] == 'pending'
@@ -166,11 +154,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         ]
     );
 
-    if (empty($row['author_id'])) {
-        $author_name = $row['author'];
-    } else {
-        $author_name = stripslashes($row['username']);
-    }
+    $author_name = empty($row['author_id']) ? $row['author'] : stripslashes($row['username']);
 
     $template->append(
         'comments',

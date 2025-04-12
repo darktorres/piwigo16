@@ -41,7 +41,7 @@ $original_fields = [
 $updates = [];
 
 foreach ($original_fields as $field) {
-    $value = ! empty($_POST[$field]) ? $_POST[$field] : null;
+    $value = empty($_POST[$field]) ? null : $_POST[$field];
     $updates[$field] = $value;
 }
 
@@ -142,7 +142,7 @@ foreach (ImageStdParams::get_all_types() as $type) {
 
 // step 3 - save data
 if (count($errors) == 0) {
-    $quality_changed = ImageStdParams::$quality != intval($_POST['resize_quality']);
+    $quality_changed = ImageStdParams::$quality !== intval($_POST['resize_quality']);
     ImageStdParams::$quality = intval($_POST['resize_quality']);
 
     $enabled = ImageStdParams::get_defined_type_map();
@@ -162,9 +162,7 @@ if (count($errors) == 0) {
                 )
             );
             $new_params->sharpen = intval($pderivative['sharpen']);
-
             ImageStdParams::apply_global($new_params);
-
             if (isset($enabled[$type])) {
                 $old_params = $enabled[$type];
                 $same = true;
@@ -200,12 +198,12 @@ if (count($errors) == 0) {
                 $enabled[$type] = $new_params;
                 unset($disabled[$type]);
             }
-        } else { // disabled
-            if (isset($enabled[$type])) { // now disabled, before was enabled
-                $changed_types[] = $type;
-                $disabled[$type] = $enabled[$type];
-                unset($enabled[$type]);
-            }
+        } elseif (isset($enabled[$type])) {
+            // disabled
+            // now disabled, before was enabled
+            $changed_types[] = $type;
+            $disabled[$type] = $enabled[$type];
+            unset($enabled[$type]);
         }
     }
 

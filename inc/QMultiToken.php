@@ -26,19 +26,20 @@ class QMultiToken implements \Stringable
     public function __toString(): string
     {
         $s = '';
+        $counter = count($this->tokens);
 
-        for ($i = 0; $i < count($this->tokens); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             $modifier = $this->tokens[$i]->modifier;
 
-            if ($i) {
+            if ($i !== 0) {
                 $s .= ' ';
             }
 
-            if ($modifier & functions_search::QST_OR) {
+            if (($modifier & functions_search::QST_OR) !== 0) {
                 $s .= 'OR ';
             }
 
-            if ($modifier & functions_search::QST_NOT) {
+            if (($modifier & functions_search::QST_NOT) !== 0) {
                 $s .= 'NOT ';
             }
 
@@ -77,7 +78,7 @@ class QMultiToken implements \Stringable
             if (($crt_modifier & functions_search::QST_QUOTED) == 0) {
                 switch ($ch) {
                     case '(':
-                        if (strlen($crt_token)) {
+                        if (strlen($crt_token) !== 0) {
                             $this->push($crt_token, $crt_modifier, $crt_scope);
                         }
 
@@ -119,7 +120,7 @@ class QMultiToken implements \Stringable
                         break;
 
                     case '"':
-                        if (strlen($crt_token)) {
+                        if (strlen($crt_token) !== 0) {
                             $this->push($crt_token, $crt_modifier, $crt_scope);
                         }
 
@@ -138,7 +139,7 @@ class QMultiToken implements \Stringable
                         break;
 
                     case '*':
-                        if (strlen($crt_token)) {
+                        if (strlen($crt_token) !== 0) {
                             $crt_token .= $ch;
                         } // wildcard end later
                         else {
@@ -156,9 +157,9 @@ class QMultiToken implements \Stringable
                         }
 
                         if (strlen($crt_token) &&
-                            preg_match('/[0-9]/', substr($crt_token, -1)) &&
+                            preg_match('/\d/', substr($crt_token, -1)) &&
                             $qi + 1 < strlen($q) &&
-                            preg_match('/[0-9]/', $q[$qi + 1])
+                            preg_match('/\d/', $q[$qi + 1])
                         ) { // dot between digits is not a separator e.g. F2.8
                             $crt_token .= $ch;
                             break;
@@ -179,25 +180,25 @@ class QMultiToken implements \Stringable
 
                         break;
                 }
-            } else { // quoted
-                if ($ch == '"') {
-                    if ($qi + 1 < strlen($q) &&
-                        $q[$qi + 1] == '*'
-                    ) {
-                        $crt_modifier |= functions_search::QST_WILDCARD_END;
-                        $qi++;
-                    }
-
-                    $this->push($crt_token, $crt_modifier, $crt_scope);
-                } else {
-                    $crt_token .= $ch;
+            } elseif ($ch === '"') {
+                // quoted
+                if ($qi + 1 < strlen($q) &&
+                    $q[$qi + 1] === '*'
+                ) {
+                    $crt_modifier |= functions_search::QST_WILDCARD_END;
+                    $qi++;
                 }
+
+                $this->push($crt_token, $crt_modifier, $crt_scope);
+            } else {
+                $crt_token .= $ch;
             }
         }
 
         $this->push($crt_token, $crt_modifier, $crt_scope);
+        $counter = count($this->tokens);
 
-        for ($i = 0; $i < count($this->tokens); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             $token = $this->tokens[$i];
             $remove = false;
 
@@ -212,7 +213,7 @@ class QMultiToken implements \Stringable
                 if (! isset($token->scope) &&
                    ($token->modifier & (functions_search::QST_QUOTED | functions_search::QST_WILDCARD)) == 0
                 ) {
-                    if (strtolower($token->term) == 'not') {
+                    if (strtolower($token->term) === 'not') {
                         if ($i + 1 < count($this->tokens)) {
                             $this->tokens[$i + 1]->modifier |= functions_search::QST_NOT;
                         }
@@ -220,7 +221,7 @@ class QMultiToken implements \Stringable
                         $token->term = '';
                     }
 
-                    if (strtolower($token->term) == 'or') {
+                    if (strtolower($token->term) === 'or') {
                         if ($i + 1 < count($this->tokens)) {
                             $this->tokens[$i + 1]->modifier |= functions_search::QST_OR;
                         }
@@ -228,7 +229,7 @@ class QMultiToken implements \Stringable
                         $token->term = '';
                     }
 
-                    if (strtolower($token->term) == 'and') {
+                    if (strtolower($token->term) === 'and') {
                         $token->term = '';
                     }
                 }
@@ -272,26 +273,27 @@ class QMultiToken implements \Stringable
     /* because evaluations occur left to right, we ensure that 'a OR b c d' is interpreted as 'a OR (b c d)'*/
     protected function check_operator_priority(): void
     {
-        for ($i = 0; $i < count($this->tokens); $i++) {
+        $counter = count($this->tokens);
+        for ($i = 0; $i < $counter; $i++) {
             if (! $this->tokens[$i]->is_single) {
                 $this->tokens[$i]->check_operator_priority();
             }
 
             if ($i == 1) {
-                $crt_prio = self::priority($this->tokens[$i]->modifier);
+                $crt_prio = $this->priority($this->tokens[$i]->modifier);
             }
 
             if ($i <= 1) {
                 continue;
             }
 
-            $prio = self::priority($this->tokens[$i]->modifier);
+            $prio = $this->priority($this->tokens[$i]->modifier);
 
             if ($prio > $crt_prio) { // e.g. 'a OR b c d' i=2, operator(c)=AND -> prio(AND) > prio(OR) = operator(b)
                 $term_count = 2; // at least b and c to be regrouped
 
                 for ($j = $i + 1; $j < count($this->tokens); $j++) {
-                    if (self::priority($this->tokens[$j]->modifier) >= $prio) {
+                    if ($this->priority($this->tokens[$j]->modifier) >= $prio) {
                         $term_count++;
                     } // also take d
                     else {
@@ -343,7 +345,8 @@ class QMultiToken implements \Stringable
     private function apply_scope(
         QSearchScope $scope
     ): void {
-        for ($i = 0; $i < count($this->tokens); $i++) {
+        $counter = count($this->tokens);
+        for ($i = 0; $i < $counter; $i++) {
             if ($this->tokens[$i]->is_single) {
                 if (! isset($this->tokens[$i]->scope)) {
                     $this->tokens[$i]->scope = $scope;
@@ -354,9 +357,9 @@ class QMultiToken implements \Stringable
         }
     }
 
-    private static function priority(
+    private function priority(
         int $modifier
     ): int {
-        return $modifier & functions_search::QST_OR ? 0 : 1;
+        return ($modifier & functions_search::QST_OR) !== 0 ? 0 : 1;
     }
 }

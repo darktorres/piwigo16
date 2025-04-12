@@ -251,10 +251,8 @@ foreach ($categories as $category) {
     if (empty($category['dir'])) {
         $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $category['id'];
         $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . functions::get_pwg_token();
-    } else {
-        if ($conf->enable_synchronization) {
-            $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $category['id'];
-        }
+    } elseif ($conf->enable_synchronization) {
+        $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $category['id'];
     }
 
     $template->append('categories', $tpl_cat);

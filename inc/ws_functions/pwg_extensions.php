@@ -37,11 +37,7 @@ final class pwg_extensions
         $plugin_list = [];
 
         foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
-            if (isset($plugins->db_plugins_by_id[$plugin_id])) {
-                $state = $plugins->db_plugins_by_id[$plugin_id]['state'];
-            } else {
-                $state = 'uninstalled';
-            }
+            $state = isset($plugins->db_plugins_by_id[$plugin_id]) ? $plugins->db_plugins_by_id[$plugin_id]['state'] : 'uninstalled';
 
             $plugin_list[] = [
                 'id' => $plugin_id,
@@ -89,7 +85,7 @@ final class pwg_extensions
         $plugins = new plugins();
         $errors = $plugins->perform_action($params['action'], $params['plugin']);
 
-        if (! empty($errors)) {
+        if ($errors !== []) {
             return new PwgError(500, $errors);
         }
 
@@ -130,7 +126,7 @@ final class pwg_extensions
         $themes = new themes();
         $errors = $themes->perform_action($params['action'], $params['theme']);
 
-        if (! empty($errors)) {
+        if ($errors !== []) {
             return new PwgError(500, $errors);
         }
 
@@ -182,7 +178,7 @@ final class pwg_extensions
         $class = '\\Piwigo\\admin\\inc\\' . $type;
         $extension = new $class();
 
-        if ($type == 'plugins') {
+        if ($type === 'plugins') {
             if (isset($extension->db_plugins_by_id[$extension_id]) &&
                 $extension->db_plugins_by_id[$extension_id]['state'] == 'active'
             ) {
@@ -209,7 +205,7 @@ final class pwg_extensions
             if (isset($params['reactivate'])) {
                 $extension->perform_action('activate', $extension_id);
             }
-        } elseif ($type == 'themes') {
+        } elseif ($type === 'themes') {
             $upgrade_status = $extension->extract_theme_files('upgrade', $revision, $extension_id);
             $extension_name = $extension->fs_themes[$extension_id]['name'];
 
@@ -218,7 +214,7 @@ final class pwg_extensions
                 'from_version' => $extension->fs_themes[$extension_id]['version'],
             ];
 
-            if ($upgrade_status == 'ok') {
+            if ($upgrade_status === 'ok') {
                 $extension->get_fs_themes(); // refresh list
                 $activity_details['to_version'] = $extension->fs_themes[$extension_id]['version'];
             } else {
@@ -226,7 +222,7 @@ final class pwg_extensions
             }
 
             functions::pwg_activity('system', ACTIVITY_SYSTEM_THEME, 'update', $activity_details);
-        } elseif ($type == 'languages') {
+        } elseif ($type === 'languages') {
             $upgrade_status = $extension->extract_language_files('upgrade', $revision, $extension_id);
             $extension_name = $extension->fs_languages[$extension_id]['name'];
         }

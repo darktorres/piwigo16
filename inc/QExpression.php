@@ -45,7 +45,8 @@ final class QExpression extends QMultiToken
         QMultiToken $expr,
         int $this_is_not
     ): void {
-        for ($i = 0; $i < count($expr->tokens); $i++) {
+        $counter = count($expr->tokens);
+        for ($i = 0; $i < $counter; $i++) {
             $token = $expr->tokens[$i];
             $crt_is_not = ($token->modifier ^ $this_is_not) & functions_search::QST_NOT; // no negation OR double negation -> no negation;
 
@@ -55,7 +56,7 @@ final class QExpression extends QMultiToken
 
                 $modifier = $token->modifier;
 
-                if ($crt_is_not) {
+                if ($crt_is_not !== 0) {
                     $modifier |= functions_search::QST_NOT;
                 } else {
                     $modifier &= ~functions_search::QST_NOT;

@@ -53,7 +53,7 @@ final class PwgServer
      */
     public function run(): void
     {
-        if ($this->_responseEncoder === null) {
+        if (! $this->_responseEncoder instanceof PwgResponseEncoder) {
             functions_html::set_status_header(400);
             header('Content-Type: text/plain');
             echo "Cannot process your request. Unknown response format.\nRequest format: " . $this->_requestFormat . ' Response format: ' . $this->_responseFormat . "\n";
@@ -61,7 +61,7 @@ final class PwgServer
             exit(0);
         }
 
-        if ($this->_requestHandler === null) {
+        if (! $this->_requestHandler instanceof PwgRequestHandler) {
             $this->sendResponse(new PwgError(400, 'Unknown request format'));
             return;
         }
@@ -200,10 +200,8 @@ final class PwgServer
     ): void {
         if ($param == null) {
             $param = [];
-        } else {
-            if (! is_array($param)) {
-                $param = [$param];
-            }
+        } elseif (! is_array($param)) {
+            $param = [$param];
         }
     }
 
@@ -288,7 +286,7 @@ final class PwgServer
         int $val,
         int $flag
     ): bool {
-        return ($val & $flag) == $flag;
+        return ($val & $flag) === $flag;
     }
 
     /**
@@ -363,7 +361,7 @@ final class PwgServer
                 if ($options['type'] > 0) {
                     $ret = self::checkType($the_param, $options['type'], $name);
 
-                    if ($ret !== null) {
+                    if ($ret instanceof PwgError) {
                         return $ret;
                     }
                 }

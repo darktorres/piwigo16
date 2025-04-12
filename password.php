@@ -40,16 +40,12 @@ functions::check_input_parameter('action', $_GET, false, '/^(lost|reset|none)$/'
 if (isset($_POST['submit'])) {
     functions::check_pwg_token();
 
-    if ($_GET['action'] == 'lost') {
-        if (functions::process_password_request()) {
-            $page['action'] = 'none';
-        }
+    if ($_GET['action'] == 'lost' && functions::process_password_request()) {
+        $page['action'] = 'none';
     }
 
-    if ($_GET['action'] == 'reset') {
-        if (functions::reset_password()) {
-            $page['action'] = 'none';
-        }
+    if ($_GET['action'] == 'reset' && functions::reset_password()) {
+        $page['action'] = 'none';
     }
 }
 

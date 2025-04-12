@@ -33,45 +33,45 @@ final class QDateRangeScope extends QSearchScope
 
         if ($pos !== false) {
             $range = [substr($str, 0, $pos), substr($str, $pos + 2)];
-        } elseif ($str[0] == '>') {
+        } elseif ($str[0] === '>') {
             $range = [substr($str, 1), ''];
             $strict[0] = 1;
-        } elseif ($str[0] == '<') {
+        } elseif ($str[0] === '<') {
             $range = ['', substr($str, 1)];
             $strict[1] = 1;
-        } elseif (($token->modifier & functions_search::QST_WILDCARD_BEGIN)) {
+        } elseif ((($token->modifier & functions_search::QST_WILDCARD_BEGIN) !== 0)) {
             $range = ['', $str];
-        } elseif (($token->modifier & functions_search::QST_WILDCARD_END)) {
+        } elseif ((($token->modifier & functions_search::QST_WILDCARD_END) !== 0)) {
             $range = [$str, ''];
         } else {
             $range = [$str, $str];
         }
 
         foreach ($range as $i => &$val) {
-            if (preg_match('/([0-9]{4})-?((?:1[0-2])|(?:0?[1-9]))?-?((?:(?:[1-3][0-9])|(?:0?[1-9])))?/', $val, $matches)) {
+            if (preg_match('/(\d{4})-?((?:1[0-2])|(?:0?[1-9]))?-?((?:(?:[1-3]\d)|(?:0?[1-9])))?/', $val, $matches)) {
                 array_shift($matches);
 
                 if (! isset($matches[1])) {
-                    $matches[1] = ($i ^ $strict[$i]) ? 12 : 1;
+                    $matches[1] = (($i ^ $strict[$i]) !== 0) ? 12 : 1;
                 }
 
                 if (! isset($matches[2])) {
-                    $matches[2] = ($i ^ $strict[$i]) ? 31 : 1;
+                    $matches[2] = (($i ^ $strict[$i]) !== 0) ? 31 : 1;
                 }
 
                 $val = implode('-', $matches);
 
-                if ($i ^ $strict[$i]) {
+                if (($i ^ $strict[$i]) !== 0) {
                     $val .= ' 23:59:59';
                 }
-            } elseif (strlen($val)) {
+            } elseif (strlen($val) !== 0) {
                 return false;
             }
         }
 
         if (! $this->nullable &&
-            $range[0] == '' &&
-            $range[1] == ''
+            $range[0] === '' &&
+            $range[1] === ''
         ) {
             return false;
         }
@@ -94,8 +94,8 @@ final class QDateRangeScope extends QSearchScope
             $clauses[] = $field . " <= '" . $token->scope_data[1] . "'";
         }
 
-        if (empty($clauses)) {
-            if ($token->modifier & functions_search::QST_WILDCARD) {
+        if ($clauses === []) {
+            if (($token->modifier & functions_search::QST_WILDCARD) !== 0) {
                 return $field . ' IS NOT NULL';
             }
 

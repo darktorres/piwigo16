@@ -33,16 +33,10 @@ abstract class PwgResponseEncoder
      * returns true if the parameter is a 'struct' (php array type whose keys are
      * NOT consecutive integers starting with 0)
      */
-    public static function is_struct(
-        array &$data
-    ): bool {
-        if (is_array($data)) {
-            if (range(0, count($data) - 1) !== array_keys($data)) { # string keys, unordered, non-incremental keys, .. - whatever, make object
-                return true;
-            }
-        }
-
-        return false;
+    public static function is_struct(array &$data): bool
+    {
+        # string keys, unordered, non-incremental keys, .. - whatever, make object
+        return is_array($data) && range(0, count($data) - 1) !== array_keys($data);
     }
 
     /**
@@ -68,11 +62,9 @@ abstract class PwgResponseEncoder
             return;
         }
 
-        if (self::is_struct($value)) {
-            if (isset($value[WS_XML_ATTRIBUTES])) {
-                $value = array_merge($value, $value[WS_XML_ATTRIBUTES]);
-                unset($value[WS_XML_ATTRIBUTES]);
-            }
+        if (self::is_struct($value) && isset($value[WS_XML_ATTRIBUTES])) {
+            $value = array_merge($value, $value[WS_XML_ATTRIBUTES]);
+            unset($value[WS_XML_ATTRIBUTES]);
         }
 
         foreach ($value as $key => &$v) {

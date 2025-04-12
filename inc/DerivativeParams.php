@@ -74,16 +74,9 @@ final class DerivativeParams
     /**
      * @todo : description of DerivativeParams::is_identity
      */
-    public function is_identity(
-        array $in_size
-    ): bool {
-        if ($in_size[0] > $this->sizing->ideal_size[0] ||
-            $in_size[1] > $this->sizing->ideal_size[1]
-        ) {
-            return false;
-        }
-
-        return true;
+    public function is_identity(array $in_size): bool
+    {
+        return $in_size[0] <= $this->sizing->ideal_size[0] && $in_size[1] <= $this->sizing->ideal_size[1];
     }
 
     public function will_watermark(

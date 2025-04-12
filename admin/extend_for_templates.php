@@ -138,7 +138,7 @@ if (isset($_POST['submit'])) {
             $bound_tpl = 'N/A';
         }
 
-        if ($handle != 'N/A') {
+        if ($handle !== 'N/A') {
             $replacements[$newtpl] = [$handle, $url_keyword, $bound_tpl];
         }
 

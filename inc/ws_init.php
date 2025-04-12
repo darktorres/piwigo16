@@ -46,10 +46,8 @@ $service = new PwgServer();
 if ($requestFormat !== null) {
     $handler = null;
 
-    switch ($requestFormat) {
-        case 'rest':
-            $handler = new PwgRestRequestHandler();
-            break;
+    if ($requestFormat === 'rest') {
+        $handler = new PwgRestRequestHandler();
     }
 
     $service->setHandler($requestFormat, $handler);

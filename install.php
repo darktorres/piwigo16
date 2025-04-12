@@ -106,18 +106,18 @@ if (! empty($_GET['dl']) &&
 }
 
 // Obtain various vars
-$dbhost = (! empty($_POST['dbhost'])) ? $_POST['dbhost'] : 'localhost';
-$dbuser = (! empty($_POST['dbuser'])) ? $_POST['dbuser'] : '';
-$dbpasswd = (! empty($_POST['dbpasswd'])) ? $_POST['dbpasswd'] : '';
-$dbname = (! empty($_POST['dbname'])) ? $_POST['dbname'] : '';
+$dbhost = (empty($_POST['dbhost'])) ? 'localhost' : $_POST['dbhost'];
+$dbuser = (empty($_POST['dbuser'])) ? '' : $_POST['dbuser'];
+$dbpasswd = (empty($_POST['dbpasswd'])) ? '' : $_POST['dbpasswd'];
+$dbname = (empty($_POST['dbname'])) ? '' : $_POST['dbname'];
 
 // dblayer
 $dblayer = 'mysqli';
 
-$admin_name = (! empty($_POST['admin_name'])) ? $_POST['admin_name'] : '';
-$admin_pass1 = (! empty($_POST['admin_pass1'])) ? $_POST['admin_pass1'] : '';
-$admin_pass2 = (! empty($_POST['admin_pass2'])) ? $_POST['admin_pass2'] : '';
-$admin_mail = (! empty($_POST['admin_mail'])) ? $_POST['admin_mail'] : '';
+$admin_name = (empty($_POST['admin_name'])) ? '' : $_POST['admin_name'];
+$admin_pass1 = (empty($_POST['admin_pass1'])) ? '' : $_POST['admin_pass1'];
+$admin_pass2 = (empty($_POST['admin_pass2'])) ? '' : $_POST['admin_pass2'];
+$admin_mail = (empty($_POST['admin_mail'])) ? '' : $_POST['admin_mail'];
 
 $is_newsletter_subscribe = true;
 
@@ -161,27 +161,27 @@ if (isset($_GET['language'])) {
     // }
 }
 
-if ($language == 'fr_FR') {
+if ($language === 'fr_FR') {
     define('PHPWG_DOMAIN', 'fr.piwigo.org');
-} elseif ($language == 'it_IT') {
+} elseif ($language === 'it_IT') {
     define('PHPWG_DOMAIN', 'it.piwigo.org');
-} elseif ($language == 'de_DE') {
+} elseif ($language === 'de_DE') {
     define('PHPWG_DOMAIN', 'de.piwigo.org');
-} elseif ($language == 'es_ES') {
+} elseif ($language === 'es_ES') {
     define('PHPWG_DOMAIN', 'es.piwigo.org');
-} elseif ($language == 'pl_PL') {
+} elseif ($language === 'pl_PL') {
     define('PHPWG_DOMAIN', 'pl.piwigo.org');
-} elseif ($language == 'zh_CN') {
+} elseif ($language === 'zh_CN') {
     define('PHPWG_DOMAIN', 'cn.piwigo.org');
-} elseif ($language == 'ru_RU') {
+} elseif ($language === 'ru_RU') {
     define('PHPWG_DOMAIN', 'ru.piwigo.org');
-} elseif ($language == 'nl_NL') {
+} elseif ($language === 'nl_NL') {
     define('PHPWG_DOMAIN', 'nl.piwigo.org');
-} elseif ($language == 'tr_TR') {
+} elseif ($language === 'tr_TR') {
     define('PHPWG_DOMAIN', 'tr.piwigo.org');
-} elseif ($language == 'da_DK') {
+} elseif ($language === 'da_DK') {
     define('PHPWG_DOMAIN', 'da.piwigo.org');
-} elseif ($language == 'pt_BR') {
+} elseif ($language === 'pt_BR') {
     define('PHPWG_DOMAIN', 'br.piwigo.org');
 } else {
     define('PHPWG_DOMAIN', 'piwigo.org');
@@ -370,7 +370,7 @@ if (isset($_POST['install'])) {
 
             $tmp_filename = md5(uniqid((string) time()));
             $fh = fopen('./' . $conf->data_location . 'pwg_' . $tmp_filename, 'w');
-            fputs($fh, $file_content, strlen($file_content));
+            fwrite($fh, $file_content, strlen($file_content));
             fclose($fh);
 
             $template->assign(
@@ -382,7 +382,7 @@ if (isset($_POST['install'])) {
             );
         }
 
-        fputs($fp, $file_content, strlen($file_content));
+        fwrite($fp, $file_content, strlen($file_content));
         fclose($fp);
     }
 }

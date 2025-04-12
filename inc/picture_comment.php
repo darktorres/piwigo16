@@ -85,12 +85,7 @@ if ($page['show_comments'] &&
 }
 
 if ($page['show_comments']) {
-    if (! functions_user::is_admin()) {
-        $validated_clause = "  AND validated = 'true'";
-    } else {
-        $validated_clause = '';
-    }
-
+    $validated_clause = functions_user::is_admin() ? '' : "  AND validated = 'true'";
     // number of comments for this picture
     $query = <<<SQL
         SELECT COUNT(*) AS nb_comments
@@ -99,7 +94,6 @@ if ($page['show_comments']) {
             {$validated_clause};
         SQL;
     $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
-
     // navigation bar creation
     if (! isset($page['start'])) {
         $page['start'] = 0;
@@ -112,7 +106,6 @@ if ($page['show_comments']) {
         $conf->nb_comment_page,
         true // We want a clean URL
     );
-
     $template->assign(
         [
             'COMMENT_COUNT' => $row['nb_comments'],
@@ -120,7 +113,6 @@ if ($page['show_comments']) {
             'comments' => [],
         ]
     );
-
     if ($row['nb_comments'] > 0) {
         // comments order (get, session, conf)
         if (! empty($_GET['comments_order']) &&
@@ -224,7 +216,6 @@ if ($page['show_comments']) {
     }
 
     $show_add_comment_form = true;
-
     if (isset($edit_comment)) {
         $show_add_comment_form = false;
     }

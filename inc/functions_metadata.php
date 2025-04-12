@@ -74,7 +74,7 @@ final class functions_metadata
     ): string {
         // strip leading zeros (weird Kodak Scanner software)
         while (isset($value[0]) &&
-               $value[0] == chr(0)
+               $value[0] === chr(0)
         ) {
             $value = substr($value, 1);
         }
@@ -160,25 +160,18 @@ final class functions_metadata
             // GPS data
             $gps_exif = array_intersect_key($exif, array_flip(['GPSLatitudeRef', 'GPSLatitude', 'GPSLongitudeRef', 'GPSLongitude']));
 
-            if (count($gps_exif) == 4) {
-                if (is_array($gps_exif['GPSLatitude']) &&
-                    in_array($gps_exif['GPSLatitudeRef'], ['S', 'N']) &&
-                    is_array($gps_exif['GPSLongitude']) &&
-                    in_array($gps_exif['GPSLongitudeRef'], ['W', 'E'])
+            if (count($gps_exif) == 4 && (is_array($gps_exif['GPSLatitude']) && in_array($gps_exif['GPSLatitudeRef'], ['S', 'N']) && is_array($gps_exif['GPSLongitude']) && in_array($gps_exif['GPSLongitudeRef'], ['W', 'E']))) {
+                $latitude = self::parse_exif_gps_data($gps_exif['GPSLatitude'], $gps_exif['GPSLatitudeRef']);
+                $longitude = self::parse_exif_gps_data($gps_exif['GPSLongitude'], $gps_exif['GPSLongitudeRef']);
+                if ($latitude >= -90.0 &&
+                    $latitude <= 90.0 &&
+                    $longitude >= -180.0 &&
+                    $longitude <= 180.0
                 ) {
-                    $latitude = self::parse_exif_gps_data($gps_exif['GPSLatitude'], $gps_exif['GPSLatitudeRef']);
-                    $longitude = self::parse_exif_gps_data($gps_exif['GPSLongitude'], $gps_exif['GPSLongitudeRef']);
-
-                    if ($latitude >= -90.0 &&
-                        $latitude <= 90.0 &&
-                        $longitude >= -180.0 &&
-                        $longitude <= 180.0
-                    ) {
-                        $result['latitude'] = $latitude;
-                        $result['longitude'] = $longitude;
-                    } else {
-                        $logger->info('[' . __FUNCTION__ . '][filename=' . $filename . '] invalid GPS coordinates, latitude=' . $latitude . ' longitude=' . $longitude);
-                    }
+                    $result['latitude'] = $latitude;
+                    $result['longitude'] = $longitude;
+                } else {
+                    $logger->info('[' . __FUNCTION__ . '][filename=' . $filename . '] invalid GPS coordinates, latitude=' . $latitude . ' longitude=' . $longitude);
                 }
             }
         }
@@ -229,8 +222,8 @@ final class functions_metadata
 
         $ref = strtoupper($ref);
 
-        if ($ref == 'S' ||
-            $ref == 'W'
+        if ($ref === 'S' ||
+            $ref === 'W'
         ) {
             $v = -$v;
         }

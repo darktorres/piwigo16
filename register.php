@@ -75,8 +75,8 @@ if (isset($_POST['submit'])) {
     $registration_post_key = functions::get_ephemeral_key(6);
 }
 
-$login = ! empty($_POST['login']) ? htmlspecialchars(stripslashes($_POST['login'])) : '';
-$email = ! empty($_POST['mail_address']) ? htmlspecialchars(stripslashes($_POST['mail_address'])) : '';
+$login = empty($_POST['login']) ? '' : htmlspecialchars(stripslashes($_POST['login']));
+$email = empty($_POST['mail_address']) ? '' : htmlspecialchars(stripslashes($_POST['mail_address']));
 
 //----------------------------------------------------- template initialization
 //

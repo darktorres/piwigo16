@@ -87,7 +87,7 @@ final class functions_mail
         $cvt_email = trim(preg_replace('#[\n\r]+#s', '', $email));
         $cvt_name = trim(preg_replace('#[\n\r]+#s', '', $name));
 
-        if ($cvt_name != '') {
+        if ($cvt_name !== '') {
             $cvt_name = '"' . addcslashes($cvt_name, '"') . '" ';
         }
 
@@ -404,7 +404,7 @@ final class functions_mail
         ?string $group_id = null
     ): bool {
         if (empty($args['content']) &&
-            empty($tpl)
+            $tpl === []
         ) {
             return false;
         }
@@ -459,7 +459,7 @@ final class functions_mail
             SQL;
         $admins = functions_mysqli::query2array($query);
 
-        if (empty($admins)) {
+        if ($admins === []) {
             return $return;
         }
 
@@ -486,7 +486,7 @@ final class functions_mail
         array $tpl = []
     ): bool|int {
         if (empty($group_id) ||
-           (empty($args['content']) && empty($tpl))
+           (empty($args['content']) && $tpl === [])
         ) {
             return false;
         }
@@ -515,7 +515,7 @@ final class functions_mail
         $query = trim($query) . ';';
         $languages = functions_mysqli::query2array($query, null, 'language');
 
-        if (empty($languages)) {
+        if ($languages === []) {
             return $return;
         }
 
@@ -532,7 +532,7 @@ final class functions_mail
                 SQL;
             $users = functions_mysqli::query2array($query);
 
-            if (empty($users)) {
+            if ($users === []) {
                 continue;
             }
 
@@ -662,7 +662,7 @@ final class functions_mail
             ];
         }
 
-        if (! empty($Bcc)) {
+        if ($Bcc !== []) {
             foreach ($Bcc as $recipient) {
                 $mail->addBCC($recipient['email'], $recipient['name']);
             }
@@ -681,13 +681,9 @@ final class functions_mail
         }
 
         // try to decompose subject like "[....] ...."
-        if (! isset($args['mail_title']) &&
-            ! isset($args['mail_subtitle'])
-        ) {
-            if (preg_match('#^\[(.*)\](.*)$#', $args['subject'], $matches)) {
-                $args['mail_title'] = $matches[1];
-                $args['mail_subtitle'] = $matches[2];
-            }
+        if (! isset($args['mail_title']) && ! isset($args['mail_subtitle']) && preg_match('#^\[(.*)\](.*)$#', $args['subject'], $matches)) {
+            $args['mail_title'] = $matches[1];
+            $args['mail_subtitle'] = $matches[2];
         }
 
         if (! isset($args['mail_title'])) {
@@ -751,7 +747,7 @@ final class functions_mail
                     ]
                 );
 
-                if ($content_type == 'text/html') {
+                if ($content_type === 'text/html') {
                     if ($template->smarty->templateExists('global-mail-css.tpl')) {
                         $template->set_filename('global-css', 'global-mail-css.tpl');
                         $template->assign_var_from_handle('GLOBAL_MAIL_CSS', 'global-css');
@@ -779,7 +775,7 @@ final class functions_mail
             // Stored in a temp variable, if a content template is used it will be assigned
             // to the $CONTENT template variable, otherwise it will be appended to the mail
             if ($args['content_format'] == 'text/plain' &&
-                $content_type == 'text/html'
+                $content_type === 'text/html'
             ) {
                 // convert plain text to html
                 $mail_content =
@@ -793,7 +789,7 @@ final class functions_mail
                   ) .
                   '</p>';
             } elseif ($args['content_format'] == 'text/html' &&
-                      $content_type == 'text/plain'
+                      $content_type === 'text/plain'
             ) {
                 // convert html text to plain text
                 $mail_content = strip_tags($args['content']);

@@ -120,17 +120,9 @@ if (isset($_POST['submit'])) {
     $data['author'] = $_POST['author'];
     $data['level'] = $_POST['level'];
 
-    if ($conf->allow_html_descriptions) {
-        $data['comment'] = $_POST['description'];
-    } else {
-        $data['comment'] = strip_tags($_POST['description']);
-    }
+    $data['comment'] = $conf->allow_html_descriptions ? $_POST['description'] : strip_tags($_POST['description']);
 
-    if (! empty($_POST['date_creation'])) {
-        $data['date_creation'] = $_POST['date_creation'];
-    } else {
-        $data['date_creation'] = null;
-    }
+    $data['date_creation'] = empty($_POST['date_creation']) ? null : $_POST['date_creation'];
 
     $data = functions_plugins::trigger_change('picture_modify_before_update', $data);
 
@@ -306,7 +298,7 @@ $intro_vars = [
     'stats' => functions::l10n('Visited %d times', $row['hit']),
     'id' => functions::l10n($row['id']),
     'ext' => functions::l10n('%s file type', strtoupper(end($extTab))),
-    'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
+    'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
 ];
 
 if ($conf->rate &&
@@ -329,7 +321,7 @@ $query = <<<SQL
     SQL;
 $formats = functions_mysqli::query2array($query);
 
-if (! empty($formats)) {
+if ($formats !== []) {
     $format_strings = [];
 
     foreach ($formats as $format) {

@@ -23,7 +23,7 @@ function admintools_add_public_controller(): void
 {
     global $MultiView, $conf, $template, $page, $user, $picture;
 
-    if (functions::script_basename() == 'picture' &&
+    if (functions::script_basename() === 'picture' &&
         empty($picture['current'])
     ) {
         return;
@@ -37,7 +37,7 @@ function admintools_add_public_controller(): void
         $tpl_vars['MULTIVIEW'] = $MultiView->get_data();
         $tpl_vars['USER'] = $MultiView->get_user();
         $tpl_vars['CURRENT_USERNAME'] = $user['id'] == $conf->guest_id ? functions::l10n('guest') : $user['username'];
-        $tpl_vars['DELETE_CACHE'] = isset($conf->multiview_invalidate_cache);
+        $tpl_vars['DELETE_CACHE'] = $conf->multiview_invalidate_cache !== null;
         $admin_lang = $MultiView->get_user_language();
 
         if ($admin_lang !== false) {
@@ -45,7 +45,7 @@ function admintools_add_public_controller(): void
             functions_mail::switch_lang_to($admin_lang);
         }
     } elseif ($conf->AdminTools['public_quick_edit'] &&
-              functions::script_basename() == 'picture' &&
+              functions::script_basename() === 'picture' &&
               $picture['current']['added_by'] == $user['id'] &&
               ! functions_user::is_a_guest()
     ) { // only "edit" button for photo owner
@@ -58,7 +58,7 @@ function admintools_add_public_controller(): void
     $tpl_vars['U_SELF'] = $MultiView->get_clean_url(true);
 
     // photo page
-    if (functions::script_basename() == 'picture') {
+    if (functions::script_basename() === 'picture') {
         $url_self = functions_url::duplicate_picture_url();
         $tpl_vars['IS_PICTURE'] = true;
 
@@ -206,7 +206,7 @@ function admintools_add_admin_controller(): void
     $tpl_vars = [];
 
     $tpl_vars['MULTIVIEW'] = $MultiView->get_data();
-    $tpl_vars['DELETE_CACHE'] = isset($conf->multiview_invalidate_cache);
+    $tpl_vars['DELETE_CACHE'] = $conf->multiview_invalidate_cache !== null;
     $tpl_vars['U_SELF'] = $MultiView->get_clean_admin_url(true);
     $admin_lang = $MultiView->get_user_language();
 

@@ -22,8 +22,8 @@ if (! isset($conf->smartpocket)) {
 } elseif (count($conf->smartpocket) != 2) {
     $conff = $conf->smartpocket;
     $config = [
-        'loop' => (! empty($conff['loop'])) ? $conff['loop'] : true,
-        'autohide' => (! empty($conff['autohide'])) ? $conff['autohide'] : 5000,
+        'loop' => (empty($conff['loop'])) ? true : $conff['loop'],
+        'autohide' => (empty($conff['autohide'])) ? 5000 : $conff['autohide'],
     ];
     functions::conf_update_param('smartpocket', $config, true);
 }

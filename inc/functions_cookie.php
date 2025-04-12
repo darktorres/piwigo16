@@ -56,12 +56,12 @@ final class functions_cookie
 
         if (str_starts_with('./', '../')) { // this is maybe a plugin inside pwg directory
             // TODO - what if it is an external script outside PWG ?
-            $scr = $scr . './';
+            $scr .= './';
 
             while (1) {
                 $new = preg_replace('#[^/]+/\.\.(/|$)#', '', $scr);
 
-                if ($new == $scr) {
+                if ($new === $scr) {
                     break;
                 }
 

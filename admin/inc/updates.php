@@ -24,7 +24,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 
 final class updates
 {
-    public array $types = [];
+    public array $types = ['plugins', 'themes', 'languages'];
 
     public plugins $plugins;
 
@@ -47,8 +47,6 @@ final class updates
     public function __construct(
         string $page = 'updates'
     ) {
-        $this->types = ['plugins', 'themes', 'languages'];
-
         if (in_array($page, $this->types)) {
             $this->types = [$page];
         }
@@ -114,7 +112,7 @@ final class updates
                     if (version_compare(PHPWG_VERSION, $last_version_number, '<')) {
                         $last_branch = functions::get_branch_from_version($last_version_number);
 
-                        if ($last_branch == $actual_branch) {
+                        if ($last_branch === $actual_branch) {
                             $new_versions['minor'] = $last_version_number;
                             $new_versions['minor_php'] = $last_version_php;
                         } else {
@@ -126,7 +124,7 @@ final class updates
                                 [$version_number, $version_php] = explode('/', trim($version));
                                 $branch = functions::get_branch_from_version($version_number);
 
-                                if ($branch == $actual_branch) {
+                                if ($branch === $actual_branch) {
                                     if (version_compare(PHPWG_VERSION, $version_number, '<')) {
                                         $new_versions['minor'] = $version_number;
                                         $new_versions['minor_php'] = $version_php;
@@ -266,7 +264,7 @@ final class updates
             }
         }
 
-        if (empty($versions_to_check)) {
+        if ($versions_to_check === []) {
             return false;
         }
 
@@ -297,7 +295,7 @@ final class updates
 
         $post_data = [];
 
-        if (! empty($ext_to_check)) {
+        if ($ext_to_check !== []) {
             $post_data['extension_include'] = implode(',', array_keys($ext_to_check));
         }
 
@@ -427,11 +425,9 @@ final class updates
             $rows = explode("\n", $result);
 
             foreach ($rows as $row) {
-                if (preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {
-                    if (version_compare($version, $match[1], '>=')) {
-                        $extensions = explode(',', trim($match[2]));
-                        $this->merged_extensions = array_merge($this->merged_extensions, $extensions);
-                    }
+                if (preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match) && version_compare($version, $match[1], '>=')) {
+                    $extensions = explode(',', trim($match[2]));
+                    $this->merged_extensions = array_merge($this->merged_extensions, $extensions);
                 }
             }
         }
@@ -444,7 +440,7 @@ final class updates
             $old_files = file('./' . $file, FILE_IGNORE_NEW_LINES);
 
             if ($old_files &&
-                ! empty($old_files)
+                $old_files !== []
             ) {
                 $old_files[] = $file;
 

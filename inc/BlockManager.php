@@ -170,13 +170,13 @@ final class BlockManager
      */
     private function sort_blocks(): void
     {
-        uasort($this->display_blocks, self::cmp_by_position(...));
+        uasort($this->display_blocks, $this->cmp_by_position(...));
     }
 
     /**
      * Callback for blocks sorting.
      */
-    private static function cmp_by_position(
+    private function cmp_by_position(
         DisplayBlock $a,
         DisplayBlock $b
     ): int {

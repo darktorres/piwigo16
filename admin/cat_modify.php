@@ -106,7 +106,7 @@ $template->assign(
     [
         'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
         'CATEGORIES_PARENT_NAV' => preg_replace('# {2,}#', ' ', preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation)),
-        'PARENT_CAT_ID' => ! empty($category['id_uppercat']) ? $category['id_uppercat'] : 0,
+        'PARENT_CAT_ID' => empty($category['id_uppercat']) ? 0 : $category['id_uppercat'],
         'CAT_ID' => $category['id'],
         'CAT_NAME' => htmlspecialchars($category['name']),
         'CAT_COMMENT' => htmlspecialchars($category['comment']),

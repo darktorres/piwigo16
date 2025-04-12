@@ -144,18 +144,16 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     unset($image_id);
 }
 
-if ($conf->display_fromto) {
-    if ($category_ids !== []) {
-        $category_ids_list = implode(', ', $category_ids);
-        $sql_condition = functions_user::get_sql_condition_FandF(
-            [
-                'visible_categories' => 'category_id',
-                'visible_images' => 'id',
-            ],
-            'AND'
-        );
-
-        $query = <<<SQL
+if ($conf->display_fromto && $category_ids !== []) {
+    $category_ids_list = implode(', ', $category_ids);
+    $sql_condition = functions_user::get_sql_condition_FandF(
+        [
+            'visible_categories' => 'category_id',
+            'visible_images' => 'id',
+        ],
+        'AND'
+    );
+    $query = <<<SQL
             SELECT category_id, MIN(date_creation) AS from, MAX(date_creation) AS to
             FROM image_category
             INNER JOIN images ON image_id = id
@@ -163,8 +161,7 @@ if ($conf->display_fromto) {
                 {$sql_condition}
             GROUP BY category_id;
             SQL;
-        $dates_of_category = functions_mysqli::query2array($query, 'category_id');
-    }
+    $dates_of_category = functions_mysqli::query2array($query, 'category_id');
 }
 
 if ($page['section'] == 'recent_cats') {
@@ -323,14 +320,11 @@ if ($categories !== []) {
             $tpl_var['icon_ts'] = functions::get_icon($category['max_date_last'], $category['is_child_date_last']);
         }
 
-        if ($conf->display_fromto) {
-            if (isset($dates_of_category[$category['id']])) {
-                $from = $dates_of_category[$category['id']]['from'];
-                $to = $dates_of_category[$category['id']]['to'];
-
-                if (! empty($from)) {
-                    $tpl_var['INFO_DATES'] = functions::format_fromto($from, $to);
-                }
+        if ($conf->display_fromto && isset($dates_of_category[$category['id']])) {
+            $from = $dates_of_category[$category['id']]['from'];
+            $to = $dates_of_category[$category['id']]['to'];
+            if (! empty($from)) {
+                $tpl_var['INFO_DATES'] = functions::format_fromto($from, $to);
             }
         }
 

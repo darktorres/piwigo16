@@ -18,18 +18,13 @@ use SmartyException;
 
 final class check_integrity
 {
-    public array $ignore_list;
+    public array $ignore_list = [];
 
-    public array $retrieve_list;
+    public array $retrieve_list = [];
 
-    public array $build_ignore_list;
+    public array $build_ignore_list = [];
 
-    public function __construct()
-    {
-        $this->ignore_list = [];
-        $this->retrieve_list = [];
-        $this->build_ignore_list = [];
-    }
+    public function __construct() {}
 
     /**
      * Check integrity
@@ -70,11 +65,9 @@ final class check_integrity
 
         // Treatments
         if (isset($_POST['c13y_submit_correction']) &&
-            isset($_POST['c13y_selection'])
-        ) {
+            isset($_POST['c13y_selection'])) {
             $corrected_count = 0;
             $not_corrected_count = 0;
-
             foreach ($this->retrieve_list as $i => $c13y) {
                 if (! empty($c13y['correction_fct']) &&
                     $c13y['is_callable'] &&
@@ -113,27 +106,23 @@ final class check_integrity
                     $not_corrected_count
                 );
             }
-        } else {
-            if (isset($_POST['c13y_submit_ignore']) &&
-                isset($_POST['c13y_selection'])
-            ) {
-                $ignored_count = 0;
-
-                foreach ($this->retrieve_list as $i => $c13y) {
-                    if (in_array($c13y['id'], $_POST['c13y_selection'])) {
-                        $this->build_ignore_list[] = $c13y['id'];
-                        $this->retrieve_list[$i]['ignored'] = true;
-                        ++$ignored_count;
-                    }
+        } elseif (isset($_POST['c13y_submit_ignore']) &&
+            isset($_POST['c13y_selection'])) {
+            $ignored_count = 0;
+            foreach ($this->retrieve_list as $i => $c13y) {
+                if (in_array($c13y['id'], $_POST['c13y_selection'])) {
+                    $this->build_ignore_list[] = $c13y['id'];
+                    $this->retrieve_list[$i]['ignored'] = true;
+                    ++$ignored_count;
                 }
+            }
 
-                if ($ignored_count > 0) {
-                    $page['infos'][] = functions::l10n_dec(
-                        '%d anomaly has been ignored.',
-                        '%d anomalies have been ignored.',
-                        $ignored_count
-                    );
-                }
+            if ($ignored_count > 0) {
+                $page['infos'][] = functions::l10n_dec(
+                    '%d anomaly has been ignored.',
+                    '%d anomalies have been ignored.',
+                    $ignored_count
+                );
             }
         }
 

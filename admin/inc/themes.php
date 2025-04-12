@@ -53,7 +53,7 @@ final class themes
         global $conf;
 
         if (! $conf->enable_extensions_install &&
-            $action == 'delete'
+            $action === 'delete'
         ) {
             exit('Piwigo extensions install/update/delete system is disabled');
         }
@@ -62,7 +62,7 @@ final class themes
             $crt_db_theme = $this->db_themes_by_id[$theme_id];
         }
 
-        $theme_maintain = self::build_maintain_class($theme_id);
+        $theme_maintain = $this->build_maintain_class($theme_id);
 
         $errors = [];
         $activity_details = [
@@ -76,7 +76,7 @@ final class themes
                     break;
                 }
 
-                if ($theme_id == 'default') {
+                if ($theme_id === 'default') {
                     // you can't activate the "default" theme
                     break;
                 }
@@ -94,7 +94,7 @@ final class themes
 
                 if ($this->fs_themes[$theme_id]['mobile'] &&
                     ! empty($conf->mobile_theme) &&
-                    $conf->mobile_theme != $theme_id
+                    $conf->mobile_theme !== $theme_id
                 ) {
                     $errors[] = functions::l10n('You can activate only one mobile theme.');
                     break;
@@ -102,7 +102,7 @@ final class themes
 
                 $theme_maintain->activate($this->fs_themes[$theme_id]['version'], $errors);
 
-                if (empty($errors)) {
+                if ($errors === []) {
                     $query = <<<SQL
                         INSERT INTO themes
                             (id, version, name)
@@ -136,7 +136,7 @@ final class themes
                     break;
                 }
 
-                if ($theme_id == functions_user::get_default_theme()) {
+                if ($theme_id === functions_user::get_default_theme()) {
                     // find a random theme to replace
                     $new_theme = null;
 
@@ -318,8 +318,8 @@ final class themes
         $dir = opendir(PHPWG_THEMES_PATH);
 
         while ($file = readdir($dir)) {
-            if ($file != '.' &&
-                $file != '..'
+            if ($file !== '.' &&
+                $file !== '..'
             ) {
                 $path = PHPWG_THEMES_PATH . $file;
 
@@ -479,7 +479,7 @@ final class themes
             }
         }
 
-        if (empty($versions_to_check)) {
+        if ($versions_to_check === []) {
             return false;
         }
 
@@ -504,7 +504,7 @@ final class themes
             ]
         );
 
-        if (! empty($themes_to_check)) {
+        if ($themes_to_check !== []) {
             if ($new) {
                 $get_data['extension_exclude'] = implode(',', $themes_to_check);
             } else {
@@ -593,7 +593,7 @@ final class themes
                 if ($list) {
                     foreach ($list as $file) {
                         // we search main.php in archive
-                        if (basename($file['filename']) == 'themeconf.inc.php' &&
+                        if (basename($file['filename']) === 'themeconf.inc.php' &&
                            (! isset($main_filepath) || strlen($file['filename']) < strlen($main_filepath))
                         ) {
                             $main_filepath = $file['filename'];
@@ -605,10 +605,10 @@ final class themes
                     if (isset($main_filepath)) {
                         $root = dirname($main_filepath); // main.php path in archive
 
-                        if ($action == 'upgrade') {
+                        if ($action === 'upgrade') {
                             $theme_id = $dest;
                         } else {
-                            $theme_id = ($root == '.' ? 'extension_' . $dest : basename($root));
+                            $theme_id = ($root === '.' ? 'extension_' . $dest : basename($root));
                         }
 
                         $extract_path = PHPWG_THEMES_PATH . $theme_id;
@@ -768,7 +768,7 @@ final class themes
      * Returns the maintain class of a theme
      * or build a new class with the procedural methods
      */
-    private static function build_maintain_class(
+    private function build_maintain_class(
         string $theme_id
     ): DummyTheme_maintain|ThemeMaintain {
         $file_to_include = PHPWG_THEMES_PATH . $theme_id . '/admin/' . $theme_id . '_maintain.php';

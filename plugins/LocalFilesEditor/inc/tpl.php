@@ -46,7 +46,7 @@ if (isset($_POST['create_tpl'])) {
         $page['errors'][] = functions::l10n('locfiledit_empty_filename');
     }
 
-    if (functions::get_extension($filename) != 'tpl') {
+    if (functions::get_extension($filename) !== 'tpl') {
         $filename .= '.tpl';
     }
 
@@ -95,7 +95,7 @@ if ($newfile_page) {
     }
 
     foreach (functions_admin::get_dirs($conf->themes_dir) as $theme_id) {
-        if ($i) {
+        if ($i !== 0) {
             $options['model'][] = '----------------------';
             $i = 0;
         }
@@ -107,7 +107,7 @@ if ($newfile_page) {
         ) {
             while ($node = readdir($content)) {
                 if (is_file($dir . $node) &&
-                    functions::get_extension($node) == 'tpl'
+                    functions::get_extension($node) === 'tpl'
                 ) {
                     $value = $dir . $node;
                     $options['model'][$value] = $theme_id . ' / ' . $node;

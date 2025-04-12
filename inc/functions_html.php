@@ -52,7 +52,7 @@ final class functions_html
 
             if (! isset($url)) {
                 $output .= $cat['name'];
-            } elseif ($url == '') {
+            } elseif ($url === '') {
                 $output .= '<a href="'
                       . functions_url::make_index_url(
                           [
@@ -62,7 +62,7 @@ final class functions_html
                       . '">';
                 $output .= $cat['name'] . '</a>';
             } else {
-                $output .= '<a href="' . './' . $url . $cat['id'] . '">';
+                $output .= '<a href="./' . $url . $cat['id'] . '">';
                 $output .= $cat['name'] . '</a>';
             }
         }
@@ -132,7 +132,7 @@ final class functions_html
                 $single_link
             ) {
                 $output .= $cat['name'];
-            } elseif ($url == '') {
+            } elseif ($url === '') {
                 $href = functions_url::add_url_params(
                     functions_url::make_index_url([
                         'category' => $cat,
@@ -370,8 +370,9 @@ final class functions_html
 
         if ($show_trace) {
             $bt = debug_backtrace();
+            $counter = count($bt);
 
-            for ($i = 1; $i < count($bt); $i++) {
+            for ($i = 1; $i < $counter; $i++) {
                 $class = isset($bt[$i]['class']) ? ($bt[$i]['class'] . '::') : '';
                 $btrace_msg .= "#{$i}\t" . $class . $bt[$i]['function'] . ' ' . $bt[$i]['file'] . '(' . $bt[$i]['line'] . ")\n";
             }
@@ -408,8 +409,9 @@ final class functions_html
         $title = '<a href="' . functions_url::get_root_url() . 'tags.php" title="' . functions::l10n('display available tags') . '">'
           . functions::l10n(count($page['tags']) > 1 ? 'Tags' : 'Tag')
           . '</a> ';
+        $counter = count($page['tags']);
 
-        for ($i = 0; $i < count($page['tags']); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             $title .= $i > 0 ? ' + ' : '';
 
             $title .=
@@ -590,7 +592,7 @@ final class functions_html
 
         // We hide the quick identification menu on the identification page. It
         // would be confusing.
-        if (functions::script_basename() != 'identification') {
+        if (functions::script_basename() !== 'identification') {
             $menu->register_block(new RegisteredBlock('mbIdentification', 'Identification', 'piwigo'));
         }
     }
@@ -680,7 +682,7 @@ final class functions_html
         string $url,
         SrcImage $src_image
     ): string {
-        return functions_url::get_action_url($src_image->id, $src_image->is_original() ? 'e' : 'r', false);
+        return functions_url::get_action_url($src_image->id, $src_image->is_original() !== 0 ? 'e' : 'r', false);
     }
 
     /**
@@ -694,7 +696,7 @@ final class functions_html
     ): string {
         global $conf;
 
-        if ($conf->original_url_protection == 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
+        if ($conf->original_url_protection === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
             $ext = functions::get_extension($infos['path']);
 
             if (! in_array($ext, $conf->picture_ext)) {

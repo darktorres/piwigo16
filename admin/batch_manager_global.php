@@ -324,10 +324,8 @@ if (isset($_POST['submit'])) {
             'action' => 'privacy_level',
         ]);
 
-        if (isset($_SESSION['bulk_manager_filter']['level'])) {
-            if ($_POST['level'] < $_SESSION['bulk_manager_filter']['level']) {
-                $redirect = true;
-            }
+        if (isset($_SESSION['bulk_manager_filter']['level']) && $_POST['level'] < $_SESSION['bulk_manager_filter']['level']) {
+            $redirect = true;
         }
     }
 
@@ -616,11 +614,7 @@ $template->assign(
 
 // how many items to display on this page
 if (! empty($_GET['display'])) {
-    if ($_GET['display'] == 'all') {
-        $page['nb_images'] = count($page['cat_elements_id']);
-    } else {
-        $page['nb_images'] = intval($_GET['display']);
-    }
+    $page['nb_images'] = $_GET['display'] == 'all' ? count($page['cat_elements_id']) : intval($_GET['display']);
 } elseif (in_array($conf->batch_manager_images_per_page_global, [20, 50, 100])) {
     $page['nb_images'] = $conf->batch_manager_images_per_page_global;
 } else {
@@ -706,7 +700,7 @@ if (count($page['cat_elements_id']) > 0) {
 
         $ttitle = functions_html::render_element_name($row);
 
-        if ($ttitle != functions::get_name_from_file($row['file'])) {
+        if ($ttitle !== functions::get_name_from_file($row['file'])) {
             $ttitle .= ' (' . $row['file'] . ')';
         }
 

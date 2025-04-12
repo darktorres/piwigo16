@@ -81,7 +81,7 @@ final class functions_tag
             SQL;
         $tag_counters = functions_mysqli::query2array($query, 'tag_id', 'counter');
 
-        if (empty($tag_counters)) {
+        if ($tag_counters === []) {
             return [];
         }
 
@@ -96,7 +96,7 @@ final class functions_tag
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
             $counter = intval($tag_counters[$row['id']]);
 
-            if ($counter) {
+            if ($counter !== 0) {
                 $row['counter'] = $counter;
                 $row['name'] = functions_plugins::trigger_change('render_tag_name', $row['name'], $row);
                 $tags[] = $row;
@@ -201,7 +201,7 @@ final class functions_tag
     ): array {
         global $conf;
 
-        if (empty($tag_ids)) {
+        if ($tag_ids === []) {
             return [];
         }
 
@@ -215,12 +215,12 @@ final class functions_tag
         ) : '';
 
         $tags_list = implode(', ', $tag_ids);
-        $extra_conditions = ! empty($extra_images_where_sql) ? " AND ({$extra_images_where_sql})" : '';
+        $extra_conditions = empty($extra_images_where_sql) ? '' : " AND ({$extra_images_where_sql})";
         $having_clause = (
             $mode === 'AND' &&
             count($tag_ids) > 1
         ) ? 'HAVING COUNT(DISTINCT tag_id) = ' . count($tag_ids) : '';
-        $order_clause = ! empty($order_by) ? $order_by : $conf->order_by;
+        $order_clause = empty($order_by) ? $conf->order_by : $order_by;
         $query = <<<SQL
             SELECT id
             FROM images i
@@ -268,7 +268,7 @@ final class functions_tag
         int $max_tags,
         array $excluded_tag_ids = []
     ): array {
-        if (empty($items)) {
+        if ($items === []) {
             return [];
         }
 
@@ -281,7 +281,7 @@ final class functions_tag
 
             SQL;
 
-        if (! empty($excluded_tag_ids)) {
+        if ($excluded_tag_ids !== []) {
             $excluded_tags = implode(', ', $excluded_tag_ids);
             $query .= <<<SQL
                 AND tag_id NOT IN ({$excluded_tags})
@@ -329,21 +329,21 @@ final class functions_tag
     ): array {
         $where_clauses = [];
 
-        if (! empty($ids)) {
+        if ($ids !== []) {
             $where_clauses[] = 'id IN (' . implode(', ', $ids) . ')';
         }
 
-        if (! empty($url_names)) {
+        if ($url_names !== []) {
             $where_clauses[] =
               "url_name IN ('" . implode("', '", $url_names) . "')";
         }
 
-        if (! empty($names)) {
+        if ($names !== []) {
             $where_clauses[] =
               "name IN ('" . implode("', '", $names) . "')";
         }
 
-        if (empty($where_clauses)) {
+        if ($where_clauses === []) {
             return [];
         }
 

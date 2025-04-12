@@ -83,8 +83,8 @@ final class LocalSiteReader
             $contents = opendir($path)
         ) {
             while (($node = readdir($contents)) !== false) {
-                if ($node == '.' ||
-                    $node == '..'
+                if ($node === '.' ||
+                    $node === '..'
                 ) {
                     continue;
                 }
@@ -109,10 +109,10 @@ final class LocalSiteReader
                         }
                     }
                 } elseif (is_dir($path . '/' . $node) &&
-                          $node != 'pwg_high' &&
-                          $node != 'pwg_representative' &&
-                          $node != 'pwg_format' &&
-                          $node != 'thumbnail'
+                          $node !== 'pwg_high' &&
+                          $node !== 'pwg_representative' &&
+                          $node !== 'pwg_format' &&
+                          $node !== 'thumbnail'
                 ) {
                     $subdirs[] = $node;
                 }

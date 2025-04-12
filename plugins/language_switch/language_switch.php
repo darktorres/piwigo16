@@ -109,7 +109,7 @@ function language_controller_flags(): void
 
     $available_lang = functions::get_languages();
 
-    if (isset($conf->no_flag_languages)) {
+    if ($conf->no_flag_languages !== null) {
         $available_lang = array_diff_key($available_lang, array_flip($conf->no_flag_languages));
     }
 

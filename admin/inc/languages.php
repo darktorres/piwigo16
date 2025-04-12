@@ -47,7 +47,7 @@ final class languages
         global $conf;
 
         if (! $conf->enable_extensions_install &&
-            $action == 'delete'
+            $action === 'delete'
         ) {
             exit('Piwigo extensions install/update/delete system is disabled');
         }
@@ -80,7 +80,7 @@ final class languages
                     break;
                 }
 
-                if ($language_id == functions_user::get_default_language()) {
+                if ($language_id === functions_user::get_default_language()) {
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE';
                     break;
                 }
@@ -143,8 +143,8 @@ final class languages
         $dir = opendir('./language');
 
         while ($file = readdir($dir)) {
-            if ($file != '.' &&
-                $file != '..'
+            if ($file !== '.' &&
+                $file !== '..'
             ) {
                 $path = './language/' . $file;
 
@@ -252,7 +252,7 @@ final class languages
             }
         }
 
-        if (empty($versions_to_check)) {
+        if ($versions_to_check === []) {
             return false;
         }
 
@@ -277,7 +277,7 @@ final class languages
             ]
         );
 
-        if (! empty($languages_to_check)) {
+        if ($languages_to_check !== []) {
             if ($new) {
                 $get_data['extension_exclude'] = implode(',', $languages_to_check);
             } else {
@@ -339,7 +339,7 @@ final class languages
                 if ($list) {
                     foreach ($list as $file) {
                         // we search common.lang.php in archive
-                        if (basename($file['filename']) == 'common.lang.php' &&
+                        if (basename($file['filename']) === 'common.lang.php' &&
                            (! isset($main_filepath) || strlen($file['filename']) < strlen($main_filepath))
                         ) {
                             $main_filepath = $file['filename'];
@@ -352,7 +352,7 @@ final class languages
                         $root = basename(dirname($main_filepath)); // common.lang.php path in archive
 
                         if (preg_match('/^[a-z]{2}_[A-Z]{2}$/', $root)) {
-                            if ($action == 'install') {
+                            if ($action === 'install') {
                                 $dest = $root;
                             }
 
@@ -376,7 +376,7 @@ final class languages
                                 if ($status == 'ok') {
                                     $this->get_fs_languages();
 
-                                    if ($action == 'install') {
+                                    if ($action === 'install') {
                                         $this->perform_action('activate', $dest);
                                     }
                                 }
@@ -385,7 +385,7 @@ final class languages
                                     $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES);
 
                                     if ($old_files &&
-                                        ! empty($old_files)
+                                        $old_files !== []
                                     ) {
                                         $old_files[] = 'obsolete.list';
                                         $logger->debug(__FUNCTION__ . ', $old_files = {' . implode('},{', $old_files) . '}');

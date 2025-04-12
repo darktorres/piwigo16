@@ -118,7 +118,7 @@ if ($display_formats &&
             SQL;
         $formats = functions_mysqli::query2array($query);
 
-        if (! empty($formats)) {
+        if ($formats !== []) {
             $format_strings = [];
 
             foreach ($formats as $format) {

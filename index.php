@@ -175,12 +175,7 @@ if (empty($page['is_external'])) {
             );
         }
     } else {
-        if ($page['chronology_field'] == 'created') {
-            $chronology_field = 'posted';
-        } else {
-            $chronology_field = 'created';
-        }
-
+        $chronology_field = $page['chronology_field'] == 'created' ? 'posted' : 'created';
         if ($conf->{'index_' . $chronology_field . '_date_icon'}) {
             $url = functions_url::duplicate_index_url(
                 [
@@ -474,7 +469,7 @@ if (empty($page['is_external'])) {
             if (isset($page['search_details']['matching_cat_ids'])) {
                 $cat_ids = $page['search_details']['matching_cat_ids'];
 
-                if (count($cat_ids)) {
+                if (count($cat_ids) > 0) {
                     $cat_ids_str = implode(', ', $cat_ids);
                     $query = <<<SQL
                         SELECT c.*

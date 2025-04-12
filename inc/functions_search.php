@@ -73,8 +73,8 @@ final class functions_search
             // there is no uuid.
             //
             // We also don't want to die if we're in the API.
-            if (functions::script_basename() != 'ws' &&
-                $clause_pattern == 'id = %u' &&
+            if (functions::script_basename() !== 'ws' &&
+                $clause_pattern === 'id = %u' &&
                 isset($searches[0]['search_uuid'])
             ) {
                 functions_html::fatal_error('this search is not reachable with its id, need the search_uuid instead');
@@ -129,11 +129,7 @@ final class functions_search
                 $local_clauses = [];
 
                 foreach ($search['fields'][$textfield]['words'] as $word) {
-                    if ($textfield == 'author') {
-                        $local_clauses[] = $textfield . "='" . $word . "'";
-                    } else {
-                        $local_clauses[] = $textfield . " LIKE '%" . $word . "%'";
-                    }
+                    $local_clauses[] = $textfield === 'author' ? $textfield . "='" . $word . "'" : $textfield . " LIKE '%" . $word . "%'";
                 }
 
                 if ($local_clauses !== []) {
@@ -312,7 +308,7 @@ final class functions_search
 
                 if (isset($search['fields'][$key])) {
                     $clauses[] = $datefield .
-                      ($suffix == 'after' ? ' >' : ' <') .
+                      ($suffix === 'after' ? ' >' : ' <') .
                       ($search['fields'][$key]['inc'] ? '=' : '') .
                       " '" . $search['fields'][$key]['date'] . "'";
                 }
@@ -453,7 +449,7 @@ final class functions_search
             $logger->debug(__FUNCTION__ . ' ' . count($items) . ' items in $items');
         }
 
-        if (! empty($tag_items)) {
+        if ($tag_items !== []) {
             switch ($search['mode']) {
                 case 'AND':
                     if (empty($search_clause) &&
@@ -502,11 +498,11 @@ final class functions_search
         foreach ($variants as $variant) {
             $use_ft = mb_strlen($variant) > 3;
 
-            if ($token->modifier & self::QST_WILDCARD_BEGIN) {
+            if (($token->modifier & self::QST_WILDCARD_BEGIN) !== 0) {
                 $use_ft = false;
             }
 
-            if ($token->modifier & (self::QST_QUOTED | self::QST_WILDCARD_END) == (self::QST_QUOTED | self::QST_WILDCARD_END)) {
+            if (($token->modifier & (self::QST_QUOTED | self::QST_WILDCARD_END) === (self::QST_QUOTED | self::QST_WILDCARD_END)) !== 0) {
                 $use_ft = false;
             }
 
@@ -535,8 +531,8 @@ final class functions_search
                     }
                 }
 
-                $pre = ($token->modifier & self::QST_WILDCARD_BEGIN) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:<:]]');
-                $post = ($token->modifier & self::QST_WILDCARD_END) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
+                $pre = (($token->modifier & self::QST_WILDCARD_BEGIN) !== 0) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:<:]]');
+                $post = (($token->modifier & self::QST_WILDCARD_END) !== 0) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
 
                 foreach ($fields as $field) {
                     $clauses[] = $field . " REGEXP '" . $pre . addslashes(preg_quote($variant)) . $post . "'";
@@ -544,11 +540,11 @@ final class functions_search
             } else {
                 $ft = $variant;
 
-                if ($token->modifier & self::QST_QUOTED) {
+                if (($token->modifier & self::QST_QUOTED) !== 0) {
                     $ft = '"' . $ft . '"';
                 }
 
-                if ($token->modifier & self::QST_WILDCARD_END) {
+                if (($token->modifier & self::QST_WILDCARD_END) !== 0) {
                     $ft .= '*';
                 }
 
@@ -575,8 +571,9 @@ final class functions_search
             WHERE
 
             SQL;
+        $counter = count($expr->stokens);
 
-        for ($i = 0; $i < count($expr->stokens); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             $token = $expr->stokens[$i];
             $scope_id = isset($token->scope) ? $token->scope->id : 'photo';
             $clauses = [];
@@ -596,9 +593,9 @@ final class functions_search
                     break;
 
                 case 'author':
-                    if (strlen($token->term)) {
+                    if (strlen($token->term) !== 0) {
                         $clauses = array_merge($clauses, self::qsearch_get_text_token_search_sql($token, ['author']));
-                    } elseif ($token->modifier & self::QST_WILDCARD) {
+                    } elseif (($token->modifier & self::QST_WILDCARD) !== 0) {
                         $clauses[] = 'author IS NOT NULL';
                     } else {
                         $clauses[] = 'author IS NULL';
@@ -663,8 +660,9 @@ final class functions_search
         $token_tag_ids = array_fill(0, count($expr->stokens), []);
         $qsr->tag_iids = $token_tag_ids;
         $all_tags = [];
+        $counter = count($expr->stokens);
 
-        for ($i = 0; $i < count($expr->stokens); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             $token = $expr->stokens[$i];
 
             if (isset($token->scope) &&
@@ -708,8 +706,9 @@ final class functions_search
         // get images
         $positive_ids = [];
         $not_ids = [];
+        $counter = count($expr->stokens);
 
-        for ($i = 0; $i < count($expr->stokens); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             $tag_ids = $token_tag_ids[$i];
             $token = $expr->stokens[$i];
 
@@ -722,19 +721,17 @@ final class functions_search
                     SQL;
                 $qsr->tag_iids[$i] = functions_mysqli::query2array($query, null, 'image_id');
 
-                if ($expr->stoken_modifiers[$i] & self::QST_NOT) {
+                if (($expr->stoken_modifiers[$i] & self::QST_NOT) !== 0) {
                     $not_ids = array_merge($not_ids, $tag_ids);
-                } else {
-                    if (strlen($token->term) > 2 ||
-                        count($expr->stokens) == 1 ||
-                        isset($token->scope) ||
-                       ($token->modifier & (self::QST_WILDCARD | self::QST_QUOTED))
-                    ) { // add tag ids to list only if the word is not too short (such as de / la /les ...)
-                        $positive_ids = array_merge($positive_ids, $tag_ids);
-                    }
+                } elseif (strlen($token->term) > 2 ||
+                    count($expr->stokens) == 1 ||
+                    isset($token->scope) ||
+                   ($token->modifier & (self::QST_WILDCARD | self::QST_QUOTED))) {
+                    // add tag ids to list only if the word is not too short (such as de / la /les ...)
+                    $positive_ids = array_merge($positive_ids, $tag_ids);
                 }
             } elseif (isset($token->scope) && $token->scope->id == 'tag' && strlen($token->term) == 0) {
-                if ($token->modifier & self::QST_WILDCARD) { // eg. 'tag:*' returns all tagged images
+                if (($token->modifier & self::QST_WILDCARD) !== 0) { // eg. 'tag:*' returns all tagged images
                     $qsr->tag_iids[$i] = functions_mysqli::query2array('SELECT DISTINCT image_id FROM image_tag;', null, 'image_id');
                 } else { // eg. 'tag:' returns all untagged images
                     $qsr->tag_iids[$i] = functions_mysqli::query2array('SELECT id FROM images LEFT JOIN image_tag ON id = image_id WHERE image_id IS NULL;', null, 'id');
@@ -761,8 +758,9 @@ final class functions_search
         $token_cat_ids = array_fill(0, count($expr->stokens), []);
         $qsr->cat_iids = $token_cat_ids;
         $all_cats = [];
+        $counter = count($expr->stokens);
 
-        for ($i = 0; $i < count($expr->stokens); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             $token = $expr->stokens[$i];
 
             if (isset($token->scope) && $token->scope->id != 'category') { // not relevant yet
@@ -806,8 +804,9 @@ final class functions_search
         // get images
         $positive_ids = [];
         $not_ids = [];
+        $counter = count($expr->stokens);
 
-        for ($i = 0; $i < count($expr->stokens); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             $cat_ids = $token_cat_ids[$i];
             $token = $expr->stokens[$i];
 
@@ -831,22 +830,20 @@ final class functions_search
                     SQL;
                 $qsr->cat_iids[$i] = functions_mysqli::query2array($query, null, 'image_id');
 
-                if ($expr->stoken_modifiers[$i] & self::QST_NOT) {
+                if (($expr->stoken_modifiers[$i] & self::QST_NOT) !== 0) {
                     $not_ids = array_merge($not_ids, $cat_ids);
-                } else {
-                    if (strlen($token->term) > 2 ||
-                        count($expr->stokens) == 1 ||
-                        isset($token->scope) ||
-                        ($token->modifier & (self::QST_WILDCARD | self::QST_QUOTED))
-                    ) { // add cat ids to list only if the word is not too short (such as de / la /les ...)
-                        $positive_ids = array_merge($positive_ids, $cat_ids);
-                    }
+                } elseif (strlen($token->term) > 2 ||
+                    count($expr->stokens) == 1 ||
+                    isset($token->scope) ||
+                    ($token->modifier & (self::QST_WILDCARD | self::QST_QUOTED))) {
+                    // add cat ids to list only if the word is not too short (such as de / la /les ...)
+                    $positive_ids = array_merge($positive_ids, $cat_ids);
                 }
             } elseif (isset($token->scope) &&
                       $token->scope->id == 'category' &&
                       strlen($token->term) == 0
             ) {
-                if ($token->modifier & self::QST_WILDCARD) { // eg. 'category:*' returns all images associated to an album
+                if (($token->modifier & self::QST_WILDCARD) !== 0) { // eg. 'category:*' returns all images associated to an album
                     $qsr->cat_iids[$i] = functions_mysqli::query2array('SELECT DISTINCT image_id FROM image_category;', null, 'image_id');
                 } else { // eg. 'category:' returns all orphan images
                     $qsr->cat_iids[$i] = functions_mysqli::query2array('SELECT id FROM images LEFT JOIN image_category ON id = image_id WHERE image_id IS NULL;', null, 'id');
@@ -875,8 +872,9 @@ final class functions_search
         $ignored_terms = [];
         $ids = [];
         $not_ids = [];
+        $counter = count($expr->tokens);
 
-        for ($i = 0; $i < count($expr->tokens); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             $crt = $expr->tokens[$i];
 
             if ($crt->is_single) {
@@ -895,21 +893,16 @@ final class functions_search
 
             $modifier = $crt->modifier;
 
-            if ($modifier & self::QST_NOT) {
+            if (($modifier & self::QST_NOT) !== 0) {
                 $not_ids = array_unique(array_merge($not_ids, $crt_ids));
             } else {
                 $ignored_terms = array_merge($ignored_terms, $crt_ignored_terms);
 
-                if ($modifier & self::QST_OR) {
+                if (($modifier & self::QST_OR) !== 0) {
                     $ids = array_unique(array_merge($ids, $crt_ids));
                     $qualifies |= $crt_qualifies;
                 } elseif ($crt_qualifies) {
-                    if ($qualifies) {
-                        $ids = array_intersect($ids, $crt_ids);
-                    } else {
-                        $ids = $crt_ids;
-                    }
-
+                    $ids = $qualifies ? array_intersect($ids, $crt_ids) : $crt_ids;
                     $qualifies = true;
                 }
             }
@@ -962,7 +955,7 @@ final class functions_search
 
         $res = self::get_quick_search_results_no_cache($q, $options);
 
-        if (count($res['items'])) { // cache the results only if not empty - otherwise it is useless
+        if (count($res['items']) > 0) { // cache the results only if not empty - otherwise it is useless
             $persistent_cache->set($cache_key, $res, 300);
         }
 
@@ -1006,7 +999,7 @@ final class functions_search
         $createdDateAliases = ['taken', 'shot'];
         $postedDateAliases = ['added'];
 
-        if ($conf->calendar_datefield == 'date_creation') {
+        if ($conf->calendar_datefield === 'date_creation') {
             $createdDateAliases[] = 'date';
         } else {
             $postedDateAliases[] = 'date';
@@ -1067,11 +1060,12 @@ final class functions_search
 
         $debug[] = "<!--\nparsed: " . htmlspecialchars($expression);
         $debug[] = count($expression->stokens) . ' tokens';
+        $counter = count($expression->stokens);
 
-        for ($i = 0; $i < count($expression->stokens); $i++) {
+        for ($i = 0; $i < $counter; $i++) {
             $debug[] = htmlspecialchars($expression->stokens[$i]) . ': ' . count($qsr->tag_ids[$i]) . ' tags, ' . count($qsr->tag_iids[$i]) . ' tiids, ' . count($qsr->images_iids[$i]) . ' iiids, ' . count($qsr->iids[$i]) . ' iids'
               . ' modifier:' . dechex($expression->stoken_modifiers[$i])
-              . (! empty($expression->stokens[$i]->variants) ? ' variants: ' . htmlspecialchars(implode(', ', $expression->stokens[$i]->variants)) : '');
+              . (empty($expression->stokens[$i]->variants) ? '' : ' variants: ' . htmlspecialchars(implode(', ', $expression->stokens[$i]->variants)));
         }
 
         $debug[] = 'before perms ' . count($ids);
@@ -1086,13 +1080,13 @@ final class functions_search
 
         global $template;
 
-        if (empty($ids)) {
+        if ($ids === []) {
             $debug[] = '-->';
             $template->append('footer_elements', implode("\n", $debug));
             return $search_results;
         }
 
-        $permissions = ! isset($options['permissions']) ? true : $options['permissions'];
+        $permissions = $options['permissions'] ?? true;
 
         $where_clauses = [];
         $where_clauses[] = 'i.id IN (' . implode(', ', $ids) . ')';

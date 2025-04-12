@@ -232,13 +232,10 @@ function GDThumb_prefilter(
 function GDThumb_admin_menu(
     array $menu
 ): array|string {
-    array_push(
-        $menu,
-        [
-            'NAME' => 'gdThumb',
-            'URL' => functions_url::get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__),
-        ]
-    );
+    $menu[] = [
+        'NAME' => 'gdThumb',
+        'URL' => functions_url::get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__),
+    ];
     return $menu;
 }
 

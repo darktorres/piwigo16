@@ -23,16 +23,9 @@ class QSearchScope
         public bool $is_text = true
     ) {}
 
-    public function parse(
-        QSingleToken $token
-    ): bool {
-        if (! $this->nullable &&
-            strlen($token->term) == 0
-        ) {
-            return false;
-        }
-
-        return true;
+    public function parse(QSingleToken $token): bool
+    {
+        return ! (! $this->nullable && strlen($token->term) == 0);
     }
 
     public function process_char(

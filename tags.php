@@ -41,10 +41,8 @@ $template->set_filenames([
 
 $page['display_mode'] = $conf->tags_default_display_mode;
 
-if (isset($_GET['display_mode'])) {
-    if (in_array($_GET['display_mode'], ['cloud', 'letters'])) {
-        $page['display_mode'] = $_GET['display_mode'];
-    }
+if (isset($_GET['display_mode']) && in_array($_GET['display_mode'], ['cloud', 'letters'])) {
+    $page['display_mode'] = $_GET['display_mode'];
 }
 
 foreach (['cloud', 'letters'] as $mode) {

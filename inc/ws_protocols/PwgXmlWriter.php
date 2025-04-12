@@ -13,28 +13,19 @@ namespace Piwigo\inc\ws_protocols;
 
 final class PwgXmlWriter
 {
-    public bool $_indent;
+    public bool $_indent = true;
 
-    public string $_indentStr;
+    public string $_indentStr = "\t";
 
-    public array $_elementStack;
+    public array $_elementStack = [];
 
-    public bool $_lastTagOpen;
+    public bool $_lastTagOpen = false;
 
-    public int $_indentLevel;
+    public int $_indentLevel = 0;
 
-    public string $_encodedXml;
+    public string $_encodedXml = '';
 
-    public function __construct()
-    {
-        $this->_elementStack = [];
-        $this->_lastTagOpen = false;
-        $this->_indentLevel = 0;
-
-        $this->_encodedXml = '';
-        $this->_indent = true;
-        $this->_indentStr = "\t";
-    }
+    public function __construct() {}
 
     public function &getOutput(): string
     {
@@ -46,7 +37,7 @@ final class PwgXmlWriter
     ): void {
         $this->_end_prev(false);
 
-        if (! empty($this->_elementStack)) {
+        if ($this->_elementStack !== []) {
             $this->_eol_indent();
         }
 

@@ -51,7 +51,7 @@ class functions_LocalFilesEditor
             }
         }
 
-        if ($b) {
+        if ($b !== 0) {
             return false;
         }
 
@@ -87,7 +87,7 @@ class functions_LocalFilesEditor
     public static function get_bak_file(
         string $file
     ): array|string {
-        if (functions::get_extension($file) == 'php') {
+        if (functions::get_extension($file) === 'php') {
             return substr_replace($file, '.bak', strrpos($file, '.'), 0);
         }
 
@@ -109,9 +109,9 @@ class functions_LocalFilesEditor
             while ($file = readdir($fh)) {
                 $pathfile = $path . '/' . $file;
 
-                if ($file != '.' &&
-                    $file != '..' &&
-                    $file != '.svn' &&
+                if ($file !== '.' &&
+                    $file !== '..' &&
+                    $file !== '.svn' &&
                     is_dir($pathfile)
                 ) {
                     $options[$pathfile] = str_replace(['./', '/'], ['', ' / '], $pathfile);

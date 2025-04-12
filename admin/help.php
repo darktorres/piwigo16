@@ -23,11 +23,7 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 $help_link = functions_url::get_root_url() . 'admin.php?page=help&section=';
 $selected = null;
 
-if (! isset($_GET['section'])) {
-    $selected = 'add_photos';
-} else {
-    $selected = $_GET['section'];
-}
+$selected = $_GET['section'] ?? 'add_photos';
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('help');

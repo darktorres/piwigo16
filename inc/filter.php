@@ -39,7 +39,6 @@ if ($filter['enabled']) {
         'time' => 0,
         'date' => '',
     ]);
-
     if (isset($filter['matches'])) {
         $filter['recent_period'] = $filter['matches'][1];
     } else {
@@ -110,7 +109,6 @@ if ($filter['enabled']) {
     }
 
     unset($filter_key);
-
     if (functions::get_filter_page_value('add_notes')) {
         $header_notes[] = functions::l10n_dec(
             'Photos posted within the last %d day.',
@@ -118,13 +116,10 @@ if ($filter['enabled']) {
             $filter['recent_period']
         );
     }
-
-} else {
-    if (functions_session::pwg_get_session_var('filter_enabled', false)) {
-        functions_session::pwg_unset_session_var('filter_enabled');
-        functions_session::pwg_unset_session_var('filter_check_key');
-        functions_session::pwg_unset_session_var('filter_categories');
-        functions_session::pwg_unset_session_var('filter_visible_categories');
-        functions_session::pwg_unset_session_var('filter_visible_images');
-    }
+} elseif (functions_session::pwg_get_session_var('filter_enabled', false)) {
+    functions_session::pwg_unset_session_var('filter_enabled');
+    functions_session::pwg_unset_session_var('filter_check_key');
+    functions_session::pwg_unset_session_var('filter_categories');
+    functions_session::pwg_unset_session_var('filter_visible_categories');
+    functions_session::pwg_unset_session_var('filter_visible_images');
 }

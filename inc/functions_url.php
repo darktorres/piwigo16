@@ -59,7 +59,7 @@ final class functions_url
             $is_https = false;
 
             if (isset($_SERVER['HTTPS']) &&
-               (strtolower($_SERVER['HTTPS']) == 'on' || $_SERVER['HTTPS'] == 1)
+               (strtolower($_SERVER['HTTPS']) === 'on' || $_SERVER['HTTPS'] == 1)
             ) {
                 $is_https = true;
                 $url .= 'https://';
@@ -74,9 +74,9 @@ final class functions_url
 
                 $url_port = null;
 
-                if ($conf->url_port == 'none') {
+                if ($conf->url_port === 'none') {
                     // do nothing
-                } elseif ($conf->url_port == 'auto') {
+                } elseif ($conf->url_port === 'auto') {
                     if ((! $is_https &&
                          $_SERVER['SERVER_PORT'] != 80) ||
                          ($is_https && $_SERVER['SERVER_PORT'] != 443)
@@ -110,14 +110,14 @@ final class functions_url
         array $params,
         string $arg_separator = '&amp;'
     ): string {
-        if (! empty($params)) {
+        if ($params !== []) {
             assert(is_array($params));
             $is_first = true;
 
             foreach ($params as $param => $val) {
                 if ($is_first) {
                     $is_first = false;
-                    $url .= (! str_contains($url, '?')) ? '?' : $arg_separator;
+                    $url .= (str_contains($url, '?')) ? $arg_separator : '?';
                 } else {
                     $url .= $arg_separator;
                 }
@@ -155,7 +155,7 @@ final class functions_url
         $url .= self::make_section_in_url($params);
         $url = self::add_well_known_params_in_url($url, $params);
 
-        if ($url == $url_before_params) {
+        if ($url === $url_before_params) {
             $url = self::get_absolute_root_url(self::url_is_remote($url));
         }
 
@@ -364,7 +364,7 @@ final class functions_url
                     if (empty($params['category']['permalink'])) {
                         $section_string .= $params['category']['id'];
 
-                        if ($conf->category_url_style == 'id-name') {
+                        if ($conf->category_url_style === 'id-name') {
                             $section_string .= '-' . functions::str2url($params['category']['name']);
                         }
                     } else {
@@ -378,7 +378,7 @@ final class functions_url
                             if (empty($category['permalink'])) {
                                 $section_string .= $category['id'];
 
-                                if ($conf->category_url_style == 'id-name') {
+                                if ($conf->category_url_style === 'id-name') {
                                     $section_string .= '-' . functions::str2url($category['name']);
                                 }
                             } else {
@@ -497,7 +497,7 @@ final class functions_url
                            ! str_starts_with($tokens[$next_token], 'startcat-') &&
                            $tokens[$current_token] != 'flat'
                     ) {
-                        if (empty($maybe_permalinks)) {
+                        if ($maybe_permalinks === []) {
                             $maybe_permalinks[] = $tokens[$current_token];
                         } else {
                             $maybe_permalinks[] = $maybe_permalinks[count($maybe_permalinks) - 1] . '/' . $tokens[$current_token];
@@ -570,7 +570,7 @@ final class functions_url
                     break;
                 }
 
-                if ($conf->tag_url_style != 'tag' &&
+                if ($conf->tag_url_style !== 'tag' &&
                     preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)
                 ) {
                     $requested_tag_ids[] = $matches[1];
@@ -583,8 +583,8 @@ final class functions_url
 
             $next_token = $i;
 
-            if (empty($requested_tag_ids) &&
-                empty($requested_tag_url_names)
+            if ($requested_tag_ids === [] &&
+                $requested_tag_url_names === []
             ) {
                 functions_html::bad_request('at least one tag required');
             }
@@ -684,8 +684,8 @@ final class functions_url
                 array_shift($chronology_tokens);
 
                 if ($chronology_tokens !== []) {
-                    if ($chronology_tokens[0] == 'list' ||
-                        $chronology_tokens[0] == 'calendar'
+                    if ($chronology_tokens[0] === 'list' ||
+                        $chronology_tokens[0] === 'calendar'
                     ) {
                         $page['chronology_view'] = $chronology_tokens[0];
                         array_shift($chronology_tokens);
@@ -822,7 +822,7 @@ final class functions_url
 
         if (! empty($conf->gallery_url)) {
             if (self::url_is_remote($conf->gallery_url) ||
-                $conf->gallery_url[0] == '/'
+                $conf->gallery_url[0] === '/'
             ) {
                 return $conf->gallery_url;
             }
@@ -857,16 +857,9 @@ final class functions_url
     /**
      * returns true if the url is absolute (begins with http)
      */
-    public static function url_is_remote(
-        string $url
-    ): bool {
-        if (str_starts_with($url, 'http://') ||
-            str_starts_with($url, 'https://')
-        ) {
-            return true;
-        }
-
-        return false;
+    public static function url_is_remote(string $url): bool
+    {
+        return str_starts_with($url, 'http://') || str_starts_with($url, 'https://');
     }
 
     /**

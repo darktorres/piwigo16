@@ -133,12 +133,8 @@ $logger = new Katzgrau\KLogger\Logger('./' . $conf->data_location . $conf->log_d
     'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf->db_password) . '.txt',
 ]);
 
-if (! $conf->check_upgrade_feed) {
-    if (! isset($conf->piwigo_db_version) ||
-        $conf->piwigo_db_version != functions::get_branch_from_version(PHPWG_VERSION)
-    ) {
-        functions::redirect(functions_url::get_root_url() . 'upgrade.php');
-    }
+if (! $conf->check_upgrade_feed && (! isset($conf->piwigo_db_version) || $conf->piwigo_db_version != functions::get_branch_from_version(PHPWG_VERSION))) {
+    functions::redirect(functions_url::get_root_url() . 'upgrade.php');
 }
 
 ImageStdParams::load_from_db();
@@ -242,7 +238,7 @@ if (defined('IN_ADMIN') &&
 } else { // Classic template
     $theme = $user['theme'];
 
-    if (functions::script_basename() != 'ws' &&
+    if (functions::script_basename() !== 'ws' &&
         functions::mobile_theme()
     ) {
         $theme = $conf->mobile_theme;
@@ -264,7 +260,7 @@ if (isset($user['internal_status']['guest_must_be_guest']) &&
 if ($conf->gallery_locked) {
     $header_msgs[] = functions::l10n('The gallery is locked for maintenance. Please, come back later.');
 
-    if (functions::script_basename() != 'identification' &&
+    if (functions::script_basename() !== 'identification' &&
         ! functions_user::is_admin()
     ) {
         functions_html::set_status_header(503, 'Service Unavailable');
@@ -276,11 +272,9 @@ if ($conf->gallery_locked) {
     }
 }
 
-if ($conf->check_upgrade_feed) {
-    if (functions_upgrade::check_upgrade_feed()) {
-        $header_msgs[] = 'Some database upgrades are missing, '
-          . '<a href="' . functions_url::get_absolute_root_url(false) . 'upgrade_feed.php">upgrade now</a>';
-    }
+if ($conf->check_upgrade_feed && functions_upgrade::check_upgrade_feed()) {
+    $header_msgs[] = 'Some database upgrades are missing, '
+      . '<a href="' . functions_url::get_absolute_root_url(false) . 'upgrade_feed.php">upgrade now</a>';
 }
 
 if ($header_msgs !== []) {

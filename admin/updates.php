@@ -24,11 +24,7 @@ if (! $conf->enable_extensions_install &&
 
 $my_base_url = functions_url::get_root_url() . 'admin.php?page=updates';
 
-if (isset($_GET['tab'])) {
-    $page['tab'] = $_GET['tab'];
-} else {
-    $page['tab'] = 'pwg';
-}
+$page['tab'] = $_GET['tab'] ?? 'pwg';
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('updates');

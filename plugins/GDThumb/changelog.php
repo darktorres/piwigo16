@@ -9,7 +9,7 @@ $first = true;
 echo '<div class="changelog">';
 
 foreach ($lines as $line_num => $line) {
-    if (trim($line)) {
+    if (trim($line) !== '' && trim($line) !== '0') {
         if ($show) {
             if (str_starts_with($line, 'version')) {
                 if ($first) {
@@ -22,7 +22,7 @@ foreach ($lines as $line_num => $line) {
             } else {
                 echo '<li>' . htmlspecialchars($line) . "</li>\n";
             }
-        } elseif (trim($line) == '=== Changelog ===') {
+        } elseif (trim($line) === '=== Changelog ===') {
             $show = true;
         }
     }

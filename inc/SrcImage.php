@@ -62,12 +62,7 @@ final class SrcImage
             $size = getimagesize('./' . $this->rel_path);
 
             if ($size === false) {
-                if ($ext == 'svg') {
-                    $this->rel_path = $infos['path'];
-                } else {
-                    $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
-                }
-
+                $this->rel_path = $ext === 'svg' ? $infos['path'] : 'themes/default/icon/mimetypes/unknown.png';
                 $size = getimagesize('./' . $this->rel_path);
             }
 
@@ -84,7 +79,7 @@ final class SrcImage
                 $this->rotation = intval($infos['rotation']) % 4;
                 // 1 or 5 =>  90 clockwise
                 // 3 or 7 => 270 clockwise
-                if ($this->rotation % 2) {
+                if ($this->rotation % 2 !== 0) {
                     $width = $infos['height'];
                     $height = $infos['width'];
                 }
@@ -115,7 +110,7 @@ final class SrcImage
     {
         $url = functions_url::get_root_url() . $this->rel_path;
 
-        if (! ($this->flags & self::IS_MIMETYPE)) {
+        if (($this->flags & self::IS_MIMETYPE) === 0) {
             $url = functions_plugins::trigger_change('get_src_image_url', $url, $this);
         }
 
@@ -133,7 +128,7 @@ final class SrcImage
     public function get_size(): ?array
     {
         if ($this->size == null) {
-            if ($this->flags & self::DIM_NOT_GIVEN) {
+            if (($this->flags & self::DIM_NOT_GIVEN) !== 0) {
                 functions_html::fatal_error('SrcImage dimensions required but not provided');
             }
 

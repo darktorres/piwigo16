@@ -50,7 +50,7 @@ final class functions_smartpocket
         $template->assign('smartpocket', $config);
 
         if (! empty($conf->mobile_theme) &&
-           (functions::get_device() != 'desktop' || functions::mobile_theme())
+           (functions::get_device() !== 'desktop' || functions::mobile_theme())
         ) {
             $template->assign([
                 'TOGGLE_MOBILE_THEME_URL' => functions_url::add_url_params(htmlspecialchars($_SERVER['REQUEST_URI']), [

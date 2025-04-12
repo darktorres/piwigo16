@@ -77,7 +77,7 @@ final class c13y_internal
             'l10n_bad_status' => 'Main "guest" user status is incorrect',
         ];
 
-        if ($conf->guest_id != $conf->default_user_id) {
+        if ($conf->guest_id !== $conf->default_user_id) {
             $c13y_users[$conf->default_user_id] = [
                 'password' => null,
                 'l10n_non_existent' => 'Default user does not exist',

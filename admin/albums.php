@@ -93,7 +93,7 @@ if (isset($_POST['simpleAutoOrder']) ||
         $ref_dates = functions_admin::get_categories_ref_date(
             $category_ids,
             $order_by_field,
-            $order_by_asc == 'ASC' ? 'min' : 'max'
+            $order_by_asc === 'ASC' ? 'min' : 'max'
         );
     }
 
@@ -108,11 +108,7 @@ if (isset($_POST['simpleAutoOrder']) ||
     while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
         $row['name'] = functions_plugins::trigger_change('render_category_name', $row['name'], 'admin_cat_list');
 
-        if ($order_by_date) {
-            $sort[] = $ref_dates[$row['id']];
-        } else {
-            $sort[] = functions::remove_accents($row['name']);
-        }
+        $sort[] = $order_by_date ? $ref_dates[$row['id']] : functions::remove_accents($row['name']);
 
         $categories[] = [
             'id' => $row['id'],
@@ -123,7 +119,7 @@ if (isset($_POST['simpleAutoOrder']) ||
     array_multisort(
         $sort,
         $order_by_field === 'natural_order' ? SORT_NATURAL : SORT_REGULAR,
-        $order_by_asc == 'ASC' ? SORT_ASC : SORT_DESC,
+        $order_by_asc === 'ASC' ? SORT_ASC : SORT_DESC,
         $categories
     );
 
@@ -170,8 +166,9 @@ foreach ($allAlbum as $album) {
 
     $parents = explode(',', $album['uppercats']);
     $the_place = &$associatedTree[strval($parents[0])];
+    $counter = count($parents);
 
-    for ($i = 1; $i < count($parents); $i++) {
+    for ($i = 1; $i < $counter; $i++) {
         $the_place = &$the_place['children'][strval($parents[$i])];
     }
 

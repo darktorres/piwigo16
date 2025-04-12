@@ -145,7 +145,7 @@ final class functions_user
     ): false|int {
         global $conf;
 
-        if ($login == '') {
+        if ($login === '') {
             $errors[] = functions::l10n('Please, enter a login');
         }
 
@@ -161,7 +161,7 @@ final class functions_user
             $errors[] = functions::l10n('this login is already used');
         }
 
-        if ($login != strip_tags($login)) {
+        if ($login !== strip_tags($login)) {
             $errors[] = functions::l10n('html tags are not allowed in login');
         }
 
@@ -235,7 +235,7 @@ final class functions_user
             self::create_user_infos($user_id, $override);
 
             if ($notify_admin &&
-                $conf->email_admin_on_new_user != 'none'
+                $conf->email_admin_on_new_user !== 'none'
             ) {
                 require_once __DIR__ . '/../inc/functions_mail.php';
                 $admin_url = functions_url::get_absolute_root_url() . 'admin.php?page=user_list&username=' . $login;
@@ -418,99 +418,86 @@ final class functions_user
 
         $userdata['preferences'] = empty($userdata['preferences']) ? [] : unserialize($userdata['preferences']);
 
-        if ($use_cache) {
-            if (! isset($userdata['need_update']) ||
-                ! is_bool($userdata['need_update']) ||
-                $userdata['need_update'] == true
-            ) {
-                $userdata['cache_update_time'] = time();
-
-                // Set need update are done
-                $userdata['need_update'] = false;
-
-                $userdata['forbidden_categories'] = self::calculate_permissions($userdata['id'], $userdata['status']);
-
-                /* now we build the list of forbidden images (this list does not contain
-                images that are not in at least an authorized category)*/
-                $query = <<<SQL
+        if ($use_cache && (! isset($userdata['need_update']) || ! is_bool($userdata['need_update']) || $userdata['need_update'] == true)) {
+            $userdata['cache_update_time'] = time();
+            // Set need update are done
+            $userdata['need_update'] = false;
+            $userdata['forbidden_categories'] = self::calculate_permissions($userdata['id'], $userdata['status']);
+            /* now we build the list of forbidden images (this list does not contain
+               images that are not in at least an authorized category)*/
+            $query = <<<SQL
                     SELECT DISTINCT id
                     FROM images INNER JOIN image_category ON id = image_id
                     WHERE category_id NOT IN ({$userdata['forbidden_categories']})
                         AND level > {$userdata['level']};
                     SQL;
-                $forbidden_ids = functions_mysqli::query2array($query, null, 'id');
+            $forbidden_ids = functions_mysqli::query2array($query, null, 'id');
+            if ($forbidden_ids === []) {
+                $forbidden_ids[] = 0;
+            }
 
-                if (empty($forbidden_ids)) {
-                    $forbidden_ids[] = 0;
-                }
-
-                $userdata['image_access_type'] = 'NOT IN'; //TODO maybe later
-                $userdata['image_access_list'] = implode(', ', $forbidden_ids);
-
-                $query = <<<SQL
+            $userdata['image_access_type'] = 'NOT IN';
+            //TODO maybe later
+            $userdata['image_access_list'] = implode(', ', $forbidden_ids);
+            $query = <<<SQL
                     SELECT COUNT(DISTINCT image_id) AS total
                     FROM image_category
                     WHERE category_id NOT IN ({$userdata['forbidden_categories']})
                         AND image_id {$userdata['image_access_type']} ({$userdata['image_access_list']});
                     SQL;
-                [$userdata['nb_total_images']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            [$userdata['nb_total_images']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+            // now we update user cache categories
+            $user_cache_cats = functions_category::get_computed_categories($userdata, null);
+            if (! self::is_admin($userdata['status'])) { // for non admins we forbid categories with no image (feature 1053)
+                $forbidden_ids = [];
 
-                // now we update user cache categories
-                $user_cache_cats = functions_category::get_computed_categories($userdata, null);
-
-                if (! self::is_admin($userdata['status'])) { // for non admins we forbid categories with no image (feature 1053)
-                    $forbidden_ids = [];
-
-                    foreach ($user_cache_cats as $cat) {
-                        if ($cat['count_images'] == 0) {
-                            $forbidden_ids[] = $cat['cat_id'];
-                            functions_category::remove_computed_category($user_cache_cats, $cat);
-                        }
-                    }
-
-                    if (! empty($forbidden_ids)) {
-                        if (empty($userdata['forbidden_categories'])) {
-                            $userdata['forbidden_categories'] = implode(', ', $forbidden_ids);
-                        } else {
-                            $userdata['forbidden_categories'] .= ',' . implode(', ', $forbidden_ids);
-                        }
+                foreach ($user_cache_cats as $cat) {
+                    if ($cat['count_images'] == 0) {
+                        $forbidden_ids[] = $cat['cat_id'];
+                        functions_category::remove_computed_category($user_cache_cats, $cat);
                     }
                 }
 
-                // delete user cache
-                $query = <<<SQL
+                if ($forbidden_ids !== []) {
+                    if (empty($userdata['forbidden_categories'])) {
+                        $userdata['forbidden_categories'] = implode(', ', $forbidden_ids);
+                    } else {
+                        $userdata['forbidden_categories'] .= ',' . implode(', ', $forbidden_ids);
+                    }
+                }
+            }
+
+            // delete user cache
+            $query = <<<SQL
                     DELETE FROM user_cache_categories
                     WHERE user_id = {$userdata['id']};
                     SQL;
-                functions_mysqli::pwg_query($query);
-
-                // Due to concurrency issues, we ask MySQL to ignore errors on
-                // insert. This may happen when cache needs refresh and that Piwigo is
-                // called "very simultaneously".
-                functions_mysqli::mass_inserts(
-                    'user_cache_categories',
-                    [
-                        'user_id', 'cat_id',
-                        'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories',
-                    ],
-                    $user_cache_cats,
-                    [
-                        'ignore' => true,
-                    ]
-                );
-
-                // update user cache
-                $query = <<<SQL
+            functions_mysqli::pwg_query($query);
+            // Due to concurrency issues, we ask MySQL to ignore errors on
+            // insert. This may happen when cache needs refresh and that Piwigo is
+            // called "very simultaneously".
+            functions_mysqli::mass_inserts(
+                'user_cache_categories',
+                [
+                    'user_id', 'cat_id',
+                    'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories',
+                ],
+                $user_cache_cats,
+                [
+                    'ignore' => true,
+                ]
+            );
+            // update user cache
+            $query = <<<SQL
                     DELETE FROM user_cache
                     WHERE user_id = {$userdata['id']};
                     SQL;
-                functions_mysqli::pwg_query($query);
-
-                // for the same reason as user_cache_categories, we ignore error on
-                // this insert
-                $boolean_to_string = functions_mysqli::boolean_to_string($userdata['need_update']);
-                $empty_last_photo_date = empty($userdata['last_photo_date']) ? 'NULL' : "'{$userdata['last_photo_date']}'";
-                $query = <<<SQL
+            functions_mysqli::pwg_query($query);
+            // for the same reason as user_cache_categories, we ignore error on
+            // this insert
+            $boolean_to_string = functions_mysqli::boolean_to_string($userdata['need_update']);
+            $empty_last_photo_date = empty($userdata['last_photo_date']) ? 'NULL' : "'{$userdata['last_photo_date']}'";
+            $query = <<<SQL
                     INSERT IGNORE INTO user_cache
                         (
                             user_id, need_update, cache_update_time, forbidden_categories, nb_total_images,
@@ -522,8 +509,7 @@ final class functions_user
                             {$userdata['nb_total_images']}, {$empty_last_photo_date}, '{$userdata['image_access_type']}', '{$userdata['image_access_list']}'
                         );
                     SQL;
-                functions_mysqli::pwg_query($query);
-            }
+            functions_mysqli::pwg_query($query);
         }
 
         return $userdata;
@@ -640,7 +626,7 @@ final class functions_user
             $forbidden_array = array_unique($forbidden_array);
         }
 
-        if (empty($forbidden_array)) { // at least, the list contains 0 value. This category does not exists so
+        if ($forbidden_array === []) { // at least, the list contains 0 value. This category does not exists so
             // where clauses such as "WHERE category_id NOT IN (0)" will always be
             // true.
             $forbidden_array[] = 0;
@@ -806,7 +792,7 @@ final class functions_user
         // case insensitive match
         // 'en-US;q=0.9, fr-CH, kok-IN;q=0.7' => 'en_us;q=0.9, fr_ch, kok_in;q=0.7'
         $language_header = strtolower(str_replace('-', '_', $language_header));
-        $match_pattern = '/(([a-z]{1,8})(?:_[a-z0-9]{1,8})*)\s*(?:;\s*q\s*=\s*([01](?:\.[0-9]{0,3})?))?/';
+        $match_pattern = '/(([a-z]{1,8})(?:_[a-z0-9]{1,8})*)\s*(?:;\s*q\s*=\s*([01](?:\.\d{0,3})?))?/';
         $matches = null;
         preg_match_all($match_pattern, $language_header, $matches);
         $accept_languages_full = $matches[1];  // ['en-us', 'fr-ch', 'kok-in']
@@ -819,7 +805,7 @@ final class functions_user
         // if the quality value is absent for an language, use 1 as the default
         $q_values = $matches[3];  // ['0.9', '', '0.7']
 
-        foreach ($q_values as $i => $q_value) {
+        foreach (array_keys($q_values) as $i) {
             $q_values[$i] = ($q_values[$i] === '') ? 1 : floatval($q_values[$i]);
         }
 
@@ -841,7 +827,7 @@ final class functions_user
         // in both full and short forms, and case insensitive
         $languages_available = [];
 
-        foreach (functions::get_languages() as $language_code => $language_name) {
+        foreach (array_keys(functions::get_languages()) as $language_code) {
             $lowercase_full = strtolower($language_code);
             $lowercase_parts = explode('_', $lowercase_full, 2);
             $lowercase_prefix = $lowercase_parts[0];
@@ -849,7 +835,7 @@ final class functions_user
             $languages_available[$lowercase_prefix] = $language_code;
         }
 
-        foreach ($q_values as $i => $q_value) {
+        foreach (array_keys($q_values) as $i) {
             // if the exact language variant is present, make sure it's chosen
             // en-US;q=0.9 => en_us => en_US
             if (array_key_exists($accept_languages_full[$i], $languages_available)) {
@@ -882,7 +868,7 @@ final class functions_user
             $user_ids = [$user_ids];
         }
 
-        if (! empty($user_ids)) {
+        if ($user_ids !== []) {
             $inserts = [];
             [$dbnow] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT NOW();'));
 
@@ -1090,7 +1076,7 @@ final class functions_user
         string $password,
         bool $remember_me
     ): bool {
-        if ($success === true) {
+        if ($success) {
             return true;
         }
 
@@ -1271,7 +1257,7 @@ final class functions_user
     public static function is_generic(
         string $user_status = ''
     ): bool {
-        return self::get_user_status($user_status) == 'generic';
+        return self::get_user_status($user_status) === 'generic';
     }
 
     /**
@@ -1282,7 +1268,7 @@ final class functions_user
     public static function is_a_guest(
         string $user_status = ''
     ): bool {
-        return self::get_user_status($user_status) == 'guest';
+        return self::get_user_status($user_status) === 'guest';
     }
 
     /**
@@ -1341,23 +1327,12 @@ final class functions_user
             return true;
         }
 
-        if ($action == 'edit' &&
-            $conf->user_can_edit_comment
+        if ($action === 'edit' && $conf->user_can_edit_comment && $comment_author_id == $user['id']
         ) {
-            if ($comment_author_id == $user['id']) {
-                return true;
-            }
+            return true;
         }
 
-        if ($action == 'delete' &&
-            $conf->user_can_delete_comment
-        ) {
-            if ($comment_author_id == $user['id']) {
-                return true;
-            }
-        }
-
-        return false;
+        return $action === 'delete' && $conf->user_can_delete_comment && $comment_author_id == $user['id'];
     }
 
     /**
@@ -1700,7 +1675,7 @@ final class functions_user
             $params = [$params];
         }
 
-        if (empty($params)) {
+        if ($params === []) {
             return;
         }
 

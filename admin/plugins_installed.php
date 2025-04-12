@@ -27,12 +27,7 @@ $template->set_filenames([
 
 // should we display details on plugins?
 if (isset($_GET['show_details'])) {
-    if ($_GET['show_details'] == 1) {
-        $show_details = true;
-    } else {
-        $show_details = false;
-    }
-
+    $show_details = $_GET['show_details'] == 1 ? true : false;
     functions_session::pwg_set_session_var('plugins_show_details', $show_details);
 } elseif (functions_session::pwg_get_session_var('plugins_show_details') != null) {
     $show_details = functions_session::pwg_get_session_var('plugins_show_details');
@@ -57,7 +52,7 @@ if (isset($_GET['incompatible_plugins'])) {
 
     $incompatible_plugins = [];
 
-    foreach ($incompatible_plugins_raw as $plugin => $version) {
+    foreach (array_keys($incompatible_plugins_raw) as $plugin) {
         if ($plugin == '~~expire~~') {
             continue;
         }

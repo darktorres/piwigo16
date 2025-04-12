@@ -31,13 +31,13 @@ final class functions_comment
     ): string {
         global $conf,$user;
 
-        if ($action == 'reject') {
+        if ($action === 'reject') {
             return $action;
         }
 
         $my_action = $conf->comment_spam_reject ? 'reject' : 'moderate';
 
-        if ($action == $my_action) {
+        if ($action === $my_action) {
             return $action;
         }
 
@@ -180,7 +180,7 @@ final class functions_comment
 
         $anonymous_id = implode('.', $ip_components);
 
-        if ($comment_action != 'reject' &&
+        if ($comment_action !== 'reject' &&
             $conf->anti_flood_time > 0 &&
             ! functions_user::is_admin()
         ) { // anti-flood system
@@ -220,8 +220,8 @@ final class functions_comment
         if ($comment_action != 'reject') {
             $validated = $comment_action == 'validate' ? 'true' : 'false';
             $validation_date = $comment_action == 'validate' ? 'NOW()' : 'NULL';
-            $website_url = ! empty($comm['website_url']) ? "'{$comm['website_url']}'" : 'NULL';
-            $email = ! empty($comm['email']) ? "'{$comm['email']}'" : 'NULL';
+            $website_url = empty($comm['website_url']) ? 'NULL' : "'{$comm['website_url']}'";
+            $email = empty($comm['email']) ? 'NULL' : "'{$comm['email']}'";
             $query = <<<SQL
                 INSERT INTO comments
                     (author, author_id, anonymous_id, content, date, validated, validation_date, image_id, website_url, email)
@@ -385,7 +385,7 @@ final class functions_comment
                 $user_where_clause = " AND author_id = '{$GLOBALS['user']['id']}'";
             }
 
-            $website_url = ! empty($comment['website_url']) ? "'{$comment['website_url']}'" : 'NULL';
+            $website_url = empty($comment['website_url']) ? 'NULL' : "'{$comment['website_url']}'";
             $validated = $comment_action == 'validate' ? 'true' : 'false';
             $validation_date = $comment_action == 'validate' ? 'NOW()' : 'NULL';
             $query = <<<SQL
@@ -447,8 +447,8 @@ final class functions_comment
         global $conf;
 
         if (! in_array($action, ['edit', 'delete']) ||
-          ($action == 'edit' && ! $conf->email_admin_on_comment_edition) ||
-          ($action == 'delete' && ! $conf->email_admin_on_comment_deletion)
+          ($action === 'edit' && ! $conf->email_admin_on_comment_edition) ||
+          ($action === 'delete' && ! $conf->email_admin_on_comment_deletion)
         ) {
             return;
         }
@@ -459,7 +459,7 @@ final class functions_comment
             functions::get_l10n_args('Author: %s', $comment['author']),
         ];
 
-        if ($action == 'delete') {
+        if ($action === 'delete') {
             $keyargs_content[] = functions::get_l10n_args('This author removed the comment with id %d', $comment['comment_id']);
         } else {
             $keyargs_content[] = functions::get_l10n_args('This author modified following comment:');
@@ -507,11 +507,7 @@ final class functions_comment
     public static function validate_user_comment(
         array|int $comment_id
     ): void {
-        if (is_array($comment_id)) {
-            $where_clause = 'id IN (' . implode(', ', $comment_id) . ')';
-        } else {
-            $where_clause = 'id = ' . $comment_id;
-        }
+        $where_clause = is_array($comment_id) ? 'id IN (' . implode(', ', $comment_id) . ')' : 'id = ' . $comment_id;
 
         $query = <<<SQL
             UPDATE comments

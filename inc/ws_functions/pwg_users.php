@@ -84,7 +84,7 @@ final class pwg_users
             $escaped_filter = functions_mysqli::pwg_db_real_escape_string($params['filter']);
             $filter_where_clause = "(u.{$conf->user_fields['username']} LIKE '%{$escaped_filter}%' OR u.{$conf->user_fields['email']} LIKE '%{$escaped_filter}%'";
 
-            if (! empty($filtered_groups)) {
+            if ($filtered_groups !== []) {
                 $filter_where_clause .= 'OR ug.group_id IN (' . implode(', ', $filtered_groups) . ')';
             }
 
@@ -383,10 +383,8 @@ final class pwg_users
 
         global $conf;
 
-        if ($conf->double_password_type_in_admin) {
-            if ($params['password'] != $params['password_confirm']) {
-                return new PwgError(WS_ERR_INVALID_PARAM, functions::l10n('The passwords do not match'));
-            }
+        if ($conf->double_password_type_in_admin && $params['password'] != $params['password_confirm']) {
+            return new PwgError(WS_ERR_INVALID_PARAM, functions::l10n('The passwords do not match'));
         }
 
         $user_id = functions_user::register_user(
@@ -540,7 +538,7 @@ final class pwg_users
                     return new PwgError(WS_ERR_INVALID_PARAM, functions::l10n('this login is already used'));
                 }
 
-                if ($params['username'] != strip_tags($params['username'])) {
+                if ($params['username'] !== strip_tags($params['username'])) {
                     return new PwgError(WS_ERR_INVALID_PARAM, functions::l10n('html tags are not allowed in login'));
                 }
 

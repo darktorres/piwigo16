@@ -341,7 +341,7 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
                 SQL;
             $virtual_categories = functions_mysqli::query2array($query, null, 'id');
 
-            if (! empty($virtual_categories)) {
+            if ($virtual_categories !== []) {
                 $category_ids = implode(', ', $virtual_categories);
                 $query = <<<SQL
                     SELECT DISTINCT image_id
@@ -656,7 +656,7 @@ if (functions_mysqli::pwg_db_num_rows($result)) {
     }
 }
 
-if (empty($widths)) { // arbitrary values, only used when no photos on the gallery
+if ($widths === []) { // arbitrary values, only used when no photos on the gallery
     $widths = [600, 1920, 3500];
     $heights = [480, 1080, 2300];
     $ratios = [1.25, 1.52, 1.78];
@@ -737,7 +737,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
     $filesizes[] = sprintf('%.1f', $row['filesize'] / 1024);
 }
 
-if (empty($filesizes)) { // arbitrary values, only used when no photos on the gallery
+if ($filesizes === []) { // arbitrary values, only used when no photos on the gallery
     $filesizes = [0, 1, 2, 5, 8, 15];
 }
 

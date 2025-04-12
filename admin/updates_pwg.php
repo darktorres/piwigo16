@@ -67,14 +67,9 @@ if ($step == 1) {
 // +-----------------------------------------------------------------------+
 // |                                Step 2                                 |
 // +-----------------------------------------------------------------------+
-if ($step == 2 &&
-    functions_user::is_webmaster()
+if ($step == 2 && functions_user::is_webmaster() && (isset($_POST['submit']) && isset($_POST['upgrade_to']))
 ) {
-    if (isset($_POST['submit']) &&
-        isset($_POST['upgrade_to'])
-    ) {
-        updates::upgrade_to($_POST['upgrade_to'], $step);
-    }
+    updates::upgrade_to($_POST['upgrade_to'], $step);
 }
 
 // +-----------------------------------------------------------------------+

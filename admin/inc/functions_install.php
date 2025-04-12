@@ -45,10 +45,8 @@ final class functions_install
 
                 // we don't execute "DROP TABLE" queries
                 if (! preg_match('/^DROP TABLE/i', $query)) {
-                    if ($dblayer == 'mysql') {
-                        if (preg_match('/^(CREATE TABLE .*)[\s]*;[\s]*/im', $query, $matches)) {
-                            $query = $matches[1] . ' DEFAULT CHARACTER SET utf8;';
-                        }
+                    if ($dblayer === 'mysql' && preg_match('/^(CREATE TABLE .*)[\s]*;[\s]*/im', $query, $matches)) {
+                        $query = $matches[1] . ' DEFAULT CHARACTER SET utf8;';
                     }
 
                     functions_mysqli::pwg_query($query);
@@ -66,7 +64,7 @@ final class functions_install
     {
         $themes = new themes();
 
-        foreach ($themes->fs_themes as $theme_id => $fs_theme) {
+        foreach (array_keys($themes->fs_themes) as $theme_id) {
             if (in_array($theme_id, ['modus', 'smartpocket'])) {
                 $themes->perform_action('activate', $theme_id);
             }
@@ -80,7 +78,7 @@ final class functions_install
     {
         $plugins = new plugins();
 
-        foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
+        foreach (array_keys($plugins->fs_plugins) as $plugin_id) {
             if (in_array($plugin_id, [])) {
                 $plugins->perform_action('activate', $plugin_id);
             }

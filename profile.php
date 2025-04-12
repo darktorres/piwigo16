@@ -51,7 +51,7 @@ if (! defined('PHPWG_ROOT_PATH')) { //direct script access
         $query = <<<SQL
             SELECT {$imploded_fields}
             FROM user_infos
-            WHERE user_id = {$conf['default_user_id']};
+            WHERE user_id = {$conf->default_user_id};
             SQL;
         $result = functions_mysqli::pwg_query($query);
         $default_user = functions_mysqli::pwg_db_fetch_assoc($result);

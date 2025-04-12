@@ -108,7 +108,7 @@ final class functions_upgrade
             $query = <<<SQL
                 SELECT theme
                 FROM user_infos
-                WHERE user_id = {$conf['default_user_id']};
+                WHERE user_id = {$conf->default_user_id};
                 SQL;
             list($default_theme) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
@@ -134,7 +134,7 @@ final class functions_upgrade
                 $query = <<<SQL
                     UPDATE user_infos
                     SET theme = '{$defaultTemplate}'
-                    WHERE user_id = {$conf['default_user_id']};
+                    WHERE user_id = {$conf->default_user_id};
                     SQL;
                 functions_mysqli::pwg_query($query);
             }
@@ -202,14 +202,14 @@ final class functions_upgrade
             $query = <<<SQL
                 SELECT u.password, ui.status
                 FROM users AS u
-                INNER JOIN user_infos AS ui ON u.{$conf['user_fields']['id']} = ui.user_id
-                WHERE {$conf['user_fields']['username']} = '{$username}';
+                INNER JOIN user_infos AS ui ON u.{$conf->user_fields['id']} = ui.user_id
+                WHERE {$conf->user_fields['username']} = '{$username}';
                 SQL;
         }
 
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
-        if (! $conf['password_verify']($password, $row['password'])) {
+        if (! ($conf->password_verify)($password, $row['password'])) {
             $page['errors'][] = functions::l10n('Invalid password!');
         } elseif ($row['status'] != 'admin' &&
                   $row['status'] != 'webmaster'
@@ -272,10 +272,10 @@ final class functions_upgrade
 
         try {
             functions_mysqli::pwg_db_connect(
-                $conf['db_host'],
-                $conf['db_user'],
-                $conf['db_password'],
-                $conf['db_base']
+                $conf->db_host,
+                $conf->db_user,
+                $conf->db_password,
+                $conf->db_base
             );
             functions_mysqli::pwg_db_check_version();
         } catch (Exception $e) {

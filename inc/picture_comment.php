@@ -37,7 +37,7 @@ if ($page['show_comments'] &&
     isset($_POST['content'])
 ) {
     if (functions_user::is_a_guest() &&
-        ! $conf['comments_forall']
+        ! $conf->comments_forall
     ) {
         exit('Session expired');
     }
@@ -109,7 +109,7 @@ if ($page['show_comments']) {
         functions_url::duplicate_picture_url([], ['start']),
         $row['nb_comments'],
         $page['start'],
-        $conf['nb_comment_page'],
+        $conf->nb_comment_page,
         true // We want a clean URL
     );
 
@@ -129,7 +129,7 @@ if ($page['show_comments']) {
             functions_session::pwg_set_session_var('comments_order', $_GET['comments_order']);
         }
 
-        $comments_order = functions_session::pwg_get_session_var('comments_order', $conf['comments_order']);
+        $comments_order = functions_session::pwg_get_session_var('comments_order', $conf->comments_order);
 
         $template->assign([
             'COMMENTS_ORDER_URL' => functions_url::add_url_params(functions_url::duplicate_picture_url(), [
@@ -139,14 +139,14 @@ if ($page['show_comments']) {
         ]);
 
         $query = <<<SQL
-            SELECT c.id, c.author, c.author_id, u.{$conf['user_fields']['email']} AS user_email, c.date,
+            SELECT c.id, c.author, c.author_id, u.{$conf->user_fields['email']} AS user_email, c.date,
                 c.image_id, c.website_url, c.email, c.content, c.validated
             FROM comments AS c
-            LEFT JOIN users AS u ON u.{$conf['user_fields']['id']} = author_id
+            LEFT JOIN users AS u ON u.{$conf->user_fields['id']} = author_id
             WHERE c.image_id = {$page['image_id']}
                 {$validated_clause}
             ORDER BY c.date {$comments_order}
-            LIMIT {$conf['nb_comment_page']} OFFSET {$page['start']};
+            LIMIT {$conf->nb_comment_page} OFFSET {$page['start']};
             SQL;
         $result = functions_mysqli::pwg_query($query);
 
@@ -230,7 +230,7 @@ if ($page['show_comments']) {
     }
 
     if (functions_user::is_a_guest() &&
-        ! $conf['comments_forall']
+        ! $conf->comments_forall
     ) {
         $show_add_comment_form = false;
     }
@@ -243,13 +243,13 @@ if ($page['show_comments']) {
             'KEY' => $key,
             'CONTENT' => '',
             'SHOW_AUTHOR' => ! functions_user::is_classic_user(),
-            'AUTHOR_MANDATORY' => $conf['comments_author_mandatory'],
+            'AUTHOR_MANDATORY' => $conf->comments_author_mandatory,
             'AUTHOR' => '',
             'WEBSITE_URL' => '',
             'SHOW_EMAIL' => ! functions_user::is_classic_user() || empty($user['email']),
-            'EMAIL_MANDATORY' => $conf['comments_email_mandatory'],
+            'EMAIL_MANDATORY' => $conf->comments_email_mandatory,
             'EMAIL' => '',
-            'SHOW_WEBSITE' => $conf['comments_enable_website'],
+            'SHOW_WEBSITE' => $conf->comments_enable_website,
         ];
 
         if ($comment_action == 'reject') {

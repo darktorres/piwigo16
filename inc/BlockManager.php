@@ -80,7 +80,7 @@ final class BlockManager
     {
         global $conf;
         $conf_id = 'blk_' . $this->id;
-        $mb_conf = isset($conf[$conf_id]) ? $conf[$conf_id] : [];
+        $mb_conf = isset($conf->{$conf_id}) ? $conf->{$conf_id} : [];
 
         if (! is_array($mb_conf)) {
             $mb_conf = unserialize($mb_conf);

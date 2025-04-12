@@ -38,7 +38,7 @@ final class functions_TakeATour
         }
 
         $template->set_filename('TAT_js_css', PHPWG_PLUGINS_PATH . 'TakeATour/tpl/js_css.tpl');
-        $template->assign('ADMIN_THEME', $conf['admin_theme']);
+        $template->assign('ADMIN_THEME', $conf->admin_theme);
         $template->parse('TAT_js_css');
 
         if (isset($TAT_restart) &&
@@ -50,7 +50,7 @@ final class functions_TakeATour
 
         $tat_path = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME']);
         $template->assign('TAT_path', $tat_path);
-        $template->assign('ABS_U_ADMIN', functions_url::get_absolute_root_url()); // absolute one due to public pages and $conf['question_mark_in_urls'] = false + $conf['php_extension_in_urls'] = false;
+        $template->assign('ABS_U_ADMIN', functions_url::get_absolute_root_url()); // absolute one due to public pages and $conf->question_mark_in_urls = false + $conf->php_extension_in_urls = false;
 
         // some tours may need admin functions (like 2_8_0 needs get_orphans)
 

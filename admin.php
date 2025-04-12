@@ -43,11 +43,11 @@ functions::check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.
 // | Filesystem checks                                                     |
 // +-----------------------------------------------------------------------+
 
-if ($conf['fs_quick_check_period'] > 0) {
+if ($conf->fs_quick_check_period > 0) {
     $perform_fsqc = false;
 
-    if (isset($conf['fs_quick_check_last_check'])) {
-        if (strtotime($conf['fs_quick_check_last_check']) < strtotime($conf['fs_quick_check_period'] . ' seconds ago')) {
+    if (isset($conf->fs_quick_check_last_check)) {
+        if (strtotime($conf->fs_quick_check_last_check) < strtotime($conf->fs_quick_check_period . ' seconds ago')) {
             $perform_fsqc = true;
         }
     } else {
@@ -106,7 +106,7 @@ if (isset($_GET['change_theme'])) {
 // +-----------------------------------------------------------------------+
 
 // sync_user() is only useful when external authentication is activated
-if ($conf['external_authentication']) {
+if ($conf->external_authentication) {
     functions_admin::sync_users();
 }
 
@@ -204,7 +204,7 @@ $template->set_filenames([
 $template->assign(
     [
         'USERNAME' => $user['username'],
-        'ENABLE_SYNCHRONIZATION' => $conf['enable_synchronization'],
+        'ENABLE_SYNCHRONIZATION' => $conf->enable_synchronization,
         'U_SITE_MANAGER' => $link_start . 'site_manager',
         'U_HISTORY_STAT' => $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
         'U_FAQ' => $link_start . 'help',
@@ -236,16 +236,16 @@ $template->assign(
         'U_CHANGE_THEME' => $change_theme_url,
         'ADMIN_PAGE_TITLE' => 'Piwigo Administration Page',
         'ADMIN_PAGE_OBJECT_ID' => '',
-        'U_SHOW_TEMPLATE_TAB' => $conf['show_template_in_side_menu'],
-        'SHOW_RATING' => $conf['rate'],
+        'U_SHOW_TEMPLATE_TAB' => $conf->show_template_in_side_menu,
+        'SHOW_RATING' => $conf->rate,
     ]
 );
 
-if ($conf['enable_core_update']) {
+if ($conf->enable_core_update) {
     $template->assign('U_UPDATES', $link_start . 'updates');
 }
 
-if ($conf['activate_comments']) {
+if ($conf->activate_comments) {
     $template->assign('U_COMMENTS', $link_start . 'comments');
 
     // pending comments

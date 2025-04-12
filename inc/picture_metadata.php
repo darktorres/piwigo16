@@ -16,10 +16,10 @@ declare(strict_types=1);
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_metadata;
 
-if ($conf['show_exif']) {
+if ($conf->show_exif) {
     $exif_mapping = [];
 
-    foreach ($conf['show_exif_fields'] as $field) {
+    foreach ($conf->show_exif_fields as $field) {
         $exif_mapping[$field] = $field;
     }
 
@@ -31,7 +31,7 @@ if ($conf['show_exif']) {
             'lines' => [],
         ];
 
-        foreach ($conf['show_exif_fields'] as $field) {
+        foreach ($conf->show_exif_fields as $field) {
             if (strpos($field, ';') === false) {
                 // template cannot deal with an array as value, we skip it
                 if (isset($exif[$field]) &&
@@ -67,8 +67,8 @@ if ($conf['show_exif']) {
     }
 }
 
-if ($conf['show_iptc']) {
-    $iptc = functions_metadata::get_iptc_data($picture['current']['src_image']->get_path(), $conf['show_iptc_mapping'], ', ');
+if ($conf->show_iptc) {
+    $iptc = functions_metadata::get_iptc_data($picture['current']['src_image']->get_path(), $conf->show_iptc_mapping, ', ');
 
     if (count($iptc) > 0) {
         $tpl_meta = [

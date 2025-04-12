@@ -200,13 +200,13 @@ class Config
         $this->initFiles();
 
         // Create initial config if necessary
-        if (! isset($conf[self::CONF_PARAM])) {
+        if (! isset($conf->{self::CONF_PARAM})) {
             $this->createDefaultConfig();
             return;
         }
 
         // Load and JSON decode the config
-        $loaded = json_decode($conf[self::CONF_PARAM], true);
+        $loaded = json_decode($conf->{self::CONF_PARAM}, true);
 
         // Check for current version
         if (isset($loaded[self::KEY_VERSION]) &&

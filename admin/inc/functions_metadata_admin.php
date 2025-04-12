@@ -26,7 +26,7 @@ final class functions_metadata_admin
     ): array {
         global $conf;
 
-        $map = $conf['use_iptc_mapping'];
+        $map = $conf->use_iptc_mapping;
 
         $iptc = functions_metadata::get_iptc_data($file, $map);
 
@@ -67,7 +67,7 @@ final class functions_metadata_admin
     ): array {
         global $conf;
 
-        $exif = functions_metadata::get_exif_data($file, $conf['use_exif_mapping']);
+        $exif = functions_metadata::get_exif_data($file, $conf->use_exif_mapping);
 
         foreach ($exif as $pwg_key => $value) {
             if (in_array($pwg_key, ['date_creation', 'date_available'])) {
@@ -137,20 +137,20 @@ final class functions_metadata_admin
 
         $update_fields = ['filesize', 'width', 'height'];
 
-        if ($conf['use_exif']) {
+        if ($conf->use_exif) {
             $update_fields =
               array_merge(
                   $update_fields,
-                  array_keys($conf['use_exif_mapping']),
+                  array_keys($conf->use_exif_mapping),
                   ['latitude', 'longitude']
               );
         }
 
-        if ($conf['use_iptc']) {
+        if ($conf->use_iptc) {
             $update_fields =
               array_merge(
                   $update_fields,
-                  array_keys($conf['use_iptc_mapping'])
+                  array_keys($conf->use_iptc_mapping)
               );
         }
 
@@ -237,12 +237,12 @@ final class functions_metadata_admin
             $file = './' . $infos['path'];
         }
 
-        if ($conf['use_exif']) {
+        if ($conf->use_exif) {
             $exif = self::get_sync_exif_data($file);
             $infos = array_merge($infos, $exif);
         }
 
-        if ($conf['use_iptc']) {
+        if ($conf->use_iptc) {
             $iptc = self::get_sync_iptc_data($file);
             $infos = array_merge($infos, $iptc);
         }
@@ -410,7 +410,7 @@ final class functions_metadata_admin
     ): string {
         global $conf;
 
-        $keywords_string = preg_replace($conf['metadata_keyword_separator_regex'], ',', $keywords_string);
+        $keywords_string = preg_replace($conf->metadata_keyword_separator_regex, ',', $keywords_string);
         // new lines are always considered as keyword separators
         $keywords_string = str_replace(["\r\n", "\n"], ',', $keywords_string);
         $keywords_string = preg_replace('/,+/', ',', $keywords_string);

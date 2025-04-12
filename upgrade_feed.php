@@ -37,7 +37,7 @@ require_once __DIR__ . '/inc/functions.php';
 // | Check Access and exit when it is not ok                               |
 // +-----------------------------------------------------------------------+
 
-if (! $conf['check_upgrade_feed']) {
+if (! $conf->check_upgrade_feed) {
     exit('upgrade feed is not active');
 }
 
@@ -48,10 +48,10 @@ define('UPGRADES_PATH', './install/db');
 // +-----------------------------------------------------------------------+
 try {
     functions_mysqli::pwg_db_connect(
-        $conf['db_host'],
-        $conf['db_user'],
-        $conf['db_password'],
-        $conf['db_base']
+        $conf->db_host,
+        $conf->db_user,
+        $conf->db_password,
+        $conf->db_base
     );
 } catch (Exception $e) {
     functions_mysqli::my_error(functions::l10n($e->getMessage()), true);

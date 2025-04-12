@@ -74,7 +74,7 @@ if (count($pictures) > 0) {
           ]
       );
 
-    if ($conf['activate_comments'] &&
+    if ($conf->activate_comments &&
         $user['show_nb_comments']
     ) {
         $implodedSelection = implode(', ', $selection);
@@ -124,7 +124,7 @@ foreach ($pictures as $row) {
         'file_ext' => strtolower(functions::get_extension($row['file'])),
     ]);
 
-    if ($conf['index_new_icon']) {
+    if ($conf->index_new_icon) {
         $tpl_var['icon_ts'] = functions::get_icon($row['date_available']);
     }
 
@@ -151,8 +151,8 @@ foreach ($pictures as $row) {
 
 $template->assign([
     'derivative_params' => functions_plugins::trigger_change('get_index_derivative_params', ImageStdParams::get_by_type(functions_session::pwg_get_session_var('index_deriv', derivative_std_params::IMG_THUMB))),
-    'maxRequests' => $conf['max_requests'],
-    'SHOW_THUMBNAIL_CAPTION' => $conf['show_thumbnail_caption'],
+    'maxRequests' => $conf->max_requests,
+    'SHOW_THUMBNAIL_CAPTION' => $conf->show_thumbnail_caption,
 ]);
 $tpl_thumbnails_var = functions_plugins::trigger_change('loc_end_index_thumbnails', $tpl_thumbnails_var, $pictures);
 $template->assign('thumbnails', $tpl_thumbnails_var);

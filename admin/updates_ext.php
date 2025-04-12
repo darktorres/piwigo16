@@ -17,7 +17,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     exit('Hacking attempt!');
 }
 
-if (! $conf['enable_extensions_install']) {
+if (! $conf->enable_extensions_install) {
     exit('Piwigo extensions install/update system is disabled');
 }
 
@@ -70,13 +70,13 @@ foreach ($autoupdate->types as $type) {
                     'CURRENT_VERSION' => $fs_ext['version'],
                     'NEW_VERSION' => $ext_info['revision_name'],
                     'URL_DOWNLOAD' => $ext_info['download_url'] . '&amp;origin=piwigo_download',
-                    'IGNORED' => in_array($ext_id, $conf['updates_ignored'][$type]),
+                    'IGNORED' => in_array($ext_id, $conf->updates_ignored[$type]),
                 ]
             );
         }
     }
 
-    if (! empty($conf['updates_ignored'][$type])) {
+    if (! empty($conf->updates_ignored[$type])) {
         $show_reset = true;
     }
 }

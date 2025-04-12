@@ -37,7 +37,7 @@ final class image_ext_imagick implements imageInterface
     ) {
         global $conf;
         $this->source_filepath = $source_filepath;
-        $this->imagickdir = $conf['ext_imagick_dir'];
+        $this->imagickdir = $conf->ext_imagick_dir;
 
         if (strpos($_SERVER['SCRIPT_FILENAME'], '/kunden/') === 0) {  // 1and1
             putenv('MAGICK_THREAD_LIMIT=1');
@@ -144,7 +144,7 @@ final class image_ext_imagick implements imageInterface
             // in cas of animated WebP, we need to maximize quality to 70 to avoid
             // heavy thumbnails (or square or whatever is displayed on the thumbnails
             // page)
-            $quality = min($quality, $conf['animated_webp_compression_quality']);
+            $quality = min($quality, $conf->animated_webp_compression_quality);
         }
 
         $this->add_command('quality', $quality);

@@ -73,7 +73,7 @@ if ($page['tab'] == 'properties') {
 } elseif ($page['tab'] == 'coi') {
     require __DIR__ . '/../admin/picture_coi.php';
 } elseif ($page['tab'] == 'formats' &&
-          $conf['enable_formats']
+          $conf->enable_formats
 ) {
     require __DIR__ . '/../admin/picture_formats.php';
 } else {

@@ -16,8 +16,8 @@ if (! defined('PHPWG_ROOT_PATH')) {
     exit('Hacking attempt!');
 }
 
-if (! $conf['enable_extensions_install'] &&
-    ! $conf['enable_core_update']
+if (! $conf->enable_extensions_install &&
+    ! $conf->enable_core_update
 ) {
     exit('update system is disabled');
 }

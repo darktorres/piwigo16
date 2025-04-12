@@ -58,7 +58,7 @@ if (! (defined('IN_ADMIN') && IN_ADMIN) &&           // no message inside admini
         ]);
 
         if (functions_user::is_admin()) {
-            $url = $conf['no_photo_yet_url'];
+            $url = $conf->no_photo_yet_url;
 
             if (substr($url, 0, 4) != 'http') {
                 $url = functions_url::get_root_url() . $url;

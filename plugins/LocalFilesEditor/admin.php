@@ -44,19 +44,19 @@ functions_user::check_status(ACCESS_WEBMASTER);
 // |                            Tabssheet
 // +-----------------------------------------------------------------------+
 
-if (empty($conf['LocalFilesEditor_tabs'])) {
-    $conf['LocalFilesEditor_tabs'] = ['localconf', 'css', 'tpl', 'lang', 'plug'];
+if (empty($conf->LocalFilesEditor_tabs)) {
+    $conf->LocalFilesEditor_tabs = ['localconf', 'css', 'tpl', 'lang', 'plug'];
 }
 
-$page['tab'] = isset($_GET['tab']) ? $_GET['tab'] : $conf['LocalFilesEditor_tabs'][0];
+$page['tab'] = isset($_GET['tab']) ? $_GET['tab'] : $conf->LocalFilesEditor_tabs[0];
 
-if (! in_array($page['tab'], $conf['LocalFilesEditor_tabs'])) {
+if (! in_array($page['tab'], $conf->LocalFilesEditor_tabs)) {
     exit('Hacking attempt!');
 }
 
 $tabsheet = new tabsheet();
 
-foreach ($conf['LocalFilesEditor_tabs'] as $tab) {
+foreach ($conf->LocalFilesEditor_tabs as $tab) {
     $tabsheet->add($tab, functions::l10n('locfiledit_onglet_' . $tab), $my_base_url . '-' . $tab);
 }
 

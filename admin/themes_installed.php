@@ -179,7 +179,7 @@ functions_plugins::trigger_notify('loc_end_themes_installed');
 
 $template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Themes'));
-$template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $conf['enable_extensions_install']);
+$template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $conf->enable_extensions_install);
 
 $template->set_filenames([
     'themes' => 'themes_installed.tpl',

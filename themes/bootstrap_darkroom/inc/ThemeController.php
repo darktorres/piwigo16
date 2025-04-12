@@ -69,28 +69,24 @@ readonly class ThemeController
     {
         global $template, $conf;
 
-        if (array_key_exists('bootstrap_darkroom_navbar_main_style', $conf) &&
-            ! empty($conf['bootstrap_darkroom_navbar_main_style'])
+        if (! empty($conf->bootstrap_darkroom_navbar_main_style)
         ) {
-            $this->config->navbar_main_style = $conf['bootstrap_darkroom_navbar_main_style'];
+            $this->config->navbar_main_style = $conf->bootstrap_darkroom_navbar_main_style;
         }
 
-        if (array_key_exists('bootstrap_darkroom_navbar_main_bg', $conf) &&
-            ! empty($conf['bootstrap_darkroom_navbar_main_bg'])
+        if (! empty($conf->bootstrap_darkroom_navbar_main_bg)
         ) {
-            $this->config->navbar_main_bg = $conf['bootstrap_darkroom_navbar_main_bg'];
+            $this->config->navbar_main_bg = $conf->bootstrap_darkroom_navbar_main_bg;
         }
 
-        if (array_key_exists('bootstrap_darkroom_navbar_contextual_style', $conf) &&
-            ! empty($conf['bootstrap_darkroom_navbar_contextual_style'])
+        if (! empty($conf->bootstrap_darkroom_navbar_contextual_style)
         ) {
-            $this->config->navbar_contextual_style = $conf['bootstrap_darkroom_navbar_contextual_style'];
+            $this->config->navbar_contextual_style = $conf->bootstrap_darkroom_navbar_contextual_style;
         }
 
-        if (array_key_exists('bootstrap_darkroom_navbar_contextual_bg', $conf) &&
-            ! empty($conf['bootstrap_darkroom_navbar_contextual_bg'])
+        if (! empty($conf->bootstrap_darkroom_navbar_contextual_bg)
         ) {
-            $this->config->navbar_contextual_bg = $conf['bootstrap_darkroom_navbar_contextual_bg'];
+            $this->config->navbar_contextual_bg = $conf->bootstrap_darkroom_navbar_contextual_bg;
         }
 
         $template->assign('theme_config', $this->config);
@@ -137,11 +133,11 @@ readonly class ThemeController
 
         $template->assign([
             'loaded_plugins' => $GLOBALS['pwg_loaded_plugins'],
-            'meta_ref_enabled' => $conf['meta_ref'],
+            'meta_ref_enabled' => $conf->meta_ref,
         ]);
 
-        if (array_key_exists('bootstrap_darkroom_core_js_in_header', $conf)) {
-            $template->assign('bootstrap_darkroom_core_js_in_header', $conf['bootstrap_darkroom_core_js_in_header']);
+        if (! empty($conf->bootstrap_darkroom_core_js_in_header)) {
+            $template->assign('bootstrap_darkroom_core_js_in_header', $conf->bootstrap_darkroom_core_js_in_header);
         } else {
             $template->assign('bootstrap_darkroom_core_js_in_header', false);
         }
@@ -165,8 +161,8 @@ readonly class ThemeController
     ): array {
         global $conf;
 
-        if (array_key_exists('bootstrap_darkroom_ps_exif_replacements', $conf)) {
-            foreach ($conf['bootstrap_darkroom_ps_exif_replacements'] as $tag => $replacement) {
+        if (! empty($conf->bootstrap_darkroom_ps_exif_replacements)) {
+            foreach ($conf->bootstrap_darkroom_ps_exif_replacements as $tag => $replacement) {
                 if (is_array($exif) &&
                     array_key_exists($tag, $exif)
                 ) {

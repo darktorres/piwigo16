@@ -29,7 +29,7 @@ define('PHPWG_ROOT_PATH', './');
 require_once __DIR__ . '/inc/common.php';
 require_once __DIR__ . '/inc/functions_comment.php';
 
-if (! $conf['activate_comments']) {
+if (! $conf->activate_comments) {
     functions_html::page_not_found(null);
 }
 
@@ -55,16 +55,16 @@ $sort_by = [
 $items_number = [5, 10, 20, 50, 'all'];
 
 // if the default value is not in the expected values, we add it in the $items_number array
-if (! in_array($conf['comments_page_nb_comments'], $items_number)) {
+if (! in_array($conf->comments_page_nb_comments, $items_number)) {
     $items_number_new = [];
 
     $is_inserted = false;
 
     foreach ($items_number as $number) {
-        if ($number > $conf['comments_page_nb_comments'] ||
+        if ($number > $conf->comments_page_nb_comments ||
            ($number == 'all' && ! $is_inserted)
         ) {
-            $items_number_new[] = $conf['comments_page_nb_comments'];
+            $items_number_new[] = $conf->comments_page_nb_comments;
             $is_inserted = true;
         }
 
@@ -125,7 +125,7 @@ if (isset($_GET['sort_order']) &&
 
 // number of items to display
 //
-$page['items_number'] = $conf['comments_page_nb_comments'];
+$page['items_number'] = $conf->comments_page_nb_comments;
 
 if (isset($_GET['items_number'])) {
     $page['items_number'] = $_GET['items_number'];
@@ -157,7 +157,7 @@ if (isset($_GET['cat']) &&
 
 // search a particular author
 if (! empty($_GET['author'])) {
-    $page['where_clauses'][] = "(u.{$conf['user_fields']['username']} = '{$_GET['author']}' OR author = '{$_GET['author']}')";
+    $page['where_clauses'][] = "(u.{$conf->user_fields['username']} = '{$_GET['author']}' OR author = '{$_GET['author']}')";
 }
 
 // search a specific comment (if you're coming directly from an admin
@@ -374,11 +374,11 @@ $category_ids = [];
 $where_clauses = implode(' AND ', $page['where_clauses']);
 $query = <<<SQL
     SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id, com.image_id, ic.category_id, com.author, com.author_id,
-        u.{$conf['user_fields']['email']} AS user_email, com.email, com.date, com.website_url, com.content,
+        u.{$conf->user_fields['email']} AS user_email, com.email, com.date, com.website_url, com.content,
         com.validated
     FROM image_category AS ic
     INNER JOIN comments AS com ON ic.image_id = com.image_id
-    LEFT JOIN users As u ON u.{$conf['user_fields']['id']} = com.author_id
+    LEFT JOIN users As u ON u.{$conf->user_fields['id']} = com.author_id
     WHERE {$where_clauses}
     GROUP BY comment_id
     ORDER BY {$page['sort_by']} {$page['sort_order']}

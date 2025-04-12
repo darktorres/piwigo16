@@ -39,7 +39,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 
 functions_user::check_status(ACCESS_ADMINISTRATOR);
 
-$tpl_extension = $conf['extents_for_templates'] ?? [];
+$tpl_extension = $conf->extents_for_templates ?? [];
 $new_extensions = functions_admin::get_extents();
 
 /* Selective URLs keyword */
@@ -145,12 +145,12 @@ if (isset($_POST['submit'])) {
         $i++;
     }
 
-    $conf['extents_for_templates'] = serialize($replacements);
+    $conf->extents_for_templates = serialize($replacements);
     $tpl_extension = $replacements;
     /* ecrire la nouvelle conf */
     $query = <<<SQL
         UPDATE config
-        SET value = '{$conf['extents_for_templates']}'
+        SET value = '{$conf->extents_for_templates}'
         WHERE param = 'extents_for_templates';
         SQL;
 

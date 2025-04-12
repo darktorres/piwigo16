@@ -17,7 +17,7 @@ $default_conf = functions_modus::modus_get_default_config();
 
 functions::load_language('theme.lang', dirname(__FILE__) . '/../');
 
-$my_conf = $conf['modus_theme'];
+$my_conf = $conf->modus_theme;
 
 if (! isset($my_conf)) {
     $my_conf = $default_conf;

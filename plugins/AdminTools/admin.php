@@ -9,18 +9,18 @@ if (! defined('ADMINTOOLS_PATH')) {
 }
 
 if (isset($_POST['save_config'])) {
-    $conf['AdminTools'] = [
+    $conf->AdminTools = [
         'default_open' => isset($_POST['default_open']),
         'closed_position' => $_POST['closed_position'],
         'public_quick_edit' => isset($_POST['public_quick_edit']),
     ];
 
-    functions::conf_update_param('AdminTools', $conf['AdminTools']);
+    functions::conf_update_param('AdminTools', $conf->AdminTools);
     $page['infos'][] = functions::l10n('Information data registered in database');
 }
 
 $template->assign([
-    'AdminTools' => $conf['AdminTools'],
+    'AdminTools' => $conf->AdminTools,
 ]);
 
 $template->set_filename('admintools_content', realpath(ADMINTOOLS_PATH . 'template/admin.tpl'));

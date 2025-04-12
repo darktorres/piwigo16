@@ -69,8 +69,8 @@ $template->assign('register_dates', implode(',', $register_dates));
 $template->assign(
     [
         'ADMIN_PAGE_TITLE' => functions::l10n('Users'),
-        'ACTIVATE_COMMENTS' => $conf['activate_comments'],
-        'Double_Password' => $conf['double_password_type_in_admin'],
+        'ACTIVATE_COMMENTS' => $conf->activate_comments,
+        'Double_Password' => $conf->double_password_type_in_admin,
     ]
 );
 
@@ -82,12 +82,12 @@ $default_user = functions_user::get_default_user_info(true);
 
 $protected_users = [
     $user['id'],
-    $conf['guest_id'],
-    $conf['default_user_id'],
-    $conf['webmaster_id'],
+    $conf->guest_id,
+    $conf->default_user_id,
+    $conf->webmaster_id,
 ];
 
-$password_protected_users = [$conf['guest_id']];
+$password_protected_users = [$conf->guest_id];
 
 // an admin can't delete other admin/webmaster
 if ($user['status'] == 'admin') {
@@ -117,11 +117,11 @@ $template->assign(
         'association_options' => $groups,
         'protected_users' => implode(',', array_unique($protected_users)),
         'password_protected_users' => implode(',', array_unique($password_protected_users)),
-        'guest_user' => $conf['guest_id'],
+        'guest_user' => $conf->guest_id,
         'filter_group' => (isset($_GET['group']) ? $_GET['group'] : null),
         'connected_user' => $user['id'],
         'connected_user_status' => $user['status'],
-        'owner' => $conf['webmaster_id'],
+        'owner' => $conf->webmaster_id,
     ]
 );
 
@@ -147,7 +147,7 @@ $template->assign('pref_status_options', $pref_status_options);
 $template->assign('pref_status_selected', 'normal');
 
 // user level options
-foreach ($conf['available_permission_levels'] as $level) {
+foreach ($conf->available_permission_levels as $level) {
     $level_options[$level] = functions::l10n(sprintf('Level %d', $level));
 }
 
@@ -171,7 +171,7 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 
 $template->assign('groups_arr_id', implode(',', $groups_arr_id));
 $template->assign('groups_arr_name', implode(',', $groups_arr_name));
-$template->assign('guest_id', $conf['guest_id']);
+$template->assign('guest_id', $conf->guest_id);
 
 $template->assign('view_selector', functions_user::userprefs_get_param('user-manager-view', 'line'));
 

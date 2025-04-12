@@ -358,7 +358,7 @@ final class functions_plugins
         global $conf, $pwg_loaded_plugins;
         $pwg_loaded_plugins = [];
 
-        if ($conf['enable_plugins']) {
+        if ($conf->enable_plugins) {
             $plugins = self::get_db_plugins('active');
 
             foreach ($plugins as $plugin) { // include main from a function to avoid using same function context

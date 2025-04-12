@@ -108,14 +108,14 @@ function add_core_tabs(
                 'url' => $link_start . 'cat_options&amp;section=visible',
             ];
 
-            if ($conf['activate_comments']) {
+            if ($conf->activate_comments) {
                 $sheets['comments'] = [
                     'caption' => '<span class="icon-chat"></span>' . functions::l10n('Comments'),
                     'url' => $link_start . 'cat_options&amp;section=comments',
                 ];
             }
 
-            if ($conf['allow_random_representative']) {
+            if ($conf->allow_random_representative) {
                 $sheets['representative'] = [
                     'caption' => functions::l10n('Representative'),
                     'url' => $link_start . 'cat_options&amp;section=representative',
@@ -208,7 +208,7 @@ function add_core_tabs(
                 'url' => $my_base_url . '&amp;tab=installed',
             ];
 
-            if ($conf['enable_extensions_install']) {
+            if ($conf->enable_extensions_install) {
                 $sheets['update'] = [
                     'caption' => '<span class="icon-arrows-cw"></span>' . functions::l10n('Check for updates'),
                     'url' => $my_base_url . '&amp;tab=update',
@@ -256,7 +256,7 @@ function add_core_tabs(
                 'url' => $admin_photo_base_url . '-coi',
             ];
 
-            if ($conf['enable_formats']) {
+            if ($conf->enable_formats) {
                 $sheets['formats'] = [
                     'caption' => '<span class="icon-docs"></span>' . functions::l10n('Formats'),
                     'url' => $admin_photo_base_url . '-formats',
@@ -275,7 +275,7 @@ function add_core_tabs(
                 'url' => PHOTOS_ADD_BASE_URL . '&amp;section=applications',
             ];
 
-            if ($conf['enable_synchronization']) {
+            if ($conf->enable_synchronization) {
                 $sheets['ftp'] = [
                     'caption' => '<span class="icon-exchange"></span>' . functions::l10n('FTP + Synchronization'),
                     'url' => PHOTOS_ADD_BASE_URL . '&amp;section=ftp',
@@ -291,7 +291,7 @@ function add_core_tabs(
                 'url' => $my_base_url . '&amp;tab=installed',
             ];
 
-            if ($conf['enable_extensions_install']) {
+            if ($conf->enable_extensions_install) {
                 $sheets['update'] = [
                     'caption' => '<span class="icon-arrows-cw"></span>' . functions::l10n('Check for updates'),
                     'url' => $my_base_url . '&amp;tab=update',
@@ -322,7 +322,7 @@ function add_core_tabs(
                 'url' => $my_base_url . '&amp;tab=installed',
             ];
 
-            if ($conf['enable_extensions_install']) {
+            if ($conf->enable_extensions_install) {
                 $sheets['update'] = [
                     'caption' => '<span class="icon-arrows-cw"></span>' . functions::l10n('Check for updates'),
                     'url' => $my_base_url . '&amp;tab=update',
@@ -338,14 +338,14 @@ function add_core_tabs(
         case 'updates':
             global $my_base_url;
 
-            if ($conf['enable_core_update']) {
+            if ($conf->enable_core_update) {
                 $sheets['pwg'] = [
                     'caption' => functions::l10n('Piwigo core'),
                     'url' => $my_base_url,
                 ];
             }
 
-            if ($conf['enable_extensions_install']) {
+            if ($conf->enable_extensions_install) {
                 $sheets['ext'] = [
                     'caption' => functions::l10n('Extensions'),
                     'url' => $my_base_url . '&amp;tab=ext',

@@ -17,7 +17,7 @@ global $template, $conf, $page;
 
 functions::load_language('plugin.lang', GDTHUMB_PATH);
 require dirname(__FILE__) . '/config_default.php';
-$params = $conf['gdThumb'];
+$params = $conf->gdThumb;
 
 if (isset($_GET['getMissingDerivative'])) {
     list($max_id, $image_count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT MAX(id) + 1, COUNT(*) FROM images;'));
@@ -30,9 +30,9 @@ if (isset($_GET['getMissingDerivative'])) {
 
     $uid = '&b=' . time();
     global $conf;
-    $conf['question_mark_in_urls'] = true;
-    $conf['php_extension_in_urls'] = true;
-    $conf['derivative_url_style'] = 2; //script
+    $conf->question_mark_in_urls = true;
+    $conf->php_extension_in_urls = true;
+    $conf->derivative_url_style = 2; //script
 
     $qlimit = min(5000, ceil(max($image_count / 500, $max_urls)));
 
@@ -187,10 +187,10 @@ if (isset($_POST['submit'])) {
         array_push($page['errors'], functions::l10n('Number of photos per page must be an integer'));
     }
 
-    if ($params['height'] != $conf['gdThumb']['height']) {
-        functions_GDThumb::delete_gdthumb_cache($conf['gdThumb']['height']);
-    } elseif ($params['margin'] != $conf['gdThumb']['margin']) {
-        functions_GDThumb::delete_gdthumb_cache($conf['gdThumb']['height'] * 2 + $conf['gdThumb']['margin']);
+    if ($params['height'] != $conf->gdThumb['height']) {
+        functions_GDThumb::delete_gdthumb_cache($conf->gdThumb['height']);
+    } elseif ($params['margin'] != $conf->gdThumb['margin']) {
+        functions_GDThumb::delete_gdthumb_cache($conf->gdThumb['height'] * 2 + $conf->gdThumb['margin']);
     }
 
     if (empty($page['errors'])) {

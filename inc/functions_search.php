@@ -445,7 +445,7 @@ final class functions_search
 
             $query .= <<<SQL
                 {$forbidden}
-                {$conf['order_by']};
+                {$conf->order_by};
                 SQL;
             $items = functions_mysqli::query2array($query, null, 'id');
 
@@ -808,7 +808,7 @@ final class functions_search
             $token = $expr->stokens[$i];
 
             if (! empty($cat_ids)) {
-                if ($conf['quick_search_include_sub_albums']) {
+                if ($conf->quick_search_include_sub_albums) {
                     $subcatIdsList = implode(', ', functions_category::get_subcat_ids($cat_ids));
                     $query = <<<SQL
                         SELECT id
@@ -946,7 +946,7 @@ final class functions_search
 
         $cache_key = $persistent_cache->make_key([
             strtolower($q),
-            $conf['order_by'],
+            $conf->order_by,
             $user['id'], $user['cache_update_time'],
             isset($options['permissions']) ? (bool) $options['permissions'] : true,
             isset($options['images_where']) ? $options['images_where'] : '',
@@ -1002,7 +1002,7 @@ final class functions_search
         $createdDateAliases = ['taken', 'shot'];
         $postedDateAliases = ['added'];
 
-        if ($conf['calendar_datefield'] == 'date_creation') {
+        if ($conf->calendar_datefield == 'date_creation') {
             $createdDateAliases[] = 'date';
         } else {
             $postedDateAliases[] = 'date';
@@ -1123,7 +1123,7 @@ final class functions_search
 
         $query .= <<<SQL
             WHERE {$whereClauses}
-            {$conf['order_by']};
+            {$conf->order_by};
             SQL;
 
         $ids = functions_mysqli::query2array($query, null, 'id');

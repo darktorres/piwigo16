@@ -508,7 +508,7 @@ if (isset($_GET['slideshow'])) {
 }
 
 if ($page['slideshow'] &&
-    $conf['light_slideshow']
+    $conf->light_slideshow
 ) {
     $template->set_filenames([
         'slideshow' => 'slideshow.tpl',
@@ -531,7 +531,7 @@ $url_metadata = functions_url::add_url_params($url_metadata, [
 // do we have a plugin that can show metadata for something else than images?
 $metadata_showable = functions_plugins::trigger_change(
     'get_element_metadata_available',
-    ($conf['show_exif'] || $conf['show_iptc']) && ! $picture['current']['src_image']->is_mimetype(),
+    ($conf->show_exif || $conf->show_iptc) && ! $picture['current']['src_image']->is_mimetype(),
     $picture['current']
 );
 
@@ -569,7 +569,7 @@ foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
     }
 }
 
-if ($conf['picture_download_icon'] &&
+if ($conf->picture_download_icon &&
     ! empty($picture['current']['download_url']) &&
     $user['enabled_high'] == 'true'
 ) {
@@ -577,7 +577,7 @@ if ($conf['picture_download_icon'] &&
         'U_DOWNLOAD' => $picture['current']['download_url'],
     ], true);
 
-    if ($conf['enable_formats']) {
+    if ($conf->enable_formats) {
         $query = <<<SQL
             SELECT *
             FROM image_format
@@ -651,7 +651,7 @@ if ($page['slideshow']) {
     }
 
     foreach (['dec', 'inc'] as $op) {
-        $new_period = $slideshow_params['period'] + (($op == 'dec') ? -1 : 1) * $conf['slideshow_period_step'];
+        $new_period = $slideshow_params['period'] + (($op == 'dec') ? -1 : 1) * $conf->slideshow_period_step;
         $new_slideshow_params =
           functions_picture::correct_slideshow_params(
               array_merge(
@@ -676,7 +676,7 @@ if ($page['slideshow']) {
 
     $template->assign('slideshow', $tpl_slideshow);
 
-} elseif ($conf['picture_slideshow_icon']) {
+} elseif ($conf->picture_slideshow_icon) {
     $template->assign(
         [
             'U_SLIDESHOW_START' =>
@@ -696,15 +696,15 @@ $template->assign(
         'PHOTO' => $title_nb,
         'IS_HOME' => ($page['section'] == 'categories' && ! isset($page['category'])),
 
-        'LEVEL_SEPARATOR' => $conf['level_separator'],
+        'LEVEL_SEPARATOR' => $conf->level_separator,
 
         'U_UP' => $url_up,
-        'DISPLAY_NAV_BUTTONS' => $conf['picture_navigation_icons'],
-        'DISPLAY_NAV_THUMB' => $conf['picture_navigation_thumb'],
+        'DISPLAY_NAV_BUTTONS' => $conf->picture_navigation_icons,
+        'DISPLAY_NAV_THUMB' => $conf->picture_navigation_thumb,
     ]
 );
 
-if ($conf['picture_metadata_icon']) {
+if ($conf->picture_metadata_icon) {
     $template->assign('U_METADATA', $url_metadata);
 }
 
@@ -713,7 +713,7 @@ if ($conf['picture_metadata_icon']) {
 // admin links
 if (functions_user::is_admin()) {
     if (isset($page['category']) &&
-        $conf['picture_representative_icon']
+        $conf->picture_representative_icon
     ) {
         $template->assign(
             [
@@ -727,12 +727,12 @@ if (functions_user::is_admin()) {
         );
     }
 
-    if ($conf['picture_edit_icon']) {
+    if ($conf->picture_edit_icon) {
         $url_admin = functions_url::get_root_url() . 'admin.php?page=photo-' . $page['image_id'] . (isset($page['category']) ? '&amp;cat_id=' . $page['category']['id'] : '');
         $template->assign('U_PHOTO_ADMIN', $url_admin);
     }
 
-    if ($conf['picture_caddie_icon']) {
+    if ($conf->picture_caddie_icon) {
         $template->assign(
             'U_CADDIE',
             functions_url::add_url_params($url_self, [
@@ -746,7 +746,7 @@ if (functions_user::is_admin()) {
 
 // favorite manipulation
 if (! functions_user::is_a_guest() &&
-    $conf['picture_favorite_icon']
+    $conf->picture_favorite_icon
 ) {
     // verify if the picture is already in the favorite of the user
     $query = <<<SQL
@@ -840,7 +840,7 @@ $infos['INFO_VISITS'] = $picture['current']['hit'];
 $infos['INFO_FILE'] = $picture['current']['file'];
 
 $template->assign($infos);
-$template->assign('display_info', $conf['picture_information']);
+$template->assign('display_info', $conf->picture_information);
 
 // related tags
 $tags = functions_tag::get_common_tags([$page['image_id']], -1);
@@ -921,7 +921,7 @@ if (isset($picture['next']) &&
 ) {
     $template->assign(
         'U_PREFETCH',
-        $picture['next']['derivatives'][functions_session::pwg_get_session_var('picture_deriv', $conf['derivative_default_size'])]->get_url()
+        $picture['next']['derivatives'][functions_session::pwg_get_session_var('picture_deriv', $conf->derivative_default_size)]->get_url()
     );
 }
 
@@ -941,7 +941,7 @@ $template->assign(
 
 require __DIR__ . '/inc/picture_rate.php';
 
-if ($conf['activate_comments']) {
+if ($conf->activate_comments) {
     require __DIR__ . '/inc/picture_comment.php';
 }
 
@@ -954,7 +954,7 @@ if ($metadata_showable &&
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
 
-if ($conf['picture_menu'] &&
+if ($conf->picture_menu &&
    (! isset($themeconf['hide_menu_on']) || ! in_array('thePicturePage', $themeconf['hide_menu_on']))
 ) {
     if (! isset($page['start'])) {
@@ -969,7 +969,7 @@ functions_plugins::trigger_notify('loc_end_picture');
 functions_html::flush_page_messages();
 
 if ($page['slideshow'] &&
-    $conf['light_slideshow']
+    $conf->light_slideshow
 ) {
     $template->pparse('slideshow');
 } else {

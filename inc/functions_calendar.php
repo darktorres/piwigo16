@@ -249,7 +249,7 @@ final class functions_calendar
 
         if ($must_show_list) {
             if (isset($page['super_order_by'])) {
-                $order_by = $conf['order_by'];
+                $order_by = $conf->order_by;
             } else {
                 if (count($page['chronology_date']) == 0 ||
                     in_array('any', $page['chronology_date'])
@@ -262,7 +262,7 @@ final class functions_calendar
                 $order_by = str_replace(
                     'ORDER BY ',
                     'ORDER BY ' . $calendar->date_field . $order,
-                    $conf['order_by']
+                    $conf->order_by
                 );
             }
 

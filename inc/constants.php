@@ -18,14 +18,14 @@ define('PHPWG_DEFAULT_LANGUAGE', 'en_UK');
 // default value (see file install/piwigo_structure-mysql.sql)
 define('PHPWG_DEFAULT_TEMPLATE', 'modus');
 
-define('PHPWG_THEMES_PATH', $conf['themes_dir'] . '/');
+define('PHPWG_THEMES_PATH', $conf->themes_dir . '/');
 
 if (! defined('PWG_COMBINED_DIR')) {
-    define('PWG_COMBINED_DIR', $conf['data_location'] . 'combined/');
+    define('PWG_COMBINED_DIR', $conf->data_location . 'combined/');
 }
 
 if (! defined('PWG_DERIVATIVE_DIR')) {
-    define('PWG_DERIVATIVE_DIR', $conf['data_location'] . 'i/');
+    define('PWG_DERIVATIVE_DIR', $conf->data_location . 'i/');
 }
 
 // Required versions

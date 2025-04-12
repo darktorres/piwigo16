@@ -63,12 +63,12 @@ final class pwg_users
 
         if (! empty($params['user_id'])) {
             $user_ids = implode(', ', $params['user_id']);
-            $where_clauses[] = "u.{$conf['user_fields']['id']} IN ({$user_ids})";
+            $where_clauses[] = "u.{$conf->user_fields['id']} IN ({$user_ids})";
         }
 
         if (! empty($params['username'])) {
             $escaped_username = functions_mysqli::pwg_db_real_escape_string($params['username']);
-            $where_clauses[] = "u.{$conf['user_fields']['username']} LIKE '{$escaped_username}'"; // TODO: why no wildcard? this is the same as comparing with =
+            $where_clauses[] = "u.{$conf->user_fields['username']} LIKE '{$escaped_username}'"; // TODO: why no wildcard? this is the same as comparing with =
         }
 
         $filtered_groups = [];
@@ -82,7 +82,7 @@ final class pwg_users
             }
 
             $escaped_filter = functions_mysqli::pwg_db_real_escape_string($params['filter']);
-            $filter_where_clause = "(u.{$conf['user_fields']['username']} LIKE '%{$escaped_filter}%' OR u.{$conf['user_fields']['email']} LIKE '%{$escaped_filter}%'";
+            $filter_where_clause = "(u.{$conf->user_fields['username']} LIKE '%{$escaped_filter}%' OR u.{$conf->user_fields['email']} LIKE '%{$escaped_filter}%'";
 
             if (! empty($filtered_groups)) {
                 $filter_where_clause .= 'OR ug.group_id IN (' . implode(', ', $filtered_groups) . ')';
@@ -118,7 +118,7 @@ final class pwg_users
         }
 
         if (! empty($params['min_level'])) {
-            if (! in_array($params['min_level'], $conf['available_permission_levels'])) {
+            if (! in_array($params['min_level'], $conf->available_permission_levels)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
             }
 
@@ -126,7 +126,7 @@ final class pwg_users
         }
 
         if (! empty($params['max_level'])) {
-            if (! in_array($params['max_level'], $conf['available_permission_levels'])) {
+            if (! in_array($params['max_level'], $conf->available_permission_levels)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
             }
 
@@ -138,11 +138,11 @@ final class pwg_users
         }
 
         if (! empty($params['exclude'])) {
-            $where_clauses[] = 'u.' . $conf['user_fields']['id'] . ' NOT IN (' . implode(', ', $params['exclude']) . ')';
+            $where_clauses[] = 'u.' . $conf->user_fields['id'] . ' NOT IN (' . implode(', ', $params['exclude']) . ')';
         }
 
         $display = [
-            'u.' . $conf['user_fields']['id'] => 'id',
+            'u.' . $conf->user_fields['id'] => 'id',
         ];
 
         if ($params['display'] != 'none') {
@@ -183,11 +183,11 @@ final class pwg_users
             }
 
             if (isset($params['display']['username'])) {
-                $display['u.' . $conf['user_fields']['username']] = 'username';
+                $display['u.' . $conf->user_fields['username']] = 'username';
             }
 
             if (isset($params['display']['email'])) {
-                $display['u.' . $conf['user_fields']['email']] = 'email';
+                $display['u.' . $conf->user_fields['email']] = 'email';
             }
 
             $ui_fields = [
@@ -240,8 +240,8 @@ final class pwg_users
         $query .= <<<SQL
 
             FROM users AS u
-            INNER JOIN user_infos AS ui ON u.{$conf['user_fields']['id']} = ui.user_id
-            LEFT JOIN user_group AS ug ON u.{$conf['user_fields']['id']} = ug.user_id
+            INNER JOIN user_infos AS ui ON u.{$conf->user_fields['id']} = ui.user_id
+            LEFT JOIN user_group AS ug ON u.{$conf->user_fields['id']} = ug.user_id
             WHERE {$whereClause}
             ORDER BY {$params['order']}
 
@@ -383,7 +383,7 @@ final class pwg_users
 
         global $conf;
 
-        if ($conf['double_password_type_in_admin']) {
+        if ($conf->double_password_type_in_admin) {
             if ($params['password'] != $params['password_confirm']) {
                 return new PwgError(WS_ERR_INVALID_PARAM, functions::l10n('The passwords do not match'));
             }
@@ -453,9 +453,9 @@ final class pwg_users
 
         $protected_users = [
             $user['id'],
-            $conf['guest_id'],
-            $conf['default_user_id'],
-            $conf['webmaster_id'],
+            $conf->guest_id,
+            $conf->default_user_id,
+            $conf->webmaster_id,
         ];
 
         // an admin can't delete other admin/webmaster
@@ -544,7 +544,7 @@ final class pwg_users
                     return new PwgError(WS_ERR_INVALID_PARAM, functions::l10n('html tags are not allowed in login'));
                 }
 
-                $updates[$conf['user_fields']['username']] = $params['username'];
+                $updates[$conf->user_fields['username']] = $params['username'];
             }
 
             if (! empty($params['email'])) {
@@ -554,12 +554,12 @@ final class pwg_users
                     return new PwgError(WS_ERR_INVALID_PARAM, $error);
                 }
 
-                $updates[$conf['user_fields']['email']] = $params['email'];
+                $updates[$conf->user_fields['email']] = $params['email'];
             }
 
             if (! empty($params['password'])) {
                 if (! functions_user::is_webmaster()) {
-                    $password_protected_users = [$conf['guest_id']];
+                    $password_protected_users = [$conf->guest_id];
 
                     $query = <<<SQL
                         SELECT user_id
@@ -576,7 +576,7 @@ final class pwg_users
                     }
                 }
 
-                $updates[$conf['user_fields']['password']] = $conf['password_hash']($params['password']);
+                $updates[$conf->user_fields['password']] = ($conf->password_hash)($params['password']);
             }
         }
 
@@ -593,8 +593,8 @@ final class pwg_users
 
             $protected_users = [
                 $user['id'],
-                $conf['guest_id'],
-                $conf['webmaster_id'],
+                $conf->guest_id,
+                $conf->webmaster_id,
             ];
 
             // an admin can't change status of other admin/webmaster
@@ -617,7 +617,7 @@ final class pwg_users
         if (! empty($params['level']) ||
             $params['level'] === 0
         ) {
-            if (! in_array($params['level'], $conf['available_permission_levels'])) {
+            if (! in_array($params['level'], $conf->available_permission_levels)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
             }
 
@@ -679,15 +679,15 @@ final class pwg_users
             'users',
             $updates,
             [
-                $conf['user_fields']['id'] => $params['user_id'][0],
+                $conf->user_fields['id'] => $params['user_id'][0],
             ]
         );
 
-        if (isset($updates[$conf['user_fields']['password']])) {
+        if (isset($updates[$conf->user_fields['password']])) {
             functions_user::deactivate_user_auth_keys($params['user_id'][0]);
         }
 
-        if (isset($updates[$conf['user_fields']['email']])) {
+        if (isset($updates[$conf->user_fields['email']])) {
             functions_user::deactivate_password_reset_key($params['user_id'][0]);
         }
 
@@ -917,7 +917,7 @@ final class pwg_users
         functions_user::check_user_favorites();
 
         $order_by = ws_functions::ws_std_image_sql_order($params, 'i.');
-        $order_by = empty($order_by) ? $conf['order_by'] : 'ORDER BY ' . $order_by;
+        $order_by = empty($order_by) ? $conf->order_by : 'ORDER BY ' . $order_by;
 
         $sql_condition = functions_user::get_sql_condition_FandF(
             [

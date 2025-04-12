@@ -42,10 +42,10 @@ class MultiView
                 'view_as' => 0,
                 'theme' => '',
                 'lang' => '',
-                'show_queries' => $conf['show_queries'],
-                'debug_l10n' => $conf['debug_l10n'],
-                'debug_template' => $conf['debug_template'],
-                'template_combine_files' => $conf['template_combine_files'],
+                'show_queries' => $conf->show_queries,
+                'debug_l10n' => $conf->debug_l10n,
+                'debug_template' => $conf->debug_template,
+                'template_combine_files' => $conf->template_combine_files,
                 'no_history' => false,
             ],
             functions_session::pwg_get_session_var('multiview', [])
@@ -144,7 +144,7 @@ class MultiView
                 $this->data['show_queries'] = (bool) $_GET['ato_show_queries'];
             }
 
-            $conf['show_queries'] = $this->data['show_queries'];
+            $conf->show_queries = $this->data['show_queries'];
 
             if ($this->data['view_as'] == 0) {
                 $this->data['view_as'] = $user['id'];
@@ -194,21 +194,21 @@ class MultiView
                 $this->data['debug_l10n'] = (bool) $_GET['ato_debug_l10n'];
             }
 
-            $conf['debug_l10n'] = $this->data['debug_l10n'];
+            $conf->debug_l10n = $this->data['debug_l10n'];
 
             // debug_template
             if (isset($_GET['ato_debug_template'])) {
                 $this->data['debug_template'] = (bool) $_GET['ato_debug_template'];
             }
 
-            $conf['debug_template'] = $this->data['debug_template'];
+            $conf->debug_template = $this->data['debug_template'];
 
             // template_combine_files
             if (isset($_GET['ato_template_combine_files'])) {
                 $this->data['template_combine_files'] = (bool) $_GET['ato_template_combine_files'];
             }
 
-            $conf['template_combine_files'] = $this->data['template_combine_files'];
+            $conf->template_combine_files = $this->data['template_combine_files'];
 
             // no_history
             if (isset($_GET['ato_no_history'])) {
@@ -296,10 +296,10 @@ class MultiView
 
         // get users
         $query = <<<SQL
-            SELECT {$conf['user_fields']['id']} AS id, {$conf['user_fields']['username']} AS username, status
+            SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['username']} AS username, status
             FROM users AS u
-            INNER JOIN user_infos AS i ON {$conf['user_fields']['id']} = user_id
-            ORDER BY CONVERT({$conf['user_fields']['username']}, CHAR);
+            INNER JOIN user_infos AS i ON {$conf->user_fields['id']} = user_id
+            ORDER BY CONVERT({$conf->user_fields['username']}, CHAR);
             SQL;
         $out['users'] = functions_mysqli::query2array($query);
 

@@ -39,7 +39,7 @@ $sql_conditions = functions_user::get_sql_condition_FandF(
     'WHERE'
 );
 $db_random_function = functions_mysqli::DB_RANDOM_FUNCTION;
-$limit_value = min(50, $conf['top_number'], $user['nb_image_page']);
+$limit_value = min(50, $conf->top_number, $user['nb_image_page']);
 
 $query = <<<SQL
     SELECT id

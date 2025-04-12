@@ -134,7 +134,7 @@ final class functions_category
                 ]
             );
 
-            if ($conf['index_new_icon']) {
+            if ($conf->index_new_icon) {
                 $row['icon_ts'] = functions::get_icon($row['max_date_last'], $child_date_last);
             }
 
@@ -230,8 +230,8 @@ final class functions_category
             [functions::l10n('Date created, old &rarr; new'),   'date_creation ASC',    true],
             [functions::l10n('Date posted, new &rarr; old'),    'date_available DESC',  true],
             [functions::l10n('Date posted, old &rarr; new'),    'date_available ASC',   true],
-            [functions::l10n('Rating score, high &rarr; low'),  'rating_score DESC',    $conf['rate']],
-            [functions::l10n('Rating score, low &rarr; high'),  'rating_score ASC',     $conf['rate']],
+            [functions::l10n('Rating score, high &rarr; low'),  'rating_score DESC',    $conf->rate],
+            [functions::l10n('Rating score, low &rarr; high'),  'rating_score ASC',     $conf->rate],
             [functions::l10n('Visits, high &rarr; low'),        'hit DESC',             true],
             [functions::l10n('Visits, low &rarr; high'),        'hit ASC',              true],
             [functions::l10n('Permissions'),                    'level DESC',           functions_user::is_admin()],
@@ -680,7 +680,7 @@ final class functions_category
                 SQL;
         }
 
-        $query .= "\n" . (empty($order_by) ? $conf['order_by'] : $order_by);
+        $query .= "\n" . (empty($order_by) ? $conf->order_by : $order_by);
 
         return functions_mysqli::query2array($query, null, 'id');
     }
@@ -759,7 +759,7 @@ final class functions_category
     ): array {
         global $page, $conf;
 
-        $common_cats = self::get_common_categories($items, $conf['related_albums_display_limit'], $excluded_cat_ids);
+        $common_cats = self::get_common_categories($items, $conf->related_albums_display_limit, $excluded_cat_ids);
         // echo '<pre>'; print_r($common_cats); echo '</pre>';
 
         if (count($common_cats) == 0) {

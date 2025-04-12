@@ -18,7 +18,7 @@ define('IN_WS', true);
 require_once __DIR__ . '/inc/common.php';
 functions_user::check_status(ACCESS_FREE);
 
-if (! $conf['allow_web_services']) {
+if (! $conf->allow_web_services) {
     functions_html::page_forbidden('Web services are disabled');
 }
 

@@ -23,7 +23,7 @@ functions_plugins::trigger_notify('loc_begin_page_tail');
 
 $template->assign(
     [
-        'VERSION' => $conf['show_version'] ? PHPWG_VERSION : '',
+        'VERSION' => $conf->show_version ? PHPWG_VERSION : '',
         'PHPWG_URL' => defined('PHPWG_URL') ? str_replace('http:', 'https:', PHPWG_URL) : '',
     ]
 );
@@ -38,11 +38,11 @@ if (! functions_user::is_a_guest()) {
 }
 
 //--------------------------------------------------------- update notification
-// if ($conf['update_notify_check_period'] > 0) {
+// if ($conf->update_notify_check_period > 0) {
 //     $check_for_updates = false;
 
-//     if (isset($conf['update_notify_last_check'])) {
-//         if (strtotime($conf['update_notify_last_check']) < strtotime($conf['update_notify_check_period'] . ' seconds ago')) {
+//     if (isset($conf->update_notify_last_check)) {
+//         if (strtotime($conf->update_notify_last_check) < strtotime($conf->update_notify_check_period . ' seconds ago')) {
 //             $check_for_updates = true;
 //         }
 //     } else {
@@ -58,13 +58,13 @@ if (! functions_user::is_a_guest()) {
 //------------------------------------------------------------- generation time
 $debug_vars = [];
 
-if ($conf['show_queries']) {
+if ($conf->show_queries) {
     $debug_vars = array_merge($debug_vars, [
         'QUERIES_LIST' => $debug,
     ]);
 }
 
-if ($conf['show_gt']) {
+if ($conf->show_gt) {
     if (! isset($page['count_queries'])) {
         $page['count_queries'] = 0;
         $page['queries_time'] = 0;
@@ -85,7 +85,7 @@ if ($conf['show_gt']) {
 $template->assign('debug', $debug_vars);
 
 //------------------------------------------------------------- mobile version
-if (! empty($conf['mobile_theme']) &&
+if (! empty($conf->mobile_theme) &&
    (functions::get_device() != 'desktop' || functions::mobile_theme())
 ) {
     $template->assign(

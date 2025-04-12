@@ -65,11 +65,11 @@ if (isset($_POST['submit'])) {
 
     functions_admin::delete_element_derivatives($row, derivative_std_params::IMG_CUSTOM);
     $uid = '&b=' . time();
-    $conf['question_mark_in_urls'] = true;
-    $conf['php_extension_in_urls'] = true;
+    $conf->question_mark_in_urls = true;
+    $conf->php_extension_in_urls = true;
 
-    if ($conf['derivative_url_style'] == 1) {
-        $conf['derivative_url_style'] = 0; //auto
+    if ($conf->derivative_url_style == 1) {
+        $conf->derivative_url_style = 0; //auto
     }
 } else {
     $uid = '';

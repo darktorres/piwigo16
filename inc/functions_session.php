@@ -14,18 +14,18 @@ namespace Piwigo\inc;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Random\RandomException;
 
-if (isset($conf['session_save_handler']) &&
-    $conf['session_save_handler'] == 'db' &&
+if (isset($conf->session_save_handler) &&
+    $conf->session_save_handler == 'db' &&
     defined('PHPWG_INSTALLED')
 ) {
     session_set_save_handler(new PwgSessionHandler(), true);
 
-    ini_set('session.use_cookies', $conf['session_use_cookies']);
-    ini_set('session.use_only_cookies', $conf['session_use_only_cookies']);
-    ini_set('session.use_trans_sid', intval($conf['session_use_trans_sid']));
+    ini_set('session.use_cookies', $conf->session_use_cookies);
+    ini_set('session.use_only_cookies', $conf->session_use_only_cookies);
+    ini_set('session.use_trans_sid', intval($conf->session_use_trans_sid));
     ini_set('session.cookie_httponly', 1);
 
-    session_name($conf['session_name']);
+    session_name($conf->session_name);
     session_set_cookie_params(0, functions_cookie::cookie_path());
     register_shutdown_function('session_write_close');
 }
@@ -79,7 +79,7 @@ final class functions_session
     {
         global $conf;
 
-        if (! $conf['session_use_ip_address']) {
+        if (! $conf->session_use_ip_address) {
             return '';
         }
 
@@ -158,7 +158,7 @@ final class functions_session
         $expiration_ts = functions_mysqli::pwg_db_date_to_ts('expiration');
         $query = <<<SQL
             DELETE FROM sessions
-            WHERE {$now_ts} - {$expiration_ts} > {$conf['session_length']};
+            WHERE {$now_ts} - {$expiration_ts} > {$conf->session_length};
             SQL;
 
         $result = functions_mysqli::pwg_query($query);

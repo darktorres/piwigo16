@@ -34,7 +34,7 @@ if (isset($_GET['f_min_rates'])) {
     $filter_min_rates = (int) $_GET['f_min_rates'];
 }
 
-$consensus_top_number = $conf['top_number'];
+$consensus_top_number = $conf->top_number;
 
 if (isset($_GET['consensus_top_number'])) {
     $consensus_top_number = (int) $_GET['consensus_top_number'];
@@ -43,9 +43,9 @@ if (isset($_GET['consensus_top_number'])) {
 // build users
 global $conf;
 $query = <<<SQL
-    SELECT DISTINCT u.{$conf['user_fields']['id']} AS id, u.{$conf['user_fields']['username']} AS name, ui.status
+    SELECT DISTINCT u.{$conf->user_fields['id']} AS id, u.{$conf->user_fields['username']} AS name, ui.status
     FROM users AS u
-    INNER JOIN user_infos AS ui ON u.{$conf['user_fields']['id']} = ui.user_id;
+    INNER JOIN user_infos AS ui ON u.{$conf->user_fields['id']} = ui.user_id;
     SQL;
 
 $users_by_id = [];
@@ -62,7 +62,7 @@ $by_user_rating_model = [
     'rates' => [],
 ];
 
-foreach ($conf['rate_items'] as $rate) {
+foreach ($conf->rate_items as $rate) {
     $by_user_rating_model['rates'][$rate] = [];
 }
 
@@ -246,7 +246,7 @@ $template->assign([
     'F_ACTION' => functions_url::get_root_url() . 'admin.php',
     'F_MIN_RATES' => $filter_min_rates,
     'CONSENSUS_TOP_NUMBER' => $consensus_top_number,
-    'available_rates' => $conf['rate_items'],
+    'available_rates' => $conf->rate_items,
     'ratings' => $by_user_ratings,
     'image_urls' => $image_urls,
     'TN_WIDTH' => ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE)->sizing->ideal_size[0],

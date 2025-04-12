@@ -126,7 +126,7 @@ $template->assign(
     ]
 );
 
-if ($conf['activate_comments']) {
+if ($conf->activate_comments) {
     $template->assign('CAT_COMMENTABLE', functions_mysqli::boolean_to_string($category['commentable']));
 }
 
@@ -255,7 +255,7 @@ if (! $category['is_virtual']) {
     $template->assign('CAT_DIR_NAME', basename($category_full_dir));
     $template->assign('CAT_MIN_DIR', functions_admin::get_min_local_dir($category_full_dir));
 
-    if ($conf['enable_synchronization']) {
+    if ($conf->enable_synchronization) {
         $template->assign(
             'U_SYNC',
             $base_url . 'site_update&amp;site=' . $category['site_id'] . '&amp;cat_id=' . $category['id']
@@ -281,7 +281,7 @@ if ($category['has_images'] ||
 
     // can the admin delete the current representative ?
     if (($category['has_images'] &&
-         $conf['allow_random_representative']) ||
+         $conf->allow_random_representative) ||
         (! $category['has_images'] && ! empty($category['representative_picture_id']))
     ) {
         $tpl_representative['ALLOW_DELETE'] = true;

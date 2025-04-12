@@ -108,7 +108,7 @@ switch ($action) {
         $sessions = functions_mysqli::query2array($query);
 
         $query = <<<SQL
-            SELECT {$conf['user_fields']['id']} AS id
+            SELECT {$conf->user_fields['id']} AS id
             FROM users;
             SQL;
         $all_user_ids = functions_mysqli::query2array($query, 'id', null);
@@ -265,8 +265,8 @@ $template->assign(
         'U_PHPINFO' => sprintf($url_format, 'phpinfo'),
         'PHP_DATATIME' => $php_current_timestamp,
         'DB_DATATIME' => $db_current_date,
-        'cache_sizes' => $conf['cache_sizes'] ?? null,
-        'time_elapsed_since_last_calc' => (isset($conf['cache_sizes'])) ? functions::time_since($conf['cache_sizes'][3]['value'], 'year') : null,
+        'cache_sizes' => $conf->cache_sizes ?? null,
+        'time_elapsed_since_last_calc' => (isset($conf->cache_sizes)) ? functions::time_since($conf->cache_sizes[3]['value'], 'year') : null,
     ]
 );
 
@@ -286,7 +286,7 @@ switch (pwg_image::get_library()) {
 
     case 'ext_imagick':
         $library = 'External ImageMagick';
-        exec($conf['ext_imagick_dir'] . 'convert -version', $returnarray);
+        exec($conf->ext_imagick_dir . 'convert -version', $returnarray);
 
         if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
             $library .= ' ' . $match[1];
@@ -306,7 +306,7 @@ switch (pwg_image::get_library()) {
         break;
 }
 
-if ($conf['gallery_locked']) {
+if ($conf->gallery_locked) {
     $template->assign(
         [
             'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

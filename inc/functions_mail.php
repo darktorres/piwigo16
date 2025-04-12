@@ -29,7 +29,7 @@ final class functions_mail
     {
         global $conf;
 
-        return empty($conf['mail_sender_name']) ? $conf['gallery_title'] : $conf['mail_sender_name'];
+        return empty($conf->mail_sender_name) ? $conf->gallery_title : $conf->mail_sender_name;
     }
 
     /**
@@ -39,7 +39,7 @@ final class functions_mail
     {
         global $conf;
 
-        return empty($conf['mail_sender_email']) ? functions::get_webmaster_mail_address() : $conf['mail_sender_email'];
+        return empty($conf->mail_sender_email) ? functions::get_webmaster_mail_address() : $conf->mail_sender_email;
     }
 
     /**
@@ -59,14 +59,14 @@ final class functions_mail
         global $conf;
 
         $conf_mail = [
-            'send_bcc_mail_webmaster' => $conf['send_bcc_mail_webmaster'],
-            'mail_allow_html' => $conf['mail_allow_html'],
-            'mail_theme' => $conf['mail_theme'],
-            'use_smtp' => ! empty($conf['smtp_host']),
-            'smtp_host' => $conf['smtp_host'],
-            'smtp_user' => $conf['smtp_user'],
-            'smtp_password' => $conf['smtp_password'],
-            'smtp_secure' => $conf['smtp_secure'],
+            'send_bcc_mail_webmaster' => $conf->send_bcc_mail_webmaster,
+            'mail_allow_html' => $conf->mail_allow_html,
+            'mail_theme' => $conf->mail_theme,
+            'use_smtp' => ! empty($conf->smtp_host),
+            'smtp_host' => $conf->smtp_host,
+            'smtp_user' => $conf->smtp_user,
+            'smtp_password' => $conf->smtp_password,
+            'smtp_secure' => $conf->smtp_secure,
             'email_webmaster' => self::get_mail_sender_email(),
             'name_webmaster' => self::get_mail_sender_name(),
         ];
@@ -372,8 +372,8 @@ final class functions_mail
 
         return self::pwg_mail_admins(
             [
-                'subject' => '[' . $conf['gallery_title'] . '] ' . $subject,
-                'mail_title' => $conf['gallery_title'],
+                'subject' => '[' . $conf->gallery_title . '] ' . $subject,
+                'mail_title' => $conf->gallery_title,
                 'mail_subtitle' => $subject,
                 'content' => $content,
                 'content_format' => 'text/plain',
@@ -421,9 +421,9 @@ final class functions_mail
         // get admins (except ourself)
         $user_statuses_str = implode("','", $user_statuses);
         $query = <<<SQL
-            SELECT i.user_id, u.{$conf['user_fields']['username']} AS name, u.{$conf['user_fields']['email']} AS email
+            SELECT i.user_id, u.{$conf->user_fields['username']} AS name, u.{$conf->user_fields['email']} AS email
             FROM users AS u
-            JOIN user_infos AS i ON i.user_id =  u.{$conf['user_fields']['id']}
+            JOIN user_infos AS i ON i.user_id =  u.{$conf->user_fields['id']}
 
             SQL;
 
@@ -436,7 +436,7 @@ final class functions_mail
 
         $query .= <<<SQL
             WHERE i.status IN ('{$user_statuses_str}')
-                AND u.{$conf['user_fields']['email']} IS NOT NULL
+                AND u.{$conf->user_fields['email']} IS NOT NULL
 
             SQL;
 
@@ -498,10 +498,10 @@ final class functions_mail
         $query = <<<SQL
             SELECT DISTINCT language
             FROM user_group AS ug
-            INNER JOIN users AS u ON {$conf['user_fields']['id']} = ug.user_id
+            INNER JOIN users AS u ON {$conf->user_fields['id']} = ug.user_id
             INNER JOIN user_infos AS ui ON ui.user_id = ug.user_id
             WHERE group_id = {$group_id}
-                AND {$conf['user_fields']['email']} != ""
+                AND {$conf->user_fields['email']} != ""
 
             SQL;
 
@@ -522,12 +522,12 @@ final class functions_mail
         foreach ($languages as $language) {
             // get subset of users in this group for a specific language
             $query = <<<SQL
-                SELECT ui.user_id, ui.status, u.{$conf['user_fields']['username']} AS name, u.{$conf['user_fields']['email']} AS email
+                SELECT ui.user_id, ui.status, u.{$conf->user_fields['username']} AS name, u.{$conf->user_fields['email']} AS email
                 FROM user_group AS ug
-                INNER JOIN users AS u ON {$conf['user_fields']['id']} = ug.user_id
+                INNER JOIN users AS u ON {$conf->user_fields['id']} = ug.user_id
                 INNER JOIN user_infos AS ui ON ui.user_id = ug.user_id
                 WHERE group_id = {$group_id}
-                    AND {$conf['user_fields']['email']} != ""
+                    AND {$conf->user_fields['email']} != ""
                     AND language = '{$language}';
                 SQL;
             $users = functions_mysqli::query2array($query);
@@ -585,7 +585,7 @@ final class functions_mail
      *       o content_format: format of mail content [default value 'text/plain']
      *       o email_format: global mail format [default value $conf_mail['default_email_format']]
      *       o theme: theme to use [default value $conf_mail['mail_theme']]
-     *       o mail_title: main title of the mail [default value $conf['gallery_title']]
+     *       o mail_title: main title of the mail [default value $conf->gallery_title]
      *       o mail_subtitle: subtitle of the mail [default value subject]
      *       o auth_key: authentication key to add on footer link [default value null]
      * @param array $tpl - use these options to define a custom content template file
@@ -691,7 +691,7 @@ final class functions_mail
         }
 
         if (! isset($args['mail_title'])) {
-            $args['mail_title'] = $conf['gallery_title'];
+            $args['mail_title'] = $conf->gallery_title;
         }
 
         if (! isset($args['mail_subtitle'])) {
@@ -743,8 +743,8 @@ final class functions_mail
                 $template->assign(
                     [
                         'GALLERY_URL' => functions_url::add_url_params(functions_url::get_gallery_home_url(), $add_url_params),
-                        'GALLERY_TITLE' => isset($page['gallery_title']) ? $page['gallery_title'] : $conf['gallery_title'],
-                        'VERSION' => $conf['show_version'] ? PHPWG_VERSION : '',
+                        'GALLERY_TITLE' => isset($page['gallery_title']) ? $page['gallery_title'] : $conf->gallery_title,
+                        'VERSION' => $conf->show_version ? PHPWG_VERSION : '',
                         'PHPWG_URL' => defined('PHPWG_URL') ? PHPWG_URL : '',
                         'CONTENT_ENCODING' => functions::get_pwg_charset(),
                         'CONTACT_MAIL' => $conf_mail['email_webmaster'],
@@ -885,7 +885,7 @@ final class functions_mail
                 trigger_error('Mailer Error: ' . $mail->ErrorInfo, E_USER_WARNING);
             }
 
-            if ($conf['debug_mail']) {
+            if ($conf->debug_mail) {
                 self::pwg_send_mail_test($ret, $mail, $args);
             }
         }
@@ -939,7 +939,7 @@ final class functions_mail
     ): void {
         global $conf, $user, $lang_info;
 
-        $dir = './' . $conf['data_location'] . 'tmp';
+        $dir = './' . $conf->data_location . 'tmp';
 
         if (functions::mkgetdir($dir, functions::MKGETDIR_DEFAULT & ~functions::MKGETDIR_DIE_ON_ERROR)) {
             $filename = $dir . '/mail.' . stripslashes($user['username']) . '.' . $lang_info['code'] . '-' . date('YmdHis') . ($success ? '' : '.ERROR');

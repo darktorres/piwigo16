@@ -23,8 +23,8 @@ use Piwigo\inc\functions_html;
 $template->assign(
     [
         'F_ADD_ACTION' => PHOTOS_ADD_BASE_URL,
-        'chunk_size' => $conf['upload_form_chunk_size'],
-        'max_file_size' => $conf['upload_form_max_file_size'],
+        'chunk_size' => $conf->upload_form_chunk_size,
+        'max_file_size' => $conf->upload_form_max_file_size,
         'ADMIN_PAGE_TITLE' => functions::l10n('Upload Photos'),
     ]
 );
@@ -55,11 +55,11 @@ if (pwg_image::get_library() == 'gd') {
 }
 
 //warn the user if the picture will be resized after upload
-if ($conf['original_resize']) {
+if ($conf->original_resize) {
     $template->assign(
         [
-            'original_resize_maxwidth' => $conf['original_resize_maxwidth'],
-            'original_resize_maxheight' => $conf['original_resize_maxheight'],
+            'original_resize_maxwidth' => $conf->original_resize_maxwidth,
+            'original_resize_maxheight' => $conf->original_resize_maxheight,
         ]
     );
 }
@@ -74,7 +74,7 @@ $template->assign(
 $unique_exts = array_unique(
     array_map(
         strtolower(...),
-        $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext']
+        $conf->upload_form_all_types ? $conf->file_ext : $conf->picture_ext
     )
 );
 
@@ -185,10 +185,10 @@ if (! isset($_SESSION['upload_hide_warnings'])) {
         );
     }
 
-    if (functions_upload::get_ini_size('upload_max_filesize') < $conf['upload_form_chunk_size'] * 1024) {
+    if (functions_upload::get_ini_size('upload_max_filesize') < $conf->upload_form_chunk_size * 1024) {
         $setup_warnings[] = sprintf(
             'Piwigo setting upload_form_chunk_size (%ukB) should be smaller than PHP configuration setting upload_max_filesize (%ukB)',
-            $conf['upload_form_chunk_size'],
+            $conf->upload_form_chunk_size,
             ceil(functions_upload::get_ini_size('upload_max_filesize') / 1024)
         );
     }

@@ -46,10 +46,10 @@ final class functions_smartpocket
     {
         global $template, $conf;
 
-        $config = $conf['smartpocket'];
+        $config = $conf->smartpocket;
         $template->assign('smartpocket', $config);
 
-        if (! empty($conf['mobile_theme']) &&
+        if (! empty($conf->mobile_theme) &&
            (functions::get_device() != 'desktop' || functions::mobile_theme())
         ) {
             $template->assign([

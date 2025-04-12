@@ -71,20 +71,20 @@ final class c13y_internal
         global $conf;
 
         $c13y_users = [];
-        $c13y_users[$conf['guest_id']] = [
+        $c13y_users[$conf->guest_id] = [
             'status' => 'guest',
             'l10n_non_existent' => 'Main "guest" user does not exist',
             'l10n_bad_status' => 'Main "guest" user status is incorrect',
         ];
 
-        if ($conf['guest_id'] != $conf['default_user_id']) {
-            $c13y_users[$conf['default_user_id']] = [
+        if ($conf->guest_id != $conf->default_user_id) {
+            $c13y_users[$conf->default_user_id] = [
                 'password' => null,
                 'l10n_non_existent' => 'Default user does not exist',
             ];
         }
 
-        $c13y_users[$conf['webmaster_id']] = [
+        $c13y_users[$conf->webmaster_id] = [
             'status' => 'webmaster',
             'l10n_non_existent' => 'Main "webmaster" user does not exist',
             'l10n_bad_status' => 'Main "webmaster" user status is incorrect',
@@ -92,10 +92,10 @@ final class c13y_internal
 
         $user_ids = implode(', ', array_keys($c13y_users));
         $query = <<<SQL
-            SELECT u.{$conf['user_fields']['id']} AS id, ui.status
+            SELECT u.{$conf->user_fields['id']} AS id, ui.status
             FROM users AS u
-            LEFT JOIN user_infos AS ui ON u.{$conf['user_fields']['id']} = ui.user_id
-            WHERE u.{$conf['user_fields']['id']} IN ({$user_ids});
+            LEFT JOIN user_infos AS ui ON u.{$conf->user_fields['id']} = ui.user_id
+            WHERE u.{$conf->user_fields['id']} IN ({$user_ids});
             SQL;
 
         $status = [];
@@ -146,13 +146,13 @@ final class c13y_internal
         if (! empty($id)) {
             switch ($action) {
                 case 'creation':
-                    if ($id == $conf['guest_id']) {
+                    if ($id == $conf->guest_id) {
                         $name = 'guest';
                         $password = null;
-                    } elseif ($id == $conf['default_user_id']) {
+                    } elseif ($id == $conf->default_user_id) {
                         $name = 'guest';
                         $password = null;
-                    } elseif ($id == $conf['webmaster_id']) {
+                    } elseif ($id == $conf->webmaster_id) {
                         $name = 'webmaster';
                         $password = functions_session::generate_key(6);
                     }
@@ -188,11 +188,11 @@ final class c13y_internal
                     break;
 
                 case 'status':
-                    if ($id == $conf['guest_id']) {
+                    if ($id == $conf->guest_id) {
                         $status = 'guest';
-                    } elseif ($id == $conf['default_user_id']) {
+                    } elseif ($id == $conf->default_user_id) {
                         $status = 'guest';
-                    } elseif ($id == $conf['webmaster_id']) {
+                    } elseif ($id == $conf->webmaster_id) {
                         $status = 'webmaster';
                     }
 

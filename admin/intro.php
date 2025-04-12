@@ -105,7 +105,7 @@ $template->set_filenames([
     'intro' => 'intro.tpl',
 ]);
 
-if ($conf['show_newsletter_subscription'] &&
+if ($conf->show_newsletter_subscription &&
     functions_user::userprefs_get_param('show_newsletter_subscription', true)
 ) {
     $template->assign(
@@ -199,11 +199,11 @@ $template->assign(
         'NB_PLUGINS' => count($pwg_loaded_plugins),
         'STORAGE_USED' => str_replace(' ', '&nbsp;', functions::l10n('%sGB', number_format($du_gb, $du_decimals))),
         'U_QUICK_SYNC' => './admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . functions::get_pwg_token(),
-        'CHECK_FOR_UPDATES' => $conf['dashboard_check_for_updates'],
+        'CHECK_FOR_UPDATES' => $conf->dashboard_check_for_updates,
     ]
 );
 
-if ($conf['activate_comments']) {
+if ($conf->activate_comments) {
     $query = <<<SQL
         SELECT COUNT(*)
         FROM comments;
@@ -214,7 +214,7 @@ if ($conf['activate_comments']) {
     $template->assign('NB_COMMENTS', 0);
 }
 
-if ($conf['show_piwigo_latest_news']) {
+if ($conf->show_piwigo_latest_news) {
     $latest_news = functions_admin::get_piwigo_news();
 
     if (isset($latest_news['id']) &&
@@ -236,7 +236,7 @@ functions_plugins::trigger_notify('loc_end_intro');
 // |                           get activity data                           |
 // +-----------------------------------------------------------------------+
 
-$nb_weeks = $conf['dashboard_activity_nb_weeks'];
+$nb_weeks = $conf->dashboard_activity_nb_weeks;
 
 //Count mondays
 $mondays = 0;
@@ -407,7 +407,7 @@ $file_extensions = functions_mysqli::query2array($query, 'ext');
 foreach ($file_extensions as $ext => $ext_details) {
     $type = null;
 
-    if (in_array(strtolower($ext), $conf['picture_ext'])) {
+    if (in_array(strtolower($ext), $conf->picture_ext)) {
         $type = 'Photos';
     } elseif (in_array(strtolower($ext), $video_format)) {
         $type = 'Videos';
@@ -448,10 +448,10 @@ foreach ($file_extensions as $ext => $ext_details) {
 }
 
 // Add cache size if requested and known.
-if ($conf['add_cache_to_storage_chart'] &&
-    isset($conf['cache_sizes'])
+if ($conf->add_cache_to_storage_chart &&
+    isset($conf->cache_sizes)
 ) {
-    $cache_sizes = $conf['cache_sizes'];
+    $cache_sizes = $conf->cache_sizes;
 
     if (isset($cache_sizes)) {
         if (isset($cache_sizes[0]) &&

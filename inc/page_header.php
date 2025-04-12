@@ -34,15 +34,15 @@ $template->assign(
     [
         'GALLERY_TITLE' =>
           isset($page['gallery_title']) ?
-            $page['gallery_title'] : $conf['gallery_title'],
+            $page['gallery_title'] : $conf->gallery_title,
 
         'PAGE_BANNER' =>
           functions_plugins::trigger_change(
               'render_page_banner',
               str_replace(
                   '%gallery_title%',
-                  $conf['gallery_title'],
-                  isset($page['page_banner']) ? $page['page_banner'] : $conf['page_banner']
+                  $conf->gallery_title,
+                  isset($page['page_banner']) ? $page['page_banner'] : $conf->page_banner
               )
           ),
 
@@ -55,7 +55,7 @@ $template->assign(
 
         'U_HOME' => functions_url::get_gallery_home_url(),
 
-        'LEVEL_SEPARATOR' => $conf['level_separator'],
+        'LEVEL_SEPARATOR' => $conf->level_separator,
 
         'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
 
@@ -71,7 +71,7 @@ if (! empty($header_notes)) {
 }
 
 // No referencing is required
-if (! $conf['meta_ref']) {
+if (! $conf->meta_ref) {
     $page['meta_robots']['noindex'] = 1;
     $page['meta_robots']['nofollow'] = 1;
 }

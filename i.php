@@ -30,18 +30,18 @@ if (! defined('PWG_LOCAL_DIR')) {
 }
 
 if (! defined('PWG_DERIVATIVE_DIR')) {
-    define('PWG_DERIVATIVE_DIR', $conf['data_location'] . 'i/');
+    define('PWG_DERIVATIVE_DIR', $conf->data_location . 'i/');
 }
 
 if (file_exists(__DIR__ . '/local/config/database.php')) {
     require __DIR__ . '/local/config/database.php';
 }
 
-$logger = new Katzgrau\KLogger\Logger('./' . $conf['data_location'] . $conf['log_dir'], $conf['log_level'], [
+$logger = new Katzgrau\KLogger\Logger('./' . $conf->data_location . $conf->log_dir, $conf->log_level, [
     // we use an hashed filename to prevent direct file access, and we salt with
     // the db_password instead of secret_key because the log must be usable in i.php
     // (secret_key is in the database)
-    'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf['db_password']) . '.txt',
+    'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf->db_password) . '.txt',
 ]);
 
 // end fast bootstrap
@@ -56,10 +56,10 @@ foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $
 
 try {
     functions_mysqli::pwg_db_connect(
-        $conf['db_host'],
-        $conf['db_user'],
-        $conf['db_password'],
-        $conf['db_base']
+        $conf->db_host,
+        $conf->db_user,
+        $conf->db_password,
+        $conf->db_base
     );
 } catch (Exception $e) {
     $logger->error($e->getMessage());
@@ -72,8 +72,8 @@ $query = <<<SQL
     FROM config
     WHERE param = 'derivatives';
     SQL;
-list($conf['derivatives']) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
-$conf['derivatives'] = unserialize($conf['derivatives']);
+list($tmp) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+$conf->derivatives = unserialize($tmp);
 ImageStdParams::load_from_db();
 
 functions::parse_request();
@@ -281,7 +281,7 @@ if (! $changes) {
     functions::ierror($page['src_url'], 301);
 }
 
-if ($conf['derivatives_strip_metadata_threshold'] > $d_size[0] * $d_size[1]) { // strip metadata for small images
+if ($conf->derivatives_strip_metadata_threshold > $d_size[0] * $d_size[1]) { // strip metadata for small images
     $image->strip();
 }
 
@@ -296,7 +296,7 @@ $timing['send'] = functions::time_step($step);
 
 $timing['total'] = functions::time_step($begin);
 
-if ($conf['log_level'] >= Psr\Log\LogLevel::DEBUG) {
+if ($conf->log_level >= Psr\Log\LogLevel::DEBUG) {
     $logger->debug('', [
         'src_path' => basename($page['src_path']),
         'derivative_path' => basename($page['derivative_path']),

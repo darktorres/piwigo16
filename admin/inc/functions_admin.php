@@ -13,6 +13,7 @@ namespace Piwigo\admin\inc;
 
 use DateInterval;
 use DateTime;
+use Piwigo\inc\Config;
 use Piwigo\inc\dblayer\functions_mysqli;
 use Piwigo\inc\derivative_params;
 use Piwigo\inc\derivative_std_params;
@@ -236,7 +237,7 @@ final class functions_admin
 
             $ok = true;
 
-            if (! isset($conf['never_delete_originals'])) {
+            if (! isset($conf->never_delete_originals)) {
                 foreach ($files as $path) {
                     if (is_file($path) &&
                         ! unlink($path)
@@ -408,7 +409,7 @@ final class functions_admin
         // destruction of the user
         $query = <<<SQL
             DELETE FROM users
-            WHERE {$conf['user_fields']['id']} = {$user_id};
+            WHERE {$conf->user_fields['id']} = {$user_id};
             SQL;
         functions_mysqli::pwg_query($query);
 
@@ -495,7 +496,7 @@ final class functions_admin
             functions_mysqli::pwg_query($query);
         }
 
-        if (! $conf['allow_random_representative']) {
+        if (! $conf->allow_random_representative) {
             // If the random representative is not allowed, we need to find
             // categories with elements and with no representative. Those categories
             // must be added to the list of categories to set to a random
@@ -596,7 +597,7 @@ final class functions_admin
         $path = rtrim($path, '/');
 
         $exclude_folders = array_merge(
-            $conf['sync_exclude_folders'],
+            $conf->sync_exclude_folders,
             [
                 '.', '..', '.svn',
                 'thumbnail', 'pwg_high',
@@ -1120,7 +1121,7 @@ final class functions_admin
     }
 
     // /**
-    //  * Returns an array with all file system files according to $conf['file_ext']
+    //  * Returns an array with all file system files according to $conf->file_ext
     //  *
     //  * @deprecated 2.4
     //  */
@@ -1131,12 +1132,12 @@ final class functions_admin
     //     global $conf;
 
     //     // because isset is faster than in_array...
-    //     if (! isset($conf['flip_picture_ext'])) {
-    //         $conf['flip_picture_ext'] = array_flip($conf['picture_ext']);
+    //     if (! isset($conf->flip_picture_ext)) {
+    //         $conf->flip_picture_ext = array_flip($conf->picture_ext);
     //     }
 
-    //     if (! isset($conf['flip_file_ext'])) {
-    //         $conf['flip_file_ext'] = array_flip($conf['file_ext']);
+    //     if (! isset($conf->flip_file_ext)) {
+    //         $conf->flip_file_ext = array_flip($conf->file_ext);
     //     }
 
     //     $fs['elements'] = [];
@@ -1158,7 +1159,7 @@ final class functions_admin
     //                 if (is_file($path . '/' . $node)) {
     //                     $extension = functions::get_extension($node);
 
-    //                     if (isset($conf['flip_picture_ext'][$extension])) {
+    //                     if (isset($conf->flip_picture_ext[$extension])) {
     //                         if (basename($path) == 'thumbnail') {
     //                             $fs['thumbnails'][] = $path . '/' . $node;
     //                         } elseif (basename($path) == 'pwg_representative') {
@@ -1166,7 +1167,7 @@ final class functions_admin
     //                         } else {
     //                             $fs['elements'][] = $path . '/' . $node;
     //                         }
-    //                     } elseif (isset($conf['flip_file_ext'][$extension])) {
+    //                     } elseif (isset($conf->flip_file_ext[$extension])) {
     //                         $fs['elements'][] = $path . '/' . $node;
     //                     }
     //                 } elseif (is_dir($path . '/' . $node) and
@@ -1216,7 +1217,7 @@ final class functions_admin
         global $conf;
 
         $query = <<<SQL
-            SELECT {$conf['user_fields']['id']} AS id
+            SELECT {$conf->user_fields['id']} AS id
             FROM users;
             SQL;
         $base_users = functions_mysqli::query2array($query, null, 'id');
@@ -1460,7 +1461,7 @@ final class functions_admin
 
         $rank = 0;
 
-        if ($conf['newcat_default_position'] == 'last') {
+        if ($conf->newcat_default_position == 'last') {
             //what is the current higher rank for this parent?
             $parent_condition = empty($parent_id) ? 'IS NULL' : "= {$parent_id}";
             $query = <<<SQL
@@ -1487,7 +1488,7 @@ final class functions_admin
         ) {
             $insert['commentable'] = $options['commentable'];
         } else {
-            $insert['commentable'] = $conf['newcat_default_commentable'];
+            $insert['commentable'] = $conf->newcat_default_commentable;
         }
 
         $insert['commentable'] = functions_mysqli::boolean_to_string($insert['commentable']);
@@ -1500,7 +1501,7 @@ final class functions_admin
         ) {
             $insert['visible'] = $options['visible'];
         } else {
-            $insert['visible'] = $conf['newcat_default_visible'];
+            $insert['visible'] = $conf->newcat_default_visible;
         }
 
         $insert['visible'] = functions_mysqli::boolean_to_string($insert['visible']);
@@ -1511,12 +1512,12 @@ final class functions_admin
         ) {
             $insert['status'] = 'private';
         } else {
-            $insert['status'] = $conf['newcat_default_status'];
+            $insert['status'] = $conf->newcat_default_status;
         }
 
         // any description for this album?
         if (isset($options['comment'])) {
-            $insert['comment'] = $conf['allow_html_descriptions'] ? $options['comment'] : strip_tags($options['comment']);
+            $insert['comment'] = $conf->allow_html_descriptions ? $options['comment'] : strip_tags($options['comment']);
         }
 
         if (! empty($parent_id) &&
@@ -1569,7 +1570,7 @@ final class functions_admin
 
         if ($insert['status'] == 'private' &&
             ! empty($insert['id_uppercat']) &&
-            ((isset($options['inherit']) && $options['inherit']) || $conf['inheritance_by_default'])
+            ((isset($options['inherit']) && $options['inherit']) || $conf->inheritance_by_default)
         ) {
             $query = <<<SQL
                 SELECT group_id
@@ -1955,8 +1956,8 @@ final class functions_admin
     ): ?array {
         global $logger;
 
-        if (isset($conf['empty_lounge_running'])) {
-            list($running_exec_id, $running_exec_start_time) = explode('-', $conf['empty_lounge_running']);
+        if (isset($conf->empty_lounge_running)) {
+            list($running_exec_id, $running_exec_start_time) = explode('-', $conf->empty_lounge_running);
 
             if (time() - $running_exec_start_time > 60) {
                 $logger->debug(__FUNCTION__ . ', exec=' . $running_exec_id . ', timeout stopped by another call to the function');
@@ -2515,16 +2516,16 @@ final class functions_admin
         // Try curl to read remote file
         $ch = curl_init();
 
-        if (isset($conf['use_proxy']) &&
-            $conf['use_proxy']
+        if (isset($conf->use_proxy) &&
+            $conf->use_proxy
         ) {
             curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, 0);
-            curl_setopt($ch, CURLOPT_PROXY, $conf['proxy_server']);
+            curl_setopt($ch, CURLOPT_PROXY, $conf->proxy_server);
 
-            if (isset($conf['proxy_auth']) &&
-                ! empty($conf['proxy_auth'])
+            if (isset($conf->proxy_auth) &&
+                ! empty($conf->proxy_auth)
             ) {
-                curl_setopt($ch, CURLOPT_PROXYUSERPWD, $conf['proxy_auth']);
+                curl_setopt($ch, CURLOPT_PROXYUSERPWD, $conf->proxy_auth);
             }
         }
 
@@ -2738,9 +2739,9 @@ final class functions_admin
         global $conf;
 
         $query = <<<SQL
-            SELECT {$conf['user_fields']['username']}
+            SELECT {$conf->user_fields['username']}
             FROM users
-            WHERE {$conf['user_fields']['id']} = {$user_id};
+            WHERE {$conf->user_fields['id']} = {$user_id};
             SQL;
         $result = functions_mysqli::pwg_query($query);
 
@@ -3559,7 +3560,7 @@ final class functions_admin
     {
         global $page, $conf;
 
-        if ($conf['fs_quick_check_period'] == 0) {
+        if ($conf->fs_quick_check_period == 0) {
             return;
         }
 
@@ -3869,6 +3870,9 @@ final class functions_admin
 
     public static function order_by_is_local(): bool
     {
+        /**
+         * @var Config $conf
+         */
         $conf = [];
         require __DIR__ . '/../../inc/config_default.php';
 
@@ -3876,8 +3880,8 @@ final class functions_admin
             require __DIR__ . '/../../local/config/config.php';
         }
 
-        return isset($conf['order_by']) ||
-               isset($conf['order_by_inside_category']);
+        return isset($conf->order_by) ||
+               isset($conf->order_by_inside_category);
     }
 
     public static function make_consecutive(
@@ -3969,17 +3973,17 @@ final class functions_admin
         // Set null mail_address empty
         $query = <<<SQL
             UPDATE users
-            SET {$conf['user_fields']['email']} = NULL
-            WHERE TRIM({$conf['user_fields']['email']}) = '';
+            SET {$conf->user_fields['email']} = NULL
+            WHERE TRIM({$conf->user_fields['email']}) = '';
             SQL;
         functions_mysqli::pwg_query($query);
 
         // null mail_address are not selected in the list
         $query = <<<SQL
-            SELECT u.{$conf['user_fields']['id']} AS user_id, u.{$conf['user_fields']['username']} AS username, u.{$conf['user_fields']['email']} AS mail_address
+            SELECT u.{$conf->user_fields['id']} AS user_id, u.{$conf->user_fields['username']} AS username, u.{$conf->user_fields['email']} AS mail_address
             FROM users AS u
-            LEFT JOIN user_mail_notification AS m ON u.{$conf['user_fields']['id']} = m.user_id
-            WHERE u.{$conf['user_fields']['email']} IS NOT NULL
+            LEFT JOIN user_mail_notification AS m ON u.{$conf->user_fields['id']} = m.user_id
+            WHERE u.{$conf->user_fields['email']} IS NOT NULL
                 AND m.user_id IS NULL
             ORDER BY user_id;
             SQL;
@@ -4016,7 +4020,7 @@ final class functions_admin
             // Update field enabled with specific function
             $check_key_treated = functions_notification_by_mail::do_subscribe_unsubscribe_notification_by_mail(
                 true,
-                $conf['nbm_default_value_user_enabled'],
+                $conf->nbm_default_value_user_enabled,
                 $check_key_list
             );
 
@@ -4047,7 +4051,7 @@ final class functions_admin
     ): string {
         global $conf;
 
-        if ($conf['nbm_send_html_mail'] &&
+        if ($conf->nbm_send_html_mail &&
             ! (strpos($customize_mail_content, '<') === 0)
         ) {
             // On HTML mail, detects if the content are HTML format.
@@ -4081,7 +4085,7 @@ final class functions_admin
             $data_users = functions_notification_by_mail::get_user_notifications('send', $check_key_list);
 
             // List all if it's define on options or on timeout
-            $is_list_all_without_test = ($env_nbm['is_sendmail_timeout'] || $conf['nbm_list_all_enabled_users_to_send']);
+            $is_list_all_without_test = ($env_nbm['is_sendmail_timeout'] || $conf->nbm_list_all_enabled_users_to_send);
 
             // Check if exist news to list user or send mails
             if (! $is_list_all_without_test ||
@@ -4091,7 +4095,7 @@ final class functions_admin
                     $datas = [];
 
                     if (! isset($customize_mail_content)) {
-                        $customize_mail_content = $conf['nbm_complementary_mail_content'];
+                        $customize_mail_content = $conf->nbm_complementary_mail_content;
                     }
 
                     $customize_mail_content =
@@ -4142,15 +4146,15 @@ final class functions_admin
                             // Fill return list of "treated" check_key for 'send'
                             $return_list[] = $nbm_user['check_key'];
 
-                            if ($conf['nbm_send_detailed_content']) {
-                                $news = functions_notification::news($nbm_user['last_send'], $dbnow, false, $conf['nbm_send_html_mail'], $auth);
+                            if ($conf->nbm_send_detailed_content) {
+                                $news = functions_notification::news($nbm_user['last_send'], $dbnow, false, $conf->nbm_send_html_mail, $auth);
                                 $exist_data = count($news) > 0;
                             } else {
                                 $exist_data = functions_notification::news_exists($nbm_user['last_send'], $dbnow);
                             }
 
                             if ($exist_data) {
-                                $subject = '[' . $conf['gallery_title'] . '] ' . functions::l10n('New photos added');
+                                $subject = '[' . $conf->gallery_title . '] ' . functions::l10n('New photos added');
 
                                 // Assign current var for nbm mail
                                 functions_notification_by_mail::assign_vars_nbm_mail_content($nbm_user);
@@ -4172,7 +4176,7 @@ final class functions_admin
                                     );
                                 }
 
-                                if ($conf['nbm_send_detailed_content']) {
+                                if ($conf->nbm_send_detailed_content) {
                                     $env_nbm['mail_template']->assign('global_new_lines', $news);
                                 }
 
@@ -4190,11 +4194,11 @@ final class functions_admin
                                     );
                                 }
 
-                                if ($conf['nbm_send_html_mail'] &&
-                                    $conf['nbm_send_recent_post_dates']
+                                if ($conf->nbm_send_html_mail &&
+                                    $conf->nbm_send_recent_post_dates
                                 ) {
                                     $recent_post_dates = functions_notification::get_recent_post_dates_array(
-                                        $conf['recent_post_dates']['NBM']
+                                        $conf->recent_post_dates['NBM']
                                     );
 
                                     foreach ($recent_post_dates as $date_detail) {
@@ -4210,7 +4214,7 @@ final class functions_admin
 
                                 $env_nbm['mail_template']->assign(
                                     [
-                                        'GOTO_GALLERY_TITLE' => $conf['gallery_title'],
+                                        'GOTO_GALLERY_TITLE' => $conf->gallery_title,
                                         'GOTO_GALLERY_URL' => functions_url::add_url_params(functions_url::get_gallery_home_url(), $add_url_params),
                                         'SEND_AS_NAME' => $env_nbm['send_as_name'],
                                     ]

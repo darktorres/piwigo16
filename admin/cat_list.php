@@ -112,7 +112,7 @@ elseif (isset($_POST['submitAdd'])) {
 // +-----------------------------------------------------------------------+
 
 if (isset($_GET['parent_id'])) {
-    $navigation .= $conf['level_separator'];
+    $navigation .= $conf->level_separator;
 
     $navigation .= functions_html::get_cat_display_name_from_id(
         $_GET['parent_id'],
@@ -252,7 +252,7 @@ foreach ($categories as $category) {
         $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $category['id'];
         $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . functions::get_pwg_token();
     } else {
-        if ($conf['enable_synchronization']) {
+        if ($conf->enable_synchronization) {
             $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $category['id'];
         }
     }

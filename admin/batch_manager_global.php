@@ -440,7 +440,7 @@ $prefilters = [
     ],
 ];
 
-if ($conf['enable_synchronization']) {
+if ($conf->enable_synchronization) {
     $prefilters[] = [
         'ID' => 'no_virtual_album',
         'NAME' => functions::l10n('With no virtual album'),
@@ -460,7 +460,7 @@ usort($prefilters, function (array $a, array $b): int {
 
 $template->assign(
     [
-        'conf_checksum_compute_blocksize' => $conf['checksum_compute_blocksize'],
+        'conf_checksum_compute_blocksize' => $conf->checksum_compute_blocksize,
         'prefilters' => $prefilters,
         'filter' => $_SESSION['bulk_manager_filter'],
         'selection' => $collection,
@@ -493,7 +493,7 @@ $template->assign('IN_CADDIE', $page['prefilter'] == 'caddie');
 // +-----------------------------------------------------------------------+
 
 // privacy level
-foreach ($conf['available_permission_levels'] as $level) {
+foreach ($conf->available_permission_levels as $level) {
     $level_options[$level] = functions::l10n(sprintf('Level %d', $level));
 
     if ($level == 0) {
@@ -625,8 +625,8 @@ if (! empty($_GET['display'])) {
     } else {
         $page['nb_images'] = intval($_GET['display']);
     }
-} elseif (in_array($conf['batch_manager_images_per_page_global'], [20, 50, 100])) {
-    $page['nb_images'] = $conf['batch_manager_images_per_page_global'];
+} elseif (in_array($conf->batch_manager_images_per_page_global, [20, 50, 100])) {
+    $page['nb_images'] = $conf->batch_manager_images_per_page_global;
 } else {
     $page['nb_images'] = 20;
 }
@@ -658,7 +658,7 @@ if (count($page['cat_elements_id']) > 0) {
     ) {
         // The $duplicates_on_fields variable is defined in ./batch_manager.php
         $order_by_fields = array_merge($duplicates_on_fields, ['id']);
-        $conf['order_by'] = ' ORDER BY ' . implode(', ', $order_by_fields);
+        $conf->order_by = ' ORDER BY ' . implode(', ', $order_by_fields);
     }
 
     $query = <<<SQL
@@ -670,10 +670,10 @@ if (count($page['cat_elements_id']) > 0) {
     if ($is_category) {
         $category_info = functions_category::get_cat_info($_SESSION['bulk_manager_filter']['category']);
 
-        $conf['order_by'] = $conf['order_by_inside_category'];
+        $conf->order_by = $conf->order_by_inside_category;
 
         if (! empty($category_info['image_order'])) {
-            $conf['order_by'] = ' ORDER BY ' . $category_info['image_order'];
+            $conf->order_by = ' ORDER BY ' . $category_info['image_order'];
         }
 
         $query .= <<<SQL
@@ -696,7 +696,7 @@ if (count($page['cat_elements_id']) > 0) {
     }
 
     $query .= <<<SQL
-        {$conf['order_by']}
+        {$conf->order_by}
         LIMIT {$page['nb_images']} OFFSET {$page['start']};
         SQL;
     $result = functions_mysqli::pwg_query($query);

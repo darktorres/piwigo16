@@ -77,7 +77,7 @@ if (isset($page['search_id'])) {
         functions_url::get_root_url() . 'admin.php' . functions_url::get_query_string_diff(['start']),
         $page['nb_lines'],
         $page['start'],
-        $conf['nb_logs_page']
+        $conf->nb_logs_page
     );
 
     $template->assign('navbar', $navbar);
@@ -143,7 +143,7 @@ $template->assign(
 
 $template->assign('display_thumbnails', $display_thumbnails);
 $template->assign('display_thumbnail_selected', $form['display_thumbnail']);
-$template->assign('guest_id', $conf['guest_id']);
+$template->assign('guest_id', $conf->guest_id);
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('History'));
 
 // +-----------------------------------------------------------------------+

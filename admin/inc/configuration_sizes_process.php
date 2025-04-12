@@ -65,7 +65,7 @@ foreach ($pderivatives as $type => &$pderivative) {
         $pderivative['crop'] = 100;
     }
 
-    $pderivative['must_enable'] = ($type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB || $type == $conf['derivative_default_size']) ? true : false;
+    $pderivative['must_enable'] = ($type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB || $type == $conf->derivative_default_size) ? true : false;
     $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'] ? true : false;
 
     if (isset($pderivative['crop'])) {
@@ -146,7 +146,7 @@ if (count($errors) == 0) {
     ImageStdParams::$quality = intval($_POST['resize_quality']);
 
     $enabled = ImageStdParams::get_defined_type_map();
-    $disabled = $conf['disabled_derivatives'] ?? [];
+    $disabled = $conf->disabled_derivatives ?? [];
 
     $changed_types = [];
 
@@ -236,7 +236,7 @@ if (count($errors) == 0) {
         functions::conf_update_param('disabled_derivatives', addslashes(serialize($disabled)));
     }
 
-    $conf['disabled_derivatives'] = serialize($disabled);
+    $conf->disabled_derivatives = serialize($disabled);
 
     if (count($changed_types)) {
         functions_admin::clear_derivative_cache($changed_types);

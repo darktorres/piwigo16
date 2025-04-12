@@ -64,7 +64,7 @@ if (isset($_POST['submit'])) {
         $data['author'] = $_POST['author-' . $row['id']];
         $data['level'] = $_POST['level-' . $row['id']];
 
-        if ($conf['allow_html_descriptions']) {
+        if ($conf->allow_html_descriptions) {
             $data['comment'] = $_POST['description-' . $row['id']];
         } else {
             $data['comment'] = strip_tags($_POST['description-' . $row['id']]);
@@ -130,8 +130,8 @@ $template->assign(
 // how many items to display on this page
 if (! empty($_GET['display'])) {
     $page['nb_images'] = intval($_GET['display']);
-} elseif (in_array($conf['batch_manager_images_per_page_unit'], [5, 10, 50])) {
-    $page['nb_images'] = $conf['batch_manager_images_per_page_unit'];
+} elseif (in_array($conf->batch_manager_images_per_page_unit, [5, 10, 50])) {
+    $page['nb_images'] = $conf->batch_manager_images_per_page_unit;
 } else {
     $page['nb_images'] = 5;
 }
@@ -160,7 +160,7 @@ if (count($page['cat_elements_id']) > 0) {
     if (isset($_SESSION['bulk_manager_filter']['prefilter']) &&
         $_SESSION['bulk_manager_filter']['prefilter'] == 'duplicates'
     ) {
-        $conf['order_by'] = ' ORDER BY file, id';
+        $conf->order_by = ' ORDER BY file, id';
     }
 
     $query = <<<SQL
@@ -172,10 +172,10 @@ if (count($page['cat_elements_id']) > 0) {
     if ($is_category) {
         $category_info = functions_category::get_cat_info($_SESSION['bulk_manager_filter']['category']);
 
-        $conf['order_by'] = $conf['order_by_inside_category'];
+        $conf->order_by = $conf->order_by_inside_category;
 
         if (! empty($category_info['image_order'])) {
-            $conf['order_by'] = ' ORDER BY ' . $category_info['image_order'];
+            $conf->order_by = ' ORDER BY ' . $category_info['image_order'];
         }
 
         $query .= <<<SQL
@@ -198,7 +198,7 @@ if (count($page['cat_elements_id']) > 0) {
     }
 
     $query .= <<<SQL
-        {$conf['order_by']}
+        {$conf->order_by}
         LIMIT {$page['nb_images']} OFFSET {$page['start']};
         SQL;
     $result = functions_mysqli::pwg_query($query);

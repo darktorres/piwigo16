@@ -44,7 +44,7 @@ final class pwg_image
 
         $extension = strtolower(functions::get_extension($source_filepath));
 
-        if (! in_array($extension, $conf['picture_ext'])) {
+        if (! in_array($extension, $conf->picture_ext)) {
             exit('[Image] unsupported file extension');
         }
 
@@ -363,11 +363,11 @@ final class pwg_image
     {
         global $conf;
 
-        if (empty($conf['ext_imagick_dir'])) {
+        if (empty($conf->ext_imagick_dir)) {
             return false;
         }
 
-        exec($conf['ext_imagick_dir'] . 'convert -version', $returnarray);
+        exec($conf->ext_imagick_dir . 'convert -version', $returnarray);
 
         if (is_array($returnarray) &&
             ! empty($returnarray[0]) &&
@@ -400,7 +400,7 @@ final class pwg_image
         global $conf;
 
         if ($library === null) {
-            $library = $conf['graphics_library'];
+            $library = $conf->graphics_library;
         }
 
         // Choose image library

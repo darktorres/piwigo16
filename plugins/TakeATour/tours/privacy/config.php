@@ -72,6 +72,6 @@ if (isset($_GET['cat_id']) &&
 
 global $conf;
 
-if (isset($conf['enable_synchronization'])) {
-    $template->assign('TAT_FTP', $conf['enable_synchronization']);
+if (isset($conf->enable_synchronization)) {
+    $template->assign('TAT_FTP', $conf->enable_synchronization);
 }

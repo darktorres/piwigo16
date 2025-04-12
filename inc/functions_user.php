@@ -31,7 +31,7 @@ final class functions_user
         global $conf;
 
         if (empty($mail_address) &&
-            ! ($conf['obligatory_user_mail_address'] &&
+            ! ($conf->obligatory_user_mail_address &&
             in_array(functions::script_basename(), ['register', 'profile']))
         ) {
             return '';
@@ -44,11 +44,11 @@ final class functions_user
         if (defined('PHPWG_INSTALLED') &&
             ! empty($mail_address)
         ) {
-            $exclude_user_condition = is_numeric($user_id) ? "AND {$conf['user_fields']['id']} != '{$user_id}'" : '';
+            $exclude_user_condition = is_numeric($user_id) ? "AND {$conf->user_fields['id']} != '{$user_id}'" : '';
             $query = <<<SQL
                 SELECT COUNT(*)
                 FROM users
-                WHERE UPPER({$conf['user_fields']['email']}) = UPPER('{$mail_address}')
+                WHERE UPPER({$conf->user_fields['email']}) = UPPER('{$mail_address}')
                     {$exclude_user_condition};
                 SQL;
             list($count) = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -73,10 +73,10 @@ final class functions_user
         global $conf;
 
         if (defined('PHPWG_INSTALLED')) {
-            $escaped_username_field = stripslashes($conf['user_fields']['username']);
+            $escaped_username_field = stripslashes($conf->user_fields['username']);
             $lowered_login = strtolower($login);
             $query = <<<SQL
-                SELECT {$conf['user_fields']['username']}
+                SELECT {$conf->user_fields['username']}
                 FROM users
                 WHERE LOWER({$escaped_username_field}) = '{$lowered_login}';
                 SQL;
@@ -107,7 +107,7 @@ final class functions_user
         $SCU_users = [];
 
         $q = functions_mysqli::pwg_query(<<<SQL
-            SELECT {$conf['user_fields']['username']} AS username
+            SELECT {$conf->user_fields['username']} AS username
             FROM users;
             SQL);
 
@@ -171,7 +171,7 @@ final class functions_user
             $errors[] = $mail_error;
         }
 
-        if ($conf['insensitive_case_logon'] == true) {
+        if ($conf->insensitive_case_logon == true) {
             $login_error = self::validate_login_case($login);
 
             if ($login_error != '') {
@@ -192,9 +192,9 @@ final class functions_user
         // if no error until here, registration of the user
         if (empty($errors)) {
             $insert = [
-                $conf['user_fields']['username'] => $login,
-                $conf['user_fields']['password'] => $conf['password_hash']($password),
-                $conf['user_fields']['email'] => $mail_address,
+                $conf->user_fields['username'] => $login,
+                $conf->user_fields['password'] => ($conf->password_hash)($password),
+                $conf->user_fields['email'] => $mail_address,
             ];
 
             functions_mysqli::single_insert('users', $insert);
@@ -224,7 +224,7 @@ final class functions_user
 
             $override = [];
 
-            if ($conf['browser_language']) {
+            if ($conf->browser_language) {
                 $language = self::get_browser_language();
 
                 if ($language) {
@@ -235,7 +235,7 @@ final class functions_user
             self::create_user_infos($user_id, $override);
 
             if ($notify_admin &&
-                $conf['email_admin_on_new_user'] != 'none'
+                $conf->email_admin_on_new_user != 'none'
             ) {
                 require_once __DIR__ . '/../inc/functions_mail.php';
                 $admin_url = functions_url::get_absolute_root_url() . 'admin.php?page=user_list&username=' . $login;
@@ -249,7 +249,7 @@ final class functions_user
 
                 $group_id = null;
 
-                if (preg_match('/^group:(\d+)$/', $conf['email_admin_on_new_user'], $matches)) {
+                if (preg_match('/^group:(\d+)$/', $conf->email_admin_on_new_user, $matches)) {
                     $group_id = $matches[1];
                 }
 
@@ -268,7 +268,7 @@ final class functions_user
 
                 $keyargs_content = [
                     functions::get_l10n_args('Hello %s,', stripslashes($login)),
-                    functions::get_l10n_args('Thank you for registering at %s!', $conf['gallery_title']),
+                    functions::get_l10n_args('Thank you for registering at %s!', $conf->gallery_title),
                     functions::get_l10n_args('', ''),
                     functions::get_l10n_args('Here are your connection settings', ''),
                     functions::get_l10n_args('', ''),
@@ -283,7 +283,7 @@ final class functions_user
                 functions_mail::pwg_mail(
                     $mail_address,
                     [
-                        'subject' => '[' . $conf['gallery_title'] . '] ' . functions::l10n('Registration'),
+                        'subject' => '[' . $conf->gallery_title . '] ' . functions::l10n('Registration'),
                         'content' => functions::l10n_args($keyargs_content),
                         'content_format' => 'text/plain',
                     ]
@@ -320,7 +320,7 @@ final class functions_user
         $user['id'] = $user_id;
         $user = array_merge($user, self::getuserdata($user_id, $use_cache));
 
-        if ($user['id'] == $conf['guest_id'] &&
+        if ($user['id'] == $conf->guest_id &&
             $user['status'] != 'guest'
         ) {
             $user['status'] = 'guest';
@@ -356,7 +356,7 @@ final class functions_user
             SQL;
         $is_first = true;
 
-        foreach ($conf['user_fields'] as $pwgfield => $dbfield) {
+        foreach ($conf->user_fields as $pwgfield => $dbfield) {
             if ($is_first) {
                 $is_first = false;
             } else {
@@ -369,12 +369,12 @@ final class functions_user
         $query .= "\n";
         $query .= <<<SQL
             FROM users
-            WHERE {$conf['user_fields']['id']} = {$user_id};
+            WHERE {$conf->user_fields['id']} = {$user_id};
             SQL;
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
         // retrieve additional user data ?
-        if ($conf['external_authentication']) {
+        if ($conf->external_authentication) {
             $query = <<<SQL
                 SELECT COUNT(1) AS counter
                 FROM user_infos AS ui
@@ -660,9 +660,9 @@ final class functions_user
         $username = functions_mysqli::pwg_db_real_escape_string($username);
 
         $query = <<<SQL
-            SELECT {$conf['user_fields']['id']}
+            SELECT {$conf->user_fields['id']}
             FROM users
-            WHERE {$conf['user_fields']['username']} = '{$username}';
+            WHERE {$conf->user_fields['username']} = '{$username}';
             SQL;
         $result = functions_mysqli::pwg_query($query);
 
@@ -685,9 +685,9 @@ final class functions_user
         $email = functions_mysqli::pwg_db_real_escape_string($email);
 
         $query = <<<SQL
-            SELECT {$conf['user_fields']['id']}
+            SELECT {$conf->user_fields['id']}
             FROM users
-            WHERE UPPER({$conf['user_fields']['email']}) = UPPER('{$email}');
+            WHERE UPPER({$conf->user_fields['email']}) = UPPER('{$email}');
             SQL;
         $result = functions_mysqli::pwg_query($query);
 
@@ -713,7 +713,7 @@ final class functions_user
             $query = <<<SQL
                 SELECT *
                 FROM user_infos
-                WHERE user_id = {$conf['default_user_id']};
+                WHERE user_id = {$conf->default_user_id};
                 SQL;
 
             $result = functions_mysqli::pwg_query($query);
@@ -900,11 +900,11 @@ final class functions_user
             foreach ($user_ids as $user_id) {
                 $level = isset($default_user['level']) ? $default_user['level'] : 0;
 
-                if ($user_id == $conf['webmaster_id']) {
+                if ($user_id == $conf->webmaster_id) {
                     $status = 'webmaster';
-                    $level = max($conf['available_permission_levels']);
-                } elseif ($user_id == $conf['guest_id'] ||
-                          $user_id == $conf['default_user_id']
+                    $level = max($conf->available_permission_levels);
+                } elseif ($user_id == $conf->guest_id ||
+                          $user_id == $conf->default_user_id
                 ) {
                     $status = 'guest';
                 } else {
@@ -940,9 +940,9 @@ final class functions_user
     ): false|string {
         global $conf;
         $query = <<<SQL
-            SELECT {$conf['user_fields']['username']} AS username, {$conf['user_fields']['password']} AS password
+            SELECT {$conf->user_fields['username']} AS username, {$conf->user_fields['password']} AS password
             FROM users
-            WHERE {$conf['user_fields']['id']} = {$user_id};
+            WHERE {$conf->user_fields['id']} = {$user_id};
             SQL;
         $result = functions_mysqli::pwg_query($query);
 
@@ -950,7 +950,7 @@ final class functions_user
             $row = functions_mysqli::pwg_db_fetch_assoc($result);
             $username = stripslashes($row['username']);
             $data = $time . $user_id . $username;
-            $key = base64_encode(hash_hmac('sha1', $data, $conf['secret_key'] . $row['password'], true));
+            $key = base64_encode(hash_hmac('sha1', $data, $conf->secret_key . $row['password'], true));
             return $key;
         }
 
@@ -967,7 +967,7 @@ final class functions_user
         global $conf, $user;
 
         if ($remember_me &&
-            $conf['authorize_remembering']
+            $conf->authorize_remembering
         ) {
             $now = time();
             $key = self::calculate_auto_login_key($user_id, $now, $username);
@@ -975,9 +975,9 @@ final class functions_user
             if ($key !== false) {
                 $cookie = $user_id . '-' . $now . '-' . $key;
                 setcookie(
-                    $conf['remember_me_name'],
+                    $conf->remember_me_name,
                     $cookie,
-                    time() + $conf['remember_me_length'],
+                    time() + $conf->remember_me_length,
                     functions_cookie::cookie_path(),
                     ini_get('session.cookie_domain'),
                     (bool) ini_get('session.cookie_secure'),
@@ -985,7 +985,7 @@ final class functions_user
                 );
             }
         } else { // make sure we clean any remember me ...
-            setcookie($conf['remember_me_name'], '', 0, functions_cookie::cookie_path(), ini_get('session.cookie_domain'));
+            setcookie($conf->remember_me_name, '', 0, functions_cookie::cookie_path(), ini_get('session.cookie_domain'));
         }
 
         if (session_id() != '') { // we regenerate the session for security reasons
@@ -1009,13 +1009,13 @@ final class functions_user
     {
         global $conf;
 
-        if (isset($_COOKIE[$conf['remember_me_name']])) {
-            $cookie = explode('-', stripslashes($_COOKIE[$conf['remember_me_name']]));
+        if (isset($_COOKIE[$conf->remember_me_name])) {
+            $cookie = explode('-', stripslashes($_COOKIE[$conf->remember_me_name]));
 
             if (count($cookie) === 3 &&
                 is_numeric($cookie[0]) &&
                 is_numeric($cookie[1]) &&
-                time() - $conf['remember_me_length'] <= $cookie[1] &&
+                time() - $conf->remember_me_length <= $cookie[1] &&
                 time() >= $cookie[1] /*cookie generated in the past*/
             ) {
                 $key = self::calculate_auto_login_key($cookie[0], $cookie[1], $username);
@@ -1029,7 +1029,7 @@ final class functions_user
                 }
             }
 
-            setcookie($conf['remember_me_name'], '', 0, functions_cookie::cookie_path(), ini_get('session.cookie_domain'));
+            setcookie($conf->remember_me_name, '', 0, functions_cookie::cookie_path(), ini_get('session.cookie_domain'));
         }
 
         return false;
@@ -1093,15 +1093,15 @@ final class functions_user
         // retrieving the encrypted password of the login submitted
         $escaped_username = functions_mysqli::pwg_db_real_escape_string($username);
         $query = <<<SQL
-            SELECT {$conf['user_fields']['id']} AS id, {$conf['user_fields']['password']} AS password
+            SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['password']} AS password
             FROM users
-            WHERE {$conf['user_fields']['username']} = '{$escaped_username}';
+            WHERE {$conf->user_fields['username']} = '{$escaped_username}';
             SQL;
 
         $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
         if (isset($row['id']) &&
-            $conf['password_verify']($password, $row['password'], $row['id'])
+            ($conf->password_verify)($password, $row['password'], $row['id'])
         ) {
             $user_found = true;
         }
@@ -1110,15 +1110,15 @@ final class functions_user
         if (! $user_found) {
             $escaped_username = functions_mysqli::pwg_db_real_escape_string($username);
             $query = <<<SQL
-                SELECT {$conf['user_fields']['id']} AS id, {$conf['user_fields']['password']} AS password
+                SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['password']} AS password
                 FROM users
-                WHERE {$conf['user_fields']['email']} = '{$escaped_username}';
+                WHERE {$conf->user_fields['email']} = '{$escaped_username}';
                 SQL;
 
             $row = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
             if (isset($row['id']) &&
-                $conf['password_verify']($password, $row['password'], $row['id'])
+                ($conf->password_verify)($password, $row['password'], $row['id'])
             ) {
                 $user_found = true;
             }
@@ -1171,7 +1171,7 @@ final class functions_user
             ini_get('session.cookie_path'),
             ini_get('session.cookie_domain')
         );
-        setcookie($conf['remember_me_name'], '', 0, functions_cookie::cookie_path(), ini_get('session.cookie_domain'));
+        setcookie($conf->remember_me_name, '', 0, functions_cookie::cookie_path(), ini_get('session.cookie_domain'));
     }
 
     /**
@@ -1209,7 +1209,7 @@ final class functions_user
 
         switch (self::get_user_status($user_status)) {
             case 'guest':
-                $access_type_status = ($conf['guest_access'] ? ACCESS_GUEST : ACCESS_FREE);
+                $access_type_status = ($conf->guest_access ? ACCESS_GUEST : ACCESS_FREE);
                 break;
 
             case 'generic':
@@ -1343,7 +1343,7 @@ final class functions_user
         }
 
         if ($action == 'edit' &&
-            $conf['user_can_edit_comment']
+            $conf->user_can_edit_comment
         ) {
             if ($comment_author_id == $user['id']) {
                 return true;
@@ -1351,7 +1351,7 @@ final class functions_user
         }
 
         if ($action == 'delete' &&
-            $conf['user_can_delete_comment']
+            $conf->user_can_delete_comment
         ) {
             if ($comment_author_id == $user['id']) {
                 return true;
@@ -1480,10 +1480,10 @@ final class functions_user
         }
 
         $query = <<<SQL
-            SELECT *, {$conf['user_fields']['username']} AS username, NOW() AS dbnow
+            SELECT *, {$conf->user_fields['username']} AS username, NOW() AS dbnow
             FROM user_auth_keys AS uak
             JOIN user_infos AS ui ON uak.user_id = ui.user_id
-            JOIN users AS u ON u.{$conf['user_fields']['id']} = ui.user_id
+            JOIN users AS u ON u.{$conf->user_fields['id']} = ui.user_id
             WHERE auth_key = '{$auth_key}';
             SQL;
         $keys = functions_mysqli::query2array($query);
@@ -1526,7 +1526,7 @@ final class functions_user
     ): false|array {
         global $conf;
 
-        if ($conf['auth_key_duration'] == 0) {
+        if ($conf->auth_key_duration == 0) {
             return false;
         }
 
@@ -1553,7 +1553,7 @@ final class functions_user
         $candidate = functions_session::generate_key(30);
 
         $query = <<<SQL
-            SELECT COUNT(*), NOW(), ADDDATE(NOW(), INTERVAL {$conf['auth_key_duration']} SECOND)
+            SELECT COUNT(*), NOW(), ADDDATE(NOW(), INTERVAL {$conf->auth_key_duration} SECOND)
             FROM user_auth_keys
             WHERE auth_key = '{$candidate}';
             SQL;
@@ -1564,7 +1564,7 @@ final class functions_user
                 'auth_key' => $candidate,
                 'user_id' => $user_id,
                 'created_on' => $now,
-                'duration' => $conf['auth_key_duration'],
+                'duration' => $conf->auth_key_duration,
                 'expired_on' => $expiration,
             ];
 

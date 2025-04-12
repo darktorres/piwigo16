@@ -65,9 +65,9 @@ $page['user_filter'] = '';
 
 if (isset($_GET['users'])) {
     if ($_GET['users'] == 'user') {
-        $page['user_filter'] = ' AND r.user_id != ' . $conf['guest_id'];
+        $page['user_filter'] = ' AND r.user_id != ' . $conf->guest_id;
     } elseif ($_GET['users'] == 'guest') {
-        $page['user_filter'] = ' AND r.user_id = ' . $conf['guest_id'];
+        $page['user_filter'] = ' AND r.user_id = ' . $conf->guest_id;
     }
 }
 
@@ -85,7 +85,7 @@ if (isset($_GET['cat']) &&
 
 $users = [];
 $query = <<<SQL
-    SELECT {$conf['user_fields']['username']} AS username, {$conf['user_fields']['id']} AS id
+    SELECT {$conf->user_fields['username']} AS username, {$conf->user_fields['id']} AS id
     FROM users;
     SQL;
 $result = functions_mysqli::pwg_query($query);

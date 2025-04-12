@@ -94,13 +94,13 @@ if ($newfile_page) {
         $i++;
     }
 
-    foreach (functions_admin::get_dirs($conf['themes_dir']) as $theme_id) {
+    foreach (functions_admin::get_dirs($conf->themes_dir) as $theme_id) {
         if ($i) {
             $options['model'][] = '----------------------';
             $i = 0;
         }
 
-        $dir = $conf['themes_dir'] . '/' . $theme_id . '/template/';
+        $dir = $conf->themes_dir . '/' . $theme_id . '/template/';
 
         if (is_dir($dir) &&
             $content = opendir($dir)

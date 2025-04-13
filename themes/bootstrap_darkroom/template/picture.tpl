@@ -129,32 +129,8 @@
       </div>
     </div>
 
-    {if $theme_config->photoswipe && $theme_config->slick_infinite}
-      <div id="photoSwipeData" class="d-none">
-        {assign var=idx value=0}
-        {foreach from=$thumbnails item=thumbnail}
-          {assign var=derivative_medium value=$pwg->derivative($derivative_params_medium, $thumbnail.src_image)}
-          {assign var=derivative_large value=$pwg->derivative($derivative_params_large, $thumbnail.src_image)}
-          {assign var=derivative_xxlarge value=$pwg->derivative($derivative_params_xxlarge, $thumbnail.src_image)}
-          <a{if $thumbnail.id eq $current.id} id="thumbnail-active" {/if} href="{$thumbnail.URL}" data-index="{$idx}"
-            data-name="{$thumbnail.NAME}" data-description="{$thumbnail.DESCRIPTION}"
-            data-src-xlarge="{$derivative_xxlarge->get_url()}" data-size-xlarge="{$derivative_xxlarge->get_size_hr()}"
-            data-src-large="{$derivative_large->get_url()}" data-size-large="{$derivative_large->get_size_hr()}"
-            data-src-medium="{$derivative_medium->get_url()}" data-size-medium="{$derivative_medium->get_size_hr()}"
-            {if preg_match("/(mp4|m4v)$/", $thumbnail.PATH)} data-src-original="{$U_HOME}{$thumbnail.PATH}"
-            data-size-original="{$thumbnail.SIZE}" data-video="true" {/if}></a>
-            {assign var=idx value=$idx+1}
-          {/foreach}
-      </div>
-    {/if}
     {if $theme_config->slick_enabled && count($thumbnails) > 1}
       {include file="_slick_js.tpl"}
-    {/if}
-    {if $theme_config->photoswipe && !$theme_config->slick_infinite}
-      {include file="_photoswipe_js.tpl" selector="#thumbnailCarousel"}
-    {/if}
-    {if $theme_config->photoswipe && $theme_config->slick_infinite}
-      {include file="_photoswipe_js.tpl" selector="#photoSwipeData"}
     {/if}
   {/if}
 </div>

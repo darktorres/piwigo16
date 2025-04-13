@@ -283,69 +283,21 @@
                 });
             </script>{/footer_script}
             {if $theme_config->photoswipe}
-                <div id="photoSwipeData">
-                    {assign var=idx value=0}
-                    {foreach from=$thumbnails item=thumbnail}
-                        {assign var=derivative_medium value=$pwg->derivative($derivative_params_medium, $thumbnail.src_image)}
-                        {assign var=derivative_large value=$pwg->derivative($derivative_params_large, $thumbnail.src_image)}
-                        {assign var=derivative_xxlarge value=$pwg->derivative($derivative_params_xxlarge, $thumbnail.src_image)}
-                        <a href="{$thumbnail.URL}" data-index="{$idx}" data-name="{$thumbnail.NAME}"
-                            data-description="{$thumbnail.DESCRIPTION}" data-src-medium="{$derivative_medium->get_url()}"
-                            data-size-medium="{$derivative_medium->get_size_hr()}" data-src-large="{$derivative_large->get_url()}"
-                            data-size-large="{$derivative_large->get_size_hr()}" data-src-xlarge="{$derivative_xxlarge->get_url()}"
-                            data-size-xlarge="{$derivative_xxlarge->get_size_hr()}" {if preg_match("/(mp4|m4v)$/", $thumbnail.PATH)}
-                                data-src-original="{$U_HOME}{$thumbnail.PATH}" data-size-original="{$thumbnail.SIZE}" data-video="true"
-                            {else} 
-                            {/if}></a>
-                        {assign var=idx value=$idx+1}
-                    {/foreach}
-                    {include file='_photoswipe_js.tpl' selector='#photoSwipeData'}
-                </div>
-                {footer_script require='jquery' require='photoswipe'}<script>
-                    $('#startSlideshow').on('click touchstart', function() {
-                        startPhotoSwipe(0);
-                        $('.pswp__button--autoplay')[0].click();
+                {footer_script}
+                <script type="module">
+                    import PhotoSwipeLightbox from './themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe-lightbox.esm.js';
+
+                    const lightbox = new PhotoSwipeLightbox({
+                        gallery: '#thumbnails',
+                        children: 'a[data-pswp-src]',
+                        pswpModule: () => import(
+                            './themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe.esm.js')
                     });
+                    lightbox.init();
+                </script>
 
-                    function setupPhotoSwipe() {
-                        $('#thumbnails').find("a:has(img):not(.addCollection)").each(function(_index) {
-                            var $pswpIndex = {if isset($GDThumb) || isset($GThumb)}{$START_ID}{else}0{/if};
-                            if ($(this).find('img').length > 0) {
-                                var _href = $(this).href;
-                                $(this).attr('href', 'javascript:;').attr('data-href', _href);
-                                if (!$(this).attr('data-index')) {
-                                    $(this).attr('data-index', _index);
-                                    $pswpIndex = $pswpIndex + _index;
-                                } else {
-                                    $pswpIndex = $pswpIndex + $(this).data('index');
-                                }
-                                $(this).off('click tap').on('click tap', function(event) {
-                                    event.preventDefault();
-                                    startPhotoSwipe($pswpIndex);
-                                });
-                            }
-                        });
-
-                        if (window.location.hash) {
-                            const pidMatch = /(#|&)pid=(\d+)(&|$)/.exec(window.location.hash);
-                            if (pidMatch) {
-                                startPhotoSwipe(parseInt(pidMatch[2]) - 1);
-                            }
-                        }
-                    }
-
-                    {if $theme_config->thumbnail_linkto == 'photoswipe' || ($theme_config->thumbnail_linkto == 'photoswipe_mobile_only' && functions::get_device() != 'desktop')}
-                        $(document).ready(function() {
-                            setupPhotoSwipe();
-                        });
-
-                        {if isset($loaded_plugins['rv_tscroller'])}
-                            $(document).ajaxComplete(function() {
-                                setupPhotoSwipe();
-                            });
-                        {/if}
-                    {/if}
-                </script>{/footer_script}
+                <link rel="stylesheet" href="./themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe.css">
+                {/footer_script}
             {/if}
             {footer_script require="jquery"}<script>
                 {if !isset($loaded_plugins['piwigo-videojs']) && (isset($GThumb) || isset($GDThumb))}

@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\themes\bootstrap_darkroom\inc;
 
-use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\functions;
-use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_url;
-use Piwigo\inc\ImageStdParams;
-use Piwigo\inc\SrcImage;
 
 readonly class ThemeController
 {
@@ -54,14 +50,6 @@ readonly class ThemeController
         functions_plugins::add_event_handler('format_exif_data', $this->exifReplacements(...));
         functions_plugins::add_event_handler('loc_end_picture', $this->registerPictureTemplates(...), 1000);
         functions_plugins::add_event_handler('loc_begin_index_thumbnails', $this->returnPageStart(...));
-
-        if ($this->config->slick_enabled === true ||
-            $this->config->photoswipe === true
-        ) {
-            functions_plugins::add_event_handler('loc_end_picture', $this->getAllThumbnailsInCategory(...));
-            // also needed on index.tpl for compatibility with GThumb+/GDThumb
-            functions_plugins::add_event_handler('loc_end_index', $this->getAllThumbnailsInCategory(...));
-        }
     }
 
     public function assignConfig(): void
@@ -223,84 +211,6 @@ readonly class ThemeController
                 $template->assign('SECTION_TITLE', $title);
             }
         }
-    }
-
-    public function getAllThumbnailsInCategory(): void
-    {
-        global $template, $conf, $user, $page;
-
-        if (! $page['items'] ||
-           ($page['section'] == 'categories' && ! isset($page['category']) && ! isset($page['chronology_field']) && ! isset($page['flat']))
-        ) {
-            return;
-        }
-
-        // if (count($page['items']) > 1000) {
-        //     $this->config->slick_enabled = false;
-        //     $this->config->photoswipe = false;
-
-        //     return;
-        // }
-
-        // select all pictures for this category
-        $items = implode(', ', $page['items']);
-        $query = <<<SQL
-            SELECT id, file, representative_ext, name, comment, width, height, date_creation, path, rotation
-            FROM images
-            WHERE id IN ({$items})
-            ORDER BY FIELD(id, {$items});
-            SQL;
-
-        $result = $conf->sql_backend::pwg_query($query);
-
-        $pictures = [];
-
-        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-            $pictures[] = $row;
-        }
-
-        $tpl_thumbnails_var = [];
-
-        $theme_config = $template->get_template_vars('theme_config');
-
-        foreach ($pictures as $row) {
-            $url = functions_url::duplicate_picture_url(
-                [
-                    'image_id' => $row['id'],
-                    'image_file' => $row['file'],
-                ],
-                ['start']
-            );
-
-            $name = functions_html::render_element_name($row);
-            $desc = functions_html::render_element_description($row, 'main_page_element_description');
-
-            $tpl_var = array_merge($row, [
-                'NAME' => $name,
-                'TN_ALT' => htmlspecialchars(strip_tags($name)),
-                'URL' => $url,
-                'DESCRIPTION' => htmlspecialchars(strip_tags($desc)),
-                'src_image' => new SrcImage($row),
-                'SIZE' => $row['width'] . 'x' . $row['height'],
-                'PATH' => $row['path'],
-                'DATE_CREATED' => $row['date_creation'],
-                'file_ext' => strtolower(functions::get_extension($row['file'])),
-                'path_ext' => strtolower(functions::get_extension($row['path'])),
-            ]);
-
-            $tpl_thumbnails_var[] = $tpl_var;
-        }
-
-        $template->assign('thumbnails', $tpl_thumbnails_var);
-
-        $template->assign([
-            'derivative_params_square' => functions_plugins::trigger_change('get_index_derivative_params', ImageStdParams::get_by_type(derivative_std_params::IMG_SQUARE)),
-            'derivative_params_medium' => functions_plugins::trigger_change('get_index_derivative_params', ImageStdParams::get_by_type(derivative_std_params::IMG_MEDIUM)),
-            'derivative_params_large' => functions_plugins::trigger_change('get_index_derivative_params', ImageStdParams::get_by_type(derivative_std_params::IMG_LARGE)),
-            'derivative_params_xxlarge' => functions_plugins::trigger_change('get_index_derivative_params', ImageStdParams::get_by_type(derivative_std_params::IMG_XXLARGE)),
-        ]);
-
-        unset($tpl_thumbnails_var, $pictures);
     }
 
     public function &getConfigReference(): Config

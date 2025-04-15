@@ -2749,6 +2749,7 @@ class functions_admin
             case 'photo':
             case 'photos_add':
             case 'rating':
+            case 'rating_user':
             case 'tags':
             case 'batch_manager':
                 return 0;

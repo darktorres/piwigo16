@@ -278,138 +278,55 @@ final class functions_mysqli
             return;
         }
 
-        // we use the multi table update or N update queries
-        if (count($datas) < 10) {
-            foreach ($datas as $data) {
+        foreach ($datas as $data) {
+            $is_first = true;
+
+            $query = <<<SQL
+                UPDATE {$tablename}
+                SET
+
+                SQL;
+
+            foreach ($dbfields['update'] as $key) {
+                $separator = $is_first ? '' : ",\n";
+
+                if (isset($data[$key]) &&
+                    $data[$key] != ''
+                ) {
+                    $query .= "{$separator}{$key} = '{$data[$key]}'";
+                } else {
+                    if (($flags & self::MASS_UPDATES_SKIP_EMPTY) !== 0) {
+                        continue; // next field
+                    }
+
+                    $query .= "{$separator}{$key} = NULL";
+                }
+
+                $is_first = false;
+            }
+
+            if (! $is_first) { // only if one field at least updated
                 $is_first = true;
 
-                $query = <<<SQL
-                    UPDATE {$tablename}
-                    SET
+                $query .= "\nWHERE\n";
 
-                    SQL;
+                foreach ($dbfields['primary'] as $key) {
+                    if (! $is_first) {
+                        $query .= ' AND ';
+                    }
 
-                foreach ($dbfields['update'] as $key) {
-                    $separator = $is_first ? '' : ",\n";
-
-                    if (isset($data[$key]) &&
-                        $data[$key] != ''
-                    ) {
-                        $query .= "{$separator}{$key} = '{$data[$key]}'";
+                    if (isset($data[$key])) {
+                        $query .= "{$key} = '{$data[$key]}'\n";
                     } else {
-                        if (($flags & self::MASS_UPDATES_SKIP_EMPTY) !== 0) {
-                            continue; // next field
-                        }
-
-                        $query .= "{$separator}{$key} = NULL";
+                        $query .= "{$key} IS NULL\n";
                     }
 
                     $is_first = false;
                 }
 
-                if (! $is_first) { // only if one field at least updated
-                    $is_first = true;
-
-                    $query .= "\nWHERE\n";
-
-                    foreach ($dbfields['primary'] as $key) {
-                        if (! $is_first) {
-                            $query .= ' AND ';
-                        }
-
-                        if (isset($data[$key])) {
-                            $query .= "{$key} = '{$data[$key]}'\n";
-                        } else {
-                            $query .= "{$key} IS NULL\n";
-                        }
-
-                        $is_first = false;
-                    }
-
-                    $query = trim($query) . ';';
-                    self::pwg_query($query);
-                }
+                $query = trim($query) . ';';
+                self::pwg_query($query);
             }
-        } else {
-            // creation of the temporary table
-            $result = self::pwg_query("SHOW FULL COLUMNS FROM {$tablename};");
-            $columns = [];
-            $all_fields = array_merge($dbfields['primary'], $dbfields['update']);
-
-            while ($row = self::pwg_db_fetch_assoc($result)) {
-                if (in_array($row['Field'], $all_fields)) {
-                    $column = "{$row['Field']}";
-                    $column .= " {$row['Type']}";
-
-                    $nullable = true;
-
-                    if (! isset($row['Null']) ||
-                        $row['Null'] == '' ||
-                        $row['Null'] == 'NO'
-                    ) {
-                        $column .= ' NOT NULL';
-                        $nullable = false;
-                    }
-
-                    if (isset($row['Default'])) {
-                        $column .= " default '{$row['Default']}'";
-                    } elseif ($nullable) {
-                        $column .= ' default NULL';
-                    }
-
-                    if (isset($row['Collation']) &&
-                        $row['Collation'] != 'NULL'
-                    ) {
-                        $column .= " collate '{$row['Collation']}'";
-                    }
-
-                    $columns[] = $column;
-                }
-            }
-
-            $temporary_tablename = $tablename . '_' . functions::micro_seconds();
-
-            $columnsList = implode(",\n  ", $columns);
-            $primaryKeys = implode(', ', $dbfields['primary']);
-            $query = <<<SQL
-                CREATE TABLE {$temporary_tablename}
-                    (
-                        {$columnsList},
-                        UNIQUE KEY the_key ({$primaryKeys})
-                    );
-                SQL;
-
-            self::pwg_query($query);
-            self::mass_inserts($temporary_tablename, $all_fields, $datas);
-
-            if (($flags & self::MASS_UPDATES_SKIP_EMPTY) !== 0) {
-                $func_set = (fn (string $s): string => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
-            } else {
-                $func_set = (fn (string $s): string => "t1.{$s} = t2.{$s}");
-            }
-
-            // update of table by joining with temporary table
-            $updateFields = implode(
-                ",\n    ",
-                array_map($func_set, $dbfields['update'])
-            );
-
-            $primaryConditions = implode(
-                "\n    AND ",
-                array_map(
-                    fn (string $s): string => "t1.{$s} = t2.{$s}",
-                    $dbfields['primary']
-                )
-            );
-
-            $query = <<<SQL
-                UPDATE {$tablename} AS t1, {$temporary_tablename} AS t2
-                SET {$updateFields}
-                WHERE {$primaryConditions};
-                SQL;
-            self::pwg_query($query);
-
-            self::pwg_query("DROP TABLE {$temporary_tablename};");
         }
     }
 

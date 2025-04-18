@@ -205,69 +205,56 @@ final class pwg_users
             $params['display'] = [];
         }
 
-        $query = <<<SQL
-            SELECT DISTINCT
-
-            SQL;
-
-        // ADD SQL_CALC_FOUND_ROWS if display total_count is requested
-        if (isset($params['display']['total_count'])) {
-            $query .= 'SQL_CALC_FOUND_ROWS ';
-        }
-
-        $first = true;
+        $inner_select = [];
+        $outer_select = ['COUNT(*) OVER() AS total_count'];
 
         foreach ($display as $field => $name) {
-            if (! $first) {
-                $query .= ', ';
-            } else {
-                $first = false;
-            }
-
-            $query .= "{$field} AS {$name}";
+            $inner_select[] = "{$field} AS {$name}";
+            $outer_select[] = $name;
         }
 
         if (isset($display['ui.last_visit'])) {
-            if (! $first) {
-                $query .= ', ';
-            }
-
-            $query .= "ui.last_visit_from_history AS last_visit_from_history\n";
+            $inner_select[] = 'ui.last_visit_from_history AS last_visit_from_history';
+            $outer_select[] = 'last_visit_from_history';
         }
 
+        $inner_sql = implode(",\n", $inner_select);
+        $outer_sql = implode(",\n", $outer_select);
+
         $whereClause = implode(' AND ', $where_clauses);
+        $order = $params['order'];
 
-        $query .= <<<SQL
-
-            FROM users AS u
-            INNER JOIN user_infos AS ui ON u.{$conf->user_fields['id']} = ui.user_id
-            LEFT JOIN user_group AS ug ON u.{$conf->user_fields['id']} = ug.user_id
-            WHERE {$whereClause}
-            ORDER BY {$params['order']}
-
-            SQL;
+        $limit_offset = '';
 
         if ($params['per_page'] != 0 ||
             isset($params['display']) && $params['display'] !== []
         ) {
             $offset = $params['per_page'] * $params['page'];
-            $query .= <<<SQL
+            $limit_offset = <<<SQL
                 LIMIT {$params['per_page']} OFFSET {$offset}
 
                 SQL;
         }
 
+        $query = <<<SQL
+            SELECT {$outer_sql}
+            FROM (
+                SELECT DISTINCT {$inner_sql}
+                FROM users AS u
+                INNER JOIN user_infos AS ui ON u.{$conf->user_fields['id']} = ui.user_id
+                LEFT JOIN user_group AS ug ON u.{$conf->user_fields['id']} = ug.user_id
+                WHERE {$whereClause}
+            ) AS distinct_users
+            ORDER BY {$order}
+            {$limit_offset}
+            SQL;
+
         $query = trim($query) . ';';
         $result = functions_mysqli::pwg_query($query);
         $users = [];
 
-        /* GET THE RESULT OF SQL_CALC_FOUND_ROWS if display total_count is requested*/
-        if (isset($params['display']['total_count'])) {
-            $total_count_query_result = functions_mysqli::pwg_query('SELECT FOUND_ROWS();');
-            [$total_count] = functions_mysqli::pwg_db_fetch_row($total_count_query_result);
-        }
-
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            $total_count = $row['total_count'];
             $row['id'] = intval($row['id']);
 
             if (isset($params['display']['groups'])) {
@@ -829,7 +816,7 @@ final class pwg_users
 
         // does the image really exist?
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM images
             WHERE id = {$params['image_id']};
             SQL;
@@ -872,7 +859,7 @@ final class pwg_users
 
         // does the image really exist?
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM images
             WHERE id = {$params['image_id']};
             SQL;

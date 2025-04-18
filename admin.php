@@ -250,7 +250,7 @@ if ($conf->activate_comments) {
 
     // pending comments
     $query = <<<SQL
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS "COUNT(*)"
         FROM comments
         WHERE validated = 'false';
         SQL;
@@ -265,7 +265,7 @@ if ($conf->activate_comments) {
 
 // any photo in the caddie?
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM caddie
     WHERE user_id = {$user['id']};
     SQL;

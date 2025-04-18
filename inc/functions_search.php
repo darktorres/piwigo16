@@ -583,7 +583,7 @@ final class functions_search
 
             $like = addslashes($token->term);
             $like = str_replace(['%', '_'], ['\\%', '\\_'], $like); // escape LIKE specials %_
-            $file_like = "CONVERT(file, CHAR) LIKE '%" . $like . "%'";
+            $file_like = "CAST(file AS CHAR) LIKE '%" . $like . "%'";
 
             switch ($scope_id) {
                 case 'photo':
@@ -1195,7 +1195,7 @@ final class functions_search
         $candidate = 'psk-' . date('Ymd') . '-' . functions_session::generate_key(10);
 
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM search
             WHERE search_uuid = '{$candidate}';
             SQL;

@@ -171,52 +171,52 @@ final class pwg
         $infos['version'] = PHPWG_VERSION;
 
         $query = <<<SQL
-            SELECT COUNT(*) FROM images;
+            SELECT COUNT(*) AS "COUNT(*)" FROM images;
             SQL;
         [$infos['nb_elements']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
-            SELECT COUNT(*) FROM categories;
+            SELECT COUNT(*) AS "COUNT(*)" FROM categories;
             SQL;
         [$infos['nb_categories']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
-            SELECT COUNT(*) FROM categories WHERE dir IS NULL;
+            SELECT COUNT(*) AS "COUNT(*)" FROM categories WHERE dir IS NULL;
             SQL;
         [$infos['nb_virtual']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
-            SELECT COUNT(*) FROM categories WHERE dir IS NOT NULL;
+            SELECT COUNT(*) AS "COUNT(*)" FROM categories WHERE dir IS NOT NULL;
             SQL;
         [$infos['nb_physical']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
-            SELECT COUNT(*) FROM image_category;
+            SELECT COUNT(*) AS "COUNT(*)" FROM image_category;
             SQL;
         [$infos['nb_image_category']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
-            SELECT COUNT(*) FROM tags;
+            SELECT COUNT(*) AS "COUNT(*)" FROM tags;
             SQL;
         [$infos['nb_tags']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
-            SELECT COUNT(*) FROM image_tag;
+            SELECT COUNT(*) AS "COUNT(*)" FROM image_tag;
             SQL;
         [$infos['nb_image_tag']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
-            SELECT COUNT(*) FROM users;
+            SELECT COUNT(*) AS "COUNT(*)" FROM users;
             SQL;
         [$infos['nb_users']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
-            SELECT COUNT(*) FROM user_groups;
+            SELECT COUNT(*) AS "COUNT(*)" FROM user_groups;
             SQL;
         [$infos['nb_groups']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
         $query = <<<SQL
-            SELECT COUNT(*) FROM comments;
+            SELECT COUNT(*) AS "COUNT(*)" FROM comments;
             SQL;
         [$infos['nb_comments']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
@@ -231,7 +231,7 @@ final class pwg
         // unvalidated comments
         if ($infos['nb_comments'] > 0) {
             $query = <<<SQL
-                SELECT COUNT(*) FROM comments WHERE validated = 'false';
+                SELECT COUNT(*) AS "COUNT(*)" FROM comments WHERE validated = 'false';
                 SQL;
             [$infos['nb_unvalidated_comments']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
         }
@@ -632,13 +632,13 @@ final class pwg
 
         if (isset($param['uid'])) {
             $query = <<<SQL
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS "COUNT(*)"
                 FROM activity
                 WHERE performed_by = {$param['uid']};
                 SQL;
         } else {
             $query = <<<SQL
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS "COUNT(*)"
                 FROM activity;
                 SQL;
         }

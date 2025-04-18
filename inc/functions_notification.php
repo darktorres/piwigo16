@@ -510,7 +510,7 @@ final class functions_notification
             if ($max_elements > 0) { // get some thumbnails ...
                 $randomFunction = functions_mysqli::DB_RANDOM_FUNCTION;
                 $query = <<<SQL
-                    SELECT DISTINCT i.*
+                    SELECT DISTINCT i.*, {$randomFunction}
                     FROM images i
                     INNER JOIN image_category AS ic ON id = image_id
                     {$where_sql}

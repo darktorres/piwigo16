@@ -134,7 +134,7 @@ final class pwg_categories
             $where_condition = implode("\n    AND ", $where_clauses);
             $offset = $params['per_page'] * $params['page'];
             $query = <<<SQL
-                SELECT SQL_CALC_FOUND_ROWS i.*
+                SELECT COUNT(*) OVER() AS total_count, i.*
                 FROM images i
                 INNER JOIN image_category ON i.id = image_id
                 WHERE {$where_condition}
@@ -145,6 +145,7 @@ final class pwg_categories
             $result = functions_mysqli::pwg_query($query);
 
             while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+                $total_images = $row['total_count'];
                 $image_ids[] = $row['id'];
 
                 $image = [];
@@ -164,8 +165,6 @@ final class pwg_categories
 
                 $images[] = $image;
             }
-
-            [$total_images] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
 
             // let's take care of adding the related albums to each photo
             if ($image_ids !== []) {
@@ -589,7 +588,7 @@ final class pwg_categories
         // pwg_db_real_escape_string
 
         $query = <<<SQL
-            SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order
+            SELECT COUNT(*) OVER() AS total_count, id, name, comment, uppercats, global_rank, dir, status, image_order
             FROM categories
 
             SQL;
@@ -608,11 +607,10 @@ final class pwg_categories
         $query = trim($query) . ';';
         $result = functions_mysqli::pwg_query($query);
 
-        [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
-
         $cats = [];
 
         while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+            $counter = $row['total_count'];
             $id = $row['id'];
             $row['nb_images'] = $nb_images_of[$id] ?? 0;
 
@@ -940,7 +938,7 @@ final class pwg_categories
     ): ?PwgError {
         // does the category really exist?
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM categories
             WHERE id = {$params['category_id']};
             SQL;
@@ -952,7 +950,7 @@ final class pwg_categories
 
         // does the image really exist?
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM images
             WHERE id = {$params['image_id']};
             SQL;
@@ -1012,7 +1010,7 @@ final class pwg_categories
         }
 
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM image_category
             WHERE category_id = {$params['category_id']};
             SQL;

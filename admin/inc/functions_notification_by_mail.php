@@ -50,7 +50,7 @@ final class functions_notification_by_mail
         while (true) {
             $key = functions_session::generate_key(16);
             $query = <<<SQL
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS "COUNT(*)"
                 FROM user_mail_notification
                 WHERE check_key = '{$key}';
                 SQL;

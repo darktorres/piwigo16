@@ -297,7 +297,7 @@ class MultiView
             SELECT {$conf->user_fields['id']} AS id, {$conf->user_fields['username']} AS username, status
             FROM users AS u
             INNER JOIN user_infos AS i ON {$conf->user_fields['id']} = user_id
-            ORDER BY CONVERT({$conf->user_fields['username']}, CHAR);
+            ORDER BY CAST({$conf->user_fields['username']} AS CHAR);
             SQL;
         $out['users'] = functions_mysqli::query2array($query);
 

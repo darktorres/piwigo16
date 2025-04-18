@@ -288,7 +288,7 @@ final class pwg_tags
 
         $tag_ids = implode(', ', $params['tag_id']);
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM tags
             WHERE id IN ({$tag_ids});
             SQL;
@@ -326,7 +326,7 @@ final class pwg_tags
 
         // does the tag exist ?
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM tags
             WHERE id = {$tag_id};
             SQL;
@@ -387,7 +387,7 @@ final class pwg_tags
 
         // does the tag exist ?
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM tags
             WHERE id = {$tag_id};
             SQL;
@@ -398,7 +398,7 @@ final class pwg_tags
         }
 
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM tags
             WHERE name = '{$copy_name}';
             SQL;
@@ -473,7 +473,7 @@ final class pwg_tags
 
         $all_tags_imploded = implode(', ', $all_tags);
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM tags
             WHERE id IN ({$all_tags_imploded});
             SQL;

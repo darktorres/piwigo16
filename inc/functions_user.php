@@ -46,7 +46,7 @@ final class functions_user
         ) {
             $exclude_user_condition = is_numeric($user_id) ? "AND {$conf->user_fields['id']} != '{$user_id}'" : '';
             $query = <<<SQL
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS "COUNT(*)"
                 FROM users
                 WHERE UPPER({$conf->user_fields['email']}) = UPPER('{$mail_address}')
                     {$exclude_user_condition};
@@ -497,18 +497,41 @@ final class functions_user
             // this insert
             $boolean_to_string = functions_mysqli::boolean_to_string($userdata['need_update']);
             $empty_last_photo_date = empty($userdata['last_photo_date']) ? 'NULL' : "'{$userdata['last_photo_date']}'";
-            $query = <<<SQL
+
+            if ($conf->dblayer === 'mysqli') {
+                $query = <<<SQL
                     INSERT IGNORE INTO user_cache
-                        (
-                            user_id, need_update, cache_update_time, forbidden_categories, nb_total_images,
-                            last_photo_date, image_access_type, image_access_list
-                        )
-                    VALUES
-                        (
-                            {$userdata['id']}, '{$boolean_to_string}', {$userdata['cache_update_time']}, '{$userdata['forbidden_categories']}',
-                            {$userdata['nb_total_images']}, {$empty_last_photo_date}, '{$userdata['image_access_type']}', '{$userdata['image_access_list']}'
-                        );
+
                     SQL;
+            }
+
+            if ($conf->dblayer === 'pgsql') {
+                $query = <<<SQL
+                    INSERT INTO user_cache
+
+                    SQL;
+            }
+
+            $query .= <<<SQL
+                    (
+                        user_id, need_update, cache_update_time, forbidden_categories, nb_total_images,
+                        last_photo_date, image_access_type, image_access_list
+                    )
+                    VALUES
+                    (
+                        {$userdata['id']}, '{$boolean_to_string}', {$userdata['cache_update_time']}, '{$userdata['forbidden_categories']}',
+                        {$userdata['nb_total_images']}, {$empty_last_photo_date}, '{$userdata['image_access_type']}', '{$userdata['image_access_list']}'
+                    )
+                    SQL;
+
+            if ($conf->dblayer === 'pgsql') {
+                $query .= <<<SQL
+
+                    ON CONFLICT (user_id) DO NOTHING
+                    SQL;
+            }
+
+            $query .= ';';
             functions_mysqli::pwg_query($query);
         }
 
@@ -1519,7 +1542,7 @@ final class functions_user
         $candidate = functions_session::generate_key(30);
 
         $query = <<<SQL
-            SELECT COUNT(*), NOW(), ADDDATE(NOW(), INTERVAL {$conf->auth_key_duration} SECOND)
+            SELECT COUNT(*) AS "COUNT(*)", NOW(), ADDDATE(NOW(), INTERVAL {$conf->auth_key_duration} SECOND)
             FROM user_auth_keys
             WHERE auth_key = '{$candidate}';
             SQL;

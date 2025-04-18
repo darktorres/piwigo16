@@ -236,6 +236,8 @@
                   <select id="dbtype" name="dbtype" required>
                     <option value="mysqli">MySQL</option>
                     <option value="mysqli-socket">MySQL Socket</option>
+                    <option value="pgsql">PostgreSQL</option>
+                    <option value="pgsql-socket">PostgreSQL Socket</option>
                   </select>
                 </td>
                 <td class="fielddesc">{'Select the type of your database'|translate}</td>
@@ -281,6 +283,16 @@
                         break;
                       case 'mysqli-socket':
                         dbHostInput.value = '/var/run/mysqld/mysqld.sock';
+                        dbUserInput.value = 'www-data';
+                        dbPasswdInput.value = '';
+                        break;
+                      case 'pgsql':
+                        dbHostInput.value = 'localhost:5432';
+                        dbUserInput.value = 'postgres';
+                        dbPasswdInput.value = '1234';
+                        break;
+                      case 'pgsql-socket':
+                        dbHostInput.value = '/var/run/postgresql';
                         dbUserInput.value = 'www-data';
                         dbPasswdInput.value = '';
                         break;

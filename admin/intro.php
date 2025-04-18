@@ -79,7 +79,7 @@ if ($nb_orphans > 0) {
 
 // locked album ?
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM categories
     WHERE visible = 'false';
     SQL;
@@ -117,43 +117,43 @@ if ($conf->show_newsletter_subscription &&
 }
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM images;
     SQL;
 [$nb_photos] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM categories;
     SQL;
 [$nb_categories] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM tags;
     SQL;
 [$nb_tags] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM image_tag;
     SQL;
 [$nb_image_tag] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM users;
     SQL;
 [$nb_users] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM user_groups;
     SQL;
 [$nb_groups] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM rate;
     SQL;
 [$nb_rates] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -205,7 +205,7 @@ $template->assign(
 
 if ($conf->activate_comments) {
     $query = <<<SQL
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS "COUNT(*)"
         FROM comments;
         SQL;
     [$nb_comments] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -266,8 +266,20 @@ if (! isset($_SESSION['cache_activity_last_weeks']) ||
 ) {
     $start_time = functions::get_moment();
 
+    if ($conf->dblayer === 'mysqli') {
+        $date_format_function = <<<SQL
+            DATE_FORMAT(occurred_on, '%Y-%m-%d')
+            SQL;
+    }
+
+    if ($conf->dblayer === 'pgsql') {
+        $date_format_function = <<<SQL
+            TO_CHAR(occurred_on, 'YYYY-MM-DD')
+            SQL;
+    }
+
     $query = <<<SQL
-        SELECT DATE_FORMAT(occurred_on , '%Y-%m-%d') AS activity_day, object, action, COUNT(*) AS activity_counter
+        SELECT {$date_format_function} AS activity_day, object, action, COUNT(*) AS activity_counter
         FROM activity
         WHERE occurred_on >= '{$date_string}'
         GROUP BY activity_day, object, action;
@@ -393,8 +405,20 @@ $video_format = ['webm', 'webmv', 'ogg', 'ogv', 'mp4', 'm4v', 'mov'];
 $data_storage = [];
 
 //Select files in Image_Table
+if ($conf->dblayer === 'mysqli') {
+    $ext_query = <<<SQL
+        SUBSTRING_INDEX(path, '.', -1)
+        SQL;
+}
+
+if ($conf->dblayer === 'pgsql') {
+    $ext_query = <<<SQL
+        SPLIT_PART(path, '.', ARRAY_LENGTH(STRING_TO_ARRAY(path, '.'), 1))
+        SQL;
+}
+
 $query = <<<SQL
-    SELECT COUNT(*) AS ext_counter, SUBSTRING_INDEX(path, '.', -1) AS ext, SUM(filesize) AS filesize
+    SELECT COUNT(*) AS ext_counter, {$ext_query} AS ext, SUM(filesize) AS filesize
     FROM images
     GROUP BY ext;
     SQL;

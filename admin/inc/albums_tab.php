@@ -21,7 +21,7 @@ $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM categories;
     SQL;
 

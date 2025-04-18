@@ -135,7 +135,7 @@ $template->assign('selected_category', $selected_category);
 
 // how many existing albums?
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM categories;
     SQL;
 [$nb_albums] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));

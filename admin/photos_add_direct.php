@@ -65,13 +65,13 @@ if (functions_user::userprefs_get_param('promote-mobile-apps', true)) {
     [$register_date] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     $query = <<<SQL
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS "COUNT(*)"
         FROM categories;
         SQL;
     [$nb_cats] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
     $query = <<<SQL
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS "COUNT(*)"
         FROM images;
         SQL;
     [$nb_images] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));

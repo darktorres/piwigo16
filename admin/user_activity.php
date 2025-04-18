@@ -124,7 +124,7 @@ foreach ($nb_lines_for_user as $id => $nb_line) {
 $template->assign('ulist', $filterable_users);
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM users;
     SQL;
 

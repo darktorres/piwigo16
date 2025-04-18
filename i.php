@@ -72,6 +72,11 @@ $query = <<<SQL
     WHERE param = 'derivatives';
     SQL;
 [$tmp] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
+
+if ($conf->dblayer === 'pgsql') {
+    $tmp = stripslashes((string) $tmp);
+}
+
 $conf->derivatives = unserialize($tmp);
 ImageStdParams::load_from_db();
 

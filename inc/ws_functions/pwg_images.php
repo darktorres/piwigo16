@@ -950,7 +950,7 @@ final class pwg_images
 
         // does the image really exist?
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM images
             WHERE id = {$params['image_id']};
             SQL;
@@ -962,7 +962,7 @@ final class pwg_images
 
         // is the image associated to this category?
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM image_category
             WHERE image_id = {$params['image_id']}
                 AND category_id = {$params['category_id']};
@@ -1194,7 +1194,7 @@ final class pwg_images
 
         if ($params['image_id'] > 0) {
             $query = <<<SQL
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS "COUNT(*)"
                 FROM images
                 WHERE id = {$params['image_id']};
                 SQL;
@@ -1215,7 +1215,7 @@ final class pwg_images
             }
 
             $query = <<<SQL
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS "COUNT(*)"
                 FROM images
                 WHERE {$where_clause};
                 SQL;
@@ -1367,7 +1367,7 @@ final class pwg_images
 
         if ($params['image_id'] > 0) {
             $query = <<<SQL
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS "COUNT(*)"
                 FROM images
                 WHERE id = {$params['image_id']};
                 SQL;
@@ -1629,7 +1629,7 @@ final class pwg_images
             $category_infos = functions_mysqli::pwg_db_fetch_assoc(functions_mysqli::pwg_query($query));
 
             $query = <<<SQL
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS "COUNT(*)"
                 FROM lounge
                 WHERE category_id = {$params['category'][0]};
                 SQL;
@@ -1690,7 +1690,7 @@ final class pwg_images
 
         if ($params['image_id'] > 0) {
             $query = <<<SQL
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS "COUNT(*)"
                 FROM images
                 WHERE id = {$params['image_id']};
                 SQL;

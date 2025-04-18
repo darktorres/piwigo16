@@ -1089,7 +1089,14 @@ class Config
 
     public string $db_user;
 
-    public string $dblayer;
+    public string $sql_backend;
+
+    public string $dblayer {
+        set {
+            $this->dblayer = $value;
+            $this->sql_backend = '\Piwigo\inc\dblayer\functions_' . $value;
+        }
+    }
 
     public array $derivatives;
 

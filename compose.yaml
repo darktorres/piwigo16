@@ -6,8 +6,10 @@ services:
     volumes:
       - piwigo:/var/www/html/piwigo-fork
       - percona_data:/var/lib/mysql
+      - postgre_data:/var/lib/postgresql
     restart: unless-stopped
 
 volumes:
   piwigo:
   percona_data:
+  postgre_data:

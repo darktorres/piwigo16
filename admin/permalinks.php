@@ -64,7 +64,7 @@ $page['tab'] = 'permalinks';
 require __DIR__ . '/../admin/inc/albums_tab.php';
 
 $query = <<<SQL
-    SELECT id, permalink, CONCAT(id, ' - ', name, IF(permalink IS NULL, '', ' &radic;')) AS name, uppercats, global_rank
+    SELECT id, permalink, CONCAT(id, ' - ', name, CASE WHEN permalink IS NULL THEN '' ELSE ' &radic;' END) AS name, uppercats, global_rank
     FROM categories;
     SQL;
 

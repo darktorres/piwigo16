@@ -12,32 +12,31 @@ declare(strict_types=1);
 namespace Piwigo\inc\dblayer;
 
 use Exception;
-use mysqli;
-use mysqli_result;
+use PgSql\Result;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
 
-final class functions_mysqli
+final class functions_pgsql
 {
-    public const string DB_ENGINE = 'MySQL';
+    public const string DB_ENGINE = 'PostgreSQL';
 
-    public const string REQUIRED_MYSQL_VERSION = '8.4.4';
+    public const string REQUIRED_POSTGRESQL_VERSION = '17.4';
 
-    public const string DB_REGEX_OPERATOR = 'REGEXP';
+    public const string DB_REGEX_OPERATOR = '~';
 
-    public const string DB_RANDOM_FUNCTION = 'RAND()';
+    public const string DB_RANDOM_FUNCTION = 'CAST(random() AS text)';
 
     public const int MASS_UPDATES_SKIP_EMPTY = 1;
 
+    private static ?Result $last_result = null;
+
     /**
-     * Connect to database and store MySQLi resource in __$mysqli__ global variable.
+     * Connect to database and store PostgreSQL resource in __$pg__ global variable.
      *
      * @param string $host
      *    - localhost
-     *    - 1.2.3.4:3405
+     *    - 1.2.3.4:5432
      *    - /path/to/socket
-     *
-     * @throws Exception
      */
     public static function pwg_db_connect(
         string $host,
@@ -45,60 +44,66 @@ final class functions_mysqli
         string $password,
         string $database
     ): void {
-        global $mysqli;
+        global $pg;
 
         $port = null;
-        $socket = null;
 
-        if (str_starts_with($host, '/')) {
-            $socket = $host;
-            $host = null;
-        } elseif (str_contains($host, ':')) {
+        if (str_contains($host, ':')) {
             [$host, $port] = explode(':', $host);
-            $port = (int) $port;
         }
 
-        $mysqli = new mysqli($host, $user, $password, '', $port, $socket);
-
-        if (mysqli_connect_error()) {
-            throw new Exception("Can't connect to server");
+        if ($database === '') {
+            $database = 'postgres';
         }
 
-        if (! empty($database) &&
-            ! $mysqli->select_db($database)
+        $database = "dbname={$database}";
+
+        if ($password !== '') {
+            $password = "password={$password}";
+        }
+
+        if ($port !== null &&
+            $port !== ''
         ) {
-            throw new Exception('Connection to server succeed, but it was impossible to connect to database');
+            $port = "port={$port}";
         }
 
-        self::pwg_query("SET SESSION sql_mode = 'ANSI,TRADITIONAL,NO_ENGINE_SUBSTITUTION';");
+        $connection_string = "host={$host} {$port} {$database} user={$user} {$password}";
+        $pg = pg_connect($connection_string);
+
+        if ($pg === false) {
+            throw new Exception("Can't connect to server.");
+        }
+
+        // PostgreSQL doesn't require a specific session setting for group by
     }
 
     /**
-     * Check MySQL version. Can call fatal_error().
+     * Check PostgreSQL version. Can call fatal_error().
      */
     public static function pwg_db_check_version(): void
     {
-        $current_mysql = self::pwg_get_db_version();
+        $current_pg = self::pwg_get_db_version();
 
-        if (version_compare($current_mysql, self::REQUIRED_MYSQL_VERSION, '<')) {
+        if (version_compare($current_pg, self::REQUIRED_POSTGRESQL_VERSION, '<')) {
             functions_html::fatal_error(
                 sprintf(
-                    'your MySQL version is too old, you have "%s" and you need at least "%s"',
-                    $current_mysql,
-                    self::REQUIRED_MYSQL_VERSION
+                    'Your PostgreSQL version is too old, you have "%s" and you need at least "%s"',
+                    $current_pg,
+                    self::REQUIRED_POSTGRESQL_VERSION
                 )
             );
         }
     }
 
     /**
-     * Get Mysql Version.
+     * Get PostgreSQL Version.
      */
     public static function pwg_get_db_version(): string
     {
-        global $mysqli;
+        global $pg;
 
-        return $mysqli->server_info;
+        return pg_version($pg)['server'];
     }
 
     /**
@@ -106,12 +111,12 @@ final class functions_mysqli
      */
     public static function pwg_query(
         string $query
-    ): mysqli_result|bool|null {
-        global $mysqli, $conf, $page, $debug, $t2;
+    ): Result|bool {
+        global $pg, $conf, $page, $debug, $t2;
 
         $start = microtime(true);
 
-        $log_file = dirname(__DIR__, 2) . '/_data/sql/mysqli.sql';
+        $log_file = dirname(__DIR__, 2) . '/_data/sql/pgsql.sql';
         $log_dir = dirname($log_file);
 
         if (! is_dir($log_dir)) {
@@ -120,10 +125,11 @@ final class functions_mysqli
 
         file_put_contents($log_file, $query . "\n\n", FILE_APPEND | LOCK_EX);
 
-        try {
-            $result = $mysqli->query($query);
-        } catch (Exception $exception) {
-            self::my_error($exception->getMessage() . "\n" . $query, $conf->die_on_sql_error);
+        $result = pg_query($pg, $query);
+        self::$last_result = $result;
+
+        if ($result === false) {
+            self::my_error(pg_last_error($pg) . "\n" . $query, $conf->die_on_sql_error);
         }
 
         $time = microtime(true) - $start;
@@ -137,7 +143,8 @@ final class functions_mysqli
         $page['queries_time'] += $time;
 
         if ($conf->show_queries) {
-            $output = '<pre>[' . $page['count_queries'] . '] ';
+            $output = '';
+            $output .= '<pre>[' . $page['count_queries'] . '] ';
             $output .= "\n" . $query;
             $output .= "\n" . '(this query time : ';
             $output .= '<b>' . number_format($time, 3, '.', ' ') . ' s)</b>';
@@ -146,12 +153,12 @@ final class functions_mysqli
             $output .= "\n" . '(total time      : ';
             $output .= number_format(($time + $start - $t2), 3, '.', ' ') . ' s)';
 
-            if ($result != null &&
+            if ($result != false &&
                 preg_match('/\s*SELECT\s+/i', $query)
             ) {
                 $output .= "\n" . '(num rows        : ';
                 $output .= self::pwg_db_num_rows($result) . ' )';
-            } elseif ($result != null &&
+            } elseif ($result != false &&
                       preg_match('/\s*INSERT|UPDATE|REPLACE|DELETE\s+/i', $query)
             ) {
                 $output .= "\n" . '(affected rows   : ';
@@ -172,9 +179,9 @@ final class functions_mysqli
     public static function pwg_db_nextval(
         string $column,
         string $table
-    ): array|bool|string|null {
+    ): string {
         $query = <<<SQL
-            SELECT IF(MAX({$column}) + 1 IS NULL, 1, MAX({$column}) + 1)
+            SELECT COALESCE(MAX({$column}) + 1, 1)
             FROM {$table};
             SQL;
         [$next] = self::pwg_db_fetch_row(self::pwg_query($query));
@@ -184,81 +191,95 @@ final class functions_mysqli
 
     public static function pwg_db_changes(): int|string
     {
-        global $mysqli;
-
-        return $mysqli->affected_rows;
+        return isset(self::$last_result) ? pg_affected_rows(self::$last_result) : 0;
     }
 
     public static function pwg_db_num_rows(
-        mysqli_result $result
-    ): int|string {
-        return $result->num_rows;
+        Result $result
+    ): int {
+        return pg_num_rows($result);
     }
 
     // public static function pwg_db_fetch_array(
-    //     mysqli_result $result
+    //     Result $result
     // ): array|bool|null {
-    //     return $result->fetch_array();
+    //     return pg_fetch_array($result);
     // }
 
     public static function pwg_db_fetch_assoc(
-        mysqli_result $result
-    ): array|bool|null {
-        return $result->fetch_assoc();
+        Result $result
+    ): array|bool {
+        $row = pg_fetch_assoc($result);
+        self::convert_bool($row);
+        return $row;
     }
 
     public static function pwg_db_fetch_row(
-        mysqli_result $result
-    ): array|bool|null {
-        return $result->fetch_row();
+        Result $result
+    ): array|bool {
+        $row = pg_fetch_row($result);
+        self::convert_bool($row);
+        return $row;
     }
 
     // public static function pwg_db_fetch_object(
-    //     mysqli_result $result
+    //     Result $result
     // ): bool|object|null {
-    //     return $result->fetch_object();
+    //     return pg_fetch_object($result);
     // }
 
     // public static function pwg_db_free_result(
-    //     mysqli_result $result
+    //     Result $result
     // ): void {
-    //     $result->free_result();
+    //     pg_free_result($result);
     // }
 
     public static function pwg_db_real_escape_string(
-        ?string $s
-    ): ?string {
-        global $mysqli;
+        string|int|float|null $s
+    ): string|null {
+        global $pg;
 
-        return isset($s) ? $mysqli->real_escape_string($s) : null;
+        if (is_int($s) ||
+            is_float($s)
+        ) {
+            return (string) $s;
+        }
+
+        return isset($s) ? pg_escape_string($pg, $s) : null;
     }
 
     public static function pwg_db_insert_id(): int|string
     {
-        global $mysqli;
+        global $pg;
 
-        return $mysqli->insert_id;
+        $result = pg_query($pg, 'SELECT lastval()');
+
+        if ($result === false) {
+            throw new Exception('Failed to get last insert id');
+        }
+
+        [$row] = pg_fetch_row($result);
+
+        return $row;
     }
 
     // public static function pwg_db_errno(): int
     // {
-    //     global $mysqli;
-
-    //     return $mysqli->errno;
+    //     // no error code support in pgsql
     // }
 
     // public static function pwg_db_error(): string
     // {
-    //     global $mysqli;
+    //     global $pg;
 
-    //     return $mysqli->error;
+    //     return pg_last_error($pg);
     // }
 
-    public static function pwg_db_close(): true
+    public static function pwg_db_close(): bool
     {
-        global $mysqli;
+        global $pg;
 
-        return $mysqli->close();
+        return pg_close($pg);
     }
 
     /**
@@ -278,16 +299,16 @@ final class functions_mysqli
             return;
         }
 
-        // we use the multi table update or N update queries
+        // If there are less than 10 records, we update individually
         if (count($datas) < 10) {
             foreach ($datas as $data) {
                 $is_first = true;
 
                 $query = <<<SQL
-                    UPDATE {$tablename}
-                    SET
+                UPDATE {$tablename}
+                SET
 
-                    SQL;
+                SQL;
 
                 foreach ($dbfields['update'] as $key) {
                     $separator = $is_first ? '' : ",\n";
@@ -331,36 +352,22 @@ final class functions_mysqli
                 }
             }
         } else {
-            // creation of the temporary table
-            $result = self::pwg_query("SHOW FULL COLUMNS FROM {$tablename};");
+            // Creation of a temporary table for bulk update
+            $result = self::pwg_query("SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_name = '{$tablename}';");
+
             $columns = [];
             $all_fields = array_merge($dbfields['primary'], $dbfields['update']);
 
             while ($row = self::pwg_db_fetch_assoc($result)) {
-                if (in_array($row['Field'], $all_fields)) {
-                    $column = "{$row['Field']}";
-                    $column .= " {$row['Type']}";
+                if (in_array($row['column_name'], $all_fields)) {
+                    $column = $row['column_name'] . ' ' . $row['data_type'];
 
-                    $nullable = true;
-
-                    if (! isset($row['Null']) ||
-                        $row['Null'] == '' ||
-                        $row['Null'] == 'NO'
-                    ) {
+                    if ($row['is_nullable'] == 'NO') {
                         $column .= ' NOT NULL';
-                        $nullable = false;
                     }
 
-                    if (isset($row['Default'])) {
-                        $column .= " default '{$row['Default']}'";
-                    } elseif ($nullable) {
-                        $column .= ' default NULL';
-                    }
-
-                    if (isset($row['Collation']) &&
-                        $row['Collation'] != 'NULL'
-                    ) {
-                        $column .= " collate '{$row['Collation']}'";
+                    if ($row['column_default'] !== null) {
+                        $column .= " DEFAULT {$row['column_default']}";
                     }
 
                     $columns[] = $column;
@@ -368,47 +375,40 @@ final class functions_mysqli
             }
 
             $temporary_tablename = $tablename . '_' . functions::micro_seconds();
-
-            $columnsList = implode(",\n  ", $columns);
-            $primaryKeys = implode(', ', $dbfields['primary']);
-            $query = <<<SQL
-                CREATE TABLE {$temporary_tablename}
-                    (
-                        {$columnsList},
-                        UNIQUE KEY the_key ({$primaryKeys})
-                    );
-                SQL;
-
+            $columns_ = implode(",\n  ", $columns);
+            $dbfields_ = implode(', ', $dbfields['primary']);
+            $query = "CREATE TEMPORARY TABLE {$temporary_tablename} ({$columns_}, UNIQUE ({$dbfields_}))";
+            $query = trim($query) . ';';
             self::pwg_query($query);
+
+            // Insert data into the temporary table
             self::mass_inserts($temporary_tablename, $all_fields, $datas);
 
+            // Determine the update set based on flags
             if (($flags & self::MASS_UPDATES_SKIP_EMPTY) !== 0) {
-                $func_set = (fn (string $s): string => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
+                $func_set = fn (string $s): string => "{$s} = COALESCE(t2.{$s}, {$tablename}.{$s})";
             } else {
-                $func_set = (fn (string $s): string => "t1.{$s} = t2.{$s}");
+                $func_set = fn (string $s): string => "{$s} = t2.{$s}";
             }
 
-            // update of table by joining with temporary table
-            $updateFields = implode(
-                ",\n    ",
+            // Construct the update query with a join
+            $dbfields_update_ = implode(
+                "\n    , ",
                 array_map($func_set, $dbfields['update'])
             );
-
-            $primaryConditions = implode(
+            $dbfields_primary_ = implode(
                 "\n    AND ",
                 array_map(
-                    fn (string $s): string => "t1.{$s} = t2.{$s}",
+                    fn (string $s): string => "{$tablename}.{$s} = t2.{$s}",
                     $dbfields['primary']
                 )
             );
 
-            $query = <<<SQL
-                UPDATE {$tablename} AS t1, {$temporary_tablename} AS t2
-                SET {$updateFields}
-                WHERE {$primaryConditions};
-                SQL;
+            $query = "UPDATE {$tablename} SET {$dbfields_update_} FROM {$temporary_tablename} t2 WHERE {$dbfields_primary_}";
+            $query = trim($query) . ';';
             self::pwg_query($query);
 
+            // Drop the temporary table after the update
             self::pwg_query("DROP TABLE {$temporary_tablename};");
         }
     }
@@ -487,7 +487,7 @@ final class functions_mysqli
      * } $options
      */
     public static function mass_inserts(
-        string $table_name,
+        string $tablename,
         array $dbfields,
         array $datas,
         array $options = []
@@ -496,62 +496,26 @@ final class functions_mysqli
             return;
         }
 
-        $ignore = '';
-
-        if (isset($options['ignore']) &&
-            $options['ignore']
-        ) {
-            $ignore = 'IGNORE';
-        }
-
-        $query = <<<SQL
-            SELECT @@max_allowed_packet;
-            SQL;
-        [$packet_size] = self::pwg_db_fetch_row(self::pwg_query($query));
         $dbfields_str = implode(', ', $dbfields);
+        $query = "INSERT INTO {$tablename} ({$dbfields_str}) VALUES\n";
 
-        $insert_ignore = 'INSERT' . ($ignore !== '' ? " {$ignore}" : '');
-        $queryBase = "{$insert_ignore} INTO {$table_name} ({$dbfields_str}) VALUES\n";
-        $query = '';
+        $values = [];
 
-        foreach ($datas as $insert) {
-            $queryTemp = '(';
+        foreach ($datas as $data) {
+            $row_values = [];
 
-            foreach ($dbfields as $field_id => $dbfield) {
-                if ($field_id > 0) {
-                    $queryTemp .= ', ';
-                }
-
-                if (! isset($insert[$dbfield]) ||
-                    $insert[$dbfield] === ''
-                ) {
-                    $queryTemp .= 'NULL';
-                } else {
-                    $queryTemp .= "'{$insert[$dbfield]}'";
-                }
+            foreach ($dbfields as $key) {
+                $row_values[] = isset($data[$key]) ? "'" . self::pwg_db_real_escape_string($data[$key]) . "'" : 'NULL';
             }
 
-            $queryTemp .= ')';
-
-            $len = strlen($queryBase . $query . ', ' . $queryTemp);
-
-            if ($len >= $packet_size) { // delay $insert to next query
-                $query = trim($query) . ';';
-                self::pwg_query($queryBase . $query);
-                $query = $queryTemp;
-            } else {
-                if ($query !== '' &&
-                    $query !== '0'
-                ) {
-                    $query .= ",\n";
-                }
-
-                $query .= $queryTemp;
-            }
+            $values[] = '(' . implode(', ', $row_values) . ')';
         }
 
+        $query .= implode(",\n", $values);
         $query = trim($query) . ';';
-        self::pwg_query($queryBase . $query);
+
+        self::pwg_query($query);
+        self::sync_sequences();
     }
 
     /**
@@ -570,18 +534,17 @@ final class functions_mysqli
             return;
         }
 
-        $ignore = '';
+        $on_conflict = '';
 
         if (isset($options['ignore']) &&
             $options['ignore']
         ) {
-            $ignore = 'IGNORE';
+            $on_conflict = 'ON CONFLICT DO NOTHING';
         }
 
         $columns = implode(', ', array_keys($data));
-        $insert_ignore = 'INSERT' . ($ignore !== '' ? " {$ignore}" : '');
         $query = <<<SQL
-            {$insert_ignore} INTO {$table_name}
+            INSERT INTO {$table_name}
                 ({$columns})
             VALUES
 
@@ -606,10 +569,11 @@ final class functions_mysqli
             }
         }
 
-        $query .= ')';
-
+        $query .= ") {$on_conflict}";
         $query = trim($query) . ';';
+
         self::pwg_query($query);
+        self::sync_sequences();
     }
 
     /**
@@ -621,23 +585,35 @@ final class functions_mysqli
 
         $all_tables = [];
 
-        // List all tables
-        $query = 'SHOW TABLES';
+        // List all user tables (excluding system catalogs)
+        $query = <<<SQL
+            SELECT tablename
+            FROM pg_tables
+            WHERE schemaname = 'public';
+            SQL;
         $result = self::pwg_query($query);
 
-        while ($row = self::pwg_db_fetch_row($result)) {
-            $all_tables[] = $row[0];
+        while ($row = self::pwg_db_fetch_assoc($result)) {
+            $all_tables[] = $row['tablename'];
         }
 
-        // Optimize all tables
-        $allTablesList = implode(', ', $all_tables);
-        $query = <<<SQL
-            OPTIMIZE TABLE {$allTablesList};
-            SQL;
-        $mysqli_rc = self::pwg_query($query);
+        $ok = true;
 
-        if ($mysqli_rc) {
-            $page['infos'][] = functions::l10n('All optimizations have been successfully completed.');
+        // VACUUM and ANALYZE each table
+        foreach ($all_tables as $table_name) {
+            $query = <<<SQL
+                VACUUM FULL {$table_name};
+                SQL;
+            $ok = $ok && self::pwg_query($query);
+
+            $query = <<<SQL
+                ANALYZE {$table_name};
+                SQL;
+            $ok = $ok && self::pwg_query($query);
+        }
+
+        if ($ok) {
+            $page['infos'][] = functions::l10n('All PostgreSQL maintenance tasks completed successfully.');
         } else {
             $page['errors'][] = functions::l10n('Optimizations have been completed with some errors.');
         }
@@ -672,21 +648,18 @@ final class functions_mysqli
     public static function get_enums(
         string $table,
         string $field
-    ): array {
-        $result = self::pwg_query("DESC {$table};");
+    ): array|bool {
+        $options = [];
+        $query = <<<SQL
+            SELECT unnest(enum_range(NULL::{$table}_{$field}));
+            SQL;
+        $result = self::pwg_query($query);
 
         while ($row = self::pwg_db_fetch_assoc($result)) {
-            if ($row['Field'] == $field) {
-                // parse enum('blue','green','black')
-                $options = explode(',', substr($row['Type'], 5, -1));
-
-                foreach ($options as $i => $option) {
-                    $options[$i] = str_replace("'", '', $option);
-                }
-            }
+            $options[] = $row['unnest'];
         }
 
-        $result->free_result();
+        pg_free_result($result);
         return $options;
     }
 
@@ -704,8 +677,8 @@ final class functions_mysqli
      * If the input is another type, it is not changed.
      */
     public static function boolean_to_string(
-        bool|int|string $var
-    ): bool|int|string {
+        string|bool|int $var
+    ): string|int {
         if (is_bool($var)) {
             return $var ? 'true' : 'false';
         }
@@ -714,7 +687,7 @@ final class functions_mysqli
     }
 
     public static function pwg_db_get_recent_period_expression(
-        string|int $period,
+        int|string $period,
         string $date = 'CURRENT_DATE'
     ): string {
         if ($date !== 'CURRENT_DATE') {
@@ -722,17 +695,17 @@ final class functions_mysqli
         }
 
         return <<<SQL
-            SUBDATE({$date}, INTERVAL {$period} DAY)
+            CURRENT_DATE - INTERVAL '{$period} days'
             SQL;
     }
 
     public static function pwg_db_get_recent_period(
-        string|int $period,
+        int|string $period,
         string $date = 'CURRENT_DATE'
-    ): array|bool|string|null {
+    ): string {
         $recentPeriodExpression = self::pwg_db_get_recent_period_expression($period);
         $query = <<<SQL
-            SELECT {$recentPeriodExpression};
+            SELECT {$recentPeriodExpression} AS date;
             SQL;
         [$d] = self::pwg_db_fetch_row(self::pwg_query($query));
 
@@ -743,7 +716,7 @@ final class functions_mysqli
         int|string $seconds
     ): string {
         return <<<SQL
-            SUBDATE(NOW(), INTERVAL {$seconds} SECOND)
+            CURRENT TIMESTAMP - INTERVAL '{$seconds} seconds'
             SQL;
     }
 
@@ -751,7 +724,7 @@ final class functions_mysqli
         string $date
     ): string {
         return <<<SQL
-            HOUR({$date})
+            EXTRACT(HOUR FROM {$date})
             SQL;
     }
 
@@ -759,7 +732,7 @@ final class functions_mysqli
         string $date
     ): string {
         return <<<SQL
-            DATE_FORMAT({$date}, '%Y%m')
+            TO_CHAR({$date}, 'YYYYMM')
             SQL;
     }
 
@@ -767,7 +740,7 @@ final class functions_mysqli
         string $date
     ): string {
         return <<<SQL
-            DATE_FORMAT({$date}, '%m%d')
+            TO_CHAR({$date}, 'MMDD')
             SQL;
     }
 
@@ -775,7 +748,7 @@ final class functions_mysqli
         string $date
     ): string {
         return <<<SQL
-            YEAR({$date})
+            EXTRACT(YEAR FROM {$date})
             SQL;
     }
 
@@ -783,7 +756,7 @@ final class functions_mysqli
         string $date
     ): string {
         return <<<SQL
-            MONTH({$date})
+            EXTRACT(MONTH FROM {$date})
             SQL;
     }
 
@@ -791,14 +764,8 @@ final class functions_mysqli
         string $date,
         ?int $mode = null
     ): string {
-        if ($mode) {
-            return <<<SQL
-                WEEK({$date}, {$mode})
-                SQL;
-        }
-
         return <<<SQL
-            WEEK({$date})
+            EXTRACT(WEEK FROM {$date})
             SQL;
     }
 
@@ -806,7 +773,7 @@ final class functions_mysqli
         string $date
     ): string {
         return <<<SQL
-            DAYOFMONTH({$date})
+            EXTRACT(DAY FROM {$date})
             SQL;
     }
 
@@ -814,7 +781,7 @@ final class functions_mysqli
         string $date
     ): string {
         return <<<SQL
-            DAYOFWEEK({$date})
+            EXTRACT(DOW FROM {$date})
             SQL;
     }
 
@@ -822,7 +789,7 @@ final class functions_mysqli
         string $date
     ): string {
         return <<<SQL
-            WEEKDAY({$date})
+            EXTRACT(DOW FROM {$date})
             SQL;
     }
 
@@ -830,7 +797,7 @@ final class functions_mysqli
         string $date
     ): string {
         return <<<SQL
-            UNIX_TIMESTAMP({$date})
+            EXTRACT(EPOCH FROM {$date})
             SQL;
     }
 
@@ -842,10 +809,7 @@ final class functions_mysqli
         string $header,
         bool $die
     ): void {
-        global $mysqli;
-
-        $error = '[mysql error ' . $mysqli->errno . '] ' . $mysqli->error . "\n";
-        $error .= $header;
+        $error = '[pgsql error] ' . $header . "\n";
 
         if ($die) {
             functions_html::fatal_error($error);
@@ -903,5 +867,49 @@ final class functions_mysqli
         }
 
         return $data;
+    }
+
+    private static function convert_bool(array|bool &$row): void
+    {
+        if ($row) {
+            foreach ($row as $key => $value) {
+                if ($value === 't') {
+                    $row[$key] = 'true';
+                } elseif ($value === 'f') {
+                    $row[$key] = 'false';
+                }
+            }
+        }
+    }
+
+    private static function sync_sequences(): void
+    {
+        $query = <<<SQL
+            SELECT
+                'SELECT SETVAL(' ||
+                quote_literal(quote_ident(sequence_namespace.nspname) || '.' || quote_ident(class_sequence.relname)) ||
+                ', COALESCE(MAX(' ||quote_ident(pg_attribute.attname)|| '), 1) ) FROM ' ||
+                quote_ident(table_namespace.nspname)|| '.'||quote_ident(class_table.relname)|| ';'
+            FROM pg_depend
+                INNER JOIN pg_class AS class_sequence
+                    ON class_sequence.oid = pg_depend.objid
+                        AND class_sequence.relkind = 'S'
+                INNER JOIN pg_class AS class_table
+                    ON class_table.oid = pg_depend.refobjid
+                INNER JOIN pg_attribute
+                    ON pg_attribute.attrelid = class_table.oid
+                        AND pg_depend.refobjsubid = pg_attribute.attnum
+                INNER JOIN pg_namespace as table_namespace
+                    ON table_namespace.oid = class_table.relnamespace
+                INNER JOIN pg_namespace AS sequence_namespace
+                    ON sequence_namespace.oid = class_sequence.relnamespace
+            ORDER BY sequence_namespace.nspname, class_sequence.relname;
+            SQL;
+
+        $res = self::pwg_query($query);
+
+        while ($row = pg_fetch_row($res)) {
+            self::pwg_query($row[0]);
+        }
     }
 }

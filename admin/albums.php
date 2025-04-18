@@ -22,7 +22,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM categories;
     SQL;
 [$albums_counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));

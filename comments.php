@@ -362,7 +362,7 @@ $category_ids = [];
 
 $where_clauses = implode(' AND ', $page['where_clauses']);
 $query = <<<SQL
-    SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id, com.image_id, ic.category_id, com.author, com.author_id,
+    SELECT COUNT(*) OVER() AS total_count, com.id AS comment_id, com.image_id, ic.category_id, com.author, com.author_id,
         u.{$conf->user_fields['email']} AS user_email, com.email, com.date, com.website_url, com.content,
         com.validated
     FROM image_category AS ic
@@ -385,12 +385,11 @@ $query = trim($query) . ';';
 $result = functions_mysqli::pwg_query($query);
 
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    $counter = $row['total_count'];
     $comments[] = $row;
     $element_ids[] = $row['image_id'];
     $category_ids[] = $row['category_id'];
 }
-
-[$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
 
 $url = './comments.php' . functions_url::get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
 

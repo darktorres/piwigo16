@@ -117,7 +117,7 @@ final class functions_upgrade
                 // make sure default Piwigo theme is active
                 $defaultTemplate = PHPWG_DEFAULT_TEMPLATE;
                 $query = <<<SQL
-                    SELECT COUNT(*)
+                    SELECT COUNT(*) AS "COUNT(*)"
                     FROM themes
                     WHERE id = '{$defaultTemplate}';
                     SQL;

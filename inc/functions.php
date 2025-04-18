@@ -1449,6 +1449,10 @@ final class functions
             } elseif ($val === null) {
                 $val = null;
             } elseif (self::is_serialized($val)) {
+                if ($conf->dblayer === 'pgsql') {
+                    $val = stripslashes($val);
+                }
+
                 $val = unserialize($val);
             } elseif (is_numeric($val)) {
                 $val = str_contains($val, '.') ? (float) $val : (int) $val;
@@ -1493,6 +1497,8 @@ final class functions
         bool $updateGlobal = false,
         ?callable $parser = null
     ): void {
+        global $conf;
+
         if ($parser != null) {
             $dbValue = call_user_func($parser, $value);
         } elseif (is_array($value) ||
@@ -1508,10 +1514,22 @@ final class functions
                 (param, value)
             VALUES
                 ('{$param}', '{$dbValue}')
-            ON DUPLICATE KEY UPDATE
-                value = '{$dbValue}';
+
             SQL;
 
+        if ($conf->dblayer === 'mysqli') {
+            $query .= <<<SQL
+                ON DUPLICATE KEY UPDATE value = '{$dbValue}'
+                SQL;
+        }
+
+        if ($conf->dblayer === 'pgsql') {
+            $query .= <<<SQL
+                ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value
+                SQL;
+        }
+
+        $query .= ';';
         functions_mysqli::pwg_query($query);
 
         if ($updateGlobal) {
@@ -2881,7 +2899,7 @@ final class functions
         while (true) {
             $key = functions_session::generate_key(50);
             $query = <<<SQL
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS "COUNT(*)"
                 FROM user_feed
                 WHERE id = '{$key}';
                 SQL;

@@ -396,7 +396,7 @@ final class functions_upload
 
         if (! $conf->lounge_active) {
             // check if we need to use the lounge from now
-            [$nb_photos] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT COUNT(*) FROM images;'));
+            [$nb_photos] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT COUNT(*) AS "COUNT(*)" FROM images;'));
 
             if ($nb_photos >= $conf->lounge_activate_threshold) {
                 functions::conf_update_param('lounge_active', true, true);

@@ -440,13 +440,24 @@ final class functions_admin
      */
     public static function get_orphan_tags(): array
     {
+        global $conf;
+
         $query = <<<SQL
             SELECT id, name
             FROM tags
             LEFT JOIN image_tag ON id = tag_id
             WHERE tag_id IS NULL
-                AND lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY);
+
             SQL;
+
+        if ($conf->dblayer === 'mysqli') {
+            $query .= 'AND lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY);';
+        }
+
+        if ($conf->dblayer === 'pgsql') {
+            $query .= "AND lastmodified < NOW() - INTERVAL '1 DAY';";
+        }
+
         return functions_mysqli::query2array($query);
     }
 
@@ -1948,7 +1959,7 @@ final class functions_admin
     public static function empty_lounge(
         bool $invalidate_user_cache = true
     ): ?array {
-        global $logger;
+        global $conf, $logger;
 
         if ($conf->empty_lounge_running !== null) {
             [$running_exec_id, $running_exec_start_time] = explode('-', $conf->empty_lounge_running);
@@ -1964,12 +1975,25 @@ final class functions_admin
 
         // if lounge is already being emptied, skip
         $current_time = time();
+        $ignore = '';
+
+        if ($conf->dblayer === 'mysqli') {
+            $ignore = 'IGNORE';
+        }
+
         $query = <<<SQL
-            INSERT IGNORE
-            INTO config
-            SET param = 'empty_lounge_running',
-                value = '{$exec_id}-{$current_time}';
+            INSERT {$ignore} INTO config (param, value)
+            VALUES ('empty_lounge_running', '{$exec_id}-{$current_time}')
             SQL;
+
+        if ($conf->dblayer === 'pgsql') {
+            $query .= <<<SQL
+
+                ON CONFLICT (param) DO NOTHING
+                SQL;
+        }
+
+        $query .= ';';
         functions_mysqli::pwg_query($query);
 
         $query = <<<SQL
@@ -2173,12 +2197,26 @@ final class functions_admin
 
         // let's first break links with all old albums but their "storage album"
         $image_ids = implode(', ', $images);
-        $query = <<<SQL
-            DELETE FROM image_category
-            JOIN images ON image_id = id
-            WHERE id IN ({$image_ids})
+        $query = '';
 
-            SQL;
+        if ($conf->dblayer === 'mysqli') {
+            $query = <<<SQL
+                DELETE FROM image_category
+                JOIN images ON image_id = id
+                WHERE id IN ({$image_ids})
+
+                SQL;
+        }
+
+        if ($conf->dblayer === 'pgsql') {
+            $query = <<<SQL
+                DELETE FROM image_category
+                USING images
+                WHERE image_id = id
+                AND id IN ({$image_ids})
+
+                SQL;
+        }
 
         if (is_array($categories) &&
             $categories !== []
@@ -3140,6 +3178,8 @@ final class functions_admin
     public static function get_admin_client_cache_keys(
         array|string $requested = []
     ): array {
+        global $conf;
+
         $tables = [
             'categories' => 'categories',
             'user_groups' => 'user_groups',
@@ -3160,7 +3200,23 @@ final class functions_admin
 
         foreach ($requested as $item) {
             $query = <<<SQL
-                SELECT CONCAT(UNIX_TIMESTAMP(MAX(lastmodified)), '_', COUNT(*))
+                SELECT CONCAT(
+                SQL;
+
+            if ($conf->dblayer === 'mysqli') {
+                $query .= <<<SQL
+                    UNIX_TIMESTAMP(MAX(lastmodified))
+                    SQL;
+            }
+
+            if ($conf->dblayer === 'pgsql') {
+                $query .= <<<SQL
+                    EXTRACT(EPOCH FROM MAX(lastmodified))::BIGINT
+                    SQL;
+            }
+
+            $query .= <<<SQL
+                , '_', COUNT(*))
                 FROM {$tables[$item]};
                 SQL;
             [$keys[$item]] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -3228,7 +3284,7 @@ final class functions_admin
             // we don't care about the list of image_ids, we only care about the number
             // of orphans, so let's use a faster method than calling count(get_orphans())
             $query = <<<SQL
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS "COUNT(*)"
                 FROM images;
                 SQL;
             [$image_counter_all] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -4409,6 +4465,7 @@ final class functions_admin
             )
                 AND day IS NOT NULL
                 AND hour IS NULL
+                GROUP BY year, month
             ORDER BY year DESC, month DESC;
             SQL;
 

@@ -28,7 +28,7 @@ use Piwigo\inc\SrcImage;
 
 // $user['forbidden_categories'] including with user_cache_categories
 $query = <<<SQL
-    SELECT SQL_CALC_FOUND_ROWS c.*, user_representative_picture_id, nb_images, date_last, max_date_last,
+    SELECT COUNT(*) OVER() AS total_count, c.*, user_representative_picture_id, nb_images, date_last, max_date_last,
         count_images, nb_categories, count_categories
     FROM categories c
     INNER JOIN user_cache_categories ucc ON id = cat_id AND user_id = {$user['id']}
@@ -76,7 +76,6 @@ $query .= <<<SQL
 $query = functions_plugins::trigger_change('loc_begin_index_category_thumbnails_query', $query);
 
 $result = functions_mysqli::pwg_query($query);
-[$page['total_categories']] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query('SELECT FOUND_ROWS();'));
 
 $categories = [];
 $category_ids = [];
@@ -84,6 +83,7 @@ $image_ids = [];
 $user_representative_updates_for = [];
 
 while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
+    $page['total_categories'] = $row['total_count'];
     $row['is_child_date_last'] = $row['max_date_last'] > $row['date_last'];
 
     if (! empty($row['user_representative_picture_id'])) {

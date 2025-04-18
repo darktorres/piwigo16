@@ -451,7 +451,7 @@ if (isset($_SESSION['bulk_manager_filter']['category'])) {
 
     // we need to check the category still exists (it may have been deleted since it was added in the session)
     $query = <<<SQL
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS "COUNT(*)"
         FROM categories
         WHERE id = {$_SESSION['bulk_manager_filter']['category']};
         SQL;

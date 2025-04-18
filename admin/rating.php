@@ -109,7 +109,7 @@ $query = trim($query) . ';';
 [$nb_images] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM rate;
     SQL;
 [$nb_elements] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));

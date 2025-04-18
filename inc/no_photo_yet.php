@@ -28,7 +28,7 @@ if (! (defined('IN_ADMIN') && IN_ADMIN) &&           // no message inside admini
     ! isset($_SESSION['no_photo_yet'])                               // temporary hide
 ) {
     $query = <<<SQL
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS "COUNT(*)"
         FROM images;
         SQL;
     [$nb_photos] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));

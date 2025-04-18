@@ -206,7 +206,7 @@ if ($result !== []) {
 
 // Sub Albums
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM categories
     WHERE id_uppercat = {$category['id']};
     SQL;

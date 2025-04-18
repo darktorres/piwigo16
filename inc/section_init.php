@@ -437,7 +437,7 @@ if ($page['section'] == 'categories') {
 
     $recent_photos_sql = functions_user::get_recent_photos_sql('date_available');
     $query = <<<SQL
-            SELECT DISTINCT id, date_available, date_creation
+            SELECT DISTINCT id, date_available, date_creation, file
             FROM images
             INNER JOIN image_category AS ic ON id = ic.image_id
             WHERE {$recent_photos_sql}
@@ -515,7 +515,7 @@ if ($page['section'] == 'categories') {
 } elseif ($page['section'] == 'list') {
     $image_ids = implode(', ', $page['list']);
     $query = <<<SQL
-            SELECT DISTINCT id, date_creation
+            SELECT DISTINCT id, date_creation, file
             FROM images
             INNER JOIN image_category AS ic ON id = ic.image_id
             WHERE image_id IN ({$image_ids})

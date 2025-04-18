@@ -305,7 +305,7 @@ if ($conf->rate &&
     ! empty($row['rating_score'])
 ) {
     $query = <<<SQL
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS "COUNT(*)"
         FROM rate
         WHERE element_id = {$_GET['image_id']};
         SQL;

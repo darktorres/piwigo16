@@ -122,12 +122,37 @@ final class functions_session
         string $session_id,
         string $data
     ): true {
+        global $conf;
+
+        if ($conf->dblayer === 'mysqli') {
+            $query = <<<SQL
+                REPLACE INTO sessions
+
+                SQL;
+        }
+
+        if ($conf->dblayer === 'pgsql') {
+            $query = <<<SQL
+                INSERT INTO sessions
+
+                SQL;
+        }
+
         $session_hash = self::get_remote_addr_session_hash() . $session_id;
         $escaped_data = functions_mysqli::pwg_db_real_escape_string($data);
-        $query = <<<SQL
-            REPLACE INTO sessions (id, data, expiration)
-            VALUES ('{$session_hash}', '{$escaped_data}', NOW());
+        $query .= <<<SQL
+            (id, data, expiration)
+            VALUES ('{$session_hash}', '{$escaped_data}', NOW())
             SQL;
+
+        if ($conf->dblayer === 'pgsql') {
+            $query .= <<<SQL
+
+                ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, expiration = EXCLUDED.expiration
+                SQL;
+        }
+
+        $query .= ';';
         functions_mysqli::pwg_query($query);
         return true;
     }

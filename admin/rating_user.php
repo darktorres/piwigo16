@@ -234,7 +234,7 @@ $template->assign('order_by_options_selected', [$order_by_index]);
 $x = uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM rate;
     SQL;
 [$nb_elements] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));

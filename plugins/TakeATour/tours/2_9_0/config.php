@@ -50,7 +50,7 @@ if ($_SESSION['TAT_tour29_image_id'] > 0) {
 $template->assign('TAT_tour29_history_url', 'admin.php?page=stats&year=' . date('Y') . '&month=' . date('n'));
 
 $query = <<<SQL
-    SELECT COUNT(*)
+    SELECT COUNT(*) AS "COUNT(*)"
     FROM tags;
     SQL;
 [$counter] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\admin\inc;
 
 use Piwigo\inc\dblayer\functions_mysqli;
+use Piwigo\inc\dblayer\functions_pgsql;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_session;
@@ -42,11 +43,21 @@ final class c13y_internal
             'required' => REQUIRED_PHP_VERSION,
         ];
 
-        $check_list[] = [
-            'type' => 'MySQL',
-            'current' => functions_mysqli::pwg_get_db_version(),
-            'required' => functions_mysqli::REQUIRED_MYSQL_VERSION,
-        ];
+        if ($conf->dblayer === 'mysqli') {
+            $check_list[] = [
+                'type' => 'MySQL',
+                'current' => functions_mysqli::pwg_get_db_version(),
+                'required' => functions_mysqli::REQUIRED_MYSQL_VERSION,
+            ];
+        }
+
+        if ($conf->dblayer === 'pgsql') {
+            $check_list[] = [
+                'type' => 'PostgreSQL',
+                'current' => functions_pgsql::pwg_get_db_version(),
+                'required' => functions_pgsql::REQUIRED_POSTGRESQL_VERSION,
+            ];
+        }
 
         foreach ($check_list as $elem) {
             if (version_compare($elem['current'], $elem['required'], '<')) {

@@ -346,7 +346,7 @@ final class functions_history
         // we want to purge only if there are too many lines and if the lines are summarized
 
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM history;
             SQL;
         [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));
@@ -427,7 +427,7 @@ final class functions_history
         }
 
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM history;
             SQL;
         [$count] = functions_mysqli::pwg_db_fetch_row(functions_mysqli::pwg_query($query));

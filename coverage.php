@@ -155,6 +155,7 @@ $filter_->includeFiles(
         __DIR__ . '/inc/config_default.php',
         __DIR__ . '/inc/constants.php',
         __DIR__ . '/inc/dblayer/functions_mysqli.php',
+        __DIR__ . '/inc/dblayer/functions_pgsql.php',
         __DIR__ . '/inc/derivative_params.php',
         __DIR__ . '/inc/derivative_std_params.php',
         __DIR__ . '/inc/filter.php',

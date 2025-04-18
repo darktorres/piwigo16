@@ -49,7 +49,25 @@ while ($row = functions_mysqli::pwg_db_fetch_assoc($result)) {
 // +-----------------------------------------------------------------------+
 
 $query = <<<SQL
-    SELECT DISTINCT MONTH(registration_date) AS registration_month, YEAR(registration_date) AS registration_year
+    SELECT DISTINCT
+
+    SQL;
+
+if ($conf->dblayer === 'mysqli') {
+    $query .= <<<SQL
+        MONTH(registration_date) AS registration_month, YEAR(registration_date) AS registration_year, registration_date
+
+        SQL;
+}
+
+if ($conf->dblayer === 'pgsql') {
+    $query .= <<<SQL
+        EXTRACT(MONTH FROM registration_date) AS registration_month, EXTRACT(YEAR FROM registration_date) AS registration_year, registration_date
+
+        SQL;
+}
+
+$query .= <<<SQL
     FROM user_infos
     ORDER BY registration_date;
     SQL;

@@ -90,7 +90,7 @@ final class pwg_groups
 
         // is the name not already used ?
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM user_groups
             WHERE name = '{$params['name']}';
             SQL;
@@ -172,7 +172,7 @@ final class pwg_groups
 
         // does the group exist ?
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;
@@ -187,7 +187,7 @@ final class pwg_groups
 
             // is the name not already used ?
             $query = <<<SQL
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS "COUNT(*)"
                 FROM user_groups
                 WHERE name = '{$params['name']}'
                     AND id != {$params['group_id']};
@@ -241,7 +241,7 @@ final class pwg_groups
 
         // does the group exist ?
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;
@@ -304,7 +304,7 @@ final class pwg_groups
 
         $allGroupsList = implode(', ', $all_groups);
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM user_groups
             WHERE id IN ({$allGroupsList});
             SQL;
@@ -393,7 +393,7 @@ final class pwg_groups
 
         $escapedCopyName = functions_mysqli::pwg_db_real_escape_string($params['copy_name']);
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM user_groups
             WHERE name = '{$escapedCopyName}';
             SQL;
@@ -404,7 +404,7 @@ final class pwg_groups
         }
 
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;
@@ -492,7 +492,7 @@ final class pwg_groups
 
         // does the group exist ?
         $query = <<<SQL
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS "COUNT(*)"
             FROM user_groups
             WHERE id = {$params['group_id']};
             SQL;

@@ -70,11 +70,7 @@ $clear_skins = [
     'bootswatch-yeti',
 ];
 // Get value of bootstrap theme and set themeconf to clear or leave as default (dark)
-$closure = Closure::bind(function &(ThemeController $controller): Config {
-    return $controller->config;
-}, null, ThemeController::class);
-
-$config = &$closure($controller);
+$config = &$controller->getConfigReference();
 
 if (in_array($config->bootstrap_theme, $clear_skins)) {
     $themeconf['colorscheme'] = 'clear';

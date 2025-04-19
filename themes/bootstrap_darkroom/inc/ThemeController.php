@@ -303,4 +303,9 @@ readonly class ThemeController
 
         unset($tpl_thumbnails_var, $pictures);
     }
+
+    public function &getConfigReference(): Config
+    {
+        return $this->config;
+    }
 }

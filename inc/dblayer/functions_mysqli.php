@@ -529,6 +529,10 @@ final class functions_mysqli
         array $datas,
         array $options = []
     ): void {
+        if (count($datas) == 0) {
+            return;
+        }
+
         $ignore = '';
 
         if (isset($options['ignore']) &&
@@ -537,57 +541,55 @@ final class functions_mysqli
             $ignore = 'IGNORE';
         }
 
-        if (count($datas) != 0) {
-            $query = <<<SQL
-                SELECT @@max_allowed_packet;
-                SQL;
-            list($packet_size) = self::pwg_db_fetch_row(self::pwg_query($query));
-            $escapedTablename = self::protect_column_name($table_name);
-            $escapeddbfields = implode(', ', array_map(self::protect_column_name(...), $dbfields));
+        $query = <<<SQL
+            SELECT @@max_allowed_packet;
+            SQL;
+        list($packet_size) = self::pwg_db_fetch_row(self::pwg_query($query));
+        $escapedTablename = self::protect_column_name($table_name);
+        $escapeddbfields = implode(', ', array_map(self::protect_column_name(...), $dbfields));
 
-            $insert_ignore = 'INSERT' . ($ignore ? " {$ignore}" : '');
-            $queryBase = "{$insert_ignore} INTO {$escapedTablename} ({$escapeddbfields}) VALUES\n";
-            $query = '';
+        $insert_ignore = 'INSERT' . ($ignore ? " {$ignore}" : '');
+        $queryBase = "{$insert_ignore} INTO {$escapedTablename} ({$escapeddbfields}) VALUES\n";
+        $query = '';
 
-            foreach ($datas as $insert) {
-                $queryTemp = '(';
+        foreach ($datas as $insert) {
+            $queryTemp = '(';
 
-                foreach ($dbfields as $field_id => $dbfield) {
-                    if ($field_id > 0) {
-                        $queryTemp .= ', ';
-                    }
-
-                    if (! isset($insert[$dbfield]) ||
-                        $insert[$dbfield] === ''
-                    ) {
-                        $queryTemp .= 'NULL';
-                    } else {
-                        $queryTemp .= "'{$insert[$dbfield]}'";
-                    }
+            foreach ($dbfields as $field_id => $dbfield) {
+                if ($field_id > 0) {
+                    $queryTemp .= ', ';
                 }
 
-                $queryTemp .= ')';
-
-                $len = strlen($queryBase . $query . ', ' . $queryTemp);
-
-                if ($len >= $packet_size) { // delay $insert to next query
-                    $query = trim($query) . ';';
-                    self::pwg_query($queryBase . $query);
-                    $query = $queryTemp;
+                if (! isset($insert[$dbfield]) ||
+                    $insert[$dbfield] === ''
+                ) {
+                    $queryTemp .= 'NULL';
                 } else {
-                    if ($query !== '' &&
-                        $query !== '0'
-                    ) {
-                        $query .= ",\n";
-                    }
-
-                    $query .= $queryTemp;
+                    $queryTemp .= "'{$insert[$dbfield]}'";
                 }
             }
 
-            $query = trim($query) . ';';
-            self::pwg_query($queryBase . $query);
+            $queryTemp .= ')';
+
+            $len = strlen($queryBase . $query . ', ' . $queryTemp);
+
+            if ($len >= $packet_size) { // delay $insert to next query
+                $query = trim($query) . ';';
+                self::pwg_query($queryBase . $query);
+                $query = $queryTemp;
+            } else {
+                if ($query !== '' &&
+                    $query !== '0'
+                ) {
+                    $query .= ",\n";
+                }
+
+                $query .= $queryTemp;
+            }
         }
+
+        $query = trim($query) . ';';
+        self::pwg_query($queryBase . $query);
     }
 
     /**
@@ -602,6 +604,10 @@ final class functions_mysqli
         array $data,
         array $options = []
     ): void {
+        if (count($data) == 0) {
+            return;
+        }
+
         $ignore = '';
 
         if (isset($options['ignore']) &&
@@ -610,41 +616,39 @@ final class functions_mysqli
             $ignore = 'IGNORE';
         }
 
-        if (count($data) != 0) {
-            $escapedTablename = self::protect_column_name($table_name);
-            $columns = implode(', ', array_map(self::protect_column_name(...), array_keys($data)));
-            $insert_ignore = 'INSERT' . ($ignore ? " {$ignore}" : '');
-            $query = <<<SQL
-                {$insert_ignore} INTO {$escapedTablename}
-                    ({$columns})
-                VALUES
+        $escapedTablename = self::protect_column_name($table_name);
+        $columns = implode(', ', array_map(self::protect_column_name(...), array_keys($data)));
+        $insert_ignore = 'INSERT' . ($ignore ? " {$ignore}" : '');
+        $query = <<<SQL
+            {$insert_ignore} INTO {$escapedTablename}
+                ({$columns})
+            VALUES
 
-                SQL;
+            SQL;
 
-            $query .= '(';
-            $is_first = true;
+        $query .= '(';
+        $is_first = true;
 
-            foreach ($data as $key => $value) {
-                if (! $is_first) {
-                    $query .= ', ';
-                } else {
-                    $is_first = false;
-                }
-
-                if ($value === '' ||
-                    $value === null
-                ) {
-                    $query .= 'NULL';
-                } else {
-                    $query .= "'{$value}'";
-                }
+        foreach ($data as $key => $value) {
+            if (! $is_first) {
+                $query .= ', ';
+            } else {
+                $is_first = false;
             }
 
-            $query .= ')';
-
-            $query = trim($query) . ';';
-            self::pwg_query($query);
+            if ($value === '' ||
+                $value === null
+            ) {
+                $query .= 'NULL';
+            } else {
+                $query .= "'{$value}'";
+            }
         }
+
+        $query .= ')';
+
+        $query = trim($query) . ';';
+        self::pwg_query($query);
     }
 
     public static function protect_column_name(
@@ -774,11 +778,7 @@ final class functions_mysqli
     public static function get_boolean(
         array|string $input
     ): bool {
-        if (strtolower($input) === 'false') {
-            return false;
-        }
-
-        return (bool) $input;
+        return strtolower($input) === 'false' ? false : (bool) $input;
     }
 
     /**
@@ -974,25 +974,13 @@ final class functions_mysqli
         $result = self::pwg_query($query);
         $data = [];
 
-        if (isset($key_name)) {
-            if (isset($value_name)) {
-                while ($row = $result->fetch_assoc()) {
-                    $data[$row[$key_name]] = $row[$value_name];
-                }
+        while ($row = self::pwg_db_fetch_assoc($result)) {
+            if (isset($key_name)) {
+                $data[$row[$key_name]] = isset($value_name) ? $row[$value_name] : $row;
+            } elseif (isset($value_name)) {
+                $data[] = $row[$value_name];
             } else {
-                while ($row = $result->fetch_assoc()) {
-                    $data[$row[$key_name]] = $row;
-                }
-            }
-        } else {
-            if (isset($value_name)) {
-                while ($row = $result->fetch_assoc()) {
-                    $data[] = $row[$value_name];
-                }
-            } else {
-                while ($row = $result->fetch_assoc()) {
-                    $data[] = $row;
-                }
+                $data[] = $row;
             }
         }
 

@@ -44,7 +44,7 @@ CREATE TABLE categories
     site_id                   INT UNSIGNED                        DEFAULT NULL,
     visible                   ENUM ('true', 'false')     NOT NULL DEFAULT 'true',
     representative_picture_id INT UNSIGNED                        DEFAULT NULL,
-    uppercats                 VARCHAR(255)               NOT NULL,
+    uppercats                 VARCHAR(255),
     commentable               ENUM ('true', 'false')     NOT NULL DEFAULT 'true',
     global_rank               VARCHAR(255)                        DEFAULT NULL,
     image_order               VARCHAR(128)                        DEFAULT NULL,

@@ -319,6 +319,7 @@ var GDThumb = {
         var max_height = 0;
         var last_height = GDThumb.max_height;
         var line = 1;
+        var thumb_process;
         // Reuse array instead of creating new one
         if (!thumb_process) {
             thumb_process = new Array();

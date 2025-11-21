@@ -92,11 +92,11 @@ if (isset($conf->show_php_errors) &&
     ! empty($conf->show_php_errors)
 ) {
     ini_set('error_reporting', $conf->show_php_errors);
-}
 
-// Always disable displaying errors on the frontend to prevent breaking HTML/JSON responses
-// Errors are logged to PHP error log for debugging purposes
-ini_set('display_errors', false);
+    if ($conf->show_php_errors_on_frontend) {
+        ini_set('display_errors', true);
+    }
+}
 
 if ($conf->session_gc_probability > 0) {
     ini_set('session.gc_divisor', 100);

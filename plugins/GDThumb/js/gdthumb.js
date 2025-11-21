@@ -10,6 +10,7 @@ var GDThumb = {
     t: new Array(),
     do_merge: false,
     _initialized: false,
+    _resizeHandlerAttached: false,
 
     // Initialize plugin logic, perform necessary steps
     setup: function (
@@ -49,11 +50,17 @@ var GDThumb = {
 
             GDThumb.build();
 
-            mainlists.resize(GDThumb.process);
-            jQuery("ul.thumbnails .thumbLegend.overlay").click(function () {
+            // Only attach resize handler once
+            if (!GDThumb._resizeHandlerAttached) {
+                mainlists.resize(GDThumb.process);
+                GDThumb._resizeHandlerAttached = true;
+            }
+
+            // Re-attach click handlers (needed for new thumbnails)
+            jQuery("ul.thumbnails .thumbLegend.overlay").off("click").on("click", function () {
                 window.location.href = $(this).parent().find("a").attr("href");
             });
-            jQuery("ul.thumbnails .thumbLegend.overlay-ex").click(function () {
+            jQuery("ul.thumbnails .thumbLegend.overlay-ex").off("click").on("click", function () {
                 window.location.href = $(this).parent().find("a").attr("href");
             });
         }

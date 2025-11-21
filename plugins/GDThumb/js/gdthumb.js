@@ -56,6 +56,8 @@ var GDThumb = {
     _resizeObserverAttached: false,
     /** @type {number} - Internal: recursion depth counter for process() */
     _processDepth: 0,
+    /** @type {Function|null} - Internal: stored click handler for cleanup */
+    _clickHandler: null,
 
     /**
      * Initialize plugin with configuration
@@ -101,8 +103,8 @@ var GDThumb = {
      * @returns {void}
      */
     init: function () {
-        var mainlists = jQuery("ul.thumbnails");
-        if (typeof mainlists !== "undefined") {
+        var thumbnailList = document.querySelector("ul.thumbnails");
+        if (thumbnailList) {
             if (GDThumb.do_merge) {
                 GDThumb.merge();
             }
@@ -111,7 +113,6 @@ var GDThumb = {
 
             // Only attach resize observer once
             if (!GDThumb._resizeObserverAttached) {
-                var thumbnailList = jQuery("ul.thumbnails")[0];
                 if (thumbnailList && window.ResizeObserver) {
                     var resizeObserver = new ResizeObserver(function() {
                         GDThumb.process();
@@ -121,13 +122,22 @@ var GDThumb = {
                 }
             }
 
-            // Re-attach click handlers (needed for new thumbnails)
-            jQuery("ul.thumbnails .thumbLegend.overlay").off("click").on("click", function () {
-                window.location.href = $(this).parent().find("a").attr("href");
-            });
-            jQuery("ul.thumbnails .thumbLegend.overlay-ex").off("click").on("click", function () {
-                window.location.href = $(this).parent().find("a").attr("href");
-            });
+            // Re-attach click handlers with event delegation (needed for new thumbnails)
+            var clickHandler = function(e) {
+                var target = e.target;
+                var legend = target.closest(".thumbLegend.overlay, .thumbLegend.overlay-ex");
+                if (legend) {
+                    var link = legend.closest("li").querySelector("a");
+                    if (link) {
+                        window.location.href = link.getAttribute("href");
+                    }
+                }
+            };
+
+            // Remove old handler if exists and attach new one
+            thumbnailList.removeEventListener("click", GDThumb._clickHandler);
+            thumbnailList.addEventListener("click", clickHandler);
+            GDThumb._clickHandler = clickHandler;
         }
     },
 

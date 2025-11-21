@@ -162,7 +162,8 @@ var GDThumb = {
         var line = 1;
         var round_rest = 0;
         var main_width = jQuery("ul.thumbnails").width();
-        var first_thumb = jQuery("ul.thumbnails img.thumbnail:first");
+        var $allThumbs = jQuery("ul.thumbnails img.thumbnail");
+        var first_thumb = $allThumbs.first();
         var best_size = { width: 1, height: 1 };
 
         if (GDThumb.method == "slide") {
@@ -354,7 +355,7 @@ var GDThumb = {
                         }
                     }
                     GDThumb.resize(
-                        jQuery("ul.thumbnails img.thumbnail").eq(
+                        $allThumbs.eq(
                             thumb_process[j].index,
                         ),
                         thumb_process[j].real_width,
@@ -383,7 +384,7 @@ var GDThumb = {
             // we have only one line, i.e. the first line is the one and only line and therefor the last line too
             if (line == 1) {
                 GDThumb.resize(
-                    jQuery("ul.thumbnails img.thumbnail").eq(
+                    $allThumbs.eq(
                         thumb_process[j].index,
                     ),
                     thumb_process[j].real_width,

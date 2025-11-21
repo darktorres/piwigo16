@@ -10,25 +10,6 @@
  * @property {number} real_height - Original image height
  */
 var GDThumb = {
-    /** @type {boolean} - Enable side-by-side jQuery vs vanilla JS validation */
-    _validateMode: false,
-
-    /**
-     * Validate jQuery and vanilla JS produce same results
-     * @private
-     */
-    _validate: function(name, jqueryFn, vanillaFn) {
-        if (!this._validateMode) return;
-        var jqResult = jqueryFn();
-        var vjResult = vanillaFn();
-        var match = JSON.stringify(jqResult) === JSON.stringify(vjResult);
-        console.log("[VALIDATE] " + name + ":", {
-            jQuery: jqResult,
-            vanilla: vjResult,
-            match: match ? "✓ PASS" : "✗ FAIL"
-        });
-        return match;
-    },
 
     /** @type {number} - Maximum height for thumbnails (pixels) */
     max_height: 200,
@@ -438,7 +419,7 @@ var GDThumb = {
     /**
      * Apply calculated dimensions to a thumbnail DOM element
      * Handles aspect ratio cropping, scaling, and CSS application
-     * @param {jQuery} thumb - jQuery element of the thumbnail image
+     * @param {HTMLElement} thumb - Thumbnail image element
      * @param {number} width - Original image width
      * @param {number} height - Original image height
      * @param {number} new_width - Calculated display width
@@ -447,8 +428,7 @@ var GDThumb = {
      * @returns {void}
      */
     resize: function (thumb, width, height, new_width, new_height, is_big) {
-        // Handle both jQuery and DOM elements
-        var thumbElement = thumb.jquery ? thumb[0] : thumb;
+        var thumbElement = thumb;
 
         use_crop = true;
         if (GDThumb.method == "slide") {

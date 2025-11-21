@@ -1,19 +1,52 @@
+/**
+ * GDThumb - Responsive thumbnail gallery layout system
+ * Dynamically resizes thumbnails to fill width while maintaining aspect ratio
+ * @namespace GDThumb
+ * @typedef {Object} ThumbnailData
+ * @property {number} index - Index in the thumbnail list
+ * @property {number} width - Current display width in pixels
+ * @property {number} height - Current display height in pixels
+ * @property {number} real_width - Original image width
+ * @property {number} real_height - Original image height
+ */
 var GDThumb = {
+    /** @type {number} - Maximum height for thumbnails (pixels) */
     max_height: 200,
+    /** @type {number} - Margin between thumbnails (pixels) */
     margin: 10,
+    /** @type {number} - Maximum first thumbnail width relative to container */
     max_first_thumb_width: 0.7,
+    /** @type {Object|null} - Big representative thumbnail configuration */
     big_thumb: null,
+    /** @type {boolean} - Whether big thumbnail is blocked */
     big_thumb_block: false,
+    /** @type {boolean} - Check preview images */
     check_pv: false,
+    /** @type {Object|null} - Small fallback thumbnail */
     small_thumb: null,
+    /** @type {string} - Layout method: 'crop', 'slide', or 'square' */
     method: "crop",
+    /** @type {Array<ThumbnailData>} - Array of thumbnail data */
     t: new Array(),
+    /** @type {boolean} - Whether to merge category and thumbnail displays */
     do_merge: false,
+    /** @type {boolean} - Internal: whether plugin has been initialized */
     _initialized: false,
-    _resizeHandlerAttached: false,
+    /** @type {boolean} - Internal: whether resize observer is attached */
+    _resizeObserverAttached: false,
+    /** @type {number} - Internal: recursion depth counter for process() */
     _processDepth: 0,
 
-    // Initialize plugin logic, perform necessary steps
+    /**
+     * Initialize plugin with configuration
+     * @param {string} method - Layout method ('crop', 'slide', 'square')
+     * @param {number} max_height - Maximum thumbnail height in pixels
+     * @param {number} margin - Margin between thumbnails in pixels
+     * @param {boolean} do_merge - Whether to merge category and thumbnail displays
+     * @param {Object|null} big_thumb - Big representative thumbnail config
+     * @param {boolean} check_pv - Check preview images flag
+     * @returns {void}
+     */
     setup: function (
         method,
         max_height,
@@ -42,6 +75,11 @@ var GDThumb = {
         GDThumb.init();
     },
 
+    /**
+     * Initialize the gallery after page load or AJAX content added
+     * Reads thumbnail sizes, attaches resize observer, and processes layout
+     * @returns {void}
+     */
     init: function () {
         var mainlists = jQuery("ul.thumbnails");
         if (typeof mainlists !== "undefined") {
@@ -73,7 +111,11 @@ var GDThumb = {
         }
     },
 
-    // Merge categories and picture lists
+    /**
+     * Merge category thumbnails with regular thumbnail list
+     * Combines both lists into single display when applicable
+     * @returns {void}
+     */
     merge: function () {
         var mainlists = $(".content ul.thumbnails");
         if (mainlists.length < 2) {
@@ -88,7 +130,11 @@ var GDThumb = {
         }
     },
 
-    // Build thumb metadata
+    /**
+     * Read thumbnail DOM elements and build metadata array
+     * Extracts dimensions from image tags for layout calculations
+     * @returns {void}
+     */
     build: function () {
         if (
             GDThumb.method == "square" &&
@@ -166,7 +212,12 @@ var GDThumb = {
         GDThumb.process();
     },
 
-    // Find where the last row starts by looking at image positions in the DOM
+    /**
+     * Find where the last rendered row starts by scanning DOM positions
+     * Used for incremental layout calculation on AJAX loads
+     * @returns {number} Index of first image in last row
+     * @private
+     */
     _findLastRowStartIndex: function () {
         var $images = jQuery("ul.thumbnails img.thumbnail");
 
@@ -187,7 +238,13 @@ var GDThumb = {
         return 0; // All images in one row
     },
 
-    // Adjust thumb attributes to match plugin settings
+    /**
+     * Calculate optimal thumbnail dimensions and apply to DOM
+     * Main algorithm: fills rows pixel-by-pixel to fit available width while maintaining aspect ratios
+     * On initial load: recalculates from beginning
+     * On AJAX load: starts from last row for incremental update
+     * @returns {void}
+     */
     process: function () {
         var main_width = jQuery("ul.thumbnails").width();
         var $allThumbs = jQuery("ul.thumbnails img.thumbnail");
@@ -323,6 +380,17 @@ var GDThumb = {
         }
     },
 
+    /**
+     * Apply calculated dimensions to a thumbnail DOM element
+     * Handles aspect ratio cropping, scaling, and CSS application
+     * @param {jQuery} thumb - jQuery element of the thumbnail image
+     * @param {number} width - Original image width
+     * @param {number} height - Original image height
+     * @param {number} new_width - Calculated display width
+     * @param {number} new_height - Calculated display height
+     * @param {boolean} is_big - Whether this is a big/representative thumbnail
+     * @returns {void}
+     */
     resize: function (thumb, width, height, new_width, new_height, is_big) {
         use_crop = true;
         if (GDThumb.method == "slide") {

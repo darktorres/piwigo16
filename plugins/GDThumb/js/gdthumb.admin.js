@@ -79,6 +79,16 @@
     }
 
     function wsData(data) {
+        // Log any PHP errors that were captured during the request
+        if (data.errors) {
+            // Execute the console log commands that were captured by PHP error handler
+            try {
+                eval(data.errors);
+            } catch (e) {
+                console.error("Error logging PHP errors to console:", e);
+            }
+        }
+
         if (!data.urls) {
             return;
         }

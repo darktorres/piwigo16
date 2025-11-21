@@ -19,6 +19,10 @@ require __DIR__ . '/config_default.php';
 $params = $conf->gdThumb;
 
 if (isset($_GET['getMissingDerivative'])) {
+    // Initialize error logging for this JSON API endpoint
+    global $custom_error_log;
+    $custom_error_log = '';
+
     [$max_id, $image_count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT MAX(id) + 1, COUNT(*) FROM images;'));
 
     $start_id = intval($_POST['prev_page']);
@@ -90,6 +94,13 @@ if (isset($_GET['getMissingDerivative'])) {
     }
 
     $ret['urls'] = $urls;
+
+    // Include any captured PHP errors in the response
+    global $custom_error_log;
+    if (! empty($custom_error_log)) {
+        $ret['errors'] = $custom_error_log;
+    }
+
     header('Content-Type: application/json');
     echo json_encode($ret);
     exit();

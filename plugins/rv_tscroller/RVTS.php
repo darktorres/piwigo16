@@ -46,6 +46,9 @@ final class RVTS
         global $page;
         $is_ajax = isset($_GET['rvts']);
 
+        // Always set body_id when rv_tscroller is active (both initial and AJAX loads)
+        $page['body_id'] = 'scroll';
+
         if (! $is_ajax) {
             if (empty($page['items'])) {
                 functions_plugins::add_event_handler('loc_end_index', self::on_end_index(...));
@@ -86,7 +89,6 @@ final class RVTS
             // $page['nb_image_page'] = (int) $_GET['rvts'];
             functions_plugins::add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails_ajax(...), EVENT_HANDLER_PRIORITY_NEUTRAL + 5);
             $page['root_path'] = functions_url::get_absolute_root_url(false);
-            $page['body_id'] = 'scroll';
             global $user, $template, $conf;
             require __DIR__ . '/../../inc/category_default.php';
         }

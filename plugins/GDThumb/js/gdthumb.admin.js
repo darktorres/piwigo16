@@ -67,6 +67,9 @@
             body: params,
         })
             .then(function (response) {
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status + ": " + response.statusText);
+                }
                 return response.json();
             })
             .then(wsData)
@@ -81,12 +84,27 @@
             } else {
                 getUrls(data.next_page);
             }
+        } else {
+            // No more pages - mark URL fetching as complete
+            urlProcessingDone = true;
         }
     }
 
-    function wsError() {
+    function wsError(error) {
         // Error handling - marking URL processing as done
         urlProcessingDone = true;
+        console.error("Failed to fetch URLs:", error);
+
+        // Show error message to user
+        var errorList = document.getElementById("errorList");
+        if (errorList) {
+            var errorMsg = document.createElement("div");
+            errorMsg.style.color = "red";
+            errorMsg.style.fontWeight = "bold";
+            errorMsg.style.padding = "10px";
+            errorMsg.textContent = "Error: Failed to fetch image list from server. " + error.message;
+            errorList.insertBefore(errorMsg, errorList.firstChild);
+        }
     }
 
     function updateStats() {

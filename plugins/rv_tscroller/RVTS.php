@@ -174,13 +174,6 @@ final class RVTS
     ): never {
         global $template;
         $template->assign('thumbnails', $thumbs);
-
-        // Ensure index_thumbnails template is set
-        // Fallback to default template if GDThumb didn't set it
-        if (!isset($template->smarty->_tpl_vars['index_thumbnails'])) {
-            $template->set_filename('index_thumbnails', PHPWG_ROOT_PATH . 'inc/template/index_thumbnails.tpl');
-        }
-
         header('Content-Type: text/html; charset=utf-8');
         $template->pparse('index_thumbnails');
         exit;

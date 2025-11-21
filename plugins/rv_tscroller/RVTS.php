@@ -118,15 +118,9 @@ final class RVTS
         $my_base_name = basename(__DIR__);
         $ajax_loader_image = functions_url::get_root_url() . "plugins/{$my_base_name}/ajax-loader.gif";
         $template->func_combine_script([
-            'id' => 'jquery',
-            'load' => 'footer',
-            'path' => 'node_modules/jquery/dist/jquery.js',
-        ]);
-        $template->func_combine_script([
             'id' => $my_base_name,
             'load' => 'async',
             'path' => 'plugins/' . $my_base_name . '/rv_tscroller.js',
-            'require' => 'jquery',
             'version' => RVTS_VERSION,
         ]);
         $start = (int) $page['start'];
@@ -161,7 +155,8 @@ final class RVTS
                     prevMsg: '{$prevMsg}',
                     ajaxLoaderImage: '{$ajax_loader_image}'
                 };
-                jQuery('.navigationBar').hide();
+                var navBar = document.querySelector('.navigationBar');
+                if (navBar) navBar.style.display = 'none';
                 </script>
                 JS
         );

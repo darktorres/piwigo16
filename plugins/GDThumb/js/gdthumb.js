@@ -11,7 +11,7 @@
  */
 var GDThumb = {
     /** @type {boolean} - Enable side-by-side jQuery vs vanilla JS validation */
-    _validateMode: true,
+    _validateMode: false,
 
     /**
      * Validate jQuery and vanilla JS produce same results

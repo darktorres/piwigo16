@@ -57,16 +57,14 @@
 </style>{/html_style}
 
 {combine_css path=$gdthumb_config.GDTHUMB_ROOT|cat:"/css/gdthumb.css"}
-{combine_script id='gdthumb' require='jquery' path=$gdthumb_config.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
+{combine_script id='gdthumb' path=$gdthumb_config.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
 
 {footer_script require="gdthumb"}<script>
-  $(function() {
-    {if isset($gdthumb_big_thumb)}
-      {assign var=gt_size value=$gdthumb_big_thumb->get_size()}
-      var big_thumb = { id: {$gdthumb_big_thumb->src_image->id}, src: '{$gdthumb_big_thumb->get_url()}', width: {$gt_size[0]}, height: {$gt_size[1]} };
-    {else}
-      var big_thumb = null;
-    {/if}
-    GDThumb.setup('{$gdthumb_config.method}', {$gdthumb_config.height}, {$gdthumb_config.margin}, true, big_thumb, {$gdthumb_config.big_thumb_noinpw});
-  });
+  {if isset($gdthumb_big_thumb)}
+    {assign var=gt_size value=$gdthumb_big_thumb->get_size()}
+    var big_thumb = { id: {$gdthumb_big_thumb->src_image->id}, src: '{$gdthumb_big_thumb->get_url()}', width: {$gt_size[0]}, height: {$gt_size[1]} };
+  {else}
+    var big_thumb = null;
+  {/if}
+  GDThumb.setup('{$gdthumb_config.method}', {$gdthumb_config.height}, {$gdthumb_config.margin}, true, big_thumb, {$gdthumb_config.big_thumb_noinpw});
 </script>{/footer_script}

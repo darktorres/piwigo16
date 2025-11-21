@@ -106,7 +106,12 @@ var GDThumb = {
             GDThumb.max_height = thumb_width;
         }
 
-        GDThumb.t = new Array();
+        // Reuse array instead of creating new one
+        if (GDThumb.t) {
+            GDThumb.t.length = 0;
+        } else {
+            GDThumb.t = new Array();
+        }
         $("ul.thumbnails img.thumbnail").each(function (index) {
             width = parseInt(jQuery(this).attr("width"));
             height = parseInt(jQuery(this).attr("height"));
@@ -313,7 +318,12 @@ var GDThumb = {
         max_height = 0;
         last_height = GDThumb.max_height;
         line = 1;
-        thumb_process = new Array();
+        // Reuse array instead of creating new one
+        if (!thumb_process) {
+            thumb_process = new Array();
+        } else {
+            thumb_process.length = 0;
+        }
 
         for (
             i = GDThumb.t[0].crop != false ? 1 : 0;
@@ -368,7 +378,8 @@ var GDThumb = {
 
                     width_count += new_width + GDThumb.margin;
                 }
-                thumb_process = new Array();
+                // Reuse array instead of creating new one
+                thumb_process.length = 0;
                 width_count = GDThumb.margin;
                 max_height = 0;
                 line++;

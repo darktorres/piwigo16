@@ -162,158 +162,31 @@ var GDThumb = {
         GDThumb.process();
     },
 
+    // Find where the last row starts by looking at image positions in the DOM
+    _findLastRowStartIndex: function () {
+        var $images = jQuery("ul.thumbnails img.thumbnail");
+
+        if ($images.length === 0) {
+            return 0;
+        }
+
+        // Get the top position of the last image
+        var lastImageTop = $images.last().position().top;
+
+        // Scan backwards to find where this row started
+        for (var i = $images.length - 2; i >= 0; i--) {
+            if ($images.eq(i).position().top !== lastImageTop) {
+                return i + 1; // Found it - this is where the last row starts
+            }
+        }
+
+        return 0; // All images in one row
+    },
+
     // Adjust thumb attributes to match plugin settings
     process: function () {
-        var width_count = GDThumb.margin;
-        var line = 1;
-        var round_rest = 0;
         var main_width = jQuery("ul.thumbnails").width();
         var $allThumbs = jQuery("ul.thumbnails img.thumbnail");
-        var first_thumb = $allThumbs.first();
-        var best_size = { width: 1, height: 1 };
-
-        if (GDThumb.method == "slide") {
-            best_size.width = GDThumb.max_height;
-            best_size.height = GDThumb.max_height;
-
-            GDThumb.resize(
-                first_thumb,
-                GDThumb.t[0].real_width,
-                GDThumb.t[0].real_height,
-                GDThumb.t[0].width,
-                GDThumb.t[0].height,
-                false,
-            );
-        } else if (GDThumb.method == "square") {
-            if (GDThumb.big_thumb != null) {
-                best_size.width = GDThumb.big_thumb.width;
-                best_size.height = GDThumb.big_thumb.height;
-
-                if (GDThumb.big_thumb.src != first_thumb.attr("src")) {
-                    first_thumb.attr("src", GDThumb.big_thumb.src).attr({
-                        width: GDThumb.big_thumb.width,
-                        height: GDThumb.big_thumb.height,
-                    });
-                    GDThumb.t[0].width = GDThumb.big_thumb.width;
-                    GDThumb.t[0].height = GDThumb.big_thumb.height;
-                }
-                GDThumb.t[0].crop = best_size.width;
-                GDThumb.resize(
-                    first_thumb,
-                    GDThumb.t[0].real_width,
-                    GDThumb.t[0].real_height,
-                    GDThumb.big_thumb.width,
-                    GDThumb.big_thumb.height,
-                    true,
-                );
-            } else {
-                best_size.width = GDThumb.max_height;
-                best_size.height = GDThumb.max_height;
-                GDThumb.resize(
-                    first_thumb,
-                    GDThumb.t[0].real_width,
-                    GDThumb.t[0].real_height,
-                    GDThumb.t[0].width,
-                    GDThumb.t[0].height,
-                    true,
-                );
-            }
-        } else {
-            if (
-                GDThumb.big_thumb != null &&
-                GDThumb.big_thumb.height <
-                    main_width * GDThumb.max_first_thumb_width
-            ) {
-                // Compute best size for landscape picture (we choose bigger height)
-                var min_ratio = Math.min(
-                    1.05,
-                    GDThumb.big_thumb.width / GDThumb.big_thumb.height,
-                );
-
-                for (
-                    width = GDThumb.big_thumb.width;
-                    width / best_size.height >= min_ratio;
-                    width--
-                ) {
-                    width_count = GDThumb.margin;
-                    height = GDThumb.margin;
-                    max_height = 0;
-                    available_width = main_width - (width + GDThumb.margin);
-                    line = 1;
-                    for (i = 1; i < GDThumb.t.length; i++) {
-                        width_count += GDThumb.t[i].width + GDThumb.margin;
-                        max_height = Math.max(GDThumb.t[i].height, max_height);
-
-                        if (width_count > available_width) {
-                            ratio = width_count / available_width;
-                            height += Math.round(max_height / ratio);
-                            line++;
-                            max_height = 0;
-                            width_count = GDThumb.margin;
-                            if (line > 2) {
-                                if (
-                                    height >= best_size.height &&
-                                    width / height >= min_ratio &&
-                                    height <= GDThumb.big_thumb.height
-                                ) {
-                                    best_size = {
-                                        width: width,
-                                        height: height,
-                                    };
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    if (line <= 2) {
-                        if (max_height == 0 || line == 1) {
-                            height = GDThumb.big_thumb.height;
-                        } else {
-                            height += max_height;
-                        }
-                        if (
-                            height >= best_size.height &&
-                            width / height >= min_ratio &&
-                            height <= GDThumb.big_thumb.height
-                        ) {
-                            best_size = { width: width, height: height };
-                        }
-                    }
-                }
-                if (GDThumb.big_thumb.src != first_thumb.attr("src")) {
-                    first_thumb.attr("src", GDThumb.big_thumb.src).attr({
-                        width: GDThumb.big_thumb.width,
-                        height: GDThumb.big_thumb.height,
-                    });
-                    GDThumb.t[0].width = GDThumb.big_thumb.width;
-                    GDThumb.t[0].height = GDThumb.big_thumb.height;
-                }
-                GDThumb.t[0].crop = best_size.width;
-                GDThumb.resize(
-                    first_thumb,
-                    GDThumb.big_thumb.width,
-                    GDThumb.big_thumb.height,
-                    best_size.width,
-                    best_size.height,
-                    true,
-                );
-            }
-        }
-
-        if (best_size.width == 1) {
-            if (
-                GDThumb.small_thumb != null &&
-                GDThumb.small_thumb.src != first_thumb.attr("src")
-            ) {
-                first_thumb.prop("src", GDThumb.small_thumb.src).attr({
-                    width: GDThumb.small_thumb.width,
-                    height: GDThumb.small_thumb.height,
-                });
-                GDThumb.t[0].width = GDThumb.small_thumb.width;
-                GDThumb.t[0].height = GDThumb.small_thumb.height;
-            }
-            GDThumb.t[0].crop = false;
-        }
 
         var width_count = GDThumb.margin;
         var max_height = 0;
@@ -327,8 +200,11 @@ var GDThumb = {
             thumb_process.length = 0;
         }
 
+        // On AJAX loads, start from the last row instead of recalculating everything
+        var startIndex = GDThumb._findLastRowStartIndex();
+
         for (
-            var i = GDThumb.t[0].crop != false ? 1 : 0;
+            var i = startIndex;
             i < GDThumb.t.length;
             i++
         ) {
@@ -337,9 +213,6 @@ var GDThumb = {
             thumb_process.push(GDThumb.t[i]);
 
             var available_width = main_width;
-            if (line <= 2 && GDThumb.t[0].crop !== false) {
-                available_width -= GDThumb.t[0].crop + GDThumb.margin;
-            }
 
             if (width_count > available_width) {
                 var last_thumb = GDThumb.t[i].index;

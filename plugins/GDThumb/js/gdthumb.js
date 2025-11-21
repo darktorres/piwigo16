@@ -284,12 +284,12 @@ var GDThumb = {
             return 0;
         }
 
-        // Get the top position of the last image
-        var lastImageTop = jQuery(images[images.length - 1]).position().top;
+        // Get the top position of the last image (offsetTop - relative to offset parent)
+        var lastImageTop = images[images.length - 1].offsetTop;
 
         // Scan backwards to find where this row started
         for (var i = images.length - 2; i >= 0; i--) {
-            if (jQuery(images[i]).position().top !== lastImageTop) {
+            if (images[i].offsetTop !== lastImageTop) {
                 return i + 1; // Found it - this is where the last row starts
             }
         }

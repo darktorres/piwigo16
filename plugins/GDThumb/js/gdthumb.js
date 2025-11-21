@@ -10,6 +10,26 @@
  * @property {number} real_height - Original image height
  */
 var GDThumb = {
+    /** @type {boolean} - Enable side-by-side jQuery vs vanilla JS validation */
+    _validateMode: false,
+
+    /**
+     * Validate jQuery and vanilla JS produce same results
+     * @private
+     */
+    _validate: function(name, jqueryFn, vanillaFn) {
+        if (!this._validateMode) return;
+        var jqResult = jqueryFn();
+        var vjResult = vanillaFn();
+        var match = JSON.stringify(jqResult) === JSON.stringify(vjResult);
+        console.log("[VALIDATE] " + name + ":", {
+            jQuery: jqResult,
+            vanilla: vjResult,
+            match: match ? "✓ PASS" : "✗ FAIL"
+        });
+        return match;
+    },
+
     /** @type {number} - Maximum height for thumbnails (pixels) */
     max_height: 200,
     /** @type {number} - Margin between thumbnails (pixels) */
@@ -136,6 +156,12 @@ var GDThumb = {
      * @returns {void}
      */
     build: function () {
+        // Validate width() replacement
+        GDThumb._validate("width()",
+            function() { return jQuery("ul.thumbnails").width(); },
+            function() { var el = document.querySelector("ul.thumbnails"); return el ? el.clientWidth : 0; }
+        );
+
         if (
             GDThumb.method == "square" &&
             GDThumb.big_thumb != null &&

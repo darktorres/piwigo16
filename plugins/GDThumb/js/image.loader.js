@@ -25,9 +25,7 @@ ImageLoader.prototype = {
     },
 
     add: function (urls) {
-        console.log("[ImageLoader] add() called with " + urls.length + " URLs");
         this.queue = this.queue.concat(urls);
-        console.log("[ImageLoader] Queue size now: " + this.queue.length);
         this._fireChanged("add");
         this._checkQueue();
     },
@@ -53,17 +51,12 @@ ImageLoader.prototype = {
     },
 
     _checkQueue: function () {
-        var started = 0;
         while (
             !this.paused &&
             this.queue.length &&
             this.current.length < this.opts.maxRequests
         ) {
             this._processOne(this.queue.shift());
-            started++;
-        }
-        if (started > 0) {
-            console.log("[ImageLoader] Started " + started + " image loads, current active: " + this.current.length);
         }
     },
 
@@ -74,8 +67,6 @@ ImageLoader.prototype = {
 
         // Vanilla JS: Create handler function for load/error/abort events
         var handleLoadComplete = function (e) {
-            console.log("[ImageLoader] Image " + e.type + ": " + img.src);
-
             // Remove event listeners
             img.onload = null;
             img.onerror = null;
@@ -90,14 +81,11 @@ ImageLoader.prototype = {
             if (e.type === "load") {
                 that.loaded++;
                 that.errorEma *= 0.9;
-                console.log("[ImageLoader] Stats: loaded=" + that.loaded + ", errors=" + that.errors + ", remaining=" + that.remaining());
             } else {
                 that.errors++;
                 that.errorEma++;
-                console.log("[ImageLoader] Error count: " + that.errors + ", errorEma: " + that.errorEma.toFixed(2));
                 if (that.errorEma >= 20 && that.errorEma < 21) {
                     that.paused = true;
-                    console.log("[ImageLoader] Too many errors, auto-pausing");
                 }
             }
             that._fireChanged(e.type, img);
@@ -109,7 +97,6 @@ ImageLoader.prototype = {
         img.onload = handleLoadComplete;
         img.onerror = handleLoadComplete;
         img.onabort = handleLoadComplete;
-        console.log("[ImageLoader] Setting img.src = " + url);
         img.src = url;
     },
 

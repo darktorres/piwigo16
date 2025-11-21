@@ -19,17 +19,13 @@ require __DIR__ . '/config_default.php';
 $params = $conf->gdThumb;
 
 if (isset($_GET['getMissingDerivative'])) {
-    error_log("[GDThumb] getMissingDerivative request started");
     [$max_id, $image_count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT MAX(id) + 1, COUNT(*) FROM images;'));
-    error_log("[GDThumb] max_id=$max_id, image_count=$image_count");
 
     $start_id = intval($_POST['prev_page']);
     $max_urls = intval($_POST['max_urls']);
-    error_log("[GDThumb] start_id=$start_id, max_urls=$max_urls");
 
     if ($start_id <= 0) {
         $start_id = $max_id;
-        error_log("[GDThumb] start_id was 0, set to max_id: $start_id");
     }
 
     $uid = '&b=' . time();
@@ -48,27 +44,16 @@ if (isset($_GET['getMissingDerivative'])) {
         SQL;
 
     $urls = [];
-    error_log("[GDThumb] Starting query loop");
 
     do {
-        $sql = str_replace('start_id', $start_id, $query_model);
-        error_log("[GDThumb] Query: $sql");
-        $result = $conf->sql_backend::pwg_query($sql);
-        $row_count = $conf->sql_backend::pwg_db_num_rows($result);
-        $is_last = $row_count < $qlimit;
-        error_log("[GDThumb] Query returned $row_count rows, is_last=$is_last");
-
-        $checked = 0;
-        $skipped = 0;
-        $missing = 0;
+        $result = $conf->sql_backend::pwg_query(str_replace('start_id', $start_id, $query_model));
+        $is_last = $conf->sql_backend::pwg_db_num_rows($result) < $qlimit;
 
         while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-            $checked++;
             $start_id = $row['id'];
             $src_image = new SrcImage($row);
 
             if ($src_image->is_mimetype() !== 0) {
-                $skipped++;
                 continue;
             }
 
@@ -80,11 +65,9 @@ if (isset($_GET['getMissingDerivative'])) {
                 $derivative = new DerivativeImage(ImageStdParams::get_custom(9999, $params['height']), $src_image);
             }
 
-            $deriv_path = $derivative->get_path();
-            $mtime = file_exists($deriv_path) ? filemtime($deriv_path) : false;
+            $mtime = file_exists($derivative->get_path()) ? filemtime($derivative->get_path()) : false;
 
             if ($mtime === false) {
-                $missing++;
                 $urls[] = $derivative->get_url() . $uid;
             }
 
@@ -94,8 +77,6 @@ if (isset($_GET['getMissingDerivative'])) {
                 break;
             }
         }
-
-        error_log("[GDThumb] Checked: $checked, Skipped: $skipped, Missing: $missing, Total URLs: " . count($urls));
 
         if ($is_last) {
             $start_id = 0;

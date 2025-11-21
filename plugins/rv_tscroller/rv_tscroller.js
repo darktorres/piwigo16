@@ -102,18 +102,31 @@ if (window.RVTS) {
                     });
                     window.dispatchEvent(event);
 
+                    // Get thumbnail height before adding new items
+                    var thumbsBefore = RVTS.$thumbs.offsetHeight;
+
                     if (!event.defaultPrevented)
                         RVTS.$thumbs.insertAdjacentHTML("afterbegin", htm);
+
+                    // Get thumbnail height after adding new items
+                    var thumbsAfter = RVTS.$thumbs.offsetHeight;
+                    var heightAdded = thumbsAfter - thumbsBefore;
 
                     // Update tracking after successful load
                     RVTS.start = newStart;
                     RVTS.next -= reqCount;
 
                     console.log("RVTS: loadUp - loaded " + reqCount + " items, new start=" + RVTS.start + ", new next=" + RVTS.next);
+                    console.log("RVTS: loadUp - height increased by " + heightAdded + "px (before=" + thumbsBefore + ", after=" + thumbsAfter + ")");
 
                     // Unload from bottom when loading from top
                     console.log("RVTS: loadUp - unloading " + reqCount + " items from bottom");
                     RVTS._removeFromBottom(reqCount);
+
+                    // Adjust scroll position to compensate for items added at top
+                    // This prevents the infinite loop of top-loading when content is added above
+                    window.scrollBy(0, heightAdded);
+                    console.log("RVTS: loadUp - scrolled down by " + heightAdded + "px to maintain view");
                 } catch (error) {
                     console.error("RVTS: Failed to load previous page:", error);
                 } finally {

@@ -135,16 +135,16 @@
       title="{'Delete images in GDThumb cache.'|translate}" onclick="return confirm('{'Are you sure?'|translate}');">
     <input type="button" name="cachebuild" id="cachebuild" value="{'Pre-cache thumbnails'|translate}"
       title="{'Finds images that have not been cached and creates the cached version.'|translate}"
-      onclick="jQuery.gdThumb_start();">
+      onclick="gdThumb_start();">
   </p>
 </form>
 <fieldset id="generate_cache">
   <legend>{'Pre-cache thumbnails'|translate}</legend>
   <p class="buttons">
-    <input id="startLink" value="{'Start'|translate}" onclick="jQuery.gdThumb_start()" type="button">
-    <input id="pauseLink" value="{'Pause'|translate}" onclick="jQuery.gdThumb_pause()" type="button"
+    <input id="startLink" value="{'Start'|translate}" onclick="gdThumb_start()" type="button">
+    <input id="pauseLink" value="{'Pause'|translate}" onclick="gdThumb_pause()" type="button"
       disabled="disbled">
-    <input id="stopLink" value="{'Stop'|translate}" onclick="jQuery.gdThumb_stop()" type="button" disabled="disbled">
+    <input id="stopLink" value="{'Stop'|translate}" onclick="gdThumb_stop()" type="button" disabled="disbled">
   </p>
   <div>
     <ul>

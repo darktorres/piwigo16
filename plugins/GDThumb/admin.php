@@ -89,6 +89,7 @@ if (isset($_GET['getMissingDerivative'])) {
     }
 
     $ret['urls'] = $urls;
+    header('Content-Type: application/json');
     echo json_encode($ret);
     exit();
 }

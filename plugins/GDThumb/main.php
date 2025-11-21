@@ -46,8 +46,13 @@ if (! isset($conf->gdThumb)) {
     functions::load_conf_from_db();
 }
 
-// RV Thumbnails Scroller
-if (isset($_GET['rvts'])) {
+// RV Thumbnails Scroller integration
+// Check if we're in an AJAX pagination request from rv_tscroller
+$is_ajax_pagination = isset($_GET['rvts']) && class_exists('Piwigo\plugins\rv_tscroller\RVTS');
+
+if ($is_ajax_pagination) {
+    // rv_tscroller infinite scroll - disable big thumbnail
+    // (big thumb only makes sense on initial page load)
     $conf->gdThumb['big_thumb'] = false;
     functions_plugins::add_event_handler('loc_end_index_thumbnails', GDThumb_process_thumb(...), 50);
 }

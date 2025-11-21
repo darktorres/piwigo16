@@ -20,6 +20,8 @@ if (window.jQuery && window.RVTS)
             loading: 0,
             loadingUp: 0,
             adjust: 0,
+            requestCounter: 0,
+            lastProcessedRequest: 0,
 
             loadUp: function () {
                 if (RVTS.loadingUp || RVTS.start <= 0) return;
@@ -66,6 +68,8 @@ if (window.jQuery && window.RVTS)
                     url += "&adj=" + RVTS.adjust;
                     RVTS.adjust = 0;
                 }
+                // Add request ID to track responses
+                var currentRequest = ++RVTS.requestCounter;
                 $("#ajaxLoader").show();
                 RVTS.loading = 1;
                 $.ajax({
@@ -73,12 +77,20 @@ if (window.jQuery && window.RVTS)
                     dataType: "html",
                     url: url,
                     success: function (htm) {
-                        RVTS.next += RVTS.perPage;
-                        var event = jQuery.Event("RVTS_add");
-                        $(window).trigger(event, [htm, true]);
+                        // Only process if this is the next expected response
+                        if (currentRequest === RVTS.lastProcessedRequest + 1) {
+                            RVTS.next += RVTS.perPage;
+                            RVTS.lastProcessedRequest = currentRequest;
+                            var event = jQuery.Event("RVTS_add");
+                            $(window).trigger(event, [htm, true]);
 
-                        if (!event.isDefaultPrevented())
-                            RVTS.$thumbs.append(htm);
+                            if (!event.isDefaultPrevented())
+                                RVTS.$thumbs.append(htm);
+                        } else if (currentRequest > RVTS.lastProcessedRequest) {
+                            // Out of order - ignore this response
+                            console.warn("RVTS: Out of order response #" + currentRequest + ", expected #" + (RVTS.lastProcessedRequest + 1));
+                            return;
+                        }
                         // if (
                         //     RVTS.next - RVTS.start > 500 &&
                         //     RVTS.total - RVTS.next > 50

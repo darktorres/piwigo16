@@ -36,9 +36,13 @@ if (window.RVTS) {
              */
             _removeFromTop: function (count) {
                 var items = RVTS.$thumbs.querySelectorAll("li");
-                for (var i = 0; i < Math.min(count, items.length); i++) {
+                var toRemove = Math.min(count, items.length);
+                console.log("RVTS: Removing " + toRemove + " items from top (had " + items.length + " total)");
+                for (var i = 0; i < toRemove; i++) {
                     items[i].remove();
                 }
+                var newItems = RVTS.$thumbs.querySelectorAll("li");
+                console.log("RVTS: After removal: " + newItems.length + " items remain");
             },
 
             /**
@@ -59,8 +63,13 @@ if (window.RVTS) {
              * @returns {Promise<void>}
              */
             loadUp: async function () {
-                if (RVTS.loadingUp || RVTS.start <= 0) return;
+                console.log("RVTS: loadUp called - loadingUp=" + RVTS.loadingUp + ", start=" + RVTS.start);
+                if (RVTS.loadingUp || RVTS.start <= 0) {
+                    console.log("RVTS: loadUp returning early - loadingUp=" + RVTS.loadingUp + ", start=" + RVTS.start);
+                    return;
+                }
 
+                console.log("RVTS: loadUp proceeding - loading from " + (RVTS.start - RVTS.perPage) + " to " + (RVTS.start - 1));
                 var newStart = RVTS.start - RVTS.perPage;
                 var reqCount = RVTS.perPage;
 
@@ -96,7 +105,10 @@ if (window.RVTS) {
                     RVTS.start = newStart;
                     RVTS.next -= reqCount;
 
+                    console.log("RVTS: loadUp - loaded " + reqCount + " items, new start=" + RVTS.start + ", new next=" + RVTS.next);
+
                     // Unload from bottom when loading from top
+                    console.log("RVTS: loadUp - unloading " + reqCount + " items from bottom");
                     RVTS._removeFromBottom(reqCount);
                 } catch (error) {
                     console.error("RVTS: Failed to load previous page:", error);
@@ -155,9 +167,14 @@ if (window.RVTS) {
                             RVTS.$thumbs.insertAdjacentHTML("beforeend", htm);
 
                         // Unload from top when loading from bottom
+                        console.log("RVTS: doAutoScroll - loaded " + RVTS.perPage + " items, start=" + RVTS.start + ", next=" + RVTS.next);
                         if (RVTS.start > 0) {
+                            console.log("RVTS: doAutoScroll - removing from top (start > 0)");
                             RVTS._removeFromTop(RVTS.perPage);
                             RVTS.start += RVTS.perPage;
+                            console.log("RVTS: doAutoScroll - after removal: start=" + RVTS.start);
+                        } else {
+                            console.log("RVTS: doAutoScroll - NOT removing from top (start=" + RVTS.start + ")");
                         }
                     } else if (currentRequest > RVTS.lastProcessedRequest) {
                         // Out of order - ignore this response to prevent duplicates
@@ -187,7 +204,11 @@ if (window.RVTS) {
                 // Vanilla JS: Calculate window bottom position
                 var wBot = window.scrollY + window.innerHeight;
                 tBot -= !evt ? 0 : 100; // Begin loading 100 pixels before end
-                return tBot <= wBot ? (RVTS.doAutoScroll(), 1) : 0;
+                var shouldLoad = tBot <= wBot;
+                if (evt) {
+                    console.log("RVTS: checkAutoScroll - wBot=" + wBot + ", tBot=" + tBot + ", shouldLoad=" + shouldLoad + ", next=" + RVTS.next + ", total=" + RVTS.total);
+                }
+                return shouldLoad ? (RVTS.doAutoScroll(), 1) : 0;
             },
 
             /**
@@ -201,7 +222,11 @@ if (window.RVTS) {
                 // Vanilla JS: Calculate window top position
                 var wTop = window.scrollY;
                 tTop += !evt ? 0 : 100; // Begin loading 100 pixels before top
-                return wTop < tTop ? (RVTS.loadUp(), 1) : 0;
+                var shouldLoad = wTop < tTop;
+                if (evt) {
+                    console.log("RVTS: checkAutoScrollUp - wTop=" + wTop + ", tTop=" + tTop + ", shouldLoad=" + shouldLoad + ", start=" + RVTS.start);
+                }
+                return shouldLoad ? (RVTS.loadUp(), 1) : 0;
             },
 
             /**

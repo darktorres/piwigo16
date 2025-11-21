@@ -19,9 +19,6 @@ require __DIR__ . '/config_default.php';
 $params = $conf->gdThumb;
 
 if (isset($_GET['getMissingDerivative'])) {
-    // Start output buffering to prevent errors from being mixed with JSON response
-    ob_start();
-
     [$max_id, $image_count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT MAX(id) + 1, COUNT(*) FROM images;'));
 
     $start_id = intval($_POST['prev_page']);
@@ -93,10 +90,6 @@ if (isset($_GET['getMissingDerivative'])) {
     }
 
     $ret['urls'] = $urls;
-
-    // Clear any buffered output (errors, warnings, etc.) to ensure pure JSON response
-    ob_end_clean();
-
     header('Content-Type: application/json');
     echo json_encode($ret);
     exit();

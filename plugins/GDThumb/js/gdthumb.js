@@ -11,6 +11,7 @@ var GDThumb = {
     do_merge: false,
     _initialized: false,
     _resizeHandlerAttached: false,
+    _processDepth: 0,
 
     // Initialize plugin logic, perform necessary steps
     setup: function (
@@ -433,7 +434,12 @@ var GDThumb = {
         }
 
         if (main_width != jQuery("ul.thumbnails").width()) {
-            GDThumb.process();
+            // Prevent infinite recursion - limit to 3 iterations max
+            if (GDThumb._processDepth < 3) {
+                GDThumb._processDepth++;
+                GDThumb.process();
+                GDThumb._processDepth--;
+            }
         }
     },
 

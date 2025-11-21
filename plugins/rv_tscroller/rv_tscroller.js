@@ -22,6 +22,7 @@ if (window.jQuery && window.RVTS)
             adjust: 0,
             requestCounter: 0,
             lastProcessedRequest: 0,
+            checkAutoScrollScheduled: false,
 
             loadUp: function () {
                 if (RVTS.loadingUp || RVTS.start <= 0) return;
@@ -127,6 +128,16 @@ if (window.jQuery && window.RVTS)
                 return tBot <= wBot ? (RVTS.doAutoScroll(), 1) : 0;
             },
 
+            throttleCheckAutoScroll: function (evt) {
+                if (RVTS.checkAutoScrollScheduled) return;
+                RVTS.checkAutoScrollScheduled = true;
+                var raf = window.requestAnimationFrame || function(cb) { return window.setTimeout(cb, 16); };
+                raf(function() {
+                    RVTS.checkAutoScroll(evt);
+                    RVTS.checkAutoScrollScheduled = false;
+                });
+            },
+
             engage: function () {
                 var $w = $(window);
                 RVTS.$thumbs = $("#thumbnails");
@@ -141,7 +152,7 @@ if (window.jQuery && window.RVTS)
                 if (RVTS.$thumbs.outerHeight() < $w.height()) RVTS.adjust = 1;
                 else if (RVTS.$thumbs.height() > 2 * $w.height())
                     RVTS.adjust = -1;
-                $w.on("scroll resize", RVTS.checkAutoScroll);
+                $w.on("scroll resize", RVTS.throttleCheckAutoScroll);
                 if (RVTS.checkAutoScroll())
                     window.setTimeout(RVTS.checkAutoScroll, 1500);
             },

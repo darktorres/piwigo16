@@ -9,6 +9,7 @@ var GDThumb = {
     method: "crop",
     t: new Array(),
     do_merge: false,
+    _initialized: false,
 
     // Initialize plugin logic, perform necessary steps
     setup: function (
@@ -28,10 +29,15 @@ var GDThumb = {
         GDThumb.do_merge = do_merge;
         GDThumb.big_thumb = big_thumb;
 
-        $(window).off("RVTS_loaded").on("RVTS_loaded", function () {
-            GDThumb.init();
-        });
+        // Only register RVTS_loaded handler for AJAX loads (after first init)
+        if (GDThumb._initialized) {
+            $(window).off("RVTS_loaded").on("RVTS_loaded", function () {
+                GDThumb.init();
+            });
+        }
+
         GDThumb.init();
+        GDThumb._initialized = true;
     },
 
     init: function () {
@@ -42,7 +48,6 @@ var GDThumb = {
             }
 
             GDThumb.build();
-            jQuery(window).off("RVTS_loaded").on("RVTS_loaded", GDThumb.build);
 
             mainlists.resize(GDThumb.process);
             jQuery("ul.thumbnails .thumbLegend.overlay").click(function () {

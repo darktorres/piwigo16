@@ -77,7 +77,11 @@ var GDThumb = {
         big_thumb,
         check_pv,
     ) {
-        jQuery("ul#thumbnails").addClass("thumbnails");
+        // Vanilla JS: Add class to thumbnails container
+        var thumbnailsContainer = document.querySelector("ul#thumbnails");
+        if (thumbnailsContainer) {
+            thumbnailsContainer.classList.add("thumbnails");
+        }
 
         GDThumb.max_height = max_height;
         GDThumb.margin = margin;
@@ -147,16 +151,35 @@ var GDThumb = {
      * @returns {void}
      */
     merge: function () {
-        var mainlists = $(".content ul.thumbnails");
+        // Vanilla JS: Find all thumbnail lists
+        var mainlists = document.querySelectorAll(".content ul.thumbnails");
         if (mainlists.length < 2) {
             // there is only one list of elements
         } else {
-            $(".thumbnailCategories li").addClass("album");
-            $(".thumbnailCategories").append(
-                $(".content ul#thumbnails").html(),
-            );
-            $("ul#thumbnails").remove();
-            $("div.loader:eq(1)").remove();
+            // Add 'album' class to category items
+            var categoryItems = document.querySelectorAll(".thumbnailCategories li");
+            categoryItems.forEach(function(item) {
+                item.classList.add("album");
+            });
+
+            // Get thumbnail HTML and append to categories
+            var thumbnailsHtml = document.querySelector(".content ul#thumbnails");
+            var categoriesContainer = document.querySelector(".thumbnailCategories");
+            if (thumbnailsHtml && categoriesContainer) {
+                categoriesContainer.innerHTML += thumbnailsHtml.innerHTML;
+            }
+
+            // Remove original thumbnails list
+            var thumbnailsList = document.querySelector("ul#thumbnails");
+            if (thumbnailsList) {
+                thumbnailsList.remove();
+            }
+
+            // Remove second loader
+            var loaders = document.querySelectorAll("div.loader");
+            if (loaders.length > 1) {
+                loaders[1].remove();
+            }
         }
     },
 
@@ -254,18 +277,23 @@ var GDThumb = {
      * @private
      */
     _findLastRowStartIndex: function () {
-        var $images = jQuery("ul.thumbnails img.thumbnail");
+        // Vanilla JS: Get all thumbnail images
+        var images = document.querySelectorAll("ul.thumbnails img.thumbnail");
 
-        if ($images.length === 0) {
+        if (images.length === 0) {
             return 0;
         }
 
-        // Get the top position of the last image
-        var lastImageTop = $images.last().position().top;
+        // Get the top position of the last image (document-relative)
+        var lastImage = images[images.length - 1];
+        var lastImageRect = lastImage.getBoundingClientRect();
+        var lastImageTop = lastImageRect.top + window.scrollY;
 
         // Scan backwards to find where this row started
-        for (var i = $images.length - 2; i >= 0; i--) {
-            if ($images.eq(i).position().top !== lastImageTop) {
+        for (var i = images.length - 2; i >= 0; i--) {
+            var imgRect = images[i].getBoundingClientRect();
+            var imgTop = imgRect.top + window.scrollY;
+            if (imgTop !== lastImageTop) {
                 return i + 1; // Found it - this is where the last row starts
             }
         }

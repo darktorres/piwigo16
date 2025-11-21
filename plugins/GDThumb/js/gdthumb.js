@@ -113,8 +113,8 @@ var GDThumb = {
             GDThumb.t = new Array();
         }
         $("ul.thumbnails img.thumbnail").each(function (index) {
-            width = parseInt(jQuery(this).attr("width"));
-            height = parseInt(jQuery(this).attr("height"));
+            width = parseInt(jQuery(this).attr("width"), 10);
+            height = parseInt(jQuery(this).attr("height"), 10);
             th = {
                 index: index,
                 width: width,

@@ -143,8 +143,8 @@
   <p class="buttons">
     <input id="startLink" value="{'Start'|translate}" onclick="gdThumb_start()" type="button">
     <input id="pauseLink" value="{'Pause'|translate}" onclick="gdThumb_pause()" type="button"
-      disabled="disbled">
-    <input id="stopLink" value="{'Stop'|translate}" onclick="gdThumb_stop()" type="button" disabled="disbled">
+      disabled="disabled">
+    <input id="stopLink" value="{'Stop'|translate}" onclick="gdThumb_stop()" type="button" disabled="disabled">
   </p>
   <div>
     <ul>
@@ -189,5 +189,4 @@
 {/if}
 
 {combine_script id='iloader' load='footer' path=$GDTHUMB_PATH|cat:"/js/image.loader.js"}
-{combine_script id='jquery.tipTip' load='footer' require='jquery' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.js'}
-{combine_script id='admin.precache' load='footer' path=$GDTHUMB_PATH|cat:"/js/gdthumb.admin.js" require='jquery.ui,jquery.tipTip'}
+{combine_script id='admin.precache' load='footer' path=$GDTHUMB_PATH|cat:"/js/gdthumb.admin.js" require='iloader'}

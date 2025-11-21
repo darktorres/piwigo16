@@ -194,22 +194,31 @@ if (window.jQuery && window.RVTS)
              * @returns {void}
              */
             engage: function () {
-                var $w = $(window);
-                RVTS.$thumbs = $("#thumbnails");
-                RVTS.$thumbs.after(
-                    '<div id="ajaxLoader" style="display:none;position:fixed;bottom:32px;right:1%;z-index:999"><img src="' +
+                // Vanilla JS: Get thumbnails container
+                RVTS.$thumbs = document.getElementById("thumbnails");
+
+                // Vanilla JS: Insert ajax loader after thumbnails
+                if (RVTS.$thumbs) {
+                    var loaderHtml = '<div id="ajaxLoader" style="display:none;position:fixed;bottom:32px;right:1%;z-index:999"><img src="' +
                         RVTS.ajaxLoaderImage +
-                        '" width="128" height="15" alt="~"></div>',
-                );
+                        '" width="128" height="15" alt="~"></div>';
+                    RVTS.$thumbs.insertAdjacentHTML("afterend", loaderHtml);
+                }
 
                 if ("#top" == window.location.hash) window.scrollTo(0, 0);
 
                 // Adjust pagination size based on initial viewport fill
-                if (RVTS.$thumbs.outerHeight() < $w.height()) RVTS.adjust = 1;
-                else if (RVTS.$thumbs.height() > 2 * $w.height())
-                    RVTS.adjust = -1;
+                if (RVTS.$thumbs) {
+                    var thumbsHeight = RVTS.$thumbs.offsetHeight + (RVTS.$thumbs.offsetWidth - RVTS.$thumbs.clientWidth);
+                    var windowHeight = window.innerHeight;
+                    if (thumbsHeight < windowHeight) RVTS.adjust = 1;
+                    else if (RVTS.$thumbs.offsetHeight > 2 * windowHeight)
+                        RVTS.adjust = -1;
+                }
 
-                $w.on("scroll resize", RVTS.throttleCheckAutoScroll);
+                // Vanilla JS: Add scroll and resize event listeners
+                window.addEventListener("scroll", RVTS.throttleCheckAutoScroll);
+                window.addEventListener("resize", RVTS.throttleCheckAutoScroll);
                 if (RVTS.checkAutoScroll())
                     window.setTimeout(RVTS.checkAutoScroll, 1500);
             },

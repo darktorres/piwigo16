@@ -1,7 +1,5 @@
 // Initialize admin page
 (function () {
-    console.log("GDThumb admin script loading...");
-
     // Note: tipTip is a jQuery UI plugin - would need separate tooltip library
     // For now, skipping tooltip implementation
     // TODO: Replace with vanilla JS tooltip library if needed
@@ -21,17 +19,13 @@
 
     // Vanilla JS: Replace jQuery.Deferred with simple callbacks
     window.gdThumb_start = function () {
-        console.log("gdThumb_start called");
         urlProcessingDone = false;
 
         // Vanilla JS: Show/hide controls
         setTimeout(function () {
-            console.log("Inside setTimeout in gdThumb_start");
             var generateCache = document.getElementById("generate_cache");
-            console.log("generateCache element:", generateCache);
             if (generateCache) {
-                generateCache.style.display = "";
-                console.log("Set generateCache display to empty string");
+                generateCache.style.display = "block";
             }
 
             var startLink = document.getElementById("startLink");
@@ -47,11 +41,8 @@
             });
         }, 0);
 
-        console.log("About to call loader methods");
         loader.pause(false);
-        console.log("Calling updateStats");
         updateStats();
-        console.log("Calling getUrls(0)");
         getUrls(0);
     };
 
@@ -150,7 +141,7 @@
                             else
                                 feedbackImg.removeAttribute("height");
                             feedbackImg.src = url;
-                            feedbackWrap.style.display = "";
+                            feedbackWrap.style.display = "block";
                         }, 300);
                     }
                 }

@@ -1,17 +1,17 @@
 {if !empty($thumbnails)}
   {foreach $thumbnails as $thumbnail}
-    {assign var=derivative value=$pwg->derivative($GDThumb_derivative_params, $thumbnail.src_image)}
+    {assign var=derivative value=$pwg->derivative($gdthumb_derivatives, $thumbnail.src_image)}
     {assign var=media_type value={media_type file=$thumbnail.file}}
     {assign var=media_type_name value={$media_type|capitalize:false:true}}
     {* {$thumbnails|print_r} *}
 
-    <li class="gdthumb{if $GDThumb.thumb_animate} animate{/if} {$GDThumb.method}">
-      {if $GDThumb.thumb_mode_photo !== "hide" }
-        <span class="thumbLegend {$GDThumb.thumb_mode_photo}">
+    <li class="gdthumb{if $gdthumb_config.thumb_animate} animate{/if} {$gdthumb_config.method}">
+      {if $gdthumb_config.thumb_mode_photo !== "hide" }
+        <span class="thumbLegend {$gdthumb_config.thumb_mode_photo}">
           <span class="thumbName thumbTitle">
-            {if $GDThumb.normalize_title == "desc" && $thumbnail.DESCRIPTION}
+            {if $gdthumb_config.normalize_title == "desc" && $thumbnail.DESCRIPTION}
               {$thumbnail.DESCRIPTION}
-            {elseif $GDThumb.normalize_title == "off"}
+            {elseif $gdthumb_config.normalize_title == "off"}
               {$thumbnail.NAME}
             {else}
               {assign var="file_title" value=$thumbnail.NAME|cat:"."}
@@ -22,13 +22,13 @@
                 {$thumbnail.NAME}
               {/if}
             {/if}
-            {if $GDThumb.thumb_mode_album !== "overlay-ex"}
+            {if $gdthumb_config.thumb_mode_album !== "overlay-ex"}
               {if !empty($thumbnail.icon_ts)}
                 <img title="{$thumbnail.icon_ts.TITLE}" src="{$ROOT_URL}{$themeconf.icon_dir|default:null}/recent.png" alt="(!)">
               {/if}
             {/if}
           </span>
-          {if $GDThumb.thumb_mode_album == "overlay-ex"}
+          {if $gdthumb_config.thumb_mode_album == "overlay-ex"}
             <span class="thumbInfo">
               <span class="hit-num">{$thumbnail.hit}</span>
               <span
@@ -40,7 +40,7 @@
                 <span class="rank-num"><i class="fas fa-star"></i>{$thumbnail.rating_score|string_format:"%d"}</span>
               {/if}
             </span>
-          {elseif $GDThumb.thumb_metamode !== "hide"}
+          {elseif $gdthumb_config.thumb_metamode !== "hide"}
             {if isset($thumbnail.NB_COMMENTS)}
               <span
                 class="{if 0==$thumbnail.NB_COMMENTS}zero {/if}nb-comments">{$thumbnail.NB_COMMENTS|translate_dec:'%d comment':'%d comments'}</span>
@@ -69,28 +69,28 @@
     </li>
   {/foreach}
 
-  {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css" version=1}
-  {combine_script id='jquery.ba-resize'  path=$GDThumb.GDTHUMB_ROOT|cat:"/js/jquery.ba-resize.js" load="footer"}
-  {combine_script id='gdthumb' require='jquery,jquery.ba-resize' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
+  {combine_css path=$gdthumb_config.GDTHUMB_ROOT|cat:"/css/gdthumb.css" version=1}
+  {combine_script id='jquery.ba-resize'  path=$gdthumb_config.GDTHUMB_ROOT|cat:"/js/jquery.ba-resize.js" load="footer"}
+  {combine_script id='gdthumb' require='jquery,jquery.ba-resize' path=$gdthumb_config.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
 
   {footer_script require="gdthumb"}<script>
     {if isset($has_cats)}
     {else}
       $(function() {
-        {if isset($GDThumb_big)}
-          {assign var=gt_size value=$GDThumb_big->get_size()}
-          var big_thumb = { id: {$GDThumb_big->src_image->id}, src: '{$GDThumb_big->get_url()}', width: {$gt_size[0]}, height: {$gt_size[1]} };
+        {if isset($gdthumb_big_thumb)}
+          {assign var=gt_size value=$gdthumb_big_thumb->get_size()}
+          var big_thumb = { id: {$gdthumb_big_thumb->src_image->id}, src: '{$gdthumb_big_thumb->get_url()}', width: {$gt_size[0]}, height: {$gt_size[1]} };
         {else}
           var big_thumb = null;
         {/if}
-        GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin}, false, big_thumb, {$GDThumb.big_thumb_noinpw});
+        GDThumb.setup('{$gdthumb_config.method}', {$gdthumb_config.height}, {$gdthumb_config.margin}, false, big_thumb, {$gdthumb_config.big_thumb_noinpw});
       });
     {/if}
   </script>{/footer_script}
 
   {html_head}
   <style>
-    #thumbnails .gdthumb { margin:{$GDThumb.margin / 2}px {$GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px !important; }
+    #thumbnails .gdthumb { margin:{$gdthumb_config.margin / 2}px {$gdthumb_config.margin / 2}px {$gdthumb_config.margin - $gdthumb_config.margin / 2}px {$gdthumb_config.margin - $gdthumb_config.margin / 2}px !important; }
   </style>
   {/html_head}
 {/if}

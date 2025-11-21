@@ -88,7 +88,7 @@ var GDThumb = {
 
         // Register handler once and only once
         if (!GDThumb._initialized) {
-            $(window).off("RVTS_loaded").on("RVTS_loaded", function () {
+            window.addEventListener("RVTS_loaded", function () {
                 GDThumb.init();
             });
             GDThumb._initialized = true;

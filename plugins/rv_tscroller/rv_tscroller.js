@@ -64,10 +64,14 @@ if (window.jQuery && window.RVTS)
                     var htm = await _fetchHtml(url);
                     RVTS.start = newStart;
 
-                    var event = jQuery.Event("RVTS_add");
-                    $(window).trigger(event, [htm, false]);
+                    var event = new CustomEvent("RVTS_add", {
+                        detail: { html: htm, isDown: false },
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    window.dispatchEvent(event);
 
-                    if (!event.isDefaultPrevented())
+                    if (!event.defaultPrevented)
                         RVTS.$thumbs.prepend(htm);
 
                     if (RVTS.start <= 0) $("#rvtsUp").remove();
@@ -76,7 +80,7 @@ if (window.jQuery && window.RVTS)
                 } finally {
                     RVTS.loadingUp = 0;
                     RVTS.loading || $("#ajaxLoader").hide();
-                    $(window).trigger("RVTS_loaded", 0);
+                    window.dispatchEvent(new Event("RVTS_loaded"));
                 }
             },
 
@@ -110,10 +114,14 @@ if (window.jQuery && window.RVTS)
                         RVTS.next += RVTS.perPage;
                         RVTS.lastProcessedRequest = currentRequest;
 
-                        var event = jQuery.Event("RVTS_add");
-                        $(window).trigger(event, [htm, true]);
+                        var event = new CustomEvent("RVTS_add", {
+                            detail: { html: htm, isDown: true },
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        window.dispatchEvent(event);
 
-                        if (!event.isDefaultPrevented())
+                        if (!event.defaultPrevented)
                             RVTS.$thumbs.append(htm);
                     } else if (currentRequest > RVTS.lastProcessedRequest) {
                         // Out of order - ignore this response to prevent duplicates
@@ -124,7 +132,7 @@ if (window.jQuery && window.RVTS)
                 } finally {
                     RVTS.loading = 0;
                     RVTS.loadingUp || $("#ajaxLoader").hide();
-                    $(window).trigger("RVTS_loaded", 1);
+                    window.dispatchEvent(new Event("RVTS_loaded"));
                 }
             },
 

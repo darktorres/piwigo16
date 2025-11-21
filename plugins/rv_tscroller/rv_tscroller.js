@@ -64,8 +64,12 @@ if (window.RVTS) {
              */
             loadUp: async function () {
                 console.log("RVTS: loadUp called - loadingUp=" + RVTS.loadingUp + ", start=" + RVTS.start);
-                if (RVTS.loadingUp || RVTS.start <= 0) {
-                    console.log("RVTS: loadUp returning early - loadingUp=" + RVTS.loadingUp + ", start=" + RVTS.start);
+                if (RVTS.loadingUp) {
+                    console.log("RVTS: loadUp returning early - already loading (loadingUp=1)");
+                    return;
+                }
+                if (RVTS.start <= 0) {
+                    console.log("RVTS: loadUp returning early - already at beginning (start=" + RVTS.start + ")");
                     return;
                 }
 
@@ -166,15 +170,19 @@ if (window.RVTS) {
                         if (!event.defaultPrevented)
                             RVTS.$thumbs.insertAdjacentHTML("beforeend", htm);
 
-                        // Unload from top when loading from bottom
+                        // Unload from top when loading from bottom (maintain sliding window)
                         console.log("RVTS: doAutoScroll - loaded " + RVTS.perPage + " items, start=" + RVTS.start + ", next=" + RVTS.next);
-                        if (RVTS.start > 0) {
-                            console.log("RVTS: doAutoScroll - removing from top (start > 0)");
+                        var items = RVTS.$thumbs.querySelectorAll("li");
+                        console.log("RVTS: doAutoScroll - DOM has " + items.length + " items");
+
+                        // Only unload if we have more than 2 pages worth of items (perPage * 2)
+                        if (items.length > RVTS.perPage * 2) {
+                            console.log("RVTS: doAutoScroll - removing from top (have " + items.length + " items, threshold=" + (RVTS.perPage * 2) + ")");
                             RVTS._removeFromTop(RVTS.perPage);
                             RVTS.start += RVTS.perPage;
                             console.log("RVTS: doAutoScroll - after removal: start=" + RVTS.start);
                         } else {
-                            console.log("RVTS: doAutoScroll - NOT removing from top (start=" + RVTS.start + ")");
+                            console.log("RVTS: doAutoScroll - NOT removing from top (only " + items.length + " items)");
                         }
                     } else if (currentRequest > RVTS.lastProcessedRequest) {
                         // Out of order - ignore this response to prevent duplicates

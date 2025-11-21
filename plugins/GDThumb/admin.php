@@ -23,6 +23,9 @@ if (isset($_GET['getMissingDerivative'])) {
     global $custom_error_log;
     $custom_error_log = '';
 
+    // Start output buffering to capture any PHP error output
+    ob_start();
+
     [$max_id, $image_count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT MAX(id) + 1, COUNT(*) FROM images;'));
 
     $start_id = intval($_POST['prev_page']);
@@ -100,6 +103,9 @@ if (isset($_GET['getMissingDerivative'])) {
     if (! empty($custom_error_log)) {
         $ret['errors'] = $custom_error_log;
     }
+
+    // Clear any buffered error output to ensure clean JSON response
+    ob_end_clean();
 
     header('Content-Type: application/json');
     echo json_encode($ret);

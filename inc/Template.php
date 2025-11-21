@@ -52,6 +52,22 @@ set_error_handler(function (
     return false;
 });
 
+// Catch fatal errors that set_error_handler doesn't catch
+register_shutdown_function(function () {
+    $error = error_get_last();
+
+    if ($error !== null && ($error['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR))) {
+        global $custom_error_log;
+
+        if ($custom_error_log === null) {
+            $custom_error_log = '';
+        }
+
+        $errorMessage = json_encode("PHP FATAL: {$error['message']} in {$error['file']} on line {$error['line']}");
+        $custom_error_log .= "console.error({$errorMessage});\n";
+    }
+});
+
 /** default rank for buttons */
 define('BUTTONS_RANK_NEUTRAL', 50);
 

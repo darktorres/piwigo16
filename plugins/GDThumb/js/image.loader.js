@@ -1,8 +1,9 @@
 function ImageLoader(opts) {
-    this.opts = jQuery.extend(
+    // Vanilla JS: Object.assign instead of jQuery.extend
+    this.opts = Object.assign(
         {
             maxRequests: 30,
-            onChanged: jQuery.noop,
+            onChanged: function() {}, // noop function
         },
         opts || {},
     );
@@ -31,7 +32,13 @@ ImageLoader.prototype = {
 
     clear: function () {
         this.queue.length = 0;
-        while (this.current.length) jQuery(this.current.pop()).unbind();
+        // Vanilla JS: Remove all event listeners from images
+        while (this.current.length) {
+            var img = this.current.pop();
+            img.onload = null;
+            img.onerror = null;
+            img.onabort = null;
+        }
         this.loaded = this.errors = this.errorEma = 0;
     },
 
@@ -57,11 +64,20 @@ ImageLoader.prototype = {
         var img = this.pool.shift() || new Image();
         this.current.push(img);
         var that = this;
-        jQuery(img).bind("load error abort", function (e) {
-            //img.onload = function(e) {
-            jQuery(img).unbind();
+
+        // Vanilla JS: Create handler function for load/error/abort events
+        var handleLoadComplete = function (e) {
+            // Remove event listeners
             img.onload = null;
-            that.current.splice(jQuery.inArray(img, that.current), 1);
+            img.onerror = null;
+            img.onabort = null;
+
+            // Remove from current array
+            var index = that.current.indexOf(img);
+            if (index > -1) {
+                that.current.splice(index, 1);
+            }
+
             if (e.type === "load") {
                 that.loaded++;
                 that.errorEma *= 0.9;
@@ -74,7 +90,12 @@ ImageLoader.prototype = {
             that._fireChanged(e.type, img);
             that._checkQueue();
             that.pool.push(img);
-        });
+        };
+
+        // Vanilla JS: Attach event handlers
+        img.onload = handleLoadComplete;
+        img.onerror = handleLoadComplete;
+        img.onabort = handleLoadComplete;
         img.src = url;
     },
 

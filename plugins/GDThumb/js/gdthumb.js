@@ -236,11 +236,12 @@ var GDThumb = {
 
         var first = GDThumb.t[0];
         if (first) {
+            var firstImg = document.querySelector("ul.thumbnails img.thumbnail");
             GDThumb.small_thumb = {
                 index: first.index,
                 width: first.real_width,
                 height: first.real_height,
-                src: jQuery("ul.thumbnails img.thumbnail:first").attr("src"),
+                src: firstImg ? firstImg.getAttribute("src") : "",
             };
         }
         GDThumb.process();

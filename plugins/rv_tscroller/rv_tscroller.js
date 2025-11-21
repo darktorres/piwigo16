@@ -225,20 +225,32 @@ if (window.jQuery && window.RVTS)
             },
         }); //end extend
 
-        $(document).ready(function () {
+        // Vanilla JS: Document ready - engage when DOM is ready
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", function () {
+                if ("#top" == window.location.hash) window.scrollTo(0, 0);
+                window.setTimeout(RVTS.engage, 150);
+            });
+        } else {
+            // Already loaded
             if ("#top" == window.location.hash) window.scrollTo(0, 0);
             window.setTimeout(RVTS.engage, 150);
-        });
+        }
 
         if (window.history.replaceState) {
             var iniStart = RVTS.start;
-            $(window).one("RVTS_loaded", function () {
-                $(window).on("unload", function () {
-                    var threshold = Math.max(0, $(window).scrollTop() - 60);
-                    var elts = RVTS.$thumbs.children("li");
+            // Vanilla JS: Listen for RVTS_loaded event once
+            window.addEventListener("RVTS_loaded", function onRVTSLoaded() {
+                window.removeEventListener("RVTS_loaded", onRVTSLoaded);
+
+                // Vanilla JS: Listen for unload to save scroll position
+                window.addEventListener("unload", function () {
+                    var threshold = Math.max(0, window.scrollY - 60);
+                    var elts = RVTS.$thumbs.querySelectorAll("li");
                     for (var i = 0; i < elts.length; i++) {
-                        var offset = $(elts[i]).offset();
-                        if (offset.top >= threshold) {
+                        var rect = elts[i].getBoundingClientRect();
+                        var offsetTop = rect.top + window.scrollY;
+                        if (offsetTop >= threshold) {
                             var start = RVTS.start + i;
                             var delta = start - iniStart;
                             if (delta < 0 || delta >= RVTS.perPage) {

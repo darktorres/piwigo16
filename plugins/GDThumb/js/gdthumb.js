@@ -428,10 +428,14 @@ var GDThumb = {
      * @returns {void}
      */
     resize: function (thumb, width, height, new_width, new_height, is_big) {
+        // Handle both jQuery and DOM elements
+        var thumbElement = thumb.jquery ? thumb[0] : thumb;
+
         use_crop = true;
         if (GDThumb.method == "slide") {
             use_crop = false;
-            thumb.css({ height: "", width: "" });
+            thumbElement.style.height = "";
+            thumbElement.style.width = "";
             new_width = new_height;
 
             if (width < height) {
@@ -444,12 +448,11 @@ var GDThumb = {
 
             height_crop = Math.round((real_height - new_height) / 2);
             width_crop = Math.round((real_width - new_height) / 2);
-            thumb.css({
-                height: real_height + "px",
-                width: real_width + "px",
-            });
+            thumbElement.style.height = real_height + "px";
+            thumbElement.style.width = real_width + "px";
         } else if (!is_big && GDThumb.method == "square") {
-            thumb.css({ height: "", width: "" });
+            thumbElement.style.height = "";
+            thumbElement.style.width = "";
             new_width = new_height;
 
             if (width < height) {
@@ -462,10 +465,8 @@ var GDThumb = {
 
             height_crop = Math.round((real_height - new_height) / 2);
             width_crop = Math.round((real_width - new_width) / 2);
-            thumb.css({
-                height: real_height + "px",
-                width: real_width + "px",
-            });
+            thumbElement.style.height = real_height + "px";
+            thumbElement.style.width = real_width + "px";
         } else if (
             GDThumb.method == "resize" ||
             height < new_height ||
@@ -485,22 +486,25 @@ var GDThumb = {
                     height_crop = Math.round((real_height - new_height) / 2);
                 }
             }
-            thumb.css({
-                height: real_height + "px",
-                width: real_width + "px",
-            });
+            thumbElement.style.height = real_height + "px";
+            thumbElement.style.width = real_width + "px";
         } else {
-            thumb.css({ height: "", width: "" });
+            thumbElement.style.height = "";
+            thumbElement.style.width = "";
             height_crop = Math.round((height - new_height) / 2);
             width_crop = Math.round((width - new_width) / 2);
         }
 
-        thumb
-            .parents("li")
-            .css({ height: new_height + "px", width: new_width + "px" });
+        var liElement = thumbElement.closest("li");
+        if (liElement) {
+            liElement.style.height = new_height + "px";
+            liElement.style.width = new_width + "px";
+        }
+
         if (use_crop) {
-            thumb.parent("a").css({
-                clip:
+            var aElement = thumbElement.closest("a");
+            if (aElement) {
+                aElement.style.clip =
                     "rect(" +
                     height_crop +
                     "px, " +
@@ -509,14 +513,16 @@ var GDThumb = {
                     (new_height + height_crop) +
                     "px, " +
                     width_crop +
-                    "px)",
-                top: -height_crop + "px",
-                left: -width_crop + "px",
-            });
+                    "px)";
+                aElement.style.top = -height_crop + "px";
+                aElement.style.left = -width_crop + "px";
+            }
         } else {
-            thumb
-                .parent("a")
-                .css({ top: -height_crop + "px", left: -width_crop + "px" });
+            var aElement = thumbElement.closest("a");
+            if (aElement) {
+                aElement.style.top = -height_crop + "px";
+                aElement.style.left = -width_crop + "px";
+            }
         }
     },
 };

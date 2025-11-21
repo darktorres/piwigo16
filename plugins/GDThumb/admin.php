@@ -23,6 +23,10 @@ if (isset($_GET['getMissingDerivative'])) {
     global $custom_error_log;
     $custom_error_log = '';
 
+    // Disable display_errors to prevent PHP from outputting errors to the page
+    // Errors will be captured by Piwigo's error handler and sent to browser console instead
+    ini_set('display_errors', false);
+
     // Start output buffering to capture any PHP error output
     ob_start();
 

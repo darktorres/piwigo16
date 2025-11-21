@@ -16,6 +16,20 @@ if (window.jQuery && window.RVTS)
             );
         }
 
+        /**
+         * Fetch HTML content from URL
+         * @param {string} url - URL to fetch from
+         * @returns {Promise<string>} HTML content
+         * @private
+         */
+        var _fetchHtml = async function(url) {
+            var response = await fetch(url);
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status + ": " + response.statusText);
+            }
+            return await response.text();
+        };
+
         RVTS = $.fn.extend(RVTS, {
             loading: 0,
             loadingUp: 0,
@@ -24,110 +38,114 @@ if (window.jQuery && window.RVTS)
             lastProcessedRequest: 0,
             checkAutoScrollScheduled: false,
 
-            loadUp: function () {
+            /**
+             * Load thumbnails from earlier in the gallery (load up when scrolled to top)
+             * @returns {Promise<void>}
+             */
+            loadUp: async function () {
                 if (RVTS.loadingUp || RVTS.start <= 0) return;
+
                 var newStart = RVTS.start - RVTS.perPage;
                 var reqCount = RVTS.perPage;
+
                 if (newStart < 0) {
                     reqCount += newStart;
                     newStart = 0;
                 }
+
                 var url = RVTS.ajaxUrlModel
                     .replace("%start%", newStart)
                     .replace("%per%", reqCount);
-                $("#ajaxLoader").show();
-                RVTS.loadingUp = 1;
-                $.ajax({
-                    type: "GET",
-                    dataType: "html",
-                    url: url,
-                    success: function (htm) {
-                        RVTS.start = newStart;
 
-                        var event = jQuery.Event("RVTS_add");
-                        $(window).trigger(event, [htm, false]);
+                try {
+                    $("#ajaxLoader").show();
+                    RVTS.loadingUp = 1;
 
-                        if (!event.isDefaultPrevented())
-                            RVTS.$thumbs.prepend(htm);
+                    var htm = await _fetchHtml(url);
+                    RVTS.start = newStart;
 
-                        if (RVTS.start <= 0) $("#rvtsUp").remove();
-                    },
-                    complete: function () {
-                        RVTS.loadingUp = 0;
-                        RVTS.loading || $("#ajaxLoader").hide();
-                        $(window).trigger("RVTS_loaded", 0);
-                    },
-                });
+                    var event = jQuery.Event("RVTS_add");
+                    $(window).trigger(event, [htm, false]);
+
+                    if (!event.isDefaultPrevented())
+                        RVTS.$thumbs.prepend(htm);
+
+                    if (RVTS.start <= 0) $("#rvtsUp").remove();
+                } catch (error) {
+                    console.error("RVTS: Failed to load previous page:", error);
+                } finally {
+                    RVTS.loadingUp = 0;
+                    RVTS.loading || $("#ajaxLoader").hide();
+                    $(window).trigger("RVTS_loaded", 0);
+                }
             },
 
-            doAutoScroll: function () {
+            /**
+             * Load next page of thumbnails automatically when user scrolls near bottom
+             * @returns {Promise<void>}
+             */
+            doAutoScroll: async function () {
                 if (RVTS.loading || RVTS.next >= RVTS.total) return;
+
                 var url = RVTS.ajaxUrlModel
                     .replace("%start%", RVTS.next)
                     .replace("%per%", RVTS.perPage);
+
                 if (RVTS.adjust) {
                     url += "&adj=" + RVTS.adjust;
                     RVTS.adjust = 0;
                 }
-                // Add request ID to track responses
-                var currentRequest = ++RVTS.requestCounter;
-                $("#ajaxLoader").show();
-                RVTS.loading = 1;
-                $.ajax({
-                    type: "GET",
-                    dataType: "html",
-                    url: url,
-                    success: function (htm) {
-                        // Only process if this is the next expected response
-                        if (currentRequest === RVTS.lastProcessedRequest + 1) {
-                            RVTS.next += RVTS.perPage;
-                            RVTS.lastProcessedRequest = currentRequest;
-                            var event = jQuery.Event("RVTS_add");
-                            $(window).trigger(event, [htm, true]);
 
-                            if (!event.isDefaultPrevented())
-                                RVTS.$thumbs.append(htm);
-                        } else if (currentRequest > RVTS.lastProcessedRequest) {
-                            // Out of order - ignore this response
-                            console.warn("RVTS: Out of order response #" + currentRequest + ", expected #" + (RVTS.lastProcessedRequest + 1));
-                            return;
-                        }
-                        // if (
-                        //     RVTS.next - RVTS.start > 500 &&
-                        //     RVTS.total - RVTS.next > 50
-                        // ) {
-                        //     RVTS.$thumbs.after(
-                        //         '<div style="text-align:center;font-size:180%;margin:0 0 20px"><a href="' +
-                        //             RVTS.urlModel.replace(
-                        //                 "%start%",
-                        //                 RVTS.next,
-                        //             ) +
-                        //             '">' +
-                        //             RVTS.moreMsg.replace(
-                        //                 "%d",
-                        //                 RVTS.total - RVTS.next,
-                        //             ) +
-                        //             "</a></div>",
-                        //     );
-                        //     RVTS.total = 0;
-                        // }
-                    },
-                    complete: function () {
-                        RVTS.loading = 0;
-                        RVTS.loadingUp || $("#ajaxLoader").hide();
-                        $(window).trigger("RVTS_loaded", 1);
-                    },
-                });
+                // Track request order to handle out-of-order responses from network delays
+                var currentRequest = ++RVTS.requestCounter;
+
+                try {
+                    $("#ajaxLoader").show();
+                    RVTS.loading = 1;
+
+                    var htm = await _fetchHtml(url);
+
+                    // Only process if this is the next expected response (handles race conditions)
+                    if (currentRequest === RVTS.lastProcessedRequest + 1) {
+                        RVTS.next += RVTS.perPage;
+                        RVTS.lastProcessedRequest = currentRequest;
+
+                        var event = jQuery.Event("RVTS_add");
+                        $(window).trigger(event, [htm, true]);
+
+                        if (!event.isDefaultPrevented())
+                            RVTS.$thumbs.append(htm);
+                    } else if (currentRequest > RVTS.lastProcessedRequest) {
+                        // Out of order - ignore this response to prevent duplicates
+                        console.warn("RVTS: Out of order response #" + currentRequest + ", expected #" + (RVTS.lastProcessedRequest + 1));
+                    }
+                } catch (error) {
+                    console.error("RVTS: Failed to load next page:", error);
+                } finally {
+                    RVTS.loading = 0;
+                    RVTS.loadingUp || $("#ajaxLoader").hide();
+                    $(window).trigger("RVTS_loaded", 1);
+                }
             },
 
+            /**
+             * Check if user has scrolled near the bottom of thumbnails
+             * @param {Event} evt - Optional scroll/resize event
+             * @returns {number} 1 if near bottom and load triggered, 0 otherwise
+             */
             checkAutoScroll: function (evt) {
                 var tBot =
                     RVTS.$thumbs.position().top + RVTS.$thumbs.outerHeight();
                 var wBot = $(window).scrollTop() + $(window).height();
-                tBot -= !evt ? 0 : 100; //begin 100 pixels before end
+                tBot -= !evt ? 0 : 100; // Begin loading 100 pixels before end
                 return tBot <= wBot ? (RVTS.doAutoScroll(), 1) : 0;
             },
 
+            /**
+             * Throttle scroll/resize events using requestAnimationFrame
+             * @param {Event} evt - Scroll or resize event
+             * @returns {void}
+             */
             throttleCheckAutoScroll: function (evt) {
                 if (RVTS.checkAutoScrollScheduled) return;
                 RVTS.checkAutoScrollScheduled = true;
@@ -138,6 +156,10 @@ if (window.jQuery && window.RVTS)
                 });
             },
 
+            /**
+             * Initialize the infinite scroll plugin
+             * @returns {void}
+             */
             engage: function () {
                 var $w = $(window);
                 RVTS.$thumbs = $("#thumbnails");
@@ -149,9 +171,11 @@ if (window.jQuery && window.RVTS)
 
                 if ("#top" == window.location.hash) window.scrollTo(0, 0);
 
+                // Adjust pagination size based on initial viewport fill
                 if (RVTS.$thumbs.outerHeight() < $w.height()) RVTS.adjust = 1;
                 else if (RVTS.$thumbs.height() > 2 * $w.height())
                     RVTS.adjust = -1;
+
                 $w.on("scroll resize", RVTS.throttleCheckAutoScroll);
                 if (RVTS.checkAutoScroll())
                     window.setTimeout(RVTS.checkAutoScroll, 1500);

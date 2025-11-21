@@ -283,7 +283,7 @@ var GDThumb = {
     process: function () {
         var thumbnailsList = document.querySelector("ul.thumbnails");
         var main_width = thumbnailsList ? thumbnailsList.clientWidth : 0;
-        var $allThumbs = jQuery("ul.thumbnails img.thumbnail");
+        var allThumbs = document.querySelectorAll("ul.thumbnails img.thumbnail");
 
         var width_count = GDThumb.margin;
         var max_height = 0;
@@ -338,9 +338,7 @@ var GDThumb = {
                         }
                     }
                     GDThumb.resize(
-                        $allThumbs.eq(
-                            thumb_process[j].index,
-                        ),
+                        allThumbs[thumb_process[j].index],
                         thumb_process[j].real_width,
                         thumb_process[j].real_height,
                         new_width,
@@ -369,9 +367,7 @@ var GDThumb = {
             // we have only one line, i.e. the first line is the one and only line and therefor the last line too
             if (line == 1) {
                 GDThumb.resize(
-                    $allThumbs.eq(
-                        thumb_process[j].index,
-                    ),
+                    allThumbs[thumb_process[j].index],
                     thumb_process[j].real_width,
                     thumb_process[j].real_height,
                     thumb_process[j].width,
@@ -391,9 +387,7 @@ var GDThumb = {
                 }
 
                 GDThumb.resize(
-                    jQuery("ul.thumbnails img.thumbnail").eq(
-                        thumb_process[j].index,
-                    ),
+                    allThumbs[thumb_process[j].index],
                     thumb_process[j].real_width,
                     thumb_process[j].real_height,
                     new_width,

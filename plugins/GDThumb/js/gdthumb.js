@@ -29,15 +29,15 @@ var GDThumb = {
         GDThumb.do_merge = do_merge;
         GDThumb.big_thumb = big_thumb;
 
-        // Only register RVTS_loaded handler for AJAX loads (after first init)
-        if (GDThumb._initialized) {
+        // Register handler once and only once
+        if (!GDThumb._initialized) {
             $(window).off("RVTS_loaded").on("RVTS_loaded", function () {
                 GDThumb.init();
             });
+            GDThumb._initialized = true;
         }
 
         GDThumb.init();
-        GDThumb._initialized = true;
     },
 
     init: function () {

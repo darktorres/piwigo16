@@ -11,7 +11,7 @@
  */
 var GDThumb = {
     /** @type {boolean} - Enable side-by-side jQuery vs vanilla JS validation */
-    _validateMode: true,
+    _validateMode: false,
 
     /**
      * Validate jQuery and vanilla JS produce same results
@@ -156,11 +156,8 @@ var GDThumb = {
      * @returns {void}
      */
     build: function () {
-        // Validate width() replacement
-        GDThumb._validate("width()",
-            function() { return jQuery("ul.thumbnails").width(); },
-            function() { var el = document.querySelector("ul.thumbnails"); return el ? el.clientWidth : 0; }
-        );
+        var thumbnailsList = document.querySelector("ul.thumbnails");
+        var main_width = thumbnailsList ? thumbnailsList.clientWidth : 0;
 
         if (
             GDThumb.method == "square" &&
@@ -168,7 +165,6 @@ var GDThumb = {
             (GDThumb.big_thumb.height != GDThumb.big_thumb.width ||
                 GDThumb.big_thumb.height < GDThumb.max_height)
         ) {
-            var main_width = jQuery("ul.thumbnails").width();
             var max_col_count = Math.floor(main_width / GDThumb.max_height);
             var thumb_width =
                 Math.floor(main_width / max_col_count) - GDThumb.margin;
@@ -178,7 +174,6 @@ var GDThumb = {
             GDThumb.big_thumb.crop = GDThumb.big_thumb.height;
             GDThumb.max_height = thumb_width;
         } else if (GDThumb.method == "slide") {
-            var main_width = jQuery("ul.thumbnails").width();
             var max_col_count = Math.floor(main_width / GDThumb.max_height);
             var thumb_width =
                 Math.floor(main_width / max_col_count) - GDThumb.margin;
@@ -272,7 +267,8 @@ var GDThumb = {
      * @returns {void}
      */
     process: function () {
-        var main_width = jQuery("ul.thumbnails").width();
+        var thumbnailsList = document.querySelector("ul.thumbnails");
+        var main_width = thumbnailsList ? thumbnailsList.clientWidth : 0;
         var $allThumbs = jQuery("ul.thumbnails img.thumbnail");
 
         var width_count = GDThumb.margin;
@@ -396,7 +392,8 @@ var GDThumb = {
             }
         }
 
-        if (main_width != jQuery("ul.thumbnails").width()) {
+        var currentWidth = thumbnailsList ? thumbnailsList.clientWidth : 0;
+        if (main_width != currentWidth) {
             // Prevent infinite recursion - limit to 3 iterations max
             if (GDThumb._processDepth < 3) {
                 GDThumb._processDepth++;

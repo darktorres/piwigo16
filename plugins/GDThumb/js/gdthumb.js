@@ -277,23 +277,19 @@ var GDThumb = {
      * @private
      */
     _findLastRowStartIndex: function () {
-        // Vanilla JS: Get all thumbnail images
-        var images = document.querySelectorAll("ul.thumbnails img.thumbnail");
+        // TODO: Convert to vanilla JS with proper coordinate calculation
+        var $images = jQuery("ul.thumbnails img.thumbnail");
 
-        if (images.length === 0) {
+        if ($images.length === 0) {
             return 0;
         }
 
-        // Get the top position of the last image (document-relative)
-        var lastImage = images[images.length - 1];
-        var lastImageRect = lastImage.getBoundingClientRect();
-        var lastImageTop = lastImageRect.top + window.scrollY;
+        // Get the top position of the last image
+        var lastImageTop = $images.last().position().top;
 
         // Scan backwards to find where this row started
-        for (var i = images.length - 2; i >= 0; i--) {
-            var imgRect = images[i].getBoundingClientRect();
-            var imgTop = imgRect.top + window.scrollY;
-            if (imgTop !== lastImageTop) {
+        for (var i = $images.length - 2; i >= 0; i--) {
+            if ($images.eq(i).position().top !== lastImageTop) {
                 return i + 1; // Found it - this is where the last row starts
             }
         }

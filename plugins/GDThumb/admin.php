@@ -30,77 +30,86 @@ if (isset($_GET['getMissingDerivative'])) {
     // Start output buffering to capture any PHP error output
     ob_start();
 
-    [$max_id, $image_count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT MAX(id) + 1, COUNT(*) FROM images;'));
+    try {
+        [$max_id, $image_count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT MAX(id) + 1, COUNT(*) FROM images;'));
 
-    $start_id = intval($_POST['prev_page']);
-    $max_urls = intval($_POST['max_urls']);
+        $start_id = intval($_POST['prev_page']);
+        $max_urls = intval($_POST['max_urls']);
 
-    if ($start_id <= 0) {
-        $start_id = $max_id;
+        if ($start_id <= 0) {
+            $start_id = $max_id;
+        }
+
+        $uid = '&b=' . time();
+        global $conf;
+        $conf->question_mark_in_urls = true;
+        $conf->php_extension_in_urls = true;
+        $conf->derivative_url_style = 2; //script
+
+        $qlimit = min(5000, ceil(max($image_count / 500, $max_urls)));
+
+        $query_model = <<<SQL
+            SELECT * FROM images
+            WHERE id < start_id
+            ORDER BY id DESC
+            LIMIT {$qlimit};
+            SQL;
+
+        $urls = [];
+
+        do {
+            $result = $conf->sql_backend::pwg_query(str_replace('start_id', (string) $start_id, $query_model));
+            $is_last = $conf->sql_backend::pwg_db_num_rows($result) < $qlimit;
+
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
+                $start_id = $row['id'];
+                $src_image = new SrcImage($row);
+
+                if ($src_image->is_mimetype() !== 0) {
+                    continue;
+                }
+
+                if (($params['method'] == 'slide') ||
+                    ($params['method'] == 'square')
+                ) {
+                    $derivative = new DerivativeImage(ImageStdParams::get_custom($params['height'], 9999), $src_image);
+                } else {
+                    $derivative = new DerivativeImage(ImageStdParams::get_custom(9999, $params['height']), $src_image);
+                }
+
+                $mtime = file_exists($derivative->get_path()) ? filemtime($derivative->get_path()) : false;
+
+                if ($mtime === false) {
+                    $urls[] = $derivative->get_url() . $uid;
+                }
+
+                if (count($urls) >= $max_urls &&
+                    ! $is_last
+                ) {
+                    break;
+                }
+            }
+
+            if ($is_last) {
+                $start_id = 0;
+            }
+        } while (count($urls) < $max_urls && $start_id);
+    } catch (\Throwable $e) {
+        // Catch any errors (including fatal ones) and log to console
+        global $custom_error_log;
+        $errorMessage = json_encode("PHP ERROR: {$e->getMessage()} in {$e->getFile()} on line {$e->getLine()}");
+        $custom_error_log .= "console.error({$errorMessage});\n";
+
+        $urls = [];
     }
-
-    $uid = '&b=' . time();
-    global $conf;
-    $conf->question_mark_in_urls = true;
-    $conf->php_extension_in_urls = true;
-    $conf->derivative_url_style = 2; //script
-
-    $qlimit = min(5000, ceil(max($image_count / 500, $max_urls)));
-
-    $query_model = <<<SQL
-        SELECT * FROM images
-        WHERE id < start_id
-        ORDER BY id DESC
-        LIMIT {$qlimit};
-        SQL;
-
-    $urls = [];
-
-    do {
-        $result = $conf->sql_backend::pwg_query(str_replace('start_id', $start_id, $query_model));
-        $is_last = $conf->sql_backend::pwg_db_num_rows($result) < $qlimit;
-
-        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-            $start_id = $row['id'];
-            $src_image = new SrcImage($row);
-
-            if ($src_image->is_mimetype() !== 0) {
-                continue;
-            }
-
-            if (($params['method'] == 'slide') ||
-                ($params['method'] == 'square')
-            ) {
-                $derivative = new DerivativeImage(ImageStdParams::get_custom($params['height'], 9999), $src_image);
-            } else {
-                $derivative = new DerivativeImage(ImageStdParams::get_custom(9999, $params['height']), $src_image);
-            }
-
-            $mtime = file_exists($derivative->get_path()) ? filemtime($derivative->get_path()) : false;
-
-            if ($mtime === false) {
-                $urls[] = $derivative->get_url() . $uid;
-            }
-
-            if (count($urls) >= $max_urls &&
-                ! $is_last
-            ) {
-                break;
-            }
-        }
-
-        if ($is_last) {
-            $start_id = 0;
-        }
-    } while (count($urls) < $max_urls && $start_id);
 
     $ret = [];
 
-    if ($start_id) {
+    if ($start_id ?? false) {
         $ret['next_page'] = $start_id;
     }
 
-    $ret['urls'] = $urls;
+    $ret['urls'] = $urls ?? [];
 
     // Include any captured PHP errors in the response
     global $custom_error_log;

@@ -2,25 +2,8 @@
 Don't use directly. Compile on http://closure-compiler.appspot.com/home
 */
 if (window.RVTS) {
-    if (RVTS.start > 0) {
-            // Vanilla JS: Get first navigation link
-            var firstLink = document.querySelector(".navigationBar A[rel=first]");
-            var firstHref = firstLink ? firstLink.getAttribute("href") : "#";
-            var firstHtml = firstLink ? firstLink.innerHTML : "";
-
-            // Vanilla JS: Insert up button before thumbnails
-            var thumbnails = document.getElementById("thumbnails");
-            if (thumbnails) {
-                var upHtml = '<div id=rvtsUp style="text-align:center;font-size:120%;margin:10px"><a href="' +
-                    firstHref +
-                    '">' +
-                    firstHtml +
-                    '</a> | <a href="javascript:RVTS.loadUp()">' +
-                    RVTS.prevMsg +
-                    "</a></div>";
-                thumbnails.insertAdjacentHTML("beforebegin", upHtml);
-            }
-        }
+    // Bidirectional infinite scroll enabled - no manual load button needed
+    // User can scroll to top/bottom and content auto-loads
 
         /**
          * Fetch HTML content from URL
@@ -44,6 +27,32 @@ if (window.RVTS) {
             requestCounter: 0,
             lastProcessedRequest: 0,
             checkAutoScrollScheduled: false,
+
+            /**
+             * Remove N items from the start of thumbnails (when unloading from top)
+             * @param {number} count - Number of items to remove
+             * @returns {void}
+             * @private
+             */
+            _removeFromTop: function (count) {
+                var items = RVTS.$thumbs.querySelectorAll("li");
+                for (var i = 0; i < Math.min(count, items.length); i++) {
+                    items[i].remove();
+                }
+            },
+
+            /**
+             * Remove N items from the end of thumbnails (when unloading from bottom)
+             * @param {number} count - Number of items to remove
+             * @returns {void}
+             * @private
+             */
+            _removeFromBottom: function (count) {
+                var items = RVTS.$thumbs.querySelectorAll("li");
+                for (var i = items.length - 1; i >= Math.max(0, items.length - count); i--) {
+                    items[i].remove();
+                }
+            },
 
             /**
              * Load thumbnails from earlier in the gallery (load up when scrolled to top)
@@ -72,7 +81,6 @@ if (window.RVTS) {
                     RVTS.loadingUp = 1;
 
                     var htm = await _fetchHtml(url);
-                    RVTS.start = newStart;
 
                     var event = new CustomEvent("RVTS_add", {
                         detail: { html: htm, isDown: false },
@@ -84,11 +92,12 @@ if (window.RVTS) {
                     if (!event.defaultPrevented)
                         RVTS.$thumbs.insertAdjacentHTML("afterbegin", htm);
 
-                    // Vanilla JS: Remove rvtsUp element
-                    if (RVTS.start <= 0) {
-                        var rvtsUp = document.getElementById("rvtsUp");
-                        if (rvtsUp) rvtsUp.remove();
-                    }
+                    // Update tracking after successful load
+                    RVTS.start = newStart;
+                    RVTS.next -= reqCount;
+
+                    // Unload from bottom when loading from top
+                    RVTS._removeFromBottom(reqCount);
                 } catch (error) {
                     console.error("RVTS: Failed to load previous page:", error);
                 } finally {
@@ -144,6 +153,12 @@ if (window.RVTS) {
 
                         if (!event.defaultPrevented)
                             RVTS.$thumbs.insertAdjacentHTML("beforeend", htm);
+
+                        // Unload from top when loading from bottom
+                        if (RVTS.start > 0) {
+                            RVTS._removeFromTop(RVTS.perPage);
+                            RVTS.start += RVTS.perPage;
+                        }
                     } else if (currentRequest > RVTS.lastProcessedRequest) {
                         // Out of order - ignore this response to prevent duplicates
                         console.warn("RVTS: Out of order response #" + currentRequest + ", expected #" + (RVTS.lastProcessedRequest + 1));
@@ -176,6 +191,20 @@ if (window.RVTS) {
             },
 
             /**
+             * Check if user has scrolled near the top of thumbnails
+             * @param {Event} evt - Optional scroll/resize event
+             * @returns {number} 1 if near top and load triggered, 0 otherwise
+             */
+            checkAutoScrollUp: function (evt) {
+                // Vanilla JS: Calculate thumbnail top position
+                var tTop = RVTS.$thumbs.offsetTop;
+                // Vanilla JS: Calculate window top position
+                var wTop = window.scrollY;
+                tTop += !evt ? 0 : 100; // Begin loading 100 pixels before top
+                return wTop < tTop ? (RVTS.loadUp(), 1) : 0;
+            },
+
+            /**
              * Throttle scroll/resize events using requestAnimationFrame
              * @param {Event} evt - Scroll or resize event
              * @returns {void}
@@ -186,6 +215,7 @@ if (window.RVTS) {
                 var raf = window.requestAnimationFrame || function(cb) { return window.setTimeout(cb, 16); };
                 raf(function() {
                     RVTS.checkAutoScroll(evt);
+                    RVTS.checkAutoScrollUp(evt);
                     RVTS.checkAutoScrollScheduled = false;
                 });
             },

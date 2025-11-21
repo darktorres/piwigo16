@@ -31,6 +31,14 @@ final class RVTS
         // }
 
         functions_plugins::add_event_handler('loc_begin_index', self::on_index_begin(...), EVENT_HANDLER_PRIORITY_NEUTRAL + 10);
+        // Listen for GDThumb config changes to clear cached height
+        functions_plugins::add_event_handler('gdthumb_config_changed', self::on_gdthumb_config_changed(...));
+    }
+
+    public static function on_gdthumb_config_changed(array $params): void
+    {
+        // Clear any cached state that depends on thumbnail height
+        functions_session::pwg_delete_session_var('rvts_cache_height');
     }
 
     public static function on_index_begin(): void

@@ -184,8 +184,20 @@ if (isset($_POST['submit'])) {
     }
 
     if (empty($page['errors'])) {
+        // Store old height for event notification
+        $old_height = $conf->gdThumb['height'];
+        $new_height = $params['height'];
+
         functions::conf_update_param('gdThumb', $params);
         $page['infos'][] = functions::l10n('Information data registered in database');
+
+        // Notify other plugins when GDThumb config changes
+        if ($old_height !== $new_height) {
+            functions_plugins::trigger_notify('gdthumb_config_changed', [
+                'old_height' => $old_height,
+                'new_height' => $new_height,
+            ]);
+        }
     }
 }
 

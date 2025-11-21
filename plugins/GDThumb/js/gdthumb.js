@@ -11,7 +11,7 @@
  */
 var GDThumb = {
     /** @type {boolean} - Enable side-by-side jQuery vs vanilla JS validation */
-    _validateMode: false,
+    _validateMode: true,
 
     /**
      * Validate jQuery and vanilla JS produce same results
@@ -186,9 +186,12 @@ var GDThumb = {
         } else {
             GDThumb.t = new Array();
         }
-        $("ul.thumbnails img.thumbnail").each(function (index) {
-            var width = parseInt(jQuery(this).attr("width"), 10);
-            var height = parseInt(jQuery(this).attr("height"), 10);
+
+        // Vanilla JS version with forEach
+        var thumbnailImages = document.querySelectorAll("ul.thumbnails img.thumbnail");
+        thumbnailImages.forEach(function (img, index) {
+            var width = parseInt(img.getAttribute("width"), 10);
+            var height = parseInt(img.getAttribute("height"), 10);
             var th = {
                 index: index,
                 width: width,

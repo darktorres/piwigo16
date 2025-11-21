@@ -58,7 +58,7 @@ if (isset($_GET['getMissingDerivative'])) {
         $urls = [];
 
         do {
-            $result = $conf->sql_backend::pwg_query(str_replace('start_id', $start_id, $query_model));
+            $result = $conf->sql_backend::pwg_query(str_replace('start_id', (string) $start_id, $query_model));
             $is_last = $conf->sql_backend::pwg_db_num_rows($result) < $qlimit;
 
             while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {

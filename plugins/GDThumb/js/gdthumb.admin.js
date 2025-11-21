@@ -1,19 +1,18 @@
 // Initialize admin page
 (function () {
-    try {
-        // Note: tipTip is a jQuery UI plugin - would need separate tooltip library
-        // For now, skipping tooltip implementation
-        // TODO: Replace with vanilla JS tooltip library if needed
+    // Note: tipTip is a jQuery UI plugin - would need separate tooltip library
+    // For now, skipping tooltip implementation
+    // TODO: Replace with vanilla JS tooltip library if needed
 
-        // Vanilla JS: Hide infos div after 4 seconds
-        var infosDiv = document.querySelector("div.infos");
-        if (infosDiv) {
-            setTimeout(function () {
-                infosDiv.style.display = "none";
-            }, 4000);
-        }
+    // Vanilla JS: Hide infos div after 4 seconds
+    var infosDiv = document.querySelector("div.infos");
+    if (infosDiv) {
+        setTimeout(function () {
+            infosDiv.style.display = "none";
+        }, 4000);
+    }
 
-        var loader = new ImageLoader({ onChanged: loaderChanged });
+    var loader = new ImageLoader({ onChanged: loaderChanged });
     var pending_next_page = null;
     var last_image_show_time = 0;
     var urlProcessingDone = false;
@@ -162,8 +161,5 @@
         } else if (loader.remaining() == 0 && urlProcessingDone) {
             // All loading and processing complete
         }
-    } catch (error) {
-        console.error("GDThumb admin initialization error:", error);
-        console.error(error.stack);
     }
 })();

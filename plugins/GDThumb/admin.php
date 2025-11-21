@@ -174,8 +174,12 @@ if (isset($_POST['submit'])) {
     }
 
     if ($params['height'] != $conf->gdThumb['height']) {
+        // Height changed - clear all derivatives using old height
         functions_GDThumb::delete_gdthumb_cache($conf->gdThumb['height']);
+        // Also clear big thumbnail cache (2x height + margin)
+        functions_GDThumb::delete_gdthumb_cache($conf->gdThumb['height'] * 2 + $conf->gdThumb['margin']);
     } elseif ($params['margin'] != $conf->gdThumb['margin']) {
+        // Margin changed - clear big thumbnail cache
         functions_GDThumb::delete_gdthumb_cache($conf->gdThumb['height'] * 2 + $conf->gdThumb['margin']);
     }
 

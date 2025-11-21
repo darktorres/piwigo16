@@ -1,9 +1,8 @@
 /*
 Don't use directly. Compile on http://closure-compiler.appspot.com/home
 */
-if (window.jQuery && window.RVTS)
-    (function ($) {
-        if (RVTS.start > 0) {
+if (window.RVTS) {
+    if (RVTS.start > 0) {
             // Vanilla JS: Get first navigation link
             var firstLink = document.querySelector(".navigationBar A[rel=first]");
             var firstHref = firstLink ? firstLink.getAttribute("href") : "#";
@@ -273,4 +272,5 @@ if (window.jQuery && window.RVTS)
                 });
             });
         }
-    })(jQuery);
+    }
+}

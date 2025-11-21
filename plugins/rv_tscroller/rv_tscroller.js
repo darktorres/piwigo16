@@ -58,7 +58,10 @@ if (window.jQuery && window.RVTS)
                     .replace("%per%", reqCount);
 
                 try {
-                    $("#ajaxLoader").show();
+                    // Vanilla JS: Show ajax loader
+                    var ajaxLoader = document.getElementById("ajaxLoader");
+                    if (ajaxLoader) ajaxLoader.style.display = "";
+
                     RVTS.loadingUp = 1;
 
                     var htm = await _fetchHtml(url);
@@ -74,12 +77,20 @@ if (window.jQuery && window.RVTS)
                     if (!event.defaultPrevented)
                         RVTS.$thumbs.prepend(htm);
 
-                    if (RVTS.start <= 0) $("#rvtsUp").remove();
+                    // Vanilla JS: Remove rvtsUp element
+                    if (RVTS.start <= 0) {
+                        var rvtsUp = document.getElementById("rvtsUp");
+                        if (rvtsUp) rvtsUp.remove();
+                    }
                 } catch (error) {
                     console.error("RVTS: Failed to load previous page:", error);
                 } finally {
                     RVTS.loadingUp = 0;
-                    RVTS.loading || $("#ajaxLoader").hide();
+                    // Vanilla JS: Hide ajax loader
+                    if (!RVTS.loading) {
+                        var ajaxLoader = document.getElementById("ajaxLoader");
+                        if (ajaxLoader) ajaxLoader.style.display = "none";
+                    }
                     window.dispatchEvent(new Event("RVTS_loaded"));
                 }
             },
@@ -104,7 +115,10 @@ if (window.jQuery && window.RVTS)
                 var currentRequest = ++RVTS.requestCounter;
 
                 try {
-                    $("#ajaxLoader").show();
+                    // Vanilla JS: Show ajax loader
+                    var ajaxLoader = document.getElementById("ajaxLoader");
+                    if (ajaxLoader) ajaxLoader.style.display = "";
+
                     RVTS.loading = 1;
 
                     var htm = await _fetchHtml(url);
@@ -131,7 +145,11 @@ if (window.jQuery && window.RVTS)
                     console.error("RVTS: Failed to load next page:", error);
                 } finally {
                     RVTS.loading = 0;
-                    RVTS.loadingUp || $("#ajaxLoader").hide();
+                    // Vanilla JS: Hide ajax loader
+                    if (!RVTS.loadingUp) {
+                        var ajaxLoader = document.getElementById("ajaxLoader");
+                        if (ajaxLoader) ajaxLoader.style.display = "none";
+                    }
                     window.dispatchEvent(new Event("RVTS_loaded"));
                 }
             },

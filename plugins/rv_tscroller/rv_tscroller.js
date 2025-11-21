@@ -4,16 +4,23 @@ Don't use directly. Compile on http://closure-compiler.appspot.com/home
 if (window.jQuery && window.RVTS)
     (function ($) {
         if (RVTS.start > 0) {
-            var $f = $(".navigationBar A[rel=first]");
-            $("#thumbnails").before(
-                '<div id=rvtsUp style="text-align:center;font-size:120%;margin:10px"><a href="' +
-                    $f.attr("href") +
+            // Vanilla JS: Get first navigation link
+            var firstLink = document.querySelector(".navigationBar A[rel=first]");
+            var firstHref = firstLink ? firstLink.getAttribute("href") : "#";
+            var firstHtml = firstLink ? firstLink.innerHTML : "";
+
+            // Vanilla JS: Insert up button before thumbnails
+            var thumbnails = document.getElementById("thumbnails");
+            if (thumbnails) {
+                var upHtml = '<div id=rvtsUp style="text-align:center;font-size:120%;margin:10px"><a href="' +
+                    firstHref +
                     '">' +
-                    $f.html() +
+                    firstHtml +
                     '</a> | <a href="javascript:RVTS.loadUp()">' +
                     RVTS.prevMsg +
-                    "</a></div>",
-            );
+                    "</a></div>";
+                thumbnails.insertAdjacentHTML("beforebegin", upHtml);
+            }
         }
 
         /**

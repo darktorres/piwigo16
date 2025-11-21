@@ -141,10 +141,12 @@
 <fieldset id="generate_cache">
   <legend>{'Pre-cache thumbnails'|translate}</legend>
   <p class="buttons">
-    <input id="startLink" value="{'Start'|translate}" onclick="gdThumb_start()" type="button">
+    <input id="startLink" value="{'Start'|translate}" onclick="gdThumb_start()" type="button"
+      title="{'Start pre-caching thumbnails'|translate}">
     <input id="pauseLink" value="{'Pause'|translate}" onclick="gdThumb_pause()" type="button"
-      disabled="disabled">
-    <input id="stopLink" value="{'Stop'|translate}" onclick="gdThumb_stop()" type="button" disabled="disabled">
+      disabled="disabled" title="{'Pause the pre-caching process'|translate}">
+    <input id="stopLink" value="{'Stop'|translate}" onclick="gdThumb_stop()" type="button" disabled="disabled"
+      title="{'Stop the pre-caching process'|translate}">
   </p>
   <div>
     <ul>
@@ -190,3 +192,4 @@
 
 {combine_script id='iloader' load='footer' path=$GDTHUMB_PATH|cat:"/js/image.loader.js"}
 {combine_script id='admin.precache' load='footer' path=$GDTHUMB_PATH|cat:"/js/gdthumb.admin.js" require='iloader'}
+{combine_script id='gdthumb.tooltip' load='footer' path=$GDTHUMB_PATH|cat:"/js/tooltip.js"}

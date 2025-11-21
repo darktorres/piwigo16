@@ -63,6 +63,18 @@ final class RVTS
                 }
             }
 
+            // Apply multiplier to pagination
+            $mult = functions_session::pwg_get_session_var('rvts_mult', 1);
+            if ($mult > 1) {
+                $page['nb_image_page'] = (int) ($page['nb_image_page'] * $mult);
+
+                // Prevent unbounded growth
+                $max_per_page = 500;
+                if ($page['nb_image_page'] > $max_per_page) {
+                    $page['nb_image_page'] = $max_per_page;
+                }
+            }
+
             // $page['nb_image_page'] = (int) $_GET['rvts'];
             functions_plugins::add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails_ajax(...), EVENT_HANDLER_PRIORITY_NEUTRAL + 5);
             $page['root_path'] = functions_url::get_absolute_root_url(false);

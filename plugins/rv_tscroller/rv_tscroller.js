@@ -167,9 +167,10 @@ if (window.jQuery && window.RVTS)
              * @returns {number} 1 if near bottom and load triggered, 0 otherwise
              */
             checkAutoScroll: function (evt) {
-                var tBot =
-                    RVTS.$thumbs.position().top + RVTS.$thumbs.outerHeight();
-                var wBot = $(window).scrollTop() + $(window).height();
+                // Vanilla JS: Calculate thumbnail bottom position
+                var tBot = RVTS.$thumbs.offsetTop + RVTS.$thumbs.offsetHeight;
+                // Vanilla JS: Calculate window bottom position
+                var wBot = window.scrollY + window.innerHeight;
                 tBot -= !evt ? 0 : 100; // Begin loading 100 pixels before end
                 return tBot <= wBot ? (RVTS.doAutoScroll(), 1) : 0;
             },

@@ -82,7 +82,7 @@ if (window.jQuery && window.RVTS)
                     window.dispatchEvent(event);
 
                     if (!event.defaultPrevented)
-                        RVTS.$thumbs.prepend(htm);
+                        RVTS.$thumbs.insertAdjacentHTML("afterbegin", htm);
 
                     // Vanilla JS: Remove rvtsUp element
                     if (RVTS.start <= 0) {
@@ -143,7 +143,7 @@ if (window.jQuery && window.RVTS)
                         window.dispatchEvent(event);
 
                         if (!event.defaultPrevented)
-                            RVTS.$thumbs.append(htm);
+                            RVTS.$thumbs.insertAdjacentHTML("beforeend", htm);
                     } else if (currentRequest > RVTS.lastProcessedRequest) {
                         // Out of order - ignore this response to prevent duplicates
                         console.warn("RVTS: Out of order response #" + currentRequest + ", expected #" + (RVTS.lastProcessedRequest + 1));

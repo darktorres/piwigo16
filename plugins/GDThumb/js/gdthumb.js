@@ -51,10 +51,16 @@ var GDThumb = {
 
             GDThumb.build();
 
-            // Only attach resize handler once
-            if (!GDThumb._resizeHandlerAttached) {
-                mainlists.resize(GDThumb.process);
-                GDThumb._resizeHandlerAttached = true;
+            // Only attach resize observer once
+            if (!GDThumb._resizeObserverAttached) {
+                var thumbnailList = jQuery("ul.thumbnails")[0];
+                if (thumbnailList && window.ResizeObserver) {
+                    var resizeObserver = new ResizeObserver(function() {
+                        GDThumb.process();
+                    });
+                    resizeObserver.observe(thumbnailList);
+                    GDThumb._resizeObserverAttached = true;
+                }
             }
 
             // Re-attach click handlers (needed for new thumbnails)
@@ -157,8 +163,6 @@ var GDThumb = {
                 src: jQuery("ul.thumbnails img.thumbnail:first").attr("src"),
             };
         }
-        jQuery.resize.throttleWindow = false;
-        jQuery.resize.delay = 50;
         GDThumb.process();
     },
 

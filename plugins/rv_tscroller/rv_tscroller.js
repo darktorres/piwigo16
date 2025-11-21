@@ -37,7 +37,8 @@ if (window.jQuery && window.RVTS)
             return await response.text();
         };
 
-        RVTS = $.fn.extend(RVTS, {
+        // Vanilla JS: Extend RVTS object with methods
+        RVTS = Object.assign(RVTS, {
             loading: 0,
             loadingUp: 0,
             adjust: 0,

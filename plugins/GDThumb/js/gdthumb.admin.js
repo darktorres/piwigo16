@@ -1,5 +1,7 @@
 // Initialize admin page
 (function () {
+    console.log("GDThumb admin script loading...");
+
     // Note: tipTip is a jQuery UI plugin - would need separate tooltip library
     // For now, skipping tooltip implementation
     // TODO: Replace with vanilla JS tooltip library if needed
@@ -19,6 +21,7 @@
 
     // Vanilla JS: Replace jQuery.Deferred with simple callbacks
     window.gdThumb_start = function () {
+        console.log("gdThumb_start called");
         urlProcessingDone = false;
 
         // Vanilla JS: Show/hide controls

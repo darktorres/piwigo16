@@ -28,7 +28,7 @@ var GDThumb = {
         GDThumb.do_merge = do_merge;
         GDThumb.big_thumb = big_thumb;
 
-        $(window).bind("RVTS_loaded", function () {
+        $(window).off("RVTS_loaded").on("RVTS_loaded", function () {
             GDThumb.init();
         });
         GDThumb.init();
@@ -42,7 +42,7 @@ var GDThumb = {
             }
 
             GDThumb.build();
-            jQuery(window).bind("RVTS_loaded", GDThumb.build);
+            jQuery(window).off("RVTS_loaded").on("RVTS_loaded", GDThumb.build);
 
             mainlists.resize(GDThumb.process);
             jQuery("ul.thumbnails .thumbLegend.overlay").click(function () {

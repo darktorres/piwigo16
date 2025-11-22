@@ -172,37 +172,26 @@ if (isset($_POST['submit']) &&
     // we need to have fulldirs as keys to make efficient comparison
     $db_fulldirs = array_flip($db_fulldirs);
 
-    // finding next rank for each id_uppercat. By default, each category id
-    // has 1 for next rank on its sub-categories to create
-    $next_rank['NULL'] = 1;
+    // Finding next rank for each category and parent (id_uppercat).
+    // Optimized: combine two queries into one using LEFT JOIN and UNION
+    // Query 1: Get max rank for each parent (categories with children)
+    // Query 2: Handle root categories (NULL parent)
+    $next_rank = ['NULL' => 1];
 
     $query = <<<SQL
-        SELECT id
-        FROM categories;
-        SQL;
-    $result = $conf->sql_backend::pwg_query($query);
-
-    while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-        $next_rank[$row['id']] = 1;
-    }
-
-    // let's see if some categories already have some sub-categories...
-    $query = <<<SQL
-        SELECT id_uppercat, MAX(sort_rank) + 1 AS next_rank
+        SELECT c.id, COALESCE(MAX(c2.sort_rank) + 1, 1) AS next_rank
+        FROM categories c
+        LEFT JOIN categories c2 ON c2.id_uppercat = c.id
+        GROUP BY c.id
+        UNION ALL
+        SELECT 'NULL' AS id, COALESCE(MAX(sort_rank) + 1, 1) AS next_rank
         FROM categories
-        GROUP BY id_uppercat;
+        WHERE id_uppercat IS NULL;
         SQL;
     $result = $conf->sql_backend::pwg_query($query);
 
     while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-        // for the id_uppercat NULL, we write 'NULL' and not the empty string
-        if (! isset($row['id_uppercat']) ||
-            $row['id_uppercat'] == ''
-        ) {
-            $row['id_uppercat'] = 'NULL';
-        }
-
-        $next_rank[$row['id_uppercat']] = $row['next_rank'];
+        $next_rank[$row['id']] = $row['next_rank'];
     }
 
     // next category id available

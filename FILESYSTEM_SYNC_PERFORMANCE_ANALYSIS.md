@@ -162,9 +162,9 @@ To test this change, you need to:
 
 #### ✅ 1.4 Optimize Array Operations
 
-**Status:** COMPLETED (awaiting test)
+**Status:** COMPLETED & TESTED ✓
 **Date:** 2025-11-21
-**Commit:** (pending)
+**Commit:** `e8b44cf7e` - perf: Optimize array operations in category/directory sync
 
 **Changes Made:**
 - **File:** `admin/site_update.php` (lines 227-231, 365-374)
@@ -201,7 +201,51 @@ To test this change, you need to:
 4. Ensure no sync errors or missing categories
 5. Verify performance improvement in footer timing
 
-#### ⏳ 1.5 Single-Pass Category Structure Query (PENDING)
+#### ✅ 1.5 Single-Pass Category Structure Query
+
+**Status:** COMPLETED (awaiting test)
+**Date:** 2025-11-21
+**Commit:** (pending)
+
+**Changes Made:**
+- **File:** `admin/site_update.php` (lines 175-195)
+
+**What was wrong:**
+- **Query 1 (lines 179-187):** `SELECT id FROM categories` - gets all category IDs, initializes next_rank=1
+- **Query 2 (lines 190-206):** `SELECT id_uppercat, MAX(sort_rank)+1 FROM categories GROUP BY id_uppercat` - gets actual next ranks
+
+Two separate database roundtrips to accomplish one task.
+
+**What I fixed:**
+Combined into a single query using LEFT JOIN and UNION:
+```sql
+SELECT c.id, COALESCE(MAX(c2.sort_rank) + 1, 1) AS next_rank
+FROM categories c
+LEFT JOIN categories c2 ON c2.id_uppercat = c.id
+GROUP BY c.id
+UNION ALL
+SELECT 'NULL' AS id, COALESCE(MAX(sort_rank) + 1, 1) AS next_rank
+FROM categories
+WHERE id_uppercat IS NULL;
+```
+
+Logic:
+- Main query: For each category, find the max rank of its children (or 1 if none)
+- UNION: Also get the max rank for root categories (NULL parent)
+- Single roundtrip to database instead of two
+
+**Impact:**
+- **Database Roundtrips:** 2 queries → 1 query (50% reduction)
+- **Network:** Reduced latency from 2 roundtrips to 1
+- **Time Savings:** Estimated 50-200ms (depends on database latency and category count)
+- **Safety:** Same logic as before, just optimized SQL
+
+**Testing Plan:**
+1. Run directory/file sync to create new categories
+2. Verify all categories created with correct parent relationships
+3. Verify sort_rank and global_rank are correct
+4. Check that category hierarchies work (subcategories have correct parents)
+5. Ensure no categories are skipped or duplicated
 
 ---
 

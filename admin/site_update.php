@@ -787,133 +787,178 @@ if (isset($_POST['submit']) &&
 // +-----------------------------------------------------------------------+
 // |                          synchronize metadata                         |
 // +-----------------------------------------------------------------------+
-if (isset($_POST['submit']) &&
-    isset($_POST['sync_meta']) &&
-    ! $general_failure
-) {
-    // sync only never synchronized files ?
-    $opts['only_new'] = ! isset($_POST['meta_all']);
-    $opts['category_id'] = '';
-    $opts['recursive'] = true;
 
-    if (isset($_POST['cat'])) {
-        $opts['category_id'] = $_POST['cat'];
-        // recursive ?
-        if (! isset($_POST['subcats-included']) ||
-            $_POST['subcats-included'] != 1
-        ) {
-            $opts['recursive'] = false;
-        }
+// Determine default chunk size (files to process per request)
+$chunk_size = isset($conf->metadata_sync_chunk_size) ? (int) $conf->metadata_sync_chunk_size : 500;
+
+// Check if this is a resumed metadata sync (chunked processing)
+$is_metadata_sync_resumed = isset($_GET['resume_metadata_sync']) && $_GET['resume_metadata_sync'] == 1;
+
+if ((isset($_POST['submit']) && isset($_POST['sync_meta']) && ! $general_failure) ||
+    $is_metadata_sync_resumed
+) {
+    // Initialize or load session state for metadata sync
+    if (! $is_metadata_sync_resumed) {
+        // New metadata sync - initialize session
+        $_SESSION['metadata_sync'] = [
+            'site_id' => $site_id,
+            'offset' => 0,
+            'chunk_size' => $chunk_size,
+            'all_files' => null,
+            'all_datas' => [],
+            'all_tag_names' => [],
+            'all_errors' => [],
+            'options' => [
+                'only_new' => ! isset($_POST['meta_all']),
+                'category_id' => isset($_POST['cat']) ? $_POST['cat'] : '',
+                'recursive' => ! isset($_POST['cat']) || ! isset($_POST['subcats-included']) || $_POST['subcats-included'] == 1,
+            ],
+            'simulate' => isset($_POST['simulate']) && $_POST['simulate'] == 1,
+            'meta_empty_overrides' => isset($_POST['meta_empty_overrides']),
+        ];
     }
 
+    $sync_state = &$_SESSION['metadata_sync'];
+    $opts = $sync_state['options'];
+
+    // Get full file list (once, cached in session)
+    if ($sync_state['all_files'] === null) {
+        $start = functions::get_moment();
+        $sync_state['all_files'] = functions_metadata_admin::get_filelist(
+            $opts['category_id'],
+            $site_id,
+            $opts['recursive'],
+            $opts['only_new']
+        );
+        $template->append('footer_elements', '<!-- get_filelist : '
+          . functions::get_elapsed_time($start, functions::get_moment())
+          . ' -->');
+    }
+
+    $files = $sync_state['all_files'];
+    $offset = $sync_state['offset'];
+    $total_files = count($files);
+
+    // Process current chunk
     $start = functions::get_moment();
-    $files = functions_metadata_admin::get_filelist(
-        $opts['category_id'],
-        $site_id,
-        $opts['recursive'],
-        $opts['only_new']
-    );
+    $current_chunk = array_slice($files, $offset, $chunk_size, true);
 
-    $template->append('footer_elements', '<!-- get_filelist : '
-      . functions::get_elapsed_time($start, functions::get_moment())
-      . ' -->');
+    if (! empty($current_chunk)) {
+        // Batch extract metadata for current chunk
+        $metadata_results = $site_reader->get_elements_metadata_batch($current_chunk);
 
-    $start = functions::get_moment();
-    $datas = [];
-    $tags_of = [];
-    $all_tag_names = [];
+        // Process metadata and collect tag names
+        foreach ($current_chunk as $id => $element_infos) {
+            $data = $metadata_results[$id];
 
-    // Batch extract metadata for all files (enables parallelization infrastructure)
-    $metadata_results = $site_reader->get_elements_metadata_batch($files);
+            if (is_array($data)) {
+                $data['date_metadata_update'] = CURRENT_DATE;
+                $data['id'] = $id;
+                $sync_state['all_datas'][] = $data;
 
-    // First pass: process extracted metadata and collect all unique tag names
-    foreach ($files as $id => $element_infos) {
-        $data = $metadata_results[$id];
-
-        if (is_array($data)) {
-            $data['date_metadata_update'] = CURRENT_DATE;
-            $data['id'] = $id;
-            $datas[] = $data;
-
-            // Collect tag names for batch lookup later
-            foreach (['keywords', 'tags'] as $key) {
-                if (isset($data[$key])) {
-                    foreach (explode(',', $data[$key]) as $tag_name) {
-                        $all_tag_names[] = $tag_name;
+                // Collect tag names for batch lookup later
+                foreach (['keywords', 'tags'] as $key) {
+                    if (isset($data[$key])) {
+                        foreach (explode(',', $data[$key]) as $tag_name) {
+                            $sync_state['all_tag_names'][] = $tag_name;
+                        }
                     }
                 }
+            } else {
+                $sync_state['all_errors'][] = [
+                    'path' => $element_infos['path'],
+                    'type' => 'PWG-ERROR-NO-FS',
+                ];
             }
-        } else {
-            $errors[] = [
-                'path' => $element_infos['path'],
-                'type' => 'PWG-ERROR-NO-FS',
-            ];
         }
+
+        $template->append('footer_elements', '<!-- chunk ' . ($offset / $chunk_size + 1)
+          . '/' . ceil($total_files / $chunk_size)
+          . ' : ' . functions::get_elapsed_time($start, functions::get_moment())
+          . ' -->');
+
+        // Update offset for next chunk
+        $sync_state['offset'] += $chunk_size;
     }
 
-    // Batch lookup all tag IDs in a single operation (more efficient than per-tag lookups)
-    if (! empty($all_tag_names)) {
-        $tag_id_map = functions_admin::tag_ids_from_tag_names(array_unique($all_tag_names));
+    // Check if we have more chunks to process
+    if ($sync_state['offset'] < $total_files) {
+        // More chunks remain - redirect to continue
+        functions::redirect(
+            functions_url::get_root_url() . 'admin.php?page=site_update&site=' . $site_id
+            . '&resume_metadata_sync=1&pwg_token=' . $page['pwg_token']
+        );
+    } else {
+        // All chunks processed - finalize metadata sync
+        $datas = $sync_state['all_datas'];
+        $all_tag_names = $sync_state['all_tag_names'];
+        $errors = array_merge($errors, $sync_state['all_errors']);
 
-        // Second pass: populate tags_of using the pre-built lookup map
-        foreach ($datas as $data) {
-            $id = $data['id'];
+        // Batch lookup all tag IDs in a single operation
+        if (! empty($all_tag_names)) {
+            $tag_id_map = functions_admin::tag_ids_from_tag_names(array_unique($all_tag_names));
 
-            foreach (['keywords', 'tags'] as $key) {
-                if (isset($data[$key])) {
-                    if (! isset($tags_of[$id])) {
-                        $tags_of[$id] = [];
-                    }
+            $tags_of = [];
+            // Process all accumulated datas and populate tags_of
+            foreach ($datas as $data) {
+                $id = $data['id'];
 
-                    foreach (explode(',', $data[$key]) as $tag_name) {
-                        $tag_name = trim($tag_name);
-                        if (isset($tag_id_map[$tag_name])) {
-                            $tags_of[$id][] = $tag_id_map[$tag_name];
+                foreach (['keywords', 'tags'] as $key) {
+                    if (isset($data[$key])) {
+                        if (! isset($tags_of[$id])) {
+                            $tags_of[$id] = [];
+                        }
+
+                        foreach (explode(',', $data[$key]) as $tag_name) {
+                            $tag_name = trim($tag_name);
+                            if (isset($tag_id_map[$tag_name])) {
+                                $tags_of[$id][] = $tag_id_map[$tag_name];
+                            }
                         }
                     }
                 }
             }
-        }
-    }
-
-    if (! $simulate) {
-        if ($datas !== []) {
-            $conf->sql_backend::mass_updates(
-                'images',
-                // fields
-                [
-                    'primary' => ['id'],
-                    'update' => array_unique(
-                        array_merge(
-                            array_diff(
-                                $site_reader->get_metadata_attributes(),
-                                // keywords and tags fields are managed separately
-                                ['keywords', 'tags']
-                            ),
-                            ['date_metadata_update']
-                        )
-                    ),
-                ],
-                $datas,
-                isset($_POST['meta_empty_overrides']) ? 0 : $conf->sql_backend::MASS_UPDATES_SKIP_EMPTY
-            );
+        } else {
+            $tags_of = [];
         }
 
-        functions_admin::set_tags_of($tags_of);
+        if (! $sync_state['simulate']) {
+            if ($datas !== []) {
+                $conf->sql_backend::mass_updates(
+                    'images',
+                    // fields
+                    [
+                        'primary' => ['id'],
+                        'update' => array_unique(
+                            array_merge(
+                                array_diff(
+                                    $site_reader->get_metadata_attributes(),
+                                    // keywords and tags fields are managed separately
+                                    ['keywords', 'tags']
+                                ),
+                                ['date_metadata_update']
+                            )
+                        ),
+                    ],
+                    $datas,
+                    $sync_state['meta_empty_overrides'] ? 0 : $conf->sql_backend::MASS_UPDATES_SKIP_EMPTY
+                );
+            }
+
+            functions_admin::set_tags_of($tags_of);
+        }
+
+        $template->append('footer_elements', '<!-- metadata update (all chunks) : complete -->');
+
+        $template->assign(
+            'metadata_result',
+            [
+                'NB_ELEMENTS_DONE' => count($datas),
+                'NB_ELEMENTS_CANDIDATES' => $total_files,
+                'NB_ERRORS' => count($errors),
+            ]
+        );
     }
-
-    $template->append('footer_elements', '<!-- metadata update : '
-      . functions::get_elapsed_time($start, functions::get_moment())
-      . ' -->');
-
-    $template->assign(
-        'metadata_result',
-        [
-            'NB_ELEMENTS_DONE' => count($datas),
-            'NB_ELEMENTS_CANDIDATES' => count($files),
-            'NB_ERRORS' => count($errors),
-        ]
-    );
 }
 
 // +-----------------------------------------------------------------------+

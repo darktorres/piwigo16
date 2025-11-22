@@ -379,9 +379,9 @@ Added `$extract_all` boolean parameter (default: true for backward compatibility
 
 #### ✅ 2.3 Pre-scan Representative Extensions with Map
 
-**Status:** COMPLETED (awaiting test)
+**Status:** COMPLETED & TESTED ✓
 **Date:** 2025-11-21
-**Commit:** (pending)
+**Commit:** `e8e819fda` - perf: Pre-scan representative extensions to build O(1) lookup map
 
 **Changes Made:**
 - **File:** `admin/LocalSiteReader.php` (lines 22, 37-72, 217-223)

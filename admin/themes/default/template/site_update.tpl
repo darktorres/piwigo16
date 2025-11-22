@@ -1,4 +1,42 @@
 {footer_script}<script>
+  // Progress monitoring for metadata sync
+  var syncProgressInterval = null;
+  var syncInProgress = false;
+
+  function pollSyncProgress() {
+    $.ajax({
+      url: 'admin.php?page=site_update&site={$SITE_ID}&action=progress',
+      dataType: 'json',
+      success: function(data) {
+        if (data.status === 'in_progress') {
+          syncInProgress = true;
+          $('#syncProgress').show();
+          $('#syncProgressBar').css('width', data.percent + '%');
+          $('#syncProgressPercent').text(data.percent + '%');
+          $('#syncProgressStats').html(
+            '<strong>' + data.processed + ' / ' + data.total + '</strong> ' +
+            'files processed in ' + data.elapsed_seconds + 's' +
+            (data.estimated_remaining_seconds ? ' (est. ' + data.estimated_remaining_seconds + 's remaining)' : '')
+          );
+        } else if (data.status === 'complete') {
+          $('#syncProgressBar').css('width', '100%');
+          $('#syncProgressPercent').text('100%');
+          $('#syncProgressStats').html('<strong>' + data.total + ' / ' + data.total + '</strong> files completed');
+          clearInterval(syncProgressInterval);
+          syncInProgress = false;
+        }
+      }
+    });
+  }
+
+  // Start polling when page loads if sync is in progress
+  $(document).ready(function() {
+    pollSyncProgress();
+    if (syncInProgress) {
+      syncProgressInterval = setInterval(pollSyncProgress, 2000); // Poll every 2 seconds
+    }
+  });
+
   $('#syncFiles label').click(function() {
     if ($("input[value='files']:checked").val()) {
       $("input[value='files']").closest("li").find("ul").show();
@@ -7,6 +45,19 @@
     }
   })
 </script>{/footer_script}
+
+<!-- Progress Bar for Metadata Sync -->
+<div id="syncProgress" style="display: none; margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 4px;">
+  <h4>{'Synchronization Progress'|translate}</h4>
+  <div style="width: 100%; background: #ddd; border-radius: 4px; overflow: hidden; height: 25px; margin: 10px 0;">
+    <div id="syncProgressBar" style="width: 0%; background: #4CAF50; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; transition: width 0.3s ease;">
+      <span id="syncProgressPercent">0%</span>
+    </div>
+  </div>
+  <div id="syncProgressStats" style="font-size: 12px; color: #666;">
+    Waiting for sync to start...
+  </div>
+</div>
 
 <div class="selectedAlbum site-url-path">
   <span class="icon-folder-open selectedAlbum-first">{$SITE_URL}</span>

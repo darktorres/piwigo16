@@ -102,6 +102,64 @@ if (isset($_GET['quick_sync'])) {
     $_POST['submit'] = 'Quick Local Synchronization';
 }
 
+// +-----------------------------------------------------------------------+
+// | Progress API endpoint (JSON)                                         |
+// +-----------------------------------------------------------------------+
+
+if (isset($_GET['action']) && $_GET['action'] === 'progress') {
+    header('Content-Type: application/json');
+
+    $progress = [
+        'status' => 'idle',
+        'phase' => null,
+        'processed' => 0,
+        'total' => 0,
+        'percent' => 0,
+        'elapsed_seconds' => 0,
+        'estimated_remaining_seconds' => null,
+    ];
+
+    // Check if metadata sync is in progress
+    if (isset($_SESSION['metadata_sync'])) {
+        $sync_state = $_SESSION['metadata_sync'];
+        $total = count($sync_state['all_files'] ?? []);
+        $processed = count($sync_state['all_datas'] ?? []);
+        $offset = $sync_state['offset'] ?? 0;
+
+        if ($offset < $total) {
+            // Still processing chunks
+            $progress['status'] = 'in_progress';
+            $progress['phase'] = 'metadata_sync';
+            $progress['processed'] = $processed;
+            $progress['total'] = $total;
+            $progress['percent'] = $total > 0 ? round(($offset / $total) * 100) : 0;
+
+            // Calculate elapsed time and estimate remaining
+            if (isset($sync_state['start_time'])) {
+                $elapsed = time() - $sync_state['start_time'];
+                $progress['elapsed_seconds'] = $elapsed;
+
+                // Estimate remaining time based on processing rate
+                if ($offset > 0 && $elapsed > 0) {
+                    $rate = $offset / $elapsed; // files per second
+                    $remaining_files = $total - $offset;
+                    $progress['estimated_remaining_seconds'] = ceil($remaining_files / $rate);
+                }
+            }
+        } else {
+            // Completed
+            $progress['status'] = 'complete';
+            $progress['phase'] = 'metadata_sync';
+            $progress['processed'] = $total;
+            $progress['total'] = $total;
+            $progress['percent'] = 100;
+        }
+    }
+
+    echo json_encode($progress, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    exit;
+}
+
 $general_failure = true;
 
 if (isset($_POST['submit'])) {
@@ -808,6 +866,7 @@ if ((isset($_POST['submit']) && isset($_POST['sync_meta']) && ! $general_failure
             'all_datas' => [],
             'all_tag_names' => [],
             'all_errors' => [],
+            'start_time' => time(),
             'options' => [
                 'only_new' => ! isset($_POST['meta_all']),
                 'category_id' => isset($_POST['cat']) ? $_POST['cat'] : '',
@@ -987,6 +1046,7 @@ if ($site_is_remote &&
 
 $template->assign(
     [
+        'SITE_ID' => $site_id,
         'SITE_URL' => $site_url,
         'U_SITE_MANAGER' => functions_url::get_root_url() . 'admin.php?page=site_manager',
         'L_RESULT_UPDATE' => $result_title . functions::l10n('Search for new images in the directories'),

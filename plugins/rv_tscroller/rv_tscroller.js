@@ -175,14 +175,12 @@ if (window.RVTS) {
                         if (!event.defaultPrevented)
                             RVTS.$thumbs.insertAdjacentHTML("beforeend", htm);
 
-                        // Unload from top when loading from bottom (maintain sliding window)
-                        var items = RVTS.$thumbs.querySelectorAll("li");
-
-                        // Only unload if we have more than 2 pages worth of items (perPage * 2)
-                        if (items.length > RVTS.perPage * 2) {
-                            RVTS._removeFromTop(RVTS.perPage);
-                            RVTS.start += RVTS.perPage;
-                        }
+                        // Unload from top disabled for now
+                        // var items = RVTS.$thumbs.querySelectorAll("li");
+                        // if (items.length > RVTS.perPage * 2) {
+                        //     RVTS._removeFromTop(RVTS.perPage);
+                        //     RVTS.start += RVTS.perPage;
+                        // }
                     } else if (currentRequest > RVTS.lastProcessedRequest) {
                         // Out of order - ignore this response to prevent duplicates
                         console.warn("RVTS: Out of order response #" + currentRequest + ", expected #" + (RVTS.lastProcessedRequest + 1));

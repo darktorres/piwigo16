@@ -1281,6 +1281,63 @@ These are major architectural changes for large-scale gallery support.
 
 ### Pending Tasks
 
+#### ✅ 3.5 Implement Progress API
+
+**Status:** COMPLETED & TESTED ✓
+**Date:** 2025-11-21
+**Commit:** `31e561201` - perf: Implement progress API and real-time progress UI for metadata sync
+
+**Changes Made:**
+- **File 1:** `admin/site_update.php` (lines 105-161 progress API, line 869 start_time tracking, line 1049 SITE_ID)
+- **File 2:** `admin/themes/default/template/site_update.tpl` (lines 1-60 progress UI and polling)
+
+**What was implemented:**
+
+1. **JSON Progress API Endpoint:**
+   - URL: `admin.php?page=site_update&site=X&action=progress`
+   - Returns JSON with real-time progress data
+   - Fields: status, phase, processed, total, percent, elapsed_seconds, estimated_remaining_seconds
+
+2. **Progress Tracking in Session:**
+   - `start_time` recorded when metadata sync begins
+   - Processing rate calculated for accurate ETA
+   - Progress updated after each chunk processed
+
+3. **Progress Bar UI:**
+   - Animated green progress bar (0-100%)
+   - Shows percentage in center
+   - Displays stats: "X / Y files processed in Zs (est. Ns remaining)"
+   - Hidden by default, shown when sync starts
+
+4. **JavaScript Progress Polling:**
+   - AJAX polling every 2 seconds
+   - Auto-starts when page loads
+   - Smooth progress bar animation
+   - Updates file counts and timing in real-time
+   - Stops when sync complete
+
+**Scope:**
+- Progress tracking currently for **metadata sync phase only**
+- File sync phase doesn't have progress tracking (can be added in future if needed)
+- Works with chunked metadata sync (Task 3.1)
+
+**Impact:**
+- Users see real-time progress indication for metadata syncs
+- Estimated time remaining helps gauge completion time
+- Transparent feedback during potentially long operations
+- No additional database overhead (uses session data)
+
+**Testing Results:**
+- Progress API returns correct JSON data
+- Progress bar displays and updates smoothly
+- Percentage, file counts, and timing update correctly
+- Polling continues until sync completes
+- Estimated time becomes more accurate as sync progresses
+
+**Effort:** 2-3 hours (actual implementation)
+
+---
+
 #### 3.2 Add Configuration for Metadata Sync Granularity
 
 **File:** `Config.php` + `site_update.php`

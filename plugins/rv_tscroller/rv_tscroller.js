@@ -89,15 +89,8 @@ if (window.RVTS) {
                     });
                     window.dispatchEvent(event);
 
-                    // Get thumbnail height before adding new items
-                    var thumbsBefore = RVTS.$thumbs.offsetHeight;
-
                     if (!event.defaultPrevented)
                         RVTS.$thumbs.insertAdjacentHTML("afterbegin", htm);
-
-                    // Get thumbnail height after adding new items
-                    var thumbsAfter = RVTS.$thumbs.offsetHeight;
-                    var heightAdded = thumbsAfter - thumbsBefore;
 
                     // Update tracking after successful load
                     RVTS.start = newStart;
@@ -105,10 +98,6 @@ if (window.RVTS) {
 
                     // Unload from bottom when loading from top
                     RVTS._removeFromBottom(reqCount);
-
-                    // Adjust scroll position to compensate for items added at top
-                    // This prevents the infinite loop of top-loading when content is added above
-                    window.scrollBy(0, heightAdded);
                 } catch (error) {
                     console.error("RVTS: Failed to load previous page:", error);
                 } finally {
@@ -200,8 +189,8 @@ if (window.RVTS) {
                 var tBot = RVTS.$thumbs.offsetTop + RVTS.$thumbs.offsetHeight;
                 // Vanilla JS: Calculate window bottom position
                 var wBot = window.scrollY + window.innerHeight;
-                // Proactively load before user reaches bottom (500px buffer for smooth loading)
-                tBot -= !evt ? 0 : 500;
+                // Proactively load well before user reaches bottom (1500px buffer for seamless loading)
+                tBot -= !evt ? 0 : 1500;
                 return tBot <= wBot ? (RVTS.doAutoScroll(), 1) : 0;
             },
 
@@ -215,8 +204,8 @@ if (window.RVTS) {
                 var tTop = RVTS.$thumbs.offsetTop;
                 // Vanilla JS: Calculate window top position
                 var wTop = window.scrollY;
-                // Proactively load before user reaches top (500px buffer for smooth loading)
-                tTop += !evt ? 0 : 500;
+                // Proactively load well before user reaches top (1500px buffer for seamless loading)
+                tTop += !evt ? 0 : 1500;
                 return wTop < tTop ? (RVTS.loadUp(), 1) : 0;
             },
 

@@ -38,22 +38,16 @@ if (window.RVTS) {
                 var items = RVTS.$thumbs.querySelectorAll("li");
                 var toRemove = Math.min(count, items.length);
 
-                // Calculate height of items to be removed
-                var heightToRemove = 0;
-                for (var i = 0; i < toRemove; i++) {
-                    heightToRemove += items[i].offsetHeight;
-                }
+                // Save current scroll position to prevent screen from moving
+                var savedScrollY = window.scrollY;
 
                 // Remove the items
                 for (var i = 0; i < toRemove; i++) {
                     items[i].remove();
                 }
 
-                // Adjust scroll position to keep user's view steady
-                // (prevents spurious loadUp triggers when unloading from top)
-                if (heightToRemove > 0) {
-                    window.scrollBy(0, -heightToRemove);
-                }
+                // Restore scroll position so screen doesn't move
+                window.scrollTo(0, savedScrollY);
             },
 
             /**
@@ -66,19 +60,16 @@ if (window.RVTS) {
                 var items = RVTS.$thumbs.querySelectorAll("li");
                 var toRemove = Math.min(count, items.length);
 
-                // Calculate height of items to be removed
-                var heightToRemove = 0;
-                for (var i = items.length - toRemove; i < items.length; i++) {
-                    heightToRemove += items[i].offsetHeight;
-                }
+                // Save current scroll position to prevent screen from moving
+                var savedScrollY = window.scrollY;
 
                 // Remove the items
                 for (var i = items.length - 1; i >= Math.max(0, items.length - toRemove); i--) {
                     items[i].remove();
                 }
 
-                // No scroll adjustment needed when removing from bottom
-                // (items below current viewport don't affect scroll position)
+                // Restore scroll position so screen doesn't move
+                window.scrollTo(0, savedScrollY);
             },
 
             /**

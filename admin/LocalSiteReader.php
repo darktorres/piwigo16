@@ -19,6 +19,8 @@ use Piwigo\inc\functions;
 
 final class LocalSiteReader
 {
+    private array $representative_ext_map = [];
+
     public function __construct(
         public string $site_url
     ) {
@@ -31,6 +33,42 @@ final class LocalSiteReader
         if (! isset($conf->flip_picture_ext)) {
             $conf->flip_picture_ext = array_flip($conf->picture_ext);
         }
+
+        // Pre-scan representative directory to build lookup map
+        $this->build_representative_map();
+    }
+
+    /**
+     * Pre-scan the pwg_representative directory to build a lookup map.
+     * This eliminates the need to loop through extensions for each file.
+     * Map format: filename_without_ext => extension
+     */
+    private function build_representative_map(): void
+    {
+        $representative_dir = $this->site_url . '/pwg_representative';
+
+        if (! is_dir($representative_dir)) {
+            return;
+        }
+
+        $contents = opendir($representative_dir);
+        if (! $contents) {
+            return;
+        }
+
+        while (($file = readdir($contents)) !== false) {
+            if ($file === '.' || $file === '..') {
+                continue;
+            }
+
+            if (is_file($representative_dir . '/' . $file)) {
+                $ext = strtolower(functions::get_extension($file));
+                $filename_wo_ext = functions::get_filename_wo_extension($file);
+                $this->representative_ext_map[$filename_wo_ext] = $ext;
+            }
+        }
+
+        closedir($contents);
     }
 
     /**
@@ -180,18 +218,8 @@ final class LocalSiteReader
         string $path,
         string $filename_wo_ext
     ): ?string {
-        global $conf;
-        $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';
-
-        foreach ($conf->picture_ext as $ext) {
-            $test = $base_test . $ext;
-
-            if (is_file($test)) {
-                return $ext;
-            }
-        }
-
-        return null;
+        // Use pre-built map for O(1) lookup instead of O(n) loop with filesystem checks
+        return $this->representative_ext_map[$filename_wo_ext] ?? null;
     }
 
     public function get_formats(

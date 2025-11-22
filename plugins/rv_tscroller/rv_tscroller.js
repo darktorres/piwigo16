@@ -37,12 +37,9 @@ if (window.RVTS) {
             _removeFromTop: function (count) {
                 var items = RVTS.$thumbs.querySelectorAll("li");
                 var toRemove = Math.min(count, items.length);
-                console.log("RVTS: Removing " + toRemove + " items from top (had " + items.length + " total)");
                 for (var i = 0; i < toRemove; i++) {
                     items[i].remove();
                 }
-                var newItems = RVTS.$thumbs.querySelectorAll("li");
-                console.log("RVTS: After removal: " + newItems.length + " items remain");
             },
 
             /**
@@ -63,17 +60,7 @@ if (window.RVTS) {
              * @returns {Promise<void>}
              */
             loadUp: async function () {
-                console.log("RVTS: loadUp called - loadingUp=" + RVTS.loadingUp + ", start=" + RVTS.start);
-                if (RVTS.loadingUp) {
-                    console.log("RVTS: loadUp returning early - already loading (loadingUp=1)");
-                    return;
-                }
-                if (RVTS.start <= 0) {
-                    console.log("RVTS: loadUp returning early - already at beginning (start=" + RVTS.start + ")");
-                    return;
-                }
-
-                console.log("RVTS: loadUp proceeding - loading from " + (RVTS.start - RVTS.perPage) + " to " + (RVTS.start - 1));
+                if (RVTS.loadingUp || RVTS.start <= 0) return;
                 var newStart = RVTS.start - RVTS.perPage;
                 var reqCount = RVTS.perPage;
 
@@ -116,17 +103,12 @@ if (window.RVTS) {
                     RVTS.start = newStart;
                     RVTS.next -= reqCount;
 
-                    console.log("RVTS: loadUp - loaded " + reqCount + " items, new start=" + RVTS.start + ", new next=" + RVTS.next);
-                    console.log("RVTS: loadUp - height increased by " + heightAdded + "px (before=" + thumbsBefore + ", after=" + thumbsAfter + ")");
-
                     // Unload from bottom when loading from top
-                    console.log("RVTS: loadUp - unloading " + reqCount + " items from bottom");
                     RVTS._removeFromBottom(reqCount);
 
                     // Adjust scroll position to compensate for items added at top
                     // This prevents the infinite loop of top-loading when content is added above
                     window.scrollBy(0, heightAdded);
-                    console.log("RVTS: loadUp - scrolled down by " + heightAdded + "px to maintain view");
                 } catch (error) {
                     console.error("RVTS: Failed to load previous page:", error);
                 } finally {
@@ -184,18 +166,12 @@ if (window.RVTS) {
                             RVTS.$thumbs.insertAdjacentHTML("beforeend", htm);
 
                         // Unload from top when loading from bottom (maintain sliding window)
-                        console.log("RVTS: doAutoScroll - loaded " + RVTS.perPage + " items, start=" + RVTS.start + ", next=" + RVTS.next);
                         var items = RVTS.$thumbs.querySelectorAll("li");
-                        console.log("RVTS: doAutoScroll - DOM has " + items.length + " items");
 
                         // Only unload if we have more than 2 pages worth of items (perPage * 2)
                         if (items.length > RVTS.perPage * 2) {
-                            console.log("RVTS: doAutoScroll - removing from top (have " + items.length + " items, threshold=" + (RVTS.perPage * 2) + ")");
                             RVTS._removeFromTop(RVTS.perPage);
                             RVTS.start += RVTS.perPage;
-                            console.log("RVTS: doAutoScroll - after removal: start=" + RVTS.start);
-                        } else {
-                            console.log("RVTS: doAutoScroll - NOT removing from top (only " + items.length + " items)");
                         }
                     } else if (currentRequest > RVTS.lastProcessedRequest) {
                         // Out of order - ignore this response to prevent duplicates
@@ -225,11 +201,7 @@ if (window.RVTS) {
                 // Vanilla JS: Calculate window bottom position
                 var wBot = window.scrollY + window.innerHeight;
                 tBot -= !evt ? 0 : 100; // Begin loading 100 pixels before end
-                var shouldLoad = tBot <= wBot;
-                if (evt) {
-                    console.log("RVTS: checkAutoScroll - wBot=" + wBot + ", tBot=" + tBot + ", shouldLoad=" + shouldLoad + ", next=" + RVTS.next + ", total=" + RVTS.total);
-                }
-                return shouldLoad ? (RVTS.doAutoScroll(), 1) : 0;
+                return tBot <= wBot ? (RVTS.doAutoScroll(), 1) : 0;
             },
 
             /**
@@ -243,11 +215,7 @@ if (window.RVTS) {
                 // Vanilla JS: Calculate window top position
                 var wTop = window.scrollY;
                 tTop += !evt ? 0 : 100; // Begin loading 100 pixels before top
-                var shouldLoad = wTop < tTop;
-                if (evt) {
-                    console.log("RVTS: checkAutoScrollUp - wTop=" + wTop + ", tTop=" + tTop + ", shouldLoad=" + shouldLoad + ", start=" + RVTS.start);
-                }
-                return shouldLoad ? (RVTS.loadUp(), 1) : 0;
+                return wTop < tTop ? (RVTS.loadUp(), 1) : 0;
             },
 
             /**

@@ -123,6 +123,88 @@ final class functions_metadata_admin
     }
 
     /**
+     * Retrieve cached metadata for a file if it exists and is still valid.
+     * Cache is valid only if the file's modification time (mtime) matches the cached mtime.
+     *
+     * @param string $file_path - Path to the file (e.g., "galleries/category/photo.jpg")
+     * @param int $file_mtime - Current file modification time
+     * @return array|null - Cached metadata if valid, null otherwise
+     */
+    private static function get_cached_metadata(string $file_path, int $file_mtime): ?array
+    {
+        $cache_dir = './pwg_data/sync_cache';
+        if (! is_dir($cache_dir)) {
+            return null;
+        }
+
+        $cache_key = md5($file_path);
+        $cache_file = $cache_dir . '/' . $cache_key . '.json';
+
+        if (! file_exists($cache_file)) {
+            return null;
+        }
+
+        $cache_data = json_decode(file_get_contents($cache_file), true);
+
+        // Validate cache: file must not have been modified
+        if (isset($cache_data['mtime']) && $cache_data['mtime'] === $file_mtime) {
+            return $cache_data['metadata'] ?? null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Cache extracted metadata for a file with its modification time.
+     * Cache will be invalidated if the file is modified (mtime changes).
+     *
+     * @param string $file_path - Path to the file
+     * @param int $file_mtime - File modification time (for cache invalidation)
+     * @param array $metadata - Extracted metadata to cache
+     */
+    private static function cache_metadata(string $file_path, int $file_mtime, array $metadata): void
+    {
+        $cache_dir = './pwg_data/sync_cache';
+
+        // Create cache directory if it doesn't exist
+        if (! is_dir($cache_dir)) {
+            @mkdir($cache_dir, 0755, true);
+        }
+
+        $cache_key = md5($file_path);
+        $cache_file = $cache_dir . '/' . $cache_key . '.json';
+
+        $cache_data = [
+            'mtime' => $file_mtime,
+            'metadata' => $metadata,
+            'cached_at' => time(),
+        ];
+
+        @file_put_contents($cache_file, json_encode($cache_data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * Clear metadata cache for a specific file.
+     * Useful when explicitly re-syncing or if cache is corrupted.
+     *
+     * @param string $file_path - Path to the file
+     */
+    public static function clear_metadata_cache(string $file_path): void
+    {
+        $cache_dir = './pwg_data/sync_cache';
+        if (! is_dir($cache_dir)) {
+            return;
+        }
+
+        $cache_key = md5($file_path);
+        $cache_file = $cache_dir . '/' . $cache_key . '.json';
+
+        if (file_exists($cache_file)) {
+            @unlink($cache_file);
+        }
+    }
+
+    /**
      * Get all potential file metadata fields, including IPTC and EXIF.
      *
      * @return array<string>
@@ -177,6 +259,16 @@ final class functions_metadata_admin
         // Lazy extraction: only extract expensive metadata if requested
         if (! $extract_all) {
             return $infos;
+        }
+
+        // Check cache before expensive metadata extraction
+        $file_mtime = @filemtime($file);
+        if ($file_mtime !== false) {
+            $cached = self::get_cached_metadata($infos['path'], $file_mtime);
+            if ($cached !== null) {
+                // Merge cached metadata with filesize and path info
+                return array_merge($infos, $cached);
+            }
         }
 
         $is_tiff = false;
@@ -268,6 +360,15 @@ final class functions_metadata_admin
                 foreach (["\r\n", "\n"] as $to_replace_string) {
                     $infos[$single_line_field] = str_replace($to_replace_string, ' ', $infos[$single_line_field]);
                 }
+            }
+        }
+
+        // Cache extracted metadata for future syncs (only cache if we have mtime)
+        if ($file_mtime !== false) {
+            // Extract only the metadata parts that were extracted (not path/id/etc)
+            $metadata_to_cache = array_diff_key($infos, ['path' => 0, 'representative_ext' => 0, 'id' => 0, 'filesize' => 0]);
+            if (! empty($metadata_to_cache)) {
+                self::cache_metadata($infos['path'], $file_mtime, $metadata_to_cache);
             }
         }
 

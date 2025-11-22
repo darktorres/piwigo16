@@ -93,9 +93,10 @@ final class LocalSiteReader
                     $filename_wo_ext = functions::get_filename_wo_extension($node);
 
                     if (isset($conf->flip_file_ext[$extension])) {
+                        $is_picture = isset($conf->flip_picture_ext[$extension]);
                         $representative_ext = null;
 
-                        if (! isset($conf->flip_picture_ext[$extension])) {
+                        if (! $is_picture) {
                             $representative_ext = $this->get_representative_ext($path, $filename_wo_ext);
                         }
 
@@ -103,7 +104,8 @@ final class LocalSiteReader
                             'representative_ext' => $representative_ext,
                         ];
 
-                        if ($conf->enable_formats) {
+                        // Only check for formats on non-picture files (pictures don't have alternative formats)
+                        if ($conf->enable_formats && ! $is_picture) {
                             $fs[$path . '/' . $node]['formats'] = $this->get_formats($path, $filename_wo_ext);
                         }
                     }

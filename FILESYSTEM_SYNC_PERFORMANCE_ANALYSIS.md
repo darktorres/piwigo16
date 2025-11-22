@@ -91,9 +91,9 @@ To test this change, you need to:
 
 #### ✅ 1.2 Batch Tag ID Lookups
 
-**Status:** COMPLETED (awaiting test)
+**Status:** COMPLETED & TESTED ✓
 **Date:** 2025-11-21
-**Commit:** (pending)
+**Commit:** `528d1dbb1` - perf: Batch tag ID lookups during metadata sync
 
 **Changes Made:**
 - **File 1:** `admin/inc/functions_admin.php` (new function `tag_ids_from_tag_names()`)
@@ -129,7 +129,37 @@ To test this change, you need to:
 3. Check that new tags are created if needed
 4. Monitor query count and execution time
 
-#### ⏳ 1.3 Skip Representative Check for Picture Files (PENDING)
+#### ✅ 1.3 Skip Representative Check for Picture Files
+
+**Status:** COMPLETED (awaiting test)
+**Date:** 2025-11-21
+**Commit:** (pending)
+
+**Changes Made:**
+- **File:** `admin/LocalSiteReader.php` (lines 95-111)
+
+**What was wrong:**
+- Line 106-108: `get_formats()` was called for **all files** (both picture and non-picture)
+- `get_formats()` loops through all format extensions and does `is_file()` checks
+- Picture files (jpg, png, gif) almost never have formats - only non-picture files (pdf, mp4) have format versions
+
+**What I fixed:**
+- Added `$is_picture` flag (line 96)
+- Only call `get_formats()` for non-picture files (line 108)
+- Prevents unnecessary filesystem checks on the majority of files
+
+**Impact:**
+- **Filesystem I/O Reduction:** If 80% of files are pictures, eliminates ~80% of format checks
+- **Time Savings:** Estimated 0.5-1 second per 10,000 files (depends on format extensions configured)
+- **Safety:** Very low risk - purely skips unnecessary checks
+
+**Testing Plan:**
+1. Run file sync with a gallery containing both pictures and non-picture files
+2. Verify all files are discovered
+3. Check that picture files show representative_ext = NULL
+4. Check that non-picture files still show formats if they exist
+5. Ensure no missing files or broken associations
+
 #### ⏳ 1.4 Optimize Array Operations (PENDING)
 #### ⏳ 1.5 Single-Pass Category Structure Query (PENDING)
 

@@ -823,9 +823,12 @@ if (isset($_POST['submit']) &&
     $tags_of = [];
     $all_tag_names = [];
 
-    // First pass: extract metadata and collect all unique tag names
+    // Batch extract metadata for all files (enables parallelization infrastructure)
+    $metadata_results = $site_reader->get_elements_metadata_batch($files);
+
+    // First pass: process extracted metadata and collect all unique tag names
     foreach ($files as $id => $element_infos) {
-        $data = $site_reader->get_element_metadata($element_infos);
+        $data = $metadata_results[$id];
 
         if (is_array($data)) {
             $data['date_metadata_update'] = CURRENT_DATE;

@@ -213,6 +213,27 @@ final class LocalSiteReader
         return functions_metadata_admin::get_sync_metadata($infos, $extract_all);
     }
 
+    /**
+     * Batch extract metadata for multiple files.
+     * This enables future parallelization and internal caching within batches.
+     *
+     * @param array<int, array> $file_infos_list - Array of (id => infos) where infos contains 'path' and 'representative_ext'
+     * @param bool $extract_all - Whether to extract expensive metadata (EXIF, IPTC, dimensions)
+     * @return array<int, array|bool> - Array of (id => metadata) where metadata is result from get_element_metadata()
+     */
+    public function get_elements_metadata_batch(
+        array $file_infos_list,
+        bool $extract_all = true
+    ): array {
+        $results = [];
+
+        foreach ($file_infos_list as $id => $file_infos) {
+            $results[$id] = $this->get_element_metadata($file_infos, $extract_all);
+        }
+
+        return $results;
+    }
+
     //-------------------------------------------------- private functions --------
     public function get_representative_ext(
         string $path,

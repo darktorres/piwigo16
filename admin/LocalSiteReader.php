@@ -169,9 +169,10 @@ final class LocalSiteReader
 
     // returns a hash of attributes (metadata+filesize+width,...) for file
     public function get_element_metadata(
-        array $infos
+        array $infos,
+        bool $extract_all = true
     ): array|bool {
-        return functions_metadata_admin::get_sync_metadata($infos);
+        return functions_metadata_admin::get_sync_metadata($infos, $extract_all);
     }
 
     //-------------------------------------------------- private functions --------

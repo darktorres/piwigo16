@@ -287,13 +287,57 @@ Logic:
 - Array operations: 0.5-1.5 seconds saved
 - **Total: 4.5-11.5 seconds saved (~40% improvement)**
 
+### Phase 2: Major Refactoring (Tier 2)
+
+#### ✅ 2.1 Lazy Metadata Extraction
+
+**Status:** COMPLETED (awaiting test)
+**Date:** 2025-11-21
+**Commit:** (pending)
+
+**Changes Made:**
+- **File 1:** `admin/inc/functions_metadata_admin.php` - Added `$extract_all` parameter to `get_sync_metadata()`
+- **File 2:** `admin/LocalSiteReader.php` - Updated `get_element_metadata()` to support parameter passthrough
+
+**What was wrong:**
+- `get_sync_metadata()` **always** extracted:
+  - Image dimensions via `getimagesize()` (expensive)
+  - EXIF metadata (if enabled)
+  - IPTC metadata (if enabled)
+  - SVG parsing
+- Even when metadata extraction wasn't requested or not configured
+
+**What I fixed:**
+Added `$extract_all` boolean parameter (default: true for backward compatibility):
+- **When false:** Only extracts filesize (fast) and returns immediately
+- **When true:** Extracts all metadata (current behavior)
+- Early return prevents expensive operations when not needed
+
+**Use case:**
+- Metadata sync phase: `$extract_all = true` (need full metadata)
+- Future optimization: Can pass `false` when metadata not configured to be used
+
+**Impact:**
+- **Backward compatible:** Default parameter ensures existing calls work unchanged
+- **Reduces overhead:** Eliminates getimagesize(), EXIF, IPTC parsing when not needed
+- **Time savings:** Estimated 3-5 seconds for files with complex metadata
+- **Safety:** No changes to extraction logic, just conditional execution
+
+**Testing Plan:**
+1. Run metadata sync with metadata extraction enabled
+2. Verify all metadata (dimensions, EXIF, IPTC) extracted correctly
+3. Check that images have width, height, date_creation, etc.
+4. Ensure no data loss or corruption
+5. Verify performance remains good
+
+---
+
 ### Next Steps
 
 To continue with Phase 2 (Major Refactoring) for additional 50% improvement:
-- Task 2.1: Lazy Metadata Extraction (skip metadata if not requested)
-- Task 2.2: Optimize getimagesize() calls
-- Task 2.3: Pre-scan representative extensions with map
-- Task 2.4: Batch metadata extraction
+- Task 2.2: Optimize getimagesize() calls (eliminate double calls)
+- Task 2.3: Pre-scan representative extensions with map (eliminate loops)
+- Task 2.4: Batch metadata extraction (enable parallelization)
 
 **Estimated Phase 2 gain:** 5-10 seconds additional (total 75-83% improvement for 10k files)
 

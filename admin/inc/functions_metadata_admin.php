@@ -157,10 +157,12 @@ final class functions_metadata_admin
      * Get all metadata of a file.
      *
      * @param array<string, int|string|null> $infos - (path[, representative_ext])
+     * @param bool $extract_all - Extract all metadata (EXIF, IPTC, dimensions) or minimal only (filesize)
      * @return array<string, int|string|null>|bool - includes data provided in $infos
      */
     public static function get_sync_metadata(
-        array $infos
+        array $infos,
+        bool $extract_all = true
     ): array|bool {
         global $conf;
         $file = './' . $infos['path'];
@@ -171,6 +173,11 @@ final class functions_metadata_admin
         }
 
         $infos['filesize'] = floor($fs / 1024);
+
+        // Lazy extraction: only extract expensive metadata if requested
+        if (! $extract_all) {
+            return $infos;
+        }
 
         $is_tiff = false;
 

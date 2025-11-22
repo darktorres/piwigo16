@@ -208,8 +208,9 @@ if (window.RVTS) {
                 var tBot = RVTS.$thumbs.offsetTop + RVTS.$thumbs.offsetHeight;
                 // Vanilla JS: Calculate window bottom position
                 var wBot = window.scrollY + window.innerHeight;
-                // Proactively load before user reaches bottom (800px buffer for seamless loading)
-                tBot -= !evt ? 0 : 800;
+                // Proactively load before user reaches bottom (75% of viewport height buffer)
+                var loadBuffer = !evt ? 0 : Math.floor(window.innerHeight * 0.75);
+                tBot -= loadBuffer;
                 return tBot <= wBot ? (RVTS.doAutoScroll(), 1) : 0;
             },
 
@@ -223,8 +224,9 @@ if (window.RVTS) {
                 var tTop = RVTS.$thumbs.offsetTop;
                 // Vanilla JS: Calculate window top position
                 var wTop = window.scrollY;
-                // Proactively load before user reaches top (800px buffer for seamless loading)
-                tTop += !evt ? 0 : 800;
+                // Proactively load before user reaches top (75% of viewport height buffer)
+                var loadBuffer = !evt ? 0 : Math.floor(window.innerHeight * 0.75);
+                tTop += loadBuffer;
                 return wTop < tTop ? (RVTS.loadUp(), 1) : 0;
             },
 

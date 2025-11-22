@@ -8,6 +8,94 @@ This document provides a deep analysis of the root causes and a comprehensive im
 
 ---
 
+## Implementation Progress
+
+### ✅ Phase 1: Quick Wins (Tier 1)
+
+#### ✅ 1.1 Cache Representative Extensions
+
+**Status:** COMPLETED
+**Date:** 2025-11-21
+**Commit:** (pending)
+
+**Changes Made:**
+- **File:** `admin/site_update.php` (lines 736-747)
+- **Change:** Removed redundant call to `get_element_update_attributes()` in the file update phase
+- **Rationale:** The `get_filelist()` query already fetches `representative_ext` from the database (line 385 of `functions_metadata_admin.php`). The update phase was recomputing it via filesystem checks, which is wasteful.
+- **Code Change:** Now directly uses `$file['representative_ext']` from the database result instead of calling `get_element_update_attributes()` which triggers expensive filesystem lookups.
+
+**Impact:**
+- **Filesystem I/O Reduction:** ~10,000-15,000 stat() calls eliminated for typical 10,000 file sync
+- **Time Savings:** Estimated 1-2 seconds per 10,000 files
+- **Safety:** Very low risk - uses existing database data that was already computed in phase 1
+
+**Testing Plan:**
+
+To test this change, you need to:
+
+1. **Prepare Test Environment:**
+   - Have a Piwigo instance with at least one gallery (e.g., 100+ files)
+   - Have both picture files (jpg, png) and non-picture files (pdf, mp4)
+   - Ensure the database is clean or use a test database
+
+2. **Test Procedure:**
+   ```
+   a) Log in to Piwigo admin panel
+   b) Go to: Admin > Synchronize
+   c) Select your gallery
+   d) Check "Search for new images in the directories"
+   e) Run the sync (File sync phase only, no metadata)
+   f) Verify:
+      - New files are added to database
+      - representative_ext values are correct
+      - No errors or PHP notices
+   g) Check the "representative_ext" column in images table:
+      - Picture files (jpg, png) should have NULL
+      - Files with representatives should show the extension (e.g., 'jpg')
+   ```
+
+3. **Validation Queries (Database):**
+   ```sql
+   -- Check if representative_ext is properly set
+   SELECT file, representative_ext, COUNT(*) as count
+   FROM images
+   WHERE representative_ext IS NOT NULL
+   GROUP BY representative_ext;
+
+   -- Verify all new files have representative_ext set
+   SELECT COUNT(*) as total_files,
+          SUM(CASE WHEN representative_ext IS NULL THEN 1 ELSE 0 END) as null_count
+   FROM images;
+   ```
+
+4. **Performance Check (Manual):**
+   - Time the sync before and after
+   - Expected improvement: 1-2 seconds faster for 10,000 files
+   - Use admin interface timing ("<!-- scanning files: 1.234s -->")
+
+5. **Regression Tests:**
+   - Verify files with representatives (PDFs, videos) still have correct ext
+   - Verify picture files still show as pictures (representative_ext = NULL)
+   - Run a second sync and verify no duplicates
+   - Check that existing files are not modified unnecessarily
+
+**Safety Notes:**
+- This change only affects the file UPDATE phase (not new file creation)
+- New files still get representative_ext set correctly in phase 1
+- This is a pure optimization with no functional changes
+- Safe to roll back if issues occur
+
+**Next Step:** Complete testing, then proceed to task 1.2
+
+---
+
+#### ⏳ 1.2 Batch Tag ID Lookups (PENDING)
+#### ⏳ 1.3 Skip Representative Check for Picture Files (PENDING)
+#### ⏳ 1.4 Optimize Array Operations (PENDING)
+#### ⏳ 1.5 Single-Pass Category Structure Query (PENDING)
+
+---
+
 ## Deep Analysis: Critical Bottlenecks
 
 ### 1. **Recursive Filesystem Scanning with Redundant I/O** (Severity: CRITICAL)

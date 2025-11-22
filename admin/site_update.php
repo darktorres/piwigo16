@@ -736,14 +736,13 @@ if (isset($_POST['submit']) &&
         $datas = [];
 
         foreach ($files as $id => $file) {
-            $file = $file['path'];
-            $data = $site_reader->get_element_update_attributes($file);
+            // $file array already contains 'path' and 'representative_ext' from get_filelist()
+            // No need to recompute representative_ext from filesystem
+            $data = [
+                'id' => $id,
+                'representative_ext' => $file['representative_ext'],
+            ];
 
-            if (! is_array($data)) {
-                continue;
-            }
-
-            $data['id'] = $id;
             $datas[] = $data;
         }
 

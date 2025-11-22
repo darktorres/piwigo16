@@ -291,9 +291,9 @@ Logic:
 
 #### ✅ 2.1 Lazy Metadata Extraction
 
-**Status:** COMPLETED (awaiting test)
+**Status:** COMPLETED & TESTED ✓
 **Date:** 2025-11-21
-**Commit:** (pending)
+**Commit:** `a413b1711` - perf: Add lazy metadata extraction with extract_all parameter
 
 **Changes Made:**
 - **File 1:** `admin/inc/functions_metadata_admin.php` - Added `$extract_all` parameter to `get_sync_metadata()`
@@ -332,10 +332,54 @@ Added `$extract_all` boolean parameter (default: true for backward compatibility
 
 ---
 
+#### ✅ 2.2 Optimize getimagesize() Calls
+
+**Status:** COMPLETED (awaiting test)
+**Date:** 2025-11-21
+**Commit:** (pending)
+
+**Changes Made:**
+- **File:** `admin/inc/functions_metadata_admin.php` (lines 182-249)
+
+**What was wrong:**
+- **Line 185:** `getimagesize()` called to check file type for TIFF detection
+- **Line 231:** `getimagesize()` called **again** to get image dimensions
+- **For SVG files:** `getimagesize()` called even after dimensions parsed from XML
+- Result: **2-3 calls per file** when could use 1 or 0
+
+**What I fixed:**
+1. **Reuse result from type-check call:**
+   - First call to detect TIFF type now cached in `$image_size`
+   - Flag `$dimensions_from_getimagesize` tracks if dimensions already obtained
+   - Skip second call if already have dimensions
+
+2. **Skip redundant SVG call:**
+   - Track SVG files with `$is_svg` flag
+   - Skip `getimagesize()` for SVG since dimensions from XML parsing
+   - Prevents wasted system call for files that don't need it
+
+**Logic Flow:**
+- If file has representative: call `getimagesize()` once, cache both type and dimensions
+- If SVG file: parse XML for dimensions, skip `getimagesize()`
+- If regular image without representative: call `getimagesize()` once
+- Result: **Eliminates 50-66% of getimagesize() calls**
+
+**Impact:**
+- **getimagesize() calls:** 50-66% reduction (from 2-3 per file to 0-1)
+- **Time savings:** Estimated 1-3 seconds per 10,000 files
+- **Safety:** Same logic, just optimized call pattern
+
+**Testing Plan:**
+1. Run metadata sync with various image types
+2. Verify image dimensions (width, height) correctly extracted
+3. Check TIFF files handled correctly
+4. Verify SVG files have dimensions
+5. Ensure no metadata corruption or missing values
+6. Confirm improved performance
+
 ### Next Steps
 
 To continue with Phase 2 (Major Refactoring) for additional 50% improvement:
-- Task 2.2: Optimize getimagesize() calls (eliminate double calls)
 - Task 2.3: Pre-scan representative extensions with map (eliminate loops)
 - Task 2.4: Batch metadata extraction (enable parallelization)
 

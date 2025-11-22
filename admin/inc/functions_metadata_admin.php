@@ -180,8 +180,11 @@ final class functions_metadata_admin
         }
 
         $is_tiff = false;
+        $image_size = null;
+        $dimensions_from_getimagesize = false;
 
         if (isset($infos['representative_ext'])) {
+            // Single getimagesize() call: reuse for type detection and dimensions
             $image_size = getimagesize($file);
 
             if ($image_size) {
@@ -195,14 +198,19 @@ final class functions_metadata_admin
                     // for width/height (to compute the multiple size dimensions)
                     $is_tiff = true;
                 }
+
+                // Mark that we have dimensions from first call
+                $dimensions_from_getimagesize = true;
             }
 
             $file = functions::original_to_representative($file, $infos['representative_ext']);
         }
 
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $is_svg = false;
 
         if (in_array($finfo->file($file), ['image/svg+xml', 'image/svg'])) {
+            $is_svg = true;
             $xml = file_get_contents($file);
 
             $xmlget = simplexml_load_string($xml);
@@ -228,9 +236,14 @@ final class functions_metadata_admin
             }
         }
 
-        $image_size = getimagesize($file);
+        // Only call getimagesize() again if we haven't already (from SVG parsing)
+        // and if we don't have dimensions from the type-check call
+        if (! $is_svg && ! $dimensions_from_getimagesize) {
+            $image_size = getimagesize($file);
+        }
 
-        if ($image_size) {
+        // Set dimensions from getimagesize if SVG didn't already provide them
+        if ($image_size && ! $is_svg) {
             $infos['width'] = $image_size[0];
             $infos['height'] = $image_size[1];
         }

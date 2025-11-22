@@ -77,6 +77,10 @@ if (window.RVTS) {
              * @returns {Promise<void>}
              */
             loadUp: async function () {
+                // Disabled for now
+                return;
+
+                // eslint-disable-next-line unreachable
                 if (RVTS.loadingUp || RVTS.start <= 0) return;
                 var newStart = RVTS.start - RVTS.perPage;
                 var reqCount = RVTS.perPage;

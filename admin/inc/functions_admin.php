@@ -1839,6 +1839,156 @@ final class functions_admin
     }
 
     /**
+     * Batch lookup tag IDs by tag names. More efficient than calling tag_id_from_tag_name() for each tag.
+     *
+     * @param array<string> $tag_names - List of tag names to look up or create
+     * @return array<string, int> - Mapping of tag_name => tag_id
+     */
+    public static function tag_ids_from_tag_names(
+        array $tag_names
+    ): array {
+        global $conf, $page;
+
+        if (count($tag_names) === 0) {
+            return [];
+        }
+
+        // Normalize: trim and filter empty names
+        $tag_names = array_filter(array_map('trim', $tag_names));
+        if (count($tag_names) === 0) {
+            return [];
+        }
+
+        // Initialize cache if needed
+        if (! isset($page['tag_id_from_tag_name_cache'])) {
+            $page['tag_id_from_tag_name_cache'] = [];
+        }
+
+        $result_map = [];
+        $tags_to_lookup = [];
+
+        // Check cache first
+        foreach ($tag_names as $tag_name) {
+            if (isset($page['tag_id_from_tag_name_cache'][$tag_name])) {
+                $result_map[$tag_name] = $page['tag_id_from_tag_name_cache'][$tag_name];
+            } else {
+                $tags_to_lookup[] = $tag_name;
+            }
+        }
+
+        if (count($tags_to_lookup) === 0) {
+            return $result_map;
+        }
+
+        // Batch query for existing tags by exact name
+        $quoted_names = array_map(function($name) use ($conf) {
+            return "'" . $conf->sql_backend::pwg_db_real_escape_string($name) . "'";
+        }, $tags_to_lookup);
+
+        $names_in = implode(', ', $quoted_names);
+        $query = <<<SQL
+            SELECT id, name
+            FROM tags
+            WHERE name IN ({$names_in});
+            SQL;
+        $existing_by_name = $conf->sql_backend::query2array($query, 'name', 'id');
+
+        // Update result map with found tags
+        foreach ($existing_by_name as $name => $id) {
+            $result_map[$name] = $id;
+            $page['tag_id_from_tag_name_cache'][$name] = $id;
+        }
+
+        // Find tags still not found
+        $tags_to_create = [];
+        foreach ($tags_to_lookup as $tag_name) {
+            if (! isset($result_map[$tag_name])) {
+                $tags_to_create[] = $tag_name;
+            }
+        }
+
+        // If there are tags not found by exact name, try url_name lookup
+        if (count($tags_to_create) > 0) {
+            $tags_to_create_by_url = [];
+            $url_map = [];
+
+            foreach ($tags_to_create as $tag_name) {
+                $url_name = functions_plugins::trigger_change('render_tag_url', $tag_name);
+                $url_map[$url_name] = $tag_name;
+                $tags_to_create_by_url[] = $url_name;
+            }
+
+            $quoted_urls = array_map(function($url) use ($conf) {
+                return "'" . $conf->sql_backend::pwg_db_real_escape_string($url) . "'";
+            }, $tags_to_create_by_url);
+
+            $urls_in = implode(', ', $quoted_urls);
+            $query = <<<SQL
+                SELECT id, url_name
+                FROM tags
+                WHERE url_name IN ({$urls_in});
+                SQL;
+            $existing_by_url = $conf->sql_backend::query2array($query, 'url_name', 'id');
+
+            // Update result map with tags found by url
+            foreach ($existing_by_url as $url_name => $id) {
+                $tag_name = $url_map[$url_name];
+                $result_map[$tag_name] = $id;
+                $page['tag_id_from_tag_name_cache'][$tag_name] = $id;
+            }
+
+            // Find tags still not found
+            $tags_to_create = [];
+            foreach ($tags_to_lookup as $tag_name) {
+                if (! isset($result_map[$tag_name])) {
+                    $tags_to_create[] = $tag_name;
+                }
+            }
+        }
+
+        // Create new tags in a batch insert
+        if (count($tags_to_create) > 0) {
+            $inserts = [];
+
+            foreach ($tags_to_create as $tag_name) {
+                $url_name = functions_plugins::trigger_change('render_tag_url', $tag_name);
+                $inserts[] = [
+                    'name' => $tag_name,
+                    'url_name' => $url_name,
+                ];
+            }
+
+            $conf->sql_backend::mass_inserts(
+                'tags',
+                ['name', 'url_name'],
+                $inserts
+            );
+
+            self::invalidate_user_cache_nb_tags();
+
+            // Query newly created tags to get their IDs
+            $quoted_names = array_map(function($name) use ($conf) {
+                return "'" . $conf->sql_backend::pwg_db_real_escape_string($name) . "'";
+            }, $tags_to_create);
+
+            $names_in = implode(', ', $quoted_names);
+            $query = <<<SQL
+                SELECT id, name
+                FROM tags
+                WHERE name IN ({$names_in});
+                SQL;
+            $new_tags = $conf->sql_backend::query2array($query, 'name', 'id');
+
+            foreach ($new_tags as $name => $id) {
+                $result_map[$name] = $id;
+                $page['tag_id_from_tag_name_cache'][$name] = $id;
+            }
+        }
+
+        return $result_map;
+    }
+
+    /**
      * Set tags of images. Overwrites all existing associations.
      *
      * @param array<int, string> $tags_of - keys are image ids, values are array of tag ids

@@ -14,9 +14,9 @@ This document provides a deep analysis of the root causes and a comprehensive im
 
 #### ✅ 1.1 Cache Representative Extensions
 
-**Status:** COMPLETED
+**Status:** COMPLETED & TESTED ✓
 **Date:** 2025-11-21
-**Commit:** (pending)
+**Commit:** `68a03c13a` - perf: Eliminate redundant representative_ext lookups
 
 **Changes Made:**
 - **File:** `admin/site_update.php` (lines 736-747)
@@ -89,7 +89,46 @@ To test this change, you need to:
 
 ---
 
-#### ⏳ 1.2 Batch Tag ID Lookups (PENDING)
+#### ✅ 1.2 Batch Tag ID Lookups
+
+**Status:** COMPLETED (awaiting test)
+**Date:** 2025-11-21
+**Commit:** (pending)
+
+**Changes Made:**
+- **File 1:** `admin/inc/functions_admin.php` (new function `tag_ids_from_tag_names()`)
+- **File 2:** `admin/site_update.php` (lines 825-878 - metadata sync phase)
+
+**What was wrong:**
+- Line 844 called `tag_id_from_tag_name()` for **each tag individually** during metadata sync
+- Each call potentially triggered database queries (even with per-call caching)
+- For 1,000 images with 5 tags each = 5,000 function calls = many database queries
+
+**What I fixed:**
+1. Created new `tag_ids_from_tag_names()` function that:
+   - Accepts array of tag names
+   - Batch-queries database (single query instead of N queries)
+   - Handles both exact name and URL name matching
+   - Creates missing tags in a single batch insert
+   - Returns a complete lookup map: `tag_name => tag_id`
+   - Reuses existing per-call cache
+
+2. Updated metadata sync to:
+   - First pass: extract all metadata and collect unique tag names
+   - Batch lookup: call `tag_ids_from_tag_names()` once for all tags
+   - Second pass: use the pre-built lookup map (O(1) array lookups)
+
+**Impact:**
+- **Database Query Reduction:** From 5,000+ queries to ~3 batch queries (best case 1-2 queries if tags exist)
+- **Time Savings:** Estimated 2-5 seconds for 10,000 files (depending on number of unique tags)
+- **Safety:** Low risk - uses same database logic as original, just batched
+
+**Testing Plan:**
+1. Run metadata sync with files containing tags
+2. Verify tags are correctly associated with images
+3. Check that new tags are created if needed
+4. Monitor query count and execution time
+
 #### ⏳ 1.3 Skip Representative Check for Picture Files (PENDING)
 #### ⏳ 1.4 Optimize Array Operations (PENDING)
 #### ⏳ 1.5 Single-Pass Category Structure Query (PENDING)

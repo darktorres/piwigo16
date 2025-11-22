@@ -825,7 +825,9 @@ if (isset($_POST['submit']) &&
     $start = functions::get_moment();
     $datas = [];
     $tags_of = [];
+    $all_tag_names = [];
 
+    // First pass: extract metadata and collect all unique tag names
     foreach ($files as $id => $element_infos) {
         $data = $site_reader->get_element_metadata($element_infos);
 
@@ -834,14 +836,11 @@ if (isset($_POST['submit']) &&
             $data['id'] = $id;
             $datas[] = $data;
 
+            // Collect tag names for batch lookup later
             foreach (['keywords', 'tags'] as $key) {
                 if (isset($data[$key])) {
-                    if (! isset($tags_of[$id])) {
-                        $tags_of[$id] = [];
-                    }
-
                     foreach (explode(',', $data[$key]) as $tag_name) {
-                        $tags_of[$id][] = functions_admin::tag_id_from_tag_name($tag_name);
+                        $all_tag_names[] = $tag_name;
                     }
                 }
             }
@@ -850,6 +849,31 @@ if (isset($_POST['submit']) &&
                 'path' => $element_infos['path'],
                 'type' => 'PWG-ERROR-NO-FS',
             ];
+        }
+    }
+
+    // Batch lookup all tag IDs in a single operation (more efficient than per-tag lookups)
+    if (! empty($all_tag_names)) {
+        $tag_id_map = functions_admin::tag_ids_from_tag_names(array_unique($all_tag_names));
+
+        // Second pass: populate tags_of using the pre-built lookup map
+        foreach ($datas as $data) {
+            $id = $data['id'];
+
+            foreach (['keywords', 'tags'] as $key) {
+                if (isset($data[$key])) {
+                    if (! isset($tags_of[$id])) {
+                        $tags_of[$id] = [];
+                    }
+
+                    foreach (explode(',', $data[$key]) as $tag_name) {
+                        $tag_name = trim($tag_name);
+                        if (isset($tag_id_map[$tag_name])) {
+                            $tags_of[$id][] = $tag_id_map[$tag_name];
+                        }
+                    }
+                }
+            }
         }
     }
 

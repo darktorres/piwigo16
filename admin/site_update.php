@@ -224,7 +224,10 @@ if (isset($_POST['submit']) &&
     if (! isset($_POST['subcats-included']) ||
         $_POST['subcats-included'] != 1
     ) {
-        $fs_fulldirs = array_intersect($fs_fulldirs, array_keys($db_fulldirs));
+        // Use array_filter with isset for O(n) complexity instead of array_intersect O(n*m)
+        $fs_fulldirs = array_filter($fs_fulldirs, static function($dir) use ($db_fulldirs) {
+            return isset($db_fulldirs[$dir]);
+        });
     }
 
     $inserts = [];
@@ -359,10 +362,14 @@ if (isset($_POST['submit']) &&
                 $insert_granted_users = [];
                 $insert_granted_grps = [];
 
+                // Pre-build lookup array for O(1) checks instead of O(n) in_array()
+                $category_ids_lookup = array_flip($category_ids);
+
                 foreach ($category_ids as $ids) {
                     $parent_id = $db_categories[$ids]['parent'];
 
-                    while (in_array($parent_id, $category_ids)) {
+                    // Use isset for O(1) lookup instead of in_array O(n)
+                    while ($parent_id !== null && isset($category_ids_lookup[$parent_id])) {
                         $parent_id = $db_categories[$parent_id]['parent'];
                     }
 

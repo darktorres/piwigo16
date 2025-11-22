@@ -131,9 +131,9 @@ To test this change, you need to:
 
 #### ✅ 1.3 Skip Representative Check for Picture Files
 
-**Status:** COMPLETED (awaiting test)
+**Status:** COMPLETED & TESTED ✓
 **Date:** 2025-11-21
-**Commit:** (pending)
+**Commit:** `c24d3f0b1` - perf: Skip format checks for picture files
 
 **Changes Made:**
 - **File:** `admin/LocalSiteReader.php` (lines 95-111)
@@ -160,7 +160,47 @@ To test this change, you need to:
 4. Check that non-picture files still show formats if they exist
 5. Ensure no missing files or broken associations
 
-#### ⏳ 1.4 Optimize Array Operations (PENDING)
+#### ✅ 1.4 Optimize Array Operations
+
+**Status:** COMPLETED (awaiting test)
+**Date:** 2025-11-21
+**Commit:** (pending)
+
+**Changes Made:**
+- **File:** `admin/site_update.php` (lines 227-231, 365-374)
+
+**What was wrong:**
+1. **Line 227:** `array_intersect($fs_fulldirs, array_keys($db_fulldirs))` - O(n*m) complexity
+   - Compares every element of fs_fulldirs against every key of db_fulldirs
+   - With 50,000 directories: 2.5 billion comparisons
+
+2. **Line 365:** `while (in_array($parent_id, $category_ids))` - O(n) inside loop
+   - Loop checks `in_array()` which is O(n)
+   - With 1,000 new categories: 1,000,000 comparisons
+
+**What I fixed:**
+1. **Line 227-231:** Replaced `array_intersect()` with `array_filter(isset())`
+   - Now O(n) instead of O(n*m)
+   - Uses static closure for performance
+
+2. **Line 365-374:** Pre-built lookup array with `array_flip()`
+   - Created `$category_ids_lookup = array_flip($category_ids)` before loop
+   - Now `isset($category_ids_lookup[$parent_id])` is O(1) instead of `in_array()` O(n)
+   - Added null check to while condition for safety
+
+**Impact:**
+- **array_intersect optimization:** O(n*m) → O(n) - potentially 10-50x faster for large directories
+- **in_array optimization:** O(n) per iteration → O(1) per iteration - potentially 100x+ faster
+- **Time Savings:** Estimated 0.5-1.5 seconds for 10,000+ files
+- **Memory:** Minimal increase (just flip array for lookup)
+
+**Testing Plan:**
+1. Run file/category sync with 100+ directories
+2. Verify all new categories are created
+3. Check permissions are inherited correctly
+4. Ensure no sync errors or missing categories
+5. Verify performance improvement in footer timing
+
 #### ⏳ 1.5 Single-Pass Category Structure Query (PENDING)
 
 ---

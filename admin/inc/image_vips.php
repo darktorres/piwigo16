@@ -29,11 +29,8 @@ final class image_vips implements imageInterface
     public function __construct(
         string $source_filepath
     ) {
-        // putenv('VIPS_WARNING=0');
-        $this->image = Image::newFromFile(realpath($source_filepath), [
-            'access' => 'sequential',
-        ]);
         $this->source_filepath = realpath($source_filepath);
+        $this->image = Image::newFromFile($this->source_filepath);
     }
 
     public function add_command(
@@ -91,8 +88,9 @@ final class image_vips implements imageInterface
         int $width,
         int $height
     ): true {
-        $this->image = Image::thumbnail($this->source_filepath, $width, [
+        $this->image = $this->image->thumbnailImage($width, [
             'height' => $height,
+            'size' => 'down',
         ]);
         return true;
     }
@@ -118,8 +116,19 @@ final class image_vips implements imageInterface
     public function write(
         string $destination_filepath
     ): true {
-        $dest = pathinfo($destination_filepath);
-        $this->image->writeToFile(realpath($dest['dirname']) . '/' . $dest['basename']);
+        $ext = strtolower(pathinfo($destination_filepath, PATHINFO_EXTENSION));
+        $options = match ($ext) {
+            'jpg', 'jpeg' => ['Q' => $this->quality],
+            'webp'        => ['Q' => $this->quality],
+            'png'         => ['compression' => (int) round((100 - $this->quality) / 10)],
+            default       => [],
+        };
+        $this->image->writeToFile($destination_filepath, $options);
         return true;
+    }
+
+    public function destroy(): void
+    {
+        unset($this->image);
     }
 }

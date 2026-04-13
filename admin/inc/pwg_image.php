@@ -387,7 +387,7 @@ final class pwg_image
 
     public static function is_vips(): bool
     {
-        return class_exists('\Piwigo\admin\inc\image_vips');
+        return extension_loaded('vips') && class_exists('\Jcupitt\Vips\Image');
     }
 
     public static function get_library(

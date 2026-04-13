@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "dependencies": {
@@ -132,7 +133,7 @@
 
     "chartjs-color-string": ["chartjs-color-string@0.6.0", "", { "dependencies": { "color-name": "^1.0.0" } }, "sha512-TIB5OKn1hPJvO7JcteW4WY/63v6KwEdt6udfnDE9iCAZgy+V4SrbSxoIbTw/xkUIapjEI4ExGtD0+6D3KyFd7A=="],
 
-    "chosen": ["chosen@github:harvesthq/chosen#b34a5d8", {}, "harvesthq-chosen-b34a5d8"],
+    "chosen": ["chosen@github:harvesthq/chosen#b34a5d8", {}, "harvesthq-chosen-b34a5d8", "sha512-fVGPS/qNCInNu3IPTyHt3wX9+rzgjWwTi5qvJTue66LOuTM6zaXWSNIe3owVg2MHKrwPylwA5o4CTsZMPCAjnA=="],
 
     "cli": ["cli@0.4.5", "", { "dependencies": { "glob": ">= 3.1.4" } }, "sha512-dbn5HyeJWSOU58RwOEiF1VWrl7HRvDsKLpu0uiI/vExH6iNoyUzjB5Mr3IJY5DVUfnbpe9793xw4DFJVzC9nWQ=="],
 
@@ -166,7 +167,7 @@
 
     "ctype": ["ctype@0.5.2", "", {}, "sha512-C+CbWLSk0xdPcp7evo2YEF0o8SLKcDCQsw//accyrf8/NAWYzmUhmL8ZiSokvuwwMQ08RK10U9pkRcyy8EmA5A=="],
 
-    "datatables": ["datatables@github:DataTables/DataTables#8a3412a", { "dependencies": { "jquery": ">=1.7" } }, "DataTables-DataTables-8a3412a"],
+    "datatables": ["datatables@github:DataTables/DataTables#8a3412a", { "dependencies": { "jquery": ">=1.7" } }, "DataTables-DataTables-8a3412a", "sha512-y0iwwRT9fht7eqf+JlQk3sES6RWq5SWDkOmTwBxJp/etJkEyeM62RUXMOYPsflHwELKvKNNN1dGL7dGXhe5pyQ=="],
 
     "debug": ["debug@4.4.1", "", { "dependencies": { "ms": "^2.1.3" } }, "sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ=="],
 
@@ -262,7 +263,7 @@
 
     "isexe": ["isexe@2.0.0", "", {}, "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw=="],
 
-    "jQuery-Timepicker-Addon": ["jQuery-Timepicker-Addon@github:trentrichardson/jQuery-Timepicker-Addon#30c9bdb", {}, "trentrichardson-jQuery-Timepicker-Addon-30c9bdb"],
+    "jQuery-Timepicker-Addon": ["jQuery-Timepicker-Addon@github:trentrichardson/jQuery-Timepicker-Addon#30c9bdb", {}, "trentrichardson-jQuery-Timepicker-Addon-30c9bdb", "sha512-q/sM1pkK+ZWv8J/eWb6nIdTWGWtYUixlXCmiknt1ABtPT7pqgmTTL3uPS/bEhw5xXVpT1NMilH4b5bNgUgAKUg=="],
 
     "jackspeak": ["jackspeak@4.1.1", "", { "dependencies": { "@isaacs/cliui": "^8.0.2" } }, "sha512-zptv57P3GpL+O0I7VdMJNBZCu+BPHVQUk55Ft8/QCJjTVxrnJHuVuX/0Bl2A6/+2oyR/ZMEuFKwmzqqZ/U5nPQ=="],
 
@@ -282,7 +283,7 @@
 
     "jquery.Jcrop.js": ["jquery.Jcrop.js@0.9.12", "", {}, "sha512-WMjXDRjssnXk17UsFBJ8QXT/fd8PJ8Q2g0vC+W583WmCKU0ccUUNI9s/G8G1ludVjtXfREAQWN/h51MwdAw+Cw=="],
 
-    "jquery.cookie": ["jquery.cookie@github:js-cookie/js-cookie#92b7715", {}, "js-cookie-js-cookie-92b7715"],
+    "jquery.cookie": ["jquery.cookie@github:js-cookie/js-cookie#92b7715", {}, "js-cookie-js-cookie-92b7715", "sha512-W/I+9CpRtkq54ybytovj/FmLmktaQ1QZEFMjGE3Rp/HfUcJ2bIOJFK4DRdVKlpmcQDM9i7oymnKk2M4JOtpr6A=="],
 
     "js-yaml": ["js-yaml@4.1.0", "", { "dependencies": { "argparse": "^2.0.1" }, "bin": { "js-yaml": "bin/js-yaml.js" } }, "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA=="],
 
@@ -354,7 +355,7 @@
 
     "pause": ["pause@0.0.1", "", {}, "sha512-KG8UEiEVkR3wGEb4m5yZkVCzigAD+cVEJck2CzYZO37ZGJfctvVptVO192MwrtPhzONn6go8ylnOdMhKqi4nfg=="],
 
-    "piecon": ["piecon@github:lipka/piecon#4a2bb61", {}, "lipka-piecon-4a2bb61"],
+    "piecon": ["piecon@github:lipka/piecon#4a2bb61", {}, "lipka-piecon-4a2bb61", "sha512-cWAQzUtFKXSDzTBxlVug+7bnO4fc+d3uy8oybOYOaaG/tZWMQ8i52vwX9CFo3pZWH16l+p5jnhmqkaDyNVC5Fg=="],
 
     "plupload": ["plupload@2.2.0", "", { "dependencies": { "glob": "3.2.x", "handlebars": "1.0.x", "jake": "0.5.x", "jshint": "2.1.x", "yuidocjs": "0.3.x" } }, "sha512-D7QEfR5Kl/TVyQq2+3bxwDhr4517Lu457p6ITuy18YdtvXgMAfO+1+xCRG0lQ8iV4QdEGEsmMUyeYFNnTvit4g=="],
 
@@ -372,7 +373,7 @@
 
     "rimraf": ["rimraf@6.0.1", "", { "dependencies": { "glob": "^11.0.0", "package-json-from-dist": "^1.0.0" }, "bin": { "rimraf": "dist/esm/bin.mjs" } }, "sha512-9dkvaxAsk/xNXSJzMgFqqMCuFgt2+KsOFek3TMLfo8NCPfWpBmqwyNn5Y+NX56QUYfCtsyhF3ayiboEoUmJk/A=="],
 
-    "selectize": ["selectize@github:selectize/selectize.js#74e8953", {}, "selectize-selectize.js-74e8953"],
+    "selectize": ["selectize@github:selectize/selectize.js#74e8953", {}, "selectize-selectize.js-74e8953", "sha512-T/TCgOUJTAJ8FoZvdV0YDrmKpn1r8JDm3XHFaICjogHxsuh6JurdFcxTQVkrSpkF/7G4MgJyJudTB+P7eKgcrA=="],
 
     "send": ["send@0.1.0", "", { "dependencies": { "debug": "*", "fresh": "0.1.0", "mime": "1.2.6", "range-parser": "0.0.4" } }, "sha512-D/GaJQQYx7ICNq9Te5V4wHetfDQdFk3HJ4oBfDUBNW7XQmLbJ8sQDm/wFvVUUpKN8tluOnO1dFdM8KODn6D79w=="],
 

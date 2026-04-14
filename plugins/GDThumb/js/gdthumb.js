@@ -29,6 +29,7 @@ var GDThumb = {
         GDThumb.big_thumb = big_thumb;
 
         $(window).on("RVTS_loaded", function () {
+            GDThumb.big_thumb = null;
             GDThumb.build();
         });
         GDThumb.init();

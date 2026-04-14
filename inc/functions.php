@@ -1396,7 +1396,7 @@ final class functions
      */
     public static function get_themeconf(
         string $key
-    ): array|bool {
+    ): array|bool|string {
         return $GLOBALS['template']->get_themeconf($key);
     }
 

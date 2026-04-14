@@ -31,7 +31,7 @@ ImageLoader.prototype = {
 
     clear: function () {
         this.queue.length = 0;
-        while (this.current.length) jQuery(this.current.pop()).unbind();
+        while (this.current.length) jQuery(this.current.pop()).off();
         this.loaded = this.errors = this.errorEma = 0;
     },
 
@@ -57,9 +57,8 @@ ImageLoader.prototype = {
         var img = this.pool.shift() || new Image();
         this.current.push(img);
         var that = this;
-        jQuery(img).bind("load error abort", function (e) {
-            //img.onload = function(e) {
-            jQuery(img).unbind();
+        jQuery(img).on("load error abort", function (e) {
+            jQuery(img).off();
             img.onload = null;
             that.current.splice(jQuery.inArray(img, that.current), 1);
             if (e.type === "load") {

@@ -217,8 +217,8 @@ function GDThumb_process_category(
 function GDThumb_prefilter(
     string $content
 ): string|array|null {
-    $pattern = '#\<div.*?id\="thumbnails".*?\>\{\$THUMBNAILS\}\</div\>#';
-    $replacement = '<ul id="thumbnails">{$THUMBNAILS}</ul>';
+    $pattern = '#\<div(.*?id\="thumbnails"[^>]*)\>\{\$THUMBNAILS\}\</div\>#';
+    $replacement = '<ul$1>{$THUMBNAILS}</ul>';
 
     return preg_replace($pattern, $replacement, $content);
 }

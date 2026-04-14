@@ -25,17 +25,10 @@ ul.thumbnails .gdthumb a img.thumbnail:hover {
 }
 
 ul.thumbnails .gdthumb.animate img {
-    -webkit-transition: 700ms;
-    -moz-transition: 700ms;
-    -o-transition: 700ms;
     transition: 700ms;
 }
 ul.thumbnails .gdthumb.animate:hover img {
     transform: scale(1.5, 1.5) rotate(10deg);
-    -ms-transform: scale(1.5, 1.5) rotate(10deg);
-    -webkit-transform: scale(1.5, 1.5) rotate(10deg);
-    -o-transform: scale(1.5, 1.5) rotate(10deg);
-    -moz-transform: scale(1.5, 1.5) rotate(10deg);
 }
 
 ul.thumbnails .gdthumb .thumbLegend {
@@ -79,10 +72,6 @@ ul.thumbnails .thumbLegend .thumbTitle {
 ul.thumbnails .gdthumb .thumbLegend.top {
     bottom: auto;
     top: -6em;
-    -webkit-transition: all 200ms ease-out;
-    -moz-transition: all 200ms ease-out;
-    -ms-transition: all 200ms ease-out;
-    -o-transition: all 200ms ease-out;
     transition: all 200ms ease-out;
 }
 ul.thumbnails .gdthumb:hover .thumbLegend.top {
@@ -97,10 +86,6 @@ ul.thumbnails .gdthumb .thumbLegend.top_static {
 ul.thumbnails .gdthumb .thumbLegend.bottom {
     bottom: -6em;
     top: auto;
-    -webkit-transition: all 200ms ease-out;
-    -moz-transition: all 200ms ease-out;
-    -ms-transition: all 200ms ease-out;
-    -o-transition: all 200ms ease-out;
     transition: all 200ms ease-out;
 }
 ul.thumbnails .gdthumb:hover .thumbLegend.bottom {
@@ -126,10 +111,6 @@ ul.thumbnails .gdthumb:hover .thumbLegend.overlay {
     visibility: visible;
     opacity: 1;
     transition: opacity 200ms linear;
-    -o-transition: opacity 200ms linear;
-    -ms-transition: opacity 200ms linear;
-    -moz-transition: opacity 200ms linear;
-    -webkit-transition: opacity 200ms linear;
 }
 ul.thumbnails .gdthumb .thumbLegend.overlay .thumbName {
     position: absolute;
@@ -158,10 +139,6 @@ ul.thumbnails .gdthumb:hover .thumbLegend.overlay-ex {
     visibility: visible;
     opacity: 1;
     transition: opacity 200ms linear;
-    -o-transition: opacity 200ms linear;
-    -ms-transition: opacity 200ms linear;
-    -moz-transition: opacity 200ms linear;
-    -webkit-transition: opacity 200ms linear;
 }
 
 ul.thumbnails .gdthumb .thumbLegend.overlay-ex .thumbName {
@@ -242,18 +219,4 @@ ul.thumbnails.nowrap .gdthumb .thumbLegend {
     white-space: nowrap;
     overflow: hidden;
     height: auto;
-}
-
-body.theme-whitehawk .gdthumb.slide {
-    border: 1px solid #000;
-}
-body.theme-whitehawk .gdthumb.slide .thumbLegend.bottom_static {
-    background: #fff;
-    color: #555;
-}
-body.theme-whitehawk .gdthumb.slide .thumbLegend.bottom_static .thumbTitle {
-    color: #555;
-}
-body.theme-whitehawk .gdthumb.slide .thumbLegend.bottom_static .thumbName {
-    color: #555;
 }

@@ -51,7 +51,7 @@ final class EverythingSDK
         void Everything3_SetSearchViewportOffset(ESearchState state, size_t offset);
         void Everything3_SetSearchViewportCount(ESearchState state, size_t count);
         int  Everything3_AddSearchPropertyRequest(ESearchState state, uint32_t property_id);
-        void Everything3_SetSearchSortProperty(ESearchState state, uint32_t property_id, int ascending);
+        int  Everything3_SetSearchSort(ESearchState state, uint32_t property_id, int ascending);
 
         EResultList Everything3_Search(EClient client, ESearchState state);
 
@@ -180,7 +180,7 @@ final class EverythingSDK
             $this->ffi->Everything3_AddSearchPropertyRequest($searchState, self::PROPERTY_FULL_PATH);
 
             if ($sortByPath) {
-                $this->ffi->Everything3_SetSearchSortProperty($searchState, self::PROPERTY_FULL_PATH, 1);
+                $this->ffi->Everything3_SetSearchSort($searchState, self::PROPERTY_FULL_PATH, 1);
             }
 
             if ($includeSize) {

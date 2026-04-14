@@ -135,11 +135,13 @@ final class functions_pgsql
         }
 
         $result = pg_query($pg, $query);
-        self::$last_result = $result;
 
         if ($result === false) {
             self::my_error(pg_last_error($pg) . "\n" . $query, $conf->die_on_sql_error);
+            return false;
         }
+
+        self::$last_result = $result;
 
         $time = microtime(true) - $start;
 

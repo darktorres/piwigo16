@@ -40,10 +40,13 @@ if (! defined('GDTHEME_PATH')) {
     define('GDTHEME_PATH', PHPWG_THEMES_PATH . 'greydragon/');
 }
 
+require __DIR__ . '/config_default.php';
 if (! isset($conf->gdThumb)) {
-    require __DIR__ . '/config_default.php';
     functions::conf_update_param('gdThumb', $config_default);
     functions::load_conf_from_db();
+} elseif (array_diff_key($config_default, (array) $conf->gdThumb)) {
+    $conf->gdThumb = array_merge($config_default, (array) $conf->gdThumb);
+    functions::conf_update_param('gdThumb', $conf->gdThumb);
 }
 
 // RV Thumbnails Scroller

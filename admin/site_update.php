@@ -609,18 +609,23 @@ if (isset($_POST['submit']) &&
     $fmt_fields     = ['image_id', 'ext', 'filesize'];
     $add_to_caddie  = isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1;
 
-    // Use available signals to estimate whether this will be a large insert.
-    // We don't know the new-file count upfront (scan is streaming), so we
-    // approximate from two sources:
-    //   1. Existing photo records in the DB for these categories.
-    //   2. Total album count ($db_fulldirs) — by this point it includes newly
-    //      inserted albums, so a fresh gallery with 394k new albums and no
-    //      existing photos correctly triggers the optimisations.
-    // If 0 new files are ultimately found, the FULLTEXT index is not rebuilt
-    // (gated on $inserted_count > 0 below).
+    // unique_checks=0 / foreign_key_checks=0 are cheap session-variable flips:
+    // no overhead for small syncs, meaningful saving at any scale. The sync
+    // computes its own IDs and has already inserted parent albums, so skipping
+    // duplicate and FK validation is always safe here.
+    $has_ft_index = false;
+
+    if (! $simulate) {
+        $conf->sql_backend::pwg_query('SET unique_checks=0, foreign_key_checks=0');
+    }
+
+    // FULLTEXT drop/rebuild is expensive (cost scales with existing table size,
+    // not new row count). Only pay that fixed overhead when inserting enough
+    // rows to justify it — approximate from existing photo records or album count.
+    // If 0 new files are ultimately found the index is not rebuilt (gated on
+    // $inserted_count > 0 below).
     $large_insert_likely = count($db_paths_set) > 10000
         || count($db_fulldirs) > 10000;
-    $has_ft_index = false;
 
     if (! $simulate && $large_insert_likely) {
         $result = $conf->sql_backend::pwg_query("SHOW INDEX FROM images WHERE Key_name = 'image_ft';");
@@ -629,8 +634,6 @@ if (isset($_POST['submit']) &&
             $conf->sql_backend::pwg_query('ALTER TABLE images DROP INDEX image_ft;');
             $has_ft_index = true;
         }
-
-        $conf->sql_backend::pwg_query('SET unique_checks=0, foreign_key_checks=0');
     }
 
     $t_mass_insert = microtime(true);
@@ -768,7 +771,7 @@ if (isset($_POST['submit']) &&
         . functions::get_elapsed_time($start, functions::get_moment())
         . ' -->');
 
-    if (! $simulate && $large_insert_likely) {
+    if (! $simulate) {
         $conf->sql_backend::pwg_query('SET unique_checks=1, foreign_key_checks=1');
 
         if ($has_ft_index && $inserted_count > 0) {

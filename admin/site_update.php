@@ -609,6 +609,43 @@ if (isset($_POST['submit']) &&
     $fmt_fields     = ['image_id', 'ext', 'filesize'];
     $add_to_caddie  = isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1;
 
+    // --- LOAD DATA LOCAL INFILE probe ---
+    // If the MySQL connection supports LOCAL INFILE, use TSV temp files +
+    // LOAD DATA for bulk inserts — 5-10x faster than multi-row INSERT for
+    // large syncs because it bypasses PHP string-building and SQL parsing.
+    $use_load_data = false;
+    $flush_size    = 50000;
+
+    if (! $simulate && method_exists($conf->sql_backend, 'load_data_local')) {
+        $probe_path = tempnam(sys_get_temp_dir(), 'pwg_probe_');
+        file_put_contents($probe_path, '');
+        $use_load_data = $conf->sql_backend::load_data_local($probe_path, 'images', $image_fields);
+        @unlink($probe_path);
+
+        if ($use_load_data) {
+            $flush_size = 250000;
+            $logger->info('[sync][files] LOAD DATA LOCAL INFILE available — using fast path');
+        } else {
+            $logger->info('[sync][files] LOAD DATA LOCAL INFILE not available — using INSERT fallback. '
+                . 'For faster bulk inserts, set local_infile=ON in my.ini and restart MySQL.');
+        }
+    }
+
+    // TSV file state (only used when $use_load_data is true).
+    $tsv_images_path = $tsv_links_path = $tsv_fmt_path = '';
+    $tsv_images = $tsv_links = $tsv_fmt = null;
+    $tsv_fmt_count = 0;
+    $chunk_count   = 0;
+
+    if ($use_load_data) {
+        $tsv_images_path = tempnam(sys_get_temp_dir(), 'pwg_img_');
+        $tsv_links_path  = tempnam(sys_get_temp_dir(), 'pwg_lnk_');
+        $tsv_fmt_path    = tempnam(sys_get_temp_dir(), 'pwg_fmt_');
+        $tsv_images = fopen($tsv_images_path, 'wb');
+        $tsv_links  = fopen($tsv_links_path, 'wb');
+        $tsv_fmt    = fopen($tsv_fmt_path, 'wb');
+    }
+
     // unique_checks=0 / foreign_key_checks=0 are cheap session-variable flips:
     // no overhead for small syncs, meaningful saving at any scale. The sync
     // computes its own IDs and has already inserted parent albums, so skipping
@@ -700,12 +737,31 @@ if (isset($_POST['submit']) &&
                 $insert['level'] = $_POST['privacy_level'];
             }
 
-            $chunk_inserts[] = $insert;
-            $chunk_links[]   = ['image_id' => $insert['id'], 'category_id' => $insert['storage_category_id']];
+            $link = ['image_id' => $insert['id'], 'category_id' => $insert['storage_category_id']];
 
-            if ($conf->enable_formats) {
-                foreach ($meta['formats'] as $ext => $filesize) {
-                    $chunk_fmt_new[] = ['image_id' => $insert['id'], 'ext' => $ext, 'filesize' => $filesize];
+            if ($use_load_data) {
+                // LOAD DATA path: stream rows to TSV temp files (no PHP arrays).
+                $conf->sql_backend::write_tsv_row($tsv_images, $insert, $image_fields);
+                $conf->sql_backend::write_tsv_row($tsv_links, $link, $link_fields);
+
+                if ($conf->enable_formats) {
+                    foreach ($meta['formats'] as $ext => $filesize) {
+                        $fmt_row = ['image_id' => $insert['id'], 'ext' => $ext, 'filesize' => $filesize];
+                        $conf->sql_backend::write_tsv_row($tsv_fmt, $fmt_row, $fmt_fields);
+                        $tsv_fmt_count++;
+                    }
+                }
+
+                $chunk_count++;
+            } else {
+                // Fallback: accumulate PHP arrays for mass_inserts.
+                $chunk_inserts[] = $insert;
+                $chunk_links[]   = $link;
+
+                if ($conf->enable_formats) {
+                    foreach ($meta['formats'] as $ext => $filesize) {
+                        $chunk_fmt_new[] = ['image_id' => $insert['id'], 'ext' => $ext, 'filesize' => $filesize];
+                    }
                 }
             }
 
@@ -713,26 +769,59 @@ if (isset($_POST['submit']) &&
                 $chunk_caddie[] = $insert['id'];
             }
 
-            if (count($chunk_inserts) >= 50000) {
-                $conf->sql_backend::mass_inserts('images', $image_fields, $chunk_inserts);
-                $conf->sql_backend::mass_inserts('image_category', $link_fields, $chunk_links);
+            $at_flush = $use_load_data
+                ? ($chunk_count >= $flush_size)
+                : (count($chunk_inserts) >= $flush_size);
 
-                if ($chunk_fmt_new !== []) {
-                    $conf->sql_backend::mass_inserts('image_format', $fmt_fields, $chunk_fmt_new);
+            if ($at_flush) {
+                if ($use_load_data) {
+                    // Close files, LOAD DATA in one transaction, reopen.
+                    fclose($tsv_images);
+                    fclose($tsv_links);
+                    fclose($tsv_fmt);
+
+                    $conf->sql_backend::pwg_query('START TRANSACTION;');
+                    $conf->sql_backend::load_data_local($tsv_images_path, 'images', $image_fields);
+                    $conf->sql_backend::load_data_local($tsv_links_path, 'image_category', $link_fields);
+
+                    if ($tsv_fmt_count > 0) {
+                        $conf->sql_backend::load_data_local($tsv_fmt_path, 'image_format', $fmt_fields);
+                    }
+
+                    $conf->sql_backend::pwg_query('COMMIT;');
+
+                    // Reopen fresh files for the next chunk.
+                    $tsv_images = fopen($tsv_images_path, 'wb');
+                    $tsv_links  = fopen($tsv_links_path, 'wb');
+                    $tsv_fmt    = fopen($tsv_fmt_path, 'wb');
+                    $tsv_fmt_count = 0;
+                    $chunk_count   = 0;
+                } else {
+                    $conf->sql_backend::pwg_query('START TRANSACTION;');
+                    $no_txn = ['no_transaction' => true];
+                    $conf->sql_backend::mass_inserts('images', $image_fields, $chunk_inserts, $no_txn);
+                    $conf->sql_backend::mass_inserts('image_category', $link_fields, $chunk_links, $no_txn);
+
+                    if ($chunk_fmt_new !== []) {
+                        $conf->sql_backend::mass_inserts('image_format', $fmt_fields, $chunk_fmt_new, $no_txn);
+                    }
+
+                    $conf->sql_backend::pwg_query('COMMIT;');
+                    $chunk_inserts = $chunk_links = $chunk_fmt_new = [];
                 }
 
                 if ($chunk_caddie !== []) {
                     functions::fill_caddie($chunk_caddie);
                 }
 
-                $chunk_inserts = $chunk_links = $chunk_fmt_new = $chunk_caddie = [];
+                $chunk_caddie = [];
 
                 sync_emit('substep_progress', [
                     'phase' => 'files', 'id' => 'insert',
                     'detail' => fmt_number($inserted_count) . ' inserted',
                 ]);
             }
-        } elseif ($sse_mode && $inserted_count % 50000 === 0) {
+        } elseif ($sse_mode && $inserted_count % $flush_size === 0) {
             sync_emit('substep_progress', [
                 'phase' => 'files', 'id' => 'insert',
                 'detail' => fmt_number($inserted_count) . ' counted',
@@ -741,17 +830,42 @@ if (isset($_POST['submit']) &&
     }
 
     // Flush the remaining partial chunk.
-    if ($chunk_inserts !== []) {
-        $conf->sql_backend::mass_inserts('images', $image_fields, $chunk_inserts);
-        $conf->sql_backend::mass_inserts('image_category', $link_fields, $chunk_links);
+    if ($use_load_data && $chunk_count > 0) {
+        fclose($tsv_images);
+        fclose($tsv_links);
+        fclose($tsv_fmt);
+
+        $conf->sql_backend::pwg_query('START TRANSACTION;');
+        $conf->sql_backend::load_data_local($tsv_images_path, 'images', $image_fields);
+        $conf->sql_backend::load_data_local($tsv_links_path, 'image_category', $link_fields);
+
+        if ($tsv_fmt_count > 0) {
+            $conf->sql_backend::load_data_local($tsv_fmt_path, 'image_format', $fmt_fields);
+        }
+
+        $conf->sql_backend::pwg_query('COMMIT;');
+    } elseif ($chunk_inserts !== []) {
+        $conf->sql_backend::pwg_query('START TRANSACTION;');
+        $no_txn = ['no_transaction' => true];
+        $conf->sql_backend::mass_inserts('images', $image_fields, $chunk_inserts, $no_txn);
+        $conf->sql_backend::mass_inserts('image_category', $link_fields, $chunk_links, $no_txn);
 
         if ($chunk_fmt_new !== []) {
-            $conf->sql_backend::mass_inserts('image_format', $fmt_fields, $chunk_fmt_new);
+            $conf->sql_backend::mass_inserts('image_format', $fmt_fields, $chunk_fmt_new, $no_txn);
         }
 
-        if ($chunk_caddie !== []) {
-            functions::fill_caddie($chunk_caddie);
-        }
+        $conf->sql_backend::pwg_query('COMMIT;');
+    }
+
+    if ($chunk_caddie !== []) {
+        functions::fill_caddie($chunk_caddie);
+    }
+
+    // Clean up temp files.
+    if ($use_load_data) {
+        @unlink($tsv_images_path);
+        @unlink($tsv_links_path);
+        @unlink($tsv_fmt_path);
     }
 
     unset($chunk_inserts, $chunk_links, $chunk_fmt_new, $chunk_caddie);

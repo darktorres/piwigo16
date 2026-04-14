@@ -43,8 +43,7 @@
         {/if}
         <a href="{$cat.URL}">
           <img class="category thumbnail" src="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy"
-            decoding="async" alt="{$cat.TN_ALT}" title="{$cat.NAME|replace:'\"':' '|strip_tags:false}"
-            {$derivative->get_size_htm()}>
+            decoding="async" alt="{$cat.TN_ALT}" title="{$cat.NAME|replace:'\"':' '|strip_tags:false}">
         </a>
       </li>
     {/foreach}

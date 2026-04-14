@@ -116,13 +116,16 @@ final class RVTS
             $moreMsg = functions::l10n($moreMsg);
         }
 
-        // the String.fromCharCode comes from google bot which somehow manage to get these urls
+        // String.fromCharCode on the first char prevents Google bot from crawling these URLs
         $ajax_url_model_0 = ord($ajax_url_model[0]);
         $ajax_url_model_rest = substr($ajax_url_model, 1);
         $url_model_0 = ord($url_model[0]);
         $url_model_rest = substr($url_model, 1);
         $next = $start + $per_page;
         $prevMsg = functions::l10n('Previous');
+
+        $moreMsg_js = json_encode($moreMsg);
+        $prevMsg_js = json_encode($prevMsg);
 
         $template->block_footer_script(
             null,
@@ -135,8 +138,8 @@ final class RVTS
                     next: {$next},
                     total: {$total},
                     urlModel: String.fromCharCode({$url_model_0})+'{$url_model_rest}',
-                    moreMsg: '{$moreMsg}',
-                    prevMsg: '{$prevMsg}',
+                    moreMsg: {$moreMsg_js},
+                    prevMsg: {$prevMsg_js},
                     ajaxLoaderImage: '{$ajax_loader_image}'
                 };
                 jQuery('.navigationBar').hide();

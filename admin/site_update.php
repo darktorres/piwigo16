@@ -527,34 +527,12 @@ if (isset($_POST['submit']) &&
     sync_emit('phase_start', ['phase' => 'files']);
     $t_files_phase = microtime(true);
 
-    sync_emit('substep_start', ['phase' => 'files', 'id' => 'scan', 'label' => 'Scanning filesystem']);
-    $t_fs_scan = microtime(true);
-    $scan_callback = $sse_mode
-        ? function (string $dir, int $count) {
-            sync_emit('substep_progress', [
-                'phase' => 'files',
-                'id' => 'scan',
-                'detail' => $dir . ($count > 0 ? ' — ' . fmt_number($count) . ' files' : ''),
-            ]);
-        }
-        : null;
-    $logger->info('[sync][files] starting get_elements', ['basedir' => $basedir]);
-    $fs = $site_reader->get_elements($basedir, 0, $scan_callback);
-    $t_fs_scan = microtime(true) - $t_fs_scan;
-    $logger->info('[sync][files] get_elements done', ['count' => count($fs), 'elapsed_s' => round($t_fs_scan, 2)]);
-    sync_emit('substep_complete', [
-        'phase' => 'files', 'id' => 'scan',
-        'detail' => fmt_number(count($fs)) . ' files found',
-        'elapsed' => round($t_fs_scan, 1),
-    ]);
-
-    $template->append('footer_elements', '<!-- get_elements: '
-      . functions::get_elapsed_time($start, functions::get_moment())
-      . ' -->');
-
     $cat_ids = array_diff(array_keys($db_categories), $to_delete);
 
-    $db_elements = [];
+    // Load existing DB images as [path => id] directly — no array_flip needed.
+    // Entries are unset during the streaming loop; what remains afterwards are
+    // files deleted from the filesystem.
+    $db_paths_set = [];
 
     sync_emit('substep_start', ['phase' => 'files', 'id' => 'db', 'label' => 'Loading database records']);
     $t_db_query = microtime(true);
@@ -566,16 +544,16 @@ if (isset($_POST['submit']) &&
         );
 
         $query = <<<SQL
-            SELECT id, path
+            SELECT path, id
             FROM images
             WHERE storage_category_id IN ({$wrappedCatIds});
             SQL;
-        $db_elements = $conf->sql_backend::query2array($query, 'id', 'path');
+        $db_paths_set = $conf->sql_backend::query2array($query, 'path', 'id');
     }
 
     sync_emit('substep_complete', [
         'phase' => 'files', 'id' => 'db',
-        'detail' => fmt_number(count($db_elements)) . ' records',
+        'detail' => fmt_number(count($db_paths_set)) . ' records',
         'elapsed' => round(microtime(true) - $t_db_query, 1),
     ]);
 
@@ -587,35 +565,19 @@ if (isset($_POST['submit']) &&
     $insert_formats = [];
     $formats_to_delete = [];
 
-    sync_emit('substep_start', ['phase' => 'files', 'id' => 'diff', 'label' => 'Comparing filesystem vs database']);
-    $t_diff = microtime(true);
+    // --- Streaming scan + insert loop ---
+    // get_elements() is a Generator: files are yielded one-by-one as the filesystem is
+    // traversed, so the full $fs array is never materialised in memory.
+    // Existing files are tracked inline; new files are inserted in 50k-row chunks.
 
-    // Fast count via C-level array_diff; freed immediately — only the integer is kept.
-    $new_paths_tmp = array_diff(array_keys($fs), $db_elements);
-    $new_count = count($new_paths_tmp);
-    unset($new_paths_tmp);
-
-    // [path => id] — entries are unset as we stream $fs in the insert loop below.
-    // What remains after the loop = deleted files (values are their image IDs).
-    $db_paths_set = array_flip($db_elements);
-
-    sync_emit('substep_complete', [
-        'phase' => 'files', 'id' => 'diff',
-        'detail' => fmt_number($new_count) . ' new, '
-            . fmt_number(count($fs) - $new_count) . ' existing',
-        'elapsed' => round(microtime(true) - $t_diff, 1),
-    ]);
-
-    // --- Streaming insert loop ---
-    // Iterates $fs once: existing files are tracked for the formats-for-existing section;
-    // new files are inserted in 50k-row chunks so peak memory stays O(chunk), not O(total).
-
-    $existing_ids   = [];
-    $inserted_count = 0;
-    $chunk_inserts  = [];
-    $chunk_links    = [];
-    $chunk_fmt_new  = [];
-    $chunk_caddie   = [];
+    $existing_ids     = [];
+    $existing_count   = 0;
+    $existing_formats = [];   // [image_id => formats array] — used by formats-for-existing section
+    $inserted_count   = 0;
+    $chunk_inserts    = [];
+    $chunk_links      = [];
+    $chunk_fmt_new    = [];
+    $chunk_caddie     = [];
 
     $image_fields = ['id', 'file', 'name', 'date_available', 'path', 'representative_ext', 'storage_category_id', 'added_by'];
 
@@ -627,10 +589,15 @@ if (isset($_POST['submit']) &&
     $fmt_fields     = ['image_id', 'ext', 'filesize'];
     $add_to_caddie  = isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1;
 
-    // Drop FULLTEXT index and disable uniqueness checks before the bulk-insert loop.
+    // Use DB record count as a proxy for "is this a large gallery?".
+    // We don't know new_count upfront (scan is streaming), so we approximate:
+    // galleries with > 10k existing records benefit from bulk-insert optimisations
+    // (FULLTEXT drop + unique_checks=0). If 0 new files are found, the FULLTEXT index
+    // is not rebuilt (gated on $inserted_count > 0 below).
+    $large_insert_likely = count($db_paths_set) > 10000;
     $has_ft_index = false;
 
-    if (! $simulate && $new_count > 10000) {
+    if (! $simulate && $large_insert_likely) {
         $result = $conf->sql_backend::pwg_query("SHOW INDEX FROM images WHERE Key_name = 'image_ft';");
 
         if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
@@ -641,18 +608,32 @@ if (isset($_POST['submit']) &&
         $conf->sql_backend::pwg_query('SET unique_checks=0, foreign_key_checks=0');
     }
 
-    if ($new_count > 0) {
-        sync_emit('substep_start', [
-            'phase' => 'files', 'id' => 'insert',
-            'label' => 'Inserting ' . fmt_number($new_count) . ' new photos',
-        ]);
-        $t_mass_insert = microtime(true);
-    }
+    $t_mass_insert = microtime(true);
 
-    foreach ($fs as $path => $meta) {
+    sync_emit('substep_start', ['phase' => 'files', 'id' => 'scan', 'label' => 'Scanning filesystem']);
+    $t_scan = microtime(true);
+
+    $scan_callback = $sse_mode
+        ? function (string $dir, int $count) {
+            sync_emit('substep_progress', [
+                'phase' => 'files',
+                'id' => 'scan',
+                'detail' => $dir . ($count > 0 ? ' — ' . fmt_number($count) . ' files' : ''),
+            ]);
+        }
+        : null;
+
+    $logger->info('[sync][files] starting get_elements', ['basedir' => $basedir]);
+
+    foreach ($site_reader->get_elements($basedir, 0, $scan_callback) as $path => $meta) {
         if (isset($db_paths_set[$path])) {
-            // Existing file: collect ID for formats-for-existing check; mark seen.
-            $existing_ids[] = $db_paths_set[$path];
+            // Existing file: collect ID + formats for formats-for-existing check; mark seen.
+            $image_id = $db_paths_set[$path];
+            $existing_ids[]   = $image_id;
+            $existing_count++;
+            if ($conf->enable_formats) {
+                $existing_formats[$image_id] = $meta['formats'] ?? [];
+            }
             unset($db_paths_set[$path]);
             continue;
         }
@@ -665,6 +646,13 @@ if (isset($_POST['submit']) &&
         }
 
         $inserted_count++;
+
+        if ($inserted_count === 1) {
+            sync_emit('substep_start', [
+                'phase' => 'files', 'id' => 'insert',
+                'label' => $simulate ? 'Counting new photos' : 'Inserting new photos',
+            ]);
+        }
 
         if (! $simulate) {
             $filename = basename($path);
@@ -713,13 +701,13 @@ if (isset($_POST['submit']) &&
 
                 sync_emit('substep_progress', [
                     'phase' => 'files', 'id' => 'insert',
-                    'detail' => fmt_number($inserted_count) . ' / ' . fmt_number($new_count) . ' inserted',
+                    'detail' => fmt_number($inserted_count) . ' inserted',
                 ]);
             }
         } elseif ($sse_mode && $inserted_count % 50000 === 0) {
             sync_emit('substep_progress', [
                 'phase' => 'files', 'id' => 'insert',
-                'detail' => fmt_number($inserted_count) . ' / ' . fmt_number($new_count) . ' counted',
+                'detail' => fmt_number($inserted_count) . ' counted',
             ]);
         }
     }
@@ -740,10 +728,25 @@ if (isset($_POST['submit']) &&
 
     unset($chunk_inserts, $chunk_links, $chunk_fmt_new, $chunk_caddie);
 
-    if (! $simulate && $new_count > 10000) {
+    $logger->info('[sync][files] get_elements done', [
+        'total'    => $inserted_count + $existing_count,
+        'new'      => $inserted_count,
+        'existing' => $existing_count,
+    ]);
+    sync_emit('substep_complete', [
+        'phase' => 'files', 'id' => 'scan',
+        'detail' => fmt_number($inserted_count + $existing_count) . ' files found',
+        'elapsed' => round(microtime(true) - $t_scan, 1),
+    ]);
+
+    $template->append('footer_elements', '<!-- get_elements: '
+        . functions::get_elapsed_time($start, functions::get_moment())
+        . ' -->');
+
+    if (! $simulate && $large_insert_likely) {
         $conf->sql_backend::pwg_query('SET unique_checks=1, foreign_key_checks=1');
 
-        if ($has_ft_index) {
+        if ($has_ft_index && $inserted_count > 0) {
             sync_emit('substep_progress', [
                 'phase' => 'files', 'id' => 'insert',
                 'detail' => 'Rebuilding fulltext index...',
@@ -791,7 +794,7 @@ if (isset($_POST['submit']) &&
 
         // first we search the formats that were removed
         foreach ($db_formats as $image_id => $formats) {
-            $image_formats_to_delete = array_diff_key($formats, $fs[$db_elements[$image_id]]['formats']);
+            $image_formats_to_delete = array_diff_key($formats, $existing_formats[$image_id] ?? []);
 
             foreach ($image_formats_to_delete as $ext => $format_id) {
                 $formats_to_delete[] = $format_id;
@@ -800,9 +803,8 @@ if (isset($_POST['submit']) &&
 
         // then we search for new formats on existing photos
         foreach ($existing_ids as $image_id) {
-            $path   = $db_elements[$image_id];
             $formats = $db_formats[$image_id] ?? [];
-            $image_formats_to_insert = array_diff_key($fs[$path]['formats'], $formats);
+            $image_formats_to_insert = array_diff_key($existing_formats[$image_id] ?? [], $formats);
 
             foreach ($image_formats_to_insert as $ext => $filesize) {
                 $insert_formats[] = [
@@ -875,25 +877,8 @@ if (isset($_POST['submit']) &&
         'elapsed' => round(microtime(true) - $t_delete_check, 1),
     ]);
 
-    sync_emit('substep_start', ['phase' => 'files', 'id' => 'cache', 'label' => 'Building filesize cache']);
-    $t_cache = microtime(true);
-
-    // Build filesize cache from scan results for the metadata phase.
-    // The scan already called stat() on every file (via is_file), so
-    // filesize() was captured for free from the stat cache.
-    $fs_sizes = [];
-
-    foreach ($fs as $path => $info) {
-        if (isset($info['fs_filesize'])) {
-            $fs_sizes[$path] = (int) $info['fs_filesize'];
-        }
-    }
-
-    sync_emit('substep_complete', [
-        'phase' => 'files', 'id' => 'cache',
-        'detail' => fmt_number(count($fs_sizes)) . ' entries',
-        'elapsed' => round(microtime(true) - $t_cache, 1),
-    ]);
+    // $fs_sizes cache removed: get_sync_metadata() calls filesize() directly when
+    // fs_filesize is absent from $element_infos — the overhead is negligible vs EXIF parsing.
 
     sync_emit('phase_complete', [
         'phase' => 'files',
@@ -1039,16 +1024,12 @@ if (isset($_POST['submit']) &&
     sync_emit('substep_start', ['phase' => 'meta', 'id' => 'filelist', 'label' => 'Loading file list']);
     $start = functions::get_moment();
     $t_filelist = microtime(true);
-    $files = functions_metadata_admin::get_filelist(
-        '',
-        $site_id,
-        true,
-        $opts['only_new']
-    );
+    $files_total = functions_metadata_admin::count_filelist('', $site_id, true, $opts['only_new']);
+    $files = functions_metadata_admin::get_filelist('', $site_id, true, $opts['only_new']);
     $t_filelist = microtime(true) - $t_filelist;
     sync_emit('substep_complete', [
         'phase' => 'meta', 'id' => 'filelist',
-        'detail' => fmt_number(count($files)) . ' candidates',
+        'detail' => fmt_number($files_total) . ' candidates',
         'elapsed' => round($t_filelist, 1),
     ]);
 
@@ -1092,13 +1073,6 @@ if (isset($_POST['submit']) &&
             $t_img = microtime(true);
         }
 
-        // Inject cached filesize from scan phase to avoid redundant stat() calls
-        $scan_path = $element_infos['path'];
-
-        if (isset($fs_sizes[$scan_path])) {
-            $element_infos['fs_filesize'] = $fs_sizes[$scan_path];
-        }
-
         $data = $site_reader->get_element_metadata($element_infos);
 
         if ($profiling) {
@@ -1127,7 +1101,7 @@ if (isset($_POST['submit']) &&
                 sync_emit('phase_progress', [
                     'phase' => 'meta',
                     'current' => $meta_progress_count,
-                    'total' => count($files),
+                    'total' => $files_total,
                     'updated' => $meta_datas_total,
                     'skipped' => $meta_skipped,
                     'file' => basename($element_infos['path']),
@@ -1172,7 +1146,7 @@ if (isset($_POST['submit']) &&
             sync_emit('phase_progress', [
                 'phase' => 'meta',
                 'current' => $meta_progress_count,
-                'total' => count($files),
+                'total' => $files_total,
                 'updated' => $meta_datas_total,
                 'skipped' => $meta_skipped,
                 'file' => basename($element_infos['path']),
@@ -1278,7 +1252,7 @@ if (isset($_POST['submit']) &&
         'phase' => 'meta',
         'elapsed' => round(microtime(true) - $t_meta_phase, 1),
         'updated' => $meta_datas_total,
-        'candidates' => count($files),
+        'candidates' => $files_total,
         'skipped' => $meta_skipped,
     ]);
 
@@ -1290,7 +1264,7 @@ if (isset($_POST['submit']) &&
         'metadata_result',
         [
             'NB_ELEMENTS_DONE' => $meta_datas_total,
-            'NB_ELEMENTS_CANDIDATES' => count($files),
+            'NB_ELEMENTS_CANDIDATES' => $files_total,
             'NB_ERRORS' => count($errors),
         ]
     );
@@ -1316,7 +1290,7 @@ if ($sse_mode && isset($_POST['submit'])) {
     if (isset($t_meta_phase)) {
         $sse_results['metadata'] = [
             'updated' => $meta_datas_total,
-            'candidates' => count($files),
+            'candidates' => $files_total,
             'errors' => count($errors),
         ];
     }

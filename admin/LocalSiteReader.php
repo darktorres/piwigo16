@@ -25,6 +25,9 @@ final class LocalSiteReader
     /** @var array<string, array<string, array<string, int>>> scandir cache: path => [filename_wo_ext => [ext => size_kb]] */
     private array $format_cache = [];
 
+    /** Running count of elements yielded across the current get_elements() traversal. */
+    private int $elementsYielded = 0;
+
     public function __construct(
         public string $site_url
     ) {
@@ -72,21 +75,29 @@ final class LocalSiteReader
     }
 
     /**
-     * Returns an array with all file system files according to $conf->file_ext
-     * and $conf->picture_ext
+     * Yields all file system files matching $conf->file_ext / $conf->picture_ext.
+     *
+     * Converted from array-building to a Generator so the caller can process
+     * each entry immediately without materialising the full list in memory.
+     * Global sort (ksort) is dropped; entries are yielded in DFS/readdir order.
+     *
      * @param string $path recurse in this directory
-     * @return array like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
+     * @return \Generator<string, array{representative_ext: ?string, fs_filesize: int, formats?: array}>
      */
     public function get_elements(
         string $path,
         int $depth = 0,
         ?\Closure $on_dir = null
-    ): array {
+    ): \Generator {
         global $conf, $logger;
 
-        $subdirs = [];
-        $fs = [];
+        $subdirs   = [];
+        $dir_files = [];
         $profiling = $conf->sync_profiling;
+
+        if ($depth === 0) {
+            $this->elementsYielded = 0;
+        }
 
         if ($profiling && $depth === 0) {
             $GLOBALS['sync_scan_prof'] = [
@@ -145,7 +156,7 @@ final class LocalSiteReader
                             }
                         }
 
-                        $fs[$path . '/' . $node] = [
+                        $entry = [
                             'representative_ext' => $representative_ext,
                             'fs_filesize' => floor(filesize($path . '/' . $node) / 1024),
                         ];
@@ -156,12 +167,14 @@ final class LocalSiteReader
                                 $t_fmt = microtime(true);
                             }
 
-                            $fs[$path . '/' . $node]['formats'] = $this->get_formats($path, $filename_wo_ext);
+                            $entry['formats'] = $this->get_formats($path, $filename_wo_ext);
 
                             if ($profiling) {
                                 $GLOBALS['sync_scan_prof']['format_time'] += microtime(true) - $t_fmt;
                             }
                         }
+
+                        $dir_files[$path . '/' . $node] = $entry;
                     }
                 } elseif (is_dir($path . '/' . $node) &&
                           $node !== 'pwg_high' &&
@@ -180,18 +193,20 @@ final class LocalSiteReader
             closedir($contents);
 
             if ($on_dir !== null) {
-                $on_dir($path, count($fs));
+                $on_dir($path, count($dir_files));
+            }
+
+            foreach ($dir_files as $filePath => $entry) {
+                $this->elementsYielded++;
+                yield $filePath => $entry;
             }
 
             foreach ($subdirs as $subdir) {
-                $tmp_fs = $this->get_elements($path . '/' . $subdir, $depth + 1, $on_dir);
-                $fs += $tmp_fs;
+                yield from $this->get_elements($path . '/' . $subdir, $depth + 1, $on_dir);
             }
         }
 
         if ($depth === 0) {
-            ksort($fs);
-
             if ($profiling) {
                 $total_elapsed = microtime(true) - $GLOBALS['sync_scan_start'];
                 $p = $GLOBALS['sync_scan_prof'];
@@ -217,8 +232,17 @@ final class LocalSiteReader
                 unset($GLOBALS['sync_scan_prof'], $GLOBALS['sync_scan_start']);
             }
         }
+    }
 
-        return $fs;
+    /**
+     * Returns the total number of scannable files under $path, or null when an
+     * upfront count requires a full traversal (caller should stream instead).
+     *
+     * LocalSiteReader cannot count without traversing, so it always returns null.
+     */
+    public function count_elements(string $path): ?int
+    {
+        return null;
     }
 
     // returns the name of the attributes that are supported for

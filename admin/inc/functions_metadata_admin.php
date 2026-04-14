@@ -438,19 +438,18 @@ final class functions_metadata_admin
     }
 
     /**
-     * Returns an array associating element id (images.id) with its complete
-     * path in the filesystem
+     * Returns the category IDs for a given site / optional category filter.
+     *
+     * Extracted from get_filelist() so it can be shared with count_filelist().
+     *
+     * @return list<int>
      */
-    public static function get_filelist(
-        string $category_id = '',
-        int|string $site_id = 1,
-        bool $recursive = false,
-        bool $only_new = false
+    private static function get_filelist_cat_ids(
+        string $category_id,
+        int|string $site_id,
+        bool $recursive
     ): array {
         global $conf;
-
-        // filling $cat_ids : all categories required
-        $cat_ids = [];
 
         $query = <<<SQL
             SELECT id
@@ -478,17 +477,90 @@ final class functions_metadata_admin
         $query = trim($query) . ';';
         $result = $conf->sql_backend::pwg_query($query);
 
+        $cat_ids = [];
+
         while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $cat_ids[] = $row['id'];
         }
 
-        if (count($cat_ids) == 0) {
-            return [];
+        return $cat_ids;
+    }
+
+    /**
+     * Yields elements (image rows) for the given site/category.
+     *
+     * Converted from array-returning to a Generator that pages through
+     * results in 10 000-row chunks via an ID cursor, so the entire image
+     * table is never materialised in memory.
+     *
+     * @return \Generator<int, array{id: int, path: string, representative_ext: string|null, filesize: int|null}>
+     */
+    public static function get_filelist(
+        string $category_id = '',
+        int|string $site_id = 1,
+        bool $recursive = false,
+        bool $only_new = false
+    ): \Generator {
+        global $conf;
+
+        $cat_ids = self::get_filelist_cat_ids($category_id, $site_id, $recursive);
+
+        if ($cat_ids === []) {
+            return;
+        }
+
+        $imploded_cat_ids = implode(', ', $cat_ids);
+        $only_new_clause  = $only_new ? 'AND date_metadata_update IS NULL' : '';
+
+        $last_id = 0;
+
+        while (true) {
+            $query = <<<SQL
+                SELECT id, path, representative_ext, filesize
+                FROM images
+                WHERE storage_category_id IN ({$imploded_cat_ids})
+                {$only_new_clause}
+                AND id > {$last_id}
+                ORDER BY id
+                LIMIT 10000;
+                SQL;
+
+            $rows = $conf->sql_backend::query2array($query, 'id');
+
+            if ($rows === []) {
+                break;
+            }
+
+            foreach ($rows as $id => $row) {
+                yield $id => $row;
+            }
+
+            // Advance cursor to the last id yielded in this chunk.
+            $last_id = $id;
+        }
+    }
+
+    /**
+     * Returns the total number of images that get_filelist() would yield for
+     * the same arguments. Runs a single COUNT(*) query (fast, index-backed).
+     */
+    public static function count_filelist(
+        string $category_id = '',
+        int|string $site_id = 1,
+        bool $recursive = false,
+        bool $only_new = false
+    ): int {
+        global $conf;
+
+        $cat_ids = self::get_filelist_cat_ids($category_id, $site_id, $recursive);
+
+        if ($cat_ids === []) {
+            return 0;
         }
 
         $imploded_cat_ids = implode(', ', $cat_ids);
         $query = <<<SQL
-            SELECT id, path, representative_ext, filesize
+            SELECT COUNT(*) AS cnt
             FROM images
             WHERE storage_category_id IN ({$imploded_cat_ids})
 
@@ -502,7 +574,9 @@ final class functions_metadata_admin
         }
 
         $query = trim($query) . ';';
-        return $conf->sql_backend::query2array($query, 'id');
+        [$count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
+
+        return (int) $count;
     }
 
     /**

@@ -131,7 +131,7 @@
   <p class="admin_buttons">
     <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
     <input type="submit" name="submit" value="{'Submit'|translate}">
-    <input type="button" name="cachedelete" id="cachedelete" value="{'Purge thumbnails cache'|translate}"
+    <input type="submit" name="cachedelete" id="cachedelete" value="{'Purge thumbnails cache'|translate}"
       title="{'Delete images in GDThumb cache.'|translate}" onclick="return confirm('{'Are you sure?'|translate}');">
     <input type="button" name="cachebuild" id="cachebuild" value="{'Pre-cache thumbnails'|translate}"
       title="{'Finds images that have not been cached and creates the cached version.'|translate}"
@@ -189,5 +189,4 @@
 {/if}
 
 {combine_script id='iloader' load='footer' path=$GDTHUMB_PATH|cat:"/js/image.loader.js"}
-{combine_script id='jquery.tipTip' load='footer' require='jquery' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.js'}
-{combine_script id='admin.precache' load='footer' path=$GDTHUMB_PATH|cat:"/js/gdthumb.admin.js" require='jquery.ui,jquery.tipTip'}
+{combine_script id='admin.precache' load='footer' path=$GDTHUMB_PATH|cat:"/js/gdthumb.admin.js" require='jquery.ui'}

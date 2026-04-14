@@ -132,8 +132,7 @@ function GDThumb_media_type(
 }
 
 function GDThumb_process_thumb(
-    array $tpl_vars,
-    array $pictures
+    array $tpl_vars
 ): array {
     global $template, $conf;
     $confTemp = $conf->gdThumb;
@@ -178,7 +177,7 @@ function GDThumb_process_category(
     global $template, $conf;
     $confTemp = $conf->gdThumb;
     $confTemp['GDTHUMB_ROOT'] = 'plugins/' . GDTHUMB_ID;
-    $confTemp['big_thumb_noinpw'] = isset($confTemp['big_thumb_noinpw']) ? 1 : 0;
+    $confTemp['big_thumb_noinpw'] = (isset($confTemp['big_thumb_noinpw']) && ($confTemp['big_thumb_noinpw'])) ? 1 : 0;
 
     $template->set_filename('index_category_thumbnails', __DIR__ . '/template/gdthumb_cat.tpl');
     $template->assign('GDThumb', $confTemp);
@@ -216,7 +215,7 @@ function GDThumb_process_category(
 
 function GDThumb_prefilter(
     string $content
-): string|array|null {
+): string|null {
     $pattern = '#\<div(.*?id\="thumbnails"[^>]*)\>\{\$THUMBNAILS\}\</div\>#';
     $replacement = '<ul$1>{$THUMBNAILS}</ul>';
 

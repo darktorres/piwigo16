@@ -97,9 +97,9 @@ var GDThumb = {
 
         GDThumb.t = new Array();
         $("ul.thumbnails img.thumbnail").each(function (index) {
-            width = parseInt(jQuery(this).attr("width"));
-            height = parseInt(jQuery(this).attr("height"));
-            th = {
+            var width = parseInt(jQuery(this).attr("width"));
+            var height = parseInt(jQuery(this).attr("height"));
+            var th = {
                 index: index,
                 width: width,
                 height: height,
@@ -131,7 +131,7 @@ var GDThumb = {
             GDThumb.big_thumb = null;
         }
 
-        first = GDThumb.t[0];
+        var first = GDThumb.t[0];
         if (first) {
             GDThumb.small_thumb = {
                 index: first.index,
@@ -207,27 +207,27 @@ var GDThumb = {
                     main_width * GDThumb.max_first_thumb_width
             ) {
                 // Compute best size for landscape picture (we choose bigger height)
-                min_ratio = Math.min(
+                var min_ratio = Math.min(
                     1.05,
                     GDThumb.big_thumb.width / GDThumb.big_thumb.height,
                 );
 
                 for (
-                    width = GDThumb.big_thumb.width;
+                    var width = GDThumb.big_thumb.width;
                     width / best_size.height >= min_ratio;
                     width--
                 ) {
                     width_count = GDThumb.margin;
-                    height = GDThumb.margin;
-                    max_height = 0;
-                    available_width = main_width - (width + GDThumb.margin);
+                    var height = GDThumb.margin;
+                    var max_height = 0;
+                    var available_width = main_width - (width + GDThumb.margin);
                     line = 1;
-                    for (i = 1; i < GDThumb.t.length; i++) {
+                    for (var i = 1; i < GDThumb.t.length; i++) {
                         width_count += GDThumb.t[i].width + GDThumb.margin;
                         max_height = Math.max(GDThumb.t[i].height, max_height);
 
                         if (width_count > available_width) {
-                            ratio = width_count / available_width;
+                            var ratio = width_count / available_width;
                             height += Math.round(max_height / ratio);
                             line++;
                             max_height = 0;
@@ -298,13 +298,13 @@ var GDThumb = {
         }
 
         width_count = GDThumb.margin;
-        max_height = 0;
-        last_height = GDThumb.max_height;
+        var max_height = 0;
+        var last_height = GDThumb.max_height;
         line = 1;
-        thumb_process = new Array();
+        var thumb_process = [];
 
         for (
-            i = GDThumb.t[0].crop != false ? 1 : 0;
+            var i = GDThumb.t[0].crop != false ? 1 : 0;
             i < GDThumb.t.length;
             i++
         ) {
@@ -312,24 +312,24 @@ var GDThumb = {
             max_height = Math.max(GDThumb.t[i].height, max_height);
             thumb_process.push(GDThumb.t[i]);
 
-            available_width = main_width;
+            var available_width = main_width;
             if (line <= 2 && GDThumb.t[0].crop !== false) {
                 available_width -= GDThumb.t[0].crop + GDThumb.margin;
             }
 
             if (width_count > available_width) {
-                last_thumb = GDThumb.t[i].index;
-                ratio = width_count / available_width;
-                new_height = Math.round(max_height / ratio);
+                var last_thumb = GDThumb.t[i].index;
+                var ratio = width_count / available_width;
+                var new_height = Math.round(max_height / ratio);
                 round_rest = 0;
                 width_count = GDThumb.margin;
 
-                for (j = 0; j < thumb_process.length; j++) {
+                for (var j = 0; j < thumb_process.length; j++) {
                     if (
                         GDThumb.method == "square" ||
                         GDThumb.method == "slide"
                     ) {
-                        new_width = GDThumb.max_height;
+                        var new_width = GDThumb.max_height;
                         new_height = GDThumb.max_height;
                     } else {
                         if (thumb_process[j].index == last_thumb) {
@@ -368,7 +368,7 @@ var GDThumb = {
         }
 
         // Crop last line only if we have more than one line
-        for (j = 0; j < thumb_process.length; j++) {
+        for (var j = 0; j < thumb_process.length; j++) {
             // we have only one line, i.e. the first line is the one and only line and therefor the last line too
             if (line == 1) {
                 GDThumb.resize(
@@ -415,7 +415,8 @@ var GDThumb = {
     },
 
     resize: function (thumb, width, height, new_width, new_height, is_big) {
-        use_crop = true;
+        var use_crop = true;
+        var real_width, real_height, width_crop, height_crop;
         if (GDThumb.method == "slide") {
             use_crop = false;
             thumb.css({ height: "", width: "" });

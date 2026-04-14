@@ -23,13 +23,6 @@ final class RVTS
 {
     public static function on_end_section_init(): void
     {
-        // global $page;
-        // $page['nb_image_page'] *= functions_session::pwg_get_session_var('rvts_mult', 1);
-
-        // if (count($page['items']) < $page['nb_image_page'] + 3 && (! $page['start'] || functions::script_basename() === 'picture')) {
-        //     $page['nb_image_page'] = max($page['nb_image_page'], count($page['items']));
-        // }
-
         functions_plugins::add_event_handler('loc_begin_index', self::on_index_begin(...), EVENT_HANDLER_PRIORITY_NEUTRAL + 10);
     }
 
@@ -63,12 +56,11 @@ final class RVTS
                 }
             }
 
-            // $page['nb_image_page'] = (int) $_GET['rvts'];
             functions_plugins::add_event_handler('loc_end_index_thumbnails', self::on_index_thumbnails_ajax(...), EVENT_HANDLER_PRIORITY_NEUTRAL + 5);
             $page['root_path'] = functions_url::get_absolute_root_url(false);
             $page['body_id'] = 'scroll';
             global $user, $template, $conf;
-            require __DIR__ . '/../../inc/category_default.php';
+            require PHPWG_ROOT_PATH . 'inc/category_default.php';
         }
     }
 

@@ -51,6 +51,7 @@ final class EverythingSDK
         void Everything3_SetSearchViewportOffset(ESearchState state, size_t offset);
         void Everything3_SetSearchViewportCount(ESearchState state, size_t count);
         int  Everything3_AddSearchPropertyRequest(ESearchState state, uint32_t property_id);
+        void Everything3_SetSearchSortProperty(ESearchState state, uint32_t property_id, int ascending);
 
         EResultList Everything3_Search(EClient client, ESearchState state);
 
@@ -126,11 +127,15 @@ final class EverythingSDK
     /**
      * Query Everything and return matching paths (backslash, Windows format).
      *
+     * @param bool $sortByPath  When true, asks Everything to sort results by
+     *                          full path ascending. This guarantees parent
+     *                          directories appear before their children, which
+     *                          site_update.php's category insertion loop requires.
      * @return list<string>
      */
-    public function queryPaths(string $query): array
+    public function queryPaths(string $query, bool $sortByPath = false): array
     {
-        return array_column($this->executeSearch($query, false), 'path');
+        return array_column($this->executeSearch($query, false, $sortByPath), 'path');
     }
 
     /**
@@ -140,7 +145,7 @@ final class EverythingSDK
      */
     public function queryPathsWithSize(string $query): array
     {
-        return $this->executeSearch($query, true);
+        return $this->executeSearch($query, true, false);
     }
 
     // ------------------------------------------------------------------
@@ -150,7 +155,7 @@ final class EverythingSDK
     /**
      * @return list<array{path: string, size_bytes?: int}>
      */
-    private function executeSearch(string $query, bool $includeSize): array
+    private function executeSearch(string $query, bool $includeSize, bool $sortByPath): array
     {
         $client = null;
         $searchState = null;
@@ -173,6 +178,10 @@ final class EverythingSDK
             $this->ffi->Everything3_SetSearchViewportOffset($searchState, 0);
             $this->ffi->Everything3_SetSearchViewportCount($searchState, self::MAX_VIEWPORT);
             $this->ffi->Everything3_AddSearchPropertyRequest($searchState, self::PROPERTY_FULL_PATH);
+
+            if ($sortByPath) {
+                $this->ffi->Everything3_SetSearchSortProperty($searchState, self::PROPERTY_FULL_PATH, 1);
+            }
 
             if ($includeSize) {
                 $this->ffi->Everything3_AddSearchPropertyRequest($searchState, self::PROPERTY_SIZE);

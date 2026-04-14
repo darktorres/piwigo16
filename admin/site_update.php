@@ -63,6 +63,7 @@ $error_labels = [
 ];
 $errors = [];
 $infos = [];
+$fs_sizes = [];
 
 if ($site_is_remote) {
     functions_html::fatal_error('remote sites not supported');
@@ -102,6 +103,41 @@ if (isset($_GET['quick_sync'])) {
     $_POST['submit'] = 'Quick Local Synchronization';
 }
 
+// +-----------------------------------------------------------------------+
+// | SSE (Server-Sent Events) streaming mode                              |
+// +-----------------------------------------------------------------------+
+
+$sse_mode = isset($_GET['sse']);
+
+function fmt_number(int $n): string
+{
+    return number_format($n, 0, '.', ',');
+}
+
+function sync_emit(string $event, array $data): void
+{
+    if (! $GLOBALS['sse_mode']) {
+        return;
+    }
+
+    echo 'event: ' . $event . "\n";
+    echo 'data: ' . json_encode($data, JSON_UNESCAPED_UNICODE) . "\n\n";
+    flush();
+}
+
+if ($sse_mode && isset($_POST['submit'])) {
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+
+    header('Content-Type: text/event-stream');
+    header('Cache-Control: no-cache');
+    header('X-Accel-Buffering: no');
+    ignore_user_abort(false);
+    set_time_limit(0);
+    session_write_close();
+}
+
 $general_failure = true;
 
 if (isset($_POST['submit'])) {
@@ -111,6 +147,11 @@ if (isset($_POST['submit'])) {
 
     // shall we simulate only
     $simulate = isset($_POST['simulate']) && $_POST['simulate'] == 1;
+
+    if ($sse_mode && $general_failure) {
+        sync_emit('error', ['message' => 'Failed to open site reader']);
+        exit();
+    }
 }
 
 // +-----------------------------------------------------------------------+
@@ -130,6 +171,8 @@ if (isset($_POST['submit']) &&
    ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files') &&
     ! $general_failure
 ) {
+    sync_emit('phase_start', ['phase' => 'dirs']);
+    $t_dirs_phase = microtime(true);
     $start = functions::get_moment();
     // which categories to update ?
     $query = <<<SQL
@@ -209,7 +252,15 @@ if (isset($_POST['submit']) &&
     $next_id = $conf->sql_backend::pwg_db_nextval('id', 'categories');
 
     // retrieve sub-directories fulldirs from the site reader
-    $fs_fulldirs = $site_reader->get_full_directories($basedir);
+    $dir_callback = $sse_mode
+        ? function (string $dir) {
+            sync_emit('phase_progress', [
+                'phase' => 'dirs',
+                'dir' => $dir,
+            ]);
+        }
+        : null;
+    $fs_fulldirs = $site_reader->get_full_directories($basedir, $dir_callback);
 
     // get_full_directories doesn't include the base directory, so if it's a
     // category directory, we need to include it in our array
@@ -434,6 +485,13 @@ if (isset($_POST['submit']) &&
         $counts['del_categories'] = count($to_delete);
     }
 
+    sync_emit('phase_complete', [
+        'phase' => 'dirs',
+        'elapsed' => round(microtime(true) - $t_dirs_phase, 1),
+        'new' => $counts['new_categories'],
+        'deleted' => $counts['del_categories'],
+    ]);
+
     $template->append('footer_elements', '<!-- scanning dirs : '
       . functions::get_elapsed_time($start, functions::get_moment())
       . ' -->');
@@ -449,7 +507,27 @@ if (isset($_POST['submit']) &&
     $start_files = functions::get_moment();
     $start = $start_files;
 
-    $fs = $site_reader->get_elements($basedir);
+    sync_emit('phase_start', ['phase' => 'files']);
+    $t_files_phase = microtime(true);
+
+    sync_emit('substep_start', ['phase' => 'files', 'id' => 'scan', 'label' => 'Scanning filesystem']);
+    $t_fs_scan = microtime(true);
+    $scan_callback = $sse_mode
+        ? function (string $dir, int $count) {
+            sync_emit('substep_progress', [
+                'phase' => 'files',
+                'id' => 'scan',
+                'detail' => $dir . ($count > 0 ? ' — ' . fmt_number($count) . ' files' : ''),
+            ]);
+        }
+        : null;
+    $fs = $site_reader->get_elements($basedir, 0, $scan_callback);
+    $t_fs_scan = microtime(true) - $t_fs_scan;
+    sync_emit('substep_complete', [
+        'phase' => 'files', 'id' => 'scan',
+        'detail' => fmt_number(count($fs)) . ' files found',
+        'elapsed' => round($t_fs_scan, 1),
+    ]);
 
     $template->append('footer_elements', '<!-- get_elements: '
       . functions::get_elapsed_time($start, functions::get_moment())
@@ -458,6 +536,9 @@ if (isset($_POST['submit']) &&
     $cat_ids = array_diff(array_keys($db_categories), $to_delete);
 
     $db_elements = [];
+
+    sync_emit('substep_start', ['phase' => 'files', 'id' => 'db', 'label' => 'Loading database records']);
+    $t_db_query = microtime(true);
 
     if ($cat_ids !== []) {
         $wrappedCatIds = wordwrap(
@@ -473,6 +554,12 @@ if (isset($_POST['submit']) &&
         $db_elements = $conf->sql_backend::query2array($query, 'id', 'path');
     }
 
+    sync_emit('substep_complete', [
+        'phase' => 'files', 'id' => 'db',
+        'detail' => fmt_number(count($db_elements)) . ' records',
+        'elapsed' => round(microtime(true) - $t_db_query, 1),
+    ]);
+
     // next element id available
     $next_element_id = $conf->sql_backend::pwg_db_nextval('id', 'images');
 
@@ -483,7 +570,18 @@ if (isset($_POST['submit']) &&
     $insert_formats = [];
     $formats_to_delete = [];
 
-    foreach (array_diff(array_keys($fs), $db_elements) as $path) {
+    sync_emit('substep_start', ['phase' => 'files', 'id' => 'diff', 'label' => 'Comparing filesystem vs database']);
+    $t_diff = microtime(true);
+
+    $new_paths = array_diff(array_keys($fs), $db_elements);
+    sync_emit('substep_complete', [
+        'phase' => 'files', 'id' => 'diff',
+        'detail' => fmt_number(count($new_paths)) . ' new, '
+            . fmt_number(count($fs) - count($new_paths)) . ' existing',
+        'elapsed' => round(microtime(true) - $t_diff, 1),
+    ]);
+
+    foreach ($new_paths as $path) {
         $insert = [];
         // storage category must exist
         $dirname = dirname($path);
@@ -549,7 +647,6 @@ if (isset($_POST['submit']) &&
             $existing_ids[] = $db_elements_flip[$path];
         }
 
-        $logger->debug('existing_ids', $existing_ids);
 
         if ($existing_ids !== []) {
             $db_formats = [];
@@ -574,7 +671,6 @@ if (isset($_POST['submit']) &&
             // first we search the formats that were removed
             foreach ($db_formats as $image_id => $formats) {
                 $image_formats_to_delete = array_diff_key($formats, $fs[$db_elements[$image_id]]['formats']);
-                $logger->debug('image_formats_to_delete', $image_formats_to_delete);
 
                 foreach ($image_formats_to_delete as $ext => $format_id) {
                     $formats_to_delete[] = $format_id;
@@ -597,7 +693,6 @@ if (isset($_POST['submit']) &&
                 }
 
                 $image_formats_to_insert = array_diff_key($fs[$path]['formats'], $formats);
-                $logger->debug('image_formats_to_insert', $image_formats_to_insert);
 
                 foreach ($image_formats_to_insert as $ext => $filesize) {
                     $insert_formats[] = [
@@ -618,11 +713,33 @@ if (isset($_POST['submit']) &&
     if (! $simulate) {
         // inserts all new elements
         if ($inserts !== []) {
+            sync_emit('substep_start', [
+                'phase' => 'files', 'id' => 'insert',
+                'label' => 'Inserting ' . fmt_number(count($inserts)) . ' new photos',
+            ]);
+            $t_mass_insert = microtime(true);
+            $insert_progress = $sse_mode
+                ? function (int $done, int $total) {
+                    sync_emit('substep_progress', [
+                        'phase' => 'files',
+                        'id' => 'insert',
+                        'detail' => fmt_number($done) . ' / ' . fmt_number($total) . ' photos inserted',
+                    ]);
+                }
+                : null;
             $conf->sql_backend::mass_inserts(
                 'images',
                 array_keys($inserts[0]),
-                $inserts
+                $inserts,
+                [],
+                $insert_progress
             );
+
+            sync_emit('substep_progress', [
+                'phase' => 'files',
+                'id' => 'insert',
+                'detail' => 'Inserting album links...',
+            ]);
 
             // inserts all links between new elements and their storage category
             $conf->sql_backend::mass_inserts(
@@ -630,7 +747,6 @@ if (isset($_POST['submit']) &&
                 array_keys($insert_links[0]),
                 $insert_links
             );
-
             functions::pwg_activity('photo', $caddiables, 'add', [
                 'sync' => true,
             ]);
@@ -641,6 +757,12 @@ if (isset($_POST['submit']) &&
             ) {
                 functions::fill_caddie($caddiables);
             }
+
+            sync_emit('substep_complete', [
+                'phase' => 'files', 'id' => 'insert',
+                'detail' => fmt_number(count($inserts)) . ' photos inserted',
+                'elapsed' => round(microtime(true) - $t_mass_insert, 1),
+            ]);
         }
 
         // inserts all formats
@@ -664,6 +786,9 @@ if (isset($_POST['submit']) &&
 
     $counts['new_elements'] = count($inserts);
 
+    sync_emit('substep_start', ['phase' => 'files', 'id' => 'delete', 'label' => 'Checking for deleted files']);
+    $t_delete_check = microtime(true);
+
     // delete elements that are in database but not in the filesystem
     $to_delete_elements = [];
 
@@ -683,6 +808,41 @@ if (isset($_POST['submit']) &&
         $counts['del_elements'] = count($to_delete_elements);
     }
 
+    sync_emit('substep_complete', [
+        'phase' => 'files', 'id' => 'delete',
+        'detail' => count($to_delete_elements) > 0
+            ? fmt_number(count($to_delete_elements)) . ' deleted'
+            : 'no deletions',
+        'elapsed' => round(microtime(true) - $t_delete_check, 1),
+    ]);
+
+    sync_emit('substep_start', ['phase' => 'files', 'id' => 'cache', 'label' => 'Building filesize cache']);
+    $t_cache = microtime(true);
+
+    // Build filesize cache from scan results for the metadata phase.
+    // The scan already called stat() on every file (via is_file), so
+    // filesize() was captured for free from the stat cache.
+    $fs_sizes = [];
+
+    foreach ($fs as $path => $info) {
+        if (isset($info['fs_filesize'])) {
+            $fs_sizes[$path] = (int) $info['fs_filesize'];
+        }
+    }
+
+    sync_emit('substep_complete', [
+        'phase' => 'files', 'id' => 'cache',
+        'detail' => fmt_number(count($fs_sizes)) . ' entries',
+        'elapsed' => round(microtime(true) - $t_cache, 1),
+    ]);
+
+    sync_emit('phase_complete', [
+        'phase' => 'files',
+        'elapsed' => round(microtime(true) - $t_files_phase, 1),
+        'new' => $counts['new_elements'],
+        'deleted' => $counts['del_elements'],
+    ]);
+
     $template->append('footer_elements', '<!-- scanning files : '
       . functions::get_elapsed_time($start_files, functions::get_moment())
       . ' -->');
@@ -696,6 +856,8 @@ if (isset($_POST['submit']) &&
     ! $general_failure
 ) {
     if (! $simulate) {
+        sync_emit('substep_start', ['phase' => 'files', 'id' => 'categories', 'label' => 'Updating album metadata']);
+        $t_cat_update = microtime(true);
         $start = functions::get_moment();
         functions_admin::update_category();
         $template->append('footer_elements', '<!-- \Piwigo\admin\inc\functions::update_category(all) : '
@@ -706,6 +868,11 @@ if (isset($_POST['submit']) &&
         $template->append('footer_elements', '<!-- ordering categories : '
           . functions::get_elapsed_time($start, functions::get_moment())
           . ' -->');
+        sync_emit('substep_complete', [
+            'phase' => 'files', 'id' => 'categories',
+            'detail' => 'done',
+            'elapsed' => round(microtime(true) - $t_cat_update, 1),
+        ]);
     }
 
     if ($_POST['sync'] == 'files') {
@@ -723,6 +890,8 @@ if (isset($_POST['submit']) &&
             }
         }
 
+        sync_emit('substep_start', ['phase' => 'files', 'id' => 'attrs', 'label' => 'Checking file attributes']);
+        $t_update_phase = microtime(true);
         $files = functions_metadata_admin::get_filelist(
             $opts['category_id'],
             $site_id,
@@ -736,17 +905,23 @@ if (isset($_POST['submit']) &&
         $datas = [];
 
         foreach ($files as $id => $file) {
-            $file = $file['path'];
-            $data = $site_reader->get_element_update_attributes($file);
+            $data = $site_reader->get_element_update_attributes($file['path']);
 
             if (! is_array($data)) {
+                continue;
+            }
+
+            // Skip if representative_ext hasn't changed
+            $existing_rep = $file['representative_ext'] ?? null;
+            $new_rep = $data['representative_ext'] ?? null;
+
+            if ($existing_rep === $new_rep) {
                 continue;
             }
 
             $data['id'] = $id;
             $datas[] = $data;
         }
-
         $counts['upd_elements'] = count($datas);
 
         if (! $simulate &&
@@ -754,7 +929,6 @@ if (isset($_POST['submit']) &&
         ) {
             $conf->sql_backend::mass_updates(
                 'images',
-                // fields
                 [
                     'primary' => ['id'],
                     'update' => $site_reader->get_update_attributes(),
@@ -762,6 +936,12 @@ if (isset($_POST['submit']) &&
                 $datas
             );
         }
+
+        sync_emit('substep_complete', [
+            'phase' => 'files', 'id' => 'attrs',
+            'detail' => count($datas) > 0 ? fmt_number(count($datas)) . ' updated' : 'no changes',
+            'elapsed' => round(microtime(true) - $t_update_phase, 1),
+        ]);
 
         $template->append('footer_elements', '<!-- update files : '
           . functions::get_elapsed_time($start, functions::get_moment())
@@ -811,38 +991,110 @@ if (isset($_POST['submit']) &&
         }
     }
 
+    sync_emit('phase_start', ['phase' => 'meta']);
+    $t_meta_phase = microtime(true);
+
+    sync_emit('substep_start', ['phase' => 'meta', 'id' => 'filelist', 'label' => 'Loading file list']);
     $start = functions::get_moment();
+    $t_filelist = microtime(true);
     $files = functions_metadata_admin::get_filelist(
         $opts['category_id'],
         $site_id,
         $opts['recursive'],
         $opts['only_new']
     );
+    $t_filelist = microtime(true) - $t_filelist;
+    sync_emit('substep_complete', [
+        'phase' => 'meta', 'id' => 'filelist',
+        'detail' => fmt_number(count($files)) . ' candidates',
+        'elapsed' => round($t_filelist, 1),
+    ]);
 
     $template->append('footer_elements', '<!-- get_filelist : '
       . functions::get_elapsed_time($start, functions::get_moment())
       . ' -->');
 
+    sync_emit('substep_start', ['phase' => 'meta', 'id' => 'extract', 'label' => 'Extracting metadata', 'has_progress' => true]);
+    $t_extract = microtime(true);
+
     $start = functions::get_moment();
     $datas = [];
     $tags_of = [];
+    $tag_names_by_image = [];
+    $meta_progress_count = 0;
+    $meta_skipped = 0;
+    $profiling = $conf->sync_profiling;
+
+    if ($profiling) {
+        $prof_meta_count = 0;
+        $prof_meta_total = 0;
+        $prof_meta_times = [];
+    }
 
     foreach ($files as $id => $element_infos) {
+        if ($profiling) {
+            $t_img = microtime(true);
+        }
+
+        // Inject cached filesize from scan phase to avoid redundant stat() calls
+        $scan_path = $element_infos['path'];
+
+        if (isset($fs_sizes[$scan_path])) {
+            $element_infos['fs_filesize'] = $fs_sizes[$scan_path];
+        }
+
         $data = $site_reader->get_element_metadata($element_infos);
+
+        if ($profiling) {
+            $t_img_elapsed = microtime(true) - $t_img;
+            $prof_meta_count++;
+            $prof_meta_total += $t_img_elapsed;
+            $prof_meta_times[] = $t_img_elapsed;
+
+            if ($prof_meta_count <= 10 || $prof_meta_count % 100 === 0) {
+                $logger->debug('[sync][meta] get_element_metadata', [
+                    'n' => $prof_meta_count,
+                    'id' => $id,
+                    'path' => $element_infos['path'],
+                    'elapsed_s' => round($t_img_elapsed, 4),
+                ]);
+            }
+        }
+
+        $meta_progress_count++;
+
+        if ($data === null) {
+            // File unchanged (filesize matches DB), skip
+            $meta_skipped++;
+
+            if ($sse_mode && $meta_progress_count % 100 === 0) {
+                sync_emit('phase_progress', [
+                    'phase' => 'meta',
+                    'current' => $meta_progress_count,
+                    'total' => count($files),
+                    'updated' => count($datas),
+                    'skipped' => $meta_skipped,
+                    'file' => basename($element_infos['path']),
+                ]);
+            }
+
+            continue;
+        }
 
         if (is_array($data)) {
             $data['date_metadata_update'] = CURRENT_DATE;
             $data['id'] = $id;
             $datas[] = $data;
 
+            // Collect tag names for batch resolution after the loop
             foreach (['keywords', 'tags'] as $key) {
                 if (isset($data[$key])) {
-                    if (! isset($tags_of[$id])) {
-                        $tags_of[$id] = [];
+                    if (! isset($tag_names_by_image[$id])) {
+                        $tag_names_by_image[$id] = [];
                     }
 
                     foreach (explode(',', $data[$key]) as $tag_name) {
-                        $tags_of[$id][] = functions_admin::tag_id_from_tag_name($tag_name);
+                        $tag_names_by_image[$id][] = trim($tag_name);
                     }
                 }
             }
@@ -852,13 +1104,101 @@ if (isset($_POST['submit']) &&
                 'type' => 'PWG-ERROR-NO-FS',
             ];
         }
+
+        if ($sse_mode && $meta_progress_count % 100 === 0) {
+            sync_emit('phase_progress', [
+                'phase' => 'meta',
+                'current' => $meta_progress_count,
+                'total' => count($files),
+                'updated' => count($datas),
+                'skipped' => $meta_skipped,
+                'file' => basename($element_infos['path']),
+            ]);
+        }
+    }
+
+    if ($profiling && $prof_meta_count > 0) {
+        sort($prof_meta_times);
+        $p50 = $prof_meta_times[(int) floor($prof_meta_count * 0.5)] ?? 0;
+        $p95 = $prof_meta_times[(int) floor($prof_meta_count * 0.95)] ?? 0;
+        $p99 = $prof_meta_times[(int) floor($prof_meta_count * 0.99)] ?? 0;
+        $logger->info('[sync][meta] metadata extraction loop summary', [
+            'images_processed' => $prof_meta_count,
+            'images_success' => count($datas),
+            'images_error' => count($errors),
+            'total_s' => round($prof_meta_total, 4),
+            'avg_s' => round($prof_meta_total / $prof_meta_count, 4),
+            'min_s' => round($prof_meta_times[0], 4),
+            'max_s' => round($prof_meta_times[$prof_meta_count - 1], 4),
+            'p50_s' => round($p50, 4),
+            'p95_s' => round($p95, 4),
+            'p99_s' => round($p99, 4),
+        ]);
+    }
+
+    sync_emit('substep_complete', [
+        'phase' => 'meta', 'id' => 'extract',
+        'detail' => fmt_number(count($datas)) . ' updated, ' . fmt_number($meta_skipped) . ' skipped',
+        'elapsed' => round(microtime(true) - $t_extract, 1),
+    ]);
+
+    // Batch-resolve all collected tag names at once
+    if ($tag_names_by_image !== []) {
+        $all_tag_names = [];
+
+        foreach ($tag_names_by_image as $img_tag_names) {
+            foreach ($img_tag_names as $tn) {
+                $all_tag_names[] = $tn;
+            }
+        }
+
+        $t_tags = microtime(true);
+        $tag_name_to_id = functions_admin::batch_tag_ids_from_tag_names($all_tag_names);
+        $t_tags = microtime(true) - $t_tags;
+
+        foreach ($tag_names_by_image as $img_id => $img_tag_names) {
+            if (! isset($tags_of[$img_id])) {
+                $tags_of[$img_id] = [];
+            }
+
+            foreach ($img_tag_names as $tn) {
+                if (isset($tag_name_to_id[$tn])) {
+                    $tags_of[$img_id][] = $tag_name_to_id[$tn];
+                }
+            }
+        }
+
+        if ($profiling) {
+            $logger->info('[sync][meta] tag lookup summary', [
+                'tag_lookups' => count($all_tag_names),
+                'total_s' => round($t_tags, 4),
+                'images_with_tags' => count($tags_of),
+            ]);
+        }
+    }
+
+    // log per-operation aggregate breakdown from get_sync_metadata
+    if ($profiling && isset($GLOBALS['sync_meta_prof'])) {
+        foreach ($GLOBALS['sync_meta_prof'] as $op => $stats) {
+            $logger->info('[sync][meta][aggregate] ' . $op, [
+                'calls' => $stats['count'],
+                'total_s' => round($stats['total'], 4),
+                'avg_s' => round($stats['total'] / $stats['count'], 5),
+                'max_s' => round($stats['max'], 5),
+                'max_file' => $stats['max_file'],
+            ]);
+        }
+
+        unset($GLOBALS['sync_meta_prof']);
     }
 
     if (! $simulate) {
+        sync_emit('substep_start', ['phase' => 'meta', 'id' => 'db_update', 'label' => 'Updating database']);
+        $t_db_update = microtime(true);
+
         if ($datas !== []) {
             $conf->sql_backend::mass_updates(
                 'images',
-                // fields
                 [
                     'primary' => ['id'],
                     'update' => array_unique(
@@ -878,7 +1218,21 @@ if (isset($_POST['submit']) &&
         }
 
         functions_admin::set_tags_of($tags_of);
+
+        sync_emit('substep_complete', [
+            'phase' => 'meta', 'id' => 'db_update',
+            'detail' => fmt_number(count($datas)) . ' rows, ' . count($tags_of) . ' tagged',
+            'elapsed' => round(microtime(true) - $t_db_update, 1),
+        ]);
     }
+
+    sync_emit('phase_complete', [
+        'phase' => 'meta',
+        'elapsed' => round(microtime(true) - $t_meta_phase, 1),
+        'updated' => count($datas),
+        'candidates' => count($files),
+        'skipped' => $meta_skipped,
+    ]);
 
     $template->append('footer_elements', '<!-- metadata update : '
       . functions::get_elapsed_time($start, functions::get_moment())
@@ -892,6 +1246,35 @@ if (isset($_POST['submit']) &&
             'NB_ERRORS' => count($errors),
         ]
     );
+}
+
+// +-----------------------------------------------------------------------+
+// | SSE: emit final results and exit                                      |
+// +-----------------------------------------------------------------------+
+if ($sse_mode && isset($_POST['submit'])) {
+    $sse_results = ['simulate' => $simulate ?? false];
+
+    if (isset($counts)) {
+        $sse_results['update'] = [
+            'new_categories' => $counts['new_categories'],
+            'del_categories' => $counts['del_categories'],
+            'new_elements' => $counts['new_elements'] ?? 0,
+            'del_elements' => $counts['del_elements'] ?? 0,
+            'upd_elements' => $counts['upd_elements'] ?? 0,
+            'errors' => count($errors),
+        ];
+    }
+
+    if (isset($t_meta_phase)) {
+        $sse_results['metadata'] = [
+            'updated' => count($datas),
+            'candidates' => count($files),
+            'errors' => count($errors),
+        ];
+    }
+
+    sync_emit('complete', $sse_results);
+    exit();
 }
 
 // +-----------------------------------------------------------------------+

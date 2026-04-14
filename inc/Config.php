@@ -980,6 +980,14 @@ class Config
     // Keep logs file during X days
     public int $log_archive_days = 30;
 
+    // log_sql_queries : log all SQL queries to _data/sql/<backend>.sql
+    // Useful for debugging but has performance impact (file I/O + lock per query).
+    public bool $log_sql_queries = false;
+
+    // sync_profiling : enable detailed profiling of sync operations
+    // Adds microtime() instrumentation to filesystem scans and metadata extraction.
+    public bool $sync_profiling = false;
+
     // +-----------------------------------------------------------------------+
     // | Proxy Settings                                                        |
     // +-----------------------------------------------------------------------+

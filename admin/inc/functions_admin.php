@@ -609,7 +609,8 @@ final class functions_admin
      */
     public static function get_fs_directories(
         string $path,
-        bool $recursive = true
+        bool $recursive = true,
+        ?\Closure $on_dir = null
     ): array {
         global $conf;
 
@@ -637,8 +638,12 @@ final class functions_admin
                     ) {
                         $dirs[] = $path . '/' . $node;
 
+                        if ($on_dir !== null) {
+                            $on_dir($path . '/' . $node);
+                        }
+
                         if ($recursive) {
-                            $dirs = array_merge($dirs, self::get_fs_directories($path . '/' . $node));
+                            array_push($dirs, ...self::get_fs_directories($path . '/' . $node, true, $on_dir));
                         }
                     }
                 }
@@ -1836,6 +1841,140 @@ final class functions_admin
 
         $page['tag_id_from_tag_name_cache'][$tag_name] = $existing_tags[0];
         return $page['tag_id_from_tag_name_cache'][$tag_name];
+    }
+
+    /**
+     * Resolves multiple tag names to IDs in batch, creating missing tags.
+     * Optimized for sync paths where many tag names are resolved at once.
+     *
+     * @param array<string> $tag_names
+     * @return array<string, int> map of tag_name => tag_id
+     */
+    public static function batch_tag_ids_from_tag_names(
+        array $tag_names
+    ): array {
+        global $page, $conf;
+
+        if (! isset($page['tag_id_from_tag_name_cache'])) {
+            $page['tag_id_from_tag_name_cache'] = [];
+        }
+
+        // Deduplicate and trim, skip already-cached names
+        $unique_names = [];
+
+        foreach ($tag_names as $name) {
+            $name = trim($name);
+
+            if ($name !== '' && ! isset($page['tag_id_from_tag_name_cache'][$name])) {
+                $unique_names[$name] = true;
+            }
+        }
+
+        if ($unique_names !== []) {
+            $names_to_resolve = array_keys($unique_names);
+
+            // Step 1: Batch lookup by exact name
+            $escaped = array_map(
+                fn ($n) => "'" . $conf->sql_backend::pwg_db_real_escape_string($n) . "'",
+                $names_to_resolve
+            );
+            $in_clause = implode(', ', $escaped);
+            $query = "SELECT id, name FROM tags WHERE name IN ({$in_clause});";
+            $found = $conf->sql_backend::query2array($query, 'name', 'id');
+
+            foreach ($found as $name => $id) {
+                $page['tag_id_from_tag_name_cache'][$name] = (int) $id;
+                unset($unique_names[$name]);
+            }
+
+            // Step 2: For remaining, compute url_names and batch lookup
+            if ($unique_names !== []) {
+                $remaining = array_keys($unique_names);
+                $name_to_url = [];
+
+                foreach ($remaining as $name) {
+                    $name_to_url[$name] = functions_plugins::trigger_change('render_tag_url', $name);
+                }
+
+                $escaped_urls = array_map(
+                    fn ($u) => "'" . $conf->sql_backend::pwg_db_real_escape_string($u) . "'",
+                    array_values($name_to_url)
+                );
+                $url_in = implode(', ', $escaped_urls);
+                $query = "SELECT id, url_name FROM tags WHERE url_name IN ({$url_in});";
+                $found_by_url = $conf->sql_backend::query2array($query, 'url_name', 'id');
+
+                foreach ($remaining as $name) {
+                    $url = $name_to_url[$name];
+
+                    if (isset($found_by_url[$url])) {
+                        $page['tag_id_from_tag_name_cache'][$name] = (int) $found_by_url[$url];
+                        unset($unique_names[$name]);
+                    }
+                }
+            }
+
+            // Step 3: Per-tag plugin sub-name lookup (can't batch — hook returns per-tag WHERE)
+            if ($unique_names !== []) {
+                foreach (array_keys($unique_names) as $name) {
+                    $sub_name_where = functions_plugins::trigger_change('get_tag_name_like_where', [], $name);
+
+                    if (count($sub_name_where)) {
+                        $sub_name_conditions = implode(' OR ', $sub_name_where);
+                        $query = "SELECT id FROM tags WHERE {$sub_name_conditions};";
+                        $sub_found = $conf->sql_backend::query2array($query, null, 'id');
+
+                        if (count($sub_found)) {
+                            $page['tag_id_from_tag_name_cache'][$name] = (int) $sub_found[0];
+                            unset($unique_names[$name]);
+                        }
+                    }
+                }
+            }
+
+            // Step 4: Batch-insert all remaining new tags
+            if ($unique_names !== []) {
+                $to_insert = [];
+
+                foreach (array_keys($unique_names) as $name) {
+                    $to_insert[] = [
+                        'name' => $name,
+                        'url_name' => $name_to_url[$name]
+                            ?? functions_plugins::trigger_change('render_tag_url', $name),
+                    ];
+                }
+
+                $conf->sql_backend::mass_inserts('tags', ['name', 'url_name'], $to_insert);
+
+                // Re-fetch to get IDs
+                $new_escaped = array_map(
+                    fn ($n) => "'" . $conf->sql_backend::pwg_db_real_escape_string($n) . "'",
+                    array_keys($unique_names)
+                );
+                $new_in = implode(', ', $new_escaped);
+                $query = "SELECT id, name FROM tags WHERE name IN ({$new_in});";
+                $new_tags = $conf->sql_backend::query2array($query, 'name', 'id');
+
+                foreach ($new_tags as $name => $id) {
+                    $page['tag_id_from_tag_name_cache'][$name] = (int) $id;
+                }
+
+                self::invalidate_user_cache_nb_tags();
+            }
+        }
+
+        // Build result from cache
+        $result = [];
+
+        foreach ($tag_names as $name) {
+            $name = trim($name);
+
+            if ($name !== '' && isset($page['tag_id_from_tag_name_cache'][$name])) {
+                $result[$name] = $page['tag_id_from_tag_name_cache'][$name];
+            }
+        }
+
+        return $result;
     }
 
     /**

@@ -375,7 +375,7 @@ if (isset($_POST['submit']) &&
                 ! empty($category_up)
             ) {
                 $query = <<<SQL
-                    SELECT *
+                    SELECT cat_id, group_id
                     FROM group_access
                     WHERE cat_id IN ({$category_up});
                     SQL;
@@ -390,7 +390,7 @@ if (isset($_POST['submit']) &&
                 }
 
                 $query = <<<SQL
-                    SELECT *
+                    SELECT cat_id, user_id
                     FROM user_access
                     WHERE cat_id IN ({$category_up});
                     SQL;
@@ -440,9 +440,18 @@ if (isset($_POST['submit']) &&
                     }
                 }
 
-                $conf->sql_backend::mass_inserts('group_access', ['group_id', 'cat_id'], $insert_granted_grps);
-                $insert_granted_users = array_unique($insert_granted_users, SORT_REGULAR);
-                $conf->sql_backend::mass_inserts('user_access', ['user_id', 'cat_id'], $insert_granted_users);
+                $conf->sql_backend::mass_inserts('group_access', ['group_id', 'cat_id'], $insert_granted_grps, ['bulk' => true]);
+                // Deduplicate via a hash key to avoid O(n²) array_unique(SORT_REGULAR).
+                $seen_user_perms = [];
+                $deduped_user_perms = [];
+                foreach ($insert_granted_users as $perm) {
+                    $key = $perm['user_id'] . '_' . $perm['cat_id'];
+                    if (! isset($seen_user_perms[$key])) {
+                        $seen_user_perms[$key] = true;
+                        $deduped_user_perms[] = $perm;
+                    }
+                }
+                $conf->sql_backend::mass_inserts('user_access', ['user_id', 'cat_id'], $deduped_user_perms, ['bulk' => true]);
             } else {
                 // add_permission_on_category only does meaningful work for
                 // private albums.  Skip the expensive DB round-trip entirely
@@ -789,7 +798,7 @@ if (isset($_POST['submit']) &&
         // find formats for existing photos (already in database)
         $existingIdsList = implode(', ', $existing_ids);
         $query = <<<SQL
-            SELECT *
+            SELECT image_id, ext, format_id
             FROM image_format
             WHERE image_id IN ({$existingIdsList});
             SQL;
@@ -840,7 +849,8 @@ if (isset($_POST['submit']) &&
                 $conf->sql_backend::mass_inserts(
                     'image_format',
                     array_keys($insert_formats[0]),
-                    $insert_formats
+                    $insert_formats,
+                    ['bulk' => true]
                 );
             }
 

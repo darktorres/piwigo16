@@ -927,7 +927,8 @@ if (isset($_POST['submit']) &&
         $files = functions_metadata_admin::get_filelist(
             '',
             $site_id,
-            true
+            true,
+            only_representable: true
         );
         $template->append('footer_elements', '<!-- get_filelist : '
           . functions::get_elapsed_time($start, functions::get_moment())

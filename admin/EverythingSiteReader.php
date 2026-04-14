@@ -86,7 +86,7 @@ final class EverythingSiteReader
         foreach ($queryTargets as $target) {
             $query = $this->buildPathQuery($target['absPath']) . ' folder:';
             $logger->info('[sync][ev] querying dirs', ['target' => $target['piwigoPrefix'], 'query' => $query]);
-            $paths = $this->sdk->queryPaths($query);
+            $paths = $this->sdk->queryPaths($query, sortByPath: true);
             $logger->info('[sync][ev] dirs result', ['target' => $target['piwigoPrefix'], 'raw_count' => count($paths)]);
 
             $absPrefixFwd = str_replace('\\', '/', $target['absPath']);

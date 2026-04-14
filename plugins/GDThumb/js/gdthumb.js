@@ -28,8 +28,8 @@ var GDThumb = {
         GDThumb.do_merge = do_merge;
         GDThumb.big_thumb = big_thumb;
 
-        $(window).bind("RVTS_loaded", function () {
-            GDThumb.init();
+        $(window).on("RVTS_loaded", function () {
+            GDThumb.build();
         });
         GDThumb.init();
     },
@@ -42,13 +42,12 @@ var GDThumb = {
             }
 
             GDThumb.build();
-            jQuery(window).bind("RVTS_loaded", GDThumb.build);
 
             mainlists.resize(GDThumb.process);
-            jQuery("ul.thumbnails .thumbLegend.overlay").click(function () {
+            jQuery("ul.thumbnails").on("click", ".thumbLegend.overlay", function () {
                 window.location.href = $(this).parent().find("a").attr("href");
             });
-            jQuery("ul.thumbnails .thumbLegend.overlay-ex").click(function () {
+            jQuery("ul.thumbnails").on("click", ".thumbLegend.overlay-ex", function () {
                 window.location.href = $(this).parent().find("a").attr("href");
             });
         }

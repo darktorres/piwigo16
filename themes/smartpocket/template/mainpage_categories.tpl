@@ -1,4 +1,4 @@
-<ul data-role="listview" data-inset="true">
+<ul data-role="listview" data-inset="true" data-album-grid>
 	{foreach from=$category_thumbnails item=cat}
 		<li>
 			<a href="{$cat.URL}">

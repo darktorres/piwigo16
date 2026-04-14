@@ -1,5 +1,5 @@
 {if !empty($album_thumb_size)}{* ================= modus mode ===*}
-	<ul class="albThumbs" id="rv-at">
+	<ul class="albThumbs" id="rv-at" data-album-grid>
 		{foreach $category_thumbnails as $item}
 			<li>
 				<a href="{$item.URL}">

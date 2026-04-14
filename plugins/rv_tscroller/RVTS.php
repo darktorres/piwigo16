@@ -29,9 +29,27 @@ final class RVTS
     public static function on_index_begin(): void
     {
         global $page;
-        $is_ajax = isset($_GET['rvts']);
+        $is_ajax      = isset($_GET['rvts']);
+        $is_ajax_cats = isset($_GET['rvts_cats']);
+
+        if ($is_ajax_cats) {
+            // $page['startcat'] is already parsed from the URL path (e.g. /startcat-12)
+            // by functions_url.php before plugins are invoked — just clamp it.
+            $page['startcat']  = max(0, (int) ($page['startcat'] ?? 0));
+            $page['root_path'] = functions_url::get_absolute_root_url(false);
+            global $user, $template, $conf;
+            require PHPWG_ROOT_PATH . 'inc/category_cats.php';
+            $html = $template->get_template_vars('CATEGORIES') ?? '';
+            header('Content-Type: text/html; charset=utf-8');
+            echo $html;
+            exit;
+        }
 
         if (! $is_ajax) {
+            // Album scroll is wired up on every index page; on_end_index_cats
+            // will silently return when there is nothing more to load.
+            functions_plugins::add_event_handler('loc_end_index', self::on_end_index_cats(...));
+
             if (empty($page['items'])) {
                 functions_plugins::add_event_handler('loc_end_index', self::on_end_index(...));
             } else {
@@ -64,6 +82,67 @@ final class RVTS
         }
     }
 
+    /**
+     * Injects the RVTS_CATS JS config when there are more album pages to load.
+     * Replaces the traditional cats_navbar with infinite scroll.
+     */
+    public static function on_end_index_cats(): void
+    {
+        global $page, $template, $conf;
+
+        $total    = $page['total_categories'] ?? 0;
+        $startcat = $page['startcat'] ?? 0;
+        $per_page = $conf->nb_categories_page;
+
+        if ($total <= $per_page + $startcat) {
+            return; // All albums visible — nothing to scroll.
+        }
+
+        // Build URL model using the same path-style /startcat-N format that
+        // create_navigation_bar uses (clean_url=true). duplicate_index_url ignores
+        // the startcat param, so we append it manually to the base URL.
+        $base_url       = functions_url::duplicate_index_url([], ['startcat']);
+        $url_model      = rtrim($base_url, '/') . '/startcat-%startcat%';
+        $ajax_url_model = functions_url::add_url_params($url_model, ['rvts_cats' => '1']);
+        $url_model      = str_replace('&amp;', '&', $url_model);
+        $ajax_url_model = str_replace('&amp;', '&', $ajax_url_model);
+
+        $my_base_name      = basename(__DIR__);
+        $ajax_loader_image = functions_url::get_root_url() . "plugins/{$my_base_name}/ajax-loader.gif";
+
+        $template->func_combine_script([
+            'id'      => $my_base_name . '_cats',
+            'load'    => 'async',
+            'path'    => 'plugins/' . $my_base_name . '/rv_tscroller.js',
+            'require' => 'jquery',
+            'version' => RVTS_VERSION,
+        ]);
+
+        $next                = $startcat + $per_page;
+        $ajax_url_0          = ord($ajax_url_model[0]);
+        $ajax_url_rest       = addcslashes(substr($ajax_url_model, 1), "'\\</");
+        $ajax_loader_img_js  = json_encode($ajax_loader_image);
+
+        $template->block_footer_script(
+            null,
+            <<<JS
+                <script>
+                var RVTS_CATS = {
+                    ajaxUrlModel: String.fromCharCode({$ajax_url_0})+'{$ajax_url_rest}',
+                    start: {$startcat},
+                    perPage: {$per_page},
+                    next: {$next},
+                    total: {$total},
+                    ajaxLoaderImage: {$ajax_loader_img_js}
+                };
+                </script>
+                JS
+        );
+
+        // Suppress the traditional album nav bar — scroll replaces it.
+        $template->assign('cats_navbar', []);
+    }
+
     public static function on_index_thumbnails(
         array $thumbs
     ): array {
@@ -87,11 +166,6 @@ final class RVTS
 
         $my_base_name = basename(__DIR__);
         $ajax_loader_image = functions_url::get_root_url() . "plugins/{$my_base_name}/ajax-loader.gif";
-        $template->func_combine_script([
-            'id' => 'jquery',
-            'load' => 'footer',
-            'path' => 'node_modules/jquery/dist/jquery.js',
-        ]);
         $template->func_combine_script([
             'id' => $my_base_name,
             'load' => 'async',

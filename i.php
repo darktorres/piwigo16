@@ -129,7 +129,7 @@ if (! str_contains($page['src_location'], '/pwg_representative/') &&
 ) {
     try {
         // Extract the function result
-        $escaped_path = addslashes($page['src_location']);
+        $escaped_path = $conf->sql_backend::pwg_db_real_escape_string($page['src_location']);
         $query = <<<SQL
             SELECT *
             FROM images

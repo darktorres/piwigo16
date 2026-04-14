@@ -19,9 +19,10 @@ require __DIR__ . '/config_default.php';
 $params = $conf->gdThumb;
 
 if (isset($_GET['getMissingDerivative'])) {
+    header('Content-Type: application/json');
     [$max_id, $image_count] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT MAX(id) + 1, COUNT(*) FROM images;'));
-    $start_id = intval($_POST['prev_page']);
-    $max_urls = intval($_POST['max_urls']);
+    $start_id = intval($_POST['prev_page'] ?? 0);
+    $max_urls = intval($_POST['max_urls'] ?? 500);
 
     if ($start_id <= 0) {
         $start_id = $max_id;
@@ -103,8 +104,9 @@ if (isset($_POST['cachedelete'])) {
 
 // Save configuration
 if (isset($_POST['submit'])) {
-    $method = empty($_POST['method']) ? 'resize' : $_POST['method'];
-    $normalize = empty($_POST['normalize_title']) ? 'off' : $_POST['normalize_title'];
+    functions::check_pwg_token();
+    $method = empty($_POST['method'] ?? null) ? 'resize' : $_POST['method'];
+    $normalize = empty($_POST['normalize_title'] ?? null) ? 'off' : $_POST['normalize_title'];
     $big_thumb = ! empty($_POST['big_thumb']);
     $big_thumb_noinpw = ! empty($_POST['big_thumb_noinpw']);
     $thumb_animate = ! empty($_POST['thumb_animate']);
@@ -147,9 +149,9 @@ if (isset($_POST['submit'])) {
     }
 
     $params = [
-        'height' => $_POST['height'],
-        'margin' => $_POST['margin'],
-        'nb_image_page' => $_POST['nb_image_page'],
+        'height' => (int) ($_POST['height'] ?? $conf->gdThumb['height']),
+        'margin' => (int) ($_POST['margin'] ?? $conf->gdThumb['margin']),
+        'nb_image_page' => (int) ($_POST['nb_image_page'] ?? $conf->gdThumb['nb_image_page']),
         'big_thumb' => $big_thumb,
         'big_thumb_noinpw' => $big_thumb_noinpw,
         'cache_big_thumb' => ! empty($_POST['cache_big_thumb']),
@@ -157,7 +159,7 @@ if (isset($_POST['submit'])) {
         'method' => $method,
         'thumb_mode_album' => $thumb_mode_album,
         'thumb_mode_photo' => $thumb_mode_photo,
-        'thumb_metamode' => $_POST['thumb_metamode'],
+        'thumb_metamode' => in_array($_POST['thumb_metamode'] ?? '', ['merged', 'merged_desc', 'hide']) ? $_POST['thumb_metamode'] : 'merged',
         'no_wordwrap' => ! empty($_POST['no_wordwrap']),
         'thumb_animate' => $thumb_animate,
     ];

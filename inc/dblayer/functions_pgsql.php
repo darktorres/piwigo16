@@ -30,6 +30,13 @@ final class functions_pgsql
 
     private static ?Result $last_result = null;
 
+    /** Maps table name → tsvector column name for PostgreSQL FTS index management. */
+    private static array $FTS_COLUMN_MAP = [
+        'images'     => 'image_fts',
+        'categories' => 'category_fts',
+        'tags'       => 'tag_fts',
+    ];
+
     /**
      * Connect to database and store PostgreSQL resource in __$pg__ global variable.
      *
@@ -432,7 +439,8 @@ final class functions_pgsql
         string $tablename,
         array $dbfields,
         array $datas,
-        array $options = []
+        array $options = [],
+        ?\Closure $on_progress = null
     ): void {
         if (count($datas) == 0) {
             return;
@@ -444,6 +452,11 @@ final class functions_pgsql
             $on_conflict = ' ON CONFLICT DO NOTHING';
         }
 
+        // When the caller manages the outer transaction (e.g. sync loop
+        // wrapping images + image_category in one commit), skip the
+        // internal BEGIN/COMMIT so we don't nest transactions.
+        $manage_txn = empty($options['no_transaction']);
+
         $dbfields_str = implode(', ', $dbfields);
         $insert_base = "INSERT INTO {$tablename} ({$dbfields_str}) VALUES\n";
 
@@ -452,6 +465,12 @@ final class functions_pgsql
         $max_rows = 50000;
         $offset = 0;
         $total = count($datas);
+
+        if ($manage_txn) {
+            self::pwg_query('BEGIN;');
+        }
+
+        $inserted = 0;
 
         while ($offset < $total) {
             $chunk = array_slice($datas, $offset, $max_rows);
@@ -470,12 +489,106 @@ final class functions_pgsql
             }
 
             self::pwg_query($insert_base . implode(",\n", $values) . $on_conflict . ';');
-
+            $inserted += count($chunk);
             $offset += $max_rows;
+
+            if ($on_progress !== null) {
+                $on_progress($inserted, $total);
+            }
         }
 
-        // Call sync_sequences once after all chunks, not per batch.
-        self::sync_sequences();
+        if ($manage_txn) {
+            self::pwg_query('COMMIT;');
+            // Fix IDENTITY sequences after bulk inserts that may have skipped nextval().
+            self::sync_sequences();
+        }
+    }
+
+    /**
+     * Write one TSV row into an open file handle.
+     *
+     * NULL / empty values are written as \N (the COPY NULL marker).
+     * Tabs, newlines and backslashes in values are escaped.
+     *
+     * @param resource $fp       fopen() handle opened with 'wb'.
+     * @param array    $row      Associative row data.
+     * @param string[] $dbfields Column order.
+     */
+    public static function write_tsv_row($fp, array $row, array $dbfields): void
+    {
+        $line = '';
+
+        foreach ($dbfields as $i => $field) {
+            if ($i > 0) {
+                $line .= "\t";
+            }
+
+            if (! isset($row[$field]) || $row[$field] === '') {
+                $line .= '\\N';
+            } else {
+                $line .= str_replace(
+                    ['\\', "\t", "\n", "\r"],
+                    ['\\\\', '\\t', '\\n', '\\r'],
+                    (string) $row[$field]
+                );
+            }
+        }
+
+        fwrite($fp, $line . "\n");
+    }
+
+    /**
+     * Bulk-load rows from a TSV temp file via COPY FROM STDIN.
+     *
+     * Much faster than multi-row INSERT for large datasets because it
+     * bypasses SQL parsing and PHP string-building entirely.
+     *
+     * An empty file (probe call) sends the terminator immediately and
+     * returns true, enabling the fast path without loading any data.
+     *
+     * The caller is responsible for transaction management.
+     *
+     * @param string   $tsv_path   Absolute path to the TSV file.
+     * @param string   $table_name Target table.
+     * @param string[] $dbfields   Column names, matching TSV column order.
+     * @return bool    true on success, false if COPY failed.
+     */
+    public static function load_data_local(
+        string $tsv_path,
+        string $table_name,
+        array $dbfields
+    ): bool {
+        global $pg;
+
+        $cols = implode(', ', $dbfields);
+
+        $ok = pg_query($pg, "COPY {$table_name} ({$cols}) FROM STDIN WITH (FORMAT text, NULL '\\N')");
+
+        if ($ok === false) {
+            return false;
+        }
+
+        $fp = fopen($tsv_path, 'rb');
+
+        if ($fp === false) {
+            // Send terminator so the connection stays usable.
+            pg_put_line($pg, "\\.\n");
+            pg_end_copy($pg);
+            return false;
+        }
+
+        while (! feof($fp)) {
+            $line = fgets($fp);
+
+            if ($line !== false) {
+                pg_put_line($pg, $line);
+            }
+        }
+
+        fclose($fp);
+
+        pg_put_line($pg, "\\.\n");
+        return pg_end_copy($pg);
     }
 
     /**
@@ -594,11 +707,12 @@ final class functions_pgsql
         return "CONCAT_WS('{$separator}', {$string})";
     }
 
-    // public static function pwg_db_cast_to_text(
-    //     string $string
-    // ): string {
-    //     return $string;
-    // }
+    public static function pwg_db_cast_to_text(string $string): string
+    {
+        // VARCHAR is already text-compatible in PostgreSQL.
+        // CAST(x AS CHAR) would truncate to 1 character, so return as-is.
+        return $string;
+    }
 
     /**
      * Returns an array containing the possible values of an enum field.
@@ -761,6 +875,129 @@ final class functions_pgsql
             SQL;
     }
 
+    // -----------------------------------------------------------------------
+    // Cross-backend abstraction methods
+    // -----------------------------------------------------------------------
+
+    public static function index_exists(string $table, string $index_name): bool
+    {
+        $t = self::pwg_db_real_escape_string($table);
+        $i = self::pwg_db_real_escape_string($index_name);
+        $result = self::pwg_query(
+            "SELECT 1 FROM pg_indexes WHERE tablename = '{$t}' AND indexname = '{$i}';"
+        );
+        return self::pwg_db_num_rows($result) > 0;
+    }
+
+    public static function drop_index(string $table, string $index_name): void
+    {
+        $i = self::pwg_db_real_escape_string($index_name);
+        self::pwg_query("DROP INDEX IF EXISTS {$i};");
+    }
+
+    public static function create_fulltext_index(string $table, string $index_name, array $columns): void
+    {
+        $fts_col = self::$FTS_COLUMN_MAP[$table] ?? null;
+
+        if ($fts_col === null) {
+            return; // unknown table — no tsvector column to index
+        }
+
+        $i = self::pwg_db_real_escape_string($index_name);
+        self::pwg_query("CREATE INDEX {$i} ON {$table} USING GIN({$fts_col});");
+    }
+
+    public static function set_bulk_insert_mode(bool $enable): void
+    {
+        // no-op — PostgreSQL constraint checking is already efficient within transactions
+    }
+
+    public static function add_enum_value(string $table, string $column, string $new_value): void
+    {
+        // PostgreSQL enum types follow the {table}_{column} naming convention.
+        $type = "{$table}_{$column}";
+        $escaped_value = self::pwg_db_real_escape_string($new_value);
+        self::pwg_query("ALTER TYPE {$type} ADD VALUE IF NOT EXISTS '{$escaped_value}';");
+    }
+
+    public static function sql_group_concat(string $column): string
+    {
+        return "STRING_AGG({$column}::text, ',')";
+    }
+
+    public static function get_table_names(): array
+    {
+        $tables = [];
+        $result = self::pwg_query("SELECT tablename FROM pg_tables WHERE schemaname = 'public';");
+
+        while ($row = self::pwg_db_fetch_row($result)) {
+            $tables[] = $row[0];
+        }
+
+        return $tables;
+    }
+
+    public static function get_table_columns(string $table): array
+    {
+        $escaped = self::pwg_db_real_escape_string($table);
+        $result = self::pwg_query(
+            "SELECT column_name FROM information_schema.columns"
+            . " WHERE table_schema='public' AND table_name='{$escaped}'"
+            . " ORDER BY ordinal_position;"
+        );
+        $columns = [];
+
+        while ($row = self::pwg_db_fetch_row($result)) {
+            $columns[] = $row[0];
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Returns regex word-boundary tokens for use in REGEXP (~ operator) queries.
+     * PostgreSQL uses POSIX \y for word boundaries on all supported versions.
+     *
+     * @return array{begin: string, end: string}
+     */
+    public static function sql_regex_word_boundary(): array
+    {
+        return ['begin' => '\\y', 'end' => '\\y'];
+    }
+
+    /**
+     * Returns the SQL FTS clause for the given fields and terms.
+     * PostgreSQL uses tsvector @@ to_tsquery() instead of MATCH … AGAINST.
+     *
+     * Term translation:
+     *   "phrase words"  → word1 <-> word2   (adjacent/phrase operator)
+     *   prefix*         → prefix:*           (prefix search)
+     *   plain           → plain              (exact token)
+     * Multiple terms are joined with | (OR).
+     */
+    public static function sql_fulltext_clause(array $fields, array $fts_terms, string $table): string
+    {
+        $fts_col = self::$FTS_COLUMN_MAP[$table] ?? 'image_fts';
+        $tsTerms = [];
+
+        foreach ($fts_terms as $term) {
+            if (str_starts_with($term, '"') && str_ends_with($term, '"')) {
+                // Phrase: "hello world" → hello <-> world
+                $words = preg_split('/\s+/', trim($term, '"'));
+                $tsTerms[] = implode(' <-> ', $words);
+            } elseif (str_ends_with($term, '*')) {
+                // Prefix: term* → term:*
+                $tsTerms[] = rtrim($term, '*') . ':*';
+            } else {
+                $tsTerms[] = $term;
+            }
+        }
+
+        $tsQuery = implode(' | ', $tsTerms);
+        $escaped = self::pwg_db_real_escape_string($tsQuery);
+        return "{$fts_col} @@ to_tsquery('english', '{$escaped}')";
+    }
+
     /**
      * Returns (or send to standard output) the message concerning the
      * error occurred for the last mysql query.
@@ -842,7 +1079,7 @@ final class functions_pgsql
         }
     }
 
-    private static function sync_sequences(): void
+    public static function sync_sequences(): void
     {
         $query = <<<SQL
             SELECT

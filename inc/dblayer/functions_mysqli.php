@@ -458,6 +458,9 @@ final class functions_mysqli
     /** Cached value of @@max_allowed_packet (session-lifetime). */
     private static ?int $cachedPacketSize = null;
 
+    /** Cached regex word-boundary tokens (derived from DB version, set once per request). */
+    private static ?array $cachedWordBoundary = null;
+
     public static function mass_inserts(
         string $table_name,
         array $dbfields,
@@ -661,6 +664,125 @@ final class functions_mysqli
         fwrite($fp, $line . "\n");
     }
 
+    // -----------------------------------------------------------------------
+    // Cross-backend abstraction methods
+    // -----------------------------------------------------------------------
+
+    public static function index_exists(string $table, string $index_name): bool
+    {
+        $t = self::pwg_db_real_escape_string($table);
+        $i = self::pwg_db_real_escape_string($index_name);
+        $result = self::pwg_query("SHOW INDEX FROM {$t} WHERE Key_name = '{$i}';");
+        return self::pwg_db_num_rows($result) > 0;
+    }
+
+    public static function drop_index(string $table, string $index_name): void
+    {
+        $t = self::pwg_db_real_escape_string($table);
+        $i = self::pwg_db_real_escape_string($index_name);
+        self::pwg_query("ALTER TABLE {$t} DROP INDEX {$i};");
+    }
+
+    public static function create_fulltext_index(string $table, string $index_name, array $columns): void
+    {
+        $t = self::pwg_db_real_escape_string($table);
+        $i = self::pwg_db_real_escape_string($index_name);
+        $colList = implode(', ', $columns);
+        self::pwg_query("ALTER TABLE {$t} ADD FULLTEXT INDEX {$i} ({$colList});");
+    }
+
+    public static function set_bulk_insert_mode(bool $enable): void
+    {
+        $v = $enable ? 0 : 1;
+        self::pwg_query("SET unique_checks={$v}, foreign_key_checks={$v};");
+    }
+
+    public static function add_enum_value(string $table, string $column, string $new_value): void
+    {
+        $existing = self::get_enums($table, $column);
+
+        if (in_array($new_value, $existing)) {
+            return;
+        }
+
+        $existing[] = $new_value;
+        $values = implode(',', array_map(
+            fn($v) => "'" . self::pwg_db_real_escape_string($v) . "'",
+            $existing
+        ));
+        self::pwg_query("ALTER TABLE {$table} CHANGE {$column} {$column} ENUM({$values}) DEFAULT NULL;");
+    }
+
+    public static function sql_group_concat(string $column): string
+    {
+        return "GROUP_CONCAT({$column})";
+    }
+
+    public static function get_table_names(): array
+    {
+        $tables = [];
+        $result = self::pwg_query('SHOW TABLES;');
+
+        while ($row = self::pwg_db_fetch_row($result)) {
+            $tables[] = $row[0];
+        }
+
+        return $tables;
+    }
+
+    public static function get_table_columns(string $table): array
+    {
+        $columns = [];
+        $result = self::pwg_query("DESC {$table};");
+
+        while ($row = self::pwg_db_fetch_assoc($result)) {
+            $columns[] = $row['Field'];
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Returns regex word-boundary tokens suitable for REGEXP queries.
+     *
+     * MySQL 8.0.4+ uses the ICU regex engine where \b is a word boundary.
+     * MariaDB and older MySQL use POSIX character classes [[:<:]] / [[:>:]].
+     *
+     * @return array{begin: string, end: string}
+     */
+    public static function sql_regex_word_boundary(): array
+    {
+        if (self::$cachedWordBoundary !== null) {
+            return self::$cachedWordBoundary;
+        }
+
+        $version = self::pwg_get_db_version();
+        $isMariaDB = stripos($version, 'mariadb') !== false;
+
+        if (! $isMariaDB && version_compare($version, '8.0.4', '>=')) {
+            // ICU regex: four PHP backslashes → \\b in the SQL literal → \b seen by ICU.
+            self::$cachedWordBoundary = ['begin' => '\\\\b', 'end' => '\\\\b'];
+        } else {
+            self::$cachedWordBoundary = ['begin' => '[[:<:]]', 'end' => '[[:>:]]'];
+        }
+
+        return self::$cachedWordBoundary;
+    }
+
+    /**
+     * Returns the SQL FULLTEXT search clause for MATCH … AGAINST in boolean mode.
+     * The $table parameter is accepted for interface symmetry but ignored by MySQL.
+     */
+    public static function sql_fulltext_clause(array $fields, array $fts_terms, string $table): string
+    {
+        $fieldList = implode(', ', $fields);
+        $termsStr = self::pwg_db_real_escape_string(implode(' ', $fts_terms));
+        return "MATCH({$fieldList}) AGAINST('{$termsStr}' IN BOOLEAN MODE)";
+    }
+
+    /** No-op for MySQL: sequences are auto-incremented columns managed natively. */
+    public static function sync_sequences(): void {}
+
     /**
      * Inserts one line in a table.
      *
@@ -765,11 +887,10 @@ final class functions_mysqli
         return "CONCAT_WS('{$separator}', {$string})";
     }
 
-    // public static function pwg_db_cast_to_text(
-    //     string $string
-    // ): string {
-    //     return $string;
-    // }
+    public static function pwg_db_cast_to_text(string $string): string
+    {
+        return "CAST({$string} AS CHAR)";
+    }
 
     /**
      * Returns an array containing the possible values of an enum field.

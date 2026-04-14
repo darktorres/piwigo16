@@ -594,11 +594,8 @@ final class functions
             ) {
                 $section = $page['section'];
             } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page['section'])) {
-                $history_sections = $conf->sql_backend::get_enums('history', 'section');
-                $history_sections[] = $page['section'];
-
                 // alter history table structure, to include a new section
-                $conf->sql_backend::pwg_query("ALTER TABLE history CHANGE section section enum('" . implode("','", array_unique($history_sections)) . "') DEFAULT NULL;");
+                $conf->sql_backend::add_enum_value('history', 'section', $page['section']);
 
                 // and refresh cache
                 self::conf_update_param('history_sections_cache', $conf->sql_backend::get_enums('history', 'section'), true);
@@ -3231,18 +3228,7 @@ final class functions
     {
         global $conf;
 
-        $tables = [];
-
-        $query = <<<SQL
-            SHOW TABLES;
-            SQL;
-        $result = $conf->sql_backend::pwg_query($query);
-
-        while ($row = $conf->sql_backend::pwg_db_fetch_row($result)) {
-            $tables[] = $row[0];
-        }
-
-        return $tables;
+        return $conf->sql_backend::get_table_names();
     }
 
     /**
@@ -3258,16 +3244,7 @@ final class functions
         $columns_of = [];
 
         foreach ($tables as $table) {
-            $query = <<<SQL
-                DESC {$table};
-                SQL;
-            $result = $conf->sql_backend::pwg_query($query);
-
-            $columns_of[$table] = [];
-
-            while ($row = $conf->sql_backend::pwg_db_fetch_row($result)) {
-                $columns_of[$table][] = $row[0];
-            }
+            $columns_of[$table] = $conf->sql_backend::get_table_columns($table);
         }
 
         return $columns_of;

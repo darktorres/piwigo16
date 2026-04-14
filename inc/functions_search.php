@@ -490,9 +490,9 @@ final class functions_search
 
     public static function qsearch_get_text_token_search_sql(
         QSingleToken $token,
-        array $fields
+        array $fields,
+        string $table = ''
     ): array {
-        global $page;
         global $conf;
 
         $clauses = [];
@@ -522,21 +522,9 @@ final class functions_search
             }
 
             if (! $use_ft) { // odd term or too short for full text search; fallback to regex but unfortunately this is diacritic/accent sensitive
-                if (! isset($page['use_regexp_ICU'])) {
-                    // Prior to MySQL 8.0.4, MySQL used the Henry Spencer regular expression library to support
-                    // regular expression operations, rather than International Components for Unicode (ICU)
-                    $page['use_regexp_ICU'] = false;
-                    $db_version = $conf->sql_backend::pwg_get_db_version();
-
-                    if (! preg_match('/mariadb/i', $db_version) &&
-                        version_compare($db_version, '8.0.4', '>')
-                    ) {
-                        $page['use_regexp_ICU'] = true;
-                    }
-                }
-
-                $pre = (($token->modifier & self::QST_WILDCARD_BEGIN) !== 0) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:<:]]');
-                $post = (($token->modifier & self::QST_WILDCARD_END) !== 0) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
+                $wb = $conf->sql_backend::sql_regex_word_boundary();
+                $pre = (($token->modifier & self::QST_WILDCARD_BEGIN) !== 0) ? '' : $wb['begin'];
+                $post = (($token->modifier & self::QST_WILDCARD_END) !== 0) ? '' : $wb['end'];
 
                 foreach ($fields as $field) {
                     $clauses[] = $field . ' ' . $conf->sql_backend::DB_REGEX_OPERATOR . " '" . $pre . addslashes(preg_quote($variant)) . $post . "'";
@@ -557,7 +545,7 @@ final class functions_search
         }
 
         if ($fts !== []) {
-            $clauses[] = 'MATCH(' . implode(', ', $fields) . ") AGAINST( '" . addslashes(implode(' ', $fts)) . "' IN BOOLEAN MODE)";
+            $clauses[] = $conf->sql_backend::sql_fulltext_clause($fields, $fts, $table);
         }
 
         return $clauses;
@@ -586,12 +574,12 @@ final class functions_search
 
             $like = addslashes($token->term);
             $like = str_replace(['%', '_'], ['\\%', '\\_'], $like); // escape LIKE specials %_
-            $file_like = "CAST(file AS CHAR) LIKE '%" . $like . "%'";
+            $file_like = $conf->sql_backend::pwg_db_cast_to_text('file') . " LIKE '%" . $like . "%'";
 
             switch ($scope_id) {
                 case 'photo':
                     $clauses[] = $file_like;
-                    $clauses = array_merge($clauses, self::qsearch_get_text_token_search_sql($token, ['name', 'comment']));
+                    $clauses = array_merge($clauses, self::qsearch_get_text_token_search_sql($token, ['name', 'comment'], 'images'));
                     break;
 
                 case 'file':
@@ -600,7 +588,7 @@ final class functions_search
 
                 case 'author':
                     if (strlen($token->term) !== 0) {
-                        $clauses = array_merge($clauses, self::qsearch_get_text_token_search_sql($token, ['author']));
+                        $clauses = array_merge($clauses, self::qsearch_get_text_token_search_sql($token, ['author'], 'images'));
                     } elseif (($token->modifier & self::QST_WILDCARD) !== 0) {
                         $clauses[] = 'author IS NOT NULL';
                     } else {
@@ -683,7 +671,7 @@ final class functions_search
                 continue;
             }
 
-            $clauses = self::qsearch_get_text_token_search_sql($token, ['name']);
+            $clauses = self::qsearch_get_text_token_search_sql($token, ['name'], 'tags');
             $clausesList = implode("\n OR ", $clauses);
             $query = <<<SQL
                 SELECT * FROM tags
@@ -779,7 +767,7 @@ final class functions_search
                 continue;
             }
 
-            $clauses = self::qsearch_get_text_token_search_sql($token, ['name', 'comment']);
+            $clauses = self::qsearch_get_text_token_search_sql($token, ['name', 'comment'], 'categories');
             $clausesList = implode("\n OR ", $clauses);
             $query = <<<SQL
                 SELECT *

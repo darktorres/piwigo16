@@ -653,7 +653,7 @@ if (isset($_POST['submit']) &&
     $has_ft_index = false;
 
     if (! $simulate) {
-        $conf->sql_backend::pwg_query('SET unique_checks=0, foreign_key_checks=0');
+        $conf->sql_backend::set_bulk_insert_mode(true);
     }
 
     // FULLTEXT drop/rebuild: we defer this decision until the first new file is
@@ -710,10 +710,8 @@ if (isset($_POST['submit']) &&
             // happen, so all subsequent batched inserts bypass per-row FULLTEXT
             // maintenance. The index is rebuilt after the loop (below).
             if (! $simulate) {
-                $result = $conf->sql_backend::pwg_query("SHOW INDEX FROM images WHERE Key_name = 'image_ft';");
-
-                if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
-                    $conf->sql_backend::pwg_query('ALTER TABLE images DROP INDEX image_ft;');
+                if ($conf->sql_backend::index_exists('images', 'image_ft')) {
+                    $conf->sql_backend::drop_index('images', 'image_ft');
                     $has_ft_index = true;
                 }
             }
@@ -886,14 +884,15 @@ if (isset($_POST['submit']) &&
         . ' -->');
 
     if (! $simulate) {
-        $conf->sql_backend::pwg_query('SET unique_checks=1, foreign_key_checks=1');
+        $conf->sql_backend::sync_sequences();
+        $conf->sql_backend::set_bulk_insert_mode(false);
 
         if ($has_ft_index) {
             sync_emit('substep_progress', [
                 'phase' => 'files', 'id' => 'insert',
                 'detail' => 'Rebuilding fulltext index...',
             ]);
-            $conf->sql_backend::pwg_query('ALTER TABLE images ADD FULLTEXT INDEX image_ft (name, comment);');
+            $conf->sql_backend::create_fulltext_index('images', 'image_ft', ['name', 'comment']);
         }
     }
 

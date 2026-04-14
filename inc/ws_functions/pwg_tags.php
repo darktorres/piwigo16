@@ -149,8 +149,9 @@ final class pwg_tags
         ) {
             $tagIds = implode(', ', $tag_ids);
             $imageIds = implode(', ', $image_ids);
+            $group_concat_tag_id = $conf->sql_backend::sql_group_concat('tag_id');
             $query = <<<SQL
-                SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
+                SELECT image_id, {$group_concat_tag_id} AS tag_ids
                 FROM image_tag
                 WHERE tag_id IN ({$tagIds}) AND image_id IN ({$imageIds})
                 GROUP BY image_id;

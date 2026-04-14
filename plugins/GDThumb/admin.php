@@ -110,8 +110,9 @@ if (isset($_POST['submit'])) {
     $big_thumb = ! empty($_POST['big_thumb']);
     $big_thumb_noinpw = ! empty($_POST['big_thumb_noinpw']);
     $thumb_animate = ! empty($_POST['thumb_animate']);
-    $thumb_mode_album = $_POST['thumb_mode_album'];
-    $thumb_mode_photo = $_POST['thumb_mode_photo'];
+    $valid_modes = ['top', 'top_static', 'bottom', 'bottom_static', 'overlay', 'overlay-ex', 'hide'];
+    $thumb_mode_album = in_array($_POST['thumb_mode_album'] ?? '', $valid_modes) ? $_POST['thumb_mode_album'] : 'bottom';
+    $thumb_mode_photo = in_array($_POST['thumb_mode_photo'] ?? '', $valid_modes) ? $_POST['thumb_mode_photo'] : 'bottom';
     if ($method == 'slide') {
         if ($big_thumb) {
             $big_thumb = false;
@@ -163,17 +164,6 @@ if (isset($_POST['submit'])) {
         'no_wordwrap' => ! empty($_POST['no_wordwrap']),
         'thumb_animate' => $thumb_animate,
     ];
-    if (! is_numeric($params['height'])) {
-        $page['errors'][] = functions::l10n('Thumbnails max height must be an integer');
-    }
-
-    if (! is_numeric($params['margin'])) {
-        $page['errors'][] = functions::l10n('Margin between thumbnails must be an integer');
-    }
-
-    if (! is_numeric($params['nb_image_page'])) {
-        $page['errors'][] = functions::l10n('Number of photos per page must be an integer');
-    }
 
     if ($params['height'] != $conf->gdThumb['height']) {
         functions_GDThumb::delete_gdthumb_cache($conf->gdThumb['height']);

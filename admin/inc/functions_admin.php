@@ -1035,10 +1035,9 @@ final class functions_admin
         $result = $conf->sql_backend::pwg_query($query);
 
         while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-            $uppercats = array_merge(
-                $uppercats,
-                explode(',', $row['uppercats'])
-            );
+            foreach (explode(',', $row['uppercats']) as $id) {
+                $uppercats[] = $id;
+            }
         }
 
         return array_unique($uppercats);

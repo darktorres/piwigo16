@@ -345,7 +345,7 @@ if (isset($_POST['submit']) &&
                 'visible', 'status', 'sort_rank', 'global_rank',
             ];
             $t_insert = microtime(true);
-            $conf->sql_backend::mass_inserts('categories', $dbfields, $inserts);
+            $conf->sql_backend::mass_inserts('categories', $dbfields, $inserts, ['bulk' => true]);
             $logger->info('[sync][dirs] mass_inserts done', ['elapsed_s' => round(microtime(true) - $t_insert, 2)]);
 
             // add default permissions to categories
@@ -444,7 +444,18 @@ if (isset($_POST['submit']) &&
                 $insert_granted_users = array_unique($insert_granted_users, SORT_REGULAR);
                 $conf->sql_backend::mass_inserts('user_access', ['user_id', 'cat_id'], $insert_granted_users);
             } else {
-                functions_admin::add_permission_on_category($category_ids, functions_admin::get_admins());
+                // add_permission_on_category only does meaningful work for
+                // private albums.  Skip the expensive DB round-trip entirely
+                // when all new albums are public (the common default).
+                $private_ids = array_values(
+                    array_column(
+                        array_filter($inserts, fn($c) => $c['status'] === 'private'),
+                        'id'
+                    )
+                );
+                if ($private_ids !== []) {
+                    functions_admin::add_permission_on_category($private_ids, functions_admin::get_admins());
+                }
             }
 
             $logger->info('[sync][dirs] permissions done', ['elapsed_s' => round(microtime(true) - $t_perms, 2)]);

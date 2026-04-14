@@ -949,6 +949,15 @@ class Config
     // the directory where "ffmpeg" executable is.
     public string $ffmpeg_dir = '';
 
+    // If you want to use the Everything SDK v3 (voidtools) for faster sync
+    // on Windows, set the full path to the Everything3_x64.dll file.
+    // Requires ext-ffi and Everything 1.5a+ running.  Leave empty to
+    // disable (falls back to standard filesystem traversal).
+    public string $everything_dll_path = 'admin/inc/Everything3_x64.dll';
+
+    // Instance name for the Everything 1.5 alpha IPC connection.
+    public string $everything_instance_name = '1.5a';
+
     // batch manager: how many images should Piwigo display by default on the
     // global mode. Must be among values {20,50,100}
     public int $batch_manager_images_per_page_global = 20;

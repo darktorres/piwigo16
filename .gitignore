@@ -20,3 +20,6 @@
 
 # Docker
 compose.override.yaml
+
+# External DLLs (Everything SDK)
+/admin/inc/Everything3_x64.dll

@@ -600,6 +600,14 @@ if (isset($_POST['submit']) &&
         'elapsed' => round(microtime(true) - $t_diff, 1),
     ]);
 
+    sync_emit('substep_start', [
+        'phase' => 'files', 'id' => 'prepare',
+        'label' => 'Preparing ' . fmt_number(count($new_paths)) . ' new photos',
+    ]);
+    $t_prepare = microtime(true);
+    $prepare_count = 0;
+    $prepare_total = count($new_paths);
+
     foreach ($new_paths as $path) {
         $insert = [];
         // storage category must exist
@@ -633,6 +641,15 @@ if (isset($_POST['submit']) &&
             'category_id' => $insert['storage_category_id'],
         ];
 
+        $prepare_count++;
+
+        if ($sse_mode && $prepare_count % 50000 === 0) {
+            sync_emit('substep_progress', [
+                'phase' => 'files',
+                'id' => 'prepare',
+                'detail' => fmt_number($prepare_count) . ' / ' . fmt_number($prepare_total) . ' prepared',
+            ]);
+        }
 
         if ($conf->enable_formats) {
             foreach ($fs[$path]['formats'] as $ext => $filesize) {
@@ -646,6 +663,12 @@ if (isset($_POST['submit']) &&
 
         $caddiables[] = $insert['id'];
     }
+
+    sync_emit('substep_complete', [
+        'phase' => 'files', 'id' => 'prepare',
+        'detail' => fmt_number(count($inserts)) . ' photos prepared',
+        'elapsed' => round(microtime(true) - $t_prepare, 1),
+    ]);
 
     // search new/removed formats on photos already registered in database
     if ($conf->enable_formats) {
@@ -750,8 +773,11 @@ if (isset($_POST['submit']) &&
                 array_keys($insert_links[0]),
                 $insert_links
             );
-            functions::pwg_activity('photo', $caddiables, 'add', [
+
+            // Single activity summary instead of one row per photo.
+            functions::pwg_activity('photo', [count($caddiables)], 'add', [
                 'sync' => true,
+                'count' => count($caddiables),
             ]);
 
             // add new photos to caddie
@@ -769,21 +795,36 @@ if (isset($_POST['submit']) &&
         }
 
         // inserts all formats
-        if ($insert_formats !== []) {
-            $conf->sql_backend::mass_inserts(
-                'image_format',
-                array_keys($insert_formats[0]),
-                $insert_formats
-            );
-        }
+        if ($insert_formats !== [] || $formats_to_delete !== []) {
+            sync_emit('substep_start', [
+                'phase' => 'files', 'id' => 'formats',
+                'label' => 'Syncing file formats',
+            ]);
+            $t_formats = microtime(true);
 
-        if ($formats_to_delete !== []) {
-            $formatsToDeleteList = implode(', ', $formats_to_delete);
-            $query = <<<SQL
-                DELETE FROM image_format
-                WHERE format_id IN ({$formatsToDeleteList});
-                SQL;
-            $conf->sql_backend::pwg_query($query);
+            if ($insert_formats !== []) {
+                $conf->sql_backend::mass_inserts(
+                    'image_format',
+                    array_keys($insert_formats[0]),
+                    $insert_formats
+                );
+            }
+
+            if ($formats_to_delete !== []) {
+                $formatsToDeleteList = implode(', ', $formats_to_delete);
+                $query = <<<SQL
+                    DELETE FROM image_format
+                    WHERE format_id IN ({$formatsToDeleteList});
+                    SQL;
+                $conf->sql_backend::pwg_query($query);
+            }
+
+            sync_emit('substep_complete', [
+                'phase' => 'files', 'id' => 'formats',
+                'detail' => fmt_number(count($insert_formats)) . ' added, '
+                    . fmt_number(count($formats_to_delete)) . ' removed',
+                'elapsed' => round(microtime(true) - $t_formats, 1),
+            ]);
         }
     }
 

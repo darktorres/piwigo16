@@ -70,7 +70,8 @@ final class functions_admin
      */
     public static function delete_categories(
         array $ids,
-        string $photo_deletion_mode = 'no_delete'
+        string $photo_deletion_mode = 'no_delete',
+        bool $skip_subcats = false
     ): void {
         global $conf;
 
@@ -79,43 +80,62 @@ final class functions_admin
         }
 
         // add sub-category ids to the given ids : if a category is deleted, all
-        // sub-categories must be so
-        $ids = functions_category::get_subcat_ids($ids);
+        // sub-categories must be so.  Callers that already have the complete
+        // set (e.g. sync) can pass skip_subcats=true to avoid the expensive
+        // regex query.
+        if (! $skip_subcats) {
+            $ids = functions_category::get_subcat_ids($ids);
+        }
 
         // destruction of all photos physically linked to the category
-        $ids_str = implode(', ', $ids);
-        $wrapped_ids = wordwrap($ids_str, 80);
-        $query = <<<SQL
-            SELECT id
-            FROM images
-            WHERE storage_category_id IN ({$wrapped_ids});
-            SQL;
-        $element_ids = $conf->sql_backend::query2array($query, null, 'id');
+        $element_ids = [];
+
+        foreach (array_chunk($ids, 10000) as $chunk) {
+            $chunk_str = implode(', ', $chunk);
+            $query = <<<SQL
+                SELECT id
+                FROM images
+                WHERE storage_category_id IN ({$chunk_str});
+                SQL;
+            array_push($element_ids, ...$conf->sql_backend::query2array($query, null, 'id'));
+        }
+
         self::delete_elements($element_ids);
 
         // now, should we delete photos that are virtually linked to the category?
         if ($photo_deletion_mode === 'delete_orphans' ||
             $photo_deletion_mode === 'force_delete'
         ) {
-            $ids_str = implode(', ', $ids);
-            $query = <<<SQL
-                SELECT DISTINCT image_id
-                FROM image_category
-                WHERE category_id IN ({$ids_str});
-                SQL;
-            $image_ids_linked = $conf->sql_backend::query2array($query, null, 'image_id');
+            $image_ids_linked = [];
+
+            foreach (array_chunk($ids, 10000) as $chunk) {
+                $chunk_str = implode(', ', $chunk);
+                $query = <<<SQL
+                    SELECT DISTINCT image_id
+                    FROM image_category
+                    WHERE category_id IN ({$chunk_str});
+                    SQL;
+                array_push($image_ids_linked, ...$conf->sql_backend::query2array($query, null, 'image_id'));
+            }
+
+            $image_ids_linked = array_unique($image_ids_linked);
 
             if ($image_ids_linked !== []) {
                 if ($photo_deletion_mode === 'delete_orphans') {
-                    $image_ids_list = implode(', ', $image_ids_linked);
-                    $category_ids_list = implode(', ', $ids);
-                    $query = <<<SQL
-                        SELECT DISTINCT image_id
-                        FROM image_category
-                        WHERE image_id IN ({$image_ids_list})
-                            AND category_id NOT IN ({$category_ids_list});
-                        SQL;
-                    $image_ids_not_orphans = $conf->sql_backend::query2array($query, null, 'image_id');
+                    $image_ids_not_orphans = [];
+
+                    foreach (array_chunk($image_ids_linked, 10000) as $img_chunk) {
+                        $img_str = implode(', ', $img_chunk);
+                        $ids_str = implode(', ', $ids);
+                        $query = <<<SQL
+                            SELECT DISTINCT image_id
+                            FROM image_category
+                            WHERE image_id IN ({$img_str})
+                                AND category_id NOT IN ({$ids_str});
+                            SQL;
+                        array_push($image_ids_not_orphans, ...$conf->sql_backend::query2array($query, null, 'image_id'));
+                    }
+
                     $image_ids_to_delete = array_diff($image_ids_linked, $image_ids_not_orphans);
                 }
 
@@ -127,55 +147,46 @@ final class functions_admin
             }
         }
 
-        // destruction of the links between images and this category
-        $category_ids_list = wordwrap(implode(', ', $ids), 80);
-        $query = <<<SQL
-            DELETE FROM image_category
-            WHERE category_id IN ({$category_ids_list});
-            SQL;
-        $conf->sql_backend::pwg_query($query);
+        // Batch all DELETE operations in chunks to avoid enormous queries.
+        $delete_targets = [
+            'image_category' => 'category_id',
+            'user_access' => 'cat_id',
+            'group_access' => 'cat_id',
+            'categories' => 'id',
+            'old_permalinks' => 'cat_id',
+            'user_cache_categories' => 'cat_id',
+        ];
 
-        // destruction of the access linked to the category
-        $cat_ids_list = wordwrap(implode(', ', $ids), 80);
-        $query = <<<SQL
-            DELETE FROM user_access
-            WHERE cat_id IN ({$cat_ids_list});
-            SQL;
-        $conf->sql_backend::pwg_query($query);
+        $conf->sql_backend::pwg_query('START TRANSACTION;');
 
-        $cat_ids_list = wordwrap(implode(', ', $ids), 80);
-        $query = <<<SQL
-            DELETE FROM group_access
-            WHERE cat_id IN ({$cat_ids_list});
-            SQL;
-        $conf->sql_backend::pwg_query($query);
+        foreach ($delete_targets as $table => $column) {
+            foreach (array_chunk($ids, 10000) as $chunk) {
+                $chunk_str = implode(', ', $chunk);
+                $query = <<<SQL
+                    DELETE FROM {$table}
+                    WHERE {$column} IN ({$chunk_str});
+                    SQL;
+                $conf->sql_backend::pwg_query($query);
+            }
+        }
 
-        // destruction of the category
-        $category_ids_list = wordwrap(implode(', ', $ids), 80);
-        $query = <<<SQL
-            DELETE FROM categories
-            WHERE id IN ({$category_ids_list});
-            SQL;
-        $conf->sql_backend::pwg_query($query);
-
-        $cat_ids_list = implode(', ', $ids);
-        $query = <<<SQL
-            DELETE FROM old_permalinks
-            WHERE cat_id IN ({$cat_ids_list});
-            SQL;
-        $conf->sql_backend::pwg_query($query);
-
-        $cat_ids_list = implode(', ', $ids);
-        $query = <<<SQL
-            DELETE FROM user_cache_categories
-            WHERE cat_id IN ({$cat_ids_list});
-            SQL;
-        $conf->sql_backend::pwg_query($query);
+        $conf->sql_backend::pwg_query('COMMIT;');
 
         functions_plugins::trigger_notify('delete_categories', $ids);
-        functions::pwg_activity('album', $ids, 'delete', [
-            'photo_deletion_mode' => $photo_deletion_mode,
-        ]);
+
+        // For bulk deletes (sync), log a single summary instead of one
+        // row per category to avoid inserting hundreds of thousands of
+        // activity rows.
+        if (count($ids) > 100) {
+            functions::pwg_activity('album', [count($ids)], 'delete', [
+                'photo_deletion_mode' => $photo_deletion_mode,
+                'count' => count($ids),
+            ]);
+        } else {
+            functions::pwg_activity('album', $ids, 'delete', [
+                'photo_deletion_mode' => $photo_deletion_mode,
+            ]);
+        }
     }
 
     /**

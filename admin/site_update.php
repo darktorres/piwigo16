@@ -193,7 +193,11 @@ if (isset($_POST['submit']) &&
     sync_emit('phase_start', ['phase' => 'dirs']);
     $t_dirs_phase = microtime(true);
     $start = functions::get_moment();
-    // which categories to update ?
+
+    // --- substep: load DB categories ---
+    sync_emit('substep_start', ['phase' => 'dirs', 'id' => 'db', 'label' => 'Loading database categories']);
+    $t_sub = microtime(true);
+
     $query = <<<SQL
         SELECT id, uppercats, global_rank, status, visible
         FROM categories
@@ -201,18 +205,10 @@ if (isset($_POST['submit']) &&
             AND site_id = {$site_id};
         SQL;
     $db_categories = $conf->sql_backend::query2array($query, 'id');
-
-    // get category full directories in an array for comparison with file
-    // system directory tree
     $db_fulldirs = functions_admin::get_fulldirs(array_keys($db_categories));
-
     $basedir = rtrim($site_url, '/');
-
-    // we need to have fulldirs as keys to make efficient comparison
     $db_fulldirs = array_flip($db_fulldirs);
 
-    // finding next rank for each id_uppercat. By default, each category id
-    // has 1 for next rank on its sub-categories to create
     $next_rank['NULL'] = 1;
 
     $query = <<<SQL
@@ -225,7 +221,6 @@ if (isset($_POST['submit']) &&
         $next_rank[$row['id']] = 1;
     }
 
-    // let's see if some categories already have some sub-categories...
     $query = <<<SQL
         SELECT id_uppercat, MAX(sort_rank) + 1 AS next_rank
         FROM categories
@@ -234,34 +229,56 @@ if (isset($_POST['submit']) &&
     $result = $conf->sql_backend::pwg_query($query);
 
     while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-        // for the id_uppercat NULL, we write 'NULL' and not the empty string
-        if (! isset($row['id_uppercat']) ||
-            $row['id_uppercat'] == ''
-        ) {
+        if (! isset($row['id_uppercat']) || $row['id_uppercat'] == '') {
             $row['id_uppercat'] = 'NULL';
         }
 
         $next_rank[$row['id_uppercat']] = $row['next_rank'];
     }
 
-    // next category id available
     $next_id = $conf->sql_backend::pwg_db_nextval('id', 'categories');
 
-    // retrieve sub-directories fulldirs from the site reader
+    sync_emit('substep_complete', [
+        'phase' => 'dirs', 'id' => 'db',
+        'detail' => fmt_number(count($db_categories)) . ' albums in database',
+        'elapsed' => round(microtime(true) - $t_sub, 1),
+    ]);
+
+    // --- substep: scan filesystem ---
+    sync_emit('substep_start', ['phase' => 'dirs', 'id' => 'scan', 'label' => 'Scanning directories']);
+    $t_sub = microtime(true);
+
     $dir_callback = $sse_mode
         ? function (string $dir) {
-            sync_emit('phase_progress', [
+            sync_emit('substep_progress', [
                 'phase' => 'dirs',
-                'dir' => $dir,
+                'id' => 'scan',
+                'detail' => $dir,
             ]);
         }
         : null;
     $fs_fulldirs = $site_reader->get_full_directories($basedir, $dir_callback);
     $logger->info('[sync][dirs] get_full_directories done', ['count' => count($fs_fulldirs)]);
 
+    sync_emit('substep_complete', [
+        'phase' => 'dirs', 'id' => 'scan',
+        'detail' => fmt_number(count($fs_fulldirs)) . ' directories found',
+        'elapsed' => round(microtime(true) - $t_sub, 1),
+    ]);
+
+    // --- substep: diff ---
+    sync_emit('substep_start', ['phase' => 'dirs', 'id' => 'diff', 'label' => 'Comparing filesystem vs database']);
+    $t_sub = microtime(true);
+
     $new_dirs = array_diff($fs_fulldirs, array_keys($db_fulldirs));
     $del_dirs = array_diff(array_keys($db_fulldirs), $fs_fulldirs);
     $logger->info('[sync][dirs] diff computed', ['new' => count($new_dirs), 'del' => count($del_dirs)]);
+
+    sync_emit('substep_complete', [
+        'phase' => 'dirs', 'id' => 'diff',
+        'detail' => fmt_number(count($new_dirs)) . ' new, ' . fmt_number(count($del_dirs)) . ' to delete',
+        'elapsed' => round(microtime(true) - $t_sub, 1),
+    ]);
 
     $inserts = [];
     // new categories are the directories not present yet in the database
@@ -316,6 +333,11 @@ if (isset($_POST['submit']) &&
     }
 
     if ($inserts !== []) {
+        sync_emit('substep_start', [
+            'phase' => 'dirs', 'id' => 'insert',
+            'label' => 'Inserting ' . fmt_number(count($inserts)) . ' new albums',
+        ]);
+        $t_sub = microtime(true);
         $logger->info('[sync][dirs] inserting new categories', ['count' => count($inserts)]);
         if (! $simulate) {
             $dbfields = [
@@ -429,6 +451,11 @@ if (isset($_POST['submit']) &&
         }
 
         $counts['new_categories'] = count($inserts);
+        sync_emit('substep_complete', [
+            'phase' => 'dirs', 'id' => 'insert',
+            'detail' => fmt_number(count($inserts)) . ' albums added',
+            'elapsed' => round(microtime(true) - $t_sub, 1),
+        ]);
     }
 
     // to delete categories
@@ -447,10 +474,15 @@ if (isset($_POST['submit']) &&
     }
 
     if ($to_delete !== []) {
+        sync_emit('substep_start', [
+            'phase' => 'dirs', 'id' => 'delete',
+            'label' => 'Deleting ' . fmt_number(count($to_delete)) . ' albums',
+        ]);
+        $t_sub = microtime(true);
         $logger->info('[sync][dirs] deleting categories', ['count' => count($to_delete)]);
         if (! $simulate) {
             $t_del = microtime(true);
-            functions_admin::delete_categories($to_delete);
+            functions_admin::delete_categories($to_delete, skip_subcats: true);
             $logger->info('[sync][dirs] delete_categories done', ['elapsed_s' => round(microtime(true) - $t_del, 2)]);
 
             $t_deriv = microtime(true);
@@ -463,6 +495,11 @@ if (isset($_POST['submit']) &&
         }
 
         $counts['del_categories'] = count($to_delete);
+        sync_emit('substep_complete', [
+            'phase' => 'dirs', 'id' => 'delete',
+            'detail' => fmt_number(count($to_delete)) . ' albums deleted',
+            'elapsed' => round(microtime(true) - $t_sub, 1),
+        ]);
     }
 
     sync_emit('phase_complete', [

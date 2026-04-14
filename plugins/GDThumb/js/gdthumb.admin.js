@@ -49,7 +49,7 @@
     };
 
     function getUrls(page_token) {
-        data = { prev_page: page_token, max_urls: 500, types: [] };
+        var data = { prev_page: page_token, max_urls: 500, types: [] };
         jQuery
             .post(
                 "admin.php?page=plugin-GDThumb&getMissingDerivative=",
@@ -92,7 +92,7 @@
         updateStats();
         if (img) {
             if (type === "load") {
-                var now = jQuery.now();
+                var now = Date.now();
                 if (now - last_image_show_time > 3000) {
                     last_image_show_time = now;
                     var h = img.height;
@@ -101,7 +101,7 @@
                         "slide",
                         { direction: "down" },
                         function () {
-                            last_image_show_time = jQuery.now();
+                            last_image_show_time = Date.now();
                             if (h > 300)
                                 jQuery("#feedbackImg").attr("height", 300);
                             else jQuery("#feedbackImg").removeAttr("height");
@@ -123,8 +123,8 @@
             pending_next_page = null;
         } else if (
             loader.remaining() == 0 &&
-            jQuery.isFunction(urlDfd.isResolved) &&
-            (urlDfd.isResolved() || urlDfd.isRejected())
+            urlDfd.state &&
+            (urlDfd.state() === "resolved" || urlDfd.state() === "rejected")
         ) {
             allDoneDfd.resolve();
         }

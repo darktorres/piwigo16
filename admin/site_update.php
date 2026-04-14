@@ -619,22 +619,10 @@ if (isset($_POST['submit']) &&
         $conf->sql_backend::pwg_query('SET unique_checks=0, foreign_key_checks=0');
     }
 
-    // FULLTEXT drop/rebuild is expensive (cost scales with existing table size,
-    // not new row count). Only pay that fixed overhead when inserting enough
-    // rows to justify it — approximate from existing photo records or album count.
-    // If 0 new files are ultimately found the index is not rebuilt (gated on
-    // $inserted_count > 0 below).
-    $large_insert_likely = count($db_paths_set) > 10000
-        || count($db_fulldirs) > 10000;
-
-    if (! $simulate && $large_insert_likely) {
-        $result = $conf->sql_backend::pwg_query("SHOW INDEX FROM images WHERE Key_name = 'image_ft';");
-
-        if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
-            $conf->sql_backend::pwg_query('ALTER TABLE images DROP INDEX image_ft;');
-            $has_ft_index = true;
-        }
-    }
+    // FULLTEXT drop/rebuild: we defer this decision until the first new file is
+    // found inside the streaming loop below. This avoids any heuristic — the
+    // index is only dropped when we know at least one insert will happen, and the
+    // rebuild is skipped entirely when no new files are found.
 
     $t_mass_insert = microtime(true);
 
@@ -680,6 +668,18 @@ if (isset($_POST['submit']) &&
                 'phase' => 'files', 'id' => 'insert',
                 'label' => $simulate ? 'Counting new photos' : 'Inserting new photos',
             ]);
+
+            // Drop FULLTEXT index on first new file: we now know inserts will
+            // happen, so all subsequent batched inserts bypass per-row FULLTEXT
+            // maintenance. The index is rebuilt after the loop (below).
+            if (! $simulate) {
+                $result = $conf->sql_backend::pwg_query("SHOW INDEX FROM images WHERE Key_name = 'image_ft';");
+
+                if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
+                    $conf->sql_backend::pwg_query('ALTER TABLE images DROP INDEX image_ft;');
+                    $has_ft_index = true;
+                }
+            }
         }
 
         if (! $simulate) {
@@ -774,7 +774,7 @@ if (isset($_POST['submit']) &&
     if (! $simulate) {
         $conf->sql_backend::pwg_query('SET unique_checks=1, foreign_key_checks=1');
 
-        if ($has_ft_index && $inserted_count > 0) {
+        if ($has_ft_index) {
             sync_emit('substep_progress', [
                 'phase' => 'files', 'id' => 'insert',
                 'detail' => 'Rebuilding fulltext index...',

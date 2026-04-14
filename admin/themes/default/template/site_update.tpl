@@ -88,10 +88,20 @@
       return pump();
     }).catch(function(err) {
       if (aborted) return;
-      // Connection may drop during long DB operations (browser TCP timeout).
-      // Don't kill the UI — the sync continues server-side.
-      // Show a warning but keep timers running.
-      $('#syncTitle').text('Synchronization running (connection lost, waiting for server\u2026)');
+      if (syncComplete) return; // completed successfully before stream error — ignore
+      syncRunning = false;
+      clearInterval(timerInterval);
+      updateElapsed();
+      hideControls();
+      $('#syncTitle').text('Connection lost');
+      $('#syncResults').html(
+        '<div class="errors"><ul><li>The connection to the server was lost.'
+        + ' The sync may still be running in the background.'
+        + ' Refresh the page to check the current state.</li></ul></div>'
+        + '<p class="bottomButtons">'
+        + '<button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">'
+        + 'Refresh</button></p>'
+      ).show();
     });
   });
 

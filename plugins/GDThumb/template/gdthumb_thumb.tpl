@@ -1,26 +1,23 @@
 {if !empty($thumbnails)}
   {foreach $thumbnails as $thumbnail}
     {assign var=derivative value=$pwg->derivative($GDThumb_derivative_params, $thumbnail.src_image)}
-    {assign var=media_type value={media_type file=$thumbnail.file}}
-    {assign var=media_type_name value={$media_type|capitalize:false:true}}
-    {* {$thumbnails|print_r} *}
 
-    <li class="gdthumb{if $GDThumb.thumb_animate} animate{/if} {$GDThumb.method}">
+    <li class="gdthumb {$GDThumb.method}">
       {if $GDThumb.thumb_mode_photo !== "hide" }
         <span class="thumbLegend {$GDThumb.thumb_mode_photo}">
           <span class="thumbName thumbTitle">
             {if $GDThumb.normalize_title == "desc" && $thumbnail.DESCRIPTION}
               {$thumbnail.DESCRIPTION}
-            {elseif $GDThumb.normalize_title == "off"}
-              {$thumbnail.NAME}
-            {else}
+            {elseif $GDThumb.normalize_title == "on"}
               {assign var="file_title" value=$thumbnail.NAME|cat:"."}
               {assign var="file_name" value=$thumbnail.file|replace:"_":" "}
               {if $file_name|strstr:$file_title}
-                {$media_type_name|translate} {$thumbnail.id}
+                {$thumbnail.id}
               {else}
                 {$thumbnail.NAME}
               {/if}
+            {else}
+              {$thumbnail.NAME}
             {/if}
             {if $GDThumb.thumb_mode_photo !== "overlay-ex"}
               {if !empty($thumbnail.icon_ts)}
@@ -31,8 +28,7 @@
           {if $GDThumb.thumb_mode_photo == "overlay-ex"}
             <span class="thumbInfo">
               <span class="hit-num">{$thumbnail.hit}</span>
-              <span
-                class="fas {if $media_type=="video"}fa-file-video{elseif $media_type=="music"}fa-file-audio{elseif $media_type=="doc"}fa-file-word{elseif $media_type=="pdf"}fa-file-pdf{else}fa-image{/if}"></span>
+              <span class="fas fa-image"></span>
               {if !empty($thumbnail.icon_ts)}
                 <span class="new-thumb fas fa-asterisk" title="{$thumbnail.icon_ts.TITLE}"></span>
               {/if}
@@ -78,13 +74,7 @@
     {if isset($has_cats)}
     {else}
       $(function() {
-        {if isset($GDThumb_big)}
-          {assign var=gt_size value=$GDThumb_big->get_size()}
-          var big_thumb = { id: {$GDThumb_big->src_image->id}, src: '{$GDThumb_big->get_url()}', width: {$gt_size[0]}, height: {$gt_size[1]} };
-        {else}
-          var big_thumb = null;
-        {/if}
-        GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin}, false, big_thumb, {$GDThumb.big_thumb_noinpw});
+        GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin}, false);
       });
     {/if}
   </script>{/footer_script}

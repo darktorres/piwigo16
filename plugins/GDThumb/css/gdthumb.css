@@ -24,13 +24,6 @@ ul.thumbnails .gdthumb a img.thumbnail:hover {
     border-radius: 0;
 }
 
-ul.thumbnails .gdthumb.animate img {
-    transition: 700ms;
-}
-ul.thumbnails .gdthumb.animate:hover img {
-    transform: scale(1.5, 1.5) rotate(10deg);
-}
-
 ul.thumbnails .gdthumb .thumbLegend {
     position: absolute;
     z-index: 1;

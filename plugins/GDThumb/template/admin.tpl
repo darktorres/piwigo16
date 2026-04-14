@@ -1,19 +1,10 @@
 <div class="titrePage">
   <h2>GDThumb - {$GDTHUMB_VERSION}</h2>
-  <div class="left-links{if $CUSTOM_CSS!=="yes"} no-gd{/if}">
+  <div class="left-links">
     <ul>
       <li><a href="http://blog.dragonsoft.us/piwigo/" target="_blank">{'Home'|translate}</a>&nbsp;|&nbsp;</li>
-      {if $CUSTOM_CSS=="yes"}
-        <li><a class="ajax cboxElement"
-            href="{$GDTHUMB_PATH|cat:"/changelog.php"}?version={$GDTHUMB_VERSION}">{'Changelog'|translate}</a>&nbsp;|&nbsp;
-        </li>
-      {/if}
       <li><a href="http://piwigo.org/forum/viewtopic.php?id=24413"
           target="_blank">{'Support'|translate}</a>&nbsp;|&nbsp;</li>
-      <li><a title="Follow me on Twitter" href="http://twitter.com/greydragon_th"
-          target="_blank">{'Follow'|translate}</a>&nbsp;|&nbsp;</li>
-      <li><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=GYVNZCNDMSD58"
-          target="_blank">{'Coffee Fund'|translate}</a>&nbsp;|&nbsp;</li>
       <li><a href="http://piwigo.org/ext/extension_view.php?eid=771" onclick="return false"
           target="_blank">{'Download'|translate}</a></li>
     </ul>
@@ -24,19 +15,9 @@
     <legend>{'Configuration'|translate}</legend>
     <ul>
       <li>
-        <select id="direction" name="direction" disabled>
-          <option {if isset($DIRECTION) and ($DIRECTION == 'horizontal')}selected="selected" {/if} value="horizontal">
-            {'Horizontal (Default)'|translate}</option>
-          {* <option {if isset($DIRECTION) and ($DIRECTION == 'vertical')}selected="selected"{/if} value="vertical">{'Vertical'|translate}</option> *}
-        </select>
-        <label for="direction">{'Masonry Type'|translate}</label>
-      </li>
-      <li>
         <select id="method" name="method">
           <option {if $METHOD == 'crop'}selected="selected" {/if} value="crop">{'Crop (Default)'|translate}</option>
           <option {if $METHOD == 'resize'}selected="selected" {/if} value="resize">{'Resize'|translate}</option>
-          <option {if $METHOD == 'square'}selected="selected" {/if} value="square">{'Square'|translate}</option>
-          <option {if $METHOD == 'slide'}selected="selected" {/if} value="slide">{'Slide'|translate}</option>
         </select>
         <label for="method">{'Thumbnail Mode'|translate}</label>
       </li>
@@ -46,23 +27,6 @@
           for="margin">{'Margin between thumbnails'|translate}&nbsp;px</label></li>
       <li><input id="nb_image_page" type="text" size="2" maxlength="3" name="nb_image_page"
           value="{$NB_IMAGE_PAGE}"><label for="nb_image_page">{'Number of photos per page'|translate}</label></li>
-
-      <li><label><i class="gd-checkbox fas {if $BIG_THUMB}fa-check-square{else}fa-square{/if}"></i>&nbsp;<input
-            name="big_thumb" id="big_thumb" type="checkbox" value="1" {if $BIG_THUMB}checked="checked"
-            {/if}>{'Double the size of the first thumbnail'|translate}</label></li>
-      <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label><span
-            class="gd-checkbox fas {if $BIG_THUMB_NOINPW}fa-check-square{else}fa-square{/if}">&nbsp;</span><input
-            name="big_thumb_noinpw" id="big_thumb_noinpw" type="checkbox" value="1"
-            {if $BIG_THUMB_NOINPW}checked="checked" {/if}>{'Block for Panoramic Photo Page'|translate} (x2.2+)</label>
-      </li>
-      <li><label><span
-            class="gd-checkbox fas {if $CACHE_BIG_THUMB}fa-check-square{else}fa-square{/if}">&nbsp;</span><input
-            name="cache_big_thumb" id="cache_big_thumb" type="checkbox" value="1" {if $CACHE_BIG_THUMB}checked="checked"
-            {/if}>{'Cache the big thumbnails (recommended)'|translate}</label></li>
-      <li><label><span
-            class="gd-checkbox fas {if $THUMB_ANIMATE}fa-check-square{else}fa-square{/if}">&nbsp;</span><input
-            name="thumb_animate" id="thumb_animate" type="checkbox" value="1" {if $THUMB_ANIMATE}checked="checked"
-            {/if}>{'Animate thumbnail on hover'|translate}</label></li>
       <li>
         <select id="normalize_title" name="normalize_title">
           <option {if $NORMALIZE_TITLE == 'off'}selected="selected" {/if} value="off">
@@ -74,8 +38,7 @@
         </select>
         <label for="normalize_title">{'Normalize Photo Title'|translate}</label>
       </li>
-      <li><label><span class="gd-checkbox fas {if $NO_WORDWRAP}fa-check-square{else}fa-square{/if}">&nbsp;</span><input
-            name="no_wordwrap" id="no_wordwrap" type="checkbox" value="1" {if $NO_WORDWRAP}checked="checked"
+      <li><label><input name="no_wordwrap" id="no_wordwrap" type="checkbox" value="1" {if $NO_WORDWRAP}checked="checked"
             {/if}>{'Prevent word wrap'|translate}</label></li>
       <li>
         <select id="thumb_mode_album" name="thumb_mode_album">
@@ -88,10 +51,8 @@
             {'Overlay Bottom (Static)'|translate}</option>
           <option {if $THUMB_MODE_ALBUM=="overlay"}selected="selected" {/if} value="overlay">{'Overlay'|translate}
           </option>
-          {if $CUSTOM_CSS=="yes"}
-            <option {if $THUMB_MODE_ALBUM=="overlay-ex"}selected="selected" {/if} value="overlay-ex">
-              {'Overlay Ex'|translate}</option>
-          {/if}
+          <option {if $THUMB_MODE_ALBUM=="overlay-ex"}selected="selected" {/if} value="overlay-ex">
+            {'Overlay Ex'|translate}</option>
           <option {if $THUMB_MODE_ALBUM=="hide"}selected="selected" {/if} value="hide">{'Hide'|translate}</option>
         </select>
         <label for="thumb_mode_album">{'Title Display Mode (Album)'|translate}</label>
@@ -107,10 +68,8 @@
             {'Overlay Bottom (Static)'|translate}</option>
           <option {if $THUMB_MODE_PHOTO=="overlay"}selected="selected" {/if} value="overlay">{'Overlay'|translate}
           </option>
-          {if $CUSTOM_CSS=="yes"}
-            <option {if $THUMB_MODE_PHOTO=="overlay-ex"}selected="selected" {/if} value="overlay-ex">
-              {'Overlay Ex'|translate}</option>
-          {/if}
+          <option {if $THUMB_MODE_PHOTO=="overlay-ex"}selected="selected" {/if} value="overlay-ex">
+            {'Overlay Ex'|translate}</option>
           <option {if $THUMB_MODE_PHOTO=="hide"}selected="selected" {/if} value="hide">{'Hide'|translate}</option>
         </select>
         <label for="thumb_mode_photo">{'Title Display Mode (Photo)'|translate}</label>
@@ -162,31 +121,18 @@
 </fieldset>
 
 {combine_css path=$GDTHUMB_PATH|cat:"/css/admin.css"}
+{html_head}
+<style>
+  #generate_cache p.buttons {
+    margin-top: 0;
+  }
 
-{if $CUSTOM_CSS=="yes"}
-  {combine_css path="node_modules/jquery-colorbox/example2/colorbox.css"}
-  {combine_css path=$GDTHEME_PATH|cat:"admin/css/styles.css"}
-  {combine_css path=$GDTHEME_PATH|cat:"css/all.css"}
-  {combine_script id='jquery.colorbox' load='footer' require='jquery' path='node_modules/jquery-colorbox/jquery.colorbox.js' }
-  {combine_script id='greydragon.admin' load='footer' require='jquery' path=$GDTHEME_PATH|cat:"admin/js/admin.js" }
-{else}
-  {html_head}
-  <style>
-    .gd-checkbox {
-      display: none;
-    }
-
-    #generate_cache p.buttons {
-      margin-top: 0;
-    }
-
-    .content select {
-      width: 20.4em !important;
-      margin-right: 0.6em;
-    }
-  </style>
-  {/html_head}
-{/if}
+  .content select {
+    width: 20.4em !important;
+    margin-right: 0.6em;
+  }
+</style>
+{/html_head}
 
 {combine_script id='iloader' load='footer' path=$GDTHUMB_PATH|cat:"/js/image.loader.js"}
 {combine_script id='admin.precache' load='footer' path=$GDTHUMB_PATH|cat:"/js/gdthumb.admin.js" require='jquery.ui'}

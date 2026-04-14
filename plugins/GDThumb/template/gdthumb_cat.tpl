@@ -6,7 +6,7 @@
     {foreach $category_thumbnails as $cat}
       {assign var=derivative value=$pwg->derivative($GDThumb_derivative_params, $cat.representative.src_image)}
 
-      <li class="gdthumb{if $GDThumb.thumb_animate} animate{/if} {$GDThumb.method} album">
+      <li class="gdthumb {$GDThumb.method} album">
         {if $GDThumb.thumb_mode_album !== "hide" }
           <span class="thumbLegend {$GDThumb.thumb_mode_album}">
             <span class="thumbName">
@@ -61,12 +61,6 @@
 
 {footer_script require="gdthumb"}<script>
   $(function() {
-    {if isset($GDThumb_big)}
-      {assign var=gt_size value=$GDThumb_big->get_size()}
-      var big_thumb = { id: {$GDThumb_big->src_image->id}, src: '{$GDThumb_big->get_url()}', width: {$gt_size[0]}, height: {$gt_size[1]} };
-    {else}
-      var big_thumb = null;
-    {/if}
-    GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin}, true, big_thumb, {$GDThumb.big_thumb_noinpw});
+    GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin}, true);
   });
 </script>{/footer_script}

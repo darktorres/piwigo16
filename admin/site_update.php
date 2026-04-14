@@ -744,6 +744,20 @@ if (isset($_POST['submit']) &&
                 'label' => 'Inserting ' . fmt_number(count($inserts)) . ' new photos',
             ]);
             $t_mass_insert = microtime(true);
+
+            // Drop the FULLTEXT index before bulk insert — it causes
+            // exponential slowdown as the table grows. Recreated after.
+            $has_ft_index = false;
+
+            if (count($inserts) > 10000) {
+                $result = $conf->sql_backend::pwg_query("SHOW INDEX FROM images WHERE Key_name = 'image_ft';");
+
+                if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
+                    $conf->sql_backend::pwg_query('ALTER TABLE images DROP INDEX image_ft;');
+                    $has_ft_index = true;
+                }
+            }
+
             $insert_progress = $sse_mode
                 ? function (int $done, int $total) {
                     sync_emit('substep_progress', [
@@ -757,7 +771,7 @@ if (isset($_POST['submit']) &&
                 'images',
                 array_keys($inserts[0]),
                 $inserts,
-                [],
+                ['bulk' => true],
                 $insert_progress
             );
 
@@ -771,8 +785,20 @@ if (isset($_POST['submit']) &&
             $conf->sql_backend::mass_inserts(
                 'image_category',
                 array_keys($insert_links[0]),
-                $insert_links
+                $insert_links,
+                ['bulk' => true]
             );
+
+            if ($has_ft_index) {
+                sync_emit('substep_progress', [
+                    'phase' => 'files',
+                    'id' => 'insert',
+                    'detail' => 'Rebuilding fulltext index...',
+                ]);
+                $conf->sql_backend::pwg_query(
+                    'ALTER TABLE images ADD FULLTEXT INDEX image_ft (name, comment);'
+                );
+            }
 
             // Single activity summary instead of one row per photo.
             functions::pwg_activity('photo', [count($caddiables)], 'add', [

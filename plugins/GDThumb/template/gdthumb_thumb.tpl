@@ -34,7 +34,7 @@
               <span
                 class="fas {if $media_type=="video"}fa-file-video{elseif $media_type=="music"}fa-file-audio{elseif $media_type=="doc"}fa-file-word{elseif $media_type=="pdf"}fa-file-pdf{else}fa-image{/if}"></span>
               {if !empty($thumbnail.icon_ts)}
-                <span class="new-thumb fas fa-asterisk" title="{$thumbnail.icon_ts.TITLE}" alt="(!)"></span>
+                <span class="new-thumb fas fa-asterisk" title="{$thumbnail.icon_ts.TITLE}"></span>
               {/if}
               {if $thumbnail.rating_score > 0}
                 <span class="rank-num"><i class="fas fa-star"></i>{$thumbnail.rating_score|string_format:"%d"}</span>

@@ -584,242 +584,237 @@ if (isset($_POST['submit']) &&
 
     $start = functions::get_moment();
 
-    $inserts = [];
-    $insert_links = [];
     $insert_formats = [];
     $formats_to_delete = [];
 
     sync_emit('substep_start', ['phase' => 'files', 'id' => 'diff', 'label' => 'Comparing filesystem vs database']);
     $t_diff = microtime(true);
 
-    $new_paths = array_diff(array_keys($fs), $db_elements);
+    // Fast count via C-level array_diff; freed immediately — only the integer is kept.
+    $new_paths_tmp = array_diff(array_keys($fs), $db_elements);
+    $new_count = count($new_paths_tmp);
+    unset($new_paths_tmp);
+
+    // [path => id] — entries are unset as we stream $fs in the insert loop below.
+    // What remains after the loop = deleted files (values are their image IDs).
+    $db_paths_set = array_flip($db_elements);
+
     sync_emit('substep_complete', [
         'phase' => 'files', 'id' => 'diff',
-        'detail' => fmt_number(count($new_paths)) . ' new, '
-            . fmt_number(count($fs) - count($new_paths)) . ' existing',
+        'detail' => fmt_number($new_count) . ' new, '
+            . fmt_number(count($fs) - $new_count) . ' existing',
         'elapsed' => round(microtime(true) - $t_diff, 1),
     ]);
 
-    sync_emit('substep_start', [
-        'phase' => 'files', 'id' => 'prepare',
-        'label' => 'Preparing ' . fmt_number(count($new_paths)) . ' new photos',
-    ]);
-    $t_prepare = microtime(true);
-    $prepare_count = 0;
-    $prepare_total = count($new_paths);
+    // --- Streaming insert loop ---
+    // Iterates $fs once: existing files are tracked for the formats-for-existing section;
+    // new files are inserted in 50k-row chunks so peak memory stays O(chunk), not O(total).
 
-    foreach ($new_paths as $path) {
-        $insert = [];
-        // storage category must exist
+    $existing_ids   = [];
+    $inserted_count = 0;
+    $chunk_inserts  = [];
+    $chunk_links    = [];
+    $chunk_fmt_new  = [];
+    $chunk_caddie   = [];
+
+    $image_fields = ['id', 'file', 'name', 'date_available', 'path', 'representative_ext', 'storage_category_id', 'added_by'];
+
+    if ($_POST['privacy_level'] != 0) {
+        $image_fields[] = 'level';
+    }
+
+    $link_fields    = ['image_id', 'category_id'];
+    $fmt_fields     = ['image_id', 'ext', 'filesize'];
+    $add_to_caddie  = isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1;
+
+    // Drop FULLTEXT index and disable uniqueness checks before the bulk-insert loop.
+    $has_ft_index = false;
+
+    if (! $simulate && $new_count > 10000) {
+        $result = $conf->sql_backend::pwg_query("SHOW INDEX FROM images WHERE Key_name = 'image_ft';");
+
+        if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
+            $conf->sql_backend::pwg_query('ALTER TABLE images DROP INDEX image_ft;');
+            $has_ft_index = true;
+        }
+
+        $conf->sql_backend::pwg_query('SET unique_checks=0, foreign_key_checks=0');
+    }
+
+    if ($new_count > 0) {
+        sync_emit('substep_start', [
+            'phase' => 'files', 'id' => 'insert',
+            'label' => 'Inserting ' . fmt_number($new_count) . ' new photos',
+        ]);
+        $t_mass_insert = microtime(true);
+    }
+
+    foreach ($fs as $path => $meta) {
+        if (isset($db_paths_set[$path])) {
+            // Existing file: collect ID for formats-for-existing check; mark seen.
+            $existing_ids[] = $db_paths_set[$path];
+            unset($db_paths_set[$path]);
+            continue;
+        }
+
+        // New file: storage category must exist in DB.
         $dirname = dirname($path);
 
         if (! isset($db_fulldirs[$dirname])) {
             continue;
         }
 
-        $filename = basename($path);
+        $inserted_count++;
 
-        $insert = [
-            'id' => $next_element_id++,
-            'file' => $conf->sql_backend::pwg_db_real_escape_string($filename),
-            'name' => $conf->sql_backend::pwg_db_real_escape_string(functions::get_name_from_file($filename)),
-            'date_available' => CURRENT_DATE,
-            'path' => $conf->sql_backend::pwg_db_real_escape_string($path),
-            'representative_ext' => $fs[$path]['representative_ext'],
-            'storage_category_id' => $db_fulldirs[$dirname],
-            'added_by' => $user['id'],
-        ];
+        if (! $simulate) {
+            $filename = basename($path);
 
-        if ($_POST['privacy_level'] != 0) {
-            $insert['level'] = $_POST['privacy_level'];
+            $insert = [
+                'id'                  => $next_element_id++,
+                'file'                => $conf->sql_backend::pwg_db_real_escape_string($filename),
+                'name'                => $conf->sql_backend::pwg_db_real_escape_string(functions::get_name_from_file($filename)),
+                'date_available'      => CURRENT_DATE,
+                'path'                => $conf->sql_backend::pwg_db_real_escape_string($path),
+                'representative_ext'  => $meta['representative_ext'],
+                'storage_category_id' => $db_fulldirs[$dirname],
+                'added_by'            => $user['id'],
+            ];
+
+            if ($_POST['privacy_level'] != 0) {
+                $insert['level'] = $_POST['privacy_level'];
+            }
+
+            $chunk_inserts[] = $insert;
+            $chunk_links[]   = ['image_id' => $insert['id'], 'category_id' => $insert['storage_category_id']];
+
+            if ($conf->enable_formats) {
+                foreach ($meta['formats'] as $ext => $filesize) {
+                    $chunk_fmt_new[] = ['image_id' => $insert['id'], 'ext' => $ext, 'filesize' => $filesize];
+                }
+            }
+
+            if ($add_to_caddie) {
+                $chunk_caddie[] = $insert['id'];
+            }
+
+            if (count($chunk_inserts) >= 50000) {
+                $conf->sql_backend::mass_inserts('images', $image_fields, $chunk_inserts);
+                $conf->sql_backend::mass_inserts('image_category', $link_fields, $chunk_links);
+
+                if ($chunk_fmt_new !== []) {
+                    $conf->sql_backend::mass_inserts('image_format', $fmt_fields, $chunk_fmt_new);
+                }
+
+                if ($chunk_caddie !== []) {
+                    functions::fill_caddie($chunk_caddie);
+                }
+
+                $chunk_inserts = $chunk_links = $chunk_fmt_new = $chunk_caddie = [];
+
+                sync_emit('substep_progress', [
+                    'phase' => 'files', 'id' => 'insert',
+                    'detail' => fmt_number($inserted_count) . ' / ' . fmt_number($new_count) . ' inserted',
+                ]);
+            }
+        } elseif ($sse_mode && $inserted_count % 50000 === 0) {
+            sync_emit('substep_progress', [
+                'phase' => 'files', 'id' => 'insert',
+                'detail' => fmt_number($inserted_count) . ' / ' . fmt_number($new_count) . ' counted',
+            ]);
+        }
+    }
+
+    // Flush the remaining partial chunk.
+    if ($chunk_inserts !== []) {
+        $conf->sql_backend::mass_inserts('images', $image_fields, $chunk_inserts);
+        $conf->sql_backend::mass_inserts('image_category', $link_fields, $chunk_links);
+
+        if ($chunk_fmt_new !== []) {
+            $conf->sql_backend::mass_inserts('image_format', $fmt_fields, $chunk_fmt_new);
         }
 
-        $inserts[] = $insert;
+        if ($chunk_caddie !== []) {
+            functions::fill_caddie($chunk_caddie);
+        }
+    }
 
-        $insert_links[] = [
-            'image_id' => $insert['id'],
-            'category_id' => $insert['storage_category_id'],
-        ];
+    unset($chunk_inserts, $chunk_links, $chunk_fmt_new, $chunk_caddie);
 
-        $prepare_count++;
+    if (! $simulate && $new_count > 10000) {
+        $conf->sql_backend::pwg_query('SET unique_checks=1, foreign_key_checks=1');
 
-        if ($sse_mode && $prepare_count % 50000 === 0) {
+        if ($has_ft_index) {
             sync_emit('substep_progress', [
-                'phase' => 'files',
-                'id' => 'prepare',
-                'detail' => fmt_number($prepare_count) . ' / ' . fmt_number($prepare_total) . ' prepared',
+                'phase' => 'files', 'id' => 'insert',
+                'detail' => 'Rebuilding fulltext index...',
+            ]);
+            $conf->sql_backend::pwg_query('ALTER TABLE images ADD FULLTEXT INDEX image_ft (name, comment);');
+        }
+    }
+
+    if ($inserted_count > 0) {
+        if (! $simulate) {
+            functions::pwg_activity('photo', [$inserted_count], 'add', [
+                'sync' => true,
+                'count' => $inserted_count,
             ]);
         }
 
-        if ($conf->enable_formats) {
-            foreach ($fs[$path]['formats'] as $ext => $filesize) {
-                $insert_formats[] = [
-                    'image_id' => $insert['id'],
-                    'ext' => $ext,
-                    'filesize' => $filesize,
-                ];
-            }
-        }
-
-        $caddiables[] = $insert['id'];
+        sync_emit('substep_complete', [
+            'phase' => 'files', 'id' => 'insert',
+            'detail' => fmt_number($inserted_count) . ' photos inserted',
+            'elapsed' => round(microtime(true) - $t_mass_insert, 1),
+        ]);
     }
 
-    sync_emit('substep_complete', [
-        'phase' => 'files', 'id' => 'prepare',
-        'detail' => fmt_number(count($inserts)) . ' photos prepared',
-        'elapsed' => round(microtime(true) - $t_prepare, 1),
-    ]);
-
     // search new/removed formats on photos already registered in database
-    if ($conf->enable_formats) {
-        $db_elements_flip = array_flip($db_elements);
+    // ($existing_ids was collected during the streaming insert loop above)
+    if ($conf->enable_formats && $existing_ids !== []) {
+        $db_formats = [];
 
-        $existing_ids = [];
+        // find formats for existing photos (already in database)
+        $existingIdsList = implode(', ', $existing_ids);
+        $query = <<<SQL
+            SELECT *
+            FROM image_format
+            WHERE image_id IN ({$existingIdsList});
+            SQL;
+        $result = $conf->sql_backend::pwg_query($query);
 
-        foreach (array_keys(array_intersect_key($fs, $db_elements_flip)) as $path) {
-            $existing_ids[] = $db_elements_flip[$path];
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
+            if (! isset($db_formats[$row['image_id']])) {
+                $db_formats[$row['image_id']] = [];
+            }
+
+            $db_formats[$row['image_id']][$row['ext']] = $row['format_id'];
         }
 
+        // first we search the formats that were removed
+        foreach ($db_formats as $image_id => $formats) {
+            $image_formats_to_delete = array_diff_key($formats, $fs[$db_elements[$image_id]]['formats']);
 
-        if ($existing_ids !== []) {
-            $db_formats = [];
-
-            // find formats for existing photos (already in database)
-            $existingIdsList = implode(', ', $existing_ids);
-            $query = <<<SQL
-                SELECT *
-                FROM image_format
-                WHERE image_id IN ({$existingIdsList});
-                SQL;
-            $result = $conf->sql_backend::pwg_query($query);
-
-            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-                if (! isset($db_formats[$row['image_id']])) {
-                    $db_formats[$row['image_id']] = [];
-                }
-
-                $db_formats[$row['image_id']][$row['ext']] = $row['format_id'];
+            foreach ($image_formats_to_delete as $ext => $format_id) {
+                $formats_to_delete[] = $format_id;
             }
+        }
 
-            // first we search the formats that were removed
-            foreach ($db_formats as $image_id => $formats) {
-                $image_formats_to_delete = array_diff_key($formats, $fs[$db_elements[$image_id]]['formats']);
+        // then we search for new formats on existing photos
+        foreach ($existing_ids as $image_id) {
+            $path   = $db_elements[$image_id];
+            $formats = $db_formats[$image_id] ?? [];
+            $image_formats_to_insert = array_diff_key($fs[$path]['formats'], $formats);
 
-                foreach ($image_formats_to_delete as $ext => $format_id) {
-                    $formats_to_delete[] = $format_id;
-
-                }
-            }
-
-            // then we search for new formats on existing photos
-            foreach ($existing_ids as $image_id) {
-                $path = $db_elements[$image_id];
-
-                $formats = [];
-
-                if (isset($db_formats[$image_id])) {
-                    $formats = $db_formats[$image_id];
-                }
-
-                $image_formats_to_insert = array_diff_key($fs[$path]['formats'], $formats);
-
-                foreach ($image_formats_to_insert as $ext => $filesize) {
-                    $insert_formats[] = [
-                        'image_id' => $image_id,
-                        'ext' => $ext,
-                        'filesize' => $filesize,
-                    ];
-
-
-                }
+            foreach ($image_formats_to_insert as $ext => $filesize) {
+                $insert_formats[] = [
+                    'image_id' => $image_id,
+                    'ext'      => $ext,
+                    'filesize' => $filesize,
+                ];
             }
         }
     }
 
     if (! $simulate) {
-        // inserts all new elements
-        if ($inserts !== []) {
-            sync_emit('substep_start', [
-                'phase' => 'files', 'id' => 'insert',
-                'label' => 'Inserting ' . fmt_number(count($inserts)) . ' new photos',
-            ]);
-            $t_mass_insert = microtime(true);
-
-            // Drop the FULLTEXT index before bulk insert — it causes
-            // exponential slowdown as the table grows. Recreated after.
-            $has_ft_index = false;
-
-            if (count($inserts) > 10000) {
-                $result = $conf->sql_backend::pwg_query("SHOW INDEX FROM images WHERE Key_name = 'image_ft';");
-
-                if ($conf->sql_backend::pwg_db_num_rows($result) > 0) {
-                    $conf->sql_backend::pwg_query('ALTER TABLE images DROP INDEX image_ft;');
-                    $has_ft_index = true;
-                }
-            }
-
-            $insert_progress = $sse_mode
-                ? function (int $done, int $total) {
-                    sync_emit('substep_progress', [
-                        'phase' => 'files',
-                        'id' => 'insert',
-                        'detail' => fmt_number($done) . ' / ' . fmt_number($total) . ' photos inserted',
-                    ]);
-                }
-                : null;
-            $conf->sql_backend::mass_inserts(
-                'images',
-                array_keys($inserts[0]),
-                $inserts,
-                ['bulk' => true],
-                $insert_progress
-            );
-
-            sync_emit('substep_progress', [
-                'phase' => 'files',
-                'id' => 'insert',
-                'detail' => 'Inserting album links...',
-            ]);
-
-            // inserts all links between new elements and their storage category
-            $conf->sql_backend::mass_inserts(
-                'image_category',
-                array_keys($insert_links[0]),
-                $insert_links,
-                ['bulk' => true]
-            );
-
-            if ($has_ft_index) {
-                sync_emit('substep_progress', [
-                    'phase' => 'files',
-                    'id' => 'insert',
-                    'detail' => 'Rebuilding fulltext index...',
-                ]);
-                $conf->sql_backend::pwg_query(
-                    'ALTER TABLE images ADD FULLTEXT INDEX image_ft (name, comment);'
-                );
-            }
-
-            // Single activity summary instead of one row per photo.
-            functions::pwg_activity('photo', [count($caddiables)], 'add', [
-                'sync' => true,
-                'count' => count($caddiables),
-            ]);
-
-            // add new photos to caddie
-            if (isset($_POST['add_to_caddie']) &&
-                $_POST['add_to_caddie'] == 1
-            ) {
-                functions::fill_caddie($caddiables);
-            }
-
-            sync_emit('substep_complete', [
-                'phase' => 'files', 'id' => 'insert',
-                'detail' => fmt_number(count($inserts)) . ' photos inserted',
-                'elapsed' => round(microtime(true) - $t_mass_insert, 1),
-            ]);
-        }
-
         // inserts all formats
         if ($insert_formats !== [] || $formats_to_delete !== []) {
             sync_emit('substep_start', [
@@ -854,17 +849,15 @@ if (isset($_POST['submit']) &&
         }
     }
 
-    $counts['new_elements'] = count($inserts);
+    $counts['new_elements'] = $inserted_count;
 
     sync_emit('substep_start', ['phase' => 'files', 'id' => 'delete', 'label' => 'Checking for deleted files']);
     $t_delete_check = microtime(true);
 
-    // delete elements that are in database but not in the filesystem
-    $to_delete_elements = [];
-
-    foreach (array_diff($db_elements, array_keys($fs)) as $path) {
-        $to_delete_elements[] = array_search($path, $db_elements, true);
-    }
+    // Remaining entries in $db_paths_set are files deleted from the filesystem.
+    // (Existing files were unset from $db_paths_set during the streaming insert loop.)
+    $to_delete_elements = array_values($db_paths_set);
+    unset($db_paths_set);
 
     if ($to_delete_elements !== []) {
         if (! $simulate) {
@@ -957,6 +950,11 @@ if (isset($_POST['submit']) &&
         $start = functions::get_moment();
 
         $datas = [];
+        $attrs_update_fields = [
+            'primary' => ['id'],
+            'update'  => $site_reader->get_update_attributes(),
+        ];
+        $attrs_updated = 0;
 
         foreach ($files as $id => $file) {
             $data = $site_reader->get_element_update_attributes($file['path']);
@@ -975,25 +973,27 @@ if (isset($_POST['submit']) &&
 
             $data['id'] = $id;
             $datas[] = $data;
-        }
-        $counts['upd_elements'] = count($datas);
+            $attrs_updated++;
 
-        if (! $simulate &&
-            $datas !== []
-        ) {
-            $conf->sql_backend::mass_updates(
-                'images',
-                [
-                    'primary' => ['id'],
-                    'update' => $site_reader->get_update_attributes(),
-                ],
-                $datas
-            );
+            if (count($datas) >= 10000) {
+                if (! $simulate) {
+                    $conf->sql_backend::mass_updates('images', $attrs_update_fields, $datas);
+                }
+
+                $datas = [];
+            }
         }
+
+        if (! $simulate && $datas !== []) {
+            $conf->sql_backend::mass_updates('images', $attrs_update_fields, $datas);
+            $datas = [];
+        }
+
+        $counts['upd_elements'] = $attrs_updated;
 
         sync_emit('substep_complete', [
             'phase' => 'files', 'id' => 'attrs',
-            'detail' => count($datas) > 0 ? fmt_number(count($datas)) . ' updated' : 'no changes',
+            'detail' => $attrs_updated > 0 ? fmt_number($attrs_updated) . ' updated' : 'no changes',
             'elapsed' => round(microtime(true) - $t_update_phase, 1),
         ]);
 
@@ -1061,8 +1061,22 @@ if (isset($_POST['submit']) &&
 
     $start = functions::get_moment();
     $datas = [];
+    $meta_datas_total = 0;
     $tags_of = [];
     $tag_names_by_image = [];
+    $meta_update_fields = [
+        'primary' => ['id'],
+        'update'  => array_unique(
+            array_merge(
+                array_diff(
+                    $site_reader->get_metadata_attributes(),
+                    ['keywords', 'tags']
+                ),
+                ['date_metadata_update']
+            )
+        ),
+    ];
+    $meta_update_options = isset($_POST['meta_empty_overrides']) ? 0 : $conf->sql_backend::MASS_UPDATES_SKIP_EMPTY;
     $meta_progress_count = 0;
     $meta_skipped = 0;
     $profiling = $conf->sync_profiling;
@@ -1114,7 +1128,7 @@ if (isset($_POST['submit']) &&
                     'phase' => 'meta',
                     'current' => $meta_progress_count,
                     'total' => count($files),
-                    'updated' => count($datas),
+                    'updated' => $meta_datas_total,
                     'skipped' => $meta_skipped,
                     'file' => basename($element_infos['path']),
                 ]);
@@ -1127,6 +1141,7 @@ if (isset($_POST['submit']) &&
             $data['date_metadata_update'] = CURRENT_DATE;
             $data['id'] = $id;
             $datas[] = $data;
+            $meta_datas_total++;
 
             // Collect tag names for batch resolution after the loop
             foreach (['keywords', 'tags'] as $key) {
@@ -1140,6 +1155,12 @@ if (isset($_POST['submit']) &&
                     }
                 }
             }
+
+            // Stream to DB every 10k rows to cap $datas memory usage.
+            if (! $simulate && count($datas) >= 10000) {
+                $conf->sql_backend::mass_updates('images', $meta_update_fields, $datas, $meta_update_options);
+                $datas = [];
+            }
         } else {
             $errors[] = [
                 'path' => $element_infos['path'],
@@ -1152,7 +1173,7 @@ if (isset($_POST['submit']) &&
                 'phase' => 'meta',
                 'current' => $meta_progress_count,
                 'total' => count($files),
-                'updated' => count($datas),
+                'updated' => $meta_datas_total,
                 'skipped' => $meta_skipped,
                 'file' => basename($element_infos['path']),
             ]);
@@ -1166,7 +1187,7 @@ if (isset($_POST['submit']) &&
         $p99 = $prof_meta_times[(int) floor($prof_meta_count * 0.99)] ?? 0;
         $logger->info('[sync][meta] metadata extraction loop summary', [
             'images_processed' => $prof_meta_count,
-            'images_success' => count($datas),
+            'images_success' => $meta_datas_total,
             'images_error' => count($errors),
             'total_s' => round($prof_meta_total, 4),
             'avg_s' => round($prof_meta_total / $prof_meta_count, 4),
@@ -1180,7 +1201,7 @@ if (isset($_POST['submit']) &&
 
     sync_emit('substep_complete', [
         'phase' => 'meta', 'id' => 'extract',
-        'detail' => fmt_number(count($datas)) . ' updated, ' . fmt_number($meta_skipped) . ' skipped',
+        'detail' => fmt_number($meta_datas_total) . ' updated, ' . fmt_number($meta_skipped) . ' skipped',
         'elapsed' => round(microtime(true) - $t_extract, 1),
     ]);
 
@@ -1238,32 +1259,17 @@ if (isset($_POST['submit']) &&
         sync_emit('substep_start', ['phase' => 'meta', 'id' => 'db_update', 'label' => 'Updating database']);
         $t_db_update = microtime(true);
 
+        // Flush the remaining partial $datas batch (most rows were streamed during extract).
         if ($datas !== []) {
-            $conf->sql_backend::mass_updates(
-                'images',
-                [
-                    'primary' => ['id'],
-                    'update' => array_unique(
-                        array_merge(
-                            array_diff(
-                                $site_reader->get_metadata_attributes(),
-                                // keywords and tags fields are managed separately
-                                ['keywords', 'tags']
-                            ),
-                            ['date_metadata_update']
-                        )
-                    ),
-                ],
-                $datas,
-                isset($_POST['meta_empty_overrides']) ? 0 : $conf->sql_backend::MASS_UPDATES_SKIP_EMPTY
-            );
+            $conf->sql_backend::mass_updates('images', $meta_update_fields, $datas, $meta_update_options);
+            $datas = [];
         }
 
         functions_admin::set_tags_of($tags_of);
 
         sync_emit('substep_complete', [
             'phase' => 'meta', 'id' => 'db_update',
-            'detail' => fmt_number(count($datas)) . ' rows, ' . count($tags_of) . ' tagged',
+            'detail' => fmt_number($meta_datas_total) . ' rows, ' . count($tags_of) . ' tagged',
             'elapsed' => round(microtime(true) - $t_db_update, 1),
         ]);
     }
@@ -1271,7 +1277,7 @@ if (isset($_POST['submit']) &&
     sync_emit('phase_complete', [
         'phase' => 'meta',
         'elapsed' => round(microtime(true) - $t_meta_phase, 1),
-        'updated' => count($datas),
+        'updated' => $meta_datas_total,
         'candidates' => count($files),
         'skipped' => $meta_skipped,
     ]);
@@ -1283,7 +1289,7 @@ if (isset($_POST['submit']) &&
     $template->assign(
         'metadata_result',
         [
-            'NB_ELEMENTS_DONE' => count($datas),
+            'NB_ELEMENTS_DONE' => $meta_datas_total,
             'NB_ELEMENTS_CANDIDATES' => count($files),
             'NB_ERRORS' => count($errors),
         ]
@@ -1309,7 +1315,7 @@ if ($sse_mode && isset($_POST['submit'])) {
 
     if (isset($t_meta_phase)) {
         $sse_results['metadata'] = [
-            'updated' => count($datas),
+            'updated' => $meta_datas_total,
             'candidates' => count($files),
             'errors' => count($errors),
         ];

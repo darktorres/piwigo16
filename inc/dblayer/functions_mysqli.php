@@ -58,7 +58,18 @@ final class functions_mysqli
             $port = (int) $port;
         }
 
-        $mysqli = new mysqli($host, $user, $password, '', $port, $socket);
+        $mysqli = new mysqli();
+        $mysqli->options(MYSQLI_OPT_LOCAL_INFILE, true);
+
+        // real_connect requires concrete defaults for optional params.
+        $mysqli->real_connect(
+            $host ?? 'localhost',
+            $user,
+            $password,
+            '',
+            $port ?? 0,
+            $socket ?? ''
+        );
 
         if (mysqli_connect_error()) {
             throw new Exception("Can't connect to server");
@@ -444,6 +455,9 @@ final class functions_mysqli
      *     ignore: bool,
      * } $options
      */
+    /** Cached value of @@max_allowed_packet (session-lifetime). */
+    private static ?int $cachedPacketSize = null;
+
     public static function mass_inserts(
         string $table_name,
         array $dbfields,
@@ -463,10 +477,12 @@ final class functions_mysqli
             $ignore = 'IGNORE';
         }
 
-        $query = <<<SQL
-            SELECT @@max_allowed_packet;
-            SQL;
-        [$packet_size] = self::pwg_db_fetch_row(self::pwg_query($query));
+        if (self::$cachedPacketSize === null) {
+            [$pkt] = self::pwg_db_fetch_row(self::pwg_query('SELECT @@max_allowed_packet;'));
+            self::$cachedPacketSize = (int) $pkt;
+        }
+
+        $packet_size = self::$cachedPacketSize;
         $dbfields_str = implode(', ', $dbfields);
 
         $insert_ignore = 'INSERT' . ($ignore !== '' ? " {$ignore}" : '');
@@ -483,6 +499,11 @@ final class functions_mysqli
         $rowCount = 0;
 
         $bulk = ! empty($options['bulk']);
+        // When the caller already manages the transaction (e.g. sync loop
+        // wrapping inserts into images + image_category in one commit),
+        // skip the internal START TRANSACTION / COMMIT to avoid extra
+        // implicit commits and redundant disk syncs.
+        $manage_txn = empty($options['no_transaction']);
 
         // For very large inserts, disable index checks and commit in
         // chunks to keep the redo log manageable.
@@ -490,7 +511,10 @@ final class functions_mysqli
             self::pwg_query('SET unique_checks=0, foreign_key_checks=0;');
         }
 
-        self::pwg_query('START TRANSACTION;');
+        if ($manage_txn) {
+            self::pwg_query('START TRANSACTION;');
+        }
+
         $totalRows = count($datas);
         $insertedRows = 0;
         $batchesSinceCommit = 0;
@@ -526,7 +550,7 @@ final class functions_mysqli
                 }
 
                 // Commit periodically in bulk mode to keep the redo log bounded.
-                if ($bulk && $batchesSinceCommit >= 10) {
+                if ($manage_txn && $bulk && $batchesSinceCommit >= 10) {
                     self::pwg_query('COMMIT;');
                     self::pwg_query('START TRANSACTION;');
                     $batchesSinceCommit = 0;
@@ -549,11 +573,92 @@ final class functions_mysqli
             self::pwg_query($queryBase . $query . ';');
         }
 
-        self::pwg_query('COMMIT;');
+        if ($manage_txn) {
+            self::pwg_query('COMMIT;');
+        }
 
         if ($bulk) {
             self::pwg_query('SET unique_checks=1, foreign_key_checks=1;');
         }
+    }
+
+    /**
+     * Bulk-load rows from a TSV temp file via LOAD DATA LOCAL INFILE.
+     *
+     * Much faster than multi-row INSERT for large datasets (10k+ rows)
+     * because it bypasses SQL parsing and PHP string-building entirely.
+     *
+     * Requires MYSQLI_OPT_LOCAL_INFILE (set in pwg_db_connect) and the
+     * MySQL server to allow local_infile.  Returns false if LOAD DATA
+     * is unavailable so the caller can fall back to mass_inserts.
+     *
+     * The caller is responsible for transaction management.
+     *
+     * @param string   $tsv_path   Absolute path to the TSV file.
+     * @param string   $table_name Target table.
+     * @param string[] $dbfields   Column names, matching TSV column order.
+     * @return bool    true on success, false if LOAD DATA failed.
+     */
+    public static function load_data_local(
+        string $tsv_path,
+        string $table_name,
+        array $dbfields
+    ): bool {
+        global $mysqli;
+
+        $fields = implode(', ', $dbfields);
+        // MySQL accepts forward slashes on all platforms.
+        $path = str_replace('\\', '/', $tsv_path);
+
+        $query = "LOAD DATA LOCAL INFILE '{$path}'"
+            . " INTO TABLE {$table_name}"
+            . " CHARACTER SET utf8mb4"
+            . " FIELDS TERMINATED BY '\\t'"
+            . " LINES TERMINATED BY '\\n'"
+            . " ({$fields});";
+
+        // Suppress the exception path — return false so the caller can
+        // fall back to mass_inserts instead of dying.
+        try {
+            $result = $mysqli->query($query);
+        } catch (Exception) {
+            return false;
+        }
+
+        return $result !== false;
+    }
+
+    /**
+     * Write one TSV row into an open file handle.
+     *
+     * NULL / empty values are written as \N (the LOAD DATA NULL marker).
+     * Tabs, newlines and backslashes in values are escaped.
+     *
+     * @param resource $fp       fopen() handle opened with 'wb'.
+     * @param array    $row      Associative row data.
+     * @param string[] $dbfields Column order.
+     */
+    public static function write_tsv_row($fp, array $row, array $dbfields): void
+    {
+        $line = '';
+
+        foreach ($dbfields as $i => $field) {
+            if ($i > 0) {
+                $line .= "\t";
+            }
+
+            if (! isset($row[$field]) || $row[$field] === '') {
+                $line .= '\\N';
+            } else {
+                $line .= str_replace(
+                    ['\\', "\t", "\n", "\r"],
+                    ['\\\\', '\\t', '\\n', '\\r'],
+                    (string) $row[$field]
+                );
+            }
+        }
+
+        fwrite($fp, $line . "\n");
     }
 
     /**

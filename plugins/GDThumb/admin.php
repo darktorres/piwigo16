@@ -57,13 +57,7 @@ if (isset($_GET['getMissingDerivative'])) {
                 continue;
             }
 
-            if (($params['method'] == 'slide') ||
-                ($params['method'] == 'square')
-            ) {
-                $derivative = new DerivativeImage(ImageStdParams::get_custom($params['height'], 9999), $src_image);
-            } else {
-                $derivative = new DerivativeImage(ImageStdParams::get_custom(9999, $params['height']), $src_image);
-            }
+            $derivative = new DerivativeImage(ImageStdParams::get_custom(9999, $params['height']), $src_image);
 
             $mtime = file_exists($derivative->get_path()) ? filemtime($derivative->get_path()) : false;
 
@@ -98,77 +92,32 @@ if (isset($_GET['getMissingDerivative'])) {
 if (isset($_POST['cachedelete'])) {
     functions::check_pwg_token();
     functions_GDThumb::delete_gdthumb_cache($params['height']);
-    functions_GDThumb::delete_gdthumb_cache($params['height'] * 2 + $params['margin']);
     functions::redirect('admin.php?page=plugin-GDThumb');
 }
 
 // Save configuration
 if (isset($_POST['submit'])) {
     functions::check_pwg_token();
-    $method = empty($_POST['method'] ?? null) ? 'resize' : $_POST['method'];
+    $method = in_array($_POST['method'] ?? '', ['crop', 'resize']) ? $_POST['method'] : 'crop';
     $normalize = empty($_POST['normalize_title'] ?? null) ? 'off' : $_POST['normalize_title'];
-    $big_thumb = ! empty($_POST['big_thumb']);
-    $big_thumb_noinpw = ! empty($_POST['big_thumb_noinpw']);
-    $thumb_animate = ! empty($_POST['thumb_animate']);
     $valid_modes = ['top', 'top_static', 'bottom', 'bottom_static', 'overlay', 'overlay-ex', 'hide'];
     $thumb_mode_album = in_array($_POST['thumb_mode_album'] ?? '', $valid_modes) ? $_POST['thumb_mode_album'] : 'bottom';
     $thumb_mode_photo = in_array($_POST['thumb_mode_photo'] ?? '', $valid_modes) ? $_POST['thumb_mode_photo'] : 'bottom';
-    if ($method == 'slide') {
-        if ($big_thumb) {
-            $big_thumb = false;
-            $page['warnings'][] = functions::l10n('Big thumb cannot be used in Slide mode. Disabled');
-        }
-
-        if ($thumb_animate) {
-            $thumb_animate = false;
-            $page['warnings'][] = functions::l10n('Thumb animation cannot be used in Slide mode. Disabled');
-        }
-
-        if ($thumb_mode_album == 'overlay-ex' ||
-            $thumb_mode_album == 'overlay' ||
-            $thumb_mode_album == 'top' ||
-            $thumb_mode_album == 'bottom'
-        ) {
-            $thumb_mode_album = 'bottom_static';
-            $page['warnings'][] = functions::l10n('This Thumb mode cannot be used in Slide mode. Changed to default');
-        }
-
-        if ($thumb_mode_photo == 'overlay-ex' ||
-            $thumb_mode_photo == 'overlay' ||
-            $thumb_mode_photo == 'top' ||
-            $thumb_mode_photo == 'bottom'
-        ) {
-            $thumb_mode_photo = 'bottom_static';
-            $page['warnings'][] = functions::l10n('This Thumb mode cannot be used in Slide mode. Changed to default');
-        }
-    }
-
-    if ($big_thumb_noinpw &&
-        ! $big_thumb
-    ) {
-        $big_thumb_noinpw = false;
-    }
 
     $params = [
         'height' => (int) ($_POST['height'] ?? $conf->gdThumb['height']),
         'margin' => (int) ($_POST['margin'] ?? $conf->gdThumb['margin']),
         'nb_image_page' => (int) ($_POST['nb_image_page'] ?? $conf->gdThumb['nb_image_page']),
-        'big_thumb' => $big_thumb,
-        'big_thumb_noinpw' => $big_thumb_noinpw,
-        'cache_big_thumb' => ! empty($_POST['cache_big_thumb']),
         'normalize_title' => $normalize,
         'method' => $method,
         'thumb_mode_album' => $thumb_mode_album,
         'thumb_mode_photo' => $thumb_mode_photo,
         'thumb_metamode' => in_array($_POST['thumb_metamode'] ?? '', ['merged', 'merged_desc', 'hide']) ? $_POST['thumb_metamode'] : 'merged',
         'no_wordwrap' => ! empty($_POST['no_wordwrap']),
-        'thumb_animate' => $thumb_animate,
     ];
 
     if ($params['height'] != $conf->gdThumb['height']) {
         functions_GDThumb::delete_gdthumb_cache($conf->gdThumb['height']);
-    } elseif ($params['margin'] != $conf->gdThumb['margin']) {
-        functions_GDThumb::delete_gdthumb_cache($conf->gdThumb['height'] * 2 + $conf->gdThumb['margin']);
     }
 
     if (empty($page['errors'])) {
@@ -176,11 +125,6 @@ if (isset($_POST['submit'])) {
         $page['infos'][] = functions::l10n('Information data registered in database');
     }
 }
-
-// Try to find GreyDragon Theme and use Theme's styles for admin area
-$css_file = str_replace('/./', '/', dirname(__FILE__, 3) . '/' . GDTHEME_PATH . 'admin/css/styles.css');
-
-$custom_css = file_exists($css_file) ? 'yes' : 'no';
 
 if (! isset($params['normalize_title'])) {
     $params['normalize_title'] = 'off';
@@ -192,26 +136,19 @@ if (! isset($params['normalize_title'])) {
 $template->assign(
     [
         'GDTHUMB_PATH' => 'plugins/' . GDTHUMB_ID,
-        'GDTHEME_PATH' => GDTHEME_PATH,
         'GDTHUMB_VERSION' => GDTHUMB_VERSION,
-        'PHPWG_ROOT_PATH' => './',
 
         'HEIGHT' => $params['height'],
         'MARGIN' => $params['margin'],
         'NB_IMAGE_PAGE' => $params['nb_image_page'],
-        'BIG_THUMB' => $params['big_thumb'],
-        'BIG_THUMB_NOINPW' => isset($params['big_thumb_noinpw']) && $params['big_thumb_noinpw'],
-        'CACHE_BIG_THUMB' => $params['cache_big_thumb'],
         'NORMALIZE_TITLE' => $params['normalize_title'],
         'METHOD' => $params['method'],
         'THUMB_MODE_ALBUM' => $params['thumb_mode_album'],
         'THUMB_MODE_PHOTO' => $params['thumb_mode_photo'],
         'THUMB_METAMODE' => $params['thumb_metamode'],
         'NO_WORDWRAP' => isset($params['no_wordwrap']) && $params['no_wordwrap'],
-        'THUMB_ANIMATE' => isset($params['thumb_animate']) && $params['thumb_animate'],
 
         'PWG_TOKEN' => functions::get_pwg_token(),
-        'CUSTOM_CSS' => $custom_css,
     ]
 );
 

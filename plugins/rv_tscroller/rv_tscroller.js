@@ -5,15 +5,11 @@ if (window.jQuery && window.RVTS)
     (function ($) {
         if (RVTS.start > 0) {
             var $f = $(".navigationBar A[rel=first]");
-            $("#thumbnails").before(
-                '<div id=rvtsUp style="text-align:center;font-size:120%;margin:10px"><a href="' +
-                    $f.attr("href") +
-                    '">' +
-                    $f.html() +
-                    '</a> | <a href="javascript:RVTS.loadUp()">' +
-                    RVTS.prevMsg +
-                    "</a></div>",
-            );
+            var $upDiv = $('<div id="rvtsUp" style="text-align:center;font-size:120%;margin:10px"></div>');
+            $upDiv.append($('<a></a>').attr("href", $f.attr("href")).text($f.text()));
+            $upDiv.append(" | ");
+            $upDiv.append($('<a href="#"></a>').text(RVTS.prevMsg).on("click", function(e) { e.preventDefault(); RVTS.loadUp(); }));
+            $("#thumbnails").before($upDiv);
         }
 
         RVTS = $.fn.extend(RVTS, {
@@ -145,7 +141,7 @@ if (window.jQuery && window.RVTS)
             $(window).one("RVTS_loaded", function () {
                 $(window).on("unload", function () {
                     var threshold = Math.max(0, $(window).scrollTop() - 60);
-                    var elts = RVTS.$thumbs.children("li");
+                    var elts = RVTS.$thumbs.children();
                     for (var i = 0; i < elts.length; i++) {
                         var offset = $(elts[i]).offset();
                         if (offset.top >= threshold) {
@@ -158,11 +154,13 @@ if (window.jQuery && window.RVTS)
                                           "/start-%start%",
                                           "",
                                       );
-                                window.history.replaceState(
-                                    null,
-                                    "",
-                                    url + "#top",
-                                );
+                                try {
+                                    window.history.replaceState(
+                                        null,
+                                        "",
+                                        url + "#top",
+                                    );
+                                } catch (e) {}
                             }
                             break;
                         }

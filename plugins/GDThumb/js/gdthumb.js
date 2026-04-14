@@ -7,8 +7,10 @@ var GDThumb = {
     check_pv: false,
     small_thumb: null,
     method: "crop",
-    t: new Array(),
+    t: [],
     do_merge: false,
+    _$list: null,
+    _$imgs: null,
 
     // Initialize plugin logic, perform necessary steps
     setup: function (
@@ -72,13 +74,15 @@ var GDThumb = {
 
     // Build thumb metadata
     build: function () {
+        GDThumb._$list = jQuery("ul.thumbnails");
+        GDThumb._$imgs = GDThumb._$list.find("img.thumbnail");
         if (
             GDThumb.method == "square" &&
             GDThumb.big_thumb != null &&
             (GDThumb.big_thumb.height != GDThumb.big_thumb.width ||
                 GDThumb.big_thumb.height < GDThumb.max_height)
         ) {
-            var main_width = jQuery("ul.thumbnails").width();
+            var main_width = GDThumb._$list.width();
             var max_col_count = Math.floor(main_width / GDThumb.max_height);
             var thumb_width =
                 Math.floor(main_width / max_col_count) - GDThumb.margin;
@@ -88,15 +92,15 @@ var GDThumb = {
             GDThumb.big_thumb.crop = GDThumb.big_thumb.height;
             GDThumb.max_height = thumb_width;
         } else if (GDThumb.method == "slide") {
-            var main_width = jQuery("ul.thumbnails").width();
+            var main_width = GDThumb._$list.width();
             var max_col_count = Math.floor(main_width / GDThumb.max_height);
             var thumb_width =
                 Math.floor(main_width / max_col_count) - GDThumb.margin;
             GDThumb.max_height = thumb_width;
         }
 
-        GDThumb.t = new Array();
-        $("ul.thumbnails img.thumbnail").each(function (index) {
+        GDThumb.t = [];
+        GDThumb._$imgs.each(function (index) {
             var width = parseInt(jQuery(this).attr("width"));
             var height = parseInt(jQuery(this).attr("height"));
             var th = {
@@ -137,7 +141,7 @@ var GDThumb = {
                 index: first.index,
                 width: first.real_width,
                 height: first.real_height,
-                src: jQuery("ul.thumbnails img.thumbnail:first").attr("src"),
+                src: GDThumb._$imgs.first().attr("src"),
             };
         }
         jQuery.resize.throttleWindow = false;
@@ -150,8 +154,8 @@ var GDThumb = {
         var width_count = GDThumb.margin;
         var line = 1;
         var round_rest = 0;
-        var main_width = jQuery("ul.thumbnails").width();
-        var first_thumb = jQuery("ul.thumbnails img.thumbnail:first");
+        var main_width = GDThumb._$list.width();
+        var first_thumb = GDThumb._$imgs.first();
         var best_size = { width: 1, height: 1 };
 
         if (GDThumb.method == "slide") {
@@ -343,7 +347,7 @@ var GDThumb = {
                         }
                     }
                     GDThumb.resize(
-                        jQuery("ul.thumbnails img.thumbnail").eq(
+                        GDThumb._$imgs.eq(
                             thumb_process[j].index,
                         ),
                         thumb_process[j].real_width,
@@ -356,7 +360,7 @@ var GDThumb = {
 
                     width_count += new_width + GDThumb.margin;
                 }
-                thumb_process = new Array();
+                thumb_process = [];
                 width_count = GDThumb.margin;
                 max_height = 0;
                 line++;
@@ -372,7 +376,7 @@ var GDThumb = {
             // we have only one line, i.e. the first line is the one and only line and therefor the last line too
             if (line == 1) {
                 GDThumb.resize(
-                    jQuery("ul.thumbnails img.thumbnail").eq(
+                    GDThumb._$imgs.eq(
                         thumb_process[j].index,
                     ),
                     thumb_process[j].real_width,
@@ -394,7 +398,7 @@ var GDThumb = {
                 }
 
                 GDThumb.resize(
-                    jQuery("ul.thumbnails img.thumbnail").eq(
+                    GDThumb._$imgs.eq(
                         thumb_process[j].index,
                     ),
                     thumb_process[j].real_width,
@@ -409,7 +413,7 @@ var GDThumb = {
             }
         }
 
-        if (main_width != jQuery("ul.thumbnails").width() && !GDThumb._processing) {
+        if (main_width != GDThumb._$list.width() && !GDThumb._processing) {
             GDThumb._processing = true;
             GDThumb.process();
             GDThumb._processing = false;

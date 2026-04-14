@@ -473,11 +473,11 @@ final class functions_mysqli
         $queryBase = "{$insert_ignore} INTO {$table_name} ({$dbfields_str}) VALUES\n";
         $queryBaseLen = strlen($queryBase);
 
-        // Cap batch size to avoid building enormous strings (O(n²) concat)
-        // and give MySQL smaller queries to parse. 1000 rows per INSERT is
-        // a good balance — large enough for efficiency, small enough to avoid
-        // multi-MB string allocations.
-        $max_rows = 1000;
+        // Cap batch size to keep individual INSERT statements under the
+        // max_allowed_packet limit.  The packet_size check below is the
+        // primary guard; max_rows is a secondary ceiling so we don't
+        // build excessively large PHP strings in memory.
+        $max_rows = 50000;
         $query = '';
         $currentLen = $queryBaseLen;
         $rowCount = 0;

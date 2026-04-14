@@ -440,9 +440,7 @@ final class functions_history
             return;
         }
 
-        $result = $conf->sql_backend::pwg_query('SHOW COLUMNS FROM history LIKE "summarized";');
-
-        if ($conf->sql_backend::pwg_db_num_rows($result)) {
+        if (in_array('summarized', $conf->sql_backend::get_table_columns('history'))) {
             $conf->sql_backend::pwg_query('ALTER TABLE history DROP COLUMN summarized;');
         }
 

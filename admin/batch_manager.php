@@ -396,8 +396,9 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
             // combination of "duplicates_on_fields" you won't get all the
             // duplicates.
 
+            $group_concat_id = $conf->sql_backend::sql_group_concat('id');
             $query = <<<SQL
-                SELECT GROUP_CONCAT(id) AS ids
+                SELECT {$group_concat_id} AS ids
                 FROM images
 
                 SQL;

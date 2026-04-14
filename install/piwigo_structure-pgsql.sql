@@ -7,6 +7,35 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- FTS trigger functions: populate tsvector columns on INSERT and UPDATE.
+-- These fire during COPY FROM STDIN, so bulk inserts populate FTS automatically.
+
+CREATE OR REPLACE FUNCTION update_images_fts()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.image_fts := to_tsvector('english',
+        coalesce(NEW.name, '') || ' ' || coalesce(NEW.comment, ''));
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_categories_fts()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.category_fts := to_tsvector('english',
+        coalesce(NEW.name, '') || ' ' || coalesce(NEW.comment, ''));
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_tags_fts()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.tag_fts := to_tsvector('english', coalesce(NEW.name, ''));
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 --
 -- Table structure for table `activity`
 --
@@ -72,6 +101,11 @@ CREATE TRIGGER trg_categories_update_lastmodified
     BEFORE UPDATE
     ON categories
     FOR EACH ROW EXECUTE FUNCTION update_lastmodified_column();
+
+CREATE TRIGGER trg_categories_fts
+    BEFORE INSERT OR UPDATE OF name, comment
+    ON categories
+    FOR EACH ROW EXECUTE FUNCTION update_categories_fts();
 
 --
 -- Table structure for table `comments`
@@ -279,6 +313,11 @@ CREATE TRIGGER trg_images_update_lastmodified
     ON images
     FOR EACH ROW EXECUTE FUNCTION update_lastmodified_column();
 
+CREATE TRIGGER trg_images_fts
+    BEFORE INSERT OR UPDATE OF name, comment
+    ON images
+    FOR EACH ROW EXECUTE FUNCTION update_images_fts();
+
 --
 -- Table structure for table `languages`
 --
@@ -398,6 +437,11 @@ CREATE TRIGGER trg_tags_update_lastmodified
     BEFORE UPDATE
     ON tags
     FOR EACH ROW EXECUTE FUNCTION update_lastmodified_column();
+
+CREATE TRIGGER trg_tags_fts
+    BEFORE INSERT OR UPDATE OF name
+    ON tags
+    FOR EACH ROW EXECUTE FUNCTION update_tags_fts();
 
 --
 -- Table structure for table `themes`

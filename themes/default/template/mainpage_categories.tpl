@@ -8,7 +8,7 @@
 	}
 </style>{/html_style}
 <div class="loader"><img src="{$ROOT_URL}{$themeconf.img_dir}/ajax_loader.gif"></div>
-<ul class="thumbnailCategories">
+<ul class="thumbnailCategories" data-album-grid>
 	{foreach from=$category_thumbnails item=cat name=cat_loop}
 		{assign var=derivative value=$pwg->derivative($derivative_params, $cat.representative.src_image)}
 		<li class="{if $smarty.foreach.cat_loop.index is odd}odd{else}even{/if}">

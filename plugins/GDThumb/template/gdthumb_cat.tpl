@@ -1,5 +1,5 @@
 <div class="loader"><img src="{$ROOT_URL}{$themeconf.img_dir|default:null}/ajax_loader.gif" alt=""></div>
-<ul class="thumbnailCategories thumbnails {if $GDThumb.no_wordwrap}nowrap{/if}">
+<ul class="thumbnailCategories thumbnails {if $GDThumb.no_wordwrap}nowrap{/if}" data-album-grid>
 
   {if !empty($category_thumbnails)}
     {assign var=has_cats value="true" scope=root nocache}

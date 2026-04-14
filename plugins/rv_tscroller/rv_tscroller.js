@@ -150,3 +150,64 @@ if (window.jQuery && window.RVTS)
             });
         }
     })(jQuery);
+
+// Album / folder infinite scroll
+if (window.jQuery && window.RVTS_CATS)
+    (function ($) {
+        RVTS_CATS = $.fn.extend(RVTS_CATS, {
+            loading: 0,
+
+            doAutoScroll: function () {
+                if (RVTS_CATS.loading || RVTS_CATS.next >= RVTS_CATS.total) return;
+                var url = RVTS_CATS.ajaxUrlModel
+                    .replace('%startcat%', RVTS_CATS.next);
+                $("#ajaxLoader").show();
+                RVTS_CATS.loading = 1;
+                $.ajax({
+                    type: "GET",
+                    dataType: "html",
+                    url: url,
+                    success: function (htm) {
+                        RVTS_CATS.next += RVTS_CATS.perPage;
+                        var $src = $(htm);
+                        var $wrap = $src.filter("[data-album-grid]");
+                        if (!$wrap.length) $wrap = $src.find("[data-album-grid]");
+                        var $items = $wrap.length ? $wrap.children() : $src;
+                        RVTS_CATS.$thumbs.append($items);
+                        if (typeof GDThumb !== 'undefined' && typeof GDThumb.build === 'function') {
+                            GDThumb.build();
+                        }
+                    },
+                    complete: function () {
+                        RVTS_CATS.loading = 0;
+                        $("#ajaxLoader").hide();
+                    },
+                });
+            },
+
+            checkAutoScroll: function () {
+                var tBot =
+                    RVTS_CATS.$thumbs.position().top + RVTS_CATS.$thumbs.outerHeight();
+                var wBot = $(window).scrollTop() + $(window).height();
+                tBot -= 100;
+                return tBot <= wBot ? (RVTS_CATS.doAutoScroll(), 1) : 0;
+            },
+
+            engage: function () {
+                RVTS_CATS.$thumbs = $("[data-album-grid]").first();
+                if (!RVTS_CATS.$thumbs.length) return;
+                RVTS_CATS.$thumbs.after(
+                    '<div id="ajaxLoader" style="display:none;position:fixed;bottom:32px;right:1%;z-index:999"><img src="' +
+                        RVTS_CATS.ajaxLoaderImage +
+                        '" width="128" height="15" alt="~"></div>',
+                );
+                $(window).on("scroll resize", RVTS_CATS.checkAutoScroll);
+                if (RVTS_CATS.checkAutoScroll())
+                    window.setTimeout(RVTS_CATS.checkAutoScroll, 1500);
+            },
+        });
+
+        $(document).ready(function () {
+            window.setTimeout(RVTS_CATS.engage, 150);
+        });
+    })(jQuery);

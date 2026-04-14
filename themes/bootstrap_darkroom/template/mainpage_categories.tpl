@@ -3,7 +3,7 @@
 {assign var=height value=360}
 {define_derivative name='derivative_params' width=$width height=$height crop=true}
 {define_derivative name='derivative_params_square' type=IMG_SQUARE}
-<div class="row">
+<div class="row" data-album-grid>
   {foreach $category_thumbnails as $cat}
     {if $theme_config->category_wells == 'never' || ($theme_config->category_wells == 'mobile_only' && functions::get_device() == 'desktop')}
       {assign var=derivative value=$pwg->derivative($derivative_params, $cat.representative.src_image)}

@@ -56,15 +56,16 @@ var GDThumb = {
 
     // Merge categories and picture lists
     merge: function () {
-        var mainlists = $(".content ul.thumbnails");
+        var mainlists = $("#content ul.thumbnails");
         if (mainlists.length < 2) {
             // there is only one list of elements
         } else {
             $(".thumbnailCategories li").addClass("album");
             $(".thumbnailCategories").append(
-                $(".content ul#thumbnails").html(),
+                $("#content ul#thumbnails").html(),
             );
             $("ul#thumbnails").remove();
+            $(".thumbnailCategories").attr("id", "thumbnails");
             $("div.loader:eq(1)").remove();
         }
     },

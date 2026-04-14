@@ -140,6 +140,42 @@
       background-color: #ff7700;
       color: white;
     }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #111;
+      }
+
+      #global {
+        background-color: #222;
+        border-color: #444;
+      }
+
+      TD {
+        color: #aaa;
+      }
+
+      #noPhotoWelcome {
+        color: #ccc;
+      }
+
+      #quickconnect {
+        color: #ccc;
+      }
+
+      #quickconnect input[type="text"],
+      #quickconnect input[type="password"] {
+        color: #ccc;
+        background-color: #333;
+        border-color: #555;
+      }
+
+      #quickconnect input[type="text"]:focus,
+      #quickconnect input[type="password"]:focus {
+        background-color: #444;
+        border-color: #ff7700;
+      }
+    }
   </style>
 
 </head>

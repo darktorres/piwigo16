@@ -5,7 +5,7 @@
     text-align: center !important;
 }
 
-.thumbnailCategories LI {
+.thumbnailCategories LI:not(.gdthumb) {
     width: 31% !important;
     margin-left: 15px !important;
 }

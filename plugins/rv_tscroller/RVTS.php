@@ -110,14 +110,15 @@ final class RVTS
 
         // String.fromCharCode on the first char prevents Google bot from crawling these URLs
         $ajax_url_model_0 = ord($ajax_url_model[0]);
-        $ajax_url_model_rest = substr($ajax_url_model, 1);
+        $ajax_url_model_rest = addcslashes(substr($ajax_url_model, 1), "'\\</");
         $url_model_0 = ord($url_model[0]);
-        $url_model_rest = substr($url_model, 1);
+        $url_model_rest = addcslashes(substr($url_model, 1), "'\\</");
         $next = $start + $per_page;
         $prevMsg = functions::l10n('Previous');
 
         $moreMsg_js = json_encode($moreMsg);
         $prevMsg_js = json_encode($prevMsg);
+        $ajax_loader_image_js = json_encode($ajax_loader_image);
 
         $template->block_footer_script(
             null,
@@ -132,7 +133,7 @@ final class RVTS
                     urlModel: String.fromCharCode({$url_model_0})+'{$url_model_rest}',
                     moreMsg: {$moreMsg_js},
                     prevMsg: {$prevMsg_js},
-                    ajaxLoaderImage: '{$ajax_loader_image}'
+                    ajaxLoaderImage: {$ajax_loader_image_js}
                 };
                 jQuery('.navigationBar').hide();
                 </script>

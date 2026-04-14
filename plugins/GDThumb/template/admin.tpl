@@ -47,7 +47,7 @@
       <li><input id="nb_image_page" type="text" size="2" maxlength="3" name="nb_image_page"
           value="{$NB_IMAGE_PAGE}"><label for="nb_image_page">{'Number of photos per page'|translate}</label></li>
 
-      <li><label><i class="gd-checkbox fas {if $BIG_THUMB}fa-check-square{else}fa-square{/if}"></i>&nbsp;</span><input
+      <li><label><i class="gd-checkbox fas {if $BIG_THUMB}fa-check-square{else}fa-square{/if}"></i>&nbsp;<input
             name="big_thumb" id="big_thumb" type="checkbox" value="1" {if $BIG_THUMB}checked="checked"
             {/if}>{'Double the size of the first thumbnail'|translate}</label></li>
       <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label><span
@@ -143,8 +143,8 @@
   <p class="buttons">
     <input id="startLink" value="{'Start'|translate}" onclick="jQuery.gdThumb_start()" type="button">
     <input id="pauseLink" value="{'Pause'|translate}" onclick="jQuery.gdThumb_pause()" type="button"
-      disabled="disbled">
-    <input id="stopLink" value="{'Stop'|translate}" onclick="jQuery.gdThumb_stop()" type="button" disabled="disbled">
+      disabled="disabled">
+    <input id="stopLink" value="{'Stop'|translate}" onclick="jQuery.gdThumb_stop()" type="button" disabled="disabled">
   </p>
   <div>
     <ul>

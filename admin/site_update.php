@@ -283,7 +283,7 @@ if (isset($_POST['submit']) &&
     $inserts = [];
     // new categories are the directories not present yet in the database
     foreach ($new_dirs as $fulldir) {
-        $dir = $conf->sql_backend::pwg_db_real_escape_string(basename($fulldir));
+        $dir = basename($fulldir);
         $insert = [
             'id' => $next_id++,
             'dir' => $dir,
@@ -659,10 +659,10 @@ if (isset($_POST['submit']) &&
 
             $insert = [
                 'id'                  => $next_element_id++,
-                'file'                => $conf->sql_backend::pwg_db_real_escape_string($filename),
-                'name'                => $conf->sql_backend::pwg_db_real_escape_string(functions::get_name_from_file($filename)),
+                'file'                => $filename,
+                'name'                => functions::get_name_from_file($filename),
                 'date_available'      => CURRENT_DATE,
-                'path'                => $conf->sql_backend::pwg_db_real_escape_string($path),
+                'path'                => $path,
                 'representative_ext'  => $meta['representative_ext'],
                 'storage_category_id' => $db_fulldirs[$dirname],
                 'added_by'            => $user['id'],

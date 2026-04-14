@@ -609,12 +609,17 @@ if (isset($_POST['submit']) &&
     $fmt_fields     = ['image_id', 'ext', 'filesize'];
     $add_to_caddie  = isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1;
 
-    // Use DB record count as a proxy for "is this a large gallery?".
-    // We don't know new_count upfront (scan is streaming), so we approximate:
-    // galleries with > 10k existing records benefit from bulk-insert optimisations
-    // (FULLTEXT drop + unique_checks=0). If 0 new files are found, the FULLTEXT index
-    // is not rebuilt (gated on $inserted_count > 0 below).
-    $large_insert_likely = count($db_paths_set) > 10000;
+    // Use available signals to estimate whether this will be a large insert.
+    // We don't know the new-file count upfront (scan is streaming), so we
+    // approximate from two sources:
+    //   1. Existing photo records in the DB for these categories.
+    //   2. Total album count ($db_fulldirs) — by this point it includes newly
+    //      inserted albums, so a fresh gallery with 394k new albums and no
+    //      existing photos correctly triggers the optimisations.
+    // If 0 new files are ultimately found, the FULLTEXT index is not rebuilt
+    // (gated on $inserted_count > 0 below).
+    $large_insert_likely = count($db_paths_set) > 10000
+        || count($db_fulldirs) > 10000;
     $has_ft_index = false;
 
     if (! $simulate && $large_insert_likely) {

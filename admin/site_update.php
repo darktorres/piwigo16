@@ -64,7 +64,6 @@ $error_labels = [
     ],
 ];
 $errors = [];
-$infos = [];
 $fs_sizes = [];
 
 if ($site_is_remote) {
@@ -116,7 +115,6 @@ if (isset($_GET['quick_sync'])) {
     functions::check_pwg_token();
 
     $_POST['sync'] = 'files';
-    $_POST['display_info'] = '1';
     $_POST['add_to_caddie'] = '1';
     $_POST['privacy_level'] = '0';
     $_POST['sync_meta'] = '1';
@@ -598,10 +596,6 @@ if (isset($_POST['submit']) &&
             'category_id' => $insert['storage_category_id'],
         ];
 
-        $infos[] = [
-            'path' => $insert['path'],
-            'info' => functions::l10n('added'),
-        ];
 
         if ($conf->enable_formats) {
             foreach ($fs[$path]['formats'] as $ext => $filesize) {
@@ -609,11 +603,6 @@ if (isset($_POST['submit']) &&
                     'image_id' => $insert['id'],
                     'ext' => $ext,
                     'filesize' => $filesize,
-                ];
-
-                $infos[] = [
-                    'path' => $insert['path'],
-                    'info' => functions::l10n('format %s added', $ext),
                 ];
             }
         }
@@ -659,10 +648,6 @@ if (isset($_POST['submit']) &&
                 foreach ($image_formats_to_delete as $ext => $format_id) {
                     $formats_to_delete[] = $format_id;
 
-                    $infos[] = [
-                        'path' => $db_elements[$image_id],
-                        'info' => functions::l10n('format %s removed', $ext),
-                    ];
                 }
             }
 
@@ -685,10 +670,7 @@ if (isset($_POST['submit']) &&
                         'filesize' => $filesize,
                     ];
 
-                    $infos[] = [
-                        'path' => $db_elements[$image_id],
-                        'info' => functions::l10n('format %s added', $ext),
-                    ];
+
                 }
             }
         }
@@ -778,10 +760,6 @@ if (isset($_POST['submit']) &&
 
     foreach (array_diff($db_elements, array_keys($fs)) as $path) {
         $to_delete_elements[] = array_search($path, $db_elements, true);
-        $infos[] = [
-            'path' => $path,
-            'info' => functions::l10n('deleted'),
-        ];
     }
 
     if ($to_delete_elements !== []) {
@@ -1280,7 +1258,6 @@ if (isset($_POST['submit'])) {
     $tpl_introduction = [
         'sync' => $_POST['sync'],
         'sync_meta' => isset($_POST['sync_meta']),
-        'display_info' => isset($_POST['display_info']) && $_POST['display_info'] == 1,
         'add_to_caddie' => isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1,
         'subcats_included' => true,
         'privacy_level_selected' => (int) $_POST['privacy_level'],
@@ -1292,7 +1269,6 @@ if (isset($_POST['submit'])) {
     $tpl_introduction = [
         'sync' => 'dirs',
         'sync_meta' => true,
-        'display_info' => false,
         'add_to_caddie' => false,
         'subcats_included' => true,
         'privacy_level_selected' => 0,
@@ -1328,20 +1304,6 @@ if ($errors !== []) {
     }
 }
 
-if ($infos !== [] &&
-    isset($_POST['display_info']) &&
-    $_POST['display_info'] == 1
-) {
-    foreach ($infos as $info) {
-        $template->append(
-            'sync_infos',
-            [
-                'ELEMENT' => $info['path'],
-                'LABEL' => $info['info'],
-            ]
-        );
-    }
-}
 
 // +-----------------------------------------------------------------------+
 // |                          sending html code                            |

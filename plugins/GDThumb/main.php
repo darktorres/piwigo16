@@ -181,7 +181,7 @@ function GDThumb_prefilter(
 
 function GDThumb_admin_menu(
     array $menu
-): array|string {
+): array {
     $menu[] = [
         'NAME' => 'gdThumb',
         'URL' => functions_url::get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__),

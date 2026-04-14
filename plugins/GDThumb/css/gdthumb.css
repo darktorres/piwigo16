@@ -78,10 +78,6 @@ ul.thumbnails .gdthumb:hover .thumbLegend.top {
     top: 0px;
 }
 
-/* Top Static overlay */
-ul.thumbnails .gdthumb .thumbLegend.top_static {
-}
-
 /* Bottom overlay */
 ul.thumbnails .gdthumb .thumbLegend.bottom {
     bottom: -6em;

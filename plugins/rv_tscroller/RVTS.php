@@ -178,6 +178,5 @@ final class RVTS
             ]);
         }
 
-        //var_export($template->scriptLoader);
     }
 }

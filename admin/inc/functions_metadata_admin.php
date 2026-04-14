@@ -21,13 +21,14 @@ final class functions_metadata_admin
      * @todo : clean code (factorize foreach)
      */
     public static function get_sync_iptc_data(
-        string $file
+        string $file,
+        ?array $imginfo = null
     ): array {
         global $conf;
 
         $map = $conf->use_iptc_mapping;
 
-        $iptc = functions_metadata::get_iptc_data($file, $map);
+        $iptc = functions_metadata::get_iptc_data($file, $map, ',', $imginfo);
 
         foreach ($iptc as $pwg_key => $value) {
             if (in_array($pwg_key, ['date_creation', 'date_available']) && preg_match('/(\d{4})(\d{2})(\d{2})/', $value, $matches)) {
@@ -59,11 +60,12 @@ final class functions_metadata_admin
      * Returns EXIF metadata to sync from a file, depending on EXIF mapping.
      */
     public static function get_sync_exif_data(
-        string $file
+        string $file,
+        ?array $imginfo = null
     ): array {
         global $conf;
 
-        $exif = functions_metadata::get_exif_data($file, $conf->use_exif_mapping);
+        $exif = functions_metadata::get_exif_data($file, $conf->use_exif_mapping, $imginfo);
 
         foreach ($exif as $pwg_key => $value) {
             if (in_array($pwg_key, ['date_creation', 'date_available'])) {
@@ -157,22 +159,49 @@ final class functions_metadata_admin
      * Get all metadata of a file.
      *
      * @param array<string, int|string|null> $infos - (path[, representative_ext])
-     * @return array<string, int|string|null>|bool - includes data provided in $infos
+     * @return array<string, int|string|null>|bool|null - null means file unchanged (skip)
      */
     public static function get_sync_metadata(
         array $infos
-    ): array|bool {
-        global $conf;
+    ): array|bool|null {
+        global $conf, $logger;
         $file = './' . $infos['path'];
-        $fs = filesize($file);
+        $profiling = $conf->sync_profiling;
 
-        if ($fs === false) {
-            return false;
+        if ($profiling) {
+            $prof = [];
+            $t = microtime(true);
         }
 
-        $infos['filesize'] = floor($fs / 1024);
+        // Use cached filesize from scan phase if available, otherwise stat the file
+        if (isset($infos['fs_filesize'])) {
+            $filesize_kb = (int) $infos['fs_filesize'];
+        } else {
+            $fs = filesize($file);
+
+            if ($fs === false) {
+                return false;
+            }
+
+            $filesize_kb = (int) floor($fs / 1024);
+        }
+
+        if ($profiling) {
+            $prof['filesize'] = microtime(true) - $t;
+        }
+
+        // Skip full metadata extraction if file size hasn't changed since last sync
+        if (isset($infos['filesize']) &&
+            (int) $infos['filesize'] === $filesize_kb &&
+            $infos['filesize'] > 0
+        ) {
+            return null; // signal: unchanged, skip this file
+        }
+
+        $infos['filesize'] = $filesize_kb;
 
         $is_tiff = false;
+        $imginfo = [];
 
         if (isset($infos['representative_ext'])) {
             $image_size = getimagesize($file);
@@ -183,9 +212,6 @@ final class functions_metadata_admin
                 if ($type == IMAGETYPE_TIFF_MM ||
                     $type == IMAGETYPE_TIFF_II
                 ) {
-                    // in case of TIFF files, we want to use the original file and not
-                    // the representative for EXIF/IPTC, but we need the representative
-                    // for width/height (to compute the multiple size dimensions)
                     $is_tiff = true;
                 }
             }
@@ -193,9 +219,9 @@ final class functions_metadata_admin
             $file = functions::original_to_representative($file, $infos['representative_ext']);
         }
 
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
 
-        if (in_array($finfo->file($file), ['image/svg+xml', 'image/svg'])) {
+        if ($ext === 'svg' || $ext === 'svgz') {
             $xml = file_get_contents($file);
 
             $xmlget = simplexml_load_string($xml);
@@ -221,32 +247,87 @@ final class functions_metadata_admin
             }
         }
 
-        $image_size = getimagesize($file);
+        // Single getimagesize call: dimensions + APP1/APP13 segments for EXIF/IPTC
+        if ($profiling) {
+            $t = microtime(true);
+        }
+
+        $image_size = getimagesize($file, $imginfo);
+
+        if ($profiling) {
+            $prof['getimagesize'] = microtime(true) - $t;
+        }
 
         if ($image_size) {
             $infos['width'] = $image_size[0];
             $infos['height'] = $image_size[1];
         }
 
+        // For TIFF: use representative for dimensions (above), original for EXIF/IPTC
+        $exif_file = $is_tiff ? './' . $infos['path'] : $file;
+        $exif_imginfo = $imginfo;
+
         if ($is_tiff) {
-            // back to original file
-            $file = './' . $infos['path'];
+            getimagesize($exif_file, $exif_imginfo);
         }
 
         if ($conf->use_exif) {
-            $exif = self::get_sync_exif_data($file);
+            if ($profiling) {
+                $t = microtime(true);
+            }
+
+            $exif = self::get_sync_exif_data($exif_file, $exif_imginfo);
+
+            if ($profiling) {
+                $prof['exif'] = microtime(true) - $t;
+            }
+
             $infos = array_merge($infos, $exif);
         }
 
         if ($conf->use_iptc) {
-            $iptc = self::get_sync_iptc_data($file);
+            if ($profiling) {
+                $t = microtime(true);
+            }
+
+            $iptc = self::get_sync_iptc_data($exif_file, $exif_imginfo);
+
+            if ($profiling) {
+                $prof['iptc'] = microtime(true) - $t;
+            }
+
             $infos = array_merge($infos, $iptc);
         }
 
         foreach (['name', 'author'] as $single_line_field) {
             if (isset($infos[$single_line_field])) {
-                foreach (["\r\n", "\n"] as $to_replace_string) {
-                    $infos[$single_line_field] = str_replace($to_replace_string, ' ', $infos[$single_line_field]);
+                $infos[$single_line_field] = str_replace(
+                    ["\r\n", "\n"],
+                    ' ',
+                    $infos[$single_line_field]
+                );
+            }
+        }
+
+        if ($profiling) {
+            $prof_rounded = array_map(fn ($v) => round($v, 5), $prof);
+            $logger->debug('[sync][meta][breakdown] ' . $infos['path'], $prof_rounded);
+
+            if (! isset($GLOBALS['sync_meta_prof'])) {
+                $GLOBALS['sync_meta_prof'] = [];
+            }
+
+            foreach ($prof as $k => $v) {
+                if (! isset($GLOBALS['sync_meta_prof'][$k])) {
+                    $GLOBALS['sync_meta_prof'][$k] = ['total' => 0, 'count' => 0, 'max' => 0, 'max_file' => ''];
+                }
+
+                $GLOBALS['sync_meta_prof'][$k]['total'] += $v;
+                $GLOBALS['sync_meta_prof'][$k]['count']++;
+
+                if ($v > $GLOBALS['sync_meta_prof'][$k]['max']) {
+                    $GLOBALS['sync_meta_prof'][$k]['max'] = $v;
+                    $GLOBALS['sync_meta_prof'][$k]['max_file'] = $infos['path'];
                 }
             }
         }
@@ -271,10 +352,11 @@ final class functions_metadata_admin
 
         $datas = [];
         $tags_of = [];
+        $tag_names_by_image = [];
 
         $wrapped_ids = wordwrap(implode(', ', $ids), 160);
         $query = <<<SQL
-            SELECT id, path, representative_ext
+            SELECT id, path, representative_ext, filesize
             FROM images
             WHERE id IN ({$wrapped_ids});
             SQL;
@@ -284,21 +366,20 @@ final class functions_metadata_admin
         while ($data = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $data = self::get_sync_metadata($data);
 
-            if ($data === false) {
+            if ($data === false || $data === null) {
                 continue;
             }
 
-            // print_r($data);
             $id = $data['id'];
 
             foreach (['keywords', 'tags'] as $key) {
                 if (isset($data[$key])) {
-                    if (! isset($tags_of[$id])) {
-                        $tags_of[$id] = [];
+                    if (! isset($tag_names_by_image[$id])) {
+                        $tag_names_by_image[$id] = [];
                     }
 
                     foreach (explode(',', $data[$key]) as $tag_name) {
-                        $tags_of[$id][] = functions_admin::tag_id_from_tag_name($tag_name);
+                        $tag_names_by_image[$id][] = trim($tag_name);
                     }
                 }
             }
@@ -306,6 +387,31 @@ final class functions_metadata_admin
             $data['date_metadata_update'] = CURRENT_DATE;
 
             $datas[] = $data;
+        }
+
+        // Batch-resolve all tag names
+        if ($tag_names_by_image !== []) {
+            $all_tag_names = [];
+
+            foreach ($tag_names_by_image as $img_tag_names) {
+                foreach ($img_tag_names as $tn) {
+                    $all_tag_names[] = $tn;
+                }
+            }
+
+            $tag_name_to_id = functions_admin::batch_tag_ids_from_tag_names($all_tag_names);
+
+            foreach ($tag_names_by_image as $img_id => $img_tag_names) {
+                if (! isset($tags_of[$img_id])) {
+                    $tags_of[$img_id] = [];
+                }
+
+                foreach ($img_tag_names as $tn) {
+                    if (isset($tag_name_to_id[$tn])) {
+                        $tags_of[$img_id][] = $tag_name_to_id[$tn];
+                    }
+                }
+            }
         }
 
         if ($datas !== []) {
@@ -382,7 +488,7 @@ final class functions_metadata_admin
 
         $imploded_cat_ids = implode(', ', $cat_ids);
         $query = <<<SQL
-            SELECT id, path, representative_ext
+            SELECT id, path, representative_ext, filesize
             FROM images
             WHERE storage_category_id IN ({$imploded_cat_ids})
 

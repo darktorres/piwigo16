@@ -19,16 +19,20 @@ final class functions_metadata
     public static function get_iptc_data(
         string $filename,
         array $map,
-        string $array_sep = ','
+        string $array_sep = ',',
+        ?array $imginfo = null
     ): array {
         global $conf;
 
         $result = [];
 
-        $imginfo = [];
+        // Use pre-fetched image info if available, otherwise call getimagesize
+        if ($imginfo === null) {
+            $imginfo = [];
 
-        if (! getimagesize($filename, $imginfo)) {
-            return $result;
+            if (! getimagesize($filename, $imginfo)) {
+                return $result;
+            }
         }
 
         if (isset($imginfo['APP13'])) {
@@ -112,16 +116,21 @@ final class functions_metadata
      */
     public static function get_exif_data(
         string $filename,
-        array $map
+        array $map,
+        ?array $imginfo = null
     ): array {
         global $conf, $logger;
 
         $result = [];
 
-        getimagesize($filename, $info);
+        // Use pre-fetched image info if available, otherwise call getimagesize
+        if ($imginfo === null) {
+            $imginfo = [];
+            getimagesize($filename, $imginfo);
+        }
 
         // Check if the APP1 segment exists in the info array
-        if (! isset($info['APP1']) || ! str_starts_with((string) $info['APP1'], 'Exif')) {
+        if (! isset($imginfo['APP1']) || ! str_starts_with((string) $imginfo['APP1'], 'Exif')) {
             return [];
         }
 

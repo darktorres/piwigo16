@@ -116,14 +116,16 @@ final class functions_pgsql
 
         $start = microtime(true);
 
-        $log_file = dirname(__DIR__, 2) . '/_data/sql/pgsql.sql';
-        $log_dir = dirname($log_file);
+        if ($conf->log_sql_queries) {
+            $log_file = dirname(__DIR__, 2) . '/_data/sql/pgsql.sql';
+            $log_dir = dirname($log_file);
 
-        if (! is_dir($log_dir)) {
-            mkdir($log_dir, 0777, true);
+            if (! is_dir($log_dir)) {
+                mkdir($log_dir, 0777, true);
+            }
+
+            file_put_contents($log_file, $query . "\n\n", FILE_APPEND | LOCK_EX);
         }
-
-        file_put_contents($log_file, $query . "\n\n", FILE_APPEND | LOCK_EX);
 
         $result = pg_query($pg, $query);
         self::$last_result = $result;
@@ -299,14 +301,12 @@ final class functions_pgsql
             return;
         }
 
+        self::pwg_query('BEGIN;');
+
         foreach ($datas as $data) {
             $is_first = true;
 
-            $query = <<<SQL
-                UPDATE {$tablename}
-                SET
-
-                SQL;
+            $query = "UPDATE {$tablename} SET\n";
 
             foreach ($dbfields['update'] as $key) {
                 $separator = $is_first ? '' : ",\n";
@@ -314,7 +314,8 @@ final class functions_pgsql
                 if (isset($data[$key]) &&
                     $data[$key] != ''
                 ) {
-                    $query .= "{$separator}{$key} = '{$data[$key]}'";
+                    $escaped = self::pwg_db_real_escape_string((string) $data[$key]);
+                    $query .= "{$separator}{$key} = '{$escaped}'";
                 } else {
                     if (($flags & self::MASS_UPDATES_SKIP_EMPTY) !== 0) {
                         continue; // next field
@@ -337,7 +338,8 @@ final class functions_pgsql
                     }
 
                     if (isset($data[$key])) {
-                        $query .= "{$key} = '{$data[$key]}'\n";
+                        $escaped = self::pwg_db_real_escape_string((string) $data[$key]);
+                        $query .= "{$key} = '{$escaped}'\n";
                     } else {
                         $query .= "{$key} IS NULL\n";
                     }
@@ -349,6 +351,8 @@ final class functions_pgsql
                 self::pwg_query($query);
             }
         }
+
+        self::pwg_query('COMMIT;');
     }
 
     /**

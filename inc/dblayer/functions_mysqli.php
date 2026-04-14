@@ -111,14 +111,16 @@ final class functions_mysqli
 
         $start = microtime(true);
 
-        $log_file = dirname(__DIR__, 2) . '/_data/sql/mysqli.sql';
-        $log_dir = dirname($log_file);
+        if ($conf->log_sql_queries) {
+            $log_file = dirname(__DIR__, 2) . '/_data/sql/mysqli.sql';
+            $log_dir = dirname($log_file);
 
-        if (! is_dir($log_dir)) {
-            mkdir($log_dir, 0777, true);
+            if (! is_dir($log_dir)) {
+                mkdir($log_dir, 0777, true);
+            }
+
+            file_put_contents($log_file, $query . "\n\n", FILE_APPEND | LOCK_EX);
         }
-
-        file_put_contents($log_file, $query . "\n\n", FILE_APPEND | LOCK_EX);
 
         try {
             $result = $mysqli->query($query);
@@ -278,56 +280,95 @@ final class functions_mysqli
             return;
         }
 
+        global $mysqli;
+
+        [$packet_size] = self::pwg_db_fetch_row(
+            self::pwg_query('SELECT @@max_allowed_packet;')
+        );
+
+        self::pwg_query('START TRANSACTION;');
+
+        $batch = '';
+
         foreach ($datas as $data) {
             $is_first = true;
 
-            $query = <<<SQL
-                UPDATE {$tablename}
-                SET
-
-                SQL;
+            $stmt = "UPDATE {$tablename} SET ";
 
             foreach ($dbfields['update'] as $key) {
-                $separator = $is_first ? '' : ",\n";
+                $separator = $is_first ? '' : ', ';
 
                 if (isset($data[$key]) &&
                     $data[$key] != ''
                 ) {
-                    $query .= "{$separator}{$key} = '{$data[$key]}'";
+                    $escaped = self::pwg_db_real_escape_string((string) $data[$key]);
+                    $stmt .= "{$separator}{$key} = '{$escaped}'";
                 } else {
                     if (($flags & self::MASS_UPDATES_SKIP_EMPTY) !== 0) {
                         continue; // next field
                     }
 
-                    $query .= "{$separator}{$key} = NULL";
+                    $stmt .= "{$separator}{$key} = NULL";
                 }
 
                 $is_first = false;
             }
 
-            if (! $is_first) { // only if one field at least updated
-                $is_first = true;
+            if ($is_first) {
+                continue; // no fields to update
+            }
 
-                $query .= "\nWHERE\n";
+            $stmt .= ' WHERE ';
+            $is_first = true;
 
-                foreach ($dbfields['primary'] as $key) {
-                    if (! $is_first) {
-                        $query .= ' AND ';
-                    }
-
-                    if (isset($data[$key])) {
-                        $query .= "{$key} = '{$data[$key]}'\n";
-                    } else {
-                        $query .= "{$key} IS NULL\n";
-                    }
-
-                    $is_first = false;
+            foreach ($dbfields['primary'] as $key) {
+                if (! $is_first) {
+                    $stmt .= ' AND ';
                 }
 
-                $query = trim($query) . ';';
-                self::pwg_query($query);
+                if (isset($data[$key])) {
+                    $escaped = self::pwg_db_real_escape_string((string) $data[$key]);
+                    $stmt .= "{$key} = '{$escaped}'";
+                } else {
+                    $stmt .= "{$key} IS NULL";
+                }
+
+                $is_first = false;
             }
+
+            $stmt .= ";\n";
+
+            if (strlen($batch) + strlen($stmt) >= $packet_size) {
+                $mysqli->multi_query($batch);
+
+                // drain all result sets from multi_query
+                do {
+                    $result = $mysqli->store_result();
+
+                    if ($result) {
+                        $result->free();
+                    }
+                } while ($mysqli->next_result());
+
+                $batch = '';
+            }
+
+            $batch .= $stmt;
         }
+
+        if ($batch !== '') {
+            $mysqli->multi_query($batch);
+
+            do {
+                $result = $mysqli->store_result();
+
+                if ($result) {
+                    $result->free();
+                }
+            } while ($mysqli->next_result());
+        }
+
+        self::pwg_query('COMMIT;');
     }
 
     /**
@@ -407,7 +448,8 @@ final class functions_mysqli
         string $table_name,
         array $dbfields,
         array $datas,
-        array $options = []
+        array $options = [],
+        ?\Closure $on_progress = null
     ): void {
         if (count($datas) == 0) {
             return;
@@ -429,7 +471,21 @@ final class functions_mysqli
 
         $insert_ignore = 'INSERT' . ($ignore !== '' ? " {$ignore}" : '');
         $queryBase = "{$insert_ignore} INTO {$table_name} ({$dbfields_str}) VALUES\n";
+        $queryBaseLen = strlen($queryBase);
+
+        // Cap batch size to avoid building enormous strings (O(n²) concat)
+        // and give MySQL smaller queries to parse. 1000 rows per INSERT is
+        // a good balance — large enough for efficiency, small enough to avoid
+        // multi-MB string allocations.
+        $max_rows = 1000;
         $query = '';
+        $currentLen = $queryBaseLen;
+        $rowCount = 0;
+
+        // Wrap in transaction for InnoDB performance (one fsync at commit)
+        self::pwg_query('START TRANSACTION;');
+        $totalRows = count($datas);
+        $insertedRows = 0;
 
         foreach ($datas as $insert) {
             $queryTemp = '(';
@@ -444,31 +500,40 @@ final class functions_mysqli
                 ) {
                     $queryTemp .= 'NULL';
                 } else {
-                    $queryTemp .= "'{$insert[$dbfield]}'";
+                    $queryTemp .= "'" . self::pwg_db_real_escape_string((string) $insert[$dbfield]) . "'";
                 }
             }
 
             $queryTemp .= ')';
+            $tempLen = strlen($queryTemp) + 2;
+            $rowCount++;
 
-            $len = strlen($queryBase . $query . ', ' . $queryTemp);
+            if (($currentLen + $tempLen >= $packet_size || $rowCount > $max_rows) && $query !== '') {
+                self::pwg_query($queryBase . $query . ';');
+                $insertedRows += $rowCount - 1;
 
-            if ($len >= $packet_size) { // delay $insert to next query
-                $query = trim($query) . ';';
-                self::pwg_query($queryBase . $query);
+                if ($on_progress !== null) {
+                    $on_progress($insertedRows, $totalRows);
+                }
+
                 $query = $queryTemp;
+                $currentLen = $queryBaseLen + strlen($queryTemp);
+                $rowCount = 1;
             } else {
-                if ($query !== '' &&
-                    $query !== '0'
-                ) {
+                if ($query !== '') {
                     $query .= ",\n";
                 }
 
                 $query .= $queryTemp;
+                $currentLen += $tempLen;
             }
         }
 
-        $query = trim($query) . ';';
-        self::pwg_query($queryBase . $query);
+        if ($query !== '') {
+            self::pwg_query($queryBase . $query . ';');
+        }
+
+        self::pwg_query('COMMIT;');
     }
 
     /**

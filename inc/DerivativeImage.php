@@ -190,7 +190,13 @@ final class DerivativeImage
             return $this->src_image->get_size();
         }
 
-        return $this->params->compute_final_size($this->src_image->get_size());
+        $src_size = $this->src_image->get_size();
+
+        if ($src_size === null) {
+            return null;
+        }
+
+        return $this->params->compute_final_size($src_size);
     }
 
     /**

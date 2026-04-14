@@ -491,17 +491,6 @@
   </ul>
 {/if}
 
-{if not empty($sync_infos)}
-  <h3>{'Detailed information'|translate}</h3>
-  <div class="infos">
-    <ul>
-      {foreach $sync_infos as $info}
-        <li>[{$info.ELEMENT}] {$info.LABEL}</li>
-      {/foreach}
-    </ul>
-  </div>
-{/if}
-
 {if isset($introduction)}
   <form action="" method="post" id="update">
 
@@ -516,10 +505,6 @@
         <li><label><input type="radio" name="sync" value="files" {if 'files'==$introduction.sync}checked="checked" {/if}>
             {'directories + files'|translate}</label>
           <ul style="display:none;padding-left:3em">
-            <li><label><input type="checkbox" name="display_info" value="1"
-                  {if $introduction.display_info}checked="checked" {/if}>
-                {'display maximum information (added albums and photos, deleted albums and photos)'|translate}</label>
-            </li>
             <li><label><input type="checkbox" name="add_to_caddie" value="1"
                   {if $introduction.add_to_caddie}checked="checked" {/if}> {'add new photos to caddie'|translate}</label>
             </li>

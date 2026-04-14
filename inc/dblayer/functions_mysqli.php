@@ -482,10 +482,18 @@ final class functions_mysqli
         $currentLen = $queryBaseLen;
         $rowCount = 0;
 
-        // Wrap in transaction for InnoDB performance (one fsync at commit)
+        $bulk = ! empty($options['bulk']);
+
+        // For very large inserts, disable index checks and commit in
+        // chunks to keep the redo log manageable.
+        if ($bulk) {
+            self::pwg_query('SET unique_checks=0, foreign_key_checks=0;');
+        }
+
         self::pwg_query('START TRANSACTION;');
         $totalRows = count($datas);
         $insertedRows = 0;
+        $batchesSinceCommit = 0;
 
         foreach ($datas as $insert) {
             $queryTemp = '(';
@@ -511,9 +519,17 @@ final class functions_mysqli
             if (($currentLen + $tempLen >= $packet_size || $rowCount > $max_rows) && $query !== '') {
                 self::pwg_query($queryBase . $query . ';');
                 $insertedRows += $rowCount - 1;
+                $batchesSinceCommit++;
 
                 if ($on_progress !== null) {
                     $on_progress($insertedRows, $totalRows);
+                }
+
+                // Commit periodically in bulk mode to keep the redo log bounded.
+                if ($bulk && $batchesSinceCommit >= 10) {
+                    self::pwg_query('COMMIT;');
+                    self::pwg_query('START TRANSACTION;');
+                    $batchesSinceCommit = 0;
                 }
 
                 $query = $queryTemp;
@@ -534,6 +550,10 @@ final class functions_mysqli
         }
 
         self::pwg_query('COMMIT;');
+
+        if ($bulk) {
+            self::pwg_query('SET unique_checks=1, foreign_key_checks=1;');
+        }
     }
 
     /**

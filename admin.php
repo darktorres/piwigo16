@@ -42,21 +42,8 @@ functions::check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.
 // | Filesystem checks                                                     |
 // +-----------------------------------------------------------------------+
 
-if ($conf->fs_quick_check_period > 0) {
-    $perform_fsqc = false;
-
-    if (isset($conf->fs_quick_check_last_check)) {
-        if (strtotime($conf->fs_quick_check_last_check) < strtotime($conf->fs_quick_check_period . ' seconds ago')) {
-            $perform_fsqc = true;
-        }
-    } else {
-        $perform_fsqc = true;
-    }
-
-    if ($perform_fsqc) {
-        functions_admin::fs_quick_check();
-    }
-}
+// fs_quick_check disabled — redundant when using Everything-based sync
+// which discovers all files/missing files during the sync itself.
 
 // +-----------------------------------------------------------------------+
 // | Direct actions                                                        |
@@ -287,14 +274,8 @@ if ($nb_photos_in_caddie > 0) {
     );
 }
 
-// any photos with no md5sum ?
-if (in_array($page['page'], ['site_update', 'batch_manager'])) {
-    $nb_no_md5sum = count(functions_admin::get_photos_no_md5sum());
-
-    if ($nb_no_md5sum > 0) {
-        $page['no_md5sum_number'] = $nb_no_md5sum;
-    }
-}
+// md5sum check disabled — with millions of images this loads all IDs
+// into PHP just to count them.  Not useful for sync workflows.
 
 // only calculate number of orphans on all pages if the number of images is "not huge"
 $page['nb_orphans'] = 0;
@@ -317,23 +298,19 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 // Only for pages which change permissions
-if (in_array($page['page'], [
-    'site_manager', // delete site
-    'site_update',  // ?only POST
-]) ||
-    (
-        ! empty($_POST) && in_array(
-            $page['page'],
-            [
-                'album',        // public/private; lock/unlock, permissions
-                'albums',
-                'cat_options',  // public/private; lock/unlock
-                'user_list',    // group assoc; user level
-                'user_perm',
-            ]
-        )
-    )
-) {
+// Only invalidate cache when an actual change was submitted.
+if (! empty($_POST) && in_array(
+    $page['page'],
+    [
+        'site_manager',
+        'site_update',
+        'album',
+        'albums',
+        'cat_options',
+        'user_list',
+        'user_perm',
+    ]
+)) {
     functions_admin::invalidate_user_cache();
 }
 

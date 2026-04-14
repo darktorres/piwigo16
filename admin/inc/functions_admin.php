@@ -726,7 +726,6 @@ final class functions_admin
             ORDER BY id_uppercat, sort_rank, name;
             SQL;
 
-        global $cat_map; // used in preg_replace callback
         $cat_map = [];
 
         $current_rank = 0;
@@ -753,14 +752,17 @@ final class functions_admin
 
         $datas = [];
 
-        $cat_map_callback = (fn (array $m): int => $cat_map[$m[1]]['sort_rank']);
-
         foreach ($cat_map as $id => $cat) {
-            $new_global_rank = preg_replace_callback(
-                '/(\d+)/',
-                $cat_map_callback,
-                str_replace(',', '.', $cat['uppercats'])
-            );
+            // Build global_rank by replacing each category ID in uppercats
+            // with its sort_rank, separated by dots.
+            $parts = explode(',', $cat['uppercats']);
+            $rank_parts = [];
+
+            foreach ($parts as $cat_id) {
+                $rank_parts[] = $cat_map[(int) $cat_id]['sort_rank'] ?? 0;
+            }
+
+            $new_global_rank = implode('.', $rank_parts);
 
             if ($cat['rank_changed'] ||
                 $new_global_rank !== $cat['global_rank']
@@ -3743,25 +3745,52 @@ final class functions_admin
         $page[__FUNCTION__ . '_already_called'] = true;
         functions::conf_update_param('fs_quick_check_last_check', date('c'));
 
+        // Use range-based random sampling instead of loading thousands
+        // of IDs into PHP and shuffling.  Pick random IDs between
+        // MIN(id) and MAX(id) — fast even on tables with millions of rows.
         $query = <<<SQL
-            SELECT id
-            FROM images
-            WHERE date_available < '2022-12-08 00:00:00'
-                AND path LIKE './upload/%'
-            LIMIT 5000;
+            SELECT MIN(id) AS min_id, MAX(id) AS max_id
+            FROM images;
             SQL;
-        $issue1827_ids = $conf->sql_backend::query2array($query, null, 'id');
-        shuffle($issue1827_ids);
-        $issue1827_ids = array_slice($issue1827_ids, 0, 50);
+        $range = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
 
-        $query = <<<SQL
-            SELECT id
-            FROM images
-            LIMIT 5000;
-            SQL;
-        $random_image_ids = $conf->sql_backend::query2array($query, null, 'id');
-        shuffle($random_image_ids);
-        $random_image_ids = array_slice($random_image_ids, 0, 50);
+        $issue1827_ids = [];
+        $random_image_ids = [];
+
+        if ($range && $range['max_id'] !== null) {
+            $min = (int) $range['min_id'];
+            $max = (int) $range['max_id'];
+
+            // Generate 50 random IDs in range for the issue1827 check
+            $rand_ids = [];
+            for ($i = 0; $i < 50; $i++) {
+                $rand_ids[] = random_int($min, $max);
+            }
+
+            $rand_list = implode(', ', $rand_ids);
+            $query = <<<SQL
+                SELECT id
+                FROM images
+                WHERE id IN ({$rand_list})
+                    AND date_available < '2022-12-08 00:00:00'
+                    AND path LIKE './upload/%';
+                SQL;
+            $issue1827_ids = $conf->sql_backend::query2array($query, null, 'id');
+
+            // Generate another 50 random IDs for the general check
+            $rand_ids = [];
+            for ($i = 0; $i < 50; $i++) {
+                $rand_ids[] = random_int($min, $max);
+            }
+
+            $rand_list = implode(', ', $rand_ids);
+            $query = <<<SQL
+                SELECT id
+                FROM images
+                WHERE id IN ({$rand_list});
+                SQL;
+            $random_image_ids = $conf->sql_backend::query2array($query, null, 'id');
+        }
 
         $fs_quick_check_ids = array_unique(array_merge($issue1827_ids, $random_image_ids));
 

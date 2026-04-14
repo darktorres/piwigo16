@@ -192,7 +192,7 @@ final class functions_metadata
                 if (is_array($value)) {
                     array_walk_recursive($value, self::strip_html_in_metadata(...));
                 } else {
-                    $result[$key] = strip_tags($value);
+                    $result[$key] = strip_tags((string) $value);
                 }
             }
         }

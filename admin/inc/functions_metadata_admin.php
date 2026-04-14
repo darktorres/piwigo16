@@ -493,13 +493,19 @@ final class functions_metadata_admin
      * results in 10 000-row chunks via an ID cursor, so the entire image
      * table is never materialised in memory.
      *
+     * $only_representable = true adds AND representative_ext IS NOT NULL.
+     * Use this for the "Checking file attributes" phase, which only needs
+     * to verify existing representatives — skipping it for picture-only
+     * galleries where the column is always NULL avoids a full-table scan.
+     *
      * @return \Generator<int, array{id: int, path: string, representative_ext: string|null, filesize: int|null}>
      */
     public static function get_filelist(
         string $category_id = '',
         int|string $site_id = 1,
         bool $recursive = false,
-        bool $only_new = false
+        bool $only_new = false,
+        bool $only_representable = false
     ): \Generator {
         global $conf;
 
@@ -509,8 +515,9 @@ final class functions_metadata_admin
             return;
         }
 
-        $imploded_cat_ids = implode(', ', $cat_ids);
-        $only_new_clause  = $only_new ? 'AND date_metadata_update IS NULL' : '';
+        $imploded_cat_ids       = implode(', ', $cat_ids);
+        $only_new_clause        = $only_new          ? 'AND date_metadata_update IS NULL' : '';
+        $only_representable_clause = $only_representable ? 'AND representative_ext IS NOT NULL' : '';
 
         $last_id = 0;
 
@@ -520,6 +527,7 @@ final class functions_metadata_admin
                 FROM images
                 WHERE storage_category_id IN ({$imploded_cat_ids})
                 {$only_new_clause}
+                {$only_representable_clause}
                 AND id > {$last_id}
                 ORDER BY id
                 LIMIT 10000;
@@ -548,7 +556,8 @@ final class functions_metadata_admin
         string $category_id = '',
         int|string $site_id = 1,
         bool $recursive = false,
-        bool $only_new = false
+        bool $only_new = false,
+        bool $only_representable = false
     ): int {
         global $conf;
 
@@ -569,6 +578,13 @@ final class functions_metadata_admin
         if ($only_new) {
             $query .= <<<SQL
                 AND date_metadata_update IS NULL
+
+                SQL;
+        }
+
+        if ($only_representable) {
+            $query .= <<<SQL
+                AND representative_ext IS NOT NULL
 
                 SQL;
         }

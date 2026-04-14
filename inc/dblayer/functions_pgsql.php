@@ -438,25 +438,43 @@ final class functions_pgsql
             return;
         }
 
-        $dbfields_str = implode(', ', $dbfields);
-        $query = "INSERT INTO {$tablename} ({$dbfields_str}) VALUES\n";
+        $on_conflict = '';
 
-        $values = [];
-
-        foreach ($datas as $data) {
-            $row_values = [];
-
-            foreach ($dbfields as $key) {
-                $row_values[] = isset($data[$key]) ? "'" . self::pwg_db_real_escape_string($data[$key]) . "'" : 'NULL';
-            }
-
-            $values[] = '(' . implode(', ', $row_values) . ')';
+        if (isset($options['ignore']) && $options['ignore']) {
+            $on_conflict = ' ON CONFLICT DO NOTHING';
         }
 
-        $query .= implode(",\n", $values);
-        $query = trim($query) . ';';
+        $dbfields_str = implode(', ', $dbfields);
+        $insert_base = "INSERT INTO {$tablename} ({$dbfields_str}) VALUES\n";
 
-        self::pwg_query($query);
+        // Chunk into 50k-row batches to avoid building unbounded SQL strings
+        // for large syncs (e.g. 394k albums in a single call).
+        $max_rows = 50000;
+        $offset = 0;
+        $total = count($datas);
+
+        while ($offset < $total) {
+            $chunk = array_slice($datas, $offset, $max_rows);
+            $values = [];
+
+            foreach ($chunk as $data) {
+                $row_values = [];
+
+                foreach ($dbfields as $key) {
+                    $row_values[] = isset($data[$key])
+                        ? "'" . self::pwg_db_real_escape_string($data[$key]) . "'"
+                        : 'NULL';
+                }
+
+                $values[] = '(' . implode(', ', $row_values) . ')';
+            }
+
+            self::pwg_query($insert_base . implode(",\n", $values) . $on_conflict . ';');
+
+            $offset += $max_rows;
+        }
+
+        // Call sync_sequences once after all chunks, not per batch.
         self::sync_sequences();
     }
 

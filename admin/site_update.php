@@ -302,10 +302,6 @@ if (isset($_POST['submit']) &&
         }
 
         $inserts[] = $insert;
-        $infos[] = [
-            'path' => $fulldir,
-            'info' => functions::l10n('added'),
-        ];
 
         // add the new category to $db_categories and $db_fulldirs array
         $db_categories[$insert['id']] =
@@ -328,7 +324,9 @@ if (isset($_POST['submit']) &&
                 'id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable',
                 'visible', 'status', 'sort_rank', 'global_rank',
             ];
+            $t_insert = microtime(true);
             $conf->sql_backend::mass_inserts('categories', $dbfields, $inserts);
+            $logger->info('[sync][dirs] mass_inserts done', ['elapsed_s' => round(microtime(true) - $t_insert, 2)]);
 
             // add default permissions to categories
             $category_ids = [];
@@ -342,10 +340,15 @@ if (isset($_POST['submit']) &&
                 }
             }
 
-            functions::pwg_activity('album', $category_ids, 'add', [
+            // Log a single summary activity instead of one row per category.
+            $t_activity = microtime(true);
+            functions::pwg_activity('album', [count($category_ids)], 'add', [
                 'sync' => true,
+                'count' => count($category_ids),
             ]);
+            $logger->info('[sync][dirs] pwg_activity done', ['elapsed_s' => round(microtime(true) - $t_activity, 2)]);
 
+            $t_perms = microtime(true);
             $category_up = implode(', ', array_unique($category_up));
 
             if ($conf->inheritance_by_default &&
@@ -358,18 +361,11 @@ if (isset($_POST['submit']) &&
                     SQL;
                 $result = $conf->sql_backend::pwg_query($query);
 
+                $granted_grps = [];
+
                 if (! empty($result)) {
-                    $granted_grps = [];
-
                     while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-                        if (! isset($granted_grps[$row['cat_id']])) {
-                            $granted_grps[$row['cat_id']] = [];
-                        }
-
-                        // TODO: explanation
-                        $granted_grps[] = [
-                            $row['cat_id'] => array_push($granted_grps[$row['cat_id']], $row['group_id']),
-                        ];
+                        $granted_grps[$row['cat_id']][] = $row['group_id'];
                     }
                 }
 
@@ -380,28 +376,24 @@ if (isset($_POST['submit']) &&
                     SQL;
                 $result = $conf->sql_backend::pwg_query($query);
 
+                $granted_users = [];
+
                 if (! empty($result)) {
-                    $granted_users = [];
-
                     while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-                        if (! isset($granted_users[$row['cat_id']])) {
-                            $granted_users[$row['cat_id']] = [];
-                        }
-
-                        // TODO: explanation
-                        $granted_users[] = [
-                            $row['cat_id'] => array_push($granted_users[$row['cat_id']], $row['user_id']),
-                        ];
+                        $granted_users[$row['cat_id']][] = $row['user_id'];
                     }
                 }
 
                 $insert_granted_users = [];
                 $insert_granted_grps = [];
 
+                // Use a hash set for O(1) lookups instead of in_array O(n).
+                $category_ids_set = array_flip($category_ids);
+
                 foreach ($category_ids as $ids) {
                     $parent_id = $db_categories[$ids]['parent'];
 
-                    while (in_array($parent_id, $category_ids)) {
+                    while (isset($category_ids_set[$parent_id])) {
                         $parent_id = $db_categories[$parent_id]['parent'];
                     }
 
@@ -434,6 +426,8 @@ if (isset($_POST['submit']) &&
             } else {
                 functions_admin::add_permission_on_category($category_ids, functions_admin::get_admins());
             }
+
+            $logger->info('[sync][dirs] permissions done', ['elapsed_s' => round(microtime(true) - $t_perms, 2)]);
         }
 
         $counts['new_categories'] = count($inserts);
@@ -443,14 +437,9 @@ if (isset($_POST['submit']) &&
     $to_delete = [];
     $to_delete_derivative_dirs = [];
 
-    foreach (array_diff(array_keys($db_fulldirs), $fs_fulldirs) as $fulldir) {
+    foreach ($del_dirs as $fulldir) {
         $to_delete[] = $db_fulldirs[$fulldir];
         unset($db_fulldirs[$fulldir]);
-
-        $infos[] = [
-            'path' => $fulldir,
-            'info' => functions::l10n('deleted'),
-        ];
 
         if (substr_compare($fulldir, '../', 0, 3) == 0) {
             $fulldir = substr($fulldir, 3);
@@ -462,13 +451,17 @@ if (isset($_POST['submit']) &&
     if ($to_delete !== []) {
         $logger->info('[sync][dirs] deleting categories', ['count' => count($to_delete)]);
         if (! $simulate) {
+            $t_del = microtime(true);
             functions_admin::delete_categories($to_delete);
+            $logger->info('[sync][dirs] delete_categories done', ['elapsed_s' => round(microtime(true) - $t_del, 2)]);
 
+            $t_deriv = microtime(true);
             foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                 if (is_dir($to_delete_dir)) {
                     functions_admin::clear_derivative_cache_rec($to_delete_dir, '#.+#');
                 }
             }
+            $logger->info('[sync][dirs] derivative cleanup done', ['elapsed_s' => round(microtime(true) - $t_deriv, 2)]);
         }
 
         $counts['del_categories'] = count($to_delete);

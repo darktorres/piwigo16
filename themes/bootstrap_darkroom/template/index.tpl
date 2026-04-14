@@ -282,18 +282,21 @@
                     })
                 });
             </script>{/footer_script}
-            {if $theme_config->photoswipe}
+            {if $theme_config->photoswipe && !isset($GDThumb)}
                 {footer_script}
                 <script type="module">
-                    import PhotoSwipeLightbox from './themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe-lightbox.esm.js';
+                    if (!window._pswpInitialized) {
+                        window._pswpInitialized = true;
+                        const { default: PhotoSwipeLightbox } = await import('./themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe-lightbox.esm.js');
 
-                    const lightbox = new PhotoSwipeLightbox({
-                        gallery: '#thumbnails',
-                        children: 'a[data-pswp-src]',
-                        pswpModule: () => import(
-                            './themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe.esm.js')
-                    });
-                    lightbox.init();
+                        const lightbox = new PhotoSwipeLightbox({
+                            gallery: '#thumbnails',
+                            children: 'a[data-pswp-src]',
+                            pswpModule: () => import(
+                                './themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe.esm.js')
+                        });
+                        lightbox.init();
+                    }
                 </script>
 
                 <link rel="stylesheet" href="./themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe.css">

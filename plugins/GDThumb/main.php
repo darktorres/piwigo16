@@ -78,21 +78,14 @@ function GDThumb_index(): void
     functions_plugins::add_event_handler('loc_end_index_thumbnails', GDThumb_process_thumb(...), 50);
 }
 
-function GDThumb_endsWith(
-    string $needles,
-    string $haystack
-): bool {
-    if (empty($needles) ||
-        empty($haystack)
-    ) {
-        return false;
-    }
-
-    $arr_needles = explode(',', $needles);
-
-    return array_any($arr_needles, fn ($needle): bool => (string) $needle === substr($haystack, -strlen($needle)));
-
-}
+const GDTHUMB_MEDIA_TYPES = [
+    'video' => ['webm', 'webmv', 'ogv', 'm4v', 'flv', 'mp4'],
+    'music' => ['mp3', 'ogg', 'oga', 'm4a', 'webma', 'fla', 'wav'],
+    'pdf' => ['pdf'],
+    'doc' => ['doc', 'docx', 'odt'],
+    'xls' => ['xls', 'xlsx', 'ods'],
+    'ppt' => ['ppt', 'pptx', 'odp'],
+];
 
 function GDThumb_media_type(
     array $params,
@@ -102,30 +95,12 @@ function GDThumb_media_type(
         return 'image';
     }
 
-    $file = $params['file'];
+    $ext = strtolower(pathinfo($params['file'], PATHINFO_EXTENSION));
 
-    if (GDThumb_endsWith('webm,webmv,ogv,m4v,flv,mp4', $file)) {
-        return 'video';
-    }
-
-    if (GDThumb_endsWith('mp3,ogg,oga,m4a,webma,fla,wav', $file)) {
-        return 'music';
-    }
-
-    if (GDThumb_endsWith('pdf', $file)) {
-        return 'pdf';
-    }
-
-    if (GDThumb_endsWith('doc,docx,odt', $file)) {
-        return 'doc';
-    }
-
-    if (GDThumb_endsWith('xls,xlsx,ods', $file)) {
-        return 'xls';
-    }
-
-    if (GDThumb_endsWith('ppt,pptx,odp', $file)) {
-        return 'ppt';
+    foreach (GDTHUMB_MEDIA_TYPES as $type => $extensions) {
+        if (in_array($ext, $extensions, true)) {
+            return $type;
+        }
     }
 
     return 'image';
@@ -145,27 +120,13 @@ function GDThumb_process_thumb(
 
     $template->set_filename('index_thumbnails', __DIR__ . '/template/gdthumb_thumb.tpl');
     $template->assign('GDThumb', $confTemp);
+    $template->assign('GDThumb_derivative_params', GDThumb_get_derivative_params($confTemp));
 
-    if (($confTemp['method'] == 'slide') ||
-        ($confTemp['method'] == 'square')
-    ) {
-        $template->assign('GDThumb_derivative_params', ImageStdParams::get_custom($confTemp['height'], 9999));
-    } else {
-        $template->assign('GDThumb_derivative_params', ImageStdParams::get_custom(9999, $confTemp['height']));
-    }
-
-    if ($confTemp['big_thumb'] &&
-        ! empty($tpl_vars[0])
-    ) {
-        if (($confTemp['method'] == 'slide') ||
-            ($confTemp['method'] == 'square')
-        ) {
-            $derivative_params = ImageStdParams::get_custom(2 * $confTemp['height'] + $confTemp['margin'], 9999);
-        } else {
-            $derivative_params = ImageStdParams::get_custom(9999, 2 * $confTemp['height'] + $confTemp['margin']);
-        }
-
-        $template->assign('GDThumb_big', new DerivativeImage($derivative_params, $tpl_vars[0]['src_image']));
+    if ($confTemp['big_thumb'] && ! empty($tpl_vars[0])) {
+        $template->assign('GDThumb_big', new DerivativeImage(
+            GDThumb_get_derivative_params($confTemp, true),
+            $tpl_vars[0]['src_image']
+        ));
     }
 
     return $tpl_vars;
@@ -181,36 +142,32 @@ function GDThumb_process_category(
 
     $template->set_filename('index_category_thumbnails', __DIR__ . '/template/gdthumb_cat.tpl');
     $template->assign('GDThumb', $confTemp);
+    $template->assign('GDThumb_derivative_params', GDThumb_get_derivative_params($confTemp));
 
-    if (($confTemp['method'] == 'slide') ||
-        ($confTemp['method'] == 'square')
-    ) {
-        $template->assign('GDThumb_derivative_params', ImageStdParams::get_custom($confTemp['height'], 9999));
-    } else {
-        $template->assign('GDThumb_derivative_params', ImageStdParams::get_custom(9999, $confTemp['height']));
-    }
-
-    if ($confTemp['big_thumb'] &&
-        ! empty($tpl_vars[0])
-    ) {
+    if ($confTemp['big_thumb'] && ! empty($tpl_vars[0])) {
         $id = $tpl_vars[0]['representative_picture_id'];
 
-        if (($id) &&
-            ($rep = $tpl_vars[0]['representative'])
-        ) {
-            if (($confTemp['method'] == 'slide') ||
-                ($confTemp['method'] == 'square')
-            ) {
-                $derivative_params = ImageStdParams::get_custom(2 * $confTemp['height'] + $confTemp['margin'], 9999);
-            } else {
-                $derivative_params = ImageStdParams::get_custom(9999, 2 * $confTemp['height'] + $confTemp['margin']);
-            }
-
-            $template->assign('GDThumb_big', new DerivativeImage($derivative_params, $rep['src_image']));
+        if (($id) && ($rep = $tpl_vars[0]['representative'])) {
+            $template->assign('GDThumb_big', new DerivativeImage(
+                GDThumb_get_derivative_params($confTemp, true),
+                $rep['src_image']
+            ));
         }
     }
 
     return $tpl_vars;
+}
+
+function GDThumb_get_derivative_params(
+    array $confTemp,
+    bool $big = false
+): \Piwigo\inc\DerivativeParams {
+    $size = $big ? 2 * $confTemp['height'] + $confTemp['margin'] : $confTemp['height'];
+    $is_vertical = ($confTemp['method'] == 'slide') || ($confTemp['method'] == 'square');
+
+    return $is_vertical
+        ? ImageStdParams::get_custom($size, 9999)
+        : ImageStdParams::get_custom(9999, $size);
 }
 
 function GDThumb_prefilter(

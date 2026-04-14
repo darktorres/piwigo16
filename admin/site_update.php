@@ -12,6 +12,8 @@ declare(strict_types=1);
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_metadata_admin;
 use Piwigo\admin\inc\tabsheet;
+use Piwigo\admin\EverythingSDK;
+use Piwigo\admin\EverythingSiteReader;
 use Piwigo\admin\LocalSiteReader;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_category;
@@ -68,7 +70,27 @@ $fs_sizes = [];
 if ($site_is_remote) {
     functions_html::fatal_error('remote sites not supported');
 } else {
-    $site_reader = new LocalSiteReader($site_url);
+    $site_reader = null;
+
+    if ($conf->everything_dll_path !== '') {
+        $dll_path = str_starts_with($conf->everything_dll_path, '/')
+            || preg_match('/^[A-Za-z]:/', $conf->everything_dll_path)
+            ? $conf->everything_dll_path
+            : PHPWG_ROOT_PATH . $conf->everything_dll_path;
+
+        $everything_sdk = EverythingSDK::create(
+            $dll_path,
+            $conf->everything_instance_name
+        );
+
+        if ($everything_sdk !== null) {
+            $site_reader = new EverythingSiteReader($site_url, $everything_sdk);
+        } else {
+            functions_html::fatal_error('Everything SDK failed: ' . EverythingSDK::$lastError);
+        }
+    } else {
+        $site_reader = new LocalSiteReader($site_url);
+    }
 }
 
 if (isset($page['no_md5sum_number'])) {

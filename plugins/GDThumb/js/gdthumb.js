@@ -37,7 +37,7 @@ var GDThumb = {
 
     init: function () {
         var mainlists = jQuery("ul.thumbnails");
-        if (typeof mainlists !== "undefined") {
+        if (mainlists.length > 0) {
             if (GDThumb.do_merge) {
                 GDThumb.merge();
             }
@@ -409,8 +409,10 @@ var GDThumb = {
             }
         }
 
-        if (main_width != jQuery("ul.thumbnails").width()) {
+        if (main_width != jQuery("ul.thumbnails").width() && !GDThumb._processing) {
+            GDThumb._processing = true;
             GDThumb.process();
+            GDThumb._processing = false;
         }
     },
 

@@ -558,20 +558,6 @@
       </ul>
     </fieldset>
 
-    <fieldset id="catSubset">
-      <legend><span class="icon-filter icon-purple"></span>{'reduce to single existing albums'|translate}</legend>
-      <ul>
-        <li>
-          <select class="categoryList" name="cat" size="10">
-            {html_options options=$category_options selected=$category_options_selected}
-          </select>
-        </li>
-
-        <li><label><input type="checkbox" name="subcats-included" value="1"
-              {if $introduction.subcats_included}checked="checked" {/if}> {'Search in sub-albums'|translate}</label></li>
-      </ul>
-    </fieldset>
-
     <p class="bottomButtons syncBtn">
       <button class="icon-exchange buttonGradient" type="submit" value="" name="submit"> {'Synchronize'|translate}
       </button>

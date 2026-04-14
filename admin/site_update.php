@@ -121,7 +121,6 @@ if (isset($_GET['quick_sync'])) {
     $_POST['privacy_level'] = '0';
     $_POST['sync_meta'] = '1';
     $_POST['simulate'] = '0';
-    $_POST['subcats-included'] = '1';
     $_POST['submit'] = 'Quick Local Synchronization';
 }
 
@@ -201,38 +200,15 @@ if (isset($_POST['submit']) &&
         SELECT id, uppercats, global_rank, status, visible
         FROM categories
         WHERE dir IS NOT NULL
-            AND site_id = {$site_id}
-
+            AND site_id = {$site_id};
         SQL;
-
-    if (isset($_POST['cat']) &&
-        is_numeric($_POST['cat'])
-    ) {
-        if (isset($_POST['subcats-included']) &&
-            $_POST['subcats-included'] == 1
-        ) {
-            $db_regex = $conf->sql_backend::DB_REGEX_OPERATOR;
-            $query .= <<<SQL
-                AND uppercats {$db_regex} '(^|,){$_POST['cat']}(,|$)'
-
-                SQL;
-        } else {
-            $query .= <<<SQL
-                AND id = {$_POST['cat']}
-
-                SQL;
-        }
-    }
-
-    $query = trim($query) . ';';
     $db_categories = $conf->sql_backend::query2array($query, 'id');
 
     // get category full directories in an array for comparison with file
     // system directory tree
     $db_fulldirs = functions_admin::get_fulldirs(array_keys($db_categories));
 
-    // what is the base directory to search file system sub-directories ?
-    $basedir = isset($_POST['cat']) && is_numeric($_POST['cat']) ? $db_fulldirs[$_POST['cat']] : rtrim($site_url, '/');
+    $basedir = rtrim($site_url, '/');
 
     // we need to have fulldirs as keys to make efficient comparison
     $db_fulldirs = array_flip($db_fulldirs);
@@ -283,26 +259,15 @@ if (isset($_POST['submit']) &&
         }
         : null;
     $fs_fulldirs = $site_reader->get_full_directories($basedir, $dir_callback);
+    $logger->info('[sync][dirs] get_full_directories done', ['count' => count($fs_fulldirs)]);
 
-    // get_full_directories doesn't include the base directory, so if it's a
-    // category directory, we need to include it in our array
-    if (isset($_POST['cat'])) {
-        $fs_fulldirs[] = $basedir;
-    }
-
-    // If $_POST['subcats-included'] != 1 ("Search in sub-albums" is unchecked)
-    // $db_fulldirs doesn't include any subdirectories and $fs_fulldirs does
-    // So $fs_fulldirs will be limited to the selected basedir
-    // (if that one is in $fs_fulldirs)
-    if (! isset($_POST['subcats-included']) ||
-        $_POST['subcats-included'] != 1
-    ) {
-        $fs_fulldirs = array_intersect($fs_fulldirs, array_keys($db_fulldirs));
-    }
+    $new_dirs = array_diff($fs_fulldirs, array_keys($db_fulldirs));
+    $del_dirs = array_diff(array_keys($db_fulldirs), $fs_fulldirs);
+    $logger->info('[sync][dirs] diff computed', ['new' => count($new_dirs), 'del' => count($del_dirs)]);
 
     $inserts = [];
     // new categories are the directories not present yet in the database
-    foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
+    foreach ($new_dirs as $fulldir) {
         $dir = $conf->sql_backend::pwg_db_real_escape_string(basename($fulldir));
         $insert = [
             'id' => $next_id++,
@@ -357,6 +322,7 @@ if (isset($_POST['submit']) &&
     }
 
     if ($inserts !== []) {
+        $logger->info('[sync][dirs] inserting new categories', ['count' => count($inserts)]);
         if (! $simulate) {
             $dbfields = [
                 'id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable',
@@ -494,6 +460,7 @@ if (isset($_POST['submit']) &&
     }
 
     if ($to_delete !== []) {
+        $logger->info('[sync][dirs] deleting categories', ['count' => count($to_delete)]);
         if (! $simulate) {
             functions_admin::delete_categories($to_delete);
 
@@ -543,8 +510,10 @@ if (isset($_POST['submit']) &&
             ]);
         }
         : null;
+    $logger->info('[sync][files] starting get_elements', ['basedir' => $basedir]);
     $fs = $site_reader->get_elements($basedir, 0, $scan_callback);
     $t_fs_scan = microtime(true) - $t_fs_scan;
+    $logger->info('[sync][files] get_elements done', ['count' => count($fs), 'elapsed_s' => round($t_fs_scan, 2)]);
     sync_emit('substep_complete', [
         'phase' => 'files', 'id' => 'scan',
         'detail' => fmt_number(count($fs)) . ' files found',
@@ -899,25 +868,13 @@ if (isset($_POST['submit']) &&
 
     if ($_POST['sync'] == 'files') {
         $start = functions::get_moment();
-        $opts['category_id'] = '';
-        $opts['recursive'] = true;
-
-        if (isset($_POST['cat'])) {
-            $opts['category_id'] = $_POST['cat'];
-
-            if (! isset($_POST['subcats-included']) ||
-                $_POST['subcats-included'] != 1
-            ) {
-                $opts['recursive'] = false;
-            }
-        }
 
         sync_emit('substep_start', ['phase' => 'files', 'id' => 'attrs', 'label' => 'Checking file attributes']);
         $t_update_phase = microtime(true);
         $files = functions_metadata_admin::get_filelist(
-            $opts['category_id'],
+            '',
             $site_id,
-            $opts['recursive']
+            true
         );
         $template->append('footer_elements', '<!-- get_filelist : '
           . functions::get_elapsed_time($start, functions::get_moment())
@@ -1000,18 +957,6 @@ if (isset($_POST['submit']) &&
 ) {
     // sync only never synchronized files ?
     $opts['only_new'] = ! isset($_POST['meta_all']);
-    $opts['category_id'] = '';
-    $opts['recursive'] = true;
-
-    if (isset($_POST['cat'])) {
-        $opts['category_id'] = $_POST['cat'];
-        // recursive ?
-        if (! isset($_POST['subcats-included']) ||
-            $_POST['subcats-included'] != 1
-        ) {
-            $opts['recursive'] = false;
-        }
-    }
 
     sync_emit('phase_start', ['phase' => 'meta']);
     $t_meta_phase = microtime(true);
@@ -1020,9 +965,9 @@ if (isset($_POST['submit']) &&
     $start = functions::get_moment();
     $t_filelist = microtime(true);
     $files = functions_metadata_admin::get_filelist(
-        $opts['category_id'],
+        '',
         $site_id,
-        $opts['recursive'],
+        true,
         $opts['only_new']
     );
     $t_filelist = microtime(true) - $t_filelist;
@@ -1344,13 +1289,12 @@ if (isset($_POST['submit'])) {
         'sync_meta' => isset($_POST['sync_meta']),
         'display_info' => isset($_POST['display_info']) && $_POST['display_info'] == 1,
         'add_to_caddie' => isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1,
-        'subcats_included' => isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1,
+        'subcats_included' => true,
         'privacy_level_selected' => (int) $_POST['privacy_level'],
         'meta_all' => isset($_POST['meta_all']),
         'meta_empty_overrides' => isset($_POST['meta_empty_overrides']),
     ];
 
-    $cat_selected = isset($_POST['cat']) && is_numeric($_POST['cat']) ? [$_POST['cat']] : [];
 } else {
     $tpl_introduction = [
         'sync' => 'dirs',
@@ -1362,32 +1306,12 @@ if (isset($_POST['submit'])) {
         'meta_all' => false,
         'meta_empty_overrides' => false,
     ];
-
-    $cat_selected = [];
-
-    if (isset($_GET['cat_id'])) {
-        functions::check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
-
-        $cat_selected = [$_GET['cat_id']];
-        $tpl_introduction['sync'] = 'files';
-    }
 }
 
 $tpl_introduction['privacy_level_options'] = functions::get_privacy_level_options();
 
 $template->assign('introduction', $tpl_introduction);
 
-$query = <<<SQL
-    SELECT id, name, uppercats, global_rank
-    FROM categories
-    WHERE site_id = {$site_id};
-    SQL;
-functions_category::display_select_cat_wrapper(
-    $query,
-    $cat_selected,
-    'category_options',
-    false
-);
 
 if ($errors !== []) {
     foreach ($errors as $error) {

@@ -55,7 +55,7 @@ final class EverythingSiteReader
         string $basedir,
         ?\Closure $on_dir = null
     ): array {
-        global $conf;
+        global $conf, $logger;
 
         $absBasedir = realpath($basedir);
 
@@ -73,12 +73,18 @@ final class EverythingSiteReader
 
         // Build query targets: the basedir itself + any symlink targets.
         $queryTargets = $this->buildQueryTargets($basedirClean, $absBasedir, $excludeFolders);
+        $logger->info('[sync][ev] get_full_directories targets', [
+            'count' => count($queryTargets),
+            'targets' => array_column($queryTargets, 'piwigoPrefix'),
+        ]);
 
         $dirs = [];
 
         foreach ($queryTargets as $target) {
             $query = $this->buildPathQuery($target['absPath']) . ' folder:';
+            $logger->info('[sync][ev] querying dirs', ['target' => $target['piwigoPrefix'], 'query' => $query]);
             $paths = $this->sdk->queryPaths($query);
+            $logger->info('[sync][ev] dirs result', ['target' => $target['piwigoPrefix'], 'raw_count' => count($paths)]);
 
             $absPrefixFwd = str_replace('\\', '/', $target['absPath']);
             $absPrefixLen = strlen($absPrefixFwd);
@@ -160,13 +166,19 @@ final class EverythingSiteReader
         // Build query targets: the basedir itself + any symlink targets.
         // For file scanning, use the file-scan exclude list for symlink discovery.
         $queryTargets = $this->buildQueryTargets($basedirClean, $absBasedir, $excludeDirs);
+        $logger->info('[sync][ev] get_elements targets', [
+            'count' => count($queryTargets),
+            'targets' => array_column($queryTargets, 'piwigoPrefix'),
+        ]);
 
         $fs = [];
         $dirFileCounts = [];
 
         foreach ($queryTargets as $target) {
             $query = $this->buildPathQuery($target['absPath']) . ' ext:' . $extList;
+            $logger->info('[sync][ev] querying files', ['target' => $target['piwigoPrefix'], 'query' => $query]);
             $results = $this->sdk->queryPathsWithSize($query);
+            $logger->info('[sync][ev] files result', ['target' => $target['piwigoPrefix'], 'raw_count' => count($results)]);
 
             $absPrefixFwd = str_replace('\\', '/', $target['absPath']);
             $absPrefixLen = strlen($absPrefixFwd);

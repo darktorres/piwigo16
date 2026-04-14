@@ -32,6 +32,9 @@ final class EverythingSiteReader
 
     public string $site_url;
 
+    /** Running count of elements yielded in the current get_elements() traversal. */
+    private int $elementsYielded = 0;
+
     public function __construct(string $site_url, EverythingSDK $sdk)
     {
         $this->site_url = $site_url;
@@ -132,21 +135,30 @@ final class EverythingSiteReader
     // ------------------------------------------------------------------
 
     /**
-     * @return array<string, array{representative_ext: ?string, fs_filesize: int, formats?: array}>
+     * Yields all file system files matching $conf->file_ext / $conf->picture_ext.
+     *
+     * Converted from array-building to a Generator so the caller can process
+     * each entry immediately without materialising the full list in memory.
+     * The Everything SDK query still loads all results at once internally, but
+     * the $fs array that was previously built on top of those results is eliminated.
+     *
+     * @return \Generator<string, array{representative_ext: ?string, fs_filesize: int, formats?: array}>
      */
     public function get_elements(
         string $path,
         int $depth = 0,
         ?\Closure $on_dir = null
-    ): array {
+    ): \Generator {
         global $conf, $logger;
 
         $absBasedir = realpath($path);
 
         if ($absBasedir === false) {
-            return $this->local->get_elements($path, $depth, $on_dir);
+            yield from $this->local->get_elements($path, $depth, $on_dir);
+            return;
         }
 
+        $this->elementsYielded = 0;
         $profiling = $conf->sync_profiling;
 
         if ($profiling) {
@@ -171,7 +183,6 @@ final class EverythingSiteReader
             'targets' => array_column($queryTargets, 'piwigoPrefix'),
         ]);
 
-        $fs = [];
         $dirFileCounts = [];
 
         foreach ($queryTargets as $target) {
@@ -240,7 +251,8 @@ final class EverythingSiteReader
                     $entry['formats'] = $this->local->get_formats($dirPath, $filenameWoExt);
                 }
 
-                $fs[$piwigoPath] = $entry;
+                $this->elementsYielded++;
+                yield $piwigoPath => $entry;
 
                 if ($on_dir !== null) {
                     $dirFileCounts[$dirPath] = ($dirFileCounts[$dirPath] ?? 0) + 1;
@@ -249,24 +261,30 @@ final class EverythingSiteReader
                     if ($dirFileCounts[$dirPath] === 1
                         || $dirFileCounts[$dirPath] % 500 === 0
                     ) {
-                        $on_dir($dirPath, count($fs));
+                        $on_dir($dirPath, $this->elementsYielded);
                     }
                 }
             }
         }
 
-        ksort($fs);
-
         if ($profiling) {
             $elapsed = microtime(true) - $tStart;
             $logger->info('[sync][scan] Everything SDK scan summary', [
                 'total_elapsed_s' => round($elapsed, 4),
-                'files_matched' => count($fs),
+                'files_matched' => $this->elementsYielded,
                 'source' => 'Everything SDK v3',
             ]);
         }
+    }
 
-        return $fs;
+    /**
+     * Returns null — an accurate upfront count requires path-level filtering
+     * that cannot be expressed cheaply via the Everything SDK query alone.
+     * The caller will instead use running counters from the get_elements() loop.
+     */
+    public function count_elements(string $path): ?int
+    {
+        return null;
     }
 
     // ------------------------------------------------------------------

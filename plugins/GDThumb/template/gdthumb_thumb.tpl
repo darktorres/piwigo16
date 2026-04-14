@@ -22,13 +22,13 @@
                 {$thumbnail.NAME}
               {/if}
             {/if}
-            {if $GDThumb.thumb_mode_album !== "overlay-ex"}
+            {if $GDThumb.thumb_mode_photo !== "overlay-ex"}
               {if !empty($thumbnail.icon_ts)}
                 <img title="{$thumbnail.icon_ts.TITLE}" src="{$ROOT_URL}{$themeconf.icon_dir|default:null}/recent.png" alt="(!)">
               {/if}
             {/if}
           </span>
-          {if $GDThumb.thumb_mode_album == "overlay-ex"}
+          {if $GDThumb.thumb_mode_photo == "overlay-ex"}
             <span class="thumbInfo">
               <span class="hit-num">{$thumbnail.hit}</span>
               <span

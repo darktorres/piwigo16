@@ -1256,7 +1256,7 @@ class Config
 
         $this->file_ext = array_merge(
             $this->picture_ext,
-            ['tiff', 'tif', 'mpg', 'zip', 'avi', 'mp3', 'ogg', 'pdf', 'svg', 'heic']
+            ['tiff', 'tif', 'mpg', 'mpeg', 'avi', 'mp4', 'm4v', 'mov', 'mkv', 'webm', 'ogv', 'wmv', 'flv', 'zip', 'mp3', 'ogg', 'pdf', 'svg', 'heic']
         );
 
         $this->default_user_id = $this->guest_id;

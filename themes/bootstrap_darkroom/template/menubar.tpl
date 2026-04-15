@@ -1,5 +1,5 @@
 <!-- Start of menubar.tpl -->
-<ul class="navbar-nav{if !$theme_config->quicksearch_navbar} ml-auto{/if}">
+<ul class="navbar-nav{if !$theme_config->quicksearch_navbar} ms-auto{/if}">
     {assign var="discover_menu_exists" value=false}
     {foreach $blocks as $id => $block}
         {if not empty($block->template)}
@@ -8,8 +8,8 @@
             {/if}
             {if $discover_menu_exists == false && ($id == "mbSpecials" or $id == "mbMenu")}
                 <li class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{'Discover'|translate}</a>
-                    <div class="dropdown-menu dropdown-menu-right" role="menu">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">{'Discover'|translate}</a>
+                    <div class="dropdown-menu dropdown-menu-end" role="menu">
                         {if not empty($blocks.mbMenu->template)}
                             {include file=$blocks.mbMenu->template}
                         {/if}

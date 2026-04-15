@@ -3,15 +3,15 @@
         <a class="dropdown-item" id="menu-info-coll-{$coll_id}" href="{$coll_edit}"
             {if $coll_id == "coll_template"}style="display:none" {/if}>
             {$coll_name}
-            <span class="badge badge-secondary ml-2">{$coll_nb_images|number_format}</span>
+            <span class="badge bg-secondary ms-2">{$coll_nb_images|number_format}</span>
         </a>
     {/function}
 {/function}
 
 
 <li class="nav-item dropdown">
-    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{$block->get_title()|strip_tags:true}</a>
-    <div class="dropdown-menu dropdown-menu-right" role="menu">
+    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">{$block->get_title()|strip_tags:true}</a>
+    <div class="dropdown-menu dropdown-menu-end" role="menu">
         <a class="dropdown-item" href="{$block->data.U_LIST}">
             {if $block->data.NB_COL == 0}
                 {'You have no collection'|translate}

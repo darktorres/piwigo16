@@ -1,7 +1,7 @@
 @import "../common/variables";
-@import "node_modules/bootswatch/dist/sketchy/variables";
-@import "node_modules/bootstrap/scss/bootstrap";
-@import "node_modules/bootswatch/dist/sketchy/bootswatch";
+@import "bootswatch/dist/sketchy/variables";
+@import "bootstrap/scss/bootstrap";
+@import "bootswatch/dist/sketchy/bootswatch";
 @import "common";
 
 .navbar-contextual {

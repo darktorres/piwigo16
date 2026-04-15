@@ -172,7 +172,7 @@
                   <dd class="col-sm-7">
                     <div class="dropdown">
                       <button class="btn btn-primary btn-raised dropdown-toggle ellipsis" type="button"
-                        id="dropdownPermissions" data-toggle="dropdown" aria-expanded="true">
+                        id="dropdownPermissions" data-bs-toggle="dropdown" aria-expanded="true">
                         {$available_permission_levels[$current.level]}
                       </button>
                       <div class="dropdown-menu" role="menu" aria-labelledby="dropdownPermissions">
@@ -195,7 +195,7 @@
           <div class="card-body">
             <h5 class="card-title">{'Tags'|translate}</h5>
             <div id="Tags" class="imageInfo">
-              {foreach $related_tags as $tag}<a class="btn btn-primary btn-raised mr-1"
+              {foreach $related_tags as $tag}<a class="btn btn-primary btn-raised me-1"
                 href="{$tag.URL}">{$tag.name}</a>{/foreach}
             </div>
           </div>
@@ -237,7 +237,7 @@
                   array_key_exists("{$exif_model}", $metadata.0.lines))}
                   <div class="row" style="line-height: 40px">
                     <div class="col-12">
-                      <span class="camera-compact fa-3x mr-3" title="{$exif_make} &amp; {$exif_model}"></span>
+                      <span class="camera-compact fa-3x me-3" title="{$exif_make} &amp; {$exif_model}"></span>
                       {if is_array($metadata.0.lines) && (array_key_exists("{$exif_make}",
                       $metadata.0.lines))}{$metadata.0.lines[{$exif_make}]}{/if}
                       {if is_array($metadata.0.lines) && (array_key_exists("{$exif_model}",
@@ -248,7 +248,7 @@
                 {if is_array($metadata.0.lines) && (array_key_exists("{$exif_lens}", $metadata.0.lines))}
                   <div class="row" style="line-height: 40px">
                     <div class="col-12">
-                      <span class="camera-lens-h fa-3x mr-3" title="{$exif_lens}"></span>
+                      <span class="camera-lens-h fa-3x me-3" title="{$exif_lens}"></span>
                       {$metadata.0.lines[{$exif_lens}]}
                     </div>
                   </div>
@@ -258,36 +258,36 @@
                     <div class="row">
                       {if is_array($metadata.0.lines) && (array_key_exists("{$exif_fnumber}", $metadata.0.lines))}
                         <div class="col-6 col-sm-4">
-                          <span class="camera-aperture fa-2x pr-2" title="{$exif_fnumber}"></span>
+                          <span class="camera-aperture fa-2x pe-2" title="{$exif_fnumber}"></span>
                           f/{$metadata.0.lines[{$exif_fnumber}]}
                         </div>
                       {/if}
                       {if is_array($metadata.0.lines) && (array_key_exists("{$exif_focal_length}", $metadata.0.lines))}
                         <div class="col-6 col-sm-4">
-                          <span class="camera-focal-length fa-2x pr-2" title="{$exif_focal_length}"></span>
+                          <span class="camera-focal-length fa-2x pe-2" title="{$exif_focal_length}"></span>
                           {$metadata.0.lines[{$exif_focal_length}]}
                         </div>
                       {/if}
                       {if is_array($metadata.0.lines) && (array_key_exists("{$exif_exposure_time}", $metadata.0.lines))}
                         <div class="col-6 col-sm-4">
-                          <span class="camera-shutter-speed fa-2x pr-2" title="{$exif_exposure_time}"></span>
+                          <span class="camera-shutter-speed fa-2x pe-2" title="{$exif_exposure_time}"></span>
                           {$metadata.0.lines[{$exif_exposure_time}]}
                         </div>
                       {/if}
                       {if is_array($metadata.0.lines) && (array_key_exists("{$exif_iso}", $metadata.0.lines))}
                         <div class="col-6 col-sm-4">
-                          <span class="camera-iso fa-2x pr-2" title="{$exif_iso}"></span> {$metadata.0.lines[{$exif_iso}]}
+                          <span class="camera-iso fa-2x pe-2" title="{$exif_iso}"></span> {$metadata.0.lines[{$exif_iso}]}
                         </div>
                       {/if}
                       {if is_array($metadata.0.lines) && (array_key_exists("{$exif_exposure_bias}", $metadata.0.lines))}
                         <div class="col-6 col-sm-4">
-                          <span class="camera-exposure fa-2x pr-2" title="{$exif_exposure_bias}"></span>
+                          <span class="camera-exposure fa-2x pe-2" title="{$exif_exposure_bias}"></span>
                           {$metadata.0.lines[{$exif_exposure_bias}]}
                         </div>
                       {/if}
                       {if is_array($metadata.0.lines) && (array_key_exists("{$exif_flash}", $metadata.0.lines))}
                         <div class="col-6 col-sm-4">
-                          <span class="camera-flash fa-2x pr-2 float-left h-100" title="{$exif_flash}"></span>
+                          <span class="camera-flash fa-2x pe-2 float-start h-100" title="{$exif_flash}"></span>
                           <div> {$metadata.0.lines[{$exif_flash}]}</div>
                         </div>
                       {/if}
@@ -296,15 +296,15 @@
                 </div>
               </div>
               <button id="show_exif_data" class="btn btn-primary btn-raised mt-1" style="text-transform: none;"><i
-                  class="fas fa-info mr-1"></i> {'Show EXIF data'|translate}</button>
+                  class="fas fa-info me-1"></i> {'Show EXIF data'|translate}</button>
               {footer_script require='jquery'}<script>
                 $('#show_exif_data').on('click', function() {
                   if ($('#full_exif_data').hasClass('d-none')) {
                     $('#full_exif_data').addClass('d-flex').removeClass('d-none');
-                    $('#show_exif_data').html('<i class="fas fa-info mr-1"></i> {"Hide EXIF data"|translate}');
+                    $('#show_exif_data').html('<i class="fas fa-info me-1"></i> {"Hide EXIF data"|translate}');
                   } else {
                     $('#full_exif_data').addClass('d-none').removeClass('d-flex');
-                    $('#show_exif_data').html('<i class="fas fa-info mr-1"></i> {"Show EXIF data"|translate}');
+                    $('#show_exif_data').html('<i class="fas fa-info me-1"></i> {"Show EXIF data"|translate}');
                   }
                 });
               </script>{/footer_script}
@@ -323,7 +323,7 @@
             </div>
           </div>
         {/if}
-        <div id="card-comments" class="ml-2">
+        <div id="card-comments" class="ms-2">
           {include file='picture_info_comments.tpl'}
         </div>
       </div>

@@ -160,10 +160,10 @@
                     <dd>
                         <div class="dropdown">
                             <button class="btn btn-primary dropdown-toggle ellipsis" type="button" id="dropdownPermissions"
-                                data-toggle="dropdown" aria-expanded="true">
+                                data-bs-toggle="dropdown" aria-expanded="true">
                                 {$available_permission_levels[$current.level]}
                             </button>
-                            <div class="dropdown-menu dropdown-menu-right" role="menu"
+                            <div class="dropdown-menu dropdown-menu-end" role="menu"
                                 aria-labelledby="dropdownPermissions">
                                 {foreach $available_permission_levels as $level => $label}
                                     <a id="permission-{$level}"

@@ -672,7 +672,7 @@
           <input name="upload_id" value="{$upload_id}" type="hidden">
         {/if}
 
-        <fieldset class="selectAlbum form-group">
+        <fieldset class="selectAlbum mb-3">
           <legend>{'Drop into album'|translate}</legend>
 
           <span class="albumSelection" {if count($category_options) == 0} style="display:none" {/if}>
@@ -689,7 +689,7 @@
           {/if}
         </fieldset>
 
-        <fieldset class="selectFiles form-group">
+        <fieldset class="selectFiles mb-3">
           <legend>{'Select files'|translate}</legend>
           <button id="addFiles" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> {'Add Photos'|translate}</button>
 
@@ -715,7 +715,7 @@
 
     <p class="showFieldset"><a id="showPhotoProperties" href="#">{'Set Photo Properties'|translate}</a></p>
 
-    <fieldset id="photoProperties" class="form-group" style="display:none">
+    <fieldset id="photoProperties" class="mb-3" style="display:none">
       <legend>{'Photo Properties'|translate}</legend>
 
       <input type="checkbox" name="set_photo_properties" style="display:none">
@@ -750,7 +750,7 @@
 
   </form>
 
-  <fieldset class="form-group" style="display:none">
+  <fieldset class="mb-3" style="display:none">
     <legend>{'Uploaded Photos'|translate}</legend>
         <div id="uploadedPhotos"></div>
       </fieldset>

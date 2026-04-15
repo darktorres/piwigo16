@@ -1,5 +1,5 @@
 // Material core overrides
-@import "node_modules/bootstrap-material-design/scss/variables/colors";
+@import "bootstrap-material-design/scss/variables/colors";
 
 // variable overrides
 $bmd-navbar-link-font-size: 1rem !default;
@@ -7,4 +7,4 @@ $brand-primary: theme-color('primary') !default;
 $navbar-dark-color: rgba($white,.75) !default;
 
 // import
-@import "node_modules/bootstrap-material-design/scss/bootstrap-material-design";
+@import "bootstrap-material-design/scss/bootstrap-material-design";

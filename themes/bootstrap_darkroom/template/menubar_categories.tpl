@@ -1,12 +1,12 @@
 <li id="categoriesDropdownMenu" class="nav-item dropdown">
-  <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{'Albums'|translate}</a>
-  <div class="dropdown-menu dropdown-menu-right" role="menu">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">{'Albums'|translate}</a>
+  <div class="dropdown-menu dropdown-menu-end" role="menu">
     {assign var='ref_level' value=0}
     {foreach $block->data.MENU_CATEGORIES as $cat}
       <a class="dropdown-item{if $cat.SELECTED} active{/if}" data-level="{($cat.LEVEL -1)}" href="{$cat.URL}">
         {$cat.NAME}
         {if $cat.count_images > 0}
-          <span class="badge badge-secondary ml-2" title="{$cat.TITLE}">{$cat.count_images|number_format}</span>
+          <span class="badge bg-secondary ms-2" title="{$cat.TITLE}">{$cat.count_images|number_format}</span>
         {/if}
         {if !empty($cat.icon_ts)}
           <img title="{$cat.icon_ts.TITLE}"

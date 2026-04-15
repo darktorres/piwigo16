@@ -25,7 +25,6 @@ final class EverythingSDK
     private const PROPERTY_FULL_PATH = 240;
     private const PROPERTY_SIZE = 2;
 
-    private const MAX_VIEWPORT = 10_000_000;
     private const PATH_BUF_SIZE = 2048;
 
     /**
@@ -176,7 +175,7 @@ final class EverythingSDK
 
             $this->ffi->Everything3_SetSearchTextUTF8($searchState, $query);
             $this->ffi->Everything3_SetSearchViewportOffset($searchState, 0);
-            $this->ffi->Everything3_SetSearchViewportCount($searchState, self::MAX_VIEWPORT);
+            $this->ffi->Everything3_SetSearchViewportCount($searchState, PHP_INT_MAX);
             $this->ffi->Everything3_AddSearchPropertyRequest($searchState, self::PROPERTY_FULL_PATH);
 
             if ($sortByPath) {

@@ -1682,17 +1682,81 @@ All admin pages use SSR with Tera templates. Each page is an isolated handler.
 - [ ] HTMX integration for partial page updates (optional enhancement, not required for v1)
 
 #### 4.3.2 High Priority Pages
-- [ ] **Dashboard** (`/admin`) — pending comments, orphan images, update notifications, activity summary
-- [ ] **Album management** (`/admin/albums`) — tree view, drag-and-drop ordering (or form-based), create/edit/delete
-- [ ] **Album edit** (`/admin/album/{id}`) — name, description, status, representative, permissions
-- [ ] **Photo upload** (`/admin/photos/add`) — drag-and-drop upload interface, progress, album assignment
-- [ ] **Photo edit** (`/admin/photo/{id}`) — metadata, tags, album links, privacy level, COI tool
-- [ ] **Batch manager** (`/admin/batch`) — filter by any criteria, bulk tag/category/privacy/delete operations
-- [ ] **Configuration** (`/admin/configuration`) — all ~900 config options, tabbed by domain
-- [ ] **User management** (`/admin/users`) — list, create, edit, delete, group assignment
-- [ ] **User permissions** (`/admin/user/{id}/permissions`) — category access grants
-- [ ] **Group management** (`/admin/groups`) — create, edit, delete, member management
-- [ ] **Group permissions** (`/admin/group/{id}/permissions`)
+
+- [ ] **Dashboard** (`/admin` → `intro.tpl`)
+  - Pending comments count + link
+  - Orphan images count + link
+  - Update notifications (core + extensions)
+  - Activity summary: uploads/comments/logins per week (last 4 weeks, bar chart)
+  - Storage breakdown: originals, derivatives, cache (pie chart from `images_disk_usage` config)
+  - Quick links: add photos, sync, batch manager
+  - Gallery stats: total photos, albums, tags, users, comments
+  - Hook: `loc_end_intro` for plugin widgets
+
+- [ ] **Album management** (`/admin/albums` → `albums.tpl`)
+  - Interactive tree view of all albums (drag-and-drop reordering via JS or form-based)
+  - For each album: name, photo count, sub-album count, status icon (public/private), visibility icon
+  - Actions: create new album (modal), edit, move, delete
+  - Bulk actions: set all to public/private, lock/unlock
+  - Two views: simple `cat_list.tpl` (flat) and `albums.tpl` (tree with nesting)
+
+- [ ] **Album edit** (`/admin/album/{id}` — tabbed: properties, sort, permissions, notification)
+  - **Properties tab** (`cat_modify.tpl`): name, description (rich text), status (public/private), visibility, commentable, representative image picker, permalink
+  - **Sort tab** (`element_set_ranks.tpl`): drag-and-drop image ordering within album, or sort by date/name/id
+  - **Permissions tab** (`cat_perm.tpl`): dual-listbox for user access and group access grants; "apply to sub-albums" checkbox
+  - **Notification tab** (`album_notification.tpl`): send notification to subscribers about new content
+
+- [ ] **Photo upload** (`/admin/photos/add` → `photos_add_direct.tpl`)
+  - Drag-and-drop zone + file picker fallback
+  - Album selector (searchable dropdown or tree)
+  - Upload progress: per-file progress bar + overall progress
+  - Chunked upload: JS splits files into 500KB chunks, sends via `pwg.images.addChunk`, finalizes with `pwg.images.uploadCompleted`
+  - Privacy level selector
+  - Post-upload: link to batch manager for tagging
+  - Hook: `loc_end_photo_add_direct`
+
+- [ ] **Photo edit** (`/admin/photo/{id}` — tabbed: properties, coi, formats)
+  - **Properties tab** (`picture_modify.tpl`): name, author, description, date_creation (datepicker), privacy level, tags (autocomplete), linked albums (multi-select), rotation
+  - **COI tab** (`picture_coi.tpl`): interactive crop tool — click/drag to set center-of-interest rectangle on the image. Saves 4-char `coi` value.
+  - **Formats tab** (`picture_formats.tpl`): list alternative formats (CR2, DNG, etc.), upload new format, delete format
+  - Hook: `loc_end_picture_modify`, `picture_modify_before_update`
+
+- [ ] **Batch manager** (`/admin/batch` → `batch_manager_global.tpl` / `batch_manager_unit.tpl`)
+  - **Global mode**: filter images by prefilter (caddie, no_album, no_tag, duplicates, last_import, all_photos) → display grid → select all/some → apply action
+  - **Unit mode**: edit images one at a time with full detail form
+  - **10 prefilters** (see §20.7.1 for complete list)
+  - **15 actions** (see §20.7.2): add/remove tags, associate/move/dissociate albums, set author/title/date/level, delete, sync metadata, generate/delete derivatives
+  - Filter state stored in session (`$_SESSION['bulk_manager_filter']`)
+  - Hooks: `get_batch_manager_prefilters`, `batch_manager_register_filters`, `element_set_global_action`
+
+- [ ] **Configuration** (`/admin/configuration` — 5 sub-sections via `&section=` param)
+  - **Main** (`configuration_main.tpl`): gallery title, banner, guest access, registration, email settings
+  - **Display** (`configuration_display.tpl`): thumbnail captions, picture page options (icons, navigation), index page options
+  - **Sizes** (`configuration_sizes.tpl`): all 9 derivative sizes with width/height/crop/quality settings, original resize
+  - **Watermark** (`configuration_watermark.tpl`): watermark image, position (%), opacity, repeat, minimum output size
+  - **Comments** (`configuration_comments.tpl`): enable/disable, moderation, anti-flood, spam settings, guest comments
+  - **Defaults** (`configuration_default.tpl`): default sort order, new album defaults, recent period
+
+- [ ] **User management** (`/admin/users` → `user_list.tpl`)
+  - Paginated, searchable, sortable table of all users
+  - Columns: username, email, status, groups, registration date, last visit, nb_images (from user cache)
+  - Actions: edit (inline or modal), delete, change status, assign groups
+  - Filter by status, group, registration date range
+  - Bulk actions: delete selected, change status, assign to group
+  - Create new user form
+
+- [ ] **User permissions** (`/admin/user/{id}/permissions` → `user_perm.tpl`)
+  - Dual-listbox: available categories on left, granted categories on right
+  - Shows inheritance (which permissions come from group membership)
+  - "Apply" saves to `user_access` table
+
+- [ ] **Group management** (`/admin/groups` → `group_list.tpl`)
+  - List all groups with member count, is_default flag
+  - Create/edit/delete/merge/duplicate groups
+  - Add/remove members (searchable user picker)
+
+- [ ] **Group permissions** (`/admin/group/{id}/permissions` → `group_perm.tpl`)
+  - Same dual-listbox as user permissions, but saves to `group_access` table
 
 #### 4.3.3 Medium Priority Pages
 - [ ] **Sync** (`/admin/sync`) — trigger sync, view progress via SSE, profiling stats
@@ -2161,23 +2225,78 @@ Each built-in plugin is reimplemented as a Lua plugin (or native Rust if perform
 
 ### 7.5 Template Migration Execution
 
-- [ ] Write a Smarty→Tera transpiler script (PHP or Python) to handle mechanical conversions:
-  - `{$var}` → `{{ var }}`
-  - `{'key'|translate}` → `{{ 'key' | translate }}`
-  - `{if $cond}...{/if}` → `{% if cond %}...{% endif %}`
-  - `{foreach from=$arr item=x}...{/foreach}` → `{% for x in arr %}...{% endfor %}`
-  - `{include file='name.tpl'}` → `{% include 'name.html' %}`
-  - `{combine_script ...}` → `{{ combine_script(...) }}`
-- [ ] Manually review and fix each migrated template (~277 files)
+- [ ] Write a Smarty→Tera transpiler script (Python recommended) to handle mechanical conversions. **Complete conversion rule table:**
+
+  | Smarty Syntax | Tera Equivalent | Notes |
+  |---|---|---|
+  | `{$var}` | `{{ var }}` | Simple variable |
+  | `{$var\|escape}` | `{{ var \| escape }}` | Tera auto-escapes by default |
+  | `{$obj.property}` | `{{ obj.property }}` | Dot access |
+  | `{$arr[0]}` | `{{ arr[0] }}` | Array index (Tera uses `.0` or `[0]`) |
+  | `{$derivative->get_url()}` | `{{ derivative.url }}` | **Method calls → pre-computed properties** |
+  | `{'key'\|translate}` | `{{ 'key' \| translate }}` | Custom filter |
+  | `{'key'\|translate\|escape}` | `{{ 'key' \| translate }}` | Tera auto-escapes; remove redundant |
+  | `{$count\|translate_dec:'%d photo':'%d photos'}` | `{{ count \| translate_dec(s='%d photo', p='%d photos') }}` | Named args in Tera |
+  | `{$var\|sprintf:$arg}` | `{{ var \| sprintf(arg=arg) }}` | Custom filter |
+  | `{$var\|intval}` | `{{ var \| int }}` | Built-in Tera |
+  | `{$var\|strtolower}` | `{{ var \| lower }}` | Built-in Tera |
+  | `{$var\|strtoupper}` | `{{ var \| upper }}` | Built-in Tera |
+  | `{$var\|trim}` | `{{ var \| trim }}` | Built-in Tera |
+  | `{$var\|urlencode}` | `{{ var \| urlencode }}` | Built-in Tera |
+  | `{$arr\|implode:', '}` | `{{ arr \| join(sep=', ') }}` | Built-in Tera |
+  | `{$var\|json_encode}` | `{{ var \| json_encode() }}` | Custom filter |
+  | `{$var\|md5}` | `{{ var \| md5 }}` | Custom filter |
+  | `{$var\|get_extent:'handle'}` | `{{ var \| theme_override(handle='handle') }}` | Custom filter for theme cascade |
+  | `{if $cond}...{elseif $c2}...{else}...{/if}` | `{% if cond %}...{% elif c2 %}...{% else %}...{% endif %}` | |
+  | `{if isset($var)}` | `{% if var is defined %}` | Tera `defined` test |
+  | `{if !empty($var)}` | `{% if var %}` or `{% if var \| length > 0 %}` | Depends on context |
+  | `{foreach from=$arr item=x}` | `{% for x in arr %}` | |
+  | `{foreach from=$arr key=k item=v}` | `{% for k, v in arr %}` | |
+  | `{$smarty.foreach.foo.index}` | `{{ loop.index0 }}` | Tera built-in loop var |
+  | `{$smarty.foreach.foo.iteration}` | `{{ loop.index }}` | 1-based |
+  | `{$smarty.foreach.foo.first}` | `{{ loop.first }}` | |
+  | `{$smarty.foreach.foo.last}` | `{{ loop.last }}` | |
+  | `{include file='foo.tpl'}` | `{% include "foo.html" %}` | |
+  | `{include file=$var\|get_extent:'handle'}` | `{% include theme_override("handle") %}` | Custom function |
+  | `{assign var=x value=expr}` | `{% set x = expr %}` | |
+  | `{literal}...{/literal}` | `{% raw %}...{% endraw %}` | |
+  | `{ldelim}` / `{rdelim}` | `{{ "{" }}` / `{{ "}" }}` | Or use raw blocks |
+  | `{combine_script id=x path=y require=z}` | `{{ combine_script(id='x', path='y', require='z') }}` | Custom function |
+  | `{combine_css path=x order=y}` | `{{ combine_css(path='x', order=y) }}` | Custom function |
+  | `{get_combined_scripts load='header'}` | `{{ get_combined_scripts(load='header') }}` | Custom function |
+  | `{get_combined_css}` | `{{ get_combined_css() }}` | Custom function |
+  | `{footer_script require='jquery'}...{/footer_script}` | Collect into `InlineScript` list during render | Post-processing, not a Tera tag |
+  | `{html_head}...{/html_head}` | Collect into head content list | Post-processing |
+  | `{html_style}...{/html_style}` | Collect into style content list | Post-processing |
+  | `{define_derivative name=x type=y}` | `{{ define_derivative(name='x', type='y') }}` | Custom function |
+  | `{$pwg->derivative_url($img, $type)}` | `{{ derivative_url(img=img, type=type) }}` | Custom function (no method calls in Tera) |
+
+- [ ] **Patterns that CANNOT be mechanically converted** (require manual work):
+  1. **Object method calls** (`{$derivative->get_type()}`) — must be pre-computed in handler and passed as flat properties
+  2. **PHP function calls in templates** (`{$smarty.const.IMG_THUMB}`, `{count($array)}`) — compute in handler or use Tera globals
+  3. **`{footer_script}` / `{html_head}` blocks** — collected post-render, not native Tera
+  4. **`.css.tpl` / `.js.tpl` template assets** (5 files in modus theme) — render via Tera, then feed to CSS/JS minifier
+  5. **`file_exists` modifier** (3 uses) — pre-compute in handler
+  6. **`preg_match` modifier** (2 uses) — pre-compute in handler
+
+- [ ] Manually review and fix each migrated template (~265 files — see Appendix E for complete list)
 - [ ] Build visual regression test suite: screenshot comparison between PHP and Rust renders
-- [ ] Priority migration order:
-  1. `header.html` + `footer.html` (affects all pages)
-  2. `index.html` (gallery browsing)
-  3. `picture.html` (image detail)
-  4. `identification.html` (login)
-  5. All admin templates
-  6. Remaining gallery templates
-  7. All child-theme overrides
+- [ ] **Priority migration order** (blocking dependencies first):
+  1. `header.html` + `footer.html` — affects every page
+  2. `menubar.html` + `menubar_*.html` — sidebar on every page
+  3. `index.html` + `thumbnails.html` + `mainpage_categories.html` — gallery browsing
+  4. `picture.html` + `picture_content.html` + `picture_nav_buttons.html` — image viewing
+  5. `identification.html` — login (needed for testing auth)
+  6. `navigation_bar.html` — pagination (used everywhere)
+  7. Admin `header.html` + `footer.html` + `admin.html` — admin shell
+  8. Admin `intro.html` — dashboard (first page admins see)
+  9. Remaining admin templates (56 files — see Appendix E §Admin)
+  10. Remaining gallery templates (search, tags, comments, profile, register, about, etc.)
+  11. Mail templates (13 files)
+  12. bootstrap_darkroom theme overrides (69 files)
+  13. modus theme overrides (16 files, including 5 CSS templates)
+  14. smartpocket theme overrides (34 files)
+  15. elegant theme overrides (2 files — trivial)
 
 ---
 
@@ -2238,13 +2357,54 @@ Each built-in plugin is reimplemented as a Lua plugin (or native Rust if perform
 
 ### 8.4 Security Audit
 
-- [ ] SQL injection: verify all 523 ported queries use bind parameters — automated check via `cargo clippy` lint or grep for string interpolation in query strings
-- [ ] XSS: verify all template output is escaped by default (Tera auto-escapes by default)
-- [ ] CSRF: verify all state-mutating POST endpoints check CSRF token
-- [ ] Session fixation: verify session ID is regenerated on login
-- [ ] Path traversal: verify file serving endpoints reject `../` patterns
-- [ ] Upload validation: verify file type checked by magic bytes, not extension
-- [ ] Rate limiting: verify login endpoint and derivative generation are rate-limited
+**SQL Injection:**
+- [ ] Automated scan: `grep -rn 'format!.*SELECT\|format!.*INSERT\|format!.*UPDATE\|format!.*DELETE'` in all Rust source — must return zero results
+- [ ] Verify all 523+ ported queries use bind parameters via `QueryBuilder` or `sqlx::query!`
+- [ ] Verify LIKE queries escape `%` and `_` metacharacters (see §20.2.2 for the 4 known-vulnerable patterns in PHP)
+- [ ] Verify ORDER BY clauses use enum-based column selection, never user-supplied strings
+- [ ] Verify Lua plugin `db.query()` / `db.execute()` use parameterized queries (params passed separately from SQL)
+
+**XSS (Cross-Site Scripting):**
+- [ ] Verify Tera auto-escaping is enabled globally (`autoescape = true` in Tera config)
+- [ ] Audit all `| safe` filter uses — each must be justified (intentional raw HTML)
+- [ ] Verify `render_*` hooks that output HTML (e.g., `render_element_content`, `render_page_banner`) sanitize plugin output
+- [ ] Verify JSON embedded in `<script>` tags uses `JSON_HEX_TAG | JSON_HEX_AMP` equivalent
+- [ ] Verify user-supplied content in `Content-Disposition` headers is sanitized (filename injection)
+
+**CSRF (Cross-Site Request Forgery):**
+- [ ] Verify all 38 POST-only API methods validate `pwg_token` parameter
+- [ ] Verify all admin form submissions include and validate CSRF token
+- [ ] Verify CSRF token is per-session (HMAC of session ID + secret key), not predictable
+- [ ] Verify logout is POST-only (prevent CSRF logout attacks)
+
+**Authentication:**
+- [ ] Session fixation: session ID regenerated on login
+- [ ] Session binding: IP octets included in session validation
+- [ ] Remember-me: HMAC-SHA1 with timing-safe comparison (`constant_time_eq`)
+- [ ] API keys: stored as SHA-256 hash, never plaintext
+- [ ] Password: bcrypt with cost >= 10, `password_verify` auto-detects cost
+- [ ] Rate limiting: max 10 login attempts per IP per minute
+
+**Authorization:**
+- [ ] Verify every admin endpoint checks `user.status >= Admin` before processing
+- [ ] Verify `pwg.extensions.update` checks for Webmaster (not just Admin)
+- [ ] Verify image privacy level checked on every image access (view, download, derivative)
+- [ ] Verify `ws_invoke_allowed` hook runs before every API method dispatch
+
+**File Handling:**
+- [ ] Path traversal: reject `../` in all file paths, derivative URLs, upload filenames
+- [ ] Upload validation: check file type by magic bytes (`infer` crate), not just extension
+- [ ] Upload size: enforce `upload_form_max_file_size` on server side (don't trust client)
+- [ ] Derivative URL parsing: validate derivative type code is recognized, reject arbitrary file paths
+- [ ] Symlink prevention: `walkdir` configured to not follow symlinks during sync
+
+**HTTP Headers:**
+- [ ] `Content-Security-Policy`: restrict script/style sources
+- [ ] `X-Frame-Options: DENY` (or `SAMEORIGIN` if admin uses iframes)
+- [ ] `X-Content-Type-Options: nosniff`
+- [ ] `Referrer-Policy: strict-origin-when-cross-origin`
+- [ ] `Strict-Transport-Security` when HTTPS is detected
+- [ ] `X-Request-Id` on all responses for correlation
 
 ---
 

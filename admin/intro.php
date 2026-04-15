@@ -115,11 +115,7 @@ if ($conf->show_newsletter_subscription &&
     );
 }
 
-$query = <<<SQL
-    SELECT COUNT(*) AS "COUNT(*)"
-    FROM images;
-    SQL;
-[$nb_photos] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
+$nb_photos = $page['nb_photos_total'];
 
 $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"
@@ -164,19 +160,7 @@ $query = <<<SQL
     SQL;
 [$nb_views] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 
-$query = <<<SQL
-    SELECT SUM(filesize)
-    FROM images;
-    SQL;
-[$disk_usage] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
-
-$query = <<<SQL
-    SELECT SUM(filesize)
-    FROM image_format;
-    SQL;
-[$formats_disk_usage] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
-
-$disk_usage += $formats_disk_usage;
+$disk_usage = functions_admin::get_images_disk_usage();
 
 $du_decimals = 1;
 $du_gb = $disk_usage / (1024 * 1024);
@@ -403,30 +387,9 @@ $template->assign('DAY_LABELS', $day_labels);
 $video_format = ['webm', 'webmv', 'ogg', 'ogv', 'mp4', 'm4v', 'mov'];
 $data_storage = [];
 
-//Select files in Image_Table
-if ($conf->dblayer === 'mysqli') {
-    $ext_query = <<<SQL
-        SUBSTRING_INDEX(path, '.', -1)
-        SQL;
-}
+$storage_by_ext = functions_admin::get_storage_by_ext();
 
-if ($conf->dblayer === 'pgsql') {
-    $ext_query = <<<SQL
-        SPLIT_PART(path, '.', ARRAY_LENGTH(STRING_TO_ARRAY(path, '.'), 1))
-        SQL;
-}
-
-$query = <<<SQL
-    SELECT COUNT(*) AS ext_counter, {$ext_query} AS ext, SUM(filesize) AS filesize
-    FROM images
-    GROUP BY ext;
-    SQL;
-
-$file_extensions = $conf->sql_backend::query2array($query, 'ext');
-
-foreach ($file_extensions as $ext => $ext_details) {
-    $type = null;
-
+foreach ($storage_by_ext['images'] as $ext => $ext_details) {
     if (in_array(strtolower($ext), $conf->picture_ext)) {
         $type = 'Photos';
     } elseif (in_array(strtolower($ext), $video_format)) {
@@ -446,22 +409,13 @@ foreach ($file_extensions as $ext => $ext_details) {
     ];
 }
 
-//Select files from format table
-$query = <<<SQL
-    SELECT COUNT(*) AS ext_counter, ext, SUM(filesize) AS filesize
-    FROM image_format
-    GROUP BY ext;
-    SQL;
+foreach ($storage_by_ext['formats'] as $ext => $ext_details) {
+    $data_storage['Formats']['total']['filesize'] ??= 0;
+    $data_storage['Formats']['total']['filesize'] += $ext_details['filesize'];
+    $data_storage['Formats']['total']['nb_files'] ??= 0;
+    $data_storage['Formats']['total']['nb_files'] += $ext_details['ext_counter'];
 
-$file_extensions = $conf->sql_backend::query2array($query, 'ext');
-
-foreach ($file_extensions as $ext => $ext_details) {
-    $type = 'Formats';
-
-    $data_storage[$type]['total']['filesize'] += $ext_details['filesize'];
-    $data_storage[$type]['total']['nb_files'] += $ext_details['ext_counter'];
-
-    $data_storage[$type]['details'][strtoupper($ext)] = [
+    $data_storage['Formats']['details'][strtoupper($ext)] = [
         'filesize' => $ext_details['filesize'],
         'nb_files' => $ext_details['ext_counter'],
     ];

@@ -1057,6 +1057,12 @@ class Config
 
     public bool|int $count_orphans;
 
+    public int $nb_photos_total;
+
+    public int $images_disk_usage;
+
+    public string $storage_by_ext;
+
     public int $data_dir_checked;
 
     public string $db_base;

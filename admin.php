@@ -280,7 +280,7 @@ if ($nb_photos_in_caddie > 0) {
 // only calculate number of orphans on all pages if the number of images is "not huge"
 $page['nb_orphans'] = 0;
 
-[$page['nb_photos_total']] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT COUNT(*) FROM images;'));
+$page['nb_photos_total'] = functions_admin::get_nb_photos_total();
 
 if ($page['nb_photos_total'] < 100000) { // 100k is already a big gallery
     $page['nb_orphans'] = functions_admin::count_orphans();

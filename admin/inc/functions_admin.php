@@ -2512,7 +2512,7 @@ final class functions_admin
 
         $conf->sql_backend::pwg_query($query);
 
-        functions::conf_delete_param('count_orphans');
+        functions::conf_delete_param(['count_orphans', 'nb_photos_total', 'images_disk_usage', 'storage_by_ext']);
         functions_plugins::trigger_notify('invalidate_user_cache', $full);
     }
 
@@ -3521,6 +3521,64 @@ final class functions_admin
         }
 
         return functions::conf_get_param('count_orphans');
+    }
+
+    public static function get_nb_photos_total(): int
+    {
+        global $conf;
+
+        if (functions::conf_get_param('nb_photos_total') === null) {
+            [$count] = $conf->sql_backend::pwg_db_fetch_row(
+                $conf->sql_backend::pwg_query('SELECT COUNT(*) FROM images;')
+            );
+            functions::conf_update_param('nb_photos_total', (int) $count, true);
+        }
+
+        return (int) functions::conf_get_param('nb_photos_total');
+    }
+
+    public static function get_images_disk_usage(): int
+    {
+        global $conf;
+
+        if (functions::conf_get_param('images_disk_usage') === null) {
+            [$images_fs] = $conf->sql_backend::pwg_db_fetch_row(
+                $conf->sql_backend::pwg_query('SELECT COALESCE(SUM(filesize), 0) FROM images;')
+            );
+            [$format_fs] = $conf->sql_backend::pwg_db_fetch_row(
+                $conf->sql_backend::pwg_query('SELECT COALESCE(SUM(filesize), 0) FROM image_format;')
+            );
+            functions::conf_update_param('images_disk_usage', (int) $images_fs + (int) $format_fs, true);
+        }
+
+        return (int) functions::conf_get_param('images_disk_usage');
+    }
+
+    public static function get_storage_by_ext(): array
+    {
+        global $conf;
+
+        if (functions::conf_get_param('storage_by_ext') === null) {
+            $ext_expr = $conf->dblayer === 'mysqli'
+                ? "SUBSTRING_INDEX(path, '.', -1)"
+                : "SPLIT_PART(path, '.', ARRAY_LENGTH(STRING_TO_ARRAY(path, '.'), 1))";
+
+            $images_by_ext = $conf->sql_backend::query2array(
+                "SELECT COUNT(*) AS ext_counter, {$ext_expr} AS ext, COALESCE(SUM(filesize), 0) AS filesize FROM images GROUP BY ext;",
+                'ext'
+            );
+            $formats_by_ext = $conf->sql_backend::query2array(
+                'SELECT COUNT(*) AS ext_counter, ext, COALESCE(SUM(filesize), 0) AS filesize FROM image_format GROUP BY ext;',
+                'ext'
+            );
+
+            functions::conf_update_param('storage_by_ext', json_encode([
+                'images'  => $images_by_ext,
+                'formats' => $formats_by_ext,
+            ]), true);
+        }
+
+        return json_decode(functions::conf_get_param('storage_by_ext'), true);
     }
 
     /**

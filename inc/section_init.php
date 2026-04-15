@@ -297,23 +297,33 @@ if ($page['section'] == 'categories') {
         $cleaned_order_by = str_replace(['ORDER BY ', ' ASC', ' DESC'], '', $order_by_clause);
         $column_names = ', ' . $cleaned_order_by;
 
-        // main query
-        // FIXME: this query fetches all photos of an album everytime rvtscroller asks for few more photos on scroll
-        $query = <<<SQL
+        // Cache the total count — a single integer — rather than the full ID list.
+        $count_query = <<<SQL
+            SELECT COUNT(DISTINCT image_id)
+            FROM image_category
+            INNER JOIN images ON id = image_id
+            WHERE {$where_sql} {$forbidden};
+            SQL;
+        $count_cache_key = md5($count_query);
+
+        if (! $persistent_cache->get($count_cache_key, $page['total_items'])) {
+            $result = $conf->sql_backend::pwg_query($count_query);
+            $page['total_items'] = (int) $conf->sql_backend::pwg_db_fetch_row($result)[0];
+            $persistent_cache->set($count_cache_key, $page['total_items']);
+        }
+
+        // Fetch only the current page's IDs via LIMIT/OFFSET — no caching needed.
+        $offset = (int) $page['start'];
+        $limit  = (int) $page['nb_image_page'];
+        $query  = <<<SQL
             SELECT DISTINCT image_id {$column_names}
             FROM image_category
             INNER JOIN images ON id = image_id
             WHERE {$where_sql} {$forbidden}
-            {$conf->order_by};
+            {$conf->order_by}
+            LIMIT {$limit} OFFSET {$offset};
             SQL;
-        $cache_key = md5($query);
-
-        if (! $persistent_cache->get($cache_key, $page['items'])) {
-            $page['items'] = $conf->sql_backend::query2array($query, null, 'image_id');
-
-            // TODO: invalidate this cache on album sync
-            $persistent_cache->set($cache_key, $page['items']);
-        }
+        $page['items'] = $conf->sql_backend::query2array($query, null, 'image_id');
     }
 } elseif ($page['section'] == 'tags') {
     // +-----------------------------------------------------------------------+

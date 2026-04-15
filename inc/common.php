@@ -23,8 +23,6 @@ if (! defined('PHPWG_ROOT_PATH')) {
     trigger_error('Hacking attempt!', E_USER_ERROR);
 }
 
-error_log("Page loaded: {$_SERVER['REQUEST_URI']}");
-
 // determine the initial instant to indicate the generation time of this page
 $t2 = microtime(true);
 

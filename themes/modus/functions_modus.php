@@ -428,8 +428,8 @@ final class functions_modus
             if (! isset($deriv)) {
                 $deriv = new DerivativeImage($def_params, $src_image);
                 $dsize = $deriv->get_size();
-                $l = intval($wh - $dsize[0]) / 2;
-                $t = intval($wh - $dsize[1]) / 2;
+                $l = $dsize !== null ? intval($wh - $dsize[0]) / 2 : 0;
+                $t = $dsize !== null ? intval($wh - $dsize[1]) / 2 : 0;
             }
 
             $item['modus_deriv'] = $deriv;

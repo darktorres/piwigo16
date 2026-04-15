@@ -58,7 +58,7 @@
       {/if}
       {assign var=src_size value=$derivative->src_image->get_size()}
       <a href="{$thumbnail.URL}" data-pswp-src="{$derivative->src_image->get_url()}" data-pswp-width="{$src_size.0}"
-        data-pswp-height="{$src_size.1}" data-pswp-cropped="true">
+        data-pswp-height="{$src_size.1}">
         <img class="thumbnail" src="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
           alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}">
       </a>
@@ -67,8 +67,7 @@
 
   {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css" version=1}
   {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/js/photoswipe/photoswipe.css"}
-  {combine_script id='jquery.ba-resize'  path=$GDThumb.GDTHUMB_ROOT|cat:"/js/jquery.ba-resize.js" load="footer"}
-  {combine_script id='gdthumb' require='jquery,jquery.ba-resize' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
+  {combine_script id='gdthumb' require='jquery' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
 
   {footer_script require="gdthumb"}<script>
     {if isset($has_cats)}
@@ -86,16 +85,9 @@
       const lightbox = new PhotoSwipeLightbox({
         gallery: '#thumbnails',
         children: 'a[data-pswp-src]',
-        showHideOpacity: true,
         pswpModule: () => import('./themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe.esm.js')
       });
       lightbox.init();
     }
   </script>{/footer_script}
-
-  {html_head}
-  <style>
-    #thumbnails .gdthumb { margin:{$GDThumb.margin / 2}px {$GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px !important; }
-  </style>
-  {/html_head}
 {/if}

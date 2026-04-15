@@ -76,7 +76,7 @@ function GDThumb_process_thumb(
     global $template, $conf;
     $confTemp = $conf->gdThumb;
     $confTemp['GDTHUMB_ROOT'] = 'plugins/' . GDTHUMB_ID;
-    $confTemp['height'] = GDThumb_effective_height();
+    $confTemp['height'] = GDThumb_effective_width();
 
     if ($confTemp['normalize_title'] == '1') {
         $confTemp['normalize_title'] = 'on';
@@ -95,7 +95,7 @@ function GDThumb_process_category(
     global $template, $conf;
     $confTemp = $conf->gdThumb;
     $confTemp['GDTHUMB_ROOT'] = 'plugins/' . GDTHUMB_ID;
-    $confTemp['height'] = GDThumb_effective_height();
+    $confTemp['height'] = GDThumb_effective_width();
 
     $template->set_filename('index_category_thumbnails', __DIR__ . '/template/gdthumb_cat.tpl');
     $template->assign('GDThumb', $confTemp);
@@ -104,15 +104,16 @@ function GDThumb_process_category(
     return $tpl_vars;
 }
 
-function GDThumb_effective_height(): int
+function GDThumb_effective_width(): int
 {
     $type = functions_session::pwg_get_session_var('index_deriv', derivative_std_params::IMG_THUMB);
-    return ImageStdParams::get_by_type($type)->sizing->ideal_size[1];
+    $size = ImageStdParams::get_by_type($type)->sizing->ideal_size;
+    return max($size[0], $size[1], 500);
 }
 
 function GDThumb_get_derivative_params(): \Piwigo\inc\DerivativeParams
 {
-    return ImageStdParams::get_custom(9999, GDThumb_effective_height());
+    return ImageStdParams::get_custom(GDThumb_effective_width(), 9999);
 }
 
 function GDThumb_prefilter(

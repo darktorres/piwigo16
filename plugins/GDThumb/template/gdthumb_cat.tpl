@@ -51,13 +51,8 @@
 
 </ul>
 
-{html_style}<style>
-  .thumbnailCategories .gdthumb { margin: {$GDThumb.margin / 2}px {$GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px {$GDThumb.margin - $GDThumb.margin / 2}px !important; }
-</style>{/html_style}
-
 {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css"}
-{combine_script id='jquery.ba-resize' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/jquery.ba-resize.js" load="footer"}
-{combine_script id='gdthumb' require='jquery,jquery.ba-resize' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
+{combine_script id='gdthumb' require='jquery' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
 
 {footer_script require="gdthumb"}<script>
   $(function() {

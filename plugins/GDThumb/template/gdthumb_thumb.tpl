@@ -58,7 +58,7 @@
       {/if}
       {assign var=src_size value=$derivative->src_image->get_size()}
       <a href="{$thumbnail.URL}" data-pswp-src="{$derivative->src_image->get_url()}" data-pswp-width="{$src_size.0}"
-        data-pswp-height="{$src_size.1}">
+        data-pswp-height="{$src_size.1}" data-pswp-cropped="true">
         <img class="thumbnail" src="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
           alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}">
       </a>

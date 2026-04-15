@@ -5,6 +5,7 @@ body {
     -moz-osx-font-smoothing: grayscale;
     box-shadow: none;
     border: 0px;
+    padding-bottom: 50px;
 }
 
 html,
@@ -45,6 +46,11 @@ body {
     margin-top: auto;
     margin-bottom: 0;
     width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 500;
+    background-color: inherit;
 }
 
 .infos {

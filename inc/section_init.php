@@ -329,9 +329,9 @@ if ($page['section'] == 'categories') {
 
         // Flat mode: subquery deduplicates image_ids across sub-categories; forbidden only
         // references images.id so no JOIN needed in the outer query.
-        // Normal mode: no DISTINCT — single category_id = N means the PK prevents duplicates,
-        // and removing DISTINCT lets the planner use idx_image_category_category_id instead of
-        // scanning all images by date_creation.
+        // Normal mode: MATERIALIZED CTE fences the 30k-row category join before ORDER BY+LIMIT,
+        // preventing the planner from scanning all 10M images via idx_images_date_creation
+        // (which it prefers for mixed-direction ORDER BY via Incremental Sort).
         if (isset($page['flat'])) {
             $query = <<<SQL
                 SELECT id AS image_id {$column_names}
@@ -342,11 +342,17 @@ if ($page['section'] == 'categories') {
                 LIMIT {$limit} OFFSET {$offset};
                 SQL;
         } else {
+            // MATERIALIZED fences the 30k-row category result before sort+limit,
+            // preventing the planner from scanning all 10M images via idx_images_date_creation.
             $query = <<<SQL
+                WITH cat AS MATERIALIZED (
+                    SELECT image_id {$column_names}
+                    FROM image_category
+                    INNER JOIN images ON id = image_id
+                    WHERE {$where_sql} {$forbidden}
+                )
                 SELECT image_id {$column_names}
-                FROM image_category
-                INNER JOIN images ON id = image_id
-                WHERE {$where_sql} {$forbidden}
+                FROM cat
                 {$conf->order_by}
                 LIMIT {$limit} OFFSET {$offset};
                 SQL;

@@ -58,6 +58,6 @@
 
 {footer_script require="gdthumb.masonry"}<script>
   $(function() {
-    GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin}, true);
+    GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin});
   });
 </script>{/footer_script}

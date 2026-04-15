@@ -77,7 +77,6 @@ var GDMasonry = (function ($) {
         _colWidth = colWidth || 300;
         _gap      = gap      || 4;
         _$c = $('ul#thumbnails');
-        if (!_$c.length) _$c = $('[data-album-grid]').first();
         if (!_$c.length) return;
 
         layout();

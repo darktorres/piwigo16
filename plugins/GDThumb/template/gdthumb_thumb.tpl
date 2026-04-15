@@ -75,7 +75,7 @@
     {if isset($has_cats)}
     {else}
       $(function() {
-        GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin}, false);
+        GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin});
       });
     {/if}
   </script>{/footer_script}

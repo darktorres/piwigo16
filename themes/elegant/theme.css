@@ -119,6 +119,12 @@ TEXTAREA:focus {
 }
 #copyright {
     border-top-width: 2px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 500;
+    background-color: inherit;
 }
 #content .calendarTitleBar {
     border-bottom: none;
@@ -162,6 +168,7 @@ A:hover .pwg-icon {
 
 body {
     margin: 5px 0;
+    padding-bottom: 50px;
 }
 a:hover {
     border-bottom: none;

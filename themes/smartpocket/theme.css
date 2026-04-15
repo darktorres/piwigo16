@@ -137,6 +137,18 @@ div.ps-toolbar div div.ps-toolbar-content {
     opacity: 0 !important;
 }
 
+.pwg_footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 500;
+    background-color: inherit;
+}
+
+body {
+    padding-bottom: 50px;
+}
+
 @media (max-width: 600px) {
     .filter-manager-close,
     .tags-found-close,
@@ -158,10 +170,5 @@ div.ps-toolbar div div.ps-toolbar-content {
         display: flex;
         align-items: center;
         gap: 5px;
-    }
-    .pwg_footer {
-        position: absolute;
-        bottom: 0;
-        width: 100%;
     }
 }

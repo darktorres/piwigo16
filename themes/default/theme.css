@@ -552,6 +552,16 @@ A.pwg-state-default:hover {
     font-size: 83%;
     text-align: center;
     margin: 0 0 10px 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 500;
+    background-color: inherit;
+}
+
+body {
+    padding-bottom: 50px;
 }
 
 INPUT,

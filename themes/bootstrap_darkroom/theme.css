@@ -17,6 +17,7 @@ body {
 
 body {
     overflow-x: hidden;
+    padding-bottom: 90px;
 }
 
 @media (min-width: 1800px) {
@@ -111,6 +112,12 @@ body {
 /* Copyright container */
 .copyright {
     padding: 30px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 500;
+    background-color: inherit;
 }
 
 /* Help popup */

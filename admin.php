@@ -42,9 +42,6 @@ functions::check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.
 // | Filesystem checks                                                     |
 // +-----------------------------------------------------------------------+
 
-// fs_quick_check disabled — redundant when using Everything-based sync
-// which discovers all files/missing files during the sync itself.
-
 // +-----------------------------------------------------------------------+
 // | Direct actions                                                        |
 // +-----------------------------------------------------------------------+

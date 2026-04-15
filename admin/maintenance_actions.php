@@ -22,8 +22,6 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 
-functions_admin::fs_quick_check();
-
 // +-----------------------------------------------------------------------+
 // |                                actions                                |
 // +-----------------------------------------------------------------------+

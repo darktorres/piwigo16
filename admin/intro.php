@@ -77,12 +77,7 @@ if ($nb_orphans > 0) {
 }
 
 // locked album ?
-$query = <<<SQL
-    SELECT COUNT(*) AS "COUNT(*)"
-    FROM categories
-    WHERE visible = 'false';
-    SQL;
-[$locked_album] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
+$locked_album = functions_admin::get_nb_locked_albums();
 
 if ($locked_album > 0) {
     $locked_album_url = './admin.php?page=cat_options&section=visible';
@@ -93,8 +88,6 @@ if ($locked_album > 0) {
 
     $page['warnings'][] = $message;
 }
-
-functions_admin::fs_quick_check();
 
 // +-----------------------------------------------------------------------+
 // |                             template init                             |
@@ -117,11 +110,7 @@ if ($conf->show_newsletter_subscription &&
 
 $nb_photos = $page['nb_photos_total'];
 
-$query = <<<SQL
-    SELECT COUNT(*) AS "COUNT(*)"
-    FROM categories;
-    SQL;
-[$nb_categories] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
+$nb_categories = functions_admin::get_nb_categories();
 
 $query = <<<SQL
     SELECT COUNT(*) AS "COUNT(*)"

@@ -501,7 +501,6 @@ trait ExtensionFunctionUpdater
             'do_timeout_treatment' => '\Piwigo\admin\inc\functions_admin::do_timeout_treatment',
             'empty_lounge' => '\Piwigo\admin\inc\functions_admin::empty_lounge',
             'fill_lounge' => '\Piwigo\admin\inc\functions_admin::fill_lounge',
-            'fs_quick_check' => '\Piwigo\admin\inc\functions_admin::fs_quick_check',
             'get_active_menu' => '\Piwigo\admin\inc\functions_admin::get_active_menu',
             'get_admin_client_cache_keys' => '\Piwigo\admin\inc\functions_admin::get_admin_client_cache_keys',
             'get_cache_size_derivatives' => '\Piwigo\admin\inc\functions_admin::get_cache_size_derivatives',

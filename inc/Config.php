@@ -286,12 +286,6 @@ class Config
     // Limit for linked albums search
     public int $linked_album_search_limit = 100;
 
-    // how often should we check for missing photos in the filesystem. Only in the
-    // administration. Consider the fs_quick_check is always performed on
-    // dashboard and maintenance pages. This setting is only for any other
-    // administration page.
-    // 0 to disable.
-    public int $fs_quick_check_period = 24 * 60 * 60;
 
     // +-----------------------------------------------------------------------+
     // |                                 email                                 |
@@ -1059,6 +1053,10 @@ class Config
 
     public int $nb_photos_total;
 
+    public int $nb_categories_total;
+
+    public int $nb_locked_albums;
+
     public int $images_disk_usage;
 
     public string $storage_by_ext;
@@ -1108,7 +1106,6 @@ class Config
 
     public array $flip_picture_ext;
 
-    public string $fs_quick_check_last_check;
 
     public bool $gallery_locked;
 

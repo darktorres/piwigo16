@@ -5,8 +5,9 @@
     {assign var=has_cats value="true" scope=root nocache}
     {foreach $category_thumbnails as $cat}
       {assign var=derivative value=$pwg->derivative($GDThumb_derivative_params, $cat.representative.src_image)}
+      {assign var=deriv_size value=$derivative->get_size()}
 
-      <li class="gdthumb {$GDThumb.method} album">
+      <li class="gdthumb {$GDThumb.method} album" style="flex-grow: {if $deriv_size[1] > 0}{$deriv_size[0] / $deriv_size[1]}{else}1{/if};">
         {if $GDThumb.thumb_mode_album !== "hide" }
           <span class="thumbLegend {$GDThumb.thumb_mode_album}">
             <span class="thumbName">

@@ -21,5 +21,6 @@
 # Docker
 compose.override.yaml
 
-# External DLLs (Everything SDK)
+# Everything SDK (binaries + header, installed locally)
 /admin/inc/Everything3_x64.dll
+/admin/inc/Everything3.h

@@ -21,8 +21,6 @@
         </select>
         <label for="method">{'Thumbnail Mode'|translate}</label>
       </li>
-      <li><input id="height" type="text" size="2" maxlength="3" name="height" value="{$HEIGHT}"><label
-          for="height">{'Thumbnails max height'|translate}&nbsp;(px)</label></li>
       <li><input id="margin" type="text" size="2" maxlength="3" name="margin" value="{$MARGIN}"><label
           for="margin">{'Margin between thumbnails'|translate}&nbsp;px</label></li>
       <li><input id="nb_image_page" type="text" size="2" maxlength="3" name="nb_image_page"
@@ -112,7 +110,7 @@
       <li>Errors:&nbsp;<span id="errors">0</span></li>
     </ul>
   </div>
-  <div id="feedbackWrap" style="height:{$HEIGHT}px; min-height:{$HEIGHT}px;">
+  <div id="feedbackWrap" style="height:200px; min-height:200px;">
     <img id="feedbackImg">
   </div>
 

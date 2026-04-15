@@ -13,8 +13,10 @@ Has Settings: true
 */
 // Original work by P@t - GTHumb+
 
+use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
+use Piwigo\inc\functions_session;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\ImageStdParams;
 
@@ -48,7 +50,6 @@ functions_plugins::add_event_handler('init', GDThumb_init(...));
 functions_plugins::add_event_handler('loc_begin_index', GDThumb_index(...), 60);
 functions_plugins::add_event_handler('loc_end_index_category_thumbnails', GDThumb_process_category(...), 50);
 functions_plugins::add_event_handler('get_admin_plugin_menu_links', GDThumb_admin_menu(...));
-functions_plugins::add_event_handler('loc_end_index', GDThumb_remove_thumb_size(...));
 
 function GDThumb_init(): void
 {
@@ -75,6 +76,7 @@ function GDThumb_process_thumb(
     global $template, $conf;
     $confTemp = $conf->gdThumb;
     $confTemp['GDTHUMB_ROOT'] = 'plugins/' . GDTHUMB_ID;
+    $confTemp['height'] = GDThumb_effective_height();
 
     if ($confTemp['normalize_title'] == '1') {
         $confTemp['normalize_title'] = 'on';
@@ -82,7 +84,7 @@ function GDThumb_process_thumb(
 
     $template->set_filename('index_thumbnails', __DIR__ . '/template/gdthumb_thumb.tpl');
     $template->assign('GDThumb', $confTemp);
-    $template->assign('GDThumb_derivative_params', GDThumb_get_derivative_params($confTemp));
+    $template->assign('GDThumb_derivative_params', GDThumb_get_derivative_params());
 
     return $tpl_vars;
 }
@@ -93,18 +95,24 @@ function GDThumb_process_category(
     global $template, $conf;
     $confTemp = $conf->gdThumb;
     $confTemp['GDTHUMB_ROOT'] = 'plugins/' . GDTHUMB_ID;
+    $confTemp['height'] = GDThumb_effective_height();
 
     $template->set_filename('index_category_thumbnails', __DIR__ . '/template/gdthumb_cat.tpl');
     $template->assign('GDThumb', $confTemp);
-    $template->assign('GDThumb_derivative_params', GDThumb_get_derivative_params($confTemp));
+    $template->assign('GDThumb_derivative_params', GDThumb_get_derivative_params());
 
     return $tpl_vars;
 }
 
-function GDThumb_get_derivative_params(
-    array $confTemp
-): \Piwigo\inc\DerivativeParams {
-    return ImageStdParams::get_custom(9999, $confTemp['height']);
+function GDThumb_effective_height(): int
+{
+    $type = functions_session::pwg_get_session_var('index_deriv', derivative_std_params::IMG_THUMB);
+    return ImageStdParams::get_by_type($type)->sizing->ideal_size[1];
+}
+
+function GDThumb_get_derivative_params(): \Piwigo\inc\DerivativeParams
+{
+    return ImageStdParams::get_custom(9999, GDThumb_effective_height());
 }
 
 function GDThumb_prefilter(
@@ -126,8 +134,3 @@ function GDThumb_admin_menu(
     return $menu;
 }
 
-function GDThumb_remove_thumb_size(): void
-{
-    global $template;
-    $template->clear_assign('image_derivatives');
-}

@@ -27,10 +27,8 @@ final class functions_GDThumb
         }
     }
 
-    public static function delete_gdthumb_cache(
-        int|string $height
-    ): void {
-        self::int_delete_gdthumb_cache('#.*-cu_s9999x' . $height . '\.[a-zA-Z0-9]{3,4}$#');
-        self::int_delete_gdthumb_cache('#.*-cu_s' . $height . 'x9999\.[a-zA-Z0-9]{3,4}$#');
+    public static function delete_gdthumb_cache(): void
+    {
+        self::int_delete_gdthumb_cache('#.*-cu_s9999x\d+\.[a-zA-Z0-9]{3,4}$#');
     }
 }

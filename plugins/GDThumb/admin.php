@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\DerivativeImage;
 use Piwigo\inc\functions;
+use Piwigo\inc\functions_session;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\SrcImage;
 use Piwigo\plugins\GDThumb\functions_GDThumb;
@@ -57,7 +59,9 @@ if (isset($_GET['getMissingDerivative'])) {
                 continue;
             }
 
-            $derivative = new DerivativeImage(ImageStdParams::get_custom(9999, $params['height']), $src_image);
+            $pretype = functions_session::pwg_get_session_var('index_deriv', derivative_std_params::IMG_THUMB);
+            $preheight = ImageStdParams::get_by_type($pretype)->sizing->ideal_size[1];
+            $derivative = new DerivativeImage(ImageStdParams::get_custom(9999, $preheight), $src_image);
 
             $mtime = file_exists($derivative->get_path()) ? filemtime($derivative->get_path()) : false;
 
@@ -91,7 +95,7 @@ if (isset($_GET['getMissingDerivative'])) {
 // Delete cache
 if (isset($_POST['cachedelete'])) {
     functions::check_pwg_token();
-    functions_GDThumb::delete_gdthumb_cache($params['height']);
+    functions_GDThumb::delete_gdthumb_cache();
     functions::redirect('admin.php?page=plugin-GDThumb');
 }
 
@@ -105,7 +109,6 @@ if (isset($_POST['submit'])) {
     $thumb_mode_photo = in_array($_POST['thumb_mode_photo'] ?? '', $valid_modes) ? $_POST['thumb_mode_photo'] : 'bottom';
 
     $params = [
-        'height' => (int) ($_POST['height'] ?? $conf->gdThumb['height']),
         'margin' => (int) ($_POST['margin'] ?? $conf->gdThumb['margin']),
         'nb_image_page' => (int) ($_POST['nb_image_page'] ?? $conf->gdThumb['nb_image_page']),
         'normalize_title' => $normalize,
@@ -115,10 +118,6 @@ if (isset($_POST['submit'])) {
         'thumb_metamode' => in_array($_POST['thumb_metamode'] ?? '', ['merged', 'merged_desc', 'hide']) ? $_POST['thumb_metamode'] : 'merged',
         'no_wordwrap' => ! empty($_POST['no_wordwrap']),
     ];
-
-    if ($params['height'] != $conf->gdThumb['height']) {
-        functions_GDThumb::delete_gdthumb_cache($conf->gdThumb['height']);
-    }
 
     if (empty($page['errors'])) {
         functions::conf_update_param('gdThumb', $params);
@@ -138,7 +137,6 @@ $template->assign(
         'GDTHUMB_PATH' => 'plugins/' . GDTHUMB_ID,
         'GDTHUMB_VERSION' => GDTHUMB_VERSION,
 
-        'HEIGHT' => $params['height'],
         'MARGIN' => $params['margin'],
         'NB_IMAGE_PAGE' => $params['nb_image_page'],
         'NORMALIZE_TITLE' => $params['normalize_title'],

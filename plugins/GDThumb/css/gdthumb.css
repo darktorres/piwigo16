@@ -1,18 +1,24 @@
 ul.thumbnails {
-    columns: 250px;
-    column-gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
     background: inherit;
+}
+
+ul.thumbnails::after {
+    content: '';
+    flex-grow: 999;
 }
 
 ul.thumbnails .gdthumb {
     position: relative;
     overflow: hidden;
-    break-inside: avoid;
-    margin-bottom: 8px;
+    height: 250px;
     background: inherit !important;
 }
 ul.thumbnails .gdthumb a {
     display: block;
+    height: 100%;
     z-index: 0;
 }
 
@@ -23,8 +29,8 @@ ul.thumbnails .gdthumb a img.thumbnail:hover {
     margin: 0;
     padding: 0;
     border-radius: 0;
-    width: 100%;
-    height: auto;
+    height: 100%;
+    width: auto;
 }
 
 ul.thumbnails .gdthumb .thumbLegend {

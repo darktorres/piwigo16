@@ -1,8 +1,9 @@
 {if !empty($thumbnails)}
   {foreach $thumbnails as $thumbnail}
     {assign var=derivative value=$pwg->derivative($GDThumb_derivative_params, $thumbnail.src_image)}
+    {assign var=deriv_size value=$derivative->get_size()}
 
-    <li class="gdthumb {$GDThumb.method}">
+    <li class="gdthumb {$GDThumb.method}" style="flex-grow: {if $deriv_size[1] > 0}{$deriv_size[0] / $deriv_size[1]}{else}1{/if};">
       {if $GDThumb.thumb_mode_photo !== "hide" }
         <span class="thumbLegend {$GDThumb.thumb_mode_photo}">
           <span class="thumbName thumbTitle">

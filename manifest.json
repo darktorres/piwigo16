@@ -1,0 +1,21 @@
+{
+  "name": "Piwigo Gallery",
+  "short_name": "Piwigo",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#222222",
+  "theme_color": "#222222",
+  "icons": [
+    {
+      "src": "themes/bootstrap_darkroom/img/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "themes/bootstrap_darkroom/img/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

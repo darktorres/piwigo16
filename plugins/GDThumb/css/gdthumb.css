@@ -21,6 +21,7 @@ ul.thumbnails .gdthumb a {
 
 ul.thumbnails .gdthumb a img.thumbnail,
 ul.thumbnails .gdthumb a img.thumbnail:hover {
+    display: block;
     border: 0 none;
     margin: 0;
     padding: 0;

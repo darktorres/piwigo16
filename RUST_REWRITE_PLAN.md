@@ -759,6 +759,77 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
 - [ ] Expose config to handlers via `axum::extract::State<Arc<AppState>>`
 - [ ] Hot-reload of DB-sourced config on SIGHUP (Unix) or admin panel "reload" action
 
+- [ ] Config domain sub-structs (see Appendix C for complete list):
+  ```rust
+  pub struct GalleryConfig {
+      pub title: String,                          // "Just another Piwigo gallery"
+      pub url: Option<String>,                    // null = auto-detect
+      pub locked: bool,                           // false
+      pub page_banner: String,                    // HTML with %gallery_title%
+      pub show_version: bool,                     // false
+      pub show_thumbnail_caption: bool,           // true
+      pub level_separator: String,                // " / "
+      pub paginate_pages_around: u32,             // 2
+      pub top_number: u32,                        // 15
+      pub allow_html_descriptions: bool,          // true
+      pub random_index_redirect: Vec<String>,     // []
+  }
+  pub struct AlbumConfig {
+      pub default_commentable: bool,              // true
+      pub default_visible: bool,                  // true
+      pub default_status: CategoryStatus,         // Public
+      pub default_position: Position,             // First
+      pub nb_categories_page: u32,                // 12
+      pub allow_random_representative: bool,      // false
+      pub inheritance_by_default: bool,           // false
+  }
+  pub struct ImageConfig {
+      pub picture_ext: Vec<String>,               // jpg,jpeg,png,gif,webp
+      pub format_ext: Vec<String>,                // cr2,tif,tiff,nef,dng,ai,psd
+      pub enable_formats: bool,                   // false
+      pub uniqueness_mode: UniquenessMode,        // Md5sum
+      pub available_permission_levels: Vec<u8>,   // 0,1,2,4,8
+      pub graphics_library: GraphicsLibrary,      // Auto
+  }
+  pub struct DerivativeConfig {
+      pub params: ImageStdParams,                 // DB: serialized derivative sizes
+      pub default_size: DerivativeType,           // Medium
+      pub strip_metadata_threshold: u32,          // 256000 pixels
+      pub animated_webp_quality: u8,              // 70
+      pub original_resize: bool,                  // false
+      pub original_resize_maxwidth: u32,          // 2016
+      pub original_resize_maxheight: u32,         // 2016
+      pub original_resize_quality: u8,            // 95
+  }
+  pub struct UploadConfig {
+      pub dir: PathBuf,                           // ./upload
+      pub chunk_size_kb: u32,                     // 500
+      pub max_file_size_mb: u32,                  // 1000
+      pub automatic_rotation: bool,               // true
+  }
+  pub struct AuthConfig {
+      pub guest_id: i32,                          // 2
+      pub webmaster_id: i32,                      // 1
+      pub guest_access: bool,                     // true
+      pub allow_registration: bool,               // false
+      pub insensitive_case_logon: bool,           // false
+      pub session_length: u64,                    // 3600
+      pub session_use_ip: bool,                   // true
+      pub remember_me_enabled: bool,              // true
+      pub remember_me_length: u64,                // 5184000 (60 days)
+      pub auth_key_duration: u64,                 // 259200 (3 days)
+      pub secret_key: String,                     // random per install
+  }
+  pub struct UrlConfig {
+      pub category_style: UrlStyle,               // Id
+      pub picture_style: PictureUrlStyle,         // Id
+      pub tag_style: TagUrlStyle,                 // IdTag
+  }
+  ```
+- [ ] **PHP serialized config values:** Several DB config values are PHP-serialized arrays (`derivatives`, `picture_information`, `bootstrap_darkroom`, `elegant`, `modus_theme`, `smartpocket`, `gdThumb`, `AdminTools`, `updates_ignored`). These must be deserialized during migration. Use `php_serde` crate or custom parser for `serialize()`/`unserialize()` format.
+- [ ] **Validation:** Validate config values on load — e.g., `session_length > 0`, `original_resize_quality` in 1..100, `uniqueness_mode` is valid enum value. Log warnings for invalid values and use defaults.
+- [ ] **Test cases:** Unit test for each config type, including PHP serialized → JSON migration.
+
 **Acceptance:** Config loads, all 3 tiers merge correctly, unit tests cover all value types.
 
 ---
@@ -797,6 +868,67 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
 - [ ] Connection pool configuration: max connections, acquire timeout, idle timeout
 - [ ] Query logging in debug mode (`RUST_LOG=piwigo_db=debug` logs all queries)
 
+- [ ] **`mass_inserts` implementation detail:**
+  ```rust
+  /// Batch insert with chunking to avoid parameter limit (MySQL: 65535, PG: 32767).
+  /// Each chunk is a single INSERT ... VALUES (...), (...), ...
+  /// Wraps all chunks in a transaction.
+  pub async fn mass_inserts(
+      pool: &DbPool,
+      table: &str,
+      columns: &[&str],
+      rows: &[Vec<SqlValue>],
+      batch_size: usize,  // default: 50 for MySQL, 100 for PG
+  ) -> Result<u64> {
+      let params_per_row = columns.len();
+      let max_params = match pool {
+          DbPool::Mysql(_) => 65535,
+          DbPool::Postgres(_) => 32767,
+      };
+      let effective_batch = batch_size.min(max_params / params_per_row);
+      // ...chunk and execute in transaction
+  }
+  ```
+- [ ] **`mass_updates` implementation detail:**
+  ```rust
+  /// Batch update using CASE/WHEN for MySQL, or UPDATE FROM VALUES for PG.
+  /// MySQL: UPDATE t SET col1 = CASE id WHEN 1 THEN 'a' WHEN 2 THEN 'b' END WHERE id IN (1,2)
+  /// PG: UPDATE t SET col1 = v.col1 FROM (VALUES (1,'a'),(2,'b')) AS v(id,col1) WHERE t.id = v.id
+  pub async fn mass_updates(
+      pool: &DbPool,
+      table: &str,
+      update_cols: &[&str],
+      where_cols: &[&str],  // usually just ["id"]
+      rows: &[HashMap<String, SqlValue>],
+  ) -> Result<u64>;
+  ```
+- [ ] **Cross-DB helper functions:**
+  ```rust
+  /// Returns DB-specific SQL fragments
+  pub trait DbDialect {
+      fn regex_operator(&self) -> &str;        // MySQL: "REGEXP", PG: "~"
+      fn random_function(&self) -> &str;        // MySQL: "RAND()", PG: "random()"
+      fn boolean_true(&self) -> &str;           // MySQL: "'true'", PG: "true"
+      fn boolean_false(&self) -> &str;          // MySQL: "'false'", PG: "false"
+      fn date_sub(&self, interval_days: i32) -> String;  // DB-specific date math
+      fn upsert_prefix(&self) -> &str;          // MySQL: "REPLACE INTO", PG: "INSERT INTO"
+      fn upsert_suffix(&self, conflict_cols: &[&str]) -> String;  // PG: "ON CONFLICT (...) DO UPDATE SET ..."
+      fn concat_ws(&self, sep: &str, cols: &[&str]) -> String;
+      fn limit_offset(&self, limit: u32, offset: u32) -> String;
+  }
+  ```
+- [ ] **Migration file naming:** `{NNN}_{description}.sql` in `migrations/mysql/` and `migrations/postgres/`.
+  - `001_initial_schema.sql` — creates all 34 tables (see Appendix A)
+  - `002_add_json_columns.sql` — adds `sessions.data_json`, `search.rules_json`, `user_infos.preferences_json`
+  - `003_add_foreign_keys.sql` — adds FK constraints to all implicit relationships (see Appendix A §Key Schema Notes)
+  - `004_migrate_php_serialized.sql` — one-time data migration of PHP serialized → JSON
+- [ ] **Connection pool defaults:**
+  - `max_connections`: 10 (tunable via config)
+  - `min_connections`: 2
+  - `acquire_timeout`: 5s
+  - `idle_timeout`: 600s
+  - `max_lifetime`: 1800s
+
 **Acceptance:** Both MySQL and PostgreSQL connect and migrate successfully. Integration tests with testcontainers pass for all query modules.
 
 ---
@@ -815,13 +947,137 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
       Webmaster     = 4,
   }
   ```
-- [ ] `UserStatus` enum: `Guest`, `Generic`, `Normal`, `Admin`, `Webmaster`
+- [ ] `UserStatus` enum (maps to `user_infos_status` DB enum):
+  ```rust
+  #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, sqlx::Type)]
+  #[sqlx(type_name = "user_infos_status", rename_all = "lowercase")]
+  pub enum UserStatus {
+      Guest     = 0,
+      Generic   = 1,
+      Normal    = 2,
+      Admin     = 3,
+      Webmaster = 4,
+  }
+  impl UserStatus {
+      pub fn is_admin_or_above(&self) -> bool { *self >= Self::Admin }
+  }
+  ```
 - [ ] `CategoryStatus` enum: `Public`, `Private`
-- [ ] `Image` struct with all fields from the `images` table
-- [ ] `Category` struct with hierarchy fields (`uppercats`, `global_rank`)
-- [ ] `User` struct (from `users` + `user_infos` join)
-- [ ] `DerivativeType` enum: `Square`, `Thumb`, `XXSmall`, `XSmall`, `Small`, `Medium`, `Large`, `XLarge`, `XXLarge`, `Custom`
-- [ ] `PiwigoError` type hierarchy with `thiserror`
+- [ ] `Image` struct (maps to `images` table — see Appendix A.14):
+  ```rust
+  #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+  pub struct Image {
+      pub id: i32,
+      pub file: String,
+      pub date_available: DateTime<Utc>,
+      pub date_creation: Option<DateTime<Utc>>,
+      pub name: Option<String>,
+      pub comment: Option<String>,
+      pub author: Option<String>,
+      pub hit: i32,
+      pub filesize: Option<i32>,          // KB
+      pub width: Option<i32>,
+      pub height: Option<i32>,
+      pub coi: Option<String>,            // 4-char center-of-interest
+      pub representative_ext: Option<String>,
+      pub date_metadata_update: Option<NaiveDate>,
+      pub rating_score: Option<f32>,
+      pub path: String,
+      pub storage_category_id: Option<i32>,
+      pub level: i32,                     // privacy level: 0,1,2,4,8
+      pub md5sum: Option<String>,         // 32-char hex
+      pub added_by: i32,
+      pub rotation: Option<i32>,
+      pub latitude: Option<f64>,
+      pub longitude: Option<f64>,
+      pub lastmodified: Option<DateTime<Utc>>,
+  }
+  ```
+- [ ] `Category` struct (maps to `categories` table — see Appendix A.3):
+  ```rust
+  #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+  pub struct Category {
+      pub id: i32,
+      pub name: String,
+      pub id_uppercat: Option<i64>,       // parent category ID
+      pub comment: Option<String>,
+      pub dir: Option<String>,            // physical directory name (null for virtual albums)
+      pub sort_rank: Option<i32>,
+      pub status: CategoryStatus,
+      pub site_id: Option<i32>,
+      pub visible: bool,
+      pub representative_picture_id: Option<i32>,
+      pub uppercats: Option<String>,      // "1,5,12" — ancestor chain
+      pub commentable: bool,
+      pub global_rank: Option<String>,    // "1.2.3" — sort rank path
+      pub image_order: Option<String>,    // custom ORDER BY for this album
+      pub permalink: Option<String>,
+      pub lastmodified: Option<DateTime<Utc>>,
+  }
+  impl Category {
+      pub fn is_physical(&self) -> bool { self.dir.is_some() }
+      pub fn is_virtual(&self) -> bool { self.dir.is_none() }
+      pub fn parent_ids(&self) -> Vec<i32> {
+          self.uppercats.as_deref().unwrap_or("")
+              .split(',').filter_map(|s| s.parse().ok()).collect()
+      }
+  }
+  ```
+- [ ] `User` struct (from `users` + `user_infos` JOIN):
+  ```rust
+  #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+  pub struct User {
+      // from users table
+      pub id: i32,
+      pub username: String,
+      #[serde(skip_serializing)]
+      pub password: Option<String>,
+      pub mail_address: Option<String>,
+      // from user_infos table
+      pub status: UserStatus,
+      pub level: i32,
+      pub language: String,
+      pub theme: String,
+      pub nb_image_page: i32,
+      pub recent_period: i32,
+      pub expand: bool,
+      pub show_nb_comments: bool,
+      pub show_nb_hits: bool,
+      pub enabled_high: bool,
+      pub registration_date: DateTime<Utc>,
+      pub last_visit: Option<DateTime<Utc>>,
+  }
+  ```
+- [ ] `DerivativeType` enum with 2-char code mapping:
+  ```rust
+  #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+  pub enum DerivativeType {
+      Square,   // sq  120×120 crop=1.0
+      Thumb,    // th  144×144
+      XXSmall,  // 2s  240×240
+      XSmall,   // xs  432×324
+      Small,    // sm  576×432
+      Medium,   // me  792×594
+      Large,    // la  1008×756
+      XLarge,   // xl  1224×918
+      XXLarge,  // xx  1656×1242
+      Custom(CustomDerivativeParams),
+  }
+  impl DerivativeType {
+      pub fn code(&self) -> &str {
+          match self {
+              Self::Square => "sq", Self::Thumb => "th",
+              Self::XXSmall => "2s", Self::XSmall => "xs",
+              Self::Small => "sm", Self::Medium => "me",
+              Self::Large => "la", Self::XLarge => "xl",
+              Self::XXLarge => "xx", Self::Custom(_) => "cu",
+          }
+      }
+      pub fn from_code(code: &str) -> Option<Self> { /* reverse mapping */ }
+  }
+  ```
+- [ ] `Tag`, `Comment`, `Rate` structs matching their respective table schemas
+- [ ] `PiwigoError` type hierarchy with `thiserror` (see ADR-006 for full definition)
 - [ ] All types implement `serde::Serialize` + `serde::Deserialize` where appropriate
 
 ---
@@ -976,14 +1232,40 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
   }
   ```
 - [ ] URL parser: tokenize path info (`/category/12-album/start-24` → `[category, 12-album, start-24]`)
+- [ ] **Two-phase dispatch** (matches PHP `section_init.php` — see Appendix F):
+  1. `parse_section_url(tokens)` → identify section type and primary resource
+  2. `parse_well_known_params(remaining_tokens)` → extract modifiers (flat, start-N, startcat-N, chronology)
 - [ ] Implement all 3 URL style variants per entity type:
-  - Categories: `id`, `id-name`
-  - Pictures: `id`, `id-file`, `file`
-  - Tags: `id-tag`, `id`, `tag`
-- [ ] Permalink resolution: query `old_permalinks` table, 301 redirect if slug changed
-- [ ] Pagination: extract `start-N` token, validate against item count
+  - Categories: `id`, `id-name` (per `config.url.category_style`)
+  - Pictures: `id`, `id-file`, `file` (per `config.url.picture_style`)
+  - Tags: `id-tag`, `id`, `tag` (per `config.url.tag_style`)
+- [ ] **Category resolution algorithm:**
+  1. Try numeric parse → direct ID lookup
+  2. Try `{id}-{slug}` parse → ID lookup + validate slug matches, 301 redirect if slug changed
+  3. Try permalink lookup in `categories.permalink` → resolve to ID
+  4. Try `old_permalinks` table → 301 redirect to current URL
+  5. 404 if none match
+- [ ] **Tag resolution:** Tags can appear as `{id}-{url_name}` pairs separated by `/` in the URL. Multiple tags = AND filter by default, OR if `tag_mode_and=false`.
+- [ ] **Chronology parsing:** Tokens like `created-monthly-2026-04` are parsed into:
+  ```rust
+  pub struct ChronologyParams {
+      pub field: ChronologyField,     // Created or Posted (date_creation or date_available)
+      pub style: ChronologyStyle,     // Monthly or Weekly
+      pub view: ChronologyView,       // List or Calendar
+      pub date: Vec<i32>,             // [year] or [year, month] or [year, month, day]
+  }
+  ```
+- [ ] Pagination: extract `start-N` token, validate against item count. `startcat-N` for sub-album pagination (separate from image pagination).
 - [ ] URL generation helpers: `make_index_url(section, start)`, `make_picture_url(image_id, cat_id)`, etc.
 - [ ] Canonical URL header on all pages
+- [ ] **Picture page context:** `picture.php` URLs carry section context (which album/tag/search the user navigated from). This determines prev/next navigation. Parse as:
+  ```rust
+  pub struct PicturePageContext {
+      pub image_id: i32,
+      pub section: GallerySection,    // the album/tag/search context
+      pub start: u32,                 // pagination position in the list
+  }
+  ```
 
 ---
 
@@ -1000,14 +1282,56 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
   ORDER BY [config_order]
   ```
 - [ ] Persistent query cache (moka, keyed by MD5 of full SQL + user cache key)
-- [ ] Image ordering: 7 built-in sort orders (date posted, date created, file name, id, position, rating, visits) + custom via config
-- [ ] Pagination: N images per page (from user preference)
-- [ ] Sub-categories display: query children of current category with representative images
-- [ ] "Flat" view: fetch all descendant categories recursively, merge their image lists
-- [ ] Chronology (calendar) view: group by year/month/week/day
-- [ ] Breadcrumb: walk `uppercats` string to build ancestor trail
+- [ ] Image ordering — 7 built-in sort orders (all whitelisted, never user-supplied SQL):
+  ```rust
+  pub enum ImageOrder {
+      DateAvailableDesc,    // "date_available DESC, file ASC, id ASC"
+      DateAvailableAsc,     // "date_available ASC, file ASC, id ASC"
+      DateCreationDesc,     // "date_creation DESC, file ASC, id ASC"
+      DateCreationAsc,      // "date_creation ASC, file ASC, id ASC"
+      FileName,             // "file ASC, id ASC"
+      FileNameDesc,         // "file DESC, id DESC"
+      Rating,               // "rating_score DESC, file ASC, id ASC"
+      Visits,               // "hit DESC, file ASC, id ASC"
+      Random,               // "RANDOM()" (PG) or "RAND()" (MySQL)
+      Rank,                 // "sort_rank ASC, id ASC" (inside category only)
+  }
+  ```
+- [ ] Pagination: `user_infos.nb_image_page` images per page (default 15). Offset via `start-N` URL token.
+- [ ] **Sub-categories query:**
+  ```sql
+  SELECT c.*, ucc.nb_images, ucc.count_images, ucc.count_categories,
+         ucc.max_date_last, ucc.user_representative_picture_id
+  FROM categories c
+  JOIN user_cache_categories ucc ON c.id = ucc.cat_id AND ucc.user_id = ?
+  WHERE c.id_uppercat = ?
+    AND c.id NOT IN (?)  -- forbidden categories
+  ORDER BY c.sort_rank, c.name
+  ```
+- [ ] **Representative image selection:** For each sub-category, show a cover image:
+  1. Use `categories.representative_picture_id` if set
+  2. Else use `user_cache_categories.user_representative_picture_id` if set
+  3. Else pick a random image from the category (and cache the choice in `user_cache_categories`)
+- [ ] **"Flat" view:** Fetch all descendant category IDs via `uppercats LIKE '{current_uppercats},%'`, then query images across all:
+  ```sql
+  SELECT DISTINCT i.id, [order_fields]
+  FROM images i
+  JOIN image_category ic ON i.id = ic.image_id
+  WHERE ic.category_id IN (?)   -- all descendant categories
+    AND ic.category_id NOT IN (?) -- forbidden
+    AND i.level <= ?
+  ORDER BY [config_order]
+  ```
+- [ ] **Chronology (calendar) view:** Group images by date field (creation or available):
+  - Level 1: years → `SELECT EXTRACT(YEAR FROM date_creation) AS year, COUNT(*) FROM images ... GROUP BY year`
+  - Level 2: months within year → same with `EXTRACT(MONTH ...)`
+  - Level 3: days within month → same with `EXTRACT(DAY ...)`
+  - Display as calendar grid or list (per chronology_view parameter)
+- [ ] **Breadcrumb:** Parse `uppercats` string ("1,5,12") → fetch names for each ID → build `[{id, name, url}]` trail
+- [ ] **Template variables assigned** (key ones): `TITLE`, `items` (image array), `categories` (sub-album array), `BREADCRUMB`, `START`, `NB_IMAGES`, `derivative_params`, `navbar` (pagination HTML)
 - [ ] `trigger_notify('loc_begin_index')` and `trigger_notify('loc_end_index')`
 - [ ] `trigger_change('loc_begin_index_category_thumbnails_query', sql)` — plugin can modify SQL
+- [ ] `trigger_change('loc_end_index_thumbnails', tpl_var, pictures)` — plugin can modify thumbnail template data
 
 ---
 
@@ -1022,9 +1346,21 @@ let q = QueryBuilder::new("WHERE category_id != ALL($1)")
   - Rate-limited: one increment per session per image
   - Configurable: `$conf->count_views`
 - [ ] Privacy level check: `image.level <= user.level` — 403 if inaccessible
-- [ ] Navigation: previous/next image in category context (using pre-fetched id list)
-- [ ] Download link: served via `GET /download/{image_id}` with Content-Disposition header
-- [ ] Related tags display
+- [ ] **Navigation algorithm** (previous/next/first/last within section context):
+  1. Use the same query as the index page (same section, same filters, same ORDER BY)
+  2. Fetch the full ordered image ID list for the section (or a window around current position)
+  3. Find current `image_id` in the list → `prev = list[pos-1]`, `next = list[pos+1]`
+  4. Assign to template: `previous.id`, `next.id`, `first.id`, `last.id` with their derivative URLs
+  5. **Optimization:** Don't fetch the full list for large sections. Instead, use two bounded queries:
+     ```sql
+     -- Previous image
+     SELECT id FROM images ... WHERE (order_fields) < (current_fields) ORDER BY order_fields DESC LIMIT 1
+     -- Next image
+     SELECT id FROM images ... WHERE (order_fields) > (current_fields) ORDER BY order_fields ASC LIMIT 1
+     ```
+- [ ] Download link: served via `GET /action.php?id={image_id}&part=e&download` → `Content-Disposition: attachment`
+- [ ] **Alternative formats download:** If `enable_formats` is true, show download links for each format in `image_format` table (CR2, DNG, etc.)
+- [ ] Related tags: `SELECT t.* FROM tags t JOIN image_tag it ON t.id = it.tag_id WHERE it.image_id = ?`
 - [ ] Slideshow: JSON data for JS slideshow (image list, derivative URLs)
 - [ ] `trigger_notify('loc_begin_picture')` and `trigger_notify('loc_end_picture')`
 
@@ -2094,13 +2430,60 @@ async fn test_category_permission_filtering() {
 }
 ```
 
+### Integration Test Scenarios
+
+Critical cross-subsystem scenarios that must pass before release:
+
+#### Permission Boundary Tests
+- [ ] Guest user cannot see private album images
+- [ ] User with group access to private album CAN see its images
+- [ ] User with direct access but no group access CAN see private album
+- [ ] Admin can see `visible=false` albums; normal user cannot
+- [ ] Image with `level=4` invisible to user with `level=2`
+- [ ] Image in both public and private album: accessible to all (at least one public link)
+- [ ] Empty forbidden list (sentinel `[0]`): all categories visible
+- [ ] Permission cache invalidation: after granting access, user sees album on next request
+
+#### Auth Edge Cases
+- [ ] Login with correct password → session created, user_login event fired
+- [ ] Login with wrong password → 401, login_failure event fired
+- [ ] Case-insensitive login when `insensitive_case_logon=true`
+- [ ] Remember-me cookie: close browser, reopen → auto-login works
+- [ ] Remember-me expired (>60 days) → redirect to login
+- [ ] API key auth: `?auth=KEY` in URL works for normal/generic users
+- [ ] API key auth: admin users cannot use API keys (returns error)
+- [ ] API key expired → 401
+- [ ] Session with IP change (first 2 octets differ) → session rejected
+- [ ] CSRF token mismatch on POST → 403
+- [ ] Concurrent sessions: user logged in from two browsers, both work
+
+#### Upload & Sync
+- [ ] Upload JPEG → image created, derivatives generated, metadata extracted
+- [ ] Upload duplicate (same MD5) → rejected or linked (per config)
+- [ ] Chunked upload: 3 chunks in order → concatenated correctly
+- [ ] Chunked upload: chunks out of order → still works (sorted by position)
+- [ ] Sync: new directory on disk → category created in DB
+- [ ] Sync: file deleted from disk → image marked/deleted in DB
+- [ ] Sync: file unchanged (same filesize) → metadata extraction skipped
+- [ ] Sync: EXIF with GPS → latitude/longitude populated
+- [ ] Sync interrupted mid-phase → next sync recovers cleanly
+
+#### API Backward Compatibility
+- [ ] All 85 methods return responses matching PHP JSON format (field names, nesting, types)
+- [ ] `pwg.session.getStatus` returns `pwg_token` that works for subsequent admin calls
+- [ ] `pwg.categories.getList` with `tree_output=true` returns nested tree structure
+- [ ] `pwg.images.search` with `f_min_date_created` filter returns correct subset
+- [ ] Array parameters: `image_id[]=1&image_id[]=2` correctly parsed as array
+
 ### API Tests
 
-Each of the 84 REST methods has at least one test covering:
-- Happy path
-- Authentication required (returns 403)
-- Missing required parameter (returns 1002)
-- Invalid parameter type (returns 1003)
+Each of the 85 REST methods has at least one test covering:
+- Happy path with expected response format
+- Authentication required (returns 403 for admin-only methods)
+- Missing required parameter (returns error code 1002)
+- Invalid parameter type (returns error code 1003)
+- Array parameters (FORCE_ARRAY methods accept both scalar and array)
+- CSRF token validation on POST methods that require `pwg_token`
 
 ### Benchmark Suite
 
@@ -2129,6 +2512,16 @@ benches/
 | R-08 | Template visual regression too large to automate | Medium | Medium | Prioritize high-traffic pages; accept manual review for others |
 | R-09 | Memory usage higher than expected at scale | Low | Medium | Profile early with realistic dataset; use `jemalloc` for reduced fragmentation |
 | R-10 | Community plugin ecosystem resists Lua migration | High | Low | Accepted breakage; document clearly; provide PHP→Lua migration guide |
+| R-11 | PHP serialized data contains edge cases (nested objects, references, custom classes) that break deserialization | Medium | High | Test against real production DB dumps; handle `O:` (object) tokens by converting to associative arrays; reject `R:` (reference) tokens |
+| R-12 | `mass_inserts` hits parameter limit on large batch operations (e.g., sync of 100k files) | Medium | Medium | Chunk inserts to stay under MySQL's 65535 / PG's 32767 param limit; already accounted for in §1.3 |
+| R-13 | Smarty→Tera template migration introduces subtle rendering differences (whitespace, escaping, filter behavior) | High | Medium | Visual regression test suite (§8.2) catches these; manual review of all 265 templates |
+| R-14 | `get_sql_condition_FandF` reimplementation has different semantics for edge cases (empty lists, NULL handling) | Medium | High | Port all 22 call sites with dedicated integration tests; test with real permission data from production DB |
+| R-15 | Concurrent derivative generation causes file corruption (two requests generate same derivative simultaneously) | Medium | Medium | Atomic write (write to temp file, then rename); per-path lock map to serialize concurrent requests for same derivative |
+| R-16 | i18n plural forms differ between PHP and Rust (some languages have complex plural rules) | Low | Low | Use ICU plural rules; test with Russian (3 forms), Arabic (6 forms), Chinese (1 form) |
+| R-17 | EXIF date parsing fails on non-standard formats from specific camera brands | High | Low | Compile exhaustive format list from real-world data; log unparseable dates as warnings rather than failing |
+| R-18 | Windows path handling differs from Unix (backslashes, drive letters, UNC paths, case insensitivity) | Medium | Medium | Use `PathBuf` consistently; normalize paths on input; test on both platforms in CI |
+| R-19 | `upload_file` hook returns representative extension for non-image types (PDF, HEIC, video) — Lua handler must call external tools | Medium | High | Ship built-in handlers for common types (HEIC→JPEG via libvips, PDF→PNG via `poppler-rs`); Lua hooks for exotic types |
+| R-20 | bcrypt cost factor difference: PHP default is 10, Rust `bcrypt` crate default is 12 — existing passwords must verify with original cost | Low | High | Use `bcrypt::verify()` which auto-detects cost from hash; only new passwords use the configured cost |
 
 ---
 
@@ -2172,6 +2565,40 @@ PHP themes (`.tpl` files) are incompatible. The 5 built-in themes are migrated. 
 #### Configuration
 
 Config values from `config` table are preserved. The `local/config/config.php` format is read during migration for backward compatibility and converted to `local/config/config.toml`.
+
+### Migration Runbook (Step-by-Step)
+
+**Pre-migration (before touching anything):**
+1. Back up the database: `pg_dump piwigo_fork > backup.sql` or `mysqldump piwigo > backup.sql`
+2. Back up `_data/`, `local/`, `plugins/`, `themes/` directories
+3. Note the current Piwigo version: `SELECT value FROM config WHERE param = 'piwigo_installed_version'`
+4. Verify PHP Piwigo is functional (browse gallery, check admin)
+
+**Migration steps:**
+1. **Stop PHP Piwigo** — shut down Apache/Nginx serving the PHP version
+2. **Run `piwigo upgrade`** — applies SQL migrations:
+   - Adds `sessions.data_json`, `search.rules_json`, `user_infos.preferences_json` columns
+   - Adds foreign key constraints (non-breaking — existing data should be consistent)
+   - Migrates PHP-serialized data to JSON (sessions, search rules, user preferences, config values)
+   - Adds `upgrade` table entries for each applied migration
+3. **Convert config:** `piwigo upgrade` also reads `local/config/database.php` and `local/config/config.php` → writes `local/config/database.toml` and `local/config/config.toml`
+4. **Start Rust Piwigo:** `piwigo serve --config local/config/config.toml`
+5. **Verify:**
+   - Browse gallery — images and albums visible
+   - Login — existing user credentials work (bcrypt hashes are compatible)
+   - Admin panel — accessible, config values preserved
+   - API — `curl /ws.php?method=pwg.getVersion&format=json` returns version
+6. **Rollback plan:** If issues found, stop Rust Piwigo, restore DB from backup, restart PHP Piwigo. The added columns are harmless to the PHP version.
+
+**Post-migration cleanup (after 30 days):**
+1. Run `piwigo upgrade --finalize` — drops legacy PHP-serialized columns (`sessions.data`, old `search.rules`, old `user_infos.preferences`)
+2. Remove PHP files from web root (no longer needed)
+3. Uninstall PHP and PHP-FPM if no other applications use them
+
+**Dual-run testing (optional, recommended for production):**
+1. Run both PHP and Rust Piwigo against the same database on different ports
+2. Compare responses for key pages using a diff tool
+3. Route traffic gradually: 10% → 50% → 100% to Rust via load balancer
 
 ---
 

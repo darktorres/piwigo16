@@ -29,6 +29,7 @@
   <link rel="shortcut icon" type="image/x-icon" href="{$ROOT_URL}{$themeconf.icon_dir}/favicon.ico">
   <link rel="icon" sizes="192x192" href="{$ROOT_URL}themes/bootstrap_darkroom/img/logo.png">
   <link rel="apple-touch-icon" sizes="192x192" href="{$ROOT_URL}themes/bootstrap_darkroom/img/logo.png">
+  <link rel="manifest" href="{$ROOT_URL}manifest.json">
   <link rel="start" title="{'Home'|translate}" href="{$U_HOME}">
   <link rel="search" title="{'Search'|translate}" href="{$ROOT_URL}search.php">
   {if isset($first.U_IMG)}
@@ -98,6 +99,11 @@
     {foreach $head_elements as $elt}{$elt}
     {/foreach}
   {/if}
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('{$ROOT_URL}sw.js');
+    }
+  </script>
 </head>
 
 <body id="{$BODY_ID}" class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}" data-infos='{$BODY_DATA}'>

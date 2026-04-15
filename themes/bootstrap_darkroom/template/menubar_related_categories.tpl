@@ -5,10 +5,10 @@
       <{if isset($cat.url)}a href="{$cat.url}" {else}span{/if} class="dropdown-item" data-level="{($cat.LEVEL -1)}">
         {$cat.name}
         {if !empty($cat.count_images)}
-          <span class="badge badge-primary ml-2" title="{if isset($cat.TITLE)}{$cat.TITLE}{/if}">{$cat.count_images}</span>
+          <span class="badge badge-primary ml-2" title="{if isset($cat.TITLE)}{$cat.TITLE}{/if}">{$cat.count_images|number_format}</span>
         {/if}
         {if !empty($cat.count_categories) }
-          <span class="badge badge-secondary ml-2" title="{'sub-albums'|translate}">{$cat.count_categories}</span>
+          <span class="badge badge-secondary ml-2" title="{'sub-albums'|translate}">{$cat.count_categories|number_format}</span>
         {/if}
       </{if isset($cat.url)}a{else}span{/if}>
     {/foreach}

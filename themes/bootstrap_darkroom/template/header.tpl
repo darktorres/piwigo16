@@ -87,12 +87,7 @@
   {/if}
   {combine_script id='jquery' path='themes/bootstrap_darkroom/node_modules/jquery/dist/jquery.min.js' load=$loc}
   {combine_script id='jquery-migrate' require='jquery' path='themes/bootstrap_darkroom/node_modules/jquery-migrate/dist/jquery-migrate.min.js' load=$loc}
-  {combine_script id='popper.js' require='jquery' path='themes/bootstrap_darkroom/node_modules/popper.js/dist/umd/popper.js' load=$loc}
-  {if preg_match('/^material/', $theme_config->bootstrap_theme)}
-    {combine_script id='bootstrap' require='popper.js' path='themes/bootstrap_darkroom/node_modules/bootstrap-material-design/dist/js/bootstrap-material-design.js' load=$loc}
-  {else}
-    {combine_script id='bootstrap' require='popper.js' path='themes/bootstrap_darkroom/node_modules/bootstrap/dist/js/bootstrap.js' load=$loc}
-  {/if}
+  {combine_script id='bootstrap' require='jquery' path='themes/bootstrap_darkroom/node_modules/bootstrap/dist/js/bootstrap.bundle.js' load=$loc}
   {combine_script id=$themeconf.name require='bootstrap' path='themes/bootstrap_darkroom/js/theme.js' load='footer'}
   {get_combined_scripts load='header'}
   {if not empty($head_elements)}
@@ -114,23 +109,21 @@
         class="navbar navbar-expand-lg navbar-main {$theme_config->navbar_main_bg} {if $theme_config->page_header == 'fancy'}navbar-dark navbar-transparent fixed-top{else}{$theme_config->navbar_main_style}{/if}">
         <div class="container{if $theme_config->fluid_width}-fluid{/if}">
           {if $theme_config->logo_image_enabled && $theme_config->logo_image_path !== ''}
-            <a class="navbar-brand mr-auto" href="{$U_HOME}"><img class="img-fluid"
+            <a class="navbar-brand me-auto" href="{$U_HOME}"><img class="img-fluid"
                 src="{$ROOT_URL}{$theme_config->logo_image_path}" alt="{$GALLERY_TITLE}" /></a>
           {else}
-            <a class="navbar-brand mr-auto" href="{$U_HOME}">{$GALLERY_TITLE}</a>
+            <a class="navbar-brand me-auto" href="{$U_HOME}">{$GALLERY_TITLE}</a>
           {/if}
-          <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-menubar"
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-menubar"
             aria-controls="navbar-menubar" aria-expanded="false" aria-label="Toggle navigation">
             <span class="fas fa-bars"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbar-menubar">
             {if $theme_config->quicksearch_navbar}
-              <form class="form-inline navbar-form ml-auto" role="search" action="{$ROOT_URL}qsearch.php" method="get"
+              <form class="d-flex align-items-center navbar-form ms-auto" role="search" action="{$ROOT_URL}qsearch.php" method="get"
                 id="quicksearch" onsubmit="return this.q.value!='' && this.q.value!=qsearch_prompt;">
                 <i class="fas fa-search" title="{'Search'|translate}" aria-hidden="true"></i>
-                <div class="form-group">
-                  <input type="text" name="q" id="qsearchInput" class="form-control" placeholder="{'Search'|translate}" />
-                </div>
+                <input type="text" name="q" id="qsearchInput" class="form-control" placeholder="{'Search'|translate}" />
               </form>
               {footer_script require='jquery'}<script>
                 var qsearch_icon = $('#navbar-menubar>#quicksearch>.fa-search');

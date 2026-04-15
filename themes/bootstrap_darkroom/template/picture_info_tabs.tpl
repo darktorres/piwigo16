@@ -3,17 +3,17 @@
       <ul class="nav nav-tabs nav-justified flex-column flex-sm-row" role="tablist">
         {if $theme_config->picture_info == 'tabs' || (functions::get_device() != 'desktop' && $theme_config->picture_info != 'disabled')}
           <li class="nav-item"><a class="flex-sm-fill text-sm-center nav-link active" href="#tab_info"
-              aria-controls="tab_info" role="tab" data-toggle="tab">{'Information'|translate}</a></li>
+              aria-controls="tab_info" role="tab" data-bs-toggle="tab">{'Information'|translate}</a></li>
           {if isset($metadata)}
             <li class="nav-item"><a class="flex-sm-fill text-sm-center nav-link" href="#tab_metadata"
-                aria-controls="tab_metadata" role="tab" data-toggle="tab">{'EXIF Metadata'|translate}</a></li>
+                aria-controls="tab_metadata" role="tab" data-bs-toggle="tab">{'EXIF Metadata'|translate}</a></li>
           {/if}
         {/if}
         {if isset($comment_add) || !empty($COMMENT_COUNT)}
           <li
             class="nav-item{if $theme_config->picture_info == 'disabled' || ($theme_config->picture_info != 'tabs' && functions::get_device() == 'desktop')} active{/if}">
             <a class="flex-sm-fill text-sm-center nav-link" href="#tab_comments" aria-controls="tab_comments" role="tab"
-              data-toggle="tab">{'Comments'|translate} <span class="badge badge-secondary">{$COMMENT_COUNT}</span></a>
+              data-bs-toggle="tab">{'Comments'|translate} <span class="badge bg-secondary">{$COMMENT_COUNT}</span></a>
           </li>
         {/if}
       </ul>
@@ -210,7 +210,7 @@
                           <div id="Privacy" class="imageInfo">
                             <div class="dropdown">
                               <button class="btn btn-secondary btn-raised dropdown-toggle ellipsis" type="button"
-                                id="dropdownPermissions" data-toggle="dropdown" aria-expanded="true">
+                                id="dropdownPermissions" data-bs-toggle="dropdown" aria-expanded="true">
                                 {$available_permission_levels[$current.level]}
                               </button>
                               <div class="dropdown-menu" role="menu" aria-labelledby="dropdownPermissions">

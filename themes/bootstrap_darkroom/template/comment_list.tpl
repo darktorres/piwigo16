@@ -65,12 +65,12 @@
                 {if isset($comment.IN_EDIT)}
                     <a name="edit_comment"></a>
                     <form method="post" action="{$comment.U_EDIT}">
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="website_url">{'Website'|translate} :</label>
                             <input class="form-control" type="text" name="website_url" id="website_url"
                                 value="{$comment.WEBSITE_URL}">
                         </div>
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="contenteditid">{'Edit a comment'|translate} :</label>
                             <textarea class="form-control" name="content" id="contenteditid" rows="5"
                                 cols="80">{$comment.CONTENT|escape}</textarea>

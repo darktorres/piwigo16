@@ -19,13 +19,13 @@
          <ul class="nav nav-pills p-2" role="tablist">
            {if !empty($COMMENT_COUNT)}
              <li class="nav-item">
-               <a class="nav-link active" href="#viewcomments" data-toggle="pill"
+               <a class="nav-link active" href="#viewcomments" data-bs-toggle="pill"
                  aria-controls="viewcomments">{$COMMENT_COUNT|translate_dec:'%d comment':'%d comments'}</a>
              </li>
            {/if}
            {if isset($comment_add)}
              <li class="nav-item">
-               <a class="nav-link{if empty($COMMENT_COUNT)} active{/if}" href="#addcomment" data-toggle="pill"
+               <a class="nav-link{if empty($COMMENT_COUNT)} active{/if}" href="#addcomment" data-bs-toggle="pill"
                  aria-controls="addcomment">{'Add a comment'|translate}</a>
              </li>
            {/if}
@@ -49,27 +49,27 @@
              <div id="addcomment" class="tab-pane{if empty($COMMENT_COUNT)} active{/if}">
                <form method="post" action="{$comment_add.F_ACTION}">
                  {if $comment_add.SHOW_AUTHOR}
-                   <div class="form-group">
+                   <div class="mb-3">
                      <label for="author">{'Author'|translate}{if $comment_add.AUTHOR_MANDATORY} ({'mandatory'|translate}){/if}
                        :</label>
                      <input class="form-control" type="text" name="author" id="author" value="{$comment_add.AUTHOR}">
                    </div>
                  {/if}
                  {if $comment_add.SHOW_EMAIL}
-                   <div class="form-group">
+                   <div class="mb-3">
                      <label for="email">{'Email address'|translate}{if $comment_add.EMAIL_MANDATORY}
                        ({'mandatory'|translate}){/if} :</label>
                      <input class="form-control" type="text" name="email" id="email" value="{$comment_add.EMAIL}">
                    </div>
                  {/if}
                  {if $comment_add.SHOW_WEBSITE}
-                   <div class="form-group">
+                   <div class="mb-3">
                      <label for="website_url">{'Website'|translate} :</label>
                      <input class="form-control" type="text" name="website_url" id="website_url"
                        value="{$comment_add.WEBSITE_URL}">
                    </div>
                  {/if}
-                 <div class="form-group">
+                 <div class="mb-3">
                    <label for="contentid">{'Comment'|translate} ({'mandatory'|translate}) :</label>
                    <textarea class="form-control" name="content" id="contentid" rows="5"
                      cols="50">{$comment_add.CONTENT}</textarea>

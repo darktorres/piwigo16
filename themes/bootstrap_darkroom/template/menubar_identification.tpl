@@ -1,8 +1,8 @@
 <li class="nav-item dropdown" id="identificationDropdown">
-    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{if isset($USERNAME)}<i class="fas fa-user"></i>
+    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">{if isset($USERNAME)}<i class="fas fa-user"></i>
         {$USERNAME}{else}{'Login'|translate}
         {/if}</a>
-    <div class="dropdown-menu dropdown-menu-right" role="menu">
+    <div class="dropdown-menu dropdown-menu-end" role="menu">
         {if isset($USERNAME)}
             <div class="dropdown-header">{'Hello'|translate} {$USERNAME}!</div>
             <div class="dropdown-divider"></div>
@@ -10,7 +10,7 @@
         {if isset($U_LOGIN)}
             <div class="dropdown-header">
                 <form class="navbar-form" method="post" action="{$U_LOGIN}" id="quickconnect">
-                    <div class="form-group">
+                    <div class="mb-3">
                         <input class="form-control mb-2" type="text" name="username" id="username" value=""
                             placeholder="{'Username'|translate}">
                         <input class="form-control" type="password" name="password" id="password"

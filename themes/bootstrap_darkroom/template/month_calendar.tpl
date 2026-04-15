@@ -55,12 +55,12 @@
     {foreach $chronology_calendar.calendar_bars as $bar}
         <div class="card">
             <div class="card-header"><a href="{$bar.U_HEAD}">{$bar.HEAD_LABEL}</a> <span
-                    class="badge badge-secondary">{$bar.NB_IMAGES}</span></div>
+                    class="badge bg-secondary">{$bar.NB_IMAGES}</span></div>
             <div class="card-body">
                 <ul class="calendar-month-list">
                     {foreach $bar.items as $item}
                         <li><a href="{if isset($item.URL)}{$item.URL}{else}#{/if}">{$item.LABEL}{if isset($item.NB_IMAGES)} <span
-                                class="badge badge-secondary">{$item.NB_IMAGES}</span>{/if}</a></li>
+                                class="badge bg-secondary">{$item.NB_IMAGES}</span>{/if}</a></li>
                 {/foreach}
             </ul>
         </div>

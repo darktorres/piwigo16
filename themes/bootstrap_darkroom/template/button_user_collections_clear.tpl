@@ -2,5 +2,5 @@
   data-icon="fas fa-broom" data-validate="{'Clear'|translate}" data-content="{'Are you sure?'|translate}"
   data-cancel="{'Cancel'|translate}" rel="nofollow">
   <i class="fas fa-broom"></i>
-  <span class="d-lg-none ml-2">{'Clear'|translate}</span>
+  <span class="d-lg-none ms-2">{'Clear'|translate}</span>
 </a>

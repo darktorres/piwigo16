@@ -20,10 +20,10 @@ $black: #000;
 
 // Theme colors
 $theme-colors: (
-  primary: $gray-darker-2,
-  secondary: $gray-darker-1,
-  light: $gray-darker-3,
-  dark: $black
+  "primary": $gray-darker-2,
+  "secondary": $gray-darker-1,
+  "light": $gray-darker-3,
+  "dark": $black
 ) !default;
 
 
@@ -58,7 +58,7 @@ $component-active-bg:    $gray-darker-2 !default;
 
 // Dropdowns
 $dropdown-link-color:            $gray-darker-1 !default;
-$dropdown-link-hover-color:      darken($gray-darker-3, 5%) !default;
+$dropdown-link-hover-color:      adjust-color($gray-darker-3, $lightness: -5%) !default;
 $dropdown-link-hover-bg:         $gray-lighter-2 !default;
 
 $dropdown-link-active-color:     $component-active-color !default;
@@ -85,7 +85,7 @@ $pagination-active-bg:                 $gray-darker-3 !default;
 $pagination-active-border-color:       $gray-darker-3 !default;
 
 $pagination-disabled-color:            $gray-600 !default;
-$pagination-disabled-bg:               lighten($pagination-active-bg, 10%) !default;
+$pagination-disabled-bg:               adjust-color($pagination-active-bg, $lightness: 10%) !default;
 $pagination-disabled-border-color:     $pagination-disabled-bg !default;
 
 // Tabs

@@ -14,7 +14,7 @@
 <nav
     class="navbar navbar-contextual navbar-expand-lg {$theme_config->navbar_contextual_style} {$theme_config->navbar_contextual_bg} sticky-top mb-5">
     <div class="container{if $theme_config->fluid_width}-fluid{/if}">
-        <div class="navbar-brand mr-auto"><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}<a
+        <div class="navbar-brand me-auto"><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}<a
                 href>{'Search'|translate}</a></div>
         <ul class="navbar-nav justify-content-end">
             <li class="nav-item">
@@ -37,44 +37,44 @@
                 {'Search for words'|translate}
             </h4>
             <div class="card-body">
-                <div class="form-group">
+                <div class="mb-3">
                     <input type="text" id="search_allwords" name="search_allwords" class="form-control mb-3" />
                 </div>
-                <div class="form-group">
+                <div class="mb-3">
                     <div class="form-check form-check-inline radio">
-                        <label class="form-check-label mr-3">
+                        <label class="form-check-label me-3">
                             <input type="radio" name="mode" value="AND" checked="checked"
-                                class="form-check-input mr-1">{'Search for all terms'|translate}
+                                class="form-check-input me-1">{'Search for all terms'|translate}
                         </label>
                         <label class="form-check-label">
                             <input type="radio" name="mode" value="OR"
-                                class="form-check-input mr-1">{'Search for any term'|translate}
+                                class="form-check-input me-1">{'Search for any term'|translate}
                         </label>
                     </div>
                 </div>
                 <label>{'Apply on properties'|translate}</label>
-                <div class="form-group">
+                <div class="mb-3">
                     <div class="form-check checkbox">
-                        <label class="form-check-label mr-2">
+                        <label class="form-check-label me-2">
                             <input class="form-check-input" type="checkbox" name="fields[]" value="name"
                                 checked="checked"> {'Photo title'|translate}
                         </label>
                     </div>
                     <div class="form-check checkbox">
-                        <label class="form-check-label mr-2">
+                        <label class="form-check-label me-2">
                             <input class="form-check-input" type="checkbox" name="fields[]" value="comment"
                                 checked="checked"> {'Photo description'|translate}
                         </label>
                     </div>
                     <div class="form-check checkbox">
-                        <label class="form-check-label mr-2">
+                        <label class="form-check-label me-2">
                             <input class="form-check-input" type="checkbox" name="fields[]" value="file"
                                 checked="checked"> {'File name'|translate}
                         </label>
                     </div>
                     {if isset($TAGS)}
                         <div class="form-check checkbox">
-                            <label class="form-check-label mr-2">
+                            <label class="form-check-label me-2">
                                 <input class="form-check-input" type="checkbox" name="search_in_tags" value="tags">
                                 {'Tags'|translate}
                             </label>
@@ -89,7 +89,7 @@
                     {'Search for Author'|translate}
                 </h4>
                 <div class="card-body">
-                    <div class="form-group">
+                    <div class="mb-3">
                         <select class="form-control" id="authors" placeholder="{'Type in a search term'|translate}"
                             name="authors[]" multiple>
                             {foreach $AUTHORS as $author}
@@ -107,7 +107,7 @@
                     {'Search tags'|translate}
                 </h4>
                 <div class="card-body">
-                    <div class="form-group mb-3">
+                    <div class="mb-3 mb-3">
                         <select class="form-control" id="tags" placeholder="{'Type in a search term'|translate}"
                             name="tags[]" multiple>
                             {foreach $TAGS as $tag}
@@ -116,9 +116,9 @@
                             {/foreach}
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                         <div class="form-check form-check-inline radio">
-                            <label class="form-check-label mr-3">
+                            <label class="form-check-label me-3">
                                 <input class="form-check-input" type="radio" name="tag_mode" value="AND" checked="checked">
                                 {'All tags'|translate}
                             </label>
@@ -137,9 +137,9 @@
             </h4>
             <div class="card-body">
                 <label>{'Kind of date'|translate}</label>
-                <div class="form-group">
+                <div class="mb-3">
                     <div class="form-check form-check-inline radio">
-                        <label class="form-check-label mr-3">
+                        <label class="form-check-label me-3">
                             <input class="form-check-input" type="radio" name="date_type" value="date_creation"
                                 checked="checked"> {'Creation date'|translate}
                         </label>
@@ -150,9 +150,9 @@
                     </div>
                 </div>
                 <label>{'Date'|translate}</label>
-                <div class="form-group">
-                    <div class="form-inline">
-                        <select id="start_day" name="start_day" class="form-control mr-3">
+                <div class="mb-3">
+                    <div class="d-flex flex-wrap align-items-center">
+                        <select id="start_day" name="start_day" class="form-control me-3">
                             <option value="0">--</option>
                             {section name=day start=1 loop=32}
                                 <option value="{$smarty.section.day.index}"
@@ -160,21 +160,21 @@
                                     {$smarty.section.day.index}</option>
                             {/section}
                         </select>
-                        <select id="start_month" name="start_month" class="form-control mr-3">
+                        <select id="start_month" name="start_month" class="form-control me-3">
                             {html_options options=$month_list selected=$START_MONTH_SELECTED}
                         </select>
                         <input id="start_year" name="start_year" type="text" size="4" maxlength="4" class="form-control"
                             placeholder="{'Year'|translate}">
                         <input id="start_linked_date" name="start_linked_date" type="hidden" size="10"
                             disabled="disabled">
-                        <a class="date_today ml-3 btn btn-sm btn-info" href="#"
+                        <a class="date_today ms-3 btn btn-sm btn-info" href="#"
                             onClick="document.getElementById('start_day').value={$smarty.now|date_format:"%d"};document.getElementById('start_month').value={$smarty.now|date_format:"%m"};document.getElementById('start_year').value={$smarty.now|date_format:"%Y"};return false;">{'today'|translate}</a>
                     </div>
                 </div>
                 <label>{'End-Date'|translate}</label>
-                <div class="form-group">
-                    <div class="form-inline">
-                        <select id="end_day" name="end_day" class="form-control mr-3">
+                <div class="mb-3">
+                    <div class="d-flex flex-wrap align-items-center">
+                        <select id="end_day" name="end_day" class="form-control me-3">
                             <option value="0">--</option>
                             {section name=day start=1 loop=32}
                                 <option value="{$smarty.section.day.index}"
@@ -182,13 +182,13 @@
                                     {$smarty.section.day.index}</option>
                             {/section}
                         </select>
-                        <select id="end_month" name="end_month" class="form-control mr-3">
+                        <select id="end_month" name="end_month" class="form-control me-3">
                             {html_options options=$month_list selected=$END_MONTH_SELECTED}
                         </select>
                         <input id="end_year" name="end_year" type="text" size="4" maxlength="4" class="form-control"
                             placeholder="{'Year'|translate}">
                         <input id="end_linked_date" name="end_linked_date" type="hidden" size="10" disabled="disabled">
-                        <a class="date_today ml-3 btn btn-sm btn-info" href="#"
+                        <a class="date_today ms-3 btn btn-sm btn-info" href="#"
                             onClick="document.getElementById('end_day').value={$smarty.now|date_format:"%d"};document.getElementById('end_month').value={$smarty.now|date_format:"%m"};document.getElementById('end_year').value={$smarty.now|date_format:"%Y"};return false;">{'today'|translate}</a>
                     </div>
                 </div>
@@ -206,7 +206,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="mb-3">
                     <div class="form-check checkbox">
                         <label class="form-check-label">
                             <input class="form-check-input" type="checkbox" name="subcats-included" value="1"

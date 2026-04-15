@@ -4,23 +4,23 @@
         {'Login'|translate}
     </div>
     <div class="card-body">
-        <form action="{$block.F_LOGIN_ACTION}" method="post" name="login_form" class="form-inline">
-            <div class="form-group mb-2">
-                <label for="username" class="sr-only">{'Username'|translate}</label>
+        <form action="{$block.F_LOGIN_ACTION}" method="post" name="login_form" class="d-flex flex-wrap align-items-center">
+            <div class="mb-3 mb-2">
+                <label for="username" class="visually-hidden">{'Username'|translate}</label>
                 <div class="col">
                     <input tabindex="1" class="form-control" type="text" name="username" id="username"
                         placeholder="{'Username'|translate}">
                 </div>
             </div>
-            <div class="form-group mb-2">
-                <label for="password" class="sr-only">{'Password'|translate}</label>
+            <div class="mb-3 mb-2">
+                <label for="password" class="visually-hidden">{'Password'|translate}</label>
                 <div class="col">
                     <input tabindex="2" class="form-control" type="password" name="password" id="password"
                         placeholder="{'Password'|translate}">
                 </div>
             </div>
             {if $block.authorize_remembering}
-                <div class="form-group mb-2">
+                <div class="mb-3 mb-2">
                     <div class="col">
                         <div class="form-check form-check-inline checkbox">
                             <label class="form-check-label">

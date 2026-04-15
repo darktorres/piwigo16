@@ -2,16 +2,16 @@
   {if $current.height < $current.width}
     <div id="video-modal" class="col-lg-8 col-md-10 col-sm-12 mx-auto">
       {if $current.height / $current.width * 100 < 60}
-        <div class="embed-responsive embed-responsive-16by9">
+        <div class="ratio ratio-16x9">
         {else}
-          <div class="embed-responsive embed-responsive-custom"
+          <div class="ratio embed-responsive-custom"
             style="padding-bottom:{$current.height / $current.width * 100}%">
           {/if}
         {else}
           <div id="video-modal" class="col-lg-3 col-md-5 col-sm-6 col-xs-8 mx-auto">
-            <div class="embed-responsive embed-responsive-9by16">
+            <div class="ratio embed-responsive-9by16">
             {/if}
-            <video id="video" class="embed-responsive-item" width="100%" height="auto" controls preload="auto"
+            <video id="video" class="" width="100%" height="auto" controls preload="auto"
               poster="{$current.selected_derivative->get_url()}">
               <source src="{$ROOT_URL}{$current.path}" type="video/mp4">
               </source>

@@ -4,7 +4,7 @@
       $('.pwg-icon-globe').removeClass('pwg-icon').closest('a').html(
         '<i class="fas fa-globe fa-fw" aria-hidden="true"></i>').addClass('nav-link').removeClass(
         'pwg-state-default pwg-button').closest('li').addClass('nav-item osm-button').find('a>i').after(
-        '<span class="d-lg-none ml-2">' + $('.osm-button').find('a').attr('title') + '</span>');
+        '<span class="d-lg-none ms-2">' + $('.osm-button').find('a').attr('title') + '</span>');
     });
   </script>{/footer_script}
 {/if}
@@ -15,7 +15,7 @@
       $('.pwg-icon-map').removeClass('pwg-icon').closest('a').html(
         '<i class="fas fa-globe fa-fw" aria-hidden="true"></i>').addClass('nav-link').removeClass(
         'pwg-state-default pwg-button').wrap('<li class="nav-item rvgmaps-button"></li>').find('i').after(
-        '<span class="d-lg-none ml-2">' + $('.rvgmaps-button').find('a').attr('title') + '</span>');
+        '<span class="d-lg-none ms-2">' + $('.rvgmaps-button').find('a').attr('title') + '</span>');
       $('#map').wrap('<div id="mapContainer" class="container"></div>');
       $('#mapPicture').prependTo('#mapContainer').wrap('<div class="row justify-content-center"></div>');
     });
@@ -28,7 +28,7 @@
       $('.pwg-icon-map').removeClass('pwg-icon').closest('a').html(
         '<i class="fas fa-globe fa-fw" aria-hidden="true"></i>').addClass('nav-link').removeClass(
         'pwg-state-default pwg-button').closest('li').addClass('nav-item rvgmaps-button').find('a>i').after(
-        '<span class="d-lg-none ml-2">' + $('.rvgmaps-button').find('a').attr('title') + '</span>');
+        '<span class="d-lg-none ms-2">' + $('.rvgmaps-button').find('a').attr('title') + '</span>');
     });
   </script>{/footer_script}
 {/if}
@@ -61,10 +61,10 @@
 {if isset($loaded_plugins['ProtectedAlbums']) && $BODY_ID == 'theCategoryPage'}
   {footer_script require='jquery'}<script>
     var form = $('#content>form');
-    $(form).addClass('form-inline').wrap('<div class="col-sm-12"></div>');
+    $(form).addClass('d-flex flex-wrap align-items-center').wrap('<div class="col-sm-12"></div>');
     $(form).find('legend').changeElementType('h4');
     $(form).find('fieldset').changeElementType('div');
-    $(form).find('div').addClass('form-group');
+    $(form).find('div').addClass('mb-3');
     $(form).find('div>input[type="password"]').addClass('form-control');
     $(form).find('div>input[type="submit"]').changeElementType('button');
     $(form).find('button').addClass('btn btn-primary btn-raised').text('Login');
@@ -78,11 +78,11 @@
     $(document).ready(function() {
       $(ucf_body_id).find('fieldset>legend').remove();
       $(ucf_body_id).find('fieldset>ul>li').changeElementType('div');
-      $(ucf_body_id).find('fieldset>ul>div').addClass('form-group row').unwrap();
+      $(ucf_body_id).find('fieldset>ul>div').addClass('row mb-3').unwrap();
       $(ucf_body_id).find('fieldset>div>.property>label').addClass('col-sm-2 control-label').unwrap();
-      $(ucf_body_id).find('fieldset>.form-group>input').wrap('<div class="col-sm-4"></div>').addClass('form-control');
+      $(ucf_body_id).find('fieldset>.mb-3>input').wrap('<div class="col-sm-4"></div>').addClass('form-control');
       $('#theProfilePage .property').addClass('col-sm-2 control-label').changeElementType('label');
-      var u = $('#theProfilePage form#profile .form-group').first().contents().filter(function() {
+      var u = $('#theProfilePage form#profile .mb-3').first().contents().filter(function() {
         return this
           .nodeType == 3;
       }).eq(1);
@@ -97,14 +97,14 @@
       if ($('#batchDownloadLink').next('div#batchDownloadBox').length > 0) {
         $('#batchDownloadLink').closest('li').addClass('nav-item dropdown');
         $('#batchDownloadLink').addClass('nav-link dropdown-toggle').removeClass('pwg-state-default pwg-button').attr(
-          'data-toggle', 'dropdown').attr('href', '#');
+          'data-bs-toggle', 'dropdown').attr('href', '#');
         $('#batchDownloadBox').off();
         $('#batchDownloadBox a').addClass('dropdown-item');
         $('#batchDownloadBox').attr('role', 'menu').attr('style', '');
         $('#batchDownloadBox .switchBoxTitle').addClass('dropdown-header').removeClass('switchBoxTitle');
         $('#batchDownloadBox br').remove();
-        $('#batchDownloadBox').addClass('dropdown-menu dropdown-menu-right').removeClass('switchBox');
-        $('#batchDownloadLink .pwg-button-text').addClass('d-lg-none ml-2').removeClass('pwg-button-text');
+        $('#batchDownloadBox').addClass('dropdown-menu dropdown-menu-end').removeClass('switchBox');
+        $('#batchDownloadLink .pwg-button-text').addClass('d-lg-none ms-2').removeClass('pwg-button-text');
       } else {
         $('#batchDownloadLink').closest('li').addClass('nav-item');
         $('#batchDownloadLink').addClass('nav-link').removeClass('pwg-state-default pwg-button');
@@ -115,7 +115,9 @@
     $(window).on('load', function() {
       if ($('#batchDownloadLink').next('div#batchDownloadBox').length > 0) {
         $('#batchDownloadLink').next('div#batchDownloadBox').off();
-        $('#batchDownloadLink').off().on('click', function() { $('#batchDownloadLink').dropdown() });
+        $('#batchDownloadLink').off().on('click', function() {
+          bootstrap.Dropdown.getOrCreateInstance(document.getElementById('batchDownloadLink')).toggle();
+        });
       }
     });
   </script>{/footer_script}
@@ -132,8 +134,8 @@
       $(liDownloadSizeLink).addClass('dropdown');
       $('#downloadSizeBox').appendTo(liDownloadSizeLink);
       $('#downloadSwitchLink').addClass('dropdown-toggle').removeClass('pwg-state-default pwg-button').attr(
-        'data-toggle', 'dropdown');
-      $('#downloadSizeBox').addClass('dropdown-menu dropdown-menu-right').removeClass('switchBox');
+        'data-bs-toggle', 'dropdown');
+      $('#downloadSizeBox').addClass('dropdown-menu dropdown-menu-end').removeClass('switchBox');
       $('#downloadSizeBox a').addClass('dropdown-item');
       $('#downloadSizeBox').attr('role', 'menu').attr('style', '');
       $('#downloadSizeBox .switchBoxTitle').addClass('dropdown-header').removeClass('switchBoxTitle');
@@ -143,7 +145,7 @@
     $(window).on("load", function() {
       $('#downloadSwitchLink').off().on('click', function() {
         $('#downloadSizeBox').off();
-        $('#downloadSwitchLink').dropdown();
+        bootstrap.Dropdown.getOrCreateInstance(document.getElementById('downloadSwitchLink')).toggle();
       });
     });
   </script>{/footer_script}

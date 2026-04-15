@@ -53,10 +53,10 @@
     <div class="card">
       <div class="card-body p-0">
         <a href="{$cat.URL}">
-          <div class="media h-100">
-            <img class="d-flex mr-3" src="{$derivative_square->get_url()}" loading="lazy" decoding="async"
+          <div class="d-flex h-100">
+            <img class="flex-shrink-0 me-3" src="{$derivative_square->get_url()}" loading="lazy" decoding="async"
               alt="{$cat.TN_ALT}">
-            <div class="media-body pt-2">
+            <div class="flex-grow-1 pt-2">
               <h4 class="mt-0 mb-1">{$cat.NAME}</h4>
               {if not empty($cat.DESCRIPTION)}
               <div class="description">{$cat.DESCRIPTION}</div>

@@ -302,8 +302,8 @@
   .nav-breadcrumb-item {
     + .nav-breadcrumb-item::before {
       display: inline-block;
-      padding-right: $breadcrumb-item-padding;
-      padding-left: $breadcrumb-item-padding;
+      padding-right: $breadcrumb-item-padding-x;
+      padding-left: $breadcrumb-item-padding-x;
       color: inherit;
       content: "#{$breadcrumb-divider}";
     }

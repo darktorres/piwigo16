@@ -105,7 +105,7 @@ class Config
     private array $defaults = [
         self::KEY_FLUID_WIDTH => true,
         self::KEY_FLUID_WIDTH_COL_XXL => true,
-        self::KEY_BOOTSTRAP_THEME => 'material-darkroom',
+        self::KEY_BOOTSTRAP_THEME => 'bootstrap-darkroom',
         self::KEY_BOOTSWATCH_THEME => 'cerulean',
         self::KEY_MATERIAL_COLOR => 'teal',
         self::KEY_NAVBAR_MAIN_STYLE => 'navbar-dark',

@@ -4,8 +4,8 @@
     {assign var=level value=$tag.level}
 {/if}
 <li class="nav-item dropdown">
-    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{'Related tags'|translate}</a>
-    <div class="dropdown-menu dropdown-menu-right" role="menu">
+    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">{'Related tags'|translate}</a>
+    <div class="dropdown-menu dropdown-menu-end" role="menu">
         {foreach $block->data as $tag}
             <a class="dropdown-item tagLevel{$level}" href={if isset($tag.U_ADD)} "{$tag.U_ADD}"
                     title="{$tag.counter|translate_dec:'%d photo is also linked to current tags':'%d photos are also linked to current tags'}"

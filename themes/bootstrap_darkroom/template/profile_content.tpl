@@ -9,7 +9,7 @@
                     {if isset($loaded_plugins['user_custom_fields'])}
                         {$UCF_PROFILE_ADD}
                     {else}
-                        <div class="form-group row">
+                        <div class="row mb-3">
                             <label for="username" class="col-12 col-md-3 col-form-label">{'Username'|translate}</label>
                             <div class="col-12 col-md-4">
                                 <input id="username" class="form-control-plaintext" type="text" value="{$USERNAME}" readonly
@@ -17,7 +17,7 @@
                             </div>
                         </div>
                         {if not $SPECIAL_USER} {* can modify password + email*}
-                            <div class="form-group row">
+                            <div class="row mb-3">
                                 <label for="mail_address"
                                     class="col-12 col-md-3 col-form-label">{'Email address'|translate}</label>
                                 <div class="col-12 col-md-4">
@@ -25,14 +25,14 @@
                                         value="{$EMAIL}" placeholder="{'Email address'|translate}" autocomplete="email">
                                 </div>
                             </div>
-                            <div class="form-group row">
+                            <div class="row mb-3">
                                 <label for="password" class="col-12 col-md-3 col-form-label">{'Password'|translate}</label>
                                 <div class="col-12 col-md-4">
                                     <input type="password" name="password" id="password" class="form-control" value=""
                                         placeholder="{'Password'|translate}" autocomplete="current-password">
                                 </div>
                             </div>
-                            <div class="form-group row">
+                            <div class="row mb-3">
                                 <label for="use_new_pwd"
                                     class="col-12 col-md-3 col-form-label">{'New password'|translate}</label>
                                 <div class="col-12 col-md-4">
@@ -40,7 +40,7 @@
                                         placeholder="{'New password'|translate}" autocomplete="new-password">
                                 </div>
                             </div>
-                            <div class="form-group row">
+                            <div class="row mb-3">
                                 <label for="passwordConf"
                                     class="col-12 col-md-3 col-form-label">{'Confirm Password'|translate}</label>
                                 <div class="col-12 col-md-4">
@@ -51,7 +51,7 @@
                         {/if}
                     </fieldset>
                     {if !$ALLOW_USER_CUSTOMIZATION}
-                        <div class="form-group row">
+                        <div class="row mb-3">
                             <div class="col-12 col-md-offset-2 col-12 col-md-10">
                                 <input class="btn btn-primary btn-raised" type="submit" name="validate"
                                     value="{'Submit'|translate}">
@@ -69,7 +69,7 @@
                     {'Preferences'|translate}
                 </h4>
                 <div class="card-body">
-                    <div class="form-group row">
+                    <div class="row mb-3">
                         <label for="nb_image_page"
                             class="col-12 col-md-3 col-form-label">{'Number of photos per page'|translate}</label>
                         <div class="col-12 col-md-2">
@@ -77,7 +77,7 @@
                                 value="{$NB_IMAGE_PAGE}">
                         </div>
                     </div>
-                    <div class="form-group row">
+                    <div class="row mb-3">
                         <label for="theme" class="col-12 col-md-3 col-form-label">{'Theme'|translate}</label>
                         <div class="col-12 col-md-4">
                             <select class="form-control" name="theme">
@@ -85,7 +85,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-group row">
+                    <div class="row mb-3">
                         <label for="language" class="col-12 col-md-3 col-form-label">{'Language'|translate}</label>
                         <div class="col-12 col-md-4">
                             <select class="form-control" name="language">
@@ -93,7 +93,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-group row">
+                    <div class="row mb-3">
                         <label for="recent_period"
                             class="col-12 col-md-3 col-form-label">{'Recent period'|translate}</label>
                         <div class="col-12 col-md-2">
@@ -101,7 +101,7 @@
                                 class="form-control" value="{$RECENT_PERIOD}">
                         </div>
                     </div>
-                    <label class="col-12 col-lg-4 form-check-label float-left pl-0">{'Expand all albums'|translate}</label>
+                    <label class="col-12 col-lg-4 form-check-label float-start ps-0">{'Expand all albums'|translate}</label>
                     <div class="col-12 col-lg-8">
                         {foreach $radio_options as $option => $value}
                             <div class="form-check form-check-inline radio">
@@ -115,7 +115,7 @@
                     </div>
                     {if $ACTIVATE_COMMENTS}
                         <label
-                            class="col-12 col-lg-4 form-check-label float-left pl-0">{'Show number of comments'|translate}</label>
+                            class="col-12 col-lg-4 form-check-label float-start ps-0">{'Show number of comments'|translate}</label>
                         <div class="col-12 col-lg-8">
                             {foreach $radio_options as $option => $value}
                                 <div class="form-check form-check-inline radio">
@@ -129,7 +129,7 @@
                         </div>
                     {/if}
                     <label
-                        class="col-12 col-lg-4 form-check-label float-left pl-0">{'Show number of hits'|translate}</label>
+                        class="col-12 col-lg-4 form-check-label float-start ps-0">{'Show number of hits'|translate}</label>
                     <div class="col-12 col-lg-8">
                         {foreach $radio_options as $option => $value}
                             <div class="form-check form-check-inline radio">

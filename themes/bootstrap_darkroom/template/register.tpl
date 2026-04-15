@@ -1,7 +1,7 @@
 <nav
     class="navbar navbar-contextual navbar-expand-lg {$theme_config->navbar_contextual_style} {$theme_config->navbar_contextual_bg} sticky-top mb-5">
     <div class="container{if $theme_config->fluid_width}-fluid{/if}">
-        <div class="navbar-brand mr-auto"><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}<a
+        <div class="navbar-brand me-auto"><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}<a
                 href>{'Registration'|translate}</a></div>
         <ul class="navbar-nav justify-content-end">
             {if !empty($PLUGIN_INDEX_ACTIONS)}{$PLUGIN_INDEX_ACTIONS}{/if}
@@ -19,21 +19,21 @@
             </div>
             <div class="panel-body">
                 <fieldset>
-                    <div class="form-group">
+                    <div class="mb-3">
                         <label for="login" class="col-sm-2 control-label">{'Username'|translate} *</label>
                         <div class="col-sm-4">
                             <input type="text" name="login" id="login" value="{$F_LOGIN}" class="form-control"
                                 placeholder="{'Username'|translate}" required="required" autocomplete="username" />
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                         <label for="password" class="col-sm-2 control-label">{'Password'|translate} *</label>
                         <div class="col-sm-4">
                             <input type="password" name="password" id="password" class="form-control"
                                 placeholder="{'Password'|translate}" required="required" autocomplete="new-password" />
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                         <label for="password_conf" class="col-sm-2 control-label">{'Confirm Password'|translate}
                             *</label>
                         <div class="col-sm-4">
@@ -42,7 +42,7 @@
                                 autocomplete="new-password" />
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                         <label for="mail_address"
                             class="col-sm-2 control-label">{'Email address'|translate}{if $obligatory_user_mail_address}
                             *{/if}</label>
@@ -55,7 +55,7 @@
                             {/if}
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                         <div class="col-sm-offset-2 col-sm-10">
                             <div class="checkbox">
                                 <label>
@@ -66,7 +66,7 @@
                         </div>
                     </div>
                 </fieldset>
-                <div class="form-group">
+                <div class="mb-3">
                     <div class="col-sm-offset-2 col-sm-10">
                         <input type="hidden" name="key" value="{$F_KEY}">
                         <input type="submit" name="submit" value="{'Register'|translate}"

@@ -1,7 +1,7 @@
 <nav
     class="navbar navbar-contextual navbar-expand-lg {$theme_config->navbar_contextual_style} {$theme_config->navbar_contextual_bg} sticky-top mb-5">
     <div class="container{if $theme_config->fluid_width}-fluid{/if}">
-        <div class="navbar-brand mr-auto"><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}<a
+        <div class="navbar-brand me-auto"><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}<a
                 href>{'Identification'|translate}</a></div>
         <ul class="navbar-nav justify-content-end">
             {if !empty($PLUGIN_INDEX_ACTIONS)}{$PLUGIN_INDEX_ACTIONS}{/if}
@@ -18,14 +18,14 @@
                 {'Connection settings'|translate}
             </h4>
             <div class="card-body">
-                <div class="form-group">
+                <div class="mb-3">
                     <label for="username" class="col-sm-2 control-label">{'Username'|translate}</label>
                     <div class="col-sm-4">
                         <input tabindex="1" class="form-control" type="text" name="username" id="username"
                             placeholder="{'Username'|translate}">
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="mb-3">
                     <label for="password" class="col-sm-2 control-label">{'Password'|translate}</label>
                     <div class="col-sm-4">
                         <input tabindex="2" class="form-control" type="password" name="password" id="password"
@@ -33,7 +33,7 @@
                     </div>
                 </div>
                 {if $authorize_remembering }
-                    <div class="form-group">
+                    <div class="mb-3">
                         <div class="col-sm-offset-2 col-sm-10">
                             <div class="checkbox">
                                 <label>
@@ -44,14 +44,14 @@
                         </div>
                     </div>
                 {/if}
-                <div class="form-group">
+                <div class="mb-3">
                     <div class="col-sm-offset-2 col-sm-10">
                         <input type="hidden" name="redirect" value="{$U_REDIRECT|urlencode}">
                         <input tabindex="4" type="submit" name="login" value="{'Submit'|translate}"
                             class="btn btn-primary btn-raised">
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="mb-3">
                     <div class="col-sm-offset-2 col-sm-10">
                         {if isset($U_REGISTER)}
                             <a href="{$U_REGISTER}" title="{'Register'|translate}" class="pwg-state-default pwg-button">

@@ -1,7 +1,7 @@
 <nav
     class="navbar navbar-contextual navbar-expand-lg {$theme_config->navbar_contextual_style} {$theme_config->navbar_contextual_bg} sticky-top mb-5">
     <div class="container{if $theme_config->fluid_width}-fluid{/if}">
-        <div class="navbar-brand mr-auto"><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}<a
+        <div class="navbar-brand me-auto"><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}<a
                 href>{$title}</a></div>
         <ul class="nav navbar-nav">
             {if !empty($PLUGIN_INDEX_ACTIONS)}{$PLUGIN_INDEX_ACTIONS}{/if}
@@ -27,7 +27,7 @@
                             {'You will receive a link to create a new password via email.'|translate}
                         </div>
                         <br />
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="username_or_email"
                                 class="col-sm-2 control-label">{'Username or email'|translate}</label>
                             <div class="col-sm-4">
@@ -36,7 +36,7 @@
                                     placeholder="{'Username or email'|translate}" autocomplete="email">
                             </div>
                         </div>
-                        <div class="form-group">
+                        <div class="mb-3">
                             <div class="col-sm-offset-2 col-sm-10">
                                 <input type="submit" name="submit" value="{'Change my password'|translate}"
                                     class="btn btn-primary btn-raised">
@@ -45,21 +45,21 @@
                     {elseif $action eq 'reset'}
                         <div>{'Hello'|translate} <em>{$username}</em>. {'Enter your new password below.'|translate}</div>
                         <br />
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="use_new_pwd" class="col-sm-2 control-label">{'New password'|translate}</label>
                             <div class="col-sm-4">
                                 <input type="password" name="use_new_pwd" id="use_new_pwd" value="" class="form-control"
                                     placeholder="{'New password'|translate}" autocomplete="new-password">
                             </div>
                         </div>
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="passwordConf" class="col-sm-2 control-label">{'Confirm Password'|translate}</label>
                             <div class="col-sm-4">
                                 <input type="password" name="passwordConf" id="passwordConf" class="form-control" value=""
                                     placeholder="{'Confirm Password'|translate}" autocomplete="new-password">
                             </div>
                         </div>
-                        <div class="form-group">
+                        <div class="mb-3">
                             <div class="col-sm-offset-2 col-sm-10">
                                 <input type="submit" name="submit" value="{'Submit'|translate}"
                                     class="btn btn-primary btn-raised">

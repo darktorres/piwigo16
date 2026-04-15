@@ -24,9 +24,15 @@ body {
   }
 }
 
-/* Jumbotron */
+/* Jumbotron — BS5 removed this component; defined here as a custom component */
 .jumbotron {
+  padding: 2rem 1rem;
   border-radius: 0;
+}
+@include media-breakpoint-up(sm) {
+  .jumbotron {
+    padding: 4rem 2rem;
+  }
 }
 .jumbotron h1 {
   font-size: 49px;

@@ -34,7 +34,7 @@
 // Nav overrides
 .nav-tabs {
   .nav-link {
-    @include hover-focus {
+    &:hover, &:focus {
       background-color: $gray-darker-2;
     }
   }

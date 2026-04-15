@@ -2512,7 +2512,7 @@ final class functions_admin
 
         $conf->sql_backend::pwg_query($query);
 
-        functions::conf_delete_param(['count_orphans', 'nb_photos_total', 'images_disk_usage', 'storage_by_ext']);
+        functions::conf_delete_param(['count_orphans', 'nb_photos_total', 'nb_categories_total', 'nb_locked_albums', 'images_disk_usage', 'storage_by_ext']);
         functions_plugins::trigger_notify('invalidate_user_cache', $full);
     }
 
@@ -3581,6 +3581,34 @@ final class functions_admin
         return json_decode(functions::conf_get_param('storage_by_ext'), true);
     }
 
+    public static function get_nb_categories(): int
+    {
+        global $conf;
+
+        if (functions::conf_get_param('nb_categories_total') === null) {
+            [$count] = $conf->sql_backend::pwg_db_fetch_row(
+                $conf->sql_backend::pwg_query('SELECT COUNT(*) FROM categories;')
+            );
+            functions::conf_update_param('nb_categories_total', (int) $count, true);
+        }
+
+        return (int) functions::conf_get_param('nb_categories_total');
+    }
+
+    public static function get_nb_locked_albums(): int
+    {
+        global $conf;
+
+        if (functions::conf_get_param('nb_locked_albums') === null) {
+            [$count] = $conf->sql_backend::pwg_db_fetch_row(
+                $conf->sql_backend::pwg_query("SELECT COUNT(*) FROM categories WHERE visible = 'false';")
+            );
+            functions::conf_update_param('nb_locked_albums', (int) $count, true);
+        }
+
+        return (int) functions::conf_get_param('nb_locked_albums');
+    }
+
     /**
      * Return the list of image ids associated to no album
      *
@@ -3782,101 +3810,6 @@ final class functions_admin
         }
 
         return $msizes;
-    }
-
-    /**
-     * Displays a header warning if we find missing photos on a random sample.
-     */
-    public static function fs_quick_check(): void
-    {
-        global $page, $conf;
-
-        if ($conf->fs_quick_check_period == 0) {
-            return;
-        }
-
-        if (isset($page[__FUNCTION__ . '_already_called'])) {
-            return;
-        }
-
-        $page[__FUNCTION__ . '_already_called'] = true;
-        functions::conf_update_param('fs_quick_check_last_check', date('c'));
-
-        // Use range-based random sampling instead of loading thousands
-        // of IDs into PHP and shuffling.  Pick random IDs between
-        // MIN(id) and MAX(id) — fast even on tables with millions of rows.
-        $query = <<<SQL
-            SELECT MIN(id) AS min_id, MAX(id) AS max_id
-            FROM images;
-            SQL;
-        $range = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
-
-        $issue1827_ids = [];
-        $random_image_ids = [];
-
-        if ($range && $range['max_id'] !== null) {
-            $min = (int) $range['min_id'];
-            $max = (int) $range['max_id'];
-
-            // Generate 50 random IDs in range for the issue1827 check
-            $rand_ids = [];
-            for ($i = 0; $i < 50; $i++) {
-                $rand_ids[] = random_int($min, $max);
-            }
-
-            $rand_list = implode(', ', $rand_ids);
-            $query = <<<SQL
-                SELECT id
-                FROM images
-                WHERE id IN ({$rand_list})
-                    AND date_available < '2022-12-08 00:00:00'
-                    AND path LIKE './upload/%';
-                SQL;
-            $issue1827_ids = $conf->sql_backend::query2array($query, null, 'id');
-
-            // Generate another 50 random IDs for the general check
-            $rand_ids = [];
-            for ($i = 0; $i < 50; $i++) {
-                $rand_ids[] = random_int($min, $max);
-            }
-
-            $rand_list = implode(', ', $rand_ids);
-            $query = <<<SQL
-                SELECT id
-                FROM images
-                WHERE id IN ({$rand_list});
-                SQL;
-            $random_image_ids = $conf->sql_backend::query2array($query, null, 'id');
-        }
-
-        $fs_quick_check_ids = array_unique(array_merge($issue1827_ids, $random_image_ids));
-
-        if (count($fs_quick_check_ids) < 1) {
-            return;
-        }
-
-        $quick_check_ids = implode(', ', $fs_quick_check_ids);
-        $query = <<<SQL
-            SELECT id, path
-            FROM images
-            WHERE id IN ({$quick_check_ids});
-            SQL;
-        $fsqc_paths = $conf->sql_backend::query2array($query, 'id', 'path');
-
-        foreach ($fsqc_paths as $id => $path) {
-            if (! file_exists($path)) {
-                global $template;
-
-                $template->assign(
-                    'header_msgs',
-                    [
-                        functions::l10n('Some photos are missing from your file system. Details provided by plugin Check Uploads'),
-                    ]
-                );
-
-                return;
-            }
-        }
     }
 
     /**

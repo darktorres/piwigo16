@@ -36,7 +36,7 @@ if (isset($page['category'])) {
 }
 
 if ($page['start'] > 0 &&
-    $page['start'] >= count($page['items'])
+    $page['start'] >= ($page['total_items'] ?? count($page['items']))
 ) {
     functions_html::page_not_found('', functions_url::duplicate_index_url([
         'start' => 0,
@@ -73,10 +73,10 @@ if (isset($_GET['display'])) {
 // navigation bar
 $page['navigation_bar'] = [];
 
-if (count($page['items']) > $page['nb_image_page']) {
+if (($page['total_items'] ?? count($page['items'])) > $page['nb_image_page']) {
     $page['navigation_bar'] = functions::create_navigation_bar(
         functions_url::duplicate_index_url([], ['start']),
-        count($page['items']),
+        $page['total_items'] ?? count($page['items']),
         $page['start'],
         $page['nb_image_page'],
         true
@@ -99,7 +99,7 @@ if (isset($page['is_homepage']) &&
     $start = $page['nb_image_page'] * round($page['start'] / $page['nb_image_page']);
 
     if ($start > 0 &&
-        $start >= count($page['items'])
+        $start >= ($page['total_items'] ?? count($page['items']))
     ) {
         $start -= $page['nb_image_page'];
     }
@@ -114,7 +114,7 @@ $template->assign('U_CANONICAL', $canonical_url);
 //-------------------------------------------------------------- page title
 $title = $page['title'];
 $template_title = $page['section_title'];
-$nb_items = count($page['items']);
+$nb_items = $page['total_items'] ?? count($page['items']);
 $template->assign('TITLE', $template_title);
 $template->assign('NB_ITEMS', $nb_items);
 

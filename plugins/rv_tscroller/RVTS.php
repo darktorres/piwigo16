@@ -147,7 +147,7 @@ final class RVTS
         array $thumbs
     ): array {
         global $page, $template;
-        $total = count($page['items']);
+        $total = $page['total_items'] ?? count($page['items']);
 
         if (count($thumbs) >= $total) {
             functions_plugins::add_event_handler('loc_end_index', self::on_end_index(...));

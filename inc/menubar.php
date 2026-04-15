@@ -118,7 +118,7 @@ final class menubar
         $block = $menu->get_block('mbRelatedCategories');
 
         if (isset($page['items']) &&
-            count($page['items']) < $conf->related_albums_maximum_items_to_compute &&
+            ($page['total_items'] ?? count($page['items'])) < $conf->related_albums_maximum_items_to_compute &&
             $block != null &&
             ! empty($page['items'])
         ) {
@@ -205,7 +205,9 @@ final class menubar
             elseif (! empty($page['items']) &&
                    ($conf->menubar_tag_cloud_content === 'current_only' || $conf->menubar_tag_cloud_content === 'all_or_current')
             ) {
-                $selection = array_slice($page['items'], (int) $page['start'], (int) $page['nb_image_page']);
+                $selection = isset($page['total_items'])
+                    ? $page['items']
+                    : array_slice($page['items'], (int) $page['start'], (int) $page['nb_image_page']);
                 $tags = functions_tag::add_level_to_tags(functions_tag::get_common_tags($selection, $conf->content_tag_cloud_items_number));
 
                 foreach ($tags as $tag) {

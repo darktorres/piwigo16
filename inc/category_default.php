@@ -26,11 +26,11 @@ use Piwigo\inc\SrcImage;
 
 $pictures = [];
 
-$selection = array_slice(
-    $page['items'],
-    (int) $page['start'],
-    (int) $page['nb_image_page']
-);
+// When section_init used LIMIT/OFFSET, $page['items'] is already the current page.
+// Otherwise (tags, search, etc.) slice the full list the old way.
+$selection = isset($page['total_items'])
+    ? $page['items']
+    : array_slice($page['items'], (int) $page['start'], (int) $page['nb_image_page']);
 
 $selection = functions_plugins::trigger_change('loc_index_thumbnails_selection', $selection);
 

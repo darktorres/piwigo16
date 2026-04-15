@@ -9,6 +9,8 @@ var GDThumb = {
             GDThumb.merge();
         }
 
+        GDMasonry.init(300, 4);
+
         jQuery("ul.thumbnails").on("click", ".thumbLegend.overlay", function () {
             window.location.href = $(this).parent().find("a").attr("href");
         });

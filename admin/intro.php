@@ -233,8 +233,12 @@ while ($mondays < $nb_weeks) {
 $week_number = array_reverse($week_number);
 $date_string = $date->format('Y-m-d');
 
-if (! isset($_SESSION['cache_activity_last_weeks']) ||
-    $_SESSION['cache_activity_last_weeks']['calculated_on'] < strtotime('5 minutes ago')
+$_cached_activity = isset($conf->cache_activity_last_weeks)
+    ? json_decode($conf->cache_activity_last_weeks, true)
+    : null;
+
+if ($_cached_activity === null ||
+    $_cached_activity['calculated_on'] < strtotime('5 minutes ago')
 ) {
     $start_time = functions::get_moment();
 
@@ -280,13 +284,13 @@ if (! isset($_SESSION['cache_activity_last_weeks']) ||
 
     $logger->debug('[admin/intro::' . __LINE__ . '] recent activity calculated in ' . functions::get_elapsed_time($start_time, functions::get_moment()));
 
-    $_SESSION['cache_activity_last_weeks'] = [
+    functions::conf_update_param('cache_activity_last_weeks', json_encode([
         'calculated_on' => time(),
         'data' => $activity_last_weeks,
-    ];
+    ]));
+} else {
+    $activity_last_weeks = $_cached_activity['data'];
 }
-
-$activity_last_weeks = $_SESSION['cache_activity_last_weeks']['data'];
 
 foreach ($activity_last_weeks as $week => $i) {
     foreach ($i as $day => $j) {

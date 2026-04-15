@@ -298,12 +298,23 @@ if ($page['section'] == 'categories') {
         $column_names = ', ' . $cleaned_order_by;
 
         // Cache the total count — a single integer — rather than the full ID list.
-        $count_query = <<<SQL
-            SELECT COUNT(DISTINCT image_id)
-            FROM image_category
-            INNER JOIN images ON id = image_id
-            WHERE {$where_sql} {$forbidden};
-            SQL;
+        // Flat mode: image_id may repeat across sub-categories, use subquery to deduplicate.
+        // Normal mode: (image_id, category_id) is PK so no duplicates; COUNT(*) suffices.
+        if (isset($page['flat'])) {
+            $count_query = <<<SQL
+                SELECT COUNT(*)
+                FROM images
+                WHERE id IN (SELECT image_id FROM image_category WHERE {$where_sql})
+                {$forbidden};
+                SQL;
+        } else {
+            $count_query = <<<SQL
+                SELECT COUNT(*)
+                FROM image_category
+                INNER JOIN images ON id = image_id
+                WHERE {$where_sql} {$forbidden};
+                SQL;
+        }
         $count_cache_key = md5($count_query);
 
         if (! $persistent_cache->get($count_cache_key, $page['total_items'])) {
@@ -315,14 +326,31 @@ if ($page['section'] == 'categories') {
         // Fetch only the current page's IDs via LIMIT/OFFSET — no caching needed.
         $offset = (int) $page['start'];
         $limit  = (int) $page['nb_image_page'];
-        $query  = <<<SQL
-            SELECT DISTINCT image_id {$column_names}
-            FROM image_category
-            INNER JOIN images ON id = image_id
-            WHERE {$where_sql} {$forbidden}
-            {$conf->order_by}
-            LIMIT {$limit} OFFSET {$offset};
-            SQL;
+
+        // Flat mode: subquery deduplicates image_ids across sub-categories; forbidden only
+        // references images.id so no JOIN needed in the outer query.
+        // Normal mode: no DISTINCT — single category_id = N means the PK prevents duplicates,
+        // and removing DISTINCT lets the planner use idx_image_category_category_id instead of
+        // scanning all images by date_creation.
+        if (isset($page['flat'])) {
+            $query = <<<SQL
+                SELECT id AS image_id {$column_names}
+                FROM images
+                WHERE id IN (SELECT image_id FROM image_category WHERE {$where_sql})
+                {$forbidden}
+                {$conf->order_by}
+                LIMIT {$limit} OFFSET {$offset};
+                SQL;
+        } else {
+            $query = <<<SQL
+                SELECT image_id {$column_names}
+                FROM image_category
+                INNER JOIN images ON id = image_id
+                WHERE {$where_sql} {$forbidden}
+                {$conf->order_by}
+                LIMIT {$limit} OFFSET {$offset};
+                SQL;
+        }
         $page['items'] = $conf->sql_backend::query2array($query, null, 'image_id');
     }
 } elseif ($page['section'] == 'tags') {
@@ -444,13 +472,17 @@ if ($page['section'] == 'categories') {
     }
 
     $recent_photos_sql = functions_user::get_recent_photos_sql('date_available');
+    // LIMIT 500 added: without it the query returns every recently-added image with no bound.
+    // DISTINCT is required because the image_category join multiplies rows for images in
+    // multiple categories; $forbidden references category_id so the join must stay.
     $query = <<<SQL
             SELECT DISTINCT id, date_available, date_creation, file
             FROM images
             INNER JOIN image_category AS ic ON id = ic.image_id
             WHERE {$recent_photos_sql}
                 {$forbidden}
-            {$conf->order_by};
+            {$conf->order_by}
+            LIMIT 500;
             SQL;
 
     $page = array_merge(

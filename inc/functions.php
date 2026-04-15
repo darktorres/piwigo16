@@ -485,6 +485,11 @@ final class functions
     {
         global $conf;
 
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+
         $query = <<<SQL
             SELECT id, name
             FROM languages
@@ -500,7 +505,8 @@ final class functions
             }
         }
 
-        return $languages;
+        $cache = $languages;
+        return $cache;
     }
 
     /**

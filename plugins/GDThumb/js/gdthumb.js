@@ -171,37 +171,8 @@ var GDThumb = {
     },
 
     resize: function (thumb, width, height, new_width, new_height) {
-        var height_crop, width_crop;
-
-        if (GDThumb.method == "resize" || height < new_height || width < new_width) {
-            height_crop = 0;
-            width_crop = 0;
-            thumb.css({
-                height: new_height + "px",
-                width: new_width + "px",
-            });
-        } else {
-            thumb.css({ height: "", width: "" });
-            height_crop = Math.round((height - new_height) / 2);
-            width_crop = Math.round((width - new_width) / 2);
-        }
-
         thumb
             .parents("li")
             .css({ height: new_height + "px", width: new_width + "px" });
-        thumb.parent("a").css({
-            clip:
-                "rect(" +
-                height_crop +
-                "px, " +
-                (new_width + width_crop) +
-                "px, " +
-                (new_height + height_crop) +
-                "px, " +
-                width_crop +
-                "px)",
-            top: -height_crop + "px",
-            left: -width_crop + "px",
-        });
     },
 };

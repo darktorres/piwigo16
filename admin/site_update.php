@@ -287,7 +287,7 @@ if (isset($_POST['submit']) &&
         $insert = [
             'id' => $next_id++,
             'dir' => $dir,
-            'name' => str_replace('_', ' ', $dir),
+            'name' => $dir,
             'site_id' => $site_id,
             'commentable' =>
                 $conf->sql_backend::boolean_to_string($conf->newcat_default_commentable),

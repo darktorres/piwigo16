@@ -1631,42 +1631,99 @@ Implement all 84 methods. Below is the priority order with complexity notes.
 
 #### 4.2.4 Image Methods (26)
 
-Most complex. Prioritize:
-- [ ] `pwg.images.getInfo` — full image detail (metadata, comments, URLs for all derivative sizes)
-- [ ] `pwg.images.search` — full-text + structured search with permission filtering
-- [ ] `pwg.images.rate` — submit rating, update `rating_score`
-- [ ] `pwg.images.addComment` — validated, optionally moderated
-- [ ] `pwg.images.setInfo` — update title, description, date, tags, level, etc.
-- [ ] `pwg.images.setCategory` — associate/dissociate/move image between albums
-- [ ] `pwg.images.addSimple` — single file upload (multipart POST)
-- [ ] `pwg.images.addChunk`, `pwg.images.uploadCompleted` — chunked upload
-- [ ] `pwg.images.uploadAsync` — username+password in POST body
-- [ ] `pwg.images.delete` — delete image + files + DB records
-- [ ] `pwg.images.exist` — check by md5sum or file path
-- [ ] `pwg.images.syncMetadata` — re-extract EXIF/IPTC from file
-- [ ] `pwg.images.checkFiles` — compare file checksums to DB
-- [ ] `pwg.images.deleteOrphans` — delete images not linked to any category
-- [ ] Remaining 11 methods
+Most complex API group. Full method list with per-method notes:
+
+**Read methods:**
+- [ ] `pwg.images.getInfo` — full image detail: metadata, comments (paginated), derivative URLs for all 9 sizes, tag list, category associations, rating data. Permission-filtered: checks privacy level and category access.
+- [ ] `pwg.images.search` — full-text + structured search with permission filtering. Stores search rules as JSON in `search` table, returns `search_id` for pagination. Supports `f_params` filter parameters.
+- [ ] `pwg.images.rate` — submit rating (POST despite being listed as GET in PHP). Validates rate value against `conf.rate_items` whitelist. Recomputes Bayesian `rating_score`.
+- [ ] `pwg.images.exist` — batch duplicate check: accepts `md5sum_list` (comma-separated) or `filename_list`, returns map of existing matches with image IDs
+
+**Write methods (upload):**
+- [ ] `pwg.images.addSimple` — single file upload (multipart POST). Creates image record, extracts metadata, generates initial derivatives. If `image_id` provided, updates existing image.
+- [ ] `pwg.images.upload` — modern upload endpoint with `pwg_token` CSRF. Supports `format_of` parameter for uploading alternative formats of an existing image.
+- [ ] `pwg.images.addChunk` — chunked upload: receives base64 `data` + `position` + `original_sum`. Stores chunk in `_data/upload/chunks/{original_sum}/`
+- [ ] `pwg.images.addFile` — finalize chunked upload: assembles chunks for given `image_id`, validates checksum
+- [ ] `pwg.images.add` — register image from pre-uploaded chunks. Creates DB record, links to categories (format: `"cat_id[,rank];cat_id[,rank]"`), assigns tags
+- [ ] `pwg.images.uploadAsync` — stateless chunked upload with username/password in POST body (no session needed). For batch uploaders like digiKam, Lightroom plugins.
+- [ ] `pwg.images.uploadCompleted` — finalization callback after multi-image upload batch. Triggers cache invalidation and notification.
+- [ ] `pwg.images.addComment` — submit comment on image. Validates via `insert_user_comment()` pipeline (§4.4.1).
+
+**Write methods (edit):**
+- [ ] `pwg.images.setInfo` — update image metadata. Supports `single_value_mode` (fill_if_empty / replace) and `multiple_value_mode` (append / replace) for categories and tags.
+- [ ] `pwg.images.setPrivacyLevel` — batch set privacy level for multiple images. Triggers `invalidate_user_cache()`.
+- [ ] `pwg.images.setCategory` — batch associate/dissociate/move images between albums. Action `move` = dissociate from all current + associate to new.
+- [ ] `pwg.images.setRank` — set sort order within a category for multiple images
+- [ ] `pwg.images.setMd5sum` — batch compute and store MD5 checksums for images missing them. Processes in configurable `block_size` (default: 500).
+- [ ] `pwg.images.syncMetadata` — re-extract EXIF/IPTC from files and update DB. Batch operation on multiple image IDs.
+
+**Write methods (delete):**
+- [ ] `pwg.images.delete` — cascade delete: images + files + derivatives + comments + tags + favorites + rates + caddie. See §20.7.4 for full cascade order.
+- [ ] `pwg.images.deleteOrphans` — delete images not linked to any category. Processes in `block_size` chunks (default: 1000).
+- [ ] `pwg.images.emptyLounge` — clear the upload staging area (lounge). Triggers `empty_lounge` hook.
+
+**Utility methods:**
+- [ ] `pwg.images.checkFiles` — compare file checksum to DB `md5sum` for an image. Returns mismatch status.
+- [ ] `pwg.images.checkUpload` — verify upload capability (disk space, permissions). Returns boolean.
+- [ ] `pwg.images.formats.searchImage` — find images matching filenames in a given category. Used by format upload to find the base image.
+- [ ] `pwg.images.formats.delete` — delete an alternative format record and its file. Requires `pwg_token`.
 
 #### 4.2.5 Tags Methods (8)
-- [ ] `pwg.tags.getList`, `pwg.tags.getImages`
-- [ ] `pwg.tags.add`, `pwg.tags.delete`, `pwg.tags.rename`, `pwg.tags.duplicate`, `pwg.tags.merge`
-- [ ] `pwg.tags.getAdminList`
+
+- [ ] `pwg.tags.getList` — all tags with image counts. `sort_by_counter` orders by usage frequency.
+- [ ] `pwg.tags.getImages` — images for given tag(s). Supports `tag_id[]`, `tag_url_name[]`, `tag_name[]` lookups. `tag_mode_and` = require all tags (default: any). Supports `f_params` filters.
+- [ ] `pwg.tags.getAdminList` — all tags without permission filtering (admin only)
+- [ ] `pwg.tags.add` — create tag with `name`. Computes `url_name` via `render_tag_url` hook. Returns new tag ID.
+- [ ] `pwg.tags.delete` — delete tag(s) and all `image_tag` associations. Requires `pwg_token`.
+- [ ] `pwg.tags.rename` — rename tag. Updates `name` and recomputes `url_name`.
+- [ ] `pwg.tags.duplicate` — create a copy of a tag with all its image associations.
+- [ ] `pwg.tags.merge` — merge source tag(s) into destination tag. Moves all `image_tag` rows, then deletes source tags. Requires `pwg_token`.
 
 #### 4.2.6 User/Group/Permission Methods (21)
-- [ ] All user CRUD methods + auth key management + favorites
-- [ ] All group CRUD methods
-- [ ] All permission methods (add/remove/list for user and group access)
+
+**User methods (9):**
+- [ ] `pwg.users.getList` — paginated user list with filters (status, username search). Hook: `ws_users_getList` (C). Admin only.
+- [ ] `pwg.users.add` — create user. Calls `register_user()`. Returns user ID. Admin only.
+- [ ] `pwg.users.delete` — delete user and associated data (favorites, rates, comments optionally). Admin only. Requires `pwg_token`.
+- [ ] `pwg.users.setInfo` — update user fields (status, level, language, theme, nb_image_page, etc.). Admin only.
+- [ ] `pwg.users.favorites.getList` — current user's favorite images with derivative URLs
+- [ ] `pwg.users.favorites.add` — add image to favorites
+- [ ] `pwg.users.favorites.remove` — remove image from favorites
+- [ ] `pwg.users.setAuthKey` — generate/invalidate API authentication key for a user
+- [ ] `pwg.users.getAuthKey` — retrieve current auth key info (admin only)
+
+**Group methods (8):**
+- [ ] `pwg.groups.getList` — all groups with member counts. Admin only.
+- [ ] `pwg.groups.add` — create group with `name`. Optionally set `is_default`. Admin only.
+- [ ] `pwg.groups.delete` — delete group and associated `group_access`, `user_group` records. Admin only. Requires `pwg_token`.
+- [ ] `pwg.groups.setInfo` — update group name, is_default flag. Admin only.
+- [ ] `pwg.groups.addUser` — add user to group. Inserts into `user_group`. Admin only.
+- [ ] `pwg.groups.deleteUser` — remove user from group. Admin only.
+- [ ] `pwg.groups.merge` — merge source group(s) into destination group. Moves members. Admin only.
+- [ ] `pwg.groups.duplicate` — copy group with all members. Admin only.
+
+**Permission methods (3):**
+- [ ] `pwg.permissions.getList` — list all category access grants (user_access + group_access). Returns per-category breakdown. Admin only.
+- [ ] `pwg.permissions.add` — grant access to category for user(s) and/or group(s). Inserts into `user_access`/`group_access`. Triggers `invalidate_user_cache()`.
+- [ ] `pwg.permissions.remove` — revoke access. Triggers `invalidate_user_cache()`. Requires `pwg_token`.
 
 #### 4.2.7 Plugin/Extension Methods (6)
-- [ ] `pwg.plugins.getList`, `pwg.plugins.performAction`
-- [ ] `pwg.extensions.checkUpdates`, `pwg.extensions.update`, `pwg.extensions.ignoreUpdate`
-- [ ] `pwg.themes.performAction`
+
+- [ ] `pwg.plugins.getList` — list installed plugins with status (active/inactive), version, description. Admin only.
+- [ ] `pwg.plugins.performAction` — activate/deactivate/delete/install/restore plugin. Calls `PluginMaintain` lifecycle methods. Admin only. Requires `pwg_token`.
+- [ ] `pwg.extensions.checkUpdates` — query marketplace for available updates to installed plugins/themes/languages. Webmaster only.
+- [ ] `pwg.extensions.update` — download and apply update for a specific extension. Webmaster only. Requires `pwg_token`.
+- [ ] `pwg.extensions.ignoreUpdate` — suppress update notification for a specific extension version. Stored in `conf.updates_ignored`.
+- [ ] `pwg.themes.performAction` — activate/deactivate/delete/set_default theme. Admin only. Triggers theme lifecycle hooks.
 
 #### 4.2.8 Utility Methods (6)
-- [ ] `pwg.caddie.add`, `pwg.rates.delete`
-- [ ] `pwg.getMissingDerivatives`, `pwg.history.log`, `pwg.history.search`
-- [ ] `pwg.images.filteredSearch.create`
+
+- [ ] `pwg.caddie.add` — add image(s) to current user's working set (caddie). Inserts into `caddie(user_id, element_id)`.
+- [ ] `pwg.rates.delete` — delete specific rating records. Admin only. Requires `pwg_token`. Recomputes `rating_score` for affected images.
+- [ ] `pwg.getMissingDerivatives` — scan images for missing derivative sizes. Returns list of `(image_id, derivative_type)` pairs. Used by maintenance page to trigger batch generation.
+- [ ] `pwg.history.log` — manually insert a history record. Used by external clients to log access events.
+- [ ] `pwg.history.search` — query history table with date range, user, IP, image, and type filters. Returns paginated results. Hook: `get_history` (C). Admin only.
+- [ ] `pwg.images.filteredSearch.create` — create a saved search with filter parameters. Stores rules as JSON in `search` table. Returns `search_id` for later retrieval.
 
 ---
 

@@ -103,7 +103,7 @@ class Config
     public const string KEY_CUSTOM_CSS = 'custom_css';
 
     private array $defaults = [
-        self::KEY_FLUID_WIDTH => false,
+        self::KEY_FLUID_WIDTH => true,
         self::KEY_FLUID_WIDTH_COL_XXL => true,
         self::KEY_BOOTSTRAP_THEME => 'material-darkroom',
         self::KEY_BOOTSWATCH_THEME => 'cerulean',

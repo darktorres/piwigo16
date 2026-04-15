@@ -802,6 +802,8 @@ final class functions_category
         foreach ($cats as $idx => $cat) {
             $index_of_cat[$cat['id']] = $idx;
             $cats[$idx]['LEVEL'] = substr_count($cat['global_rank'], '.') + 1;
+            $cats[$idx]['count_images'] = 0;
+            $cats[$idx]['count_categories'] = 0;
             $cats[$idx]['name'] = functions_plugins::trigger_change('render_category_name', $cat['name'], $cat);
 
             // if the category is directly linked to the items, we add an URL + counter

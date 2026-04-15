@@ -179,6 +179,18 @@ final class functions_pgsql
             $output .= "</pre>\n";
 
             $debug .= $output;
+
+            $log_file = dirname(__DIR__, 2) . '/_data/sql/show_queries.log';
+            $log_dir = dirname($log_file);
+            if (! is_dir($log_dir)) {
+                mkdir($log_dir, 0777, true);
+            }
+            $log_entry = '[' . $page['count_queries'] . '] ' . date('Y-m-d H:i:s') . "\n";
+            $log_entry .= $query . "\n";
+            $log_entry .= '(this query time : ' . number_format($time, 3, '.', ' ') . " s)\n";
+            $log_entry .= '(total SQL time  : ' . number_format($page['queries_time'], 3, '.', ' ') . " s)\n";
+            $log_entry .= '(total time      : ' . number_format(($time + $start - $t2), 3, '.', ' ') . " s)\n\n";
+            file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
         }
 
         return $result;

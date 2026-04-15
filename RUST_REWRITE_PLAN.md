@@ -507,7 +507,7 @@ piwigo-rs/
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── event_bus.rs       # EventBus: trigger_notify, trigger_change
-│   │       ├── events.rs          # All 132 event types as enum
+│   │       ├── events.rs          # All 144 event types as enum
 │   │       ├── lua_bridge.rs      # mlua plugin host
 │   │       ├── plugin_loader.rs   # Discovery, activation, lifecycle
 │   │       ├── host_api.rs        # Lua-callable Rust functions
@@ -1759,25 +1759,227 @@ All admin pages use SSR with Tera templates. Each page is an isolated handler.
   - Same dual-listbox as user permissions, but saves to `group_access` table
 
 #### 4.3.3 Medium Priority Pages
-- [ ] **Sync** (`/admin/sync`) — trigger sync, view progress via SSE, profiling stats
-- [ ] **Maintenance** (`/admin/maintenance`) — DB optimize, cache clear, session purge, integrity check
-- [ ] **Tags** (`/admin/tags`) — list, rename, merge, delete
-- [ ] **Comments** (`/admin/comments`) — moderation queue, approve/reject/delete
-- [ ] **History** (`/admin/history`) — activity log with filters
-- [ ] **Stats** (`/admin/stats`) — visit statistics, most viewed
-- [ ] **Rating** (`/admin/rating`) — manage ratings, delete spam
+
+##### Sync (`/admin/sync`) → `site_update.tpl`
+
+**Source:** `admin/site_update.php` (1,389 lines)
+
+- [ ] **Form fields (POST):**
+  - `sync`: Radio — `""` (none), `"dirs"` (directories only), `"files"` (files + directories)
+  - `add_to_caddie`: Checkbox — add synced images to working set
+  - `privacy_level`: Select — privacy level for newly discovered photos
+  - `sync_meta`: Checkbox — run metadata extraction phase
+  - `meta_all`: Checkbox — re-extract even for already-synced photos
+  - `meta_empty_overrides`: Checkbox — allow empty EXIF values to overwrite existing DB values
+  - `simulate`: Checkbox (default: checked) — dry-run mode, no DB writes
+- [ ] **Quick sync mode:** `?quick_sync` query param pre-populates form with `sync=files, sync_meta=true, simulate=false`
+- [ ] **SSE progress:** When `?sse` present, response is `Content-Type: text/event-stream` with events: `phase_start`, `substep_start`, `substep_progress`, `phase_progress`, `substep_complete`, `phase_complete`, `complete`, `error`
+- [ ] **Client-side:** JS parses SSE events, updates progress bars per phase, shows elapsed time, supports pause/resume/abort
+
+##### Maintenance (`/admin/maintenance`) → `maintenance_actions.tpl`, `maintenance_env.tpl`
+
+**Source:** `admin/maintenance.php`, `admin/maintenance_actions.php`, `admin/maintenance_env.php`
+
+- [ ] **Tabs:** `actions`, `env` (tabsheet system)
+- [ ] **Actions tab operations:**
+  - Lock/unlock gallery (toggle `gallery_locked` config)
+  - Purge history detail (`DELETE FROM history`)
+  - Purge history summary (`DELETE FROM history_summary`)
+  - Purge search history (`DELETE FROM search`)
+  - Purge never-connected users
+  - Purge sessions (`DELETE FROM sessions WHERE expiration < NOW()`)
+  - Rebuild DB cache (`invalidate_user_cache(true)` — TRUNCATE `user_cache` + `user_cache_categories`)
+  - Delete derivative sizes: checkboxes per size (sq, th, 2s, xs, sm, me, la, xl, xx) → delete files from `_data/i/`
+  - Generate missing derivative sizes: launch background job
+  - Update photo information: recompute category image counts, representative images
+  - Repair and optimize database tables
+- [ ] **Env tab:** Read-only display of PHP/Rust version, DB engine, OS, cache sizes, active plugins list (via AJAX), image counts, storage usage
+- [ ] All destructive actions require `pwg_token` CSRF validation
+
+##### Tags (`/admin/tags`) → `tags.tpl`
+
+**Source:** `admin/tags.php`
+
+- [ ] **Display:** Paginated tag list (100/200/500/1000 per page) with image count per tag
+- [ ] **Operations (AJAX-driven):**
+  - Rename: change `tags.name` and recompute `tags.url_name`
+  - Merge: select multiple tags → merge into one target tag. Reassigns all `image_tag` rows from source tags to target, then deletes source tags
+  - Delete: remove tag and all `image_tag` links
+  - Add: create new tag directly from admin
+  - Delete orphan tags: `?action=delete_orphans` — removes tags with zero image links
+- [ ] **Selection mode:** Toggle checkbox column for batch operations
+- [ ] **Hooks:** `render_tag_name` (C), `get_tag_alt_names` (C)
+- [ ] **SQL:** `SELECT t.*, COUNT(it.image_id) AS counter FROM tags t LEFT JOIN image_tag it ON t.id = it.tag_id GROUP BY t.id`
+
+##### Comments (`/admin/comments`) → `comments.tpl`
+
+**Source:** `admin/comments.php`
+
+- [ ] **Filter tabs:** "All" / "Pending" (unvalidated) with counts
+- [ ] **Batch operations (POST):**
+  - `validate`: Approve selected comments — `UPDATE comments SET validated = true, validation_date = NOW() WHERE id IN (?)`
+  - `reject`: Delete selected comments — `DELETE FROM comments WHERE id IN (?)`
+- [ ] **Per-comment display:** Author name (rendered via `render_comment_author` hook), content (via `render_comment_content` hook), date, associated image thumbnail, IP/anonymous_id
+- [ ] **Selection UI:** Select All / None / Invert links, checkbox per comment
+- [ ] **Pagination:** `conf.comments_page_nb_comments` (default 10), navigation bar
+- [ ] **SQL:** `SELECT c.*, i.path, i.tn_ext, u.username FROM comments c JOIN images i ON c.image_id = i.id LEFT JOIN users u ON c.author_id = u.id WHERE validated = ? ORDER BY date DESC LIMIT ? OFFSET ?`
+
+##### History (`/admin/history`) → `history.tpl`
+
+**Source:** `admin/history.php`
+
+- [ ] **Filter form (POST/GET):**
+  - Date range: `start` (date-after), `end` (date-before) — datepicker inputs
+  - `types[]`: Multi-select for action types (visited, downloaded, photo upload, etc.)
+  - `filter_ip`: IP address filter (validated `/^[0-9.]+$/`)
+  - `filter_image_id`: Image ID filter
+  - `filter_user_id`: User ID filter
+  - `display_thumbnail`: Radio — no thumbnails, classic thumbnails, hoverbox thumbnails
+- [ ] **Data retrieval:** Via API call `pwg.history.search` with dynamic WHERE clause filtering
+- [ ] **Pagination:** Configurable items per page (`conf.nb_logs_page`)
+- [ ] **Summary refresh:** Calls `history_summarize()` to aggregate detail table into `history_summary`
+
+##### Stats (`/admin/stats`) → `stats.tpl`
+
+**Source:** `admin/stats.php` (linked from history)
+
+- [ ] **Chart.js visualization** with data selectors:
+  - Last 72 hours (hourly)
+  - Last 90 days (daily)
+  - Last 60 months (monthly)
+  - Year-over-year comparison (current month across years)
+- [ ] **Data queries:** `get_last(72, 'hour')`, `get_last(90, 'day')`, `get_last(60, 'month')`, `get_month_of_last_years()`
+- [ ] **Data format:** JSON embedded as data attributes on chart canvas element
+- [ ] **Locale support:** Month labels via Moment.js locale integration
+
+##### Rating (`/admin/rating`) → `rating.tpl`
+
+**Source:** `admin/rating.php`
+
+- [ ] **Filter form (GET):**
+  - `order_by`: Select — 8 sort options (Rate date, Rating score, Average rate, Nb rates, Sum rates, File name, Creation date, Post date)
+  - `users`: Select — "all", "user", "guest"
+  - `display`: Items per page (default 10)
+  - `cat`: Category filter (selectize dropdown)
+- [ ] **Data display:** Per-image aggregates (COUNT, AVG, SUM of rates), plus expandable per-image detail showing individual ratings (user, rate value, date)
+- [ ] **SQL:** `SELECT i.*, MAX(r.date) AS recently_rated, ROUND(AVG(r.rate), 2) AS avg_rates, COUNT(r.rate) AS nb_rates, SUM(r.rate) AS sum_rates FROM rate r JOIN images i ON r.element_id = i.id GROUP BY i.id`
+- [ ] **Category filter:** Joins with `image_category` when `cat` filter provided
 
 #### 4.3.4 Lower Priority Pages
-- [ ] **Plugins** (`/admin/plugins`) — installed list, activate/deactivate, install from file
-- [ ] **Themes** (`/admin/themes`) — installed list, activate, upload new
-- [ ] **Languages** (`/admin/languages`) — installed list, install new
-- [ ] **Permalinks** (`/admin/permalinks`) — URL structure config
-- [ ] **Photo formats** (`/admin/photo/{id}/formats`) — manage alternative file formats
-- [ ] **Menubar** (`/admin/menubar`) — sidebar block ordering
-- [ ] **Notification by mail** (`/admin/notification`) — subscription management, send digest
-- [ ] **FTP import** (`/admin/photos/ftp`) — import from FTP-uploaded files
-- [ ] **Updates** (`/admin/updates`) — check for core/plugin/theme updates
-- [ ] Remaining pages
+
+##### Plugins (`/admin/plugins`) → `plugins_installed.tpl`, `plugins_new.tpl`
+
+**Source:** `admin/plugins.php`, `admin/plugins_installed.php`, `admin/plugins_new.php`
+
+- [ ] **Tabs:** `installed`, `new`, `update` (tabsheet system)
+- [ ] **Installed tab:**
+  - List active/inactive plugins with name, version, description, author
+  - Toggle details view (stored in session: `plugins_show_details`)
+  - Actions per plugin: activate, deactivate, delete (each requires `pwg_token`)
+  - Plugin sort order saved to session (`plugins_new_order`)
+  - Hooks: `get_admin_plugin_menu_links` (C — deprecated, for legacy plugin admin pages)
+- [ ] **New tab:** Install from PEM (Piwigo Extension Manager) marketplace — search, browse, install by revision ID
+- [ ] **Update tab:** Compare installed versions vs marketplace, show available updates
+- [ ] **Plugin actions:** `POST /admin/plugins/{id}/{action}` where action ∈ {activate, deactivate, delete, install, restore}
+
+##### Themes (`/admin/themes`) → `themes_installed.tpl`, `themes_new.tpl`
+
+**Source:** `admin/themes.php`, `admin/themes_installed.php`, `admin/themes_new.php`
+
+- [ ] **Tabs:** `installed`, `new`, `update`
+- [ ] **Installed tab:**
+  - List themes with name, screenshot preview, version, author
+  - Actions: activate (sets as user default), deactivate, delete
+  - Only one theme can be "default" for new users — others are available as user preference
+  - Hooks: `theme_activated` (N), `theme_deactivated` (N), `theme_deleted` (N), `loc_end_themes_installed` (N)
+- [ ] **New tab:** Install from marketplace. Hook: `theme_installed` (N)
+- [ ] **SQL:** `SELECT * FROM themes`, `UPDATE user_infos SET theme = ? WHERE theme = ?` (when deactivating a theme in use)
+
+##### Languages (`/admin/languages`) → `languages_installed.tpl`, `languages_new.tpl`
+
+**Source:** `admin/languages.php`, `admin/languages_installed.php`, `admin/languages_new.php`
+
+- [ ] **Tabs:** `installed`, `new`, `update`
+- [ ] **Installed tab:**
+  - List languages with name, code, active/inactive status
+  - Actions: activate, deactivate, set_default, delete
+  - Set default: `UPDATE user_infos SET language = ? WHERE language = ?` (migrates users from deleted/deactivated language)
+- [ ] **New tab:** Install from marketplace
+
+##### Permalinks (`/admin/permalinks`) → `permalinks.tpl`
+
+**Source:** `admin/permalinks.php`
+
+- [ ] **Active permalinks table:** Categories with non-null `permalink` column — sortable by id, name, permalink
+- [ ] **Old permalinks table:** `old_permalinks` table — previously assigned permalinks that now redirect. Sortable by cat_id, permalink, date_deleted, last_hit
+- [ ] **Actions:**
+  - `set_permalink` (POST): Assign permalink string to category — validates uniqueness, stores in `categories.permalink`. Previous permalink moved to `old_permalinks` for redirect
+  - `delete_permanent` (GET): Remove old permalink redirect entry — requires `pwg_token`
+- [ ] **Functions:** `delete_cat_permalink()`, `set_cat_permalink()` from `admin/inc/functions_admin.php`
+
+##### Photo Formats (`/admin/photo/{id}/formats`)
+
+- [ ] **Display:** List of alternative file formats for an image (stored in `image_format` table)
+- [ ] **Format types:** Original, JPEG, PNG, TIFF, WebP, AVIF, RAW formats detected during sync
+- [ ] **Actions:** Delete individual format files, upload new format variant
+- [ ] **Schema reference:** `image_format(format_id, image_id, ext)` — see Appendix A
+
+##### Menubar (`/admin/menubar`) → `menubar.tpl`
+
+**Source:** `admin/menubar.php`
+
+- [ ] **Block ordering form (POST):**
+  - Per-block: `hide_{block_id}` checkbox (visibility), `pos_{block_id}` input (numeric position)
+  - Position value: positive = visible at that position, negative = hidden
+  - `make_consecutive()` normalizes position values after save
+- [ ] **Config storage:** Serialized array in `config` table under key `blk_menubar`
+- [ ] **BlockManager integration:** Loads all registered blocks (core + plugin-registered via `blockmanager_register_blocks` hook)
+- [ ] **Rust note:** Replace PHP serialized format with JSON for the `blk_menubar` config value
+
+##### Notification by Mail (`/admin/notification`) → `notification_by_mail.tpl`, `double_select.tpl`
+
+**Source:** `admin/notification_by_mail.php`
+
+- [ ] **Modes (GET param):** `param`, `subscribe`, `send`
+- [ ] **Param mode (POST):**
+  - `nbm_send_html_mail`: Boolean toggle
+  - `nbm_send_detailed_content`: Boolean — include image details in digest
+  - `nbm_send_recent_post_dates`: Boolean — include dates
+  - `nbm_send_mail_as`: Sender email address override
+  - `nbm_complementary_mail_content`: Custom text appended to all notifications
+  - `auth_key_duration`: Auth key lifetime in seconds
+- [ ] **Subscribe mode:** Dual-listbox (subscribed / unsubscribed users). Actions: `truthify` (subscribe), `falsify` (unsubscribe)
+- [ ] **Send mode:** List of subscribed users with checkboxes. `send_submit` dispatches digest emails. `send_customize_mail_content` textarea for per-send custom content
+- [ ] **Hook:** `nbm_render_global_customize_mail_content` (C), `nbm_event_handler_added` (N)
+- [ ] **Subscription table:** `user_mail_notification(user_id, check_key, enabled, last_send)` — `check_key` is a 16-char random token for unsubscribe links
+- [ ] **Timeout protection:** Respects `max_execution_time` via `nbm_max_treatment_timeout_percent`
+
+##### FTP Import (`/admin/photos/ftp`)
+
+**Source:** `admin/photos_add_ftp.php`
+
+- [ ] **Informational page:** Displays help content from `language/{lang}/help/photos_add_ftp.html`
+- [ ] **No form/POST actions:** This page tells users to use filesystem sync instead of FTP upload
+- [ ] **Template variable:** `FTP_HELP_CONTENT` assigned from language file
+- [ ] **Rust note:** May be deprecated entirely — sync is the primary import mechanism
+
+##### Updates (`/admin/updates`) → `updates_ext.tpl`, `updates_pwg.tpl`
+
+**Source:** `admin/updates.php`, `admin/updates_ext.php`, `admin/updates_pwg.php`
+
+- [ ] **Tabs:** `pwg` (core updates), `extensions` (plugin/theme/language updates)
+- [ ] **Extensions tab:**
+  - Checks marketplace for newer versions of installed plugins, themes, and languages
+  - Compares `installed_version` vs `available_version`
+  - One-click update per extension (downloads ZIP, extracts, replaces files)
+  - `updates_ignored` config: array of extension IDs to skip
+  - Requires `pwg_token` for update actions
+- [ ] **Core tab:**
+  - Checks for new Piwigo versions (minor and major)
+  - Multi-step upgrade wizard: download → extract → run migrations → verify
+  - PHP version requirement checking per target version
+  - Config flags: `enable_core_update`, `enable_extensions_install`
+- [ ] **Rust note:** Core updates become binary replacement — different mechanism than PHP file replacement. Extensions tab only relevant for Lua plugins, themes, and language packs
 
 #### 4.3.5 Category & Permission Operations (Admin)
 - [ ] `category.uppercats` recomputation after move/create/delete
@@ -1789,27 +1991,200 @@ All admin pages use SSR with Tera templates. Each page is an isolated handler.
 
 ### 4.4 User-Facing Write Operations
 
-- [ ] Comment submission: `POST /comments` — validate, optionally queue for moderation, trigger notification
-- [ ] Comment validation/deletion (admin)
-- [ ] User registration: `POST /register` — validate, create user, send activation email
-- [ ] User profile update: `POST /profile` — password change, email, language, theme, notification prefs
-- [ ] Image rating: `POST /rate/{image_id}` — validate score, upsert in `rate` table, recompute `rating_score`
-- [ ] Favorite add/remove: `POST /favorites/{image_id}`
-- [ ] Caddie (working set) management
+#### 4.4.1 Comment Submission
+
+**Source:** `inc/functions_comment.php` — `insert_user_comment()` (533 lines)
+
+- [ ] `POST /comments` (form submission from picture page):
+  - **CSRF:** Validate ephemeral key (session-stored, single-use)
+  - **Validation chain:**
+    1. Content not empty
+    2. Spam filter: reject if content contains more than `conf.comment_spam_max_links` URLs
+    3. Email format validation (if provided by anonymous user)
+    4. Author name collision: anonymous users cannot use an existing registered username
+    5. Website URL: only accepted if `conf.comments_enable_website = true` (honeypot field)
+    6. Anti-flood: reject if same IP posted within `conf.anti_flood_time` seconds
+    7. Plugin hook: `user_comment_check` (C) — plugins can reject with custom message
+  - **Database:** `INSERT INTO comments (author, author_id, anonymous_id, content, date, validated, validation_date, image_id, website_url, email)`
+    - `anonymous_id` = last 3 octets of IP address (for anonymous users)
+    - `validated = true` for admin/webmaster users, `false` for moderation queue (based on `conf.comment_moderate`)
+  - **Post-insert:**
+    - Trigger `user_comment_validation` hook (N) if auto-validated
+    - Email notification to admins if `conf.email_admin_on_comment` (validated) or `conf.email_admin_on_comment_validation` (pending)
+    - `invalidate_user_cache_nb_comments()` — update cached comment counts
+  - **Return:** `'validate'` (published), `'moderate'` (queued), or `'reject'` (spam/error)
+
+#### 4.4.2 User Registration
+
+**Source:** `register.php`, `inc/functions_user.php` — `register_user()`
+
+- [ ] `POST /register` (form submission):
+  - **CSRF:** Ephemeral key validation
+  - **Validation:**
+    1. Login uniqueness (case-insensitive if `conf.insensitive_case_logon`)
+    2. No leading/trailing spaces, no HTML tags in username
+    3. Password confirmation match
+    4. Email format validation, email uniqueness check
+  - **Database:**
+    - `INSERT INTO users (username, password, mail_address)` — password is `bcrypt(plaintext, cost=10)`
+    - `INSERT INTO user_infos (user_id, status, nb_image_page, language, expand, show_nb_comments, show_nb_hits, recent_period, theme, registration_date)` — all values from `conf.default_user_*` defaults
+  - **Post-registration:**
+    - `log_user(user_id, false)` — auto-login the new user
+    - Optionally send welcome email with password (`conf.browser_language` detection for language)
+    - Admin notification if `conf.email_admin_on_new_user`
+    - Redirect to gallery home page
+
+#### 4.4.3 User Profile Update
+
+**Source:** `profile.php`, `inc/functions.php` — `save_profile_from_post()`
+
+- [ ] `POST /profile` (form submission):
+  - **Access control:** Guest users cannot edit profile. Non-admin users must provide current password to change password or email.
+  - **Editable fields:**
+    - `password` + `password_confirm` — must match, hashed with bcrypt
+    - `mail_address` — format and uniqueness validation
+    - `nb_image_page` — integer, photos per page
+    - `language` — must be in active languages whitelist
+    - `theme` — must be in active themes whitelist
+    - `expand` — boolean, expand category tree
+    - `show_nb_comments` — boolean
+    - `show_nb_hits` — boolean
+    - `recent_period` — integer, days to consider "recent"
+  - **Database:** `mass_updates()` on `users` table (email, password, username) and `user_infos` table (all preference fields)
+  - **Side effects:**
+    - If password changed: deactivate all auth keys for this user
+    - If email changed: delete password reset keys
+    - Hook: `save_profile_from_post` (N, data: user_id)
+    - Activity log: `pwg_activity('user', user_id, 'edit', [changed_fields])`
+
+#### 4.4.4 Image Rating
+
+**Source:** `inc/functions_rate.php` — `rate_picture()`
+
+- [ ] `POST /rate/{image_id}` or via API `pwg.images.rate`:
+  - **Validation:**
+    - `conf.rate` must be `true` (rating enabled globally)
+    - Rate value must be in `conf.rate_items` whitelist (default: `[1, 2, 3, 4, 5]`)
+    - If anonymous: `conf.rate_anonymous` must be `true`
+  - **Database:**
+    - `anonymous_id` = last 3 octets of IP (for anonymous raters)
+    - `DELETE FROM rate WHERE user_id = ? AND element_id = ? AND anonymous_id = ?` (remove existing vote)
+    - `INSERT INTO rate (user_id, anonymous_id, element_id, rate, date)` (new vote)
+    - Recompute Bayesian score: `update_rating_score(image_id)`
+  - **Bayesian scoring algorithm:**
+    ```
+    global_avg = AVG(rate) across all images
+    per_item_avg = AVG(rate) for this image
+    per_item_count = COUNT(rate) for this image
+    confidence = configurable weight (default: 2)
+    rating_score = (confidence * global_avg + per_item_count * per_item_avg) / (confidence + per_item_count)
+    ```
+    - Updates `images.rating_score`; NULL for unrated images
+  - **Hook:** `update_rating_score` (C) — plugins can override scoring algorithm
+
+#### 4.4.5 Favorites Management
+
+- [ ] `POST /favorites/{image_id}/add` and `POST /favorites/{image_id}/remove`:
+  - **Schema:** `favorites(user_id, image_id)` — composite primary key
+  - `INSERT INTO favorites (user_id, image_id)` / `DELETE FROM favorites WHERE user_id = ? AND image_id = ?`
+  - Bulk remove: `POST /favorites/remove_all` — `DELETE FROM favorites WHERE user_id = ?`
+  - **Permission validation:** `check_user_favorites()` — on permission changes, purge favorites referencing images the user can no longer access
+  - Guest users cannot have favorites (requires login)
+
+#### 4.4.6 Caddie (Working Set) Management
+
+- [ ] **Schema:** `caddie(user_id, element_id)` — composite primary key
+- [ ] **Operations:**
+  - Add to caddie: from picture page, from batch manager (bulk), from sync (`add_to_caddie` option)
+  - Remove from caddie: `DELETE FROM caddie WHERE user_id = ? AND element_id IN (?)`
+  - Empty caddie: `DELETE FROM caddie WHERE user_id = ?`
+  - View caddie: Batch manager prefilter `caddie` shows only caddie contents
+- [ ] Caddie is per-user, only visible to the user who added items
+- [ ] Admin use case: sync → add new images to caddie → review in batch manager → tag/categorize
 
 ---
 
 ### 4.5 Email System (piwigo-mail crate)
 
-**Source:** `inc/functions_mail.php` (1,047 lines), `inc/functions_notification.php`
+**Source:** `inc/functions_mail.php` (1,047 lines), `inc/functions_notification.php`, `inc/functions_notification_by_mail.php`
 
-- [ ] `PiwigoMailer` wrapping `lettre::AsyncSmtpTransport`
-- [ ] SMTP configuration: host, port, TLS mode, username, password (from config)
-- [ ] `send_mail(to, subject, template, context)` — render Tera template, send HTML + plain text
-- [ ] Email templates: Tera templates in `templates/mail/`
-- [ ] Notification types: new comments, digest for subscribed albums, user activation, password reset
-- [ ] Subscription management: per-user per-album opt-in/out
-- [ ] Batch notification digest: collect new images since last check, send one email
+#### 4.5.1 SMTP Configuration
+
+- [ ] Config keys:
+  - `smtp_host`: SMTP server address (format: `host:port` or just `host`, default port 25)
+  - `smtp_user`: Authentication username (empty = no auth)
+  - `smtp_password`: Authentication password
+  - `smtp_secure`: Security type — `"ssl"` (port 465) or `"tls"` (STARTTLS, port 587)
+  - `mail_sender_name`: Display name for From header (default: `conf.gallery_title`)
+  - `mail_sender_email`: Sender email (default: webmaster email from DB)
+  - `mail_allow_html`: Boolean — send HTML emails (with plain text fallback)
+  - `mail_theme`: Email template theme — `"clear"` or `"dark"`
+
+#### 4.5.2 Mailer Implementation
+
+- [ ] `PiwigoMailer` wrapping `lettre::AsyncSmtpTransport`:
+  ```rust
+  pub struct PiwigoMailer {
+      transport: lettre::AsyncSmtpTransport<lettre::Tokio1Executor>,
+      sender: lettre::message::Mailbox,
+      config: MailConfig,
+      templates: Arc<Tera>,
+  }
+  impl PiwigoMailer {
+      pub async fn send_mail(&self, to: &str, subject: &str, template: &str, context: &tera::Context) -> Result<()>;
+      pub async fn send_html_mail(&self, to: &str, subject: &str, html_template: &str, text_template: &str, context: &tera::Context) -> Result<()>;
+  }
+  ```
+- [ ] **Sending pipeline:**
+  1. Render Tera template for HTML body (`templates/mail/html/{template}.html`)
+  2. Render Tera template for plain text body (`templates/mail/text/{template}.txt`)
+  3. CSS inlining for HTML emails (inline `<style>` blocks into element `style` attributes) — use `css-inline` crate (Rust equivalent of PHP Emogrifier)
+  4. Trigger `before_send_mail` hook (C) — plugins can modify or cancel
+  5. If hook returns `false`, skip sending
+  6. Build `lettre::Message` with HTML + plain text multipart
+  7. Send via SMTP transport
+  8. If `conf.debug_mail`, also write email to `_data/tmp/mail_{timestamp}.eml` for debugging
+
+#### 4.5.3 Email Template Inventory
+
+- [ ] **Mail templates to migrate** (from `themes/default/template/mail/`):
+  - `header.html` / `header.txt` — common email header with gallery branding
+  - `footer.html` / `footer.txt` — common email footer with unsubscribe links
+  - `notification_by_mail.html` / `.txt` — digest notification with new images/comments
+  - `notification_admin.html` / `.txt` — admin notification (new user, new comment)
+  - `cat_group_info.html` — album group notification
+  - CSS files for mail themes (clear, dark)
+
+#### 4.5.4 Notification Types
+
+| Type | Trigger | Recipients | Template |
+|---|---|---|---|
+| New comment (validated) | `insert_user_comment()` with `validated=true` | Admins (if `email_admin_on_comment`) | `notification_admin` |
+| New comment (pending) | `insert_user_comment()` with `validated=false` | Admins (if `email_admin_on_comment_validation`) | `notification_admin` |
+| New user registered | `register_user()` | Admins (if `email_admin_on_new_user`) | `notification_admin` |
+| Password reset | `POST /password` | User who requested reset | inline template |
+| Welcome email | `register_user()` with `notify_user=true` | New user | inline template |
+| Digest (new images) | Scheduled / manual from admin | Subscribed users | `notification_by_mail` |
+| Album notification | `POST /admin/album/{id}/notify` | Selected users | `cat_group_info` |
+
+#### 4.5.5 Digest Notification System
+
+- [ ] **Subscription table:** `user_mail_notification(user_id, check_key, enabled, last_send)`
+  - `check_key`: 16-char random token — used in unsubscribe URLs for authentication without login
+  - `enabled`: `true`/`false` — user can opt out via unsubscribe link
+  - `last_send`: timestamp of last digest dispatch for this user
+- [ ] **Digest computation:** `custom_notification_query()` counts new content since `last_send`:
+  - New images: `SELECT COUNT(*) FROM images WHERE date_available > ? AND ...permission_filters...`
+  - Updated albums: `SELECT COUNT(*) FROM categories WHERE lastmodified > ?`
+  - New comments: `SELECT COUNT(*) FROM comments WHERE validation_date > ?`
+- [ ] **Digest dispatch:**
+  1. Query all subscribed users with `enabled='true'` and non-null email
+  2. For each user: compute new content since `last_send`, respecting that user's permission filters
+  3. If new content exists: render `notification_by_mail` template with image thumbnails, album names, comment snippets
+  4. Send email via `PiwigoMailer`
+  5. Update `last_send` timestamp for this user
+  6. **Timeout protection:** Track elapsed time, abort remaining sends if approaching `max_execution_time` threshold
+- [ ] **Subscribe/unsubscribe URLs:** `/notification?action=subscribe&key={check_key}` / `?action=unsubscribe&key={check_key}` — no login required, authenticated by `check_key`
 
 ---
 
@@ -1945,7 +2320,97 @@ All admin pages use SSR with Tera templates. Each page is an isolated handler.
 
 ---
 
-## 11. Phase 6 — Plugin System
+### 5.6 Edge Cases, Failure Modes & Recovery
+
+#### 5.6.1 Transaction Safety Per Phase
+
+The PHP sync is **NOT transactional across phases** — each phase commits independently. The Rust version should improve this:
+
+| Operation | PHP Transaction? | Rust Target |
+|---|---|---|
+| Phase 1: Category inserts | NO (individual `mass_inserts`) | Transaction per batch |
+| Phase 1: Category deletes | YES (explicit) | Transaction per batch |
+| Phase 1: Permission inheritance (user_access, group_access) | NO (separate from category insert) | Same transaction as category insert |
+| Phase 2: Image inserts | NO (50k-row chunks via LOAD DATA) | Transaction per chunk with SAVEPOINT |
+| Phase 2: image_category links | NO (separate from image insert) | Same transaction as image insert |
+| Phase 2: image_format records | NO (separate) | Same transaction as image insert |
+| Phase 2: Image deletes | Per-element (not batched) | Batched transaction |
+| Phase 3: Metadata updates | NO (mass_updates, no transaction) | Transaction per batch |
+| Phase 3: Tag inserts | NO (separate mass_inserts) | Same transaction as metadata update |
+
+- [ ] Wrap each phase in an outer transaction with SAVEPOINTs for sub-operations
+- [ ] On interruption: ROLLBACK the current phase, mark sync as `incomplete` in a `sync_jobs` table
+- [ ] Next sync detects incomplete job → offers resume or clean restart
+
+#### 5.6.2 Interrupted Sync Recovery
+
+| Failure Point | State Left Behind | Detection | Recovery |
+|---|---|---|---|
+| Mid Phase 1 (category inserts) | Orphaned categories without proper `uppercats`/`global_rank` | `categories WHERE uppercats IS NULL` | Rerun `update_uppercats()` + `update_global_rank()` |
+| Mid Phase 1 (permission inheritance) | Categories created but missing `user_access`/`group_access` | Private categories with zero access grants | Rerun permission inheritance from parent |
+| Mid Phase 2 (image inserts) | `images` rows without `image_category` links | `images LEFT JOIN image_category WHERE image_category.image_id IS NULL` | `images_integrity()` cleanup |
+| Mid Phase 2 (image deletes) | `image_category` links to deleted images | `image_category LEFT JOIN images WHERE images.id IS NULL` | `images_integrity()` cleanup |
+| Mid Phase 3 (metadata extraction) | Some images have EXIF, others don't | `images WHERE md5sum IS NULL AND storage_category_id IS NOT NULL` | Re-run Phase 3 only |
+| Mid Phase 3 (tag sync) | `image_tag` cleared but not fully repopulated | Count mismatch between IPTC keywords and `image_tag` rows | Re-run Phase 3 with `meta_all=true` |
+
+- [ ] **Idempotent re-run:** Sync is safe to re-run because:
+  - Duplicate categories detected via `db_fulldirs` key lookup
+  - Duplicate images detected via `db_paths_set` lookup
+  - New inserts check against existing DB state before inserting
+- [ ] **Integrity functions** (from `admin/inc/functions_admin.php`):
+  - `images_integrity()`: Removes `image_category` links to deleted images via LEFT JOIN detection
+  - `categories_integrity()`: Removes access/link records for deleted categories
+  - `delete_orphan_tags()`: Removes tags with zero image links
+  - `update_category()`: Clears broken `representative_picture_id` references
+- [ ] **Admin maintenance button:** "Repair after interrupted sync" — runs all integrity functions in sequence
+
+#### 5.6.3 Fulltext Index Management During Sync
+
+- [ ] **Problem:** Bulk inserts with an active FULLTEXT index cause per-row index maintenance overhead
+- [ ] **PHP behavior:** Drops `image_ft` FULLTEXT index on first new file found (line 714), rebuilds after insert loop (line 896)
+- [ ] **Failure mode:** If sync interrupted after DROP but before REBUILD — FULLTEXT search disabled for entire `images` table. No auto-recovery in PHP; manual `CREATE INDEX` required.
+- [ ] **Rust improvement:**
+  - Use PostgreSQL tsvector triggers (already exist) — no manual index management needed
+  - For MySQL: check if index exists before DROP, rebuild in a `finally` block (Rust `Drop` trait on a guard struct)
+  - Alternatively, disable index updates during bulk insert via `ALTER TABLE ... DISABLE KEYS` (MySQL) and re-enable after
+
+#### 5.6.4 Category Hierarchy Edge Cases
+
+- [ ] **Status inheritance during sync:**
+  - New subcategory inherits parent's `status = 'private'` if parent is private
+  - New subcategory inherits parent's `visible = false` if parent is hidden
+  - Permission grants (`user_access`, `group_access`) copied from parent if `conf.inheritance_by_default = true`
+  - **Edge case:** If parent permissions change AFTER child creation but BEFORE access tables updated → race condition. Mitigation: permission inheritance and category insert in same transaction.
+
+- [ ] **Representative picture assignment:**
+  - After all files synced, `update_category('all')` assigns random image as representative for categories with images but NULL representative
+  - **Edge case:** Category created by sync, then directory deleted from filesystem before Phase 2 completes → category has NULL representative and zero images. Harmless but clutters admin view.
+  - Categories with `allow_random_representative = false` get a random image anyway (it's required for display)
+
+- [ ] **Global rank calculation vulnerability:**
+  - `update_global_rank()` accesses `$cat_map[$parent_id]` without null check
+  - If a category's parent is deleted but `id_uppercat` not yet cleared → undefined behavior
+  - **Rust fix:** Validate parent exists before building rank string. Log warning and assign rank `"0"` for orphaned categories.
+
+#### 5.6.5 Metadata Skip Logic Limitations
+
+- [ ] **Current PHP skip logic:** `fs_filesize == db.filesize` → skip extraction
+- [ ] **False negative:** File modified in-place without changing filesize (e.g., EXIF edited, metadata stripped) → metadata not re-extracted
+- [ ] **Rust improvement options:**
+  1. Use `mtime` comparison in addition to filesize
+  2. Store file hash (fast xxHash, not MD5) for reliable change detection
+  3. Accept the limitation (matches PHP behavior) — user can force re-extraction with `meta_all=true`
+- [ ] **Decision:** Match PHP behavior (filesize-only) for parity, document the `meta_all` override for edge cases
+
+#### 5.6.6 Simulate (Dry Run) Mode
+
+- [ ] Simulate mode skips: category/image inserts, deletes, metadata updates, attribute updates
+- [ ] Simulate mode does NOT skip: filesystem scanning, filesize reads, SSE progress reporting
+- [ ] **Limitation:** Simulate can report success but real sync may fail due to:
+  - File permissions changed between simulate and real run
+  - Disk space exhausted by temp files during real run
+  - DB constraint violations not caught in simulate (FK checks, unique constraints)
+- [ ] **Rust approach:** Simulate computes the full diff but wraps DB operations in a transaction that is rolled back instead of committed — catches constraint errors.
 
 **Duration: 8–10 weeks**  
 **Goal:** Full event hook system with Lua plugin support. All 6 built-in PHP plugins reimplemented.
@@ -1954,25 +2419,208 @@ All admin pages use SSR with Tera templates. Each page is an isolated handler.
 
 ### 6.1 Event Bus (piwigo-plugins crate)
 
-**Source:** `inc/functions_plugins.php` (369 lines), 132 event names
+**Source:** `inc/functions_plugins.php` (369 lines), **144 unique event names** (91 notify + 53 change) across 222 call sites
 
-- [ ] Define all 132 event names as a Rust enum:
+- [ ] Define all 144 event names as a Rust enum. Each variant is annotated with its type (`N` = trigger_notify, `C` = trigger_change):
   ```rust
-  #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+  #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
   pub enum PiwigoEvent {
-      Init,
-      PluginsLoaded,
-      UserInit,
-      UserLogin,
-      UserLogout,
-      LoginSuccess,
-      LoginFailure,
-      TryLogUser,
-      LocBeginIndex,
-      LocEndIndex,
-      // ... all 132
+      // ─── Lifecycle / Initialization (6 events) ───
+      Init,                               // N — inc/common.php:296
+      PluginsLoaded,                       // N — inc/functions_plugins.php:366
+      LoadingLang,                         // N — inc/common.php:192, inc/functions.php:1094, inc/functions_mail.php:280
+      LoadConf,                            // N — inc/functions.php:1471
+      FunctionsMailIncluded,               // N — inc/functions_mail.php:957
+      FunctionsHistoryIncluded,            // N — admin/inc/functions_history.php:452
+
+      // ─── Authentication / Session (8 events) ───
+      UserInit,                            // N — inc/user.php:80
+      TryLogUser,                          // C — inc/functions_user.php:1090 (data: bool, username, password, remember_me)
+      UserLogin,                           // N — inc/functions_user.php:1017
+      LoginSuccess,                        // N — inc/functions_user.php:1043,1165,1502
+      LoginFailure,                        // N — inc/functions_user.php:1170
+      UserLogout,                          // N — inc/functions_user.php:1181
+      PwgLogAllowed,                       // C — inc/functions.php:531 (data: bool, image_id, image_type)
+      PwgLogUpdateLastVisit,               // C — inc/functions.php:552 (data: bool)
+
+      // ─── Page Lifecycle — loc_begin_* (22 events) ───
+      LocBeginAbout,                       // N — about.php:34
+      LocBeginAdmin,                       // N — admin.php:30
+      LocBeginAdminPage,                   // N — admin.php:318
+      LocBeginCatList,                     // N — admin/cat_list.php:28
+      LocBeginCatModify,                   // N — admin/cat_modify.php:32
+      LocBeginComments,                    // N — comments.php:97
+      LocBeginElementSetGlobal,            // N — admin/batch_manager_global.php:45
+      LocBeginElementSetUnit,              // N — admin/batch_manager_unit.php:37
+      LocBeginIdentification,              // N — identification.php:35
+      LocBeginIndex,                       // N — index.php:46
+      LocBeginIndexCategoryThumbnails,     // N — inc/category_cats.php:266 (data: categories array)
+      LocBeginIndexThumbnails,             // N — inc/category_default.php:95 (data: pictures array)
+      LocBeginNotification,                // N — notification.php:30
+      LocBeginPassword,                    // N — password.php:33
+      LocBeginPageHeader,                  // N — inc/page_header.php:23
+      LocBeginPageTail,                    // N — inc/page_tail.php:22
+      LocBeginPicture,                     // N — picture.php:140
+      LocBeginProfile,                     // N — profile.php:39
+      LocBeginRegister,                    // N — register.php:34
+      LocBeginSearch,                      // N — search.php:27
+      LocBeginTags,                        // N — tags.php:29
+      LocActionBeforeHttpHeaders,          // N — action.php:147
+
+      // ─── Page Lifecycle — loc_end_* (23 events) ───
+      LocEndAdmin,                         // N — admin.php:332
+      LocEndCatList,                       // N — admin/cat_list.php:260
+      LocEndCatModify,                     // N — admin/cat_modify.php:298
+      LocEndComments,                      // N — comments.php:527
+      LocEndElementSetGlobal,              // N — admin/batch_manager_global.php:731
+      LocEndElementSetUnit,                // N — admin/batch_manager_unit.php:250
+      LocEndHelp,                          // N — admin/help.php:33
+      LocEndIdentification,                // N — identification.php:135
+      LocEndIndex,                         // N — index.php:719
+      LocEndIntro,                         // N — admin/intro.php:205
+      LocEndNoPhotoYet,                    // N — inc/no_photo_yet.php:87
+      LocEndNotification,                  // N — notification.php:91
+      LocEndPassword,                      // N — password.php:145
+      LocEndPageHeader,                    // N — inc/page_header.php:105
+      LocAfterPageHeader,                  // N — inc/page_header.php:110
+      LocEndPageTail,                      // N — inc/page_tail.php:103
+      LocEndPicture,                       // N — picture.php:962
+      LocEndPictureModify,                 // N — admin/picture_modify.php:450
+      LocEndPhotoAddDirect,                // N — admin/photos_add_direct.php:153
+      LocEndProfile,                       // N — profile.php:84
+      LocEndRegister,                      // N — register.php:110
+      LocEndSectionInit,                   // N — inc/section_init.php:696
+      LocEndTags,                          // N — tags.php:172
+      LocEndThemesInstalled,               // N — admin/themes_installed.php:178
+      LocEndAddUploadedFile,               // N — admin/inc/functions_upload.php:383 (data: image_infos)
+      LocEndAddFormat,                     // N — admin/inc/functions_upload.php:488 (data: format_infos)
+
+      // ─── Data Modification / CRUD (11 events) ───
+      CreateVirtualCategory,               // N — admin/inc/functions_admin.php:1655 (data: category fields)
+      DeleteCategories,                    // N — admin/inc/functions_admin.php:175 (data: category_ids)
+      BeginDeleteElements,                 // N — admin/inc/functions_admin.php:298 (data: image_ids)
+      DeleteElements,                      // N — admin/inc/functions_admin.php:378 (data: image_ids)
+      DeleteUser,                          // N — admin/inc/functions_admin.php:432 (data: user_id)
+      DeleteTags,                          // N — admin/inc/functions_admin.php:1777 (data: tag_ids)
+      DeleteGroup,                         // N — admin/inc/functions_admin.php:2913 (data: group_ids)
+      EmptyLounge,                         // N — admin/inc/functions_admin.php:2246 (data: rows)
+      ElementSetGlobalAction,              // N — admin/batch_manager_global.php:393 (data: action, collection)
+      InvalidateUserCache,                 // N — admin/inc/functions_admin.php:2516 (data: full bool)
+      UserCommentDeletion,                 // N — inc/functions_comment.php:320 (data: comment_id)
+      UserCommentValidation,               // N — inc/functions_comment.php:526 (data: comment_id)
+
+      // ─── Rendering Filters (14 events) ───
+      RenderCategoryName,                  // C — inc/functions_category.php:816+ (data: name, cat) → String
+      RenderTagName,                       // C — inc/functions_tag.php:102+ (data: name, tag) → String
+      RenderTagUrl,                        // C — admin/inc/functions_admin.php:1810+ (data: tag_name) → String
+      RenderCommentAuthor,                 // C — comments.php:456, admin/comments.php:164 (data: author) → String
+      RenderCommentContent,                // C — comments.php:459, admin/comments.php:166 (data: content) → String
+      RenderElementName,                   // C — inc/functions_html.php:604 (data: name, info) → String
+      RenderElementDescription,            // C — inc/functions_html.php:621 (data: comment, param) → String
+      RenderLostPasswordMailContent,       // C — inc/functions.php:3004 (data: message) → String
+      GetThumbnailTitle,                   // C — inc/functions_html.php:667 (data: title, info) → String
+      GetTagAltNames,                      // C — admin/tags.php:153 (data: [], raw_name) → Vec<String>
+      GetTagNameLikeWhere,                 // C — admin/inc/functions_admin.php:1821 (data: [], tag_name) → Vec<String>
+      GetPopupHelpContent,                 // C — admin/popuphelp.php:72 (data: content, page) → String
+      GetMimetypeLocation,                 // C — inc/SrcImage.php:58 (data: path, ext) → String
+      GetSrcImageUrl,                      // C — inc/SrcImage.php:121 (data: url, src_image) → String
+
+      // ─── Search (6 events) ───
+      QsearchPre,                          // C — inc/functions_search.php:981 (data: query_string) → String
+      QsearchGetScopes,                    // C — inc/functions_search.php:1010 (data: scopes) → Vec<Scope>
+      QsearchGetImagesSqlScopes,           // C — inc/functions_search.php:642 (data: clauses, token, expr) → Vec<String>
+      QsearchExpressionParsed,             // N — inc/functions_search.php:1042 (data: expression)
+      QsearchBeforeEval,                   // N — inc/functions_search.php:1055 (data: expression, qsr)
+      QsearchResults,                      // C — inc/functions_search.php:1073 (data: results, expression, qsr) → SearchResults
+
+      // ─── Index / Thumbnails (7 events) ───
+      LocIndexThumbnailsSelection,         // C — inc/category_default.php:35 (data: selection) → Vec<i32>
+      GetIndexDerivativeParams,            // C — inc/category_default.php:151 (data: DerivativeParams) → DerivativeParams
+      LocEndIndexThumbnails,               // C — inc/category_default.php:154 (data: tpl_var, pictures) → Vec<TplThumbnail>
+      LocBeginIndexCatThumbsQuery,         // C — inc/category_cats.php:75 (data: SQL query) → String
+      GetIndexAlbumDerivativeParams,       // C — inc/category_cats.php:336 (data: DerivativeParams) → DerivativeParams
+      LocEndIndexCategoryThumbnails,       // C — inc/category_cats.php:337 (data: tpl_var) → Vec<TplCategory>
+      GetCategoryPreferredImageOrders,     // C — inc/functions_category.php:234 (data: orders) → Vec<ImageOrder>
+
+      // ─── Picture Page (3 events) ───
+      AllowIncrementElementHitCount,       // C — picture.php:353 (data: bool, image_id) → bool
+      PicturePicturesData,                 // C — picture.php:544 (data: picture) → PictureData
+      GetCommentsDerivativeParams,         // C — comments.php:511 (data: DerivativeParams) → DerivativeParams
+
+      // ─── Comments (already covered in Rendering + Data Modification) ───
+
+      // ─── Batch Manager (5 events) ───
+      GetBatchManagerPrefilters,           // C — admin/batch_manager_global.php:451 (data: prefilters) → Vec<Prefilter>
+      BatchManagerRegisterFilters,         // C — admin/batch_manager.php:189 (data: filter) → BatchFilter
+      BatchManagerUrlFilter,               // C — admin/batch_manager.php:270 (data: filter, url_filter) → BatchFilter
+      PerformBatchManagerPrefilters,       // C — admin/batch_manager.php:444 (data: filter_sets, prefilter) → Vec<Vec<i32>>
+      BatchManagerPerformFilters,          // C — admin/batch_manager.php:584 (data: filter_sets, filter) → Vec<Vec<i32>>
+
+      // ─── API / WS (4 events) ───
+      WsAddMethods,                        // N — inc/PwgServer.php:80 (data: &PwgServer)
+      WsInvokeAllowed,                     // C — inc/PwgServer.php:383 (data: bool, method_name, params) → bool | PwgError
+      SendResponse,                        // N — inc/PwgServer.php:96 (data: encoded_response)
+      WsUsersGetList,                      // C — inc/ws_functions/pwg_users.php:319 (data: users) → Vec<User>
+
+      // ─── Image / Upload (3 events) ───
+      UploadFile,                          // C — admin/inc/functions_upload.php:272 (data: None, file_path) → Option<String>
+      LoadImageLibrary,                    // N — admin/inc/pwg_image.php:36 (data: &PwgImage)
+      PictureModifyBeforeUpdate,           // C — admin/picture_modify.php:126 (data: image_data) → ImageData
+
+      // ─── Derivative / Image URLs (2 events) ───
+      // (GetSrcImageUrl, GetMimetypeLocation already in Rendering above)
+      UpdateRatingScore,                   // C — inc/functions_rate.php:122 (data: false, element_id) → Option<f64>
+
+      // ─── Template / CSS+JS Combination (5 events) ───
+      CombinablePreparse,                  // N — inc/FileCombiner.php:195 (data: template, combinable, combiner)
+      CombinedCss,                         // C — inc/Template.php:597 (data: href, combi) → String
+      CombinedCssPostfilter,               // C — inc/FileCombiner.php:269 (data: css) → String
+      CombinedScript,                      // C — inc/Template.php:1302 (data: ret, script) → String
+      TabsheetBeforeSelect,                // C — admin/inc/tabsheet.php:89 (data: sheets, uniqid) → Vec<Tab>
+
+      // ─── Block Manager (3 events — already covered above) ───
+      BlockmanagerRegisterBlocks,          // N — inc/BlockManager.php:38
+      BlockmanagerPrepareDisplay,          // N — inc/BlockManager.php:97
+      BlockmanagerApply,                   // N — inc/BlockManager.php:151
+
+      // ─── Mail (4 events) ───
+      BeforeParseMailTemplate,             // N — inc/functions_mail.php:721 (data: cache_key, content_type)
+      BeforeSendMail,                      // C — inc/functions_mail.php:869 (data: true, to, args, mail) → bool
+      NbmEventHandlerAdded,               // N — admin/notification_by_mail.php:59
+      NbmRenderGlobalCustomizeMailContent, // C — admin/inc/functions_admin.php:4273 (data: content) → String
+
+      // ─── Themes (4 events) ───
+      ThemeActivated,                      // N — admin/inc/themes.php:113 (data: theme info)
+      ThemeDeactivated,                    // N — admin/inc/themes.php:166 (data: theme info)
+      ThemeDeleted,                        // N — admin/inc/themes.php:199 (data: theme info)
+      ThemeInstalled,                      // N — admin/themes_new.php:83 (data: theme info)
+
+      // ─── Profile / User Operations (3 events) ───
+      SaveProfileFromPost,                 // N — inc/functions.php:3467 (data: user_id)
+      LoadProfileInTemplate,               // N — inc/functions.php:3537 (data: userdata)
+      GetPwgThemes,                        // C — inc/functions.php:1189 (data: themes) → Vec<Theme>
+
+      // ─── Metadata (2 events) ───
+      CleanIptcValue,                      // C — inc/functions_metadata.php:92 (data: value) → String
+      FormatExifData,                      // C — inc/functions_metadata.php:142,151 (data: exif, filename, map) → ExifData
+
+      // ─── Misc (5 events) ───
+      GetAdminPluginMenuLinks,             // C — admin/plugins_installed.php:69 (data: []) → Vec<MenuLink>
+      ListCheckIntegrity,                  // N — admin/inc/check_integrity.php:53 (data: checker)
+      SetStatusHeader,                     // N — inc/functions_html.php:548 (data: code, text)
+      GetWebmasterMailAddress,             // C — inc/functions.php:1420 (data: email) → String
+      GetHistory,                          // C — inc/ws_functions/pwg.php:831 (data: [], search, types) → Vec<HistoryRow>
+
+      // ─── Plugin-specific (1 event — from TakeATour built-in plugin) ───
+      TatBeforeParseTour,                  // N — plugins/TakeATour/functions_TakeATour.php:60
   }
   ```
+
+  **Total: 144 unique events** (91 `trigger_notify`, 53 `trigger_change`).
+
+  Implement `PiwigoEvent::event_type(&self) -> EventType` returning `Notify` or `Change` for each variant — enforced at compile time so callers cannot accidentally call `trigger_change` on a notify-only event or vice versa.
+
+  Implement `PiwigoEvent::from_str(s: &str) -> Option<Self>` for Lua plugins that register by string name.
 - [ ] `EventBus`:
   ```rust
   pub struct EventBus {
@@ -1999,8 +2647,17 @@ All admin pages use SSR with Tera templates. Each page is an isolated handler.
 - [ ] `LuaPluginHost` struct:
   ```rust
   pub struct LuaPluginHost {
-      lua: Lua,
+      lua: Lua,                          // mlua::Lua with sandbox enabled
       plugins: Vec<LoadedPlugin>,
+      capability_cache: HashMap<String, PluginCapabilities>,
+  }
+  pub struct LoadedPlugin {
+      pub id: String,
+      pub name: String,
+      pub version: String,
+      pub capabilities: PluginCapabilities,
+      pub status: PluginStatus,           // Active, Inactive, Error
+      pub handler_ids: Vec<HandlerId>,    // For cleanup on deactivate
   }
   ```
 - [ ] Plugin discovery: scan `plugins/` directories for `plugin.toml`
@@ -2013,6 +2670,14 @@ All admin pages use SSR with Tera templates. Each page is an isolated handler.
   author = "Piwigo"
   description = "..."
   min_piwigo_version = "14.0.0"
+
+  [capabilities]
+  db_read = true          # SELECT queries
+  db_write = false        # INSERT/UPDATE/DELETE — requires admin approval
+  config_write = false    # piwigo.conf.set() — requires admin approval
+  filesystem_read = false # Read files outside plugin directory
+  http_client = false     # Outbound HTTP requests
+  user_impersonation = false  # set_user() — AdminTools needs this
   ```
 - [ ] Plugin loading: for each active plugin in DB, `require("plugins/{id}/main.lua")`
 - [ ] Host API exposed to Lua (via `mlua::UserData`):
@@ -2023,14 +2688,58 @@ All admin pages use SSR with Tera templates. Each page is an isolated handler.
   piwigo.template.assign("VAR_NAME", value)
   piwigo.template.concat("VAR_NAME", value)
   piwigo.conf.get("key")
-  piwigo.conf.set("key", value)  -- admin plugins only
-  piwigo.db.query(sql, params)   -- sandboxed: only SELECT allowed for non-admin plugins
-  piwigo.db.execute(sql, params) -- admin plugins only
+  piwigo.conf.set("key", value)  -- requires config_write capability
+  piwigo.db.query(sql, params)   -- requires db_read capability (SELECT only)
+  piwigo.db.execute(sql, params) -- requires db_write capability
   piwigo.l10n("key")
   piwigo.log(level, message)
+  piwigo.http.get(url, headers)  -- requires http_client capability
+  piwigo.http.post(url, body, headers)  -- requires http_client capability
   ```
-- [ ] Capability model: plugin declares required capabilities in `plugin.toml`, user approves on install
-- [ ] Lua error isolation: errors in plugin handlers are caught, logged, and execution continues
+- [ ] Capability model: plugin declares required capabilities in `plugin.toml`, user approves on install. Capabilities are stored in `plugins.capabilities` DB column as JSON. At runtime, each host API call checks the calling plugin's capabilities before executing.
+
+#### 6.2.1 Lua Sandbox Security Model
+
+- [ ] **mlua sandbox mode:** Create Lua VM with `Lua::new_with(StdLib::ALL_SAFE, LuaOptions::new().catch_rust_panics(true))`
+  - Removes `io`, `os.execute`, `os.remove`, `os.rename`, `os.exit`, `loadfile`, `dofile` from Lua standard library
+  - `os.clock`, `os.date`, `os.difftime`, `os.time` remain available (read-only time operations)
+  - `require` is overridden to only resolve modules within `plugins/{plugin_id}/` directory
+- [ ] **Per-plugin Lua environments:** Each plugin runs in its own `_ENV` table (Lua 5.4 environment), preventing global namespace pollution between plugins:
+  ```rust
+  fn create_plugin_env(lua: &Lua, plugin_id: &str, caps: &PluginCapabilities) -> LuaTable {
+      let env = lua.create_table().unwrap();
+      env.set("piwigo", create_piwigo_api(lua, plugin_id, caps)).unwrap();
+      // Copy safe stdlib into env
+      for name in ["string", "table", "math", "utf8", "coroutine", "pcall", "pairs", "ipairs",
+                    "type", "tostring", "tonumber", "select", "unpack", "error", "assert"] {
+          env.set(name, lua.globals().get::<LuaValue>(name).unwrap()).unwrap();
+      }
+      env
+  }
+  ```
+- [ ] **Resource limits:**
+  - **CPU:** `lua.set_hook(HookTriggers::EVERY_NTH_INSTRUCTION, 1_000_000, |_, _| Err(LuaError::RuntimeError("CPU limit exceeded".into())))` — kill handler after ~1M instructions
+  - **Memory:** `lua.set_memory_limit(16 * 1024 * 1024)` — 16MB per plugin VM (configurable)
+  - **Execution time:** `tokio::time::timeout(Duration::from_secs(5), handler_future)` — 5s wall-clock timeout per handler invocation
+- [ ] **SQL injection prevention in `piwigo.db.query()`:**
+  - SQL string is parsed to verify it begins with `SELECT` (for non-admin plugins)
+  - Parameters MUST be passed as the second argument (never concatenated into SQL)
+  - Host creates a parameterized query via `sqlx::query()` with bind parameters
+  - `piwigo.db.execute()` additionally rejects `DROP`, `TRUNCATE`, `ALTER` — only `INSERT`/`UPDATE`/`DELETE` allowed, even for admin plugins
+- [ ] **Filesystem sandboxing:** `piwigo.fs.read(path)` resolves `path` relative to `plugins/{plugin_id}/` and rejects any path containing `..` or absolute paths. No write access to filesystem from Lua.
+- [ ] **Error isolation:** Every Lua handler invocation is wrapped in `pcall` equivalent:
+  ```rust
+  match lua.scope(|scope| { /* invoke handler */ }) {
+      Ok(result) => result,
+      Err(e) => {
+          tracing::error!(plugin = %plugin_id, event = %event, error = %e, "Plugin handler failed");
+          // For trigger_notify: continue to next handler
+          // For trigger_change: return unmodified data (skip this handler's transformation)
+          default_result
+      }
+  }
+  ```
+- [ ] **Hot-reload in dev mode:** When `PIWIGO_DEV=1`, watch `plugins/` for file changes → reload affected plugin's Lua VM without server restart. Production mode loads once at startup.
 
 ---
 
@@ -2812,14 +3521,14 @@ Config values from `config` table are preserved. The `local/config/config.php` f
 
 ### 20.1.1 Hook Inventory
 
-The codebase has **222 hook call sites** across 52 files, invoking **132 unique event names**.
+The codebase has **222 hook call sites** across 52 files, invoking **144 unique event names** (91 notify + 53 change).
 
 | Metric | Count |
 |---|---|
 | `trigger_notify()` call sites | 105 |
 | `trigger_change()` call sites | 117 |
-| Unique notify events | 71 |
-| Unique change events | 61 |
+| Unique notify events | 91 |
+| Unique change events | 53 |
 | Built-in plugins | 6 |
 | Total handler registrations by built-in plugins | 28 |
 

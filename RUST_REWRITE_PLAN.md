@@ -1,7 +1,7 @@
 # Piwigo Rust Rewrite
 
 > Full ground-up rewrite of the Piwigo PHP photo gallery in Rust.  
-> Target: feature parity with the current PHP 14.x branch, plus performance and safety improvements.
+> Target: feature parity with the current PHP 14.x branch, then modernization beyond what PHP could offer.
 
 ---
 
@@ -35,6 +35,18 @@
     - [20.6 Image Pipeline & Derivative System](#206-image-pipeline--derivative-system)
     - [20.7 Admin Batch Operations & Upload Pipeline](#207-admin-batch-operations--upload-pipeline)
     - [20.8 Session Serialization & Auth Edge Cases](#208-session-serialization--auth-edge-cases)
+21. [Modernization Roadmap](#21-modernization-roadmap)
+    - [21.1 Modern Image & Media Pipeline](#211-modern-image--media-pipeline)
+    - [21.2 AI-Powered Features](#212-ai-powered-features)
+    - [21.3 Modern Authentication & Security](#213-modern-authentication--security)
+    - [21.4 Advanced Search](#214-advanced-search)
+    - [21.5 Storage Backends](#215-storage-backends)
+    - [21.6 Modern Frontend](#216-modern-frontend)
+    - [21.7 API Modernization](#217-api-modernization)
+    - [21.8 Observability](#218-observability)
+    - [21.9 Deployment & Operations](#219-deployment--operations)
+    - [21.10 Collaboration & Sharing](#2110-collaboration--sharing)
+    - [21.11 Privacy & Compliance](#2111-privacy--compliance)
 
 ---
 
@@ -3035,3 +3047,848 @@ cookie = "{user_id}-{timestamp}-{hmac}"
 | **No remember-me refresh** | Cookie expiry is fixed from creation time | Refresh expiry on each `auto_login()` |
 | **Deterministic GC** | Session GC runs on every login | Probabilistic (1% of requests) or background task |
 | **Case-insensitive login** | Loads ALL users for case-insensitive search | Use `LOWER(username) = LOWER(?)` in SQL |
+
+---
+
+## 21. Modernization Roadmap
+
+> Post-parity features that take advantage of the Rust rewrite to deliver capabilities PHP Piwigo could never offer. Organized by domain. Each item is classified as **Tier 1** (ship with or soon after v1.0 — low effort, high value), **Tier 2** (v1.x series — medium effort), or **Tier 3** (v2.0 — major new subsystem).
+
+---
+
+### 21.1 Modern Image & Media Pipeline
+
+#### 21.1.1 Next-Gen Format Negotiation — Tier 1
+
+libvips already supports AVIF, WebP, and JPEG XL. Serve the best format the client accepts.
+
+- [ ] Parse `Accept` header for `image/avif`, `image/webp`, `image/jxl`
+- [ ] Preference order: AVIF > JXL > WebP > JPEG (configurable)
+- [ ] Generate derivatives in negotiated format on first request, cache alongside the JPEG derivative
+- [ ] Cache key includes format: `photo-me.avif`, `photo-me.webp`, `photo-me.jpg` coexist in `_data/i/`
+- [ ] `<picture>` element with `<source>` tags in templates for browsers that don't send proper Accept
+- [ ] Admin toggle per format (some admins may not want AVIF due to older browser share)
+- [ ] Fallback: if libvips lacks encoder for a format (e.g., JXL on older builds), skip silently
+
+**Size savings estimate:** AVIF is ~30-50% smaller than JPEG at equivalent quality. For a gallery with 100k images at 9 derivative sizes each, this saves significant storage and bandwidth.
+
+#### 21.1.2 BlurHash / LQIP Placeholders — Tier 1
+
+Generate a tiny placeholder that renders instantly while the real image loads.
+
+- [ ] Compute [BlurHash](https://blurha.sh/) string (20-30 chars) during upload/sync metadata extraction
+- [ ] Store in `images.blurhash` column (`VARCHAR(32)`)
+- [ ] Embed hash in HTML as `data-blurhash` attribute on `<img>` tags
+- [ ] Client-side JS decodes hash into a 32×32 canvas, displayed as placeholder
+- [ ] Alternative: store a 4×3 pixel JPEG inline as base64 data URI (~100 bytes) — no JS needed
+- [ ] **Crate:** `blurhash` (pure Rust encoder/decoder)
+
+#### 21.1.3 Video Support — Tier 3
+
+Basic video hosting with thumbnail extraction and adaptive streaming.
+
+- [ ] **Supported formats:** MP4 (H.264/H.265), WebM (VP9/AV1), MOV
+- [ ] **Thumbnail extraction:** Use `ffmpeg` CLI (shelled out via `tokio::process::Command`) to extract frame at configurable timestamp (default: 10% into video, or scene-detect)
+- [ ] **Transcoding pipeline:**
+  - Original stored as-is
+  - Generate HLS segments: `ffmpeg -i input.mp4 -codec: copy -start_number 0 -hls_time 6 -hls_list_size 0 -f hls output.m3u8`
+  - Multiple quality tiers: 1080p, 720p, 480p (configurable)
+  - Store segments in `_data/v/{image_id}/`
+- [ ] **Streaming:** Serve `.m3u8` playlist + `.ts` segments via standard Axum static file serving
+- [ ] **Player:** Embed `hls.js` for HLS playback in browsers without native support
+- [ ] **Metadata:** Duration, resolution, codec, framerate — extracted via `ffprobe` JSON output
+- [ ] **Schema:** `images.media_type ENUM('photo','video','audio')`, `images.duration_ms INT`, `video_formats` table for transcoded variants
+- [ ] **Background processing:** Video transcoding is CPU-heavy — run in a background job queue (§21.9), not inline with upload
+
+#### 21.1.4 RAW File Support — Tier 2
+
+Photographers shoot RAW. Support it as a first-class format.
+
+- [ ] Detect RAW formats: CR2, CR3, NEF, ARW, DNG, ORF, RW2, RAF, PEF
+- [ ] **Crate:** `rawloader` for demosaicing, or shell out to `dcraw`/`libraw`
+- [ ] On upload: extract embedded JPEG preview for immediate display, generate full-quality JPEG derivative from RAW data as background job
+- [ ] Store RAW as original, treat generated JPEG as the representative
+- [ ] EXIF extraction works on RAW files via `kamadak-exif` (already reads TIFF-based formats)
+
+#### 21.1.5 Perceptual Hashing — Tier 2
+
+Detect near-duplicate images regardless of resolution, crop, or compression.
+
+- [ ] Compute perceptual hash (pHash or blockhash) during upload/sync
+- [ ] Store as `images.phash BIGINT` (64-bit hash)
+- [ ] **Similarity:** Hamming distance between hashes — distance < 10 = likely duplicate
+- [ ] Admin tool: "Find similar images" page — query all pairs within threshold
+- [ ] Batch manager prefilter: `near_duplicates` — groups by phash similarity
+- [ ] **Crate:** `image_hasher` (implements aHash, dHash, pHash, blockhash)
+- [ ] Index: B-tree on `phash` column enables range scans for Hamming-distance queries, or use BK-tree in memory for large galleries
+
+---
+
+### 21.2 AI-Powered Features
+
+#### 21.2.1 ONNX Runtime Integration — Tier 2
+
+Run ML models locally — no cloud API, no data leaves the server.
+
+- [ ] **Crate:** `ort` (ONNX Runtime Rust bindings)
+- [ ] Load models from `models/` directory on startup
+- [ ] Inference runs on `tokio::task::spawn_blocking` with a semaphore (default: 2 concurrent inferences)
+- [ ] GPU acceleration: ONNX Runtime supports CUDA and DirectML — configure via `config.ml.execution_provider`
+- [ ] Models are not bundled with the binary — downloaded on first use or manually placed
+- [ ] All ML features are opt-in via config flags
+
+```rust
+pub struct MlPipeline {
+    clip_vision: Option<ort::Session>,     // CLIP ViT-B/32 (~350MB)
+    clip_text: Option<ort::Session>,       // CLIP text encoder (~250MB)
+    tagger: Option<ort::Session>,          // Scene/object tagger (~90MB)
+    face_detect: Option<ort::Session>,     // RetinaFace (~30MB)
+    face_embed: Option<ort::Session>,      // ArcFace (~120MB)
+}
+```
+
+#### 21.2.2 Auto-Tagging — Tier 2
+
+Automatic scene and object detection on upload.
+
+- [ ] **Model:** Pre-trained tagger (e.g., Recognize Anything Model / RAM, or WD-Tagger for anime/illustration galleries)
+- [ ] Run inference on upload (if enabled) — input is resized derivative (224×224 or 384×384)
+- [ ] Output: list of `(tag_name, confidence)` pairs
+- [ ] Filter by configurable confidence threshold (default: 0.5)
+- [ ] Create tags automatically in `tags` table, link via `image_tag` with `source = 'auto'`
+- [ ] Admin review page: show auto-tagged images grouped by tag, approve/reject/edit
+- [ ] Re-run on existing gallery: `piwigo ml tag --all` CLI command (batch, uses rayon for parallelism)
+- [ ] Store confidence score: `image_tag.confidence FLOAT NULL` (NULL = manual tag)
+
+#### 21.2.3 Face Detection & Recognition — Tier 3
+
+Identify and group faces across the gallery.
+
+- [ ] **Detection:** RetinaFace ONNX model — outputs bounding boxes + landmarks for each face
+- [ ] **Embedding:** ArcFace ONNX model — 512-dim vector per face
+- [ ] **Schema:**
+  ```sql
+  CREATE TABLE faces (
+      id SERIAL PRIMARY KEY,
+      image_id INT NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+      bbox_x FLOAT, bbox_y FLOAT, bbox_w FLOAT, bbox_h FLOAT,  -- normalized 0-1
+      embedding BYTEA,          -- 512×float32 = 2048 bytes
+      person_id INT REFERENCES persons(id),
+      confirmed BOOLEAN DEFAULT false
+  );
+  CREATE TABLE persons (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255),
+      representative_face_id INT REFERENCES faces(id)
+  );
+  ```
+- [ ] **Clustering:** On-demand DBSCAN or Chinese Whispers clustering of unassigned face embeddings → suggest person groups
+- [ ] **Admin UI:** Face review page — show clusters, name them, merge/split, confirm matches
+- [ ] **Privacy:** Face detection is off by default. Opt-in per gallery. No external API calls.
+- [ ] **Search:** "Photos of [person name]" in search bar
+
+#### 21.2.4 Semantic Search via CLIP — Tier 2
+
+Search photos by natural language description instead of manual tags.
+
+- [ ] **CLIP (Contrastive Language-Image Pre-training):** Embeds images and text into the same 512-dim vector space
+- [ ] On upload: run image through CLIP vision encoder → store 512-dim float32 vector (2048 bytes)
+- [ ] Store in `images.clip_embedding BYTEA` column
+- [ ] On search: encode query text via CLIP text encoder → cosine similarity against all image embeddings
+- [ ] **Performance:** Brute-force cosine similarity over 100k 512-dim vectors takes ~5ms on modern CPU (SIMD)
+- [ ] For larger galleries (>500k): use `usearch` or `hnsw_rs` crate for approximate nearest-neighbor index
+- [ ] Query examples: "sunset over mountains", "birthday cake with candles", "dog playing in snow"
+- [ ] Integrate into existing search: `type:semantic sunset over mountains` scope prefix, or automatic fallback when tag/text search returns few results
+- [ ] **Crate:** `usearch` (compact ANN index, single-file, no server dependency)
+
+#### 21.2.5 Smart Albums — Tier 2
+
+Albums that auto-populate based on rules and ML signals.
+
+- [ ] **Rule engine:** Combine filters with AND/OR logic
+  - Date range: photos from last 30 days
+  - Tag: has tag "landscape" (manual or auto)
+  - Person: contains face of [person]
+  - Location: within radius of GPS coordinate
+  - Camera: shot with specific camera model
+  - Rating: above threshold
+  - Semantic: similar to text query (CLIP)
+- [ ] Stored as JSON rule definition in `categories.smart_rules JSONB` column
+- [ ] `categories.is_smart BOOLEAN DEFAULT false`
+- [ ] Membership computed on access (cached with TTL) — not materialized
+- [ ] Admin UI: rule builder with live preview count
+
+---
+
+### 21.3 Modern Authentication & Security
+
+#### 21.3.1 WebAuthn / Passkeys — Tier 2
+
+Passwordless authentication using platform authenticators (fingerprint, face, hardware key).
+
+- [ ] **Crate:** `webauthn-rs` (comprehensive WebAuthn server library)
+- [ ] **Schema:**
+  ```sql
+  CREATE TABLE webauthn_credentials (
+      id SERIAL PRIMARY KEY,
+      user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      credential_id BYTEA NOT NULL UNIQUE,
+      public_key BYTEA NOT NULL,
+      counter INT NOT NULL DEFAULT 0,
+      transports TEXT[],           -- usb, ble, nfc, internal
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      last_used_at TIMESTAMP
+  );
+  ```
+- [ ] **Registration flow:** User logs in with password → navigates to security settings → clicks "Add passkey" → browser WebAuthn ceremony → credential stored
+- [ ] **Login flow:** Username field → server sends challenge → browser prompts passkey → server verifies assertion
+- [ ] **Discoverable credentials:** Support resident keys so users don't need to type username
+- [ ] Passkeys are additive — password login remains available unless explicitly disabled by user
+
+#### 21.3.2 TOTP Two-Factor Authentication — Tier 1
+
+Standard time-based one-time passwords (Google Authenticator, Authy, etc.).
+
+- [ ] **Crate:** `totp-rs`
+- [ ] **Setup:** Generate secret → display QR code (via `qrcode` crate rendered to SVG) → user scans → verify one code to confirm
+- [ ] Store `users.totp_secret` (encrypted at rest with server secret key)
+- [ ] **Login flow:** Password verified → if TOTP enabled → redirect to TOTP entry page → verify code → establish session
+- [ ] **Recovery codes:** Generate 10 single-use 8-char codes on TOTP setup, stored hashed. User saves these offline.
+- [ ] Admin can enforce 2FA for admin/webmaster accounts via config
+
+#### 21.3.3 OAuth2 / OIDC Single Sign-On — Tier 2
+
+Login with Google, GitHub, Microsoft, or any OIDC provider.
+
+- [ ] **Crate:** `openidconnect` (full OIDC Relying Party implementation)
+- [ ] **Schema:**
+  ```sql
+  CREATE TABLE oauth_providers (
+      id VARCHAR(50) PRIMARY KEY,    -- 'google', 'github', 'custom-oidc'
+      display_name VARCHAR(100),
+      client_id VARCHAR(255) NOT NULL,
+      client_secret VARCHAR(255) NOT NULL,
+      issuer_url VARCHAR(500),        -- OIDC discovery URL
+      authorization_url VARCHAR(500), -- for non-OIDC OAuth2
+      token_url VARCHAR(500),
+      scopes VARCHAR(255) DEFAULT 'openid profile email',
+      enabled BOOLEAN DEFAULT true
+  );
+  CREATE TABLE user_oauth_links (
+      user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      provider_id VARCHAR(50) NOT NULL REFERENCES oauth_providers(id),
+      external_id VARCHAR(255) NOT NULL,
+      email VARCHAR(255),
+      UNIQUE(provider_id, external_id)
+  );
+  ```
+- [ ] **Flow:** Login page shows "Sign in with [provider]" buttons → OAuth2 Authorization Code flow with PKCE → on callback, match `external_id` to existing user or auto-provision
+- [ ] Auto-provision configurable: off (must link manually), on for matching email, on always (create new user)
+- [ ] Pre-built configurations for Google, GitHub, Microsoft — admin just enters client ID/secret
+- [ ] Custom OIDC provider: admin enters discovery URL, client credentials
+
+#### 21.3.4 Scoped API Tokens — Tier 1
+
+Replace the current plaintext 30-char keys with proper scoped tokens.
+
+- [ ] **Schema:**
+  ```sql
+  CREATE TABLE api_tokens (
+      id SERIAL PRIMARY KEY,
+      user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name VARCHAR(100) NOT NULL,      -- "Lightroom sync", "Mobile app"
+      token_hash VARCHAR(128) NOT NULL, -- SHA-256 of token (never store plaintext)
+      token_prefix VARCHAR(8) NOT NULL, -- first 8 chars for identification: "pwg_a1b2"
+      scopes TEXT[] NOT NULL,           -- ['read', 'upload', 'admin']
+      expires_at TIMESTAMP,             -- NULL = no expiry
+      last_used_at TIMESTAMP,
+      last_used_ip INET,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+  );
+  ```
+- [ ] **Token format:** `pwg_{random_40_chars}` — prefix makes tokens identifiable in logs/secrets scanning
+- [ ] **Scopes:** `read` (browse gallery, download), `upload` (add photos), `write` (edit metadata, manage albums), `admin` (full admin access)
+- [ ] API validates scope on each method: `pwg.images.addSimple` requires `upload`, `pwg.users.delete` requires `admin`
+- [ ] Admin UI: token management page — create, list (showing prefix + last used), revoke
+- [ ] Backward compat: old-style tokens continue to work with `read+upload` scope
+
+#### 21.3.5 EXIF Privacy Controls — Tier 1
+
+Protect photographer and subject location data.
+
+- [ ] **Config options:**
+  - `exif.strip_gps`: `never` | `on_public` | `always` — strip GPS from derivatives served to non-admin users
+  - `exif.strip_all_metadata`: strip all EXIF from derivatives (already planned as `strip()`)
+  - `exif.geographic_privacy_zones`: list of `{lat, lon, radius_km, label}` — auto-strip GPS from originals within zone
+- [ ] **Implementation:** During derivative generation, conditionally call `vips_image_remove("exif-ifd2")` (GPS IFD) before writing
+- [ ] **Privacy zones:** During metadata extraction in sync/upload, check if GPS coordinates fall within any zone → if yes, null out `images.latitude`/`images.longitude` and strip GPS from stored original
+- [ ] **Admin UI:** Map-based zone editor (Leaflet.js) for defining privacy zones (home, school, workplace)
+- [ ] Originals always retain full EXIF on disk — stripping happens at serving time for derivatives and at DB level for coordinates
+
+---
+
+### 21.4 Advanced Search
+
+#### 21.4.1 Tantivy Full-Text Search — Tier 2
+
+Replace SQL `LIKE '%word%'` with a proper inverted index.
+
+- [ ] **Crate:** `tantivy` (Rust-native full-text search engine, Lucene architecture)
+- [ ] **Indexed fields:** image name, description, file name, tags, IPTC keywords, author, album name, album description, comments
+- [ ] **Index location:** `_data/search_index/` directory
+- [ ] **Indexing:** On upload/edit/sync, update the Tantivy document for affected images. Batch reindex via `piwigo search reindex` CLI.
+- [ ] **Tokenizer:** ICU-aware tokenizer for CJK support, plus stemming for European languages
+- [ ] **Query syntax:** Support quoted phrases (`"red car"`), boolean operators (`sunset AND mountains`), field-specific (`tag:landscape`), fuzzy (`sunet~1`)
+- [ ] **Ranking:** BM25 with boost on title > tags > description > comments
+- [ ] **Performance:** Tantivy searches 1M documents in <10ms
+- [ ] **Fallback:** If Tantivy index is unavailable, degrade to SQL LIKE (with warning in logs)
+
+#### 21.4.2 Vector Similarity Search — Tier 2
+
+Powers semantic search (§21.2.4) and "find similar images".
+
+- [ ] **Crate:** `usearch` (single-file ANN index) or `hnsw_rs`
+- [ ] **Index:** HNSW (Hierarchical Navigable Small World) graph for approximate nearest neighbors
+- [ ] **Index location:** `_data/vector_index/` — single memory-mapped file
+- [ ] **Operations:**
+  - `search_by_text(query, top_k)` → encode text with CLIP → ANN search → return image IDs
+  - `search_by_image(image_id, top_k)` → use stored embedding → ANN search → return similar images
+- [ ] **"More like this" button** on picture page — returns 12 most visually similar images
+- [ ] Index rebuilt incrementally on upload; full rebuild via `piwigo search reindex-vectors`
+
+#### 21.4.3 Faceted Search — Tier 1
+
+Filter search results by multiple dimensions simultaneously.
+
+- [ ] **Facets:** camera make, camera model, lens, year, month, tag, album, author, rating, file type, privacy level, resolution range, orientation (landscape/portrait/square)
+- [ ] **UI:** Sidebar with collapsible facet sections, each showing top values with counts
+- [ ] Clicking a facet value adds it as a filter — URL reflects all active facets
+- [ ] **Implementation:** Aggregate queries alongside main search — `GROUP BY camera_make` etc.
+- [ ] If Tantivy is enabled, use its native facet support (more efficient than SQL aggregation)
+- [ ] Facets update dynamically as filters are applied (counts reflect filtered result set)
+
+---
+
+### 21.5 Storage Backends
+
+#### 21.5.1 S3-Compatible Object Storage — Tier 2
+
+Store originals and/or derivatives on S3, MinIO, Backblaze B2, Cloudflare R2, or any S3-compatible service.
+
+- [ ] **Crate:** `aws-sdk-s3` (official AWS SDK) or `rust-s3` (lighter, S3-compatible)
+- [ ] **Config:**
+  ```toml
+  [storage]
+  backend = "s3"           # "local" | "s3" | "hybrid"
+  
+  [storage.s3]
+  endpoint = "https://s3.amazonaws.com"   # or MinIO/R2/B2 endpoint
+  bucket = "my-piwigo-gallery"
+  region = "us-east-1"
+  access_key_id = "..."
+  secret_access_key = "..."
+  prefix = "gallery/"                      # optional key prefix
+  public_url = "https://cdn.example.com"   # for direct client access (signed URLs or public bucket)
+  ```
+- [ ] **Storage trait:**
+  ```rust
+  #[async_trait]
+  pub trait StorageBackend: Send + Sync {
+      async fn put(&self, key: &str, data: Bytes, content_type: &str) -> Result<()>;
+      async fn get(&self, key: &str) -> Result<Bytes>;
+      async fn delete(&self, key: &str) -> Result<()>;
+      async fn exists(&self, key: &str) -> Result<bool>;
+      async fn presigned_url(&self, key: &str, expires_in: Duration) -> Result<String>;
+  }
+  ```
+- [ ] **Hybrid mode:** Originals on S3, derivatives on local disk (fast serving). Or originals local, derivatives on S3 behind CDN.
+- [ ] **Direct serving:** For public galleries, generate presigned S3 URLs or use public bucket URL — client fetches directly from S3/CDN, bypassing Piwigo server for image data
+- [ ] **Migration CLI:** `piwigo storage migrate --from local --to s3` — copies all files, updates paths, verifiable with `--dry-run`
+
+#### 21.5.2 Content-Addressed Deduplication — Tier 2
+
+If the same photo is uploaded to multiple albums, store only one copy.
+
+- [ ] **Key:** `SHA-256` of original file content → `_data/cas/{ab}/{cd}/{abcdef...full-hash}.{ext}`
+- [ ] `images.cas_hash VARCHAR(64)` — the content hash
+- [ ] `images.path` becomes a virtual path (album-relative), `images.cas_hash` points to actual storage
+- [ ] **Dedup check:** Before writing file, check if hash exists → if yes, skip write, link to existing
+- [ ] **Reference counting:** `cas_objects` table tracks `hash → ref_count`. Decrement on image delete, GC when ref_count = 0.
+- [ ] **Savings:** For galleries where the same photos appear in multiple albums (events, curated collections), storage drops significantly
+- [ ] Compatible with both local and S3 storage backends
+
+#### 21.5.3 Tiered Storage — Tier 3
+
+Hot/cold storage tiers for large archives.
+
+- [ ] **Hot tier:** Local SSD — originals and derivatives for recently accessed images
+- [ ] **Cold tier:** S3/S3 Glacier/tape — originals for images not accessed in N days
+- [ ] **Policy:** Configurable per album or globally: `archive_after_days = 90`
+- [ ] **Access:** When a cold image is requested, fetch from cold tier → cache on hot tier → serve. Display a "loading from archive" placeholder during retrieval.
+- [ ] **Background job:** Nightly scan moves images past threshold to cold tier, deletes hot copies (except small derivatives for browsing)
+- [ ] **CLI:** `piwigo storage archive --older-than 180d` and `piwigo storage restore --album 42`
+
+---
+
+### 21.6 Modern Frontend
+
+#### 21.6.1 HTMX Progressive Enhancement — Tier 1
+
+Add interactivity to the SSR pages without a JavaScript framework.
+
+- [ ] **Key interactions to enhance:**
+  - Infinite scroll / "load more" for image grids: `hx-get="/gallery/42?page=3" hx-trigger="revealed" hx-swap="afterend"`
+  - Batch manager: action forms submit via HTMX → partial page update instead of full reload
+  - Admin quick-edit: inline editing of image title/tags/description
+  - Comments: submit/delete without full page reload
+  - Search autocomplete: `hx-get="/qsearch?q=" hx-trigger="keyup changed delay:300ms"`
+  - Album tree drag-and-drop reordering (with Sortable.js + HTMX swap)
+- [ ] **Response format:** Handlers detect `HX-Request` header → return HTML fragment instead of full page
+- [ ] **Progress indicators:** `hx-indicator` for loading spinners on slow operations
+- [ ] **Size:** HTMX is ~14KB gzipped — single `<script>` tag, no build pipeline
+
+#### 21.6.2 Responsive Images — Tier 1
+
+Serve optimal image sizes for every viewport.
+
+- [ ] **`srcset` generation:** For each image, emit all available derivative sizes in `srcset`:
+  ```html
+  <img src="photo-me.jpg"
+       srcset="photo-xs.jpg 432w, photo-sm.jpg 576w, photo-me.jpg 792w, photo-la.jpg 1008w, photo-xl.jpg 1224w"
+       sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
+       loading="lazy"
+       decoding="async"
+       alt="{{ image.name }}">
+  ```
+- [ ] **`<picture>` with format sources:** Combine with format negotiation (§21.1.1):
+  ```html
+  <picture>
+      <source srcset="photo-me.avif 792w, photo-la.avif 1008w" type="image/avif">
+      <source srcset="photo-me.webp 792w, photo-la.webp 1008w" type="image/webp">
+      <img src="photo-me.jpg" srcset="photo-me.jpg 792w, photo-la.jpg 1008w" ...>
+  </picture>
+  ```
+- [ ] **Thumbnail grid:** `sizes` attribute computed from CSS grid column count per breakpoint
+- [ ] **Art direction:** Square crop for mobile grid, uncropped for desktop — different `srcset` per breakpoint
+
+#### 21.6.3 Progressive Web App — Tier 2
+
+Offline browsing and native app feel on mobile.
+
+- [ ] **Service worker:** Cache gallery shell (HTML, CSS, JS), cache viewed images for offline browsing
+- [ ] **Cache strategy:**
+  - App shell: cache-first (CSS, JS, fonts)
+  - Gallery pages: network-first with cache fallback
+  - Images: cache-first (thumbnails likely don't change)
+  - API calls: network-only (real-time data)
+- [ ] **Manifest:** `manifest.json` with app name, icons, theme color, `display: standalone`
+- [ ] **Install prompt:** "Add to Home Screen" banner on mobile
+- [ ] **Offline indicator:** Show banner when offline, indicate which content is cached
+- [ ] **Share Target:** Register as a share target — users can share photos from other apps directly to Piwigo for upload
+- [ ] **Background sync:** Queue uploads when offline, sync when connection returns
+
+#### 21.6.4 Masonry / Justified Grid Layout — Tier 1
+
+Display thumbnails in a visually appealing layout that respects each image's aspect ratio.
+
+- [ ] **Justified layout:** Rows of images with equal height, variable width — like Flickr/Google Photos
+- [ ] **Implementation:** Server-side layout computation using image aspect ratios (known from DB):
+  ```rust
+  pub struct JustifiedRow {
+      pub images: Vec<JustifiedImage>,
+      pub height: u32,
+  }
+  pub struct JustifiedImage {
+      pub id: i32,
+      pub width: u32,   // computed display width
+      pub height: u32,  // same for all images in row
+  }
+  ```
+- [ ] Algorithm: Knuth-Plass line-breaking adapted for images — minimize row height variance
+- [ ] Pass computed dimensions to template → CSS `width` and `height` set per image → no layout shift
+- [ ] **User toggle:** Grid (uniform squares), Justified (variable width), List (single column with metadata)
+- [ ] Persisted in user session/preferences
+
+#### 21.6.5 Dark Mode — Tier 1
+
+System-preference-aware dark theme.
+
+- [ ] CSS custom properties for all colors — single source of truth
+- [ ] `@media (prefers-color-scheme: dark)` for automatic detection
+- [ ] Manual toggle (stored in session) overrides system preference
+- [ ] Three states: Light / Dark / System
+- [ ] Admin panel gets dark mode too
+- [ ] Theme authors can override dark mode palette via `theme.toml`
+
+#### 21.6.6 Keyboard Navigation — Tier 1
+
+Power-user shortcuts throughout the gallery.
+
+- [ ] **Gallery browsing:** `j`/`k` or arrow keys to move between thumbnails, `Enter` to open
+- [ ] **Picture page:** Left/Right arrows for prev/next (already common), `f` for fullscreen, `i` for info panel toggle, `Escape` to return to album
+- [ ] **Admin batch manager:** `x` to select/deselect, `Shift+click` for range select, `Ctrl+a` select all
+- [ ] **Global:** `/` focuses search, `?` shows shortcut help overlay
+- [ ] Implementation: single `keydown` event listener, action map dispatched by current page context
+- [ ] Shortcut help modal: `?` key opens overlay showing all available shortcuts for current page
+
+---
+
+### 21.7 API Modernization
+
+#### 21.7.1 OpenAPI Specification — Tier 1
+
+Auto-generate API documentation from the method registry.
+
+- [ ] **Crate:** `utoipa` (derive macros for OpenAPI from Axum handlers)
+- [ ] Each API method annotated with `#[utoipa::path(...)]` — parameters, response types, auth requirements
+- [ ] Serve `GET /api/openapi.json` with the full OpenAPI 3.1 spec
+- [ ] Embed Swagger UI at `GET /api/docs` (served from static assets)
+- [ ] Spec includes all 84+ methods with request/response schemas
+- [ ] CI check: spec matches implementation (generated spec diffed against committed spec)
+
+#### 21.7.2 Webhooks — Tier 2
+
+Push notifications when gallery events occur.
+
+- [ ] **Schema:**
+  ```sql
+  CREATE TABLE webhooks (
+      id SERIAL PRIMARY KEY,
+      user_id INT NOT NULL REFERENCES users(id),
+      url VARCHAR(500) NOT NULL,
+      secret VARCHAR(128),          -- HMAC signing key
+      events TEXT[] NOT NULL,        -- ['image.uploaded', 'album.updated', 'comment.added']
+      enabled BOOLEAN DEFAULT true,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      last_triggered_at TIMESTAMP,
+      failure_count INT DEFAULT 0
+  );
+  ```
+- [ ] **Events:** `image.uploaded`, `image.deleted`, `image.updated`, `album.created`, `album.deleted`, `comment.added`, `comment.approved`, `user.registered`, `sync.completed`
+- [ ] **Delivery:** POST to webhook URL with JSON body + `X-Piwigo-Signature` header (HMAC-SHA256 of body with webhook secret)
+- [ ] **Retry:** Exponential backoff — 1s, 10s, 60s, 600s. Disable webhook after 10 consecutive failures.
+- [ ] **Delivery queue:** Fire-and-forget via `tokio::spawn` — webhook delivery never blocks the triggering request
+- [ ] **Admin UI:** Webhook management page — create, test (sends ping event), view delivery log
+
+#### 21.7.3 GraphQL Endpoint — Tier 3
+
+Optional alternative API for clients that benefit from it (mobile apps, SPAs).
+
+- [ ] **Crate:** `async-graphql` (most mature Rust GraphQL server)
+- [ ] Serve at `POST /api/graphql` alongside the existing REST API
+- [ ] **Schema mirrors domain:**
+  ```graphql
+  type Query {
+      image(id: ID!): Image
+      images(albumId: ID, search: String, first: Int, after: String): ImageConnection
+      album(id: ID!): Album
+      albums(parentId: ID): [Album!]!
+      tags: [Tag!]!
+      me: User
+  }
+  type Mutation {
+      uploadImage(input: UploadInput!): Image!
+      updateImage(id: ID!, input: ImageInput!): Image!
+      deleteImage(id: ID!): Boolean!
+      addComment(imageId: ID!, content: String!): Comment!
+  }
+  type Subscription {
+      syncProgress(jobId: ID!): SyncEvent!
+  }
+  ```
+- [ ] **Key advantage:** Clients can request exactly the fields they need — mobile app fetching thumbnail grid doesn't need full EXIF, desktop app fetching image detail doesn't need all derivative URLs
+- [ ] **DataLoader:** Use `async-graphql::dataloader` for N+1 query prevention
+- [ ] Auth: same session/token auth as REST, scope enforcement on mutations
+- [ ] GraphQL Playground at `/api/graphql/playground` (dev mode only)
+
+---
+
+### 21.8 Observability
+
+#### 21.8.1 OpenTelemetry — Tier 1
+
+Distributed tracing and metrics from day one.
+
+- [ ] **Crates:** `tracing-opentelemetry`, `opentelemetry`, `opentelemetry-otlp`
+- [ ] **Traces:** Each HTTP request is a trace span. Child spans for:
+  - Database queries (query text, duration, rows affected)
+  - Image processing (source path, derivative type, dimensions, duration)
+  - Plugin hook invocations (event name, handler count, duration)
+  - Template rendering (template name, duration)
+  - External HTTP calls (webhook delivery, update checks)
+- [ ] **Metrics:**
+  - `http_requests_total` (method, path, status)
+  - `http_request_duration_seconds` (histogram)
+  - `db_query_duration_seconds` (histogram, by query type)
+  - `derivative_generation_duration_seconds` (histogram, by size)
+  - `active_sessions` (gauge)
+  - `sync_phase_duration_seconds` (histogram, by phase)
+  - `cache_hit_ratio` (by cache: permission, derivative, template)
+- [ ] **Export:** OTLP gRPC/HTTP to Jaeger, Grafana Tempo, Datadog, or any OTLP-compatible backend
+- [ ] **Config:** `config.telemetry.otlp_endpoint`, `config.telemetry.service_name`
+- [ ] **Zero-cost when disabled:** If no OTLP endpoint configured, tracing overhead is near-zero (no-op subscriber)
+
+#### 21.8.2 Prometheus Metrics Endpoint — Tier 1
+
+Standard `/metrics` endpoint for monitoring.
+
+- [ ] **Crate:** `metrics`, `metrics-exporter-prometheus`
+- [ ] Serve at `GET /metrics` (optionally behind auth or IP whitelist)
+- [ ] All metrics from §21.8.1 exported in Prometheus exposition format
+- [ ] **Process metrics:** RSS, CPU seconds, open file descriptors, thread count
+- [ ] **Business metrics:** total images, total albums, total users, storage used
+- [ ] Pre-built Grafana dashboard JSON shipped in `docs/grafana-dashboard.json`
+
+#### 21.8.3 Structured Logging — Tier 1
+
+JSON logs with correlation IDs for every request.
+
+- [ ] **Format:** Each log line is JSON:
+  ```json
+  {"timestamp":"2026-04-15T12:00:00Z","level":"INFO","message":"image uploaded",
+   "request_id":"a1b2c3","user_id":3,"image_id":42,"duration_ms":150,
+   "span":"upload_handler"}
+  ```
+- [ ] **Request ID:** Generated per request (`uuid::Uuid::new_v4`), propagated via `tracing::Span`, included in all log lines and response header `X-Request-Id`
+- [ ] **Log levels:** `ERROR` (action needed), `WARN` (degraded), `INFO` (request lifecycle), `DEBUG` (query details), `TRACE` (framework internals)
+- [ ] **Config:** `RUST_LOG=piwigo=info,piwigo_db=debug` for per-module control
+- [ ] **Dev mode:** Pretty-printed colored console output instead of JSON
+
+---
+
+### 21.9 Deployment & Operations
+
+#### 21.9.1 Docker — Tier 1
+
+Multi-architecture container images.
+
+- [ ] **Multi-stage Dockerfile:**
+  ```dockerfile
+  FROM rust:1.82 AS builder
+  # ... build with cargo
+  FROM debian:bookworm-slim
+  RUN apt-get install -y libvips42 ffmpeg  # runtime deps only
+  COPY --from=builder /app/piwigo /usr/local/bin/piwigo
+  ENTRYPOINT ["piwigo"]
+  CMD ["serve"]
+  ```
+- [ ] **Architectures:** `linux/amd64`, `linux/arm64` (Raspberry Pi, ARM servers)
+- [ ] **Compose file:** `compose.yaml` with Piwigo + PostgreSQL + optional Redis/MinIO
+- [ ] **Health probes:** `HEALTHCHECK CMD piwigo health` (checks DB, storage, libvips)
+- [ ] **Env-based config (12-factor):** All config options overridable via environment:
+  - `PIWIGO_DATABASE_URL=postgres://...`
+  - `PIWIGO_SERVER_PORT=8080`
+  - `PIWIGO_STORAGE_BACKEND=s3`
+  - Config precedence: env vars > config file > DB > code defaults
+
+#### 21.9.2 Background Job Queue — Tier 2
+
+Long-running tasks shouldn't block HTTP requests.
+
+- [ ] **Job types:** Derivative batch generation, video transcoding, ML inference (tagging, face detection, CLIP embedding), S3 migration, search reindexing, email digest sending, storage tier migration
+- [ ] **Architecture:** In-process job runner using `tokio::spawn` + bounded channel
+  ```rust
+  pub enum Job {
+      GenerateDerivatives { image_ids: Vec<i32>, sizes: Vec<DerivativeType> },
+      TranscodeVideo { image_id: i32, quality_tiers: Vec<VideoQuality> },
+      MlInference { image_ids: Vec<i32>, models: Vec<MlModel> },
+      ReindexSearch { scope: ReindexScope },
+      SendDigestEmails,
+  }
+  ```
+- [ ] **Persistence:** Jobs stored in `job_queue` table — survives server restart
+- [ ] **Concurrency:** Configurable per job type (e.g., 4 concurrent derivative generations, 1 video transcode, 2 ML inferences)
+- [ ] **Progress:** Job status visible in admin panel, queryable via API
+- [ ] **CLI:** `piwigo jobs list`, `piwigo jobs run <id>`, `piwigo jobs cancel <id>`
+- [ ] **Scheduling:** Periodic jobs (nightly storage tiering, weekly search reindex) via internal cron table — no external crontab needed
+
+#### 21.9.3 Backup & Restore — Tier 1
+
+First-class backup tooling built into the binary.
+
+- [ ] **`piwigo backup`:**
+  - Dumps database to SQL file (via `pg_dump` / `mysqldump` shelled out, or sqlx-native for portability)
+  - Archives `_data/` directory (originals, derivatives, config)
+  - Archives `plugins/` and `themes/` directories
+  - Output: single `.tar.zst` file (Zstandard-compressed tar)
+  - Options: `--db-only`, `--files-only`, `--exclude-derivatives` (regeneratable), `--output path`
+- [ ] **`piwigo restore`:**
+  - Validates backup integrity (checksum)
+  - Restores database (drop + recreate, or merge into existing)
+  - Restores files to correct locations
+  - Runs pending migrations after restore
+- [ ] **Scheduled backups:** Via job queue (§21.9.2) — `config.backup.schedule = "0 3 * * *"` (daily at 3am)
+- [ ] **Remote backup:** Upload backup file to S3 after creation
+
+---
+
+### 21.10 Collaboration & Sharing
+
+#### 21.10.1 Shareable Guest Links — Tier 1
+
+Share albums without requiring recipients to create accounts.
+
+- [ ] **Schema:**
+  ```sql
+  CREATE TABLE share_links (
+      id SERIAL PRIMARY KEY,
+      token VARCHAR(64) NOT NULL UNIQUE,    -- random URL-safe string
+      category_id INT NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+      created_by INT NOT NULL REFERENCES users(id),
+      password_hash VARCHAR(255),            -- optional password protection
+      expires_at TIMESTAMP,                  -- NULL = no expiry
+      max_views INT,                         -- NULL = unlimited
+      view_count INT DEFAULT 0,
+      allow_download BOOLEAN DEFAULT true,
+      allow_originals BOOLEAN DEFAULT false,  -- only derivatives if false
+      include_subcategories BOOLEAN DEFAULT true,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+  );
+  ```
+- [ ] **URL:** `https://gallery.example.com/s/{token}`
+- [ ] Guest accesses shared link → sees album without login (no user record needed)
+- [ ] Permission check: shared link grants temporary read access to the specific album, bypassing normal permission system
+- [ ] **Expiry:** Admin/owner can set expiry date and/or max views
+- [ ] **Revocation:** Delete the share link → all access immediately revoked
+- [ ] **Admin UI:** Per-album "Share" button → generate link, set options, copy to clipboard
+
+#### 21.10.2 Guest Upload Links — Tier 2
+
+Allow anyone with a link to upload photos to a specific album.
+
+- [ ] Similar to share links but with write permission: `share_links.allow_upload BOOLEAN DEFAULT false`
+- [ ] Upload page: minimal UI — drag-and-drop area, optional name/comment field
+- [ ] Uploads go to moderation queue: `images.upload_status ENUM('approved','pending','rejected')` — admin reviews before they're visible
+- [ ] Rate limiting: max 50 uploads per link per hour
+- [ ] Use case: wedding guests, event attendees, classroom assignments
+
+#### 21.10.3 Activity Feed — Tier 2
+
+Per-album feed of recent activity.
+
+- [ ] **Events tracked:** Photo added, photo commented on, album updated, person tagged
+- [ ] **Implementation:** Query existing `activity` table (already tracks most operations), filter by album, format as timeline
+- [ ] **UI:** Activity tab on album page — chronological list with thumbnails
+- [ ] **API:** `pwg.activity.getAlbumFeed(album_id, since)` — for mobile/external clients
+- [ ] **Notifications:** Users can "watch" an album → receive email digest when new activity occurs (ties into existing notification system)
+
+---
+
+### 21.11 Privacy & Compliance
+
+#### 21.11.1 Download Restrictions — Tier 1
+
+Control what visitors can download.
+
+- [ ] **Config per album:**
+  - `download_policy`: `original` | `largest_derivative` | `watermarked_only` | `disabled`
+  - Applies to download button, right-click save (watermark deters), API download methods
+- [ ] **Watermark-only viewing:** Serve watermarked derivatives for non-owner users, strip download button. Original available only to owner/admin.
+- [ ] **Hotlink protection:** Check `Referer` header on derivative requests — reject if not from gallery domain (configurable, off by default)
+
+#### 21.11.2 GDPR Tools — Tier 2
+
+Self-service tools for user data management.
+
+- [ ] **Data export:** `GET /profile/export` → generates ZIP of all user data:
+  - Profile information (JSON)
+  - Comments posted (JSON)
+  - Ratings given (JSON)
+  - Favorites list (JSON)
+  - Uploaded images (if applicable — links or actual files per config)
+  - Activity history (JSON)
+- [ ] **Account deletion:** `DELETE /profile` → cascade delete all user data:
+  - Comments anonymized or deleted (configurable)
+  - Ratings removed
+  - Favorites cleared
+  - Sessions destroyed
+  - User record deleted
+  - Confirmation email sent
+- [ ] **Consent tracking:** Record when user accepted terms, which version
+- [ ] **Cookie consent:** Minimal cookies by default (session only). Analytics/tracking cookies require explicit consent banner.
+
+#### 21.11.3 Audit Trail — Tier 1
+
+Comprehensive, tamper-evident log of security-relevant actions.
+
+- [ ] **Events:**
+  - Authentication: login success/failure, 2FA success/failure, password change, passkey added/removed
+  - Authorization: permission grant/revoke, role change
+  - Data access: original image download, bulk export
+  - Admin actions: user create/delete, album delete, config change, plugin install
+  - Sharing: link created/revoked, guest access
+- [ ] **Schema:**
+  ```sql
+  CREATE TABLE audit_log (
+      id BIGSERIAL PRIMARY KEY,
+      timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+      event_type VARCHAR(50) NOT NULL,
+      actor_id INT REFERENCES users(id),     -- NULL for system events
+      actor_ip INET,
+      target_type VARCHAR(30),                -- 'user', 'image', 'album', 'config'
+      target_id VARCHAR(100),
+      details JSONB,
+      request_id VARCHAR(36)                  -- correlation with HTTP request
+  );
+  ```
+- [ ] **Retention:** Configurable, default 1 year. `piwigo maintenance audit-trim` for manual cleanup.
+- [ ] **Admin UI:** Searchable audit log page with filters by event type, actor, date range
+- [ ] **Export:** `piwigo audit export --from 2026-01-01 --to 2026-04-01 --format csv`
+
+---
+
+### 21.12 Modernization Dependencies
+
+Additional crates for the modernization features (beyond §3 base dependencies):
+
+```toml
+# Image formats (already via libvips — no additional crate)
+blurhash             = "0.2"           # BlurHash encoding
+
+# AI/ML
+ort                  = { version = "2", features = ["cuda"] }  # ONNX Runtime
+usearch              = "2"             # Approximate nearest neighbor
+image_hasher         = "2"             # Perceptual hashing
+
+# Authentication
+webauthn-rs          = { version = "0.5", features = ["danger-allow-state-serialisation"] }
+totp-rs              = { version = "5", features = ["qr"] }
+openidconnect        = "4"
+qrcode               = "0.14"
+
+# Search
+tantivy              = "0.22"
+
+# Storage
+aws-sdk-s3           = "1"
+aws-config           = "1"
+
+# API
+utoipa               = { version = "5", features = ["axum_extras"] }
+utoipa-swagger-ui    = { version = "8", features = ["axum"] }
+async-graphql        = { version = "7", features = ["dataloader"] }
+async-graphql-axum   = "7"
+
+# Observability
+opentelemetry        = "0.27"
+opentelemetry-otlp   = "0.27"
+tracing-opentelemetry = "0.28"
+metrics              = "0.24"
+metrics-exporter-prometheus = "0.16"
+
+# Deployment
+zstd                 = "0.13"          # Backup compression
+
+# Frontend (JS, not Rust — served as static assets)
+# htmx: 14KB, loaded from static/
+# hls.js: video playback
+# leaflet: privacy zone map editor
+```
+
+### 21.13 Modernization Milestone Summary
+
+| Milestone | Tier | Features | Est. After v1.0 |
+|---|---|---|---|
+| **M9: Quick wins** | Tier 1 | AVIF/WebP negotiation, BlurHash, responsive images, dark mode, keyboard shortcuts, HTMX, justified grid, TOTP 2FA, faceted search, scoped API tokens, EXIF privacy, OpenAPI docs, OpenTelemetry, Prometheus, structured logging, Docker multi-arch, backup/restore, guest links, download restrictions, audit trail | +2 months |
+| **M10: Intelligence** | Tier 2 | Tantivy search, CLIP semantic search, auto-tagging, perceptual hashing, RAW support, WebAuthn, OAuth2/OIDC, S3 storage, content-addressed dedup, PWA, webhooks, background job queue, vector index, smart albums, guest uploads, activity feed, GDPR tools | +6 months |
+| **M11: Full platform** | Tier 3 | Video support (HLS), face detection/recognition, tiered storage, GraphQL endpoint | +12 months |

@@ -1,19 +1,10 @@
 ul.thumbnails {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+    position: relative;
     background: inherit;
 }
 
-ul.thumbnails::after {
-    content: '';
-    flex-grow: 999;
-}
-
 ul.thumbnails .gdthumb {
-    position: relative;
     overflow: hidden;
-    height: 250px;
     background: inherit !important;
 }
 ul.thumbnails .gdthumb a {
@@ -29,8 +20,8 @@ ul.thumbnails .gdthumb a img.thumbnail:hover {
     margin: 0;
     padding: 0;
     border-radius: 0;
-    height: 100%;
-    width: auto;
+    width: 100%;
+    height: auto;
 }
 
 ul.thumbnails .gdthumb .thumbLegend {

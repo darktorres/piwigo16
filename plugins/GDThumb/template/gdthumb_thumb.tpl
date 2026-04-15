@@ -3,7 +3,7 @@
     {assign var=derivative value=$pwg->derivative($GDThumb_derivative_params, $thumbnail.src_image)}
     {assign var=deriv_size value=$derivative->get_size()}
 
-    <li class="gdthumb {$GDThumb.method}" style="flex-grow: {if $deriv_size[1] > 0}{$deriv_size[0] / $deriv_size[1]}{else}1{/if};">
+    <li class="gdthumb {$GDThumb.method}">
       {if $GDThumb.thumb_mode_photo !== "hide" }
         <span class="thumbLegend {$GDThumb.thumb_mode_photo}">
           <span class="thumbName thumbTitle">
@@ -69,8 +69,9 @@
   {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css" version=1}
   {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/js/photoswipe/photoswipe.css"}
   {combine_script id='gdthumb' require='jquery' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
+  {combine_script id='gdthumb.masonry' require='gdthumb' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/masonry.js" load="footer"}
 
-  {footer_script require="gdthumb"}<script>
+  {footer_script require="gdthumb.masonry"}<script>
     {if isset($has_cats)}
     {else}
       $(function() {

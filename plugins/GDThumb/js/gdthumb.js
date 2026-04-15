@@ -1,14 +1,8 @@
 var GDThumb = {
-    do_merge: false,
 
-    setup: function (method, max_height, margin, do_merge) {
+    setup: function (method, max_height, margin) {
+        GDThumb.merge();
         jQuery("ul#thumbnails").addClass("thumbnails");
-        GDThumb.do_merge = do_merge;
-
-        if (do_merge) {
-            GDThumb.merge();
-        }
-
         GDMasonry.init(300, 4);
 
         jQuery("ul.thumbnails").on("click", ".thumbLegend.overlay", function () {
@@ -24,19 +18,22 @@ var GDThumb = {
         GDMasonry.positionNew();
     },
 
-    // Merge categories and picture lists
+    // Always called on setup. Handles three cases:
+    //   albums + photos  → append photos into albums list, rename to #thumbnails
+    //   albums only      → rename albums list to #thumbnails
+    //   photos only      → already #thumbnails, nothing to do
     merge: function () {
-        var mainlists = $("#content ul.thumbnails");
-        if (mainlists.length < 2) {
-            // there is only one list of elements
-        } else {
-            $(".thumbnailCategories li").addClass("album");
-            $(".thumbnailCategories").append(
-                $("#content ul#thumbnails").html(),
-            );
-            $("ul#thumbnails").remove();
-            $(".thumbnailCategories").attr("id", "thumbnails");
+        var $albums = $(".thumbnailCategories");
+        var $photos = $("#content ul#thumbnails");
+
+        if ($albums.length && $photos.length) {
+            $albums.append($photos.html());
+            $photos.remove();
             $("div.loader:eq(1)").remove();
+        }
+
+        if ($albums.length) {
+            $albums.attr("id", "thumbnails");
         }
     },
 };

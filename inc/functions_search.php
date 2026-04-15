@@ -427,11 +427,14 @@ final class functions_search
             $cleaned_order_by = str_replace(['ORDER BY', 'ASC', 'DESC'], '', $order_by_clause);
             $column_names = ', ' . $cleaned_order_by;
 
+            // LEFT JOIN image_tag removed: tag IDs are resolved to image ID lists in
+            // get_sql_search_clause() and injected as id IN (...), so the join is unused.
+            // DISTINCT is still required because image_category multiplies rows for
+            // images in multiple categories, and $forbidden references category_id.
             $query = <<<SQL
                 SELECT DISTINCT id {$column_names}
                 FROM images i
                 INNER JOIN image_category AS ic ON id = ic.image_id
-                LEFT JOIN image_tag AS it ON id = it.image_id
                 WHERE {$search_clause}
 
                 SQL;
@@ -820,9 +823,8 @@ final class functions_search
 
                 $catIdsList = implode(', ', $cat_ids);
                 $query = <<<SQL
-                    SELECT image_id FROM image_category
-                    WHERE category_id IN ({$catIdsList})
-                    GROUP BY image_id;
+                    SELECT DISTINCT image_id FROM image_category
+                    WHERE category_id IN ({$catIdsList});
                     SQL;
                 $qsr->cat_iids[$i] = $conf->sql_backend::query2array($query, null, 'image_id');
 

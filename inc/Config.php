@@ -1061,6 +1061,8 @@ class Config
 
     public string $storage_by_ext;
 
+    public string $cache_activity_last_weeks;
+
     public int $data_dir_checked;
 
     public string $db_base;

@@ -58,6 +58,14 @@ final class functions_category
     {
         global $page, $user, $filter, $conf;
 
+        // Per-request cache: the menu query is identical for the same user/page/filter
+        // combination and is called multiple times per request (theme + plugins).
+        static $cache = [];
+        $cache_key = ($user['id'] ?? '') . '|' . ($page['category']['id'] ?? '') . '|' . ((int) ($user['expand'] ?? 0)) . '|' . ((int) ($filter['enabled'] ?? 0));
+        if (isset($cache[$cache_key])) {
+            return $cache[$cache_key];
+        }
+
         $query = <<<SQL
             SELECT
             -- From categories
@@ -148,6 +156,7 @@ final class functions_category
         // Update filtered data
         functions_filter::update_cats_with_filtered_data($cats);
 
+        $cache[$cache_key] = $cats;
         return $cats;
     }
 

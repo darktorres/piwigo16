@@ -7,7 +7,7 @@
       {assign var=derivative value=$pwg->derivative($GDThumb_derivative_params, $cat.representative.src_image)}
       {assign var=deriv_size value=$derivative->get_size()}
 
-      <li class="gdthumb {$GDThumb.method} album" style="flex-grow: {if $deriv_size[1] > 0}{$deriv_size[0] / $deriv_size[1]}{else}1{/if};">
+      <li class="gdthumb {$GDThumb.method} album">
         {if $GDThumb.thumb_mode_album !== "hide" }
           <span class="thumbLegend {$GDThumb.thumb_mode_album}">
             <span class="thumbName">
@@ -54,8 +54,9 @@
 
 {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css"}
 {combine_script id='gdthumb' require='jquery' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
+{combine_script id='gdthumb.masonry' require='gdthumb' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/masonry.js" load="footer"}
 
-{footer_script require="gdthumb"}<script>
+{footer_script require="gdthumb.masonry"}<script>
   $(function() {
     GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin}, true);
   });

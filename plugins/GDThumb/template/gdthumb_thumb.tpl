@@ -86,6 +86,7 @@
       const lightbox = new PhotoSwipeLightbox({
         gallery: '#thumbnails',
         children: 'a[data-pswp-src]',
+        showHideOpacity: true,
         pswpModule: () => import('./themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe.esm.js')
       });
       lightbox.init();

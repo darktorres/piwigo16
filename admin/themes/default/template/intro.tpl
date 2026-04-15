@@ -203,14 +203,14 @@
     {if $NB_ALBUMS > 1}
       <a class="stat-box" href="{$U_ALBUMS}">
         <i class="icon-sitemap icon-red"></i>
-        <span class="number">{$NB_ALBUMS}</span><span class="caption">{'Albums'|translate}</span>
+        <span class="number">{$NB_ALBUMS|number_format}</span><span class="caption">{'Albums'|translate}</span>
       </a>
     {/if}
 
     {if $NB_TAGS > 1}
       <a class="stat-box" href="{$U_TAGS}">
         <i class="icon-tags icon-yellow"></i>
-        <span class="number">{$NB_TAGS}</span><span class="caption"
+        <span class="number">{$NB_TAGS|number_format}</span><span class="caption"
           title="{'%d associations'|translate:$NB_IMAGE_TAG}">{'Tags'|translate}</span>
       </a>
     {/if}
@@ -219,28 +219,28 @@
       <a class="stat-box" href="{$U_USERS}">
         <i class="icon-users icon-purple"></i>
         {* -1 because we don't count the "guest" user *}
-        <span class="number">{$NB_USERS - 1}</span><span class="caption">{'Users'|translate}</span>
+        <span class="number">{($NB_USERS - 1)|number_format}</span><span class="caption">{'Users'|translate}</span>
       </a>
     {/if}
 
     {if $NB_GROUPS > 0}
       <a class="stat-box" href="{$U_GROUPS}">
         <i class="icon-group icon-purple"></i>
-        <span class="number">{$NB_GROUPS}</span><span class="caption">{'Groups'|translate}</span>
+        <span class="number">{$NB_GROUPS|number_format}</span><span class="caption">{'Groups'|translate}</span>
       </a>
     {/if}
 
     {if $NB_COMMENTS > 1}
       <a class="stat-box" href="{$U_COMMENTS}">
         <i class="icon-chat icon-blue"></i>
-        <span class="number">{$NB_COMMENTS}</span><span class="caption">{'Comments'|translate}</span>
+        <span class="number">{$NB_COMMENTS|number_format}</span><span class="caption">{'Comments'|translate}</span>
       </a>
     {/if}
 
     {if $NB_RATES > 0}
       <a class="stat-box" href="{$U_RATING}">
         <i class="icon-star icon-yellow"></i>
-        <span class="number">{$NB_RATES}</span><span class="caption">{'Rating'|translate}</span>
+        <span class="number">{$NB_RATES|number_format}</span><span class="caption">{'Rating'|translate}</span>
       </a>
     {/if}
 

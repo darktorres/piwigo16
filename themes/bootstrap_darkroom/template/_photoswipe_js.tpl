@@ -189,9 +189,19 @@
                 }
                 $('.pswp__button--autoplay').off('click touchstart');
                 $(selector).find('a.active').removeClass('active');
+                $($pswp).off('wheel.pswp');
             });
 
             photoSwipe.init();
+
+            $($pswp).on('wheel.pswp', function(e) {
+                e.preventDefault();
+                if (e.originalEvent.deltaY > 0) {
+                    photoSwipe.next();
+                } else {
+                    photoSwipe.prev();
+                }
+            });
 
             detectVideo(photoSwipe);
 

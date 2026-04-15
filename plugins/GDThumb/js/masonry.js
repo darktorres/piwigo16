@@ -101,5 +101,21 @@ var GDMasonry = (function ($) {
         });
     }
 
-    return { init: init, layout: layout, addItems: addItems };
+    // Position any <li> children that were appended directly to the container
+    // without going through addItems() — used by RVTS_CATS which bypasses RVTS_add.
+    function positionNew() {
+        if (!_$c || !_$c.length) return;
+        var $items = _$c.children('li').filter(function () {
+            return !this.style.position;
+        });
+        if (!$items.length) return;
+        if (_colCount() !== _ncols) {
+            layout();
+            return;
+        }
+        $items.each(function () { _place($(this)); });
+        _setHeight();
+    }
+
+    return { init: init, layout: layout, addItems: addItems, positionNew: positionNew };
 })(jQuery);

@@ -19,6 +19,11 @@ var GDThumb = {
         });
     },
 
+    // Called by RVTS_CATS after it directly appends new album items.
+    build: function () {
+        GDMasonry.positionNew();
+    },
+
     // Merge categories and picture lists
     merge: function () {
         var mainlists = $("#content ul.thumbnails");

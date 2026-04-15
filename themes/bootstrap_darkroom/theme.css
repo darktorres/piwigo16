@@ -117,8 +117,12 @@ body {
     left: 0;
     width: 100%;
     z-index: 500;
-    background-color: inherit;
+    background-color: #4f4f4f; /* matches material-darkroom body background */
 }
+
+/* Light Bootstrap variants (bootswatch-*, material-*, bootstrap-default) need
+   a white footer — override via local/bootstrap_darkroom/custom.css:
+   .copyright { background-color: #fff; color: #212529; } */
 
 /* Help popup */
 #thePopuphelpPage .jumbotron {

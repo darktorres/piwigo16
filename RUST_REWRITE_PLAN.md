@@ -48,6 +48,15 @@
     - [21.10 Collaboration & Sharing](#2110-collaboration--sharing)
     - [21.11 Privacy & Compliance](#2111-privacy--compliance)
 
+**Appendices — Reference Material**
+
+- [A. Complete Database Schema](#appendix-a-complete-database-schema)
+- [B. Complete API Method Catalog](#appendix-b-complete-api-method-catalog)
+- [C. Complete Configuration Reference](#appendix-c-complete-configuration-reference)
+- [D. Complete Hook Event Catalog](#appendix-d-complete-hook-event-catalog)
+- [E. Complete Template Inventory](#appendix-e-complete-template-inventory)
+- [F. Complete URL Routing Map](#appendix-f-complete-url-routing-map)
+
 ---
 
 ## 1. Project Overview
@@ -143,7 +152,152 @@ A complete, ground-up rewrite of the Piwigo photo gallery application in Rust. N
 - The Lua sandbox provides isolation — plugins cannot access Rust internals not explicitly exposed
 - Alternative considered: Rhai (pure Rust scripting) — rejected due to smaller ecosystem and missing features
 
-### ADR-006: SSR Admin UI (Not SPA)
+### ADR-006: Error Handling Strategy
+
+**Decision:** `thiserror` for typed errors in library crates, `anyhow` at the application boundary, HTTP error mapping via Axum `IntoResponse`.
+
+**Error Hierarchy:**
+
+```rust
+// piwigo-core: typed, matchable errors
+#[derive(Debug, thiserror::Error)]
+pub enum PiwigoError {
+    // === Authentication ===
+    #[error("Invalid credentials")]
+    InvalidCredentials,
+    #[error("Account disabled")]
+    AccountDisabled,
+    #[error("Session expired")]
+    SessionExpired,
+    #[error("Insufficient permissions: requires {required}, have {actual}")]
+    InsufficientPermissions { required: AccessLevel, actual: AccessLevel },
+    #[error("CSRF token mismatch")]
+    CsrfMismatch,
+    #[error("Rate limited: retry after {retry_after_secs}s")]
+    RateLimited { retry_after_secs: u64 },
+
+    // === Resource errors ===
+    #[error("Image not found: {0}")]
+    ImageNotFound(i32),
+    #[error("Category not found: {0}")]
+    CategoryNotFound(i32),
+    #[error("User not found: {0}")]
+    UserNotFound(i32),
+    #[error("Tag not found: {0}")]
+    TagNotFound(i32),
+    #[error("Resource not found: {resource_type} {id}")]
+    NotFound { resource_type: &'static str, id: String },
+
+    // === Validation ===
+    #[error("Invalid parameter: {name} — {reason}")]
+    InvalidParameter { name: String, reason: String },
+    #[error("Missing required parameter: {0}")]
+    MissingParameter(String),
+    #[error("Parameter out of range: {name} must be {constraint}")]
+    ParameterOutOfRange { name: String, constraint: String },
+
+    // === Upload/file ===
+    #[error("File type not allowed: {0}")]
+    FileTypeNotAllowed(String),
+    #[error("File too large: {size_bytes} exceeds limit {limit_bytes}")]
+    FileTooLarge { size_bytes: u64, limit_bytes: u64 },
+    #[error("Duplicate image: md5 {md5} matches image {existing_id}")]
+    DuplicateImage { md5: String, existing_id: i32 },
+    #[error("Upload chunk missing: expected {expected}, got {actual}")]
+    UploadChunkMissing { expected: u32, actual: u32 },
+
+    // === Database ===
+    #[error("Database error: {0}")]
+    Database(#[from] sqlx::Error),
+
+    // === Image processing ===
+    #[error("Image processing failed: {0}")]
+    ImageProcessing(String),
+
+    // === Plugin ===
+    #[error("Plugin error in {plugin}: {message}")]
+    PluginError { plugin: String, message: String },
+
+    // === Configuration ===
+    #[error("Configuration error: {0}")]
+    Config(String),
+    #[error("Maintenance mode active")]
+    MaintenanceMode,
+}
+```
+
+**HTTP Status Code Mapping:**
+
+| Error Variant | HTTP Status | WS Error Code |
+|---|---|---|
+| `InvalidCredentials` | 401 | 999 |
+| `AccountDisabled` | 403 | 999 |
+| `SessionExpired` | 401 | 999 |
+| `InsufficientPermissions` | 403 | 401 |
+| `CsrfMismatch` | 403 | 403 |
+| `RateLimited` | 429 | 429 |
+| `*NotFound` | 404 | 501 |
+| `InvalidParameter` / `MissingParameter` | 400 | 1002/1003 |
+| `FileTypeNotAllowed` / `FileTooLarge` | 400 | 500 |
+| `DuplicateImage` | 409 | 500 |
+| `Database` | 500 | 500 |
+| `ImageProcessing` | 500 | 500 |
+| `PluginError` | 500 | 500 |
+| `MaintenanceMode` | 503 | 503 |
+
+**WS Error Format** (backward-compatible with PHP `ws.php`):
+```json
+{"stat": "fail", "err": 1002, "message": "Missing required parameter: image_id"}
+```
+
+**HTML error pages:** Custom Tera templates for 403, 404, 500, 503. Plugin hook `render_error_page` allows override.
+
+**Rationale:**
+- Typed errors catch missing error handling at compile time
+- HTTP mapping is deterministic — same error always produces same status code
+- WS error codes maintain compatibility with existing API clients (Lightroom, DigiKam, Piwigo mobile apps)
+- Plugins can throw `PiwigoError::PluginError` which is caught and logged without crashing the request
+
+### ADR-007: Caching Strategy
+
+**Decision:** Three-layer caching with explicit invalidation contracts.
+
+**Layer 1 — In-Process Cache (moka):**
+- Permission cache: `user_id → CachedPermissions` (TTL: 5 min, invalidated explicitly)
+- Config cache: `key → Value` (TTL: none, invalidated on admin change or SIGHUP)
+- Template cache: Tera compiles templates once at startup (hot-reload in dev mode)
+- i18n cache: all language strings loaded into `HashMap` at startup
+
+**Layer 2 — Database Cache (user_cache, user_cache_categories):**
+- Computed permission data persisted to DB for cold starts
+- `need_update` flag triggers recomputation on next request
+- Survives server restart, unlike Layer 1
+
+**Layer 3 — HTTP Cache (browser + CDN):**
+- Derivatives: `Cache-Control: public, max-age=864000` (10 days) when source is stable
+- Static assets (CSS/JS): `Cache-Control: public, max-age=31536000, immutable` with hash-based filenames
+- Gallery pages: `Cache-Control: private, no-cache` (vary by user permissions)
+- API responses: `Cache-Control: no-store` (dynamic data)
+- `ETag` and `Last-Modified` on all derivative responses for conditional requests
+
+**Invalidation Contract:**
+
+| Event | Layer 1 | Layer 2 | Layer 3 |
+|---|---|---|---|
+| Category status change | Evict affected users | `need_update = true` for all | N/A (private) |
+| Image privacy level change | Evict affected users | `need_update = true` for all | N/A |
+| User permission change | Evict specific user | `need_update = true` for user | N/A |
+| Config change | Replace config entry | Update `config` table | N/A |
+| Derivative params change | Reload `ImageStdParams` | — | `params.last_mod_time` triggers regen on next request |
+| Template edit | Tera reload (dev only) | — | — |
+| Image metadata edit | — | — | New `Last-Modified` on derivatives |
+
+**Rationale:**
+- In-process moka cache avoids DB round-trip for the hottest data (permissions checked on every request)
+- DB cache survives restarts without full recomputation
+- HTTP caching offloads derivative serving to browser/CDN — the highest-volume endpoint
+
+### ADR-008: SSR Admin UI (Not SPA)
 
 **Decision:** Admin panel uses server-side rendering with Tera templates, not a JS SPA.
 
@@ -153,7 +307,7 @@ A complete, ground-up rewrite of the Piwigo photo gallery application in Rust. N
 - Incremental migration is simpler — each admin page is an isolated Tera template
 - HTMX can be added later for selective interactivity without architectural change
 
-### ADR-007: Single Binary, Multiple Modes
+### ADR-009: Single Binary, Multiple Modes
 
 **Decision:** Compile to a single binary with subcommands.
 
@@ -3892,3 +4046,1174 @@ zstd                 = "0.13"          # Backup compression
 | **M9: Quick wins** | Tier 1 | AVIF/WebP negotiation, BlurHash, responsive images, dark mode, keyboard shortcuts, HTMX, justified grid, TOTP 2FA, faceted search, scoped API tokens, EXIF privacy, OpenAPI docs, OpenTelemetry, Prometheus, structured logging, Docker multi-arch, backup/restore, guest links, download restrictions, audit trail | +2 months |
 | **M10: Intelligence** | Tier 2 | Tantivy search, CLIP semantic search, auto-tagging, perceptual hashing, RAW support, WebAuthn, OAuth2/OIDC, S3 storage, content-addressed dedup, PWA, webhooks, background job queue, vector index, smart albums, guest uploads, activity feed, GDPR tools | +6 months |
 | **M11: Full platform** | Tier 3 | Video support (HLS), face detection/recognition, tiered storage, GraphQL endpoint | +12 months |
+
+---
+---
+
+# Appendices — Reference Material
+
+> Exhaustive inventories derived from the PHP 14.x codebase. Every table, API method, config option, hook event, template file, and URL pattern is cataloged here so no implementation surprise goes undocumented.
+
+---
+
+## Appendix A: Complete Database Schema
+
+**Source files:** `install/piwigo_structure-pgsql.sql`, `install/piwigo_structure-mysqli.sql`
+**Total:** 34 tables, 64 indexes, 11 triggers, 5 custom ENUM types, **0 foreign keys** (all referential integrity enforced at application layer)
+
+### Custom ENUM Types (PostgreSQL)
+
+| Type Name | Values |
+|---|---|
+| `categories_status` | `public`, `private` |
+| `history_section` | `categories`, `tags`, `search`, `list`, `favorites`, `most_visited`, `best_rated`, `recent_pics`, `recent_cats` |
+| `history_image_type` | `picture`, `high`, `other` |
+| `plugins_state` | `inactive`, `active` |
+| `user_cache_image_access_type` | `NOT IN`, `IN` |
+| `user_infos_status` | `webmaster`, `admin`, `normal`, `generic`, `guest` |
+
+### Trigger Functions
+
+| Function | Behavior |
+|---|---|
+| `update_lastmodified_column()` | Sets `NEW.lastmodified = now()` BEFORE UPDATE |
+| `update_images_fts()` | Populates `image_fts` tsvector from `name` + `comment` |
+| `update_categories_fts()` | Populates `category_fts` tsvector from `name` + `comment` |
+| `update_tags_fts()` | Populates `tag_fts` tsvector from `name` |
+
+### Table Schemas
+
+#### A.1 `activity`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `activity_id` | INTEGER | NOT NULL | IDENTITY **PK** |
+| `object` | VARCHAR(255) | NOT NULL | |
+| `object_id` | INTEGER | NOT NULL | |
+| `action` | VARCHAR(255) | NOT NULL | |
+| `performed_by` | INTEGER | NOT NULL | |
+| `session_idx` | VARCHAR(255) | NOT NULL | |
+| `ip_address` | INET | nullable | |
+| `occurred_on` | TIMESTAMPTZ | nullable | CURRENT_TIMESTAMP |
+| `details` | VARCHAR(255) | nullable | |
+| `user_agent` | VARCHAR(255) | nullable | |
+
+#### A.2 `caddie`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `user_id` | INTEGER | NOT NULL | **PK (1/2)** |
+| `element_id` | INTEGER | NOT NULL | **PK (2/2)** |
+
+Implicit FKs: `user_id` → `users.id`, `element_id` → `images.id`
+
+#### A.3 `categories`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
+| `name` | VARCHAR(255) | NOT NULL | |
+| `id_uppercat` | BIGINT | nullable | |
+| `comment` | TEXT | nullable | |
+| `dir` | VARCHAR(255) | nullable | |
+| `sort_rank` | INTEGER | nullable | |
+| `status` | `categories_status` | NOT NULL | `'public'` |
+| `site_id` | INTEGER | nullable | |
+| `visible` | BOOLEAN | NOT NULL | `true` |
+| `representative_picture_id` | INTEGER | nullable | |
+| `uppercats` | VARCHAR(255) | nullable | |
+| `commentable` | BOOLEAN | NOT NULL | `true` |
+| `global_rank` | VARCHAR(255) | nullable | |
+| `image_order` | VARCHAR(128) | nullable | |
+| `permalink` | VARCHAR(64) | nullable | **UNIQUE** |
+| `lastmodified` | TIMESTAMPTZ | nullable | CURRENT_TIMESTAMP |
+| `category_fts` | TSVECTOR | nullable | |
+
+Indexes: `id_uppercat`, `lastmodified`, `uppercats (text_pattern_ops)`, GIN on `category_fts`
+Triggers: `trg_categories_update_lastmodified`, `trg_categories_fts`
+Implicit FKs: `id_uppercat` → `categories.id`, `site_id` → `sites.id`, `representative_picture_id` → `images.id`
+
+#### A.4 `comments`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
+| `image_id` | INTEGER | NOT NULL | |
+| `date` | TIMESTAMPTZ | NOT NULL | CURRENT_TIMESTAMP |
+| `author` | VARCHAR(255) | nullable | |
+| `email` | VARCHAR(255) | nullable | |
+| `author_id` | INTEGER | nullable | |
+| `anonymous_id` | VARCHAR(45) | NOT NULL | |
+| `website_url` | VARCHAR(255) | nullable | |
+| `content` | TEXT | nullable | |
+| `validated` | BOOLEAN | NOT NULL | `false` |
+| `validation_date` | TIMESTAMPTZ | nullable | |
+
+Indexes: `image_id`, `validation_date`
+
+#### A.5 `config`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `param` | VARCHAR(40) | NOT NULL | **PK** |
+| `value` | TEXT | nullable | |
+| `comment` | VARCHAR(255) | nullable | |
+
+#### A.6 `favorites`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `user_id` | INTEGER | NOT NULL | **PK (1/2)** |
+| `image_id` | INTEGER | NOT NULL | **PK (2/2)** |
+
+#### A.7 `group_access`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `group_id` | INTEGER | NOT NULL | **PK (1/2)** |
+| `cat_id` | INTEGER | NOT NULL | **PK (2/2)** |
+
+#### A.8 `user_groups` (the "groups" table)
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
+| `name` | VARCHAR(255) | NOT NULL | **UNIQUE** |
+| `is_default` | BOOLEAN | NOT NULL | `false` |
+| `lastmodified` | TIMESTAMPTZ | nullable | CURRENT_TIMESTAMP |
+
+Triggers: `trg_user_groups_update_lastmodified`
+
+#### A.9 `history`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
+| `date` | DATE | NOT NULL | |
+| `time` | TIME | NOT NULL | |
+| `user_id` | INTEGER | NOT NULL | |
+| `IP` | INET | NOT NULL | |
+| `section` | `history_section` | nullable | |
+| `category_id` | INTEGER | nullable | |
+| `search_id` | INTEGER | nullable | |
+| `tag_ids` | VARCHAR(50) | nullable | |
+| `image_id` | INTEGER | nullable | |
+| `image_type` | `history_image_type` | nullable | |
+| `format_id` | INTEGER | nullable | |
+| `auth_key_id` | INTEGER | nullable | |
+
+#### A.10 `history_summary`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `year` | INTEGER | NOT NULL | |
+| `month` | INTEGER | nullable | |
+| `day` | INTEGER | nullable | |
+| `hour` | INTEGER | nullable | |
+| `nb_pages` | INTEGER | nullable | |
+| `history_id_from` | INTEGER | nullable | |
+| `history_id_to` | INTEGER | nullable | |
+
+**No PK** — UNIQUE on `(year, month, day, hour)`
+
+#### A.11 `image_category`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `image_id` | INTEGER | NOT NULL | **PK (1/2)** |
+| `category_id` | INTEGER | NOT NULL | **PK (2/2)** |
+| `sort_rank` | INTEGER | nullable | |
+
+Indexes: `category_id`
+
+#### A.12 `image_format`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `format_id` | INTEGER | NOT NULL | IDENTITY **PK** |
+| `image_id` | INTEGER | NOT NULL | |
+| `ext` | VARCHAR(255) | NOT NULL | |
+| `filesize` | INTEGER | nullable | |
+
+#### A.13 `image_tag`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `image_id` | INTEGER | NOT NULL | **PK (1/2)** |
+| `tag_id` | INTEGER | NOT NULL | **PK (2/2)** |
+
+Indexes: `tag_id`
+
+#### A.14 `images` (most-indexed table — 14 indexes)
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
+| `file` | VARCHAR(255) | NOT NULL | |
+| `date_available` | TIMESTAMPTZ | NOT NULL | CURRENT_TIMESTAMP |
+| `date_creation` | TIMESTAMPTZ | nullable | |
+| `name` | VARCHAR(255) | nullable | |
+| `comment` | TEXT | nullable | |
+| `author` | VARCHAR(255) | nullable | |
+| `hit` | INTEGER | NOT NULL | `0` |
+| `filesize` | INTEGER | nullable | |
+| `width` | INTEGER | nullable | |
+| `height` | INTEGER | nullable | |
+| `coi` | CHAR(4) | nullable | center-of-interest |
+| `representative_ext` | VARCHAR(4) | nullable | |
+| `date_metadata_update` | DATE | nullable | |
+| `rating_score` | REAL | nullable | |
+| `path` | VARCHAR(600) | NOT NULL | |
+| `storage_category_id` | INTEGER | nullable | |
+| `level` | INTEGER | NOT NULL | `0` |
+| `md5sum` | CHAR(32) | nullable | |
+| `added_by` | INTEGER | NOT NULL | |
+| `rotation` | INTEGER | nullable | |
+| `latitude` | DOUBLE PRECISION | nullable | |
+| `longitude` | DOUBLE PRECISION | nullable | |
+| `lastmodified` | TIMESTAMPTZ | nullable | CURRENT_TIMESTAMP |
+| `image_fts` | TSVECTOR | nullable | |
+
+Indexes: `storage_category_id`, `date_available`, `rating_score`, `hit`, `date_creation`, `latitude`, `path`, `lastmodified`, GIN on `image_fts`, GIN trigram on `name`, `file`, `author`, `comment`
+Triggers: `trg_images_update_lastmodified`, `trg_images_fts`
+
+#### A.15 `languages`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | VARCHAR(64) | NOT NULL | **PK** |
+| `version` | VARCHAR(64) | NOT NULL | |
+| `name` | VARCHAR(64) | nullable | |
+
+#### A.16 `lounge`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `image_id` | INTEGER | NOT NULL | **PK (1/2)** |
+| `category_id` | INTEGER | NOT NULL | **PK (2/2)** |
+
+#### A.17 `old_permalinks`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `cat_id` | INTEGER | NOT NULL | |
+| `permalink` | VARCHAR(64) | NOT NULL | **PK** |
+| `date_deleted` | TIMESTAMPTZ | NOT NULL | CURRENT_TIMESTAMP |
+| `last_hit` | TIMESTAMPTZ | nullable | |
+| `hit` | INTEGER | NOT NULL | |
+
+#### A.18 `plugins`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | VARCHAR(64) | NOT NULL | **PK** |
+| `state` | `plugins_state` | NOT NULL | `'inactive'` |
+| `version` | VARCHAR(64) | NOT NULL | |
+
+#### A.19 `rate`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `user_id` | INTEGER | NOT NULL | **PK** |
+| `element_id` | INTEGER | NOT NULL | **PK** |
+| `anonymous_id` | VARCHAR(45) | NOT NULL | **PK** |
+| `rate` | INTEGER | NOT NULL | |
+| `date` | DATE | NOT NULL | |
+
+#### A.20 `search`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
+| `search_uuid` | CHAR(23) | nullable | |
+| `created_on` | TIMESTAMPTZ | nullable | |
+| `created_by` | INTEGER | nullable | |
+| `forked_from` | INTEGER | nullable | |
+| `rules` | TEXT | nullable | |
+
+#### A.21 `sessions`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | VARCHAR(255) | NOT NULL | **PK** |
+| `data` | TEXT | NOT NULL | |
+| `expiration` | TIMESTAMPTZ | NOT NULL | CURRENT_TIMESTAMP |
+
+#### A.22 `sites`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
+| `galleries_url` | VARCHAR(255) | NOT NULL | **UNIQUE** |
+
+#### A.23 `tags`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
+| `name` | VARCHAR(255) | NOT NULL | |
+| `url_name` | VARCHAR(255) | NOT NULL | |
+| `lastmodified` | TIMESTAMPTZ | nullable | CURRENT_TIMESTAMP |
+| `tag_fts` | TSVECTOR | nullable | |
+
+Indexes: `url_name`, `lastmodified`, GIN on `tag_fts`
+Triggers: `trg_tags_update_lastmodified`, `trg_tags_fts`
+
+#### A.24 `themes`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | VARCHAR(64) | NOT NULL | **PK** |
+| `version` | VARCHAR(64) | NOT NULL | |
+| `name` | VARCHAR(64) | nullable | |
+
+#### A.25 `upgrade`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | VARCHAR(20) | NOT NULL | **PK** |
+| `applied` | TIMESTAMPTZ | NOT NULL | CURRENT_TIMESTAMP |
+| `description` | VARCHAR(255) | nullable | |
+
+#### A.26 `user_access`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `user_id` | INTEGER | NOT NULL | **PK (1/2)** |
+| `cat_id` | INTEGER | NOT NULL | **PK (2/2)** |
+
+#### A.27 `user_auth_keys`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `auth_key_id` | INTEGER | NOT NULL | IDENTITY **PK** |
+| `auth_key` | VARCHAR(255) | NOT NULL | |
+| `user_id` | INTEGER | NOT NULL | |
+| `created_on` | TIMESTAMPTZ | NOT NULL | |
+| `duration` | INTEGER | nullable | |
+| `expired_on` | TIMESTAMPTZ | NOT NULL | |
+
+#### A.28 `user_cache`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `user_id` | INTEGER | NOT NULL | **PK** |
+| `need_update` | BOOLEAN | NOT NULL | `true` |
+| `cache_update_time` | INTEGER | NOT NULL | |
+| `forbidden_categories` | TEXT | nullable | |
+| `nb_total_images` | INTEGER | nullable | |
+| `last_photo_date` | TIMESTAMPTZ | nullable | |
+| `nb_available_tags` | INTEGER | nullable | |
+| `nb_available_comments` | INTEGER | nullable | |
+| `image_access_type` | `user_cache_image_access_type` | NOT NULL | `'NOT IN'` |
+| `image_access_list` | TEXT | nullable | |
+
+#### A.29 `user_cache_categories`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `user_id` | INTEGER | NOT NULL | **PK (1/2)** |
+| `cat_id` | INTEGER | NOT NULL | **PK (2/2)** |
+| `date_last` | TIMESTAMPTZ | nullable | |
+| `max_date_last` | TIMESTAMPTZ | nullable | |
+| `nb_images` | INTEGER | NOT NULL | |
+| `count_images` | INTEGER | nullable | `0` |
+| `nb_categories` | INTEGER | nullable | `0` |
+| `count_categories` | INTEGER | nullable | `0` |
+| `user_representative_picture_id` | INTEGER | nullable | |
+
+#### A.30 `user_feed`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | VARCHAR(50) | NOT NULL | **PK** |
+| `user_id` | INTEGER | NOT NULL | |
+| `last_check` | TIMESTAMPTZ | nullable | |
+
+#### A.31 `user_group`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `user_id` | INTEGER | NOT NULL | **PK** |
+| `group_id` | INTEGER | NOT NULL | **PK** |
+
+#### A.32 `user_infos`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `user_id` | INTEGER | NOT NULL | **PK** |
+| `nb_image_page` | INTEGER | NOT NULL | `15` |
+| `status` | `user_infos_status` | NOT NULL | `'guest'` |
+| `language` | VARCHAR(50) | NOT NULL | |
+| `expand` | BOOLEAN | NOT NULL | `false` |
+| `show_nb_comments` | BOOLEAN | NOT NULL | `false` |
+| `show_nb_hits` | BOOLEAN | NOT NULL | `false` |
+| `recent_period` | INTEGER | NOT NULL | `7` |
+| `theme` | VARCHAR(255) | NOT NULL | `'modus'` |
+| `registration_date` | TIMESTAMPTZ | NOT NULL | CURRENT_TIMESTAMP |
+| `enabled_high` | BOOLEAN | NOT NULL | `true` |
+| `level` | INTEGER | NOT NULL | |
+| `activation_key` | VARCHAR(255) | nullable | |
+| `activation_key_expire` | TIMESTAMPTZ | nullable | |
+| `last_visit` | TIMESTAMPTZ | nullable | |
+| `last_visit_from_history` | BOOLEAN | NOT NULL | `false` |
+| `lastmodified` | TIMESTAMPTZ | nullable | CURRENT_TIMESTAMP |
+| `preferences` | TEXT | nullable | |
+
+Triggers: `trg_user_infos_update_lastmodified`
+
+#### A.33 `user_mail_notification`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `user_id` | INTEGER | NOT NULL | **PK** |
+| `check_key` | VARCHAR(16) | NOT NULL | **UNIQUE** |
+| `enabled` | BOOLEAN | NOT NULL | `false` |
+| `last_send` | TIMESTAMPTZ | nullable | |
+
+#### A.34 `users`
+
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| `id` | INTEGER | NOT NULL | IDENTITY **PK** |
+| `username` | VARCHAR(100) | NOT NULL | **UNIQUE** |
+| `password` | VARCHAR(255) | nullable | |
+| `mail_address` | VARCHAR(255) | nullable | |
+
+### Key Schema Notes for Rust Rewrite
+
+1. **No foreign keys exist.** All referential integrity is application-enforced. The Rust rewrite should add proper FK constraints with appropriate ON DELETE behavior.
+
+2. **Implicit FK map** (most critical relationships):
+   - `image_category` → `images.id` + `categories.id`
+   - `image_tag` → `images.id` + `tags.id`
+   - `comments.image_id` → `images.id`
+   - `categories.id_uppercat` → `categories.id` (self-referential)
+   - `user_infos.user_id` → `users.id` (1:1)
+   - `user_cache.user_id` → `users.id` (1:1)
+   - `favorites` / `caddie` / `rate` → `users.id` + `images.id`
+   - `user_access` / `group_access` → `users.id`/`user_groups.id` + `categories.id`
+
+3. **FTS strategy:** PostgreSQL uses `TSVECTOR` columns + GIN indexes on `images`, `categories`, `tags`, populated by trigger functions. Live DB also has trigram GIN indexes on `images.name/file/author/comment`.
+
+4. **MySQL-to-PG type mapping:**
+   - `ENUM('true','false')` → `BOOLEAN`
+   - `INT UNSIGNED` → `INTEGER`
+   - `VARCHAR(45)` for IP → `INET`
+   - `FULLTEXT` → `TSVECTOR` + GIN + triggers
+   - `AUTO_INCREMENT` → `GENERATED BY DEFAULT AS IDENTITY`
+   - `ON UPDATE CURRENT_TIMESTAMP` → trigger function
+
+5. **`history_summary`** is the only table without a PK (uses UNIQUE constraint).
+
+6. **Cache tables** (`user_cache`, `user_cache_categories`) can potentially be replaced with in-process caching in Rust.
+
+---
+
+## Appendix B: Complete API Method Catalog
+
+**Source:** `inc/ws_functions.php` (83 methods) + `inc/PwgServer.php` (2 reflection methods)
+**Total: 85 methods** — 60 admin-only, 38 POST-only, 21 public GET
+
+### Type System
+
+| Constant | Meaning |
+|---|---|
+| `WS_TYPE_BOOL` | Boolean |
+| `WS_TYPE_INT` | Integer |
+| `WS_TYPE_FLOAT` | Float |
+| `WS_TYPE_POSITIVE` | Must be >= 0 |
+| `WS_TYPE_NOTNULL` | Must be > 0 |
+| `WS_TYPE_ID` | INT + POSITIVE + NOTNULL |
+| `WS_PARAM_OPTIONAL` | Parameter is optional |
+| `WS_PARAM_ACCEPT_ARRAY` | Can accept array value |
+| `WS_PARAM_FORCE_ARRAY` | Always coerced to array |
+
+### Shared Filter Parameters (`f_params`)
+
+Applied to image-listing methods (`pwg.categories.getImages`, `pwg.images.search`, `pwg.tags.getImages`, `pwg.getMissingDerivatives`):
+
+| Parameter | Type | Default |
+|---|---|---|
+| `f_min_rate` / `f_max_rate` | float | null |
+| `f_min_hit` / `f_max_hit` | int, positive | null |
+| `f_min_ratio` / `f_max_ratio` | float, positive | null |
+| `f_max_level` | int, positive | null |
+| `f_min_date_available` / `f_max_date_available` | string | null |
+| `f_min_date_created` / `f_max_date_created` | string | null |
+
+### B.1 Reflection (2 methods)
+
+| Method | HTTP | Admin | Parameters |
+|---|---|---|---|
+| `reflection.getMethodList` | GET | No | (none) |
+| `reflection.getMethodDetails` | GET | No | `methodName` (string, required) |
+
+### B.2 Session (3 methods)
+
+| Method | HTTP | Admin | Parameters |
+|---|---|---|---|
+| `pwg.session.getStatus` | GET | No | (none) — returns user info + CSRF token |
+| `pwg.session.login` | POST | No | `username` (string, req), `password` (string, opt) |
+| `pwg.session.logout` | GET | No | (none) |
+
+### B.3 General (10 methods)
+
+| Method | HTTP | Admin | Key Parameters |
+|---|---|---|---|
+| `pwg.getVersion` | GET | No | (none) |
+| `pwg.getInfos` | GET | Yes | (none) |
+| `pwg.getCacheSize` | GET | Yes | (none) |
+| `pwg.activity.getList` | GET | Yes | `page` (int, opt), `uid` (int, opt) |
+| `pwg.caddie.add` | GET | Yes | `image_id` (ID[], req) |
+| `pwg.getMissingDerivatives` | GET | Yes | `types` (string[], opt), `ids` (ID[], opt), `max_urls` (int, opt, default=200), `prev_page` (int, opt), + f_params |
+| `pwg.rates.delete` | POST | Yes | `user_id` (ID, req), `anonymous_id` (string, opt), `image_id` (ID, opt) |
+| `pwg.history.log` | GET | No | `image_id` (ID, req), `cat_id` (ID, opt), `section` (string, opt), `tags_string` (string, opt), `is_download` (bool, opt) |
+| `pwg.history.search` | GET | No | `start`/`end` (date, opt), `types` (string[], opt), `user_id` (string, opt), `image_id` (ID, opt), `filename`/`ip` (string, opt), `display_thumbnail` (string, opt), `pageNumber` (int, opt) |
+| `pwg.images.filteredSearch.create` | GET | No | `search_id` (string, opt), `allwords` (string, opt), `allwords_mode` (AND/OR), `allwords_fields` (string[]), `tags` (ID[]), `tags_mode` (AND/OR), `categories` (ID[]), `categories_withsubs` (bool), `authors` (string[]), `added_by` (ID[]), `filetypes` (string[]), `date_posted` (string) |
+
+### B.4 Categories (12 methods)
+
+| Method | HTTP | Admin | Key Parameters |
+|---|---|---|---|
+| `pwg.categories.getList` | GET | No | `cat_id` (int, opt), `recursive` (bool), `public` (bool), `tree_output` (bool), `fullname` (bool), `thumbnail_size` (string), `search` (string) |
+| `pwg.categories.getImages` | GET | No | `cat_id` (int[], opt), `recursive` (bool), `per_page` (int, max=500), `page` (int), `order` (string), + f_params |
+| `pwg.categories.getAdminList` | GET | Yes | `search` (string, opt), `additional_output` (string, opt) |
+| `pwg.categories.calculateOrphans` | GET | Yes | `category_id` (ID[], req) |
+| `pwg.categories.add` | GET | Yes | `name` (string, req), `parent` (int, opt), `comment` (string, opt), `visible` (bool), `status` (public/private), `commentable` (bool), `position` (first/last), `pwg_token` |
+| `pwg.categories.delete` | POST | Yes | `category_id` (string/array, req), `photo_deletion_mode` (no_delete/delete_orphans/force_delete), `pwg_token` |
+| `pwg.categories.move` | POST | Yes | `category_id` (string/array, req), `parent` (int, req), `pwg_token` |
+| `pwg.categories.setInfo` | POST | Yes | `category_id` (ID, req), `name`/`comment`/`status`/`visible`/`commentable` (all opt), `apply_commentable_to_subalbums` (bool, opt), `pwg_token` |
+| `pwg.categories.setRank` | POST | Yes | `category_id` (ID[], req), `sort_rank` (int, opt) |
+| `pwg.categories.setRepresentative` | POST | Yes | `category_id` (ID, req), `image_id` (ID, req) |
+| `pwg.categories.deleteRepresentative` | POST | Yes | `category_id` (ID, req) |
+| `pwg.categories.refreshRepresentative` | POST | Yes | `category_id` (ID, req) |
+
+### B.5 Images (22 methods)
+
+| Method | HTTP | Admin | Key Parameters |
+|---|---|---|---|
+| `pwg.images.getInfo` | GET | No | `image_id` (ID, req), `comments_page` (int), `comments_per_page` (int) |
+| `pwg.images.search` | GET | No | `query` (string, req), `per_page` (int), `page` (int), `order` (string), + f_params |
+| `pwg.images.rate` | GET | No | `image_id` (ID, req), `rate` (float, req) |
+| `pwg.images.addComment` | POST | No | `image_id` (ID, req), `author` (string), `content` (string, req), `key` (string, req) |
+| `pwg.images.addSimple` | POST | Yes | `category` (ID[]), `name`/`author`/`comment` (string), `level` (int), `tags` (string/array), `image_id` (ID, opt — set to update) |
+| `pwg.images.upload` | POST | Yes | `name` (string), `category` (ID[]), `level` (int), `format_of` (ID, opt), `pwg_token` |
+| `pwg.images.addChunk` | POST | Yes | `data` (base64, req), `original_sum` (string, req), `type` (string), `position` (string, req) |
+| `pwg.images.addFile` | GET | Yes | `image_id` (ID, req), `type` (string), `sum` (string, req) |
+| `pwg.images.add` | GET | Yes | `original_sum` (string, req), `original_filename`/`name`/`author`/`date_creation`/`comment` (string, opt), `categories` (string — "id[,rank];id[,rank]"), `tag_ids` (string — comma-separated), `level` (int), `check_uniqueness` (bool), `image_id` (ID, opt) |
+| `pwg.images.uploadAsync` | POST | Yes | `username`/`password` (string, req), `chunk`/`chunks` (int, req), `chunk_sum`/`original_sum`/`filename` (string, req), `category` (ID[]), `name`/`author`/`comment`/`date_creation` (string, opt), `level` (int), `tag_ids` (string), `image_id` (ID, opt) |
+| `pwg.images.uploadCompleted` | GET | Yes | `image_id` (string/array, opt), `pwg_token` (req), `category_id` (ID, req) |
+| `pwg.images.setInfo` | POST | Yes | `image_id` (ID, req), `file`/`name`/`author`/`date_creation`/`comment` (string, opt), `categories` (string, opt), `tag_ids` (string, opt), `level` (int, opt), `single_value_mode` (fill_if_empty/replace), `multiple_value_mode` (append/replace), `pwg_token` |
+| `pwg.images.setPrivacyLevel` | POST | Yes | `image_id` (ID[], req), `level` (int, req) |
+| `pwg.images.setCategory` | POST | Yes | `image_id` (ID[], req), `category_id` (ID, req), `action` (associate/dissociate/move), `pwg_token` |
+| `pwg.images.setRank` | POST | Yes | `image_id` (ID[], req), `category_id` (ID, req), `sort_rank` (int, opt) |
+| `pwg.images.delete` | POST | Yes | `image_id` (string/array, req), `pwg_token` |
+| `pwg.images.exist` | GET | Yes | `md5sum_list` (string, opt), `filename_list` (string, opt) |
+| `pwg.images.checkFiles` | GET | Yes | `image_id` (ID, req), `file_sum` (string, opt) |
+| `pwg.images.checkUpload` | GET | Yes | (none) |
+| `pwg.images.setMd5sum` | POST | Yes | `block_size` (int, opt), `pwg_token` |
+| `pwg.images.syncMetadata` | POST | Yes | `image_id` (ID[], opt), `pwg_token` |
+| `pwg.images.deleteOrphans` | POST | Yes | `block_size` (int, opt, default=1000), `pwg_token` |
+| `pwg.images.emptyLounge` | GET | Yes | (none) |
+| `pwg.images.formats.searchImage` | POST | Yes | `category_id` (ID, opt), `filename_list` (string — JSON, req) |
+| `pwg.images.formats.delete` | POST | Yes | `format_id` (ID, opt), `pwg_token` |
+
+### B.6 Tags (8 methods)
+
+| Method | HTTP | Admin | Key Parameters |
+|---|---|---|---|
+| `pwg.tags.getList` | GET | No | `sort_by_counter` (bool) |
+| `pwg.tags.getImages` | GET | No | `tag_id` (ID[]), `tag_url_name` (string[]), `tag_name` (string[]), `tag_mode_and` (bool), `per_page`/`page`/`order`, + f_params |
+| `pwg.tags.getAdminList` | GET | Yes | (none) |
+| `pwg.tags.add` | GET | Yes | `name` (string, req) |
+| `pwg.tags.delete` | GET | Yes | `tag_id` (ID[], req), `pwg_token` |
+| `pwg.tags.rename` | GET | Yes | `tag_id` (ID, req), `new_name` (string, req), `pwg_token` |
+| `pwg.tags.duplicate` | POST | Yes | `tag_id` (ID, req), `copy_name` (string, req), `pwg_token` |
+| `pwg.tags.merge` | POST | Yes | `destination_tag_id` (ID, req), `merge_tag_id` (ID[], req), `pwg_token` |
+
+### B.7 Users (9 methods)
+
+| Method | HTTP | Admin | Key Parameters |
+|---|---|---|---|
+| `pwg.users.getList` | GET | Yes | `user_id` (ID[]), `username` (string, % wildcard), `status` (string[]), `min_level` (int), `group_id` (ID[]), `per_page`/`page`/`order`, `exclude` (ID[]), `display` (string — comma-separated fields), `filter` (string), `min_register`/`max_register` (date) |
+| `pwg.users.add` | POST | Yes | `username` (string, req), `password`/`password_confirm` (string, opt), `email` (string, opt), `send_password_by_mail` (bool), `pwg_token` |
+| `pwg.users.delete` | POST | Yes | `user_id` (ID[], req), `pwg_token` |
+| `pwg.users.setInfo` | POST | Yes | `user_id` (ID[], req), `username`/`password`/`email`/`status`/`level`/`language`/`theme` (opt), `group_id` (int[] — -1 to dissociate all), `pwg_token` |
+| `pwg.users.getAuthKey` | POST | Yes | `user_id` (ID, req), `pwg_token` |
+| `pwg.users.preferences.set` | GET | No | `param` (string, req), `value` (string, opt), `is_json` (bool) |
+| `pwg.users.favorites.add` | GET | No | `image_id` (ID, req) |
+| `pwg.users.favorites.remove` | GET | No | `image_id` (ID, req) |
+| `pwg.users.favorites.getList` | GET | No | `per_page`/`page`/`order` |
+
+### B.8 Groups (8 methods)
+
+| Method | HTTP | Admin | Key Parameters |
+|---|---|---|---|
+| `pwg.groups.getList` | GET | Yes | `group_id` (ID[]), `name` (string, % wildcard), `per_page`/`page`/`order` (id/name/nb_users/is_default) |
+| `pwg.groups.add` | POST | Yes | `name` (string, req), `is_default` (bool) |
+| `pwg.groups.delete` | POST | Yes | `group_id` (ID[], req), `pwg_token` |
+| `pwg.groups.setInfo` | POST | Yes | `group_id` (ID, req), `name` (string, opt), `is_default` (bool, opt), `pwg_token` |
+| `pwg.groups.addUser` | POST | Yes | `group_id` (ID, req), `user_id` (ID[], req), `pwg_token` |
+| `pwg.groups.deleteUser` | POST | Yes | `group_id` (ID, req), `user_id` (ID[], req), `pwg_token` |
+| `pwg.groups.merge` | POST | Yes | `destination_group_id` (ID, req), `merge_group_id` (ID[], req), `pwg_token` |
+| `pwg.groups.duplicate` | POST | Yes | `group_id` (ID, req), `copy_name` (string, req), `pwg_token` |
+
+### B.9 Plugins / Themes / Extensions (6 methods)
+
+| Method | HTTP | Admin | Key Parameters |
+|---|---|---|---|
+| `pwg.plugins.getList` | GET | Yes | (none) |
+| `pwg.plugins.performAction` | GET | Yes | `action` (install/activate/deactivate/uninstall/delete), `plugin` (string), `pwg_token` |
+| `pwg.themes.performAction` | GET | Yes | `action` (activate/deactivate/delete/set_default), `theme` (string), `pwg_token` |
+| `pwg.extensions.update` | GET | Webmaster | `type` (plugins/languages/themes), `id` (string), `revision` (string), `pwg_token` |
+| `pwg.extensions.ignoreUpdate` | GET | Webmaster | `type` (string, opt), `id` (string, opt), `reset` (bool), `pwg_token` |
+| `pwg.extensions.checkUpdates` | GET | Yes | (none) |
+
+### B.10 Permissions (3 methods)
+
+| Method | HTTP | Admin | Key Parameters |
+|---|---|---|---|
+| `pwg.permissions.getList` | GET | Yes | `cat_id` (ID[]), `group_id` (ID[]), `user_id` (ID[]) — provide only one |
+| `pwg.permissions.add` | POST | Yes | `cat_id` (ID[], req), `group_id` (ID[], opt), `user_id` (ID[], opt), `recursive` (bool), `pwg_token` |
+| `pwg.permissions.remove` | POST | Yes | `cat_id` (ID[], req), `group_id` (ID[], opt), `user_id` (ID[], opt), `pwg_token` |
+
+---
+
+## Appendix C: Complete Configuration Reference
+
+**Source:** `inc/Config.php` (~170 properties), `config` DB table, `local/config/config.php`
+**Loading order:** Code defaults → `local/config/config.php` → DB `config` table (last wins)
+
+### Gallery / Display
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `gallery_title` | DB: "Just another Piwigo gallery" | string | Gallery title |
+| `gallery_url` | `null` | string | Explicit home URL (null = auto-detect) |
+| `gallery_locked` | DB: false | bool | Lock gallery for maintenance |
+| `page_banner` | DB: HTML template | string | Banner HTML (`%gallery_title%` substituted) |
+| `show_version` | `false` | bool | Show Piwigo version at bottom |
+| `show_thumbnail_caption` | `true` | bool | Captions under thumbnails |
+| `level_separator` | `' / '` | string | Album hierarchy separator |
+| `paginate_pages_around` | `2` | int | Pages shown before/after current in pagination |
+| `random_index_redirect` | `[]` | array | Redirect rules for gallery root |
+
+### Albums
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `newcat_default_commentable` | `true` | bool | New albums commentable by default |
+| `newcat_default_visible` | `true` | bool | New albums visible by default |
+| `newcat_default_status` | `'public'` | string | Default privacy (public/private) |
+| `newcat_default_position` | `'first'` | string | New album position (first/last) |
+| `nb_categories_page` | DB: 12 | int | Sub-albums per page |
+| `allow_random_representative` | `false` | bool | Random cover image on each reload |
+| `inheritance_by_default` | `false` | bool | Inherit parent permissions |
+
+### Ordering
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `order_by` | DB: "ORDER BY date_creation DESC, file ASC, id ASC" | string | Global photo sort |
+| `order_by_inside_category` | DB: same as order_by | string | Photo sort inside album |
+
+### Image / Photo
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `picture_ext` | `['jpg','jpeg','png','gif','webp']` | array | Picture extensions |
+| `file_ext` | computed | array | All allowed file extensions |
+| `enable_formats` | `false` | bool | Multiple formats (RAW, etc.) |
+| `format_ext` | `['cr2','tif','tiff','nef','dng','ai','psd']` | array | Format extensions |
+| `uniqueness_mode` | `'md5sum'` | string | Duplicate check: md5sum or filename |
+| `available_permission_levels` | `[0,1,2,4,8]` | array | Privacy levels |
+
+### Derivatives / Image Processing
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `derivatives` | DB: serialized | array | Full derivative config (sizes, quality, watermark) |
+| `derivative_default_size` | `'medium'` | string | Default derivative size |
+| `derivatives_strip_metadata_threshold` | `256000` | int | Strip metadata below this pixel count |
+| `animated_webp_compression_quality` | `70` | int | Animated WebP quality |
+| `graphics_library` | `'auto'` | string | Image library: auto/imagick/gd/vips |
+| `original_resize` | DB: false | bool | Resize originals on upload |
+| `original_resize_maxwidth` | DB: 2016 | int | Max original width |
+| `original_resize_maxheight` | DB: 2016 | int | Max original height |
+| `original_resize_quality` | DB: 95 | int | Original resize JPEG quality |
+
+### Upload
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `upload_dir` | `'./upload'` | string | Upload directory |
+| `upload_form_chunk_size` | `500` | int | Chunk size (KB) |
+| `upload_form_max_file_size` | `1000` | int | Max file size (MB) |
+| `upload_form_automatic_rotation` | `true` | bool | Auto-rotate via EXIF |
+
+### Sync / Filesystem
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `enable_synchronization` | `true` | bool | Enable filesystem sync |
+| `sync_exclude_folders` | `[]` | array | Folders to exclude |
+| `sync_profiling` | `false` | bool | Detailed sync profiling |
+| `everything_dll_path` | `'admin/inc/Everything3_x64.dll'` | string | Everything SDK DLL |
+| `checksum_compute_blocksize` | `50` | int | MD5 computation batch size |
+
+### Metadata
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `show_exif` | `true` | bool | Show EXIF on picture page |
+| `show_exif_fields` | `['Make','Model','DateTimeOriginal','COMPUTED;ApertureFNumber']` | array | EXIF fields to display |
+| `use_exif` | `true` | bool | Use EXIF during sync |
+| `use_exif_mapping` | `['date_creation'=>'DateTimeOriginal']` | array | EXIF→DB mapping |
+| `show_iptc` | `false` | bool | Show IPTC metadata |
+| `use_iptc` | `false` | bool | Use IPTC during sync |
+| `use_iptc_mapping` | 5 entries | array | IPTC→DB mapping |
+
+### Comments
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `activate_comments` | DB: false | bool | Enable comments |
+| `anti_flood_time` | `60` | int | Seconds between comments |
+| `comment_spam_max_links` | `3` | int | Max links before spam |
+| `comments_validation` | DB: false | bool | Require admin approval |
+| `comments_forall` | DB: false | bool | Allow anonymous comments |
+| `user_can_delete_comment` | DB: false | bool | Users delete own comments |
+| `user_can_edit_comment` | DB: false | bool | Users edit own comments |
+
+### Authentication / Users
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `guest_id` | `2` | int | Guest user ID |
+| `webmaster_id` | `1` | int | Webmaster user ID |
+| `guest_access` | `true` | bool | Allow anonymous access |
+| `allow_user_registration` | DB: false | bool | Enable self-registration |
+| `insensitive_case_logon` | `false` | bool | Case-insensitive login |
+
+### Session
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `session_name` | `'pwg_id'` | string | Session cookie name |
+| `session_save_handler` | `'db'` | string | Session backend |
+| `session_length` | `3600` | int | Session lifetime (seconds) |
+| `session_use_ip_address` | `true` | bool | IP binding for sessions |
+| `authorize_remembering` | `true` | bool | Enable remember-me |
+| `remember_me_length` | `5184000` | int | Remember-me lifetime (60 days) |
+
+### Email / SMTP
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `smtp_host` | `''` | string | SMTP host:port (empty = PHP mail) |
+| `smtp_user` | `''` | string | SMTP username |
+| `smtp_password` | `''` | string | SMTP password |
+| `smtp_secure` | `null` | string | ssl/tls/null |
+| `mail_theme` | DB: 'clear' | string | Email template theme |
+
+### URLs
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `question_mark_in_urls` | `true` | bool | `?` in URLs |
+| `php_extension_in_urls` | `true` | bool | `.php` in URLs |
+| `category_url_style` | `'id'` | string | Album URL: id / id-name |
+| `picture_url_style` | `'id'` | string | Picture URL: id / id-file / file |
+| `tag_url_style` | `'id-tag'` | string | Tag URL: id-tag / id / tag |
+
+### Performance / Debug
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `show_queries` | `false` | bool | Display SQL queries |
+| `template_combine_files` | `false` | bool | Merge JS/CSS files |
+| `template_force_compile` | `true` | bool | Force template recompilation |
+| `log_sql_queries` | `false` | bool | Log all SQL queries |
+
+### Admin
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `ws_max_images_per_page` | `500` | int | Max images per API response |
+| `ws_max_users_per_page` | `1000` | int | Max users per API response |
+| `batch_manager_images_per_page_global` | `20` | int | Batch manager global images/page |
+| `batch_manager_images_per_page_unit` | `5` | int | Batch manager unit images/page |
+
+### Miscellaneous
+
+| Key | Default | Type | Description |
+|---|---|---|---|
+| `top_number` | `15` | int | Items in best-rated/most-visited |
+| `allow_html_descriptions` | `true` | bool | HTML in descriptions |
+| `secret_key` | DB: random | string | CSRF/HMAC secret |
+| `rate` | DB: true | bool | Enable rating |
+| `rate_anonymous` | DB: true | bool | Anonymous rating |
+| `rate_items` | `[0,1,2,3,4,5]` | array | Rating values |
+| `auth_key_duration` | `259200` | int | Auth key TTL (3 days) |
+| `data_location` | `'_data/'` | string | Data directory |
+
+---
+
+## Appendix D: Complete Hook Event Catalog
+
+**Total: ~105 unique events** — 62 notify, 43 change
+**Source:** Grep of all `trigger_notify()` and `trigger_change()` calls across the codebase
+
+### D.1 Lifecycle / Initialization (7 events)
+
+| Event | Type | Location | Data |
+|---|---|---|---|
+| `init` | notify | `common.php:296` | (none) |
+| `loading_lang` | notify | `common.php:192` + 3 others | (none) |
+| `load_conf` | notify | `functions.php:1471` | `$condition` (SQL WHERE) |
+| `plugins_loaded` | notify | `functions_plugins.php:366` | (none) |
+| `user_init` | notify | `user.php:80` | `$user` array |
+| `functions_mail_included` | notify | `functions_mail.php:957` | (none) |
+| `functions_history_included` | notify | `functions_history.php:452` | (none) |
+
+### D.2 Authentication (10 events)
+
+| Event | Type | Location | Data |
+|---|---|---|---|
+| `try_log_user` | **change** | `functions_user.php:1090` | `false`, `$username`, `$password`, `$remember_me` |
+| `register_user_check` | **change** | `functions_user.php:181` | `$errors` array, registration data |
+| `register_user` | notify | `functions_user.php:292` | `['id', 'username', 'email']` |
+| `user_login` | notify | `functions_user.php:1017` | `$user_id` |
+| `login_success` | notify | `functions_user.php:1043,1165,1502` | `$username` |
+| `login_failure` | notify | `functions_user.php:1170` | `$username` |
+| `user_logout` | notify | `functions_user.php:1181` | `$_SESSION['pwg_uid']` |
+| `delete_user` | notify | `functions_admin.php:432` | `$user_id` |
+| `save_profile_from_post` | notify | `functions.php:3467` | `$userdata['id']` |
+| `load_profile_in_template` | notify | `functions.php:3537` | `$userdata` |
+
+### D.3 Page Lifecycle — loc_begin/loc_end (27 events)
+
+| Event | Type | Location |
+|---|---|---|
+| `loc_begin_page_header` | notify | `page_header.php:23` |
+| `loc_end_page_header` | notify | `page_header.php:105` |
+| `loc_after_page_header` | notify | `page_header.php:110` |
+| `loc_begin_page_tail` | notify | `page_tail.php:22` |
+| `loc_end_page_tail` | notify | `page_tail.php:103` |
+| `loc_begin_index` / `loc_end_index` | notify | `index.php` |
+| `loc_begin_picture` / `loc_end_picture` | notify | `picture.php` |
+| `loc_begin_identification` / `loc_end_identification` | notify | `identification.php` |
+| `loc_begin_register` / `loc_end_register` | notify | `register.php` |
+| `loc_begin_password` / `loc_end_password` | notify | `password.php` |
+| `loc_begin_profile` / `loc_end_profile` | notify | `profile.php` |
+| `loc_begin_search` | notify | `search.php` |
+| `loc_begin_tags` / `loc_end_tags` | notify | `tags.php` |
+| `loc_begin_comments` / `loc_end_comments` | notify | `comments.php` |
+| `loc_begin_about` | notify | `about.php` |
+| `loc_begin_notification` / `loc_end_notification` | notify | `notification.php` |
+| `loc_end_section_init` | notify | `section_init.php:696` |
+| `loc_begin_admin` / `loc_end_admin` | notify | `admin.php` |
+| `loc_begin_admin_page` | notify | `admin.php:318` |
+
+### D.4 Data Modification (15 events)
+
+| Event | Type | Location | Data |
+|---|---|---|---|
+| `create_virtual_category` | notify | `functions_admin.php:1655` | `['id' => ...]` |
+| `delete_categories` | notify | `functions_admin.php:175` | `$ids` |
+| `begin_delete_elements` | notify | `functions_admin.php:298` | `$ids` |
+| `delete_elements` | notify | `functions_admin.php:378` | `$ids` |
+| `delete_tags` | notify | `functions_admin.php:1777` | `$tag_ids` |
+| `delete_group` | notify | `functions_admin.php:2913` | `$groupids` |
+| `empty_lounge` | notify | `functions_admin.php:2246` | `$rows` |
+| `invalidate_user_cache` | notify | `functions_admin.php:2516` | `$full` (bool) |
+| `element_set_global_action` | notify | `batch_manager_global.php:393` | `$action`, `$collection` |
+| `picture_modify_before_update` | **change** | `picture_modify.php:126` | `$data` array |
+| `ws_images_uploadCompleted` | notify | `pwg_images.php:2534` | upload info |
+| `loc_end_add_uploaded_file` | notify | `functions_upload.php:383` | `$image_infos` |
+| `loc_end_add_format` | notify | `functions_upload.php:488` | `$format_infos` |
+| `upload_file` | **change** | `functions_upload.php:272` | `null`, `$file_path` |
+
+### D.5 Rendering Filters (16 events)
+
+| Event | Type | Data |
+|---|---|---|
+| `render_category_name` | **change** | `$name` string |
+| `render_category_description` | **change** | `$comment` string |
+| `render_category_literal_description` | **change** | `$desc` string |
+| `render_element_name` | **change** | `$name`, `$info` |
+| `render_element_description` | **change** | `$comment`, `$param` |
+| `render_element_content` | **change** | `''`, `$picture['current']` |
+| `render_comment_content` | **change** | `$content` string |
+| `render_comment_author` | **change** | `$author` string |
+| `render_tag_name` | **change** | `$name`, `$row` |
+| `render_tag_url` | **change** | `$tag_name` → URL slug |
+| `render_page_banner` | **change** | `$banner_html` |
+| `render_lost_password_mail_content` | **change** | `$message` |
+| `get_thumbnail_title` | **change** | `$title`, `$info` |
+| `get_tag_alt_names` | **change** | `[]`, `$raw_name` |
+| `get_tag_name_like_where` | **change** | `[]`, `$tag_name` |
+
+### D.6 Search (6 events)
+
+| Event | Type | Data |
+|---|---|---|
+| `qsearch_pre` | **change** | `$q` query string |
+| `qsearch_get_scopes` | **change** | `$scopes` array |
+| `qsearch_expression_parsed` | notify | `$expression` |
+| `qsearch_before_eval` | notify | `$expression`, `$qsr` |
+| `qsearch_get_images_sql_scopes` | **change** | `$clauses`, `$token`, `$expr` |
+| `qsearch_results` | **change** | `$search_results`, `$expression`, `$qsr` |
+
+### D.7 Index / Thumbnails (10 events)
+
+| Event | Type | Data |
+|---|---|---|
+| `loc_begin_index_thumbnails` | notify | `$pictures` |
+| `loc_index_thumbnails_selection` | **change** | `$selection` (image IDs) |
+| `loc_end_index_thumbnails` | **change** | `$tpl_thumbnails_var`, `$pictures` |
+| `get_index_derivative_params` | **change** | DerivativeParams |
+| `loc_begin_index_category_thumbnails_query` | **change** | `$query` SQL |
+| `loc_begin_index_category_thumbnails` | notify | `$categories` |
+| `loc_end_index_category_thumbnails` | **change** | `$tpl_var` |
+| `get_index_album_derivative_params` | **change** | DerivativeParams |
+| `get_categories_menu_sql_where` | **change** | `$where` SQL |
+| `get_category_preferred_image_orders` | **change** | `$orders` array |
+
+### D.8 Picture Page (3 events)
+
+| Event | Type | Data |
+|---|---|---|
+| `allow_increment_element_hit_count` | **change** | `$inc_hit_count` bool |
+| `get_element_metadata_available` | **change** | `$showable` bool |
+| `picture_pictures_data` | **change** | `$picture` full data |
+
+### D.9 Comments (4 events)
+
+| Event | Type | Data |
+|---|---|---|
+| `user_comment_check` | **change** | `$comment_action`, `$comm` |
+| `user_comment_insertion` | notify | `$comm + action` |
+| `user_comment_deletion` | notify | `$comment_id` |
+| `user_comment_validation` | notify | `$comment_id` |
+
+### D.10 API (5 events)
+
+| Event | Type | Data |
+|---|---|---|
+| `ws_add_methods` | notify | `[&$server]` PwgServer ref |
+| `ws_invoke_allowed` | **change** | `true`, `$methodName`, `$params` |
+| `sendResponse` | notify | `$encodedResponse` |
+| `get_history` | **change** | `[]`, `$search`, `$types` |
+| `ws_users_getList` | **change** | `$users` array |
+
+### D.11 Image/Derivative URLs (4 events)
+
+| Event | Type | Data |
+|---|---|---|
+| `get_derivative_url` | **change** | `$url`, `$params`, `$src_image`, `$rel_url` |
+| `get_src_image_url` | **change** | `$url`, `$this` SrcImage |
+| `get_element_url` | **change** | (handler-dependent) |
+| `get_mimetype_location` | **change** | `$path`, `$ext` |
+
+### D.12 Template / Assets (5 events)
+
+| Event | Type | Data |
+|---|---|---|
+| `combinable_preparse` | notify | `$template`, `$combinable`, `$this` |
+| `combined_css` | **change** | `$href` URL |
+| `combined_css_postfilter` | **change** | `$css` string |
+| `combined_script` | **change** | `$ret` URL |
+| `tabsheet_before_select` | **change** | `$sheets`, `$uniqid` |
+
+### D.13 Block Manager (3 events)
+
+| Event | Type | Data |
+|---|---|---|
+| `blockmanager_register_blocks` | notify | `[$this]` BlockManager |
+| `blockmanager_prepare_display` | notify | `[$this]` BlockManager |
+| `blockmanager_apply` | notify | `[$this]` BlockManager |
+
+### D.14 Mail (4 events)
+
+| Event | Type | Data |
+|---|---|---|
+| `before_send_mail` | **change** | `true`, `$to`, `$args`, `$mail` PHPMailer |
+| `before_parse_mail_template` | notify | `$cache_key`, `$content_type` |
+| `nbm_render_global_customize_mail_content` | **change** | `$content` |
+| `nbm_render_user_customize_mail_content` | **change** | `$content`, `$user` |
+
+### D.15 Themes (5 events)
+
+| Event | Type | Data |
+|---|---|---|
+| `theme_installed` | notify | `['theme_id' => ...]` |
+| `theme_activated` | notify | `['theme_id' => ...]` |
+| `theme_deactivated` | notify | `['theme_id' => ...]` |
+| `theme_deleted` | notify | `['theme_id' => ...]` |
+| `get_pwg_themes` | **change** | `$themes` array |
+
+### D.16 Metadata / Logging / Misc (6 events)
+
+| Event | Type | Data |
+|---|---|---|
+| `clean_iptc_value` | **change** | `$value` raw IPTC |
+| `format_exif_data` | **change** | `$exif`, `$filename`, `$map` |
+| `update_rating_score` | **change** | `false`, `$element_id` |
+| `pwg_log_allowed` | **change** | `$do_log` bool |
+| `pwg_log_update_last_visit` | **change** | `$update_last_visit` bool |
+| `set_status_header` | notify | `$code`, `$text` |
+
+---
+
+## Appendix E: Complete Template Inventory
+
+**Total: 265 .tpl files** — 67 admin, 53 default theme, 69 bootstrap_darkroom, 16 modus, 2 elegant, 34 smartpocket, 11 plugins, 9 mail, 4 samples
+
+### Admin Theme (67 files)
+
+56 page templates + 11 partials/includes in `admin/themes/default/template/`
+
+**Pages:** `admin.tpl`, `album_notification.tpl`, `albums.tpl`, `batch_manager_global.tpl`, `batch_manager_unit.tpl`, `cat_list.tpl`, `cat_modify.tpl`, `cat_options.tpl`, `cat_perm.tpl`, `cat_search.tpl`, `check_integrity.tpl`, `comments.tpl`, `configuration_comments.tpl`, `configuration_default.tpl`, `configuration_display.tpl`, `configuration_main.tpl`, `configuration_sizes.tpl`, `configuration_watermark.tpl`, `element_set_ranks.tpl`, `extend_for_templates.tpl`, `group_list.tpl`, `group_perm.tpl`, `help.tpl`, `history.tpl`, `install.tpl`, `intro.tpl`, `languages_installed.tpl`, `languages_new.tpl`, `maintenance_actions.tpl`, `maintenance_env.tpl`, `menubar.tpl`, `notification_by_mail.tpl`, `permalinks.tpl`, `photos_add_applications.tpl`, `photos_add_direct.tpl`, `photos_add_ftp.tpl`, `picture_coi.tpl`, `picture_formats.tpl`, `picture_modify.tpl`, `plugins_installed.tpl`, `plugins_new.tpl`, `popuphelp.tpl`, `rating.tpl`, `rating_user.tpl`, `site_manager.tpl`, `site_update.tpl`, `stats.tpl`, `tags.tpl`, `themes_installed.tpl`, `themes_new.tpl`, `updates_ext.tpl`, `updates_pwg.tpl`, `upgrade.tpl`, `user_activity.tpl`, `user_list.tpl`, `user_perm.tpl`
+
+**Partials:** `header.tpl`, `footer.tpl`, `navigation_bar.tpl`, `tabsheet.tpl`, `double_select.tpl`, `inc/add_album.inc.tpl`, `inc/album_selector.inc.tpl`, `inc/autosize.inc.tpl`, `inc/colorbox.inc.tpl`, `inc/datepicker.inc.tpl`, `inc/install.inc.tpl`
+
+### Default Theme (53 files)
+
+16 page templates + 24 partials + 13 mail templates in `themes/default/template/`
+
+**Pages:** `about.tpl`, `comments.tpl`, `identification.tpl`, `index.tpl`, `nbm.tpl`, `notification.tpl`, `password.tpl`, `picture.tpl`, `popuphelp.tpl`, `profile.tpl`, `redirect.tpl`, `register.tpl`, `search.tpl`, `search_rules.tpl`, `slideshow.tpl`, `tags.tpl`
+
+**Key partials:** `header.tpl`, `footer.tpl`, `thumbnails.tpl`, `menubar.tpl`, `navigation_bar.tpl`, `picture_content.tpl`, `picture_nav_buttons.tpl`, `mainpage_categories.tpl`, `comment_list.tpl`, `profile_content.tpl`, menubar_*.tpl (8 files)
+
+### Bootstrap Darkroom (69 files)
+
+13 page templates + 54 partials + 2 admin in `themes/bootstrap_darkroom/template/`
+
+Overrides all default theme pages plus adds PhotoSwipe integration (`_photoswipe_div.tpl`, `_photoswipe_js.tpl`), Slick carousel (`_slick_js.tpl`), and extensive partial library.
+
+### Modus (16 files)
+
+4 page overrides + 5 partials + 5 CSS templates + 1 mail + 1 admin in `themes/modus/`
+
+**Notable:** CSS files are Smarty templates (`.css.tpl`) requiring Tera rendering before serving.
+
+### SmartPocket (34 files)
+
+12 page templates + 21 partials + 1 admin in `themes/smartpocket/template/`
+
+Mobile-focused theme, inherits from default.
+
+### Elegant (2 files)
+
+`local_head.tpl` + `admin/admin.tpl` — minimal overrides, inherits almost everything from default.
+
+### Plugins (11 files)
+
+AdminTools (3), GDThumb (3), LocalFilesEditor (2), TakeATour (2+tours), language_switch (1)
+
+### Theme Inheritance Chain
+
+```
+default (base) ←── bootstrap_darkroom (full override)
+              ←── modus (selective override)
+              ←── elegant (minimal override)
+              ←── smartpocket (mobile override)
+```
+
+Missing templates in child themes fall through to `default`.
+
+---
+
+## Appendix F: Complete URL Routing Map
+
+### F.1 Frontend URL Patterns
+
+**Router:** `inc/section_init.php` — splits PATH_INFO on `/`, dispatches via `parse_section_url()` then `parse_well_known_params_url()`.
+
+| URL Pattern | Section | Parameters |
+|---|---|---|
+| `/` (no path) | `categories` | `is_homepage = true` |
+| `/category/{id}` | `categories` | `category = id` |
+| `/category/{id}-{slug}` | `categories` | `category = id`, slug for SEO |
+| `/category/{permalink}` | `categories` | Resolved via `old_permalinks` |
+| `/category/{id1}/{id2}/{id3}` | `categories` | Combined multi-album view |
+| `/tags/{id1}-{name}/{id2}-{name}` | `tags` | One or more tags |
+| `/search/{search_id}` | `search` | Integer search ID |
+| `/search/{psk-YYYYMMDD-XXXXXXXXXX}` | `search` | Persistent search key |
+| `/favorites` | `favorites` | (requires auth) |
+| `/most_visited` | `most_visited` | |
+| `/best_rated` | `best_rated` | |
+| `/recent_pics` | `recent_pics` | |
+| `/recent_cats` | `recent_cats` | |
+| `/list/{id1,id2,id3}` | `list` | Explicit image ID list |
+
+**Trailing modifiers** (can follow any section):
+
+| Token | Parameter |
+|---|---|
+| `flat` | `page.flat = true` |
+| `start-{N}` | `page.start = N` (image pagination) |
+| `startcat-{N}` | `page.startcat = N` (album pagination) |
+| `created-monthly` | Calendar by creation date |
+| `posted-weekly` | Calendar by post date |
+| `{field}-{style}-{Y}-{M}-{D}` | Calendar drill-down to specific date |
+
+### F.2 Picture Page URL Patterns
+
+**Router:** `picture.php` — extracts image ID from first token, then delegates to section parser for context.
+
+| URL Pattern | Parameters |
+|---|---|
+| `/picture/{image_id}` | `image_id` only |
+| `/picture/{image_id}-{filename}` | `image_id` + `image_file` |
+| `/picture/{filename}` | Resolved by filename lookup |
+| `/picture/{image_id}/category/{cat_id}` | Image within album context |
+| `/picture/{image_id}/tags/{tag_id}` | Image within tag context |
+| `/picture/{image_id}/favorites` | Image within favorites context |
+| `/picture/{image_id}/search/{search_id}` | Image within search context |
+
+### F.3 Standalone Endpoints
+
+| File | URL | Purpose | Has Template |
+|---|---|---|---|
+| `search.php` | `/search.php` | Search form / quick search | Yes |
+| `tags.php` | `/tags.php` | Tag cloud / letter listing | Yes |
+| `about.php` | `/about.php` | About page | Yes |
+| `identification.php` | `/identification.php` | Login | Yes |
+| `register.php` | `/register.php` | Registration | Yes |
+| `password.php` | `/password.php` | Password reset | Yes |
+| `profile.php` | `/profile.php` | User profile | Yes |
+| `comments.php` | `/comments.php` | Public comments | Yes |
+| `notification.php` | `/notification.php` | Notification page | Yes |
+| `nbm.php` | `/nbm.php` | Mail notification subscribe | Yes |
+| `feed.php` | `/feed.php` | RSS/Atom feed | No (XML) |
+| `action.php` | `/action.php` | File download | No (stream) |
+| `random.php` | `/random.php` | Random image redirect | No (redirect) |
+| `qsearch.php` | `/qsearch.php` | Quick search redirect | No (redirect) |
+| `i.php` | `/_data/i/...` | On-demand derivative gen | No (image) |
+| `ws.php` | `/ws.php` | REST API | No (JSON/XML) |
+
+### F.4 Admin URL Patterns
+
+**Router:** `admin.php` — single GET parameter `page=` maps to PHP file in `admin/`.
+
+**Clean URL aliases:**
+- `admin.php?page=plugin-{name}-{tab}` → plugin admin page
+- `admin.php?page=album-{id}-{tab}` → album admin (tabs: properties/sort/permissions/notification)
+- `admin.php?page=photo-{id}-{tab}` → photo admin (tabs: properties/coi/formats)
+
+**All admin pages (50+):**
+
+`intro` (dashboard), `album`, `album_notification`, `albums`, `batch_manager`, `batch_manager_global`, `batch_manager_unit`, `cat_list`, `cat_modify`, `cat_options`, `cat_perm`, `cat_search`, `comments`, `configuration` (sub-sections: main/sizes/watermark/default/comments), `element_set_ranks`, `extend_for_templates`, `group_list`, `group_perm`, `help`, `history`, `languages_installed`, `languages_new`, `maintenance_actions`, `maintenance_env`, `menubar`, `notification_by_mail`, `permalinks`, `photo`, `photos_add_direct`, `photos_add_ftp`, `photos_add_applications`, `picture_coi`, `picture_formats`, `picture_modify`, `plugin`, `plugins_installed`, `plugins_new`, `rating`, `rating_user`, `site_manager`, `site_update`, `stats`, `tags`, `theme`, `themes_installed`, `themes_new`, `updates_ext`, `updates_pwg`, `user_activity`, `user_list`, `user_perm`
+
+**Common query parameters:** `&section=` (config sub-pages), `&tab=` (tabbed pages), `&cat_id=` (album pages), `&image_id=` (photo pages), `&filter=prefilter-{name}` (batch manager)
+
+### F.5 Notes for Rust Router
+
+1. **No `.htaccess` exists** — all routing is PHP-internal via PATH_INFO splitting
+2. **URL dispatch is two-phase:** `parse_section_url()` → section, then `parse_well_known_params_url()` → modifiers
+3. **`picture.php` has its own parser** for the image identifier, then delegates context to the section parser
+4. **Admin routing is simpler:** `page=` GET param maps 1:1 to a PHP file
+5. **`ws.php`** has its own method dispatch system via `MethodRegistry` (separate from URL router)

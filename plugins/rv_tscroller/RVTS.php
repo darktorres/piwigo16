@@ -88,11 +88,11 @@ final class RVTS
      */
     public static function on_end_index_cats(): void
     {
-        global $page, $template, $conf;
+        global $page, $template, $conf, $user;
 
         $total    = $page['total_categories'] ?? 0;
         $startcat = $page['startcat'] ?? 0;
-        $per_page = $conf->nb_categories_page;
+        $per_page = $user['nb_image_page'];
 
         if ($total <= $per_page + $startcat) {
             return; // All albums visible — nothing to scroll.

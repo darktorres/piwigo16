@@ -69,7 +69,7 @@ if ($page['section'] != 'recent_cats') {
 
 $offset = $page['startcat'] ?? 0;
 $query .= <<<SQL
-    LIMIT {$conf->nb_categories_page} OFFSET {$offset};
+    LIMIT {$user['nb_image_page']} OFFSET {$offset};
     SQL;
 
 $query = functions_plugins::trigger_change('loc_begin_index_category_thumbnails_query', $query);
@@ -345,12 +345,12 @@ if ($categories !== []) {
     // navigation bar
     $page['cats_navigation_bar'] = [];
 
-    if ($page['total_categories'] > $conf->nb_categories_page) {
+    if ($page['total_categories'] > $user['nb_image_page']) {
         $page['cats_navigation_bar'] = functions::create_navigation_bar(
             functions_url::duplicate_index_url([], ['startcat']),
             $page['total_categories'],
             $page['startcat'],
-            $conf->nb_categories_page,
+            $user['nb_image_page'],
             true,
             'startcat'
         );

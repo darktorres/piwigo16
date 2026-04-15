@@ -7,7 +7,7 @@
       <a class="dropdown-item{if $cat.SELECTED} active{/if}" data-level="{($cat.LEVEL -1)}" href="{$cat.URL}">
         {$cat.NAME}
         {if $cat.count_images > 0}
-          <span class="badge badge-secondary ml-2" title="{$cat.TITLE}">{$cat.count_images}</span>
+          <span class="badge badge-secondary ml-2" title="{$cat.TITLE}">{$cat.count_images|number_format}</span>
         {/if}
         {if !empty($cat.icon_ts)}
           <span class="album-recent ml-2" title="{$cat.icon_ts.TITLE}">✻</span>

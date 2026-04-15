@@ -1326,12 +1326,12 @@ final class functions
         global $lang_info;
 
         return sprintf(
-            self::l10n((
+            str_replace('%d', '%s', self::l10n((
                 ($decimal > 1 || ($decimal == 0 && $lang_info['zero_plural']))
                 ? $plural_key
                 : $singular_key
-            )),
-            $decimal
+            ))),
+            number_format((int) $decimal)
         );
     }
 

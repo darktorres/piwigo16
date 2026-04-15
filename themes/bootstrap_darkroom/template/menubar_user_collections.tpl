@@ -3,7 +3,7 @@
         <a class="dropdown-item" id="menu-info-coll-{$coll_id}" href="{$coll_edit}"
             {if $coll_id == "coll_template"}style="display:none" {/if}>
             {$coll_name}
-            <span class="badge badge-secondary ml-2">{$coll_nb_images}</span>
+            <span class="badge badge-secondary ml-2">{$coll_nb_images|number_format}</span>
         </a>
     {/function}
 {/function}

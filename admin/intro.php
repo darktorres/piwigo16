@@ -171,13 +171,13 @@ if ($du_gb > 100) {
 
 $template->assign(
     [
-        'NB_PHOTOS' => $nb_photos,
-        'NB_ALBUMS' => $nb_categories,
-        'NB_TAGS' => $nb_tags,
-        'NB_IMAGE_TAG' => $nb_image_tag,
-        'NB_USERS' => $nb_users,
-        'NB_GROUPS' => $nb_groups,
-        'NB_RATES' => $nb_rates,
+        'NB_PHOTOS' => (int) $nb_photos,
+        'NB_ALBUMS' => (int) $nb_categories,
+        'NB_TAGS' => (int) $nb_tags,
+        'NB_IMAGE_TAG' => (int) $nb_image_tag,
+        'NB_USERS' => (int) $nb_users,
+        'NB_GROUPS' => (int) $nb_groups,
+        'NB_RATES' => (int) $nb_rates,
         'NB_VIEWS' => functions_admin::number_format_human_readable($nb_views),
         'NB_PLUGINS' => count($pwg_loaded_plugins),
         'STORAGE_USED' => str_replace(' ', '&nbsp;', functions::l10n('%sGB', number_format($du_gb, $du_decimals))),

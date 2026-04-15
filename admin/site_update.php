@@ -599,7 +599,7 @@ if (isset($_POST['submit']) &&
     $chunk_fmt_new    = [];
     $chunk_caddie     = [];
 
-    $image_fields = ['id', 'file', 'name', 'date_available', 'path', 'representative_ext', 'storage_category_id', 'added_by'];
+    $image_fields = ['id', 'file', 'name', 'date_available', 'path', 'representative_ext', 'storage_category_id', 'added_by', 'filesize'];
 
     if ($_POST['privacy_level'] != 0) {
         $image_fields[] = 'level';
@@ -729,6 +729,7 @@ if (isset($_POST['submit']) &&
                 'representative_ext'  => $meta['representative_ext'],
                 'storage_category_id' => $db_fulldirs[$dirname],
                 'added_by'            => $user['id'],
+                'filesize'            => $meta['fs_filesize'],
             ];
 
             if ($_POST['privacy_level'] != 0) {

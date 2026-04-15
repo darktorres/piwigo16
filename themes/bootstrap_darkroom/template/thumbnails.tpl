@@ -24,7 +24,7 @@
                     <a href="{$thumbnail.URL}" data-index="{$idx}"
                         class="ripple{if isset($smarty.cookies.view) and $smarty.cookies.view != 'list'} d-block{/if}"
                         data-pswp-src="{$derivative->src_image->get_url()}" data-pswp-width="{$src_size.0}"
-                        data-pswp-height="{$src_size.1}" data-pswp-cropped="true">
+                        data-pswp-height="{$src_size.1}">
                         <img class="{if isset($smarty.cookies.view) and $smarty.cookies.view == 'list'}card-img-left{else}card-img-top{/if} thumb-img"
                             src="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
                             alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}">

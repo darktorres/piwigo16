@@ -908,3 +908,9 @@ html:has(#thumbnails) #content .titrePage {
     top: 0;
     z-index: 50;
 }
+
+html:has(#thumbnails) #copyright,
+html:has(#thumbnails) #copyright a {
+    font-size: 1rem;
+    color: #fff;
+}

@@ -1,6 +1,6 @@
         <!-- Start of footer.tpl -->
         </div><!-- /bd_scroll_area -->
-        <div class="copyright container{if $theme_config->fluid_width}-fluid{/if}">
+        <div class="copyright container{if $theme_config->fluid_width}-fluid{/if} {$theme_config->navbar_contextual_bg}">
                 <div class="text-center">
                         {if isset($debug.TIME)}
                                 {'Page generated in'|translate} {$debug.TIME} ({$debug.NB_QUERIES}

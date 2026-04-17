@@ -110,7 +110,7 @@ body {
 
 /* Copyright container */
 .copyright {
-  padding: 30px;
+  padding: 8px 30px;
 }
 
 /* Help popup */
@@ -1134,5 +1134,13 @@ html:has(#thumbnails) #bd_scroll_area {
     flex: 1 1 0%;
     overflow-y: auto;
     min-height: 0;
-    padding-bottom: 90px;
+    padding-bottom: 50px;
+}
+
+html:has(#thumbnails) .copyright {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
 }

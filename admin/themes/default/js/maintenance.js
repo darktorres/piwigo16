@@ -1,3 +1,4 @@
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 function displayResponse(domElem, values, mDivs, mValues) {
     for (let index = 0; index < domElem.length; index++) {
         domElem[index].innerHTML = unit_MB.replace("%s", values[index]);
@@ -12,7 +13,7 @@ function displayResponse(domElem, values, mDivs, mValues) {
     if (cacheLastCalc) cacheLastCalc.innerHTML = no_time_elapsed;
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     document.querySelectorAll(".refresh-cache-size").forEach(function (btn) {
         btn.addEventListener("click", function () {
             var refreshIcon = this.querySelector(".refresh-icon");

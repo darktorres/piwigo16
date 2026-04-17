@@ -140,11 +140,9 @@
                 ts.settings.create = !!options.create;
 
                 // load options
-                ts.load(function (callback) {
-                    if (Object.keys(this.options).length === 0) {
-                        callback(filtered);
-                    }
-                });
+                if (Object.keys(ts.options).length === 0) {
+                    ts.addOptions(filtered);
+                }
 
                 // load items
                 if ((value = el.dataset.value)) {

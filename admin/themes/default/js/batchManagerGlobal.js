@@ -1,3 +1,4 @@
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 /* ********** Filters */
 function filter_enable(filter) {
     /* show the filter*/
@@ -49,7 +50,7 @@ function filter_disable(filter) {
 /* Called from the addFilter-button onclick attribute */
 function toggleAddFilterDropdown() {
     var el = document.querySelector('.addFilter-dropdown');
-    if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+    if (el) el.style.display = window.getComputedStyle(el).display === 'none' ? 'block' : 'none';
 }
 
 /* Called from javascript: hrefs in the generate/delete derivatives action panels */
@@ -127,7 +128,7 @@ document.addEventListener("mouseup", function (e) {
 
 /* ********** Thumbs */
 
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     var cfg = batchManagerConfig;
     var lang = cfg.lang;
 

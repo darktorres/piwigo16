@@ -1,26 +1,24 @@
 import { test, expect } from "@playwright/test";
 import { collectConsoleIssues, assertNoErrors } from "../helpers/index.js";
+import { dbGetFirstPhysicalAlbumId } from "../helpers/db.js";
 
 test.describe("Admin — rating", () => {
 
     test("rating admin — category filter reveal/hide", async ({ page }) => {
+        const catId = await dbGetFirstPhysicalAlbumId();
+        expect(catId, "A physical album must exist").not.toBeNull();
+
         const getIssues = collectConsoleIssues(page);
-        await page.goto("admin.php?page=rating");
+        // Load with a pre-selected category so removeAlbumFilter appears
+        await page.goto(`admin.php?page=rating&cat=${catId!}`);
         await assertNoErrors(page, getIssues());
 
-        // Selectize hides the native <select>; interact via its UI
-        const selectizeInput = page.locator('[data-selectize=categories] + .selectize-control .selectize-input');
-        await expect(selectizeInput).toBeVisible();
-        await selectizeInput.click();
-
-        // Wait for dropdown and pick the first option
-        const firstOption = page.locator('.selectize-dropdown .option').first();
-        await expect(firstOption).toBeVisible({ timeout: 5_000 });
-        await firstOption.click();
-
-        await expect(page.locator("#removeAlbumFilter")).toBeVisible();
-        await page.locator("#removeAlbumFilter").click();
-        await expect(page.locator("#removeAlbumFilter")).toBeHidden();
+        // After cache resolves, TomSelect adds the item and fires 'change',
+        // which makes #removeAlbumFilter visible
+        const removeBtn = page.locator("#removeAlbumFilter");
+        await expect(removeBtn).toBeVisible({ timeout: 10_000 });
+        await removeBtn.click();
+        await expect(removeBtn).toBeHidden();
     });
 
     test("rating user — DataTables renders", async ({ page }) => {

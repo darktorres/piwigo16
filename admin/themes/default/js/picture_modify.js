@@ -1,4 +1,5 @@
-document.addEventListener('DOMContentLoaded', function () {
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+_docReady( function () {
     document.querySelectorAll(".linked-albums.add-item").forEach(function (btn) {
         btn.addEventListener("click", function () {
             linked_albums_open();

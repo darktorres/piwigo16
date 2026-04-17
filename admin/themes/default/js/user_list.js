@@ -1,3 +1,4 @@
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 const color_icons = [
     "icon-red",
     "icon-blue",
@@ -94,7 +95,7 @@ function isSelectionMode() {
     return toggleSelectionMode ? toggleSelectionMode.checked : false;
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+_docReady( function () {
     tippy('.user-property-register', { maxWidth: 300, delay: 0, placement: 'top' });
     tippy('.user-property-last-visit', { maxWidth: 300, delay: 0, placement: 'top' });
 

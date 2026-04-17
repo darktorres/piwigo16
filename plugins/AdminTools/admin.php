@@ -19,8 +19,12 @@ if (isset($_POST['save_config'])) {
     $page['infos'][] = functions::l10n('Information data registered in database');
 }
 
+$adminToolsDefaults = ['default_open' => false, 'closed_position' => 'right', 'public_quick_edit' => false];
+$adminToolsConf = is_array($conf->AdminTools) ? array_merge($adminToolsDefaults, $conf->AdminTools) : $adminToolsDefaults;
+
 $template->assign([
-    'AdminTools' => $conf->AdminTools,
+    'AdminTools' => $adminToolsConf,
+    'ADMINTOOLS_PATH' => substr(ADMINTOOLS_PATH, 2),
 ]);
 
 $template->set_filename('admintools_content', realpath(ADMINTOOLS_PATH . 'template/admin.tpl'));

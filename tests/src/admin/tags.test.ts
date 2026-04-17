@@ -18,7 +18,7 @@ test.describe("Admin — tags", () => {
         await dbCleanupTestEntities();
     });
 
-    test("selectize tag widget initialises on photo properties page", async ({ page }) => {
+    test("TomSelect tag widget initialises on photo properties page", async ({ page }) => {
         const photoId = await dbGetFirstPhotoId();
         expect(photoId, "At least one photo must exist").not.toBeNull();
 
@@ -28,13 +28,16 @@ test.describe("Admin — tags", () => {
 
         await assertNoErrors(page, getIssues());
 
-        const selectizeControl = page.locator(".selectize-control, .selectize-input");
-        await expect(selectizeControl.first()).toBeVisible();
+        const tsControl = page.locator(".ts-control").first();
+        await expect(tsControl).toBeVisible();
 
-        await selectizeControl.first().click();
+        // Type a character to trigger the "create" option in the dropdown
+        // (dropdown won't open on empty focus when there are no options yet)
+        const tsInput = tsControl.locator("input");
+        await tsInput.fill("x");
 
-        const dropdown = page.locator(".selectize-dropdown");
-        await expect(dropdown.first()).toBeVisible();
+        const dropdown = page.locator(".ts-dropdown");
+        await expect(dropdown.first()).toBeVisible({ timeout: 5_000 });
     });
 
     test("create tag → verify DB → delete → verify gone", async ({ page }) => {
@@ -68,10 +71,21 @@ test.describe("Admin — tags", () => {
         await expect(deleteOption).toBeVisible();
         await deleteOption.click();
 
-        // Confirm the jquery-confirm dialog
-        const confirmBtn = page.locator(".jconfirm-box button.btn-red");
+        // Confirm the pwgConfirm dialog
+        const confirmBtn = page.locator("#pwg-confirm-dialog .pwg-confirm-buttons button.btn-red");
         await expect(confirmBtn).toBeVisible({ timeout: 5_000 });
+
+        const deleteResponse = page.waitForResponse(
+            (r) => r.url().includes("pwg.tags.delete"),
+        );
         await confirmBtn.click();
+        const resp = await deleteResponse;
+        expect(resp.status()).toBe(200);
+        const body = await resp.json() as { stat: string };
+        expect(body.stat, `pwg.tags.delete should return stat=ok, got: ${JSON.stringify(body)}`).toBe("ok");
+
+        // Check for JS errors after delete
+        await assertNoErrors(page, getIssues());
 
         // Wait for tag box to be removed from DOM
         await expect(tagBox).not.toBeAttached({ timeout: 10_000 });

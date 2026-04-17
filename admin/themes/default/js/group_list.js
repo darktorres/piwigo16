@@ -1,3 +1,4 @@
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 const DELAY_FEEDBACK = 3000;
 /*-------
 Group Popin
@@ -64,7 +65,7 @@ var deployAddGroupForm = function () {
     }
     setTimeout(() => {
         let form = document.querySelector("#addGroupForm form");
-        if (form) form.style.display = '';
+        if (form) form.style.display = 'block';
         let input = document.getElementById("addGroupNameInput");
         if (input) input.focus();
     }, 400);
@@ -93,7 +94,7 @@ var hideAddGroupForm = function () {
  Add Group Submit
  -------*/
 
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     document.querySelector("#addGroupForm form")?.addEventListener("submit", function (e) {
         e.preventDefault();
         let name = document.querySelector("#addGroupForm input[type=text]").value;
@@ -210,7 +211,7 @@ var createGroup = function (group) {
 /*-------
  SETUP JS ON GROUP BOX
  -------*/
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     document.querySelectorAll(".GroupContainer").forEach((el) => {
         if (el.id != "group-template") setupGroupBox(el);
     });
@@ -233,7 +234,7 @@ var setupGroupBox = function (groupBox) {
     if (dropdown) {
         dropdown.addEventListener("click", function () {
             let options = groupBox.querySelector("#GroupOptions");
-            if (options) options.style.display = options.style.display === 'none' ? '' : 'none';
+            if (options) options.style.display = window.getComputedStyle(options).display === 'none' ? 'block' : 'none';
         });
     }
 
@@ -371,6 +372,7 @@ var deleteGroup = function (id) {
                     fetch("ws.php?format=json&method=pwg.groups.delete", {
                         method: "POST",
                         body: "group_id=" + id + "&pwg_token=" + pwg_token,
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     })
                     .then(response => response.text())
                     .then(raw_data => {
@@ -402,6 +404,7 @@ var renameGroup = function (id, newName) {
         fetch("ws.php?format=json&method=pwg.groups.setInfo", {
             method: "POST",
             body: "group_id=" + id + "&pwg_token=" + pwg_token + "&name=" + encodeURIComponent(newName),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         })
         .then(response => response.text())
         .then(raw_data => {
@@ -481,6 +484,7 @@ var setDefaultGroup = function (id, is_default) {
     fetch("ws.php?format=json&method=pwg.groups.setInfo", {
         method: "POST",
         body: "group_id=" + id + "&pwg_token=" + pwg_token + "&is_default=" + is_default,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
     .then(response => response.text())
     .then(raw_data => {
@@ -567,6 +571,7 @@ var duplicateAction = function (id) {
     fetch("ws.php?format=json&method=pwg.groups.duplicate", {
         method: "POST",
         body: "group_id=" + id + "&pwg_token=" + pwg_token + "&copy_name=" + encodeURIComponent(copy_name),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
     .then(response => response.text())
     .then(raw_data => {
@@ -596,17 +601,17 @@ var duplicateAction = function (id) {
  disables group actions in selection mode
  -------*/
 
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     let toggleBtn = document.getElementById("toggleSelectionMode");
     if (toggleBtn) {
         toggleBtn.checked = false;
         toggleBtn.addEventListener("click", function () {
             if (this.checked) {
-                document.querySelectorAll(".in-selection-mode").forEach(el => el.style.display = '');
+                document.querySelectorAll(".in-selection-mode").forEach(el => el.style.display = 'block');
                 document.querySelectorAll(".not-in-selection-mode").forEach(el => el.style.display = 'none');
                 document.querySelector(".GroupManagerButtons")?.classList.remove("visible");
             } else {
-                document.querySelectorAll(".in-selection-mode").forEach(el => el.style.display = 'none');
+                document.querySelectorAll(".in-selection-mode").forEach(el => el.style.display = '');
                 document.querySelectorAll(".not-in-selection-mode").forEach(el => el.style.cssText = "");
                 document.querySelectorAll(".Group-checkbox input").forEach(el => el.checked = false);
                 document.querySelectorAll(".Group-checkbox input[type='checkbox']").forEach(el => {
@@ -745,6 +750,7 @@ document.querySelector(".ConfirmMergeButton")?.addEventListener("click", functio
     fetch("ws.php?format=json&method=pwg.groups.merge", {
         method: "POST",
         body: "destination_group_id=" + dest_grp + str_merge_group + "&pwg_token=" + pwg_token,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
     .then(response => response.text())
     .then(raw_data => {
@@ -779,6 +785,7 @@ document.querySelector(".ConfirmMergeButton")?.addEventListener("click", functio
             fetch("ws.php?format=json&method=pwg.users.getList", {
                 method: "POST",
                 body: "group_id=" + dest_grp,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             })
             .then(response => response.text())
             .then(raw_data => {
@@ -821,6 +828,7 @@ document.querySelector(".ConfirmDeleteButton")?.addEventListener("click", functi
     fetch("ws.php?format=json&method=pwg.groups.delete", {
         method: "POST",
         body: str_id + "pwg_token=" + pwg_token,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
     .then(response => response.text())
     .then(raw_data => {
@@ -871,7 +879,7 @@ associateUserInfo.className = "ValidationUserAssociated";
 associateUserInfo.innerHTML = "<p class='icon-ok'></p>";
 
 // Setup the user research bar
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     // initialize the TomSelect control
     let selectEl = document.querySelector(".AddUserBlock select");
     if (selectEl) {
@@ -929,6 +937,7 @@ var openUserManager = function (grp_id) {
     fetch("ws.php?format=json&method=pwg.users.getList", {
         method: "POST",
         body: "group_id=" + grp_id,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
     .then(response => response.text())
     .then(raw_data => {
@@ -1001,6 +1010,7 @@ var getUserDisplay = function (username, user_id, grp_id) {
             fetch("ws.php?format=json&method=pwg.groups.deleteUser", {
                 method: "POST",
                 body: "group_id=" + grp_id + "&user_id=" + user_id + "&pwg_token=" + pwg_token,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             })
             .then(response => response.text())
             .then(raw_data => {
@@ -1072,6 +1082,7 @@ document.querySelector(".AddUserBlock button")?.addEventListener("click", functi
         fetch("ws.php?format=json&method=pwg.groups.addUser", {
             method: "POST",
             body: "group_id=" + grp_id + "&user_id=" + id + "&pwg_token=" + pwg_token,
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         })
         .then(response => response.text())
         .then(raw_data => {

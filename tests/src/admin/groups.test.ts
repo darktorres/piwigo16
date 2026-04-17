@@ -71,8 +71,8 @@ test.describe("Admin — groups", () => {
         await expect(deleteBtn).toBeVisible();
         await deleteBtn.click();
 
-        // Confirm the jquery-confirm dialog
-        const confirmBtn = page.locator(".jconfirm-box button.btn-red");
+        // Confirm the pwgConfirm dialog
+        const confirmBtn = page.locator("#pwg-confirm-dialog .pwg-confirm-buttons button.btn-red");
         await expect(confirmBtn).toBeVisible({ timeout: 5_000 });
 
         await confirmBtn.click();

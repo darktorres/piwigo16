@@ -178,7 +178,7 @@ function admintools_add_public_controller(): void
     }
 
     $template->assign([
-        'ADMINTOOLS_PATH' => './plugins/' . ADMINTOOLS_ID . '/',
+        'ADMINTOOLS_PATH' => 'plugins/' . ADMINTOOLS_ID . '/',
         'ato' => $tpl_vars,
         'PWG_TOKEN' => functions::get_pwg_token(),
     ]);
@@ -215,7 +215,7 @@ function admintools_add_admin_controller(): void
     }
 
     $template->assign([
-        'ADMINTOOLS_PATH' => './plugins/' . ADMINTOOLS_ID . '/',
+        'ADMINTOOLS_PATH' => 'plugins/' . ADMINTOOLS_ID . '/',
         'ato' => $tpl_vars,
     ]);
 

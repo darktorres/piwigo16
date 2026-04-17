@@ -385,7 +385,7 @@ function removeTag(id, name) {
     .then(raw_data => {
         data = JSON.parse(raw_data);
         if (data.stat === "ok") {
-            let el = document.querySelector(".tag-box[data-id=" + id + "]");
+            let el = document.querySelector(".tag-box[data-id=\"" + id + "\"]");
             if (el) el.remove();
             //Update data
             dataTags = dataTags.filter((tag) => tag.id != id);
@@ -415,10 +415,10 @@ function renameTag(id, new_name) {
             data = JSON.parse(raw_data);
             console.log(data);
             if (data.stat === "ok") {
-                document.querySelectorAll(".tag-box[data-id=" + id + "] p, .tag-box[data-id=" + id + "] .tag-dropdown-header b").forEach(el => {
+                document.querySelectorAll(".tag-box[data-id=\"" + id + "\"] p, .tag-box[data-id=\"" + id + "\"] .tag-dropdown-header b").forEach(el => {
                     el.innerHTML = data.result.name;
                 });
-                let editableEl = document.querySelector(".tag-box[data-id=" + id + "] .tag-name-editable");
+                let editableEl = document.querySelector(".tag-box[data-id=\"" + id + "\"] .tag-name-editable");
                 if (editableEl) editableEl.value = data.result.name;
                 let u_view = "index.php?/tags/" + id + "-" + data.result.url_name;
                 let viewLink = document.querySelector(".dropdown-option.view");
@@ -474,7 +474,7 @@ function duplicateTag(id, name) {
                     data.result.url_name,
                     data.result.count,
                 );
-                let afterEl = document.querySelector(".tag-box[data-id=" + id + "]");
+                let afterEl = document.querySelector(".tag-box[data-id=\"" + id + "\"]");
                 if (afterEl) afterEl.insertAdjacentElement("afterend", newTag);
                 setupTagbox(newTag);
 
@@ -582,10 +582,10 @@ function removeSelectedItem(id) {
             return parseInt(tag) != parseInt(id);
         });
 
-        let tagBox = document.querySelector(".tag-box[data-id=" + id + "]");
+        let tagBox = document.querySelector(".tag-box[data-id=\"" + id + "\"]");
         if (tagBox) tagBox.setAttribute("data-selected", "0");
 
-        let tagListItem = document.querySelector(".selection-mode-tag .tag-list div[data-id=" + id + "]");
+        let tagListItem = document.querySelector(".selection-mode-tag .tag-list div[data-id=\"" + id + "\"]");
         if (tagListItem) {
             tagListItem.remove();
 
@@ -593,7 +593,7 @@ function removeSelectedItem(id) {
                 let i = 0;
                 isNotCreate = true;
                 while (i < selected.length && isNotCreate) {
-                    if (document.querySelector(".selection-mode-tag .tag-list div[data-id=" + selected[i] + "]") === null) {
+                    if (document.querySelector(".selection-mode-tag .tag-list div[data-id=\"" + selected[i] + "\"]") === null) {
                         isNotCreate = false;
                         indexOfTag = dataTags.findIndex((tag) => tag.id == selected[i]);
                         createSelectionItem(selected[i], dataTags[indexOfTag].name);
@@ -712,7 +712,7 @@ function selectAll(data) {
     data.forEach((tag) => {
         promises.push(
             new Promise((res, rej) => {
-                let tagBox = document.querySelector(".tag-box[data-id=" + tag.id + "]");
+                let tagBox = document.querySelector(".tag-box[data-id=\"" + tag.id + "\"]");
                 if (tagBox) tagBox.setAttribute("data-selected", "1");
                 addSelectedItem(tag.id);
                 res();
@@ -758,7 +758,7 @@ document.getElementById("selectInvert")?.addEventListener("click", function () {
 
 function selectInvert(data) {
     data.forEach((tag) => {
-        let tagBox = document.querySelector(".tag-box[data-id=" + tag.id + "]");
+        let tagBox = document.querySelector(".tag-box[data-id=\"" + tag.id + "\"]");
         if (tagBox) {
             if (tagBox.getAttribute("data-selected") == "1") {
                 tagBox.setAttribute("data-selected", "0");
@@ -819,7 +819,7 @@ function removeSelectedTags() {
         raw_data = raw_data.slice(raw_data.search("{"));
         if ((JSON.parse(raw_data).stat = "ok")) {
             selected.forEach(function (id) {
-                let el = document.querySelector(".tag-box[data-id=" + id + "]");
+                let el = document.querySelector(".tag-box[data-id=\"" + id + "\"]");
                 if (el) el.remove();
             });
 
@@ -846,12 +846,12 @@ document.querySelector(".ConfirmMergeButton")?.addEventListener("click", () => {
 });
 
 function mergeGroups(destination_id, merge_ids) {
-    let destNameEl = document.querySelector(".tag-box[data-id=" + destination_id + "] .tag-name");
+    let destNameEl = document.querySelector(".tag-box[data-id=\"" + destination_id + "\"] .tag-name");
     destination_name = destNameEl ? destNameEl.innerHTML : "";
     merge_name = [];
 
     merge_ids.forEach((id) => {
-        let el = document.querySelector(".tag-box[data-id=" + id + "] .tag-name");
+        let el = document.querySelector(".tag-box[data-id=\"" + id + "\"] .tag-name");
         if (el) merge_name.push(el.innerHTML);
     });
 
@@ -875,7 +875,7 @@ function mergeGroups(destination_id, merge_ids) {
         if (data.stat === "ok") {
             data.result.deleted_tag.forEach((id) => {
                 if (data.result.destination_tag != id) {
-                    let el = document.querySelector(".tag-box[data-id=" + id + "]");
+                    let el = document.querySelector(".tag-box[data-id=\"" + id + "\"]");
                     if (el) el.remove();
                     // Update data
                     dataTags = dataTags.filter(
@@ -884,7 +884,7 @@ function mergeGroups(destination_id, merge_ids) {
                 }
             });
             if (data.result.images_in_merged_tag.length > 0) {
-                let tagBox = document.querySelector(".tag-box[data-id=" + data.result.destination_tag + "]");
+                let tagBox = document.querySelector(".tag-box[data-id=\"" + data.result.destination_tag + "\"]");
                 if (tagBox) {
                     let views = tagBox.querySelectorAll(".dropdown-option.view, .dropdown-option.manage, .tag-dropdown-header i");
                     views.forEach(el => el.style.display = '');
@@ -1172,7 +1172,7 @@ function updatePage() {
 
                 //Select selected tags
                 selected.forEach((id) => {
-                    let el = document.querySelector(".tag-box[data-id=" + id + "]");
+                    let el = document.querySelector(".tag-box[data-id=\"" + id + "\"]");
                     if (el) el.setAttribute("data-selected", "1");
                 });
 

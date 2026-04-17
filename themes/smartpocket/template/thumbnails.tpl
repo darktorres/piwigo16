@@ -21,7 +21,7 @@
 		.thumbnails LI{ margin-left:{$hmargin}px; margin-bottom:{$vmargin}px}
 		.thumbnails { margin:0 {$container_margin}px 0 {$container_margin-$hmargin}px}
 	</style>{/html_style}
-	<ul class="thumbnails" {if !empty($smartpocket_log_history.cat_id)}data-cat_id="{$smartpocket_log_history.cat_id}" {/if}
+	<ul id="thumbnails" class="thumbnails" {if !empty($smartpocket_log_history.cat_id)}data-cat_id="{$smartpocket_log_history.cat_id}" {/if}
 		{if !empty($smartpocket_log_history.section)}data-section="{$smartpocket_log_history.section}" {/if}
 		{if !empty($smartpocket_log_history.tags_string)}data-tags_string="{$smartpocket_log_history.tags_string}" {/if}>
 		{foreach from=$thumbnails item=thumbnail}

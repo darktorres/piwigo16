@@ -379,3 +379,34 @@ input[type="submit"]:hover, button:hover { background: #3a6a9d; }
     .mcs-tags-found,
     .mcs-albums-found { display: flex; align-items: center; gap: 5px; }
 }
+
+/* === Thumbnail-only scroll layout === */
+html:has(#thumbnails) {
+    height: 100%;
+}
+
+html:has(#thumbnails) body {
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+html:has(#thumbnails) .sp-header {
+    flex-shrink: 0;
+}
+
+html:has(#thumbnails) .sp-content {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    padding-bottom: 50px;
+}
+
+html:has(#thumbnails) #content .titrePage {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background-color: inherit;
+}

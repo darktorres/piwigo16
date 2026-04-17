@@ -560,10 +560,6 @@ A.pwg-state-default:hover {
     background-color: inherit;
 }
 
-body {
-    padding-bottom: 50px;
-}
-
 INPUT,
 SELECT {
     margin: 0;
@@ -1004,4 +1000,57 @@ because of this it needs to specifically be added to each theme */
     padding: 2px 5px !important;
     font-size: 10px;
     background: #777;
+}
+
+/* === Thumbnail-only scroll layout (:has scopes to index/category pages only) === */
+
+html:has(#thumbnails),
+html:has(#thumbnails) body {
+    height: 100%;
+    overflow: hidden;
+}
+
+html:has(#thumbnails) body {
+    padding-bottom: 0;
+}
+
+html:has(#thumbnails) #the_page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+html:has(#thumbnails) #content_area {
+    display: flex;
+    flex-direction: row;
+    flex: 1 1 0%;
+    overflow: hidden;
+    min-height: 0;
+}
+
+html:has(#thumbnails) #menubar {
+    float: none;
+    flex-shrink: 0;
+    width: 18em;
+    margin: 0 0 0 1em;
+    overflow-y: auto;
+}
+
+html:has(#thumbnails) #content {
+    flex: 1 1 0%;
+    overflow-y: auto;
+    min-height: 0;
+    position: relative;
+    padding-bottom: 50px;
+}
+
+html:has(#thumbnails) .contentWithMenu {
+    margin-left: 0;
+}
+
+html:has(#thumbnails) #content .titrePage {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background-color: inherit;
 }

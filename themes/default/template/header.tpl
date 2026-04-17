@@ -94,3 +94,4 @@
         {/foreach}
       </div>
 {/if}
+    <div id="content_area">

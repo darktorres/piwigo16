@@ -1,17 +1,21 @@
 {include file='inc/autosize.inc.tpl'}
 {footer_script}<script>
-  jQuery(document).ready(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    var checkAllLink = document.getElementById("checkAllLink");
+    if (checkAllLink) {
+      checkAllLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll("#notification_by_mail input[type=checkbox]").forEach(function(el) { el.checked = true; });
+      });
+    }
 
-    jQuery("#checkAllLink").click(function() {
-      jQuery("#notification_by_mail input[type=checkbox]").prop('checked', true);
-      return false;
-    });
-
-    jQuery("#uncheckAllLink").click(function() {
-      jQuery("#notification_by_mail input[type=checkbox]").prop('checked', false);
-      return false;
-    });
-
+    var uncheckAllLink = document.getElementById("uncheckAllLink");
+    if (uncheckAllLink) {
+      uncheckAllLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll("#notification_by_mail input[type=checkbox]").forEach(function(el) { el.checked = false; });
+      });
+    }
   });
 </script>{/footer_script}
 

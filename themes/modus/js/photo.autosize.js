@@ -20,7 +20,8 @@ function rvas_get_scaled_size(d, available) {
 }
 
 function rvas_get_available_size() {
-    var width = $("#theImage").width();
+    var theImage = document.getElementById("theImage");
+    var width = theImage ? theImage.offsetWidth : 0;
     var zoom = 1;
     var docHeight;
 
@@ -33,7 +34,9 @@ function rvas_get_available_size() {
             zoom = document.documentElement.clientWidth / window.innerWidth;
         docHeight = Math.floor(docHeight * zoom);
     } else docHeight = document.documentElement.offsetHeight;
-    var height = docHeight - Math.ceil($("#theImage").offset().top);
+
+    var imageTop = theImage ? theImage.getBoundingClientRect().top + window.scrollY : 0;
+    var height = docHeight - Math.ceil(imageTop);
 
     var dpr =
         window.devicePixelRatio && window.devicePixelRatio > 1
@@ -50,7 +53,7 @@ function rvas_get_available_size() {
 function rvas_choose(relaxed) {
     var best;
     var available = rvas_get_available_size();
-    var $img = $("#theMainImage");
+    var img = document.getElementById("theMainImage");
     var changed = true;
     for (var i = 0; i < RVAS.derivatives.length; i++) {
         var d = RVAS.derivatives[i];
@@ -65,61 +68,67 @@ function rvas_choose(relaxed) {
     if (best) {
         if (available.dpr > 1) {
             var rescaled = rvas_get_scaled_size(best, available);
-            if ($img.attr("width") && available.zoom == 1) {
-                var changeRatio = rescaled.h / $img.height();
+            if (img.getAttribute("width") && available.zoom == 1) {
+                var changeRatio = rescaled.h / img.offsetHeight;
                 var limit = relaxed ? 1.25 : 1.15;
                 if (
                     (changeRatio >= 1 && changeRatio < limit) ||
                     (changeRatio < 1 &&
                         changeRatio > 1 / limit &&
-                        $img.width() < available.w / available.dpr)
+                        img.offsetWidth < available.w / available.dpr)
                 )
                     return;
             }
-            if (!$img.data("natural-w") || $img.data("natural-w") < best.w) {
-                $img.attr("width", rescaled.w)
-                    .attr("height", rescaled.h)
-                    .attr("src", best.url)
-                    .removeAttr("usemap")
-                    .data("natural-w", best.w);
+            var naturalW = img.dataset.rvasNaturalW ? parseInt(img.dataset.rvasNaturalW) : 0;
+            if (!naturalW || naturalW < best.w) {
+                img.setAttribute("width", rescaled.w);
+                img.setAttribute("height", rescaled.h);
+                img.setAttribute("src", best.url);
+                img.removeAttribute("usemap");
+                img.dataset.rvasNaturalW = best.w;
             } else {
-                $img.attr("width", rescaled.w).attr("height", rescaled.h);
+                img.setAttribute("width", rescaled.w);
+                img.setAttribute("height", rescaled.h);
                 changed = false;
             }
         } else {
-            if ($img.attr("width")) {
-                var changeRatio = best.h / $img.height();
+            if (img.getAttribute("width")) {
+                var changeRatio = best.h / img.offsetHeight;
                 var limit = relaxed ? 2 : 1.15;
                 if (
                     (changeRatio >= 1 && changeRatio < limit) ||
                     (changeRatio < 1 &&
                         changeRatio > 1 / limit &&
-                        $img.width() < available.w)
+                        img.offsetWidth < available.w)
                 )
                     return;
             }
-            $img.attr("width", best.w)
-                .attr("height", best.h)
-                .attr("src", best.url)
-                .attr("usemap", "#map" + best.type);
+            img.setAttribute("width", best.w);
+            img.setAttribute("height", best.h);
+            img.setAttribute("src", best.url);
+            img.setAttribute("usemap", "#map" + best.type);
         }
         if (changed) {
-            $("#derivativeSwitchBox .switchCheck").css("visibility", "hidden");
-            $("#derivativeChecked" + best.type).css("visibility", "visible");
+            document.querySelectorAll("#derivativeSwitchBox .switchCheck").forEach(function (el) {
+                el.style.visibility = "hidden";
+            });
+            var checked = document.getElementById("derivativeChecked" + best.type);
+            if (checked) checked.style.visibility = "visible";
         }
     }
-    $img.off("load").on("load", function () {
-        const attrW = $(this).attr("width");
-        const attrH = $(this).attr("height");
-        $(this).css({
-            width: attrW ? attrW : "auto",
-            height: attrH ? attrH : "auto",
-        });
-    });
+    img.removeEventListener("load", img._rvasLoadHandler);
+    img._rvasLoadHandler = function () {
+        var attrW = this.getAttribute("width");
+        var attrH = this.getAttribute("height");
+        this.style.width = attrW ? attrW + "px" : "auto";
+        this.style.height = attrH ? attrH + "px" : "auto";
+    };
+    img.addEventListener("load", img._rvasLoadHandler);
 }
 
-$(document).ready(function () {
-    if (window.changeImgSrc) {
+document.addEventListener('DOMContentLoaded', function () {
+    var img = document.getElementById("theMainImage");
+    if (window.changeImgSrc && img) {
         RVAS.changeImgSrcOrig = changeImgSrc;
         changeImgSrc = function () {
             RVAS.disable = 1;
@@ -127,32 +136,38 @@ $(document).ready(function () {
         };
     }
 
-    $(window).resize(function () {
-        var w = $("body").width();
-        var de = $(document.documentElement);
+    window.addEventListener("resize", function () {
+        var w = document.body.offsetWidth;
+        var de = document.documentElement;
         if (document.location.search.indexOf("slideshow") == -1) {
-            if (w < 1262) de.removeClass("wide");
-            else de.addClass("wide");
+            if (w < 1262) de.classList.remove("wide");
+            else de.classList.add("wide");
         }
 
         if (RVAS.disable) rvas_get_available_size();
         else rvas_choose();
     });
 
-    $("#theMainImage").click(function (e) {
-        if (!$(this).attr("usemap") && e.clientY) {
-            var pct = (e.pageX - $(this).offset().left) / $(this).width();
-            var clientY = e.pageY - $(this).offset().top;
-            if (pct < 0.3) {
-                if ($("#linkPrev").length && clientY > 15)
-                    window.location = $("#linkPrev").attr("href");
-            } else if (pct > 0.7) {
-                if ($("#linkNext").length && clientY > 15)
-                    window.location = $("#linkNext").attr("href");
-            } else if (clientY / $(this).height() < 0.5 && clientY > 15) {
-                var href = $(".pwg-icon-arrow-n").parent("a").attr("href");
-                if (href) window.location = href;
+    if (img) {
+        img.addEventListener("click", function (e) {
+            if (!this.getAttribute("usemap") && e.clientY) {
+                var rect = this.getBoundingClientRect();
+                var pct = (e.pageX - (rect.left + window.scrollX)) / this.offsetWidth;
+                var clientY = e.pageY - (rect.top + window.scrollY);
+                if (pct < 0.3) {
+                    var linkPrev = document.getElementById("linkPrev");
+                    if (linkPrev && clientY > 15)
+                        window.location = linkPrev.getAttribute("href");
+                } else if (pct > 0.7) {
+                    var linkNext = document.getElementById("linkNext");
+                    if (linkNext && clientY > 15)
+                        window.location = linkNext.getAttribute("href");
+                } else if (clientY / this.offsetHeight < 0.5 && clientY > 15) {
+                    var upIcon = document.querySelector(".pwg-icon-arrow-n");
+                    var upLink = upIcon ? upIcon.closest("a") : null;
+                    if (upLink) window.location = upLink.getAttribute("href");
+                }
             }
-        }
-    });
+        });
+    }
 });

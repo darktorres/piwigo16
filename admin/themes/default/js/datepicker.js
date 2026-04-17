@@ -1,242 +1,124 @@
-(function ($) {
-    jQuery.timepicker.log = jQuery.noop; // that's ugly, but the timepicker is acting weird and throws parsing errors
+(function () {
+    /**
+     * pwgDatepicker — thin Flatpickr wrapper, jQuery-free.
+     *
+     * Usage: pwgDatepicker(nodeOrNodeList, options)
+     *   options.showTimepicker — boolean, default false
+     *   options.cancelButton  — string label for a "cancel" button inside the picker
+     *
+     * HTML attributes on the <input type="text"> element:
+     *   data-datepicker="<name>"          — name of sibling <input type="hidden"> that stores
+     *                                       the machine-readable date (YYYY-MM-DD[ HH:mm:ss])
+     *   data-datepicker-end="<name>"      — this is the START picker; name of the END picker
+     *                                       (will have its minDate constrained)
+     *   data-datepicker-start="<name>"    — this is the END picker; name of the START picker
+     *                                       (will have its maxDate constrained)
+     *   data-datepicker-unset="<id>"      — id of an element that clears the date when clicked
+     */
+    window.pwgDatepicker = function (target, options) {
+        var opts = Object.assign({ showTimepicker: false, cancelButton: false }, options || {});
 
-    // modify DatePicker internal methods to replace year select by a numeric input
-    var origGenerateMonthYearHeader = $.datepicker._generateMonthYearHeader;
-    var origSelectMonthYear = $.datepicker._selectMonthYear;
-
-    $.datepicker._generateMonthYearHeader = function (
-        inst,
-        drawMonth,
-        drawYear,
-        minDate,
-        maxDate,
-        secondary,
-        monthNames,
-        monthNamesShort,
-    ) {
-        var html = origGenerateMonthYearHeader.call(
-            this,
-            inst,
-            drawMonth,
-            drawYear,
-            minDate,
-            maxDate,
-            secondary,
-            monthNames,
-            monthNamesShort,
-        );
-
-        var yearshtml =
-            "<input type='number' class='ui-datepicker-year' data-handler='selectYear' data-event='change keyup' value='" +
-            drawYear +
-            "' style='width:4em;margin-left:2px;'>";
-
-        return html.replace(
-            new RegExp("<select class='ui-datepicker-year'.*</select>", "gm"),
-            yearshtml,
-        );
-    };
-
-    $.datepicker._selectMonthYear = debounce(function (id, select, period) {
-        if (period === "M") {
-            origSelectMonthYear.call(this, id, select, period);
+        var els;
+        if (target instanceof NodeList) {
+            els = Array.from(target);
+        } else if (Array.isArray(target)) {
+            els = target;
         } else {
-            var target = $(id);
-            var inst = this._getInst(target[0]);
-            var val = parseInt(select.value, 10);
-
-            if (isNaN(val)) {
-                inst["drawYear"] = "";
-            } else {
-                inst["selectedYear"] = inst["drawYear"] = val;
-
-                this._notifyChange(inst);
-                this._adjustDate(target);
-
-                $(".ui-datepicker-year").focus();
-            }
+            els = [target];
         }
-    }, 500);
 
-    // plugin definition
-    jQuery.fn.pwgDatepicker = function (settings) {
-        var options = jQuery.extend(
-            true,
-            {
-                showTimepicker: false,
-                cancelButton: false,
-            },
-            settings || {},
-        );
+        var instances = {};
 
-        return this.each(function () {
-            var $this = jQuery(this);
-            var originalValue = $this.val();
-            var originalDate;
-            var $target = jQuery('[name="' + $this.data("datepicker") + '"]');
-            var linked = !!$target.length;
-            var $start;
-            var $end;
+        els.forEach(function (el) {
+            var name = el.dataset.datepicker;
+            var hiddenEl = name ? document.querySelector('[name="' + name + '"]') : null;
+            var initialValue = hiddenEl ? hiddenEl.value.trim() : '';
+            var originalDate = null;
 
-            if (linked) {
-                originalValue = $target.val();
-            }
+            var fpConfig = {
+                enableTime: !!opts.showTimepicker,
+                dateFormat: opts.showTimepicker ? 'D, j M Y H:i' : 'D, j M Y',
+                time_24hr: true,
+                allowInput: false,
+                onOpen: function (selectedDates) {
+                    originalDate = selectedDates[0] ? new Date(selectedDates[0].getTime()) : null;
+                },
+                onChange: function (selectedDates) {
+                    var d = selectedDates[0] || null;
 
-            // custom setter
-            function set(date, init) {
-                if (date === "") date = null;
-                $this.datetimepicker("setDate", date);
-
-                if ($this.data("datepicker-start") && $start) {
-                    $start.datetimepicker("option", "maxDate", date);
-                } else if ($this.data("datepicker-end") && $end) {
-                    if (!init) {
-                        // on init, "end" is not initialized yet (assuming "start" is before "end" in the DOM)
-                        $end.datetimepicker("option", "minDate", date);
+                    if (hiddenEl) {
+                        hiddenEl.value = d ? formatMachine(d, opts.showTimepicker) : '';
                     }
-                }
 
-                if (!date && linked) {
-                    $target.val("");
-                }
-            }
+                    var endName = el.dataset.datepickerEnd;
+                    if (endName && instances[endName]) {
+                        instances[endName].set('minDate', d || null);
+                    }
 
-            // and custom cancel button
-            if (options.cancelButton) {
-                options.beforeShow = options.onChangeMonthYear = function () {
-                    setTimeout(function () {
-                        var buttonPane = $this
-                            .datepicker("widget")
-                            .find(".ui-datepicker-buttonpane");
+                    var startName = el.dataset.datepickerStart;
+                    if (startName && instances[startName]) {
+                        instances[startName].set('maxDate', d || null);
+                    }
+                },
+            };
 
-                        if (
-                            buttonPane.find(".pwg-datepicker-cancel").length ==
-                            0
-                        ) {
-                            $(
-                                '<button type="button">' +
-                                    options.cancelButton +
-                                    "</button>",
-                            )
-                                .on("click", function () {
-                                    set(originalDate, false);
-                                    $this.datepicker("hide").blur();
-                                })
-                                .addClass(
-                                    "pwg-datepicker-cancel ui-state-error ui-corner-all",
-                                )
-                                .appendTo(buttonPane);
-                        }
-                    }, 1);
+            if (opts.cancelButton) {
+                fpConfig.onReady = function (selectedDates, dateStr, fp) {
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = opts.cancelButton;
+                    btn.className = 'pwg-flatpickr-cancel';
+                    btn.style.cssText = 'display:block;width:100%;margin-top:4px;padding:2px 8px;cursor:pointer;';
+                    btn.addEventListener('click', function () {
+                        fp.setDate(originalDate, true);
+                        fp.close();
+                    });
+                    fp.calendarContainer.appendChild(btn);
                 };
             }
 
-            // init picker
-            $this.datetimepicker(
-                jQuery.extend(
-                    {
-                        dateFormat: linked ? "DD d MM yy" : "yy-mm-dd",
-                        timeFormat: "HH:mm",
-                        separator: options.showTimepicker ? " " : "",
+            var fp = flatpickr(el, fpConfig);
 
-                        altField: linked ? $target : null,
-                        altFormat: "yy-mm-dd",
-                        altTimeFormat: options.showTimepicker ? "HH:mm:ss" : "",
-
-                        autoSize: true,
-                        changeMonth: true,
-                        changeYear: true,
-                        altFieldTimeOnly: false,
-                        showSecond: false,
-                        alwaysSetTime: false,
-                    },
-                    options,
-                ),
-            );
-
-            // attach range pickers
-            if ($this.data("datepicker-start")) {
-                $start = jQuery(
-                    '[data-datepicker="' +
-                        $this.data("datepicker-start") +
-                        '"]',
-                );
-
-                $this.datetimepicker("option", "onClose", function (date) {
-                    $start.datetimepicker("option", "maxDate", date);
-                });
-
-                $this.datetimepicker(
-                    "option",
-                    "minDate",
-                    $start.datetimepicker("getDate"),
-                );
-            } else if ($this.data("datepicker-end")) {
-                $end = jQuery(
-                    '[data-datepicker="' + $this.data("datepicker-end") + '"]',
-                );
-
-                $this.datetimepicker("option", "onClose", function (date) {
-                    $end.datetimepicker("option", "minDate", date);
-                });
+            if (initialValue) {
+                fp.setDate(initialValue, false, opts.showTimepicker ? 'Y-m-d H:i:S' : 'Y-m-d');
             }
 
-            // attach unset button
-            if ($this.data("datepicker-unset")) {
-                jQuery("#" + $this.data("datepicker-unset")).on(
-                    "click",
-                    function (e) {
+            if (name) instances[name] = fp;
+
+            var unsetId = el.dataset.datepickerUnset;
+            if (unsetId) {
+                var unsetBtn = document.getElementById(unsetId);
+                if (unsetBtn) {
+                    unsetBtn.addEventListener('click', function (e) {
                         e.preventDefault();
-                        set(null, false);
-                    },
-                );
-            }
-
-            // set value from linked input
-            if (linked) {
-                var split = originalValue.split(" ");
-                if (split.length == 2 && options.showTimepicker) {
-                    set(
-                        jQuery.datepicker.parseDateTime(
-                            "yy-mm-dd",
-                            "HH:mm:ss",
-                            originalValue,
-                        ),
-                        true,
-                    );
-                } else if (split[0].length == 10) {
-                    set(
-                        jQuery.datepicker.parseDate("yy-mm-dd", split[0]),
-                        true,
-                    );
-                } else {
-                    set(null, true);
+                        fp.clear();
+                        if (hiddenEl) hiddenEl.value = '';
+                    });
                 }
             }
+        });
 
-            originalDate = $this.datetimepicker("getDate");
+        // Second pass: apply initial minDate constraints to end pickers.
+        // (Start pickers are processed before end pickers in the DOM, so
+        // the start instance is already in `instances` when we reach the end.)
+        els.forEach(function (el) {
+            var name = el.dataset.datepicker;
+            var fp = name ? instances[name] : null;
+            if (!fp) return;
 
-            // autoSize not handled by timepicker
-            if (options.showTimepicker) {
-                $this.attr("size", parseInt($this.attr("size")) + 6);
+            var startName = el.dataset.datepickerStart;
+            if (startName && instances[startName]) {
+                var startDate = instances[startName].selectedDates[0];
+                if (startDate) fp.set('minDate', startDate);
             }
         });
     };
 
-    function debounce(func, wait, immediate) {
-        var timeout;
-        return function () {
-            var context = this,
-                args = arguments;
-            var later = function () {
-                timeout = null;
-                if (!immediate) func.apply(context, args);
-            };
-            var callNow = immediate && !timeout;
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-            if (callNow) func.apply(context, args);
-        };
+    function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+    function formatMachine(d, withTime) {
+        var date = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+        if (!withTime) return date;
+        return date + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
     }
-})(jQuery);
+})();

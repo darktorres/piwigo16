@@ -1,12 +1,13 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
 {footer_script}<script>
-  $(document).ready(() => {
-    $("h1").append("<span class='badge-number'>"+{$nb_cats}+"</span>");
+  document.addEventListener('DOMContentLoaded', function() {
+    var h1 = document.querySelector("h1");
+    if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>"+{$nb_cats}+"</span>");
   });
   var data = {json_encode($data_cat)};
-  /* 
-    Here data is an associative array id => category under this form 
+  /*
+    Here data is an associative array id => category under this form
     [0] : name
     [1] : array of id, path to find this album (root to album)
     [2] : 1 = private or 0 = public
@@ -24,27 +25,39 @@
   var editLink = "admin.php?page=album-";
   var colors = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
 
-  $(".limit-album-reached").hide();
+  var limitReachedEl = document.querySelector(".limit-album-reached");
+  if (limitReachedEl) limitReachedEl.style.display = 'none';
 
-  $('.search-input').on('input', () => {
-    updateSearch();
-  })
+  var searchInput = document.querySelector('.search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      updateSearch();
+    });
+  }
 
   // Update the page according to the search field
   function updateSearch() {
-    string = $('.search-input').val();
-    $('.search-album-result').html("");
-    $('.search-album-noresult').hide();
-    $(".limit-album-reached").hide();
+    var string = searchInput ? searchInput.value : '';
+    var resultEl = document.querySelector('.search-album-result');
+    var noresultEl = document.querySelector('.search-album-noresult');
+    var limitEl = document.querySelector(".limit-album-reached");
+    if (resultEl) resultEl.innerHTML = "";
+    if (noresultEl) noresultEl.style.display = 'none';
+    if (limitEl) limitEl.style.display = 'none';
     if (string == '') {
       // help button unnecessary so do not show
-      // $('.search-album-help').show();
-      $('.search-album-ghost').show();
-      $('.search-album-num-result').hide();
+      // document.querySelector('.search-album-help').style.display = '';
+      var ghostEl = document.querySelector('.search-album-ghost');
+      if (ghostEl) ghostEl.style.display = '';
+      var numResultEl = document.querySelector('.search-album-num-result');
+      if (numResultEl) numResultEl.style.display = 'none';
     } else {
-      $('.search-album-ghost').hide();
-      $('.search-album-help').hide();
-      $('.search-album-num-result').show();
+      var ghostEl = document.querySelector('.search-album-ghost');
+      if (ghostEl) ghostEl.style.display = 'none';
+      var helpEl = document.querySelector('.search-album-help');
+      if (helpEl) helpEl.style.display = 'none';
+      var numResultEl = document.querySelector('.search-album-num-result');
+      if (numResultEl) numResultEl.style.display = '';
 
       nbResult = 0;
       categories.forEach((c) => {
@@ -52,22 +65,24 @@
           nbResult++;
           addAlbumResult(c, nbResult);
         }
-      })
+      });
 
-      if (nbResult != 1) {
-        if (nbResult >= RESULT_LIMIT) {
-          $('.search-album-num-result').html(str_result_limit.replace('%d', nbResult));
+      if (numResultEl) {
+        if (nbResult != 1) {
+          if (nbResult >= RESULT_LIMIT) {
+            numResultEl.innerHTML = str_result_limit.replace('%d', nbResult);
+          } else {
+            numResultEl.innerHTML = str_albums_found.replace('%d', nbResult);
+          }
         } else {
-          $('.search-album-num-result').html(str_albums_found.replace('%d', nbResult));
+          numResultEl.innerHTML = str_album_found;
         }
-      } else {
-        $('.search-album-num-result').html(str_album_found);
       }
 
       if (nbResult != 0) {
-        resultAppear($('.search-album-result .search-album-elem').first());
+        resultAppear(document.querySelector('.search-album-result .search-album-elem'));
       } else {
-        $('.search-album-noresult').show();
+        if (noresultEl) noresultEl.style.display = '';
       }
     }
   }
@@ -75,8 +90,12 @@
   // Add an album as a result in the page
   function addAlbumResult(cat, nbResult) {
     id = cat[1][cat[1].length - 1];
-    template = $('.search-album-elem-template').html();
-    newCatNode = $(template);
+    var templateEl = document.querySelector('.search-album-elem-template');
+    var template = templateEl ? templateEl.innerHTML.trim() : '';
+    var tempDiv = document.createElement('div');
+    tempDiv.innerHTML = template;
+    var newCatNode = tempDiv.firstElementChild;
+    if (!newCatNode) return;
 
     hasChildren = false;
     categories.forEach((c) => {
@@ -85,27 +104,31 @@
           hasChildren = true;
         }
       }
-    })
+    });
 
-    if (hasChildren) {
-      newCatNode.find('.search-album-icon').addClass('icon-sitemap');
-    } else {
-      newCatNode.find('.search-album-icon').addClass('icon-folder-open');
+    var iconEl = newCatNode.querySelector('.search-album-icon');
+    if (iconEl) {
+      iconEl.classList.add(hasChildren ? 'icon-sitemap' : 'icon-folder-open');
+      colorId = id % 5;
+      iconEl.classList.add(colors[colorId]);
     }
 
-    colorId = id % 5;
-    newCatNode.find('.search-album-icon').addClass(colors[colorId]);
-
-    newCatNode.find('.search-album-name').html(getHtmlPath(cat));
+    var nameEl = newCatNode.querySelector('.search-album-name');
+    if (nameEl) nameEl.innerHTML = getHtmlPath(cat);
 
     href = "admin.php?page=album-" + id;
-    newCatNode.find('.search-album-edit').attr('href', href);
+    var editEl = newCatNode.querySelector('.search-album-edit');
+    if (editEl) editEl.setAttribute('href', href);
 
-    $('.search-album-result').append(newCatNode);
+    var resultEl = document.querySelector('.search-album-result');
+    if (resultEl) resultEl.appendChild(newCatNode);
 
     if (nbResult >= RESULT_LIMIT) {
-      $(".limit-album-reached").show(1000);
-      $('.limit-album-reached').html(str_result_limit.replace('%d', nbResult));
+      var limitEl = document.querySelector(".limit-album-reached");
+      if (limitEl) {
+        limitEl.style.display = '';
+        limitEl.innerHTML = str_result_limit.replace('%d', nbResult);
+      }
     }
   }
 
@@ -124,14 +147,15 @@
 
   // Make the results appear one after one [and limit results to 100]
   function resultAppear(result) {
-    result.fadeIn();
-    if (result.next().length != 0) {
-      setTimeout(() => { resultAppear(result.next().first()) }, 50);
+    if (!result) return;
+    result.style.display = '';
+    if (result.nextElementSibling !== null) {
+      setTimeout(() => { resultAppear(result.nextElementSibling); }, 50);
     }
   }
 
   updateSearch();
-  $('.search-input').focus();
+  if (searchInput) searchInput.focus();
 </script>{/footer_script}
 
 <div class="search-album">

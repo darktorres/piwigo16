@@ -1,4 +1,4 @@
-{combine_script id='core.switchbox' load='async' require='jquery' path='themes/default/js/switchbox.js'}
+{combine_script id='core.switchbox' load='async' path='themes/default/js/switchbox.js'}
 {if isset($MENUBAR)}{$MENUBAR}{/if}
 <div id="content" {if isset($MENUBAR)} class="contentWithMenu" {/if}>
 
@@ -21,7 +21,7 @@
 
 		<div class="actionButtons">
 			{if isset($current.unique_derivatives) && count($current.unique_derivatives)>1}
-				{footer_script require='jquery'}<script>
+				{footer_script}<script>
 					function changeImgSrc(url, typeSave, typeMap) {
 						var theImg = document.getElementById("theMainImage");
 						if (theImg) {
@@ -44,8 +44,11 @@
 							theImg.src = encodedUrl;
 							theImg.useMap = "#map" + typeMap;
 						}
-						jQuery('#derivativeSwitchBox .switchCheck').css('visibility', 'hidden');
-						jQuery('#derivativeChecked' + typeMap).css('visibility', 'visible');
+						document.querySelectorAll('#derivativeSwitchBox .switchCheck').forEach(function(el) {
+							el.style.visibility = 'hidden';
+						});
+						var checked = document.getElementById('derivativeChecked' + typeMap);
+						if (checked) checked.style.visibility = 'visible';
 						document.cookie = 'picture_deriv='+typeSave+';path={$COOKIE_PATH}';
 					}
 					(window.SwitchBox = window.SwitchBox || []).push("#derivativeSwitchLink", "#derivativeSwitchBox");
@@ -95,10 +98,10 @@
 				</a>
 
 				{if !empty($current.formats)}
-					{footer_script require='jquery'}<script>
-						jQuery().ready(function() {
-							jQuery("#downloadSwitchLink").removeAttr("href");
-
+					{footer_script}<script>
+						document.addEventListener('DOMContentLoaded', function() {
+							var dlLink = document.getElementById('downloadSwitchLink');
+							if (dlLink) dlLink.removeAttribute('href');
 							(window.SwitchBox = window.SwitchBox || []).push("#downloadSwitchLink", "#downloadSwitchBox");
 						});
 					</script>{/footer_script}
@@ -346,7 +349,7 @@
 								<a id="privacyLevelLink" href>{$available_permission_levels[$current.level]}</a>
 							</div>
 							{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-							{footer_script require='jquery'}<script>
+							{footer_script}<script>
 								function setPrivacyLevel(id, level) {
 									(new PwgWS('{$ROOT_URL}')).callService(
 									"pwg.images.setPrivacyLevel",
@@ -355,9 +358,17 @@
 										method: "POST",
 										onFailure: function(num, text) { alert(num + " " + text); },
 										onSuccess: function(result) {
-											jQuery('#privacyLevelBox .switchCheck').css('visibility', 'hidden');
-											jQuery('#switchLevel' + level).prev('.switchCheck').css('visibility', 'visible');
-											jQuery('#privacyLevelLink').text(jQuery('#switchLevel' + level).text());
+											document.querySelectorAll('#privacyLevelBox .switchCheck').forEach(function(el) {
+												el.style.visibility = 'hidden';
+											});
+											var switchLevel = document.getElementById('switchLevel' + level);
+											if (switchLevel && switchLevel.previousElementSibling) {
+												switchLevel.previousElementSibling.style.visibility = 'visible';
+											}
+											var privacyLink = document.getElementById('privacyLevelLink');
+											if (privacyLink && switchLevel) {
+												privacyLink.textContent = switchLevel.textContent;
+											}
 										}
 									}
 								);

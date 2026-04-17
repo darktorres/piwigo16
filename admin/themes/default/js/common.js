@@ -1,49 +1,46 @@
-jQuery.fn.fontCheckbox = function () {
+function initFontCheckbox(container) {
     /* checkbox */
-    this.find("input[type=checkbox]").each(function () {
-        if (!jQuery(this).is(":checked")) {
-            jQuery(this).prev().toggleClass("icon-check icon-check-empty");
+    container.querySelectorAll("input[type=checkbox]").forEach(function(cb) {
+        var prev = cb.previousElementSibling;
+        if (prev && !cb.checked) {
+            prev.classList.toggle("icon-check");
+            prev.classList.toggle("icon-check-empty");
         }
-    });
-    this.find("input[type=checkbox]").on("change", function () {
-        jQuery(this).prev().removeClass();
-        if (!jQuery(this).is(":checked")) {
-            jQuery(this).prev().addClass("icon-check-empty");
-        } else {
-            jQuery(this).prev().addClass("icon-check");
-        }
+        cb.addEventListener("change", function() {
+            var prev = this.previousElementSibling;
+            if (!prev) return;
+            prev.className = '';
+            prev.classList.add(this.checked ? "icon-check" : "icon-check-empty");
+        });
     });
 
     /* radio */
-    this.find("input[type=radio]").each(function () {
-        if (!jQuery(this).is(":checked")) {
-            jQuery(this)
-                .prev()
-                .toggleClass("icon-dot-circled icon-circle-empty");
-        } else {
-            jQuery(this).closest("label").addClass("selected");
+    container.querySelectorAll("input[type=radio]").forEach(function(radio) {
+        var prev = radio.previousElementSibling;
+        if (prev && !radio.checked) {
+            prev.classList.toggle("icon-dot-circled");
+            prev.classList.toggle("icon-circle-empty");
+        } else if (prev && radio.checked) {
+            var label = radio.closest("label");
+            if (label) label.classList.add("selected");
         }
-    });
-    this.find("input[type=radio]").on("change", function () {
-        jQuery(
-            '.font-checkbox input[type=radio][name="' +
-                jQuery(this).attr("name") +
-                '"]',
-        ).each(function () {
-            jQuery(this).prev().removeClass();
-            jQuery(this).closest("label").removeClass("selected");
-            if (!jQuery(this).is(":checked")) {
-                jQuery(this).prev().addClass("icon-circle-empty");
-            } else {
-                jQuery(this).prev().addClass("icon-dot-circled");
-                jQuery(this).closest("label").addClass("selected");
-            }
+        radio.addEventListener("change", function() {
+            document.querySelectorAll('.font-checkbox input[type=radio][name="' + this.name + '"]').forEach(function(r) {
+                var p = r.previousElementSibling;
+                if (p) p.className = '';
+                var label = r.closest("label");
+                if (label) label.classList.remove("selected");
+                if (p) p.classList.add(r.checked ? "icon-dot-circled" : "icon-circle-empty");
+                if (r.checked && label) label.classList.add("selected");
+            });
         });
     });
-};
+}
 
 // init fontCheckbox everywhere
-jQuery(".font-checkbox").fontCheckbox();
+document.querySelectorAll(".font-checkbox").forEach(function(el) {
+    initFontCheckbox(el);
+});
 
 function array_delete(arr, item) {
     var i = arr.indexOf(item);
@@ -152,17 +149,27 @@ function sprintf() {
     return o.join("");
 }
 
-$(".search-cancel").on("click", function () {
-    $(".search-input").val("");
-    $(".search-input").trigger("input");
+document.querySelectorAll(".search-cancel").forEach(function (el) {
+    el.addEventListener("click", function () {
+        document.querySelectorAll(".search-input").forEach(function (input) {
+            input.value = "";
+            input.dispatchEvent(new Event("input"));
+        });
+    });
 });
 
-$(".search-input").on("input", function () {
-    if ($(".search-input").val() == "") {
-        $(".search-cancel").hide();
-    } else {
-        $(".search-cancel").show();
-    }
+document.querySelectorAll(".search-input").forEach(function (el) {
+    el.addEventListener("input", function () {
+        if (this.value == "") {
+            document.querySelectorAll(".search-cancel").forEach(function (cancel) {
+                cancel.style.display = 'none';
+            });
+        } else {
+            document.querySelectorAll(".search-cancel").forEach(function (cancel) {
+                cancel.style.display = '';
+            });
+        }
+    });
 });
 
 // Class to implement a temporary state and reverse it
@@ -176,44 +183,46 @@ class TemporaryState {
 
     /**
      * Change temporarily an attribute of an object
-     * @param {Jquery Object(s)} obj HTML Object(s)
+     * @param {DOM Element(s)} obj HTML Element(s) or NodeList
      * @param {String} attr Attribute
      * @param {String} tempVal Temporary value of the attribute
      */
     changeAttribute(obj, attr, tempVal) {
-        for (let i = 0; i < obj.length; i++) {
+        let elements = obj instanceof NodeList ? Array.from(obj) : (obj instanceof Element ? [obj] : []);
+        for (let i = 0; i < elements.length; i++) {
             this.attrChanges.push({
-                object: $(obj[i]),
+                object: elements[i],
                 attribute: attr,
-                value: $(obj[i]).attr(attr),
+                value: elements[i].getAttribute(attr),
             });
+            elements[i].setAttribute(attr, tempVal);
         }
-        obj.attr(attr, tempVal);
     }
 
     /**
      * Add/remove a class temporarily
-     * @param {Jquery Object(s)} obj HTML Object
+     * @param {DOM Element(s)} obj HTML Element(s) or NodeList
      * @param {Boolean} st Add (true) or Remove (false) the class
-     * @param {String} loadclass Class Name
+     * @param {String} tempclass Class Name
      */
     changeClass(obj, st, tempclass) {
-        for (let i = 0; i < obj.length; i++) {
-            if (!($(obj[i]).hasClass(tempclass) && st)) {
+        let elements = obj instanceof NodeList ? Array.from(obj) : (obj instanceof Element ? [obj] : []);
+        for (let i = 0; i < elements.length; i++) {
+            if (!(elements[i].classList.contains(tempclass) && st)) {
                 this.classChanges.push({
-                    object: $(obj[i]),
+                    object: elements[i],
                     state: !st,
                     class: tempclass,
                 });
-                if (st) $(obj[i]).addClass(tempclass);
-                else $(obj[i]).removeClass(tempclass);
+                if (st) elements[i].classList.add(tempclass);
+                else elements[i].classList.remove(tempclass);
             }
         }
     }
 
     /**
      * Add temporarily a class to the object
-     * @param {Jquery Object(s)} obj
+     * @param {DOM Element(s)} obj
      * @param {string} tempclass
      */
     addClass(obj, tempclass) {
@@ -222,7 +231,7 @@ class TemporaryState {
 
     /**
      * Remove temporarily a class to the object
-     * @param {Jquery Object(s)} obj
+     * @param {DOM Element(s)} obj
      * @param {string} tempclass
      */
     removeClass(obj, tempclass) {
@@ -231,17 +240,18 @@ class TemporaryState {
 
     /**
      * Change temporarily the html of objects (remove event handlers on the actual content)
-     * @param {Jquery Object(s)} obj
+     * @param {DOM Element(s)} obj
      * @param {string} temphtml
      */
     changeHTML(obj, temphtml) {
-        for (let i = 0; i < obj.length; i++) {
+        let elements = obj instanceof NodeList ? Array.from(obj) : (obj instanceof Element ? [obj] : []);
+        for (let i = 0; i < elements.length; i++) {
             this.htmlChanges.push({
-                object: $(obj[i]),
-                html: $(obj[i]).html(),
+                object: elements[i],
+                html: elements[i].innerHTML,
             });
+            elements[i].innerHTML = temphtml;
         }
-        obj.html(temphtml);
     }
 
     /**
@@ -250,17 +260,17 @@ class TemporaryState {
     reverse() {
         this.attrChanges.forEach(function (change) {
             if (change.value == undefined) {
-                change.object.removeAttr(change.attribute);
+                change.object.removeAttribute(change.attribute);
             } else {
-                change.object.attr(change.attribute, change.value);
+                change.object.setAttribute(change.attribute, change.value);
             }
         });
         this.classChanges.forEach(function (change) {
-            if (change.state) change.object.addClass(change.class);
-            else change.object.removeClass(change.class);
+            if (change.state) change.object.classList.add(change.class);
+            else change.object.classList.remove(change.class);
         });
         this.htmlChanges.forEach(function (change) {
-            change.object.html(change.html);
+            change.object.innerHTML = change.html;
         });
         this.attrChanges = [];
         this.classChanges = [];
@@ -268,90 +278,3 @@ class TemporaryState {
     }
 }
 
-const jConfirm_alert_options = {
-    icon: "icon-ok",
-    titleClass: "jconfirmAlert",
-    theme: "modern",
-    closeIcon: true,
-    draggable: false,
-    animation: "zoom",
-    boxWidth: "20%",
-    useBootstrap: false,
-    backgroundDismiss: true,
-    animateFromElement: false,
-    typeAnimated: false,
-};
-
-const jConfirm_confirm_options = {
-    draggable: false,
-    titleClass: "jconfirmDeleteConfirm",
-    theme: "modern",
-    animation: "zoom",
-    boxWidth: "40%",
-    useBootstrap: false,
-    type: "red",
-    animateFromElement: false,
-    backgroundDismiss: true,
-    typeAnimated: false,
-};
-
-const jConfirm_warning_options = {
-    icon: "icon-attention",
-    draggable: false,
-    titleClass: "jconfirmWarning jconfirmAlert",
-    theme: "modern",
-    type: "orange",
-    closeIcon: true,
-    draggable: false,
-    animation: "zoom",
-    boxWidth: "20%",
-    useBootstrap: false,
-    backgroundDismiss: true,
-    animateFromElement: false,
-    typeAnimated: false,
-};
-
-const jConfirm_confirm_with_content_options = {
-    draggable: false,
-    theme: "modern",
-    animation: "zoom",
-    boxWidth: "40%",
-    useBootstrap: false,
-    type: "red",
-    animateFromElement: false,
-    backgroundDismiss: true,
-    typeAnimated: false,
-};
-
-jQuery.fn.pwg_jconfirm_follow_href = function ({
-    alert_title = "TITLE",
-    alert_confirm = "CONFIRM",
-    alert_cancel = "CANCEL",
-    alert_content = "",
-} = {}) {
-    let button_href = $(this).attr("href");
-    const options =
-        alert_content === ""
-            ? jConfirm_confirm_options
-            : jConfirm_confirm_with_content_options;
-    $(this).click(function () {
-        $.confirm({
-            content: alert_content,
-            title: alert_title,
-            buttons: {
-                confirm: {
-                    text: alert_confirm,
-                    btnClass: "btn-red",
-                    action: function () {
-                        window.location.href = button_href;
-                    },
-                },
-                cancel: {
-                    text: alert_cancel,
-                },
-            },
-            ...options,
-        });
-        return false;
-    });
-};

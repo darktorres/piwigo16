@@ -92,16 +92,16 @@
       title="{'Delete images in GDThumb cache.'|translate}" onclick="return confirm('{'Are you sure?'|translate}');">
     <input type="button" name="cachebuild" id="cachebuild" value="{'Pre-cache thumbnails'|translate}"
       title="{'Finds images that have not been cached and creates the cached version.'|translate}"
-      onclick="jQuery.gdThumb_start();">
+      onclick="window.gdThumb_start();">
   </p>
 </form>
 <fieldset id="generate_cache">
   <legend>{'Pre-cache thumbnails'|translate}</legend>
   <p class="buttons">
-    <input id="startLink" value="{'Start'|translate}" onclick="jQuery.gdThumb_start()" type="button">
-    <input id="pauseLink" value="{'Pause'|translate}" onclick="jQuery.gdThumb_pause()" type="button"
+    <input id="startLink" value="{'Start'|translate}" onclick="window.gdThumb_start()" type="button">
+    <input id="pauseLink" value="{'Pause'|translate}" onclick="window.gdThumb_pause()" type="button"
       disabled="disabled">
-    <input id="stopLink" value="{'Stop'|translate}" onclick="jQuery.gdThumb_stop()" type="button" disabled="disabled">
+    <input id="stopLink" value="{'Stop'|translate}" onclick="window.gdThumb_stop()" type="button" disabled="disabled">
   </p>
   <div>
     <ul>
@@ -133,4 +133,4 @@
 {/html_head}
 
 {combine_script id='iloader' load='footer' path=$GDTHUMB_PATH|cat:"/js/image.loader.js"}
-{combine_script id='admin.precache' load='footer' path=$GDTHUMB_PATH|cat:"/js/gdthumb.admin.js" require='jquery.ui'}
+{combine_script id='admin.precache' load='footer' path=$GDTHUMB_PATH|cat:"/js/gdthumb.admin.js" require='iloader'}

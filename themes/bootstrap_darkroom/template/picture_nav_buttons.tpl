@@ -103,10 +103,10 @@
     			url;
     		switch (keyCode) {
     			{if isset($next)}
-	    			case 63235: case 39: if ((e.ctrlKey || docElem.scrollLeft==docElem.scrollWidth-docElem.clientWidth) && $('.pswp--visible').length === 0)url="{$next.U_IMG}"; break;
+	    			case 63235: case 39: if ((e.ctrlKey || docElem.scrollLeft==docElem.scrollWidth-docElem.clientWidth) && document.querySelector('.pswp--visible') === null)url="{$next.U_IMG}"; break;
     			{/if}
     			{if isset($previous)}
-	    			case 63234: case 37: if ((e.ctrlKey || docElem.scrollLeft==0) && $('.pswp--visible').length === 0)url="{$previous.U_IMG}"; break;
+	    			case 63234: case 37: if ((e.ctrlKey || docElem.scrollLeft==0) && document.querySelector('.pswp--visible') === null)url="{$previous.U_IMG}"; break;
     			{/if}
     			{if isset($first)}
 	    			{* Home *}case 36: if (e.ctrlKey)url="{$first.U_IMG}"; break;

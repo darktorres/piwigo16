@@ -1,8 +1,5 @@
-$(window).on("load", function () {
-    const checkbox = $('input[type="checkbox"]');
-    checkbox.checkboxradio("refresh");
-    checkbox.on("change", function () {
-        $(this).checkboxradio("refresh");
+window.addEventListener('load', function() {
+    document.querySelectorAll(".ui-content").forEach(function(el) {
+        el.style.height = "90vh";
     });
-    $(".ui-content").css("height", "90vh");
 });

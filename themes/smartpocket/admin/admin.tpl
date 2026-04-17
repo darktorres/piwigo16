@@ -10,9 +10,15 @@
 </style>{/html_style}
 
 {footer_script}<script>
-  jQuery(document).ready(function() {
-    jQuery('form li label input[type=checkbox]').change(function() {
-      jQuery(this).prev().toggleClass('icon-check icon-check-empty');
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('form li label input[type=checkbox]').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        var prev = this.previousElementSibling;
+        if (prev) {
+          prev.classList.toggle('icon-check');
+          prev.classList.toggle('icon-check-empty');
+        }
+      });
     });
   });
 </script>{/footer_script}

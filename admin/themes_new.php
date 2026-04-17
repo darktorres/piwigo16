@@ -23,7 +23,7 @@ if (! $conf->enable_extensions_install) {
     exit('Piwigo extensions install/update system is disabled');
 }
 
-$base_url = functions_url::get_root_url() . 'admin.php?page=' . $page['page'] . '&tab=' . $page['tab'];
+$base_url = functions_url::get_root_url() . 'admin.php?page=' . $page['page'] . (isset($page['tab']) ? '&tab=' . $page['tab'] : '');
 
 $themes = new themes();
 

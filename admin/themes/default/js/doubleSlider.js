@@ -1,34 +1,20 @@
-(function ($) {
+(function () {
     /**
+     * pwgDoubleSlider — noUiSlider-backed range slider, jQuery-free.
+     *
      * OPTIONS:
-     * values {mixed[]}
-     * selected {object} min and max
-     * text {string}
+     *   values   {mixed[]}  — ordered array of allowed values
+     *   selected {object}   — { min, max } initial selection
+     *   text     {string}   — sprintf template shown in .slider-info
      */
-    $.fn.pwgDoubleSlider = function (options) {
-        var that = this;
-
-        function onChange(e, ui) {
-            that.find("[data-input=min]").val(options.values[ui.values[0]]);
-            that.find("[data-input=max]").val(options.values[ui.values[1]]);
-
-            that.find(".slider-info").html(
-                sprintf(
-                    options.text,
-                    options.values[ui.values[0]],
-                    options.values[ui.values[1]],
-                ),
-            );
-        }
+    window.pwgDoubleSlider = function (containerEl, options) {
+        var sliderEl = containerEl.querySelector(".slider-slider");
 
         function findClosest(array, value) {
             var closest = null;
             var index = -1;
-            $.each(array, function (i, v) {
-                if (
-                    closest == null ||
-                    Math.abs(v - value) < Math.abs(closest - value)
-                ) {
+            array.forEach(function (v, i) {
+                if (closest === null || Math.abs(v - value) < Math.abs(closest - value)) {
                     closest = v;
                     index = i;
                 }
@@ -36,39 +22,39 @@
             return index;
         }
 
-        var values = [
-            options.values.indexOf(options.selected.min),
-            options.values.indexOf(options.selected.max),
-        ];
-        if (values[0] == -1) {
-            values[0] = findClosest(options.values, options.selected.min);
-        }
-        if (values[1] == -1) {
-            values[1] = findClosest(options.values, options.selected.max);
-        }
+        var startLo = options.values.indexOf(options.selected.min);
+        var startHi = options.values.indexOf(options.selected.max);
+        if (startLo === -1) startLo = findClosest(options.values, options.selected.min);
+        if (startHi === -1) startHi = findClosest(options.values, options.selected.max);
 
-        var slider = this.find(".slider-slider").slider({
-            range: true,
-            min: 0,
-            max: options.values.length - 1,
-            values: values,
-            slide: onChange,
-            change: onChange,
+        noUiSlider.create(sliderEl, {
+            start: [startLo, startHi],
+            range: { min: 0, max: options.values.length - 1 },
+            step: 1,
+            connect: true,
         });
 
-        this.find(".slider-choice").on("click", function () {
-            slider.slider(
-                "values",
-                0,
-                options.values.indexOf($(this).data("min")),
-            );
-            slider.slider(
-                "values",
-                1,
-                options.values.indexOf($(this).data("max")),
-            );
+        function onChange(values) {
+            var lo = Math.round(parseFloat(values[0]));
+            var hi = Math.round(parseFloat(values[1]));
+            var minEl = containerEl.querySelector("[data-input=min]");
+            var maxEl = containerEl.querySelector("[data-input=max]");
+            var infoEl = containerEl.querySelector(".slider-info");
+            if (minEl) minEl.value = options.values[lo];
+            if (maxEl) maxEl.value = options.values[hi];
+            if (infoEl) infoEl.innerHTML = sprintf(options.text, options.values[lo], options.values[hi]);
+        }
+
+        sliderEl.noUiSlider.on("update", onChange);
+
+        containerEl.querySelectorAll(".slider-choice").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                var minIdx = options.values.indexOf(Number(btn.dataset.min));
+                var maxIdx = options.values.indexOf(Number(btn.dataset.max));
+                sliderEl.noUiSlider.set([minIdx, maxIdx]);
+            });
         });
 
-        return this;
+        return containerEl;
     };
-})(jQuery);
+})();

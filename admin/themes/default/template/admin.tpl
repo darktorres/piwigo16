@@ -1,51 +1,7 @@
-{footer_script}<script>
-  jQuery.fn.lightAccordion = function(options) {
-    var settings = $.extend({
-      header: 'dt',
-      content: 'dd',
-      active: 0
-    }, options);
+{combine_script id='admin' load='footer' path='admin/themes/default/js/admin.js'}
+{combine_script id='helpPopin' load='footer' path='admin/themes/default/js/helpPopin.js'}
 
-    return this.each(function() {
-      var self = jQuery(this);
-
-      var contents = self.find(settings.content),
-        headers = self.find(settings.header);
-
-      contents.not(contents[settings.active]).hide();
-
-      self.on('click', settings.header, function() {
-        var content = jQuery(this).next(settings.content);
-        content.slideDown();
-        contents.not(content).slideUp();
-      });
-    });
-  };
-
-  $('#menubar').lightAccordion({
-    active: {$ACTIVE_MENU}
-  });
-
-  /* in case we have several infos/errors/warnings display bullets */
-  jQuery(document).ready(function() {
-    var eiw = ["infos", "errors", "warnings", "messages"];
-
-    for (var i = 0; i < eiw.length; i++) {
-      var boxType = eiw[i];
-
-      if (jQuery("." + boxType + " ul li").length > 1) {
-        jQuery("." + boxType + " ul li").css("list-style-type", "square");
-        jQuery("." + boxType + " .eiw-icon").css("margin-right", "20px");
-      }
-    }
-
-    if (jQuery('h2').length > 0) {
-      jQuery('h1').html(jQuery('h2').html());
-    }
-  });
-</script>{/footer_script}
-
-<div id="menubar">
+<div id="menubar" data-active-menu="{$ACTIVE_MENU}">
   <div id="adminHome"><a href="{$U_ADMIN}" class="admin-main"><i class="icon-television"></i>
       {'Dashboard'|translate}</a></div>
 
@@ -143,10 +99,6 @@
     {$TABSHEET}
   {/if}
   {if isset($U_HELP)}
-    {include file='inc/colorbox.inc.tpl'}
-    {footer_script}<script>
-      jQuery('.help-popin').colorbox({ width: "500px" });
-    </script>{/footer_script}
     <ul class="HelpActions">
       <li><a href="{$U_HELP}&amp;output=content_only" title="{'Help'|translate}" class="help-popin"><span
             class="icon-help-circled"></span></a></li>

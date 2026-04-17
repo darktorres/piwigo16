@@ -68,15 +68,13 @@
 
   {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css" version=1}
   {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/js/photoswipe/photoswipe.css"}
-  {combine_script id='gdthumb' require='jquery' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
+  {combine_script id='gdthumb' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
   {combine_script id='gdthumb.masonry' require='gdthumb' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/masonry.js" load="footer"}
 
   {footer_script require="gdthumb.masonry"}<script>
     {if isset($has_cats)}
     {else}
-      $(function() {
-        GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin});
-      });
+      GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin});
     {/if}
   </script>{/footer_script}
 

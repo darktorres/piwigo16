@@ -114,7 +114,6 @@ final class RVTS
             'id'      => $my_base_name . '_cats',
             'load'    => 'async',
             'path'    => 'plugins/' . $my_base_name . '/rv_tscroller.js',
-            'require' => 'jquery',
             'version' => RVTS_VERSION,
         ]);
 
@@ -170,7 +169,6 @@ final class RVTS
             'id' => $my_base_name,
             'load' => 'async',
             'path' => 'plugins/' . $my_base_name . '/rv_tscroller.js',
-            'require' => 'jquery',
             'version' => RVTS_VERSION,
         ]);
         $start = (int) $page['start'];
@@ -209,7 +207,7 @@ final class RVTS
                     prevMsg: {$prevMsg_js},
                     ajaxLoaderImage: {$ajax_loader_image_js}
                 };
-                jQuery('.navigationBar').hide();
+                document.querySelector('.navigationBar') && (document.querySelector('.navigationBar').style.display = 'none');
                 </script>
                 JS
         );

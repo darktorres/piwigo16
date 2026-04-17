@@ -1,4 +1,4 @@
-{combine_script id='core.switchbox' load='async' require='jquery' path='themes/default/js/switchbox.js'}
+{combine_script id='core.switchbox' load='async' path='themes/default/js/switchbox.js'}
 
 {$MENUBAR}
 

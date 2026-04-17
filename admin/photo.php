@@ -71,10 +71,12 @@ if ($page['tab'] == 'properties') {
     require __DIR__ . '/../admin/picture_modify.php';
 } elseif ($page['tab'] == 'coi') {
     require __DIR__ . '/../admin/picture_coi.php';
-} elseif ($page['tab'] == 'formats' &&
-          $conf->enable_formats
-) {
-    require __DIR__ . '/../admin/picture_formats.php';
+} elseif ($page['tab'] == 'formats') {
+    if ($conf->enable_formats) {
+        require __DIR__ . '/../admin/picture_formats.php';
+    } else {
+        require __DIR__ . '/../admin/picture_modify.php';
+    }
 } else {
     require __DIR__ . '/../admin/photo_' . $page['tab'] . '.php';
 }

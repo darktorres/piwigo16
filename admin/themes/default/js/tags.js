@@ -1,28 +1,20 @@
 //Get the data
-var dataTags = $(".tag-container").data("tags");
+var dataTags = document.querySelector(".tag-container")?.dataset.tags ? JSON.parse(document.querySelector(".tag-container").dataset.tags) : [];
 
 //Initiate Select
-$("#select-100").prop("checked", true);
+var _sel100 = document.getElementById("select-100");
+if (_sel100) _sel100.checked = true;
 
 //Orphan tags
-$(".info-warning p a").on("click", () => {
-    let url = $(".info-warning p a").data("url");
+document.querySelector(".info-warning p a")?.addEventListener("click", () => {
+    let url = document.querySelector(".info-warning p a")?.dataset.url;
     let tags = orphan_tag_names;
     let str_orphans = str_orphan_tags
         .replace("%s1", tags.length)
         .replace("%s2", tags.join(", "));
-    $.confirm({
+    pwgConfirm({
         content: str_orphans,
         title: str_delete_orphan_tags,
-        draggable: false,
-        theme: "modern",
-        animation: "zoom",
-        boxWidth: "30%",
-        useBootstrap: false,
-        type: "red",
-        animateFromElement: false,
-        backgroundDismiss: true,
-        typeAnimated: false,
         buttons: {
             delete: {
                 text: str_delete_them,
@@ -34,7 +26,7 @@ $(".info-warning p a").on("click", () => {
             keep: {
                 text: str_keep_them,
                 action: function () {
-                    $(".info-warning").hide();
+                    document.querySelector(".info-warning").style.display = 'none';
                 },
             },
         },
@@ -48,8 +40,9 @@ function createTagBox(id, name, url_name, count, raw_name = null) {
     }
     let u_edit = "admin.php?page=batch_manager&filter=tag-" + id;
     let u_view = "index.php?/tags/" + id + "-" + url_name;
-    let html = $(".tag-template")
-        .html()
+    let templateEl = document.querySelector(".tag-template");
+    let html = templateEl ? templateEl.innerHTML : "";
+    html = html
         .replace(/%name%/g, unescape(name))
         .replace("%U_VIEW%", u_view)
         .replace("%U_EDIT%", u_edit)
@@ -57,102 +50,111 @@ function createTagBox(id, name, url_name, count, raw_name = null) {
     if (name == raw_name) {
         html = html.replace("icon-globe", "");
     }
-    newTag = $(
-        '<div class="tag-box test" data-id=' +
-            id +
-            ' data-selected="0">' +
-            html +
-            "</div>",
-    );
-    if ($("#toggleSelectionMode").is(":checked")) {
-        newTag.addClass("selection");
-        newTag.find(".in-selection-mode").show();
+    let div = document.createElement("div");
+    div.className = "tag-box test";
+    div.setAttribute("data-id", id);
+    div.setAttribute("data-selected", "0");
+    div.innerHTML = html;
+
+    let toggleEl = document.getElementById("toggleSelectionMode");
+    if (toggleEl && toggleEl.checked) {
+        div.classList.add("selection");
+        let inSelection = div.querySelector(".in-selection-mode");
+        if (inSelection) inSelection.style.display = '';
     }
     if (count > 0) {
-        newTag
-            .find(".dropdown-option.view, .dropdown-option.manage")
-            .css("display", "block");
-        newTag
-            .find(".tag-dropdown-header i")
-            .html(str_number_photos.replace("%d", count));
+        let views = div.querySelectorAll(".dropdown-option.view, .dropdown-option.manage");
+        views.forEach(el => el.style.display = "block");
+        let headerI = div.querySelector(".tag-dropdown-header i");
+        if (headerI) headerI.innerHTML = str_number_photos.replace("%d", count);
     } else {
-        newTag.find(".tag-dropdown-header i").html(str_no_photos);
+        let headerI = div.querySelector(".tag-dropdown-header i");
+        if (headerI) headerI.innerHTML = str_no_photos;
     }
-    return newTag;
+    return div;
 }
 
 function recycleTagBox(tagBox, id, name, url_name, count, raw_name = null) {
     if (raw_name === null) {
         raw_name = name;
     }
-    tagBox = tagBox.first();
-    tagBox.attr("data-id", id);
-    tagBox.find(".tag-name, .tag-dropdown-header b").html(name);
-    tagBox.find(".tag-name-editable").val(name);
-    tagBox.attr("data-selected", 0);
-    tagBox.find(".tag-name").data("rawname", raw_name);
+    tagBox = tagBox instanceof NodeList ? tagBox[0] : tagBox;
+    tagBox.setAttribute("data-id", id);
+    let nameEls = tagBox.querySelectorAll(".tag-name, .tag-dropdown-header b");
+    nameEls.forEach(el => el.innerHTML = name);
+    let editableEl = tagBox.querySelector(".tag-name-editable");
+    if (editableEl) editableEl.value = name;
+    tagBox.setAttribute("data-selected", "0");
+    let tagNameEl = tagBox.querySelector(".tag-name");
+    if (tagNameEl) tagNameEl.dataset.rawname = raw_name;
 
     //Dropdown
     let u_edit = "admin.php?page=batch_manager&filter=tag-" + id;
     let u_view = "index.php?/tags/" + id + "-" + url_name;
-    tagBox.find(".dropdown-option.view").attr("href", u_view);
-    tagBox.find(".dropdown-option.manage").attr("href", u_edit);
+    let viewLink = tagBox.querySelector(".dropdown-option.view");
+    let manageLink = tagBox.querySelector(".dropdown-option.manage");
+    if (viewLink) viewLink.href = u_view;
+    if (manageLink) manageLink.href = u_edit;
 
     if (count > 0) {
-        tagBox
-            .find(".dropdown-option.view, .dropdown-option.manage")
-            .css("display", "block");
-        tagBox
-            .find(".tag-dropdown-header i")
-            .html(str_number_photos.replace("%d", count));
+        let views = tagBox.querySelectorAll(".dropdown-option.view, .dropdown-option.manage");
+        views.forEach(el => el.style.display = "block");
+        let headerI = tagBox.querySelector(".tag-dropdown-header i");
+        if (headerI) headerI.innerHTML = str_number_photos.replace("%d", count);
     } else {
-        tagBox.find(".tag-dropdown-header i").html(str_no_photos);
+        let headerI = tagBox.querySelector(".tag-dropdown-header i");
+        if (headerI) headerI.innerHTML = str_no_photos;
     }
 }
 
 //Number On Badge
 function updateBadge() {
-    $(".badge-number").html(dataTags.length);
+    let badgeEl = document.querySelector(".badge-number");
+    if (badgeEl) badgeEl.innerHTML = dataTags.length;
+    let labelEl = document.querySelector(".tag-header #add-tag .add-tag-label");
     if (dataTags.length == 0) {
-        $(".tag-header #add-tag .add-tag-label").addClass("highlight");
+        if (labelEl) labelEl.classList.add("highlight");
     } else {
-        $(".tag-header #add-tag .add-tag-label").removeClass("highlight");
+        if (labelEl) labelEl.classList.remove("highlight");
     }
 }
 
 //Add a tag
-$(".add-tag-container").on("click", function () {
-    $("#add-tag").addClass("input-mode");
-    $("#add-tag-input").focus();
-    $(".tag-info").hide();
+document.querySelector(".add-tag-container")?.addEventListener("click", function () {
+    document.getElementById("add-tag").classList.add("input-mode");
+    document.getElementById("add-tag-input").focus();
+    let tagInfo = document.querySelector(".tag-info");
+    if (tagInfo) tagInfo.style.display = 'none';
 });
 
-$("#add-tag .icon-cancel-circled").on("click", function () {
-    $("#add-tag").removeClass("input-mode");
-    $(".tag-info").hide();
+document.querySelector("#add-tag .icon-cancel-circled")?.addEventListener("click", function () {
+    document.getElementById("add-tag").classList.remove("input-mode");
+    let tagInfo = document.querySelector(".tag-info");
+    if (tagInfo) tagInfo.style.display = 'none';
 });
 
 //Display/Hide tag option
-$(".tag-box").each(function () {
-    setupTagbox($(this));
+document.querySelectorAll(".tag-box").forEach(function (el) {
+    setupTagbox(el);
 });
 
 //Call the API when rename a tag
-$(".TagSubmit").on("click", function () {
-    $(".TagSubmit").hide();
-    $(".TagLoading").show();
+document.querySelector(".TagSubmit")?.addEventListener("click", function () {
+    document.querySelector(".TagSubmit").style.display = 'none';
+    document.querySelector(".TagLoading").style.display = '';
+    let inputEl = document.querySelector(".RenameTagPopInContainer .tag-property-input");
     renameTag(
-        $(".RenameTagPopInContainer").find(".tag-property-input").attr("id"),
-        $(".RenameTagPopInContainer").find(".tag-property-input").val(),
+        inputEl.id,
+        inputEl.value,
     )
         .then(() => {
-            $(".TagSubmit").show();
-            $(".TagLoading").hide();
+            document.querySelector(".TagSubmit").style.display = '';
+            document.querySelector(".TagLoading").style.display = 'none';
             rename_tag_close();
         })
         .catch((message) => {
-            $(".TagSubmit").show();
-            $(".TagLoading").hide();
+            document.querySelector(".TagSubmit").style.display = '';
+            document.querySelector(".TagLoading").style.display = 'none';
             console.error(message);
         });
 });
@@ -161,28 +163,31 @@ $(".TagSubmit").on("click", function () {
  Add a tag
 -------*/
 
-$("#add-tag").submit(function (e) {
+document.getElementById("add-tag")?.addEventListener("submit", function (e) {
     e.preventDefault();
-    if ($("#add-tag-input").val() != "") {
+    let inputEl = document.getElementById("add-tag-input");
+    if (inputEl && inputEl.value != "") {
         loadState = new TemporaryState();
-        loadState.removeClass($("#add-tag .icon-validate"), "icon-plus");
+        let validateIcon = document.querySelector("#add-tag .icon-validate");
+        loadState.removeClass(validateIcon, "icon-plus");
         loadState.changeHTML(
-            $("#add-tag .icon-validate"),
+            validateIcon,
             "<i class='icon-spin6 animate-spin'> </i>",
         );
         loadState.changeAttribute(
-            $("#add-tag .icon-validate"),
+            validateIcon,
             "style",
             "pointer-event:none",
         );
-        addTag($("#add-tag-input").val())
+        addTag(inputEl.value)
             .then(function () {
                 showMessage(
-                    str_tag_created.replace("%s", $("#add-tag-input").val()),
+                    str_tag_created.replace("%s", inputEl.value),
                 );
-                $("#add-tag-input").val("");
-                $("#add-tag").removeClass("input-mode");
-                $("#search-tag .search-input").trigger("input");
+                inputEl.value = "";
+                document.getElementById("add-tag").classList.remove("input-mode");
+                let searchInput = document.querySelector("#search-tag .search-input");
+                if (searchInput) searchInput.dispatchEvent(new Event("input"));
                 loadState.reverse();
             })
             .catch((message) => {
@@ -192,228 +197,244 @@ $("#add-tag").submit(function (e) {
     }
 });
 
-$("#add-tag .icon-validate").on("click", function () {
-    if ($("#add-tag").hasClass("input-mode")) {
-        $("#add-tag").submit();
+document.querySelector("#add-tag .icon-validate")?.addEventListener("click", function () {
+    let addTag = document.getElementById("add-tag");
+    if (addTag && addTag.classList.contains("input-mode")) {
+        addTag.dispatchEvent(new Event("submit"));
     }
 });
 
 function addTag(name) {
     return new Promise((resolve, reject) => {
-        jQuery.ajax({
-            url: "ws.php?format=json&method=pwg.tags.add",
-            type: "POST",
-            data: {
-                name: name,
-            },
-            success: function (raw_data) {
-                data = jQuery.parseJSON(raw_data);
-                if (data.stat === "ok") {
-                    newTag = createTagBox(
-                        data.result.id,
-                        data.result.name,
-                        data.result.url_name,
-                        0,
-                    );
-                    $(".tag-container").prepend(newTag);
-                    setupTagbox(newTag);
-                    updateSearchInfo();
+        fetch("ws.php?format=json&method=pwg.tags.add", {
+            method: "POST",
+            body: new URLSearchParams({ name: name }),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+        .then(response => response.text())
+        .then(raw_data => {
+            data = JSON.parse(raw_data);
+            if (data.stat === "ok") {
+                newTag = createTagBox(
+                    data.result.id,
+                    data.result.name,
+                    data.result.url_name,
+                    0,
+                );
+                let container = document.querySelector(".tag-container");
+                if (container) container.prepend(newTag);
+                setupTagbox(newTag);
+                updateSearchInfo();
 
-                    //Update the data
-                    dataTags.unshift({
-                        name: data.result.name,
-                        raw_name: data.result.name,
-                        id: data.result.id,
-                        url_name: data.result.url_name,
-                    });
-                    updateBadge();
-                    resolve();
-                } else {
-                    reject(str_already_exist.replace("%s", name));
-                }
-            },
-            error: function (err) {
-                reject(err);
-            },
-        });
+                //Update the data
+                dataTags.unshift({
+                    name: data.result.name,
+                    raw_name: data.result.name,
+                    id: data.result.id,
+                    url_name: data.result.url_name,
+                });
+                updateBadge();
+                resolve();
+            } else {
+                reject(str_already_exist.replace("%s", name));
+            }
+        })
+        .catch(error => reject(error));
     });
 }
+
 /*-------
  Setup Tag Box
 -------*/
 
 function setupTagbox(tagBox) {
     //Dropdown options
-    tagBox.find(".showOptions").on("click", function () {
-        tagBox.find(".tag-dropdown-block").css("display", "grid");
-    });
+    let showOptionsBtn = tagBox.querySelector(".showOptions");
+    if (showOptionsBtn) {
+        showOptionsBtn.addEventListener("click", function () {
+            let dropdown = tagBox.querySelector(".tag-dropdown-block");
+            if (dropdown) dropdown.style.display = "grid";
+        });
+    }
 
-    $(document).mouseup(function (e) {
+    document.addEventListener("mouseup", function (e) {
         e.stopPropagation();
         let option_is_clicked = false;
-        tagBox.find(".dropdown-option").each(function () {
-            if (!($(this).has(e.target).length === 0)) {
+        tagBox.querySelectorAll(".dropdown-option").forEach(el => {
+            if (el.contains(e.target)) {
                 option_is_clicked = true;
             }
         });
         if (!option_is_clicked) {
-            tagBox.find(".tag-dropdown-block").hide();
+            let dropdown = tagBox.querySelector(".tag-dropdown-block");
+            if (dropdown) dropdown.style.display = 'none';
         }
     });
 
     // Selection behaviour
-    tagBox.on("click", function () {
-        if ($(".tag-container").hasClass("selection")) {
-            if (tagBox.attr("data-selected") == "1") {
-                tagBox.attr("data-selected", "0");
-                removeSelectedItem(tagBox.attr("data-id"));
+    tagBox.addEventListener("click", function () {
+        let container = document.querySelector(".tag-container");
+        if (container && container.classList.contains("selection")) {
+            if (this.getAttribute("data-selected") == "1") {
+                this.setAttribute("data-selected", "0");
+                removeSelectedItem(this.getAttribute("data-id"));
             } else {
-                tagBox.attr("data-selected", "1");
-                addSelectedItem(tagBox.attr("data-id"));
+                this.setAttribute("data-selected", "1");
+                addSelectedItem(this.getAttribute("data-id"));
             }
             updateSelectionContent();
         }
     });
 
     //Edit Name
-    tagBox.find(".dropdown-option.edit").on("click", function () {
-        set_up_popin(
-            tagBox.data("id"),
-            tagBox.find(".tag-name").data("rawname"),
-            tagBox.find(".tag-name").html(),
-        );
-        rename_tag_open();
-    });
+    let editBtn = tagBox.querySelector(".dropdown-option.edit");
+    if (editBtn) {
+        editBtn.addEventListener("click", function () {
+            let nameEl = tagBox.querySelector(".tag-name");
+            set_up_popin(
+                tagBox.dataset.id,
+                nameEl?.dataset.rawname || "",
+                nameEl?.innerHTML || "",
+            );
+            rename_tag_open();
+        });
+    }
 
     //Delete Tag
-    tagBox.find(".dropdown-option.delete").on("click", function () {
-        $.confirm({
-            title: str_delete.replace("%s", tagBox.find(".tag-name").html()),
-            buttons: {
-                confirm: {
-                    text: str_yes_delete_confirmation,
-                    btnClass: "btn-red",
-                    action: function () {
-                        removeTag(
-                            tagBox.data("id"),
-                            tagBox.find(".tag-name").html(),
-                        );
+    let deleteBtn = tagBox.querySelector(".dropdown-option.delete");
+    if (deleteBtn) {
+        deleteBtn.addEventListener("click", function () {
+            pwgConfirm({
+                title: str_delete.replace("%s", tagBox.querySelector(".tag-name")?.innerHTML || ""),
+                buttons: {
+                    confirm: {
+                        text: str_yes_delete_confirmation,
+                        btnClass: "btn-red",
+                        action: function () {
+                            removeTag(
+                                tagBox.dataset.id,
+                                tagBox.querySelector(".tag-name")?.innerHTML || "",
+                            );
+                        },
+                    },
+                    cancel: {
+                        text: str_no_delete_confirmation,
                     },
                 },
-                cancel: {
-                    text: str_no_delete_confirmation,
-                },
-            },
-            ...jConfirm_confirm_options,
+            });
         });
-    });
+    }
 
     //Duplicate Tag
-    tagBox.find(".dropdown-option.duplicate").on("click", function () {
-        duplicateTag(
-            tagBox.data("id"),
-            tagBox.find(".tag-name").data("rawname"),
-        ).then((data) => {
-            showMessage(str_tag_created.replace("%s", data.result.name));
+    let dupBtn = tagBox.querySelector(".dropdown-option.duplicate");
+    if (dupBtn) {
+        dupBtn.addEventListener("click", function () {
+            let nameEl = tagBox.querySelector(".tag-name");
+            duplicateTag(
+                tagBox.dataset.id,
+                nameEl?.dataset.rawname || "",
+            ).then((data) => {
+                showMessage(str_tag_created.replace("%s", data.result.name));
+            });
         });
-    });
+    }
 }
 
 function set_up_popin(id, tagRawName, tagName) {
-    $(".RenameTagPopInContainer").find(".tag-property-input").attr("id", id);
+    let inputEl = document.querySelector(".RenameTagPopInContainer .tag-property-input");
+    if (inputEl) inputEl.id = id;
 
-    $(".AddIconTitle span").html(str_tag_rename.replace("%s", tagName));
-    $(".ClosePopIn, .TagCancel").on("click", function () {
-        rename_tag_close();
+    let titleEl = document.querySelector(".AddIconTitle span");
+    if (titleEl) titleEl.innerHTML = str_tag_rename.replace("%s", tagName);
+
+    document.querySelectorAll(".ClosePopIn, .TagCancel").forEach(el => {
+        el.removeEventListener("click", arguments.callee);
+        el.addEventListener("click", function () {
+            rename_tag_close();
+        });
     });
-    $(".TagSubmit").html(str_yes_rename_confirmation);
-    $(".RenameTagPopInContainer").find(".tag-property-input").val(tagRawName);
+
+    let submitBtn = document.querySelector(".TagSubmit");
+    if (submitBtn) submitBtn.innerHTML = str_yes_rename_confirmation;
+
+    if (inputEl) inputEl.value = tagRawName;
 }
 
 function rename_tag_close() {
-    $("#RenameTag").fadeOut();
+    let el = document.getElementById("RenameTag");
+    if (el) el.style.display = 'none';
 }
 
 function rename_tag_open() {
-    $("#RenameTag").fadeIn();
-    $(".tag-property-input").first().focus();
+    let el = document.getElementById("RenameTag");
+    if (el) el.style.display = '';
+    let input = document.querySelector(".tag-property-input");
+    if (input) input.focus();
 }
 
 function removeTag(id, name) {
-    $.alert({
-        title: str_tag_deleted.replace("%s", name),
-        content: function () {
-            return jQuery.ajax({
-                url: "ws.php?format=json&method=pwg.tags.delete",
-                type: "POST",
-                data: {
-                    tag_id: id,
-                    pwg_token: pwg_token,
-                },
-                success: function (raw_data) {
-                    data = jQuery.parseJSON(raw_data);
-
-                    if (data.stat === "ok") {
-                        $(".tag-box[data-id=" + id + "]").remove();
-                        //Update data
-                        dataTags = dataTags.filter((tag) => tag.id != id);
-                        showMessage(str_tag_deleted.replace("%s", name));
-                        updateBadge();
-                        updateSearchInfo();
-                        updatePaginationMenu();
-                    } else {
-                        showError("A problem has occurred");
-                    }
-                },
-            });
-        },
-        ...jConfirm_alert_options,
+    fetch("ws.php?format=json&method=pwg.tags.delete", {
+        method: "POST",
+        body: new URLSearchParams({
+            tag_id: id,
+            pwg_token: pwg_token,
+        }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+    .then(response => response.text())
+    .then(raw_data => {
+        data = JSON.parse(raw_data);
+        if (data.stat === "ok") {
+            let el = document.querySelector(".tag-box[data-id=" + id + "]");
+            if (el) el.remove();
+            //Update data
+            dataTags = dataTags.filter((tag) => tag.id != id);
+            showMessage(str_tag_deleted.replace("%s", name));
+            updateBadge();
+            updateSearchInfo();
+            updatePaginationMenu();
+        } else {
+            throw new Error("A problem has occurred");
+        }
     });
 }
 
 function renameTag(id, new_name) {
     return new Promise((resolve, reject) => {
-        jQuery.ajax({
-            url: "ws.php?format=json&method=pwg.tags.rename",
-            type: "POST",
-            data: {
+        fetch("ws.php?format=json&method=pwg.tags.rename", {
+            method: "POST",
+            body: new URLSearchParams({
                 tag_id: id,
                 new_name: new_name,
                 pwg_token: pwg_token,
-            },
-            success: function (raw_data) {
-                data = jQuery.parseJSON(raw_data);
-                console.log(data);
-                if (data.stat === "ok") {
-                    $(
-                        ".tag-box[data-id=" +
-                            id +
-                            "] p, .tag-box[data-id=" +
-                            id +
-                            "] .tag-dropdown-header b",
-                    ).html(data.result.name);
-                    $(".tag-box[data-id=" + id + "] .tag-name-editable").attr(
-                        "value",
-                        data.result.name,
-                    );
-                    let u_view =
-                        "index.php?/tags/" + id + "-" + data.result.url_name;
-                    $(".dropdown-option.view").attr("href", u_view);
+            }),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+        .then(response => response.text())
+        .then(raw_data => {
+            data = JSON.parse(raw_data);
+            console.log(data);
+            if (data.stat === "ok") {
+                document.querySelectorAll(".tag-box[data-id=" + id + "] p, .tag-box[data-id=" + id + "] .tag-dropdown-header b").forEach(el => {
+                    el.innerHTML = data.result.name;
+                });
+                let editableEl = document.querySelector(".tag-box[data-id=" + id + "] .tag-name-editable");
+                if (editableEl) editableEl.value = data.result.name;
+                let u_view = "index.php?/tags/" + id + "-" + data.result.url_name;
+                let viewLink = document.querySelector(".dropdown-option.view");
+                if (viewLink) viewLink.href = u_view;
 
-                    //Update the data
-                    index = dataTags.findIndex((tag) => tag.id == id);
-                    dataTags[index].name = data.result.name;
-                    dataTags[index].url_name = data.result.url_name;
+                //Update the data
+                index = dataTags.findIndex((tag) => tag.id == id);
+                dataTags[index].name = data.result.name;
+                dataTags[index].url_name = data.result.url_name;
 
-                    resolve(data);
-                } else {
-                    reject(str_already_exist.replace("%s", new_name));
-                }
-            },
-            error: function (XMLHttpRequest) {
-                reject(XMLHttpRequest.statusText);
-            },
-        });
+                resolve(data);
+            } else {
+                reject(str_already_exist.replace("%s", new_name));
+            }
+        })
+        .catch(error => reject(error.statusText || error));
     });
 }
 
@@ -423,8 +444,8 @@ function duplicateTag(id, name) {
 
         let name_exist = function (name) {
             exist = false;
-            $(".tag-box .tag-name").each(function () {
-                if ($(this).html() === name) exist = true;
+            document.querySelectorAll(".tag-box .tag-name").forEach(el => {
+                if (el.innerHTML === name) exist = true;
             });
             return exist;
         };
@@ -434,43 +455,43 @@ function duplicateTag(id, name) {
             copy_name = name + str_other_copy.replace("%s", i++);
         }
 
-        jQuery.ajax({
-            url: "ws.php?format=json&method=pwg.tags.duplicate",
-            type: "POST",
-            data: {
+        fetch("ws.php?format=json&method=pwg.tags.duplicate", {
+            method: "POST",
+            body: new URLSearchParams({
                 tag_id: id,
                 copy_name: copy_name,
                 pwg_token: pwg_token,
-            },
-            success: function (raw_data) {
-                data = jQuery.parseJSON(raw_data);
-                if (data.stat === "ok") {
-                    newTag = createTagBox(
-                        data.result.id,
-                        data.result.name,
-                        data.result.url_name,
-                        data.result.count,
-                    );
-                    newTag.insertAfter($(".tag-box[data-id=" + id + "]"));
-                    setupTagbox(newTag);
+            }),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+        .then(response => response.text())
+        .then(raw_data => {
+            data = JSON.parse(raw_data);
+            if (data.stat === "ok") {
+                newTag = createTagBox(
+                    data.result.id,
+                    data.result.name,
+                    data.result.url_name,
+                    data.result.count,
+                );
+                let afterEl = document.querySelector(".tag-box[data-id=" + id + "]");
+                if (afterEl) afterEl.insertAdjacentElement("afterend", newTag);
+                setupTagbox(newTag);
 
-                    //Update Data
-                    index = dataTags.findIndex((tag) => tag.id == id);
-                    dataTags.splice(index + 1, 0, {
-                        name: data.result.name,
-                        id: data.result.id,
-                        url_name: data.result.url_name,
-                        counter: data.result.count,
-                    });
-                    updateBadge();
-                    updateSearchInfo();
-                    resolve(data);
-                }
-            },
-            error: function (XMLHttpRequest) {
-                reject(XMLHttpRequest.statusText);
-            },
-        });
+                //Update Data
+                index = dataTags.findIndex((tag) => tag.id == id);
+                dataTags.splice(index + 1, 0, {
+                    name: data.result.name,
+                    id: data.result.id,
+                    url_name: data.result.url_name,
+                    counter: data.result.count,
+                });
+                updateBadge();
+                updateSearchInfo();
+                resolve(data);
+            }
+        })
+        .catch(error => reject(error.statusText || error));
     });
 }
 
@@ -480,32 +501,41 @@ function duplicateTag(id, name) {
 var selected = [];
 maxItemDisplayed = 5;
 
-$("#toggleSelectionMode").attr("checked", false);
-$("#toggleSelectionMode").click(function () {
-    selectionMode($(this).is(":checked"));
-    $(".tag-info").hide();
-});
+let toggleSelectionEl = document.getElementById("toggleSelectionMode");
+if (toggleSelectionEl) {
+    toggleSelectionEl.checked = false;
+    toggleSelectionEl.addEventListener("click", function () {
+        selectionMode(this.checked);
+        let tagInfo = document.querySelector(".tag-info");
+        if (tagInfo) tagInfo.style.display = 'none';
+    });
+}
 
 function selectionMode(isSelection) {
     if (isSelection) {
-        $(".in-selection-mode").addClass("show");
-        $(".not-in-selection-mode").addClass("hide");
-        $(".tag-container").addClass("selection");
-        $(".tag-box").removeClass("edit-name");
+        document.querySelectorAll(".in-selection-mode").forEach(el => el.classList.add("show"));
+        document.querySelectorAll(".not-in-selection-mode").forEach(el => el.classList.add("hide"));
+        document.querySelector(".tag-container")?.classList.add("selection");
+        document.querySelectorAll(".tag-box").forEach(el => el.classList.remove("edit-name"));
     } else {
-        $(".in-selection-mode").removeClass("show");
-        $(".not-in-selection-mode").removeClass("hide");
-        $(".tag-container").removeClass("selection");
-        $(".tag-box").attr("data-selected", "0");
-        $(".tag-select-message").slideUp();
+        document.querySelectorAll(".in-selection-mode").forEach(el => el.classList.remove("show"));
+        document.querySelectorAll(".not-in-selection-mode").forEach(el => el.classList.remove("hide"));
+        document.querySelector(".tag-container")?.classList.remove("selection");
+        document.querySelectorAll(".tag-box").forEach(el => el.setAttribute("data-selected", "0"));
+        let selectMsg = document.querySelector(".tag-select-message");
+        if (selectMsg && selectMsg.style.display !== 'none') {
+            selectMsg.style.display = 'none';
+        }
         clearSelection();
     }
 }
 
 function clearSelection() {
     selected = [];
-    $(".selection-mode-tag .tag-list").html("");
-    $(".selection-other-tags").hide();
+    let tagList = document.querySelector(".selection-mode-tag .tag-list");
+    if (tagList) tagList.innerHTML = "";
+    let otherTags = document.querySelector(".selection-other-tags");
+    if (otherTags) otherTags.style.display = 'none';
     updateSelectionContent();
 }
 
@@ -514,16 +544,13 @@ function addSelectedItem(id) {
         selected.push(id);
 
         if (selected.length > maxItemDisplayed) {
-            $(".selection-other-tags").show();
-            let numberDisplayed = $(".selection-mode-tag .tag-list div").length;
-            $(".selection-other-tags").html(
-                str_and_others_tags.replace(
-                    "%s",
-                    selected.length - numberDisplayed,
-                ),
-            );
+            let otherTags = document.querySelector(".selection-other-tags");
+            if (otherTags) otherTags.style.display = '';
+            let numberDisplayed = document.querySelectorAll(".selection-mode-tag .tag-list div").length;
+            if (otherTags) otherTags.innerHTML = str_and_others_tags.replace("%s", selected.length - numberDisplayed);
         } else {
-            $(".selection-other-tags").hide();
+            let otherTags = document.querySelector(".selection-other-tags");
+            if (otherTags) otherTags.style.display = 'none';
             if (dataTags.findIndex((tag) => tag.id == id) > -1) {
                 createSelectionItem(
                     id,
@@ -535,20 +562,18 @@ function addSelectedItem(id) {
 }
 
 function createSelectionItem(id, name) {
-    let newItemStructure = $(
-        '<div data-id="' +
-            id +
-            '"><a class="icon-cancel"></a><p>' +
-            name +
-            "</p> </div>",
-    );
-    $(".selection-mode-tag .tag-list").prepend(newItemStructure);
-    $(".selection-mode-tag .tag-list div[data-id=" + id + "] a").on(
-        "click",
-        function () {
+    let div = document.createElement("div");
+    div.setAttribute("data-id", id);
+    div.innerHTML = '<a class="icon-cancel"></a><p>' + name + "</p>";
+    let tagList = document.querySelector(".selection-mode-tag .tag-list");
+    if (tagList) tagList.prepend(div);
+
+    let closeBtn = div.querySelector("a");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", function () {
             removeSelectedItem(id);
-        },
-    );
+        });
+    }
 }
 
 function removeSelectedItem(id) {
@@ -557,120 +582,112 @@ function removeSelectedItem(id) {
             return parseInt(tag) != parseInt(id);
         });
 
-        $(".tag-box[data-id=" + id + "]").attr("data-selected", "0");
-        if (
-            $(".selection-mode-tag .tag-list div[data-id=" + id + "]").length !=
-            0
-        ) {
-            $(".selection-mode-tag .tag-list div[data-id=" + id + "]").remove();
+        let tagBox = document.querySelector(".tag-box[data-id=" + id + "]");
+        if (tagBox) tagBox.setAttribute("data-selected", "0");
+
+        let tagListItem = document.querySelector(".selection-mode-tag .tag-list div[data-id=" + id + "]");
+        if (tagListItem) {
+            tagListItem.remove();
 
             if (selected.length >= maxItemDisplayed) {
                 let i = 0;
                 isNotCreate = true;
                 while (i < selected.length && isNotCreate) {
-                    if (
-                        $(
-                            ".selection-mode-tag .tag-list div[data-id=" +
-                                selected[i] +
-                                "]",
-                        ).length == 0
-                    ) {
+                    if (document.querySelector(".selection-mode-tag .tag-list div[data-id=" + selected[i] + "]") === null) {
                         isNotCreate = false;
-                        indexOfTag = dataTags.findIndex(
-                            (tag) => tag.id == selected[i],
-                        );
-                        createSelectionItem(
-                            selected[i],
-                            dataTags[indexOfTag].name,
-                        );
+                        indexOfTag = dataTags.findIndex((tag) => tag.id == selected[i]);
+                        createSelectionItem(selected[i], dataTags[indexOfTag].name);
                     }
                     i++;
                 }
             }
         }
 
-        let numberDisplayed = $(".selection-mode-tag .tag-list div").length;
-        $(".selection-other-tags").html(
-            str_and_others_tags.replace(
-                "%s",
-                selected.length - numberDisplayed,
-            ),
-        );
-        if (selected.length - numberDisplayed <= 0) {
-            $(".selection-other-tags").hide();
+        let numberDisplayed = document.querySelectorAll(".selection-mode-tag .tag-list div").length;
+        let otherTags = document.querySelector(".selection-other-tags");
+        if (otherTags) {
+            otherTags.innerHTML = str_and_others_tags.replace("%s", selected.length - numberDisplayed);
+            if (selected.length - numberDisplayed <= 0) {
+                otherTags.style.display = 'none';
+            }
         }
 
         //Remove the selection message
-        $(".tag-select-message").slideUp();
+        let selectMsg = document.querySelector(".tag-select-message");
+        if (selectMsg && selectMsg.style.display !== 'none') {
+            selectMsg.style.display = 'none';
+        }
     }
 }
 
 function updateMergeItems() {
-    $("#MergeOptionsChoices").html("");
-    selected.forEach((id) => {
-        $("#MergeOptionsChoices").append(
-            $(
-                '<option value="' +
-                    id +
-                    '">' +
-                    dataTags.find((tag) => tag.id == id).name +
-                    "</option>",
-            ),
-        );
-    });
+    let mergeChoices = document.getElementById("MergeOptionsChoices");
+    if (mergeChoices) {
+        mergeChoices.innerHTML = "";
+        selected.forEach((id) => {
+            let opt = document.createElement("option");
+            opt.value = id;
+            opt.innerHTML = dataTags.find((tag) => tag.id == id).name;
+            mergeChoices.appendChild(opt);
+        });
+    }
 }
 
 mergeOption = false;
 
 function updateSelectionContent() {
     number = selected.length;
+    let nothingSelected = document.getElementById("nothing-selected");
+    let selectionMode = document.querySelector(".selection-mode-tag");
+    let mergeBlock = document.getElementById("MergeOptionsBlock");
+    let mergeBtn = document.getElementById("MergeSelectionMode");
+
     if (number == 0) {
         mergeOption = false;
-        $("#nothing-selected").show();
-        $(".selection-mode-tag").hide();
-        $("#MergeOptionsBlock").hide();
+        if (nothingSelected) nothingSelected.style.display = '';
+        if (selectionMode) selectionMode.style.display = 'none';
+        if (mergeBlock) mergeBlock.style.display = 'none';
     } else if (number == 1) {
         mergeOption = false;
-        $("#nothing-selected").hide();
-        $(".selection-mode-tag").show();
-        $("#MergeOptionsBlock").hide();
-        $("#MergeSelectionMode").addClass("unavailable");
+        if (nothingSelected) nothingSelected.style.display = 'none';
+        if (selectionMode) selectionMode.style.display = '';
+        if (mergeBlock) mergeBlock.style.display = 'none';
+        if (mergeBtn) mergeBtn.classList.add("unavailable");
     } else if (number > 1) {
-        $("#nothing-selected").hide();
-        $("#MergeSelectionMode").removeClass("unavailable");
+        if (nothingSelected) nothingSelected.style.display = 'none';
+        if (mergeBtn) mergeBtn.classList.remove("unavailable");
         if (mergeOption) {
-            $("#MergeOptionsBlock").show();
-            $(".selection-mode-tag").hide();
+            if (mergeBlock) mergeBlock.style.display = '';
+            if (selectionMode) selectionMode.style.display = 'none';
             updateMergeItems();
         } else {
-            $("#MergeOptionsBlock").hide();
-            $(".selection-mode-tag").show();
+            if (mergeBlock) mergeBlock.style.display = 'none';
+            if (selectionMode) selectionMode.style.display = '';
         }
     }
 }
 
-$("#MergeSelectionMode").on("click", function () {
+document.getElementById("MergeSelectionMode")?.addEventListener("click", function () {
     mergeOption = true;
     updateSelectionContent();
 });
 
-$("#CancelMerge").on("click", function () {
+document.getElementById("CancelMerge")?.addEventListener("click", function () {
     mergeOption = false;
     updateSelectionContent();
 });
 
-$("#selectAll").on("click", function () {
+document.getElementById("selectAll")?.addEventListener("click", function () {
     selectAll(tagToDisplay());
     updateSelectionContent();
     if (selected.length < dataTags.length) {
         showSelectMessage(
-            str_selection_done.replace("%d", $(".tag-box").length),
+            str_selection_done.replace("%d", document.querySelectorAll(".tag-box").length),
             str_select_all_tag.replace("%d", dataTags.length),
             function () {
-                $(".tag-select-message a").html("");
-                $(".tag-select-message div").html(
-                    "<i class='icon-spin6 animate-spin'> </i>",
-                );
+                document.querySelector(".tag-select-message a").innerHTML = "";
+                let div = document.querySelector(".tag-select-message div");
+                if (div) div.innerHTML = "<i class='icon-spin6 animate-spin'> </i>";
                 setTimeout(() => {
                     selectAll(dataTags).then(() => {
                         updateSelectionContent();
@@ -679,7 +696,8 @@ $("#selectAll").on("click", function () {
                             str_clear_selection,
                             function () {
                                 selectNone();
-                                $(".tag-select-message").slideUp();
+                                let selectMsg = document.querySelector(".tag-select-message");
+                                if (selectMsg) selectMsg.style.display = 'none';
                             },
                         );
                     });
@@ -694,7 +712,8 @@ function selectAll(data) {
     data.forEach((tag) => {
         promises.push(
             new Promise((res, rej) => {
-                $(".tag-box[data-id=" + tag.id + "]").attr("data-selected", 1);
+                let tagBox = document.querySelector(".tag-box[data-id=" + tag.id + "]");
+                if (tagBox) tagBox.setAttribute("data-selected", "1");
                 addSelectedItem(tag.id);
                 res();
             }),
@@ -704,46 +723,50 @@ function selectAll(data) {
 }
 
 function showSelectMessage(str1, str2, callback) {
-    if (!$(".tag-select-message").is(":visible")) {
-        $(".tag-select-message").slideDown({
-            start: function () {
-                $(this).css({
-                    display: "flex",
-                });
-            },
-        });
+    let selectMsg = document.querySelector(".tag-select-message");
+    if (selectMsg && getComputedStyle(selectMsg).display === 'none') {
+        selectMsg.style.display = 'flex';
     }
 
-    $(".tag-select-message div").html(str1);
-    $(".tag-select-message a").html(str2);
-    $(".tag-select-message a").off("click");
-    $(".tag-select-message a").on("click", callback);
+    let msgDiv = document.querySelector(".tag-select-message div");
+    if (msgDiv) msgDiv.innerHTML = str1;
+
+    let msgLink = document.querySelector(".tag-select-message a");
+    if (msgLink) {
+        msgLink.innerHTML = str2;
+        msgLink.removeEventListener("click", arguments.callee);
+        msgLink.addEventListener("click", callback);
+    }
 }
 
-$("#selectNone").on("click", function () {
-    $(".tag-select-message").slideUp();
+document.getElementById("selectNone")?.addEventListener("click", function () {
+    let selectMsg = document.querySelector(".tag-select-message");
+    if (selectMsg) selectMsg.style.display = 'none';
     selectNone();
 });
 
 function selectNone() {
-    $(".tag-box").attr("data-selected", "0");
+    document.querySelectorAll(".tag-box").forEach(el => el.setAttribute("data-selected", "0"));
     clearSelection();
 }
 
-$("#selectInvert").on("click", function () {
-    $(".tag-select-message").slideUp();
+document.getElementById("selectInvert")?.addEventListener("click", function () {
+    let selectMsg = document.querySelector(".tag-select-message");
+    if (selectMsg) selectMsg.style.display = 'none';
     selectInvert(tagToDisplay());
 });
 
 function selectInvert(data) {
     data.forEach((tag) => {
-        tagBox = $(".tag-box[data-id=" + tag.id + "]");
-        if (tagBox.attr("data-selected") == 1) {
-            tagBox.attr("data-selected", "0");
-            removeSelectedItem(tag.id);
-        } else {
-            tagBox.attr("data-selected", "1");
-            addSelectedItem(tag.id);
+        let tagBox = document.querySelector(".tag-box[data-id=" + tag.id + "]");
+        if (tagBox) {
+            if (tagBox.getAttribute("data-selected") == "1") {
+                tagBox.setAttribute("data-selected", "0");
+                removeSelectedItem(tag.id);
+            } else {
+                tagBox.setAttribute("data-selected", "1");
+                addSelectedItem(tag.id);
+            }
         }
     });
     updateSelectionContent();
@@ -754,13 +777,13 @@ function selectInvert(data) {
 -------*/
 
 //Remove tags
-$("#DeleteSelectionMode").on("click", function () {
+document.getElementById("DeleteSelectionMode")?.addEventListener("click", function () {
     let names = [];
     selected.forEach(function (id) {
         names.push(dataTags.find((tag) => tag.id == id).name);
     });
 
-    $.confirm({
+    pwgConfirm({
         title: str_delete_tags.replace("%s", tagListToString(names)),
         buttons: {
             confirm: {
@@ -774,7 +797,6 @@ $("#DeleteSelectionMode").on("click", function () {
                 text: str_no_delete_confirmation,
             },
         },
-        ...jConfirm_confirm_options,
     });
 });
 
@@ -784,128 +806,102 @@ function removeSelectedTags() {
         names.push(dataTags.find((tag) => tag.id == id).name);
     });
 
-    $.alert({
-        title: str_tags_deleted.replace("%s", tagListToString(names)),
-        content: function () {
-            return jQuery.ajax({
-                url: "ws.php?format=json&method=pwg.tags.delete",
-                type: "POST",
-                data: {
-                    pwg_token: pwg_token,
-                    tag_id: selected,
-                },
-                success: function (raw_data) {
-                    raw_data = raw_data.slice(raw_data.search("{"));
-                    if ((JSON.parse(raw_data).stat = "ok")) {
-                        selected.forEach(function (id) {
-                            $(".tag-box[data-id=" + id + "]").remove();
-                        });
-
-                        // Update Data
-                        dataTags = dataTags.filter(
-                            (tag) => !selected.includes(tag.id),
-                        );
-
-                        clearSelection();
-                        updatePaginationMenu();
-                        updateBadge();
-                        updateSearchInfo();
-                    } else {
-                        return raw_data;
-                    }
-                },
-                error: function (message) {
-                    return message;
-                },
+    fetch("ws.php?format=json&method=pwg.tags.delete", {
+        method: "POST",
+        body: new URLSearchParams({
+            pwg_token: pwg_token,
+            tag_id: selected,
+        }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+    .then(response => response.text())
+    .then(raw_data => {
+        raw_data = raw_data.slice(raw_data.search("{"));
+        if ((JSON.parse(raw_data).stat = "ok")) {
+            selected.forEach(function (id) {
+                let el = document.querySelector(".tag-box[data-id=" + id + "]");
+                if (el) el.remove();
             });
-        },
-        ...jConfirm_alert_options,
+
+            // Update Data
+            dataTags = dataTags.filter(
+                (tag) => !selected.includes(tag.id),
+            );
+
+            clearSelection();
+            updatePaginationMenu();
+            updateBadge();
+            updateSearchInfo();
+        }
     });
 }
 
 //Merge Tags
-$(".ConfirmMergeButton").on("click", () => {
-    dest_id = $("#MergeOptionsChoices").val();
-    mergeGroups(dest_id, selected);
+document.querySelector(".ConfirmMergeButton")?.addEventListener("click", () => {
+    let destSelect = document.getElementById("MergeOptionsChoices");
+    if (destSelect) {
+        dest_id = destSelect.value;
+        mergeGroups(dest_id, selected);
+    }
 });
 
 function mergeGroups(destination_id, merge_ids) {
-    destination_name = $(
-        ".tag-box[data-id=" + destination_id + "] .tag-name",
-    ).html();
+    let destNameEl = document.querySelector(".tag-box[data-id=" + destination_id + "] .tag-name");
+    destination_name = destNameEl ? destNameEl.innerHTML : "";
     merge_name = [];
 
     merge_ids.forEach((id) => {
-        merge_name.push($(".tag-box[data-id=" + id + "] .tag-name").html());
+        let el = document.querySelector(".tag-box[data-id=" + id + "] .tag-name");
+        if (el) merge_name.push(el.innerHTML);
     });
 
     str_message = str_merged_into
         .replace("%s1", tagListToString(merge_name))
         .replace("%s2", destination_name);
 
-    $.alert({
-        title: str_message,
-        content: function () {
-            return jQuery.ajax({
-                url: "ws.php?format=json&method=pwg.tags.merge",
-                type: "POST",
-                data: {
-                    pwg_token: pwg_token,
-                    destination_tag_id: destination_id,
-                    merge_tag_id: merge_ids,
-                },
-                success: function (raw_data) {
-                    raw_data = raw_data.slice(raw_data.search("{"));
-                    data = jQuery.parseJSON(raw_data);
-                    if (data.stat === "ok") {
-                        data.result.deleted_tag.forEach((id) => {
-                            if (data.result.destination_tag != id) {
-                                $(".tag-box[data-id=" + id + "]").remove();
-                                // Update data
-                                dataTags = dataTags.filter(
-                                    (tag) => id != tag.id,
-                                );
-                            }
-                        });
-                        if (data.result.images_in_merged_tag.length > 0) {
-                            tagBox = $(
-                                ".tag-box[data-id=" +
-                                    data.result.destination_tag +
-                                    "]",
-                            );
-                            tagBox
-                                .find(
-                                    ".dropdown-option.view," +
-                                        ".dropdown-option.manage," +
-                                        ".tag-dropdown-header i",
-                                )
-                                .show();
-                            $(".tag-dropdown-header i").html(
-                                str_number_photos.replace(
-                                    "%d",
-                                    data.result.images_in_merged_tag.length,
-                                ),
-                            );
-
-                            // Update data
-                            index = dataTags.findIndex(
-                                (tag) => tag.id == data.result.destination_tag,
-                            );
-                            dataTags[index].counter =
-                                data.result.images_in_merged_tag.length;
-                        }
-                        $(".tag-box").attr("data-selected", "0");
-                        clearSelection();
-                        updatePaginationMenu();
-                        updateBadge();
-                        updateSearchInfo();
-                    } else {
-                        return raw_data;
-                    }
-                },
+    fetch("ws.php?format=json&method=pwg.tags.merge", {
+        method: "POST",
+        body: new URLSearchParams({
+            pwg_token: pwg_token,
+            destination_tag_id: destination_id,
+            merge_tag_id: merge_ids,
+        }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+    .then(response => response.text())
+    .then(raw_data => {
+        raw_data = raw_data.slice(raw_data.search("{"));
+        data = JSON.parse(raw_data);
+        if (data.stat === "ok") {
+            data.result.deleted_tag.forEach((id) => {
+                if (data.result.destination_tag != id) {
+                    let el = document.querySelector(".tag-box[data-id=" + id + "]");
+                    if (el) el.remove();
+                    // Update data
+                    dataTags = dataTags.filter(
+                        (tag) => id != tag.id,
+                    );
+                }
             });
-        },
-        ...jConfirm_alert_options,
+            if (data.result.images_in_merged_tag.length > 0) {
+                let tagBox = document.querySelector(".tag-box[data-id=" + data.result.destination_tag + "]");
+                if (tagBox) {
+                    let views = tagBox.querySelectorAll(".dropdown-option.view, .dropdown-option.manage, .tag-dropdown-header i");
+                    views.forEach(el => el.style.display = '');
+                    let headerI = tagBox.querySelector(".tag-dropdown-header i");
+                    if (headerI) headerI.innerHTML = str_number_photos.replace("%d", data.result.images_in_merged_tag.length);
+                }
+
+                // Update data
+                index = dataTags.findIndex((tag) => tag.id == data.result.destination_tag);
+                dataTags[index].counter = data.result.images_in_merged_tag.length;
+            }
+            document.querySelectorAll(".tag-box").forEach(el => el.setAttribute("data-selected", "0"));
+            clearSelection();
+            updatePaginationMenu();
+            updateBadge();
+            updateSearchInfo();
+        }
     });
 }
 
@@ -929,22 +925,22 @@ var maxShown = 100;
 var searchTimeOut;
 var delaySearchInput = 300;
 
-$("#search-tag .search-input").on("input", function () {
+document.querySelector("#search-tag .search-input")?.addEventListener("input", function () {
     actualPage = 1;
 
     clearTimeout(searchTimeOut);
     searchTimeOut = setTimeout(() => {
         updatePaginationMenu();
         if (dataTags.filter(isDataSearched).length == 0) {
-            $(".emptyResearch").show();
+            document.querySelector(".emptyResearch").style.display = '';
         } else {
-            $(".emptyResearch").hide();
+            document.querySelector(".emptyResearch").style.display = 'none';
         }
     }, delaySearchInput);
 });
 
 function isSearched(tagBox, stringSearch) {
-    let name = tagBox.find("p").text().toLowerCase();
+    let name = tagBox.querySelector("p")?.textContent.toLowerCase() || "";
     if (name.startsWith(stringSearch.toLowerCase())) {
         return true;
     } else {
@@ -954,7 +950,7 @@ function isSearched(tagBox, stringSearch) {
 
 function isDataSearched(tagObj) {
     let name = tagObj.raw_name.toLowerCase();
-    let stringSearch = $("#search-tag .search-input").val();
+    let stringSearch = document.querySelector("#search-tag .search-input")?.value || "";
     if (name.includes(stringSearch.toLowerCase())) {
         return true;
     } else {
@@ -966,23 +962,30 @@ function isDataSearched(tagObj) {
  Show Info
 -------*/
 function showError(message) {
-    $(".info-error p").html(message);
-    $(".info-error").attr("title", message);
-    $(".info-info").hide();
-    $(".info-error").css("display", "flex");
+    let errorMsg = document.querySelector(".info-error p");
+    if (errorMsg) errorMsg.innerHTML = message;
+    let errorBox = document.querySelector(".info-error");
+    if (errorBox) errorBox.setAttribute("title", message);
+    let infoEl = document.querySelector(".info-info");
+    if (infoEl) infoEl.style.display = 'none';
+    if (errorBox) errorBox.style.display = "flex";
 }
 
 function showMessage(message) {
-    $(".info-message p").html(message);
-    $(".info-message").attr("title", message);
-    $(".info-info").hide();
-    $(".info-message").css("display", "flex");
+    let msgEl = document.querySelector(".info-message p");
+    if (msgEl) msgEl.innerHTML = message;
+    let msgBox = document.querySelector(".info-message");
+    if (msgBox) msgBox.setAttribute("title", message);
+    let infoEl = document.querySelector(".info-info");
+    if (infoEl) infoEl.style.display = 'none';
+    if (msgBox) msgBox.style.display = "flex";
 }
 
 /*-------
  Pagination
 -------*/
-var per_page = $(".tag-container").data("per_page");
+var per_page = document.querySelector(".tag-container")?.dataset.per_page || 20;
+per_page = parseInt(per_page);
 var pageItem = '<a data-page="%d">%d</a>';
 var pageEllipsis = "<span>...</span>";
 var promisePending = false;
@@ -1010,22 +1013,27 @@ function promiseFinish() {
 }
 
 function updatePaginationMenu() {
-    $(".pagination-item-container").html("");
+    let container = document.querySelector(".pagination-item-container");
+    if (container) container.innerHTML = "";
 
     actualPage = Math.min(actualPage, getNumberPages());
 
+    let paginationContainer = document.querySelector(".pagination-container");
     if (getNumberPages() > 1) {
-        $(".pagination-container").show();
+        if (paginationContainer) paginationContainer.style.display = '';
         createPaginationMenu();
     } else {
-        $(".pagination-container").hide();
+        if (paginationContainer) paginationContainer.style.display = 'none';
     }
 
     updateArrows();
     askUpdatePage();
 
     //Remove the selection message
-    $(".tag-select-message").slideUp();
+    let selectMsg = document.querySelector(".tag-select-message");
+    if (selectMsg && selectMsg.style.display !== 'none') {
+        selectMsg.style.display = 'none';
+    }
 }
 
 function createPaginationMenu() {
@@ -1050,31 +1058,41 @@ function createPaginationMenu() {
 
 function appendPaginationItem(page = null) {
     if (page != null) {
-        let newTag = $(pageItem.replace(/%d/g, page));
-        $(".pagination-item-container").append(newTag);
+        let newItem = document.createElement("a");
+        newItem.setAttribute("data-page", page);
+        newItem.innerHTML = page;
+        let container = document.querySelector(".pagination-item-container");
+        if (container) container.appendChild(newItem);
+
         if (actualPage == page) {
-            newTag.addClass("actual");
+            newItem.classList.add("actual");
         }
-        newTag.on("click", () => {
-            actualPage = newTag.data("page");
+        newItem.addEventListener("click", () => {
+            actualPage = parseInt(newItem.getAttribute("data-page"));
             updatePaginationMenu();
         });
     } else {
-        $(".pagination-item-container").append($(pageEllipsis));
+        let ellipsis = document.createElement("span");
+        ellipsis.innerHTML = "...";
+        let container = document.querySelector(".pagination-item-container");
+        if (container) container.appendChild(ellipsis);
     }
 }
 
 function updateArrows() {
+    let leftArrow = document.querySelector(".pagination-arrow.left");
+    let rightArrow = document.querySelector(".pagination-arrow.right");
+
     if (actualPage == 1) {
-        $(".pagination-arrow.left").addClass("unavailable");
+        if (leftArrow) leftArrow.classList.add("unavailable");
     } else {
-        $(".pagination-arrow.left").removeClass("unavailable");
+        if (leftArrow) leftArrow.classList.remove("unavailable");
     }
 
     if (actualPage == getNumberPages()) {
-        $(".pagination-arrow.right").addClass("unavailable");
+        if (rightArrow) rightArrow.classList.add("unavailable");
     } else {
-        $(".pagination-arrow.right").removeClass("unavailable");
+        if (rightArrow) rightArrow.classList.remove("unavailable");
     }
 }
 
@@ -1084,7 +1102,7 @@ function getNumberPages() {
 }
 
 function movePage(toRight = true) {
-    $(".tag-box").removeClass("edit-name");
+    document.querySelectorAll(".tag-box").forEach(el => el.classList.remove("edit-name"));
     if (toRight) {
         if (actualPage < getNumberPages()) {
             actualPage++;
@@ -1102,75 +1120,78 @@ function updatePage() {
     return new Promise((resolve, reject) => {
         newPage = actualPage;
         dataToDisplay = tagToDisplay();
-        tagBoxes = $(".tag-box");
-        $(".pageLoad").fadeIn();
-        $(".tag-box")
-            .animate({ opacity: 0 }, 500)
-            .promise()
-            .then(() => {
-                let displayTags = new Promise((res, rej) => {
-                    boxToRecycle = Math.min(
-                        dataToDisplay.length,
-                        tagBoxes.length,
-                    );
+        tagBoxes = document.querySelectorAll(".tag-box");
+        let pageLoad = document.querySelector(".pageLoad");
+        if (pageLoad) pageLoad.style.display = '';
 
-                    for (let i = 0; i < boxToRecycle; i++) {
-                        let tag = dataToDisplay[i];
-                        recycleTagBox(
-                            $(tagBoxes[i]),
+        // Fade out tags
+        let tagContainer = document.querySelector(".tag-container");
+        if (tagContainer) {
+            tagContainer.style.opacity = "0";
+            tagContainer.style.transition = "opacity 0.5s";
+        }
+
+        setTimeout(() => {
+            let displayTags = new Promise((res, rej) => {
+                boxToRecycle = Math.min(
+                    dataToDisplay.length,
+                    tagBoxes.length,
+                );
+
+                for (let i = 0; i < boxToRecycle; i++) {
+                    let tag = dataToDisplay[i];
+                    recycleTagBox(
+                        tagBoxes[i],
+                        tag.id,
+                        tag.name,
+                        tag.url_name,
+                        tag.counter || tag.count,
+                        tag.raw_name,
+                    );
+                }
+
+                if (dataToDisplay.length < tagBoxes.length) {
+                    for (let j = boxToRecycle; j < tagBoxes.length; j++) {
+                        tagBoxes[j].remove();
+                    }
+                } else if (dataToDisplay.length > tagBoxes.length) {
+                    for (let j = boxToRecycle; j < dataToDisplay.length; j++) {
+                        let tag = dataToDisplay[j];
+                        newTag = createTagBox(
                             tag.id,
                             tag.name,
                             tag.url_name,
-                            tag.counter,
+                            tag.counter || tag.count,
                             tag.raw_name,
                         );
+                        newTag.style.opacity = "0";
+                        if (tagContainer) tagContainer.appendChild(newTag);
+                        setupTagbox(newTag);
                     }
+                }
 
-                    if (dataToDisplay.length < tagBoxes.length) {
-                        for (let j = boxToRecycle; j < tagBoxes.length; j++) {
-                            $(tagBoxes[j]).remove();
-                        }
-                    } else if (dataToDisplay.length > tagBoxes.length) {
-                        for (
-                            let j = boxToRecycle;
-                            j < dataToDisplay.length;
-                            j++
-                        ) {
-                            let tag = dataToDisplay[j];
-                            newTag = createTagBox(
-                                tag.id,
-                                tag.name,
-                                tag.url_name,
-                                tag.counter,
-                                tag.raw_name,
-                            );
-                            newTag.css("opacity", 0);
-                            $(".tag-container").append(newTag);
-                            setupTagbox(newTag);
-                        }
-                    }
-
-                    //Select selected tags
-                    selected.forEach((id) => {
-                        $(".tag-box[data-id=" + id + "]").attr(
-                            "data-selected",
-                            1,
-                        );
-                    });
-
-                    res();
+                //Select selected tags
+                selected.forEach((id) => {
+                    let el = document.querySelector(".tag-box[data-id=" + id + "]");
+                    if (el) el.setAttribute("data-selected", "1");
                 });
 
-                displayTags.then(() => {
-                    $(".pageLoad").fadeOut();
-                    $(".tag-box").animate({ opacity: 1 }, 500);
-                    if (getNumberPages() > 1) {
-                        $(".tag-pagination").animate({ opacity: 1 }, 500);
-                    }
-                    updateSearchInfo();
-                    resolve();
-                });
+                res();
             });
+
+            displayTags.then(() => {
+                if (pageLoad) pageLoad.style.display = 'none';
+                if (tagContainer) {
+                    tagContainer.style.opacity = "1";
+                }
+                let tagPag = document.querySelector(".tag-pagination");
+                if (getNumberPages() > 1 && tagPag) {
+                    tagPag.style.opacity = "1";
+                }
+                updateSearchInfo();
+                resolve();
+            });
+        }, 500);
     });
 }
 
@@ -1180,48 +1201,61 @@ function tagToDisplay() {
         .slice((actualPage - 1) * per_page, actualPage * per_page);
 }
 
-$(".pagination-arrow.right").on("click", () => {
+document.querySelector(".pagination-arrow.right")?.addEventListener("click", () => {
     movePage();
 });
 
-$(".pagination-arrow.left").on("click", () => {
+document.querySelector(".pagination-arrow.left")?.addEventListener("click", () => {
     movePage(false);
 });
 
 if (getNumberPages() > 1) {
-    $(".pagination-container").show();
+    let paginationContainer = document.querySelector(".pagination-container");
+    if (paginationContainer) paginationContainer.style.display = '';
     createPaginationMenu();
     updateArrows();
 } else {
-    $(".pagination-container").hide();
+    let paginationContainer = document.querySelector(".pagination-container");
+    if (paginationContainer) paginationContainer.style.display = 'none';
 }
 
-$(".pagination-per-page a").on("click", function () {
-    per_page = parseInt($(this).html());
-    updatePaginationMenu();
-    $(".pagination-per-page .selected").removeClass("selected");
-    $(this).addClass("selected");
-    $.cookie("pwg_tags_per_page", per_page);
+document.querySelectorAll(".pagination-per-page a").forEach(el => {
+    el.addEventListener("click", function () {
+        per_page = parseInt(this.innerHTML);
+        updatePaginationMenu();
+        document.querySelectorAll(".pagination-per-page .selected").forEach(el => el.classList.remove("selected"));
+        this.classList.add("selected");
+        document.cookie = 'pwg_tags_per_page=' + per_page + '; path=/; SameSite=Lax';
+    });
 });
 
 function updateSearchInfo() {
-    if ($(".search-input").val() != "") {
+    let searchInput = document.querySelector(".search-input");
+    if (searchInput && searchInput.value != "") {
         let number = dataTags.filter(isDataSearched).length;
-        if (number > 1) {
-            $(".search-info").html(str_tags_found.replace("%d", number));
-        } else {
-            $(".search-info").html(str_tag_found.replace("%d", number));
+        let searchInfo = document.querySelector(".search-info");
+        if (searchInfo) {
+            if (number > 1) {
+                searchInfo.innerHTML = str_tags_found.replace("%d", number);
+            } else {
+                searchInfo.innerHTML = str_tag_found.replace("%d", number);
+            }
         }
     } else {
-        $(".search-info").html("");
+        let searchInfo = document.querySelector(".search-info");
+        if (searchInfo) searchInfo.innerHTML = "";
     }
 }
 
-$(function () {
+document.addEventListener('DOMContentLoaded', function () {
     function setPagination() {
-        let test = $.cookie("pwg_tags_per_page");
-        $(".pagination-per-page .selected").removeClass("selected");
-        $("#" + test).trigger("click");
+        var match = document.cookie.match(/(?:^|;)\s*pwg_tags_per_page=([^;]*)/);
+        var saved = match ? match[1] : null;
+        if (saved) {
+            document.querySelectorAll(".pagination-per-page .selected").forEach(el => el.classList.remove("selected"));
+            var el = document.getElementById(saved);
+            if (el) el.click();
+        }
     }
 
     setPagination();

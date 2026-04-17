@@ -6,30 +6,30 @@ var sortPlugins = function (a, b) {
         sortOrder == "revision" ||
         sortOrder == "date"
     )
-        return parseInt($(a).data(sortOrder)) < parseInt($(b).data(sortOrder))
+        return parseInt(a.dataset[sortOrder]) < parseInt(b.dataset[sortOrder])
             ? 1
             : -1;
     else
-        return $(a).data(sortOrder).toLowerCase() >
-            $(b).data(sortOrder).toLowerCase()
+        return a.dataset[sortOrder].toLowerCase() >
+            b.dataset[sortOrder].toLowerCase()
             ? 1
             : -1;
 };
 
-$(function () {
+document.addEventListener('DOMContentLoaded', function () {
     // <-- Set the advanced filters -->
 
-    let betaTestPlugins = $("#showBetaTestPlugin")[0].hasAttribute("checked");
+    let betaTestPlugins = document.getElementById("showBetaTestPlugin").hasAttribute("checked");
 
     // object that remember filters states (initialized later)
     let filters = {};
 
     // toggle advanced filter's panel
-    $(".advanced-filter-btn").click(advanced_filter_button_click);
-    $(".advanced-filter span.icon-cancel").click(advanced_filter_hide);
+    document.querySelector(".advanced-filter-btn").addEventListener("click", advanced_filter_button_click);
+    document.querySelector(".advanced-filter span.icon-cancel").addEventListener("click", advanced_filter_hide);
 
     function advanced_filter_button_click() {
-        if (!$(".advanced-filter").hasClass("advanced-filter-open")) {
+        if (!document.querySelector(".advanced-filter").classList.contains("advanced-filter-open")) {
             advanced_filter_show();
         } else {
             advanced_filter_hide();
@@ -37,51 +37,53 @@ $(function () {
     }
 
     function advanced_filter_show() {
-        $(".advanced-filter-btn, .advanced-filter").addClass(
-            "advanced-filter-open",
-        );
+        document.querySelector(".advanced-filter-btn").classList.add("advanced-filter-open");
+        document.querySelector(".advanced-filter").classList.add("advanced-filter-open");
     }
 
     function advanced_filter_hide() {
-        $(".advanced-filter-btn, .advanced-filter").removeClass(
-            "advanced-filter-open",
-        );
+        document.querySelector(".advanced-filter-btn").classList.remove("advanced-filter-open");
+        document.querySelector(".advanced-filter").classList.remove("advanced-filter-open");
     }
 
-    jQuery('select[name="selectOrder"]').change(function () {
-        sortOrder = this.value;
-        $(".pluginBox").sortElements(sortPlugins);
-        $.get("admin.php?plugins_new_order=" + sortOrder);
-    });
+    var orderSelect = document.querySelector('select[name="selectOrder"]');
+    if (orderSelect) {
+        orderSelect.addEventListener("change", function () {
+            sortOrder = this.value;
+            var container = document.querySelector(".pluginBox") && document.querySelector(".pluginBox").parentElement;
+            if (container) {
+                var boxes = Array.from(container.querySelectorAll(".pluginBox"));
+                boxes.sort(sortPlugins);
+                boxes.forEach(function(el) { container.appendChild(el); });
+            }
+            fetch("admin.php?plugins_new_order=" + sortOrder);
+        });
+    }
 
-    jQuery("#search").on("input", function () {
+    document.getElementById("search").addEventListener("input", function () {
         applyFilter("search", this.value.toUpperCase());
-        jQuery("#search").trigger("click");
+        document.getElementById("search").click();
     });
 
-    $(".search-cancel").on("click", () => {
+    document.querySelector(".search-cancel").addEventListener("click", function () {
         applyFilter("search", "");
     });
 
-    $(".buttonInstall").each(function () {
-        let plugin_name = $(this).closest(".pluginBox").data("name");
-        $(this).pwg_jconfirm_follow_href({
+    document.querySelectorAll(".buttonInstall").forEach(function (el) {
+        let pluginBox = el.closest(".pluginBox");
+        let plugin_name = pluginBox.dataset.name;
+        pwgConfirmFollowHref(el, {
             alert_title: str_install_title.replace("%s", plugin_name),
             alert_confirm: str_confirm_msg,
             alert_cancel: str_cancel_msg,
         });
     });
 
-    jQuery(".certification").tipTip({
-        delay: 0,
-        fadeIn: 200,
-        fadeOut: 200,
-    });
+    tippy('.certification', { delay: 0, placement: 'top' });
 
-    $(".pluginRating").each((i, node) => {
-        let ratingContainer = $(node);
-        let rating = ratingContainer.data("rating");
-        displayStars(ratingContainer.find(".rating-star-container"), rating);
+    document.querySelectorAll(".pluginRating").forEach(function (node) {
+        let rating = node.dataset.rating;
+        displayStars(node.querySelector(".rating-star-container"), rating);
     });
 
     // put default values in the select
@@ -89,15 +91,15 @@ $(function () {
     let tagsNames = [{ value: "", text: "-" }];
 
     // read all plugin boxes to get author and tags
-    $(".pluginBox").each((i, el) => {
-        let author = $(el).data("author");
+    document.querySelectorAll(".pluginBox").forEach(function (el) {
+        let author = el.dataset.author;
         author.split(", ").forEach((name) => {
             if (!authorNames.find((el) => el.value == name)) {
                 authorNames.push({ value: name, text: name });
             }
         });
 
-        let tags = $(el).data("tags");
+        let tags = el.dataset.tags;
         tags.split(", ").forEach((tag) => {
             if (!tagsNames.find((el) => el.value == tag)) {
                 tagsNames.push({ value: tag, text: tag });
@@ -105,54 +107,96 @@ $(function () {
         });
     });
 
-    // initialize the Selectize control
-    $select = $("#author-filter").selectize({
-        onChange: function (value) {
-            applyFilter("author", value);
-        },
-        plugins: ["remove_button"],
-    });
+    // initialize the TomSelect controls
+    var authorEl = document.getElementById("author-filter");
+    if (authorEl) {
+        var selectizeAuthor = new TomSelect(authorEl, {
+            onChange: function (value) {
+                applyFilter("author", value);
+            },
+            plugins: ["remove_button"],
+        });
+        selectizeAuthor.addOption(authorNames);
+    }
 
-    // fetch the instance
-    let selectizeAuthor = $select[0].selectize;
-    selectizeAuthor.addOption(authorNames);
+    var tagEl = document.getElementById("tag-filter");
+    if (tagEl) {
+        var selectizeTag = new TomSelect(tagEl, {
+            onChange: function (value) {
+                applyFilter("tag", value);
+            },
+            plugins: ["remove_button"],
+        });
+        selectizeTag.addOption(tagsNames);
+    }
 
-    // initialize the Selectize control
-    $select = $("#tag-filter").selectize({
-        onChange: function (value) {
-            applyFilter("tag", value);
-        },
-        plugins: ["remove_button"],
-    });
+        var notationSliderEl = document.querySelector(".notation-filter-slider");
+        if (notationSliderEl) {
+            noUiSlider.create(notationSliderEl, {
+                start: [0],
+                range: { min: 0, max: 5 },
+                step: 0.5,
+                connect: [true, false],
+            });
+            notationSliderEl.noUiSlider.on("slide", function (values) {
+                var val = parseFloat(values[0]);
+                updateRatingFilterLabel(val);
+                applyFilter("rating", val);
+            });
+        }
 
-    // fetch the instance
-    let selectizeTag = $select[0].selectize;
-    selectizeTag.addOption(tagsNames);
+        var revisionSliderEl = document.querySelector(".revision-date-filter-slider");
+        if (revisionSliderEl) {
+            noUiSlider.create(revisionSliderEl, {
+                start: [0],
+                range: { min: 0, max: 6 },
+                step: 1,
+                connect: [true, false],
+            });
+            revisionSliderEl.noUiSlider.on("slide", function (values) {
+                var val = Math.round(parseFloat(values[0]));
+                let month;
+                [month, _] = value_to_month(val);
+                updateRevisionFilterLabel(val);
+                applyFilter("revision", month);
+            });
+        }
 
-    $(".notation-filter-slider").slider({
-        range: "min",
-        value: 0,
-        min: 0,
-        max: 5,
-        step: 0.5,
-        slide: function (event, ui) {
-            updateRatingFilterLabel(ui.value);
-            applyFilter("rating", ui.value);
-        },
-    });
+        // The certification filter doesn't include incompatible if the beta-test option is not checked
+        let minCertification = betaTestPlugins ? -1 : 0;
 
-    $(".revision-date-filter-slider").slider({
-        range: "min",
-        value: 0,
-        min: 0,
-        max: 6,
-        slide: function (event, ui) {
-            let month;
-            [month, _] = value_to_month(ui.value);
-            updateRevisionFilterLabel(ui.value);
-            applyFilter("revision", month);
-        },
-    });
+        var certificationSliderEl = document.querySelector(".certification-filter-slider");
+        if (certificationSliderEl) {
+            noUiSlider.create(certificationSliderEl, {
+                start: [minCertification],
+                range: { min: minCertification, max: 3 },
+                step: 1,
+                connect: [true, false],
+            });
+            certificationSliderEl.noUiSlider.on("slide", function (values) {
+                var val = Math.round(parseFloat(values[0]));
+                updateCertificationFilterLabel(val);
+                applyFilter("certification", val);
+            });
+        }
+
+        updateRatingFilterLabel(0);
+        updateCertificationFilterLabel(minCertification);
+        updateRevisionFilterLabel(0);
+
+        var showBetaEl = document.getElementById("showBetaTestPlugin");
+        if (showBetaEl) {
+            showBetaEl.addEventListener("change", function (e) {
+                document.querySelectorAll(".beta-test-plugin-switch .slider").forEach(function(el) {
+                    el.classList.add("loading");
+                });
+
+                let queryParams = new URLSearchParams(window.location.search);
+                queryParams.set("beta-test", e.currentTarget.checked.toString());
+                history.replaceState(null, null, "?" + queryParams.toString());
+                window.location.reload(true);
+            });
+        }
 
     // All the slider values and it's corresponding month's number and label
     function value_to_month(val) {
@@ -181,20 +225,6 @@ $(function () {
         }
     }
 
-    // The certification filter doesn't include incompatible if the beta-test option is not checked
-    let minCertification = betaTestPlugins ? -1 : 0;
-
-    $(".certification-filter-slider").slider({
-        range: "min",
-        value: minCertification,
-        min: minCertification,
-        max: 3,
-        slide: function (event, ui) {
-            updateCertificationFilterLabel(ui.value);
-            applyFilter("certification", ui.value);
-        },
-    });
-
     // Difference between two dates, in months
     function monthDiff(d1, d2) {
         var months;
@@ -204,31 +234,27 @@ $(function () {
         return months <= 0 ? 0 : months;
     }
 
-    updateRatingFilterLabel(0);
-    updateCertificationFilterLabel(minCertification);
-    updateRevisionFilterLabel(0);
-
     function displayStars(element, rating) {
-        element.find("span").addClass("icon-star-empty");
-        element.find("span i").attr("class", "");
+        element.querySelectorAll("span").forEach(function (span) {
+            span.classList.add("icon-star-empty");
+            var i = span.querySelector("i");
+            if (i) i.className = "";
+        });
 
         rating = Math.round(rating * 2);
 
         if (rating % 2 == 1) {
-            $(element)
-                .find("span[data-star=" + (rating - 1) / 2 + "] i")
-                .addClass("icon-star-half");
+            var starEl = element.querySelector("span[data-star='" + (rating - 1) / 2 + "'] i");
+            if (starEl) starEl.classList.add("icon-star-half");
             rating -= 1;
         }
 
         while (rating > 0) {
             rating -= 2;
-            $(element)
-                .find("span[data-star=" + rating / 2 + "] i")
-                .addClass("icon-star");
-            $(element)
-                .find("span[data-star=" + rating / 2 + "]")
-                .removeClass("icon-star-empty");
+            var starEl = element.querySelector("span[data-star='" + rating / 2 + "'] i");
+            if (starEl) starEl.classList.add("icon-star");
+            var spanEl = element.querySelector("span[data-star='" + rating / 2 + "']");
+            if (spanEl) spanEl.classList.remove("icon-star-empty");
         }
     }
 
@@ -236,59 +262,60 @@ $(function () {
 
     function updateRatingFilterLabel(value) {
         displayStars(
-            $(".advanced-filter-rating .rating-star-container"),
+            document.querySelector(".advanced-filter-rating .rating-star-container"),
             value,
         );
     }
 
     function updateCertificationFilterLabel(value) {
-        let certifNode = $(".advanced-filter-certification .certification");
-        certifNode.attr("data-certification", value);
-        certifNode.attr("title", strs_certification[String(value)]);
-        certifNode.tipTip({
-            delay: 0,
-            fadeIn: 200,
-            fadeOut: 200,
-        });
+        let certifNode = document.querySelector(".advanced-filter-certification .certification");
+        certifNode.setAttribute("data-certification", value);
+        certifNode.setAttribute("title", strs_certification[String(value)]);
+        tippy(certifNode, { delay: 0, placement: 'top' });
     }
 
     function updateRevisionFilterLabel(val) {
         let label;
         [_, label] = value_to_month(val);
-        $(".revision-date").html(label);
+        document.querySelector(".revision-date").innerHTML = label;
     }
 
     // <-- Apply advanced filters -->
 
     // object that remember filters states
     filters = {
-        search: $("#search").val(),
+        search: document.getElementById("search").value,
         author: "",
         tag: "",
-        rating: $(".notation-filter-slider").slider("value"),
-        certification: $(".certification-filter-slider").slider("value"),
+        rating: notationSliderEl && notationSliderEl.noUiSlider
+            ? parseFloat(notationSliderEl.noUiSlider.get())
+            : 0,
+        certification: certificationSliderEl && certificationSliderEl.noUiSlider
+            ? Math.round(parseFloat(certificationSliderEl.noUiSlider.get()))
+            : betaTestPlugins ? -1 : 0,
         revision: value_to_month(
-            $(".certification-filter-slider").slider("value"),
+            certificationSliderEl && certificationSliderEl.noUiSlider
+                ? Math.round(parseFloat(certificationSliderEl.noUiSlider.get()))
+                : betaTestPlugins ? -1 : 0,
         )[0],
     };
 
-    selectizeAuthor.setValue("");
-    selectizeTag.setValue("");
+    if (authorEl && authorEl.tomselect) authorEl.tomselect.setValue("");
+    if (tagEl && tagEl.tomselect) tagEl.tomselect.setValue("");
 
     function applyFilter(changed, value) {
         filters[changed] = value;
 
         sort((pluginBox) => {
             let pluginRating =
-                pluginBox.find(".pluginRating").data("rating") || 0;
+                (pluginBox.querySelector(".pluginRating")?.dataset.rating || 0);
             let pluginCertification = pluginBox
-                .find(".certification")
-                .data("certification");
-            let pluginAuthors = pluginBox.data("author").split(", ");
-            let pluginName = pluginBox.data("name").toUpperCase();
-            let pluginTags = pluginBox.data("tags").split(", ");
+                .querySelector(".certification")?.dataset.certification;
+            let pluginAuthors = pluginBox.dataset.author.split(", ");
+            let pluginName = pluginBox.dataset.name.toUpperCase();
+            let pluginTags = pluginBox.dataset.tags.split(", ");
             let pluginRevisionOld = monthDiff(
-                new Date(pluginBox.data("revision") * 1000),
+                new Date(pluginBox.dataset.revision * 1000),
                 new Date(),
             ); // number of months between the last revision date and now
 
@@ -307,36 +334,25 @@ $(function () {
 
     // Display or not plugin with a function handler
     function sort(sortFunction) {
-        $(".pluginBox").each((i, el) => {
-            if (sortFunction($(el))) {
-                $(el).show();
+        document.querySelectorAll(".pluginBox").forEach(function (el) {
+            if (sortFunction(el)) {
+                el.style.display = '';
             } else {
-                $(el).hide();
+                el.style.display = 'none';
             }
         });
     }
 
     function clearSort() {
-        $(".pluginBox").show();
+        document.querySelectorAll(".pluginBox").forEach(function (el) {
+            el.style.display = '';
+        });
     }
 
     // Crop the names of plugins if there are too long
-    $(".pluginName span").each((i, el) => {
-        let name = $(el);
-        if (name.html().length > 30) {
-            name.html(name.html().slice(0, 30) + "...");
+    document.querySelectorAll(".pluginName span").forEach(function (el) {
+        if (el.innerHTML.length > 30) {
+            el.innerHTML = el.innerHTML.slice(0, 30) + "...";
         }
-    });
-
-    $("#showBetaTestPlugin").on("change", (e) => {
-        $(".beta-test-plugin-switch .slider").addClass("loading");
-
-        let queryParams = new URLSearchParams(window.location.search);
-
-        queryParams.set("beta-test", e.currentTarget.checked.toString());
-
-        history.replaceState(null, null, "?" + queryParams.toString());
-
-        window.location.reload(true);
     });
 });

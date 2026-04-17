@@ -37,7 +37,7 @@ if (! empty($_POST)) {
 if (isset($_GET['user_id']) &&
     is_numeric($_GET['user_id'])
 ) {
-    $page['user'] = $_GET['user_id'];
+    $page['user'] = (int) $_GET['user_id'];
 } else {
     exit('user_id URL parameter is missing');
 }

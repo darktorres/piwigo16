@@ -1,30 +1,52 @@
+function getCookieVal(name) {
+    var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return match ? decodeURIComponent(match[1]) : undefined;
+}
+
+function setCookieVal(name, value) {
+    document.cookie = name + '=' + encodeURIComponent(value) + '; path=/';
+}
+
+function applyStyles(selector, styles) {
+    document.querySelectorAll(selector).forEach(function (el) {
+        Object.assign(el.style, styles);
+    });
+}
+
+function applyStyle(selector, prop, value) {
+    document.querySelectorAll(selector).forEach(function (el) {
+        el.style[prop] = value;
+    });
+}
+
+function removeHoverEffect(elements) {
+    elements.forEach(function (el) {
+        if (el._hoverEnter) { el.removeEventListener('mouseenter', el._hoverEnter); delete el._hoverEnter; }
+        if (el._hoverLeave) { el.removeEventListener('mouseleave', el._hoverLeave); delete el._hoverLeave; }
+    });
+}
+
 function setDisplayCompact() {
     removeIconDesc();
 
-    $(".albumActions").css("display", "flex");
-    removeHoverEffect($(".categoryBox"));
-    removeHoverEffect(
-        $(".categoryBox").children(".albumActions").children("a"),
-    );
+    applyStyle(".albumActions", "display", "flex");
+    removeHoverEffect(Array.from(document.querySelectorAll(".categoryBox")));
+    removeHoverEffect(Array.from(document.querySelectorAll(".categoryBox .albumActions a")));
 
-    $(".categoryBox")
-        .children(".albumActions")
-        .children("a")
-        .hover(
-            function () {
-                $(this).css({
-                    color: "#000000",
-                });
-            },
-            function () {
-                $(this).css({
-                    color: "#848484",
-                });
-            },
-        );
-    $(".categoryBox").removeClass("line_cat").removeClass("tile_cat");
-    $(".addAlbum").removeClass("tile_add");
-    $(".categoryBox").css({
+    document.querySelectorAll(".categoryBox .albumActions a").forEach(function (el) {
+        el._hoverEnter = function () { this.style.color = "#000000"; };
+        el._hoverLeave = function () { this.style.color = "#848484"; };
+        el.addEventListener('mouseenter', el._hoverEnter);
+        el.addEventListener('mouseleave', el._hoverLeave);
+    });
+
+    document.querySelectorAll(".categoryBox").forEach(function (el) {
+        el.classList.remove("line_cat", "tile_cat");
+    });
+    document.querySelectorAll(".addAlbum").forEach(function (el) {
+        el.classList.remove("tile_add");
+    });
+    applyStyles(".categoryBox", {
         minWidth: "250px",
         maxWidth: "350px",
         flexDirection: "column",
@@ -32,64 +54,28 @@ function setDisplayCompact() {
         alignItems: "unset",
         margin: "15px",
     });
-
-    $(".albumInfos").css({
-        marginLeft: "0",
-        flexDirection: "column",
-    });
-
-    // $(".albumIcon").css({
-    //     height: "80px"
-    // });
-
-    // $(".albumIcon span").css({
-    //     fontSize: "19px",
-    //     width: "27px",
-    //     padding: "10px"
-    // });
-
-    $(".albumIcon").css({
-        height: "60px",
-    });
-
-    $(".albumIcon span").css({
-        fontSize: "14px",
-        width: "20px",
-        padding: "8px",
-    });
-
-    $(".albumInfos p").css({
-        margin: "0",
-        textAlign: "center",
-        whiteSpace: "normal",
-    });
-    $(".albumInfos p:last-child").css({
-        width: "auto",
-    });
-
-    $(".albumTop").css({
+    applyStyles(".albumInfos", { marginLeft: "0", flexDirection: "column" });
+    applyStyles(".albumIcon", { height: "60px" });
+    applyStyles(".albumIcon span", { fontSize: "14px", width: "20px", padding: "8px" });
+    applyStyles(".albumInfos p", { margin: "0", textAlign: "center", whiteSpace: "normal" });
+    applyStyle(".albumInfos p:last-child", "width", "auto");
+    applyStyles(".albumTop", {
         width: "auto",
         justifyContent: "center",
         flexDirection: "row",
         alignItems: "baseline",
         height: "65px",
     });
-
-    $(".albumTitle").css("padding", "0 15px");
-
-    $(".addAlbum").css({
+    applyStyle(".albumTitle", "padding", "0 15px");
+    applyStyles(".addAlbum", {
         minWidth: "250px",
         maxWidth: "350px",
         flexDirection: "column",
         maxHeight: "180px",
         margin: "15px",
     });
-
-    $(".addAlbum form label").css({
-        display: "none",
-    });
-
-    $(".addAlbumHead").css({
+    applyStyle(".addAlbum form label", "display", "none");
+    applyStyles(".addAlbumHead", {
         flexDirection: "column",
         transform: "translateY(55px)",
         alignItems: "center",
@@ -97,107 +83,67 @@ function setDisplayCompact() {
         transition: "0.4s ease",
         marginBottom: "0px",
     });
-
-    $(".addAlbum form").css("flex-direction", "column");
-
-    $(".addAlbum form").css({
+    applyStyles(".addAlbum form", {
         flexDirection: "column",
         marginTop: "0",
         marginBottom: "0",
         transitionDelay: "0s",
     });
-
-    $(".addAlbum.input-mode form").css({
-        transitionDelay: "0.4s",
-    });
-
-    $(".addAlbum form input").css("margin", "0px 10px 0px 10px");
-    $(".addAlbum form button").css("margin", "10px auto 0 auto");
-    $(".addAlbum p").css("margin-bottom", "0px");
-
-    $(".addAlbumHead p").css("margin-left", "0");
-
-    $(".addAlbumHead span").css({
-        fontSize: "14px",
-        width: "20px",
-        height: "20px",
-        padding: "8px",
-    });
-
-    $(".albumActions").css({
-        flexDirection: "row",
-        marginTop: "auto",
-        width: "100%",
-    });
-
-    $(".albumActions a").css({
-        minWidth: "0px",
-    });
-
-    $(".albumActions a:first-child").css("margin-left", "35px");
-    $(".albumActions a:last-child").css("margin-right", "35px");
+    applyStyles(".addAlbum.input-mode form", { transitionDelay: "0.4s" });
+    applyStyle(".addAlbum form input", "margin", "0px 10px 0px 10px");
+    applyStyle(".addAlbum form button", "margin", "10px auto 0 auto");
+    applyStyle(".addAlbum p", "marginBottom", "0px");
+    applyStyle(".addAlbumHead p", "marginLeft", "0");
+    applyStyles(".addAlbumHead span", { fontSize: "14px", width: "20px", height: "20px", padding: "8px" });
+    applyStyles(".albumActions", { flexDirection: "row", marginTop: "auto", width: "100%" });
+    applyStyle(".albumActions a", "minWidth", "0px");
+    applyStyle(".albumActions a:first-child", "marginLeft", "35px");
+    applyStyle(".albumActions a:last-child", "marginRight", "35px");
 }
 
 function setDisplayLine() {
-    /*********** Hover stuff ***********/
-
     removeIconDesc();
-    $(".albumActions").css("display", "flex");
-    removeHoverEffect($(".categoryBox"));
+    applyStyle(".albumActions", "display", "flex");
+    removeHoverEffect(Array.from(document.querySelectorAll(".categoryBox")));
 
-    $(".categoryBox").hover(
-        function () {
-            $(this).css("background", "#ffd7ad");
-            $(this).children(".albumInfos").css({
-                color: "#515151",
+    document.querySelectorAll(".categoryBox").forEach(function (el) {
+        el._hoverEnter = function () {
+            this.style.background = "#ffd7ad";
+            var albumInfos = this.querySelector(".albumInfos");
+            if (albumInfos) albumInfos.style.color = "#515151";
+            this.querySelectorAll(".albumActions a").forEach(function (a) { a.style.color = "#515151"; });
+            this.querySelectorAll(".albumTop .albumIcon span").forEach(function (span) {
+                span.classList.add("albumIconLineHover");
             });
-            $(this).children(".albumActions").children("a").css({
-                color: "#515151",
+        };
+        el._hoverLeave = function () {
+            this.style.background = "#fafafa";
+            var albumInfos = this.querySelector(".albumInfos");
+            if (albumInfos) albumInfos.style.color = "#a9a9a9";
+            this.querySelectorAll(".albumActions a").forEach(function (a) { a.style.color = "#848484"; });
+            this.querySelectorAll(".albumTop .albumIcon span").forEach(function (span) {
+                span.classList.remove("albumIconLineHover");
             });
+        };
+        el.addEventListener('mouseenter', el._hoverEnter);
+        el.addEventListener('mouseleave', el._hoverLeave);
+    });
 
-            $(this)
-                .children(".albumTop")
-                .children(".albumIcon")
-                .children("span")
-                .addClass("albumIconLineHover");
-        },
-        function () {
-            $(this).css("background", "#fafafa");
-            $(this).children(".albumInfos").css({
-                color: "#a9a9a9",
-            });
-            $(this).children(".albumActions").children("a").css({
-                color: "#848484",
-            });
+    document.querySelectorAll(".categoryBox .albumActions a").forEach(function (el) {
+        el._hoverEnter = function () { this.style.color = "#000000"; };
+        el._hoverLeave = function () { this.style.color = "#515151"; };
+        el.addEventListener('mouseenter', el._hoverEnter);
+        el.addEventListener('mouseleave', el._hoverLeave);
+    });
 
-            $(this)
-                .children(".albumTop")
-                .children(".albumIcon")
-                .children("span")
-                .removeClass("albumIconLineHover");
-        },
-    );
-
-    $(".categoryBox")
-        .children(".albumActions")
-        .children("a")
-        .hover(
-            function () {
-                $(this).css({
-                    color: "#000000",
-                });
-            },
-            function () {
-                $(this).css({
-                    color: "#515151",
-                });
-            },
-        );
-
-    /************************************/
-    $(".categoryBox").addClass("line_cat").removeClass("tile_cat");
-    $(".addAlbum").removeClass("tile_add");
-    $(".categoryBox").css({
+    document.querySelectorAll(".categoryBox").forEach(function (el) {
+        el.classList.add("line_cat");
+        el.classList.remove("tile_cat");
+    });
+    document.querySelectorAll(".addAlbum").forEach(function (el) {
+        el.classList.remove("tile_add");
+    });
+    applyStyles(".categoryBox", {
         minWidth: "90%",
         maxWidth: "100%",
         flexDirection: "row",
@@ -205,136 +151,83 @@ function setDisplayLine() {
         alignItems: "unset",
         margin: "5px 15px",
     });
-
-    $(".albumIcon").css({
-        height: "60px",
-    });
-
-    $(".albumIcon span").css({
-        fontSize: "14px",
-        width: "20px",
-        padding: "8px",
-    });
-
-    $(".addAlbumHead span").css({
-        fontSize: "14px",
-        width: "20px",
-        height: "20px",
-        padding: "8px",
-    });
-
-    $(".albumInfos").css({
+    applyStyles(".albumIcon", { height: "60px" });
+    applyStyles(".albumIcon span", { fontSize: "14px", width: "20px", padding: "8px" });
+    applyStyles(".addAlbumHead span", { fontSize: "14px", width: "20px", height: "20px", padding: "8px" });
+    applyStyles(".albumInfos", {
         marginLeft: "auto",
         flexDirection: "row",
         justifyContent: "space-around",
         width: "auto",
     });
-
-    $(".albumInfos p").css({
-        textAlign: "right",
-        margin: "0",
-        whiteSpace: "nowrap",
-    });
-
-    $(".albumInfos p:last-child").css({
-        width: "270px",
-    });
-
-    $(".albumTop").css({
+    applyStyles(".albumInfos p", { textAlign: "right", margin: "0", whiteSpace: "nowrap" });
+    applyStyle(".albumInfos p:last-child", "width", "270px");
+    applyStyles(".albumTop", {
         width: "35%",
         justifyContent: "flex-start",
         flexDirection: "row",
         alignItems: "baseline",
         height: "75px",
     });
-
-    $(".albumTitle").css("padding", "0 15px");
-
-    $(".addAlbum").css({
+    applyStyle(".albumTitle", "padding", "0 15px");
+    applyStyles(".addAlbum", {
         minWidth: "90%",
         maxWidth: "100%",
         flexDirection: "row",
         maxHeight: "60px",
         margin: "15px 15px 5px 15px",
     });
-
-    $(".addAlbum form label").css({
-        display: "none",
-    });
-
-    $(".addAlbumHead").css({
+    applyStyle(".addAlbum form label", "display", "none");
+    applyStyles(".addAlbumHead", {
         flexDirection: "row",
-        transform: "translateY(0)",
+        transform: "translateX(200px)",
         alignItems: "center",
         marginTop: "0",
-        transform: "translateX(200px)",
         marginBottom: "0",
     });
-
-    $(".addAlbum form").css({
+    applyStyles(".addAlbum form", {
         flexDirection: "row",
         marginTop: "0",
         marginBottom: "0",
         transitionDelay: "0s",
     });
-
-    $(".addAlbum.input-mode form").css({
-        transitionDelay: "0s",
-    });
-
-    $(".addAlbum form").css("align-items", "center");
-    $(".addAlbum form input").css("margin", "0px 10px 0px 10px");
-    $(".addAlbum form button").css("margin", "0px 20px");
-    $(".addAlbum p").css("margin-bottom", "0px");
-
-    $(".addAlbumHead p").css("margin-left", "15px");
-
-    $(".albumActions").css({
-        flexDirection: "row",
-        margin: "auto 0px",
-        width: "300px",
-    });
-
-    $(".albumActions a").css({
-        minWidth: "30px",
-    });
-
-    $(".albumActions a:first-child").css("margin-left", "35px");
-    $(".albumActions a:last-child").css("margin-right", "35px");
+    applyStyles(".addAlbum.input-mode form", { transitionDelay: "0s" });
+    applyStyle(".addAlbum form", "alignItems", "center");
+    applyStyle(".addAlbum form input", "margin", "0px 10px 0px 10px");
+    applyStyle(".addAlbum form button", "margin", "0px 20px");
+    applyStyle(".addAlbum p", "marginBottom", "0px");
+    applyStyle(".addAlbumHead p", "marginLeft", "15px");
+    applyStyles(".albumActions", { flexDirection: "row", margin: "auto 0px", width: "300px" });
+    applyStyle(".albumActions a", "minWidth", "30px");
+    applyStyle(".albumActions a:first-child", "marginLeft", "35px");
+    applyStyle(".albumActions a:last-child", "marginRight", "35px");
 }
 
 function setDisplayTile() {
     ShowIconDesc();
 
-    $(".albumActions").css("display", "flex");
-    removeHoverEffect($(".categoryBox"));
-    removeHoverEffect(
-        $(".categoryBox").children(".albumActions").children("a"),
-    );
-    $(".categoryBox")
-        .children(".albumActions")
-        .children("a")
-        .hover(
-            function () {
-                $(this).css({
-                    color: "#FFA646",
-                });
-            },
-            function () {
-                $(this).css({
-                    color: "#848484",
-                });
-            },
-        );
+    applyStyle(".albumActions", "display", "flex");
+    removeHoverEffect(Array.from(document.querySelectorAll(".categoryBox")));
+    removeHoverEffect(Array.from(document.querySelectorAll(".categoryBox .albumActions a")));
+
+    document.querySelectorAll(".categoryBox .albumActions a").forEach(function (el) {
+        el._hoverEnter = function () { this.style.color = "#FFA646"; };
+        el._hoverLeave = function () { this.style.color = "#848484"; };
+        el.addEventListener('mouseenter', el._hoverEnter);
+        el.addEventListener('mouseleave', el._hoverLeave);
+    });
 
     AddHoverOnAlbumActions();
 
-    $(".addAlbum.input-mode form").css({
-        transitionDelay: "0s",
+    applyStyles(".addAlbum.input-mode form", { transitionDelay: "0s" });
+    document.querySelectorAll(".categoryBox").forEach(function (el) {
+        el.classList.remove("line_cat");
+        el.classList.add("tile_cat");
     });
-    $(".categoryBox").removeClass("line_cat").addClass("tile_cat");
-    $(".addAlbum").addClass("tile_add");
-    $(".categoryBox").css({
+    document.querySelectorAll(".addAlbum").forEach(function (el) {
+        el.classList.add("tile_add");
+    });
+    applyStyles(".categoryBox", {
         minWidth: "220px",
         maxWidth: "280px",
         flexDirection: "column",
@@ -342,56 +235,32 @@ function setDisplayTile() {
         alignItems: "center",
         margin: "15px",
     });
-
-    $(".albumActions").css({
+    applyStyles(".albumActions", {
         flexDirection: "column",
         margin: "auto",
         alignItems: "flex-start",
         width: "75%",
     });
-
-    $(".albumInfos").css({
-        marginLeft: "0",
-        flexDirection: "column",
-    });
-
-    $(".albumInfos p:last-child").css({
-        width: "auto",
-    });
-    $(".albumInfos p").css({
-        margin: "0",
-        textAlign: "center",
-        whiteSpace: "normal",
-    });
-
-    $(".albumIcon").css({
-        height: "80px",
-    });
-
-    $(".albumIcon span").css({
-        fontSize: "19px",
-        width: "27px",
-        padding: "10px",
-    });
-
-    $(".albumTop").css({
+    applyStyles(".albumInfos", { marginLeft: "0", flexDirection: "column" });
+    applyStyle(".albumInfos p:last-child", "width", "auto");
+    applyStyles(".albumInfos p", { margin: "0", textAlign: "center", whiteSpace: "normal" });
+    applyStyles(".albumIcon", { height: "80px" });
+    applyStyles(".albumIcon span", { fontSize: "19px", width: "27px", padding: "10px" });
+    applyStyles(".albumTop", {
         width: "85%",
         flexDirection: "column",
         alignItems: "unset",
         height: "110px",
     });
-
-    $(".albumTitle").css("padding", "0");
-
-    $(".addAlbum").css({
+    applyStyle(".albumTitle", "padding", "0");
+    applyStyles(".addAlbum", {
         minWidth: "220px",
         maxWidth: "280px",
         flexDirection: "column",
         maxHeight: "320px",
         margin: "15px",
     });
-
-    $(".addAlbumHead").css({
+    applyStyles(".addAlbumHead", {
         flexDirection: "column",
         transform: "translateY(75px)",
         alignItems: "center",
@@ -399,125 +268,130 @@ function setDisplayTile() {
         transition: "0.4s ease",
         marginBottom: "0",
     });
-
-    $(".addAlbum form").css({
+    applyStyles(".addAlbum form", {
         flexDirection: "column",
         marginTop: "auto",
         marginBottom: "20px",
         transitionDelay: "0s",
     });
-
-    $(".addAlbum form input").css("margin", "0px 10px 10px 10px");
-    $(".addAlbum form button").css("margin", "10px auto 0 auto");
-    $(".addAlbum p").css("margin-bottom", "20px");
-
-    $(".addAlbum form label").css({
-        display: "flex",
-        margin: "-25px 0 0 15px",
-    });
-
-    $(".addAlbumHead p").css("margin-left", "0");
-
-    $(".addAlbumHead span").css({
-        fontSize: "19px",
-        width: "27px",
-        height: "27px",
-        padding: "10px",
-    });
-
-    $(".albumInfos p").css("margin", "0");
-
-    $(".albumActions a").css({
-        minWidth: "0px",
-    });
-
-    $(".albumActions a:first-child").css("margin-left", "5px");
-    $(".albumActions a:last-child").css("margin-left", "5px");
+    applyStyle(".addAlbum form input", "margin", "0px 10px 10px 10px");
+    applyStyle(".addAlbum form button", "margin", "10px auto 0 auto");
+    applyStyle(".addAlbum p", "marginBottom", "20px");
+    applyStyles(".addAlbum form label", { display: "flex", margin: "-25px 0 0 15px" });
+    applyStyle(".addAlbumHead p", "marginLeft", "0");
+    applyStyles(".addAlbumHead span", { fontSize: "19px", width: "27px", height: "27px", padding: "10px" });
+    applyStyle(".albumInfos p", "margin", "0");
+    applyStyle(".albumActions a", "minWidth", "0px");
+    applyStyle(".albumActions a:first-child", "marginLeft", "5px");
+    applyStyle(".albumActions a:last-child", "marginLeft", "5px");
 }
 
 function ShowIconDesc() {
-    $(".albumActions span.iconLegend").show();
+    document.querySelectorAll(".albumActions span.iconLegend").forEach(function (el) {
+        el.style.display = '';
+    });
 }
 
 function removeIconDesc() {
-    $(".albumActions span.iconLegend").hide();
-}
-
-function removeHoverEffect(e) {
-    e.unbind("mouseenter").unbind("mouseleave");
+    document.querySelectorAll(".albumActions span.iconLegend").forEach(function (el) {
+        el.style.display = 'none';
+    });
 }
 
 function AddHoverOnAlbumActions() {
-    $(".albumActions").css("display", "none");
-    $(".categoryBox").hover(
-        function () {
-            $(this).children(".albumActions").css("display", "flex");
-        },
-        function () {
-            $(this).children(".albumActions").css("display", "none");
-        },
-    );
+    applyStyle(".albumActions", "display", "none");
+    document.querySelectorAll(".categoryBox").forEach(function (el) {
+        el._hoverEnter = function () {
+            var actions = this.querySelector(".albumActions");
+            if (actions) actions.style.display = 'flex';
+        };
+        el._hoverLeave = function () {
+            var actions = this.querySelector(".albumActions");
+            if (actions) actions.style.display = 'none';
+        };
+        el.addEventListener('mouseenter', el._hoverEnter);
+        el.addEventListener('mouseleave', el._hoverLeave);
+    });
 }
 
-$(document).ready(function () {
-    if (!$.cookie("pwg_album_manager_view")) {
-        $.cookie("pwg_album_manager_view", "tile");
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll(".addAlbumHead").forEach(function (el) {
+        el.addEventListener('click', function () {
+            var input = document.querySelector(".addAlbum input[name=virtual_name]");
+            if (input) input.focus();
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (!getCookieVal("pwg_album_manager_view")) {
+        setCookieVal("pwg_album_manager_view", "tile");
     }
 
-    $(".addAlbum").on("click", function (e) {
-        if (e.target.className !== "cancelAddAlbum") {
-            $(".addAlbum").addClass("input-mode");
-
-            if ($.cookie("pwg_album_manager_view") !== "tile") {
-                $(".addAlbum p").hide(300);
+    document.querySelectorAll(".addAlbum").forEach(function (el) {
+        el.addEventListener("click", function (e) {
+            if (e.target.className !== "cancelAddAlbum") {
+                document.querySelectorAll(".addAlbum").forEach(function (a) {
+                    a.classList.add("input-mode");
+                });
+                if (getCookieVal("pwg_album_manager_view") !== "tile") {
+                    document.querySelectorAll(".addAlbum p").forEach(function (p) {
+                        p.style.display = 'none';
+                    });
+                }
             }
-        }
+        });
     });
 
-    $(".cancelAddAlbum").on("click", function () {
-        $(".addAlbum").removeClass("input-mode");
-        $(".addAlbum p").show(800);
+    document.querySelectorAll(".cancelAddAlbum").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            document.querySelectorAll(".addAlbum").forEach(function (el) {
+                el.classList.remove("input-mode");
+            });
+            document.querySelectorAll(".addAlbum p").forEach(function (p) {
+                p.style.display = '';
+            });
+        });
     });
 
-    if ($("#displayCompact").is(":checked")) {
-        setDisplayCompact();
+    var displayCompact = document.getElementById("displayCompact");
+    var displayLine = document.getElementById("displayLine");
+    var displayTile = document.getElementById("displayTile");
+
+    if (displayCompact && displayCompact.checked) setDisplayCompact();
+    if (displayLine && displayLine.checked) setDisplayLine();
+    if (displayTile && displayTile.checked) setDisplayTile();
+
+    if (displayCompact) {
+        displayCompact.addEventListener("change", function () {
+            setDisplayCompact();
+            var addAlbumInputMode = document.querySelector(".addAlbum.input-mode");
+            if (addAlbumInputMode) {
+                document.querySelectorAll(".addAlbum p").forEach(function (p) { p.style.display = 'none'; });
+            }
+            setCookieVal("pwg_album_manager_view", "compact");
+        });
     }
 
-    if ($("#displayLine").is(":checked")) {
-        setDisplayLine();
+    if (displayLine) {
+        displayLine.addEventListener("change", function () {
+            setDisplayLine();
+            var addAlbumInputMode = document.querySelector(".addAlbum.input-mode");
+            if (addAlbumInputMode) {
+                document.querySelectorAll(".addAlbum p").forEach(function (p) { p.style.display = 'none'; });
+            }
+            setCookieVal("pwg_album_manager_view", "line");
+        });
     }
 
-    if ($("#displayTile").is(":checked")) {
-        setDisplayTile();
+    if (displayTile) {
+        displayTile.addEventListener("change", function () {
+            setDisplayTile();
+            var addAlbumInputMode = document.querySelector(".addAlbum.input-mode");
+            if (addAlbumInputMode) {
+                document.querySelectorAll(".addAlbum p").forEach(function (p) { p.style.display = ''; });
+            }
+            setCookieVal("pwg_album_manager_view", "tile");
+        });
     }
-
-    $("#displayCompact").change(function () {
-        setDisplayCompact();
-
-        if ($(".addAlbum").hasClass("input-mode")) {
-            $(".addAlbum p").hide();
-        }
-
-        $.cookie("pwg_album_manager_view", "compact");
-    });
-
-    $("#displayLine").change(function () {
-        setDisplayLine();
-
-        if ($(".addAlbum").hasClass("input-mode")) {
-            $(".addAlbum p").hide();
-        }
-
-        $.cookie("pwg_album_manager_view", "line");
-    });
-
-    $("#displayTile").change(function () {
-        setDisplayTile();
-
-        if ($(".addAlbum").hasClass("input-mode")) {
-            $(".addAlbum p").show();
-        }
-
-        $.cookie("pwg_album_manager_view", "tile");
-    });
 });

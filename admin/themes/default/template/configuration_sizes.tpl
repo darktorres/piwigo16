@@ -1,13 +1,12 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
-{combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
-{footer_script}<script>
+{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
+{footer_script require='pwgConfirm'}<script>
   const title_msg = '{'Are you sure you want to restore to default settings?'|translate|escape:javascript}';
   const confirm_msg = '{'Yes, I am sure'|translate|escape}';
   const cancel_msg = '{'No, I have changed my mind'|translate|escape}';
 
-  $(".restore-settings-button").each(function() {
-    $(this).pwg_jconfirm_follow_href({
+  document.querySelectorAll(".restore-settings-button").forEach(function(el) {
+    pwgConfirmFollowHref(el, {
       alert_title: title_msg,
       alert_confirm: confirm_msg,
       alert_cancel: cancel_msg
@@ -21,46 +20,54 @@
     labelHeight = "{'Height'|translate}";
 
     function toggleResizeFields(size) {
-      var checkbox = jQuery("[name=original_resize]");
-      var needToggle = jQuery("#sizeEdit-original");
-
-      if (jQuery(checkbox).is(':checked')) {
-        needToggle.show();
-      } else {
-        needToggle.hide();
-      }
+      var checkbox = document.querySelector("[name=original_resize]");
+      var needToggle = document.getElementById("sizeEdit-original");
+      if (!checkbox || !needToggle) return;
+      needToggle.style.display = checkbox.checked ? '' : 'none';
     }
 
     toggleResizeFields("original");
-    jQuery("[name=original_resize]").click(function() {
-      toggleResizeFields("original");
+    var originalResizeCheckbox = document.querySelector("[name=original_resize]");
+    if (originalResizeCheckbox) {
+      originalResizeCheckbox.addEventListener('click', function() {
+        toggleResizeFields("original");
+      });
+    }
+
+    document.querySelectorAll("a[id^='sizeEditOpen-']").forEach(function(el) {
+      el.addEventListener('click', function(event) {
+        event.preventDefault();
+        var sizeName = this.id.split("-")[1];
+        var sizeEdit = document.getElementById("sizeEdit-" + sizeName);
+        if (sizeEdit) sizeEdit.style.display = sizeEdit.style.display === 'none' || sizeEdit.style.display === '' ? 'block' : 'none';
+        this.style.display = 'none';
+      });
     });
 
-    jQuery("a[id^='sizeEditOpen-']").click(function() {
-      var sizeName = jQuery(this).attr("id").split("-")[1];
-      jQuery("#sizeEdit-" + sizeName).toggle();
-      jQuery(this).hide();
-      return false;
+    document.querySelectorAll(".cropToggle").forEach(function(el) {
+      el.addEventListener('click', function() {
+        var form = this.closest('table.sizeEditForm');
+        if (!form) return;
+        var labelBoxWidth = form.querySelector('td.sizeEditWidth');
+        var labelBoxHeight = form.querySelector('td.sizeEditHeight');
+        if (this.checked) {
+          if (labelBoxWidth) labelBoxWidth.innerHTML = labelWidth;
+          if (labelBoxHeight) labelBoxHeight.innerHTML = labelHeight;
+        } else {
+          if (labelBoxWidth) labelBoxWidth.innerHTML = labelMaxWidth;
+          if (labelBoxHeight) labelBoxHeight.innerHTML = labelMaxHeight;
+        }
+      });
     });
 
-    jQuery(".cropToggle").click(function() {
-      var labelBoxWidth = jQuery(this).parents('table.sizeEditForm').find('td.sizeEditWidth');
-      var labelBoxHeight = jQuery(this).parents('table.sizeEditForm').find('td.sizeEditHeight');
-
-      if (jQuery(this).is(':checked')) {
-        jQuery(labelBoxWidth).html(labelWidth);
-        jQuery(labelBoxHeight).html(labelHeight);
-      } else {
-        jQuery(labelBoxWidth).html(labelMaxWidth);
-        jQuery(labelBoxHeight).html(labelMaxHeight);
-      }
-    });
-
-    jQuery("#showDetails").click(function() {
-      jQuery(".sizeDetails").show();
-      jQuery(this).css("visibility", "hidden");
-      return false;
-    });
+    var showDetailsBtn = document.getElementById("showDetails");
+    if (showDetailsBtn) {
+      showDetailsBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        document.querySelectorAll(".sizeDetails").forEach(function(el) { el.style.display = ''; });
+        this.style.visibility = 'hidden';
+      });
+    }
   })();
 </script>{/footer_script}
 

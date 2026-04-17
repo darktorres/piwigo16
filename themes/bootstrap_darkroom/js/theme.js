@@ -1,91 +1,124 @@
-$(document).ready(function () {
+document.addEventListener("DOMContentLoaded", function () {
     // Grid view button click
-    $("#btn-grid").click(function () {
-        if ($(this).hasClass("active")) {
-            return;
-        }
-        $.cookie("view", "grid");
-        $("#btn-grid").addClass("active");
-        $("#btn-list").removeClass("active");
-        $("#content")
-            .removeClass("content-list")
-            .addClass("content-grid")
-            .find(".col-outer")
-            .each(function () {
-                $(this).find(".card-body").attr("style", "");
-                $(this)
-                    .find("a")
-                    .addClass("d-block")
-                    .find(".card-img-left")
-                    .addClass("card-img-top")
-                    .removeClass("card-img-left");
-                $(this).find(".card-body.list-view-only").addClass("d-none");
-                $(this).find(".addCollection").removeAttr("style");
-                $(this)
-                    .removeClass("col-12")
-                    .addClass($(this).data("grid-classes"))
-                    .one("webkitTransitionEnd", function () {
-                        $("#content")
-                            .find(".card-body")
-                            .removeAttr("style")
-                            .equalHeights();
+    var btnGrid = document.getElementById("btn-grid");
+    if (btnGrid) {
+        btnGrid.addEventListener("click", function () {
+            if (this.classList.contains("active")) {
+                return;
+            }
+            setCookie("view", "grid");
+            btnGrid.classList.add("active");
+            document.getElementById("btn-list").classList.remove("active");
+            var content = document.getElementById("content");
+            content.classList.remove("content-list");
+            content.classList.add("content-grid");
+
+            var colOuters = content.querySelectorAll(".col-outer");
+            colOuters.forEach(function (colOuter) {
+                var cardBody = colOuter.querySelector(".card-body");
+                if (cardBody) cardBody.removeAttribute("style");
+
+                var link = colOuter.querySelector("a");
+                if (link) {
+                    link.classList.add("d-block");
+                    var cardImgLeft = link.querySelector(".card-img-left");
+                    if (cardImgLeft) {
+                        cardImgLeft.classList.add("card-img-top");
+                        cardImgLeft.classList.remove("card-img-left");
+                    }
+                }
+
+                var listViewOnly = colOuter.querySelector(".card-body.list-view-only");
+                if (listViewOnly) listViewOnly.classList.add("d-none");
+
+                var addCollection = colOuter.querySelector(".addCollection");
+                if (addCollection) addCollection.removeAttribute("style");
+
+                var gridClasses = colOuter.dataset.gridClasses;
+                colOuter.classList.remove("col-12");
+                if (gridClasses) colOuter.classList.add(gridClasses);
+
+                colOuter.addEventListener("webkitTransitionEnd", function () {
+                    document.querySelectorAll("#content .card-body").forEach(function (cb) {
+                        cb.removeAttribute("style");
                     });
+                    equalHeights();
+                }, { once: true });
             });
-    });
+        });
+    }
 
     // List view button click
-    $("#btn-list").click(function () {
-        if ($(this).hasClass("active")) {
-            return;
-        }
-        $.cookie("view", "list");
-        $("#btn-list").addClass("active");
-        $("#btn-grid").removeClass("active");
-        $("#content")
-            .removeClass("content-grid")
-            .addClass("content-list")
-            .height("auto")
-            .find(".col-outer")
-            .each(function () {
-                $(this)
-                    .find("a")
-                    .removeClass("d-block")
-                    .find(".card-img-top")
-                    .addClass("card-img-left")
-                    .removeClass("card-img-top");
-                $(this).find(".card-body.list-view-only").removeClass("d-none");
-                $(this)
-                    .find(".addCollection")
-                    .attr(
-                        "style",
-                        "width: " + $(this).find("img").width() + "px",
-                    );
-                $(this)
-                    .removeClass($(this).data("grid-classes"))
-                    .addClass("col-12")
-                    .one("webkitTransitionEnd", function () {
-                        $("#content")
-                            .find(".card-body")
-                            .removeAttr("style")
-                            .equalHeights();
+    var btnList = document.getElementById("btn-list");
+    if (btnList) {
+        btnList.addEventListener("click", function () {
+            if (this.classList.contains("active")) {
+                return;
+            }
+            setCookie("view", "list");
+            btnList.classList.add("active");
+            document.getElementById("btn-grid").classList.remove("active");
+            var content = document.getElementById("content");
+            content.classList.remove("content-grid");
+            content.classList.add("content-list");
+            content.style.height = "auto";
+
+            var colOuters = content.querySelectorAll(".col-outer");
+            colOuters.forEach(function (colOuter) {
+                var link = colOuter.querySelector("a");
+                if (link) {
+                    link.classList.remove("d-block");
+                    var cardImgTop = link.querySelector(".card-img-top");
+                    if (cardImgTop) {
+                        cardImgTop.classList.add("card-img-left");
+                        cardImgTop.classList.remove("card-img-top");
+                    }
+                }
+
+                var listViewOnly = colOuter.querySelector(".card-body.list-view-only");
+                if (listViewOnly) listViewOnly.classList.remove("d-none");
+
+                var addCollection = colOuter.querySelector(".addCollection");
+                if (addCollection) {
+                    var img = colOuter.querySelector("img");
+                    var width = img ? img.width : 0;
+                    addCollection.setAttribute("style", "width: " + width + "px");
+                }
+
+                var gridClasses = colOuter.dataset.gridClasses;
+                if (gridClasses) colOuter.classList.remove(gridClasses);
+                colOuter.classList.add("col-12");
+
+                colOuter.addEventListener("webkitTransitionEnd", function () {
+                    document.querySelectorAll("#content .card-body").forEach(function (cb) {
+                        cb.removeAttribute("style");
                     });
+                    equalHeights();
+                }, { once: true });
             });
-    });
+        });
+    }
 
     // Side bar
-    var sidebar = $("#sidebar");
-    var navigationButtons = $("#navigationButtons");
-    if (sidebar.length && navigationButtons.length) {
-        sidebar.css("top", navigationButtons.offset().top + 1 + "px");
-        $("#info-link").click(function () {
-            var sidebar = $("#sidebar");
-            if (parseInt(sidebar.css("right")) < 0) {
-                sidebar.animate({ right: "+=250" }, 500);
-            } else {
-                sidebar.animate({ right: "-=250" }, 500);
-            }
-            return false;
-        });
+    var sidebar = document.getElementById("sidebar");
+    var navigationButtons = document.getElementById("navigationButtons");
+    if (sidebar && navigationButtons) {
+        var navTop = navigationButtons.getBoundingClientRect().top + window.scrollY;
+        sidebar.style.top = (navTop + 1) + "px";
+
+        var infoLink = document.getElementById("info-link");
+        if (infoLink) {
+            infoLink.addEventListener("click", function (e) {
+                e.preventDefault();
+                var sidebarEl = document.getElementById("sidebar");
+                if (sidebarEl) {
+                    var rightValue = parseInt(window.getComputedStyle(sidebarEl).right);
+                    var newRight = rightValue < 0 ? rightValue + 250 : rightValue - 250;
+                    sidebarEl.style.right = newRight + "px";
+                }
+                return false;
+            });
+        }
     }
 });
 
@@ -98,20 +131,57 @@ function bd_popup(url) {
     );
 }
 
-/* changeElementType: this function changes element types. e.g. <div> to <ul> */
-(function ($) {
-    $.fn.changeElementType = function (newType) {
-        var attrs = {};
-        if (!(this[0] && this[0].attributes)) return;
+/* Set cookie using native API */
+function setCookie(name, value, days) {
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
 
-        $.each(this[0].attributes, function (idx, attr) {
-            attrs[attr.nodeName] = attr.nodeValue;
-        });
-        this.replaceWith(function () {
-            return $("<" + newType + "/>", attrs).append($(this).contents());
-        });
-    };
-})(jQuery);
+/* Get cookie using native API */
+function getCookie(name) {
+    var nameEQ = name + "=";
+    var cookies = document.cookie.split(';');
+    for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].trim();
+        if (cookie.indexOf(nameEQ) === 0) return cookie.substring(nameEQ.length);
+    }
+    return null;
+}
+
+/* Equal heights helper - if equalHeights is used elsewhere, we provide a stub */
+function equalHeights() {
+    // Placeholder for any custom equal heights logic
+    // This may be defined in other scripts or can be extended as needed
+}
+
+/* changeElementType: this function changes element types. e.g. <div> to <ul> */
+function changeElementType(element, newType) {
+    var attrs = {};
+    if (!element || !element.attributes) return;
+
+    for (var i = 0; i < element.attributes.length; i++) {
+        var attr = element.attributes[i];
+        attrs[attr.nodeName] = attr.nodeValue;
+    }
+
+    var newElement = document.createElement(newType);
+    for (var key in attrs) {
+        if (attrs.hasOwnProperty(key)) {
+            newElement.setAttribute(key, attrs[key]);
+        }
+    }
+
+    while (element.firstChild) {
+        newElement.appendChild(element.firstChild);
+    }
+
+    element.parentNode.replaceChild(newElement, element);
+}
 
 /* change rgba alpha */
 function setColorOpacity(colorStr, opacity) {

@@ -516,7 +516,7 @@
         <input type="submit" name="submit" value="{'Save Settings'|translate}">
     </p>
 </form>
-{footer_script require="jquery"}<script>
+{footer_script}<script>
     (function() {
         var targets = {
             'input[name="social_enabled"]': ['#social_twitter', '#social_facebook', '#social_pinterest',
@@ -528,171 +528,218 @@
         };
         for (selector in targets) {
             for (target of targets[selector]) {
-                jQuery(target).toggle(jQuery(selector).is(':checked'));
+                var triggerElement = document.querySelector(selector);
+                var targetElement = document.querySelector(target);
+                if (triggerElement && targetElement) {
+                    targetElement.style.display = triggerElement.checked ? '' : 'none';
 
-                (function(target) {
-                    jQuery(selector).on('change', function() {
-                        jQuery(target).toggle($(this).is(':checked'));
-                    });
-                })(target);
+                    (function(target) {
+                        var triggerEl = document.querySelector(selector);
+                        if (triggerEl) {
+                            triggerEl.addEventListener('change', function() {
+                                var targetEl = document.querySelector(target);
+                                if (targetEl) {
+                                    targetEl.style.display = this.checked ? '' : 'none';
+                                }
+                            });
+                        }
+                    })(target);
+                }
             }
         };
     }());
 
-    $(document).ready(function() {
-        $('ul.tabs li').click(function() {
-            var tab_id = $(this).attr('data-tab');
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('ul.tabs li').forEach(function(tabLink) {
+            tabLink.addEventListener('click', function() {
+                var tab_id = this.getAttribute('data-tab');
 
-            $('ul.tabs li').removeClass('current');
-            $('.tab-content').removeClass('current');
+                document.querySelectorAll('ul.tabs li').forEach(function(li) {
+                    li.classList.remove('current');
+                });
+                document.querySelectorAll('.tab-content').forEach(function(content) {
+                    content.classList.remove('current');
+                });
 
-            $(this).addClass('current');
-            $("#" + tab_id).addClass('current');
-        })
-    })
-
-
-    var select_bootswatch = $("#bootswatch_theme");
-    var label_bootswatch = $("#bootswatch_theme_label");
-    var preview = $("#theme_preview");
-    var cur_theme = '{$theme_config->bootswatch_theme}';
-    function getBootswatchThemes() {
-        $.getJSON("https://bootswatch.com/api/3.json", function(data) {
-            var themes = data.themes;
-            select_bootswatch.show();
-            label_bootswatch.show();
-
-            themes.forEach(function(value, index) {
-                $name = value.name;
-                $lname = $name.toLowerCase();
-                select_bootswatch.append($("<option />")
-                    .val($lname)
-                    .text($name));
-
-                if ($lname === cur_theme) {
-                    $('option[value=' + $lname + ']').attr('selected', 'selected');
+                this.classList.add('current');
+                var targetTab = document.getElementById(tab_id);
+                if (targetTab) {
+                    targetTab.classList.add('current');
                 }
             });
-            preview.html('<img src="themes/bootstrap_darkroom/components/bootswatch/' + select_bootswatch
-                .val() + '/thumbnail.png" width="50%" style="padding: 10px 0;"/>');
-            preview.show();
-
-        }, "json").fail(function() {
-            $(".alert").toggleClass("alert-info alert-danger");
-            $(".alert h4").text("Failed to load available Bootswatch Themes!");
         });
+    });
 
+
+    var select_bootswatch = document.getElementById("bootswatch_theme");
+    var label_bootswatch = document.getElementById("bootswatch_theme_label");
+    var preview = document.getElementById("theme_preview");
+    var cur_theme = '{$theme_config->bootswatch_theme}';
+    function getBootswatchThemes() {
+        fetch("https://bootswatch.com/api/3.json")
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Failed to load Bootswatch themes');
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                var themes = data.themes;
+                select_bootswatch.style.display = '';
+                label_bootswatch.style.display = '';
+
+                themes.forEach(function(value) {
+                    var name = value.name;
+                    var lname = name.toLowerCase();
+                    var option = document.createElement('option');
+                    option.value = lname;
+                    option.textContent = name;
+                    select_bootswatch.appendChild(option);
+
+                    if (lname === cur_theme) {
+                        option.selected = true;
+                    }
+                });
+                preview.innerHTML = '<img src="themes/bootstrap_darkroom/components/bootswatch/' + select_bootswatch
+                    .value + '/thumbnail.png" width="50%" style="padding: 10px 0;"/>';
+                preview.style.display = '';
+            })
+            .catch(function() {
+                var alert = document.querySelector(".alert");
+                if (alert) {
+                    alert.classList.remove("alert-info");
+                    alert.classList.add("alert-danger");
+                    var alertHeading = alert.querySelector("h4");
+                    if (alertHeading) {
+                        alertHeading.textContent = "Failed to load available Bootswatch Themes!";
+                    }
+                }
+            });
     }
 
-    $(document).ready(function() {
-        if ($('select[name=bootstrap_theme]').val() === 'bootswatch') {
+    document.addEventListener('DOMContentLoaded', function() {
+        var themeSelect = document.querySelector('select[name=bootstrap_theme]');
+        var photoswipeCheckbox = document.querySelector('input[name=photoswipe]');
+        var thumbnailLinktoSelect = document.querySelector('select[name=thumbnail_linkto]');
+        var pageHeaderSelect = document.querySelector('select[name=page_header]');
+
+        if (themeSelect && themeSelect.value === 'bootswatch') {
             getBootswatchThemes();
-        } else {
-            preview.html('<img src="themes/bootstrap_darkroom/admin/img/' + $('select[name=bootstrap_theme]')
-                .val() + '.png" style="padding: 10px 0;"/>');
-            preview.show();
+        } else if (themeSelect) {
+            preview.innerHTML = '<img src="themes/bootstrap_darkroom/admin/img/' + themeSelect
+                .value + '.png" style="padding: 10px 0;"/>';
+            preview.style.display = '';
         }
 
-        link_target = $('select[name=thumbnail_linkto]').val();
-        if (!$('input[name=photoswipe]').is(':checked') && link_target !== 'photoswipe') {
-            $('select[name=thumbnail_linkto]').val('picture');
-            $('select[name=thumbnail_linkto] option[value=photoswipe]').attr('disabled', 'disabled');
-            $('select[name=thumbnail_linkto] option[value=photoswipe_mobile_only]').attr('disabled',
-                'disabled');
+        if (thumbnailLinktoSelect && photoswipeCheckbox) {
+            var link_target = thumbnailLinktoSelect.value;
+            if (!photoswipeCheckbox.checked && link_target !== 'photoswipe') {
+                thumbnailLinktoSelect.value = 'picture';
+                document.querySelector('select[name=thumbnail_linkto] option[value=photoswipe]').disabled = true;
+                document.querySelector('select[name=thumbnail_linkto] option[value=photoswipe_mobile_only]').disabled = true;
+            }
         }
 
+        if (pageHeaderSelect) {
+            var pageHeaderImage = document.getElementById('page_header_image');
+            var pageHeaderNavbars = document.getElementById('page_header_navbars');
+            var pageHeaderFull = document.getElementById('page_header_full');
 
-        if ($('select[name=page_header]').val() === 'fancy') {
-            $('#page_header_image').show();
-            $('#page_header_navbars').show();
-        } else {
-            $('#page_header_image').hide();
-            $('#page_header_navbars').hide();
-            $('#page_header_full').hide();
-        }
-    });
-
-    $('select[name=page_header]').change(function() {
-        if ($(this).val() == 'fancy') {
-            $('#page_header_image').show();
-            $('#page_header_navbars').show();
-            $('#page_header_full').show();
-        } else {
-            $('#page_header_image').hide();
-            $('#page_header_navbars').hide();
-            $('#page_header_full').hide();
+            if (pageHeaderSelect.value === 'fancy') {
+                if (pageHeaderImage) pageHeaderImage.style.display = '';
+                if (pageHeaderNavbars) pageHeaderNavbars.style.display = '';
+            } else {
+                if (pageHeaderImage) pageHeaderImage.style.display = 'none';
+                if (pageHeaderNavbars) pageHeaderNavbars.style.display = 'none';
+                if (pageHeaderFull) pageHeaderFull.style.display = 'none';
+            }
         }
     });
 
-    $('select[name=bootstrap_theme]').change(function() {
-        var navbar_main_style = 'navbar-dark',
-            navbar_main_bg = 'bg-dark',
-            navbar_contextual_style = 'navbar-dark',
-            navbar_contextual_bg = 'bg-light',
-            bs_theme = $('select[name=bootstrap_theme]').val();
+    var pageHeaderSelect = document.querySelector('select[name=page_header]');
+    if (pageHeaderSelect) {
+        pageHeaderSelect.addEventListener('change', function() {
+            var pageHeaderImage = document.getElementById('page_header_image');
+            var pageHeaderNavbars = document.getElementById('page_header_navbars');
+            var pageHeaderFull = document.getElementById('page_header_full');
 
-        switch (bs_theme) {
-            case 'bootstrap-default':
+            if (this.value === 'fancy') {
+                if (pageHeaderImage) pageHeaderImage.style.display = '';
+                if (pageHeaderNavbars) pageHeaderNavbars.style.display = '';
+                if (pageHeaderFull) pageHeaderFull.style.display = '';
+            } else {
+                if (pageHeaderImage) pageHeaderImage.style.display = 'none';
+                if (pageHeaderNavbars) pageHeaderNavbars.style.display = 'none';
+                if (pageHeaderFull) pageHeaderFull.style.display = 'none';
+            }
+        });
+    }
+
+    var bootstrapThemeSelect = document.querySelector('select[name=bootstrap_theme]');
+    if (bootstrapThemeSelect) {
+        bootstrapThemeSelect.addEventListener('change', function() {
+            var navbar_main_style = 'navbar-dark',
+                navbar_main_bg = 'bg-dark',
+                navbar_contextual_style = 'navbar-dark',
+                navbar_contextual_bg = 'bg-light',
+                bs_theme = this.value;
+
+            if (bs_theme === 'bootstrap-default') {
                 navbar_contextual_style = 'navbar-light';
-                break;
-            case (bs_theme.match(/^material-(amber|lime)/) || {}).input:
+            } else if (bs_theme.match(/^material-(amber|lime)/)) {
                 navbar_contextual_style = 'navbar-light';
                 navbar_contextual_bg = 'bg-primary';
-                break;
-            case (bs_theme.match(/^material/) || {}).input:
+            } else if (bs_theme.match(/^material/)) {
                 navbar_contextual_bg = 'bg-primary';
-                break;
-            case (bs_theme.match(/^bootswatch-(litera|simplex)/) || {}).input:
+            } else if (bs_theme.match(/^bootswatch-(litera|simplex)/)) {
                 navbar_main_style = 'navbar-light';
                 navbar_main_bg = 'bg-light';
                 navbar_contextual_style = 'navbar-light';
                 navbar_contextual_bg = 'bg-light';
-                break;
-            case (bs_theme.match(/^bootswatch-(cyborg|solar)/) || {}).input:
+            } else if (bs_theme.match(/^bootswatch-(cyborg|solar)/)) {
                 navbar_main_bg = 'bg-dark';
                 navbar_contextual_bg = 'bg-dark';
-                break;
-            case (bs_theme.match(/^bootswatch/) || {}).input:
+            } else if (bs_theme.match(/^bootswatch/) && bs_theme !== 'bootswatch') {
                 navbar_main_bg = 'bg-primary';
                 navbar_contextual_bg = 'bg-primary';
-                break;
-            case 'bootswatch':
+            } else if (bs_theme === 'bootswatch') {
                 getBootswatchThemes();
-                break;
-            default:
-                navbar_main_style = 'navbar-dark';
-                navbar_main_bg = 'bg-dark';
-                navbar_contextual_style = 'navbar-dark';
-                navbar_contextual_bg = 'bg-light';
-                select_bootswatch.empty()
-                select_bootswatch.hide();
-                label_bootswatch.hide();
-                break;
-        }
+            } else {
+                select_bootswatch.innerHTML = '';
+                select_bootswatch.style.display = 'none';
+                label_bootswatch.style.display = 'none';
+            }
 
-        preview.html('<img src="themes/bootstrap_darkroom/admin/img/' + $('select[name=bootstrap_theme]')
-            .val() + '.png" style="padding: 10px 0;"/>');
+            preview.innerHTML = '<img src="themes/bootstrap_darkroom/admin/img/' + this.value + '.png" style="padding: 10px 0;"/>';
 
-        $('input[name=navbar_main_style]').attr('value', navbar_main_style);
-        $('input[name=navbar_main_bg]').attr('value', navbar_main_bg);
-        $('input[name=navbar_contextual_style]').attr('value', navbar_contextual_style);
-        $('input[name=navbar_contextual_bg]').attr('value', navbar_contextual_bg);
-    });
-    $(select_bootswatch).change(function() {
-        preview.html('<img src="themes/bootstrap_darkroom/components/bootswatch/' + select_bootswatch.val() +
-            '/thumbnail.png" width="50%" style="padding: 10px 0;"/>');
-    });
+            document.querySelector('input[name=navbar_main_style]').value = navbar_main_style;
+            document.querySelector('input[name=navbar_main_bg]').value = navbar_main_bg;
+            document.querySelector('input[name=navbar_contextual_style]').value = navbar_contextual_style;
+            document.querySelector('input[name=navbar_contextual_bg]').value = navbar_contextual_bg;
+        });
+    }
+    if (select_bootswatch) {
+        select_bootswatch.addEventListener('change', function() {
+            preview.innerHTML = '<img src="themes/bootstrap_darkroom/components/bootswatch/' + select_bootswatch.value +
+                '/thumbnail.png" width="50%" style="padding: 10px 0;"/>';
+        });
+    }
 
-    $('input[name=photoswipe]').change(function() {
-        curr = $('select[name=thumbnail_linkto]').val();
-        if (!$(this).is(':checked') && curr !== 'picture') {
-            $('select[name=thumbnail_linkto]').val('picture');
-            $('select[name=thumbnail_linkto] option[value=photoswipe]').attr('disabled', 'disabled');
-            $('select[name=thumbnail_linkto] option[value=photoswipe_mobile_only]').attr('disabled',
-                'disabled');
-        } else {
-            $('select[name=thumbnail_linkto] option[value=photoswipe]').removeAttr('disabled');
-            $('select[name=thumbnail_linkto] option[value=photoswipe_mobile_only]').removeAttr('disabled');
-        }
-    });
+    var photoswipeCheckbox = document.querySelector('input[name=photoswipe]');
+    if (photoswipeCheckbox) {
+        photoswipeCheckbox.addEventListener('change', function() {
+            var thumbnailLinktoSelect = document.querySelector('select[name=thumbnail_linkto]');
+            if (thumbnailLinktoSelect) {
+                var curr = thumbnailLinktoSelect.value;
+                if (!this.checked && curr !== 'picture') {
+                    thumbnailLinktoSelect.value = 'picture';
+                    document.querySelector('select[name=thumbnail_linkto] option[value=photoswipe]').disabled = true;
+                    document.querySelector('select[name=thumbnail_linkto] option[value=photoswipe_mobile_only]').disabled = true;
+                } else {
+                    document.querySelector('select[name=thumbnail_linkto] option[value=photoswipe]').disabled = false;
+                    document.querySelector('select[name=thumbnail_linkto] option[value=photoswipe_mobile_only]').disabled = false;
+                }
+            }
+        });
+    }
 </script>{/footer_script}

@@ -1,31 +1,6 @@
-{combine_script id='jquery.dataTables' load='footer' path='node_modules/datatables/media/js/jquery.dataTables.js'}
+{combine_script id='dataTables' load='footer' path='node_modules/datatables.net/js/dataTables.js'}
+{combine_css path='node_modules/datatables.net-dt/css/dataTables.dataTables.css'}
 {html_style}<style>
-	.sorting {
-		background: url(node_modules/datatables/media/images/sort_both.png) no-repeat center right;
-		cursor: pointer;
-	}
-
-	.sorting_asc {
-		background: url(node_modules/datatables/media/images/sort_asc.png) no-repeat center right;
-	}
-
-	.sorting_desc {
-		background: url(node_modules/datatables/media/images/sort_desc.png) no-repeat center right;
-	}
-
-	.sorting,
-	.sorting_asc,
-	.sorting_desc {
-		padding: 3px 18px 3px 10px;
-	}
-
-	.sorting_asc_disabled {
-		background: url(node_modules/datatables/media/images/sort_asc_disabled.png) no-repeat center right;
-	}
-
-	.sorting_desc_disabled {
-		background: url(node_modules/datatables/media/images/sort_desc_disabled.png) no-repeat center right;
-	}
 
 	.dtBar {
 		text-align: left;
@@ -55,8 +30,9 @@
 	}
 </style>{/html_style}
 {footer_script}<script>
-	$(document).ready(function() {
-		$('h1').append("<span class='badge-number'>{$NB_ELEMENTS}</span>")
+	document.addEventListener('DOMContentLoaded', function() {
+		var h1 = document.querySelector('h1');
+		if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>{$NB_ELEMENTS}</span>");
 	});
 </script>{/footer_script}
 
@@ -89,73 +65,69 @@
 	</fieldset>
 </form>
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
-{combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
+{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
 {combine_script id='jquery.geoip' load='async' path='admin/themes/default/js/jquery.geoip.js'}
 {footer_script}<script>
-	jQuery('#rateTable').dataTable({
+	var oTable = new DataTable('#rateTable', {
 		dom: '<"dtBar"filp>rt<"dtBar"ilp>',
 		pageLength: 100,
 		lengthMenu: [
 			[25, 50, 100, 500, -1],
 			[25, 50, 100, 500, "All"]
 		],
-		sorting: [], //[[1,'desc']],
+		order: [],
 		autoWidth: false,
-		sortClasses: false,
 		columnDefs: [{
-				aTargets: ["dtc_user"],
-				sType: "string",
-				sClass: null
+				targets: ["dtc_user"],
+				type: "string"
 			},
 			{
-				aTargets: ["dtc_date"],
-				asSorting: ["desc", "asc"],
-				sType: "string",
-				sClass: null
+				targets: ["dtc_date"],
+				orderSequence: ["desc", "asc"],
+				type: "string"
 			},
 			{
-				aTargets: ["dtc_stat"],
-				asSorting: ["desc", "asc"],
-				bSearchable: false,
-				sType: "numeric",
-				sClass: null
+				targets: ["dtc_stat"],
+				orderSequence: ["desc", "asc"],
+				searchable: false,
+				type: "numeric"
 			},
 			{
-				aTargets: ["dtc_rate"],
-				asSorting: ["desc", "asc"],
-				bSearchable: false,
-				sType: "html",
-				sClass: null
+				targets: ["dtc_rate"],
+				orderSequence: ["desc", "asc"],
+				searchable: false,
+				type: "html"
 			},
 			{
-				aTargets: ["dtc_del"],
-				bSortable: false,
-				bSearchable: false,
-				sType: "string",
-				sClass: null
+				targets: ["dtc_del"],
+				orderable: false,
+				searchable: false,
+				type: "string"
 			}
 		]
 	});
 
-	var oTable = jQuery('#rateTable').DataTable();
-
 	function uidFromCell(cell) {
 		var tr = cell;
 		while (tr.nodeName != "TR") tr = tr.parentNode;
-		return $(tr).data("usr");
+		return JSON.parse(tr.dataset.usr);
 	}
 
 	{* -----DELETE----- *}
-	$(document).ready(function() {
-		$("#rateTable").on("click", ".del", function(e) {
+	document.addEventListener('DOMContentLoaded', function() {
+		var rateTable = document.getElementById("rateTable");
+		if (rateTable) {
+			rateTable.addEventListener("click", function(e) {
+				var delBtn = e.target.closest(".del");
+				if (!delBtn) return;
 				e.preventDefault();
 				const title_msg  = '{'Are you sure you want to delete the ratings of the user "%s"?'|translate|escape:'javascript'}';
 				const confirm_msg = '{"Yes, I am sure"|translate}';
 				const cancel_msg = "{"No, I have changed my mind"|translate}";
-				let usr_name = $(this).closest("tr").find(".usr").html();
-				$.confirm({
+				let trEl = delBtn.closest("tr");
+				let usr_name = trEl ? (trEl.querySelector(".usr")?.innerHTML ?? '') : '';
+				pwgConfirm({
 						title: title_msg.replace("%s", usr_name),
 						buttons: {
 							confirm: {
@@ -163,39 +135,38 @@
 								btnClass: 'btn-red',
 								action: function() {
 									var cell = e.target.parentNode,
-										tr = cell;
-									while (tr.nodeName != "TR") tr = tr.parentNode;
-									tr = jQuery(tr).fadeTo(1000, 0.4);
+										trEl = cell;
+									while (trEl.nodeName != "TR") trEl = trEl.parentNode;
+									var anim = trEl.animate([{ opacity: 1 }, { opacity: 0.4 }], { duration: 1000, fill: 'forwards' });
 									var data = uidFromCell(cell);
 									(new PwgWS('{$ROOT_URL|escape:javascript}')).callService(
-									'pwg.rates.delete', {
-										user_id: data.uid,
-										anonymous_id: data
-											.aid
-									}, {
-										method: 'POST',
-										onFailure: function(num, text) {
-											tr.stop();
-											tr.fadeTo(0, 1);
-											alert(num + " " + text);
-										},
-										onSuccess: function(result) {
-											if (result)
-												oTable.row(tr[0]).remove().draw();
-											else
-												alert(result);
+										'pwg.rates.delete', {
+											user_id: data.uid,
+											anonymous_id: data.aid
+										}, {
+											method: 'POST',
+											onFailure: function(num, text) {
+												anim.cancel();
+												trEl.style.opacity = '1';
+												alert(num + " " + text);
+											},
+											onSuccess: function(result) {
+												if (result)
+													oTable.row(trEl).remove().draw();
+												else
+													alert(result);
+											}
 										}
-									}
-								);
+									);
+								}
+							},
+							cancel: {
+								text: cancel_msg
 							}
-						},
-						cancel: {
-							text: cancel_msg
 						}
-					},
-					...jConfirm_confirm_options
-				});
-		});
+					});
+			});
+		}
 	});
 </script>{/footer_script}
 <table id="rateTable">
@@ -240,39 +211,3 @@
 		</tr>
 	{/foreach}
 </table>
-
-{combine_script id='jquery.ui' load='footer'}
-{footer_script require='jquery.ui'}<script>
-	jQuery(document).ready(function() {
-		jQuery("#rateTable").tooltip({
-			items: ".usr,[title]",
-			content: function(callback) {
-				var t = $(this).attr("title");
-				if (t)
-					return t;
-				var that = $(this),
-					udata = uidFromCell(this);
-				if (!udata.aid)
-					return;
-				that
-					.data("isOver", true)
-					.one("mouseleave", function() {
-						that.removeData("isOver");
-					});
-
-				GeoIp.get(udata.aid + ".1", function(data) {
-					if (!data.fullName) return;
-					var content = data.fullName;
-					if (data.latitude && data.region_name) {
-						content +=
-							"<br><img width=300 height=220 src=\"http://maps.googleapis.com/maps/api/staticmap?sensor=false&size=300x220&zoom=6" +
-							"&markers=size:tiny%7C" + data.latitude + "," + data.longitude +
-							"\">";
-					}
-					if (that.data("isOver"))
-						callback(content);
-				});
-			}
-		});
-	})
-</script>{/footer_script}

@@ -85,10 +85,9 @@
   {else}
     {assign var=loc value="footer"}
   {/if}
-  {combine_script id='jquery' path='themes/bootstrap_darkroom/node_modules/jquery/dist/jquery.min.js' load=$loc}
-  {combine_script id='jquery-migrate' require='jquery' path='themes/bootstrap_darkroom/node_modules/jquery-migrate/dist/jquery-migrate.min.js' load=$loc}
-  {combine_script id='bootstrap' require='jquery' path='themes/bootstrap_darkroom/node_modules/bootstrap/dist/js/bootstrap.bundle.js' load=$loc}
+  {combine_script id='bootstrap' path='themes/bootstrap_darkroom/node_modules/bootstrap/dist/js/bootstrap.bundle.js' load=$loc}
   {combine_script id=$themeconf.name require='bootstrap' path='themes/bootstrap_darkroom/js/theme.js' load='footer'}
+  {combine_script id='bd-header' require=$themeconf.name path='themes/bootstrap_darkroom/js/header.js' load='footer'}
   {get_combined_scripts load='header'}
   {if not empty($head_elements)}
     {foreach $head_elements as $elt}{$elt}
@@ -101,7 +100,11 @@
   </script>
 </head>
 
-<body id="{$BODY_ID}" class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}" data-infos='{$BODY_DATA}'>
+<body id="{$BODY_ID}" class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}" data-infos='{$BODY_DATA}'
+  data-quicksearch-navbar="{if $theme_config->quicksearch_navbar}1{else}0{/if}"
+  data-page-header="{$theme_config->page_header}"
+  data-page-header-both-navs="{if $theme_config->page_header_both_navs}1{else}0{/if}"
+  data-has-menubar="{if !empty($MENUBAR)}1{else}0{/if}">
 
   <div id="wrapper">
     {if isset($MENUBAR)}
@@ -125,84 +128,11 @@
                 <i class="fas fa-search" title="{'Search'|translate}" aria-hidden="true"></i>
                 <input type="text" name="q" id="qsearchInput" class="form-control" placeholder="{'Search'|translate}" />
               </form>
-              {footer_script require='jquery'}<script>
-                var qsearch_icon = $('#navbar-menubar>#quicksearch>.fa-search');
-                var qsearch_text = $('#navbar-menubar>#quicksearch #qsearchInput');
-                $(qsearch_icon).click(function() {
-                  $(qsearch_text).focus();
-                });
-                $(document).ready(function() {
-                  $('#navbar-menubar>#quicksearch').css({ 'color': $('#navbar-menubar .nav-link').css('color') });
-                });
-              </script>{/footer_script}
             {/if}
             {$MENUBAR}
           </div>
         </div>
       </nav>
-      {if $theme_config->page_header == 'fancy'}
-        {footer_script require='jquery'}<script>
-          var sfactor = $(".page-header").height() - 50;
-          var color = "rgba(0, 0, 0, 1)";
-          var nb_main_height = $('.navbar-main').outerHeight();
-          $(window).resize(function() {
-            sfactor = $(".page-header").height() - 50;
-          });
-
-          function setNavbarOpacity() {
-            var alpha = 0 + ($(window).scrollTop() / sfactor);
-            $('.page-header').attr('style', 'background-color: ' + setColorOpacity(color, alpha) + ' !important');
-            $('.page-header .content-center').css('opacity', 1 - alpha * 2.5);
-            $('.page-header .page-header-image').css('opacity', 1 - alpha);
-            var top_offset = $(window).scrollTop();
-            var p_size = $('.page-header').outerHeight() - $(".navbar-main").outerHeight() - $(".navbar-contextual")
-              .outerHeight();
-            var c_size = $('.page-header').outerHeight() - $(".navbar-contextual").outerHeight();
-            if (!$('.navbar-contextual .navbar-collapse').hasClass('show')) {
-              if (top_offset >= c_size) {
-                $('.navbar-contextual.navbar-transparent').attr('style', 'background-color: ' + setColorOpacity(color, 1) +
-                  ' !important;');
-              } else {
-                $('.navbar-contextual.navbar-transparent').removeAttr('style');
-              }
-            }
-            if (top_offset >= p_size) {
-              if ($('.navbar-main .navbar-nav').find('.nav-item.dropdown.show').length == 0) {
-                $('.navbar-main').css('top', 0 - (top_offset - p_size));
-              }
-            } else {
-              $('.navbar-main').css('top', 0);
-            }
-
-            if ($('.page-header.page-header-small').length == 0) {
-              if (top_offset > 5) {
-                $('.navbar-contextual.navbar-transparent').fadeIn('slow').addClass('d-flex');
-              } else {
-                $('.navbar-contextual.navbar-transparent').fadeOut('slow').removeClass('d-flex');
-              }
-            }
-          }
-
-          $(window).scroll(function() {
-            setNavbarOpacity();
-          });
-          $('.navbar-main .navbar-collapse').on('show.bs.collapse', function() {
-            $('.navbar-main').attr('style', 'background-color: rgba(0, 0, 0, 0.9) !important');
-          });
-          $('.navbar-main .navbar-collapse').on('hidden.bs.collapse', function() {
-            $('.navbar-main').attr('style', '');
-          });
-          {if $theme_config->page_header_both_navs}
-            $('.navbar-contextual .navbar-collapse').on('show.bs.collapse', function() {
-              $('.navbar-contextual').attr('style', 'background-color: rgba(0, 0, 0, 0.9) !important');
-            });
-            $('.navbar-contextual .navbar-collapse').on('hidden.bs.collapse', function() {
-              $('.navbar-contextual').attr('style', '');
-              setNavbarOpacity();
-            });
-          {/if}
-        </script>{/footer_script}
-      {/if}
     {/if}
 
     {if !isset($slideshow) && !empty($MENUBAR)}
@@ -226,28 +156,14 @@
       {/if}
     {/if}
 
-    {if $theme_config->page_header == 'fancy' && $theme_config->page_header_both_navs}
-      {if empty($MENUBAR)}
-        {html_style}<style>
-          .navbar-contextual {
-            background-color: #000 !important;
-            padding-top: 5px;
-            padding-bottom: 5px;
-          }
-        </style>{/html_style}
-        {footer_script require='jquery'}<script>
-          $(document).ready(function() {
-            $('.navbar-contextual').removeClass('navbar-light').addClass('navbar-dark navbar-forced-sm');
-          });
-        </script>{/footer_script}
-      {else}
-        {footer_script require='jquery'}<script>
-          $(document).ready(function() {
-            $('.page-header').addClass('mb-5');
-            $('.navbar-contextual').addClass('navbar-transparent navbar-sm');
-          });
-        </script>{/footer_script}
-      {/if}
+    {if $theme_config->page_header == 'fancy' && $theme_config->page_header_both_navs && empty($MENUBAR)}
+      {html_style}<style>
+        .navbar-contextual {
+          background-color: #000 !important;
+          padding-top: 5px;
+          padding-bottom: 5px;
+        }
+      </style>{/html_style}
     {/if}
 
     {if not empty($header_msgs)}

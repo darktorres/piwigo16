@@ -1,8 +1,8 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
-{combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
+{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
+{combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {footer_script}<script>
   const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
@@ -14,7 +14,7 @@
       rootUrl: '{$ROOT_URL}'
     });
 
-    groupsCache.selectize(jQuery('[data-selectize=groups]'));
+    groupsCache.selectize(document.querySelectorAll('[data-selectize=groups]'));
 
     {* <!-- USERS --> *}
     var usersCache = new UsersCache({
@@ -23,27 +23,33 @@
       rootUrl: '{$ROOT_URL}'
     });
 
-    usersCache.selectize(jQuery('[data-selectize=users]'));
+    usersCache.selectize(document.querySelectorAll('[data-selectize=users]'));
 
     {* <!-- TOGGLES --> *}
     function checkStatusOptions() {
-      if (jQuery("input[name=status]:checked").val() == "private") {
-        jQuery("#privateOptions").show();
-      } else {
-        jQuery("#privateOptions").hide();
+      var checked = document.querySelector("input[name=status]:checked");
+      var privateOptions = document.getElementById("privateOptions");
+      if (privateOptions) {
+        privateOptions.style.display = (checked && checked.value === "private") ? '' : 'none';
       }
     }
 
     checkStatusOptions();
-    jQuery("#selectStatus").change(function() {
-      checkStatusOptions();
-    });
+    var selectStatus = document.getElementById("selectStatus");
+    if (selectStatus) {
+      selectStatus.addEventListener('change', function() { checkStatusOptions(); });
+    }
 
     {if isset($nb_users_granted_indirect) && $nb_users_granted_indirect>0}
-      jQuery(".toggle-indirectPermissions").click(function(e) {
-        jQuery(".toggle-indirectPermissions").toggle();
-        jQuery("#indirectPermissionsDetails").toggle();
-        e.preventDefault();
+      document.querySelectorAll(".toggle-indirectPermissions").forEach(function(el) {
+        el.addEventListener('click', function(e) {
+          e.preventDefault();
+          document.querySelectorAll(".toggle-indirectPermissions").forEach(function(t) {
+            t.style.display = t.style.display === 'none' ? '' : 'none';
+          });
+          var details = document.getElementById("indirectPermissionsDetails");
+          if (details) details.style.display = details.style.display === 'none' ? '' : 'none';
+        });
       });
     {/if}
   }());

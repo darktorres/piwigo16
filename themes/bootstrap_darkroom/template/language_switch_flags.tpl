@@ -22,8 +22,12 @@
 {combine_css path=$LANGUAGE_SWITCH_PATH|cat:"language_switch.css"}
 
 {* move to main navbar to avoid scrolling issues in navmenu on mobile devices *}
-{footer_script require='jquery'}<script>
-    $(document).ready(function() {
-        $('#languageSwitch').appendTo('#navbar-menubar>ul.navbar-nav');
+{footer_script}<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var languageSwitch = document.getElementById('languageSwitch');
+        var targetContainer = document.querySelector('#navbar-menubar>ul.navbar-nav');
+        if (languageSwitch && targetContainer) {
+            targetContainer.appendChild(languageSwitch);
+        }
     });
 </script>{/footer_script}

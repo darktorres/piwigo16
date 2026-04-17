@@ -1,19 +1,28 @@
 function set_up_popin() {
-    $(".ClosePopIn").on("click", function () {
-        linked_albums_close();
+    document.querySelectorAll(".ClosePopIn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            linked_albums_close();
+        });
     });
 }
 
 function linked_albums_close() {
-    $("#addLinkedAlbum").fadeOut();
+    var addLinkedAlbum = document.getElementById("addLinkedAlbum");
+    if (addLinkedAlbum) addLinkedAlbum.style.display = 'none';
 }
 
 function linked_albums_open() {
-    $("#addLinkedAlbum").fadeIn();
-    $(".search-input").val("");
-    $(".search-input").focus();
-    $("#searchResult").empty();
-    $(".limitReached").html(str_no_search_in_progress);
+    var addLinkedAlbum = document.getElementById("addLinkedAlbum");
+    if (addLinkedAlbum) addLinkedAlbum.style.display = '';
+    var searchInput = document.querySelector(".search-input");
+    if (searchInput) {
+        searchInput.value = "";
+        searchInput.focus();
+    }
+    var searchResult = document.getElementById("searchResult");
+    if (searchResult) searchResult.innerHTML = '';
+    var limitReached = document.querySelector(".limitReached");
+    if (limitReached) limitReached.innerHTML = str_no_search_in_progress;
 }
 
 function linked_albums_search(searchText) {
@@ -34,36 +43,37 @@ function linked_albums_search(searchText) {
     console.log("lalalal");
     console.log(api_method);
 
-    $(".linkedAlbumPopInContainer .searching").show();
-    $.ajax({
-        url: "ws.php?format=json&method=" + api_method,
-        type: "POST",
-        dataType: "json",
-        data: api_params,
-        before: function () {},
-        success: function (raw_data) {
-            $(".linkedAlbumPopInContainer .searching").hide();
+    var searching = document.querySelector(".linkedAlbumPopInContainer .searching");
+    if (searching) searching.style.display = '';
+
+    var params = new URLSearchParams(api_params);
+    fetch("ws.php?format=json&method=" + api_method, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params,
+    })
+        .then(function (response) { return response.json(); })
+        .then(function (raw_data) {
+            if (searching) searching.style.display = 'none';
 
             categories = raw_data.result.categories;
             fill_results(categories);
 
-            if (raw_data.result.limit_reached) {
-                $(".limitReached").html(
-                    str_result_limit.replace("%d", categories.length),
-                );
-            } else {
-                if (categories.length == 1) {
-                    $(".limitReached").html(str_album_found);
+            var limitReached = document.querySelector(".limitReached");
+            if (limitReached) {
+                if (raw_data.result.limit_reached) {
+                    limitReached.innerHTML = str_result_limit.replace("%d", categories.length);
                 } else {
-                    $(".limitReached").html(
-                        str_albums_found.replace("%d", categories.length),
-                    );
+                    if (categories.length == 1) {
+                        limitReached.innerHTML = str_album_found;
+                    } else {
+                        limitReached.innerHTML = str_albums_found.replace("%d", categories.length);
+                    }
                 }
             }
-        },
-        error: function (e) {
-            $(".linkedAlbumPopInContainer .searching").hide();
+        })
+        .catch(function (e) {
+            if (searching) searching.style.display = 'none';
             console.log(e.message);
-        },
-    });
+        });
 }

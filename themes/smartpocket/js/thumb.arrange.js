@@ -10,23 +10,24 @@ SPTLine.prototype = {
     elementsWidth: 0,
     firstThumbIndex: 0,
 
-    add: function ($elt, absIndex) {
+    add: function (img, absIndex) {
         if (this.elements.length === 0) this.firstThumbIndex = absIndex;
-        if (!$elt.data("w")) {
-            var w = $elt.width();
-            var h = $elt.height();
+        var w, h;
+        if (!img.dataset.sptW) {
+            w = img.offsetWidth;
+            h = img.offsetHeight;
             if (h > this.rowHeight) {
                 w = Math.round((w * this.rowHeight) / h);
                 h = this.rowHeight;
             }
-            $elt.data("w", w).data("h", h);
+            img.dataset.sptW = w;
+            img.dataset.sptH = h;
+        } else {
+            w = parseFloat(img.dataset.sptW);
+            h = parseFloat(img.dataset.sptH);
         }
 
-        var eltObj = {
-            $elt: $elt,
-            w: $elt.data("w"),
-            h: $elt.data("h"),
-        };
+        var eltObj = { img: img, w: w, h: h };
         this.elements.push(eltObj);
 
         if (eltObj.h > this.maxHeight) this.maxHeight = eltObj.h;
@@ -46,9 +47,9 @@ SPTLine.prototype = {
 function SPThumbs(options) {
     this.opts = options;
 
-    this.$thumbs = $(".thumbnails");
-    if (this.$thumbs.length == 0) return;
-    this.$thumbs.css("text-align", "left");
+    this.thumbs = document.querySelector(".thumbnails");
+    if (!this.thumbs) return;
+    this.thumbs.style.textAlign = "left";
 
     this.opts.extraRowHeight = 0;
     if (window.devicePixelRatio > 1) {
@@ -60,18 +61,18 @@ function SPThumbs(options) {
     this.process();
 
     var that = this;
-    $(window)
-        .on("resize", function () {
-            if (Math.abs(that.$thumbs.width() - that.prevContainerWidth) > 1)
-                that.process();
-        })
-        .on("RVTS_loaded", function (evt, down) {
-            that.process(
-                down && that.$thumbs.width() == that.prevContainerWidth
-                    ? that.prevLastLineFirstThumbIndex
-                    : 0,
-            );
-        });
+    window.addEventListener("resize", function () {
+        if (Math.abs(that.thumbs.offsetWidth - that.prevContainerWidth) > 1)
+            that.process();
+    });
+    window.addEventListener("RVTS_loaded", function (evt) {
+        var down = evt.detail && evt.detail.down;
+        that.process(
+            down && that.thumbs.offsetWidth == that.prevContainerWidth
+                ? that.prevLastLineFirstThumbIndex
+                : 0,
+        );
+    });
 }
 
 SPThumbs.prototype = {
@@ -80,17 +81,15 @@ SPThumbs.prototype = {
 
     process: function (startIndex) {
         startIndex = startIndex ? startIndex : 0;
-        var containerWidth = this.$thumbs.width();
+        var containerWidth = this.thumbs.offsetWidth;
         var maxExtraMarginPerThumb = 1;
         this.prevContainerWidth = containerWidth;
 
-        var $elts = $("li.liVisible>a>img", this.$thumbs);
+        var elts = this.thumbs.querySelectorAll("li.liVisible>a>img");
         var line = new SPTLine(this.opts.hMargin, this.opts.rowHeight);
 
-        for (var i = startIndex; i < $elts.length; i++) {
-            var $elt = $($elts[i]);
-
-            line.add($elt, i);
+        for (var i = startIndex; i < elts.length; i++) {
+            line.add(elts[i], i);
             if (
                 line.width >=
                 containerWidth - maxExtraMarginPerThumb * line.elements.length
@@ -157,7 +156,7 @@ SPThumbs.prototype = {
             }
 
             this.reposition(
-                eltObj.$elt,
+                eltObj.img,
                 eltW,
                 eltH,
                 eltW - eltToRecover,
@@ -166,17 +165,20 @@ SPThumbs.prototype = {
         }
     },
 
-    reposition: function ($img, imgW, imgH, liW, liH) {
-        $img.attr("width", imgW).attr("height", imgH);
+    reposition: function (img, imgW, imgH, liW, liH) {
+        img.setAttribute("width", imgW);
+        img.setAttribute("height", imgH);
 
-        $img.closest("li").css({
-            width: liW + "px",
-            height: liH + "px",
-        });
+        var li = img.closest("li");
+        if (li) {
+            li.style.width = liW + "px";
+            li.style.height = liH + "px";
+        }
 
-        $img.parent("a").css({
-            left: Math.round((liW - imgW) / 2) + "px",
-            top: Math.round((liH - imgH) / 2) + "px",
-        });
+        var a = img.parentElement;
+        if (a) {
+            a.style.left = Math.round((liW - imgW) / 2) + "px";
+            a.style.top = Math.round((liH - imgH) / 2) + "px";
+        }
     },
 };

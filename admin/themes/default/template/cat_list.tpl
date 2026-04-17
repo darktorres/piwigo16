@@ -1,27 +1,19 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
 {combine_script id='alternativeView' load='footer' path='admin/themes/default/js/cat_list.js'}
-{combine_script id='jquery.cookie' path='node_modules/jquery.cookie/jquery.cookie.js' load='footer'}
 
-{footer_script require='jquery.ui'}<script>
-  jQuery(document).ready(function() {
-    $(".addAlbumHead").click(function() {
-      $(".addAlbum input[name=virtual_name]").focus();
-    })
-  });
-</script>{/footer_script}
 
 <div class="selectedAlbum cat-list-album-path">
   <span class="icon-sitemap selectedAlbum-first">{$CATEGORIES_NAV}</span>
   <div class="AlbumViewSelector">
     <input type="radio" name="layout" class="switchLayout" id="displayCompact"
-      {if $smarty.cookies.pwg_album_manager_view == 'compact'}checked{/if} /><label for="displayCompact"><span
+      {if !empty($smarty.cookies.pwg_album_manager_view) && $smarty.cookies.pwg_album_manager_view == 'compact'}checked{/if} /><label for="displayCompact"><span
         class="icon-th-large firstIcon tiptip" title="{'Compact View'|translate}"></span></label><input type="radio"
       name="layout" class="switchLayout tiptip" id="displayLine"
-      {if $smarty.cookies.pwg_album_manager_view == 'line'}checked{/if} /><label for="displayLine"><span
+      {if !empty($smarty.cookies.pwg_album_manager_view) && $smarty.cookies.pwg_album_manager_view == 'line'}checked{/if} /><label for="displayLine"><span
         class="icon-th-list tiptip" title="{'Line View'|translate}"></span></label><input type="radio" name="layout"
       class="switchLayout" id="displayTile"
-      {if $smarty.cookies.pwg_album_manager_view == 'tile' || !$smarty.cookies.pwg_album_manager_view}checked{/if} /><label
+      {if empty($smarty.cookies.pwg_album_manager_view) || $smarty.cookies.pwg_album_manager_view == 'tile'}checked{/if} /><label
       for="displayTile"><span class="icon-pause lastIcon tiptip" title="{'Tile View'|translate}"></span></label>
   </div>
 </div>

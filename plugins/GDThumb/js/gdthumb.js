@@ -2,14 +2,17 @@ var GDThumb = {
 
     setup: function (method, max_height, margin) {
         GDThumb.merge();
-        jQuery("ul#thumbnails").addClass("thumbnails");
+        var ul = document.querySelector("ul#thumbnails");
+        if (ul) ul.classList.add("thumbnails");
         GDMasonry.init(300, 4);
 
-        jQuery("ul.thumbnails").on("click", ".thumbLegend.overlay", function () {
-            window.location.href = $(this).parent().find("a").attr("href");
-        });
-        jQuery("ul.thumbnails").on("click", ".thumbLegend.overlay-ex", function () {
-            window.location.href = $(this).parent().find("a").attr("href");
+        document.querySelectorAll("ul.thumbnails").forEach(function(list) {
+            list.addEventListener("click", function(e) {
+                var leg = e.target.closest(".thumbLegend.overlay, .thumbLegend.overlay-ex");
+                if (!leg) return;
+                var a = leg.parentElement && leg.parentElement.querySelector("a");
+                if (a) window.location.href = a.getAttribute("href");
+            });
         });
     },
 
@@ -23,17 +26,18 @@ var GDThumb = {
     //   albums only      → rename albums list to #thumbnails
     //   photos only      → already #thumbnails, nothing to do
     merge: function () {
-        var $albums = $(".thumbnailCategories");
-        var $photos = $("#content ul#thumbnails");
+        var albums = document.querySelector(".thumbnailCategories");
+        var photos = document.querySelector("#content ul#thumbnails");
 
-        if ($albums.length && $photos.length) {
-            $albums.append($photos.html());
-            $photos.remove();
-            $("div.loader:eq(1)").remove();
+        if (albums && photos) {
+            albums.insertAdjacentHTML('beforeend', photos.innerHTML);
+            photos.remove();
+            var loaders = document.querySelectorAll("div.loader");
+            if (loaders.length > 1) loaders[1].remove();
         }
 
-        if ($albums.length) {
-            $albums.attr("id", "thumbnails");
+        if (albums) {
+            albums.id = "thumbnails";
         }
     },
 };

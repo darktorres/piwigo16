@@ -1,7 +1,6 @@
 {if empty($load_mode)}{$load_mode='footer'}{/if}
 {if !isset($show_root_btn)}{$show_root_btn=false}{/if}
 
-{include file='inc/colorbox.inc.tpl' load_mode=$load_mode}
 {combine_script id='albumSelector' load_mode=$load_mode path='admin/themes/default/js/album_selector.js'}
 {footer_script}<script>
   str_no_search_in_progress = '{'No search in progress'|translate|escape:javascript}';

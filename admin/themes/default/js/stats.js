@@ -1,13 +1,14 @@
 /*-------
 Data Get
 -------*/
+var dataEl = document.getElementById("data");
 data = {};
-data["hours"] = $("#data").data("hours");
-data["days"] = $("#data").data("days");
-data["months"] = $("#data").data("months");
-data["years"] = $("#data").data("years");
-data["compare-years"] = $("#data").data("compare-years");
-data["month-stats"] = $("#data").data("month-stats");
+data["hours"] = dataEl ? JSON.parse(dataEl.dataset.hours || 'null') : null;
+data["days"] = dataEl ? JSON.parse(dataEl.dataset.days || 'null') : null;
+data["months"] = dataEl ? JSON.parse(dataEl.dataset.months || 'null') : null;
+data["years"] = dataEl ? JSON.parse(dataEl.dataset.years || 'null') : null;
+data["compare-years"] = dataEl ? JSON.parse(dataEl.dataset.compareYears || 'null') : null;
+data["month-stats"] = dataEl ? JSON.parse(dataEl.dataset.monthStats || 'null') : null;
 
 data_unit = {
     hours: "day",
@@ -50,7 +51,8 @@ var displayOptions = {
     lineTension: 0.2,
 };
 
-function changeData(dataType, options = displayOptions) {
+function changeData(dataType, options) {
+    options = options || displayOptions;
     if (!compareMode) {
         statGraph.data = {
             datasets: [
@@ -242,43 +244,51 @@ function getMonthStatsDataset() {
 }
 
 //Event listener
-$(".stat-data-selector label").on("click", function () {
-    dataType = $(this).data("value");
-    changeData(dataType);
+document.querySelectorAll(".stat-data-selector label").forEach(function (label) {
+    label.addEventListener("click", function () {
+        dataType = this.dataset.value;
+        changeData(dataType);
+    });
 });
 
-$(".stat-compare-mode input").on("change", function () {
-    compareMode = $(this)[0].checked;
+document.querySelectorAll(".stat-compare-mode input").forEach(function (input) {
+    input.addEventListener("change", function () {
+        compareMode = this.checked;
 
-    if (compareMode) {
-        $("#hours-selector + label, #days-selector + label").addClass(
-            "unavailable",
-        );
-        if (
-            $("#hours-selector").prop("checked") ||
-            $("#days-selector").prop("checked")
-        ) {
-            $("#years-selector").prop("checked", true);
-            $("#hours-selector, #days-selector").prop("checked", false);
-            changeData("years");
+        if (compareMode) {
+            document.querySelectorAll("#hours-selector + label, #days-selector + label").forEach(function (el) {
+                el.classList.add("unavailable");
+            });
+            var hoursChecked = document.getElementById("hours-selector");
+            var daysChecked = document.getElementById("days-selector");
+            if (
+                (hoursChecked && hoursChecked.checked) ||
+                (daysChecked && daysChecked.checked)
+            ) {
+                var yearsSelector = document.getElementById("years-selector");
+                if (yearsSelector) yearsSelector.checked = true;
+                document.querySelectorAll("#hours-selector, #days-selector").forEach(function (el) {
+                    el.checked = false;
+                });
+                changeData("years");
+            } else {
+                var checkedLabel = document.querySelector(".stat-data-selector input:checked + label");
+                if (checkedLabel) changeData(checkedLabel.dataset.value);
+            }
         } else {
-            changeData(
-                $(".stat-data-selector input:checked + label").data("value"),
-            );
+            document.querySelectorAll("#hours-selector + label, #days-selector + label").forEach(function (el) {
+                el.classList.remove("unavailable");
+            });
+            var checkedLabel = document.querySelector(".stat-data-selector input:checked + label");
+            if (checkedLabel) changeData(checkedLabel.dataset.value);
         }
-    } else {
-        $("#hours-selector + label, #days-selector + label").removeClass(
-            "unavailable",
-        );
-        changeData(
-            $(".stat-data-selector input:checked + label").data("value"),
-        );
-    }
+    });
 });
 
 /*-------
 Initialize the page
 -------*/
-$(function () {
-    changeData($(".stat-data-selector input:checked + label").data("value"));
+document.addEventListener('DOMContentLoaded', function () {
+    var checkedLabel = document.querySelector(".stat-data-selector input:checked + label");
+    if (checkedLabel) changeData(checkedLabel.dataset.value);
 });

@@ -1,14 +1,19 @@
 {footer_script}<script>
-  jQuery(document).ready(function() {
-    jQuery('input[name="submit"]').click(function() {
-      if(!confirm('{'Are you sure?'|translate}'))
-      return false;
-      jQuery(this).hide();
-      jQuery('.autoupdate_bar').show();
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[name="submit"]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!confirm('{'Are you sure?'|translate}')) return false;
+        this.style.display = 'none';
+        document.querySelectorAll('.autoupdate_bar').forEach(function(el) { el.style.display = ''; });
+      });
     });
-    jQuery('[name="understand"]').click(function() {
-      jQuery('[name="submit"]').attr('disabled', !this.checked);
-    });
+
+    var understandEl = document.querySelector('[name="understand"]');
+    if (understandEl) {
+      understandEl.addEventListener('click', function() {
+        document.querySelectorAll('[name="submit"]').forEach(function(el) { el.disabled = !understandEl.checked; });
+      });
+    }
   });
 </script>{/footer_script}
 

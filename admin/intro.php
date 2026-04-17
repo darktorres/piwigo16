@@ -167,7 +167,7 @@ $template->assign(
         'NB_USERS' => (int) $nb_users,
         'NB_GROUPS' => (int) $nb_groups,
         'NB_RATES' => (int) $nb_rates,
-        'NB_VIEWS' => functions_admin::number_format_human_readable($nb_views),
+        'NB_VIEWS' => functions_admin::number_format_human_readable(isset($nb_views) ? (float) $nb_views : null),
         'NB_PLUGINS' => count($pwg_loaded_plugins),
         'STORAGE_USED' => str_replace(' ', '&nbsp;', functions::l10n('%sGB', number_format($du_gb, $du_decimals))),
         'U_QUICK_SYNC' => './admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . functions::get_pwg_token(),

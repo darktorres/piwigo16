@@ -14,14 +14,19 @@
     {/foreach}
   </div>
 </li>
-{footer_script require='jquery'}<script>
-  $('#relatedCategoriesDropdownMenu').on('show.bs.dropdown', function() {
-    $(this).find('.dropdown-item').each(function() {
-      var level = $(this).data('level');
-      var padding = parseInt($(this).css('padding-left'));
-      if (level > 0) {
-        $(this).css('padding-left', (padding + 10 * level) + 'px')
-      }
+{footer_script}<script>
+  var relatedCategoriesDropdownMenu = document.getElementById('relatedCategoriesDropdownMenu');
+  if (relatedCategoriesDropdownMenu) {
+    relatedCategoriesDropdownMenu.addEventListener('show.bs.dropdown', function() {
+      var items = this.querySelectorAll('.dropdown-item');
+      items.forEach(function(item) {
+        var level = parseInt(item.dataset.level);
+        var paddingLeft = window.getComputedStyle(item).paddingLeft;
+        var padding = parseInt(paddingLeft);
+        if (level > 0) {
+          item.style.paddingLeft = (padding + 10 * level) + 'px';
+        }
+      });
     });
-  });
+  }
 </script>{/footer_script}

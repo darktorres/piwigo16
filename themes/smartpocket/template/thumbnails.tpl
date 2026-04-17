@@ -4,10 +4,10 @@
 	{$vmargin=5}
 	{$container_margin=-10}
 
-	{combine_script id='klass' path='https://rawcdn.githack.com/Piwigo/piwigo-smartpocket/dea72053d0d5d3ec1ec61fccb58dac35ad9c8bf5/js/klass.min.js'}
-	{combine_script id='photoswipe' path='https://rawcdn.githack.com/Piwigo/piwigo-smartpocket/dea72053d0d5d3ec1ec61fccb58dac35ad9c8bf5/js/code.photoswipe.jquery.min.js' require='klass,jquery.mobile'}
-	{combine_script id='smartpocket' path='themes/smartpocket/js/smartpocket.js' require='photoswipe' load='footer'}
-	{combine_script id='sp.thumb.arrange' path='themes/smartpocket/js/thumb.arrange.js' require='jquery' load='footer'}
+	{combine_script id='glightbox' path='node_modules/glightbox/dist/js/glightbox.min.js' load='footer'}
+	{combine_css path='node_modules/glightbox/dist/css/glightbox.min.css'}
+	{combine_script id='smartpocket' path='themes/smartpocket/js/smartpocket.js' require='glightbox' load='footer'}
+	{combine_script id='sp.thumb.arrange' path='themes/smartpocket/js/thumb.arrange.js' load='footer'}
 	{footer_script}<script>
 		var var_loop = {if $smartpocket.loop}true{else}false{/if}, var_autohide = {$smartpocket.autohide}, var_trad = "{'More Information'|translate}";
 		var SPThumbsOpts ={ hMargin:{$hmargin},rowHeight:{$row_height}};

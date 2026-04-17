@@ -15,9 +15,12 @@
 {/if}
 
 {footer_script}<script>
-  $(document).ready(function() {
-    $('.close-button').click(function() {
-      $(this).parents('.ui-bar').remove();
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.close-button').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var bar = this.closest('.ui-bar');
+        if (bar) bar.remove();
+      });
     });
   });
 </script>{/footer_script}

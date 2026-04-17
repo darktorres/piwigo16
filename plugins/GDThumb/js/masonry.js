@@ -5,15 +5,15 @@
  * Existing item positions are never touched — new items only append to column bottoms.
  * Upward RVTS scroll is disabled (preventDefault, items dropped).
  */
-var GDMasonry = (function ($) {
+var GDMasonry = (function () {
     var _colWidth = 300;
     var _gap = 4;
     var _colHeights = [];
     var _ncols = 0;
-    var _$c = null; // #thumbnails container
+    var _c = null; // #thumbnails container (DOM element)
 
     function _colCount() {
-        return Math.max(1, Math.floor((_$c.width() + _gap) / (_colWidth + _gap)));
+        return Math.max(1, Math.floor((_c.clientWidth + _gap) / (_colWidth + _gap)));
     }
 
     function _shortest() {
@@ -26,25 +26,25 @@ var GDMasonry = (function ($) {
 
     // Styles are applied before the element is appended so there is no
     // intermediate paint with the item at position 0,0.
-    function _place($li) {
-        var $img = $li.find('img.thumbnail');
-        var iw = parseInt($img.attr('width'))  || _colWidth;
-        var ih = parseInt($img.attr('height')) || _colWidth;
+    function _place(li) {
+        var img = li.querySelector('img.thumbnail');
+        var iw = img ? (parseInt(img.getAttribute('width'))  || _colWidth) : _colWidth;
+        var ih = img ? (parseInt(img.getAttribute('height')) || _colWidth) : _colWidth;
         var itemH = Math.round(ih * _colWidth / iw);
         var col   = _shortest();
 
-        $li[0].style.position = 'absolute';
-        $li[0].style.width    = _colWidth + 'px';
-        $li[0].style.height   = itemH + 'px';
-        $li[0].style.left     = (col * (_colWidth + _gap)) + 'px';
-        $li[0].style.top      = _colHeights[col] + 'px';
+        li.style.position = 'absolute';
+        li.style.width    = _colWidth + 'px';
+        li.style.height   = itemH + 'px';
+        li.style.left     = (col * (_colWidth + _gap)) + 'px';
+        li.style.top      = _colHeights[col] + 'px';
 
         _colHeights[col] += itemH + _gap;
     }
 
     function _setHeight() {
         var maxH = Math.max.apply(null, _colHeights);
-        _$c[0].style.height = Math.max(0, maxH - _gap) + 'px';
+        _c.style.height = Math.max(0, maxH - _gap) + 'px';
     }
 
     // Full re-layout of every child — used on init and on resize when
@@ -52,23 +52,22 @@ var GDMasonry = (function ($) {
     function layout() {
         _ncols = _colCount();
         _colHeights = new Array(_ncols).fill(0);
-        _$c.children('li').each(function () { _place($(this)); });
+        Array.from(_c.querySelectorAll(':scope > li')).forEach(function(li) { _place(li); });
         _setHeight();
     }
 
-    // Append a jQuery set of new <li> elements without disturbing existing ones.
+    // Append an array of new <li> elements without disturbing existing ones.
     // Falls back to full re-layout only when the column count has changed
     // (e.g. the window was resized between two infinite-scroll batches).
-    function addItems($items) {
+    function addItems(items) {
         if (_colCount() !== _ncols) {
-            _$c.append($items);
+            items.forEach(function(li) { _c.appendChild(li); });
             layout();
             return;
         }
-        $items.each(function () {
-            var $li = $(this);
-            _place($li);     // position set before append — no flash
-            _$c.append($li);
+        items.forEach(function(li) {
+            _place(li);     // position set before append — no flash
+            _c.appendChild(li);
         });
         _setHeight();
     }
@@ -76,45 +75,48 @@ var GDMasonry = (function ($) {
     function init(colWidth, gap) {
         _colWidth = colWidth || 300;
         _gap      = gap      || 4;
-        _$c = $('ul#thumbnails');
-        if (!_$c.length) return;
+        _c = document.querySelector('ul#thumbnails');
+        if (!_c) return;
 
         layout();
 
         // Reflow on resize, debounced.
         var _t;
-        $(window).on('resize', function () {
+        window.addEventListener('resize', function () {
             clearTimeout(_t);
             _t = setTimeout(layout, 150);
         });
 
         // Intercept RVTS infinite-scroll inserts.
         // preventDefault() stops RVTS from doing its own .append()/.prepend().
-        $(window).on('RVTS_add', function (event, html, isDown) {
+        window.addEventListener('RVTS_add', function (event) {
             event.preventDefault();
 
-            if (!isDown) return; // upward scroll disabled — items dropped
+            if (!event.detail.addToEnd) return; // upward scroll disabled — items dropped
 
-            var $items = $(html).filter('li');
-            if ($items.length) addItems($items);
+            var tmp = document.createElement('div');
+            tmp.innerHTML = event.detail.htm;
+            var items = Array.from(tmp.querySelectorAll(':scope > li'));
+            if (!items.length) items = Array.from(tmp.querySelectorAll('li'));
+            if (items.length) addItems(items);
         });
     }
 
     // Position any <li> children that were appended directly to the container
     // without going through addItems() — used by RVTS_CATS which bypasses RVTS_add.
     function positionNew() {
-        if (!_$c || !_$c.length) return;
-        var $items = _$c.children('li').filter(function () {
-            return !this.style.position;
+        if (!_c) return;
+        var items = Array.from(_c.querySelectorAll(':scope > li')).filter(function(li) {
+            return !li.style.position;
         });
-        if (!$items.length) return;
+        if (!items.length) return;
         if (_colCount() !== _ncols) {
             layout();
             return;
         }
-        $items.each(function () { _place($(this)); });
+        items.forEach(function(li) { _place(li); });
         _setHeight();
     }
 
     return { init: init, layout: layout, addItems: addItems, positionNew: positionNew };
-})(jQuery);
+})();

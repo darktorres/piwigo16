@@ -175,10 +175,10 @@
   // Start the tour
   tour.start();
 
-  jQuery("p.albumActions a").click(function() {
-    if (tour.getCurrentStep() == 9) {
-      tour.goTo(10);
-    }
+  document.querySelectorAll("p.albumActions a").forEach(function(el) {
+    el.addEventListener('click', function() {
+      if (tour.getCurrentStep() == 9) tour.goTo(10);
+    });
   });
 </script>{/footer_script}
 {html_style}<style>

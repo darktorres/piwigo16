@@ -22,11 +22,10 @@
   var delay_autoOpen = {$delay_before_autoOpen}
 </script>{/footer_script}
 
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
-{combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
+{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_css path="node_modules/jqtree/jqtree.css"}
-{combine_script id='jtree' load='footer' path='node_modules/jqtree/tree.jquery.js'}
+{combine_script id='pwgtree' load='footer' path='admin/themes/default/js/PwgTree.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 {footer_script}<script>
@@ -52,13 +51,11 @@
   const tiptip_locked_album = "{'Locked album'|translate|escape:javascript}";
 </script>{/footer_script}
 
-{combine_script id='jquery.tipTip' load='footer' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.js'}
-
 {combine_script id='albums' load='footer' path='admin/themes/default/js/albums.js'}
 
 <div class="cat-move-order-popin">
   <div class="order-popin-container">
-    <a class="close-popin icon-cancel" onClick="$('.cat-move-order-popin').fadeOut()"> </a>
+    <a class="close-popin icon-cancel" onclick="var el=document.querySelector('.cat-move-order-popin'); if(el) el.style.display='none';"> </a>
     <div class="popin-title"><span class="icon-sort-name-up icon-purple"></span><span
         class="popin-title-text">{'apply automatic sort order'|translate}</span></div>
     <div class="album-name icon-sitemap"></div>

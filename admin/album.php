@@ -27,6 +27,10 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 
 functions::check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 
+if (! isset($_GET['cat_id'])) {
+    exit('cat_id URL parameter is missing');
+}
+
 $admin_album_base_url = functions_url::get_root_url() . 'admin.php?page=album-' . $_GET['cat_id'];
 
 $query = <<<SQL

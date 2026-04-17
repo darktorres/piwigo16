@@ -60,6 +60,6 @@
   tour.start();
 
   if (tour.getCurrentStep() == 3) {
-    jQuery("input[value=custom]").prop("checked", true);
+    document.querySelectorAll("input[value=custom]").forEach(function(el) { el.checked = true; });
   }
 </script>{/footer_script}

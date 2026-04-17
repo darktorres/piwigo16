@@ -46,31 +46,40 @@
                 {/foreach}
             </div>
         {else}
-            {combine_script id='jquery.awesomeCloud' load='footer' path="https://rawcdn.githack.com/russelporosky/jQuery.awesomeCloud.plugin/refs/heads/master/jquery.awesomeCloud-0.2.js"}
-            {footer_script require='jquery.awesomeCloud'}<script>
-                $(document).ready(function() {
-                    $("#tagCloudCanvas").awesomeCloud({
-                        "size": {
-                            "grid": 12,
-                            "factor": 0,
-                            "normalize": false
-                        },
-                        "options": {
-                            "color": "gradient",
-                            "rotationRatio": 0.2,
-                        },
-                        "color": {
-                            "start": $('#tagCloudGradientStart').css('color'),
-                            "end": $('#tagCloudGradientEnd').css('color')
-                        },
-                        "font": "'Helvetica Neue',Helvetica,Arial,sans-serif",
-                        "shape": "circle"
-                    });
-                });
-            </script>{/footer_script}
-            <div id="tagCloudCanvas">
+            {combine_script id='wordcloud2' load='footer' path="themes/bootstrap_darkroom/node_modules/wordcloud/src/wordcloud2.js"}
+            {footer_script require='wordcloud2'}<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var canvas = document.getElementById('tagCloudCanvas');
+        if (!canvas || typeof WordCloud === 'undefined') return;
+        var startGradient = document.getElementById('tagCloudGradientStart');
+        var endGradient = document.getElementById('tagCloudGradientEnd');
+        var startColor = startGradient ? window.getComputedStyle(startGradient).color : '#333';
+        var endColor = endGradient ? window.getComputedStyle(endGradient).color : '#aaa';
+        var list = Array.from(document.querySelectorAll('#tagCloudData span[data-weight]')).map(function(span) {
+            return [span.textContent, parseFloat(span.dataset.weight) || 1];
+        });
+        WordCloud(canvas, {
+            list: list,
+            color: function(word, weight, fontSize) {
+                return startColor;
+            },
+            rotateRatio: 0.2,
+            fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif",
+            shape: 'circle',
+            backgroundColor: 'transparent',
+            click: function(item) {
+                var span = Array.from(document.querySelectorAll('#tagCloudData span[data-weight]'))
+                    .find(function(s) { return s.textContent === item[0]; });
+                if (span && span.dataset.href) window.location.href = span.dataset.href;
+            }
+        });
+        canvas.style.cursor = 'pointer';
+    });
+</script>{/footer_script}
+            <canvas id="tagCloudCanvas" width="600" height="400" style="width:100%;max-width:600px"></canvas>
+            <div id="tagCloudData" style="display:none">
                 {foreach $tags as $tag}
-                    <span data-weight="{$tag.counter}"><a href="{$tag.URL}">{$tag.name}</a></span>
+                    <span data-weight="{$tag.counter}" data-href="{$tag.URL}">{$tag.name}</span>
                 {/foreach}
             </div>
             <div id="tagCloudGradientStart"></div>

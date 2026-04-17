@@ -29,6 +29,26 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 // |                       variable initialization                         |
 // +-----------------------------------------------------------------------+
 
+if (! isset($category)) {
+    $cat_id = (int) ($_GET['cat_id'] ?? $_GET['cat'] ?? 0);
+    $admin_album_base_url = functions_url::get_root_url() . 'admin.php?page=album-' . $cat_id;
+
+    if (! $cat_id) {
+        exit('cat_id URL parameter is missing');
+    }
+
+    $query = <<<SQL
+        SELECT *
+        FROM categories
+        WHERE id = {$cat_id};
+        SQL;
+    $category = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
+
+    if (! isset($category['id'])) {
+        exit('unknown album');
+    }
+}
+
 $page['cat'] = $category['id'];
 
 // +-----------------------------------------------------------------------+

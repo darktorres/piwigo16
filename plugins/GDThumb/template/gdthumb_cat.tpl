@@ -53,11 +53,9 @@
 </ul>
 
 {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css"}
-{combine_script id='gdthumb' require='jquery' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
+{combine_script id='gdthumb' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
 {combine_script id='gdthumb.masonry' require='gdthumb' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/masonry.js" load="footer"}
 
 {footer_script require="gdthumb.masonry"}<script>
-  $(function() {
-    GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin});
-  });
+  GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin});
 </script>{/footer_script}

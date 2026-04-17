@@ -12,7 +12,7 @@
         <div class="navbar-collapse collapse justify-content-end" id="secondary-navbar">
             <ul class="navbar-nav">
                 {if isset($current.unique_derivatives) && count($current.unique_derivatives)>1}
-                    {footer_script require='jquery'}<script>
+                    {footer_script}<script>
                         function changeImgSrc(url, typeSave, typeMap) {
                             var theImg = document.getElementById("theMainImage");
                             if (theImg) {
@@ -35,8 +35,14 @@
                                 theImg.src = encodedUrl;
                                 theImg.useMap = "#map" + typeMap;
                             }
-                            jQuery('.derivative-li').removeClass('active');
-                            jQuery('#derivative' + typeMap).addClass('active');
+                            var activeItems = document.querySelectorAll('.derivative-li');
+                            activeItems.forEach(function(item) {
+                                item.classList.remove('active');
+                            });
+                            var targetItem = document.getElementById('derivative' + typeMap);
+                            if (targetItem) {
+                                targetItem.classList.add('active');
+                            }
                             document.cookie = 'picture_deriv='+typeSave+';path={$COOKIE_PATH}';
                         }
                     </script>{/footer_script}

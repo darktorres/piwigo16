@@ -1,8 +1,8 @@
 {include file='inc/datepicker.inc.tpl'}
 
 {footer_script}<script>
-  jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
-  jQuery('[data-datepicker]').pwgDatepicker();
+  document.addEventListener('DOMContentLoaded', function() { {* <!-- onLoad needed to wait localization loads --> *}
+    pwgDatepicker(document.querySelectorAll('[data-datepicker]'));
   });
 
   var dateObj = new Date();
@@ -66,7 +66,7 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='history' load='footer' path='admin/themes/default/js/history.js'}
 
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
+{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 {combine_css path="themes/default/fontello/css/gallery-icon.css" order=-10}
 
@@ -254,46 +254,48 @@
 {combine_script id='jquery.geoip' load='async' path='admin/themes/default/js/jquery.geoip.js'}
 
 {footer_script}<script>
-  jQuery(document).ready(function() {
-    jQuery(".IP").one("mouseenter", function() {
-      var that = $(this);
-      that
-        .data("isOver", true)
-        .one("mouseleave", function() {
-          that.removeData("isOver");
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll(".IP").forEach(function(ipEl) {
+      ipEl.addEventListener("mouseenter", function() {
+        var that = ipEl;
+        that._isOver = true;
+        that.addEventListener("mouseleave", function() { delete that._isOver; }, { once: true });
+        GeoIp.get(that.textContent.trim(), function(data) {
+          if (!data.fullName) return;
+          var content = data.fullName;
+          if (data.latitude && data.region_name) {
+            content += '<br><a class="ipGeoOpen" data-lat="' + data.latitude + '" data-lon="' + data.longitude + '"';
+            content += ' href="#">show on a Google Map</a>';
+          }
+          var tippyInstance = that._tippyInstance;
+          if (tippyInstance) {
+            tippyInstance.setContent(content);
+          } else {
+            tippyInstance = tippy(that, {
+              content: content,
+              allowHTML: true,
+              interactive: true,
+              placement: 'right',
+              maxWidth: 320,
+            });
+            that._tippyInstance = tippyInstance;
+          }
+          if (that._isOver) tippyInstance.show();
         });
-      GeoIp.get(that.text(), function(data) {
-        if (!data.fullName) return;
-
-        var content = data.fullName;
-        if (data.latitude && data.region_name) {
-          content += '<br><a class="ipGeoOpen" data-lat="' + data.latitude + '" data-lon="' + data
-            .longitude + '"';
-          content += ' href="#">show on a Google Map</a>';
-        }
-
-        that.tipTip({
-          content: content,
-          keepAlive: true,
-          defaultPosition: "right",
-          maxWidth: 320,
-        });
-        if (that.data("isOver"))
-          that.trigger("mouseenter");
-      });
+      }, { once: true });
     });
 
-    jQuery(document).on('click', '.ipGeoOpen', function() {
-      var lat = jQuery(this).data("lat");
-      var lon = jQuery(this).data("lon");
-      var parent = jQuery(this).parent();
-      jQuery(this).remove();
-
+    document.addEventListener('click', function(e) {
+      var geoBtn = e.target.closest('.ipGeoOpen');
+      if (!geoBtn) return;
+      e.preventDefault();
+      var lat = geoBtn.dataset.lat;
+      var lon = geoBtn.dataset.lon;
+      var parent = geoBtn.parentElement;
+      geoBtn.remove();
       var append = '<br><img width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap';
       append += '?sensor=false&size=300x220&zoom=6&markers=size:tiny%7C' + lat + ',' + lon + '">';
-
-      jQuery(parent).append(append);
-      return false;
+      if (parent) parent.insertAdjacentHTML('beforeend', append);
     });
   });
 </script>{/footer_script}

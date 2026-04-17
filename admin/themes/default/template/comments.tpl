@@ -1,46 +1,54 @@
 {footer_script}<script>
-  jQuery(document).ready(function() {
-    $("h1").append("<span class='badge-number'>"+{$nb_total}+"</span>");
+  document.addEventListener('DOMContentLoaded', function() {
+    var h1 = document.querySelector("h1");
+    if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>"+{$nb_total}+"</span>");
 
     function highlightComments() {
-      jQuery(".checkComment").each(function() {
-        var parent = jQuery(this).parent('tr');
-        if (jQuery(this).children("input[type=checkbox]").is(':checked')) {
-          jQuery(parent).addClass('selectedComment');
-        } else {
-          jQuery(parent).removeClass('selectedComment');
+      document.querySelectorAll(".checkComment").forEach(function(el) {
+        var parent = el.closest('tr');
+        var checkbox = el.querySelector("input[type=checkbox]");
+        if (parent && checkbox) {
+          parent.classList.toggle('selectedComment', checkbox.checked);
         }
       });
     }
 
-    jQuery(".checkComment").click(function(event) {
-      var checkbox = jQuery(this).children("input[type=checkbox]");
-      if (event.target.type !== 'checkbox') {
-        jQuery(checkbox).prop('checked', !jQuery(checkbox).prop('checked'));
-      }
-      highlightComments();
-    });
-
-    jQuery("#commentSelectAll").click(function() {
-      jQuery(".checkComment input[type=checkbox]").prop('checked', true);
-      highlightComments();
-      return false;
-    });
-
-    jQuery("#commentSelectNone").click(function() {
-      jQuery(".checkComment input[type=checkbox]").prop('checked', false);
-      highlightComments();
-      return false;
-    });
-
-    jQuery("#commentSelectInvert").click(function() {
-      jQuery(".checkComment input[type=checkbox]").each(function() {
-        jQuery(this).prop('checked', !$(this).prop('checked'));
+    document.querySelectorAll(".checkComment").forEach(function(el) {
+      el.addEventListener('click', function(event) {
+        var checkbox = this.querySelector("input[type=checkbox]");
+        if (event.target.type !== 'checkbox' && checkbox) {
+          checkbox.checked = !checkbox.checked;
+        }
+        highlightComments();
       });
-      highlightComments();
-      return false;
     });
 
+    var selectAllBtn = document.getElementById("commentSelectAll");
+    if (selectAllBtn) {
+      selectAllBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        document.querySelectorAll(".checkComment input[type=checkbox]").forEach(function(el) { el.checked = true; });
+        highlightComments();
+      });
+    }
+
+    var selectNoneBtn = document.getElementById("commentSelectNone");
+    if (selectNoneBtn) {
+      selectNoneBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        document.querySelectorAll(".checkComment input[type=checkbox]").forEach(function(el) { el.checked = false; });
+        highlightComments();
+      });
+    }
+
+    var selectInvertBtn = document.getElementById("commentSelectInvert");
+    if (selectInvertBtn) {
+      selectInvertBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        document.querySelectorAll(".checkComment input[type=checkbox]").forEach(function(el) { el.checked = !el.checked; });
+        highlightComments();
+      });
+    }
   });
 </script>{/footer_script}
 

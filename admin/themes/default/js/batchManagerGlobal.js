@@ -1,605 +1,846 @@
-/* ********** Filters*/
+/* ********** Filters */
 function filter_enable(filter) {
     /* show the filter*/
-    $("#" + filter).show();
+    var el = document.getElementById(filter);
+    if (el) el.style.display = '';
 
     /* check the checkbox to declare we use this filter */
-    $("input[type=checkbox][name=" + filter + "_use]").prop("checked", true);
+    var checkbox = document.querySelector("input[type=checkbox][name=" + filter + "_use]");
+    if (checkbox) checkbox.checked = true;
 
     /* forbid to select this filter in the addFilter list */
-    $("#addFilter")
-        .find("a[data-value=" + filter + "]")
-        .addClass("disabled", "disabled");
+    var addFilterLink = document.querySelector("#addFilter a[data-value=" + filter + "]");
+    if (addFilterLink) addFilterLink.classList.add("disabled");
 
     /* hide the no filter message */
-    $(".noFilter").hide();
-    $(".addFilter-button").removeClass("highlight");
+    document.querySelectorAll(".noFilter").forEach(function (el) {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll(".addFilter-button").forEach(function (el) {
+        el.classList.remove("highlight");
+    });
 }
 
 function filter_disable(filter) {
     /* hide the filter line */
-    $("#" + filter).hide();
+    var el = document.getElementById(filter);
+    if (el) el.style.display = 'none';
 
     /* uncheck the checkbox to declare we do not use this filter */
-    $("input[name=" + filter + "_use]").prop("checked", false);
+    var checkbox = document.querySelector("input[name=" + filter + "_use]");
+    if (checkbox) checkbox.checked = false;
 
     /* give the possibility to show it again */
-    $("#addFilter")
-        .find("a[data-value=" + filter + "]")
-        .removeClass("disabled");
+    var addFilterLink = document.querySelector("#addFilter a[data-value=" + filter + "]");
+    if (addFilterLink) addFilterLink.classList.remove("disabled");
 
     /* show the no filter message if no filter selected */
-    if ($("#filterList li:visible").length == 0) {
-        $(".noFilter").show();
-        $(".addFilter-button").addClass("highlight");
+    var visibleFilters = document.querySelectorAll("#filterList li:not([style*='display: none'])").length;
+    if (visibleFilters == 0) {
+        document.querySelectorAll(".noFilter").forEach(function (el) {
+            el.style.display = '';
+        });
+        document.querySelectorAll(".addFilter-button").forEach(function (el) {
+            el.classList.add("highlight");
+        });
     }
 }
 
-$(".removeFilter").addClass("icon-cancel-circled");
+/* Called from the addFilter-button onclick attribute */
+function toggleAddFilterDropdown() {
+    var el = document.querySelector('.addFilter-dropdown');
+    if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+}
 
-$(".removeFilter").click(function () {
-    var filter = $(this).parent("li").attr("id");
-    filter_disable(filter);
-
-    return false;
-});
-
-$("#addFilter a").on("click", function () {
-    var filter = $(this).attr("data-value");
-    filter_enable(filter);
-});
-
-$("#removeFilters").click(function () {
-    $("#filterList li").each(function () {
-        var filter = $(this).attr("id");
-        filter_disable(filter);
+/* Called from javascript: hrefs in the generate/delete derivatives action panels */
+function selectGenerateDerivAll() {
+    document.querySelectorAll("#action_generate_derivatives input[type=checkbox]").forEach(function (el) {
+        el.checked = true;
+        el.dispatchEvent(new Event("change"));
     });
-    return false;
+}
+
+function selectGenerateDerivNone() {
+    document.querySelectorAll("#action_generate_derivatives input[type=checkbox]").forEach(function (el) {
+        el.checked = false;
+        el.dispatchEvent(new Event("change"));
+    });
+}
+
+function selectDelDerivAll() {
+    document.querySelectorAll('#action_delete_derivatives input[name="del_derivatives_type[]"]').forEach(function (el) {
+        el.checked = true;
+        el.dispatchEvent(new Event("change"));
+    });
+}
+
+function selectDelDerivNone() {
+    document.querySelectorAll('#action_delete_derivatives input[name="del_derivatives_type[]"]').forEach(function (el) {
+        el.checked = false;
+        el.dispatchEvent(new Event("change"));
+    });
+}
+
+document.querySelectorAll(".removeFilter").forEach(function (el) {
+    el.classList.add("icon-cancel-circled");
 });
 
-$("[data-slider=widths]").pwgDoubleSlider(sliders.widths);
-$("[data-slider=heights]").pwgDoubleSlider(sliders.heights);
-$("[data-slider=ratios]").pwgDoubleSlider(sliders.ratios);
-$("[data-slider=filesizes]").pwgDoubleSlider(sliders.filesizes);
+document.querySelectorAll(".removeFilter").forEach(function (el) {
+    el.addEventListener("click", function () {
+        var filter = this.closest("li").id;
+        filter_disable(filter);
+        return false;
+    });
+});
 
-$(document).mouseup(function (e) {
+document.querySelectorAll("#addFilter a").forEach(function (el) {
+    el.addEventListener("click", function () {
+        var filter = this.getAttribute("data-value");
+        filter_enable(filter);
+    });
+});
+
+var removeFiltersBtn = document.getElementById("removeFilters");
+if (removeFiltersBtn) {
+    removeFiltersBtn.addEventListener("click", function () {
+        document.querySelectorAll("#filterList li").forEach(function (el) {
+            var filter = el.id;
+            filter_disable(filter);
+        });
+        return false;
+    });
+}
+
+["widths", "heights", "ratios", "filesizes"].forEach(function (key) {
+    var el = document.querySelector("[data-slider=" + key + "]");
+    if (el) pwgDoubleSlider(el, batchManagerConfig.sliders[key]);
+});
+
+document.addEventListener("mouseup", function (e) {
     e.stopPropagation();
-    if (!$(event.target).hasClass("addFilter-button")) {
-        $(".addFilter-dropdown").slideUp();
+    if (!e.target.classList.contains("addFilter-button")) {
+        document.querySelectorAll(".addFilter-dropdown").forEach(function (el) {
+            el.style.display = 'none';
+        });
     }
 });
 
 /* ********** Thumbs */
 
-/* Shift-click: select all photos between the click and the shift+click */
-jQuery(document).ready(function () {
-    var last_clicked = 0;
-    var last_clickedstatus = true;
-    jQuery.fn.enableShiftClick = function () {
-        var inputs = [],
-            count = 0;
-        this.find("input[type=checkbox]").each(function () {
-            var pos = count;
-            inputs[count++] = this;
-            $(this).bind("shclick", function (dummy, event) {
-                if (event.shiftKey) {
-                    var first = last_clicked;
-                    var last = pos;
-                    if (first > last) {
-                        first = pos;
-                        last = last_clicked;
-                    }
+document.addEventListener('DOMContentLoaded', function () {
+    var cfg = batchManagerConfig;
+    var lang = cfg.lang;
 
+    /* ---- Tags ---- */
+    var tagsCache = new TagsCache({
+        serverKey: cfg.tagsServerKey,
+        serverId: cfg.cacheServerId,
+        rootUrl: cfg.rootUrl
+    });
+
+    tagsCache.selectize(document.querySelectorAll('[data-selectize=tags]'), {
+        lang: { 'Add': lang.tagCreate }
+    });
+
+    /* ---- Categories ---- */
+    window.categoriesCache = new CategoriesCache({
+        serverKey: cfg.categoriesServerKey,
+        serverId: cfg.cacheServerId,
+        rootUrl: cfg.rootUrl
+    });
+
+    categoriesCache.selectize(document.querySelectorAll('[data-selectize=categories]'), {
+        filter: function (categories, options) {
+            if (this.name == 'dissociate') {
+                var filtered = categories.filter(function (cat) {
+                    return !!cfg.associatedCategories[cat.id];
+                });
+                if (filtered.length > 0) options.default = filtered[0].id;
+                return filtered;
+            }
+            return categories;
+        }
+    });
+
+    /* ---- Selection counters ---- */
+    function checkPermitAction() {
+        var setSelectedEl = document.querySelector("input[name=setSelected]");
+        var nbSelected = 0;
+        if (setSelectedEl && setSelectedEl.checked) {
+            nbSelected = cfg.nbThumbsSet;
+        } else {
+            nbSelected = document.querySelectorAll(".thumbnails input[type=checkbox]:checked").length;
+        }
+
+        var permitAction = document.getElementById("permitAction");
+        var forbidAction = document.getElementById("forbidAction");
+        if (nbSelected == 0) {
+            if (permitAction) permitAction.style.display = 'none';
+            if (forbidAction) forbidAction.style.display = '';
+        } else {
+            if (permitAction) permitAction.style.display = '';
+            if (forbidAction) forbidAction.style.display = 'none';
+        }
+
+        var applyOnDetails = document.getElementById("applyOnDetails");
+        if (applyOnDetails) applyOnDetails.textContent = sprintf(cfg.applyOnDetailsPattern, nbSelected);
+
+        var selectedMessage = document.getElementById("selectedMessage");
+        if (selectedMessage) {
+            if (nbSelected == 0) {
+                selectedMessage.textContent = sprintf(cfg.selectedMessageNone, cfg.nbThumbsSet);
+            } else if (nbSelected == cfg.nbThumbsSet) {
+                selectedMessage.textContent = sprintf(cfg.selectedMessageAll, cfg.nbThumbsSet);
+            } else {
+                selectedMessage.textContent = sprintf(cfg.selectedMessagePattern, nbSelected, cfg.nbThumbsSet);
+            }
+        }
+    }
+
+    /* ---- Action panel ---- */
+    document.querySelectorAll("[id^=action_]").forEach(function (el) {
+        el.style.display = 'none';
+    });
+
+    var selectActionEl = document.querySelector("select[name=selectAction]");
+    if (selectActionEl) {
+        selectActionEl.addEventListener('change', function () {
+            document.querySelectorAll("[id^=action_]").forEach(function (el) {
+                el.style.display = 'none';
+            });
+
+            var action = this.value;
+            if (action == 'move') action = 'associate';
+
+            var actionEl = document.getElementById("action_" + action);
+            if (actionEl) actionEl.style.display = '';
+
+            var applyActionBlock = document.getElementById("applyActionBlock");
+            if (this.value != -1) {
+                if (applyActionBlock) applyActionBlock.style.display = '';
+            } else {
+                if (applyActionBlock) applyActionBlock.style.display = 'none';
+            }
+
+            var confirmDel = document.getElementById("confirmDel");
+            if (this.value == "delete" || this.value == "delete_derivatives") {
+                if (confirmDel) confirmDel.style.visibility = "visible";
+            } else {
+                if (confirmDel) confirmDel.style.visibility = "hidden";
+            }
+        });
+    }
+
+    /* ---- Thumbnail selection ---- */
+    document.querySelectorAll(".wrap1 label").forEach(function (label) {
+        label.addEventListener('click', function () {
+            var setSelectedEl = document.querySelector("input[name=setSelected]");
+            if (setSelectedEl) {
+                setSelectedEl.checked = false;
+                setSelectedEl.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            var li = this.closest("li");
+            var checkbox = this.querySelector("input[type=checkbox]");
+            if (checkbox) {
+                if (checkbox.checked) {
+                    if (li) li.classList.add("thumbSelected");
+                } else {
+                    if (li) li.classList.remove('thumbSelected');
+                }
+            }
+
+            checkPermitAction();
+        });
+    });
+
+    function selectPageThumbnails() {
+        document.querySelectorAll(".thumbnails label").forEach(function (label) {
+            var checkbox = label.querySelector("input[type=checkbox]");
+            if (checkbox) {
+                checkbox.checked = true;
+                checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+            var li = label.closest("li");
+            if (li) li.classList.add("thumbSelected");
+        });
+    }
+
+    var selectAllEl = document.getElementById("selectAll");
+    if (selectAllEl) {
+        selectAllEl.addEventListener('click', function (event) {
+            event.preventDefault();
+            var setSelectedEl = document.querySelector("input[name=setSelected]");
+            if (setSelectedEl) {
+                setSelectedEl.checked = false;
+                setSelectedEl.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            selectPageThumbnails();
+            checkPermitAction();
+        });
+    }
+
+    var selectNoneEl = document.getElementById("selectNone");
+    if (selectNoneEl) {
+        selectNoneEl.addEventListener('click', function (event) {
+            event.preventDefault();
+            var setSelectedEl = document.querySelector("input[name=setSelected]");
+            if (setSelectedEl) {
+                setSelectedEl.checked = false;
+                setSelectedEl.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            document.querySelectorAll(".thumbnails label").forEach(function (label) {
+                var checkbox = label.querySelector("input[type=checkbox]");
+                if (checkbox && checkbox.checked) {
+                    checkbox.checked = false;
+                    checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+                }
+                var li = label.closest("li");
+                if (li) li.classList.remove("thumbSelected");
+            });
+            checkPermitAction();
+        });
+    }
+
+    var selectInvertEl = document.getElementById("selectInvert");
+    if (selectInvertEl) {
+        selectInvertEl.addEventListener('click', function (event) {
+            event.preventDefault();
+            var setSelectedEl = document.querySelector("input[name=setSelected]");
+            if (setSelectedEl) {
+                setSelectedEl.checked = false;
+                setSelectedEl.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            document.querySelectorAll(".thumbnails label").forEach(function (label) {
+                var checkbox = label.querySelector("input[type=checkbox]");
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+                    var li = label.closest("li");
+                    if (li) li.classList.toggle("thumbSelected", checkbox.checked);
+                }
+            });
+            checkPermitAction();
+        });
+    }
+
+    var selectSetEl = document.getElementById("selectSet");
+    if (selectSetEl) {
+        selectSetEl.addEventListener('click', function (event) {
+            event.preventDefault();
+            selectPageThumbnails();
+            var setSelectedEl = document.querySelector("input[name=setSelected]");
+            if (setSelectedEl) {
+                setSelectedEl.checked = true;
+                setSelectedEl.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            checkPermitAction();
+        });
+    }
+
+    var setSelectedEl = document.querySelector("input[name=setSelected]");
+    if (setSelectedEl) {
+        setSelectedEl.addEventListener('change', function () {
+            var wholeSet = document.querySelector('input[name=whole_set]');
+            if (wholeSet) wholeSet.value = this.checked ? cfg.allElements.join(',') : '';
+        });
+        /* Trigger on load when whole set is already selected (e.g. after an action) */
+        if (setSelectedEl.checked) {
+            setSelectedEl.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    /* ---- Filter prefilter ---- */
+    var filterPrefilterEl = document.querySelector("select[name=filter_prefilter]");
+    if (filterPrefilterEl) {
+        filterPrefilterEl.addEventListener('change', function () {
+            var emptyCaddie = document.getElementById("empty_caddie");
+            var duplicatesOptions = document.getElementById("duplicates_options");
+            var deleteOrphans = document.getElementById("delete_orphans");
+            var syncMd5sum = document.getElementById("sync_md5sum");
+            if (emptyCaddie) emptyCaddie.style.display = this.value == "caddie" ? '' : 'none';
+            if (duplicatesOptions) duplicatesOptions.style.display = this.value == "duplicates" ? '' : 'none';
+            if (deleteOrphans) deleteOrphans.style.display = this.value == "no_album" ? '' : 'none';
+            if (syncMd5sum) syncMd5sum.style.display = this.value == "no_sync_md5sum" ? '' : 'none';
+        });
+    }
+
+    checkPermitAction();
+
+    /* ---- Shift-click range selection ---- */
+    (function () {
+        var last_clicked = 0;
+        var last_clickedstatus = true;
+
+        var thumbnails = document.querySelector("ul.thumbnails");
+        if (!thumbnails) return;
+        var checkboxes = Array.from(thumbnails.querySelectorAll("input[type=checkbox]"));
+        checkboxes.forEach(function (cb, pos) {
+            cb.addEventListener("click", function (event) {
+                if (event.shiftKey) {
+                    var first = last_clicked < pos ? last_clicked : pos;
+                    var last = last_clicked < pos ? pos : last_clicked;
                     for (var i = first; i <= last; i++) {
-                        input = $(inputs[i]);
-                        $(input)
-                            .prop("checked", last_clickedstatus)
-                            .trigger("change");
-                        if (last_clickedstatus) {
-                            $(input).closest("li").addClass("thumbSelected");
-                        } else {
-                            $(input).closest("li").removeClass("thumbSelected");
-                        }
+                        checkboxes[i].checked = last_clickedstatus;
+                        checkboxes[i].dispatchEvent(new Event("change"));
+                        var li = checkboxes[i].closest("li");
+                        if (li) li.classList.toggle("thumbSelected", last_clickedstatus);
                     }
                 } else {
                     last_clicked = pos;
                     last_clickedstatus = this.checked;
                 }
-                return true;
-            });
-            $(this).click(function (event) {
-                $(this).triggerHandler("shclick", event);
             });
         });
-    };
-    $("ul.thumbnails").enableShiftClick();
-});
+    })();
 
-jQuery("a.preview-box").colorbox({ photo: true });
+    GLightbox({ selector: 'a.preview-box' });
 
-jQuery(".thumbnails img").tipTip({
-    delay: 0,
-    fadeIn: 200,
-    fadeOut: 200,
-});
+    tippy('.thumbnails img', { delay: 0, placement: 'top' });
 
-/* ********** Actions*/
+    /* ---- Actions ---- */
 
-jQuery("[data-datepicker]").pwgDatepicker({
-    showTimepicker: true,
-    cancelButton: lang.Cancel,
-});
-
-jQuery("[data-add-album]").pwgAddAlbum();
-
-$("input[name=remove_author]").click(function () {
-    if ($(this).is(":checked")) {
-        $("input[name=author]").hide();
-    } else {
-        $("input[name=author]").show();
-    }
-});
-
-$("input[name=remove_title]").click(function () {
-    if ($(this).is(":checked")) {
-        $("input[name=title]").hide();
-    } else {
-        $("input[name=title]").show();
-    }
-});
-
-$("input[name=remove_date_creation]").click(function () {
-    if ($(this).is(":checked")) {
-        $("#set_date_creation").hide();
-    } else {
-        $("#set_date_creation").show();
-    }
-});
-
-var derivatives = {
-    elements: null,
-    done: 0,
-    total: 0,
-
-    finished: function () {
-        return (
-            derivatives.done == derivatives.total &&
-            derivatives.elements &&
-            derivatives.elements.length == 0
-        );
-    },
-};
-
-function progress_start() {
-    jQuery("#uploadingActions").show();
-    jQuery("#uploadingActions .progress-bar").width("0%");
-}
-
-function progress_end() {
-    jQuery("#uploadingActions").hide();
-}
-
-function progress(success) {
-    percent = parseInt((derivatives.done / derivatives.total) * 100);
-    jQuery("#uploadingActions .progressbar").width(percent.toString() + "%");
-    if (success !== undefined) {
-        var type = success ? "regenerateSuccess" : "regenerateError";
-        var s = jQuery('[name="' + type + '"]').val();
-        jQuery('[name="' + type + '"]').val(++s);
-    }
-
-    if (derivatives.finished()) {
-        progress_end();
-        jQuery("#applyAction").click();
-    }
-}
-
-function getDerivativeUrls() {
-    var ids = derivatives.elements.splice(0, 500);
-    var params = { max_urls: 100000, ids: ids, types: [] };
-    jQuery("#action_generate_derivatives input").each(function (i, t) {
-        if ($(t).is(":checked")) params.types.push(t.value);
+    pwgDatepicker(document.querySelectorAll("[data-datepicker]"), {
+        showTimepicker: true,
+        cancelButton: lang.Cancel,
     });
-    jQuery("#applyActionBlock").hide();
-    jQuery(".permitActionListButton").hide();
-    jQuery("#confirmDel").hide();
-    jQuery("#regenerationMsg").show();
-    jQuery("#regenerationText").html(lang.generateMsg);
-    progress_start();
-    jQuery.ajax({
-        type: "POST",
-        url: "ws.php?format=json&method=pwg.getMissingDerivatives",
-        data: params,
-        dataType: "json",
-        success: function (data) {
-            if (!data.stat || data.stat != "ok") {
+
+    document.querySelectorAll("[data-add-album]").forEach(function (btn) { pwgAddAlbum(btn); });
+
+    document.querySelectorAll("input[name=remove_author]").forEach(function (el) {
+        el.addEventListener("click", function () {
+            var display = this.checked ? 'none' : '';
+            document.querySelectorAll("input[name=author]").forEach(function (input) {
+                input.style.display = display;
+            });
+        });
+    });
+
+    document.querySelectorAll("input[name=remove_title]").forEach(function (el) {
+        el.addEventListener("click", function () {
+            var display = this.checked ? 'none' : '';
+            document.querySelectorAll("input[name=title]").forEach(function (input) {
+                input.style.display = display;
+            });
+        });
+    });
+
+    document.querySelectorAll("input[name=remove_date_creation]").forEach(function (el) {
+        el.addEventListener("click", function () {
+            var setDate = document.getElementById("set_date_creation");
+            if (setDate) setDate.style.display = this.checked ? 'none' : '';
+        });
+    });
+
+    /* ---- Derivative generation ---- */
+    var derivatives = {
+        elements: null,
+        done: 0,
+        total: 0,
+
+        finished: function () {
+            return (
+                derivatives.done == derivatives.total &&
+                derivatives.elements &&
+                derivatives.elements.length == 0
+            );
+        },
+    };
+
+    function progress_start() {
+        var el = document.getElementById("uploadingActions");
+        if (el) {
+            el.style.display = '';
+            var progBar = el.querySelector(".progress-bar");
+            if (progBar) progBar.style.width = "0%";
+        }
+    }
+
+    function progress_end() {
+        var el = document.getElementById("uploadingActions");
+        if (el) el.style.display = 'none';
+    }
+
+    function progress(success) {
+        var percent = parseInt((derivatives.done / derivatives.total) * 100);
+        var progBar = document.querySelector("#uploadingActions .progressbar");
+        if (progBar) progBar.style.width = percent.toString() + "%";
+
+        if (success !== undefined) {
+            var type = success ? "regenerateSuccess" : "regenerateError";
+            var input = document.querySelector('[name="' + type + '"]');
+            if (input) input.value = (parseInt(input.value) + 1).toString();
+        }
+
+        if (derivatives.finished()) {
+            progress_end();
+            var applyActionBtn = document.getElementById("applyAction");
+            if (applyActionBtn) applyActionBtn.click();
+        }
+    }
+
+    function getDerivativeUrls() {
+        var ids = derivatives.elements.splice(0, 500);
+        var params = { max_urls: 100000, ids: ids, types: [] };
+
+        document.querySelectorAll("#action_generate_derivatives input").forEach(function (t) {
+            if (t.checked) params.types.push(t.value);
+        });
+
+        document.getElementById("applyActionBlock").style.display = 'none';
+        document.querySelectorAll(".permitActionListButton").forEach(function (el) {
+            el.style.display = 'none';
+        });
+        document.getElementById("confirmDel").style.display = 'none';
+        document.getElementById("regenerationMsg").style.display = '';
+        var regenerationText = document.getElementById("regenerationText");
+        if (regenerationText) regenerationText.innerHTML = lang.generateMsg;
+
+        progress_start();
+
+        var body = new URLSearchParams();
+        body.append("max_urls", params.max_urls);
+        params.ids.forEach(function (id) { body.append("ids[]", id); });
+        params.types.forEach(function (t) { body.append("types[]", t); });
+        fetch("ws.php?format=json&method=pwg.getMissingDerivatives", { method: "POST", body: body })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.stat || data.stat != "ok") return;
+                derivatives.total += data.result.urls.length;
+                var badge = document.querySelector("#regenerationStatus .badge-number");
+                if (badge) badge.innerHTML = derivatives.done + "/" + derivatives.total;
+                progress();
+                var urls = data.result.urls;
+                var idx = 0;
+                function fetchNextDerivative() {
+                    if (idx >= urls.length) return;
+                    var url = urls[idx++];
+                    fetch(url + "&ajaxload=true")
+                        .then(function (r) { return r.json(); })
+                        .then(function () {
+                            derivatives.done++;
+                            var badge = document.querySelector("#regenerationStatus .badge-number");
+                            if (badge) badge.innerHTML = derivatives.done + "/" + derivatives.total;
+                            progress(true);
+                            fetchNextDerivative();
+                        })
+                        .catch(function () {
+                            derivatives.done++;
+                            var badge = document.querySelector("#regenerationStatus .badge-number");
+                            if (badge) badge.innerHTML = derivatives.done + "/" + derivatives.total;
+                            progress(false);
+                            fetchNextDerivative();
+                        });
+                }
+                fetchNextDerivative();
+                if (derivatives.elements.length)
+                    setTimeout(getDerivativeUrls, 25 * (derivatives.total - derivatives.done));
+            });
+    }
+
+    /* ---- Apply action (all action types in one handler) ---- */
+    var applyActionBtn = document.getElementById("applyAction");
+    if (applyActionBtn) {
+        applyActionBtn.addEventListener("click", function (e) {
+            var action = document.querySelector('[name="selectAction"]').value;
+
+            /* delete_derivatives: require confirmation */
+            if (action == 'delete_derivatives') {
+                if (!document.querySelector("#confirmDel input[name=confirm_deletion]").checked) {
+                    document.querySelector("#confirmDel span.errors").style.visibility = "visible";
+                    e.preventDefault();
+                }
                 return;
             }
-            derivatives.total += data.result.urls.length;
-            jQuery("#regenerationStatus .badge-number").html(
-                derivatives.done.toString() +
-                    "/" +
-                    derivatives.total.toString(),
-            );
-            progress();
-            for (var i = 0; i < data.result.urls.length; i++) {
-                jQuery.manageAjax.add("queued", {
-                    type: "GET",
-                    url: data.result.urls[i] + "&ajaxload=true",
-                    dataType: "json",
-                    success: function (data) {
-                        derivatives.done++;
-                        jQuery("#regenerationStatus .badge-number").html(
-                            derivatives.done.toString() +
-                                "/" +
-                                derivatives.total.toString(),
-                        );
-                        progress(true);
-                    },
-                    error: function (data) {
-                        derivatives.done++;
-                        jQuery("#regenerationStatus .badge-number").html(
-                            derivatives.done.toString() +
-                                "/" +
-                                derivatives.total.toString(),
-                        );
-                        progress(false);
-                    },
+
+            /* generate_derivatives: kick off async generation */
+            if (action == 'generate_derivatives') {
+                if (derivatives.finished()) return;
+                e.preventDefault();
+                document.querySelectorAll('.bulkAction').forEach(function (el) {
+                    el.style.display = 'none';
                 });
+                derivatives.elements = [];
+                if (document.querySelector('input[name="setSelected"]').checked) {
+                    derivatives.elements = cfg.allElements.slice();
+                } else {
+                    document.querySelectorAll('.thumbnails input[type=checkbox]').forEach(function (cb) {
+                        if (cb.checked) derivatives.elements.push(cb.value);
+                    });
+                }
+                document.getElementById('applyActionBlock').style.display = 'none';
+                document.querySelector('select[name="selectAction"]').style.display = 'none';
+                document.querySelector('.permitActionListButton div').classList.add('hidden');
+                document.getElementById('regenerationMsg').style.display = '';
+                progress_start();
+                progress();
+                getDerivativeUrls();
+                return;
             }
-            if (derivatives.elements.length)
-                setTimeout(
-                    getDerivativeUrls,
-                    25 * (derivatives.total - derivatives.done),
+
+            /* metadata: sync by blocks with progress */
+            if (action == 'metadata') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.querySelectorAll(".bulkAction").forEach(function (el) {
+                    el.style.display = 'none';
+                });
+                var regenerationText = document.getElementById("regenerationText");
+                if (regenerationText) regenerationText.innerHTML = lang.syncProgressMessage;
+                var elements = [];
+
+                if (document.querySelector("input[name=setSelected]").checked) {
+                    elements = cfg.allElements.slice();
+                } else {
+                    document.querySelectorAll('input[name="selection[]"]:checked').forEach(function (el) {
+                        elements.push(el.value);
+                    });
+                }
+
+                var progressBar_max = elements.length;
+                var todo = 0;
+                var syncBlockSize = Math.min(Number((elements.length / 2).toFixed()), 500);
+                var image_ids = [];
+
+                document.getElementById("applyActionBlock").style.display = 'none';
+                document.querySelectorAll(".permitActionListButton").forEach(function (el) {
+                    el.style.display = 'none';
+                });
+                document.getElementById("confirmDel").style.display = 'none';
+                document.getElementById("regenerationMsg").style.display = '';
+                progress_bar_start();
+
+                for (var i = 0; i < elements.length; i++) {
+                    image_ids.push(elements[i]);
+                    if (i % syncBlockSize != syncBlockSize - 1 && i != elements.length - 1) continue;
+
+                    (function (ids) {
+                        var thisBatchSize = ids.length;
+                        var body = new URLSearchParams({
+                            pwg_token: document.querySelector("input[name=pwg_token]").value,
+                        });
+                        ids.forEach(function (id) { body.append("image_id[]", id); });
+                        fetch("ws.php?format=json&method=pwg.images.syncMetadata", { method: "POST", body: body })
+                            .then(function (r) { return r.json(); })
+                            .then(function () {
+                                todo += thisBatchSize;
+                                var badge = document.querySelector("#regenerationStatus .badge-number");
+                                if (badge) badge.innerHTML = todo + "/" + progressBar_max;
+                                progress_bar(todo, progressBar_max, false);
+                            })
+                            .catch(function () {
+                                todo += thisBatchSize;
+                                var badge = document.querySelector("#regenerationStatus .badge-number");
+                                if (badge) badge.innerHTML = todo + "/" + progressBar_max;
+                                progress_bar(todo, progressBar_max, false);
+                            });
+                    })(image_ids);
+                    image_ids = [];
+                }
+                return;
+            }
+
+            /* delete: require confirmation, then delete by blocks */
+            if (action == 'delete') {
+                if (!document.querySelector("#confirmDel input[name=confirm_deletion]").checked) {
+                    var errorSpan = document.querySelector("#confirmDel span.errors");
+                    if (errorSpan) errorSpan.style.visibility = "visible";
+                    e.preventDefault();
+                    return;
+                }
+                e.preventDefault();
+                e.stopPropagation();
+
+                document.querySelectorAll(".bulkAction").forEach(function (el) {
+                    el.style.display = 'none';
+                });
+
+                var elements = [];
+                if (document.querySelector("input[name=setSelected]").checked) {
+                    elements = cfg.allElements.slice();
+                } else {
+                    document.querySelectorAll('input[name="selection[]"]:checked').forEach(function (el) {
+                        elements.push(el.value);
+                    });
+                }
+
+                var progressBar_max = elements.length;
+                var todo = 0;
+                var deleteBlockSize = Math.min(Number((elements.length / 2).toFixed()), 1000);
+                var image_ids = [];
+
+                document.getElementById("applyActionBlock").style.display = 'none';
+                document.querySelectorAll(".permitActionListButton").forEach(function (el) {
+                    el.style.display = 'none';
+                });
+                document.getElementById("confirmDel").style.display = 'none';
+                var regenerationText = document.getElementById("regenerationText");
+                if (regenerationText) regenerationText.innerHTML = lang.deleteProgressMessage;
+                document.getElementById("regenerationMsg").style.display = '';
+                progress_bar_start();
+
+                var _deleteQueue = Promise.resolve();
+                for (var i = 0; i < elements.length; i++) {
+                    image_ids.push(elements[i]);
+                    if (i % deleteBlockSize != deleteBlockSize - 1 && i != elements.length - 1) continue;
+
+                    (function (ids) {
+                        var thisBatchSize = ids.length;
+                        _deleteQueue = _deleteQueue.then(function () {
+                            return fetch("ws.php?format=json", {
+                                method: "POST",
+                                body: new URLSearchParams({
+                                    method: "pwg.images.delete",
+                                    pwg_token: document.querySelector("input[name=pwg_token]").value,
+                                    image_id: ids.join(","),
+                                }),
+                            })
+                                .then(function (r) { return r.json(); })
+                                .then(function () {
+                                    todo += thisBatchSize;
+                                    var badge = document.querySelector("#regenerationStatus .badge-number");
+                                    if (badge) badge.innerHTML = todo + "/" + progressBar_max;
+                                    progress_bar(todo, progressBar_max, false);
+                                })
+                                .catch(function () {
+                                    todo += thisBatchSize;
+                                    var badge = document.querySelector("#regenerationStatus .badge-number");
+                                    if (badge) badge.innerHTML = todo + "/" + progressBar_max;
+                                    progress_bar(todo, progressBar_max, false);
+                                });
+                        });
+                    })(image_ids);
+
+                    image_ids = [];
+                }
+
+                document.querySelector("form").insertAdjacentHTML(
+                    "beforeend",
+                    '<input type="hidden" name="nb_photos_deleted" value="' + elements.length + '">',
                 );
-        },
-    });
-}
-
-function selectGenerateDerivAll() {
-    $("#action_generate_derivatives input[type=checkbox]")
-        .prop("checked", true)
-        .trigger("change");
-}
-function selectGenerateDerivNone() {
-    $("#action_generate_derivatives input[type=checkbox]")
-        .prop("checked", false)
-        .trigger("change");
-}
-
-function selectDelDerivAll() {
-    $('#action_delete_derivatives input[name="del_derivatives_type[]"]')
-        .prop("checked", true)
-        .trigger("change");
-}
-function selectDelDerivNone() {
-    $('#action_delete_derivatives input[name="del_derivatives_type[]"]')
-        .prop("checked", false)
-        .trigger("change");
-}
-
-/* sync metadatas or delete photos by blocks, with progress bar */
-jQuery("#applyAction").click(function (e) {
-    if (typeof elements != "undefined") {
-        return true;
-    }
-
-    if (jQuery('[name="selectAction"]').val() == "metadata") {
-        e.preventDefault();
-        e.stopPropagation();
-        jQuery(".bulkAction").hide();
-        jQuery("#regenerationText").html(lang.syncProgressMessage);
-        elements = Array();
-
-        if (jQuery("input[name=setSelected]").is(":checked")) {
-            elements = all_elements;
-        } else {
-            jQuery('input[name="selection[]"]')
-                .filter(":checked")
-                .each(function () {
-                    elements.push(jQuery(this).val());
-                });
-        }
-
-        progressBar_max = elements.length;
-        var todo = 0;
-        var syncBlockSize = Math.min(
-            Number((elements.length / 2).toFixed()),
-            500,
-        );
-        var image_ids = Array();
-
-        jQuery("#applyActionBlock").hide();
-        jQuery(".permitActionListButton").hide();
-        jQuery("#confirmDel").hide();
-        jQuery("#regenerationMsg").show();
-        progress_bar_start();
-        for (i = 0; i < elements.length; i++) {
-            image_ids.push(elements[i]);
-            if (
-                i % syncBlockSize != syncBlockSize - 1 &&
-                i != elements.length - 1
-            ) {
-                continue;
+                return;
             }
+        });
+    }
 
-            (function (ids) {
-                var thisBatchSize = ids.length;
-                jQuery.ajax({
-                    url: "ws.php?format=json&method=pwg.images.syncMetadata",
-                    type: "POST",
-                    dataType: "json",
-                    data: {
-                        pwg_token: jQuery("input[name=pwg_token]").val(),
-                        image_id: ids,
-                    },
-                    success: function (data) {
-                        todo += thisBatchSize;
-                        var isOk = data.stat && "ok" == data.stat;
-                        if (
-                            isOk &&
-                            data.result.nb_synchronized != thisBatchSize
-                            /*TODO: user feedback only data.nb_synchronized images out of thisBatchSize were sync*/
-                        );
-                        /*TODO: user feedback if isError*/
-                        jQuery("#regenerationStatus .badge-number").html(
-                            todo.toString() + "/" + progressBar_max.toString(),
-                        );
-                        progress_bar(todo, progressBar_max, false);
-                    },
-                    error: function (data) {
-                        todo += thisBatchSize;
-                        /*TODO: user feedback*/
-                        jQuery("#regenerationStatus .badge-number").html(
-                            todo.toString() + "/" + progressBar_max.toString(),
-                        );
-                        progress_bar(todo, progressBar_max, false);
-                    },
-                });
-            })(image_ids);
-            image_ids = Array();
+    function progress_bar_start() {
+        var el = document.getElementById("uploadingActions");
+        if (el) {
+            el.style.display = '';
+            var progBar = el.querySelector(".progress-bar");
+            if (progBar) progBar.style.width = "0%";
         }
     }
 
-    if (jQuery('[name="selectAction"]').val() == "delete") {
-        if (
-            !jQuery("#confirmDel input[name=confirm_deletion]").is(":checked")
-        ) {
-            jQuery("#confirmDel span.errors").css("visibility", "visible");
-            return false;
-        }
-        e.stopPropagation();
-    } else {
-        return true;
+    function progress_bar_end() {
+        var el = document.getElementById("uploadingActions");
+        if (el) el.style.display = 'none';
     }
 
-    jQuery(".bulkAction").hide();
-    var maxRequests = 1;
+    function progress_bar(val, max) {
+        var percent = parseInt((val / max) * 100);
+        var progBar = document.querySelector("#uploadingActions .progressbar");
+        if (progBar) progBar.style.width = percent.toString() + "%";
+        if (val == max) {
+            var applyActionBtn = document.getElementById("applyAction");
+            if (applyActionBtn) applyActionBtn.click();
+        }
+    }
 
-    var queuedManager = jQuery.manageAjax.create("queued", {
-        queue: true,
-        cacheResponse: false,
-        maxRequests: maxRequests,
+    document.querySelectorAll("#confirmDel input[name=confirm_deletion]").forEach(function (el) {
+        el.addEventListener("change", function () {
+            var errorSpan = document.querySelector("#confirmDel span.errors");
+            if (errorSpan) errorSpan.style.visibility = "hidden";
+        });
     });
 
-    elements = Array();
+    document.querySelectorAll("#sync_md5sum").forEach(function (el) {
+        el.addEventListener("click", function (e) {
+            e.preventDefault();
+            this.style.display = 'none';
+            var addMd5sum = document.getElementById("add_md5sum");
+            if (addMd5sum) addMd5sum.style.display = '';
 
-    if (jQuery("input[name=setSelected]").is(":checked")) {
-        elements = all_elements;
-    } else {
-        jQuery('input[name="selection[]"]')
-            .filter(":checked")
-            .each(function () {
-                elements.push(jQuery(this).val());
+            var md5sumToAdd = document.getElementById("md5sum_to_add");
+            var addBlockSize = Math.min(Number((md5sumToAdd.dataset.origin / 2).toFixed()), 1000);
+            add_md5sum_block(addBlockSize);
+        });
+    });
+
+    function add_md5sum_block(blockSize) {
+        var body = new URLSearchParams({ pwg_token: document.querySelector("input[name=pwg_token]").value });
+        if (blockSize !== undefined) body.append("block_size", blockSize);
+        fetch("ws.php?format=json&method=pwg.images.setMd5sum", { method: "POST", body: body })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var md5sumToAdd = document.getElementById("md5sum_to_add");
+                if (md5sumToAdd) md5sumToAdd.innerHTML = data.result.nb_no_md5sum;
+
+                var percent_remaining = Number(((data.result.nb_no_md5sum * 100) / md5sumToAdd.dataset.origin).toFixed());
+                var percent_done = 100 - percent_remaining;
+                var md5sumAdded = document.getElementById("md5sum_added");
+                if (md5sumAdded) md5sumAdded.innerHTML = percent_done;
+
+                if (data.result.nb_no_md5sum > 0) {
+                    add_md5sum_block();
+                } else {
+                    document.location = "admin.php?page=batch_manager&action=sync_md5sum&nb_md5sum_added=" +
+                        md5sumToAdd.dataset.origin;
+                }
+            })
+            .catch(function (err) {
+                var addMd5sum = document.getElementById("add_md5sum");
+                if (addMd5sum) addMd5sum.style.display = 'none';
+                var addMd5sumError = document.getElementById("add_md5sum_error");
+                if (addMd5sumError) {
+                    addMd5sumError.style.display = '';
+                    addMd5sumError.innerHTML = "error: " + err.message;
+                }
             });
     }
 
-    progressBar_max = elements.length;
-    var todo = 0;
-    var deleteBlockSize = Math.min(
-        Number((elements.length / 2).toFixed()),
-        1000,
-    );
-    var image_ids = Array();
+    document.querySelectorAll("#delete_orphans").forEach(function (el) {
+        el.addEventListener("click", function (e) {
+            e.preventDefault();
+            this.style.display = 'none';
+            var orphansDeletion = document.getElementById("orphans_deletion");
+            if (orphansDeletion) orphansDeletion.style.display = '';
 
-    jQuery("#applyActionBlock").hide();
-    jQuery(".permitActionListButton").hide();
-    jQuery("#confirmDel").hide();
-    jQuery("#regenerationText").html(lang.deleteProgressMessage);
-    jQuery("#regenerationMsg").show();
-    progress_bar_start();
-    for (i = 0; i < elements.length; i++) {
-        image_ids.push(elements[i]);
-        if (
-            i % deleteBlockSize != deleteBlockSize - 1 &&
-            i != elements.length - 1
-        ) {
-            continue;
-        }
+            var orphansToDelete = document.getElementById("orphans_to_delete");
+            var deleteBlockSize = Math.min(Number((orphansToDelete.dataset.origin / 2).toFixed()), 1000);
+            delete_orphans_block(deleteBlockSize);
+        });
+    });
 
-        (function (ids) {
-            var thisBatchSize = ids.length;
-            queuedManager.add({
-                type: "POST",
-                url: "ws.php?format=json",
-                data: {
-                    method: "pwg.images.delete",
-                    pwg_token: jQuery("input[name=pwg_token]").val(),
-                    image_id: ids.join(","),
-                },
-                dataType: "json",
-                success: function (data) {
-                    todo += thisBatchSize;
-                    var isOk = data.stat && "ok" == data.stat;
-                    if (isOk && data.result != thisBatchSize);
-                    /*TODO: user feedback only data.result images out of thisBatchSize were deleted*/
-                    /*TODO: user feedback if isError*/
-                    jQuery("#regenerationStatus .badge-number").html(
-                        todo.toString() + "/" + progressBar_max.toString(),
-                    );
-                    progress_bar(todo, progressBar_max, false);
-                },
-                error: function (data) {
-                    todo += thisBatchSize;
-                    /*TODO: user feedback*/
-                    jQuery("#regenerationStatus .badge-number").html(
-                        todo.toString() + "/" + progressBar_max.toString(),
-                    );
-                    progress_bar(todo, progressBar_max, false);
-                },
+    function delete_orphans_block(blockSize) {
+        var body = new URLSearchParams({ pwg_token: document.querySelector("input[name=pwg_token]").value });
+        if (blockSize !== undefined) body.append("block_size", blockSize);
+        fetch("ws.php?format=json&method=pwg.images.deleteOrphans", { method: "POST", body: body })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var orphansToDelete = document.getElementById("orphans_to_delete");
+                if (orphansToDelete) orphansToDelete.innerHTML = data.result.nb_orphans;
+
+                var percent_remaining = Number(((data.result.nb_orphans * 100) / orphansToDelete.dataset.origin).toFixed());
+                var percent_done = 100 - percent_remaining;
+                var orphansDeleted = document.getElementById("orphans_deleted");
+                if (orphansDeleted) orphansDeleted.innerHTML = percent_done;
+
+                if (data.result.nb_orphans > 0) {
+                    delete_orphans_block();
+                } else {
+                    document.location = "admin.php?page=batch_manager&action=delete_orphans&nb_orphans_deleted=" +
+                        orphansToDelete.dataset.origin;
+                }
+            })
+            .catch(function (err) {
+                var orphansDeletion = document.getElementById("orphans_deletion");
+                if (orphansDeletion) orphansDeletion.style.display = 'none';
+                var orphansDeletionError = document.getElementById("orphans_deletion_error");
+                if (orphansDeletionError) {
+                    orphansDeletionError.style.display = '';
+                    orphansDeletionError.innerHTML = "error: " + err.message;
+                }
             });
-        })(image_ids);
-
-        image_ids = Array();
     }
-
-    /* tell PHP how many photos were deleted */
-    jQuery("form").append(
-        '<input type="hidden" name="nb_photos_deleted" value="' +
-            elements.length +
-            '">',
-    );
-
-    return false;
 });
-
-function progress_bar_start() {
-    jQuery("#uploadingActions").show();
-    jQuery("#uploadingActions .progress-bar").width("0%");
-}
-
-function progress_bar_end() {
-    jQuery("#uploadingActions").hide();
-}
-
-function progress_bar(val, max, success) {
-    percent = parseInt((val / max) * 100);
-    jQuery("#uploadingActions .progressbar").width(percent.toString() + "%");
-    if (val == max) jQuery("#applyAction").click();
-}
-
-jQuery("#confirmDel input[name=confirm_deletion]").change(function () {
-    jQuery("#confirmDel span.errors").css("visibility", "hidden");
-});
-
-jQuery("#sync_md5sum").click(function (e) {
-    jQuery(this).hide();
-    jQuery("#add_md5sum").show();
-
-    var addBlockSize = Math.min(
-        Number((jQuery("#md5sum_to_add").data("origin") / 2).toFixed()),
-        1000,
-    );
-    add_md5sum_block(addBlockSize);
-
-    return false;
-});
-
-function add_md5sum_block(blockSize) {
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.images.setMd5sum",
-        type: "POST",
-        dataType: "json",
-        data: {
-            pwg_token: jQuery("input[name=pwg_token]").val(),
-            block_size: blockSize,
-        },
-        success: function (data) {
-            jQuery("#md5sum_to_add").html(data.result.nb_no_md5sum);
-
-            var percent_remaining = Number(
-                (
-                    (data.result.nb_no_md5sum * 100) /
-                    jQuery("#md5sum_to_add").data("origin")
-                ).toFixed(),
-            );
-            var percent_done = 100 - percent_remaining;
-            jQuery("#md5sum_added").html(percent_done);
-            if (data.result.nb_no_md5sum > 0) {
-                add_md5sum_block();
-            } else {
-                // time to refresh the whole page
-                var redirect_to = "admin.php?page=batch_manager";
-                redirect_to += "&action=sync_md5sum";
-                redirect_to +=
-                    "&nb_md5sum_added=" +
-                    jQuery("#md5sum_to_add").data("origin");
-
-                document.location = redirect_to;
-            }
-        },
-        error: function (XMLHttpRequest) {
-            jQuery("#add_md5sum").hide();
-            jQuery("#add_md5sum_error")
-                .show()
-                .html(
-                    "error " +
-                        XMLHttpRequest.status +
-                        " : " +
-                        XMLHttpRequest.statusText,
-                );
-        },
-    });
-}
-
-jQuery("#delete_orphans").click(function (e) {
-    jQuery(this).hide();
-    jQuery("#orphans_deletion").show();
-
-    var deleteBlockSize = Math.min(
-        Number((jQuery("#orphans_to_delete").data("origin") / 2).toFixed()),
-        1000,
-    );
-
-    delete_orphans_block(deleteBlockSize);
-
-    return false;
-});
-
-function delete_orphans_block(blockSize) {
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.images.deleteOrphans",
-        type: "POST",
-        dataType: "json",
-        data: {
-            pwg_token: jQuery("input[name=pwg_token]").val(),
-            block_size: blockSize,
-        },
-        success: function (data) {
-            jQuery("#orphans_to_delete").html(data.result.nb_orphans);
-
-            var percent_remaining = Number(
-                (
-                    (data.result.nb_orphans * 100) /
-                    jQuery("#orphans_to_delete").data("origin")
-                ).toFixed(),
-            );
-            var percent_done = 100 - percent_remaining;
-            jQuery("#orphans_deleted").html(percent_done);
-
-            if (data.result.nb_orphans > 0) {
-                delete_orphans_block();
-            } else {
-                // time to refresh the whole page
-                var redirect_to = "admin.php?page=batch_manager";
-                redirect_to += "&action=delete_orphans";
-                redirect_to +=
-                    "&nb_orphans_deleted=" +
-                    jQuery("#orphans_to_delete").data("origin");
-
-                document.location = redirect_to;
-            }
-        },
-        error: function (XMLHttpRequest) {
-            jQuery("#orphans_deletion").hide();
-            jQuery("#orphans_deletion_error")
-                .show()
-                .html(
-                    "error " +
-                        XMLHttpRequest.status +
-                        " : " +
-                        XMLHttpRequest.statusText,
-                );
-        },
-    });
-}

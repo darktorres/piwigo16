@@ -1,4 +1,4 @@
-(function ($, exports) {
+(function (exports) {
     "use strict";
 
     /**
@@ -87,14 +87,14 @@
     };
 
     /**
-     * Abstract class containing common initialization code for selectize
+     * Abstract class containing common initialization code for TomSelect
      */
     var AbstractSelectizer = function () {};
     AbstractSelectizer.prototype = new LocalStorageCache({});
 
     /*
-     * Load Selectize with cache content
-     * @param $target {jQuery} may have some data attributes (create, default, value)
+     * Load TomSelect with cache content
+     * @param els {Element|NodeList|Array} native DOM element(s)
      * @param options {object}
      *    - value (optional) list of preselected items (ids, or objects with "id" attribute")
      *    - default (optional) default value which will be forced if the select is emptied
@@ -104,56 +104,63 @@
      *      must return new data
      */
     AbstractSelectizer.prototype._selectize = function (
-        $target,
+        els,
         globalOptions,
     ) {
-        $target.data("cache", this);
+        if (!Array.isArray(els)) {
+            els = els instanceof NodeList ? Array.from(els) : [els];
+        }
+
+        var that = this;
+        els.forEach(function (el) { el._pwgCache = that; });
 
         this.get(function (data) {
-            $target.each(function () {
+            els.forEach(function (el) {
+                var ts = el.tomselect;
+                if (!ts) return;
+
                 var filtered;
                 var value;
                 var defaultValue;
-                var options = $.extend({}, globalOptions);
+                var options = Object.assign({}, globalOptions);
 
                 // apply filter function
                 if (options.filter != undefined) {
-                    filtered = options.filter.call(this, data, options);
+                    filtered = options.filter.call(el, data, options);
                 } else {
                     filtered = data;
                 }
 
-                this.selectize.settings.maxOptions = filtered.length + 100;
+                ts.settings.maxOptions = filtered.length + 100;
 
                 // active creation mode
-                if (this.hasAttribute("data-create")) {
+                if (el.hasAttribute("data-create")) {
                     options.create = true;
                 }
-                this.selectize.settings.create = !!options.create;
+                ts.settings.create = !!options.create;
 
                 // load options
-                this.selectize.load(function (callback) {
-                    if ($.isEmptyObject(this.options)) {
+                ts.load(function (callback) {
+                    if (Object.keys(this.options).length === 0) {
                         callback(filtered);
                     }
                 });
 
                 // load items
-                if ((value = $(this).data("value"))) {
+                if ((value = el.dataset.value)) {
+                    value = JSON.parse(value);
                     options.value = value;
                 }
                 if (options.value != undefined) {
-                    $.each(
-                        value,
-                        $.proxy(function (i, cat) {
-                            if ($.isNumeric(cat)) this.selectize.addItem(cat);
-                            else this.selectize.addItem(cat.id);
-                        }, this),
-                    );
+                    (Array.isArray(options.value) ? options.value : [options.value]).forEach(function (cat) {
+                        var n = parseFloat(cat);
+                        if (!isNaN(n) && isFinite(cat)) ts.addItem(cat);
+                        else ts.addItem(cat.id);
+                    });
                 }
 
                 // set default
-                if ((defaultValue = $(this).data("default"))) {
+                if ((defaultValue = el.dataset['default'])) {
                     options.default = defaultValue;
                 }
                 if (options.default == "first") {
@@ -162,27 +169,26 @@
 
                 if (options.default != undefined) {
                     // add default item
-                    if (this.selectize.getValue() == "") {
-                        this.selectize.addItem(options.default);
+                    if (ts.getValue() == "") {
+                        ts.addItem(options.default);
                     }
 
                     // if multiple: prevent item deletion
-                    if (this.multiple) {
-                        this.selectize
-                            .getItem(options.default)
-                            .find(".remove")
-                            .hide();
+                    if (el.multiple) {
+                        var removeBtn = ts.getItem(options.default).querySelector(".remove");
+                        if (removeBtn) removeBtn.style.display = 'none';
 
-                        this.selectize.on("item_remove", function (id) {
+                        ts.on("item_remove", function (id) {
                             if (id == options.default) {
                                 this.addItem(id);
-                                this.getItem(id).find(".remove").hide();
+                                var btn = this.getItem(id).querySelector(".remove");
+                                if (btn) btn.style.display = 'none';
                             }
                         });
                     }
                     // if single: restore default on blur
                     else {
-                        this.selectize.on("dropdown_close", function () {
+                        ts.on("dropdown_close", function () {
                             if (this.getValue() == "") {
                                 this.addItem(options.default);
                             }
@@ -193,7 +199,7 @@
         });
     };
 
-    // redefine Selectize templates without escape
+    // redefine TomSelect render templates without escape
     AbstractSelectizer.getRender = function (field_label, lang) {
         lang = lang || { Add: "Add" };
 
@@ -228,20 +234,17 @@
         options.key = "categoriesAdminList";
 
         options.loader = function (callback) {
-            $.getJSON(
-                options.rootUrl +
-                    "ws.php?format=json&method=pwg.categories.getAdminList",
-                function (data) {
+            fetch(options.rootUrl + "ws.php?format=json&method=pwg.categories.getAdminList")
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
                     var cats = data.result.categories.map(function (c, i) {
                         c.pos = i;
                         delete c["comment"];
                         delete c["uppercats"];
                         return c;
                     });
-
                     callback(cats);
-                },
-            );
+                });
         };
 
         this._init(options);
@@ -250,22 +253,26 @@
     CategoriesCache.prototype = new AbstractSelectizer();
 
     /*
-     * Init Selectize with cache content
+     * Init TomSelect with cache content
+     * @param target {Element|NodeList|Array} native DOM element(s)
      * @see AbstractSelectizer._selectize
      */
-    CategoriesCache.prototype.selectize = function ($target, options) {
+    CategoriesCache.prototype.selectize = function (target, options) {
         options = options || {};
+        var els = target instanceof NodeList ? Array.from(target) : (Array.isArray(target) ? target : [target]);
 
-        $target.selectize({
-            valueField: "id",
-            labelField: "fullname",
-            sortField: "pos",
-            searchField: ["fullname"],
-            plugins: ["remove_button"],
-            render: AbstractSelectizer.getRender("fullname", options.lang),
+        els.forEach(function (el) {
+            new TomSelect(el, {
+                valueField: "id",
+                labelField: "fullname",
+                sortField: "pos",
+                searchField: ["fullname"],
+                plugins: ["remove_button"],
+                render: AbstractSelectizer.getRender("fullname", options.lang),
+            });
         });
 
-        this._selectize($target, options);
+        this._selectize(els, options);
     };
 
     /**
@@ -280,20 +287,17 @@
         options.key = "tagsAdminList";
 
         options.loader = function (callback) {
-            $.getJSON(
-                options.rootUrl +
-                    "ws.php?format=json&method=pwg.tags.getAdminList",
-                function (data) {
+            fetch(options.rootUrl + "ws.php?format=json&method=pwg.tags.getAdminList")
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
                     var tags = data.result.tags.map(function (t) {
                         t.id = "~~" + t.id + "~~";
                         delete t["url_name"];
                         delete t["lastmodified"];
                         return t;
                     });
-
                     callback(tags);
-                },
-            );
+                });
         };
 
         this._init(options);
@@ -302,22 +306,26 @@
     TagsCache.prototype = new AbstractSelectizer();
 
     /*
-     * Init Selectize with cache content
+     * Init TomSelect with cache content
+     * @param target {Element|NodeList|Array} native DOM element(s)
      * @see AbstractSelectizer._selectize
      */
-    TagsCache.prototype.selectize = function ($target, options) {
+    TagsCache.prototype.selectize = function (target, options) {
         options = options || {};
+        var els = target instanceof NodeList ? Array.from(target) : (Array.isArray(target) ? target : [target]);
 
-        $target.selectize({
-            valueField: "id",
-            labelField: "name",
-            sortField: "name",
-            searchField: ["name"],
-            plugins: ["remove_button"],
-            render: AbstractSelectizer.getRender("name", options.lang),
+        els.forEach(function (el) {
+            new TomSelect(el, {
+                valueField: "id",
+                labelField: "name",
+                sortField: "name",
+                searchField: ["name"],
+                plugins: ["remove_button"],
+                render: AbstractSelectizer.getRender("name", options.lang),
+            });
         });
 
-        this._selectize($target, options);
+        this._selectize(els, options);
     };
 
     /**
@@ -332,18 +340,15 @@
         options.key = "groupsAdminList";
 
         options.loader = function (callback) {
-            $.getJSON(
-                options.rootUrl +
-                    "ws.php?format=json&method=pwg.groups.getList&per_page=9999",
-                function (data) {
+            fetch(options.rootUrl + "ws.php?format=json&method=pwg.groups.getList&per_page=9999")
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
                     var groups = data.result.groups.map(function (g) {
                         delete g["lastmodified"];
                         return g;
                     });
-
                     callback(groups);
-                },
-            );
+                });
         };
 
         this._init(options);
@@ -352,22 +357,26 @@
     GroupsCache.prototype = new AbstractSelectizer();
 
     /*
-     * Init Selectize with cache content
+     * Init TomSelect with cache content
+     * @param target {Element|NodeList|Array} native DOM element(s)
      * @see AbstractSelectizer._selectize
      */
-    GroupsCache.prototype.selectize = function ($target, options) {
+    GroupsCache.prototype.selectize = function (target, options) {
         options = options || {};
+        var els = target instanceof NodeList ? Array.from(target) : (Array.isArray(target) ? target : [target]);
 
-        $target.selectize({
-            valueField: "id",
-            labelField: "name",
-            sortField: "name",
-            searchField: ["name"],
-            plugins: ["remove_button"],
-            render: AbstractSelectizer.getRender("name", options.lang),
+        els.forEach(function (el) {
+            new TomSelect(el, {
+                valueField: "id",
+                labelField: "name",
+                sortField: "name",
+                searchField: ["name"],
+                plugins: ["remove_button"],
+                render: AbstractSelectizer.getRender("name", options.lang),
+            });
         });
 
-        this._selectize($target, options);
+        this._selectize(els, options);
     };
 
     /**
@@ -386,11 +395,13 @@
 
             // recursive loader
             (function load(page) {
-                jQuery.getJSON(
+                fetch(
                     options.rootUrl +
                         "ws.php?format=json&method=pwg.users.getList&display=username&per_page=9999&page=" +
                         page,
-                    function (data) {
+                )
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
                         users = users.concat(data.result.users);
 
                         if (
@@ -401,8 +412,7 @@
                         } else {
                             callback(users);
                         }
-                    },
-                );
+                    });
             })(0);
         };
 
@@ -412,22 +422,26 @@
     UsersCache.prototype = new AbstractSelectizer();
 
     /*
-     * Init Selectize with cache content
+     * Init TomSelect with cache content
+     * @param target {Element|NodeList|Array} native DOM element(s)
      * @see AbstractSelectizer._selectize
      */
-    UsersCache.prototype.selectize = function ($target, options) {
+    UsersCache.prototype.selectize = function (target, options) {
         options = options || {};
+        var els = target instanceof NodeList ? Array.from(target) : (Array.isArray(target) ? target : [target]);
 
-        $target.selectize({
-            valueField: "id",
-            labelField: "username",
-            sortField: "username",
-            searchField: ["username"],
-            plugins: ["remove_button"],
-            render: AbstractSelectizer.getRender("username", options.lang),
+        els.forEach(function (el) {
+            new TomSelect(el, {
+                valueField: "id",
+                labelField: "username",
+                sortField: "username",
+                searchField: ["username"],
+                plugins: ["remove_button"],
+                render: AbstractSelectizer.getRender("username", options.lang),
+            });
         });
 
-        this._selectize($target, options);
+        this._selectize(els, options);
     };
 
     /**
@@ -438,4 +452,4 @@
     exports.TagsCache = TagsCache;
     exports.GroupsCache = GroupsCache;
     exports.UsersCache = UsersCache;
-})(jQuery, window);
+})(window);

@@ -41,7 +41,7 @@ if (! isset($_GET['group_id'])) {
 
 functions::check_input_parameter('group_id', $_GET, false, PATTERN_ID);
 
-$page['group'] = $_GET['group_id'];
+$page['group'] = (int) $_GET['group_id'];
 
 // +-----------------------------------------------------------------------+
 // |                                updates                                |

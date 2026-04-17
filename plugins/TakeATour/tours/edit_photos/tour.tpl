@@ -91,9 +91,9 @@
   // Start the tour
   tour.start();
 
-  jQuery("p.albumActions > a:nth-child(1)").click(function() {
-    if (tour.getCurrentStep() == 20) {
-      tour.goTo(21);
-    }
+  document.querySelectorAll("p.albumActions > a:nth-child(1)").forEach(function(el) {
+    el.addEventListener('click', function() {
+      if (tour.getCurrentStep() == 20) tour.goTo(21);
+    });
   });
 </script>{/footer_script}

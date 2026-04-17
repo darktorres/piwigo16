@@ -1,20 +1,22 @@
 {footer_script}<script>
 (function() {
   // --- File options toggle ---
-  $('#syncFiles label').click(function() {
-    if ($("input[value='files']:checked").val()) {
-      $("input[value='files']").closest("li").find("ul").show();
-    } else {
-      $("input[value='files']").closest("li").find("ul").hide();
-    }
+  document.querySelectorAll('#syncFiles label').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var filesInput = document.querySelector("input[value='files']");
+      var subList = filesInput ? filesInput.closest("li").querySelector("ul") : null;
+      if (subList) {
+        subList.style.display = document.querySelector("input[value='files']:checked") ? '' : 'none';
+      }
+    });
   });
 
   // --- Real-time sync via Server-Sent Events ---
-  var $form = $('#update');
-  if (!$form.length) return;
+  var form = document.getElementById('update');
+  if (!form) return;
 
-  var $progress = $('#syncProgress');
-  var $phases = $('#syncPhases');
+  var progress = document.getElementById('syncProgress');
+  var phases = document.getElementById('syncPhases');
   var startTime, timerInterval;
   var activeSubstepId = null, activeSubstepStart = 0;
 
@@ -32,16 +34,19 @@
     }
   });
 
-  $form.on('submit', function(e) {
-    var syncVal = $("input[name='sync']:checked").val();
-    var syncMeta = $("input[name='sync_meta']").is(':checked');
+  form.addEventListener('submit', function(e) {
+    var syncChecked = document.querySelector("input[name='sync']:checked");
+    var syncVal = syncChecked ? syncChecked.value : '';
+    var syncMetaEl = document.querySelector("input[name='sync_meta']");
+    var syncMeta = syncMetaEl ? syncMetaEl.checked : false;
     if (!syncVal && !syncMeta) return true;
 
     e.preventDefault();
     syncRunning = true;
-    $form.hide();
-    $progress.show();
-    $('#syncControls').show();
+    form.style.display = 'none';
+    progress.style.display = '';
+    var syncControls = document.getElementById('syncControls');
+    if (syncControls) syncControls.style.display = '';
     startTime = performance.now();
     timerInterval = setInterval(updateElapsed, 100);
     paused = false;
@@ -52,7 +57,7 @@
     var url = new URL(window.location.href);
     url.searchParams.set('sse', '1');
 
-    var formData = new FormData($form[0]);
+    var formData = new FormData(form);
     formData.append('submit', 'Synchronize');
 
     fetch(url.toString(), {
@@ -93,61 +98,80 @@
       clearInterval(timerInterval);
       updateElapsed();
       hideControls();
-      $('#syncTitle').text('Connection lost');
-      $('#syncResults').html(
-        '<div class="errors"><ul><li>The connection to the server was lost.'
-        + ' The sync may still be running in the background.'
-        + ' Refresh the page to check the current state.</li></ul></div>'
-        + '<p class="bottomButtons">'
-        + '<button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">'
-        + 'Refresh</button></p>'
-      ).show();
+      var syncTitle = document.getElementById('syncTitle');
+      if (syncTitle) syncTitle.textContent = 'Connection lost';
+      var syncResults = document.getElementById('syncResults');
+      if (syncResults) {
+        syncResults.innerHTML = '<div class="errors"><ul><li>The connection to the server was lost.'
+          + ' The sync may still be running in the background.'
+          + ' Refresh the page to check the current state.</li></ul></div>'
+          + '<p class="bottomButtons">'
+          + '<button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">'
+          + 'Refresh</button></p>';
+        syncResults.style.display = '';
+      }
     });
   });
 
-  $('#syncPause').click(function() {
-    if (paused) {
-      paused = false;
-      $(this).text('Pause');
-      $('.syncPausedLabel').remove();
-      if (resumeResolve) {
+  var syncPauseBtn = document.getElementById('syncPause');
+  if (syncPauseBtn) {
+    syncPauseBtn.addEventListener('click', function() {
+      if (paused) {
+        paused = false;
+        this.textContent = 'Pause';
+        document.querySelectorAll('.syncPausedLabel').forEach(function(el) { el.remove(); });
+        if (resumeResolve) {
+          var fn = resumeResolve;
+          resumeResolve = null;
+          fn();
+        }
+      } else {
+        paused = true;
+        this.textContent = 'Resume';
+        var syncElapsed = document.getElementById('syncElapsed');
+        if (syncElapsed) syncElapsed.insertAdjacentHTML('afterend', '<span class="syncPausedLabel">PAUSED</span>');
+      }
+    });
+  }
+
+  var syncAbortBtn = document.getElementById('syncAbort');
+  if (syncAbortBtn) {
+    syncAbortBtn.addEventListener('click', function() {
+      aborted = true;
+      syncRunning = false;
+      if (paused && resumeResolve) {
+        paused = false;
         var fn = resumeResolve;
         resumeResolve = null;
         fn();
       }
-    } else {
-      paused = true;
-      $(this).text('Resume');
-      $('#syncElapsed').after('<span class="syncPausedLabel">PAUSED</span>');
-    }
-  });
-
-  $('#syncAbort').click(function() {
-    aborted = true;
-    syncRunning = false;
-    if (paused && resumeResolve) {
-      paused = false;
-      var fn = resumeResolve;
-      resumeResolve = null;
-      fn();
-    }
-    abortController.abort();
-    clearInterval(timerInterval);
-    updateElapsed();
-    hideControls();
-    $('#syncTitle').text('Synchronization aborted');
-    $('.sync-phase.running').removeClass('running').addClass('aborted');
-    $('.sync-phase.aborted .phase-status').html('\u2717');
-    $('#syncResults').html(
-      '<p>The synchronization was aborted. Any changes already committed to the database will remain.</p>'
-      + '<p class="bottomButtons">'
-      + '<button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">'
-      + 'Back to sync</button></p>'
-    ).show();
-  });
+      abortController.abort();
+      clearInterval(timerInterval);
+      updateElapsed();
+      hideControls();
+      var syncTitle = document.getElementById('syncTitle');
+      if (syncTitle) syncTitle.textContent = 'Synchronization aborted';
+      document.querySelectorAll('.sync-phase.running').forEach(function(el) {
+        el.classList.remove('running');
+        el.classList.add('aborted');
+      });
+      document.querySelectorAll('.sync-phase.aborted .phase-status').forEach(function(el) {
+        el.innerHTML = '\u2717';
+      });
+      var syncResults = document.getElementById('syncResults');
+      if (syncResults) {
+        syncResults.innerHTML = '<p>The synchronization was aborted. Any changes already committed to the database will remain.</p>'
+          + '<p class="bottomButtons">'
+          + '<button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">'
+          + 'Back to sync</button></p>';
+        syncResults.style.display = '';
+      }
+    });
+  }
 
   function hideControls() {
-    $('#syncControls').hide();
+    var syncControls = document.getElementById('syncControls');
+    if (syncControls) syncControls.style.display = 'none';
   }
 
   function parseEvent(raw) {
@@ -185,7 +209,7 @@
       + '<span class="phase-detail"></span>'
       + '<span class="phase-time"></span>'
       + '</div>';
-    $phases.append(h);
+    phases.insertAdjacentHTML('beforeend', h);
   }
 
   function onSubstepStart(data) {
@@ -203,61 +227,65 @@
         + '<span class="progress-text"></span></div>';
     }
     h += '</div>';
-    $phases.append(h);
+    phases.insertAdjacentHTML('beforeend', h);
   }
 
   function onSubstepProgress(data) {
-    var $el = $('#substep-' + data.phase + '-' + data.id);
-    if (data.detail) $el.find('.substep-detail').text(data.detail);
+    var el = document.getElementById('substep-' + data.phase + '-' + data.id);
+    if (el && data.detail) el.querySelector('.substep-detail').textContent = data.detail;
   }
 
   function onSubstepComplete(data) {
     var id = 'substep-' + data.phase + '-' + data.id;
-    var $el = $('#' + id);
-    $el.removeClass('running').addClass('done');
-    $el.find('.substep-status').html('\u2713');
-    if (data.detail) $el.find('.substep-detail').text(data.detail);
-    if (data.elapsed !== undefined) $el.find('.substep-time').text(data.elapsed + 's');
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('running');
+    el.classList.add('done');
+    el.querySelector('.substep-status').innerHTML = '\u2713';
+    if (data.detail) el.querySelector('.substep-detail').textContent = data.detail;
+    if (data.elapsed !== undefined) el.querySelector('.substep-time').textContent = data.elapsed + 's';
     if (activeSubstepId === id) activeSubstepId = null;
   }
 
   function onPhaseProgress(data) {
-    var $phase = $('#phase-' + data.phase);
+    var phaseEl = document.getElementById('phase-' + data.phase);
+    if (!phaseEl) return;
     if (data.phase === 'dirs' && data.dir) {
-      $phase.find('.phase-detail').text(data.dir);
+      phaseEl.querySelector('.phase-detail').textContent = data.dir;
     } else if (data.phase === 'meta' && data.current !== undefined) {
-      var $sub = $('#substep-meta-extract');
+      var sub = document.getElementById('substep-meta-extract');
+      if (!sub) return;
       var pct = data.total > 0 ? Math.round((data.current / data.total) * 100) : 0;
-      $sub.find('.progress-fill').css('width', pct + '%');
+      sub.querySelector('.progress-fill').style.width = pct + '%';
       var infoText = fmt(data.current) + ' / ' + fmt(data.total);
       if (data.file) infoText += ' \u2014 ' + data.file;
-      $sub.find('.progress-text').text(infoText);
-      $sub.find('.substep-detail').text(
-        pct + '% \u2014 ' + data.updated + ' updated, ' + fmt(data.skipped) + ' skipped'
-      );
+      sub.querySelector('.progress-text').textContent = infoText;
+      sub.querySelector('.substep-detail').textContent =
+        pct + '% \u2014 ' + data.updated + ' updated, ' + fmt(data.skipped) + ' skipped';
     }
   }
 
   function onPhaseComplete(data) {
-    var $phase = $('#phase-' + data.phase);
-    $phase.removeClass('running').addClass('done');
-    $phase.find('.phase-status').html('\u2713');
-    $phase.find('.phase-time').text(data.elapsed + 's');
+    var phaseEl = document.getElementById('phase-' + data.phase);
+    if (!phaseEl) return;
+    phaseEl.classList.remove('running');
+    phaseEl.classList.add('done');
+    phaseEl.querySelector('.phase-status').innerHTML = '\u2713';
+    phaseEl.querySelector('.phase-time').textContent = data.elapsed + 's';
 
     if (data.phase === 'dirs') {
       var p = [];
       if (data.new > 0) p.push(data.new + ' new');
       if (data.deleted > 0) p.push(data.deleted + ' deleted');
-      $phase.find('.phase-detail').text(p.length ? p.join(', ') : 'no changes');
+      phaseEl.querySelector('.phase-detail').textContent = p.length ? p.join(', ') : 'no changes';
     } else if (data.phase === 'files') {
       var p = [];
       if (data.new > 0) p.push(data.new + ' new');
       if (data.deleted > 0) p.push(data.deleted + ' deleted');
-      $phase.find('.phase-detail').text(p.length ? p.join(', ') : 'no changes');
+      phaseEl.querySelector('.phase-detail').textContent = p.length ? p.join(', ') : 'no changes';
     } else if (data.phase === 'meta') {
-      $phase.find('.phase-detail').text(
-        data.updated + ' updated, ' + fmt(data.skipped) + ' skipped'
-      );
+      phaseEl.querySelector('.phase-detail').textContent =
+        data.updated + ' updated, ' + fmt(data.skipped) + ' skipped';
     }
   }
 
@@ -270,7 +298,8 @@
     var title = data.simulate
       ? '[Simulation] Synchronization complete'
       : 'Synchronization complete';
-    $('#syncTitle').text(title);
+    var syncTitle = document.getElementById('syncTitle');
+    if (syncTitle) syncTitle.textContent = title;
 
     var h = '';
     if (data.update) {
@@ -294,28 +323,32 @@
     h += '<p class="bottomButtons">'
       + '<button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">'
       + 'Run again</button></p>';
-    $('#syncResults').html(h).show();
+    var syncResults = document.getElementById('syncResults');
+    if (syncResults) { syncResults.innerHTML = h; syncResults.style.display = ''; }
   }
 
   function onError(msg) {
     syncRunning = false;
     clearInterval(timerInterval);
-    $('#syncTitle').text('Synchronization failed');
-    $('#syncResults').html(
-      '<div class="errors"><ul><li>' + msg + '</li></ul></div>'
-      + '<p class="bottomButtons">'
-      + '<button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">'
-      + 'Try again</button></p>'
-    ).show();
+    var syncTitle = document.getElementById('syncTitle');
+    if (syncTitle) syncTitle.textContent = 'Synchronization failed';
+    var syncResults = document.getElementById('syncResults');
+    if (syncResults) {
+      syncResults.innerHTML = '<div class="errors"><ul><li>' + msg + '</li></ul></div>'
+        + '<p class="bottomButtons">'
+        + '<button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">'
+        + 'Try again</button></p>';
+      syncResults.style.display = '';
+    }
   }
 
   function updateElapsed() {
     var now = performance.now();
-    $('#syncElapsed').text(fmtTime((now - startTime) / 1000));
+    var syncElapsed = document.getElementById('syncElapsed');
+    if (syncElapsed) syncElapsed.textContent = fmtTime((now - startTime) / 1000);
     if (activeSubstepId) {
-      $('#' + activeSubstepId).find('.substep-time').text(
-        fmtTime((now - activeSubstepStart) / 1000)
-      );
+      var subEl = document.getElementById(activeSubstepId);
+      if (subEl) subEl.querySelector('.substep-time').textContent = fmtTime((now - activeSubstepStart) / 1000);
     }
   }
 

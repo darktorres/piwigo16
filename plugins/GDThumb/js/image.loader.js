@@ -1,8 +1,8 @@
 function ImageLoader(opts) {
-    this.opts = jQuery.extend(
+    this.opts = Object.assign(
         {
             maxRequests: 30,
-            onChanged: jQuery.noop,
+            onChanged: function() {},
         },
         opts || {},
     );
@@ -31,7 +31,15 @@ ImageLoader.prototype = {
 
     clear: function () {
         this.queue.length = 0;
-        while (this.current.length) jQuery(this.current.pop()).off();
+        while (this.current.length) {
+            var img = this.current.pop();
+            if (img._loaderHandler) {
+                img.removeEventListener('load',  img._loaderHandler);
+                img.removeEventListener('error', img._loaderHandler);
+                img.removeEventListener('abort', img._loaderHandler);
+                img._loaderHandler = null;
+            }
+        }
         this.loaded = this.errors = this.errorEma = 0;
     },
 
@@ -57,10 +65,17 @@ ImageLoader.prototype = {
         var img = this.pool.shift() || new Image();
         this.current.push(img);
         var that = this;
-        jQuery(img).on("load error abort", function (e) {
-            jQuery(img).off();
+
+        function handler(e) {
+            img.removeEventListener('load',  handler);
+            img.removeEventListener('error', handler);
+            img.removeEventListener('abort', handler);
+            img._loaderHandler = null;
             img.onload = null;
-            that.current.splice(jQuery.inArray(img, that.current), 1);
+
+            var idx = that.current.indexOf(img);
+            if (idx !== -1) that.current.splice(idx, 1);
+
             if (e.type === "load") {
                 that.loaded++;
                 that.errorEma *= 0.9;
@@ -73,7 +88,12 @@ ImageLoader.prototype = {
             that._fireChanged(e.type, img);
             that._checkQueue();
             that.pool.push(img);
-        });
+        }
+
+        img._loaderHandler = handler;
+        img.addEventListener('load',  handler);
+        img.addEventListener('error', handler);
+        img.addEventListener('abort', handler);
         img.src = url;
     },
 

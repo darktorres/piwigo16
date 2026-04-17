@@ -15,7 +15,7 @@ GeoIp = {
                 }
                 GeoIp.cache = cache;
             }
-            jQuery(window).on("unload", function () {
+            window.addEventListener("unload", function () {
                 localStorage.setItem("freegeoip", JSON.stringify(GeoIp.cache));
             });
         }
@@ -24,16 +24,13 @@ GeoIp = {
         else if (GeoIp.pending[ip]) GeoIp.pending[ip].push(callback);
         else {
             GeoIp.pending[ip] = [callback];
-            jQuery.ajax({
-                url: "http://freegeoip.net/json/" + ip,
-                dataType: "jsonp",
-                cache: true,
-                timeout: 5000,
-                success: function (data) {
+            fetch("https://ipapi.co/" + ip + "/json/")
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
                     data.reqTime = new Date().getTime();
                     var res = [];
                     if (data.city) res.push(data.city);
-                    if (data.region_name) res.push(data.region_name);
+                    if (data.region) res.push(data.region);
                     if (data.country_name) res.push(data.country_name);
                     data.fullName = res.join(", ");
 
@@ -42,9 +39,8 @@ GeoIp = {
                     delete GeoIp.pending[ip];
                     for (var i = 0; i < callbacks.length; i++)
                         callbacks[i].call(null, data);
-                },
-
-                error: function () {
+                })
+                .catch(function () {
                     var data = { ip: ip, reqTime: new Date().getTime() };
 
                     GeoIp.cache[ip] = data;
@@ -52,8 +48,7 @@ GeoIp = {
                     delete GeoIp.pending[ip];
                     for (var i = 0; i < callbacks.length; i++)
                         callbacks[i].call(null, data);
-                },
-            });
+                });
         }
     },
 };

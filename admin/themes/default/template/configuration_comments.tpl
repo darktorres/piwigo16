@@ -8,25 +8,26 @@
       'input[name="user_can_delete_comment"]': '#email_admin_on_comment_deletion'
     };
 
-    for (selector in targets) {
-      var target = targets[selector];
+    Object.keys(targets).forEach(function(selector) {
+      var targetEl = document.querySelector(targets[selector]);
+      var triggerEl = document.querySelector(selector);
+      if (!targetEl || !triggerEl) return;
 
-      jQuery(target).toggle(jQuery(selector).is(':checked'));
+      targetEl.style.display = triggerEl.checked ? '' : 'none';
 
-      (function(target) {
-        jQuery(selector).on('change', function() {
-          jQuery(target).toggle($(this).is(':checked'));
-        });
-      })(target);
-    };
+      triggerEl.addEventListener('change', function() {
+        targetEl.style.display = this.checked ? '' : 'none';
+      });
+    });
 
     function check_activate_comments() {
-      jQuery("#comments_param_container").toggle(jQuery("input[name=activate_comments]").is(":checked"));
+      var container = document.getElementById("comments_param_container");
+      var checkbox = document.querySelector("input[name=activate_comments]");
+      if (container && checkbox) container.style.display = checkbox.checked ? '' : 'none';
     }
     check_activate_comments();
-    jQuery("input[name=activate_comments]").on("change", function() {
-      check_activate_comments();
-    });
+    var activateEl = document.querySelector("input[name=activate_comments]");
+    if (activateEl) activateEl.addEventListener("change", check_activate_comments);
   }());
 </script>{/footer_script}
 

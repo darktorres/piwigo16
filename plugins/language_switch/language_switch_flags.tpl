@@ -16,16 +16,25 @@
   </div>
 </li>
 
-{footer_script require='jquery'}<script>
-  jQuery("#languageSwitchLink").click(function() {
-    var elt = jQuery("#languageSwitchBox");
-    elt.css("left", Math.min(jQuery(this).offset().left, jQuery(window).width() - elt.outerWidth(true) - 5))
-      .css("top", jQuery(this).offset().top + jQuery(this).outerHeight(true))
-      .toggle();
-  });
-  jQuery("#languageSwitchBox").on("mouseleave", function() {
-    jQuery(this).hide();
-  });
+{footer_script}<script>
+  var _lsLink = document.getElementById("languageSwitchLink");
+  var _lsBox  = document.getElementById("languageSwitchBox");
+  if (_lsLink && _lsBox) {
+    _lsLink.addEventListener("click", function() {
+      var r = _lsLink.getBoundingClientRect();
+      var linkLeft = r.left + window.scrollX;
+      var linkTop  = r.bottom + window.scrollY;
+      var boxW = _lsBox.offsetWidth +
+        parseInt(getComputedStyle(_lsBox).marginLeft || 0) +
+        parseInt(getComputedStyle(_lsBox).marginRight || 0);
+      _lsBox.style.left = Math.min(linkLeft, window.innerWidth - boxW - 5) + "px";
+      _lsBox.style.top  = linkTop + "px";
+      _lsBox.style.display = _lsBox.style.display === "none" ? "" : "none";
+    });
+    _lsBox.addEventListener("mouseleave", function() {
+      _lsBox.style.display = "none";
+    });
+  }
 </script>{/footer_script}
 
 {* <!-- stylish for themes missing .switchBox styles --> *}

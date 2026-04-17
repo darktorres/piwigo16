@@ -1,9 +1,13 @@
-{combine_script id='jquery.autogrow' load='async' require='jquery' path='https://rawcdn.githack.com/Piwigo/Piwigo/refs/heads/14.x/themes/default/js/plugins/jquery.autogrow-textarea.js'}
-{* Auto size and auto grow textarea *}
-{footer_script require='jquery.autogrow'}<script>
-	jQuery(document).ready(function() {
-		jQuery('textarea').css('overflow-y', 'hidden');
-		// Auto size and auto grow for all text area
-		jQuery('textarea').autogrow();
+{footer_script}<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		document.querySelectorAll('textarea').forEach(function(el) {
+			el.style.overflowY = 'hidden';
+			el.addEventListener('input', function() {
+				el.style.height = 'auto';
+				el.style.height = el.scrollHeight + 'px';
+			});
+			// Set initial height
+			el.style.height = el.scrollHeight + 'px';
+		});
 	});
 </script>{/footer_script}

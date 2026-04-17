@@ -1,4 +1,4 @@
 {include file='infos_errors.tpl'}
-<div data-role="content">
+<div>
     {$PROFILE_CONTENT}
 </div>

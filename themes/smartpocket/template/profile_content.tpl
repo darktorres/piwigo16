@@ -1,46 +1,46 @@
 <form method="post" name="profile" action="{$F_ACTION}" id="profile" class="properties">
 
-  <div data-role="fieldcontain">
+  <div>
     <label for="username">{'Username'|translate}</label>
     <input type="text" name="username" id="username" value="{$USERNAME}" disabled="disabled">
   </div>
 
   {if not $SPECIAL_USER} {* can modify password + email*}
-    <div data-role="fieldcontain">
+    <div>
       <label for="mail_address">{'Email address'|translate}</label>
       <input type="text" name="mail_address" id="mail_address" value="{$EMAIL}">
     </div>
 
-    <div data-role="fieldcontain">
+    <div>
       <label for="password">{'Password'|translate}</label>
       <input type="password" name="password" id="password" value="">
     </div>
 
-    <div data-role="fieldcontain">
+    <div>
       <label for="use_new_pwd">{'New password'|translate}</label>
       <input type="password" name="use_new_pwd" id="use_new_pwd" value="">
     </div>
 
-    <div data-role="fieldcontain">
+    <div>
       <label for="passwordConf">{'Confirm Password'|translate}</label>
       <input type="password" name="passwordConf" id="passwordConf" value="">
     </div>
   {/if}
 
   {if $ALLOW_USER_CUSTOMIZATION}
-    <div data-role="fieldcontain">
+    <div>
       <label for="nb_image_page">{'Number of photos per page'|translate}</label>
       <input type="range" name="nb_image_page" id="nb_image_page" value="{$NB_IMAGE_PAGE}" min="1" max="100" />
     </div>
 
-    <div data-role="fieldcontain">
+    <div>
       <label for="language">{'Language'|translate}</label>
       {html_options name=language options=$language_options selected=$language_selection}
     </div>
   {/if}
 
 
-  <div data-role="fieldcontain">
+  <div>
     {if $ALLOW_USER_CUSTOMIZATION}
       <input type="hidden" name="theme" value="{$template_selection}">
       <input type="hidden" name="recent_period" value="{$RECENT_PERIOD}">

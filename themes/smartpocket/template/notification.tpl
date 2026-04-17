@@ -5,9 +5,9 @@
   href="{$U_FEED}">
 {/html_head}
 {include file='infos_errors.tpl'}
-<div data-role="content">
-  <ul data-role="listview" data-inset="true">
-    <li data-role="list-divider">{'Notification'|translate}</li>
+<div>
+  <ul>
+    <li class="sp-divider">{'Notification'|translate}</li>
     <li>
       {'The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader.'|translate}
     </li>

@@ -1,3 +1,3 @@
-<div data-role="panel" id="menubar" data-position="right" data-display="overlay">
+<div id="menubar">
   {$MENUBAR}
 </div>{assign var='MENUBAR' value=''}

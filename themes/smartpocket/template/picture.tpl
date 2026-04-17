@@ -1,9 +1,9 @@
 {if isset($errors) or not empty($infos)}
 	{include file='infos_errors.tpl'}
 {/if}
-<div data-role="content" id="picture_page">
-	<ul data-role="listview" data-inset="true">
-		<li data-role="list-divider">{$SECTION_TITLE}<span
+<div id="picture_page">
+	<ul>
+		<li class="sp-divider">{$SECTION_TITLE}<span
 				class="browsePathSeparator">{$LEVEL_SEPARATOR}</span>{$current.TITLE}</li>
 	</ul>
 	{$ELEMENT_CONTENT}
@@ -14,7 +14,7 @@
 		<p class="imageComment">{$COMMENT_IMG}</p>
 	{/if}
 
-	<ul data-role="listview" data-inset="true" id="PictureInfo">
+	<ul id="PictureInfo">
 		{if $display_info.author and isset($INFO_AUTHOR)}
 			<li id="Author" class="imageInfo">
 				<dt>{'Author'|translate}</dt>
@@ -102,7 +102,7 @@
 						id="updateRate">{if isset($rating.USER_RATE)}{'Update your rating'|translate}{else}{'Rate this photo'|translate}{/if}</span>
 				</dt>
 				<form action="{$rating.F_ACTION}" method="post" id="rateForm" style="margin:0;">
-					<div data-role="controlgroup" data-type="horizontal" align="center">
+					<div align="center">
 						{foreach from=$rating.marks item=mark name=rate_loop}
 							{if isset($rating.USER_RATE) && $mark==$rating.USER_RATE}
 								<input type="button" name="rate" value="{$mark}" class="rateButtonSelected" title="{$mark}">
@@ -117,7 +117,7 @@
 	</ul>
 
 	{if isset($metadata)}
-		<ul data-role="listview" data-inset="true">
+		<ul>
 			{foreach from=$metadata item=meta}
 				<li>
 					<h3>{$meta.TITLE}</h3>
@@ -134,12 +134,12 @@
 	</ul>
 
 	{if isset($COMMENT_COUNT)}
-		<ul data-role="listview" data-inset="true">
+		<ul>
 			<h3>{$COMMENT_COUNT|translate_dec:'%d comment':'%d comments'}</h3>
 
 			<div id="pictureComments">
 				{if isset($comment_add)}
-					<div data-role="collapsible">
+					<div class="sp-collapsible">
 						<h3>{'Add a comment'|translate}</h3>
 						<form method="post" action="{$comment_add.F_ACTION}" id="addComment">
 							{if $comment_add.SHOW_AUTHOR}
@@ -163,7 +163,7 @@
 					</div>
 				{/if}
 				{if isset($comments)}
-					<ul data-role="listview" data-inset="true">
+					<ul>
 						{if (($COMMENT_COUNT > 2) || !empty($navbar))}
 							<div id="pictureCommentNavBar">
 								{if $COMMENT_COUNT > 2}

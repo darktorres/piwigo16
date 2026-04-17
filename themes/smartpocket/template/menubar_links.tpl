@@ -1,5 +1,5 @@
 <h3>{'Links'|translate}</h3>
-<ul data-role="listview">
+<ul>
 	{foreach from=$block->data item=link}
 		<li>
 			<a href="{$link.URL}" class="external" {if isset($link.new_window)}

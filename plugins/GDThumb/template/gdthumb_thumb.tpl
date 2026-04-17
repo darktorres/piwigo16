@@ -67,7 +67,7 @@
   {/foreach}
 
   {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css" version=1}
-  {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/js/photoswipe/photoswipe.css"}
+  {combine_css path="node_modules/photoswipe/dist/photoswipe.css"}
   {combine_script id='gdthumb' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
   {combine_script id='gdthumb.masonry' require='gdthumb' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/masonry.js" load="footer"}
 
@@ -81,11 +81,11 @@
   {footer_script}<script type="module">
     if (!window._pswpInitialized) {
       window._pswpInitialized = true;
-      const { default: PhotoSwipeLightbox } = await import('{$ROOT_URL}{$GDThumb.GDTHUMB_ROOT}/js/photoswipe/photoswipe-lightbox.esm.js');
+      const { default: PhotoSwipeLightbox } = await import('./node_modules/photoswipe/dist/photoswipe-lightbox.esm.js');
       const lightbox = new PhotoSwipeLightbox({
         gallery: '#thumbnails',
         children: 'a[data-pswp-src]',
-        pswpModule: () => import('{$ROOT_URL}{$GDThumb.GDTHUMB_ROOT}/js/photoswipe/photoswipe.esm.js')
+        pswpModule: () => import('./node_modules/photoswipe/dist/photoswipe.esm.js')
       });
       lightbox.init();
     }

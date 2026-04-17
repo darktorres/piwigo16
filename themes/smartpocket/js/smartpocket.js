@@ -1,14 +1,14 @@
 (function () {
     function init() {
-        var thumbs = document.querySelector('ul.thumbnails');
+        var thumbs = document.getElementById('thumbnails');
         if (!thumbs || typeof GLightbox === 'undefined') return;
 
-        if (document.activeElement && document.activeElement.closest('.thumbnails')) {
+        if (document.activeElement && document.activeElement.closest('#thumbnails')) {
             document.activeElement.blur();
         }
 
         var lb = GLightbox({
-            selector: '.thumbnails a[href]',
+            selector: '#thumbnails a[href]',
             loop: typeof var_loop !== 'undefined' ? var_loop : false,
             autoplayVideos: false,
             touchNavigation: true,
@@ -22,7 +22,7 @@
                 : null;
             if (!a) {
                 // Try to find link by matching src
-                var links = document.querySelectorAll('.thumbnails a[data-image-id]');
+                var links = document.querySelectorAll('#thumbnails a[data-image-id]');
                 a = links[current.index] || null;
             }
             if (!a) return;

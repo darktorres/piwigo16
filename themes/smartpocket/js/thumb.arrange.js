@@ -47,7 +47,7 @@ SPTLine.prototype = {
 function SPThumbs(options) {
     this.opts = options;
 
-    this.thumbs = document.querySelector(".thumbnails");
+    this.thumbs = document.getElementById('thumbnails');
     if (!this.thumbs) return;
     this.thumbs.style.textAlign = "left";
 

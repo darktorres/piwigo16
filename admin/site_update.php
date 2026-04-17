@@ -582,9 +582,6 @@ if (isset($_POST['submit']) &&
 
     $start = functions::get_moment();
 
-    $insert_formats = [];
-    $formats_to_delete = [];
-
     // --- Streaming scan + insert loop ---
     // get_elements() is a Generator: files are yielded one-by-one as the filesystem is
     // traversed, so the full $fs array is never materialised in memory.
@@ -592,8 +589,66 @@ if (isset($_POST['submit']) &&
 
     $existing_ids     = [];
     $existing_count   = 0;
-    $existing_formats = [];   // [image_id => formats array] — used by formats-for-existing section
+    $existing_formats = [];   // [image_id => formats array] — used by mid-loop flush
     $inserted_count   = 0;
+
+    $flush_existing_formats = function (array $ids, array $fs_formats) use ($conf, $simulate): void {
+        if ($ids === []) {
+            return;
+        }
+
+        $db_formats = [];
+
+        foreach (array_chunk($ids, 10000) as $chunk) {
+            $chunk_str = implode(', ', $chunk);
+            $query = <<<SQL
+                SELECT image_id, ext, format_id
+                FROM image_format
+                WHERE image_id IN ({$chunk_str});
+                SQL;
+            $result = $conf->sql_backend::pwg_query($query);
+
+            while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
+                $db_formats[$row['image_id']][$row['ext']] = $row['format_id'];
+            }
+        }
+
+        $insert_formats   = [];
+        $formats_to_delete = [];
+
+        foreach ($db_formats as $image_id => $formats) {
+            foreach (array_diff_key($formats, $fs_formats[$image_id] ?? []) as $format_id) {
+                $formats_to_delete[] = $format_id;
+            }
+        }
+
+        foreach ($ids as $image_id) {
+            foreach (array_diff_key($fs_formats[$image_id] ?? [], $db_formats[$image_id] ?? []) as $ext => $filesize) {
+                $insert_formats[] = ['image_id' => $image_id, 'ext' => $ext, 'filesize' => $filesize];
+            }
+        }
+
+        if ($simulate) {
+            return;
+        }
+
+        if ($insert_formats !== []) {
+            $conf->sql_backend::mass_inserts(
+                'image_format',
+                array_keys($insert_formats[0]),
+                $insert_formats,
+                ['bulk' => true]
+            );
+        }
+
+        foreach (array_chunk($formats_to_delete, 10000) as $chunk) {
+            $chunk_str = implode(', ', $chunk);
+            $query = <<<SQL
+                DELETE FROM image_format WHERE format_id IN ({$chunk_str});
+                SQL;
+            $conf->sql_backend::pwg_query($query);
+        }
+    };
     $chunk_inserts    = [];
     $chunk_links      = [];
     $chunk_fmt_new    = [];
@@ -680,12 +735,16 @@ if (isset($_POST['submit']) &&
 
     foreach ($site_reader->get_elements($basedir, 0, $scan_callback) as $path => $meta) {
         if (isset($db_paths_set[$path])) {
-            // Existing file: collect ID + formats for formats-for-existing check; mark seen.
             $image_id = $db_paths_set[$path];
-            $existing_ids[]   = $image_id;
             $existing_count++;
             if ($conf->enable_formats) {
+                $existing_ids[]   = $image_id;
                 $existing_formats[$image_id] = $meta['formats'] ?? [];
+                if (count($existing_ids) >= $flush_size) {
+                    $flush_existing_formats($existing_ids, $existing_formats);
+                    $existing_ids     = [];
+                    $existing_formats = [];
+                }
             }
             unset($db_paths_set[$path]);
             continue;
@@ -828,6 +887,13 @@ if (isset($_POST['submit']) &&
         }
     }
 
+    // Final flush for any remaining existing-file format IDs not yet processed.
+    if ($conf->enable_formats && $existing_ids !== []) {
+        $flush_existing_formats($existing_ids, $existing_formats);
+        $existing_ids     = [];
+        $existing_formats = [];
+    }
+
     // Flush the remaining partial chunk.
     if ($use_load_data && $chunk_count > 0) {
         fclose($tsv_images);
@@ -912,87 +978,7 @@ if (isset($_POST['submit']) &&
         ]);
     }
 
-    // search new/removed formats on photos already registered in database
-    // ($existing_ids was collected during the streaming insert loop above)
-    if ($conf->enable_formats && $existing_ids !== []) {
-        $db_formats = [];
-
-        // find formats for existing photos (already in database)
-        $existingIdsList = implode(', ', $existing_ids);
-        $query = <<<SQL
-            SELECT image_id, ext, format_id
-            FROM image_format
-            WHERE image_id IN ({$existingIdsList});
-            SQL;
-        $result = $conf->sql_backend::pwg_query($query);
-
-        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-            if (! isset($db_formats[$row['image_id']])) {
-                $db_formats[$row['image_id']] = [];
-            }
-
-            $db_formats[$row['image_id']][$row['ext']] = $row['format_id'];
-        }
-
-        // first we search the formats that were removed
-        foreach ($db_formats as $image_id => $formats) {
-            $image_formats_to_delete = array_diff_key($formats, $existing_formats[$image_id] ?? []);
-
-            foreach ($image_formats_to_delete as $ext => $format_id) {
-                $formats_to_delete[] = $format_id;
-            }
-        }
-
-        // then we search for new formats on existing photos
-        foreach ($existing_ids as $image_id) {
-            $formats = $db_formats[$image_id] ?? [];
-            $image_formats_to_insert = array_diff_key($existing_formats[$image_id] ?? [], $formats);
-
-            foreach ($image_formats_to_insert as $ext => $filesize) {
-                $insert_formats[] = [
-                    'image_id' => $image_id,
-                    'ext'      => $ext,
-                    'filesize' => $filesize,
-                ];
-            }
-        }
-    }
-
-    if (! $simulate) {
-        // inserts all formats
-        if ($insert_formats !== [] || $formats_to_delete !== []) {
-            sync_emit('substep_start', [
-                'phase' => 'files', 'id' => 'formats',
-                'label' => 'Syncing file formats',
-            ]);
-            $t_formats = microtime(true);
-
-            if ($insert_formats !== []) {
-                $conf->sql_backend::mass_inserts(
-                    'image_format',
-                    array_keys($insert_formats[0]),
-                    $insert_formats,
-                    ['bulk' => true]
-                );
-            }
-
-            if ($formats_to_delete !== []) {
-                $formatsToDeleteList = implode(', ', $formats_to_delete);
-                $query = <<<SQL
-                    DELETE FROM image_format
-                    WHERE format_id IN ({$formatsToDeleteList});
-                    SQL;
-                $conf->sql_backend::pwg_query($query);
-            }
-
-            sync_emit('substep_complete', [
-                'phase' => 'files', 'id' => 'formats',
-                'detail' => fmt_number(count($insert_formats)) . ' added, '
-                    . fmt_number(count($formats_to_delete)) . ' removed',
-                'elapsed' => round(microtime(true) - $t_formats, 1),
-            ]);
-        }
-    }
+    // Format sync for existing photos was handled in mid-loop and final flushes above.
 
     $counts['new_elements'] = $inserted_count;
 

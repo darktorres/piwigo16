@@ -1,25 +1,24 @@
-{footer_script require="jquery"}<script>
-  jQuery('.TAT_description a[href*="piwigo.org"]').addClass("externalLink");
-
-  jQuery('.showInfo').tipTip({
-    'delay': 0,
-    'fadeIn': 200,
-    'fadeOut': 200,
-    'maxWidth': '300px',
-    'keepAlive': true,
-    'activation': 'click'
+{footer_script require="tippy.js"}<script>
+  document.querySelectorAll('.TAT_description a[href*="piwigo.org"]').forEach(function(el) {
+    el.classList.add("externalLink");
   });
 
-  jQuery(".showDetails a").click(function() {
-    jQuery(".pluginMiniBox, .pluginBox").toggle();
+  tippy('.showInfo', { delay: 0, maxWidth: 300, interactive: true, trigger: 'click', placement: 'top' });
 
-    var currentText = jQuery(this).html();
-    jQuery(this).html(jQuery(this).data("alt-text")).data("alt-text", currentText);
-
-    jQuery(this).toggleClass("icon-eye").toggleClass("icon-eye-off");
-
-    return false;
-  });
+  var showDetailsLink = document.querySelector(".showDetails a");
+  if (showDetailsLink) {
+    showDetailsLink.addEventListener("click", function(e) {
+      e.preventDefault();
+      document.querySelectorAll(".pluginMiniBox, .pluginBox").forEach(function(el) {
+        el.style.display = el.style.display === 'none' ? '' : 'none';
+      });
+      var altText = this.dataset.altText;
+      this.dataset.altText = this.innerHTML;
+      this.innerHTML = altText;
+      this.classList.toggle("icon-eye");
+      this.classList.toggle("icon-eye-off");
+    });
+  }
 </script>{/footer_script}
 
 {html_style}<style>

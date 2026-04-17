@@ -219,6 +219,10 @@ $template->set_filenames(
     ]
 );
 
+if (! isset($admin_photo_base_url)) {
+    $admin_photo_base_url = functions_url::get_root_url() . 'admin.php?page=photo-' . $_GET['image_id'];
+}
+
 $admin_url_start = $admin_photo_base_url . '-properties';
 $admin_url_start .= isset($_GET['cat_id']) ? '&amp;cat_id=' . $_GET['cat_id'] : '';
 

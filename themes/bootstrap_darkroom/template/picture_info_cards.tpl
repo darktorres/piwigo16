@@ -56,7 +56,7 @@
                         {/foreach}
                         {combine_script id='core.scripts' path='themes/default/js/scripts.js' load='async'}
                         {combine_script id='rating' require='core.scripts' path='themes/bootstrap_darkroom/js/rating.js' load='async'}
-                        {footer_script require='jquery'}<script>
+                        {footer_script}<script>
                           var _pwgRatingAutoQueue = _pwgRatingAutoQueue || [];
                           _pwgRatingAutoQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
                           onSuccess: function(rating) {
@@ -72,12 +72,20 @@
                               e.innerHTML = "({'%d rates'|translate|escape:'javascript'})".replace( "%d", rating.count);
                             }
                           }
-                          $('#averageRate').find('span').each(function() {
-                            $(this).addClass(rating.average > $(this).data('value') - 0.5 ? 'rateButtonStarFull' :
-                              'rateButtonStarEmpty');
-                            $(this).removeClass(rating.average > $(this).data('value') - 0.5 ?
-                              'rateButtonStarEmpty' : 'rateButtonStarFull');
-                          });
+                          var averageRateEl = document.getElementById('averageRate');
+                          if (averageRateEl) {
+                            var spans = averageRateEl.querySelectorAll('span');
+                            spans.forEach(function(span) {
+                              var value = parseFloat(span.dataset.value);
+                              if (rating.average > value - 0.5) {
+                                span.classList.add('rateButtonStarFull');
+                                span.classList.remove('rateButtonStarEmpty');
+                              } else {
+                                span.classList.add('rateButtonStarEmpty');
+                                span.classList.remove('rateButtonStarFull');
+                              }
+                            });
+                          }
                           }
                           });
                         </script>{/footer_script}
@@ -149,7 +157,7 @@
             {/if}
             {if $display_info.privacy_level and isset($available_permission_levels)}
               {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-              {footer_script require='jquery'}<script>
+              {footer_script}<script>
                 function setPrivacyLevel(id, level, label) {
                   (new PwgWS('{$ROOT_URL}')).callService(
                   "pwg.images.setPrivacyLevel",
@@ -158,9 +166,14 @@
                     method: "POST",
                     onFailure: function(num, text) { alert(num + " " + text); },
                     onSuccess: function(result) {
-                      jQuery('#dropdownPermissions').html(label);
-                      jQuery('.permission-li').removeClass('active');
-                      jQuery('#permission-' + level).addClass('active');
+                      var dropdown = document.getElementById('dropdownPermissions');
+                      if (dropdown) dropdown.innerHTML = label;
+                      var permLis = document.querySelectorAll('.permission-li');
+                      permLis.forEach(function(li) {
+                        li.classList.remove('active');
+                      });
+                      var permElement = document.getElementById('permission-' + level);
+                      if (permElement) permElement.classList.add('active');
                     }
                   }
                 );
@@ -297,16 +310,24 @@
               </div>
               <button id="show_exif_data" class="btn btn-primary btn-raised mt-1" style="text-transform: none;"><i
                   class="fas fa-info me-1"></i> {'Show EXIF data'|translate}</button>
-              {footer_script require='jquery'}<script>
-                $('#show_exif_data').on('click', function() {
-                  if ($('#full_exif_data').hasClass('d-none')) {
-                    $('#full_exif_data').addClass('d-flex').removeClass('d-none');
-                    $('#show_exif_data').html('<i class="fas fa-info me-1"></i> {"Hide EXIF data"|translate}');
-                  } else {
-                    $('#full_exif_data').addClass('d-none').removeClass('d-flex');
-                    $('#show_exif_data').html('<i class="fas fa-info me-1"></i> {"Show EXIF data"|translate}');
-                  }
-                });
+              {footer_script}<script>
+                var showExifBtn = document.getElementById('show_exif_data');
+                if (showExifBtn) {
+                  showExifBtn.addEventListener('click', function() {
+                    var exifData = document.getElementById('full_exif_data');
+                    if (exifData) {
+                      if (exifData.classList.contains('d-none')) {
+                        exifData.classList.remove('d-none');
+                        exifData.classList.add('d-flex');
+                        showExifBtn.innerHTML = '<i class="fas fa-info me-1"></i> {"Hide EXIF data"|translate}';
+                      } else {
+                        exifData.classList.add('d-none');
+                        exifData.classList.remove('d-flex');
+                        showExifBtn.innerHTML = '<i class="fas fa-info me-1"></i> {"Show EXIF data"|translate}';
+                      }
+                    }
+                  });
+                }
               </script>{/footer_script}
               <div id="full_exif_data" class="d-none flex-column mt-2">
                 {foreach $metadata as $meta}

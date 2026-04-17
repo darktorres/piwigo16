@@ -10,30 +10,31 @@ RVGTLine.prototype = {
     elementsWidth: 0,
     firstThumbIndex: 0,
 
-    add: function ($elt, absIndex) {
+    add: function (img, absIndex) {
         if (this.elements.length === 0) this.firstThumbIndex = absIndex;
-        var w;
-        var h;
+        var w, h;
 
-        if (!(w = $elt.data("w"))) {
-            if ((w = $elt[0].getAttribute("width")) && (w = parseInt(w))) {
-                h = parseInt($elt[0].getAttribute("height"));
+        if (!img.dataset.rvgtW) {
+            var attrW = img.getAttribute("width");
+            var attrH = img.getAttribute("height");
+            if (attrW && (w = parseInt(attrW))) {
+                h = parseInt(attrH);
             } else {
-                w = $elt.width();
-                h = $elt.height();
+                w = img.offsetWidth;
+                h = img.offsetHeight;
             }
             if (h > this.rowHeight) {
                 w = Math.round((w * this.rowHeight) / h);
                 h = this.rowHeight;
             }
-            $elt.data("w", w).data("h", h);
-        } else h = $elt.data("h");
+            img.dataset.rvgtW = w;
+            img.dataset.rvgtH = h;
+        } else {
+            w = parseFloat(img.dataset.rvgtW);
+            h = parseFloat(img.dataset.rvgtH);
+        }
 
-        var eltObj = {
-            $elt: $elt,
-            w: w,
-            h: h,
-        };
+        var eltObj = { img: img, w: w, h: h };
         this.elements.push(eltObj);
 
         if (eltObj.h > this.maxHeight) this.maxHeight = eltObj.h;
@@ -53,9 +54,9 @@ RVGTLine.prototype = {
 function RVGThumbs(options) {
     this.opts = options;
 
-    this.$thumbs = $("#thumbnails");
-    if (this.$thumbs.length == 0) return;
-    this.$thumbs.css("text-align", "left");
+    this.thumbs = document.getElementById("thumbnails");
+    if (!this.thumbs) return;
+    this.thumbs.style.textAlign = "left";
 
     this.opts.extraRowHeight = 0;
     if (window.devicePixelRatio > 1) {
@@ -72,22 +73,22 @@ function RVGThumbs(options) {
     this.process();
 
     var that = this;
-    $(window)
-        .on("resize", function () {
-            if (Math.abs(that.$thumbs.width() - that.prevContainerWidth) > 1)
-                that.process();
-        })
-        .on("RVTS_loaded", function (evt, down) {
-            that.process(
-                down && that.$thumbs.width() == that.prevContainerWidth
-                    ? that.prevLastLineFirstThumbIndex
-                    : 0,
-            );
-        });
+    window.addEventListener("resize", function () {
+        if (Math.abs(that.thumbs.offsetWidth - that.prevContainerWidth) > 1)
+            that.process();
+    });
+    window.addEventListener("RVTS_loaded", function (evt) {
+        var down = evt.detail && evt.detail.down;
+        that.process(
+            down && that.thumbs.offsetWidth == that.prevContainerWidth
+                ? that.prevLastLineFirstThumbIndex
+                : 0,
+        );
+    });
 
-    if (!$.isReady) {
-        $(document).ready(function () {
-            if (that.$thumbs.width() < that.prevContainerWidth) that.process();
+    if (document.readyState !== 'complete' && document.readyState !== 'interactive') {
+        document.addEventListener('DOMContentLoaded', function () {
+            if (that.thumbs.offsetWidth < that.prevContainerWidth) that.process();
         });
     }
 }
@@ -98,17 +99,15 @@ RVGThumbs.prototype = {
 
     process: function (startIndex) {
         startIndex = startIndex ? startIndex : 0;
-        var containerWidth = this.$thumbs.width();
+        var containerWidth = this.thumbs.offsetWidth;
         var maxExtraMarginPerThumb = 1;
         this.prevContainerWidth = containerWidth;
 
-        var $elts = $("li>a>img", this.$thumbs);
+        var elts = this.thumbs.querySelectorAll("li>a>img");
         var line = new RVGTLine(this.opts.hMargin, this.opts.rowHeight);
 
-        for (var i = startIndex; i < $elts.length; i++) {
-            var $elt = $($elts[i]);
-
-            line.add($elt, i);
+        for (var i = startIndex; i < elts.length; i++) {
+            line.add(elts[i], i);
             if (
                 line.width >=
                 containerWidth - maxExtraMarginPerThumb * line.elements.length
@@ -176,7 +175,7 @@ RVGThumbs.prototype = {
             }
 
             this.reposition(
-                eltObj.$elt,
+                eltObj.img,
                 eltW,
                 eltH,
                 eltW - eltToRecover,
@@ -185,18 +184,17 @@ RVGThumbs.prototype = {
         }
     },
 
-    reposition: function ($img, imgW, imgH, liW, liH) {
-        /* JQuery .attr and .css functions add too much overhead ...*/
-        var elt = $img[0];
-        elt.setAttribute("width", imgW + "");
-        elt.setAttribute("height", imgH + "");
+    reposition: function (img, imgW, imgH, liW, liH) {
+        /* Vanilla DOM - avoids jQuery overhead */
+        img.setAttribute("width", imgW + "");
+        img.setAttribute("height", imgH + "");
 
-        elt = elt.parentNode; //a
-        elt.style.left = Math.round((liW - imgW) / 2) + "px";
-        elt.style.top = Math.round((liH - imgH) / 2) + "px";
+        var a = img.parentNode; //a
+        a.style.left = Math.round((liW - imgW) / 2) + "px";
+        a.style.top = Math.round((liH - imgH) / 2) + "px";
 
-        elt = elt.parentNode; //li
-        elt.style.width = liW + "px";
-        elt.style.height = liH + "px";
+        var li = a.parentNode; //li
+        li.style.width = liW + "px";
+        li.style.height = liH + "px";
     },
 };

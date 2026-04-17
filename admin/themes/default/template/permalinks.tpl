@@ -1,15 +1,28 @@
-{footer_script require='jquery.ui'}<script>
-  jQuery(document).ready(function() {
-    $("h1").append("<span class='badge-number'>{$nb_cats}</span>")
-    jQuery("#addPermalinkOpen").click(function() {
-      jQuery("#addPermalink").show();
-      jQuery("#showAddPermalink").hide();
-    });
+{footer_script}<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var h1 = document.querySelector("h1");
+    if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>{$nb_cats}</span>");
 
-    jQuery("#addPermalinkClose").click(function() {
-      jQuery("#addPermalink").hide();
-      jQuery("#showAddPermalink").show();
-    });
+    var addPermalink = document.getElementById("addPermalink");
+    var showAddPermalink = document.getElementById("showAddPermalink");
+
+    var openBtn = document.getElementById("addPermalinkOpen");
+    if (openBtn) {
+      openBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (addPermalink) addPermalink.style.display = '';
+        if (showAddPermalink) showAddPermalink.style.display = 'none';
+      });
+    }
+
+    var closeBtn = document.getElementById("addPermalinkClose");
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (addPermalink) addPermalink.style.display = 'none';
+        if (showAddPermalink) showAddPermalink.style.display = '';
+      });
+    }
   });
 </script>{/footer_script}
 

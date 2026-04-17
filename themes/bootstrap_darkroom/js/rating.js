@@ -4,30 +4,29 @@ var gUserRating;
 
 function makeNiceRatingForm(options) {
     gRatingOptions = options;
-    var form = $("#rateForm");
+    var form = document.getElementById("rateForm");
     if (!form) return; //? template changed
 
-    gRatingButtons = form.find("span");
+    gRatingButtons = form.querySelectorAll("span");
     gUserRating = "";
-    gRatingButtons.each(function () {
-        if ($(this).hasClass("rateButtonStarFull")) {
-            gUserRating = $(this).data("value");
+    gRatingButtons.forEach(function (button) {
+        if (button.classList.contains("rateButtonStarFull")) {
+            gUserRating = button.dataset.value;
         }
     });
 
-    gRatingButtons.each(function () {
-        $(this).data("initialRateValue", $(this).data("value"));
+    gRatingButtons.forEach(function (button) {
+        button.dataset.initialRateValue = button.dataset.value;
 
-        pwgAddEventListener($(this).get(0), "click", updateRating);
-        pwgAddEventListener($(this).get(0), "mouseout", function () {
+        pwgAddEventListener(button, "click", updateRating);
+        pwgAddEventListener(button, "mouseout", function () {
             updateRatingStarDisplay(gUserRating);
         });
-        pwgAddEventListener($(this).get(0), "mouseover", function (e) {
-            updateRatingStarDisplay(
-                e.target
-                    ? $(e.target).data("initialRateValue")
-                    : $(e.srcElement).data("initialRateValue"),
-            );
+        pwgAddEventListener(button, "mouseover", function (e) {
+            var targetValue = e.target
+                ? e.target.dataset.initialRateValue
+                : e.srcElement.dataset.initialRateValue;
+            updateRatingStarDisplay(targetValue);
         });
     });
 
@@ -35,32 +34,31 @@ function makeNiceRatingForm(options) {
 }
 
 function updateRatingStarDisplay(userRating) {
-    gRatingButtons.each(function () {
-        $(this).addClass(
-            userRating !== "" && userRating >= $(this).data("initialRateValue")
-                ? "rateButtonStarFull"
-                : "rateButtonStarEmpty",
-        );
-        $(this).removeClass(
-            userRating !== "" && userRating >= $(this).data("initialRateValue")
-                ? "rateButtonStarEmpty"
-                : "rateButtonStarFull",
-        );
+    gRatingButtons.forEach(function (button) {
+        var initialValue = parseFloat(button.dataset.initialRateValue);
+        var shouldBeFull = userRating !== "" && userRating >= initialValue;
+
+        if (shouldBeFull) {
+            button.classList.add("rateButtonStarFull");
+            button.classList.remove("rateButtonStarEmpty");
+        } else {
+            button.classList.add("rateButtonStarEmpty");
+            button.classList.remove("rateButtonStarFull");
+        }
     });
 }
 
 function updateRating(e) {
     var elem = e.target || e.srcElement;
-    var rateButton = $(elem);
-    if (
-        rateButton.data("disabled") == true ||
-        rateButton.data("initialRateValue") == gUserRating
-    ) {
+    var rateButtonValue = elem.dataset.initialRateValue;
+    var isDisabled = elem.dataset.disabled == "true";
+
+    if (isDisabled || rateButtonValue == gUserRating) {
         return false; //nothing to do
     }
 
-    gRatingButtons.each(function () {
-        rateButton.data("disabled", true);
+    gRatingButtons.forEach(function (btn) {
+        elem.dataset.disabled = "true";
     });
 
     var y = new PwgWS(gRatingOptions.rootUrl);
@@ -68,21 +66,20 @@ function updateRating(e) {
         "pwg.images.rate",
         {
             image_id: gRatingOptions.image_id,
-            rate: rateButton.data("initialRateValue"),
+            rate: rateButtonValue,
         },
         {
             method: "POST",
             onFailure: function (num, text) {
                 alert(num + " " + text);
-                document.location =
-                    $("#rateForm").attr("action") +
-                    "&rate=" +
-                    rateButton.data("initialRateValue");
+                var rateForm = document.getElementById("rateForm");
+                var action = rateForm ? rateForm.getAttribute("action") : "";
+                document.location = action + "&rate=" + rateButtonValue;
             },
             onSuccess: function (result) {
-                gUserRating = rateButton.data("initialRateValue");
-                gRatingButtons.each(function () {
-                    rateButton.data("disabled", false);
+                gUserRating = rateButtonValue;
+                gRatingButtons.forEach(function (btn) {
+                    elem.dataset.disabled = "false";
                 });
                 if (gRatingOptions.onSuccess) gRatingOptions.onSuccess(result);
                 if (gRatingOptions.updateRateElement)

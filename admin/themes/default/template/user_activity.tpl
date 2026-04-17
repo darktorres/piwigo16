@@ -1,8 +1,7 @@
-{include file='inc/colorbox.inc.tpl'}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-{combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
+{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
+{combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
@@ -103,55 +102,55 @@
     get_user_activity(activity_page, uid_filter);
 
     function get_user_activity(page, uid) {
-        $.ajax({
-            url: "ws.php?format=json&method=pwg.activity.getList",
-            type: "POST",
-            dataType: "json",
-            data: {
-                page: page - 1,
-                uid: uid,
-            },
-            beforeSend: () => {
-                $('.tab').contents(':not(#-1):not(.loading)').remove();
-                $(".loading").show();
-                $('.pagination-arrow.right').addClass('unavailable');
-                $('.pagination-arrow.left').addClass('unavailable');
-                $(".pagination-item-container").hide();
-                $(".user-update-spinner").addClass("icon-spin6");
-            },
-            success: (data) => {
-                /* console log to help debug */
-                {* console.log(data); *}
-                uid_filter = uid;
+        var tab = document.querySelector('.tab');
+        if (tab) {
+            Array.from(tab.children).forEach(function(child) {
+                if (child.id !== '-1' && !child.classList.contains('loading')) child.remove();
+            });
+        }
+        document.querySelectorAll(".loading").forEach(function(el) { el.style.display = ''; });
+        document.querySelectorAll('.pagination-arrow.right').forEach(function(el) { el.classList.add('unavailable'); });
+        document.querySelectorAll('.pagination-arrow.left').forEach(function(el) { el.classList.add('unavailable'); });
+        document.querySelectorAll(".pagination-item-container").forEach(function(el) { el.style.display = 'none'; });
+        document.querySelectorAll(".user-update-spinner").forEach(function(el) { el.classList.add('icon-spin6'); });
 
-                setCreationDate(data.result['result_lines'][data.result['result_lines'].length - 1].date,
-                    data.result['result_lines'][0].date);
-                $(".loading").hide();
-
-                data.result['result_lines'].forEach(line => {
-                    lineConstructor(line);
-                });
-
-                max_page = data.result['max_page'];
-                $(".user-update-spinner").removeClass("icon-spin6");
-                $(".pagination-item-container").show();
-                update_pagination_menu();
-            },
-            error: (e) => {
-                console.log("ajax call failed");
-                console.log(e);
-            }
+        fetch("ws.php?format=json&method=pwg.activity.getList", {
+            method: "POST",
+            body: new URLSearchParams({ page: page - 1, uid: uid }),
         })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            /* console log to help debug */
+            {* console.log(data); *}
+            uid_filter = uid;
+
+            setCreationDate(
+                data.result['result_lines'][data.result['result_lines'].length - 1].date,
+                data.result['result_lines'][0].date
+            );
+            document.querySelectorAll(".loading").forEach(function(el) { el.style.display = 'none'; });
+
+            data.result['result_lines'].forEach(function(line) { lineConstructor(line); });
+
+            max_page = data.result['max_page'];
+            document.querySelectorAll(".user-update-spinner").forEach(function(el) { el.classList.remove('icon-spin6'); });
+            document.querySelectorAll(".pagination-item-container").forEach(function(el) { el.style.display = ''; });
+            update_pagination_menu();
+        })
+        .catch(function(e) {
+            console.log("ajax call failed");
+            console.log(e);
+        });
     }
 
     function lineConstructor(line) {
-        let newLine = $("#-1").clone();
+        let newLine = document.getElementById("-1").cloneNode(true);
 
-        newLine.removeClass("hide");
+        newLine.classList.remove("hide");
 
         /* console log to help debug */
         {* console.log(line); *}
-        newLine.attr("id", line.id);
+        newLine.id = line.id;
 
         var final_albumInfos;
 
@@ -161,35 +160,35 @@
             // pluriel
             switch (line.action) {
                 case "edit":
-                    newLine.find(".action-type").addClass("icon-blue");
-                    newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
-                    newLine.find(".action-icon").addClass("icon-pencil");
+                    newLine.querySelector(".action-type")?.classList.add("icon-blue");
+                    newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
+                    newLine.querySelector(".action-icon")?.classList.add("icon-pencil");
 
-                    newLine.find(".action-name").html(actionType_edit);
+                    newLine.querySelector(".action-name").innerHTML = actionType_edit;
                     switch (line.object) {
                         case "user":
                             final_albumInfos = actionInfos_users_edited.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-user-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-user-1");
 
                             break;
                         case "album":
                             final_albumInfos = actionInfos_albums_edited.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-folder-open");
+                            newLine.querySelector(".action-section")?.classList.add("icon-folder-open");
 
                             break;
                         case "group":
                             final_albumInfos = actionInfos_groups_edited.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-users-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-users-1");
 
                             break;
                         case "photo":
                             final_albumInfos = actionInfos_photos_edited.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-picture");
+                            newLine.querySelector(".action-section")?.classList.add("icon-picture");
 
                             break;
                         case "tag":
                             final_albumInfos = actionInfos_tags_edited.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-tags");
+                            newLine.querySelector(".action-section")?.classList.add("icon-tags");
 
                             break;
                         default:
@@ -200,35 +199,35 @@
                     break;
 
                 case "add":
-                    newLine.find(".action-type").addClass("icon-green");
-                    newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
-                    newLine.find(".action-icon").addClass("icon-plus");
+                    newLine.querySelector(".action-type")?.classList.add("icon-green");
+                    newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
+                    newLine.querySelector(".action-icon")?.classList.add("icon-plus");
 
-                    newLine.find(".action-name").html(actionType_add);
+                    newLine.querySelector(".action-name").innerHTML = actionType_add;
                     switch (line.object) {
                         case "user":
                             final_albumInfos = actionInfos_users_added.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-user-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-user-1");
 
                             break;
                         case "album":
                             final_albumInfos = actionInfos_albums_added.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-folder-open");
+                            newLine.querySelector(".action-section")?.classList.add("icon-folder-open");
 
                             break;
                         case "group":
                             final_albumInfos = actionInfos_groups_added.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-users-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-users-1");
 
                             break;
                         case "photo":
                             final_albumInfos = actionInfos_photos_added.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-picture");
+                            newLine.querySelector(".action-section")?.classList.add("icon-picture");
 
                             break;
                         case "tag":
                             final_albumInfos = actionInfos_tags_added.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-tags");
+                            newLine.querySelector(".action-section")?.classList.add("icon-tags");
 
                             break;
                         default:
@@ -239,35 +238,35 @@
                     break;
 
                 case "delete":
-                    newLine.find(".action-type").addClass("icon-red");
-                    newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
-                    newLine.find(".action-icon").addClass("icon-trash-1");
+                    newLine.querySelector(".action-type")?.classList.add("icon-red");
+                    newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
+                    newLine.querySelector(".action-icon")?.classList.add("icon-trash-1");
 
-                    newLine.find(".action-name").html(actionType_delete);
+                    newLine.querySelector(".action-name").innerHTML = actionType_delete;
                     switch (line.object) {
                         case "user":
                             final_albumInfos = actionInfos_users_deleted.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-user-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-user-1");
 
                             break;
                         case "album":
                             final_albumInfos = actionInfos_albums_deleted.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-folder-open");
+                            newLine.querySelector(".action-section")?.classList.add("icon-folder-open");
 
                             break;
                         case "group":
                             final_albumInfos = actionInfos_groups_deleted.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-users-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-users-1");
 
                             break;
                         case "photo":
                             final_albumInfos = actionInfos_photos_deleted.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-picture");
+                            newLine.querySelector(".action-section")?.classList.add("icon-picture");
 
                             break;
                         case "tag":
                             final_albumInfos = actionInfos_tags_deleted.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-tags");
+                            newLine.querySelector(".action-section")?.classList.add("icon-tags");
 
                             break;
                         default:
@@ -278,30 +277,30 @@
                     break;
 
                 case "move":
-                    newLine.find(".action-type").addClass("icon-yellow");
-                    newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
-                    newLine.find(".action-icon").addClass("icon-move");
+                    newLine.querySelector(".action-type")?.classList.add("icon-yellow");
+                    newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
+                    newLine.querySelector(".action-icon")?.classList.add("icon-move");
 
-                    newLine.find(".action-name").html(actionType_move);
+                    newLine.querySelector(".action-name").innerHTML = actionType_move;
                     switch (line.object) {
                         case "album":
                             final_albumInfos = actionInfos_albums_moved.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-folder-open");
+                            newLine.querySelector(".action-section")?.classList.add("icon-folder-open");
 
                             break;
                         case "group":
                             final_albumInfos = actionInfos_groups_moved.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-users-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-users-1");
 
                             break;
                         case "photo":
                             final_albumInfos = actionInfos_photos_moved.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-picture");
+                            newLine.querySelector(".action-section")?.classList.add("icon-picture");
 
                             break;
                         case "tag":
                             final_albumInfos = actionInfos_tags_moved.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-tags");
+                            newLine.querySelector(".action-section")?.classList.add("icon-tags");
 
                             break;
                         default:
@@ -312,71 +311,71 @@
                     break;
 
                 case "login":
-                    newLine.find(".action-type").addClass("icon-purple");
-                    newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
-                    newLine.find(".action-icon").addClass("icon-key");
-                    newLine.find(".action-section").addClass("icon-user-1");
+                    newLine.querySelector(".action-type")?.classList.add("icon-purple");
+                    newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
+                    newLine.querySelector(".action-icon")?.classList.add("icon-key");
+                    newLine.querySelector(".action-section")?.classList.add("icon-user-1");
 
-                    newLine.find(".action-name").html(actionType_login);
+                    newLine.querySelector(".action-name").innerHTML = actionType_login;
 
                     final_albumInfos = actionInfos_users_logged_in.replace('%d', line.counter);
 
                     break;
 
                 case "logout":
-                    newLine.find(".action-type").addClass("icon-purple");
+                    newLine.querySelector(".action-type")?.classList.add("icon-purple");
                     if (line.user_id != 2) {
-                        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
+                        newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
                     } else {
-                        newLine.find(".user-pic").addClass(color_icons[line.object_id[0] % 5]);
+                        newLine.querySelector(".user-pic")?.classList.add(color_icons[line.object_id[0] % 5]);
                     }
-                    newLine.find(".action-icon").addClass("icon-logout");
-                    newLine.find(".action-section").addClass("icon-user-1");
+                    newLine.querySelector(".action-icon")?.classList.add("icon-logout");
+                    newLine.querySelector(".action-section")?.classList.add("icon-user-1");
 
-                    newLine.find(".action-name").html(actionType_logout);
+                    newLine.querySelector(".action-name").innerHTML = actionType_logout;
 
                     final_albumInfos = actionInfos_users_logged_out.replace('%d', line.counter);
 
                     break;
 
                 default:
-                    newLine.find(".action-type").addClass("icon-purple");
-                    newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
+                    newLine.querySelector(".action-type")?.classList.add("icon-purple");
+                    newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
                     break;
             }
         } else {
             // singulier
             switch (line.action) {
                 case "edit":
-                    newLine.find(".action-type").addClass("icon-blue");
-                    newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
-                    newLine.find(".action-icon").addClass("icon-pencil");
+                    newLine.querySelector(".action-type")?.classList.add("icon-blue");
+                    newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
+                    newLine.querySelector(".action-icon")?.classList.add("icon-pencil");
 
-                    newLine.find(".action-name").html(actionType_edit);
+                    newLine.querySelector(".action-name").innerHTML = actionType_edit;
                     switch (line.object) {
                         case "user":
                             final_albumInfos = actionInfos_user_edited.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-user-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-user-1");
 
                             break;
                         case "album":
                             final_albumInfos = actionInfos_album_edited.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-folder-open");
+                            newLine.querySelector(".action-section")?.classList.add("icon-folder-open");
 
                             break;
                         case "group":
                             final_albumInfos = actionInfos_group_edited.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-users-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-users-1");
 
                             break;
                         case "photo":
                             final_albumInfos = actionInfos_photo_edited.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-picture");
+                            newLine.querySelector(".action-section")?.classList.add("icon-picture");
 
                             break;
                         case "tag":
                             final_albumInfos = actionInfos_tag_edited.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-tags");
+                            newLine.querySelector(".action-section")?.classList.add("icon-tags");
 
                             break;
                         default:
@@ -387,35 +386,35 @@
 
                     break;
                 case "add":
-                    newLine.find(".action-type").addClass("icon-green");
-                    newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
-                    newLine.find(".action-icon").addClass("icon-plus");
+                    newLine.querySelector(".action-type")?.classList.add("icon-green");
+                    newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
+                    newLine.querySelector(".action-icon")?.classList.add("icon-plus");
 
-                    newLine.find(".action-name").html(actionType_add);
+                    newLine.querySelector(".action-name").innerHTML = actionType_add;
                     switch (line.object) {
                         case "user":
                             final_albumInfos = actionInfos_user_added.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-user-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-user-1");
 
                             break;
                         case "album":
                             final_albumInfos = actionInfos_album_added.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-folder-open");
+                            newLine.querySelector(".action-section")?.classList.add("icon-folder-open");
 
                             break;
                         case "group":
                             final_albumInfos = actionInfos_group_added.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-users-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-users-1");
 
                             break;
                         case "photo":
                             final_albumInfos = actionInfos_photo_added.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-picture");
+                            newLine.querySelector(".action-section")?.classList.add("icon-picture");
 
                             break;
                         case "tag":
                             final_albumInfos = actionInfos_tag_added.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-tags");
+                            newLine.querySelector(".action-section")?.classList.add("icon-tags");
 
                             break;
                         default:
@@ -426,35 +425,35 @@
 
                     break;
                 case "delete":
-                    newLine.find(".action-type").addClass("icon-red");
-                    newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
-                    newLine.find(".action-icon").addClass("icon-trash-1");
+                    newLine.querySelector(".action-type")?.classList.add("icon-red");
+                    newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
+                    newLine.querySelector(".action-icon")?.classList.add("icon-trash-1");
 
-                    newLine.find(".action-name").html(actionType_delete);
+                    newLine.querySelector(".action-name").innerHTML = actionType_delete;
                     switch (line.object) {
                         case "user":
                             final_albumInfos = actionInfos_user_deleted.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-user-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-user-1");
 
                             break;
                         case "album":
                             final_albumInfos = actionInfos_album_deleted.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-folder-open");
+                            newLine.querySelector(".action-section")?.classList.add("icon-folder-open");
 
                             break;
                         case "group":
                             final_albumInfos = actionInfos_group_deleted.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-users-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-users-1");
 
                             break;
                         case "photo":
                             final_albumInfos = actionInfos_photo_deleted.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-picture");
+                            newLine.querySelector(".action-section")?.classList.add("icon-picture");
 
                             break;
                         case "tag":
                             final_albumInfos = actionInfos_tag_deleted.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-tags");
+                            newLine.querySelector(".action-section")?.classList.add("icon-tags");
 
                             break;
                         default:
@@ -464,30 +463,30 @@
 
                     break;
                 case "move":
-                    newLine.find(".action-type").addClass("icon-yellow");
-                    newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
-                    newLine.find(".action-icon").addClass("icon-move");
+                    newLine.querySelector(".action-type")?.classList.add("icon-yellow");
+                    newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
+                    newLine.querySelector(".action-icon")?.classList.add("icon-move");
 
-                    newLine.find(".action-name").html(actionType_move);
+                    newLine.querySelector(".action-name").innerHTML = actionType_move;
                     switch (line.object) {
                         case "album":
                             final_albumInfos = actionInfos_album_moved.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-folder-open");
+                            newLine.querySelector(".action-section")?.classList.add("icon-folder-open");
 
                             break;
                         case "group":
                             final_albumInfos = actionInfos_group_moved.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-users-1");
+                            newLine.querySelector(".action-section")?.classList.add("icon-users-1");
 
                             break;
                         case "photo":
                             final_albumInfos = actionInfos_photo_moved.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-picture");
+                            newLine.querySelector(".action-section")?.classList.add("icon-picture");
 
                             break;
                         case "tag":
                             final_albumInfos = actionInfos_tag_moved.replace('%d', line.counter);
-                            newLine.find(".action-section").addClass("icon-tags");
+                            newLine.querySelector(".action-section")?.classList.add("icon-tags");
 
                             break;
                         default:
@@ -497,81 +496,81 @@
 
                     break;
                 case "login":
-                    newLine.find(".action-type").addClass("icon-purple");
-                    newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
-                    newLine.find(".action-icon").addClass("icon-key");
-                    newLine.find(".action-section").addClass("icon-user-1");
+                    newLine.querySelector(".action-type")?.classList.add("icon-purple");
+                    newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
+                    newLine.querySelector(".action-icon")?.classList.add("icon-key");
+                    newLine.querySelector(".action-section")?.classList.add("icon-user-1");
 
-                    newLine.find(".action-name").html(actionType_login);
+                    newLine.querySelector(".action-name").innerHTML = actionType_login;
 
                     final_albumInfos = actionInfos_user_logged_in.replace('%d', line.counter);
 
                     break;
                 case "logout":
-                    newLine.find(".action-type").addClass("icon-purple");
+                    newLine.querySelector(".action-type")?.classList.add("icon-purple");
                     if (line.user_id != 2) {
-                        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
+                        newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
                     } else {
-                        newLine.find(".user-pic").addClass(color_icons[line.object_id[0] % 5]);
+                        newLine.querySelector(".user-pic")?.classList.add(color_icons[line.object_id[0] % 5]);
                     }
-                    newLine.find(".action-icon").addClass("icon-logout");
-                    newLine.find(".action-section").addClass("icon-user-1");
+                    newLine.querySelector(".action-icon")?.classList.add("icon-logout");
+                    newLine.querySelector(".action-section")?.classList.add("icon-user-1");
 
-                    newLine.find(".action-name").html(actionType_logout);
+                    newLine.querySelector(".action-name").innerHTML = actionType_logout;
 
                     final_albumInfos = actionInfos_user_logged_out.replace('%d', line.counter);
 
                     break;
 
                 default:
-                    newLine.find(".action-type").addClass("icon-purple");
-                    newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]);
+                    newLine.querySelector(".action-type")?.classList.add("icon-purple");
+                    newLine.querySelector(".user-pic")?.classList.add(color_icons[line.user_id % 5]);
                     break;
             }
         }
 
-        newLine.find(".action-infos-test").html(final_albumInfos);
+        newLine.querySelector(".action-infos-test").innerHTML = final_albumInfos;
 
         /* Action_section */
-        newLine.find(".nb_items").html(line.counter);
+        newLine.querySelector(".nb_items").innerHTML = line.counter;
 
         /* Date_section */
-        newLine.find(".date-day").html(line.date);
-        newLine.find(".date-hour").html(line.hour);
+        newLine.querySelector(".date-day").innerHTML = line.date;
+        newLine.querySelector(".date-hour").innerHTML = line.hour;
 
         /* User _Section */
-        newLine.find(".user-name").html(line.username);
-        newLine.find(".user-pic").html(get_initials(line.username));
+        newLine.querySelector(".user-name").innerHTML = line.username;
+        newLine.querySelector(".user-pic").innerHTML = get_initials(line.username);
 
         /* Detail_section */
-        newLine.find(".detail-item-1").html(line.ip_address);
-        newLine.find(".detail-item-1").attr("title", "IP");
+        newLine.querySelector(".detail-item-1").innerHTML = line.ip_address;
+        newLine.querySelector(".detail-item-1")?.setAttribute("title", "IP");
 
         if (line.detailsType == "script") {
-            newLine.find(".detail-item-2").html(line.details.script);
-            newLine.find(".detail-item-2").attr('title', 'Script');
+            newLine.querySelector(".detail-item-2").innerHTML = line.details.script;
+            newLine.querySelector(".detail-item-2")?.setAttribute('title', 'Script');
         } else if (line.detailsType == "method") {
-            newLine.find(".detail-item-2").html(line.details.method);
-            newLine.find(".detail-item-2").attr('title', 'API Method');
+            newLine.querySelector(".detail-item-2").innerHTML = line.details.method;
+            newLine.querySelector(".detail-item-2")?.setAttribute('title', 'API Method');
         }
 
         if (line.details.agent) {
-            newLine.find(".detail-item-3").html(line.details.agent);
-            newLine.find(".detail-item-3").attr('title', line.details.agent);
+            newLine.querySelector(".detail-item-3").innerHTML = line.details.agent;
+            newLine.querySelector(".detail-item-3")?.setAttribute('title', line.details.agent);
         } else if (line.details.users_string && line.action != "logout" && line.action != "login") {
-            newLine.find(".detail-item-3").html(line.details.users_string);
-            newLine.find(".detail-item-3").attr('title', users_key + ": " + line.details.users_string);
+            newLine.querySelector(".detail-item-3").innerHTML = line.details.users_string;
+            newLine.querySelector(".detail-item-3")?.setAttribute('title', users_key + ": " + line.details.users_string);
         } else {
-            newLine.find(".detail-item-3").remove();
+            newLine.querySelector(".detail-item-3")?.remove();
         }
 
-        newLine.addClass("uid-" + line.user_id);
+        newLine.classList.add("uid-" + line.user_id);
 
         displayLine(newLine);
     }
 
     function displayLine(line) {
-        $(".tab").append(line);
+        document.querySelector(".tab").appendChild(line);
     }
 
     function get_initials(username) {
@@ -585,9 +584,9 @@
     }
 
     function setCreationDate(startDate, endDate) {
-        $(".start-date").html(startDate)
+        document.querySelectorAll(".start-date").forEach(function(el) { el.innerHTML = startDate; })
 
-        $(".end-date").html(endDate)
+        document.querySelectorAll(".end-date").forEach(function(el) { el.innerHTML = endDate; })
     }
 
     {* Pagination *}
@@ -600,41 +599,41 @@
         get_user_activity(page, uid_filter);
     }
 
-    $('.pagination-arrow.right').on('click', () => {
-        move_to_page(actual_page + 1);
-    })
+    document.querySelectorAll('.pagination-arrow.right').forEach(function(el) {
+        el.addEventListener('click', () => { move_to_page(actual_page + 1); });
+    });
 
-    $('.pagination-arrow.left').on('click', () => {
-        move_to_page(actual_page - 1);
-    })
+    document.querySelectorAll('.pagination-arrow.left').forEach(function(el) {
+        el.addEventListener('click', () => { move_to_page(actual_page - 1); });
+    });
 
     function update_pagination_menu() {
         {* max_page = Math.ceil(nb_filtered_users / per_page); *}
         updateArrows();
         update_pagination_items();
         if (max_page <= 1) {
-            $('.pagination-container').hide();
+            document.querySelectorAll('.pagination-container').forEach(function(el) { el.style.display = 'none'; });
         } else {
-            $('.pagination-container').show();
+            document.querySelectorAll('.pagination-container').forEach(function(el) { el.style.display = ''; });
         }
     }
 
     function updateArrows() {
         if (actual_page == 1) {
-            $('.pagination-arrow.left').addClass('unavailable');
+            document.querySelectorAll('.pagination-arrow.left').forEach(function(el) { el.classList.add('unavailable'); });
         } else {
-            $('.pagination-arrow.left').removeClass('unavailable');
+            document.querySelectorAll('.pagination-arrow.left').forEach(function(el) { el.classList.remove('unavailable'); });
         }
         if (actual_page == max_page) {
-            $('.pagination-arrow.right').addClass('unavailable');
+            document.querySelectorAll('.pagination-arrow.right').forEach(function(el) { el.classList.add('unavailable'); });
         } else {
-            $('.pagination-arrow.right').removeClass('unavailable');
+            document.querySelectorAll('.pagination-arrow.right').forEach(function(el) { el.classList.remove('unavailable'); });
         }
     }
 
     function update_pagination_items() {
-        $('.pagination-item-container a').remove();
-        $('.pagination-item-container span').remove();
+        document.querySelectorAll('.pagination-item-container a').forEach(function(el) { el.remove(); });
+        document.querySelectorAll('.pagination-item-container span').forEach(function(el) { el.remove(); });
 
         append_pagination_item(1);
 
@@ -648,41 +647,51 @@
             append_pagination_item();
         }
         append_pagination_item(max_page);
-
     }
 
     function append_pagination_item(page = null) {
+        var container = document.querySelector('.pagination-item-container');
+        if (!container) return;
         if (page != null) {
-            let new_tag = $(page_item.replace(/%d/g, page));
-            $('.pagination-item-container').append(new_tag);
+            container.insertAdjacentHTML('beforeend', page_item.replace(/%d/g, page));
+            var new_tag = container.lastElementChild;
             if (actual_page == page) {
-                new_tag.addClass('actual');
+                new_tag.classList.add('actual');
             }
-            new_tag.on('click', () => {
-                move_to_page(new_tag.data('page'));
-            })
+            new_tag.addEventListener('click', function() {
+                move_to_page(parseInt(this.dataset.page));
+            });
         } else {
-            $('.pagination-item-container').append($(page_ellipsis));
+            container.insertAdjacentHTML('beforeend', page_ellipsis);
         }
     }
 
+    document.addEventListener('DOMContentLoaded', function() {
+        var h1El = document.querySelector("h1");
+        if (h1El) h1El.insertAdjacentHTML('beforeend', `<span class='badge-number'>`+{$nb_users - 1}+`</span>`);
 
-    $(document).ready(function() {
-        $("h1").append(`<span class='badge-number'>`+{$nb_users - 1}+`</span>`);
+        var userSelector = document.querySelector(".user-selector");
+        if (userSelector) {
+            new TomSelect(userSelector, {});
+            if (userSelector.tomselect) userSelector.tomselect.setValue(null);
+        }
 
-        $('select').on('change', function(user) {
-            if ($(".selectize-input").hasClass("full")) {
-                {* call ajax sur activity list avec uid en param *}
-                get_user_activity(1, $(".selectize-input .item").data("value"));
-            }
+        document.querySelectorAll('select').forEach(function(sel) {
+            sel.addEventListener('change', function() {
+                var tsControl = document.querySelector(".ts-control");
+                if (tsControl && tsControl.classList.contains("full")) {
+                    var item = document.querySelector(".ts-control .item");
+                    get_user_activity(1, item ? item.dataset.value : undefined);
+                }
+            });
         });
 
-        jQuery('.user-selector').selectize();
-        jQuery(".user-selector")[0].selectize.setValue(null);
-
-        jQuery(".cancel-icon").click(function() {
-            jQuery(".user-selector")[0].selectize.clear(true);
-            $(".line").css('display', 'flex');
+        document.querySelectorAll(".cancel-icon").forEach(function(el) {
+            el.addEventListener('click', function() {
+                var userSel = document.querySelector(".user-selector");
+                if (userSel && userSel.tomselect) userSel.tomselect.clear(true);
+                document.querySelectorAll(".line").forEach(function(l) { l.style.display = 'flex'; });
+            });
         });
     });
 </script>{/footer_script}
@@ -963,12 +972,12 @@
     }
 
 
-    /* Selectize */
-    .selectize-control.single.user-selector {
+    /* TomSelect */
+    .ts-wrapper.single.user-selector {
         height: 30px;
     }
 
-    .selectize-control.single .selectize-input {
+    .ts-wrapper.single .ts-control {
         height: 30px;
         padding: 0 10px;
 
@@ -977,15 +986,15 @@
         justify-content: left;
     }
 
-    .selectize-input {
+    .ts-control {
         text-align: left;
     }
 
-    .selectize-control.single .selectize-input input {
+    .ts-wrapper.single .ts-control input {
         height: 30px;
     }
 
-    .selectize-dropdown {
+    .ts-dropdown {
         text-align: left;
     }
 

@@ -1,2 +1,2 @@
-{combine_script id='jquery.colorbox' load='footer' require='jquery' path='node_modules/jquery-colorbox/jquery.colorbox.js'}
-{combine_css path="node_modules/jquery-colorbox/example2/colorbox.css"}
+{combine_script id='glightbox' load='footer' path='node_modules/glightbox/dist/js/glightbox.min.js'}
+{combine_css path='node_modules/glightbox/dist/css/glightbox.min.css'}

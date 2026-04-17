@@ -1,29 +1,36 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='sortablejs' load='footer' path='node_modules/sortablejs/Sortable.min.js'}
 
-{footer_script require='jquery.ui'}<script>
-  jQuery(document).ready(function() {
-    jQuery(".menuPos").hide();
-    jQuery(".drag_button").show();
-    jQuery(".menuLi").css("cursor", "move");
-    jQuery(".menuUl").sortable({
-      axis: "y",
-      opacity: 0.8
+{footer_script require='sortablejs'}<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll(".menuPos").forEach(function(el) { el.style.display = 'none'; });
+    document.querySelectorAll(".drag_button").forEach(function(el) { el.style.display = ''; });
+    document.querySelectorAll(".menuLi").forEach(function(el) { el.style.cursor = "move"; });
+
+    var menuUl = document.querySelector(".menuUl");
+    var menuSortable = menuUl ? Sortable.create(menuUl, { animation: 150 }) : null;
+
+    document.querySelectorAll("input[name^='hide_']").forEach(function(el) {
+      el.addEventListener('click', function() {
+        var men = this.name.split('hide_');
+        var menuEl = document.getElementById("menu_" + men[1]);
+        if (menuEl) menuEl.classList.toggle('menuLi_hidden', this.checked);
+      });
     });
-    jQuery("input[name^='hide_']").click(function() {
-      men = this.name.split('hide_');
-      if (this.checked) {
-        jQuery("#menu_" + men[1]).addClass('menuLi_hidden');
-      } else {
-        jQuery("#menu_" + men[1]).removeClass('menuLi_hidden');
-      }
-    });
-    jQuery("#menuOrdering").submit(function() {
-      ar = jQuery('.menuUl').sortable('toArray');
-      for (i = 0; i < ar.length; i++) {
-        men = ar[i].split('menu_');
-        document.getElementsByName('pos_' + men[1])[0].value = i + 1;
-      }
-    });
+
+    var menuOrdering = document.getElementById("menuOrdering");
+    if (menuOrdering) {
+      menuOrdering.addEventListener('submit', function() {
+        if (menuSortable) {
+          var ar = menuSortable.toArray();
+          for (var i = 0; i < ar.length; i++) {
+            var men = ar[i].split('menu_');
+            var posInput = document.getElementsByName('pos_' + men[1])[0];
+            if (posInput) posInput.value = i + 1;
+          }
+        }
+      });
+    }
   });
 </script>{/footer_script}
 

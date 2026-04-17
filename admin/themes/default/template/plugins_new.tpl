@@ -1,15 +1,12 @@
-{combine_script id='jquery.sort' load='footer' path='https://rawcdn.githack.com/Piwigo/Piwigo/refs/heads/14.x/themes/default/js/plugins/jquery.sort.js'}
+{combine_script id='nouislider' load='header' path='node_modules/nouislider/dist/nouislider.min.js'}
+{combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
 
-{combine_script id='jquery.ui' require='jquery' load='header'}
-{combine_css path="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.slider.css"}
-
-{combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
+{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
+{combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
-{combine_script id='pluginsNew' load='footer' require='jquery.ui,jquery.sort' path='admin/themes/default/js/plugins_new.js'}
-{combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
+{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
+{combine_script id='pluginsNew' load='footer' require='nouislider' path='admin/themes/default/js/plugins_new.js'}
 
 {footer_script}<script>
   const str_confirm_msg = "{"Yes, I am sure"|translate}";

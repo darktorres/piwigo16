@@ -1,4 +1,4 @@
-$(document).ready(() => {
+document.addEventListener('DOMContentLoaded', function () {
     activateLineOptions();
     checkFilters();
 
@@ -12,16 +12,16 @@ $(document).ready(() => {
         addUserFilter(filter_user_name);
     }
 
-    $(".elem-type-select").on("change", function (e) {
-        console.log($(".elem-type-select option:selected").attr("value"));
+    document.querySelector(".elem-type-select").addEventListener("change", function (e) {
+        console.log(document.querySelector(".elem-type-select option:checked").getAttribute("value"));
 
-        if ($(".elem-type-select option:selected").attr("value") == "visited") {
+        if (document.querySelector(".elem-type-select option:checked").getAttribute("value") == "visited") {
             current_param.types = {
                 0: "none",
                 1: "picture",
             };
         } else if (
-            $(".elem-type-select option:selected").attr("value") == "downloaded"
+            document.querySelector(".elem-type-select option:checked").getAttribute("value") == "downloaded"
         ) {
             current_param.types = {
                 0: "high",
@@ -39,12 +39,12 @@ $(document).ready(() => {
         fillHistoryResult(current_param);
     });
 
-    $(".date-start").on("change", function () {
+    document.querySelector(".date-start").addEventListener("change", function () {
         if (
             current_param.start !=
-            $('.date-start input[name="start"]').attr("value")
+            document.querySelector('.date-start input[name="start"]').getAttribute("value")
         ) {
-            current_param.start = $('.date-start input[name="start"]').attr(
+            current_param.start = document.querySelector('.date-start input[name="start"]').getAttribute(
                 "value",
             );
             current_param.pageNumber = 0;
@@ -52,10 +52,10 @@ $(document).ready(() => {
         }
     });
 
-    $(".date-end").on("change", function () {
-        const newValue = $('.date-end input[name="end"]').attr("value");
+    document.querySelector(".date-end").addEventListener("change", function () {
+        const newValue = document.querySelector('.date-end input[name="end"]').getAttribute("value");
         if (current_param.end != newValue) {
-            current_param.end = $('.date-end input[name="end"]').attr("value");
+            current_param.end = newValue;
             current_param.pageNumber = 0;
             // The datepicker first fills the end-date with '1899-12-31',
             // which triggers an unnecessary ajax request
@@ -66,7 +66,7 @@ $(document).ready(() => {
         }
     });
 
-    $("#start_unset").on("click", function () {
+    document.getElementById("start_unset").addEventListener("click", function () {
         console.log("here" + current_param.start);
         if (!current_param.start == "") {
             current_param.pageNumber = 0;
@@ -75,7 +75,7 @@ $(document).ready(() => {
         }
     });
 
-    $("#end_unset").on("click", function () {
+    document.getElementById("end_unset").addEventListener("click", function () {
         if (!current_param.start == today) {
             current_param.end = today;
             current_param.pageNumber = 0;
@@ -83,76 +83,78 @@ $(document).ready(() => {
         }
     });
 
-    $(".pagination-arrow.right").on("click", () => {
+    document.querySelector(".pagination-arrow.right").addEventListener("click", function () {
         current_param.pageNumber += 1;
         fillHistoryResult(current_param);
     });
 
-    $(".pagination-arrow.left").on("click", () => {
+    document.querySelector(".pagination-arrow.left").addEventListener("click", function () {
         current_param.pageNumber -= 1;
         fillHistoryResult(current_param);
     });
 
-    $(".refresh-results").on("click", function () {
+    document.querySelector(".refresh-results").addEventListener("click", function () {
         fillHistoryResult(current_param);
     });
 });
 
 function activateLineOptions() {
-    $(".search-line").find(".img-option").hide();
+    document.querySelectorAll(".search-line .img-option").forEach(function (el) {
+        el.style.display = 'none';
+    });
 
     /* Display the option on the click on "..." */
-    $(".search-line")
-        .find(".toggle-img-option")
-        .on("click", function () {
-            $(this).find(".img-option").toggle();
+    document.querySelectorAll(".search-line .toggle-img-option").forEach(function (el) {
+        el.addEventListener("click", function () {
+            var imgOption = this.closest(".search-line").querySelector(".img-option");
+            if (imgOption) {
+                imgOption.style.display = getComputedStyle(imgOption).display === 'none' ? '' : 'none';
+            }
         });
+    });
 
     /* Hide img options and rename field on click on the screen */
 
-    $(document).mouseup(function (e) {
+    document.addEventListener("mouseup", function (e) {
         e.stopPropagation();
         let option_is_clicked = false;
-        $(".img-option span").each(function () {
-            if (!($(this).has(e.target).length === 0)) {
+        document.querySelectorAll(".img-option span").forEach(function (el) {
+            if (el.contains(e.target)) {
                 option_is_clicked = true;
             }
         });
         if (!option_is_clicked) {
-            $(".search-line").find(".img-option").hide();
+            document.querySelectorAll(".search-line .img-option").forEach(function (el) {
+                el.style.display = 'none';
+            });
         }
     });
 }
 
 function fillSummaryResult(summary) {
-    $(".user-list").empty();
+    document.querySelector(".user-list").innerHTML = '';
 
-    $(".summary-lines .summary-data").html(summary.NB_LINES);
-    $(".summary-weight .summary-data").html(
-        unit_MB.replace("%s", summary.FILESIZE),
-    );
-    $(".summary-users .summary-data").html(summary.USERS);
-    $(".summary-guests .summary-data").html(summary.GUESTS);
+    document.querySelector(".summary-lines .summary-data").innerHTML = summary.NB_LINES;
+    document.querySelector(".summary-weight .summary-data").innerHTML =
+        unit_MB.replace("%s", summary.FILESIZE);
+    document.querySelector(".summary-users .summary-data").innerHTML = summary.USERS;
+    document.querySelector(".summary-guests .summary-data").innerHTML = summary.GUESTS;
 
     if (summary.GUESTS.split(" ")[0] != "0") {
-        $(".summary-guests .summary-data")
-            .addClass("icon-plus-circled")
-            .on("click", function () {
-                if (current_param.user_id == "-1") {
-                    current_param.user_id = guest_id;
-                    addGuestFilter(str_guest);
-                    fillHistoryResult(current_param);
-                }
-            })
-            .hover(function () {
-                $(this).css({
-                    cursor: "pointer",
-                });
-            });
+        var guestDataEl = document.querySelector(".summary-guests .summary-data");
+        guestDataEl.classList.add("icon-plus-circled");
+        guestDataEl.addEventListener("click", function () {
+            if (current_param.user_id == "-1") {
+                current_param.user_id = guest_id;
+                addGuestFilter(str_guest);
+                fillHistoryResult(current_param);
+            }
+        });
+        guestDataEl.style.cursor = "pointer";
 
-        $(".summary-guests").show();
+        document.querySelector(".summary-guests").style.display = '';
     } else {
-        $(".summary-guests").hide();
+        document.querySelector(".summary-guests").style.display = 'none';
     }
 
     var id_of = [];
@@ -166,30 +168,32 @@ function fillSummaryResult(summary) {
         }
     });
     user_dot_title = user_dot_title.slice(0, -2);
-    $(".user-dot").attr("title", user_dot_title).addClass("tiptip");
+    var userDot = document.querySelector(".user-dot");
+    userDot.setAttribute("title", user_dot_title);
+    userDot.classList.add("tiptip");
 
     var tmp = 0;
-    $(".user-dot").hide();
+    document.querySelector(".user-dot").style.display = 'none';
     //sorted
     for (const [key, value] of Object.entries(summary.SORTED_MEMBERS)) {
         if (tmp < 5) {
-            new_user_item = $("#-2").clone();
+            var new_user_item = document.getElementById("-2").cloneNode(true);
 
-            new_user_item.removeClass("hide");
-            new_user_item.find(".user-item-name").html(key);
-            new_user_item.data("user-id", id_of[key]);
+            new_user_item.classList.remove("hide");
+            new_user_item.querySelector(".user-item-name").innerHTML = key;
+            new_user_item.dataset.userId = id_of[key];
 
-            new_user_item.on("click", function () {
+            new_user_item.addEventListener("click", function () {
                 if (current_param.user_id != id_of[key]) {
-                    current_param.user_id = $(this).data("user-id");
+                    current_param.user_id = this.dataset.userId;
                     addUserFilter(key);
                     fillHistoryResult(current_param);
                 }
             });
-            $(".user-list").append(new_user_item);
+            document.querySelector(".user-list").appendChild(new_user_item);
             tmp++;
         } else {
-            $(".user-dot").show();
+            document.querySelector(".user-dot").style.display = '';
         }
     }
 }
@@ -197,29 +201,29 @@ function fillSummaryResult(summary) {
 function showResults(doShow) {
     console.log("EMPTY");
     if (doShow) {
-        $(".search-summary").show();
-        $(".container").show();
+        document.querySelector(".search-summary").style.display = '';
+        document.querySelector(".container").style.display = '';
     } else {
-        $(".search-summary").hide();
-        $(".container").hide();
+        document.querySelector(".search-summary").style.display = 'none';
+        document.querySelector(".container").style.display = 'none';
     }
 }
 
 function fillHistoryResult(ajaxParam) {
     // console.log(current_param);
-    // $(".tab .search-line").remove();
-    $.ajax({
-        url: API_METHOD,
+    // document.querySelector(".tab .search-line").remove();
+    fetch(API_METHOD, {
         method: "POST",
-        dataType: "JSON",
-        data: ajaxParam,
-        beforeSend: function () {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(ajaxParam),
+    })
+        .then(function (response) { return response.json(); })
+        .then(function (raw_data) {
             showResults(false);
-            $(".loading").removeClass("hide");
-            $(".noResults").hide();
-            $(".tab").empty();
-        },
-        success: function (raw_data) {
+            document.querySelector(".loading").classList.remove("hide");
+            document.querySelector(".noResults").style.display = 'none';
+            document.querySelector(".tab").innerHTML = '';
+
             data = raw_data.result["lines"];
             imageDisplay = raw_data.result["params"].display_thumbnail;
             maxPage = raw_data.result["maxPage"];
@@ -237,30 +241,25 @@ function fillHistoryResult(ajaxParam) {
 
                 fillSummaryResult(summary);
                 showResults(true);
-                $(".noResults").hide();
+                document.querySelector(".noResults").style.display = 'none';
             } else {
                 showResults(false);
-                $(".noResults").show();
+                document.querySelector(".noResults").style.display = '';
             }
-        },
-        error: function (e) {
+
+            activateLineOptions();
+            document.querySelector(".loading").classList.add("hide");
+            updatePagination(maxPage);
+
+            tippy('.tiptip', { delay: 0, placement: 'top' });
+        })
+        .catch(function (e) {
             console.log(e);
-        },
-    }).done(() => {
-        activateLineOptions();
-        $(".loading").addClass("hide");
-        updatePagination(maxPage);
-        $(".tiptip").tipTip({
-            delay: 0,
-            fadeIn: 200,
-            fadeOut: 200,
-            edgeOffset: 3,
         });
-    });
 }
 
 function lineConstructor(line, id, imageDisplay) {
-    let newLine = $("#-1").clone();
+    let newLine = document.getElementById("-1").cloneNode(true);
 
     let sections = [
         "categories",
@@ -288,102 +287,98 @@ function lineConstructor(line, id, imageDisplay) {
         "line-icon icon-heart icon-red",
     ];
 
-    newLine.removeClass("hide");
+    newLine.classList.remove("hide");
 
     /* console log to help debug */
     // console.log(line);
-    newLine.attr("id", id);
+    newLine.id = id;
     // console.log(id);
 
-    newLine.find(".date-day").html(line.DATE);
-    newLine.find(".date-hour").html(line.TIME);
+    newLine.querySelector(".date-day").innerHTML = line.DATE;
+    newLine.querySelector(".date-hour").innerHTML = line.TIME;
 
     newLine
-        .find(".user-name")
-        .html(line.USERNAME + '<i class="add-filter icon-plus-circled"></i>');
+        .querySelector(".user-name")
+        .innerHTML = line.USERNAME + '<i class="add-filter icon-plus-circled"></i>';
 
-    newLine.find(".user-name").attr("id", line.USERID);
+    newLine.querySelector(".user-name").id = line.USERID;
     if (current_param.user_id == "-1") {
-        newLine.find(".user-name").on("click", function () {
-            current_param.user_id = $(this).attr("id") + "";
+        newLine.querySelector(".user-name").addEventListener("click", function () {
+            current_param.user_id = this.id + "";
             current_param.pageNumber = 0;
-            addUserFilter($(this).html());
+            addUserFilter(this.innerHTML);
             fillHistoryResult(current_param);
         });
     }
 
     newLine
-        .find(".user-ip")
-        .html(line.IP + '<i class="add-filter icon-plus-circled"></i>');
-    newLine.find(".user-ip").data("ip", line.IP);
+        .querySelector(".user-ip")
+        .innerHTML = line.IP + '<i class="add-filter icon-plus-circled"></i>';
+    newLine.querySelector(".user-ip").dataset.ip = line.IP;
     if (current_param.ip == "") {
-        newLine.find(".user-ip").on("click", function () {
-            current_param.ip = $(this).data("ip");
+        newLine.querySelector(".user-ip").addEventListener("click", function () {
+            current_param.ip = this.dataset.ip;
             current_param.pageNumber = 0;
-            addIpFilter($(this).html());
+            addIpFilter(this.innerHTML);
             fillHistoryResult(current_param);
         });
     }
 
-    newLine.find(".add-img-as-filter").data("img-id", line.IMAGEID);
+    newLine.querySelector(".add-img-as-filter").dataset.imgId = line.IMAGEID;
     if (current_param.image_id == "") {
-        newLine.find(".add-img-as-filter").on("click", function () {
-            current_param.image_id = $(this).data("img-id");
+        newLine.querySelector(".add-img-as-filter").addEventListener("click", function () {
+            current_param.image_id = this.dataset.imgId;
             current_param.pageNumber = 0;
-            addImageFilter($(this).data("img-id"));
+            addImageFilter(this.dataset.imgId);
             fillHistoryResult(current_param);
         });
     }
 
     if (line.EDIT_IMAGE != "") {
-        newLine.find(".edit-img").attr("href", line.EDIT_IMAGE);
+        newLine.querySelector(".edit-img").setAttribute("href", line.EDIT_IMAGE);
     } else {
-        newLine
-            .find(".edit-img")
-            .attr("href", "#")
-            .addClass("notClickable tiptip")
-            .attr("title", str_no_longer_exist_photo)
-            .on("click", (e) => {
-                e.preventDefault();
-            });
+        var editImg = newLine.querySelector(".edit-img");
+        editImg.setAttribute("href", "#");
+        editImg.classList.add("notClickable", "tiptip");
+        editImg.setAttribute("title", str_no_longer_exist_photo);
+        editImg.addEventListener("click", function (e) {
+            e.preventDefault();
+        });
     }
 
     switch (line.SECTION) {
         case "tags":
             if (line.TAGS.length > 1 && line.TAGS.length <= 2) {
                 newLine
-                    .find(".type-name")
-                    .html(line.TAGS[0] + ", " + line.TAGS[1] + ", ...");
+                    .querySelector(".type-name")
+                    .innerHTML = line.TAGS[0] + ", " + line.TAGS[1] + ", ...";
                 newLine
-                    .find(".type-id")
-                    .html(
-                        "#" + line.TAGIDS[0] + ", " + line.TAGIDS[1] + ", ...",
-                    );
+                    .querySelector(".type-id")
+                    .innerHTML =
+                    "#" + line.TAGIDS[0] + ", " + line.TAGIDS[1] + ", ...";
             } else if (line.TAGS.length > 2) {
                 newLine
-                    .find(".type-name")
-                    .html(
-                        line.TAGS[0] +
-                            ", " +
-                            line.TAGS[1] +
-                            ", " +
-                            line.TAGS[2] +
-                            ", ...",
-                    );
+                    .querySelector(".type-name")
+                    .innerHTML =
+                    line.TAGS[0] +
+                    ", " +
+                    line.TAGS[1] +
+                    ", " +
+                    line.TAGS[2] +
+                    ", ...";
                 newLine
-                    .find(".type-id")
-                    .html(
-                        "#" +
-                            line.TAGIDS[0] +
-                            ", " +
-                            line.TAGIDS[1] +
-                            ", " +
-                            line.TAGIDS[2] +
-                            ", ...",
-                    );
+                    .querySelector(".type-id")
+                    .innerHTML =
+                    "#" +
+                    line.TAGIDS[0] +
+                    ", " +
+                    line.TAGIDS[1] +
+                    ", " +
+                    line.TAGIDS[2] +
+                    ", ...";
             } else {
-                newLine.find(".type-name").html(line.TAGS[0]);
-                newLine.find(".type-id").html("#" + line.TAGIDS[0]);
+                newLine.querySelector(".type-name").innerHTML = line.TAGS[0];
+                newLine.querySelector(".type-id").innerHTML = "#" + line.TAGIDS[0];
             }
 
             let detail_str = "";
@@ -391,37 +386,33 @@ function lineConstructor(line, id, imageDisplay) {
                 detail_str += tag + ", ";
             });
             detail_str = detail_str.slice(0, -2);
-            newLine.find(".detail-item-1").html(detail_str);
-            newLine
-                .find(".detail-item-1")
-                .attr("title", detail_str)
-                .removeClass("hide")
-                .addClass("icon-tags");
+            newLine.querySelector(".detail-item-1").innerHTML = detail_str;
+            var detailItem = newLine.querySelector(".detail-item-1");
+            detailItem.setAttribute("title", detail_str);
+            detailItem.classList.remove("hide", "add");
+            detailItem.classList.add("icon-tags");
             break;
 
         case "most_visited":
-            newLine.find(".type-name").html(str_most_visited);
-            newLine
-                .find(".detail-item-1")
-                .html(str_most_visited)
-                .addClass("icon-fire");
-            newLine.find(".type-id").hide();
+            newLine.querySelector(".type-name").innerHTML = str_most_visited;
+            var detail = newLine.querySelector(".detail-item-1");
+            detail.innerHTML = str_most_visited;
+            detail.classList.add("icon-fire");
+            newLine.querySelector(".type-id").style.display = 'none';
             break;
         case "best_rated":
-            newLine.find(".type-name").html(str_best_rated);
-            newLine
-                .find(".detail-item-1")
-                .html(str_best_rated)
-                .addClass("icon-star");
-            newLine.find(".type-id").hide();
+            newLine.querySelector(".type-name").innerHTML = str_best_rated;
+            var detail = newLine.querySelector(".detail-item-1");
+            detail.innerHTML = str_best_rated;
+            detail.classList.add("icon-star");
+            newLine.querySelector(".type-id").style.display = 'none';
             break;
         case "list":
-            newLine.find(".type-name").html(str_list);
-            newLine
-                .find(".detail-item-1")
-                .html(str_list)
-                .addClass("icon-dice-solid");
-            newLine.find(".type-id").hide();
+            newLine.querySelector(".type-name").innerHTML = str_list;
+            var detail = newLine.querySelector(".detail-item-1");
+            detail.innerHTML = str_list;
+            detail.classList.add("icon-dice-solid");
+            newLine.querySelector(".type-id").style.display = 'none';
             break;
         case "search":
             // for debug
@@ -436,14 +427,14 @@ function lineConstructor(line, id, imageDisplay) {
                 added_by: "gallery-icon-user",
                 filetypes: "gallery-icon-file-image",
             };
-            newLine.find(".type-name").html(line.SECTION);
-            newLine.find(".type-id").html("#" + line.SEARCH_ID);
+            newLine.querySelector(".type-name").innerHTML = line.SECTION;
+            newLine.querySelector(".type-id").innerHTML = "#" + line.SEARCH_ID;
             if (!line.SEARCH_ID) {
-                newLine.find(".type-id").hide();
+                newLine.querySelector(".type-id").style.display = 'none';
             }
 
             if (!search_details) {
-                newLine.find(".detail-item-1").hide();
+                newLine.querySelector(".detail-item-1").style.display = 'none';
                 break;
             }
             let active_search_details = {};
@@ -457,41 +448,36 @@ function lineConstructor(line, id, imageDisplay) {
             const active_items = Object.keys(active_search_details);
             if (active_items.length > 0) {
                 if (active_search_details.allwords) {
-                    newLine
-                        .find(".detail-item-" + count_item)
-                        .html(active_search_details.allwords.join(" "))
-                        .addClass(search_icons.allwords + " tiptip");
-                    newLine
-                        .find(".detail-item-" + count_item)
-                        .attr(
-                            "title",
-                            "<b>" +
-                                str_search_details["allwords"] +
-                                " :</b> " +
-                                active_search_details.allwords.join(" "),
-                        );
+                    var detailEl = newLine.querySelector(".detail-item-" + count_item);
+                    detailEl.innerHTML = active_search_details.allwords.join(" ");
+                    detailEl.classList.add(search_icons.allwords, "tiptip");
+                    detailEl.setAttribute(
+                        "title",
+                        "<b>" +
+                        str_search_details["allwords"] +
+                        " :</b> " +
+                        active_search_details.allwords.join(" "),
+                    );
                     count_item++;
                     active_more.push("allwords");
                 }
                 if (active_search_details.cat) {
                     const array_cat = Object.values(active_search_details.cat);
                     const cat = array_cat.join(" + ");
-                    let temp_div = $("<div>").html(cat);
-                    let text = temp_div.text().trim();
-                    newLine
-                        .find(".detail-item-" + count_item)
-                        .html(cat)
-                        .addClass(search_icons.cat + " tiptip");
-                    newLine
-                        .find(".detail-item-" + count_item)
-                        .attr(
-                            "title",
-                            "<b>" +
-                                str_search_details["cat"] +
-                                " :</b> " +
-                                text,
-                        )
-                        .removeClass("hide");
+                    let temp_div = document.createElement("div");
+                    temp_div.innerHTML = cat;
+                    let text = temp_div.textContent.trim();
+                    var detailEl = newLine.querySelector(".detail-item-" + count_item);
+                    detailEl.innerHTML = cat;
+                    detailEl.classList.add(search_icons.cat, "tiptip");
+                    detailEl.setAttribute(
+                        "title",
+                        "<b>" +
+                        str_search_details["cat"] +
+                        " :</b> " +
+                        text,
+                    );
+                    detailEl.classList.remove("hide");
                     count_item++;
                     active_more.push("cat");
                 }
@@ -499,20 +485,17 @@ function lineConstructor(line, id, imageDisplay) {
                     const array_tags = Object.values(
                         active_search_details.tags,
                     );
-                    newLine
-                        .find(".detail-item-" + count_item)
-                        .html(array_tags.join(" + "))
-                        .addClass(search_icons.tags + " tiptip");
-                    newLine
-                        .find(".detail-item-" + count_item)
-                        .attr(
-                            "title",
-                            "<b>" +
-                                str_search_details["tags"] +
-                                " :</b> " +
-                                array_tags.join(" + "),
-                        )
-                        .removeClass("hide");
+                    var detailEl = newLine.querySelector(".detail-item-" + count_item);
+                    detailEl.innerHTML = array_tags.join(" + ");
+                    detailEl.classList.add(search_icons.tags, "tiptip");
+                    detailEl.setAttribute(
+                        "title",
+                        "<b>" +
+                        str_search_details["tags"] +
+                        " :</b> " +
+                        array_tags.join(" + "),
+                    );
+                    detailEl.classList.remove("hide");
                     count_item++;
                     active_more.push("tags");
                 }
@@ -538,20 +521,17 @@ function lineConstructor(line, id, imageDisplay) {
                             } else {
                                 array_key = [active_search_details[key]];
                             }
-                            newLine
-                                .find(".detail-item-" + count_item)
-                                .html(array_key.join(" + "))
-                                .addClass(search_icons[key] + " tiptip");
-                            newLine
-                                .find(".detail-item-" + count_item)
-                                .attr(
-                                    "title",
-                                    "<b>" +
-                                        str_search_details[key] +
-                                        " :</b> " +
-                                        array_key.join(" + "),
-                                )
-                                .removeClass("hide");
+                            var detailEl = newLine.querySelector(".detail-item-" + count_item);
+                            detailEl.innerHTML = array_key.join(" + ");
+                            detailEl.classList.add(search_icons[key], "tiptip");
+                            detailEl.setAttribute(
+                                "title",
+                                "<b>" +
+                                str_search_details[key] +
+                                " :</b> " +
+                                array_key.join(" + "),
+                            );
+                            detailEl.classList.remove("hide");
                             count_item++;
                             badge_added++;
                             active_more.push(key);
@@ -563,7 +543,7 @@ function lineConstructor(line, id, imageDisplay) {
                     });
                 }
             } else {
-                newLine.find(".detail-item-1").hide();
+                newLine.querySelector(".detail-item-1").style.display = 'none';
             }
             if (active_items.length >= 3) {
                 let count_more = 0;
@@ -582,161 +562,153 @@ function lineConstructor(line, id, imageDisplay) {
                         }
 
                         if (key == "cat") {
-                            let temp_div = $("<div>").html(value_str);
-                            let text = temp_div.text().trim();
+                            let temp_div = document.createElement("div");
+                            temp_div.innerHTML = value_str;
+                            let text = temp_div.textContent.trim();
                             value_str = text;
                         }
                         count_more++;
                         return `<b>${str_search_details[key]}</b> : ${value_str}`;
                     })
                     .join(" <br />");
-                newLine
-                    .find(".detail-item-3")
-                    .html(sprintf(str_and_more, count_more))
-                    .addClass("icon-info-circled-1 tiptip");
-                newLine
-                    .find(".detail-item-3")
-                    .attr("title", search_details_str)
-                    .removeClass("hide");
+                var detailItem = newLine.querySelector(".detail-item-3");
+                detailItem.innerHTML = sprintf(str_and_more, count_more);
+                detailItem.classList.add("icon-info-circled-1", "tiptip");
+                detailItem.setAttribute("title", search_details_str);
+                detailItem.classList.remove("hide");
             }
             break;
         case "favorites":
-            newLine.find(".type-name").html(str_favorites);
-            newLine
-                .find(".detail-item-1")
-                .html(str_favorites)
-                .addClass("icon-heart");
-            newLine.find(".type-id").hide();
+            newLine.querySelector(".type-name").innerHTML = str_favorites;
+            var detail = newLine.querySelector(".detail-item-1");
+            detail.innerHTML = str_favorites;
+            detail.classList.add("icon-heart");
+            newLine.querySelector(".type-id").style.display = 'none';
             break;
         case "recent_cats":
-            newLine.find(".type-name").html(str_recent_cats);
-            newLine
-                .find(".detail-item-1")
-                .html(str_recent_cats)
-                .addClass("icon-clock");
-            newLine.find(".type-id").hide();
+            newLine.querySelector(".type-name").innerHTML = str_recent_cats;
+            var detail = newLine.querySelector(".detail-item-1");
+            detail.innerHTML = str_recent_cats;
+            detail.classList.add("icon-clock");
+            newLine.querySelector(".type-id").style.display = 'none';
             break;
         case "recent_pics":
-            newLine.find(".type-name").html(str_recent_pics);
-            newLine
-                .find(".detail-item-1")
-                .html(str_recent_pics)
-                .addClass("icon-clock");
-            newLine.find(".type-id").hide();
+            newLine.querySelector(".type-name").innerHTML = str_recent_pics;
+            var detail = newLine.querySelector(".detail-item-1");
+            detail.innerHTML = str_recent_pics;
+            detail.classList.add("icon-clock");
+            newLine.querySelector(".type-id").style.display = 'none';
             break;
         case "categories":
-            newLine.find(".type-name").html(line.CATEGORY);
-            newLine
-                .find(".detail-item-1")
-                .html(line.CATEGORY)
-                .addClass("icon-folder-open tiptip")
-                .attr("title", line.FULL_CATEGORY_PATH);
+            newLine.querySelector(".type-name").innerHTML = line.CATEGORY;
+            var detail = newLine.querySelector(".detail-item-1");
+            detail.innerHTML = line.CATEGORY;
+            detail.classList.add("icon-folder-open", "tiptip");
+            detail.setAttribute("title", line.FULL_CATEGORY_PATH);
             if (line.IMAGE == "") {
-                newLine.find(".type-id").hide();
+                newLine.querySelector(".type-id").style.display = 'none';
             }
             break;
         case "memories-1-year-ago":
-            newLine.find(".type-name").html(str_memories);
-            newLine
-                .find(".detail-item-1")
-                .html(str_memories)
-                .addClass("icon-clock");
-            newLine.find(".type-id").hide();
+            newLine.querySelector(".type-name").innerHTML = str_memories;
+            var detail = newLine.querySelector(".detail-item-1");
+            detail.innerHTML = str_memories;
+            detail.classList.add("icon-clock");
+            newLine.querySelector(".type-id").style.display = 'none';
             break;
         case "contact":
             newLine
-                .find(".type-icon i")
-                .addClass("line-icon icon-mail-1 icon-yellow");
-            newLine.find(".type-name").html(str_contact_form);
-            newLine.find(".detail-item-1").html(str_contact_form);
-            newLine.find(".type-id").hide();
+                .querySelector(".type-icon i")
+                .classList.add("line-icon", "icon-mail-1", "icon-yellow");
+            newLine.querySelector(".type-name").innerHTML = str_contact_form;
+            newLine.querySelector(".detail-item-1").innerHTML = str_contact_form;
+            newLine.querySelector(".type-id").style.display = 'none';
             break;
         default:
             newLine
-                .find(".type-icon i")
-                .addClass("line-icon icon-help-puzzle icon-grey");
-            newLine.find(".type-name").html(line.SECTION);
-            newLine.find(".type-id").hide();
+                .querySelector(".type-icon i")
+                .classList.add("line-icon", "icon-help-puzzle", "icon-grey");
+            newLine.querySelector(".type-name").innerHTML = line.SECTION;
+            newLine.querySelector(".type-id").style.display = 'none';
             break;
     }
 
     if (line.IMAGE != "") {
-        newLine.find(".type-name").html(line.IMAGENAME);
-        newLine.find(".type-icon").html(line.IMAGE);
-        newLine.find(".type-id").html("#" + line.IMAGEID);
+        newLine.querySelector(".type-name").innerHTML = line.IMAGENAME;
+        newLine.querySelector(".type-icon").innerHTML = line.IMAGE;
+        newLine.querySelector(".type-id").innerHTML = "#" + line.IMAGEID;
         newLine
-            .find(".type-icon")
-            .attr("href", line.EDIT_IMAGE)
-            .removeClass("no-img");
+            .querySelector(".type-icon")
+            .setAttribute("href", line.EDIT_IMAGE);
+        newLine.querySelector(".type-icon").classList.remove("no-img");
         newLine
-            .find(".type-icon img")
-            .attr("title", str_edit_img)
-            .addClass("tiptip");
-        newLine.find(".type-id").show();
+            .querySelector(".type-icon img")
+            .setAttribute("title", str_edit_img);
+        newLine.querySelector(".type-icon img").classList.add("tiptip");
+        newLine.querySelector(".type-id").style.display = '';
     } else {
-        newLine
-            .find(".type-icon .icon-file-image")
-            .removeClass("icon-file-image");
-        newLine.find(".toggle-img-option").hide();
+        var iconEl = newLine.querySelector(".type-icon .icon-file-image");
+        if (iconEl) iconEl.classList.remove("icon-file-image");
+        var toggleOption = newLine.querySelector(".toggle-img-option");
+        if (toggleOption) toggleOption.style.display = 'none';
 
         if (sections.indexOf(line.SECTION) != -1) {
             var lineIconClass = icons[sections.indexOf(line.SECTION)];
-            newLine.find(".type-icon i").addClass(lineIconClass);
+            newLine.querySelector(".type-icon i").classList.add(...lineIconClass.split(" "));
         } else {
             console.log("Unhandled section : " + line.SECTION);
         }
     }
 
-    newLine.find(".detail-item-1").removeClass("hide");
+    newLine.querySelector(".detail-item-1").classList.remove("hide");
     if (line.TYPE == "high") {
-        newLine
-            .find(".detail-item-1")
-            .html(str_dwld)
-            .addClass("icon-blue")
-            .removeClass("detail-item-1")
-            .removeClass("hide");
-        newLine.find(".date-dwld-icon").addClass("icon-blue icon-floppy");
+        var detailItem = newLine.querySelector(".detail-item-1");
+        detailItem.innerHTML = str_dwld;
+        detailItem.classList.add("icon-blue");
+        detailItem.classList.remove("detail-item-1", "hide");
+        newLine.querySelector(".date-dwld-icon").classList.add("icon-blue", "icon-floppy");
     } else {
-        newLine.find(".date-dwld-icon").remove();
+        var dwldIcon = newLine.querySelector(".date-dwld-icon");
+        if (dwldIcon) dwldIcon.remove();
     }
     displayLine(newLine);
 }
 
 function displayLine(line) {
-    $(".tab").append(line);
+    document.querySelector(".tab").appendChild(line);
 }
 
 function addUserFilter(username) {
-    var newFilter = $("#default-filter").clone();
-    newFilter.removeClass("hide");
+    var newFilter = document.getElementById("default-filter").cloneNode(true);
+    newFilter.classList.remove("hide");
 
-    newFilter.find(".filter-title").html(username);
-    newFilter.find(".filter-icon").addClass("icon-user");
+    newFilter.querySelector(".filter-title").innerHTML = username;
+    newFilter.querySelector(".filter-icon").classList.add("icon-user");
 
-    newFilter.find(".remove-filter").on("click", function () {
-        $(this).parent().remove();
+    newFilter.querySelector(".remove-filter").addEventListener("click", function () {
+        this.parentElement.remove();
 
         current_param.user_id = "-1";
         current_param.pageNumber = 0;
         fillHistoryResult(current_param);
         checkFilters();
-        $(".summary-guests").show();
+        document.querySelector(".summary-guests").style.display = '';
     });
 
-    $(".summary-guests").hide();
-    $(".filter-container").append(newFilter);
+    document.querySelector(".summary-guests").style.display = 'none';
+    document.querySelector(".filter-container").appendChild(newFilter);
     checkFilters();
 }
 
 function addGuestFilter(username) {
-    var newFilter = $("#default-filter").clone();
-    newFilter.removeClass("hide");
+    var newFilter = document.getElementById("default-filter").cloneNode(true);
+    newFilter.classList.remove("hide");
 
-    newFilter.find(".filter-title").html(username);
-    newFilter.find(".filter-icon").addClass("icon-user-secret");
+    newFilter.querySelector(".filter-title").innerHTML = username;
+    newFilter.querySelector(".filter-icon").classList.add("icon-user-secret");
 
-    newFilter.find(".remove-filter").on("click", function () {
-        $(this).parent().remove();
+    newFilter.querySelector(".remove-filter").addEventListener("click", function () {
+        this.parentElement.remove();
 
         current_param.user_id = "-1";
         current_param.pageNumber = 0;
@@ -744,19 +716,20 @@ function addGuestFilter(username) {
         checkFilters();
     });
 
-    $(".filter-container").append(newFilter);
+    document.querySelector(".filter-container").appendChild(newFilter);
     checkFilters();
 }
 
 function addIpFilter(ip) {
-    var newFilter = $("#default-filter").clone();
-    newFilter.removeClass("hide");
+    var newFilter = document.getElementById("default-filter").cloneNode(true);
+    newFilter.classList.remove("hide");
 
-    newFilter.find(".filter-title").html(ip);
-    newFilter.find(".filter-icon").html("IP ").addClass("bold");
+    newFilter.querySelector(".filter-title").innerHTML = ip;
+    newFilter.querySelector(".filter-icon").innerHTML = "IP ";
+    newFilter.querySelector(".filter-icon").classList.add("bold");
 
-    newFilter.find(".remove-filter").on("click", function () {
-        $(this).parent().remove();
+    newFilter.querySelector(".remove-filter").addEventListener("click", function () {
+        this.parentElement.remove();
 
         current_param.ip = "";
         current_param.pageNumber = 0;
@@ -764,19 +737,19 @@ function addIpFilter(ip) {
         checkFilters();
     });
 
-    $(".filter-container").append(newFilter);
+    document.querySelector(".filter-container").appendChild(newFilter);
     checkFilters();
 }
 
 function addImageFilter(img_id) {
-    var newFilter = $("#default-filter").clone();
-    newFilter.removeClass("hide");
+    var newFilter = document.getElementById("default-filter").cloneNode(true);
+    newFilter.classList.remove("hide");
 
-    newFilter.find(".filter-title").html("Image #" + img_id);
-    newFilter.find(".filter-icon").addClass("icon-picture");
+    newFilter.querySelector(".filter-title").innerHTML = "Image #" + img_id;
+    newFilter.querySelector(".filter-icon").classList.add("icon-picture");
 
-    newFilter.find(".remove-filter").on("click", function () {
-        $(this).parent().remove();
+    newFilter.querySelector(".remove-filter").addEventListener("click", function () {
+        this.parentElement.remove();
 
         current_param.image_id = "";
         current_param.pageNumber = 0;
@@ -784,42 +757,43 @@ function addImageFilter(img_id) {
         checkFilters();
     });
 
-    $(".filter-container").append(newFilter);
+    document.querySelector(".filter-container").appendChild(newFilter);
     checkFilters();
 }
 
 function updateArrows(actualPage, maxPage) {
     if (actualPage == 0) {
-        $(".pagination-arrow.left").addClass("unavailable");
+        document.querySelector(".pagination-arrow.left").classList.add("unavailable");
     } else {
-        $(".pagination-arrow.left").removeClass("unavailable");
+        document.querySelector(".pagination-arrow.left").classList.remove("unavailable");
     }
 
     if (actualPage == maxPage - 1) {
-        $(".pagination-arrow.right").addClass("unavailable");
+        document.querySelector(".pagination-arrow.right").classList.add("unavailable");
     } else {
-        $(".pagination-arrow.right").removeClass("unavailable");
+        document.querySelector(".pagination-arrow.right").classList.remove("unavailable");
     }
 }
 
 function updatePagination(maxPage) {
     updateArrows(current_param.pageNumber, maxPage);
 
-    $(".pagination-item-container").empty();
-    $(".pagination-item-container").append(
+    document.querySelector(".pagination-item-container").innerHTML = '';
+    document.querySelector(".pagination-item-container").insertAdjacentHTML(
+        "beforeend",
         "<a class='actual'>" +
-            (current_param.pageNumber + 1) +
-            "/" +
-            maxPage +
-            "</a>",
+        (current_param.pageNumber + 1) +
+        "/" +
+        maxPage +
+        "</a>",
     );
 }
 
 function checkFilters() {
-    if ($(".filter-container")[0].childElementCount - 1 > 0) {
+    if (document.querySelector(".filter-container").childElementCount - 1 > 0) {
         //Check if there are filters
-        $(".filter-tags label").show();
+        document.querySelector(".filter-tags label").style.display = '';
     } else {
-        $(".filter-tags label").hide();
+        document.querySelector(".filter-tags label").style.display = 'none';
     }
 }

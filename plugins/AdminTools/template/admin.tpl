@@ -9,15 +9,7 @@
   }
 </style>{/html_style}
 
-{footer_script}<script>
-  jQuery('#ato-config input[type=checkbox]').change(function() {
-    jQuery(this).prev().toggleClass('icon-check icon-check-empty');
-  });
-  jQuery('#ato-config input[type=radio]').change(function() {
-    jQuery('#ato-config input[type=radio][name=' + $(this).attr('name') + ']').prev().toggleClass(
-      'icon-check icon-check-empty');
-  });
-</script>{/footer_script}
+{combine_script id='admintools.admin' load='footer' path=$ADMINTOOLS_PATH|cat:'js/admin.js'}
 
 <div class="titrePage">
   <h2>Admin Tools</h2>

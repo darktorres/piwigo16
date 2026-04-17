@@ -1,84 +1,83 @@
 {combine_css path="themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe.css" order=-11}
 {combine_css path="themes/bootstrap_darkroom/node_modules/photoswipe/dist/default-skin/default-skin.css" order=-12}
-{combine_script id="photoswipe" require="jquery" path="themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe.js" load="footer"}
+{combine_script id="photoswipe" path="themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe.js" load="footer"}
 {combine_script id="photoswipe.ui" require="photoswipe" path="themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe-ui-default.js" load="footer"}
-{footer_script require='jquery' require="photoswipe.ui"}<script>
+{footer_script require="photoswipe.ui"}<script>
     var selector = '{$selector}';
 
     function startPhotoSwipe(idx) {
-        $(selector).each(function() {
-            $('#thumbnail-active').addClass('active');
-            var $pic = $(this),
-                getItems = function() {
+        document.querySelectorAll(selector).forEach(function(pic) {
+            const active = document.getElementById('thumbnail-active');
+            if (active) active.classList.add('active');
+            var getItems = function() {
                     var items = [];
-                    $pic.find('a').each(function() {
-                        if ($(this).attr('data-video')) {
-                            var $src = $(this).data('src-original'),
-                                $size = $(this).data('size-original').split('x'),
-                                $width = $size[0],
-                                $height = $size[1],
-                                $src_preview = $(this).data('src-medium'),
-                                $size_preview = $(this).data('size-medium').split(' x '),
-                                $width_preview = $size_preview[0],
-                                $height_preview = $size_preview[1],
-                                $href = $(this).attr('href'),
-                                $title = '<a href="' + $href + '">' + $(this).data('name') +
-                                '</a><ul><li>' + $(this).data('description') + '</li></ul>';
+                    pic.querySelectorAll('a').forEach(function(link) {
+                        if (link.getAttribute('data-video')) {
+                            var src = link.dataset.srcOriginal,
+                                size = link.dataset.sizeOriginal.split('x'),
+                                width = size[0],
+                                height = size[1],
+                                src_preview = link.dataset.srcMedium,
+                                size_preview = link.dataset.sizeMedium.split(' x '),
+                                width_preview = size_preview[0],
+                                height_preview = size_preview[1],
+                                href = link.getAttribute('href'),
+                                title = '<a href="' + href + '">' + link.dataset.name +
+                                '</a><ul><li>' + (link.dataset.description || '') + '</li></ul>';
                             var item = {
                                 is_video: true,
-                                href: $href,
-                                src: $src_preview,
-                                w: $width_preview,
-                                h: $height_preview,
-                                title: $title,
+                                href: href,
+                                src: src_preview,
+                                w: width_preview,
+                                h: height_preview,
+                                title: title,
                                 videoProperties: {
-                                    src: $src,
-                                    w: $width,
-                                    h: $height,
+                                    src: src,
+                                    w: width,
+                                    h: height,
                                 }
                             };
                         } else {
-                            var $src_xlarge = $(this).data('src-xlarge'),
-                                $size_xlarge = $(this).data('size-xlarge').split(' x '),
-                                $width_xlarge = $size_xlarge[0],
-                                $height_xlarge = $size_xlarge[1],
-                                $src_large = $(this).data('src-large'),
-                                $size_large = $(this).data('size-large').split(' x '),
-                                $width_large = $size_large[0],
-                                $height_large = $size_large[1],
-                                $src_medium = $(this).data('src-medium'),
-                                $size_medium = $(this).data('size-medium').split(' x '),
-                                $width_medium = $size_medium[0],
-                                $height_medium = $size_medium[1],
-                                $href = $(this).attr('href'),
-                                $title = '<a href="' + $href + '"><div><div>' + $(this).data('name');
-                            $title += '</div>';
-                            if ($(this).data('description').length > 0) {
-                                $title +=
-                                    '<ul id="pswp--caption--description"><li>' + $(this).data(
-                                        'description') + '</li></ul>';
+                            var src_xlarge = link.dataset.srcXlarge,
+                                size_xlarge = link.dataset.sizeXlarge.split(' x '),
+                                width_xlarge = size_xlarge[0],
+                                height_xlarge = size_xlarge[1],
+                                src_large = link.dataset.srcLarge,
+                                size_large = link.dataset.sizeLarge.split(' x '),
+                                width_large = size_large[0],
+                                height_large = size_large[1],
+                                src_medium = link.dataset.srcMedium,
+                                size_medium = link.dataset.sizeMedium.split(' x '),
+                                width_medium = size_medium[0],
+                                height_medium = size_medium[1],
+                                href = link.getAttribute('href'),
+                                title = '<a href="' + href + '"><div><div>' + link.dataset.name;
+                            title += '</div>';
+                            if ((link.dataset.description || '').length > 0) {
+                                title +=
+                                    '<ul id="pswp--caption--description"><li>' + link.dataset.description + '</li></ul>';
                             }
-                            $title += '</div></a>';
+                            title += '</div></a>';
                             var item = {
                                 is_video: false,
-                                href: $href,
+                                href: href,
                                 mediumImage: {
-                                    src: $src_medium,
-                                    w: $width_medium,
-                                    h: $height_medium,
-                                    title: $title
+                                    src: src_medium,
+                                    w: width_medium,
+                                    h: height_medium,
+                                    title: title
                                 },
                                 largeImage: {
-                                    src: $src_large,
-                                    w: $width_large,
-                                    h: $height_large,
-                                    title: $title
+                                    src: src_large,
+                                    w: width_large,
+                                    h: height_large,
+                                    title: title
                                 },
                                 xlargeImage: {
-                                    src: $src_xlarge,
-                                    w: $width_xlarge,
-                                    h: $height_xlarge,
-                                    title: $title
+                                    src: src_xlarge,
+                                    w: width_xlarge,
+                                    h: height_xlarge,
+                                    title: title
                                 }
                             };
                         }
@@ -88,24 +87,22 @@
                 };
             var items = getItems();
 
-            var $pswp = $('.pswp')[0];
+            var pswp = document.querySelector('.pswp');
+            var index;
             if (typeof(idx) === "number") {
-                var $index = idx;
+                index = idx;
             } else {
-                var $index = $(selector + ' a.active').data('index');
+                const activeLink = pic.querySelector('a.active');
+                index = activeLink ? parseInt(activeLink.dataset.index) : 0;
             }
-            if (navigator.userAgent.match(/IEMobile\/11\.0/)) {
-                var $history = false;
-            } else {
-                var $history = true;
-            }
+            var history = !navigator.userAgent.match(/IEMobile\/11\.0/);
             var options = {
-                index: $index,
+                index: index,
                 showHideOpacity: true,
                 closeOnScroll: false,
                 closeOnVerticalDrag: false,
                 focus: false,
-                history: $history,
+                history: history,
                 preload: [1, 2],
                 {if $theme_config->social_enabled}
                     shareButtons: [
@@ -125,7 +122,7 @@
                     ],
                 {/if}
             };
-            var photoSwipe = new PhotoSwipe($pswp, PhotoSwipeUI_Default, items, options);
+            var photoSwipe = new PhotoSwipe(pswp, PhotoSwipeUI_Default, items, options);
             var realViewportWidth,
                 useLargeImages = false,
                 firstResize = true,
@@ -169,57 +166,65 @@
             });
 
             var autoplayId = null;
-            $('.pswp__button--autoplay').on('click touchstart', function(event) {
-                event.preventDefault();
-                if (autoplayId) {
-                    clearInterval(autoplayId);
-                    autoplayId = null;
-                    $('.pswp__button--autoplay').removeClass('stop');
-                } else {
-                    autoplayId = setInterval(function() { photoSwipe.next(); $index = photoSwipe.getCurrentIndex(); }, {$theme_config->photoswipe_interval});
-                    $('.pswp__button--autoplay').addClass('stop');
-                }
-            });
+            const autoplayBtn = pswp.querySelector('.pswp__button--autoplay');
+            if (autoplayBtn) {
+                autoplayBtn.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    if (autoplayId) {
+                        clearInterval(autoplayId);
+                        autoplayId = null;
+                        autoplayBtn.classList.remove('stop');
+                    } else {
+                        autoplayId = setInterval(function() { photoSwipe.next(); index = photoSwipe.getCurrentIndex(); }, {$theme_config->photoswipe_interval});
+                        autoplayBtn.classList.add('stop');
+                    }
+                });
+            }
 
             photoSwipe.listen('destroy', function() {
                 if (autoplayId) {
                     clearInterval(autoplayId);
                     autoplayId = null;
-                    $('.pswp__button--autoplay').removeClass('stop');
+                    if (autoplayBtn) autoplayBtn.classList.remove('stop');
                 }
-                $('.pswp__button--autoplay').off('click touchstart');
-                $(selector).find('a.active').removeClass('active');
-                $($pswp).off('wheel.pswp');
+                pic.querySelectorAll('a.active').forEach(a => a.classList.remove('active'));
+                if (pswp) pswp.removeEventListener('wheel', wheelHandler);
             });
 
             photoSwipe.init();
 
-            $($pswp).on('wheel.pswp', function(e) {
+            const wheelHandler = function(e) {
                 e.preventDefault();
-                if (e.originalEvent.deltaY > 0) {
+                if (e.deltaY > 0) {
                     photoSwipe.next();
                 } else {
                     photoSwipe.prev();
                 }
-            });
+            };
+            if (pswp) pswp.addEventListener('wheel', wheelHandler);
 
             detectVideo(photoSwipe);
 
-            photoSwipe.listen('initialZoomInEnd', function() {
-                curr_idx = photoSwipe.getCurrentIndex();
-                if (curr_idx !== $index && autoplayId == null) {
-                    photoSwipe.goTo($index);
+            const attachDetailsHandler = function() {
+                const detailsBtn = pswp ? pswp.querySelector('.pswp__button--details') : null;
+                if (detailsBtn) {
+                    detailsBtn.onclick = function() {
+                        location.href = photoSwipe.currItem.href;
+                    };
                 }
-                $('.pswp__button--details').on('click touchstart', function() {
-                    location.href = photoSwipe.currItem.href
-                });
+            };
+
+            photoSwipe.listen('initialZoomInEnd', function() {
+                var curr_idx = photoSwipe.getCurrentIndex();
+                if (curr_idx !== index && autoplayId == null) {
+                    photoSwipe.goTo(index);
+                }
+                attachDetailsHandler();
             });
 
             photoSwipe.listen('afterChange', function() {
                 detectVideo(photoSwipe);
-                $('.pswp__button--details').off().on('click touchstart', function() {
-                    location.href = photoSwipe.currItem.href
-                });
+                attachDetailsHandler();
             });
 
             photoSwipe.listen('beforeChange', function() {
@@ -227,11 +232,12 @@
             });
 
             photoSwipe.listen('resize', function() {
-                if ($('.pswp-video-modal').length > 0) {
+                const videoModal = pswp ? pswp.querySelector('.pswp-video-modal') : null;
+                if (videoModal) {
                     var vsize = setVideoSize(photoSwipe.currItem, photoSwipe.viewportSize);
-                    console.log('PhotoSwipe resize in action. Setting video size to ' + vsize.w + 'x' +
-                        vsize.h);
-                    $('.pswp-video-modal').css({ 'width': vsize.w, 'height': vsize.h });
+                    console.log('PhotoSwipe resize in action. Setting video size to ' + vsize.w + 'x' + vsize.h);
+                    videoModal.style.width = vsize.w + 'px';
+                    videoModal.style.height = vsize.h + 'px';
                     updateVideoPosition(photoSwipe);
                 }
             });
@@ -242,18 +248,23 @@
         });
 
         function removeVideo() {
-            if ($('.pswp-video-modal').length > 0) {
-                if ($('#pswp-video').length > 0) {
-                    $('#pswp-video')[0].pause();
-                    $('#pswp-video')[0].src = "";
-                    $('.pswp-video-modal').remove();
-                    $('.pswp__img').css('visibility', 'visible');
-                    $(document).off('webkitfullscreenchange mozfullscreenchange fullscreenchange');
+            const videoModal = document.querySelector('.pswp-video-modal');
+            if (videoModal) {
+                const video = document.getElementById('pswp-video');
+                if (video) {
+                    video.pause();
+                    video.src = "";
+                    videoModal.remove();
+                    const img = document.querySelector('.pswp__img');
+                    if (img) img.style.visibility = 'visible';
+                    document.removeEventListener('webkitfullscreenchange', null);
+                    document.removeEventListener('mozfullscreenchange', null);
+                    document.removeEventListener('fullscreenchange', null);
                     if (navigator.userAgent.match(/(iPhone|iPad|Android)/)) {
-                        $('.pswp-video-modal').css('background', '');
+                        videoModal.style.background = '';
                     }
                 } else {
-                    $('.pswp-video-modal').remove();
+                    videoModal.remove();
                 }
             }
         }
@@ -269,49 +280,65 @@
         function addVideo(item, vp) {
             var vfile = item.videoProperties.src;
             var vsize = setVideoSize(item, vp);
-            var v = $('<div />', {
-                class: 'pswp-video-modal',
-                css: ({ 'position': 'absolute', 'width': vsize.w, 'height': vsize.h })
+            var v = document.createElement('div');
+            v.className = 'pswp-video-modal';
+            v.style.position = 'absolute';
+            v.style.width = vsize.w + 'px';
+            v.style.height = vsize.h + 'px';
 
-            });
-            v.one('{if functions::get_device() == 'desktop'}click{else}tap{/if}', (function(event) {
-            event.preventDefault();
-            var playerCode = '<video id="pswp-video" width="100%" height="auto" autoplay controls>' +
-                '<source src="' + vfile + '" type="video/mp4"></source>' +
-                '</video>';
-            $(this).html(playerCode);
-            $('.pswp__img').css('visibility', 'hidden');
-            $('.pswp-video-modal video').css('visibility', 'visible');
-            if (navigator.userAgent.match(/(iPhone|iPad|Android)/)) {
-                $('.pswp-video-modal').css('background', 'none');
-            }
-            if ($('.pswp__button--autoplay.stop').length > 0) $('.pswp__button--autoplay.stop')[0].click();
-        }));
-    if (navigator.appVersion.indexOf("Windows") !== -1 && navigator.userAgent.match(/(Edge|rv:11)/)) {
-        v.insertAfter('.pswp__scroll-wrap');
-    } else {
-        v.appendTo('.pswp__scroll-wrap');
-    }
+            v.addEventListener('{if functions::get_device() == 'desktop'}click{else}tap{/if}', function(event) {
+                event.preventDefault();
+                var playerCode = '<video id="pswp-video" width="100%" height="auto" autoplay controls>' +
+                    '<source src="' + vfile + '" type="video/mp4"></source>' +
+                    '</video>';
+                this.innerHTML = playerCode;
+                const img = document.querySelector('.pswp__img');
+                if (img) img.style.visibility = 'hidden';
+                const video = this.querySelector('video');
+                if (video) video.style.visibility = 'visible';
+                if (navigator.userAgent.match(/(iPhone|iPad|Android)/)) {
+                    this.style.background = 'none';
+                }
+                const autoBtn = document.querySelector('.pswp__button--autoplay.stop');
+                if (autoBtn) autoBtn.click();
+            }, { once: true });
 
-    {* this is soooo nasty, but i have no better idea to fix the fullscreen video issue on OS X, Chrome/Windows *}
-    if ((navigator.appVersion.indexOf("Windows") !== -1 && navigator.userAgent.match(/(Chrome|Firefox)/)) || navigator
-        .userAgent.match(/(X11|Macintosh)/)) {
-        $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function(e) {
-            var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen,
-                event = state ? 'FullscreenOn' : 'FullscreenOff',
-                holder_height = item.h;
-            if (event === 'FullscreenOn') {
-                $('#wrapper').hide();
-                $('body').css('height', window.screen.height);
-                $('.pswp-video-modal').css('height', window.screen.height);
-            } else {
-                $('#wrapper').show();
-                $('body').css('height', '');
-                $('.pswp-video-modal').css('height', holder_height);
+            const scrollWrap = document.querySelector('.pswp__scroll-wrap');
+            if (scrollWrap) {
+                if (navigator.appVersion.indexOf("Windows") !== -1 && navigator.userAgent.match(/(Edge|rv:11)/)) {
+                    scrollWrap.parentNode.insertBefore(v, scrollWrap.nextSibling);
+                } else {
+                    scrollWrap.appendChild(v);
+                }
             }
-        });
-    }
-    }
+
+            {* this is soooo nasty, but i have no better idea to fix the fullscreen video issue on OS X, Chrome/Windows *}
+            if ((navigator.appVersion.indexOf("Windows") !== -1 && navigator.userAgent.match(/(Chrome|Firefox)/)) || navigator
+                .userAgent.match(/(X11|Macintosh)/)) {
+                const fullscreenHandler = function(e) {
+                    var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen,
+                        event = state ? 'FullscreenOn' : 'FullscreenOff',
+                        holder_height = item.h;
+                    if (event === 'FullscreenOn') {
+                        const wrapper = document.getElementById('wrapper');
+                        if (wrapper) wrapper.style.display = 'none';
+                        document.body.style.height = window.screen.height + 'px';
+                        const videoModal = document.querySelector('.pswp-video-modal');
+                        if (videoModal) videoModal.style.height = window.screen.height + 'px';
+                    } else {
+                        const wrapper = document.getElementById('wrapper');
+                        if (wrapper) wrapper.style.display = '';
+                        document.body.style.height = '';
+                        const videoModal = document.querySelector('.pswp-video-modal');
+                        if (videoModal) videoModal.style.height = holder_height + 'px';
+                    }
+                };
+                document.addEventListener('webkitfullscreenchange', fullscreenHandler);
+                document.addEventListener('mozfullscreenchange', fullscreenHandler);
+                document.addEventListener('fullscreenchange', fullscreenHandler);
+                document.addEventListener('MSFullscreenChange', fullscreenHandler);
+            }
+        }
 
     function updateVideoPosition(o, w, h) {
         var item = o.currItem;
@@ -319,7 +346,12 @@
         var vsize = setVideoSize(item, vp);
         var top = (vp.y - vsize.h) / 2;
         var left = (vp.x - vsize.w) / 2;
-        $('.pswp-video-modal').css({ position: 'absolute', top: top, left: left });
+        var videoModal = document.querySelector('.pswp-video-modal');
+        if (videoModal) {
+            videoModal.style.position = 'absolute';
+            videoModal.style.top = top + 'px';
+            videoModal.style.left = left + 'px';
+        }
     }
 
     function setVideoSize(item, vp) {
@@ -352,23 +384,37 @@
     }
     };
 
-    $(document).ready(function() {
-        $('#startPhotoSwipe').on('click', function(event) {
-            event.preventDefault;
-            startPhotoSwipe();
-        });
-        {if functions::get_device() != 'desktop'}
-            $('#theImage').on('doubletap', startPhotoSwipe);
-        {/if}
-        {if isset($U_SLIDESHOW_START)}
-            $('#startSlideshow').on('click touchstart', function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const startBtn = document.getElementById('startPhotoSwipe');
+        if (startBtn) {
+            startBtn.addEventListener('click', function(event) {
+                event.preventDefault();
                 startPhotoSwipe();
-                $('.pswp__button--autoplay')[0].click();
             });
+        }
+
+        {if functions::get_device() != 'desktop'}
+            const theImage = document.getElementById('theImage');
+            if (theImage && theImage.addEventListener) {
+                theImage.addEventListener('doubletap', startPhotoSwipe);
+            }
         {/if}
+
+        {if isset($U_SLIDESHOW_START)}
+            const slideBtn = document.getElementById('startSlideshow');
+            if (slideBtn) {
+                slideBtn.addEventListener('click', function() {
+                    startPhotoSwipe();
+                    const autoBtn = document.querySelector('.pswp__button--autoplay');
+                    if (autoBtn) autoBtn.click();
+                });
+            }
+        {/if}
+
         if (window.location.hash === "#start-slideshow") {
             startPhotoSwipe();
-            $('.pswp__button--autoplay')[0].click();
+            const autoBtn = document.querySelector('.pswp__button--autoplay');
+            if (autoBtn) autoBtn.click();
         }
     });
 </script>{/footer_script}

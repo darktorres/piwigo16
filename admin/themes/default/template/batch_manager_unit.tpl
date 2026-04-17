@@ -4,8 +4,8 @@
 
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
-{combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
+{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
+{combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {footer_script}<script>
   (function() {
@@ -16,24 +16,22 @@
       rootUrl: '{$ROOT_URL}'
     });
 
-    tagsCache.selectize(jQuery('[data-selectize=tags]'), {
+    tagsCache.selectize(document.querySelectorAll('[data-selectize=tags]'), {
       lang: {
         'Add': '{'Create'|translate}'
       }
     });
 
     {* <!-- DATEPICKER --> *}
-    jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
-    jQuery('[data-datepicker]').pwgDatepicker({
-      showTimepicker: true,
-      cancelButton: '{'Cancel'|translate}'
+    document.addEventListener('DOMContentLoaded', function() { {* <!-- onLoad needed to wait localization loads --> *}
+      pwgDatepicker(document.querySelectorAll('[data-datepicker]'), {
+        showTimepicker: true,
+        cancelButton: '{'Cancel'|translate}'
+      });
     });
-  });
 
-  {* <!-- THUMBNAILS --> *}
-  jQuery("a.preview-box").colorbox({
-    photo: true
-  });
+    {* <!-- THUMBNAILS --> *}
+    GLightbox({ selector: 'a.preview-box' });
   }());
 </script>{/footer_script}
 
@@ -134,8 +132,8 @@
 </form>
 
 <style>
-  .selectize-input .item,
-  .selectize-input .item.active {
+  .ts-control .item,
+  .ts-control .item.active {
     background-image: none !important;
     background-color: #ffa646 !important;
     border-color: transparent !important;
@@ -144,8 +142,8 @@
     border-radius: 20px !important;
   }
 
-  .selectize-input .item .remove,
-  .selectize-input .item .remove {
+  .ts-control .item .remove,
+  .ts-control .item .remove {
     background-color: transparent !important;
     border-top-right-radius: 20px !important;
     border-bottom-right-radius: 20px !important;
@@ -155,8 +153,8 @@
 
   }
 
-  .selectize-input .item .remove:hover,
-  .selectize-input .item .remove:hover {
+  .ts-control .item .remove:hover,
+  .ts-control .item .remove:hover {
     background-color: #ff7700 !important;
   }
 

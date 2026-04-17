@@ -30,22 +30,19 @@
   var str_tags_found = '{'<b>%d</b> tags found'|translate}';
   var str_tag_found = '{'<b>%d</b> tag found'|translate}';
 
-  $(document).ready(function() {
-    $("h1").append('<span class="badge-number">{$total}</span>');
+  document.addEventListener('DOMContentLoaded', function() {
+    var h1 = document.querySelector("h1");
+    if (h1) h1.insertAdjacentHTML('beforeend', '<span class="badge-number">{$total}</span>');
   });
 </script>{/footer_script}
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
-{combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
+{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-{combine_script id='jquery.tipTip' load='header' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.js'}
 {combine_script id='tags' load='footer' path='admin/themes/default/js/tags.js'}
-{combine_script id='jquery.cookie' path='node_modules/jquery.cookie/jquery.cookie.js' load='footer'}
-
 {footer_script}<script>
-  if (!$.cookie("pwg_tags_per_page")) {
-    $.cookie("pwg_tags_per_page", "100");
+  if (!document.cookie.match(/(?:^|;)\s*pwg_tags_per_page=/)) {
+    document.cookie = 'pwg_tags_per_page=100; path=/; SameSite=Lax';
   }
 </script>{/footer_script}
 

@@ -1,15 +1,12 @@
-{combine_script id='common' load='header' require='jquery' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='header' path='admin/themes/default/js/common.js'}
 
-{combine_script id='jquery.selectize' load='header' path='node_modules/selectize/dist/js/standalone/selectize.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
+{combine_script id='tom-select' load='header' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
+{combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-{combine_script id='jquery.ui' require='jquery' load='header'}
-{combine_css path="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.slider.css"}
+{combine_script id='nouislider' load='header' path='node_modules/nouislider/dist/nouislider.min.js'}
+{combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
 
-{combine_script id='jquery.confirm' load='header' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
-{combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
-
-{combine_script id='jquery.tipTip' load='header' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.js'}
+{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
@@ -87,113 +84,124 @@
   update_user_list();
   update_selection_content();
 
-  $(".icon-help-circled").tipTip({
-    'maxWidth': '700px',
-    'fadeIn': '1000',
-  });
+  tippy('.icon-help-circled', { maxWidth: 700, delay: 0, placement: 'top' });
 
-  $(document).ready(function() {
+  document.addEventListener('DOMContentLoaded', function() {
     // Only webmaster can set admin or webmaster to others users
     if (connected_user_status !== 'webmaster') {
-      $('select[name="status"] option[value="webmaster"], select[name="status"] option[value="admin"]').attr(
-        "disabled", true);
+      document.querySelectorAll('select[name="status"] option[value="webmaster"], select[name="status"] option[value="admin"]').forEach(function(el) {
+        el.setAttribute("disabled", true);
+      });
     }
-    // We set the applyAction btn click event here so plugins can add cases to the list 
+    // We set the applyAction btn click event here so plugins can add cases to the list
     // which is not possible if this JS part is in a JS file
     // see #1571 on Github
-    jQuery("#applyAction").click(function() {
-      let action = jQuery("select[name=selectAction]").prop("value");
-      let method = 'pwg.users.setInfo';
-      let data = {
-        pwg_token: pwg_token,
-        user_id: selection.map(x => x.id)
-      };
-      switch (action) {
-        case 'delete':
-          if (!($("#permitActionUserList .user-list-checkbox[name=confirm_deletion]").attr("data-selected") ===
-              "1")) {
-            alert(missingConfirm);
-            return false;
+    var applyActionBtn = document.getElementById("applyAction");
+    if (applyActionBtn) {
+      applyActionBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        var selectActionEl = document.querySelector("select[name=selectAction]");
+        let action = selectActionEl ? selectActionEl.value : '';
+        let method = 'pwg.users.setInfo';
+        let data = {
+          pwg_token: pwg_token,
+          user_id: selection.map(x => x.id)
+        };
+        switch (action) {
+          case 'delete':
+            if (!(document.querySelector("#permitActionUserList .user-list-checkbox[name=confirm_deletion]")
+                ?.getAttribute("data-selected") === "1")) {
+              alert(missingConfirm);
+              return;
+            }
+            method = 'pwg.users.delete';
+            break;
+          case 'group_associate':
+            method = 'pwg.groups.addUser';
+            data.group_id = document.querySelector("#permitActionUserList select[name=associate]")?.value;
+            break;
+          case 'group_dissociate':
+            method = 'pwg.groups.deleteUser';
+            data.group_id = document.querySelector("#permitActionUserList select[name=dissociate]")?.value;
+            break;
+          case 'status':
+            data.status = document.querySelector("#permitActionUserList select[name=status]")?.value;
+            break;
+          case 'enabled_high':
+            data.enabled_high = document.querySelector("#permitActionUserList .user-list-checkbox[name=enabled_high_yes]")
+              ?.getAttribute("data-selected") === "1" ? true : false;
+            break;
+          case 'level':
+            data.level = document.querySelector("#permitActionUserList select[name=level]")?.value;
+            break;
+          case 'nb_image_page':
+            data.nb_image_page = document.querySelector("#permitActionUserList input[name=nb_image_page]")?.value;
+            break;
+          case 'theme':
+            data.theme = document.querySelector("#permitActionUserList select[name=theme]")?.value;
+            break;
+          case 'language':
+            data.language = document.querySelector("#permitActionUserList select[name=language]")?.value;
+            break;
+          case 'recent_period': {
+            var _ps = document.querySelector('#permitActionUserList .period-select-bar .slider-bar-container');
+            data.recent_period = recent_period_values[_ps && _ps.noUiSlider ? Math.round(parseFloat(_ps.noUiSlider.get())) : 0];
+            break;
           }
-          method = 'pwg.users.delete';
-          break;
-        case 'group_associate':
-          method = 'pwg.groups.addUser';
-          data.group_id = jQuery("#permitActionUserList select[name=associate]").prop("value");
-          break;
-        case 'group_dissociate':
-          method = 'pwg.groups.deleteUser';
-          data.group_id = jQuery("#permitActionUserList select[name=dissociate]").prop("value");
-          break;
-        case 'status':
-          data.status = jQuery("#permitActionUserList select[name=status]").prop("value");
-          break;
-        case 'enabled_high':
-          data.enabled_high = $("#permitActionUserList .user-list-checkbox[name=enabled_high_yes]").attr(
-            "data-selected") === "1" ? true : false;
-          break;
-        case 'level':
-          data.level = jQuery("#permitActionUserList select[name=level]").val();
-          break;
-        case 'nb_image_page':
-          data.nb_image_page = jQuery("#permitActionUserList input[name=nb_image_page]").val();
-          break;
-        case 'theme':
-          data.theme = jQuery("#permitActionUserList select[name=theme]").val();
-          break;
-        case 'language':
-          data.language = jQuery("#permitActionUserList select[name=language]").val();
-          break;
-        case 'recent_period':
-          data.recent_period = recent_period_values[$(
-            '#permitActionUserList .period-select-bar .slider-bar-container').slider("option", "value")];;
-          break;
-        case 'expand':
-          data.expand = $("#permitActionUserList .user-list-checkbox[name=expand_yes]").attr(
-            "data-selected") === "1" ? true : false;
-          break;
-        case 'show_nb_comments':
-          data.show_nb_comments = $("#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]")
-            .attr("data-selected") === "1" ? true : false
-          break;
-        case 'show_nb_hits':
-          data.show_nb_hits = $("#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]").attr(
-            "data-selected") === "1" ? true : false;
-          break;
-        default:
-          alert("Unexpected action");
-          return false;
-      }
-      jQuery.ajax({
-        url: "ws.php?format=json&method=" + method,
-        type: "POST",
-        data: data,
-        beforeSend: function() {
-          jQuery("#applyActionLoading").show();
-          jQuery("#applyActionBlock .infos").fadeOut();
-        },
-        success: function(data) {
-          jQuery("#applyActionLoading").hide();
-          jQuery("#applyActionBlock .infos").fadeIn();
-          jQuery("#applyActionBlock .infos").css("display", "inline-block");
-          update_user_list();
-          if (action == 'delete') {
-            selection = [];
-            update_selection_content();
-          }
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrows) {
-          jQuery("#applyActionLoading").hide();
+          case 'expand':
+            data.expand = document.querySelector("#permitActionUserList .user-list-checkbox[name=expand_yes]")
+              ?.getAttribute("data-selected") === "1" ? true : false;
+            break;
+          case 'show_nb_comments':
+            data.show_nb_comments = document.querySelector("#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]")
+              ?.getAttribute("data-selected") === "1" ? true : false;
+            break;
+          case 'show_nb_hits':
+            data.show_nb_hits = document.querySelector("#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]")
+              ?.getAttribute("data-selected") === "1" ? true : false;
+            break;
+          default:
+            alert("Unexpected action");
+            return;
         }
+        var loadingEl = document.getElementById('applyActionLoading');
+        var infosEl = document.querySelector("#applyActionBlock .infos");
+        if (loadingEl) loadingEl.style.display = '';
+        if (infosEl) infosEl.style.display = 'none';
+        var params = new URLSearchParams();
+        Object.keys(data).forEach(function(k) {
+          var v = data[k];
+          if (Array.isArray(v)) {
+            v.forEach(function(item) { params.append(k + '[]', item); });
+          } else {
+            params.append(k, v);
+          }
+        });
+        fetch("ws.php?format=json&method=" + method, {
+          method: "POST",
+          headers: {ldelim}"Content-Type": "application/x-www-form-urlencoded"{rdelim},
+          body: params
+        })
+          .then(function(r) { return r.json(); })
+          .then(function(responseData) {
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (infosEl) infosEl.style.display = 'inline-block';
+            update_user_list();
+            if (action == 'delete') {
+              selection = [];
+              update_selection_content();
+            }
+          })
+          .catch(function() {
+            if (loadingEl) loadingEl.style.display = 'none';
+          });
       });
-      return false;
-    });
+    }
   });
 </script>{/footer_script}
 
 {combine_script id='user_list' load='footer' path='admin/themes/default/js/user_list.js'}
 
-{combine_script id='jquery.cookie' path='node_modules/jquery.cookie/jquery.cookie.js' load='footer'}
 
 <div class="selection-mode-group-manager" style="right:30px">
   <label class="switch">
@@ -1701,11 +1709,11 @@
   }
 
 
-  .user-property-select>.selectize-input.items {
+  .user-property-select>.ts-control.has-items {
     padding: 0;
   }
 
-  .user-property-group .selectize-input.items {
+  .user-property-group .ts-control.has-items {
     border: none;
   }
 
@@ -1928,8 +1936,8 @@
 
   /* Selectize Inputs (groups) */
 
-  #UserList .user-property-group .selectize-input,
-  #GuestUserList .user-property-group .selectize-input {
+  #UserList .user-property-group .ts-control,
+  #GuestUserList .user-property-group .ts-control {
     overflow-y: scroll;
   }
 
@@ -2102,7 +2110,7 @@ Advanced filter
     font-size: 25px;
   }
 
-  .UserListPopInContainer .selectize-dropdown-content .option {
+  .UserListPopInContainer .ts-dropdown-content .option {
     font-size: 0.9em;
     margin-bottom: 5px;
   }
@@ -2414,7 +2422,7 @@ Advanced filter
     margin-right: 5px;
   }
 
-  .selectize-input.items .item {
+  .ts-control.has-items .item {
     color: #000 !important;
   }
 

@@ -1,11 +1,13 @@
-{footer_script require='jquery'}<script>
-	var h = jQuery("#theHeader div.banner").css("height");
-	var d = jQuery("#menuSwitcher").css("padding-top");
-
-	jQuery(document).ready(function() {
-		if (jQuery('#theHeader div.banner').is(':visible') && jQuery("body").css("display") == "flex") {
-			jQuery("#menuSwitcher").css("padding-top", parseInt(h) + parseInt(d));
-		};
+{footer_script}<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		var banner = document.querySelector('#theHeader div.banner');
+		var menuSwitcher = document.getElementById('menuSwitcher');
+		if (banner && menuSwitcher && banner.offsetParent !== null &&
+			window.getComputedStyle(document.body).display === 'flex') {
+			var h = parseInt(window.getComputedStyle(banner).height);
+			var d = parseInt(window.getComputedStyle(menuSwitcher).paddingTop);
+			menuSwitcher.style.paddingTop = (h + d) + 'px';
+		}
 	});
 </script>{/footer_script}
 
@@ -175,4 +177,4 @@
 	</aside>
 {/if}
 <a id="menuSwitcher" class="pwg-button" title="{'Menu'|translate}"><span class="pwg-icon pwg-icon-menu"></span></a>
-{combine_script id='zzz.d1.menu' load='async' path="themes/`$themeconf.id`/js/menuh.js" require="jquery" version=0}
+{combine_script id='zzz.d1.menu' load='async' path="themes/`$themeconf.id`/js/menuh.js" version=0}

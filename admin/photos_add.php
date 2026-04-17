@@ -44,7 +44,7 @@ if (isset($_GET['section'])) {
     $page['tab'] = $_GET['section'];
 
     // backward compatibility
-    if ($page['tab'] == 'ploader') {
+    if ($page['tab'] == 'ploader' || $page['tab'] == 'upload') {
         $page['tab'] = 'applications';
     }
 } else {

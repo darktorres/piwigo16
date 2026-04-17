@@ -1,13 +1,13 @@
-{combine_css path="themes/bootstrap_darkroom/node_modules/selectize/dist/css/selectize.bootstrap3.css"}
-{combine_script id='jquery.selectize' load='footer' require='jquery' path="themes/bootstrap_darkroom/node_modules/selectize/dist/js/standalone/selectize.js"}
-{footer_script require='jquery'}<script>
-    jQuery(document).ready(function() {
-        jQuery("#authors, #tags, #categories").each(function() {
-            jQuery(this).selectize({
+{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
+{combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
+{footer_script}<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll("#authors, #tags, #categories").forEach(function(select) {
+            new TomSelect(select, {
                 plugins: ['remove_button'],
-                maxOptions: jQuery(this).find("option").length
+                maxOptions: select.querySelectorAll('option').length
             });
-        })
+        });
     });
 </script>{/footer_script}
 

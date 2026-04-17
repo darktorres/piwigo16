@@ -32,17 +32,17 @@
 </div>{* <!-- the_page --> *}
 
 
-{combine_script id='jquery.tipTip' load='footer' path='https://rawcdn.githack.com/drewwilson/TipTip/refs/heads/master/jquery.tipTip.js'}
-{footer_script require='jquery.tipTip'}<script>
-  jQuery('.tiptip').tipTip({
-    delay: 0,
-    fadeIn: 200,
-    fadeOut: 200
-  });
+{combine_script id='popper.js' load='footer' path='node_modules/@popperjs/core/dist/umd/popper.min.js'}
+{combine_script id='tippy.js' load='footer' require='popper.js' path='node_modules/tippy.js/dist/tippy-bundle.umd.min.js'}
+{combine_css path='node_modules/tippy.js/dist/tippy.css'}
+{footer_script require='tippy.js'}<script>
+  tippy('.tiptip', { delay: 0, placement: 'top' });
 
-  jQuery('a.externalLink').click(function() {
-    window.open(jQuery(this).attr("href"));
-    return false;
+  document.querySelectorAll('a.externalLink').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      window.open(this.getAttribute("href"));
+    });
   });
 </script>{/footer_script}
 

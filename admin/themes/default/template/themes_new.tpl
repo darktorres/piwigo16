@@ -1,22 +1,25 @@
 {include file='inc/colorbox.inc.tpl'}
 {footer_script}<script>
-  $(window).bind("load", function() {
-    $('.themeBox').each(function() {
+  GLightbox({ selector: 'a.preview-box' });
+  window.addEventListener('load', function() {
+    document.querySelectorAll('.themeBox').forEach(function(box) {
+      var screenImage = box.querySelector(".preview-box img");
+      var previewBox = box.querySelector(".preview-box");
+      if (!screenImage || !previewBox) return;
 
-      let screenImage = $(this).find(".preview-box img");
-      let imageW = screenImage.innerWidth();
-      let imageH = screenImage.innerHeight();
-      let size = $(this).find(".preview-box").innerWidth();
+      var imageW = screenImage.clientWidth;
+      var imageH = screenImage.clientHeight;
+      var size = previewBox.clientWidth;
 
       if (imageW > imageH) {
-        screenImage.css('height', size + 'px');
-        screenImage.css('width', (imageW * size / imageH) + 'px');
+        screenImage.style.height = size + 'px';
+        screenImage.style.width = (imageW * size / imageH) + 'px';
       } else {
-        screenImage.css('width', size + 'px');
-        screenImage.css('height', (imageH * size / imageW) + 'px');
+        screenImage.style.width = size + 'px';
+        screenImage.style.height = (imageH * size / imageW) + 'px';
       }
-    })
-  })
+    });
+  });
 </script>{/footer_script}
 
 {if not empty($new_themes)}

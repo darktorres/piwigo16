@@ -19,7 +19,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 
 functions::check_input_parameter('user_id', $_GET, false, PATTERN_ID);
 
-$edit_user = functions_user::build_user($_GET['user_id'], false);
+$edit_user = functions_user::build_user(isset($_GET['user_id']) ? (int) $_GET['user_id'] : (int) $user['id'], false);
 
 if (! empty($_POST)) {
     functions::check_pwg_token();
@@ -37,5 +37,8 @@ functions::load_profile_in_template(
 );
 $page['errors'] = array_merge($page['errors'], $errors);
 
+// profile.tpl lives in the public theme — add the user theme and its parent chain to the search path
+$template->set_template_dir(__DIR__ . '/../themes/' . $user['theme'] . '/template');
+$template->set_template_dir(__DIR__ . '/../themes/default/template');
 $template->set_filename('profile', 'profile.tpl');
 $template->assign_var_from_handle('ADMIN_CONTENT', 'profile');

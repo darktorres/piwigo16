@@ -80,9 +80,9 @@
   // Start the tour
   tour.start();
 
-  jQuery("input[class='submit']").click(function() {
-    if (tour.getCurrentStep() == 5) {
-      tour.goTo(6);
-    }
+  document.querySelectorAll("input[class='submit']").forEach(function(el) {
+    el.addEventListener('click', function() {
+      if (tour.getCurrentStep() == 5) tour.goTo(6);
+    });
   });
 </script>{/footer_script}

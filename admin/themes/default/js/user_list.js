@@ -26,10 +26,11 @@ Escape of pop-in
 ----------------*/
 
 //get out of pop in via escape key
-$(document).on("keydown", function (e) {
+document.addEventListener("keydown", function (e) {
     if (e.keyCode === 27) {
         // ESC button
-        $("#UserList").fadeOut();
+        const userList = document.getElementById("UserList");
+        if (userList) userList.style.display = 'none';
     }
 });
 
@@ -45,324 +46,429 @@ $(document).on("keydown", function (e) {
 Group Selectize
 ----------------*/
 
-jQuery("[data-selectize=groups]").selectize({
-    valueField: "value",
-    labelField: "label",
-    searchField: ["label"],
-    plugins: ["remove_button"],
+let groupSelectize = null;
+let groupGuestSelectize = null;
+
+document.querySelectorAll("[data-selectize=groups]").forEach(function (el) {
+    new TomSelect(el, {
+        valueField: "value",
+        labelField: "label",
+        searchField: ["label"],
+        plugins: ["remove_button"],
+    });
 });
 
-let groupSelectize = jQuery("[data-selectize=groups]")[0].selectize;
-let groupGuestSelectize = jQuery("[data-selectize=groups]")[1].selectize;
+var _groupEls = document.querySelectorAll("[data-selectize=groups]");
+groupSelectize = _groupEls[0] ? _groupEls[0].tomselect : null;
+groupGuestSelectize = _groupEls[1] ? _groupEls[1].tomselect : null;
 
 /*-----------------
 OnClick functions
 -----------------*/
 function open_user_list() {
     hide_temporary_messages();
-    $("#UserList").fadeIn();
+    const userList = document.getElementById("UserList");
+    if (userList) userList.style.display = 'flex';
 }
 
 function close_user_list() {
     hide_temporary_messages();
-    $("#UserList").fadeOut();
+    const userList = document.getElementById("UserList");
+    if (userList) userList.style.display = 'none';
 }
 
 function open_guest_user_list() {
     hide_temporary_messages();
-    $("#GuestUserList").fadeIn();
+    const guestUserList = document.getElementById("GuestUserList");
+    if (guestUserList) guestUserList.style.display = 'flex';
 }
 
 function close_guest_user_list() {
     hide_temporary_messages();
-    $("#GuestUserList").fadeOut();
+    const guestUserList = document.getElementById("GuestUserList");
+    if (guestUserList) guestUserList.style.display = 'none';
 }
 
 function isSelectionMode() {
-    return $("#toggleSelectionMode").is(":checked");
+    const toggleSelectionMode = document.getElementById("toggleSelectionMode");
+    return toggleSelectionMode ? toggleSelectionMode.checked : false;
 }
 
-$(document).ready(function () {
-    $(".user-property-register").tipTip({
-        maxWidth: "300px",
-        delay: 0,
-        fadeIn: 200,
-        fadeOut: 200,
-    });
-    $(".user-property-last-visit").tipTip({
-        maxWidth: "300px",
-        delay: 0,
-        fadeIn: 200,
-        fadeOut: 200,
-    });
-    $(".advanced-filter-level select option").eq(1).remove();
-    $(".edit-password").click(function () {
-        $(".user-property-password").hide();
-        $(".user-property-password-change").show().css("display", "flex");
+document.addEventListener("DOMContentLoaded", function () {
+    tippy('.user-property-register', { maxWidth: 300, delay: 0, placement: 'top' });
+    tippy('.user-property-last-visit', { maxWidth: 300, delay: 0, placement: 'top' });
+
+    const advFilterLevelSelects = document.querySelectorAll(".advanced-filter-level select option");
+    if (advFilterLevelSelects.length > 1) {
+        advFilterLevelSelects[1].remove();
+    }
+
+    document.querySelectorAll(".edit-password").forEach(function (el) {
+        el.addEventListener("click", function () {
+            document.querySelectorAll(".user-property-password").forEach(el => el.style.display = 'none');
+            document.querySelectorAll(".user-property-password-change").forEach(el => {
+                el.style.display = 'flex';
+            });
+        });
     });
 
-    $(".edit-password-cancel").click(function () {
-        //possibly reset input value
-        $(".user-property-password").show();
-        $(".user-property-password-change").hide();
+    document.querySelectorAll(".edit-password-cancel").forEach(function (el) {
+        el.addEventListener("click", function () {
+            document.querySelectorAll(".user-property-password").forEach(el => el.style.display = '');
+            document.querySelectorAll(".user-property-password-change").forEach(el => el.style.display = 'none');
+        });
     });
 
-    $(".edit-username").click(function () {
-        $(".user-property-username").hide();
-        $(".user-property-username-change").show().css("display", "flex");
+    document.querySelectorAll(".edit-username").forEach(function (el) {
+        el.addEventListener("click", function () {
+            document.querySelectorAll(".user-property-username").forEach(el => el.style.display = 'none');
+            document.querySelectorAll(".user-property-username-change").forEach(el => {
+                el.style.display = 'flex';
+            });
+        });
     });
 
-    $(".edit-username-cancel").click(function () {
-        //possibly reset input value
-        $(".user-property-username").show();
-        $(".user-property-username-change").hide();
+    document.querySelectorAll(".edit-username-cancel").forEach(function (el) {
+        el.addEventListener("click", function () {
+            document.querySelectorAll(".user-property-username").forEach(el => el.style.display = '');
+            document.querySelectorAll(".user-property-username-change").forEach(el => el.style.display = 'none');
+        });
     });
 
-    $("#UserList .close-update-button").click(close_user_list);
-    $(".CloseUserList").click(close_user_list);
-
-    $("#toggleSelectionMode").attr("checked", false);
-    $("#toggleSelectionMode").click(function () {
-        let isSelection = $(this).is(":checked");
-        selectionMode(isSelection);
+    document.querySelectorAll("#UserList .close-update-button").forEach(el => {
+        el.addEventListener("click", close_user_list);
     });
-    $(".edit-guest-user-button").click(open_guest_user_list);
-    $(".CloseGuestUserList").click(close_guest_user_list);
-    $("#GuestUserList .close-update-button").click(close_guest_user_list);
-
-    $("#show_password").click(function () {
-        if ($(this).hasClass("icon-eye")) {
-            $(this).removeClass("icon-eye");
-            $(this).addClass("icon-eye-off");
-            $("#AddUserPassword").get(0).type = "text";
-        } else {
-            $(this).removeClass("icon-eye-off");
-            $(this).addClass("icon-eye");
-            $("#AddUserPassword").get(0).type = "password";
-        }
+    document.querySelectorAll(".CloseUserList").forEach(el => {
+        el.addEventListener("click", close_user_list);
     });
-    /* Action */
-    jQuery("[id^=action_]").hide();
 
-    jQuery("select[name=selectAction]").change(function () {
-        jQuery("#applyActionBlock .infos").hide();
-        jQuery("[id^=action_]").hide();
-        jQuery("#action_" + $(this).prop("value")).show();
-        if (jQuery(this).val() != -1) {
-            jQuery("#applyActionBlock").show();
-        } else {
-            jQuery("#applyActionBlock").hide();
-        }
+    const toggleSelectionMode = document.getElementById("toggleSelectionMode");
+    if (toggleSelectionMode) {
+        toggleSelectionMode.checked = false;
+        toggleSelectionMode.addEventListener("click", function () {
+            let isSelection = this.checked;
+            selectionMode(isSelection);
+        });
+    }
+
+    document.querySelectorAll(".edit-guest-user-button").forEach(el => {
+        el.addEventListener("click", open_guest_user_list);
     });
-    $(".yes_no_radio .user-list-checkbox")
-        .unbind("click")
-        .click(function () {
-            if ($(this).attr("data-selected") !== "1") {
-                $(this).attr("data-selected", "1");
-                $(this).siblings().attr("data-selected", "0");
+    document.querySelectorAll(".CloseGuestUserList").forEach(el => {
+        el.addEventListener("click", close_guest_user_list);
+    });
+    document.querySelectorAll("#GuestUserList .close-update-button").forEach(el => {
+        el.addEventListener("click", close_guest_user_list);
+    });
+
+    const showPassword = document.getElementById("show_password");
+    if (showPassword) {
+        showPassword.addEventListener("click", function () {
+            if (this.classList.contains("icon-eye")) {
+                this.classList.remove("icon-eye");
+                this.classList.add("icon-eye-off");
+                const addUserPassword = document.getElementById("AddUserPassword");
+                if (addUserPassword) addUserPassword.type = "text";
+            } else {
+                this.classList.remove("icon-eye-off");
+                this.classList.add("icon-eye");
+                const addUserPassword = document.getElementById("AddUserPassword");
+                if (addUserPassword) addUserPassword.type = "password";
             }
         });
-    $(".AddUserGenPassword").click(gen_password);
-    $(".AddUserSubmit").click(add_user);
-    $(".AddUserCancel").click(add_user_close);
-    $(".CloseAddUser").click(add_user_close);
+    }
+    /* Action */
+    document.querySelectorAll("[id^=action_]").forEach(el => {
+        el.style.display = 'none';
+    });
+
+    document.querySelectorAll("select[name=selectAction]").forEach(function (el) {
+        el.addEventListener("change", function () {
+            document.querySelectorAll("#applyActionBlock .infos").forEach(el => {
+                el.style.display = 'none';
+            });
+            document.querySelectorAll("[id^=action_]").forEach(el => {
+                el.style.display = 'none';
+            });
+            const actionEl = document.getElementById("action_" + this.value);
+            if (actionEl) actionEl.style.display = '';
+            const applyActionBlock = document.getElementById("applyActionBlock");
+            if (applyActionBlock) {
+                applyActionBlock.style.display = this.value != -1 ? '' : 'none';
+            }
+        });
+    });
+
+    document.querySelectorAll(".yes_no_radio .user-list-checkbox").forEach(function (el) {
+        el.addEventListener("click", function () {
+            if (this.getAttribute("data-selected") !== "1") {
+                this.setAttribute("data-selected", "1");
+                this.parentElement.querySelectorAll(".user-list-checkbox").forEach(sibling => {
+                    if (sibling !== this) sibling.setAttribute("data-selected", "0");
+                });
+            }
+        });
+    });
+
+    document.querySelectorAll(".AddUserGenPassword").forEach(el => {
+        el.addEventListener("click", gen_password);
+    });
+    document.querySelectorAll(".AddUserSubmit").forEach(el => {
+        el.addEventListener("click", add_user);
+    });
+    document.querySelectorAll(".AddUserCancel").forEach(el => {
+        el.addEventListener("click", add_user_close);
+    });
+    document.querySelectorAll(".CloseAddUser").forEach(el => {
+        el.addEventListener("click", add_user_close);
+    });
 
     //open add user pop in
-    $(".add-user-button").click(add_user_open);
+    document.querySelectorAll(".add-user-button").forEach(el => {
+        el.addEventListener("click", add_user_open);
+    });
 
     /* Select */
 
-    jQuery("#selectSet").click(function () {
-        select_whole_set();
-        return false;
-    });
+    const selectSetBtn = document.getElementById("selectSet");
+    if (selectSetBtn) {
+        selectSetBtn.addEventListener("click", function () {
+            select_whole_set();
+            return false;
+        });
+    }
 
-    jQuery("#selectAllPage").click(function () {
-        let selection_ids = selection.map((x) => x.id);
-        for (let i = 0; i < current_users.length; i++) {
-            if (!selection_ids.includes(current_users[i].id)) {
-                selection.push({
-                    id: current_users[i].id,
-                    username: current_users[i].username,
-                });
+    const selectAllPageBtn = document.getElementById("selectAllPage");
+    if (selectAllPageBtn) {
+        selectAllPageBtn.addEventListener("click", function () {
+            let selection_ids = selection.map((x) => x.id);
+            for (let i = 0; i < current_users.length; i++) {
+                if (!selection_ids.includes(current_users[i].id)) {
+                    selection.push({
+                        id: current_users[i].id,
+                        username: current_users[i].username,
+                    });
+                }
             }
-        }
-        update_selection_content();
-        return false;
-    });
+            update_selection_content();
+            return false;
+        });
+    }
 
-    jQuery("#selectNone").click(function () {
-        selection = [];
-        update_selection_content();
-        return false;
-    });
+    const selectNoneBtn = document.getElementById("selectNone");
+    if (selectNoneBtn) {
+        selectNoneBtn.addEventListener("click", function () {
+            selection = [];
+            update_selection_content();
+            return false;
+        });
+    }
 
-    jQuery("#selectInvert").click(function () {
-        let selection_ids = selection.map((x) => x.id);
-        for (let i = 0; i < current_users.length; i++) {
-            if (selection_ids.includes(current_users[i].id)) {
-                selection.splice(
-                    selection.findIndex((x) => x.id == current_users[i].id),
-                    1,
-                );
-            } else {
-                selection.push({
-                    id: current_users[i].id,
-                    username: current_users[i].username,
-                });
+    const selectInvertBtn = document.getElementById("selectInvert");
+    if (selectInvertBtn) {
+        selectInvertBtn.addEventListener("click", function () {
+            let selection_ids = selection.map((x) => x.id);
+            for (let i = 0; i < current_users.length; i++) {
+                if (selection_ids.includes(current_users[i].id)) {
+                    selection.splice(
+                        selection.findIndex((x) => x.id == current_users[i].id),
+                        1,
+                    );
+                } else {
+                    selection.push({
+                        id: current_users[i].id,
+                        username: current_users[i].username,
+                    });
+                }
             }
-        }
-        update_selection_content();
-        return false;
+            update_selection_content();
+            return false;
+        });
+    }
+
+    const permitActionSelectAction = document.querySelector("#permitActionUserList select[name=selectAction]");
+    if (permitActionSelectAction) permitActionSelectAction.value = "-1";
+
+    document.querySelectorAll(".advanced-filter-btn").forEach(el => {
+        el.addEventListener("click", advanced_filter_button_click);
     });
-
-    $("#permitActionUserList select[name=selectAction]").val("-1");
-
-    $(".advanced-filter-btn").click(advanced_filter_button_click);
-    $(".advanced-filter span.icon-cancel").click(advanced_filter_hide);
-    $(".advanced-filter-select").change(update_user_list);
-    $("#user_search").on("input", update_user_list);
+    document.querySelectorAll(".advanced-filter span.icon-cancel").forEach(el => {
+        el.addEventListener("click", advanced_filter_hide);
+    });
+    document.querySelectorAll(".advanced-filter-select").forEach(el => {
+        el.addEventListener("change", update_user_list);
+    });
+    const userSearch = document.getElementById("user_search");
+    if (userSearch) {
+        userSearch.addEventListener("input", update_user_list);
+    }
 
     /*View manager*/
 
-    if ($("#displayCompact").is(":checked")) {
+    const displayCompact = document.getElementById("displayCompact");
+    const displayLine = document.getElementById("displayLine");
+    const displayTile = document.getElementById("displayTile");
+
+    if (displayCompact && displayCompact.checked) {
         setDisplayCompact();
     }
 
-    if ($("#displayLine").is(":checked")) {
+    if (displayLine && displayLine.checked) {
         setDisplayLine();
     }
 
-    if ($("#displayTile").is(":checked")) {
+    if (displayTile && displayTile.checked) {
         setDisplayTile();
     }
 
-    $("#displayCompact").change(function () {
-        setDisplayCompact();
+    if (displayCompact) {
+        displayCompact.addEventListener("change", function () {
+            setDisplayCompact();
 
-        if ($(".addAlbum").hasClass("input-mode")) {
-            $(".addAlbum p").hide();
-        }
-        set_view_selector("compact");
-    });
+            const addAlbums = document.querySelectorAll(".addAlbum");
+            addAlbums.forEach(el => {
+                if (el.classList.contains("input-mode")) {
+                    el.querySelectorAll("p").forEach(p => p.style.display = 'none');
+                }
+            });
+            set_view_selector("compact");
+        });
+    }
 
-    $("#displayLine").change(function () {
-        setDisplayLine();
+    if (displayLine) {
+        displayLine.addEventListener("change", function () {
+            setDisplayLine();
 
-        if ($(".addAlbum").hasClass("input-mode")) {
-            $(".addAlbum p").hide();
-        }
-        set_view_selector("line");
-    });
+            const addAlbums = document.querySelectorAll(".addAlbum");
+            addAlbums.forEach(el => {
+                if (el.classList.contains("input-mode")) {
+                    el.querySelectorAll("p").forEach(p => p.style.display = 'none');
+                }
+            });
+            set_view_selector("line");
+        });
+    }
 
-    $("#displayTile").change(function () {
-        setDisplayTile();
+    if (displayTile) {
+        displayTile.addEventListener("change", function () {
+            setDisplayTile();
 
-        if ($(".addAlbum").hasClass("input-mode")) {
-            $(".addAlbum p").show();
-        }
-        set_view_selector("tile");
-    });
+            const addAlbums = document.querySelectorAll(".addAlbum");
+            addAlbums.forEach(el => {
+                if (el.classList.contains("input-mode")) {
+                    el.querySelectorAll("p").forEach(p => p.style.display = '');
+                }
+            });
+            set_view_selector("tile");
+        });
+    }
 
     /* Pagination */
 
-    switch (pagination) {
-        case "5":
-            $("#pagination-per-page-5").addClass("selected-pagination");
-            $("#pagination-per-page-10").removeClass("selected-pagination");
-            $("#pagination-per-page-25").removeClass("selected-pagination");
-            $("#pagination-per-page-50").removeClass("selected-pagination");
-            break;
-        case "10":
-            $("#pagination-per-page-5").removeClass("selected-pagination");
-            $("#pagination-per-page-10").addClass("selected-pagination");
-            $("#pagination-per-page-25").removeClass("selected-pagination");
-            $("#pagination-per-page-50").removeClass("selected-pagination");
+    const paginationPages = ["5", "10", "25", "50"];
+    paginationPages.forEach(page => {
+        const el = document.getElementById("pagination-per-page-" + page);
+        if (el) {
+            if (page === pagination) {
+                el.classList.add("selected-pagination");
+            } else {
+                el.classList.remove("selected-pagination");
+            }
+        }
+    });
 
-            break;
-        case "25":
-            $("#pagination-per-page-5").removeClass("selected-pagination");
-            $("#pagination-per-page-10").removeClass("selected-pagination");
-            $("#pagination-per-page-25").addClass("selected-pagination");
-            $("#pagination-per-page-50").removeClass("selected-pagination");
-
-            break;
-        case "50":
-            $("#pagination-per-page-5").removeClass("selected-pagination");
-            $("#pagination-per-page-10").removeClass("selected-pagination");
-            $("#pagination-per-page-25").removeClass("selected-pagination");
-            $("#pagination-per-page-50").addClass("selected-pagination");
-            break;
-        default:
-            break;
+    const paginationBtn = document.getElementById("pagination-per-page-" + pagination);
+    if (paginationBtn) {
+        paginationBtn.dispatchEvent(new Event("click", { bubbles: true }));
     }
-
-    $("#pagination-per-page-" + pagination).trigger("click");
 
     if (has_group) {
         advanced_filter_button_click();
-        $("select[name='filter_group']").val(has_group);
+        const filterGroup = document.querySelector("select[name='filter_group']");
+        if (filterGroup) filterGroup.value = has_group;
         update_user_list();
     }
 
-    $(".search-cancel").on("click", function () {
-        $(".search-input").val("");
-        $(".search-input").trigger("input");
+    document.querySelectorAll(".search-cancel").forEach(el => {
+        el.addEventListener("click", function () {
+            document.querySelectorAll(".search-input").forEach(input => {
+                input.value = "";
+                input.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+        });
     });
 
-    $(".search-input").on("input", function () {
-        if ($(".search-input").val() == "") {
-            $(".search-cancel").hide();
-        } else {
-            $(".search-cancel").show();
-        }
+    document.querySelectorAll(".search-input").forEach(el => {
+        el.addEventListener("input", function () {
+            if (this.value == "") {
+                document.querySelectorAll(".search-cancel").forEach(cancel => {
+                    cancel.style.display = 'none';
+                });
+            } else {
+                document.querySelectorAll(".search-cancel").forEach(cancel => {
+                    cancel.style.display = '';
+                });
+            }
+        });
     });
 });
 
 function set_view_selector(view_type) {
-    $.ajax({
-        url: "ws.php?format=json&method=pwg.users.preferences.set",
-        type: "POST",
-        dataType: "JSON",
-        data: {
-            param: "user-manager-view",
-            value: view_type,
-        },
+    const params = new URLSearchParams({
+        param: "user-manager-view",
+        value: view_type,
     });
+    fetch("ws.php?format=json&method=pwg.users.preferences.set", {
+        method: "POST",
+        body: params,
+    }).catch(err => console.error("Error setting view selector:", err));
 }
 
 function setDisplayTile() {
-    $(".user-container-wrapper")
-        .removeClass("compactView")
-        .removeClass("lineView")
-        .addClass("tileView");
-    $(".user-header-col").addClass("hide");
+    document.querySelectorAll(".user-container-wrapper").forEach(el => {
+        el.classList.remove("compactView", "lineView");
+        el.classList.add("tileView");
+    });
+    document.querySelectorAll(".user-header-col").forEach(el => {
+        el.classList.add("hide");
+    });
 }
 
 function setDisplayLine() {
-    $(".user-container-wrapper")
-        .removeClass("tileView")
-        .removeClass("compactView")
-        .addClass("lineView");
-    $(".user-header-col").removeClass("hide");
+    document.querySelectorAll(".user-container-wrapper").forEach(el => {
+        el.classList.remove("tileView", "compactView");
+        el.classList.add("lineView");
+    });
+    document.querySelectorAll(".user-header-col").forEach(el => {
+        el.classList.remove("hide");
+    });
 }
 
 function setDisplayCompact() {
-    $(".user-container-wrapper")
-        .removeClass("tileView")
-        .removeClass("lineView")
-        .addClass("compactView");
-    $(".user-header-col").addClass("hide");
+    document.querySelectorAll(".user-container-wrapper").forEach(el => {
+        el.classList.remove("tileView", "lineView");
+        el.classList.add("compactView");
+    });
+    document.querySelectorAll(".user-header-col").forEach(el => {
+        el.classList.add("hide");
+    });
 
     if (per_page < 10) {
         per_page = 10;
         update_pagination_menu();
         update_user_list();
 
-        $("#pagination-per-page-5").removeClass("selected-pagination");
-        $("#pagination-per-page-10").addClass("selected-pagination");
-        $("#pagination-per-page-25").removeClass("selected-pagination");
-        $("#pagination-per-page-50").removeClass("selected-pagination");
+        const pages = ["5", "10", "25", "50"];
+        pages.forEach(page => {
+            const el = document.getElementById("pagination-per-page-" + page);
+            if (el) {
+                if (page === "10") {
+                    el.classList.add("selected-pagination");
+                } else {
+                    el.classList.remove("selected-pagination");
+                }
+            }
+        });
     }
 }
 
@@ -371,25 +477,29 @@ Checkboxes
 ----------------*/
 
 function checkbox_change() {
-    if ($(this).attr("data-selected") == "1") {
-        $(this).find("i").hide();
+    if (this.getAttribute("data-selected") == "1") {
+        this.querySelectorAll("i").forEach(el => el.style.display = 'none');
     } else {
-        $(this).find("i").show();
+        this.querySelectorAll("i").forEach(el => el.style.display = '');
     }
 }
 
 function checkbox_click() {
-    if ($(this).attr("data-selected") == "1") {
-        $(this).attr("data-selected", "0");
-        $(this).find("i").hide();
+    if (this.getAttribute("data-selected") == "1") {
+        this.setAttribute("data-selected", "0");
+        this.querySelectorAll("i").forEach(el => el.style.display = 'none');
     } else {
-        $(this).attr("data-selected", "1");
-        $(this).find("i").show();
+        this.setAttribute("data-selected", "1");
+        this.querySelectorAll("i").forEach(el => el.style.display = '');
     }
 }
 
-$(".user-list-checkbox").unbind("change").change(checkbox_change);
-$(".user-list-checkbox").unbind("click").click(checkbox_click);
+document.querySelectorAll(".user-list-checkbox").forEach(el => {
+    el.removeEventListener("change", checkbox_change);
+    el.removeEventListener("click", checkbox_click);
+    el.addEventListener("change", checkbox_change);
+    el.addEventListener("click", checkbox_click);
+});
 
 /* ---------------
 User edit sliders 
@@ -430,154 +540,84 @@ function getRecentPeriodInfoFromIdx(idx) {
 }
 
 /* Photos bar slider */
-jQuery("#UserList .photos-select-bar .slider-bar-container").slider({
-    range: "min",
-    min: 0,
-    max: nb_image_page_values.length - 1,
-    value: nb_image_page_init,
-    change: function (event, ui) {
-        $("#UserList .photos-select-bar .nb-img-page-infos").html(
-            getNbImagePageInfoFromIdx(ui.value),
-        );
-    },
-    slide: function (event, ui) {
-        $("#UserList .photos-select-bar .nb-img-page-infos").html(
-            getNbImagePageInfoFromIdx(ui.value),
-        );
-    },
-    stop: function (event, ui) {
-        $("#UserList .photos-select-bar input[name=nb_image_page]")
-            .val(nb_image_page_values[ui.value])
-            .trigger("change");
-    },
-});
+(function () {
+    function makePhotosSlider(scope) {
+        var el = document.querySelector(scope + " .photos-select-bar .slider-bar-container");
+        if (!el) return;
+        noUiSlider.create(el, {
+            start: [nb_image_page_init],
+            range: { min: 0, max: nb_image_page_values.length - 1 },
+            step: 1,
+            connect: [true, false],
+        });
+        el.noUiSlider.on("slide", function (values) {
+            var val = Math.round(parseFloat(values[0]));
+            const infos = document.querySelector(scope + " .photos-select-bar .nb-img-page-infos");
+            if (infos) infos.innerHTML = getNbImagePageInfoFromIdx(val);
+        });
+        el.noUiSlider.on("change", function (values) {
+            var val = Math.round(parseFloat(values[0]));
+            const infos = document.querySelector(scope + " .photos-select-bar .nb-img-page-infos");
+            if (infos) infos.innerHTML = getNbImagePageInfoFromIdx(val);
+            const input = document.querySelector(scope + " .photos-select-bar input[name=nb_image_page]");
+            if (input) {
+                input.value = nb_image_page_values[val];
+                input.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+        });
+    }
 
-jQuery("#GuestUserList .photos-select-bar .slider-bar-container").slider({
-    range: "min",
-    min: 0,
-    max: nb_image_page_values.length - 1,
-    value: nb_image_page_init,
-    change: function (event, ui) {
-        $("#GuestUserList .photos-select-bar .nb-img-page-infos").html(
-            getNbImagePageInfoFromIdx(ui.value),
-        );
-    },
-    slide: function (event, ui) {
-        $("#GuestUserList .photos-select-bar .nb-img-page-infos").html(
-            getNbImagePageInfoFromIdx(ui.value),
-        );
-    },
-    stop: function (event, ui) {
-        $("#GuestUserList .photos-select-bar input[name=nb_image_page]")
-            .val(nb_image_page_values[ui.value])
-            .trigger("change");
-    },
-});
+    makePhotosSlider("#UserList");
+    makePhotosSlider("#GuestUserList");
 
-$("#permitActionUserList .photos-select-bar .nb-img-page-infos").html(
-    getNbImagePageInfoFromIdx(0),
-);
-jQuery("#permitActionUserList .photos-select-bar .slider-bar-container").slider(
-    {
-        range: "min",
-        min: 0,
-        max: nb_image_page_values.length - 1,
-        value: nb_image_page_init,
-        change: function (event, ui) {
-            $(
-                "#permitActionUserList .photos-select-bar .nb-img-page-infos",
-            ).html(getNbImagePageInfoFromIdx(ui.value));
-        },
-        slide: function (event, ui) {
-            $(
-                "#permitActionUserList .photos-select-bar .nb-img-page-infos",
-            ).html(getNbImagePageInfoFromIdx(ui.value));
-        },
-        stop: function (event, ui) {
-            $(
-                "#permitActionUserList .photos-select-bar input[name=nb_image_page]",
-            )
-                .val(nb_image_page_values[ui.value])
-                .trigger("change");
-        },
-    },
-);
+    const permitActionPhotosInfo = document.querySelector("#permitActionUserList .photos-select-bar .nb-img-page-infos");
+    if (permitActionPhotosInfo) {
+        permitActionPhotosInfo.innerHTML = getNbImagePageInfoFromIdx(0);
+    }
+    makePhotosSlider("#permitActionUserList");
+}());
 
 /* recent_period slider */
-$("#UserList .period-select-bar .slider-bar-container").slider({
-    range: "min",
-    min: 0,
-    max: recent_period_values.length - 1,
-    value: recent_period_init,
-    change: function (event, ui) {
-        $("#UserList .period-select-bar .recent_period_infos").html(
-            getRecentPeriodInfoFromIdx(ui.value),
-        );
-    },
-    slide: function (event, ui) {
-        $("#UserList .period-select-bar .recent_period_infos").html(
-            getRecentPeriodInfoFromIdx(ui.value),
-        );
-    },
-    stop: function (event, ui) {
-        $("#UserList .period-select-bar input[name=recent_period]")
-            .val(recent_period_values[ui.value])
-            .trigger("change");
-    },
-});
+(function () {
+    function makePeriodSlider(scope) {
+        var el = document.querySelector(scope + " .period-select-bar .slider-bar-container");
+        if (!el) return;
+        noUiSlider.create(el, {
+            start: [recent_period_init],
+            range: { min: 0, max: recent_period_values.length - 1 },
+            step: 1,
+            connect: [true, false],
+        });
+        el.noUiSlider.on("slide", function (values) {
+            var val = Math.round(parseFloat(values[0]));
+            const infos = document.querySelector(scope + " .period-select-bar .recent_period_infos");
+            if (infos) infos.innerHTML = getRecentPeriodInfoFromIdx(val);
+        });
+        el.noUiSlider.on("change", function (values) {
+            var val = Math.round(parseFloat(values[0]));
+            const infos = document.querySelector(scope + " .period-select-bar .recent_period_infos");
+            if (infos) infos.innerHTML = getRecentPeriodInfoFromIdx(val);
+            const input = document.querySelector(scope + " .period-select-bar input[name=recent_period]");
+            if (input) {
+                input.value = recent_period_values[val];
+                input.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+        });
+    }
 
-$("#GuestUserList .period-select-bar .slider-bar-container").slider({
-    range: "min",
-    min: 0,
-    max: recent_period_values.length - 1,
-    value: recent_period_init,
-    change: function (event, ui) {
-        $("#GuestUserList .period-select-bar .recent_period_infos").html(
-            getRecentPeriodInfoFromIdx(ui.value),
-        );
-    },
-    slide: function (event, ui) {
-        $("#GuestUserList .period-select-bar .recent_period_infos").html(
-            getRecentPeriodInfoFromIdx(ui.value),
-        );
-    },
-    stop: function (event, ui) {
-        $("#GuestUserList .period-select-bar input[name=recent_period]")
-            .val(recent_period_values[ui.value])
-            .trigger("change");
-    },
-});
+    makePeriodSlider("#UserList");
+    makePeriodSlider("#GuestUserList");
+    makePeriodSlider("#permitActionUserList");
 
-$("#permitActionUserList .period-select-bar .slider-bar-container").slider({
-    range: "min",
-    min: 0,
-    max: recent_period_values.length - 1,
-    value: recent_period_init,
-    change: function (event, ui) {
-        $("#permitActionUserList .period-select-bar .recent_period_infos").html(
-            getRecentPeriodInfoFromIdx(ui.value),
-        );
-    },
-    slide: function (event, ui) {
-        $("#permitActionUserList .period-select-bar .recent_period_infos").html(
-            getRecentPeriodInfoFromIdx(ui.value),
-        );
-    },
-    stop: function (event, ui) {
-        $("#permitActionUserList .period-select-bar input[name=recent_period]")
-            .val(recent_period_values[ui.value])
-            .trigger("change");
-    },
-});
-$("#permitActionUserList .photos-select-bar .slider-bar-container").slider(
-    "option",
-    "value",
-    0,
-);
-let period_info = getRecentPeriodInfoFromIdx(0);
-$("#permitActionUserList .period-select-bar .recent_period_infos").html(
-    period_info,
-);
+    var permitPhotosSlider = document.querySelector("#permitActionUserList .photos-select-bar .slider-bar-container");
+    if (permitPhotosSlider && permitPhotosSlider.noUiSlider) permitPhotosSlider.noUiSlider.set(0);
+
+    let period_info = getRecentPeriodInfoFromIdx(0);
+    const permitActionPeriodInfo = document.querySelector("#permitActionUserList .period-select-bar .recent_period_infos");
+    if (permitActionPeriodInfo) {
+        permitActionPeriodInfo.innerHTML = period_info;
+    }
+}());
 
 /* -----------
 Pagination
@@ -599,53 +639,74 @@ function move_to_page(page) {
     update_user_list();
 }
 
-$(".pagination-arrow.right").on("click", () => {
-    move_to_page(actual_page + 1);
-});
-
-$(".pagination-arrow.left").on("click", () => {
-    move_to_page(actual_page - 1);
-});
-
-$(".pagination-per-page a").on("click", function () {
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.preferences.set",
-        type: "POST",
-        data: {
-            param: "user-manager-pagination",
-            value: parseInt($(this).html()),
-            is_json: false,
-        },
+document.querySelectorAll(".pagination-arrow.right").forEach(el => {
+    el.addEventListener("click", () => {
+        move_to_page(actual_page + 1);
     });
+});
 
-    per_page = parseInt($(this).html());
-    actual_page = 1;
-    update_pagination_menu();
-    update_user_list();
+document.querySelectorAll(".pagination-arrow.left").forEach(el => {
+    el.addEventListener("click", () => {
+        move_to_page(actual_page - 1);
+    });
+});
 
-    $(this).parent().children("a").removeClass("selected-pagination");
+document.querySelectorAll(".pagination-per-page a").forEach(function (el) {
+    el.addEventListener("click", function () {
+        const value = parseInt(this.innerHTML);
+        const params = new URLSearchParams({
+            param: "user-manager-pagination",
+            value: value,
+            is_json: false,
+        });
+        fetch("ws.php?format=json&method=pwg.users.preferences.set", {
+            method: "POST",
+            body: params,
+        }).catch(err => console.error("Error setting pagination:", err));
 
-    $(this).addClass("selected-pagination");
+        per_page = value;
+        actual_page = 1;
+        update_pagination_menu();
+        update_user_list();
+
+        this.parentElement.querySelectorAll("a").forEach(a => {
+            a.classList.remove("selected-pagination");
+        });
+
+        this.classList.add("selected-pagination");
+    });
 });
 
 function append_pagination_item(page = null) {
+    const container = document.querySelector(".pagination-item-container");
+    if (!container) return;
+
     if (page != null) {
-        let new_tag = $(page_item.replace(/%d/g, page));
-        $(".pagination-item-container").append(new_tag);
+        const html = page_item.replace(/%d/g, page);
+        const temp = document.createElement("div");
+        temp.innerHTML = html;
+        const new_tag = temp.firstElementChild;
+
+        container.appendChild(new_tag);
         if (actual_page == page) {
-            new_tag.addClass("actual");
+            new_tag.classList.add("actual");
         }
-        new_tag.on("click", () => {
-            move_to_page(new_tag.data("page"));
+        new_tag.addEventListener("click", () => {
+            move_to_page(parseInt(new_tag.getAttribute("data-page")));
         });
     } else {
-        $(".pagination-item-container").append($(page_ellipsis));
+        const temp = document.createElement("div");
+        temp.innerHTML = page_ellipsis;
+        container.appendChild(temp.firstElementChild);
     }
 }
 
 function update_pagination_items() {
-    $(".pagination-item-container a").remove();
-    $(".pagination-item-container span").remove();
+    const container = document.querySelector(".pagination-item-container");
+    if (!container) return;
+
+    container.querySelectorAll("a").forEach(el => el.remove());
+    container.querySelectorAll("span").forEach(el => el.remove());
 
     append_pagination_item(1);
 
@@ -665,24 +726,27 @@ function update_pagination_menu() {
     max_page = Math.ceil(nb_filtered_users / per_page);
     updateArrows();
     update_pagination_items();
-    if (max_page <= 1) {
-        $(".pagination-container").hide();
-    } else {
-        $(".pagination-container").show();
+    const paginationContainer = document.querySelector(".pagination-container");
+    if (paginationContainer) {
+        paginationContainer.style.display = max_page <= 1 ? 'none' : '';
     }
 }
 
 function updateArrows() {
-    if (actual_page == 1) {
-        $(".pagination-arrow.left").addClass("unavailable");
-    } else {
-        $(".pagination-arrow.left").removeClass("unavailable");
-    }
-    if (actual_page == max_page) {
-        $(".pagination-arrow.right").addClass("unavailable");
-    } else {
-        $(".pagination-arrow.right").removeClass("unavailable");
-    }
+    document.querySelectorAll(".pagination-arrow.left").forEach(el => {
+        if (actual_page == 1) {
+            el.classList.add("unavailable");
+        } else {
+            el.classList.remove("unavailable");
+        }
+    });
+    document.querySelectorAll(".pagination-arrow.right").forEach(el => {
+        if (actual_page == max_page) {
+            el.classList.add("unavailable");
+        } else {
+            el.classList.remove("unavailable");
+        }
+    });
 }
 
 /*------------------
@@ -690,7 +754,8 @@ Advanced filter
 ------------------*/
 
 function advanced_filter_button_click() {
-    if (!$(".advanced-filter").hasClass("advanced-filter-open")) {
+    const advFilter = document.querySelector(".advanced-filter");
+    if (advFilter && !advFilter.classList.contains("advanced-filter-open")) {
         advanced_filter_show();
     } else {
         advanced_filter_hide();
@@ -699,15 +764,15 @@ function advanced_filter_button_click() {
 }
 
 function advanced_filter_show() {
-    $(".advanced-filter-btn, .advanced-filter").addClass(
-        "advanced-filter-open",
-    );
+    document.querySelectorAll(".advanced-filter-btn, .advanced-filter").forEach(el => {
+        el.classList.add("advanced-filter-open");
+    });
 }
 
 function advanced_filter_hide() {
-    $(".advanced-filter-btn, .advanced-filter").removeClass(
-        "advanced-filter-open",
-    );
+    document.querySelectorAll(".advanced-filter-btn, .advanced-filter").forEach(el => {
+        el.classList.remove("advanced-filter-open");
+    });
 }
 
 let months = [];
@@ -719,48 +784,41 @@ function getDateStr(date) {
 }
 
 function setupRegisterDates(register_dates) {
-    $(".advanced-filter .dates-select-bar .slider-bar-container").slider({
-        range: true,
-        min: 0,
-        max: register_dates.length - 1,
-        values: [0, register_dates.length - 1],
-        change: function (event, ui) {
-            $(".advanced-filter .dates-infos").html(
-                sprintf(
+    var el = document.querySelector(".advanced-filter .dates-select-bar .slider-bar-container");
+    if (el) {
+        noUiSlider.create(el, {
+            start: [0, register_dates.length - 1],
+            range: { min: 0, max: register_dates.length - 1 },
+            step: 1,
+            connect: true,
+        });
+        function updateDatesDisplay(values) {
+            var lo = Math.round(parseFloat(values[0]));
+            var hi = Math.round(parseFloat(values[1]));
+            const infos = document.querySelector(".advanced-filter .dates-infos");
+            if (infos) {
+                infos.innerHTML = sprintf(
                     dates_infos,
-                    getDateStr(register_dates[ui.values[0]]),
-                    getDateStr(register_dates[ui.values[1]]),
-                ),
-            );
-        },
-        slide: function (event, ui) {
-            $(".advanced-filter .dates-infos").html(
-                sprintf(
-                    dates_infos,
-                    getDateStr(register_dates[ui.values[0]]),
-                    getDateStr(register_dates[ui.values[1]]),
-                ),
-            );
-        },
-        stop: function (event, ui) {
-            $(".advanced-filter .dates-infos").html(
-                sprintf(
-                    dates_infos,
-                    getDateStr(register_dates[ui.values[0]]),
-                    getDateStr(register_dates[ui.values[1]]),
-                ),
-            );
+                    getDateStr(register_dates[lo]),
+                    getDateStr(register_dates[hi]),
+                );
+            }
+        }
+        el.noUiSlider.on("slide", updateDatesDisplay);
+        el.noUiSlider.on("change", function (values) {
+            updateDatesDisplay(values);
             update_user_list();
-        },
-    });
+        });
+    }
 
-    $(".advanced-filter .dates-infos").html(
-        sprintf(
+    const datesInfos = document.querySelector(".advanced-filter .dates-infos");
+    if (datesInfos) {
+        datesInfos.innerHTML = sprintf(
             dates_infos,
             getDateStr(register_dates[0]),
             getDateStr(register_dates[register_dates.length - 1]),
-        ),
-    );
+        );
+    }
 }
 /*------------------
 Add User
@@ -783,17 +841,23 @@ function gen_password(e) {
         );
     }
 
-    jQuery("#AddUserPassword").val(password);
+    const addUserPassword = document.getElementById("AddUserPassword");
+    if (addUserPassword) addUserPassword.value = password;
 }
 
 function add_user_close() {
-    $("#AddUser").fadeOut();
+    const addUser = document.getElementById("AddUser");
+    if (addUser) addUser.style.display = 'none';
 }
 
 function add_user_open() {
-    $("#AddUser .AddUserInput").val("");
-    $("#AddUser").fadeIn();
-    $(".AddUserLabelUsername input").first().focus();
+    const addUser = document.getElementById("AddUser");
+    if (addUser) {
+        addUser.querySelectorAll(".AddUserInput").forEach(el => el.value = "");
+        addUser.style.display = 'flex';
+        const firstInput = document.querySelector(".AddUserLabelUsername input");
+        if (firstInput) firstInput.focus();
+    }
 }
 
 /*------------------
@@ -801,33 +865,33 @@ Selection mode
 ------------------*/
 
 function checkbox_container_change() {
-    if ($(this).attr("data-selected") == "1") {
-        $(this).attr("data-selected", "0");
-        $(this).find("i").hide();
+    if (this.getAttribute("data-selected") == "1") {
+        this.setAttribute("data-selected", "0");
+        this.querySelectorAll("i").forEach(el => el.style.display = 'none');
     } else {
-        $(this).attr("data-selected", "1");
-        $(this).find("i").show();
+        this.setAttribute("data-selected", "1");
+        this.querySelectorAll("i").forEach(el => el.style.display = '');
     }
 }
 
 function checkbox_container_click() {
-    let curr_container = $(this).closest(".user-container");
-    let in_container = curr_container.length != 0;
+    let curr_container = this.closest(".user-container");
+    let in_container = curr_container != null;
     let curr_user = in_container
-        ? current_users[parseInt(curr_container.attr("key"))]
+        ? current_users[parseInt(curr_container.getAttribute("key"))]
         : { id: -1 };
-    if ($(this).attr("data-selected") == "1") {
-        $(this).attr("data-selected", "0");
-        $(this).find("i").hide();
+    if (this.getAttribute("data-selected") == "1") {
+        this.setAttribute("data-selected", "0");
+        this.querySelectorAll("i").forEach(el => el.style.display = 'none');
         if (in_container) {
-            curr_container.removeClass("container-selected");
+            curr_container.classList.remove("container-selected");
             selection = selection.filter((elem) => elem.id != curr_user.id);
         }
     } else {
-        $(this).attr("data-selected", "1");
-        $(this).find("i").show();
+        this.setAttribute("data-selected", "1");
+        this.querySelectorAll("i").forEach(el => el.style.display = '');
         if (in_container) {
-            curr_container.addClass("container-selected");
+            curr_container.classList.add("container-selected");
             selection.push({ id: curr_user.id, username: curr_user.username });
         }
     }
@@ -837,40 +901,56 @@ function checkbox_container_click() {
 }
 
 function create_user_selected_item(user) {
-    let new_elem = $("#template .user-selected-item").clone();
-    new_elem.attr("data-id", user.id.toString());
-    new_elem.find("p").html(user.username);
-    new_elem.find("a").click(() => {
-        selection.splice(
-            selection.findIndex((i) => i.id == user.id),
-            1,
-        );
-        update_selection_content();
-    });
+    const template = document.querySelector("#template .user-selected-item");
+    if (!template) return null;
+
+    const new_elem = template.cloneNode(true);
+    new_elem.setAttribute("data-id", user.id.toString());
+
+    const p = new_elem.querySelector("p");
+    if (p) p.innerHTML = user.username;
+
+    const a = new_elem.querySelector("a");
+    if (a) {
+        a.addEventListener("click", () => {
+            selection.splice(
+                selection.findIndex((i) => i.id == user.id),
+                1,
+            );
+            update_selection_content();
+        });
+    }
     return new_elem;
 }
 
 function generate_user_selected_items() {
     let items_created = 0;
     let others = selection.length - 5;
-    $(".user-selected-list .user-selected-item").remove();
+
+    const userSelectedList = document.querySelector(".user-selected-list");
+    if (userSelectedList) {
+        userSelectedList.querySelectorAll(".user-selected-item").forEach(el => el.remove());
+    }
+
     for (let i = 0; i < selection.length && items_created < 5; i++) {
         if (typeof selection[i].username !== "undefined") {
-            $(".user-selected-list").append(
-                create_user_selected_item(selection[i]),
-            );
+            const item = create_user_selected_item(selection[i]);
+            if (item && userSelectedList) {
+                userSelectedList.appendChild(item);
+            }
             items_created += 1;
         }
     }
-    if (others >= 1) {
-        $(".selection-other-users").html(
-            str_and_others_tags.replace("%s", others),
-        );
-        $(".selection-other-users").show();
-    } else {
-        $(".selection-other-users").hide();
+
+    const selectionOtherUsers = document.querySelector(".selection-other-users");
+    if (selectionOtherUsers) {
+        if (others >= 1) {
+            selectionOtherUsers.innerHTML = str_and_others_tags.replace("%s", others);
+            selectionOtherUsers.style.display = '';
+        } else {
+            selectionOtherUsers.style.display = 'none';
+        }
     }
-    return;
 }
 
 function fill_user_selected_list() {
@@ -890,70 +970,110 @@ function fill_user_selected_list() {
 function update_selection_content() {
     number = selection.length;
     fill_user_selected_list();
+
+    const forbidAction = document.getElementById("forbidAction");
+    const permitActionUserList = document.getElementById("permitActionUserList");
+    const selectionModeUl = document.querySelector(".selection-mode-ul");
+
     if (number == 0) {
-        $("#forbidAction").show();
-        $(".selection-mode-ul").hide();
-        $("#permitActionUserList").hide();
+        if (forbidAction) forbidAction.style.display = '';
+        if (selectionModeUl) selectionModeUl.style.display = 'none';
+        if (permitActionUserList) permitActionUserList.style.display = 'none';
     } else {
-        $("#forbidAction").hide();
-        $("#permitActionUserList").show();
-        $(".selection-mode-ul").show();
+        if (forbidAction) forbidAction.style.display = 'none';
+        if (permitActionUserList) permitActionUserList.style.display = '';
+        if (selectionModeUl) selectionModeUl.style.display = '';
     }
+
     set_selected_to_selection();
-    $("#applyActionBlock .infos").hide();
+
+    document.querySelectorAll("#applyActionBlock .infos").forEach(el => {
+        el.style.display = 'none';
+    });
 }
 
 function set_selected_to_selection() {
-    if (!$("#toggleSelectionMode").is(":checked")) {
+    const toggleSelectionMode = document.getElementById("toggleSelectionMode");
+    if (!toggleSelectionMode || !toggleSelectionMode.checked) {
         return;
     }
-    $(".user-container-wrapper .user-container").each(function (index) {
+
+    const containers = document.querySelectorAll(".user-container-wrapper .user-container");
+    containers.forEach((container, index) => {
         selection_ids = selection.map((x) => x.id);
         if (selection_ids.includes(current_users[index].id)) {
-            $(this).addClass("container-selected");
-            $(this).find(".user-list-checkbox").attr("data-selected", "1");
-            $(this).find(".user-list-checkbox i").show();
+            container.classList.add("container-selected");
+            const checkbox = container.querySelector(".user-list-checkbox");
+            if (checkbox) {
+                checkbox.setAttribute("data-selected", "1");
+                checkbox.querySelectorAll("i").forEach(el => el.style.display = '');
+            }
         } else {
-            $(this).removeClass("container-selected");
-            $(this).find(".user-list-checkbox").attr("data-selected", "0");
-            $(this).find(".user-list-checkbox i").hide();
+            container.classList.remove("container-selected");
+            const checkbox = container.querySelector(".user-list-checkbox");
+            if (checkbox) {
+                checkbox.setAttribute("data-selected", "0");
+                checkbox.querySelectorAll("i").forEach(el => el.style.display = 'none');
+            }
         }
     });
 }
 
 function selectionMode(isSelection) {
-    $("#permitActionUserList select[name=selectAction]").val("-1");
-    $("#permitActionUserList select[name=selectAction]").trigger("change");
+    const selectAction = document.querySelector("#permitActionUserList select[name=selectAction]");
+    if (selectAction) {
+        selectAction.value = "-1";
+        selectAction.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
     if (isSelection) {
         //resets the selection
         //selection = [];
         set_selected_to_selection();
-        $(".in-selection-mode").show();
-        $(".not-in-selection-mode").hide();
+
+        document.querySelectorAll(".in-selection-mode").forEach(el => {
+            el.style.display = '';
+        });
+        document.querySelectorAll(".not-in-selection-mode").forEach(el => {
+            el.style.display = 'none';
+        });
 
         if (view_selector === "tile") {
-            $(".user-container-email").show();
+            document.querySelectorAll(".user-container-email").forEach(el => {
+                el.style.display = '';
+            });
         }
 
         if (view_selector === "compact") {
-            $(".user-container-email").css({
-                display: "none",
+            document.querySelectorAll(".user-container-email").forEach(el => {
+                el.style.display = 'none';
             });
         }
 
-        $(".user-container").addClass("selectable");
+        document.querySelectorAll(".user-container").forEach(el => {
+            el.classList.add("selectable");
+        });
     } else {
-        $(".container-selected").removeClass("container-selected");
-        $(".in-selection-mode").hide();
-        $(".not-in-selection-mode").show();
+        document.querySelectorAll(".container-selected").forEach(el => {
+            el.classList.remove("container-selected");
+        });
+
+        document.querySelectorAll(".in-selection-mode").forEach(el => {
+            el.style.display = 'none';
+        });
+        document.querySelectorAll(".not-in-selection-mode").forEach(el => {
+            el.style.display = '';
+        });
 
         if (view_selector === "tile" || view_selector === "line") {
-            $(".user-container-email").css({
-                display: "flex",
+            document.querySelectorAll(".user-container-email").forEach(el => {
+                el.style.display = 'flex';
             });
         }
 
-        $(".user-container").removeClass("selectable");
+        document.querySelectorAll(".user-container").forEach(el => {
+            el.classList.remove("selectable");
+        });
     }
 }
 
@@ -962,9 +1082,14 @@ General functions
 ------------------*/
 
 function hide_temporary_messages() {
-    $(".update-user-success").hide();
-    $("#AddUserSuccess").hide();
-    $(".error-msg").hide();
+    document.querySelectorAll(".update-user-success").forEach(el => {
+        el.style.display = 'none';
+    });
+    const addUserSuccess = document.getElementById("AddUserSuccess");
+    if (addUserSuccess) addUserSuccess.style.display = 'none';
+    document.querySelectorAll(".error-msg").forEach(el => {
+        el.style.display = 'none';
+    });
 }
 
 function get_group_name_from_id(id) {
@@ -992,24 +1117,25 @@ function user_container_click() {
     if (!isSelectionMode()) {
         return;
     }
-    let curr_container = $(this);
-    let in_container = curr_container.length != 0;
-    let container_checkbox = $(this).find(".user-list-checkbox");
+    let curr_container = this;
+    let in_container = curr_container != null;
+    let container_checkbox = curr_container.querySelector(".user-list-checkbox");
     let curr_user = in_container
-        ? current_users[parseInt(curr_container.attr("key"))]
+        ? current_users[parseInt(curr_container.getAttribute("key"))]
         : { id: -1 };
-    if (container_checkbox.attr("data-selected") == "1") {
-        container_checkbox.attr("data-selected", "0");
-        container_checkbox.find("i").hide();
+
+    if (container_checkbox && container_checkbox.getAttribute("data-selected") == "1") {
+        container_checkbox.setAttribute("data-selected", "0");
+        container_checkbox.querySelectorAll("i").forEach(el => el.style.display = 'none');
         if (in_container) {
-            curr_container.removeClass("container-selected");
+            curr_container.classList.remove("container-selected");
             selection = selection.filter((elem) => elem.id != curr_user.id);
         }
-    } else {
-        container_checkbox.attr("data-selected", "1");
-        container_checkbox.find("i").show();
+    } else if (container_checkbox) {
+        container_checkbox.setAttribute("data-selected", "1");
+        container_checkbox.querySelectorAll("i").forEach(el => el.style.display = '');
         if (in_container) {
-            curr_container.addClass("container-selected");
+            curr_container.classList.add("container-selected");
             selection.push({ id: curr_user.id, username: curr_user.username });
         }
     }
@@ -1019,34 +1145,45 @@ function user_container_click() {
 }
 
 function generate_groups(container, groups) {
-    container.find(".user-container-groups").html("");
+    const groupsContainer = container.querySelector(".user-container-groups");
+    if (groupsContainer) groupsContainer.innerHTML = "";
+
     if (groups.length >= 1) {
-        let primary_grp = $("#template .group-primary").clone();
-        primary_grp.html(get_group_name_from_id(groups[0]));
-        primary_grp.addClass(color_icons[groups[0] % 5]);
-        container.find(".user-container-groups").append(primary_grp);
+        const template = document.querySelector("#template .group-primary");
+        if (template) {
+            let primary_grp = template.cloneNode(true);
+            primary_grp.innerHTML = get_group_name_from_id(groups[0]);
+            primary_grp.classList.add(color_icons[groups[0] % 5]);
+            if (groupsContainer) groupsContainer.appendChild(primary_grp);
+        }
     }
     if (groups.length >= 2) {
-        let primary_grp = $("#template .group-primary").clone();
-        primary_grp.html(get_group_name_from_id(groups[1]));
-        primary_grp.addClass(color_icons[groups[1] % 5]);
-        container.find(".user-container-groups").append(primary_grp);
+        const template = document.querySelector("#template .group-primary");
+        if (template) {
+            let primary_grp = template.cloneNode(true);
+            primary_grp.innerHTML = get_group_name_from_id(groups[1]);
+            primary_grp.classList.add(color_icons[groups[1] % 5]);
+            if (groupsContainer) groupsContainer.appendChild(primary_grp);
+        }
     }
     if (groups.length >= 3) {
-        let bonus_grp = $("#template .group-bonus").clone();
-        bonus_grp.html("...");
-        bonus_grp.addClass(color_icons[groups[2] % 5]);
-        bonus_grp.addClass("tiptip");
-        let groups_in_title = "";
-        for (let i = 2; i < groups.length; i++) {
-            groups_in_title += get_group_name_from_id(groups[i]) + ", ";
+        const template = document.querySelector("#template .group-bonus");
+        if (template) {
+            let bonus_grp = template.cloneNode(true);
+            bonus_grp.innerHTML = "...";
+            bonus_grp.classList.add(color_icons[groups[2] % 5]);
+            bonus_grp.classList.add("tiptip");
+            let groups_in_title = "";
+            for (let i = 2; i < groups.length; i++) {
+                groups_in_title += get_group_name_from_id(groups[i]) + ", ";
+            }
+            groups_in_title = groups_in_title.substring(
+                0,
+                groups_in_title.length - 2,
+            );
+            bonus_grp.setAttribute("title", groups_in_title);
+            if (groupsContainer) groupsContainer.appendChild(bonus_grp);
         }
-        groups_in_title = groups_in_title.substring(
-            0,
-            groups_in_title.length - 2,
-        );
-        bonus_grp.prop("title", groups_in_title);
-        container.find(".user-container-groups").append(bonus_grp);
     }
 }
 
@@ -1063,40 +1200,62 @@ function get_initials(username) {
 function fill_container_user_info(container, user_index) {
     let user = current_users[user_index];
     let registration_dates = user.registration_date.split(" ");
-    container.attr("key", user_index);
-    container.find(".user-container-username span").html(user.username);
-    container
-        .find(".user-container-initials span")
-        .html(get_initials(user.username))
-        .addClass(color_icons[user.id % 5]);
-    container
-        .find(".user-container-status span")
-        .html(status_to_str[user.status]);
-    container.find(".user-container-email span").html(user.email);
+    container.setAttribute("key", user_index);
+
+    const usernameSpan = container.querySelector(".user-container-username span");
+    if (usernameSpan) usernameSpan.innerHTML = user.username;
+
+    const initialsSpan = container.querySelector(".user-container-initials span");
+    if (initialsSpan) {
+        initialsSpan.innerHTML = get_initials(user.username);
+        initialsSpan.classList.add(color_icons[user.id % 5]);
+    }
+
+    const statusSpan = container.querySelector(".user-container-status span");
+    if (statusSpan) statusSpan.innerHTML = status_to_str[user.status];
+
+    const emailSpan = container.querySelector(".user-container-email span");
+    if (emailSpan) emailSpan.innerHTML = user.email;
+
     generate_groups(container, user.groups);
-    container
-        .find(".user-container-registration-date")
-        .html(registration_dates[0]);
-    container
-        .find(".user-container-registration-time")
-        .html(registration_dates[1]);
-    container
-        .find(".user-container-registration-date-since")
-        .html(user.registration_date_since);
+
+    const regDateEl = container.querySelector(".user-container-registration-date");
+    if (regDateEl) regDateEl.innerHTML = registration_dates[0];
+
+    const regTimeEl = container.querySelector(".user-container-registration-time");
+    if (regTimeEl) regTimeEl.innerHTML = registration_dates[1];
+
+    const regDateSinceEl = container.querySelector(".user-container-registration-date-since");
+    if (regDateSinceEl) regDateSinceEl.innerHTML = user.registration_date_since;
 }
 
 function generate_user_list() {
-    $("#user-table-content").find(".user-container").remove();
-    for (let i = 0; i < current_users.length; i++) {
-        let new_container = $("#template .user-container").clone();
-        fill_container_user_info(new_container, i);
-        $("#user-table-content .user-container-wrapper").append(new_container);
+    const userTableContent = document.getElementById("user-table-content");
+    if (userTableContent) {
+        userTableContent.querySelectorAll(".user-container").forEach(el => el.remove());
     }
-    $(".user-container .user-list-checkbox")
-        .unbind("change")
-        .change(checkbox_change);
-    $(".user-container .user-list-checkbox").unbind("click");
-    $(".user-container").click(user_container_click);
+
+    for (let i = 0; i < current_users.length; i++) {
+        const template = document.querySelector("#template .user-container");
+        if (template) {
+            let new_container = template.cloneNode(true);
+            fill_container_user_info(new_container, i);
+
+            const wrapper = document.querySelector("#user-table-content .user-container-wrapper");
+            if (wrapper) wrapper.appendChild(new_container);
+        }
+    }
+
+    document.querySelectorAll(".user-container .user-list-checkbox").forEach(el => {
+        el.removeEventListener("change", checkbox_change);
+        el.removeEventListener("click", checkbox_click);
+        el.addEventListener("change", checkbox_change);
+    });
+
+    document.querySelectorAll(".user-container").forEach(el => {
+        el.removeEventListener("click", user_container_click);
+        el.addEventListener("click", user_container_click);
+    });
 }
 
 /*---------------------
@@ -1138,50 +1297,60 @@ function set_selected_groups(groups) {
 }
 
 function fill_user_edit_summary(user_to_edit, pop_in, isGuest) {
-    // console.log(isGuest);
-    if (isGuest) {
-        pop_in
-            .find(".user-property-initials span")
-            .removeClass(color_icons.join(" "))
-            .addClass(color_icons[user_to_edit.id % 5]);
-    } else {
-        pop_in
-            .find(".user-property-initials span")
-            .html(get_initials(user_to_edit.username))
-            .removeClass(color_icons.join(" "))
-            .addClass(color_icons[user_to_edit.id % 5]);
+    const initialsSpan = pop_in.querySelector(".user-property-initials span");
+    if (initialsSpan) {
+        color_icons.forEach(icon => initialsSpan.classList.remove(icon));
+        if (!isGuest) {
+            initialsSpan.innerHTML = get_initials(user_to_edit.username);
+        }
+        initialsSpan.classList.add(color_icons[user_to_edit.id % 5]);
     }
-    pop_in
-        .find(".user-property-username span:first")
-        .html(user_to_edit.username);
 
-    if (user_to_edit.id === connected_user || user_to_edit.id === 1) {
-        pop_in.find(".user-property-username .edit-username-specifier").show();
-    } else {
-        pop_in.find(".user-property-username .edit-username-specifier").hide();
+    const usernameSpan = pop_in.querySelector(".user-property-username span");
+    if (usernameSpan) {
+        usernameSpan.innerHTML = user_to_edit.username;
     }
-    pop_in
-        .find(".user-property-username-change input")
-        .val(user_to_edit.username);
-    pop_in.find(".user-property-password-change input").val("");
-    pop_in
-        .find(".user-property-permissions a")
-        .attr("href", `admin.php?page=user_perm&user_id=${user_to_edit.id}`);
-    pop_in
-        .find(".user-property-register")
-        .html(get_formatted_date(user_to_edit.registration_date));
-    pop_in.find(".user-property-register").tipTip({
-        content: `${registered_str}<br />${user_to_edit.registration_date_since}`,
-    });
-    pop_in
-        .find(".user-property-last-visit")
-        .html(get_formatted_date(user_to_edit.last_visit));
-    pop_in.find(".user-property-last-visit").tipTip({
-        content: `${last_visit_str}<br />${user_to_edit.last_visit_since}`,
-    });
-    pop_in
-        .find(".user-property-history a")
-        .attr("href", history_base_url + user_to_edit.id);
+
+    const editUsernameSpecifier = pop_in.querySelector(".user-property-username .edit-username-specifier");
+    if (editUsernameSpecifier) {
+        editUsernameSpecifier.style.display = (user_to_edit.id === connected_user || user_to_edit.id === 1) ? '' : 'none';
+    }
+
+    const usernameChangeInput = pop_in.querySelector(".user-property-username-change input");
+    if (usernameChangeInput) usernameChangeInput.value = user_to_edit.username;
+
+    const passwordChangeInput = pop_in.querySelector(".user-property-password-change input");
+    if (passwordChangeInput) passwordChangeInput.value = "";
+
+    const permissionsLink = pop_in.querySelector(".user-property-permissions a");
+    if (permissionsLink) {
+        permissionsLink.setAttribute("href", `admin.php?page=user_perm&user_id=${user_to_edit.id}`);
+    }
+
+    const registerEl = pop_in.querySelector(".user-property-register");
+    if (registerEl) {
+        registerEl.innerHTML = get_formatted_date(user_to_edit.registration_date);
+        tippy(registerEl, {
+            content: `${registered_str}<br />${user_to_edit.registration_date_since}`,
+            allowHTML: true,
+            placement: 'top',
+        });
+    }
+
+    const lastVisitEl = pop_in.querySelector(".user-property-last-visit");
+    if (lastVisitEl) {
+        lastVisitEl.innerHTML = get_formatted_date(user_to_edit.last_visit);
+        tippy(lastVisitEl, {
+            content: `${last_visit_str}<br />${user_to_edit.last_visit_since}`,
+            allowHTML: true,
+            placement: 'top',
+        });
+    }
+
+    const historyLink = pop_in.querySelector(".user-property-history a");
+    if (historyLink) {
+        historyLink.setAttribute("href", history_base_url + user_to_edit.id);
+    }
 }
 
 function fill_user_edit_properties(user_to_edit, pop_in) {
@@ -1190,30 +1359,41 @@ function fill_user_edit_properties(user_to_edit, pop_in) {
     let current_group_selectize =
         user_to_edit.id === guest_id ? groupGuestSelectize : groupSelectize;
 
-    pop_in.find(".user-property-email input").val(user_to_edit.email);
-    pop_in
-        .find(`.user-property-status select option:eq(${status_index})`)
-        .prop("selected", true);
-    pop_in
-        .find(`.user-property-level select option:eq(${level_index})`)
-        .prop("selected", true);
-    pop_in.find(".photos-select-bar input").val(user_to_edit.recent_period);
+    const emailInput = pop_in.querySelector(".user-property-email input");
+    if (emailInput) emailInput.value = user_to_edit.email;
+
+    const statusOptions = pop_in.querySelectorAll(".user-property-status select option");
+    if (statusOptions && statusOptions[status_index]) {
+        statusOptions[status_index].selected = true;
+    }
+
+    const levelOptions = pop_in.querySelectorAll(".user-property-level select option");
+    if (levelOptions && levelOptions[level_index]) {
+        levelOptions[level_index].selected = true;
+    }
+
+    const photosInputs = pop_in.querySelectorAll(".photos-select-bar input");
+    if (photosInputs && photosInputs[0]) {
+        photosInputs[0].value = user_to_edit.recent_period;
+    }
+
     set_selected_groups(user_to_edit.groups);
-    current_group_selectize.clear();
-    current_group_selectize.load(function (callback) {
-        callback(groupOptions);
-    });
-    jQuery.each(
-        jQuery.grep(groupOptions, function (group) {
+    if (current_group_selectize) {
+        current_group_selectize.clear();
+        current_group_selectize.load(function (callback) {
+            callback(groupOptions);
+        });
+        groupOptions.filter(function (group) {
             return group.isSelected;
-        }),
-        function (i, group) {
+        }).forEach(function (group) {
             current_group_selectize.addItem(group.value);
-        },
-    );
-    pop_in
-        .find('.user-list-checkbox[name="hd_enabled"]')
-        .attr("data-selected", user_to_edit.enabled_high == "true" ? "1" : "0");
+        });
+    }
+
+    const hdCheckbox = pop_in.querySelector('.user-list-checkbox[name="hd_enabled"]');
+    if (hdCheckbox) {
+        hdCheckbox.setAttribute("data-selected", user_to_edit.enabled_high == "true" ? "1" : "0");
+    }
 }
 
 function fill_user_edit_preferences(user_to_edit, pop_in) {
@@ -1226,58 +1406,67 @@ function fill_user_edit_preferences(user_to_edit, pop_in) {
         recent_period_values,
     );
 
-    pop_in
-        .find(".photos-select-bar .slider-bar-container")
-        .slider("option", "value", slider_key_photos);
-    pop_in.find(".user-property-theme select option").each(function () {
-        if ($(this).val() == user_to_edit.theme) {
-            $(this).prop("selected", true);
+    const photosSlider = pop_in.querySelector(".photos-select-bar .slider-bar-container");
+    if (photosSlider && photosSlider.noUiSlider) photosSlider.noUiSlider.set(slider_key_photos);
+
+    pop_in.querySelectorAll(".user-property-theme select option").forEach((option) => {
+        if (option.value == user_to_edit.theme) {
+            option.selected = true;
         }
     });
-    pop_in.find(".user-property-lang select option").each(function () {
-        if ($(this).val() == user_to_edit.language) {
-            $(this).prop("selected", true);
+
+    pop_in.querySelectorAll(".user-property-lang select option").forEach((option) => {
+        if (option.value == user_to_edit.language) {
+            option.selected = true;
         }
     });
-    pop_in
-        .find(".period-select-bar .slider-bar-container")
-        .slider("option", "value", slider_key_period);
-    pop_in
-        .find('.user-list-checkbox[name="expand_all_albums"]')
-        .attr("data-selected", user_to_edit.expand == "true" ? "1" : "0");
-    pop_in
-        .find('.user-list-checkbox[name="show_nb_comments"]')
-        .attr(
-            "data-selected",
-            user_to_edit.show_nb_comments == "true" ? "1" : "0",
-        );
-    pop_in
-        .find('.user-list-checkbox[name="show_nb_hits"]')
-        .attr("data-selected", user_to_edit.show_nb_hits == "true" ? "1" : "0");
+
+    const periodSlider = pop_in.querySelector(".period-select-bar .slider-bar-container");
+    if (periodSlider && periodSlider.noUiSlider) periodSlider.noUiSlider.set(slider_key_period);
+
+    const expandCheckbox = pop_in.querySelector('.user-list-checkbox[name="expand_all_albums"]');
+    if (expandCheckbox) {
+        expandCheckbox.setAttribute("data-selected", user_to_edit.expand == "true" ? "1" : "0");
+    }
+
+    const nbCommentsCheckbox = pop_in.querySelector('.user-list-checkbox[name="show_nb_comments"]');
+    if (nbCommentsCheckbox) {
+        nbCommentsCheckbox.setAttribute("data-selected", user_to_edit.show_nb_comments == "true" ? "1" : "0");
+    }
+
+    const nbHitsCheckbox = pop_in.querySelector('.user-list-checkbox[name="show_nb_hits"]');
+    if (nbHitsCheckbox) {
+        nbHitsCheckbox.setAttribute("data-selected", user_to_edit.show_nb_hits == "true" ? "1" : "0");
+    }
 }
 
 function fill_user_edit_update(user_to_edit, pop_in) {
-    pop_in
-        .find(".update-user-button")
-        .unbind("click")
-        .click(
-            user_to_edit.id === guest_id ? update_guest_info : update_user_info,
-        );
-    pop_in
-        .find(".edit-username-validate")
-        .unbind("click")
-        .click(update_user_username);
-    pop_in
-        .find(".edit-password-validate")
-        .unbind("click")
-        .click(update_user_password);
-    pop_in
-        .find(".delete-user-button")
-        .unbind("click")
-        .click(function () {
-            $.confirm({
+    const updateButton = pop_in.querySelector(".update-user-button");
+    if (updateButton) {
+        updateButton.removeEventListener("click", update_user_info);
+        updateButton.removeEventListener("click", update_guest_info);
+        updateButton.addEventListener("click",
+            user_to_edit.id === guest_id ? update_guest_info : update_user_info);
+    }
+
+    const editUsernameValidate = pop_in.querySelector(".edit-username-validate");
+    if (editUsernameValidate) {
+        editUsernameValidate.removeEventListener("click", update_user_username);
+        editUsernameValidate.addEventListener("click", update_user_username);
+    }
+
+    const editPasswordValidate = pop_in.querySelector(".edit-password-validate");
+    if (editPasswordValidate) {
+        editPasswordValidate.removeEventListener("click", update_user_password);
+        editPasswordValidate.addEventListener("click", update_user_password);
+    }
+
+    const deleteButton = pop_in.querySelector(".delete-user-button");
+    if (deleteButton) {
+        deleteButton.removeEventListener("click", null);
+        deleteButton.addEventListener("click", function () {
+            pwgConfirm({
                 title: title_msg.replace("%s", user_to_edit.username),
-                content: "",
                 buttons: {
                     confirm: {
                         text: confirm_msg,
@@ -1290,36 +1479,56 @@ function fill_user_edit_update(user_to_edit, pop_in) {
                         text: cancel_msg,
                     },
                 },
-                ...jConfirm_confirm_options,
             });
         });
+    }
 }
 
 function fill_user_edit_permissions(user_to_edit, pop_in) {
+    // Helper to manage display and attributes
+    function setPermissionDisplay(container, selector, visible) {
+        const els = container.querySelectorAll(selector);
+        els.forEach(el => el.style.display = visible ? '' : 'none');
+    }
+
+    function setDisabled(container, selector, disabled) {
+        const els = container.querySelectorAll(selector);
+        els.forEach(el => {
+            if (disabled) {
+                el.setAttribute("disabled", "disabled");
+            } else {
+                el.removeAttribute("disabled");
+            }
+        });
+    }
+
+    function setClass(container, selector, className, add) {
+        const els = container.querySelectorAll(selector);
+        els.forEach(el => {
+            if (add) {
+                el.classList.add(className);
+            } else {
+                el.classList.remove(className);
+            }
+        });
+    }
+
     if (user_to_edit.id != connected_user) {
         // I'm not the connected user
         if (!is_owner(connected_user)) {
             // I'm not the owner, you need to test my permissions
             if (is_owner(user_to_edit.id)) {
                 // I want to edit the owner but I'm not the owner (No matter my status)
-                pop_in.find(".delete-user-button").hide();
-                pop_in.find(".user-property-password.edit-password").hide();
-                pop_in
-                    .find(".user-property-email .user-property-input")
-                    .attr("disabled", "disabled");
-                pop_in
-                    .find(".user-property-status .user-property-select")
-                    .addClass("notClickable");
-                pop_in.find(".user-property-username .edit-username").hide();
+                setPermissionDisplay(pop_in, ".delete-user-button", false);
+                setPermissionDisplay(pop_in, ".user-property-password.edit-password", false);
+                setDisabled(pop_in, ".user-property-email .user-property-input", true);
+                setClass(pop_in, ".user-property-status .user-property-select", "notClickable", true);
+                setPermissionDisplay(pop_in, ".user-property-username .edit-username", false);
             } else {
-                pop_in.find(".user-property-password.edit-password").show();
-                pop_in
-                    .find(".user-property-email .user-property-input")
-                    .removeAttr("disabled");
-                pop_in
-                    .find(".user-property-status .user-property-select")
-                    .removeClass("notClickable");
-                pop_in.find(".user-property-username .edit-username").show();
+                setPermissionDisplay(pop_in, ".user-property-password.edit-password", true);
+                setDisabled(pop_in, ".user-property-email .user-property-input", false);
+                setClass(pop_in, ".user-property-status .user-property-select", "notClickable", false);
+                setPermissionDisplay(pop_in, ".user-property-username .edit-username", true);
             }
 
             if (
@@ -1327,86 +1536,62 @@ function fill_user_edit_permissions(user_to_edit, pop_in) {
                 connected_user_status == "webmaster" &&
                 !is_owner(user_to_edit.id)
             ) {
-                // I have the same status than the user I want to edit and I'm a webmaster, I can do whatever I want
-                pop_in.find(".delete-user-button").show();
-                pop_in.find(".user-property-password.edit-password").show();
-                pop_in
-                    .find(".user-property-email .user-property-input")
-                    .removeAttr("disabled");
-                pop_in
-                    .find(".user-property-status .user-property-select")
-                    .removeClass("notClickable");
-                pop_in.find(".user-property-username .edit-username").show();
+                setPermissionDisplay(pop_in, ".delete-user-button", true);
+                setPermissionDisplay(pop_in, ".user-property-password.edit-password", true);
+                setDisabled(pop_in, ".user-property-email .user-property-input", false);
+                setClass(pop_in, ".user-property-status .user-property-select", "notClickable", false);
+                setPermissionDisplay(pop_in, ".user-property-username .edit-username", true);
             } else if (
                 user_to_edit.status == connected_user_status &&
                 connected_user_status == "admin"
             ) {
-                // I have the same status than the user I want to edit and I'm an admin, I can do whatever I want but edit the status
-                pop_in.find(".delete-user-button").hide();
-                pop_in.find(".user-property-password.edit-password").show();
-                pop_in
-                    .find(".user-property-email .user-property-input")
-                    .removeAttr("disabled");
-                pop_in
-                    .find(".user-property-username .edit-username")
-                    .removeClass("notClickable");
-                pop_in
-                    .find(".user-property-status .user-property-select")
-                    .addClass("notClickable");
+                setPermissionDisplay(pop_in, ".delete-user-button", false);
+                setPermissionDisplay(pop_in, ".user-property-password.edit-password", true);
+                setDisabled(pop_in, ".user-property-email .user-property-input", false);
+                setClass(pop_in, ".user-property-username .edit-username", "notClickable", false);
+                setClass(pop_in, ".user-property-status .user-property-select", "notClickable", true);
             } else if (
                 user_to_edit.status == "webmaster" &&
                 connected_user_status == "admin"
             ) {
-                // I'm admin and I want to edit webmaster
-                pop_in.find(".user-property-password.edit-password").hide();
-                pop_in
-                    .find(".user-property-email .user-property-input")
-                    .attr("disabled", "disabled");
-                pop_in
-                    .find(".user-property-status .user-property-select")
-                    .addClass("notClickable");
-                pop_in.find(".user-property-username .edit-username").hide();
+                setPermissionDisplay(pop_in, ".user-property-password.edit-password", false);
+                setDisabled(pop_in, ".user-property-email .user-property-input", true);
+                setClass(pop_in, ".user-property-status .user-property-select", "notClickable", true);
+                setPermissionDisplay(pop_in, ".user-property-username .edit-username", false);
             } else if (
                 user_to_edit.status == "admin" &&
                 connected_user_status == "webmaster"
             ) {
-                // I'm webmaster and I want to edit admin
-                pop_in.find(".user-property-password.edit-password").show();
-                pop_in
-                    .find(".user-property-email .user-property-input")
-                    .removeAttr("disabled");
-                pop_in
-                    .find(".user-property-status .user-property-select")
-                    .removeClass("notClickable");
-                pop_in.find(".user-property-username .edit-username").show();
+                setPermissionDisplay(pop_in, ".user-property-password.edit-password", true);
+                setDisabled(pop_in, ".user-property-email .user-property-input", false);
+                setClass(pop_in, ".user-property-status .user-property-select", "notClickable", false);
+                setPermissionDisplay(pop_in, ".user-property-username .edit-username", true);
             }
         } else {
-            // I'm the owner, I can do whatever I want. No need to test, I am GOD here
-            pop_in.find(".delete-user-button").show();
-            pop_in.find(".user-property-password.edit-password").show();
-            pop_in
-                .find(".user-property-email .user-property-input")
-                .removeAttr("disabled");
-            pop_in
-                .find(".user-property-status .user-property-select")
-                .removeClass("notClickable");
-            pop_in.find(".user-property-username .edit-username").show();
+            // I'm the owner, I can do whatever I want
+            setPermissionDisplay(pop_in, ".delete-user-button", true);
+            setPermissionDisplay(pop_in, ".user-property-password.edit-password", true);
+            setDisabled(pop_in, ".user-property-email .user-property-input", false);
+            setClass(pop_in, ".user-property-status .user-property-select", "notClickable", false);
+            setPermissionDisplay(pop_in, ".user-property-username .edit-username", true);
         }
     } else {
-        // I'm the connected user, I can do whatever I want on my profile but kill myself (Suicide is not allowed) and edit my status
-        pop_in.find(".delete-user-button").hide();
-        pop_in.find(".user-property-password.edit-password").show();
-        pop_in
-            .find(".user-property-email .user-property-input")
-            .removeAttr("disabled");
-        pop_in
-            .find(".user-property-status .user-property-select")
-            .addClass("notClickable");
-        pop_in.find(".user-property-username .edit-username").show();
+        // I'm the connected user
+        setPermissionDisplay(pop_in, ".delete-user-button", false);
+        setPermissionDisplay(pop_in, ".user-property-password.edit-password", true);
+        setDisabled(pop_in, ".user-property-email .user-property-input", false);
+        setClass(pop_in, ".user-property-status .user-property-select", "notClickable", true);
+        setPermissionDisplay(pop_in, ".user-property-username .edit-username", true);
     }
 
-    $(".notClickableBefore").removeClass("notClickableBefore");
-    $(".notClickable").parent().addClass("notClickableBefore");
+    document.querySelectorAll(".notClickableBefore").forEach(el => {
+        el.classList.remove("notClickableBefore");
+    });
+    document.querySelectorAll(".notClickable").forEach(el => {
+        if (el.parentElement) {
+            el.parentElement.classList.add("notClickableBefore");
+        }
+    });
 }
 
 function is_owner(user_id) {
@@ -1414,7 +1599,8 @@ function is_owner(user_id) {
 }
 
 function fill_user_edit(user_to_edit) {
-    let pop_in = $(".UserListPopInContainer");
+    let pop_in = document.querySelector(".UserListPopInContainer");
+    if (!pop_in) return;
     fill_user_edit_summary(user_to_edit, pop_in, false);
     fill_user_edit_properties(user_to_edit, pop_in);
     fill_user_edit_preferences(user_to_edit, pop_in);
@@ -1424,7 +1610,8 @@ function fill_user_edit(user_to_edit) {
 
 function fill_guest_edit() {
     let user_to_edit = guest_user;
-    let pop_in = $(".GuestUserListPopInContainer");
+    let pop_in = document.querySelector(".GuestUserListPopInContainer");
+    if (!pop_in) return;
     fill_user_edit_summary(user_to_edit, pop_in, true);
     fill_user_edit_properties(user_to_edit, pop_in);
     fill_user_edit_preferences(user_to_edit, pop_in);
@@ -1436,68 +1623,62 @@ Fill data for setInfo
 -------------------*/
 
 function fill_ajax_data_from_properties(ajax_data, pop_in) {
-    let groups_selected = pop_in
-        .find(".user-property-group .selectize-input .item")
-        .map(function () {
-            return parseInt($(this).attr("data-value"));
-        })
-        .get();
-    // console.log(groups_selected);
-    ajax_data["email"] = pop_in.find(".user-property-email input").val();
+    let groups_selected = [];
+    const groupItems = pop_in.querySelectorAll(".user-property-group .ts-control .item");
+    groupItems.forEach(function (item) {
+        groups_selected.push(parseInt(item.getAttribute("data-value")));
+    });
+
+    const emailInput = pop_in.querySelector(".user-property-email input");
+    ajax_data["email"] = emailInput ? emailInput.value : "";
+
+    const statusSelect = pop_in.querySelector(".user-property-status select");
+    const statusValue = statusSelect ? statusSelect.value : "";
     if (
         connected_user_status == "admin" &&
-        pop_in.find(".user-property-status select").val() != "webmaster" &&
-        pop_in.find(".user-property-status select").val() != "admin"
+        statusValue != "webmaster" &&
+        statusValue != "admin"
     ) {
-        ajax_data["status"] = pop_in.find(".user-property-status select").val();
+        ajax_data["status"] = statusValue;
     } else if (connected_user_status == "webmaster") {
-        ajax_data["status"] = pop_in.find(".user-property-status select").val();
+        ajax_data["status"] = statusValue;
     }
-    // console.log(ajax_data["status"]);
-    ajax_data["level"] = pop_in.find(".user-property-level select").val();
+
+    const levelSelect = pop_in.querySelector(".user-property-level select");
+    ajax_data["level"] = levelSelect ? levelSelect.value : "";
     ajax_data["group_id"] = groups_selected.length == 0 ? -1 : groups_selected;
-    ajax_data["enabled_high"] =
-        pop_in
-            .find('.user-list-checkbox[name="hd_enabled"]')
-            .attr("data-selected") == "1"
-            ? true
-            : false;
+
+    const hdCheckbox = pop_in.querySelector('.user-list-checkbox[name="hd_enabled"]');
+    ajax_data["enabled_high"] = hdCheckbox && hdCheckbox.getAttribute("data-selected") == "1" ? true : false;
     return ajax_data;
 }
 
 function fill_ajax_data_from_preferences(ajax_data, pop_in) {
-    ajax_data["theme"] = pop_in.find(".user-property-theme select").val();
-    ajax_data["language"] = pop_in.find(".user-property-lang select").val();
-    ajax_data["nb_image_page"] =
-        nb_image_page_values[
-            pop_in
-                .find(".photos-select-bar .slider-bar-container")
-                .slider("option", "value")
-        ];
-    ajax_data["recent_period"] =
-        recent_period_values[
-            pop_in
-                .find(".period-select-bar .slider-bar-container")
-                .slider("option", "value")
-        ];
-    ajax_data["expand"] =
-        pop_in
-            .find('.user-list-checkbox[name="expand_all_albums"]')
-            .attr("data-selected") == "1"
-            ? true
-            : false;
-    ajax_data["show_nb_comments"] =
-        pop_in
-            .find('.user-list-checkbox[name="show_nb_comments"]')
-            .attr("data-selected") == "1"
-            ? true
-            : false;
-    ajax_data["show_nb_hits"] =
-        pop_in
-            .find('.user-list-checkbox[name="show_nb_hits"]')
-            .attr("data-selected") == "1"
-            ? true
-            : false;
+    const themeSelect = pop_in.querySelector(".user-property-theme select");
+    ajax_data["theme"] = themeSelect ? themeSelect.value : "";
+
+    const langSelect = pop_in.querySelector(".user-property-lang select");
+    ajax_data["language"] = langSelect ? langSelect.value : "";
+
+    let photosValue = 0;
+    const photosSlider2 = pop_in.querySelector(".photos-select-bar .slider-bar-container");
+    if (photosSlider2 && photosSlider2.noUiSlider) photosValue = Math.round(parseFloat(photosSlider2.noUiSlider.get()));
+    ajax_data["nb_image_page"] = nb_image_page_values[photosValue];
+
+    let periodValue = 0;
+    const periodSlider2 = pop_in.querySelector(".period-select-bar .slider-bar-container");
+    if (periodSlider2 && periodSlider2.noUiSlider) periodValue = Math.round(parseFloat(periodSlider2.noUiSlider.get()));
+    ajax_data["recent_period"] = recent_period_values[periodValue];
+
+    const expandCheckbox = pop_in.querySelector('.user-list-checkbox[name="expand_all_albums"]');
+    ajax_data["expand"] = expandCheckbox && expandCheckbox.getAttribute("data-selected") == "1" ? true : false;
+
+    const nbCommentsCheckbox = pop_in.querySelector('.user-list-checkbox[name="show_nb_comments"]');
+    ajax_data["show_nb_comments"] = nbCommentsCheckbox && nbCommentsCheckbox.getAttribute("data-selected") == "1" ? true : false;
+
+    const nbHitsCheckbox = pop_in.querySelector('.user-list-checkbox[name="show_nb_hits"]');
+    ajax_data["show_nb_hits"] = nbHitsCheckbox && nbHitsCheckbox.getAttribute("data-selected") == "1" ? true : false;
+
     return ajax_data;
 }
 
@@ -1513,17 +1694,19 @@ Ajax Requests
 
 function get_first_selection_usernames(callback) {
     let first_ids = selection.slice(0, 50).map((x) => x.id);
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.getList",
-        type: "POST",
-        data: {
-            display: "username",
-            order: "id",
-            user_id: first_ids,
-            exclude: [guest_id],
-        },
-        success: function (data) {
-            data = jQuery.parseJSON(data);
+    const params = new URLSearchParams({
+        display: "username",
+        order: "id",
+        user_id: first_ids,
+        exclude: [guest_id],
+    });
+
+    fetch("ws.php?format=json&method=pwg.users.getList", {
+        method: "POST",
+        body: params,
+    })
+        .then(response => response.json())
+        .then(data => {
             let result = data.result.users;
             for (let i = 0; i < result.length; i++) {
                 let index = selection.findIndex((x) => x.id === result[i].id);
@@ -1532,281 +1715,363 @@ function get_first_selection_usernames(callback) {
                 }
             }
             callback();
-        },
-    });
+        })
+        .catch(err => console.error("Error getting selection usernames:", err));
 }
 
 function select_whole_set() {
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.getList",
-        type: "POST",
-        data: {
-            display: "only_id",
-            order: "id",
-            page: actual_page - 1,
-            per_page: 0,
-            exclude: [guest_id],
-            status: $(".advanced-filter-select[name=filter_status]").val(),
-            group_id: $(".advanced-filter-select[name=filter_group]").val(),
-            min_level: $(".advanced-filter-select[name=filter_level]").val(),
-            max_level: $(".advanced-filter-select[name=filter_level]").val(),
-            min_register:
-                register_dates[
-                    $(".dates-select-bar .slider-bar-container").slider(
-                        "option",
-                        "values",
-                    )[0]
-                ],
-            max_register:
-                register_dates[
-                    $(".dates-select-bar .slider-bar-container").slider(
-                        "option",
-                        "values",
-                    )[1]
-                ],
-        },
-        beforeSend: function () {
-            $("#checkActions .loading").show();
-        },
-        success: function (data) {
-            data = jQuery.parseJSON(data);
+    const statusSelect = document.querySelector(".advanced-filter-select[name=filter_status]");
+    const groupSelect = document.querySelector(".advanced-filter-select[name=filter_group]");
+    const levelSelect = document.querySelector(".advanced-filter-select[name=filter_level]");
+
+    let minRegister = 0, maxRegister = 0;
+    const _datesSliderWS = document.querySelector(".dates-select-bar .slider-bar-container");
+    if (_datesSliderWS && _datesSliderWS.noUiSlider) {
+        const _v = _datesSliderWS.noUiSlider.get().map(Number);
+        minRegister = register_dates[Math.round(_v[0])];
+        maxRegister = register_dates[Math.round(_v[1])];
+    }
+
+    const params = new URLSearchParams({
+        display: "only_id",
+        order: "id",
+        page: actual_page - 1,
+        per_page: 0,
+        exclude: [guest_id],
+        status: statusSelect ? statusSelect.value : "",
+        group_id: groupSelect ? groupSelect.value : "",
+        min_level: levelSelect ? levelSelect.value : "",
+        max_level: levelSelect ? levelSelect.value : "",
+        min_register: minRegister,
+        max_register: maxRegister,
+    });
+
+    const loadingEl = document.querySelector("#checkActions .loading");
+    if (loadingEl) loadingEl.style.display = '';
+
+    fetch("ws.php?format=json&method=pwg.users.getList", {
+        method: "POST",
+        body: params,
+    })
+        .then(response => response.json())
+        .then(data => {
             selection = data.result.map((x) => {
                 return { id: x };
             });
-            $("#checkActions .loading").hide();
+            if (loadingEl) loadingEl.style.display = 'none';
             update_selection_content();
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrows) {
-            $("#checkActions .loading").hide();
-        },
-    });
+        })
+        .catch(err => {
+            console.error("Error selecting whole set:", err);
+            if (loadingEl) loadingEl.style.display = 'none';
+        });
 }
 
 function update_user_username() {
-    let pop_in_container = $(".UserListPopInContainer");
+    let pop_in_container = document.querySelector(".UserListPopInContainer");
+    if (!pop_in_container) return;
+
     let ajax_data = {
         pwg_token: pwg_token,
         user_id: last_user_id,
     };
-    ajax_data["username"] = pop_in_container
-        .find(".user-property-input-username")
-        .val();
+    const usernameInput = pop_in_container.querySelector(".user-property-input-username");
+    ajax_data["username"] = usernameInput ? usernameInput.value : "";
+
     if (ajax_data.username.replace(/\s/g, "").length == 0) {
-        $(".update-user-fail")
-            .html(fieldNotEmpty)
-            .fadeIn()
-            .delay(1500)
-            .fadeOut(2500);
+        const failEl = document.querySelector(".update-user-fail");
+        if (failEl) {
+            failEl.innerHTML = fieldNotEmpty;
+            failEl.style.display = '';
+            setTimeout(() => {
+                failEl.style.display = 'none';
+            }, 1500 + 2500);
+        }
         return;
     }
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.setInfo",
-        type: "POST",
-        data: ajax_data,
-        success: (raw_data) => {
-            data = jQuery.parseJSON(raw_data);
+
+    const params = new URLSearchParams(ajax_data);
+    fetch("ws.php?format=json&method=pwg.users.setInfo", {
+        method: "POST",
+        body: params,
+    })
+        .then(response => response.json())
+        .then(data => {
             if (data.stat == "ok") {
                 if (last_user_index != -1) {
                     current_users[last_user_index].username =
                         data.result.users[0].username;
-                    $(
-                        "#UserList .user-property-username .edit-username-title",
-                    ).html(current_users[last_user_index].username);
-                    $("#UserList .user-property-initials span").html(
-                        get_initials(current_users[last_user_index].username),
-                    );
-                    fill_container_user_info(
-                        $("#user-table-content .user-container").eq(
-                            last_user_index,
-                        ),
-                        last_user_index,
-                    );
+                    const titleEl = document.querySelector("#UserList .user-property-username .edit-username-title");
+                    if (titleEl) titleEl.innerHTML = current_users[last_user_index].username;
+
+                    const initialsEl = document.querySelector("#UserList .user-property-initials span");
+                    if (initialsEl) initialsEl.innerHTML = get_initials(current_users[last_user_index].username);
+
+                    const container = document.querySelector("#user-table-content .user-container");
+                    if (container) {
+                        fill_container_user_info(container, last_user_index);
+                    }
                 }
-                $("#UserList .update-user-success")
-                    .fadeIn()
-                    .delay(1500)
-                    .fadeOut(2500);
-                $(".user-property-username").show();
-                $(".user-property-username-change").hide();
+
+                const successEl = document.querySelector("#UserList .update-user-success");
+                if (successEl) {
+                    successEl.style.display = '';
+                    setTimeout(() => {
+                        successEl.style.display = 'none';
+                    }, 1500 + 2500);
+                }
+
+                document.querySelectorAll(".user-property-username").forEach(el => {
+                    el.style.display = '';
+                });
+                document.querySelectorAll(".user-property-username-change").forEach(el => {
+                    el.style.display = 'none';
+                });
             }
-        },
-    });
+        })
+        .catch(err => console.error("Error updating username:", err));
 }
 
 function update_user_password() {
-    let pop_in_container = $(".UserListPopInContainer");
+    let pop_in_container = document.querySelector(".UserListPopInContainer");
+    if (!pop_in_container) return;
+
     let ajax_data = {
         pwg_token: pwg_token,
         user_id: last_user_id,
     };
-    ajax_data["password"] = pop_in_container
-        .find(".user-property-input-password")
-        .val();
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.setInfo",
-        type: "POST",
-        data: ajax_data,
-        success: (raw_data) => {
-            data = jQuery.parseJSON(raw_data);
+    const passwordInput = pop_in_container.querySelector(".user-property-input-password");
+    ajax_data["password"] = passwordInput ? passwordInput.value : "";
+
+    const params = new URLSearchParams(ajax_data);
+    fetch("ws.php?format=json&method=pwg.users.setInfo", {
+        method: "POST",
+        body: params,
+    })
+        .then(response => response.json())
+        .then(data => {
             if (data.stat == "ok") {
-                $("#UserList .update-user-success")
-                    .fadeIn()
-                    .delay(1500)
-                    .fadeOut(2500);
-                $(".user-property-password").show();
-                $(".user-property-password-change").hide();
+                const successEl = document.querySelector("#UserList .update-user-success");
+                if (successEl) {
+                    successEl.style.display = '';
+                    setTimeout(() => {
+                        successEl.style.display = 'none';
+                    }, 1500 + 2500);
+                }
+
+                document.querySelectorAll(".user-property-password").forEach(el => {
+                    el.style.display = '';
+                });
+                document.querySelectorAll(".user-property-password-change").forEach(el => {
+                    el.style.display = 'none';
+                });
             }
-        },
-    });
+        })
+        .catch(err => console.error("Error updating password:", err));
 }
 
 function update_user_info() {
     //Show spinner
-    $(".update-user-button i")
-        .removeClass("icon-floppy")
-        .addClass("icon-spin6 animate-spin");
-    $(".update-user-button").addClass("unclickable");
-    let pop_in_container = $(".UserListPopInContainer");
+    document.querySelectorAll(".update-user-button i").forEach(el => {
+        el.classList.remove("icon-floppy");
+        el.classList.add("icon-spin6", "animate-spin");
+    });
+    document.querySelectorAll(".update-user-button").forEach(el => {
+        el.classList.add("unclickable");
+    });
+
+    let pop_in_container = document.querySelector(".UserListPopInContainer");
+    if (!pop_in_container) return;
+
     let ajax_data = {
         pwg_token: pwg_token,
         user_id: last_user_id,
     };
 
     ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.setInfo",
-        type: "POST",
-        data: ajax_data,
-        beforeSend: function () {
-            $("#UserList .update-user-fail").fadeOut();
-            $("#UserList .update-user-success").fadeOut();
-        },
-        success: function (raw_data) {
-            data = jQuery.parseJSON(raw_data);
+
+    // Hide fail/success messages before sending
+    document.querySelectorAll("#UserList .update-user-fail").forEach(el => {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll("#UserList .update-user-success").forEach(el => {
+        el.style.display = 'none';
+    });
+
+    const params = new URLSearchParams(ajax_data);
+    fetch("ws.php?format=json&method=pwg.users.setInfo", {
+        method: "POST",
+        body: params,
+    })
+        .then(response => response.json())
+        .then(data => {
             if (data.stat === "ok") {
                 let result_user = data.result.users[0];
                 if (last_user_index != -1) {
                     current_users[last_user_index].email = result_user.email;
-                    current_users[last_user_index].enabled_high =
-                        result_user.enabled_high;
+                    current_users[last_user_index].enabled_high = result_user.enabled_high;
                     current_users[last_user_index].expand = result_user.expand;
                     current_users[last_user_index].groups = result_user.groups;
-                    current_users[last_user_index].language =
-                        result_user.language;
+                    current_users[last_user_index].language = result_user.language;
                     current_users[last_user_index].level = result_user.level;
-                    current_users[last_user_index].nb_image_page =
-                        result_user.nb_image_page;
-                    current_users[last_user_index].recent_period =
-                        result_user.recent_period;
-                    current_users[last_user_index].show_nb_comments =
-                        result_user.show_nb_comments;
-                    current_users[last_user_index].show_nb_hits =
-                        result_user.show_nb_hits;
+                    current_users[last_user_index].nb_image_page = result_user.nb_image_page;
+                    current_users[last_user_index].recent_period = result_user.recent_period;
+                    current_users[last_user_index].show_nb_comments = result_user.show_nb_comments;
+                    current_users[last_user_index].show_nb_hits = result_user.show_nb_hits;
                     current_users[last_user_index].status = result_user.status;
                     current_users[last_user_index].theme = result_user.theme;
-                    fill_container_user_info(
-                        $("#user-table-content .user-container").eq(
-                            last_user_index,
-                        ),
-                        last_user_index,
-                    );
+
+                    const container = document.querySelector("#user-table-content .user-container");
+                    if (container) {
+                        fill_container_user_info(container, last_user_index);
+                    }
                 }
-                $("#UserList .update-user-success")
-                    .fadeIn()
-                    .delay(1500)
-                    .fadeOut(2500);
+
+                const successEl = document.querySelector("#UserList .update-user-success");
+                if (successEl) {
+                    successEl.style.display = '';
+                    setTimeout(() => {
+                        successEl.style.display = 'none';
+                    }, 1500 + 2500);
+                }
 
                 //Hide spinner
-                $(".update-user-button i")
-                    .removeClass("icon-spin6 animate-spin")
-                    .addClass("icon-floppy");
-                $(".update-user-button").removeClass("unclickable");
+                document.querySelectorAll(".update-user-button i").forEach(el => {
+                    el.classList.remove("icon-spin6", "animate-spin");
+                    el.classList.add("icon-floppy");
+                });
+                document.querySelectorAll(".update-user-button").forEach(el => {
+                    el.classList.remove("unclickable");
+                });
             } else if (data.stat === "fail") {
-                $("#UserList .update-user-fail").html(data.message);
-                $("#UserList .update-user-fail").fadeIn();
-                $(".update-user-button i")
-                    .addClass("icon-floppy")
-                    .removeClass("icon-spin6 animate-spin");
-                $(".update-user-button").removeClass("unclickable");
+                const failEl = document.querySelector("#UserList .update-user-fail");
+                if (failEl) {
+                    failEl.innerHTML = data.message;
+                    failEl.style.display = '';
+                }
+
+                document.querySelectorAll(".update-user-button i").forEach(el => {
+                    el.classList.add("icon-floppy");
+                    el.classList.remove("icon-spin6", "animate-spin");
+                });
+                document.querySelectorAll(".update-user-button").forEach(el => {
+                    el.classList.remove("unclickable");
+                });
+
                 setTimeout(() => {
-                    $("#UserList .update-user-fail").fadeOut();
+                    if (failEl) failEl.style.display = 'none';
                 }, 5000);
             }
-        },
-    });
+        })
+        .catch(err => {
+            console.error("Error updating user info:", err);
+            document.querySelectorAll(".update-user-button i").forEach(el => {
+                el.classList.remove("icon-spin6", "animate-spin");
+                el.classList.add("icon-floppy");
+            });
+            document.querySelectorAll(".update-user-button").forEach(el => {
+                el.classList.remove("unclickable");
+            });
+        });
 }
 
 function get_guest_info() {
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.getList",
-        type: "POST",
-        data: {
-            display: "all",
-            user_id: guest_id,
-        },
-        success: (raw_data) => {
-            data = jQuery.parseJSON(raw_data);
+    const params = new URLSearchParams({
+        display: "all",
+        user_id: guest_id,
+    });
+
+    fetch("ws.php?format=json&method=pwg.users.getList", {
+        method: "POST",
+        body: params,
+    })
+        .then(response => response.json())
+        .then(data => {
             if (data.stat == "ok") {
                 guest_user = data.result.users[0];
                 fill_guest_edit();
             }
-        },
-    });
+        })
+        .catch(err => console.error("Error getting guest info:", err));
 }
 
-function get_user_info(uid, callback = None) {
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.getList",
-        type: "POST",
-        data: {
-            display: "all",
-            user_id: uid,
-        },
-        success: (raw_data) => {
-            data = jQuery.parseJSON(raw_data);
+function get_user_info(uid, callback = null) {
+    const params = new URLSearchParams({
+        display: "all",
+        user_id: uid,
+    });
+
+    fetch("ws.php?format=json&method=pwg.users.getList", {
+        method: "POST",
+        body: params,
+    })
+        .then(response => response.json())
+        .then(data => {
             if (data.stat == "ok") {
                 let result_user = data.result.users[0];
                 fill_user_edit(result_user);
-                callback();
+                if (callback) callback();
             }
-        },
-    });
+        })
+        .catch(err => console.error("Error getting user info:", err));
 }
 
 function update_guest_info() {
     //Show spinner
-    $(".update-user-button i")
-        .removeClass("icon-floppy")
-        .addClass("icon-spin6 animate-spin");
-    $(".update-user-button").addClass("unclickable");
+    document.querySelectorAll(".update-user-button i").forEach(el => {
+        el.classList.remove("icon-floppy");
+        el.classList.add("icon-spin6", "animate-spin");
+    });
+    document.querySelectorAll(".update-user-button").forEach(el => {
+        el.classList.add("unclickable");
+    });
 
-    let pop_in_container = $(".GuestUserListPopInContainer");
+    let pop_in_container = document.querySelector(".GuestUserListPopInContainer");
+    if (!pop_in_container) return;
+
     let ajax_data = {
         pwg_token: pwg_token,
         user_id: guest_id,
     };
     ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
-    ajax_data.email = undefined;
-    ajax_data.status = undefined;
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.setInfo",
-        type: "POST",
-        data: ajax_data,
-        success: function (raw_data) {
-            data = jQuery.parseJSON(raw_data);
+    delete ajax_data.email;
+    delete ajax_data.status;
+
+    const params = new URLSearchParams(ajax_data);
+    fetch("ws.php?format=json&method=pwg.users.setInfo", {
+        method: "POST",
+        body: params,
+    })
+        .then(response => response.json())
+        .then(data => {
             if (data.stat == "ok") {
-                $("#GuestUserList .update-user-success")
-                    .fadeIn()
-                    .delay(1500)
-                    .fadeOut(2500);
+                const successEl = document.querySelector("#GuestUserList .update-user-success");
+                if (successEl) {
+                    successEl.style.display = '';
+                    setTimeout(() => {
+                        successEl.style.display = 'none';
+                    }, 1500 + 2500);
+                }
             }
             //Hide spinner
-            $(".update-user-button i")
-                .removeClass("icon-spin6 animate-spin")
-                .addClass("icon-floppy");
-            $(".update-user-button").removeClass("unclickable");
-        },
-    });
+            document.querySelectorAll(".update-user-button i").forEach(el => {
+                el.classList.remove("icon-spin6", "animate-spin");
+                el.classList.add("icon-floppy");
+            });
+            document.querySelectorAll(".update-user-button").forEach(el => {
+                el.classList.remove("unclickable");
+            });
+        })
+        .catch(err => {
+            console.error("Error updating guest info:", err);
+            document.querySelectorAll(".update-user-button i").forEach(el => {
+                el.classList.remove("icon-spin6", "animate-spin");
+                el.classList.add("icon-floppy");
+            });
+            document.querySelectorAll(".update-user-button").forEach(el => {
+                el.classList.remove("unclickable");
+            });
+        });
 }
 
 function update_user_list() {
@@ -1817,145 +2082,163 @@ function update_user_list() {
         per_page: per_page,
         exclude: [guest_id],
     };
-    if ($("#user_search").val().length != 0) {
-        update_data["filter"] = $("#user_search").val();
+
+    const userSearch = document.getElementById("user_search");
+    if (userSearch && userSearch.value.length != 0) {
+        update_data["filter"] = userSearch.value;
     }
-    if ($(".advanced-filter").hasClass("advanced-filter-open")) {
-        update_data["status"] = $(
-            ".advanced-filter-select[name=filter_status]",
-        ).val();
-        update_data["group_id"] = $(
-            ".advanced-filter-select[name=filter_group]",
-        ).val();
-        update_data["min_level"] = $(
-            ".advanced-filter-select[name=filter_level]",
-        ).val();
-        update_data["max_level"] = $(
-            ".advanced-filter-select[name=filter_level]",
-        ).val();
-        update_data["min_register"] =
-            register_dates[
-                $(".dates-select-bar .slider-bar-container").slider(
-                    "option",
-                    "values",
-                )[0]
-            ];
-        update_data["max_register"] =
-            register_dates[
-                $(".dates-select-bar .slider-bar-container").slider(
-                    "option",
-                    "values",
-                )[1]
-            ];
+
+    const advancedFilter = document.querySelector(".advanced-filter");
+    if (advancedFilter && advancedFilter.classList.contains("advanced-filter-open")) {
+        const statusSelect = document.querySelector(".advanced-filter-select[name=filter_status]");
+        const groupSelect = document.querySelector(".advanced-filter-select[name=filter_group]");
+        const levelSelect = document.querySelector(".advanced-filter-select[name=filter_level]");
+
+        update_data["status"] = statusSelect ? statusSelect.value : "";
+        update_data["group_id"] = groupSelect ? groupSelect.value : "";
+        update_data["min_level"] = levelSelect ? levelSelect.value : "";
+        update_data["max_level"] = levelSelect ? levelSelect.value : "";
+
+        let minRegister = 0, maxRegister = 0;
+        const _datesSliderUL = document.querySelector(".dates-select-bar .slider-bar-container");
+        if (_datesSliderUL && _datesSliderUL.noUiSlider) {
+            const _v = _datesSliderUL.noUiSlider.get().map(Number);
+            minRegister = register_dates[Math.round(_v[0])];
+            maxRegister = register_dates[Math.round(_v[1])];
+        }
+        update_data["min_register"] = minRegister;
+        update_data["max_register"] = maxRegister;
     }
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.getList",
-        type: "POST",
-        data: update_data,
-        beforeSend: function () {
-            $(".user-update-spinner").show();
-        },
-        success: function (raw_data) {
-            data = jQuery.parseJSON(raw_data);
+
+    const spinnerEl = document.querySelector(".user-update-spinner");
+    if (spinnerEl) spinnerEl.style.display = '';
+
+    const params = new URLSearchParams(update_data);
+    fetch("ws.php?format=json&method=pwg.users.getList", {
+        method: "POST",
+        body: params,
+    })
+        .then(response => response.json())
+        .then(data => {
             if (data.stat === "fail") {
                 console.log(data.message);
+                if (spinnerEl) spinnerEl.style.display = 'none';
                 return;
             }
+
             total_users = data.result.total_count;
             if (first_update) {
-                $("h1").append(
-                    `<span class='badge-number'>${total_users}</span>`,
-                );
+                const h1 = document.querySelector("h1");
+                if (h1) {
+                    h1.appendChild(
+                        Object.assign(document.createElement("span"), {
+                            className: "badge-number",
+                            innerHTML: total_users
+                        })
+                    );
+                }
                 first_update = false;
             }
+
             nb_filtered_users = data.result.total_count;
             update_pagination_menu();
             current_users = data.result.users;
             generate_user_list();
-            $(".user-col.user-first-col.user-container-edit").click(
-                function () {
-                    let uid_index = $(this)
-                        .closest(".user-container")
-                        .attr("key");
+
+            // Add click handler to user edit columns
+            document.querySelectorAll(".user-col.user-first-col.user-container-edit").forEach(el => {
+                el.removeEventListener("click", null);
+                el.addEventListener("click", function () {
+                    let uid_index = this.closest(".user-container").getAttribute("key");
                     last_user_id = current_users[uid_index].id;
                     last_user_index = uid_index;
                     fill_user_edit(current_users[uid_index]);
-                    $("#UserList").fadeIn();
-                },
-            );
+                    const userListEl = document.getElementById("UserList");
+                    if (userListEl) userListEl.style.display = 'flex';
+                });
+            });
+
             set_selected_to_selection();
 
-            $(".user-update-spinner").hide();
+            if (spinnerEl) spinnerEl.style.display = 'none';
 
+            // Count active filters
             let nb_filters = 0;
-            $(".advanced-filter-select[name=filter_status]").val() != ""
-                ? (nb_filters += 1)
-                : false;
-            $(".advanced-filter-select[name=filter_group]").val() != ""
-                ? (nb_filters += 1)
-                : false;
-            $(".advanced-filter-select[name=filter_level]").val() != ""
-                ? (nb_filters += 1)
-                : false;
-            $(".dates-select-bar .slider-bar-container").slider(
-                "option",
-                "values",
-            )[0] != 0
-                ? (nb_filters += 1)
-                : false;
-            $(".dates-select-bar .slider-bar-container").slider(
-                "option",
-                "values",
-            )[1] !=
-            register_dates.length - 1
-                ? (nb_filters += 1)
-                : false;
+            const statusVal = document.querySelector(".advanced-filter-select[name=filter_status]");
+            if (statusVal && statusVal.value != "") nb_filters += 1;
+
+            const groupVal = document.querySelector(".advanced-filter-select[name=filter_group]");
+            if (groupVal && groupVal.value != "") nb_filters += 1;
+
+            const levelVal = document.querySelector(".advanced-filter-select[name=filter_level]");
+            if (levelVal && levelVal.value != "") nb_filters += 1;
+
+            const _datesSliderF = document.querySelector(".dates-select-bar .slider-bar-container");
+            if (_datesSliderF && _datesSliderF.noUiSlider) {
+                const _v = _datesSliderF.noUiSlider.get().map(Number);
+                if (Math.round(_v[0]) != 0) nb_filters += 1;
+                if (Math.round(_v[1]) != register_dates.length - 1) nb_filters += 1;
+            }
 
             show_filter_infos(nb_filters);
-        },
-        error: (raw_data) => {
-            $(".user-update-spinner").hide();
-        },
-    });
+        })
+        .catch(err => {
+            console.error("Error updating user list:", err);
+            if (spinnerEl) spinnerEl.style.display = 'none';
+        });
 }
 
 function add_user() {
+    const usernameInput = document.querySelector(".AddUserLabelUsername .user-property-input");
+    const usernameVal = usernameInput ? usernameInput.value : "";
+
+    const addUserErrors = document.querySelector("#AddUser .AddUserErrors");
+    addUserErrors.style.visibility = "hidden";
+
+    if (usernameVal == "") {
+        if (addUserErrors) {
+            addUserErrors.innerHTML = missingUsername;
+            addUserErrors.style.visibility = "visible";
+        }
+        return false;
+    }
+
     let ajax_data = {
         pwg_token: pwg_token,
     };
-    ajax_data.username = $(".AddUserLabelUsername .user-property-input").val();
-    ajax_data.password = $("#AddUserPassword").val();
-    ajax_data.email = $(".AddUserLabelEmail .user-property-input").val();
-    ajax_data.send_password_by_mail =
-        $('.user-list-checkbox[name="send_by_email"]').attr("data-selected") ==
-        "1"
-            ? true
-            : false;
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.add",
-        type: "POST",
-        data: ajax_data,
-        beforeSend: function () {
-            $("#AddUser .AddUserErrors").css("visibility", "hidden");
-            if ($(".AddUserLabelUsername .user-property-input").val() == "") {
-                $("#AddUser .AddUserErrors").html(missingUsername);
-                $("#AddUser .AddUserErrors").css("visibility", "visible");
-                return false;
-            }
-        },
-        success: (raw_data) => {
-            let data = jQuery.parseJSON(raw_data);
+    ajax_data.username = usernameVal;
+
+    const passwordInput = document.getElementById("AddUserPassword");
+    ajax_data.password = passwordInput ? passwordInput.value : "";
+
+    const emailInput = document.querySelector(".AddUserLabelEmail .user-property-input");
+    ajax_data.email = emailInput ? emailInput.value : "";
+
+    const sendByEmailCheckbox = document.querySelector('.user-list-checkbox[name="send_by_email"]');
+    ajax_data.send_password_by_mail = sendByEmailCheckbox && sendByEmailCheckbox.getAttribute("data-selected") == "1" ? true : false;
+
+    const params = new URLSearchParams(ajax_data);
+    fetch("ws.php?format=json&method=pwg.users.add", {
+        method: "POST",
+        body: params,
+    })
+        .then(response => response.json())
+        .then(data => {
             if (data.stat == "ok") {
                 let new_user_id = data.result.users[0].id;
                 update_user_list();
                 add_user_close();
-                $("#AddUser .user-property-input").val("");
-                $("#AddUserSuccess .edit-now")
-                    .unbind("click")
-                    .click(() => {
+
+                document.querySelectorAll("#AddUser .user-property-input").forEach(el => {
+                    el.value = "";
+                });
+
+                const editNowBtn = document.querySelector("#AddUserSuccess .edit-now");
+                if (editNowBtn) {
+                    editNowBtn.removeEventListener("click", null);
+                    editNowBtn.addEventListener("click", () => {
                         last_user_id = new_user_id;
-                        last_user_index =
-                            get_container_index_from_uid(new_user_id);
+                        last_user_index = get_container_index_from_uid(new_user_id);
                         if (last_user_index != -1) {
                             fill_user_edit(current_users[last_user_index]);
                             open_user_list();
@@ -1963,66 +2246,70 @@ function add_user() {
                             get_user_info(new_user_id, open_user_list);
                         }
                     });
-                $("#AddUserSuccess label span:first").html(
-                    user_added_str.replace("%s", ajax_data.username),
-                );
-                $("#AddUserSuccess").css("display", "flex");
+                }
+
+                const successLabel = document.querySelector("#AddUserSuccess label span:first-child");
+                if (successLabel) {
+                    successLabel.innerHTML = user_added_str.replace("%s", ajax_data.username);
+                }
+
+                const addUserSuccess = document.getElementById("AddUserSuccess");
+                if (addUserSuccess) addUserSuccess.style.display = "flex";
             } else {
-                $("#AddUser .AddUserErrors").html(data.message);
-                $("#AddUser .AddUserErrors").css("visibility", "visible");
+                if (addUserErrors) {
+                    addUserErrors.innerHTML = data.message;
+                    addUserErrors.style.visibility = "visible";
+                }
             }
-        },
-    });
+        })
+        .catch(err => console.error("Error adding user:", err));
 }
 
 function delete_user(uid) {
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.delete",
-        type: "POST",
-        data: {
-            user_id: uid,
-            pwg_token: pwg_token,
-        },
-        beforeSend: function () {
-            //jQuery('#user'+uid+' .userDelete .loading').show();
-        },
-        success: function (data) {
+    const params = new URLSearchParams({
+        user_id: uid,
+        pwg_token: pwg_token,
+    });
+
+    fetch("ws.php?format=json&method=pwg.users.delete", {
+        method: "POST",
+        body: params,
+    })
+        .then(response => response.json())
+        .then(data => {
             close_user_list();
             update_user_list();
-            // msg where user was deleted
-            //jQuery('#showAddUser .infos').html('&#x2714; User '+username+' deleted').show();
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrows) {
-            //error just hide loading
-            //jQuery('#user'+uid+' .userDelete .loading').hide();
-        },
-    });
+        })
+        .catch(err => console.error("Error deleting user:", err));
 }
 
 function show_filter_infos(nb_filters) {
-    if ($("#user_search").val().length != 0 || nb_filters != 0) {
-        if (total_users != "1") {
-            $(".filtered-users").html(
-                filtered_users.replace(/%d/g, total_users),
-            );
-        } else {
-            $(".filtered-users").html(
-                filtered_user.replace(/%d/g, total_users),
-            );
-        }
+    const userSearch = document.getElementById("user_search");
+    if ((userSearch && userSearch.value.length != 0) || nb_filters != 0) {
+        const filteredUsersEls = document.querySelectorAll(".filtered-users");
+        const message = total_users != "1"
+            ? filtered_users.replace(/%d/g, total_users)
+            : filtered_user.replace(/%d/g, total_users);
+        filteredUsersEls.forEach(el => el.innerHTML = message);
     } else {
-        $(".filtered-users").html("");
+        document.querySelectorAll(".filtered-users").forEach(el => el.innerHTML = "");
     }
 
     if (nb_filters != 0) {
-        $(".advanced-filter-btn").css({
-            width: "80px",
+        document.querySelectorAll(".advanced-filter-btn").forEach(el => {
+            el.style.width = "80px";
         });
-        $(".filter-counter").html(nb_filters).css("display", "flex");
+        document.querySelectorAll(".filter-counter").forEach(el => {
+            el.innerHTML = nb_filters;
+            el.style.display = "flex";
+        });
     } else {
-        $(".advanced-filter-btn").css({
-            width: "70px",
+        document.querySelectorAll(".advanced-filter-btn").forEach(el => {
+            el.style.width = "70px";
         });
-        $(".filter-counter").css("display", "none").html(0);
+        document.querySelectorAll(".filter-counter").forEach(el => {
+            el.innerHTML = "0";
+            el.style.display = "none";
+        });
     }
 }

@@ -4,348 +4,77 @@
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-{combine_script id='jquery.ui' require='jquery' load='async'}
-{combine_css path="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.slider.css"}
-{combine_script id='doubleSlider' load='async' require='jquery.ui' path='admin/themes/default/js/doubleSlider.js'}
+{combine_script id='nouislider' load='async' path='node_modules/nouislider/dist/nouislider.min.js'}
+{combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
+{combine_script id='doubleSlider' load='async' require='nouislider' path='admin/themes/default/js/doubleSlider.js'}
 
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
-{combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
+{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
+{combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-{combine_script id='jquery.progressBar' load='async' path='https://rawcdn.githack.com/Piwigo/Piwigo/refs/heads/14.x/themes/default/js/plugins/jquery.progressbar.js'}
-{combine_script id='jquery.ajaxmanager' load='async' path='https://rawcdn.githack.com/aFarkas/Ajaxmanager/refs/heads/master/jquery.ajaxmanager.js'}
-
-{combine_script id='batchManagerGlobal' load='async' require='jquery,datepicker,jquery.colorbox,addAlbum,doubleSlider' path='admin/themes/default/js/batchManagerGlobal.js'}
+{combine_script id='batchManagerGlobal' load='async' require='datepicker,addAlbum,doubleSlider,glightbox' path='admin/themes/default/js/batchManagerGlobal.js'}
 
 {footer_script}<script>
-  var lang = {
-    Cancel: '{'Cancel'|translate|escape:'javascript'}',
-    deleteProgressMessage: "{'Deletion in progress'|translate|escape:'javascript'}",
-    syncProgressMessage: "{'Synchronization in progress'|translate|escape:'javascript'}",
-    AreYouSure: "{'Are you sure?'|translate|escape:'javascript'}",
-    generateMsg: "{'Generate multiple size images'|translate}"
-  };
-
-  jQuery(document).ready(function() {
-
-    {* <!-- TAGS --> *}
-    var tagsCache = new TagsCache({
-      serverKey: '{$CACHE_KEYS.tags}',
-      serverId: '{$CACHE_KEYS._hash}',
-      rootUrl: '{$ROOT_URL}'
-    });
-
-    tagsCache.selectize(jQuery('[data-selectize=tags]'), {
-      lang: {
-        'Add': '{'Create'|translate}'
-      }
-    });
-
-    {* <!-- CATEGORIES --> *}
-    window.categoriesCache = new CategoriesCache({
-      serverKey: '{$CACHE_KEYS.categories}',
-      serverId: '{$CACHE_KEYS._hash}',
-      rootUrl: '{$ROOT_URL}'
-    });
-
-    var associated_categories = {$associated_categories|json_encode};
-
-    categoriesCache.selectize(jQuery('[data-selectize=categories]'), {
-      filter: function(categories, options) {
-        if (this.name == 'dissociate') {
-          var filtered = jQuery.grep(categories, function(cat) {
-            return !!associated_categories[cat.id];
-          });
-
-          if (filtered.length > 0) {
-            options.default = filtered[0].id;
-          }
-
-          return filtered;
-        } else {
-          return categories;
-        }
-      }
-    });
-
-  });
-
-  var nb_thumbs_page = {$nb_thumbs_page};
-  var nb_thumbs_set = {$nb_thumbs_set};
-  var applyOnDetails_pattern = "{'on the %d selected photos'|translate}";
-  var all_elements = [{if !empty($all_elements)}{$all_elements|join:','}{/if}];
-
-  var selectedMessage_pattern = "{'%d of %d photos selected'|translate}";
-  var selectedMessage_none = "{'No photo selected, %d photos in current set'|translate}";
-  var selectedMessage_all = "{'All %d photos are selected'|translate}";
-
-  $(document).ready(function() {
-    jQuery('.help-popin-search').colorbox({ width: "600px" });
-
-    function checkPermitAction() {
-      var nbSelected = 0;
-      if ($("input[name=setSelected]").is(':checked')) {
-        nbSelected = nb_thumbs_set;
-      } else {
-        nbSelected = $(".thumbnails input[type=checkbox]").filter(':checked').length;
-      }
-
-      if (nbSelected == 0) {
-        $("#permitAction").hide();
-        $("#forbidAction").show();
-      } else {
-        $("#permitAction").show();
-        $("#forbidAction").hide();
-      }
-
-      $("#applyOnDetails").text(
-        sprintf(
-          applyOnDetails_pattern,
-          nbSelected
-        )
-      );
-
-      // display the number of currently selected photos in the "Selection" fieldset
-      if (nbSelected == 0) {
-        $("#selectedMessage").text(
-          sprintf(
-            selectedMessage_none,
-            nb_thumbs_set
-          )
-        );
-      } else if (nbSelected == nb_thumbs_set) {
-        $("#selectedMessage").text(
-          sprintf(
-            selectedMessage_all,
-            nb_thumbs_set
-          )
-        );
-      } else {
-        $("#selectedMessage").text(
-          sprintf(
-            selectedMessage_pattern,
-            nbSelected,
-            nb_thumbs_set
-          )
-        );
-      }
-    }
-
-
-
-    $("[id^=action_]").hide();
-
-    $("select[name=selectAction]").change(function() {
-      $("[id^=action_]").hide();
-
-      var action = $(this).prop("value");
-      if (action == 'move') {
-        action = 'associate';
-      }
-
-      $("#action_" + action).show();
-
-      if ($(this).val() != -1) {
-        $("#applyActionBlock").show();
-      } else {
-        $("#applyActionBlock").hide();
-      }
-      if ($(this).val() == "delete" || $(this).val() == "delete_derivatives") {
-        $("#confirmDel").css("visibility", "visible");
-      } else {
-        $("#confirmDel").css("visibility", "hidden");
-      }
-    });
-
-    $(".wrap1 label").click(function(event) {
-      $("input[name=setSelected]").prop('checked', false).trigger('change');
-
-      var li = $(this).closest("li");
-      var checkbox = $(this).children("input[type=checkbox]");
-
-      checkbox.triggerHandler("shclick", event);
-
-      if ($(checkbox).is(':checked')) {
-        $(li).addClass("thumbSelected");
-      } else {
-        $(li).removeClass('thumbSelected');
-      }
-
-      checkPermitAction();
-    });
-
-    $("#selectAll").click(function() {
-      $("input[name=setSelected]").prop('checked', false).trigger('change');
-      selectPageThumbnails();
-      checkPermitAction();
-      return false;
-    });
-
-    function selectPageThumbnails() {
-      $(".thumbnails label").each(function() {
-        var checkbox = $(this).children("input[type=checkbox]");
-
-        $(checkbox).prop('checked', true).trigger("change");
-        $(this).closest("li").addClass("thumbSelected");
-      });
-    }
-
-    $("#selectNone").click(function() {
-      $("input[name=setSelected]").prop('checked', false).trigger('change');
-
-      $(".thumbnails label").each(function() {
-        var checkbox = $(this).children("input[type=checkbox]");
-
-        if (jQuery(checkbox).is(':checked')) {
-          $(checkbox).prop('checked', false).trigger("change");
-        }
-
-        $(this).closest("li").removeClass("thumbSelected");
-      });
-      checkPermitAction();
-      return false;
-    });
-
-    $("#selectInvert").click(function() {
-      $("input[name=setSelected]").prop('checked', false).trigger('change');
-
-      $(".thumbnails label").each(function() {
-        var checkbox = $(this).children("input[type=checkbox]");
-
-        $(checkbox).prop('checked', !$(checkbox).is(':checked')).trigger("change");
-
-        if ($(checkbox).is(':checked')) {
-          $(this).closest("li").addClass("thumbSelected");
-        } else {
-          $(this).closest("li").removeClass('thumbSelected');
-        }
-      });
-      checkPermitAction();
-      return false;
-    });
-
-    $("#selectSet").click(function() {
-      selectPageThumbnails();
-      $("input[name=setSelected]").prop('checked', true).trigger('change');
-      checkPermitAction();
-      return false;
-    });
-
-    $("input[name=setSelected]").change(function() {
-      $('input[name=whole_set]').val(this.checked ? all_elements.join(',') : '');
-    });
-
-    {* if the whole set is selected on page load (after a first action has been applied), *}
-    {* trigger a change to make sure input[name=whole_set] is updated *}
-    if ($('input[name="setSelected"]').is(':checked')) {
-      $("input[name=setSelected]").trigger('change');
-    }
-
-    jQuery("input[name=confirm_deletion]").change(function() {
-      jQuery("#confirmDel span.errors").css("visibility", "hidden");
-    });
-
-    jQuery('#applyAction').click(function() {
-      var action = jQuery('[name="selectAction"]').val();
-      if (action == 'delete_derivatives') {
-        let d_count = $('#confirmDel input[type=checkbox]').filter(':checked').length
-        let e_count = $('input[name="setSelected"]').is(':checked') ? nb_thumbs_set : $(
-          '.thumbnails input[type=checkbox]').filter(':checked').length;
-        if (!jQuery("#confirmDel input[name=confirm_deletion]").is(':checked')) {
-          jQuery("#confirmDel span.errors").css("visibility", "visible");
-          return false;
-        } else {
-          return true;
-        }
-      }
-
-      if (action != 'generate_derivatives' ||
-        derivatives.finished()) {
-        return true;
-      }
-
-      jQuery('.bulkAction').hide();
-
-      var queuedManager = jQuery.manageAjax.create('queued', {
-        queue: true,
-        cacheResponse: false,
-        maxRequests: 1
-      });
-
-      derivatives.elements = [];
-      if (jQuery('input[name="setSelected"]').is(':checked'))
-        derivatives.elements = all_elements;
-      else
-        jQuery('.thumbnails input[type=checkbox]').each(function() {
-          if (jQuery(this).is(':checked')) {
-            derivatives.elements.push(jQuery(this).val());
-          }
-        });
-
-      jQuery('#applyActionBlock').hide();
-      jQuery('select[name="selectAction"]').hide();
-      jQuery('.permitActionListButton div').addClass('hidden');
-      jQuery('#regenerationMsg').show();
-
-      progress_start();
-      progress();
-      getDerivativeUrls();
-      return false;
-    });
-
-    checkPermitAction();
-
-    jQuery("select[name=filter_prefilter]").change(function() {
-      jQuery("#empty_caddie").toggle(jQuery(this).val() == "caddie");
-      jQuery("#duplicates_options").toggle(jQuery(this).val() == "duplicates");
-      jQuery("#delete_orphans").toggle(jQuery(this).val() == "no_album");
-      jQuery("#sync_md5sum").toggle(jQuery(this).val() == "no_sync_md5sum");
-    });
-  });
-
-  {*<!-- sliders config -->*}
-  var sliders = {
-    widths: {
-      values: [{$dimensions.widths}],
-      selected: {
-        min: {$dimensions.selected.min_width},
-        max: {$dimensions.selected.max_width},
-      },
-      text: '{'between %d and %d pixels'|translate|escape:'javascript'}'
+  window.batchManagerConfig = {
+    lang: {
+      Cancel: '{'Cancel'|translate|escape:'javascript'}',
+      deleteProgressMessage: "{'Deletion in progress'|translate|escape:'javascript'}",
+      syncProgressMessage: "{'Synchronization in progress'|translate|escape:'javascript'}",
+      AreYouSure: "{'Are you sure?'|translate|escape:'javascript'}",
+      generateMsg: "{'Generate multiple size images'|translate}",
+      tagCreate: '{'Create'|translate|escape:'javascript'}'
     },
-
-    heights: {
-      values: [{$dimensions.heights}],
-      selected: {
-        min: {$dimensions.selected.min_height},
-        max: {$dimensions.selected.max_height},
+    nbThumbsPage: {$nb_thumbs_page},
+    nbThumbsSet: {$nb_thumbs_set},
+    applyOnDetailsPattern: "{'on the %d selected photos'|translate}",
+    allElements: [{if !empty($all_elements)}{$all_elements|join:','}{/if}],
+    selectedMessagePattern: "{'%d of %d photos selected'|translate}",
+    selectedMessageNone: "{'No photo selected, %d photos in current set'|translate}",
+    selectedMessageAll: "{'All %d photos are selected'|translate}",
+    associatedCategories: {$associated_categories|json_encode},
+    tagsServerKey: '{$CACHE_KEYS.tags}',
+    categoriesServerKey: '{$CACHE_KEYS.categories}',
+    cacheServerId: '{$CACHE_KEYS._hash}',
+    rootUrl: '{$ROOT_URL}',
+    sliders: {
+      widths: {
+        values: [{$dimensions.widths}],
+        selected: {
+          min: {$dimensions.selected.min_width},
+          max: {$dimensions.selected.max_width}
+        },
+        text: '{'between %d and %d pixels'|translate|escape:'javascript'}'
       },
-      text: '{'between %d and %d pixels'|translate|escape:'javascript'}'
-    },
-
-    ratios: {
-      values: [{$dimensions.ratios}],
-      selected: {
-        min: {$dimensions.selected.min_ratio},
-        max: {$dimensions.selected.max_ratio},
+      heights: {
+        values: [{$dimensions.heights}],
+        selected: {
+          min: {$dimensions.selected.min_height},
+          max: {$dimensions.selected.max_height}
+        },
+        text: '{'between %d and %d pixels'|translate|escape:'javascript'}'
       },
-      text: '{'between %.2f and %.2f'|translate|escape:'javascript'}'
-    },
-
-    filesizes: {
-      values: [{$filesize.list}],
-      selected: {
-        min: {$filesize.selected.min},
-        max: {$filesize.selected.max},
+      ratios: {
+        values: [{$dimensions.ratios}],
+        selected: {
+          min: {$dimensions.selected.min_ratio},
+          max: {$dimensions.selected.max_ratio}
+        },
+        text: '{'between %.2f and %.2f'|translate|escape:'javascript'}'
       },
-      text: '{'between %s and %s MB'|translate|escape:'javascript'}'
+      filesizes: {
+        values: [{$filesize.list}],
+        selected: {
+          min: {$filesize.selected.min},
+          max: {$filesize.selected.max}
+        },
+        text: '{'between %s and %s MB'|translate|escape:'javascript'}'
+      }
     }
   };
 </script>{/footer_script}
 
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
-{combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
+{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 <div id="batchManagerGlobal">
@@ -589,7 +318,7 @@
 
         <div class="filterActions">
           <div id="addFilter">
-            <div class="addFilter-button icon-plus" onclick="$('.addFilter-dropdown').slideToggle()">
+            <div class="addFilter-button icon-plus" onclick="toggleAddFilterDropdown()">
               {'Add a filter'|translate}</div>
             <div class="addFilter-dropdown">
               <a data-value="filter_prefilter" {if isset($filter.prefilter)}class="disabled"
@@ -882,7 +611,7 @@
 </div> <!-- #batchManagerGlobal -->
 
 <style>
-  #action_associate .selectize-input {
+  #action_associate .ts-control {
     min-width: 500px;
     height: 44px;
   }

@@ -1,43 +1,120 @@
+function showInactivePlugins() {
+    var showEls = document.querySelectorAll(".showInactivePlugins");
+    if (!showEls.length) {
+        document.querySelectorAll(".plugin-inactive").forEach(function(el) { el.style.display = ''; });
+        return;
+    }
+    var pending = showEls.length;
+    showEls.forEach(function(el) {
+        el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).finished.then(function() {
+            el.style.display = 'none';
+            if (--pending === 0) {
+                document.querySelectorAll(".plugin-inactive").forEach(function(inEl) {
+                    inEl.style.display = '';
+                    inEl.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+                });
+            }
+        });
+    });
+}
+
+function actualizeFilter() {
+    var seeAllLabel = document.querySelector("label[for='seeAll'] .filter-badge");
+    if (seeAllLabel) seeAllLabel.innerHTML = nb_plugin.all;
+    var seeActiveLabel = document.querySelector("label[for='seeActive'] .filter-badge");
+    if (seeActiveLabel) seeActiveLabel.innerHTML = nb_plugin.active;
+    var seeInactiveLabel = document.querySelector("label[for='seeInactive'] .filter-badge");
+    if (seeInactiveLabel) seeInactiveLabel.innerHTML = nb_plugin.inactive;
+    var seeOtherLabel = document.querySelector("label[for='seeOther'] .filter-badge");
+    if (seeOtherLabel) seeOtherLabel.innerHTML = nb_plugin.other;
+
+    document.querySelectorAll(".filterLabel").forEach(function (el) {
+        el.style.display = '';
+    });
+
+    document.querySelectorAll(".pluginMiniBox").forEach(function (el) {
+        if (nb_plugin.active == 0) {
+            var activeLabel = document.querySelector("label[for='seeActive']");
+            if (activeLabel) activeLabel.style.display = 'none';
+            if (document.getElementById("seeActive").checked) {
+                document.getElementById("seeAll").click();
+            }
+        }
+        if (nb_plugin.inactive == 0) {
+            var inactiveLabel = document.querySelector("label[for='seeInactive']");
+            if (inactiveLabel) inactiveLabel.style.display = 'none';
+            if (document.getElementById("seeInactive").checked) {
+                document.getElementById("seeAll").click();
+            }
+        }
+        if (nb_plugin.other == 0) {
+            var otherLabel = document.querySelector("label[for='seeOther']");
+            if (otherLabel) otherLabel.style.display = 'none';
+            if (document.getElementById("seeOther").checked) {
+                document.getElementById("seeAll").click();
+            }
+        }
+    });
+}
+
 function setDisplayClassic() {
-    $(".pluginContainer")
-        .removeClass("line-form")
-        .removeClass("compact-form")
-        .addClass("classic-form");
+    document.querySelectorAll(".pluginContainer").forEach(function (el) {
+        el.classList.remove("line-form", "compact-form");
+        el.classList.add("classic-form");
+    });
 
-    $(".pluginDesc").show();
-    $(".pluginActions").show();
-    $(".pluginActionsSmallIcons").hide();
+    document.querySelectorAll(".pluginDesc").forEach(function (el) {
+        el.style.display = '';
+    });
+    document.querySelectorAll(".pluginActions").forEach(function (el) {
+        el.style.display = '';
+    });
+    document.querySelectorAll(".pluginActionsSmallIcons").forEach(function (el) {
+        el.style.display = 'none';
+    });
 
-    $(".pluginName").removeClass("pluginNameCompact");
-
-    // normalTitle();
+    document.querySelectorAll(".pluginName").forEach(function (el) {
+        el.classList.remove("pluginNameCompact");
+    });
 }
 
 function setDisplayCompact() {
-    $(".pluginContainer")
-        .removeClass("line-form")
-        .addClass("compact-form")
-        .removeClass("classic-form");
+    document.querySelectorAll(".pluginContainer").forEach(function (el) {
+        el.classList.remove("line-form");
+        el.classList.add("compact-form");
+        el.classList.remove("classic-form");
+    });
 
-    $(".pluginDesc").hide();
-    $(".pluginActions").hide();
-    $(".pluginActionsSmallIcons").show();
+    document.querySelectorAll(".pluginDesc").forEach(function (el) {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll(".pluginActions").forEach(function (el) {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll(".pluginActionsSmallIcons").forEach(function (el) {
+        el.style.display = '';
+    });
 
-    $(".pluginName").addClass("pluginNameCompact");
-
-    // reduceTitle()
+    document.querySelectorAll(".pluginName").forEach(function (el) {
+        el.classList.add("pluginNameCompact");
+    });
 }
 
 function setDisplayLine() {
-    $(".pluginContainer")
-        .addClass("line-form")
-        .removeClass("compact-form")
-        .removeClass("classic-form");
+    document.querySelectorAll(".pluginContainer").forEach(function (el) {
+        el.classList.add("line-form");
+        el.classList.remove("compact-form", "classic-form");
+    });
 
-    $(".pluginDesc").show();
-    $(".pluginActions").show();
-    $(".pluginActionsSmallIcons").hide();
-    // normalTitle();
+    document.querySelectorAll(".pluginDesc").forEach(function (el) {
+        el.style.display = '';
+    });
+    document.querySelectorAll(".pluginActions").forEach(function (el) {
+        el.style.display = '';
+    });
+    document.querySelectorAll(".pluginActionsSmallIcons").forEach(function (el) {
+        el.style.display = 'none';
+    });
 }
 
 function reduceTitle() {
@@ -65,288 +142,249 @@ function normalTitle() {
 }
 
 function activatePlugin(id) {
-    $("#" + id + " .switch").attr("disabled", true);
+    var switchEl = document.querySelector("#" + id + " .switch");
+    if (switchEl) switchEl.disabled = true;
 
-    $.ajax({
-        type: "GET",
-        dataType: "json",
-        url: "ws.php",
-        data: {
-            method: "pwg.plugins.performAction",
-            action: "activate",
-            plugin: id,
-            pwg_token: pwg_token,
-            format: "json",
-        },
-        success: function (data) {
-            if (data.stat == "ok") {
-                let pluginName = id;
-                $("#" + id + " .pluginNotif").stop(false, true);
-                $("#" + id + " .AddPluginSuccess label span:first").html(
-                    plugin_added_str,
-                );
-                $("#" + id + " .AddPluginSuccess").css("display", "flex");
-
-                nb_plugin.active += 1;
-                nb_plugin.inactive -= 1;
-                actualizeFilter();
+    fetch("ws.php?" + new URLSearchParams({
+        method: "pwg.plugins.performAction",
+        action: "activate",
+        plugin: id,
+        pwg_token: pwg_token,
+        format: "json",
+    }))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var switchEl = document.querySelector("#" + id + " .switch");
+        if (switchEl) switchEl.disabled = false;
+        if (data.stat == "ok") {
+            var successLabel = document.querySelector("#" + id + " .AddPluginSuccess label span");
+            if (successLabel) successLabel.innerHTML = plugin_added_str;
+            var successEl = document.querySelector("#" + id + " .AddPluginSuccess");
+            if (successEl) {
+                successEl.style.display = "flex";
+                setTimeout(function() { successEl.style.display = 'none'; }, 3000);
             }
-        },
-        error: function (e) {
-            console.log(e.responseText);
-            $("#" + id + " .pluginNotif").stop(false, true);
-            $("#" + id + " .PluginActionError label span:first").html(
-                plugin_action_error,
-            );
-            $("#" + id + " .PluginActionError").css("display", "flex");
-            $("#" + id + " .PluginActionError")
-                .delay(1500)
-                .fadeOut(2500);
-        },
-    }).done(function (data) {
-        $("#" + id + " .switch").attr("disabled", false);
-        $("#" + id + " .AddPluginSuccess").fadeOut(3000);
+            nb_plugin.active += 1;
+            nb_plugin.inactive -= 1;
+            actualizeFilter();
+        }
+    })
+    .catch(function(e) {
+        console.log(e);
+        var errorLabel = document.querySelector("#" + id + " .PluginActionError label span");
+        if (errorLabel) errorLabel.innerHTML = plugin_action_error;
+        var errorEl = document.querySelector("#" + id + " .PluginActionError");
+        if (errorEl) {
+            errorEl.style.display = "flex";
+            setTimeout(function() { errorEl.style.display = 'none'; }, 4000);
+        }
     });
 }
 
 function deactivatePlugin(id) {
-    $("#" + id + " .switch").attr("disabled", true);
+    var switchEl = document.querySelector("#" + id + " .switch");
+    if (switchEl) switchEl.disabled = true;
 
-    $.ajax({
-        type: "GET",
-        dataType: "json",
-        url: "ws.php",
-        data: {
-            method: "pwg.plugins.performAction",
-            action: "deactivate",
-            plugin: id,
-            pwg_token: pwg_token,
-            format: "json",
-        },
-        success: function (data) {
-            if (data.stat == "ok") {
-                let pluginName = id;
-                $("#" + id + " .pluginNotif").stop(false, true);
-                $("#" + id + " .DeactivatePluginSuccess label span:first").html(
-                    plugin_deactivated_str,
-                );
-                $("#" + id + " .DeactivatePluginSuccess").css(
-                    "display",
-                    "flex",
-                );
-
-                nb_plugin.inactive += 1;
-                nb_plugin.active -= 1;
-                actualizeFilter();
+    fetch("ws.php?" + new URLSearchParams({
+        method: "pwg.plugins.performAction",
+        action: "deactivate",
+        plugin: id,
+        pwg_token: pwg_token,
+        format: "json",
+    }))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var switchEl = document.querySelector("#" + id + " .switch");
+        if (switchEl) switchEl.disabled = false;
+        if (data.stat == "ok") {
+            var deactivateLabel = document.querySelector("#" + id + " .DeactivatePluginSuccess label span");
+            if (deactivateLabel) deactivateLabel.innerHTML = plugin_deactivated_str;
+            var deactivateEl = document.querySelector("#" + id + " .DeactivatePluginSuccess");
+            if (deactivateEl) {
+                deactivateEl.style.display = "flex";
+                setTimeout(function() { deactivateEl.style.display = 'none'; }, 3000);
             }
-        },
-        error: function (e) {
-            console.log(e);
-            $("#" + id + " .pluginNotif").stop(false, true);
-            $("#" + id + " .PluginActionError label span:first").html(
-                plugin_action_error,
-            );
-            $("#" + id + " .PluginActionError").css("display", "flex");
-            $("#" + id + " .PluginActionError")
-                .delay(1500)
-                .fadeOut(2500);
-        },
-    }).done(function (data) {
-        $("#" + id + " .switch").attr("disabled", false);
-        $("#" + id + " .DeactivatePluginSuccess").fadeOut(3000);
+            nb_plugin.inactive += 1;
+            nb_plugin.active -= 1;
+            actualizeFilter();
+        }
+    })
+    .catch(function(e) {
+        console.log(e);
+        var errorLabel = document.querySelector("#" + id + " .PluginActionError label span");
+        if (errorLabel) errorLabel.innerHTML = plugin_action_error;
+        var errorEl = document.querySelector("#" + id + " .PluginActionError");
+        if (errorEl) {
+            errorEl.style.display = "flex";
+            setTimeout(function() { errorEl.style.display = 'none'; }, 4000);
+        }
     });
 }
 
 function deletePlugin(id, name) {
-    $.alert({
-        title: deleted_plugin_msg.replace("%s", name),
-        content: function () {
-            return $.ajax({
-                type: "GET",
-                dataType: "json",
-                url: "ws.php",
-                data: {
-                    method: "pwg.plugins.performAction",
-                    action: "delete",
-                    plugin: id,
-                    pwg_token: pwg_token,
-                    format: "json",
-                },
-                success: function (data) {
-                    if (data.stat === "ok") {
-                        $("#" + id).remove();
-                        nb_plugin.inactive -= 1;
-                        nb_plugin.all -= 1;
-                        actualizeFilter();
-                    }
-                },
-                error: function (e) {
-                    console.log(e);
-                    $("#" + id + " .pluginNotif").stop(false, true);
-                    $("#" + id + " .PluginActionError label span:first").html(
-                        plugin_action_error,
-                    );
-                    $("#" + id + " .PluginActionError").css("display", "flex");
-                    $("#" + id + " .PluginActionError")
-                        .delay(1500)
-                        .fadeOut(2500);
-                },
-            });
-        },
-        ...jConfirm_alert_options,
+    fetch("ws.php?" + new URLSearchParams({
+        method: "pwg.plugins.performAction",
+        action: "delete",
+        plugin: id,
+        pwg_token: pwg_token,
+        format: "json",
+    }))
+    .then(response => response.json())
+    .then(function (data) {
+        if (data.stat === "ok") {
+            var el = document.getElementById(id);
+            if (el) el.remove();
+            nb_plugin.inactive -= 1;
+            nb_plugin.all -= 1;
+            actualizeFilter();
+        }
+    })
+    .catch(function (e) {
+        console.log(e);
+        var errorEl = document.querySelector("#" + id + " .PluginActionError");
+        if (errorEl) {
+            errorEl.style.display = "flex";
+            setTimeout(function() { errorEl.style.display = 'none'; }, 4000);
+        }
     });
 }
 
 function restorePlugin(id) {
-    $.ajax({
-        type: "GET",
-        dataType: "json",
-        url: "ws.php",
-        data: {
-            method: "pwg.plugins.performAction",
-            action: "restore",
-            plugin: id,
-            pwg_token: pwg_token,
-            format: "json",
-        },
-        success: function (data) {
-            if (data.stat == "ok") {
-                let pluginName = id;
-                $("#" + id + " .pluginNotif").stop(false, true);
-                $("#" + id + " .RestorePluginSuccess label span:first").html(
-                    plugin_restored_str,
-                );
-                $("#" + id + " .RestorePluginSuccess").css("display", "flex");
+    fetch("ws.php?" + new URLSearchParams({
+        method: "pwg.plugins.performAction",
+        action: "restore",
+        plugin: id,
+        pwg_token: pwg_token,
+        format: "json",
+    }))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.stat == "ok") {
+            var restoreLabel = document.querySelector("#" + id + " .RestorePluginSuccess label span");
+            if (restoreLabel) restoreLabel.innerHTML = plugin_restored_str;
+            var restoreEl = document.querySelector("#" + id + " .RestorePluginSuccess");
+            if (restoreEl) {
+                restoreEl.style.display = "flex";
+                setTimeout(function() { restoreEl.style.display = 'none'; }, 3000);
             }
-        },
-        error: function (e) {
-            console.log(e);
-            $("#" + id + " .pluginNotif").stop(false, true);
-            $("#" + id + " .PluginActionError label span:first").html(
-                plugin_action_error,
-            );
-            $("#" + id + " .PluginActionError").css("display", "flex");
-            $("#" + id + " .PluginActionError")
-                .delay(1500)
-                .fadeOut(2500);
-        },
-    }).done(function (data) {
-        $("#" + id + " .RestorePluginSuccess").fadeOut(3000);
+        }
+    })
+    .catch(function(e) {
+        console.log(e);
+        var errorLabel = document.querySelector("#" + id + " .PluginActionError label span");
+        if (errorLabel) errorLabel.innerHTML = plugin_action_error;
+        var errorEl = document.querySelector("#" + id + " .PluginActionError");
+        if (errorEl) {
+            errorEl.style.display = "flex";
+            setTimeout(function() { errorEl.style.display = 'none'; }, 4000);
+        }
     });
 }
 
 function uninstallPlugin(id) {
-    $.ajax({
-        type: "GET",
-        dataType: "json",
-        url: "ws.php",
-        data: {
-            method: "pwg.plugins.performAction",
-            action: "uninstall",
-            plugin: id,
-            pwg_token: pwg_token,
-            format: "json",
-        },
-        success: function (data) {
-            $("#" + id).remove();
-            nb_plugin.other -= 1;
-            nb_plugin.all -= 1;
-            actualizeFilter();
-        },
-        error: function (e) {
-            $("#" + id + " .pluginNotif").stop(false, true);
-            $("#" + id + " .PluginActionError label span:first").html(
-                plugin_action_error,
-            );
-            $("#" + id + " .PluginActionError").css("display", "flex");
-            $("#" + id + " .PluginActionError")
-                .delay(1500)
-                .fadeOut(2500);
-            console.log(e.message);
-        },
+    fetch("ws.php?" + new URLSearchParams({
+        method: "pwg.plugins.performAction",
+        action: "uninstall",
+        plugin: id,
+        pwg_token: pwg_token,
+        format: "json",
+    }))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var el = document.getElementById(id);
+        if (el) el.remove();
+        nb_plugin.other -= 1;
+        nb_plugin.all -= 1;
+        actualizeFilter();
+    })
+    .catch(function(e) {
+        var errorLabel = document.querySelector("#" + id + " .PluginActionError label span");
+        if (errorLabel) errorLabel.innerHTML = plugin_action_error;
+        var errorEl = document.querySelector("#" + id + " .PluginActionError");
+        if (errorEl) {
+            errorEl.style.display = "flex";
+            setTimeout(function() { errorEl.style.display = 'none'; }, 4000);
+        }
+        console.log(e.message);
     });
 }
 
-$(document).ready(function () {
+document.addEventListener('DOMContentLoaded', function () {
     actualizeFilter();
 
-    if ($("#displayClassic").is(":checked")) {
+    if (document.getElementById("displayClassic") && document.getElementById("displayClassic").checked) {
         setDisplayClassic();
     }
 
-    if ($("#displayCompact").is(":checked")) {
+    if (document.getElementById("displayCompact") && document.getElementById("displayCompact").checked) {
         setDisplayCompact();
     }
 
-    if ($("#displayLine").is(":checked")) {
+    if (document.getElementById("displayLine") && document.getElementById("displayLine").checked) {
         setDisplayLine();
     }
 
-    $("#displayClassic").change(function () {
-        setDisplayClassic();
-        set_view_selector("classic");
-    });
-
-    $("#displayCompact").change(function () {
-        setDisplayCompact();
-        set_view_selector("compact");
-    });
-
-    $("#displayLine").change(function () {
-        setDisplayLine();
-        set_view_selector("line");
+    document.querySelectorAll("#displayClassic, #displayCompact, #displayLine").forEach(function (el) {
+        el.addEventListener("change", function () {
+            if (this.id === "displayClassic") {
+                setDisplayClassic();
+                set_view_selector("classic");
+            } else if (this.id === "displayCompact") {
+                setDisplayCompact();
+                set_view_selector("compact");
+            } else if (this.id === "displayLine") {
+                setDisplayLine();
+                set_view_selector("line");
+            }
+        });
     });
 
     /* Plugin Filters */
 
     // Set filter on Active on load
     if (nb_plugin.active > 0) {
-        $(".pluginMiniBox").each(function () {
-            if (!$(this).hasClass("plugin-active")) {
-                $(this).hide();
+        document.querySelectorAll(".pluginMiniBox").forEach(function (el) {
+            if (!el.classList.contains("plugin-active")) {
+                el.style.display = 'none';
             }
         });
-        $("#seeActive").trigger("click");
+        var seeActiveEl = document.getElementById("seeActive");
+        if (seeActiveEl) seeActiveEl.click();
     } else {
-        $(".pluginMiniBox").show();
+        document.querySelectorAll(".pluginMiniBox").forEach(function (el) {
+            el.style.display = '';
+        });
     }
 
-    $("#seeAll").on("change", function () {
-        $(".pluginBox").show();
-        $(".search-input").trigger("input");
-    });
+    document.querySelectorAll("#seeAll, #seeActive, #seeInactive, #seeOther").forEach(function (el) {
+        el.addEventListener("change", function () {
+            document.querySelectorAll(".pluginBox").forEach(function (box) {
+                box.style.display = '';
+            });
 
-    $("#seeActive").on("change", function () {
-        $(".pluginBox").show();
-        $(".pluginBox").each(function () {
-            if (!$(this).hasClass("plugin-active")) {
-                $(this).hide();
+            if (this.id === "seeActive") {
+                document.querySelectorAll(".pluginBox").forEach(function (box) {
+                    if (!box.classList.contains("plugin-active")) {
+                        box.style.display = 'none';
+                    }
+                });
+            } else if (this.id === "seeInactive") {
+                document.querySelectorAll(".pluginBox").forEach(function (box) {
+                    if (!box.classList.contains("plugin-inactive")) {
+                        box.style.display = 'none';
+                    }
+                });
+            } else if (this.id === "seeOther") {
+                document.querySelectorAll(".pluginBox").forEach(function (box) {
+                    if (box.classList.contains("plugin-active") || box.classList.contains("plugin-inactive")) {
+                        box.style.display = 'none';
+                    }
+                });
             }
-        });
-        $(".search-input").trigger("input");
-    });
 
-    $("#seeInactive").on("change", function () {
-        $(".pluginBox").show();
-        $(".pluginBox").each(function () {
-            if (!$(this).hasClass("plugin-inactive")) {
-                $(this).hide();
-            }
+            var searchInput = document.querySelector(".search-input");
+            if (searchInput) searchInput.dispatchEvent(new Event("input"));
         });
-        $(".search-input").trigger("input");
-    });
-
-    $("#seeOther").on("change", function () {
-        $(".pluginBox").show();
-        $(".pluginBox").each(function () {
-            if (
-                $(this).hasClass("plugin-active") ||
-                $(this).hasClass("plugin-inactive")
-            ) {
-                $(this).hide();
-            }
-        });
-        $(".search-input").trigger("input");
     });
 
     /* Plugin Actions */
@@ -354,90 +392,82 @@ $(document).ready(function () {
      * Activate / Deactivate
      */
     if (isWebmaster != 0) {
-        $(".switch").change(function () {
-            $(".pluginMiniBox").addClass("usable");
+        document.querySelectorAll(".switch").forEach(function (switchEl) {
+            switchEl.addEventListener("change", function () {
+                document.querySelectorAll(".pluginMiniBox").forEach(function (el) {
+                    el.classList.add("usable");
+                });
 
-            if ($(this).find("#toggleSelectionMode").is(":checked")) {
-                activatePlugin($(this).parent().parent().attr("id"));
+                var pluginBox = this.closest(".pluginBox");
+                if (!pluginBox) pluginBox = this.closest(".pluginMiniBox");
 
-                $(this)
-                    .parent()
-                    .parent()
-                    .addClass("plugin-active")
-                    .removeClass("plugin-inactive");
-                if (
-                    $(this)
-                        .parent()
-                        .parent()
-                        .find(".pluginUnavailableAction")
-                        .attr("href")
-                ) {
-                    $(this)
-                        .parent()
-                        .parent()
-                        .find(".pluginUnavailableAction")
-                        .removeClass("pluginUnavailableAction")
-                        .addClass("pluginActionLevel1");
+                if (this.querySelector("#toggleSelectionMode") && this.querySelector("#toggleSelectionMode").checked) {
+                    activatePlugin(pluginBox.id);
+                    pluginBox.classList.add("plugin-active");
+                    pluginBox.classList.remove("plugin-inactive");
+                    var unavail = pluginBox.querySelector(".pluginUnavailableAction");
+                    if (unavail && unavail.getAttribute("href")) {
+                        unavail.classList.remove("pluginUnavailableAction");
+                        unavail.classList.add("pluginActionLevel1");
+                    }
+                } else {
+                    deactivatePlugin(pluginBox.id);
+                    pluginBox.classList.remove("plugin-active");
+                    pluginBox.classList.add("plugin-inactive");
+                    var level1 = pluginBox.querySelector(".pluginActionLevel1");
+                    if (level1) {
+                        level1.classList.remove("pluginActionLevel1");
+                        level1.classList.add("pluginUnavailableAction");
+                    }
                 }
-            } else {
-                deactivatePlugin($(this).parent().parent().attr("id"));
 
-                $(this)
-                    .parent()
-                    .parent()
-                    .removeClass("plugin-active")
-                    .addClass("plugin-inactive");
-                $(this)
-                    .parent()
-                    .parent()
-                    .find(".pluginActionLevel1")
-                    .removeClass("pluginActionLevel1")
-                    .addClass("pluginUnavailableAction");
-            }
-
-            actualizeFilter();
+                actualizeFilter();
+            });
         });
     } else {
-        $(".pluginMiniBox").addClass("notUsable");
-        $(".plugin-active").find(".slider").addClass("deactivate_disabled");
-        $(".plugin-inactive").find(".slider").addClass("activate_disabled");
-        $(".switch input").on("click", function (event) {
-            $(this).addClass("disabled");
-            event.preventDefault();
-            event.stopPropagation();
+        document.querySelectorAll(".pluginMiniBox").forEach(function (el) {
+            el.classList.add("notUsable");
+        });
+        document.querySelectorAll(".plugin-active .slider").forEach(function (el) {
+            el.classList.add("deactivate_disabled");
+        });
+        document.querySelectorAll(".plugin-inactive .slider").forEach(function (el) {
+            el.classList.add("activate_disabled");
+        });
+        document.querySelectorAll(".switch input").forEach(function (el) {
+            el.addEventListener("click", function (event) {
+                this.classList.add("disabled");
+                event.preventDefault();
+                event.stopPropagation();
 
-            var id = $(this).parent().parent().parent().attr("id");
-            $("#" + id + " .pluginNotif").stop(false, true);
-            $("#" + id + " .PluginActionError label span:first").html(
-                not_webmaster,
-            );
-            $("#" + id + " .PluginActionError").css("display", "flex");
-            $("#" + id + " .PluginActionError")
-                .delay(1500)
-                .fadeOut(2500);
+                var id = this.closest(".pluginBox").id || this.closest(".pluginMiniBox").id;
+                var errorLabel = document.querySelector("#" + id + " .PluginActionError label span");
+                if (errorLabel) errorLabel.innerHTML = not_webmaster;
+                var errorEl = document.querySelector("#" + id + " .PluginActionError");
+                if (errorEl) errorEl.style.display = "flex";
+                if (errorEl) {
+                    setTimeout(function() {
+                        errorEl.style.display = 'none';
+                    }, 4000);
+                }
 
-            setTimeout(function () {
-                $(".switch input").removeClass("disabled");
-            }, 400); //Same duration as the animation "deactivate_disabled" in css
+                setTimeout(function () {
+                    document.querySelectorAll(".switch input").forEach(function (inp) {
+                        inp.classList.remove("disabled");
+                    });
+                }, 400);
+            });
         });
     }
 
     /**
      * Delete
      */
-    $(".pluginContent")
-        .find(".dropdown-option.delete-plugin-button")
-        .on("click", function () {
-            let plugin_name = $(this)
-                .closest(".pluginContent")
-                .find(".pluginName")
-                .html()
-                .trim();
-            let plugin_id = $(this)
-                .closest(".pluginContent")
-                .parent()
-                .attr("id");
-            $.confirm({
+    document.querySelectorAll(".pluginContent .dropdown-option.delete-plugin-button").forEach(function (el) {
+        el.addEventListener("click", function () {
+            let plugin_name = this.closest(".pluginContent").querySelector(".pluginName").innerHTML.trim();
+            let plugin_id = this.closest(".pluginBox").id;
+            pwgConfirm({
                 title: delete_plugin_msg.replace("%s", plugin_name),
                 buttons: {
                     confirm: {
@@ -451,26 +481,18 @@ $(document).ready(function () {
                         text: cancel_msg,
                     },
                 },
-                ...jConfirm_confirm_options,
             });
         });
+    });
 
     /**
      * Restore
      */
-    $(".pluginContent")
-        .find(".dropdown-option.plugin-restore")
-        .on("click", function () {
-            let plugin_name = $(this)
-                .closest(".pluginContent")
-                .find(".pluginName")
-                .html()
-                .trim();
-            let plugin_id = $(this)
-                .closest(".pluginContent")
-                .parent()
-                .attr("id");
-            $.confirm({
+    document.querySelectorAll(".pluginContent .dropdown-option.plugin-restore").forEach(function (el) {
+        el.addEventListener("click", function () {
+            let plugin_name = this.closest(".pluginContent").querySelector(".pluginName").innerHTML.trim();
+            let plugin_id = this.closest(".pluginBox").id;
+            pwgConfirm({
                 title: restore_plugin_msg.replace("%s", plugin_name),
                 content: str_restore_def,
                 buttons: {
@@ -485,26 +507,18 @@ $(document).ready(function () {
                         text: cancel_msg,
                     },
                 },
-                ...jConfirm_confirm_options,
             });
         });
+    });
 
     /**
      * Uninstall
      */
-    $(".pluginContent")
-        .find(".uninstall-plugin-button")
-        .on("click", function () {
-            let plugin_name = $(this)
-                .closest(".pluginContent")
-                .find(".pluginName")
-                .html()
-                .trim();
-            let plugin_id = $(this)
-                .closest(".pluginContent")
-                .parent()
-                .attr("id");
-            $.confirm({
+    document.querySelectorAll(".pluginContent .uninstall-plugin-button").forEach(function (el) {
+        el.addEventListener("click", function () {
+            let plugin_name = this.closest(".pluginContent").querySelector(".pluginName").innerHTML.trim();
+            let plugin_id = this.closest(".pluginBox").id;
+            pwgConfirm({
                 title: uninstall_plugin_msg.replace("%s", plugin_name),
                 buttons: {
                     confirm: {
@@ -518,346 +532,243 @@ $(document).ready(function () {
                         text: cancel_msg,
                     },
                 },
-                ...jConfirm_confirm_options,
             });
         });
-});
-
-function set_view_selector(view_type) {
-    $.ajax({
-        url: "ws.php?format=json&method=pwg.users.preferences.set",
-        type: "POST",
-        dataType: "JSON",
-        data: {
-            param: "plugin-manager-view",
-            value: view_type,
-        },
-    });
-}
-
-// TPL part :
-
-const queuedManager = jQuery.manageAjax.create("queued", {
-    queue: true,
-    maxRequests: 1,
-});
-
-const nb_plugins = jQuery("div.active").size();
-const done = 0;
-
-function showInactivePlugins() {
-    jQuery(".showInactivePlugins").fadeOut(
-        (complete = function () {
-            jQuery(".plugin-inactive").fadeIn();
-        }),
-    );
-}
-
-function actualizeFilter() {
-    $("label[for='seeAll'] .filter-badge").html(nb_plugin.all);
-    $("label[for='seeActive'] .filter-badge").html(nb_plugin.active);
-    $("label[for='seeInactive'] .filter-badge").html(nb_plugin.inactive);
-    $("label[for='seeOther'] .filter-badge").html(nb_plugin.other);
-    $(".filterLabel").show();
-
-    $(".pluginMiniBox").each(function () {
-        if (nb_plugin.active == 0) {
-            $("label[for='seeActive']").hide();
-            if ($("#seeActive").is(":checked")) {
-                $("#seeAll").trigger("click");
-            }
-        }
-        if (nb_plugin.inactive == 0) {
-            $("label[for='seeInactive']").hide();
-            if ($("#seeInactive").is(":checked")) {
-                $("#seeAll").trigger("click");
-            }
-        }
-        if (nb_plugin.other == 0) {
-            $("label[for='seeOther']").hide();
-            if ($("#seeOther").is(":checked")) {
-                $("#seeAll").trigger("click");
-            }
-        }
-    });
-}
-
-function performPluginDeactivate(id) {
-    queuedManager.add({
-        type: "GET",
-        dataType: "json",
-        url: "ws.php",
-        data: {
-            method: "pwg.plugins.performAction",
-            action: "deactivate",
-            plugin: id,
-            pwg_token: pwg_token,
-            format: "json",
-        },
-        success: function (data) {
-            if (data["stat"] == "ok")
-                jQuery("#" + id)
-                    .removeClass("active")
-                    .addClass("inactive");
-            done++;
-            if (done == nb_plugins) location.reload();
-        },
-    });
-}
-
-/* group action */
-
-jQuery(document).ready(function () {
-    $("label[for='seeActive'] .filter-badge").html(nb_plugin.active);
-    $("label[for='seeInactive'] .filter-badge").html(nb_plugin.inactive);
-    $("label[for='seeOther'] .filter-badge").html(nb_plugin.other);
-    $(".filterLabel").show();
-
-    $(".pluginBox").each(function () {
-        if (nb_plugin.active == 0) {
-            $("label[for='seeActive']").hide();
-            if ($("#seeActive").is(":checked")) {
-                $("#seeAll").trigger("click");
-            }
-        }
-        if (nb_plugin.inactive == 0) {
-            $("label[for='seeInactive']").hide();
-            if ($("#seeInactive").is(":checked")) {
-                $("#seeAll").trigger("click");
-            }
-        }
-        if (nb_plugin.other == 0) {
-            $("label[for='seeOther']").hide();
-            if ($("#seeOther").is(":checked")) {
-                $("#seeAll").trigger("click");
-            }
-        }
-
-        let myplugin = jQuery(this);
-        myplugin.find(".showOptions").click(function () {
-            myplugin.find(".PluginOptionsBlock").toggle();
-        });
     });
 
-    jQuery("div.deactivate_all a").click(function () {
-        $.confirm({
-            title: deactivate_all_msg,
-            buttons: {
-                confirm: {
-                    text: confirm_msg,
-                    btnClass: "btn-red",
-                    action: function () {
-                        jQuery("div.active").each(function () {
-                            performPluginDeactivate(jQuery(this).attr("id"));
-                        });
-                    },
-                },
-                cancel: {
-                    text: cancel_msg,
-                },
-            },
-            ...jConfirm_confirm_options,
-        });
+    /**
+     * Show Inactive plugins or button to show them
+     */
+    document.querySelectorAll(".showInactivePlugins button").forEach(function (el) {
+        el.addEventListener("click", showInactivePlugins);
     });
 
-    /* incompatible plugins */
-    jQuery.ajax({
-        method: "GET",
-        url: "admin.php",
-        data: { page: "plugins_installed", incompatible_plugins: true },
-        dataType: "json",
-        success: function (data) {
-            for (i = 0; i < data.length; i++) {
-                if (show_details)
-                    jQuery("#" + data[i] + " .pluginName").prepend(
-                        '<a class="warning" title="' +
-                            incompatible_msg +
-                            '"></a>',
-                    );
-                else
-                    jQuery("#" + data[i] + " .pluginName").prepend(
-                        '<span class="warning" title="' +
-                            incompatible_msg +
-                            '"></span>',
-                    );
-                jQuery("#" + data[i]).addClass("incompatible");
-                jQuery("#" + data[i] + " .activate").each(function () {
-                    $(this).pwg_jconfirm_follow_href({
-                        alert_title: incompatible_msg + activate_msg,
-                        alert_confirm: confirm_msg,
-                        alert_cancel: cancel_msg,
-                    });
-                });
-            }
-            jQuery(".warning").tipTip({
-                delay: 0,
-                fadeIn: 200,
-                fadeOut: 200,
-                maxWidth: "250px",
-            });
-        },
-    });
+    if (plugin_filter == "deactivated") {
+        var filterLabel = document.querySelector(".filterLabel[for='seeInactive']");
+        if (filterLabel) filterLabel.click();
+    }
 
-    jQuery(".fullInfo").tipTip({
-        delay: 500,
-        fadeIn: 200,
-        fadeOut: 200,
-        maxWidth: "300px",
-        keepAlive: false,
-    });
-
-    /*Add the filter research*/
-    document.onkeydown = function (e) {
+    /**
+     * Add the filter research
+     */
+    document.addEventListener("keydown", function (e) {
         if (e.keyCode == 58) {
-            jQuery(".pluginFilter input.search-input").focus();
+            var searchInput = document.querySelector(".pluginFilter input.search-input");
+            if (searchInput) searchInput.focus();
             return false;
         }
-    };
+    });
 
-    jQuery(".pluginFilter input").on("input", function () {
-        let text = jQuery(this).val().toLowerCase();
-        var searchNumber = 0;
+    document.querySelectorAll(".pluginFilter input").forEach(function (inputEl) {
+        inputEl.addEventListener("input", function () {
+            let text = this.value.toLowerCase();
+            var searchNumber = 0;
+            var searchActive = 0;
+            var searchInactive = 0;
+            var searchOther = 0;
 
-        var searchActive = 0;
-        var searchInactive = 0;
-        var searchOther = 0;
+            document.querySelectorAll(".pluginBox").forEach(function (box) {
+                if (text == "") {
+                    document.querySelectorAll(".nbPluginsSearch").forEach(function (el) {
+                        el.style.display = 'none';
+                    });
+                    if (document.getElementById("seeAll").checked) {
+                        box.style.display = '';
+                    }
+                    if (document.getElementById("seeActive").checked && box.classList.contains("plugin-active")) {
+                        box.style.display = '';
+                    }
+                    if (document.getElementById("seeInactive").checked && box.classList.contains("plugin-inactive")) {
+                        box.style.display = '';
+                    }
+                    if (document.getElementById("seeOther").checked && (box.classList.contains("plugin-merged") || box.classList.contains("plugin-missing"))) {
+                        box.style.display = '';
+                    }
 
-        $(".pluginBox").each(function () {
-            if (text == "") {
-                jQuery(".nbPluginsSearch").hide();
-                if ($("#seeAll").is(":checked")) {
-                    jQuery(this).show();
-                }
-                if (
-                    $("#seeActive").is(":checked") &&
-                    jQuery(this).hasClass("plugin-active")
-                ) {
-                    jQuery(this).show();
-                }
-                if (
-                    $("#seeInactive").is(":checked") &&
-                    jQuery(this).hasClass("plugin-inactive")
-                ) {
-                    jQuery(this).show();
-                }
-                if (
-                    $("#seeOther").is(":checked") &&
-                    (jQuery(this).hasClass("plugin-merged") ||
-                        jQuery(this).hasClass("plugin-missing"))
-                ) {
-                    jQuery(this).show();
-                }
-
-                if ($(this).hasClass("plugin-active")) {
-                    searchActive++;
-                }
-                if ($(this).hasClass("plugin-inactive")) {
-                    searchInactive++;
-                }
-                if (
-                    $(this).hasClass("plugin-merged") ||
-                    $(this).hasClass("plugin-missing")
-                ) {
-                    searchOther++;
-                }
-                searchNumber++;
-
-                nb_plugin.all = searchNumber;
-                nb_plugin.active = searchActive;
-                nb_plugin.inactive = searchInactive;
-                nb_plugin.other = searchOther;
-            } else {
-                let name = jQuery(this)
-                    .find(".pluginName")
-                    .text()
-                    .toLowerCase();
-                jQuery(".nbPluginsSearch").show();
-                let description = jQuery(this)
-                    .find(".pluginDesc")
-                    .text()
-                    .toLowerCase();
-                if (name.search(text) != -1 || description.search(text) != -1) {
+                    if (box.classList.contains("plugin-active")) searchActive++;
+                    if (box.classList.contains("plugin-inactive")) searchInactive++;
+                    if (box.classList.contains("plugin-merged") || box.classList.contains("plugin-missing")) searchOther++;
                     searchNumber++;
-
-                    if ($("#seeAll").is(":checked")) {
-                        jQuery(this).show();
-                    }
-                    if (
-                        $("#seeActive").is(":checked") &&
-                        jQuery(this).hasClass("plugin-active")
-                    ) {
-                        jQuery(this).show();
-                    }
-                    if (
-                        $("#seeInactive").is(":checked") &&
-                        jQuery(this).hasClass("plugin-inactive")
-                    ) {
-                        jQuery(this).show();
-                    }
-                    if (
-                        $("#seeOther").is(":checked") &&
-                        (jQuery(this).hasClass("plugin-merged") ||
-                            jQuery(this).hasClass("plugin-missing"))
-                    ) {
-                        jQuery(this).show();
-                    }
-
-                    if ($(this).hasClass("plugin-active")) {
-                        searchActive++;
-                    }
-                    if ($(this).hasClass("plugin-inactive")) {
-                        searchInactive++;
-                    }
-                    if (
-                        $(this).hasClass("plugin-merged") ||
-                        $(this).hasClass("plugin-missing")
-                    ) {
-                        searchOther++;
-                    }
 
                     nb_plugin.all = searchNumber;
                     nb_plugin.active = searchActive;
                     nb_plugin.inactive = searchInactive;
                     nb_plugin.other = searchOther;
                 } else {
-                    jQuery(this).hide();
+                    let name = box.querySelector(".pluginName").textContent.toLowerCase();
+                    document.querySelectorAll(".nbPluginsSearch").forEach(function (el) {
+                        el.style.display = '';
+                    });
+                    let description = box.querySelector(".pluginDesc").textContent.toLowerCase();
 
-                    nb_plugin.all = searchNumber;
-                    nb_plugin.active = searchActive;
-                    nb_plugin.inactive = searchInactive;
-                    nb_plugin.other = searchOther;
+                    if (name.search(text) != -1 || description.search(text) != -1) {
+                        searchNumber++;
+
+                        if (document.getElementById("seeAll").checked) {
+                            box.style.display = '';
+                        }
+                        if (document.getElementById("seeActive").checked && box.classList.contains("plugin-active")) {
+                            box.style.display = '';
+                        }
+                        if (document.getElementById("seeInactive").checked && box.classList.contains("plugin-inactive")) {
+                            box.style.display = '';
+                        }
+                        if (document.getElementById("seeOther").checked && (box.classList.contains("plugin-merged") || box.classList.contains("plugin-missing"))) {
+                            box.style.display = '';
+                        }
+
+                        if (box.classList.contains("plugin-active")) searchActive++;
+                        if (box.classList.contains("plugin-inactive")) searchInactive++;
+                        if (box.classList.contains("plugin-merged") || box.classList.contains("plugin-missing")) searchOther++;
+
+                        nb_plugin.all = searchNumber;
+                        nb_plugin.active = searchActive;
+                        nb_plugin.inactive = searchInactive;
+                        nb_plugin.other = searchOther;
+                    } else {
+                        box.style.display = 'none';
+
+                        nb_plugin.all = searchNumber;
+                        nb_plugin.active = searchActive;
+                        nb_plugin.inactive = searchInactive;
+                        nb_plugin.other = searchOther;
+                    }
                 }
+            });
+
+            actualizeFilter();
+
+            var nbSearchEl = document.querySelector(".nbPluginsSearch");
+            if (searchNumber == 0) {
+                if (nbSearchEl) nbSearchEl.innerHTML = nothing_found;
+            } else if (searchNumber == 1) {
+                if (nbSearchEl) nbSearchEl.innerHTML = plugin_found.replace("%s", searchNumber);
+            } else {
+                if (nbSearchEl) nbSearchEl.innerHTML = x_plugins_found.replace("%s", searchNumber);
             }
         });
+    });
+});
 
-        actualizeFilter();
+function set_view_selector(view_type) {
+    fetch("ws.php?format=json&method=pwg.users.preferences.set", {
+        method: "POST",
+        body: new URLSearchParams({ param: "plugin-manager-view", value: view_type }),
+    });
+}
 
-        if (searchNumber == 0) {
-            jQuery(".nbPluginsSearch").html(nothing_found);
-        } else if (searchNumber == 1) {
-            jQuery(".nbPluginsSearch").html(
-                plugin_found.replace("%s", searchNumber),
-            );
-        } else {
-            jQuery(".nbPluginsSearch").html(
-                x_plugins_found.replace("%s", searchNumber),
-            );
+/* Sequential fetch queue for deactivating all plugins */
+var _deactivateQueue = Promise.resolve();
+var _deactivateTotal = 0;
+var _deactivateDone = 0;
+
+function performPluginDeactivate(id) {
+    _deactivateTotal++;
+    _deactivateQueue = _deactivateQueue.then(function() {
+        return fetch("ws.php?" + new URLSearchParams({
+            method: "pwg.plugins.performAction",
+            action: "deactivate",
+            plugin: id,
+            pwg_token: pwg_token,
+            format: "json",
+        }))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.stat == "ok") {
+                var el = document.getElementById(id);
+                if (el) {
+                    el.classList.remove("active");
+                    el.classList.add("inactive");
+                }
+            }
+            _deactivateDone++;
+            if (_deactivateDone == _deactivateTotal) location.reload();
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    actualizeFilter();
+
+    document.querySelectorAll(".pluginBox").forEach(function (el) {
+        let myplugin = el;
+        var showOptions = el.querySelector(".showOptions");
+        if (showOptions) {
+            showOptions.addEventListener("click", function () {
+                var optionsBlock = myplugin.querySelector(".PluginOptionsBlock");
+                if (optionsBlock) {
+                    optionsBlock.style.display = optionsBlock.style.display === 'none' ? '' : 'none';
+                }
+            });
         }
     });
 
-    /* Show Inactive plugins or button to show them*/
-    jQuery(".showInactivePlugins button").on("click", showInactivePlugins);
+    document.querySelectorAll("div.deactivate_all a").forEach(function (el) {
+        el.addEventListener("click", function () {
+            pwgConfirm({
+                title: deactivate_all_msg,
+                buttons: {
+                    confirm: {
+                        text: confirm_msg,
+                        btnClass: "btn-red",
+                        action: function () {
+                            _deactivateTotal = 0;
+                            _deactivateDone = 0;
+                            _deactivateQueue = Promise.resolve();
+                            document.querySelectorAll("div.active").forEach(function (el) {
+                                performPluginDeactivate(el.id);
+                            });
+                        },
+                    },
+                    cancel: {
+                        text: cancel_msg,
+                    },
+                },
+            });
+        });
+    });
 
-    if (plugin_filter == "deactivated") {
-        jQuery(".filterLabel[for='seeInactive']").trigger("click");
-    }
+    /* incompatible plugins */
+    fetch("admin.php?" + new URLSearchParams({ page: "plugins_installed", incompatible_plugins: true }))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        for (var i = 0; i < data.length; i++) {
+            if (show_details) {
+                var pluginName = document.querySelector("#" + data[i] + " .pluginName");
+                if (pluginName) {
+                    pluginName.insertAdjacentHTML('afterbegin', '<a class="warning" title="' + incompatible_msg + '"></a>');
+                }
+            } else {
+                var pluginName = document.querySelector("#" + data[i] + " .pluginName");
+                if (pluginName) {
+                    pluginName.insertAdjacentHTML('afterbegin', '<span class="warning" title="' + incompatible_msg + '"></span>');
+                }
+            }
+            var el = document.getElementById(data[i]);
+            if (el) {
+                el.classList.add("incompatible");
+                el.querySelectorAll(".activate").forEach(function (activateBtn) {
+                    pwgConfirmFollowHref(activateBtn, {
+                        alert_title: incompatible_msg + activate_msg,
+                        alert_confirm: confirm_msg,
+                        alert_cancel: cancel_msg,
+                    });
+                });
+            }
+        }
+        tippy('.warning', { delay: 0, maxWidth: 250, placement: 'top' });
+    });
+
+    tippy('.fullInfo', { delay: 500, maxWidth: 300, placement: 'top' });
 });
 
-$(document).mouseup(function (e) {
+document.addEventListener("mouseup", function (e) {
     e.stopPropagation();
-    $(".pluginBox").each(function () {
-        if ($(this).find(".showOptions").has(e.target).length === 0) {
-            $(this).find(".PluginOptionsBlock").hide();
+    document.querySelectorAll(".pluginBox").forEach(function (el) {
+        var showOptions = el.querySelector(".showOptions");
+        if (showOptions && !showOptions.contains(e.target)) {
+            var optionsBlock = el.querySelector(".PluginOptionsBlock");
+            if (optionsBlock) optionsBlock.style.display = 'none';
         }
     });
 });

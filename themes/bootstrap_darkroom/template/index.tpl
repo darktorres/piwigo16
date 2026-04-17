@@ -1,9 +1,4 @@
 <!-- Start of index.tpl -->
-{combine_script id='cookie' require='jquery' path='node_modules/jquery.cookie/jquery.cookie.js' load='footer'}
-{combine_script id='equalheights' require='jquery' path='https://rawcdn.githack.com/Piwigo/piwigo-bootstrap-darkroom/refs/heads/master/js/jquery.equalheights.js' load='footer'}
-{if functions::get_device() != 'desktop'}
-    {combine_script id='jquery.mobile-events' path='themes/bootstrap_darkroom/node_modules/jQuery-Touch-Events/src/jquery.mobile-events.js' require='jquery' load='footer'}
-{/if}
 {if !empty($PLUGIN_INDEX_CONTENT_BEFORE)}{$PLUGIN_INDEX_CONTENT_BEFORE}{/if}
 
 <nav
@@ -233,9 +228,16 @@
         {if !empty($CATEGORIES)}
             <!-- Start of categories -->
             {$CATEGORIES}
-            {footer_script require='jquery'}<script>
-                $(document).ready(function() {
-                    $('#content .col-outer .card-body:has(> .card-title)').equalHeights();
+            {footer_script}<script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var elements = document.querySelectorAll('#content .col-outer .card-body');
+                    elements.forEach(function(el) {
+                        var hasTitle = el.querySelector(':scope > .card-title');
+                        if (hasTitle) {
+                            equalHeights();
+                            return;
+                        }
+                    });
                 });
             </script>{/footer_script}
             <!-- End of categories -->
@@ -274,12 +276,14 @@
         {if !empty($THUMBNAILS)}
             <!-- Start of thumbnails -->
             <div id="thumbnails" class="row">{$THUMBNAILS}</div>
-            {footer_script require='jquery'}<script>
-                $(document).ready(function() {
-                    $('#content img').load(function() {
-                        $('#content .col-inner')
-                            .equalHeights()
-                    })
+            {footer_script}<script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var images = document.querySelectorAll('#content img');
+                    images.forEach(function(img) {
+                        img.addEventListener('load', function() {
+                            equalHeights();
+                        });
+                    });
                 });
             </script>{/footer_script}
             {if $theme_config->photoswipe && !isset($GDThumb)}
@@ -302,26 +306,33 @@
                 <link rel="stylesheet" href="./themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe.css">
                 {/footer_script}
             {/if}
-            {footer_script require="jquery"}<script>
+            {footer_script}<script>
                 {if !isset($loaded_plugins['piwigo-videojs']) && (isset($GThumb) || isset($GDThumb))}
                     function addVideoIndicator() {
-                        $('img.thumbnail[src*="pwg_representative"]').each(function() {
-                            $(this).closest('li').append(
-                                '<i class="fas fa-file-video fa-2x video-indicator" aria-hidden="true" style="position: absolute; top: 10px; left: 10px; z-index: 100; color: #fff;"></i>'
-                            );
+                        var images = document.querySelectorAll('img.thumbnail[src*="pwg_representative"]');
+                        images.forEach(function(img) {
+                            var li = img.closest('li');
+                            if (li) {
+                                li.insertAdjacentHTML('beforeend', '<i class="fas fa-file-video fa-2x video-indicator" aria-hidden="true" style="position: absolute; top: 10px; left: 10px; z-index: 100; color: #fff;"></i>');
+                            }
                         });
                     }
-                    $(document).ready(function() {
+                    document.addEventListener('DOMContentLoaded', function() {
                         addVideoIndicator();
                     });
-                    $(document).ajaxComplete(function() {
+                    document.addEventListener('ajaxComplete', function() {
                         addVideoIndicator();
                     });
                 {else}
-                    $('.card-thumbnail').find('img[src*="pwg_representative"]').each(function() {
-                        $(this).closest('div').append(
-                            '<i class="fas fa-file-video fa-2x video-indicator" aria-hidden="true" style="position: absolute; top: 10px; left: 10px; z-index: 100; color: #fff;"></i>'
-                        );
+                    var cardThumbnails = document.querySelectorAll('.card-thumbnail');
+                    cardThumbnails.forEach(function(card) {
+                        var img = card.querySelector('img[src*="pwg_representative"]');
+                        if (img) {
+                            var div = img.closest('div');
+                            if (div) {
+                                div.insertAdjacentHTML('beforeend', '<i class="fas fa-file-video fa-2x video-indicator" aria-hidden="true" style="position: absolute; top: 10px; left: 10px; z-index: 100; color: #fff;"></i>');
+                            }
+                        }
                     });
                 {/if}
             </script>{/footer_script}

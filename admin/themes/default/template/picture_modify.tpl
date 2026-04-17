@@ -4,11 +4,10 @@
 
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
-{combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
+{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
+{combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='node_modules/jquery-confirm/js/jquery-confirm.js'}
-{combine_css path="node_modules/jquery-confirm/css/jquery-confirm.css"}
+{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 
 {footer_script}<script>
   (function() {
@@ -19,7 +18,7 @@
       rootUrl: '{$ROOT_URL}'
     });
 
-    categoriesCache.selectize(jQuery('[data-selectize=categories]'));
+    categoriesCache.selectize(document.querySelectorAll('[data-selectize=categories]'));
 
     {* <!-- TAGS --> *}
     var tagsCache = new TagsCache({
@@ -28,66 +27,56 @@
       rootUrl: '{$ROOT_URL}'
     });
 
-    tagsCache.selectize(jQuery('[data-selectize=tags]'), {
+    tagsCache.selectize(document.querySelectorAll('[data-selectize=tags]'), {
       lang: {
         'Add': '{'Create'|translate}'
       }
     });
 
     {* <!-- DATEPICKER --> *}
-    jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
-    jQuery('[data-datepicker]').pwgDatepicker({
-      showTimepicker: true,
-      cancelButton: '{'Cancel'|translate}'
+    document.addEventListener('DOMContentLoaded', function() { {* <!-- onLoad needed to wait localization loads --> *}
+      pwgDatepicker(document.querySelectorAll('[data-datepicker]'), {
+        showTimepicker: true,
+        cancelButton: '{'Cancel'|translate}'
+      });
     });
-  });
 
-  {* <!-- THUMBNAILS --> *}
-  jQuery("a.preview-box").colorbox({
-    photo: true
-  });
+    {* <!-- THUMBNAILS --> *}
+    GLightbox({ selector: 'a.preview-box' });
 
-  str_are_you_sure = '{'Are you sure?'|translate|escape:javascript}';
-  str_yes = '{'Yes, delete'|translate|escape:javascript}';
-  str_no = '{'No, I have changed my mind'|translate|escape:'javascript'}';
-  url_delete = '{$U_DELETE}';
-  str_albums_found = '{"<b>%d</b> albums found"|translate|escape:javascript}';
-  str_album_found = '{"<b>1</b> album found"|translate|escape:javascript}';
-  str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|translate|escape:javascript}';
-  str_orphan = '{'This photo is an orphan'|translate|escape:javascript}';
-  str_no_search_in_progress = '{'No search in progress'|translate|escape:javascript}';
+    var str_are_you_sure = '{'Are you sure?'|translate|escape:javascript}';
+    var str_yes = '{'Yes, delete'|translate|escape:javascript}';
+    var str_no = '{'No, I have changed my mind'|translate|escape:'javascript'}';
+    var url_delete = '{$U_DELETE}';
+    var str_albums_found = '{"<b>%d</b> albums found"|translate|escape:javascript}';
+    var str_album_found = '{"<b>1</b> album found"|translate|escape:javascript}';
+    var str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|translate|escape:javascript}';
+    var str_orphan = '{'This photo is an orphan'|translate|escape:javascript}';
+    var str_no_search_in_progress = '{'No search in progress'|translate|escape:javascript}';
 
-  related_categories_ids = {$related_categories_ids|json_encode};
-  str_already_in_related_cats = '{'This albums is already in related categories list'|translate|escape:javascript}';
+    var related_categories_ids = {$related_categories_ids|json_encode};
+    var str_already_in_related_cats = '{'This albums is already in related categories list'|translate|escape:javascript}';
 
-  $('#action-delete-picture').on('click', function() {
-    $.confirm({
-      title: str_are_you_sure,
-      draggable: false,
-      titleClass: "groupDeleteConfirm",
-      theme: "modern",
-      content: "",
-      animation: "zoom",
-      boxWidth: '30%',
-      useBootstrap: false,
-      type: 'red',
-      animateFromElement: false,
-      backgroundDismiss: true,
-      typeAnimated: false,
-      buttons: {
-        confirm: {
-          text: str_yes,
-          btnClass: 'btn-red',
-          action: function() {
-            window.location.href = url_delete.replaceAll('amp;', '');
+    var deleteBtn = document.getElementById('action-delete-picture');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function() {
+        pwgConfirm({
+          title: str_are_you_sure,
+          buttons: {
+            confirm: {
+              text: str_yes,
+              btnClass: 'btn-red',
+              action: function() {
+                window.location.href = url_delete.replaceAll('amp;', '');
+              }
+            },
+            cancel: {
+              text: str_no
+            }
           }
-        },
-        cancel: {
-          text: str_no
-        }
-      }
-    });
-  })
+        });
+      });
+    }
 
   }());
 </script>{/footer_script}
@@ -251,8 +240,8 @@ searchPlaceholder={'Search'|translate}
 }
 
 <style>
-  .selectize-input .item,
-  .selectize-input .item.active {
+  .ts-control .item,
+  .ts-control .item.active {
     background-image: none !important;
     background-color: #ffa646 !important;
     border-color: transparent !important;
@@ -261,8 +250,8 @@ searchPlaceholder={'Search'|translate}
     border-radius: 20px !important;
   }
 
-  .selectize-input .item .remove,
-  .selectize-input .item .remove {
+  .ts-control .item .remove,
+  .ts-control .item .remove {
     background-color: transparent !important;
     border-top-right-radius: 20px !important;
     border-bottom-right-radius: 20px !important;
@@ -272,8 +261,8 @@ searchPlaceholder={'Search'|translate}
 
   }
 
-  .selectize-input .item .remove:hover,
-  .selectize-input .item .remove:hover {
+  .ts-control .item .remove:hover,
+  .ts-control .item .remove:hover {
     background-color: #ff7700 !important;
   }
 </style>

@@ -140,7 +140,7 @@ $query = <<<SQL
     LEFT JOIN users AS u ON u.{$conf->user_fields['id']} = c.author_id
     WHERE {$where_clause}
     ORDER BY c.date DESC
-    LIMIT {$page['start']}, {$conf->comments_page_nb_comments};
+    LIMIT {$conf->comments_page_nb_comments} OFFSET {$page['start']};
     SQL;
 $result = $conf->sql_backend::pwg_query($query);
 

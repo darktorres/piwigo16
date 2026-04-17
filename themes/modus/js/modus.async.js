@@ -1,46 +1,66 @@
-$("#albumActionsSwitcher").click(function () {
-    var box = $(this).siblings(".categoryActions");
-    if (box.is(":visible")) {
-        box.css("display", ""); // remove inline css in case browser resizes larger
-    } else {
-        $("#menubar,.switchBox").css("display", "");
-        box.css(
-            "left",
-            Math.min(
-                $(this).position().left,
-                $(window).width() - box.outerWidth(true) - 5,
-            ),
-        )
-            .css("top", $(this).position().top + $(this).outerHeight(true))
-            .css("display", "block");
-    }
-});
-
-if (!("ontouchstart" in document))
-    $(".categoryActions").on("mouseleave", function () {
-        if ($("#albumActionsSwitcher").is(":visible"))
-            $(this).css("display", ""); // remove inline css in case browser resizes larger
+var albumActionsSwitcher = document.getElementById('albumActionsSwitcher');
+if (albumActionsSwitcher) {
+    albumActionsSwitcher.addEventListener('click', function() {
+        var box = this.parentElement.querySelector('.categoryActions');
+        if (!box) return;
+        if (box.offsetParent !== null) {
+            box.style.display = ''; // remove inline css when browser resizes larger
+        } else {
+            document.querySelectorAll('#menubar,.switchBox').forEach(function(el) {
+                el.style.display = '';
+            });
+            var rect = albumActionsSwitcher.getBoundingClientRect();
+            var style = window.getComputedStyle(box);
+            var boxW = box.offsetWidth
+                + parseFloat(style.marginLeft)
+                + parseFloat(style.marginRight);
+            box.style.left = Math.min(albumActionsSwitcher.offsetLeft, window.innerWidth - boxW - 5) + 'px';
+            box.style.top = (albumActionsSwitcher.offsetTop + albumActionsSwitcher.offsetHeight) + 'px';
+            box.style.display = 'block';
+        }
     });
+}
 
-$("#imageActionsSwitch").click(function () {
-    var box = $(".actionButtons");
-    if (box.is(":visible")) {
-        box.css("display", ""); // remove inline css in case browser resizes larger
-    } else {
-        $("#menubar,.switchBox").css("display", "");
-        box.css(
-            "left",
-            Math.min(
-                $(this).position().left,
-                $(window).width() - box.outerWidth(true) - 5,
-            ),
-        )
-            .css("top", $(this).position().top + $(this).outerHeight(true))
-            .css("display", "block");
-    }
-});
-
-if (!("ontouchstart" in document))
-    $(".actionButtons").on("mouseleave", function () {
-        if ($("#imageActionsSwitch").is(":visible")) $(this).css("display", ""); // remove inline css in case browser resizes larger
+if (!("ontouchstart" in document)) {
+    document.querySelectorAll('.categoryActions').forEach(function(el) {
+        el.addEventListener('mouseleave', function() {
+            var switcher = document.getElementById('albumActionsSwitcher');
+            if (switcher && switcher.offsetParent !== null) {
+                this.style.display = ''; // remove inline css when browser resizes larger
+            }
+        });
     });
+}
+
+var imageActionsSwitch = document.getElementById('imageActionsSwitch');
+if (imageActionsSwitch) {
+    imageActionsSwitch.addEventListener('click', function() {
+        var box = document.querySelector('.actionButtons');
+        if (!box) return;
+        if (box.offsetParent !== null) {
+            box.style.display = ''; // remove inline css when browser resizes larger
+        } else {
+            document.querySelectorAll('#menubar,.switchBox').forEach(function(el) {
+                el.style.display = '';
+            });
+            var style = window.getComputedStyle(box);
+            var boxW = box.offsetWidth
+                + parseFloat(style.marginLeft)
+                + parseFloat(style.marginRight);
+            box.style.left = Math.min(imageActionsSwitch.offsetLeft, window.innerWidth - boxW - 5) + 'px';
+            box.style.top = (imageActionsSwitch.offsetTop + imageActionsSwitch.offsetHeight) + 'px';
+            box.style.display = 'block';
+        }
+    });
+}
+
+if (!("ontouchstart" in document)) {
+    document.querySelectorAll('.actionButtons').forEach(function(el) {
+        el.addEventListener('mouseleave', function() {
+            var switcher = document.getElementById('imageActionsSwitch');
+            if (switcher && switcher.offsetParent !== null) {
+                this.style.display = ''; // remove inline css when browser resizes larger
+            }
+        });
+    });
+}

@@ -1,10 +1,24 @@
-{combine_script id='jquery.cluetip' load='async' require='jquery' path='node_modules/cluetip/jquery.cluetip.js'}
-
-{footer_script require='jquery.cluetip'}<script>
-  jQuery().ready(function() {
-    jQuery('.cluetip').cluetip({
-      width: 300,
-      splitTitle: '|'
+{footer_script}<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.cluetip').forEach(function(el) {
+      var raw = el.getAttribute('title') || '';
+      el.removeAttribute('title');
+      el.dataset.cluetip = raw;
+      el.addEventListener('mouseenter', function() {
+        var parts = (el.dataset.cluetip || '').split('|');
+        var tip = document.createElement('div');
+        tip.className = 'pwg-cluetip';
+        tip.style.cssText = 'position:absolute;z-index:9999;background:#fff;border:1px solid #ccc;padding:8px;width:300px;box-shadow:2px 2px 6px rgba(0,0,0,.2);font-size:13px;';
+        tip.innerHTML = '<strong>' + (parts[0] || '') + '</strong>' + (parts[1] ? '<hr style="margin:4px 0">' + parts[1] : '');
+        document.body.appendChild(tip);
+        var rect = el.getBoundingClientRect();
+        tip.style.left = (rect.left + window.scrollX) + 'px';
+        tip.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+        el._cluetip = tip;
+      });
+      el.addEventListener('mouseleave', function() {
+        if (el._cluetip) { el._cluetip.remove(); el._cluetip = null; }
+      });
     });
   });
 </script>{/footer_script}

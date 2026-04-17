@@ -1,68 +1,41 @@
-(function (window, $, PhotoSwipe) {
-    $(document).ready(function () {
-        var more_link;
-        var options = {
-            jQueryMobile: true,
-            loop: var_loop,
-            captionAndToolbarAutoHideDelay: var_autohide,
-            imageScaleMethod: "fitNoUpscale",
-            getToolbar: function () {
-                return (
-                    '<div class="ps-toolbar-close"><div class="ps-toolbar-content"></div></div><div class="ps-toolbar-play"><div class="ps-toolbar-content"></div></div><div id="more_link">' +
-                    var_trad +
-                    '</div><div class="ps-toolbar-previous"><div class="ps-toolbar-content"></div></div><div class="ps-toolbar-next"><div class="ps-toolbar-content"></div></div>'
-                );
-            },
-            getImageMetaData: function (el) {
-                return {
-                    picture_url: $(el).attr("data-picture-url"),
-                    image_id: $(el).attr("data-image-id"),
-                };
-            },
-        };
-        var myPhotoSwipe = $(".thumbnails a").photoSwipe(options);
-        // onShow - store a reference to our "more_link" button
-        myPhotoSwipe.addEventHandler(
-            PhotoSwipe.EventTypes.onShow,
-            function (e) {
-                more_link = window.document.querySelectorAll("#more_link")[0];
-            },
-        );
-        // onToolbarTap - listen out for when the toolbar is tapped
-        myPhotoSwipe.addEventHandler(
-            PhotoSwipe.EventTypes.onToolbarTap,
-            function (e) {
-                if (e.toolbarAction === PhotoSwipe.Toolbar.ToolbarAction.none) {
-                    if (
-                        e.tapTarget === more_link ||
-                        Util.DOM.isChildOf(e.tapTarget, more_link)
-                    ) {
-                        var currentImage = myPhotoSwipe.getCurrentImage();
-                        window.location = currentImage.metaData.picture_url;
-                    }
-                }
-            },
-        );
+(function () {
+    document.addEventListener('DOMContentLoaded', function () {
+        var thumbs = document.querySelector('ul.thumbnails');
+        if (!thumbs || typeof GLightbox === 'undefined') return;
 
-        myPhotoSwipe.addEventHandler(
-            PhotoSwipe.EventTypes.onDisplayImage,
-            function (e) {
-                var currentImage = myPhotoSwipe.getCurrentImage();
+        var lb = GLightbox({
+            selector: '.thumbnails a[href]',
+            loop: typeof var_loop !== 'undefined' ? var_loop : false,
+            autoplayVideos: false,
+            touchNavigation: true,
+        });
 
-                jQuery.ajax({
-                    type: "POST",
-                    url: "ws.php?format=json&method=pwg.history.log",
-                    data: {
-                        image_id: currentImage.metaData.image_id,
-                        cat_id: jQuery("ul.thumbnails").data("cat_id"),
-                        section: jQuery("ul.thumbnails").data("section"),
-                        tags_string:
-                            jQuery("ul.thumbnails").data("tags_string"),
-                    },
-                });
-            },
-        );
+        // Log photo history on slide change
+        lb.on('slide_changed', function (prev, current) {
+            if (!current || !current.slideNode) return;
+            var a = current.slideNode.closest('li')
+                ? current.slideNode.closest('li').querySelector('a[data-image-id]')
+                : null;
+            if (!a) {
+                // Try to find link by matching src
+                var links = document.querySelectorAll('.thumbnails a[data-image-id]');
+                a = links[current.index] || null;
+            }
+            if (!a) return;
+            fetch('ws.php?format=json&method=pwg.history.log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    image_id: a.getAttribute('data-image-id') || '',
+                    cat_id: thumbs.dataset.cat_id || '',
+                    section: thumbs.dataset.section || '',
+                    tags_string: thumbs.dataset.tags_string || '',
+                }),
+            });
+        });
 
-        var spThumbs = new SPThumbs(SPThumbsOpts);
+        if (typeof SPThumbs !== 'undefined' && typeof SPThumbsOpts !== 'undefined') {
+            new SPThumbs(SPThumbsOpts);
+        }
     });
-})(window, window.jQuery, window.Code.PhotoSwipe);
+})();

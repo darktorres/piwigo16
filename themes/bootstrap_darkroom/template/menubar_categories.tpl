@@ -19,14 +19,19 @@
     <div class="dropdown-header">{$block->data.NB_PICTURE|translate_dec:'%d photo':'%d photos'}</div>
   </div>
 </li>
-{footer_script require='jquery'}<script>
-  $('#categoriesDropdownMenu').on('show.bs.dropdown', function() {
-    $(this).find('a.dropdown-item').each(function() {
-      var level = $(this).data('level');
-      var padding = parseInt($(this).css('padding-left'));
-      if (level > 0) {
-        $(this).css('padding-left', (padding + 10 * level) + 'px')
-      }
+{footer_script}<script>
+  var categoriesDropdownMenu = document.getElementById('categoriesDropdownMenu');
+  if (categoriesDropdownMenu) {
+    categoriesDropdownMenu.addEventListener('show.bs.dropdown', function() {
+      var items = this.querySelectorAll('a.dropdown-item');
+      items.forEach(function(item) {
+        var level = parseInt(item.dataset.level);
+        var paddingLeft = window.getComputedStyle(item).paddingLeft;
+        var padding = parseInt(paddingLeft);
+        if (level > 0) {
+          item.style.paddingLeft = (padding + 10 * level) + 'px';
+        }
+      });
     });
-  });
+  }
 </script>{/footer_script}

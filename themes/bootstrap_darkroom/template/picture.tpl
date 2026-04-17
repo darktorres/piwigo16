@@ -1,8 +1,4 @@
 <!-- Start of picture.tpl -->
-{if functions::get_device() != 'desktop'}
-  {combine_script id='jquery.mobile-events' path='themes/bootstrap_darkroom/node_modules/jQuery-Touch-Events/src/jquery.mobile-events.js' require='jquery' load='footer'}
-{/if}
-
 {if !empty($PLUGIN_PICTURE_BEFORE)}{$PLUGIN_PICTURE_BEFORE}{/if}
 
 {$PICTURE_NAV}
@@ -14,16 +10,28 @@
     {include file='picture_nav_buttons.tpl'|get_extent:'picture_nav_buttons'}
   </div>
   {if functions::get_device() != 'desktop' }
-    {footer_script require="jquery"}<script>
-      $('#theImage img').bind('swipeleft swiperight', function(event) {
-        if (event.type == 'swipeleft') {
-          $('#navigationButtons a#navNextPicture i').click();
-        } else if (event.type == 'swiperight') {
-          $('#navigationButtons a#navPrevPicture i').click();
-        } else {
-          return;
-        }
-      });
+    {footer_script}<script>
+      var theImageImg = document.querySelector('#theImage img');
+      if (theImageImg && ('ontouchstart' in window)) {
+        var _swipeStart = null;
+        theImageImg.addEventListener('touchstart', function(e) {
+          _swipeStart = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+        }, {passive: true});
+        theImageImg.addEventListener('touchend', function(e) {
+          if (!_swipeStart) return;
+          var dx = e.changedTouches[0].clientX - _swipeStart.x;
+          var dy = e.changedTouches[0].clientY - _swipeStart.y;
+          _swipeStart = null;
+          if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+          if (dx < 0) {
+            var next = document.querySelector('#navigationButtons a#navNextPicture i');
+            if (next) next.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true, view: window}));
+          } else {
+            var prev = document.querySelector('#navigationButtons a#navPrevPicture i');
+            if (prev) prev.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true, view: window}));
+          }
+        }, {passive: true});
+      }
     </script>{/footer_script}
   {/if}
 
@@ -88,7 +96,8 @@
   {if !empty($thumbnails) && ($theme_config->slick_enabled || $theme_config->photoswipe)}
     <div id="theImageCarousel" class="row mx-0{if !$theme_config->slick_enabled} d-none{/if}">
       <div class="col-lg-10 col-md-12 mx-auto">
-        <div id="thumbnailCarousel" class="slick-carousel{if $theme_config->slick_centered} center{/if}">
+        <div id="thumbnailCarousel" class="swiper{if $theme_config->slick_centered} swiper-centered{/if}">
+          <div class="swiper-wrapper">
           {assign var=idx value=0}
           {foreach $thumbnails as $thumbnail}
             {assign var=derivative value=$pwg->derivative($derivative_params_square, $thumbnail.src_image)}
@@ -99,7 +108,7 @@
             {/if}
             {if $theme_config->photoswipe && !$theme_config->slick_infinite}
               <div
-                class="text-center{if $thumbnail.id eq $current.id && !$theme_config->slick_infinite} thumbnail-active{/if}">
+                class="swiper-slide text-center{if $thumbnail.id eq $current.id && !$theme_config->slick_infinite} thumbnail-active{/if}">
                 <a {if $thumbnail.id eq $current.id} id="thumbnail-active" {/if} href="{$thumbnail.URL}" data-index="{$idx}"
                   data-name="{$thumbnail.NAME}" data-description="{$thumbnail.DESCRIPTION}"
                   {if !$theme_config->slick_infinite}data-src-xlarge="{$derivative_xxlarge->get_url()}"
@@ -107,7 +116,7 @@
                     data-size-large="{$derivative_large->get_size_hr()}" data-src-medium="{$derivative_medium->get_url()}"
                     data-size-medium="{$derivative_medium->get_size_hr()}" {if preg_match("/(mp4|m4v)$/", $thumbnail.PATH)}
                       data-src-original="{$U_HOME}{$thumbnail.PATH}" data-size-original="{$thumbnail.SIZE}" data-video="true"
-                    {/if} 
+                    {/if}
                   {/if}>
                   <img data-lazy="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
                     alt="{$thumbnail.TN_ALT}" title="{if isset($thumbnail.TN_TITLE)}{$thumbnail.TN_TITLE}{/if}"
@@ -115,7 +124,7 @@
                 </a>
               </div>
             {else}
-              <div class="text-center{if $thumbnail.id eq $current.id} thumbnail-active{/if}">
+              <div class="swiper-slide text-center{if $thumbnail.id eq $current.id} thumbnail-active{/if}">
                 <a href="{$thumbnail.URL}">
                   <img data-lazy="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
                     alt="{$thumbnail.TN_ALT}" title="{if isset($thumbnail.TN_TITLE)}{$thumbnail.TN_TITLE}{/if}"
@@ -125,6 +134,7 @@
             {/if}
             {assign var=idx value=$idx+1}
           {/foreach}
+          </div>
         </div>
       </div>
     </div>

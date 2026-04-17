@@ -1,5 +1,11 @@
-{footer_script require='jquery'}<script>
-    $(document).ready(function() { $("#wrapper").css({ "position": "relative", "overflow-x": "hidden" }); });
+{footer_script}<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var wrapper = document.getElementById("wrapper");
+        if (wrapper) {
+            wrapper.style.position = "relative";
+            wrapper.style.overflowX = "hidden";
+        }
+    });
 </script>{/footer_script}
 <div id="sidebar">
     <div id="info-content" class="info">
@@ -105,7 +111,7 @@
                                 {/foreach}
                                 {combine_script id='core.scripts' path='themes/default/js/scripts.js' load='async'}
                                 {combine_script id='rating' require='core.scripts' path='themes/bootstrap_darkroom/js/rating.js' load='async'}
-                                {footer_script require='jquery'}<script>
+                                {footer_script}<script>
                                     var _pwgRatingAutoQueue = _pwgRatingAutoQueue || [];
                                     _pwgRatingAutoQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
                                     onSuccess: function(rating) {
@@ -121,12 +127,20 @@
                                             e.innerHTML = "({'%d rates'|translate|escape:'javascript'})".replace( "%d", rating.count);
                                         }
                                     }
-                                    $('#averageRate').find('span').each(function() {
-                                        $(this).addClass(rating.average > $(this).data('value') - 0.5 ?
-                                            'rateButtonStarFull' : 'rateButtonStarEmpty');
-                                        $(this).removeClass(rating.average > $(this).data('value') - 0.5 ?
-                                            'rateButtonStarEmpty' : 'rateButtonStarFull');
-                                    });
+                                    var averageRateEl = document.getElementById('averageRate');
+                                    if (averageRateEl) {
+                                        var spans = averageRateEl.querySelectorAll('span');
+                                        spans.forEach(function(span) {
+                                            var value = parseFloat(span.dataset.value);
+                                            if (rating.average > value - 0.5) {
+                                                span.classList.add('rateButtonStarFull');
+                                                span.classList.remove('rateButtonStarEmpty');
+                                            } else {
+                                                span.classList.add('rateButtonStarEmpty');
+                                                span.classList.remove('rateButtonStarFull');
+                                            }
+                                        });
+                                    }
                                     }
                                     });
                                 </script>{/footer_script}
@@ -137,7 +151,7 @@
             {/if}
             {if $display_info.privacy_level and isset($available_permission_levels)}
                 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-                {footer_script require='jquery'}<script>
+                {footer_script}<script>
                     function setPrivacyLevel(id, level, label) {
                         (new PwgWS('{$ROOT_URL}')).callService(
                         "pwg.images.setPrivacyLevel",
@@ -146,9 +160,14 @@
                             method: "POST",
                             onFailure: function(num, text) { alert(num + " " + text); },
                             onSuccess: function(result) {
-                                jQuery('#dropdownPermissions').html(label);
-                                jQuery('.permission-li').removeClass('active');
-                                jQuery('#permission-' + level).addClass('active');
+                                var dropdown = document.getElementById('dropdownPermissions');
+                                if (dropdown) dropdown.innerHTML = label;
+                                var permLis = document.querySelectorAll('.permission-li');
+                                permLis.forEach(function(li) {
+                                    li.classList.remove('active');
+                                });
+                                var permElement = document.getElementById('permission-' + level);
+                                if (permElement) permElement.classList.add('active');
                             }
                         }
                     );

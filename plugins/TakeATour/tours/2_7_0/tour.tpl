@@ -49,7 +49,7 @@
     {
       path: "{$TAT_path}admin.php?page=cat_list",
       element: "#autoOrderOpen",
-      onShown: function(tour) { jQuery("#autoOrderOpen").trigger("click"); },
+      onShown: function(tour) { var el = document.getElementById("autoOrderOpen"); if (el) el.click(); },
       title: "{'2_7_0_title7'|translate|escape:'javascript'}",
       content: "{'2_7_0_stp7'|translate|escape:'javascript'}",
     },
@@ -87,9 +87,9 @@
   // Start the tour
   tour.start();
 
-  jQuery("input[class='submit']").click(function() {
-    if (tour.getCurrentStep() == 5) {
-      tour.goTo(6);
-    }
+  document.querySelectorAll("input[class='submit']").forEach(function(el) {
+    el.addEventListener('click', function() {
+      if (tour.getCurrentStep() == 5) tour.goTo(6);
+    });
   });
 </script>{/footer_script}

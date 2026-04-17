@@ -26,7 +26,7 @@ $template->set_filenames([
     'languages' => 'languages_new.tpl',
 ]);
 
-$base_url = functions_url::get_root_url() . 'admin.php?page=' . $page['page'] . '&tab=' . $page['tab'];
+$base_url = functions_url::get_root_url() . 'admin.php?page=' . $page['page'] . (isset($page['tab']) ? '&tab=' . $page['tab'] : '');
 
 $languages = new languages();
 $languages->get_db_languages();

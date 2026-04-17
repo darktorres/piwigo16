@@ -56,18 +56,22 @@
 
           <p>
             <script>
-              jQuery(document).ready(function() {
+              document.addEventListener('DOMContentLoaded', function() {
+                var checkAllLink = document.getElementById("checkAllLink");
+                if (checkAllLink) {
+                  checkAllLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll("#c13y input[type=checkbox]").forEach(function(el) { el.checked = true; });
+                  });
+                }
 
-                jQuery("#checkAllLink").click(function() {
-                  jQuery("#c13y input[type=checkbox]").attr('checked', true);
-                  return false;
-                });
-
-                jQuery("#uncheckAllLink").click(function() {
-                  jQuery("#c13y input[type=checkbox]").attr('checked', false);
-                  return false;
-                });
-
+                var uncheckAllLink = document.getElementById("uncheckAllLink");
+                if (uncheckAllLink) {
+                  uncheckAllLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll("#c13y input[type=checkbox]").forEach(function(el) { el.checked = false; });
+                  });
+                }
               });
 
               function DeselectAll(formulaire) {

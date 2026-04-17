@@ -3,46 +3,51 @@ const DELAY_FEEDBACK = 3000;
 Group Popin
 -------*/
 
-$(".group_details_popup_trigger").click(function () {
-    $(".Group_details-popup-container").show();
+document.querySelector(".group_details_popup_trigger")?.addEventListener("click", function () {
+    let el = document.querySelector(".Group_details-popup-container");
+    if (el) el.style.display = '';
 });
 
-$(".CloseGroupPopup").click(function () {
-    $(".Group_details-popup-container").hide();
+document.querySelector(".CloseGroupPopup")?.addEventListener("click", function () {
+    let el = document.querySelector(".Group_details-popup-container");
+    if (el) el.style.display = 'none';
 });
 
 //Number On Badge
 function updateBadge() {
-    $(".badge-number").html($(".GroupContainer").length - 2); //Less the add group div and the template
+    let badge = document.querySelector(".badge-number");
+    if (badge) badge.innerHTML = document.querySelectorAll(".GroupContainer").length - 2; //Less the add group div and the template
 }
 
 /*-------
  Add User toggle and reduces height of user list when add user form is visible
  -------*/
 
-$("#form-btn").click(function () {
-    $("#cancel").show();
-    $("#addUserLabel").show();
-    $(".UserSearch").show();
-    $("#UserSubmit").show();
-    $("#form-btn").hide();
-    $(".groups .list_user").css("max-height", "100px");
+document.getElementById("form-btn")?.addEventListener("click", function () {
+    document.getElementById("cancel").style.display = '';
+    document.getElementById("addUserLabel").style.display = '';
+    document.querySelector(".UserSearch").style.display = '';
+    document.getElementById("UserSubmit").style.display = '';
+    document.getElementById("form-btn").style.display = 'none';
+    let userList = document.querySelector(".groups .list_user");
+    if (userList) userList.style.maxHeight = "100px";
 });
 
-$("#cancel").click(function () {
-    $("#cancel").hide();
-    $("#addUserLabel").hide();
-    $(".UserSearch").hide();
-    $("#UserSubmit").hide();
-    $("#form-btn").show();
-    $(".groups .list_user").css("max-height", "200px");
+document.getElementById("cancel")?.addEventListener("click", function () {
+    document.getElementById("cancel").style.display = 'none';
+    document.getElementById("addUserLabel").style.display = 'none';
+    document.querySelector(".UserSearch").style.display = 'none';
+    document.getElementById("UserSubmit").style.display = 'none';
+    document.getElementById("form-btn").style.display = '';
+    let userList = document.querySelector(".groups .list_user");
+    if (userList) userList.style.maxHeight = "200px";
 });
 
 /*-------
  Add Group toggle
  -------*/
 var isToggle = true;
-$(".addGroupBlock").on("click", function () {
+document.querySelector(".addGroupBlock")?.addEventListener("click", function () {
     if (isToggle) {
         deployAddGroupForm();
     } else {
@@ -51,30 +56,36 @@ $(".addGroupBlock").on("click", function () {
 });
 
 var deployAddGroupForm = function () {
-    $(".addGroupBlock").animate(
-        {
-            top: "20%",
-            padding: "0px",
-        },
-        400,
-        (complete = function () {
-            $("#addGroupForm form").fadeIn();
-            $("#addGroupNameInput").focus();
-        }),
-    );
+    let block = document.querySelector(".addGroupBlock");
+    if (block) {
+        block.style.transition = "all 0.4s ease";
+        block.style.top = "20%";
+        block.style.padding = "0px";
+    }
+    setTimeout(() => {
+        let form = document.querySelector("#addGroupForm form");
+        if (form) form.style.display = '';
+        let input = document.getElementById("addGroupNameInput");
+        if (input) input.focus();
+    }, 400);
     isToggle = false;
 };
 
 var hideAddGroupForm = function () {
-    $("#addGroupForm form").fadeOut(function () {
-        $(".addGroupBlock").animate(
-            {
-                top: "50%",
-                padding: "100px 0",
-            },
-            400,
-        );
-    });
+    let form = document.querySelector("#addGroupForm form");
+    if (form) {
+        form.style.opacity = "0";
+        form.style.transition = "opacity 0.4s ease";
+    }
+    setTimeout(() => {
+        let block = document.querySelector(".addGroupBlock");
+        if (block) {
+            block.style.top = "50%";
+            block.style.padding = "100px 0";
+        }
+        if (form) form.style.display = 'none';
+        if (form) form.style.opacity = "1";
+    }, 400);
     isToggle = true;
 };
 
@@ -82,315 +93,294 @@ var hideAddGroupForm = function () {
  Add Group Submit
  -------*/
 
-jQuery(document).ready(function () {
-    $("#addGroupForm form").on("submit", function (e) {
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelector("#addGroupForm form")?.addEventListener("submit", function (e) {
         e.preventDefault();
-        let name = $("#addGroupForm input[type=text]").val();
+        let name = document.querySelector("#addGroupForm input[type=text]").value;
         let loadState = new TemporaryState();
         loadState.changeHTML(
-            $(".actionButtons button"),
+            document.querySelectorAll(".actionButtons button"),
             "<i class='icon-spin6 animate-spin'> </i>",
         );
         loadState.changeAttribute(
-            $(".actionButtons button"),
+            document.querySelectorAll(".actionButtons button"),
             "style",
             "pointer-events: none",
         );
         loadState.changeAttribute(
-            $(".actionButtons a"),
+            document.querySelectorAll(".actionButtons a"),
             "style",
             "pointer-events: none",
         );
 
         if (name.replace(/\s/g, "").length != 0) {
-            jQuery.ajax({
-                url: "ws.php?format=json&method=pwg.groups.add",
-                type: "POST",
-                data: {
+            fetch("ws.php?format=json&method=pwg.groups.add", {
+                method: "POST",
+                body: new URLSearchParams({
                     name: name,
                     pwg_token: pwg_token,
-                },
-                success: function (raw_data) {
-                    loadState.reverse();
-                    data = jQuery.parseJSON(raw_data);
-                    if (data.stat === "ok") {
-                        $(".addGroupFormLabelAndInput input").val("");
-                        group = data.result.groups[0];
-                        groupBox = createGroup(group);
-                        $("#addGroupForm").after(groupBox);
-                        setupGroupBox(groupBox);
-                        updateBadge();
-                    } else {
-                        $("#addGroupForm .groupError").html(str_name_not_empty);
-                        $("#addGroupForm .groupError").fadeIn();
-                        $("#addGroupForm .groupError")
-                            .delay(DELAY_FEEDBACK)
-                            .fadeOut();
+                }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+            .then(response => response.text())
+            .then(raw_data => {
+                loadState.reverse();
+                data = JSON.parse(raw_data);
+                if (data.stat === "ok") {
+                    document.querySelector(".addGroupFormLabelAndInput input").value = "";
+                    group = data.result.groups[0];
+                    groupBox = createGroup(group);
+                    document.getElementById("addGroupForm").insertAdjacentElement("afterend", groupBox);
+                    setupGroupBox(groupBox);
+                    updateBadge();
+                } else {
+                    let error = document.querySelector("#addGroupForm .groupError");
+                    if (error) {
+                        error.innerHTML = str_name_not_empty;
+                        error.style.display = '';
+                        setTimeout(() => error.style.display = 'none', DELAY_FEEDBACK);
                     }
-                },
-                error: function (err) {
-                    console.log(err);
-                },
+                }
+            })
+            .catch(error => {
+                loadState.reverse();
+                console.log(error);
             });
         } else {
             loadState.reverse();
-            $("#addGroupForm .groupError").html(str_name_not_empty);
-            $("#addGroupForm .groupError").fadeIn();
-            $("#addGroupForm .groupError").delay(DELAY_FEEDBACK).fadeOut();
+            let error = document.querySelector("#addGroupForm .groupError");
+            if (error) {
+                error.innerHTML = str_name_not_empty;
+                error.style.display = '';
+                setTimeout(() => error.style.display = 'none', DELAY_FEEDBACK);
+            }
         }
     });
 });
 
 var createGroup = function (group) {
     //Setup the group
-    newgroup = $("#group-template")
-        .clone()
-        .attr("id", "group-" + group.id);
-    newgroup.attr("data-id", group.id);
-    newgroup.find("#group_name").html(group.name);
-    newgroup.find(".group_name-editable").val(group.name);
-    newgroup
-        .find(".Group-checkbox label")
-        .attr("for", "Group-Checkbox-selection-" + group.id);
-    newgroup
-        .find(".Group-checkbox input")
-        .attr("id", "Group-Checkbox-selection-" + group.id);
-    newgroup.find(".input-edit-group-name").attr("placeholder", group.name);
-    newgroup
-        .find(".group_number_users")
-        .html(
-            group.nb_users +
-                " " +
-                (group.nb_users > 1 ? str_members_default : str_member_default),
-        );
-    newgroup.find(".group_name-editable").html(group.name);
-    newgroup
-        .find(".manage-permissions")
-        .attr("href", "admin.php?page=group_perm&group_id=" + group.id);
+    let template = document.getElementById("group-template");
+    let newgroup = template.cloneNode(true);
+    newgroup.id = "group-" + group.id;
+    newgroup.setAttribute("data-id", group.id);
+
+    let nameEl = newgroup.querySelector("#group_name");
+    if (nameEl) nameEl.innerHTML = group.name;
+
+    let editableEl = newgroup.querySelector(".group_name-editable");
+    if (editableEl) editableEl.value = group.name;
+
+    let checkbox = newgroup.querySelector(".Group-checkbox label");
+    if (checkbox) checkbox.setAttribute("for", "Group-Checkbox-selection-" + group.id);
+
+    let checkboxInput = newgroup.querySelector(".Group-checkbox input");
+    if (checkboxInput) checkboxInput.id = "Group-Checkbox-selection-" + group.id;
+
+    let placeholder = newgroup.querySelector(".input-edit-group-name");
+    if (placeholder) placeholder.setAttribute("placeholder", group.name);
+
+    let userCount = newgroup.querySelector(".group_number_users");
+    if (userCount) userCount.innerHTML = group.nb_users + " " + (group.nb_users > 1 ? str_members_default : str_member_default);
+
+    let editableHtml = newgroup.querySelector(".group_name-editable");
+    if (editableHtml) editableHtml.innerHTML = group.name;
+
+    let manageLink = newgroup.querySelector(".manage-permissions");
+    if (manageLink) manageLink.href = "admin.php?page=group_perm&group_id=" + group.id;
+
     hideAddGroupForm();
 
     //Setup the icon color
-    var colors = [
-        "icon-red",
-        "icon-blue",
-        "icon-yellow",
-        "icon-purple",
-        "icon-green",
-    ];
+    var colors = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
     var colorId = Number(group.id) % 5;
-    newgroup.find(".icon-users-1").addClass(colors[colorId]);
+    let icon = newgroup.querySelector(".icon-users-1");
+    if (icon) icon.classList.add(colors[colorId]);
 
     //Place group in first Place
-    newgroup.find(".groupMessage").html(str_group_created);
-    newgroup.find(".groupMessage").fadeIn();
-    newgroup.find(".groupMessage").delay(DELAY_FEEDBACK).fadeOut();
+    let msg = newgroup.querySelector(".groupMessage");
+    if (msg) {
+        msg.innerHTML = str_group_created;
+        msg.style.display = '';
+        setTimeout(() => msg.style.display = 'none', DELAY_FEEDBACK);
+    }
     return newgroup;
 };
 
 /*-------
  SETUP JS ON GROUP BOX
  -------*/
-jQuery(document).ready(function () {
-    $(".GroupContainer").each(function () {
-        if ($(this).attr("id") != "group-template") setupGroupBox($(this));
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll(".GroupContainer").forEach((el) => {
+        if (el.id != "group-template") setupGroupBox(el);
     });
 });
+
 var setupGroupBox = function (groupBox) {
-    var id = groupBox.data("id");
+    var id = groupBox.getAttribute("data-id");
 
     /* Change background color of group block if checked in selection mode */
-    groupBox.find(".Group-checkbox input[type='checkbox']").change(function () {
-        toggleSelection(
-            id,
-            groupBox
-                .find(".Group-checkbox input[type='checkbox']")
-                .is(":checked"),
-        );
-    });
-    groupBox
-        .find(".Group-checkbox input[type='checkbox']")
-        .attr("checked", false);
+    let checkbox = groupBox.querySelector(".Group-checkbox input[type='checkbox']");
+    if (checkbox) {
+        checkbox.addEventListener("change", function () {
+            toggleSelection(id, this.checked);
+        });
+        checkbox.checked = false;
+    }
 
     /* Display the option on the click on "..." */
-    groupBox.find(".group-dropdown-options").click(function GroupOptions() {
-        $(this).find("#GroupOptions").toggle();
-    });
+    let dropdown = groupBox.querySelector(".group-dropdown-options");
+    if (dropdown) {
+        dropdown.addEventListener("click", function () {
+            let options = groupBox.querySelector("#GroupOptions");
+            if (options) options.style.display = options.style.display === 'none' ? '' : 'none';
+        });
+    }
 
     /* Set the delete action */
-    groupBox.find("#GroupDelete").on("click", function () {
-        deleteGroup(id);
-    });
+    let deleteBtn = groupBox.querySelector("#GroupDelete");
+    if (deleteBtn) deleteBtn.addEventListener("click", () => deleteGroup(id));
 
     /* Set the rename action */
-    groupBox
-        .find(".Group-name .icon-pencil, #GroupEdit")
-        .on("click", function () {
+    document.querySelectorAll("#group-" + id + " .Group-name .icon-pencil, #group-" + id + " #GroupEdit").forEach(el => {
+        el?.addEventListener("click", function () {
             displayRenameForm(true, id);
             setTimeout(() => {
-                groupBox.find("#GroupOptions").hide();
+                let opts = groupBox.querySelector("#GroupOptions");
+                if (opts) opts.style.display = 'none';
             }, 10);
         });
-
-    groupBox.find(".group-rename .validate").on("click", function () {
-        groupBox.find(".group-rename form").trigger("submit");
     });
 
-    groupBox.find(".group-rename form").on("submit", function (e) {
-        e.preventDefault();
-        renameGroup(id, groupBox.find(".group_name-editable").val());
-    });
+    let validateBtn = groupBox.querySelector(".group-rename .validate");
+    if (validateBtn) {
+        validateBtn.addEventListener("click", function () {
+            let form = groupBox.querySelector(".group-rename form");
+            if (form) form.dispatchEvent(new Event("submit"));
+        });
+    }
 
-    groupBox.find(".group-rename .icon-cancel").on("click", function () {
-        displayRenameForm(false, id);
-        groupBox
-            .find(".group_name-editable")
-            .val(groupBox.find(".Group-name-container p").html());
-    });
+    let renameForm = groupBox.querySelector(".group-rename form");
+    if (renameForm) {
+        renameForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            let input = groupBox.querySelector(".group_name-editable");
+            renameGroup(id, input?.value || "");
+        });
+    }
+
+    let cancelBtn = groupBox.querySelector(".group-rename .icon-cancel");
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", function () {
+            displayRenameForm(false, id);
+            let input = groupBox.querySelector(".group_name-editable");
+            let nameContainer = groupBox.querySelector(".Group-name-container p");
+            if (input && nameContainer) input.value = nameContainer.innerHTML;
+        });
+    }
 
     /* Hide group options and rename field on click on the screen */
-
-    $(document).mouseup(function (e) {
+    document.addEventListener("mouseup", function (e) {
         e.stopPropagation();
         let option_is_clicked = false;
-        $("#GroupOptions div").each(function () {
-            if (!($(this).has(e.target).length === 0)) {
+        document.querySelectorAll("#GroupOptions div").forEach(el => {
+            if (el.contains(e.target)) {
                 option_is_clicked = true;
             }
         });
         if (!option_is_clicked) {
-            groupBox.find("#GroupOptions").hide();
+            let opts = groupBox.querySelector("#GroupOptions");
+            if (opts) opts.style.display = 'none';
         }
     });
 
     /* Setup the default action */
-    if (groupBox.data("default") == 1) {
+    let isDefault = groupBox.getAttribute("data-default");
+    if (isDefault == "1") {
         setupDefaultActions(id, true);
-    } else if (groupBox.data("default") == 0) {
+    } else if (isDefault == "0") {
         setupDefaultActions(id, false);
     }
 
-    groupBox.find(".manage-users").on("click", function () {
-        openUserManager(id);
-    });
+    let manageBtn = groupBox.querySelector(".manage-users");
+    if (manageBtn) manageBtn.addEventListener("click", () => openUserManager(id));
 
-    groupBox.find("#GroupDuplicate").on("click", function () {
-        duplicateAction(id);
-    });
+    let dupBtn = groupBox.querySelector("#GroupDuplicate");
+    if (dupBtn) dupBtn.addEventListener("click", () => duplicateAction(id));
 };
 
 var toggleSelection = function (group_id, toggle) {
-    groupBox = $("#group-" + group_id);
+    let groupBox = document.getElementById("group-" + group_id);
+    if (!groupBox) return;
+
     if (toggle) {
-        groupBox.find(".Group-checkbox input").attr("checked", true);
-        groupBox.addClass("GroupBackgroundSelected");
-        groupBox.find(".icon-users-1").addClass("OrangeIcon");
-        groupBox.find(".group_number_users").addClass("OrangeFont");
+        let checkbox = groupBox.querySelector(".Group-checkbox input");
+        if (checkbox) checkbox.checked = true;
+
+        groupBox.classList.add("GroupBackgroundSelected");
+        groupBox.querySelector(".icon-users-1")?.classList.add("OrangeIcon");
+        groupBox.querySelector(".group_number_users")?.classList.add("OrangeFont");
 
         //Display item selection on selection panel
-        item = $(
-            "<div data-id=" +
-                group_id +
-                ">" +
-                "<a class='icon-cancel'></a>" +
-                "<p>" +
-                groupBox.find("#group_name").html() +
-                "</p> </div>",
-        );
-        item.appendTo(".DeleteGroupList");
-        item.find("a").on("click", function () {
-            groupBox.find(".Group-checkbox input").attr("checked", false);
-            toggleSelection(group_id);
+        let item = document.createElement("div");
+        item.setAttribute("data-id", group_id);
+        item.innerHTML = '<a class="icon-cancel"></a><p>' + (groupBox.querySelector("#group_name")?.innerHTML || "") + '</p>';
+        document.querySelector(".DeleteGroupList")?.appendChild(item);
+        item.querySelector("a")?.addEventListener("click", function () {
+            let checkbox = groupBox.querySelector(".Group-checkbox input");
+            if (checkbox) checkbox.checked = false;
+            toggleSelection(group_id, false);
         });
+
         updateSelectionPanel();
-        option = $(
-            '<option value="' +
-                group_id +
-                '">' +
-                groupBox.find("#group_name").html() +
-                "</option>",
-        );
-        option.appendTo("#MergeOptionsChoices");
+
+        let option = document.createElement("option");
+        option.value = group_id;
+        option.innerHTML = groupBox.querySelector("#group_name")?.innerHTML || "";
+        document.getElementById("MergeOptionsChoices")?.appendChild(option);
     } else {
-        groupBox.find(".Group-checkbox input").attr("checked", false);
-        groupBox.removeClass("GroupBackgroundSelected");
-        groupBox.find(".icon-users-1").removeClass("OrangeIcon");
-        groupBox.find(".group_number_users").removeClass("OrangeFont");
-        $(".DeleteGroupList div").each(function () {
-            if ($(this).data("id") == group_id) {
-                $(this).remove();
-            }
+        let checkbox = groupBox.querySelector(".Group-checkbox input");
+        if (checkbox) checkbox.checked = false;
+
+        groupBox.classList.remove("GroupBackgroundSelected");
+        groupBox.querySelector(".icon-users-1")?.classList.remove("OrangeIcon");
+        groupBox.querySelector(".group_number_users")?.classList.remove("OrangeFont");
+
+        document.querySelectorAll(".DeleteGroupList div").forEach(el => {
+            if (el.getAttribute("data-id") == group_id) el.remove();
         });
+
         updateSelectionPanel();
-        $("#MergeOptionsChoices option").each(function () {
-            if ($(this).attr("value") == group_id) {
-                $(this).remove();
-            }
+
+        document.querySelectorAll("#MergeOptionsChoices option").forEach(el => {
+            if (el.value == group_id) el.remove();
         });
     }
 };
 
 /* Group Ajax and Display Functions */
 var deleteGroup = function (id) {
-    $.confirm({
-        title: str_delete.replace(
-            "%s",
-            $("#group-" + id + " #group_name").html(),
-        ),
-        draggable: false,
-        titleClass: "jconfirmDeleteConfirm",
-        theme: "modern",
-        content: "",
-        animation: "zoom",
-        boxWidth: "30%",
-        useBootstrap: false,
-        type: "red",
-        animateFromElement: false,
-        backgroundDismiss: true,
-        typeAnimated: false,
+    let groupName = document.querySelector("#group-" + id + " #group_name")?.innerHTML || "";
+    pwgConfirm({
+        title: str_delete.replace("%s", groupName),
         buttons: {
             confirm: {
                 text: str_yes_delete_confirmation,
                 btnClass: "btn-red",
                 action: function () {
-                    let groupName = $(
-                        "#group-" + id + " .Group-name-container p",
-                    ).html();
-                    $.alert({
-                        ...{
-                            title: str_group_deleted.replace("%s", groupName),
-                            content: function () {
-                                return jQuery.ajax({
-                                    url: "ws.php?format=json&method=pwg.groups.delete",
-                                    type: "POST",
-                                    data:
-                                        "group_id=" +
-                                        id +
-                                        "&pwg_token=" +
-                                        pwg_token,
-                                    success: function (raw_data) {
-                                        data = jQuery.parseJSON(raw_data);
-                                        if (data.stat === "ok") {
-                                            $("#group-" + id).remove();
-                                            $(
-                                                ".DeleteGroupList div[data-id=" +
-                                                    id +
-                                                    "]",
-                                            ).remove();
-                                            $(
-                                                "#MergeOptionsChoices option[value=" +
-                                                    id +
-                                                    "]",
-                                            ).remove();
-                                        }
-                                        updateBadge();
-                                    },
-                                    error: function (err) {
-                                        console.log(err);
-                                    },
-                                });
-                            },
-                        },
-                        ...jConfirm_alert_options,
+                    fetch("ws.php?format=json&method=pwg.groups.delete", {
+                        method: "POST",
+                        body: "group_id=" + id + "&pwg_token=" + pwg_token,
+                    })
+                    .then(response => response.text())
+                    .then(raw_data => {
+                        data = JSON.parse(raw_data);
+                        if (data.stat === "ok") {
+                            document.getElementById("group-" + id)?.remove();
+                            document.querySelectorAll(".DeleteGroupList div[data-id=" + id + "]").forEach(el => el.remove());
+                            document.querySelectorAll("#MergeOptionsChoices option[value=" + id + "]").forEach(el => el.remove());
+                        }
+                        updateBadge();
                     });
                 },
             },
@@ -403,290 +393,228 @@ var deleteGroup = function (id) {
 
 var renameGroup = function (id, newName) {
     let loadState = new TemporaryState();
-    loadState.changeHTML(
-        $("#group-" + id + " .group-rename .validate"),
-        "<i class='animate-spin icon-spin6'></i>",
-    );
-    loadState.removeClass(
-        $("#group-" + id + " .group-rename .validate"),
-        "icon-ok",
-    );
-    loadState.changeAttribute(
-        $("#group-" + id + " .group-rename span"),
-        "style",
-        "pointer-events: none",
-    );
+    let validateBtn = document.querySelector("#group-" + id + " .group-rename .validate");
+    loadState.changeHTML(validateBtn, "<i class='animate-spin icon-spin6'></i>");
+    loadState.removeClass(validateBtn, "icon-ok");
+    loadState.changeAttribute(document.querySelector("#group-" + id + " .group-rename span"), "style", "pointer-events: none");
 
     if (newName.replace(/\s/g, "").length != 0) {
-        jQuery.ajax({
-            url: "ws.php?format=json&method=pwg.groups.setInfo",
-            type: "POST",
-            data:
-                "group_id=" +
-                id +
-                "&pwg_token=" +
-                pwg_token +
-                "&name=" +
-                newName,
-            success: function (raw_data) {
-                data = jQuery.parseJSON(raw_data);
-                loadState.reverse();
-                if (data.stat === "ok") {
-                    newName = data.result.groups[0].name;
-                    //Display message
-                    $("#group-" + id)
-                        .find(".groupMessage")
-                        .html(str_renaming_done);
-                    $("#group-" + id)
-                        .find(".groupMessage")
-                        .fadeIn();
-                    $("#group-" + id)
-                        .find(".groupMessage")
-                        .delay(DELAY_FEEDBACK)
-                        .fadeOut();
-                    $("#group-" + id)
-                        .find("#group_name")
-                        .html(newName);
-
-                    //Hide editable field
-                    displayRenameForm(false, id);
-                } else {
-                    //Display error message
-                    $("#group-" + id)
-                        .find(".groupError")
-                        .html(str_name_taken);
-                    $("#group-" + id)
-                        .find(".groupError")
-                        .fadeIn();
-                    $("#group-" + id)
-                        .find(".groupError")
-                        .delay(DELAY_FEEDBACK)
-                        .fadeOut();
+        fetch("ws.php?format=json&method=pwg.groups.setInfo", {
+            method: "POST",
+            body: "group_id=" + id + "&pwg_token=" + pwg_token + "&name=" + encodeURIComponent(newName),
+        })
+        .then(response => response.text())
+        .then(raw_data => {
+            data = JSON.parse(raw_data);
+            loadState.reverse();
+            if (data.stat === "ok") {
+                newName = data.result.groups[0].name;
+                //Display message
+                let msg = document.querySelector("#group-" + id + " .groupMessage");
+                if (msg) {
+                    msg.innerHTML = str_renaming_done;
+                    msg.style.display = '';
+                    setTimeout(() => msg.style.display = 'none', DELAY_FEEDBACK);
                 }
-            },
-            error: function (err) {
-                console.log(err);
-            },
-        });
+                let nameEl = document.querySelector("#group-" + id + " #group_name");
+                if (nameEl) nameEl.innerHTML = newName;
+
+                //Hide editable field
+                displayRenameForm(false, id);
+            } else {
+                //Display error message
+                let error = document.querySelector("#group-" + id + " .groupError");
+                if (error) {
+                    error.innerHTML = str_name_taken;
+                    error.style.display = '';
+                    setTimeout(() => error.style.display = 'none', DELAY_FEEDBACK);
+                }
+            }
+        })
+        .catch(error => console.log(error));
     } else {
         loadState.reverse();
-        $("#group-" + id)
-            .find(".groupError")
-            .html(str_name_not_empty);
-        $("#group-" + id)
-            .find(".groupError")
-            .fadeIn();
-        $("#group-" + id)
-            .find(".groupError")
-            .delay(DELAY_FEEDBACK)
-            .fadeOut();
+        let error = document.querySelector("#group-" + id + " .groupError");
+        if (error) {
+            error.innerHTML = str_name_not_empty;
+            error.style.display = '';
+            setTimeout(() => error.style.display = 'none', DELAY_FEEDBACK);
+        }
     }
 };
 
 // Hide or display rename form
 var displayRenameForm = function (doDisplay, grp_id) {
     if (doDisplay) {
-        $("#group-" + grp_id)
-            .find(".group-rename")
-            .css("display", "flex");
-        $("#group-" + grp_id)
-            .find(".Group-name-container .icon-pencil")
-            .hide();
-        $("#group-" + grp_id)
-            .find(".Group-name-container p")
-            .css("opacity", 0);
+        let form = document.querySelector("#group-" + grp_id + " .group-rename");
+        if (form) form.style.display = "flex";
+        let pencil = document.querySelector("#group-" + grp_id + " .Group-name-container .icon-pencil");
+        if (pencil) pencil.style.display = 'none';
+        let name = document.querySelector("#group-" + grp_id + " .Group-name-container p");
+        if (name) name.style.opacity = "0";
     } else {
-        $("#group-" + grp_id)
-            .find(".group-rename")
-            .hide();
-        $("#group-" + grp_id)
-            .find(".Group-name-container .icon-pencil")
-            .removeAttr("style");
-        $("#group-" + grp_id)
-            .find(".Group-name-container p")
-            .css("opacity", 1);
+        let form = document.querySelector("#group-" + grp_id + " .group-rename");
+        if (form) form.style.display = 'none';
+        let pencil = document.querySelector("#group-" + grp_id + " .Group-name-container .icon-pencil");
+        if (pencil) pencil.style.display = '';
+        let name = document.querySelector("#group-" + grp_id + " .Group-name-container p");
+        if (name) name.style.opacity = "1";
     }
 };
 
 var setDefaultGroup = function (id, is_default) {
-    $("#group-" + id + " #GroupDefault").css(
-        "width",
-        $("#group-" + id + " #GroupDefault").width(),
-    );
-    $("#group-" + id + " #GroupDefault").html(
-        "<i class='icon-spin6 animate-spin'> </i>",
-    );
-    $("#group-" + id + " #GroupDefault").removeClass("icon-star");
-    $("#group-" + id + " #GroupDefault").attr(
-        "style",
-        "pointer-events: none; text-align: center;",
-    );
-    $("#group-" + id)
-        .find(".is-default-token")
-        .addClass("icon-spin6")
-        .addClass("animate-spin")
-        .removeClass("icon-star");
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.groups.setInfo",
-        type: "POST",
-        data:
-            "group_id=" +
-            id +
-            "&pwg_token=" +
-            pwg_token +
-            "&is_default=" +
-            is_default,
-        success: function (raw_data) {
-            data = jQuery.parseJSON(raw_data);
-            $("#group-" + id + " #GroupOptions").hide();
-            if (data.stat === "ok") {
-                if (is_default) {
-                    setupDefaultActions(id, true);
-                } else {
-                    setupDefaultActions(id, false);
-                }
+    let btn = document.querySelector("#group-" + id + " #GroupDefault");
+    if (btn) {
+        btn.style.width = btn.offsetWidth + "px";
+        btn.innerHTML = "<i class='icon-spin6 animate-spin'> </i>";
+        btn.classList.remove("icon-star");
+        btn.style.pointerEvents = "none";
+        btn.style.textAlign = "center";
+    }
+
+    let token = document.querySelector("#group-" + id + " .is-default-token");
+    if (token) {
+        token.classList.add("icon-spin6", "animate-spin");
+        token.classList.remove("icon-star");
+    }
+
+    fetch("ws.php?format=json&method=pwg.groups.setInfo", {
+        method: "POST",
+        body: "group_id=" + id + "&pwg_token=" + pwg_token + "&is_default=" + is_default,
+    })
+    .then(response => response.text())
+    .then(raw_data => {
+        data = JSON.parse(raw_data);
+        let opts = document.querySelector("#group-" + id + " #GroupOptions");
+        if (opts) opts.style.display = 'none';
+        if (data.stat === "ok") {
+            if (is_default) {
+                setupDefaultActions(id, true);
+            } else {
+                setupDefaultActions(id, false);
             }
-        },
-        error: function (err) {
-            console.log(err);
-        },
-    });
+        }
+    })
+    .catch(error => console.log(error));
 };
 
 var setupDefaultActions = function (id, is_default) {
-    $("#group-" + id + " #GroupDefault").attr("style", "");
-    $("#group-" + id + " #GroupDefault").addClass("icon-star");
-    $("#group-" + id)
-        .find(".is-default-token")
-        .removeClass("icon-spin6")
-        .removeClass("animate-spin")
-        .addClass("icon-star");
+    let btn = document.querySelector("#group-" + id + " #GroupDefault");
+    if (btn) {
+        btn.style.cssText = "";
+        btn.classList.add("icon-star");
+    }
+
+    let token = document.querySelector("#group-" + id + " .is-default-token");
+    if (token) {
+        token.classList.remove("icon-spin6", "animate-spin");
+        token.classList.add("icon-star");
+    }
+
     if (is_default) {
-        $("#group-" + id)
-            .find("#GroupDefault")
-            .html(str_unset_default);
-        $("#group-" + id)
-            .find(".is-default-token")
-            .attr("title", str_unset_default);
-        $("#group-" + id)
-            .find("#GroupDefault")
-            .unbind("click");
-        $("#group-" + id)
-            .find(".is-default-token")
-            .removeClass("deactivate");
-        $("#group-" + id)
-            .find("#GroupDefault")
-            .on("click", function () {
-                setDefaultGroup(id, false);
-            });
-        $("#group-" + id)
-            .find(".is-default-token")
-            .on("click", function () {
-                setDefaultGroup(id, false);
-            });
+        let btn = document.querySelector("#group-" + id + " #GroupDefault");
+        if (btn) {
+            btn.innerHTML = str_unset_default;
+            btn.removeEventListener("click", arguments.callee);
+            btn.addEventListener("click", function () { setDefaultGroup(id, false); });
+        }
+
+        let token = document.querySelector("#group-" + id + " .is-default-token");
+        if (token) {
+            token.setAttribute("title", str_unset_default);
+            token.classList.remove("deactivate");
+            token.removeEventListener("click", arguments.callee);
+            token.addEventListener("click", function () { setDefaultGroup(id, false); });
+        }
     } else {
-        $("#group-" + id)
-            .find("#GroupDefault")
-            .html(str_set_default);
-        $("#group-" + id)
-            .find(".is-default-token")
-            .attr("title", str_set_default);
-        $("#group-" + id)
-            .find(".is-default-token")
-            .addClass("deactivate");
-        $("#group-" + id)
-            .find("#GroupDefault")
-            .on("click", function () {
-                setDefaultGroup(id, true);
-            });
-        $("#group-" + id)
-            .find(".is-default-token")
-            .unbind("click");
+        let btn = document.querySelector("#group-" + id + " #GroupDefault");
+        if (btn) {
+            btn.innerHTML = str_set_default;
+            btn.addEventListener("click", function () { setDefaultGroup(id, true); });
+        }
+
+        let token = document.querySelector("#group-" + id + " .is-default-token");
+        if (token) {
+            token.setAttribute("title", str_set_default);
+            token.classList.add("deactivate");
+            token.removeEventListener("click", arguments.callee);
+        }
     }
 };
 
 var duplicateAction = function (id) {
     let loadState = new TemporaryState();
-    loadState.changeHTML(
-        $("#group-" + id + " #GroupDuplicate"),
-        "<i class='icon-spin6 animate-spin'> </i>",
-    );
-    loadState.removeClass($("#group-" + id + " #GroupDuplicate"), "icon-docs");
-    loadState.changeAttribute(
-        $("#group-" + id + " #GroupDuplicate"),
-        "style",
-        "pointer-events: none; text-align: center;",
-    );
-    copy_name = $("#group-" + id + " #group_name").html() + str_copy;
+    let dupBtn = document.querySelector("#group-" + id + " #GroupDuplicate");
+    loadState.changeHTML(dupBtn, "<i class='icon-spin6 animate-spin'> </i>");
+    loadState.removeClass(dupBtn, "icon-docs");
+    loadState.changeAttribute(dupBtn, "style", "pointer-events: none; text-align: center;");
+
+    copy_name = (document.querySelector("#group-" + id + " #group_name")?.innerHTML || "") + str_copy;
 
     let name_exist = function (name) {
-        exist = false;
-        $(".Group-name-container p").each(function () {
-            if ($(this).html() === name) exist = true;
+        let exist = false;
+        document.querySelectorAll(".Group-name-container p").forEach(el => {
+            if (el.innerHTML === name) exist = true;
         });
         return exist;
     };
 
     let i = 1;
     while (name_exist(copy_name)) {
-        copy_name =
-            $("#group-" + id + " #group_name").html() +
-            str_other_copy.replace("%s", i++);
+        copy_name = (document.querySelector("#group-" + id + " #group_name")?.innerHTML || "") + str_other_copy.replace("%s", i++);
     }
 
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.groups.duplicate",
-        type: "POST",
-        data:
-            "group_id=" +
-            id +
-            "&pwg_token=" +
-            pwg_token +
-            "&copy_name=" +
-            copy_name,
-        success: function (raw_data) {
-            data = jQuery.parseJSON(raw_data);
-            loadState.reverse();
-            if (data.stat === "ok") {
-                $("#group-" + id + " #GroupOptions").hide();
-                group = data.result.groups[0];
-                let groupbox = createGroup(group);
-                groupbox.insertAfter($("#group-" + id));
-                setupGroupBox(groupbox);
-                updateBadge();
+    fetch("ws.php?format=json&method=pwg.groups.duplicate", {
+        method: "POST",
+        body: "group_id=" + id + "&pwg_token=" + pwg_token + "&copy_name=" + encodeURIComponent(copy_name),
+    })
+    .then(response => response.text())
+    .then(raw_data => {
+        data = JSON.parse(raw_data);
+        loadState.reverse();
+        if (data.stat === "ok") {
+            let opts = document.querySelector("#group-" + id + " #GroupOptions");
+            if (opts) opts.style.display = 'none';
+            group = data.result.groups[0];
+            let groupbox = createGroup(group);
+            document.getElementById("group-" + id)?.insertAdjacentElement("afterend", groupbox);
+            setupGroupBox(groupbox);
+            updateBadge();
 
-                /* data.result.groups[0].is_default is a string */
-                if (data.result.groups[0].is_default == "true") {
-                    setupDefaultActions(data.result.groups[0].id, true);
-                }
+            /* data.result.groups[0].is_default is a string */
+            if (data.result.groups[0].is_default == "true") {
+                setupDefaultActions(data.result.groups[0].id, true);
             }
-        },
-        error: function (err) {
-            console.log(err);
-        },
-    });
+        }
+    })
+    .catch(error => console.log(error));
 };
 
 /*-------
- Selection mode toggle actions,  
+ Selection mode toggle actions,
  changes "..." in group block to checkbox,
  disables group actions in selection mode
  -------*/
 
-$(function () {
-    $("#toggleSelectionMode").attr("checked", false);
-    $("#toggleSelectionMode").click(function () {
-        if ($(this).is(":checked")) {
-            $(".in-selection-mode").show();
-            $(".not-in-selection-mode").hide();
-            $(".GroupManagerButtons").removeClass("visible");
-        } else {
-            $(".in-selection-mode").hide();
-            $(".not-in-selection-mode").removeAttr("style");
-            $(".Group-checkbox input").attr("checked", false);
-            $(".Group-checkbox input[type='checkbox']").trigger("change");
-        }
-    });
+document.addEventListener('DOMContentLoaded', function () {
+    let toggleBtn = document.getElementById("toggleSelectionMode");
+    if (toggleBtn) {
+        toggleBtn.checked = false;
+        toggleBtn.addEventListener("click", function () {
+            if (this.checked) {
+                document.querySelectorAll(".in-selection-mode").forEach(el => el.style.display = '');
+                document.querySelectorAll(".not-in-selection-mode").forEach(el => el.style.display = 'none');
+                document.querySelector(".GroupManagerButtons")?.classList.remove("visible");
+            } else {
+                document.querySelectorAll(".in-selection-mode").forEach(el => el.style.display = 'none');
+                document.querySelectorAll(".not-in-selection-mode").forEach(el => el.style.cssText = "");
+                document.querySelectorAll(".Group-checkbox input").forEach(el => el.checked = false);
+                document.querySelectorAll(".Group-checkbox input[type='checkbox']").forEach(el => {
+                    el.dispatchEvent(new Event("change"));
+                });
+            }
+        });
+    }
 });
 
 /*-------
@@ -695,7 +623,7 @@ $(function () {
 var state = "NoSelection";
 
 var updateSelectionPanel = function (changedState = "") {
-    let numSelect = $(".DeleteGroupList div").length;
+    let numSelect = document.querySelectorAll(".DeleteGroupList div").length;
 
     if (numSelect == 0) {
         updateStatePanel("NoSelection");
@@ -710,7 +638,8 @@ var updateSelectionPanel = function (changedState = "") {
         else updateStatePanel(changedState);
     }
 
-    $(".number-Selected").html(numSelect + "");
+    let numEl = document.querySelector(".number-Selected");
+    if (numEl) numEl.innerHTML = numSelect + "";
 };
 
 /*Update the state of the panel in 5 states :
@@ -718,159 +647,150 @@ var updateSelectionPanel = function (changedState = "") {
  */
 var updateStatePanel = function (newState = "Selection") {
     state = newState;
+    let deleteBtn = document.getElementById("DeleteSelectionMode");
+    let mergeBtn = document.getElementById("MergeSelectionMode");
+    let mergeBlock = document.getElementById("MergeOptionsBlock");
+    let confirmBlock = document.getElementById("ConfirmGroupAction");
+
     switch (newState) {
         case "OneSelected":
-            $("#DeleteSelectionMode").show();
-            $("#MergeSelectionMode").show();
-            buttonUnavailable($("#MergeSelectionMode"));
-            buttonAvailable(
-                $("#DeleteSelectionMode"),
-                "updateSelectionPanel('ConfirmDeletion')",
-            );
-            $("#MergeOptionsBlock").hide();
-            $("#ConfirmGroupAction").hide();
+            if (deleteBtn) deleteBtn.style.display = '';
+            if (mergeBtn) mergeBtn.style.display = '';
+            buttonUnavailable(mergeBtn);
+            buttonAvailable(deleteBtn, "updateSelectionPanel('ConfirmDeletion')");
+            if (mergeBlock) mergeBlock.style.display = 'none';
+            if (confirmBlock) confirmBlock.style.display = 'none';
             break;
         case "ConfirmDeletion":
-            $("#DeleteSelectionMode").hide();
-            $("#MergeSelectionMode").hide();
-            $("#MergeOptionsBlock").hide();
-            $("#ConfirmGroupAction").show();
+            if (deleteBtn) deleteBtn.style.display = 'none';
+            if (mergeBtn) mergeBtn.style.display = 'none';
+            if (mergeBlock) mergeBlock.style.display = 'none';
+            if (confirmBlock) confirmBlock.style.display = '';
             break;
         case "Selection":
-            $("#DeleteSelectionMode").show();
-            $("#MergeSelectionMode").show();
-            buttonAvailable(
-                $("#MergeSelectionMode"),
-                "updateSelectionPanel('OptionMerge')",
-            );
-            buttonAvailable(
-                $("#DeleteSelectionMode"),
-                "updateSelectionPanel('ConfirmDeletion')",
-            );
-            $("#MergeOptionsBlock").hide();
-            $("#ConfirmGroupAction").hide();
+            if (deleteBtn) deleteBtn.style.display = '';
+            if (mergeBtn) mergeBtn.style.display = '';
+            buttonAvailable(mergeBtn, "updateSelectionPanel('OptionMerge')");
+            buttonAvailable(deleteBtn, "updateSelectionPanel('ConfirmDeletion')");
+            if (mergeBlock) mergeBlock.style.display = 'none';
+            if (confirmBlock) confirmBlock.style.display = 'none';
             break;
         case "OptionMerge":
-            $("#DeleteSelectionMode").hide();
-            $("#MergeSelectionMode").hide();
-            $("#MergeOptionsBlock").show();
-            $("#ConfirmGroupAction").hide();
+            if (deleteBtn) deleteBtn.style.display = 'none';
+            if (mergeBtn) mergeBtn.style.display = 'none';
+            if (mergeBlock) mergeBlock.style.display = '';
+            if (confirmBlock) confirmBlock.style.display = 'none';
             break;
     }
+    var selectionModeGroup = document.querySelector(".SelectionModeGroup");
     if (newState == "NoSelection") {
-        $("#DeleteSelectionMode").show();
-        $("#MergeSelectionMode").show();
-        buttonUnavailable($("#MergeSelectionMode"));
-        buttonUnavailable($("#DeleteSelectionMode"));
-        $(".SelectionModeGroup").hide();
-        $("#nothing-selected").show();
-        $("#MergeOptionsBlock").hide();
-        $("#ConfirmGroupAction").hide();
+        if (deleteBtn) deleteBtn.style.display = '';
+        if (mergeBtn) mergeBtn.style.display = '';
+        buttonUnavailable(mergeBtn);
+        buttonUnavailable(deleteBtn);
+        if (selectionModeGroup) selectionModeGroup.style.display = 'none';
+        let nothingSelected = document.getElementById("nothing-selected");
+        if (nothingSelected) nothingSelected.style.display = '';
+        if (mergeBlock) mergeBlock.style.display = 'none';
+        if (confirmBlock) confirmBlock.style.display = 'none';
     } else {
-        $(".SelectionModeGroup").show();
-        $("#nothing-selected").hide();
+        if (selectionModeGroup) selectionModeGroup.style.display = '';
+        let nothingSelected = document.getElementById("nothing-selected");
+        if (nothingSelected) nothingSelected.style.display = 'none';
     }
 };
 
 var buttonAvailable = function (button, onClick) {
-    button.removeClass("unavailable");
-    button.attr("OnClick", onClick);
+    if (button) {
+        button.classList.remove("unavailable");
+        button.setAttribute("onClick", onClick);
+    }
 };
 
 var buttonUnavailable = function (button) {
-    button.addClass("unavailable");
-    button.removeAttr("OnClick");
+    if (button) {
+        button.classList.add("unavailable");
+        button.removeAttribute("onClick");
+    }
 };
 
 /*-------
  Merge function on button's panel
  -------*/
 
-$(".ConfirmMergeButton").on("click", function () {
+document.querySelector(".ConfirmMergeButton")?.addEventListener("click", function () {
     let loadState = new TemporaryState();
-    loadState.changeAttribute(
-        $(".ConfirmMergeButton"),
-        "style",
-        "pointer-events: none",
-    );
-    loadState.changeHTML(
-        $(".ConfirmMergeButton"),
-        "<i class='icon-spin6 animate-spin'> </i>",
-    );
-    loadState.removeClass($(".ConfirmMergeButton"), "icon-ok");
+    let mergeBtn = document.querySelector(".ConfirmMergeButton");
+    loadState.changeAttribute(mergeBtn, "style", "pointer-events: none");
+    loadState.changeHTML(mergeBtn, "<i class='icon-spin6 animate-spin'> </i>");
+    loadState.removeClass(mergeBtn, "icon-ok");
+
     merge_group = [];
     str_merge_group = "";
     name_merge = [];
     name_dest = [];
-    dest_grp = $("#MergeOptionsChoices").val();
+    let destSelect = document.getElementById("MergeOptionsChoices");
+    dest_grp = destSelect ? destSelect.value : "";
 
-    $(".DeleteGroupList div").each(function () {
-        if (dest_grp != $(this).attr("data-id")) {
-            str_merge_group += "&merge_group_id[]=" + $(this).attr("data-id");
-            merge_group.push($(this).attr("data-id"));
-            name_merge.push($(this).find("p").html());
+    document.querySelectorAll(".DeleteGroupList div").forEach(el => {
+        if (dest_grp != el.getAttribute("data-id")) {
+            str_merge_group += "&merge_group_id[]=" + el.getAttribute("data-id");
+            merge_group.push(el.getAttribute("data-id"));
+            name_merge.push(el.querySelector("p")?.innerHTML || "");
         } else {
-            name_dest = $(this).find("p").html();
+            name_dest = el.querySelector("p")?.innerHTML || "";
         }
     });
 
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.groups.merge",
-        type: "POST",
-        data:
-            "destination_group_id=" +
-            dest_grp +
-            str_merge_group +
-            "&pwg_token=" +
-            pwg_token,
-        success: function (raw_data) {
-            loadState.reverse();
-            data = jQuery.parseJSON(raw_data);
-            if (data.stat === "ok") {
-                updateSelectionPanel("Selection");
-                merge_group.forEach(function (id) {
-                    $("#group-" + id).fadeOut(
-                        (complete = function () {
-                            $(this).remove();
-                        }),
-                    );
-                });
-                toggleSelection(dest_grp, false);
-                $(".DeleteGroupList").html("");
-                $("#MergeOptionsChoices").html("");
+    fetch("ws.php?format=json&method=pwg.groups.merge", {
+        method: "POST",
+        body: "destination_group_id=" + dest_grp + str_merge_group + "&pwg_token=" + pwg_token,
+    })
+    .then(response => response.text())
+    .then(raw_data => {
+        loadState.reverse();
+        data = JSON.parse(raw_data);
+        if (data.stat === "ok") {
+            updateSelectionPanel("Selection");
+            merge_group.forEach(function (id) {
+                let el = document.getElementById("group-" + id);
+                if (el) {
+                    el.style.opacity = "0";
+                    el.style.transition = "opacity 0.4s ease";
+                    setTimeout(() => el.remove(), 400);
+                }
+            });
+            toggleSelection(dest_grp, false);
+            let list = document.querySelector(".DeleteGroupList");
+            if (list) list.innerHTML = "";
+            let mergeSelect = document.getElementById("MergeOptionsChoices");
+            if (mergeSelect) mergeSelect.innerHTML = "";
 
-                $.alert({
-                    ...{
-                        title: str_merged_into
-                            .replace("%s1", name_merge.toString())
-                            .replace("%s2", name_dest),
-                        content: "",
-                    },
-                    ...jConfirm_alert_options,
-                });
+            pwgConfirm({
+                title: str_merged_into
+                    .replace("%s1", name_merge.toString())
+                    .replace("%s2", name_dest),
+                buttons: { ok: { text: 'OK' } }
+            });
 
-                $("#group-" + dest_grp + " .group_number_users").html(
-                    "<i class='icon-spin6 animate-spin'> </i>",
-                );
-                jQuery.ajax({
-                    url: "ws.php?format=json&method=pwg.users.getList",
-                    type: "POST",
-                    data: "group_id=" + dest_grp,
-                    success: function (raw_data) {
-                        data = jQuery.parseJSON(raw_data);
-                        let number = data.result.users.length;
-                        $("#group-" + dest_grp + " .group_number_users").html(
-                            number +
-                                " " +
-                                (number > 1
-                                    ? str_members_default
-                                    : str_member_default),
-                        );
-                        updateBadge();
-                    },
-                });
-            }
-        },
+            let userCount = document.querySelector("#group-" + dest_grp + " .group_number_users");
+            if (userCount) userCount.innerHTML = "<i class='icon-spin6 animate-spin'> </i>";
+
+            fetch("ws.php?format=json&method=pwg.users.getList", {
+                method: "POST",
+                body: "group_id=" + dest_grp,
+            })
+            .then(response => response.text())
+            .then(raw_data => {
+                data = JSON.parse(raw_data);
+                let number = data.result.users.length;
+                let userCountEl = document.querySelector("#group-" + dest_grp + " .group_number_users");
+                if (userCountEl) {
+                    userCountEl.innerHTML = number + " " + (number > 1 ? str_members_default : str_member_default);
+                }
+                updateBadge();
+            });
+        }
     });
 });
 
@@ -878,68 +798,51 @@ $(".ConfirmMergeButton").on("click", function () {
  Delete function on button's panel
  -------*/
 
-$(".ConfirmDeleteButton").on("click", function () {
+document.querySelector(".ConfirmDeleteButton")?.addEventListener("click", function () {
     let names = [];
     let ids = [];
-    $(".DeleteGroupList div").each(function () {
-        let id = $(this).data("id");
-        names.push($("#group-" + id + " #group_name").html());
+    document.querySelectorAll(".DeleteGroupList div").forEach(el => {
+        let id = el.getAttribute("data-id");
+        names.push(document.querySelector("#group-" + id + " #group_name")?.innerHTML || "");
         ids.push(id);
     });
 
     let loadState = new TemporaryState();
-    loadState.changeAttribute(
-        $(".ConfirmDeleteButton"),
-        "style",
-        "pointer-events: none",
-    );
-    loadState.changeHTML(
-        $(".ConfirmDeleteButton"),
-        "<i class='icon-spin6 animate-spin'> </i>",
-    );
-    loadState.removeClass($(".ConfirmDeleteButton"), "icon-ok");
+    let delBtn = document.querySelector(".ConfirmDeleteButton");
+    loadState.changeAttribute(delBtn, "style", "pointer-events: none");
+    loadState.changeHTML(delBtn, "<i class='icon-spin6 animate-spin'> </i>");
+    loadState.removeClass(delBtn, "icon-ok");
 
     str_id = "";
     ids.forEach(function (id) {
         str_id += "group_id[]=" + id + "&";
     });
 
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.groups.delete",
-        type: "POST",
-        data: str_id + "pwg_token=" + pwg_token,
-        success: function (raw_data) {
-            data = jQuery.parseJSON(raw_data);
-            if (data.stat === "ok") {
-                $(".DeleteGroupList div").each(function () {
-                    $(this).remove();
-                    $("#group-" + $(this).attr("data-id")).remove();
-                    $(
-                        "#MergeOptionsChoices option[value=" +
-                            $(this).attr("data-id") +
-                            "]",
-                    ).remove();
-                });
+    fetch("ws.php?format=json&method=pwg.groups.delete", {
+        method: "POST",
+        body: str_id + "pwg_token=" + pwg_token,
+    })
+    .then(response => response.text())
+    .then(raw_data => {
+        data = JSON.parse(raw_data);
+        if (data.stat === "ok") {
+            document.querySelectorAll(".DeleteGroupList div").forEach(el => {
+                let id = el.getAttribute("data-id");
+                el.remove();
+                document.getElementById("group-" + id)?.remove();
+                document.querySelectorAll("#MergeOptionsChoices option[value=" + id + "]").forEach(opt => opt.remove());
+            });
 
-                loadState.reverse();
-                updateSelectionPanel("NoSelection");
-                $.alert({
-                    ...{
-                        title: str_groups_deleted.replace(
-                            "%s",
-                            names.toString(),
-                        ),
-                        content: "",
-                    },
-                    ...jConfirm_alert_options,
-                });
-                updateBadge();
-            }
-        },
-        error: function (err) {
-            console.log(err);
-        },
-    });
+            loadState.reverse();
+            updateSelectionPanel("NoSelection");
+            pwgConfirm({
+                title: str_groups_deleted.replace("%s", names.toString()),
+                buttons: { ok: { text: 'OK' } }
+            });
+            updateBadge();
+        }
+    })
+    .catch(error => console.log(error));
 });
 
 /*-------
@@ -957,351 +860,310 @@ var usersInGroup = [];
 // Max offset of the user container (322 = 6 lines)
 var maxOffsetUserCont = 322;
 
-var dissociateUserInfo = $(
-    "<div class='ValidationUserDissociated'>" +
-        "<p class='icon-ok'></p>" +
-        "</div>",
-)
-    .appendTo(".group-name-block")
-    .hide();
+let dissociateUserInfo = document.createElement("div");
+dissociateUserInfo.className = "ValidationUserDissociated";
+dissociateUserInfo.innerHTML = "<p class='icon-ok'></p>";
+document.querySelector(".group-name-block")?.appendChild(dissociateUserInfo);
+dissociateUserInfo.style.display = 'none';
 
-var associateUserInfo = $(
-    "<div class='ValidationUserAssociated'>" +
-        "<p class='icon-ok'></p>" +
-        "</div>",
-);
+var associateUserInfo = document.createElement("div");
+associateUserInfo.className = "ValidationUserAssociated";
+associateUserInfo.innerHTML = "<p class='icon-ok'></p>";
 
 // Setup the user research bar
-$(function () {
-    // initialize the Selectize control
-    $select = $(".AddUserBlock select").selectize({});
+document.addEventListener('DOMContentLoaded', function () {
+    // initialize the TomSelect control
+    let selectEl = document.querySelector(".AddUserBlock select");
+    if (selectEl) {
+        selectize = selectEl.tomselect || new TomSelect(selectEl, {});
 
-    // fetch the instance
-    selectize = $select[0].selectize;
-
-    var idSearch = "";
-    $(".UserSearch input").on("focus", function () {
-        if (idSearch != $("#UserList").attr("data-group_id")) {
-            updateUserSearch();
-        }
-    });
-
-    // Update User search bar (remove group users in selection)
-    updateUserSearch = function () {
-        selectize.clear();
-        if ((usersCache = {})) {
-            usersCache = new UsersCache({
-                serverKey: serverKey,
-                serverId: serverId,
-                rootUrl: rootUrl,
-            });
-        }
-        JSON.parse(usersCache.storage[usersCache.key]).data.forEach(
-            function (u) {
-                selectize.addOption({ value: u.id, text: u.username });
-            },
-        );
-        idSearch = $("#UserList").attr("data-group_id");
-        for (const [key, value] of Object.entries(selectize.options)) {
-            if (value.username === "guest") {
-                selectize.removeOption(value.id);
+        var idSearch = "";
+        document.querySelector(".UserSearch input")?.addEventListener("focus", function () {
+            if (idSearch != document.getElementById("UserList")?.getAttribute("data-group_id")) {
+                updateUserSearch();
             }
-        }
-        $(".UsernameBlock").each(function () {
-            selectize.removeOption($(this).data("id"));
         });
-    };
+
+        // Update User search bar (remove group users in selection)
+        updateUserSearch = function () {
+            if (selectize) selectize.clear();
+            if ((usersCache = {})) {
+                usersCache = new UsersCache({
+                    serverKey: serverKey,
+                    serverId: serverId,
+                    rootUrl: rootUrl,
+                });
+            }
+            try {
+                JSON.parse(usersCache.storage[usersCache.key]).data.forEach(function (u) {
+                    if (selectize) selectize.addOption({ value: u.id, text: u.username });
+                });
+            } catch (e) {
+                // Handle cache parsing errors
+            }
+            idSearch = document.getElementById("UserList")?.getAttribute("data-group_id");
+
+            if (selectize) {
+                for (const [key, value] of Object.entries(selectize.options)) {
+                    if (value.username === "guest") {
+                        selectize.removeOption(value.id);
+                    }
+                }
+            }
+
+            document.querySelectorAll(".UsernameBlock").forEach(el => {
+                if (selectize) selectize.removeOption(el.getAttribute("data-id"));
+            });
+        };
+    }
 });
 
 // Display the user manager for a specific group
 var openUserManager = function (grp_id) {
     let loadState = new TemporaryState();
-    loadState.removeClass(
-        $("#group-" + grp_id + " #UserListTrigger"),
-        "icon-user-1",
-    );
-    loadState.changeAttribute(
-        $("#group-" + grp_id + " #UserListTrigger"),
-        "style",
-        "pointer-events: none",
-    );
-    loadState.changeHTML(
-        $("#group-" + grp_id + " #UserListTrigger"),
-        "<i class='icon-spin6 animate-spin'> </i>",
-    );
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.getList",
-        type: "POST",
-        data: "group_id=" + grp_id,
-        success: function (raw_data) {
-            loadState.reverse();
-            data = jQuery.parseJSON(raw_data);
-            if (data.stat === "ok") {
-                //Set the popin name
-                $(".group-name-block p").html(
-                    $("#group-" + grp_id + " #group_name").html() +
-                        " / " +
-                        str_user_list,
-                );
-                $(".UsersInGroupList").html("");
+    let trigger = document.querySelector("#group-" + grp_id + " #UserListTrigger");
+    loadState.removeClass(trigger, "icon-user-1");
+    loadState.changeAttribute(trigger, "style", "pointer-events: none");
+    loadState.changeHTML(trigger, "<i class='icon-spin6 animate-spin'> </i>");
 
-                //Display the popin
-                $("#UserList").fadeIn();
+    fetch("ws.php?format=json&method=pwg.users.getList", {
+        method: "POST",
+        body: "group_id=" + grp_id,
+    })
+    .then(response => response.text())
+    .then(raw_data => {
+        loadState.reverse();
+        data = JSON.parse(raw_data);
+        if (data.stat === "ok") {
+            //Set the popin name
+            let nameBlock = document.querySelector(".group-name-block p");
+            if (nameBlock) nameBlock.innerHTML = (document.querySelector("#group-" + grp_id + " #group_name")?.innerHTML || "") + " / " + str_user_list;
 
-                //Fill with user blocks
-                usersInGroup = data.result.users;
-                // Sort in alphabetic order
-                usersInGroup.sort(function (a, b) {
-                    if (a.username.toLowerCase() < b.username.toLowerCase()) {
-                        return -1;
-                    } else return 1;
-                });
-                let i = 0;
-                while (
-                    $(".UsersInGroupList").outerHeight() <= maxOffsetUserCont &&
-                    usersInGroup[i] != undefined
-                ) {
-                    getUserDisplay(
-                        usersInGroup[i].username,
-                        usersInGroup[i].id,
-                        grp_id,
-                    ).appendTo(".UsersInGroupList");
-                    i++;
-                }
-                while ($(".UsersInGroupList").height() > maxOffsetUserCont) {
-                    $(".UsernameBlock").last().remove();
-                }
-                updateMembernumber(usersInGroup.length, grp_id);
-                //Attribute the group id to the div
-                $("#UserList").attr("data-group_id", grp_id);
+            let userList = document.querySelector(".UsersInGroupList");
+            if (userList) userList.innerHTML = "";
 
-                $(".LinkUserManager a").attr(
-                    "href",
-                    "admin.php?page=user_list&group=" + grp_id,
-                );
+            //Display the popin
+            let popup = document.getElementById("UserList");
+            if (popup) popup.style.display = '';
+
+            //Fill with user blocks
+            usersInGroup = data.result.users;
+            // Sort in alphabetic order
+            usersInGroup.sort(function (a, b) {
+                if (a.username.toLowerCase() < b.username.toLowerCase()) {
+                    return -1;
+                } else return 1;
+            });
+
+            let i = 0;
+            let userListEl = document.querySelector(".UsersInGroupList");
+            while (userListEl && userListEl.offsetHeight <= maxOffsetUserCont && usersInGroup[i] != undefined) {
+                let userEl = getUserDisplay(usersInGroup[i].username, usersInGroup[i].id, grp_id);
+                userListEl.appendChild(userEl);
+                i++;
             }
-        },
-        error: function (err) {
-            console.log(err);
-        },
-    });
+
+            while (userListEl && userListEl.offsetHeight > maxOffsetUserCont) {
+                userListEl.querySelector(".UsernameBlock:last-child")?.remove();
+            }
+
+            updateMembernumber(usersInGroup.length, grp_id);
+            //Attribute the group id to the div
+            if (popup) popup.setAttribute("data-group_id", grp_id);
+
+            let managerLink = document.querySelector(".LinkUserManager a");
+            if (managerLink) managerLink.href = "admin.php?page=user_list&group=" + grp_id;
+        }
+    })
+    .catch(error => console.log(error));
 };
 
 //Add a user block
 var getUserDisplay = function (username, user_id, grp_id) {
-    let userBlock = $(
-        '<div class="UsernameBlock" data-id=' +
-            user_id +
-            ">" +
-            '<span class="icon-user-1"></span>' +
-            "<p>" +
-            username +
-            "</p>" +
-            '<div class="Tooltip">' +
-            '<span class="icon-cancel"></span>' +
-            '<p class="TooltipText">' +
-            str_user_dissociate +
-            "</p>" +
-            "</div>" +
-            "</div>",
-    );
+    let userBlock = document.createElement("div");
+    userBlock.className = "UsernameBlock";
+    userBlock.setAttribute("data-id", user_id);
+    userBlock.innerHTML = '<span class="icon-user-1"></span><p>' + username + '</p><div class="Tooltip"><span class="icon-cancel"></span><p class="TooltipText">' + str_user_dissociate + '</p></div>';
 
-    while ($(".UsersInGroupList")[0].offsetHeight > maxOffsetUserCont) {
-        $(".UsernameBlock").last().remove();
+    let userList = document.querySelector(".UsersInGroupList");
+    while (userList && userList.offsetHeight > maxOffsetUserCont) {
+        userList.querySelector(".UsernameBlock:last-child")?.remove();
     }
 
     //Setup the delete action
-    userBlock.find(".icon-cancel").on("click", function () {
-        userBlock.find(".icon-cancel").addClass("icon-spin6");
-        userBlock.find(".icon-cancel").addClass("animate-spin");
-        userBlock.find(".icon-cancel").css("pointer-events", "none");
-        userBlock.find(".icon-cancel").removeClass("icon-cancel");
-        jQuery.ajax({
-            url: "ws.php?format=json&method=pwg.groups.deleteUser",
-            type: "POST",
-            data:
-                "group_id=" +
-                grp_id +
-                "&user_id=" +
-                user_id +
-                "&pwg_token=" +
-                pwg_token,
-            success: function (raw_data) {
-                data = jQuery.parseJSON(raw_data);
+    let cancelBtn = userBlock.querySelector(".icon-cancel");
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", function () {
+            cancelBtn.classList.add("icon-spin6", "animate-spin");
+            cancelBtn.style.pointerEvents = "none";
+            cancelBtn.classList.remove("icon-cancel");
+
+            fetch("ws.php?format=json&method=pwg.groups.deleteUser", {
+                method: "POST",
+                body: "group_id=" + grp_id + "&user_id=" + user_id + "&pwg_token=" + pwg_token,
+            })
+            .then(response => response.text())
+            .then(raw_data => {
+                data = JSON.parse(raw_data);
                 if (data.stat === "ok") {
                     let str = str_user_dissociated.replace("%s", username);
-                    associateUserInfo.fadeOut();
-                    dissociateUserInfo.find("p").html(str);
-                    dissociateUserInfo.fadeIn();
+                    associateUserInfo.style.display = 'none';
+                    dissociateUserInfo.querySelector("p").innerHTML = str;
+                    dissociateUserInfo.style.display = '';
 
-                    $(".UsernameBlock")
-                        .css("margin-right", "10px")
-                        .css("border", "none");
+                    document.querySelectorAll(".UsernameBlock").forEach(el => {
+                        el.style.marginRight = "10px";
+                        el.style.border = "none";
+                    });
                     userBlock.remove();
 
                     updateUserSearch();
 
-                    while (
-                        $(".UsersInGroupList").height() > maxOffsetUserCont
-                    ) {
-                        $(".UsernameBlock").last().remove();
+                    let userList = document.querySelector(".UsersInGroupList");
+                    while (userList && userList.offsetHeight > maxOffsetUserCont) {
+                        userList.querySelector(".UsernameBlock:last-child")?.remove();
                     }
 
                     usersInGroup = usersInGroup.filter((u) => u.id != user_id);
 
                     //Update member number
-                    updateMembernumber(
-                        parseInt($(".UserNumberBadge").html()) - 1,
-                        grp_id,
-                    );
+                    let badgeNum = document.querySelector(".UserNumberBadge")?.innerHTML || "0";
+                    updateMembernumber(parseInt(badgeNum) - 1, grp_id);
                 }
-            },
+            });
         });
-    });
+    }
     return userBlock;
 };
 
 //Update member number function
 function updateMembernumber(number, grp_id) {
-    $(".GroupContainer[data-id=" + grp_id + "] .group_number_users").html(
-        number + " " + (number > 1 ? str_members_default : str_member_default),
-    );
-    $(".UserNumberBadge").html(number);
-    $(".AmountOfUsersShown strong:nth-child(2)").html(number);
-    $(".AmountOfUsersShown strong:nth-child(1)").html(
-        $(".UsernameBlock").length,
-    );
+    let el = document.querySelector(".GroupContainer[data-id=" + grp_id + "] .group_number_users");
+    if (el) el.innerHTML = number + " " + (number > 1 ? str_members_default : str_member_default);
+
+    let badge = document.querySelector(".UserNumberBadge");
+    if (badge) badge.innerHTML = number;
+
+    let shown2 = document.querySelector(".AmountOfUsersShown strong:nth-child(2)");
+    if (shown2) shown2.innerHTML = number;
+
+    let shown1 = document.querySelector(".AmountOfUsersShown strong:nth-child(1)");
+    if (shown1) shown1.innerHTML = document.querySelectorAll(".UsernameBlock").length;
 }
 
 // Close pop-up on cross click
-$(".CloseUserList").on("click", function () {
-    $("#UserList").fadeOut();
+document.querySelector(".CloseUserList")?.addEventListener("click", function () {
+    let popup = document.getElementById("UserList");
+    if (popup) popup.style.display = 'none';
 });
 
 // Adding Group Action
-$(".AddUserBlock button").on("click", function () {
-    let grp_id = $("#UserList").attr("data-group_id");
-    let usersString = "";
-    // Get selected ids
-    let id = selectize.getValue();
+document.querySelector(".AddUserBlock button")?.addEventListener("click", function () {
+    let grp_id = document.getElementById("UserList")?.getAttribute("data-group_id");
+    let id = selectize ? selectize.getValue() : "";
 
     if (id != "") {
         let loadState = new TemporaryState();
-        loadState.changeHTML(
-            $("#UserSubmit"),
-            "<i class='icon-spin6 animate-spin'> </i>",
-        );
-        loadState.removeClass($("#UserSubmit"), "icon-user-add");
-        loadState.changeAttribute(
-            $("#UserSubmit"),
-            "css",
-            "pointer-events:none",
-        );
-        jQuery.ajax({
-            url: "ws.php?format=json&method=pwg.groups.addUser",
-            type: "POST",
-            data:
-                "group_id=" +
-                grp_id +
-                "&user_id=" +
-                id +
-                "&pwg_token=" +
-                pwg_token,
-            success: function (raw_data) {
-                loadState.reverse();
-                data = jQuery.parseJSON(raw_data);
+        let submitBtn = document.getElementById("UserSubmit");
+        loadState.changeHTML(submitBtn, "<i class='icon-spin6 animate-spin'> </i>");
+        loadState.removeClass(submitBtn, "icon-user-add");
+        loadState.changeAttribute(submitBtn, "style", "pointer-events:none");
 
-                if (data.stat === "ok") {
-                    // Get the username
-                    let username = "undefined";
-                    JSON.parse(usersCache.storage[usersCache.key]).data.forEach(
-                        function (u) {
-                            if (u.id == id) {
-                                username = u.username;
-                            }
-                        },
-                    );
-                    let userBlock = getUserDisplay(
-                        username,
-                        id,
-                        grp_id,
-                    ).prependTo(".UsersInGroupList");
+        fetch("ws.php?format=json&method=pwg.groups.addUser", {
+            method: "POST",
+            body: "group_id=" + grp_id + "&user_id=" + id + "&pwg_token=" + pwg_token,
+        })
+        .then(response => response.text())
+        .then(raw_data => {
+            loadState.reverse();
+            data = JSON.parse(raw_data);
 
-                    dissociateUserInfo.fadeOut();
-
-                    $(".UsernameBlock:first")
-                        .css("margin-right", "0px")
-                        .css("border", "2px solid #c2f5c2");
-                    $(".UsernameBlock")
-                        .slice(1)
-                        .css("margin-right", "10px")
-                        .css("border", "none");
-                    associateUserInfo.remove();
-                    associateUserInfo.insertAfter(userBlock);
-                    associateUserInfo.find("p").html(str_user_associated);
-                    associateUserInfo.fadeIn();
-
-                    updateUserSearch();
-
-                    usersInGroup.push({ username: username, id: id });
-
-                    while (
-                        $(".UsersInGroupList").height() > maxOffsetUserCont
-                    ) {
-                        $(".UsernameBlock").last().remove();
-                    }
-
-                    //Update member number
-                    updateMembernumber(
-                        parseInt($(".UserNumberBadge").html()) + 1,
-                        grp_id,
-                    );
+            if (data.stat === "ok") {
+                // Get the username
+                let username = "undefined";
+                try {
+                    JSON.parse(usersCache.storage[usersCache.key]).data.forEach(function (u) {
+                        if (u.id == id) {
+                            username = u.username;
+                        }
+                    });
+                } catch (e) {
+                    // Handle cache errors
                 }
-            },
+
+                let userBlock = getUserDisplay(username, id, grp_id);
+                document.querySelector(".UsersInGroupList")?.insertBefore(userBlock, document.querySelector(".UsersInGroupList")?.firstChild);
+
+                associateUserInfo.style.display = 'none';
+
+                document.querySelectorAll(".UsernameBlock:first-child").forEach(el => {
+                    el.style.marginRight = "0px";
+                    el.style.border = "2px solid #c2f5c2";
+                });
+                document.querySelectorAll(".UsernameBlock").forEach((el, idx) => {
+                    if (idx > 0) {
+                        el.style.marginRight = "10px";
+                        el.style.border = "none";
+                    }
+                });
+
+                if (associateUserInfo.parentNode) associateUserInfo.parentNode.removeChild(associateUserInfo);
+                userBlock.insertAdjacentElement("afterend", associateUserInfo);
+                associateUserInfo.querySelector("p").innerHTML = str_user_associated;
+                associateUserInfo.style.display = '';
+
+                updateUserSearch();
+
+                usersInGroup.push({ username: username, id: id });
+
+                let userList = document.querySelector(".UsersInGroupList");
+                while (userList && userList.offsetHeight > maxOffsetUserCont) {
+                    userList.querySelector(".UsernameBlock:last-child")?.remove();
+                }
+
+                //Update member number
+                let badgeNum = document.querySelector(".UserNumberBadge")?.innerHTML || "0";
+                updateMembernumber(parseInt(badgeNum) + 1, grp_id);
+            }
         });
     }
 });
 
-$(".input-user-name").on("input", function () {
-    searchString = $(this).val().toLowerCase();
-    grp_id = $(".UserListPopIn").data("group_id");
+document.querySelector(".input-user-name")?.addEventListener("input", function () {
+    searchString = this.value.toLowerCase();
+    let grp_id = document.querySelector(".UserListPopIn")?.getAttribute("data-group_id");
     if (searchString != "") {
-        $(".UsersInGroupListContainer").css(
-            "min-height",
-            $(".UsersInGroupListContainer").height(),
-        );
+        let container = document.querySelector(".UsersInGroupListContainer");
+        if (container) container.style.minHeight = container.offsetHeight + "px";
+
         usersInGroup.forEach(function (u) {
             let isSearched = u.username.toLowerCase().includes(searchString);
-            if ($(".UsernameBlock[data-id=" + u.id + "]").length != 0) {
-                if (!isSearched) {
-                    $(".UsernameBlock[data-id=" + u.id + "]").remove();
-                }
-            } else if (isSearched) {
-                getUserDisplay(u.username, u.id, grp_id).prependTo(
-                    ".UsersInGroupList",
-                );
+            let userBlock = document.querySelector(".UsernameBlock[data-id=" + u.id + "]");
+            if (userBlock && !isSearched) {
+                userBlock.remove();
+            } else if (!userBlock && isSearched) {
+                let newBlock = getUserDisplay(u.username, u.id, grp_id);
+                document.querySelector(".UsersInGroupList")?.insertBefore(newBlock, document.querySelector(".UsersInGroupList")?.firstChild);
             }
         });
     } else {
-        $(".UsersInGroupListContainer").css("min-height", "");
-        $(".UsersInGroupList").html("");
+        let container = document.querySelector(".UsersInGroupListContainer");
+        if (container) container.style.minHeight = "";
+        let userList = document.querySelector(".UsersInGroupList");
+        if (userList) userList.innerHTML = "";
+
         let i = 0;
-        while (
-            $(".UsersInGroupList").outerHeight() <= maxOffsetUserCont &&
-            usersInGroup[i] != undefined
-        ) {
-            getUserDisplay(
-                usersInGroup[i].username,
-                usersInGroup[i].id,
-                grp_id,
-            ).appendTo(".UsersInGroupList");
+        while (userList && userList.offsetHeight <= maxOffsetUserCont && usersInGroup[i] != undefined) {
+            let userEl = getUserDisplay(usersInGroup[i].username, usersInGroup[i].id, grp_id);
+            userList.appendChild(userEl);
             i++;
         }
     }
-    $(".AmountOfUsersShown strong:nth-child(1)").html(
-        $(".UsernameBlock").length,
-    );
-    while ($(".UsersInGroupList").height() > maxOffsetUserCont) {
-        $(".UsernameBlock").last().remove();
+    let shown = document.querySelector(".AmountOfUsersShown strong:nth-child(1)");
+    if (shown) shown.innerHTML = document.querySelectorAll(".UsernameBlock").length;
+
+    let userList = document.querySelector(".UsersInGroupList");
+    while (userList && userList.offsetHeight > maxOffsetUserCont) {
+        userList.querySelector(".UsernameBlock:last-child")?.remove();
     }
 });

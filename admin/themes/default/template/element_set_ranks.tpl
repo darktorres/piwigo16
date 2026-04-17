@@ -1,43 +1,42 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{footer_script require='jquery.ui'}<script>
+{combine_script id='sortablejs' load='footer' path='node_modules/sortablejs/Sortable.min.js'}
+
+{footer_script require='sortablejs'}<script>
   const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
 
-  jQuery(document).ready(function() {
-    function checkOrderOptions() {
-      jQuery("#image_order_user_define_options").hide();
-      if (jQuery("input[name=image_order_choice]:checked").val() == "user_define") {
-        jQuery("#image_order_user_define_options").show();
-      }
+  function checkOrderOptions() {
+    var opts = document.getElementById("image_order_user_define_options");
+    if (!opts) return;
+    var checked = document.querySelector("input[name=image_order_choice]:checked");
+    opts.style.display = (checked && checked.value === "user_define") ? '' : 'none';
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var thumbnailsUl = document.querySelector('ul.thumbnails');
+    if (thumbnailsUl) {
+      Sortable.create(thumbnailsUl, {
+        animation: 150,
+        handle: '.rank-of-image',
+        onEnd: function() {
+          thumbnailsUl.querySelectorAll('li').forEach(function(li, i) {
+            li.querySelectorAll("input[name^=rank_of_image]").forEach(function(inp) {
+              inp.setAttribute('value', (i + 1) * 10);
+            });
+          });
+          var rankRadio = document.getElementById('image_order_rank');
+          if (rankRadio) rankRadio.checked = true;
+          checkOrderOptions();
+        }
+      });
     }
 
-    jQuery('ul.thumbnails').sortable({
-      revert: true,
-      opacity: 0.7,
-      handle: jQuery('.rank-of-image').add('.rank-of-image img'),
-      update: function() {
-        jQuery(this).find('li').each(function(i) {
-          jQuery(this).find("input[name^=rank_of_image]").each(function() {
-            jQuery(this).attr('value', (i + 1) * 10)
-          });
-        });
-
-        jQuery('#image_order_rank').prop('checked', true);
-        checkOrderOptions();
-      }
-    });
-
-    jQuery("input[name=image_order_choice]").click(function() {
-      checkOrderOptions();
+    document.querySelectorAll("input[name=image_order_choice]").forEach(function(el) {
+      el.addEventListener('click', function() { checkOrderOptions(); });
     });
 
     checkOrderOptions();
-  });
-  jQuery(document).ready(function() {
-    jQuery('.thumbnail').tipTip({
-      'delay': 0,
-      'fadeIn': 200,
-      'fadeOut': 200
-    });
+
+    tippy('.thumbnail', { delay: 0, placement: 'top' });
   });
 </script>{/footer_script}
 

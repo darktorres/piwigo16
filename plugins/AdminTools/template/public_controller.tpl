@@ -3,33 +3,11 @@
 {combine_css path=$ADMINTOOLS_PATH|cat:'template/fontello/css/fontello-ato.css'}
 
 {if isset($ato.QUICK_EDIT)}
-  {*<!-- mousetrap -->*}
   {combine_script id='mousetrap' load='footer' path='node_modules/mousetrap/mousetrap.js'}
-
-  {*<!-- colorbox -->*}
-  {combine_script id='jquery.colorbox' load='footer' require='jquery' path='node_modules/jquery-colorbox/jquery.colorbox.js'}
-  {combine_css id='colorbox' path='node_modules/jquery-colorbox/example2/colorbox.css'}
-
-  {if isset($ato.IS_PICTURE)}
-    {*<!-- tokeninput -->*}
-    {combine_script id='jquery.tokeninput' load='footer' require='jquery' path='https://rawcdn.githack.com/Piwigo/Piwigo/refs/heads/14.x/themes/default/js/plugins/jquery.tokeninput.js'}
-    {combine_css path='https://rawcdn.githack.com/Piwigo/Piwigo/refs/heads/14.x/themes/default/js/plugins/jquery.tokeninput.css'}
-
-    {*<!-- datepicker -->*}
-    {combine_script id='jquery.ui' load='footer'}
-
-    {assign var=datepicker_language value='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/i18n/jquery.ui.datepicker-'|cat:$lang_info.code|cat:'.js'}
-    {if 'PHPWG_ROOT_PATH'|constant|cat:$datepicker_language|file_exists}
-      {combine_script id='jquery.ui.datepicker-'|cat:$lang_info.code load='footer' path=$datepicker_language}
-    {/if}
-
-    {combine_css path='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.core.css'}
-    {combine_css path='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.theme.css'}
-    {combine_css path='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.datepicker.css'}
-  {/if}
+  {combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
+  {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 {/if}
-
-{combine_script id='admintools.controller' load='footer' require='jquery' path=$ADMINTOOLS_PATH|cat:'template/public_controller.js'}
+{combine_script id='admintools.controller' load='footer' path=$ADMINTOOLS_PATH|cat:'template/public_controller.js'}
 
 {footer_script require='admintools.controller'}<script>
   AdminTools.urlWS = '{$ROOT_URL}ws.php?format=json&method=';
@@ -57,12 +35,7 @@
     AdminTools.initCaddie({$current.id});
   {/if}
   {if isset($ato.QUICK_EDIT)}
-    AdminTools.initQuickEdit({intval(isset($ato.IS_PICTURE))}, {
-    hintText: '{'Type in a search term'|translate|escape:javascript}',
-    noResultsText: '{'No results'|translate|escape:javascript}',
-    searchingText: '{'Searching...'|translate|escape:javascript}',
-    newText: ' ({'new'|translate|escape:javascript})'
-    });
+    AdminTools.initQuickEdit({intval(isset($ato.IS_PICTURE))});
   {/if}
 </script>{/footer_script}
 
@@ -160,7 +133,8 @@
 </div>
 
 {if isset($ato.QUICK_EDIT)}
-  <div style="display:none;">
+  <style>#ato_quick_edit_dlg { border: none; border-radius: 6px; padding: 0; max-width: 520px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,.3); }</style>
+  <dialog id="ato_quick_edit_dlg">
     <div id="ato_quick_edit" title="{'Quick edit'|translate}">
       <form method="post" action="{$ato.U_SELF}">
         <fieldset class="left">
@@ -180,7 +154,7 @@
               value="{$ato.QUICK_EDIT.author|escape:html}" {/if}>
 
             <label for="quick_edit_date_creation">{'Creation date'|translate}</label>
-            <input type="text" name="date_creation" id="quick_edit_date_creation" class="datepicker"
+            <input type="date" name="date_creation" id="quick_edit_date_creation"
               value="{$ato.QUICK_EDIT.date_creation}">
             <input type="hidden" name="date_creation_time" value="{$ato.QUICK_EDIT.date_creation_time}">
 
@@ -206,5 +180,5 @@
         <input type="hidden" name="action" value="quick_edit">
       </form>
     </div>
-  </div>
+  </dialog>
 {/if}

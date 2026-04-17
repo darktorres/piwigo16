@@ -1,69 +1,92 @@
-$(document).ready(function () {
-    $(".linked-albums.add-item").on("click", function () {
-        linked_albums_open();
-        set_up_popin();
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll(".linked-albums.add-item").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            linked_albums_open();
+            set_up_popin();
+        });
     });
 
-    $(".limitReached").html(str_no_search_in_progress);
-    $(".search-cancel-linked-album").hide();
-    $(".linkedAlbumPopInContainer .searching").hide();
-    $("#linkedAlbumSearch .search-input").on("input", function () {
-        if ($(this).val() != 0) {
-            $("#linkedAlbumSearch .search-cancel-linked-album").show();
-        } else {
-            $("#linkedAlbumSearch .search-cancel-linked-album").hide();
-        }
-
-        // Search input value length required to start searching
-        if ($(this).val().length > 0) {
-            linked_albums_search($(this).val());
-        } else {
-            $(".limitReached").html(str_no_search_in_progress);
-            $("#searchResult").empty();
-        }
+    var limitReached = document.querySelector(".limitReached");
+    if (limitReached) limitReached.innerHTML = str_no_search_in_progress;
+    document.querySelectorAll(".search-cancel-linked-album").forEach(function (el) {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll(".linkedAlbumPopInContainer .searching").forEach(function (el) {
+        el.style.display = 'none';
     });
 
-    $(".search-cancel-linked-album").on("click", function () {
-        $("#linkedAlbumSearch .search-input").val("");
-        $("#linkedAlbumSearch .search-input").trigger("input");
+    var linkedAlbumSearchInput = document.querySelector("#linkedAlbumSearch .search-input");
+    if (linkedAlbumSearchInput) {
+        linkedAlbumSearchInput.addEventListener("input", function () {
+            var cancelBtn = document.querySelector("#linkedAlbumSearch .search-cancel-linked-album");
+            if (this.value != 0) {
+                if (cancelBtn) cancelBtn.style.display = '';
+            } else {
+                if (cancelBtn) cancelBtn.style.display = 'none';
+            }
+
+            // Search input value length required to start searching
+            if (this.value.length > 0) {
+                linked_albums_search(this.value);
+            } else {
+                var limitReached = document.querySelector(".limitReached");
+                if (limitReached) limitReached.innerHTML = str_no_search_in_progress;
+                var searchResult = document.getElementById("searchResult");
+                if (searchResult) searchResult.innerHTML = '';
+            }
+        });
+    }
+
+    document.querySelectorAll(".search-cancel-linked-album").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var searchInput = document.querySelector("#linkedAlbumSearch .search-input");
+            if (searchInput) {
+                searchInput.value = "";
+                searchInput.dispatchEvent(new Event("input"));
+            }
+        });
     });
 
-    $(".related-categories-container .breadcrumb-item .remove-item").on(
-        "click",
-        function () {
-            remove_related_category($(this).attr("id"));
-        },
-    );
+    document.querySelectorAll(".related-categories-container .breadcrumb-item .remove-item").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            remove_related_category(this.getAttribute("id"));
+        });
+    });
+
     // Unsaved settings message before leave this page
     let form_unsaved = false;
     let user_interacted = false;
-    $("#pictureModify")
-        .find(":input")
-        .on("focus", function () {
-            user_interacted = true;
+    var pictureModify = document.getElementById("pictureModify");
+    if (pictureModify) {
+        pictureModify.querySelectorAll("input, select, textarea, button").forEach(function (input) {
+            input.addEventListener("focus", function () {
+                user_interacted = true;
+            });
+            input.addEventListener("change", function () {
+                if (user_interacted) {
+                    form_unsaved = true;
+                    console.log(this.name, this);
+                }
+            });
         });
-    $("#pictureModify")
-        .find(":input")
-        .on("change", function () {
-            if (user_interacted) {
-                form_unsaved = true;
-                console.log($(this)[0].name, $(this));
-            }
+        pictureModify.addEventListener("submit", function () {
+            form_unsaved = false;
         });
-    $(window).on("beforeunload", function () {
+    }
+    window.addEventListener("beforeunload", function () {
         if (form_unsaved) {
             return "Some changes are not registered";
         }
     });
-    $("#pictureModify").on("submit", function () {
-        form_unsaved = false;
-    });
 });
 
 function fill_results(cats) {
-    $("#searchResult").empty();
-    cats.forEach((cat) => {
-        $("#searchResult").append(
+    var searchResult = document.getElementById("searchResult");
+    if (!searchResult) return;
+    searchResult.innerHTML = '';
+    cats.forEach(function (cat) {
+        searchResult.insertAdjacentHTML(
+            "beforeend",
             "<div class='search-result-item' id=" +
                 cat.id +
                 ">" +
@@ -76,34 +99,39 @@ function fill_results(cats) {
         );
 
         if (related_categories_ids.includes(cat.id)) {
-            $(".search-result-item #" + cat.id + ".item-add")
-                .addClass("notClickable")
-                .attr("title", str_already_in_related_cats)
-                .on("click", function (event) {
+            var itemAdd = document.querySelector(".search-result-item #" + cat.id + ".item-add");
+            if (itemAdd) {
+                itemAdd.classList.add("notClickable");
+                itemAdd.setAttribute("title", str_already_in_related_cats);
+                itemAdd.addEventListener("click", function (event) {
                     event.preventDefault();
                 });
-            $(".search-result-item")
-                .addClass("notClickable")
-                .attr("title", str_already_in_related_cats)
-                .on("click", function (event) {
+            }
+            document.querySelectorAll(".search-result-item").forEach(function (item) {
+                item.classList.add("notClickable");
+                item.setAttribute("title", str_already_in_related_cats);
+                item.addEventListener("click", function (event) {
                     event.preventDefault();
                 });
-        } else {
-            $(".search-result-item#" + cat.id).on("click", function () {
-                add_related_category(cat.id, cat.full_name_with_admin_links);
             });
+        } else {
+            var resultItem = searchResult.querySelector(".search-result-item#" + cat.id);
+            if (resultItem) {
+                resultItem.addEventListener("click", function () {
+                    add_related_category(cat.id, cat.full_name_with_admin_links);
+                });
+            }
         }
     });
 }
 
 function remove_related_category(cat_id) {
-    $(
-        ".invisible-related-categories-select option[value=" + cat_id + "]",
-    ).remove();
-    $(".invisible-related-categories-select").trigger("change");
-    $("#" + cat_id)
-        .parent()
-        .remove();
+    var option = document.querySelector(".invisible-related-categories-select option[value='" + cat_id + "']");
+    if (option) option.remove();
+    var invisibleSelect = document.querySelector(".invisible-related-categories-select");
+    if (invisibleSelect) invisibleSelect.dispatchEvent(new Event("change"));
+    var el = document.getElementById(cat_id);
+    if (el && el.parentElement) el.parentElement.remove();
 
     cat_to_remove_index = related_categories_ids.indexOf(cat_id);
     if (cat_to_remove_index > -1) {
@@ -115,25 +143,37 @@ function remove_related_category(cat_id) {
 
 function add_related_category(cat_id, cat_link_path) {
     if (!related_categories_ids.includes(cat_id)) {
-        $(".related-categories-container").append(
-            "<div class='breadcrumb-item'>" +
-                "<span class='link-path'>" +
-                cat_link_path +
-                "</span><span id=" +
-                cat_id +
-                " class='icon-cancel-circled remove-item'></span>" +
-                "</div>",
-        );
+        var container = document.querySelector(".related-categories-container");
+        if (container) {
+            container.insertAdjacentHTML(
+                "beforeend",
+                "<div class='breadcrumb-item'>" +
+                    "<span class='link-path'>" +
+                    cat_link_path +
+                    "</span><span id=" +
+                    cat_id +
+                    " class='icon-cancel-circled remove-item'></span>" +
+                    "</div>",
+            );
+        }
 
-        $(".search-result-item #" + cat_id).addClass("notClickable");
+        var searchItemIcon = document.querySelector(".search-result-item #" + cat_id);
+        if (searchItemIcon) searchItemIcon.classList.add("notClickable");
+
         related_categories_ids.push(cat_id);
-        $(".invisible-related-categories-select")
-            .append("<option selected value=" + cat_id + "></option>")
-            .trigger("change");
 
-        $("#" + cat_id).on("click", function () {
-            remove_related_category($(this).attr("id"));
-        });
+        var invisibleSelect = document.querySelector(".invisible-related-categories-select");
+        if (invisibleSelect) {
+            invisibleSelect.insertAdjacentHTML("beforeend", "<option selected value=" + cat_id + "></option>");
+            invisibleSelect.dispatchEvent(new Event("change"));
+        }
+
+        var removeBtn = document.getElementById("" + cat_id);
+        if (removeBtn) {
+            removeBtn.addEventListener("click", function () {
+                remove_related_category(this.getAttribute("id"));
+            });
+        }
 
         linked_albums_close();
     }
@@ -142,15 +182,30 @@ function add_related_category(cat_id, cat_link_path) {
 }
 
 function check_related_categories() {
-    $(".linked-albums-badge").html(related_categories_ids.length);
+    document.querySelectorAll(".linked-albums-badge").forEach(function (el) {
+        el.innerHTML = related_categories_ids.length;
+    });
 
     if (related_categories_ids.length == 0) {
-        $(".linked-albums-badge").addClass("badge-red");
-        $(".add-item").addClass("highlight");
-        $(".orphan-photo").html(str_orphan).show();
+        document.querySelectorAll(".linked-albums-badge").forEach(function (el) {
+            el.classList.add("badge-red");
+        });
+        document.querySelectorAll(".add-item").forEach(function (el) {
+            el.classList.add("highlight");
+        });
+        document.querySelectorAll(".orphan-photo").forEach(function (el) {
+            el.innerHTML = str_orphan;
+            el.style.display = '';
+        });
     } else {
-        $(".linked-albums-badge.badge-red").removeClass("badge-red");
-        $(".add-item.highlight").removeClass("highlight");
-        $(".orphan-photo").hide();
+        document.querySelectorAll(".linked-albums-badge.badge-red").forEach(function (el) {
+            el.classList.remove("badge-red");
+        });
+        document.querySelectorAll(".add-item.highlight").forEach(function (el) {
+            el.classList.remove("highlight");
+        });
+        document.querySelectorAll(".orphan-photo").forEach(function (el) {
+            el.style.display = 'none';
+        });
     }
 }

@@ -52,9 +52,9 @@
   // Start the tour
   tour.start();
 
-  jQuery("p.albumActions > a:nth-child(1)").click(function() {
-    if (tour.getCurrentStep() == 2) {
-      tour.goTo(3);
-    }
+  document.querySelectorAll("p.albumActions > a:nth-child(1)").forEach(function(el) {
+    el.addEventListener('click', function() {
+      if (tour.getCurrentStep() == 2) tour.goTo(3);
+    });
   });
 </script>{/footer_script}

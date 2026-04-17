@@ -3,33 +3,46 @@
 {footer_script}<script>
   (function() {
     function onWatermarkChange() {
-      var val = jQuery("#wSelect").val();
+      var wSelect = document.getElementById("wSelect");
+      var wImg = document.getElementById("wImg");
+      if (!wSelect || !wImg) return;
+      var val = wSelect.value;
       if (val.length) {
-        jQuery("#wImg").attr('src', '{$ROOT_URL}'+val).show();
+        wImg.setAttribute('src', '{$ROOT_URL}' + val);
+        wImg.style.display = '';
       } else {
-        jQuery("#wImg").hide();
+        wImg.style.display = 'none';
       }
     }
 
     onWatermarkChange();
 
-    jQuery("#wSelect").bind("change", onWatermarkChange);
+    var wSelect = document.getElementById("wSelect");
+    if (wSelect) wSelect.addEventListener("change", onWatermarkChange);
 
-    if (jQuery("input[name='w[position]']:checked").val() == 'custom') {
-      jQuery("#positionCustomDetails").show();
+    var positionChecked = document.querySelector("input[name='w[position]']:checked");
+    var positionCustomDetails = document.getElementById("positionCustomDetails");
+    if (positionChecked && positionCustomDetails) {
+      positionCustomDetails.style.display = positionChecked.value === 'custom' ? '' : 'none';
     }
 
-    jQuery("input[name='w[position]']").change(function() {
-      if (jQuery(this).val() == 'custom') {
-        jQuery("#positionCustomDetails").show();
-      } else {
-        jQuery("#positionCustomDetails").hide();
-      }
+    document.querySelectorAll("input[name='w[position]']").forEach(function(el) {
+      el.addEventListener('change', function() {
+        var positionCustomDetails = document.getElementById("positionCustomDetails");
+        if (positionCustomDetails) {
+          positionCustomDetails.style.display = this.value === 'custom' ? '' : 'none';
+        }
+      });
     });
 
-    jQuery(".addWatermarkOpen").click(function() {
-      jQuery("#addWatermark, #selectWatermark").toggle();
-      return false;
+    document.querySelectorAll(".addWatermarkOpen").forEach(function(el) {
+      el.addEventListener('click', function(event) {
+        event.preventDefault();
+        var addWatermark = document.getElementById("addWatermark");
+        var selectWatermark = document.getElementById("selectWatermark");
+        if (addWatermark) addWatermark.style.display = addWatermark.style.display === 'none' ? '' : 'none';
+        if (selectWatermark) selectWatermark.style.display = selectWatermark.style.display === 'none' ? '' : 'none';
+      });
     });
   }());
 </script>{/footer_script}

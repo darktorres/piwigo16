@@ -1,7 +1,6 @@
-{html_head}
-<link rel="stylesheet" href="node_modules/jquery.Jcrop.js/css/jquery.Jcrop.css" />
-{/html_head}
-{combine_script id='jquery.jcrop' load='footer' require='jquery' path='node_modules/jquery.Jcrop.js/js/jquery.Jcrop.js'}
+{combine_script id='cropperjs' load='footer' path='node_modules/cropperjs/dist/cropper.min.js'}
+{combine_css path='node_modules/cropperjs/dist/cropper.min.css'}
+{combine_script id='picture_coi' load='footer' require='cropperjs' path='admin/themes/default/js/picture_coi.js'}
 
 <form method="post">
 
@@ -25,7 +24,13 @@
 		<input type="hidden" id="r" name="r" value="{if isset($coi)}{$coi.r}{/if}">
 		<input type="hidden" id="b" name="b" value="{if isset($coi)}{$coi.b}{/if}">
 
-		<img id="jcrop" src="{$U_IMG}" alt="{$ALT}">
+		<div id="jcrop-container" style="max-width:500px;">
+			<img id="jcrop" src="{$U_IMG}" alt="{$ALT}" style="display:block;max-width:100%;" {if isset($coi)}data-coi='{$coi|json_encode}'{/if}>
+		</div>
+
+		<p>
+			<button type="button" id="jcrop-clear">{'Clear center of interest'|translate}</button>
+		</p>
 
 		<p>
 			<input type="submit" name="submit" value="{'Submit'|translate}">
@@ -33,39 +38,3 @@
 	</fieldset>
 </form>
 
-{footer_script}<script>
-	function from_coi(f, total) {
-		return f * total;
-	}
-
-	function to_coi(v, total) {
-		return v / total;
-	}
-
-	function jOnChange(sel) {
-		var $img = jQuery("#jcrop");
-		jQuery("#l").val(to_coi(sel.x, $img.width()));
-		jQuery("#t").val(to_coi(sel.y, $img.height()));
-		jQuery("#r").val(to_coi(sel.x2, $img.width()));
-		jQuery("#b").val(to_coi(sel.y2, $img.height()));
-	}
-
-	function jOnRelease() {
-		jQuery("#l,#t,#r,#b").val("");
-	}
-
-	jQuery("#jcrop").Jcrop({
-			boxWidth: 500,
-			boxHeight: 400,
-			onChange: jOnChange,
-			onRelease: jOnRelease
-		}
-		{if isset($coi)}
-			,
-			function() {
-				var $img = jQuery("#jcrop");
-				this.animateTo( [from_coi({$coi.l}, $img.width()), from_coi({$coi.t}, $img.height()), from_coi({$coi.r}, $img.width()), from_coi({$coi.b}, $img.height()) ] );
-			}
-		{/if}
-	);
-</script>{/footer_script}

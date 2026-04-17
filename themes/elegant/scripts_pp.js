@@ -1,183 +1,187 @@
-﻿(function () {
+(function () {
     var session_storage = window.sessionStorage || {};
 
-    var menubar = jQuery("#menubar");
-    var menuswitcher;
-    var content = jQuery("#the_page > .content");
-    var pcontent = jQuery("#content");
-    var imageInfos = jQuery("#imageInfos");
-    var infoswitcher;
-    var theImage = jQuery("#theImage");
-    var comments = jQuery("#thePicturePage #comments");
-    var comments_button;
-    var commentsswitcher;
-    var comments_add;
+    var menubar = document.getElementById('menubar');
+    var menuswitcher = null;
+    var content = document.querySelector('#the_page > .content');
+    var pcontent = document.getElementById('content');
+    var imageInfos = document.getElementById('imageInfos');
+    var infoswitcher = null;
+    var theImage = document.getElementById('theImage');
+    var comments = document.querySelector('#thePicturePage #comments');
+    var comments_button = null;
+    var commentsswitcher = null;
+    var comments_add = null;
     var comments_top_offset = 0;
 
-    function hideMenu(delay) {
-        menubar.hide(delay);
-        menuswitcher.addClass("menuhidden").removeClass("menushown");
-        content.addClass("menuhidden").removeClass("menushown");
-        pcontent.addClass("menuhidden").removeClass("menushown");
+    function hideMenu() {
+        if (menubar) menubar.style.display = 'none';
+        [menuswitcher, content, pcontent].forEach(function (el) {
+            if (el) { el.classList.add('menuhidden'); el.classList.remove('menushown'); }
+        });
         session_storage["picture-menu"] = "hidden";
     }
 
-    function showMenu(delay) {
-        menubar.show(delay);
-        menuswitcher.addClass("menushown").removeClass("menuhidden");
-        content.addClass("menushown").removeClass("menuhidden");
-        pcontent.addClass("menushown").removeClass("menuhidden");
+    function showMenu() {
+        if (menubar) menubar.style.display = '';
+        [menuswitcher, content, pcontent].forEach(function (el) {
+            if (el) { el.classList.add('menushown'); el.classList.remove('menuhidden'); }
+        });
         session_storage["picture-menu"] = "visible";
     }
 
-    function hideInfo(delay) {
-        imageInfos.hide(delay);
-        infoswitcher.addClass("infohidden").removeClass("infoshown");
-        theImage.addClass("infohidden").removeClass("infoshown");
+    function hideInfo() {
+        if (imageInfos) imageInfos.style.display = 'none';
+        [infoswitcher, theImage].forEach(function (el) {
+            if (el) { el.classList.add('infohidden'); el.classList.remove('infoshown'); }
+        });
         session_storage["side-info"] = "hidden";
     }
 
-    function showInfo(delay) {
-        imageInfos.show(delay);
-        infoswitcher.addClass("infoshown").removeClass("infohidden");
-        theImage.addClass("infoshown").removeClass("infohidden");
+    function showInfo() {
+        if (imageInfos) imageInfos.style.display = '';
+        [infoswitcher, theImage].forEach(function (el) {
+            if (el) { el.classList.add('infoshown'); el.classList.remove('infohidden'); }
+        });
         session_storage["side-info"] = "visible";
     }
 
     function commentsToggle() {
-        if (comments.hasClass("commentshidden")) {
-            comments.removeClass("commentshidden").addClass("commentsshown");
-            comments_button
-                .addClass("comments_toggle_off")
-                .removeClass("comments_toggle_on");
+        if (!comments) return;
+        if (comments.classList.contains("commentshidden")) {
+            comments.classList.remove("commentshidden");
+            comments.classList.add("commentsshown");
+            if (comments_button) {
+                comments_button.classList.add("comments_toggle_off");
+                comments_button.classList.remove("comments_toggle_on");
+            }
             session_storage["comments"] = "visible";
-            comments_top_offset =
-                comments_add.offset().top -
-                parseFloat(comments_add.css("marginTop").replace(/auto/, 0));
+            if (comments_add) {
+                var marginTop = parseFloat(
+                    window.getComputedStyle(comments_add).marginTop.replace(/auto/, 0)
+                );
+                comments_top_offset = comments_add.getBoundingClientRect().top + window.scrollY - marginTop;
+            }
         } else {
-            comments.addClass("commentshidden").removeClass("commentsshown");
-            comments_button
-                .addClass("comments_toggle_on")
-                .removeClass("comments_toggle_off");
+            comments.classList.add("commentshidden");
+            comments.classList.remove("commentsshown");
+            if (comments_button) {
+                comments_button.classList.add("comments_toggle_on");
+                comments_button.classList.remove("comments_toggle_off");
+            }
             session_storage["comments"] = "hidden";
             comments_top_offset = 0;
         }
     }
 
-    jQuery(function () {
+    document.addEventListener('DOMContentLoaded', function () {
         // side-menu show/hide
-        if (menubar.length == 1 && p_main_menu != "disabled") {
-            menuswitcher = jQuery("#menuSwitcher");
+        if (menubar && p_main_menu != "disabled") {
+            menuswitcher = document.getElementById('menuSwitcher');
+            if (menuswitcher) menuswitcher.innerHTML = '<div class="switchArrow">&nbsp;</div>';
 
-            menuswitcher.html('<div class="switchArrow">&nbsp;</div>');
-
-            if (
-                session_storage["picture-menu"] === undefined &&
-                p_main_menu == "off"
-            ) {
+            if (session_storage["picture-menu"] === undefined && p_main_menu == "off") {
                 session_storage["picture-menu"] = "hidden";
             }
 
             if (session_storage["picture-menu"] == "hidden") {
-                hideMenu(0);
+                hideMenu();
             } else {
-                showMenu(0);
+                showMenu();
             }
 
-            menuswitcher.click(function (e) {
-                if (menubar.is(":hidden")) {
-                    showMenu(0);
-                } else {
-                    hideMenu(0);
-                }
-                e.preventDefault();
-            });
+            if (menuswitcher) {
+                menuswitcher.addEventListener('click', function (e) {
+                    if (window.getComputedStyle(menubar).display === 'none') {
+                        showMenu();
+                    } else {
+                        hideMenu();
+                    }
+                    e.preventDefault();
+                });
+            }
         }
 
         // info show/hide
-        if (imageInfos.length == 1 && p_pict_descr != "disabled") {
-            infoswitcher = jQuery("#infoSwitcher");
+        if (imageInfos && p_pict_descr != "disabled") {
+            infoswitcher = document.getElementById('infoSwitcher');
+            if (infoswitcher) infoswitcher.innerHTML = '<div class="switchArrow">&nbsp;</div>';
 
-            infoswitcher.html('<div class="switchArrow">&nbsp;</div>');
-
-            if (
-                session_storage["side-info"] === undefined &&
-                p_pict_descr == "off"
-            ) {
+            if (session_storage["side-info"] === undefined && p_pict_descr == "off") {
                 session_storage["side-info"] = "hidden";
             }
 
             if (session_storage["side-info"] == "hidden") {
-                hideInfo(0);
+                hideInfo();
             } else {
-                showInfo(0);
+                showInfo();
             }
 
-            infoswitcher.click(function (e) {
-                if (imageInfos.is(":hidden")) {
-                    showInfo(0);
-                } else {
-                    hideInfo(0);
-                }
-                e.preventDefault();
-            });
+            if (infoswitcher) {
+                infoswitcher.addEventListener('click', function (e) {
+                    if (window.getComputedStyle(imageInfos).display === 'none') {
+                        showInfo();
+                    } else {
+                        hideInfo();
+                    }
+                    e.preventDefault();
+                });
+            }
         }
 
         // comments show/hide
-        if (comments.length == 1 && p_pict_comment != "disabled") {
-            commentsswitcher = jQuery("#commentsSwitcher");
-            comments_button = jQuery("#comments h3");
-            comments_add = jQuery("#commentAdd");
+        if (comments && p_pict_comment != "disabled") {
+            commentsswitcher = document.getElementById('commentsSwitcher');
+            comments_button = document.querySelector('#comments h3');
+            comments_add = document.getElementById('commentAdd');
 
-            commentsswitcher.html('<div class="switchArrow">&nbsp;</div>');
+            if (commentsswitcher) commentsswitcher.innerHTML = '<div class="switchArrow">&nbsp;</div>';
 
-            if (comments_button.length == 0) {
-                jQuery("#addComment").before("<h3>Comments</h3>");
-                comments_button = jQuery("#comments h3");
+            if (!comments_button) {
+                var addComment = document.getElementById('addComment');
+                if (addComment) {
+                    var h3 = document.createElement('h3');
+                    h3.textContent = 'Comments';
+                    addComment.parentNode.insertBefore(h3, addComment);
+                    comments_button = document.querySelector('#comments h3');
+                }
             }
 
-            if (
-                session_storage["comments"] === undefined &&
-                p_pict_comment == "off"
-            ) {
+            if (session_storage["comments"] === undefined && p_pict_comment == "off") {
                 session_storage["comments"] = "hidden";
             }
 
             if (session_storage["comments"] == "hidden") {
-                comments.addClass("commentshidden");
-                comments_button.addClass("comments_toggle comments_toggle_on");
+                comments.classList.add("commentshidden");
+                if (comments_button) comments_button.classList.add("comments_toggle", "comments_toggle_on");
             } else {
-                comments.addClass("commentsshown");
-                comments_button.addClass("comments_toggle comments_toggle_off");
+                comments.classList.add("commentsshown");
+                if (comments_button) comments_button.classList.add("comments_toggle", "comments_toggle_off");
             }
 
-            comments_button.click(commentsToggle);
-            commentsswitcher.click(commentsToggle);
+            if (comments_button) comments_button.addEventListener('click', commentsToggle);
+            if (commentsswitcher) commentsswitcher.addEventListener('click', commentsToggle);
 
-            jQuery(window).scroll(function (event) {
-                if (comments_top_offset == 0) return;
+            window.addEventListener("scroll", function () {
+                if (comments_top_offset == 0 || !comments_add || !comments) return;
 
-                var y = jQuery(this).scrollTop();
+                var y = window.scrollY;
+                var commentsTop = comments.getBoundingClientRect().top + window.scrollY;
 
                 if (y >= comments_top_offset) {
-                    comments_add.css({
-                        position: "absolute",
-                        top: y - comments.offset().top + 10,
-                    });
+                    comments_add.style.position = "absolute";
+                    comments_add.style.top = (y - commentsTop + 10) + "px";
                 } else {
-                    comments_add.css({
-                        position: "static",
-                        top: 0,
-                    });
+                    comments_add.style.position = "static";
+                    comments_add.style.top = "0";
                 }
             });
 
-            if (comments_add.is(":visible")) {
-                comments_top_offset =
-                    comments_add.offset().top -
-                    parseFloat(
-                        comments_add.css("marginTop").replace(/auto/, 0),
-                    );
+            if (comments_add && comments_add.offsetParent !== null) {
+                var marginTop = parseFloat(
+                    window.getComputedStyle(comments_add).marginTop.replace(/auto/, 0)
+                );
+                comments_top_offset = comments_add.getBoundingClientRect().top + window.scrollY - marginTop;
             }
         }
     });

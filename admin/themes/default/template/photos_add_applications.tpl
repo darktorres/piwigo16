@@ -1,9 +1,7 @@
 {include file='inc/colorbox.inc.tpl'}
 
 {footer_script}<script>
-  jQuery().ready(function() {
-    jQuery(".illustration a").colorbox({ rel: 'group1' });
-  });
+  GLightbox({ selector: '.illustration a' });
 </script>{/footer_script}
 
 {html_head}

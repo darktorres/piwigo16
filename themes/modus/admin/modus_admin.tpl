@@ -1,7 +1,7 @@
 {include file='inc/colorbox.inc.tpl'}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.ui' require='jquery' load='footer'}
-{combine_css path="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.slider.css"}
+{combine_script id='nouislider' load='footer' path='node_modules/nouislider/dist/nouislider.min.js'}
+{combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
 
 {html_style}<style>
   .graphicalCheckbox {
@@ -81,32 +81,55 @@
 
 
 {footer_script}<script>
-  jQuery(document).ready(function() {
-    jQuery('#modus-config input[type=checkbox]').change(function() {
-      jQuery(this).prev().toggleClass('icon-check icon-check-empty');
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('#modus-config input[type=checkbox]').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        var prev = this.previousElementSibling;
+        if (prev) {
+          prev.classList.toggle('icon-check');
+          prev.classList.toggle('icon-check-empty');
+        }
+      });
     });
 
-    jQuery('input[name=use_album_square_thumbs]').change(function() {
-      jQuery('#album_square_thumbs').toggle();
-    });
+    var squareThumbsToggle = document.querySelector('input[name=use_album_square_thumbs]');
+    if (squareThumbsToggle) {
+      squareThumbsToggle.addEventListener('change', function() {
+        var el = document.getElementById('album_square_thumbs');
+        if (el) el.style.display = (el.style.display === 'none') ? '' : 'none';
+      });
+    }
 
-    jQuery("#album_thumb_size").slider({
-      range: "min",
-      min: 200,
-      max: 400,
-      value: {$ALBUM_THUMB_SIZE},
-      slide: function(event, ui) {
-        jQuery("#album_thumb_size_info").html(sprintf("{'%d pixels'|translate}", ui.value));
-      },
-      stop: function(event, ui) {
-        jQuery("input[name=album_thumb_size]").val(ui.value);
-      }
-    });
-    jQuery(".themeBoxes a").colorbox({ rel: 'group1' });
+    var albumThumbSlider = document.getElementById('album_thumb_size');
+    if (albumThumbSlider) {
+      noUiSlider.create(albumThumbSlider, {
+        start: [{$ALBUM_THUMB_SIZE}],
+        range: { min: 200, max: 400 },
+        step: 1,
+        connect: [true, false],
+      });
+      albumThumbSlider.noUiSlider.on('slide', function(values) {
+        var val = Math.round(parseFloat(values[0]));
+        var info = document.getElementById('album_thumb_size_info');
+        if (info) info.innerHTML = sprintf("{'%d pixels'|translate}", val);
+      });
+      albumThumbSlider.noUiSlider.on('change', function(values) {
+        var val = Math.round(parseFloat(values[0]));
+        var input = document.querySelector("input[name=album_thumb_size]");
+        if (input) input.value = val;
+      });
+    }
+    GLightbox({ selector: '.themeBoxes a' });
 
-    jQuery("input[name='skin']").change(function() {
-      jQuery("input[name='skin']").parents(".themeBoxModusConfig").removeClass("themeDefault");
-      jQuery(this).parents(".themeBoxModusConfig").addClass("themeDefault");
+    document.querySelectorAll("input[name='skin']").forEach(function(radio) {
+      radio.addEventListener('change', function() {
+        document.querySelectorAll("input[name='skin']").forEach(function(r) {
+          var box = r.closest('.themeBoxModusConfig');
+          if (box) box.classList.remove('themeDefault');
+        });
+        var myBox = this.closest('.themeBoxModusConfig');
+        if (myBox) myBox.classList.add('themeDefault');
+      });
     });
   });
 </script>{/footer_script}

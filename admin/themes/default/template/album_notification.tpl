@@ -1,47 +1,49 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.selectize' load='footer' path='node_modules/selectize/dist/js/standalone/selectize.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
+{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
+{combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {footer_script}<script>
   const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
 
-  jQuery(document).ready(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    function checkWhoOptions() {
+      var checkedEl = document.querySelector("input[name=who]:checked");
+      var option = checkedEl ? checkedEl.value : '';
+      document.querySelectorAll(".who_option").forEach(function(el) { el.style.display = 'none'; });
+      var target = document.querySelector(".who_" + option);
+      if (target) target.style.display = '';
+    }
 
-
-    jQuery("input[name=who]").change(function() {
-      checkWhoOptions();
+    document.querySelectorAll("input[name=who]").forEach(function(el) {
+      el.addEventListener('change', function() { checkWhoOptions(); });
     });
 
     checkWhoOptions();
 
-    function checkWhoOptions() {
-      var option = jQuery("input[name=who]:checked").val();
-      jQuery(".who_option").hide();
-      jQuery(".who_" + option).show();
-    }
-
-    jQuery(".who_option select").selectize({
-      plugins: ['remove_button']
+    document.querySelectorAll(".who_option select").forEach(function(el) {
+      new TomSelect(el, { plugins: ['remove_button'] });
     });
 
-    jQuery("form#categoryNotify").submit(function(e) {
-      var who_selected = false;
-      var who_option = jQuery("input[name=who]:checked").val();
-
-      if (jQuery(".who_" + who_option + " select").length > 0) {
-        if (jQuery(".who_" + who_option + " select option:selected").length > 0) {
+    var categoryNotify = document.getElementById("categoryNotify");
+    if (categoryNotify) {
+      categoryNotify.addEventListener('submit', function(e) {
+        var who_selected = false;
+        var checkedEl = document.querySelector("input[name=who]:checked");
+        var who_option = checkedEl ? checkedEl.value : '';
+        var selectEl = document.querySelector(".who_" + who_option + " select");
+        if (selectEl && selectEl.querySelector("option:checked")) {
           who_selected = true;
         }
-      }
-
-      if (!who_selected) {
-        jQuery(".actionButtons .errors").show();
-        e.preventDefault();
-      } else {
-        jQuery(".actionButtons .errors").hide();
-        console.log("form can be submitted");
-      }
-    });
+        var errorsEl = document.querySelector(".actionButtons .errors");
+        if (!who_selected) {
+          if (errorsEl) errorsEl.style.display = '';
+          e.preventDefault();
+        } else {
+          if (errorsEl) errorsEl.style.display = 'none';
+          console.log("form can be submitted");
+        }
+      });
+    }
   });
 </script>{/footer_script}
 

@@ -1,8 +1,4 @@
-{include file='inc/colorbox.inc.tpl'}
-
-{combine_script id='jquery.cluetip' load='async' require='jquery' path='node_modules/cluetip/jquery.cluetip.js'}
-
-{footer_script require='jquery.cluetip'}<script>
+{footer_script}<script>
   var piwigo_need_update_msg = '<a href="admin.php?page=updates">{'A new version of Piwigo is available.'|translate|escape:"javascript"} <i class="icon-right"></i></a>';
   var ext_need_update_msg = '<a href="admin.php?page=updates&amp;tab=ext">{'Some upgrades are available for extensions.'|translate|escape:"javascript"} <i class="icon-right"></i></a>';
   const str_gb_used = "{'%s GB used'|translate}";
@@ -13,71 +9,93 @@
   const storage_details = {$STORAGE_CHART_DATA|json_encode};
   const translate_files = "{'%d files'|translate|escape:javascript}";
   let translate_type = {};
-  jQuery().ready(function() {
-    jQuery('.cluetip').cluetip({
-      width: 300,
-      splitTitle: '|',
-      positionBy: 'bottomTop'
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.cluetip').forEach(function(el) {
+      var raw = el.getAttribute('title') || '';
+      el.removeAttribute('title');
+      el.dataset.cluetip = raw;
+      el.addEventListener('mouseenter', function(e) {
+        var parts = (el.dataset.cluetip || '').split('|');
+        var tip = document.createElement('div');
+        tip.className = 'pwg-cluetip';
+        tip.style.cssText = 'position:absolute;z-index:9999;background:#fff;border:1px solid #ccc;padding:8px;width:300px;box-shadow:2px 2px 6px rgba(0,0,0,.2);font-size:13px;';
+        tip.innerHTML = '<strong>' + (parts[0] || '') + '</strong>' + (parts[1] ? '<hr style="margin:4px 0">' + parts[1] : '');
+        document.body.appendChild(tip);
+        var rect = el.getBoundingClientRect();
+        tip.style.left = (rect.left + window.scrollX) + 'px';
+        tip.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+        el._cluetip = tip;
+      });
+      el.addEventListener('mouseleave', function() {
+        if (el._cluetip) { el._cluetip.remove(); el._cluetip = null; }
+      });
     });
     {if $CHECK_FOR_UPDATES}
-      jQuery.ajax({
-        type: 'GET',
-        url: 'ws.php',
-        dataType: 'json',
-        data: { method: 'pwg.extensions.checkUpdates', format: 'json' },
-        timeout: 5000,
-        success: function(data) {
-          if (data['stat'] != 'ok')
-            return;
-          piwigo_update = data['result']['piwigo_need_update'];
-          ext_update = data['result']['ext_need_update']
-          if ((piwigo_update || ext_update) && !jQuery(".warnings").is('div'))
-            jQuery(".eiw").prepend(
-              '<div class="warnings"><i class="eiw-icon icon-attention"></i><ul></ul></div>');
-          if (piwigo_update)
-            jQuery(".warnings ul").append('<li>' + piwigo_need_update_msg + '</li>');
-          if (ext_update)
-            jQuery(".warnings ul").append('<li>' + ext_need_update_msg + '</li>');
-        }
-      });
+      fetch('ws.php?method=pwg.extensions.checkUpdates&format=json')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data['stat'] != 'ok') return;
+          var piwigo_update = data['result']['piwigo_need_update'];
+          var ext_update = data['result']['ext_need_update'];
+          if (piwigo_update || ext_update) {
+            var warningsEl = document.querySelector(".warnings");
+            if (!warningsEl || warningsEl.tagName !== 'DIV') {
+              var eiwEl = document.querySelector(".eiw");
+              if (eiwEl) eiwEl.insertAdjacentHTML('afterbegin',
+                '<div class="warnings"><i class="eiw-icon icon-attention"></i><ul></ul></div>');
+            }
+          }
+          if (piwigo_update) {
+            var warningsUl = document.querySelector(".warnings ul");
+            if (warningsUl) warningsUl.insertAdjacentHTML('beforeend', '<li>' + piwigo_need_update_msg + '</li>');
+          }
+          if (ext_update) {
+            var warningsUl = document.querySelector(".warnings ul");
+            if (warningsUl) warningsUl.insertAdjacentHTML('beforeend', '<li>' + ext_need_update_msg + '</li>');
+          }
+        });
     {/if}
 
-    jQuery('.newsletter-subscription a').click(function() {
-      jQuery('.newsletter-subscription').hide();
-
-      jQuery.ajax({
-        type: 'GET',
-        url: 'admin.php?action=hide_newsletter_subscription'
+    document.querySelectorAll('.newsletter-subscription a').forEach(function(el) {
+      el.addEventListener('click', function(event) {
+        document.querySelectorAll('.newsletter-subscription').forEach(function(ns) { ns.style.display = 'none'; });
+        fetch('admin.php?action=hide_newsletter_subscription');
+        if (this.classList.contains('newsletter-hide')) {
+          event.preventDefault();
+        }
       });
-
-      if (jQuery(this).hasClass('newsletter-hide')) {
-        return false;
-      }
     });
+
     let size_info = storage_total > 1000000 ? str_gb_used : str_mb_used;
-    let size_nb = storage_total > 1000000 ? (storage_total / 1000000).toFixed(2) : (storage_total / 1000).toFixed(
-      0);
-    $(".chart-title-infos").html(size_info.replace("%s", size_nb));
+    let size_nb = storage_total > 1000000 ? (storage_total / 1000000).toFixed(2) : (storage_total / 1000).toFixed(0);
+    var chartTitleInfos = document.querySelector(".chart-title-infos");
+    if (chartTitleInfos) chartTitleInfos.innerHTML = size_info.replace("%s", size_nb);
   });
+
   {foreach from=$STORAGE_CHART_DATA key=type_to_translate item=details}
     translate_type['{$type_to_translate}'] = "{$type_to_translate|translate}";
   {/foreach}
+
   Object.entries(storage_details).forEach(([type, infos]) => {
-    // Determine if we use MB or GB and show it correctly 
+    // Determine if we use MB or GB and show it correctly
     let size = infos.total.filesize;
     let str_size_type_string = size > 1000000 ? str_gb : str_mb;
     let size_nb = size > 1000000 ? (size / 1000000).toFixed(2) : (size / 1000).toFixed(0);
     let str_size = str_size_type_string.replace("%s", size_nb);
 
     // Display head of Tooltip
-    $('#storage-title-' + type).html('<b>' + translate_type[type] + '</b>');
-    $('#storage-size-' + type).html('<b>' + str_size + '</b>');
-    $('#storage-files-' + type).html('<p>' + (infos.total.nb_files ? translate_files.replace('%d', infos.total
-      .nb_files) : "~") + '</p>');
+    var storageTitleEl = document.getElementById('storage-title-' + type);
+    if (storageTitleEl) storageTitleEl.innerHTML = '<b>' + translate_type[type] + '</b>';
+    var storageSizeEl = document.getElementById('storage-size-' + type);
+    if (storageSizeEl) storageSizeEl.innerHTML = '<b>' + str_size + '</b>';
+    var storageFilesEl = document.getElementById('storage-files-' + type);
+    if (storageFilesEl) storageFilesEl.innerHTML = '<p>' + (infos.total.nb_files ? translate_files.replace('%d', infos.total.nb_files) : "~") + '</p>';
 
     // Display body of Tooltip
     if (infos.details) {
-      $.each(infos.details, function(ext, data) {
+      Object.keys(infos.details).forEach(function(ext) {
+        var data = infos.details[ext];
         // Determinate if we use MB or GB and show it correctly (duplicate code from total size for scaling code)
         let detail_size = data.filesize;
         let detail_str_size_type_string;
@@ -91,90 +109,97 @@
             detail_size / 1000).toFixed(0);
         }
         let detail_str_size = detail_str_size_type_string.replace("%s", detail_size_nb);
-        $('#storage-detail-' + type).append('' +
+        var storageDetailEl = document.getElementById('storage-detail-' + type);
+        if (storageDetailEl) storageDetailEl.insertAdjacentHTML('beforeend',
           '<span class="tooltip-details-cont">' +
           '<span class="tooltip-details-ext"><b>' + ext + '</b></span>' +
           '<span class="tooltip-details-size"><b>' + detail_str_size + '</b></span>' +
           '<span class="tooltip-details-files">' + translate_files.replace('%d', data.nb_files) + '</span>' +
-          '</span>' +
-          '');
-        let ext_bg_color = $('.storage-chart span[data-type="storage-' + type + '"]').css('background-color');
-        $('#storage-' + type + ' .tooltip-details-ext b').css('color', ext_bg_color);
+          '</span>');
+        var chartSpan = document.querySelector('.storage-chart span[data-type="storage-' + type + '"]');
+        var ext_bg_color = chartSpan ? window.getComputedStyle(chartSpan).backgroundColor : '';
+        document.querySelectorAll('#storage-' + type + ' .tooltip-details-ext b').forEach(function(b) {
+          b.style.color = ext_bg_color;
+        });
       });
     } else {
-      $('#storage-' + type + ' .separated').attr('style', 'display: none !important');
-      $('#storage-' + type + ' .tooltip-header').css('margin', '0');
+      document.querySelectorAll('#storage-' + type + ' .separated').forEach(function(el) {
+        el.setAttribute('style', 'display: none !important');
+      });
+      document.querySelectorAll('#storage-' + type + ' .tooltip-header').forEach(function(el) {
+        el.style.margin = '0';
+      });
     }
 
     // Fixing storage chart tooltip bug in little screen
     // Keep showing tooltip and his % when hovered
-    $('#storage-' + type).hover(function() {
-      $(this).css('display', 'block');
-      $('.storage-chart span[data-type="storage-' + type + '"] p').css('opacity', '0.4');
-    }, function() {
-      $(this).css('display', 'none');
-      $('.storage-chart span[data-type="storage-' + type + '"] p').css('opacity', '0');
-    });
-    $('.storage-chart span[data-type="storage-' + type + '"]').hover(function() {
-      $(this).find('p').css('opacity', '0.4');
-    }, function() {
-      $(this).find('p').css('opacity', '0');
+    var tooltipEl = document.getElementById('storage-' + type);
+    if (tooltipEl) {
+      tooltipEl.addEventListener('mouseenter', function() {
+        this.style.display = 'block';
+        document.querySelectorAll('.storage-chart span[data-type="storage-' + type + '"] p').forEach(function(p) { p.style.opacity = '0.4'; });
+      });
+      tooltipEl.addEventListener('mouseleave', function() {
+        this.style.display = 'none';
+        document.querySelectorAll('.storage-chart span[data-type="storage-' + type + '"] p').forEach(function(p) { p.style.opacity = '0'; });
+      });
+    }
+    document.querySelectorAll('.storage-chart span[data-type="storage-' + type + '"]').forEach(function(span) {
+      span.addEventListener('mouseenter', function() {
+        this.querySelectorAll('p').forEach(function(p) { p.style.opacity = '0.4'; });
+      });
+      span.addEventListener('mouseleave', function() {
+        this.querySelectorAll('p').forEach(function(p) { p.style.opacity = '0'; });
+      });
     });
   });
+
+  function positionStorageTooltip(el) {
+    var tooltipId = el.dataset.type;
+    var tooltip = document.querySelector('.storage-tooltips #' + tooltipId);
+    var arrow = document.querySelector('.storage-tooltips #' + tooltipId + ' .tooltip-arrow');
+    if (!tooltip || !arrow) return;
+
+    let left = el.offsetLeft + el.getBoundingClientRect().width / 2 - tooltip.clientWidth / 2;
+    // Move tooltip if it creates horizontal scrollbar
+    var chartTitleEl = document.getElementById('chart-title-storage');
+    let storage_width = chartTitleEl ? chartTitleEl.clientWidth : 0;
+    if (left + tooltip.clientWidth > storage_width) {
+      let diff = (left + tooltip.clientWidth) - storage_width;
+      left = left - diff;
+      arrow.style.left = 'calc(50% + ' + diff + 'px)';
+    }
+    tooltip.style.left = left + "px";
+    // Move tooltip if it creates vertical scrollbar
+    var storageChart = document.querySelector('.storage-chart');
+    let str_chart_pos = storageChart ? storageChart.getBoundingClientRect().top + window.scrollY : 0;
+    let str_chart_height = storageChart ? storageChart.clientHeight : 0;
+    let tooltip_height = tooltip.clientHeight + str_chart_height;
+    if (str_chart_pos + tooltip_height > window.innerHeight) {
+      tooltip.style.bottom = 'calc(100% + ' + str_chart_height + 'px)';
+      arrow.classList.add('bottom');
+    } else {
+      tooltip.style.bottom = '';
+      arrow.classList.remove('bottom');
+    }
+  }
 
   //Tooltip for the storage chart
-  $('.storage-chart span').each(function() {
-    let tooltip = $('.storage-tooltips #' + $(this).data('type'));
-    let arrow = $('.storage-tooltips #' + $(this).data("type") + ' .tooltip-arrow');
-    let left = $(this).position().left + $(this).width() / 2 - tooltip.innerWidth() / 2;
-    // Move tooltip if he create horizontal scrollbar
-    let storage_width = $('#chart-title-storage').innerWidth();
-    if (left + tooltip.innerWidth() > storage_width) {
-      let diff = (left + tooltip.innerWidth()) - storage_width;
-      left = left - diff;
-      arrow.css('left', 'calc(50% + ' + diff + 'px)');
+  document.querySelectorAll('.storage-chart span').forEach(function(el) {
+    var tooltipId = el.dataset.type;
+    var tooltip = document.querySelector('.storage-tooltips #' + tooltipId);
+    positionStorageTooltip(el);
+    if (tooltip) {
+      var toggleFn = function() {
+        tooltip.style.display = tooltip.style.display === 'none' ? '' : 'none';
+      };
+      el.addEventListener('mouseenter', toggleFn);
+      el.addEventListener('mouseleave', toggleFn);
     }
-    tooltip.css('left', left + "px");
-    // Move tooltip if he create vertical scrollbar
-    let str_chart_pos = $('.storage-chart').offset().top;
-    let str_chart_height = $('.storage-chart').innerHeight();
-    let tooltip_height = $('.storage-tooltips #' + $(this).data("type")).innerHeight() + str_chart_height;
-    let windows_height = $(window).height();
-    if (str_chart_pos + tooltip_height > windows_height) {
-      tooltip.css('bottom', 'calc(100% + ' + str_chart_height + 'px)');
-      arrow.addClass('bottom');
-    }
-    $(this).hover(function() {
-      tooltip.toggle();
-    });
   });
 
-  $(window).on('resize', function() {
-    $('.storage-chart span').each(function() {
-      let tooltip = $('.storage-tooltips #' + $(this).data('type'));
-      let arrow = $('.storage-tooltips #' + $(this).data("type") + ' .tooltip-arrow');
-      let left = $(this).position().left + $(this).width() / 2 - tooltip.innerWidth() / 2;
-      // Move tooltip if he create horizontal scrollbar
-      let storage_width = $('#chart-title-storage').innerWidth();
-      if (left + tooltip.innerWidth() > storage_width) {
-        let diff = (left + tooltip.innerWidth()) - storage_width;
-        left = left - diff;
-        arrow.css('left', 'calc(50% + ' + diff + 'px)');
-      }
-      tooltip.css('left', left + "px");
-      // Move tooltip if he create vertical scrollbar
-      let str_chart_pos = $('.storage-chart').offset().top;
-      let str_chart_height = $('.storage-chart').innerHeight();
-      let tooltip_height = $('.storage-tooltips #' + $(this).data("type")).innerHeight() + str_chart_height;
-      let windows_height = $(window).height();
-      if (str_chart_pos + tooltip_height > windows_height) {
-        tooltip.css('bottom', 'calc(100% + ' + str_chart_height + 'px)');
-        arrow.addClass('bottom');
-      } else {
-        tooltip.css('bottom', '');
-        arrow.removeClass('bottom');
-      }
-    });
+  window.addEventListener('resize', function() {
+    document.querySelectorAll('.storage-chart span').forEach(positionStorageTooltip);
   });
 </script>{/footer_script}
 

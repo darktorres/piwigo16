@@ -13,6 +13,7 @@ namespace Piwigo\inc\ws_protocols;
 
 use Override;
 use Piwigo\inc\PwgError;
+use Piwigo\inc\PwgNamedArray;
 use Piwigo\inc\PwgResponseEncoder;
 
 final class PwgXmlRpcEncoder extends PwgResponseEncoder
@@ -65,7 +66,7 @@ final class PwgXmlRpcEncoder extends PwgResponseEncoder
 
     #[Override]
     public function encodeResponse(
-        array|bool|PwgError|null $response
+        array|bool|string|PwgError|PwgNamedArray|null $response
     ): string {
         if ($response instanceof PwgError) {
             $code = $response->code();

@@ -108,7 +108,7 @@ function GDThumb_effective_width(): int
 {
     $type = functions_session::pwg_get_session_var('index_deriv', derivative_std_params::IMG_THUMB);
     $size = ImageStdParams::get_by_type($type)->sizing->ideal_size;
-    return max($size[0], $size[1], 500);
+    return max($size[0], $size[1]);
 }
 
 function GDThumb_get_derivative_params(): \Piwigo\inc\DerivativeParams

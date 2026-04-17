@@ -513,8 +513,7 @@ final class functions_upload
         $ext = functions::conf_get_param('pdf_representative_ext', 'jpg');
         $jpg_quality = functions::conf_get_param('pdf_jpg_quality', 90);
 
-        // move the uploaded file to pwg_representative sub-directory
-        $representative_file_path = functions::original_to_representative($file_path, $ext);
+        $representative_file_path = self::rep_path($file_path, $ext);
         self::prepare_directory(dirname($representative_file_path));
 
         $exec = $conf->ext_imagick_dir . 'convert';
@@ -558,8 +557,7 @@ final class functions_upload
 
         $ext = 'jpg';
 
-        // move the uploaded file to pwg_representative sub-directory
-        $representative_file_path = functions::original_to_representative($file_path, $ext);
+        $representative_file_path = self::rep_path($file_path, $ext);
         self::prepare_directory(dirname($representative_file_path));
 
         [$w, $h] = self::get_optimal_dimensions_for_representative();
@@ -602,13 +600,8 @@ final class functions_upload
             return $representative_ext;
         }
 
-        // move the uploaded file to pwg_representative sub-directory
-        $representative_file_path = dirname($file_path) . '/pwg_representative/';
-        $representative_file_path .= functions::get_filename_wo_extension(basename($file_path)) . '.';
-
         $representative_ext = $conf->tiff_representative_ext;
-        $representative_file_path .= $representative_ext;
-
+        $representative_file_path = self::rep_path($file_path, $representative_ext);
         self::prepare_directory(dirname($representative_file_path));
 
         $exec = $conf->ext_imagick_dir . 'convert';
@@ -665,16 +658,13 @@ final class functions_upload
             return $representative_ext;
         }
 
-        $representative_file_path = dirname($file_path) . '/pwg_representative/';
-        $representative_file_path .= functions::get_filename_wo_extension(basename($file_path)) . '.';
-
         $representative_ext = 'jpg';
-        $representative_file_path .= $representative_ext;
+        $representative_file_path = self::rep_path($file_path, $representative_ext);
 
         self::prepare_directory(dirname($representative_file_path));
 
         // Get duration of video and determine time of poster
-        exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1' . " '{$file_path}'", $O, $S);
+        exec($conf->ffmpeg_dir . 'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' . escapeshellarg($file_path), $O, $S);
 
         if (! empty($O[0])) {
             $second = min(floor($O[0] * 10) / 10, 2);
@@ -686,10 +676,10 @@ final class functions_upload
 
         // Generate poster, see https://trac.ffmpeg.org/wiki/Seeking
         $ffmpeg = $conf->ffmpeg_dir . 'ffmpeg';
-        $ffmpeg .= ' -ss ' . $second;  // Fast seeking
-        $ffmpeg .= ' -i "' . $file_path . '"'; // Video file
-        $ffmpeg .= ' -frames:v 1';  // Extract one frame
-        $ffmpeg .= ' "' . $representative_file_path . '"'; // Output file
+        $ffmpeg .= ' -ss ' . $second;
+        $ffmpeg .= ' -i ' . escapeshellarg($file_path);
+        $ffmpeg .= ' -frames:v 1';
+        $ffmpeg .= ' ' . escapeshellarg($representative_file_path);
 
         exec($ffmpeg . ' 2>&1', $FO, $FS);
 
@@ -726,12 +716,8 @@ final class functions_upload
             return $representative_ext;
         }
 
-        // move the uploaded file to pwg_representative sub-directory
-        $representative_file_path = dirname($file_path) . '/pwg_representative/';
-        $representative_file_path .= functions::get_filename_wo_extension(basename($file_path)) . '.';
-
         $representative_ext = 'png';
-        $representative_file_path .= $representative_ext;
+        $representative_file_path = self::rep_path($file_path, $representative_ext);
 
         self::prepare_directory(dirname($representative_file_path));
 
@@ -788,8 +774,7 @@ final class functions_upload
         // if the representative is "jpg", the derivatives are ugly. With "png" it's fine.
         $ext = 'png';
 
-        // move the uploaded file to pwg_representative sub-directory
-        $representative_file_path = functions::original_to_representative($file_path, $ext);
+        $representative_file_path = self::rep_path($file_path, $ext);
         self::prepare_directory(dirname($representative_file_path));
 
         // convert -density 300 image.eps -resize 2048x2048 image.png
@@ -809,6 +794,19 @@ final class functions_upload
         }
 
         return $representative_ext;
+    }
+
+    private static function rep_path(string $fs_path, string $ext): string
+    {
+        global $conf;
+        $normalized = str_replace('\\', '/', $fs_path);
+        $root = rtrim(str_replace('\\', '/', PHPWG_ROOT_PATH), '/') . '/';
+        $rel = str_starts_with($normalized, $root) ? substr($normalized, strlen($root)) : ltrim($normalized, '/');
+        $dot = strrpos($rel, '.');
+        if ($dot !== false) {
+            $rel = substr($rel, 0, $dot + 1) . $ext;
+        }
+        return PHPWG_ROOT_PATH . $conf->data_location . 'i/' . $rel;
     }
 
     public static function prepare_directory(

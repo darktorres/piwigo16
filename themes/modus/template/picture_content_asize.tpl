@@ -28,7 +28,12 @@
 </script>{/footer_script}
 {/if}
 
-{if isset($current.path_ext) and $current.path_ext == 'pdf' and isset($PDF_VIEWER_FILESIZE_THRESHOLD) and $current.filesize < $PDF_VIEWER_FILESIZE_THRESHOLD}
+{if isset($current.path_ext) and ($current.path_ext == 'mp4' or $current.path_ext == 'm4v' or $current.path_ext == 'webm' or $current.path_ext == 'ogv' or $current.path_ext == 'mov' or $current.path_ext == 'mkv')}
+<video width="100%" height="auto" controls preload="auto"
+  poster="{$current.selected_derivative->get_url()}">
+  <source src="{$ROOT_URL}{$current.path}" type="{if $current.path_ext == 'webm'}video/webm{elseif $current.path_ext == 'ogv'}video/ogg{else}video/mp4{/if}">
+</video>
+{elseif isset($current.path_ext) and $current.path_ext == 'pdf' and isset($PDF_VIEWER_FILESIZE_THRESHOLD) and $current.filesize < $PDF_VIEWER_FILESIZE_THRESHOLD}
 <div>
   <embed src="{$ROOT_URL}{$current.path}" type="application/pdf"
     style='width: 95%; height:calc(100vh - 200px); min-height:600px;' />

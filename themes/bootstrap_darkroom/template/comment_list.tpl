@@ -27,7 +27,7 @@
                 {else}
                     {include file="http_scheme.tpl"}
                     <img class="gravatar"
-                        src="//www.gravatar.com/avatar/{$comment.EMAIL|default:''|trim|strtolower|md5}?d={$http_scheme}://{$smarty.server.HTTP_HOST}/{get_gallery_home_url()}themes/bootstrap_darkroom/img/user.png" />
+                        src="//www.gravatar.com/avatar/{$comment.EMAIL|default:''|trim|strtolower|md5}?d={$U_HOME}themes/bootstrap_darkroom/img/user.png" />
                 {/if}
             </div>
             <div class="description">

@@ -1,4 +1,4 @@
-{if preg_match("/(mp4|m4v)$/", $current.path)}
+{if preg_match("/(mp4|m4v|webm|ogv|mov|mkv)$/i", $current.path)}
   {if $current.height < $current.width}
     <div id="video-modal" class="col-lg-8 col-md-10 col-sm-12 mx-auto">
       {if $current.height / $current.width * 100 < 60}
@@ -13,7 +13,7 @@
             {/if}
             <video id="video" class="" width="100%" height="auto" controls preload="auto"
               poster="{$current.selected_derivative->get_url()}">
-              <source src="{$ROOT_URL}{$current.path}" type="video/mp4">
+              <source src="{$ROOT_URL}{$current.path}" type="{if $current.path_ext == 'webm'}video/webm{elseif $current.path_ext == 'ogv'}video/ogg{else}video/mp4{/if}">
               </source>
             </video>
           </div>

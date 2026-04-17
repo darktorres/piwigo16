@@ -23,7 +23,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
 
     #[Override]
     public function encodeResponse(
-        array|bool|PwgError|null $response
+        array|bool|string|PwgError|PwgNamedArray|null $response
     ): string {
         if ($response instanceof PwgError) {
             $escapedMessage = htmlspecialchars($response->message());

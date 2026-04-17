@@ -109,7 +109,7 @@ final class pwg_groups
 
         // creating the group
         $conf->sql_backend::single_insert(
-            'groups',
+            'user_groups',
             [
                 'name' => $params['name'],
                 'is_default' => $conf->sql_backend::boolean_to_string($params['is_default']),
@@ -435,7 +435,7 @@ final class pwg_groups
 
         // creating the group
         $conf->sql_backend::single_insert(
-            'groups',
+            'user_groups',
             [
                 'name' => $params['copy_name'],
                 'is_default' => $conf->sql_backend::boolean_to_string($is_default),

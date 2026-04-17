@@ -86,7 +86,7 @@ final class PwgServer
      * Encodes a response and sends it back to the browser.
      */
     public function sendResponse(
-        array|bool|string|PwgError|null $response
+        array|bool|string|PwgError|PwgNamedArray|null $response
     ): void {
         $encodedResponse = $this->_responseEncoder->encodeResponse($response);
         $contentType = $this->_responseEncoder->getContentType();
@@ -298,7 +298,7 @@ final class PwgServer
     public function invoke(
         string $methodName,
         array $params
-    ): PwgError|array|bool|string|null {
+    ): PwgError|PwgNamedArray|array|bool|string|null {
         $method = $this->_methods[$methodName];
 
         if ($method == null) {

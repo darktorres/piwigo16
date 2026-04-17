@@ -21,7 +21,7 @@ abstract class PwgResponseEncoder
      * @param array|bool|PwgError|null $response the unencoded result of a service method call
      */
     abstract public function encodeResponse(
-        array|bool|PwgError|null $response
+        array|bool|string|PwgError|PwgNamedArray|null $response
     ): bool|string;
 
     /**

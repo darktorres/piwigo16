@@ -23,8 +23,6 @@
       </li>
       <li><input id="margin" type="text" size="2" maxlength="3" name="margin" value="{$MARGIN}"><label
           for="margin">{'Margin between thumbnails'|translate}&nbsp;px</label></li>
-      <li><input id="nb_image_page" type="text" size="2" maxlength="3" name="nb_image_page"
-          value="{$NB_IMAGE_PAGE}"><label for="nb_image_page">{'Number of photos per page'|translate}</label></li>
       <li>
         <select id="normalize_title" name="normalize_title">
           <option {if $NORMALIZE_TITLE == 'off'}selected="selected" {/if} value="off">

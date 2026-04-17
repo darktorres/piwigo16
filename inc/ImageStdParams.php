@@ -105,6 +105,16 @@ final class ImageStdParams
         return $params;
     }
 
+    /**
+     * Get derivative params that fit within the given width while maintaining aspect ratio.
+     * Useful for masonry/gallery layouts where you want width constraint but height scales with content.
+     */
+    public static function get_fit_width(
+        int $w
+    ): DerivativeParams {
+        return self::get_custom($w, 9999);
+    }
+
     public static function get_watermark(): WatermarkParams
     {
         return self::$watermark;

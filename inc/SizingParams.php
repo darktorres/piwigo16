@@ -49,6 +49,16 @@ final class SizingParams
     }
 
     /**
+     * Returns a SizingParams object that fits within the given width while maintaining aspect ratio.
+     * Height is unlimited to allow the original image aspect ratio to be preserved.
+     */
+    public static function fit_width(
+        int $w
+    ): self {
+        return new self([$w, 9999]);
+    }
+
+    /**
      * Adds tokens depending on sizing configuration.
      */
     public function add_url_tokens(

@@ -9,7 +9,7 @@ var GDThumb = {
         GDThumb.merge();
         var ul = document.querySelector("ul#thumbnails");
         if (ul) ul.classList.add("thumbnails");
-        GDMasonry.init(300, 4);
+        GDMasonry.init(max_height, margin);
 
         document.querySelectorAll("ul.thumbnails").forEach(function(list) {
             list.addEventListener("click", function(e) {

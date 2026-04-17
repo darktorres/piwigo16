@@ -56,9 +56,7 @@ function GDThumb_init(): void
     global $conf, $user, $page, $stripped;
 
     $confTemp = $conf->gdThumb;
-    $user['nb_image_page'] = $confTemp['nb_image_page'];
-    $page['nb_image_page'] = $confTemp['nb_image_page'];
-    $stripped['maxThumb'] = $confTemp['nb_image_page'];
+    $stripped['maxThumb'] = $user['nb_image_page'];
 }
 
 function GDThumb_index(): void
@@ -113,7 +111,7 @@ function GDThumb_effective_width(): int
 
 function GDThumb_get_derivative_params(): \Piwigo\inc\DerivativeParams
 {
-    return ImageStdParams::get_custom(GDThumb_effective_width(), 9999);
+    return ImageStdParams::get_fit_width(GDThumb_effective_width());
 }
 
 function GDThumb_prefilter(

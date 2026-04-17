@@ -110,7 +110,6 @@ if (isset($_POST['submit'])) {
 
     $params = [
         'margin' => (int) ($_POST['margin'] ?? $conf->gdThumb['margin']),
-        'nb_image_page' => (int) ($_POST['nb_image_page'] ?? $conf->gdThumb['nb_image_page']),
         'normalize_title' => $normalize,
         'method' => $method,
         'thumb_mode_album' => $thumb_mode_album,
@@ -138,7 +137,6 @@ $template->assign(
         'GDTHUMB_VERSION' => GDTHUMB_VERSION,
 
         'MARGIN' => $params['margin'],
-        'NB_IMAGE_PAGE' => $params['nb_image_page'],
         'NORMALIZE_TITLE' => $params['normalize_title'],
         'METHOD' => $params['method'],
         'THUMB_MODE_ALBUM' => $params['thumb_mode_album'],

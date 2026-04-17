@@ -175,6 +175,6 @@
       {foreach $header_notes as $note}
       {/foreach}
     {/if}
-    <div id="bd_scroll_area">
+    <div id="bd_scroll_area" data-rvts-scroll>
 
 <!-- End of header.tpl -->

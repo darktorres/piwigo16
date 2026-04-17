@@ -1,4 +1,4 @@
-<div class="sp-content">
+<div class="sp-content" data-rvts-scroll>
 	{if isset($SEARCH_IN_SET_BUTTON) and $SEARCH_IN_SET_BUTTON}
 		<div class="mcs-side-results search-in-set-button">
 			<div>

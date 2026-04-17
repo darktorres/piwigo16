@@ -81,11 +81,11 @@
   {footer_script}<script type="module">
     if (!window._pswpInitialized) {
       window._pswpInitialized = true;
-      const { default: PhotoSwipeLightbox } = await import('./themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe-lightbox.esm.js');
+      const { default: PhotoSwipeLightbox } = await import('{$ROOT_URL}{$GDThumb.GDTHUMB_ROOT}/js/photoswipe/photoswipe-lightbox.esm.js');
       const lightbox = new PhotoSwipeLightbox({
         gallery: '#thumbnails',
         children: 'a[data-pswp-src]',
-        pswpModule: () => import('./themes/bootstrap_darkroom/node_modules/photoswipe/dist/photoswipe.esm.js')
+        pswpModule: () => import('{$ROOT_URL}{$GDThumb.GDTHUMB_ROOT}/js/photoswipe/photoswipe.esm.js')
       });
       lightbox.init();
     }

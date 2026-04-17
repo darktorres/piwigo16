@@ -101,6 +101,12 @@ SPThumbs.prototype = {
 
         if (line.elements.length) this.processLine(line, containerWidth, true);
         this.prevLastLineFirstThumbIndex = line.firstThumbIndex;
+
+        var that = this;
+        window.requestAnimationFrame(function () {
+            if (Math.abs(that.thumbs.offsetWidth - that.prevContainerWidth) > 1)
+                that.process();
+        });
     },
 
     processLine: function (line, containerWidth, lastLine) {

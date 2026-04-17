@@ -64,11 +64,15 @@ if ($sse_mode && isset($_POST['submit'])) {
 
     foreach ($images as $i => $image) {
         $full_path = PHPWG_ROOT_PATH . ltrim($image['path'], './');
+        $skip_reason = null;
+
+        $ffmpeg_output = [];
 
         if (! file_exists($full_path)) {
             $skipped++;
+            $skip_reason = 'file_not_found';
         } else {
-            $new_ext = functions_upload::upload_file_video(null, $full_path);
+            $new_ext = functions_upload::upload_file_video(null, $full_path, $ffmpeg_output);
 
             if ($new_ext !== null) {
                 $update_query = "UPDATE images SET representative_ext = 'jpg' WHERE id = {$image['id']}";
@@ -76,16 +80,24 @@ if ($sse_mode && isset($_POST['submit'])) {
                 $generated++;
             } else {
                 $skipped++;
+                $skip_reason = 'ffmpeg_failed';
             }
         }
 
-        vt_emit('progress', [
+        $event = [
             'current' => $i + 1,
             'total' => $total,
             'generated' => $generated,
             'skipped' => $skipped,
             'file' => basename($image['path']),
-        ]);
+            'skip_reason' => $skip_reason,
+        ];
+
+        if ($ffmpeg_output !== []) {
+            $event['ffmpeg_output'] = $ffmpeg_output;
+        }
+
+        vt_emit('progress', $event);
     }
 
     vt_emit('complete', [

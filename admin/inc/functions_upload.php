@@ -639,7 +639,8 @@ final class functions_upload
 
     public static function upload_file_video(
         ?string $representative_ext,
-        string $file_path
+        string $file_path,
+        array &$ffmpeg_output = []
     ): ?string {
         global $logger, $conf;
 
@@ -683,13 +684,14 @@ final class functions_upload
 
         exec($ffmpeg . ' 2>&1', $FO, $FS);
 
-        if (! empty($FO[0])) {
+        if (! empty($FO)) {
             $logger->debug(__FUNCTION__ . ', Tried ' . $ffmpeg);
-            $logger->debug($FO[0]);
+            $logger->debug(implode("\n", $FO));
         }
 
         // Did we generate the file ?
         if (! file_exists($representative_file_path)) {
+            $ffmpeg_output = $FO;
             return null;
         }
 

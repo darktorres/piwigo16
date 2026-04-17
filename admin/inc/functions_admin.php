@@ -3284,6 +3284,10 @@ final class functions_admin
 
         if (! empty($infos['representative_ext'])) {
             $path = functions::original_to_representative($path, $infos['representative_ext']);
+            // Strip the derivative dir prefix so the glob below doesn't double it
+            if (str_starts_with($path, PWG_DERIVATIVE_DIR)) {
+                $path = './' . substr($path, strlen(PWG_DERIVATIVE_DIR));
+            }
         }
 
         if (substr_compare($path, '../', 0, 3) == 0) {

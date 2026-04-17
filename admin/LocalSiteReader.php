@@ -13,6 +13,7 @@ namespace Piwigo\admin;
 
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_metadata_admin;
+use Piwigo\admin\inc\functions_upload;
 use Piwigo\inc\functions;
 
 // provides data for site synchronization from the local file system
@@ -149,7 +150,7 @@ final class LocalSiteReader
                                 $t_rep = microtime(true);
                             }
 
-                            $representative_ext = $this->get_representative_ext($path, $filename_wo_ext);
+                            $representative_ext = $this->get_representative_ext($path, $filename_wo_ext, $extension);
 
                             if ($profiling) {
                                 $GLOBALS['sync_scan_prof']['representative_time'] += microtime(true) - $t_rep;
@@ -266,7 +267,7 @@ final class LocalSiteReader
         if (! isset($conf->flip_picture_ext[$extension])) {
             $dirname = dirname($file);
             $filename_wo_ext = functions::get_filename_wo_extension($filename);
-            $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
+            $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext, $extension);
         }
 
         $data['representative_ext'] = $representative_ext;
@@ -293,7 +294,19 @@ final class LocalSiteReader
     private function load_representative_cache(string $path): void
     {
         global $conf;
-        $rep_dir = $path . '/pwg_representative';
+
+        $normalized = str_replace('\\', '/', $path);
+        $root = rtrim(str_replace('\\', '/', PHPWG_ROOT_PATH), '/') . '/';
+
+        if (str_starts_with($normalized, $root)) {
+            $rel = substr($normalized, strlen($root));
+        } elseif (str_starts_with($normalized, './')) {
+            $rel = substr($normalized, 2);
+        } else {
+            $rel = ltrim($normalized, '/');
+        }
+
+        $rep_dir = PHPWG_ROOT_PATH . $conf->data_location . 'i/' . $rel;
 
         if (! is_dir($rep_dir)) {
             $this->representative_cache[$path] = [];
@@ -363,13 +376,30 @@ final class LocalSiteReader
 
     public function get_representative_ext(
         string $path,
-        string $filename_wo_ext
+        string $filename_wo_ext,
+        ?string $extension = null
     ): ?string {
         if (! isset($this->representative_cache[$path])) {
             $this->load_representative_cache($path);
         }
 
-        return $this->representative_cache[$path][$filename_wo_ext] ?? null;
+        $result = $this->representative_cache[$path][$filename_wo_ext] ?? null;
+
+        if ($result === null && $extension !== null) {
+            $video_exts = ['wmv', 'mov', 'mkv', 'mp4', 'mpg', 'flv', 'asf', 'xvid', 'divx', 'mpeg', 'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv'];
+
+            if (in_array(strtolower($extension), $video_exts)) {
+                $full_path = $path . '/' . $filename_wo_ext . '.' . $extension;
+                $new_ext = functions_upload::upload_file_video(null, $full_path);
+
+                if ($new_ext !== null) {
+                    $this->representative_cache[$path][$filename_wo_ext] = $new_ext;
+                    $result = $new_ext;
+                }
+            }
+        }
+
+        return $result;
     }
 
     public function get_formats(

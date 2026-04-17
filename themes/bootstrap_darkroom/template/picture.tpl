@@ -10,7 +10,7 @@
     {include file='picture_nav_buttons.tpl'|get_extent:'picture_nav_buttons'}
   </div>
   {if functions::get_device() != 'desktop' }
-    {footer_script}<script>
+    {footer_script}<script>{literal}
       var theImageImg = document.querySelector('#theImage img');
       if (theImageImg && ('ontouchstart' in window)) {
         var _swipeStart = null;
@@ -32,7 +32,7 @@
           }
         }, {passive: true});
       }
-    </script>{/footer_script}
+    {/literal}</script>{/footer_script}
   {/if}
 
   <div id="theImage" class="row d-block justify-content-center mb-3">

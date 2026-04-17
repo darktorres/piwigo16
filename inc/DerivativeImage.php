@@ -342,6 +342,8 @@ final class DerivativeImage
             $loc = substr($loc, 2);
         } elseif (substr_compare($loc, '../', 0, 3) == 0) {
             $loc = substr($loc, 3);
+        } elseif (str_starts_with($loc, PWG_DERIVATIVE_DIR)) {
+            $loc = substr($loc, strlen(PWG_DERIVATIVE_DIR));
         }
 
         $loc = substr_replace($loc, '-' . implode('_', $tokens), strrpos($loc, '.'), 0);

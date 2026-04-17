@@ -1207,10 +1207,15 @@ final class functions
         string $path,
         string $representative_ext
     ): string {
-        $pos = strrpos($path, '/');
-        $path = substr_replace($path, 'pwg_representative/', $pos + 1, 0);
-        $pos = strrpos($path, '.');
-        return substr_replace($path, $representative_ext, $pos + 1);
+        global $conf;
+        // Strip leading './' from DB paths to get a clean relative path
+        $rel = substr($path, 0, 2) === './' ? substr($path, 2) : ltrim($path, '/');
+        // Change extension
+        $dot = strrpos($rel, '.');
+        if ($dot !== false) {
+            $rel = substr($rel, 0, $dot + 1) . $representative_ext;
+        }
+        return $conf->data_location . 'i/' . $rel;
     }
 
     /**

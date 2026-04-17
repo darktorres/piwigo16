@@ -668,9 +668,11 @@ final class functions_upload
         exec($conf->ffmpeg_dir . 'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' . escapeshellarg($file_path), $O, $S);
 
         if (! empty($O[0])) {
-            $second = min(floor($O[0] * 10) / 10, 2);
+            // Seek to 10% of duration, capped at 2s — keeps us well before the end
+            // for short clips where seeking near the end produces no frames
+            $second = round(min((float) $O[0] * 0.1, 2.0), 2);
         } else {
-            $second = 0; // Safest position of the poster
+            $second = 0;
         }
 
         $logger->info(__FUNCTION__ . ', Poster at ' . $second . 's');

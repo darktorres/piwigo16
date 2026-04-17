@@ -3,6 +3,10 @@
         var thumbs = document.querySelector('ul.thumbnails');
         if (!thumbs || typeof GLightbox === 'undefined') return;
 
+        if (document.activeElement && document.activeElement.closest('.thumbnails')) {
+            document.activeElement.blur();
+        }
+
         var lb = GLightbox({
             selector: '.thumbnails a[href]',
             loop: typeof var_loop !== 'undefined' ? var_loop : false,

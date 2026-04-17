@@ -52,7 +52,8 @@ if (window.RVTS)
                         if (!evt.defaultPrevented) {
                             var tmp = document.createElement('div');
                             tmp.innerHTML = htm;
-                            var wrap = tmp.querySelector('.thumbnails') || tmp;
+                            var wrap = tmp.querySelector('#thumbnails');
+                            if (!wrap) return;
                             var items = Array.from(wrap.children);
                             var frag = document.createDocumentFragment();
                             items.forEach(function(item) { frag.appendChild(item); });
@@ -92,7 +93,8 @@ if (window.RVTS)
                         if (!evt.defaultPrevented) {
                             var tmp = document.createElement('div');
                             tmp.innerHTML = htm;
-                            var wrap = tmp.querySelector('.thumbnails') || tmp;
+                            var wrap = tmp.querySelector('#thumbnails');
+                            if (!wrap) return;
                             var items = Array.from(wrap.children);
                             var frag = document.createDocumentFragment();
                             items.forEach(function(item) { frag.appendChild(item); });

@@ -26,6 +26,7 @@ final class EverythingSDK
     private const PROPERTY_SIZE = 2;
 
     private const PATH_BUF_SIZE = 2048;
+    private const BATCH_SIZE = 50000;
 
     /**
      * FFI C declarations for the Everything SDK v3 UTF-8 API.
@@ -130,21 +131,23 @@ final class EverythingSDK
      *                          full path ascending. This guarantees parent
      *                          directories appear before their children, which
      *                          site_update.php's category insertion loop requires.
-     * @return list<string>
+     * @return \Generator<string>
      */
-    public function queryPaths(string $query, bool $sortByPath = false): array
+    public function queryPaths(string $query, bool $sortByPath = false): \Generator
     {
-        return array_column($this->executeSearch($query, false, $sortByPath), 'path');
+        foreach ($this->executeSearchPaginated($query, false, $sortByPath) as $result) {
+            yield $result['path'];
+        }
     }
 
     /**
      * Query Everything and return paths with file sizes in bytes.
      *
-     * @return list<array{path: string, size_bytes: int}>
+     * @return \Generator<array{path: string, size_bytes: int}>
      */
-    public function queryPathsWithSize(string $query): array
+    public function queryPathsWithSize(string $query): \Generator
     {
-        return $this->executeSearch($query, true, false);
+        yield from $this->executeSearchPaginated($query, true, false);
     }
 
     // ------------------------------------------------------------------
@@ -152,9 +155,39 @@ final class EverythingSDK
     // ------------------------------------------------------------------
 
     /**
+     * Yields results from Everything in paginated batches via viewport offset/count.
+     *
+     * @return \Generator<array{path: string, size_bytes?: int}>
+     */
+    private function executeSearchPaginated(string $query, bool $includeSize, bool $sortByPath): \Generator
+    {
+        $offset = 0;
+
+        while (true) {
+            $batch = $this->executeSearchBatch($query, $includeSize, $sortByPath, $offset, self::BATCH_SIZE);
+
+            if (empty($batch)) {
+                break;
+            }
+
+            foreach ($batch as $result) {
+                yield $result;
+            }
+
+            if (count($batch) < self::BATCH_SIZE) {
+                break;
+            }
+
+            $offset += self::BATCH_SIZE;
+        }
+    }
+
+    /**
+     * Fetches a single batch of results from Everything using viewport offset/count.
+     *
      * @return list<array{path: string, size_bytes?: int}>
      */
-    private function executeSearch(string $query, bool $includeSize, bool $sortByPath): array
+    private function executeSearchBatch(string $query, bool $includeSize, bool $sortByPath, int $offset, int $count): array
     {
         $client = null;
         $searchState = null;
@@ -174,8 +207,8 @@ final class EverythingSDK
             }
 
             $this->ffi->Everything3_SetSearchTextUTF8($searchState, $query);
-            $this->ffi->Everything3_SetSearchViewportOffset($searchState, 0);
-            $this->ffi->Everything3_SetSearchViewportCount($searchState, PHP_INT_MAX);
+            $this->ffi->Everything3_SetSearchViewportOffset($searchState, $offset);
+            $this->ffi->Everything3_SetSearchViewportCount($searchState, $count);
             $this->ffi->Everything3_AddSearchPropertyRequest($searchState, self::PROPERTY_FULL_PATH);
 
             if ($sortByPath) {
@@ -226,6 +259,7 @@ final class EverythingSDK
             $this->destroyHandle($client, 'Everything3_DestroyClient');
         }
     }
+
 
     private function isNullHandle(mixed $handle): bool
     {

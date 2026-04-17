@@ -1042,6 +1042,7 @@ html:has(#thumbnails) #content {
     min-height: 0;
     position: relative;
     padding-bottom: 50px;
+    margin-left: 0 !important;
 }
 
 html:has(#thumbnails) .contentWithMenu {

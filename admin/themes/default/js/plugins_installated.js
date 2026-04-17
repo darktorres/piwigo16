@@ -1,3 +1,4 @@
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 function showInactivePlugins() {
     var showEls = document.querySelectorAll(".showInactivePlugins");
     if (!showEls.length) {
@@ -309,7 +310,7 @@ function uninstallPlugin(id) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     actualizeFilter();
 
     if (document.getElementById("displayClassic") && document.getElementById("displayClassic").checked) {
@@ -687,7 +688,7 @@ function performPluginDeactivate(id) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     actualizeFilter();
 
     document.querySelectorAll(".pluginBox").forEach(function (el) {

@@ -68,7 +68,7 @@ test.describe("Admin — users", () => {
         await expect(deleteBtn).toBeVisible({ timeout: 5_000 });
         await deleteBtn.click();
 
-        const confirmBtn = page.locator(".jconfirm-box button.btn-red");
+        const confirmBtn = page.locator("#pwg-confirm-dialog .pwg-confirm-buttons button.btn-red");
         await expect(confirmBtn).toBeVisible({ timeout: 5_000 });
         await confirmBtn.click();
         // Wait for the user container to disappear after deletion

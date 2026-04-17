@@ -1,3 +1,4 @@
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 /* Menubar: expand active section, collapse others on click */
 (function () {
     var menubar = document.getElementById('menubar');
@@ -19,7 +20,7 @@
 
 /* Show bullet points when multiple items exist in info/error/warning boxes;
    mirror the active page title from h2 into h1 */
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     ["infos", "errors", "warnings", "messages"].forEach(function (boxType) {
         var listItems = document.querySelectorAll("." + boxType + " ul li");
         if (listItems.length > 1) {

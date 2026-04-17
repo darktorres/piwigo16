@@ -1,6 +1,7 @@
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 /* Shared help-popin handler: fetch help content and display in a <dialog>.
    Works for both .help-popin (page-level) and .help-popin-search (search tips). */
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     var dlg = null;
     document.querySelectorAll('.help-popin, .help-popin-search').forEach(function (a) {
         a.addEventListener('click', function (e) {

@@ -1,3 +1,4 @@
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 // <-- Define sort orders -->
 var sortOrder = "date";
 var sortPlugins = function (a, b) {
@@ -16,7 +17,7 @@ var sortPlugins = function (a, b) {
             : -1;
 };
 
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     // <-- Set the advanced filters -->
 
     let betaTestPlugins = document.getElementById("showBetaTestPlugin").hasAttribute("checked");

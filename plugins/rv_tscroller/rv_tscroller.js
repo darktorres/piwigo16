@@ -135,7 +135,7 @@ if (window.RVTS)
             var iniStart = RVTS.start;
             window.addEventListener('RVTS_loaded', function handler() {
                 window.removeEventListener('RVTS_loaded', handler);
-                window.addEventListener('unload', function () {
+                window.addEventListener('pagehide', function () {
                     var threshold = Math.max(0, window.scrollY - 60);
                     var elts = RVTS.$thumbs.children;
                     for (var i = 0; i < elts.length; i++) {

@@ -136,10 +136,10 @@ test.describe("Admin — batch manager", () => {
         await expect(dpInput).toBeVisible();
         await dpInput.click();
 
-        const calendar = page.locator(".ui-datepicker");
+        const calendar = page.locator(".flatpickr-calendar");
         await expect(calendar).toBeVisible();
 
-        const availableDay = calendar.locator("td:not(.ui-datepicker-unselectable):not(.ui-state-disabled) a").first();
+        const availableDay = calendar.locator(".flatpickr-day:not(.disabled):not(.flatpickr-disabled)").first();
         await availableDay.click();
         const hiddenInput = page.locator('input[name="date_creation"]');
         await expect(hiddenInput).not.toHaveValue("");

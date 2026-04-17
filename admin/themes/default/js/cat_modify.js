@@ -1,4 +1,5 @@
-document.addEventListener('DOMContentLoaded', function () {
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+_docReady( function () {
     activateCommentDropdown();
     checkAlbumLock();
 

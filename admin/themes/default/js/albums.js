@@ -1,4 +1,5 @@
-document.addEventListener('DOMContentLoaded', () => {
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+_docReady( () => {
     formatedData = data;
 
     document.querySelector("h1").appendChild(document.createElement("span")).className = "badge-number";

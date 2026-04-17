@@ -1,4 +1,5 @@
-document.addEventListener('DOMContentLoaded', function () {
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+_docReady( function () {
     fetch("ws.php?format=json&method=pwg.plugins.getList")
         .then(function (response) { return response.json(); })
         .then(function (data) {

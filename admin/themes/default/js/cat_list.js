@@ -1,3 +1,4 @@
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 function getCookieVal(name) {
     var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
     return match ? decodeURIComponent(match[1]) : undefined;
@@ -314,7 +315,7 @@ function AddHoverOnAlbumActions() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     document.querySelectorAll(".addAlbumHead").forEach(function (el) {
         el.addEventListener('click', function () {
             var input = document.querySelector(".addAlbum input[name=virtual_name]");
@@ -323,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     if (!getCookieVal("pwg_album_manager_view")) {
         setCookieVal("pwg_album_manager_view", "tile");
     }

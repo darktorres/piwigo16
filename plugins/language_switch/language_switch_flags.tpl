@@ -29,7 +29,7 @@
         parseInt(getComputedStyle(_lsBox).marginRight || 0);
       _lsBox.style.left = Math.min(linkLeft, window.innerWidth - boxW - 5) + "px";
       _lsBox.style.top  = linkTop + "px";
-      _lsBox.style.display = _lsBox.style.display === "none" ? "" : "none";
+      _lsBox.style.display = window.getComputedStyle(_lsBox).display === "none" ? "block" : "none";
     });
     _lsBox.addEventListener("mouseleave", function() {
       _lsBox.style.display = "none";

@@ -73,7 +73,7 @@ var AdminTools = (function () {
             if (langEl) { langEl.innerHTML = html; langEl.value = __this.multiView.lang; }
 
             multiview.dataset.init = "1";
-            multiview.querySelectorAll(".switcher").forEach(function(el) { el.style.display = ''; });
+            multiview.querySelectorAll(".switcher").forEach(function(el) { el.style.display = 'block'; });
         };
 
         if (
@@ -130,7 +130,7 @@ var AdminTools = (function () {
     function _slideDown(el) {
         if (!el) return;
         el.style.opacity = '0';
-        el.style.display = '';
+        el.style.display = 'block';
         el.style.transition = 'opacity 0.2s';
         requestAnimationFrame(function() {
             requestAnimationFrame(function() {
@@ -144,7 +144,7 @@ var AdminTools = (function () {
         if (!el) return;
         el.style.transition = 'opacity 0.2s';
         el.style.opacity = '1';
-        el.style.display = '';
+        el.style.display = 'block';
         setTimeout(function() {
             el.style.opacity = '0';
             setTimeout(function() {
@@ -160,7 +160,7 @@ var AdminTools = (function () {
         if (!$ato) return;
         document.body.insertAdjacentElement('afterbegin', $ato); // ensure bar is at beginning
 
-        $ato.style.display = '';
+        $ato.style.display = 'block';
         ato_height = $ato.offsetHeight;
 
         if ("localStorage" in window) {
@@ -171,10 +171,10 @@ var AdminTools = (function () {
                 moveBody("show", false);
             } else {
                 $ato.style.display = 'none';
-                if ($ato_closed) $ato_closed.style.display = '';
+                if ($ato_closed) $ato_closed.style.display = 'block';
             }
         } else {
-            $ato.style.display = '';
+            $ato.style.display = 'block';
             moveBody("show", false);
         }
 
@@ -183,7 +183,7 @@ var AdminTools = (function () {
             parent.addEventListener("click", function() {
                 if (parent.classList.contains("multiview")) populateMultiView();
                 var ul = parent.querySelector("ul");
-                if (ul) ul.style.display = ul.style.display === "none" ? "" : "none";
+                if (ul) ul.style.display = window.getComputedStyle(ul).display === "none" ? "block" : "none";
             });
             parent.addEventListener("mouseleave", function(e) {
                 if (e.target.tagName.toLowerCase() !== "select") {

@@ -29,11 +29,11 @@ test.describe("Admin JS interactions", () => {
         await expect(dpInput).toBeVisible();
 
         await dpInput.click();
-        const calendar = page.locator(".ui-datepicker");
+        const calendar = page.locator(".flatpickr-calendar.open");
         await expect(calendar).toBeVisible();
 
         const availableDay = calendar
-            .locator("td:not(.ui-datepicker-unselectable):not(.ui-state-disabled) a")
+            .locator(".flatpickr-day:not(.disabled):not(.nextMonthDay):not(.prevMonthDay):not(.flatpickr-disabled)")
             .first();
         await availableDay.click();
         await expect(dpInput).not.toHaveValue("");
@@ -67,7 +67,11 @@ test.describe("Admin JS interactions", () => {
 
     test("AdminTools public toolbar — close and reopen", async ({ page }) => {
         const getIssues = collectConsoleIssues(page);
+        // Force the panel open regardless of prior localStorage state
         await page.goto("index.php");
+        await page.evaluate(() => { localStorage.setItem("ato_panel_open", "1"); });
+        await page.reload();
+        await page.waitForLoadState("load");
         await assertNoErrors(page, getIssues());
 
         const header = page.locator("#ato_header");

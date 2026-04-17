@@ -1,3 +1,4 @@
+var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 /*-------
 Data Get
 -------*/
@@ -288,7 +289,7 @@ document.querySelectorAll(".stat-compare-mode input").forEach(function (input) {
 /*-------
 Initialize the page
 -------*/
-document.addEventListener('DOMContentLoaded', function () {
+_docReady( function () {
     var checkedLabel = document.querySelector(".stat-data-selector input:checked + label");
     if (checkedLabel) changeData(checkedLabel.dataset.value);
 });

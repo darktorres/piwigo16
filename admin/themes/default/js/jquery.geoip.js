@@ -15,7 +15,7 @@ GeoIp = {
                 }
                 GeoIp.cache = cache;
             }
-            window.addEventListener("unload", function () {
+            window.addEventListener("pagehide", function () {
                 localStorage.setItem("freegeoip", JSON.stringify(GeoIp.cache));
             });
         }

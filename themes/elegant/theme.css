@@ -584,3 +584,12 @@ TD.nbEntries {
 .categoryActions .theme_menuf {
     display: none;
 }
+
+/* === Thumbnail-only scroll layout === */
+html:has(#thumbnails) #copyright {
+    background-color: #111;
+    margin: 0;
+    padding: 10px 16px;
+    text-align: center;
+    font-size: 100%;
+}

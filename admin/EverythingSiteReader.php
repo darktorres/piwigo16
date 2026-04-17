@@ -86,13 +86,13 @@ final class EverythingSiteReader
         foreach ($queryTargets as $target) {
             $query = $this->buildPathQuery($target['absPath']) . ' folder:';
             $logger->info('[sync][ev] querying dirs', ['target' => $target['piwigoPrefix'], 'query' => $query]);
-            $paths = $this->sdk->queryPaths($query, sortByPath: true);
-            $logger->info('[sync][ev] dirs result', ['target' => $target['piwigoPrefix'], 'raw_count' => count($paths)]);
 
             $absPrefixFwd = str_replace('\\', '/', $target['absPath']);
             $absPrefixLen = strlen($absPrefixFwd);
+            $rawCount = 0;
 
-            foreach ($paths as $rawPath) {
+            foreach ($this->sdk->queryPaths($query, sortByPath: true) as $rawPath) {
+                $rawCount++;
                 $pathFwd = str_replace('\\', '/', $rawPath);
 
                 if (strncasecmp($pathFwd, $absPrefixFwd, $absPrefixLen) !== 0) {
@@ -116,6 +116,8 @@ final class EverythingSiteReader
                     $on_dir($piwigoPath);
                 }
             }
+
+            $logger->info('[sync][ev] dirs result', ['target' => $target['piwigoPrefix'], 'raw_count' => $rawCount]);
 
             // The symlink directory itself is also a valid directory.
             if ($target['piwigoPrefix'] !== $basedirClean) {
@@ -188,13 +190,13 @@ final class EverythingSiteReader
         foreach ($queryTargets as $target) {
             $query = $this->buildPathQuery($target['absPath']) . ' ext:' . $extList;
             $logger->info('[sync][ev] querying files', ['target' => $target['piwigoPrefix'], 'query' => $query]);
-            $results = $this->sdk->queryPathsWithSize($query);
-            $logger->info('[sync][ev] files result', ['target' => $target['piwigoPrefix'], 'raw_count' => count($results)]);
 
             $absPrefixFwd = str_replace('\\', '/', $target['absPath']);
             $absPrefixLen = strlen($absPrefixFwd);
+            $rawCount = 0;
 
-            foreach ($results as $result) {
+            foreach ($this->sdk->queryPathsWithSize($query) as $result) {
+                $rawCount++;
                 $pathFwd = str_replace('\\', '/', $result['path']);
 
                 if (strncasecmp($pathFwd, $absPrefixFwd, $absPrefixLen) !== 0) {
@@ -265,6 +267,8 @@ final class EverythingSiteReader
                     }
                 }
             }
+
+            $logger->info('[sync][ev] files result', ['target' => $target['piwigoPrefix'], 'raw_count' => $rawCount]);
         }
 
         if ($profiling) {

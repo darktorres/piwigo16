@@ -282,11 +282,9 @@
 <form id="vtForm" method="post" action="{$U_ACTION}">
   <input type="hidden" name="pwg_token" value="{$pwg_token}">
   {if $PENDING_COUNT > 0}
-    <p>
-      {sprintf('Found %d video(s) without a thumbnail. FFmpeg will extract a frame from each one.'|translate, $PENDING_COUNT)}
-    </p>
+    <p style="color:#ddd">{sprintf('Found %d video(s) without a thumbnail. FFmpeg will extract a frame from each one.'|translate, $PENDING_COUNT)}</p>
   {else}
-    <p>{'All videos already have thumbnails.'|translate}</p>
+    <p style="color:#ddd">{'All videos already have thumbnails.'|translate}</p>
   {/if}
   <p class="bottomButtons">
     <button type="submit" class="icon-film buttonGradient"{if $PENDING_COUNT == 0} disabled{/if}>

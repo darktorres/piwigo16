@@ -1,11 +1,13 @@
 # Piwigo Fork — Claude Notes
 
-## PostgreSQL
+## MySQL
 
-Binary: `"C:/Program Files/PostgreSQL/18/bin/psql.exe"`  
+Binary: `"C:/Program Files/MySQL/MySQL Server 8.4/bin/mysql.exe"`  
 Database: `piwigo_fork`  
-User: `postgres`
+User: `root`  
+Password: `1234`  
+Host: `127.0.0.1`
 
 ```bash
-"/c/Program Files/PostgreSQL/18/bin/psql.exe" -U postgres -d piwigo_fork -c "YOUR SQL HERE"
+"/c/Program Files/MySQL/MySQL Server 8.4/bin/mysql.exe" -u root -p1234 -h 127.0.0.1 piwigo_fork -e "YOUR SQL HERE"
 ```

@@ -93,7 +93,7 @@ if (isset($_GET['delete']) &&
 elseif (isset($_POST['submitAdd'])) {
     $output_create = functions_admin::create_virtual_category(
         $_POST['virtual_name'],
-        $_GET['parent_id']
+        isset($_GET['parent_id']) ? (int) $_GET['parent_id'] : null
     );
 
     functions_admin::invalidate_user_cache();

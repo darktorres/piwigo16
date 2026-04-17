@@ -344,8 +344,10 @@ if ($page['section'] == 'categories') {
         } else {
             // MATERIALIZED fences the 30k-row category result before sort+limit,
             // preventing the planner from scanning all 10M images via idx_images_date_creation.
+            // MATERIALIZED is PostgreSQL-specific; MySQL uses plain WITH.
+            $cte_materialized = ($conf->dblayer === 'pgsql') ? 'MATERIALIZED' : '';
             $query = <<<SQL
-                WITH cat AS MATERIALIZED (
+                WITH cat AS {$cte_materialized} (
                     SELECT image_id {$column_names}
                     FROM image_category
                     INNER JOIN images ON id = image_id

@@ -3,7 +3,11 @@
   "scripts": {
     "preinstall": "cd tests && bun install && cd ../themes/bootstrap_darkroom && bun install --omit=dev",
     "reinstall": "bunx rimraf node_modules tests/node_modules themes/bootstrap_darkroom/node_modules && bun install && cd tests && bun install && cd ../themes/bootstrap_darkroom && bun install --omit=dev",
-    "tests": "cd tests && bun tests"
+    "test": "cd tests && bunx playwright test",
+    "test:headed": "cd tests && bunx playwright test --headed",
+    "test:report": "cd tests && bunx playwright show-report",
+    "typecheck": "cd tests && bunx tsc --noEmit",
+    "lint:tests": "cd tests && bunx eslint src"
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",

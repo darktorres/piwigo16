@@ -1,20 +1,22 @@
 {
+  "name": "piwigo-tests",
   "private": true,
-  "type": "module",
-  "dependencies": {
-    "@types/cli-progress": "^3.11.6",
-    "@types/fs-extra": "^11.0.4",
-    "@types/jsdom": "^21.1.7",
-    "@types/node": "^22.15.30",
-    "cli-progress": "^3.12.0",
-    "colorette": "^2.0.20",
-    "eslint": "^9.28.0",
-    "fs-extra": "^11.3.0",
-    "jsdom": "^26.1.0",
-    "puppeteer": "^24.10.0",
-    "typescript": "^5.8.3"
-  },
   "scripts": {
-    "tests": "bun ./dist/run-tests.mjs"
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^25.6.0",
+    "eslint": "^10.2.0",
+    "eslint-plugin-playwright": "^2.10.1",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.58.2"
+  },
+  "dependencies": {
+    "mysql2": "^3.22.0"
   }
 }

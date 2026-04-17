@@ -10,6 +10,12 @@
 !/local/**/index.php
 /upload
 
+# Test artifacts
+/tests/.env
+/tests/.auth/
+/tests/playwright-report/
+/tests/test-results/
+
 # NPM
 /node_modules/
 /tests/node_modules/

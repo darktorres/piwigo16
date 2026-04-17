@@ -680,6 +680,7 @@ final class functions_upload
         $ffmpeg .= ' -ss ' . $second;
         $ffmpeg .= ' -i ' . escapeshellarg($file_path);
         $ffmpeg .= ' -frames:v 1';
+        $ffmpeg .= ' -strict unofficial';
         $ffmpeg .= ' ' . escapeshellarg($representative_file_path);
 
         exec($ffmpeg . ' 2>&1', $FO, $FS);

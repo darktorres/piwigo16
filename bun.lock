@@ -16,6 +16,7 @@
         "moment": "~2.26.0",
         "mousetrap": "1.4.6",
         "nouislider": "^15.8.1",
+        "photoswipe": "5.4.4",
         "piecon": "github:lipka/piecon#0.5.0",
         "sortablejs": "^1.15.7",
         "tippy.js": "^6.3.7",
@@ -31,6 +32,9 @@
         "rimraf": "^6.0.1",
       },
     },
+  },
+  "patchedDependencies": {
+    "photoswipe@5.4.4": "patches/photoswipe@5.4.4.patch",
   },
   "packages": {
     "@biomejs/biome": ["@biomejs/biome@1.9.4", "", { "optionalDependencies": { "@biomejs/cli-darwin-arm64": "1.9.4", "@biomejs/cli-darwin-x64": "1.9.4", "@biomejs/cli-linux-arm64": "1.9.4", "@biomejs/cli-linux-arm64-musl": "1.9.4", "@biomejs/cli-linux-x64": "1.9.4", "@biomejs/cli-linux-x64-musl": "1.9.4", "@biomejs/cli-win32-arm64": "1.9.4", "@biomejs/cli-win32-x64": "1.9.4" }, "bin": { "biome": "bin/biome" } }, "sha512-1rkd7G70+o9KkTn5KLmDYXihGoTaIGO9PIIN2ZB7UJxFrWw04CZHPYiMRjYsaDvVV7hP1dYNRLxSANLaBFGpog=="],
@@ -256,6 +260,8 @@
     "path-key": ["path-key@3.1.1", "", {}, "sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q=="],
 
     "path-scurry": ["path-scurry@2.0.0", "", { "dependencies": { "lru-cache": "^11.0.0", "minipass": "^7.1.2" } }, "sha512-ypGJsmGtdXUOeM5u93TyeIEfEhM6s+ljAhrk5vAvSx8uyY/02OvrZnA0YNGUrPXfpJMgI1ODd3nwz8Npx4O4cg=="],
+
+    "photoswipe": ["photoswipe@5.4.4", "", {}, "sha512-WNFHoKrkZNnvFFhbHL93WDkW3ifwVOXSW3w1UuZZelSmgXpIGiZSNlZJq37rR8YejqME2rHs9EhH9ZvlvFH2NA=="],
 
     "piecon": ["piecon@github:lipka/piecon#4a2bb61", {}, "lipka-piecon-4a2bb61", "sha512-cWAQzUtFKXSDzTBxlVug+7bnO4fc+d3uy8oybOYOaaG/tZWMQ8i52vwX9CFo3pZWH16l+p5jnhmqkaDyNVC5Fg=="],
 

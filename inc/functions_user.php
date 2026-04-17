@@ -808,7 +808,7 @@ final class functions_user
      */
     public static function get_browser_language(): false|string
     {
-        $language_header = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+        $language_header = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
 
         if ($language_header == '') {
             return false;
@@ -1328,7 +1328,7 @@ final class functions_user
      */
     public static function can_manage_comment(
         string $action,
-        int $comment_author_id
+        int|string $comment_author_id
     ): bool {
         global $user, $conf;
 

@@ -373,6 +373,7 @@ final class pwg_users
             return new PwgError(WS_ERR_INVALID_PARAM, functions::l10n('The passwords do not match'));
         }
 
+        $errors = [];
         $user_id = functions_user::register_user(
             $params['username'],
             $params['password'],

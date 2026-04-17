@@ -503,6 +503,7 @@ final class functions_url
                     }
 
                     if ($maybe_permalinks !== []) {
+                        $perma_index = 0;
                         $cat_id = functions_category::get_cat_id_from_permalinks($maybe_permalinks, $perma_index);
 
                         if (isset($cat_id)) {

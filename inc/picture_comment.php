@@ -24,6 +24,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 $page['show_comments'] = false;
+$comment_action = null;
 
 foreach ($related_categories as $category) {
     if ($category['commentable'] == 'true') {
@@ -53,13 +54,19 @@ if ($page['show_comments'] &&
 
     $comment_action = functions_comment::insert_user_comment($comm, $_POST['key'], $page['errors']);
 
+    // allow plugins to notify what's going on
+    functions_plugins::trigger_notify(
+        'user_comment_insertion',
+        array_merge($comm, [
+            'action' => $comment_action,
+        ])
+    );
+
     switch ($comment_action) {
         case 'moderate':
-            $page['infos'][] = functions::l10n('An administrator must authorize your comment before it is visible.');
-            // no break
-
         case 'validate':
-            $page['infos'][] = functions::l10n('Your comment has been registered');
+            // Post/Redirect/Get: redirect to avoid re-submit and prevent PHP crash on render
+            functions::redirect($url_self);
             break;
 
         case 'reject':
@@ -70,14 +77,6 @@ if ($page['show_comments'] &&
         default:
             trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
     }
-
-    // allow plugins to notify what's going on
-    functions_plugins::trigger_notify(
-        'user_comment_insertion',
-        array_merge($comm, [
-            'action' => $comment_action,
-        ])
-    );
 } elseif (isset($_POST['content'])) {
     functions_html::set_status_header(403);
     exit('ugly spammer');

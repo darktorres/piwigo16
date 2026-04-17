@@ -64,7 +64,7 @@ if (isset($_POST['falsify']) &&
           isset($_POST['cat_false']) &&
           count($_POST['cat_false']) > 0
 ) {
-    functions_admin::add_permission_on_category($_POST['cat_false'], $page['user']);
+    functions_admin::add_permission_on_category($_POST['cat_false'], [$page['user']]);
 }
 
 // +-----------------------------------------------------------------------+

@@ -2409,7 +2409,7 @@ final class functions
             );
         }
 
-        return $user['nb_available_comments'];
+        return (int) $user['nb_available_comments'];
     }
 
     /**

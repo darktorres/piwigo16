@@ -94,6 +94,7 @@ if (window.RVTS)
             },
 
             checkAutoScroll: function (evt) {
+                if (!RVTS.$thumbs) return 0;
                 var tBot = RVTS.$thumbs.offsetTop + RVTS.$thumbs.offsetHeight;
                 var wBot = window.scrollY + window.innerHeight;
                 tBot -= !evt ? 0 : 100; //begin 100 pixels before end

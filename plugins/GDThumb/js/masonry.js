@@ -43,6 +43,7 @@ var GDMasonry = (function () {
     }
 
     function _setHeight() {
+        if (!_$c || !_$c.length) return;
         var maxH = Math.max.apply(null, _colHeights);
         _c.style.height = Math.max(0, maxH - _gap) + 'px';
     }
@@ -50,6 +51,7 @@ var GDMasonry = (function () {
     // Full re-layout of every child — used on init and on resize when
     // column count changes.
     function layout() {
+        if (!_$c || !_$c.length) return;
         _ncols = _colCount();
         _colHeights = new Array(_ncols).fill(0);
         Array.from(_c.querySelectorAll(':scope > li')).forEach(function(li) { _place(li); });

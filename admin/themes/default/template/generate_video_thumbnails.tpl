@@ -133,7 +133,9 @@
       + '<div class="sync-progress-bar">'
       + '<div class="progress-track"><div class="progress-fill" id="vtProgressFill"></div></div>'
       + '<span class="progress-text" id="vtProgressText"></span>'
-      + '</div></div>';
+      + '</div>'
+      + '<div class="vt-current-file" id="vtCurrentFile"></div>'
+      + '</div>';
     phases.innerHTML = h;
     var c = document.getElementById('vtControls');
     if (c) c.style.display = '';
@@ -144,7 +146,31 @@
     var fill = document.getElementById('vtProgressFill');
     if (fill) fill.style.width = pct + '%';
     var text = document.getElementById('vtProgressText');
-    if (text) text.textContent = data.current + ' / ' + data.total + (data.file ? ' \u2014 ' + data.file : '');
+    if (text) text.textContent = data.current + ' / ' + data.total;
+    var fileLabel = document.getElementById('vtCurrentFile');
+    if (fileLabel) fileLabel.textContent = data.file || '';
+    if (data.skip_reason) {
+      var list = document.getElementById('vtSkippedList');
+      if (list) {
+        var entry = document.createElement('div');
+        entry.className = 'vt-skip-entry';
+        if (data.skip_reason === 'file_not_found') {
+          entry.textContent = data.file + ' \u2014 {'File not found on disk'|translate|escape:'javascript'}';
+        } else if (data.ffmpeg_output && data.ffmpeg_output.length) {
+          var header = document.createElement('div');
+          header.textContent = data.file + ' \u2014 {'FFmpeg output'|translate|escape:'javascript'}:';
+          entry.appendChild(header);
+          var pre = document.createElement('pre');
+          pre.className = 'vt-skip-ffmpeg-output';
+          pre.textContent = data.ffmpeg_output.join('\n');
+          entry.appendChild(pre);
+        } else {
+          entry.textContent = data.file + ' \u2014 {'FFmpeg produced no output'|translate|escape:'javascript'}';
+        }
+        list.appendChild(entry);
+        list.style.display = '';
+      }
+    }
     var sub = document.getElementById('substep-generate');
     if (sub) sub.querySelector('.substep-detail').textContent =
       pct + '% \u2014 ' + data.generated + ' {'generated'|translate|escape:'javascript'}' + (data.skipped > 0 ? ', ' + data.skipped + ' {'skipped'|translate|escape:'javascript'}' : '');
@@ -238,7 +264,8 @@
 .sync-substep .substep-status .spinner { width: 12px; height: 12px; }
 .sync-substep.running .substep-label { color: #ddd; }
 .sync-substep .substep-label { color: #999; }
-.sync-substep .substep-detail { color: #888; font-size: 12px; }
+.sync-substep .substep-detail { color: #ccc; font-size: 12px; }
+.vt-current-file { min-height: 1.4em; font-size: 11px; color: #bbb; padding-left: 56px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sync-substep .substep-time { margin-left: auto; color: #777; font-size: 11px; }
 .sync-substep .sync-progress-bar { padding-left: 26px; }
 .sync-phase.aborted .phase-status, .sync-substep.aborted .substep-status { color: #e25b5b; }
@@ -247,10 +274,13 @@
 .syncAbortBtn { background: #b32d2e; color: #fff; }
 .syncAbortBtn:hover { background: #9b2324; }
 #vtResults ul { margin: 5px 0 5px 20px; }
+#vtSkippedList { margin-top: 10px; max-height: 200px; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px; }
+.vt-skip-entry { font-size: 12px; color: #e09050; padding: 3px 0; }
+.vt-skip-ffmpeg-output { font-size: 11px; color: #ccc; background: #2a2a2a; border: 1px solid #444; border-radius: 3px; padding: 6px 8px; margin: 3px 0 6px; white-space: pre-wrap; word-break: break-all; max-height: 120px; overflow-y: auto; }
 </style>
 
 <form id="vtForm" method="post" action="{$U_ACTION}">
-  {html_input_field field='pwg_token' type='hidden' value=$pwg_token}
+  <input type="hidden" name="pwg_token" value="{$pwg_token}">
   {if $PENDING_COUNT > 0}
     <p>
       {sprintf('Found %d video(s) without a thumbnail. FFmpeg will extract a frame from each one.'|translate, $PENDING_COUNT)}
@@ -275,6 +305,7 @@
         <button type="button" id="vtAbort" class="buttonGradient syncControlBtn syncAbortBtn">{'Abort'|translate}</button>
       </span>
     </p>
+    <div id="vtSkippedList" style="display:none"></div>
   </fieldset>
   <div id="vtResults" style="display:none"></div>
 </div>

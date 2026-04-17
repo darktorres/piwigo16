@@ -20,6 +20,7 @@
     {/if}
   {/if}
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
 
   {if (isset($REVERSE) and $REVERSE and $PAGE_TITLE == functions::l10n('Home'))}
@@ -30,7 +31,7 @@
   {get_combined_css}
   {foreach from=$themes item=theme}
     {if $theme.load_css}
-      {combine_css path="themes/`$theme.id`/theme.css" order=-10}
+      {combine_css path="themes/`$theme.id`/theme.css" order=-10 version=2}
     {/if}
     {if !empty($theme.local_head)}{include file=$theme.local_head load_css=$theme.load_css}{/if}
   {/foreach}
@@ -47,14 +48,12 @@
 </head>
 
 <body>
-  <div data-role="page" data-theme="a">
-    {if isset($MENUBAR)}<div data-role="panel" id="menubar" data-position="right" data-display="overlay">
+  <div>
+    {if isset($MENUBAR)}<div id="menubar">
         {$MENUBAR}
     </div>{/if}
-    <div data-role="header">
-      <div class="title">
-        <a href="{$U_HOME}" class="home_button" data-icon="home" data-iconpos="notext" data-role="button"></a>
-        {$GALLERY_TITLE}
-        <a href="#menubar" data-icon="grid" data-iconpos="notext" data-role="button" style="float: right">Menu</a>
-      </div>
+    <div class="sp-header">
+      <a href="{$U_HOME}" class="home_button">&#8962;</a>
+      <span class="title">{$GALLERY_TITLE}</span>
+      <a href="#menubar" class="sp-menu-btn">Menu</a>
 </div>

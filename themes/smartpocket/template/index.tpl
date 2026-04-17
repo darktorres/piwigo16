@@ -1,4 +1,4 @@
-<div data-role="content">
+<div class="sp-content">
 	{if isset($SEARCH_IN_SET_BUTTON) and $SEARCH_IN_SET_BUTTON}
 		<div class="mcs-side-results search-in-set-button">
 			<div>

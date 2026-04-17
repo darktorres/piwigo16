@@ -1,5 +1,5 @@
 <h3>{'Menu'|translate}</h3>
-<ul data-role="listview">
+<ul>
 	{foreach from=$block->data item=link}
 		{if is_array($link)}
 			<li><a href="{$link.URL}" title="{if isset($link.TITLE)}{$link.TITLE}{/if}" {if isset($link.REL)}

@@ -26,14 +26,14 @@
 </style>{/html_style}
 
 {include file='infos_errors.tpl'}
-<div data-role="content">
-  <ul data-role="listview" data-inset="true">
-    <li data-role="list-divider">{'Search'|translate}</li>
+<div>
+  <ul>
+    <li class="sp-divider">{'Search'|translate}</li>
   </ul>
 
 
   <form class="filter" method="post" name="search" action="{$F_SEARCH_ACTION}">
-    <fieldset data-role="controlgroup">
+    <fieldset>
       <legend>{'Search for words'|translate}</legend>
 
       <input type="text" name="search_allwords">
@@ -45,7 +45,7 @@
       <label for="mode_or">{'Search for any term'|translate}</label>
     </fieldset>
 
-    <fieldset data-role="controlgroup">
+    <fieldset>
       <legend>{'Apply on properties'|translate}</legend>
 
       <input type="checkbox" name="fields[]" value="name" checked="checked" id="field-name">
@@ -64,7 +64,7 @@
     </fieldset>
 
     {if count($AUTHORS)>=1}
-      <fieldset data-role="controlgroup">
+      <fieldset>
         <legend>{'Search for Author'|translate}</legend>
         <select id="authors" placeholder="{'Type in a search term'|translate}" name="authors[]" multiple>
           {foreach from=$AUTHORS item=author}
@@ -76,7 +76,7 @@
     {/if}
 
     {if isset($TAGS)}
-      <fieldset data-role="controlgroup">
+      <fieldset>
         <legend>{'Search tags'|translate}</legend>
         <select id="tags" placeholder="{'Type in a search term'|translate}" name="tags[]" multiple>
           {foreach from=$TAGS item=tag}
@@ -91,7 +91,7 @@
       </fieldset>
     {/if}
 
-    <fieldset data-role="controlgroup">
+    <fieldset>
       <legend>{'Search in albums'|translate}</legend>
       <select id="categories" placeholder="{'Type in a search term'|translate}" name="cat[]" multiple>
         {html_options options=$category_options selected=$category_options_selected}

@@ -5,7 +5,7 @@
 {elseif !empty($navbar) and !isset($ELEMENT_CONTENT)}
 	{include file='navigation_bar.tpl'|get_extent:'navbar'}
 {else}
-	<div data-role="footer" class="pwg_footer">
+	<div class="pwg_footer">
 		<h6>
 			{'Powered by'|translate} <a href="{$PHPWG_URL}" class="Piwigo">Piwigo</a>
 			{$VERSION}
@@ -20,6 +20,28 @@
 		</h6>
 	</div>
 {/if}
+{footer_script}<script>
+(function() {
+    var menubar = document.getElementById('menubar');
+    if (!menubar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'sp-overlay';
+    document.body.appendChild(overlay);
+    function spOpen()  { menubar.classList.add('sp-open');    overlay.classList.add('sp-open'); }
+    function spClose() { menubar.classList.remove('sp-open'); overlay.classList.remove('sp-open'); }
+    document.querySelectorAll('a[href="#menubar"]').forEach(function(a) {
+        a.addEventListener('click', function(e) {
+            e.preventDefault();
+            a.dataset.rel === 'close' ? spClose() : spOpen();
+        });
+    });
+    overlay.addEventListener('click', spClose);
+    document.querySelectorAll('.sp-collapsible').forEach(function(el) {
+        var h = el.querySelector('h3');
+        if (h) h.addEventListener('click', function() { el.classList.toggle('sp-open'); });
+    });
+})();
+</script>{/footer_script}
 {footer_script}<script>
 	document.cookie = 'screen_size='+window.innerWidth+'x'+window.innerHeight;{if isset($COOKIE_PATH)}path={$COOKIE_PATH};{/if}
 </script>{/footer_script}

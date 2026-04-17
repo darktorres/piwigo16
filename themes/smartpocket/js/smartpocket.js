@@ -1,5 +1,5 @@
 (function () {
-    document.addEventListener('DOMContentLoaded', function () {
+    function init() {
         var thumbs = document.querySelector('ul.thumbnails');
         if (!thumbs || typeof GLightbox === 'undefined') return;
 
@@ -37,5 +37,10 @@
         if (typeof SPThumbs !== 'undefined' && typeof SPThumbsOpts !== 'undefined') {
             new SPThumbs(SPThumbsOpts);
         }
-    });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();

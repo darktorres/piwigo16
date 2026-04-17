@@ -31,7 +31,7 @@
   {get_combined_css}
   {foreach from=$themes item=theme}
     {if $theme.load_css}
-      {combine_css path="themes/`$theme.id`/theme.css" order=-10 version=2}
+      {combine_css path="themes/`$theme.id`/theme.css" order=-10 version=3}
     {/if}
     {if !empty($theme.local_head)}{include file=$theme.local_head load_css=$theme.load_css}{/if}
   {/foreach}
@@ -55,5 +55,5 @@
     <div class="sp-header">
       <a href="{$U_HOME}" class="home_button">&#8962;</a>
       <span class="title">{$GALLERY_TITLE}</span>
-      <a href="#menubar" class="sp-menu-btn">Menu</a>
+      <a href="#menubar" class="sp-menu-btn">&#9776;</a>
 </div>

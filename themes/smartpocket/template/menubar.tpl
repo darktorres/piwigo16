@@ -15,7 +15,6 @@
 		{/foreach}
 	</div>
 {/if}
-<br>
 <ul>
 	<li class="sp-divider">{'View in'|translate}</li>
 	{if isset($TOGGLE_MOBILE_THEME_URL)}

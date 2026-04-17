@@ -102,7 +102,8 @@ if (window.RVTS)
             },
 
             engage: function () {
-                RVTS.$thumbs = document.getElementById('thumbnails');
+                RVTS.$thumbs = document.getElementById('thumbnails') || document.querySelector('.thumbnails');
+                if (!RVTS.$thumbs) return;
                 RVTS.$thumbs.insertAdjacentHTML('afterend',
                     '<div id="ajaxLoader" style="display:none;position:fixed;bottom:32px;right:1%;z-index:999"><img src="' +
                         RVTS.ajaxLoaderImage +

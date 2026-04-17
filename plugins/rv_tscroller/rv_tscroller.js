@@ -133,7 +133,7 @@ if (window.RVTS)
                         '" width="128" height="15" alt="~"></div>'
                 );
 
-                RVTS.$scrollEl = document.getElementById('content') || window;
+                RVTS.$scrollEl = document.querySelector('[data-rvts-scroll]') || window;
 
                 if ("#top" == window.location.hash) RVTS.$scrollEl.scrollTo(0, 0);
 
@@ -253,7 +253,7 @@ if (window.RVTS_CATS)
                         RVTS_CATS.ajaxLoaderImage +
                         '" width="128" height="15" alt="~"></div>'
                 );
-                RVTS_CATS.$scrollEl = document.getElementById('content') || window;
+                RVTS_CATS.$scrollEl = document.querySelector('[data-rvts-scroll]') || window;
                 RVTS_CATS.$scrollEl.addEventListener('scroll', RVTS_CATS.checkAutoScroll);
                 window.addEventListener('resize', RVTS_CATS.checkAutoScroll);
                 if (RVTS_CATS.checkAutoScroll())

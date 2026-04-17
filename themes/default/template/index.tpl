@@ -9,7 +9,7 @@
 {/if}
 
 {if !empty($PLUGIN_INDEX_CONTENT_BEFORE)}{$PLUGIN_INDEX_CONTENT_BEFORE}{/if}
-<div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
+<div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}" data-rvts-scroll>
 	<div class="titrePage{if isset($chronology.TITLE)} calendarTitleBar{/if}">
 		<ul class="categoryActions">
 			{if isset($SEARCH_IN_SET_ACTION) and $SEARCH_IN_SET_ACTION}

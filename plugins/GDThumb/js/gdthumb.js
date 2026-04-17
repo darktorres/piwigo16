@@ -1,6 +1,11 @@
 var GDThumb = {
 
+    _initialized: false,
+
     setup: function (method, max_height, margin) {
+        if (GDThumb._initialized) return;
+        GDThumb._initialized = true;
+
         GDThumb.merge();
         var ul = document.querySelector("ul#thumbnails");
         if (ul) ul.classList.add("thumbnails");

@@ -31,7 +31,7 @@
   {get_combined_css}
   {foreach from=$themes item=theme}
     {if $theme.load_css}
-      {combine_css path="themes/`$theme.id`/theme.css" order=-10 version=3}
+      {combine_css path="themes/`$theme.id`/theme.css" order=-10 version=4}
     {/if}
     {if !empty($theme.local_head)}{include file=$theme.local_head load_css=$theme.load_css}{/if}
   {/foreach}

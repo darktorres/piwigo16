@@ -268,7 +268,7 @@ ul[data-album-grid] li a::after {
 }
 .pwg_footer h6 {
     margin: 6px 10px;
-    text-align: right;
+    text-align: center;
     font-size: 0.8em;
     color: #888;
 }

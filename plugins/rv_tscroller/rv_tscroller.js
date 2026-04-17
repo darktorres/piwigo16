@@ -49,8 +49,15 @@ if (window.RVTS)
                         RVTS.start = newStart;
                         var evt = new CustomEvent('RVTS_add', {cancelable: true, detail: {htm: htm, addToEnd: false}});
                         window.dispatchEvent(evt);
-                        if (!evt.defaultPrevented)
-                            RVTS.$thumbs.insertAdjacentHTML('afterbegin', htm);
+                        if (!evt.defaultPrevented) {
+                            var tmp = document.createElement('div');
+                            tmp.innerHTML = htm;
+                            var wrap = tmp.querySelector('.thumbnails') || tmp;
+                            var items = Array.from(wrap.children);
+                            var frag = document.createDocumentFragment();
+                            items.forEach(function(item) { frag.appendChild(item); });
+                            RVTS.$thumbs.insertBefore(frag, RVTS.$thumbs.firstChild);
+                        }
                         if (RVTS.start <= 0) {
                             var rvtsUpEl = document.getElementById('rvtsUp');
                             if (rvtsUpEl) rvtsUpEl.remove();
@@ -60,7 +67,7 @@ if (window.RVTS)
                     .finally(function() {
                         RVTS.loadingUp = 0;
                         if (!RVTS.loading && loaderEl) loaderEl.style.display = 'none';
-                        window.dispatchEvent(new CustomEvent('RVTS_loaded', {detail: 0}));
+                        window.dispatchEvent(new CustomEvent('RVTS_loaded', {detail: {down: false}}));
                     });
             },
 
@@ -82,14 +89,21 @@ if (window.RVTS)
                         RVTS.next += RVTS.perPage;
                         var evt = new CustomEvent('RVTS_add', {cancelable: true, detail: {htm: htm, addToEnd: true}});
                         window.dispatchEvent(evt);
-                        if (!evt.defaultPrevented)
-                            RVTS.$thumbs.insertAdjacentHTML('beforeend', htm);
+                        if (!evt.defaultPrevented) {
+                            var tmp = document.createElement('div');
+                            tmp.innerHTML = htm;
+                            var wrap = tmp.querySelector('.thumbnails') || tmp;
+                            var items = Array.from(wrap.children);
+                            var frag = document.createDocumentFragment();
+                            items.forEach(function(item) { frag.appendChild(item); });
+                            RVTS.$thumbs.appendChild(frag);
+                        }
                     })
                     .catch(function() {})
                     .finally(function() {
                         RVTS.loading = 0;
                         if (!RVTS.loadingUp && loaderEl) loaderEl.style.display = 'none';
-                        window.dispatchEvent(new CustomEvent('RVTS_loaded', {detail: 1}));
+                        window.dispatchEvent(new CustomEvent('RVTS_loaded', {detail: {down: true}}));
                     });
             },
 

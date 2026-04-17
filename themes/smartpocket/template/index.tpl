@@ -9,7 +9,6 @@
 	{if !empty($CATEGORIES)}{$CATEGORIES}{/if}
 	{if !empty($SEARCH_ID)}
 		{include file='themes/default/template/inc/search_filters.inc.tpl'}
-		{combine_script id='mcs_sp' path='themes/smartpocket/js/mcs_sp.js'}
 	{/if}
 	{if !empty($THUMBNAILS)}
 		{$THUMBNAILS}

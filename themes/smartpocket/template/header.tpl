@@ -48,7 +48,7 @@
 </head>
 
 <body>
-  <div>
+  <div class="sp-page">
     {if isset($MENUBAR)}<div id="menubar">
         {$MENUBAR}
     </div>{/if}

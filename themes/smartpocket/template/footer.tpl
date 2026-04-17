@@ -4,22 +4,21 @@
 	{include file='navigation_bar.tpl'|get_extent:'navbar' navbar=$thumb_navbar}
 {elseif !empty($navbar) and !isset($ELEMENT_CONTENT)}
 	{include file='navigation_bar.tpl'|get_extent:'navbar'}
-{else}
-	<div class="pwg_footer">
-		<h6>
-			{'Powered by'|translate} <a href="{$PHPWG_URL}" class="Piwigo">Piwigo</a>
-			{$VERSION}
-			{if isset($CONTACT_MAIL)}
-				- {'Contact'|translate}
-				<a
-					href="mailto:{$CONTACT_MAIL}?subject={'A comment on your site'|translate|escape:url}">{'Webmaster'|translate}</a>
-			{/if}
-			<br>{'View in'|translate} :
-			<b>{'Mobile'|translate}</b> | {if isset($TOGGLE_MOBILE_THEME_URL)} <a
-				href="{$TOGGLE_MOBILE_THEME_URL}">{'Desktop'|translate}</a> {/if}
-		</h6>
-	</div>
 {/if}
+<div class="pwg_footer">
+	<h6>
+		{'Powered by'|translate} <a href="{$PHPWG_URL}" class="Piwigo">Piwigo</a>
+		{$VERSION}
+		{if isset($CONTACT_MAIL)}
+			- {'Contact'|translate}
+			<a
+				href="mailto:{$CONTACT_MAIL}?subject={'A comment on your site'|translate|escape:url}">{'Webmaster'|translate}</a>
+		{/if}
+		- {'View in'|translate} :
+		<b>{'Mobile'|translate}</b> | {if isset($TOGGLE_MOBILE_THEME_URL)} <a
+			href="{$TOGGLE_MOBILE_THEME_URL}">{'Desktop'|translate}</a> {/if}
+	</h6>
+</div>
 {footer_script}<script>
 (function() {
     var menubar = document.getElementById('menubar');
@@ -51,7 +50,7 @@
 		{$v}
 	{/foreach}
 {/if}
-</div><!-- /page -->
+</div><!-- /sp-page -->
 
 </body>
 

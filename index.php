@@ -675,31 +675,31 @@ if (empty($page['is_external'])) {
 
     if (! empty($page['items'])) {
         require __DIR__ . '/inc/category_default.php';
+    }
 
-        if ($conf->index_sizes_icon) {
-            $url = functions_url::add_url_params(
-                functions_url::duplicate_index_url(),
+    if ($conf->index_sizes_icon && (! empty($page['items']) || $template->get_template_vars('CATEGORIES'))) {
+        $url = functions_url::add_url_params(
+            functions_url::duplicate_index_url(),
+            [
+                'display' => '',
+            ]
+        );
+
+        $derivative_params = $template->get_template_vars('derivative_params');
+        $selected_type = $derivative_params ? $derivative_params->type : derivative_std_params::IMG_THUMB;
+        $template->clear_assign('derivative_params');
+        $type_map = ImageStdParams::get_defined_type_map();
+        unset($type_map[derivative_std_params::IMG_XXLARGE], $type_map[derivative_std_params::IMG_XLARGE]);
+
+        foreach ($type_map as $params) {
+            $template->append(
+                'image_derivatives',
                 [
-                    'display' => '',
+                    'DISPLAY' => functions::l10n($params->type),
+                    'URL' => $url . $params->type,
+                    'SELECTED' => $params->type == $selected_type,
                 ]
             );
-
-            $selected_type = $template->get_template_vars('derivative_params')
-                ->type;
-            $template->clear_assign('derivative_params');
-            $type_map = ImageStdParams::get_defined_type_map();
-            unset($type_map[derivative_std_params::IMG_XXLARGE], $type_map[derivative_std_params::IMG_XLARGE]);
-
-            foreach ($type_map as $params) {
-                $template->append(
-                    'image_derivatives',
-                    [
-                        'DISPLAY' => functions::l10n($params->type),
-                        'URL' => $url . $params->type,
-                        'SELECTED' => $params->type == $selected_type,
-                    ]
-                );
-            }
         }
     }
 

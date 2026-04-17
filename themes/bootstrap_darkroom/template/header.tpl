@@ -175,5 +175,6 @@
       {foreach $header_notes as $note}
       {/foreach}
     {/if}
+    <div id="bd_scroll_area">
 
 <!-- End of header.tpl -->

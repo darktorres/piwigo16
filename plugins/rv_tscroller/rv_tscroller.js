@@ -111,8 +111,15 @@ if (window.RVTS)
 
             checkAutoScroll: function (evt) {
                 if (!RVTS.$thumbs) return 0;
-                var tBot = RVTS.$thumbs.offsetTop + RVTS.$thumbs.offsetHeight;
-                var wBot = window.scrollY + window.innerHeight;
+                var scrollEl = RVTS.$scrollEl || window;
+                var tBot, wBot;
+                if (scrollEl === window) {
+                    tBot = RVTS.$thumbs.offsetTop + RVTS.$thumbs.offsetHeight;
+                    wBot = window.scrollY + window.innerHeight;
+                } else {
+                    tBot = scrollEl.scrollHeight;
+                    wBot = scrollEl.scrollTop + scrollEl.clientHeight;
+                }
                 tBot -= !evt ? 0 : 100; //begin 100 pixels before end
                 return tBot <= wBot ? (RVTS.doAutoScroll(), 1) : 0;
             },
@@ -126,12 +133,15 @@ if (window.RVTS)
                         '" width="128" height="15" alt="~"></div>'
                 );
 
-                if ("#top" == window.location.hash) window.scrollTo(0, 0);
+                RVTS.$scrollEl = document.getElementById('content') || window;
 
-                if (RVTS.$thumbs.offsetHeight < window.innerHeight) RVTS.adjust = 1;
-                else if (RVTS.$thumbs.offsetHeight > 2 * window.innerHeight)
+                if ("#top" == window.location.hash) RVTS.$scrollEl.scrollTo(0, 0);
+
+                var viewH = RVTS.$scrollEl === window ? window.innerHeight : RVTS.$scrollEl.clientHeight;
+                if (RVTS.$thumbs.offsetHeight < viewH) RVTS.adjust = 1;
+                else if (RVTS.$thumbs.offsetHeight > 2 * viewH)
                     RVTS.adjust = -1;
-                window.addEventListener('scroll', RVTS.checkAutoScroll);
+                RVTS.$scrollEl.addEventListener('scroll', RVTS.checkAutoScroll);
                 window.addEventListener('resize', RVTS.checkAutoScroll);
                 if (RVTS.checkAutoScroll())
                     window.setTimeout(RVTS.checkAutoScroll, 1500);
@@ -153,11 +163,13 @@ if (window.RVTS)
             window.addEventListener('RVTS_loaded', function handler() {
                 window.removeEventListener('RVTS_loaded', handler);
                 window.addEventListener('pagehide', function () {
-                    var threshold = Math.max(0, window.scrollY - 60);
+                    var scrollEl = RVTS.$scrollEl || window;
+                    var currentScrollY = scrollEl === window ? window.scrollY : scrollEl.scrollTop;
+                    var threshold = Math.max(0, currentScrollY - 60);
                     var elts = RVTS.$thumbs.children;
                     for (var i = 0; i < elts.length; i++) {
                         var r = elts[i].getBoundingClientRect();
-                        var offsetTop = r.top + window.scrollY;
+                        var offsetTop = r.top + currentScrollY;
                         if (offsetTop >= threshold) {
                             var start = RVTS.start + i;
                             var delta = start - iniStart;
@@ -222,8 +234,13 @@ if (window.RVTS_CATS)
             },
 
             checkAutoScroll: function () {
-                var tBot = RVTS_CATS.$thumbs.offsetTop + RVTS_CATS.$thumbs.offsetHeight;
-                var wBot = window.scrollY + window.innerHeight;
+                var scrollEl = RVTS_CATS.$scrollEl || window;
+                var tBot = scrollEl === window
+                    ? RVTS_CATS.$thumbs.offsetTop + RVTS_CATS.$thumbs.offsetHeight
+                    : scrollEl.scrollHeight;
+                var wBot = scrollEl === window
+                    ? window.scrollY + window.innerHeight
+                    : scrollEl.scrollTop + scrollEl.clientHeight;
                 tBot -= 100;
                 return tBot <= wBot ? (RVTS_CATS.doAutoScroll(), 1) : 0;
             },
@@ -236,7 +253,8 @@ if (window.RVTS_CATS)
                         RVTS_CATS.ajaxLoaderImage +
                         '" width="128" height="15" alt="~"></div>'
                 );
-                window.addEventListener('scroll', RVTS_CATS.checkAutoScroll);
+                RVTS_CATS.$scrollEl = document.getElementById('content') || window;
+                RVTS_CATS.$scrollEl.addEventListener('scroll', RVTS_CATS.checkAutoScroll);
                 window.addEventListener('resize', RVTS_CATS.checkAutoScroll);
                 if (RVTS_CATS.checkAutoScroll())
                     window.setTimeout(RVTS_CATS.checkAutoScroll, 1500);

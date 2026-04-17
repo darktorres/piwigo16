@@ -889,3 +889,22 @@ li.path-ext-svg a img {
         width: 75%; /*min default picture derivative width*/
     }
 }
+
+/* === Thumbnail-only scroll layout === */
+html:has(#thumbnails) body {
+    overflow: hidden;
+    padding-bottom: 0;
+}
+
+html:has(#thumbnails) #content {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: 50px;
+}
+
+html:has(#thumbnails) #content .titrePage {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}

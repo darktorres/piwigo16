@@ -249,5 +249,19 @@ $template->assign([
     'NB_ELEMENTS' => $nb_elements,
     'ADMIN_PAGE_TITLE' => functions::l10n('Rating'),
 ]);
+
+$page_data = [
+    'nbElements' => $nb_elements,
+    'rootUrl' => functions_url::get_root_url(),
+    'titleMsg' => functions::l10n('Are you sure you want to delete the ratings of the user "%s"?'),
+    'confirmMsg' => functions::l10n('Yes, I am sure'),
+    'cancelMsg' => functions::l10n('No, I have changed my mind'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 $template->set_filename('rating', 'rating_user.tpl');
+
+require_once __DIR__ . '/../inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['rating_user']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'rating');

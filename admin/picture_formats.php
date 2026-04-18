@@ -65,4 +65,7 @@ $template->assign([
 
 $template->set_filename('picture_formats', 'picture_formats.tpl');
 
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['picture_formats', 'pwgConfirm']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'picture_formats');

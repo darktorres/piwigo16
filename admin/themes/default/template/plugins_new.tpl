@@ -4,9 +4,11 @@
 {combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
-{combine_script id='pluginsNew' load='footer' require='nouislider' path='admin/themes/default/js/plugins_new.js'}
+
+{if $vite_plugins_new}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_plugins_new}"></script>
+{/if}
 
 {footer_script}<script>
   const str_confirm_msg = "{"Yes, I am sure"|translate}";

@@ -199,4 +199,8 @@ if (! $beta_test &&
 
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Plugins'));
 $template->assign('BETA_TEST', $beta_test);
+
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['plugins_new', 'pwgConfirm']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');

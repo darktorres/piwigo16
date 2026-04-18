@@ -1,7 +1,9 @@
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-{combine_script id='picture_formats' load='footer' path='admin/themes/default/js/picture_formats.js'}
 {combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+
+{if $vite_picture_formats}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_picture_formats}"></script>
+{/if}
 
 <script>
     const nbFormats = {count($FORMATS)}

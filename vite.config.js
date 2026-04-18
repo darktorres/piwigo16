@@ -15,6 +15,7 @@ const adminModules = [
   'datepicker',
   'doubleSlider',
   'album_selector',
+  'album_notification',
   'admin',
   'maintenance',
   'maintenance_env',

@@ -1,51 +1,12 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {footer_script}<script>
   const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
-
-  document.addEventListener('DOMContentLoaded', function() {
-    function checkWhoOptions() {
-      var checkedEl = document.querySelector("input[name=who]:checked");
-      var option = checkedEl ? checkedEl.value : '';
-      document.querySelectorAll(".who_option").forEach(function(el) { el.style.display = 'none'; });
-      var target = document.querySelector(".who_" + option);
-      if (target) target.style.display = '';
-    }
-
-    document.querySelectorAll("input[name=who]").forEach(function(el) {
-      el.addEventListener('change', function() { checkWhoOptions(); });
-    });
-
-    checkWhoOptions();
-
-    document.querySelectorAll(".who_option select").forEach(function(el) {
-      new TomSelect(el, { plugins: ['remove_button'] });
-    });
-
-    var categoryNotify = document.getElementById("categoryNotify");
-    if (categoryNotify) {
-      categoryNotify.addEventListener('submit', function(e) {
-        var who_selected = false;
-        var checkedEl = document.querySelector("input[name=who]:checked");
-        var who_option = checkedEl ? checkedEl.value : '';
-        var selectEl = document.querySelector(".who_" + who_option + " select");
-        if (selectEl && selectEl.querySelector("option:checked")) {
-          who_selected = true;
-        }
-        var errorsEl = document.querySelector(".actionButtons .errors");
-        if (!who_selected) {
-          if (errorsEl) errorsEl.style.display = '';
-          e.preventDefault();
-        } else {
-          if (errorsEl) errorsEl.style.display = 'none';
-          console.log("form can be submitted");
-        }
-      });
-    }
-  });
 </script>{/footer_script}
+
+{if $vite_album_notification}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_album_notification}"></script>
+{/if}
 
 {html_style}<style>
   .who_option {

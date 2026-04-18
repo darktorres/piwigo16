@@ -8,6 +8,12 @@
   {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 {/if}
 
+{if isset($ato.U_SET_REPRESENTATIVE)}
+  {assign var="initRepresentative" value=['imageId' => $current.id, 'categoryId' => $ato.CATEGORY_ID]|@json_encode}
+{else}
+  {assign var="initRepresentative" value='null'}
+{/if}
+
 {footer_script}<script type="application/json" id="admintools-public-config">
 {
   "urlWS": "{$ROOT_URL}ws.php?format=json&method=",
@@ -24,7 +30,7 @@
   "deleteCache": {if isset($ato.DELETE_CACHE) and $ato.DELETE_CACHE}true{else}false{/if},
   "defaultOpen": {intval($ato.DEFAULT_OPEN)},
   "initMobile": {if isset($themeconf.mobile) and $themeconf.mobile}true{else}false{/if},
-  "initRepresentative": {if isset($ato.U_SET_REPRESENTATIVE)}{"imageId": {$current.id}, "categoryId": {$ato.CATEGORY_ID}}{else}null{/if},
+  "initRepresentative": {$initRepresentative|raw},
   "initCaddie": {if isset($ato.U_CADDIE) and isset($ato.IS_PICTURE)}{$current.id}{else}null{/if},
   "initQuickEdit": {if isset($ato.QUICK_EDIT)}{intval(isset($ato.IS_PICTURE))}{else}null{/if}
 }

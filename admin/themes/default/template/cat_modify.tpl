@@ -1,35 +1,4 @@
-<script id="pwg-page-data" type="application/json">
-{
-  "hasImagesAssociatedOutside": "{'delete album and all %d photos, even the %d associated to other albums'|translate|escape:'html'}",
-  "hasImagesBecomingOrphans": "{'delete album and the %d orphan photos'|translate|escape:'html'}",
-  "hasImagesRecursives": "{'delete only album, not photos'|translate|escape:'html'}",
-  "catNav": "{$CATEGORIES_NAV|escape:'html'}",
-  "albumId": {$CAT_ID},
-  "parentAlbum": {$PARENT_CAT_ID},
-  "defaultParentAlbum": {$PARENT_CAT_ID},
-  "albumName": "{$CAT_NAME|escape:'html'}",
-  "nbSubAlbums": {$NB_SUBCATS},
-  "pwgToken": "{$PWG_TOKEN|escape:'html'}",
-  "uDelete": "{$U_DELETE|escape:'html'}",
-  "isVisible": "{$IS_VISIBLE|escape:'html'}",
-  "strCancel": "{'No, I have changed my mind'|translate|escape:'html'}",
-  "strDeleteAlbum": "{'Delete album'|translate|escape:'html'}",
-  "strDeleteAlbumAndHisXSubalbums": "{'Delete album \"%s\" and its %d sub-albums.'|translate|escape:'html'}",
-  "strJustNow": "{'Just now'|translate|escape:'html'}",
-  "strDontDeletePhotos": "{'delete only album, not photos'|translate|escape:'html'}",
-  "strDeleteOrphans": "{'delete album and the %d orphan photos'|translate|escape:'html'}",
-  "strDeleteAllPhotos": "{'delete album and all %d photos, even the %d associated to other albums'|translate|escape:'html'}",
-  "strAlbumsFound": "{'<b>%d</b> albums found'|translate|escape:'html'}",
-  "strAlbumFound": "{'<b>1</b> album found'|translate|escape:'html'}",
-  "strResultLimit": "{'<b>%d+</b> albums found, try to refine the search'|translate|escape:'html'}",
-  "strOrphan": "{'This photo is an orphan'|translate|escape:'html'}",
-  "strNoSearchInProgress": "{'No search in progress'|translate|escape:'html'}",
-  "strAlreadyInRelatedCats": "{'This albums is already in related categories list'|translate|escape:'html'}",
-  "strAlbumCommentAllow": "{'Comments allowed for sub-albums'|translate|escape:'html'}",
-  "strAlbumCommentDisallow": "{'Comments disallowed for sub-albums'|translate|escape:'html'}",
-  "strRoot": "{'Root'|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 

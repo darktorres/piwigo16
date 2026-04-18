@@ -59,8 +59,6 @@
   const guest_id = {$guest_id};
 </script>{/footer_script}
 
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
-
 {if $vite_history}
 <script type="module" src="/admin/themes/default/js/dist/{$vite_history}"></script>
 {/if}

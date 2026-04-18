@@ -1,10 +1,5 @@
-{combine_script id='nouislider' load='header' path='node_modules/nouislider/dist/nouislider.min.js'}
 {combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
-
-{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
-
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 
 {if $vite_plugins_new}
 <script type="module" src="/admin/themes/default/js/dist/{$vite_plugins_new}"></script>

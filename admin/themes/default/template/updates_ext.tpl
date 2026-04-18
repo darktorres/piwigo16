@@ -1,17 +1,4 @@
-<script id="pwg-page-data" type="application/json">
-{
-  "pwgToken": "{$PWG_TOKEN|escape:'html'}",
-  "extType": "{$EXT_TYPE|escape:'html'}",
-  "confirmMsg": "{'Are you sure?'|translate|escape:'html'}",
-  "errorHead": "{'ERROR'|translate|escape:'html'}",
-  "successHead": "{'Update Complete'|translate|escape:'html'}",
-  "errorMsg": "{'an error happened'|translate|escape:'html'}",
-  "restoreMsg": "{'Reset ignored updates'|translate|escape:'html'}",
-  "titleConfirmUpdateAll": "{'Are you sure you want to update all extensions?'|translate|escape:'html'}",
-  "strConfirm": "{'Yes, I am sure'|translate|escape:'html'}",
-  "strCancel": "{'No, I have changed my mind'|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_updates_ext}
 <script type="module" src="admin/themes/default/js/dist/{$vite_updates_ext}"></script>

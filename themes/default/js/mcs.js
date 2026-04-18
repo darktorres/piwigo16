@@ -953,7 +953,6 @@ document.querySelectorAll(".filter-filetypes .filter-actions .delete").forEach(f
         }
     });
 });
-});
 
 function serializeParams(params) {
 var parts = [];

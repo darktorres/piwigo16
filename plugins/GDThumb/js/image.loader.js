@@ -32,7 +32,7 @@ ImageLoader.prototype = {
     clear: function () {
         this.queue.length = 0;
         while (this.current.length) {
-            var img = this.current.pop();
+            const img = this.current.pop();
             if (img._loaderHandler) {
                 img.removeEventListener('load',  img._loaderHandler);
                 img.removeEventListener('error', img._loaderHandler);
@@ -62,21 +62,21 @@ ImageLoader.prototype = {
     },
 
     _processOne: function (url) {
-        var img = this.pool.shift() || new Image();
+        const img = this.pool.shift() || new Image();
         this.current.push(img);
-        var that = this;
+        const that = this;
 
-        function handler(e) {
+        function handler(_e) {
             img.removeEventListener('load',  handler);
             img.removeEventListener('error', handler);
             img.removeEventListener('abort', handler);
             img._loaderHandler = null;
             img.onload = null;
 
-            var idx = that.current.indexOf(img);
+            const idx = that.current.indexOf(img);
             if (idx !== -1) that.current.splice(idx, 1);
 
-            if (e.type === "load") {
+            if (_e.type === "load") {
                 that.loaded++;
                 that.errorEma *= 0.9;
             } else {
@@ -85,7 +85,7 @@ ImageLoader.prototype = {
                 if (that.errorEma >= 20 && that.errorEma < 21)
                     that.paused = true;
             }
-            that._fireChanged(e.type, img);
+            that._fireChanged(_e.type, img);
             that._checkQueue();
             that.pool.push(img);
         }

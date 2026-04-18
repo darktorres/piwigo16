@@ -125,7 +125,8 @@ $page['coi'] = null;
 
 if (! str_contains($page['src_location'], '/pwg_representative/') &&
     ! str_contains($page['src_location'], 'themes/') &&
-    ! str_contains($page['src_location'], 'plugins/')
+    ! str_contains($page['src_location'], 'plugins/') &&
+    ! str_starts_with($page['src_location'], './' . PWG_DERIVATIVE_DIR)
 ) {
     try {
         // Extract the function result

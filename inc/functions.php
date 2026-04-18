@@ -2743,6 +2743,8 @@ final class functions
             $req = './' . $req; // will be used to match #iamges.path
         } elseif (is_file('../' . $req . $ext)) {
             $req = '../' . $req;
+        } elseif (is_file('./' . PWG_DERIVATIVE_DIR . $req . $ext)) {
+            $req = './' . PWG_DERIVATIVE_DIR . $req;
         }
 
         $page['src_location'] = $req . $ext;

@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "private": true,
   "scripts": {
     "preinstall": "cd tests && bun install && cd ../themes/bootstrap_darkroom && bun install --omit=dev",
@@ -7,6 +8,7 @@
     "test:headed": "cd tests && bunx playwright test --headed",
     "test:report": "cd tests && bunx playwright show-report",
     "typecheck": "cd tests && bunx tsc --noEmit",
+    "lint": "bunx eslint admin themes plugins --max-warnings=0",
     "lint:tests": "cd tests && bunx eslint src"
   },
   "dependencies": {

@@ -21,6 +21,10 @@
 /tests/node_modules/
 /themes/bootstrap_darkroom/node_modules/
 
+# Build output
+/admin/themes/default/js/dist/
+.vite/
+
 # Composer
 /vendor/
 

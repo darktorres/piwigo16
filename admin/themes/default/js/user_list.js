@@ -1,4 +1,4 @@
-import { TemporaryState } from './common.js';
+import { TemporaryState, sprintf } from './common.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import TomSelect from 'tom-select';
 import noUiSlider from 'nouislider';

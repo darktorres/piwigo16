@@ -11,7 +11,7 @@
           <div id="video-modal" class="col-lg-3 col-md-5 col-sm-6 col-xs-8 mx-auto">
             <div class="ratio embed-responsive-9by16">
             {/if}
-            <video id="video" class="" width="100%" height="auto" controls preload="auto"
+            <video id="video" class="" width="100%" height="auto" controls autoplay loop preload="auto"
               poster="{$current.selected_derivative->get_url()}">
               <source src="{$ROOT_URL}{$current.path}" type="{if $current.path_ext == 'webm'}video/webm{elseif $current.path_ext == 'ogv'}video/ogg{else}video/mp4{/if}">
               </source>

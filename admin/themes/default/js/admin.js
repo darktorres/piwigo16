@@ -1,10 +1,9 @@
 import tippy from 'tippy.js';
 
 const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
-/* Menubar: expand active section, collapse others on click */
-(function () {
-    var menubar = document.getElementById('menubar');
-    if (!menubar) return;
+
+var menubar = document.getElementById('menubar');
+if (menubar) {
     var dds = menubar.querySelectorAll('dd');
     var active = parseInt(menubar.dataset.activeMenu || '0', 10);
     dds.forEach(function (dd, i) {
@@ -18,10 +17,8 @@ const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : docu
         dds.forEach(function (el) { el.style.display = 'none'; });
         dd.style.display = '';
     });
-})();
+}
 
-/* Show bullet points when multiple items exist in info/error/warning boxes;
-   mirror the active page title from h2 into h1 */
 _docReady( function () {
     ["infos", "errors", "warnings", "messages"].forEach(function (boxType) {
         var listItems = document.querySelectorAll("." + boxType + " ul li");

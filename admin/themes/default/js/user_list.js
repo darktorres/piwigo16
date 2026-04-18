@@ -2,6 +2,7 @@ import { TemporaryState } from './common.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import TomSelect from 'tom-select';
 import noUiSlider from 'nouislider';
+import tippy from 'tippy.js';
 
 const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 const color_icons = [
@@ -2319,3 +2320,162 @@ function show_filter_infos(nb_filters) {
         });
     }
 }
+
+_docReady(function() {
+  // Import globals from window
+  const title_msg = window.title_msg;
+  const are_you_sure_msg = window.are_you_sure_msg;
+  const confirm_msg = window.confirm_msg;
+  const cancel_msg = window.cancel_msg;
+  const str_and_others_tags = window.str_and_others_tags;
+  const missingConfirm = window.missingConfirm;
+  const missingUsername = window.missingUsername;
+  const fieldNotEmpty = window.fieldNotEmpty;
+  const registered_str = window.registered_str;
+  const last_visit_str = window.last_visit_str;
+  const dates_infos = window.dates_infos;
+  const hide_str = window.hide_str;
+  const show_str = window.show_str;
+  const user_added_str = window.user_added_str;
+  const str_popin_update_btn = window.str_popin_update_btn;
+  const filtered_users = window.filtered_users;
+  const filtered_user = window.filtered_user;
+  const history_base_url = window.history_base_url;
+  const status_to_str = window.status_to_str;
+  const view_selector = window.view_selector;
+  const pagination = window.pagination;
+  const months = window.months;
+  const connected_user = window.connected_user;
+  const connected_user_status = window.connected_user_status;
+  const owner_id = window.owner_id;
+  const groups_arr = window.groups_arr;
+  const guest_id = window.guest_id;
+  const nb_days = window.nb_days;
+  const nb_photos = window.nb_photos;
+  const nb_photos_per_page = window.nb_photos_per_page;
+  const pwg_token = window.pwg_token;
+  const has_group = window.has_group;
+  const register_dates = window.register_dates;
+  const groupOptions = window.groupOptions;
+
+  // Startup
+  setupRegisterDates(register_dates);
+  selectionMode(false);
+  get_guest_info();
+  update_user_list();
+  update_selection_content();
+
+  tippy('.icon-help-circled', { maxWidth: 700, delay: 0, placement: 'top' });
+
+  // Only webmaster can set admin or webmaster to others users
+  if (connected_user_status !== 'webmaster') {
+    document.querySelectorAll('select[name="status"] option[value="webmaster"], select[name="status"] option[value="admin"]').forEach(function(el) {
+      el.setAttribute("disabled", true);
+    });
+  }
+
+  // We set the applyAction btn click event here so plugins can add cases to the list
+  // which is not possible if this JS part is in a JS file
+  // see #1571 on Github
+  const applyActionBtn = document.getElementById("applyAction");
+  if (applyActionBtn) {
+    applyActionBtn.addEventListener('click', function(event) {
+      event.preventDefault();
+      const selectActionEl = document.querySelector("select[name=selectAction]");
+      let action = selectActionEl ? selectActionEl.value : '';
+      let method = 'pwg.users.setInfo';
+      let data = {
+        pwg_token: pwg_token,
+        user_id: selection.map(x => x.id)
+      };
+      switch (action) {
+        case 'delete':
+          if (!(document.querySelector("#permitActionUserList .user-list-checkbox[name=confirm_deletion]")
+              ?.getAttribute("data-selected") === "1")) {
+            alert(missingConfirm);
+            return;
+          }
+          method = 'pwg.users.delete';
+          break;
+        case 'group_associate':
+          method = 'pwg.groups.addUser';
+          data.group_id = document.querySelector("#permitActionUserList select[name=associate]")?.value;
+          break;
+        case 'group_dissociate':
+          method = 'pwg.groups.deleteUser';
+          data.group_id = document.querySelector("#permitActionUserList select[name=dissociate]")?.value;
+          break;
+        case 'status':
+          data.status = document.querySelector("#permitActionUserList select[name=status]")?.value;
+          break;
+        case 'enabled_high':
+          data.enabled_high = document.querySelector("#permitActionUserList .user-list-checkbox[name=enabled_high_yes]")
+            ?.getAttribute("data-selected") === "1" ? true : false;
+          break;
+        case 'level':
+          data.level = document.querySelector("#permitActionUserList select[name=level]")?.value;
+          break;
+        case 'nb_image_page':
+          data.nb_image_page = document.querySelector("#permitActionUserList input[name=nb_image_page]")?.value;
+          break;
+        case 'theme':
+          data.theme = document.querySelector("#permitActionUserList select[name=theme]")?.value;
+          break;
+        case 'language':
+          data.language = document.querySelector("#permitActionUserList select[name=language]")?.value;
+          break;
+        case 'recent_period': {
+          const _ps = document.querySelector('#permitActionUserList .period-select-bar .slider-bar-container');
+          data.recent_period = recent_period_values[_ps && _ps.noUiSlider ? Math.round(parseFloat(_ps.noUiSlider.get())) : 0];
+          break;
+        }
+        case 'expand':
+          data.expand = document.querySelector("#permitActionUserList .user-list-checkbox[name=expand_yes]")
+            ?.getAttribute("data-selected") === "1" ? true : false;
+          break;
+        case 'show_nb_comments':
+          data.show_nb_comments = document.querySelector("#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]")
+            ?.getAttribute("data-selected") === "1" ? true : false;
+          break;
+        case 'show_nb_hits':
+          data.show_nb_hits = document.querySelector("#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]")
+            ?.getAttribute("data-selected") === "1" ? true : false;
+          break;
+        default:
+          alert("Unexpected action");
+          return;
+      }
+      const loadingEl = document.getElementById('applyActionLoading');
+      const infosEl = document.querySelector("#applyActionBlock .infos");
+      if (loadingEl) loadingEl.style.display = '';
+      if (infosEl) infosEl.style.display = 'none';
+      const params = new URLSearchParams();
+      Object.keys(data).forEach(function(k) {
+        const v = data[k];
+        if (Array.isArray(v)) {
+          v.forEach(function(item) { params.append(k + '[]', item); });
+        } else {
+          params.append(k, v);
+        }
+      });
+      fetch("ws.php?format=json&method=" + method, {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: params
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(responseData) {
+          if (loadingEl) loadingEl.style.display = 'none';
+          if (infosEl) infosEl.style.display = 'inline-block';
+          update_user_list();
+          if (action == 'delete') {
+            selection = [];
+            update_selection_content();
+          }
+        })
+        .catch(function() {
+          if (loadingEl) loadingEl.style.display = 'none';
+        });
+    });
+  }
+});

@@ -1209,6 +1209,7 @@ resize_filter_form();
 });
 window.addEventListener("resize", function () {
 resize_filter_form();
-}
+});
 
 document.addEventListener("DOMContentLoaded", initMCS);
+}

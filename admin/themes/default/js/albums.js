@@ -787,7 +787,7 @@ function getAllSubAlbumsFromNode(node, nb_sub_cats) {
 function setSubcatsBadge(node) {
     if (!node) return;
     if (node.children.length != 0) {
-        var nbSubcatsEl = document.querySelector("#cat-" + node.id + " .nb-subcats");
+        let nbSubcatsEl = document.querySelector("#cat-" + node.id + " .nb-subcats");
         if (nbSubcatsEl) {
             nbSubcatsEl.textContent = node.children.length;
             nbSubcatsEl.style.display = '';
@@ -797,7 +797,7 @@ function setSubcatsBadge(node) {
             badgeDropdown.textContent = x_nb_subcats.replace("%d", node.children.length);
         }
     } else {
-        var nbSubcatsEl = document.querySelector("#cat-" + node.id + " .nb-subcats");
+        let nbSubcatsEl = document.querySelector("#cat-" + node.id + " .nb-subcats");
         if (nbSubcatsEl) {
             nbSubcatsEl.style.display = 'none';
         }

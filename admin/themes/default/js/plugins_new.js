@@ -163,8 +163,7 @@ export function init(cfg) {
             });
             revisionSliderEl.noUiSlider.on("slide", function (values) {
                 var val = Math.round(parseFloat(values[0]));
-                let month;
-                [month, _] = value_to_month(val);
+                let [month] = value_to_month(val);
                 updateRevisionFilterLabel(val);
                 applyFilter("revision", month);
             });
@@ -211,25 +210,18 @@ export function init(cfg) {
         switch (val) {
             case 6:
                 return [1, str_x_month.replace("%d", 1)];
-                break;
             case 5:
                 return [3, str_x_months.replace("%d", 3)];
-                break;
             case 4:
                 return [6, str_x_months.replace("%d", 6)];
-                break;
             case 3:
                 return [12, str_x_year.replace("%d", 1)];
-                break;
             case 2:
                 return [24, str_x_years.replace("%d", 2)];
-                break;
             case 1:
                 return [60, str_x_years.replace("%d", 5)];
-                break;
             default:
                 return [Number.MAX_SAFE_INTEGER, str_from_beginning];
-                break;
         }
     }
 
@@ -252,14 +244,14 @@ export function init(cfg) {
         rating = Math.round(rating * 2);
 
         if (rating % 2 == 1) {
-            var starEl = element.querySelector("span[data-star='" + (rating - 1) / 2 + "'] i");
+            let starEl = element.querySelector("span[data-star='" + (rating - 1) / 2 + "'] i");
             if (starEl) starEl.classList.add("icon-star-half");
             rating -= 1;
         }
 
         while (rating > 0) {
             rating -= 2;
-            var starEl = element.querySelector("span[data-star='" + rating / 2 + "'] i");
+            let starEl = element.querySelector("span[data-star='" + rating / 2 + "'] i");
             if (starEl) starEl.classList.add("icon-star");
             var spanEl = element.querySelector("span[data-star='" + rating / 2 + "']");
             if (spanEl) spanEl.classList.remove("icon-star-empty");
@@ -283,8 +275,7 @@ export function init(cfg) {
     }
 
     function updateRevisionFilterLabel(val) {
-        let label;
-        [_, label] = value_to_month(val);
+        const [, label] = value_to_month(val);
         document.querySelector(".revision-date").innerHTML = label;
     }
 

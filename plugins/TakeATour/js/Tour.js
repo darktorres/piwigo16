@@ -44,7 +44,7 @@ Tour.prototype._show = function(idx) {
     this._removePop();
     var target = step.element ? document.querySelector(step.element) : null;
     if (!target && !this.orphan) { this.end(); return; }
-    if (step.onShown) { try { step.onShown(this); } catch(_e) {} }
+    if (step.onShown) { try { step.onShown(this); } catch(_e) { /* ignore callback errors */ } }
     this._createPop(step, idx, target);
 };
 

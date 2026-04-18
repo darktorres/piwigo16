@@ -46,7 +46,35 @@ export function init(cfg) {
     groups_arr = groupsArrId.map((elem, index) => [elem, groupsArrName[index]]);
 
     // Parse register dates
-    const registerDates = cfg.registerDatesStr.split(',');
+    const register_dates = cfg.registerDatesStr.split(',');
+
+    // String messages and config values used by nested functions
+    const title_msg = cfg.titleMsg;
+    const are_you_sure_msg = cfg.areYouSureMsg;
+    const confirm_msg = cfg.confirmMsg;
+    const cancel_msg = cfg.cancelMsg;
+    const str_and_others_tags = cfg.strAndOthersTags;
+    const missingConfirm = cfg.missingConfirm;
+    const missingUsername = cfg.missingUsername;
+    const fieldNotEmpty = cfg.fieldNotEmpty;
+    const registered_str = cfg.registeredStr;
+    const last_visit_str = cfg.lastVisitStr;
+    const dates_infos = cfg.datesInfos;
+    const hide_str = cfg.hideStr;
+    const show_str = cfg.showStr;
+    const user_added_str = cfg.userAddedStr;
+    const str_popin_update_btn = cfg.strPopinUpdateBtn;
+    const filtered_users = cfg.filteredUsers;
+    const filtered_user = cfg.filteredUser;
+    const history_base_url = cfg.historyBaseUrl;
+    const status_to_str = cfg.statusToStr;
+    const view_selector = cfg.viewSelector;
+    const pagination = cfg.pagination;
+    const months = cfg.months;
+    const connected_user_status = cfg.connectedUserStatus;
+    const owner_id = cfg.ownerId;
+    const has_group = cfg.hasGroup;
+    const groupOptions = groups_arr.map(x => ({ value: x[0], label: x[1], isSelected: 0 }));
 
     /*----------------
     Escape of pop-in
@@ -797,8 +825,6 @@ function advanced_filter_hide() {
     });
 }
 
-let months = [];
-
 function getDateStr(date) {
     let date_arr = date.split("-");
     let curr_month = months[parseInt(date_arr[1]) - 1];
@@ -854,7 +880,7 @@ function gen_password(e) {
 
     var i;
     var password;
-    var length = getRandomInt(8, 15);
+    var length = Math.floor(Math.random() * 8) + 8;
 
     password = "";
     for (i = 0; i < length; i++) {
@@ -990,7 +1016,7 @@ function fill_user_selected_list() {
 }
 
 function update_selection_content() {
-    number = selection.length;
+    const number = selection.length;
     fill_user_selected_list();
 
     const forbidAction = document.getElementById("forbidAction");
@@ -1022,7 +1048,7 @@ function set_selected_to_selection() {
 
     const containers = document.querySelectorAll(".user-container-wrapper .user-container");
     containers.forEach((container, index) => {
-        selection_ids = selection.map((x) => x.id);
+        const selection_ids = selection.map((x) => x.id);
         if (selection_ids.includes(current_users[index].id)) {
             container.classList.add("container-selected");
             const checkbox = container.querySelector(".user-list-checkbox");
@@ -2334,34 +2360,6 @@ function show_filter_infos(nb_filters) {
             el.style.display = "none";
         });
     }
-    // Setup string messages from config
-    const title_msg = cfg.titleMsg;
-    const are_you_sure_msg = cfg.areYouSureMsg;
-    const confirm_msg = cfg.confirmMsg;
-    const cancel_msg = cfg.cancelMsg;
-    const str_and_others_tags = cfg.strAndOthersTags;
-    const missingConfirm = cfg.missingConfirm;
-    const missingUsername = cfg.missingUsername;
-    const fieldNotEmpty = cfg.fieldNotEmpty;
-    const registered_str = cfg.registeredStr;
-    const last_visit_str = cfg.lastVisitStr;
-    const dates_infos = cfg.datesInfos;
-    const hide_str = cfg.hideStr;
-    const show_str = cfg.showStr;
-    const user_added_str = cfg.userAddedStr;
-    const str_popin_update_btn = cfg.strPopinUpdateBtn;
-    const filtered_users = cfg.filteredUsers;
-    const filtered_user = cfg.filteredUser;
-    const history_base_url = cfg.historyBaseUrl;
-    const status_to_str = cfg.statusToStr;
-    const view_selector = cfg.viewSelector;
-    const pagination = cfg.pagination;
-    const months = cfg.months;
-    const connected_user_status = cfg.connectedUserStatus;
-    const owner_id = cfg.ownerId;
-    const has_group = cfg.hasGroup;
-    const groupOptions = groups_arr.map(x => ({ value: x[0], label: x[1], isSelected: 0 }));
-
   // Startup
   setupRegisterDates(register_dates);
   selectionMode(false);

@@ -1,3 +1,4 @@
+/* global GLightbox */
 export function initSmartpocket() {
     const thumbs = document.getElementById('thumbnails');
     if (!thumbs || typeof GLightbox === 'undefined') return;

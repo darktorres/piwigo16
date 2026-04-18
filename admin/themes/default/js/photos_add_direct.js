@@ -254,15 +254,15 @@ export function init(cfg) {
         const processTab = function(tab) {
           tab = tab.map(function(f) { return f.slice(0, f.indexOf('.')); });
           tab = tab.filter(function(f, i) { return i === tab.indexOf(f); });
-          if (tab.length > 5) { tab[5] = str_and_X_others.replace('%d', tab.length - 5); tab = tab.splice(0, 6); }
+          if (tab.length > 5) { tab[5] = strAndXOthers.replace('%d', tab.length - 5); tab = tab.splice(0, 6); }
           return tab;
         };
         const notFoundStr = processTab(notFound);
         const multStr = processTab(multiple);
         pwgConfirm({
           title: strFormatWarning,
-          content: (notFound.length ? '<p>' + strFormatWarning_notFound.replace('%s', notFoundStr.join(', ')) + '</p>' : '') +
-                   (multiple.length ? '<p>' + strFormatWarning_multiple.replace('%s', multStr.join(', ')) + '</p>' : ''),
+          content: (notFound.length ? '<p>' + strFormatWarningNotFound.replace('%s', notFoundStr.join(', ')) + '</p>' : '') +
+                   (multiple.length ? '<p>' + strFormatWarningMultiple.replace('%s', multStr.join(', ')) + '</p>' : ''),
           buttons: { ok: { text: strOk } }
         });
       }
@@ -370,7 +370,7 @@ export function init(cfg) {
   dz.on("error", function(file, message, xhr) {
     let errMsg = typeof message === 'string' ? message : (message && message.message) || 'Upload error';
     if (xhr && xhr.responseText) {
-      try { const parsed = JSON.parse(xhr.responseText); if (parsed.message) errMsg = parsed.message; } catch(e) {}
+      try { const parsed = JSON.parse(xhr.responseText); if (parsed.message) errMsg = parsed.message; } catch (_e) { /* ignore JSON parse errors */ }
     }
     const errorsUl = document.querySelector(".errors ul");
     if (errorsUl) errorsUl.insertAdjacentHTML('beforeend', '<li>' + errMsg + '</li>');

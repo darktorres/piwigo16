@@ -1,3 +1,4 @@
+/* global TomSelect, Mousetrap */
 let urlWS = '';
 let urlSelf = '';
 let multiView = {};

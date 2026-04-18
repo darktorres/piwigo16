@@ -749,13 +749,13 @@ function uninstallPlugin(id) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         for (var i = 0; i < data.length; i++) {
-            if (show_details) {
-                var pluginName = document.querySelector("#" + data[i] + " .pluginName");
+            if (showDetails) {
+                let pluginName = document.querySelector("#" + data[i] + " .pluginName");
                 if (pluginName) {
                     pluginName.insertAdjacentHTML('afterbegin', '<a class="warning" title="' + incompatibleMsg + '"></a>');
                 }
             } else {
-                var pluginName = document.querySelector("#" + data[i] + " .pluginName");
+                let pluginName = document.querySelector("#" + data[i] + " .pluginName");
                 if (pluginName) {
                     pluginName.insertAdjacentHTML('afterbegin', '<span class="warning" title="' + incompatibleMsg + '"></span>');
                 }

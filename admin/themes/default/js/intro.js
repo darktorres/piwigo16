@@ -40,11 +40,11 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
         if (piwigo_update) {
-          var warningsUl = document.querySelector(".warnings ul");
+          let warningsUl = document.querySelector(".warnings ul");
           if (warningsUl) warningsUl.insertAdjacentHTML('beforeend', '<li>' + cfg.piwigo_need_update_msg + '</li>');
         }
         if (ext_update) {
-          var warningsUl = document.querySelector(".warnings ul");
+          let warningsUl = document.querySelector(".warnings ul");
           if (warningsUl) warningsUl.insertAdjacentHTML('beforeend', '<li>' + cfg.ext_need_update_msg + '</li>');
         }
       });

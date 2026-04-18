@@ -1,4 +1,30 @@
+/* global TomSelect */
 export function initMCS() {
+
+// State variables
+let related_categories_ids = [];
+let PS_params = {};
+let empty_filters_list = [];
+let word_search_str = '';
+let word_search_words = [];
+let word_search_mode = '';
+let word_search_fields = {};
+let tag_search_str = '';
+let date_posted_str = '';
+let album_widget_value = '';
+let author_search_str = '';
+let added_by_names = [];
+let added_by_array = [];
+let filetypes_search_str = '';
+let filetypes_array = [];
+let new_fields = [];
+let str_no_search_in_progress = '';
+
+// Read album selector config injected by album_selector.inc.tpl
+const _albumSelectorDataEl = document.getElementById('pwg-album-selector-data');
+const _albumSelectorData = _albumSelectorDataEl ? JSON.parse(_albumSelectorDataEl.textContent) : {};
+str_no_search_in_progress = _albumSelectorData.strNoSearchInProgress || '';
+
 function toggleEl(el, callback) {
     var isHidden = window.getComputedStyle(el).display === 'none';
     el.style.display = isHidden ? '' : 'none';
@@ -177,7 +203,7 @@ if (global_params.fields.tags) {
 }
 
 // Setup Date post filter
-if (global_params.fields.hasOwnProperty("date_posted")) {
+if (Object.prototype.hasOwnProperty.call(global_params.fields, "date_posted")) {
     var filterDatePosted = document.querySelector(".filter-date_posted");
     if (filterDatePosted) filterDatePosted.style.display = 'flex';
     var datePostedController = document.querySelector(".filter-manager-controller.date_posted");
@@ -570,13 +596,13 @@ if (filterWordEl) {
         toggleEl(filterWordForm, function () {
             if (isVisible(this)) {
                 filterWordEl.classList.add("show-filter-dropdown");
-                var wordSearchInput = document.getElementById("word-search");
+                let wordSearchInput = document.getElementById("word-search");
                 if (wordSearchInput) wordSearchInput.focus();
             } else {
                 filterWordEl.classList.remove("show-filter-dropdown");
 
                 global_params.fields.allwords = {};
-                var wordSearchInput = document.getElementById("word-search");
+                let wordSearchInput = document.getElementById("word-search");
                 global_params.fields.allwords.words = wordSearchInput ? wordSearchInput.value : '';
                 var wordModeChecked = document.querySelector(".word-search-options input:checked");
                 global_params.fields.allwords.mode = wordModeChecked ? wordModeChecked.getAttribute("value") : '';
@@ -995,6 +1021,46 @@ fetch("ws.php?format=json&method=pwg.images.filteredSearch.create", {
     .catch(function (e) {
         console.log(e);
     });
+}
+
+function linked_albums_open() {
+    const addLinkedAlbum = document.getElementById('addLinkedAlbum');
+    if (addLinkedAlbum) addLinkedAlbum.style.display = '';
+    const searchInput = document.querySelector('.search-input');
+    if (searchInput) { searchInput.value = ''; searchInput.focus(); }
+    const searchResult = document.getElementById('searchResult');
+    if (searchResult) searchResult.innerHTML = '';
+    const limitReached = document.querySelector('.limitReached');
+    if (limitReached) limitReached.innerHTML = str_no_search_in_progress;
+}
+
+function linked_albums_search(searchText) {
+    const apiMethod = _albumSelectorData.apiMethod || 'pwg.categories.getList';
+    const params = new URLSearchParams({ cat_id: 0, recursive: true, fullname: true, search: searchText });
+    const searching = document.querySelector('.linkedAlbumPopInContainer .searching');
+    if (searching) searching.style.display = '';
+    fetch('ws.php?format=json&method=' + apiMethod, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params,
+    })
+        .then(r => r.json())
+        .then(raw_data => {
+            if (searching) searching.style.display = 'none';
+            fill_results(raw_data.result.categories);
+            const limitReached = document.querySelector('.limitReached');
+            if (limitReached) {
+                const count = raw_data.result.categories.length;
+                if (raw_data.result.limit_reached) {
+                    limitReached.innerHTML = (_albumSelectorData.strResultLimit || '').replace('%d', count);
+                } else {
+                    limitReached.innerHTML = count === 1
+                        ? (_albumSelectorData.strAlbumFound || '')
+                        : (_albumSelectorData.strAlbumsFound || '').replace('%d', count);
+                }
+            }
+        })
+        .catch(() => { if (searching) searching.style.display = 'none'; });
 }
 
 function set_up_popin() {

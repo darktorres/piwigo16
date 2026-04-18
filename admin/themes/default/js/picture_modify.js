@@ -1,8 +1,60 @@
 import { set_up_popin, linked_albums_open, linked_albums_close, linked_albums_search } from './album_selector.js';
+import { CategoriesCache, TagsCache } from './LocalStorageCache.js';
+import { pwgDatepicker } from './datepicker.js';
+import { pwgConfirm } from './pwgConfirm.js';
 import GLightbox from 'glightbox';
+
+const configEl = document.getElementById('pwg-page-data');
+const cfg = configEl ? JSON.parse(configEl.textContent) : {};
 
 const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 _docReady( function () {
+    var categoriesCache = new CategoriesCache({
+      serverKey: cfg.CACHE_KEYS?.categories || '',
+      serverId: cfg.CACHE_KEYS?._hash || '',
+      rootUrl: cfg.ROOT_URL || ''
+    });
+    categoriesCache.selectize(document.querySelectorAll('[data-selectize=categories]'));
+
+    var tagsCache = new TagsCache({
+      serverKey: cfg.CACHE_KEYS?.tags || '',
+      serverId: cfg.CACHE_KEYS?._hash || '',
+      rootUrl: cfg.ROOT_URL || ''
+    });
+    tagsCache.selectize(document.querySelectorAll('[data-selectize=tags]'), {
+      lang: {
+        'Add': window.str_create || 'Create'
+      }
+    });
+
+    pwgDatepicker(document.querySelectorAll('[data-datepicker]'), {
+      showTimepicker: true,
+      cancelButton: window.str_cancel || 'Cancel'
+    });
+
+    GLightbox({ selector: 'a.preview-box' });
+
+    var deleteBtn = document.getElementById('action-delete-picture');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function() {
+        pwgConfirm({
+          title: window.str_are_you_sure || 'Are you sure?',
+          buttons: {
+            confirm: {
+              text: window.str_yes_delete || 'Yes, delete',
+              btnClass: 'btn-red',
+              action: function() {
+                window.location.href = (window.url_delete || '').replaceAll('amp;', '');
+              }
+            },
+            cancel: {
+              text: window.str_no_change || 'No, I have changed my mind'
+            }
+          }
+        });
+      });
+    }
+
     document.querySelectorAll(".linked-albums.add-item").forEach(function (btn) {
         btn.addEventListener("click", function () {
             linked_albums_open();

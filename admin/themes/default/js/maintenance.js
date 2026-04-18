@@ -1,5 +1,13 @@
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+// Get config from JSON data block
+const configEl = document.getElementById('pwg-page-data');
+const cfg = configEl ? JSON.parse(configEl.textContent) : {};
+
+const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+
 function displayResponse(domElem, values, mDivs, mValues) {
+    const unit_MB = cfg.unit_MB || '%s MB';
+    const no_time_elapsed = cfg.no_time_elapsed || 'right now';
+
     for (let index = 0; index < domElem.length; index++) {
         domElem[index].innerHTML = unit_MB.replace("%s", values[index]);
     }

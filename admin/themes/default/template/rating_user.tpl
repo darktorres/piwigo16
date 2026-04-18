@@ -29,15 +29,7 @@
 		border-width: 2px;
 	}
 </style>{/html_style}
-<script id="pwg-page-data" type="application/json">
-{
-  "nbElements": {$NB_ELEMENTS},
-  "rootUrl": "{$ROOT_URL|escape:'html'}",
-  "titleMsg": "{'Are you sure you want to delete the ratings of the user \"%s\"?'|translate|escape:'html'}",
-  "confirmMsg": "{'Yes, I am sure'|translate|escape:'html'}",
-  "cancelMsg": "{'No, I have changed my mind'|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 <form action="{$F_ACTION}" method="GET">
 	<fieldset>

@@ -59,6 +59,7 @@
       {/if}
       {assign var=src_size value=$derivative->src_image->get_size()}
       {assign var=is_video value=(isset($thumbnail.path_ext) and ($thumbnail.path_ext == 'mp4' or $thumbnail.path_ext == 'm4v' or $thumbnail.path_ext == 'webm' or $thumbnail.path_ext == 'ogv' or $thumbnail.path_ext == 'mov' or $thumbnail.path_ext == 'mkv'))}
+      {assign var=is_animated value=(isset($thumbnail.path_ext) and ($thumbnail.path_ext == 'webp' or $thumbnail.path_ext == 'gif'))}
       <a href="{$thumbnail.URL}"
         {if $is_video}
           data-pswp-src="{$ROOT_URL}{$thumbnail.path}"
@@ -70,8 +71,15 @@
           data-pswp-width="{$src_size.0}"
           data-pswp-height="{$src_size.1}"
         {/if}>
-        <img class="thumbnail" src="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
-          alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}">
+        {if $is_animated}
+          <img class="thumbnail" src="{$ROOT_URL}{$thumbnail.path}"
+            width="{$deriv_size.0}" height="{$deriv_size.1}"
+            style="object-fit:cover;display:block"
+            alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}">
+        {else}
+          <img class="thumbnail" src="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
+            alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}">
+        {/if}
       </a>
     </li>
   {/foreach}

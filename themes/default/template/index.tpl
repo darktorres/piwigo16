@@ -1,4 +1,6 @@
-{combine_script id='core.switchbox' load='async' path='themes/default/js/switchbox.js'}
+{footer_script}<script type="module">
+import './themes/default/js/switchbox.js';
+</script>{/footer_script}
 
 {$MENUBAR}
 

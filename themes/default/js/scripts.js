@@ -1,12 +1,13 @@
-function phpWGOpenWindow(theURL, winName, features) {
-    img = new Image();
+export function phpWGOpenWindow(theURL, winName, features) {
+    const img = new Image();
+    let width, height, newWin;
     img.src = theURL;
     if (img.complete) {
-        var width = img.width + 40;
-        var height = img.height + 40;
+        width = img.width + 40;
+        height = img.height + 40;
     } else {
-        var width = 640;
-        var height = 480;
+        width = 640;
+        height = 480;
         img.onload = function () {
             newWin.resizeTo(img.width + 50, img.height + 100);
         };
@@ -18,7 +19,7 @@ function phpWGOpenWindow(theURL, winName, features) {
     );
 }
 
-function popuphelp(url) {
+export function popuphelp(url) {
     window.open(
         url,
         "dc_popup",
@@ -26,8 +27,8 @@ function popuphelp(url) {
     );
 }
 
-function pwgBind(object, method) {
-    var args = Array.prototype.slice.call(arguments, 2);
+export function pwgBind(object, method) {
+    const args = Array.prototype.slice.call(arguments, 2);
     return function () {
         return method.apply(
             object,
@@ -36,7 +37,7 @@ function pwgBind(object, method) {
     };
 }
 
-function PwgWS(urlRoot) {
+export function PwgWS(urlRoot) {
     this.urlRoot = urlRoot;
     this.options = {
         method: "GET",
@@ -49,31 +50,18 @@ function PwgWS(urlRoot) {
 PwgWS.prototype = {
     callService: function (method, parameters, options) {
         if (options) {
-            for (var prop in options) this.options[prop] = options[prop];
+            for (const prop in options) this.options[prop] = options[prop];
         }
-        try {
-            this.xhr = new XMLHttpRequest();
-        } catch (e) {
-            try {
-                this.xhr = new ActiveXObject("Msxml2.XMLHTTP");
-            } catch (e) {
-                try {
-                    this.xhr = new ActiveXObject("Microsoft.XMLHTTP");
-                } catch (e) {
-                    this.error(0, "Cannot create request object");
-                    return;
-                }
-            }
-        }
+        this.xhr = new XMLHttpRequest();
         this.xhr.onreadystatechange = pwgBind(this, this.onStateChange);
 
-        var url = this.urlRoot + "ws.php?format=json&method=" + method;
+        let url = this.urlRoot + "ws.php?format=json&method=" + method;
 
-        var body = "";
+        let body = "";
         if (parameters) {
-            for (var prop in parameters) {
+            for (const prop in parameters) {
                 if (typeof parameters[prop] == "object" && parameters[prop]) {
-                    for (var i = 0; i < parameters[prop].length; i++)
+                    for (let i = 0; i < parameters[prop].length; i++)
                         body +=
                             prop +
                             "[]=" +
@@ -97,13 +85,13 @@ PwgWS.prototype = {
             );
         try {
             this.xhr.send(body);
-        } catch (e) {
-            this.error(0, e.message);
+        } catch (_e) {
+            this.error(0, _e.message);
         }
     },
 
     onStateChange: function () {
-        var readyState = this.xhr.readyState;
+        const readyState = this.xhr.readyState;
         if (readyState == 4) {
             try {
                 this.respondToReadyState(readyState);
@@ -119,18 +107,18 @@ PwgWS.prototype = {
     },
 
     respondToReadyState: function (readyState) {
-        var xhr = this.xhr;
+        const xhr = this.xhr;
         if (readyState == 4 && xhr.status == 200) {
-            var resp;
+            let resp;
             try {
                 resp =
                     window.JSON && window.JSON.parse
                         ? window.JSON.parse(xhr.responseText)
                         : new Function("return " + xhr.responseText)();
-            } catch (e) {
+            } catch (_e) {
                 this.error(
                     200,
-                    e.message + "\n" + xhr.responseText.substr(0, 512),
+                    _e.message + "\n" + xhr.responseText.substr(0, 512),
                 );
             }
             if (resp != null) {
@@ -154,7 +142,7 @@ PwgWS.prototype = {
     xhr: null,
 };
 
-function pwgAddEventListener(elem, evt, fn) {
+export function pwgAddEventListener(elem, evt, fn) {
     if (window.addEventListener) elem.addEventListener(evt, fn, false);
     else elem.attachEvent("on" + evt, fn);
 }

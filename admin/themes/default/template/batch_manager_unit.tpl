@@ -2,38 +2,19 @@
 {include file='inc/datepicker.inc.tpl'}
 {include file='inc/colorbox.inc.tpl'}
 
-{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
-
-{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {footer_script}<script>
-  (function() {
-    {* <!-- TAGS --> *}
-    var tagsCache = new TagsCache({
-      serverKey: '{$CACHE_KEYS.tags|default:''}',
-      serverId: '{$CACHE_KEYS._hash|default:''}',
-      rootUrl: '{$ROOT_URL}'
-    });
-
-    tagsCache.selectize(document.querySelectorAll('[data-selectize=tags]'), {
-      lang: {
-        'Add': '{'Create'|translate}'
-      }
-    });
-
-    {* <!-- DATEPICKER --> *}
-    document.addEventListener('DOMContentLoaded', function() { {* <!-- onLoad needed to wait localization loads --> *}
-      pwgDatepicker(document.querySelectorAll('[data-datepicker]'), {
-        showTimepicker: true,
-        cancelButton: '{'Cancel'|translate}'
-      });
-    });
-
-    {* <!-- THUMBNAILS --> *}
-    GLightbox({ selector: 'a.preview-box' });
-  }());
+  window.tagsServerKey = '{$CACHE_KEYS.tags|default:''}';
+  window.tagsCacheServerId = '{$CACHE_KEYS._hash|default:''}';
+  window.rootUrl = '{$ROOT_URL}';
+  window.str_create = '{'Create'|translate}';
+  window.str_cancel = '{'Cancel'|translate}';
 </script>{/footer_script}
+
+{if $vite_batch_manager_unit}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_batch_manager_unit}"></script>
+{/if}
 
 <form action="{$F_ACTION}" method="POST">
   <div style="margin: 30px 0; display: flex; justify-content: space-between;">

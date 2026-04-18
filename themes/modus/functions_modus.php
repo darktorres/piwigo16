@@ -67,7 +67,7 @@ final class functions_modus
             }
 
             if ($pos !== false) {
-                $source = substr_replace($source, '<div class=actionButtonsWrapper><a id=imageActionsSwitch class=pwg-button><span class="pwg-icon pwg-icon-ellipsis"></span></a>{combine_script version=1 id=\'modus.async\' path="themes/`$themeconf.id`/js/modus.async.js" load=\'async\'}', $pos, 0);
+                $source = substr_replace($source, '<div class=actionButtonsWrapper><a id=imageActionsSwitch class=pwg-button><span class="pwg-icon pwg-icon-ellipsis"></span></a><script type="module">import { initModusAsync } from "./themes/{$themeconf.id}/js/modus.async.js"; initModusAsync();</script>', $pos, 0);
                 $pos = strpos($source, 'caddie', $pos + 1);
                 $pos = strpos($source, '</div>', $pos + 1);
                 $source = substr_replace($source, '</div>', $pos, 0);
@@ -90,7 +90,7 @@ final class functions_modus
             if ($pos2 !== false &&
                 substr_count($source, '<li>', $pos, $pos2 - $pos) > 2
             ) {
-                $source = substr_replace($source, '<a id=albumActionsSwitcher class=pwg-button><span class="pwg-icon pwg-icon-ellipsis"></span></a>{combine_script version=1 id=\'modus.async\' path="themes/`$themeconf.id`/js/modus.async.js" load=\'async\'}', $pos, 0);
+                $source = substr_replace($source, '<a id=albumActionsSwitcher class=pwg-button><span class="pwg-icon pwg-icon-ellipsis"></span></a><script type="module">import { initModusAsync } from "./themes/{$themeconf.id}/js/modus.async.js"; initModusAsync();</script>', $pos, 0);
             }
         }
 

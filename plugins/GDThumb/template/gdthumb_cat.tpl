@@ -53,9 +53,9 @@
 </ul>
 
 {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css"}
-{combine_script id='gdthumb' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
-{combine_script id='gdthumb.masonry' require='gdthumb' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/masonry.js" load="footer"}
 
-{footer_script require="gdthumb.masonry"}<script>
+{footer_script}<script type="module">
+  import { GDThumb } from '{$GDThumb.GDTHUMB_ROOT}/js/gdthumb.js';
+  {assign var="has_cats" value="true" scope=root nocache}
   GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin});
 </script>{/footer_script}

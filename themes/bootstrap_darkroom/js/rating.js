@@ -1,11 +1,11 @@
-var gRatingOptions;
-var gRatingButtons;
-var gUserRating;
+let gRatingOptions;
+let gRatingButtons;
+let gUserRating;
 
-function makeNiceRatingForm(options) {
+export function makeNiceRatingForm(options) {
     gRatingOptions = options;
-    var form = document.getElementById("rateForm");
-    if (!form) return; //? template changed
+    const form = document.getElementById("rateForm");
+    if (!form) return;
 
     gRatingButtons = form.querySelectorAll("span");
     gUserRating = "";
@@ -23,7 +23,7 @@ function makeNiceRatingForm(options) {
             updateRatingStarDisplay(gUserRating);
         });
         pwgAddEventListener(button, "mouseover", function (e) {
-            var targetValue = e.target
+            const targetValue = e.target
                 ? e.target.dataset.initialRateValue
                 : e.srcElement.dataset.initialRateValue;
             updateRatingStarDisplay(targetValue);
@@ -35,8 +35,8 @@ function makeNiceRatingForm(options) {
 
 function updateRatingStarDisplay(userRating) {
     gRatingButtons.forEach(function (button) {
-        var initialValue = parseFloat(button.dataset.initialRateValue);
-        var shouldBeFull = userRating !== "" && userRating >= initialValue;
+        const initialValue = parseFloat(button.dataset.initialRateValue);
+        const shouldBeFull = userRating !== "" && userRating >= initialValue;
 
         if (shouldBeFull) {
             button.classList.add("rateButtonStarFull");
@@ -49,19 +49,19 @@ function updateRatingStarDisplay(userRating) {
 }
 
 function updateRating(e) {
-    var elem = e.target || e.srcElement;
-    var rateButtonValue = elem.dataset.initialRateValue;
-    var isDisabled = elem.dataset.disabled == "true";
+    const elem = e.target || e.srcElement;
+    const rateButtonValue = elem.dataset.initialRateValue;
+    const isDisabled = elem.dataset.disabled == "true";
 
     if (isDisabled || rateButtonValue == gUserRating) {
-        return false; //nothing to do
+        return false;
     }
 
     gRatingButtons.forEach(function (btn) {
         elem.dataset.disabled = "true";
     });
 
-    var y = new PwgWS(gRatingOptions.rootUrl);
+    const y = new PwgWS(gRatingOptions.rootUrl);
     y.callService(
         "pwg.images.rate",
         {
@@ -72,8 +72,8 @@ function updateRating(e) {
             method: "POST",
             onFailure: function (num, text) {
                 alert(num + " " + text);
-                var rateForm = document.getElementById("rateForm");
-                var action = rateForm ? rateForm.getAttribute("action") : "";
+                const rateForm = document.getElementById("rateForm");
+                const action = rateForm ? rateForm.getAttribute("action") : "";
                 document.location = action + "&rate=" + rateButtonValue;
             },
             onSuccess: function (result) {
@@ -86,10 +86,10 @@ function updateRating(e) {
                     gRatingOptions.updateRateElement.innerHTML =
                         gRatingOptions.updateRateText;
                 if (gRatingOptions.ratingSummaryElement) {
-                    var t = gRatingOptions.ratingSummaryText;
-                    var args = [result.score, result.count, result.average];
-                    var idx = 0;
-                    var rexp = new RegExp(/%\.?\d*[sdf]/);
+                    let t = gRatingOptions.ratingSummaryText;
+                    const args = [result.score, result.count, result.average];
+                    let idx = 0;
+                    const rexp = new RegExp(/%\.?\d*[sdf]/);
                     while (idx < args.length) t = t.replace(rexp, args[idx++]);
                     gRatingOptions.ratingSummaryElement.innerHTML = t;
                 }
@@ -99,17 +99,16 @@ function updateRating(e) {
     return false;
 }
 
-(function () {
-    if (
-        typeof _pwgRatingAutoQueue != "undefined" &&
-        _pwgRatingAutoQueue.length
-    ) {
-        for (var i = 0; i < _pwgRatingAutoQueue.length; i++)
+export function initRating() {
+    if (typeof _pwgRatingAutoQueue !== "undefined" && _pwgRatingAutoQueue.length) {
+        for (let i = 0; i < _pwgRatingAutoQueue.length; i++)
             makeNiceRatingForm(_pwgRatingAutoQueue[i]);
     }
-    _pwgRatingAutoQueue = {
+    window._pwgRatingAutoQueue = {
         push: function (opts) {
             makeNiceRatingForm(opts);
         },
     };
-})();
+}
+
+document.addEventListener('DOMContentLoaded', initRating);

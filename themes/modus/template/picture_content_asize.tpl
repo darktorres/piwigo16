@@ -1,17 +1,18 @@
-{footer_script}<script type="application/json" id="modus-rvas-config">{
-  "derivatives": [
-    {foreach from=$current.unique_derivatives item=derivative name=derivative_loop}
-      {if 'svg' === $current.path_ext}
-        {assign var='size' value=array($current.width, $current.height)}
-      {else}
-        {assign var='size' value=$derivative->get_size()}
-      {/if}
-      {"w":{$size[0]},"h":{$size[1]},"url":"{$derivative->get_url()|escape:'html'}","type":"{$derivative->get_type()}"}{if !$smarty.foreach.derivative_loop.last},{/if}
-    {/foreach}
-  ],
-  "cp": "{$COOKIE_PATH|escape:'html'}",
-  "pending": {if $RVAS_PENDING}true{else}false{/if}
-}</script>{/footer_script}
+{assign var='rvas_derivatives' value=[]}
+{foreach from=$current.unique_derivatives item=derivative name=derivative_loop}
+  {if 'svg' === $current.path_ext}
+    {assign var='size' value=array($current.width, $current.height)}
+  {else}
+    {assign var='size' value=$derivative->get_size()}
+  {/if}
+  {$rvas_derivatives[] = ['w' => $size[0], 'h' => $size[1], 'url' => $derivative->get_url(), 'type' => $derivative->get_type()]}
+{/foreach}
+
+{assign var='rvas_config' value=['derivatives' => $rvas_derivatives, 'cp' => $COOKIE_PATH, 'pending' => $RVAS_PENDING]}
+
+{footer_script}<script type="application/json" id="modus-rvas-config">
+{$rvas_config|@json_encode}
+</script>{/footer_script}
 
 {footer_script}<script type="module">
   import { init } from './themes/modus/js/photo.autosize.js';

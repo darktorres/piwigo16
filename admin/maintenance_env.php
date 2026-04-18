@@ -351,6 +351,14 @@ $advanced_features = functions_plugins::trigger_change(
 
 $template->assign('advanced_features', $advanced_features);
 
+$page_data = [
+    'no_time_elapsed' => functions::l10n('right now'),
+    'no_active_plugin' => functions::l10n('No plugin activated'),
+    'error_occurred' => functions::l10n('an error happened'),
+    'unit_MB' => functions::l10n('%s MB'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+

@@ -1,13 +1,6 @@
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10}
 {* order 10 is required, see issue 1080 *}
-<script id="pwg-page-data" type="application/json">
-{
-  "no_time_elapsed": "{"right now"|translate|escape:'html'}",
-  "no_active_plugin": "{"No plugin activated"|translate|escape:'html'}",
-  "error_occurred": "{"an error happened"|translate|escape:'html'}",
-  "unit_MB": "{"%s MB"|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_maintenance}
 <script type="module" src="admin/themes/default/js/dist/{$vite_maintenance}"></script>

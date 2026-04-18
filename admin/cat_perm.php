@@ -312,10 +312,18 @@ if ($group_granted_ids !== []) {
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
+$cache_keys = functions_admin::get_admin_client_cache_keys(['groups', 'users']);
+$page_data = [
+    'CACHE_KEYS' => $cache_keys,
+    'ROOT_URL' => functions_url::get_root_url(),
+    'nb_users_granted_indirect' => isset($user_granted_indirect_ids) ? count($user_granted_indirect_ids) : 0,
+];
+
 $template->assign([
     'PWG_TOKEN' => functions::get_pwg_token(),
     'INHERIT' => $conf->inheritance_by_default,
-    'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(['groups', 'users']),
+    'CACHE_KEYS' => $cache_keys,
+    'page_data_json' => json_encode($page_data),
 ]);
 
 require_once __DIR__ . '/../inc/vite_helper.php';

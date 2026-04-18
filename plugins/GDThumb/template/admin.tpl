@@ -129,4 +129,4 @@
 </style>
 {/html_head}
 
-<script type="module" src="{$GDTHUMB_PATH}/js/gdthumb.admin.js"></script>
+<script type="module" src="{$ROOT_URL}admin/themes/default/js/dist/{$vite_gdthumb_admin}"></script>

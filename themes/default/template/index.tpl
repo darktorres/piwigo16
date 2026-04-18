@@ -1,5 +1,5 @@
 {footer_script}<script type="module">
-import './themes/default/js/switchbox.js';
+import '{$ROOT_URL}admin/themes/default/js/dist/{$vite_switchbox}';
 </script>{/footer_script}
 
 {$MENUBAR}

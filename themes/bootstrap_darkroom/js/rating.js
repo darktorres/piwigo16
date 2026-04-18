@@ -1,4 +1,4 @@
-import { PwgWS, pwgAddEventListener } from '../default/js/scripts.js';
+import { PwgWS, pwgAddEventListener } from '../../default/js/scripts.ts';
 
 let gRatingOptions;
 let gRatingButtons;

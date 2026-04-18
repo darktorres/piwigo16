@@ -27,5 +27,8 @@ $template->assign([
     'ADMINTOOLS_PATH' => substr(ADMINTOOLS_PATH, 2),
 ]);
 
+require_once PHPWG_ROOT_PATH . 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['at_admin' => 'plugins/AdminTools/js/admin']);
+
 $template->set_filename('admintools_content', realpath(ADMINTOOLS_PATH . 'template/admin.tpl'));
 $template->assign_var_from_handle('ADMIN_CONTENT', 'admintools_content');

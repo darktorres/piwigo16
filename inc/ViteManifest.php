@@ -32,19 +32,28 @@ class ViteManifest {
      * @param string $moduleName The module name (e.g., 'common', 'tags')
      * @return string|null The hashed filename or null if not found
      */
-    public static function getFile($moduleName) {
+    /**
+     * @param string $key Module name (e.g. 'tags') or full path (e.g. 'themes/default/js/mcs')
+     */
+    public static function getFile($key) {
         $manifest = self::loadManifest();
 
         if (!$manifest) {
             return null;
         }
 
-        $key = 'admin/themes/default/js/' . $moduleName . '.js';
-        if (!isset($manifest[$key])) {
-            return null;
+        if (strpos($key, '/') !== false) {
+            // Full source path provided
+            $fullKey = $key;
+            if (substr($fullKey, -3) !== '.js') {
+                $fullKey .= '.js';
+            }
+        } else {
+            // Legacy: module name only → admin path
+            $fullKey = 'admin/themes/default/js/' . $key . '.js';
         }
 
-        return $manifest[$key]['file'] ?? null;
+        return $manifest[$fullKey]['file'] ?? null;
     }
 }
 ?>

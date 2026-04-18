@@ -20,6 +20,7 @@ const adminModules = [
   'maintenance_env',
   'cat_list',
   'cat_search',
+  'comments',
   'generate_video_thumbnails',
   'helpPopin',
   'history',

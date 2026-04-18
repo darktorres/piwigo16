@@ -193,6 +193,7 @@ var hideAddGroupForm = function () {
             })
             .then(response => response.text())
             .then(raw_data => {
+                var data, group, groupBox;
                 loadState.reverse();
                 data = JSON.parse(raw_data);
                 if (data.stat === "ok") {
@@ -441,7 +442,7 @@ var deleteGroup = function (id) {
                     })
                     .then(response => response.text())
                     .then(raw_data => {
-                        data = JSON.parse(raw_data);
+                        var data = JSON.parse(raw_data);
                         if (data.stat === "ok") {
                             document.getElementById("group-" + id)?.remove();
                             document.querySelectorAll(".DeleteGroupList div[data-id=" + id + "]").forEach(el => el.remove());
@@ -473,7 +474,7 @@ var renameGroup = function (id, newName) {
         })
         .then(response => response.text())
         .then(raw_data => {
-            data = JSON.parse(raw_data);
+            var data = JSON.parse(raw_data);
             loadState.reverse();
             if (data.stat === "ok") {
                 newName = data.result.groups[0].name;
@@ -553,7 +554,7 @@ var setDefaultGroup = function (id, is_default) {
     })
     .then(response => response.text())
     .then(raw_data => {
-        data = JSON.parse(raw_data);
+        var data = JSON.parse(raw_data);
         let opts = document.querySelector("#group-" + id + " #GroupOptions");
         if (opts) opts.style.display = 'none';
         if (data.stat === "ok") {
@@ -618,7 +619,7 @@ var duplicateAction = function (id) {
     loadState.removeClass(dupBtn, "icon-docs");
     loadState.changeAttribute(dupBtn, "style", "pointer-events: none; text-align: center;");
 
-    copy_name = (document.querySelector("#group-" + id + " #group_name")?.innerHTML || "") + str_copy;
+    var copy_name = (document.querySelector("#group-" + id + " #group_name")?.innerHTML || "") + str_copy;
 
     let name_exist = function (name) {
         let exist = false;
@@ -640,7 +641,8 @@ var duplicateAction = function (id) {
     })
     .then(response => response.text())
     .then(raw_data => {
-        data = JSON.parse(raw_data);
+        var data = JSON.parse(raw_data);
+        var group;
         loadState.reverse();
         if (data.stat === "ok") {
             let opts = document.querySelector("#group-" + id + " #GroupOptions");
@@ -787,16 +789,18 @@ var buttonUnavailable = function (button) {
  -------*/
 
 document.querySelector(".ConfirmMergeButton")?.addEventListener("click", function () {
+    var merge_group = [];
+    var str_merge_group = "";
+    var name_merge = [];
+    var name_dest = [];
+    var dest_grp;
+
     let loadState = new TemporaryState();
     let mergeBtn = document.querySelector(".ConfirmMergeButton");
     loadState.changeAttribute(mergeBtn, "style", "pointer-events: none");
     loadState.changeHTML(mergeBtn, "<i class='icon-spin6 animate-spin'> </i>");
     loadState.removeClass(mergeBtn, "icon-ok");
 
-    merge_group = [];
-    str_merge_group = "";
-    name_merge = [];
-    name_dest = [];
     let destSelect = document.getElementById("MergeOptionsChoices");
     dest_grp = destSelect ? destSelect.value : "";
 
@@ -817,8 +821,8 @@ document.querySelector(".ConfirmMergeButton")?.addEventListener("click", functio
     })
     .then(response => response.text())
     .then(raw_data => {
+        var data = JSON.parse(raw_data);
         loadState.reverse();
-        data = JSON.parse(raw_data);
         if (data.stat === "ok") {
             updateSelectionPanel("Selection");
             merge_group.forEach(function (id) {
@@ -852,7 +856,7 @@ document.querySelector(".ConfirmMergeButton")?.addEventListener("click", functio
             })
             .then(response => response.text())
             .then(raw_data => {
-                data = JSON.parse(raw_data);
+                var data = JSON.parse(raw_data);
                 let number = data.result.users.length;
                 let userCountEl = document.querySelector("#group-" + dest_grp + " .group_number_users");
                 if (userCountEl) {
@@ -883,7 +887,7 @@ document.querySelector(".ConfirmDeleteButton")?.addEventListener("click", functi
     loadState.changeHTML(delBtn, "<i class='icon-spin6 animate-spin'> </i>");
     loadState.removeClass(delBtn, "icon-ok");
 
-    str_id = "";
+    var str_id = "";
     ids.forEach(function (id) {
         str_id += "group_id[]=" + id + "&";
     });
@@ -895,7 +899,7 @@ document.querySelector(".ConfirmDeleteButton")?.addEventListener("click", functi
     })
     .then(response => response.text())
     .then(raw_data => {
-        data = JSON.parse(raw_data);
+        var data = JSON.parse(raw_data);
         if (data.stat === "ok") {
             document.querySelectorAll(".DeleteGroupList div").forEach(el => {
                 let id = el.getAttribute("data-id");
@@ -938,6 +942,8 @@ var maxOffsetUserCont = 322;
         selectize = selectEl.tomselect || new TomSelect(selectEl, {});
 
         var idSearch = "";
+        var updateUserSearch;
+
         document.querySelector(".UserSearch input")?.addEventListener("focus", function () {
             if (idSearch != document.getElementById("UserList")?.getAttribute("data-group_id")) {
                 updateUserSearch();
@@ -946,14 +952,13 @@ var maxOffsetUserCont = 322;
 
         // Update User search bar (remove group users in selection)
         updateUserSearch = function () {
+            var usersCache;
             if (selectize) selectize.clear();
-            if ((usersCache = {})) {
-                usersCache = new UsersCache({
-                    serverKey: serverKey,
-                    serverId: serverId,
-                    rootUrl: rootUrl,
-                });
-            }
+            usersCache = new UsersCache({
+                serverKey: serverKey,
+                serverId: serverId,
+                rootUrl: rootUrl,
+            });
             try {
                 JSON.parse(usersCache.storage[usersCache.key]).data.forEach(function (u) {
                     if (selectize) selectize.addOption({ value: u.id, text: u.username });
@@ -992,8 +997,8 @@ var maxOffsetUserCont = 322;
     })
     .then(response => response.text())
     .then(raw_data => {
+        var data = JSON.parse(raw_data);
         loadState.reverse();
-        data = JSON.parse(raw_data);
         if (data.stat === "ok") {
             //Set the popin name
             let nameBlock = document.querySelector(".group-name-block p");
@@ -1065,7 +1070,7 @@ var getUserDisplay = function (username, user_id, grp_id) {
             })
             .then(response => response.text())
             .then(raw_data => {
-                data = JSON.parse(raw_data);
+                var data = JSON.parse(raw_data);
                 if (data.stat === "ok") {
                     let str = str_user_dissociated.replace("%s", username);
                     associateUserInfo.style.display = 'none';
@@ -1137,8 +1142,8 @@ document.querySelector(".AddUserBlock button")?.addEventListener("click", functi
         })
         .then(response => response.text())
         .then(raw_data => {
+            var data = JSON.parse(raw_data);
             loadState.reverse();
-            data = JSON.parse(raw_data);
 
             if (data.stat === "ok") {
                 // Get the username
@@ -1192,7 +1197,7 @@ document.querySelector(".AddUserBlock button")?.addEventListener("click", functi
 });
 
 document.querySelector(".input-user-name")?.addEventListener("input", function () {
-    searchString = this.value.toLowerCase();
+    var searchString = this.value.toLowerCase();
     let grp_id = document.querySelector(".UserListPopIn")?.getAttribute("data-group_id");
     if (searchString != "") {
         let container = document.querySelector(".UsersInGroupListContainer");

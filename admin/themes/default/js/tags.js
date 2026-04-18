@@ -1,5 +1,6 @@
 import { initModule } from './moduleInit.js';
 import { pwgConfirm } from './pwgConfirm.js';
+import { TemporaryState } from './common.js';
 
 export function init(cfg) {
     const { orphan_tag_names, total_tags, pwg_token, str_delete, str_delete_tags, str_yes_delete_confirmation, str_no_delete_confirmation, str_yes_rename_confirmation, str_tag_deleted, str_tags_deleted, str_already_exist, str_tag_created, str_tag_renamed, str_tag_rename, str_delete_orphan_tags, str_orphan_tags, str_delete_them, str_keep_them, str_copy, str_other_copy, str_merged_into, str_and_others_tags, str_others_tags_available, str_number_photos, str_no_photos, str_select_all_tag, str_clear_selection, str_selection_done, str_tag_selected, str_tags_found, str_tag_found } = cfg;
@@ -173,7 +174,7 @@ document.getElementById("add-tag")?.addEventListener("submit", function (e) {
     e.preventDefault();
     let inputEl = document.getElementById("add-tag-input");
     if (inputEl && inputEl.value != "") {
-        loadState = new TemporaryState();
+        var loadState = new TemporaryState();
         let validateIcon = document.querySelector("#add-tag .icon-validate");
         loadState.removeClass(validateIcon, "icon-plus");
         loadState.changeHTML(
@@ -219,9 +220,9 @@ function addTag(name) {
         })
         .then(response => response.text())
         .then(raw_data => {
-            data = JSON.parse(raw_data);
+            var data = JSON.parse(raw_data);
             if (data.stat === "ok") {
-                newTag = createTagBox(
+                var newTag = createTagBox(
                     data.result.id,
                     data.result.name,
                     data.result.url_name,
@@ -418,7 +419,7 @@ function renameTag(id, new_name) {
         })
         .then(response => response.text())
         .then(raw_data => {
-            data = JSON.parse(raw_data);
+            var data = JSON.parse(raw_data);
             console.log(data);
             if (data.stat === "ok") {
                 document.querySelectorAll(".tag-box[data-id=\"" + id + "\"] p, .tag-box[data-id=\"" + id + "\"] .tag-dropdown-header b").forEach(el => {
@@ -431,7 +432,7 @@ function renameTag(id, new_name) {
                 if (viewLink) viewLink.href = u_view;
 
                 //Update the data
-                index = dataTags.findIndex((tag) => tag.id == id);
+                var index = dataTags.findIndex((tag) => tag.id == id);
                 dataTags[index].name = data.result.name;
                 dataTags[index].url_name = data.result.url_name;
 
@@ -446,10 +447,10 @@ function renameTag(id, new_name) {
 
 function duplicateTag(id, name) {
     return new Promise((resolve, reject) => {
-        copy_name = name + str_copy;
+        var copy_name = name + str_copy;
 
         let name_exist = function (name) {
-            exist = false;
+            var exist = false;
             document.querySelectorAll(".tag-box .tag-name").forEach(el => {
                 if (el.innerHTML === name) exist = true;
             });
@@ -472,9 +473,9 @@ function duplicateTag(id, name) {
         })
         .then(response => response.text())
         .then(raw_data => {
-            data = JSON.parse(raw_data);
+            var data = JSON.parse(raw_data);
             if (data.stat === "ok") {
-                newTag = createTagBox(
+                var newTag = createTagBox(
                     data.result.id,
                     data.result.name,
                     data.result.url_name,

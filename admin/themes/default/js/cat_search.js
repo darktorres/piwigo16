@@ -30,20 +30,20 @@ _docReady(function() {
         var resultEl = document.querySelector('.search-album-result');
         var noresultEl = document.querySelector('.search-album-noresult');
         var limitEl = document.querySelector(".limit-album-reached");
+        var ghostEl = document.querySelector('.search-album-ghost');
+        var numResultEl = document.querySelector('.search-album-num-result');
+        var nbResult;
+
         if (resultEl) resultEl.innerHTML = "";
         if (noresultEl) noresultEl.style.display = 'none';
         if (limitEl) limitEl.style.display = 'none';
         if (string == '') {
-            var ghostEl = document.querySelector('.search-album-ghost');
             if (ghostEl) ghostEl.style.display = '';
-            var numResultEl = document.querySelector('.search-album-num-result');
             if (numResultEl) numResultEl.style.display = 'none';
         } else {
-            var ghostEl = document.querySelector('.search-album-ghost');
             if (ghostEl) ghostEl.style.display = 'none';
             var helpEl = document.querySelector('.search-album-help');
             if (helpEl) helpEl.style.display = 'none';
-            var numResultEl = document.querySelector('.search-album-num-result');
             if (numResultEl) numResultEl.style.display = '';
 
             nbResult = 0;
@@ -75,7 +75,7 @@ _docReady(function() {
     }
 
     function addAlbumResult(cat, nbResult) {
-        id = cat[1][cat[1].length - 1];
+        var id = cat[1][cat[1].length - 1];
         var templateEl = document.querySelector('.search-album-elem-template');
         var template = templateEl ? templateEl.innerHTML.trim() : '';
         var tempDiv = document.createElement('div');
@@ -83,7 +83,7 @@ _docReady(function() {
         var newCatNode = tempDiv.firstElementChild;
         if (!newCatNode) return;
 
-        hasChildren = false;
+        var hasChildren = false;
         categories.forEach((c) => {
             for (let i = 0; i < c[1].length - 1; i++) {
                 if (c[1][i] == id) {
@@ -95,14 +95,14 @@ _docReady(function() {
         var iconEl = newCatNode.querySelector('.search-album-icon');
         if (iconEl) {
             iconEl.classList.add(hasChildren ? 'icon-sitemap' : 'icon-folder-open');
-            colorId = id % 5;
+            var colorId = id % 5;
             iconEl.classList.add(colors[colorId]);
         }
 
         var nameEl = newCatNode.querySelector('.search-album-name');
         if (nameEl) nameEl.innerHTML = getHtmlPath(cat);
 
-        href = "admin.php?page=album-" + id;
+        var href = "admin.php?page=album-" + id;
         var editEl = newCatNode.querySelector('.search-album-edit');
         if (editEl) editEl.setAttribute('href', href);
 
@@ -119,10 +119,10 @@ _docReady(function() {
     }
 
     function getHtmlPath(cat) {
-        html = '';
+        var html = '';
         for (let i = 0; i < cat[1].length - 1; i++) {
-            id_bis = cat[1][i];
-            c = window.cat_search_data[id_bis];
+            var id_bis = cat[1][i];
+            var c = window.cat_search_data[id_bis];
             html += '<a href="' + editLink + id_bis + '">' + c[0] + '</a> <b>/</b> '
         }
         html += '<a href="' + editLink + cat[1][cat[1].length - 1] + '">' + cat[0] + '</a>';

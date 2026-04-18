@@ -177,4 +177,6 @@
 	</aside>
 {/if}
 <a id="menuSwitcher" class="pwg-button" title="{'Menu'|translate}"><span class="pwg-icon pwg-icon-menu"></span></a>
-{combine_script id='zzz.d1.menu' load='async' path="themes/`$themeconf.id`/js/menuh.js" version=0}
+{footer_script}<script type="module">
+import './themes/modus/js/menuh.js';
+</script>{/footer_script}

@@ -84,6 +84,20 @@ $template->assign('PWG_TOKEN', functions::get_pwg_token());
 $template->assign('EXT_TYPE', $page['page'] == 'updates' ? 'extensions' : $page['page']);
 $template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
 
+$page_data = [
+    'pwgToken' => functions::get_pwg_token(),
+    'extType' => $page['page'] == 'updates' ? 'extensions' : $page['page'],
+    'confirmMsg' => functions::l10n('Are you sure?'),
+    'errorHead' => functions::l10n('ERROR'),
+    'successHead' => functions::l10n('Update Complete'),
+    'errorMsg' => functions::l10n('an error happened'),
+    'restoreMsg' => functions::l10n('Reset ignored updates'),
+    'titleConfirmUpdateAll' => functions::l10n('Are you sure you want to update all extensions?'),
+    'strConfirm' => functions::l10n('Yes, I am sure'),
+    'strCancel' => functions::l10n('No, I have changed my mind'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['updates_ext']);
 

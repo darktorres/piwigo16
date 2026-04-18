@@ -1,5 +1,5 @@
 function SPTLine(margin, rowHeight) {
-    this.elements = new Array();
+    this.elements = [];
     this.margin = margin;
     this.rowHeight = rowHeight;
     this.maxHeight = 0;
@@ -12,7 +12,7 @@ SPTLine.prototype = {
 
     add: function (img, absIndex) {
         if (this.elements.length === 0) this.firstThumbIndex = absIndex;
-        var w, h;
+        let w, h;
         if (!img.dataset.sptW) {
             w = img.offsetWidth;
             h = img.offsetHeight;
@@ -27,7 +27,7 @@ SPTLine.prototype = {
             h = parseFloat(img.dataset.sptH);
         }
 
-        var eltObj = { img: img, w: w, h: h };
+        const eltObj = { img: img, w: w, h: h };
         this.elements.push(eltObj);
 
         if (eltObj.h > this.maxHeight) this.maxHeight = eltObj.h;
@@ -44,7 +44,7 @@ SPTLine.prototype = {
     },
 };
 
-function SPThumbs(options) {
+export function SPThumbs(options) {
     this.opts = options;
 
     this.thumbs = document.getElementById('thumbnails');
@@ -53,20 +53,20 @@ function SPThumbs(options) {
 
     this.opts.extraRowHeight = 0;
     if (window.devicePixelRatio > 1) {
-        var dpr = window.devicePixelRatio;
-        this.opts.extraRowHeight = 6; /*loose sharpness but only for small screens when we could "almost" fit with full sharpness*/
+        const dpr = window.devicePixelRatio;
+        this.opts.extraRowHeight = 6;
         this.opts.rowHeight =
             Math.round(this.opts.rowHeight / dpr) + this.opts.extraRowHeight;
     }
     this.process();
 
-    var that = this;
+    const that = this;
     window.addEventListener("resize", function () {
         if (Math.abs(that.thumbs.offsetWidth - that.prevContainerWidth) > 1)
             that.process();
     });
     window.addEventListener("RVTS_loaded", function (evt) {
-        var down = evt.detail && evt.detail.down;
+        const down = evt.detail && evt.detail.down;
         that.process(
             down && that.thumbs.offsetWidth == that.prevContainerWidth
                 ? that.prevLastLineFirstThumbIndex
@@ -81,14 +81,14 @@ SPThumbs.prototype = {
 
     process: function (startIndex) {
         startIndex = startIndex ? startIndex : 0;
-        var containerWidth = this.thumbs.offsetWidth;
-        var maxExtraMarginPerThumb = 1;
+        const containerWidth = this.thumbs.offsetWidth;
+        const maxExtraMarginPerThumb = 1;
         this.prevContainerWidth = containerWidth;
 
-        var elts = this.thumbs.querySelectorAll("li.liVisible>a>img");
-        var line = new SPTLine(this.opts.hMargin, this.opts.rowHeight);
+        const elts = this.thumbs.querySelectorAll("li.liVisible>a>img");
+        const line = new SPTLine(this.opts.hMargin, this.opts.rowHeight);
 
-        for (var i = startIndex; i < elts.length; i++) {
+        for (let i = startIndex; i < elts.length; i++) {
             line.add(elts[i], i);
             if (
                 line.width >=
@@ -102,7 +102,7 @@ SPThumbs.prototype = {
         if (line.elements.length) this.processLine(line, containerWidth, true);
         this.prevLastLineFirstThumbIndex = line.firstThumbIndex;
 
-        var that = this;
+        const that = this;
         window.requestAnimationFrame(function () {
             if (Math.abs(that.thumbs.offsetWidth - that.prevContainerWidth) > 1)
                 that.process();
@@ -110,20 +110,20 @@ SPThumbs.prototype = {
     },
 
     processLine: function (line, containerWidth, lastLine) {
-        var toRecover;
-        var eltW;
-        var eltH;
-        var rowHeight = line.maxHeight ? line.maxHeight : line.elements[0].h;
+        let toRecover;
+        let eltW;
+        let eltH;
+        let rowHeight = line.maxHeight ? line.maxHeight : line.elements[0].h;
 
         if (line.width / containerWidth > 1.01) {
-            var ratio =
+            const ratio =
                 line.elementsWidth /
                 (line.elementsWidth + containerWidth - line.width);
-            var adjustedRowHeight = rowHeight / (1 + (ratio - 1) * 0.95);
+            let adjustedRowHeight = rowHeight / (1 + (ratio - 1) * 0.95);
             adjustedRowHeight = 6 * Math.round(adjustedRowHeight / 6);
             if (adjustedRowHeight < rowHeight / ratio) {
                 adjustedRowHeight = Math.ceil(rowHeight / ratio);
-                var missing =
+                const missing =
                     this.opts.rowHeight -
                     this.opts.extraRowHeight -
                     adjustedRowHeight;
@@ -139,11 +139,11 @@ SPThumbs.prototype = {
         toRecover = line.width - containerWidth;
         if (lastLine) toRecover = 0;
 
-        for (var i = 0; i < line.elements.length; i++) {
-            var eltObj = line.elements[i];
-            var eltW = eltObj.w;
-            var eltH = eltObj.h;
-            var eltToRecover;
+        for (let i = 0; i < line.elements.length; i++) {
+            const eltObj = line.elements[i];
+            eltW = eltObj.w;
+            eltH = eltObj.h;
+            let eltToRecover;
 
             if (i == line.elements.length - 1) eltToRecover = toRecover;
             else
@@ -175,13 +175,13 @@ SPThumbs.prototype = {
         img.setAttribute("width", imgW);
         img.setAttribute("height", imgH);
 
-        var li = img.closest("li");
+        const li = img.closest("li");
         if (li) {
             li.style.width = liW + "px";
             li.style.height = liH + "px";
         }
 
-        var a = img.parentElement;
+        const a = img.parentElement;
         if (a) {
             a.style.left = Math.round((liW - imgW) / 2) + "px";
             a.style.top = Math.round((liH - imgH) / 2) + "px";

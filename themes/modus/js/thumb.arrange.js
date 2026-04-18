@@ -1,5 +1,5 @@
 function RVGTLine(margin, rowHeight) {
-    this.elements = new Array();
+    this.elements = [];
     this.margin = margin;
     this.rowHeight = rowHeight;
     this.maxHeight = 0;
@@ -12,11 +12,11 @@ RVGTLine.prototype = {
 
     add: function (img, absIndex) {
         if (this.elements.length === 0) this.firstThumbIndex = absIndex;
-        var w, h;
+        let w, h;
 
         if (!img.dataset.rvgtW) {
-            var attrW = img.getAttribute("width");
-            var attrH = img.getAttribute("height");
+            const attrW = img.getAttribute("width");
+            const attrH = img.getAttribute("height");
             if (attrW && (w = parseInt(attrW))) {
                 h = parseInt(attrH);
             } else {
@@ -34,7 +34,7 @@ RVGTLine.prototype = {
             h = parseFloat(img.dataset.rvgtH);
         }
 
-        var eltObj = { img: img, w: w, h: h };
+        const eltObj = { img: img, w: w, h: h };
         this.elements.push(eltObj);
 
         if (eltObj.h > this.maxHeight) this.maxHeight = eltObj.h;
@@ -51,7 +51,7 @@ RVGTLine.prototype = {
     },
 };
 
-function RVGThumbs(options) {
+export function RVGThumbs(options) {
     this.opts = options;
 
     this.thumbs = document.getElementById("thumbnails");
@@ -60,25 +60,25 @@ function RVGThumbs(options) {
 
     this.opts.extraRowHeight = 0;
     if (window.devicePixelRatio > 1) {
-        var dpr = window.devicePixelRatio;
+        const dpr = window.devicePixelRatio;
         this.opts.resizeThreshold = 1.01;
         this.opts.resizeFactor = 0.95;
-        this.opts.extraRowHeight = 6; /*loose sharpness but only for small screens when we could "almost" fit with full sharpness*/
+        this.opts.extraRowHeight = 6;
         this.opts.rowHeight =
             Math.round(this.opts.rowHeight / dpr) + this.opts.extraRowHeight;
     } else {
-        this.opts.resizeThreshold = 1.12; /*if row is less than 12% larger than available width, distribute extra width through cropping*/
-        this.opts.resizeFactor = 0.8; /* when row is more than 12% larger than available width, distribute extra width 80% through resizing and 20% through cropping*/
+        this.opts.resizeThreshold = 1.12;
+        this.opts.resizeFactor = 0.8;
     }
     this.process();
 
-    var that = this;
+    const that = this;
     window.addEventListener("resize", function () {
         if (Math.abs(that.thumbs.offsetWidth - that.prevContainerWidth) > 1)
             that.process();
     });
     window.addEventListener("RVTS_loaded", function (evt) {
-        var down = evt.detail && evt.detail.down;
+        const down = evt.detail && evt.detail.down;
         that.process(
             down && that.thumbs.offsetWidth == that.prevContainerWidth
                 ? that.prevLastLineFirstThumbIndex
@@ -99,14 +99,14 @@ RVGThumbs.prototype = {
 
     process: function (startIndex) {
         startIndex = startIndex ? startIndex : 0;
-        var containerWidth = this.thumbs.offsetWidth;
-        var maxExtraMarginPerThumb = 1;
+        const containerWidth = this.thumbs.offsetWidth;
+        const maxExtraMarginPerThumb = 1;
         this.prevContainerWidth = containerWidth;
 
-        var elts = this.thumbs.querySelectorAll("li>a>img");
-        var line = new RVGTLine(this.opts.hMargin, this.opts.rowHeight);
+        const elts = this.thumbs.querySelectorAll("li>a>img");
+        const line = new RVGTLine(this.opts.hMargin, this.opts.rowHeight);
 
-        for (var i = startIndex; i < elts.length; i++) {
+        for (let i = startIndex; i < elts.length; i++) {
             line.add(elts[i], i);
             if (
                 line.width >=
@@ -122,21 +122,21 @@ RVGThumbs.prototype = {
     },
 
     processLine: function (line, containerWidth, lastLine) {
-        var toRecover;
-        var eltW;
-        var eltH;
-        var rowHeight = line.maxHeight ? line.maxHeight : line.elements[0].h;
+        let toRecover;
+        let eltW;
+        let eltH;
+        let rowHeight = line.maxHeight ? line.maxHeight : line.elements[0].h;
 
         if (line.width / containerWidth > this.opts.resizeThreshold) {
-            var ratio =
+            const ratio =
                 line.elementsWidth /
                 (line.elementsWidth + containerWidth - line.width);
-            var adjustedRowHeight =
+            let adjustedRowHeight =
                 rowHeight / (1 + (ratio - 1) * this.opts.resizeFactor);
             adjustedRowHeight = 6 * Math.round(adjustedRowHeight / 6);
             if (adjustedRowHeight < rowHeight / ratio) {
                 adjustedRowHeight = Math.ceil(rowHeight / ratio);
-                var missing =
+                const missing =
                     this.opts.rowHeight -
                     this.opts.extraRowHeight -
                     adjustedRowHeight;
@@ -152,11 +152,11 @@ RVGThumbs.prototype = {
         toRecover = line.width - containerWidth;
         if (lastLine) toRecover = 0;
 
-        for (var i = 0; i < line.elements.length; i++) {
-            var eltObj = line.elements[i];
-            var eltW = eltObj.w;
-            var eltH = eltObj.h;
-            var eltToRecover;
+        for (let i = 0; i < line.elements.length; i++) {
+            const eltObj = line.elements[i];
+            eltW = eltObj.w;
+            eltH = eltObj.h;
+            let eltToRecover;
 
             if (i == line.elements.length - 1) eltToRecover = toRecover;
             else
@@ -185,15 +185,14 @@ RVGThumbs.prototype = {
     },
 
     reposition: function (img, imgW, imgH, liW, liH) {
-        /* Vanilla DOM - avoids jQuery overhead */
         img.setAttribute("width", imgW + "");
         img.setAttribute("height", imgH + "");
 
-        var a = img.parentNode; //a
+        const a = img.parentNode;
         a.style.left = Math.round((liW - imgW) / 2) + "px";
         a.style.top = Math.round((liH - imgH) / 2) + "px";
 
-        var li = a.parentNode; //li
+        const li = a.parentNode;
         li.style.width = liW + "px";
         li.style.height = liH + "px";
     },

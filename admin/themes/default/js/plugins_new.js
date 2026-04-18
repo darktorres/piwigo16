@@ -1,25 +1,30 @@
+import { initModule } from './moduleInit.js';
 import tippy from 'tippy.js';
+import TomSelect from 'tom-select';
+import noUiSlider from 'nouislider';
+import { pwgConfirmFollowHref } from './pwgConfirm.js';
 
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
-// <-- Define sort orders -->
-var sortOrder = "date";
-var sortPlugins = function (a, b) {
-    if (
-        sortOrder == "downloads" ||
-        sortOrder == "revision" ||
-        sortOrder == "date"
-    )
-        return parseInt(a.dataset[sortOrder]) < parseInt(b.dataset[sortOrder])
-            ? 1
-            : -1;
-    else
-        return a.dataset[sortOrder].toLowerCase() >
-            b.dataset[sortOrder].toLowerCase()
-            ? 1
-            : -1;
-};
+export function init(cfg) {
+    const { str_install_title, str_confirm_msg, str_cancel_msg, strs_certification, str_x_month, str_x_months, str_x_year, str_x_years, str_from_beginning } = cfg;
 
-_docReady( function () {
+    // <-- Define sort orders -->
+    let sortOrder = "date";
+    let sortPlugins = function (a, b) {
+        if (
+            sortOrder == "downloads" ||
+            sortOrder == "revision" ||
+            sortOrder == "date"
+        )
+            return parseInt(a.dataset[sortOrder]) < parseInt(b.dataset[sortOrder])
+                ? 1
+                : -1;
+        else
+            return a.dataset[sortOrder].toLowerCase() >
+                b.dataset[sortOrder].toLowerCase()
+                ? 1
+                : -1;
+    };
+
     // <-- Set the advanced filters -->
 
     let betaTestPlugins = document.getElementById("showBetaTestPlugin").hasAttribute("checked");
@@ -358,4 +363,6 @@ _docReady( function () {
             el.innerHTML = el.innerHTML.slice(0, 30) + "...";
         }
     });
-});
+}
+
+initModule(init);

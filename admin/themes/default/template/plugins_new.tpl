@@ -1,27 +1,29 @@
 {combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
+<script id="pwg-page-data" type="application/json">
+{
+  "str_confirm_msg": "{"Yes, I am sure"|translate|escape:'html'}",
+  "str_cancel_msg": "{"No, I have chaged my mind"|translate|escape:'html'}",
+  "str_install_title": "{'Are you sure you want to install the plugin "%s"?'|translate|escape:'html'}",
+  "strs_certification": {
+    "-1": "{'This plugin is incompatible with your version'|translate|escape:'html'}",
+    "0": "{'This plugin have no update since 3 years ! It may be outdated'|translate|escape:'html'}",
+    "1": "{'This plugin has no recent update'|translate|escape:'html'}",
+    "2": "{'This plugin was updated less than 6 months ago'|translate|escape:'html'}",
+    "3": "{'This plugin have been updated recently'|translate|escape:'html'}"
+  },
+  "str_x_month": "{"%d month"|translate|escape:'html'}",
+  "str_x_months": "{"%d months"|translate|escape:'html'}",
+  "str_x_year": "{"%d year"|translate|escape:'html'}",
+  "str_x_years": "{"%d years"|translate|escape:'html'}",
+  "str_from_beginning": "{"since the beginning"|translate|escape:'html'}"
+}
+</script>
+
 {if $vite_plugins_new}
 <script type="module" src="admin/themes/default/js/dist/{$vite_plugins_new}"></script>
 {/if}
-
-{footer_script}<script>
-  const str_confirm_msg = "{"Yes, I am sure"|translate}";
-  const str_cancel_msg = "{"No, I have chaged my mind"|translate}";
-  const str_install_title = "{'Are you sure you want to install the plugin "%s"?'|translate|escape:'javascript'}";
-  const strs_certification = {
-    "-1" : "{'This plugin is incompatible with your version'|translate}",
-    "0" : "{'This plugin have no update since 3 years ! It may be outdated'|translate}",
-    "1" : "{'This plugin has no recent update'|translate}", 
-    "2" : "{'This plugin was updated less than 6 months ago'|translate}",
-    "3" : "{'This plugin have been updated recently'|translate}",
-  };
-  const str_x_month = "{"%d month"|translate}";
-  const str_x_months = "{"%d months"|translate}";
-  const str_x_year = "{"%d year"|translate}";
-  const str_x_years = "{"%d years"|translate}";
-  const str_from_beginning = "{"since the beginning"|translate}";
-</script>{/footer_script}
 
 <div class="titrePage">
   <div class="sort">

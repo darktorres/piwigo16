@@ -1,9 +1,8 @@
 /**
  * pwgConfirm — lightweight native <dialog> replacement for jquery-confirm.
- * Exposes window.pwgConfirm(opts) and window.pwgConfirmFollowHref(el, opts).
+ * Exports pwgConfirm(opts) and pwgConfirmFollowHref(el, opts).
  */
-(function () {
-    var styleId = 'pwg-confirm-styles';
+var styleId = 'pwg-confirm-styles';
     if (!document.getElementById(styleId)) {
         var style = document.createElement('style');
         style.id = styleId;
@@ -23,70 +22,69 @@
         document.head.appendChild(style);
     }
 
-    var dialog = null;
+var dialog = null;
 
-    function getDialog() {
-        if (!dialog) {
-            dialog = document.createElement('dialog');
-            dialog.id = 'pwg-confirm-dialog';
-            dialog.innerHTML =
-                '<h3 class="pwg-confirm-title"></h3>' +
-                '<div class="pwg-confirm-content"></div>' +
-                '<div class="pwg-confirm-buttons"></div>';
-            document.body.appendChild(dialog);
-            dialog.addEventListener('click', function (e) {
-                if (e.target === dialog) dialog.close();
-            });
-        }
-        return dialog;
+function getDialog() {
+    if (!dialog) {
+        dialog = document.createElement('dialog');
+        dialog.id = 'pwg-confirm-dialog';
+        dialog.innerHTML =
+            '<h3 class="pwg-confirm-title"></h3>' +
+            '<div class="pwg-confirm-content"></div>' +
+            '<div class="pwg-confirm-buttons"></div>';
+        document.body.appendChild(dialog);
+        dialog.addEventListener('click', function (e) {
+            if (e.target === dialog) dialog.close();
+        });
     }
+    return dialog;
+}
 
-    window.pwgConfirm = function (opts) {
-        opts = opts || {};
-        var dlg = getDialog();
-        dlg.querySelector('.pwg-confirm-title').innerHTML = opts.title || '';
-        var contentEl = dlg.querySelector('.pwg-confirm-content');
-        contentEl.innerHTML = opts.content || '';
-        contentEl.style.display = opts.content ? '' : 'none';
-        var buttonsEl = dlg.querySelector('.pwg-confirm-buttons');
-        buttonsEl.innerHTML = '';
-        var buttons = opts.buttons || {};
-        Object.keys(buttons).forEach(function (key) {
-            var btn = buttons[key];
-            var el = document.createElement('button');
-            el.type = 'button';
-            el.textContent = btn.text || key;
-            if (btn.btnClass) el.className = btn.btnClass;
-            el.addEventListener('click', function () {
-                dlg.close();
-                if (btn.action) btn.action.call(el);
-            });
-            buttonsEl.appendChild(el);
+export function pwgConfirm(opts) {
+    opts = opts || {};
+    var dlg = getDialog();
+    dlg.querySelector('.pwg-confirm-title').innerHTML = opts.title || '';
+    var contentEl = dlg.querySelector('.pwg-confirm-content');
+    contentEl.innerHTML = opts.content || '';
+    contentEl.style.display = opts.content ? '' : 'none';
+    var buttonsEl = dlg.querySelector('.pwg-confirm-buttons');
+    buttonsEl.innerHTML = '';
+    var buttons = opts.buttons || {};
+    Object.keys(buttons).forEach(function (key) {
+        var btn = buttons[key];
+        var el = document.createElement('button');
+        el.type = 'button';
+        el.textContent = btn.text || key;
+        if (btn.btnClass) el.className = btn.btnClass;
+        el.addEventListener('click', function () {
+            dlg.close();
+            if (btn.action) btn.action.call(el);
         });
-        dlg.showModal();
-    };
+        buttonsEl.appendChild(el);
+    });
+    dlg.showModal();
+}
 
-    window.pwgConfirmFollowHref = function (el, opts) {
-        opts = opts || {};
-        var href = el.getAttribute('href');
-        var title = opts.alert_title || '';
-        var confirmText = opts.alert_confirm || 'OK';
-        var cancelText = opts.alert_cancel || 'Cancel';
-        var content = opts.alert_content || '';
-        el.addEventListener('click', function (e) {
-            e.preventDefault();
-            pwgConfirm({
-                title: title,
-                content: content,
-                buttons: {
-                    confirm: {
-                        text: confirmText,
-                        btnClass: 'btn-red',
-                        action: function () { window.location.href = href; }
-                    },
-                    cancel: { text: cancelText }
-                }
-            });
+export function pwgConfirmFollowHref(el, opts) {
+    opts = opts || {};
+    var href = el.getAttribute('href');
+    var title = opts.alert_title || '';
+    var confirmText = opts.alert_confirm || 'OK';
+    var cancelText = opts.alert_cancel || 'Cancel';
+    var content = opts.alert_content || '';
+    el.addEventListener('click', function (e) {
+        e.preventDefault();
+        pwgConfirm({
+            title: title,
+            content: content,
+            buttons: {
+                confirm: {
+                    text: confirmText,
+                    btnClass: 'btn-red',
+                    action: function () { window.location.href = href; }
+                },
+                cancel: { text: cancelText }
+            }
         });
-    };
-})();
+    });
+}

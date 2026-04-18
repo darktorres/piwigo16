@@ -1,4 +1,4 @@
-window.pwgAddAlbum = function (btn, options) {
+export function pwgAddAlbum(btn, options) {
     options = options || {};
 
     var popup = document.getElementById("addAlbumForm");
@@ -114,4 +114,4 @@ window.pwgAddAlbum = function (btn, options) {
     });
 
     return btn;
-};
+}

@@ -1,6 +1,7 @@
-(function () {
-    /**
-     * pwgDatepicker — thin Flatpickr wrapper, jQuery-free.
+import flatpickr from 'flatpickr';
+
+/**
+ * pwgDatepicker — thin Flatpickr wrapper, jQuery-free.
      *
      * Usage: pwgDatepicker(nodeOrNodeList, options)
      *   options.showTimepicker — boolean, default false
@@ -15,7 +16,7 @@
      *                                       (will have its maxDate constrained)
      *   data-datepicker-unset="<id>"      — id of an element that clears the date when clicked
      */
-    window.pwgDatepicker = function (target, options) {
+export function pwgDatepicker(target, options) {
         var opts = Object.assign({ showTimepicker: false, cancelButton: false }, options || {});
 
         var els;
@@ -112,13 +113,12 @@
                 if (startDate) fp.set('minDate', startDate);
             }
         });
-    };
+}
 
-    function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 
-    function formatMachine(d, withTime) {
-        var date = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
-        if (!withTime) return date;
-        return date + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
-    }
-})();
+function formatMachine(d, withTime) {
+    var date = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    if (!withTime) return date;
+    return date + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+}

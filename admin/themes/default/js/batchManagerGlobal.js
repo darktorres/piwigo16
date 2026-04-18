@@ -1,11 +1,10 @@
+import { initModule } from './moduleInit.js';
 import tippy from 'tippy.js';
 import { sprintf } from './common.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import { pwgDoubleSlider } from './doubleSlider.js';
 import { TagsCache } from './LocalStorageCache.js';
 import GLightbox from 'glightbox';
-
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 /* ********** Filters */
 function filter_enable(filter) {
     /* show the filter*/
@@ -89,7 +88,33 @@ function selectDelDerivNone() {
     });
 }
 
-document.querySelectorAll(".removeFilter").forEach(function (el) {
+export function init(cfg) {
+    // Build batchManagerConfig from cfg for compatibility
+    const batchManagerConfig = {
+        lang: {
+            Cancel: cfg.langCancel,
+            deleteProgressMessage: cfg.deleteProgressMessage,
+            syncProgressMessage: cfg.syncProgressMessage,
+            AreYouSure: cfg.areYouSure,
+            generateMsg: cfg.generateMsg,
+            tagCreate: cfg.tagCreate
+        },
+        nbThumbsPage: cfg.nbThumbsPage,
+        nbThumbsSet: cfg.nbThumbsSet,
+        applyOnDetailsPattern: cfg.applyOnDetailsPattern,
+        allElements: cfg.allElements,
+        selectedMessagePattern: cfg.selectedMessagePattern,
+        selectedMessageNone: cfg.selectedMessageNone,
+        selectedMessageAll: cfg.selectedMessageAll,
+        associatedCategories: cfg.associatedCategories,
+        tagsServerKey: cfg.tagsServerKey,
+        categoriesServerKey: cfg.categoriesServerKey,
+        cacheServerId: cfg.cacheServerId,
+        rootUrl: cfg.rootUrl,
+        sliders: cfg.sliders
+    };
+
+    document.querySelectorAll(".removeFilter").forEach(function (el) {
     el.classList.add("icon-cancel-circled");
 });
 
@@ -133,9 +158,7 @@ document.addEventListener("mouseup", function (e) {
     }
 });
 
-/* ********** Thumbs */
-
-_docReady( function () {
+    /* ********** Thumbs */
     var cfg = batchManagerConfig;
     var lang = cfg.lang;
 
@@ -851,4 +874,6 @@ _docReady( function () {
                 }
             });
     }
-});
+}
+
+initModule(init);

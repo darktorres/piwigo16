@@ -185,6 +185,14 @@ $template->set_filenames([
     'themes' => 'themes_installed.tpl',
 ]);
 
+$page_data = [
+    'strDeleteTheme' => functions::l10n('Are you sure you want to delete this theme?'),
+    'strYesImSure' => functions::l10n('Yes, I am sure'),
+    'strIChangedMyMind' => functions::l10n('No, I have changed my mind'),
+    'strDeleteThemeMsg' => functions::l10n('Are you sure you want to delete the theme "%s"?'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['themes_installed']);
 

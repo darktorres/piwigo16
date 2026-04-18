@@ -1,13 +1,6 @@
 {include file='inc/colorbox.inc.tpl'}
 
-<script id="pwg-page-data" type="application/json">
-{
-  "strDeleteTheme": "{'Are you sure you want to delete this theme?'|translate|escape:'html'}",
-  "strYesImSure": "{'Yes, I am sure'|translate|escape:'html'}",
-  "strIChangedMyMind": "{'No, I have changed my mind'|translate|escape:'html'}",
-  "strDeleteThemeMsg": "{'Are you sure you want to delete the theme \"%s\"?'|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_themes_installed}
 <script type="module" src="admin/themes/default/js/dist/{$vite_themes_installed}"></script>

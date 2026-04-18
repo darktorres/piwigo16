@@ -28,6 +28,8 @@ let pwg_token = "";
 let selection = [];
 let first_update = true;
 let total_users = 0;
+let groupSelectize = null;
+let groupGuestSelectize = null;
 
 export function init(cfg) {
     // Assign config from cfg

@@ -111,6 +111,14 @@ $template->assign([
     'ADMIN_PAGE_TITLE' => functions::l10n('History'),
 ]);
 
+$page_data = [
+    'str_number_page_visited' => functions::l10n('Page Visited'),
+    'str_number_page_visited_with_year' => functions::l10n('Page Visited in %s'),
+    'str_avg' => functions::l10n('Average last 12 months'),
+    'str_months_tosplit' => implode('~', $lang['month']),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['stats']);
 

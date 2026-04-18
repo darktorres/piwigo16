@@ -1,11 +1,4 @@
-<script id="pwg-page-data" type="application/json">
-{
-  "str_number_page_visited": "{'Page Visited'|translate|escape:'html'}",
-  "str_number_page_visited_with_year": "{'Page Visited in %s'|translate|escape:'html'}",
-  "str_avg": "{'Average last 12 months'|translate|escape:'html'}",
-  "str_months_tosplit": "{$month_labels|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_stats}
 <script type="module" src="admin/themes/default/js/dist/{$vite_stats}"></script>

@@ -89,17 +89,16 @@
     <input type="submit" name="cachedelete" id="cachedelete" value="{'Purge thumbnails cache'|translate}"
       title="{'Delete images in GDThumb cache.'|translate}" onclick="return confirm('{'Are you sure?'|translate}');">
     <input type="button" name="cachebuild" id="cachebuild" value="{'Pre-cache thumbnails'|translate}"
-      title="{'Finds images that have not been cached and creates the cached version.'|translate}"
-      onclick="window.gdThumb_start();">
+      title="{'Finds images that have not been cached and creates the cached version.'|translate}">
   </p>
 </form>
 <fieldset id="generate_cache">
   <legend>{'Pre-cache thumbnails'|translate}</legend>
   <p class="buttons">
-    <input id="startLink" value="{'Start'|translate}" onclick="window.gdThumb_start()" type="button">
-    <input id="pauseLink" value="{'Pause'|translate}" onclick="window.gdThumb_pause()" type="button"
+    <input id="startLink" value="{'Start'|translate}" type="button">
+    <input id="pauseLink" value="{'Pause'|translate}" type="button"
       disabled="disabled">
-    <input id="stopLink" value="{'Stop'|translate}" onclick="window.gdThumb_stop()" type="button" disabled="disabled">
+    <input id="stopLink" value="{'Stop'|translate}" type="button" disabled="disabled">
   </p>
   <div>
     <ul>

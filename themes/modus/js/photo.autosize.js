@@ -1,3 +1,5 @@
+let _rvas = {};
+
 function rvas_get_scaled_size(d, available) {
     const ratio_w = d.w / available.w;
     const ratio_h = d.h / available.h;
@@ -51,8 +53,8 @@ export function rvas_choose(relaxed) {
     const available = rvas_get_available_size();
     const img = document.getElementById("theMainImage");
     let changed = true;
-    for (let i = 0; i < window.RVAS.derivatives.length; i++) {
-        const d = window.RVAS.derivatives[i];
+    for (let i = 0; i < _rvas.derivatives.length; i++) {
+        const d = _rvas.derivatives[i];
         if (
             d.w > available.w * available.zoom ||
             d.h > available.h * available.zoom
@@ -122,15 +124,8 @@ export function rvas_choose(relaxed) {
     img.addEventListener("load", img._rvasLoadHandler);
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+function setup() {
     const img = document.getElementById("theMainImage");
-    if (window.changeImgSrc && img) {
-        window.RVAS.changeImgSrcOrig = window.changeImgSrc;
-        window.changeImgSrc = function () {
-            window.RVAS.disable = 1;
-            window.RVAS.changeImgSrcOrig.apply(undefined, arguments);
-        };
-    }
 
     window.addEventListener("resize", function () {
         const w = document.body.offsetWidth;
@@ -140,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
             else de.classList.add("wide");
         }
 
-        if (window.RVAS.disable) rvas_get_available_size();
+        if (_rvas.disable) rvas_get_available_size();
         else rvas_choose();
     });
 
@@ -166,4 +161,27 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-});
+}
+
+export function init(config) {
+    _rvas = config;
+    if (document.readyState !== 'loading') {
+        setup();
+        rvas_choose(config.pending ? undefined : 1);
+    } else {
+        document.addEventListener('DOMContentLoaded', function() {
+            setup();
+            rvas_choose(config.pending ? undefined : 1);
+        });
+    }
+}
+
+export function registerChangeImgSrc(changeImgSrcFn) {
+    if (changeImgSrcFn) {
+        _rvas.changeImgSrcOrig = changeImgSrcFn;
+        window.changeImgSrc = function() {
+            _rvas.disable = 1;
+            _rvas.changeImgSrcOrig.apply(undefined, arguments);
+        };
+    }
+}

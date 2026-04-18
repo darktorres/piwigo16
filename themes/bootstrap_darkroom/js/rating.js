@@ -100,9 +100,9 @@ function updateRating(e) {
 }
 
 export function initRating() {
-    if (typeof _pwgRatingAutoQueue !== "undefined" && _pwgRatingAutoQueue.length) {
-        for (let i = 0; i < _pwgRatingAutoQueue.length; i++)
-            makeNiceRatingForm(_pwgRatingAutoQueue[i]);
+    if (document._pwgRatingQueue && Array.isArray(document._pwgRatingQueue)) {
+        for (let i = 0; i < document._pwgRatingQueue.length; i++)
+            makeNiceRatingForm(document._pwgRatingQueue[i]);
     }
     window._pwgRatingAutoQueue = {
         push: function (opts) {

@@ -1,31 +1,28 @@
+{footer_script}<script type="application/json" id="modus-rvas-config">{
+  "derivatives": [
+    {foreach from=$current.unique_derivatives item=derivative name=derivative_loop}
+      {if 'svg' === $current.path_ext}
+        {assign var='size' value=array($current.width, $current.height)}
+      {else}
+        {assign var='size' value=$derivative->get_size()}
+      {/if}
+      {"w":{$size[0]},"h":{$size[1]},"url":"{$derivative->get_url()|escape:'html'}","type":"{$derivative->get_type()}"}{if !$smarty.foreach.derivative_loop.last},{/if}
+    {/foreach}
+  ],
+  "cp": "{$COOKIE_PATH|escape:'html'}",
+  "pending": {if $RVAS_PENDING}true{else}false{/if}
+}</script>{/footer_script}
+
 {footer_script}<script type="module">
-  import { rvas_choose } from './themes/modus/js/photo.autosize.js';
-  window.RVAS = {
-      derivatives: [
-        {foreach from=$current.unique_derivatives item=derivative name=derivative_loop}
-          {if 'svg' === $current.path_ext}
-            {assign var='size' value=array($current.width, $current.height)}
-          {else}
-            {assign var='size' value=$derivative->get_size()}
-          {/if}
-          { w:{$size[0]},h:{$size[1]},url:'{$derivative->get_url()|escape:'javascript'}',type:'{$derivative->get_type()}' }{if !$smarty.foreach.derivative_loop.last},{/if}
-        {/foreach}],
-        cp: '{$COOKIE_PATH|escape:'javascript'}'
-      };
-  window.rvas_choose = rvas_choose;
+  import { init } from './themes/modus/js/photo.autosize.js';
+  const _rvas = JSON.parse(document.getElementById('modus-rvas-config').textContent);
+  init(_rvas);
 </script>{/footer_script}
 {if $RVAS_PENDING}
   <noscript><img src="{$current.selected_derivative->get_url()}" {$current.selected_derivative->get_size_htm()}
       alt="{$ALT_IMG}" id="theMainImage" usemap="#map{$current.selected_derivative->get_type()}"
       title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|strip_tags:false|replace:'"':' '}{else}{$current.TITLE_ESC} - {$ALT_IMG}{/if}"
     itemprop=contentURL></noscript>
-{footer_script}<script>
-  rvas_choose();
-</script>{/footer_script}
-{else}
-{footer_script}<script>
-  rvas_choose(1);
-</script>{/footer_script}
 {/if}
 
 {if isset($current.path_ext) and ($current.path_ext == 'mp4' or $current.path_ext == 'm4v' or $current.path_ext == 'webm' or $current.path_ext == 'ogv' or $current.path_ext == 'mov' or $current.path_ext == 'mkv')}

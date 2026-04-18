@@ -1,20 +1,23 @@
 {combine_css path=$ADMINTOOLS_PATH|cat:'template/admin_style.css'}
 {combine_css path=$ADMINTOOLS_PATH|cat:'template/fontello/css/fontello-ato.css'}
-{combine_script id='admintools.controller' load='footer' path=$ADMINTOOLS_PATH|cat:'js/admin_controller.js'}
 
-{footer_script require='admintools.controller'}<script>
-  AdminTools.urlWS = '{$ROOT_URL}ws.php?format=json&method=';
-  AdminTools.urlSelf = '{$ato.U_SELF}';
+{footer_script}<script type="application/json" id="admintools-admin-config">
+{
+  "urlWS": "{$ROOT_URL}ws.php?format=json&method=",
+  "urlSelf": "{$ato.U_SELF|escape:'html'}",
+  "multiView": {
+    "view_as": {$ato.MULTIVIEW.view_as},
+    "theme": "{$themeconf.name|escape:'html'}",
+    "lang": "{$ato.MULTIVIEW.lang|escape:'html'}"
+  },
+  "deleteCache": {if $ato.DELETE_CACHE}true{else}false{/if}
+}
+</script>{/footer_script}
 
-  AdminTools.multiView = {
-    view_as: {$ato.MULTIVIEW.view_as},
-    theme: '{$themeconf.name}',
-    lang: '{$ato.MULTIVIEW.lang}'
-  };
-
-  {if $ato.DELETE_CACHE}
-    AdminTools.deleteCache();
-  {/if}
+{footer_script}<script type="module">
+  import { AdminTools } from '{$ADMINTOOLS_PATH}js/admin_controller.js';
+  const config = JSON.parse(document.getElementById('admintools-admin-config').textContent);
+  AdminTools.setConfig(config);
   AdminTools.init();
 </script>{/footer_script}
 

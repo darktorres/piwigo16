@@ -39,7 +39,7 @@ function _setGroup(sel, disabled, opacity) {
     });
 }
 
-window.gdThumb_start = function () {
+const gdThumb_start = function () {
     allDoneDfd = _makeDeferred();
     urlDfd     = _makeDeferred();
 
@@ -64,14 +64,23 @@ window.gdThumb_start = function () {
     getUrls(0);
 };
 
-window.gdThumb_pause = function () {
+const gdThumb_pause = function () {
     loader.pause(!loader.pause());
 };
 
-window.gdThumb_stop = function () {
+const gdThumb_stop = function () {
     loader.clear();
     urlDfd.resolve();
 };
+
+// Wire button events
+document.getElementById('cachebuild')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    gdThumb_start();
+});
+document.getElementById('startLink')?.addEventListener('click', gdThumb_start);
+document.getElementById('pauseLink')?.addEventListener('click', gdThumb_pause);
+document.getElementById('stopLink')?.addEventListener('click', gdThumb_stop);
 
 function getUrls(page_token) {
     const data = new URLSearchParams({ prev_page: page_token, max_urls: 500 });

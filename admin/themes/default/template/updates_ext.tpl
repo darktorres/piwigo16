@@ -21,9 +21,9 @@
 
   <div class="autoupdate_bar">
     <div class="head-button-1 icon-ok-circled" id="update_all">{'Update All'|translate}</div>
-    <div class="head-button-2 icon-block" id="ignore_all" onClick="ignoreAll(); return false;">{'Ignore All'|translate}
+    <div class="head-button-2 icon-block" id="ignore_all" data-action="ignoreAll">{'Ignore All'|translate}
     </div>
-    <div class="head-button-2 icon-ccw" id="reset_ignore" onClick="resetIgnored(); return false;"
+    <div class="head-button-2 icon-ccw" id="reset_ignore" data-action="resetIgnored"
       {if !$SHOW_RESET}style="display:none;" {/if}>{'Reset ignored updates'|translate}</div>
   </div>
   <div class="autoupdate_bar" style="display:none;">
@@ -62,11 +62,11 @@
                   class="plugin-update-link icon-info-circled-1">{'More information'|translate}</a>
               </div>
               <div class="pluginActions">
-                <a href="#" onClick="updateExtension('{$type}', '{$extension.EXT_ID}', {$extension.REVISION_ID});"
+                <a href="#" data-action="updateExt" data-type="{$type}" data-id="{$extension.EXT_ID}" data-revision="{$extension.REVISION_ID}"
                   class="updateExtension pluginActionLevel1"> <i class="icon-ok-circled"></i> {'Install'|translate}</a>
                 <a href="{$extension.URL_DOWNLOAD}" class="pluginActionLevel2"> <i class="icon-download"></i>
                   {'Download'|translate}</a>
-                <a href="#" onClick="ignoreExtension('{$type}', '{$extension.EXT_ID}'); return false;"
+                <a href="#" data-action="ignoreExt" data-type="{$type}" data-id="{$extension.EXT_ID}"
                   class="ignoreExtension pluginActionLevel2"><i class="icon-block"></i>{'Ignore this update'|translate}</a>
               </div>
             </div>

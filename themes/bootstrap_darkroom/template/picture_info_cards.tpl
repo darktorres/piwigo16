@@ -57,8 +57,8 @@
                         {combine_script id='core.scripts' path='themes/default/js/scripts.js' load='async'}
                         {footer_script}<script type="module">
                           import { initRating, makeNiceRatingForm } from './themes/bootstrap_darkroom/js/rating.js';
-                          window._pwgRatingAutoQueue = window._pwgRatingAutoQueue || [];
-                          window._pwgRatingAutoQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
+                          document._pwgRatingQueue = document._pwgRatingQueue || [];
+                          document._pwgRatingQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
                           onSuccess: function(rating) {
                           var e = document.getElementById("updateRate");
                           if (e) e.innerHTML = "{'Update your rating'|translate|escape:'javascript'}";

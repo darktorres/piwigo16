@@ -36,7 +36,7 @@ export function init(cfg) {
   const h1 = document.querySelector('h1');
   if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>" + nbElements + "</span>");
 
-  window.del = function(node, id, uid, aid) {
+  function del(node, id, uid, aid) {
     const trEl = node.closest("tr");
     const data = { image_id: id, user_id: uid };
     if (aid) data.anonymous_id = aid;
@@ -60,7 +60,18 @@ export function init(cfg) {
       }
     );
     return false;
-  };
+  }
+
+  document.addEventListener('click', function(e) {
+    const deleteBtn = e.target.closest('[data-action="pwgDeleteRate"]');
+    if (deleteBtn) {
+      e.preventDefault();
+      const id = deleteBtn.dataset.imageId;
+      const uid = deleteBtn.dataset.userId;
+      const aid = deleteBtn.dataset.anonymousId;
+      del(deleteBtn, id, uid, aid);
+    }
+  });
 }
 
 initModule(init);

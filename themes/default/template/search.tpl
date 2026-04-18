@@ -17,7 +17,7 @@
 
   <div class="titrePage">
     <ul class="categoryActions">
-      <li><a href="{$U_HELP}" onclick="popuphelp(this.href); return false;" title="{'Help'|translate}"
+      <li><a href="{$U_HELP}" data-action="pwgPopupHelp" title="{'Help'|translate}"
           class="pwg-state-default pwg-button">
           <span class="pwg-icon pwg-icon-help"></span><span class="pwg-button-text">{'Help'|translate}</span>
         </a></li>
@@ -25,8 +25,8 @@
     <h2><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}{'Search'|translate}</h2>
   </div>
   {footer_script}<script type="module">
-    import { popuphelp } from './themes/default/js/scripts.js';
-    window.popuphelp = popuphelp;
+    import { setupPopuphelp } from './themes/default/js/scripts.js';
+    setupPopuphelp();
   </script>{/footer_script}
 
   {include file='infos_errors.tpl'}

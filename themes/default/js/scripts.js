@@ -146,3 +146,25 @@ export function pwgAddEventListener(elem, evt, fn) {
     if (window.addEventListener) elem.addEventListener(evt, fn, false);
     else elem.attachEvent("on" + evt, fn);
 }
+
+export function setupPwgOpenWindow() {
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('[data-action="pwgOpenWindow"]');
+        if (link) {
+            e.preventDefault();
+            const url = link.dataset.url;
+            const features = link.dataset.features;
+            phpWGOpenWindow(url, 'xxx', features);
+        }
+    });
+}
+
+export function setupPopuphelp() {
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('[data-action="pwgPopupHelp"]');
+        if (link) {
+            e.preventDefault();
+            popuphelp(link.href);
+        }
+    });
+}

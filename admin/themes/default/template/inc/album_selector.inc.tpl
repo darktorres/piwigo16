@@ -1,16 +1,14 @@
 {if empty($load_mode)}{$load_mode='footer'}{/if}
 {if !isset($show_root_btn)}{$show_root_btn=false}{/if}
 
-{combine_script id='albumSelector' load_mode=$load_mode path='admin/themes/default/js/album_selector.js'}
 {footer_script}<script>
-  str_no_search_in_progress = '{'No search in progress'|translate|escape:javascript}';
-  str_albums_found = '{"<b>%d</b> albums found"|translate}';
-  str_album_found = '{"<b>1</b> album found"|translate}';
-
+  window.str_no_search_in_progress = '{'No search in progress'|translate|escape:javascript}';
+  window.str_albums_found = '{"<b>%d</b> albums found"|translate}';
+  window.str_album_found = '{"<b>1</b> album found"|translate}';
   {if isset($api_method)}
-    api_method = '{$api_method}';
+    window.api_method = '{$api_method}';
   {else}
-    api_method = 'pwg.categories.getAdminList';
+    window.api_method = 'pwg.categories.getAdminList';
   {/if}
 </script>{/footer_script}
 

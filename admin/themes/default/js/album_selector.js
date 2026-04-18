@@ -22,11 +22,11 @@ export function linked_albums_open() {
     var searchResult = document.getElementById("searchResult");
     if (searchResult) searchResult.innerHTML = '';
     var limitReached = document.querySelector(".limitReached");
-    if (limitReached) limitReached.innerHTML = str_no_search_in_progress;
+    if (limitReached) limitReached.innerHTML = window.str_no_search_in_progress;
 }
 
 export function linked_albums_search(searchText) {
-    if (api_method == "pwg.categories.getList") {
+    if (window.api_method == "pwg.categories.getList") {
         api_params = {
             cat_id: 0,
             recursive: true,
@@ -47,7 +47,7 @@ export function linked_albums_search(searchText) {
     if (searching) searching.style.display = '';
 
     var params = new URLSearchParams(api_params);
-    fetch("ws.php?format=json&method=" + api_method, {
+    fetch("ws.php?format=json&method=" + window.api_method, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: params,
@@ -65,9 +65,9 @@ export function linked_albums_search(searchText) {
                     limitReached.innerHTML = str_result_limit.replace("%d", categories.length);
                 } else {
                     if (categories.length == 1) {
-                        limitReached.innerHTML = str_album_found;
+                        limitReached.innerHTML = window.str_album_found;
                     } else {
-                        limitReached.innerHTML = str_albums_found.replace("%d", categories.length);
+                        limitReached.innerHTML = window.str_albums_found.replace("%d", categories.length);
                     }
                 }
             }

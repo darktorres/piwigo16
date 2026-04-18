@@ -481,7 +481,7 @@ CREATE TABLE user_group
 CREATE TABLE user_infos
 (
     user_id                 INT UNSIGNED                                              NOT NULL,
-    nb_image_page           INT UNSIGNED                                              NOT NULL DEFAULT 15,
+    nb_image_page           INT UNSIGNED                                              NOT NULL DEFAULT 80,
     status                  ENUM ('webmaster', 'admin', 'normal', 'generic', 'guest') NOT NULL DEFAULT 'guest',
     language                VARCHAR(50)                                               NOT NULL,
     expand                  ENUM ('true', 'false')                                    NOT NULL DEFAULT 'false',

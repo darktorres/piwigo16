@@ -1,64 +1,15 @@
 {include file='inc/colorbox.inc.tpl'}
 
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
-{footer_script require='pwgConfirm'}<script>
-  const title_msg = '{'Are you sure you want to delete this theme?'|translate|escape:'javascript'}';
-  const confirm_msg = '{"Yes, I am sure"|translate}';
-  const cancel_msg = "{"No, I have changed my mind"|translate}";
-  document.querySelectorAll(".delete-theme-button").forEach(function(el) {
-    let theme_name = el.closest(".themeBox")?.querySelector(".themeName")?.getAttribute("title") ?? '';
-    let title = '{'Are you sure you want to delete the theme "%s"?'|translate|escape:'javascript'}';
-    pwgConfirmFollowHref(el, {
-      alert_title: title.replace("%s", theme_name),
-      alert_confirm: confirm_msg,
-      alert_cancel: cancel_msg
-    });
-  });
-</script>{/footer_script}
-
 {footer_script}<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    GLightbox({ selector: 'a.preview-box' });
-
-    document.addEventListener('mouseup', function(e) {
-      e.stopPropagation();
-      if (!e.target.classList.contains('showInfo')) {
-        document.querySelectorAll('.showInfo-dropdown').forEach(function(el) { el.style.display = 'none'; });
-      }
-    });
-  });
-
-  window.addEventListener('load', function() {
-    document.querySelectorAll('.themeBox').forEach(function(box) {
-      var showInfoBtn = box.querySelector('.showInfo');
-      if (showInfoBtn) {
-        showInfoBtn.addEventListener('click', function() {
-          // Hide all dropdowns, then show this box's dropdown
-          document.querySelectorAll('.showInfo-dropdown').forEach(function(el) { el.style.display = 'none'; });
-          var dropdown = box.querySelector('.showInfo-dropdown');
-          if (dropdown) dropdown.style.display = '';
-        });
-      }
-
-      var screenImage = box.querySelector(".preview-box img");
-      var previewBox = box.querySelector(".preview-box");
-      if (screenImage && previewBox) {
-        let imageW = screenImage.clientWidth;
-        let imageH = screenImage.clientHeight;
-        let size = previewBox.clientWidth;
-
-        if (imageW > imageH) {
-          screenImage.style.height = size + 'px';
-          screenImage.style.width = (imageW * size / imageH) + 'px';
-        } else {
-          screenImage.style.width = size + 'px';
-          screenImage.style.height = (imageH * size / imageW) + 'px';
-        }
-      }
-    });
-  });
+  window.str_delete_theme = '{'Are you sure you want to delete this theme?'|translate|escape:'javascript'}';
+  window.str_yes_im_sure = '{"Yes, I am sure"|translate}';
+  window.str_i_changed_my_mind = '{"No, I have changed my mind"|translate|escape:'javascript'}';
+  window.str_delete_theme_msg = '{'Are you sure you want to delete the theme "%s"?'|translate|escape:'javascript'}';
 </script>{/footer_script}
+
+{if $vite_themes_installed}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_themes_installed}"></script>
+{/if}
 
 <div id="themesContent">
 

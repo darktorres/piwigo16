@@ -37,6 +37,7 @@ const adminModules = [
   'picture_coi',
   'picture_modify',
   'tags',
+  'themes_installed',
   'user_list',
   'albums',
   'batchManagerGlobal',

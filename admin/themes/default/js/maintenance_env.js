@@ -1,4 +1,8 @@
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+// Get config from JSON data block
+const configEl = document.getElementById('pwg-page-data');
+const cfg = configEl ? JSON.parse(configEl.textContent) : {};
+
+const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 _docReady( function () {
     fetch("ws.php?format=json&method=pwg.plugins.getList")
         .then(function (response) { return response.json(); })
@@ -24,7 +28,7 @@ _docReady( function () {
                 if (pluginList) {
                     var spinner = pluginList.querySelector("i");
                     if (spinner) spinner.style.display = 'none';
-                    pluginList.insertAdjacentHTML("beforeend", "<p>" + no_active_plugin + "</p>");
+                    pluginList.insertAdjacentHTML("beforeend", "<p>" + (cfg.no_active_plugin || 'No active plugins') + "</p>");
                 }
             }
             document.querySelectorAll(".badge-number").forEach(function (el) {
@@ -37,7 +41,7 @@ _docReady( function () {
             });
             var pluginList = document.querySelector("#pluginList ul");
             if (pluginList) {
-                pluginList.insertAdjacentHTML("beforeend", "<p>" + error_occurred + "</p>");
+                pluginList.insertAdjacentHTML("beforeend", "<p>" + (cfg.error_occurred || 'An error occurred') + "</p>");
                 var spinner = pluginList.querySelector("i");
                 if (spinner) spinner.style.display = 'none';
             }

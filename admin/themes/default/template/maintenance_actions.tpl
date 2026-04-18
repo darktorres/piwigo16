@@ -142,7 +142,9 @@
   });
 </script>{/footer_script}
 
-<script type="module" src="/admin/themes/default/js/dist/maintenance.CWnWXXMa.js"></script>
+{if $vite_maintenance}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_maintenance}"></script>
+{/if}
 
 {if $isWebmaster == 1}
 

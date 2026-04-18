@@ -15,6 +15,7 @@ const adminModules = [
   'datepicker',
   'doubleSlider',
   'maintenance',
+  'maintenance_env',
 ];
 
 const input = {};

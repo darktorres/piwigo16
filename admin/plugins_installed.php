@@ -209,6 +209,40 @@ $template->assign(
     ]
 );
 
+$page_data = [
+    'pwgToken' => $pwg_token,
+    'incompatibleMsg' => functions::l10n('WARNING! This plugin does not seem to be compatible with this version of Piwigo.'),
+    'activateMsg' => "\n" . functions::l10n('Do you want to activate anyway?'),
+    'deactivateAllMsg' => functions::l10n('Deactivate all'),
+    'nbPlugin' => [
+        'all' => $count_types_plugins['active'] + $count_types_plugins['inactive'] + $count_types_plugins['missing'] + $count_types_plugins['merged'],
+        'active' => $count_types_plugins['active'],
+        'inactive' => $count_types_plugins['inactive'],
+        'other' => $count_types_plugins['missing'] + $count_types_plugins['merged'],
+    ],
+    'areYouSureMsg' => functions::l10n('Are you sure?'),
+    'confirmMsg' => functions::l10n('Yes, I am sure'),
+    'cancelMsg' => functions::l10n('No, I have changed my mind'),
+    'deletePluginMsg' => functions::l10n('Are you sure you want to delete the plugin "%s"?'),
+    'deletedPluginMsg' => functions::l10n('Plugin "%s" deleted!'),
+    'restorePluginMsg' => functions::l10n('Are you sure you want to restore the plugin "%s"?'),
+    'uninstallPluginMsg' => functions::l10n('Are you sure you want to uninstall the plugin "%s"?'),
+    'restoreTipMsg' => functions::l10n('Restore default configuration. You will lose your plugin settings!'),
+    'pluginAddedStr' => functions::l10n('Activated'),
+    'pluginDeactivatedStr' => functions::l10n('Deactivated'),
+    'pluginRestoredStr' => functions::l10n('Restored'),
+    'pluginActionError' => functions::l10n('an error happened'),
+    'notWebmaster' => functions::l10n('Webmaster status required'),
+    'nothingFound' => functions::l10n('No plugins found'),
+    'xPluginsFound' => functions::l10n('%s plugins found'),
+    'pluginFound' => functions::l10n('%s plugin found'),
+    'isWebmaster' => (functions_user::is_webmaster()) ? 1 : 0,
+    'viewSelector' => $show_details ? 'detailed' : functions_user::userprefs_get_param('plugin-manager-view', 'classic'),
+    'strRestoreDef' => functions::l10n('While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset'),
+    'showDetails' => (bool) $show_details,
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['plugins_installated', 'pwgConfirm']);
 

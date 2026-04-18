@@ -113,6 +113,35 @@ while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
 
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Groups') . ' <span class="badge-number">' . $group_counter . '</span>');
 
+$cache_keys = functions_admin::get_admin_client_cache_keys(['groups', 'users']);
+$page_data = [
+    'pwgToken' => functions::get_pwg_token(),
+    'strMemberDefault' => functions::l10n('member'),
+    'strMembersDefault' => functions::l10n('members'),
+    'strGroupCreated' => functions::l10n('Group added'),
+    'strRenamingDone' => functions::l10n('Group renamed'),
+    'strNameTaken' => functions::l10n('Name is already taken'),
+    'strNameNotEmpty' => functions::l10n('Name field must not be empty'),
+    'strGroupDeleted' => functions::l10n('Group "%s" successfully deleted'),
+    'strGroupsDeleted' => functions::l10n('Groups {%s} successfully deleted'),
+    'strSetDefault' => functions::l10n('Set as group for new users'),
+    'strUnsetDefault' => functions::l10n('Unset as group for new users'),
+    'strDelete' => functions::l10n('Are you sure you want to delete group "%s"?'),
+    'strYesDeleteConfirmation' => functions::l10n('Yes, delete'),
+    'strNoDeleteConfirmation' => functions::l10n('No, I have changed my mind'),
+    'strUserAssociated' => functions::l10n('User associated'),
+    'strUserDissociate' => functions::l10n('Dissociate user from this group'),
+    'strUserDissociated' => functions::l10n('User "%s" dissociated from this group'),
+    'strUserList' => functions::l10n('Manage the members'),
+    'strMergedInto' => functions::l10n('Group(s) {%s1} successfully merged into "%s2"'),
+    'strCopy' => functions::l10n(' (copy)'),
+    'strOtherCopy' => functions::l10n(' (copy %s)'),
+    'serverKey' => $cache_keys['users'],
+    'serverId' => $cache_keys['_hash'],
+    'rootUrl' => functions_url::get_root_url(),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+

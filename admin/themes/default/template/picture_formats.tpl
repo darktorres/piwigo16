@@ -1,16 +1,17 @@
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
+<script id="pwg-page-data" type="application/json">
+{
+  "pwg_token": "{$PWG_TOKEN|escape:'html'}",
+  "str_confirm_delete_format": "{'Delete %s format ?'|translate|escape:'html'}",
+  "str_confirm_msg": "{"Yes, I am sure"|translate|escape:'html'}",
+  "str_cancel_msg": "{"No, I have changed my mind"|translate|escape:'html'}"
+}
+</script>
+
 {if $vite_picture_formats}
 <script type="module" src="admin/themes/default/js/dist/{$vite_picture_formats}"></script>
 {/if}
-
-<script>
-    const nbFormats = {count($FORMATS)}
-    const pwg_token = "{$PWG_TOKEN}"
-    const str_confirm_delete_format = "{'Delete %s format ?'|translate}"
-    const str_confirm_msg = '{"Yes, I am sure"|translate}';
-    const str_cancel_msg = "{"No, I have changed my mind"|translate}";
-</script>
 
 <div class="formats-header">
     <a class="{if (count($FORMATS) != 0)}head-button-1{else}head-button-2{/if} icon-plus-circled"

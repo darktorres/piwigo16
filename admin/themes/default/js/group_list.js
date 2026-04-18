@@ -1,12 +1,12 @@
+import { initModule } from './moduleInit.js';
 import { TemporaryState } from './common.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import { UsersCache } from './LocalStorageCache.js';
 import TomSelect from 'tom-select';
 
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 const DELAY_FEEDBACK = 3000;
 
-// Import globals from window - these get assigned when initialized
+// Module-level config - initialized by init()
 let pwg_token = '';
 let str_member_default = '';
 let str_members_default = '';
@@ -32,39 +32,48 @@ let serverKey = '';
 let serverId = '';
 let rootUrl = '';
 
-_docReady(function() {
-  // Assign globals from window when DOM is ready
-  pwg_token = window.pwg_token || '';
-  str_member_default = window.str_member_default || '';
-  str_members_default = window.str_members_default || '';
-  str_group_created = window.str_group_created || '';
-  str_renaming_done = window.str_renaming_done || '';
-  str_name_taken = window.str_name_taken || '';
-  str_name_not_empty = window.str_name_not_empty || '';
-  str_group_deleted = window.str_group_deleted || '';
-  str_groups_deleted = window.str_groups_deleted || '';
-  str_set_default = window.str_set_default || '';
-  str_unset_default = window.str_unset_default || '';
-  str_delete = window.str_delete || '';
-  str_yes_delete_confirmation = window.str_yes_delete_confirmation || '';
-  str_no_delete_confirmation = window.str_no_delete_confirmation || '';
-  str_user_associated = window.str_user_associated || '';
-  str_user_dissociate = window.str_user_dissociate || '';
-  str_user_dissociated = window.str_user_dissociated || '';
-  str_user_list = window.str_user_list || '';
-  str_merged_into = window.str_merged_into || '';
-  str_copy = window.str_copy || '';
-  str_other_copy = window.str_other_copy || '';
-  serverKey = window.serverKey || '';
-  serverId = window.serverId || '';
-  rootUrl = window.rootUrl || '';
-});
+export function init(cfg) {
+    pwg_token = cfg.pwgToken;
+    str_member_default = cfg.strMemberDefault;
+    str_members_default = cfg.strMembersDefault;
+    str_group_created = cfg.strGroupCreated;
+    str_renaming_done = cfg.strRenamingDone;
+    str_name_taken = cfg.strNameTaken;
+    str_name_not_empty = cfg.strNameNotEmpty;
+    str_group_deleted = cfg.strGroupDeleted;
+    str_groups_deleted = cfg.strGroupsDeleted;
+    str_set_default = cfg.strSetDefault;
+    str_unset_default = cfg.strUnsetDefault;
+    str_delete = cfg.strDelete;
+    str_yes_delete_confirmation = cfg.strYesDeleteConfirmation;
+    str_no_delete_confirmation = cfg.strNoDeleteConfirmation;
+    str_user_associated = cfg.strUserAssociated;
+    str_user_dissociate = cfg.strUserDissociate;
+    str_user_dissociated = cfg.strUserDissociated;
+    str_user_list = cfg.strUserList;
+    str_merged_into = cfg.strMergedInto;
+    str_copy = cfg.strCopy;
+    str_other_copy = cfg.strOtherCopy;
+    serverKey = cfg.serverKey;
+    serverId = cfg.serverId;
+    rootUrl = cfg.rootUrl;
 
-/*-------
-Group Popin
--------*/
+    // Setup validation messages for user association/dissociation
+    let dissociateUserInfo = document.createElement("div");
+    dissociateUserInfo.className = "ValidationUserDissociated";
+    dissociateUserInfo.innerHTML = "<p class='icon-ok'></p>";
+    document.querySelector(".group-name-block")?.appendChild(dissociateUserInfo);
+    dissociateUserInfo.style.display = 'none';
 
-document.querySelector(".group_details_popup_trigger")?.addEventListener("click", function () {
+    var associateUserInfo = document.createElement("div");
+    associateUserInfo.className = "ValidationUserAssociated";
+    associateUserInfo.innerHTML = "<p class='icon-ok'></p>";
+
+    /*-------
+    Group Popin
+    -------*/
+
+    document.querySelector(".group_details_popup_trigger")?.addEventListener("click", function () {
     let el = document.querySelector(".Group_details-popup-container");
     if (el) el.style.display = '';
 });
@@ -150,11 +159,10 @@ var hideAddGroupForm = function () {
     isToggle = true;
 };
 
-/*-------
- Add Group Submit
- -------*/
+    /*-------
+    Add Group Submit
+    -------*/
 
-_docReady( function () {
     document.querySelector("#addGroupForm form")?.addEventListener("submit", function (e) {
         e.preventDefault();
         let name = document.querySelector("#addGroupForm input[type=text]").value;
@@ -217,9 +225,8 @@ _docReady( function () {
             }
         }
     });
-});
 
-var createGroup = function (group) {
+    var createGroup = function (group) {
     //Setup the group
     let template = document.getElementById("group-template");
     let newgroup = template.cloneNode(true);
@@ -268,16 +275,14 @@ var createGroup = function (group) {
     return newgroup;
 };
 
-/*-------
- SETUP JS ON GROUP BOX
- -------*/
-_docReady( function () {
+    /*-------
+    SETUP JS ON GROUP BOX
+    -------*/
     document.querySelectorAll(".GroupContainer").forEach((el) => {
         if (el.id != "group-template") setupGroupBox(el);
     });
-});
 
-var setupGroupBox = function (groupBox) {
+    var setupGroupBox = function (groupBox) {
     var id = groupBox.getAttribute("data-id");
 
     /* Change background color of group block if checked in selection mode */
@@ -661,7 +666,6 @@ var duplicateAction = function (id) {
  disables group actions in selection mode
  -------*/
 
-_docReady( function () {
     let toggleBtn = document.getElementById("toggleSelectionMode");
     if (toggleBtn) {
         toggleBtn.checked = false;
@@ -680,12 +684,11 @@ _docReady( function () {
             }
         });
     }
-});
 
-/*-------
- Update Selection Panel
- -------*/
-var state = "NoSelection";
+    /*-------
+    Update Selection Panel
+    -------*/
+    var state = "NoSelection";
 
 var updateSelectionPanel = function (changedState = "") {
     let numSelect = document.querySelectorAll(".DeleteGroupList div").length;
@@ -928,18 +931,7 @@ var usersInGroup = [];
 // Max offset of the user container (322 = 6 lines)
 var maxOffsetUserCont = 322;
 
-let dissociateUserInfo = document.createElement("div");
-dissociateUserInfo.className = "ValidationUserDissociated";
-dissociateUserInfo.innerHTML = "<p class='icon-ok'></p>";
-document.querySelector(".group-name-block")?.appendChild(dissociateUserInfo);
-dissociateUserInfo.style.display = 'none';
-
-var associateUserInfo = document.createElement("div");
-associateUserInfo.className = "ValidationUserAssociated";
-associateUserInfo.innerHTML = "<p class='icon-ok'></p>";
-
-// Setup the user research bar
-_docReady( function () {
+    // Setup the user research bar
     // initialize the TomSelect control
     let selectEl = document.querySelector(".AddUserBlock select");
     if (selectEl) {
@@ -984,10 +976,9 @@ _docReady( function () {
             });
         };
     }
-});
 
-// Display the user manager for a specific group
-var openUserManager = function (grp_id) {
+    // Display the user manager for a specific group
+    var openUserManager = function (grp_id) {
     let loadState = new TemporaryState();
     let trigger = document.querySelector("#group-" + grp_id + " #UserListTrigger");
     loadState.removeClass(trigger, "icon-user-1");
@@ -1239,13 +1230,12 @@ document.querySelector(".input-user-name")?.addEventListener("input", function (
     }
 });
 
-_docReady(function() {
-  // temporary fix for #1283 (begin) : force user local storage cache on page load.
-  const usersCache = new UsersCache({
-    serverKey: serverKey,
-    serverId: serverId,
-    rootUrl: rootUrl
-  });
+    // temporary fix for #1283 (begin) : force user local storage cache on page load.
+    usersCache = new UsersCache({
+      serverKey: serverKey,
+      serverId: serverId,
+      rootUrl: rootUrl
+    });
 
   usersCache.selectize(document.querySelectorAll('select.UserSearch'));
   // temporary fix for #1283 (end)
@@ -1269,4 +1259,6 @@ _docReady(function() {
       }
     }
   });
-});
+}
+
+initModule(init);

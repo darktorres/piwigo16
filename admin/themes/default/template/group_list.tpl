@@ -1,29 +1,31 @@
-{footer_script}<script>
-  window.pwg_token = "{$PWG_TOKEN}";
-  window.str_member_default = "{'member'|translate|escape:'javascript'}";
-  window.str_members_default = "{'members'|translate|escape:'javascript'}";
-  window.str_group_created = "{'Group added'|translate|escape:'javascript'}";
-  window.str_renaming_done = "{'Group renamed'|translate|escape:'javascript'}";
-  window.str_name_taken = "{'Name is already taken'|translate|escape:'javascript'}";
-  window.str_name_not_empty = "{'Name field must not be empty'|translate|escape:'javascript'}";
-  window.str_group_deleted = '{'Group "%s" successfully deleted'|translate|escape:'javascript'}';
-  window.str_groups_deleted = '{'Groups \{%s\} successfully deleted'|translate}';
-  window.str_set_default = "{'Set as group for new users'|translate|escape:'javascript'}";
-  window.str_unset_default = "{'Unset as group for new users'|translate|escape:'javascript'}";
-  window.str_delete = '{'Are you sure you want to delete group "%s"?'|translate|escape:'javascript'}';
-  window.str_yes_delete_confirmation = "{'Yes, delete'|translate|escape:'javascript'}";
-  window.str_no_delete_confirmation = "{"No, I have changed my mind"|translate|escape:'javascript'}";
-  window.str_user_associated = "{"User associated"|translate|escape:'javascript'}";
-  window.str_user_dissociate = "{'Dissociate user from this group'|translate|escape:'javascript'}";
-  window.str_user_dissociated = '{'User "%s" dissociated from this group'|translate|escape:'javascript'}';
-  window.str_user_list = "{'Manage the members'|translate|escape:'javascript'}";
-  window.str_merged_into = '{'Group(s) \{%s1\} successfully merged into "%s2"'|translate}';
-  window.str_copy = '{' (copy)'|translate|escape:'javascript'}';
-  window.str_other_copy = '{' (copy %s)'|translate|escape:'javascript'}';
-  window.serverKey = '{$CACHE_KEYS.users}';
-  window.serverId = '{$CACHE_KEYS._hash}';
-  window.rootUrl = '{$ROOT_URL}';
-</script>{/footer_script}
+<script id="pwg-page-data" type="application/json">
+{
+  "pwgToken": "{$PWG_TOKEN|escape:'html'}",
+  "strMemberDefault": "{'member'|translate|escape:'html'}",
+  "strMembersDefault": "{'members'|translate|escape:'html'}",
+  "strGroupCreated": "{'Group added'|translate|escape:'html'}",
+  "strRenamingDone": "{'Group renamed'|translate|escape:'html'}",
+  "strNameTaken": "{'Name is already taken'|translate|escape:'html'}",
+  "strNameNotEmpty": "{'Name field must not be empty'|translate|escape:'html'}",
+  "strGroupDeleted": "{'Group \"%s\" successfully deleted'|translate|escape:'html'}",
+  "strGroupsDeleted": "{'Groups {%s} successfully deleted'|translate|escape:'html'}",
+  "strSetDefault": "{'Set as group for new users'|translate|escape:'html'}",
+  "strUnsetDefault": "{'Unset as group for new users'|translate|escape:'html'}",
+  "strDelete": "{'Are you sure you want to delete group \"%s\"?'|translate|escape:'html'}",
+  "strYesDeleteConfirmation": "{'Yes, delete'|translate|escape:'html'}",
+  "strNoDeleteConfirmation": "{'No, I have changed my mind'|translate|escape:'html'}",
+  "strUserAssociated": "{'User associated'|translate|escape:'html'}",
+  "strUserDissociate": "{'Dissociate user from this group'|translate|escape:'html'}",
+  "strUserDissociated": "{'User \"%s\" dissociated from this group'|translate|escape:'html'}",
+  "strUserList": "{'Manage the members'|translate|escape:'html'}",
+  "strMergedInto": "{'Group(s) {%s1} successfully merged into \"%s2\"'|translate|escape:'html'}",
+  "strCopy": "{' (copy)'|translate|escape:'html'}",
+  "strOtherCopy": "{' (copy %s)'|translate|escape:'html'}",
+  "serverKey": "{$CACHE_KEYS.users|escape:'html'}",
+  "serverId": "{$CACHE_KEYS._hash|escape:'html'}",
+  "rootUrl": "{$ROOT_URL|escape:'html'}"
+}
+</script>
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}

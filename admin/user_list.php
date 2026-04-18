@@ -190,15 +190,67 @@ $template->assign('groups_arr_id', implode(',', $groups_arr_id));
 $template->assign('groups_arr_name', implode(',', $groups_arr_name));
 $template->assign('guest_id', $conf->guest_id);
 
-$template->assign('view_selector', functions_user::userprefs_get_param('user-manager-view', 'line'));
+$view_selector = functions_user::userprefs_get_param('user-manager-view', 'line');
+$template->assign('view_selector', $view_selector);
 
-if (functions_user::userprefs_get_param('user-manager-view', 'line') == 'line') {
+if ($view_selector == 'line') {
     //Show 5 users by default
-    $template->assign('pagination', functions_user::userprefs_get_param('user-manager-pagination', 5));
+    $pagination = functions_user::userprefs_get_param('user-manager-pagination', 5);
+    $template->assign('pagination', $pagination);
 } else {
     //Show 10 users by default
-    $template->assign('pagination', functions_user::userprefs_get_param('user-manager-pagination', 10));
+    $pagination = functions_user::userprefs_get_param('user-manager-pagination', 10);
+    $template->assign('pagination', $pagination);
 }
+
+$status_to_str = [];
+foreach ($conf->sql_backend::get_enums('user_infos', 'status') as $status) {
+    $status_to_str[$status] = functions::l10n('user_status_' . $status);
+}
+
+$months = [];
+for ($i = 1; $i <= 12; $i++) {
+    $months[] = functions::l10n(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][$i - 1]);
+}
+
+$page_data = [
+    'titleMsg' => functions::l10n('Are you sure you want to delete the user "%s"?'),
+    'areYouSureMsg' => functions::l10n('Are you sure?'),
+    'confirmMsg' => functions::l10n('Yes, I am sure'),
+    'cancelMsg' => functions::l10n('No, I have changed my mind'),
+    'strAndOthersTags' => functions::l10n('and %s others'),
+    'missingConfirm' => functions::l10n('You need to confirm deletion'),
+    'missingUsername' => functions::l10n('Please, enter a login'),
+    'fieldNotEmpty' => functions::l10n('Name field must not be empty'),
+    'registeredStr' => functions::l10n('Registered'),
+    'lastVisitStr' => functions::l10n('Last visit'),
+    'datesInfos' => functions::l10n('between %s and %s'),
+    'hideStr' => functions::l10n('Hide'),
+    'showStr' => functions::l10n('Show'),
+    'userAddedStr' => functions::l10n('User %s added'),
+    'strPopinUpdateBtn' => functions::l10n('Update'),
+    'filteredUsers' => functions::l10n('<b>%d</b> filtered users'),
+    'filteredUser' => functions::l10n('<b>%d</b> filtered user'),
+    'historyBaseUrl' => $U_HISTORY ?? '',
+    'statusToStr' => $status_to_str,
+    'viewSelector' => $view_selector,
+    'pagination' => $pagination,
+    'months' => $months,
+    'connectedUser' => $user['id'],
+    'connectedUserStatus' => $user['status'],
+    'ownerId' => $conf->webmaster_id,
+    'groupsArrName' => !empty($groups_arr_name) ? array_map(fn($g) => trim($g, '"'), $groups_arr_name) : [],
+    'groupsArrId' => $groups_arr_id,
+    'guestId' => $conf->guest_id,
+    'nbDays' => functions::l10n('%d days'),
+    'nbPhotos' => functions::l10n('%d photos'),
+    'nbPhotosPerPage' => functions::l10n('%d photos per page'),
+    'pwgToken' => functions::get_pwg_token(),
+    'hasGroup' => $_GET['group'] ?? null,
+    'registerDatesStr' => implode(',', $register_dates),
+];
+
+$template->assign('page_data_json', json_encode($page_data));
 
 // +-----------------------------------------------------------------------+
 // | html code display                                                     |

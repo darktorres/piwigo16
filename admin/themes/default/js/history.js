@@ -1,11 +1,67 @@
+import { initModule } from './moduleInit.js';
 import { pwgDatepicker } from './datepicker.js';
 import { sprintf } from './common.js';
 import tippy from 'tippy.js';
 
 var GeoIp = window.GeoIp || { get: function() {} };
 
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
-_docReady( function () {
+// Module-level mutable config - initialized by init()
+let filter_user_name, API_METHOD;
+let today, current_param;
+let str_dwld, str_most_visited, str_best_rated, str_list, str_favorites;
+let str_recent_cats, str_recent_pics, str_memories, str_no_longer_exist_photo;
+let str_tags, unit_MB, str_guest, str_contact_form, str_edit_img;
+let str_search_details, str_and_more;
+let guest_id;
+
+export function init(cfg) {
+    // Compute today's date
+    const dateObj = new Date();
+    let month = dateObj.getUTCMonth() + 1;
+    let day = dateObj.getUTCDate();
+    const year = dateObj.getUTCFullYear();
+    if (month < 10) month = "0" + month;
+    if (day < 10) day = "0" + day;
+    today = year + "-" + month + "-" + day;
+
+    // Initialize config from cfg
+    filter_user_name = cfg.userName;
+    API_METHOD = cfg.apiMethod;
+    str_dwld = cfg.strDwld;
+    str_most_visited = cfg.strMostVisited;
+    str_best_rated = cfg.strBestRated;
+    str_list = cfg.strList;
+    str_favorites = cfg.strFavorites;
+    str_recent_cats = cfg.strRecentCats;
+    str_recent_pics = cfg.strRecentPics;
+    str_memories = cfg.strMemories;
+    str_no_longer_exist_photo = cfg.strNoLongerExistPhoto;
+    str_tags = cfg.strTags;
+    unit_MB = cfg.unitMb;
+    str_guest = cfg.strGuest;
+    str_contact_form = cfg.strContactForm;
+    str_edit_img = cfg.strEditImg;
+    str_search_details = cfg.strSearchDetails;
+    str_and_more = cfg.strAndMore;
+    guest_id = cfg.guestId;
+
+    // Initialize current_param
+    current_param = {
+        start: "",
+        end: today,
+        types: {
+            0: "none",
+            1: "picture",
+            2: "high",
+            3: "other"
+        },
+        user_id: cfg.userId,
+        image_id: cfg.imageId,
+        filename: "",
+        ip: cfg.ip,
+        display_thumbnail: "display_thumbnail_classic",
+        pageNumber: 0
+    };
     pwgDatepicker(document.querySelectorAll('[data-datepicker]'));
 
     activateLineOptions();
@@ -105,7 +161,6 @@ _docReady( function () {
     document.querySelector(".refresh-results").addEventListener("click", function () {
         fillHistoryResult(current_param);
     });
-});
 
 function activateLineOptions() {
     document.querySelectorAll(".search-line .img-option").forEach(function (el) {
@@ -807,7 +862,7 @@ function checkFilters() {
     }
 }
 
-_docReady(function() {
+    // GeoIP loading for IP addresses
     document.querySelectorAll(".IP").forEach(function(ipEl) {
       ipEl.addEventListener("mouseenter", function() {
         var that = ipEl;
@@ -850,4 +905,6 @@ _docReady(function() {
       append += '?sensor=false&size=300x220&zoom=6&markers=size:tiny%7C' + lat + ',' + lon + '">';
       if (parent) parent.insertAdjacentHTML('beforeend', append);
     });
-});
+}
+
+initModule(init);

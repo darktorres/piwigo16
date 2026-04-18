@@ -1,63 +1,39 @@
+<script id="pwg-page-data" type="application/json">
+{
+  "userName": "{$USER_NAME|escape:'html'}",
+  "userId": {$USER_ID},
+  "imageId": {if isset($IMAGE_ID)}"{$IMAGE_ID|escape:'html'}"{else}""{/if},
+  "ip": {if isset($IP)}"{$IP|escape:'html'}"{else}""{/if},
+  "apiMethod": "{$API_METHOD|escape:'html'}",
+  "guestId": {$guest_id},
+  "strDwld": "{'Downloaded'|translate|escape:'html'}",
+  "strMostVisited": "{'Most visited'|translate|escape:'html'}",
+  "strBestRated": "{'Best rated'|translate|escape:'html'}",
+  "strList": "{'Random photo'|translate|escape:'html'}",
+  "strFavorites": "{'Your favorites'|translate|escape:'html'}",
+  "strRecentCats": "{'Recent albums'|translate|escape:'html'}",
+  "strRecentPics": "{'Recent photos'|translate|escape:'html'}",
+  "strMemories": "{'Memories'|translate|escape:'html'}",
+  "strNoLongerExistPhoto": "{'This photo no longer exists'|translate|escape:'html'}",
+  "strTags": "{'Tags'|translate|escape:'html'}",
+  "unitMb": "{"%s MB"|translate|escape:'html'}",
+  "strGuest": "{'guest'|translate|escape:'html'}",
+  "strContactForm": "{'Contact Form'|translate|escape:'html'}",
+  "strEditImg": "{'Edit photo'|translate|escape:'html'}",
+  "strSearchDetails": {
+    "allwords": "{'Search for words'|translate|escape:'html'}",
+    "date_posted": "{'Post date'|translate|escape:'html'}",
+    "tags": "{'Tags'|translate|escape:'html'}",
+    "cat": "{'Album'|translate|escape:'html'}",
+    "author": "{'Author'|translate|escape:'html'}",
+    "added_by": "{'Added by'|translate|escape:'html'}",
+    "filetypes": "{'File type'|translate|escape:'html'}"
+  },
+  "strAndMore": "{'and %d more'|translate|escape:'html'}"
+}
+</script>
+
 {include file='inc/datepicker.inc.tpl'}
-
-{footer_script}<script>
-  var dateObj = new Date();
-  var month = dateObj.getUTCMonth() + 1; //months from 1-12
-  var day = dateObj.getUTCDate();
-  var year = dateObj.getUTCFullYear();
-
-  var filter_user_name = "{$USER_NAME}";
-
-  if (month < 10) month = "0" + month;
-  if (day < 10) day = "0" + day;
-
-  today = year + "-" + month + "-" + day;
-  var current_param = {
-    start: "",
-    end: today,
-    types: {
-      0: "none",
-      1: "picture",
-      2: "high",
-      3: "other"
-    },
-    user_id: {$USER_ID},
-    image_id: {if isset($IMAGE_ID)}"{$IMAGE_ID}"{else}""{/if},
-    filename: "",
-    ip: {if isset($IP)}"{$IP}"{else}""{/if},
-    display_thumbnail: "display_thumbnail_classic",
-    pageNumber: 0 {* fetch lines from line 0 to line 100*}
-  }
-
-  const API_METHOD = "{$API_METHOD}";
-  const str_dwld = "{'Downloaded'|translate}";
-  const str_most_visited = "{'Most visited'|translate}";
-  const str_best_rated = "{'Best rated'|translate}";
-  const str_list = "{'Random photo'|translate}";
-  const str_favorites = "{'Your favorites'|translate}";
-  const str_recent_cats = "{'Recent albums'|translate}";
-  const str_recent_pics = "{'Recent photos'|translate}";
-  const str_memories = "{'Memories'|translate}";
-  const str_no_longer_exist_photo = "{'This photo no longer exists'|translate}";
-  const str_tags = "{'Tags'|translate}";
-  const unit_MB = "{"%s MB"|translate}";
-  const str_guest = '{'guest'|translate}';
-  const str_contact_form = '{'Contact Form'|translate}';
-  const str_edit_img = '{'Edit photo'|translate}';
-
-  const str_search_details = {
-    "allwords": "{'Search for words'|translate}",
-    "date_posted": "{'Post date'|translate}",
-    "tags": str_tags,
-    "cat": "{'Album'|translate}",
-    "author": "{'Author'|translate}",
-    "added_by": "{'Added by'|translate}",
-    "filetypes": "{'File type'|translate}",
-  };
-  const str_and_more = "{'and %d more'|translate}"
-
-  const guest_id = {$guest_id};
-</script>{/footer_script}
 
 {if $vite_history}
 <script type="module" src="admin/themes/default/js/dist/{$vite_history}"></script>

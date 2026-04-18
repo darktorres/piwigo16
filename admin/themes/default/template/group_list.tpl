@@ -1,56 +1,28 @@
 {footer_script}<script>
-  var pwg_token = "{$PWG_TOKEN}";
-  var str_member_default = "{'member'|translate|escape:'javascript'}"
-  var str_members_default = "{'members'|translate|escape:'javascript'}"
-  var str_group_created = "{'Group added'|translate|escape:'javascript'}"
-  var str_renaming_done = "{'Group renamed'|translate|escape:'javascript'}"
-  var str_name_taken = "{'Name is already taken'|translate|escape:'javascript'}"
-  var str_name_not_empty = "{'Name field must not be empty'|translate|escape:'javascript'}"
-  var str_group_deleted = '{'Group "%s" successfully deleted'|translate|escape:'javascript'}'
-  var str_groups_deleted = '{'Groups \{%s\} successfully deleted'|translate}'
-  var str_set_default = "{'Set as group for new users'|translate|escape:'javascript'}"
-  var str_unset_default = "{'Unset as group for new users'|translate|escape:'javascript'}"
-  var str_delete = '{'Are you sure you want to delete group "%s"?'|translate|escape:'javascript'}'
-  var str_yes_delete_confirmation = "{'Yes, delete'|translate|escape:'javascript'}"
-  var str_no_delete_confirmation = "{"No, I have changed my mind"|translate|escape:'javascript'}"
-  var str_user_associated = "{"User associated"|translate|escape:'javascript'}"
-  var str_user_dissociate = "{'Dissociate user from this group'|translate|escape:'javascript'}"
-  var str_user_dissociated = '{'User "%s" dissociated from this group'|translate|escape:'javascript'}'
-  var str_user_list = "{'Manage the members'|translate|escape:'javascript'}"
-  var str_merged_into = '{'Group(s) \{%s1\} successfully merged into "%s2"'|translate}'
-  var str_copy = '{' (copy)'|translate|escape:'javascript'}'
-  var str_other_copy = '{' (copy %s)'|translate|escape:'javascript'}'
-
-  var serverKey = '{$CACHE_KEYS.users}'
-  var serverId = '{$CACHE_KEYS._hash}'
-  var rootUrl = '{$ROOT_URL}'
-
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') { // ESC button
-      var userListEl = document.getElementById("UserList");
-      if (userListEl) {
-        userListEl.style.display = 'none';
-      }
-    }
-  });
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest(".UserListPopInContainer")) {
-      var userListEl = document.getElementById("UserList");
-      if (userListEl) {
-        userListEl.style.display = 'none';
-      }
-    }
-  });
-
-  {* temporary fix for #1283 (begin) : force user local storage cache on page load. *}
-  var usersCache = new UsersCache({
-    serverKey: '{$CACHE_KEYS.users}',
-    serverId: '{$CACHE_KEYS._hash}',
-    rootUrl: '{$ROOT_URL}'
-  });
-
-  usersCache.selectize(document.querySelectorAll('select.UserSearch'));
-  {* temporary fix for #1283 (end) *}
+  window.pwg_token = "{$PWG_TOKEN}";
+  window.str_member_default = "{'member'|translate|escape:'javascript'}";
+  window.str_members_default = "{'members'|translate|escape:'javascript'}";
+  window.str_group_created = "{'Group added'|translate|escape:'javascript'}";
+  window.str_renaming_done = "{'Group renamed'|translate|escape:'javascript'}";
+  window.str_name_taken = "{'Name is already taken'|translate|escape:'javascript'}";
+  window.str_name_not_empty = "{'Name field must not be empty'|translate|escape:'javascript'}";
+  window.str_group_deleted = '{'Group "%s" successfully deleted'|translate|escape:'javascript'}';
+  window.str_groups_deleted = '{'Groups \{%s\} successfully deleted'|translate}';
+  window.str_set_default = "{'Set as group for new users'|translate|escape:'javascript'}";
+  window.str_unset_default = "{'Unset as group for new users'|translate|escape:'javascript'}";
+  window.str_delete = '{'Are you sure you want to delete group "%s"?'|translate|escape:'javascript'}';
+  window.str_yes_delete_confirmation = "{'Yes, delete'|translate|escape:'javascript'}";
+  window.str_no_delete_confirmation = "{"No, I have changed my mind"|translate|escape:'javascript'}";
+  window.str_user_associated = "{"User associated"|translate|escape:'javascript'}";
+  window.str_user_dissociate = "{'Dissociate user from this group'|translate|escape:'javascript'}";
+  window.str_user_dissociated = '{'User "%s" dissociated from this group'|translate|escape:'javascript'}';
+  window.str_user_list = "{'Manage the members'|translate|escape:'javascript'}";
+  window.str_merged_into = '{'Group(s) \{%s1\} successfully merged into "%s2"'|translate}';
+  window.str_copy = '{' (copy)'|translate|escape:'javascript'}';
+  window.str_other_copy = '{' (copy %s)'|translate|escape:'javascript'}';
+  window.serverKey = '{$CACHE_KEYS.users}';
+  window.serverId = '{$CACHE_KEYS._hash}';
+  window.rootUrl = '{$ROOT_URL}';
 </script>{/footer_script}
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}

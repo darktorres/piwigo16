@@ -1183,3 +1183,39 @@ document.querySelector(".input-user-name")?.addEventListener("input", function (
         userList.querySelector(".UsernameBlock:last-child")?.remove();
     }
 });
+
+_docReady(function() {
+  // temporary fix for #1283 (begin) : force user local storage cache on page load.
+  const serverKey = window.serverKey || '';
+  const serverId = window.serverId || '';
+  const rootUrl = window.rootUrl || '';
+
+  const usersCache = new UsersCache({
+    serverKey: serverKey,
+    serverId: serverId,
+    rootUrl: rootUrl
+  });
+
+  usersCache.selectize(document.querySelectorAll('select.UserSearch'));
+  // temporary fix for #1283 (end)
+
+  // Escape key handler
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const userListEl = document.getElementById("UserList");
+      if (userListEl) {
+        userListEl.style.display = 'none';
+      }
+    }
+  });
+
+  // Click-outside handler for UserList
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest(".UserListPopInContainer")) {
+      const userListEl = document.getElementById("UserList");
+      if (userListEl) {
+        userListEl.style.display = 'none';
+      }
+    }
+  });
+});

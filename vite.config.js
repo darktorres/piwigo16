@@ -22,6 +22,7 @@ const adminModules = [
   'cat_list',
   'cat_search',
   'comments',
+  'element_set_ranks',
   'generate_video_thumbnails',
   'helpPopin',
   'history',

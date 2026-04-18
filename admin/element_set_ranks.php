@@ -224,4 +224,7 @@ $template->assign('image_order_choice', $image_order_choice);
 // |                          sending html code                            |
 // +-----------------------------------------------------------------------+
 
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['element_set_ranks']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'element_set_ranks');

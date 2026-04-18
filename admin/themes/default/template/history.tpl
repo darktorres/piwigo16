@@ -222,9 +222,6 @@
 
 {if !empty($navbar) }{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}
 
-{combine_script id='jquery.geoip' load='async' path='admin/themes/default/js/jquery.geoip.js'}
-
-
 <style>
   .notClickable {
     opacity: 0.5;

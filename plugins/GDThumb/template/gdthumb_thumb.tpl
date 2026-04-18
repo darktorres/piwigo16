@@ -88,7 +88,7 @@
   {combine_css path="node_modules/photoswipe/dist/photoswipe.css"}
 
   <script type="module">
-    import { GDThumb } from './{$GDThumb.GDTHUMB_ROOT}/js/gdthumb.js';
+    import { GDThumb } from '{$ROOT_URL}admin/themes/default/js/dist/{$vite_gdthumb}';
     {if !isset($has_cats)}
     GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin});
     {/if}

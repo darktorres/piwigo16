@@ -148,6 +148,9 @@ $template->assign(
     ]
 );
 
+require_once PHPWG_ROOT_PATH . 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['gdthumb_admin' => 'plugins/GDThumb/js/gdthumb.admin']);
+
 $template->set_filenames([
     'plugin_admin_content' => __DIR__ . '/template/admin.tpl',
 ]);

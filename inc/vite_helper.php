@@ -4,20 +4,24 @@ namespace Piwigo\Vite;
 require_once __DIR__ . '/ViteManifest.php';
 
 /**
- * Helper function to assign multiple Vite module filenames to a template
+ * Assign Vite module filenames to Smarty template variables.
  *
- * Usage: vite_assign_modules($template, ['maintenance', 'tags', 'common'])
- * Creates template variables: $vite_maintenance, $vite_tags, $vite_common
+ * Supports two formats:
+ *   Old: ['admin', 'helpPopin']              → $vite_admin, $vite_helpPopin  (admin path)
+ *   New: ['mcs' => 'themes/default/js/mcs']  → $vite_mcs                    (full source path)
  *
  * @param object $template Smarty template object
- * @param array $modules Array of module names (without .js extension)
+ * @param array  $modules  Array of module names or varName => sourcePath pairs
  */
 function vite_assign_modules($template, $modules) {
     $data = [];
-    foreach ($modules as $key) {
-        $file = ViteManifest::getFile($key);
+    foreach ($modules as $varName => $module) {
+        if (is_int($varName)) {
+            $varName = $module;
+        }
+        $file = ViteManifest::getFile($module);
         if ($file) {
-            $data['vite_' . $key] = $file;
+            $data['vite_' . $varName] = $file;
         }
     }
     if (!empty($data)) {

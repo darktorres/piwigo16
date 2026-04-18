@@ -110,6 +110,12 @@ final class RVTS
         $my_base_name      = basename(__DIR__);
         $ajax_loader_image = functions_url::get_root_url() . "plugins/{$my_base_name}/ajax-loader.gif";
 
+        require_once PHPWG_ROOT_PATH . 'inc/ViteManifest.php';
+        $rvts_dist = \Piwigo\Vite\ViteManifest::getFile('plugins/rv_tscroller/rv_tscroller');
+        $rvts_cats_js_url = $rvts_dist
+            ? functions_url::get_root_url() . 'admin/themes/default/js/dist/' . $rvts_dist
+            : './plugins/' . $my_base_name . '/rv_tscroller.js';
+
         $next                = $startcat + $per_page;
         $ajax_url_0          = ord($ajax_url_model[0]);
         $ajax_url_rest       = addcslashes(substr($ajax_url_model, 1), "'\\</");
@@ -129,7 +135,7 @@ final class RVTS
                 }
                 </script>
                 <script type="module">
-                import { initRVTS_CATS } from './plugins/{$my_base_name}/rv_tscroller.js';
+                import { initRVTS_CATS } from '{$rvts_cats_js_url}';
                 const cfg = JSON.parse(document.getElementById('rvts-cats-config').textContent);
                 initRVTS_CATS(cfg);
                 </script>
@@ -163,6 +169,11 @@ final class RVTS
 
         $my_base_name = basename(__DIR__);
         $ajax_loader_image = functions_url::get_root_url() . "plugins/{$my_base_name}/ajax-loader.gif";
+        require_once PHPWG_ROOT_PATH . 'inc/ViteManifest.php';
+        $rvts_dist2 = \Piwigo\Vite\ViteManifest::getFile('plugins/rv_tscroller/rv_tscroller');
+        $rvts_js_url = $rvts_dist2
+            ? functions_url::get_root_url() . 'admin/themes/default/js/dist/' . $rvts_dist2
+            : './plugins/' . $my_base_name . '/rv_tscroller.js';
         $start = (int) $page['start'];
         $per_page = $page['nb_image_page'];
         $moreMsg = 'See the remaining %d photos';
@@ -201,7 +212,7 @@ final class RVTS
                 }
                 </script>
                 <script type="module">
-                import { initRVTS } from './plugins/{$my_base_name}/rv_tscroller.js';
+                import { initRVTS } from '{$rvts_js_url}';
                 const cfg = JSON.parse(document.getElementById('rvts-config').textContent);
                 initRVTS(cfg);
                 document.querySelector('.navigationBar') && (document.querySelector('.navigationBar').style.display = 'none');

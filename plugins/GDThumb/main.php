@@ -82,6 +82,8 @@ function GDThumb_process_thumb(
 
     $template->set_filename('index_thumbnails', __DIR__ . '/template/gdthumb_thumb.tpl');
     $template->assign('GDThumb', $confTemp);
+    require_once PHPWG_ROOT_PATH . 'inc/vite_helper.php';
+    \Piwigo\Vite\vite_assign_modules($template, ['gdthumb' => 'plugins/GDThumb/js/gdthumb']);
     $template->assign('GDThumb_derivative_params', GDThumb_get_derivative_params());
 
     return $tpl_vars;
@@ -97,6 +99,8 @@ function GDThumb_process_category(
 
     $template->set_filename('index_category_thumbnails', __DIR__ . '/template/gdthumb_cat.tpl');
     $template->assign('GDThumb', $confTemp);
+    require_once PHPWG_ROOT_PATH . 'inc/vite_helper.php';
+    \Piwigo\Vite\vite_assign_modules($template, ['gdthumb' => 'plugins/GDThumb/js/gdthumb']);
     $template->assign('GDThumb_derivative_params', GDThumb_get_derivative_params());
 
     return $tpl_vars;

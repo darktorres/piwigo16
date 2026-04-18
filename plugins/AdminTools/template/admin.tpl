@@ -9,7 +9,7 @@
   }
 </style>{/html_style}
 
-{combine_script id='admintools.admin' load='footer' path=$ADMINTOOLS_PATH|cat:'js/admin.js'}
+{footer_script}<script type="module" src="{$ROOT_URL}admin/themes/default/js/dist/{$vite_at_admin}"></script>{/footer_script}
 
 <div class="titrePage">
   <h2>Admin Tools</h2>

@@ -63,7 +63,6 @@
                                 </a>
                             {/foreach}
                             {if isset($U_ORIGINAL)}
-                                {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
                                 <a class="dropdown-item"
                                     href="javascript:phpWGOpenWindow('{$U_ORIGINAL}','xxx','scrollbars=yes,toolbar=no,status=no,resizable=yes')"
                                     rel="nofollow">{'Original'|translate}</a>

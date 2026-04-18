@@ -1,5 +1,5 @@
 {combine_css path="themes/bootstrap_darkroom/admin/css/admin.css"}
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+
 <div class="titrePage">
     <h2>Bootstrap Darkroom {$TABSHEET_TITLE}</h2>
 </div>

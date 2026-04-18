@@ -217,7 +217,7 @@
               value="{if isset($filter.search)} {$filter.search.q|stripslashes|htmlspecialchars}{/if}">
             <a href="admin/popuphelp.php?page=quick_search&amp;output=content_only" title="{'Help'|translate}"
               class="help-popin-search"><span class="icon-help-circled">{'Search tips'|translate}</span></a>
-            {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
+
             {if (isset($no_search_results))}
               <div>{'No results for'|translate} :
                 <em><strong>

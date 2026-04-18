@@ -1,5 +1,5 @@
 {include file='inc/colorbox.inc.tpl'}
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{footer_script}<script type="module">import { sprintf } from 'admin/themes/default/js/common.js'; window.sprintf = sprintf;</script>{/footer_script}
 {combine_script id='nouislider' load='footer' path='node_modules/nouislider/dist/nouislider.min.js'}
 {combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
 

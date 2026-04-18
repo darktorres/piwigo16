@@ -1,4 +1,4 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{footer_script}<script type="module">import { sprintf } from 'admin/themes/default/js/common.js'; window.sprintf = sprintf;</script>{/footer_script}
 {combine_script id='dropzone' load='footer' path='node_modules/dropzone/dist/dropzone.js'}
 
 {combine_css path='node_modules/dropzone/dist/basic.css'}

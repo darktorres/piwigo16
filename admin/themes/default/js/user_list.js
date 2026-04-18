@@ -1,10 +1,10 @@
+import { initModule } from './moduleInit.js';
 import { TemporaryState, sprintf } from './common.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import TomSelect from 'tom-select';
 import noUiSlider from 'nouislider';
 import tippy from 'tippy.js';
 
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 const color_icons = [
     "icon-red",
     "icon-blue",
@@ -28,12 +28,30 @@ let pwg_token = "";
 let selection = [];
 let first_update = true;
 let total_users = 0;
-/*----------------
-Escape of pop-in
-----------------*/
 
-//get out of pop in via escape key
-document.addEventListener("keydown", function (e) {
+export function init(cfg) {
+    // Assign config from cfg
+    guest_id = cfg.guestId;
+    connected_user = cfg.connectedUser;
+    nb_days = cfg.nbDays;
+    nb_photos = cfg.nbPhotos;
+    nb_photos_per_page = cfg.nbPhotosPerPage;
+    pwg_token = cfg.pwgToken;
+
+    // Compute derived values
+    const groupsArrId = cfg.groupsArrId;
+    const groupsArrName = cfg.groupsArrName;
+    groups_arr = groupsArrId.map((elem, index) => [elem, groupsArrName[index]]);
+
+    // Parse register dates
+    const registerDates = cfg.registerDatesStr.split(',');
+
+    /*----------------
+    Escape of pop-in
+    ----------------*/
+
+    //get out of pop in via escape key
+    document.addEventListener("keydown", function (e) {
     if (e.keyCode === 27) {
         // ESC button
         const userList = document.getElementById("UserList");
@@ -41,33 +59,30 @@ document.addEventListener("keydown", function (e) {
     }
 });
 
-//get out of pop in via clicking outside pop in
-//$(document).on('click', function (e) {
-//    console.log($(e.target));
-//    if ($(e.target) && $(e.target).closest(".UserListPopInContainer").length === 0) {
-//        $("#UserList").fadeOut();
-//    }
-//});
+    //get out of pop in via clicking outside pop in
+    //$(document).on('click', function (e) {
+    //    console.log($(e.target));
+    //    if ($(e.target) && $(e.target).closest(".UserListPopInContainer").length === 0) {
+    //        $("#UserList").fadeOut();
+    //    }
+    //});
 
-/*----------------
-Group Selectize
-----------------*/
+    /*----------------
+    Group Selectize
+    ----------------*/
 
-let groupSelectize = null;
-let groupGuestSelectize = null;
-
-document.querySelectorAll("[data-selectize=groups]").forEach(function (el) {
-    new TomSelect(el, {
-        valueField: "value",
-        labelField: "label",
-        searchField: ["label"],
-        plugins: ["remove_button"],
+    document.querySelectorAll("[data-selectize=groups]").forEach(function (el) {
+        new TomSelect(el, {
+            valueField: "value",
+            labelField: "label",
+            searchField: ["label"],
+            plugins: ["remove_button"],
+        });
     });
-});
 
-var _groupEls = document.querySelectorAll("[data-selectize=groups]");
-groupSelectize = _groupEls[0] ? _groupEls[0].tomselect : null;
-groupGuestSelectize = _groupEls[1] ? _groupEls[1].tomselect : null;
+    var _groupEls = document.querySelectorAll("[data-selectize=groups]");
+    groupSelectize = _groupEls[0] ? _groupEls[0].tomselect : null;
+    groupGuestSelectize = _groupEls[1] ? _groupEls[1].tomselect : null;
 
 /*-----------------
 OnClick functions
@@ -96,12 +111,11 @@ function close_guest_user_list() {
     if (guestUserList) guestUserList.style.display = 'none';
 }
 
-function isSelectionMode() {
-    const toggleSelectionMode = document.getElementById("toggleSelectionMode");
-    return toggleSelectionMode ? toggleSelectionMode.checked : false;
-}
+    function isSelectionMode() {
+        const toggleSelectionMode = document.getElementById("toggleSelectionMode");
+        return toggleSelectionMode ? toggleSelectionMode.checked : false;
+    }
 
-_docReady( function () {
     tippy('.user-property-register', { maxWidth: 300, delay: 0, placement: 'top' });
     tippy('.user-property-last-visit', { maxWidth: 300, delay: 0, placement: 'top' });
 
@@ -418,9 +432,8 @@ _docReady( function () {
             }
         });
     });
-});
 
-function set_view_selector(view_type) {
+    function set_view_selector(view_type) {
     const params = new URLSearchParams({
         param: "user-manager-view",
         value: view_type,
@@ -2319,44 +2332,33 @@ function show_filter_infos(nb_filters) {
             el.style.display = "none";
         });
     }
-}
-
-_docReady(function() {
-  // Import globals from window
-  const title_msg = window.title_msg;
-  const are_you_sure_msg = window.are_you_sure_msg;
-  const confirm_msg = window.confirm_msg;
-  const cancel_msg = window.cancel_msg;
-  const str_and_others_tags = window.str_and_others_tags;
-  const missingConfirm = window.missingConfirm;
-  const missingUsername = window.missingUsername;
-  const fieldNotEmpty = window.fieldNotEmpty;
-  const registered_str = window.registered_str;
-  const last_visit_str = window.last_visit_str;
-  const dates_infos = window.dates_infos;
-  const hide_str = window.hide_str;
-  const show_str = window.show_str;
-  const user_added_str = window.user_added_str;
-  const str_popin_update_btn = window.str_popin_update_btn;
-  const filtered_users = window.filtered_users;
-  const filtered_user = window.filtered_user;
-  const history_base_url = window.history_base_url;
-  const status_to_str = window.status_to_str;
-  const view_selector = window.view_selector;
-  const pagination = window.pagination;
-  const months = window.months;
-  const connected_user = window.connected_user;
-  const connected_user_status = window.connected_user_status;
-  const owner_id = window.owner_id;
-  const groups_arr = window.groups_arr;
-  const guest_id = window.guest_id;
-  const nb_days = window.nb_days;
-  const nb_photos = window.nb_photos;
-  const nb_photos_per_page = window.nb_photos_per_page;
-  const pwg_token = window.pwg_token;
-  const has_group = window.has_group;
-  const register_dates = window.register_dates;
-  const groupOptions = window.groupOptions;
+    // Setup string messages from config
+    const title_msg = cfg.titleMsg;
+    const are_you_sure_msg = cfg.areYouSureMsg;
+    const confirm_msg = cfg.confirmMsg;
+    const cancel_msg = cfg.cancelMsg;
+    const str_and_others_tags = cfg.strAndOthersTags;
+    const missingConfirm = cfg.missingConfirm;
+    const missingUsername = cfg.missingUsername;
+    const fieldNotEmpty = cfg.fieldNotEmpty;
+    const registered_str = cfg.registeredStr;
+    const last_visit_str = cfg.lastVisitStr;
+    const dates_infos = cfg.datesInfos;
+    const hide_str = cfg.hideStr;
+    const show_str = cfg.showStr;
+    const user_added_str = cfg.userAddedStr;
+    const str_popin_update_btn = cfg.strPopinUpdateBtn;
+    const filtered_users = cfg.filteredUsers;
+    const filtered_user = cfg.filteredUser;
+    const history_base_url = cfg.historyBaseUrl;
+    const status_to_str = cfg.statusToStr;
+    const view_selector = cfg.viewSelector;
+    const pagination = cfg.pagination;
+    const months = cfg.months;
+    const connected_user_status = cfg.connectedUserStatus;
+    const owner_id = cfg.ownerId;
+    const has_group = cfg.hasGroup;
+    const groupOptions = groups_arr.map(x => ({ value: x[0], label: x[1], isSelected: 0 }));
 
   // Startup
   setupRegisterDates(register_dates);
@@ -2478,4 +2480,7 @@ _docReady(function() {
         });
     });
   }
-});
+  }
+}
+
+initModule(init);

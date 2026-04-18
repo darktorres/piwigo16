@@ -16,6 +16,9 @@ let str_add_album, str_edit_album, str_add_photo, str_visit_gallery;
 let str_sort_order, str_delete_album, str_root_order, str_sub_album_order;
 let str_album_name_empty, add_album_root_title, add_sub_album_of;
 let tiptip_locked_album, toggler_open, toggler_close;
+let _addAlbumKeyupHandler = null;
+let _renameAlbumKeypressHandler = null;
+let _deleteAlbumClickHandler = null;
 
 export function init(cfg) {
     data = cfg.data;
@@ -615,8 +618,10 @@ function openAddAlbumPopIn(parentAlbumId, pwgTree) {
     document.querySelector(".AddAlbumLabelUsername .user-property-input").value = "";
     document.querySelector(".AddAlbumLabelUsername .user-property-input").focus();
 
-    document.getElementById("AddAlbum").removeEventListener("keyup", arguments.callee);
-    document.getElementById("AddAlbum").addEventListener("keyup", function (e) {
+    if (_addAlbumKeyupHandler) {
+        document.getElementById("AddAlbum").removeEventListener("keyup", _addAlbumKeyupHandler);
+    }
+    _addAlbumKeyupHandler = function (e) {
         // 13 is 'Enter'
         if (e.keyCode === 13) {
             document.querySelector(".AddAlbumSubmit").click();
@@ -625,7 +630,8 @@ function openAddAlbumPopIn(parentAlbumId, pwgTree) {
         if (e.keyCode === 27) {
             closeAddAlbumPopIn();
         }
-    });
+    };
+    document.getElementById("AddAlbum").addEventListener("keyup", _addAlbumKeyupHandler);
 }
 
 function closeAddAlbumPopIn() {
@@ -639,12 +645,15 @@ function openRenameAlbumPopIn(replacedAlbumName) {
     document.querySelector(".RenameAlbumLabelUsername .user-property-input").value = replacedAlbumName;
     document.querySelector(".RenameAlbumLabelUsername .user-property-input").focus();
 
-    document.removeEventListener("keypress", arguments.callee);
-    document.addEventListener("keypress", function (e) {
+    if (_renameAlbumKeypressHandler) {
+        document.removeEventListener("keypress", _renameAlbumKeypressHandler);
+    }
+    _renameAlbumKeypressHandler = function (e) {
         if (e.which == 13) {
             document.querySelector(".RenameAlbumSubmit").click();
         }
-    });
+    };
+    document.addEventListener("keypress", _renameAlbumKeypressHandler);
 }
 
 function closeRenameAlbumPopIn() {
@@ -708,8 +717,10 @@ function openDeleteAlbumPopIn(cat_to_delete, pwgTree) {
     }
 
     // Actually delete
-    document.querySelector(".DeleteAlbumSubmit").removeEventListener("click", arguments.callee);
-    document.querySelector(".DeleteAlbumSubmit").addEventListener("click", function () {
+    if (_deleteAlbumClickHandler) {
+        document.querySelector(".DeleteAlbumSubmit").removeEventListener("click", _deleteAlbumClickHandler);
+    }
+    _deleteAlbumClickHandler = function () {
         fetch("ws.php?format=json&method=pwg.categories.delete", {
             method: "POST",
             body: new URLSearchParams({
@@ -751,7 +762,8 @@ function openDeleteAlbumPopIn(cat_to_delete, pwgTree) {
             closeDeleteAlbumPopIn();
         })
         .catch(function (error) { console.log(error); });
-    });
+    };
+    document.querySelector(".DeleteAlbumSubmit").addEventListener("click", _deleteAlbumClickHandler);
 }
 
 function closeDeleteAlbumPopIn() {

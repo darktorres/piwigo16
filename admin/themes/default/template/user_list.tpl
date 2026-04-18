@@ -10,17 +10,17 @@
   window.str_and_others_tags = '{'and %s others'|translate|escape:javascript}';
   window.missingConfirm = "{'You need to confirm deletion'|translate|escape:javascript}";
   window.missingUsername = "{'Please, enter a login'|translate|escape:javascript}";
-  window.fieldNotEmpty = "{'Name field must not be empty'|translate|escape:javascript'}";
+  window.fieldNotEmpty = "{'Name field must not be empty'|translate|escape:javascript}";
 
   window.registered_str = '{"Registered"|translate|escape:javascript}';
   window.last_visit_str = '{"Last visit"|translate|escape:javascript}';
-  window.dates_infos = '{'between %s and %s'|translate|escape:javascript'}';
-  window.hide_str = '{'Hide'|translate|escape:javascript'}';
-  window.show_str = '{'Show'|translate|escape:javascript'}';
-  window.user_added_str = '{'User %s added'|translate|escape:javascript'}';
-  window.str_popin_update_btn = '{'Update'|translate|escape:javascript'}';
-  window.filtered_users = '{'<b>%d</b> filtered users'|translate|escape:javascript'}';
-  window.filtered_user = '{'<b>%d</b> filtered user'|translate|escape:javascript'}';
+  window.dates_infos = '{'between %s and %s'|translate|escape:javascript}';
+  window.hide_str = '{'Hide'|translate|escape:javascript}';
+  window.show_str = '{'Show'|translate|escape:javascript}';
+  window.user_added_str = '{'User %s added'|translate|escape:javascript}';
+  window.str_popin_update_btn = '{'Update'|translate|escape:javascript}';
+  window.filtered_users = '{'<b>%d</b> filtered users'|translate|escape:javascript}';
+  window.filtered_user = '{'<b>%d</b> filtered user'|translate|escape:javascript}';
   window.history_base_url = "{$U_HISTORY}";
 
   window.status_to_str = {

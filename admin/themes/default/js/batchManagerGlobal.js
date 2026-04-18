@@ -3,8 +3,11 @@ import tippy from 'tippy.js';
 import { sprintf } from './common.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import { pwgDoubleSlider } from './doubleSlider.js';
-import { TagsCache } from './LocalStorageCache.js';
+import { CategoriesCache, TagsCache } from './LocalStorageCache.js';
 import GLightbox from 'glightbox';
+
+let categoriesCache;
+
 /* ********** Filters */
 function filter_enable(filter) {
     /* show the filter*/
@@ -174,7 +177,7 @@ document.addEventListener("mouseup", function (e) {
     });
 
     /* ---- Categories ---- */
-    window.categoriesCache = new CategoriesCache({
+    categoriesCache = new CategoriesCache({
         serverKey: cfg.categoriesServerKey,
         serverId: cfg.cacheServerId,
         rootUrl: cfg.rootUrl

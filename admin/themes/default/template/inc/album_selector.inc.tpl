@@ -1,16 +1,19 @@
 {if empty($load_mode)}{$load_mode='footer'}{/if}
 {if !isset($show_root_btn)}{$show_root_btn=false}{/if}
 
-{footer_script}<script>
-  window.str_no_search_in_progress = '{'No search in progress'|translate|escape:javascript}';
-  window.str_albums_found = '{"<b>%d</b> albums found"|translate}';
-  window.str_album_found = '{"<b>1</b> album found"|translate}';
-  {if isset($api_method)}
-    window.api_method = '{$api_method}';
-  {else}
-    window.api_method = 'pwg.categories.getAdminList';
-  {/if}
-</script>{/footer_script}
+<script id="pwg-album-selector-data" type="application/json">
+{
+  "apiMethod": "{if isset($api_method)}{$api_method|escape:'html'}{else}pwg.categories.getAdminList{/if}",
+  "strNoSearchInProgress": "{'No search in progress'|translate|escape:'html'}",
+  "strAlbumsFound": "{'<b>%d</b> albums found'|translate|escape:'html'}",
+  "strAlbumFound": "{'<b>1</b> album found'|translate|escape:'html'}",
+  "strResultLimit": "{if isset($str_result_limit)}{$str_result_limit|escape:'html'}{else}{'<b>%d</b> result limit reached'|translate|escape:'html'}{/if}"
+}
+</script>
+
+{if $vite_album_selector}
+<script type="module" src="admin/themes/default/js/dist/{$vite_album_selector}"></script>
+{/if}
 
 <div id="addLinkedAlbum" class="linkedAlbumPopIn">
   <div class="linkedAlbumPopInContainer">

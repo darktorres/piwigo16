@@ -1,3 +1,5 @@
+import tippy from 'tippy.js';
+
 var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 // <-- Define sort orders -->
 var sortOrder = "date";

@@ -1,10 +1,4 @@
-<script id="pwg-page-data" type="application/json">
-{
-  "strConfirmDeleteSite": "{'Are you sure you want to delete this site?'|translate|escape:'html'}",
-  "strYesSure": "{'Yes, I am sure'|translate|escape:'html'}",
-  "strNoChangedMind": "{'No, I have changed my mind'|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_site_manager}
 <script type="module" src="admin/themes/default/js/dist/{$vite_site_manager}"></script>

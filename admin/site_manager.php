@@ -189,6 +189,13 @@ while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $template->append('sites', $tpl_var);
 }
 
+$page_data = [
+    'strConfirmDeleteSite' => functions::l10n('Are you sure you want to delete this site?'),
+    'strYesSure' => functions::l10n('Yes, I am sure'),
+    'strNoChangedMind' => functions::l10n('No, I have changed my mind'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['site_manager']);
 

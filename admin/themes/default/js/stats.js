@@ -1,25 +1,21 @@
+import { initModule } from './moduleInit.js';
 import Chart from 'chart.js';
 import moment from 'moment';
 
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+export function init(cfg) {
+    const { str_number_page_visited, str_number_page_visited_with_year, str_avg, str_months_tosplit } = cfg;
 
-const configEl = document.getElementById('pwg-page-data');
-const cfg = configEl ? JSON.parse(configEl.textContent) : {};
-
-const str_number_page_visited = window.str_number_page_visited || 'Page Visited';
-const str_number_page_visited_with_year = window.str_number_page_visited_with_year || 'Page Visited in %s';
-const str_tooltip_format = {
-  "years": "YYYY",
-  "months": "MMMM YYYY",
-  "days": "DD MMM",
-  "hours": "LT"
-};
-const str_unit_format = {
-  "day": "dddd",
-  "month": "MMM YYYY"
-};
-const str_avg = window.str_avg || 'Average last 12 months';
-const str_months = (window.str_months_tosplit || '').split('~');
+    const str_tooltip_format = {
+      "years": "YYYY",
+      "months": "MMMM YYYY",
+      "days": "DD MMM",
+      "hours": "LT"
+    };
+    const str_unit_format = {
+      "day": "dddd",
+      "month": "MMM YYYY"
+    };
+    const str_months = (str_months_tosplit || '').split('~');
 
 /*-------
 Data Get
@@ -311,7 +307,8 @@ document.querySelectorAll(".stat-compare-mode input").forEach(function (input) {
 /*-------
 Initialize the page
 -------*/
-_docReady( function () {
     var checkedLabel = document.querySelector(".stat-data-selector input:checked + label");
     if (checkedLabel) changeData(checkedLabel.dataset.value);
-});
+}
+
+initModule(init);

@@ -1,44 +1,10 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='sortablejs' load='footer' path='node_modules/sortablejs/Sortable.min.js'}
-
-{footer_script require='sortablejs'}<script>
+{footer_script}<script>
   const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
-
-  function checkOrderOptions() {
-    var opts = document.getElementById("image_order_user_define_options");
-    if (!opts) return;
-    var checked = document.querySelector("input[name=image_order_choice]:checked");
-    opts.style.display = (checked && checked.value === "user_define") ? '' : 'none';
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    var thumbnailsUl = document.querySelector('ul.thumbnails');
-    if (thumbnailsUl) {
-      Sortable.create(thumbnailsUl, {
-        animation: 150,
-        handle: '.rank-of-image',
-        onEnd: function() {
-          thumbnailsUl.querySelectorAll('li').forEach(function(li, i) {
-            li.querySelectorAll("input[name^=rank_of_image]").forEach(function(inp) {
-              inp.setAttribute('value', (i + 1) * 10);
-            });
-          });
-          var rankRadio = document.getElementById('image_order_rank');
-          if (rankRadio) rankRadio.checked = true;
-          checkOrderOptions();
-        }
-      });
-    }
-
-    document.querySelectorAll("input[name=image_order_choice]").forEach(function(el) {
-      el.addEventListener('click', function() { checkOrderOptions(); });
-    });
-
-    checkOrderOptions();
-
-    tippy('.thumbnail', { delay: 0, placement: 'top' });
-  });
 </script>{/footer_script}
+
+{if $vite_element_set_ranks}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_element_set_ranks}"></script>
+{/if}
 
 <form action="{$F_ACTION}" method="post">
   {if !empty($thumbnails)}

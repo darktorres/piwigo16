@@ -2,11 +2,7 @@
 <script type="module" src="admin/themes/default/js/dist/{$vite_configuration}"></script>
 {/if}
 
-<script id="pwg-page-data" type="application/json">
-{
-  "rootUrl": "{$ROOT_URL|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_configuration_watermark}
 <script type="module" src="admin/themes/default/js/dist/{$vite_configuration_watermark}"></script>

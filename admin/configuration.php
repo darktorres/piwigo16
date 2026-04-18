@@ -541,6 +541,17 @@ switch ($page['section']) {
             $template->assign('custom_derivatives', $tpl_vars);
         }
 
+        $page_data = [
+            'titleMsg' => functions::l10n('Are you sure you want to restore to default settings?'),
+            'confirmMsg' => functions::l10n('Yes, I am sure'),
+            'cancelMsg' => functions::l10n('No, I have changed my mind'),
+            'labelMaxWidth' => functions::l10n('Maximum width'),
+            'labelWidth' => functions::l10n('Width'),
+            'labelMaxHeight' => functions::l10n('Maximum height'),
+            'labelHeight' => functions::l10n('Height'),
+        ];
+        $template->assign('page_data_json', json_encode($page_data));
+
         break;
 
     case 'watermark':
@@ -625,6 +636,11 @@ switch ($page['section']) {
                 ]
             );
         }
+
+        $page_data = [
+            'rootUrl' => functions_url::get_root_url(),
+        ];
+        $template->assign('page_data_json', json_encode($page_data));
 
         break;
 

@@ -1250,6 +1250,9 @@ function updateSearchInfo() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    var h1 = document.querySelector("h1");
+    if (h1) h1.insertAdjacentHTML('beforeend', '<span class="badge-number">' + (window.total_tags || '0') + '</span>');
+
     function setPagination() {
         var match = document.cookie.match(/(?:^|;)\s*pwg_tags_per_page=([^;]*)/);
         var saved = match ? match[1] : null;
@@ -1261,4 +1264,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     setPagination();
+
+    if (!document.cookie.match(/(?:^|;)\s*pwg_tags_per_page=/)) {
+        document.cookie = 'pwg_tags_per_page=100; path=/; SameSite=Lax';
+    }
 });

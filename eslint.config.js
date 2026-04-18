@@ -15,7 +15,7 @@ export default [
     files: ["admin/**/*.js", "plugins/**/*.js", "themes/**/*.js"],
     languageOptions: {
       ecmaVersion: 2020,
-      sourceType: "script",
+      sourceType: "module",
       globals: {
         ...globals.browser,
         Piwigo: "readonly",
@@ -24,6 +24,8 @@ export default [
     },
     rules: {
       ...js.configs.recommended.rules,
+      "no-undef": "error",
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
     },
   },
 ];

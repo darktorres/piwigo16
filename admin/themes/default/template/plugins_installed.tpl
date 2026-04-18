@@ -1,46 +1,41 @@
+<script id="pwg-page-data" type="application/json">
+{
+  "pwgToken": "{$PWG_TOKEN|escape:'html'}",
+  "incompatibleMsg": "{'WARNING! This plugin does not seem to be compatible with this version of Piwigo.'|translate|escape:'html'}",
+  "activateMsg": "\n{'Do you want to activate anyway?'|translate|escape:'html'}",
+  "deactivateAllMsg": "{'Deactivate all'|translate|escape:'html'}",
+  "nbPlugin": {
+    "all": {$count_types_plugins["active"]} + {$count_types_plugins["inactive"]} + {$count_types_plugins["missing"]} + {$count_types_plugins["merged"]},
+    "active": {$count_types_plugins["active"]},
+    "inactive": {$count_types_plugins["inactive"]},
+    "other": {$count_types_plugins["missing"]} + {$count_types_plugins["merged"]}
+  },
+  "areYouSureMsg": "{'Are you sure?'|translate|escape:'html'}",
+  "confirmMsg": "{'Yes, I am sure'|translate|escape:'html'}",
+  "cancelMsg": "{'No, I have changed my mind'|translate|escape:'html'}",
+  "deletePluginMsg": "{'Are you sure you want to delete the plugin \"%s\"?'|translate|escape:'html'}",
+  "deletedPluginMsg": "{'Plugin \"%s\" deleted!'|translate|escape:'html'}",
+  "restorePluginMsg": "{'Are you sure you want to restore the plugin \"%s\"?'|translate|escape:'html'}",
+  "uninstallPluginMsg": "{'Are you sure you want to uninstall the plugin \"%s\"?'|translate|escape:'html'}",
+  "restoreTipMsg": "{'Restore default configuration. You will lose your plugin settings!'|translate|escape:'html'}",
+  "pluginAddedStr": "{'Activated'|translate|escape:'html'}",
+  "pluginDeactivatedStr": "{'Deactivated'|translate|escape:'html'}",
+  "pluginRestoredStr": "{'Restored'|translate|escape:'html'}",
+  "pluginActionError": "{'an error happened'|translate|escape:'html'}",
+  "notWebmaster": "{'Webmaster status required'|translate|escape:'html'}",
+  "nothingFound": "{'No plugins found'|translate|escape:'html'}",
+  "xPluginsFound": "{'%s plugins found'|translate|escape:'html'}",
+  "pluginFound": "{'%s plugin found'|translate|escape:'html'}",
+  "isWebmaster": {$isWebmaster},
+  "viewSelector": "{$view_selector|escape:'html'}",
+  "strRestoreDef": "{'While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset'|translate|escape:'html'}",
+  "showDetails": {if $show_details} true {else} false {/if}
+}
+</script>
+
 {if $vite_plugins_installated}
 <script type="module" src="admin/themes/default/js/dist/{$vite_plugins_installated}"></script>
 {/if}
-
-{footer_script}<script>
-  /* incompatible message */
-  var incompatible_msg = '{'WARNING! This plugin does not seem to be compatible with this version of Piwigo.'|translate|escape:'javascript'}';
-  var activate_msg = '\n{'Do you want to activate anyway?'|translate|escape:'javascript'}';
-  var deactivate_all_msg = '{'Deactivate all'|translate}';
-
-  /* group action */
-  const pwg_token = '{$PWG_TOKEN}';
-  const nb_plugin = {
-    'all' : {$count_types_plugins["active"]} + {$count_types_plugins["inactive"]} + {$count_types_plugins["missing"]} + {$count_types_plugins["merged"]},
-    'active' : {$count_types_plugins["active"]},
-    'inactive' : {$count_types_plugins["inactive"]},
-    'other' : {$count_types_plugins["missing"]} + {$count_types_plugins["merged"]},
-  };
-  const are_you_sure_msg  = '{'Are you sure?'|translate|escape:'javascript'}';
-  const confirm_msg = '{"Yes, I am sure"|translate}';
-  const cancel_msg = "{"No, I have changed my mind"|translate}";
-  let delete_plugin_msg = '{'Are you sure you want to delete the plugin "%s"?'|translate|escape:'javascript'}';
-  let deleted_plugin_msg = '{'Plugin "%s" deleted!'|translate|escape:'javascript'}';
-  let restore_plugin_msg = '{'Are you sure you want to restore the plugin "%s"?'|translate|escape:'javascript'}';
-  let uninstall_plugin_msg = '{'Are you sure you want to uninstall the plugin "%s"?'|translate|escape:'javascript'}';
-  const restore_tip_msg = "{'Restore default configuration. You will lose your plugin settings!'|translate|escape:'javascript'}";
-  const plugin_added_str = '{'Activated'|translate|escape:'javascript'}';
-  const plugin_deactivated_str = '{'Deactivated'|translate|escape:'javascript'}';
-  const plugin_restored_str = '{'Restored'|translate|escape:'javascript'}';
-  const plugin_action_error = '{'an error happened'|translate|escape:'javascript'}';
-  const not_webmaster = '{'Webmaster status required'|translate|escape:'javascript'}';
-  const nothing_found = '{'No plugins found'|translate|escape:'javascript'}';
-  const x_plugins_found = '{'%s plugins found'|translate|escape:'javascript'}';
-  const plugin_found = '{'%s plugin found'|translate|escape:'javascript'}';
-  const isWebmaster = {$isWebmaster};
-  const view_selector = '{$view_selector}';
-  const str_restore_def = '{'While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset'|translate|escape:'javascript'}';
-
-  const show_details = {if $show_details} true {else} false {/if};
-
-  let searchParams = new URLSearchParams(window.location.search);
-  let plugin_filter = searchParams.get('filter');
-</script>{/footer_script}
 
 {if isset($plugins)}
 

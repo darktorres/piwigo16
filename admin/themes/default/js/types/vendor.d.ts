@@ -1,5 +1,11 @@
 // Ambient stubs for third-party libs that ship no @types package
 
+declare module 'chart.js' {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Chart: any;
+  export default Chart;
+}
+
 declare module 'glightbox' {
   interface GLightboxOptions {
     selector?: string;

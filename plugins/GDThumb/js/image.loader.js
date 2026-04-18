@@ -101,3 +101,5 @@ ImageLoader.prototype = {
         this.opts.onChanged(type, img);
     },
 };
+
+export default ImageLoader;

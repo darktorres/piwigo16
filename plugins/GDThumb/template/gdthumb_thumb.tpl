@@ -86,15 +86,13 @@
 
   {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css" version=1}
   {combine_css path="node_modules/photoswipe/dist/photoswipe.css"}
-  {combine_script id='gdthumb' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/gdthumb.js" load="footer"}
-  {combine_script id='gdthumb.masonry' require='gdthumb' path=$GDThumb.GDTHUMB_ROOT|cat:"/js/masonry.js" load="footer"}
 
-  {footer_script require="gdthumb.masonry"}<script>
-    {if isset($has_cats)}
-    {else}
-      GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin});
+  <script type="module">
+    import { GDThumb } from '{$GDThumb.GDTHUMB_ROOT}/js/gdthumb.js';
+    {if !isset($has_cats)}
+    GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin});
     {/if}
-  </script>{/footer_script}
+  </script>
 
   {footer_script}<script type="module">
     if (!window._pswpInitialized) {

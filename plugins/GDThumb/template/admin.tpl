@@ -130,5 +130,4 @@
 </style>
 {/html_head}
 
-{combine_script id='iloader' load='footer' path=$GDTHUMB_PATH|cat:"/js/image.loader.js"}
-{combine_script id='admin.precache' load='footer' path=$GDTHUMB_PATH|cat:"/js/gdthumb.admin.js" require='iloader'}
+<script type="module" src="{$GDTHUMB_PATH}/js/gdthumb.admin.js"></script>

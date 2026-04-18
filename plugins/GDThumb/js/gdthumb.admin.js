@@ -1,3 +1,5 @@
+import ImageLoader from './image.loader.js';
+
 (function () {
     // Fade out div.infos after 4 s
     document.querySelectorAll("div.infos").forEach(function(el) {

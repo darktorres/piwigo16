@@ -5,7 +5,7 @@
  * Existing item positions are never touched — new items only append to column bottoms.
  * Upward RVTS scroll is disabled (preventDefault, items dropped).
  */
-var GDMasonry = (function () {
+const GDMasonry = (function () {
     var _colWidth = 300;
     var _gap = 4;
     var _colHeights = [];
@@ -122,3 +122,5 @@ var GDMasonry = (function () {
 
     return { init: init, layout: layout, addItems: addItems, positionNew: positionNew };
 })();
+
+export default GDMasonry;

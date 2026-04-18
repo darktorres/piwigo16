@@ -1,4 +1,6 @@
-var GDThumb = {
+import GDMasonry from './masonry.js';
+
+export const GDThumb = {
 
     _initialized: false,
 

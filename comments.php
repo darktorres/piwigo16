@@ -220,7 +220,7 @@ foreach ($actions as $loop_action) {
 }
 
 if (isset($action)) {
-    $comment_author_id = functions_comment::get_comment_author_id($comment_id);
+    $comment_author_id = functions_comment::get_comment_author_id((int) $comment_id);
 
     if (functions_user::can_manage_comment($action, $comment_author_id)) {
         $perform_redirect = false;

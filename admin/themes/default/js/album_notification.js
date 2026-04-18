@@ -1,3 +1,5 @@
+import TomSelect from 'tom-select';
+
 const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 
 _docReady(function() {
@@ -17,7 +19,7 @@ _docReady(function() {
     checkWhoOptions();
 
     document.querySelectorAll(".who_option select").forEach(function(el) {
-      new window.TomSelect(el, { plugins: ['remove_button'] });
+      new TomSelect(el, { plugins: ['remove_button'] });
     });
 
     var categoryNotify = document.getElementById("categoryNotify");

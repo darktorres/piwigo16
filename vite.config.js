@@ -48,6 +48,7 @@ const adminModules = [
   'site_manager',
   'updates_ext',
   'user_activity',
+  'menubar',
 ];
 
 const input = {};

@@ -58,8 +58,18 @@
         </span>
       {/if}
       {assign var=src_size value=$derivative->src_image->get_size()}
-      <a href="{$thumbnail.URL}" data-pswp-src="{$derivative->src_image->get_url()}" data-pswp-width="{$src_size.0}"
-        data-pswp-height="{$src_size.1}">
+      {assign var=is_video value=(isset($thumbnail.path_ext) and ($thumbnail.path_ext == 'mp4' or $thumbnail.path_ext == 'm4v' or $thumbnail.path_ext == 'webm' or $thumbnail.path_ext == 'ogv' or $thumbnail.path_ext == 'mov' or $thumbnail.path_ext == 'mkv'))}
+      <a href="{$thumbnail.URL}"
+        {if $is_video}
+          data-pswp-src="{$ROOT_URL}{$thumbnail.path}"
+          data-pswp-width="{if $thumbnail.width}{$thumbnail.width}{else}1920{/if}"
+          data-pswp-height="{if $thumbnail.height}{$thumbnail.height}{else}1080{/if}"
+          data-pswp-type="video"
+        {else}
+          data-pswp-src="{$derivative->src_image->get_url()}"
+          data-pswp-width="{$src_size.0}"
+          data-pswp-height="{$src_size.1}"
+        {/if}>
         <img class="thumbnail" src="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
           alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}">
       </a>
@@ -87,6 +97,46 @@
         children: 'a[data-pswp-src]',
         pswpModule: () => import('./node_modules/photoswipe/dist/photoswipe.esm.js')
       });
+
+      lightbox.on('contentLoad', (e) => {
+        const { content } = e;
+        if (content.type === 'video') {
+          e.preventDefault();
+          const container = document.createElement('div');
+          container.style.cssText = 'display:flex;align-items:center;justify-content:center;width:100%;height:100%';
+          const src = content.data.src;
+          const ext = src.split('.').pop().split('?')[0].toLowerCase();
+          const mime = ext === 'webm' ? 'video/webm' : (ext === 'ogv' || ext === 'ogg' ? 'video/ogg' : 'video/mp4');
+          const video = document.createElement('video');
+          video.controls = true;
+          video.autoplay = true;
+          video.loop = true;
+          video.playsInline = true;
+          video.style.cssText = 'max-width:100%;max-height:100%;outline:none';
+          const source = document.createElement('source');
+          source.src = src;
+          source.type = mime;
+          video.appendChild(source);
+          container.appendChild(video);
+          content.element = container;
+          content.state = 'loaded';
+        }
+      });
+
+      lightbox.on('contentDeactivate', ({ content }) => {
+        if (content.type === 'video' && content.element) {
+          const video = content.element.querySelector('video');
+          if (video) video.pause();
+        }
+      });
+
+      lightbox.on('contentDestroy', ({ content }) => {
+        if (content.type === 'video' && content.element) {
+          const video = content.element.querySelector('video');
+          if (video) { video.pause(); video.src = ''; }
+        }
+      });
+
       lightbox.init();
     }
   </script>{/footer_script}

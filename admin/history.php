@@ -145,6 +145,40 @@ $template->assign('display_thumbnail_selected', $form['display_thumbnail']);
 $template->assign('guest_id', $conf->guest_id);
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('History'));
 
+$page_data = [
+    'userName' => $form_param['user_name'] ?? null,
+    'userId' => $form_param['user_id'],
+    'imageId' => $form_param['image_id'] ?? '',
+    'ip' => $form_param['ip'] ?? '',
+    'apiMethod' => 'ws.php?format=json&method=pwg.history.search',
+    'guestId' => $conf->guest_id,
+    'strDwld' => functions::l10n('Downloaded'),
+    'strMostVisited' => functions::l10n('Most visited'),
+    'strBestRated' => functions::l10n('Best rated'),
+    'strList' => functions::l10n('Random photo'),
+    'strFavorites' => functions::l10n('Your favorites'),
+    'strRecentCats' => functions::l10n('Recent albums'),
+    'strRecentPics' => functions::l10n('Recent photos'),
+    'strMemories' => functions::l10n('Memories'),
+    'strNoLongerExistPhoto' => functions::l10n('This photo no longer exists'),
+    'strTags' => functions::l10n('Tags'),
+    'unitMb' => functions::l10n('%s MB'),
+    'strGuest' => functions::l10n('guest'),
+    'strContactForm' => functions::l10n('Contact Form'),
+    'strEditImg' => functions::l10n('Edit photo'),
+    'strSearchDetails' => [
+        'allwords' => functions::l10n('Search for words'),
+        'date_posted' => functions::l10n('Post date'),
+        'tags' => functions::l10n('Tags'),
+        'cat' => functions::l10n('Album'),
+        'author' => functions::l10n('Author'),
+        'added_by' => functions::l10n('Added by'),
+        'filetypes' => functions::l10n('File type'),
+    ],
+    'strAndMore' => functions::l10n('and %d more'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+

@@ -614,7 +614,7 @@ function openAddAlbumPopIn(parentAlbumId, pwgTree) {
     } else {
         document.querySelector("#AddAlbum .AddIconTitle span").innerHTML = add_album_root_title;
     }
-    document.getElementById("AddAlbum").style.display = '';
+    document.getElementById("AddAlbum").style.display = 'block';
     document.querySelector(".AddAlbumLabelUsername .user-property-input").value = "";
     document.querySelector(".AddAlbumLabelUsername .user-property-input").focus();
 
@@ -639,7 +639,7 @@ function closeAddAlbumPopIn() {
 }
 
 function openRenameAlbumPopIn(replacedAlbumName) {
-    document.getElementById("RenameAlbum").style.display = '';
+    document.getElementById("RenameAlbum").style.display = 'block';
     document.querySelector(".RenameAlbumTitle span").innerHTML =
         rename_item.replace("%s", replacedAlbumName);
     document.querySelector(".RenameAlbumLabelUsername .user-property-input").value = replacedAlbumName;
@@ -703,7 +703,7 @@ function triggerDeleteAlbum(cat_id, pwgTree) {
 }
 
 function openDeleteAlbumPopIn(cat_to_delete, pwgTree) {
-    document.getElementById("DeleteAlbum").style.display = '';
+    document.getElementById("DeleteAlbum").style.display = 'block';
     var node = pwgTree.getNodeById(cat_to_delete);
     if (node.children.length == 0) {
         document.querySelector(".DeleteIconTitle span").innerHTML =

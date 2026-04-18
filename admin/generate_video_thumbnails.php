@@ -126,6 +126,30 @@ $template->assign([
     'U_ACTION' => functions_url::get_root_url() . 'admin.php?page=generate_video_thumbnails',
 ]);
 
+$page_data = [
+    'vtStrings' => [
+        'unexpected_end' => functions::l10n('Server process ended unexpectedly. Check PHP error log for details.'),
+        'connection_lost' => functions::l10n('The connection to the server was lost.'),
+        'try_again' => functions::l10n('Try again'),
+        'aborted' => functions::l10n('Aborted'),
+        'aborted_message' => functions::l10n('Aborted. Any thumbnails already generated are saved.'),
+        'back' => functions::l10n('Back'),
+        'generating' => functions::l10n('Generating video thumbnails'),
+        'extracting' => functions::l10n('Extracting frames with FFmpeg'),
+        'generated' => functions::l10n('generated'),
+        'skipped' => functions::l10n('skipped'),
+        'done' => functions::l10n('Done'),
+        'file_not_found' => functions::l10n('File not found on disk'),
+        'ffmpeg_output' => functions::l10n('FFmpeg output'),
+        'ffmpeg_no_output' => functions::l10n('FFmpeg produced no output'),
+        'thumbnails_generated' => functions::l10n('thumbnails generated'),
+        'skipped_reason' => functions::l10n('skipped (file not found or FFmpeg unavailable)'),
+        'error' => functions::l10n('Error'),
+        'run_again' => functions::l10n('Run again'),
+    ],
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['generate_video_thumbnails']);
 

@@ -1,7 +1,6 @@
-{combine_script id='photo.autosize' path="themes/`$themeconf.id`/js/photo.autosize.js" load='footer'}
-
-{footer_script}<script>
-  RVAS = {
+{footer_script}<script type="module">
+  import { rvas_choose } from './themes/modus/js/photo.autosize.js';
+  window.RVAS = {
       derivatives: [
         {foreach from=$current.unique_derivatives item=derivative name=derivative_loop}
           {if 'svg' === $current.path_ext}
@@ -12,7 +11,8 @@
           { w:{$size[0]},h:{$size[1]},url:'{$derivative->get_url()|escape:'javascript'}',type:'{$derivative->get_type()}' }{if !$smarty.foreach.derivative_loop.last},{/if}
         {/foreach}],
         cp: '{$COOKIE_PATH|escape:'javascript'}'
-      }
+      };
+  window.rvas_choose = rvas_choose;
 </script>{/footer_script}
 {if $RVAS_PENDING}
   <noscript><img src="{$current.selected_derivative->get_url()}" {$current.selected_derivative->get_size_htm()}

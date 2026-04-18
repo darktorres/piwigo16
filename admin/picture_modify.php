@@ -453,6 +453,26 @@ $template->assign([
 
 functions_plugins::trigger_notify('loc_end_picture_modify');
 
+$cache_keys = functions_admin::get_admin_client_cache_keys(['tags', 'categories']);
+$page_data = [
+    'CACHE_KEYS' => $cache_keys,
+    'ROOT_URL' => functions_url::get_root_url(),
+    'str_create' => functions::l10n('Create'),
+    'str_cancel' => functions::l10n('Cancel'),
+    'str_are_you_sure' => functions::l10n('Are you sure?'),
+    'str_yes_delete' => functions::l10n('Yes, delete'),
+    'str_no_change' => functions::l10n('No, I have changed my mind'),
+    'url_delete' => $admin_url_start . '&delete=1&pwg_token=' . functions::get_pwg_token(),
+    'str_albums_found' => functions::l10n('<b>%d</b> albums found'),
+    'str_album_found' => functions::l10n('<b>1</b> album found'),
+    'str_result_limit' => functions::l10n('<b>%d+</b> albums found, try to refine the search'),
+    'str_orphan' => functions::l10n('This photo is an orphan'),
+    'str_no_search_in_progress' => functions::l10n('No search in progress'),
+    'related_categories_ids' => $related_categories_ids,
+    'str_already_in_related_cats' => functions::l10n('This albums is already in related categories list'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 //----------------------------------------------------------- sending html code
 
 require_once __DIR__ . '/../inc/vite_helper.php';

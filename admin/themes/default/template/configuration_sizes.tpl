@@ -1,14 +1,4 @@
-<script id="pwg-page-data" type="application/json">
-{
-  "titleMsg": "{'Are you sure you want to restore to default settings?'|translate|escape:'html'}",
-  "confirmMsg": "{'Yes, I am sure'|translate|escape:'html'}",
-  "cancelMsg": "{'No, I have changed my mind'|translate|escape:'html'}",
-  "labelMaxWidth": "{'Maximum width'|translate|escape:'html'}",
-  "labelWidth": "{'Width'|translate|escape:'html'}",
-  "labelMaxHeight": "{'Maximum height'|translate|escape:'html'}",
-  "labelHeight": "{'Height'|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_configuration_sizes}
 <script type="module" src="admin/themes/default/js/dist/{$vite_configuration_sizes}"></script>

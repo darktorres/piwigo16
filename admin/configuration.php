@@ -627,5 +627,8 @@ switch ($page['section']) {
 $template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Configuration'));
 
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['configuration']);
+
 //----------------------------------------------------------- sending html code
 $template->assign_var_from_handle('ADMIN_CONTENT', 'config');

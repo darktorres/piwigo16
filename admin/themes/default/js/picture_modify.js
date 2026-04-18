@@ -188,7 +188,7 @@ function remove_related_category(cat_id) {
     var el = document.getElementById(cat_id);
     if (el && el.parentElement) el.parentElement.remove();
 
-    cat_to_remove_index = related_categories_ids.indexOf(cat_id);
+    var cat_to_remove_index = related_categories_ids.indexOf(cat_id);
     if (cat_to_remove_index > -1) {
         related_categories_ids.splice(cat_to_remove_index, 1);
     }

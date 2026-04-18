@@ -1,8 +1,4 @@
-<script id="pwg-page-data" type="application/json">
-{
-  "nbTotal": {$nb_total}
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_comments}
 <script type="module" src="admin/themes/default/js/dist/{$vite_comments}"></script>

@@ -1,3 +1,5 @@
+import tippy from 'tippy.js';
+
 const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 /* Menubar: expand active section, collapse others on click */
 (function () {
@@ -34,4 +36,13 @@ _docReady( function () {
     var h2 = document.querySelector('h2');
     var h1 = document.querySelector('h1');
     if (h2 && h1) h1.innerHTML = h2.innerHTML;
+
+    tippy('.tiptip', { delay: 0, placement: 'top' });
+
+    document.querySelectorAll('a.externalLink').forEach(function(el) {
+      el.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.open(this.getAttribute("href"));
+      });
+    });
 });

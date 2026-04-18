@@ -79,7 +79,6 @@
                                     <span class="rateButtonStarEmpty" data-value="{$mark}"></span>
                                   {/if}
                                 {/foreach}
-                                {combine_script id='core.scripts' path='themes/default/js/scripts.js' load='async'}
                                 {footer_script}<script type="module">
                                   import { initRating, makeNiceRatingForm } from './themes/bootstrap_darkroom/js/rating.js';
                                   document._pwgRatingQueue = document._pwgRatingQueue || [];
@@ -194,7 +193,6 @@
                       </tr>
                     {/if}
                     {if $display_info.privacy_level and isset($available_permission_levels)}
-                      {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
                       {footer_script}<script>
                         function setPrivacyLevel(id, level, label) {
                           (new PwgWS('{$ROOT_URL}')).callService(

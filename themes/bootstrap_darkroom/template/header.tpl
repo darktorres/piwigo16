@@ -89,7 +89,12 @@
   <script type="module">
     import './themes/bootstrap_darkroom/js/theme.js';
     import { initHeader } from './themes/bootstrap_darkroom/js/header.js';
+    import { phpWGOpenWindow, PwgWS, setupPwgOpenWindow, setupPopuphelp } from './themes/default/js/scripts.js';
     document.addEventListener('DOMContentLoaded', initHeader);
+    window.phpWGOpenWindow = phpWGOpenWindow;
+    window.PwgWS = PwgWS;
+    setupPwgOpenWindow();
+    setupPopuphelp();
   </script>
   {get_combined_scripts load='header'}
   {if not empty($head_elements)}

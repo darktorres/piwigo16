@@ -3,6 +3,8 @@ import tippy from 'tippy.js';
 import { sprintf } from './common.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import { pwgDoubleSlider } from './doubleSlider.js';
+import { pwgDatepicker } from './datepicker.js';
+import { pwgAddAlbum } from './addAlbum.js';
 import { CategoriesCache, TagsCache } from './LocalStorageCache.js';
 import GLightbox from 'glightbox';
 

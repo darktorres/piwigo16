@@ -1,4 +1,5 @@
 import { pwgDatepicker } from './datepicker.js';
+import { sprintf } from './common.js';
 import tippy from 'tippy.js';
 
 var GeoIp = window.GeoIp || { get: function() {} };

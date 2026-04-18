@@ -1,4 +1,5 @@
 import tippy from 'tippy.js';
+import { sprintf } from './common.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import { pwgDoubleSlider } from './doubleSlider.js';
 import { TagsCache } from './LocalStorageCache.js';

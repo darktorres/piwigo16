@@ -14,6 +14,7 @@ const adminModules = [
   'addAlbum',
   'datepicker',
   'doubleSlider',
+  'maintenance',
 ];
 
 const input = {};

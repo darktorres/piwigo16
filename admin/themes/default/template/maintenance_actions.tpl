@@ -1,11 +1,21 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+<script id="pwg-page-data" type="application/json">
+{
+  "confirm_msg": "{"Yes, I am sure"|translate|escape:'html'}",
+  "cancel_msg": "{"No, I have changed my mind"|translate|escape:'html'}",
+  "no_time_elapsed": "{"right now"|translate|escape:'html'}",
+  "unit_MB": "{"%s MB"|translate|escape:'html'}"
+}
+</script>
 {footer_script require='pwgConfirm'}<script>
-  const confirm_msg = '{"Yes, I am sure"|translate}';
-  const cancel_msg = "{"No, I have changed my mind"|translate}";
-  const no_time_elapsed = "{"right now"|translate}";
-  const unit_MB = "{"%s MB"|translate}"
+  // Config loaded from pwg-page-data JSON block
+  const configEl = document.getElementById('pwg-page-data');
+  const cfg = configEl ? JSON.parse(configEl.textContent) : {};
+  const confirm_msg = cfg.confirm_msg || '{"Yes, I am sure"|translate}';
+  const cancel_msg = cfg.cancel_msg || "{"No, I have changed my mind"|translate}";
+  const no_time_elapsed = cfg.no_time_elapsed || "{"right now"|translate}";
+  const unit_MB = cfg.unit_MB || "{"%s MB"|translate}"
   let selected = [];
 
   document.querySelectorAll(".lock-gallery-button").forEach(function(el) {
@@ -132,7 +142,7 @@
   });
 </script>{/footer_script}
 
-{combine_script id='ajax' load='footer' path='admin/themes/default/js/maintenance.js'}
+<script type="module" src="/admin/themes/default/js/dist/maintenance.CWnWXXMa.js"></script>
 
 {if $isWebmaster == 1}
 

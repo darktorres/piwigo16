@@ -21,7 +21,7 @@ export default [
         ...globals.browser,
         Piwigo: "readonly",
         pwg_token: "readonly",
-        // Smarty template-injected config/state variables only (not utility functions)
+        // Smarty template-injected config/state variables
         pagination: "readonly",
         has_group: "readonly",
         view_selector: "readonly",
@@ -34,7 +34,18 @@ export default [
         owner: "readonly",
         groupOptions: "readonly",
         guest_id: "readonly",
-        // Add more as needed, but NOT utility functions - those must be imported
+        // Plugin/theme injected globals
+        RVTS: "readonly",
+        RVTS_CATS: "readonly",
+        PS_params: "readonly",
+        global_params: "readonly",
+        GeoIp: "readonly",
+        nb_plugin: "readonly",
+        related_categories_ids: "readonly",
+        newTag: "readonly",
+        tagBoxes: "readonly",
+        nbResult: "readonly",
+        // NOTE: sprintf, data, current_param, etc. must be imported, not added here
       },
     },
     rules: {

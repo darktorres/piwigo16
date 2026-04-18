@@ -41,6 +41,7 @@ const adminModules = [
   'user_list',
   'albums',
   'batchManagerGlobal',
+  'batch_manager_unit',
 ];
 
 const input = {};

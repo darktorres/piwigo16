@@ -31,8 +31,10 @@
   const prefix_icon = 'gallery-icon-';
 </script>{/footer_script}
 
-{combine_script id='mcs' load='async' require='tom-select' path='themes/default/js/mcs.js'}
 <div class="mcs-container">
+  {footer_script}<script type="module">
+    import './themes/default/js/mcs.js';
+  </script>{/footer_script}
   <div class="filter-manager-popin">
     <div class="filter-manager-popin-container">
       <span class="gallery-icon-cancel filter-manager-close"></span>

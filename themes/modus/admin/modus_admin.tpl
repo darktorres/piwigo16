@@ -1,5 +1,4 @@
 {include file='inc/colorbox.inc.tpl'}
-{footer_script}<script type="module">import { sprintf } from 'admin/themes/default/js/common.js'; window.sprintf = sprintf;</script>{/footer_script}
 {combine_script id='nouislider' load='footer' path='node_modules/nouislider/dist/nouislider.min.js'}
 {combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
 
@@ -80,7 +79,8 @@
 </style>{/html_style}
 
 
-{footer_script}<script>
+{footer_script}<script type="module">
+  import { sprintf } from 'admin/themes/default/js/common.js';
   document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('#modus-config input[type=checkbox]').forEach(function(cb) {
       cb.addEventListener('change', function() {

@@ -451,7 +451,7 @@ function lineConstructor(line, id, imageDisplay) {
             });
             detail_str = detail_str.slice(0, -2);
             newLine.querySelector(".detail-item-1").innerHTML = detail_str;
-            var detailItem = newLine.querySelector(".detail-item-1");
+            let detailItem = newLine.querySelector(".detail-item-1");
             detailItem.setAttribute("title", detail_str);
             detailItem.classList.remove("hide", "add");
             detailItem.classList.add("icon-tags");
@@ -460,7 +460,7 @@ function lineConstructor(line, id, imageDisplay) {
 
         case "most_visited": {
             newLine.querySelector(".type-name").innerHTML = str_most_visited;
-            var detail = newLine.querySelector(".detail-item-1");
+            let detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_most_visited;
             detail.classList.add("icon-fire");
             newLine.querySelector(".type-id").style.display = 'none';
@@ -468,7 +468,7 @@ function lineConstructor(line, id, imageDisplay) {
         }
         case "best_rated": {
             newLine.querySelector(".type-name").innerHTML = str_best_rated;
-            var detail = newLine.querySelector(".detail-item-1");
+            let detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_best_rated;
             detail.classList.add("icon-star");
             newLine.querySelector(".type-id").style.display = 'none';
@@ -476,7 +476,7 @@ function lineConstructor(line, id, imageDisplay) {
         }
         case "list": {
             newLine.querySelector(".type-name").innerHTML = str_list;
-            var detail = newLine.querySelector(".detail-item-1");
+            let detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_list;
             detail.classList.add("icon-dice-solid");
             newLine.querySelector(".type-id").style.display = 'none';
@@ -516,7 +516,7 @@ function lineConstructor(line, id, imageDisplay) {
             const active_items = Object.keys(active_search_details);
             if (active_items.length > 0) {
                 if (active_search_details.allwords) {
-                    var detailEl = newLine.querySelector(".detail-item-" + count_item);
+                    let detailEl = newLine.querySelector(".detail-item-" + count_item);
                     detailEl.innerHTML = active_search_details.allwords.join(" ");
                     detailEl.classList.add(search_icons.allwords, "tiptip");
                     detailEl.setAttribute(
@@ -535,7 +535,7 @@ function lineConstructor(line, id, imageDisplay) {
                     let temp_div = document.createElement("div");
                     temp_div.innerHTML = cat;
                     let text = temp_div.textContent.trim();
-                    var detailEl = newLine.querySelector(".detail-item-" + count_item);
+                    let detailEl = newLine.querySelector(".detail-item-" + count_item);
                     detailEl.innerHTML = cat;
                     detailEl.classList.add(search_icons.cat, "tiptip");
                     detailEl.setAttribute(
@@ -553,7 +553,7 @@ function lineConstructor(line, id, imageDisplay) {
                     const array_tags = Object.values(
                         active_search_details.tags,
                     );
-                    var detailEl = newLine.querySelector(".detail-item-" + count_item);
+                    let detailEl = newLine.querySelector(".detail-item-" + count_item);
                     detailEl.innerHTML = array_tags.join(" + ");
                     detailEl.classList.add(search_icons.tags, "tiptip");
                     detailEl.setAttribute(
@@ -589,7 +589,7 @@ function lineConstructor(line, id, imageDisplay) {
                             } else {
                                 array_key = [active_search_details[key]];
                             }
-                            var detailEl = newLine.querySelector(".detail-item-" + count_item);
+                            let detailEl = newLine.querySelector(".detail-item-" + count_item);
                             detailEl.innerHTML = array_key.join(" + ");
                             detailEl.classList.add(search_icons[key], "tiptip");
                             detailEl.setAttribute(
@@ -639,7 +639,7 @@ function lineConstructor(line, id, imageDisplay) {
                         return `<b>${str_search_details[key]}</b> : ${value_str}`;
                     })
                     .join(" <br />");
-                var detailItem = newLine.querySelector(".detail-item-3");
+                let detailItem = newLine.querySelector(".detail-item-3");
                 detailItem.innerHTML = sprintf(str_and_more, count_more);
                 detailItem.classList.add("icon-info-circled-1", "tiptip");
                 detailItem.setAttribute("title", search_details_str);
@@ -649,7 +649,7 @@ function lineConstructor(line, id, imageDisplay) {
         }
         case "favorites": {
             newLine.querySelector(".type-name").innerHTML = str_favorites;
-            var detail = newLine.querySelector(".detail-item-1");
+            let detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_favorites;
             detail.classList.add("icon-heart");
             newLine.querySelector(".type-id").style.display = 'none';
@@ -657,7 +657,7 @@ function lineConstructor(line, id, imageDisplay) {
         }
         case "recent_cats": {
             newLine.querySelector(".type-name").innerHTML = str_recent_cats;
-            var detail = newLine.querySelector(".detail-item-1");
+            let detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_recent_cats;
             detail.classList.add("icon-clock");
             newLine.querySelector(".type-id").style.display = 'none';
@@ -665,7 +665,7 @@ function lineConstructor(line, id, imageDisplay) {
         }
         case "recent_pics": {
             newLine.querySelector(".type-name").innerHTML = str_recent_pics;
-            var detail = newLine.querySelector(".detail-item-1");
+            let detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_recent_pics;
             detail.classList.add("icon-clock");
             newLine.querySelector(".type-id").style.display = 'none';
@@ -673,7 +673,7 @@ function lineConstructor(line, id, imageDisplay) {
         }
         case "categories": {
             newLine.querySelector(".type-name").innerHTML = line.CATEGORY;
-            var detail = newLine.querySelector(".detail-item-1");
+            let detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = line.CATEGORY;
             detail.classList.add("icon-folder-open", "tiptip");
             detail.setAttribute("title", line.FULL_CATEGORY_PATH);
@@ -684,7 +684,7 @@ function lineConstructor(line, id, imageDisplay) {
         }
         case "memories-1-year-ago": {
             newLine.querySelector(".type-name").innerHTML = str_memories;
-            var detail = newLine.querySelector(".detail-item-1");
+            let detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_memories;
             detail.classList.add("icon-clock");
             newLine.querySelector(".type-id").style.display = 'none';
@@ -738,7 +738,7 @@ function lineConstructor(line, id, imageDisplay) {
 
     newLine.querySelector(".detail-item-1").classList.remove("hide");
     if (line.TYPE == "high") {
-        var detailItem = newLine.querySelector(".detail-item-1");
+        let detailItem = newLine.querySelector(".detail-item-1");
         detailItem.innerHTML = str_dwld;
         detailItem.classList.add("icon-blue");
         detailItem.classList.remove("detail-item-1", "hide");

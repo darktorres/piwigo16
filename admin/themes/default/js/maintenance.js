@@ -72,11 +72,11 @@ export function init(cfg) {
       el.addEventListener('click', function() {
         if (this.getAttribute('data-selected') == '1') {
           this.setAttribute('data-selected', '0');
-          var icon = this.querySelector("i");
+          let icon = this.querySelector("i");
           if (icon) icon.style.display = 'none';
         } else {
           this.setAttribute('data-selected', '1');
-          var icon = this.querySelector("i");
+          let icon = this.querySelector("i");
           if (icon) icon.style.display = '';
         }
         this.dispatchEvent(new Event('change', {bubbles: true}));

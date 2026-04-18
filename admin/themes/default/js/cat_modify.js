@@ -384,10 +384,10 @@ export function init(cfg) {
     if (linkedAlbumSearchInput) {
         linkedAlbumSearchInput.addEventListener("input", function () {
             if (this.value != 0) {
-                var cancelBtn = document.querySelector("#linkedAlbumSearch .search-cancel-linked-album");
+                let cancelBtn = document.querySelector("#linkedAlbumSearch .search-cancel-linked-album");
                 if (cancelBtn) cancelBtn.style.display = '';
             } else {
-                var cancelBtn = document.querySelector("#linkedAlbumSearch .search-cancel-linked-album");
+                let cancelBtn = document.querySelector("#linkedAlbumSearch .search-cancel-linked-album");
                 if (cancelBtn) cancelBtn.style.display = 'none';
             }
 
@@ -430,7 +430,7 @@ export function init(cfg) {
                             document.getElementById("cat-commentable").click();
                         }
 
-                        temp_txt = document.querySelector(".info-message").textContent;
+                        const temp_txt = document.querySelector(".info-message").textContent;
                         document.querySelector(".info-message").textContent = str_album_comment_allow;
                         document.querySelector(".info-message").style.display = '';
 
@@ -471,7 +471,7 @@ export function init(cfg) {
                             document.getElementById("cat-commentable").click();
                         }
 
-                        temp_txt = document.querySelector(".info-message").textContent;
+                        const temp_txt = document.querySelector(".info-message").textContent;
                         document.querySelector(".info-message").textContent = str_album_comment_disallow;
                         document.querySelector(".info-message").style.display = '';
 

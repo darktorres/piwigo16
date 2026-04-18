@@ -28,7 +28,7 @@
   str_empty_search_top_alt = "{'Fill in the filters to start a search'|translate|escape:javascript}";
   str_empty_search_bot_alt = "{'Pre-established filters are proposed, but you can add or remove them using the "Choose filters" button.'|translate|escape:javascript}";
 
-  const prefix_icon = 'gallery-icon-';
+  prefix_icon = 'gallery-icon-';
 </script>{/footer_script}
 
 <div class="mcs-container">

@@ -42,7 +42,7 @@ export function changeElementType(element, newType) {
 
     const newElement = document.createElement(newType);
     for (const key in attrs) {
-        if (attrs.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(attrs, key)) {
             newElement.setAttribute(key, attrs[key]);
         }
     }

@@ -23,7 +23,7 @@ export function makeNiceRatingForm(options) {
         rateButton.initialRateValue = rateButton.value;
         try {
             rateButton.type = "button";
-        } catch (_e) {}
+        } catch (_e) { /* read-only in some browsers */ }
 
         rateButton.value = " ";
         rateButton.style.marginLeft = 0;

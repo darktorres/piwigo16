@@ -1,3 +1,4 @@
+/* global GDThumb */
 export function initRVTS(RVTS) {
     if (RVTS.start > 0) {
         const fEl = document.querySelector(".navigationBar A[rel=first]");
@@ -182,7 +183,7 @@ export function initRVTS(RVTS) {
                                     "",
                                     url + "#top",
                                 );
-                            } catch (_e) {}
+                            } catch (_e) { /* ignore history.replaceState errors */ }
                         }
                         break;
                     }

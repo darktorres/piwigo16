@@ -21,29 +21,16 @@ export function PwgWS(urlRoot) {
 PwgWS.prototype = {
     callService: function (method, parameters, options) {
         if (options) {
-            for (var prop in options) this.options[prop] = options[prop];
+            for (let prop in options) this.options[prop] = options[prop];
         }
-        try {
-            this.xhr = new XMLHttpRequest();
-        } catch (e) {
-            try {
-                this.xhr = new ActiveXObject("Msxml2.XMLHTTP");
-            } catch (e) {
-                try {
-                    this.xhr = new ActiveXObject("Microsoft.XMLHTTP");
-                } catch (e) {
-                    this.error(0, "Cannot create request object");
-                    return;
-                }
-            }
-        }
+        this.xhr = new XMLHttpRequest();
         this.xhr.onreadystatechange = pwgBind(this, this.onStateChange);
 
         var url = this.urlRoot + "ws.php?format=json&method=" + method;
 
         var body = "";
         if (parameters) {
-            for (var prop in parameters) {
+            for (let prop in parameters) {
                 if (typeof parameters[prop] == "object" && parameters[prop]) {
                     for (var i = 0; i < parameters[prop].length; i++)
                         body +=

@@ -164,7 +164,7 @@ document.addEventListener("mouseup", function (e) {
 });
 
     /* ********** Thumbs */
-    var cfg = batchManagerConfig;
+    cfg = batchManagerConfig;
     var lang = cfg.lang;
 
     /* ---- Tags ---- */
@@ -621,9 +621,9 @@ document.addEventListener("mouseup", function (e) {
                 document.querySelectorAll(".bulkAction").forEach(function (el) {
                     el.style.display = 'none';
                 });
-                var regenerationText = document.getElementById("regenerationText");
+                let regenerationText = document.getElementById("regenerationText");
                 if (regenerationText) regenerationText.innerHTML = lang.syncProgressMessage;
-                var elements = [];
+                let elements = [];
 
                 if (document.querySelector("input[name=setSelected]").checked) {
                     elements = cfg.allElements.slice();
@@ -633,10 +633,10 @@ document.addEventListener("mouseup", function (e) {
                     });
                 }
 
-                var progressBar_max = elements.length;
-                var todo = 0;
+                let progressBar_max = elements.length;
+                let todo = 0;
                 var syncBlockSize = Math.min(Number((elements.length / 2).toFixed()), 500);
-                var image_ids = [];
+                let image_ids = [];
 
                 document.getElementById("applyActionBlock").style.display = 'none';
                 document.querySelectorAll(".permitActionListButton").forEach(function (el) {
@@ -646,7 +646,7 @@ document.addEventListener("mouseup", function (e) {
                 document.getElementById("regenerationMsg").style.display = '';
                 progress_bar_start();
 
-                for (var i = 0; i < elements.length; i++) {
+                for (let i = 0; i < elements.length; i++) {
                     image_ids.push(elements[i]);
                     if (i % syncBlockSize != syncBlockSize - 1 && i != elements.length - 1) continue;
 
@@ -691,7 +691,7 @@ document.addEventListener("mouseup", function (e) {
                     el.style.display = 'none';
                 });
 
-                var elements = [];
+                let elements = [];
                 if (document.querySelector("input[name=setSelected]").checked) {
                     elements = cfg.allElements.slice();
                 } else {
@@ -700,23 +700,23 @@ document.addEventListener("mouseup", function (e) {
                     });
                 }
 
-                var progressBar_max = elements.length;
-                var todo = 0;
+                let progressBar_max = elements.length;
+                let todo = 0;
                 var deleteBlockSize = Math.min(Number((elements.length / 2).toFixed()), 1000);
-                var image_ids = [];
+                let image_ids = [];
 
                 document.getElementById("applyActionBlock").style.display = 'none';
                 document.querySelectorAll(".permitActionListButton").forEach(function (el) {
                     el.style.display = 'none';
                 });
                 document.getElementById("confirmDel").style.display = 'none';
-                var regenerationText = document.getElementById("regenerationText");
+                let regenerationText = document.getElementById("regenerationText");
                 if (regenerationText) regenerationText.innerHTML = lang.deleteProgressMessage;
                 document.getElementById("regenerationMsg").style.display = '';
                 progress_bar_start();
 
                 var _deleteQueue = Promise.resolve();
-                for (var i = 0; i < elements.length; i++) {
+                for (let i = 0; i < elements.length; i++) {
                     image_ids.push(elements[i]);
                     if (i % deleteBlockSize != deleteBlockSize - 1 && i != elements.length - 1) continue;
 

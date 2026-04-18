@@ -114,7 +114,6 @@ final class RVTS
         $ajax_url_0          = ord($ajax_url_model[0]);
         $ajax_url_rest       = addcslashes(substr($ajax_url_model, 1), "'\\</");
         $ajax_loader_img_js  = json_encode($ajax_loader_image);
-        $js_path             = functions_url::get_root_url() . "plugins/{$my_base_name}/rv_tscroller.js";
 
         $template->block_footer_script(
             null,
@@ -130,7 +129,7 @@ final class RVTS
                 }
                 </script>
                 <script type="module">
-                import { initRVTS_CATS } from '{$js_path}';
+                import { initRVTS_CATS } from './plugins/{$my_base_name}/rv_tscroller.js';
                 const cfg = JSON.parse(document.getElementById('rvts-cats-config').textContent);
                 initRVTS_CATS(cfg);
                 </script>
@@ -184,7 +183,6 @@ final class RVTS
         $moreMsg_js = json_encode($moreMsg);
         $prevMsg_js = json_encode($prevMsg);
         $ajax_loader_image_js = json_encode($ajax_loader_image);
-        $js_path = functions_url::get_root_url() . "plugins/{$my_base_name}/rv_tscroller.js";
 
         $template->block_footer_script(
             null,
@@ -203,7 +201,7 @@ final class RVTS
                 }
                 </script>
                 <script type="module">
-                import { initRVTS } from '{$js_path}';
+                import { initRVTS } from './plugins/{$my_base_name}/rv_tscroller.js';
                 const cfg = JSON.parse(document.getElementById('rvts-config').textContent);
                 initRVTS(cfg);
                 document.querySelector('.navigationBar') && (document.querySelector('.navigationBar').style.display = 'none');

@@ -189,4 +189,7 @@ while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
     $template->append('sites', $tpl_var);
 }
 
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['site_manager']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'site_manager');

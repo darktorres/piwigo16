@@ -45,6 +45,7 @@ const adminModules = [
   'photos_add_applications',
   'photos_add_direct',
   'rating',
+  'site_manager',
 ];
 
 const input = {};

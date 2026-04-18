@@ -2,8 +2,7 @@ import { initModule } from './moduleInit.js';
 import { pwgDatepicker } from './datepicker.js';
 import { sprintf } from './common.js';
 import tippy from 'tippy.js';
-
-var GeoIp = window.GeoIp || { get: function() {} };
+import { GeoIp } from './geoip.js';
 
 // Module-level mutable config - initialized by init()
 let filter_user_name, API_METHOD;

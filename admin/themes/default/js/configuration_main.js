@@ -1,4 +1,6 @@
 import { initModule } from './moduleInit.js';
+import tippy from 'tippy.js';
+import GLightbox from 'glightbox';
 
 export function init(cfg) {
   const { isOrderByCustom, maxOrderByFields } = cfg;

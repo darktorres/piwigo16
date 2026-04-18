@@ -1,5 +1,7 @@
 import { initModule } from './moduleInit.js';
 import DataTable from 'datatables.net';
+import { pwgConfirm } from './pwgConfirm.js';
+import { PwgWS } from './pwgws.js';
 
 export function init(cfg) {
   const { nbElements, rootUrl, titleMsg, confirmMsg, cancelMsg } = cfg;

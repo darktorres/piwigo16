@@ -1,5 +1,6 @@
 import { initModule } from './moduleInit.js';
 import { CategoriesCache } from './LocalStorageCache.js';
+import { PwgWS } from './pwgws.js';
 
 export function init(cfg) {
   const { categoriesServerKey, categoriesServerId, rootUrl, nbElements } = cfg;

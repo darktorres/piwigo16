@@ -25,21 +25,6 @@ export default [
       sourceType: "module",
       globals: {
         ...globals.browser,
-        Piwigo: "readonly",
-        pwg_token: "readonly",
-        // Smarty template-injected config/state variables
-        pagination: "readonly",
-        has_group: "readonly",
-        view_selector: "readonly",
-        status_to_str: "readonly",
-        registered_str: "readonly",
-        last_visit_str: "readonly",
-        dates_infos: "readonly",
-        str_and_others_tags: "readonly",
-        connected_user: "readonly",
-        owner: "readonly",
-        groupOptions: "readonly",
-        guest_id: "readonly",
         // Gallery search filter Smarty-injected globals (search_filters.inc.tpl)
         search_id: "readonly",
         fullname_of_cat: "readonly",
@@ -52,15 +37,8 @@ export default [
         str_filetypes_widget_label: "readonly",
         str_empty_search_top_alt: "readonly",
         str_empty_search_bot_alt: "readonly",
-        // Plugin/theme injected globals
-        RVTS: "readonly",
-        RVTS_CATS: "readonly",
+        // Plugin/theme injected globals (search_filters.inc.tpl)
         global_params: "readonly",
-        GeoIp: "readonly",
-        nb_plugin: "readonly",
-        newTag: "readonly",
-        tagBoxes: "readonly",
-        nbResult: "readonly",
         // NOTE: sprintf, data, current_param, etc. must be imported, not added here
       },
     },

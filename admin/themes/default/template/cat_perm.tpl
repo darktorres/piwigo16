@@ -4,13 +4,7 @@
   const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
 </script>{/footer_script}
 
-<script id="pwg-page-data" type="application/json">
-{
-  "CACHE_KEYS": {$CACHE_KEYS|json_encode},
-  "ROOT_URL": "{$ROOT_URL|escape:javascript}",
-  "nb_users_granted_indirect": {if isset($nb_users_granted_indirect)}{$nb_users_granted_indirect}{else}0{/if}
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_cat_perm}
 <script type="module" src="admin/themes/default/js/dist/{$vite_cat_perm}"></script>

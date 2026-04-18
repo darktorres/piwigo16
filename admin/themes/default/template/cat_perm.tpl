@@ -1,59 +1,20 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
-
-{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {footer_script}<script>
   const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
-  (function() {
-    {* <!-- GROUPS --> *}
-    var groupsCache = new GroupsCache({
-      serverKey: '{$CACHE_KEYS.groups|default:''}',
-      serverId: '{$CACHE_KEYS._hash}',
-      rootUrl: '{$ROOT_URL}'
-    });
-
-    groupsCache.selectize(document.querySelectorAll('[data-selectize=groups]'));
-
-    {* <!-- USERS --> *}
-    var usersCache = new UsersCache({
-      serverKey: '{$CACHE_KEYS.users}',
-      serverId: '{$CACHE_KEYS._hash}',
-      rootUrl: '{$ROOT_URL}'
-    });
-
-    usersCache.selectize(document.querySelectorAll('[data-selectize=users]'));
-
-    {* <!-- TOGGLES --> *}
-    function checkStatusOptions() {
-      var checked = document.querySelector("input[name=status]:checked");
-      var privateOptions = document.getElementById("privateOptions");
-      if (privateOptions) {
-        privateOptions.style.display = (checked && checked.value === "private") ? '' : 'none';
-      }
-    }
-
-    checkStatusOptions();
-    var selectStatus = document.getElementById("selectStatus");
-    if (selectStatus) {
-      selectStatus.addEventListener('change', function() { checkStatusOptions(); });
-    }
-
-    {if isset($nb_users_granted_indirect) && $nb_users_granted_indirect>0}
-      document.querySelectorAll(".toggle-indirectPermissions").forEach(function(el) {
-        el.addEventListener('click', function(e) {
-          e.preventDefault();
-          document.querySelectorAll(".toggle-indirectPermissions").forEach(function(t) {
-            t.style.display = t.style.display === 'none' ? '' : 'none';
-          });
-          var details = document.getElementById("indirectPermissionsDetails");
-          if (details) details.style.display = details.style.display === 'none' ? '' : 'none';
-        });
-      });
-    {/if}
-  }());
 </script>{/footer_script}
+
+<script id="pwg-page-data" type="application/json">
+{
+  "CACHE_KEYS": {$CACHE_KEYS|json_encode},
+  "ROOT_URL": "{$ROOT_URL|escape:javascript}",
+  "nb_users_granted_indirect": {if isset($nb_users_granted_indirect)}{$nb_users_granted_indirect}{else}0{/if}
+}
+</script>
+
+{if $vite_cat_perm}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_cat_perm}"></script>
+{/if}
 
 <form action="{$F_ACTION}" method="post" id="categoryPermissions">
 

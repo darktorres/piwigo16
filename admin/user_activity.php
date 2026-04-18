@@ -130,6 +130,46 @@ $query = <<<SQL
 [$nb_users] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 $template->assign('nb_users', $nb_users);
 
+$cache_keys = functions_admin::get_admin_client_cache_keys(['users']);
+$page_data = [
+    'usersServerKey' => $cache_keys['users'],
+    'usersServerId' => $cache_keys['_hash'],
+    'rootUrl' => functions_url::get_root_url(),
+    'usersKey' => functions::l10n('Users'),
+    'nbUsers' => $nb_users,
+    'actionTypes' => [
+        'add' => functions::l10n('add'),
+        'delete' => functions::l10n('deletion'),
+        'move' => functions::l10n('move'),
+        'edit' => functions::l10n('edit'),
+        'login' => functions::l10n('login'),
+        'logout' => functions::l10n('logout'),
+    ],
+    'actionInfos' => [
+        'album' => [
+            'added' => functions::l10n('%d album added'),
+            'deleted' => functions::l10n('%d album deleted'),
+            'edited' => functions::l10n('%d album edited'),
+            'moved' => functions::l10n('%d album moved'),
+            'addedPlural' => functions::l10n('%d albums added'),
+            'deletedPlural' => functions::l10n('%d albums deleted'),
+            'editedPlural' => functions::l10n('%d albums edited'),
+            'movedPlural' => functions::l10n('%d albums moved'),
+        ],
+        'photo' => [
+            'added' => functions::l10n('%d photo added'),
+            'deleted' => functions::l10n('%d photo deleted'),
+            'edited' => functions::l10n('%d photo edited'),
+            'moved' => functions::l10n('%d photo moved'),
+            'addedPlural' => functions::l10n('%d photos added'),
+            'deletedPlural' => functions::l10n('%d photos deleted'),
+            'editedPlural' => functions::l10n('%d photos edited'),
+            'movedPlural' => functions::l10n('%d photos moved'),
+        ],
+    ],
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['user_activity']);
 

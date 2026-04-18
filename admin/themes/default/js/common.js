@@ -1,4 +1,4 @@
-function initFontCheckbox(container) {
+export function initFontCheckbox(container) {
     /* checkbox */
     container.querySelectorAll("input[type=checkbox]").forEach(function(cb) {
         var prev = cb.previousElementSibling;
@@ -42,12 +42,12 @@ document.querySelectorAll(".font-checkbox").forEach(function(el) {
     initFontCheckbox(el);
 });
 
-function array_delete(arr, item) {
+export function array_delete(arr, item) {
     var i = arr.indexOf(item);
     if (i != -1) arr.splice(i, 1);
 }
 
-function str_repeat(i, m) {
+export function str_repeat(i, m) {
     for (var o = []; m > 0; o[--m] = i);
     return o.join("");
 }
@@ -67,13 +67,13 @@ if (!Array.prototype.indexOf) {
     };
 }
 
-function getRandomInt(min, max) {
+export function getRandomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function sprintf() {
+export function sprintf() {
     var i = 0;
     var a;
     var f = arguments[i++];
@@ -173,7 +173,7 @@ document.querySelectorAll(".search-input").forEach(function (el) {
 });
 
 // Class to implement a temporary state and reverse it
-class TemporaryState {
+export class TemporaryState {
     constructor() {
         //Arrays to reverse changes
         this.attrChanges = []; //Attribute changes : {object(s), attribute, value}

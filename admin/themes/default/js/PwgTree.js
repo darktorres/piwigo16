@@ -1,5 +1,4 @@
-(function (window) {
-    'use strict';
+'use strict';
 
     function TreeNode(data, parent) {
         this.id = data.id;
@@ -296,5 +295,4 @@
         return null;
     };
 
-    window.PwgTree = PwgTree;
-})(window);
+export { PwgTree, TreeNode };

@@ -1,5 +1,6 @@
-(function (exports) {
-    "use strict";
+"use strict";
+
+import TomSelect from 'tom-select';
 
     /**
      * Base LocalStorage cache
@@ -442,12 +443,7 @@
         this._selectize(els, options);
     };
 
-    /**
-     * Expose classes in global scope
-     */
-    exports.LocalStorageCache = LocalStorageCache;
-    exports.CategoriesCache = CategoriesCache;
-    exports.TagsCache = TagsCache;
-    exports.GroupsCache = GroupsCache;
-    exports.UsersCache = UsersCache;
-})(window);
+/**
+ * Export classes as ES modules
+ */
+export { LocalStorageCache, CategoriesCache, TagsCache, GroupsCache, UsersCache };

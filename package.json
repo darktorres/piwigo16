@@ -4,6 +4,7 @@
   "scripts": {
     "preinstall": "cd tests && bun install && cd ../themes/bootstrap_darkroom && bun install --omit=dev",
     "reinstall": "bunx rimraf node_modules tests/node_modules themes/bootstrap_darkroom/node_modules && bun install && cd tests && bun install && cd ../themes/bootstrap_darkroom && bun install --omit=dev",
+    "build": "vite build",
     "test": "cd tests && bunx playwright test",
     "test:headed": "cd tests && bunx playwright test --headed",
     "test:report": "cd tests && bunx playwright show-report",
@@ -40,6 +41,7 @@
     "eslint": "^9.28.0",
     "eslint-plugin-no-jquery": "^3.1.1",
     "globals": "^16.2.0",
-    "rimraf": "^6.0.1"
+    "rimraf": "^6.0.1",
+    "vite": "^8.0.8"
   }
 }

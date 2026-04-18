@@ -1,13 +1,15 @@
-(function () {
-    /**
-     * pwgDoubleSlider — noUiSlider-backed range slider, jQuery-free.
+import noUiSlider from 'nouislider';
+import { sprintf } from './common.js';
+
+/**
+ * pwgDoubleSlider — noUiSlider-backed range slider, jQuery-free.
      *
      * OPTIONS:
      *   values   {mixed[]}  — ordered array of allowed values
      *   selected {object}   — { min, max } initial selection
      *   text     {string}   — sprintf template shown in .slider-info
      */
-    window.pwgDoubleSlider = function (containerEl, options) {
+export function pwgDoubleSlider(containerEl, options) {
         var sliderEl = containerEl.querySelector(".slider-slider");
 
         function findClosest(array, value) {
@@ -56,5 +58,4 @@
         });
 
         return containerEl;
-    };
-})();
+}

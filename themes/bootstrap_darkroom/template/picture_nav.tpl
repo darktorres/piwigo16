@@ -73,7 +73,7 @@
                 {/if}
                 {if isset($U_SLIDESHOW_START)}
                     <li class="nav-item">
-                        <a class="nav-link" href="{if $theme_config->photoswipe}javascript:;{else}{$U_SLIDESHOW_START}{/if}"
+                        <a class="nav-link" href="{$U_SLIDESHOW_START}"
                             title="{'slideshow'|translate}" id="startSlideshow" rel="nofollow">
                             <i class="fas fa-play fa-fw" aria-hidden="true"></i><span
                                 class="d-lg-none ms-2 text-capitalize">{'slideshow'|translate}</span>

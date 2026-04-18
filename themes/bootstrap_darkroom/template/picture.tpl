@@ -93,37 +93,13 @@
 </div>
 
 <div id="carousel-container" class="container">
-  {if !empty($thumbnails) && ($theme_config->slick_enabled || $theme_config->photoswipe)}
+  {if !empty($thumbnails) && $theme_config->slick_enabled}
     <div id="theImageCarousel" class="row mx-0{if !$theme_config->slick_enabled} d-none{/if}">
       <div class="col-lg-10 col-md-12 mx-auto">
         <div id="thumbnailCarousel" class="swiper{if $theme_config->slick_centered} swiper-centered{/if}">
           <div class="swiper-wrapper">
-          {assign var=idx value=0}
           {foreach $thumbnails as $thumbnail}
             {assign var=derivative value=$pwg->derivative($derivative_params_square, $thumbnail.src_image)}
-            {if !$theme_config->slick_infinite}
-              {assign var=derivative_medium value=$pwg->derivative($derivative_params_medium, $thumbnail.src_image)}
-              {assign var=derivative_large value=$pwg->derivative($derivative_params_large, $thumbnail.src_image)}
-              {assign var=derivative_xxlarge value=$pwg->derivative($derivative_params_xxlarge, $thumbnail.src_image)}
-            {/if}
-            {if $theme_config->photoswipe && !$theme_config->slick_infinite}
-              <div
-                class="swiper-slide text-center{if $thumbnail.id eq $current.id && !$theme_config->slick_infinite} thumbnail-active{/if}">
-                <a {if $thumbnail.id eq $current.id} id="thumbnail-active" {/if} href="{$thumbnail.URL}" data-index="{$idx}"
-                  data-name="{$thumbnail.NAME}" data-description="{$thumbnail.DESCRIPTION}"
-                  {if !$theme_config->slick_infinite}data-src-xlarge="{$derivative_xxlarge->get_url()}"
-                    data-size-xlarge="{$derivative_xxlarge->get_size_hr()}" data-src-large="{$derivative_large->get_url()}"
-                    data-size-large="{$derivative_large->get_size_hr()}" data-src-medium="{$derivative_medium->get_url()}"
-                    data-size-medium="{$derivative_medium->get_size_hr()}" {if preg_match("/(mp4|m4v)$/", $thumbnail.PATH)}
-                      data-src-original="{$U_HOME}{$thumbnail.PATH}" data-size-original="{$thumbnail.SIZE}" data-video="true"
-                    {/if}
-                  {/if}>
-                  <img data-lazy="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
-                    alt="{$thumbnail.TN_ALT}" title="{if isset($thumbnail.TN_TITLE)}{$thumbnail.TN_TITLE}{/if}"
-                    class="img-fluid {if isset($thumbnail.path_ext)}path-ext-{$thumbnail.path_ext}{/if} {if isset($thumbnail.file_ext)}file-ext-{$thumbnail.file_ext}{/if}">
-                </a>
-              </div>
-            {else}
               <div class="swiper-slide text-center{if $thumbnail.id eq $current.id} thumbnail-active{/if}">
                 <a href="{$thumbnail.URL}">
                   <img data-lazy="{$derivative->get_url()}" {$derivative->get_size_htm()} loading="lazy" decoding="async"
@@ -131,8 +107,6 @@
                     class="img-fluid {if isset($thumbnail.path_ext)}path-ext-{$thumbnail.path_ext}{/if} {if isset($thumbnail.file_ext)}file-ext-{$thumbnail.file_ext}{/if}">
                 </a>
               </div>
-            {/if}
-            {assign var=idx value=$idx+1}
           {/foreach}
           </div>
         </div>

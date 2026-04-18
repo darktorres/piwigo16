@@ -276,13 +276,7 @@
                     <li>
                         <label labelfor="thumbnail_linkto">{'Link thumbnail to'|translate}</label>
                         <select name="thumbnail_linkto">
-                            <option value="picture" {if $theme_config->thumbnail_linkto == 'picture'}
-                                selected="selected" {/if}>{'Picture details page'|translate}</option>
-                            <option value="photoswipe" {if $theme_config->thumbnail_linkto == 'photoswipe'}
-                                selected="selected" {/if}>{'PhotoSwipe Slideshow'|translate}</option>
-                            <option value="photoswipe_mobile_only"
-                                {if $theme_config->thumbnail_linkto == 'photoswipe_mobile_only'} selected="selected"
-                                {/if}>{'Photoswipe Slideshow (Mobile devices only)'|translate}</option>
+                            <option value="picture" selected="selected">{'Picture details page'|translate}</option>
                         </select>
                     </li>
                     <li>
@@ -379,26 +373,6 @@
                         </label>
                         <span
                             class="info">{'Display the currently selected image in the middle. Works best with infinite looping enabled.'|translate}</span>
-                    </li>
-                </ul>
-            </fieldset>
-            <fieldset>
-                <legend>PhotoSwipe {'Settings'|translate}</legend>
-                <ul>
-                    <li>
-                        <label class="font-checkbox">
-                            <span class="icon-check"></span>
-                            <input type="checkbox" name="photoswipe" {if $theme_config->photoswipe} checked="checked"
-                                {/if}>
-                            {'Enabled'|translate}
-                        </label>
-                        <span
-                            class="info">{'Enable PhotoSwipe fullscreen slideshow. Disable if you prefer to use Plugins like Fotorama or Piwigo\'s default slideshow.'|translate}</span>
-                    </li>
-                    <li>
-                        <label labelfor="photoswipe_interval">{'Autoplay interval'|translate}</label>
-                        <input type="number" name="photoswipe_interval" value="{$theme_config->photoswipe_interval}"
-                            min="1000" max="50000"> {'milliseconds'|translate}
                     </li>
                 </ul>
             </fieldset>
@@ -619,8 +593,6 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         var themeSelect = document.querySelector('select[name=bootstrap_theme]');
-        var photoswipeCheckbox = document.querySelector('input[name=photoswipe]');
-        var thumbnailLinktoSelect = document.querySelector('select[name=thumbnail_linkto]');
         var pageHeaderSelect = document.querySelector('select[name=page_header]');
 
         if (themeSelect && themeSelect.value === 'bootswatch') {
@@ -629,15 +601,6 @@
             preview.innerHTML = '<img src="themes/bootstrap_darkroom/admin/img/' + themeSelect
                 .value + '.png" style="padding: 10px 0;"/>';
             preview.style.display = '';
-        }
-
-        if (thumbnailLinktoSelect && photoswipeCheckbox) {
-            var link_target = thumbnailLinktoSelect.value;
-            if (!photoswipeCheckbox.checked && link_target !== 'photoswipe') {
-                thumbnailLinktoSelect.value = 'picture';
-                document.querySelector('select[name=thumbnail_linkto] option[value=photoswipe]').disabled = true;
-                document.querySelector('select[name=thumbnail_linkto] option[value=photoswipe_mobile_only]').disabled = true;
-            }
         }
 
         if (pageHeaderSelect) {
@@ -725,21 +688,4 @@
         });
     }
 
-    var photoswipeCheckbox = document.querySelector('input[name=photoswipe]');
-    if (photoswipeCheckbox) {
-        photoswipeCheckbox.addEventListener('change', function() {
-            var thumbnailLinktoSelect = document.querySelector('select[name=thumbnail_linkto]');
-            if (thumbnailLinktoSelect) {
-                var curr = thumbnailLinktoSelect.value;
-                if (!this.checked && curr !== 'picture') {
-                    thumbnailLinktoSelect.value = 'picture';
-                    document.querySelector('select[name=thumbnail_linkto] option[value=photoswipe]').disabled = true;
-                    document.querySelector('select[name=thumbnail_linkto] option[value=photoswipe_mobile_only]').disabled = true;
-                } else {
-                    document.querySelector('select[name=thumbnail_linkto] option[value=photoswipe]').disabled = false;
-                    document.querySelector('select[name=thumbnail_linkto] option[value=photoswipe_mobile_only]').disabled = false;
-                }
-            }
-        });
-    }
 </script>{/footer_script}

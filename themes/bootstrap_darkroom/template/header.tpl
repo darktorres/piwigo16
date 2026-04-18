@@ -86,8 +86,11 @@
     {assign var=loc value="footer"}
   {/if}
   {combine_script id='bootstrap' path='themes/bootstrap_darkroom/node_modules/bootstrap/dist/js/bootstrap.bundle.js' load=$loc}
-  {combine_script id=$themeconf.name require='bootstrap' path='themes/bootstrap_darkroom/js/theme.js' load='footer'}
-  {combine_script id='bd-header' require=$themeconf.name path='themes/bootstrap_darkroom/js/header.js' load='footer'}
+  <script type="module">
+    import './themes/bootstrap_darkroom/js/theme.js';
+    import { initHeader } from './themes/bootstrap_darkroom/js/header.js';
+    document.addEventListener('DOMContentLoaded', initHeader);
+  </script>
   {get_combined_scripts load='header'}
   {if not empty($head_elements)}
     {foreach $head_elements as $elt}{$elt}

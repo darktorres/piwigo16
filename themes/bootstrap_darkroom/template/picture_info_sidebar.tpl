@@ -110,10 +110,10 @@
                                     {/if}
                                 {/foreach}
                                 {combine_script id='core.scripts' path='themes/default/js/scripts.js' load='async'}
-                                {combine_script id='rating' require='core.scripts' path='themes/bootstrap_darkroom/js/rating.js' load='async'}
-                                {footer_script}<script>
-                                    var _pwgRatingAutoQueue = _pwgRatingAutoQueue || [];
-                                    _pwgRatingAutoQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
+                                {footer_script}<script type="module">
+                                    import { initRating, makeNiceRatingForm } from './themes/bootstrap_darkroom/js/rating.js';
+                                    window._pwgRatingAutoQueue = window._pwgRatingAutoQueue || [];
+                                    window._pwgRatingAutoQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
                                     onSuccess: function(rating) {
                                     var e = document.getElementById("updateRate");
                                     if (e) e.innerHTML = "{'Update your rating'|translate|escape:'javascript'}";

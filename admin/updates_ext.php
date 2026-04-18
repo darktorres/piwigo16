@@ -84,7 +84,7 @@ $template->assign('PWG_TOKEN', functions::get_pwg_token());
 $template->assign('EXT_TYPE', $page['page'] == 'updates' ? 'extensions' : $page['page']);
 $template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
 
-require_once 'inc/vite_helper.php';
+require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['updates_ext']);
 
 $template->set_filename('plugin_admin_content', 'updates_ext.tpl');

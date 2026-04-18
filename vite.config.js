@@ -60,7 +60,6 @@ adminModules.forEach(module => {
 
 export default defineConfig({
   build: {
-    manifest: true,
     outDir: 'admin/themes/default/js/dist',
     rollupOptions: {
       output: {
@@ -71,4 +70,26 @@ export default defineConfig({
       input,
     },
   },
+  plugins: [
+    {
+      name: 'generate-manifest',
+      generateBundle(options, bundle) {
+        const manifest = {};
+        for (const [key, file] of Object.entries(bundle)) {
+          if (file.type === 'asset') continue;
+          const moduleName = file.name;
+          const fullPath = `admin/themes/default/js/${moduleName}.js`;
+          manifest[fullPath] = {
+            file: file.fileName,
+            name: moduleName,
+          };
+        }
+        this.emitFile({
+          type: 'asset',
+          fileName: 'manifest.json',
+          source: JSON.stringify(manifest, null, 2),
+        });
+      },
+    },
+  ],
 });

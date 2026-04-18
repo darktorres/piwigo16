@@ -209,7 +209,7 @@ $template->assign(
     ]
 );
 
-require_once 'inc/vite_helper.php';
+require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['plugins_installated', 'pwgConfirm']);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');

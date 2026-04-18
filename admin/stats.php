@@ -111,7 +111,7 @@ $template->assign([
     'ADMIN_PAGE_TITLE' => functions::l10n('History'),
 ]);
 
-require_once 'inc/vite_helper.php';
+require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['stats']);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'stats');

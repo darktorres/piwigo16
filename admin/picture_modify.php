@@ -455,7 +455,7 @@ functions_plugins::trigger_notify('loc_end_picture_modify');
 
 //----------------------------------------------------------- sending html code
 
-require_once 'inc/vite_helper.php';
+require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['picture_modify']);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'picture_modify');

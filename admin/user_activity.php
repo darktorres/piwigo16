@@ -130,7 +130,7 @@ $query = <<<SQL
 [$nb_users] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query($query));
 $template->assign('nb_users', $nb_users);
 
-require_once 'inc/vite_helper.php';
+require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['user_activity']);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'user_activity');

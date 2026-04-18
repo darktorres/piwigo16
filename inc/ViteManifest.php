@@ -15,7 +15,7 @@ class ViteManifest {
             return self::$manifest;
         }
 
-        $manifestPath = dirname(__DIR__) . '/admin/themes/default/js/dist/.vite/manifest.json';
+        $manifestPath = dirname(__DIR__) . '/admin/themes/default/js/dist/manifest.json';
 
         if (!file_exists($manifestPath)) {
             return null;

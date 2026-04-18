@@ -328,6 +328,7 @@ fieldset legend {
     padding-left: 16px;
     height: auto;
     background-image: none;
+    z-index: 50;
 }
 
 .titrePage H2 span.badge::before,

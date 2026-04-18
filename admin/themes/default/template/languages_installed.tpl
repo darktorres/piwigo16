@@ -1,10 +1,4 @@
-<script id="pwg-page-data" type="application/json">
-{
-  "strAreYouSure": "{'Are you sure you want to delete the language \"%s\"?'|translate|escape:'html'}",
-  "strYesImSure": "{'Yes, I am sure'|translate|escape:'html'}",
-  "strIChangedMyMind": "{'No, I have changed my mind'|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_languages_installed}
 <script type="module" src="admin/themes/default/js/dist/{$vite_languages_installed}"></script>

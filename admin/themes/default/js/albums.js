@@ -1,9 +1,59 @@
+import { initModule } from './moduleInit.js';
 import tippy from 'tippy.js';
 import { PwgTree } from './PwgTree.js';
 import { pwgConfirm } from './pwgConfirm.js';
 
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
-_docReady( () => {
+// Module-level config - populated by init()
+let data, pwg_token, formatedData;
+let str_show_sub, str_hide_sub, str_manage_sub_album, str_apply_order;
+let str_edit, str_are_you_sure, str_yes_change_parent, str_no_change_parent, str_root;
+let openCat, nb_albums, light_album_manager;
+let x_nb_subcats, x_nb_images, x_nb_sub_photos;
+let delay_autoOpen;
+let delete_album_with_name, delete_album_with_subs, has_images_associated_outside;
+let has_images_becoming_orphans, has_images_recursives, rename_item;
+let str_add_album, str_edit_album, str_add_photo, str_visit_gallery;
+let str_sort_order, str_delete_album, str_root_order, str_sub_album_order;
+let str_album_name_empty, add_album_root_title, add_sub_album_of;
+let tiptip_locked_album, toggler_open, toggler_close;
+
+export function init(cfg) {
+    data = cfg.data;
+    pwg_token = cfg.pwgToken;
+    str_show_sub = cfg.strShowSub;
+    str_hide_sub = cfg.strHideSub;
+    str_manage_sub_album = cfg.strManageSubAlbum;
+    str_apply_order = cfg.strApplyOrderRaw.charAt(0).toUpperCase() + cfg.strApplyOrderRaw.slice(1);
+    str_edit = cfg.strEdit;
+    str_are_you_sure = cfg.strAreYouSure;
+    str_yes_change_parent = cfg.strYesChangeParent;
+    str_no_change_parent = cfg.strNoChangeParent;
+    str_root = cfg.strRoot;
+    openCat = cfg.openCat;
+    nb_albums = cfg.nbAlbums;
+    light_album_manager = cfg.lightAlbumManager;
+    x_nb_subcats = cfg.xNbSubcats;
+    x_nb_images = cfg.xNbImages;
+    x_nb_sub_photos = cfg.xNbSubPhotos;
+    delay_autoOpen = cfg.delayAutoOpen;
+    delete_album_with_name = cfg.deleteAlbumWithName;
+    delete_album_with_subs = cfg.deleteAlbumWithSubs;
+    has_images_associated_outside = cfg.hasImagesAssociatedOutside;
+    has_images_becoming_orphans = cfg.hasImagesBecomingOrphans;
+    has_images_recursives = cfg.hasImagesRecursives;
+    rename_item = cfg.renameItem;
+    str_add_album = cfg.strAddAlbum;
+    str_edit_album = cfg.strEditAlbum;
+    str_add_photo = cfg.strAddPhoto;
+    str_visit_gallery = cfg.strVisitGallery;
+    str_sort_order = cfg.strSortOrder;
+    str_delete_album = cfg.strDeleteAlbum;
+    str_root_order = cfg.strRootOrder;
+    str_sub_album_order = cfg.strSubAlbumOrder;
+    str_album_name_empty = cfg.strAlbumNameEmpty;
+    add_album_root_title = cfg.addAlbumRootTitle;
+    add_sub_album_of = cfg.addSubAlbumOf;
+    tiptip_locked_album = cfg.tiptipLockedAlbum;
     formatedData = data;
 
     document.querySelector("h1").appendChild(document.createElement("span")).className = "badge-number";
@@ -356,7 +406,7 @@ _docReady( () => {
     if (!light_album_manager) {
         tippy('.tiptip', { delay: 0, placement: 'top' });
     }
-});
+}
 
 function createAlbumNode(node, li) {
     var icon = "<span class='%icon%'></span>";
@@ -983,3 +1033,5 @@ function getPathNode(node) {
         return node.name;
     }
 }
+
+initModule(init);

@@ -117,6 +117,13 @@ $template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Languages'));
 $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $conf->enable_extensions_install);
 
+$page_data = [
+    'strAreYouSure' => functions::l10n('Are you sure you want to delete the language "%s"?'),
+    'strYesImSure' => functions::l10n('Yes, I am sure'),
+    'strIChangedMyMind' => functions::l10n('No, I have changed my mind'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['languages_installed']);
 

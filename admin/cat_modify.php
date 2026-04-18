@@ -238,7 +238,39 @@ $template->assign(
     ]
 );
 
+$page_data = [
+    'hasImagesAssociatedOutside' => functions::l10n('delete album and all %d photos, even the %d associated to other albums'),
+    'hasImagesBecomingOrphans' => functions::l10n('delete album and the %d orphan photos'),
+    'hasImagesRecursives' => functions::l10n('delete only album, not photos'),
+    'catNav' => preg_replace('# {2,}#', ' ', preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
+    'albumId' => $category['id'],
+    'parentAlbum' => empty($category['id_uppercat']) ? 0 : $category['id_uppercat'],
+    'defaultParentAlbum' => empty($category['id_uppercat']) ? 0 : $category['id_uppercat'],
+    'albumName' => htmlspecialchars($category['name']),
+    'nbSubAlbums' => $category['nb_subcats'],
+    'pwgToken' => functions::get_pwg_token(),
+    'uDelete' => $base_url . 'albums',
+    'isVisible' => $conf->sql_backend::boolean_to_string($category['visible']),
+    'strCancel' => functions::l10n('No, I have changed my mind'),
+    'strDeleteAlbum' => functions::l10n('Delete album'),
+    'strDeleteAlbumAndHisXSubalbums' => functions::l10n('Delete album "%s" and its %d sub-albums.'),
+    'strJustNow' => functions::l10n('Just now'),
+    'strDontDeletePhotos' => functions::l10n('delete only album, not photos'),
+    'strDeleteOrphans' => functions::l10n('delete album and the %d orphan photos'),
+    'strDeleteAllPhotos' => functions::l10n('delete album and all %d photos, even the %d associated to other albums'),
+    'strAlbumsFound' => functions::l10n('<b>%d</b> albums found'),
+    'strAlbumFound' => functions::l10n('<b>1</b> album found'),
+    'strResultLimit' => functions::l10n('<b>%d+</b> albums found, try to refine the search'),
+    'strOrphan' => functions::l10n('This photo is an orphan'),
+    'strNoSearchInProgress' => functions::l10n('No search in progress'),
+    'strAlreadyInRelatedCats' => functions::l10n('This albums is already in related categories list'),
+    'strAlbumCommentAllow' => functions::l10n('Comments allowed for sub-albums'),
+    'strAlbumCommentDisallow' => functions::l10n('Comments disallowed for sub-albums'),
+    'strRoot' => functions::l10n('Root'),
+];
+
 $template->assign([
+    'page_data_json' => json_encode($page_data),
     'U_MANAGE_RANKS' => $base_url . 'element_set_ranks&amp;cat_id=' . $category['id'],
     'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(['categories']),
 ]);

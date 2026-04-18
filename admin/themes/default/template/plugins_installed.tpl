@@ -1,7 +1,8 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{if $vite_plugins_installated}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_plugins_installated}"></script>
+{/if}
 
 {combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
-{combine_script id='pluginInstallated' load='footer' path='admin/themes/default/js/plugins_installated.js'}
 
 {footer_script}<script>
   /* incompatible message */

@@ -1,6 +1,6 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-
-{combine_script id='alternativeView' load='footer' path='admin/themes/default/js/cat_list.js'}
+{if $vite_cat_list}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_cat_list}"></script>
+{/if}
 
 
 <div class="selectedAlbum cat-list-album-path">

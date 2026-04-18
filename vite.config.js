@@ -16,6 +16,12 @@ const adminModules = [
   'doubleSlider',
   'maintenance',
   'maintenance_env',
+  'cat_list',
+  'helpPopin',
+  'history',
+  'plugins_installated',
+  'plugins_new',
+  'picture_formats',
 ];
 
 const input = {};

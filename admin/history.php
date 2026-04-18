@@ -149,4 +149,7 @@ $template->assign('ADMIN_PAGE_TITLE', functions::l10n('History'));
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+
 
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['history', 'pwgConfirm']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'history');

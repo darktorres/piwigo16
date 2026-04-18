@@ -1,6 +1,8 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
-{footer_script require='pwgConfirm'}<script>
+{if $vite_configuration}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_configuration}"></script>
+{/if}
+
+{footer_script}<script>
   const title_msg = '{'Are you sure you want to restore to default settings?'|translate|escape:javascript}';
   const confirm_msg = '{'Yes, I am sure'|translate|escape}';
   const cancel_msg = '{'No, I have changed my mind'|translate|escape}';

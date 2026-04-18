@@ -1,4 +1,6 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{if $vite_configuration}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_configuration}"></script>
+{/if}
 
 <form method="post" name="profile" action="{$GUEST_F_ACTION}" id="profile" class="properties">
 

@@ -190,4 +190,7 @@ $template->assign('ADMIN_PAGE_TITLE', functions::l10n('User comments'));
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
 
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['comments']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'comments');

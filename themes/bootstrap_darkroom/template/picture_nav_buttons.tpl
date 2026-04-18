@@ -51,11 +51,6 @@
 		    		<i class="fas fa-chevron-up"></i>
 		    	</a>
 	    	{/if}
-	    	{if !isset($slideshow) && ($theme_config->photoswipe && !empty($thumbnails))}
-		    	<a href="javascript:;" title="{'Fullscreen'|translate}" id="startPhotoSwipe">
-		    		<i class="fas fa-expand-arrows-alt" aria-hidden="true"></i>
-		    	</a>
-	    	{/if}
 	    	{if isset($slideshow.U_START_PLAY)}
 		    	<a href="{$slideshow.U_START_PLAY}" title="{'Play of slideshow'|translate}">
 		    		<i class="fas fa-play" aria-hidden="true"></i>
@@ -103,10 +98,10 @@
     			url;
     		switch (keyCode) {
     			{if isset($next)}
-	    			case 63235: case 39: if ((e.ctrlKey || docElem.scrollLeft==docElem.scrollWidth-docElem.clientWidth) && document.querySelector('.pswp--visible') === null)url="{$next.U_IMG}"; break;
+	    			case 63235: case 39: if (e.ctrlKey || docElem.scrollLeft==docElem.scrollWidth-docElem.clientWidth)url="{$next.U_IMG}"; break;
     			{/if}
     			{if isset($previous)}
-	    			case 63234: case 37: if ((e.ctrlKey || docElem.scrollLeft==0) && document.querySelector('.pswp--visible') === null)url="{$previous.U_IMG}"; break;
+	    			case 63234: case 37: if (e.ctrlKey || docElem.scrollLeft==0)url="{$previous.U_IMG}"; break;
     			{/if}
     			{if isset($first)}
 	    			{* Home *}case 36: if (e.ctrlKey)url="{$first.U_IMG}"; break;

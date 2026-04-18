@@ -94,7 +94,7 @@
                 {/if}
                 {if isset($U_SLIDESHOW)}
                     <li class="nav-item">
-                        <a class="nav-link" href="{if $theme_config->photoswipe}javascript:;{else}{$U_SLIDESHOW}{/if}"
+                        <a class="nav-link" href="{$U_SLIDESHOW}"
                             id="startSlideshow" title="{'slideshow'|translate}" rel="nofollow">
                             <i class="fas fa-play fa-fw" aria-hidden="true"></i><span
                                 class="d-lg-none ms-2 text-capitalize">{'slideshow'|translate}</span>
@@ -286,26 +286,6 @@
                     });
                 });
             </script>{/footer_script}
-            {if $theme_config->photoswipe && !isset($GDThumb)}
-                {footer_script}
-                <script type="module">
-                    if (!window._pswpInitialized) {
-                        window._pswpInitialized = true;
-                        const { default: PhotoSwipeLightbox } = await import('./node_modules/photoswipe/dist/photoswipe-lightbox.esm.js');
-
-                        const lightbox = new PhotoSwipeLightbox({
-                            gallery: '#thumbnails',
-                            children: 'a[data-pswp-src]',
-                            pswpModule: () => import(
-                                './node_modules/photoswipe/dist/photoswipe.esm.js')
-                        });
-                        lightbox.init();
-                    }
-                </script>
-
-                <link rel="stylesheet" href="./node_modules/photoswipe/dist/photoswipe.css">
-                {/footer_script}
-            {/if}
             {footer_script}<script>
                 {if !isset($loaded_plugins['piwigo-videojs']) && (isset($GThumb) || isset($GDThumb))}
                     function addVideoIndicator() {

@@ -4,76 +4,27 @@
 
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
+<script id="pwg-page-data" type="application/json">
+{
+  "CACHE_KEYS": {$CACHE_KEYS|json_encode},
+  "ROOT_URL": "{$ROOT_URL|escape:javascript}"
+}
+</script>
+
 {footer_script}<script>
-  (function() {
-    {* <!-- CATEGORIES --> *}
-    var categoriesCache = new CategoriesCache({
-      serverKey: '{$CACHE_KEYS.categories}',
-      serverId: '{$CACHE_KEYS._hash}',
-      rootUrl: '{$ROOT_URL}'
-    });
-
-    categoriesCache.selectize(document.querySelectorAll('[data-selectize=categories]'));
-
-    {* <!-- TAGS --> *}
-    var tagsCache = new TagsCache({
-      serverKey: '{$CACHE_KEYS.tags}',
-      serverId: '{$CACHE_KEYS._hash}',
-      rootUrl: '{$ROOT_URL}'
-    });
-
-    tagsCache.selectize(document.querySelectorAll('[data-selectize=tags]'), {
-      lang: {
-        'Add': '{'Create'|translate}'
-      }
-    });
-
-    {* <!-- DATEPICKER --> *}
-    document.addEventListener('DOMContentLoaded', function() { {* <!-- onLoad needed to wait localization loads --> *}
-      pwgDatepicker(document.querySelectorAll('[data-datepicker]'), {
-        showTimepicker: true,
-        cancelButton: '{'Cancel'|translate}'
-      });
-    });
-
-    {* <!-- THUMBNAILS --> *}
-    GLightbox({ selector: 'a.preview-box' });
-
-    var str_are_you_sure = '{'Are you sure?'|translate|escape:javascript}';
-    var str_yes = '{'Yes, delete'|translate|escape:javascript}';
-    var str_no = '{'No, I have changed my mind'|translate|escape:'javascript'}';
-    var url_delete = '{$U_DELETE}';
-    var str_albums_found = '{"<b>%d</b> albums found"|translate|escape:javascript}';
-    var str_album_found = '{"<b>1</b> album found"|translate|escape:javascript}';
-    var str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|translate|escape:javascript}';
-    var str_orphan = '{'This photo is an orphan'|translate|escape:javascript}';
-    var str_no_search_in_progress = '{'No search in progress'|translate|escape:javascript}';
-
-    var related_categories_ids = {$related_categories_ids|json_encode};
-    var str_already_in_related_cats = '{'This albums is already in related categories list'|translate|escape:javascript}';
-
-    var deleteBtn = document.getElementById('action-delete-picture');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', function() {
-        pwgConfirm({
-          title: str_are_you_sure,
-          buttons: {
-            confirm: {
-              text: str_yes,
-              btnClass: 'btn-red',
-              action: function() {
-                window.location.href = url_delete.replaceAll('amp;', '');
-              }
-            },
-            cancel: {
-              text: str_no
-            }
-          }
-        });
-      });
-    }
-
-  }());
+  window.str_create = '{'Create'|translate}';
+  window.str_cancel = '{'Cancel'|translate}';
+  window.str_are_you_sure = '{'Are you sure?'|translate|escape:javascript}';
+  window.str_yes_delete = '{'Yes, delete'|translate|escape:javascript}';
+  window.str_no_change = '{'No, I have changed my mind'|translate|escape:'javascript'}';
+  window.url_delete = '{$U_DELETE}';
+  window.str_albums_found = '{"<b>%d</b> albums found"|translate|escape:javascript}';
+  window.str_album_found = '{"<b>1</b> album found"|translate|escape:javascript}';
+  window.str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|translate|escape:javascript}';
+  window.str_orphan = '{'This photo is an orphan'|translate|escape:javascript}';
+  window.str_no_search_in_progress = '{'No search in progress'|translate|escape:javascript}';
+  window.related_categories_ids = {$related_categories_ids|json_encode};
+  window.str_already_in_related_cats = '{'This albums is already in related categories list'|translate|escape:javascript}';
 </script>{/footer_script}
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}

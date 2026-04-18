@@ -906,7 +906,6 @@ html:has(#thumbnails) #content {
 html:has(#thumbnails) #content .titrePage {
     position: sticky;
     top: 0;
-    z-index: 50;
 }
 
 html:has(#thumbnails) #copyright,

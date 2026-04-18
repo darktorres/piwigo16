@@ -1,13 +1,6 @@
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-<script id="pwg-page-data" type="application/json">
-{
-  "categoriesServerKey": "{$CACHE_KEYS.categories|escape:'html'}",
-  "categoriesServerId": "{$CACHE_KEYS._hash|escape:'html'}",
-  "rootUrl": "{$ROOT_URL|escape:'html'}",
-  "nbElements": {$NB_ELEMENTS}
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_rating}
 <script type="module" src="admin/themes/default/js/dist/{$vite_rating}"></script>

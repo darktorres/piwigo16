@@ -243,6 +243,15 @@ foreach ($images as $image) {
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
 
+$cache_keys = functions_admin::get_admin_client_cache_keys(['categories']);
+$page_data = [
+    'categoriesServerKey' => $cache_keys['categories'],
+    'categoriesServerId' => $cache_keys['_hash'],
+    'rootUrl' => functions_url::get_root_url(),
+    'nbElements' => $nb_elements,
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['rating']);
 

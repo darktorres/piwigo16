@@ -1,7 +1,7 @@
 {include file='inc/colorbox.inc.tpl'}
 
 {if $vite_photos_add_applications}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_photos_add_applications}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_photos_add_applications}"></script>
 {/if}
 
 {html_head}

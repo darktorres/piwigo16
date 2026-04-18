@@ -6,7 +6,7 @@
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {if $vite_batchManagerGlobal}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_batchManagerGlobal}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_batchManagerGlobal}"></script>
 {/if}
 
 {footer_script}<script>

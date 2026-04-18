@@ -1,5 +1,5 @@
 {if $vite_updates_ext}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_updates_ext}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_updates_ext}"></script>
 {/if}
 
 {footer_script}<script>

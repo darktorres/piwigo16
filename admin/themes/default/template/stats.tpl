@@ -6,7 +6,7 @@
 </script>{/footer_script}
 
 {if $vite_stats}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_stats}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_stats}"></script>
 {/if}
 
 <div class="stat-compare-mode">

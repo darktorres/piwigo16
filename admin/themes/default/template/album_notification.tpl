@@ -5,7 +5,7 @@
 </script>{/footer_script}
 
 {if $vite_album_notification}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_album_notification}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_album_notification}"></script>
 {/if}
 
 {html_style}<style>

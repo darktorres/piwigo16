@@ -1,7 +1,7 @@
 {combine_css path='node_modules/cropperjs/dist/cropper.min.css'}
 
 {if $vite_picture_coi}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_picture_coi}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_picture_coi}"></script>
 {/if}
 
 <form method="post">

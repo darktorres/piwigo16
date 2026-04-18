@@ -1,5 +1,5 @@
 {if $vite_plugins_installated}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_plugins_installated}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_plugins_installated}"></script>
 {/if}
 
 {footer_script}<script>

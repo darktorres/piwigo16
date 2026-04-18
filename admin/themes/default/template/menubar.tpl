@@ -1,5 +1,5 @@
 {if $vite_menubar}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_menubar}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_menubar}"></script>
 {/if}
 
 {html_style}<style>

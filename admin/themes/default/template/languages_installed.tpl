@@ -5,7 +5,7 @@
 </script>{/footer_script}
 
 {if $vite_languages_installed}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_languages_installed}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_languages_installed}"></script>
 {/if}
 
 {foreach $language_states as $language_state}

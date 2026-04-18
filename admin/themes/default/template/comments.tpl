@@ -3,7 +3,7 @@
 </script>{/footer_script}
 
 {if $vite_comments}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_comments}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_comments}"></script>
 {/if}
 
 <div class="commentFilter">

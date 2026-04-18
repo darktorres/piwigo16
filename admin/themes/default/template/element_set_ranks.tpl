@@ -3,7 +3,7 @@
 </script>{/footer_script}
 
 {if $vite_element_set_ranks}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_element_set_ranks}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_element_set_ranks}"></script>
 {/if}
 
 <form action="{$F_ACTION}" method="post">

@@ -1,5 +1,5 @@
 {if $vite_site_manager}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_site_manager}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_site_manager}"></script>
 {/if}
 
 {footer_script}<script>

@@ -22,7 +22,7 @@ window.vt_strings = {
 </script>{/footer_script}
 
 {if $vite_generate_video_thumbnails}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_generate_video_thumbnails}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_generate_video_thumbnails}"></script>
 {/if}
 
 <style>

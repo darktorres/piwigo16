@@ -1,8 +1,8 @@
 {if $vite_admin}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_admin}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_admin}"></script>
 {/if}
 {if $vite_helpPopin}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_helpPopin}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_helpPopin}"></script>
 {/if}
 
 <div id="menubar" data-active-menu="{$ACTIVE_MENU}">

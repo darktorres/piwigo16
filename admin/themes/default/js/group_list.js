@@ -5,6 +5,61 @@ import TomSelect from 'tom-select';
 
 const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 const DELAY_FEEDBACK = 3000;
+
+// Import globals from window - these get assigned when initialized
+let pwg_token = '';
+let str_member_default = '';
+let str_members_default = '';
+let str_group_created = '';
+let str_renaming_done = '';
+let str_name_taken = '';
+let str_name_not_empty = '';
+let str_group_deleted = '';
+let str_groups_deleted = '';
+let str_set_default = '';
+let str_unset_default = '';
+let str_delete = '';
+let str_yes_delete_confirmation = '';
+let str_no_delete_confirmation = '';
+let str_user_associated = '';
+let str_user_dissociate = '';
+let str_user_dissociated = '';
+let str_user_list = '';
+let str_merged_into = '';
+let str_copy = '';
+let str_other_copy = '';
+let serverKey = '';
+let serverId = '';
+let rootUrl = '';
+
+_docReady(function() {
+  // Assign globals from window when DOM is ready
+  pwg_token = window.pwg_token || '';
+  str_member_default = window.str_member_default || '';
+  str_members_default = window.str_members_default || '';
+  str_group_created = window.str_group_created || '';
+  str_renaming_done = window.str_renaming_done || '';
+  str_name_taken = window.str_name_taken || '';
+  str_name_not_empty = window.str_name_not_empty || '';
+  str_group_deleted = window.str_group_deleted || '';
+  str_groups_deleted = window.str_groups_deleted || '';
+  str_set_default = window.str_set_default || '';
+  str_unset_default = window.str_unset_default || '';
+  str_delete = window.str_delete || '';
+  str_yes_delete_confirmation = window.str_yes_delete_confirmation || '';
+  str_no_delete_confirmation = window.str_no_delete_confirmation || '';
+  str_user_associated = window.str_user_associated || '';
+  str_user_dissociate = window.str_user_dissociate || '';
+  str_user_dissociated = window.str_user_dissociated || '';
+  str_user_list = window.str_user_list || '';
+  str_merged_into = window.str_merged_into || '';
+  str_copy = window.str_copy || '';
+  str_other_copy = window.str_other_copy || '';
+  serverKey = window.serverKey || '';
+  serverId = window.serverId || '';
+  rootUrl = window.rootUrl || '';
+});
+
 /*-------
 Group Popin
 -------*/
@@ -1186,10 +1241,6 @@ document.querySelector(".input-user-name")?.addEventListener("input", function (
 
 _docReady(function() {
   // temporary fix for #1283 (begin) : force user local storage cache on page load.
-  const serverKey = window.serverKey || '';
-  const serverId = window.serverId || '';
-  const rootUrl = window.rootUrl || '';
-
   const usersCache = new UsersCache({
     serverKey: serverKey,
     serverId: serverId,

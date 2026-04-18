@@ -8,7 +8,7 @@
 </script>{/footer_script}
 
 {if $vite_themes_installed}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_themes_installed}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_themes_installed}"></script>
 {/if}
 
 <div id="themesContent">

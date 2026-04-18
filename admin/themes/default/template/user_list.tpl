@@ -68,7 +68,7 @@
 </script>{/footer_script}
 
 {if $vite_user_list}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_user_list}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_user_list}"></script>
 {/if}
 
 <div class="selection-mode-group-manager" style="right:30px">

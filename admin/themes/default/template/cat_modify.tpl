@@ -31,7 +31,7 @@
 </script>{/footer_script}
 
 {if $vite_cat_modify}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_cat_modify}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_cat_modify}"></script>
 {/if}
 
 <div class="cat-modify" id="cat-modify">

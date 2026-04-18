@@ -13,7 +13,7 @@
 </script>
 
 {if $vite_cat_perm}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_cat_perm}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_cat_perm}"></script>
 {/if}
 
 <form action="{$F_ACTION}" method="post" id="categoryPermissions">

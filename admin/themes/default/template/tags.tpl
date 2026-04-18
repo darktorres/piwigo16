@@ -35,7 +35,7 @@
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 {if $vite_tags}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_tags}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_tags}"></script>
 {/if}
 
 <meta http-equiv='cache-control' content='no-cache'>

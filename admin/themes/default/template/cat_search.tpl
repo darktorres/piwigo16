@@ -7,7 +7,7 @@
 </script>{/footer_script}
 
 {if $vite_cat_search}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_cat_search}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_cat_search}"></script>
 {/if}
 
 <div class="search-album">

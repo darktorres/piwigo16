@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import { fileURLToPath } from 'url';
+import { existsSync } from 'fs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -63,7 +64,9 @@ const adminModules = [
 
 const input = {};
 adminModules.forEach(module => {
-  input[module] = resolve(__dirname, `admin/themes/default/js/${module}.js`);
+  const ts = resolve(__dirname, `admin/themes/default/js/${module}.ts`);
+  const js = resolve(__dirname, `admin/themes/default/js/${module}.js`);
+  input[module] = existsSync(ts) ? ts : js;
 });
 
 export default defineConfig({

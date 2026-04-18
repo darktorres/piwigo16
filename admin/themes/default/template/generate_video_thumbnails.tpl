@@ -1,244 +1,29 @@
 {footer_script}<script>
-(function() {
-  var form = document.getElementById('vtForm');
-  if (!form) return;
-
-  var progress = document.getElementById('vtProgress');
-  var startTime, timerInterval;
-  var abortController, aborted, vtReader;
-  var vtRunning = false, vtComplete = false;
-
-  window.addEventListener('beforeunload', function(e) {
-    if (vtRunning) e.preventDefault();
-  });
-
-  form.addEventListener('submit', function(e) {
-    e.preventDefault();
-    vtRunning = true;
-    form.style.display = 'none';
-    progress.style.display = '';
-    startTime = performance.now();
-    timerInterval = setInterval(updateElapsed, 100);
-    aborted = false;
-    abortController = new AbortController();
-
-    var url = new URL(window.location.href);
-    url.searchParams.set('sse', '1');
-    var formData = new FormData(form);
-    formData.append('submit', '1');
-
-    fetch(url.toString(), {
-      method: 'POST',
-      body: formData,
-      signal: abortController.signal
-    }).then(function(response) {
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      vtReader = response.body.getReader();
-      var decoder = new TextDecoder();
-      var buffer = '';
-
-      function pump() {
-        return vtReader.read().then(function(result) {
-          if (result.done) {
-            if (!vtComplete) onError('Server process ended unexpectedly. Check PHP error log for details.');
-            return;
-          }
-          buffer += decoder.decode(result.value, { stream: true });
-          var parts = buffer.split('\n\n');
-          buffer = parts.pop();
-          parts.forEach(parseEvent);
-          return pump();
-        });
-      }
-      return pump();
-    }).catch(function(err) {
-      if (aborted || vtComplete) return;
-      vtRunning = false;
-      clearInterval(timerInterval);
-      hideControls();
-      var title = document.getElementById('vtTitle');
-      if (title) title.textContent = 'Connection lost';
-      var results = document.getElementById('vtResults');
-      if (results) {
-        results.innerHTML = '<div class="errors"><ul><li>The connection to the server was lost.</li></ul></div>'
-          + '<p class="bottomButtons"><button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">Try again</button></p>';
-        results.style.display = '';
-      }
-    });
-  });
-
-  var abortBtn = document.getElementById('vtAbort');
-  if (abortBtn) {
-    abortBtn.addEventListener('click', function() {
-      aborted = true;
-      vtRunning = false;
-      abortController.abort();
-      clearInterval(timerInterval);
-      hideControls();
-      var title = document.getElementById('vtTitle');
-      if (title) title.textContent = 'Aborted';
-      document.querySelectorAll('.sync-phase.running').forEach(function(el) {
-        el.classList.remove('running');
-        el.classList.add('aborted');
-        el.querySelector('.phase-status').innerHTML = '\u2717';
-      });
-      var results = document.getElementById('vtResults');
-      if (results) {
-        results.innerHTML = '<p>Aborted. Any thumbnails already generated are saved.</p>'
-          + '<p class="bottomButtons"><button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">Back</button></p>';
-        results.style.display = '';
-      }
-    });
-  }
-
-  function hideControls() {
-    var c = document.getElementById('vtControls');
-    if (c) c.style.display = 'none';
-  }
-
-  function parseEvent(raw) {
-    if (!raw.trim()) return;
-    var lines = raw.trim().split('\n');
-    var name = '', data = '';
-    for (var i = 0; i < lines.length; i++) {
-      if (lines[i].indexOf('event: ') === 0) name = lines[i].substring(7);
-      else if (lines[i].indexOf('data: ') === 0) data = lines[i].substring(6);
-    }
-    if (!name || !data) return;
-    try { handleEvent(name, JSON.parse(data)); }
-    catch(ex) { console.error('SSE parse error', ex, data); }
-  }
-
-  function handleEvent(event, data) {
-    if (event === 'start') onStart(data);
-    else if (event === 'progress') onProgress(data);
-    else if (event === 'complete') onComplete(data);
-    else if (event === 'error') onError(data.message);
-  }
-
-  function onStart(data) {
-    var phases = document.getElementById('vtPhases');
-    if (!phases) return;
-    var h = '<div class="sync-phase running" id="phase-generate">'
-      + '<span class="phase-status"><span class="spinner"></span></span>'
-      + '<span class="phase-label">{'Generating video thumbnails'|translate|escape:'javascript'}</span>'
-      + '<span class="phase-detail"></span>'
-      + '<span class="phase-time"></span>'
-      + '</div>'
-      + '<div class="sync-substep running" id="substep-generate">'
-      + '<span class="substep-status"><span class="spinner"></span></span>'
-      + '<span class="substep-label">{'Extracting frames with FFmpeg'|translate|escape:'javascript'}</span>'
-      + '<span class="substep-detail"></span>'
-      + '<span class="substep-time"></span>'
-      + '<div class="sync-progress-bar">'
-      + '<div class="progress-track"><div class="progress-fill" id="vtProgressFill"></div></div>'
-      + '<span class="progress-text" id="vtProgressText"></span>'
-      + '</div>'
-      + '<div class="vt-current-file" id="vtCurrentFile"></div>'
-      + '</div>';
-    phases.innerHTML = h;
-    var c = document.getElementById('vtControls');
-    if (c) c.style.display = '';
-  }
-
-  function onProgress(data) {
-    var pct = data.total > 0 ? Math.round((data.current / data.total) * 100) : 0;
-    var fill = document.getElementById('vtProgressFill');
-    if (fill) fill.style.width = pct + '%';
-    var text = document.getElementById('vtProgressText');
-    if (text) text.textContent = data.current + ' / ' + data.total;
-    var fileLabel = document.getElementById('vtCurrentFile');
-    if (fileLabel) fileLabel.textContent = data.file || '';
-    if (data.skip_reason) {
-      var list = document.getElementById('vtSkippedList');
-      if (list) {
-        var entry = document.createElement('div');
-        entry.className = 'vt-skip-entry';
-        if (data.skip_reason === 'file_not_found') {
-          entry.textContent = data.file + ' \u2014 {'File not found on disk'|translate|escape:'javascript'}';
-        } else if (data.ffmpeg_output && data.ffmpeg_output.length) {
-          var header = document.createElement('div');
-          header.textContent = data.file + ' \u2014 {'FFmpeg output'|translate|escape:'javascript'}:';
-          entry.appendChild(header);
-          var pre = document.createElement('pre');
-          pre.className = 'vt-skip-ffmpeg-output';
-          pre.textContent = data.ffmpeg_output.join('\n');
-          entry.appendChild(pre);
-        } else {
-          entry.textContent = data.file + ' \u2014 {'FFmpeg produced no output'|translate|escape:'javascript'}';
-        }
-        list.appendChild(entry);
-        list.style.display = '';
-      }
-    }
-    var sub = document.getElementById('substep-generate');
-    if (sub) sub.querySelector('.substep-detail').textContent =
-      pct + '% \u2014 ' + data.generated + ' {'generated'|translate|escape:'javascript'}' + (data.skipped > 0 ? ', ' + data.skipped + ' {'skipped'|translate|escape:'javascript'}' : '');
-  }
-
-  function onComplete(data) {
-    vtComplete = true;
-    vtRunning = false;
-    clearInterval(timerInterval);
-    updateElapsed();
-    hideControls();
-
-    var phaseEl = document.getElementById('phase-generate');
-    if (phaseEl) {
-      phaseEl.classList.remove('running');
-      phaseEl.classList.add('done');
-      phaseEl.querySelector('.phase-status').innerHTML = '\u2713';
-      phaseEl.querySelector('.phase-time').textContent = data.elapsed + 's';
-      phaseEl.querySelector('.phase-detail').textContent =
-        data.generated + ' {'generated'|translate|escape:'javascript'}' + (data.skipped > 0 ? ', ' + data.skipped + ' {'skipped'|translate|escape:'javascript'}' : '');
-    }
-    var sub = document.getElementById('substep-generate');
-    if (sub) {
-      sub.classList.remove('running');
-      sub.classList.add('done');
-      sub.querySelector('.substep-status').innerHTML = '\u2713';
-    }
-
-    var title = document.getElementById('vtTitle');
-    if (title) title.textContent = '{'Done'|translate|escape:'javascript'}';
-
-    var h = '<ul>'
-      + '<li>' + data.generated + ' {'thumbnails generated'|translate|escape:'javascript'}</li>';
-    if (data.skipped > 0) {
-      h += '<li>' + data.skipped + ' {'skipped (file not found or FFmpeg unavailable)'|translate|escape:'javascript'}</li>';
-    }
-    h += '</ul>'
-      + '<p class="bottomButtons">'
-      + '<button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">{'Run again'|translate|escape:'javascript'}</button></p>';
-
-    var results = document.getElementById('vtResults');
-    if (results) { results.innerHTML = h; results.style.display = ''; }
-  }
-
-  function onError(msg) {
-    vtRunning = false;
-    clearInterval(timerInterval);
-    hideControls();
-    var title = document.getElementById('vtTitle');
-    if (title) title.textContent = '{'Error'|translate|escape:'javascript'}';
-    var results = document.getElementById('vtResults');
-    if (results) {
-      results.innerHTML = '<div class="errors"><ul><li>' + msg + '</li></ul></div>'
-        + '<p class="bottomButtons"><button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">{'Try again'|translate|escape:'javascript'}</button></p>';
-      results.style.display = '';
-    }
-  }
-
-  function updateElapsed() {
-    var el = document.getElementById('vtElapsed');
-    if (el && startTime) el.textContent = fmtTime((performance.now() - startTime) / 1000);
-  }
-
-  function fmtTime(s) {
-    return s < 60 ? s.toFixed(1) + 's' : Math.floor(s / 60) + 'm ' + Math.floor(s % 60) + 's';
-  }
-})();
+window.vt_strings = {
+  unexpected_end: '{'Server process ended unexpectedly. Check PHP error log for details.'|translate|escape:'javascript'}',
+  connection_lost: '{'The connection to the server was lost.'|translate|escape:'javascript'}',
+  try_again: '{'Try again'|translate|escape:'javascript'}',
+  aborted: '{'Aborted'|translate|escape:'javascript'}',
+  aborted_message: '{'Aborted. Any thumbnails already generated are saved.'|translate|escape:'javascript'}',
+  back: '{'Back'|translate|escape:'javascript'}',
+  generating: '{'Generating video thumbnails'|translate|escape:'javascript'}',
+  extracting: '{'Extracting frames with FFmpeg'|translate|escape:'javascript'}',
+  generated: '{'generated'|translate|escape:'javascript'}',
+  skipped: '{'skipped'|translate|escape:'javascript'}',
+  done: '{'Done'|translate|escape:'javascript'}',
+  file_not_found: '{'File not found on disk'|translate|escape:'javascript'}',
+  ffmpeg_output: '{'FFmpeg output'|translate|escape:'javascript'}',
+  ffmpeg_no_output: '{'FFmpeg produced no output'|translate|escape:'javascript'}',
+  thumbnails_generated: '{'thumbnails generated'|translate|escape:'javascript'}',
+  skipped_reason: '{'skipped (file not found or FFmpeg unavailable)'|translate|escape:'javascript'}',
+  error: '{'Error'|translate|escape:'javascript'}',
+  run_again: '{'Run again'|translate|escape:'javascript'}'
+};
 </script>{/footer_script}
+
+{if $vite_generate_video_thumbnails}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_generate_video_thumbnails}"></script>
+{/if}
 
 <style>
 .sync-phase {

@@ -81,7 +81,7 @@
               <td><b>{$rate.USER}</b></td>
               <td>{$rate.date}</td>
               <td><a
-                  onclick="return del(this,{$image.id},{$rate.user_id}{if !empty({$rate.anonymous_id})},'{$rate.anonymous_id}'{/if})"
+                  href="#" data-action="pwgDeleteRate" data-image-id="{$image.id}" data-user-id="{$rate.user_id}"{if !empty({$rate.anonymous_id})} data-anonymous-id="{$rate.anonymous_id|escape:'html'}"{/if}
                   class="icon-trash"> </a></td>
             </tr>
           {/foreach}{*rates*}

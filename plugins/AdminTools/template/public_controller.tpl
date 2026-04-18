@@ -7,36 +7,39 @@
   {combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
   {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 {/if}
-{combine_script id='admintools.controller' load='footer' path=$ADMINTOOLS_PATH|cat:'template/public_controller.js'}
 
-{footer_script require='admintools.controller'}<script>
-  AdminTools.urlWS = '{$ROOT_URL}ws.php?format=json&method=';
-  AdminTools.urlSelf = '{$ato.U_SELF}';
-
+{footer_script}<script type="application/json" id="admintools-public-config">
+{
+  "urlWS": "{$ROOT_URL}ws.php?format=json&method=",
+  "urlSelf": "{$ato.U_SELF|escape:'html'}",
   {if isset($ato.MULTIVIEW)}
-    AdminTools.multiView = {
-      view_as: {$ato.MULTIVIEW.view_as},
-      theme: '{$ato.MULTIVIEW.theme}',
-      lang: '{$ato.MULTIVIEW.lang}'
-    };
+  "multiView": {
+    "view_as": {$ato.MULTIVIEW.view_as},
+    "theme": "{$ato.MULTIVIEW.theme|escape:'html'}",
+    "lang": "{$ato.MULTIVIEW.lang|escape:'html'}"
+  },
+  {else}
+  "multiView": {},
   {/if}
+  "deleteCache": {if isset($ato.DELETE_CACHE) and $ato.DELETE_CACHE}true{else}false{/if},
+  "defaultOpen": {intval($ato.DEFAULT_OPEN)},
+  "initMobile": {if isset($themeconf.mobile) and $themeconf.mobile}true{else}false{/if},
+  "initRepresentative": {if isset($ato.U_SET_REPRESENTATIVE)}{"imageId": {$current.id}, "categoryId": {$ato.CATEGORY_ID}}{else}null{/if},
+  "initCaddie": {if isset($ato.U_CADDIE) and isset($ato.IS_PICTURE)}{$current.id}{else}null{/if},
+  "initQuickEdit": {if isset($ato.QUICK_EDIT)}{intval(isset($ato.IS_PICTURE))}{else}null{/if}
+}
+</script>{/footer_script}
 
-  {if isset($ato.DELETE_CACHE) and $ato.DELETE_CACHE}
-    AdminTools.deleteCache();
-  {/if}
-  AdminTools.init({intval($ato.DEFAULT_OPEN)});
-  {if isset($themeconf.mobile) and $themeconf.mobile}
-    AdminTools.initMobile();
-  {/if}
-  {if isset($ato.U_SET_REPRESENTATIVE)}
-    AdminTools.initRepresentative({$current.id}, {$ato.CATEGORY_ID});
-  {/if}
-  {if isset($ato.U_CADDIE) and isset($ato.IS_PICTURE)}
-    AdminTools.initCaddie({$current.id});
-  {/if}
-  {if isset($ato.QUICK_EDIT)}
-    AdminTools.initQuickEdit({intval(isset($ato.IS_PICTURE))});
-  {/if}
+{footer_script}<script type="module">
+  import { AdminTools } from '{$ADMINTOOLS_PATH}template/public_controller.js';
+  const config = JSON.parse(document.getElementById('admintools-public-config').textContent);
+  AdminTools.setConfig(config);
+  AdminTools.init(config.defaultOpen);
+  if (config.deleteCache) AdminTools.deleteCache();
+  if (config.initMobile) AdminTools.initMobile();
+  if (config.initRepresentative) AdminTools.initRepresentative(config.initRepresentative.imageId, config.initRepresentative.categoryId);
+  if (config.initCaddie !== null) AdminTools.initCaddie(config.initCaddie);
+  if (config.initQuickEdit !== null) AdminTools.initQuickEdit(config.initQuickEdit);
 </script>{/footer_script}
 
 <div id="ato_header_closed" {if $ato.POSITION=='right'} class="right" {/if}><a href="#" class="icon-tools"></a></div>

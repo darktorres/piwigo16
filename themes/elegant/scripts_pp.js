@@ -1,5 +1,7 @@
 const sessionStorage = window.sessionStorage || {};
 
+let _config = {};
+
 let menubar = document.getElementById('menubar');
 let menuswitcher = null;
 let content = document.querySelector('#the_page > .content');
@@ -73,13 +75,13 @@ function commentsToggle() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+function setup() {
     // side-menu show/hide
-    if (menubar && window.p_main_menu != "disabled") {
+    if (menubar && _config.p_main_menu != "disabled") {
         menuswitcher = document.getElementById('menuSwitcher');
         if (menuswitcher) menuswitcher.innerHTML = '<div class="switchArrow">&nbsp;</div>';
 
-        if (sessionStorage["picture-menu"] === undefined && window.p_main_menu == "off") {
+        if (sessionStorage["picture-menu"] === undefined && _config.p_main_menu == "off") {
             sessionStorage["picture-menu"] = "hidden";
         }
 
@@ -102,11 +104,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // info show/hide
-    if (imageInfos && window.p_pict_descr != "disabled") {
+    if (imageInfos && _config.p_pict_descr != "disabled") {
         infoswitcher = document.getElementById('infoSwitcher');
         if (infoswitcher) infoswitcher.innerHTML = '<div class="switchArrow">&nbsp;</div>';
 
-        if (sessionStorage["side-info"] === undefined && window.p_pict_descr == "off") {
+        if (sessionStorage["side-info"] === undefined && _config.p_pict_descr == "off") {
             sessionStorage["side-info"] = "hidden";
         }
 
@@ -129,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // comments show/hide
-    if (comments && window.p_pict_comment != "disabled") {
+    if (comments && _config.p_pict_comment != "disabled") {
         commentsswitcher = document.getElementById('commentsSwitcher');
         comments_button = document.querySelector('#comments h3');
         comments_add = document.getElementById('commentAdd');
@@ -146,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        if (sessionStorage["comments"] === undefined && window.p_pict_comment == "off") {
+        if (sessionStorage["comments"] === undefined && _config.p_pict_comment == "off") {
             sessionStorage["comments"] = "hidden";
         }
 
@@ -183,4 +185,13 @@ document.addEventListener('DOMContentLoaded', function () {
             comments_top_offset = comments_add.getBoundingClientRect().top + window.scrollY - marginTop;
         }
     }
-});
+}
+
+export function init(config) {
+    _config = config;
+    if (document.readyState !== 'loading') {
+        setup();
+    } else {
+        document.addEventListener('DOMContentLoaded', setup);
+    }
+}

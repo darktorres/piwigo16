@@ -5,6 +5,8 @@ const menuswitcher = document.getElementById('menuSwitcher');
 const content = document.querySelector('#the_page > .content');
 const pcontent = document.getElementById('content');
 
+let _config = {};
+
 function hideMenu() {
     if (menubar) menubar.style.display = 'none';
     [menuswitcher, content, pcontent].forEach(function (el) {
@@ -21,11 +23,11 @@ function showMenu() {
     sessionStorage["page-menu"] = "visible";
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    if (menubar && window.p_main_menu != "disabled") {
+function setup() {
+    if (menubar && _config.p_main_menu != "disabled") {
         if (menuswitcher) menuswitcher.innerHTML = '<div class="switchArrow">&nbsp;</div>';
 
-        if (sessionStorage["page-menu"] === undefined && window.p_main_menu == "off") {
+        if (sessionStorage["page-menu"] === undefined && _config.p_main_menu == "off") {
             sessionStorage["page-menu"] = "hidden";
         }
 
@@ -45,7 +47,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.preventDefault();
             });
         }
-    } else if (menubar && window.p_main_menu == "disabled") {
+    } else if (menubar && _config.p_main_menu == "disabled") {
         showMenu();
     }
-});
+}
+
+export function init(config) {
+    _config = config;
+    if (document.readyState !== 'loading') {
+        setup();
+    } else {
+        document.addEventListener('DOMContentLoaded', setup);
+    }
+}

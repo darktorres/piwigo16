@@ -42,7 +42,7 @@ import './themes/default/js/switchbox.js';
 						{/foreach}
 					</div>
 					{footer_script}<script>
-						(window.SwitchBox = window.SwitchBox || []).push("#sortOrderLink", "#sortOrderBox");
+						(document._switchBoxQueue = document._switchBoxQueue || []).push("#sortOrderLink", "#sortOrderBox");
 					</script>{/footer_script}
 				</li>
 			{/if}
@@ -66,7 +66,7 @@ import './themes/default/js/switchbox.js';
 						{/foreach}
 					</div>
 					{footer_script}<script>
-						(window.SwitchBox = window.SwitchBox || []).push("#derivativeSwitchLink", "#derivativeSwitchBox");
+						(document._switchBoxQueue = document._switchBoxQueue || []).push("#derivativeSwitchLink", "#derivativeSwitchBox");
 					</script>{/footer_script}
 				</li>
 			{/if}
@@ -154,7 +154,7 @@ import './themes/default/js/switchbox.js';
 						{/foreach}
 				</div>
 				{footer_script}<script>
-					(window.SwitchBox = window.SwitchBox || []).push("#calendarViewSwitchLink", "#calendarViewSwitchBox");
+					(document._switchBoxQueue = document._switchBoxQueue || []).push("#calendarViewSwitchLink", "#calendarViewSwitchBox");
 				</script>{/footer_script}
 			</div>
 		{/if}

@@ -1,8 +1,8 @@
 {footer_script}<script type="module">
 import './themes/default/js/switchbox.js';
-import { phpWGOpenWindow, PwgWS } from './themes/default/js/scripts.js';
+import { setupPwgOpenWindow, PwgWS } from './themes/default/js/scripts.js';
 import { initRating } from './themes/default/js/rating.js';
-window.phpWGOpenWindow = phpWGOpenWindow;
+setupPwgOpenWindow();
 window.PwgWS = PwgWS;
 </script>{/footer_script}
 {if isset($MENUBAR)}{$MENUBAR}{/if}
@@ -57,7 +57,11 @@ window.PwgWS = PwgWS;
 						if (checked) checked.style.visibility = 'visible';
 						document.cookie = 'picture_deriv='+typeSave+';path={$COOKIE_PATH}';
 					}
-					(window.SwitchBox = window.SwitchBox || []).push("#derivativeSwitchLink", "#derivativeSwitchBox");
+					(document._switchBoxQueue = document._switchBoxQueue || []).push("#derivativeSwitchLink", "#derivativeSwitchBox");
+				</script>{/footer_script}
+				{footer_script}<script type="module">
+					import { registerChangeImgSrc } from './themes/modus/js/photo.autosize.js';
+					registerChangeImgSrc(window.changeImgSrc);
 				</script>{/footer_script}
 				<a id="derivativeSwitchLink" title="{'Photo sizes'|translate}" class="pwg-state-default pwg-button"
 					rel="nofollow">
@@ -77,8 +81,7 @@ window.PwgWS = PwgWS;
 						</a><br>
 					{/foreach}
 					{if isset($U_ORIGINAL)}
-						<a href="javascript:phpWGOpenWindow('{$U_ORIGINAL}','xxx','scrollbars=yes,toolbar=no,status=no,resizable=yes')"
-							rel="nofollow">{'Original'|translate}</a>
+						<a href="#" data-action="pwgOpenWindow" data-url="{$U_ORIGINAL|escape:'html'}" data-features="scrollbars=yes,toolbar=no,status=no,resizable=yes" rel="nofollow">{'Original'|translate}</a>
 					{/if}
 				</div>
 			{/if}
@@ -107,7 +110,7 @@ window.PwgWS = PwgWS;
 						document.addEventListener('DOMContentLoaded', function() {
 							var dlLink = document.getElementById('downloadSwitchLink');
 							if (dlLink) dlLink.removeAttribute('href');
-							(window.SwitchBox = window.SwitchBox || []).push("#downloadSwitchLink", "#downloadSwitchBox");
+							(document._switchBoxQueue = document._switchBoxQueue || []).push("#downloadSwitchLink", "#downloadSwitchBox");
 						});
 					</script>{/footer_script}
 
@@ -321,8 +324,8 @@ window.PwgWS = PwgWS;
 									{/foreach}
 									{footer_script}<script type="module">
 										import { initRating } from './themes/default/js/rating.js';
-										var _pwgRatingAutoQueue = _pwgRatingAutoQueue || [];
-										_pwgRatingAutoQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
+										document._pwgRatingQueue = document._pwgRatingQueue || [];
+										document._pwgRatingQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
 										onSuccess: function(rating) {
 										var e = document.getElementById("updateRate");
 										if (e) e.innerHTML = "{'Update your rating'|translate|escape:'javascript'}";
@@ -376,7 +379,7 @@ window.PwgWS = PwgWS;
 									}
 								);
 								}
-								(window.SwitchBox = window.SwitchBox || []).push("#privacyLevelLink", "#privacyLevelBox");
+								(document._switchBoxQueue = document._switchBoxQueue || []).push("#privacyLevelLink", "#privacyLevelBox");
 							</script>{/footer_script}
 							<div id="privacyLevelBox" class="switchBox" style="display:none">
 								{foreach $available_permission_levels as $level => $label}

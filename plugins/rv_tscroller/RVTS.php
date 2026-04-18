@@ -119,19 +119,20 @@ final class RVTS
         $template->block_footer_script(
             null,
             <<<JS
-                <script>
-                var RVTS_CATS = {
-                    ajaxUrlModel: String.fromCharCode({$ajax_url_0})+'{$ajax_url_rest}',
-                    start: {$startcat},
-                    perPage: {$per_page},
-                    next: {$next},
-                    total: {$total},
-                    ajaxLoaderImage: {$ajax_loader_img_js}
-                };
+                <script type="application/json" id="rvts-cats-config">
+                {
+                    "ajaxUrlModel": "{$ajax_url_model}",
+                    "start": {$startcat},
+                    "perPage": {$per_page},
+                    "next": {$next},
+                    "total": {$total},
+                    "ajaxLoaderImage": {$ajax_loader_img_js}
+                }
                 </script>
                 <script type="module">
                 import { initRVTS_CATS } from '{$js_path}';
-                if (window.RVTS_CATS) initRVTS_CATS(window.RVTS_CATS);
+                const cfg = JSON.parse(document.getElementById('rvts-cats-config').textContent);
+                initRVTS_CATS(cfg);
                 </script>
                 JS
         );
@@ -188,23 +189,24 @@ final class RVTS
         $template->block_footer_script(
             null,
             <<<JS
-                <script>
-                var RVTS = {
-                    ajaxUrlModel: String.fromCharCode({$ajax_url_model_0})+'{$ajax_url_model_rest}',
-                    start: {$start},
-                    perPage: {$per_page},
-                    next: {$next},
-                    total: {$total},
-                    urlModel: String.fromCharCode({$url_model_0})+'{$url_model_rest}',
-                    moreMsg: {$moreMsg_js},
-                    prevMsg: {$prevMsg_js},
-                    ajaxLoaderImage: {$ajax_loader_image_js}
-                };
-                document.querySelector('.navigationBar') && (document.querySelector('.navigationBar').style.display = 'none');
+                <script type="application/json" id="rvts-config">
+                {
+                    "ajaxUrlModel": "{$ajax_url_model}",
+                    "start": {$start},
+                    "perPage": {$per_page},
+                    "next": {$next},
+                    "total": {$total},
+                    "urlModel": "{$url_model}",
+                    "moreMsg": {$moreMsg_js},
+                    "prevMsg": {$prevMsg_js},
+                    "ajaxLoaderImage": {$ajax_loader_image_js}
+                }
                 </script>
                 <script type="module">
                 import { initRVTS } from '{$js_path}';
-                if (window.RVTS) initRVTS(window.RVTS);
+                const cfg = JSON.parse(document.getElementById('rvts-config').textContent);
+                initRVTS(cfg);
+                document.querySelector('.navigationBar') && (document.querySelector('.navigationBar').style.display = 'none');
                 </script>
                 JS
         );

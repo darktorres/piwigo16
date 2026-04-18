@@ -30,9 +30,9 @@ function sbFunc(link, box) {
     });
 }
 
-if (window.SwitchBox && Array.isArray(window.SwitchBox)) {
-    for (let i = 0; i < window.SwitchBox.length; i += 2)
-        sbFunc(window.SwitchBox[i], window.SwitchBox[i + 1]);
+if (document._switchBoxQueue && Array.isArray(document._switchBoxQueue)) {
+    for (let i = 0; i < document._switchBoxQueue.length; i += 2)
+        sbFunc(document._switchBoxQueue[i], document._switchBoxQueue[i + 1]);
 }
 
 window.SwitchBox = {

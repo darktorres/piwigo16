@@ -1,9 +1,9 @@
 export const AdminTools = (function () {
-    var __this = this;
-
-    this.urlWS;
-    this.urlSelf;
-    this.multiView;
+    const state = {
+        urlWS: null,
+        urlSelf: null,
+        multiView: null
+    };
 
     var $ato = document.getElementById("ato_container");
 
@@ -23,21 +23,21 @@ export const AdminTools = (function () {
                 }
             });
             var viewAs = multiview.querySelector('select[data-type="view_as"]');
-            if (viewAs) { viewAs.innerHTML = html; viewAs.value = __this.multiView.view_as; }
+            if (viewAs) { viewAs.innerHTML = html; viewAs.value = state.multiView.view_as; }
 
             html = "";
             ["clear", "roma"].forEach(function(theme) {
                 html += '<option value="' + theme + '">' + theme + "</option>";
             });
             var themeEl = multiview.querySelector('select[data-type="theme"]');
-            if (themeEl) { themeEl.innerHTML = html; themeEl.value = __this.multiView.theme; }
+            if (themeEl) { themeEl.innerHTML = html; themeEl.value = state.multiView.theme; }
 
             html = "";
             data.languages.forEach(function(language) {
                 html += '<option value="' + language.id + '">' + language.name + "</option>";
             });
             var langEl = multiview.querySelector('select[data-type="lang"]');
-            if (langEl) { langEl.innerHTML = html; langEl.value = __this.multiView.lang; }
+            if (langEl) { langEl.innerHTML = html; langEl.value = state.multiView.lang; }
 
             multiview.dataset.init = "1";
 
@@ -52,7 +52,7 @@ export const AdminTools = (function () {
         ) {
             render(JSON.parse(window.sessionStorage.multiView));
         } else {
-            fetch(__this.urlWS + "multiView.getData", { method: "POST" })
+            fetch(state.urlWS + "multiView.getData", { method: "POST" })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     render(data.result);
@@ -65,14 +65,14 @@ export const AdminTools = (function () {
     }
 
     // delete session cache
-    this.deleteCache = function () {
+    state.deleteCache = function () {
         if ("sessionStorage" in window) {
             window.sessionStorage.removeItem("multiView");
         }
     };
 
     // attach event handlers
-    this.init = function (open) {
+    state.init = function (open) {
         if (!$ato) return;
 
         var multiview = document.querySelector(".multiview");
@@ -104,17 +104,24 @@ export const AdminTools = (function () {
         $ato.querySelectorAll(".switcher").forEach(function(sel) {
             sel.addEventListener("change", function() {
                 if (sel.dataset.type == "theme") {
-                    if (sel.value != __this.multiView.theme) {
-                        window.location.href = __this.urlSelf + "change_theme=1";
+                    if (sel.value != state.multiView.theme) {
+                        window.location.href = state.urlSelf + "change_theme=1";
                     }
                 } else {
                     window.location.href =
-                        __this.urlSelf + "ato_" + sel.dataset.type + "=" + sel.value;
+                        state.urlSelf + "ato_" + sel.dataset.type + "=" + sel.value;
                 }
             });
             sel.addEventListener("click", function(e) { e.stopPropagation(); });
         });
     };
 
-    return this;
+    state.setConfig = function(config) {
+        if (config.urlWS) state.urlWS = config.urlWS;
+        if (config.urlSelf) state.urlSelf = config.urlSelf;
+        if (config.multiView) state.multiView = config.multiView;
+        if (config.deleteCache) state.deleteCache();
+    };
+
+    return state;
 })();

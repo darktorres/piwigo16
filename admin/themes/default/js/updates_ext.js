@@ -182,12 +182,41 @@ export function init(cfg) {
 
   checkFieldsets();
 
-  // Expose functions globally for inline onclick handlers
-  window.updateExtension = updateExtension;
-  window.ignoreExtension = ignoreExtension;
-  window.resetIgnored = resetIgnored;
-  window.updateAll = updateAll;
-  window.ignoreAll = ignoreAll;
+  // Event delegation for per-extension actions
+  document.addEventListener('click', function(e) {
+    const updateBtn = e.target.closest('[data-action="updateExt"]');
+    if (updateBtn) {
+      e.preventDefault();
+      const type = updateBtn.dataset.type;
+      const id = updateBtn.dataset.id;
+      const revision = updateBtn.dataset.revision;
+      updateExtension(type, id, revision);
+      return;
+    }
+
+    const ignoreBtn = e.target.closest('[data-action="ignoreExt"]');
+    if (ignoreBtn) {
+      e.preventDefault();
+      const type = ignoreBtn.dataset.type;
+      const id = ignoreBtn.dataset.id;
+      ignoreExtension(type, id);
+      return;
+    }
+
+    const ignoreAllBtn = e.target.closest('[data-action="ignoreAll"]');
+    if (ignoreAllBtn) {
+      e.preventDefault();
+      ignoreAll();
+      return;
+    }
+
+    const resetBtn = e.target.closest('[data-action="resetIgnored"]');
+    if (resetBtn) {
+      e.preventDefault();
+      resetIgnored();
+      return;
+    }
+  });
 
   // Update all button confirmation
   const updateAllBtn = document.getElementById("update_all");

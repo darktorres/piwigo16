@@ -27,6 +27,7 @@ const adminModules = [
   'generate_video_thumbnails',
   'helpPopin',
   'history',
+  'languages_installed',
   'plugins_installated',
   'plugins_new',
   'picture_formats',

@@ -1,39 +1,43 @@
+import { initModule } from './moduleInit.js';
 import { pwgConfirm } from './pwgConfirm.js';
 
-//Get the data
-var dataTags = document.querySelector(".tag-container")?.dataset.tags ? JSON.parse(document.querySelector(".tag-container").dataset.tags) : [];
+export function init(cfg) {
+    const { orphan_tag_names, total_tags, pwg_token, str_delete, str_delete_tags, str_yes_delete_confirmation, str_no_delete_confirmation, str_yes_rename_confirmation, str_tag_deleted, str_tags_deleted, str_already_exist, str_tag_created, str_tag_renamed, str_tag_rename, str_delete_orphan_tags, str_orphan_tags, str_delete_them, str_keep_them, str_copy, str_other_copy, str_merged_into, str_and_others_tags, str_others_tags_available, str_number_photos, str_no_photos, str_select_all_tag, str_clear_selection, str_selection_done, str_tag_selected, str_tags_found, str_tag_found } = cfg;
 
-//Initiate Select
-var _sel100 = document.getElementById("select-100");
-if (_sel100) _sel100.checked = true;
+    //Get the data
+    var dataTags = document.querySelector(".tag-container")?.dataset.tags ? JSON.parse(document.querySelector(".tag-container").dataset.tags) : [];
 
-//Orphan tags
-document.querySelector(".info-warning p a")?.addEventListener("click", () => {
-    let url = document.querySelector(".info-warning p a")?.dataset.url;
-    let tags = orphan_tag_names;
-    let str_orphans = str_orphan_tags
-        .replace("%s1", tags.length)
-        .replace("%s2", tags.join(", "));
-    pwgConfirm({
-        content: str_orphans,
-        title: str_delete_orphan_tags,
-        buttons: {
-            delete: {
-                text: str_delete_them,
-                btnClass: "btn-red",
-                action: function () {
-                    window.location.href = url.replace(/amp;/g, "");
+    //Initiate Select
+    var _sel100 = document.getElementById("select-100");
+    if (_sel100) _sel100.checked = true;
+
+    //Orphan tags
+    document.querySelector(".info-warning p a")?.addEventListener("click", () => {
+        let url = document.querySelector(".info-warning p a")?.dataset.url;
+        let tags = orphan_tag_names;
+        let str_orphans = str_orphan_tags
+            .replace("%s1", tags.length)
+            .replace("%s2", tags.join(", "));
+        pwgConfirm({
+            content: str_orphans,
+            title: str_delete_orphan_tags,
+            buttons: {
+                delete: {
+                    text: str_delete_them,
+                    btnClass: "btn-red",
+                    action: function () {
+                        window.location.href = url.replace(/amp;/g, "");
+                    },
+                },
+                keep: {
+                    text: str_keep_them,
+                    action: function () {
+                        document.querySelector(".info-warning").style.display = 'none';
+                    },
                 },
             },
-            keep: {
-                text: str_keep_them,
-                action: function () {
-                    document.querySelector(".info-warning").style.display = 'none';
-                },
-            },
-        },
+        });
     });
-});
 
 //Create and recycle tag box
 function createTagBox(id, name, url_name, count, raw_name = null) {
@@ -1249,9 +1253,8 @@ function updateSearchInfo() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function () {
     var h1 = document.querySelector("h1");
-    if (h1) h1.insertAdjacentHTML('beforeend', '<span class="badge-number">' + (window.total_tags || '0') + '</span>');
+    if (h1) h1.insertAdjacentHTML('beforeend', '<span class="badge-number">' + (total_tags || '0') + '</span>');
 
     function setPagination() {
         var match = document.cookie.match(/(?:^|;)\s*pwg_tags_per_page=([^;]*)/);
@@ -1268,4 +1271,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!document.cookie.match(/(?:^|;)\s*pwg_tags_per_page=/)) {
         document.cookie = 'pwg_tags_per_page=100; path=/; SameSite=Lax';
     }
-});
+}
+
+initModule(init);

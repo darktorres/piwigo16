@@ -1,38 +1,40 @@
-{footer_script}<script>
-  window.pwg_token = "{$PWG_TOKEN}";
-  window.orphan_tag_names = {$orphan_tag_names_array};
-  window.total_tags = {$total};
-  window.str_delete = '{'Delete tag "%s"?'|translate}';
-  window.str_delete_tags = '{'Delete tags \{%s\}?'|translate}';
-  window.str_yes_delete_confirmation = "{'Yes, delete'|translate}";
-  window.str_no_delete_confirmation = "{"No, I have changed my mind"|translate}";
-  window.str_yes_rename_confirmation = "{'Yes, rename'|translate}";
-  window.str_tag_deleted = '{'Tag "%s" successfully deleted'|translate}';
-  window.str_tags_deleted = '{'Tags \{%s\} successfully deleted'|translate}';
-  window.str_already_exist = '{'Tag "%s" already exists'|translate}';
-  window.str_tag_created = '{'Tag "%s" created'|translate}';
-  window.str_tag_renamed = '{'Tag "%s1" renamed in "%s2"'|translate}';
-  window.str_tag_rename = '{'Rename "%s"'|translate}';
-  window.str_delete_orphan_tags = '{'Delete orphan tags ?'|translate}';
-  window.str_orphan_tags = '{'You have %s1 orphan : %s2'|translate}';
-  window.str_delete_them = '{'Delete them'|translate}';
-  window.str_keep_them = '{'Keep them'|translate}';
-  window.str_copy = '{' (copy)'|translate}';
-  window.str_other_copy = '{' (copy %s)'|translate}';
-  window.str_merged_into = '{'Tag(s) \{%s1\} successfully merged into "%s2"'|translate}';
-  window.str_and_others_tags = '{'and %s others'|translate}';
-  window.str_others_tags_available = '{'%s other tags available...'|translate}';
-  window.str_number_photos = '{'%d photos'}';
-  window.str_no_photos = '{'no photo'}';
-  window.str_select_all_tag = '{'Select all %d tags'|translate}';
-  window.str_clear_selection = '{'Clear Selection'|translate}';
-  window.str_selection_done = '{'The %d tags on this page are selected'|translate}';
-  window.str_tag_selected = '{'<b>%d</b> tag selected'|translate}';
-  window.str_tags_found = '{'<b>%d</b> tags found'|translate}';
-  window.str_tag_found = '{'<b>%d</b> tag found'|translate}';
-</script>{/footer_script}
-
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+
+<script id="pwg-page-data" type="application/json">
+{
+  "pwg_token": "{$PWG_TOKEN|escape:'html'}",
+  "orphan_tag_names": {$orphan_tag_names_array},
+  "total_tags": {$total},
+  "str_delete": "{'Delete tag "%s"?'|translate|escape:'html'}",
+  "str_delete_tags": "{'Delete tags \\{%s\\}?'|translate|escape:'html'}",
+  "str_yes_delete_confirmation": "{'Yes, delete'|translate|escape:'html'}",
+  "str_no_delete_confirmation": "{"No, I have changed my mind"|translate|escape:'html'}",
+  "str_yes_rename_confirmation": "{'Yes, rename'|translate|escape:'html'}",
+  "str_tag_deleted": "{'Tag "%s" successfully deleted'|translate|escape:'html'}",
+  "str_tags_deleted": "{'Tags \\{%s\\} successfully deleted'|translate|escape:'html'}",
+  "str_already_exist": "{'Tag "%s" already exists'|translate|escape:'html'}",
+  "str_tag_created": "{'Tag "%s" created'|translate|escape:'html'}",
+  "str_tag_renamed": "{'Tag "%s1" renamed in "%s2"'|translate|escape:'html'}",
+  "str_tag_rename": "{'Rename "%s"'|translate|escape:'html'}",
+  "str_delete_orphan_tags": "{'Delete orphan tags ?'|translate|escape:'html'}",
+  "str_orphan_tags": "{'You have %s1 orphan : %s2'|translate|escape:'html'}",
+  "str_delete_them": "{'Delete them'|translate|escape:'html'}",
+  "str_keep_them": "{'Keep them'|translate|escape:'html'}",
+  "str_copy": "{' (copy)'|translate|escape:'html'}",
+  "str_other_copy": "{' (copy %s)'|translate|escape:'html'}",
+  "str_merged_into": "{'Tag(s) \\{%s1\\} successfully merged into "%s2"'|translate|escape:'html'}",
+  "str_and_others_tags": "{'and %s others'|translate|escape:'html'}",
+  "str_others_tags_available": "{'%s other tags available...'|translate|escape:'html'}",
+  "str_number_photos": "{'%d photos'|translate|escape:'html'}",
+  "str_no_photos": "{'no photo'|translate|escape:'html'}",
+  "str_select_all_tag": "{'Select all %d tags'|translate|escape:'html'}",
+  "str_clear_selection": "{'Clear Selection'|translate|escape:'html'}",
+  "str_selection_done": "{'The %d tags on this page are selected'|translate|escape:'html'}",
+  "str_tag_selected": "{'<b>%d</b> tag selected'|translate|escape:'html'}",
+  "str_tags_found": "{'<b>%d</b> tags found'|translate|escape:'html'}",
+  "str_tag_found": "{'<b>%d</b> tag found'|translate|escape:'html'}"
+}
+</script>
 
 {if $vite_tags}
 <script type="module" src="admin/themes/default/js/dist/{$vite_tags}"></script>

@@ -32,19 +32,7 @@
 </div>{* <!-- the_page --> *}
 
 
-{combine_script id='popper.js' load='footer' path='node_modules/@popperjs/core/dist/umd/popper.min.js'}
-{combine_script id='tippy.js' load='footer' require='popper.js' path='node_modules/tippy.js/dist/tippy-bundle.umd.min.js'}
 {combine_css path='node_modules/tippy.js/dist/tippy.css'}
-{footer_script require='tippy.js'}<script>
-  tippy('.tiptip', { delay: 0, placement: 'top' });
-
-  document.querySelectorAll('a.externalLink').forEach(function(el) {
-    el.addEventListener('click', function(e) {
-      e.preventDefault();
-      window.open(this.getAttribute("href"));
-    });
-  });
-</script>{/footer_script}
 
 <!-- BEGIN get_combined -->
 {get_combined_scripts load='footer'}

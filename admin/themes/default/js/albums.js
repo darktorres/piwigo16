@@ -1,3 +1,4 @@
+import tippy from 'tippy.js';
 import { PwgTree } from './PwgTree.js';
 import { pwgConfirm } from './pwgConfirm.js';
 

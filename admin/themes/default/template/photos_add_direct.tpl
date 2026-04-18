@@ -14,32 +14,7 @@
   /* specific to this page, do not move in theme.css */
 </style>{/html_style}
 
-<script id="pwg-page-data" type="application/json">
-{
-  "formatMode": {if $DISPLAY_FORMATS}true{else}false{/if},
-  "haveFormatsOriginal": {if $HAVE_FORMATS_ORIGINAL}true{else}false{/if},
-  "originalImageId": {if isset($FORMATS_ORIGINAL_INFO['id'])}"{$FORMATS_ORIGINAL_INFO['id']}"{else}-1{/if},
-  "categoriesServerKey": "{$CACHE_KEYS.categories|escape:'html'}",
-  "categoriesServerId": "{$CACHE_KEYS._hash|escape:'html'}",
-  "rootUrl": "{$ROOT_URL|escape:'html'}",
-  "pwgToken": "{$pwg_token|escape:'html'}",
-  "photosUploadedLabel": "{'%d photos uploaded'|translate|escape:'html'}",
-  "formatsUploadedLabel": "{'%d formats uploaded for %d photos'|translate|escape:'html'}",
-  "batchLabel": "{'Manage this set of %d photos'|translate|escape:'html'}",
-  "albumSummaryLabel": "{'Album \"%s\" now contains %d photos'|translate|escape:'html'}",
-  "strFormatWarning": "{'Error when trying to detect formats'|translate|escape:'html'}",
-  "strOk": "{'Ok'|translate|escape:'html'}",
-  "strFormatWarningMultiple": "{'There is multiple image in the database with the following names : %s.'|translate|escape:'html'}",
-  "strFormatWarningNotFound": "{'No picture found with the following name : %s.'|translate|escape:'html'}",
-  "strAndXOthers": "{'and %d more'|translate|escape:'html'}",
-  "fileExt": "{$file_exts|escape:'html'}",
-  "formatExt": "{$format_ext|escape:'html'}",
-  "chunkSize": {$chunk_size},
-  "maxFileSize": {$max_file_size},
-  "dropzoneMsg": "{'Drop files here or click Add Photos'|translate|escape:'html'}",
-  "strUploadInProgress": "{'Upload in progress'|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_photos_add_direct}
 <script type="module" src="admin/themes/default/js/dist/{$vite_photos_add_direct}"></script>

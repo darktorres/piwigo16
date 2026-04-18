@@ -152,6 +152,33 @@ require_once __DIR__ . '/../admin/inc/photos_add_direct_prepare.php';
 
 functions_plugins::trigger_notify('loc_end_photo_add_direct');
 
+$cache_keys = functions_admin::get_admin_client_cache_keys(['categories']);
+$page_data = [
+    'formatMode' => (bool) $display_formats,
+    'haveFormatsOriginal' => (bool) $have_formats_original,
+    'originalImageId' => $have_formats_original && isset($formats_original_info['id']) ? (string) $formats_original_info['id'] : '-1',
+    'categoriesServerKey' => $cache_keys['categories'],
+    'categoriesServerId' => $cache_keys['_hash'],
+    'rootUrl' => functions_url::get_root_url(),
+    'pwgToken' => functions::get_pwg_token(),
+    'photosUploadedLabel' => functions::l10n('%d photos uploaded'),
+    'formatsUploadedLabel' => functions::l10n('%d formats uploaded for %d photos'),
+    'batchLabel' => functions::l10n('Manage this set of %d photos'),
+    'albumSummaryLabel' => functions::l10n('Album "%s" now contains %d photos'),
+    'strFormatWarning' => functions::l10n('Error when trying to detect formats'),
+    'strOk' => functions::l10n('Ok'),
+    'strFormatWarningMultiple' => functions::l10n('There is multiple image in the database with the following names : %s.'),
+    'strFormatWarningNotFound' => functions::l10n('No picture found with the following name : %s.'),
+    'strAndXOthers' => functions::l10n('and %d more'),
+    'fileExt' => implode(',', array_unique(array_map(strtolower(...), $conf->upload_form_all_types ? $conf->file_ext : $conf->picture_ext))),
+    'formatExt' => implode(',', $conf->format_ext),
+    'chunkSize' => $conf->upload_form_chunk_size,
+    'maxFileSize' => $conf->upload_form_max_file_size,
+    'dropzoneMsg' => functions::l10n('Drop files here or click Add Photos'),
+    'strUploadInProgress' => functions::l10n('Upload in progress'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['photos_add_direct']);
 

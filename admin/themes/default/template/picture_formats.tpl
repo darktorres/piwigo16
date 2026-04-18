@@ -1,13 +1,6 @@
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
-<script id="pwg-page-data" type="application/json">
-{
-  "pwg_token": "{$PWG_TOKEN|escape:'html'}",
-  "str_confirm_delete_format": "{'Delete %s format ?'|translate|escape:'html'}",
-  "str_confirm_msg": "{"Yes, I am sure"|translate|escape:'html'}",
-  "str_cancel_msg": "{"No, I have changed my mind"|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_picture_formats}
 <script type="module" src="admin/themes/default/js/dist/{$vite_picture_formats}"></script>

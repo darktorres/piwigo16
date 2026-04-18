@@ -1,0 +1,525 @@
+$ bunx eslint admin themes plugins --max-warnings=0
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\LocalStorageCache.js
+  206:37  warning  'escape' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  209:35  warning  'escape' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  212:44  warning  'escape' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\PwgTree.js
+  106:50  warning  'animate' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  114:51  warning  'animate' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\album_notification.js
+  4:22  warning  'cfg' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\album_selector.js
+  30:9   error  'api_params' is not defined        no-undef
+  37:9   error  'api_params' is not defined        no-undef
+  44:17  error  'api_method' is not defined        no-undef
+  49:38  error  'api_params' is not defined        no-undef
+  59:13  error  'categories' is not defined        no-undef
+  60:13  error  'fill_results' is not defined      no-undef
+  60:26  error  'categories' is not defined        no-undef
+  65:46  error  'str_result_limit' is not defined  no-undef
+  65:77  error  'categories' is not defined        no-undef
+  67:25  error  'categories' is not defined        no-undef
+  70:88  error  'categories' is not defined        no-undef
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\albums.js
+    8:5   warning  'str_show_sub' is assigned a value but never used                           no-unused-vars
+    8:19  warning  'str_hide_sub' is assigned a value but never used                           no-unused-vars
+    8:33  warning  'str_manage_sub_album' is assigned a value but never used                   no-unused-vars
+    8:55  warning  'str_apply_order' is assigned a value but never used                        no-unused-vars
+    9:5   warning  'str_edit' is assigned a value but never used                               no-unused-vars
+   14:34  warning  'has_images_recursives' is assigned a value but never used                  no-unused-vars
+   70:36  warning  'node' is defined but never used. Allowed unused args must match /^_/u      no-unused-vars
+  487:13  warning  'open_nodes' is assigned a value but never used                             no-unused-vars
+  600:10  warning  'isNumeric' is defined but never used                                       no-unused-vars
+  723:25  warning  'raw_data' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  788:13  error    'nbSubcatsEl' is already defined                                            no-redeclare
+  834:10  warning  'closeTree' is defined but never used                                       no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\batchManagerGlobal.js
+    4:10  warning  'pwgConfirm' is defined but never used               no-unused-vars
+   57:10  warning  'toggleAddFilterDropdown' is defined but never used  no-unused-vars
+   63:10  warning  'selectGenerateDerivAll' is defined but never used   no-unused-vars
+   70:10  warning  'selectGenerateDerivNone' is defined but never used  no-unused-vars
+   77:10  warning  'selectDelDerivAll' is defined but never used        no-unused-vars
+   84:10  warning  'selectDelDerivNone' is defined but never used       no-unused-vars
+  162:9   error    'cfg' is already defined                             no-redeclare
+  177:34  error    'CategoriesCache' is not defined                     no-undef
+  183:5   error    'categoriesCache' is not defined                     no-undef
+  434:5   error    'pwgDatepicker' is not defined                       no-undef
+  439:76  error    'pwgAddAlbum' is not defined                         no-undef
+  689:21  error    'elements' is already defined                        no-redeclare
+  698:21  error    'progressBar_max' is already defined                 no-redeclare
+  699:21  error    'todo' is already defined                            no-redeclare
+  701:21  error    'image_ids' is already defined                       no-redeclare
+  708:21  error    'regenerationText' is already defined                no-redeclare
+  714:26  error    'i' is already defined                               no-redeclare
+  766:14  warning  'progress_bar_end' is defined but never used         no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\cat_modify.js
+    7:5   warning  'has_images_associated_outside' is assigned a value but never used      no-unused-vars
+    7:36  warning  'has_images_becoming_orphans' is assigned a value but never used        no-unused-vars
+    7:65  warning  'has_images_recursives' is assigned a value but never used              no-unused-vars
+    8:5   warning  'cat_nav' is assigned a value but never used                            no-unused-vars
+   12:5   warning  'str_albums_found' is assigned a value but never used                   no-unused-vars
+   12:23  warning  'str_album_found' is assigned a value but never used                    no-unused-vars
+   12:40  warning  'str_result_limit' is assigned a value but never used                   no-unused-vars
+   13:5   warning  'str_orphan' is assigned a value but never used                         no-unused-vars
+  263:33  warning  'data' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  390:21  error    'cancelBtn' is already defined                                          no-redeclare
+  433:25  error    'temp_txt' is not defined                                               no-undef
+  439:83  error    'temp_txt' is not defined                                               no-undef
+  474:25  error    'temp_txt' is not defined                                               no-undef
+  480:83  error    'temp_txt' is not defined                                               no-undef
+  497:9   warning  'form_unsaved' is assigned a value but never used                       no-unused-vars
+  498:11  warning  'cat_modify' is assigned a value but never used                         no-unused-vars
+  546:10  warning  'fill_results' is defined but never used                                no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\cat_perm.js
+  3:8  warning  'TomSelect' is defined but never used  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\configuration_comments.js
+  3:22  warning  'cfg' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\configuration_main.js
+  25:3  error  'tippy' is not defined      no-undef
+  87:3  error  'GLightbox' is not defined  no-undef
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\configuration_sizes.js
+  15:31  warning  'size' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\element_set_ranks.js
+  5:22  warning  'cfg' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\generate_video_thumbnails.js
+   57:23  warning  'err' is defined but never used. Allowed unused args must match /^_/u   no-unused-vars
+  122:20  warning  'data' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\group_list.js
+    17:5   warning  'str_group_deleted' is assigned a value but never used  no-unused-vars
+   966:22  warning  'e' is defined but never used                           no-unused-vars
+   972:29  warning  'key' is assigned a value but never used                no-unused-vars
+  1157:26  warning  'e' is defined but never used                           no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\history.js
+   13:5   warning  'str_tags' is assigned a value but never used                                   no-unused-vars
+   80:86  warning  'e' is defined but never used. Allowed unused args must match /^_/u             no-unused-vars
+  242:22  warning  'value' is assigned a value but never used                                      no-unused-vars
+  326:36  warning  'imageDisplay' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  472:17  error    'detail' is already defined                                                     no-redeclare
+  480:17  error    'detail' is already defined                                                     no-redeclare
+  539:25  error    'detailEl' is already defined                                                   no-redeclare
+  557:25  error    'detailEl' is already defined                                                   no-redeclare
+  627:40  warning  'k' is defined but never used. Allowed unused args must match /^_/u             no-unused-vars
+  643:21  error    'detailItem' is already defined                                                 no-redeclare
+  653:17  error    'detail' is already defined                                                     no-redeclare
+  661:17  error    'detail' is already defined                                                     no-redeclare
+  669:17  error    'detail' is already defined                                                     no-redeclare
+  677:17  error    'detail' is already defined                                                     no-redeclare
+  688:17  error    'detail' is already defined                                                     no-redeclare
+  742:13  error    'detailItem' is already defined                                                 no-redeclare
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\intro.js
+   9:48  warning  'e' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  47:15  error    'warningsUl' is already defined                                      no-redeclare
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\jquery.geoip.js
+   1:1   error  Read-only global 'GeoIp' should not be modified                            no-global-assign
+  23:25  error  Do not access Object.prototype method 'hasOwnProperty' from target object  no-prototype-builtins
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\maintenance.js
+   79:15  error    'icon' is already defined                   no-redeclare
+  186:46  warning  'value' is assigned a value but never used  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\photos_add_direct.js
+   21:5    warning  'strFormatWarningMultiple' is assigned a value but never used              no-unused-vars
+   22:5    warning  'strFormatWarningNotFound' is assigned a value but never used              no-unused-vars
+   23:5    warning  'strAndXOthers' is assigned a value but never used                         no-unused-vars
+   45:36   warning  'options' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+   99:22   warning  'res' is defined but never used. Allowed unused args must match /^_/u      no-unused-vars
+  220:31   warning  'file' is defined but never used. Allowed unused args must match /^_/u     no-unused-vars
+  257:42   error    'str_and_X_others' is not defined                                          no-undef
+  264:47   error    'strFormatWarning_notFound' is not defined                                 no-undef
+  265:47   error    'strFormatWarning_multiple' is not defined                                 no-undef
+  274:33   warning  'file' is defined but never used. Allowed unused args must match /^_/u     no-unused-vars
+  299:32   warning  'file' is defined but never used. Allowed unused args must match /^_/u     no-unused-vars
+  340:61   warning  'e' is defined but never used                                              no-unused-vars
+  373:111  warning  'e' is defined but never used                                              no-unused-vars
+  373:114  error    Empty block statement                                                      no-empty
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\picture_modify.js
+   9:120  warning  'str_albums_found' is assigned a value but never used  no-unused-vars
+   9:138  warning  'str_album_found' is assigned a value but never used   no-unused-vars
+   9:155  warning  'str_result_limit' is assigned a value but never used  no-unused-vars
+  11:14   warning  'fill_results' is defined but never used               no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\plugins_installated.js
+   12:19  warning  'areYouSureMsg' is assigned a value but never used                      no-unused-vars
+   13:26  warning  'deletedPluginMsg' is assigned a value but never used                   no-unused-vars
+   14:9   warning  'restoreTipMsg' is assigned a value but never used                      no-unused-vars
+   16:22  warning  'viewSelector' is assigned a value but never used                       no-unused-vars
+   16:51  warning  'showDetails' is assigned a value but never used                        no-unused-vars
+   56:67  warning  'el' is defined but never used. Allowed unused args must match /^_/u    no-unused-vars
+  141:10  warning  'reduceTitle' is defined but never used                                 no-unused-vars
+  157:10  warning  'normalTitle' is defined but never used                                 no-unused-vars
+  245:27  warning  'name' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  314:20  warning  'data' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  752:17  error    'show_details' is not defined                                           no-undef
+  758:21  error    'pluginName' is already defined                                         no-redeclare
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\plugins_new.js
+  167:25  error    '_' is not defined                     no-undef
+  214:17  error    Unreachable code                       no-unreachable
+  217:17  error    Unreachable code                       no-unreachable
+  220:17  error    Unreachable code                       no-unreachable
+  223:17  error    Unreachable code                       no-unreachable
+  226:17  error    Unreachable code                       no-unreachable
+  229:17  error    Unreachable code                       no-unreachable
+  232:17  error    Unreachable code                       no-unreachable
+  262:17  error    'starEl' is already defined            no-redeclare
+  287:10  error    '_' is not defined                     no-undef
+  354:14  warning  'clearSort' is defined but never used  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\rating.js
+  44:10  error  'PwgWS' is not defined  no-undef
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\rating_user.js
+  64:7   error  'pwgConfirm' is not defined  no-undef
+  76:20  error  'PwgWS' is not defined       no-undef
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\site_update.js
+   3:22  warning  'cfg' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  95:23  warning  'err' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\stats.js
+  3:8   warning  'moment' is defined but never used                                      no-unused-vars
+  6:38  warning  'str_number_page_visited_with_year' is assigned a value but never used  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\tags.js
+     6:186  warning  'str_tags_deleted' is assigned a value but never used                     no-unused-vars
+     6:240  warning  'str_tag_renamed' is assigned a value but never used                      no-unused-vars
+     6:410  warning  'str_others_tags_available' is assigned a value but never used            no-unused-vars
+   721:31   warning  'rej' is defined but never used. Allowed unused args must match /^_/u     no-unused-vars
+   866:9    warning  'str_message' is assigned a value but never used                          no-unused-vars
+   932:5    warning  'maxShown' is assigned a value but never used                             no-unused-vars
+   950:10   warning  'isSearched' is defined but never used                                    no-unused-vars
+   997:5    warning  'pageItem' is assigned a value but never used                             no-unused-vars
+   998:5    warning  'pageEllipsis' is assigned a value but never used                         no-unused-vars
+  1000:5    warning  'delay' is assigned a value but never used                                no-unused-vars
+  1128:34   warning  'reject' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  1129:13   warning  'newPage' is assigned a value but never used                              no-unused-vars
+  1143:49   warning  'rej' is defined but never used. Allowed unused args must match /^_/u     no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\themes_installed.js
+  8:11  warning  'title_msg' is assigned a value but never used  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\themes_new.js
+  4:22  warning  'cfg' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\updates_ext.js
+  8:9  warning  'confirmMsg_local' is assigned a value but never used  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\user_activity.js
+  11:5  warning  'nbUsers' is assigned a value but never used     no-unused-vars
+  16:9  warning  'usersCache' is assigned a value but never used  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\admin\themes\default\js\user_list.js
+     2:10  warning  'TemporaryState' is defined but never used                                      no-unused-vars
+    24:5   warning  'nb_photos_per_page' is assigned a value but never used                         no-unused-vars
+    47:11  warning  'registerDates' is assigned a value but never used                              no-unused-vars
+    84:5   error    'groupSelectize' is not defined                                                 no-undef
+    85:5   error    'groupGuestSelectize' is not defined                                            no-undef
+   652:5   warning  'promise_pending' is assigned a value but never used                            no-unused-vars
+   653:5   warning  'update_ask' is assigned a value but never used                                 no-unused-vars
+   855:18  error    'getRandomInt' is not defined                                                   no-undef
+   887:10  warning  'checkbox_container_change' is defined but never used                           no-unused-vars
+   897:10  warning  'checkbox_container_click' is defined but never used                            no-unused-vars
+   991:5   error    'number' is not defined                                                         no-undef
+   998:9   error    'number' is not defined                                                         no-undef
+  1023:9   error    'selection_ids' is not defined                                                  no-undef
+  1024:13  error    'selection_ids' is not defined                                                  no-undef
+  1372:42  error    'history_base_url' is not defined                                               no-undef
+  1380:40  error    'groupGuestSelectize' is not defined                                            no-undef
+  1380:62  error    'groupSelectize' is not defined                                                 no-undef
+  1489:24  error    'title_msg' is not defined                                                      no-undef
+  1492:31  error    'confirm_msg' is not defined                                                    no-undef
+  1499:31  error    'cancel_msg' is not defined                                                     no-undef
+  1555:40  error    'connected_user_status' is not defined                                          no-undef
+  1556:17  error    'connected_user_status' is not defined                                          no-undef
+  1565:40  error    'connected_user_status' is not defined                                          no-undef
+  1566:17  error    'connected_user_status' is not defined                                          no-undef
+  1575:17  error    'connected_user_status' is not defined                                          no-undef
+  1583:17  error    'connected_user_status' is not defined                                          no-undef
+  1618:24  error    'owner_id' is not defined                                                       no-undef
+  1658:9   error    'connected_user_status' is not defined                                          no-undef
+  1663:16  error    'connected_user_status' is not defined                                          no-undef
+  1751:23  error    'register_dates' is not defined                                                 no-undef
+  1752:23  error    'register_dates' is not defined                                                 no-undef
+  1804:32  error    'fieldNotEmpty' is not defined                                                  no-undef
+  2126:27  error    'register_dates' is not defined                                                 no-undef
+  2127:27  error    'register_dates' is not defined                                                 no-undef
+  2200:42  error    'register_dates' is not defined                                                 no-undef
+  2220:39  error    'missingUsername' is not defined                                                no-undef
+  2273:46  error    'user_added_str' is not defined                                                 no-undef
+  2299:15  warning  'data' is defined but never used. Allowed unused args must match /^_/u          no-unused-vars
+  2336:11  warning  'title_msg' is assigned a value but never used                                  no-unused-vars
+  2337:11  warning  'are_you_sure_msg' is assigned a value but never used                           no-unused-vars
+  2338:11  warning  'confirm_msg' is assigned a value but never used                                no-unused-vars
+  2339:11  warning  'cancel_msg' is assigned a value but never used                                 no-unused-vars
+  2340:11  warning  'str_and_others_tags' is assigned a value but never used                        no-unused-vars
+  2342:11  warning  'missingUsername' is assigned a value but never used                            no-unused-vars
+  2343:11  warning  'fieldNotEmpty' is assigned a value but never used                              no-unused-vars
+  2344:11  warning  'registered_str' is assigned a value but never used                             no-unused-vars
+  2345:11  warning  'last_visit_str' is assigned a value but never used                             no-unused-vars
+  2346:11  warning  'dates_infos' is assigned a value but never used                                no-unused-vars
+  2347:11  warning  'hide_str' is assigned a value but never used                                   no-unused-vars
+  2348:11  warning  'show_str' is assigned a value but never used                                   no-unused-vars
+  2349:11  warning  'user_added_str' is assigned a value but never used                             no-unused-vars
+  2350:11  warning  'str_popin_update_btn' is assigned a value but never used                       no-unused-vars
+  2353:11  warning  'history_base_url' is assigned a value but never used                           no-unused-vars
+  2354:11  warning  'status_to_str' is assigned a value but never used                              no-unused-vars
+  2355:11  warning  'view_selector' is assigned a value but never used                              no-unused-vars
+  2356:11  warning  'pagination' is assigned a value but never used                                 no-unused-vars
+  2357:11  warning  'months' is assigned a value but never used                                     no-unused-vars
+  2359:11  warning  'owner_id' is assigned a value but never used                                   no-unused-vars
+  2360:11  warning  'has_group' is assigned a value but never used                                  no-unused-vars
+  2361:11  warning  'groupOptions' is assigned a value but never used                               no-unused-vars
+  2364:22  error    'register_dates' is not defined                                                 no-undef
+  2469:24  warning  'responseData' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\plugins\AdminTools\js\admin_controller.js
+   1:5   warning  'AdminTools' is assigned a value but never used                         no-unused-vars
+  75:27  warning  'open' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\plugins\AdminTools\template\public_controller.js
+    1:5   warning  'AdminTools' is assigned a value but never used  no-unused-vars
+   35:17  error    'pages' is already defined                       no-redeclare
+  316:33  error    'TomSelect' is not defined                       no-undef
+  330:13  error    'Mousetrap' is not defined                       no-undef
+
+C:\Apache24\htdocs\piwigo-fork\plugins\GDThumb\js\gdthumb.admin.js
+  11:22  error  'ImageLoader' is not defined  no-undef
+
+C:\Apache24\htdocs\piwigo-fork\plugins\GDThumb\js\gdthumb.js
+  12:9  error  'GDMasonry' is not defined  no-undef
+  26:9  error  'GDMasonry' is not defined  no-undef
+
+C:\Apache24\htdocs\piwigo-fork\plugins\GDThumb\js\masonry.js
+  8:5  warning  'GDMasonry' is assigned a value but never used  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\plugins\TakeATour\js\Tour.js
+  46:63  warning  'e' is defined but never used  no-unused-vars
+  46:66  error    Empty block statement          no-empty
+
+C:\Apache24\htdocs\piwigo-fork\plugins\rv_tscroller\rv_tscroller.js
+  189:42  warning  'e' is defined but never used  no-unused-vars
+  189:45  error    Empty block statement          no-empty
+  225:70  error    'GDThumb' is not defined       no-undef
+  226:29  error    'GDThumb' is not defined       no-undef
+
+C:\Apache24\htdocs\piwigo-fork\themes\bootstrap_darkroom\js\header.js
+  40:52  error  'setColorOpacity' is not defined  no-undef
+  60:62  error  'setColorOpacity' is not defined  no-undef
+
+C:\Apache24\htdocs\piwigo-fork\themes\bootstrap_darkroom\js\rating.js
+   21:9   error    'pwgAddEventListener' is not defined                                   no-undef
+   22:9   error    'pwgAddEventListener' is not defined                                   no-undef
+   25:9   error    'pwgAddEventListener' is not defined                                   no-undef
+   60:38  warning  'btn' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+   64:17  error    'PwgWS' is not defined                                                 no-undef
+   81:50  warning  'btn' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  105:9   error    '_pwgRatingAutoQueue' is not defined                                   no-undef
+  107:29  error    '_pwgRatingAutoQueue' is not defined                                   no-undef
+  108:32  error    '_pwgRatingAutoQueue' is not defined                                   no-undef
+  110:5   error    '_pwgRatingAutoQueue' is not defined                                   no-undef
+
+C:\Apache24\htdocs\piwigo-fork\themes\bootstrap_darkroom\js\theme.js
+  126:10  warning  'bd_popup' is defined but never used                                       no-unused-vars
+  146:10  warning  'getCookie' is defined but never used                                      no-unused-vars
+  163:10  warning  'changeElementType' is defined but never used                              no-unused-vars
+  174:19  error    Do not access Object.prototype method 'hasOwnProperty' from target object  no-prototype-builtins
+  187:10  warning  'setColorOpacity' is defined but never used                                no-unused-vars
+  195:13  error    'rgbaCol' is already defined                                               no-redeclare
+  203:13  error    'rgbaCol' is already defined                                               no-redeclare
+
+C:\Apache24\htdocs\piwigo-fork\themes\bootstrap_darkroom\postcss.config.js
+  3:1  error  'module' is not defined  no-undef
+
+C:\Apache24\htdocs\piwigo-fork\themes\default\js\mcs.js
+    12:5   error    Read-only global 'related_categories_ids' should not be modified           no-global-assign
+    15:26  error    'prefix_icon' is not defined                                               no-undef
+    52:31  error    'search_id' is not defined                                                 no-undef
+    59:5   error    Read-only global 'PS_params' should not be modified                        no-global-assign
+    60:27  error    'search_id' is not defined                                                 no-undef
+    61:5   error    'empty_filters_list' is not defined                                        no-undef
+    70:9   error    'word_search_str' is not defined                                           no-undef
+    71:9   error    'word_search_words' is not defined                                         no-undef
+    75:9   error    'word_search_words' is not defined                                         no-undef
+    75:53  error    'word_search_str' is not defined                                           no-undef
+    77:48  error    'word_search_str' is not defined                                           no-undef
+    85:74  error    'word_search_str' is not defined                                           no-undef
+    87:74  error    'str_word_widget_label' is not defined                                     no-undef
+    90:9   error    'word_search_fields' is not defined                                        no-undef
+    91:21  error    'word_search_fields' is not defined                                        no-undef
+    92:46  error    'word_search_fields' is not defined                                        no-undef
+    96:9   error    'word_search_mode' is not defined                                          no-undef
+    97:90  error    'word_search_mode' is not defined                                          no-undef
+   115:30  error    'word_search_str' is not defined                                           no-undef
+   116:37  error    'word_search_fields' is not defined                                        no-undef
+   117:35  error    'word_search_mode' is not defined                                          no-undef
+   119:9   error    'empty_filters_list' is not defined                                        no-undef
+   127:13  error    'TomSelect' is not defined                                                 no-undef
+   143:9   error    'tag_search_str' is not defined                                            no-undef
+   148:17  error    'tag_search_str' is not defined                                            no-undef
+   157:74  error    'tag_search_str' is not defined                                            no-undef
+   159:74  error    'str_tags_widget_label' is not defined                                     no-undef
+   176:9   error    'empty_filters_list' is not defined                                        no-undef
+   180:30  error    Do not access Object.prototype method 'hasOwnProperty' from target object  no-prototype-builtins
+   196:13  error    'date_posted_str' is not defined                                           no-undef
+   199:88  error    'date_posted_str' is not defined                                           no-undef
+   213:9   error    'empty_filters_list' is not defined                                        no-undef
+   223:9   error    'album_widget_value' is not defined                                        no-undef
+   225:42  error    'fullname_of_cat' is not defined                                           no-undef
+   226:13  error    'album_widget_value' is not defined                                        no-undef
+   226:35  error    'fullname_of_cat' is not defined                                           no-undef
+   234:76  error    'album_widget_value' is not defined                                        no-undef
+   236:76  error    'str_album_widget_label' is not defined                                    no-undef
+   246:17  error    Read-only global 'related_categories_ids' should not be modified           no-global-assign
+   260:9   error    'empty_filters_list' is not defined                                        no-undef
+   266:13  error    'TomSelect' is not defined                                                 no-undef
+   277:13  error    'author_search_str' is not defined                                         no-undef
+   282:21  error    'author_search_str' is not defined                                         no-undef
+   292:86  error    'author_search_str' is not defined                                         no-undef
+   294:86  error    'str_author_widget_label' is not defined                                   no-undef
+   308:13  error    'empty_filters_list' is not defined                                        no-undef
+   325:13  error    'added_by_names' is not defined                                            no-undef
+   334:33  error    'added_by_names' is not defined                                            no-undef
+   339:82  error    'added_by_names' is not defined                                            no-undef
+   342:84  error    'str_added_by_widget_label' is not defined                                 no-undef
+   356:9   error    'empty_filters_list' is not defined                                        no-undef
+   366:9   error    'filetypes_search_str' is not defined                                      no-undef
+   367:64  error    'filetypes_search_str' is not defined                                      no-undef
+   376:58  error    'filetypes_search_str' is not defined                                      no-undef
+   384:86  error    'str_filetypes_widget_label' is not defined                                no-undef
+   398:9   error    'empty_filters_list' is not defined                                        no-undef
+   405:50  error    'str_empty_search_top_alt' is not defined                                  no-undef
+   406:50  error    'str_empty_search_bot_alt' is not defined                                  no-undef
+   409:10  error    'empty_filters_list' is not defined                                        no-undef
+   579:25  error    'wordSearchInput' is already defined                                       no-redeclare
+   587:21  error    'new_fields' is not defined                                                no-undef
+   592:25  error    'new_fields' is not defined                                                no-undef
+   599:60  error    'new_fields' is not defined                                                no-undef
+   601:25  error    'new_fields' is not defined                                                no-undef
+   601:49  error    'new_fields' is not defined                                                no-undef
+   776:13  error    'linked_albums_open' is not defined                                        no-undef
+   793:17  error    'linked_albums_search' is not defined                                      no-undef
+   796:60  error    'str_no_search_in_progress' is not defined                                 no-undef
+   874:21  error    'added_by_array' is not defined                                            no-undef
+   876:25  error    'added_by_array' is not defined                                            no-undef
+   879:59  error    'added_by_array' is not defined                                            no-undef
+   882:25  error    'added_by_array' is not defined                                            no-undef
+   882:53  error    'added_by_array' is not defined                                            no-undef
+   926:21  error    'filetypes_array' is not defined                                           no-undef
+   928:25  error    'filetypes_array' is not defined                                           no-undef
+   931:54  error    'filetypes_array' is not defined                                           no-undef
+   934:25  error    'filetypes_array' is not defined                                           no-undef
+   934:54  error    'filetypes_array' is not defined                                           no-undef
+   992:37  error    'prefix_icon' is not defined                                               no-undef
+   993:34  error    'prefix_icon' is not defined                                               no-undef
+  1024:10  warning  'fill_results' is defined but never used                                   no-unused-vars
+  1064:17  error    'prefix_icon' is not defined                                               no-undef
+  1100:9   error    Read-only global 'related_categories_ids' should not be modified           no-global-assign
+
+C:\Apache24\htdocs\piwigo-fork\themes\default\js\rating.js
+   17:14  error    'i' is already defined                no-redeclare
+   22:18  warning  'e' is defined but never used         no-unused-vars
+   22:21  error    Empty block statement                 no-empty
+   36:9   error    'pwgAddEventListener' is not defined  no-undef
+   37:9   error    'pwgAddEventListener' is not defined  no-undef
+   40:9   error    'pwgAddEventListener' is not defined  no-undef
+   66:17  error    'PwgWS' is not defined                no-undef
+  107:9   error    '_pwgRatingAutoQueue' is not defined  no-undef
+  109:29  error    '_pwgRatingAutoQueue' is not defined  no-undef
+  110:32  error    '_pwgRatingAutoQueue' is not defined  no-undef
+  112:5   error    '_pwgRatingAutoQueue' is not defined  no-undef
+
+C:\Apache24\htdocs\piwigo-fork\themes\default\js\scripts.js
+    1:10  warning  'phpWGOpenWindow' is defined but never used      no-unused-vars
+    2:5   error    'img' is not defined                             no-undef
+    3:5   error    'img' is not defined                             no-undef
+    4:9   error    'img' is not defined                             no-undef
+    5:21  error    'img' is not defined                             no-undef
+    6:22  error    'img' is not defined                             no-undef
+    8:13  error    'width' is already defined                       no-redeclare
+    9:13  error    'height' is already defined                      no-redeclare
+   10:9   error    'img' is not defined                             no-undef
+   11:13  error    'newWin' is not defined                          no-undef
+   11:29  error    'img' is not defined                             no-undef
+   11:45  error    'img' is not defined                             no-undef
+   14:5   error    'newWin' is not defined                          no-undef
+   21:10  warning  'popuphelp' is defined but never used            no-unused-vars
+   56:18  warning  'e' is defined but never used                    no-unused-vars
+   58:32  error    'ActiveXObject' is not defined                   no-undef
+   59:22  warning  'e' is defined but never used                    no-unused-vars
+   61:36  error    'ActiveXObject' is not defined                   no-undef
+   62:26  warning  'e' is defined but never used                    no-unused-vars
+   74:22  error    'prop' is already defined                        no-redeclare
+  157:10  warning  'pwgAddEventListener' is defined but never used  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\themes\default\js\switchbox.js
+  35:29  error  'SwitchBox' is not defined  no-undef
+  36:20  error  'SwitchBox' is not defined  no-undef
+  36:34  error  'SwitchBox' is not defined  no-undef
+
+C:\Apache24\htdocs\piwigo-fork\themes\elegant\scripts.js
+  26:24  error  'p_main_menu' is not defined  no-undef
+  29:63  error  'p_main_menu' is not defined  no-undef
+  49:31  error  'p_main_menu' is not defined  no-undef
+
+C:\Apache24\htdocs\piwigo-fork\themes\elegant\scripts_pp.js
+   79:24  error  'p_main_menu' is not defined     no-undef
+   83:66  error  'p_main_menu' is not defined     no-undef
+  106:27  error  'p_pict_descr' is not defined    no-undef
+  110:63  error  'p_pict_descr' is not defined    no-undef
+  133:25  error  'p_pict_comment' is not defined  no-undef
+  150:62  error  'p_pict_comment' is not defined  no-undef
+
+C:\Apache24\htdocs\piwigo-fork\themes\modus\js\modus.async.js
+  12:17  warning  'rect' is assigned a value but never used  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\themes\modus\js\photo.autosize.js
+   49:67  error  'RVAS' is not defined             no-undef
+   58:25  error  'RVAS' is not defined             no-undef
+   59:17  error  'RVAS' is not defined             no-undef
+   96:21  error  'changeRatio' is already defined  no-redeclare
+   97:21  error  'limit' is already defined        no-redeclare
+  132:9   error  'RVAS' is not defined             no-undef
+  132:33  error  'changeImgSrc' is not defined     no-undef
+  133:9   error  'changeImgSrc' is not defined     no-undef
+  134:13  error  'RVAS' is not defined             no-undef
+  135:13  error  'RVAS' is not defined             no-undef
+  147:13  error  'RVAS' is not defined             no-undef
+
+C:\Apache24\htdocs\piwigo-fork\themes\modus\js\thumb.arrange.js
+  157:17  error  'eltW' is already defined  no-redeclare
+  158:17  error  'eltH' is already defined  no-redeclare
+
+C:\Apache24\htdocs\piwigo-fork\themes\modus\js\thumb.pop.js
+  62:55  warning  'e' is defined but never used  no-unused-vars
+
+C:\Apache24\htdocs\piwigo-fork\themes\smartpocket\js\smartpocket.js
+  10:18  error  'GLightbox' is not defined     no-undef
+  12:53  error  'var_loop' is not defined      no-undef
+  42:17  error  'SPThumbs' is not defined      no-undef
+  42:26  error  'SPThumbsOpts' is not defined  no-undef
+
+C:\Apache24\htdocs\piwigo-fork\themes\smartpocket\js\thumb.arrange.js
+  144:17  error  'eltW' is already defined  no-redeclare
+  145:17  error  'eltH' is already defined  no-redeclare
+
+✖ 410 problems (257 errors, 153 warnings)
+
+error: script "lint" exited with code 1

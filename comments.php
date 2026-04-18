@@ -317,7 +317,7 @@ $query = <<<SQL
     FROM categories
     {$sql_condition};
     SQL;
-functions_category::display_select_cat_wrapper($query, [$_GET['cat']], $blockname);
+functions_category::display_select_cat_wrapper($query, [$_GET['cat'] ?? 0], $blockname);
 
 // Filter on recent comments...
 
@@ -368,7 +368,7 @@ $query = <<<SQL
     INNER JOIN comments AS com ON ic.image_id = com.image_id
     LEFT JOIN users As u ON u.{$conf->user_fields['id']} = com.author_id
     WHERE {$where_clauses}
-    GROUP BY comment_id
+    GROUP BY comment_id, ic.category_id
     ORDER BY {$page['sort_by']} {$page['sort_order']}
 
     SQL;

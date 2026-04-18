@@ -6,6 +6,21 @@ const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : docu
 const configEl = document.getElementById('pwg-page-data');
 const cfg = configEl ? JSON.parse(configEl.textContent) : {};
 
+const str_number_page_visited = window.str_number_page_visited || 'Page Visited';
+const str_number_page_visited_with_year = window.str_number_page_visited_with_year || 'Page Visited in %s';
+const str_tooltip_format = {
+  "years": "YYYY",
+  "months": "MMMM YYYY",
+  "days": "DD MMM",
+  "hours": "LT"
+};
+const str_unit_format = {
+  "day": "dddd",
+  "month": "MMM YYYY"
+};
+const str_avg = window.str_avg || 'Average last 12 months';
+const str_months = (window.str_months_tosplit || '').split('~');
+
 /*-------
 Data Get
 -------*/

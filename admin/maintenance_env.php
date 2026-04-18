@@ -355,4 +355,8 @@ $template->assign('advanced_features', $advanced_features);
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
 
+// Assign Vite module filenames for dynamic loading
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['maintenance', 'maintenance_env']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'maintenance');

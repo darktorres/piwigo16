@@ -1,13 +1,20 @@
-{combine_script id='ajax' load='footer' path='admin/themes/default/js/maintenance.js'}
-{combine_script id='activated_plugin_list' load='footer' path='admin/themes/default/js/maintenance_env.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10}
 {* order 10 is required, see issue 1080 *}
-{footer_script}<script>
-  const no_time_elapsed = "{"right now"|translate}";
-  const no_active_plugin = "{"No plugin activated"|translate}";
-  const error_occurred = "{"an error happened"|translate}";
-  const unit_MB = "{"%s MB"|translate}"
-</script>{/footer_script}
+<script id="pwg-page-data" type="application/json">
+{
+  "no_time_elapsed": "{"right now"|translate|escape:'html'}",
+  "no_active_plugin": "{"No plugin activated"|translate|escape:'html'}",
+  "error_occurred": "{"an error happened"|translate|escape:'html'}",
+  "unit_MB": "{"%s MB"|translate|escape:'html'}"
+}
+</script>
+
+{if $vite_maintenance}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_maintenance}"></script>
+{/if}
+{if $vite_maintenance_env}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_maintenance_env}"></script>
+{/if}
 
 <fieldset id="environment">
   <legend><span class="icon-television icon-red"></span> {'Environment'|translate}</legend>

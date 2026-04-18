@@ -184,4 +184,8 @@ $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $conf->enable_extensions_ins
 $template->set_filenames([
     'themes' => 'themes_installed.tpl',
 ]);
+
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['themes_installed']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');

@@ -176,6 +176,41 @@ $template->assign(
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
 
+$page_data = [
+    'pwg_token' => functions::get_pwg_token(),
+    'orphan_tag_names' => json_decode($orphan_tag_names_array),
+    'total_tags' => count($all_tags),
+    'str_delete' => functions::l10n('Delete tag "%s"?'),
+    'str_delete_tags' => functions::l10n('Delete tags {%s}?'),
+    'str_yes_delete_confirmation' => functions::l10n('Yes, delete'),
+    'str_no_delete_confirmation' => functions::l10n('No, I have changed my mind'),
+    'str_yes_rename_confirmation' => functions::l10n('Yes, rename'),
+    'str_tag_deleted' => functions::l10n('Tag "%s" successfully deleted'),
+    'str_tags_deleted' => functions::l10n('Tags {%s} successfully deleted'),
+    'str_already_exist' => functions::l10n('Tag "%s" already exists'),
+    'str_tag_created' => functions::l10n('Tag "%s" created'),
+    'str_tag_renamed' => functions::l10n('Tag "%s1" renamed in "%s2"'),
+    'str_tag_rename' => functions::l10n('Rename "%s"'),
+    'str_delete_orphan_tags' => functions::l10n('Delete orphan tags ?'),
+    'str_orphan_tags' => functions::l10n('You have %s1 orphan : %s2'),
+    'str_delete_them' => functions::l10n('Delete them'),
+    'str_keep_them' => functions::l10n('Keep them'),
+    'str_copy' => functions::l10n(' (copy)'),
+    'str_other_copy' => functions::l10n(' (copy %s)'),
+    'str_merged_into' => functions::l10n('Tag(s) {%s1} successfully merged into "%s2"'),
+    'str_and_others_tags' => functions::l10n('and %s others'),
+    'str_others_tags_available' => functions::l10n('%s other tags available...'),
+    'str_number_photos' => functions::l10n('%d photos'),
+    'str_no_photos' => functions::l10n('no photo'),
+    'str_select_all_tag' => functions::l10n('Select all %d tags'),
+    'str_clear_selection' => functions::l10n('Clear Selection'),
+    'str_selection_done' => functions::l10n('The %d tags on this page are selected'),
+    'str_tag_selected' => functions::l10n('<b>%d</b> tag selected'),
+    'str_tags_found' => functions::l10n('<b>%d</b> tags found'),
+    'str_tag_found' => functions::l10n('<b>%d</b> tag found'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['tags', 'pwgConfirm']);
 

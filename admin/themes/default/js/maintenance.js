@@ -1,74 +1,68 @@
+import { initModule } from './moduleInit.js';
 import { pwgConfirmFollowHref } from './pwgConfirm.js';
 
-// Get config from JSON data block
-const configEl = document.getElementById('pwg-page-data');
-const cfg = configEl ? JSON.parse(configEl.textContent) : {};
-
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
-
-const confirm_msg = cfg.confirm_msg || 'Yes, I am sure';
-const cancel_msg = cfg.cancel_msg || 'No, I have changed my mind';
-
-function displayResponse(domElem, values, mDivs, mValues) {
+export function init(cfg) {
+    const confirm_msg = cfg.confirm_msg || 'Yes, I am sure';
+    const cancel_msg = cfg.cancel_msg || 'No, I have changed my mind';
+    const str_gallery_tip = cfg.str_gallery_tip || 'A locked gallery is only visible to administrators';
+    const str_lock_unlock_title = cfg.str_lock_unlock_title || 'Are you sure?';
+    const str_purge_detail = cfg.str_purge_detail || 'Purge history detail';
+    const str_purge_summary = cfg.str_purge_summary || 'Purge history summary';
+    const str_purge_search = cfg.str_purge_search || 'Purge search history';
+    const str_delete_all_sizes = cfg.str_delete_all_sizes || 'Are you sure you want to delete all sizes?';
     const unit_MB = cfg.unit_MB || '%s MB';
     const no_time_elapsed = cfg.no_time_elapsed || 'right now';
+    const pwg_token = cfg.pwg_token || '';
 
-    for (let index = 0; index < domElem.length; index++) {
-        domElem[index].innerHTML = unit_MB.replace("%s", values[index]);
+    function displayResponse(domElem, values, mDivs, mValues) {
+        for (let index = 0; index < domElem.length; index++) {
+            domElem[index].innerHTML = unit_MB.replace("%s", values[index]);
+        }
+
+        for (let index = 0; index < mDivs.length; index++) {
+            const mDivName = mDivs[index].getAttribute("name");
+            mDivs[index].title = unit_MB.replace("%s", mValues[mDivName]);
+        }
+
+        var cacheLastCalc = document.querySelector(".cache-lastCalculated-value");
+        if (cacheLastCalc) cacheLastCalc.innerHTML = no_time_elapsed;
     }
-
-    for (let index = 0; index < mDivs.length; index++) {
-        mDivName = mDivs[index].getAttribute("name");
-        mDivs[index].title = unit_MB.replace("%s", mValues[mDivName]);
-    }
-
-    var cacheLastCalc = document.querySelector(".cache-lastCalculated-value");
-    if (cacheLastCalc) cacheLastCalc.innerHTML = no_time_elapsed;
-}
-
-_docReady( function () {
     document.querySelectorAll(".lock-gallery-button").forEach(function(el) {
-      const gallery_tip = window.str_gallery_tip || 'A locked gallery is only visible to administrators';
-      const title = window.str_lock_unlock_title || 'Are you sure?';
       pwgConfirmFollowHref(el, {
-        alert_title: title,
+        alert_title: str_lock_unlock_title,
         alert_confirm: confirm_msg,
         alert_cancel: cancel_msg,
-        alert_content: gallery_tip
+        alert_content: str_gallery_tip
       });
     });
 
     document.querySelectorAll(".purge-history-detail-button").forEach(function(el) {
-      const title = window.str_purge_detail || 'Purge history detail';
       pwgConfirmFollowHref(el, {
-        alert_title: title,
+        alert_title: str_purge_detail,
         alert_confirm: confirm_msg,
         alert_cancel: cancel_msg
       });
     });
 
     document.querySelectorAll(".purge-history-summary-button").forEach(function(el) {
-      const title = window.str_purge_summary || 'Purge history summary';
       pwgConfirmFollowHref(el, {
-        alert_title: title,
+        alert_title: str_purge_summary,
         alert_confirm: confirm_msg,
         alert_cancel: cancel_msg
       });
     });
 
     document.querySelectorAll(".purge-search-history-button").forEach(function(el) {
-      const title = window.str_purge_search || 'Purge search history';
       pwgConfirmFollowHref(el, {
-        alert_title: title,
+        alert_title: str_purge_search,
         alert_confirm: confirm_msg,
         alert_cancel: cancel_msg
       });
     });
 
     document.querySelectorAll(".delete-all-sizes-button").forEach(function(el) {
-      const title = window.str_delete_all_sizes || 'Are you sure you want to delete all sizes?';
       pwgConfirmFollowHref(el, {
-        alert_title: title,
+        alert_title: str_delete_all_sizes,
         alert_confirm: confirm_msg,
         alert_cancel: cancel_msg
       });
@@ -109,7 +103,6 @@ _docReady( function () {
     }
 
     const delete_deriv_URL = "admin.php?page=maintenance&action=derivatives&";
-    const pwg_token = cfg.pwg_token || '';
     document.querySelectorAll(".delete-size-check").forEach(function(el) {
       el.addEventListener('change', function() {
         var delete_deriv_with_token = delete_deriv_URL + "pwg_token=" + pwg_token + "&";
@@ -163,7 +156,7 @@ _docReady( function () {
                 })
                     .then(function (response) { return response.text(); })
                     .then(function (raw) {
-                        data = JSON.parse(raw);
+                        const data = JSON.parse(raw);
                         if (data.stat === "ok") {
                             res();
 
@@ -219,4 +212,6 @@ _docReady( function () {
             });
         });
     });
-});
+}
+
+initModule(init);

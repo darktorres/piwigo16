@@ -1,3 +1,5 @@
+export {};
+
 const _docReady = function (fn: () => void): void {
     document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn);
 };

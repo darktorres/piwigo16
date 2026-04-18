@@ -1,4 +1,7 @@
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+import { set_up_popin, linked_albums_open, linked_albums_close, linked_albums_search } from './album_selector.js';
+import GLightbox from 'glightbox';
+
+const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 _docReady( function () {
     document.querySelectorAll(".linked-albums.add-item").forEach(function (btn) {
         btn.addEventListener("click", function () {

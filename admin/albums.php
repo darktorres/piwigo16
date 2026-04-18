@@ -232,4 +232,7 @@ $template->assign(
 // |                          sending html code                            |
 // +-----------------------------------------------------------------------+
 
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['albums', 'pwgConfirm']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'albums');

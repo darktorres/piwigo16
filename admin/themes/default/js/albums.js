@@ -1,13 +1,16 @@
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+import { PwgTree } from './PwgTree.js';
+import { pwgConfirm } from './pwgConfirm.js';
+
+const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 _docReady( () => {
     formatedData = data;
 
     document.querySelector("h1").appendChild(document.createElement("span")).className = "badge-number";
     document.querySelector("h1 .badge-number").textContent = nb_albums;
 
-    var treeEl = document.querySelector('.tree');
+    const treeEl = document.querySelector('.tree');
 
-    var pwgTree = new PwgTree(treeEl, {
+    const pwgTree = new PwgTree(treeEl, {
         data: formatedData,
         autoOpen: false,
         dragAndDrop: true,

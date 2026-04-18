@@ -53,16 +53,12 @@
   {* temporary fix for #1283 (end) *}
 </script>{/footer_script}
 
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='group_list' load='footer' path='admin/themes/default/js/group_list.js'}
-
-{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
+{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
-
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{if $vite_group_list}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_group_list}"></script>
+{/if}
 
 {* Define template function for the content of Groups*}
 {function name=groupContent}

@@ -1,4 +1,7 @@
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+import { pwgConfirm } from './pwgConfirm.js';
+import GLightbox from 'glightbox';
+
+const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 /* ********** Filters */
 function filter_enable(filter) {
     /* show the filter*/

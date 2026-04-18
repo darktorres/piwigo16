@@ -2,12 +2,7 @@
 {include file='inc/datepicker.inc.tpl'}
 {include file='inc/colorbox.inc.tpl'}
 
-{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
-
-{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
-
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 
 {footer_script}<script>
   (function() {
@@ -81,8 +76,11 @@
   }());
 </script>{/footer_script}
 
-{combine_script id='picture_modify' load='footer' path='admin/themes/default/js/picture_modify.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+
+{if $vite_picture_modify}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_picture_modify}"></script>
+{/if}
 
 <form action="{$F_ACTION}" method="post" id="pictureModify">
   {if $INTRO.is_svg}

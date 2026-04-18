@@ -1,3 +1,5 @@
+import Cropper from 'cropperjs';
+
 function from_coi(f, total) {
     return f * total;
 }

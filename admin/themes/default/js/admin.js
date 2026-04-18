@@ -1,4 +1,4 @@
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 /* Menubar: expand active section, collapse others on click */
 (function () {
     var menubar = document.getElementById('menubar');

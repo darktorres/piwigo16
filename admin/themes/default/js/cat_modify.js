@@ -1,4 +1,7 @@
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+import { pwgConfirm } from './pwgConfirm.js';
+import tippy from 'tippy.js';
+
+const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 _docReady( function () {
     activateCommentDropdown();
     checkAlbumLock();

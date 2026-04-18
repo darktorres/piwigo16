@@ -1,3 +1,5 @@
+import { pwgConfirm } from './pwgConfirm.js';
+
 //Get the data
 var dataTags = document.querySelector(".tag-container")?.dataset.tags ? JSON.parse(document.querySelector(".tag-container").dataset.tags) : [];
 

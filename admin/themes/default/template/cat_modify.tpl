@@ -1,6 +1,3 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='cat_modify' load='footer' path='admin/themes/default/js/cat_modify.js'}
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 {footer_script}<script>
   const has_images_associated_outside = '{"delete album and all %d photos, even the %d associated to other albums"|translate|escape:javascript}';
@@ -35,6 +32,10 @@
   str_album_comment_disallow = '{'Comments disallowed for sub-albums'|translate|escape:javascript}';
   str_root = '{'Root'|translate|escape:javascript}';
 </script>{/footer_script}
+
+{if $vite_cat_modify}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_cat_modify}"></script>
+{/if}
 
 <div class="cat-modify" id="cat-modify">
 

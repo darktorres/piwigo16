@@ -731,4 +731,7 @@ $template->assign([
 functions_plugins::trigger_notify('loc_end_element_set_global');
 
 //----------------------------------------------------------- sending html code
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['batchManagerGlobal', 'pwgConfirm']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'batch_manager_global');

@@ -1,4 +1,4 @@
-function set_up_popin() {
+export function set_up_popin() {
     document.querySelectorAll(".ClosePopIn").forEach(function (btn) {
         btn.addEventListener("click", function () {
             linked_albums_close();
@@ -6,12 +6,12 @@ function set_up_popin() {
     });
 }
 
-function linked_albums_close() {
+export function linked_albums_close() {
     var addLinkedAlbum = document.getElementById("addLinkedAlbum");
     if (addLinkedAlbum) addLinkedAlbum.style.display = 'none';
 }
 
-function linked_albums_open() {
+export function linked_albums_open() {
     var addLinkedAlbum = document.getElementById("addLinkedAlbum");
     if (addLinkedAlbum) addLinkedAlbum.style.display = '';
     var searchInput = document.querySelector(".search-input");
@@ -25,7 +25,7 @@ function linked_albums_open() {
     if (limitReached) limitReached.innerHTML = str_no_search_in_progress;
 }
 
-function linked_albums_search(searchText) {
+export function linked_albums_search(searchText) {
     if (api_method == "pwg.categories.getList") {
         api_params = {
             cat_id: 0,

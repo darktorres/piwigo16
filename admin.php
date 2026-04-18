@@ -333,6 +333,9 @@ functions_plugins::trigger_notify('loc_end_admin');
 
 functions_html::flush_page_messages();
 
+require_once __DIR__ . '/inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['admin', 'helpPopin']);
+
 $template->pparse('admin');
 
 require __DIR__ . '/inc/page_tail.php';

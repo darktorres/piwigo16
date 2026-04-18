@@ -1,4 +1,5 @@
 import tippy from 'tippy.js';
+import { pwgConfirm, pwgConfirmFollowHref } from './pwgConfirm.js';
 
 var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 function showInactivePlugins() {
@@ -700,7 +701,7 @@ _docReady( function () {
             showOptions.addEventListener("click", function () {
                 var optionsBlock = myplugin.querySelector(".PluginOptionsBlock");
                 if (optionsBlock) {
-                    optionsBlock.style.display = optionsBlock.style.display === 'none' ? '' : 'none';
+                    optionsBlock.style.display = optionsBlock.style.display === 'none' ? 'block' : 'none';
                 }
             });
         }

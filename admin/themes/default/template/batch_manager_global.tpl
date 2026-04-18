@@ -68,7 +68,6 @@
   };
 </script>{/footer_script}
 
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 <div id="batchManagerGlobal">

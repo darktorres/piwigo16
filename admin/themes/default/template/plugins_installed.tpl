@@ -2,8 +2,6 @@
 <script type="module" src="/admin/themes/default/js/dist/{$vite_plugins_installated}"></script>
 {/if}
 
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
-
 {footer_script}<script>
   /* incompatible message */
   var incompatible_msg = '{'WARNING! This plugin does not seem to be compatible with this version of Piwigo.'|translate|escape:'javascript'}';

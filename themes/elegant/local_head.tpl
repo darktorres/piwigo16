@@ -1,8 +1,10 @@
-{footer_script}<script>
-	var p_main_menu = "{$elegant.p_main_menu}", p_pict_descr = "{$elegant.p_pict_descr}", p_pict_comment = "{$elegant.p_pict_comment}";
+{footer_script}<script type="module">
+	window.p_main_menu = "{$elegant.p_main_menu}";
+	window.p_pict_descr = "{$elegant.p_pict_descr}";
+	window.p_pict_comment = "{$elegant.p_pict_comment}";
+	{if $BODY_ID=='thePicturePage'}
+	import './themes/elegant/scripts_pp.js';
+	{else}
+	import './themes/elegant/scripts.js';
+	{/if}
 </script>{/footer_script}
-{if $BODY_ID=='thePicturePage'}
-	{combine_script id='elegant.scripts_pp' load='footer' path='themes/elegant/scripts_pp.js'}
-{else}
-	{combine_script id='elegant.scripts' load='footer' path='themes/elegant/scripts.js'}
-{/if}

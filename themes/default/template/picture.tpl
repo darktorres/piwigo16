@@ -1,4 +1,10 @@
-{combine_script id='core.switchbox' load='async' path='themes/default/js/switchbox.js'}
+{footer_script}<script type="module">
+import './themes/default/js/switchbox.js';
+import { phpWGOpenWindow, PwgWS } from './themes/default/js/scripts.js';
+import { initRating } from './themes/default/js/rating.js';
+window.phpWGOpenWindow = phpWGOpenWindow;
+window.PwgWS = PwgWS;
+</script>{/footer_script}
 {if isset($MENUBAR)}{$MENUBAR}{/if}
 <div id="content" {if isset($MENUBAR)} class="contentWithMenu" {/if}>
 
@@ -71,7 +77,6 @@
 						</a><br>
 					{/foreach}
 					{if isset($U_ORIGINAL)}
-						{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
 						<a href="javascript:phpWGOpenWindow('{$U_ORIGINAL}','xxx','scrollbars=yes,toolbar=no,status=no,resizable=yes')"
 							rel="nofollow">{'Original'|translate}</a>
 					{/if}
@@ -314,9 +319,8 @@
 											<input type="submit" name="rate" value="{$mark}" class="rateButton" title="{$mark}">
 										{/if}
 									{/foreach}
-									{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-									{combine_script id='rating' load='async' require='core.scripts' path='themes/default/js/rating.js'}
-									{footer_script}<script>
+									{footer_script}<script type="module">
+										import { initRating } from './themes/default/js/rating.js';
 										var _pwgRatingAutoQueue = _pwgRatingAutoQueue || [];
 										_pwgRatingAutoQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
 										onSuccess: function(rating) {
@@ -348,7 +352,6 @@
 							<div>
 								<a id="privacyLevelLink" href>{$available_permission_levels[$current.level]}</a>
 							</div>
-							{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
 							{footer_script}<script>
 								function setPrivacyLevel(id, level) {
 									(new PwgWS('{$ROOT_URL}')).callService(

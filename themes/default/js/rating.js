@@ -1,36 +1,40 @@
-var gRatingOptions, gRatingButtons, gUserRating;
+import { PwgWS, pwgAddEventListener } from './scripts.js';
 
-function makeNiceRatingForm(options) {
+let gRatingOptions;
+let gRatingButtons;
+let gUserRating;
+
+export function makeNiceRatingForm(options) {
     gRatingOptions = options;
-    var form = document.getElementById("rateForm");
-    if (!form) return; //? template changed
+    const form = document.getElementById("rateForm");
+    if (!form) return;
 
     gRatingButtons = form.getElementsByTagName("input");
     gUserRating = "";
-    for (var i = 0; i < gRatingButtons.length; i++) {
+    for (let i = 0; i < gRatingButtons.length; i++) {
         if (gRatingButtons[i].type == "button") {
             gUserRating = gRatingButtons[i].value;
             break;
         }
     }
 
-    for (var i = 0; i < gRatingButtons.length; i++) {
-        var rateButton = gRatingButtons[i];
-        rateButton.initialRateValue = rateButton.value; // save it as a property
+    for (let i = 0; i < gRatingButtons.length; i++) {
+        const rateButton = gRatingButtons[i];
+        rateButton.initialRateValue = rateButton.value;
         try {
             rateButton.type = "button";
-        } catch (e) {} // avoid normal submit (use ajax); not working in IE6
+        } catch (_e) {}
 
-        rateButton.value = " "; //hide the text (Apple + IE would show text above the stars)
+        rateButton.value = " ";
         rateButton.style.marginLeft = 0;
         rateButton.style.marginRight = 0;
 
         if (
             i != gRatingButtons.length - 1 &&
-            rateButton.nextSibling.nodeType == 3 /*TEXT_NODE*/
+            rateButton.nextSibling.nodeType == 3
         )
             rateButton.parentNode.removeChild(rateButton.nextSibling);
-        if (i > 0 && rateButton.previousSibling.nodeType == 3 /*TEXT_NODE*/)
+        if (i > 0 && rateButton.previousSibling.nodeType == 3)
             rateButton.parentNode.removeChild(rateButton.previousSibling);
 
         pwgAddEventListener(rateButton, "click", updateRating);
@@ -49,7 +53,7 @@ function makeNiceRatingForm(options) {
 }
 
 function updateRatingStarDisplay(userRating) {
-    for (var i = 0; i < gRatingButtons.length; i++)
+    for (let i = 0; i < gRatingButtons.length; i++)
         gRatingButtons[i].className =
             userRating !== "" &&
             userRating >= gRatingButtons[i].initialRateValue
@@ -58,12 +62,12 @@ function updateRatingStarDisplay(userRating) {
 }
 
 function updateRating(e) {
-    var rateButton = e.target || e.srcElement;
-    if (rateButton.initialRateValue == gUserRating) return false; //nothing to do
+    const rateButton = e.target || e.srcElement;
+    if (rateButton.initialRateValue == gUserRating) return false;
 
-    for (var i = 0; i < gRatingButtons.length; i++)
+    for (let i = 0; i < gRatingButtons.length; i++)
         gRatingButtons[i].disabled = true;
-    var y = new PwgWS(gRatingOptions.rootUrl);
+    const y = new PwgWS(gRatingOptions.rootUrl);
     y.callService(
         "pwg.images.rate",
         {
@@ -81,17 +85,17 @@ function updateRating(e) {
             },
             onSuccess: function (result) {
                 gUserRating = rateButton.initialRateValue;
-                for (var i = 0; i < gRatingButtons.length; i++)
+                for (let i = 0; i < gRatingButtons.length; i++)
                     gRatingButtons[i].disabled = false;
                 if (gRatingOptions.onSuccess) gRatingOptions.onSuccess(result);
                 if (gRatingOptions.updateRateElement)
                     gRatingOptions.updateRateElement.innerHTML =
                         gRatingOptions.updateRateText;
                 if (gRatingOptions.ratingSummaryElement) {
-                    var t = gRatingOptions.ratingSummaryText;
-                    var args = [result.score, result.count, result.average],
-                        idx = 0,
-                        rexp = new RegExp(/%\.?\d*[sdf]/);
+                    let t = gRatingOptions.ratingSummaryText;
+                    const args = [result.score, result.count, result.average];
+                    let idx = 0;
+                    const rexp = new RegExp(/%\.?\d*[sdf]/);
                     while (idx < args.length) t = t.replace(rexp, args[idx++]);
                     gRatingOptions.ratingSummaryElement.innerHTML = t;
                 }
@@ -101,17 +105,16 @@ function updateRating(e) {
     return false;
 }
 
-(function () {
-    if (
-        typeof _pwgRatingAutoQueue != "undefined" &&
-        _pwgRatingAutoQueue.length
-    ) {
-        for (var i = 0; i < _pwgRatingAutoQueue.length; i++)
+export function initRating() {
+    if (typeof _pwgRatingAutoQueue !== "undefined" && _pwgRatingAutoQueue.length) {
+        for (let i = 0; i < _pwgRatingAutoQueue.length; i++)
             makeNiceRatingForm(_pwgRatingAutoQueue[i]);
     }
-    _pwgRatingAutoQueue = {
+    window._pwgRatingAutoQueue = {
         push: function (opts) {
             makeNiceRatingForm(opts);
         },
     };
-})();
+}
+
+document.addEventListener('DOMContentLoaded', initRating);

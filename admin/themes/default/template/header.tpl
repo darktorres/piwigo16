@@ -28,7 +28,6 @@
     {/if}
   {/foreach}
 
-  {combine_script id='jquery'}
 
   <!-- BEGIN get_combined -->
   {get_combined_css}

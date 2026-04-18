@@ -3,39 +3,38 @@
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 {footer_script}<script>
-  /* Translates */
-  const title_msg = '{'Are you sure you want to delete the user "%s"?'|translate|escape:'javascript'}';
-  const are_you_sure_msg  = '{'Are you sure?'|translate|escape:'javascript'}';
-  const confirm_msg = '{'Yes, I am sure'|translate|escape}';
-  const cancel_msg = '{'No, I have changed my mind'|translate|escape}';
-  const str_and_others_tags = '{'and %s others'|translate|escape:javascript}';
-  const missingConfirm = "{'You need to confirm deletion'|translate|escape:javascript}";
-  const missingUsername = "{'Please, enter a login'|translate|escape:javascript}";
-  const fieldNotEmpty = "{'Name field must not be empty'|translate|escape:javascript}"
+  window.title_msg = '{'Are you sure you want to delete the user "%s"?'|translate|escape:'javascript'}';
+  window.are_you_sure_msg = '{'Are you sure?'|translate|escape:'javascript'}';
+  window.confirm_msg = '{'Yes, I am sure'|translate|escape}';
+  window.cancel_msg = '{'No, I have changed my mind'|translate|escape}';
+  window.str_and_others_tags = '{'and %s others'|translate|escape:javascript}';
+  window.missingConfirm = "{'You need to confirm deletion'|translate|escape:javascript}";
+  window.missingUsername = "{'Please, enter a login'|translate|escape:javascript}";
+  window.fieldNotEmpty = "{'Name field must not be empty'|translate|escape:javascript'}";
 
-  const registered_str = '{"Registered"|translate|escape:javascript}';
-  const last_visit_str = '{"Last visit"|translate|escape:javascript}';
-  const dates_infos = '{'between %s and %s'|translate|escape:javascript}'
-  const hide_str = '{'Hide'|translate|escape:javascript}';
-  const show_str = '{'Show'|translate|escape:javascript}';
-  const user_added_str = '{'User %s added'|translate|escape:javascript}';
-  const str_popin_update_btn = '{'Update'|translate|escape:javascript}';
-  const filtered_users = '{'<b>%d</b> filtered users'|translate|escape:javascript}';
-  const filtered_user = '{'<b>%d</b> filtered user'|translate|escape:javascript}';
-  const history_base_url = "{$U_HISTORY}";
+  window.registered_str = '{"Registered"|translate|escape:javascript}';
+  window.last_visit_str = '{"Last visit"|translate|escape:javascript}';
+  window.dates_infos = '{'between %s and %s'|translate|escape:javascript'}';
+  window.hide_str = '{'Hide'|translate|escape:javascript'}';
+  window.show_str = '{'Show'|translate|escape:javascript'}';
+  window.user_added_str = '{'User %s added'|translate|escape:javascript'}';
+  window.str_popin_update_btn = '{'Update'|translate|escape:javascript'}';
+  window.filtered_users = '{'<b>%d</b> filtered users'|translate|escape:javascript'}';
+  window.filtered_user = '{'<b>%d</b> filtered user'|translate|escape:javascript'}';
+  window.history_base_url = "{$U_HISTORY}";
 
-  const status_to_str = {
+  window.status_to_str = {
     'webmaster': "{'user_status_webmaster'|translate}",
     'admin': "{'user_status_admin'|translate}",
     'normal': "{'user_status_normal'|translate}",
     'generic': "{'user_status_generic'|translate}",
     'guest': "{'user_status_guest'|translate}",
-  }
+  };
 
-  const view_selector = '{$view_selector}';
-  const pagination = '{$pagination}';
+  window.view_selector = '{$view_selector}';
+  window.pagination = '{$pagination}';
 
-  months = [
+  window.months = [
     "{'Jan'|translate}",
     "{'Feb'|translate}",
     "{'Mar'|translate}",
@@ -50,146 +49,22 @@
     "{'Dec'|translate}"
   ];
 
-  /* Template variables */
-  connected_user = {$connected_user};
-  connected_user_status = "{$connected_user_status}";
-  owner_id = {$owner};
-  let groups_arr_name = [{$groups_arr_name}];
-  let groups_arr_id = [{$groups_arr_id}];
-  groups_arr = groups_arr_id.map((elem, index) => [elem, groups_arr_name[index]]);
-  guest_id = {$guest_id};
-  nb_days = "{'%d days'|translate}";
-  //per page is too long for the popin
-  nb_photos = "{'%d photos'|translate}";
-  nb_photos_per_page = "{'%d photos per page'|translate}";
-  pwg_token = '{$PWG_TOKEN}';
-  has_group = "{$filter_group}";
+  window.connected_user = {$connected_user};
+  window.connected_user_status = "{$connected_user_status}";
+  window.owner_id = {$owner};
+  window.groups_arr_name = [{$groups_arr_name}];
+  window.groups_arr_id = [{$groups_arr_id}];
+  window.groups_arr = window.groups_arr_id.map((elem, index) => [elem, window.groups_arr_name[index]]);
+  window.guest_id = {$guest_id};
+  window.nb_days = "{'%d days'|translate}";
+  window.nb_photos = "{'%d photos'|translate}";
+  window.nb_photos_per_page = "{'%d photos per page'|translate}";
+  window.pwg_token = '{$PWG_TOKEN}';
+  window.has_group = "{$filter_group}";
 
-  let register_dates_str = '{$register_dates}';
-  let register_dates = register_dates_str.split(',');
-  let groupOptions = groups_arr.map(x => ({ value: x[0], label: x[1], isSelected: 0 }));
-
-  /* Startup */
-  setupRegisterDates(register_dates);
-  selectionMode(false);
-  get_guest_info();
-  update_user_list();
-  update_selection_content();
-
-  tippy('.icon-help-circled', { maxWidth: 700, delay: 0, placement: 'top' });
-
-  document.addEventListener('DOMContentLoaded', function() {
-    // Only webmaster can set admin or webmaster to others users
-    if (connected_user_status !== 'webmaster') {
-      document.querySelectorAll('select[name="status"] option[value="webmaster"], select[name="status"] option[value="admin"]').forEach(function(el) {
-        el.setAttribute("disabled", true);
-      });
-    }
-    // We set the applyAction btn click event here so plugins can add cases to the list
-    // which is not possible if this JS part is in a JS file
-    // see #1571 on Github
-    var applyActionBtn = document.getElementById("applyAction");
-    if (applyActionBtn) {
-      applyActionBtn.addEventListener('click', function(event) {
-        event.preventDefault();
-        var selectActionEl = document.querySelector("select[name=selectAction]");
-        let action = selectActionEl ? selectActionEl.value : '';
-        let method = 'pwg.users.setInfo';
-        let data = {
-          pwg_token: pwg_token,
-          user_id: selection.map(x => x.id)
-        };
-        switch (action) {
-          case 'delete':
-            if (!(document.querySelector("#permitActionUserList .user-list-checkbox[name=confirm_deletion]")
-                ?.getAttribute("data-selected") === "1")) {
-              alert(missingConfirm);
-              return;
-            }
-            method = 'pwg.users.delete';
-            break;
-          case 'group_associate':
-            method = 'pwg.groups.addUser';
-            data.group_id = document.querySelector("#permitActionUserList select[name=associate]")?.value;
-            break;
-          case 'group_dissociate':
-            method = 'pwg.groups.deleteUser';
-            data.group_id = document.querySelector("#permitActionUserList select[name=dissociate]")?.value;
-            break;
-          case 'status':
-            data.status = document.querySelector("#permitActionUserList select[name=status]")?.value;
-            break;
-          case 'enabled_high':
-            data.enabled_high = document.querySelector("#permitActionUserList .user-list-checkbox[name=enabled_high_yes]")
-              ?.getAttribute("data-selected") === "1" ? true : false;
-            break;
-          case 'level':
-            data.level = document.querySelector("#permitActionUserList select[name=level]")?.value;
-            break;
-          case 'nb_image_page':
-            data.nb_image_page = document.querySelector("#permitActionUserList input[name=nb_image_page]")?.value;
-            break;
-          case 'theme':
-            data.theme = document.querySelector("#permitActionUserList select[name=theme]")?.value;
-            break;
-          case 'language':
-            data.language = document.querySelector("#permitActionUserList select[name=language]")?.value;
-            break;
-          case 'recent_period': {
-            var _ps = document.querySelector('#permitActionUserList .period-select-bar .slider-bar-container');
-            data.recent_period = recent_period_values[_ps && _ps.noUiSlider ? Math.round(parseFloat(_ps.noUiSlider.get())) : 0];
-            break;
-          }
-          case 'expand':
-            data.expand = document.querySelector("#permitActionUserList .user-list-checkbox[name=expand_yes]")
-              ?.getAttribute("data-selected") === "1" ? true : false;
-            break;
-          case 'show_nb_comments':
-            data.show_nb_comments = document.querySelector("#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]")
-              ?.getAttribute("data-selected") === "1" ? true : false;
-            break;
-          case 'show_nb_hits':
-            data.show_nb_hits = document.querySelector("#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]")
-              ?.getAttribute("data-selected") === "1" ? true : false;
-            break;
-          default:
-            alert("Unexpected action");
-            return;
-        }
-        var loadingEl = document.getElementById('applyActionLoading');
-        var infosEl = document.querySelector("#applyActionBlock .infos");
-        if (loadingEl) loadingEl.style.display = '';
-        if (infosEl) infosEl.style.display = 'none';
-        var params = new URLSearchParams();
-        Object.keys(data).forEach(function(k) {
-          var v = data[k];
-          if (Array.isArray(v)) {
-            v.forEach(function(item) { params.append(k + '[]', item); });
-          } else {
-            params.append(k, v);
-          }
-        });
-        fetch("ws.php?format=json&method=" + method, {
-          method: "POST",
-          headers: {ldelim}"Content-Type": "application/x-www-form-urlencoded"{rdelim},
-          body: params
-        })
-          .then(function(r) { return r.json(); })
-          .then(function(responseData) {
-            if (loadingEl) loadingEl.style.display = 'none';
-            if (infosEl) infosEl.style.display = 'inline-block';
-            update_user_list();
-            if (action == 'delete') {
-              selection = [];
-              update_selection_content();
-            }
-          })
-          .catch(function() {
-            if (loadingEl) loadingEl.style.display = 'none';
-          });
-      });
-    }
-  });
+  window.register_dates_str = '{$register_dates}';
+  window.register_dates = window.register_dates_str.split(',');
+  window.groupOptions = window.groups_arr.map(x => ({ value: x[0], label: x[1], isSelected: 0 }));
 </script>{/footer_script}
 
 {if $vite_user_list}

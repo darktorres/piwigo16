@@ -154,7 +154,7 @@ function changeData(dataType, options) {
                 ],
             };
         } else if (dataType == "months") {
-            days = [];
+            var days = [];
             for (let i = 1; i <= 31; i++) {
                 days.push(i);
             }
@@ -187,7 +187,7 @@ function changeData(dataType, options) {
 
 //Make Data readable by Chart.js
 function getValues(data) {
-    values = [];
+    var values = [];
     Object.keys(data).forEach(function (key) {
         var newPoint = {
             x: new Date(key),
@@ -199,12 +199,12 @@ function getValues(data) {
 }
 
 function getComparedYearDataset() {
-    colors = ["#ffa744", "#ff5252", "#896af3", "#2883c3", "#6ece5e"];
-    values = {};
-    dataset = [];
+    var colors = ["#ffa744", "#ff5252", "#896af3", "#2883c3", "#6ece5e"];
+    var values = {};
+    var dataset = [];
 
     Object.keys(data["compare-years"]).forEach(function (key) {
-        date = new Date(key);
+        var date = new Date(key);
         if (values[date.getFullYear()] == undefined) {
             values[date.getFullYear()] = [];
         }
@@ -226,9 +226,9 @@ function getComparedYearDataset() {
 }
 
 function getMonthStatsDataset() {
-    colors = ["#ffa744", "#ff5252", "#896af3", "#2883c3", "#6ece5e"];
-    dataset = [];
-    colorIndice = 0;
+    var colors = ["#ffa744", "#ff5252", "#896af3", "#2883c3", "#6ece5e"];
+    var dataset = [];
+    var colorIndice = 0;
     let date;
 
     data["month-stats"]["month"].forEach((values) => {
@@ -247,7 +247,7 @@ function getMonthStatsDataset() {
         colorIndice++;
     });
 
-    averageTab = [];
+    var averageTab = [];
     for (let i = 0; i < 31; i++) {
         averageTab[i] = data["month-stats"]["avg"];
     }
@@ -265,13 +265,14 @@ function getMonthStatsDataset() {
 //Event listener
 document.querySelectorAll(".stat-data-selector label").forEach(function (label) {
     label.addEventListener("click", function () {
-        dataType = this.dataset.value;
+        var dataType = this.dataset.value;
         changeData(dataType);
     });
 });
 
 document.querySelectorAll(".stat-compare-mode input").forEach(function (input) {
     input.addEventListener("change", function () {
+        var checkedLabel;
         compareMode = this.checked;
 
         if (compareMode) {
@@ -291,14 +292,14 @@ document.querySelectorAll(".stat-compare-mode input").forEach(function (input) {
                 });
                 changeData("years");
             } else {
-                var checkedLabel = document.querySelector(".stat-data-selector input:checked + label");
+                checkedLabel = document.querySelector(".stat-data-selector input:checked + label");
                 if (checkedLabel) changeData(checkedLabel.dataset.value);
             }
         } else {
             document.querySelectorAll("#hours-selector + label, #days-selector + label").forEach(function (el) {
                 el.classList.remove("unavailable");
             });
-            var checkedLabel = document.querySelector(".stat-data-selector input:checked + label");
+            checkedLabel = document.querySelector(".stat-data-selector input:checked + label");
             if (checkedLabel) changeData(checkedLabel.dataset.value);
         }
     });

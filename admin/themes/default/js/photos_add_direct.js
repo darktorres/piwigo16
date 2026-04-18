@@ -3,7 +3,7 @@ import { pwgAddAlbum } from './addAlbum.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import { sprintf } from './common.js';
 import { initModule } from './moduleInit.js';
-import Dropzone from 'dropzone';
+import { Dropzone } from 'dropzone';
 import Piecon from 'piecon';
 
 export function init(cfg) {

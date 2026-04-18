@@ -318,4 +318,7 @@ $template->assign([
     'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(['groups', 'users']),
 ]);
 
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['cat_perm']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'cat_perm');

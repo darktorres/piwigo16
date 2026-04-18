@@ -20,6 +20,7 @@ const adminModules = [
   'maintenance',
   'maintenance_env',
   'cat_list',
+  'cat_perm',
   'cat_search',
   'comments',
   'element_set_ranks',

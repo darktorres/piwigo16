@@ -24,7 +24,7 @@
 </script>{/footer_script}
 
 {if $vite_maintenance}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_maintenance}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_maintenance}"></script>
 {/if}
 
 {if $isWebmaster == 1}

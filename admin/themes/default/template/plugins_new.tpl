@@ -2,7 +2,7 @@
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {if $vite_plugins_new}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_plugins_new}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_plugins_new}"></script>
 {/if}
 
 {footer_script}<script>

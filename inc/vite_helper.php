@@ -1,7 +1,7 @@
 <?php
 namespace Piwigo\Vite;
 
-use Piwigo\Vite\ViteManifest;
+require_once __DIR__ . '/ViteManifest.php';
 
 /**
  * Helper function to assign multiple Vite module filenames to a template

@@ -1,4 +1,6 @@
 import { pwgConfirm } from './pwgConfirm.js';
+import { pwgDoubleSlider } from './doubleSlider.js';
+import { TagsCache } from './LocalStorageCache.js';
 import GLightbox from 'glightbox';
 
 const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };

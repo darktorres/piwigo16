@@ -10,10 +10,10 @@
 </script>
 
 {if $vite_maintenance}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_maintenance}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_maintenance}"></script>
 {/if}
 {if $vite_maintenance_env}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_maintenance_env}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_maintenance_env}"></script>
 {/if}
 
 <fieldset id="environment">

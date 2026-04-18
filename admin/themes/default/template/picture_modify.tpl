@@ -30,7 +30,7 @@
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 {if $vite_picture_modify}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_picture_modify}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_picture_modify}"></script>
 {/if}
 
 <form action="{$F_ACTION}" method="post" id="pictureModify">

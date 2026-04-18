@@ -60,7 +60,7 @@
 </script>{/footer_script}
 
 {if $vite_history}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_history}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_history}"></script>
 {/if}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 {combine_css path="themes/default/fontello/css/gallery-icon.css" order=-10}

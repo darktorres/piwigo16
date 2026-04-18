@@ -1,5 +1,5 @@
 {if $vite_intro}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_intro}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_intro}"></script>
 {/if}
 
 <script id="pwg-intro-data" type="application/json">
@@ -9,8 +9,8 @@
   "ext_need_update_msg": "<a href=\"admin.php?page=updates&amp;tab=ext\">{'Some upgrades are available for extensions.'|translate|escape:'javascript'} <i class=\"icon-right\"></i></a>",
   "str_gb_used": "{'%s GB used'|translate}",
   "str_mb_used": "{'%s MB used'|translate}",
-  "str_gb": "{'%sGB'|translate}".replace(' ', '&nbsp;'),
-  "str_mb": "{'%sMB'|translate}".replace(' ', '&nbsp;'),
+  "str_gb": "{'%sGB'|translate}",
+  "str_mb": "{'%sMB'|translate}",
   "storage_total": {$STORAGE_TOTAL},
   "storage_details": {$STORAGE_CHART_DATA|json_encode},
   "translate_files": "{'%d files'|translate|escape:javascript}"

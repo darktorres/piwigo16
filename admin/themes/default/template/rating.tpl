@@ -1,7 +1,7 @@
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {if $vite_rating}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_rating}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_rating}"></script>
 {/if}
 
 {footer_script}<script>

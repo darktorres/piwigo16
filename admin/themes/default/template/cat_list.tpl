@@ -1,5 +1,5 @@
 {if $vite_cat_list}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_cat_list}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_cat_list}"></script>
 {/if}
 
 
@@ -22,7 +22,7 @@
   <div class="addAlbum">
     <div class="addAlbumHead">
       <span class="icon-plus-circled icon-blue icon-blue-full"></span>
-      <p>{"Add Album"|translate}
+      <p>{"Add Album"|translate}</p>
     </div>
     <form action="{$F_ACTION}" method="post">
       <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">

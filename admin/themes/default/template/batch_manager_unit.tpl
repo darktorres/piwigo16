@@ -13,7 +13,7 @@
 </script>{/footer_script}
 
 {if $vite_batch_manager_unit}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_batch_manager_unit}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_batch_manager_unit}"></script>
 {/if}
 
 <form action="{$F_ACTION}" method="POST">

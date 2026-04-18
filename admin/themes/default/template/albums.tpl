@@ -48,7 +48,7 @@
 </script>{/footer_script}
 
 {if $vite_albums}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_albums}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_albums}"></script>
 {/if}
 
 <div class="cat-move-order-popin">

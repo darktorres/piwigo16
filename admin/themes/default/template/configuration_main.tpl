@@ -1,6 +1,6 @@
 {include file='inc/colorbox.inc.tpl'}
 {if $vite_configuration}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_configuration}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_configuration}"></script>
 {/if}
 
 {footer_script}<script>

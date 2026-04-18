@@ -29,7 +29,7 @@
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {if $vite_group_list}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_group_list}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_group_list}"></script>
 {/if}
 
 {* Define template function for the content of Groups*}

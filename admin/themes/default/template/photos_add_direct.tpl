@@ -40,7 +40,7 @@
 </script>{/footer_script}
 
 {if $vite_photos_add_direct}
-<script type="module" src="/admin/themes/default/js/dist/{$vite_photos_add_direct}"></script>
+<script type="module" src="admin/themes/default/js/dist/{$vite_photos_add_direct}"></script>
 {/if}
 
 <div id="photosAddContent">

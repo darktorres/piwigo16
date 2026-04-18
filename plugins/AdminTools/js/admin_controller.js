@@ -1,4 +1,4 @@
-var AdminTools = (function () {
+export const AdminTools = (function () {
     var __this = this;
 
     this.urlWS;

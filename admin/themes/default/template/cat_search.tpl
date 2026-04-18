@@ -1,12 +1,4 @@
-<script id="pwg-page-data" type="application/json">
-{
-  "catSearchNbCats": {$nb_cats},
-  "catSearchData": {json_encode($data_cat)},
-  "catSearchStrAlbumsFound": "{'<b>%d</b> albums found'|translate|escape:'html'}",
-  "catSearchStrAlbumFound": "{'<b>1</b> album found'|translate|escape:'html'}",
-  "catSearchStrResultLimit": "{'<b>%d+</b> albums found, try to refine the search'|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_cat_search}
 <script type="module" src="admin/themes/default/js/dist/{$vite_cat_search}"></script>

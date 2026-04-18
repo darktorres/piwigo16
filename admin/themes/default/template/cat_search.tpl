@@ -1,10 +1,12 @@
-{footer_script}<script>
-  window.cat_search_nb_cats = {$nb_cats};
-  window.cat_search_data = {json_encode($data_cat)};
-  window.cat_search_str_albums_found = '{"<b>%d</b> albums found"|translate}';
-  window.cat_search_str_album_found = '{"<b>1</b> album found"|translate}';
-  window.cat_search_str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|translate|escape:javascript}';
-</script>{/footer_script}
+<script id="pwg-page-data" type="application/json">
+{
+  "catSearchNbCats": {$nb_cats},
+  "catSearchData": {json_encode($data_cat)},
+  "catSearchStrAlbumsFound": "{'<b>%d</b> albums found'|translate|escape:'html'}",
+  "catSearchStrAlbumFound": "{'<b>1</b> album found'|translate|escape:'html'}",
+  "catSearchStrResultLimit": "{'<b>%d+</b> albums found, try to refine the search'|translate|escape:'html'}"
+}
+</script>
 
 {if $vite_cat_search}
 <script type="module" src="admin/themes/default/js/dist/{$vite_cat_search}"></script>

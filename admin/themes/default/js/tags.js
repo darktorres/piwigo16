@@ -390,7 +390,7 @@ function removeTag(id, name) {
     })
     .then(response => response.text())
     .then(raw_data => {
-        data = JSON.parse(raw_data);
+        var data = JSON.parse(raw_data);
         if (data.stat === "ok") {
             let el = document.querySelector(".tag-box[data-id=\"" + id + "\"]");
             if (el) el.remove();
@@ -486,7 +486,7 @@ function duplicateTag(id, name) {
                 setupTagbox(newTag);
 
                 //Update Data
-                index = dataTags.findIndex((tag) => tag.id == id);
+                var index = dataTags.findIndex((tag) => tag.id == id);
                 dataTags.splice(index + 1, 0, {
                     name: data.result.name,
                     id: data.result.id,
@@ -715,7 +715,7 @@ document.getElementById("selectAll")?.addEventListener("click", function () {
 });
 
 function selectAll(data) {
-    promises = [];
+    var promises = [];
     data.forEach((tag) => {
         promises.push(
             new Promise((res, rej) => {
@@ -824,7 +824,8 @@ function removeSelectedTags() {
     .then(response => response.text())
     .then(raw_data => {
         raw_data = raw_data.slice(raw_data.search("{"));
-        if ((JSON.parse(raw_data).stat = "ok")) {
+        var data = JSON.parse(raw_data);
+        if (data.stat === "ok") {
             selected.forEach(function (id) {
                 let el = document.querySelector(".tag-box[data-id=\"" + id + "\"]");
                 if (el) el.remove();
@@ -847,22 +848,22 @@ function removeSelectedTags() {
 document.querySelector(".ConfirmMergeButton")?.addEventListener("click", () => {
     let destSelect = document.getElementById("MergeOptionsChoices");
     if (destSelect) {
-        dest_id = destSelect.value;
+        var dest_id = destSelect.value;
         mergeGroups(dest_id, selected);
     }
 });
 
 function mergeGroups(destination_id, merge_ids) {
     let destNameEl = document.querySelector(".tag-box[data-id=\"" + destination_id + "\"] .tag-name");
-    destination_name = destNameEl ? destNameEl.innerHTML : "";
-    merge_name = [];
+    var destination_name = destNameEl ? destNameEl.innerHTML : "";
+    var merge_name = [];
 
     merge_ids.forEach((id) => {
         let el = document.querySelector(".tag-box[data-id=\"" + id + "\"] .tag-name");
         if (el) merge_name.push(el.innerHTML);
     });
 
-    str_message = str_merged_into
+    var str_message = str_merged_into
         .replace("%s1", tagListToString(merge_name))
         .replace("%s2", destination_name);
 
@@ -878,7 +879,7 @@ function mergeGroups(destination_id, merge_ids) {
     .then(response => response.text())
     .then(raw_data => {
         raw_data = raw_data.slice(raw_data.search("{"));
-        data = JSON.parse(raw_data);
+        var data = JSON.parse(raw_data);
         if (data.stat === "ok") {
             data.result.deleted_tag.forEach((id) => {
                 if (data.result.destination_tag != id) {
@@ -900,7 +901,7 @@ function mergeGroups(destination_id, merge_ids) {
                 }
 
                 // Update data
-                index = dataTags.findIndex((tag) => tag.id == data.result.destination_tag);
+                var index = dataTags.findIndex((tag) => tag.id == data.result.destination_tag);
                 dataTags[index].counter = data.result.images_in_merged_tag.length;
             }
             document.querySelectorAll(".tag-box").forEach(el => el.setAttribute("data-selected", "0"));
@@ -1044,7 +1045,7 @@ function updatePaginationMenu() {
 }
 
 function createPaginationMenu() {
-    nbPage = getNumberPages();
+    var nbPage = getNumberPages();
 
     appendPaginationItem(1);
 
@@ -1104,7 +1105,7 @@ function updateArrows() {
 }
 
 function getNumberPages() {
-    dataVisible = dataTags.filter(isDataSearched).length;
+    var dataVisible = dataTags.filter(isDataSearched).length;
     return Math.floor((dataVisible - 1) / per_page) + 1;
 }
 
@@ -1125,9 +1126,9 @@ function movePage(toRight = true) {
 
 function updatePage() {
     return new Promise((resolve, reject) => {
-        newPage = actualPage;
-        dataToDisplay = tagToDisplay();
-        tagBoxes = document.querySelectorAll(".tag-box");
+        var newPage = actualPage;
+        var dataToDisplay = tagToDisplay();
+        var tagBoxes = document.querySelectorAll(".tag-box");
         let pageLoad = document.querySelector(".pageLoad");
         if (pageLoad) pageLoad.style.display = '';
 
@@ -1140,7 +1141,7 @@ function updatePage() {
 
         setTimeout(() => {
             let displayTags = new Promise((res, rej) => {
-                boxToRecycle = Math.min(
+                var boxToRecycle = Math.min(
                     dataToDisplay.length,
                     tagBoxes.length,
                 );
@@ -1164,7 +1165,7 @@ function updatePage() {
                 } else if (dataToDisplay.length > tagBoxes.length) {
                     for (let j = boxToRecycle; j < dataToDisplay.length; j++) {
                         let tag = dataToDisplay[j];
-                        newTag = createTagBox(
+                        let newTag = createTagBox(
                             tag.id,
                             tag.name,
                             tag.url_name,

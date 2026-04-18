@@ -13,7 +13,7 @@ export function init(cfg) {
         deletePluginMsg, deletedPluginMsg, restorePluginMsg, uninstallPluginMsg,
         restoreTipMsg, pluginAddedStr, pluginDeactivatedStr, pluginRestoredStr,
         pluginActionError, notWebmaster, nothingFound, xPluginsFound, pluginFound,
-        isWebmaster, viewSelector, strRestoreDef, showDetails
+        isWebmaster, viewSelector, strRestoreDef, showDetails, pluginFilter = ''
     } = cfg;
 
     const nb_plugin = nbPlugin;
@@ -179,7 +179,7 @@ function activatePlugin(id) {
         if (switchEl) switchEl.disabled = false;
         if (data.stat == "ok") {
             var successLabel = document.querySelector("#" + id + " .AddPluginSuccess label span");
-            if (successLabel) successLabel.innerHTML = plugin_added_str;
+            if (successLabel) successLabel.innerHTML = pluginAddedStr;
             var successEl = document.querySelector("#" + id + " .AddPluginSuccess");
             if (successEl) {
                 successEl.style.display = "flex";
@@ -193,7 +193,7 @@ function activatePlugin(id) {
     .catch(function(e) {
         console.log(e);
         var errorLabel = document.querySelector("#" + id + " .PluginActionError label span");
-        if (errorLabel) errorLabel.innerHTML = plugin_action_error;
+        if (errorLabel) errorLabel.innerHTML = pluginActionError;
         var errorEl = document.querySelector("#" + id + " .PluginActionError");
         if (errorEl) {
             errorEl.style.display = "flex";
@@ -219,7 +219,7 @@ function deactivatePlugin(id) {
         if (switchEl) switchEl.disabled = false;
         if (data.stat == "ok") {
             var deactivateLabel = document.querySelector("#" + id + " .DeactivatePluginSuccess label span");
-            if (deactivateLabel) deactivateLabel.innerHTML = plugin_deactivated_str;
+            if (deactivateLabel) deactivateLabel.innerHTML = pluginDeactivatedStr;
             var deactivateEl = document.querySelector("#" + id + " .DeactivatePluginSuccess");
             if (deactivateEl) {
                 deactivateEl.style.display = "flex";
@@ -233,7 +233,7 @@ function deactivatePlugin(id) {
     .catch(function(e) {
         console.log(e);
         var errorLabel = document.querySelector("#" + id + " .PluginActionError label span");
-        if (errorLabel) errorLabel.innerHTML = plugin_action_error;
+        if (errorLabel) errorLabel.innerHTML = pluginActionError;
         var errorEl = document.querySelector("#" + id + " .PluginActionError");
         if (errorEl) {
             errorEl.style.display = "flex";
@@ -282,7 +282,7 @@ function restorePlugin(id) {
     .then(function(data) {
         if (data.stat == "ok") {
             var restoreLabel = document.querySelector("#" + id + " .RestorePluginSuccess label span");
-            if (restoreLabel) restoreLabel.innerHTML = plugin_restored_str;
+            if (restoreLabel) restoreLabel.innerHTML = pluginRestoredStr;
             var restoreEl = document.querySelector("#" + id + " .RestorePluginSuccess");
             if (restoreEl) {
                 restoreEl.style.display = "flex";
@@ -293,7 +293,7 @@ function restorePlugin(id) {
     .catch(function(e) {
         console.log(e);
         var errorLabel = document.querySelector("#" + id + " .PluginActionError label span");
-        if (errorLabel) errorLabel.innerHTML = plugin_action_error;
+        if (errorLabel) errorLabel.innerHTML = pluginActionError;
         var errorEl = document.querySelector("#" + id + " .PluginActionError");
         if (errorEl) {
             errorEl.style.display = "flex";
@@ -320,7 +320,7 @@ function uninstallPlugin(id) {
     })
     .catch(function(e) {
         var errorLabel = document.querySelector("#" + id + " .PluginActionError label span");
-        if (errorLabel) errorLabel.innerHTML = plugin_action_error;
+        if (errorLabel) errorLabel.innerHTML = pluginActionError;
         var errorEl = document.querySelector("#" + id + " .PluginActionError");
         if (errorEl) {
             errorEl.style.display = "flex";
@@ -463,7 +463,7 @@ function uninstallPlugin(id) {
 
                 var id = this.closest(".pluginBox").id || this.closest(".pluginMiniBox").id;
                 var errorLabel = document.querySelector("#" + id + " .PluginActionError label span");
-                if (errorLabel) errorLabel.innerHTML = not_webmaster;
+                if (errorLabel) errorLabel.innerHTML = notWebmaster;
                 var errorEl = document.querySelector("#" + id + " .PluginActionError");
                 if (errorEl) errorEl.style.display = "flex";
                 if (errorEl) {
@@ -489,17 +489,17 @@ function uninstallPlugin(id) {
             let plugin_name = this.closest(".pluginContent").querySelector(".pluginName").innerHTML.trim();
             let plugin_id = this.closest(".pluginBox").id;
             pwgConfirm({
-                title: delete_plugin_msg.replace("%s", plugin_name),
+                title: deletePluginMsg.replace("%s", plugin_name),
                 buttons: {
                     confirm: {
-                        text: confirm_msg,
+                        text: confirmMsg,
                         btnClass: "btn-red",
                         action: function () {
                             deletePlugin(plugin_id, plugin_name);
                         },
                     },
                     cancel: {
-                        text: cancel_msg,
+                        text: cancelMsg,
                     },
                 },
             });
@@ -514,18 +514,18 @@ function uninstallPlugin(id) {
             let plugin_name = this.closest(".pluginContent").querySelector(".pluginName").innerHTML.trim();
             let plugin_id = this.closest(".pluginBox").id;
             pwgConfirm({
-                title: restore_plugin_msg.replace("%s", plugin_name),
-                content: str_restore_def,
+                title: restorePluginMsg.replace("%s", plugin_name),
+                content: strRestoreDef,
                 buttons: {
                     confirm: {
-                        text: confirm_msg,
+                        text: confirmMsg,
                         btnClass: "btn-red",
                         action: function () {
                             restorePlugin(plugin_id);
                         },
                     },
                     cancel: {
-                        text: cancel_msg,
+                        text: cancelMsg,
                     },
                 },
             });
@@ -540,17 +540,17 @@ function uninstallPlugin(id) {
             let plugin_name = this.closest(".pluginContent").querySelector(".pluginName").innerHTML.trim();
             let plugin_id = this.closest(".pluginBox").id;
             pwgConfirm({
-                title: uninstall_plugin_msg.replace("%s", plugin_name),
+                title: uninstallPluginMsg.replace("%s", plugin_name),
                 buttons: {
                     confirm: {
-                        text: confirm_msg,
+                        text: confirmMsg,
                         btnClass: "btn-red",
                         action: function () {
                             uninstallPlugin(plugin_id);
                         },
                     },
                     cancel: {
-                        text: cancel_msg,
+                        text: cancelMsg,
                     },
                 },
             });
@@ -564,7 +564,7 @@ function uninstallPlugin(id) {
         el.addEventListener("click", showInactivePlugins);
     });
 
-    if (plugin_filter == "deactivated") {
+    if (pluginFilter == "deactivated") {
         var filterLabel = document.querySelector(".filterLabel[for='seeInactive']");
         if (filterLabel) filterLabel.click();
     }
@@ -661,29 +661,25 @@ function uninstallPlugin(id) {
 
             var nbSearchEl = document.querySelector(".nbPluginsSearch");
             if (searchNumber == 0) {
-                if (nbSearchEl) nbSearchEl.innerHTML = nothing_found;
+                if (nbSearchEl) nbSearchEl.innerHTML = nothingFound;
             } else if (searchNumber == 1) {
-                if (nbSearchEl) nbSearchEl.innerHTML = plugin_found.replace("%s", searchNumber);
+                if (nbSearchEl) nbSearchEl.innerHTML = pluginFound.replace("%s", searchNumber);
             } else {
-                if (nbSearchEl) nbSearchEl.innerHTML = x_plugins_found.replace("%s", searchNumber);
+                if (nbSearchEl) nbSearchEl.innerHTML = xPluginsFound.replace("%s", searchNumber);
             }
         });
     });
 
     // Second initialization - plugin options and deactivate
-function set_view_selector(view_type) {
-    fetch("ws.php?format=json&method=pwg.users.preferences.set", {
-        method: "POST",
-        body: new URLSearchParams({ param: "plugin-manager-view", value: view_type }),
-    });
-}
+    function set_view_selector(view_type) {
+        fetch("ws.php?format=json&method=pwg.users.preferences.set", {
+            method: "POST",
+            body: new URLSearchParams({ param: "plugin-manager-view", value: view_type }),
+        });
+    }
 
-/* Sequential fetch queue for deactivating all plugins */
-var _deactivateQueue = Promise.resolve();
-var _deactivateTotal = 0;
-var _deactivateDone = 0;
-
-function performPluginDeactivate(id) {
+    /* Sequential fetch queue for deactivating all plugins */
+    function performPluginDeactivate(id) {
     _deactivateTotal++;
     _deactivateQueue = _deactivateQueue.then(function() {
         return fetch("ws.php?" + new URLSearchParams({
@@ -726,10 +722,10 @@ function performPluginDeactivate(id) {
     document.querySelectorAll("div.deactivate_all a").forEach(function (el) {
         el.addEventListener("click", function () {
             pwgConfirm({
-                title: deactivate_all_msg,
+                title: deactivateAllMsg,
                 buttons: {
                     confirm: {
-                        text: confirm_msg,
+                        text: confirmMsg,
                         btnClass: "btn-red",
                         action: function () {
                             _deactivateTotal = 0;
@@ -741,7 +737,7 @@ function performPluginDeactivate(id) {
                         },
                     },
                     cancel: {
-                        text: cancel_msg,
+                        text: cancelMsg,
                     },
                 },
             });
@@ -756,12 +752,12 @@ function performPluginDeactivate(id) {
             if (show_details) {
                 var pluginName = document.querySelector("#" + data[i] + " .pluginName");
                 if (pluginName) {
-                    pluginName.insertAdjacentHTML('afterbegin', '<a class="warning" title="' + incompatible_msg + '"></a>');
+                    pluginName.insertAdjacentHTML('afterbegin', '<a class="warning" title="' + incompatibleMsg + '"></a>');
                 }
             } else {
                 var pluginName = document.querySelector("#" + data[i] + " .pluginName");
                 if (pluginName) {
-                    pluginName.insertAdjacentHTML('afterbegin', '<span class="warning" title="' + incompatible_msg + '"></span>');
+                    pluginName.insertAdjacentHTML('afterbegin', '<span class="warning" title="' + incompatibleMsg + '"></span>');
                 }
             }
             var el = document.getElementById(data[i]);
@@ -769,9 +765,9 @@ function performPluginDeactivate(id) {
                 el.classList.add("incompatible");
                 el.querySelectorAll(".activate").forEach(function (activateBtn) {
                     pwgConfirmFollowHref(activateBtn, {
-                        alert_title: incompatible_msg + activate_msg,
-                        alert_confirm: confirm_msg,
-                        alert_cancel: cancel_msg,
+                        alert_title: incompatibleMsg + activateMsg,
+                        alert_confirm: confirmMsg,
+                        alert_cancel: cancelMsg,
                     });
                 });
             }

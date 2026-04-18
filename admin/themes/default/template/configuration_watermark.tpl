@@ -2,52 +2,15 @@
 <script type="module" src="admin/themes/default/js/dist/{$vite_configuration}"></script>
 {/if}
 
-{footer_script}<script>
-  (function() {
-    function onWatermarkChange() {
-      var wSelect = document.getElementById("wSelect");
-      var wImg = document.getElementById("wImg");
-      if (!wSelect || !wImg) return;
-      var val = wSelect.value;
-      if (val.length) {
-        wImg.setAttribute('src', '{$ROOT_URL}' + val);
-        wImg.style.display = '';
-      } else {
-        wImg.style.display = 'none';
-      }
-    }
+<script id="pwg-page-data" type="application/json">
+{
+  "rootUrl": "{$ROOT_URL|escape:'html'}"
+}
+</script>
 
-    onWatermarkChange();
-
-    var wSelect = document.getElementById("wSelect");
-    if (wSelect) wSelect.addEventListener("change", onWatermarkChange);
-
-    var positionChecked = document.querySelector("input[name='w[position]']:checked");
-    var positionCustomDetails = document.getElementById("positionCustomDetails");
-    if (positionChecked && positionCustomDetails) {
-      positionCustomDetails.style.display = positionChecked.value === 'custom' ? '' : 'none';
-    }
-
-    document.querySelectorAll("input[name='w[position]']").forEach(function(el) {
-      el.addEventListener('change', function() {
-        var positionCustomDetails = document.getElementById("positionCustomDetails");
-        if (positionCustomDetails) {
-          positionCustomDetails.style.display = this.value === 'custom' ? '' : 'none';
-        }
-      });
-    });
-
-    document.querySelectorAll(".addWatermarkOpen").forEach(function(el) {
-      el.addEventListener('click', function(event) {
-        event.preventDefault();
-        var addWatermark = document.getElementById("addWatermark");
-        var selectWatermark = document.getElementById("selectWatermark");
-        if (addWatermark) addWatermark.style.display = addWatermark.style.display === 'none' ? '' : 'none';
-        if (selectWatermark) selectWatermark.style.display = selectWatermark.style.display === 'none' ? '' : 'none';
-      });
-    });
-  }());
-</script>{/footer_script}
+{if $vite_configuration_watermark}
+<script type="module" src="admin/themes/default/js/dist/{$vite_configuration_watermark}"></script>
+{/if}
 
 <form method="post" action="{$F_ACTION}" class="properties" enctype="multipart/form-data">
 

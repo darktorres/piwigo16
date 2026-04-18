@@ -1,8 +1,10 @@
-{footer_script}<script>
-  window.str_are_you_sure = '{'Are you sure you want to delete the language "%s"?'|translate|escape:'javascript'}';
-  window.str_yes_im_sure = '{"Yes, I am sure"|translate}';
-  window.str_i_changed_my_mind = '{"No, I have changed my mind"|translate|escape:'javascript'}';
-</script>{/footer_script}
+<script id="pwg-page-data" type="application/json">
+{
+  "strAreYouSure": "{'Are you sure you want to delete the language \"%s\"?'|translate|escape:'html'}",
+  "strYesImSure": "{'Yes, I am sure'|translate|escape:'html'}",
+  "strIChangedMyMind": "{'No, I have changed my mind'|translate|escape:'html'}"
+}
+</script>
 
 {if $vite_languages_installed}
 <script type="module" src="admin/themes/default/js/dist/{$vite_languages_installed}"></script>

@@ -3,112 +3,16 @@
 <script type="module" src="admin/themes/default/js/dist/{$vite_configuration}"></script>
 {/if}
 
-{footer_script}<script>
-  (function() {
-    var targets = {
-      'input[name="rate"]': '#rate_anonymous',
-      'input[name="allow_user_registration"]': '#email_admin_on_new_user',
-      'input[name="email_admin_on_new_user"]': '#email_admin_on_new_user_filter'
-    };
+<script id="pwg-page-data" type="application/json">
+{
+  "isOrderByCustom": {if isset($ORDER_BY_IS_CUSTOM)}true{else}false{/if},
+  "maxOrderByFields": {(($main.order_by_options|count) + 1) / 2 | intval}
+}
+</script>
 
-    Object.keys(targets).forEach(function(selector) {
-      var target = targets[selector];
-      var targetEl = document.querySelector(target);
-      var sourceEl = document.querySelector(selector);
-      if (!targetEl || !sourceEl) return;
-      targetEl.style.display = sourceEl.checked ? '' : 'none';
-      (function(targetEl) {
-        sourceEl.addEventListener('change', function() {
-          targetEl.style.display = this.checked ? '' : 'none';
-        });
-      })(targetEl);
-    });
-
-    tippy('.tiptip-with-img', { maxWidth: 300, delay: 0, placement: 'top' });
-  }());
-
-  {if !isset($ORDER_BY_IS_CUSTOM)}
-    (function() {
-      var max_fields = Math.ceil({$main.order_by_options|count}/2);
-
-      function updateFilters() {
-        var selects = Array.from(document.querySelectorAll('#order_filters select'));
-        var addFilter = document.querySelector('#order_filters .addFilter');
-        if (addFilter) addFilter.style.display = selects.length <= max_fields ? '' : 'none';
-
-        var removeFilters = Array.from(document.querySelectorAll('#order_filters .removeFilter'));
-        removeFilters.forEach(function(el, i) { el.style.display = i === 0 ? 'none' : ''; });
-
-        selects.forEach(function(sel) {
-          sel.querySelectorAll('option').forEach(function(opt) { opt.removeAttribute('disabled'); });
-        });
-        selects.forEach(function(sel) {
-          var val = sel.value;
-          selects.forEach(function(other) {
-            if (other !== sel) {
-              var opt = other.querySelector('option[value="' + val + '"]');
-              if (opt) opt.setAttribute('disabled', 'disabled');
-            }
-          });
-        });
-      }
-
-      var orderFilters = document.getElementById('order_filters');
-      if (orderFilters) {
-        orderFilters.addEventListener('click', function(event) {
-          var btn = event.target.closest('.removeFilter');
-          if (btn) {
-            var filterSpan = btn.closest('span.filter');
-            if (filterSpan) filterSpan.remove();
-            updateFilters();
-          }
-        });
-
-        orderFilters.addEventListener('change', function(event) {
-          if (event.target.matches('select')) updateFilters();
-        });
-      }
-
-      var addFilterBtn = document.querySelector('#order_filters .addFilter');
-      if (addFilterBtn) {
-        addFilterBtn.addEventListener('click', function() {
-          var prevFilter = this.previousElementSibling;
-          if (prevFilter && prevFilter.matches('span.filter')) {
-            var clone = prevFilter.cloneNode(true);
-            this.parentNode.insertBefore(clone, this);
-            var cloneSelect = clone.querySelector('select');
-            if (cloneSelect) cloneSelect.value = '';
-          }
-          updateFilters();
-        });
-      }
-
-      updateFilters();
-    }());
-  {/if}
-
-  GLightbox({ selector: '.themeBoxes a' });
-
-  document.querySelectorAll("input[name='mail_theme']").forEach(function(el) {
-    el.addEventListener('change', function() {
-      document.querySelectorAll("input[name='mail_theme']").forEach(function(inp) {
-        var ts = inp.closest(".themeSelect");
-        if (ts) ts.classList.remove("themeDefault");
-      });
-      var myTs = this.closest(".themeSelect");
-      if (myTs) myTs.classList.add("themeDefault");
-    });
-  });
-
-  document.querySelectorAll("input[name='email_admin_on_new_user_filter']").forEach(function(el) {
-    el.addEventListener('change', function() {
-      var checkedEl = document.querySelector("input[name='email_admin_on_new_user_filter']:checked");
-      var val = checkedEl ? checkedEl.value : '';
-      var groupOpts = document.getElementById('email_admin_on_new_user_filter_group_options');
-      if (groupOpts) groupOpts.style.display = (val === 'group') ? '' : 'none';
-    });
-  });
-</script>{/footer_script}
+{if $vite_configuration_main}
+<script type="module" src="admin/themes/default/js/dist/{$vite_configuration_main}"></script>
+{/if}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

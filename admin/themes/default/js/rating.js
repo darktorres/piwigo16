@@ -1,12 +1,13 @@
+import { initModule } from './moduleInit.js';
 import { CategoriesCache } from './LocalStorageCache.js';
 
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+export function init(cfg) {
+  const { categoriesServerKey, categoriesServerId, rootUrl, nbElements } = cfg;
 
-_docReady(function() {
   const categoriesCache = new CategoriesCache({
-    serverKey: window.categoriesServerKey || '',
-    serverId: window.categoriesServerId || '',
-    rootUrl: window.rootUrl || ''
+    serverKey: categoriesServerKey || '',
+    serverId: categoriesServerId || '',
+    rootUrl: rootUrl || ''
   });
 
   categoriesCache.selectize(document.querySelectorAll('[data-selectize=categories]'));
@@ -32,7 +33,7 @@ _docReady(function() {
   if (catSelectEl) catSelectEl.addEventListener('change', function() { checkCatFilter(); });
 
   const h1 = document.querySelector('h1');
-  if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>" + window.nbElements + "</span>");
+  if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>" + nbElements + "</span>");
 
   window.del = function(node, id, uid, aid) {
     const trEl = node.closest("tr");
@@ -40,7 +41,7 @@ _docReady(function() {
     if (aid) data.anonymous_id = aid;
 
     const anim = trEl ? trEl.animate([{opacity: 1}, {opacity: 0.4}], {duration: 1000, fill: 'forwards'}) : null;
-    (new PwgWS(window.rootUrl)).callService(
+    (new PwgWS(rootUrl)).callService(
       'pwg.rates.delete', data, {
         method: 'POST',
         onFailure: function(num, text) {
@@ -59,4 +60,6 @@ _docReady(function() {
     );
     return false;
   };
-});
+}
+
+initModule(init);

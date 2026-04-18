@@ -5,67 +5,77 @@
 <script type="module" src="admin/themes/default/js/dist/{$vite_user_activity}"></script>
 {/if}
 
-{footer_script}<script>
-  window.usersServerKey = '{$CACHE_KEYS.users}';
-  window.usersServerId = '{$CACHE_KEYS._hash}';
-  window.rootUrl = '{$ROOT_URL}';
-  window.users_key = "{"Users"|translate}";
-  window.nbUsers = {$nb_users};
-
-  window.actionType_add = "{'add'|translate}";
-  window.actionType_delete = "{'deletion'|translate}";
-  window.actionType_move = "{'move'|translate}";
-  window.actionType_edit = "{'edit'|translate}";
-  window.actionType_login = "{'login'|translate}";
-  window.actionType_logout = "{'logout'|translate}";
-
-  window.actionInfos_album_added = "{'%d album added'|translate}";
-  window.actionInfos_album_deleted = "{'%d album deleted'|translate}";
-  window.actionInfos_album_edited = "{'%d album edited'|translate}";
-  window.actionInfos_album_moved = "{'%d album moved'|translate}";
-  window.actionInfos_albums_added = "{'%d albums added'|translate}";
-  window.actionInfos_albums_deleted = "{'%d albums deleted'|translate}";
-  window.actionInfos_albums_edited = "{'%d albums edited'|translate}";
-  window.actionInfos_albums_moved = "{'%d albums moved'|translate}";
-
-  window.actionInfos_user_added = "{'%d user added'|translate}";
-  window.actionInfos_user_deleted = "{'%d user deleted'|translate}";
-  window.actionInfos_user_edited = "{'%d user edited'|translate}";
-  window.actionInfos_user_logged_in = "{'%d user logged in'|translate}";
-  window.actionInfos_user_logged_out = "{'%d user logged out'|translate}";
-  window.actionInfos_users_added = "{'%d users added'|translate}";
-  window.actionInfos_users_deleted = "{'%d users deleted'|translate}";
-  window.actionInfos_users_edited = "{'%d users edited'|translate}";
-  window.actionInfos_users_logged_in = "{'%d users logged in'|translate}";
-  window.actionInfos_users_logged_out = "{'%d users logged out'|translate}";
-
-  window.actionInfos_photo_added = "{'%d photo added'|translate}";
-  window.actionInfos_photo_deleted = "{'%d photo deleted'|translate}";
-  window.actionInfos_photo_edited = "{'%d photo edited'|translate}";
-  window.actionInfos_photo_moved = "{'%d photo moved'|translate}";
-  window.actionInfos_photos_added = "{'%d photos added'|translate}";
-  window.actionInfos_photos_deleted = "{'%d photos deleted'|translate}";
-  window.actionInfos_photos_edited = "{'%d photos edited'|translate}";
-  window.actionInfos_photos_moved = "{'%d photos moved'|translate}";
-
-  window.actionInfos_group_added = "{'%d group added'|translate}";
-  window.actionInfos_group_deleted = "{'%d group deleted'|translate}";
-  window.actionInfos_group_edited = "{'%d group edited'|translate}";
-  window.actionInfos_group_moved = "{'%d group moved'|translate}";
-  window.actionInfos_groups_added = "{'%d groups added'|translate}";
-  window.actionInfos_groups_deleted = "{'%d groups deleted'|translate}";
-  window.actionInfos_groups_edited = "{'%d groups edited'|translate}";
-  window.actionInfos_groups_moved = "{'%d groups moved'|translate}";
-
-  window.actionInfos_tag_added = "{'%d tag added'|translate}";
-  window.actionInfos_tag_deleted = "{'%d tag deleted'|translate}";
-  window.actionInfos_tag_edited = "{'%d tag edited'|translate}";
-  window.actionInfos_tag_moved = "{'%d tag moved'|translate}";
-  window.actionInfos_tags_added = "{'%d tags added'|translate}";
-  window.actionInfos_tags_deleted = "{'%d tags deleted'|translate}";
-  window.actionInfos_tags_edited = "{'%d tags edited'|translate}";
-  window.actionInfos_tags_moved = "{'%d tags moved'|translate}";
-</script>{/footer_script}
+<script id="pwg-page-data" type="application/json">
+{
+  "usersServerKey": "{$CACHE_KEYS.users|escape:'html'}",
+  "usersServerId": "{$CACHE_KEYS._hash|escape:'html'}",
+  "rootUrl": "{$ROOT_URL|escape:'html'}",
+  "usersKey": "{'Users'|translate|escape:'html'}",
+  "nbUsers": {$nb_users},
+  "actionTypes": {
+    "add": "{'add'|translate|escape:'html'}",
+    "delete": "{'deletion'|translate|escape:'html'}",
+    "move": "{'move'|translate|escape:'html'}",
+    "edit": "{'edit'|translate|escape:'html'}",
+    "login": "{'login'|translate|escape:'html'}",
+    "logout": "{'logout'|translate|escape:'html'}"
+  },
+  "actionInfos": {
+    "album": {
+      "added": "{'%d album added'|translate|escape:'html'}",
+      "deleted": "{'%d album deleted'|translate|escape:'html'}",
+      "edited": "{'%d album edited'|translate|escape:'html'}",
+      "moved": "{'%d album moved'|translate|escape:'html'}",
+      "addedPlural": "{'%d albums added'|translate|escape:'html'}",
+      "deletedPlural": "{'%d albums deleted'|translate|escape:'html'}",
+      "editedPlural": "{'%d albums edited'|translate|escape:'html'}",
+      "movedPlural": "{'%d albums moved'|translate|escape:'html'}"
+    },
+    "user": {
+      "added": "{'%d user added'|translate|escape:'html'}",
+      "deleted": "{'%d user deleted'|translate|escape:'html'}",
+      "edited": "{'%d user edited'|translate|escape:'html'}",
+      "loggedIn": "{'%d user logged in'|translate|escape:'html'}",
+      "loggedOut": "{'%d user logged out'|translate|escape:'html'}",
+      "addedPlural": "{'%d users added'|translate|escape:'html'}",
+      "deletedPlural": "{'%d users deleted'|translate|escape:'html'}",
+      "editedPlural": "{'%d users edited'|translate|escape:'html'}",
+      "loggedInPlural": "{'%d users logged in'|translate|escape:'html'}",
+      "loggedOutPlural": "{'%d users logged out'|translate|escape:'html'}"
+    },
+    "photo": {
+      "added": "{'%d photo added'|translate|escape:'html'}",
+      "deleted": "{'%d photo deleted'|translate|escape:'html'}",
+      "edited": "{'%d photo edited'|translate|escape:'html'}",
+      "moved": "{'%d photo moved'|translate|escape:'html'}",
+      "addedPlural": "{'%d photos added'|translate|escape:'html'}",
+      "deletedPlural": "{'%d photos deleted'|translate|escape:'html'}",
+      "editedPlural": "{'%d photos edited'|translate|escape:'html'}",
+      "movedPlural": "{'%d photos moved'|translate|escape:'html'}"
+    },
+    "group": {
+      "added": "{'%d group added'|translate|escape:'html'}",
+      "deleted": "{'%d group deleted'|translate|escape:'html'}",
+      "edited": "{'%d group edited'|translate|escape:'html'}",
+      "moved": "{'%d group moved'|translate|escape:'html'}",
+      "addedPlural": "{'%d groups added'|translate|escape:'html'}",
+      "deletedPlural": "{'%d groups deleted'|translate|escape:'html'}",
+      "editedPlural": "{'%d groups edited'|translate|escape:'html'}",
+      "movedPlural": "{'%d groups moved'|translate|escape:'html'}"
+    },
+    "tag": {
+      "added": "{'%d tag added'|translate|escape:'html'}",
+      "deleted": "{'%d tag deleted'|translate|escape:'html'}",
+      "edited": "{'%d tag edited'|translate|escape:'html'}",
+      "moved": "{'%d tag moved'|translate|escape:'html'}",
+      "addedPlural": "{'%d tags added'|translate|escape:'html'}",
+      "deletedPlural": "{'%d tags deleted'|translate|escape:'html'}",
+      "editedPlural": "{'%d tags edited'|translate|escape:'html'}",
+      "movedPlural": "{'%d tags moved'|translate|escape:'html'}"
+    }
+  }
+}
+</script>
 
 <div class="container">
 

@@ -1,25 +1,27 @@
-{footer_script}<script>
-window.vt_strings = {
-  unexpected_end: '{'Server process ended unexpectedly. Check PHP error log for details.'|translate|escape:'javascript'}',
-  connection_lost: '{'The connection to the server was lost.'|translate|escape:'javascript'}',
-  try_again: '{'Try again'|translate|escape:'javascript'}',
-  aborted: '{'Aborted'|translate|escape:'javascript'}',
-  aborted_message: '{'Aborted. Any thumbnails already generated are saved.'|translate|escape:'javascript'}',
-  back: '{'Back'|translate|escape:'javascript'}',
-  generating: '{'Generating video thumbnails'|translate|escape:'javascript'}',
-  extracting: '{'Extracting frames with FFmpeg'|translate|escape:'javascript'}',
-  generated: '{'generated'|translate|escape:'javascript'}',
-  skipped: '{'skipped'|translate|escape:'javascript'}',
-  done: '{'Done'|translate|escape:'javascript'}',
-  file_not_found: '{'File not found on disk'|translate|escape:'javascript'}',
-  ffmpeg_output: '{'FFmpeg output'|translate|escape:'javascript'}',
-  ffmpeg_no_output: '{'FFmpeg produced no output'|translate|escape:'javascript'}',
-  thumbnails_generated: '{'thumbnails generated'|translate|escape:'javascript'}',
-  skipped_reason: '{'skipped (file not found or FFmpeg unavailable)'|translate|escape:'javascript'}',
-  error: '{'Error'|translate|escape:'javascript'}',
-  run_again: '{'Run again'|translate|escape:'javascript'}'
-};
-</script>{/footer_script}
+<script id="pwg-page-data" type="application/json">
+{
+  "vtStrings": {
+    "unexpected_end": "{'Server process ended unexpectedly. Check PHP error log for details.'|translate|escape:'html'}",
+    "connection_lost": "{'The connection to the server was lost.'|translate|escape:'html'}",
+    "try_again": "{'Try again'|translate|escape:'html'}",
+    "aborted": "{'Aborted'|translate|escape:'html'}",
+    "aborted_message": "{'Aborted. Any thumbnails already generated are saved.'|translate|escape:'html'}",
+    "back": "{'Back'|translate|escape:'html'}",
+    "generating": "{'Generating video thumbnails'|translate|escape:'html'}",
+    "extracting": "{'Extracting frames with FFmpeg'|translate|escape:'html'}",
+    "generated": "{'generated'|translate|escape:'html'}",
+    "skipped": "{'skipped'|translate|escape:'html'}",
+    "done": "{'Done'|translate|escape:'html'}",
+    "file_not_found": "{'File not found on disk'|translate|escape:'html'}",
+    "ffmpeg_output": "{'FFmpeg output'|translate|escape:'html'}",
+    "ffmpeg_no_output": "{'FFmpeg produced no output'|translate|escape:'html'}",
+    "thumbnails_generated": "{'thumbnails generated'|translate|escape:'html'}",
+    "skipped_reason": "{'skipped (file not found or FFmpeg unavailable)'|translate|escape:'html'}",
+    "error": "{'Error'|translate|escape:'html'}",
+    "run_again": "{'Run again'|translate|escape:'html'}"
+  }
+}
+</script>
 
 {if $vite_generate_video_thumbnails}
 <script type="module" src="admin/themes/default/js/dist/{$vite_generate_video_thumbnails}"></script>

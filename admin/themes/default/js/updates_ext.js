@@ -1,15 +1,15 @@
+import { initModule } from './moduleInit.js';
 import { pwgConfirm } from './pwgConfirm.js';
 
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
-
-_docReady(function() {
-  const pwg_token = window.pwg_token || '';
-  const extType = window.extType || '';
-  const confirmMsg = window.confirmMsg || 'Are you sure?';
-  const errorHead = window.errorHead || 'ERROR';
-  const successHead = window.successHead || 'Update Complete';
-  const errorMsg = window.errorMsg || 'an error happened';
-  const restoreMsg = window.restoreMsg || 'Reset ignored updates';
+export function init(cfg) {
+  const { pwgToken, extType, confirmMsg, errorHead, successHead, errorMsg, restoreMsg, titleConfirmUpdateAll, strConfirm, strCancel } = cfg;
+  const pwg_token = pwgToken || '';
+  const extType_local = extType || '';
+  const confirmMsg_local = confirmMsg || 'Are you sure?';
+  const errorHead_local = errorHead || 'ERROR';
+  const successHead_local = successHead || 'Update Complete';
+  const errorMsg_local = errorMsg || 'an error happened';
+  const restoreMsg_local = restoreMsg || 'Reset ignored updates';
 
   let todo = 0;
 
@@ -80,7 +80,7 @@ _docReady(function() {
     const params = new URLSearchParams({
       method: 'pwg.extensions.ignoreUpdate',
       reset: true,
-      type: extType,
+      type: extType_local,
       pwg_token: pwg_token,
       format: 'json'
     });
@@ -131,7 +131,7 @@ _docReady(function() {
     }
     if (ignored > 0) {
       const resetIgnoreEl = document.getElementById("reset_ignore");
-      if (resetIgnoreEl) resetIgnoreEl.value = restoreMsg + ' (' + ignored + ')';
+      if (resetIgnoreEl) resetIgnoreEl.value = restoreMsg_local + ' (' + ignored + ')';
     }
   }
 
@@ -141,16 +141,16 @@ _docReady(function() {
       data: { method: 'pwg.extensions.update', type: type, id: id, revision: revision, pwg_token: pwg_token, format: 'json' },
       success: function(data) {
         if (data['stat'] == 'ok') {
-          pwgToast(data['result'], { theme: 'success', header: successHead, life: 4000 });
+          pwgToast(data['result'], { theme: 'success', header: successHead_local, life: 4000 });
           const extEl = document.getElementById(type + "_" + id);
           if (extEl) extEl.remove();
           checkFieldsets();
         } else {
-          pwgToast(data['result'], { theme: 'error', header: errorHead, sticky: true });
+          pwgToast(data['result'], { theme: 'error', header: errorHead_local, sticky: true });
         }
       },
       error: function() {
-        pwgToast(errorMsg, { theme: 'error', header: errorHead, sticky: true });
+        pwgToast(errorMsg_local, { theme: 'error', header: errorHead_local, sticky: true });
       }
     });
   }
@@ -194,9 +194,9 @@ _docReady(function() {
   if (updateAllBtn) {
     updateAllBtn.addEventListener('click', function(e) {
       e.preventDefault();
-      const title_msg = window.title_confirm_update_all || "Are you sure you want to update all extensions?";
-      const confirm_msg = window.str_confirm || "Yes, I am sure";
-      const cancel_msg = window.str_cancel || "No, I have changed my mind";
+      const title_msg = titleConfirmUpdateAll || "Are you sure you want to update all extensions?";
+      const confirm_msg = strConfirm || "Yes, I am sure";
+      const cancel_msg = strCancel || "No, I have changed my mind";
       pwgConfirm({
         title: title_msg,
         buttons: {
@@ -214,4 +214,6 @@ _docReady(function() {
       });
     });
   }
-});
+}
+
+initModule(init);

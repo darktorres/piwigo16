@@ -50,6 +50,14 @@ const adminModules = [
   'user_activity',
   'menubar',
   'configuration',
+  'configuration_comments',
+  'configuration_sizes',
+  'themes_new',
+  'configuration_watermark',
+  'permalinks',
+  'configuration_main',
+  'rating_user',
+  'site_update',
   'intro',
 ];
 

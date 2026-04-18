@@ -1,17 +1,17 @@
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+import { initModule } from './moduleInit.js';
 
 const RESULT_LIMIT = 100;
 
-_docReady(function() {
-    document.addEventListener('DOMContentLoaded', function() {
-        var h1 = document.querySelector("h1");
-        if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>"+window.cat_search_nb_cats+"</span>");
-    });
+export function init(cfg) {
+    const { catSearchNbCats, catSearchData, catSearchStrAlbumsFound, catSearchStrAlbumFound, catSearchStrResultLimit } = cfg;
 
-    var categories = Object.values(window.cat_search_data);
-    var str_albums_found = window.cat_search_str_albums_found;
-    var str_album_found = window.cat_search_str_album_found;
-    var str_result_limit = window.cat_search_str_result_limit;
+    var h1 = document.querySelector("h1");
+    if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>"+catSearchNbCats+"</span>");
+
+    var categories = Object.values(catSearchData);
+    var str_albums_found = catSearchStrAlbumsFound;
+    var str_album_found = catSearchStrAlbumFound;
+    var str_result_limit = catSearchStrResultLimit;
     var editLink = "admin.php?page=album-";
     var colors = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
 
@@ -122,7 +122,7 @@ _docReady(function() {
         var html = '';
         for (let i = 0; i < cat[1].length - 1; i++) {
             var id_bis = cat[1][i];
-            var c = window.cat_search_data[id_bis];
+            var c = catSearchData[id_bis];
             html += '<a href="' + editLink + id_bis + '">' + c[0] + '</a> <b>/</b> '
         }
         html += '<a href="' + editLink + cat[1][cat[1].length - 1] + '">' + cat[0] + '</a>';
@@ -139,4 +139,6 @@ _docReady(function() {
 
     updateSearch();
     if (searchInput) searchInput.focus();
-});
+}
+
+initModule(init);

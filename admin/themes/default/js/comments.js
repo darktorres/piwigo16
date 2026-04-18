@@ -1,9 +1,10 @@
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+import { initModule } from './moduleInit.js';
 
-_docReady(function() {
-  document.addEventListener('DOMContentLoaded', function() {
+export function init(cfg) {
+    const { nbTotal } = cfg;
+
     var h1 = document.querySelector("h1");
-    if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>"+window.comments_nb_total+"</span>");
+    if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>"+nbTotal+"</span>");
 
     function highlightComments() {
       document.querySelectorAll(".checkComment").forEach(function(el) {
@@ -51,5 +52,6 @@ _docReady(function() {
         highlightComments();
       });
     }
-  });
-});
+}
+
+initModule(init);

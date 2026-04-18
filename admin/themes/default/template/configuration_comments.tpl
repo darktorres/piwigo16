@@ -1,37 +1,10 @@
+{if $vite_configuration_comments}
+<script type="module" src="admin/themes/default/js/dist/{$vite_configuration_comments}"></script>
+{/if}
+
 {if $vite_configuration}
 <script type="module" src="admin/themes/default/js/dist/{$vite_configuration}"></script>
 {/if}
-
-{footer_script}<script>
-  (function() {
-    var targets = {
-      'input[name="comments_validation"]': '#email_admin_on_comment_validation',
-      'input[name="user_can_edit_comment"]': '#email_admin_on_comment_edition',
-      'input[name="user_can_delete_comment"]': '#email_admin_on_comment_deletion'
-    };
-
-    Object.keys(targets).forEach(function(selector) {
-      var targetEl = document.querySelector(targets[selector]);
-      var triggerEl = document.querySelector(selector);
-      if (!targetEl || !triggerEl) return;
-
-      targetEl.style.display = triggerEl.checked ? '' : 'none';
-
-      triggerEl.addEventListener('change', function() {
-        targetEl.style.display = this.checked ? '' : 'none';
-      });
-    });
-
-    function check_activate_comments() {
-      var container = document.getElementById("comments_param_container");
-      var checkbox = document.querySelector("input[name=activate_comments]");
-      if (container && checkbox) container.style.display = checkbox.checked ? '' : 'none';
-    }
-    check_activate_comments();
-    var activateEl = document.querySelector("input[name=activate_comments]");
-    if (activateEl) activateEl.addEventListener("change", check_activate_comments);
-  }());
-</script>{/footer_script}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

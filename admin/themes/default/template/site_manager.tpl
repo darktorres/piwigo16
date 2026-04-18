@@ -1,12 +1,14 @@
+<script id="pwg-page-data" type="application/json">
+{
+  "strConfirmDeleteSite": "{'Are you sure you want to delete this site?'|translate|escape:'html'}",
+  "strYesSure": "{'Yes, I am sure'|translate|escape:'html'}",
+  "strNoChangedMind": "{'No, I have changed my mind'|translate|escape:'html'}"
+}
+</script>
+
 {if $vite_site_manager}
 <script type="module" src="admin/themes/default/js/dist/{$vite_site_manager}"></script>
 {/if}
-
-{footer_script}<script>
-  window.str_confirm_delete_site = '{'Are you sure you want to delete this site?'|translate|escape:'javascript'}';
-  window.str_yes_sure = '{"Yes, I am sure"|translate}';
-  window.str_no_changed_mind = '{"No, I have changed my mind"|translate}';
-</script>{/footer_script}
 
 {if not empty($remote_output)}
   <div class="remoteOutput">

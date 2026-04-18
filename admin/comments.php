@@ -117,11 +117,16 @@ if (isset($_GET['filter']) &&
     $page['filter'] = $_GET['filter'];
 }
 
+$page_data = [
+    'nbTotal' => $nb_total,
+];
+
 $template->assign(
     [
         'nb_total' => $nb_total,
         'nb_pending' => $nb_pending,
         'filter' => $page['filter'],
+        'page_data_json' => json_encode($page_data),
     ]
 );
 

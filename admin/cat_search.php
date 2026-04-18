@@ -85,11 +85,20 @@ if (empty($placeholder)) {
 
 $template->set_filename('cat_search', 'cat_search.tpl');
 
+$page_data = [
+    'catSearchNbCats' => count($categories),
+    'catSearchData' => $categories,
+    'catSearchStrAlbumsFound' => functions::l10n('<b>%d</b> albums found'),
+    'catSearchStrAlbumFound' => functions::l10n('<b>1</b> album found'),
+    'catSearchStrResultLimit' => functions::l10n('<b>%d+</b> albums found, try to refine the search'),
+];
+
 $template->assign(
     [
         'data_cat' => $categories,
         'ADMIN_PAGE_TITLE' => functions::l10n('Albums'),
         'placeholder' => $placeholder,
+        'page_data_json' => json_encode($page_data),
     ]
 );
 

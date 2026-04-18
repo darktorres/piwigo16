@@ -722,10 +722,68 @@ if (count($page['cat_elements_id']) > 0) {
     $template->assign('thumb_params', $thumb_params);
 }
 
+$cache_keys = functions_admin::get_admin_client_cache_keys(['tags', 'categories']);
+
+$page_data = [
+    'langCancel' => functions::l10n('Cancel'),
+    'deleteProgressMessage' => functions::l10n('Deletion in progress'),
+    'syncProgressMessage' => functions::l10n('Synchronization in progress'),
+    'areYouSure' => functions::l10n('Are you sure?'),
+    'generateMsg' => functions::l10n('Generate multiple size images'),
+    'tagCreate' => functions::l10n('Create'),
+    'nbThumbsPage' => $nb_thumbs_page,
+    'nbThumbsSet' => count($page['cat_elements_id']),
+    'applyOnDetailsPattern' => functions::l10n('on the %d selected photos'),
+    'allElements' => !empty($all_elements) ? array_map('intval', explode(',', $all_elements)) : [],
+    'selectedMessagePattern' => functions::l10n('%d of %d photos selected'),
+    'selectedMessageNone' => functions::l10n('No photo selected, %d photos in current set'),
+    'selectedMessageAll' => functions::l10n('All %d photos are selected'),
+    'associatedCategories' => $associated_categories,
+    'tagsServerKey' => $cache_keys['tags'],
+    'categoriesServerKey' => $cache_keys['categories'],
+    'cacheServerId' => $cache_keys['_hash'],
+    'rootUrl' => functions_url::get_root_url(),
+    'sliders' => [
+        'widths' => [
+            'values' => !empty($dimensions['widths']) ? array_map('intval', explode(',', $dimensions['widths'])) : [],
+            'selected' => [
+                'min' => (int)($dimensions['selected']['min_width'] ?? 0),
+                'max' => (int)($dimensions['selected']['max_width'] ?? 0),
+            ],
+            'text' => functions::l10n('between %d and %d pixels'),
+        ],
+        'heights' => [
+            'values' => !empty($dimensions['heights']) ? array_map('intval', explode(',', $dimensions['heights'])) : [],
+            'selected' => [
+                'min' => (int)($dimensions['selected']['min_height'] ?? 0),
+                'max' => (int)($dimensions['selected']['max_height'] ?? 0),
+            ],
+            'text' => functions::l10n('between %d and %d pixels'),
+        ],
+        'ratios' => [
+            'values' => !empty($dimensions['ratios']) ? array_map('floatval', explode(',', $dimensions['ratios'])) : [],
+            'selected' => [
+                'min' => (float)($dimensions['selected']['min_ratio'] ?? 0),
+                'max' => (float)($dimensions['selected']['max_ratio'] ?? 0),
+            ],
+            'text' => functions::l10n('between %.2f and %.2f'),
+        ],
+        'filesizes' => [
+            'values' => !empty($filesize['list']) ? explode(',', $filesize['list']) : [],
+            'selected' => [
+                'min' => (int)($filesize['selected']['min'] ?? 0),
+                'max' => (int)($filesize['selected']['max'] ?? 0),
+            ],
+            'text' => functions::l10n('between %s and %s MB'),
+        ],
+    ],
+];
+
 $template->assign([
     'nb_thumbs_page' => $nb_thumbs_page,
     'nb_thumbs_set' => count($page['cat_elements_id']),
-    'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(['tags', 'categories']),
+    'CACHE_KEYS' => $cache_keys,
+    'page_data_json' => json_encode($page_data),
 ]);
 
 functions_plugins::trigger_notify('loc_end_element_set_global');

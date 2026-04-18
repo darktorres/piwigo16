@@ -11,10 +11,16 @@ export default [
 
     {
         languageOptions: {
+            ecmaVersion: 2020,
+            sourceType: "module",
             globals: {
                 ...globals.browser,
                 ...globals.jquery,
             },
+        },
+        rules: {
+            "no-undef": "error",
+            "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
         },
     },
 

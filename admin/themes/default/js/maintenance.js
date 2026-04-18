@@ -1,8 +1,13 @@
+import { pwgConfirmFollowHref } from './pwgConfirm.js';
+
 // Get config from JSON data block
 const configEl = document.getElementById('pwg-page-data');
 const cfg = configEl ? JSON.parse(configEl.textContent) : {};
 
 const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+
+const confirm_msg = cfg.confirm_msg || 'Yes, I am sure';
+const cancel_msg = cfg.cancel_msg || 'No, I have changed my mind';
 
 function displayResponse(domElem, values, mDivs, mValues) {
     const unit_MB = cfg.unit_MB || '%s MB';
@@ -22,6 +27,129 @@ function displayResponse(domElem, values, mDivs, mValues) {
 }
 
 _docReady( function () {
+    document.querySelectorAll(".lock-gallery-button").forEach(function(el) {
+      const gallery_tip = window.str_gallery_tip || 'A locked gallery is only visible to administrators';
+      const title = window.str_lock_unlock_title || 'Are you sure?';
+      pwgConfirmFollowHref(el, {
+        alert_title: title,
+        alert_confirm: confirm_msg,
+        alert_cancel: cancel_msg,
+        alert_content: gallery_tip
+      });
+    });
+
+    document.querySelectorAll(".purge-history-detail-button").forEach(function(el) {
+      const title = window.str_purge_detail || 'Purge history detail';
+      pwgConfirmFollowHref(el, {
+        alert_title: title,
+        alert_confirm: confirm_msg,
+        alert_cancel: cancel_msg
+      });
+    });
+
+    document.querySelectorAll(".purge-history-summary-button").forEach(function(el) {
+      const title = window.str_purge_summary || 'Purge history summary';
+      pwgConfirmFollowHref(el, {
+        alert_title: title,
+        alert_confirm: confirm_msg,
+        alert_cancel: cancel_msg
+      });
+    });
+
+    document.querySelectorAll(".purge-search-history-button").forEach(function(el) {
+      const title = window.str_purge_search || 'Purge search history';
+      pwgConfirmFollowHref(el, {
+        alert_title: title,
+        alert_confirm: confirm_msg,
+        alert_cancel: cancel_msg
+      });
+    });
+
+    document.querySelectorAll(".delete-all-sizes-button").forEach(function(el) {
+      const title = window.str_delete_all_sizes || 'Are you sure you want to delete all sizes?';
+      pwgConfirmFollowHref(el, {
+        alert_title: title,
+        alert_confirm: confirm_msg,
+        alert_cancel: cancel_msg
+      });
+    });
+
+    document.querySelectorAll(".delete-size-check").forEach(function(el) {
+      el.addEventListener('click', function() {
+        if (this.getAttribute('data-selected') == '1') {
+          this.setAttribute('data-selected', '0');
+          var icon = this.querySelector("i");
+          if (icon) icon.style.display = 'none';
+        } else {
+          this.setAttribute('data-selected', '1');
+          var icon = this.querySelector("i");
+          if (icon) icon.style.display = '';
+        }
+        this.dispatchEvent(new Event('change', {bubbles: true}));
+      });
+    });
+
+    var firstDeleteSizeCheck = document.querySelector(".delete-size-check");
+    if (firstDeleteSizeCheck) {
+      firstDeleteSizeCheck.addEventListener('change', function() {
+        var allChecks = document.querySelectorAll(".delete-size-check");
+        if (this.getAttribute('data-selected') == '1') {
+          allChecks.forEach(function(el) {
+            el.style.display = 'none';
+            el.setAttribute("data-selected", "1");
+          });
+          this.style.display = '';
+        } else {
+          allChecks.forEach(function(el) {
+            el.style.display = '';
+            el.setAttribute("data-selected", "0");
+          });
+        }
+      });
+    }
+
+    const delete_deriv_URL = "admin.php?page=maintenance&action=derivatives&";
+    const pwg_token = cfg.pwg_token || '';
+    document.querySelectorAll(".delete-size-check").forEach(function(el) {
+      el.addEventListener('change', function() {
+        var delete_deriv_with_token = delete_deriv_URL + "pwg_token=" + pwg_token + "&";
+        var types_str = '';
+        var selected = [];
+        document.querySelectorAll(".delete-size-check").forEach(function(check) {
+          if (check.getAttribute("data-selected") == '1') {
+            selected.push(check.getAttribute("name"));
+          }
+        });
+        var deleteLink = document.querySelector(".delete-sizes");
+        if (selected.length == 0) {
+          if (deleteLink) deleteLink.setAttribute("href", "");
+        } else {
+          if (selected[0] == "all") {
+            types_str = "all";
+          } else {
+            types_str = selected.join("_");
+          }
+          if (deleteLink) deleteLink.setAttribute("href", delete_deriv_with_token + "type=" + types_str);
+        }
+      });
+    });
+
+    var deleteSizesLink = document.querySelector(".delete-sizes");
+    if (deleteSizesLink) deleteSizesLink.style.display = 'none';
+
+    document.querySelectorAll(".delete-size-check").forEach(function(el) {
+      el.addEventListener('click', function() {
+        var displayDeleteSizes = false;
+        document.querySelectorAll(".delete-size-check").forEach(function(check) {
+          if (check.getAttribute("data-selected") == 1) {
+            displayDeleteSizes = true;
+          }
+        });
+        var deleteSizes = document.querySelector(".delete-sizes");
+        if (deleteSizes) deleteSizes.style.display = displayDeleteSizes ? '' : 'none';
+      });
+    });
+
     document.querySelectorAll(".refresh-cache-size").forEach(function (btn) {
         btn.addEventListener("click", function () {
             var refreshIcon = this.querySelector(".refresh-icon");

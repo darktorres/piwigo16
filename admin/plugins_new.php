@@ -200,6 +200,25 @@ if (! $beta_test &&
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Plugins'));
 $template->assign('BETA_TEST', $beta_test);
 
+$page_data = [
+    'str_confirm_msg' => functions::l10n('Yes, I am sure'),
+    'str_cancel_msg' => functions::l10n('No, I have chaged my mind'),
+    'str_install_title' => functions::l10n('Are you sure you want to install the plugin "%s"?'),
+    'strs_certification' => [
+        '-1' => functions::l10n('This plugin is incompatible with your version'),
+        '0' => functions::l10n('This plugin have no update since 3 years ! It may be outdated'),
+        '1' => functions::l10n('This plugin has no recent update'),
+        '2' => functions::l10n('This plugin was updated less than 6 months ago'),
+        '3' => functions::l10n('This plugin have been updated recently'),
+    ],
+    'str_x_month' => functions::l10n('%d month'),
+    'str_x_months' => functions::l10n('%d months'),
+    'str_x_year' => functions::l10n('%d year'),
+    'str_x_years' => functions::l10n('%d years'),
+    'str_from_beginning' => functions::l10n('since the beginning'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['plugins_new', 'pwgConfirm']);
 

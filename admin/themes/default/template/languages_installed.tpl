@@ -1,20 +1,12 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
-{footer_script require='pwgConfirm'}<script>
-  document.querySelectorAll(".delete-lang-button").forEach(function(el) {
-    var title_msg = '{'Are you sure you want to delete the language "%s"?'|translate|escape:'javascript'}';
-    var confirm_msg = '{"Yes, I am sure"|translate}';
-    var cancel_msg = '{"No, I have changed my mind"|translate|escape:'javascript'}';
-    var langBox = el.closest(".languageBox");
-    var langNameEl = langBox ? langBox.querySelector('.languageName') : null;
-    var lang_name = langNameEl ? langNameEl.innerHTML : '';
-    pwgConfirmFollowHref(el, {
-      alert_title: title_msg.replace("%s", lang_name),
-      alert_confirm: confirm_msg,
-      alert_cancel: cancel_msg
-    });
-  });
+{footer_script}<script>
+  window.str_are_you_sure = '{'Are you sure you want to delete the language "%s"?'|translate|escape:'javascript'}';
+  window.str_yes_im_sure = '{"Yes, I am sure"|translate}';
+  window.str_i_changed_my_mind = '{"No, I have changed my mind"|translate|escape:'javascript'}';
 </script>{/footer_script}
+
+{if $vite_languages_installed}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_languages_installed}"></script>
+{/if}
 
 {foreach $language_states as $language_state}
   <fieldset>

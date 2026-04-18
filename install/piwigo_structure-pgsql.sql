@@ -559,7 +559,7 @@ CREATE TYPE user_infos_status AS ENUM ('webmaster', 'admin', 'normal', 'generic'
 CREATE TABLE user_infos
 (
     user_id                 INTEGER PRIMARY KEY,
-    nb_image_page           INTEGER                  NOT NULL DEFAULT 15,
+    nb_image_page           INTEGER                  NOT NULL DEFAULT 80,
     status                  user_infos_status        NOT NULL DEFAULT 'guest',
     language                VARCHAR(50)              NOT NULL,
     expand                  BOOLEAN                  NOT NULL DEFAULT false,

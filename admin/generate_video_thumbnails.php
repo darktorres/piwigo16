@@ -126,7 +126,7 @@ $template->assign([
     'U_ACTION' => functions_url::get_root_url() . 'admin.php?page=generate_video_thumbnails',
 ]);
 
-require_once 'inc/vite_helper.php';
+require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['generate_video_thumbnails']);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'generate_video_thumbnails');

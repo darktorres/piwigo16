@@ -156,7 +156,7 @@ $template->assign([
 $template->assign('isWebmaster', (functions_user::is_webmaster()) ? 1 : 0);
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Menu Management'));
 
-require_once 'inc/vite_helper.php';
+require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['menubar']);
 
 $template->set_filename('menubar_admin_content', 'menubar.tpl');

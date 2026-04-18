@@ -152,7 +152,7 @@ require_once __DIR__ . '/../admin/inc/photos_add_direct_prepare.php';
 
 functions_plugins::trigger_notify('loc_end_photo_add_direct');
 
-require_once 'inc/vite_helper.php';
+require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['photos_add_direct']);
 
 $template->assign([

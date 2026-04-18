@@ -1,34 +1,37 @@
+<script id="pwg-page-data" type="application/json">
+{
+  "hasImagesAssociatedOutside": "{'delete album and all %d photos, even the %d associated to other albums'|translate|escape:'html'}",
+  "hasImagesBecomingOrphans": "{'delete album and the %d orphan photos'|translate|escape:'html'}",
+  "hasImagesRecursives": "{'delete only album, not photos'|translate|escape:'html'}",
+  "catNav": "{$CATEGORIES_NAV|escape:'html'}",
+  "albumId": {$CAT_ID},
+  "parentAlbum": {$PARENT_CAT_ID},
+  "defaultParentAlbum": {$PARENT_CAT_ID},
+  "albumName": "{$CAT_NAME|escape:'html'}",
+  "nbSubAlbums": {$NB_SUBCATS},
+  "pwgToken": "{$PWG_TOKEN|escape:'html'}",
+  "uDelete": "{$U_DELETE|escape:'html'}",
+  "isVisible": "{$IS_VISIBLE|escape:'html'}",
+  "strCancel": "{'No, I have changed my mind'|translate|escape:'html'}",
+  "strDeleteAlbum": "{'Delete album'|translate|escape:'html'}",
+  "strDeleteAlbumAndHisXSubalbums": "{'Delete album \"%s\" and its %d sub-albums.'|translate|escape:'html'}",
+  "strJustNow": "{'Just now'|translate|escape:'html'}",
+  "strDontDeletePhotos": "{'delete only album, not photos'|translate|escape:'html'}",
+  "strDeleteOrphans": "{'delete album and the %d orphan photos'|translate|escape:'html'}",
+  "strDeleteAllPhotos": "{'delete album and all %d photos, even the %d associated to other albums'|translate|escape:'html'}",
+  "strAlbumsFound": "{'<b>%d</b> albums found'|translate|escape:'html'}",
+  "strAlbumFound": "{'<b>1</b> album found'|translate|escape:'html'}",
+  "strResultLimit": "{'<b>%d+</b> albums found, try to refine the search'|translate|escape:'html'}",
+  "strOrphan": "{'This photo is an orphan'|translate|escape:'html'}",
+  "strNoSearchInProgress": "{'No search in progress'|translate|escape:'html'}",
+  "strAlreadyInRelatedCats": "{'This albums is already in related categories list'|translate|escape:'html'}",
+  "strAlbumCommentAllow": "{'Comments allowed for sub-albums'|translate|escape:'html'}",
+  "strAlbumCommentDisallow": "{'Comments disallowed for sub-albums'|translate|escape:'html'}",
+  "strRoot": "{'Root'|translate|escape:'html'}"
+}
+</script>
+
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-{footer_script}<script>
-  window.has_images_associated_outside = '{"delete album and all %d photos, even the %d associated to other albums"|translate|escape:javascript}';
-  window.has_images_becoming_orphans = '{'delete album and the %d orphan photos'|translate|escape:javascript}';
-  window.has_images_recursives = '{'delete only album, not photos'|translate|escape:javascript}';
-  window.cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
-  window.album_id = {$CAT_ID};
-  window.parent_album = {$PARENT_CAT_ID};
-  window.default_parent_album = {$PARENT_CAT_ID};
-  window.album_name = "{$CAT_NAME}";
-  window.nb_sub_albums = {$NB_SUBCATS};
-  window.pwg_token = '{$PWG_TOKEN}';
-  window.u_delete = '{$U_DELETE}';
-  window.is_visible = '{$IS_VISIBLE}';
-  window.str_cancel = '{'No, I have changed my mind'|translate|escape}';
-  window.str_delete_album = '{'Delete album'|translate|escape:javascript}';
-  window.str_delete_album_and_his_x_subalbums = '{'Delete album "%s" and its %d sub-albums.'|translate|escape:javascript}';
-  window.str_just_now = '{'Just now'|translate|escape:javascript}';
-  window.str_dont_delete_photos = '{'delete only album, not photos'|translate|escape:javascript}';
-  window.str_delete_orphans = '{'delete album and the %d orphan photos'|translate|escape:javascript}';
-  window.str_delete_all_photos = '{'delete album and all %d photos, even the %d associated to other albums'|translate|escape:javascript}';
-  window.str_albums_found = '{"<b>%d</b> albums found"|translate|escape:javascript}';
-  window.str_album_found = '{"<b>1</b> album found"|translate|escape:javascript}';
-  window.str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|translate|escape:javascript}';
-  window.str_orphan = '{'This photo is an orphan'|translate|escape:javascript}';
-  window.str_no_search_in_progress = '{'No search in progress'|translate|escape:javascript}';
-  window.str_already_in_related_cats = '{'This albums is already in related categories list'|translate|escape:javascript}';
-  window.str_album_comment_allow = '{'Comments allowed for sub-albums'|translate|escape:javascript}';
-  window.str_album_comment_disallow = '{'Comments disallowed for sub-albums'|translate|escape:javascript}';
-  window.str_root = '{'Root'|translate|escape:javascript}';
-</script>{/footer_script}
 
 {if $vite_cat_modify}
 <script type="module" src="admin/themes/default/js/dist/{$vite_cat_modify}"></script>

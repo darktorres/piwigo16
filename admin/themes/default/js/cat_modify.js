@@ -1,9 +1,48 @@
+import { initModule } from './moduleInit.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import tippy from 'tippy.js';
 import { set_up_popin, linked_albums_open, linked_albums_close, linked_albums_search } from './album_selector.js';
 
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
-_docReady( function () {
+// Module-level config - initialized by init()
+let has_images_associated_outside, has_images_becoming_orphans, has_images_recursives;
+let cat_nav, album_id, parent_album, default_parent_album, album_name, nb_sub_albums;
+let pwg_token, u_delete, is_visible;
+let str_cancel, str_delete_album, str_delete_album_and_his_x_subalbums, str_just_now;
+let str_dont_delete_photos, str_delete_orphans, str_delete_all_photos;
+let str_albums_found, str_album_found, str_result_limit;
+let str_orphan, str_no_search_in_progress, str_already_in_related_cats;
+let str_album_comment_allow, str_album_comment_disallow, str_root;
+
+export function init(cfg) {
+    has_images_associated_outside = cfg.hasImagesAssociatedOutside;
+    has_images_becoming_orphans = cfg.hasImagesBecomingOrphans;
+    has_images_recursives = cfg.hasImagesRecursives;
+    cat_nav = cfg.catNav;
+    album_id = cfg.albumId;
+    parent_album = cfg.parentAlbum;
+    default_parent_album = cfg.defaultParentAlbum;
+    album_name = cfg.albumName;
+    nb_sub_albums = cfg.nbSubAlbums;
+    pwg_token = cfg.pwgToken;
+    u_delete = cfg.uDelete;
+    is_visible = cfg.isVisible;
+    str_cancel = cfg.strCancel;
+    str_delete_album = cfg.strDeleteAlbum;
+    str_delete_album_and_his_x_subalbums = cfg.strDeleteAlbumAndHisXSubalbums;
+    str_just_now = cfg.strJustNow;
+    str_dont_delete_photos = cfg.strDontDeletePhotos;
+    str_delete_orphans = cfg.strDeleteOrphans;
+    str_delete_all_photos = cfg.strDeleteAllPhotos;
+    str_albums_found = cfg.strAlbumsFound;
+    str_album_found = cfg.strAlbumFound;
+    str_result_limit = cfg.strResultLimit;
+    str_orphan = cfg.strOrphan;
+    str_no_search_in_progress = cfg.strNoSearchInProgress;
+    str_already_in_related_cats = cfg.strAlreadyInRelatedCats;
+    str_album_comment_allow = cfg.strAlbumCommentAllow;
+    str_album_comment_disallow = cfg.strAlbumCommentDisallow;
+    str_root = cfg.strRoot;
+
     activateCommentDropdown();
     checkAlbumLock();
 
@@ -488,7 +527,7 @@ _docReady( function () {
             desc_modal.style.display = 'none';
         }
     });
-});
+}
 
 function checkAlbumLock() {
     if (is_visible == "true") {
@@ -593,3 +632,5 @@ function activateCommentDropdown() {
         }
     });
 }
+
+initModule(init);

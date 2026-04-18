@@ -43,6 +43,7 @@ const adminModules = [
   'batchManagerGlobal',
   'batch_manager_unit',
   'photos_add_applications',
+  'photos_add_direct',
 ];
 
 const input = {};

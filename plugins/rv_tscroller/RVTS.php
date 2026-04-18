@@ -110,17 +110,11 @@ final class RVTS
         $my_base_name      = basename(__DIR__);
         $ajax_loader_image = functions_url::get_root_url() . "plugins/{$my_base_name}/ajax-loader.gif";
 
-        $template->func_combine_script([
-            'id'      => $my_base_name . '_cats',
-            'load'    => 'async',
-            'path'    => 'plugins/' . $my_base_name . '/rv_tscroller.js',
-            'version' => RVTS_VERSION,
-        ]);
-
         $next                = $startcat + $per_page;
         $ajax_url_0          = ord($ajax_url_model[0]);
         $ajax_url_rest       = addcslashes(substr($ajax_url_model, 1), "'\\</");
         $ajax_loader_img_js  = json_encode($ajax_loader_image);
+        $js_path             = functions_url::get_root_url() . "plugins/{$my_base_name}/rv_tscroller.js";
 
         $template->block_footer_script(
             null,
@@ -134,6 +128,10 @@ final class RVTS
                     total: {$total},
                     ajaxLoaderImage: {$ajax_loader_img_js}
                 };
+                </script>
+                <script type="module">
+                import { initRVTS_CATS } from '{$js_path}';
+                if (window.RVTS_CATS) initRVTS_CATS(window.RVTS_CATS);
                 </script>
                 JS
         );
@@ -165,12 +163,6 @@ final class RVTS
 
         $my_base_name = basename(__DIR__);
         $ajax_loader_image = functions_url::get_root_url() . "plugins/{$my_base_name}/ajax-loader.gif";
-        $template->func_combine_script([
-            'id' => $my_base_name,
-            'load' => 'async',
-            'path' => 'plugins/' . $my_base_name . '/rv_tscroller.js',
-            'version' => RVTS_VERSION,
-        ]);
         $start = (int) $page['start'];
         $per_page = $page['nb_image_page'];
         $moreMsg = 'See the remaining %d photos';
@@ -191,6 +183,7 @@ final class RVTS
         $moreMsg_js = json_encode($moreMsg);
         $prevMsg_js = json_encode($prevMsg);
         $ajax_loader_image_js = json_encode($ajax_loader_image);
+        $js_path = functions_url::get_root_url() . "plugins/{$my_base_name}/rv_tscroller.js";
 
         $template->block_footer_script(
             null,
@@ -208,6 +201,10 @@ final class RVTS
                     ajaxLoaderImage: {$ajax_loader_image_js}
                 };
                 document.querySelector('.navigationBar') && (document.querySelector('.navigationBar').style.display = 'none');
+                </script>
+                <script type="module">
+                import { initRVTS } from '{$js_path}';
+                if (window.RVTS) initRVTS(window.RVTS);
                 </script>
                 JS
         );
@@ -227,28 +224,7 @@ final class RVTS
 
     public static function on_end_index(): void
     {
-        global $template;
-        $req = null;
-
-        foreach ($template->scriptLoader->get_all() as $script) {
-            if ($script->load_mode == 2 &&
-                ! $script->is_remote() &&
-                count($script->precedents) == 0
-            ) {
-                $req = $script->id;
-            }
-        }
-
-        if ($req != null) {
-            $my_base_name = basename(__DIR__);
-            $template->func_combine_script([
-                'id' => $my_base_name,
-                'load' => 'async',
-                'path' => 'plugins/' . $my_base_name . '/rv_tscroller.js',
-                'require' => $req,
-                'version' => RVTS_VERSION,
-            ]);
-        }
-
+        // If there are no items or all items are loaded, RVTS is not defined
+        // so there's nothing for rv_tscroller.js to do. No need to load it.
     }
 }

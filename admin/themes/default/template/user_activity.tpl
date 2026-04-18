@@ -5,77 +5,7 @@
 <script type="module" src="admin/themes/default/js/dist/{$vite_user_activity}"></script>
 {/if}
 
-<script id="pwg-page-data" type="application/json">
-{
-  "usersServerKey": "{$CACHE_KEYS.users|escape:'html'}",
-  "usersServerId": "{$CACHE_KEYS._hash|escape:'html'}",
-  "rootUrl": "{$ROOT_URL|escape:'html'}",
-  "usersKey": "{'Users'|translate|escape:'html'}",
-  "nbUsers": {$nb_users},
-  "actionTypes": {
-    "add": "{'add'|translate|escape:'html'}",
-    "delete": "{'deletion'|translate|escape:'html'}",
-    "move": "{'move'|translate|escape:'html'}",
-    "edit": "{'edit'|translate|escape:'html'}",
-    "login": "{'login'|translate|escape:'html'}",
-    "logout": "{'logout'|translate|escape:'html'}"
-  },
-  "actionInfos": {
-    "album": {
-      "added": "{'%d album added'|translate|escape:'html'}",
-      "deleted": "{'%d album deleted'|translate|escape:'html'}",
-      "edited": "{'%d album edited'|translate|escape:'html'}",
-      "moved": "{'%d album moved'|translate|escape:'html'}",
-      "addedPlural": "{'%d albums added'|translate|escape:'html'}",
-      "deletedPlural": "{'%d albums deleted'|translate|escape:'html'}",
-      "editedPlural": "{'%d albums edited'|translate|escape:'html'}",
-      "movedPlural": "{'%d albums moved'|translate|escape:'html'}"
-    },
-    "user": {
-      "added": "{'%d user added'|translate|escape:'html'}",
-      "deleted": "{'%d user deleted'|translate|escape:'html'}",
-      "edited": "{'%d user edited'|translate|escape:'html'}",
-      "loggedIn": "{'%d user logged in'|translate|escape:'html'}",
-      "loggedOut": "{'%d user logged out'|translate|escape:'html'}",
-      "addedPlural": "{'%d users added'|translate|escape:'html'}",
-      "deletedPlural": "{'%d users deleted'|translate|escape:'html'}",
-      "editedPlural": "{'%d users edited'|translate|escape:'html'}",
-      "loggedInPlural": "{'%d users logged in'|translate|escape:'html'}",
-      "loggedOutPlural": "{'%d users logged out'|translate|escape:'html'}"
-    },
-    "photo": {
-      "added": "{'%d photo added'|translate|escape:'html'}",
-      "deleted": "{'%d photo deleted'|translate|escape:'html'}",
-      "edited": "{'%d photo edited'|translate|escape:'html'}",
-      "moved": "{'%d photo moved'|translate|escape:'html'}",
-      "addedPlural": "{'%d photos added'|translate|escape:'html'}",
-      "deletedPlural": "{'%d photos deleted'|translate|escape:'html'}",
-      "editedPlural": "{'%d photos edited'|translate|escape:'html'}",
-      "movedPlural": "{'%d photos moved'|translate|escape:'html'}"
-    },
-    "group": {
-      "added": "{'%d group added'|translate|escape:'html'}",
-      "deleted": "{'%d group deleted'|translate|escape:'html'}",
-      "edited": "{'%d group edited'|translate|escape:'html'}",
-      "moved": "{'%d group moved'|translate|escape:'html'}",
-      "addedPlural": "{'%d groups added'|translate|escape:'html'}",
-      "deletedPlural": "{'%d groups deleted'|translate|escape:'html'}",
-      "editedPlural": "{'%d groups edited'|translate|escape:'html'}",
-      "movedPlural": "{'%d groups moved'|translate|escape:'html'}"
-    },
-    "tag": {
-      "added": "{'%d tag added'|translate|escape:'html'}",
-      "deleted": "{'%d tag deleted'|translate|escape:'html'}",
-      "edited": "{'%d tag edited'|translate|escape:'html'}",
-      "moved": "{'%d tag moved'|translate|escape:'html'}",
-      "addedPlural": "{'%d tags added'|translate|escape:'html'}",
-      "deletedPlural": "{'%d tags deleted'|translate|escape:'html'}",
-      "editedPlural": "{'%d tags edited'|translate|escape:'html'}",
-      "movedPlural": "{'%d tags moved'|translate|escape:'html'}"
-    }
-  }
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 <div class="container">
 

@@ -1,8 +1,8 @@
 {include file='inc/colorbox.inc.tpl'}
 
-{footer_script}<script>
-  GLightbox({ selector: '.illustration a' });
-</script>{/footer_script}
+{if $vite_photos_add_applications}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_photos_add_applications}"></script>
+{/if}
 
 {html_head}
 <style>

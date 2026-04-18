@@ -1,5 +1,6 @@
 import { pwgConfirm } from './pwgConfirm.js';
 import tippy from 'tippy.js';
+import { set_up_popin, linked_albums_open, linked_albums_close, linked_albums_search } from './album_selector.js';
 
 const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 _docReady( function () {

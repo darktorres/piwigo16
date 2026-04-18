@@ -19,6 +19,7 @@ const adminModules = [
   'maintenance',
   'maintenance_env',
   'cat_list',
+  'cat_search',
   'helpPopin',
   'history',
   'plugins_installated',

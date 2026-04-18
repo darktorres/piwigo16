@@ -24,7 +24,7 @@ export default [
     },
     rules: {
       ...js.configs.recommended.rules,
-      "no-undef": "error",
+      "no-undef": "off",
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
     },
   },

@@ -1,20 +1,6 @@
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
-<script id="pwg-page-data" type="application/json">
-{
-  "confirm_msg": "{"Yes, I am sure"|translate|escape:'html'}",
-  "cancel_msg": "{"No, I have changed my mind"|translate|escape:'html'}",
-  "no_time_elapsed": "{"right now"|translate|escape:'html'}",
-  "unit_MB": "{"%s MB"|translate|escape:'html'}",
-  "pwg_token": "{$pwg_token|escape:'html'}",
-  "str_gallery_tip": "{"A locked gallery is only visible to administrators"|translate|escape:'html'}",
-  "str_lock_unlock_title": "{if isset($U_MAINT_LOCK_GALLERY)}{"Are you sure you want to lock the gallery?"|translate|escape:'html'}{else}{"Are you sure you want to unlock the gallery?"|translate|escape:'html'}{/if}",
-  "str_purge_detail": "{"Purge history detail"|translate|escape:'html'}",
-  "str_purge_summary": "{"Purge history summary"|translate|escape:'html'}",
-  "str_purge_search": "{"Purge search history"|translate|escape:'html'}",
-  "str_delete_all_sizes": "{"Are you sure you want to delete all sizes?"|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_maintenance}
 <script type="module" src="admin/themes/default/js/dist/{$vite_maintenance}"></script>

@@ -359,6 +359,25 @@ $advanced_features = functions_plugins::trigger_change(
 
 $template->assign('advanced_features', $advanced_features);
 
+$lock_unlock_title = isset($conf->gallery_locked) && $conf->gallery_locked
+    ? functions::l10n('Are you sure you want to unlock the gallery?')
+    : functions::l10n('Are you sure you want to lock the gallery?');
+
+$page_data = [
+    'confirm_msg' => functions::l10n('Yes, I am sure'),
+    'cancel_msg' => functions::l10n('No, I have changed my mind'),
+    'no_time_elapsed' => functions::l10n('right now'),
+    'unit_MB' => functions::l10n('%s MB'),
+    'pwg_token' => $pwg_token,
+    'str_gallery_tip' => functions::l10n('A locked gallery is only visible to administrators'),
+    'str_lock_unlock_title' => $lock_unlock_title,
+    'str_purge_detail' => functions::l10n('Purge history detail'),
+    'str_purge_summary' => functions::l10n('Purge history summary'),
+    'str_purge_search' => functions::l10n('Purge search history'),
+    'str_delete_all_sizes' => functions::l10n('Are you sure you want to delete all sizes?'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+

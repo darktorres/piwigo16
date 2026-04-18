@@ -298,4 +298,7 @@ $template->assign('PWG_TOKEN', functions::get_pwg_token());
 functions_plugins::trigger_notify('loc_end_cat_modify');
 
 //----------------------------------------------------------- sending html code
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['cat_modify', 'pwgConfirm']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'album_properties');

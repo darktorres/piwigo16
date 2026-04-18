@@ -2,18 +2,12 @@
 {include file='inc/colorbox.inc.tpl' load_mode='footer'}
 {include file='inc/add_album.inc.tpl' load_mode='async'}
 
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-
-{combine_script id='nouislider' load='async' path='node_modules/nouislider/dist/nouislider.min.js'}
 {combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
-{combine_script id='doubleSlider' load='async' require='nouislider' path='admin/themes/default/js/doubleSlider.js'}
-
-{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
-
-{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-{combine_script id='batchManagerGlobal' load='async' require='datepicker,addAlbum,doubleSlider,glightbox' path='admin/themes/default/js/batchManagerGlobal.js'}
+{if $vite_batchManagerGlobal}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_batchManagerGlobal}"></script>
+{/if}
 
 {footer_script}<script>
   window.batchManagerConfig = {

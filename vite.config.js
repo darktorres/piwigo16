@@ -14,6 +14,8 @@ const adminModules = [
   'addAlbum',
   'datepicker',
   'doubleSlider',
+  'album_selector',
+  'admin',
   'maintenance',
   'maintenance_env',
   'cat_list',
@@ -22,6 +24,15 @@ const adminModules = [
   'plugins_installated',
   'plugins_new',
   'picture_formats',
+  'stats',
+  'group_list',
+  'cat_modify',
+  'picture_coi',
+  'picture_modify',
+  'tags',
+  'user_list',
+  'albums',
+  'batchManagerGlobal',
 ];
 
 const input = {};

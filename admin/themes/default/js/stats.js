@@ -1,9 +1,16 @@
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+import Chart from 'chart.js';
+import moment from 'moment';
+
+const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+
+const configEl = document.getElementById('pwg-page-data');
+const cfg = configEl ? JSON.parse(configEl.textContent) : {};
+
 /*-------
 Data Get
 -------*/
-var dataEl = document.getElementById("data");
-data = {};
+const dataEl = document.getElementById("data");
+const data = {};
 data["hours"] = dataEl ? JSON.parse(dataEl.dataset.hours || 'null') : null;
 data["days"] = dataEl ? JSON.parse(dataEl.dataset.days || 'null') : null;
 data["months"] = dataEl ? JSON.parse(dataEl.dataset.months || 'null') : null;
@@ -11,19 +18,19 @@ data["years"] = dataEl ? JSON.parse(dataEl.dataset.years || 'null') : null;
 data["compare-years"] = dataEl ? JSON.parse(dataEl.dataset.compareYears || 'null') : null;
 data["month-stats"] = dataEl ? JSON.parse(dataEl.dataset.monthStats || 'null') : null;
 
-data_unit = {
+const data_unit = {
     hours: "day",
     days: "month",
     months: "year",
     years: "year",
 };
 
-compareMode = false;
+let compareMode = false;
 
 /*-------
 Creating graph
 -------*/
-var ctx = document.getElementById("stat-graph").getContext("2d");
+const ctx = document.getElementById("stat-graph").getContext("2d");
 //Create the gradient under the curve
 function gradient(r, g, b) {
     let gradient = ctx.createLinearGradient(0, 400, 0, 0);
@@ -40,13 +47,13 @@ Chart.defaults.global.defaultFontColor = "#888";
 Chart.defaults.global.tooltips.intersect = false;
 Chart.defaults.global.legend.onClick = null;
 
-var statGraph = new Chart(ctx, {
+const statGraph = new Chart(ctx, {
     type: "line",
     maintainAspectRatio: false,
 });
 
 //Line options
-var displayOptions = {
+const displayOptions = {
     backgroundColor: gradient(255, 119, 0),
     borderColor: "rgba(255,119,0,1)",
     lineTension: 0.2,

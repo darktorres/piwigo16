@@ -1,6 +1,8 @@
-{combine_script id='cropperjs' load='footer' path='node_modules/cropperjs/dist/cropper.min.js'}
 {combine_css path='node_modules/cropperjs/dist/cropper.min.css'}
-{combine_script id='picture_coi' load='footer' require='cropperjs' path='admin/themes/default/js/picture_coi.js'}
+
+{if $vite_picture_coi}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_picture_coi}"></script>
+{/if}
 
 <form method="post">
 

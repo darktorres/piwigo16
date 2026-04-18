@@ -253,4 +253,5 @@ functions_plugins::trigger_notify('loc_end_element_set_unit');
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
 
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'batch_manager_unit');

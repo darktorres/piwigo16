@@ -1,4 +1,9 @@
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+import { TemporaryState } from './common.js';
+import { pwgConfirm } from './pwgConfirm.js';
+import { UsersCache } from './LocalStorageCache.js';
+import TomSelect from 'tom-select';
+
+const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 const DELAY_FEEDBACK = 3000;
 /*-------
 Group Popin

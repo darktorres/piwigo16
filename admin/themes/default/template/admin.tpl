@@ -1,5 +1,9 @@
-{combine_script id='admin' load='footer' path='admin/themes/default/js/admin.js'}
-{combine_script id='helpPopin' load='footer' path='admin/themes/default/js/helpPopin.js'}
+{if $vite_admin}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_admin}"></script>
+{/if}
+{if $vite_helpPopin}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_helpPopin}"></script>
+{/if}
 
 <div id="menubar" data-active-menu="{$ACTIVE_MENU}">
   <div id="adminHome"><a href="{$U_ADMIN}" class="admin-main"><i class="icon-television"></i>

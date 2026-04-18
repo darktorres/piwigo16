@@ -117,4 +117,7 @@ $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Groups') . ' <span class=
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
 
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['group_list', 'pwgConfirm']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'group_list');

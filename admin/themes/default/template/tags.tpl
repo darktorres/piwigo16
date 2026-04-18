@@ -36,10 +36,11 @@
   });
 </script>{/footer_script}
 
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-{combine_script id='tags' load='footer' path='admin/themes/default/js/tags.js'}
+
+{if $vite_tags}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_tags}"></script>
+{/if}
 {footer_script}<script>
   if (!document.cookie.match(/(?:^|;)\s*pwg_tags_per_page=/)) {
     document.cookie = 'pwg_tags_per_page=100; path=/; SameSite=Lax';

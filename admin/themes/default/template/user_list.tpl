@@ -1,13 +1,5 @@
-{combine_script id='common' load='header' path='admin/themes/default/js/common.js'}
-
-{combine_script id='tom-select' load='header' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
-
-{combine_script id='nouislider' load='header' path='node_modules/nouislider/dist/nouislider.min.js'}
 {combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
-
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
-
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 {footer_script}<script>
@@ -200,8 +192,9 @@
   });
 </script>{/footer_script}
 
-{combine_script id='user_list' load='footer' path='admin/themes/default/js/user_list.js'}
-
+{if $vite_user_list}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_user_list}"></script>
+{/if}
 
 <div class="selection-mode-group-manager" style="right:30px">
   <label class="switch">

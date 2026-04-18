@@ -1,4 +1,9 @@
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+import { TemporaryState } from './common.js';
+import { pwgConfirm } from './pwgConfirm.js';
+import TomSelect from 'tom-select';
+import noUiSlider from 'nouislider';
+
+const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
 const color_icons = [
     "icon-red",
     "icon-blue",

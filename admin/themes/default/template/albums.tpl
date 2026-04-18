@@ -22,10 +22,6 @@
   var delay_autoOpen = {$delay_before_autoOpen}
 </script>{/footer_script}
 
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_css path="node_modules/jqtree/jqtree.css"}
-{combine_script id='pwgtree' load='footer' path='admin/themes/default/js/PwgTree.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 {footer_script}<script>
@@ -51,7 +47,9 @@
   const tiptip_locked_album = "{'Locked album'|translate|escape:javascript}";
 </script>{/footer_script}
 
-{combine_script id='albums' load='footer' path='admin/themes/default/js/albums.js'}
+{if $vite_albums}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_albums}"></script>
+{/if}
 
 <div class="cat-move-order-popin">
   <div class="order-popin-container">

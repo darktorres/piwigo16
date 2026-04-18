@@ -1,13 +1,8 @@
-/**
- * Bootstrap utility for admin page modules
- * Reads config from JSON island and calls init function when DOM is ready
- */
-
-export function initModule(initFn) {
+export function initModule(initFn: (cfg: Record<string, unknown>) => void): void {
     const el = document.getElementById('pwg-page-data');
     if (!el) return;
 
-    const cfg = JSON.parse(el.textContent);
+    const cfg = JSON.parse(el.textContent!) as Record<string, unknown>;
 
     if (document.readyState !== 'loading') {
         initFn(cfg);

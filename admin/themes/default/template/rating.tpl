@@ -1,43 +1,14 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
-
-{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
+{if $vite_rating}
+<script type="module" src="/admin/themes/default/js/dist/{$vite_rating}"></script>
+{/if}
+
 {footer_script}<script>
-  {* <!-- CATEGORIES --> *}
-  var categoriesCache = new CategoriesCache({
-    serverKey: '{$CACHE_KEYS.categories}',
-    serverId: '{$CACHE_KEYS._hash}',
-    rootUrl: '{$ROOT_URL}'
-  });
-
-  categoriesCache.selectize(document.querySelectorAll('[data-selectize=categories]'));
-
-  var removeAlbumFilter = document.getElementById("removeAlbumFilter");
-  if (removeAlbumFilter) {
-    removeAlbumFilter.addEventListener('click', function(event) {
-      event.preventDefault();
-      var catSelect = document.querySelector("select[name=cat]");
-      if (catSelect && catSelect.tomselect) catSelect.tomselect.setValue(null);
-    });
-  }
-
-  function checkCatFilter() {
-    var catSelect = document.querySelector("select[name=cat]");
-    var filterBtn = document.getElementById("removeAlbumFilter");
-    if (!filterBtn) return;
-    filterBtn.style.display = (catSelect && catSelect.value !== "") ? '' : 'none';
-  }
-
-  checkCatFilter();
-  var catSelectEl = document.querySelector("select[name=cat]");
-  if (catSelectEl) catSelectEl.addEventListener('change', function() { checkCatFilter(); });
-
-  document.addEventListener('DOMContentLoaded', function() {
-    var h1 = document.querySelector('h1');
-    if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>{$NB_ELEMENTS}</span>");
-  });
+  window.categoriesServerKey = '{$CACHE_KEYS.categories}';
+  window.categoriesServerId = '{$CACHE_KEYS._hash}';
+  window.rootUrl = '{$ROOT_URL}';
+  window.nbElements = {$NB_ELEMENTS};
 </script>{/footer_script}
 
 <form action="{$F_ACTION}" method="GET" class="filter">
@@ -117,33 +88,5 @@
     </tr>
   {/foreach}{*images*}
 </table>
-{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-{footer_script}<script>
-  function del(node, id, uid, aid) {
-    var trEl = node.closest("tr");
-    var data = { image_id: id, user_id: uid };
-    if (aid) data.anonymous_id = aid;
-
-    var anim = trEl ? trEl.animate([{ldelim}opacity: 1{rdelim}, {ldelim}opacity: 0.4{rdelim}], {ldelim}duration: 1000, fill: 'forwards'{rdelim}) : null;
-    (new PwgWS('{$ROOT_URL|escape:javascript}')).callService(
-      'pwg.rates.delete', data, {
-        method: 'POST',
-        onFailure: function(num, text) {
-          if (anim) { anim.cancel(); }
-          if (trEl) trEl.style.opacity = '1';
-          alert(num + " " + text);
-        },
-        onSuccess: function(result) {
-          if (result) {
-            if (trEl) trEl.remove();
-          } else {
-            alert(result);
-          }
-        }
-      }
-    );
-    return false;
-  }
-</script>{/footer_script}
 
 {if !empty($navbar)}{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}

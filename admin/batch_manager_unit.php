@@ -241,9 +241,19 @@ if (count($page['cat_elements_id']) > 0) {
         );
     }
 
+    $cache_keys = functions_admin::get_admin_client_cache_keys(['tags']);
+    $page_data = [
+        'tagsServerKey' => $cache_keys['tags'],
+        'tagsCacheServerId' => $cache_keys['_hash'],
+        'rootUrl' => functions_url::get_root_url(),
+        'strCreate' => functions::l10n('Create'),
+        'strCancel' => functions::l10n('Cancel'),
+    ];
+
     $template->assign([
         'ELEMENT_IDS' => implode(',', $element_ids),
-        'CACHE_KEYS' => functions_admin::get_admin_client_cache_keys(['tags']),
+        'CACHE_KEYS' => $cache_keys,
+        'page_data_json' => json_encode($page_data),
     ]);
 }
 

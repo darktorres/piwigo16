@@ -4,15 +4,7 @@
 
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-<script id="pwg-page-data" type="application/json">
-{
-  "tagsServerKey": "{$CACHE_KEYS.tags|default:''|escape:'html'}",
-  "tagsCacheServerId": "{$CACHE_KEYS._hash|default:''|escape:'html'}",
-  "rootUrl": "{$ROOT_URL|escape:'html'}",
-  "strCreate": "{'Create'|translate|escape:'html'}",
-  "strCancel": "{'Cancel'|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_batch_manager_unit}
 <script type="module" src="admin/themes/default/js/dist/{$vite_batch_manager_unit}"></script>

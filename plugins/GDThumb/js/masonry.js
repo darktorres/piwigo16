@@ -5,12 +5,11 @@
  * Existing item positions are never touched — new items only append to column bottoms.
  * Upward RVTS scroll is disabled (preventDefault, items dropped).
  */
-const GDMasonry = (function () {
-    var _colWidth = 300;
-    var _gap = 4;
-    var _colHeights = [];
-    var _ncols = 0;
-    var _c = null; // #thumbnails container (DOM element)
+var _colWidth = 300;
+var _gap = 4;
+var _colHeights = [];
+var _ncols = 0;
+var _c = null;
 
     function _colCount() {
         return Math.max(1, Math.floor((_c.clientWidth + _gap) / (_colWidth + _gap)));
@@ -120,7 +119,4 @@ const GDMasonry = (function () {
         _setHeight();
     }
 
-    return { init: init, layout: layout, addItems: addItems, positionNew: positionNew };
-})();
-
-export default GDMasonry;
+export const GDMasonry = { init: init, layout: layout, addItems: addItems, positionNew: positionNew };

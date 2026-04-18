@@ -1,37 +1,4 @@
-<script id="pwg-page-data" type="application/json">
-{
-  "userName": "{$USER_NAME|escape:'html'}",
-  "userId": {$USER_ID},
-  "imageId": {if isset($IMAGE_ID)}"{$IMAGE_ID|escape:'html'}"{else}""{/if},
-  "ip": {if isset($IP)}"{$IP|escape:'html'}"{else}""{/if},
-  "apiMethod": "{$API_METHOD|escape:'html'}",
-  "guestId": {$guest_id},
-  "strDwld": "{'Downloaded'|translate|escape:'html'}",
-  "strMostVisited": "{'Most visited'|translate|escape:'html'}",
-  "strBestRated": "{'Best rated'|translate|escape:'html'}",
-  "strList": "{'Random photo'|translate|escape:'html'}",
-  "strFavorites": "{'Your favorites'|translate|escape:'html'}",
-  "strRecentCats": "{'Recent albums'|translate|escape:'html'}",
-  "strRecentPics": "{'Recent photos'|translate|escape:'html'}",
-  "strMemories": "{'Memories'|translate|escape:'html'}",
-  "strNoLongerExistPhoto": "{'This photo no longer exists'|translate|escape:'html'}",
-  "strTags": "{'Tags'|translate|escape:'html'}",
-  "unitMb": "{"%s MB"|translate|escape:'html'}",
-  "strGuest": "{'guest'|translate|escape:'html'}",
-  "strContactForm": "{'Contact Form'|translate|escape:'html'}",
-  "strEditImg": "{'Edit photo'|translate|escape:'html'}",
-  "strSearchDetails": {
-    "allwords": "{'Search for words'|translate|escape:'html'}",
-    "date_posted": "{'Post date'|translate|escape:'html'}",
-    "tags": "{'Tags'|translate|escape:'html'}",
-    "cat": "{'Album'|translate|escape:'html'}",
-    "author": "{'Author'|translate|escape:'html'}",
-    "added_by": "{'Added by'|translate|escape:'html'}",
-    "filetypes": "{'File type'|translate|escape:'html'}"
-  },
-  "strAndMore": "{'and %d more'|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {include file='inc/datepicker.inc.tpl'}
 

@@ -506,7 +506,7 @@ function duplicateTag(id, name) {
  Selection mode
 -------*/
 var selected = [];
-maxItemDisplayed = 5;
+var maxItemDisplayed = 5;
 
 let toggleSelectionEl = document.getElementById("toggleSelectionMode");
 if (toggleSelectionEl) {
@@ -598,11 +598,11 @@ function removeSelectedItem(id) {
 
             if (selected.length >= maxItemDisplayed) {
                 let i = 0;
-                isNotCreate = true;
+                var isNotCreate = true;
                 while (i < selected.length && isNotCreate) {
                     if (document.querySelector(".selection-mode-tag .tag-list div[data-id=\"" + selected[i] + "\"]") === null) {
                         isNotCreate = false;
-                        indexOfTag = dataTags.findIndex((tag) => tag.id == selected[i]);
+                        var indexOfTag = dataTags.findIndex((tag) => tag.id == selected[i]);
                         createSelectionItem(selected[i], dataTags[indexOfTag].name);
                     }
                     i++;
@@ -640,10 +640,10 @@ function updateMergeItems() {
     }
 }
 
-mergeOption = false;
+var mergeOption = false;
 
 function updateSelectionContent() {
-    number = selected.length;
+    var number = selected.length;
     let nothingSelected = document.getElementById("nothing-selected");
     let selectionMode = document.querySelector(".selection-mode-tag");
     let mergeBlock = document.getElementById("MergeOptionsBlock");

@@ -23,6 +23,9 @@ if (! defined('PHOTOS_ADD_BASE_URL')) {
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
 
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['photos_add_applications']);
+
 $template->assign('ADMIN_PAGE_TITLE', functions::l10n('Upload Photos'));
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');

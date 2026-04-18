@@ -55,7 +55,7 @@
 {combine_css path=$GDThumb.GDTHUMB_ROOT|cat:"/css/gdthumb.css"}
 
 {footer_script}<script type="module">
-  import { GDThumb } from '{$GDThumb.GDTHUMB_ROOT}/js/gdthumb.js';
+  import { GDThumb } from './{$GDThumb.GDTHUMB_ROOT}/js/gdthumb.js';
   {assign var="has_cats" value="true" scope=root nocache}
   GDThumb.setup('{$GDThumb.method}', {$GDThumb.height}, {$GDThumb.margin});
 </script>{/footer_script}

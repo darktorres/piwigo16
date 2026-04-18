@@ -50,6 +50,7 @@ const adminModules = [
   'user_activity',
   'menubar',
   'configuration',
+  'intro',
 ];
 
 const input = {};

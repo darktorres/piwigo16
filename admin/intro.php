@@ -440,6 +440,9 @@ $template->assign('STORAGE_CHART_DATA', $data_storage);
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
 
+require_once 'inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['intro']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'intro');
 
 // Check integrity

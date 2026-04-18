@@ -1,4 +1,4 @@
-{combine_script id='dataTables' load='footer' path='node_modules/datatables.net/js/dataTables.js'}
+
 {combine_css path='node_modules/datatables.net-dt/css/dataTables.dataTables.css'}
 {html_style}<style>
 

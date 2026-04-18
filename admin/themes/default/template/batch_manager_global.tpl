@@ -5,62 +5,7 @@
 {combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-<script id="pwg-page-data" type="application/json">
-{
-  "langCancel": "{'Cancel'|translate|escape:'html'}",
-  "deleteProgressMessage": "{'Deletion in progress'|translate|escape:'html'}",
-  "syncProgressMessage": "{'Synchronization in progress'|translate|escape:'html'}",
-  "areYouSure": "{'Are you sure?'|translate|escape:'html'}",
-  "generateMsg": "{'Generate multiple size images'|translate|escape:'html'}",
-  "tagCreate": "{'Create'|translate|escape:'html'}",
-  "nbThumbsPage": {$nb_thumbs_page},
-  "nbThumbsSet": {$nb_thumbs_set},
-  "applyOnDetailsPattern": "{'on the %d selected photos'|translate|escape:'html'}",
-  "allElements": [{if !empty($all_elements)}{$all_elements|join:','}{/if}],
-  "selectedMessagePattern": "{'%d of %d photos selected'|translate|escape:'html'}",
-  "selectedMessageNone": "{'No photo selected, %d photos in current set'|translate|escape:'html'}",
-  "selectedMessageAll": "{'All %d photos are selected'|translate|escape:'html'}",
-  "associatedCategories": {$associated_categories|json_encode},
-  "tagsServerKey": "{$CACHE_KEYS.tags|escape:'html'}",
-  "categoriesServerKey": "{$CACHE_KEYS.categories|escape:'html'}",
-  "cacheServerId": "{$CACHE_KEYS._hash|escape:'html'}",
-  "rootUrl": "{$ROOT_URL|escape:'html'}",
-  "sliders": {
-    "widths": {
-      "values": [{$dimensions.widths}],
-      "selected": {
-        "min": {$dimensions.selected.min_width},
-        "max": {$dimensions.selected.max_width}
-      },
-      "text": "{'between %d and %d pixels'|translate|escape:'html'}"
-    },
-    "heights": {
-      "values": [{$dimensions.heights}],
-      "selected": {
-        "min": {$dimensions.selected.min_height},
-        "max": {$dimensions.selected.max_height}
-      },
-      "text": "{'between %d and %d pixels'|translate|escape:'html'}"
-    },
-    "ratios": {
-      "values": [{$dimensions.ratios}],
-      "selected": {
-        "min": {$dimensions.selected.min_ratio},
-        "max": {$dimensions.selected.max_ratio}
-      },
-      "text": "{'between %.2f and %.2f'|translate|escape:'html'}"
-    },
-    "filesizes": {
-      "values": [{$filesize.list}],
-      "selected": {
-        "min": {$filesize.selected.min},
-        "max": {$filesize.selected.max}
-      },
-      "text": "{'between %s and %s MB'|translate|escape:'html'}"
-    }
-  }
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_batchManagerGlobal}
 <script type="module" src="admin/themes/default/js/dist/{$vite_batchManagerGlobal}"></script>

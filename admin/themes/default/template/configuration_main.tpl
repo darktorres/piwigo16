@@ -3,12 +3,7 @@
 <script type="module" src="admin/themes/default/js/dist/{$vite_configuration}"></script>
 {/if}
 
-<script id="pwg-page-data" type="application/json">
-{
-  "isOrderByCustom": {if isset($ORDER_BY_IS_CUSTOM)}true{else}false{/if},
-  "maxOrderByFields": {(($main.order_by_options|count) + 1) / 2 | intval}
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_configuration_main}
 <script type="module" src="admin/themes/default/js/dist/{$vite_configuration_main}"></script>

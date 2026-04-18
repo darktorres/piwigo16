@@ -393,6 +393,12 @@ switch ($page['section']) {
             );
         }
 
+        $page_data = [
+            'isOrderByCustom' => isset($conf->order_by_custom) || isset($conf->order_by_inside_category_custom),
+            'maxOrderByFields' => (int)ceil((count($sort_fields) + 1) / 2),
+        ];
+        $template->assign('page_data_json', json_encode($page_data));
+
         break;
 
     case 'comments':

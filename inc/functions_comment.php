@@ -499,7 +499,7 @@ final class functions_comment
 
         [$author_id] = $conf->sql_backend::pwg_db_fetch_row($result);
 
-        return $author_id;
+        return (int) $author_id;
     }
 
     /**

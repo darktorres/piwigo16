@@ -1,35 +1,34 @@
+import { initModule } from './moduleInit.js';
 import { set_up_popin, linked_albums_open, linked_albums_close, linked_albums_search } from './album_selector.js';
 import { CategoriesCache, TagsCache } from './LocalStorageCache.js';
 import { pwgDatepicker } from './datepicker.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import GLightbox from 'glightbox';
 
-const configEl = document.getElementById('pwg-page-data');
-const cfg = configEl ? JSON.parse(configEl.textContent) : {};
+export function init(cfg) {
+    const { CACHE_KEYS, ROOT_URL, str_create, str_cancel, str_are_you_sure, str_yes_delete, str_no_change, url_delete, str_albums_found, str_album_found, str_result_limit, str_orphan, str_no_search_in_progress, related_categories_ids, str_already_in_related_cats } = cfg;
 
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
-_docReady( function () {
     var categoriesCache = new CategoriesCache({
-      serverKey: cfg.CACHE_KEYS?.categories || '',
-      serverId: cfg.CACHE_KEYS?._hash || '',
-      rootUrl: cfg.ROOT_URL || ''
+      serverKey: CACHE_KEYS?.categories || '',
+      serverId: CACHE_KEYS?._hash || '',
+      rootUrl: ROOT_URL || ''
     });
     categoriesCache.selectize(document.querySelectorAll('[data-selectize=categories]'));
 
     var tagsCache = new TagsCache({
-      serverKey: cfg.CACHE_KEYS?.tags || '',
-      serverId: cfg.CACHE_KEYS?._hash || '',
-      rootUrl: cfg.ROOT_URL || ''
+      serverKey: CACHE_KEYS?.tags || '',
+      serverId: CACHE_KEYS?._hash || '',
+      rootUrl: ROOT_URL || ''
     });
     tagsCache.selectize(document.querySelectorAll('[data-selectize=tags]'), {
       lang: {
-        'Add': window.str_create || 'Create'
+        'Add': str_create || 'Create'
       }
     });
 
     pwgDatepicker(document.querySelectorAll('[data-datepicker]'), {
       showTimepicker: true,
-      cancelButton: window.str_cancel || 'Cancel'
+      cancelButton: str_cancel || 'Cancel'
     });
 
     GLightbox({ selector: 'a.preview-box' });
@@ -38,17 +37,17 @@ _docReady( function () {
     if (deleteBtn) {
       deleteBtn.addEventListener('click', function() {
         pwgConfirm({
-          title: window.str_are_you_sure || 'Are you sure?',
+          title: str_are_you_sure || 'Are you sure?',
           buttons: {
             confirm: {
-              text: window.str_yes_delete || 'Yes, delete',
+              text: str_yes_delete || 'Yes, delete',
               btnClass: 'btn-red',
               action: function() {
-                window.location.href = (window.url_delete || '').replaceAll('amp;', '');
+                window.location.href = (url_delete || '').replaceAll('amp;', '');
               }
             },
             cancel: {
-              text: window.str_no_change || 'No, I have changed my mind'
+              text: str_no_change || 'No, I have changed my mind'
             }
           }
         });
@@ -134,7 +133,7 @@ _docReady( function () {
             return "Some changes are not registered";
         }
     });
-});
+}
 
 function fill_results(cats) {
     var searchResult = document.getElementById("searchResult");
@@ -265,3 +264,5 @@ function check_related_categories() {
         });
     }
 }
+
+initModule(init);

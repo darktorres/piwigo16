@@ -7,25 +7,22 @@
 <script id="pwg-page-data" type="application/json">
 {
   "CACHE_KEYS": {$CACHE_KEYS|json_encode},
-  "ROOT_URL": "{$ROOT_URL|escape:javascript}"
+  "ROOT_URL": "{$ROOT_URL|escape:'html'}",
+  "str_create": "{'Create'|translate|escape:'html'}",
+  "str_cancel": "{'Cancel'|translate|escape:'html'}",
+  "str_are_you_sure": "{'Are you sure?'|translate|escape:'html'}",
+  "str_yes_delete": "{'Yes, delete'|translate|escape:'html'}",
+  "str_no_change": "{'No, I have changed my mind'|translate|escape:'html'}",
+  "url_delete": "{$U_DELETE|escape:'html'}",
+  "str_albums_found": "{\"<b>%d</b> albums found\"|translate|escape:'html'}",
+  "str_album_found": "{\"<b>1</b> album found\"|translate|escape:'html'}",
+  "str_result_limit": "{\"<b>%d+</b> albums found, try to refine the search\"|translate|escape:'html'}",
+  "str_orphan": "{'This photo is an orphan'|translate|escape:'html'}",
+  "str_no_search_in_progress": "{'No search in progress'|translate|escape:'html'}",
+  "related_categories_ids": {$related_categories_ids|json_encode},
+  "str_already_in_related_cats": "{'This albums is already in related categories list'|translate|escape:'html'}"
 }
 </script>
-
-{footer_script}<script>
-  window.str_create = '{'Create'|translate}';
-  window.str_cancel = '{'Cancel'|translate}';
-  window.str_are_you_sure = '{'Are you sure?'|translate|escape:javascript}';
-  window.str_yes_delete = '{'Yes, delete'|translate|escape:javascript}';
-  window.str_no_change = '{'No, I have changed my mind'|translate|escape:'javascript'}';
-  window.url_delete = '{$U_DELETE}';
-  window.str_albums_found = '{"<b>%d</b> albums found"|translate|escape:javascript}';
-  window.str_album_found = '{"<b>1</b> album found"|translate|escape:javascript}';
-  window.str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|translate|escape:javascript}';
-  window.str_orphan = '{'This photo is an orphan'|translate|escape:javascript}';
-  window.str_no_search_in_progress = '{'No search in progress'|translate|escape:javascript}';
-  window.related_categories_ids = {$related_categories_ids|json_encode};
-  window.str_already_in_related_cats = '{'This albums is already in related categories list'|translate|escape:javascript}';
-</script>{/footer_script}
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 

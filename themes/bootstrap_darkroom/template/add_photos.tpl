@@ -1,4 +1,3 @@
-{footer_script}<script type="module">import { sprintf } from 'admin/themes/default/js/common.js'; window.sprintf = sprintf;</script>{/footer_script}
 {combine_script id='dropzone' load='footer' path='node_modules/dropzone/dist/dropzone.js'}
 
 {combine_css path='node_modules/dropzone/dist/basic.css'}
@@ -8,7 +7,8 @@
 
 {combine_script id='piecon' load='footer' path='node_modules/piecon/piecon.js'}
 
-{footer_script}<script>
+{footer_script}<script type="module">
+  import { sprintf } from 'admin/themes/default/js/common.js';
   var rootUrl = "{get_absolute_root_url()}";
   document.addEventListener('DOMContentLoaded', function() {
     var dz; // populated by Dropzone init below

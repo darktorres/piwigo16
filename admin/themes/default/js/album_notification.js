@@ -1,9 +1,7 @@
+import { initModule } from './moduleInit.js';
 import TomSelect from 'tom-select';
 
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
-
-_docReady(function() {
-  document.addEventListener('DOMContentLoaded', function() {
+export function init(cfg) {
     function checkWhoOptions() {
       var checkedEl = document.querySelector("input[name=who]:checked");
       var option = checkedEl ? checkedEl.value : '';
@@ -42,5 +40,6 @@ _docReady(function() {
         }
       });
     }
-  });
-});
+}
+
+initModule(init);

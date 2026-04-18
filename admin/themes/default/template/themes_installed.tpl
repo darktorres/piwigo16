@@ -1,11 +1,13 @@
 {include file='inc/colorbox.inc.tpl'}
 
-{footer_script}<script>
-  window.str_delete_theme = '{'Are you sure you want to delete this theme?'|translate|escape:'javascript'}';
-  window.str_yes_im_sure = '{"Yes, I am sure"|translate}';
-  window.str_i_changed_my_mind = '{"No, I have changed my mind"|translate|escape:'javascript'}';
-  window.str_delete_theme_msg = '{'Are you sure you want to delete the theme "%s"?'|translate|escape:'javascript'}';
-</script>{/footer_script}
+<script id="pwg-page-data" type="application/json">
+{
+  "strDeleteTheme": "{'Are you sure you want to delete this theme?'|translate|escape:'html'}",
+  "strYesImSure": "{'Yes, I am sure'|translate|escape:'html'}",
+  "strIChangedMyMind": "{'No, I have changed my mind'|translate|escape:'html'}",
+  "strDeleteThemeMsg": "{'Are you sure you want to delete the theme \"%s\"?'|translate|escape:'html'}"
+}
+</script>
 
 {if $vite_themes_installed}
 <script type="module" src="admin/themes/default/js/dist/{$vite_themes_installed}"></script>

@@ -14,30 +14,32 @@
   /* specific to this page, do not move in theme.css */
 </style>{/html_style}
 
-{footer_script}<script>
-  window.formatMode = {if $DISPLAY_FORMATS}true{else}false{/if};
-  window.haveFormatsOriginal = {if $HAVE_FORMATS_ORIGINAL}true{else}false{/if};
-  window.originalImageId = window.haveFormatsOriginal? '{if isset($FORMATS_ORIGINAL_INFO['id'])} {$FORMATS_ORIGINAL_INFO['id']} {else} -1 {/if}' : -1;
-  window.categoriesServerKey = '{$CACHE_KEYS.categories}';
-  window.categoriesServerId = '{$CACHE_KEYS._hash}';
-  window.rootUrl = '{$ROOT_URL}';
-  window.pwg_token = '{$pwg_token}';
-  window.photosUploaded_label = "{'%d photos uploaded'|translate}";
-  window.formatsUploaded_label = "{'%d formats uploaded for %d photos'|translate}";
-  window.batch_Label = "{'Manage this set of %d photos'|translate}";
-  window.albumSummary_label = "{'Album "%s" now contains %d photos'|translate|escape}";
-  window.str_format_warning = "{'Error when trying to detect formats'|translate}";
-  window.str_ok = "{'Ok'|translate}";
-  window.str_format_warning_multiple = "{'There is multiple image in the database with the following names : %s.'|translate}";
-  window.str_format_warning_notFound = "{'No picture found with the following name : %s.'|translate}";
-  window.str_and_X_others = "{'and %d more'|translate}";
-  window.file_ext = "{$file_exts}";
-  window.format_ext = "{$format_ext}";
-  window.chunk_size = {$chunk_size};
-  window.max_file_size = {$max_file_size};
-  window.dropzone_msg = "{'Drop files here or click Add Photos'|translate}";
-  window.str_upload_in_progress = "{'Upload in progress'|translate|escape}";
-</script>{/footer_script}
+<script id="pwg-page-data" type="application/json">
+{
+  "formatMode": {if $DISPLAY_FORMATS}true{else}false{/if},
+  "haveFormatsOriginal": {if $HAVE_FORMATS_ORIGINAL}true{else}false{/if},
+  "originalImageId": {if isset($FORMATS_ORIGINAL_INFO['id'])}"{$FORMATS_ORIGINAL_INFO['id']}"{else}-1{/if},
+  "categoriesServerKey": "{$CACHE_KEYS.categories|escape:'html'}",
+  "categoriesServerId": "{$CACHE_KEYS._hash|escape:'html'}",
+  "rootUrl": "{$ROOT_URL|escape:'html'}",
+  "pwgToken": "{$pwg_token|escape:'html'}",
+  "photosUploadedLabel": "{'%d photos uploaded'|translate|escape:'html'}",
+  "formatsUploadedLabel": "{'%d formats uploaded for %d photos'|translate|escape:'html'}",
+  "batchLabel": "{'Manage this set of %d photos'|translate|escape:'html'}",
+  "albumSummaryLabel": "{'Album \"%s\" now contains %d photos'|translate|escape:'html'}",
+  "strFormatWarning": "{'Error when trying to detect formats'|translate|escape:'html'}",
+  "strOk": "{'Ok'|translate|escape:'html'}",
+  "strFormatWarningMultiple": "{'There is multiple image in the database with the following names : %s.'|translate|escape:'html'}",
+  "strFormatWarningNotFound": "{'No picture found with the following name : %s.'|translate|escape:'html'}",
+  "strAndXOthers": "{'and %d more'|translate|escape:'html'}",
+  "fileExt": "{$file_exts|escape:'html'}",
+  "formatExt": "{$format_ext|escape:'html'}",
+  "chunkSize": {$chunk_size},
+  "maxFileSize": {$max_file_size},
+  "dropzoneMsg": "{'Drop files here or click Add Photos'|translate|escape:'html'}",
+  "strUploadInProgress": "{'Upload in progress'|translate|escape:'html'}"
+}
+</script>
 
 {if $vite_photos_add_direct}
 <script type="module" src="admin/themes/default/js/dist/{$vite_photos_add_direct}"></script>

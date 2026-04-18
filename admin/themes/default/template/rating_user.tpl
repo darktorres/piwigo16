@@ -29,12 +29,15 @@
 		border-width: 2px;
 	}
 </style>{/html_style}
-{footer_script}<script>
-	document.addEventListener('DOMContentLoaded', function() {
-		var h1 = document.querySelector('h1');
-		if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>{$NB_ELEMENTS}</span>");
-	});
-</script>{/footer_script}
+<script id="pwg-page-data" type="application/json">
+{
+  "nbElements": {$NB_ELEMENTS},
+  "rootUrl": "{$ROOT_URL|escape:'html'}",
+  "titleMsg": "{'Are you sure you want to delete the ratings of the user \"%s\"?'|translate|escape:'html'}",
+  "confirmMsg": "{'Yes, I am sure'|translate|escape:'html'}",
+  "cancelMsg": "{'No, I have changed my mind'|translate|escape:'html'}"
+}
+</script>
 
 <form action="{$F_ACTION}" method="GET">
 	<fieldset>
@@ -64,111 +67,9 @@
 		<input type="hidden" name="page" value="rating_user">
 	</fieldset>
 </form>
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='pwgConfirm' load='footer' path='admin/themes/default/js/pwgConfirm.js'}
-{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-{combine_script id='jquery.geoip' load='async' path='admin/themes/default/js/jquery.geoip.js'}
-{footer_script}<script>
-	var oTable = new DataTable('#rateTable', {
-		dom: '<"dtBar"filp>rt<"dtBar"ilp>',
-		pageLength: 100,
-		lengthMenu: [
-			[25, 50, 100, 500, -1],
-			[25, 50, 100, 500, "All"]
-		],
-		order: [],
-		autoWidth: false,
-		columnDefs: [{
-				targets: ["dtc_user"],
-				type: "string"
-			},
-			{
-				targets: ["dtc_date"],
-				orderSequence: ["desc", "asc"],
-				type: "string"
-			},
-			{
-				targets: ["dtc_stat"],
-				orderSequence: ["desc", "asc"],
-				searchable: false,
-				type: "numeric"
-			},
-			{
-				targets: ["dtc_rate"],
-				orderSequence: ["desc", "asc"],
-				searchable: false,
-				type: "html"
-			},
-			{
-				targets: ["dtc_del"],
-				orderable: false,
-				searchable: false,
-				type: "string"
-			}
-		]
-	});
-
-	function uidFromCell(cell) {
-		var tr = cell;
-		while (tr.nodeName != "TR") tr = tr.parentNode;
-		return JSON.parse(tr.dataset.usr);
-	}
-
-	{* -----DELETE----- *}
-	document.addEventListener('DOMContentLoaded', function() {
-		var rateTable = document.getElementById("rateTable");
-		if (rateTable) {
-			rateTable.addEventListener("click", function(e) {
-				var delBtn = e.target.closest(".del");
-				if (!delBtn) return;
-				e.preventDefault();
-				const title_msg  = '{'Are you sure you want to delete the ratings of the user "%s"?'|translate|escape:'javascript'}';
-				const confirm_msg = '{"Yes, I am sure"|translate}';
-				const cancel_msg = "{"No, I have changed my mind"|translate}";
-				let trEl = delBtn.closest("tr");
-				let usr_name = trEl ? (trEl.querySelector(".usr")?.innerHTML ?? '') : '';
-				pwgConfirm({
-						title: title_msg.replace("%s", usr_name),
-						buttons: {
-							confirm: {
-								text: confirm_msg,
-								btnClass: 'btn-red',
-								action: function() {
-									var cell = e.target.parentNode,
-										trEl = cell;
-									while (trEl.nodeName != "TR") trEl = trEl.parentNode;
-									var anim = trEl.animate([{ opacity: 1 }, { opacity: 0.4 }], { duration: 1000, fill: 'forwards' });
-									var data = uidFromCell(cell);
-									(new PwgWS('{$ROOT_URL|escape:javascript}')).callService(
-										'pwg.rates.delete', {
-											user_id: data.uid,
-											anonymous_id: data.aid
-										}, {
-											method: 'POST',
-											onFailure: function(num, text) {
-												anim.cancel();
-												trEl.style.opacity = '1';
-												alert(num + " " + text);
-											},
-											onSuccess: function(result) {
-												if (result)
-													oTable.row(trEl).remove().draw();
-												else
-													alert(result);
-											}
-										}
-									);
-								}
-							},
-							cancel: {
-								text: cancel_msg
-							}
-						}
-					});
-			});
-		}
-	});
-</script>{/footer_script}
+{if $vite_rating_user}
+<script type="module" src="admin/themes/default/js/dist/{$vite_rating_user}"></script>
+{/if}
 <table id="rateTable">
 	<thead>
 		<tr class="throw">

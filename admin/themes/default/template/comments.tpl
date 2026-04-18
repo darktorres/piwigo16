@@ -1,6 +1,8 @@
-{footer_script}<script>
-  window.comments_nb_total = {$nb_total};
-</script>{/footer_script}
+<script id="pwg-page-data" type="application/json">
+{
+  "nbTotal": {$nb_total}
+}
+</script>
 
 {if $vite_comments}
 <script type="module" src="admin/themes/default/js/dist/{$vite_comments}"></script>

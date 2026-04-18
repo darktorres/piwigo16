@@ -1,19 +1,21 @@
+<script id="pwg-page-data" type="application/json">
+{
+  "pwgToken": "{$PWG_TOKEN|escape:'html'}",
+  "extType": "{$EXT_TYPE|escape:'html'}",
+  "confirmMsg": "{'Are you sure?'|translate|escape:'html'}",
+  "errorHead": "{'ERROR'|translate|escape:'html'}",
+  "successHead": "{'Update Complete'|translate|escape:'html'}",
+  "errorMsg": "{'an error happened'|translate|escape:'html'}",
+  "restoreMsg": "{'Reset ignored updates'|translate|escape:'html'}",
+  "titleConfirmUpdateAll": "{'Are you sure you want to update all extensions?'|translate|escape:'html'}",
+  "strConfirm": "{'Yes, I am sure'|translate|escape:'html'}",
+  "strCancel": "{'No, I have changed my mind'|translate|escape:'html'}"
+}
+</script>
+
 {if $vite_updates_ext}
 <script type="module" src="admin/themes/default/js/dist/{$vite_updates_ext}"></script>
 {/if}
-
-{footer_script}<script>
-  window.pwg_token = '{$PWG_TOKEN}';
-  window.extType = '{$EXT_TYPE}';
-  window.confirmMsg = '{'Are you sure?'|translate|escape:'javascript'}';
-  window.errorHead = '{'ERROR'|translate|escape:'javascript'}';
-  window.successHead = '{'Update Complete'|translate|escape:'javascript'}';
-  window.errorMsg = '{'an error happened'|translate|escape:'javascript'}';
-  window.restoreMsg = '{'Reset ignored updates'|translate|escape:'javascript'}';
-  window.title_confirm_update_all = "{'Are you sure you want to update all extensions?'|translate}";
-  window.str_confirm = '{"Yes, I am sure"|translate}';
-  window.str_cancel = "{"No, I have changed my mind"|translate}";
-</script>{/footer_script}
 
 {if $isWebmaster == 1}
 

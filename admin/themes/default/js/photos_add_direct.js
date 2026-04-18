@@ -2,30 +2,33 @@ import { CategoriesCache } from './LocalStorageCache.js';
 import { pwgAddAlbum } from './addAlbum.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import { sprintf } from './common.js';
+import { initModule } from './moduleInit.js';
 import Dropzone from 'dropzone';
 import Piecon from 'piecon';
 
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
-
-_docReady(function() {
-  const formatMode = window.formatMode || false;
-  const haveFormatsOriginal = window.haveFormatsOriginal || false;
-  const originalImageId = haveFormatsOriginal ? window.originalImageId : -1;
-
-  const pwg_token = window.pwg_token || '';
-  const photosUploaded_label = window.photosUploaded_label || '%d photos uploaded';
-  const formatsUploaded_label = window.formatsUploaded_label || '%d formats uploaded for %d photos';
-  const batch_Label = window.batch_Label || 'Manage this set of %d photos';
-  const albumSummary_label = window.albumSummary_label || 'Album "%s" now contains %d photos';
-  const str_format_warning = window.str_format_warning || 'Error when trying to detect formats';
-  const str_ok = window.str_ok || 'Ok';
-  const str_format_warning_multiple = window.str_format_warning_multiple || 'There is multiple image in the database with the following names : %s.';
-  const str_format_warning_notFound = window.str_format_warning_notFound || 'No picture found with the following name : %s.';
-  const str_and_X_others = window.str_and_X_others || 'and %d more';
-  const file_ext = window.file_ext || '';
-  const format_ext = window.format_ext || '';
-  const chunk_size = window.chunk_size || 0;
-  const max_file_size = window.max_file_size || 0;
+export function init(cfg) {
+  const {
+    formatMode = false,
+    haveFormatsOriginal = false,
+    originalImageId = -1,
+    pwgToken = '',
+    photosUploadedLabel = '%d photos uploaded',
+    formatsUploadedLabel = '%d formats uploaded for %d photos',
+    batchLabel = 'Manage this set of %d photos',
+    albumSummaryLabel = 'Album "%s" now contains %d photos',
+    strFormatWarning = 'Error when trying to detect formats',
+    strOk = 'Ok',
+    strFormatWarningMultiple = 'There is multiple image in the database with the following names : %s.',
+    strFormatWarningNotFound = 'No picture found with the following name : %s.',
+    strAndXOthers = 'and %d more',
+    fileExt = '',
+    formatExt = '',
+    chunkSize = 0,
+    maxFileSize = 0,
+    categoriesServerKey = '',
+    categoriesServerId = '',
+    rootUrl = ''
+  } = cfg;
 
   let uploadedPhotos = [];
   let uploadCategory = null;
@@ -33,9 +36,9 @@ _docReady(function() {
   // Initialize categories cache if not in format mode
   if (!formatMode) {
     const categoriesCache = new CategoriesCache({
-      serverKey: window.categoriesServerKey || '',
-      serverId: window.categoriesServerId || '',
-      rootUrl: window.rootUrl || ''
+      serverKey: categoriesServerKey,
+      serverId: categoriesServerId,
+      rootUrl: rootUrl
     });
 
     categoriesCache.selectize(document.querySelectorAll('[data-selectize=categories]'), {
@@ -129,8 +132,8 @@ _docReady(function() {
 
   let beforeUnloadHandler = null;
   let uploadStarted = false;
-  const chunkSizeBytes = chunk_size > 0 ? (chunk_size * 1024) : (100 * 1024 * 1024);
-  const acceptedExtensions = (formatMode ? format_ext : file_ext).split(',').map(function(ext) {
+  const chunkSizeBytes = chunkSize > 0 ? (chunkSize * 1024) : (100 * 1024 * 1024);
+  const acceptedExtensions = (formatMode ? formatExt : fileExt).split(',').map(function(ext) {
     return '.' + ext.trim();
   }).join(',');
 
@@ -138,13 +141,13 @@ _docReady(function() {
     url: 'ws.php?method=pwg.images.upload&format=json',
     clickable: '#addFiles',
     acceptedFiles: acceptedExtensions,
-    maxFilesize: max_file_size,
+    maxFilesize: maxFileSize,
     chunking: true,
     forceChunking: false,
     chunkSize: chunkSizeBytes,
     parallelChunkUploads: false,
     autoProcessQueue: false,
-    dictDefaultMessage: window.dropzone_msg || "Drop files here or click Add Photos",
+    dictDefaultMessage: cfg.dropzoneMsg || "Drop files here or click Add Photos",
     addRemoveLinks: true,
     dictRemoveFile: "✕",
   });
@@ -169,7 +172,7 @@ _docReady(function() {
       fetch("ws.php?format=json&method=pwg.images.uploadCompleted", {
         method: "POST",
         body: new URLSearchParams({
-          pwg_token: pwg_token,
+          pwgToken: pwgToken,
           image_id: uploadedPhotos.join(","),
           category_id: uploadCategory.id,
         }),
@@ -181,15 +184,15 @@ _docReady(function() {
     });
 
     const infoText = formatMode ?
-      sprintf(formatsUploaded_label, uploadedPhotos.length, [...new Set(dz.files.map(function(f) { return f.format_of; }))].length) :
-      sprintf(photosUploaded_label, uploadedPhotos.length);
+      sprintf(formatsUploadedLabel, uploadedPhotos.length, [...new Set(dz.files.map(function(f) { return f.format_of; }))].length) :
+      sprintf(photosUploadedLabel, uploadedPhotos.length);
 
     const infosEl = document.querySelector(".infos");
     if (infosEl) infosEl.insertAdjacentHTML('beforeend', '<ul><li>' + infoText + '</li></ul>');
 
     if (!formatMode && uploadCategory) {
       const html = sprintf(
-        albumSummary_label,
+        albumSummaryLabel,
         '<a href="admin.php?page=album-' + uploadCategory.id + '">' + uploadCategory.label + '</a>',
         parseInt(uploadCategory.nb_photos)
       );
@@ -201,7 +204,7 @@ _docReady(function() {
 
     document.querySelectorAll(".batchLink").forEach(function(el) {
       el.href = "admin.php?page=photos_add&section=direct&batch=" + uploadedPhotos.join(",");
-      el.innerHTML = sprintf(batch_Label, uploadedPhotos.length);
+      el.innerHTML = sprintf(batchLabel, uploadedPhotos.length);
     });
 
     document.querySelectorAll(".afterUploadActions").forEach(function(el) { el.style.display = ''; });
@@ -257,10 +260,10 @@ _docReady(function() {
         const notFoundStr = processTab(notFound);
         const multStr = processTab(multiple);
         pwgConfirm({
-          title: str_format_warning,
-          content: (notFound.length ? '<p>' + str_format_warning_notFound.replace('%s', notFoundStr.join(', ')) + '</p>' : '') +
-                   (multiple.length ? '<p>' + str_format_warning_multiple.replace('%s', multStr.join(', ')) + '</p>' : ''),
-          buttons: { ok: { text: str_ok } }
+          title: strFormatWarning,
+          content: (notFound.length ? '<p>' + strFormatWarning_notFound.replace('%s', notFoundStr.join(', ')) + '</p>' : '') +
+                   (multiple.length ? '<p>' + strFormatWarning_multiple.replace('%s', multStr.join(', ')) + '</p>' : ''),
+          buttons: { ok: { text: strOk } }
         });
       }
     } else if (formatMode && haveFormatsOriginal) {
@@ -281,7 +284,7 @@ _docReady(function() {
         formData.set("chunks", parseInt(totalChunks));
       }
     }
-    formData.append("pwg_token", pwg_token);
+    formData.append("pwgToken", pwgToken);
     formData.append("name", file.name);
     if (formatMode) {
       if (file.format_of) formData.append("format_of", file.format_of);
@@ -317,7 +320,7 @@ _docReady(function() {
       }
       beforeUnloadHandler = function(e) {
         e.preventDefault();
-        e.returnValue = window.str_upload_in_progress || "Upload in progress";
+        e.returnValue = cfg.strUploadInProgress || "Upload in progress";
         return e.returnValue;
       };
       window.addEventListener('beforeunload', beforeUnloadHandler);
@@ -395,4 +398,6 @@ _docReady(function() {
       handleUploadComplete();
     });
   }
-});
+}
+
+initModule(init);

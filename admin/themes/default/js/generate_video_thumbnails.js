@@ -1,6 +1,8 @@
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+import { initModule } from './moduleInit.js';
 
-_docReady(function() {
+export function init(cfg) {
+  const { vtStrings } = cfg;
+
   var form = document.getElementById('vtForm');
   if (!form) return;
 
@@ -41,7 +43,7 @@ _docReady(function() {
       function pump() {
         return vtReader.read().then(function(result) {
           if (result.done) {
-            if (!vtComplete) onError(window.vt_strings.unexpected_end);
+            if (!vtComplete) onError(vtStrings.unexpected_end);
             return;
           }
           buffer += decoder.decode(result.value, { stream: true });
@@ -58,11 +60,11 @@ _docReady(function() {
       clearInterval(timerInterval);
       hideControls();
       var title = document.getElementById('vtTitle');
-      if (title) title.textContent = window.vt_strings.connection_lost;
+      if (title) title.textContent = vtStrings.connection_lost;
       var results = document.getElementById('vtResults');
       if (results) {
-        results.innerHTML = '<div class="errors"><ul><li>' + window.vt_strings.connection_lost + '</li></ul></div>'
-          + '<p class="bottomButtons"><button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">' + window.vt_strings.try_again + '</button></p>';
+        results.innerHTML = '<div class="errors"><ul><li>' + vtStrings.connection_lost + '</li></ul></div>'
+          + '<p class="bottomButtons"><button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">' + vtStrings.try_again + '</button></p>';
         results.style.display = '';
       }
     });
@@ -77,7 +79,7 @@ _docReady(function() {
       clearInterval(timerInterval);
       hideControls();
       var title = document.getElementById('vtTitle');
-      if (title) title.textContent = window.vt_strings.aborted;
+      if (title) title.textContent = vtStrings.aborted;
       document.querySelectorAll('.sync-phase.running').forEach(function(el) {
         el.classList.remove('running');
         el.classList.add('aborted');
@@ -85,8 +87,8 @@ _docReady(function() {
       });
       var results = document.getElementById('vtResults');
       if (results) {
-        results.innerHTML = '<p>' + window.vt_strings.aborted_message + '</p>'
-          + '<p class="bottomButtons"><button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">' + window.vt_strings.back + '</button></p>';
+        results.innerHTML = '<p>' + vtStrings.aborted_message + '</p>'
+          + '<p class="bottomButtons"><button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">' + vtStrings.back + '</button></p>';
         results.style.display = '';
       }
     });
@@ -122,13 +124,13 @@ _docReady(function() {
     if (!phases) return;
     var h = '<div class="sync-phase running" id="phase-generate">'
       + '<span class="phase-status"><span class="spinner"></span></span>'
-      + '<span class="phase-label">' + window.vt_strings.generating + '</span>'
+      + '<span class="phase-label">' + vtStrings.generating + '</span>'
       + '<span class="phase-detail"></span>'
       + '<span class="phase-time"></span>'
       + '</div>'
       + '<div class="sync-substep running" id="substep-generate">'
       + '<span class="substep-status"><span class="spinner"></span></span>'
-      + '<span class="substep-label">' + window.vt_strings.extracting + '</span>'
+      + '<span class="substep-label">' + vtStrings.extracting + '</span>'
       + '<span class="substep-detail"></span>'
       + '<span class="substep-time"></span>'
       + '<div class="sync-progress-bar">'
@@ -156,17 +158,17 @@ _docReady(function() {
         var entry = document.createElement('div');
         entry.className = 'vt-skip-entry';
         if (data.skip_reason === 'file_not_found') {
-          entry.textContent = data.file + ' \u2014 ' + window.vt_strings.file_not_found;
+          entry.textContent = data.file + ' \u2014 ' + vtStrings.file_not_found;
         } else if (data.ffmpeg_output && data.ffmpeg_output.length) {
           var header = document.createElement('div');
-          header.textContent = data.file + ' \u2014 ' + window.vt_strings.ffmpeg_output + ':';
+          header.textContent = data.file + ' \u2014 ' + vtStrings.ffmpeg_output + ':';
           entry.appendChild(header);
           var pre = document.createElement('pre');
           pre.className = 'vt-skip-ffmpeg-output';
           pre.textContent = data.ffmpeg_output.join('\n');
           entry.appendChild(pre);
         } else {
-          entry.textContent = data.file + ' \u2014 ' + window.vt_strings.ffmpeg_no_output;
+          entry.textContent = data.file + ' \u2014 ' + vtStrings.ffmpeg_no_output;
         }
         list.appendChild(entry);
         list.style.display = '';
@@ -174,7 +176,7 @@ _docReady(function() {
     }
     var sub = document.getElementById('substep-generate');
     if (sub) sub.querySelector('.substep-detail').textContent =
-      pct + '% \u2014 ' + data.generated + ' ' + window.vt_strings.generated + (data.skipped > 0 ? ', ' + data.skipped + ' ' + window.vt_strings.skipped : '');
+      pct + '% \u2014 ' + data.generated + ' ' + vtStrings.generated + (data.skipped > 0 ? ', ' + data.skipped + ' ' + vtStrings.skipped : '');
   }
 
   function onComplete(data) {
@@ -191,7 +193,7 @@ _docReady(function() {
       phaseEl.querySelector('.phase-status').innerHTML = '\u2713';
       phaseEl.querySelector('.phase-time').textContent = data.elapsed + 's';
       phaseEl.querySelector('.phase-detail').textContent =
-        data.generated + ' ' + window.vt_strings.generated + (data.skipped > 0 ? ', ' + data.skipped + ' ' + window.vt_strings.skipped : '');
+        data.generated + ' ' + vtStrings.generated + (data.skipped > 0 ? ', ' + data.skipped + ' ' + vtStrings.skipped : '');
     }
     var sub = document.getElementById('substep-generate');
     if (sub) {
@@ -201,16 +203,16 @@ _docReady(function() {
     }
 
     var title = document.getElementById('vtTitle');
-    if (title) title.textContent = window.vt_strings.done;
+    if (title) title.textContent = vtStrings.done;
 
     var h = '<ul>'
-      + '<li>' + data.generated + ' ' + window.vt_strings.thumbnails_generated + '</li>';
+      + '<li>' + data.generated + ' ' + vtStrings.thumbnails_generated + '</li>';
     if (data.skipped > 0) {
-      h += '<li>' + data.skipped + ' ' + window.vt_strings.skipped_reason + '</li>';
+      h += '<li>' + data.skipped + ' ' + vtStrings.skipped_reason + '</li>';
     }
     h += '</ul>'
       + '<p class="bottomButtons">'
-      + '<button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">' + window.vt_strings.run_again + '</button></p>';
+      + '<button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">' + vtStrings.run_again + '</button></p>';
 
     var results = document.getElementById('vtResults');
     if (results) { results.innerHTML = h; results.style.display = ''; }
@@ -221,11 +223,11 @@ _docReady(function() {
     clearInterval(timerInterval);
     hideControls();
     var title = document.getElementById('vtTitle');
-    if (title) title.textContent = window.vt_strings.error;
+    if (title) title.textContent = vtStrings.error;
     var results = document.getElementById('vtResults');
     if (results) {
       results.innerHTML = '<div class="errors"><ul><li>' + msg + '</li></ul></div>'
-        + '<p class="bottomButtons"><button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">' + window.vt_strings.try_again + '</button></p>';
+        + '<p class="bottomButtons"><button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">' + vtStrings.try_again + '</button></p>';
       results.style.display = '';
     }
   }
@@ -238,4 +240,6 @@ _docReady(function() {
   function fmtTime(s) {
     return s < 60 ? s.toFixed(1) + 's' : Math.floor(s / 60) + 'm ' + Math.floor(s % 60) + 's';
   }
-});
+}
+
+initModule(init);

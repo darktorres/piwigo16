@@ -1,9 +1,5 @@
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-{footer_script}<script>
-  const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
-</script>{/footer_script}
-
 {if $vite_album_notification}
 <script type="module" src="admin/themes/default/js/dist/{$vite_album_notification}"></script>
 {/if}

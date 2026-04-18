@@ -1,13 +1,22 @@
 import { UsersCache } from './LocalStorageCache.js';
+import { initModule } from './moduleInit.js';
 import TomSelect from 'tom-select';
 
-const _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+export function init(cfg) {
+  const {
+    usersServerKey = '',
+    usersServerId = '',
+    rootUrl = '',
+    usersKey = 'Users',
+    nbUsers = 0,
+    actionTypes = {},
+    actionInfos = {}
+  } = cfg;
 
-_docReady(function() {
   const usersCache = new UsersCache({
-    serverKey: window.usersServerKey || '',
-    serverId: window.usersServerId || '',
-    rootUrl: window.rootUrl || ''
+    serverKey: usersServerKey,
+    serverId: usersServerId,
+    rootUrl: rootUrl
   });
 
   const color_icons = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
@@ -17,67 +26,67 @@ _docReady(function() {
   let uid_filter;
   const page_ellipsis = '<span>...</span>';
   const page_item = '<a data-page="%d">%d</a>';
-  const users_key = window.users_key || "Users";
+  const users_key = usersKey;
 
-  // Translation strings - read from window globals
-  const actionType_add = window.actionType_add || 'add';
-  const actionType_delete = window.actionType_delete || 'deletion';
-  const actionType_move = window.actionType_move || 'move';
-  const actionType_edit = window.actionType_edit || 'edit';
-  const actionType_login = window.actionType_login || 'login';
-  const actionType_logout = window.actionType_logout || 'logout';
+  // Action type strings
+  const actionType_add = actionTypes.add || 'add';
+  const actionType_delete = actionTypes.delete || 'deletion';
+  const actionType_move = actionTypes.move || 'move';
+  const actionType_edit = actionTypes.edit || 'edit';
+  const actionType_login = actionTypes.login || 'login';
+  const actionType_logout = actionTypes.logout || 'logout';
 
   // Album messages
-  const actionInfos_album_added = window.actionInfos_album_added || '%d album added';
-  const actionInfos_album_deleted = window.actionInfos_album_deleted || '%d album deleted';
-  const actionInfos_album_edited = window.actionInfos_album_edited || '%d album edited';
-  const actionInfos_album_moved = window.actionInfos_album_moved || '%d album moved';
-  const actionInfos_albums_added = window.actionInfos_albums_added || '%d albums added';
-  const actionInfos_albums_deleted = window.actionInfos_albums_deleted || '%d albums deleted';
-  const actionInfos_albums_edited = window.actionInfos_albums_edited || '%d albums edited';
-  const actionInfos_albums_moved = window.actionInfos_albums_moved || '%d albums moved';
+  const actionInfos_album_added = actionInfos.album?.added || '%d album added';
+  const actionInfos_album_deleted = actionInfos.album?.deleted || '%d album deleted';
+  const actionInfos_album_edited = actionInfos.album?.edited || '%d album edited';
+  const actionInfos_album_moved = actionInfos.album?.moved || '%d album moved';
+  const actionInfos_albums_added = actionInfos.album?.addedPlural || '%d albums added';
+  const actionInfos_albums_deleted = actionInfos.album?.deletedPlural || '%d albums deleted';
+  const actionInfos_albums_edited = actionInfos.album?.editedPlural || '%d albums edited';
+  const actionInfos_albums_moved = actionInfos.album?.movedPlural || '%d albums moved';
 
   // User messages
-  const actionInfos_user_added = window.actionInfos_user_added || '%d user added';
-  const actionInfos_user_deleted = window.actionInfos_user_deleted || '%d user deleted';
-  const actionInfos_user_edited = window.actionInfos_user_edited || '%d user edited';
-  const actionInfos_user_logged_in = window.actionInfos_user_logged_in || '%d user logged in';
-  const actionInfos_user_logged_out = window.actionInfos_user_logged_out || '%d user logged out';
-  const actionInfos_users_added = window.actionInfos_users_added || '%d users added';
-  const actionInfos_users_deleted = window.actionInfos_users_deleted || '%d users deleted';
-  const actionInfos_users_edited = window.actionInfos_users_edited || '%d users edited';
-  const actionInfos_users_logged_in = window.actionInfos_users_logged_in || '%d users logged in';
-  const actionInfos_users_logged_out = window.actionInfos_users_logged_out || '%d users logged out';
+  const actionInfos_user_added = actionInfos.user?.added || '%d user added';
+  const actionInfos_user_deleted = actionInfos.user?.deleted || '%d user deleted';
+  const actionInfos_user_edited = actionInfos.user?.edited || '%d user edited';
+  const actionInfos_user_logged_in = actionInfos.user?.loggedIn || '%d user logged in';
+  const actionInfos_user_logged_out = actionInfos.user?.loggedOut || '%d user logged out';
+  const actionInfos_users_added = actionInfos.user?.addedPlural || '%d users added';
+  const actionInfos_users_deleted = actionInfos.user?.deletedPlural || '%d users deleted';
+  const actionInfos_users_edited = actionInfos.user?.editedPlural || '%d users edited';
+  const actionInfos_users_logged_in = actionInfos.user?.loggedInPlural || '%d users logged in';
+  const actionInfos_users_logged_out = actionInfos.user?.loggedOutPlural || '%d users logged out';
 
   // Photo messages
-  const actionInfos_photo_added = window.actionInfos_photo_added || '%d photo added';
-  const actionInfos_photo_deleted = window.actionInfos_photo_deleted || '%d photo deleted';
-  const actionInfos_photo_edited = window.actionInfos_photo_edited || '%d photo edited';
-  const actionInfos_photo_moved = window.actionInfos_photo_moved || '%d photo moved';
-  const actionInfos_photos_added = window.actionInfos_photos_added || '%d photos added';
-  const actionInfos_photos_deleted = window.actionInfos_photos_deleted || '%d photos deleted';
-  const actionInfos_photos_edited = window.actionInfos_photos_edited || '%d photos edited';
-  const actionInfos_photos_moved = window.actionInfos_photos_moved || '%d photos moved';
+  const actionInfos_photo_added = actionInfos.photo?.added || '%d photo added';
+  const actionInfos_photo_deleted = actionInfos.photo?.deleted || '%d photo deleted';
+  const actionInfos_photo_edited = actionInfos.photo?.edited || '%d photo edited';
+  const actionInfos_photo_moved = actionInfos.photo?.moved || '%d photo moved';
+  const actionInfos_photos_added = actionInfos.photo?.addedPlural || '%d photos added';
+  const actionInfos_photos_deleted = actionInfos.photo?.deletedPlural || '%d photos deleted';
+  const actionInfos_photos_edited = actionInfos.photo?.editedPlural || '%d photos edited';
+  const actionInfos_photos_moved = actionInfos.photo?.movedPlural || '%d photos moved';
 
   // Group messages
-  const actionInfos_group_added = window.actionInfos_group_added || '%d group added';
-  const actionInfos_group_deleted = window.actionInfos_group_deleted || '%d group deleted';
-  const actionInfos_group_edited = window.actionInfos_group_edited || '%d group edited';
-  const actionInfos_group_moved = window.actionInfos_group_moved || '%d group moved';
-  const actionInfos_groups_added = window.actionInfos_groups_added || '%d groups added';
-  const actionInfos_groups_deleted = window.actionInfos_groups_deleted || '%d groups deleted';
-  const actionInfos_groups_edited = window.actionInfos_groups_edited || '%d groups edited';
-  const actionInfos_groups_moved = window.actionInfos_groups_moved || '%d groups moved';
+  const actionInfos_group_added = actionInfos.group?.added || '%d group added';
+  const actionInfos_group_deleted = actionInfos.group?.deleted || '%d group deleted';
+  const actionInfos_group_edited = actionInfos.group?.edited || '%d group edited';
+  const actionInfos_group_moved = actionInfos.group?.moved || '%d group moved';
+  const actionInfos_groups_added = actionInfos.group?.addedPlural || '%d groups added';
+  const actionInfos_groups_deleted = actionInfos.group?.deletedPlural || '%d groups deleted';
+  const actionInfos_groups_edited = actionInfos.group?.editedPlural || '%d groups edited';
+  const actionInfos_groups_moved = actionInfos.group?.movedPlural || '%d groups moved';
 
   // Tag messages
-  const actionInfos_tag_added = window.actionInfos_tag_added || '%d tag added';
-  const actionInfos_tag_deleted = window.actionInfos_tag_deleted || '%d tag deleted';
-  const actionInfos_tag_edited = window.actionInfos_tag_edited || '%d tag edited';
-  const actionInfos_tag_moved = window.actionInfos_tag_moved || '%d tag moved';
-  const actionInfos_tags_added = window.actionInfos_tags_added || '%d tags added';
-  const actionInfos_tags_deleted = window.actionInfos_tags_deleted || '%d tags deleted';
-  const actionInfos_tags_edited = window.actionInfos_tags_edited || '%d tags edited';
-  const actionInfos_tags_moved = window.actionInfos_tags_moved || '%d tags moved';
+  const actionInfos_tag_added = actionInfos.tag?.added || '%d tag added';
+  const actionInfos_tag_deleted = actionInfos.tag?.deleted || '%d tag deleted';
+  const actionInfos_tag_edited = actionInfos.tag?.edited || '%d tag edited';
+  const actionInfos_tag_moved = actionInfos.tag?.moved || '%d tag moved';
+  const actionInfos_tags_added = actionInfos.tag?.addedPlural || '%d tags added';
+  const actionInfos_tags_deleted = actionInfos.tag?.deletedPlural || '%d tags deleted';
+  const actionInfos_tags_edited = actionInfos.tag?.editedPlural || '%d tags edited';
+  const actionInfos_tags_moved = actionInfos.tag?.movedPlural || '%d tags moved';
 
   get_user_activity(activity_page, uid_filter);
 
@@ -482,4 +491,6 @@ _docReady(function() {
       document.querySelectorAll(".line").forEach(function(l) { l.style.display = 'flex'; });
     });
   });
-});
+}
+
+initModule(init);

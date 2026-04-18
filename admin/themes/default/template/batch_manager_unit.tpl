@@ -4,13 +4,15 @@
 
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-{footer_script}<script>
-  window.tagsServerKey = '{$CACHE_KEYS.tags|default:''}';
-  window.tagsCacheServerId = '{$CACHE_KEYS._hash|default:''}';
-  window.rootUrl = '{$ROOT_URL}';
-  window.str_create = '{'Create'|translate}';
-  window.str_cancel = '{'Cancel'|translate}';
-</script>{/footer_script}
+<script id="pwg-page-data" type="application/json">
+{
+  "tagsServerKey": "{$CACHE_KEYS.tags|default:''|escape:'html'}",
+  "tagsCacheServerId": "{$CACHE_KEYS._hash|default:''|escape:'html'}",
+  "rootUrl": "{$ROOT_URL|escape:'html'}",
+  "strCreate": "{'Create'|translate|escape:'html'}",
+  "strCancel": "{'Cancel'|translate|escape:'html'}"
+}
+</script>
 
 {if $vite_batch_manager_unit}
 <script type="module" src="admin/themes/default/js/dist/{$vite_batch_manager_unit}"></script>

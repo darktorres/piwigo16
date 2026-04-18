@@ -1,26 +1,8 @@
 {include file='inc/colorbox.inc.tpl'}
-{footer_script}<script>
-  GLightbox({ selector: 'a.preview-box' });
-  window.addEventListener('load', function() {
-    document.querySelectorAll('.themeBox').forEach(function(box) {
-      var screenImage = box.querySelector(".preview-box img");
-      var previewBox = box.querySelector(".preview-box");
-      if (!screenImage || !previewBox) return;
 
-      var imageW = screenImage.clientWidth;
-      var imageH = screenImage.clientHeight;
-      var size = previewBox.clientWidth;
-
-      if (imageW > imageH) {
-        screenImage.style.height = size + 'px';
-        screenImage.style.width = (imageW * size / imageH) + 'px';
-      } else {
-        screenImage.style.width = size + 'px';
-        screenImage.style.height = (imageH * size / imageW) + 'px';
-      }
-    });
-  });
-</script>{/footer_script}
+{if $vite_themes_new}
+<script type="module" src="admin/themes/default/js/dist/{$vite_themes_new}"></script>
+{/if}
 
 {if not empty($new_themes)}
   <div class="themeBoxes">

@@ -283,15 +283,16 @@ function fillHistoryResult(ajaxParam) {
     })
         .then(function (response) { return response.json(); })
         .then(function (raw_data) {
+            var data = raw_data.result["lines"];
+            var imageDisplay = raw_data.result["params"].display_thumbnail;
+            var maxPage = raw_data.result["maxPage"];
+            var summary = raw_data.result["summary"];
+
             showResults(false);
             document.querySelector(".loading").classList.remove("hide");
             document.querySelector(".noResults").style.display = 'none';
             document.querySelector(".tab").innerHTML = '';
 
-            data = raw_data.result["lines"];
-            imageDisplay = raw_data.result["params"].display_thumbnail;
-            maxPage = raw_data.result["maxPage"];
-            summary = raw_data.result["summary"];
             // console.log(raw_data);
 
             //clear lines before refill
@@ -411,7 +412,7 @@ function lineConstructor(line, id, imageDisplay) {
     }
 
     switch (line.SECTION) {
-        case "tags":
+        case "tags": {
             if (line.TAGS.length > 1 && line.TAGS.length <= 2) {
                 newLine
                     .querySelector(".type-name")
@@ -456,29 +457,33 @@ function lineConstructor(line, id, imageDisplay) {
             detailItem.classList.remove("hide", "add");
             detailItem.classList.add("icon-tags");
             break;
+        }
 
-        case "most_visited":
+        case "most_visited": {
             newLine.querySelector(".type-name").innerHTML = str_most_visited;
             var detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_most_visited;
             detail.classList.add("icon-fire");
             newLine.querySelector(".type-id").style.display = 'none';
             break;
-        case "best_rated":
+        }
+        case "best_rated": {
             newLine.querySelector(".type-name").innerHTML = str_best_rated;
             var detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_best_rated;
             detail.classList.add("icon-star");
             newLine.querySelector(".type-id").style.display = 'none';
             break;
-        case "list":
+        }
+        case "list": {
             newLine.querySelector(".type-name").innerHTML = str_list;
             var detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_list;
             detail.classList.add("icon-dice-solid");
             newLine.querySelector(".type-id").style.display = 'none';
             break;
-        case "search":
+        }
+        case "search": {
             // for debug
             // console.log('search n° : ', line.SEARCH_ID, ' ', line.SEARCH_DETAILS);
             const search_details = line.SEARCH_DETAILS;
@@ -642,28 +647,32 @@ function lineConstructor(line, id, imageDisplay) {
                 detailItem.classList.remove("hide");
             }
             break;
-        case "favorites":
+        }
+        case "favorites": {
             newLine.querySelector(".type-name").innerHTML = str_favorites;
             var detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_favorites;
             detail.classList.add("icon-heart");
             newLine.querySelector(".type-id").style.display = 'none';
             break;
-        case "recent_cats":
+        }
+        case "recent_cats": {
             newLine.querySelector(".type-name").innerHTML = str_recent_cats;
             var detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_recent_cats;
             detail.classList.add("icon-clock");
             newLine.querySelector(".type-id").style.display = 'none';
             break;
-        case "recent_pics":
+        }
+        case "recent_pics": {
             newLine.querySelector(".type-name").innerHTML = str_recent_pics;
             var detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_recent_pics;
             detail.classList.add("icon-clock");
             newLine.querySelector(".type-id").style.display = 'none';
             break;
-        case "categories":
+        }
+        case "categories": {
             newLine.querySelector(".type-name").innerHTML = line.CATEGORY;
             var detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = line.CATEGORY;
@@ -673,14 +682,16 @@ function lineConstructor(line, id, imageDisplay) {
                 newLine.querySelector(".type-id").style.display = 'none';
             }
             break;
-        case "memories-1-year-ago":
+        }
+        case "memories-1-year-ago": {
             newLine.querySelector(".type-name").innerHTML = str_memories;
             var detail = newLine.querySelector(".detail-item-1");
             detail.innerHTML = str_memories;
             detail.classList.add("icon-clock");
             newLine.querySelector(".type-id").style.display = 'none';
             break;
-        case "contact":
+        }
+        case "contact": {
             newLine
                 .querySelector(".type-icon i")
                 .classList.add("line-icon", "icon-mail-1", "icon-yellow");
@@ -688,13 +699,15 @@ function lineConstructor(line, id, imageDisplay) {
             newLine.querySelector(".detail-item-1").innerHTML = str_contact_form;
             newLine.querySelector(".type-id").style.display = 'none';
             break;
-        default:
+        }
+        default: {
             newLine
                 .querySelector(".type-icon i")
                 .classList.add("line-icon", "icon-help-puzzle", "icon-grey");
             newLine.querySelector(".type-name").innerHTML = line.SECTION;
             newLine.querySelector(".type-id").style.display = 'none';
             break;
+        }
     }
 
     if (line.IMAGE != "") {

@@ -1,77 +1,23 @@
+<script id="pwg-page-data" type="application/json">
+{
+  "titleMsg": "{'Are you sure you want to restore to default settings?'|translate|escape:'html'}",
+  "confirmMsg": "{'Yes, I am sure'|translate|escape:'html'}",
+  "cancelMsg": "{'No, I have changed my mind'|translate|escape:'html'}",
+  "labelMaxWidth": "{'Maximum width'|translate|escape:'html'}",
+  "labelWidth": "{'Width'|translate|escape:'html'}",
+  "labelMaxHeight": "{'Maximum height'|translate|escape:'html'}",
+  "labelHeight": "{'Height'|translate|escape:'html'}"
+}
+</script>
+
+{if $vite_configuration_sizes}
+<script type="module" src="admin/themes/default/js/dist/{$vite_configuration_sizes}"></script>
+{/if}
+
 {if $vite_configuration}
 <script type="module" src="admin/themes/default/js/dist/{$vite_configuration}"></script>
 {/if}
 
-{footer_script}<script>
-  const title_msg = '{'Are you sure you want to restore to default settings?'|translate|escape:javascript}';
-  const confirm_msg = '{'Yes, I am sure'|translate|escape}';
-  const cancel_msg = '{'No, I have changed my mind'|translate|escape}';
-
-  document.querySelectorAll(".restore-settings-button").forEach(function(el) {
-    pwgConfirmFollowHref(el, {
-      alert_title: title_msg,
-      alert_confirm: confirm_msg,
-      alert_cancel: cancel_msg
-    });
-  });
-
-  (function() {
-    var labelMaxWidth = "{'Maximum width'|translate}",
-    labelWidth = "{'Width'|translate}",
-    labelMaxHeight = "{'Maximum height'|translate}",
-    labelHeight = "{'Height'|translate}";
-
-    function toggleResizeFields(size) {
-      var checkbox = document.querySelector("[name=original_resize]");
-      var needToggle = document.getElementById("sizeEdit-original");
-      if (!checkbox || !needToggle) return;
-      needToggle.style.display = checkbox.checked ? '' : 'none';
-    }
-
-    toggleResizeFields("original");
-    var originalResizeCheckbox = document.querySelector("[name=original_resize]");
-    if (originalResizeCheckbox) {
-      originalResizeCheckbox.addEventListener('click', function() {
-        toggleResizeFields("original");
-      });
-    }
-
-    document.querySelectorAll("a[id^='sizeEditOpen-']").forEach(function(el) {
-      el.addEventListener('click', function(event) {
-        event.preventDefault();
-        var sizeName = this.id.split("-")[1];
-        var sizeEdit = document.getElementById("sizeEdit-" + sizeName);
-        if (sizeEdit) sizeEdit.style.display = sizeEdit.style.display === 'none' || sizeEdit.style.display === '' ? 'block' : 'none';
-        this.style.display = 'none';
-      });
-    });
-
-    document.querySelectorAll(".cropToggle").forEach(function(el) {
-      el.addEventListener('click', function() {
-        var form = this.closest('table.sizeEditForm');
-        if (!form) return;
-        var labelBoxWidth = form.querySelector('td.sizeEditWidth');
-        var labelBoxHeight = form.querySelector('td.sizeEditHeight');
-        if (this.checked) {
-          if (labelBoxWidth) labelBoxWidth.innerHTML = labelWidth;
-          if (labelBoxHeight) labelBoxHeight.innerHTML = labelHeight;
-        } else {
-          if (labelBoxWidth) labelBoxWidth.innerHTML = labelMaxWidth;
-          if (labelBoxHeight) labelBoxHeight.innerHTML = labelMaxHeight;
-        }
-      });
-    });
-
-    var showDetailsBtn = document.getElementById("showDetails");
-    if (showDetailsBtn) {
-      showDetailsBtn.addEventListener('click', function(event) {
-        event.preventDefault();
-        document.querySelectorAll(".sizeDetails").forEach(function(el) { el.style.display = ''; });
-        this.style.visibility = 'hidden';
-      });
-    }
-  })();
-</script>{/footer_script}
 
 {html_style}<style>
   .sizeEnable {

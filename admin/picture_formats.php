@@ -65,6 +65,14 @@ $template->assign([
 
 $template->set_filename('picture_formats', 'picture_formats.tpl');
 
+$page_data = [
+    'pwg_token' => functions::get_pwg_token(),
+    'str_confirm_delete_format' => functions::l10n('Delete %s format ?'),
+    'str_confirm_msg' => functions::l10n('Yes, I am sure'),
+    'str_cancel_msg' => functions::l10n('No, I have changed my mind'),
+];
+$template->assign('page_data_json', json_encode($page_data));
+
 require_once __DIR__ . '/../inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['picture_formats', 'pwgConfirm']);
 

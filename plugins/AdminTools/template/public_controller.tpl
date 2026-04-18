@@ -31,7 +31,7 @@
 </script>{/footer_script}
 
 {footer_script}<script type="module">
-  import { AdminTools } from '{$ADMINTOOLS_PATH}template/public_controller.js';
+  import { AdminTools } from './{$ADMINTOOLS_PATH}template/public_controller.js';
   const config = JSON.parse(document.getElementById('admintools-public-config').textContent);
   AdminTools.setConfig(config);
   AdminTools.init(config.defaultOpen);

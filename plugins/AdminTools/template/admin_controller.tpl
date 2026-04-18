@@ -15,7 +15,7 @@
 </script>{/footer_script}
 
 {footer_script}<script type="module">
-  import { AdminTools } from '{$ADMINTOOLS_PATH}js/admin_controller.js';
+  import { AdminTools } from './{$ADMINTOOLS_PATH}js/admin_controller.js';
   const config = JSON.parse(document.getElementById('admintools-admin-config').textContent);
   AdminTools.setConfig(config);
   AdminTools.init();

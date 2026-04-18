@@ -1,4 +1,4 @@
-import GDMasonry from './masonry.js';
+import { GDMasonry } from './masonry.js';
 
 export const GDThumb = {
 

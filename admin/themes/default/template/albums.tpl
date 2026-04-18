@@ -1,51 +1,45 @@
-{footer_script}<script>
-  var data = {json_encode($album_data)};
-  var pwg_token = "{$PWG_TOKEN}";
-  var str_show_sub = "{'Show sub-albums'|translate}";
-  var str_hide_sub = "{'Hide sub-albums'|translate}";
-  var str_manage_sub_album = "{'Manage sub-albums'|translate}";
-  var str_apply_order_raw = "{'apply automatic sort order'|translate}";
-  var str_apply_order = str_apply_order_raw.charAt(0).toUpperCase() + str_apply_order_raw.slice(1);
-  var str_edit = "{'Edit album'|translate}";
-  var str_are_you_sure = "{'The status of the album \'%s\' and its sub-albums will change to private. Are you sure?'|translate}";
-  var str_yes_change_parent = "{'Yes change parent anyway'|translate}";
-  var str_no_change_parent = "{'No, don\'t move this album here'|translate}";
-  var str_root = "{'Root'|translate}";
-  var openCat = {$open_cat};
-  var nb_albums = {$nb_albums};
-  var light_album_manager = {$light_album_manager};
-
-  var x_nb_subcats = "{'%d sub-albums'|translate}";
-  var x_nb_images = "{'%d photos'|translate}";
-  var x_nb_sub_photos = "{'%d pictures in sub-albums'|translate}";
-
-  var delay_autoOpen = {$delay_before_autoOpen}
-</script>{/footer_script}
+<script id="pwg-page-data" type="application/json">
+{
+  "data": {json_encode($album_data)},
+  "pwgToken": "{$PWG_TOKEN|escape:'html'}",
+  "strShowSub": "{'Show sub-albums'|translate|escape:'html'}",
+  "strHideSub": "{'Hide sub-albums'|translate|escape:'html'}",
+  "strManageSubAlbum": "{'Manage sub-albums'|translate|escape:'html'}",
+  "strApplyOrderRaw": "{'apply automatic sort order'|translate|escape:'html'}",
+  "strEdit": "{'Edit album'|translate|escape:'html'}",
+  "strAreYouSure": "{'The status of the album \'%s\' and its sub-albums will change to private. Are you sure?'|translate|escape:'html'}",
+  "strYesChangeParent": "{'Yes change parent anyway'|translate|escape:'html'}",
+  "strNoChangeParent": "{'No, don\'t move this album here'|translate|escape:'html'}",
+  "strRoot": "{'Root'|translate|escape:'html'}",
+  "openCat": {$open_cat},
+  "nbAlbums": {$nb_albums},
+  "lightAlbumManager": {$light_album_manager},
+  "xNbSubcats": "{'%d sub-albums'|translate|escape:'html'}",
+  "xNbImages": "{'%d photos'|translate|escape:'html'}",
+  "xNbSubPhotos": "{'%d pictures in sub-albums'|translate|escape:'html'}",
+  "delayAutoOpen": {$delay_before_autoOpen},
+  "deleteAlbumWithName": "{'Delete album \"%s\".'|translate|escape:'html'}",
+  "deleteAlbumWithSubs": "{'Delete album \"%s\" and its %d sub-albums.'|translate|escape:'html'}",
+  "hasImagesAssociatedOutside": "{'delete album and all %d photos, even the %d associated to other albums'|translate|escape:'html'}",
+  "hasImagesBecomingOrphans": "{'delete album and the %d orphan photos'|translate|escape:'html'}",
+  "hasImagesRecursives": "{'delete only album, not photos'|translate|escape:'html'}",
+  "renameItem": "{'Rename \"%s\"'|translate|escape:'html'}",
+  "strAddAlbum": "{'Add Album'|translate|escape:'html'}",
+  "strEditAlbum": "{'Edit album'|translate|escape:'html'}",
+  "strAddPhoto": "{'Add Photos'|translate|escape:'html'}",
+  "strVisitGallery": "{'Visit Gallery'|translate|escape:'html'}",
+  "strSortOrder": "{'Automatic sort order'|translate|escape:'html'}",
+  "strDeleteAlbum": "{'Delete album'|translate|escape:'html'}",
+  "strRootOrder": "{'Apply to root albums'|translate|escape:'html'}",
+  "strSubAlbumOrder": "{'Apply to direct sub-albums'|translate|escape:'html'}",
+  "strAlbumNameEmpty": "{'Album name must not be empty'|translate|escape:'html'}",
+  "addAlbumRootTitle": "{'Create a new album at root'|translate|escape:'html'}",
+  "addSubAlbumOf": "{'Create a sub-album of \"%s\"'|translate|escape:'html'}",
+  "tiptipLockedAlbum": "{'Locked album'|translate|escape:'html'}"
+}
+</script>
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-
-{footer_script}<script>
-  const delete_album_with_name = '{'Delete album "%s".'|translate|escape:javascript}';
-  const delete_album_with_subs = '{'Delete album "%s" and its %d sub-albums.'|translate|escape:javascript}'
-  const has_images_associated_outside = '{"delete album and all %d photos, even the %d associated to other albums"|translate|escape:javascript}';
-  const has_images_becoming_orphans = '{'delete album and the %d orphan photos'|translate|escape:javascript}';
-  const has_images_recursives = '{'delete only album, not photos'|translate|escape:javascript}';
-  const rename_item = '{'Rename "%s"'|translate|escape:javascript}';
-
-  const str_add_album = '{'Add Album'|translate|escape:javascript}';
-  const str_edit_album = '{'Edit album'|translate|escape:javascript}';
-  const str_add_photo = '{'Add Photos'|translate|escape:javascript}';
-  const str_visit_gallery = '{'Visit Gallery'|translate|escape:javascript}';
-  const str_sort_order = '{'Automatic sort order'|translate|escape:javascript}';
-  const str_delete_album = '{'Delete album'|translate|escape:javascript}';
-  const str_root_order = '{'Apply to root albums'|translate|escape:javascript}';
-  str_sub_album_order = '{'Apply to direct sub-albums'|translate|escape:javascript}';
-  str_album_name_empty = '{'Album name must not be empty'|translate|escape:javascript}'
-
-  const add_album_root_title = '{'Create a new album at root'|translate|escape:javascript}';
-  const add_sub_album_of = '{'Create a sub-album of "%s"'|translate|escape:javascript}';
-  const tiptip_locked_album = "{'Locked album'|translate|escape:javascript}";
-</script>{/footer_script}
 
 {if $vite_albums}
 <script type="module" src="admin/themes/default/js/dist/{$vite_albums}"></script>

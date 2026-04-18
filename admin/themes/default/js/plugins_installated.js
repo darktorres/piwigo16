@@ -1,7 +1,24 @@
+import { initModule } from './moduleInit.js';
 import tippy from 'tippy.js';
 import { pwgConfirm, pwgConfirmFollowHref } from './pwgConfirm.js';
 
-var _docReady = function(fn) { document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); };
+var _deactivateQueue = Promise.resolve();
+var _deactivateTotal = 0;
+var _deactivateDone = 0;
+
+export function init(cfg) {
+    const {
+        pwgToken, incompatibleMsg, activateMsg, deactivateAllMsg,
+        nbPlugin, areYouSureMsg, confirmMsg, cancelMsg,
+        deletePluginMsg, deletedPluginMsg, restorePluginMsg, uninstallPluginMsg,
+        restoreTipMsg, pluginAddedStr, pluginDeactivatedStr, pluginRestoredStr,
+        pluginActionError, notWebmaster, nothingFound, xPluginsFound, pluginFound,
+        isWebmaster, viewSelector, strRestoreDef, showDetails
+    } = cfg;
+
+    const nb_plugin = nbPlugin;
+    const pwg_token = pwgToken;
+
 function showInactivePlugins() {
     var showEls = document.querySelectorAll(".showInactivePlugins");
     if (!showEls.length) {
@@ -313,7 +330,7 @@ function uninstallPlugin(id) {
     });
 }
 
-_docReady( function () {
+    // Initialize
     actualizeFilter();
 
     if (document.getElementById("displayClassic") && document.getElementById("displayClassic").checked) {
@@ -652,8 +669,8 @@ _docReady( function () {
             }
         });
     });
-});
 
+    // Second initialization - plugin options and deactivate
 function set_view_selector(view_type) {
     fetch("ws.php?format=json&method=pwg.users.preferences.set", {
         method: "POST",
@@ -691,7 +708,6 @@ function performPluginDeactivate(id) {
     });
 }
 
-_docReady( function () {
     actualizeFilter();
 
     document.querySelectorAll(".pluginBox").forEach(function (el) {
@@ -764,15 +780,18 @@ _docReady( function () {
     });
 
     tippy('.fullInfo', { delay: 500, maxWidth: 300, placement: 'top' });
-});
 
-document.addEventListener("mouseup", function (e) {
-    e.stopPropagation();
-    document.querySelectorAll(".pluginBox").forEach(function (el) {
-        var showOptions = el.querySelector(".showOptions");
-        if (showOptions && !showOptions.contains(e.target)) {
-            var optionsBlock = el.querySelector(".PluginOptionsBlock");
-            if (optionsBlock) optionsBlock.style.display = 'none';
-        }
+    // Global mouseup listener for closing plugin options
+    document.addEventListener("mouseup", function (e) {
+        e.stopPropagation();
+        document.querySelectorAll(".pluginBox").forEach(function (el) {
+            var showOptions = el.querySelector(".showOptions");
+            if (showOptions && !showOptions.contains(e.target)) {
+                var optionsBlock = el.querySelector(".PluginOptionsBlock");
+                if (optionsBlock) optionsBlock.style.display = 'none';
+            }
+        });
     });
-});
+}
+
+initModule(init);

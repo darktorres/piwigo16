@@ -1,8 +1,4 @@
-<script id="pwg-page-data" type="application/json">
-{
-  "nbCats": {$nb_cats}
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_permalinks}
 <script type="module" src="admin/themes/default/js/dist/{$vite_permalinks}"></script>

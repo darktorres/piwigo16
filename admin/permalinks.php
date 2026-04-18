@@ -153,4 +153,12 @@ $template->assign([
     'ADMIN_PAGE_TITLE' => functions::l10n('Albums'),
 ]);
 
+$page_data = [
+    'nbCats' => $nb_cats,
+];
+$template->assign('page_data_json', json_encode($page_data));
+
+require_once __DIR__ . '/../inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['permalinks']);
+
 $template->assign_var_from_handle('ADMIN_CONTENT', 'permalinks');

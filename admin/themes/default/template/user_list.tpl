@@ -1,71 +1,64 @@
+<script id="pwg-page-data" type="application/json">
+{
+  "titleMsg": "{'Are you sure you want to delete the user \"%s\"?'|translate|escape:'html'}",
+  "areYouSureMsg": "{'Are you sure?'|translate|escape:'html'}",
+  "confirmMsg": "{'Yes, I am sure'|translate|escape:'html'}",
+  "cancelMsg": "{'No, I have changed my mind'|translate|escape:'html'}",
+  "strAndOthersTags": "{'and %s others'|translate|escape:'html'}",
+  "missingConfirm": "{'You need to confirm deletion'|translate|escape:'html'}",
+  "missingUsername": "{'Please, enter a login'|translate|escape:'html'}",
+  "fieldNotEmpty": "{'Name field must not be empty'|translate|escape:'html'}",
+  "registeredStr": "{'Registered'|translate|escape:'html'}",
+  "lastVisitStr": "{'Last visit'|translate|escape:'html'}",
+  "datesInfos": "{'between %s and %s'|translate|escape:'html'}",
+  "hideStr": "{'Hide'|translate|escape:'html'}",
+  "showStr": "{'Show'|translate|escape:'html'}",
+  "userAddedStr": "{'User %s added'|translate|escape:'html'}",
+  "strPopinUpdateBtn": "{'Update'|translate|escape:'html'}",
+  "filteredUsers": "{'<b>%d</b> filtered users'|translate|escape:'html'}",
+  "filteredUser": "{'<b>%d</b> filtered user'|translate|escape:'html'}",
+  "historyBaseUrl": "{$U_HISTORY|escape:'html'}",
+  "statusToStr": {
+    "webmaster": "{'user_status_webmaster'|translate|escape:'html'}",
+    "admin": "{'user_status_admin'|translate|escape:'html'}",
+    "normal": "{'user_status_normal'|translate|escape:'html'}",
+    "generic": "{'user_status_generic'|translate|escape:'html'}",
+    "guest": "{'user_status_guest'|translate|escape:'html'}"
+  },
+  "viewSelector": "{$view_selector|escape:'html'}",
+  "pagination": "{$pagination|escape:'html'}",
+  "months": [
+    "{'Jan'|translate|escape:'html'}",
+    "{'Feb'|translate|escape:'html'}",
+    "{'Mar'|translate|escape:'html'}",
+    "{'Apr'|translate|escape:'html'}",
+    "{'May'|translate|escape:'html'}",
+    "{'Jun'|translate|escape:'html'}",
+    "{'Jul'|translate|escape:'html'}",
+    "{'Aug'|translate|escape:'html'}",
+    "{'Sep'|translate|escape:'html'}",
+    "{'Oct'|translate|escape:'html'}",
+    "{'Nov'|translate|escape:'html'}",
+    "{'Dec'|translate|escape:'html'}"
+  ],
+  "connectedUser": {$connected_user},
+  "connectedUserStatus": "{$connected_user_status|escape:'html'}",
+  "ownerId": {$owner},
+  "groupsArrName": [{$groups_arr_name}],
+  "groupsArrId": [{$groups_arr_id}],
+  "guestId": {$guest_id},
+  "nbDays": "{'%d days'|translate|escape:'html'}",
+  "nbPhotos": "{'%d photos'|translate|escape:'html'}",
+  "nbPhotosPerPage": "{'%d photos per page'|translate|escape:'html'}",
+  "pwgToken": "{$PWG_TOKEN|escape:'html'}",
+  "hasGroup": "{$filter_group|escape:'html'}",
+  "registerDatesStr": "{$register_dates|escape:'html'}"
+}
+</script>
+
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 {combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-
-{footer_script}<script>
-  window.title_msg = '{'Are you sure you want to delete the user "%s"?'|translate|escape:'javascript'}';
-  window.are_you_sure_msg = '{'Are you sure?'|translate|escape:'javascript'}';
-  window.confirm_msg = '{'Yes, I am sure'|translate|escape}';
-  window.cancel_msg = '{'No, I have changed my mind'|translate|escape}';
-  window.str_and_others_tags = '{'and %s others'|translate|escape:javascript}';
-  window.missingConfirm = "{'You need to confirm deletion'|translate|escape:javascript}";
-  window.missingUsername = "{'Please, enter a login'|translate|escape:javascript}";
-  window.fieldNotEmpty = "{'Name field must not be empty'|translate|escape:javascript}";
-
-  window.registered_str = '{"Registered"|translate|escape:javascript}';
-  window.last_visit_str = '{"Last visit"|translate|escape:javascript}';
-  window.dates_infos = '{'between %s and %s'|translate|escape:javascript}';
-  window.hide_str = '{'Hide'|translate|escape:javascript}';
-  window.show_str = '{'Show'|translate|escape:javascript}';
-  window.user_added_str = '{'User %s added'|translate|escape:javascript}';
-  window.str_popin_update_btn = '{'Update'|translate|escape:javascript}';
-  window.filtered_users = '{'<b>%d</b> filtered users'|translate|escape:javascript}';
-  window.filtered_user = '{'<b>%d</b> filtered user'|translate|escape:javascript}';
-  window.history_base_url = "{$U_HISTORY}";
-
-  window.status_to_str = {
-    'webmaster': "{'user_status_webmaster'|translate}",
-    'admin': "{'user_status_admin'|translate}",
-    'normal': "{'user_status_normal'|translate}",
-    'generic': "{'user_status_generic'|translate}",
-    'guest': "{'user_status_guest'|translate}",
-  };
-
-  window.view_selector = '{$view_selector}';
-  window.pagination = '{$pagination}';
-
-  window.months = [
-    "{'Jan'|translate}",
-    "{'Feb'|translate}",
-    "{'Mar'|translate}",
-    "{'Apr'|translate}",
-    "{'May'|translate}",
-    "{'Jun'|translate}",
-    "{'Jul'|translate}",
-    "{'Aug'|translate}",
-    "{'Sep'|translate}",
-    "{'Oct'|translate}",
-    "{'Nov'|translate}",
-    "{'Dec'|translate}"
-  ];
-
-  window.connected_user = {$connected_user};
-  window.connected_user_status = "{$connected_user_status}";
-  window.owner_id = {$owner};
-  window.groups_arr_name = [{$groups_arr_name}];
-  window.groups_arr_id = [{$groups_arr_id}];
-  window.groups_arr = window.groups_arr_id.map((elem, index) => [elem, window.groups_arr_name[index]]);
-  window.guest_id = {$guest_id};
-  window.nb_days = "{'%d days'|translate}";
-  window.nb_photos = "{'%d photos'|translate}";
-  window.nb_photos_per_page = "{'%d photos per page'|translate}";
-  window.pwg_token = '{$PWG_TOKEN}';
-  window.has_group = "{$filter_group}";
-
-  window.register_dates_str = '{$register_dates}';
-  window.register_dates = window.register_dates_str.split(',');
-  window.groupOptions = window.groups_arr.map(x => ({ value: x[0], label: x[1], isSelected: 0 }));
-</script>{/footer_script}
 
 {if $vite_user_list}
 <script type="module" src="admin/themes/default/js/dist/{$vite_user_list}"></script>

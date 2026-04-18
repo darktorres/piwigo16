@@ -1,43 +1,4 @@
-<script id="pwg-page-data" type="application/json">
-{
-  "data": {json_encode($album_data)},
-  "pwgToken": "{$PWG_TOKEN|escape:'html'}",
-  "strShowSub": "{'Show sub-albums'|translate|escape:'html'}",
-  "strHideSub": "{'Hide sub-albums'|translate|escape:'html'}",
-  "strManageSubAlbum": "{'Manage sub-albums'|translate|escape:'html'}",
-  "strApplyOrderRaw": "{'apply automatic sort order'|translate|escape:'html'}",
-  "strEdit": "{'Edit album'|translate|escape:'html'}",
-  "strAreYouSure": "{'The status of the album \'%s\' and its sub-albums will change to private. Are you sure?'|translate|escape:'html'}",
-  "strYesChangeParent": "{'Yes change parent anyway'|translate|escape:'html'}",
-  "strNoChangeParent": "{'No, don\'t move this album here'|translate|escape:'html'}",
-  "strRoot": "{'Root'|translate|escape:'html'}",
-  "openCat": {$open_cat},
-  "nbAlbums": {$nb_albums},
-  "lightAlbumManager": {$light_album_manager},
-  "xNbSubcats": "{'%d sub-albums'|translate|escape:'html'}",
-  "xNbImages": "{'%d photos'|translate|escape:'html'}",
-  "xNbSubPhotos": "{'%d pictures in sub-albums'|translate|escape:'html'}",
-  "delayAutoOpen": {$delay_before_autoOpen},
-  "deleteAlbumWithName": "{'Delete album \"%s\".'|translate|escape:'html'}",
-  "deleteAlbumWithSubs": "{'Delete album \"%s\" and its %d sub-albums.'|translate|escape:'html'}",
-  "hasImagesAssociatedOutside": "{'delete album and all %d photos, even the %d associated to other albums'|translate|escape:'html'}",
-  "hasImagesBecomingOrphans": "{'delete album and the %d orphan photos'|translate|escape:'html'}",
-  "hasImagesRecursives": "{'delete only album, not photos'|translate|escape:'html'}",
-  "renameItem": "{'Rename \"%s\"'|translate|escape:'html'}",
-  "strAddAlbum": "{'Add Album'|translate|escape:'html'}",
-  "strEditAlbum": "{'Edit album'|translate|escape:'html'}",
-  "strAddPhoto": "{'Add Photos'|translate|escape:'html'}",
-  "strVisitGallery": "{'Visit Gallery'|translate|escape:'html'}",
-  "strSortOrder": "{'Automatic sort order'|translate|escape:'html'}",
-  "strDeleteAlbum": "{'Delete album'|translate|escape:'html'}",
-  "strRootOrder": "{'Apply to root albums'|translate|escape:'html'}",
-  "strSubAlbumOrder": "{'Apply to direct sub-albums'|translate|escape:'html'}",
-  "strAlbumNameEmpty": "{'Album name must not be empty'|translate|escape:'html'}",
-  "addAlbumRootTitle": "{'Create a new album at root'|translate|escape:'html'}",
-  "addSubAlbumOf": "{'Create a sub-album of \"%s\"'|translate|escape:'html'}",
-  "tiptipLockedAlbum": "{'Locked album'|translate|escape:'html'}"
-}
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 

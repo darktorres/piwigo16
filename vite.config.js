@@ -47,6 +47,7 @@ const adminModules = [
   'rating',
   'site_manager',
   'updates_ext',
+  'user_activity',
 ];
 
 const input = {};

@@ -1,15 +1,5 @@
-{combine_script id='tom-select' load='footer' path='node_modules/tom-select/dist/js/tom-select.complete.js'}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
-{footer_script}<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll("#authors, #tags, #categories").forEach(function(select) {
-            new TomSelect(select, {
-                plugins: ['remove_button'],
-                maxOptions: select.querySelectorAll('option').length
-            });
-        });
-    });
-</script>{/footer_script}
+{footer_script}<script type="module" src="{$ROOT_URL}admin/themes/default/js/dist/{$vite_gallery_search}"></script>{/footer_script}
 
 <nav
     class="navbar navbar-contextual navbar-expand-lg {$theme_config->navbar_contextual_style} {$theme_config->navbar_contextual_bg} sticky-top mb-5">

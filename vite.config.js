@@ -64,6 +64,7 @@ const adminModules = [
 const galleryAndPluginModules = [
   // gallery default theme
   ['gallery_mcs',            'themes/default/js/mcs'],
+  ['gallery_search',         'themes/default/js/search'],
   ['gallery_rating',         'themes/default/js/rating'],
   ['gallery_switchbox',      'themes/default/js/switchbox'],
   ['gallery_scripts',        'themes/default/js/scripts'],

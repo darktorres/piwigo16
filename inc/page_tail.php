@@ -24,6 +24,7 @@ functions_plugins::trigger_notify('loc_begin_page_tail');
 require_once __DIR__ . '/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, [
     'mcs'             => 'themes/default/js/mcs',
+    'gallery_search'  => 'themes/default/js/search',
     'gallery_rating'  => 'themes/default/js/rating',
     'switchbox'       => 'themes/default/js/switchbox',
     'gallery_scripts' => 'themes/default/js/scripts',

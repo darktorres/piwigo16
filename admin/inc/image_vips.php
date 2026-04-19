@@ -148,6 +148,9 @@ final class image_vips implements imageInterface
         }
 
         $lockPath = __DIR__ . '/../../_data/cache/vips_init.lock';
+        if (!is_dir(dirname($lockPath))) {
+            mkdir(dirname($lockPath), 0755, true);
+        }
         $fp = fopen($lockPath, 'c');
         if ($fp === false) {
             throw new \RuntimeException('image_vips: cannot open ' . $lockPath);

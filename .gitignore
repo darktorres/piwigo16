@@ -37,3 +37,4 @@ compose.override.yaml
 # Everything SDK (binaries + header, installed locally)
 /admin/inc/Everything3_x64.dll
 /admin/inc/Everything3.h
+rr.exe

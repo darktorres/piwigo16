@@ -66,18 +66,21 @@ final class EverythingSDK
         uint32_t Everything3_GetLastError(void);
         C;
 
-    private function __construct(private readonly \FFI $ffi, private readonly string $instanceName)
-    {
-    }
-
     /**
      * Attempt to create an SDK instance.
      *
      * Returns null when the DLL can't be loaded, ext-ffi is missing,
      * or Everything is not running (connection test fails).
      */
-    /** @var string|null Last error from create(), for diagnostics. */
+    /**
+     * @var string|null Last error from create(), for diagnostics.
+     */
     public static ?string $lastError = null;
+
+    private function __construct(
+        private readonly \FFI $ffi,
+        private readonly string $instanceName
+    ) {}
 
     public static function create(string $dllPath, string $instanceName = '1.5a'): ?self
     {
@@ -240,9 +243,14 @@ final class EverythingSDK
                         $i,
                         self::PROPERTY_SIZE
                     );
-                    $results[] = ['path' => $path, 'size_bytes' => (int) $sizeBytes];
+                    $results[] = [
+                        'path' => $path,
+                        'size_bytes' => (int) $sizeBytes,
+                    ];
                 } else {
-                    $results[] = ['path' => $path];
+                    $results[] = [
+                        'path' => $path,
+                    ];
                 }
             }
 
@@ -255,7 +263,6 @@ final class EverythingSDK
             $this->destroyHandle($client, 'Everything3_DestroyClient');
         }
     }
-
 
     private function isNullHandle(mixed $handle): bool
     {

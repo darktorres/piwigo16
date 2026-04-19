@@ -19,7 +19,11 @@ if (isset($_POST['save_config'])) {
     $page['infos'][] = functions::l10n('Information data registered in database');
 }
 
-$adminToolsDefaults = ['default_open' => false, 'closed_position' => 'right', 'public_quick_edit' => false];
+$adminToolsDefaults = [
+    'default_open' => false,
+    'closed_position' => 'right',
+    'public_quick_edit' => false,
+];
 $adminToolsConf = is_array($conf->AdminTools) ? array_merge($adminToolsDefaults, $conf->AdminTools) : $adminToolsDefaults;
 
 $template->assign([
@@ -28,7 +32,9 @@ $template->assign([
 ]);
 
 require_once PHPWG_ROOT_PATH . 'inc/vite_helper.php';
-\Piwigo\Vite\vite_assign_modules($template, ['at_admin' => 'plugins/AdminTools/js/admin']);
+\Piwigo\Vite\vite_assign_modules($template, [
+    'at_admin' => 'plugins/AdminTools/js/admin',
+]);
 
 $template->set_filename('admintools_content', realpath(ADMINTOOLS_PATH . 'template/admin.tpl'));
 $template->assign_var_from_handle('ADMIN_CONTENT', 'admintools_content');

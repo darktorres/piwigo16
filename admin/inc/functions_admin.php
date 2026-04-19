@@ -3575,7 +3575,7 @@ final class functions_admin
             );
 
             functions::conf_update_param('storage_by_ext', json_encode([
-                'images'  => $images_by_ext,
+                'images' => $images_by_ext,
                 'formats' => $formats_by_ext,
             ]), true);
         }
@@ -4062,7 +4062,7 @@ final class functions_admin
     public static function order_by_is_local(): bool
     {
         /**
-         * @var Config $conf
+         * @var Config
          */
         $conf = [];
         require __DIR__ . '/../../inc/config_default.php';

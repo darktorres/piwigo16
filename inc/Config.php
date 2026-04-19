@@ -286,7 +286,6 @@ class Config
     // Limit for linked albums search
     public int $linked_album_search_limit = 100;
 
-
     // +-----------------------------------------------------------------------+
     // |                                 email                                 |
     // +-----------------------------------------------------------------------+
@@ -1107,7 +1106,6 @@ class Config
     public array $flip_file_ext;
 
     public array $flip_picture_ext;
-
 
     public bool $gallery_locked;
 

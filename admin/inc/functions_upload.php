@@ -801,20 +801,6 @@ final class functions_upload
         return $representative_ext;
     }
 
-    private static function rep_path(string $fs_path, string $ext): string
-    {
-        global $conf;
-        $normalized = str_replace('\\', '/', $fs_path);
-        $root = rtrim(str_replace('\\', '/', PHPWG_ROOT_PATH), '/') . '/';
-        $rel = str_starts_with($normalized, $root) ? substr($normalized, strlen($root)) : ltrim($normalized, '/');
-        $dot = strrpos($rel, '.');
-        if ($dot !== false) {
-            $rel = substr($rel, 0, $dot + 1) . $ext;
-        }
-
-        return PHPWG_ROOT_PATH . $conf->data_location . 'i/' . $rel;
-    }
-
     public static function prepare_directory(
         string $directory
     ): void {
@@ -991,5 +977,19 @@ final class functions_upload
         $margin_coef = 1.5;
 
         return [$w * $margin_coef, $h * $margin_coef];
+    }
+
+    private static function rep_path(string $fs_path, string $ext): string
+    {
+        global $conf;
+        $normalized = str_replace('\\', '/', $fs_path);
+        $root = rtrim(str_replace('\\', '/', PHPWG_ROOT_PATH), '/') . '/';
+        $rel = str_starts_with($normalized, $root) ? substr($normalized, strlen($root)) : ltrim($normalized, '/');
+        $dot = strrpos($rel, '.');
+        if ($dot !== false) {
+            $rel = substr($rel, 0, $dot + 1) . $ext;
+        }
+
+        return PHPWG_ROOT_PATH . $conf->data_location . 'i/' . $rel;
     }
 }

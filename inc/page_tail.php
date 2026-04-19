@@ -21,7 +21,6 @@ $template->set_filenames([
 
 functions_plugins::trigger_notify('loc_begin_page_tail');
 
-
 $template->assign(
     [
         'VERSION' => $conf->show_version ? PHPWG_VERSION : '',

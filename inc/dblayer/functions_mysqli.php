@@ -30,6 +30,24 @@ final class functions_mysqli
     public const int MASS_UPDATES_SKIP_EMPTY = 1;
 
     /**
+     * Inserts multiple lines in a table.
+     *
+     * @param array $dbfields - fields from $datas which will be used
+     * @param array{
+     *     ignore: bool,
+     * } $options
+     */
+    /**
+     * Cached value of @@max_allowed_packet (session-lifetime).
+     */
+    private static ?int $cachedPacketSize = null;
+
+    /**
+     * Cached regex word-boundary tokens (derived from DB version, set once per request).
+     */
+    private static ?array $cachedWordBoundary = null;
+
+    /**
      * Connect to database and store MySQLi resource in __$mysqli__ global variable.
      *
      * @param string $host
@@ -460,20 +478,6 @@ final class functions_mysqli
         }
     }
 
-    /**
-     * Inserts multiple lines in a table.
-     *
-     * @param array $dbfields - fields from $datas which will be used
-     * @param array{
-     *     ignore: bool,
-     * } $options
-     */
-    /** Cached value of @@max_allowed_packet (session-lifetime). */
-    private static ?int $cachedPacketSize = null;
-
-    /** Cached regex word-boundary tokens (derived from DB version, set once per request). */
-    private static ?array $cachedWordBoundary = null;
-
     public static function mass_inserts(
         string $table_name,
         array $dbfields,
@@ -628,7 +632,7 @@ final class functions_mysqli
 
         $query = "LOAD DATA LOCAL INFILE '{$path}'"
             . " INTO TABLE {$table_name}"
-            . " CHARACTER SET utf8mb4"
+            . ' CHARACTER SET utf8mb4'
             . " FIELDS TERMINATED BY '\\t'"
             . " LINES TERMINATED BY '\\n'"
             . " ({$fields});";
@@ -720,7 +724,7 @@ final class functions_mysqli
 
         $existing[] = $new_value;
         $values = implode(',', array_map(
-            fn(?string $v): string => "'" . self::pwg_db_real_escape_string($v) . "'",
+            fn (?string $v): string => "'" . self::pwg_db_real_escape_string($v) . "'",
             $existing
         ));
         self::pwg_query("ALTER TABLE {$table} CHANGE {$column} {$column} ENUM({$values}) DEFAULT NULL;");
@@ -774,9 +778,15 @@ final class functions_mysqli
 
         if (! $isMariaDB && version_compare($version, '8.0.4', '>=')) {
             // ICU regex: four PHP backslashes → \\b in the SQL literal → \b seen by ICU.
-            self::$cachedWordBoundary = ['begin' => '\\\\b', 'end' => '\\\\b'];
+            self::$cachedWordBoundary = [
+                'begin' => '\\\\b',
+                'end' => '\\\\b',
+            ];
         } else {
-            self::$cachedWordBoundary = ['begin' => '[[:<:]]', 'end' => '[[:>:]]'];
+            self::$cachedWordBoundary = [
+                'begin' => '[[:<:]]',
+                'end' => '[[:>:]]',
+            ];
         }
 
         return self::$cachedWordBoundary;
@@ -793,7 +803,9 @@ final class functions_mysqli
         return "MATCH({$fieldList}) AGAINST('{$termsStr}' IN BOOLEAN MODE)";
     }
 
-    /** No-op for MySQL: sequences are auto-incremented columns managed natively. */
+    /**
+     * No-op for MySQL: sequences are auto-incremented columns managed natively.
+     */
     public static function sync_sequences(): void {}
 
     /**

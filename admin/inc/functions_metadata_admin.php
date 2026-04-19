@@ -319,7 +319,12 @@ final class functions_metadata_admin
 
             foreach ($prof as $k => $v) {
                 if (! isset($GLOBALS['sync_meta_prof'][$k])) {
-                    $GLOBALS['sync_meta_prof'][$k] = ['total' => 0, 'count' => 0, 'max' => 0, 'max_file' => ''];
+                    $GLOBALS['sync_meta_prof'][$k] = [
+                        'total' => 0,
+                        'count' => 0,
+                        'max' => 0,
+                        'max_file' => '',
+                    ];
                 }
 
                 $GLOBALS['sync_meta_prof'][$k]['total'] += $v;
@@ -438,55 +443,6 @@ final class functions_metadata_admin
     }
 
     /**
-     * Returns the category IDs for a given site / optional category filter.
-     *
-     * Extracted from get_filelist() so it can be shared with count_filelist().
-     *
-     * @return list<int>
-     */
-    private static function get_filelist_cat_ids(
-        string $category_id,
-        int|string $site_id,
-        bool $recursive
-    ): array {
-        global $conf;
-
-        $query = <<<SQL
-            SELECT id
-            FROM categories
-            WHERE site_id = {$site_id}
-                AND dir IS NOT NULL
-
-            SQL;
-
-        if (is_numeric($category_id)) {
-            if ($recursive) {
-                $regex_operator = $conf->sql_backend::DB_REGEX_OPERATOR;
-                $query .= <<<SQL
-                    AND uppercats {$regex_operator} '(^|,){$category_id}(,|$)'
-
-                    SQL;
-            } else {
-                $query .= <<<SQL
-                    AND id = {$category_id}
-
-                    SQL;
-            }
-        }
-
-        $query = trim($query) . ';';
-        $result = $conf->sql_backend::pwg_query($query);
-
-        $cat_ids = [];
-
-        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-            $cat_ids[] = $row['id'];
-        }
-
-        return $cat_ids;
-    }
-
-    /**
      * Yields elements (image rows) for the given site/category.
      *
      * Converted from array-returning to a Generator that pages through
@@ -515,8 +471,8 @@ final class functions_metadata_admin
             return;
         }
 
-        $imploded_cat_ids       = implode(', ', $cat_ids);
-        $only_new_clause        = $only_new          ? 'AND date_metadata_update IS NULL' : '';
+        $imploded_cat_ids = implode(', ', $cat_ids);
+        $only_new_clause = $only_new ? 'AND date_metadata_update IS NULL' : '';
         $only_representable_clause = $only_representable ? 'AND representative_ext IS NOT NULL' : '';
 
         $last_id = 0;
@@ -619,5 +575,54 @@ final class functions_metadata_admin
                 )
             )
         );
+    }
+
+    /**
+     * Returns the category IDs for a given site / optional category filter.
+     *
+     * Extracted from get_filelist() so it can be shared with count_filelist().
+     *
+     * @return list<int>
+     */
+    private static function get_filelist_cat_ids(
+        string $category_id,
+        int|string $site_id,
+        bool $recursive
+    ): array {
+        global $conf;
+
+        $query = <<<SQL
+            SELECT id
+            FROM categories
+            WHERE site_id = {$site_id}
+                AND dir IS NOT NULL
+
+            SQL;
+
+        if (is_numeric($category_id)) {
+            if ($recursive) {
+                $regex_operator = $conf->sql_backend::DB_REGEX_OPERATOR;
+                $query .= <<<SQL
+                    AND uppercats {$regex_operator} '(^|,){$category_id}(,|$)'
+
+                    SQL;
+            } else {
+                $query .= <<<SQL
+                    AND id = {$category_id}
+
+                    SQL;
+            }
+        }
+
+        $query = trim($query) . ';';
+        $result = $conf->sql_backend::pwg_query($query);
+
+        $cat_ids = [];
+
+        while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
+            $cat_ids[] = $row['id'];
+        }
+
+        return $cat_ids;
     }
 }

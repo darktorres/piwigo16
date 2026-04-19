@@ -302,14 +302,16 @@ export class UsersCache extends AbstractSelectizer {
             ? Array.from(target) as HTMLSelectElement[]
             : (Array.isArray(target) ? target as HTMLSelectElement[] : [target as HTMLSelectElement]);
         els.forEach((el) => {
-            new TomSelect(el, {
-                valueField: "id",
-                labelField: "username",
-                sortField: "username",
-                searchField: ["username"],
-                plugins: ["remove_button"],
-                render: AbstractSelectizer.getRender("username", options.lang),
-            });
+            if (!(el as HTMLSelectElement & { tomselect?: TomSelect }).tomselect) {
+                new TomSelect(el, {
+                    valueField: "id",
+                    labelField: "username",
+                    sortField: "username",
+                    searchField: ["username"],
+                    plugins: ["remove_button"],
+                    render: AbstractSelectizer.getRender("username", options.lang),
+                });
+            }
         });
         this._selectize(els, options);
     }

@@ -3,7 +3,8 @@ import { pwgAddAlbum } from './addAlbum.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import { sprintf } from './common.js';
 import { initModule } from './moduleInit.js';
-import Dropzone from 'dropzone';
+import DropzoneImport from 'dropzone';
+const Dropzone: typeof DropzoneImport = (DropzoneImport as unknown as { default: typeof DropzoneImport }).default ?? DropzoneImport;
 import Piecon from 'piecon';
 
 interface PwigoDropzoneFile extends Dropzone.DropzoneFile {

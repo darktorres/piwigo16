@@ -118,5 +118,6 @@ $template->assign([
     'available_skins' => $available_skins,
 ]);
 
+\Piwigo\Vite\vite_assign_modules($template, ['common']);
 $template->set_filename('modus_content', __DIR__ . '/modus_admin.tpl');
 $template->assign_var_from_handle('ADMIN_CONTENT', 'modus_content');

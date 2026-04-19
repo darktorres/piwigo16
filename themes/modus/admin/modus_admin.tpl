@@ -80,7 +80,7 @@
 
 
 {footer_script}<script type="module">
-  import { sprintf } from './admin/themes/default/js/common.js';
+  import { sprintf } from './admin/themes/default/js/dist/{$vite_common}';
   document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('#modus-config input[type=checkbox]').forEach(function(cb) {
       cb.addEventListener('change', function() {

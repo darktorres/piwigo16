@@ -204,7 +204,7 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
                 const threshold = Math.max(0, currentScrollY - 60);
                 const elts = cfg.$thumbs ? cfg.$thumbs.children : [];
                 for (let i = 0; i < elts.length; i++) {
-                    const r = elts[i].getBoundingClientRect();
+                    const r = elts[i]!.getBoundingClientRect();
                     const offsetTop = r.top + currentScrollY;
                     if (offsetTop >= threshold) {
                         const start = cfg.start + i;

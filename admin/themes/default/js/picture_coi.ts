@@ -15,7 +15,7 @@ function jOnChange(detail: { x: number; y: number; width: number; height: number
     };
     Object.keys(fields).forEach(function (id) {
         const el = document.getElementById(id) as HTMLInputElement | null;
-        if (el) el.value = String(to_coi(fields[id], (id === 'l' || id === 'r') ? w : h));
+        if (el) el.value = String(to_coi(fields[id]!, (id === 'l' || id === 'r') ? w : h));
     });
 }
 
@@ -25,7 +25,7 @@ function jOnRelease(): void {
 
 const img = document.getElementById('jcrop') as HTMLImageElement | null;
 if (img) {
-    const coiRaw = img.dataset.coi;
+    const coiRaw = img.dataset['coi'];
     const coiData: CoiData | null = coiRaw ? JSON.parse(coiRaw) as CoiData : null;
 
     const cropperConfig: Cropper.Options<HTMLImageElement> = {

@@ -74,7 +74,7 @@ export function init(cfg: CatSearchConfig): void {
     }
 
     function addAlbumResult(cat: [string, number[]], nbResult: number): void {
-        const id = cat[1][cat[1].length - 1];
+        const id = cat[1][cat[1].length - 1]!;
         const templateEl = document.querySelector('.search-album-elem-template');
         const template = templateEl ? templateEl.innerHTML.trim() : '';
         const tempDiv = document.createElement('div');
@@ -85,14 +85,14 @@ export function init(cfg: CatSearchConfig): void {
         let hasChildren = false;
         categories.forEach(c => {
             for (let i = 0; i < c[1].length - 1; i++) {
-                if (c[1][i] === id) hasChildren = true;
+                if (c[1][i]! === id) hasChildren = true;
             }
         });
 
         const iconEl = newCatNode.querySelector<HTMLElement>('.search-album-icon');
         if (iconEl) {
             iconEl.classList.add(hasChildren ? 'icon-sitemap' : 'icon-folder-open');
-            iconEl.classList.add(colors[id % 5]);
+            iconEl.classList.add(colors[id % 5]!);
         }
 
         const nameEl = newCatNode.querySelector('.search-album-name');
@@ -116,11 +116,11 @@ export function init(cfg: CatSearchConfig): void {
     function getHtmlPath(cat: [string, number[]]): string {
         let html = '';
         for (let i = 0; i < cat[1].length - 1; i++) {
-            const id_bis = cat[1][i];
-            const c = catSearchData[id_bis];
+            const id_bis = cat[1][i]!;
+            const c = catSearchData[id_bis]!;
             html += '<a href="' + editLink + id_bis + '">' + c[0] + '</a> <b>/</b> ';
         }
-        html += '<a href="' + editLink + cat[1][cat[1].length - 1] + '">' + cat[0] + '</a>';
+        html += '<a href="' + editLink + cat[1][cat[1].length - 1]! + '">' + cat[0] + '</a>';
         return html;
     }
 

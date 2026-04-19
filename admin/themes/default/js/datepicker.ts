@@ -25,7 +25,7 @@ export function pwgDatepicker(
 
     els.forEach(function (el) {
         const inputEl = el as HTMLInputElement;
-        const name = inputEl.dataset.datepicker;
+        const name = inputEl.dataset['datepicker'];
         const hiddenEl = name ? document.querySelector<HTMLInputElement>('[name="' + name + '"]') : null;
         const initialValue = hiddenEl ? hiddenEl.value.trim() : '';
         let originalDate: Date | null = null;
@@ -43,11 +43,11 @@ export function pwgDatepicker(
                 if (hiddenEl) {
                     hiddenEl.value = d ? formatMachine(d, !!opts.showTimepicker) : '';
                 }
-                const endName = inputEl.dataset.datepickerEnd;
+                const endName = inputEl.dataset['datepickerEnd'];
                 if (endName && instances[endName]) {
                     (instances[endName] as { set(k: string, v: Date | null): void }).set('minDate', d ?? null);
                 }
-                const startName = inputEl.dataset.datepickerStart;
+                const startName = inputEl.dataset['datepickerStart'];
                 if (startName && instances[startName]) {
                     (instances[startName] as { set(k: string, v: Date | null): void }).set('maxDate', d ?? null);
                 }
@@ -77,7 +77,7 @@ export function pwgDatepicker(
 
         if (name) instances[name] = fpInstance;
 
-        const unsetId = inputEl.dataset.datepickerUnset;
+        const unsetId = inputEl.dataset['datepickerUnset'];
         if (unsetId) {
             const unsetBtn = document.getElementById(unsetId);
             if (unsetBtn) {
@@ -92,10 +92,10 @@ export function pwgDatepicker(
 
     els.forEach(function (el) {
         const inputEl = el as HTMLInputElement;
-        const name = inputEl.dataset.datepicker;
+        const name = inputEl.dataset['datepicker'];
         const fp = name ? instances[name] : null;
         if (!fp) return;
-        const startName = inputEl.dataset.datepickerStart;
+        const startName = inputEl.dataset['datepickerStart'];
         if (startName && instances[startName]) {
             const fpTyped = instances[startName] as { selectedDates: Date[] };
             const startDate = fpTyped.selectedDates[0];

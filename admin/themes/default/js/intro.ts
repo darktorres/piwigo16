@@ -19,10 +19,10 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll<HTMLElement>('.cluetip').forEach(function (el) {
         const raw = el.getAttribute('title') ?? '';
         el.removeAttribute('title');
-        el.dataset.cluetip = raw;
+        el.dataset['cluetip'] = raw;
         let activeTip: HTMLDivElement | null = null;
         el.addEventListener('mouseenter', function (e: MouseEvent) {
-            const parts = (el.dataset.cluetip ?? '').split('|');
+            const parts = (el.dataset['cluetip'] ?? '').split('|');
             const tip = document.createElement('div');
             tip.className = 'pwg-cluetip';
             tip.style.cssText = 'position:absolute;z-index:9999;background:#fff;border:1px solid #ccc;padding:8px;width:300px;box-shadow:2px 2px 6px rgba(0,0,0,.2);font-size:13px;';
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const translate_type: Record<string, string> = {};
     const storageDetails = cfg.storage_details ?? {};
     Object.keys(storageDetails).forEach(function (type) {
-        translate_type[type] = storageDetails[type]._translate ?? type;
+        translate_type[type] = storageDetails[type]?._translate ?? type;
     });
 
     Object.entries(storageDetails).forEach(([type, infos]) => {
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (infos.details) {
             Object.keys(infos.details).forEach(function (ext) {
-                const data = infos.details![ext];
+                const data = infos.details![ext]!;
                 const detail_size = data.filesize;
                 let detail_str_size_type: string;
                 let detail_size_nb: string;
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     function positionStorageTooltip(el: HTMLElement): void {
-        const tooltipId = el.dataset.type;
+        const tooltipId = el.dataset['type'];
         const tooltip = document.querySelector<HTMLElement>('.storage-tooltips #' + tooltipId);
         const arrow = document.querySelector<HTMLElement>('.storage-tooltips #' + tooltipId + ' .tooltip-arrow');
         if (!tooltip || !arrow) return;
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.querySelectorAll<HTMLElement>('.storage-chart span').forEach(function (el) {
-        const tooltipId = el.dataset.type;
+        const tooltipId = el.dataset['type'];
         const tooltip = document.querySelector<HTMLElement>('.storage-tooltips #' + tooltipId);
         positionStorageTooltip(el);
         if (tooltip) {

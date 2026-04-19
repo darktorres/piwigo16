@@ -8,7 +8,7 @@ export function init(_cfg: Record<string, unknown>): void {
     };
 
     Object.keys(targets).forEach(function (selector) {
-        const targetEl = document.querySelector<HTMLElement>(targets[selector]);
+        const targetEl = document.querySelector<HTMLElement>(targets[selector]!);
         const triggerEl = document.querySelector<HTMLInputElement>(selector);
         if (!targetEl || !triggerEl) return;
 

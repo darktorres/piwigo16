@@ -23,7 +23,7 @@ export const GeoIp = {
                 const parsed = JSON.parse(cache) as GeoIpCache;
                 const now = new Date().getTime();
                 for (const key in parsed) {
-                    if (now - parsed[key].reqTime > 96 * 3600000) delete parsed[key];
+                    if (now - (parsed[key]?.reqTime ?? 0) > 96 * 3600000) delete parsed[key];
                 }
                 GeoIp.cache = parsed;
             }
@@ -33,7 +33,7 @@ export const GeoIp = {
         }
 
         if (Object.hasOwn(GeoIp.cache, ip)) {
-            callback(GeoIp.cache[ip]);
+            callback(GeoIp.cache[ip]!);
         } else if (GeoIp.pending[ip]) {
             GeoIp.pending[ip].push(callback);
         } else {
@@ -48,14 +48,14 @@ export const GeoIp = {
                     if (data.country_name) res.push(data.country_name);
                     data.fullName = res.join(", ");
                     GeoIp.cache[ip] = data;
-                    const callbacks = GeoIp.pending[ip];
+                    const callbacks = GeoIp.pending[ip]!;
                     delete GeoIp.pending[ip];
                     for (const cb of callbacks) cb(data);
                 })
                 .catch(function () {
                     const data: GeoIpData = { ip, reqTime: new Date().getTime() };
                     GeoIp.cache[ip] = data;
-                    const callbacks = GeoIp.pending[ip];
+                    const callbacks = GeoIp.pending[ip]!;
                     delete GeoIp.pending[ip];
                     for (const cb of callbacks) cb(data);
                 });

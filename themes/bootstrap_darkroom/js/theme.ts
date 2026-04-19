@@ -20,7 +20,7 @@ export function getCookie(name: string): string | null {
     const nameEQ = name + "=";
     const cookies = document.cookie.split(';');
     for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
+        const cookie = cookies[i]!.trim();
         if (cookie.indexOf(nameEQ) === 0) return cookie.substring(nameEQ.length);
     }
     return null;
@@ -35,14 +35,14 @@ export function changeElementType(element: Element | null, newType: string): voi
 
     const attrs: Record<string, string> = {};
     for (let i = 0; i < element.attributes.length; i++) {
-        const attr = element.attributes[i];
+        const attr = element.attributes[i]!;
         attrs[attr.nodeName] = attr.nodeValue ?? '';
     }
 
     const newElement = document.createElement(newType);
     for (const key in attrs) {
         if (Object.prototype.hasOwnProperty.call(attrs, key)) {
-            newElement.setAttribute(key, attrs[key]);
+            newElement.setAttribute(key, attrs[key]!);
         }
     }
 
@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const addCollection = colOuter.querySelector<HTMLElement>(".addCollection");
                 if (addCollection) addCollection.removeAttribute("style");
 
-                const gridClasses = colOuter.dataset.gridClasses;
+                const gridClasses = colOuter.dataset['gridClasses'];
                 colOuter.classList.remove("col-12");
                 if (gridClasses) colOuter.classList.add(gridClasses);
 
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     addCollection.setAttribute("style", "width: " + width + "px");
                 }
 
-                const gridClasses = colOuter.dataset.gridClasses;
+                const gridClasses = colOuter.dataset['gridClasses'];
                 if (gridClasses) colOuter.classList.remove(gridClasses);
                 colOuter.classList.add("col-12");
 

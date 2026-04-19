@@ -339,7 +339,6 @@ export function init(cfg: PluginsInstalledConfig): void {
     document.addEventListener('keydown', function (e) {
         if (e.keyCode === 58) {
             document.querySelector<HTMLInputElement>('.pluginFilter input.search-input')?.focus();
-            return false;
         }
     });
 
@@ -461,9 +460,9 @@ export function init(cfg: PluginsInstalledConfig): void {
                 if (showDetails) {
                     document.querySelector<HTMLElement>('#' + data[i] + ' .pluginName')?.insertAdjacentHTML('afterbegin', '<a class="warning" title="' + incompatibleMsg + '"></a>');
                 } else {
-                    document.querySelector<HTMLElement>('#' + data[i] + ' .pluginName')?.insertAdjacentHTML('afterbegin', '<span class="warning" title="' + incompatibleMsg + '"></span>');
+                    document.querySelector<HTMLElement>('#' + data[i]! + ' .pluginName')?.insertAdjacentHTML('afterbegin', '<span class="warning" title="' + incompatibleMsg + '"></span>');
                 }
-                const el = document.getElementById(data[i]);
+                const el = document.getElementById(data[i]!);
                 if (el) {
                     el.classList.add('incompatible');
                     el.querySelectorAll<HTMLAnchorElement>('.activate').forEach(function (activateBtn) {

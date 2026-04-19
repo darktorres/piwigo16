@@ -41,11 +41,11 @@ export function init(cfg: MaintenanceConfig): void {
         mValues: Record<string, string>,
     ): void {
         for (let index = 0; index < domElem.length; index++) {
-            if (domElem[index]) domElem[index]!.innerHTML = unit_MB.replace("%s", values[index]);
+            if (domElem[index]) domElem[index]!.innerHTML = unit_MB.replace("%s", values[index] ?? '');
         }
         mDivs.forEach(function (div) {
             const name = div.getAttribute("name");
-            if (name) (div as HTMLElement).title = unit_MB.replace("%s", mValues[name]);
+            if (name) (div as HTMLElement).title = unit_MB.replace("%s", mValues[name] ?? '');
         });
         const cacheLastCalc = document.querySelector(".cache-lastCalculated-value");
         if (cacheLastCalc) cacheLastCalc.innerHTML = no_time_elapsed;
@@ -143,9 +143,9 @@ export function init(cfg: MaintenanceConfig): void {
                             document.querySelector(".multiple-compiledTemplate-sizes"),
                         ];
                         const domElemValues = [
-                            String((data.result.infos[0].value as number) / 1024 / 1024),
-                            String(((data.result.infos[1].value as Record<string, number>).all) / 1024 / 1024),
-                            String((data.result.infos[2].value as number) / 1024 / 1024),
+                            String((data.result.infos[0]!.value as number) / 1024 / 1024),
+                            String(((data.result.infos[1]!.value as Record<string, number>)['all']!) / 1024 / 1024),
+                            String((data.result.infos[2]!.value as number) / 1024 / 1024),
                         ].map(v => parseFloat(v).toFixed(2));
 
                         const deleteCheckContainer = document.querySelector(".delete-check-container");
@@ -153,7 +153,7 @@ export function init(cfg: MaintenanceConfig): void {
                             ? deleteCheckContainer.querySelectorAll(".delete-size-check")
                             : document.querySelectorAll(".delete-size-check-none");
                         const multipleSizesValues = Object.fromEntries(
-                            Object.entries(data.result.infos[1].value as Record<string, number>).map(
+                            Object.entries(data.result.infos[1]!.value as Record<string, number>).map(
                                 ([k, v]) => [k, parseFloat((v / 1024 / 1024).toFixed(2)).toString()]
                             )
                         );

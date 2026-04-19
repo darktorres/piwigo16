@@ -10,8 +10,8 @@ interface LocalStorageCacheOptions {
 }
 
 interface SelectizeOptions {
-    value?: (string | number) | Array<string | number | { id: string | number }>;
-    default?: string | number;
+    value?: (string | number) | Array<string | number | { id: string | number }> | undefined;
+    default?: string | number | undefined;
     create?: boolean;
     filter?: (this: Element, data: CacheItem[], options: SelectizeOptions) => CacheItem[];
     lang?: Record<string, string>;
@@ -106,7 +106,7 @@ abstract class AbstractSelectizer extends LocalStorageCache {
 
                 if (Object.keys(ts.options).length === 0) ts.addOptions(filtered);
 
-                const valueAttr = (el as HTMLElement).dataset.value;
+                const valueAttr = (el as HTMLElement).dataset['value'];
                 if (valueAttr) options.value = JSON.parse(valueAttr) as SelectizeOptions['value'];
 
                 if (options.value !== undefined) {
@@ -122,7 +122,7 @@ abstract class AbstractSelectizer extends LocalStorageCache {
 
                 const defaultAttr = (el as HTMLElement).dataset['default'];
                 if (defaultAttr) options.default = defaultAttr;
-                if (options.default === "first") options.default = filtered[0] ? String(filtered[0].id) : undefined;
+                if (options.default === "first") options.default = filtered[0] ? String(filtered[0]['id']) : undefined;
 
                 if (options.default !== undefined) {
                     if (ts.getValue() === "") ts.addItem(String(options.default));
@@ -171,7 +171,7 @@ export class CategoriesCache extends AbstractSelectizer {
                 .then((r) => r.json())
                 .then((data: { result: { categories: CacheItem[] } }) => {
                     const cats = data.result.categories.map((c, i) => {
-                        c.pos = i;
+                        c['pos'] = i;
                         delete c["comment"];
                         delete c["uppercats"];
                         return c;
@@ -209,7 +209,7 @@ export class TagsCache extends AbstractSelectizer {
                 .then((r) => r.json())
                 .then((data: { result: { tags: CacheItem[] } }) => {
                     const tags = data.result.tags.map((t) => {
-                        t.id = "~~" + String(t.id) + "~~";
+                        t['id'] = "~~" + String(t['id']) + "~~";
                         delete t["url_name"];
                         delete t["lastmodified"];
                         return t;

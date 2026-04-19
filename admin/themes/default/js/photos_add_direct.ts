@@ -242,7 +242,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
             files.forEach((f) => {
                 const search = result.result[f.upload?.uuid ?? ''];
                 if (search?.status === 'found') {
-                    f.format_of = search.image_id;
+                    if (search.image_id !== undefined) f.format_of = search.image_id;
                 } else {
                     if (search?.status === 'multiple') multiple.push(f.name);
                     else notFound.push(f.name);

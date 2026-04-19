@@ -29,12 +29,12 @@ export function makeNiceRatingForm(options: RatingOptions): void {
     gUserRating = "";
     gRatingButtons.forEach(function (button) {
         if (button.classList.contains("rateButtonStarFull")) {
-            gUserRating = button.dataset.value ?? '';
+            gUserRating = button.dataset['value'] ?? '';
         }
     });
 
     gRatingButtons.forEach(function (button) {
-        button.dataset.initialRateValue = button.dataset.value;
+        button.dataset['initialRateValue'] = button.dataset['value'];
 
         pwgAddEventListener(button, "click", updateRating);
         pwgAddEventListener(button, "mouseout", function () {
@@ -42,7 +42,7 @@ export function makeNiceRatingForm(options: RatingOptions): void {
         });
         pwgAddEventListener(button, "mouseover", function (e: Event) {
             const target = (e.target || (e as unknown as { srcElement?: HTMLElement }).srcElement) as HTMLElement | null;
-            const targetValue = target ? target.dataset.initialRateValue ?? '' : '';
+            const targetValue = target ? target.dataset['initialRateValue'] ?? '' : '';
             updateRatingStarDisplay(targetValue);
         });
     });
@@ -52,7 +52,7 @@ export function makeNiceRatingForm(options: RatingOptions): void {
 
 function updateRatingStarDisplay(userRating: string): void {
     gRatingButtons.forEach(function (button) {
-        const initialValue = parseFloat(button.dataset.initialRateValue ?? '');
+        const initialValue = parseFloat(button.dataset['initialRateValue'] ?? '');
         const shouldBeFull = userRating !== "" && parseFloat(userRating) >= initialValue;
 
         if (shouldBeFull) {
@@ -67,15 +67,15 @@ function updateRatingStarDisplay(userRating: string): void {
 
 function updateRating(e: Event): boolean {
     const elem = (e.target || (e as unknown as { srcElement?: HTMLElement }).srcElement) as HTMLElement;
-    const rateButtonValue = elem.dataset.initialRateValue ?? '';
-    const isDisabled = elem.dataset.disabled == "true";
+    const rateButtonValue = elem.dataset['initialRateValue'] ?? '';
+    const isDisabled = elem.dataset['disabled'] == "true";
 
     if (isDisabled || rateButtonValue == gUserRating) {
         return false;
     }
 
     gRatingButtons.forEach(function () {
-        elem.dataset.disabled = "true";
+        elem.dataset['disabled'] = "true";
     });
 
     const y = new PwgWS(gRatingOptions.rootUrl);
@@ -97,7 +97,7 @@ function updateRating(e: Event): boolean {
                 const result = rawResult as RatingResult;
                 gUserRating = rateButtonValue;
                 gRatingButtons.forEach(function () {
-                    elem.dataset.disabled = "false";
+                    elem.dataset['disabled'] = "false";
                 });
                 if (gRatingOptions.onSuccess) gRatingOptions.onSuccess(result);
                 if (gRatingOptions.updateRateElement)

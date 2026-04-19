@@ -130,7 +130,7 @@ export function setupPwgOpenWindow(): void {
         const link = (e.target as Element).closest<HTMLElement>('[data-action="pwgOpenWindow"]');
         if (link) {
             e.preventDefault();
-            phpWGOpenWindow(link.dataset.url ?? '', 'xxx', link.dataset.features ?? '');
+            phpWGOpenWindow(link.dataset['url'] ?? '', 'xxx', link.dataset['features'] ?? '');
         }
     });
 }

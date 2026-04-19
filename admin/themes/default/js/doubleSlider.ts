@@ -40,17 +40,17 @@ export function pwgDoubleSlider(containerEl: HTMLElement, options: DoubleSliderO
         const minEl = containerEl.querySelector<HTMLInputElement>('[data-input=min]');
         const maxEl = containerEl.querySelector<HTMLInputElement>('[data-input=max]');
         const infoEl = containerEl.querySelector<HTMLElement>('.slider-info');
-        if (minEl) minEl.value = String(options.values[lo]);
-        if (maxEl) maxEl.value = String(options.values[hi]);
-        if (infoEl) infoEl.innerHTML = sprintf(options.text, options.values[lo], options.values[hi]);
+        if (minEl) minEl.value = String(options.values[lo]!);
+        if (maxEl) maxEl.value = String(options.values[hi]!);
+        if (infoEl) infoEl.innerHTML = sprintf(options.text, options.values[lo]!, options.values[hi]!);
     }
 
     api.on('update', onChange);
 
     containerEl.querySelectorAll<HTMLElement>('.slider-choice').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            const minIdx = options.values.indexOf(Number(btn.dataset.min));
-            const maxIdx = options.values.indexOf(Number(btn.dataset.max));
+            const minIdx = options.values.indexOf(Number(btn.dataset['min']));
+            const maxIdx = options.values.indexOf(Number(btn.dataset['max']));
             api.set([minIdx, maxIdx]);
         });
     });

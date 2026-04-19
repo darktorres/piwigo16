@@ -38,7 +38,7 @@ let str_no_search_in_progress = '';
 
 const _albumSelectorDataEl = document.getElementById('pwg-album-selector-data');
 const _albumSelectorData = _albumSelectorDataEl ? JSON.parse(_albumSelectorDataEl.textContent ?? '{}') as Record<string, string> : {} as Record<string, string>;
-str_no_search_in_progress = _albumSelectorData.strNoSearchInProgress || '';
+str_no_search_in_progress = _albumSelectorData['strNoSearchInProgress'] || '';
 
 function toggleEl(el: HTMLElement, callback: (this: HTMLElement) => void): void {
     const isHidden = window.getComputedStyle(el).display === 'none';
@@ -52,7 +52,7 @@ function isVisible(el: Element | null): boolean {
 
 related_categories_ids = [];
 
-const fields = global_params.fields as MCSFields;
+const fields = global_params["fields"] as MCSFields;
 
 document.querySelectorAll<HTMLElement>(".linkedAlbumPopInContainer .ClosePopIn").forEach(function (el) {
     el.classList.add(prefix_icon + "cancel");
@@ -90,14 +90,14 @@ document.querySelectorAll<HTMLElement>("div.filter-manager").forEach(function (e
     });
 });
 
-global_params.search_id = search_id;
+global_params["search_id"] = search_id;
 
 if (!fields) {
-    global_params.fields = {};
+    global_params["fields"] = {};
 }
 
 PS_params = {};
-PS_params.search_id = search_id;
+PS_params["search_id"] = search_id;
 empty_filters_list = [];
 
 if (fields.allwords) {
@@ -152,11 +152,11 @@ if (fields.allwords) {
         });
     });
 
-    PS_params.allwords = word_search_str.slice(0, -1);
-    PS_params.allwords_fields = word_search_fields;
-    PS_params.allwords_mode = word_search_mode;
+    PS_params["allwords"] = word_search_str.slice(0, -1);
+    PS_params["allwords_fields"] = word_search_fields;
+    PS_params["allwords_mode"] = word_search_mode;
 
-    empty_filters_list.push(PS_params.allwords);
+    empty_filters_list.push(PS_params["allwords"]);
 }
 document.querySelectorAll<HTMLElement>(".filter-spinner").forEach(function (el) { el.style.display = 'none'; });
 
@@ -165,7 +165,7 @@ if (tagSearchEl) {
     new TomSelect(tagSearchEl, {
         plugins: ["remove_button"],
         maxOptions: tagSearchEl.querySelectorAll("option").length,
-        items: fields.tags ? fields.tags.words : undefined,
+        ...(fields.tags ? { items: fields.tags.words } : {}),
     });
 }
 if (fields.tags) {
@@ -205,13 +205,13 @@ if (fields.tags) {
         });
     });
 
-    PS_params.tags =
+    PS_params["tags"] =
         fields.tags.words.length > 0
             ? fields.tags.words
             : "";
-    PS_params.tags_mode = fields.tags.mode;
+    PS_params["tags_mode"] = fields.tags.mode;
 
-    empty_filters_list.push(PS_params.tags);
+    empty_filters_list.push(PS_params["tags"]);
 }
 
 if (Object.prototype.hasOwnProperty.call(fields, "date_posted")) {
@@ -243,12 +243,12 @@ if (Object.prototype.hasOwnProperty.call(fields, "date_posted")) {
     });
 
     const dpVal = fields.date_posted;
-    PS_params.date_posted =
+    PS_params["date_posted"] =
         dpVal && String(dpVal).length > 0
             ? dpVal
             : "";
 
-    empty_filters_list.push(PS_params.date_posted);
+    empty_filters_list.push(PS_params["date_posted"]);
 }
 
 if (fields.cat) {
@@ -259,8 +259,8 @@ if (fields.cat) {
 
     album_widget_value = "";
     fields.cat.words.forEach(function (cat_id) {
-        add_related_category(cat_id, fullname_of_cat[cat_id]);
-        album_widget_value += fullname_of_cat[cat_id] + ", ";
+        add_related_category(cat_id, fullname_of_cat[cat_id] ?? '');
+        album_widget_value += (fullname_of_cat[cat_id] ?? '') + ", ";
     });
     const filterAlbumSearchWords = document.querySelector<HTMLElement>(".filter-album .search-words");
     if (
@@ -288,13 +288,13 @@ if (fields.cat) {
         });
     });
 
-    PS_params.categories =
+    PS_params["categories"] =
         fields.cat.words.length > 0
             ? fields.cat.words
             : "";
-    PS_params.categories_withsubs = fields.cat.sub_inc;
+    PS_params["categories_withsubs"] = fields.cat.sub_inc;
 
-    empty_filters_list.push(PS_params.categories);
+    empty_filters_list.push(PS_params["categories"]);
 }
 
 const authorsEl = document.getElementById("authors") as SelectWithTomSelect | null;
@@ -302,7 +302,7 @@ if (authorsEl) {
     new TomSelect(authorsEl, {
         plugins: ["remove_button"],
         maxOptions: authorsEl.querySelectorAll("option").length,
-        items: fields.author ? fields.author.words : undefined,
+        ...(fields.author ? { items: fields.author.words } : {}),
     });
     if (fields.author) {
         const filterAuthors = document.querySelector<HTMLElement>(".filter-authors");
@@ -336,12 +336,12 @@ if (authorsEl) {
             });
         });
 
-        PS_params.authors =
+        PS_params["authors"] =
             fields.author.words.length > 0
                 ? fields.author.words
                 : "";
 
-        empty_filters_list.push(PS_params.authors);
+        empty_filters_list.push(PS_params["authors"]);
     }
 }
 
@@ -383,12 +383,12 @@ if (fields.added_by) {
         });
     });
 
-    PS_params.added_by =
+    PS_params["added_by"] =
         (fields.added_by).length > 0
             ? fields.added_by
             : "";
 
-    empty_filters_list.push(PS_params.added_by);
+    empty_filters_list.push(PS_params["added_by"]);
 }
 
 if (fields.filetypes) {
@@ -424,12 +424,12 @@ if (fields.filetypes) {
         });
     });
 
-    PS_params.filetypes =
+    PS_params["filetypes"] =
         fields.filetypes.length > 0
             ? fields.filetypes
             : "";
 
-    empty_filters_list.push(PS_params.filetypes);
+    empty_filters_list.push(PS_params["filetypes"]);
 }
 
 if (document.querySelectorAll(".filter-filled").length === 0) {
@@ -500,7 +500,7 @@ document.querySelectorAll<HTMLElement>(
     btn.addEventListener("click", function () {
         if (filterManagerPopin) filterManagerPopin.style.display = 'none';
         document.querySelectorAll<HTMLInputElement>(".filter-manager-controller-container input").forEach(function (input) {
-            const filterEl = document.querySelector<HTMLElement>(".filter.filter-" + input.dataset.wid);
+            const filterEl = document.querySelector<HTMLElement>(".filter.filter-" + input.dataset["wid"]);
             if (input.checked) {
                 if (filterEl && !isVisible(filterEl)) {
                     input.checked = false;
@@ -518,15 +518,15 @@ const fmValidate = document.querySelector<HTMLElement>(".filter-manager-popin .f
 if (fmValidate) {
     fmValidate.addEventListener("click", function () {
         document.querySelectorAll<HTMLInputElement>(".filter-manager-controller-container input").forEach(function (input) {
-            const filterEl = document.querySelector<HTMLElement>(".filter.filter-" + input.dataset.wid);
+            const filterEl = document.querySelector<HTMLElement>(".filter.filter-" + input.dataset["wid"]);
             if (input.checked) {
                 if (filterEl && !isVisible(filterEl)) {
-                    updateFilters(input.dataset.wid ?? '', "add");
+                    updateFilters(input.dataset["wid"] ?? '', "add");
                 }
             } else {
                 if (filterEl && isVisible(filterEl)) {
-                    console.log(input.dataset.wid);
-                    updateFilters(input.dataset.wid ?? '', "del");
+                    console.log(input.dataset["wid"]);
+                    updateFilters(input.dataset["wid"] ?? '', "del");
                 }
             }
         });
@@ -602,8 +602,8 @@ if (filterWordEl) {
                 const wordModeChecked = document.querySelector<HTMLInputElement>(".word-search-options input:checked");
                 fields.allwords.mode = wordModeChecked ? wordModeChecked.getAttribute("value") ?? '' : '';
 
-                PS_params.allwords = wordSearchInput ? wordSearchInput.value : '';
-                PS_params.allwords_mode = wordModeChecked ? wordModeChecked.getAttribute("value") : '';
+                PS_params["allwords"] = wordSearchInput ? wordSearchInput.value : '';
+                PS_params["allwords_mode"] = wordModeChecked ? wordModeChecked.getAttribute("value") : '';
 
                 new_fields = [];
                 document.querySelectorAll<HTMLInputElement>(".filter-word-form .search-params input:checked").forEach(function (inp) {
@@ -618,7 +618,7 @@ if (filterWordEl) {
                     delete fields.search_in_tags;
                 }
                 fields.allwords.fields = new_fields;
-                PS_params.allwords_fields =
+                PS_params["allwords_fields"] =
                     new_fields.length > 0 ? new_fields : "";
             }
         });
@@ -665,8 +665,8 @@ if (filterTagEl) {
                 const tagVals = tagSearchEl && tagSearchEl.tomselect ? tagSearchEl.tomselect.getValue() as string[] : [];
                 fields.tags.words = tagVals;
 
-                PS_params.tags = tagVals.length > 0 ? tagVals : "";
-                PS_params.tags_mode = tagModeChecked ? tagModeChecked.value : '';
+                PS_params["tags"] = tagVals.length > 0 ? tagVals : "";
+                PS_params["tags_mode"] = tagModeChecked ? tagModeChecked.value : '';
             }
         });
     });
@@ -709,7 +709,7 @@ if (filterDatePostedEl) {
                 const dateChecked = document.querySelector<HTMLInputElement>(".date_posted-option input:checked");
                 fields.date_posted = dateChecked ? dateChecked.value : '';
 
-                PS_params.date_posted =
+                PS_params["date_posted"] =
                     dateChecked ? dateChecked.value : "";
             }
         });
@@ -756,11 +756,11 @@ if (filterAlbumEl) {
                 const subCatsChecked = document.querySelector<HTMLInputElement>("input[name='search-sub-cats']:checked");
                 fields.cat.sub_inc = subCatsChecked !== null;
 
-                PS_params.categories =
+                PS_params["categories"] =
                     related_categories_ids.length > 0
                         ? related_categories_ids
                         : "";
-                PS_params.categories_withsubs = subCatsChecked !== null;
+                PS_params["categories_withsubs"] = subCatsChecked !== null;
             }
         });
     });
@@ -831,7 +831,7 @@ if (filterAuthorsEl) {
                 const authorVals = authorsEl && authorsEl.tomselect ? authorsEl.tomselect.getValue() as string[] : [];
                 fields.author = { mode: "OR", words: authorVals };
 
-                PS_params.authors = authorVals.length > 0 ? authorVals : "";
+                PS_params["authors"] = authorVals.length > 0 ? authorVals : "";
             }
         });
     });
@@ -879,7 +879,7 @@ if (filterAddedByEl) {
 
                 fields.added_by = added_by_array;
 
-                PS_params.added_by =
+                PS_params["added_by"] =
                     added_by_array.length > 0 ? added_by_array : "";
             }
         });
@@ -928,7 +928,7 @@ if (filterFiletypesEl) {
 
                 fields.filetypes = filetypes_array;
 
-                PS_params.filetypes =
+                PS_params["filetypes"] =
                     filetypes_array.length > 0 ? filetypes_array : "";
             }
         });
@@ -1011,7 +1011,7 @@ interface AlbumCategory {
 }
 
 function linked_albums_search(searchText: string): void {
-    const apiMethod = _albumSelectorData.apiMethod || 'pwg.categories.getList';
+    const apiMethod = _albumSelectorData['apiMethod'] || 'pwg.categories.getList';
     const params = new URLSearchParams({ cat_id: '0', recursive: 'true', fullname: 'true', search: searchText });
     const searching = document.querySelector<HTMLElement>('.linkedAlbumPopInContainer .searching');
     if (searching) searching.style.display = '';
@@ -1028,11 +1028,11 @@ function linked_albums_search(searchText: string): void {
             if (limitReached) {
                 const count = raw_data.result.categories.length;
                 if (raw_data.result.limit_reached) {
-                    limitReached.innerHTML = (_albumSelectorData.strResultLimit || '').replace('%d', String(count));
+                    limitReached.innerHTML = (_albumSelectorData['strResultLimit'] || '').replace('%d', String(count));
                 } else {
                     limitReached.innerHTML = count === 1
-                        ? (_albumSelectorData.strAlbumFound || '')
-                        : (_albumSelectorData.strAlbumsFound || '').replace('%d', String(count));
+                        ? (_albumSelectorData['strAlbumFound'] || '')
+                        : (_albumSelectorData['strAlbumsFound'] || '').replace('%d', String(count));
                 }
             }
         })
@@ -1146,38 +1146,38 @@ function updateFilters(filterName: string, mode: string): void {
         case "word":
             if (mode == "add") {
                 fields.allwords = { words: [], mode: 'AND', fields: [] };
-                PS_params.allwords = "";
-                PS_params.allwords_mode = "AND";
-                PS_params.allwords_fields = [];
+                PS_params["allwords"] = "";
+                PS_params["allwords_mode"] = "AND";
+                PS_params["allwords_fields"] = [];
             } else if (mode == "del") {
                 delete fields.allwords;
-                delete PS_params.allwords;
-                delete PS_params.allwords_mode;
-                delete PS_params.allwords_fields;
+                delete PS_params["allwords"];
+                delete PS_params["allwords_mode"];
+                delete PS_params["allwords_fields"];
             }
             break;
 
         case "tag":
             if (mode == "add") {
                 fields.tags = { words: [], mode: 'AND' };
-                PS_params.tags = "";
-                PS_params.tags_mode = "AND";
+                PS_params["tags"] = "";
+                PS_params["tags_mode"] = "AND";
             } else if (mode == "del") {
                 delete fields.tags;
-                delete PS_params.tags;
-                delete PS_params.tags_mode;
+                delete PS_params["tags"];
+                delete PS_params["tags_mode"];
             }
             break;
 
         case "album":
             if (mode == "add") {
                 fields.cat = { words: [], sub_inc: false };
-                PS_params.categories = "";
-                PS_params.categories_withsubs = false;
+                PS_params["categories"] = "";
+                PS_params["categories_withsubs"] = false;
             } else if (mode == "del") {
                 delete fields.cat;
-                delete PS_params.categories;
-                delete PS_params.categories_withsubs;
+                delete PS_params["categories"];
+                delete PS_params["categories_withsubs"];
             }
             break;
 

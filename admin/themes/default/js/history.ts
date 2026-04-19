@@ -272,10 +272,10 @@ export function init(cfg: HistoryConfig): void {
                 const new_user_item = document.getElementById('-2')!.cloneNode(true) as HTMLElement;
                 new_user_item.classList.remove('hide');
                 new_user_item.querySelector<HTMLElement>('.user-item-name')!.innerHTML = key;
-                new_user_item.dataset.userId = String(id_of[key]);
+                new_user_item.dataset['userId'] = String(id_of[key]);
                 new_user_item.addEventListener('click', function () {
                     if (current_param.user_id !== String(id_of[key])) {
-                        current_param.user_id = (this).dataset.userId ?? '-1';
+                        current_param.user_id = (this).dataset['userId'] ?? '-1';
                         addUserFilter(key);
                         fillHistoryResult(current_param);
                     }
@@ -375,22 +375,22 @@ export function init(cfg: HistoryConfig): void {
         }
 
         newLine.querySelector<HTMLElement>('.user-ip')!.innerHTML = line.IP + '<i class="add-filter icon-plus-circled"></i>';
-        newLine.querySelector<HTMLElement>('.user-ip')!.dataset.ip = line.IP;
+        newLine.querySelector<HTMLElement>('.user-ip')!.dataset['ip'] = line.IP;
         if (current_param.ip === '') {
             newLine.querySelector<HTMLElement>('.user-ip')?.addEventListener('click', function () {
-                current_param.ip = (this).dataset.ip ?? '';
+                current_param.ip = (this).dataset['ip'] ?? '';
                 current_param.pageNumber = 0;
                 addIpFilter((this).innerHTML);
                 fillHistoryResult(current_param);
             });
         }
 
-        newLine.querySelector<HTMLElement>('.add-img-as-filter')!.dataset.imgId = line.IMAGEID;
+        newLine.querySelector<HTMLElement>('.add-img-as-filter')!.dataset['imgId'] = line.IMAGEID;
         if (current_param.image_id === '') {
             newLine.querySelector<HTMLElement>('.add-img-as-filter')?.addEventListener('click', function () {
-                current_param.image_id = (this).dataset.imgId ?? '';
+                current_param.image_id = (this).dataset['imgId'] ?? '';
                 current_param.pageNumber = 0;
-                addImageFilter((this).dataset.imgId ?? '');
+                addImageFilter((this).dataset['imgId'] ?? '');
                 fillHistoryResult(current_param);
             });
         }
@@ -475,41 +475,42 @@ export function init(cfg: HistoryConfig): void {
                 }
                 const active_search_details: Record<string, string | string[] | Record<string, string>> = {};
                 Object.keys(search_details).forEach((key) => {
-                    if (search_details[key] !== null) {
-                        active_search_details[key] = search_details[key];
+                    const val = search_details[key];
+                    if (val !== null && val !== undefined) {
+                        active_search_details[key] = val;
                     }
                 });
                 let count_item = 1;
                 const active_more: string[] = [];
                 const active_items = Object.keys(active_search_details);
                 if (active_items.length > 0) {
-                    if (active_search_details.allwords) {
+                    if (active_search_details['allwords']) {
                         const detailEl = newLine.querySelector<HTMLElement>('.detail-item-' + String(count_item))!;
-                        detailEl.innerHTML = (active_search_details.allwords as string[]).join(' ');
-                        detailEl.classList.add(search_icons.allwords, 'tiptip');
-                        detailEl.setAttribute('title', '<b>' + str_search_details['allwords'] + ' :</b> ' + (active_search_details.allwords as string[]).join(' '));
+                        detailEl.innerHTML = (active_search_details['allwords'] as string[]).join(' ');
+                        detailEl.classList.add(search_icons['allwords']!, 'tiptip');
+                        detailEl.setAttribute('title', '<b>' + str_search_details['allwords'] + ' :</b> ' + (active_search_details['allwords'] as string[]).join(' '));
                         count_item++;
                         active_more.push('allwords');
                     }
-                    if (active_search_details.cat) {
-                        const array_cat = Object.values(active_search_details.cat as Record<string, string>);
+                    if (active_search_details['cat']) {
+                        const array_cat = Object.values(active_search_details['cat'] as Record<string, string>);
                         const cat = array_cat.join(' + ');
                         const temp_div = document.createElement('div');
                         temp_div.innerHTML = cat;
                         const text = temp_div.textContent?.trim() ?? '';
                         const detailEl = newLine.querySelector<HTMLElement>('.detail-item-' + String(count_item))!;
                         detailEl.innerHTML = cat;
-                        detailEl.classList.add(search_icons.cat, 'tiptip');
+                        detailEl.classList.add(search_icons['cat']!, 'tiptip');
                         detailEl.setAttribute('title', '<b>' + str_search_details['cat'] + ' :</b> ' + text);
                         detailEl.classList.remove('hide');
                         count_item++;
                         active_more.push('cat');
                     }
-                    if (count_item <= 2 && active_search_details.tags) {
-                        const array_tags = Object.values(active_search_details.tags as Record<string, string>);
+                    if (count_item <= 2 && active_search_details['tags']) {
+                        const array_tags = Object.values(active_search_details['tags'] as Record<string, string>);
                         const detailEl = newLine.querySelector<HTMLElement>('.detail-item-' + String(count_item))!;
                         detailEl.innerHTML = array_tags.join(' + ');
-                        detailEl.classList.add(search_icons.tags, 'tiptip');
+                        detailEl.classList.add(search_icons['tags']!, 'tiptip');
                         detailEl.setAttribute('title', '<b>' + str_search_details['tags'] + ' :</b> ' + array_tags.join(' + '));
                         detailEl.classList.remove('hide');
                         count_item++;
@@ -521,12 +522,13 @@ export function init(cfg: HistoryConfig): void {
                         active_items.some((key) => {
                             if (key !== 'allwords' && key !== 'cat' && key !== 'tags') {
                                 let array_key: string[];
-                                if (Array.isArray(active_search_details[key])) {
-                                    array_key = active_search_details[key];
-                                } else if (typeof active_search_details[key] === 'object') {
-                                    array_key = Object.values(active_search_details[key]);
+                                const entry = active_search_details[key];
+                                if (Array.isArray(entry)) {
+                                    array_key = entry;
+                                } else if (typeof entry === 'object') {
+                                    array_key = Object.values(entry);
                                 } else {
-                                    array_key = [active_search_details[key]];
+                                    array_key = [entry ?? ''];
                                 }
                                 const detailEl = newLine.querySelector<HTMLElement>('.detail-item-' + String(count_item))!;
                                 detailEl.innerHTML = array_key.join(' + ');
@@ -649,7 +651,7 @@ export function init(cfg: HistoryConfig): void {
 
             const sectionIdx = sections.indexOf(line.SECTION);
             if (sectionIdx !== -1) {
-                newLine.querySelector<HTMLElement>('.type-icon i')!.classList.add(...icons[sectionIdx].split(' '));
+                newLine.querySelector<HTMLElement>('.type-icon i')!.classList.add(...(icons[sectionIdx]!).split(' '));
             } else {
                 console.log('Unhandled section : ' + line.SECTION);
             }
@@ -801,8 +803,8 @@ export function init(cfg: HistoryConfig): void {
         const geoBtn = (e.target as HTMLElement).closest<HTMLElement>('.ipGeoOpen');
         if (!geoBtn) return;
         e.preventDefault();
-        const lat = geoBtn.dataset.lat ?? '';
-        const lon = geoBtn.dataset.lon ?? '';
+        const lat = geoBtn.dataset['lat'] ?? '';
+        const lon = geoBtn.dataset['lon'] ?? '';
         const parent = geoBtn.parentElement;
         geoBtn.remove();
         const append = '<br><img width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap'

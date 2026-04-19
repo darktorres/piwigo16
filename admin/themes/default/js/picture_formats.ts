@@ -40,7 +40,7 @@ export function init(cfg: PictureFormatsConfig): void {
         fetch("ws.php?format=json&method=pwg.images.formats.delete", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ pwg_token, format_id: card.dataset.id ?? '' }),
+            body: new URLSearchParams({ pwg_token, format_id: card.dataset['id'] ?? '' }),
         })
             .then(r => r.json())
             .then(function () {

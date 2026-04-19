@@ -27,7 +27,7 @@ interface HTMLSelectWithTomSelect extends HTMLSelectElement {
 export function pwgAddAlbum(btn: HTMLElement, options: AddAlbumOptions = {}): HTMLElement {
     const popup = document.getElementById('addAlbumForm') as HTMLDialogElement | null;
     const albumParentEl = popup ? popup.querySelector<HTMLSelectWithTomSelect>('[name="category_parent"]') : null;
-    const targetEl = btn ? document.querySelector<HTMLSelectWithTomSelect>('[name="' + btn.dataset.addAlbum + '"]') : null;
+    const targetEl = btn ? document.querySelector<HTMLSelectWithTomSelect>('[name="' + btn.dataset['addAlbum'] + '"]') : null;
     const cache = targetEl ? (targetEl)._pwgCache : null;
 
     if (targetEl && !targetEl.tomselect) {
@@ -39,7 +39,7 @@ export function pwgAddAlbum(btn: HTMLElement, options: AddAlbumOptions = {}): HT
 
     function init(): void {
         if (!popup || !albumParentEl) return;
-        (popup as unknown as Record<string, unknown>)._init = true;
+        (popup as unknown as Record<string, unknown>)['_init'] = true;
 
         cache!.selectize(albumParentEl, {
             default: 0,
@@ -96,9 +96,9 @@ export function pwgAddAlbum(btn: HTMLElement, options: AddAlbumOptions = {}): HT
                     if (parent_id !== '0') {
                         const parent = parentSelectize.options[parent_id];
                         if (parent) {
-                            (newAlbum as unknown as Record<string, unknown>).fullname = parent.fullname + ' / ' + name;
-                            (newAlbum as unknown as Record<string, unknown>).global_rank = parent.global_rank + '.1';
-                            (newAlbum as unknown as Record<string, unknown>).pos = (parent.pos ?? 0) + 1;
+                            (newAlbum as unknown as Record<string, unknown>)['fullname'] = parent['fullname'] + ' / ' + name;
+                            (newAlbum as unknown as Record<string, unknown>)['global_rank'] = String(parent['global_rank']) + '.1';
+                            (newAlbum as unknown as Record<string, unknown>)['pos'] = ((parent['pos'] as number) ?? 0) + 1;
                         }
                     }
 
@@ -117,7 +117,7 @@ export function pwgAddAlbum(btn: HTMLElement, options: AddAlbumOptions = {}): HT
 
     btn.addEventListener('click', function (e) {
         e.preventDefault();
-        if (!(popup as unknown as Record<string, unknown>)._init) init();
+        if (!(popup as unknown as Record<string, unknown>)['_init']) init();
 
         const errEl = document.getElementById('categoryNameError');
         if (errEl) errEl.style.visibility = 'hidden';

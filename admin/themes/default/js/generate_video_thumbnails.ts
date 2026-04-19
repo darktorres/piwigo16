@@ -21,6 +21,23 @@ interface VtStrings {
     ffmpeg_no_output?: string;
 }
 
+interface VtProgressData {
+    current?: number;
+    total?: number;
+    file?: string;
+    generated?: string;
+    skipped?: number;
+    skip_reason?: string;
+    ffmpeg_output?: string[];
+    elapsed?: number;
+}
+
+interface VtDoneData {
+    elapsed?: number;
+    generated?: number;
+    skipped?: number;
+}
+
 interface VtConfig {
     vtStrings?: VtStrings;
 }
@@ -164,18 +181,18 @@ export function init(cfg: VtConfig): void {
         if (c) c.style.display = '';
     }
 
-    function onProgress(data: Record<string, unknown>): void {
-        const current = data.current as number ?? 0;
-        const total = data.total as number ?? 0;
+    function onProgress(data: VtProgressData): void {
+        const current = data.current ?? 0;
+        const total = data.total ?? 0;
         const pct = total > 0 ? Math.round((current / total) * 100) : 0;
         const fill = document.getElementById('vtProgressFill');
         if (fill) (fill).style.width = pct + '%';
         const text = document.getElementById('vtProgressText');
         if (text) text.textContent = current + ' / ' + total;
         const fileLabel = document.getElementById('vtCurrentFile');
-        const file = (data.file as string) ?? '';
-        const generated = (data.generated as string) ?? '';
-        const skipped = data.skipped as number;
+        const file = data.file ?? '';
+        const generated = data.generated ?? '';
+        const skipped = data.skipped ?? 0;
         if (fileLabel) fileLabel.textContent = file;
         if (data.skip_reason) {
             const list = document.getElementById('vtSkippedList');
@@ -190,7 +207,7 @@ export function init(cfg: VtConfig): void {
                     entry.appendChild(header);
                     const pre = document.createElement('pre');
                     pre.className = 'vt-skip-ffmpeg-output';
-                    pre.textContent = (data.ffmpeg_output as string[]).join('\n');
+                    pre.textContent = data.ffmpeg_output.join('\n');
                     entry.appendChild(pre);
                 } else {
                     entry.textContent = file + ' \u2014 ' + (vtStrings.ffmpeg_no_output ?? '');
@@ -207,16 +224,16 @@ export function init(cfg: VtConfig): void {
         }
     }
 
-    function onComplete(data: Record<string, unknown>): void {
+    function onComplete(data: VtDoneData): void {
         vtComplete = true;
         vtRunning = false;
         clearInterval(timerInterval);
         updateElapsed();
         hideControls();
 
-        const elapsed = (data.elapsed as string) ?? '';
-        const generated = (data.generated as string) ?? '';
-        const skipped = data.skipped as number;
+        const elapsed = String(data.elapsed ?? '');
+        const generated = String(data.generated ?? '');
+        const skipped = data.skipped ?? 0;
 
         const phaseEl = document.getElementById('phase-generate');
         if (phaseEl) {

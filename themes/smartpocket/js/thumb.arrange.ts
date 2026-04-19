@@ -22,18 +22,18 @@ class SPTLine {
     add(img: HTMLImageElement, absIndex: number): void {
         if (this.elements.length === 0) this.firstThumbIndex = absIndex;
         let w: number, h: number;
-        if (!img.dataset.sptW) {
+        if (!img.dataset['sptW']) {
             w = img.offsetWidth;
             h = img.offsetHeight;
             if (h > this.rowHeight) {
                 w = Math.round((w * this.rowHeight) / h);
                 h = this.rowHeight;
             }
-            img.dataset.sptW = String(w);
-            img.dataset.sptH = String(h);
+            img.dataset['sptW'] = String(w);
+            img.dataset['sptH'] = String(h);
         } else {
-            w = parseFloat(img.dataset.sptW ?? '0');
-            h = parseFloat(img.dataset.sptH ?? '0');
+            w = parseFloat(img.dataset['sptW'] ?? '0');
+            h = parseFloat(img.dataset['sptH'] ?? '0');
         }
 
         const eltObj: ThumbElement = { img, w, h };
@@ -101,7 +101,7 @@ export class SPThumbs {
         const line = new SPTLine(this.opts.hMargin, this.opts.rowHeight);
 
         for (let i = si; i < elts.length; i++) {
-            line.add(elts[i], i);
+            line.add(elts[i]!, i);
             if (
                 line.width >=
                 containerWidth - maxExtraMarginPerThumb * line.elements.length
@@ -124,7 +124,7 @@ export class SPThumbs {
         let toRecover: number;
         let eltW: number;
         let eltH: number;
-        let rowHeight = line.maxHeight ? line.maxHeight : line.elements[0].h;
+        let rowHeight = line.maxHeight ? line.maxHeight : line.elements[0]!.h;
 
         if (line.width / containerWidth > 1.01) {
             const ratio =
@@ -151,7 +151,7 @@ export class SPThumbs {
         if (lastLine) toRecover = 0;
 
         for (let i = 0; i < line.elements.length; i++) {
-            const eltObj = line.elements[i];
+            const eltObj = line.elements[i]!;
             eltW = eltObj.w;
             eltH = eltObj.h;
             let eltToRecover: number;

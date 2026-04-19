@@ -17,7 +17,7 @@ export function init(cfg: ConfigMainConfig): void {
     };
 
     Object.keys(targets).forEach(function (selector) {
-        const targetEl = document.querySelector<HTMLElement>(targets[selector]);
+        const targetEl = document.querySelector<HTMLElement>(targets[selector]!);
         const sourceEl = document.querySelector<HTMLInputElement>(selector);
         if (!targetEl || !sourceEl) return;
         targetEl.style.display = sourceEl.checked ? '' : 'none';

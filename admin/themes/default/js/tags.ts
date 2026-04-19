@@ -57,15 +57,15 @@ export function init(cfg: TagsConfig): void {
     } = cfg;
 
     const _tagContainer = document.querySelector<HTMLElement>('.tag-container');
-    let dataTags: TagData[] = _tagContainer?.dataset.tags
-        ? (JSON.parse(_tagContainer.dataset.tags) as TagData[])
+    let dataTags: TagData[] = _tagContainer?.dataset['tags']
+        ? (JSON.parse(_tagContainer.dataset['tags']) as TagData[])
         : [];
 
     const _sel100 = document.getElementById('select-100') as HTMLInputElement | null;
     if (_sel100) _sel100.checked = true;
 
     document.querySelector('.info-warning p a')?.addEventListener('click', () => {
-        const url = (document.querySelector<HTMLAnchorElement>('.info-warning p a'))?.dataset.url ?? '';
+        const url = (document.querySelector<HTMLAnchorElement>('.info-warning p a'))?.dataset['url'] ?? '';
         const tags = orphan_tag_names;
         const str_orphans = str_orphan_tags
             .replace('%s1', String(tags.length))
@@ -135,7 +135,7 @@ export function init(cfg: TagsConfig): void {
         if (editableEl) editableEl.value = name;
         tagBox.setAttribute('data-selected', '0');
         const tagNameEl = tagBox.querySelector<HTMLElement>('.tag-name');
-        if (tagNameEl) tagNameEl.dataset.rawname = raw_name;
+        if (tagNameEl) tagNameEl.dataset['rawname'] = raw_name;
 
         const u_edit = 'admin.php?page=batch_manager&filter=tag-' + String(id);
         const u_view = 'index.php?/tags/' + String(id) + '-' + url_name;
@@ -308,8 +308,8 @@ export function init(cfg: TagsConfig): void {
             editBtn.addEventListener('click', function () {
                 const nameEl = tagBox.querySelector<HTMLElement>('.tag-name');
                 set_up_popin(
-                    tagBox.dataset.id ?? '',
-                    nameEl?.dataset.rawname ?? '',
+                    tagBox.dataset['id'] ?? '',
+                    nameEl?.dataset['rawname'] ?? '',
                     nameEl?.innerHTML ?? '',
                 );
                 rename_tag_open();
@@ -327,7 +327,7 @@ export function init(cfg: TagsConfig): void {
                             btnClass: 'btn-red',
                             action: function () {
                                 removeTag(
-                                    tagBox.dataset.id ?? '',
+                                    tagBox.dataset['id'] ?? '',
                                     tagBox.querySelector<HTMLElement>('.tag-name')?.innerHTML ?? '',
                                 );
                             },
@@ -342,7 +342,7 @@ export function init(cfg: TagsConfig): void {
         if (dupBtn) {
             dupBtn.addEventListener('click', function () {
                 const nameEl = tagBox.querySelector<HTMLElement>('.tag-name');
-                void duplicateTag(tagBox.dataset.id ?? '', nameEl?.dataset.rawname ?? '').then((data) => {
+                void duplicateTag(tagBox.dataset['id'] ?? '', nameEl?.dataset['rawname'] ?? '').then((data) => {
                     showMessage(str_tag_created.replace('%s', data.result.name));
                 });
             });
@@ -416,8 +416,8 @@ export function init(cfg: TagsConfig): void {
                         const viewLink = document.querySelector<HTMLAnchorElement>('.dropdown-option.view');
                         if (viewLink) viewLink.href = 'index.php?/tags/' + id + '-' + data.result.url_name;
                         const index = dataTags.findIndex((tag) => tag.id == id);
-                        dataTags[index].name = data.result.name;
-                        dataTags[index].url_name = data.result.url_name;
+                        dataTags[index]!.name = data.result.name;
+                        dataTags[index]!.url_name = data.result.url_name;
                         resolve(data);
                     } else {
                         reject(new Error(str_already_exist.replace('%s', new_name)));
@@ -560,7 +560,7 @@ export function init(cfg: TagsConfig): void {
                         if (document.querySelector('.selection-mode-tag .tag-list div[data-id="' + selected[i] + '"]') === null) {
                             isNotCreate = false;
                             const indexOfTag = dataTags.findIndex((tag) => tag.id == selected[i]);
-                            createSelectionItem(selected[i], dataTags[indexOfTag].name);
+                            createSelectionItem(selected[i]!, dataTags[indexOfTag]!.name);
                         }
                         i++;
                     }
@@ -805,7 +805,7 @@ export function init(cfg: TagsConfig): void {
                             if (headerI) headerI.innerHTML = str_number_photos.replace('%d', String(data.result.images_in_merged_tag.length));
                         }
                         const index = dataTags.findIndex((tag) => tag.id == data.result.destination_tag);
-                        dataTags[index].counter = data.result.images_in_merged_tag.length;
+                        dataTags[index]!.counter = data.result.images_in_merged_tag.length;
                     }
                     document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => el.setAttribute('data-selected', '0'));
                     clearSelection();
@@ -868,7 +868,7 @@ export function init(cfg: TagsConfig): void {
 
     /*------- Pagination -------*/
 
-    let per_page: number = parseInt((document.querySelector<HTMLElement>('.tag-container'))?.dataset.per_page ?? '20');
+    let per_page: number = parseInt((document.querySelector<HTMLElement>('.tag-container'))?.dataset['per_page'] ?? '20');
     let promisePending = false;
     let updateAsk = false;
     let actualPage = 1;
@@ -977,14 +977,14 @@ export function init(cfg: TagsConfig): void {
                 const displayTags = new Promise<void>((res) => {
                     const boxToRecycle = Math.min(dataToDisplay.length, tagBoxes.length);
                     for (let i = 0; i < boxToRecycle; i++) {
-                        const tag = dataToDisplay[i];
-                        recycleTagBox(tagBoxes[i], tag.id, tag.name, tag.url_name, tag.counter ?? tag.count, tag.raw_name);
+                        const tag = dataToDisplay[i]!;
+                        recycleTagBox(tagBoxes[i]!, tag.id, tag.name, tag.url_name, tag.counter ?? tag.count, tag.raw_name);
                     }
                     if (dataToDisplay.length < tagBoxes.length) {
-                        for (let j = boxToRecycle; j < tagBoxes.length; j++) tagBoxes[j].remove();
+                        for (let j = boxToRecycle; j < tagBoxes.length; j++) tagBoxes[j]!.remove();
                     } else if (dataToDisplay.length > tagBoxes.length) {
                         for (let j = boxToRecycle; j < dataToDisplay.length; j++) {
-                            const tag = dataToDisplay[j];
+                            const tag = dataToDisplay[j]!;
                             const newTag = createTagBox(tag.id, tag.name, tag.url_name, tag.counter ?? tag.count ?? 0, tag.raw_name);
                             newTag.style.opacity = '0';
                             if (tagContainer) tagContainer.appendChild(newTag);

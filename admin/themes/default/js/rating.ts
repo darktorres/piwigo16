@@ -46,7 +46,7 @@ export function init(cfg: RatingConfig): void {
     function del(node: HTMLElement, id: string, uid: string, aid: string | undefined): false {
         const trEl = node.closest('tr');
         const data: Record<string, string> = { image_id: id, user_id: uid };
-        if (aid) data.anonymous_id = aid;
+        if (aid) data['anonymous_id'] = aid;
 
         const anim = trEl ? trEl.animate([{ opacity: 1 }, { opacity: 0.4 }], { duration: 1000, fill: 'forwards' }) : null;
         (new PwgWS(rootUrl)).callService('pwg.rates.delete', data, {
@@ -71,9 +71,9 @@ export function init(cfg: RatingConfig): void {
         const deleteBtn = (e.target as HTMLElement).closest<HTMLElement>('[data-action="pwgDeleteRate"]');
         if (deleteBtn) {
             e.preventDefault();
-            const id = deleteBtn.dataset.imageId ?? '';
-            const uid = deleteBtn.dataset.userId ?? '';
-            const aid = deleteBtn.dataset.anonymousId;
+            const id = deleteBtn.dataset['imageId'] ?? '';
+            const uid = deleteBtn.dataset['userId'] ?? '';
+            const aid = deleteBtn.dataset['anonymousId'];
             del(deleteBtn, id, uid, aid);
         }
     });

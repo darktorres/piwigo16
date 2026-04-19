@@ -197,11 +197,11 @@ export function init(cfg: UpdatesExtConfig): void {
         const updateBtn = target.closest<HTMLElement>('[data-action="updateExt"]');
         if (updateBtn) {
             e.preventDefault();
-            updateExtension(updateBtn.dataset.type ?? '', updateBtn.dataset.id ?? '', updateBtn.dataset.revision ?? '');
+            updateExtension(updateBtn.dataset['type'] ?? '', updateBtn.dataset['id'] ?? '', updateBtn.dataset['revision'] ?? '');
             return;
         }
         const ignoreBtn = target.closest<HTMLElement>('[data-action="ignoreExt"]');
-        if (ignoreBtn) { e.preventDefault(); ignoreExtension(ignoreBtn.dataset.type ?? '', ignoreBtn.dataset.id ?? ''); return; }
+        if (ignoreBtn) { e.preventDefault(); ignoreExtension(ignoreBtn.dataset['type'] ?? '', ignoreBtn.dataset['id'] ?? ''); return; }
         if (target.closest('[data-action="ignoreAll"]')) { e.preventDefault(); ignoreAll(); return; }
         if (target.closest('[data-action="resetIgnored"]')) { e.preventDefault(); resetIgnored(); return; }
     });

@@ -32,14 +32,14 @@ export function makeNiceRatingForm(options: RatingOptions): void {
     gRatingButtons = form.getElementsByTagName("input") as HTMLCollectionOf<RateButton>;
     gUserRating = "";
     for (let i = 0; i < gRatingButtons.length; i++) {
-        if (gRatingButtons[i].type == "button") {
-            gUserRating = gRatingButtons[i].value;
+        if (gRatingButtons[i]!.type == "button") {
+            gUserRating = gRatingButtons[i]!.value;
             break;
         }
     }
 
     for (let i = 0; i < gRatingButtons.length; i++) {
-        const rateButton = gRatingButtons[i];
+        const rateButton = gRatingButtons[i]!;
         rateButton.initialRateValue = rateButton.value;
         try {
             rateButton.type = "button";
@@ -74,9 +74,9 @@ export function makeNiceRatingForm(options: RatingOptions): void {
 
 function updateRatingStarDisplay(userRating: string): void {
     for (let i = 0; i < gRatingButtons.length; i++)
-        gRatingButtons[i].className =
+        gRatingButtons[i]!.className =
             userRating !== "" &&
-            userRating >= gRatingButtons[i].initialRateValue
+            userRating >= gRatingButtons[i]!.initialRateValue
                 ? "rateButtonStarFull"
                 : "rateButtonStarEmpty";
 }
@@ -86,7 +86,7 @@ function updateRating(e: Event): boolean {
     if (rateButton.initialRateValue == gUserRating) return false;
 
     for (let i = 0; i < gRatingButtons.length; i++)
-        gRatingButtons[i].disabled = true;
+        gRatingButtons[i]!.disabled = true;
     const y = new PwgWS(gRatingOptions.rootUrl);
     y.callService(
         "pwg.images.rate",
@@ -107,7 +107,7 @@ function updateRating(e: Event): boolean {
                 const result = rawResult as RatingResult;
                 gUserRating = rateButton.initialRateValue;
                 for (let i = 0; i < gRatingButtons.length; i++)
-                    gRatingButtons[i].disabled = false;
+                    gRatingButtons[i]!.disabled = false;
                 if (gRatingOptions.onSuccess) gRatingOptions.onSuccess(result);
                 if (gRatingOptions.updateRateElement)
                     gRatingOptions.updateRateElement.innerHTML =

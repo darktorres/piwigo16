@@ -152,7 +152,7 @@ export function init(cfg: BatchManagerConfig): void {
 
     (['widths', 'heights', 'ratios', 'filesizes'] as const).forEach(function (key) {
         const el = document.querySelector<HTMLElement>('[data-slider=' + key + ']');
-        if (el) pwgDoubleSlider(el, cfg.sliders[key]);
+        if (el) pwgDoubleSlider(el, cfg.sliders[key]!);
     });
 
     document.addEventListener('mouseup', function (e) {
@@ -413,9 +413,9 @@ export function init(cfg: BatchManagerConfig): void {
                     const first = last_clicked < pos ? last_clicked : pos;
                     const last = last_clicked < pos ? pos : last_clicked;
                     for (let i = first; i <= last; i++) {
-                        checkboxes[i].checked = last_clickedstatus;
-                        checkboxes[i].dispatchEvent(new Event('change'));
-                        const li = checkboxes[i].closest('li');
+                        checkboxes[i]!.checked = last_clickedstatus;
+                        checkboxes[i]!.dispatchEvent(new Event('change'));
+                        const li = checkboxes[i]!.closest('li');
                         if (li) li.classList.toggle('thumbSelected', last_clickedstatus);
                     }
                 } else {
@@ -641,7 +641,7 @@ export function init(cfg: BatchManagerConfig): void {
                 progress_bar_start();
 
                 for (let i = 0; i < elements.length; i++) {
-                    image_ids.push(elements[i]);
+                    image_ids.push(elements[i]!);
                     if (i % syncBlockSize != syncBlockSize - 1 && i != elements.length - 1) continue;
 
                     (function (ids: string[]) {
@@ -710,7 +710,7 @@ export function init(cfg: BatchManagerConfig): void {
 
                 let _deleteQueue: Promise<void> = Promise.resolve();
                 for (let i = 0; i < elements.length; i++) {
-                    image_ids.push(elements[i]);
+                    image_ids.push(elements[i]!);
                     if (i % deleteBlockSize != deleteBlockSize - 1 && i != elements.length - 1) continue;
 
                     (function (ids: string[]) {
@@ -786,7 +786,7 @@ export function init(cfg: BatchManagerConfig): void {
             if (addMd5sum) addMd5sum.style.display = '';
 
             const md5sumToAdd = document.getElementById('md5sum_to_add')!;
-            const addBlockSize = Math.min(Number((Number(md5sumToAdd.dataset.origin) / 2).toFixed()), 1000);
+            const addBlockSize = Math.min(Number((Number(md5sumToAdd.dataset['origin']) / 2).toFixed()), 1000);
             add_md5sum_block(addBlockSize);
         });
     });
@@ -800,7 +800,7 @@ export function init(cfg: BatchManagerConfig): void {
                 const md5sumToAdd = document.getElementById('md5sum_to_add')!;
                 md5sumToAdd.innerHTML = String(data.result.nb_no_md5sum);
 
-                const percent_remaining = Number(((data.result.nb_no_md5sum * 100) / Number(md5sumToAdd.dataset.origin)).toFixed());
+                const percent_remaining = Number(((data.result.nb_no_md5sum * 100) / Number(md5sumToAdd.dataset['origin'])).toFixed());
                 const percent_done = 100 - percent_remaining;
                 const md5sumAdded = document.getElementById('md5sum_added');
                 if (md5sumAdded) md5sumAdded.innerHTML = String(percent_done);
@@ -809,7 +809,7 @@ export function init(cfg: BatchManagerConfig): void {
                     add_md5sum_block();
                 } else {
                     document.location.href = 'admin.php?page=batch_manager&action=sync_md5sum&nb_md5sum_added=' +
-                        String(md5sumToAdd.dataset.origin);
+                        String(md5sumToAdd.dataset['origin']);
                 }
             })
             .catch(function (err: Error) {
@@ -831,7 +831,7 @@ export function init(cfg: BatchManagerConfig): void {
             if (orphansDeletion) orphansDeletion.style.display = '';
 
             const orphansToDelete = document.getElementById('orphans_to_delete')!;
-            const deleteBlockSize = Math.min(Number((Number(orphansToDelete.dataset.origin) / 2).toFixed()), 1000);
+            const deleteBlockSize = Math.min(Number((Number(orphansToDelete.dataset['origin']) / 2).toFixed()), 1000);
             delete_orphans_block(deleteBlockSize);
         });
     });
@@ -845,7 +845,7 @@ export function init(cfg: BatchManagerConfig): void {
                 const orphansToDelete = document.getElementById('orphans_to_delete')!;
                 orphansToDelete.innerHTML = String(data.result.nb_orphans);
 
-                const percent_remaining = Number(((data.result.nb_orphans * 100) / Number(orphansToDelete.dataset.origin)).toFixed());
+                const percent_remaining = Number(((data.result.nb_orphans * 100) / Number(orphansToDelete.dataset['origin'])).toFixed());
                 const percent_done = 100 - percent_remaining;
                 const orphansDeleted = document.getElementById('orphans_deleted');
                 if (orphansDeleted) orphansDeleted.innerHTML = String(percent_done);
@@ -854,7 +854,7 @@ export function init(cfg: BatchManagerConfig): void {
                     delete_orphans_block();
                 } else {
                     document.location.href = 'admin.php?page=batch_manager&action=delete_orphans&nb_orphans_deleted=' +
-                        String(orphansToDelete.dataset.origin);
+                        String(orphansToDelete.dataset['origin']);
                 }
             })
             .catch(function (err: Error) {

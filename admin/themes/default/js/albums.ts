@@ -181,14 +181,14 @@ export function init(cfg: AlbumsConfig): void {
     treeEl.addEventListener('tree.move', function (e) {
         const event = { move_info: (e as TreeMoveEvent).move_info };
 
-        if ((event.move_info.moved_node as TreeNode & { status?: string }).status != 'private') {
+        if ((event.move_info.moved_node as TreeNode & { status?: string }).status!== 'private') {
             let parentIsPrivate = false;
-            if (event.move_info.position == 'after') {
+            if (event.move_info.position=== 'after') {
                 parentIsPrivate =
-                    ((event.move_info.target_node.parent as TreeNode).status == 'private');
-            } else if (event.move_info.position == 'inside') {
+                    ((event.move_info.target_node.parent as TreeNode).status=== 'private');
+            } else if (event.move_info.position=== 'inside') {
                 parentIsPrivate =
-                    (event.move_info.target_node.status == 'private');
+                    (event.move_info.target_node.status=== 'private');
             }
 
             if (parentIsPrivate) {
@@ -245,13 +245,11 @@ export function init(cfg: AlbumsConfig): void {
         });
     });
 
-    if (openCat != -1) {
+    if (openCat!== -1) {
         const nodeToGo = pwgTree.getNodeById(openCat)!;
 
         goToNode(nodeToGo, nodeToGo, pwgTree);
-        if (nodeToGo.children) {
-            pwgTree.openNode(nodeToGo);
-        }
+        pwgTree.openNode(nodeToGo);
 
         let scrollElement: HTMLElement = document.documentElement;
         if (document.body.scrollHeight > document.documentElement.scrollHeight) {
@@ -304,7 +302,7 @@ export function init(cfg: AlbumsConfig): void {
             tippy('.tiptip', { delay: 0, placement: 'top' });
             closeRenameAlbumPopIn();
         })
-        .catch(function (error) { console.log(error); });
+        .catch(function (error: unknown) { console.log(error); });
     });
 
     // AddAlbumPopIn
@@ -346,8 +344,8 @@ export function init(cfg: AlbumsConfig): void {
             const responseData = JSON.parse(raw_data) as AddAlbumResponse;
             const parent_node = pwgTree.getNodeById(newAlbumParent);
 
-            if (responseData.stat == 'ok') {
-                if (newAlbumPosition == 'last') {
+            if (responseData.stat=== 'ok') {
+                if (newAlbumPosition=== 'last') {
                     pwgTree.appendNode(
                         { id: responseData.result.id, isEmptyFolder: true, name: newAlbumName },
                         parent_node ?? undefined,
@@ -407,7 +405,7 @@ export function init(cfg: AlbumsConfig): void {
                 document.querySelector<HTMLElement>('.AddAlbumSubmit')!.classList.remove('notClickable');
             }
         })
-        .catch(function (error) {
+        .catch(function (error: unknown) {
             console.log(error);
             document.querySelector<HTMLElement>('.AddAlbumSubmit')!.classList.remove('notClickable');
         });
@@ -460,13 +458,13 @@ function createAlbumNode(node: TreeNode, li: HTMLElement): void {
     const icon = "<span class='%icon%'></span>";
     let title = '<span data-id="' + String(node.id) + '" class="move-cat-title-container ';
     const parentNode = node.parent as TreeNode & { status?: string; visble?: string };
-    if (node.status == 'private' || parentNode.status == 'private') {
+    if (node.status=== 'private' || parentNode.status=== 'private') {
         node.status = 'private';
         title += 'icon-lock';
     }
     title += '">';
     const nodeExt = node as unknown as { visible?: string; visble?: string };
-    if (nodeExt.visible == 'false' || parentNode.visble == 'false') {
+    if (nodeExt.visible=== 'false' || parentNode.visble=== 'false') {
         nodeExt.visble = 'false';
         title +=
             '<span class="tiptip icon-cone" title="' +
@@ -533,7 +531,7 @@ function createAlbumNode(node: TreeNode, li: HTMLElement): void {
         });
     });
 
-    if (node.children.length != 0) {
+    if (node.children.length!== 0) {
         cont.insertAdjacentHTML('beforeend',
             toggler_cont
                 .replace(/%content%/g, toggler_close)
@@ -553,7 +551,7 @@ function createAlbumNode(node: TreeNode, li: HTMLElement): void {
 
     cont.insertAdjacentHTML('beforeend', icon.replace(/%icon%/g, 'icon-grip-vertical-solid'));
 
-    if (node.children.length != 0) {
+    if (node.children.length!== 0) {
         cont.insertAdjacentHTML('beforeend', icon.replace(/%icon%/g, 'icon-sitemap'));
     } else {
         cont.insertAdjacentHTML('beforeend', icon.replace(/%icon%/g, 'icon-folder-open'));
@@ -600,7 +598,7 @@ function createAlbumNode(node: TreeNode, li: HTMLElement): void {
         cont.querySelectorAll<HTMLElement>('.nb-subcats').forEach(function (el) { el.style.display = 'none'; });
     }
 
-    if (!(node.nb_images != 0 && node.nb_images)) {
+    if (!(node.nb_images!== 0 && node.nb_images)) {
         cont.querySelectorAll<HTMLElement>('.nb-images').forEach(function (el) { el.style.display = 'none'; });
     }
 
@@ -617,7 +615,7 @@ function createAlbumNode(node: TreeNode, li: HTMLElement): void {
 }
 
 function checkbox_change(this: HTMLElement): void {
-    if (this.getAttribute('data-selected') == '1') {
+    if (this.getAttribute('data-selected')=== '1') {
         const icon = this.querySelector<HTMLElement>('i');
         if (icon) icon.style.display = 'none';
     } else {
@@ -627,7 +625,7 @@ function checkbox_change(this: HTMLElement): void {
 }
 
 function checkbox_click(this: HTMLElement): void {
-    if (this.getAttribute('data-selected') == '1') {
+    if (this.getAttribute('data-selected')=== '1') {
         this.setAttribute('data-selected', '0');
         const icon = this.querySelector<HTMLElement>('i');
         if (icon) icon.style.display = 'none';
@@ -653,10 +651,10 @@ function openAddAlbumPopIn(parentAlbumId: string | number, pwgTree: PwgTree): vo
         document.getElementById('AddAlbum')!.removeEventListener('keyup', _addAlbumKeyupHandler as EventListener);
     }
     _addAlbumKeyupHandler = function (e: KeyboardEvent) {
-        if (e.keyCode === 13) {
+        if (e.key === 'Enter') {
             document.querySelector<HTMLElement>('.AddAlbumSubmit')!.click();
         }
-        if (e.keyCode === 27) {
+        if (e.key === 'Escape') {
             closeAddAlbumPopIn();
         }
     };
@@ -678,7 +676,7 @@ function openRenameAlbumPopIn(replacedAlbumName: string): void {
         document.removeEventListener('keypress', _renameAlbumKeypressHandler as EventListener);
     }
     _renameAlbumKeypressHandler = function (e: KeyboardEvent) {
-        if (e.which == 13) {
+        if (e.key === 'Enter') {
             document.querySelector<HTMLElement>('.RenameAlbumSubmit')!.click();
         }
     };
@@ -696,11 +694,11 @@ function triggerDeleteAlbum(cat_id: string, pwgTree: PwgTree): void {
     .then(function (response) { return response.text(); })
     .then(function (raw_data) {
         const orphanData = (JSON.parse(raw_data) as { result: OrphanResult[] }).result[0]!;
-        if (orphanData.nb_images_recursive == 0) {
+        if (orphanData.nb_images_recursive=== 0) {
             document.querySelector<HTMLElement>('.deleteAlbumOptions')!.style.display = 'none';
         } else {
             document.querySelector<HTMLElement>('.deleteAlbumOptions')!.style.display = '';
-            if (orphanData.nb_images_associated_outside == 0) {
+            if (orphanData.nb_images_associated_outside=== 0) {
                 document.getElementById('IMAGES_ASSOCIATED_OUTSIDE')!.style.display = 'none';
             } else {
                 document.querySelector<HTMLElement>('#IMAGES_ASSOCIATED_OUTSIDE .innerText')!.innerHTML = '';
@@ -712,7 +710,7 @@ function triggerDeleteAlbum(cat_id: string, pwgTree: PwgTree): void {
                     ),
                 );
             }
-            if (orphanData.nb_images_becoming_orphan == 0) {
+            if (orphanData.nb_images_becoming_orphan=== 0) {
                 document.getElementById('IMAGES_BECOMING_ORPHAN')!.style.display = 'none';
             } else {
                 document.querySelector<HTMLElement>('#IMAGES_BECOMING_ORPHAN .innerText')!.innerHTML = '';
@@ -725,13 +723,13 @@ function triggerDeleteAlbum(cat_id: string, pwgTree: PwgTree): void {
         }
         openDeleteAlbumPopIn(cat_id, pwgTree);
     })
-    .catch(function (error) { console.log(error); });
+    .catch(function (error: unknown) { console.log(error); });
 }
 
 function openDeleteAlbumPopIn(cat_to_delete: string, pwgTree: PwgTree): void {
     document.getElementById('DeleteAlbum')!.style.display = 'block';
     const node = pwgTree.getNodeById(cat_to_delete)!;
-    if (node.children.length == 0) {
+    if (node.children.length=== 0) {
         document.querySelector<HTMLElement>('.DeleteIconTitle span')!.innerHTML =
             delete_album_with_name.replace('%s', node.name);
     } else {
@@ -769,7 +767,7 @@ function openDeleteAlbumPopIn(cat_to_delete: string, pwgTree: PwgTree): void {
             setSubcatsBadge(parentOfDeletedNode as TreeNode | null);
             closeDeleteAlbumPopIn();
         })
-        .catch(function (error) { console.log(error); });
+        .catch(function (error: unknown) { console.log(error); });
     };
     document.querySelector<HTMLElement>('.DeleteAlbumSubmit')!.addEventListener('click', _deleteAlbumClickHandler);
 }
@@ -794,7 +792,7 @@ function getAllSubAlbumsFromNode(node: TreeNode, nb_sub_cats: number): number {
 
 function setSubcatsBadge(node: TreeNode | null): void {
     if (!node) return;
-    if (node.children.length != 0) {
+    if (node.children.length!== 0) {
         const nbSubcatsEl = document.querySelector<HTMLElement>('#cat-' + String(node.id) + ' .nb-subcats');
         if (nbSubcatsEl) {
             nbSubcatsEl.textContent = String(node.children.length);
@@ -818,11 +816,11 @@ function updateTitleBadge(new_nb_albums: number): void {
 }
 
 function goToNode(node: TreeNode, firstNode: TreeNode, pwgTree: PwgTree): void {
-    if (node.parent) {
-        goToNode(node.parent as TreeNode, firstNode, pwgTree);
-        if (node != firstNode) {
+    if (node.parent.id !== undefined) {
+        goToNode(node.parent, firstNode, pwgTree);
+        if (node!== firstNode) {
             pwgTree.openNode(node);
-            const parentEl = document.getElementById('cat-' + String((node.parent as TreeNode).id));
+            const parentEl = document.getElementById('cat-' + String(node.parent.id));
             if (parentEl) {
                 parentEl.style.display = '';
                 parentEl.classList.add('immune');
@@ -839,19 +837,17 @@ function goToNode(node: TreeNode, firstNode: TreeNode, pwgTree: PwgTree): void {
 }
 
 function showNodeChildren(node: TreeNode): void {
-    if (node.children) {
-        node.children.forEach(function (child) {
-            const childEl = document.getElementById('cat-' + String(child.id));
-            if (childEl) {
-                childEl.classList.add('immune');
-            }
-            showNodeChildren(child);
-        });
-    }
+    node.children.forEach(function (child) {
+        const childEl = document.getElementById('cat-' + String(child.id));
+        if (childEl) {
+            childEl.classList.add('immune');
+        }
+        showNodeChildren(child);
+    });
 }
 
 function getId(parent: TreeMoveParent): number {
-    if (parent.getLevel() == 0) {
+    if (parent.getLevel()=== 0) {
         return 0;
     } else {
         return parent.id as number;
@@ -859,14 +855,14 @@ function getId(parent: TreeMoveParent): number {
 }
 
 function getRank(node: TreeNode, ignoreId: string | number | null = null): number {
-    if (node.getPreviousSibling() != null) {
-        if (node.id != ignoreId) {
+    if (node.getPreviousSibling()!== null) {
+        if (node.id!== ignoreId) {
             return 1 + getRank(node.getPreviousSibling()!, ignoreId);
         } else {
             return getRank(node.getPreviousSibling()!, ignoreId);
         }
     } else {
-        if (node.id != ignoreId) {
+        if (node.id!== ignoreId) {
             return 1;
         } else {
             return 0;
@@ -883,18 +879,18 @@ function applyMove(event: { move_info: TreeMoveInfo }, pwgTree: PwgTree): void {
     let moveRank: number | null = null;
     const previous_parent = event.move_info.previous_parent;
     const target = event.move_info.target_node;
-    if (event.move_info.position == 'after') {
-        if (getId(previous_parent) != getId(target.parent as TreeMoveParent)) {
+    if (event.move_info.position=== 'after') {
+        if (getId(previous_parent)!== getId(target.parent as TreeMoveParent)) {
             moveParent = getId(target.parent as TreeMoveParent);
         }
         moveRank = getRank(target, id) + 1;
-    } else if (event.move_info.position == 'inside') {
-        if (getId(previous_parent) != getId(target as unknown as TreeMoveParent)) {
+    } else if (event.move_info.position=== 'inside') {
+        if (getId(previous_parent)!== getId(target as unknown as TreeMoveParent)) {
             moveParent = getId(target as unknown as TreeMoveParent);
         }
         moveRank = 1;
-    } else if (event.move_info.position == 'before') {
-        if (getId(previous_parent) != getId(target.parent as TreeMoveParent)) {
+    } else {
+        if (getId(previous_parent)!== getId(target.parent as TreeMoveParent)) {
             moveParent = getId(target.parent as TreeMoveParent);
         }
         moveRank = 1;
@@ -925,11 +921,11 @@ function applyMove(event: { move_info: TreeMoveInfo }, pwgTree: PwgTree): void {
 
 function moveNode(node: string | number, rank: number | null, parent: number | null, pwgTree: PwgTree): Promise<void> {
     return new Promise(function (res, rej) {
-        if (parent != null) {
+        if (parent!== null) {
             changeParent(node, parent, rank, pwgTree)
                 .then(function () { res(); })
                 .catch(function (e: unknown) { rej(e instanceof Error ? e : new Error(String(e))); });
-        } else if (rank != null) {
+        } else if (rank!== null) {
             changeRank(node, rank)
                 .then(function () { res(); })
                 .catch(function (e: unknown) { rej(e instanceof Error ? e : new Error(String(e))); });
@@ -1003,7 +999,7 @@ function makePrivateHierarchy(node: TreeNode): void {
 }
 
 function getPathNode(node: TreeNode): string {
-    if (node.parent.getLevel() != 0) {
+    if (node.parent.getLevel()!== 0) {
         return getPathNode(node.parent as TreeNode) + ' / ' + node.name;
     } else {
         return node.name;

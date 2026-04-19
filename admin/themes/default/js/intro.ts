@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const piwigo_update = data.result.piwigo_need_update;
                 const ext_update = data.result.ext_need_update;
                 if (piwigo_update || ext_update) {
-                    let warningsEl = document.querySelector(".warnings");
+                    const warningsEl = document.querySelector(".warnings");
                     if (!warningsEl || warningsEl.tagName !== 'DIV') {
                         const eiwEl = document.querySelector(".eiw");
                         if (eiwEl) eiwEl.insertAdjacentHTML('afterbegin',

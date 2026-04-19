@@ -14,11 +14,9 @@ export function init(cfg: MaintenanceEnvConfig): void {
         .then(r => r.json())
         .then(function (data: { result: PluginItem[] }) {
             const plugins = data.result;
-            let hasActivePlugins = false;
             let nbActivatedPlugins = 0;
             plugins.forEach(function (plugin) {
                 if (plugin.state === "active") {
-                    hasActivePlugins = true;
                     const pluginList = document.querySelector("#pluginList ul");
                     if (pluginList) {
                         pluginList.insertAdjacentHTML("beforeend", "<li>" + plugin.name + "</li>");
@@ -28,7 +26,7 @@ export function init(cfg: MaintenanceEnvConfig): void {
                     nbActivatedPlugins++;
                 }
             });
-            if (!hasActivePlugins) {
+            if (nbActivatedPlugins === 0) {
                 const pluginList = document.querySelector("#pluginList ul");
                 if (pluginList) {
                     const spinner = pluginList.querySelector<HTMLElement>("i");
@@ -36,10 +34,10 @@ export function init(cfg: MaintenanceEnvConfig): void {
                     pluginList.insertAdjacentHTML("beforeend", "<p>" + (no_active_plugin ?? 'No active plugins') + "</p>");
                 }
             }
-            document.querySelectorAll(".badge-number").forEach(el => { el.textContent = (el.textContent ?? '') + nbActivatedPlugins; });
+            document.querySelectorAll(".badge-number").forEach(el => { el.textContent = (el.textContent || '') + nbActivatedPlugins; });
         })
         .catch(function () {
-            document.querySelectorAll(".badge-number").forEach(el => { el.textContent = (el.textContent ?? '') + 0; });
+            document.querySelectorAll(".badge-number").forEach(el => { el.textContent = (el.textContent || '') + 0; });
             const pluginList = document.querySelector("#pluginList ul");
             if (pluginList) {
                 pluginList.insertAdjacentHTML("beforeend", "<p>" + (error_occurred ?? 'An error occurred') + "</p>");

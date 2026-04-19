@@ -43,8 +43,6 @@ if (img) {
         },
     };
 
-    let cropper: Cropper;
-
     if (coiData) {
         cropperConfig.ready = function () {
             cropper.setData({
@@ -56,7 +54,7 @@ if (img) {
         };
     }
 
-    cropper = new Cropper(img, cropperConfig);
+    const cropper = new Cropper(img, cropperConfig);
 
     document.getElementById('jcrop-clear')?.addEventListener('click', function () {
         cropper.clear();

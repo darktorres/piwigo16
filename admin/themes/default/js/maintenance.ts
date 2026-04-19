@@ -114,10 +114,7 @@ export function init(cfg: MaintenanceConfig): void {
 
     document.querySelectorAll<HTMLElement>(".delete-size-check").forEach(function (el) {
         el.addEventListener('click', function () {
-            let displayDeleteSizes = false;
-            document.querySelectorAll<HTMLElement>(".delete-size-check").forEach(function (check) {
-                if (check.getAttribute("data-selected") === '1') displayDeleteSizes = true;
-            });
+            const displayDeleteSizes = Array.from(document.querySelectorAll<HTMLElement>(".delete-size-check")).some(check => check.getAttribute("data-selected") === '1');
             const deleteSizes = document.querySelector<HTMLElement>(".delete-sizes");
             if (deleteSizes) deleteSizes.style.display = displayDeleteSizes ? '' : 'none';
         });

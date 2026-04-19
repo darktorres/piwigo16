@@ -31,7 +31,7 @@ export function pwgDatepicker(
         let originalDate: Date | null = null;
 
         const fpConfig: Options = {
-            enableTime: !!opts.showTimepicker,
+            enableTime: opts.showTimepicker,
             dateFormat: opts.showTimepicker ? 'D, j M Y H:i' : 'D, j M Y',
             time_24hr: true,
             allowInput: false,
@@ -41,7 +41,7 @@ export function pwgDatepicker(
             onChange: function (selectedDates) {
                 const d = selectedDates[0] ?? null;
                 if (hiddenEl) {
-                    hiddenEl.value = d ? formatMachine(d, !!opts.showTimepicker) : '';
+                    hiddenEl.value = d ? formatMachine(d, opts.showTimepicker) : '';
                 }
                 const endName = inputEl.dataset['datepickerEnd'];
                 if (endName && instances[endName]) {

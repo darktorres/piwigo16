@@ -93,13 +93,13 @@ export function init(cfg: TagsConfig): void {
     });
 
     function createTagBox(id: string | number, name: string, url_name: string, count: number, raw_name: string | null = null): HTMLElement {
-        if (raw_name === null) raw_name = name;
+        raw_name ??= name;
         const u_edit = 'admin.php?page=batch_manager&filter=tag-' + String(id);
         const u_view = 'index.php?/tags/' + String(id) + '-' + url_name;
         const templateEl = document.querySelector('.tag-template');
         let html = templateEl ? templateEl.innerHTML : '';
         html = html
-            .replace(/%name%/g, unescape(name))
+            .replace(/%name%/g, decodeURIComponent(name))
             .replace('%U_VIEW%', u_view)
             .replace('%U_EDIT%', u_edit)
             .replace('%raw_name%', raw_name);
@@ -128,7 +128,7 @@ export function init(cfg: TagsConfig): void {
     }
 
     function recycleTagBox(tagBox: HTMLElement, id: string | number, name: string, url_name: string, count: number | undefined, raw_name: string | null = null): void {
-        if (raw_name === null) raw_name = name;
+        raw_name ??= name;
         tagBox.setAttribute('data-id', String(id));
         tagBox.querySelectorAll<HTMLElement>('.tag-name, .tag-dropdown-header b').forEach(el => { el.innerHTML = name; });
         const editableEl = tagBox.querySelector<HTMLInputElement>('.tag-name-editable');
@@ -195,7 +195,7 @@ export function init(cfg: TagsConfig): void {
                 if (loadingEl) loadingEl.style.display = 'none';
                 rename_tag_close();
             })
-            .catch((message: string) => {
+            .catch((message: unknown) => {
                 if (submitBtn) submitBtn.style.display = '';
                 if (loadingEl) loadingEl.style.display = 'none';
                 console.error(message);
@@ -222,9 +222,9 @@ export function init(cfg: TagsConfig): void {
                     if (searchInput) searchInput.dispatchEvent(new Event('input'));
                     loadState.reverse();
                 })
-                .catch((message: string) => {
+                .catch((message: unknown) => {
                     loadState.reverse();
-                    showError(message);
+                    showError(String(message));
                 });
         }
     });
@@ -279,10 +279,7 @@ export function init(cfg: TagsConfig): void {
 
         document.addEventListener('mouseup', function (e) {
             e.stopPropagation();
-            let option_is_clicked = false;
-            tagBox.querySelectorAll('.dropdown-option').forEach(el => {
-                if (el.contains(e.target as Node)) option_is_clicked = true;
-            });
+            const option_is_clicked = Array.from(tagBox.querySelectorAll('.dropdown-option')).some(el => el.contains(e.target as Node));
             if (!option_is_clicked) {
                 const dropdown = tagBox.querySelector<HTMLElement>('.tag-dropdown-block');
                 if (dropdown) dropdown.style.display = 'none';
@@ -385,7 +382,7 @@ export function init(cfg: TagsConfig): void {
                 const data = JSON.parse(raw_data) as { stat: string };
                 if (data.stat === 'ok') {
                     document.querySelector('.tag-box[data-id="' + id + '"]')?.remove();
-                    dataTags = dataTags.filter((tag) => tag.id != id);
+                    dataTags = dataTags.filter((tag) => tag.id!== id);
                     showMessage(str_tag_deleted.replace('%s', name));
                     updateBadge();
                     updateSearchInfo();
@@ -415,7 +412,7 @@ export function init(cfg: TagsConfig): void {
                         if (editableEl) editableEl.value = data.result.name;
                         const viewLink = document.querySelector<HTMLAnchorElement>('.dropdown-option.view');
                         if (viewLink) viewLink.href = 'index.php?/tags/' + id + '-' + data.result.url_name;
-                        const index = dataTags.findIndex((tag) => tag.id == id);
+                        const index = dataTags.findIndex((tag) => tag.id=== id);
                         dataTags[index]!.name = data.result.name;
                         dataTags[index]!.url_name = data.result.url_name;
                         resolve(data);
@@ -454,7 +451,7 @@ export function init(cfg: TagsConfig): void {
                         const afterEl = document.querySelector('.tag-box[data-id="' + id + '"]');
                         if (afterEl) afterEl.insertAdjacentElement('afterend', newTag);
                         setupTagbox(newTag);
-                        const index = dataTags.findIndex((tag) => tag.id == id);
+                        const index = dataTags.findIndex((tag) => tag.id=== id);
                         dataTags.splice(index + 1, 0, {
                             name: data.result.name,
                             raw_name: data.result.name,
@@ -524,8 +521,8 @@ export function init(cfg: TagsConfig): void {
             } else {
                 const otherTags = document.querySelector<HTMLElement>('.selection-other-tags');
                 if (otherTags) otherTags.style.display = 'none';
-                if (dataTags.findIndex((tag) => tag.id == id) > -1) {
-                    createSelectionItem(id, dataTags.find((tag) => tag.id == id)!.name);
+                if (dataTags.findIndex((tag) => tag.id=== id) > -1) {
+                    createSelectionItem(id, dataTags.find((tag) => tag.id=== id)!.name);
                 }
             }
         }
@@ -559,7 +556,7 @@ export function init(cfg: TagsConfig): void {
                     while (i < selected.length && isNotCreate) {
                         if (document.querySelector('.selection-mode-tag .tag-list div[data-id="' + selected[i] + '"]') === null) {
                             isNotCreate = false;
-                            const indexOfTag = dataTags.findIndex((tag) => tag.id == selected[i]);
+                            const indexOfTag = dataTags.findIndex((tag) => tag.id=== selected[i]);
                             createSelectionItem(selected[i]!, dataTags[indexOfTag]!.name);
                         }
                         i++;
@@ -586,7 +583,7 @@ export function init(cfg: TagsConfig): void {
             selected.forEach((id) => {
                 const opt = document.createElement('option');
                 opt.value = id;
-                opt.innerHTML = dataTags.find((tag) => tag.id == id)?.name ?? '';
+                opt.innerHTML = dataTags.find((tag) => tag.id=== id)?.name ?? '';
                 mergeChoices.appendChild(opt);
             });
         }
@@ -667,8 +664,8 @@ export function init(cfg: TagsConfig): void {
         }
     });
 
-    function selectAll(data: TagData[]): Promise<void[]> {
-        const promises: Promise<void>[] = data.map((tag) =>
+    function selectAll(data: TagData[]): Promise<void> {
+        const promises = data.map((tag) =>
             new Promise<void>((res) => {
                 const tagBox = document.querySelector<HTMLElement>('.tag-box[data-id="' + String(tag.id) + '"]');
                 if (tagBox) tagBox.setAttribute('data-selected', '1');
@@ -676,7 +673,7 @@ export function init(cfg: TagsConfig): void {
                 res();
             }),
         );
-        return Promise.all(promises);
+        return Promise.all(promises).then(() => undefined);
     }
 
     function showSelectMessage(str1: string, str2: string, callback: () => void): void {
@@ -729,7 +726,7 @@ export function init(cfg: TagsConfig): void {
     /*------- Actions in selection mode -------*/
 
     document.getElementById('DeleteSelectionMode')?.addEventListener('click', function () {
-        const names: string[] = selected.map(id => dataTags.find((tag) => tag.id == id)?.name ?? '');
+        const names: string[] = selected.map(id => dataTags.find((tag) => tag.id=== id)?.name ?? '');
         pwgConfirm({
             title: str_delete_tags.replace('%s', tagListToString(names)),
             buttons: {
@@ -792,9 +789,9 @@ export function init(cfg: TagsConfig): void {
                 const data = JSON.parse(trimmed) as { stat: string; result: { deleted_tag: (string | number)[]; destination_tag: string | number; images_in_merged_tag: unknown[] } };
                 if (data.stat === 'ok') {
                     data.result.deleted_tag.forEach((id) => {
-                        if (data.result.destination_tag != id) {
+                        if (data.result.destination_tag!== id) {
                             document.querySelector('.tag-box[data-id="' + String(id) + '"]')?.remove();
-                            dataTags = dataTags.filter((tag) => id != tag.id);
+                            dataTags = dataTags.filter((tag) => id!== tag.id);
                         }
                     });
                     if (data.result.images_in_merged_tag.length > 0) {
@@ -804,7 +801,7 @@ export function init(cfg: TagsConfig): void {
                             const headerI = tagBox.querySelector<HTMLElement>('.tag-dropdown-header i');
                             if (headerI) headerI.innerHTML = str_number_photos.replace('%d', String(data.result.images_in_merged_tag.length));
                         }
-                        const index = dataTags.findIndex((tag) => tag.id == data.result.destination_tag);
+                        const index = dataTags.findIndex((tag) => tag.id=== data.result.destination_tag);
                         dataTags[index]!.counter = data.result.images_in_merged_tag.length;
                     }
                     document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => el.setAttribute('data-selected', '0'));
@@ -841,7 +838,7 @@ export function init(cfg: TagsConfig): void {
     });
 
     function isDataSearched(tagObj: TagData): boolean {
-        const name = String(tagObj.raw_name).toLowerCase();
+        const name = tagObj.raw_name.toLowerCase();
         const stringSearch = (document.querySelector<HTMLInputElement>('#search-tag .search-input'))?.value ?? '';
         return name.includes(stringSearch.toLowerCase());
     }

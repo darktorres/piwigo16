@@ -24,7 +24,7 @@ export function initSmartpocket(): void {
         let a = li ? li.querySelector<HTMLAnchorElement>('a[data-image-id]') : null;
         if (!a) {
             const links = document.querySelectorAll<HTMLAnchorElement>('#thumbnails a[data-image-id]');
-            a = (current.index !== undefined ? links[current.index] : null) || null;
+            a = (current.index !== undefined ? links[current.index] : null) ?? null;
         }
         if (!a) return;
         void fetch('ws.php?format=json&method=pwg.history.log', {

@@ -58,8 +58,8 @@ export const AdminTools = (function () {
 
             $ato.querySelectorAll<HTMLSelectElement>(".switcher").forEach(function (sel) {
                 sel.addEventListener("change", function () {
-                    if (sel.dataset['type'] == "theme") {
-                        if (sel.value != state.multiView?.theme) {
+                    if (sel.dataset['type']=== "theme") {
+                        if (sel.value!== state.multiView?.theme) {
                             window.location.href = (state.urlSelf ?? '') + "change_theme=1";
                         }
                     } else {
@@ -94,7 +94,7 @@ function populateMultiView(
         if (!multiview) return;
         let html = "";
         data.users.forEach(function (user) {
-            if (user.status == "webmaster" || user.status == "admin") {
+            if (user.status=== "webmaster" || user.status=== "admin") {
                 html += '<option value="' + user.id + '">' + user.username + "</option>";
             }
         });
@@ -121,7 +121,7 @@ function populateMultiView(
         });
     }
 
-    if ("sessionStorage" in window && window.sessionStorage['multiView'] != undefined) {
+    if ("sessionStorage" in window && window.sessionStorage['multiView']!== undefined) {
         render(JSON.parse(window.sessionStorage['multiView'] as string) as MultiViewData);
     } else {
         fetch((state.urlWS ?? '') + "multiView.getData", { method: "POST" })
@@ -132,6 +132,6 @@ function populateMultiView(
                     window.sessionStorage['multiView'] = JSON.stringify(data.result);
                 }
             })
-            .catch(function (err) { alert(err); });
+            .catch(function (err: unknown) { alert(String(err)); });
     }
 }

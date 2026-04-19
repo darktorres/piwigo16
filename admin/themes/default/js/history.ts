@@ -175,8 +175,8 @@ export function init(cfg: HistoryConfig): void {
 
     document.getElementById('start_unset')?.addEventListener('click', function () {
         console.log('here' + current_param.start);
-        // @ts-expect-error preserved from original JS: !string == string is always false
-        if (!current_param.start == '') {
+        // @ts-expect-error preserved from original JS: !string=== string is always false
+        if (!current_param.start=== '') {
             current_param.pageNumber = 0;
             current_param.start = '';
             fillHistoryResult(current_param);
@@ -184,8 +184,8 @@ export function init(cfg: HistoryConfig): void {
     });
 
     document.getElementById('end_unset')?.addEventListener('click', function () {
-        // @ts-expect-error preserved from original JS: !string == string is always false
-        if (!current_param.start == today) {
+        // @ts-expect-error preserved from original JS: !string=== string is always false
+        if (!current_param.start=== today) {
             current_param.end = today;
             current_param.pageNumber = 0;
             fillHistoryResult(current_param);
@@ -218,10 +218,7 @@ export function init(cfg: HistoryConfig): void {
 
         document.addEventListener('mouseup', function (e) {
             e.stopPropagation();
-            let option_is_clicked = false;
-            document.querySelectorAll<HTMLElement>('.img-option span').forEach(function (el) {
-                if (el.contains(e.target as Node)) option_is_clicked = true;
-            });
+            const option_is_clicked = Array.from(document.querySelectorAll<HTMLElement>('.img-option span')).some(el => el.contains(e.target as Node));
             if (!option_is_clicked) {
                 document.querySelectorAll<HTMLElement>('.search-line .img-option').forEach(el => { el.style.display = 'none'; });
             }
@@ -233,7 +230,7 @@ export function init(cfg: HistoryConfig): void {
         document.querySelector<HTMLElement>('.summary-lines .summary-data')!.innerHTML = String(summary.NB_LINES);
         document.querySelector<HTMLElement>('.summary-weight .summary-data')!.innerHTML = unit_MB.replace('%s', String(summary.FILESIZE));
         document.querySelector<HTMLElement>('.summary-users .summary-data')!.innerHTML = String(summary.USERS);
-        document.querySelector<HTMLElement>('.summary-guests .summary-data')!.innerHTML = String(summary.GUESTS);
+        document.querySelector<HTMLElement>('.summary-guests .summary-data')!.innerHTML = summary.GUESTS;
 
         if (summary.GUESTS.split(' ')[0] !== '0') {
             const guestDataEl = document.querySelector<HTMLElement>('.summary-guests .summary-data')!;
@@ -497,7 +494,7 @@ export function init(cfg: HistoryConfig): void {
                         const cat = array_cat.join(' + ');
                         const temp_div = document.createElement('div');
                         temp_div.innerHTML = cat;
-                        const text = temp_div.textContent?.trim() ?? '';
+                        const text = (temp_div.textContent || '').trim();
                         const detailEl = newLine.querySelector<HTMLElement>('.detail-item-' + String(count_item))!;
                         detailEl.innerHTML = cat;
                         detailEl.classList.add(search_icons['cat']!, 'tiptip');
@@ -564,7 +561,7 @@ export function init(cfg: HistoryConfig): void {
                             if (key === 'cat') {
                                 const temp_div = document.createElement('div');
                                 temp_div.innerHTML = value_str;
-                                value_str = temp_div.textContent?.trim() ?? '';
+                                value_str = (temp_div.textContent || '').trim();
                             }
                             count_more++;
                             return `<b>${str_search_details[key] ?? ''}</b> : ${value_str}`;
@@ -781,7 +778,7 @@ export function init(cfg: HistoryConfig): void {
             const that = ipEl as GeoEl;
             that._isOver = true;
             that.addEventListener('mouseleave', function () { delete that._isOver; }, { once: true });
-            GeoIp.get(that.textContent?.trim() ?? '', function (data: { fullName?: string; latitude?: string; longitude?: string; region_name?: string }) {
+            GeoIp.get((that.textContent || '').trim(), function (data: { fullName?: string; latitude?: string; longitude?: string; region_name?: string }) {
                 if (!data.fullName) return;
                 let content = data.fullName;
                 if (data.latitude && data.region_name) {
@@ -794,7 +791,7 @@ export function init(cfg: HistoryConfig): void {
                     const instance = tippy(that, { content, allowHTML: true, interactive: true, placement: 'right', maxWidth: 320 });
                     that._tippyInstance = Array.isArray(instance) ? (instance[0] as unknown as { setContent(c: string): void; show(): void }) : (instance as unknown as { setContent(c: string): void; show(): void });
                 }
-                if (that._isOver) that._tippyInstance?.show();
+                if (that._isOver) that._tippyInstance.show();
             });
         }, { once: true });
     });

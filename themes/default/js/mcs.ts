@@ -37,13 +37,13 @@ let new_fields: string[] = [];
 let str_no_search_in_progress = '';
 
 const _albumSelectorDataEl = document.getElementById('pwg-album-selector-data');
-const _albumSelectorData = _albumSelectorDataEl ? JSON.parse(_albumSelectorDataEl.textContent ?? '{}') as Record<string, string> : {} as Record<string, string>;
+const _albumSelectorData = _albumSelectorDataEl ? JSON.parse(_albumSelectorDataEl.textContent || '{}') as Record<string, string> : {} as Record<string, string>;
 str_no_search_in_progress = _albumSelectorData['strNoSearchInProgress'] || '';
 
 function toggleEl(el: HTMLElement, callback: (this: HTMLElement) => void): void {
     const isHidden = window.getComputedStyle(el).display === 'none';
     el.style.display = isHidden ? '' : 'none';
-    if (callback) callback.call(el);
+    callback.call(el);
 }
 
 function isVisible(el: Element | null): boolean {
@@ -92,10 +92,6 @@ document.querySelectorAll<HTMLElement>("div.filter-manager").forEach(function (e
 
 global_params["search_id"] = search_id;
 
-if (!fields) {
-    global_params["fields"] = {};
-}
-
 PS_params = {};
 PS_params["search_id"] = search_id;
 empty_filters_list = [];
@@ -107,19 +103,13 @@ if (fields.allwords) {
     if (wordController) wordController.checked = true;
 
     word_search_str = "";
-    word_search_words =
-        fields.allwords.words != null
-            ? fields.allwords.words
-            : [];
+    word_search_words = fields.allwords.words;
     word_search_words.forEach(function (word) { word_search_str += word + " "; });
     const wordSearchEl = document.getElementById("word-search") as HTMLInputElement | null;
     if (wordSearchEl) wordSearchEl.value = word_search_str.slice(0, -1);
 
     const filterWordSearchWords = document.querySelector<HTMLElement>(".filter-word .search-words");
-    if (
-        fields.allwords.words &&
-        fields.allwords.words.length > 0
-    ) {
+    if (fields.allwords.words.length > 0) {
         if (filterWord) filterWord.classList.add("filter-filled");
         if (filterWordSearchWords) filterWordSearchWords.innerHTML = word_search_str.slice(0, -1);
     } else {
@@ -182,13 +172,12 @@ if (fields.tags) {
     if (tagSearchEl && tagSearchEl.tomselect) {
         (tagSearchEl.tomselect.getValue() as string[]).forEach(function (id) {
             const item = tagSearchEl.tomselect!.getItem(id);
-            const itemText = item ? (item as HTMLElement).textContent ?? '' : '';
+            const itemText = item ? (item as HTMLElement).textContent || '' : '';
             tag_search_str += itemText.replace(/\(\d+ \w+\)×/, "").trim() + ", ";
         });
     }
     const filterTagSearchWords = document.querySelector<HTMLElement>(".filter.filter-tag .search-words");
     if (
-        fields.tags.words &&
         fields.tags.words.length > 0
     ) {
         if (filterTag) filterTag.classList.add("filter-filled");
@@ -221,8 +210,8 @@ if (Object.prototype.hasOwnProperty.call(fields, "date_posted")) {
     if (datePostedController) datePostedController.checked = true;
 
     if (
-        fields.date_posted != null &&
-        fields.date_posted != ""
+        fields.date_posted!== null &&
+        fields.date_posted!== ""
     ) {
         const datePostedInput = document.getElementById("date_posted-" + fields.date_posted) as HTMLInputElement | null;
         if (datePostedInput) datePostedInput.checked = true;
@@ -230,7 +219,7 @@ if (Object.prototype.hasOwnProperty.call(fields, "date_posted")) {
         const datePeriodEl = document.querySelector<HTMLElement>(
             ".date_posted-option label#" + fields.date_posted + " .date-period"
         );
-        date_posted_str = datePeriodEl ? datePeriodEl.textContent ?? "" : "";
+        date_posted_str = datePeriodEl ? datePeriodEl.textContent || "" : "";
         if (filterDatePosted) filterDatePosted.classList.add("filter-filled");
         const filterDatePostedSearchWords = document.querySelector<HTMLElement>(".filter.filter-date_posted .search-words");
         if (filterDatePostedSearchWords) filterDatePostedSearchWords.textContent = date_posted_str;
@@ -242,11 +231,7 @@ if (Object.prototype.hasOwnProperty.call(fields, "date_posted")) {
         });
     });
 
-    const dpVal = fields.date_posted;
-    PS_params["date_posted"] =
-        dpVal && String(dpVal).length > 0
-            ? dpVal
-            : "";
+    PS_params["date_posted"] = fields.date_posted || "";
 
     empty_filters_list.push(PS_params["date_posted"]);
 }
@@ -264,7 +249,6 @@ if (fields.cat) {
     });
     const filterAlbumSearchWords = document.querySelector<HTMLElement>(".filter-album .search-words");
     if (
-        fields.cat.words &&
         fields.cat.words.length > 0
     ) {
         if (filterAlbum) filterAlbum.classList.add("filter-filled");
@@ -314,14 +298,13 @@ if (authorsEl) {
         if (authorsEl.tomselect) {
             (authorsEl.tomselect.getValue() as string[]).forEach(function (id) {
                 const item = authorsEl.tomselect!.getItem(id);
-                const itemText = item ? (item as HTMLElement).textContent ?? '' : '';
+                const itemText = item ? (item as HTMLElement).textContent || '' : '';
                 author_search_str += itemText.replace(/\(\d+ \w+\)×/, "").trim() + ", ";
             });
         }
 
         const filterAuthorsSearchWords = document.querySelector<HTMLElement>(".filter.filter-authors .search-words");
         if (
-            fields.author.words &&
             fields.author.words.length > 0
         ) {
             if (filterAuthors) filterAuthors.classList.add("filter-filled");
@@ -352,7 +335,6 @@ if (fields.added_by) {
     if (addedByController) addedByController.checked = true;
 
     if (
-        fields.added_by &&
         fields.added_by.length > 0
     ) {
         if (filterAddedBy) filterAddedBy.classList.add("filter-filled");
@@ -366,7 +348,7 @@ if (fields.added_by) {
             if ((fields.added_by as (string|number)[]).includes(added_by_id)) {
                 input.checked = true;
                 const nameEl = option.querySelector(".added_by-name");
-                if (nameEl) added_by_names.push(nameEl.textContent ?? '');
+                if (nameEl) added_by_names.push(nameEl.textContent || '');
             }
         });
 
@@ -402,7 +384,6 @@ if (fields.filetypes) {
 
     const filterFiletypesSearchWords = document.querySelector<HTMLElement>(".filter.filter-filetypes .search-words");
     if (
-        fields.filetypes &&
         fields.filetypes.length > 0
     ) {
         if (filterFiletypes) filterFiletypes.classList.add("filter-filled");
@@ -469,7 +450,7 @@ document.querySelectorAll<HTMLElement>(".filter-manager").forEach(function (el) 
 });
 
 document.addEventListener("keyup", function (e: KeyboardEvent) {
-    if (e.keyCode === 27) {
+    if (e.key === 'Escape') {
         const fmClose = document.querySelector<HTMLElement>(".filter-manager-popin .filter-manager-close");
         if (fmClose) fmClose.click();
         const tagsClose = document.querySelector<HTMLElement>(".tags-found-popin .tags-found-close");
@@ -477,7 +458,7 @@ document.addEventListener("keyup", function (e: KeyboardEvent) {
         const albumsClose = document.querySelector<HTMLElement>(".albums-found-popin .albums-found-close");
         if (albumsClose) albumsClose.click();
     }
-    if (e.keyCode === 13) {
+    if (e.key === 'Enter') {
         document.querySelectorAll<HTMLElement>(".filter-form .filter-validate").forEach(function (el) {
             if (isVisible(el)) el.click();
         });
@@ -607,7 +588,7 @@ if (filterWordEl) {
 
                 new_fields = [];
                 document.querySelectorAll<HTMLInputElement>(".filter-word-form .search-params input:checked").forEach(function (inp) {
-                    if (inp.getAttribute("name") == "tags") {
+                    if (inp.getAttribute("name")=== "tags") {
                         fields.search_in_tags = true;
                     }
                     new_fields.push(inp.getAttribute("name") ?? '');
@@ -794,7 +775,7 @@ const linkedAlbumSearchInput = document.querySelector<HTMLInputElement>("#linked
 if (linkedAlbumSearchInput) {
     linkedAlbumSearchInput.addEventListener("input", function () {
         const cancelBtn = document.querySelector<HTMLElement>("#linkedAlbumSearch .search-cancel-linked-album");
-        if (this.value != '0') {
+        if (this.value!== '0') {
             if (cancelBtn) cancelBtn.style.display = '';
         } else {
             if (cancelBtn) cancelBtn.style.display = 'none';
@@ -989,7 +970,7 @@ function performSearch(params: Record<string, unknown>, reload: boolean): void {
                 el.classList.add(prefix_icon + "cancel");
             });
         })
-        .catch(function (e) {
+        .catch(function (e: unknown) {
             console.log(e);
         });
 }
@@ -1049,7 +1030,7 @@ function set_up_popin(): void {
     const addLinkedAlbum = document.getElementById("addLinkedAlbum");
     if (addLinkedAlbum) {
         addLinkedAlbum.addEventListener("keyup", function (e: KeyboardEvent) {
-            if (e.keyCode === 27) {
+            if (e.key === 'Escape') {
                 linked_albums_close();
             }
         });
@@ -1144,12 +1125,12 @@ function remove_related_category(cat_id: string): void {
 function updateFilters(filterName: string, mode: string): void {
     switch (filterName) {
         case "word":
-            if (mode == "add") {
+            if (mode=== "add") {
                 fields.allwords = { words: [], mode: 'AND', fields: [] };
                 PS_params["allwords"] = "";
                 PS_params["allwords_mode"] = "AND";
                 PS_params["allwords_fields"] = [];
-            } else if (mode == "del") {
+            } else if (mode=== "del") {
                 delete fields.allwords;
                 delete PS_params["allwords"];
                 delete PS_params["allwords_mode"];
@@ -1158,11 +1139,11 @@ function updateFilters(filterName: string, mode: string): void {
             break;
 
         case "tag":
-            if (mode == "add") {
+            if (mode=== "add") {
                 fields.tags = { words: [], mode: 'AND' };
                 PS_params["tags"] = "";
                 PS_params["tags_mode"] = "AND";
-            } else if (mode == "del") {
+            } else if (mode=== "del") {
                 delete fields.tags;
                 delete PS_params["tags"];
                 delete PS_params["tags_mode"];
@@ -1170,11 +1151,11 @@ function updateFilters(filterName: string, mode: string): void {
             break;
 
         case "album":
-            if (mode == "add") {
+            if (mode=== "add") {
                 fields.cat = { words: [], sub_inc: false };
                 PS_params["categories"] = "";
                 PS_params["categories_withsubs"] = false;
-            } else if (mode == "del") {
+            } else if (mode=== "del") {
                 delete fields.cat;
                 delete PS_params["categories"];
                 delete PS_params["categories_withsubs"];
@@ -1182,12 +1163,12 @@ function updateFilters(filterName: string, mode: string): void {
             break;
 
         default:
-            if (mode == "add") {
+            if (mode=== "add") {
                 fields[filterName] = {};
                 PS_params[filterName] = "";
-            } else if (mode == "del") {
-                delete fields[filterName];
-                delete PS_params[filterName];
+            } else if (mode=== "del") {
+                Reflect.deleteProperty(fields, filterName);
+                Reflect.deleteProperty(PS_params, filterName);
             }
             break;
     }

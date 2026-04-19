@@ -53,8 +53,16 @@ export default [
       "@typescript-eslint": tseslint,
     },
     rules: {
-      ...tseslint.configs['recommended-type-checked'].rules,
+      ...tseslint.configs['strict-type-checked'].rules,
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/no-confusing-void-expression": "off",
+      "@typescript-eslint/restrict-plus-operands": "off",
+      "@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true, allowBoolean: false, allowNullish: false }],
+      "eqeqeq": ["error", "always", { null: "ignore" }],
+      "prefer-const": "error",
+      "@typescript-eslint/prefer-nullish-coalescing": ["error", { ignorePrimitives: { string: true } }],
+      "@typescript-eslint/no-invalid-void-type": ["error", { allowAsThisParameter: true }],
     },
   },
 ];

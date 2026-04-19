@@ -4,7 +4,7 @@ import { pwgConfirm } from './pwgConfirm.js';
 import { sprintf } from './common.js';
 import { initModule } from './moduleInit.js';
 import DropzoneImport from 'dropzone';
-const Dropzone: typeof DropzoneImport = (DropzoneImport as unknown as { default: typeof DropzoneImport }).default ?? DropzoneImport;
+const Dropzone: typeof DropzoneImport = (DropzoneImport as unknown as { default?: typeof DropzoneImport }).default ?? DropzoneImport;
 import Piecon from 'piecon';
 
 interface PwigoDropzoneFile extends Dropzone.DropzoneFile {
@@ -89,7 +89,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
                     let categorySelectedPath = '';
                     if (sel?.tomselect) {
                         const item = sel.tomselect.getItem(categorySelectedId);
-                        categorySelectedPath = item ? item.textContent ?? '' : '';
+                        categorySelectedPath = item ? item.textContent || '' : '';
                     }
                     const selectedAlbum = document.querySelector<HTMLElement>('.selectedAlbum');
                     if (selectedAlbum) {
@@ -143,7 +143,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
 
     Dropzone.autoDiscover = false;
 
-    let beforeUnloadHandler: ((e: BeforeUnloadEvent) => string) | null = null;
+    let beforeUnloadHandler: ((e: BeforeUnloadEvent) => void) | null = null;
     let uploadStarted = false;
     const chunkSizeBytes = chunkSize > 0 ? (chunkSize * 1024) : (100 * 1024 * 1024);
     const acceptedExtensions = (formatMode ? formatExt : fileExt).split(',').map(ext => '.' + ext.trim()).join(',');
@@ -231,7 +231,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
             const result = await fetch('ws.php?format=json&method=pwg.images.formats.searchImage', {
                 method: 'POST',
                 body: new URLSearchParams({
-                    category_id: String((document.querySelector<HTMLSelectElement>('select[name=category]'))?.value ?? ''),
+                    category_id: (document.querySelector<HTMLSelectElement>('select[name=category]'))?.value ?? '',
                     filename_list: JSON.stringify(fileNames),
                 }),
             }).then(r => r.json()) as { result: Record<string, { status: string; image_id?: number }> };
@@ -274,13 +274,11 @@ export function init(cfg: PhotosAddDirectConfig): void {
     dz.on('removedfile', function (_file: Dropzone.DropzoneFile) { updateQueueButtons(); });
 
     dz.on('sending', function (file: PwigoDropzoneFile, _xhr: unknown, formData: FormData) {
-        if (formData.get) {
-            const chunkIdx = formData.get('dzchunkindex');
-            const totalChunks = formData.get('dztotalchunkcount');
-            if (chunkIdx !== null) {
-                formData.set('chunk', String(parseInt(chunkIdx as string)));
-                formData.set('chunks', String(parseInt((totalChunks ?? '0') as string)));
-            }
+        const chunkIdx = formData.get('dzchunkindex');
+        const totalChunks = formData.get('dztotalchunkcount');
+        if (chunkIdx !== null) {
+            formData.set('chunk', String(parseInt(chunkIdx as string)));
+            formData.set('chunks', String(parseInt((totalChunks ?? '0') as string)));
         }
         formData.append('pwgToken', pwgToken);
         formData.append('name', file.name);
@@ -307,7 +305,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
                 let categorySelectedPath = '';
                 if (sel?.tomselect) {
                     const item = sel.tomselect.getItem(categorySelectedId);
-                    categorySelectedPath = item ? item.textContent ?? '' : '';
+                    categorySelectedPath = item ? item.textContent || '' : '';
                 }
                 const selectedAlbum = document.querySelector<HTMLElement>('.selectedAlbum');
                 if (selectedAlbum) {
@@ -318,10 +316,8 @@ export function init(cfg: PhotosAddDirectConfig): void {
             }
             beforeUnloadHandler = function (e: BeforeUnloadEvent) {
                 e.preventDefault();
-                e.returnValue = cfg.strUploadInProgress ?? 'Upload in progress';
-                return e.returnValue as string;
             };
-            window.addEventListener('beforeunload', beforeUnloadHandler);
+            window.addEventListener('beforeunload', beforeUnloadHandler!);
             const levelEl = document.querySelector<HTMLSelectElement>('select[name=level]');
             if (levelEl) levelEl.setAttribute('disabled', 'disabled');
         }
@@ -352,7 +348,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
 
         if (!data?.result) return;
 
-        if (file.previewElement) file.previewElement.style.display = 'none';
+        file.previewElement.style.display = 'none';
 
         const uploadedPhotosEl = document.getElementById('uploadedPhotos');
         if (uploadedPhotosEl) {
@@ -371,7 +367,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
     });
 
     dz.on('error', function (_file: Dropzone.DropzoneFile, message: unknown, xhr: XMLHttpRequest | null) {
-        let errMsg = typeof message === 'string' ? message : ((message as { message?: string })?.message ?? 'Upload error');
+        let errMsg = typeof message === 'string' ? message : ((message as { message?: string }).message ?? 'Upload error');
         if (xhr?.responseText) {
             try { const parsed = JSON.parse(xhr.responseText) as { message?: string }; if (parsed.message) errMsg = parsed.message; } catch (_e) { /* ignore */ }
         }

@@ -49,7 +49,7 @@ export function init(cfg: CatSearchConfig): void {
 
             let nbResult = 0;
             categories.forEach(c => {
-                if (c[0].toString().toLowerCase().includes(string.toLowerCase()) && nbResult < RESULT_LIMIT) {
+                if (c[0].toLowerCase().includes(string.toLowerCase()) && nbResult < RESULT_LIMIT) {
                     nbResult++;
                     addAlbumResult(c, nbResult);
                 }
@@ -82,12 +82,7 @@ export function init(cfg: CatSearchConfig): void {
         const newCatNode = tempDiv.firstElementChild as HTMLElement | null;
         if (!newCatNode) return;
 
-        let hasChildren = false;
-        categories.forEach(c => {
-            for (let i = 0; i < c[1].length - 1; i++) {
-                if (c[1][i]! === id) hasChildren = true;
-            }
-        });
+        const hasChildren = categories.some(c => c[1].slice(0, -1).includes(id));
 
         const iconEl = newCatNode.querySelector<HTMLElement>('.search-album-icon');
         if (iconEl) {

@@ -309,7 +309,7 @@ export function init(_cfg: Record<string, unknown>): void {
         if (!document.hidden && startTime && timerInterval) updateElapsed();
     });
 
-    function fmt(n: number): string { return Number(n).toLocaleString(); }
+    function fmt(n: number): string { return n.toLocaleString(); }
 }
 
 initModule(init);

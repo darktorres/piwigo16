@@ -142,6 +142,8 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
                     cfg.loading = 0;
                     if (!cfg.loadingUp && loaderEl) loaderEl.style.display = 'none';
                     window.dispatchEvent(new CustomEvent('RVTS_loaded', {detail: {down: true}}));
+                    // If masonry still fits in viewport and more items exist, keep loading
+                    if (cfg.next < cfg.total) window.setTimeout(cfg.checkAutoScroll, 100);
                 });
         },
 
@@ -266,6 +268,8 @@ export function initRVTS_CATS(RVTS_CATS: Partial<RVTSCATSConfig> & Pick<RVTSCATS
                 .finally(function () {
                     cfg.loading = 0;
                     if (loaderEl) loaderEl.style.display = 'none';
+                    // If masonry still fits in viewport and more items exist, keep loading
+                    if (cfg.next < cfg.total) window.setTimeout(cfg.checkAutoScroll, 100);
                 });
         },
 

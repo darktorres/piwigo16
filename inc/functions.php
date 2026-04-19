@@ -25,6 +25,8 @@ require_once __DIR__ . '/../inc/functions_session.php';
 
 final class functions
 {
+    public static bool $workerMode = false;
+
     /**
      * no option for mkgetdir()
      */
@@ -2549,6 +2551,10 @@ final class functions
     ): never {
         global $logger;
 
+        if (self::$workerMode) {
+            throw new \Piwigo\inc\WorkerExitException($msg, $code);
+        }
+
         if ($code === 301 ||
             $code === 302
         ) {
@@ -2856,6 +2862,42 @@ final class functions
         }
 
         return false;
+    }
+
+    /**
+     * Returns derivative response data for worker mode instead of streaming directly.
+     *
+     * @return array{status: int, headers: array<string, string>, path: string}
+     */
+    public static function get_derivative_response(int|bool $expires): array
+    {
+        global $page;
+
+        $fp = fopen($page['derivative_path'], 'rb');
+        $fstat = fstat($fp);
+        fclose($fp);
+
+        $headers = [
+            'Last-Modified' => gmdate('D, d M Y H:i:s', $fstat['mtime']) . ' GMT',
+            'Connection'    => 'close',
+        ];
+
+        if ($expires !== false) {
+            $headers['Expires'] = gmdate('D, d M Y H:i:s', $expires) . ' GMT';
+        }
+
+        $ctype = 'application/octet-stream';
+        switch (strtolower($page['derivative_ext'])) {
+            case '.jpe': case '.jpeg': case '.jpg': $ctype = 'image/jpeg'; break;
+            case '.png':  $ctype = 'image/png';  break;
+            case '.gif':  $ctype = 'image/gif';  break;
+            case '.webp': $ctype = 'image/webp'; break;
+        }
+
+        $headers['Content-Type']  = $ctype;
+        $headers['X-Served-By']   = 'roadrunner';
+
+        return ['status' => 200, 'headers' => $headers, 'path' => $page['derivative_path']];
     }
 
     public static function send_derivative(

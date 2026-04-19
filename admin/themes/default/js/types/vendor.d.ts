@@ -10,7 +10,7 @@ declare module 'chart.js' {
     legend: { onClick: null | ((e: Event, item: unknown) => void); display?: boolean; [k: string]: unknown };
     [k: string]: unknown;
   }
-  interface ChartScaleAxis { time: { tooltipFormat?: string; unit?: string; displayFormats?: Record<string, string> }; [k: string]: unknown }
+  interface ChartScaleAxis { time?: { tooltipFormat?: string; unit?: string; displayFormats?: Record<string, string> }; [k: string]: unknown }
   interface ChartOptions {
     scales?: { xAxes?: ChartScaleAxis[]; yAxes?: ChartScaleAxis[]; [k: string]: unknown };
     legend?: { display?: boolean; [k: string]: unknown };

@@ -130,8 +130,8 @@ export function init(cfg: PluginsNewConfig): void {
     const notationSliderEl = document.querySelector<NoUiTarget>('.notation-filter-slider');
     if (notationSliderEl) {
         noUiSlider.create(notationSliderEl, { start: [0], range: { min: 0, max: 5 }, step: 0.5, connect: [true, false] });
-        notationSliderEl.noUiSlider?.on('slide', function (values: string[]) {
-            const val = parseFloat(values[0]);
+        notationSliderEl.noUiSlider?.on('slide', function (values: (string | number)[]) {
+            const val = parseFloat(String(values[0]));
             updateRatingFilterLabel(val);
             applyFilter('rating', val);
         });
@@ -140,8 +140,8 @@ export function init(cfg: PluginsNewConfig): void {
     const revisionSliderEl = document.querySelector<NoUiTarget>('.revision-date-filter-slider');
     if (revisionSliderEl) {
         noUiSlider.create(revisionSliderEl, { start: [0], range: { min: 0, max: 6 }, step: 1, connect: [true, false] });
-        revisionSliderEl.noUiSlider?.on('slide', function (values: string[]) {
-            const val = Math.round(parseFloat(values[0]));
+        revisionSliderEl.noUiSlider?.on('slide', function (values: (string | number)[]) {
+            const val = Math.round(parseFloat(String(values[0])));
             const [month] = value_to_month(val);
             updateRevisionFilterLabel(val);
             applyFilter('revision', month);
@@ -152,8 +152,8 @@ export function init(cfg: PluginsNewConfig): void {
     const certificationSliderEl = document.querySelector<NoUiTarget>('.certification-filter-slider');
     if (certificationSliderEl) {
         noUiSlider.create(certificationSliderEl, { start: [minCertification], range: { min: minCertification, max: 3 }, step: 1, connect: [true, false] });
-        certificationSliderEl.noUiSlider?.on('slide', function (values: string[]) {
-            const val = Math.round(parseFloat(values[0]));
+        certificationSliderEl.noUiSlider?.on('slide', function (values: (string | number)[]) {
+            const val = Math.round(parseFloat(String(values[0])));
             updateCertificationFilterLabel(val);
             applyFilter('certification', val);
         });

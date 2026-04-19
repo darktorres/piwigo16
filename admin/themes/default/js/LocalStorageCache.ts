@@ -86,7 +86,7 @@ type TomSelectRenderTemplates = {
     option_create: (data: { input: string }, escape: (s: string) => string) => string;
 };
 
-type TomSelectOnFn = { on(event: string, fn: (...args: unknown[]) => void): void };
+type TomSelectOnFn = { on(event: string, fn: (...args: never[]) => void): void };
 
 abstract class AbstractSelectizer extends LocalStorageCache {
     protected _selectize(els: HTMLSelectElement[], globalOptions: SelectizeOptions): void {

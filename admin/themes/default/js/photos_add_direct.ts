@@ -351,7 +351,8 @@ export function init(cfg: PhotosAddDirectConfig): void {
         if (data?.stat === 'fail') {
             const errorsUl = document.querySelector('.errors ul');
             if (errorsUl) errorsUl.insertAdjacentHTML('beforeend', '<li>' + (data.message ?? 'Upload error') + '</li>');
-            document.querySelector<HTMLElement>('.errors')?.style && (document.querySelector<HTMLElement>('.errors')!.style.display = '');
+            const errorsEl = document.querySelector<HTMLElement>('.errors');
+            if (errorsEl) errorsEl.style.display = '';
             return;
         }
 
@@ -382,7 +383,8 @@ export function init(cfg: PhotosAddDirectConfig): void {
             try { const parsed = JSON.parse(xhr.responseText) as { message?: string }; if (parsed.message) errMsg = parsed.message; } catch (_e) { /* ignore */ }
         }
         document.querySelector('.errors ul')?.insertAdjacentHTML('beforeend', '<li>' + errMsg + '</li>');
-        document.querySelector<HTMLElement>('.errors')?.style && (document.querySelector<HTMLElement>('.errors')!.style.display = '');
+        const errEl = document.querySelector<HTMLElement>('.errors');
+        if (errEl) errEl.style.display = '';
     });
 
     dz.on('queuecomplete', function () {

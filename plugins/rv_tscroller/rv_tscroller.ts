@@ -1,5 +1,3 @@
-/* global GDThumb */
-
 interface RVTSConfig {
     ajaxUrlModel: string;
     start: number;

@@ -45,7 +45,7 @@ export function init(cfg: PluginsInstalledConfig): void {
         deletePluginMsg = 'Delete %s?', restorePluginMsg = 'Restore %s?',
         uninstallPluginMsg = 'Uninstall %s?',
         pluginAddedStr = '', pluginDeactivatedStr = '', pluginRestoredStr = '',
-        pluginActionError = '', notWebmaster = '', nothingFound = '',
+        pluginActionError: _pluginActionError = '', notWebmaster = '', nothingFound = '',
         xPluginsFound = '%s plugins found', pluginFound = '1 plugin found',
         isWebmaster = 1, strRestoreDef = '', showDetails = false, pluginFilter = '',
     } = cfg;

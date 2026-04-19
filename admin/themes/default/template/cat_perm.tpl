@@ -1,9 +1,5 @@
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-{footer_script}<script>
-  const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
-</script>{/footer_script}
-
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_cat_perm}

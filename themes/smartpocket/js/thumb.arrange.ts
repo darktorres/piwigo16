@@ -75,17 +75,16 @@ export class SPThumbs {
         }
         this.process();
 
-        const that = this;
-        window.addEventListener("resize", function () {
-            if (that.thumbs && Math.abs(that.thumbs.offsetWidth - that.prevContainerWidth) > 1)
-                that.process();
+        window.addEventListener("resize", () => {
+            if (this.thumbs && Math.abs(this.thumbs.offsetWidth - this.prevContainerWidth) > 1)
+                this.process();
         });
-        window.addEventListener("RVTS_loaded", function (evt) {
+        window.addEventListener("RVTS_loaded", (evt) => {
             const customEvt = evt as CustomEvent<{ down?: boolean }>;
             const down = customEvt.detail && customEvt.detail.down;
-            that.process(
-                down && that.thumbs && that.thumbs.offsetWidth == that.prevContainerWidth
-                    ? that.prevLastLineFirstThumbIndex
+            this.process(
+                down && this.thumbs && this.thumbs.offsetWidth == this.prevContainerWidth
+                    ? this.prevLastLineFirstThumbIndex
                     : 0,
             );
         });
@@ -115,10 +114,9 @@ export class SPThumbs {
         if (line.elements.length) this.processLine(line, containerWidth, true);
         this.prevLastLineFirstThumbIndex = line.firstThumbIndex;
 
-        const that = this;
-        window.requestAnimationFrame(function () {
-            if (that.thumbs && Math.abs(that.thumbs.offsetWidth - that.prevContainerWidth) > 1)
-                that.process();
+        window.requestAnimationFrame(() => {
+            if (this.thumbs && Math.abs(this.thumbs.offsetWidth - this.prevContainerWidth) > 1)
+                this.process();
         });
     }
 

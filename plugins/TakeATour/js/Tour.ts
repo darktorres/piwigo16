@@ -39,7 +39,7 @@ export class Tour {
 
     init(): this {
         const idx = parseInt(sessionStorage.getItem(this._key) ?? '', 10);
-        if (!isNaN(idx) && idx >= 0) { const self = this; setTimeout(function () { self._show(idx); }, 100); }
+        if (!isNaN(idx) && idx >= 0) { setTimeout(() => { this._show(idx); }, 100); }
         return this;
     }
 
@@ -78,7 +78,6 @@ export class Tour {
     }
 
     private _createPop(step: TourStep, idx: number, target: HTMLElement | null): void {
-        const self = this;
         const wrap = document.createElement('div');
         wrap.innerHTML = this.template || '<div class="popover"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div><div class="popover-navigation"><div class="btn-group"><button class="btn btn-sm btn-default" data-role="prev">&laquo; Prev</button><button class="btn btn-sm btn-default" data-role="next">Next &raquo;</button></div><button class="btn btn-sm btn-default" data-role="end">End tour</button></div></div>';
         const pop = wrap.firstElementChild as HTMLElement;
@@ -88,12 +87,12 @@ export class Tour {
         if (titleEl) titleEl.innerHTML = step.title || '';
         const contentEl = pop.querySelector('.popover-content');
         if (contentEl) contentEl.innerHTML = step.content || '';
-        pop.querySelectorAll<HTMLElement>('[data-role]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
+        pop.querySelectorAll<HTMLElement>('[data-role]').forEach((btn) => {
+            btn.addEventListener('click', () => {
                 const role = btn.getAttribute('data-role');
-                if (role === 'next') self._show(idx + 1);
-                else if (role === 'prev') self._show(step.prev !== undefined ? step.prev : idx - 1);
-                else if (role === 'end') self.end();
+                if (role === 'next') this._show(idx + 1);
+                else if (role === 'prev') this._show(step.prev !== undefined ? step.prev : idx - 1);
+                else if (role === 'end') this.end();
             });
         });
         document.body.appendChild(pop);

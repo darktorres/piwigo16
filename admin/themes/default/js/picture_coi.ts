@@ -57,7 +57,6 @@ if (img) {
         };
     }
 
-    // eslint-disable-next-line prefer-const
     cropper = new Cropper(img, cropperConfig);
 
     document.getElementById('jcrop-clear')?.addEventListener('click', function () {

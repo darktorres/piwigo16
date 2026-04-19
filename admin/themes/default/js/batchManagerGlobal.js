@@ -1,7 +1,6 @@
 import { initModule } from './moduleInit.js';
 import tippy from 'tippy.js';
 import { sprintf } from './common.js';
-import { pwgConfirm } from './pwgConfirm.js';
 import { pwgDoubleSlider } from './doubleSlider.js';
 import { pwgDatepicker } from './datepicker.js';
 import { pwgAddAlbum } from './addAlbum.js';
@@ -92,6 +91,12 @@ function selectDelDerivNone() {
         el.dispatchEvent(new Event("change"));
     });
 }
+
+window.toggleAddFilterDropdown = toggleAddFilterDropdown;
+window.selectGenerateDerivAll = selectGenerateDerivAll;
+window.selectGenerateDerivNone = selectGenerateDerivNone;
+window.selectDelDerivAll = selectDelDerivAll;
+window.selectDelDerivNone = selectDelDerivNone;
 
 export function init(cfg) {
     // Build batchManagerConfig from cfg for compatibility
@@ -766,11 +771,6 @@ document.addEventListener("mouseup", function (e) {
             var progBar = el.querySelector(".progress-bar");
             if (progBar) progBar.style.width = "0%";
         }
-    }
-
-    function progress_bar_end() {
-        var el = document.getElementById("uploadingActions");
-        if (el) el.style.display = 'none';
     }
 
     function progress_bar(val, max) {

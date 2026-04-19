@@ -81,7 +81,7 @@ let openCat: string | number = -1;
 let nb_albums = 0;
 let light_album_manager = false;
 let x_nb_subcats = '', x_nb_images = '', x_nb_sub_photos = '';
-let delay_autoOpen = 0;
+let _delay_autoOpen = 0;
 let delete_album_with_name = '', delete_album_with_subs = '';
 let has_images_associated_outside = '', has_images_becoming_orphans = '', has_images_recursives = '';
 let rename_item = '';
@@ -116,7 +116,7 @@ export function init(cfg: AlbumsConfig): void {
     x_nb_subcats = cfg.xNbSubcats;
     x_nb_images = cfg.xNbImages;
     x_nb_sub_photos = cfg.xNbSubPhotos;
-    delay_autoOpen = cfg.delayAutoOpen;
+    _delay_autoOpen = cfg.delayAutoOpen;
     delete_album_with_name = cfg.deleteAlbumWithName;
     delete_album_with_subs = cfg.deleteAlbumWithSubs;
     has_images_associated_outside = cfg.hasImagesAssociatedOutside;

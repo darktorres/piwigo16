@@ -1,7 +1,8 @@
 import tippy from 'tippy.js';
 
 const _docReady = function (fn: () => void): void {
-    document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn);
+    if (document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
 };
 
 const menubar = document.getElementById('menubar');

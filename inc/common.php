@@ -20,7 +20,7 @@ use Piwigo\inc\PersistentFileCache;
 use Piwigo\inc\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    trigger_error('Hacking attempt!', E_USER_ERROR);
+    throw new \RuntimeException('Hacking attempt!');
 }
 
 // determine the initial instant to indicate the generation time of this page

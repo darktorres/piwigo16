@@ -893,7 +893,7 @@ final class Template
         array $params
     ): void {
         if (! isset($params['id'])) {
-            trigger_error("combine_script: missing 'id' parameter", E_USER_ERROR);
+            throw new \RuntimeException("combine_script: missing 'id' parameter");
         }
 
         $load = 0;
@@ -909,7 +909,7 @@ final class Template
                 case 'async': $load = 2;
                     break;
 
-                default: trigger_error("combine_script: invalid 'load' parameter", E_USER_ERROR);
+                default: throw new \RuntimeException("combine_script: invalid 'load' parameter");
             }
         }
 
@@ -936,7 +936,7 @@ final class Template
         array $params
     ): string {
         if (! isset($params['load'])) {
-            trigger_error("get_combined_scripts: missing 'load' parameter", E_USER_ERROR);
+            throw new \RuntimeException("get_combined_scripts: missing 'load' parameter");
         }
 
         $load = $params['load'] == 'header' ? 0 : 1;

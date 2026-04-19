@@ -251,6 +251,7 @@ final class pwg_users
         $query = trim($query) . ';';
         $result = $conf->sql_backend::pwg_query($query);
         $users = [];
+        $total_count = 0;
 
         while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
             $total_count = $row['total_count'];

@@ -15,34 +15,34 @@
   ],
   "scripts": {
     "build": "npm-run-all build:bootstrap build:bootstrap-darkroom build:theme build:bootswatch",
-    "build:bootstrap": "sass --style expanded --load-path=node_modules --silence-deprecation=import,if-function,global-builtin,color-functions scss/bootstrap-default.scss css/bootstrap-default/bootstrap.css && postcss --config postcss.config.js --replace css/bootstrap-default/bootstrap.css && cleancss --level 1 --source-map --source-map-inline-sources --output css/bootstrap-default/bootstrap.min.css css/bootstrap-default/bootstrap.css",
-    "build:bootstrap-darkroom": "sass --style expanded --load-path=node_modules --silence-deprecation=import,if-function,global-builtin,color-functions scss/bootstrap-darkroom.scss css/bootstrap-darkroom/bootstrap.css && postcss --config postcss.config.js --replace css/bootstrap-darkroom/bootstrap.css && cleancss --level 1 --source-map --source-map-inline-sources --output css/bootstrap-darkroom/bootstrap.min.css css/bootstrap-darkroom/bootstrap.css",
+    "build:bootstrap": "sass --style expanded --load-path=node_modules --silence-deprecation=import,if-function,global-builtin,color-functions scss/bootstrap-default.scss css/bootstrap-default/bootstrap.css && postcss --config postcss.config.js --replace css/bootstrap-default/bootstrap.css && cleancss -O1 --source-map --source-map-inline-sources --output css/bootstrap-default/bootstrap.min.css css/bootstrap-default/bootstrap.css",
+    "build:bootstrap-darkroom": "sass --style expanded --load-path=node_modules --silence-deprecation=import,if-function,global-builtin,color-functions scss/bootstrap-darkroom.scss css/bootstrap-darkroom/bootstrap.css && postcss --config postcss.config.js --replace css/bootstrap-darkroom/bootstrap.css && cleancss -O1 --source-map --source-map-inline-sources --output css/bootstrap-darkroom/bootstrap.min.css css/bootstrap-darkroom/bootstrap.css",
     "build:theme": "sass --style expanded --load-path=node_modules --silence-deprecation=import,if-function,global-builtin,color-functions scss/theme.scss theme.css",
-    "build:bootswatch": "for i in cerulean cosmo cyborg darkly flatly journal litera lumen lux materia minty pulse sandstone simplex sketchy slate solar spacelab superhero united yeti; do sass --style expanded --load-path=node_modules --silence-deprecation=import,if-function,global-builtin,color-functions scss/bootswatch/_${i}.scss css/bootswatch-${i}/bootstrap.css && postcss --config postcss.config.js --replace css/bootswatch-${i}/bootstrap.css && cleancss --level 1 --source-map --source-map-inline-sources --output css/bootswatch-${i}/bootstrap.min.css css/bootswatch-${i}/bootstrap.css; done",
-    "build:custom": "sass --style expanded --load-path=node_modules --silence-deprecation=import,if-function,global-builtin,color-functions scss/custom/custom.scss css/custom/bootstrap.css && postcss --config postcss.config.js --replace css/custom/bootstrap.css && cleancss --level 1 --source-map --source-map-inline-sources --output css/custom/bootstrap.min.css css/custom/bootstrap.css"
+    "build:bootswatch": "bash -c 'for i in cerulean cosmo cyborg darkly flatly journal litera lumen lux materia minty pulse sandstone simplex sketchy slate solar spacelab superhero united yeti; do sass --style expanded --load-path=node_modules --silence-deprecation=import,if-function,global-builtin,color-functions scss/bootswatch/_${i}.scss css/bootswatch-${i}/bootstrap.css && postcss --config postcss.config.js --replace css/bootswatch-${i}/bootstrap.css && cleancss -O1 --source-map --source-map-inline-sources --output css/bootswatch-${i}/bootstrap.min.css css/bootswatch-${i}/bootstrap.css; done'",
+    "build:custom": "sass --style expanded --load-path=node_modules --silence-deprecation=import,if-function,global-builtin,color-functions scss/custom/custom.scss css/custom/bootstrap.css && postcss --config postcss.config.js --replace css/custom/bootstrap.css && cleancss -O1 --source-map --source-map-inline-sources --output css/custom/bootstrap.min.css css/custom/bootstrap.css"
   },
   "style": "css/bootstrap-darkroom.css",
   "sass": "scss/bootstrap-darkroom.scss",
   "license": "APACHE-2.0",
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^5.11.2",
+    "@fortawesome/fontawesome-free": "^7.2.0",
     "@popperjs/core": "^2.11.8",
-    "bootstrap": "^5.3.3",
+    "bootstrap": "^5.3.8",
     "bootstrap-social": "^5.1.1",
     "slick-carousel": "tkuther/slick#1.6.0-pwg",
     "swiper": "^12.1.3",
-    "typeface-pt-sans": "^0.0.35",
-    "typeface-roboto": "^0.0.35",
+    "typeface-pt-sans": "^1.1.13",
+    "typeface-roboto": "^1.1.13",
     "wordcloud": "^1.2.3"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.19",
-    "bootswatch": "^5.3.3",
-    "clean-css-cli": "^4.2.1",
+    "autoprefixer": "^10.5.0",
+    "bootswatch": "^5.3.8",
+    "clean-css-cli": "^5.6.3",
     "npm-run-all": "^4.1.5",
     "postcss": "^8.5.10",
-    "postcss-cli": "^11.0.0",
-    "sass": "^1.77.0",
-    "uglify-js": "^3.4.9"
+    "postcss-cli": "^11.0.1",
+    "sass": "^1.99.0",
+    "uglify-js": "^3.19.3"
   }
 }

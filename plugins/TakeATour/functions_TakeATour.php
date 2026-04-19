@@ -29,7 +29,7 @@ final class functions_TakeATour
             'force_fallback' => 'en_UK',
         ]);
 
-        if (in_array($tour_name, ['edit_photos', 'manage_albums', 'config', 'plugins'])) {
+        if (in_array($tour_name, ['edit_photos', 'manage_albums', 'config', 'plugins'], true)) {
             // because these tours come from splitting the original "first_contact"
             // tour, we also load this language file
             functions::load_language('tour_first_contact.lang', PHPWG_PLUGINS_PATH . 'TakeATour/', [

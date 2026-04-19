@@ -86,11 +86,11 @@ if (isset($_POST['submit']) &&
         $page['errors'][] = functions::l10n('This site already exists') . ' [' . $url . ']';
     }
 
-    if (count($page['errors']) == 0 && ! file_exists($url)) {
+    if (count($page['errors']) === 0 && ! file_exists($url)) {
         $page['errors'][] = functions::l10n('Directory does not exist') . ' [' . $url . ']';
     }
 
-    if (count($page['errors']) == 0) {
+    if (count($page['errors']) === 0) {
         $query = <<<SQL
             INSERT INTO sites
                 (galleries_url)

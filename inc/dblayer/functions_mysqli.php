@@ -180,6 +180,7 @@ final class functions_mysqli
             if (! is_dir($log_dir)) {
                 mkdir($log_dir, 0777, true);
             }
+
             $log_entry = '[' . $page['count_queries'] . '] ' . date('Y-m-d H:i:s') . "\n";
             $log_entry .= $query . "\n";
             $log_entry .= '(this query time : ' . number_format($time, 3, '.', ' ') . " s)\n";
@@ -299,7 +300,7 @@ final class functions_mysqli
         array $datas,
         int $flags = 0
     ): void {
-        if (count($datas) == 0) {
+        if ($datas === []) {
             return;
         }
 
@@ -405,7 +406,7 @@ final class functions_mysqli
         array $where,
         int $flags = 0
     ): void {
-        if (count($datas) == 0) {
+        if ($datas === []) {
             return;
         }
 
@@ -480,7 +481,7 @@ final class functions_mysqli
         array $options = [],
         ?\Closure $on_progress = null
     ): void {
-        if (count($datas) == 0) {
+        if ($datas === []) {
             return;
         }
 
@@ -560,7 +561,7 @@ final class functions_mysqli
                 $insertedRows += $rowCount - 1;
                 $batchesSinceCommit++;
 
-                if ($on_progress !== null) {
+                if ($on_progress instanceof \Closure) {
                     $on_progress($insertedRows, $totalRows);
                 }
 
@@ -719,7 +720,7 @@ final class functions_mysqli
 
         $existing[] = $new_value;
         $values = implode(',', array_map(
-            fn($v) => "'" . self::pwg_db_real_escape_string($v) . "'",
+            fn(?string $v): string => "'" . self::pwg_db_real_escape_string($v) . "'",
             $existing
         ));
         self::pwg_query("ALTER TABLE {$table} CHANGE {$column} {$column} ENUM({$values}) DEFAULT NULL;");
@@ -807,7 +808,7 @@ final class functions_mysqli
         array $data,
         array $options = []
     ): void {
-        if (count($data) == 0) {
+        if ($data === []) {
             return;
         }
 
@@ -877,7 +878,7 @@ final class functions_mysqli
             SQL;
         $mysqli_rc = self::pwg_query($query);
 
-        if ($mysqli_rc) {
+        if ($mysqli_rc !== null) {
             $page['infos'][] = functions::l10n('All optimizations have been successfully completed.');
         } else {
             $page['errors'][] = functions::l10n('Optimizations have been completed with some errors.');

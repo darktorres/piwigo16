@@ -37,7 +37,7 @@ if ($conf->enable_formats &&
         SQL;
     $formats = $conf->sql_backend::query2array($query);
 
-    if (count($formats) == 0) {
+    if (count($formats) === 0) {
         functions::do_error(400, 'Invalid request - format');
     }
 

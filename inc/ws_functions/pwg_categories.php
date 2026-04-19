@@ -121,7 +121,7 @@ final class pwg_categories
             $order_by = ws_functions::ws_std_image_sql_order($params, 'i.');
 
             if (empty($order_by) &&
-                count($params['cat_id']) == 1 &&
+                count($params['cat_id']) === 1 &&
                 isset($cats[$params['cat_id'][0]]['image_order'])
             ) {
                 $order_by = $cats[$params['cat_id'][0]]['image_order'];
@@ -704,7 +704,7 @@ final class pwg_categories
         $options = [];
 
         if (! empty($params['status']) &&
-            in_array($params['status'], ['private', 'public'])
+            in_array($params['status'], ['private', 'public'], true)
         ) {
             $options['status'] = $params['status'];
         }
@@ -751,7 +751,7 @@ final class pwg_categories
             SQL;
         $categories = $conf->sql_backend::query2array($query);
 
-        if (count($categories) == 0) {
+        if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
 
@@ -847,14 +847,14 @@ final class pwg_categories
             SQL;
         $categories = $conf->sql_backend::query2array($query);
 
-        if (count($categories) == 0) {
+        if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
 
         $category = $categories[0];
 
         if (! empty($params['status'])) {
-            if (! in_array($params['status'], ['private', 'public'])) {
+            if (! in_array($params['status'], ['private', 'public'], true)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid status, only public/private');
             }
 
@@ -1140,7 +1140,7 @@ final class pwg_categories
             }
         }
 
-        if (count($category_ids) == 0) {
+        if ($category_ids === []) {
             return null;
         }
 
@@ -1152,7 +1152,7 @@ final class pwg_categories
             SQL;
         $category_ids = $conf->sql_backend::query2array($query, null, 'id');
 
-        if (count($category_ids) == 0) {
+        if (count($category_ids) === 0) {
             return null;
         }
 
@@ -1201,7 +1201,7 @@ final class pwg_categories
             }
         }
 
-        if (count($category_ids) == 0) {
+        if ($category_ids === []) {
             return new PwgError(403, 'Invalid category_id input parameter, no category to move');
         }
 
@@ -1242,7 +1242,7 @@ final class pwg_categories
             }
         }
 
-        if (count($categories_in_db) != count($category_ids)) {
+        if (count($categories_in_db) !== count($category_ids)) {
             $unknown_category_ids = array_diff($category_ids, array_keys($categories_in_db));
 
             return new PwgError(
@@ -1260,7 +1260,7 @@ final class pwg_categories
         if ($params['parent'] != 0) {
             $subcat_ids = functions_category::get_subcat_ids([$params['parent']]);
 
-            if (count($subcat_ids) == 0) {
+            if ($subcat_ids === []) {
                 return new PwgError(403, 'Unknown parent category id');
             }
         }

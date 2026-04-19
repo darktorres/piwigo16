@@ -75,7 +75,7 @@ final class functions_admin
     ): void {
         global $conf;
 
-        if (count($ids) == 0) {
+        if ($ids === []) {
             return;
         }
 
@@ -200,7 +200,7 @@ final class functions_admin
     ): array|int {
         global $conf;
 
-        if (count($ids) == 0) {
+        if ($ids === []) {
             return 0;
         }
 
@@ -291,7 +291,7 @@ final class functions_admin
     ): int {
         global $conf;
 
-        if (count($ids) == 0) {
+        if ($ids === []) {
             return 0;
         }
 
@@ -493,7 +493,7 @@ final class functions_admin
         } elseif (! is_array($ids)) {
             $where_cats = "%s = {$ids}";
         } else {
-            if (count($ids) == 0) {
+            if ($ids === []) {
                 return false;
             }
 
@@ -649,7 +649,7 @@ final class functions_admin
                     ) {
                         $dirs[] = $path . '/' . $node;
 
-                        if ($on_dir !== null) {
+                        if ($on_dir instanceof \Closure) {
                             $on_dir($path . '/' . $node);
                         }
 
@@ -849,7 +849,7 @@ final class functions_admin
     ): ?bool {
         global $conf;
 
-        if (! in_array($value, ['public', 'private'])) {
+        if (! in_array($value, ['public', 'private'], true)) {
             trigger_error("set_cat_status invalid param {$value}", E_USER_WARNING);
             return false;
         }
@@ -987,7 +987,7 @@ final class functions_admin
                         SQL;
                     $ref_access = $conf->sql_backend::query2array($query, null, $field);
 
-                    if (count($ref_access) == 0) {
+                    if (count($ref_access) === 0) {
                         $ref_access[] = -1;
                     }
 
@@ -1117,7 +1117,7 @@ final class functions_admin
     ): array {
         global $conf;
 
-        if (count($cat_ids) == 0) {
+        if ($cat_ids === []) {
             return [];
         }
 
@@ -1397,7 +1397,7 @@ final class functions_admin
         global $page;
         global $conf;
 
-        if (count($category_ids) == 0) {
+        if ($category_ids === []) {
             return;
         }
 
@@ -1690,8 +1690,8 @@ final class functions_admin
     ): void {
         global $conf;
 
-        if (count($tags) == 0 ||
-            count($images) == 0
+        if ($tags === [] ||
+            $images === []
         ) {
             return;
         }
@@ -1806,7 +1806,7 @@ final class functions_admin
             SQL;
         $existing_tags = $conf->sql_backend::query2array($query, null, 'id');
 
-        if (count($existing_tags) == 0) {
+        if (count($existing_tags) === 0) {
             $url_name = functions_plugins::trigger_change('render_tag_url', $tag_name);
             // search existing by url name
             $query = <<<SQL
@@ -1816,7 +1816,7 @@ final class functions_admin
                 SQL;
             $existing_tags = $conf->sql_backend::query2array($query, null, 'id');
 
-            if (count($existing_tags) == 0) {
+            if (count($existing_tags) === 0) {
                 // search by extended description (plugin sub name)
                 $sub_name_where = functions_plugins::trigger_change('get_tag_name_like_where', [], $tag_name);
 
@@ -1830,7 +1830,7 @@ final class functions_admin
                     $existing_tags = $conf->sql_backend::query2array($query, null, 'id');
                 }
 
-                if (count($existing_tags) == 0) { // finally create the tag
+                if (count($existing_tags) === 0) { // finally create the tag
                     $conf->sql_backend::mass_inserts(
                         'tags',
                         ['name', 'url_name'],
@@ -1887,7 +1887,7 @@ final class functions_admin
 
             // Step 1: Batch lookup by exact name
             $escaped = array_map(
-                fn ($n) => "'" . $conf->sql_backend::pwg_db_real_escape_string($n) . "'",
+                fn (string $n): string => "'" . $conf->sql_backend::pwg_db_real_escape_string($n) . "'",
                 $names_to_resolve
             );
             $in_clause = implode(', ', $escaped);
@@ -1909,7 +1909,7 @@ final class functions_admin
                 }
 
                 $escaped_urls = array_map(
-                    fn ($u) => "'" . $conf->sql_backend::pwg_db_real_escape_string($u) . "'",
+                    fn ($u): string => "'" . $conf->sql_backend::pwg_db_real_escape_string($u) . "'",
                     array_values($name_to_url)
                 );
                 $url_in = implode(', ', $escaped_urls);
@@ -1936,7 +1936,7 @@ final class functions_admin
                         $query = "SELECT id FROM tags WHERE {$sub_name_conditions};";
                         $sub_found = $conf->sql_backend::query2array($query, null, 'id');
 
-                        if (count($sub_found)) {
+                        if (count($sub_found) > 0) {
                             $page['tag_id_from_tag_name_cache'][$name] = (int) $sub_found[0];
                             unset($unique_names[$name]);
                         }
@@ -1960,7 +1960,7 @@ final class functions_admin
 
                 // Re-fetch to get IDs
                 $new_escaped = array_map(
-                    fn ($n) => "'" . $conf->sql_backend::pwg_db_real_escape_string($n) . "'",
+                    fn (string $n): string => "'" . $conf->sql_backend::pwg_db_real_escape_string($n) . "'",
                     array_keys($unique_names)
                 );
                 $new_in = implode(', ', $new_escaped);
@@ -2059,7 +2059,7 @@ final class functions_admin
             $images_ids = [$image_ids];
         }
 
-        if (count($image_ids) == 0) {
+        if ($image_ids === []) {
             return [];
         }
 
@@ -2261,8 +2261,8 @@ final class functions_admin
     ): ?bool {
         global $conf;
 
-        if (count($images) == 0 ||
-            count($categories) == 0
+        if ($images === [] ||
+            $categories === []
         ) {
             return false;
         }
@@ -2389,7 +2389,7 @@ final class functions_admin
     ): ?bool {
         global $conf;
 
-        if (count($images) == 0) {
+        if ($images === []) {
             return false;
         }
 
@@ -2453,7 +2453,7 @@ final class functions_admin
     ): ?bool {
         global $conf;
 
-        if (count($sources) == 0) {
+        if ($sources === []) {
             return false;
         }
 
@@ -2566,9 +2566,7 @@ final class functions_admin
         $extents = [];
 
         while (($file = readdir($dir)) !== false) {
-            if ($file === '.' ||
-                $file === '..' ||
-                $file === '.svn'
+            if (in_array($file, ['.', '..', '.svn'], true)
             ) {
                 continue;
             }
@@ -2609,7 +2607,7 @@ final class functions_admin
             SQL;
         $existing_tags = $conf->sql_backend::query2array($query, null, 'id');
 
-        if (count($existing_tags) == 0) {
+        if (count($existing_tags) === 0) {
             $conf->sql_backend::single_insert(
                 'tags',
                 [
@@ -2802,7 +2800,7 @@ final class functions_admin
                 continue;
             }
 
-            if ($i == 0) {
+            if ($i === 0) {
                 if (! preg_match('/HTTP\/(\\d\\.\\d)\\s*(\\d+)\\s*(.*)/', rtrim($line, "\r\n"), $m)) {
                     fclose($s);
                     return false;
@@ -2865,7 +2863,7 @@ final class functions_admin
     ): false|array {
         global $conf;
 
-        if (count($group_ids) == 0) {
+        if ($group_ids === []) {
             trigger_error('There is no group to delete', E_USER_WARNING);
             return false;
         }
@@ -3095,8 +3093,8 @@ final class functions_admin
         }
 
         // check for emptiness
-        if (count($category_ids) == 0 ||
-            count($user_ids) == 0
+        if ($category_ids === [] ||
+            $user_ids === []
         ) {
             return;
         }
@@ -3117,7 +3115,7 @@ final class functions_admin
             SQL;
         $private_cats = $conf->sql_backend::query2array($query, null, 'id');
 
-        if (count($private_cats) == 0) {
+        if (count($private_cats) === 0) {
             return;
         }
 
@@ -3290,7 +3288,7 @@ final class functions_admin
             }
         }
 
-        if (substr_compare($path, '../', 0, 3) == 0) {
+        if (substr_compare($path, '../', 0, 3) === 0) {
             $path = substr($path, 3);
         }
 
@@ -3698,7 +3696,7 @@ final class functions_admin
             $images_ids = [$image_ids];
         }
 
-        if (count($image_ids) == 0) {
+        if ($image_ids === []) {
             return;
         }
 
@@ -3760,7 +3758,7 @@ final class functions_admin
             SQL;
         $images = $conf->sql_backend::query2array($query);
 
-        if (count($images) == 0) {
+        if (count($images) === 0) {
             if ($die_on_missing) {
                 functions_html::fatal_error('photo ' . $image_id . ' does not exist');
             }
@@ -4106,7 +4104,7 @@ final class functions_admin
         if ($env_nbm['is_sendmail_timeout'] && isset($_POST[$post_keyname])) {
             $post_count = count($_POST[$post_keyname]);
             $treated_count = count($check_key_treated);
-            if ($treated_count != 0) {
+            if ($treated_count !== 0) {
                 $time_refresh = ceil((functions::get_moment() - $env_nbm['start_time']) * $post_count / $treated_count);
             } else {
                 $time_refresh = 0;
@@ -4204,7 +4202,7 @@ final class functions_admin
             if ($env_nbm['is_sendmail_timeout']) {
                 $quoted_check_key_list = functions_notification_by_mail::quote_check_key_list(array_diff($check_key_list, $check_key_treated));
 
-                if (count($quoted_check_key_list) != 0) {
+                if ($quoted_check_key_list !== []) {
                     $imploded_check_key_list = implode(', ', $quoted_check_key_list);
                     $query = <<<SQL
                         DELETE FROM user_mail_notification
@@ -4252,7 +4250,7 @@ final class functions_admin
         global $conf, $page, $user, $lang_info, $lang, $env_nbm;
         $return_list = [];
 
-        if (in_array($action, ['list_to_send', 'send'])) {
+        if (in_array($action, ['list_to_send', 'send'], true)) {
             [$dbnow] = $conf->sql_backend::pwg_db_fetch_row($conf->sql_backend::pwg_query('SELECT NOW();'));
 
             $is_action_send = ($action === 'send');
@@ -4480,7 +4478,7 @@ final class functions_admin
                 $base_url .= $is_first ? '?' : '&amp;';
                 $is_first = false;
 
-                if (! in_array($key, ['page', 'psf', 'dpsf', 'pwg_token'])) {
+                if (! in_array($key, ['page', 'psf', 'dpsf', 'pwg_token'], true)) {
                     functions_html::fatal_error('unexpected URL get key');
                 }
 
@@ -4813,7 +4811,7 @@ final class functions_admin
         global $change_name;
         $change_name = $candidate;
 
-        if ($step != 0) {
+        if ($step !== 0) {
             $change_name .= '-' . $step;
         }
 

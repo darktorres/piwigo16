@@ -88,7 +88,7 @@ final class pwg_images
 
         $cat_ids = array_unique($cat_ids);
 
-        if (count($cat_ids) == 0) {
+        if ($cat_ids === []) {
             return new PwgError(
                 500,
                 '[ws_add_image_category_relations] there is no category defined in "' . $categories_string . '"'
@@ -105,7 +105,7 @@ final class pwg_images
 
         $unknown_cat_ids = array_diff($cat_ids, $db_cat_ids);
 
-        if (count($unknown_cat_ids) != 0) {
+        if ($unknown_cat_ids !== []) {
             return new PwgError(
                 500,
                 '[ws_add_image_category_relations] the following categories are unknown: ' . implode(', ', $unknown_cat_ids)
@@ -139,7 +139,7 @@ final class pwg_images
 
         $new_cat_ids = array_diff($cat_ids, $existing_cat_ids);
 
-        if (count($new_cat_ids) == 0) {
+        if ($new_cat_ids === []) {
             return true;
         }
 
@@ -1583,7 +1583,7 @@ final class pwg_images
 
         // Check if file has been uploaded
         if (! $chunks ||
-            $chunk == $chunks - 1
+            $chunk === $chunks - 1
         ) {
             // Strip the temp .part suffix off
             rename("{$filePath}.part", $filePath);
@@ -1598,7 +1598,7 @@ final class pwg_images
                     SQL;
                 $images = $conf->sql_backend::query2array($query);
 
-                if (count($images) == 0) {
+                if (count($images) === 0) {
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
                 }
 
@@ -2147,7 +2147,7 @@ final class pwg_images
             $formats_of[$row['image_id']][] = $row['ext'];
         }
 
-        if (count($image_ids) == 0) {
+        if ($image_ids === []) {
             return new PwgError(404, 'No format found for the id(s) given');
         }
 
@@ -2671,7 +2671,7 @@ final class pwg_images
             SQL;
         $categories = $conf->sql_backend::query2array($query);
 
-        if (count($categories) == 0) {
+        if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
 

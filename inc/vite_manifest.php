@@ -3,9 +3,10 @@ namespace Piwigo\Vite;
 
 class ViteManifest {
     private static $manifest = null;
+
     private static $manifestPath = null;
 
-    public static function setManifestPath($path) {
+    public static function setManifestPath($path): void {
         self::$manifestPath = $path;
         self::$manifest = null; // Reset cache on path change
     }
@@ -32,7 +33,7 @@ class ViteManifest {
      * @param string $key Module key (e.g. 'tags', 'albums') or full path (e.g. 'admin/themes/default/js/tags.js')
      * @return string|null Hashed filename or null if not found
      */
-    public static function getFile($key) {
+    public static function getFile(string $key) {
         $manifest = self::getManifest();
 
         // Try full path first
@@ -54,7 +55,7 @@ class ViteManifest {
      * @param string $key Module key
      * @return array Array of imported module files
      */
-    public static function getDeps($key) {
+    public static function getDeps(string $key) {
         $manifest = self::getManifest();
         $entry = $manifest[$key . '.js'] ?? null;
 
@@ -70,7 +71,7 @@ class ViteManifest {
      * @param string $key Module key
      * @param string $rootPath Base path to dist/ (default: '/admin/themes/default/js/dist')
      */
-    public static function emitModuleScript($key, $rootPath = '/admin/themes/default/js/dist') {
+    public static function emitModuleScript($key, $rootPath = '/admin/themes/default/js/dist'): void {
         $file = self::getFile($key);
 
         if (!$file) {

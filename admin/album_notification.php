@@ -37,7 +37,7 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 if (! isset($category)) {
     $cat_id = (int) ($_GET['cat_id'] ?? $_GET['cat'] ?? 0);
 
-    if (! $cat_id) {
+    if ($cat_id === 0) {
         exit('cat_id URL parameter is missing');
     }
 
@@ -241,7 +241,7 @@ $query = <<<SQL
     SQL;
 $all_group_ids = $conf->sql_backend::query2array($query, null, 'group_id');
 
-if (count($all_group_ids) == 0) {
+if (count($all_group_ids) === 0) {
     $template->assign('no_group_in_gallery', true);
 } else {
     if ($category['status'] == 'private') {
@@ -252,7 +252,7 @@ if (count($all_group_ids) == 0) {
             SQL;
         $group_ids = $conf->sql_backend::query2array($query, null, 'group_id');
 
-        if (count($group_ids) == 0) {
+        if (count($group_ids) === 0) {
             $template->assign('permission_url', $admin_album_base_url . '-permissions');
         }
     } else {

@@ -713,7 +713,7 @@ final class functions_html
                     unset($_SESSION['page_' . $mode]);
                 }
 
-                if (count($page[$mode]) != 0) {
+                if (count($page[$mode]) !== 0) {
                     $template->assign($mode, $page[$mode]);
                 }
             }

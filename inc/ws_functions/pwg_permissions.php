@@ -101,12 +101,12 @@ final class pwg_permissions
 
         // filter by group and user
         foreach ($perms as $cat_id => &$cat) {
-            if (isset($params['group_id']) && (empty($cat['groups']) || count(array_intersect($cat['groups'], $params['group_id'])) == 0)) {
+            if (isset($params['group_id']) && (empty($cat['groups']) || array_intersect($cat['groups'], $params['group_id']) === [])) {
                 unset($perms[$cat_id]);
                 continue;
             }
 
-            if (isset($params['user_id']) && ((empty($cat['users_indirect']) || count(array_intersect($cat['users_indirect'], $params['user_id'])) == 0) && (empty($cat['users']) || count(array_intersect($cat['users'], $params['user_id'])) == 0))) {
+            if (isset($params['user_id']) && ((empty($cat['users_indirect']) || array_intersect($cat['users_indirect'], $params['user_id']) === []) && (empty($cat['users']) || array_intersect($cat['users'], $params['user_id']) === []))) {
                 unset($perms[$cat_id]);
                 continue;
             }

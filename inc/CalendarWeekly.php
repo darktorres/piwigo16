@@ -67,15 +67,15 @@ final class CalendarWeekly extends CalendarBase
     {
         global $conf, $page;
 
-        if (count($page['chronology_date']) == 0) {
+        if (count($page['chronology_date']) === 0) {
             $this->build_nav_bar(CalendarBase::CYEAR); // years
         }
 
-        if (count($page['chronology_date']) == 1) {
+        if (count($page['chronology_date']) === 1) {
             $this->build_nav_bar(CalendarBase::CWEEK, []); // week nav bar 1-53
         }
 
-        if (count($page['chronology_date']) == 2) {
+        if (count($page['chronology_date']) === 2) {
             $this->build_nav_bar(CalendarBase::CDAY); // days nav bar Mon-Sun
         }
 

@@ -58,7 +58,7 @@ foreach ($languages->fs_languages as $language_id => $language) {
         'language' => $language_id,
     ]);
 
-    if (in_array($language_id, array_keys($languages->db_languages))) {
+    if (in_array($language_id, array_keys($languages->db_languages), true)) {
         $language['state'] = 'active';
         $language['deactivatable'] = true;
 

@@ -36,7 +36,7 @@ if (isset($_POST['submit'])) {
 
         SQL;
 
-    if (strlen($_POST['l']) == 0) {
+    if ((string) $_POST['l'] === '') {
         $query .= " SET coi = NULL\n";
     } else {
         $coi = derivative_params::fraction_to_char($_POST['l'])

@@ -447,7 +447,7 @@ final class functions_comment
     ): void {
         global $conf;
 
-        if (! in_array($action, ['edit', 'delete']) ||
+        if (! in_array($action, ['edit', 'delete'], true) ||
           ($action === 'edit' && ! $conf->email_admin_on_comment_edition) ||
           ($action === 'delete' && ! $conf->email_admin_on_comment_deletion)
         ) {

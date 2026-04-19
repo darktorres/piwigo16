@@ -691,8 +691,8 @@ final class functions_search
         // check adjacent short words
         for ($i = 0; $i < count($expr->stokens) - 1; $i++) {
             if ((strlen($expr->stokens[$i]->term) <= 3 || strlen($expr->stokens[$i + 1]->term) <= 3) &&
-               (($expr->stoken_modifiers[$i] & (self::QST_QUOTED | self::QST_WILDCARD)) == 0) &&
-                (($expr->stoken_modifiers[$i + 1] & (self::QST_BREAK | self::QST_QUOTED | self::QST_WILDCARD)) == 0)
+               (($expr->stoken_modifiers[$i] & (self::QST_QUOTED | self::QST_WILDCARD)) === 0) &&
+                (($expr->stoken_modifiers[$i + 1] & (self::QST_BREAK | self::QST_QUOTED | self::QST_WILDCARD)) === 0)
             ) {
                 $common = array_intersect($token_tag_ids[$i], $token_tag_ids[$i + 1]);
 
@@ -723,13 +723,13 @@ final class functions_search
                 if (($expr->stoken_modifiers[$i] & self::QST_NOT) !== 0) {
                     $not_ids = array_merge($not_ids, $tag_ids);
                 } elseif (strlen($token->term) > 2 ||
-                    count($expr->stokens) == 1 ||
+                    count($expr->stokens) === 1 ||
                     isset($token->scope) ||
                    ($token->modifier & (self::QST_WILDCARD | self::QST_QUOTED))) {
                     // add tag ids to list only if the word is not too short (such as de / la /les ...)
                     $positive_ids = array_merge($positive_ids, $tag_ids);
                 }
-            } elseif (isset($token->scope) && $token->scope->id == 'tag' && strlen($token->term) == 0) {
+            } elseif (isset($token->scope) && $token->scope->id == 'tag' && (string) $token->term === '') {
                 if (($token->modifier & self::QST_WILDCARD) !== 0) { // eg. 'tag:*' returns all tagged images
                     $qsr->tag_iids[$i] = $conf->sql_backend::query2array('SELECT DISTINCT image_id FROM image_tag;', null, 'image_id');
                 } else { // eg. 'tag:' returns all untagged images
@@ -789,8 +789,8 @@ final class functions_search
         // check adjacent short words
         for ($i = 0; $i < count($expr->stokens) - 1; $i++) {
             if ((strlen($expr->stokens[$i]->term) <= 3 || strlen($expr->stokens[$i + 1]->term) <= 3) &&
-               (($expr->stoken_modifiers[$i] & (self::QST_QUOTED | self::QST_WILDCARD)) == 0) &&
-               (($expr->stoken_modifiers[$i + 1] & (self::QST_BREAK | self::QST_QUOTED | self::QST_WILDCARD)) == 0)
+               (($expr->stoken_modifiers[$i] & (self::QST_QUOTED | self::QST_WILDCARD)) === 0) &&
+               (($expr->stoken_modifiers[$i + 1] & (self::QST_BREAK | self::QST_QUOTED | self::QST_WILDCARD)) === 0)
             ) {
                 $common = array_intersect($token_cat_ids[$i], $token_cat_ids[$i + 1]);
 
@@ -831,7 +831,7 @@ final class functions_search
                 if (($expr->stoken_modifiers[$i] & self::QST_NOT) !== 0) {
                     $not_ids = array_merge($not_ids, $cat_ids);
                 } elseif (strlen($token->term) > 2 ||
-                    count($expr->stokens) == 1 ||
+                    count($expr->stokens) === 1 ||
                     isset($token->scope) ||
                     ($token->modifier & (self::QST_WILDCARD | self::QST_QUOTED))) {
                     // add cat ids to list only if the word is not too short (such as de / la /les ...)
@@ -839,7 +839,7 @@ final class functions_search
                 }
             } elseif (isset($token->scope) &&
                       $token->scope->id == 'category' &&
-                      strlen($token->term) == 0
+                      (string) $token->term === ''
             ) {
                 if (($token->modifier & self::QST_WILDCARD) !== 0) { // eg. 'category:*' returns all images associated to an album
                     $qsr->cat_iids[$i] = $conf->sql_backend::query2array('SELECT DISTINCT image_id FROM image_category;', null, 'image_id');
@@ -1031,8 +1031,8 @@ final class functions_search
                 }
 
                 if (strlen($token->term) > 2 &&
-                   ($token->modifier & (self::QST_QUOTED | self::QST_WILDCARD)) == 0 &&
-                    strcspn($token->term, "'0123456789") == strlen($token->term)
+                   ($token->modifier & (self::QST_QUOTED | self::QST_WILDCARD)) === 0 &&
+                    strcspn($token->term, "'0123456789") === strlen($token->term)
                 ) {
                     $token->variants = array_unique(array_diff($inflector->get_variants($token->term), [$token->term]));
                 }
@@ -1042,7 +1042,7 @@ final class functions_search
         functions_plugins::trigger_notify('qsearch_expression_parsed', $expression);
         //var_export($expression);
 
-        if (count($expression->stokens) == 0) {
+        if ($expression->stokens === []) {
             return $search_results;
         }
 

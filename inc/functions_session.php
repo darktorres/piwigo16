@@ -26,7 +26,7 @@ if (isset($conf->session_save_handler) &&
 
     session_name($conf->session_name);
     session_set_cookie_params(0, functions_cookie::cookie_path());
-    register_shutdown_function('session_write_close');
+    register_shutdown_function(session_write_close(...));
 }
 
 final class functions_session

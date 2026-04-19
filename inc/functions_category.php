@@ -191,7 +191,7 @@ final class functions_category
 
         $upper_ids = explode(',', $cat['uppercats']);
 
-        if (count($upper_ids) == 1) { // no need to make a query for level 1
+        if (count($upper_ids) === 1) { // no need to make a query for level 1
             $cat['upper_names'] = [
                 [
                     'id' => $cat['id'],
@@ -784,7 +784,7 @@ final class functions_category
         $common_cats = self::get_common_categories($items, $conf->related_albums_display_limit, $excluded_cat_ids);
         // echo '<pre>'; print_r($common_cats); echo '</pre>';
 
-        if (count($common_cats) == 0) {
+        if ($common_cats === []) {
             return [];
         }
 

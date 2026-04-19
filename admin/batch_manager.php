@@ -205,7 +205,7 @@ elseif (isset($_GET['filter'])) {
                     [, $duplicate_field] = explode('-', $value, 2);
                     $_SESSION['bulk_manager_filter']['prefilter'] = 'duplicates';
 
-                    if (in_array($duplicate_field, ['filename', 'checksum', 'date', 'dimensions'])) {
+                    if (in_array($duplicate_field, ['filename', 'checksum', 'date', 'dimensions'], true)) {
                         $_SESSION['bulk_manager_filter']['duplicates_' . $duplicate_field] = true;
                     }
                 } else {
@@ -428,7 +428,7 @@ if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
             break;
 
         case 'all_photos':
-            if (count($_SESSION['bulk_manager_filter']) == 1) { // make the query only if this is the only filter
+            if (count($_SESSION['bulk_manager_filter']) === 1) { // make the query only if this is the only filter
                 $query = <<<SQL
                     SELECT id
                     FROM images

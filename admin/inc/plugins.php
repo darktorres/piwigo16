@@ -323,7 +323,7 @@ final class plugins
             }
 
             // IMPORTANT SECURITY !
-            $plugin = array_map('htmlspecialchars', $plugin);
+            $plugin = array_map(htmlspecialchars(...), $plugin);
             $this->fs_plugins[$plugin_id] = $plugin;
 
             return $plugin;
@@ -376,7 +376,7 @@ final class plugins
 
                 // If the actual version exist, put the PEM id in $versions_to_check
                 while ($i < count($pem_versions) &&
-                       count($versions_to_check) == 0
+                       $versions_to_check === []
                 ) {
                     if (functions::get_branch_from_version($pem_versions[$i]['name']) === functions::get_branch_from_version($version)) {
                         $versions_to_check[] = $pem_versions[$i]['id'];
@@ -388,7 +388,7 @@ final class plugins
                 // If $beta_test is true, search the previous version
                 if ($beta_test) {
                     // If the actual version is not in PEM, put the latest PEM version
-                    if (count($versions_to_check) == 0) {
+                    if ($versions_to_check === []) {
                         $versions_to_check[] = $pem_versions[0]['id'];
                     } else { // Else search the next version in PEM
                         $has_found_previous_version = false;
@@ -763,7 +763,7 @@ final class plugins
     ): int {
         $r = strcasecmp($a['author_name'], $b['author_name']);
 
-        if ($r == 0) {
+        if ($r === 0) {
             return $this->extension_name_compare($a, $b);
         }
 
@@ -776,7 +776,7 @@ final class plugins
     ): int {
         $r = strcasecmp($a['author'], $b['author']);
 
-        if ($r == 0) {
+        if ($r === 0) {
             return functions_html::name_compare($a, $b);
         }
 

@@ -61,20 +61,20 @@ final class CalendarMonthly extends CalendarBase
             $tpl_var = [];
 
             //case A: no year given - display all years+months
-            if (count($page['chronology_date']) == 0 && $this->build_global_calendar($tpl_var)) {
+            if (count($page['chronology_date']) === 0 && $this->build_global_calendar($tpl_var)) {
                 $template->assign('chronology_calendar', $tpl_var);
                 return true;
             }
 
             //case B: year given - display all days in given year
-            if (count($page['chronology_date']) == 1 && $this->build_year_calendar($tpl_var)) {
+            if (count($page['chronology_date']) === 1 && $this->build_year_calendar($tpl_var)) {
                 $template->assign('chronology_calendar', $tpl_var);
                 $this->build_nav_bar(CalendarBase::CYEAR);
                 // years
                 return true;
             }
 
-            if (count($page['chronology_date']) == 2) { //case C: year+month given - display a nice month calendar
+            if (count($page['chronology_date']) === 2) { //case C: year+month given - display a nice month calendar
                 if ($this->build_month_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
                 }
@@ -85,17 +85,17 @@ final class CalendarMonthly extends CalendarBase
         }
 
         if ($view_type == functions_calendar::CAL_VIEW_LIST ||
-            count($page['chronology_date']) == 3
+            count($page['chronology_date']) === 3
         ) {
-            if (count($page['chronology_date']) == 0) {
+            if (count($page['chronology_date']) === 0) {
                 $this->build_nav_bar(CalendarBase::CYEAR); // years
             }
 
-            if (count($page['chronology_date']) == 1) {
+            if (count($page['chronology_date']) === 1) {
                 $this->build_nav_bar(CalendarBase::CMONTH); // month
             }
 
-            if (count($page['chronology_date']) == 2) {
+            if (count($page['chronology_date']) === 2) {
                 $day_labels = range(1, $this->get_all_days_in_month(
                     $page['chronology_date'][CalendarBase::CYEAR],
                     $page['chronology_date'][CalendarBase::CMONTH]
@@ -211,12 +211,12 @@ final class CalendarMonthly extends CalendarBase
         ];
 
         if (is_numeric($year) &&
-            $month == 2
+            $month === 2
         ) {
             $nb_days = $md[2];
 
-            if ($year % 4 == 0 &&
-               ($year % 100 != 0 || $year % 400 != 0)
+            if ($year % 4 === 0 &&
+               ($year % 100 !== 0 || $year % 400 !== 0)
             ) {
                 $nb_days++;
             }
@@ -238,7 +238,7 @@ final class CalendarMonthly extends CalendarBase
         global $page;
         global $conf;
 
-        assert(count($page['chronology_date']) == 0);
+        assert(count($page['chronology_date']) === 0);
 
         $period = $conf->sql_backend::pwg_db_get_date_YYYYMM($this->date_field);
         $year = $conf->sql_backend::pwg_db_get_year($this->date_field);
@@ -270,7 +270,7 @@ final class CalendarMonthly extends CalendarBase
         }
 
         // echo ('<pre>'. var_export($items, true) . '</pre>');
-        if (count($items) == 1) { // only one year exists so bail out to year view
+        if (count($items) === 1) { // only one year exists so bail out to year view
             [$y] = array_keys($items);
             $page['chronology_date'][CalendarBase::CYEAR] = $y;
             return false;
@@ -313,7 +313,7 @@ final class CalendarMonthly extends CalendarBase
         global $page;
         global $conf;
 
-        assert(count($page['chronology_date']) == 1);
+        assert(count($page['chronology_date']) === 1);
 
         $period = $conf->sql_backend::pwg_db_get_date_MMDD($this->date_field);
         $query = <<<SQL
@@ -342,7 +342,7 @@ final class CalendarMonthly extends CalendarBase
             $items[$m]['nb_images'] += $row['count'];
         }
 
-        if (count($items) == 1) { // only one month exists so bail out to month view
+        if (count($items) === 1) { // only one month exists so bail out to month view
             [$m] = array_keys($items);
             $page['chronology_date'][CalendarBase::CMONTH] = $m;
             return false;
@@ -435,7 +435,7 @@ final class CalendarMonthly extends CalendarBase
             $wday_labels = $lang['day'];
 
             if ($conf->week_starts_on === 'monday') {
-                if ($first_day_dow == 0) {
+                if ($first_day_dow === 0) {
                     $first_day_dow = 6;
                 } else {
                     --$first_day_dow;
@@ -457,8 +457,8 @@ final class CalendarMonthly extends CalendarBase
             for ($day = 1; $day <= $this->get_all_days_in_month($page['chronology_date'][CalendarBase::CYEAR], $page['chronology_date'][CalendarBase::CMONTH]); $day++) {
                 $dow = ($first_day_dow + $day - 1) % 7;
 
-                if ($dow == 0 &&
-                    $day != 1
+                if ($dow === 0 &&
+                    $day !== 1
                 ) {
                     $tpl_weeks[] = $tpl_crt_week; // add finished week to week list
                     $tpl_crt_week = []; // start new week

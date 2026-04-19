@@ -54,7 +54,7 @@ final class pwg
         } else {
             $types = array_intersect(array_keys(ImageStdParams::get_defined_type_map()), $params['types']);
 
-            if (count($types) == 0) {
+            if ($types === []) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid types');
             }
         }

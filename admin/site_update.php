@@ -82,7 +82,7 @@ if ($site_is_remote) {
             $conf->everything_instance_name
         );
 
-        if ($everything_sdk !== null) {
+        if ($everything_sdk instanceof \Piwigo\admin\EverythingSDK) {
             $site_reader = new EverythingSiteReader($site_url, $everything_sdk);
         } else {
             functions_html::fatal_error('Everything SDK failed: ' . EverythingSDK::$lastError);
@@ -249,7 +249,7 @@ if (isset($_POST['submit']) &&
     $t_sub = microtime(true);
 
     $dir_callback = $sse_mode
-        ? function (string $dir) {
+        ? function (string $dir): void {
             sync_emit('substep_progress', [
                 'phase' => 'dirs',
                 'id' => 'scan',
@@ -451,6 +451,7 @@ if (isset($_POST['submit']) &&
                         $deduped_user_perms[] = $perm;
                     }
                 }
+
                 $conf->sql_backend::mass_inserts('user_access', ['user_id', 'cat_id'], $deduped_user_perms, ['bulk' => true]);
             } else {
                 // add_permission_on_category only does meaningful work for
@@ -458,7 +459,7 @@ if (isset($_POST['submit']) &&
                 // when all new albums are public (the common default).
                 $private_ids = array_values(
                     array_column(
-                        array_filter($inserts, fn($c) => $c['status'] === 'private'),
+                        array_filter($inserts, fn(array $c): bool => $c['status'] === 'private'),
                         'id'
                     )
                 );
@@ -486,7 +487,7 @@ if (isset($_POST['submit']) &&
         $to_delete[] = $db_fulldirs[$fulldir];
         unset($db_fulldirs[$fulldir]);
 
-        if (substr_compare($fulldir, '../', 0, 3) == 0) {
+        if (substr_compare($fulldir, '../', 0, 3) === 0) {
             $fulldir = substr($fulldir, 3);
         }
 
@@ -511,6 +512,7 @@ if (isset($_POST['submit']) &&
                     functions_admin::clear_derivative_cache_rec($to_delete_dir, '#.+#');
                 }
             }
+
             $logger->info('[sync][dirs] derivative cleanup done', ['elapsed_s' => round(microtime(true) - $t_deriv, 2)]);
         }
 
@@ -685,10 +687,12 @@ if (isset($_POST['submit']) &&
                 . 'For faster bulk inserts, set local_infile=ON in my.ini and restart MySQL.');
         }
     }
-
-    // TSV file state (only used when $use_load_data is true).
-    $tsv_images_path = $tsv_links_path = $tsv_fmt_path = '';
-    $tsv_images = $tsv_links = $tsv_fmt = null;
+    $tsv_images_path = '';
+    $tsv_links_path = '';
+    $tsv_fmt_path = '';
+    $tsv_images = null;
+    $tsv_links = null;
+    $tsv_fmt = null;
     $tsv_fmt_count = 0;
     $chunk_count   = 0;
 
@@ -722,7 +726,7 @@ if (isset($_POST['submit']) &&
     $t_scan = microtime(true);
 
     $scan_callback = $sse_mode
-        ? function (string $dir, int $count) {
+        ? function (string $dir, int $count): void {
             sync_emit('substep_progress', [
                 'phase' => 'files',
                 'id' => 'scan',
@@ -746,6 +750,7 @@ if (isset($_POST['submit']) &&
                     $existing_formats = [];
                 }
             }
+
             unset($db_paths_set[$path]);
             continue;
         }
@@ -768,11 +773,9 @@ if (isset($_POST['submit']) &&
             // Drop FULLTEXT index on first new file: we now know inserts will
             // happen, so all subsequent batched inserts bypass per-row FULLTEXT
             // maintenance. The index is rebuilt after the loop (below).
-            if (! $simulate) {
-                if ($conf->sql_backend::index_exists('images', 'image_ft')) {
-                    $conf->sql_backend::drop_index('images', 'image_ft');
-                    $has_ft_index = true;
-                }
+            if (!$simulate && $conf->sql_backend::index_exists('images', 'image_ft')) {
+                $conf->sql_backend::drop_index('images', 'image_ft');
+                $has_ft_index = true;
             }
         }
 
@@ -865,7 +868,9 @@ if (isset($_POST['submit']) &&
                     }
 
                     $conf->sql_backend::pwg_query('COMMIT;');
-                    $chunk_inserts = $chunk_links = $chunk_fmt_new = [];
+                    $chunk_inserts = [];
+                    $chunk_links = [];
+                    $chunk_fmt_new = [];
                 }
 
                 if ($chunk_caddie !== []) {
@@ -1000,7 +1005,7 @@ if (isset($_POST['submit']) &&
 
     sync_emit('substep_complete', [
         'phase' => 'files', 'id' => 'delete',
-        'detail' => count($to_delete_elements) > 0
+        'detail' => $to_delete_elements !== []
             ? fmt_number(count($to_delete_elements)) . ' deleted'
             : 'no deletions',
         'elapsed' => round(microtime(true) - $t_delete_check, 1),

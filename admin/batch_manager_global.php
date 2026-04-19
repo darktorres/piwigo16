@@ -96,7 +96,7 @@ $redirect_url = functions_url::get_root_url() . 'admin.php?page=' . $_GET['page'
 if (isset($_POST['submit'])) {
     // if the user tries to apply an action, it means that there is at least 1
     // photo in the selection
-    if (count($collection) == 0) {
+    if (count($collection) === 0) {
         $page['errors'][] = functions::l10n('Select at least one photo');
     }
 
@@ -745,7 +745,7 @@ $page_data = [
     'rootUrl' => functions_url::get_root_url(),
     'sliders' => [
         'widths' => [
-            'values' => !empty($dimensions['widths']) ? array_map('intval', explode(',', $dimensions['widths'])) : [],
+            'values' => empty($dimensions['widths']) ? [] : array_map(intval(...), explode(',', $dimensions['widths'])),
             'selected' => [
                 'min' => (int)($dimensions['selected']['min_width'] ?? 0),
                 'max' => (int)($dimensions['selected']['max_width'] ?? 0),
@@ -753,7 +753,7 @@ $page_data = [
             'text' => functions::l10n('between %d and %d pixels'),
         ],
         'heights' => [
-            'values' => !empty($dimensions['heights']) ? array_map('intval', explode(',', $dimensions['heights'])) : [],
+            'values' => empty($dimensions['heights']) ? [] : array_map(intval(...), explode(',', $dimensions['heights'])),
             'selected' => [
                 'min' => (int)($dimensions['selected']['min_height'] ?? 0),
                 'max' => (int)($dimensions['selected']['max_height'] ?? 0),
@@ -761,7 +761,7 @@ $page_data = [
             'text' => functions::l10n('between %d and %d pixels'),
         ],
         'ratios' => [
-            'values' => !empty($dimensions['ratios']) ? array_map('floatval', explode(',', $dimensions['ratios'])) : [],
+            'values' => empty($dimensions['ratios']) ? [] : array_map(floatval(...), explode(',', $dimensions['ratios'])),
             'selected' => [
                 'min' => (float)($dimensions['selected']['min_ratio'] ?? 0),
                 'max' => (float)($dimensions['selected']['max_ratio'] ?? 0),
@@ -769,7 +769,7 @@ $page_data = [
             'text' => functions::l10n('between %.2f and %.2f'),
         ],
         'filesizes' => [
-            'values' => !empty($filesize['list']) ? explode(',', $filesize['list']) : [],
+            'values' => empty($filesize['list']) ? [] : explode(',', $filesize['list']),
             'selected' => [
                 'min' => (int)($filesize['selected']['min'] ?? 0),
                 'max' => (int)($filesize['selected']['max'] ?? 0),

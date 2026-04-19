@@ -284,7 +284,7 @@ final class pwg_extensions
 
         if (empty($params['id']) ||
             empty($params['type']) ||
-            ! in_array($params['type'], ['plugins', 'themes', 'languages'])
+            ! in_array($params['type'], ['plugins', 'themes', 'languages'], true)
         ) {
             return new PwgError(403, 'Invalid parameters');
         }

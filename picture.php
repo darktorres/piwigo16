@@ -864,7 +864,7 @@ if ($tags !== []) {
 }
 
 // related categories
-if (count($related_categories) == 1 &&
+if (count($related_categories) === 1 &&
     isset($page['category']) &&
     $related_categories[0]['id'] == $page['category']['id']
 ) { // no need to go to db, we have all the info

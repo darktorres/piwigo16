@@ -92,7 +92,7 @@ final class functions_metadata
             $value = functions_plugins::trigger_change('clean_iptc_value', $value);
             $qual = functions::qualify_utf8($value);
 
-            if ($qual != 0) { // has non ascii chars
+            if ($qual !== 0) { // has non ascii chars
                 if ($qual > 0) {
                     $input_encoding = 'utf-8';
                 } else {
@@ -169,7 +169,7 @@ final class functions_metadata
             // GPS data
             $gps_exif = array_intersect_key($exif, array_flip(['GPSLatitudeRef', 'GPSLatitude', 'GPSLongitudeRef', 'GPSLongitude']));
 
-            if (count($gps_exif) == 4 && (is_array($gps_exif['GPSLatitude']) && in_array($gps_exif['GPSLatitudeRef'], ['S', 'N']) && is_array($gps_exif['GPSLongitude']) && in_array($gps_exif['GPSLongitudeRef'], ['W', 'E']))) {
+            if (count($gps_exif) === 4 && (is_array($gps_exif['GPSLatitude']) && in_array($gps_exif['GPSLatitudeRef'], ['S', 'N']) && is_array($gps_exif['GPSLongitude']) && in_array($gps_exif['GPSLongitudeRef'], ['W', 'E']))) {
                 $latitude = self::parse_exif_gps_data($gps_exif['GPSLatitude'], $gps_exif['GPSLatitudeRef']);
                 $longitude = self::parse_exif_gps_data($gps_exif['GPSLongitude'], $gps_exif['GPSLongitudeRef']);
                 if ($latitude >= -90.0 &&

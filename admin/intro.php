@@ -385,7 +385,7 @@ $storage_by_ext = functions_admin::get_storage_by_ext();
 foreach ($storage_by_ext['images'] as $ext => $ext_details) {
     if (in_array(strtolower($ext), $conf->picture_ext)) {
         $type = 'Photos';
-    } elseif (in_array(strtolower($ext), $video_format)) {
+    } elseif (in_array(strtolower($ext), $video_format, true)) {
         $type = 'Videos';
     } else {
         $type = 'Other';

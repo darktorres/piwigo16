@@ -338,9 +338,9 @@ final class DerivativeImage
 
         $loc = $src->rel_path;
 
-        if (substr_compare($loc, './', 0, 2) == 0) {
+        if (substr_compare($loc, './', 0, 2) === 0) {
             $loc = substr($loc, 2);
-        } elseif (substr_compare($loc, '../', 0, 3) == 0) {
+        } elseif (substr_compare($loc, '../', 0, 3) === 0) {
             $loc = substr($loc, 3);
         } elseif (str_starts_with($loc, PWG_DERIVATIVE_DIR)) {
             $loc = substr($loc, strlen(PWG_DERIVATIVE_DIR));

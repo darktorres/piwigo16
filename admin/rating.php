@@ -228,7 +228,7 @@ foreach ($images as $image) {
     while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
         $user_rate = $users[$row['user_id']] ?? '? ' . $row['user_id'];
 
-        if (strlen($row['anonymous_id']) > 0) {
+        if ((string) $row['anonymous_id'] !== '') {
             $user_rate .= '(' . $row['anonymous_id'] . ')';
         }
 

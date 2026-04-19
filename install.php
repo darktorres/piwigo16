@@ -250,7 +250,7 @@ if (isset($_POST['install'])) {
         }
     }
 
-    if (count($errors) == 0) {
+    if ($errors === []) {
         $step = 2;
 
         // tables creation, based on piwigo_structure.sql
@@ -421,7 +421,7 @@ if ($step == 1) {
 
         session_name($conf->session_name);
         session_set_cookie_params(0, functions_cookie::cookie_path());
-        register_shutdown_function('session_write_close');
+        register_shutdown_function(session_write_close(...));
 
         $user = functions_user::build_user(1);
         functions_user::log_user($user['id'], false);
@@ -470,11 +470,11 @@ if ($step == 1) {
     }
 }
 
-if (count($errors) != 0) {
+if ($errors !== []) {
     $template->assign('errors', $errors);
 }
 
-if (count($infos) != 0) {
+if ($infos !== []) {
     $template->assign('infos', $infos);
 }
 

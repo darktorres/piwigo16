@@ -315,6 +315,7 @@ if ($page['section'] == 'categories') {
                 WHERE {$where_sql} {$forbidden};
                 SQL;
         }
+
         $count_cache_key = md5($count_query);
 
         if (! $persistent_cache->get($count_cache_key, $page['total_items'])) {
@@ -359,6 +360,7 @@ if ($page['section'] == 'categories') {
                 LIMIT {$limit} OFFSET {$offset};
                 SQL;
         }
+
         $page['items'] = $conf->sql_backend::query2array($query, null, 'image_id');
     }
 } elseif ($page['section'] == 'tags') {
@@ -371,7 +373,7 @@ if ($page['section'] == 'categories') {
     }
 
     $items = functions_tag::get_image_ids_for_tags($page['tag_ids']);
-    if (count($items) == 0) {
+    if ($items === []) {
         $logger->info(
             'attempt to see the name of the tag #' . implode(', #', $page['tag_ids'])
     . ' from the address : ' . $_SERVER['REMOTE_ADDR']

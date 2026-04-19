@@ -18,7 +18,7 @@ if (! isset($conf->elegant)) {
     ];
 
     functions::conf_update_param('elegant', $config, true);
-} elseif (count($conf->elegant) != 3) {
+} elseif (count($conf->elegant) !== 3) {
     $conff = $conf->elegant;
     $config = [
         'p_main_menu' => $conff['p_main_menu'] ?? 'on',

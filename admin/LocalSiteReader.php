@@ -193,7 +193,7 @@ final class LocalSiteReader
 
             closedir($contents);
 
-            if ($on_dir !== null) {
+            if ($on_dir instanceof \Closure) {
                 $on_dir($path, count($dir_files));
             }
 
@@ -207,31 +207,29 @@ final class LocalSiteReader
             }
         }
 
-        if ($depth === 0) {
-            if ($profiling) {
-                $total_elapsed = microtime(true) - $GLOBALS['sync_scan_start'];
-                $p = $GLOBALS['sync_scan_prof'];
-                $logger->info('[sync][scan] filesystem scan summary', [
-                    'total_elapsed_s' => round($total_elapsed, 4),
-                    'dirs_scanned' => $p['dirs_scanned'],
-                    'files_found' => $p['files_found'],
-                    'files_matched' => $p['files_matched'],
-                    'readdir_time_s' => round($p['readdir_time'], 4),
-                ]);
-                $logger->info('[sync][scan] representative ext lookups', [
-                    'lookups' => $p['representative_lookups'],
-                    'total_s' => round($p['representative_time'], 4),
-                    'avg_s' => $p['representative_lookups'] > 0
-                        ? round($p['representative_time'] / $p['representative_lookups'], 5) : 0,
-                ]);
-                $logger->info('[sync][scan] format lookups', [
-                    'lookups' => $p['format_lookups'],
-                    'total_s' => round($p['format_time'], 4),
-                    'avg_s' => $p['format_lookups'] > 0
-                        ? round($p['format_time'] / $p['format_lookups'], 5) : 0,
-                ]);
-                unset($GLOBALS['sync_scan_prof'], $GLOBALS['sync_scan_start']);
-            }
+        if ($depth === 0 && $profiling) {
+            $total_elapsed = microtime(true) - $GLOBALS['sync_scan_start'];
+            $p = $GLOBALS['sync_scan_prof'];
+            $logger->info('[sync][scan] filesystem scan summary', [
+                'total_elapsed_s' => round($total_elapsed, 4),
+                'dirs_scanned' => $p['dirs_scanned'],
+                'files_found' => $p['files_found'],
+                'files_matched' => $p['files_matched'],
+                'readdir_time_s' => round($p['readdir_time'], 4),
+            ]);
+            $logger->info('[sync][scan] representative ext lookups', [
+                'lookups' => $p['representative_lookups'],
+                'total_s' => round($p['representative_time'], 4),
+                'avg_s' => $p['representative_lookups'] > 0
+                    ? round($p['representative_time'] / $p['representative_lookups'], 5) : 0,
+            ]);
+            $logger->info('[sync][scan] format lookups', [
+                'lookups' => $p['format_lookups'],
+                'total_s' => round($p['format_time'], 4),
+                'avg_s' => $p['format_lookups'] > 0
+                    ? round($p['format_time'] / $p['format_lookups'], 5) : 0,
+            ]);
+            unset($GLOBALS['sync_scan_prof'], $GLOBALS['sync_scan_start']);
         }
     }
 
@@ -388,7 +386,7 @@ final class LocalSiteReader
         if ($result === null && $extension !== null) {
             $video_exts = ['wmv', 'mov', 'mkv', 'mp4', 'mpg', 'flv', 'asf', 'xvid', 'divx', 'mpeg', 'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv'];
 
-            if (in_array(strtolower($extension), $video_exts)) {
+            if (in_array(strtolower($extension), $video_exts, true)) {
                 $full_path = $path . '/' . $filename_wo_ext . '.' . $extension;
                 $new_ext = functions_upload::upload_file_video(null, $full_path);
 

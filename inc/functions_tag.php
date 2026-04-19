@@ -149,7 +149,7 @@ final class functions_tag
     ): array {
         global $conf;
 
-        if (count($tags) == 0) {
+        if ($tags === []) {
             return $tags;
         }
 

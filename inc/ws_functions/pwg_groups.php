@@ -103,7 +103,7 @@ final class pwg_groups
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
         }
 
-        if (strlen(str_replace(' ', '', $params['name'])) == 0) {
+        if ((string) str_replace(' ', '', $params['name']) === '') {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
         }
 
@@ -168,7 +168,7 @@ final class pwg_groups
         }
 
         if (isset($params['name']) &&
-            strlen(str_replace(' ', '', $params['name'])) == 0
+            str_replace(' ', '', $params['name']) === ''
         ) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
         }

@@ -160,7 +160,7 @@ functions::check_lounge();
 
 require __DIR__ . '/../inc/user.php';
 
-if (in_array(substr($user['language'], 0, 2), ['fr', 'it', 'de', 'es', 'pl', 'ru', 'nl', 'tr', 'da'])) {
+if (in_array(substr($user['language'], 0, 2), ['fr', 'it', 'de', 'es', 'pl', 'ru', 'nl', 'tr', 'da'], true)) {
     define('PHPWG_DOMAIN', substr($user['language'], 0, 2) . '.piwigo.org');
 } elseif ($user['language'] == 'zh_CN') {
     define('PHPWG_DOMAIN', 'cn.piwigo.org');

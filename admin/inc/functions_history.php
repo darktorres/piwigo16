@@ -107,7 +107,7 @@ final class functions_history
         }
 
         if (isset($search['fields']['filename'])) {
-            if (count($search['image_ids']) == 0) {
+            if (count($search['image_ids']) === 0) {
                 // a clause that is always false
                 $clauses[] = '1 = 2 ';
             } else {
@@ -369,7 +369,7 @@ final class functions_history
             SQL;
         $summary_lines = $conf->sql_backend::query2array($query);
 
-        if (count($summary_lines) == 0) {
+        if (count($summary_lines) === 0) {
             return; // lines not summarized, no purge
         }
 
@@ -384,7 +384,7 @@ final class functions_history
             SQL;
         $history_lines = $conf->sql_backend::query2array($query);
 
-        if (count($history_lines) == 0) {
+        if (count($history_lines) === 0) {
             return;
         }
 

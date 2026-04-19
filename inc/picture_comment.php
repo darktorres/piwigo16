@@ -114,7 +114,7 @@ if ($page['show_comments']) {
     if ($row['nb_comments'] > 0) {
         // comments order (get, session, conf)
         if (! empty($_GET['comments_order']) &&
-            in_array(strtoupper($_GET['comments_order']), ['ASC', 'DESC'])
+            in_array(strtoupper($_GET['comments_order']), ['ASC', 'DESC'], true)
         ) {
             functions_session::pwg_set_session_var('comments_order', $_GET['comments_order']);
         }

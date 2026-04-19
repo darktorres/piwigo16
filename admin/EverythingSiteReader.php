@@ -26,20 +26,14 @@ use Piwigo\inc\functions;
  */
 final class EverythingSiteReader
 {
-    private LocalSiteReader $local;
-
-    private EverythingSDK $sdk;
-
-    public string $site_url;
+    private readonly LocalSiteReader $local;
 
     /** Running count of elements yielded in the current get_elements() traversal. */
     private int $elementsYielded = 0;
 
-    public function __construct(string $site_url, EverythingSDK $sdk)
+    public function __construct(public string $site_url, private readonly EverythingSDK $sdk)
     {
-        $this->site_url = $site_url;
-        $this->local = new LocalSiteReader($site_url);
-        $this->sdk = $sdk;
+        $this->local = new LocalSiteReader($this->site_url);
     }
 
     public function open(): bool
@@ -112,7 +106,7 @@ final class EverythingSiteReader
                 $piwigoPath = $target['piwigoPrefix'] . '/' . $relative;
                 $dirs[] = $piwigoPath;
 
-                if ($on_dir !== null) {
+                if ($on_dir instanceof \Closure) {
                     $on_dir($piwigoPath);
                 }
             }
@@ -123,7 +117,7 @@ final class EverythingSiteReader
             if ($target['piwigoPrefix'] !== $basedirClean) {
                 $dirs[] = $target['piwigoPrefix'];
 
-                if ($on_dir !== null) {
+                if ($on_dir instanceof \Closure) {
                     $on_dir($target['piwigoPrefix']);
                 }
             }
@@ -256,7 +250,7 @@ final class EverythingSiteReader
                 $this->elementsYielded++;
                 yield $piwigoPath => $entry;
 
-                if ($on_dir !== null) {
+                if ($on_dir instanceof \Closure) {
                     $dirFileCounts[$dirPath] = ($dirFileCounts[$dirPath] ?? 0) + 1;
 
                     // Fire on first file in a new directory, then every 500 files.
@@ -403,12 +397,6 @@ final class EverythingSiteReader
      */
     private function hasExcludedComponent(string $relativePath, array $excludeSet): bool
     {
-        foreach (explode('/', $relativePath) as $component) {
-            if (isset($excludeSet[$component])) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any(explode('/', $relativePath), fn($component): bool => isset($excludeSet[$component]));
     }
 }

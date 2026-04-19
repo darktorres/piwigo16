@@ -106,7 +106,7 @@ final class ScriptLoader
         $is_template = false
     ): void {
         if ($this->did_head &&
-            $load_mode == 0
+            $load_mode === 0
         ) {
             trigger_error("Attempt to add script {$id} but the head has been written", E_USER_WARNING);
         } elseif ($this->did_footer) {
@@ -329,7 +329,7 @@ final class ScriptLoader
             return $script->extra['order'];
         }
 
-        if (count($script->precedents) == 0) {
+        if (count($script->precedents) === 0) {
             return $script->extra['order'] = 0;
         }
 

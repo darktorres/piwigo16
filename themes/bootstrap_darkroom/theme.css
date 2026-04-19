@@ -110,7 +110,7 @@ body {
 
 /* Copyright container */
 .copyright {
-  padding: 8px 30px;
+  padding: 30px;
 }
 
 /* Help popup */
@@ -1111,36 +1111,3 @@ ul.thumbnailCategories {
 }
 
 /*# sourceMappingURL=theme.css.map */
-
-/* === Thumbnail-only scroll layout === */
-html:has(#thumbnails),
-html:has(#thumbnails) body {
-    height: 100%;
-    overflow: hidden;
-}
-
-html:has(#thumbnails) body {
-    padding-bottom: 0;
-}
-
-html:has(#thumbnails) #wrapper {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-}
-
-html:has(#thumbnails) #bd_scroll_area {
-    flex: 1 1 0%;
-    overflow-y: auto;
-    min-height: 0;
-    padding-bottom: 50px;
-}
-
-html:has(#thumbnails) .copyright {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-}

@@ -249,6 +249,7 @@ final class pwg_users
             SQL;
 
         $query = trim($query) . ';';
+
         $result = $conf->sql_backend::pwg_query($query);
         $users = [];
         $total_count = 0;
@@ -364,7 +365,7 @@ final class pwg_users
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (strlen(str_replace(' ', '', $params['username'])) == 0) {
+        if (str_replace(' ', '', $params['username']) === '') {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
         }
 
@@ -503,7 +504,7 @@ final class pwg_users
         }
 
         if (isset($params['username']) &&
-            strlen(str_replace(' ', '', $params['username'])) == 0
+            str_replace(' ', '', $params['username']) === ''
         ) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
         }
@@ -513,7 +514,7 @@ final class pwg_users
         $updates_infos = [];
         $update_status = null;
 
-        if (count($params['user_id']) == 1) {
+        if (count($params['user_id']) === 1) {
             if (functions_admin::get_username($params['user_id'][0]) === false) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
             }
@@ -567,13 +568,13 @@ final class pwg_users
         }
 
         if (! empty($params['status'])) {
-            if (in_array($params['status'], ['webmaster', 'admin']) &&
+            if (in_array($params['status'], ['webmaster', 'admin'], true) &&
                 ! functions_user::is_webmaster()
             ) {
                 return new PwgError(403, 'Only webmasters can grant "webmaster/admin" status');
             }
 
-            if (! in_array($params['status'], ['guest', 'generic', 'normal', 'admin', 'webmaster'])) {
+            if (! in_array($params['status'], ['guest', 'generic', 'normal', 'admin', 'webmaster'], true)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid status');
             }
 

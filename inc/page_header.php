@@ -115,6 +115,8 @@ if (isset($refresh) &&
     );
 }
 
+$template->append('head_elements', '<link rel="manifest" href="' . functions_url::get_root_url() . 'manifest.json">');
+
 functions_plugins::trigger_notify('loc_end_page_header');
 
 header('Content-Type: text/html; charset=utf-8');

@@ -11,7 +11,13 @@
     "typecheck": "tsc -p tsconfig.app.json --noEmit",
     "typecheck:tests": "cd tests && bunx tsc --noEmit",
     "lint": "bunx eslint admin themes plugins --max-warnings=0",
-    "lint:tests": "cd tests && bunx eslint src"
+    "lint:tests": "cd tests && bunx eslint src",
+    "lint:css": "bunx stylelint \"admin/**/*.css\" \"themes/**/*.css\" \"plugins/**/*.css\"",
+    "lint:ox": "bunx oxlint admin themes plugins --deny-warnings",
+    "lint:biome": "bunx biome lint admin themes plugins",
+    "format": "bunx prettier --write \"admin/**/*.{ts,js,css}\" \"themes/**/*.{ts,js,css}\" \"plugins/**/*.{ts,js,css}\"",
+    "format:check": "bunx prettier --check \"admin/**/*.{ts,js,css}\" \"themes/**/*.{ts,js,css}\" \"plugins/**/*.{ts,js,css}\"",
+    "knip": "bunx knip"
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
@@ -37,7 +43,7 @@
     "photoswipe@5.4.4": "patches/photoswipe@5.4.4.patch"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "^2.4.12",
     "@eslint/js": "^9.28.0",
     "@types/chart.js": "^4.0.1",
     "@types/codemirror": "^5.60.17",
@@ -52,7 +58,12 @@
     "eslint": "^9.28.0",
     "eslint-plugin-no-jquery": "^3.1.1",
     "globals": "^16.2.0",
+    "knip": "^6.4.1",
+    "oxlint": "^1.60.0",
+    "prettier": "^3.8.3",
     "rimraf": "^6.0.1",
+    "stylelint": "^17.8.0",
+    "stylelint-config-standard": "^40.0.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.8"
   }

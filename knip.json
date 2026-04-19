@@ -1,0 +1,30 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "admin/themes/default/js/**/*.ts",
+    "themes/*/js/**/*.ts",
+    "plugins/*/js/**/*.ts",
+    "plugins/*/*.ts"
+  ],
+  "project": [
+    "admin/themes/default/js/**/*.ts",
+    "themes/*/js/**/*.ts",
+    "plugins/*/js/**/*.ts",
+    "plugins/*/*.ts"
+  ],
+  "ignore": [
+    "**/*.d.ts",
+    "tests/**",
+    "dist/**"
+  ],
+  "ignoreDependencies": [
+    "vite",
+    "typescript",
+    "oxlint",
+    "stylelint",
+    "stylelint-config-standard",
+    "knip",
+    "prettier",
+    "@biomejs/biome"
+  ]
+}

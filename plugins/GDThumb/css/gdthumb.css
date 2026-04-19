@@ -29,6 +29,7 @@ ul.thumbnails .gdthumb .thumbLegend {
     z-index: 1;
     height: 5em;
     left: 0;
+    pointer-events: none;
     right: 0;
     padding: 5px 0;
     width: 100%;

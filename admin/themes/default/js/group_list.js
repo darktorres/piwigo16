@@ -14,7 +14,7 @@ let str_group_created = '';
 let str_renaming_done = '';
 let str_name_taken = '';
 let str_name_not_empty = '';
-let str_group_deleted = '';
+let _str_group_deleted = '';
 let str_groups_deleted = '';
 let str_set_default = '';
 let str_unset_default = '';
@@ -40,7 +40,7 @@ export function init(cfg) {
     str_renaming_done = cfg.strRenamingDone;
     str_name_taken = cfg.strNameTaken;
     str_name_not_empty = cfg.strNameNotEmpty;
-    str_group_deleted = cfg.strGroupDeleted;
+    _str_group_deleted = cfg.strGroupDeleted;
     str_groups_deleted = cfg.strGroupsDeleted;
     str_set_default = cfg.strSetDefault;
     str_unset_default = cfg.strUnsetDefault;
@@ -963,13 +963,13 @@ var maxOffsetUserCont = 322;
                 JSON.parse(usersCache.storage[usersCache.key]).data.forEach(function (u) {
                     if (selectize) selectize.addOption({ value: u.id, text: u.username });
                 });
-            } catch (e) {
+            } catch (_e) {
                 // Handle cache parsing errors
             }
             idSearch = document.getElementById("UserList")?.getAttribute("data-group_id");
 
             if (selectize) {
-                for (const [key, value] of Object.entries(selectize.options)) {
+                for (const [, value] of Object.entries(selectize.options)) {
                     if (value.username === "guest") {
                         selectize.removeOption(value.id);
                     }
@@ -1154,7 +1154,7 @@ document.querySelector(".AddUserBlock button")?.addEventListener("click", functi
                             username = u.username;
                         }
                     });
-                } catch (e) {
+                } catch (_e) {
                     // Handle cache errors
                 }
 

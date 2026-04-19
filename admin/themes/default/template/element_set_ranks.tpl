@@ -1,7 +1,3 @@
-{footer_script}<script>
-  const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
-</script>{/footer_script}
-
 {if $vite_element_set_ranks}
 <script type="module" src="admin/themes/default/js/dist/{$vite_element_set_ranks}"></script>
 {/if}

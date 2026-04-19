@@ -1,4 +1,3 @@
-/* global TomSelect */
 import TomSelect from 'tom-select';
 
 interface MCSFields {
@@ -72,10 +71,9 @@ document.querySelectorAll<HTMLButtonElement>(".filter-validate").forEach(functio
 
 document.querySelectorAll<HTMLElement>("div.filter").forEach(function (filterEl) {
     filterEl.addEventListener("click", function () {
-        const self = this;
-        if (!this.parentElement) return;
-        Array.from(this.parentElement.children).forEach(function (sib) {
-            if (sib === self) return;
+        if (!filterEl.parentElement) return;
+        Array.from(filterEl.parentElement.children).forEach(function (sib) {
+            if (sib === filterEl) return;
             sib.classList.remove("show-filter-dropdown");
             sib.querySelectorAll<HTMLElement>("div.filter-form").forEach(function (form) {
                 form.style.display = 'none';

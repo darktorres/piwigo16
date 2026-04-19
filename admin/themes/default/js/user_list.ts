@@ -970,18 +970,17 @@ export function init(cfg: UserListConfig): void {
 
     function user_container_click(this: HTMLElement): void {
         if (!isSelectionMode()) return;
-        const curr_container = this;
-        const container_checkbox = curr_container.querySelector<HTMLElement>('.user-list-checkbox');
-        const curr_user = current_users[parseInt(curr_container.getAttribute('key') ?? '0')] ?? { id: -1 };
+        const container_checkbox = this.querySelector<HTMLElement>('.user-list-checkbox');
+        const curr_user = current_users[parseInt(this.getAttribute('key') ?? '0')] ?? { id: -1 };
         if (container_checkbox && container_checkbox.getAttribute('data-selected') === '1') {
             container_checkbox.setAttribute('data-selected', '0');
             container_checkbox.querySelectorAll<HTMLElement>('i').forEach(el => { el.style.display = 'none'; });
-            curr_container.classList.remove('container-selected');
+            this.classList.remove('container-selected');
             selection = selection.filter((elem) => elem.id !== curr_user.id);
         } else if (container_checkbox) {
             container_checkbox.setAttribute('data-selected', '1');
             container_checkbox.querySelectorAll<HTMLElement>('i').forEach(el => { el.style.display = ''; });
-            curr_container.classList.add('container-selected');
+            this.classList.add('container-selected');
             if ('username' in curr_user) {
                 selection.push({ id: curr_user.id, username: (curr_user as UserData).username });
             }
@@ -1171,8 +1170,8 @@ export function init(cfg: UserListConfig): void {
         if (current_group_selectize) {
             current_group_selectize.clear();
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (current_group_selectize as any).load(function (callback: (results: any[]) => void) {
-                callback(groupOptions as any[]);
+            (current_group_selectize as any).load(function (callback: (results: GroupOption[]) => void) {
+                callback(groupOptions);
             });
             groupOptions.filter(g => g.isSelected).forEach(g => {
                 current_group_selectize.addItem(String(g.value));

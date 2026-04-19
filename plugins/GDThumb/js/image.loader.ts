@@ -72,31 +72,29 @@ class ImageLoader {
     private _processOne(url: string): void {
         const img = (this.pool.shift() || new Image()) as PoolImage;
         this.current.push(img);
-        const that = this;
-
-        function handler(e: Event): void {
+        const handler = (e: Event): void => {
             img.removeEventListener('load',  handler);
             img.removeEventListener('error', handler);
             img.removeEventListener('abort', handler);
             img._loaderHandler = null;
             img.onload = null;
 
-            const idx = that.current.indexOf(img);
-            if (idx !== -1) that.current.splice(idx, 1);
+            const idx = this.current.indexOf(img);
+            if (idx !== -1) this.current.splice(idx, 1);
 
             if (e.type === "load") {
-                that.loaded++;
-                that.errorEma *= 0.9;
+                this.loaded++;
+                this.errorEma *= 0.9;
             } else {
-                that.errors++;
-                that.errorEma++;
-                if (that.errorEma >= 20 && that.errorEma < 21)
-                    that.paused = true;
+                this.errors++;
+                this.errorEma++;
+                if (this.errorEma >= 20 && this.errorEma < 21)
+                    this.paused = true;
             }
-            that._fireChanged(e.type, img);
-            that._checkQueue();
-            that.pool.push(img);
-        }
+            this._fireChanged(e.type, img);
+            this._checkQueue();
+            this.pool.push(img);
+        };
 
         img._loaderHandler = handler;
         img.addEventListener('load',  handler);

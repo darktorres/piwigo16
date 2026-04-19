@@ -175,7 +175,6 @@ export function init(cfg: HistoryConfig): void {
 
     document.getElementById('start_unset')?.addEventListener('click', function () {
         console.log('here' + current_param.start);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-boolean
         // @ts-expect-error preserved from original JS: !string == string is always false
         if (!current_param.start == '') {
             current_param.pageNumber = 0;
@@ -185,7 +184,6 @@ export function init(cfg: HistoryConfig): void {
     });
 
     document.getElementById('end_unset')?.addEventListener('click', function () {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-boolean
         // @ts-expect-error preserved from original JS: !string == string is always false
         if (!current_param.start == today) {
             current_param.end = today;

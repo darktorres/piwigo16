@@ -24,6 +24,7 @@ const adminModules = [
   'comments',
   'element_set_ranks',
   'generate_video_thumbnails',
+  'generate_thumbnails',
   'helpPopin',
   'history',
   'languages_installed',

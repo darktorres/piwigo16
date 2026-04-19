@@ -36,7 +36,7 @@ functions_user::check_status(ACCESS_ADMINISTRATOR);
 if (! isset($_GET['cat_id']) ||
     ! is_numeric($_GET['cat_id'])
 ) {
-    trigger_error('missing cat_id param', E_USER_ERROR);
+    throw new \RuntimeException('missing cat_id param');
 }
 
 $page['category_id'] = $_GET['cat_id'];

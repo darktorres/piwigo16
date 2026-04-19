@@ -20,7 +20,7 @@ use Piwigo\inc\ws_protocols\PwgSerialPhpEncoder;
 use Piwigo\inc\ws_protocols\PwgXmlRpcEncoder;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    trigger_error('Hacking attempt!', E_USER_ERROR);
+    throw new \RuntimeException('Hacking attempt!');
 }
 
 require_once __DIR__ . '/../inc/ws_core.php';

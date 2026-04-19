@@ -317,7 +317,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
             beforeUnloadHandler = function (e: BeforeUnloadEvent) {
                 e.preventDefault();
             };
-            window.addEventListener('beforeunload', beforeUnloadHandler!);
+            window.addEventListener('beforeunload', beforeUnloadHandler);
             const levelEl = document.querySelector<HTMLSelectElement>('select[name=level]');
             if (levelEl) levelEl.setAttribute('disabled', 'disabled');
         }

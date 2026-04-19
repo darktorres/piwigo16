@@ -432,7 +432,7 @@ export function init(cfg: UserListConfig): void {
     function set_view_selector(view_type: string): void {
         const params = new URLSearchParams({ param: 'user-manager-view', value: view_type });
         fetch('ws.php?format=json&method=pwg.users.preferences.set', { method: 'POST', body: params })
-            .catch((err: unknown) => console.error('Error setting view selector:', err));
+            .catch((err: unknown) => { console.error('Error setting view selector:', err); });
     }
 
     function setDisplayTile(): void {
@@ -530,9 +530,9 @@ export function init(cfg: UserListConfig): void {
     /* Photos bar slider */
     (function () {
         function makePhotosSlider(scope: string): void {
-             
+
             const el = document.querySelector<SliderEl>(scope + ' .photos-select-bar .slider-bar-container');
-            if (!el) return;
+            if (!el || el.noUiSlider) return;
             noUiSlider.create(el, {
                 start: [nb_image_page_init],
                 range: { min: 0, max: nb_image_page_values.length - 1 },
@@ -566,9 +566,9 @@ export function init(cfg: UserListConfig): void {
     /* recent_period slider */
     (function () {
         function makePeriodSlider(scope: string): void {
-             
+
             const el = document.querySelector<SliderEl>(scope + ' .period-select-bar .slider-bar-container');
-            if (!el) return;
+            if (!el || el.noUiSlider) return;
             noUiSlider.create(el, {
                 start: [recent_period_init],
                 range: { min: 0, max: recent_period_values.length - 1 },
@@ -635,7 +635,7 @@ export function init(cfg: UserListConfig): void {
                 is_json: 'false',
             });
             fetch('ws.php?format=json&method=pwg.users.preferences.set', { method: 'POST', body: params })
-                .catch((err: unknown) => console.error('Error setting pagination:', err));
+                .catch((err: unknown) => { console.error('Error setting pagination:', err); });
             per_page = value;
             actual_page = 1;
             update_pagination_menu();
@@ -668,8 +668,8 @@ export function init(cfg: UserListConfig): void {
     function update_pagination_items(): void {
         const container = document.querySelector<HTMLElement>('.pagination-item-container');
         if (!container) return;
-        container.querySelectorAll('a').forEach(el => el.remove());
-        container.querySelectorAll('span').forEach(el => el.remove());
+        container.querySelectorAll('a').forEach(el => { el.remove(); });
+        container.querySelectorAll('span').forEach(el => { el.remove(); });
         append_pagination_item(1);
         if (actual_page > 2) append_pagination_item();
         if (actual_page !== 1 && actual_page !== max_page) append_pagination_item(actual_page);
@@ -724,7 +724,7 @@ export function init(cfg: UserListConfig): void {
     function setupRegisterDates(reg_dates: string[]): void {
          
         const el = document.querySelector<SliderEl>('.advanced-filter .dates-select-bar .slider-bar-container');
-        if (el) {
+        if (el && !el.noUiSlider) {
             noUiSlider.create(el, {
                 start: [0, reg_dates.length - 1],
                 range: { min: 0, max: reg_dates.length - 1 },
@@ -837,7 +837,7 @@ export function init(cfg: UserListConfig): void {
         let items_created = 0;
         const others = selection.length - 5;
         const userSelectedList = document.querySelector<HTMLElement>('.user-selected-list');
-        if (userSelectedList) userSelectedList.querySelectorAll<HTMLElement>('.user-selected-item').forEach(el => el.remove());
+        if (userSelectedList) userSelectedList.querySelectorAll<HTMLElement>('.user-selected-item').forEach(el => { el.remove(); });
         for (let i = 0; i < selection.length && items_created < 5; i++) {
             if (typeof selection[i]!.username !== 'undefined') {
                 const item = create_user_selected_item(selection[i]!);
@@ -1055,7 +1055,7 @@ export function init(cfg: UserListConfig): void {
 
     function generate_user_list(): void {
         const userTableContent = document.getElementById('user-table-content');
-        if (userTableContent) userTableContent.querySelectorAll<HTMLElement>('.user-container').forEach(el => el.remove());
+        if (userTableContent) userTableContent.querySelectorAll<HTMLElement>('.user-container').forEach(el => { el.remove(); });
         for (let i = 0; i < current_users.length; i++) {
             const template = document.querySelector<HTMLElement>('#template .user-container');
             if (template) {
@@ -1107,7 +1107,7 @@ export function init(cfg: UserListConfig): void {
     function fill_user_edit_summary(user_to_edit: UserData, pop_in: Element, isGuest: boolean): void {
         const initialsSpan = pop_in.querySelector<HTMLElement>('.user-property-initials span');
         if (initialsSpan) {
-            color_icons.forEach(icon => initialsSpan.classList.remove(icon));
+            color_icons.forEach(icon => { initialsSpan.classList.remove(icon); });
             if (!isGuest) initialsSpan.innerHTML = get_initials(user_to_edit.username);
             initialsSpan.classList.add(color_icons[user_to_edit.id % 5]!);
         }
@@ -1397,7 +1397,7 @@ export function init(cfg: UserListConfig): void {
         const params = new URLSearchParams();
         params.append('display', 'username');
         params.append('order', 'id');
-        first_ids.forEach(id => params.append('user_id[]', String(id)));
+        first_ids.forEach(id => { params.append('user_id[]', String(id)); });
         params.append('exclude[]', String(guest_id));
         fetch('ws.php?format=json&method=pwg.users.getList', { method: 'POST', body: params })
             .then(response => response.json())
@@ -1409,7 +1409,7 @@ export function init(cfg: UserListConfig): void {
                 }
                 callback();
             })
-            .catch((err: unknown) => console.error('Error getting selection usernames:', err));
+            .catch((err: unknown) => { console.error('Error getting selection usernames:', err); });
     }
 
     function select_whole_set(): void {
@@ -1492,7 +1492,7 @@ export function init(cfg: UserListConfig): void {
                     document.querySelectorAll<HTMLElement>('.user-property-username-change').forEach(el => { el.style.display = 'none'; });
                 }
             })
-            .catch((err: unknown) => console.error('Error updating username:', err));
+            .catch((err: unknown) => { console.error('Error updating username:', err); });
     }
 
     function update_user_password(): void {
@@ -1515,7 +1515,7 @@ export function init(cfg: UserListConfig): void {
                     document.querySelectorAll<HTMLElement>('.user-property-password-change').forEach(el => { el.style.display = 'none'; });
                 }
             })
-            .catch((err: unknown) => console.error('Error updating password:', err));
+            .catch((err: unknown) => { console.error('Error updating password:', err); });
     }
 
     function update_user_info(): void {
@@ -1582,7 +1582,7 @@ export function init(cfg: UserListConfig): void {
                     fill_guest_edit();
                 }
             })
-            .catch((err: unknown) => console.error('Error getting guest info:', err));
+            .catch((err: unknown) => { console.error('Error getting guest info:', err); });
     }
 
     function get_user_info(uid: number, callback: (() => void) | null = null): void {
@@ -1595,7 +1595,7 @@ export function init(cfg: UserListConfig): void {
                     if (callback) callback();
                 }
             })
-            .catch((err: unknown) => console.error('Error getting user info:', err));
+            .catch((err: unknown) => { console.error('Error getting user info:', err); });
     }
 
     function update_guest_info(): void {
@@ -1783,7 +1783,7 @@ export function init(cfg: UserListConfig): void {
                     }
                 }
             })
-            .catch((err: unknown) => console.error('Error adding user:', err));
+            .catch((err: unknown) => { console.error('Error adding user:', err); });
     }
 
     function delete_user(uid: number): void {
@@ -1791,7 +1791,7 @@ export function init(cfg: UserListConfig): void {
         fetch('ws.php?format=json&method=pwg.users.delete', { method: 'POST', body: params })
             .then(response => response.json())
             .then(() => { close_user_list(); update_user_list(); })
-            .catch((err: unknown) => console.error('Error deleting user:', err));
+            .catch((err: unknown) => { console.error('Error deleting user:', err); });
     }
 
     function show_filter_infos(nb_filters: number): void {

@@ -53,15 +53,15 @@ export function init(cfg: MaintenanceConfig): void {
 
     const confirmOpts = { alert_confirm: confirm_msg, alert_cancel: cancel_msg };
     document.querySelectorAll<HTMLAnchorElement>(".lock-gallery-button").forEach(el =>
-        pwgConfirmFollowHref(el, { ...confirmOpts, alert_title: str_lock_unlock_title, alert_content: str_gallery_tip }));
+        { pwgConfirmFollowHref(el, { ...confirmOpts, alert_title: str_lock_unlock_title, alert_content: str_gallery_tip }); });
     document.querySelectorAll<HTMLAnchorElement>(".purge-history-detail-button").forEach(el =>
-        pwgConfirmFollowHref(el, { ...confirmOpts, alert_title: str_purge_detail }));
+        { pwgConfirmFollowHref(el, { ...confirmOpts, alert_title: str_purge_detail }); });
     document.querySelectorAll<HTMLAnchorElement>(".purge-history-summary-button").forEach(el =>
-        pwgConfirmFollowHref(el, { ...confirmOpts, alert_title: str_purge_summary }));
+        { pwgConfirmFollowHref(el, { ...confirmOpts, alert_title: str_purge_summary }); });
     document.querySelectorAll<HTMLAnchorElement>(".purge-search-history-button").forEach(el =>
-        pwgConfirmFollowHref(el, { ...confirmOpts, alert_title: str_purge_search }));
+        { pwgConfirmFollowHref(el, { ...confirmOpts, alert_title: str_purge_search }); });
     document.querySelectorAll<HTMLAnchorElement>(".delete-all-sizes-button").forEach(el =>
-        pwgConfirmFollowHref(el, { ...confirmOpts, alert_title: str_delete_all_sizes }));
+        { pwgConfirmFollowHref(el, { ...confirmOpts, alert_title: str_delete_all_sizes }); });
 
     document.querySelectorAll<HTMLElement>(".delete-size-check").forEach(function (el) {
         el.addEventListener('click', function () {
@@ -156,7 +156,7 @@ export function init(cfg: MaintenanceConfig): void {
                         );
 
                         displayResponse(domElemToRefresh, domElemValues, multipleSizes, multipleSizesValues);
-                        document.querySelectorAll<HTMLElement>(".animate-spin").forEach(el => el.classList.remove("animate-spin"));
+                        document.querySelectorAll<HTMLElement>(".animate-spin").forEach(el => { el.classList.remove("animate-spin"); });
                     }
                 })
                 .catch(console.log);

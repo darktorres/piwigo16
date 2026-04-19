@@ -23,7 +23,7 @@ export function init(cfg: SiteManagerConfig): void {
     const cancel_msg = cfg.strNoChangedMind ?? 'No, I have changed my mind';
 
     document.querySelectorAll<HTMLAnchorElement>(".delete-site-button").forEach(el =>
-        pwgConfirmFollowHref(el, { alert_title: title_msg, alert_confirm: confirm_msg, alert_cancel: cancel_msg }));
+        { pwgConfirmFollowHref(el, { alert_title: title_msg, alert_confirm: confirm_msg, alert_cancel: cancel_msg }); });
 }
 
 initModule(init as (cfg: Record<string, unknown>) => void);

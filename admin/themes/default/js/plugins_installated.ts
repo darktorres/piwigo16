@@ -112,13 +112,13 @@ export function init(cfg: PluginsInstalledConfig): void {
         document.querySelectorAll<HTMLElement>('.pluginContainer').forEach(el => { el.classList.remove('line-form', 'compact-form'); el.classList.add('classic-form'); });
         document.querySelectorAll<HTMLElement>('.pluginDesc, .pluginActions').forEach(el => { el.style.display = ''; });
         document.querySelectorAll<HTMLElement>('.pluginActionsSmallIcons').forEach(el => { el.style.display = 'none'; });
-        document.querySelectorAll<HTMLElement>('.pluginName').forEach(el => el.classList.remove('pluginNameCompact'));
+        document.querySelectorAll<HTMLElement>('.pluginName').forEach(el => { el.classList.remove('pluginNameCompact'); });
     }
     function setDisplayCompact(): void {
         document.querySelectorAll<HTMLElement>('.pluginContainer').forEach(el => { el.classList.remove('line-form', 'classic-form'); el.classList.add('compact-form'); });
         document.querySelectorAll<HTMLElement>('.pluginDesc, .pluginActions').forEach(el => { el.style.display = 'none'; });
         document.querySelectorAll<HTMLElement>('.pluginActionsSmallIcons').forEach(el => { el.style.display = ''; });
-        document.querySelectorAll<HTMLElement>('.pluginName').forEach(el => el.classList.add('pluginNameCompact'));
+        document.querySelectorAll<HTMLElement>('.pluginName').forEach(el => { el.classList.add('pluginNameCompact'); });
     }
     function setDisplayLine(): void {
         document.querySelectorAll<HTMLElement>('.pluginContainer').forEach(el => { el.classList.add('line-form'); el.classList.remove('compact-form', 'classic-form'); });
@@ -266,7 +266,7 @@ export function init(cfg: PluginsInstalledConfig): void {
     if (isWebmaster !== 0) {
         document.querySelectorAll<HTMLInputElement>('.switch').forEach(function (switchEl) {
             switchEl.addEventListener('change', function () {
-                document.querySelectorAll<HTMLElement>('.pluginMiniBox').forEach(el => el.classList.add('usable'));
+                document.querySelectorAll<HTMLElement>('.pluginMiniBox').forEach(el => { el.classList.add('usable'); });
                 const pluginBox = switchEl.closest<HTMLElement>('.pluginBox') ?? switchEl.closest<HTMLElement>('.pluginMiniBox');
                 if (!pluginBox) return;
 
@@ -288,9 +288,9 @@ export function init(cfg: PluginsInstalledConfig): void {
             });
         });
     } else {
-        document.querySelectorAll<HTMLElement>('.pluginMiniBox').forEach(el => el.classList.add('notUsable'));
-        document.querySelectorAll<HTMLElement>('.plugin-active .slider').forEach(el => el.classList.add('deactivate_disabled'));
-        document.querySelectorAll<HTMLElement>('.plugin-inactive .slider').forEach(el => el.classList.add('activate_disabled'));
+        document.querySelectorAll<HTMLElement>('.pluginMiniBox').forEach(el => { el.classList.add('notUsable'); });
+        document.querySelectorAll<HTMLElement>('.plugin-active .slider').forEach(el => { el.classList.add('deactivate_disabled'); });
+        document.querySelectorAll<HTMLElement>('.plugin-inactive .slider').forEach(el => { el.classList.add('activate_disabled'); });
         document.querySelectorAll<HTMLInputElement>('.switch input').forEach(function (el) {
             el.addEventListener('click', function (event) {
                 el.classList.add('disabled');
@@ -301,7 +301,7 @@ export function init(cfg: PluginsInstalledConfig): void {
                 if (errorLabel) errorLabel.innerHTML = notWebmaster;
                 const errorEl = document.querySelector<HTMLElement>('#' + id + ' .PluginActionError');
                 if (errorEl) { errorEl.style.display = 'flex'; setTimeout(() => { errorEl.style.display = 'none'; }, 4000); }
-                setTimeout(() => { document.querySelectorAll<HTMLInputElement>('.switch input').forEach(inp => inp.classList.remove('disabled')); }, 400);
+                setTimeout(() => { document.querySelectorAll<HTMLInputElement>('.switch input').forEach(inp => { inp.classList.remove('disabled'); }); }, 400);
             });
         });
     }
@@ -310,7 +310,7 @@ export function init(cfg: PluginsInstalledConfig): void {
         el.addEventListener('click', function () {
             const plugin_name = el.closest<HTMLElement>('.pluginContent')?.querySelector<HTMLElement>('.pluginName')?.innerHTML.trim() ?? '';
             const plugin_id = el.closest<HTMLElement>('.pluginBox')?.id ?? '';
-            pwgConfirm({ title: deletePluginMsg.replace('%s', plugin_name), buttons: { confirm: { text: confirmMsg, btnClass: 'btn-red', action: () => deletePlugin(plugin_id) }, cancel: { text: cancelMsg } } });
+            pwgConfirm({ title: deletePluginMsg.replace('%s', plugin_name), buttons: { confirm: { text: confirmMsg, btnClass: 'btn-red', action: () => { deletePlugin(plugin_id); } }, cancel: { text: cancelMsg } } });
         });
     });
 
@@ -318,7 +318,7 @@ export function init(cfg: PluginsInstalledConfig): void {
         el.addEventListener('click', function () {
             const plugin_name = el.closest<HTMLElement>('.pluginContent')?.querySelector<HTMLElement>('.pluginName')?.innerHTML.trim() ?? '';
             const plugin_id = el.closest<HTMLElement>('.pluginBox')?.id ?? '';
-            pwgConfirm({ title: restorePluginMsg.replace('%s', plugin_name), content: strRestoreDef, buttons: { confirm: { text: confirmMsg, btnClass: 'btn-red', action: () => restorePlugin(plugin_id) }, cancel: { text: cancelMsg } } });
+            pwgConfirm({ title: restorePluginMsg.replace('%s', plugin_name), content: strRestoreDef, buttons: { confirm: { text: confirmMsg, btnClass: 'btn-red', action: () => { restorePlugin(plugin_id); } }, cancel: { text: cancelMsg } } });
         });
     });
 
@@ -326,11 +326,11 @@ export function init(cfg: PluginsInstalledConfig): void {
         el.addEventListener('click', function () {
             const plugin_name = el.closest<HTMLElement>('.pluginContent')?.querySelector<HTMLElement>('.pluginName')?.innerHTML.trim() ?? '';
             const plugin_id = el.closest<HTMLElement>('.pluginBox')?.id ?? '';
-            pwgConfirm({ title: uninstallPluginMsg.replace('%s', plugin_name), buttons: { confirm: { text: confirmMsg, btnClass: 'btn-red', action: () => uninstallPlugin(plugin_id) }, cancel: { text: cancelMsg } } });
+            pwgConfirm({ title: uninstallPluginMsg.replace('%s', plugin_name), buttons: { confirm: { text: confirmMsg, btnClass: 'btn-red', action: () => { uninstallPlugin(plugin_id); } }, cancel: { text: cancelMsg } } });
         });
     });
 
-    document.querySelectorAll<HTMLButtonElement>('.showInactivePlugins button').forEach(el => el.addEventListener('click', showInactivePlugins));
+    document.querySelectorAll<HTMLButtonElement>('.showInactivePlugins button').forEach(el => { el.addEventListener('click', showInactivePlugins); });
 
     if (pluginFilter === 'deactivated') {
         document.querySelector<HTMLElement>(".filterLabel[for='seeInactive']")?.click();
@@ -444,7 +444,7 @@ export function init(cfg: PluginsInstalledConfig): void {
                             _deactivateTotal = 0;
                             _deactivateDone = 0;
                             _deactivateQueue = Promise.resolve();
-                            document.querySelectorAll<HTMLElement>('div.active').forEach(el => performPluginDeactivate(el.id));
+                            document.querySelectorAll<HTMLElement>('div.active').forEach(el => { performPluginDeactivate(el.id); });
                         },
                     },
                     cancel: { text: cancelMsg },

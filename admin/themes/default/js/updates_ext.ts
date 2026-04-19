@@ -77,13 +77,13 @@ export function init(cfg: UpdatesExtConfig): void {
             const btn = document.createElement('button');
             btn.textContent = '×';
             btn.style.cssText = 'margin-left:8px;background:none;border:none;color:#fff;cursor:pointer;font-size:16px;';
-            btn.onclick = () => d.remove();
+            btn.onclick = () => { d.remove(); };
             d.appendChild(btn);
         }
         document.body.appendChild(d);
         if (!opts.sticky) {
             setTimeout(function () {
-                d.animate([{ opacity: '1' }, { opacity: '0' }], { duration: 400 }).onfinish = () => d.remove();
+                d.animate([{ opacity: '1' }, { opacity: '0' }], { duration: 400 }).onfinish = () => { d.remove(); };
             }, opts.life ?? 3000);
         }
     }
@@ -112,7 +112,7 @@ export function init(cfg: UpdatesExtConfig): void {
             .then(function (data: Record<string, unknown>) {
                 if (data['stat'] === 'ok') {
                     document.querySelectorAll<HTMLElement>(".pluginBox, fieldset").forEach(el => { el.style.display = ''; });
-                    document.querySelectorAll(".pluginBox").forEach(el => el.setAttribute('data-ignored', 'false'));
+                    document.querySelectorAll(".pluginBox").forEach(el => { el.setAttribute('data-ignored', 'false'); });
                     ['update_all', 'ignore_all'].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.style.display = '';

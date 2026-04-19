@@ -131,7 +131,8 @@ export class TemporaryState {
     private classChanges: ClassChange[] = [];
     private htmlChanges: HtmlChange[] = [];
 
-    changeAttribute(obj: Element | NodeList, attr: string, tempVal: string): void {
+    changeAttribute(obj: Element | NodeList | null, attr: string, tempVal: string): void {
+        if (!obj) return;
         const elements: Element[] = obj instanceof NodeList ? Array.from(obj) as Element[] : [obj];
         for (const el of elements) {
             this.attrChanges.push({ object: el, attribute: attr, value: el.getAttribute(attr) });
@@ -139,7 +140,8 @@ export class TemporaryState {
         }
     }
 
-    changeClass(obj: Element | NodeList, st: boolean, tempclass: string): void {
+    changeClass(obj: Element | NodeList | null, st: boolean, tempclass: string): void {
+        if (!obj) return;
         const elements: Element[] = obj instanceof NodeList ? Array.from(obj) as Element[] : [obj];
         for (const el of elements) {
             if (!(el.classList.contains(tempclass) && st)) {
@@ -150,15 +152,16 @@ export class TemporaryState {
         }
     }
 
-    addClass(obj: Element | NodeList, tempclass: string): void {
+    addClass(obj: Element | NodeList | null, tempclass: string): void {
         this.changeClass(obj, true, tempclass);
     }
 
-    removeClass(obj: Element | NodeList, tempclass: string): void {
+    removeClass(obj: Element | NodeList | null, tempclass: string): void {
         this.changeClass(obj, false, tempclass);
     }
 
-    changeHTML(obj: Element | NodeList, temphtml: string): void {
+    changeHTML(obj: Element | NodeList | null, temphtml: string): void {
+        if (!obj) return;
         const elements: Element[] = obj instanceof NodeList ? Array.from(obj) as Element[] : [obj];
         for (const el of elements) {
             this.htmlChanges.push({ object: el, html: el.innerHTML });

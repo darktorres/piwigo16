@@ -204,7 +204,7 @@ export function init(cfg: StatsConfig): void {
             let checkedLabel: HTMLElement | null;
 
             if (compareMode) {
-                document.querySelectorAll<HTMLElement>('#hours-selector + label, #days-selector + label').forEach(el => el.classList.add('unavailable'));
+                document.querySelectorAll<HTMLElement>('#hours-selector + label, #days-selector + label').forEach(el => { el.classList.add('unavailable'); });
                 const hoursChecked = document.getElementById('hours-selector') as HTMLInputElement | null;
                 const daysChecked = document.getElementById('days-selector') as HTMLInputElement | null;
                 if ((hoursChecked?.checked) || (daysChecked?.checked)) {
@@ -217,7 +217,7 @@ export function init(cfg: StatsConfig): void {
                     if (checkedLabel?.dataset['value']) changeData(checkedLabel.dataset['value']);
                 }
             } else {
-                document.querySelectorAll<HTMLElement>('#hours-selector + label, #days-selector + label').forEach(el => el.classList.remove('unavailable'));
+                document.querySelectorAll<HTMLElement>('#hours-selector + label, #days-selector + label').forEach(el => { el.classList.remove('unavailable'); });
                 checkedLabel = document.querySelector<HTMLElement>('.stat-data-selector input:checked + label');
                 if (checkedLabel?.dataset['value']) changeData(checkedLabel.dataset['value']);
             }

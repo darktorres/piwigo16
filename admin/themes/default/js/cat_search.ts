@@ -123,7 +123,7 @@ export function init(cfg: CatSearchConfig): void {
         if (!result) return;
         result.style.display = '';
         if (result.nextElementSibling) {
-            setTimeout(() => resultAppear(result.nextElementSibling as HTMLElement), 50);
+            setTimeout(() => { resultAppear(result.nextElementSibling as HTMLElement); }, 50);
         }
     }
 

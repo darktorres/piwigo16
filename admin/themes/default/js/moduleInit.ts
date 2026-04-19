@@ -7,6 +7,6 @@ export function initModule(initFn: (cfg: Record<string, unknown>) => void): void
     if (document.readyState !== 'loading') {
         initFn(cfg);
     } else {
-        document.addEventListener('DOMContentLoaded', () => initFn(cfg));
+        document.addEventListener('DOMContentLoaded', () => { initFn(cfg); });
     }
 }

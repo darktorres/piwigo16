@@ -27,7 +27,7 @@ export function init(cfg: PictureFormatsConfig): void {
             pwgConfirm({
                 title: str_confirm_delete_format.replace("%s", extSpan?.innerHTML ?? ''),
                 buttons: {
-                    confirm: { text: str_confirm_msg, btnClass: "btn-red", action: () => deleteFormat(node) },
+                    confirm: { text: str_confirm_msg, btnClass: "btn-red", action: () => { deleteFormat(node); } },
                     cancel: { text: str_cancel_msg },
                 },
             });

@@ -1,7 +1,7 @@
 import noUiSlider from 'nouislider';
 import { sprintf } from './common.js';
 
-interface DoubleSliderOptions {
+export interface DoubleSliderOptions {
     values: number[];
     selected: { min: number; max: number };
     text: string;

@@ -11,7 +11,7 @@ export function init(_cfg: Record<string, unknown>): void {
     }
 
     document.querySelectorAll<HTMLInputElement>('input[name=who]').forEach(el => {
-        el.addEventListener('change', () => checkWhoOptions());
+        el.addEventListener('change', () => { checkWhoOptions(); });
     });
     checkWhoOptions();
 

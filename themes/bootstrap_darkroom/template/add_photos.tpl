@@ -8,7 +8,7 @@
 {combine_script id='piecon' load='footer' path='node_modules/piecon/piecon.js'}
 
 {footer_script}<script type="module">
-  import { sprintf } from './admin/themes/default/js/common.js';
+  import { sprintf } from './admin/themes/default/js/dist/{$vite_common}';
   var rootUrl = "{get_absolute_root_url()}";
   document.addEventListener('DOMContentLoaded', function() {
     var dz; // populated by Dropzone init below

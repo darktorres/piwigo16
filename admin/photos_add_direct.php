@@ -180,7 +180,7 @@ $page_data = [
 $template->assign('page_data_json', json_encode($page_data));
 
 require_once __DIR__ . '/../inc/vite_helper.php';
-\Piwigo\Vite\vite_assign_modules($template, ['photos_add_direct']);
+\Piwigo\Vite\vite_assign_modules($template, ['photos_add_direct', 'common']);
 
 $template->assign([
     'ENABLE_FORMATS' => $conf->enable_formats,

@@ -88,7 +88,6 @@ let connected_user = 0;
 let groups_arr: (string | number)[][] = [];
 let nb_days = '';
 let nb_photos = '';
-let _nb_photos_per_page = '';
 let last_user_index = -1;
 let last_user_id = -1;
 let pwg_token = '';
@@ -103,7 +102,6 @@ export function init(cfg: UserListConfig): void {
     connected_user = cfg.connectedUser;
     nb_days = cfg.nbDays;
     nb_photos = cfg.nbPhotos;
-    _nb_photos_per_page = cfg.nbPhotosPerPage;
     pwg_token = cfg.pwgToken;
 
     const groupsArrId = cfg.groupsArrId;

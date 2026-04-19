@@ -19,7 +19,7 @@ if (! isset($conf->smartpocket)) {
     ];
 
     functions::conf_update_param('smartpocket', $config, true);
-} elseif (count($conf->smartpocket) != 2) {
+} elseif (count($conf->smartpocket) !== 2) {
     $conff = $conf->smartpocket;
     $config = [
         'loop' => (empty($conff['loop'])) ? true : $conff['loop'],

@@ -239,7 +239,7 @@ $page_data = [
     'connectedUser' => $user['id'],
     'connectedUserStatus' => $user['status'],
     'ownerId' => $conf->webmaster_id,
-    'groupsArrName' => !empty($groups_arr_name) ? array_map(fn($g) => trim($g, '"'), $groups_arr_name) : [],
+    'groupsArrName' => $groups_arr_name === [] ? [] : array_map(fn(string $g): string => trim($g, '"'), $groups_arr_name),
     'groupsArrId' => $groups_arr_id,
     'guestId' => $conf->guest_id,
     'nbDays' => functions::l10n('%d days'),

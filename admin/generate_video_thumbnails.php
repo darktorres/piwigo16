@@ -46,7 +46,7 @@ if ($sse_mode && isset($_POST['submit'])) {
     session_write_close();
 
     $video_exts = ['wmv', 'mov', 'mkv', 'mp4', 'mpg', 'flv', 'asf', 'xvid', 'divx', 'mpeg', 'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv'];
-    $like_clauses = array_map(fn ($ext) => "path LIKE '%." . $ext . "'", $video_exts);
+    $like_clauses = array_map(fn (string $ext): string => "path LIKE '%." . $ext . "'", $video_exts);
     $query = 'SELECT id, path FROM images WHERE representative_ext IS NULL AND (' . implode(' OR ', $like_clauses) . ')';
     $images = $conf->sql_backend::query2array($query);
     $total = count($images);
@@ -114,7 +114,7 @@ if ($sse_mode && isset($_POST['submit'])) {
 // +-----------------------------------------------------------------------+
 
 $video_exts = ['wmv', 'mov', 'mkv', 'mp4', 'mpg', 'flv', 'asf', 'xvid', 'divx', 'mpeg', 'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv'];
-$like_clauses = array_map(fn ($ext) => "path LIKE '%." . $ext . "'", $video_exts);
+$like_clauses = array_map(fn (string $ext): string => "path LIKE '%." . $ext . "'", $video_exts);
 $count_query = 'SELECT COUNT(*) AS cnt FROM images WHERE representative_ext IS NULL AND (' . implode(' OR ', $like_clauses) . ')';
 [$count_row] = $conf->sql_backend::query2array($count_query);
 $pending_count = (int) $count_row['cnt'];

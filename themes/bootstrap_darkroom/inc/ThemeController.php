@@ -28,9 +28,7 @@ readonly class ThemeController
         functions_plugins::add_event_handler('init', $this->assignConfig(...));
         functions_plugins::add_event_handler('init', $this->setInitValues(...));
 
-        if ($this->config->bootstrap_theme === 'darkroom' ||
-            $this->config->bootstrap_theme === 'material' ||
-            $this->config->bootstrap_theme === 'bootswatch'
+        if (in_array($this->config->bootstrap_theme, ['darkroom', 'material', 'bootswatch'], true)
         ) {
             $this->config->bootstrap_theme = 'bootstrap-darkroom';
             $this->config->save();

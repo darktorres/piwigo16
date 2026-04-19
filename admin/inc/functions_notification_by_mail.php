@@ -105,10 +105,10 @@ final class functions_notification_by_mail
 
         $data_users = [];
 
-        if (in_array($action, ['subscribe', 'send'])) {
+        if (in_array($action, ['subscribe', 'send'], true)) {
             $quoted_check_key_list = self::quote_check_key_list($check_key_list);
 
-            if (count($quoted_check_key_list) != 0) {
+            if ($quoted_check_key_list !== []) {
                 $query_and_check_key = ' AND check_key IN (' . implode(', ', $quoted_check_key_list) . ') ';
             } else {
                 $query_and_check_key = '';
@@ -371,7 +371,7 @@ final class functions_notification_by_mail
             $msg_error = functions::l10n('User %s [%s] was not removed from the subscription list.');
         }
 
-        if (count($check_key_list) != 0) {
+        if ($check_key_list !== []) {
             $updates = [];
             $enabled_value = $conf->sql_backend::boolean_to_string($is_subscribe);
             $data_users = self::get_user_notifications('subscribe', $check_key_list, ! $is_subscribe);
@@ -475,7 +475,7 @@ final class functions_notification_by_mail
             $updated_data_count
         );
 
-        if ($error_on_updated_data_count != 0) {
+        if ($error_on_updated_data_count !== 0) {
             $page['errors'][] = functions::l10n_dec(
                 '%d user was not updated.',
                 '%d users were not updated.',

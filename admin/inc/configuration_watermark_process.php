@@ -32,7 +32,7 @@ if (isset($_FILES['watermarkImage']) &&
 ) {
     [$width, $height, $type] = getimagesize($_FILES['watermarkImage']['tmp_name']);
 
-    if ($type != IMAGETYPE_PNG) {
+    if ($type !== IMAGETYPE_PNG) {
         $errors['watermarkImage'] = sprintf(
             functions::l10n('Allowed file types: %s.'),
             'PNG'
@@ -123,7 +123,7 @@ if ($v <= 0 ||
 }
 
 // step 3 - save data
-if (count($errors) == 0) {
+if ($errors === []) {
     $watermark = new WatermarkParams();
     $watermark->file = $pwatermark['file'];
     $watermark->xpos = intval($pwatermark['xpos']);

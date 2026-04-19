@@ -57,7 +57,7 @@ final class PersistentFileCache extends PersistentCache
             $lifetime = $this->default_lifetime;
         }
 
-        if (mt_rand() % 97 == 0) {
+        if (mt_rand() % 97 === 0) {
             $this->purge(false);
         }
 

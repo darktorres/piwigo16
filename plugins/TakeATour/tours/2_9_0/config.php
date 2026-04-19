@@ -23,7 +23,7 @@ if (! isset($_SESSION['TAT_tour29_delete_cat_id'])) {
         SQL;
     $rows = $conf->sql_backend::query2array($query);
 
-    $_SESSION['TAT_tour29_delete_cat_id'] = count($rows) == 0 ? -1 : $rows[0]['category_id'];
+    $_SESSION['TAT_tour29_delete_cat_id'] = count($rows) === 0 ? -1 : $rows[0]['category_id'];
 }
 
 if ($_SESSION['TAT_tour29_delete_cat_id'] > 0) {
@@ -39,7 +39,7 @@ if (! isset($_SESSION['TAT_tour29_image_id'])) {
         SQL;
     $images = $conf->sql_backend::query2array($query);
 
-    $_SESSION['TAT_tour29_image_id'] = count($images) == 0 ? -1 : $images[0]['id'];
+    $_SESSION['TAT_tour29_image_id'] = count($images) === 0 ? -1 : $images[0]['id'];
 }
 
 if ($_SESSION['TAT_tour29_image_id'] > 0) {

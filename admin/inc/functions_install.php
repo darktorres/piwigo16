@@ -168,7 +168,7 @@ final class functions_install
         $themes = new themes();
 
         foreach (array_keys($themes->fs_themes) as $theme_id) {
-            if (in_array($theme_id, ['modus', 'smartpocket'])) {
+            if (in_array($theme_id, ['modus', 'smartpocket'], true)) {
                 $themes->perform_action('activate', $theme_id);
             }
         }
@@ -182,7 +182,7 @@ final class functions_install
         $plugins = new plugins();
 
         foreach (array_keys($plugins->fs_plugins) as $plugin_id) {
-            if (in_array($plugin_id, [])) {
+            if (in_array($plugin_id, [], true)) {
                 $plugins->perform_action('activate', $plugin_id);
             }
         }

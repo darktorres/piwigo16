@@ -33,7 +33,7 @@ if (! isset($category)) {
     $cat_id = (int) ($_GET['cat_id'] ?? $_GET['cat'] ?? 0);
     $admin_album_base_url = functions_url::get_root_url() . 'admin.php?page=album-' . $cat_id;
 
-    if (! $cat_id) {
+    if ($cat_id === 0) {
         exit('cat_id URL parameter is missing');
     }
 

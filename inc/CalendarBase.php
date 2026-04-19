@@ -261,11 +261,11 @@ abstract class CalendarBase
 
         $level_items = $conf->sql_backend::query2array($query, 'period', 'nb_images');
 
-        if (count($level_items) == 1 && count($page['chronology_date']) < count($this->calendar_levels) - 1 && ! isset($page['chronology_date'][$level])) {
+        if (count($level_items) === 1 && count($page['chronology_date']) < count($this->calendar_levels) - 1 && ! isset($page['chronology_date'][$level])) {
             [$key] = array_keys($level_items);
             $page['chronology_date'][$level] = (int) $key;
             if ($level < count($page['chronology_date']) &&
-                $level != count($this->calendar_levels) - 1
+                $level !== count($this->calendar_levels) - 1
             ) {
                 return;
             }

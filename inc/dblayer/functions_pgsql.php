@@ -185,6 +185,7 @@ final class functions_pgsql
             if (! is_dir($log_dir)) {
                 mkdir($log_dir, 0777, true);
             }
+
             $log_entry = '[' . $page['count_queries'] . '] ' . date('Y-m-d H:i:s') . "\n";
             $log_entry .= $query . "\n";
             $log_entry .= '(this query time : ' . number_format($time, 3, '.', ' ') . " s)\n";
@@ -318,7 +319,7 @@ final class functions_pgsql
         array $datas,
         int $flags = 0
     ): void {
-        if (count($datas) == 0) {
+        if ($datas === []) {
             return;
         }
 
@@ -387,7 +388,7 @@ final class functions_pgsql
         array $where,
         int $flags = 0
     ): void {
-        if (count($datas) == 0) {
+        if ($datas === []) {
             return;
         }
 
@@ -456,7 +457,7 @@ final class functions_pgsql
         array $options = [],
         ?\Closure $on_progress = null
     ): void {
-        if (count($datas) == 0) {
+        if ($datas === []) {
             return;
         }
 
@@ -506,7 +507,7 @@ final class functions_pgsql
             $inserted += count($chunk);
             $offset += $max_rows;
 
-            if ($on_progress !== null) {
+            if ($on_progress instanceof \Closure) {
                 $on_progress($inserted, $total);
             }
         }
@@ -617,7 +618,7 @@ final class functions_pgsql
         array $data,
         array $options = []
     ): void {
-        if (count($data) == 0) {
+        if ($data === []) {
             return;
         }
 

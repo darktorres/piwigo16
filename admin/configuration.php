@@ -181,7 +181,7 @@ if (isset($_POST['submit'])) {
                         }
 
                         // must define a default order_by if user want to order by rank only
-                        if (count($order_by) == 0) {
+                        if ($order_by === []) {
                             $order_by = ['id ASC'];
                         }
 
@@ -258,7 +258,7 @@ if (isset($_POST['submit'])) {
 
     // updating configuration if no error found
     if (! in_array($page['section'], ['sizes', 'watermark']) &&
-        count($page['errors']) == 0 &&
+        count($page['errors']) === 0 &&
         functions_user::is_webmaster()
     ) {
         //echo '<pre>'; print_r($_POST); echo '</pre>';
@@ -502,7 +502,7 @@ switch ($page['section']) {
                 $tpl_var = [];
 
                 $tpl_var['must_square'] = $type == derivative_std_params::IMG_SQUARE;
-                $tpl_var['must_enable'] = $type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB || $type == $conf->derivative_default_size;
+                $tpl_var['must_enable'] = in_array($type, [derivative_std_params::IMG_SQUARE, derivative_std_params::IMG_THUMB, $conf->derivative_default_size]);
                 $params = $enabled[$type];
 
                 if ($params) {
@@ -585,38 +585,38 @@ switch ($page['section']) {
 
             $position = 'custom';
 
-            if ($wm->xpos == 0 &&
-                $wm->ypos == 0
+            if ($wm->xpos === 0 &&
+                $wm->ypos === 0
             ) {
                 $position = 'topleft';
             }
 
-            if ($wm->xpos == 100 &&
-                $wm->ypos == 0
+            if ($wm->xpos === 100 &&
+                $wm->ypos === 0
             ) {
                 $position = 'topright';
             }
 
-            if ($wm->xpos == 50 &&
-                $wm->ypos == 50
+            if ($wm->xpos === 50 &&
+                $wm->ypos === 50
             ) {
                 $position = 'middle';
             }
 
-            if ($wm->xpos == 0 &&
-                $wm->ypos == 100
+            if ($wm->xpos === 0 &&
+                $wm->ypos === 100
             ) {
                 $position = 'bottomleft';
             }
 
-            if ($wm->xpos == 100 &&
-                $wm->ypos == 100
+            if ($wm->xpos === 100 &&
+                $wm->ypos === 100
             ) {
                 $position = 'bottomright';
             }
 
-            if ($wm->xrepeat != 0 ||
-                $wm->yrepeat != 0
+            if ($wm->xrepeat !== 0 ||
+                $wm->yrepeat !== 0
             ) {
                 $position = 'custom';
             }

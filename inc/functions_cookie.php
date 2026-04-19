@@ -48,7 +48,7 @@ final class functions_cookie
         $scr = substr($scr, 0, strrpos($scr, '/'));
 
         // add a trailing '/' if needed
-        if (strlen($scr) == 0 ||
+        if ($scr === '' ||
             $scr[strlen($scr) - 1] !== '/'
         ) {
             $scr .= '/';

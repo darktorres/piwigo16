@@ -35,17 +35,17 @@ class ViteManifest {
     /**
      * @param string $key Module name (e.g. 'tags') or full path (e.g. 'themes/default/js/mcs')
      */
-    public static function getFile($key) {
+    public static function getFile(string $key) {
         $manifest = self::loadManifest();
 
         if (!$manifest) {
             return null;
         }
 
-        if (strpos($key, '/') !== false) {
+        if (str_contains($key, '/')) {
             // Full source path provided
             $fullKey = $key;
-            if (substr($fullKey, -3) !== '.js') {
+            if (!str_ends_with($fullKey, '.js')) {
                 $fullKey .= '.js';
             }
         } else {

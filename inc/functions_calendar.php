@@ -169,7 +169,7 @@ final class functions_calendar
             }
         }
 
-        if ($any_count == 3) {
+        if ($any_count === 3) {
             array_pop($page['chronology_date']);
         }
 
@@ -249,7 +249,7 @@ final class functions_calendar
             if (isset($page['super_order_by'])) {
                 $order_by = $conf->order_by;
             } else {
-                if (count($page['chronology_date']) == 0 ||
+                if (count($page['chronology_date']) === 0 ||
                     in_array('any', $page['chronology_date'])
                 ) { // selected period is very big so we show newest first
                     $order = ' DESC, ';
@@ -266,7 +266,7 @@ final class functions_calendar
 
             if ($page['section'] == 'categories' &&
                 ! isset($page['category']) &&
-                (count($page['chronology_date']) == 0 || ($page['chronology_date'][0] == 'any' && count($page['chronology_date']) == 1))
+                (count($page['chronology_date']) === 0 || ($page['chronology_date'][0] == 'any' && count($page['chronology_date']) === 1))
             ) {
                 $cache_key = $persistent_cache->make_key($user['id'] . $user['cache_update_time'] . $calendar->date_field . $order_by);
             }

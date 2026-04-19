@@ -31,7 +31,7 @@ final class functions_user
 
         if (empty($mail_address) &&
             ! ($conf->obligatory_user_mail_address &&
-            in_array(functions::script_basename(), ['register', 'profile']))
+            in_array(functions::script_basename(), ['register', 'profile'], true))
         ) {
             return '';
         }
@@ -120,7 +120,7 @@ final class functions_user
         $users_found = array_keys($SCU_users, $username_lo);
         // $users_found is now a table of which the values are all the accounts
         // which can be written in lowercase the same way as $username
-        if (count($users_found) != 1) { // If ambiguous, don't allow lowercase writing
+        if (count($users_found) !== 1) { // If ambiguous, don't allow lowercase writing
             return $username;
         } // but normal writing will work
 
@@ -217,7 +217,7 @@ final class functions_user
                 ];
             }
 
-            if (count($inserts) != 0) {
+            if ($inserts !== []) {
                 $conf->sql_backend::mass_inserts('user_group', ['user_id', 'group_id'], $inserts);
             }
 
@@ -1336,7 +1336,7 @@ final class functions_user
             return false;
         }
 
-        if (! in_array($action, ['delete', 'edit', 'validate'])) {
+        if (! in_array($action, ['delete', 'edit', 'validate'], true)) {
             return false;
         }
 
@@ -1480,7 +1480,7 @@ final class functions_user
             SQL;
         $keys = $conf->sql_backend::query2array($query);
 
-        if (count($keys) == 0) {
+        if (count($keys) === 0) {
             return false;
         }
 
@@ -1531,7 +1531,7 @@ final class functions_user
                 SQL;
             $user_infos = $conf->sql_backend::query2array($query);
 
-            if (count($user_infos) == 0) {
+            if (count($user_infos) === 0) {
                 return false;
             }
 

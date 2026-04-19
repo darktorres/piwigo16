@@ -179,19 +179,19 @@ final class functions
 
             $ret = 1;
 
-            if ((ord($Str[$i]) & 0xE0) == 0xC0) {
+            if ((ord($Str[$i]) & 0xE0) === 0xC0) {
                 $n = 1;
             } # 110bbbbb
-            elseif ((ord($Str[$i]) & 0xF0) == 0xE0) {
+            elseif ((ord($Str[$i]) & 0xF0) === 0xE0) {
                 $n = 2;
             } # 1110bbbb
-            elseif ((ord($Str[$i]) & 0xF8) == 0xF0) {
+            elseif ((ord($Str[$i]) & 0xF8) === 0xF0) {
                 $n = 3;
             } # 11110bbb
-            elseif ((ord($Str[$i]) & 0xFC) == 0xF8) {
+            elseif ((ord($Str[$i]) & 0xFC) === 0xF8) {
                 $n = 4;
             } # 111110bb
-            elseif ((ord($Str[$i]) & 0xFE) == 0xFC) {
+            elseif ((ord($Str[$i]) & 0xFE) === 0xFC) {
                 $n = 5;
             } # 1111110b
             else {
@@ -201,7 +201,7 @@ final class functions
 
             for ($j = 0; $j < $n; $j++) { # n bytes matching 10bbbbbb follow ?
                 if (++$i === strlen($Str) ||
-                   (ord($Str[$i]) & 0xC0) != 0x80
+                   (ord($Str[$i]) & 0xC0) !== 0x80
                 ) {
                     return -1;
                 }
@@ -219,7 +219,7 @@ final class functions
     ): string {
         $utf = self::qualify_utf8($string);
 
-        if ($utf == 0) {
+        if ($utf === 0) {
             return $string; // ascii
         }
 
@@ -596,7 +596,7 @@ final class functions
             }
 
             if (in_array($page['section'], ($conf->history_sections_cache ?: [])) ||
-                in_array(strtolower($page['section']), array_map(strtolower(...), $conf->history_sections_cache ?: []))
+                in_array(strtolower($page['section']), array_map(strtolower(...), $conf->history_sections_cache ?: []), true)
             ) {
                 $section = $page['section'];
             } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page['section'])) {
@@ -629,13 +629,13 @@ final class functions
 
         $history_id = $conf->sql_backend::pwg_db_insert_id();
 
-        if ($history_id % 1000 == 0) {
+        if ($history_id % 1000 === 0) {
             require_once __DIR__ . '/../admin/inc/functions_history.php';
             functions_history::history_summarize(50000);
         }
 
         if ($conf->history_autopurge_every > 0 &&
-            $history_id % $conf->history_autopurge_every == 0
+            $history_id % $conf->history_autopurge_every === 0
         ) {
             require_once __DIR__ . '/../admin/inc/functions_history.php';
             functions_history::history_autopurge();
@@ -716,7 +716,7 @@ final class functions
             }
         }
 
-        if (in_array($object, ['album', 'photo']) &&
+        if (in_array($object, ['album', 'photo'], true) &&
             $action === 'delete' &&
             isset($_GET['page']) &&
             $_GET['page'] == 'site_update'
@@ -1145,7 +1145,7 @@ final class functions
 
         // with RefreshTime != 0, only html must be used
         if ($conf->default_redirect_method === 'http' &&
-            $refresh_time == 0 &&
+            $refresh_time === 0 &&
             ! headers_sent()
         ) {
             self::redirect_http($url);
@@ -1209,12 +1209,13 @@ final class functions
     ): string {
         global $conf;
         // Strip leading './' from DB paths to get a clean relative path
-        $rel = substr($path, 0, 2) === './' ? substr($path, 2) : ltrim($path, '/');
+        $rel = str_starts_with($path, './') ? substr($path, 2) : ltrim($path, '/');
         // Change extension
         $dot = strrpos($rel, '.');
         if ($dot !== false) {
             $rel = substr($rel, 0, $dot + 1) . $representative_ext;
         }
+
         return $conf->data_location . 'i/' . $rel;
     }
 
@@ -2053,7 +2054,7 @@ final class functions
         $time = microtime(true);
         $key = explode(':', $key);
 
-        if (count($key) != 3 ||
+        if (count($key) !== 3 ||
             $key[0] > $time - (float) $key[1] || // page must have been retrieved more than X sec ago
             $key[0] < $time - 3600 || // 60 minutes expiration
             hash_hmac(
@@ -2547,8 +2548,8 @@ final class functions
     ): never {
         global $logger;
 
-        if ($code == 301 ||
-            $code == 302
+        if ($code === 301 ||
+            $code === 302
         ) {
             if (ob_get_length() !== false) {
                 ob_clean();
@@ -3053,7 +3054,7 @@ final class functions
             SQL;
         $user_ids = $conf->sql_backend::query2array($query, null, 'id');
 
-        if (count($user_ids) == 0) {
+        if (count($user_ids) === 0) {
             $page['errors'][] = self::l10n('Invalid username or email');
             return false;
         }
@@ -3364,7 +3365,7 @@ final class functions
             }
         }
 
-        if (count($errors) == 0) {
+        if ($errors === []) {
             // mass_updates function
 
             $activity_details_tables = [];

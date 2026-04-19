@@ -232,7 +232,7 @@ final class functions_modus
             ) {
                 $candidates[] = $params;
 
-                if (count($candidates) == 3) {
+                if (count($candidates) === 3) {
                     break;
                 }
             }

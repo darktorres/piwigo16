@@ -133,7 +133,7 @@ final class pwg_image
         $rotate_for_dimensions = false;
 
         if (isset($rotation) &&
-            in_array(abs($rotation), [90, 270])
+            in_array(abs($rotation), [90, 270], true)
         ) {
             $rotate_for_dimensions = true;
         }
@@ -267,7 +267,7 @@ final class pwg_image
     ): ?int {
         [$width, $height, $type] = getimagesize($source_filepath);
 
-        if ($type != IMAGETYPE_JPEG) {
+        if ($type !== IMAGETYPE_JPEG) {
             return null;
         }
 

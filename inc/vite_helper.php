@@ -13,18 +13,20 @@ require_once __DIR__ . '/ViteManifest.php';
  * @param object $template Smarty template object
  * @param array  $modules  Array of module names or varName => sourcePath pairs
  */
-function vite_assign_modules($template, $modules) {
+function vite_assign_modules($template, $modules): void {
     $data = [];
     foreach ($modules as $varName => $module) {
         if (is_int($varName)) {
             $varName = $module;
         }
+
         $file = ViteManifest::getFile($module);
         if ($file) {
             $data['vite_' . $varName] = $file;
         }
     }
-    if (!empty($data)) {
+
+    if ($data !== []) {
         $template->assign($data);
     }
 }

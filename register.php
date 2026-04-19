@@ -56,7 +56,7 @@ if (isset($_POST['submit'])) {
         isset($_POST['send_password_by_mail'])
     );
 
-    if (count($page['errors']) == 0) {
+    if ($page['errors'] === []) {
         // email notification
         if (isset($_POST['send_password_by_mail']) &&
             functions::email_check_format($_POST['mail_address'])

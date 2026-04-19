@@ -1266,6 +1266,6 @@ class Config
 
         $this->default_user_id = $this->guest_id;
 
-        $this->chmod_value = substr_compare(PHP_SAPI, 'apa', 0, 3) == 0 ? 0777 : 0755;
+        $this->chmod_value = substr_compare(PHP_SAPI, 'apa', 0, 3) === 0 ? 0777 : 0755;
     }
 }

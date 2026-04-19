@@ -77,7 +77,7 @@ if ($page['display_mode'] == 'letters') {
     foreach ($tags as $tag) {
         $tag_letter = mb_strtoupper(mb_substr(functions::pwg_transliterate($tag['name']), 0, 1, 'utf-8'), 'utf-8');
 
-        if ($current_tag_idx == 0) {
+        if ($current_tag_idx === 0) {
             $current_letter = $tag_letter;
             $letter['TITLE'] = $tag_letter;
         }

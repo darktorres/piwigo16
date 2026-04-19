@@ -125,7 +125,7 @@ final class functions_upload
             }
         }
 
-        if (count($errors) == 0) {
+        if ($errors === []) {
             $conf->sql_backend::mass_updates(
                 'config',
                 [
@@ -232,13 +232,13 @@ final class functions_upload
 
             [$width, $height, $type] = getimagesize($source_filepath);
 
-            if ($type == IMAGETYPE_PNG) {
+            if ($type === IMAGETYPE_PNG) {
                 $file_path .= 'png';
-            } elseif ($type == IMAGETYPE_GIF) {
+            } elseif ($type === IMAGETYPE_GIF) {
                 $file_path .= 'gif';
-            } elseif ($type == IMAGETYPE_JPEG) {
+            } elseif ($type === IMAGETYPE_JPEG) {
                 $file_path .= 'jpg';
-            } elseif ($type == IMAGETYPE_WEBP) {
+            } elseif ($type === IMAGETYPE_WEBP) {
                 $file_path .= 'webp';
             } elseif (isset($conf->upload_form_all_types) &&
                       $conf->upload_form_all_types
@@ -596,7 +596,7 @@ final class functions_upload
             return $representative_ext;
         }
 
-        if (! in_array(strtolower(functions::get_extension($file_path)), ['tif', 'tiff'])) {
+        if (! in_array(strtolower(functions::get_extension($file_path)), ['tif', 'tiff'], true)) {
             return $representative_ext;
         }
 
@@ -655,7 +655,7 @@ final class functions_upload
             'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv',
         ];
 
-        if (! in_array(strtolower(functions::get_extension($file_path)), $ffmpeg_video_exts)) {
+        if (! in_array(strtolower(functions::get_extension($file_path)), $ffmpeg_video_exts, true)) {
             return $representative_ext;
         }
 
@@ -687,7 +687,7 @@ final class functions_upload
 
         exec($ffmpeg . ' 2>&1', $FO, $FS);
 
-        if (! empty($FO)) {
+        if ($FO !== []) {
             $logger->debug(__FUNCTION__ . ', Tried ' . $ffmpeg);
             $logger->debug(implode("\n", $FO));
         }
@@ -811,6 +811,7 @@ final class functions_upload
         if ($dot !== false) {
             $rel = substr($rel, 0, $dot + 1) . $ext;
         }
+
         return PHPWG_ROOT_PATH . $conf->data_location . 'i/' . $rel;
     }
 

@@ -193,7 +193,7 @@ final class languages
                     }
 
                     // IMPORTANT SECURITY !
-                    $language = array_map('htmlspecialchars', $language);
+                    $language = array_map(htmlspecialchars(...), $language);
                     $this->fs_languages[$file] = $language;
                 }
             }

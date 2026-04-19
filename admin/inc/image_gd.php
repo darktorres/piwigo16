@@ -30,7 +30,7 @@ final class image_gd implements imageInterface
         $gd_info = gd_info();
         $extension = strtolower(functions::get_extension($source_filepath));
 
-        if (in_array($extension, ['jpg', 'jpeg'])) {
+        if (in_array($extension, ['jpg', 'jpeg'], true)) {
             $this->image = imagecreatefromjpeg($source_filepath);
         } elseif ($extension === 'png') {
             $this->image = imagecreatefrompng($source_filepath);

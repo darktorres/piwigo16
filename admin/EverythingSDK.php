@@ -22,11 +22,13 @@ namespace Piwigo\admin;
 final class EverythingSDK
 {
     // Property IDs from Everything3.h — these are stable and will not change.
-    private const PROPERTY_FULL_PATH = 240;
-    private const PROPERTY_SIZE = 2;
+    private const int PROPERTY_FULL_PATH = 240;
 
-    private const PATH_BUF_SIZE = 2048;
-    private const BATCH_SIZE = 50000;
+    private const int PROPERTY_SIZE = 2;
+
+    private const int PATH_BUF_SIZE = 2048;
+
+    private const int BATCH_SIZE = 50000;
 
     /**
      * FFI C declarations for the Everything SDK v3 UTF-8 API.
@@ -35,7 +37,7 @@ final class EverythingSDK
      * On Windows x64, __stdcall and __cdecl are identical, so no calling
      * convention annotation is needed.
      */
-    private const FFI_CDEF = <<<'C'
+    private const string FFI_CDEF = <<<'C'
         typedef void* EClient;
         typedef void* ESearchState;
         typedef void* EResultList;
@@ -64,14 +66,8 @@ final class EverythingSDK
         uint32_t Everything3_GetLastError(void);
         C;
 
-    private \FFI $ffi;
-
-    private string $instanceName;
-
-    private function __construct(\FFI $ffi, string $instanceName)
+    private function __construct(private readonly \FFI $ffi, private readonly string $instanceName)
     {
-        $this->ffi = $ffi;
-        $this->instanceName = $instanceName;
     }
 
     /**
@@ -101,8 +97,8 @@ final class EverythingSDK
 
         try {
             $ffi = \FFI::cdef(self::FFI_CDEF, $absPath);
-        } catch (\FFI\Exception $e) {
-            self::$lastError = 'FFI::cdef failed: ' . $e->getMessage();
+        } catch (\FFI\Exception $exception) {
+            self::$lastError = 'FFI::cdef failed: ' . $exception->getMessage();
             return null;
         }
 
@@ -116,8 +112,8 @@ final class EverythingSDK
             }
 
             $ffi->Everything3_DestroyClient($client);
-        } catch (\FFI\Exception $e) {
-            self::$lastError = 'Connection test failed: ' . $e->getMessage();
+        } catch (\FFI\Exception $exception) {
+            self::$lastError = 'Connection test failed: ' . $exception->getMessage();
             return null;
         }
 
@@ -166,7 +162,7 @@ final class EverythingSDK
         while (true) {
             $batch = $this->executeSearchBatch($query, $includeSize, $sortByPath, $offset, self::BATCH_SIZE);
 
-            if (empty($batch)) {
+            if ($batch === []) {
                 break;
             }
 

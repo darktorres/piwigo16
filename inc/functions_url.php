@@ -674,7 +674,7 @@ final class functions_url
                 array_shift($chronology_tokens);
                 $page['chronology_style'] = $chronology_tokens[0];
 
-                if (! in_array($page['chronology_style'], ['monthly', 'weekly'])) {
+                if (! in_array($page['chronology_style'], ['monthly', 'weekly'], true)) {
                     functions_html::fatal_error('bad chronology field (style)');
                 }
 

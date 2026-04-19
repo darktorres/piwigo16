@@ -62,7 +62,7 @@ functions_plugins::trigger_notify('nbm_event_handler_added');
 // | Insert new users with mails                                           |
 // +-----------------------------------------------------------------------+
 if (! isset($_POST) ||
-    count($_POST) == 0
+    $_POST === []
 ) {
     // No insert data in post mode
     functions_admin::insert_new_data_user_mail_notification();

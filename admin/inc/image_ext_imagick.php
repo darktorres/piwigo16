@@ -118,8 +118,8 @@ final class image_ext_imagick implements imageInterface
             return true;
         }
 
-        if ($rotation == 90 ||
-            $rotation == 270
+        if ($rotation === 90 ||
+            $rotation === 270
         ) {
             $tmp = $this->width;
             $this->width = $this->height;

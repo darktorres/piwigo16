@@ -42,7 +42,7 @@ final class image_vips implements imageInterface
      * at a time. Subsequent threads call vips_init() after it has already
      * completed at the C level — it is idempotent once initialised.
      */
-    private static function initVipsThread(): void
+    private function initVipsThread(): void
     {
         if (self::$thread_initialized) {
             return;
@@ -70,7 +70,7 @@ final class image_vips implements imageInterface
     public function __construct(
         string $source_filepath
     ) {
-        self::initVipsThread();
+        $this->initVipsThread();
 
         // putenv('VIPS_WARNING=0');
         $this->image = Image::newFromFile(realpath($source_filepath), [

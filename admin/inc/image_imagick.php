@@ -82,8 +82,8 @@ final class image_imagick implements imageInterface
         $this->image->setInterlaceScheme(Imagick::INTERLACE_LINE);
 
         // TODO need to explain this condition
-        if ($this->get_width() % 2 == 0 &&
-            $this->get_height() % 2 == 0 &&
+        if ($this->get_width() % 2 === 0 &&
+            $this->get_height() % 2 === 0 &&
             $this->get_width() > 3 * $width
         ) {
             $this->image->scaleImage($this->get_width() / 2, $this->get_height() / 2);

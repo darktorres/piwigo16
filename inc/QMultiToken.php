@@ -75,7 +75,7 @@ class QMultiToken implements \Stringable
         for ($stop = false; ! $stop && $qi < strlen($q); $qi++) {
             $ch = $q[$qi];
 
-            if (($crt_modifier & functions_search::QST_QUOTED) == 0) {
+            if (($crt_modifier & functions_search::QST_QUOTED) === 0) {
                 switch ($ch) {
                     case '(':
                         if (strlen($crt_token) !== 0) {
@@ -203,7 +203,7 @@ class QMultiToken implements \Stringable
             $remove = false;
 
             if ($token->is_single) {
-                if (($token->modifier & functions_search::QST_QUOTED) == 0 &&
+                if (($token->modifier & functions_search::QST_QUOTED) === 0 &&
                      str_ends_with($token->term, '*')
                 ) {
                     $token->term = rtrim($token->term, '*');
@@ -211,7 +211,7 @@ class QMultiToken implements \Stringable
                 }
 
                 if (! isset($token->scope) &&
-                   ($token->modifier & (functions_search::QST_QUOTED | functions_search::QST_WILDCARD)) == 0
+                   ($token->modifier & (functions_search::QST_QUOTED | functions_search::QST_WILDCARD)) === 0
                 ) {
                     if (strtolower($token->term) === 'not') {
                         if ($i + 1 < count($this->tokens)) {
@@ -279,7 +279,7 @@ class QMultiToken implements \Stringable
                 $this->tokens[$i]->check_operator_priority();
             }
 
-            if ($i == 1) {
+            if ($i === 1) {
                 $crt_prio = $this->priority($this->tokens[$i]->modifier);
             }
 

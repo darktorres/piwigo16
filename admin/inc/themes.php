@@ -410,7 +410,7 @@ final class themes
                     }
 
                     // IMPORTANT SECURITY !
-                    $theme = array_map('htmlspecialchars', $theme);
+                    $theme = array_map(htmlspecialchars(...), $theme);
                     $this->fs_themes[$file] = $theme;
                 }
             }
@@ -713,7 +713,7 @@ final class themes
     ): int {
         $r = strcasecmp($a['author_name'], $b['author_name']);
 
-        if ($r == 0) {
+        if ($r === 0) {
             return $this->extension_name_compare($a, $b);
         }
 
@@ -726,7 +726,7 @@ final class themes
     ): int {
         $r = strcasecmp($a['author'], $b['author']);
 
-        if ($r == 0) {
+        if ($r === 0) {
             return functions_html::name_compare($a, $b);
         }
 

@@ -144,7 +144,7 @@ final class FileCombiner
             }
 
             $result[] = new Combinable('combi', $file, false);
-        } elseif (count($pending) == 1) {
+        } elseif (count($pending) === 1) {
             $header = '';
             $this->process_combinable($pending[0], false, $force, $header);
             $result[] = $pending[0];

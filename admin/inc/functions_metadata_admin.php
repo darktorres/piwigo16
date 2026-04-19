@@ -31,7 +31,7 @@ final class functions_metadata_admin
         $iptc = functions_metadata::get_iptc_data($file, $map, ',', $imginfo);
 
         foreach ($iptc as $pwg_key => $value) {
-            if (in_array($pwg_key, ['date_creation', 'date_available']) && preg_match('/(\d{4})(\d{2})(\d{2})/', $value, $matches)) {
+            if (in_array($pwg_key, ['date_creation', 'date_available'], true) && preg_match('/(\d{4})(\d{2})(\d{2})/', $value, $matches)) {
                 $year = $matches[1];
                 $month = $matches[2];
                 $day = $matches[3];
@@ -68,7 +68,7 @@ final class functions_metadata_admin
         $exif = functions_metadata::get_exif_data($file, $conf->use_exif_mapping, $imginfo);
 
         foreach ($exif as $pwg_key => $value) {
-            if (in_array($pwg_key, ['date_creation', 'date_available'])) {
+            if (in_array($pwg_key, ['date_creation', 'date_available'], true)) {
                 if (is_numeric($value) &&
                     (int) $value == $value
                 ) {
@@ -104,7 +104,7 @@ final class functions_metadata_admin
                 }
             }
 
-            if (in_array($pwg_key, ['keywords', 'tags'])) {
+            if (in_array($pwg_key, ['keywords', 'tags'], true)) {
                 $exif[$pwg_key] = self::metadata_normalize_keywords_string($exif[$pwg_key]);
             }
 
@@ -209,8 +209,8 @@ final class functions_metadata_admin
             if ($image_size) {
                 $type = $image_size[2];
 
-                if ($type == IMAGETYPE_TIFF_MM ||
-                    $type == IMAGETYPE_TIFF_II
+                if ($type === IMAGETYPE_TIFF_MM ||
+                    $type === IMAGETYPE_TIFF_II
                 ) {
                     $is_tiff = true;
                 }
@@ -231,7 +231,7 @@ final class functions_metadata_admin
             $vb = (string) $xmlattributes->viewBox;
 
             if (isset($width) &&
-                $width != 0
+                $width !== 0
             ) {
                 $infos['width'] = $width;
             } elseif (isset($vb)) {
@@ -239,7 +239,7 @@ final class functions_metadata_admin
             }
 
             if (isset($height) &&
-                $height != 0
+                $height !== 0
             ) {
                 $infos['height'] = $height;
             } elseif (isset($vb)) {
@@ -310,7 +310,7 @@ final class functions_metadata_admin
         }
 
         if ($profiling) {
-            $prof_rounded = array_map(fn ($v) => round($v, 5), $prof);
+            $prof_rounded = array_map(fn (float $v): float => round($v, 5), $prof);
             $logger->debug('[sync][meta][breakdown] ' . $infos['path'], $prof_rounded);
 
             if (! isset($GLOBALS['sync_meta_prof'])) {

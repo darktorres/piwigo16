@@ -25,7 +25,7 @@ class QSearchScope
 
     public function parse(QSingleToken $token): bool
     {
-        return ! (! $this->nullable && strlen($token->term) == 0);
+        return ! (! $this->nullable && $token->term === '');
     }
 
     public function process_char(

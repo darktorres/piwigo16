@@ -942,7 +942,7 @@ final class Template
         $load = $params['load'] == 'header' ? 0 : 1;
         $content = [];
 
-        if ($load == 0) {
+        if ($load === 0) {
             return self::COMBINED_SCRIPTS_TAG;
         }
 

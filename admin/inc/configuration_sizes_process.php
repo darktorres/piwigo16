@@ -64,7 +64,7 @@ foreach ($pderivatives as $type => &$pderivative) {
         $pderivative['crop'] = 100;
     }
 
-    $pderivative['must_enable'] = $type == derivative_std_params::IMG_SQUARE || $type == derivative_std_params::IMG_THUMB || $type == $conf->derivative_default_size;
+    $pderivative['must_enable'] = in_array($type, [derivative_std_params::IMG_SQUARE, derivative_std_params::IMG_THUMB, $conf->derivative_default_size]);
     $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'];
 
     if (isset($pderivative['crop'])) {
@@ -125,7 +125,7 @@ foreach (ImageStdParams::get_all_types() as $type) {
         }
     }
 
-    if (count($errors) == 0) {
+    if ($errors === []) {
         $prev_w = intval($pderivative['w']);
         $prev_h = intval($pderivative['h']);
     }
@@ -140,7 +140,7 @@ foreach (ImageStdParams::get_all_types() as $type) {
 }
 
 // step 3 - save data
-if (count($errors) == 0) {
+if ($errors === []) {
     $quality_changed = ImageStdParams::$quality !== intval($_POST['resize_quality']);
     ImageStdParams::$quality = intval($_POST['resize_quality']);
 
@@ -223,7 +223,7 @@ if (count($errors) == 0) {
 
     ImageStdParams::set_and_save($enabled_by);
 
-    if (count($disabled) == 0) {
+    if (count($disabled) === 0) {
         $query = <<<SQL
             DELETE FROM config
             WHERE param = 'disabled_derivatives';

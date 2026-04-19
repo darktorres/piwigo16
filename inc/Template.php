@@ -673,6 +673,7 @@ final class Template
         string $str
     ): string|null {
         if (is_string($str) && strlen($str) > 1 && ($str[0] === "'" && $str[strlen($str) - 1] === "'" || $str[0] === '"' && $str[strlen($str) - 1] === '"')) {
+            $tmp = null;
             eval('$tmp=' . $str . ';');
             return $tmp;
         }
@@ -1169,6 +1170,7 @@ final class Template
         return preg_replace_callback(
             '/\\<\\?php echo ((?:\'(?:(?:\\\\.)|[^\'])*\')|(?:"(?:(?:\\\\.)|[^"])*"));\\?\\>\\n/',
             function (array $matches): string {
+                $tmp = '';
                 eval('$tmp=' . $matches[1] . ';');
                 return $tmp;
             },

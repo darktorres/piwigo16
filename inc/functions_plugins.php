@@ -314,7 +314,7 @@ final class functions_plugins
 
             // autoupdate is applicable only to plugins with 2.7 architecture
             if (file_exists($maintain_file)) {
-                global $page;
+                global $conf, $page;
 
                 // call update method
                 require_once $maintain_file;

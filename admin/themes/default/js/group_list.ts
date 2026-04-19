@@ -293,11 +293,6 @@ export function init(cfg: GroupListConfig): void {
         return newgroup;
     };
 
-    /*------- SETUP JS ON GROUP BOX -------*/
-    document.querySelectorAll<HTMLElement>('.GroupContainer').forEach((el) => {
-        if (el.id != 'group-template') setupGroupBox(el);
-    });
-
     const setupGroupBox = function (groupBox: HTMLElement): void {
         const id = groupBox.getAttribute('data-id') ?? '';
 
@@ -384,6 +379,11 @@ export function init(cfg: GroupListConfig): void {
         const dupBtn = groupBox.querySelector<HTMLElement>('#GroupDuplicate');
         if (dupBtn) dupBtn.addEventListener('click', () => duplicateAction(id));
     };
+
+    /*------- SETUP JS ON GROUP BOX -------*/
+    document.querySelectorAll<HTMLElement>('.GroupContainer').forEach((el) => {
+        if (el.id != 'group-template') setupGroupBox(el);
+    });
 
     const toggleSelection = function (group_id: string, toggle: boolean): void {
         const groupBox = document.getElementById('group-' + group_id);

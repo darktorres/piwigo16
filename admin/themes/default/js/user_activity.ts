@@ -85,6 +85,11 @@ export function init(cfg: UserActivityConfig): void {
             .catch(function (e: unknown) { console.log('ajax call failed', e); });
     }
 
+    function setHtml(parent: Element, selector: string, value: string): void {
+        const el = parent.querySelector<HTMLElement>(selector);
+        if (el) el.innerHTML = value;
+    }
+
     function lineConstructor(line: ActivityLine): void {
         const template = document.getElementById('-1');
         if (!template) return;
@@ -105,7 +110,7 @@ export function init(cfg: UserActivityConfig): void {
                 newLine.querySelector('.action-type')?.classList.add('icon-blue');
                 newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
                 newLine.querySelector('.action-icon')?.classList.add('icon-pencil');
-                (newLine.querySelector('.action-name') as HTMLElement).innerHTML = at.edit ?? 'edit';
+                setHtml(newLine, '.action-name', at.edit ?? 'edit');
                 final_albumInfos = getInfo(ai[obj as keyof ActionInfos]?.edited, ai[obj as keyof ActionInfos]?.editedPlural);
                 newLine.querySelector('.action-section')?.classList.add(getObjIcon(obj));
                 break;
@@ -113,7 +118,7 @@ export function init(cfg: UserActivityConfig): void {
                 newLine.querySelector('.action-type')?.classList.add('icon-green');
                 newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
                 newLine.querySelector('.action-icon')?.classList.add('icon-plus');
-                (newLine.querySelector('.action-name') as HTMLElement).innerHTML = at.add ?? 'add';
+                setHtml(newLine, '.action-name', at.add ?? 'add');
                 final_albumInfos = getInfo(ai[obj as keyof ActionInfos]?.added, ai[obj as keyof ActionInfos]?.addedPlural);
                 newLine.querySelector('.action-section')?.classList.add(getObjIcon(obj));
                 break;
@@ -121,7 +126,7 @@ export function init(cfg: UserActivityConfig): void {
                 newLine.querySelector('.action-type')?.classList.add('icon-red');
                 newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
                 newLine.querySelector('.action-icon')?.classList.add('icon-trash-1');
-                (newLine.querySelector('.action-name') as HTMLElement).innerHTML = at.delete ?? 'delete';
+                setHtml(newLine, '.action-name', at.delete ?? 'delete');
                 final_albumInfos = getInfo(ai[obj as keyof ActionInfos]?.deleted, ai[obj as keyof ActionInfos]?.deletedPlural);
                 newLine.querySelector('.action-section')?.classList.add(getObjIcon(obj));
                 break;
@@ -129,7 +134,7 @@ export function init(cfg: UserActivityConfig): void {
                 newLine.querySelector('.action-type')?.classList.add('icon-yellow');
                 newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
                 newLine.querySelector('.action-icon')?.classList.add('icon-move');
-                (newLine.querySelector('.action-name') as HTMLElement).innerHTML = at.move ?? 'move';
+                setHtml(newLine, '.action-name', at.move ?? 'move');
                 final_albumInfos = getInfo(ai[obj as keyof ActionInfos]?.moved, ai[obj as keyof ActionInfos]?.movedPlural);
                 newLine.querySelector('.action-section')?.classList.add(getObjIcon(obj));
                 break;
@@ -138,7 +143,7 @@ export function init(cfg: UserActivityConfig): void {
                 newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
                 newLine.querySelector('.action-icon')?.classList.add('icon-key');
                 newLine.querySelector('.action-section')?.classList.add('icon-user-1');
-                (newLine.querySelector('.action-name') as HTMLElement).innerHTML = at.login ?? 'login';
+                setHtml(newLine, '.action-name', at.login ?? 'login');
                 final_albumInfos = (isPlural ? ai.user?.loggedInPlural : ai.user?.loggedIn) ?? '';
                 if (isPlural) final_albumInfos = final_albumInfos.replace('%d', String(line.counter));
                 break;
@@ -147,7 +152,7 @@ export function init(cfg: UserActivityConfig): void {
                 newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id !== 2 ? line.user_id % 5 : line.object_id[0] % 5]);
                 newLine.querySelector('.action-icon')?.classList.add('icon-logout');
                 newLine.querySelector('.action-section')?.classList.add('icon-user-1');
-                (newLine.querySelector('.action-name') as HTMLElement).innerHTML = at.logout ?? 'logout';
+                setHtml(newLine, '.action-name', at.logout ?? 'logout');
                 final_albumInfos = (isPlural ? ai.user?.loggedOutPlural : ai.user?.loggedOut) ?? '';
                 if (isPlural) final_albumInfos = final_albumInfos.replace('%d', String(line.counter));
                 break;
@@ -158,28 +163,28 @@ export function init(cfg: UserActivityConfig): void {
 
         if (final_albumInfos) final_albumInfos = final_albumInfos.replace('%d', String(line.counter));
 
-        (newLine.querySelector('.action-infos-test') as HTMLElement).innerHTML = final_albumInfos;
-        (newLine.querySelector('.nb_items') as HTMLElement).innerHTML = String(line.counter);
-        (newLine.querySelector('.date-day') as HTMLElement).innerHTML = line.date;
-        (newLine.querySelector('.date-hour') as HTMLElement).innerHTML = line.hour;
-        (newLine.querySelector('.user-name') as HTMLElement).innerHTML = line.username;
-        (newLine.querySelector('.user-pic') as HTMLElement).innerHTML = get_initials(line.username);
-        (newLine.querySelector('.detail-item-1') as HTMLElement).innerHTML = line.ip_address;
+        setHtml(newLine, '.action-infos-test', final_albumInfos);
+        setHtml(newLine, '.nb_items', String(line.counter));
+        setHtml(newLine, '.date-day', line.date);
+        setHtml(newLine, '.date-hour', line.hour);
+        setHtml(newLine, '.user-name', line.username);
+        setHtml(newLine, '.user-pic', get_initials(line.username));
+        setHtml(newLine, '.detail-item-1', line.ip_address);
         newLine.querySelector('.detail-item-1')?.setAttribute('title', 'IP');
 
         if (line.detailsType === 'script') {
-            (newLine.querySelector('.detail-item-2') as HTMLElement).innerHTML = line.details.script ?? '';
+            setHtml(newLine, '.detail-item-2', line.details.script ?? '');
             newLine.querySelector('.detail-item-2')?.setAttribute('title', 'Script');
         } else if (line.detailsType === 'method') {
-            (newLine.querySelector('.detail-item-2') as HTMLElement).innerHTML = line.details.method ?? '';
+            setHtml(newLine, '.detail-item-2', line.details.method ?? '');
             newLine.querySelector('.detail-item-2')?.setAttribute('title', 'API Method');
         }
 
         if (line.details.agent) {
-            (newLine.querySelector('.detail-item-3') as HTMLElement).innerHTML = line.details.agent;
+            setHtml(newLine, '.detail-item-3', line.details.agent);
             newLine.querySelector('.detail-item-3')?.setAttribute('title', line.details.agent);
         } else if (line.details.users_string && line.action !== 'logout' && line.action !== 'login') {
-            (newLine.querySelector('.detail-item-3') as HTMLElement).innerHTML = line.details.users_string;
+            setHtml(newLine, '.detail-item-3', line.details.users_string);
             newLine.querySelector('.detail-item-3')?.setAttribute('title', usersKey + ': ' + line.details.users_string);
         } else {
             newLine.querySelector('.detail-item-3')?.remove();

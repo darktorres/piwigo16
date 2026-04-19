@@ -96,14 +96,16 @@ export function init(cfg: StatsConfig): void {
                 tooltips: { mode: 'index' },
                 hover: { intersect: false },
             };
-            statGraph.options.scales.xAxes?.forEach((axe) => {
-                axe.time.tooltipFormat = str_tooltip_format[dataType];
-                axe.time.unit = data_unit[dataType];
-                axe.time.displayFormats = str_unit_format;
+            statGraph.options.scales?.xAxes?.forEach((axe) => {
+                if (axe.time) {
+                    axe.time.tooltipFormat = str_tooltip_format[dataType];
+                    axe.time.unit = data_unit[dataType];
+                    axe.time.displayFormats = str_unit_format;
+                }
             });
             statGraph.update();
         } else {
-            statGraph.options.legend.display = true;
+            if (statGraph.options.legend) statGraph.options.legend.display = true;
             statGraph.options.hover = { intersect: true };
             statGraph.options.tooltips = { mode: 'nearest' };
             if (dataType === 'years') {

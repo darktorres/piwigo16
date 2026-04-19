@@ -541,13 +541,13 @@ export function init(cfg: UserListConfig): void {
                 step: 1,
                 connect: [true, false],
             });
-            el.noUiSlider!.on('slide', function (values: string[]) {
-                const val = Math.round(parseFloat(values[0]));
+            el.noUiSlider!.on('slide', function (values: (string | number)[]) {
+                const val = Math.round(parseFloat(String(values[0])));
                 const infos = document.querySelector<HTMLElement>(scope + ' .photos-select-bar .nb-img-page-infos');
                 if (infos) infos.innerHTML = getNbImagePageInfoFromIdx(val);
             });
-            el.noUiSlider!.on('change', function (values: string[]) {
-                const val = Math.round(parseFloat(values[0]));
+            el.noUiSlider!.on('change', function (values: (string | number)[]) {
+                const val = Math.round(parseFloat(String(values[0])));
                 const infos = document.querySelector<HTMLElement>(scope + ' .photos-select-bar .nb-img-page-infos');
                 if (infos) infos.innerHTML = getNbImagePageInfoFromIdx(val);
                 const input = document.querySelector<HTMLInputElement>(scope + ' .photos-select-bar input[name=nb_image_page]');
@@ -577,13 +577,13 @@ export function init(cfg: UserListConfig): void {
                 step: 1,
                 connect: [true, false],
             });
-            el.noUiSlider!.on('slide', function (values: string[]) {
-                const val = Math.round(parseFloat(values[0]));
+            el.noUiSlider!.on('slide', function (values: (string | number)[]) {
+                const val = Math.round(parseFloat(String(values[0])));
                 const infos = document.querySelector<HTMLElement>(scope + ' .period-select-bar .recent_period_infos');
                 if (infos) infos.innerHTML = getRecentPeriodInfoFromIdx(val);
             });
-            el.noUiSlider!.on('change', function (values: string[]) {
-                const val = Math.round(parseFloat(values[0]));
+            el.noUiSlider!.on('change', function (values: (string | number)[]) {
+                const val = Math.round(parseFloat(String(values[0])));
                 const infos = document.querySelector<HTMLElement>(scope + ' .period-select-bar .recent_period_infos');
                 if (infos) infos.innerHTML = getRecentPeriodInfoFromIdx(val);
                 const input = document.querySelector<HTMLInputElement>(scope + ' .period-select-bar input[name=recent_period]');
@@ -733,14 +733,14 @@ export function init(cfg: UserListConfig): void {
                 step: 1,
                 connect: true,
             });
-            function updateDatesDisplay(values: string[]): void {
-                const lo = Math.round(parseFloat(values[0]));
-                const hi = Math.round(parseFloat(values[1]));
+            function updateDatesDisplay(values: (string | number)[]): void {
+                const lo = Math.round(parseFloat(String(values[0])));
+                const hi = Math.round(parseFloat(String(values[1])));
                 const infos = document.querySelector<HTMLElement>('.advanced-filter .dates-infos');
                 if (infos) infos.innerHTML = sprintf(dates_infos, getDateStr(reg_dates[lo]), getDateStr(reg_dates[hi]));
             }
             el.noUiSlider!.on('slide', updateDatesDisplay);
-            el.noUiSlider!.on('change', function (values: string[]) {
+            el.noUiSlider!.on('change', function (values: (string | number)[]) {
                 updateDatesDisplay(values);
                 update_user_list();
             });

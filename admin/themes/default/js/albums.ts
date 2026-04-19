@@ -466,7 +466,7 @@ function createAlbumNode(node: TreeNode, li: HTMLElement): void {
         title += 'icon-lock';
     }
     title += '">';
-    const nodeExt = node as TreeNode & { visible?: string; visble?: string };
+    const nodeExt = node as unknown as { visible?: string; visble?: string };
     if (nodeExt.visible == 'false' || parentNode.visble == 'false') {
         nodeExt.visble = 'false';
         title +=

@@ -910,8 +910,8 @@ export function init(cfg: GroupListConfig): void {
                 rootUrl: rootUrl,
             });
             const cachedUsers = localCache.getFromStorage();
-            if (cachedUsers) cachedUsers.forEach(function (u: UserEntry) {
-                if (selectize) selectize.addOption({ value: u.id, text: u.username });
+            if (cachedUsers) cachedUsers.forEach(function (u) {
+                if (selectize) selectize.addOption({ value: u['id'], text: u['username'] });
             });
             idSearch = document.getElementById('UserList')?.getAttribute('data-group_id') ?? '';
 
@@ -1081,8 +1081,8 @@ export function init(cfg: GroupListConfig): void {
                 if (data.stat === 'ok') {
                     let username = 'undefined';
                     const cachedData = usersCache?.getFromStorage();
-                    if (cachedData) cachedData.forEach(function (u: UserEntry) {
-                        if (String(u.id) == id) username = String(u.username);
+                    if (cachedData) cachedData.forEach(function (u) {
+                        if (String(u['id']) == id) username = String(u['username']);
                     });
 
                     const userBlock = getUserDisplay(username, id, grp_id);

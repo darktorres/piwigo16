@@ -67,9 +67,8 @@ const galleryAndPluginModules = [
   ['gallery_rating',         'themes/default/js/rating'],
   ['gallery_switchbox',      'themes/default/js/switchbox'],
   ['gallery_scripts',        'themes/default/js/scripts'],
-  // gallery smartpocket theme
+  // gallery smartpocket theme (thumb.arrange bundled into smartpocket)
   ['sp_smartpocket',         'themes/smartpocket/js/smartpocket'],
-  ['sp_thumb_arrange',       'themes/smartpocket/js/thumb.arrange'],
   // gallery bootstrap darkroom theme
   ['bd_header',              'themes/bootstrap_darkroom/js/header'],
   ['bd_rating',              'themes/bootstrap_darkroom/js/rating'],

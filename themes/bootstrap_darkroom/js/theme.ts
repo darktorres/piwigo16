@@ -1,4 +1,4 @@
-export function bd_popup(url) {
+export function bd_popup(url: string): void {
     window.open(
         url,
         "bd_popup",
@@ -6,7 +6,7 @@ export function bd_popup(url) {
     );
 }
 
-export function setCookie(name, value, days) {
+export function setCookie(name: string, value: string, days?: number): void {
     let expires = "";
     if (days) {
         const date = new Date();
@@ -16,7 +16,7 @@ export function setCookie(name, value, days) {
     document.cookie = name + "=" + (value || "") + expires + "; path=/";
 }
 
-export function getCookie(name) {
+export function getCookie(name: string): string | null {
     const nameEQ = name + "=";
     const cookies = document.cookie.split(';');
     for (let i = 0; i < cookies.length; i++) {
@@ -26,18 +26,17 @@ export function getCookie(name) {
     return null;
 }
 
-export function equalHeights() {
+export function equalHeights(): void {
     // Placeholder for any custom equal heights logic
-    // This may be defined in other scripts or can be extended as needed
 }
 
-export function changeElementType(element, newType) {
-    const attrs = {};
+export function changeElementType(element: Element | null, newType: string): void {
     if (!element || !element.attributes) return;
 
+    const attrs: Record<string, string> = {};
     for (let i = 0; i < element.attributes.length; i++) {
         const attr = element.attributes[i];
-        attrs[attr.nodeName] = attr.nodeValue;
+        attrs[attr.nodeName] = attr.nodeValue ?? '';
     }
 
     const newElement = document.createElement(newType);
@@ -51,10 +50,10 @@ export function changeElementType(element, newType) {
         newElement.appendChild(element.firstChild);
     }
 
-    element.parentNode.replaceChild(newElement, element);
+    element.parentNode?.replaceChild(newElement, element);
 }
 
-export function setColorOpacity(colorStr, opacity) {
+export function setColorOpacity(colorStr: string, opacity: number): string {
     if (colorStr.indexOf("rgb(") == 0) {
         let rgbaCol = colorStr.replace("rgb(", "rgba(");
         rgbaCol = rgbaCol.replace(")", ", " + opacity + ")");
@@ -86,7 +85,6 @@ export function setColorOpacity(colorStr, opacity) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    // Grid view button click
     const btnGrid = document.getElementById("btn-grid");
     if (btnGrid) {
         btnGrid.addEventListener("click", function () {
@@ -95,14 +93,15 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             setCookie("view", "grid");
             btnGrid.classList.add("active");
-            document.getElementById("btn-list").classList.remove("active");
+            document.getElementById("btn-list")?.classList.remove("active");
             const content = document.getElementById("content");
+            if (!content) return;
             content.classList.remove("content-list");
             content.classList.add("content-grid");
 
-            const colOuters = content.querySelectorAll(".col-outer");
+            const colOuters = content.querySelectorAll<HTMLElement>(".col-outer");
             colOuters.forEach(function (colOuter) {
-                const cardBody = colOuter.querySelector(".card-body");
+                const cardBody = colOuter.querySelector<HTMLElement>(".card-body");
                 if (cardBody) cardBody.removeAttribute("style");
 
                 const link = colOuter.querySelector("a");
@@ -115,10 +114,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 }
 
-                const listViewOnly = colOuter.querySelector(".card-body.list-view-only");
+                const listViewOnly = colOuter.querySelector<HTMLElement>(".card-body.list-view-only");
                 if (listViewOnly) listViewOnly.classList.add("d-none");
 
-                const addCollection = colOuter.querySelector(".addCollection");
+                const addCollection = colOuter.querySelector<HTMLElement>(".addCollection");
                 if (addCollection) addCollection.removeAttribute("style");
 
                 const gridClasses = colOuter.dataset.gridClasses;
@@ -126,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (gridClasses) colOuter.classList.add(gridClasses);
 
                 colOuter.addEventListener("webkitTransitionEnd", function () {
-                    document.querySelectorAll("#content .card-body").forEach(function (cb) {
+                    document.querySelectorAll<HTMLElement>("#content .card-body").forEach(function (cb) {
                         cb.removeAttribute("style");
                     });
                     equalHeights();
@@ -135,7 +134,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // List view button click
     const btnList = document.getElementById("btn-list");
     if (btnList) {
         btnList.addEventListener("click", function () {
@@ -144,13 +142,14 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             setCookie("view", "list");
             btnList.classList.add("active");
-            document.getElementById("btn-grid").classList.remove("active");
-            const content = document.getElementById("content");
+            document.getElementById("btn-grid")?.classList.remove("active");
+            const content = document.getElementById("content") as HTMLElement | null;
+            if (!content) return;
             content.classList.remove("content-grid");
             content.classList.add("content-list");
             content.style.height = "auto";
 
-            const colOuters = content.querySelectorAll(".col-outer");
+            const colOuters = content.querySelectorAll<HTMLElement>(".col-outer");
             colOuters.forEach(function (colOuter) {
                 const link = colOuter.querySelector("a");
                 if (link) {
@@ -162,10 +161,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 }
 
-                const listViewOnly = colOuter.querySelector(".card-body.list-view-only");
+                const listViewOnly = colOuter.querySelector<HTMLElement>(".card-body.list-view-only");
                 if (listViewOnly) listViewOnly.classList.remove("d-none");
 
-                const addCollection = colOuter.querySelector(".addCollection");
+                const addCollection = colOuter.querySelector<HTMLElement>(".addCollection");
                 if (addCollection) {
                     const img = colOuter.querySelector("img");
                     const width = img ? img.width : 0;
@@ -177,7 +176,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 colOuter.classList.add("col-12");
 
                 colOuter.addEventListener("webkitTransitionEnd", function () {
-                    document.querySelectorAll("#content .card-body").forEach(function (cb) {
+                    document.querySelectorAll<HTMLElement>("#content .card-body").forEach(function (cb) {
                         cb.removeAttribute("style");
                     });
                     equalHeights();
@@ -186,8 +185,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Side bar
-    const sidebar = document.getElementById("sidebar");
+    const sidebar = document.getElementById("sidebar") as HTMLElement | null;
     const navigationButtons = document.getElementById("navigationButtons");
     if (sidebar && navigationButtons) {
         const navTop = navigationButtons.getBoundingClientRect().top + window.scrollY;
@@ -197,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (infoLink) {
             infoLink.addEventListener("click", function (e) {
                 e.preventDefault();
-                const sidebarEl = document.getElementById("sidebar");
+                const sidebarEl = document.getElementById("sidebar") as HTMLElement | null;
                 if (sidebarEl) {
                     const rightValue = parseInt(window.getComputedStyle(sidebarEl).right);
                     const newRight = rightValue < 0 ? rightValue + 250 : rightValue - 250;

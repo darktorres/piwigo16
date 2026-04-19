@@ -1,10 +1,26 @@
 import { PwgWS, pwgAddEventListener } from '../../default/js/scripts.ts';
 
-let gRatingOptions;
-let gRatingButtons;
-let gUserRating;
+interface RatingOptions {
+    rootUrl: string;
+    image_id: number | string;
+    onSuccess?: (result: RatingResult) => void;
+    updateRateElement?: HTMLElement;
+    updateRateText?: string;
+    ratingSummaryElement?: HTMLElement;
+    ratingSummaryText?: string;
+}
 
-export function makeNiceRatingForm(options) {
+interface RatingResult {
+    score: number | string;
+    count: number | string;
+    average: number | string;
+}
+
+let gRatingOptions: RatingOptions;
+let gRatingButtons: NodeListOf<HTMLElement>;
+let gUserRating: string;
+
+export function makeNiceRatingForm(options: RatingOptions): void {
     gRatingOptions = options;
     const form = document.getElementById("rateForm");
     if (!form) return;
@@ -13,7 +29,7 @@ export function makeNiceRatingForm(options) {
     gUserRating = "";
     gRatingButtons.forEach(function (button) {
         if (button.classList.contains("rateButtonStarFull")) {
-            gUserRating = button.dataset.value;
+            gUserRating = button.dataset.value ?? '';
         }
     });
 
@@ -24,10 +40,9 @@ export function makeNiceRatingForm(options) {
         pwgAddEventListener(button, "mouseout", function () {
             updateRatingStarDisplay(gUserRating);
         });
-        pwgAddEventListener(button, "mouseover", function (e) {
-            const targetValue = e.target
-                ? e.target.dataset.initialRateValue
-                : e.srcElement.dataset.initialRateValue;
+        pwgAddEventListener(button, "mouseover", function (e: Event) {
+            const target = (e.target || (e as unknown as { srcElement?: HTMLElement }).srcElement) as HTMLElement | null;
+            const targetValue = target ? target.dataset.initialRateValue ?? '' : '';
             updateRatingStarDisplay(targetValue);
         });
     });
@@ -35,10 +50,10 @@ export function makeNiceRatingForm(options) {
     updateRatingStarDisplay(gUserRating);
 }
 
-function updateRatingStarDisplay(userRating) {
+function updateRatingStarDisplay(userRating: string): void {
     gRatingButtons.forEach(function (button) {
-        const initialValue = parseFloat(button.dataset.initialRateValue);
-        const shouldBeFull = userRating !== "" && userRating >= initialValue;
+        const initialValue = parseFloat(button.dataset.initialRateValue ?? '');
+        const shouldBeFull = userRating !== "" && parseFloat(userRating) >= initialValue;
 
         if (shouldBeFull) {
             button.classList.add("rateButtonStarFull");
@@ -50,16 +65,16 @@ function updateRatingStarDisplay(userRating) {
     });
 }
 
-function updateRating(e) {
-    const elem = e.target || e.srcElement;
-    const rateButtonValue = elem.dataset.initialRateValue;
+function updateRating(e: Event): boolean {
+    const elem = (e.target || (e as unknown as { srcElement?: HTMLElement }).srcElement) as HTMLElement;
+    const rateButtonValue = elem.dataset.initialRateValue ?? '';
     const isDisabled = elem.dataset.disabled == "true";
 
     if (isDisabled || rateButtonValue == gUserRating) {
         return false;
     }
 
-    gRatingButtons.forEach(function (btn) {
+    gRatingButtons.forEach(function () {
         elem.dataset.disabled = "true";
     });
 
@@ -72,27 +87,28 @@ function updateRating(e) {
         },
         {
             method: "POST",
-            onFailure: function (num, text) {
+            onFailure: function (num: number, text: string) {
                 alert(num + " " + text);
                 const rateForm = document.getElementById("rateForm");
                 const action = rateForm ? rateForm.getAttribute("action") : "";
-                document.location = action + "&rate=" + rateButtonValue;
+                document.location = (action ?? '') + "&rate=" + rateButtonValue;
             },
-            onSuccess: function (result) {
+            onSuccess: function (rawResult: unknown) {
+                const result = rawResult as RatingResult;
                 gUserRating = rateButtonValue;
-                gRatingButtons.forEach(function (btn) {
+                gRatingButtons.forEach(function () {
                     elem.dataset.disabled = "false";
                 });
                 if (gRatingOptions.onSuccess) gRatingOptions.onSuccess(result);
                 if (gRatingOptions.updateRateElement)
                     gRatingOptions.updateRateElement.innerHTML =
-                        gRatingOptions.updateRateText;
+                        gRatingOptions.updateRateText ?? '';
                 if (gRatingOptions.ratingSummaryElement) {
-                    let t = gRatingOptions.ratingSummaryText;
-                    const args = [result.score, result.count, result.average];
+                    let t = gRatingOptions.ratingSummaryText ?? '';
+                    const args: Array<number | string> = [result.score, result.count, result.average];
                     let idx = 0;
                     const rexp = new RegExp(/%\.?\d*[sdf]/);
-                    while (idx < args.length) t = t.replace(rexp, args[idx++]);
+                    while (idx < args.length) t = t.replace(rexp, String(args[idx++]));
                     gRatingOptions.ratingSummaryElement.innerHTML = t;
                 }
             },
@@ -101,14 +117,14 @@ function updateRating(e) {
     return false;
 }
 
-export function initRating() {
+export function initRating(): void {
     if (document._pwgRatingQueue && Array.isArray(document._pwgRatingQueue)) {
         for (let i = 0; i < document._pwgRatingQueue.length; i++)
-            makeNiceRatingForm(document._pwgRatingQueue[i]);
+            makeNiceRatingForm(document._pwgRatingQueue[i] as RatingOptions);
     }
     window._pwgRatingAutoQueue = {
-        push: function (opts) {
-            makeNiceRatingForm(opts);
+        push: function (opts: unknown) {
+            makeNiceRatingForm(opts as RatingOptions);
         },
     };
 }

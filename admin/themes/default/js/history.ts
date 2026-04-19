@@ -297,10 +297,18 @@ export function init(cfg: HistoryConfig): void {
     }
 
     function fillHistoryResult(ajaxParam: HistoryParams): void {
+        const body = new URLSearchParams();
+        for (const [k, v] of Object.entries(ajaxParam)) {
+            if (k === 'types') {
+                Object.values(ajaxParam.types).forEach((t, i) => body.append(`types[${i}]`, t));
+            } else {
+                body.append(k, String(v));
+            }
+        }
         fetch(API_METHOD, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams(ajaxParam as unknown as Record<string, string>),
+            body,
         })
             .then(r => r.json())
             .then(function (raw_data: { result: { lines: HistoryLine[]; params: { display_thumbnail: string }; maxPage: number; summary: HistorySummary } }) {

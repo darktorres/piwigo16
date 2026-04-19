@@ -102,6 +102,9 @@
       const lightbox = new PhotoSwipeLightbox({
         gallery: '#thumbnails',
         children: 'a[data-pswp-src]',
+        initialZoomLevel: (z) => z.pswp ? Math.min(z.pswp.viewportSize.x / z.elementSize.x, z.pswp.viewportSize.y / z.elementSize.y) : z.fit,
+        secondaryZoomLevel: 1,
+        maxZoomLevel: (z) => z.pswp ? Math.max(z.pswp.viewportSize.x / z.elementSize.x, z.pswp.viewportSize.y / z.elementSize.y, 2) : z.fit * 4,
         pswpModule: () => import('./node_modules/photoswipe/dist/photoswipe.esm.js')
       });
 
@@ -110,7 +113,7 @@
         if (content.type === 'video') {
           e.preventDefault();
           const container = document.createElement('div');
-          container.style.cssText = 'display:flex;align-items:center;justify-content:center;width:100%;height:100%';
+          container.style.cssText = 'display:flex;align-items:center;justify-content:center;width:100vw;height:100vh';
           const src = content.data.src;
           const ext = src.split('.').pop().split('?')[0].toLowerCase();
           const mime = ext === 'webm' ? 'video/webm' : (ext === 'ogv' || ext === 'ogg' ? 'video/ogg' : 'video/mp4');
@@ -119,7 +122,7 @@
           video.autoplay = true;
           video.loop = true;
           video.playsInline = true;
-          video.style.cssText = 'max-width:100%;max-height:100%;outline:none';
+          video.style.cssText = 'width:100%;height:100%;object-fit:contain;outline:none';
           const source = document.createElement('source');
           source.src = src;
           source.type = mime;

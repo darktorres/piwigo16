@@ -55,7 +55,7 @@
                           {/if}
                         {/foreach}
                         {footer_script}<script type="module">
-                          import { initRating, makeNiceRatingForm } from '{$ROOT_URL}admin/themes/default/js/dist/{$vite_bd_rating}';
+                          import { initRating, makeNiceRatingForm } from './{$ROOT_URL}admin/themes/default/js/dist/{$vite_bd_rating}';
                           document._pwgRatingQueue = document._pwgRatingQueue || [];
                           document._pwgRatingQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
                           onSuccess: function(rating) {

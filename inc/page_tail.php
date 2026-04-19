@@ -28,7 +28,6 @@ require_once __DIR__ . '/vite_helper.php';
     'switchbox'       => 'themes/default/js/switchbox',
     'gallery_scripts' => 'themes/default/js/scripts',
     'sp_smartpocket'  => 'themes/smartpocket/js/smartpocket',
-    'sp_thumb_arrange'=> 'themes/smartpocket/js/thumb.arrange',
     'bd_header'       => 'themes/bootstrap_darkroom/js/header',
     'bd_rating'       => 'themes/bootstrap_darkroom/js/rating',
     'bd_theme'        => 'themes/bootstrap_darkroom/js/theme',

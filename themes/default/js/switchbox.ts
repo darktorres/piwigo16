@@ -1,6 +1,8 @@
-function sbFunc(link, box) {
-    const linkEl = typeof link === 'string' ? document.querySelector(link) : link;
-    const boxEl = typeof box === 'string' ? document.querySelector(box) : box;
+export {};
+
+function sbFunc(link: string | Element, box: string | Element): void {
+    const linkEl = (typeof link === 'string' ? document.querySelector(link) : link) as HTMLElement | null;
+    const boxEl = (typeof box === 'string' ? document.querySelector(box) : box) as HTMLElement | null;
     if (!linkEl || !boxEl) return;
 
     linkEl.addEventListener('click', function (e) {

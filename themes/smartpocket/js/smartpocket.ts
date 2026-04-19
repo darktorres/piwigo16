@@ -1,10 +1,12 @@
-/* global GLightbox */
-export function initSmartpocket() {
+import GLightbox from 'glightbox';
+import { SPThumbs } from './thumb.arrange.ts';
+
+export function initSmartpocket(): void {
     const thumbs = document.getElementById('thumbnails');
-    if (!thumbs || typeof GLightbox === 'undefined') return;
+    if (!thumbs) return;
 
     if (document.activeElement && document.activeElement.closest('#thumbnails')) {
-        document.activeElement.blur();
+        (document.activeElement as HTMLElement).blur();
     }
 
     const lb = GLightbox({
@@ -14,14 +16,15 @@ export function initSmartpocket() {
         touchNavigation: true,
     });
 
-    lb.on('slide_changed', function (prev, current) {
+    lb.on('slide_changed', function (...args: unknown[]) {
+        const [, current] = args as [unknown, { slideNode?: Element; index?: number } | null];
         if (!current || !current.slideNode) return;
-        let a = current.slideNode.closest('li')
-            ? current.slideNode.closest('li').querySelector('a[data-image-id]')
-            : null;
+        const slideNode = current.slideNode as Element;
+        const li = slideNode.closest('li');
+        let a = li ? li.querySelector<HTMLAnchorElement>('a[data-image-id]') : null;
         if (!a) {
-            const links = document.querySelectorAll('#thumbnails a[data-image-id]');
-            a = links[current.index] || null;
+            const links = document.querySelectorAll<HTMLAnchorElement>('#thumbnails a[data-image-id]');
+            a = (current.index !== undefined ? links[current.index] : null) || null;
         }
         if (!a) return;
         fetch('ws.php?format=json&method=pwg.history.log', {
@@ -36,8 +39,8 @@ export function initSmartpocket() {
         });
     });
 
-    if (typeof window.SPThumbs !== 'undefined' && typeof window.SPThumbsOpts !== 'undefined') {
-        new window.SPThumbs(window.SPThumbsOpts);
+    if (window.SPThumbsOpts) {
+        new SPThumbs({ ...window.SPThumbsOpts, extraRowHeight: 0 });
     }
 }
 

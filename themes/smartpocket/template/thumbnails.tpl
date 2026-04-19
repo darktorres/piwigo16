@@ -4,14 +4,12 @@
 	{$vmargin=5}
 	{$container_margin=-10}
 
-	{combine_script id='glightbox' path='node_modules/glightbox/dist/js/glightbox.min.js' load='footer'}
 	{combine_css path='node_modules/glightbox/dist/css/glightbox.min.css'}
-	{combine_script id='smartpocket' path='themes/smartpocket/js/smartpocket.js' require='glightbox' load='footer'}
-	{combine_script id='sp.thumb.arrange' path='themes/smartpocket/js/thumb.arrange.js' load='footer'}
 	{footer_script}<script>
-		var var_loop = {if $smartpocket.loop}true{else}false{/if};
-		var SPThumbsOpts ={ hMargin:{$hmargin},rowHeight:{$row_height}};
+		window.var_loop = {if $smartpocket.loop}true{else}false{/if};
+		window.SPThumbsOpts = { hMargin:{$hmargin}, rowHeight:{$row_height} };
 	</script>{/footer_script}
+	{footer_script}<script type="module" src="{$ROOT_URL}admin/themes/default/js/dist/{$vite_sp_smartpocket}"></script>{/footer_script}
 	{$thumb_picker->init($row_height)}
 	{html_style}<style>
 		.thumbnails .liEmpty {

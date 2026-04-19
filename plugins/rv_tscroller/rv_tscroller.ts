@@ -73,7 +73,7 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
                 reqCount += newStart;
                 newStart = 0;
             }
-            let url = cfg.ajaxUrlModel
+            const url = cfg.ajaxUrlModel
                 .replace("%start%", String(newStart))
                 .replace("%per%", String(reqCount));
             const loaderEl = document.getElementById('ajaxLoader');
@@ -145,9 +145,9 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
                 });
         },
 
-        checkAutoScroll(this: void, evt?: Event): number {
+        checkAutoScroll(evt?: Event): number {
             if (!cfg.$thumbs) return 0;
-            const scrollEl = cfg.$scrollEl || window;
+            const scrollEl = cfg.$scrollEl;
             let tBot: number, wBot: number;
             if (scrollEl === window) {
                 tBot = (cfg.$thumbs as HTMLElement).offsetTop + (cfg.$thumbs as HTMLElement).offsetHeight;
@@ -160,8 +160,8 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
             return tBot <= wBot ? (cfg.doAutoScroll(), 1) : 0;
         },
 
-        engage(this: void): void {
-            cfg.$thumbs = document.getElementById('thumbnails') || document.querySelector('.thumbnails');
+        engage(): void {
+            cfg.$thumbs = document.getElementById('thumbnails') ?? document.querySelector('.thumbnails');
             if (!cfg.$thumbs) return;
             cfg.$thumbs.insertAdjacentHTML('afterend',
                 '<div id="ajaxLoader" style="display:none;position:fixed;bottom:32px;right:1%;z-index:999"><img src="' +
@@ -169,9 +169,9 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
                     '" width="128" height="15" alt="~"></div>'
             );
 
-            cfg.$scrollEl = document.querySelector('[data-rvts-scroll]') || window;
+            cfg.$scrollEl = document.querySelector('[data-rvts-scroll]') ?? window;
 
-            if ("#top" == window.location.hash) (cfg.$scrollEl as Window).scrollTo(0, 0);
+            if ("#top"=== window.location.hash) (cfg.$scrollEl as Window).scrollTo(0, 0);
 
             const viewH = cfg.$scrollEl === window ? window.innerHeight : (cfg.$scrollEl as HTMLElement).clientHeight;
             if ((cfg.$thumbs as HTMLElement).offsetHeight < viewH) cfg.adjust = 1;
@@ -186,20 +186,20 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
-            if ("#top" == window.location.hash) window.scrollTo(0, 0);
+            if ("#top"=== window.location.hash) window.scrollTo(0, 0);
             window.setTimeout(cfg.engage, 150);
         });
     } else {
-        if ("#top" == window.location.hash) window.scrollTo(0, 0);
+        if ("#top"=== window.location.hash) window.scrollTo(0, 0);
         window.setTimeout(cfg.engage, 150);
     }
 
-    if (window.history.replaceState) {
+    {
         const iniStart = cfg.start;
         window.addEventListener('RVTS_loaded', function handler() {
             window.removeEventListener('RVTS_loaded', handler);
             window.addEventListener('pagehide', function () {
-                const scrollEl = cfg.$scrollEl || window;
+                const scrollEl = cfg.$scrollEl;
                 const currentScrollY = scrollEl === window ? window.scrollY : (scrollEl as HTMLElement).scrollTop;
                 const threshold = Math.max(0, currentScrollY - 60);
                 const elts = cfg.$thumbs ? cfg.$thumbs.children : [];
@@ -210,7 +210,7 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
                         const start = cfg.start + i;
                         const delta = start - iniStart;
                         if (delta < 0 || delta >= cfg.perPage) {
-                            let url = start
+                            const url = start
                                 ? cfg.urlModel.replace("%start%", String(start))
                                 : cfg.urlModel.replace(
                                       "/start-%start%",
@@ -255,7 +255,7 @@ export function initRVTS_CATS(RVTS_CATS: Partial<RVTSCATSConfig> & Pick<RVTSCATS
                     for (let c = tmp.firstElementChild; c; c = c.nextElementSibling) {
                         if (c.matches('[data-album-grid]')) { wrap = c; break; }
                     }
-                    if (!wrap) wrap = tmp.querySelector('[data-album-grid]');
+                    wrap ??= tmp.querySelector('[data-album-grid]');
                     const items = Array.from(wrap ? wrap.children : tmp.children);
                     items.forEach(function (item) { if (cfg.$thumbs) cfg.$thumbs.appendChild(item); });
                     if (typeof GDThumb !== 'undefined' && typeof GDThumb.build === 'function') {
@@ -269,8 +269,8 @@ export function initRVTS_CATS(RVTS_CATS: Partial<RVTSCATSConfig> & Pick<RVTSCATS
                 });
         },
 
-        checkAutoScroll(this: void): number {
-            const scrollEl = cfg.$scrollEl || window;
+        checkAutoScroll(): number {
+            const scrollEl = cfg.$scrollEl;
             let tBot = scrollEl === window
                 ? (cfg.$thumbs as HTMLElement).offsetTop + (cfg.$thumbs as HTMLElement).offsetHeight
                 : (scrollEl as HTMLElement).scrollHeight;
@@ -281,7 +281,7 @@ export function initRVTS_CATS(RVTS_CATS: Partial<RVTSCATSConfig> & Pick<RVTSCATS
             return tBot <= wBot ? (cfg.doAutoScroll(), 1) : 0;
         },
 
-        engage(this: void): void {
+        engage(): void {
             cfg.$thumbs = document.querySelector('[data-album-grid]');
             if (!cfg.$thumbs) return;
             cfg.$thumbs.insertAdjacentHTML('afterend',
@@ -289,7 +289,7 @@ export function initRVTS_CATS(RVTS_CATS: Partial<RVTSCATSConfig> & Pick<RVTSCATS
                     cfg.ajaxLoaderImage +
                     '" width="128" height="15" alt="~"></div>'
             );
-            cfg.$scrollEl = document.querySelector('[data-rvts-scroll]') || window;
+            cfg.$scrollEl = document.querySelector('[data-rvts-scroll]') ?? window;
             cfg.$scrollEl.addEventListener('scroll', cfg.checkAutoScroll);
             window.addEventListener('resize', cfg.checkAutoScroll);
             if (cfg.checkAutoScroll())

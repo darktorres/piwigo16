@@ -56,7 +56,7 @@ const gdThumb_start = function (): void {
     });
 
     urlDfd.always(function () {
-        if (loader.remaining() == 0) allDoneDfd.resolve();
+        if (loader.remaining()=== 0) allDoneDfd.resolve();
     });
 
     setTimeout(function () {
@@ -125,7 +125,7 @@ function updateStats(): void {
     if (errorsEl)    errorsEl.textContent     = String(loader.errors);
     if (remainingEl) remainingEl.textContent  = String(loader.remaining());
 
-    if (loader.remaining() == 0) {
+    if (loader.remaining()=== 0) {
         _setBtn('startLink', false, 1);
         _setGroup('#pauseLink,#stopLink', true, 0.5);
     }
@@ -167,8 +167,7 @@ function loaderChanged(type: string, img?: HTMLImageElement): void {
         getUrls(pending_next_page);
         pending_next_page = null;
     } else if (
-        loader.remaining() == 0 &&
-        urlDfd &&
+        loader.remaining()=== 0 &&
         (urlDfd.state() === "resolved" || urlDfd.state() === "rejected")
     ) {
         allDoneDfd.resolve();

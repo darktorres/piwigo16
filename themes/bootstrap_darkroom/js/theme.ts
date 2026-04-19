@@ -31,7 +31,7 @@ export function equalHeights(): void {
 }
 
 export function changeElementType(element: Element | null, newType: string): void {
-    if (!element || !element.attributes) return;
+    if (!element) return;
 
     const attrs: Record<string, string> = {};
     for (let i = 0; i < element.attributes.length; i++) {
@@ -54,21 +54,21 @@ export function changeElementType(element: Element | null, newType: string): voi
 }
 
 export function setColorOpacity(colorStr: string, opacity: number): string {
-    if (colorStr.indexOf("rgb(") == 0) {
+    if (colorStr.indexOf("rgb(")=== 0) {
         let rgbaCol = colorStr.replace("rgb(", "rgba(");
         rgbaCol = rgbaCol.replace(")", ", " + opacity + ")");
         return rgbaCol;
     }
 
-    if (colorStr.indexOf("rgba(") == 0) {
+    if (colorStr.indexOf("rgba(")=== 0) {
         const rgbaCol =
-            colorStr.substr(0, colorStr.lastIndexOf(",") + 1) + opacity + ")";
+            colorStr.substring(0, colorStr.lastIndexOf(",") + 1) + opacity + ")";
         return rgbaCol;
     }
 
-    if (colorStr.length == 6) colorStr = "#" + colorStr;
+    if (colorStr.length=== 6) colorStr = "#" + colorStr;
 
-    if (colorStr.indexOf("#") == 0) {
+    if (colorStr.indexOf("#")=== 0) {
         const rgbaCol =
             "rgba(" +
             parseInt(colorStr.slice(-6, -4), 16) +

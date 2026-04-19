@@ -81,9 +81,9 @@ export class SPThumbs {
         });
         window.addEventListener("RVTS_loaded", (evt) => {
             const customEvt = evt as CustomEvent<{ down?: boolean }>;
-            const down = customEvt.detail && customEvt.detail.down;
+            const down = customEvt.detail.down;
             this.process(
-                down && this.thumbs && this.thumbs.offsetWidth == this.prevContainerWidth
+                down && this.thumbs && this.thumbs.offsetWidth=== this.prevContainerWidth
                     ? this.prevLastLineFirstThumbIndex
                     : 0,
             );
@@ -156,7 +156,7 @@ export class SPThumbs {
             eltH = eltObj.h;
             let eltToRecover: number;
 
-            if (i == line.elements.length - 1) eltToRecover = toRecover;
+            if (i=== line.elements.length - 1) eltToRecover = toRecover;
             else
                 eltToRecover = Math.round(
                     (toRecover * eltW) / line.elementsWidth,

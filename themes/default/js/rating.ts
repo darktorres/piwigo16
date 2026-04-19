@@ -32,7 +32,7 @@ export function makeNiceRatingForm(options: RatingOptions): void {
     gRatingButtons = form.getElementsByTagName("input") as HTMLCollectionOf<RateButton>;
     gUserRating = "";
     for (let i = 0; i < gRatingButtons.length; i++) {
-        if (gRatingButtons[i]!.type == "button") {
+        if (gRatingButtons[i]!.type=== "button") {
             gUserRating = gRatingButtons[i]!.value;
             break;
         }
@@ -50,12 +50,12 @@ export function makeNiceRatingForm(options: RatingOptions): void {
         rateButton.style.marginRight = "0";
 
         if (
-            i != gRatingButtons.length - 1 &&
+            i!== gRatingButtons.length - 1 &&
             rateButton.nextSibling !== null &&
-            rateButton.nextSibling.nodeType == 3
+            rateButton.nextSibling.nodeType=== 3
         )
             rateButton.parentNode?.removeChild(rateButton.nextSibling);
-        if (i > 0 && rateButton.previousSibling !== null && rateButton.previousSibling.nodeType == 3)
+        if (i > 0 && rateButton.previousSibling !== null && rateButton.previousSibling.nodeType=== 3)
             rateButton.parentNode?.removeChild(rateButton.previousSibling);
 
         pwgAddEventListener(rateButton, "click", updateRating);
@@ -63,7 +63,7 @@ export function makeNiceRatingForm(options: RatingOptions): void {
             updateRatingStarDisplay(gUserRating);
         });
         pwgAddEventListener(rateButton, "mouseover", function (e: Event) {
-            const target = (e.target || (e as unknown as { srcElement?: RateButton }).srcElement) as RateButton | null;
+            const target = (e.target ?? (e as unknown as { srcElement?: RateButton }).srcElement) as RateButton | null;
             updateRatingStarDisplay(
                 target ? target.initialRateValue : ''
             );
@@ -82,8 +82,8 @@ function updateRatingStarDisplay(userRating: string): void {
 }
 
 function updateRating(e: Event): boolean {
-    const rateButton = (e.target || (e as unknown as { srcElement?: RateButton }).srcElement) as RateButton;
-    if (rateButton.initialRateValue == gUserRating) return false;
+    const rateButton = (e.target ?? (e as unknown as { srcElement?: RateButton }).srcElement) as RateButton;
+    if (rateButton.initialRateValue=== gUserRating) return false;
 
     for (let i = 0; i < gRatingButtons.length; i++)
         gRatingButtons[i]!.disabled = true;

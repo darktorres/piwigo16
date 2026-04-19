@@ -136,7 +136,7 @@ export function init(cfg: UserListConfig): void {
     /*---------------- Escape of pop-in ----------------*/
 
     document.addEventListener('keydown', function (e) {
-        if (e.keyCode === 27) {
+        if (e.key === 'Escape') {
             const userList = document.getElementById('UserList');
             if (userList) userList.style.display = 'none';
         }
@@ -432,7 +432,7 @@ export function init(cfg: UserListConfig): void {
     function set_view_selector(view_type: string): void {
         const params = new URLSearchParams({ param: 'user-manager-view', value: view_type });
         fetch('ws.php?format=json&method=pwg.users.preferences.set', { method: 'POST', body: params })
-            .catch(err => console.error('Error setting view selector:', err));
+            .catch((err: unknown) => console.error('Error setting view selector:', err));
     }
 
     function setDisplayTile(): void {
@@ -635,7 +635,7 @@ export function init(cfg: UserListConfig): void {
                 is_json: 'false',
             });
             fetch('ws.php?format=json&method=pwg.users.preferences.set', { method: 'POST', body: params })
-                .catch(err => console.error('Error setting pagination:', err));
+                .catch((err: unknown) => console.error('Error setting pagination:', err));
             per_page = value;
             actual_page = 1;
             update_pagination_menu();
@@ -950,14 +950,14 @@ export function init(cfg: UserListConfig): void {
 
     function get_group_name_from_id(id: string | number): string {
         for (let i = 0; i < groups_arr.length; i++) {
-            if (groups_arr[i]![0] == id) return String(groups_arr[i]![1]);
+            if (groups_arr[i]![0]=== id) return String(groups_arr[i]![1]);
         }
         return 'group_id error';
     }
 
     function get_container_index_from_uid(uid: number): number {
         for (let i = 0; i < current_users.length; i++) {
-            if (current_users[i]!.id == uid) return i;
+            if (current_users[i]!.id=== uid) return i;
         }
         return -1;
     }
@@ -1409,7 +1409,7 @@ export function init(cfg: UserListConfig): void {
                 }
                 callback();
             })
-            .catch(err => console.error('Error getting selection usernames:', err));
+            .catch((err: unknown) => console.error('Error getting selection usernames:', err));
     }
 
     function select_whole_set(): void {
@@ -1447,7 +1447,7 @@ export function init(cfg: UserListConfig): void {
                 if (loadingEl) loadingEl.style.display = 'none';
                 update_selection_content();
             })
-            .catch(err => {
+            .catch((err: unknown) => {
                 console.error('Error selecting whole set:', err);
                 if (loadingEl) loadingEl.style.display = 'none';
             });
@@ -1458,8 +1458,9 @@ export function init(cfg: UserListConfig): void {
         if (!pop_in_container) return;
         const ajax_data: AjaxData = { pwg_token, user_id: last_user_id };
         const usernameInput = pop_in_container.querySelector<HTMLInputElement>('.user-property-input-username');
-        ajax_data['username'] = usernameInput ? usernameInput.value : '';
-        if (String(ajax_data['username']).replace(/\s/g, '').length === 0) {
+        const usernameVal = usernameInput ? usernameInput.value : '';
+        ajax_data['username'] = usernameVal;
+        if (usernameVal.replace(/\s/g, '').length === 0) {
             const failEl = document.querySelector<HTMLElement>('.update-user-fail');
             if (failEl) {
                 failEl.innerHTML = fieldNotEmpty;
@@ -1491,7 +1492,7 @@ export function init(cfg: UserListConfig): void {
                     document.querySelectorAll<HTMLElement>('.user-property-username-change').forEach(el => { el.style.display = 'none'; });
                 }
             })
-            .catch(err => console.error('Error updating username:', err));
+            .catch((err: unknown) => console.error('Error updating username:', err));
     }
 
     function update_user_password(): void {
@@ -1514,7 +1515,7 @@ export function init(cfg: UserListConfig): void {
                     document.querySelectorAll<HTMLElement>('.user-property-password-change').forEach(el => { el.style.display = 'none'; });
                 }
             })
-            .catch(err => console.error('Error updating password:', err));
+            .catch((err: unknown) => console.error('Error updating password:', err));
     }
 
     function update_user_info(): void {
@@ -1561,7 +1562,7 @@ export function init(cfg: UserListConfig): void {
                     if (failEl) setTimeout(() => { failEl.style.display = 'none'; }, 5000);
                 }
             })
-            .catch(err => {
+            .catch((err: unknown) => {
                 console.error('Error updating user info:', err);
                 document.querySelectorAll<HTMLElement>('.update-user-button i').forEach(el => {
                     el.classList.remove('icon-spin6', 'animate-spin');
@@ -1581,7 +1582,7 @@ export function init(cfg: UserListConfig): void {
                     fill_guest_edit();
                 }
             })
-            .catch(err => console.error('Error getting guest info:', err));
+            .catch((err: unknown) => console.error('Error getting guest info:', err));
     }
 
     function get_user_info(uid: number, callback: (() => void) | null = null): void {
@@ -1594,7 +1595,7 @@ export function init(cfg: UserListConfig): void {
                     if (callback) callback();
                 }
             })
-            .catch(err => console.error('Error getting user info:', err));
+            .catch((err: unknown) => console.error('Error getting user info:', err));
     }
 
     function update_guest_info(): void {
@@ -1626,7 +1627,7 @@ export function init(cfg: UserListConfig): void {
                 });
                 document.querySelectorAll<HTMLElement>('.update-user-button').forEach(el => { el.classList.remove('unclickable'); });
             })
-            .catch(err => {
+            .catch((err: unknown) => {
                 console.error('Error updating guest info:', err);
                 document.querySelectorAll<HTMLElement>('.update-user-button i').forEach(el => {
                     el.classList.remove('icon-spin6', 'animate-spin');
@@ -1724,7 +1725,7 @@ export function init(cfg: UserListConfig): void {
                 }
                 show_filter_infos(nb_filters);
             })
-            .catch(err => {
+            .catch((err: unknown) => {
                 console.error('Error updating user list:', err);
                 if (spinnerEl) spinnerEl.style.display = 'none';
             });
@@ -1782,7 +1783,7 @@ export function init(cfg: UserListConfig): void {
                     }
                 }
             })
-            .catch(err => console.error('Error adding user:', err));
+            .catch((err: unknown) => console.error('Error adding user:', err));
     }
 
     function delete_user(uid: number): void {
@@ -1790,7 +1791,7 @@ export function init(cfg: UserListConfig): void {
         fetch('ws.php?format=json&method=pwg.users.delete', { method: 'POST', body: params })
             .then(response => response.json())
             .then(() => { close_user_list(); update_user_list(); })
-            .catch(err => console.error('Error deleting user:', err));
+            .catch((err: unknown) => console.error('Error deleting user:', err));
     }
 
     function show_filter_infos(nb_filters: number): void {

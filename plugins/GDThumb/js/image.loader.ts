@@ -23,7 +23,7 @@ class ImageLoader {
                 maxRequests: 30,
                 onChanged(): void {},
             },
-            opts || {},
+            opts ?? {},
         );
     }
 
@@ -70,7 +70,7 @@ class ImageLoader {
     }
 
     private _processOne(url: string): void {
-        const img = (this.pool.shift() || new Image()) as PoolImage;
+        const img = (this.pool.shift() ?? new Image()) as PoolImage;
         this.current.push(img);
         const handler = (e: Event): void => {
             img.removeEventListener('load',  handler);

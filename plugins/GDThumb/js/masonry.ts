@@ -91,7 +91,7 @@ function init(colWidth: number, gap: number): void {
 
 function positionNew(): void {
     if (!_c) return;
-    let items = Array.from(_c.querySelectorAll<HTMLElement>(':scope > li')).filter(function (li) {
+    const items = Array.from(_c.querySelectorAll<HTMLElement>(':scope > li')).filter(function (li) {
         return !li.style.position;
     });
     if (!items.length) return;

@@ -98,7 +98,7 @@ export function init(cfg: CatModifyConfig): void {
         fetch('ws.php?format=json&method=pwg.categories.setInfo', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ category_id: String(album_id), visible: 'true' }),
+            body: new URLSearchParams({ category_id: album_id, visible: 'true' }),
         })
             .then(r => r.json())
             .then(function (data: { stat: string }) {
@@ -132,7 +132,7 @@ export function init(cfg: CatModifyConfig): void {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
-                category_id: String(album_id),
+                category_id: album_id,
                 name: (document.getElementById('cat-name') as HTMLInputElement).value,
                 comment: (document.getElementById('cat-comment') as HTMLTextAreaElement).value,
                 visible: (document.getElementById('cat-locked') as HTMLInputElement).checked ? 'false' : 'true',
@@ -167,7 +167,7 @@ export function init(cfg: CatModifyConfig): void {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
-                    category_id: String(album_id),
+                    category_id: album_id,
                     parent: String(parent_album),
                     pwg_token,
                 }),
@@ -182,7 +182,7 @@ export function init(cfg: CatModifyConfig): void {
                         setTimeout(() => { document.querySelector<HTMLElement>('.info-error')!.style.display = 'none'; }, 5000);
                     }
                 })
-                .catch(function (e: Error) { console.log(e.message); });
+                .catch(function (e: unknown) { console.log(e instanceof Error ? e.message : String(e)); });
         }
     });
 
@@ -199,7 +199,7 @@ export function init(cfg: CatModifyConfig): void {
     }
 
     document.querySelector<HTMLElement>('.deleteAlbum')?.addEventListener('click', function () {
-        fetch('ws.php?format=json&method=pwg.categories.calculateOrphans&' + new URLSearchParams({ category_id: String(album_id) }).toString())
+        fetch('ws.php?format=json&method=pwg.categories.calculateOrphans&' + new URLSearchParams({ category_id: album_id }).toString())
             .then(r => r.json())
             .then(function (raw_json: { result: OrphanData[] }) {
                 const orphan = raw_json.result[0]!;
@@ -263,7 +263,7 @@ export function init(cfg: CatModifyConfig): void {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
-                    category_id: String(album_id),
+                    category_id: album_id,
                     photo_deletion_mode: photo_deletion_mode ?? '',
                     pwg_token,
                 }),
@@ -282,7 +282,7 @@ export function init(cfg: CatModifyConfig): void {
         fetch('ws.php?format=json&method=pwg.categories.refreshRepresentative', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ category_id: String(album_id) }),
+            body: new URLSearchParams({ category_id: album_id }),
         })
             .then(r => r.json())
             .then(function (data: { stat: string; result: { src: string } }) {
@@ -313,7 +313,7 @@ export function init(cfg: CatModifyConfig): void {
         fetch('ws.php?format=json&method=pwg.categories.deleteRepresentative', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ category_id: String(album_id) }),
+            body: new URLSearchParams({ category_id: album_id }),
         })
             .then(r => r.json())
             .then(function (data: { stat: string }) {
@@ -391,7 +391,7 @@ export function init(cfg: CatModifyConfig): void {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
-                    category_id: String(album_id),
+                    category_id: album_id,
                     commentable: 'true',
                     apply_commentable_to_subalbums: 'true',
                 }),
@@ -404,7 +404,7 @@ export function init(cfg: CatModifyConfig): void {
                             (document.getElementById('cat-commentable') as HTMLInputElement).click();
                         }
                         const infoMsg = document.querySelector<HTMLElement>('.info-message')!;
-                        const temp_txt = infoMsg.textContent ?? '';
+                        const temp_txt = infoMsg.textContent || '';
                         infoMsg.textContent = str_album_comment_allow;
                         infoMsg.style.display = '';
                         setTimeout(() => { infoMsg.style.display = 'none'; infoMsg.textContent = temp_txt; }, 5000);
@@ -423,7 +423,7 @@ export function init(cfg: CatModifyConfig): void {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
-                    category_id: String(album_id),
+                    category_id: album_id,
                     commentable: 'false',
                     apply_commentable_to_subalbums: 'true',
                 }),
@@ -436,7 +436,7 @@ export function init(cfg: CatModifyConfig): void {
                             (document.getElementById('cat-commentable') as HTMLInputElement).click();
                         }
                         const infoMsg = document.querySelector<HTMLElement>('.info-message')!;
-                        const temp_txt = infoMsg.textContent ?? '';
+                        const temp_txt = infoMsg.textContent || '';
                         infoMsg.textContent = str_album_comment_disallow;
                         infoMsg.style.display = '';
                         setTimeout(() => { infoMsg.style.display = 'none'; infoMsg.textContent = temp_txt; }, 5000);
@@ -474,7 +474,7 @@ export function init(cfg: CatModifyConfig): void {
     });
 
     document.addEventListener('keyup', function (e) {
-        if (e.keyCode === 27 && desc_modal && getComputedStyle(desc_modal).display !== 'none') {
+        if (e.key === 'Escape' && desc_modal && getComputedStyle(desc_modal).display !== 'none') {
             desc_modal.style.display = 'none';
         }
     });
@@ -497,7 +497,7 @@ function fill_results(cats: CatResult[]): void {
             + "<span class='icon-plus-circled item-add'></span></div>",
         );
 
-        if (parent_album === cat.id || cat.uppercats.split(',').includes(String(album_id))) {
+        if (parent_album === cat.id || cat.uppercats.split(',').includes(album_id)) {
             const itemDiv = searchResult.querySelector<HTMLElement>('#' + String(cat.id) + '.search-result-item');
             if (itemDiv) {
                 itemDiv.classList.add('notClickable');
@@ -541,10 +541,7 @@ function activateCommentDropdown(): void {
 
     document.addEventListener('mouseup', function (e) {
         e.stopPropagation();
-        let option_is_clicked = false;
-        document.querySelectorAll<HTMLElement>('.comment-option span').forEach(function (el) {
-            if (el.contains(e.target as Node)) option_is_clicked = true;
-        });
+        const option_is_clicked = Array.from(document.querySelectorAll<HTMLElement>('.comment-option span')).some(el => el.contains(e.target as Node));
         if (!option_is_clicked) {
             document.querySelectorAll<HTMLElement>('.toggle-comment-option .comment-option').forEach(el => { el.style.display = 'none'; });
         }

@@ -41,7 +41,7 @@ export function init(cfg: UserActivityConfig): void {
     void usersCache;
 
     const color_icons = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
-    let activity_page = 1;
+    const activity_page = 1;
     let actual_page = 1;
     let max_page = 1;
     let uid_filter: string | undefined;

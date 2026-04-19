@@ -27,7 +27,7 @@ interface HTMLSelectWithTomSelect extends HTMLSelectElement {
 export function pwgAddAlbum(btn: HTMLElement, options: AddAlbumOptions = {}): HTMLElement {
     const popup = document.getElementById('addAlbumForm') as HTMLDialogElement | null;
     const albumParentEl = popup ? popup.querySelector<HTMLSelectWithTomSelect>('[name="category_parent"]') : null;
-    const targetEl = btn ? document.querySelector<HTMLSelectWithTomSelect>('[name="' + btn.dataset['addAlbum'] + '"]') : null;
+    const targetEl = document.querySelector<HTMLSelectWithTomSelect>('[name="' + btn.dataset['addAlbum'] + '"]');
     const cache = targetEl ? (targetEl)._pwgCache : null;
 
     if (targetEl && !targetEl.tomselect) {
@@ -98,7 +98,7 @@ export function pwgAddAlbum(btn: HTMLElement, options: AddAlbumOptions = {}): HT
                         if (parent) {
                             (newAlbum as unknown as Record<string, unknown>)['fullname'] = parent['fullname'] + ' / ' + name;
                             (newAlbum as unknown as Record<string, unknown>)['global_rank'] = String(parent['global_rank']) + '.1';
-                            (newAlbum as unknown as Record<string, unknown>)['pos'] = ((parent['pos'] as number) ?? 0) + 1;
+                            (newAlbum as unknown as Record<string, unknown>)['pos'] = (parent['pos'] as number) + 1;
                         }
                     }
 
@@ -110,7 +110,7 @@ export function pwgAddAlbum(btn: HTMLElement, options: AddAlbumOptions = {}): HT
                 })
                 .catch(function (err: unknown) {
                     if (loadingEl) loadingEl.style.display = 'none';
-                    alert((err as Error).message ?? String(err));
+                    alert(err instanceof Error ? err.message : String(err));
                 });
         });
     }

@@ -39,7 +39,7 @@ export class TreeNode {
         this.name = data.name;
         this.parent = parent;
         this.status = data.status ?? '';
-        this.visible = data.visible !== undefined ? data.visible : true;
+        this.visible = data.visible ?? true;
         this.nb_subcats = data.nb_subcats ?? 0;
         this.nb_images = data.nb_images ?? 0;
         this.nb_sub_photos = data.nb_sub_photos ?? 0;
@@ -51,12 +51,11 @@ export class TreeNode {
     getLevel(): number {
         let level = 0;
         let p: TreeNode | RootNode = this.parent;
-        while (p && p.id !== undefined) { level++; p = (p).parent; }
+        while (p.id !== undefined) { level++; p = (p).parent; }
         return level;
     }
 
     getPreviousSibling(): TreeNode | null {
-        if (!this.parent) return null;
         const siblings = this.parent.children;
         const idx = siblings.indexOf(this);
         return idx > 0 ? (siblings[idx - 1] ?? null) : null;
@@ -146,7 +145,7 @@ export class PwgTree {
     }
 
     openNode(node: TreeNode): void {
-        if (!node?._el) return;
+        if (!node._el) return;
         const childUl = node._el.querySelector<HTMLElement>(':scope > ul');
         if (childUl) childUl.style.display = '';
         if (!this._openNodes.includes(node.id)) this._openNodes.push(node.id);
@@ -154,7 +153,7 @@ export class PwgTree {
     }
 
     closeNode(node: TreeNode): void {
-        if (!node?._el) return;
+        if (!node._el) return;
         const childUl = node._el.querySelector<HTMLElement>(':scope > ul');
         if (childUl) childUl.style.display = 'none';
         const idx = this._openNodes.indexOf(node.id);
@@ -195,18 +194,14 @@ export class PwgTree {
     }
 
     removeNode(node: TreeNode): void {
-        if (!node) return;
         const parent = node.parent;
-        if (parent) {
-            const idx = parent.children.indexOf(node);
-            if (idx !== -1) parent.children.splice(idx, 1);
-        }
-        delete this._nodes[String(node.id)];
+        const idx = parent.children.indexOf(node);
+        if (idx !== -1) parent.children.splice(idx, 1);
+        Reflect.deleteProperty(this._nodes, String(node.id));
         node._el?.parentNode?.removeChild(node._el);
     }
 
     updateNode(node: TreeNode, name: string): void {
-        if (!node) return;
         node.name = name;
         if (this.options.onCreateLi && node._el) {
             const div = node._el.querySelector('.jqtree-element');
@@ -295,7 +290,7 @@ export class PwgTree {
                         ul.style.display = '';
                         ul.appendChild(movedNode._el!);
                     } else {
-                        const newParent = targetNode.parent ?? this._root;
+                        const newParent = targetNode.parent;
                         movedNode.parent = newParent;
                         const siblings = newParent.children;
                         const tIdx = siblings.indexOf(targetNode);

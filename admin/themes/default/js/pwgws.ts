@@ -68,18 +68,16 @@ export class PwgWS {
     private respondToReadyState(): void {
         const xhr = this.xhr!;
         if (xhr.status === 200) {
-            let resp: { stat: string; result: unknown; err?: number; message?: string } | null = null;
+            let resp: { stat?: string; result?: unknown; err?: number; message?: string } | null = null;
             try {
-                resp = JSON.parse(xhr.responseText) as { stat: string; result: unknown; err?: number; message?: string };
+                resp = JSON.parse(xhr.responseText) as { stat?: string; result?: unknown; err?: number; message?: string };
             } catch (e) {
                 this.error(200, (e as Error).message + "\n" + xhr.responseText.substring(0, 512));
                 return;
             }
-            if (resp != null) {
-                if (resp.stat == null) this.error(200, "Invalid response");
-                else if (resp.stat === "ok") this.options.onSuccess?.(resp.result);
-                else this.error(200, (resp.err ?? '') + " " + (resp.message ?? ''));
-            }
+            if (resp.stat == null) this.error(200, "Invalid response");
+            else if (resp.stat === "ok") this.options.onSuccess?.(resp.result);
+            else this.error(200, (resp.err ?? '') + " " + (resp.message ?? ''));
         } else {
             this.error(xhr.status, xhr.statusText);
         }

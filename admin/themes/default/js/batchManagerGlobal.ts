@@ -63,7 +63,7 @@ function filter_disable(filter: string): void {
     if (addFilterLink) addFilterLink.classList.remove('disabled');
 
     const visibleFilters = document.querySelectorAll('#filterList li:not([style*="display: none"])').length;
-    if (visibleFilters == 0) {
+    if (visibleFilters=== 0) {
         document.querySelectorAll<HTMLElement>('.noFilter').forEach(function (el) {
             el.style.display = '';
         });
@@ -184,7 +184,7 @@ export function init(cfg: BatchManagerConfig): void {
 
     categoriesCache.selectize(document.querySelectorAll('[data-selectize=categories]'), {
         filter: function (this: Element, categories, options) {
-            if ((this as HTMLSelectElement).name == 'dissociate') {
+            if ((this as HTMLSelectElement).name=== 'dissociate') {
                 const filtered = categories.filter(function (cat) {
                     return !!(cfg.associatedCategories)[(cat as { id: string | number }).id];
                 });
@@ -207,7 +207,7 @@ export function init(cfg: BatchManagerConfig): void {
 
         const permitAction = document.getElementById('permitAction');
         const forbidAction = document.getElementById('forbidAction');
-        if (nbSelected == 0) {
+        if (nbSelected=== 0) {
             if (permitAction) permitAction.style.display = 'none';
             if (forbidAction) forbidAction.style.display = '';
         } else {
@@ -220,9 +220,9 @@ export function init(cfg: BatchManagerConfig): void {
 
         const selectedMessage = document.getElementById('selectedMessage');
         if (selectedMessage) {
-            if (nbSelected == 0) {
+            if (nbSelected=== 0) {
                 selectedMessage.textContent = sprintf(cfg.selectedMessageNone, cfg.nbThumbsSet);
-            } else if (nbSelected == cfg.nbThumbsSet) {
+            } else if (nbSelected=== cfg.nbThumbsSet) {
                 selectedMessage.textContent = sprintf(cfg.selectedMessageAll, cfg.nbThumbsSet);
             } else {
                 selectedMessage.textContent = sprintf(cfg.selectedMessagePattern, nbSelected, cfg.nbThumbsSet);
@@ -243,20 +243,20 @@ export function init(cfg: BatchManagerConfig): void {
             });
 
             let action = this.value;
-            if (action == 'move') action = 'associate';
+            if (action=== 'move') action = 'associate';
 
             const actionEl = document.getElementById('action_' + action);
             if (actionEl) actionEl.style.display = '';
 
             const applyActionBlock = document.getElementById('applyActionBlock');
-            if (this.value != '-1') {
+            if (this.value!== '-1') {
                 if (applyActionBlock) applyActionBlock.style.display = '';
             } else {
                 if (applyActionBlock) applyActionBlock.style.display = 'none';
             }
 
             const confirmDel = document.getElementById('confirmDel');
-            if (this.value == 'delete' || this.value == 'delete_derivatives') {
+            if (this.value=== 'delete' || this.value=== 'delete_derivatives') {
                 if (confirmDel) confirmDel.style.visibility = 'visible';
             } else {
                 if (confirmDel) confirmDel.style.visibility = 'hidden';
@@ -390,10 +390,10 @@ export function init(cfg: BatchManagerConfig): void {
             const duplicatesOptions = document.getElementById('duplicates_options');
             const deleteOrphans = document.getElementById('delete_orphans');
             const syncMd5sum = document.getElementById('sync_md5sum');
-            if (emptyCaddie) emptyCaddie.style.display = this.value == 'caddie' ? '' : 'none';
-            if (duplicatesOptions) duplicatesOptions.style.display = this.value == 'duplicates' ? '' : 'none';
-            if (deleteOrphans) deleteOrphans.style.display = this.value == 'no_album' ? '' : 'none';
-            if (syncMd5sum) syncMd5sum.style.display = this.value == 'no_sync_md5sum' ? '' : 'none';
+            if (emptyCaddie) emptyCaddie.style.display = this.value=== 'caddie' ? '' : 'none';
+            if (duplicatesOptions) duplicatesOptions.style.display = this.value=== 'duplicates' ? '' : 'none';
+            if (deleteOrphans) deleteOrphans.style.display = this.value=== 'no_album' ? '' : 'none';
+            if (syncMd5sum) syncMd5sum.style.display = this.value=== 'no_sync_md5sum' ? '' : 'none';
         });
     }
 
@@ -471,9 +471,9 @@ export function init(cfg: BatchManagerConfig): void {
 
         finished: function (): boolean {
             return (
-                derivatives.done == derivatives.total &&
+                derivatives.done=== derivatives.total &&
                 derivatives.elements !== null &&
-                derivatives.elements.length == 0
+                derivatives.elements.length=== 0
             );
         },
     };
@@ -538,7 +538,7 @@ export function init(cfg: BatchManagerConfig): void {
         void fetch('ws.php?format=json&method=pwg.getMissingDerivatives', { method: 'POST', body: body })
             .then(function (r) { return r.json(); })
             .then(function (data: { stat?: string; result: { urls: string[] } }) {
-                if (!data.stat || data.stat != 'ok') return;
+                if (!data.stat || data.stat!== 'ok') return;
                 derivatives.total += data.result.urls.length;
                 const badge = document.querySelector<HTMLElement>('#regenerationStatus .badge-number');
                 if (badge) badge.innerHTML = String(derivatives.done) + '/' + String(derivatives.total);
@@ -577,7 +577,7 @@ export function init(cfg: BatchManagerConfig): void {
         applyActionBtn.addEventListener('click', function (e) {
             const action = document.querySelector<HTMLSelectElement>('[name="selectAction"]')!.value;
 
-            if (action == 'delete_derivatives') {
+            if (action=== 'delete_derivatives') {
                 if (!(document.querySelector<HTMLInputElement>('#confirmDel input[name=confirm_deletion]'))!.checked) {
                     document.querySelector<HTMLElement>('#confirmDel span.errors')!.style.visibility = 'visible';
                     e.preventDefault();
@@ -585,7 +585,7 @@ export function init(cfg: BatchManagerConfig): void {
                 return;
             }
 
-            if (action == 'generate_derivatives') {
+            if (action=== 'generate_derivatives') {
                 if (derivatives.finished()) return;
                 e.preventDefault();
                 document.querySelectorAll<HTMLElement>('.bulkAction').forEach(function (el) {
@@ -609,7 +609,7 @@ export function init(cfg: BatchManagerConfig): void {
                 return;
             }
 
-            if (action == 'metadata') {
+            if (action=== 'metadata') {
                 e.preventDefault();
                 e.stopPropagation();
                 document.querySelectorAll<HTMLElement>('.bulkAction').forEach(function (el) {
@@ -642,7 +642,7 @@ export function init(cfg: BatchManagerConfig): void {
 
                 for (let i = 0; i < elements.length; i++) {
                     image_ids.push(elements[i]!);
-                    if (i % syncBlockSize != syncBlockSize - 1 && i != elements.length - 1) continue;
+                    if (i % syncBlockSize!== syncBlockSize - 1 && i!== elements.length - 1) continue;
 
                     (function (ids: string[]) {
                         const thisBatchSize = ids.length;
@@ -670,7 +670,7 @@ export function init(cfg: BatchManagerConfig): void {
                 return;
             }
 
-            if (action == 'delete') {
+            if (action=== 'delete') {
                 if (!(document.querySelector<HTMLInputElement>('#confirmDel input[name=confirm_deletion]'))!.checked) {
                     const errorSpan = document.querySelector<HTMLElement>('#confirmDel span.errors');
                     if (errorSpan) errorSpan.style.visibility = 'visible';
@@ -711,7 +711,7 @@ export function init(cfg: BatchManagerConfig): void {
                 let _deleteQueue: Promise<void> = Promise.resolve();
                 for (let i = 0; i < elements.length; i++) {
                     image_ids.push(elements[i]!);
-                    if (i % deleteBlockSize != deleteBlockSize - 1 && i != elements.length - 1) continue;
+                    if (i % deleteBlockSize!== deleteBlockSize - 1 && i!== elements.length - 1) continue;
 
                     (function (ids: string[]) {
                         const thisBatchSize = ids.length;
@@ -765,7 +765,7 @@ export function init(cfg: BatchManagerConfig): void {
         const percent = Math.floor((val / max) * 100);
         const progBar = document.querySelector<HTMLElement>('#uploadingActions .progressbar');
         if (progBar) progBar.style.width = String(percent) + '%';
-        if (val == max) {
+        if (val=== max) {
             const applyActionBtn = document.getElementById('applyAction');
             if (applyActionBtn) applyActionBtn.click();
         }
@@ -812,13 +812,13 @@ export function init(cfg: BatchManagerConfig): void {
                         String(md5sumToAdd.dataset['origin']);
                 }
             })
-            .catch(function (err: Error) {
+            .catch(function (err: unknown) {
                 const addMd5sum = document.getElementById('add_md5sum');
                 if (addMd5sum) addMd5sum.style.display = 'none';
                 const addMd5sumError = document.getElementById('add_md5sum_error');
                 if (addMd5sumError) {
                     addMd5sumError.style.display = '';
-                    addMd5sumError.innerHTML = 'error: ' + err.message;
+                    addMd5sumError.innerHTML = 'error: ' + (err instanceof Error ? err.message : String(err));
                 }
             });
     }
@@ -857,13 +857,13 @@ export function init(cfg: BatchManagerConfig): void {
                         String(orphansToDelete.dataset['origin']);
                 }
             })
-            .catch(function (err: Error) {
+            .catch(function (err: unknown) {
                 const orphansDeletion = document.getElementById('orphans_deletion');
                 if (orphansDeletion) orphansDeletion.style.display = 'none';
                 const orphansDeletionError = document.getElementById('orphans_deletion_error');
                 if (orphansDeletionError) {
                     orphansDeletionError.style.display = '';
-                    orphansDeletionError.innerHTML = 'error: ' + err.message;
+                    orphansDeletionError.innerHTML = 'error: ' + (err instanceof Error ? err.message : String(err));
                 }
             });
     }

@@ -221,10 +221,10 @@ export function init(cfg: PluginsInstalledConfig): void {
                 nb_plugin.all -= 1;
                 actualizeFilter();
             })
-            .catch(function (e: { message?: string }) {
+            .catch(function (e: unknown) {
                 const errorEl = document.querySelector<HTMLElement>('#' + id + ' .PluginActionError');
                 if (errorEl) { errorEl.style.display = 'flex'; setTimeout(() => { errorEl.style.display = 'none'; }, 4000); }
-                console.log(e.message);
+                console.log(e instanceof Error ? e.message : String(e));
             });
     }
 
@@ -267,7 +267,7 @@ export function init(cfg: PluginsInstalledConfig): void {
         document.querySelectorAll<HTMLInputElement>('.switch').forEach(function (switchEl) {
             switchEl.addEventListener('change', function () {
                 document.querySelectorAll<HTMLElement>('.pluginMiniBox').forEach(el => el.classList.add('usable'));
-                let pluginBox = switchEl.closest<HTMLElement>('.pluginBox') ?? switchEl.closest<HTMLElement>('.pluginMiniBox');
+                const pluginBox = switchEl.closest<HTMLElement>('.pluginBox') ?? switchEl.closest<HTMLElement>('.pluginMiniBox');
                 if (!pluginBox) return;
 
                 const toggleInput = switchEl.querySelector<HTMLInputElement>('#toggleSelectionMode');
@@ -337,7 +337,7 @@ export function init(cfg: PluginsInstalledConfig): void {
     }
 
     document.addEventListener('keydown', function (e) {
-        if (e.keyCode === 58) {
+        if (e.key === ':') {
             document.querySelector<HTMLInputElement>('.pluginFilter input.search-input')?.focus();
         }
     });
@@ -363,8 +363,8 @@ export function init(cfg: PluginsInstalledConfig): void {
                     if (box.classList.contains('plugin-merged') || box.classList.contains('plugin-missing')) searchOther++;
                     searchNumber++;
                 } else {
-                    const name = box.querySelector<HTMLElement>('.pluginName')?.textContent?.toLowerCase() ?? '';
-                    const description = box.querySelector<HTMLElement>('.pluginDesc')?.textContent?.toLowerCase() ?? '';
+                    const name = (box.querySelector<HTMLElement>('.pluginName')?.textContent ?? '').toLowerCase();
+                    const description = (box.querySelector<HTMLElement>('.pluginDesc')?.textContent ?? '').toLowerCase();
                     document.querySelectorAll<HTMLElement>('.nbPluginsSearch').forEach(el => { el.style.display = ''; });
                     if (name.includes(text) || description.includes(text)) {
                         searchNumber++;

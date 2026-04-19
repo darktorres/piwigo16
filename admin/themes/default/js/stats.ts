@@ -140,8 +140,8 @@ export function init(cfg: StatsConfig): void {
         Object.keys(compareYears).forEach(key => {
             const date = new Date(key);
             const yr = date.getFullYear();
-            if (values[yr] === undefined) values[yr] = [];
-            values[yr]![date.getMonth()] = compareYears[key]!;
+            values[yr] ??= [];
+            values[yr][date.getMonth()] = compareYears[key]!;
         });
 
         Object.keys(values).forEach(key => {

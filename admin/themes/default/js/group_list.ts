@@ -206,7 +206,7 @@ export function init(cfg: GroupListConfig): void {
             'pointer-events: none',
         );
 
-        if (name.replace(/\s/g, '').length != 0) {
+        if (name.replace(/\s/g, '').length!== 0) {
             fetch('ws.php?format=json&method=pwg.groups.add', {
                 method: 'POST',
                 body: new URLSearchParams({ name: name, pwg_token: pwg_token }),
@@ -232,7 +232,7 @@ export function init(cfg: GroupListConfig): void {
                     }
                 }
             })
-            .catch(error => {
+            .catch((error: unknown) => {
                 loadState.reverse();
                 console.log(error);
             });
@@ -316,7 +316,7 @@ export function init(cfg: GroupListConfig): void {
         if (deleteBtn) deleteBtn.addEventListener('click', () => deleteGroup(id));
 
         document.querySelectorAll<HTMLElement>('#group-' + id + ' .Group-name .icon-pencil, #group-' + id + ' #GroupEdit').forEach(el => {
-            el?.addEventListener('click', function () {
+            el.addEventListener('click', function () {
                 displayRenameForm(true, id);
                 setTimeout(() => {
                     const opts = groupBox.querySelector<HTMLElement>('#GroupOptions');
@@ -354,12 +354,7 @@ export function init(cfg: GroupListConfig): void {
 
         document.addEventListener('mouseup', function (e) {
             e.stopPropagation();
-            let option_is_clicked = false;
-            document.querySelectorAll<HTMLElement>('#GroupOptions div').forEach(el => {
-                if (el.contains(e.target as Node)) {
-                    option_is_clicked = true;
-                }
-            });
+            const option_is_clicked = Array.from(document.querySelectorAll<HTMLElement>('#GroupOptions div')).some(el => el.contains(e.target as Node));
             if (!option_is_clicked) {
                 const opts = groupBox.querySelector<HTMLElement>('#GroupOptions');
                 if (opts) opts.style.display = 'none';
@@ -367,9 +362,9 @@ export function init(cfg: GroupListConfig): void {
         });
 
         const isDefault = groupBox.getAttribute('data-default');
-        if (isDefault == '1') {
+        if (isDefault=== '1') {
             setupDefaultActions(id, true);
-        } else if (isDefault == '0') {
+        } else if (isDefault=== '0') {
             setupDefaultActions(id, false);
         }
 
@@ -382,7 +377,7 @@ export function init(cfg: GroupListConfig): void {
 
     /*------- SETUP JS ON GROUP BOX -------*/
     document.querySelectorAll<HTMLElement>('.GroupContainer').forEach((el) => {
-        if (el.id != 'group-template') setupGroupBox(el);
+        if (el.id!== 'group-template') setupGroupBox(el);
     });
 
     function toggleSelection(group_id: string, toggle: boolean): void {
@@ -422,13 +417,13 @@ export function init(cfg: GroupListConfig): void {
             groupBox.querySelector<HTMLElement>('.group_number_users')?.classList.remove('OrangeFont');
 
             document.querySelectorAll<HTMLElement>('.DeleteGroupList div').forEach(el => {
-                if (el.getAttribute('data-id') == group_id) el.remove();
+                if (el.getAttribute('data-id')=== group_id) el.remove();
             });
 
             updateSelectionPanel();
 
             document.querySelectorAll<HTMLOptionElement>('#MergeOptionsChoices option').forEach(el => {
-                if (el.value == group_id) el.remove();
+                if (el.value=== group_id) el.remove();
             });
         }
     };
@@ -471,7 +466,7 @@ export function init(cfg: GroupListConfig): void {
         const renameSpan = document.querySelector<HTMLElement>('#group-' + id + ' .group-rename span');
         if (renameSpan) loadState.changeAttribute(renameSpan, 'style', 'pointer-events: none');
 
-        if (newName.replace(/\s/g, '').length != 0) {
+        if (newName.replace(/\s/g, '').length!== 0) {
             fetch('ws.php?format=json&method=pwg.groups.setInfo', {
                 method: 'POST',
                 body: 'group_id=' + id + '&pwg_token=' + pwg_token + '&name=' + encodeURIComponent(newName),
@@ -501,7 +496,7 @@ export function init(cfg: GroupListConfig): void {
                     }
                 }
             })
-            .catch(error => console.log(error));
+            .catch((error: unknown) => console.log(error));
         } else {
             loadState.reverse();
             const error = document.querySelector<HTMLElement>('#group-' + id + ' .groupError');
@@ -561,7 +556,7 @@ export function init(cfg: GroupListConfig): void {
                 setupDefaultActions(id, is_default);
             }
         })
-        .catch(error => console.log(error));
+        .catch((error: unknown) => console.log(error));
     };
 
     function setupDefaultActions(id: string, is_default: boolean): void {
@@ -643,12 +638,12 @@ export function init(cfg: GroupListConfig): void {
                 setupGroupBox(groupbox);
                 updateBadge();
 
-                if (group.is_default == 'true') {
+                if (group.is_default=== 'true') {
                     setupDefaultActions(String(group.id), true);
                 }
             }
         })
-        .catch(error => console.log(error));
+        .catch((error: unknown) => console.log(error));
     };
 
     /*------- Selection mode toggle -------*/
@@ -677,13 +672,13 @@ export function init(cfg: GroupListConfig): void {
     function updateSelectionPanel(changedState = ''): void {
         const numSelect = document.querySelectorAll('.DeleteGroupList div').length;
 
-        if (numSelect == 0) {
+        if (numSelect=== 0) {
             updateStatePanel('NoSelection');
-        } else if (changedState == '') {
-            if (numSelect == 1 && state != 'ConfirmDeletion') updateStatePanel('OneSelected');
-            if (numSelect > 1 && state == 'OneSelected') updateStatePanel('Selection');
+        } else if (changedState=== '') {
+            if (numSelect=== 1 && state!== 'ConfirmDeletion') updateStatePanel('OneSelected');
+            if (numSelect > 1 && state=== 'OneSelected') updateStatePanel('Selection');
         } else {
-            if (changedState == 'Selection' && numSelect == 1) updateStatePanel('OneSelected');
+            if (changedState=== 'Selection' && numSelect=== 1) updateStatePanel('OneSelected');
             else updateStatePanel(changedState);
         }
 
@@ -729,7 +724,7 @@ export function init(cfg: GroupListConfig): void {
                 break;
         }
         const selectionModeGroup = document.querySelector<HTMLElement>('.SelectionModeGroup');
-        if (newState == 'NoSelection') {
+        if (newState=== 'NoSelection') {
             if (deleteBtn) deleteBtn.style.display = '';
             if (mergeBtn) mergeBtn.style.display = '';
             buttonUnavailable(mergeBtn);
@@ -766,17 +761,15 @@ export function init(cfg: GroupListConfig): void {
         let str_merge_group = '';
         const name_merge: string[] = [];
         let name_dest: string = '';
-        let dest_grp: string;
-
         const loadState = new TemporaryState();
         const mergeBtn = document.querySelector<HTMLElement>('.ConfirmMergeButton');
         if (mergeBtn) { loadState.changeAttribute(mergeBtn, 'style', 'pointer-events: none'); loadState.changeHTML(mergeBtn, "<i class='icon-spin6 animate-spin'> </i>"); loadState.removeClass(mergeBtn, 'icon-ok'); }
 
         const destSelect = document.getElementById('MergeOptionsChoices') as HTMLSelectElement | null;
-        dest_grp = destSelect ? destSelect.value : '';
+        const dest_grp: string = destSelect ? destSelect.value : '';
 
         document.querySelectorAll<HTMLElement>('.DeleteGroupList div').forEach(el => {
-            if (dest_grp != el.getAttribute('data-id')) {
+            if (dest_grp!== el.getAttribute('data-id')) {
                 str_merge_group += '&merge_group_id[]=' + el.getAttribute('data-id');
                 merge_group.push(el.getAttribute('data-id') ?? '');
                 name_merge.push(el.querySelector<HTMLElement>('p')?.innerHTML ?? '');
@@ -880,7 +873,7 @@ export function init(cfg: GroupListConfig): void {
                 updateBadge();
             }
         })
-        .catch(error => console.log(error));
+        .catch((error: unknown) => console.log(error));
     });
 
     /*------- Manage User Part -------*/
@@ -894,15 +887,8 @@ export function init(cfg: GroupListConfig): void {
         selectize = (selectEl as HTMLSelectElement & { tomselect?: TomSelect }).tomselect ?? new TomSelect(selectEl, {});
 
         let idSearch = '';
-        let updateUserSearch: () => void;
 
-        document.querySelector<HTMLElement>('.UserSearch input')?.addEventListener('focus', function () {
-            if (idSearch != document.getElementById('UserList')?.getAttribute('data-group_id')) {
-                updateUserSearch();
-            }
-        });
-
-        updateUserSearch = function (): void {
+        const updateUserSearch = function (): void {
             if (selectize) selectize.clear();
             const localCache = new UsersCache({
                 serverKey: serverKey,
@@ -927,6 +913,12 @@ export function init(cfg: GroupListConfig): void {
                 if (selectize) selectize.removeOption(el.getAttribute('data-id') ?? '');
             });
         };
+
+        document.querySelector<HTMLElement>('.UserSearch input')?.addEventListener('focus', function () {
+            if (idSearch!== document.getElementById('UserList')?.getAttribute('data-group_id')) {
+                updateUserSearch();
+            }
+        });
     }
 
     function openUserManager(grp_id: string): void {
@@ -960,7 +952,7 @@ export function init(cfg: GroupListConfig): void {
 
                 let i = 0;
                 const userListEl = document.querySelector<HTMLElement>('.UsersInGroupList');
-                while (userListEl && userListEl.offsetHeight <= maxOffsetUserCont && usersInGroup[i] != undefined) {
+                while (userListEl && userListEl.offsetHeight <= maxOffsetUserCont && usersInGroup[i]!== undefined) {
                     const userEl = getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grp_id);
                     userListEl.appendChild(userEl);
                     i++;
@@ -977,7 +969,7 @@ export function init(cfg: GroupListConfig): void {
                 if (managerLink) managerLink.href = 'admin.php?page=user_list&group=' + grp_id;
             }
         })
-        .catch(error => console.log(error));
+        .catch((error: unknown) => console.log(error));
     };
 
     function getUserDisplay(username: string, user_id: string | number, grp_id: string): HTMLElement {
@@ -1020,7 +1012,7 @@ export function init(cfg: GroupListConfig): void {
                         userBlock.remove();
 
                         if (selectize) {
-                            const updateFn = (document.querySelector<HTMLElement>('.UserSearch input') as HTMLElement & { _updateFn?: () => void })?._updateFn;
+                            const updateFn = (document.querySelector<HTMLElement>('.UserSearch input') as (HTMLElement & { _updateFn?: () => void }) | null)?._updateFn;
                             if (typeof updateFn === 'function') updateFn();
                         }
 
@@ -1029,7 +1021,7 @@ export function init(cfg: GroupListConfig): void {
                             uList.querySelector<HTMLElement>('.UsernameBlock:last-child')?.remove();
                         }
 
-                        usersInGroup = usersInGroup.filter((u) => u.id != user_id);
+                        usersInGroup = usersInGroup.filter((u) => u.id!== user_id);
 
                         const badgeNum = document.querySelector<HTMLElement>('.UserNumberBadge')?.innerHTML ?? '0';
                         updateMembernumber(parseInt(badgeNum) - 1, grp_id);
@@ -1063,7 +1055,7 @@ export function init(cfg: GroupListConfig): void {
         const grp_id = document.getElementById('UserList')?.getAttribute('data-group_id') ?? '';
         const id = selectize ? String(selectize.getValue()) : '';
 
-        if (id != '') {
+        if (id!== '') {
             const loadState = new TemporaryState();
             const submitBtn = document.getElementById('UserSubmit');
             if (submitBtn) { loadState.changeHTML(submitBtn, "<i class='icon-spin6 animate-spin'> </i>"); loadState.removeClass(submitBtn, 'icon-user-add'); loadState.changeAttribute(submitBtn, 'style', 'pointer-events:none'); }
@@ -1082,7 +1074,7 @@ export function init(cfg: GroupListConfig): void {
                     let username = 'undefined';
                     const cachedData = usersCache?.getFromStorage();
                     if (cachedData) cachedData.forEach(function (u) {
-                        if (String(u['id']) == id) username = String(u['username']);
+                        if (String(u['id'])=== id) username = String(u['username']);
                     });
 
                     const userBlock = getUserDisplay(username, id, grp_id);
@@ -1130,7 +1122,7 @@ export function init(cfg: GroupListConfig): void {
     document.querySelector<HTMLElement>('.input-user-name')?.addEventListener('input', function (this: HTMLElement) {
         const searchString = (this as HTMLInputElement).value.toLowerCase();
         const grp_id = document.querySelector<HTMLElement>('.UserListPopIn')?.getAttribute('data-group_id') ?? '';
-        if (searchString != '') {
+        if (searchString!== '') {
             const container = document.querySelector<HTMLElement>('.UsersInGroupListContainer');
             if (container) container.style.minHeight = String(container.offsetHeight) + 'px';
 
@@ -1152,7 +1144,7 @@ export function init(cfg: GroupListConfig): void {
             if (userList) userList.innerHTML = '';
 
             let i = 0;
-            while (userList && userList.offsetHeight <= maxOffsetUserCont && usersInGroup[i] != undefined) {
+            while (userList && userList.offsetHeight <= maxOffsetUserCont && usersInGroup[i]!== undefined) {
                 const userEl = getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grp_id);
                 userList.appendChild(userEl);
                 i++;
@@ -1174,7 +1166,7 @@ export function init(cfg: GroupListConfig): void {
         rootUrl: rootUrl,
     });
 
-    usersCache?.selectize(document.querySelectorAll('select.UserSearch'));
+    usersCache.selectize(document.querySelectorAll('select.UserSearch'));
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {

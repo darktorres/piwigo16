@@ -28,7 +28,7 @@ export class Tour {
 
     constructor(opts: TourOptions) {
         this.name = opts.name || 'default';
-        this.onEnd = opts.onEnd || null;
+        this.onEnd = opts.onEnd ?? null;
         this.orphan = opts.orphan !== false;
         this.template = opts.template || '';
         this._key = 'piwigo-tour-' + this.name;
@@ -91,7 +91,7 @@ export class Tour {
             btn.addEventListener('click', () => {
                 const role = btn.getAttribute('data-role');
                 if (role === 'next') this._show(idx + 1);
-                else if (role === 'prev') this._show(step.prev !== undefined ? step.prev : idx - 1);
+                else if (role === 'prev') this._show(step.prev ?? idx - 1);
                 else if (role === 'end') this.end();
             });
         });

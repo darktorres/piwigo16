@@ -41,7 +41,7 @@ export function makeNiceRatingForm(options: RatingOptions): void {
             updateRatingStarDisplay(gUserRating);
         });
         pwgAddEventListener(button, "mouseover", function (e: Event) {
-            const target = (e.target || (e as unknown as { srcElement?: HTMLElement }).srcElement) as HTMLElement | null;
+            const target = (e.target ?? (e as unknown as { srcElement?: HTMLElement }).srcElement) as HTMLElement | null;
             const targetValue = target ? target.dataset['initialRateValue'] ?? '' : '';
             updateRatingStarDisplay(targetValue);
         });
@@ -66,11 +66,11 @@ function updateRatingStarDisplay(userRating: string): void {
 }
 
 function updateRating(e: Event): boolean {
-    const elem = (e.target || (e as unknown as { srcElement?: HTMLElement }).srcElement) as HTMLElement;
+    const elem = (e.target ?? (e as unknown as { srcElement?: HTMLElement }).srcElement) as HTMLElement;
     const rateButtonValue = elem.dataset['initialRateValue'] ?? '';
-    const isDisabled = elem.dataset['disabled'] == "true";
+    const isDisabled = elem.dataset['disabled']=== "true";
 
-    if (isDisabled || rateButtonValue == gUserRating) {
+    if (isDisabled || rateButtonValue=== gUserRating) {
         return false;
     }
 

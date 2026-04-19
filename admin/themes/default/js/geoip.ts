@@ -16,14 +16,14 @@ export const GeoIp = {
     storageInit: false,
 
     get(ip: string, callback: (data: GeoIpData) => void): void {
-        if (!GeoIp.storageInit && window.localStorage) {
+        if (!GeoIp.storageInit) {
             GeoIp.storageInit = true;
             const cache = localStorage.getItem("freegeoip");
             if (cache) {
                 const parsed = JSON.parse(cache) as GeoIpCache;
                 const now = new Date().getTime();
                 for (const key in parsed) {
-                    if (now - (parsed[key]?.reqTime ?? 0) > 96 * 3600000) delete parsed[key];
+                    if (now - (parsed[key]?.reqTime ?? 0) > 96 * 3600000) Reflect.deleteProperty(parsed, key);
                 }
                 GeoIp.cache = parsed;
             }
@@ -49,14 +49,14 @@ export const GeoIp = {
                     data.fullName = res.join(", ");
                     GeoIp.cache[ip] = data;
                     const callbacks = GeoIp.pending[ip]!;
-                    delete GeoIp.pending[ip];
+                    Reflect.deleteProperty(GeoIp.pending, ip);
                     for (const cb of callbacks) cb(data);
                 })
                 .catch(function () {
                     const data: GeoIpData = { ip, reqTime: new Date().getTime() };
                     GeoIp.cache[ip] = data;
                     const callbacks = GeoIp.pending[ip]!;
-                    delete GeoIp.pending[ip];
+                    Reflect.deleteProperty(GeoIp.pending, ip);
                     for (const cb of callbacks) cb(data);
                 });
         }

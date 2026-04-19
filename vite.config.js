@@ -106,6 +106,7 @@ export default defineConfig({
   build: {
     outDir: 'admin/themes/default/js/dist',
     rollupOptions: {
+      preserveEntrySignatures: 'exports-only',
       output: {
         entryFileNames: '[name].[hash].js',
         chunkFileNames: '[name].[hash].js',

@@ -87,9 +87,9 @@
   {/if}
   {combine_script id='bootstrap' path='themes/bootstrap_darkroom/node_modules/bootstrap/dist/js/bootstrap.bundle.js' load=$loc}
   <script type="module">
-    import '{$ROOT_URL}admin/themes/default/js/dist/{$vite_bd_theme}';
-    import { initHeader } from '{$ROOT_URL}admin/themes/default/js/dist/{$vite_bd_header}';
-    import { phpWGOpenWindow, PwgWS, setupPwgOpenWindow, setupPopuphelp } from '{$ROOT_URL}admin/themes/default/js/dist/{$vite_gallery_scripts}';
+    import './{$ROOT_URL}admin/themes/default/js/dist/{$vite_bd_theme}';
+    import { initHeader } from './{$ROOT_URL}admin/themes/default/js/dist/{$vite_bd_header}';
+    import { phpWGOpenWindow, PwgWS, setupPwgOpenWindow, setupPopuphelp } from './{$ROOT_URL}admin/themes/default/js/dist/{$vite_gallery_scripts}';
     document.addEventListener('DOMContentLoaded', initHeader);
     window.phpWGOpenWindow = phpWGOpenWindow;
     window.PwgWS = PwgWS;

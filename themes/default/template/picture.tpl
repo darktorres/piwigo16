@@ -1,7 +1,7 @@
 {footer_script}<script type="module">
-import '{$ROOT_URL}admin/themes/default/js/dist/{$vite_switchbox}';
-import { setupPwgOpenWindow, PwgWS } from '{$ROOT_URL}admin/themes/default/js/dist/{$vite_gallery_scripts}';
-import { initRating } from '{$ROOT_URL}admin/themes/default/js/dist/{$vite_gallery_rating}';
+import './{$ROOT_URL}admin/themes/default/js/dist/{$vite_switchbox}';
+import { setupPwgOpenWindow, PwgWS } from './{$ROOT_URL}admin/themes/default/js/dist/{$vite_gallery_scripts}';
+import { initRating } from './{$ROOT_URL}admin/themes/default/js/dist/{$vite_gallery_rating}';
 setupPwgOpenWindow();
 window.PwgWS = PwgWS;
 </script>{/footer_script}
@@ -323,7 +323,7 @@ window.PwgWS = PwgWS;
 										{/if}
 									{/foreach}
 									{footer_script}<script type="module">
-										import { initRating } from '{$ROOT_URL}admin/themes/default/js/dist/{$vite_gallery_rating}';
+										import { initRating } from './{$ROOT_URL}admin/themes/default/js/dist/{$vite_gallery_rating}';
 										document._pwgRatingQueue = document._pwgRatingQueue || [];
 										document._pwgRatingQueue.push( { rootUrl: '{$ROOT_URL}', image_id: {$current.id},
 										onSuccess: function(rating) {

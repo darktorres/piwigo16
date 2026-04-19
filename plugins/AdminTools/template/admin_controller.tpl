@@ -15,7 +15,7 @@
 </script>{/footer_script}
 
 {footer_script}<script type="module">
-  import { AdminTools } from '{$ROOT_URL}admin/themes/default/js/dist/{$vite_at_admin_controller}';
+  import { AdminTools } from './{$ROOT_URL}admin/themes/default/js/dist/{$vite_at_admin_controller}';
   const config = JSON.parse(document.getElementById('admintools-admin-config').textContent);
   AdminTools.setConfig(config);
   AdminTools.init();

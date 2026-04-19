@@ -255,7 +255,7 @@
                   <select id="dbtype" name="dbtype" required>
                     <option value="mysqli">MySQL</option>
                     <option value="mysqli-socket">MySQL Socket</option>
-                    <option value="pgsql">PostgreSQL</option>
+                    <option value="pgsql" selected>PostgreSQL</option>
                     <option value="pgsql-socket">PostgreSQL Socket</option>
                   </select>
                 </td>
@@ -263,12 +263,12 @@
               </tr>
               <tr>
                 <td style="width: 30%;" class="fieldname">{'Host:Port'|translate}</td>
-                <td><input type="text" id="dbhost" name="dbhost" value="127.0.0.1:3306" required></td>
+                <td><input type="text" id="dbhost" name="dbhost" value="" required></td>
                 <td class="fielddesc">{'localhost or other, supplied by your host provider'|translate}</td>
               </tr>
               <tr>
                 <td class="fieldname">{'User'|translate}</td>
-                <td><input type="text" id="dbuser" name="dbuser" value="root" required autocomplete="username"></td>
+                <td><input type="text" id="dbuser" name="dbuser" value="" required autocomplete="username"></td>
                 <td class="fielddesc">{'user login given by your host provider'|translate}</td>
               </tr>
               <tr>
@@ -317,6 +317,8 @@
                         break;
                     }
                   });
+
+                  dbtypeElement.dispatchEvent(new Event('change'));
                 }
               });
             </script>

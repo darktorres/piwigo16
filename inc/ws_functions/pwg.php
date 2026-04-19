@@ -555,11 +555,13 @@ final class pwg
         $result = $conf->sql_backend::pwg_query($query);
 
         while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
-            $details = unserialize($row['details']);
+            $details = unserialize($row['details'] ?? '') ?: [];
 
             if (isset($row['user_agent'])) {
                 $details['agent'] = $row['user_agent'];
             }
+
+            $detailsType = '';
 
             if (isset($details['method'])) {
                 $detailsType = 'method';

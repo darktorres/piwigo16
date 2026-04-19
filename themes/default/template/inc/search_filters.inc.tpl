@@ -32,7 +32,7 @@
 
 <div class="mcs-container">
   {footer_script}<script type="module">
-    import '{$ROOT_URL}admin/themes/default/js/dist/{$vite_mcs}';
+    import './{$ROOT_URL}admin/themes/default/js/dist/{$vite_mcs}';
   </script>{/footer_script}
   <div class="filter-manager-popin">
     <div class="filter-manager-popin-container">

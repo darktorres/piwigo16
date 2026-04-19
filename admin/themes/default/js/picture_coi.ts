@@ -28,8 +28,7 @@ if (img) {
     const coiRaw = img.dataset.coi;
     const coiData: CoiData | null = coiRaw ? JSON.parse(coiRaw) as CoiData : null;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cropperConfig: any = {
+    const cropperConfig: Cropper.Options<HTMLImageElement> = {
         viewMode: 1,
         autoCrop: false,
         movable: true,

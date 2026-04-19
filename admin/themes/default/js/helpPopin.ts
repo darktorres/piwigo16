@@ -18,7 +18,7 @@ _docReady(function () {
                 dlg.querySelector('.close-dialog')!.addEventListener('click', function () { dlg!.close(); });
                 document.body.appendChild(dlg);
             }
-            fetch(a.href)
+            void fetch(a.href)
                 .then(r => r.text())
                 .then(function (html) {
                     dlg!.querySelector<HTMLElement>('.help-content')!.innerHTML = html;

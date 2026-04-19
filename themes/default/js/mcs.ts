@@ -961,7 +961,7 @@ function serializeParams(params: Record<string, unknown>): string {
                 parts.push(encodeURIComponent(key + "[]") + "=" + encodeURIComponent(String(item)));
             });
         } else if (val !== undefined && val !== null) {
-            parts.push(encodeURIComponent(key) + "=" + encodeURIComponent(String(val)));
+            parts.push(encodeURIComponent(key) + "=" + encodeURIComponent(String(val as string | number | boolean)));
         }
     }
     return parts.join("&");

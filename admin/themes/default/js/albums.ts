@@ -466,10 +466,9 @@ function createAlbumNode(node: TreeNode, li: HTMLElement): void {
         title += 'icon-lock';
     }
     title += '">';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((node as any).visible == 'false' || (parentNode as any).visble == 'false') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (node as any).visble = 'false';
+    const nodeExt = node as TreeNode & { visible?: string; visble?: string };
+    if (nodeExt.visible == 'false' || parentNode.visble == 'false') {
+        nodeExt.visble = 'false';
         title +=
             '<span class="tiptip icon-cone" title="' +
             tiptip_locked_album +
@@ -930,11 +929,11 @@ function moveNode(node: string | number, rank: number | null, parent: number | n
         if (parent != null) {
             changeParent(node, parent, rank, pwgTree)
                 .then(function () { res(); })
-                .catch(function () { rej(); });
+                .catch(function (e: unknown) { rej(e instanceof Error ? e : new Error(String(e))); });
         } else if (rank != null) {
             changeRank(node, rank)
                 .then(function () { res(); })
-                .catch(function () { rej(); });
+                .catch(function (e: unknown) { rej(e instanceof Error ? e : new Error(String(e))); });
         }
     });
 }
@@ -954,7 +953,7 @@ function changeParent(node: string | number, parent: number, rank: number | null
         .then(function (raw_data) {
             const responseData = JSON.parse(raw_data) as ApiStatResponse;
             if (responseData.stat === 'ok') {
-                if (rank !== null) changeRank(node, rank);
+                if (rank !== null) void changeRank(node, rank);
                 const updated_cats = responseData.result.updated_cats;
                 if (updated_cats) {
                     updated_cats.forEach(function (cat) {
@@ -967,10 +966,10 @@ function changeParent(node: string | number, parent: number, rank: number | null
                 }
                 res();
             } else {
-                rej(raw_data);
+                rej(new Error(raw_data));
             }
         })
-        .catch(function (error) { rej(error); });
+        .catch(function (error: unknown) { rej(error instanceof Error ? error : new Error(String(error))); });
     });
 }
 
@@ -990,10 +989,10 @@ function changeRank(node: string | number, rank: number): Promise<void> {
             if (responseData.stat === 'ok') {
                 res();
             } else {
-                rej(raw_data);
+                rej(new Error(raw_data));
             }
         })
-        .catch(function (error) { rej(error); });
+        .catch(function (error: unknown) { rej(error instanceof Error ? error : new Error(String(error))); });
     });
 }
 

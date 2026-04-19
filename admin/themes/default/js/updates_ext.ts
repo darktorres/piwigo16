@@ -49,7 +49,7 @@ export function init(cfg: UpdatesExtConfig): void {
         const item = _qPending.shift()!;
         autoupdate_bar_toggle(1);
         const params = new URLSearchParams(item.data);
-        fetch(item.url + '?' + params)
+        void fetch(item.url + '?' + params.toString())
             .then(r => r.json())
             .then(function (data: Record<string, unknown>) {
                 autoupdate_bar_toggle(-1);
@@ -107,7 +107,7 @@ export function init(cfg: UpdatesExtConfig): void {
             method: 'pwg.extensions.ignoreUpdate', reset: 'true',
             type: extType_local, pwg_token, format: 'json',
         });
-        fetch('ws.php?' + params)
+        void fetch('ws.php?' + params.toString())
             .then(r => r.json())
             .then(function (data: Record<string, unknown>) {
                 if (data['stat'] === 'ok') {

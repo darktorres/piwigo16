@@ -2,7 +2,9 @@ import { initModule } from './moduleInit.js';
 import { sprintf } from './common.js';
 import { pwgConfirm } from './pwgConfirm.js';
 import TomSelect from 'tom-select';
-import noUiSlider from 'nouislider';
+import noUiSlider, { type API as NoUiSliderAPI } from 'nouislider';
+
+type SliderEl = HTMLElement & { noUiSlider?: NoUiSliderAPI };
 import tippy from 'tippy.js';
 
 interface UserData {
@@ -86,8 +88,7 @@ let connected_user = 0;
 let groups_arr: (string | number)[][] = [];
 let nb_days = '';
 let nb_photos = '';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-let nb_photos_per_page = '';
+let _nb_photos_per_page = '';
 let last_user_index = -1;
 let last_user_id = -1;
 let pwg_token = '';
@@ -102,7 +103,7 @@ export function init(cfg: UserListConfig): void {
     connected_user = cfg.connectedUser;
     nb_days = cfg.nbDays;
     nb_photos = cfg.nbPhotos;
-    nb_photos_per_page = cfg.nbPhotosPerPage;
+    _nb_photos_per_page = cfg.nbPhotosPerPage;
     pwg_token = cfg.pwgToken;
 
     const groupsArrId = cfg.groupsArrId;
@@ -146,8 +147,7 @@ export function init(cfg: UserListConfig): void {
     /*---------------- Group Selectize ----------------*/
 
     document.querySelectorAll<HTMLElement>('[data-selectize=groups]').forEach(function (el) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        new TomSelect(el as any, {
+        new TomSelect(el as HTMLSelectElement, {
             valueField: 'value',
             labelField: 'label',
             searchField: ['label'],
@@ -156,10 +156,8 @@ export function init(cfg: UserListConfig): void {
     });
 
     const _groupEls = document.querySelectorAll<HTMLElement>('[data-selectize=groups]');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    groupSelectize = _groupEls[0] ? (_groupEls[0] as any).tomselect : null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    groupGuestSelectize = _groupEls[1] ? (_groupEls[1] as any).tomselect : null;
+    groupSelectize = _groupEls[0] ? (_groupEls[0] as HTMLElement & { tomselect?: TomSelect }).tomselect ?? null : null;
+    groupGuestSelectize = _groupEls[1] ? (_groupEls[1] as HTMLElement & { tomselect?: TomSelect }).tomselect ?? null : null;
 
     /*----------------- OnClick functions -----------------*/
 
@@ -517,8 +515,8 @@ export function init(cfg: UserListConfig): void {
     const nb_image_page_init = 0;
 
     function getSliderKeyFromValue(value: number, values: number[]): number {
-        for (const key in values) {
-            if (values[key] >= value) return parseInt(key);
+        for (let i = 0; i < values.length; i++) {
+            if ((values[i] ?? 0) >= value) return i;
         }
         return 0;
     }
@@ -535,7 +533,7 @@ export function init(cfg: UserListConfig): void {
     (function () {
         function makePhotosSlider(scope: string): void {
              
-            const el = document.querySelector(scope + ' .photos-select-bar .slider-bar-container');
+            const el = document.querySelector<SliderEl>(scope + ' .photos-select-bar .slider-bar-container');
             if (!el) return;
             noUiSlider.create(el, {
                 start: [nb_image_page_init],
@@ -543,12 +541,12 @@ export function init(cfg: UserListConfig): void {
                 step: 1,
                 connect: [true, false],
             });
-            el.noUiSlider.on('slide', function (values: string[]) {
+            el.noUiSlider!.on('slide', function (values: string[]) {
                 const val = Math.round(parseFloat(values[0]));
                 const infos = document.querySelector<HTMLElement>(scope + ' .photos-select-bar .nb-img-page-infos');
                 if (infos) infos.innerHTML = getNbImagePageInfoFromIdx(val);
             });
-            el.noUiSlider.on('change', function (values: string[]) {
+            el.noUiSlider!.on('change', function (values: string[]) {
                 const val = Math.round(parseFloat(values[0]));
                 const infos = document.querySelector<HTMLElement>(scope + ' .photos-select-bar .nb-img-page-infos');
                 if (infos) infos.innerHTML = getNbImagePageInfoFromIdx(val);
@@ -571,7 +569,7 @@ export function init(cfg: UserListConfig): void {
     (function () {
         function makePeriodSlider(scope: string): void {
              
-            const el = document.querySelector(scope + ' .period-select-bar .slider-bar-container');
+            const el = document.querySelector<SliderEl>(scope + ' .period-select-bar .slider-bar-container');
             if (!el) return;
             noUiSlider.create(el, {
                 start: [recent_period_init],
@@ -579,12 +577,12 @@ export function init(cfg: UserListConfig): void {
                 step: 1,
                 connect: [true, false],
             });
-            el.noUiSlider.on('slide', function (values: string[]) {
+            el.noUiSlider!.on('slide', function (values: string[]) {
                 const val = Math.round(parseFloat(values[0]));
                 const infos = document.querySelector<HTMLElement>(scope + ' .period-select-bar .recent_period_infos');
                 if (infos) infos.innerHTML = getRecentPeriodInfoFromIdx(val);
             });
-            el.noUiSlider.on('change', function (values: string[]) {
+            el.noUiSlider!.on('change', function (values: string[]) {
                 const val = Math.round(parseFloat(values[0]));
                 const infos = document.querySelector<HTMLElement>(scope + ' .period-select-bar .recent_period_infos');
                 if (infos) infos.innerHTML = getRecentPeriodInfoFromIdx(val);
@@ -601,7 +599,7 @@ export function init(cfg: UserListConfig): void {
         makePeriodSlider('#permitActionUserList');
 
          
-        const permitPhotosSlider = document.querySelector('#permitActionUserList .photos-select-bar .slider-bar-container');
+        const permitPhotosSlider = document.querySelector<SliderEl>('#permitActionUserList .photos-select-bar .slider-bar-container');
         if (permitPhotosSlider?.noUiSlider) permitPhotosSlider.noUiSlider.set(0);
 
         const permitActionPeriodInfo = document.querySelector<HTMLElement>('#permitActionUserList .period-select-bar .recent_period_infos');
@@ -727,7 +725,7 @@ export function init(cfg: UserListConfig): void {
 
     function setupRegisterDates(reg_dates: string[]): void {
          
-        const el = document.querySelector('.advanced-filter .dates-select-bar .slider-bar-container');
+        const el = document.querySelector<SliderEl>('.advanced-filter .dates-select-bar .slider-bar-container');
         if (el) {
             noUiSlider.create(el, {
                 start: [0, reg_dates.length - 1],
@@ -741,8 +739,8 @@ export function init(cfg: UserListConfig): void {
                 const infos = document.querySelector<HTMLElement>('.advanced-filter .dates-infos');
                 if (infos) infos.innerHTML = sprintf(dates_infos, getDateStr(reg_dates[lo]), getDateStr(reg_dates[hi]));
             }
-            el.noUiSlider.on('slide', updateDatesDisplay);
-            el.noUiSlider.on('change', function (values: string[]) {
+            el.noUiSlider!.on('slide', updateDatesDisplay);
+            el.noUiSlider!.on('change', function (values: string[]) {
                 updateDatesDisplay(values);
                 update_user_list();
             });
@@ -1169,10 +1167,8 @@ export function init(cfg: UserListConfig): void {
         set_selected_groups(user_to_edit.groups);
         if (current_group_selectize) {
             current_group_selectize.clear();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (current_group_selectize as any).load(function (callback: (results: GroupOption[]) => void) {
-                callback(groupOptions);
-            });
+            current_group_selectize.clearOptions();
+            current_group_selectize.addOptions(groupOptions);
             groupOptions.filter(g => g.isSelected).forEach(g => {
                 current_group_selectize.addItem(String(g.value));
             });
@@ -1187,7 +1183,7 @@ export function init(cfg: UserListConfig): void {
         const slider_key_period = getSliderKeyFromValue(parseInt(String(user_to_edit.recent_period)), recent_period_values);
 
          
-        const photosSlider = pop_in.querySelector('.photos-select-bar .slider-bar-container');
+        const photosSlider = pop_in.querySelector<SliderEl>('.photos-select-bar .slider-bar-container');
         if (photosSlider?.noUiSlider) photosSlider.noUiSlider.set(slider_key_photos);
 
         pop_in.querySelectorAll<HTMLOptionElement>('.user-property-theme select option').forEach(option => {
@@ -1198,7 +1194,7 @@ export function init(cfg: UserListConfig): void {
         });
 
          
-        const periodSlider = pop_in.querySelector('.period-select-bar .slider-bar-container');
+        const periodSlider = pop_in.querySelector<SliderEl>('.period-select-bar .slider-bar-container');
         if (periodSlider?.noUiSlider) periodSlider.noUiSlider.set(slider_key_period);
 
         const expandCheckbox = pop_in.querySelector<HTMLElement>('.user-list-checkbox[name="expand_all_albums"]');
@@ -1371,14 +1367,14 @@ export function init(cfg: UserListConfig): void {
 
         let photosValue = 0;
          
-        const photosSlider2 = pop_in.querySelector('.photos-select-bar .slider-bar-container');
-        if (photosSlider2?.noUiSlider) photosValue = Math.round(parseFloat(String(photosSlider2.noUiSlider.get())));
+        const photosSlider2 = pop_in.querySelector<SliderEl>('.photos-select-bar .slider-bar-container');
+        if (photosSlider2?.noUiSlider) photosValue = Math.round(parseFloat(String(photosSlider2.noUiSlider.get() as string | number)));
         ajax_data['nb_image_page'] = nb_image_page_values[photosValue];
 
         let periodValue = 0;
          
-        const periodSlider2 = pop_in.querySelector('.period-select-bar .slider-bar-container');
-        if (periodSlider2?.noUiSlider) periodValue = Math.round(parseFloat(String(periodSlider2.noUiSlider.get())));
+        const periodSlider2 = pop_in.querySelector<SliderEl>('.period-select-bar .slider-bar-container');
+        if (periodSlider2?.noUiSlider) periodValue = Math.round(parseFloat(String(periodSlider2.noUiSlider.get() as string | number)));
         ajax_data['recent_period'] = recent_period_values[periodValue];
 
         const expandCheckbox = pop_in.querySelector<HTMLElement>('.user-list-checkbox[name="expand_all_albums"]');
@@ -1424,7 +1420,7 @@ export function init(cfg: UserListConfig): void {
         const levelSelect = document.querySelector<HTMLSelectElement>('.advanced-filter-select[name=filter_level]');
         let minRegister = 0, maxRegister = 0;
          
-        const _datesSliderWS = document.querySelector('.dates-select-bar .slider-bar-container');
+        const _datesSliderWS = document.querySelector<SliderEl>('.dates-select-bar .slider-bar-container');
         if (_datesSliderWS?.noUiSlider) {
             const _v = (Array.isArray(_datesSliderWS.noUiSlider.get())
                 ? _datesSliderWS.noUiSlider.get()
@@ -1662,7 +1658,7 @@ export function init(cfg: UserListConfig): void {
             update_data['max_level'] = levelSelect ? levelSelect.value : '';
             let minRegister = 0, maxRegister = 0;
              
-            const _datesSliderUL = document.querySelector('.dates-select-bar .slider-bar-container');
+            const _datesSliderUL = document.querySelector<SliderEl>('.dates-select-bar .slider-bar-container');
             if (_datesSliderUL?.noUiSlider) {
                 const _v = (Array.isArray(_datesSliderUL.noUiSlider.get())
                     ? _datesSliderUL.noUiSlider.get()
@@ -1720,7 +1716,7 @@ export function init(cfg: UserListConfig): void {
                 const levelVal = document.querySelector<HTMLSelectElement>('.advanced-filter-select[name=filter_level]');
                 if (levelVal && levelVal.value !== '') nb_filters += 1;
                  
-                const _datesSliderF = document.querySelector('.dates-select-bar .slider-bar-container');
+                const _datesSliderF = document.querySelector<SliderEl>('.dates-select-bar .slider-bar-container');
                 if (_datesSliderF?.noUiSlider) {
                     const _v = (Array.isArray(_datesSliderF.noUiSlider.get())
                         ? _datesSliderF.noUiSlider.get()
@@ -1886,8 +1882,8 @@ export function init(cfg: UserListConfig): void {
                         break;
                     case 'recent_period': {
                          
-                        const _ps = document.querySelector('#permitActionUserList .period-select-bar .slider-bar-container');
-                        data['recent_period'] = recent_period_values[_ps?.noUiSlider ? Math.round(parseFloat(String(_ps.noUiSlider.get()))) : 0];
+                        const _ps = document.querySelector<SliderEl>('#permitActionUserList .period-select-bar .slider-bar-container');
+                        data['recent_period'] = recent_period_values[_ps?.noUiSlider ? Math.round(parseFloat(String(_ps.noUiSlider.get() as string | number))) : 0];
                         break;
                     }
                     case 'expand':

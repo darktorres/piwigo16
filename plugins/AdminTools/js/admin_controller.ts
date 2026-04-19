@@ -122,7 +122,7 @@ function populateMultiView(
     }
 
     if ("sessionStorage" in window && window.sessionStorage.multiView != undefined) {
-        render(JSON.parse(window.sessionStorage.multiView) as MultiViewData);
+        render(JSON.parse(window.sessionStorage.multiView as string) as MultiViewData);
     } else {
         fetch((state.urlWS ?? '') + "multiView.getData", { method: "POST" })
             .then(function (r) { return r.json(); })

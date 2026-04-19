@@ -15,8 +15,8 @@ interface RVTSConfig {
     $scrollEl: Element | Window;
     loadUp(): void;
     doAutoScroll(): void;
-    checkAutoScroll(evt?: Event): number;
-    engage(): void;
+    checkAutoScroll(this: void, evt?: Event): number;
+    engage(this: void): void;
 }
 
 interface RVTSCATSConfig {
@@ -30,8 +30,8 @@ interface RVTSCATSConfig {
     $thumbs: Element | null;
     $scrollEl: Element | Window;
     doAutoScroll(): void;
-    checkAutoScroll(): number;
-    engage(): void;
+    checkAutoScroll(this: void): number;
+    engage(this: void): void;
 }
 
 declare const GDThumb: { build: () => void } | undefined;
@@ -145,7 +145,7 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
                 });
         },
 
-        checkAutoScroll(evt?: Event): number {
+        checkAutoScroll(this: void, evt?: Event): number {
             if (!cfg.$thumbs) return 0;
             const scrollEl = cfg.$scrollEl || window;
             let tBot: number, wBot: number;
@@ -160,7 +160,7 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
             return tBot <= wBot ? (cfg.doAutoScroll(), 1) : 0;
         },
 
-        engage(): void {
+        engage(this: void): void {
             cfg.$thumbs = document.getElementById('thumbnails') || document.querySelector('.thumbnails');
             if (!cfg.$thumbs) return;
             cfg.$thumbs.insertAdjacentHTML('afterend',
@@ -269,7 +269,7 @@ export function initRVTS_CATS(RVTS_CATS: Partial<RVTSCATSConfig> & Pick<RVTSCATS
                 });
         },
 
-        checkAutoScroll(): number {
+        checkAutoScroll(this: void): number {
             const scrollEl = cfg.$scrollEl || window;
             let tBot = scrollEl === window
                 ? (cfg.$thumbs as HTMLElement).offsetTop + (cfg.$thumbs as HTMLElement).offsetHeight
@@ -281,7 +281,7 @@ export function initRVTS_CATS(RVTS_CATS: Partial<RVTSCATSConfig> & Pick<RVTSCATS
             return tBot <= wBot ? (cfg.doAutoScroll(), 1) : 0;
         },
 
-        engage(): void {
+        engage(this: void): void {
             cfg.$thumbs = document.querySelector('[data-album-grid]');
             if (!cfg.$thumbs) return;
             cfg.$thumbs.insertAdjacentHTML('afterend',

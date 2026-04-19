@@ -173,24 +173,27 @@ export function init(cfg: VtConfig): void {
         const text = document.getElementById('vtProgressText');
         if (text) text.textContent = current + ' / ' + total;
         const fileLabel = document.getElementById('vtCurrentFile');
-        if (fileLabel) fileLabel.textContent = String(data.file ?? '');
+        const file = (data.file as string) ?? '';
+        const generated = (data.generated as string) ?? '';
+        const skipped = data.skipped as number;
+        if (fileLabel) fileLabel.textContent = file;
         if (data.skip_reason) {
             const list = document.getElementById('vtSkippedList');
             if (list) {
                 const entry = document.createElement('div');
                 entry.className = 'vt-skip-entry';
                 if (data.skip_reason === 'file_not_found') {
-                    entry.textContent = data.file + ' \u2014 ' + (vtStrings.file_not_found ?? '');
+                    entry.textContent = file + ' \u2014 ' + (vtStrings.file_not_found ?? '');
                 } else if (Array.isArray(data.ffmpeg_output) && data.ffmpeg_output.length) {
                     const header = document.createElement('div');
-                    header.textContent = data.file + ' \u2014 ' + (vtStrings.ffmpeg_output ?? '') + ':';
+                    header.textContent = file + ' \u2014 ' + (vtStrings.ffmpeg_output ?? '') + ':';
                     entry.appendChild(header);
                     const pre = document.createElement('pre');
                     pre.className = 'vt-skip-ffmpeg-output';
                     pre.textContent = (data.ffmpeg_output as string[]).join('\n');
                     entry.appendChild(pre);
                 } else {
-                    entry.textContent = data.file + ' \u2014 ' + (vtStrings.ffmpeg_no_output ?? '');
+                    entry.textContent = file + ' \u2014 ' + (vtStrings.ffmpeg_no_output ?? '');
                 }
                 list.appendChild(entry);
                 list.style.display = '';
@@ -199,8 +202,8 @@ export function init(cfg: VtConfig): void {
         const sub = document.getElementById('substep-generate');
         if (sub) {
             sub.querySelector('.substep-detail')!.textContent =
-                pct + '% \u2014 ' + data.generated + ' ' + (vtStrings.generated ?? '')
-                + ((data.skipped as number) > 0 ? ', ' + data.skipped + ' ' + (vtStrings.skipped ?? '') : '');
+                pct + '% \u2014 ' + generated + ' ' + (vtStrings.generated ?? '')
+                + (skipped > 0 ? ', ' + String(skipped) + ' ' + (vtStrings.skipped ?? '') : '');
         }
     }
 
@@ -211,15 +214,19 @@ export function init(cfg: VtConfig): void {
         updateElapsed();
         hideControls();
 
+        const elapsed = (data.elapsed as string) ?? '';
+        const generated = (data.generated as string) ?? '';
+        const skipped = data.skipped as number;
+
         const phaseEl = document.getElementById('phase-generate');
         if (phaseEl) {
             phaseEl.classList.remove('running');
             phaseEl.classList.add('done');
             phaseEl.querySelector('.phase-status')!.innerHTML = '\u2713';
-            phaseEl.querySelector('.phase-time')!.textContent = data.elapsed + 's';
+            phaseEl.querySelector('.phase-time')!.textContent = elapsed + 's';
             phaseEl.querySelector('.phase-detail')!.textContent =
-                data.generated + ' ' + (vtStrings.generated ?? '')
-                + ((data.skipped as number) > 0 ? ', ' + data.skipped + ' ' + (vtStrings.skipped ?? '') : '');
+                generated + ' ' + (vtStrings.generated ?? '')
+                + (skipped > 0 ? ', ' + String(skipped) + ' ' + (vtStrings.skipped ?? '') : '');
         }
         const sub = document.getElementById('substep-generate');
         if (sub) {
@@ -231,8 +238,8 @@ export function init(cfg: VtConfig): void {
         const title = document.getElementById('vtTitle');
         if (title) title.textContent = vtStrings.done ?? 'Done';
 
-        let h = '<ul><li>' + data.generated + ' ' + (vtStrings.thumbnails_generated ?? '') + '</li>';
-        if ((data.skipped as number) > 0) h += '<li>' + data.skipped + ' ' + (vtStrings.skipped_reason ?? '') + '</li>';
+        let h = '<ul><li>' + generated + ' ' + (vtStrings.thumbnails_generated ?? '') + '</li>';
+        if (skipped > 0) h += '<li>' + String(skipped) + ' ' + (vtStrings.skipped_reason ?? '') + '</li>';
         h += '</ul><p class="bottomButtons"><button class="icon-exchange buttonGradient" type="button" onclick="location.reload()">' + (vtStrings.run_again ?? 'Run again') + '</button></p>';
 
         const results = document.getElementById('vtResults');

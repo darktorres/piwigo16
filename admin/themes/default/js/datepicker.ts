@@ -69,8 +69,7 @@ export function pwgDatepicker(
             };
         }
 
-        const fp = flatpickr(inputEl, fpConfig);
-        const fpInstance = Array.isArray(fp) ? fp[0] : fp;
+        const fpInstance = flatpickr(inputEl, fpConfig);
 
         if (initialValue) {
             fpInstance.setDate(initialValue, false, opts.showTimepicker ? 'Y-m-d H:i:S' : 'Y-m-d');

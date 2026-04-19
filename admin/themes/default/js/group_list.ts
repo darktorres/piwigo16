@@ -442,7 +442,7 @@ export function init(cfg: GroupListConfig): void {
                     text: str_yes_delete_confirmation,
                     btnClass: 'btn-red',
                     action: function () {
-                        fetch('ws.php?format=json&method=pwg.groups.delete', {
+                        void fetch('ws.php?format=json&method=pwg.groups.delete', {
                             method: 'POST',
                             body: 'group_id=' + id + '&pwg_token=' + pwg_token,
                             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -785,7 +785,7 @@ export function init(cfg: GroupListConfig): void {
             }
         });
 
-        fetch('ws.php?format=json&method=pwg.groups.merge', {
+        void fetch('ws.php?format=json&method=pwg.groups.merge', {
             method: 'POST',
             body: 'destination_group_id=' + dest_grp + str_merge_group + '&pwg_token=' + pwg_token,
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -820,7 +820,7 @@ export function init(cfg: GroupListConfig): void {
                 const userCount = document.querySelector<HTMLElement>('#group-' + dest_grp + ' .group_number_users');
                 if (userCount) userCount.innerHTML = "<i class='icon-spin6 animate-spin'> </i>";
 
-                fetch('ws.php?format=json&method=pwg.users.getList', {
+                void fetch('ws.php?format=json&method=pwg.users.getList', {
                     method: 'POST',
                     body: 'group_id=' + dest_grp,
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -885,15 +885,13 @@ export function init(cfg: GroupListConfig): void {
 
     /*------- Manage User Part -------*/
     let selectize: TomSelect | undefined;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let usersCache: any = {};
+    let usersCache: UsersCache | null = null;
     let usersInGroup: UserEntry[] = [];
     const maxOffsetUserCont = 322;
 
     const selectEl = document.querySelector<HTMLSelectElement>('.AddUserBlock select');
     if (selectEl) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        selectize = (selectEl as any).tomselect ?? new TomSelect(selectEl, {});
+        selectize = (selectEl as HTMLSelectElement & { tomselect?: TomSelect }).tomselect ?? new TomSelect(selectEl, {});
 
         let idSearch = '';
         let updateUserSearch: () => void;
@@ -906,17 +904,15 @@ export function init(cfg: GroupListConfig): void {
 
         updateUserSearch = function (): void {
             if (selectize) selectize.clear();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const localCache: any = new UsersCache({
+            const localCache = new UsersCache({
                 serverKey: serverKey,
                 serverId: serverId,
                 rootUrl: rootUrl,
             });
-            try {
-                JSON.parse(localCache.storage[localCache.key]).data.forEach(function (u: UserEntry) {
-                    if (selectize) selectize.addOption({ value: u.id, text: u.username });
-                });
-            } catch (_e) { /* ignore cache errors */ }
+            const cachedUsers = localCache.getFromStorage();
+            if (cachedUsers) cachedUsers.forEach(function (u: UserEntry) {
+                if (selectize) selectize.addOption({ value: u.id, text: u.username });
+            });
             idSearch = document.getElementById('UserList')?.getAttribute('data-group_id') ?? '';
 
             if (selectize) {
@@ -1002,7 +998,7 @@ export function init(cfg: GroupListConfig): void {
                 cancelBtn.style.pointerEvents = 'none';
                 cancelBtn.classList.remove('icon-cancel');
 
-                fetch('ws.php?format=json&method=pwg.groups.deleteUser', {
+                void fetch('ws.php?format=json&method=pwg.groups.deleteUser', {
                     method: 'POST',
                     body: 'group_id=' + grp_id + '&user_id=' + String(user_id) + '&pwg_token=' + pwg_token,
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1072,7 +1068,7 @@ export function init(cfg: GroupListConfig): void {
             const submitBtn = document.getElementById('UserSubmit');
             if (submitBtn) { loadState.changeHTML(submitBtn, "<i class='icon-spin6 animate-spin'> </i>"); loadState.removeClass(submitBtn, 'icon-user-add'); loadState.changeAttribute(submitBtn, 'style', 'pointer-events:none'); }
 
-            fetch('ws.php?format=json&method=pwg.groups.addUser', {
+            void fetch('ws.php?format=json&method=pwg.groups.addUser', {
                 method: 'POST',
                 body: 'group_id=' + grp_id + '&user_id=' + id + '&pwg_token=' + pwg_token,
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1084,11 +1080,10 @@ export function init(cfg: GroupListConfig): void {
 
                 if (data.stat === 'ok') {
                     let username = 'undefined';
-                    try {
-                        JSON.parse(usersCache.storage[usersCache.key]).data.forEach(function (u: UserEntry) {
-                            if (String(u.id) == id) username = u.username;
-                        });
-                    } catch (_e) { /* ignore */ }
+                    const cachedData = usersCache?.getFromStorage();
+                    if (cachedData) cachedData.forEach(function (u: UserEntry) {
+                        if (String(u.id) == id) username = String(u.username);
+                    });
 
                     const userBlock = getUserDisplay(username, id, grp_id);
                     const listEl = document.querySelector<HTMLElement>('.UsersInGroupList');
@@ -1179,7 +1174,7 @@ export function init(cfg: GroupListConfig): void {
         rootUrl: rootUrl,
     });
 
-    usersCache.selectize(document.querySelectorAll('select.UserSearch'));
+    usersCache?.selectize(document.querySelectorAll('select.UserSearch'));
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {

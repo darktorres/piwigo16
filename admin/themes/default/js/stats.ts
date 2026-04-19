@@ -96,8 +96,7 @@ export function init(cfg: StatsConfig): void {
                 tooltips: { mode: 'index' },
                 hover: { intersect: false },
             };
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            statGraph.options.scales.xAxes.forEach((axe: any) => {
+            statGraph.options.scales.xAxes?.forEach((axe) => {
                 axe.time.tooltipFormat = str_tooltip_format[dataType];
                 axe.time.unit = data_unit[dataType];
                 axe.time.displayFormats = str_unit_format;
@@ -178,7 +177,7 @@ export function init(cfg: StatsConfig): void {
                 colorIndice++;
             });
 
-            const averageTab: number[] = Array(31).fill(monthStats.avg);
+            const averageTab: number[] = Array<number>(31).fill(monthStats.avg);
             dataset.push({
                 label: str_avg,
                 data: averageTab,

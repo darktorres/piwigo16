@@ -152,7 +152,7 @@ export function init(cfg: GroupListConfig): void {
         }
     });
 
-    const deployAddGroupForm = function (): void {
+    function deployAddGroupForm(): void {
         const block = document.querySelector<HTMLElement>('.addGroupBlock');
         if (block) {
             block.style.transition = 'all 0.4s ease';
@@ -168,7 +168,7 @@ export function init(cfg: GroupListConfig): void {
         isToggle = false;
     };
 
-    const hideAddGroupForm = function (): void {
+    function hideAddGroupForm(): void {
         const form = document.querySelector<HTMLElement>('#addGroupForm form');
         if (form) {
             form.style.opacity = '0';
@@ -247,7 +247,7 @@ export function init(cfg: GroupListConfig): void {
         }
     });
 
-    const createGroup = function (group: GroupData): HTMLElement {
+    function createGroup(group: GroupData): HTMLElement {
         const template = document.getElementById('group-template')!;
         const newgroup = template.cloneNode(true) as HTMLElement;
         newgroup.id = 'group-' + String(group.id);
@@ -293,7 +293,7 @@ export function init(cfg: GroupListConfig): void {
         return newgroup;
     };
 
-    const setupGroupBox = function (groupBox: HTMLElement): void {
+    function setupGroupBox(groupBox: HTMLElement): void {
         const id = groupBox.getAttribute('data-id') ?? '';
 
         const checkbox = groupBox.querySelector<HTMLInputElement>(".Group-checkbox input[type='checkbox']");
@@ -385,7 +385,7 @@ export function init(cfg: GroupListConfig): void {
         if (el.id != 'group-template') setupGroupBox(el);
     });
 
-    const toggleSelection = function (group_id: string, toggle: boolean): void {
+    function toggleSelection(group_id: string, toggle: boolean): void {
         const groupBox = document.getElementById('group-' + group_id);
         if (!groupBox) return;
 
@@ -433,7 +433,7 @@ export function init(cfg: GroupListConfig): void {
         }
     };
 
-    const deleteGroup = function (id: string): void {
+    function deleteGroup(id: string): void {
         const groupName = document.querySelector<HTMLElement>('#group-' + id + ' #group_name')?.innerHTML ?? '';
         pwgConfirm({
             title: str_delete.replace('%s', groupName),
@@ -464,7 +464,7 @@ export function init(cfg: GroupListConfig): void {
         });
     };
 
-    const renameGroup = function (id: string, newName: string): void {
+    function renameGroup(id: string, newName: string): void {
         const loadState = new TemporaryState();
         const validateBtn = document.querySelector<HTMLElement>('#group-' + id + ' .group-rename .validate');
         if (validateBtn) { loadState.changeHTML(validateBtn, "<i class='animate-spin icon-spin6'></i>"); loadState.removeClass(validateBtn, 'icon-ok'); }
@@ -513,7 +513,7 @@ export function init(cfg: GroupListConfig): void {
         }
     };
 
-    const displayRenameForm = function (doDisplay: boolean, grp_id: string): void {
+    function displayRenameForm(doDisplay: boolean, grp_id: string): void {
         if (doDisplay) {
             const form = document.querySelector<HTMLElement>('#group-' + grp_id + ' .group-rename');
             if (form) form.style.display = 'flex';
@@ -531,7 +531,7 @@ export function init(cfg: GroupListConfig): void {
         }
     };
 
-    const setDefaultGroup = function (id: string, is_default: boolean): void {
+    function setDefaultGroup(id: string, is_default: boolean): void {
         const btn = document.querySelector<HTMLElement>('#group-' + id + ' #GroupDefault');
         if (btn) {
             btn.style.width = String(btn.offsetWidth) + 'px';
@@ -564,7 +564,7 @@ export function init(cfg: GroupListConfig): void {
         .catch(error => console.log(error));
     };
 
-    const setupDefaultActions = function (id: string, is_default: boolean): void {
+    function setupDefaultActions(id: string, is_default: boolean): void {
         const btn = document.querySelector<HTMLElement>('#group-' + id + ' #GroupDefault');
         if (btn) {
             btn.style.cssText = '';
@@ -605,7 +605,7 @@ export function init(cfg: GroupListConfig): void {
         }
     };
 
-    const duplicateAction = function (id: string): void {
+    function duplicateAction(id: string): void {
         const loadState = new TemporaryState();
         const dupBtn = document.querySelector<HTMLElement>('#group-' + id + ' #GroupDuplicate');
         if (dupBtn) { loadState.changeHTML(dupBtn, "<i class='icon-spin6 animate-spin'> </i>"); loadState.removeClass(dupBtn, 'icon-docs'); loadState.changeAttribute(dupBtn, 'style', 'pointer-events: none; text-align: center;'); }
@@ -674,7 +674,7 @@ export function init(cfg: GroupListConfig): void {
     /*------- Update Selection Panel -------*/
     let state = 'NoSelection';
 
-    const updateSelectionPanel = function (changedState = ''): void {
+    function updateSelectionPanel(changedState = ''): void {
         const numSelect = document.querySelectorAll('.DeleteGroupList div').length;
 
         if (numSelect == 0) {
@@ -691,7 +691,7 @@ export function init(cfg: GroupListConfig): void {
         if (numEl) numEl.innerHTML = String(numSelect);
     };
 
-    const updateStatePanel = function (newState = 'Selection'): void {
+    function updateStatePanel(newState = 'Selection'): void {
         state = newState;
         const deleteBtn = document.getElementById('DeleteSelectionMode');
         const mergeBtn = document.getElementById('MergeSelectionMode');
@@ -746,14 +746,14 @@ export function init(cfg: GroupListConfig): void {
         }
     };
 
-    const buttonAvailable = function (button: HTMLElement | null | undefined, onClick: string): void {
+    function buttonAvailable(button: HTMLElement | null | undefined, onClick: string): void {
         if (button) {
             button.classList.remove('unavailable');
             button.setAttribute('onClick', onClick);
         }
     };
 
-    const buttonUnavailable = function (button: HTMLElement | null | undefined): void {
+    function buttonUnavailable(button: HTMLElement | null | undefined): void {
         if (button) {
             button.classList.add('unavailable');
             button.removeAttribute('onClick');
@@ -929,7 +929,7 @@ export function init(cfg: GroupListConfig): void {
         };
     }
 
-    const openUserManager = function (grp_id: string): void {
+    function openUserManager(grp_id: string): void {
         const loadState = new TemporaryState();
         const trigger = document.querySelector<HTMLElement>('#group-' + grp_id + ' #UserListTrigger');
         if (trigger) { loadState.removeClass(trigger, 'icon-user-1'); loadState.changeAttribute(trigger, 'style', 'pointer-events: none'); loadState.changeHTML(trigger, "<i class='icon-spin6 animate-spin'> </i>"); }
@@ -980,7 +980,7 @@ export function init(cfg: GroupListConfig): void {
         .catch(error => console.log(error));
     };
 
-    const getUserDisplay = function (username: string, user_id: string | number, grp_id: string): HTMLElement {
+    function getUserDisplay(username: string, user_id: string | number, grp_id: string): HTMLElement {
         const userBlock = document.createElement('div');
         userBlock.className = 'UsernameBlock';
         userBlock.setAttribute('data-id', String(user_id));

@@ -20,13 +20,19 @@ use Piwigo\inc\functions;
 
 final class LocalSiteReader
 {
-    /** @var array<string, array<string, string>> scandir cache: path => [filename_wo_ext => ext] */
+    /**
+     * @var array<string, array<string, string>> scandir cache: path => [filename_wo_ext => ext]
+     */
     private array $representative_cache = [];
 
-    /** @var array<string, array<string, array<string, int>>> scandir cache: path => [filename_wo_ext => [ext => size_kb]] */
+    /**
+     * @var array<string, array<string, array<string, int>>> scandir cache: path => [filename_wo_ext => [ext => size_kb]]
+     */
     private array $format_cache = [];
 
-    /** Running count of elements yielded across the current get_elements() traversal. */
+    /**
+     * Running count of elements yielded across the current get_elements() traversal.
+     */
     private int $elementsYielded = 0;
 
     public function __construct(
@@ -92,7 +98,7 @@ final class LocalSiteReader
     ): \Generator {
         global $conf, $logger;
 
-        $subdirs   = [];
+        $subdirs = [];
         $dir_files = [];
         $profiling = $conf->sync_profiling;
 
@@ -287,6 +293,45 @@ final class LocalSiteReader
         return functions_metadata_admin::get_sync_metadata($infos);
     }
 
+    public function get_representative_ext(
+        string $path,
+        string $filename_wo_ext,
+        ?string $extension = null
+    ): ?string {
+        if (! isset($this->representative_cache[$path])) {
+            $this->load_representative_cache($path);
+        }
+
+        $result = $this->representative_cache[$path][$filename_wo_ext] ?? null;
+
+        if ($result === null && $extension !== null) {
+            $video_exts = ['wmv', 'mov', 'mkv', 'mp4', 'mpg', 'flv', 'asf', 'xvid', 'divx', 'mpeg', 'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv'];
+
+            if (in_array(strtolower($extension), $video_exts, true)) {
+                $full_path = $path . '/' . $filename_wo_ext . '.' . $extension;
+                $new_ext = functions_upload::upload_file_video(null, $full_path);
+
+                if ($new_ext !== null) {
+                    $this->representative_cache[$path][$filename_wo_ext] = $new_ext;
+                    $result = $new_ext;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    public function get_formats(
+        string $path,
+        string $filename_wo_ext
+    ): array {
+        if (! isset($this->format_cache[$path])) {
+            $this->load_format_cache($path);
+        }
+
+        return $this->format_cache[$path][$filename_wo_ext] ?? [];
+    }
+
     //-------------------------------------------------- private functions --------
 
     private function load_representative_cache(string $path): void
@@ -370,44 +415,5 @@ final class LocalSiteReader
         }
 
         $this->format_cache[$path] = $cache;
-    }
-
-    public function get_representative_ext(
-        string $path,
-        string $filename_wo_ext,
-        ?string $extension = null
-    ): ?string {
-        if (! isset($this->representative_cache[$path])) {
-            $this->load_representative_cache($path);
-        }
-
-        $result = $this->representative_cache[$path][$filename_wo_ext] ?? null;
-
-        if ($result === null && $extension !== null) {
-            $video_exts = ['wmv', 'mov', 'mkv', 'mp4', 'mpg', 'flv', 'asf', 'xvid', 'divx', 'mpeg', 'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv'];
-
-            if (in_array(strtolower($extension), $video_exts, true)) {
-                $full_path = $path . '/' . $filename_wo_ext . '.' . $extension;
-                $new_ext = functions_upload::upload_file_video(null, $full_path);
-
-                if ($new_ext !== null) {
-                    $this->representative_cache[$path][$filename_wo_ext] = $new_ext;
-                    $result = $new_ext;
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    public function get_formats(
-        string $path,
-        string $filename_wo_ext
-    ): array {
-        if (! isset($this->format_cache[$path])) {
-            $this->load_format_cache($path);
-        }
-
-        return $this->format_cache[$path][$filename_wo_ext] ?? [];
     }
 }

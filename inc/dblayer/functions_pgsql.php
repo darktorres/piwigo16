@@ -30,11 +30,13 @@ final class functions_pgsql
 
     private static ?Result $last_result = null;
 
-    /** Maps table name → tsvector column name for PostgreSQL FTS index management. */
+    /**
+     * Maps table name → tsvector column name for PostgreSQL FTS index management.
+     */
     private static array $FTS_COLUMN_MAP = [
-        'images'     => 'image_fts',
+        'images' => 'image_fts',
         'categories' => 'category_fts',
-        'tags'       => 'tag_fts',
+        'tags' => 'tag_fts',
     ];
 
     /**
@@ -956,9 +958,9 @@ final class functions_pgsql
     {
         $escaped = self::pwg_db_real_escape_string($table);
         $result = self::pwg_query(
-            "SELECT column_name FROM information_schema.columns"
+            'SELECT column_name FROM information_schema.columns'
             . " WHERE table_schema='public' AND table_name='{$escaped}'"
-            . " ORDER BY ordinal_position;"
+            . ' ORDER BY ordinal_position;'
         );
         $columns = [];
 
@@ -977,7 +979,10 @@ final class functions_pgsql
      */
     public static function sql_regex_word_boundary(): array
     {
-        return ['begin' => '\\y', 'end' => '\\y'];
+        return [
+            'begin' => '\\y',
+            'end' => '\\y',
+        ];
     }
 
     /**
@@ -1081,19 +1086,6 @@ final class functions_pgsql
         return $data;
     }
 
-    private static function convert_bool(array|bool &$row): void
-    {
-        if ($row) {
-            foreach ($row as $key => $value) {
-                if ($value === 't') {
-                    $row[$key] = 'true';
-                } elseif ($value === 'f') {
-                    $row[$key] = 'false';
-                }
-            }
-        }
-    }
-
     public static function sync_sequences(): void
     {
         $query = <<<SQL
@@ -1122,6 +1114,19 @@ final class functions_pgsql
 
         while ($row = pg_fetch_row($res)) {
             self::pwg_query($row[0]);
+        }
+    }
+
+    private static function convert_bool(array|bool &$row): void
+    {
+        if ($row) {
+            foreach ($row as $key => $value) {
+                if ($value === 't') {
+                    $row[$key] = 'true';
+                } elseif ($value === 'f') {
+                    $row[$key] = 'false';
+                }
+            }
         }
     }
 }

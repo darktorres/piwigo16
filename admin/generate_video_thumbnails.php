@@ -52,11 +52,17 @@ if ($sse_mode && isset($_POST['submit'])) {
     $total = count($images);
 
     if ($total === 0) {
-        vt_emit('complete', ['generated' => 0, 'skipped' => 0, 'elapsed' => 0]);
+        vt_emit('complete', [
+            'generated' => 0,
+            'skipped' => 0,
+            'elapsed' => 0,
+        ]);
         exit();
     }
 
-    vt_emit('start', ['total' => $total]);
+    vt_emit('start', [
+        'total' => $total,
+    ]);
 
     $generated = 0;
     $skipped = 0;
@@ -119,7 +125,9 @@ $count_query = 'SELECT COUNT(*) AS cnt FROM images WHERE representative_ext IS N
 [$count_row] = $conf->sql_backend::query2array($count_query);
 $pending_count = (int) $count_row['cnt'];
 
-$template->set_filenames(['generate_video_thumbnails' => 'generate_video_thumbnails.tpl']);
+$template->set_filenames([
+    'generate_video_thumbnails' => 'generate_video_thumbnails.tpl',
+]);
 $template->assign([
     'ADMIN_PAGE_TITLE' => functions::l10n('Generate video thumbnails'),
     'PENDING_COUNT' => $pending_count,

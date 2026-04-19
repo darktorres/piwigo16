@@ -28,11 +28,15 @@ final class EverythingSiteReader
 {
     private readonly LocalSiteReader $local;
 
-    /** Running count of elements yielded in the current get_elements() traversal. */
+    /**
+     * Running count of elements yielded in the current get_elements() traversal.
+     */
     private int $elementsYielded = 0;
 
-    public function __construct(public string $site_url, private readonly EverythingSDK $sdk)
-    {
+    public function __construct(
+        public string $site_url,
+        private readonly EverythingSDK $sdk
+    ) {
         $this->local = new LocalSiteReader($this->site_url);
     }
 
@@ -79,7 +83,10 @@ final class EverythingSiteReader
 
         foreach ($queryTargets as $target) {
             $query = $this->buildPathQuery($target['absPath']) . ' folder:';
-            $logger->info('[sync][ev] querying dirs', ['target' => $target['piwigoPrefix'], 'query' => $query]);
+            $logger->info('[sync][ev] querying dirs', [
+                'target' => $target['piwigoPrefix'],
+                'query' => $query,
+            ]);
 
             $absPrefixFwd = str_replace('\\', '/', $target['absPath']);
             $absPrefixLen = strlen($absPrefixFwd);
@@ -111,7 +118,10 @@ final class EverythingSiteReader
                 }
             }
 
-            $logger->info('[sync][ev] dirs result', ['target' => $target['piwigoPrefix'], 'raw_count' => $rawCount]);
+            $logger->info('[sync][ev] dirs result', [
+                'target' => $target['piwigoPrefix'],
+                'raw_count' => $rawCount,
+            ]);
 
             // The symlink directory itself is also a valid directory.
             if ($target['piwigoPrefix'] !== $basedirClean) {
@@ -183,7 +193,10 @@ final class EverythingSiteReader
 
         foreach ($queryTargets as $target) {
             $query = $this->buildPathQuery($target['absPath']) . ' ext:' . $extList;
-            $logger->info('[sync][ev] querying files', ['target' => $target['piwigoPrefix'], 'query' => $query]);
+            $logger->info('[sync][ev] querying files', [
+                'target' => $target['piwigoPrefix'],
+                'query' => $query,
+            ]);
 
             $absPrefixFwd = str_replace('\\', '/', $target['absPath']);
             $absPrefixLen = strlen($absPrefixFwd);
@@ -262,7 +275,10 @@ final class EverythingSiteReader
                 }
             }
 
-            $logger->info('[sync][ev] files result', ['target' => $target['piwigoPrefix'], 'raw_count' => $rawCount]);
+            $logger->info('[sync][ev] files result', [
+                'target' => $target['piwigoPrefix'],
+                'raw_count' => $rawCount,
+            ]);
         }
 
         if ($profiling) {
@@ -340,7 +356,10 @@ final class EverythingSiteReader
         array $excludeDirs
     ): array {
         $targets = [
-            ['absPath' => $absBasedir, 'piwigoPrefix' => $basedirClean],
+            [
+                'absPath' => $absBasedir,
+                'piwigoPrefix' => $basedirClean,
+            ],
         ];
 
         $baseFwd = str_replace('\\', '/', $absBasedir);
@@ -372,7 +391,10 @@ final class EverythingSiteReader
                     continue;
                 }
 
-                $targets[] = ['absPath' => $resolved, 'piwigoPrefix' => $fullPath];
+                $targets[] = [
+                    'absPath' => $resolved,
+                    'piwigoPrefix' => $fullPath,
+                ];
             }
         }
 
@@ -397,6 +419,6 @@ final class EverythingSiteReader
      */
     private function hasExcludedComponent(string $relativePath, array $excludeSet): bool
     {
-        return array_any(explode('/', $relativePath), fn($component): bool => isset($excludeSet[$component]));
+        return array_any(explode('/', $relativePath), fn ($component): bool => isset($excludeSet[$component]));
     }
 }

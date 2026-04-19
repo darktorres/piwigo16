@@ -747,32 +747,32 @@ $page_data = [
         'widths' => [
             'values' => empty($dimensions['widths']) ? [] : array_map(intval(...), explode(',', $dimensions['widths'])),
             'selected' => [
-                'min' => (int)($dimensions['selected']['min_width'] ?? 0),
-                'max' => (int)($dimensions['selected']['max_width'] ?? 0),
+                'min' => (int) ($dimensions['selected']['min_width'] ?? 0),
+                'max' => (int) ($dimensions['selected']['max_width'] ?? 0),
             ],
             'text' => functions::l10n('between %d and %d pixels'),
         ],
         'heights' => [
             'values' => empty($dimensions['heights']) ? [] : array_map(intval(...), explode(',', $dimensions['heights'])),
             'selected' => [
-                'min' => (int)($dimensions['selected']['min_height'] ?? 0),
-                'max' => (int)($dimensions['selected']['max_height'] ?? 0),
+                'min' => (int) ($dimensions['selected']['min_height'] ?? 0),
+                'max' => (int) ($dimensions['selected']['max_height'] ?? 0),
             ],
             'text' => functions::l10n('between %d and %d pixels'),
         ],
         'ratios' => [
             'values' => empty($dimensions['ratios']) ? [] : array_map(floatval(...), explode(',', $dimensions['ratios'])),
             'selected' => [
-                'min' => (float)($dimensions['selected']['min_ratio'] ?? 0),
-                'max' => (float)($dimensions['selected']['max_ratio'] ?? 0),
+                'min' => (float) ($dimensions['selected']['min_ratio'] ?? 0),
+                'max' => (float) ($dimensions['selected']['max_ratio'] ?? 0),
             ],
             'text' => functions::l10n('between %.2f and %.2f'),
         ],
         'filesizes' => [
             'values' => empty($filesize['list']) ? [] : explode(',', $filesize['list']),
             'selected' => [
-                'min' => (int)($filesize['selected']['min'] ?? 0),
-                'max' => (int)($filesize['selected']['max'] ?? 0),
+                'min' => (int) ($filesize['selected']['min'] ?? 0),
+                'max' => (int) ($filesize['selected']['max'] ?? 0),
             ],
             'text' => functions::l10n('between %s and %s MB'),
         ],

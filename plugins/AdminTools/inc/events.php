@@ -220,7 +220,9 @@ function admintools_add_admin_controller(): void
     ]);
 
     require_once PHPWG_ROOT_PATH . 'inc/vite_helper.php';
-    \Piwigo\Vite\vite_assign_modules($template, ['at_admin_controller' => 'plugins/AdminTools/js/admin_controller']);
+    \Piwigo\Vite\vite_assign_modules($template, [
+        'at_admin_controller' => 'plugins/AdminTools/js/admin_controller',
+    ]);
 
     $template->set_filename('ato_admin_controller', realpath(ADMINTOOLS_PATH . 'template/admin_controller.tpl'));
     $template->parse('ato_admin_controller');

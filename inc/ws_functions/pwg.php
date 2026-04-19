@@ -528,7 +528,7 @@ final class pwg
 
             SQL;
 
-        if (!empty($param['uid'])) {
+        if (! empty($param['uid'])) {
             $query .= <<<SQL
                 AND performed_by = {$param['uid']}
 
@@ -636,7 +636,7 @@ final class pwg
             }
         }
 
-        if (!empty($param['uid'])) {
+        if (! empty($param['uid'])) {
             $query = <<<SQL
                 SELECT COUNT(*) AS "COUNT(*)"
                 FROM activity

@@ -326,7 +326,7 @@ if ($page['section'] == 'categories') {
 
         // Fetch only the current page's IDs via LIMIT/OFFSET — no caching needed.
         $offset = (int) $page['start'];
-        $limit  = (int) $page['nb_image_page'];
+        $limit = (int) $page['nb_image_page'];
 
         // Flat mode: subquery deduplicates image_ids across sub-categories; forbidden only
         // references images.id so no JOIN needed in the outer query.

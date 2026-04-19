@@ -9,14 +9,13 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\admin\EverythingSDK;
+use Piwigo\admin\EverythingSiteReader;
 use Piwigo\admin\inc\functions_admin;
 use Piwigo\admin\inc\functions_metadata_admin;
 use Piwigo\admin\inc\tabsheet;
-use Piwigo\admin\EverythingSDK;
-use Piwigo\admin\EverythingSiteReader;
 use Piwigo\admin\LocalSiteReader;
 use Piwigo\inc\functions;
-use Piwigo\inc\functions_category;
 use Piwigo\inc\functions_html;
 use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
@@ -168,7 +167,9 @@ if (isset($_POST['submit'])) {
     $simulate = isset($_POST['simulate']) && $_POST['simulate'] == 1;
 
     if ($sse_mode && $general_failure) {
-        sync_emit('error', ['message' => 'Failed to open site reader']);
+        sync_emit('error', [
+            'message' => 'Failed to open site reader',
+        ]);
         exit();
     }
 }
@@ -190,12 +191,18 @@ if (isset($_POST['submit']) &&
    ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files') &&
     ! $general_failure
 ) {
-    sync_emit('phase_start', ['phase' => 'dirs']);
+    sync_emit('phase_start', [
+        'phase' => 'dirs',
+    ]);
     $t_dirs_phase = microtime(true);
     $start = functions::get_moment();
 
     // --- substep: load DB categories ---
-    sync_emit('substep_start', ['phase' => 'dirs', 'id' => 'db', 'label' => 'Loading database categories']);
+    sync_emit('substep_start', [
+        'phase' => 'dirs',
+        'id' => 'db',
+        'label' => 'Loading database categories',
+    ]);
     $t_sub = microtime(true);
 
     $query = <<<SQL
@@ -239,13 +246,18 @@ if (isset($_POST['submit']) &&
     $next_id = $conf->sql_backend::pwg_db_nextval('id', 'categories');
 
     sync_emit('substep_complete', [
-        'phase' => 'dirs', 'id' => 'db',
+        'phase' => 'dirs',
+        'id' => 'db',
         'detail' => fmt_number(count($db_categories)) . ' albums in database',
         'elapsed' => round(microtime(true) - $t_sub, 1),
     ]);
 
     // --- substep: scan filesystem ---
-    sync_emit('substep_start', ['phase' => 'dirs', 'id' => 'scan', 'label' => 'Scanning directories']);
+    sync_emit('substep_start', [
+        'phase' => 'dirs',
+        'id' => 'scan',
+        'label' => 'Scanning directories',
+    ]);
     $t_sub = microtime(true);
 
     $dir_callback = $sse_mode
@@ -256,26 +268,37 @@ if (isset($_POST['submit']) &&
                 'detail' => $dir,
             ]);
         }
-        : null;
+    : null;
     $fs_fulldirs = $site_reader->get_full_directories($basedir, $dir_callback);
-    $logger->info('[sync][dirs] get_full_directories done', ['count' => count($fs_fulldirs)]);
+    $logger->info('[sync][dirs] get_full_directories done', [
+        'count' => count($fs_fulldirs),
+    ]);
 
     sync_emit('substep_complete', [
-        'phase' => 'dirs', 'id' => 'scan',
+        'phase' => 'dirs',
+        'id' => 'scan',
         'detail' => fmt_number(count($fs_fulldirs)) . ' directories found',
         'elapsed' => round(microtime(true) - $t_sub, 1),
     ]);
 
     // --- substep: diff ---
-    sync_emit('substep_start', ['phase' => 'dirs', 'id' => 'diff', 'label' => 'Comparing filesystem vs database']);
+    sync_emit('substep_start', [
+        'phase' => 'dirs',
+        'id' => 'diff',
+        'label' => 'Comparing filesystem vs database',
+    ]);
     $t_sub = microtime(true);
 
     $new_dirs = array_diff($fs_fulldirs, array_keys($db_fulldirs));
     $del_dirs = array_diff(array_keys($db_fulldirs), $fs_fulldirs);
-    $logger->info('[sync][dirs] diff computed', ['new' => count($new_dirs), 'del' => count($del_dirs)]);
+    $logger->info('[sync][dirs] diff computed', [
+        'new' => count($new_dirs),
+        'del' => count($del_dirs),
+    ]);
 
     sync_emit('substep_complete', [
-        'phase' => 'dirs', 'id' => 'diff',
+        'phase' => 'dirs',
+        'id' => 'diff',
         'detail' => fmt_number(count($new_dirs)) . ' new, ' . fmt_number(count($del_dirs)) . ' to delete',
         'elapsed' => round(microtime(true) - $t_sub, 1),
     ]);
@@ -334,19 +357,26 @@ if (isset($_POST['submit']) &&
 
     if ($inserts !== []) {
         sync_emit('substep_start', [
-            'phase' => 'dirs', 'id' => 'insert',
+            'phase' => 'dirs',
+            'id' => 'insert',
             'label' => 'Inserting ' . fmt_number(count($inserts)) . ' new albums',
         ]);
         $t_sub = microtime(true);
-        $logger->info('[sync][dirs] inserting new categories', ['count' => count($inserts)]);
+        $logger->info('[sync][dirs] inserting new categories', [
+            'count' => count($inserts),
+        ]);
         if (! $simulate) {
             $dbfields = [
                 'id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable',
                 'visible', 'status', 'sort_rank', 'global_rank',
             ];
             $t_insert = microtime(true);
-            $conf->sql_backend::mass_inserts('categories', $dbfields, $inserts, ['bulk' => true]);
-            $logger->info('[sync][dirs] mass_inserts done', ['elapsed_s' => round(microtime(true) - $t_insert, 2)]);
+            $conf->sql_backend::mass_inserts('categories', $dbfields, $inserts, [
+                'bulk' => true,
+            ]);
+            $logger->info('[sync][dirs] mass_inserts done', [
+                'elapsed_s' => round(microtime(true) - $t_insert, 2),
+            ]);
 
             // add default permissions to categories
             $category_ids = [];
@@ -366,7 +396,9 @@ if (isset($_POST['submit']) &&
                 'sync' => true,
                 'count' => count($category_ids),
             ]);
-            $logger->info('[sync][dirs] pwg_activity done', ['elapsed_s' => round(microtime(true) - $t_activity, 2)]);
+            $logger->info('[sync][dirs] pwg_activity done', [
+                'elapsed_s' => round(microtime(true) - $t_activity, 2),
+            ]);
 
             $t_perms = microtime(true);
             $category_up = implode(', ', array_unique($category_up));
@@ -440,7 +472,9 @@ if (isset($_POST['submit']) &&
                     }
                 }
 
-                $conf->sql_backend::mass_inserts('group_access', ['group_id', 'cat_id'], $insert_granted_grps, ['bulk' => true]);
+                $conf->sql_backend::mass_inserts('group_access', ['group_id', 'cat_id'], $insert_granted_grps, [
+                    'bulk' => true,
+                ]);
                 // Deduplicate via a hash key to avoid O(n²) array_unique(SORT_REGULAR).
                 $seen_user_perms = [];
                 $deduped_user_perms = [];
@@ -452,14 +486,16 @@ if (isset($_POST['submit']) &&
                     }
                 }
 
-                $conf->sql_backend::mass_inserts('user_access', ['user_id', 'cat_id'], $deduped_user_perms, ['bulk' => true]);
+                $conf->sql_backend::mass_inserts('user_access', ['user_id', 'cat_id'], $deduped_user_perms, [
+                    'bulk' => true,
+                ]);
             } else {
                 // add_permission_on_category only does meaningful work for
                 // private albums.  Skip the expensive DB round-trip entirely
                 // when all new albums are public (the common default).
                 $private_ids = array_values(
                     array_column(
-                        array_filter($inserts, fn(array $c): bool => $c['status'] === 'private'),
+                        array_filter($inserts, fn (array $c): bool => $c['status'] === 'private'),
                         'id'
                     )
                 );
@@ -468,12 +504,15 @@ if (isset($_POST['submit']) &&
                 }
             }
 
-            $logger->info('[sync][dirs] permissions done', ['elapsed_s' => round(microtime(true) - $t_perms, 2)]);
+            $logger->info('[sync][dirs] permissions done', [
+                'elapsed_s' => round(microtime(true) - $t_perms, 2),
+            ]);
         }
 
         $counts['new_categories'] = count($inserts);
         sync_emit('substep_complete', [
-            'phase' => 'dirs', 'id' => 'insert',
+            'phase' => 'dirs',
+            'id' => 'insert',
             'detail' => fmt_number(count($inserts)) . ' albums added',
             'elapsed' => round(microtime(true) - $t_sub, 1),
         ]);
@@ -496,15 +535,20 @@ if (isset($_POST['submit']) &&
 
     if ($to_delete !== []) {
         sync_emit('substep_start', [
-            'phase' => 'dirs', 'id' => 'delete',
+            'phase' => 'dirs',
+            'id' => 'delete',
             'label' => 'Deleting ' . fmt_number(count($to_delete)) . ' albums',
         ]);
         $t_sub = microtime(true);
-        $logger->info('[sync][dirs] deleting categories', ['count' => count($to_delete)]);
+        $logger->info('[sync][dirs] deleting categories', [
+            'count' => count($to_delete),
+        ]);
         if (! $simulate) {
             $t_del = microtime(true);
             functions_admin::delete_categories($to_delete, skip_subcats: true);
-            $logger->info('[sync][dirs] delete_categories done', ['elapsed_s' => round(microtime(true) - $t_del, 2)]);
+            $logger->info('[sync][dirs] delete_categories done', [
+                'elapsed_s' => round(microtime(true) - $t_del, 2),
+            ]);
 
             $t_deriv = microtime(true);
             foreach ($to_delete_derivative_dirs as $to_delete_dir) {
@@ -513,12 +557,15 @@ if (isset($_POST['submit']) &&
                 }
             }
 
-            $logger->info('[sync][dirs] derivative cleanup done', ['elapsed_s' => round(microtime(true) - $t_deriv, 2)]);
+            $logger->info('[sync][dirs] derivative cleanup done', [
+                'elapsed_s' => round(microtime(true) - $t_deriv, 2),
+            ]);
         }
 
         $counts['del_categories'] = count($to_delete);
         sync_emit('substep_complete', [
-            'phase' => 'dirs', 'id' => 'delete',
+            'phase' => 'dirs',
+            'id' => 'delete',
             'detail' => fmt_number(count($to_delete)) . ' albums deleted',
             'elapsed' => round(microtime(true) - $t_sub, 1),
         ]);
@@ -546,7 +593,9 @@ if (isset($_POST['submit']) &&
     $start_files = functions::get_moment();
     $start = $start_files;
 
-    sync_emit('phase_start', ['phase' => 'files']);
+    sync_emit('phase_start', [
+        'phase' => 'files',
+    ]);
     $t_files_phase = microtime(true);
 
     $cat_ids = array_diff(array_keys($db_categories), $to_delete);
@@ -556,7 +605,11 @@ if (isset($_POST['submit']) &&
     // files deleted from the filesystem.
     $db_paths_set = [];
 
-    sync_emit('substep_start', ['phase' => 'files', 'id' => 'db', 'label' => 'Loading database records']);
+    sync_emit('substep_start', [
+        'phase' => 'files',
+        'id' => 'db',
+        'label' => 'Loading database records',
+    ]);
     $t_db_query = microtime(true);
 
     if ($cat_ids !== []) {
@@ -574,7 +627,8 @@ if (isset($_POST['submit']) &&
     }
 
     sync_emit('substep_complete', [
-        'phase' => 'files', 'id' => 'db',
+        'phase' => 'files',
+        'id' => 'db',
         'detail' => fmt_number(count($db_paths_set)) . ' records',
         'elapsed' => round(microtime(true) - $t_db_query, 1),
     ]);
@@ -589,10 +643,10 @@ if (isset($_POST['submit']) &&
     // traversed, so the full $fs array is never materialised in memory.
     // Existing files are tracked inline; new files are inserted in 50k-row chunks.
 
-    $existing_ids     = [];
-    $existing_count   = 0;
+    $existing_ids = [];
+    $existing_count = 0;
     $existing_formats = [];   // [image_id => formats array] — used by mid-loop flush
-    $inserted_count   = 0;
+    $inserted_count = 0;
 
     $flush_existing_formats = function (array $ids, array $fs_formats) use ($conf, $simulate): void {
         if ($ids === []) {
@@ -615,7 +669,7 @@ if (isset($_POST['submit']) &&
             }
         }
 
-        $insert_formats   = [];
+        $insert_formats = [];
         $formats_to_delete = [];
 
         foreach ($db_formats as $image_id => $formats) {
@@ -626,7 +680,11 @@ if (isset($_POST['submit']) &&
 
         foreach ($ids as $image_id) {
             foreach (array_diff_key($fs_formats[$image_id] ?? [], $db_formats[$image_id] ?? []) as $ext => $filesize) {
-                $insert_formats[] = ['image_id' => $image_id, 'ext' => $ext, 'filesize' => $filesize];
+                $insert_formats[] = [
+                    'image_id' => $image_id,
+                    'ext' => $ext,
+                    'filesize' => $filesize,
+                ];
             }
         }
 
@@ -639,7 +697,9 @@ if (isset($_POST['submit']) &&
                 'image_format',
                 array_keys($insert_formats[0]),
                 $insert_formats,
-                ['bulk' => true]
+                [
+                    'bulk' => true,
+                ]
             );
         }
 
@@ -651,10 +711,10 @@ if (isset($_POST['submit']) &&
             $conf->sql_backend::pwg_query($query);
         }
     };
-    $chunk_inserts    = [];
-    $chunk_links      = [];
-    $chunk_fmt_new    = [];
-    $chunk_caddie     = [];
+    $chunk_inserts = [];
+    $chunk_links = [];
+    $chunk_fmt_new = [];
+    $chunk_caddie = [];
 
     $image_fields = ['id', 'file', 'name', 'date_available', 'path', 'representative_ext', 'storage_category_id', 'added_by', 'filesize'];
 
@@ -662,16 +722,16 @@ if (isset($_POST['submit']) &&
         $image_fields[] = 'level';
     }
 
-    $link_fields    = ['image_id', 'category_id'];
-    $fmt_fields     = ['image_id', 'ext', 'filesize'];
-    $add_to_caddie  = isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1;
+    $link_fields = ['image_id', 'category_id'];
+    $fmt_fields = ['image_id', 'ext', 'filesize'];
+    $add_to_caddie = isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1;
 
     // --- LOAD DATA LOCAL INFILE probe ---
     // If the MySQL connection supports LOCAL INFILE, use TSV temp files +
     // LOAD DATA for bulk inserts — 5-10x faster than multi-row INSERT for
     // large syncs because it bypasses PHP string-building and SQL parsing.
     $use_load_data = false;
-    $flush_size    = 50000;
+    $flush_size = 50000;
 
     if (! $simulate && method_exists($conf->sql_backend, 'load_data_local')) {
         $probe_path = tempnam(sys_get_temp_dir(), 'pwg_probe_');
@@ -694,15 +754,15 @@ if (isset($_POST['submit']) &&
     $tsv_links = null;
     $tsv_fmt = null;
     $tsv_fmt_count = 0;
-    $chunk_count   = 0;
+    $chunk_count = 0;
 
     if ($use_load_data) {
         $tsv_images_path = tempnam(sys_get_temp_dir(), 'pwg_img_');
-        $tsv_links_path  = tempnam(sys_get_temp_dir(), 'pwg_lnk_');
-        $tsv_fmt_path    = tempnam(sys_get_temp_dir(), 'pwg_fmt_');
+        $tsv_links_path = tempnam(sys_get_temp_dir(), 'pwg_lnk_');
+        $tsv_fmt_path = tempnam(sys_get_temp_dir(), 'pwg_fmt_');
         $tsv_images = fopen($tsv_images_path, 'wb');
-        $tsv_links  = fopen($tsv_links_path, 'wb');
-        $tsv_fmt    = fopen($tsv_fmt_path, 'wb');
+        $tsv_links = fopen($tsv_links_path, 'wb');
+        $tsv_fmt = fopen($tsv_fmt_path, 'wb');
     }
 
     // unique_checks=0 / foreign_key_checks=0 are cheap session-variable flips:
@@ -722,7 +782,11 @@ if (isset($_POST['submit']) &&
 
     $t_mass_insert = microtime(true);
 
-    sync_emit('substep_start', ['phase' => 'files', 'id' => 'scan', 'label' => 'Scanning filesystem']);
+    sync_emit('substep_start', [
+        'phase' => 'files',
+        'id' => 'scan',
+        'label' => 'Scanning filesystem',
+    ]);
     $t_scan = microtime(true);
 
     $scan_callback = $sse_mode
@@ -733,20 +797,22 @@ if (isset($_POST['submit']) &&
                 'detail' => $dir . ($count > 0 ? ' — ' . fmt_number($count) . ' files' : ''),
             ]);
         }
-        : null;
+    : null;
 
-    $logger->info('[sync][files] starting get_elements', ['basedir' => $basedir]);
+    $logger->info('[sync][files] starting get_elements', [
+        'basedir' => $basedir,
+    ]);
 
     foreach ($site_reader->get_elements($basedir, 0, $scan_callback) as $path => $meta) {
         if (isset($db_paths_set[$path])) {
             $image_id = $db_paths_set[$path];
             $existing_count++;
             if ($conf->enable_formats) {
-                $existing_ids[]   = $image_id;
+                $existing_ids[] = $image_id;
                 $existing_formats[$image_id] = $meta['formats'] ?? [];
                 if (count($existing_ids) >= $flush_size) {
                     $flush_existing_formats($existing_ids, $existing_formats);
-                    $existing_ids     = [];
+                    $existing_ids = [];
                     $existing_formats = [];
                 }
             }
@@ -766,14 +832,15 @@ if (isset($_POST['submit']) &&
 
         if ($inserted_count === 1) {
             sync_emit('substep_start', [
-                'phase' => 'files', 'id' => 'insert',
+                'phase' => 'files',
+                'id' => 'insert',
                 'label' => $simulate ? 'Counting new photos' : 'Inserting new photos',
             ]);
 
             // Drop FULLTEXT index on first new file: we now know inserts will
             // happen, so all subsequent batched inserts bypass per-row FULLTEXT
             // maintenance. The index is rebuilt after the loop (below).
-            if (!$simulate && $conf->sql_backend::index_exists('images', 'image_ft')) {
+            if (! $simulate && $conf->sql_backend::index_exists('images', 'image_ft')) {
                 $conf->sql_backend::drop_index('images', 'image_ft');
                 $has_ft_index = true;
             }
@@ -783,22 +850,25 @@ if (isset($_POST['submit']) &&
             $filename = basename($path);
 
             $insert = [
-                'id'                  => $next_element_id++,
-                'file'                => $filename,
-                'name'                => functions::get_name_from_file($filename),
-                'date_available'      => CURRENT_DATE,
-                'path'                => $path,
-                'representative_ext'  => $meta['representative_ext'],
+                'id' => $next_element_id++,
+                'file' => $filename,
+                'name' => functions::get_name_from_file($filename),
+                'date_available' => CURRENT_DATE,
+                'path' => $path,
+                'representative_ext' => $meta['representative_ext'],
                 'storage_category_id' => $db_fulldirs[$dirname],
-                'added_by'            => $user['id'],
-                'filesize'            => $meta['fs_filesize'],
+                'added_by' => $user['id'],
+                'filesize' => $meta['fs_filesize'],
             ];
 
             if ($_POST['privacy_level'] != 0) {
                 $insert['level'] = $_POST['privacy_level'];
             }
 
-            $link = ['image_id' => $insert['id'], 'category_id' => $insert['storage_category_id']];
+            $link = [
+                'image_id' => $insert['id'],
+                'category_id' => $insert['storage_category_id'],
+            ];
 
             if ($use_load_data) {
                 // LOAD DATA path: stream rows to TSV temp files (no PHP arrays).
@@ -807,7 +877,11 @@ if (isset($_POST['submit']) &&
 
                 if ($conf->enable_formats) {
                     foreach ($meta['formats'] as $ext => $filesize) {
-                        $fmt_row = ['image_id' => $insert['id'], 'ext' => $ext, 'filesize' => $filesize];
+                        $fmt_row = [
+                            'image_id' => $insert['id'],
+                            'ext' => $ext,
+                            'filesize' => $filesize,
+                        ];
                         $conf->sql_backend::write_tsv_row($tsv_fmt, $fmt_row, $fmt_fields);
                         $tsv_fmt_count++;
                     }
@@ -817,11 +891,15 @@ if (isset($_POST['submit']) &&
             } else {
                 // Fallback: accumulate PHP arrays for mass_inserts.
                 $chunk_inserts[] = $insert;
-                $chunk_links[]   = $link;
+                $chunk_links[] = $link;
 
                 if ($conf->enable_formats) {
                     foreach ($meta['formats'] as $ext => $filesize) {
-                        $chunk_fmt_new[] = ['image_id' => $insert['id'], 'ext' => $ext, 'filesize' => $filesize];
+                        $chunk_fmt_new[] = [
+                            'image_id' => $insert['id'],
+                            'ext' => $ext,
+                            'filesize' => $filesize,
+                        ];
                     }
                 }
             }
@@ -853,13 +931,15 @@ if (isset($_POST['submit']) &&
 
                     // Reopen fresh files for the next chunk.
                     $tsv_images = fopen($tsv_images_path, 'wb');
-                    $tsv_links  = fopen($tsv_links_path, 'wb');
-                    $tsv_fmt    = fopen($tsv_fmt_path, 'wb');
+                    $tsv_links = fopen($tsv_links_path, 'wb');
+                    $tsv_fmt = fopen($tsv_fmt_path, 'wb');
                     $tsv_fmt_count = 0;
-                    $chunk_count   = 0;
+                    $chunk_count = 0;
                 } else {
                     $conf->sql_backend::pwg_query('START TRANSACTION;');
-                    $no_txn = ['no_transaction' => true];
+                    $no_txn = [
+                        'no_transaction' => true,
+                    ];
                     $conf->sql_backend::mass_inserts('images', $image_fields, $chunk_inserts, $no_txn);
                     $conf->sql_backend::mass_inserts('image_category', $link_fields, $chunk_links, $no_txn);
 
@@ -880,13 +960,15 @@ if (isset($_POST['submit']) &&
                 $chunk_caddie = [];
 
                 sync_emit('substep_progress', [
-                    'phase' => 'files', 'id' => 'insert',
+                    'phase' => 'files',
+                    'id' => 'insert',
                     'detail' => fmt_number($inserted_count) . ' inserted',
                 ]);
             }
         } elseif ($sse_mode && $inserted_count % $flush_size === 0) {
             sync_emit('substep_progress', [
-                'phase' => 'files', 'id' => 'insert',
+                'phase' => 'files',
+                'id' => 'insert',
                 'detail' => fmt_number($inserted_count) . ' counted',
             ]);
         }
@@ -895,7 +977,7 @@ if (isset($_POST['submit']) &&
     // Final flush for any remaining existing-file format IDs not yet processed.
     if ($conf->enable_formats && $existing_ids !== []) {
         $flush_existing_formats($existing_ids, $existing_formats);
-        $existing_ids     = [];
+        $existing_ids = [];
         $existing_formats = [];
     }
 
@@ -916,7 +998,9 @@ if (isset($_POST['submit']) &&
         $conf->sql_backend::pwg_query('COMMIT;');
     } elseif ($chunk_inserts !== []) {
         $conf->sql_backend::pwg_query('START TRANSACTION;');
-        $no_txn = ['no_transaction' => true];
+        $no_txn = [
+            'no_transaction' => true,
+        ];
         $conf->sql_backend::mass_inserts('images', $image_fields, $chunk_inserts, $no_txn);
         $conf->sql_backend::mass_inserts('image_category', $link_fields, $chunk_links, $no_txn);
 
@@ -941,12 +1025,13 @@ if (isset($_POST['submit']) &&
     unset($chunk_inserts, $chunk_links, $chunk_fmt_new, $chunk_caddie);
 
     $logger->info('[sync][files] get_elements done', [
-        'total'    => $inserted_count + $existing_count,
-        'new'      => $inserted_count,
+        'total' => $inserted_count + $existing_count,
+        'new' => $inserted_count,
         'existing' => $existing_count,
     ]);
     sync_emit('substep_complete', [
-        'phase' => 'files', 'id' => 'scan',
+        'phase' => 'files',
+        'id' => 'scan',
         'detail' => fmt_number($inserted_count + $existing_count) . ' files found',
         'elapsed' => round(microtime(true) - $t_scan, 1),
     ]);
@@ -961,7 +1046,8 @@ if (isset($_POST['submit']) &&
 
         if ($has_ft_index) {
             sync_emit('substep_progress', [
-                'phase' => 'files', 'id' => 'insert',
+                'phase' => 'files',
+                'id' => 'insert',
                 'detail' => 'Rebuilding fulltext index...',
             ]);
             $conf->sql_backend::create_fulltext_index('images', 'image_ft', ['name', 'comment']);
@@ -977,7 +1063,8 @@ if (isset($_POST['submit']) &&
         }
 
         sync_emit('substep_complete', [
-            'phase' => 'files', 'id' => 'insert',
+            'phase' => 'files',
+            'id' => 'insert',
             'detail' => fmt_number($inserted_count) . ' photos inserted',
             'elapsed' => round(microtime(true) - $t_mass_insert, 1),
         ]);
@@ -987,7 +1074,11 @@ if (isset($_POST['submit']) &&
 
     $counts['new_elements'] = $inserted_count;
 
-    sync_emit('substep_start', ['phase' => 'files', 'id' => 'delete', 'label' => 'Checking for deleted files']);
+    sync_emit('substep_start', [
+        'phase' => 'files',
+        'id' => 'delete',
+        'label' => 'Checking for deleted files',
+    ]);
     $t_delete_check = microtime(true);
 
     // Remaining entries in $db_paths_set are files deleted from the filesystem.
@@ -1004,7 +1095,8 @@ if (isset($_POST['submit']) &&
     }
 
     sync_emit('substep_complete', [
-        'phase' => 'files', 'id' => 'delete',
+        'phase' => 'files',
+        'id' => 'delete',
         'detail' => $to_delete_elements !== []
             ? fmt_number(count($to_delete_elements)) . ' deleted'
             : 'no deletions',
@@ -1034,7 +1126,11 @@ if (isset($_POST['submit']) &&
     ! $general_failure
 ) {
     if (! $simulate) {
-        sync_emit('substep_start', ['phase' => 'files', 'id' => 'categories', 'label' => 'Updating album metadata']);
+        sync_emit('substep_start', [
+            'phase' => 'files',
+            'id' => 'categories',
+            'label' => 'Updating album metadata',
+        ]);
         $t_cat_update = microtime(true);
         $start = functions::get_moment();
         functions_admin::update_category();
@@ -1047,7 +1143,8 @@ if (isset($_POST['submit']) &&
           . functions::get_elapsed_time($start, functions::get_moment())
           . ' -->');
         sync_emit('substep_complete', [
-            'phase' => 'files', 'id' => 'categories',
+            'phase' => 'files',
+            'id' => 'categories',
             'detail' => 'done',
             'elapsed' => round(microtime(true) - $t_cat_update, 1),
         ]);
@@ -1056,7 +1153,11 @@ if (isset($_POST['submit']) &&
     if ($_POST['sync'] == 'files') {
         $start = functions::get_moment();
 
-        sync_emit('substep_start', ['phase' => 'files', 'id' => 'attrs', 'label' => 'Checking file attributes']);
+        sync_emit('substep_start', [
+            'phase' => 'files',
+            'id' => 'attrs',
+            'label' => 'Checking file attributes',
+        ]);
         $t_update_phase = microtime(true);
         $files = functions_metadata_admin::get_filelist(
             '',
@@ -1072,7 +1173,7 @@ if (isset($_POST['submit']) &&
         $datas = [];
         $attrs_update_fields = [
             'primary' => ['id'],
-            'update'  => $site_reader->get_update_attributes(),
+            'update' => $site_reader->get_update_attributes(),
         ];
         $attrs_updated = 0;
 
@@ -1112,7 +1213,8 @@ if (isset($_POST['submit']) &&
         $counts['upd_elements'] = $attrs_updated;
 
         sync_emit('substep_complete', [
-            'phase' => 'files', 'id' => 'attrs',
+            'phase' => 'files',
+            'id' => 'attrs',
             'detail' => $attrs_updated > 0 ? fmt_number($attrs_updated) . ' updated' : 'no changes',
             'elapsed' => round(microtime(true) - $t_update_phase, 1),
         ]);
@@ -1153,17 +1255,24 @@ if (isset($_POST['submit']) &&
     // sync only never synchronized files ?
     $opts['only_new'] = ! isset($_POST['meta_all']);
 
-    sync_emit('phase_start', ['phase' => 'meta']);
+    sync_emit('phase_start', [
+        'phase' => 'meta',
+    ]);
     $t_meta_phase = microtime(true);
 
-    sync_emit('substep_start', ['phase' => 'meta', 'id' => 'filelist', 'label' => 'Loading file list']);
+    sync_emit('substep_start', [
+        'phase' => 'meta',
+        'id' => 'filelist',
+        'label' => 'Loading file list',
+    ]);
     $start = functions::get_moment();
     $t_filelist = microtime(true);
     $files_total = functions_metadata_admin::count_filelist('', $site_id, true, $opts['only_new']);
     $files = functions_metadata_admin::get_filelist('', $site_id, true, $opts['only_new']);
     $t_filelist = microtime(true) - $t_filelist;
     sync_emit('substep_complete', [
-        'phase' => 'meta', 'id' => 'filelist',
+        'phase' => 'meta',
+        'id' => 'filelist',
         'detail' => fmt_number($files_total) . ' candidates',
         'elapsed' => round($t_filelist, 1),
     ]);
@@ -1172,7 +1281,12 @@ if (isset($_POST['submit']) &&
       . functions::get_elapsed_time($start, functions::get_moment())
       . ' -->');
 
-    sync_emit('substep_start', ['phase' => 'meta', 'id' => 'extract', 'label' => 'Extracting metadata', 'has_progress' => true]);
+    sync_emit('substep_start', [
+        'phase' => 'meta',
+        'id' => 'extract',
+        'label' => 'Extracting metadata',
+        'has_progress' => true,
+    ]);
     $t_extract = microtime(true);
 
     $start = functions::get_moment();
@@ -1182,7 +1296,7 @@ if (isset($_POST['submit']) &&
     $tag_names_by_image = [];
     $meta_update_fields = [
         'primary' => ['id'],
-        'update'  => array_unique(
+        'update' => array_unique(
             array_merge(
                 array_diff(
                     $site_reader->get_metadata_attributes(),
@@ -1309,7 +1423,8 @@ if (isset($_POST['submit']) &&
     }
 
     sync_emit('substep_complete', [
-        'phase' => 'meta', 'id' => 'extract',
+        'phase' => 'meta',
+        'id' => 'extract',
         'detail' => fmt_number($meta_datas_total) . ' updated, ' . fmt_number($meta_skipped) . ' skipped',
         'elapsed' => round(microtime(true) - $t_extract, 1),
     ]);
@@ -1365,7 +1480,11 @@ if (isset($_POST['submit']) &&
     }
 
     if (! $simulate) {
-        sync_emit('substep_start', ['phase' => 'meta', 'id' => 'db_update', 'label' => 'Updating database']);
+        sync_emit('substep_start', [
+            'phase' => 'meta',
+            'id' => 'db_update',
+            'label' => 'Updating database',
+        ]);
         $t_db_update = microtime(true);
 
         // Flush the remaining partial $datas batch (most rows were streamed during extract).
@@ -1377,7 +1496,8 @@ if (isset($_POST['submit']) &&
         functions_admin::set_tags_of($tags_of);
 
         sync_emit('substep_complete', [
-            'phase' => 'meta', 'id' => 'db_update',
+            'phase' => 'meta',
+            'id' => 'db_update',
             'detail' => fmt_number($meta_datas_total) . ' rows, ' . count($tags_of) . ' tagged',
             'elapsed' => round(microtime(true) - $t_db_update, 1),
         ]);
@@ -1409,7 +1529,9 @@ if (isset($_POST['submit']) &&
 // | SSE: emit final results and exit                                      |
 // +-----------------------------------------------------------------------+
 if ($sse_mode && isset($_POST['submit'])) {
-    $sse_results = ['simulate' => $simulate ?? false];
+    $sse_results = [
+        'simulate' => $simulate ?? false,
+    ];
 
     if (isset($counts)) {
         $sse_results['update'] = [
@@ -1500,7 +1622,6 @@ $tpl_introduction['privacy_level_options'] = functions::get_privacy_level_option
 
 $template->assign('introduction', $tpl_introduction);
 
-
 if ($errors !== []) {
     foreach ($errors as $error) {
         $template->append(
@@ -1522,7 +1643,6 @@ if ($errors !== []) {
         );
     }
 }
-
 
 // +-----------------------------------------------------------------------+
 // |                          sending html code                            |

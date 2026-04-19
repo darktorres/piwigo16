@@ -40,7 +40,9 @@ final class functions_TakeATour
         $template->set_filename('TAT_js_css', PHPWG_PLUGINS_PATH . 'TakeATour/tpl/js_css.tpl');
         $template->assign('ADMIN_THEME', $conf->admin_theme);
         require_once PHPWG_ROOT_PATH . 'inc/vite_helper.php';
-        \Piwigo\Vite\vite_assign_modules($template, ['tat_tour' => 'plugins/TakeATour/js/Tour']);
+        \Piwigo\Vite\vite_assign_modules($template, [
+            'tat_tour' => 'plugins/TakeATour/js/Tour',
+        ]);
         $template->parse('TAT_js_css');
 
         if (isset($TAT_restart) &&

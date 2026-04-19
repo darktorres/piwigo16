@@ -35,7 +35,7 @@ export const GDThumb = {
             albums.insertAdjacentHTML('beforeend', photos.innerHTML);
             photos.remove();
             const loaders = document.querySelectorAll("div.loader");
-            if (loaders.length > 1) loaders[1].remove();
+            if (loaders.length > 1) loaders[1]!.remove();
         }
 
         if (albums) {

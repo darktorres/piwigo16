@@ -65,7 +65,7 @@ export function pwgConfirm(opts: PwgConfirmOptions = {}): void {
     buttonsEl.innerHTML = '';
     const buttons = opts.buttons ?? {};
     Object.keys(buttons).forEach(function (key) {
-        const btn = buttons[key];
+        const btn = buttons[key]!;
         const el = document.createElement('button');
         el.type = 'button';
         el.textContent = btn.text ?? key;

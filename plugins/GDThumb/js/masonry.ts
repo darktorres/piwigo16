@@ -13,7 +13,7 @@ function _colCount(): number {
 function _shortest(): number {
     let min = 0;
     for (let i = 1; i < _colHeights.length; i++) {
-        if (_colHeights[i] < _colHeights[min]) min = i;
+        if ((_colHeights[i] ?? 0) < (_colHeights[min] ?? 0)) min = i;
     }
     return min;
 }
@@ -29,9 +29,9 @@ function _place(li: HTMLElement): void {
     li.style.width    = _colWidth + 'px';
     li.style.height   = itemH + 'px';
     li.style.left     = (col * (_colWidth + _gap)) + 'px';
-    li.style.top      = _colHeights[col] + 'px';
+    li.style.top      = (_colHeights[col] ?? 0) + 'px';
 
-    _colHeights[col] += itemH + _gap;
+    _colHeights[col]! += itemH + _gap;
 }
 
 function _setHeight(): void {

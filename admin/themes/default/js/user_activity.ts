@@ -74,7 +74,7 @@ export function init(cfg: UserActivityConfig): void {
             .then(function (data: { result: { result_lines: ActivityLine[]; max_page: number } }) {
                 uid_filter = uid;
                 const lines = data.result.result_lines;
-                setCreationDate(lines[lines.length - 1].date, lines[0].date);
+                setCreationDate(lines[lines.length - 1]!.date, lines[0]!.date);
                 document.querySelectorAll<HTMLElement>('.loading').forEach(el => { el.style.display = 'none'; });
                 lines.forEach(line => lineConstructor(line));
                 max_page = data.result.max_page;
@@ -108,7 +108,7 @@ export function init(cfg: UserActivityConfig): void {
         switch (line.action) {
             case 'edit':
                 newLine.querySelector('.action-type')?.classList.add('icon-blue');
-                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
+                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]!);
                 newLine.querySelector('.action-icon')?.classList.add('icon-pencil');
                 setHtml(newLine, '.action-name', at.edit ?? 'edit');
                 final_albumInfos = getInfo(ai[obj as keyof ActionInfos]?.edited, ai[obj as keyof ActionInfos]?.editedPlural);
@@ -116,7 +116,7 @@ export function init(cfg: UserActivityConfig): void {
                 break;
             case 'add':
                 newLine.querySelector('.action-type')?.classList.add('icon-green');
-                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
+                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]!);
                 newLine.querySelector('.action-icon')?.classList.add('icon-plus');
                 setHtml(newLine, '.action-name', at.add ?? 'add');
                 final_albumInfos = getInfo(ai[obj as keyof ActionInfos]?.added, ai[obj as keyof ActionInfos]?.addedPlural);
@@ -124,7 +124,7 @@ export function init(cfg: UserActivityConfig): void {
                 break;
             case 'delete':
                 newLine.querySelector('.action-type')?.classList.add('icon-red');
-                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
+                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]!);
                 newLine.querySelector('.action-icon')?.classList.add('icon-trash-1');
                 setHtml(newLine, '.action-name', at.delete ?? 'delete');
                 final_albumInfos = getInfo(ai[obj as keyof ActionInfos]?.deleted, ai[obj as keyof ActionInfos]?.deletedPlural);
@@ -132,7 +132,7 @@ export function init(cfg: UserActivityConfig): void {
                 break;
             case 'move':
                 newLine.querySelector('.action-type')?.classList.add('icon-yellow');
-                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
+                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]!);
                 newLine.querySelector('.action-icon')?.classList.add('icon-move');
                 setHtml(newLine, '.action-name', at.move ?? 'move');
                 final_albumInfos = getInfo(ai[obj as keyof ActionInfos]?.moved, ai[obj as keyof ActionInfos]?.movedPlural);
@@ -140,7 +140,7 @@ export function init(cfg: UserActivityConfig): void {
                 break;
             case 'login':
                 newLine.querySelector('.action-type')?.classList.add('icon-purple');
-                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
+                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]!);
                 newLine.querySelector('.action-icon')?.classList.add('icon-key');
                 newLine.querySelector('.action-section')?.classList.add('icon-user-1');
                 setHtml(newLine, '.action-name', at.login ?? 'login');
@@ -149,7 +149,7 @@ export function init(cfg: UserActivityConfig): void {
                 break;
             case 'logout':
                 newLine.querySelector('.action-type')?.classList.add('icon-purple');
-                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id !== 2 ? line.user_id % 5 : line.object_id[0] % 5]);
+                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id !== 2 ? line.user_id % 5 : line.object_id[0]! % 5]!);
                 newLine.querySelector('.action-icon')?.classList.add('icon-logout');
                 newLine.querySelector('.action-section')?.classList.add('icon-user-1');
                 setHtml(newLine, '.action-name', at.logout ?? 'logout');
@@ -158,7 +158,7 @@ export function init(cfg: UserActivityConfig): void {
                 break;
             default:
                 newLine.querySelector('.action-type')?.classList.add('icon-purple');
-                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
+                newLine.querySelector('.user-pic')?.classList.add(color_icons[line.user_id % 5]!);
         }
 
         if (final_albumInfos) final_albumInfos = final_albumInfos.replace('%d', String(line.counter));
@@ -207,8 +207,8 @@ export function init(cfg: UserActivityConfig): void {
 
     function get_initials(username: string): string {
         const words = username.toUpperCase().split(' ');
-        let res = words[0][0] ?? '';
-        if (words.length > 1 && words[1][0] !== undefined) res += words[1][0];
+        let res = words[0]?.[0] ?? '';
+        if (words.length > 1 && words[1]?.[0] !== undefined) res += words[1][0];
         return res;
     }
 
@@ -265,7 +265,7 @@ export function init(cfg: UserActivityConfig): void {
             const new_tag = container.lastElementChild as HTMLElement;
             if (actual_page === page) new_tag.classList.add('actual');
             new_tag.addEventListener('click', function () {
-                move_to_page(parseInt(new_tag.dataset.page ?? '1'));
+                move_to_page(parseInt(new_tag.dataset['page'] ?? '1'));
             });
         } else {
             container.insertAdjacentHTML('beforeend', page_ellipsis);
@@ -273,7 +273,7 @@ export function init(cfg: UserActivityConfig): void {
     }
 
     const h1El = document.querySelector('h1');
-    if (h1El) h1El.insertAdjacentHTML('beforeend', "<span class='badge-number'>" + ((window as unknown as Record<string, number>).nbUsers - 1) + '</span>');
+    if (h1El) h1El.insertAdjacentHTML('beforeend', "<span class='badge-number'>" + (((window as unknown as Record<string, number>)['nbUsers'] ?? 1) - 1) + '</span>');
 
     const userSelector = document.querySelector<HTMLSelectElement>('.user-selector');
     if (userSelector) {
@@ -286,7 +286,7 @@ export function init(cfg: UserActivityConfig): void {
             const tsControl = document.querySelector<HTMLElement>('.ts-control');
             if (tsControl?.classList.contains('full')) {
                 const item = document.querySelector<HTMLElement>('.ts-control .item');
-                get_user_activity(1, item?.dataset.value);
+                get_user_activity(1, item?.dataset['value']);
             }
         });
     });

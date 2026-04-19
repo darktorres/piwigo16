@@ -59,7 +59,7 @@ export class TreeNode {
         if (!this.parent) return null;
         const siblings = this.parent.children;
         const idx = siblings.indexOf(this);
-        return idx > 0 ? siblings[idx - 1] : null;
+        return idx > 0 ? (siblings[idx - 1] ?? null) : null;
     }
 }
 
@@ -223,7 +223,7 @@ export class PwgTree {
 
     private _getNodeForEl(li: HTMLElement): TreeNode | null {
         for (const id in this._nodes) {
-            if (this._nodes[id]._el === li) return this._nodes[id];
+            if (this._nodes[id]?._el === li) return this._nodes[id] ?? null;
         }
         return null;
     }

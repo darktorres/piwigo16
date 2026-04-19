@@ -202,7 +202,7 @@ export function init(cfg: CatModifyConfig): void {
         fetch('ws.php?format=json&method=pwg.categories.calculateOrphans&' + new URLSearchParams({ category_id: String(album_id) }).toString())
             .then(r => r.json())
             .then(function (raw_json: { result: OrphanData[] }) {
-                const orphan = raw_json.result[0];
+                const orphan = raw_json.result[0]!;
 
                 let message = '<p>' + str_delete_album_and_his_x_subalbums
                     .replace('%s', '<strong>' + album_name + '</strong>')

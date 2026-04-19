@@ -108,7 +108,7 @@ export function init(cfg: UserListConfig): void {
 
     const groupsArrId = cfg.groupsArrId;
     const groupsArrName = cfg.groupsArrName;
-    groups_arr = groupsArrId.map((elem, index) => [elem, groupsArrName[index]]);
+    groups_arr = groupsArrId.map((elem, index) => [elem, groupsArrName[index]!]);
 
     const register_dates = cfg.registerDatesStr.split(',');
 
@@ -133,7 +133,7 @@ export function init(cfg: UserListConfig): void {
     const connected_user_status = cfg.connectedUserStatus;
     const owner_id = cfg.ownerId;
     const has_group = cfg.hasGroup;
-    const groupOptions: GroupOption[] = groups_arr.map(x => ({ value: x[0], label: String(x[1]), isSelected: 0 }));
+    const groupOptions: GroupOption[] = groups_arr.map(x => ({ value: x[0]!, label: String(x[1]), isSelected: 0 }));
 
     /*---------------- Escape of pop-in ----------------*/
 
@@ -195,7 +195,7 @@ export function init(cfg: UserListConfig): void {
 
     const advFilterLevelSelects = document.querySelectorAll('.advanced-filter-level select option');
     if (advFilterLevelSelects.length > 1) {
-        advFilterLevelSelects[1].remove();
+        advFilterLevelSelects[1]!.remove();
     }
 
     document.querySelectorAll<HTMLElement>('.edit-password').forEach(function (el) {
@@ -303,8 +303,8 @@ export function init(cfg: UserListConfig): void {
         selectAllPageBtn.addEventListener('click', function () {
             const selection_ids = selection.map((x) => x.id);
             for (let i = 0; i < current_users.length; i++) {
-                if (!selection_ids.includes(current_users[i].id)) {
-                    selection.push({ id: current_users[i].id, username: current_users[i].username });
+                if (!selection_ids.includes(current_users[i]!.id)) {
+                    selection.push({ id: current_users[i]!.id, username: current_users[i]!.username });
                 }
             }
             update_selection_content();
@@ -326,10 +326,10 @@ export function init(cfg: UserListConfig): void {
         selectInvertBtn.addEventListener('click', function () {
             const selection_ids = selection.map((x) => x.id);
             for (let i = 0; i < current_users.length; i++) {
-                if (selection_ids.includes(current_users[i].id)) {
-                    selection.splice(selection.findIndex((x) => x.id === current_users[i].id), 1);
+                if (selection_ids.includes(current_users[i]!.id)) {
+                    selection.splice(selection.findIndex((x) => x.id === current_users[i]!.id), 1);
                 } else {
-                    selection.push({ id: current_users[i].id, username: current_users[i].username });
+                    selection.push({ id: current_users[i]!.id, username: current_users[i]!.username });
                 }
             }
             update_selection_content();
@@ -522,11 +522,11 @@ export function init(cfg: UserListConfig): void {
     }
 
     function getNbImagePageInfoFromIdx(idx: number): string {
-        return sprintf(nb_photos, nb_image_page_values[idx]);
+        return sprintf(nb_photos, nb_image_page_values[idx]!);
     }
 
     function getRecentPeriodInfoFromIdx(idx: number): string {
-        return sprintf(nb_days, recent_period_values[idx]);
+        return sprintf(nb_days, recent_period_values[idx]!);
     }
 
     /* Photos bar slider */
@@ -719,8 +719,8 @@ export function init(cfg: UserListConfig): void {
 
     function getDateStr(date: string): string {
         const date_arr = date.split('-');
-        const curr_month = months[parseInt(date_arr[1]) - 1];
-        return curr_month + ' ' + date_arr[0];
+        const curr_month = months[parseInt(date_arr[1]!) - 1];
+        return curr_month + ' ' + date_arr[0]!;
     }
 
     function setupRegisterDates(reg_dates: string[]): void {
@@ -737,7 +737,7 @@ export function init(cfg: UserListConfig): void {
                 const lo = Math.round(parseFloat(String(values[0])));
                 const hi = Math.round(parseFloat(String(values[1])));
                 const infos = document.querySelector<HTMLElement>('.advanced-filter .dates-infos');
-                if (infos) infos.innerHTML = sprintf(dates_infos, getDateStr(reg_dates[lo]), getDateStr(reg_dates[hi]));
+                if (infos) infos.innerHTML = sprintf(dates_infos, getDateStr(reg_dates[lo]!), getDateStr(reg_dates[hi]!));
             }
             el.noUiSlider!.on('slide', updateDatesDisplay);
             el.noUiSlider!.on('change', function (values: (string | number)[]) {
@@ -747,7 +747,7 @@ export function init(cfg: UserListConfig): void {
         }
         const datesInfos = document.querySelector<HTMLElement>('.advanced-filter .dates-infos');
         if (datesInfos) {
-            datesInfos.innerHTML = sprintf(dates_infos, getDateStr(reg_dates[0]), getDateStr(reg_dates[reg_dates.length - 1]));
+            datesInfos.innerHTML = sprintf(dates_infos, getDateStr(reg_dates[0]!), getDateStr(reg_dates[reg_dates.length - 1]!));
         }
     }
 
@@ -795,7 +795,7 @@ export function init(cfg: UserListConfig): void {
         const curr_container = this.closest<HTMLElement>('.user-container');
         const in_container = curr_container !== null;
         const curr_user = in_container
-            ? current_users[parseInt(curr_container.getAttribute('key') ?? '0')]
+            ? (current_users[parseInt(curr_container.getAttribute('key') ?? '0')] ?? { id: -1 })
             : { id: -1 };
         if (this.getAttribute('data-selected') === '1') {
             this.setAttribute('data-selected', '0');
@@ -841,8 +841,8 @@ export function init(cfg: UserListConfig): void {
         const userSelectedList = document.querySelector<HTMLElement>('.user-selected-list');
         if (userSelectedList) userSelectedList.querySelectorAll<HTMLElement>('.user-selected-item').forEach(el => el.remove());
         for (let i = 0; i < selection.length && items_created < 5; i++) {
-            if (typeof selection[i].username !== 'undefined') {
-                const item = create_user_selected_item(selection[i]);
+            if (typeof selection[i]!.username !== 'undefined') {
+                const item = create_user_selected_item(selection[i]!);
                 if (item && userSelectedList) userSelectedList.appendChild(item);
                 items_created += 1;
             }
@@ -861,7 +861,7 @@ export function init(cfg: UserListConfig): void {
     function fill_user_selected_list(): void {
         let elems_with_username = 0;
         for (let i = 0; i < selection.length && elems_with_username < 5; i++) {
-            if (typeof selection[i].username !== 'undefined') elems_with_username += 1;
+            if (typeof selection[i]!.username !== 'undefined') elems_with_username += 1;
         }
         if (elems_with_username < 5 && elems_with_username !== selection.length) {
             get_first_selection_usernames(generate_user_selected_items);
@@ -895,7 +895,7 @@ export function init(cfg: UserListConfig): void {
         const containers = document.querySelectorAll<HTMLElement>('.user-container-wrapper .user-container');
         containers.forEach((container, index) => {
             const selection_ids = selection.map((x) => x.id);
-            if (selection_ids.includes(current_users[index]?.id)) {
+            const cuid = current_users[index]?.id; if (cuid !== undefined && selection_ids.includes(cuid)) {
                 container.classList.add('container-selected');
                 const checkbox = container.querySelector<HTMLElement>('.user-list-checkbox');
                 if (checkbox) {
@@ -952,14 +952,14 @@ export function init(cfg: UserListConfig): void {
 
     function get_group_name_from_id(id: string | number): string {
         for (let i = 0; i < groups_arr.length; i++) {
-            if (groups_arr[i][0] == id) return String(groups_arr[i][1]);
+            if (groups_arr[i]![0] == id) return String(groups_arr[i]![1]);
         }
         return 'group_id error';
     }
 
     function get_container_index_from_uid(uid: number): number {
         for (let i = 0; i < current_users.length; i++) {
-            if (current_users[i].id == uid) return i;
+            if (current_users[i]!.id == uid) return i;
         }
         return -1;
     }
@@ -993,8 +993,8 @@ export function init(cfg: UserListConfig): void {
             const template = document.querySelector<HTMLElement>('#template .group-primary');
             if (template) {
                 const primary_grp = template.cloneNode(true) as HTMLElement;
-                primary_grp.innerHTML = get_group_name_from_id(groups[0]);
-                primary_grp.classList.add(color_icons[groups[0] % 5]);
+                primary_grp.innerHTML = get_group_name_from_id(groups[0]!);
+                primary_grp.classList.add(color_icons[groups[0]! % 5]!);
                 if (groupsContainer) groupsContainer.appendChild(primary_grp);
             }
         }
@@ -1002,8 +1002,8 @@ export function init(cfg: UserListConfig): void {
             const template = document.querySelector<HTMLElement>('#template .group-primary');
             if (template) {
                 const primary_grp = template.cloneNode(true) as HTMLElement;
-                primary_grp.innerHTML = get_group_name_from_id(groups[1]);
-                primary_grp.classList.add(color_icons[groups[1] % 5]);
+                primary_grp.innerHTML = get_group_name_from_id(groups[1]!);
+                primary_grp.classList.add(color_icons[groups[1]! % 5]!);
                 if (groupsContainer) groupsContainer.appendChild(primary_grp);
             }
         }
@@ -1012,10 +1012,10 @@ export function init(cfg: UserListConfig): void {
             if (template) {
                 const bonus_grp = template.cloneNode(true) as HTMLElement;
                 bonus_grp.innerHTML = '...';
-                bonus_grp.classList.add(color_icons[groups[2] % 5], 'tiptip');
+                bonus_grp.classList.add(color_icons[groups[2]! % 5]!, 'tiptip');
                 let groups_in_title = '';
                 for (let i = 2; i < groups.length; i++) {
-                    groups_in_title += get_group_name_from_id(groups[i]) + ', ';
+                    groups_in_title += get_group_name_from_id(groups[i]!) + ', ';
                 }
                 groups_in_title = groups_in_title.substring(0, groups_in_title.length - 2);
                 bonus_grp.setAttribute('title', groups_in_title);
@@ -1026,13 +1026,13 @@ export function init(cfg: UserListConfig): void {
 
     function get_initials(username: string): string {
         const words = username.toUpperCase().split(' ');
-        let res = words[0][0];
-        if (words.length > 1 && words[1][0] !== undefined) res += words[1][0];
+        let res = words[0]?.[0] ?? '';
+        if (words.length > 1 && words[1]?.[0] !== undefined) res += words[1][0];
         return res;
     }
 
     function fill_container_user_info(container: HTMLElement, user_index: number): void {
-        const user = current_users[user_index];
+        const user = current_users[user_index]!;
         const registration_dates = user.registration_date.split(' ');
         container.setAttribute('key', String(user_index));
         const usernameSpan = container.querySelector<HTMLElement>('.user-container-username span');
@@ -1040,17 +1040,17 @@ export function init(cfg: UserListConfig): void {
         const initialsSpan = container.querySelector<HTMLElement>('.user-container-initials span');
         if (initialsSpan) {
             initialsSpan.innerHTML = get_initials(user.username);
-            initialsSpan.classList.add(color_icons[user.id % 5]);
+            initialsSpan.classList.add(color_icons[user.id % 5]!);
         }
         const statusSpan = container.querySelector<HTMLElement>('.user-container-status span');
-        if (statusSpan) statusSpan.innerHTML = status_to_str[user.status];
+        if (statusSpan) statusSpan.innerHTML = status_to_str[user.status] ?? '';
         const emailSpan = container.querySelector<HTMLElement>('.user-container-email span');
         if (emailSpan) emailSpan.innerHTML = user.email;
         generate_groups(container, user.groups);
         const regDateEl = container.querySelector<HTMLElement>('.user-container-registration-date');
-        if (regDateEl) regDateEl.innerHTML = registration_dates[0];
+        if (regDateEl) regDateEl.innerHTML = registration_dates[0] ?? '';
         const regTimeEl = container.querySelector<HTMLElement>('.user-container-registration-time');
-        if (regTimeEl) regTimeEl.innerHTML = registration_dates[1];
+        if (regTimeEl) regTimeEl.innerHTML = registration_dates[1] ?? '';
         const regDateSinceEl = container.querySelector<HTMLElement>('.user-container-registration-date-since');
         if (regDateSinceEl) regDateSinceEl.innerHTML = user.registration_date_since;
     }
@@ -1083,7 +1083,7 @@ export function init(cfg: UserListConfig): void {
     function get_formatted_date(date_str: string | null): string {
         if (date_str === null) return 'N/A';
         const first_part = date_str.split(' ')[0];
-        return first_part.split('-').join('/');
+        return (first_part ?? '').split('-').join('/');
     }
 
     function get_status_index(status: string): number {
@@ -1102,7 +1102,7 @@ export function init(cfg: UserListConfig): void {
 
     function set_selected_groups(groups: number[]): void {
         for (let i = 0; i < groupOptions.length; i++) {
-            groupOptions[i].isSelected = groups.includes(Number(groupOptions[i].value));
+            groupOptions[i]!.isSelected = groups.includes(Number(groupOptions[i]!.value));
         }
     }
 
@@ -1111,7 +1111,7 @@ export function init(cfg: UserListConfig): void {
         if (initialsSpan) {
             color_icons.forEach(icon => initialsSpan.classList.remove(icon));
             if (!isGuest) initialsSpan.innerHTML = get_initials(user_to_edit.username);
-            initialsSpan.classList.add(color_icons[user_to_edit.id % 5]);
+            initialsSpan.classList.add(color_icons[user_to_edit.id % 5]!);
         }
         const usernameSpan = pop_in.querySelector<HTMLElement>('.user-property-username span');
         if (usernameSpan) usernameSpan.innerHTML = user_to_edit.username;
@@ -1369,13 +1369,13 @@ export function init(cfg: UserListConfig): void {
          
         const photosSlider2 = pop_in.querySelector<SliderEl>('.photos-select-bar .slider-bar-container');
         if (photosSlider2?.noUiSlider) photosValue = Math.round(parseFloat(String(photosSlider2.noUiSlider.get() as string | number)));
-        ajax_data['nb_image_page'] = nb_image_page_values[photosValue];
+        ajax_data['nb_image_page'] = nb_image_page_values[photosValue]!;
 
         let periodValue = 0;
          
         const periodSlider2 = pop_in.querySelector<SliderEl>('.period-select-bar .slider-bar-container');
         if (periodSlider2?.noUiSlider) periodValue = Math.round(parseFloat(String(periodSlider2.noUiSlider.get() as string | number)));
-        ajax_data['recent_period'] = recent_period_values[periodValue];
+        ajax_data['recent_period'] = recent_period_values[periodValue]!;
 
         const expandCheckbox = pop_in.querySelector<HTMLElement>('.user-list-checkbox[name="expand_all_albums"]');
         ajax_data['expand'] = !!(expandCheckbox && expandCheckbox.getAttribute('data-selected') === '1');
@@ -1406,8 +1406,8 @@ export function init(cfg: UserListConfig): void {
             .then((data: { result: { users: { id: number; username: string }[] } }) => {
                 const result = data.result.users;
                 for (let i = 0; i < result.length; i++) {
-                    const index = selection.findIndex((x) => x.id === result[i].id);
-                    if (index !== -1) selection[index].username = result[i].username;
+                    const index = selection.findIndex((x) => x.id === result[i]!.id);
+                    if (index !== -1) selection[index]!.username = result[i]!.username;
                 }
                 callback();
             })
@@ -1425,8 +1425,8 @@ export function init(cfg: UserListConfig): void {
             const _v = (Array.isArray(_datesSliderWS.noUiSlider.get())
                 ? _datesSliderWS.noUiSlider.get()
                 : [_datesSliderWS.noUiSlider.get()]) as string[];
-            minRegister = parseInt(register_dates[Math.round(parseFloat(_v[0]))]);
-            maxRegister = parseInt(register_dates[Math.round(parseFloat(_v[1] ?? _v[0]))]);
+            minRegister = parseInt(register_dates[Math.round(parseFloat(_v[0]!))]!);
+            maxRegister = parseInt(register_dates[Math.round(parseFloat(_v[1] ?? _v[0]!))]!);
         }
         const params = new URLSearchParams();
         params.append('display', 'only_id');
@@ -1476,11 +1476,11 @@ export function init(cfg: UserListConfig): void {
             .then((data: { stat: string; result: { users: { username: string }[] } }) => {
                 if (data.stat === 'ok') {
                     if (last_user_index !== -1) {
-                        current_users[last_user_index].username = data.result.users[0].username;
+                        current_users[last_user_index]!.username = data.result.users[0]!.username;
                         const titleEl = document.querySelector<HTMLElement>('#UserList .user-property-username .edit-username-title');
-                        if (titleEl) titleEl.innerHTML = current_users[last_user_index].username;
+                        if (titleEl) titleEl.innerHTML = current_users[last_user_index]!.username;
                         const initialsEl = document.querySelector<HTMLElement>('#UserList .user-property-initials span');
-                        if (initialsEl) initialsEl.innerHTML = get_initials(current_users[last_user_index].username);
+                        if (initialsEl) initialsEl.innerHTML = get_initials(current_users[last_user_index]!.username);
                         const container = document.querySelector<HTMLElement>('#user-table-content .user-container');
                         if (container) fill_container_user_info(container, last_user_index);
                     }
@@ -1536,9 +1536,9 @@ export function init(cfg: UserListConfig): void {
             .then(response => response.json())
             .then((data: { stat: string; message?: string; result: { users: UserData[] } }) => {
                 if (data.stat === 'ok') {
-                    const result_user = data.result.users[0];
+                    const result_user = data.result.users[0]!;
                     if (last_user_index !== -1) {
-                        Object.assign(current_users[last_user_index], result_user);
+                        Object.assign(current_users[last_user_index]!, result_user);
                         const container = document.querySelector<HTMLElement>('#user-table-content .user-container');
                         if (container) fill_container_user_info(container, last_user_index);
                     }
@@ -1579,7 +1579,7 @@ export function init(cfg: UserListConfig): void {
             .then(response => response.json())
             .then((data: { stat: string; result: { users: UserData[] } }) => {
                 if (data.stat === 'ok') {
-                    guest_user = data.result.users[0];
+                    guest_user = data.result.users[0]!;
                     fill_guest_edit();
                 }
             })
@@ -1592,7 +1592,7 @@ export function init(cfg: UserListConfig): void {
             .then(response => response.json())
             .then((data: { stat: string; result: { users: UserData[] } }) => {
                 if (data.stat === 'ok') {
-                    fill_user_edit(data.result.users[0]);
+                    fill_user_edit(data.result.users[0]!);
                     if (callback) callback();
                 }
             })
@@ -1663,8 +1663,8 @@ export function init(cfg: UserListConfig): void {
                 const _v = (Array.isArray(_datesSliderUL.noUiSlider.get())
                     ? _datesSliderUL.noUiSlider.get()
                     : [_datesSliderUL.noUiSlider.get()]) as string[];
-                minRegister = parseInt(register_dates[Math.round(parseFloat(_v[0]))]);
-                maxRegister = parseInt(register_dates[Math.round(parseFloat(_v[1] ?? _v[0]))]);
+                minRegister = parseInt(register_dates[Math.round(parseFloat(_v[0]!))]!);
+                maxRegister = parseInt(register_dates[Math.round(parseFloat(_v[1] ?? _v[0]!))]!);
             }
             update_data['min_register'] = minRegister;
             update_data['max_register'] = maxRegister;
@@ -1699,9 +1699,9 @@ export function init(cfg: UserListConfig): void {
                 document.querySelectorAll<HTMLElement>('.user-col.user-first-col.user-container-edit').forEach(el => {
                     el.addEventListener('click', function (this: HTMLElement) {
                         const uid_index = parseInt(this.closest<HTMLElement>('.user-container')?.getAttribute('key') ?? '0');
-                        last_user_id = current_users[uid_index].id;
+                        last_user_id = current_users[uid_index]!.id;
                         last_user_index = uid_index;
-                        fill_user_edit(current_users[uid_index]);
+                        fill_user_edit(current_users[uid_index]!);
                         const userListEl = document.getElementById('UserList');
                         if (userListEl) userListEl.style.display = 'flex';
                     });
@@ -1721,8 +1721,8 @@ export function init(cfg: UserListConfig): void {
                     const _v = (Array.isArray(_datesSliderF.noUiSlider.get())
                         ? _datesSliderF.noUiSlider.get()
                         : [_datesSliderF.noUiSlider.get()]) as string[];
-                    if (Math.round(parseFloat(_v[0])) !== 0) nb_filters += 1;
-                    if (Math.round(parseFloat(_v[1] ?? _v[0])) !== register_dates.length - 1) nb_filters += 1;
+                    if (Math.round(parseFloat(_v[0]!)) !== 0) nb_filters += 1;
+                    if (Math.round(parseFloat(_v[1] ?? _v[0]!)) !== register_dates.length - 1) nb_filters += 1;
                 }
                 show_filter_infos(nb_filters);
             })
@@ -1756,7 +1756,7 @@ export function init(cfg: UserListConfig): void {
             .then(response => response.json())
             .then((data: { stat: string; message?: string; result: { users: { id: number }[] } }) => {
                 if (data.stat === 'ok') {
-                    const new_user_id = data.result.users[0].id;
+                    const new_user_id = data.result.users[0]!.id;
                     update_user_list();
                     add_user_close();
                     document.querySelectorAll<HTMLInputElement>('#AddUser .user-property-input').forEach(el => { el.value = ''; });
@@ -1766,7 +1766,7 @@ export function init(cfg: UserListConfig): void {
                             last_user_id = new_user_id;
                             last_user_index = get_container_index_from_uid(new_user_id);
                             if (last_user_index !== -1) {
-                                fill_user_edit(current_users[last_user_index]);
+                                fill_user_edit(current_users[last_user_index]!);
                                 open_user_list();
                             } else {
                                 get_user_info(new_user_id, open_user_list);

@@ -32,9 +32,9 @@ export function initSmartpocket(): void {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
                 image_id: a.getAttribute('data-image-id') || '',
-                cat_id: thumbs.dataset.cat_id || '',
-                section: thumbs.dataset.section || '',
-                tags_string: thumbs.dataset.tags_string || '',
+                cat_id: thumbs.dataset['cat_id'] || '',
+                section: thumbs.dataset['section'] || '',
+                tags_string: thumbs.dataset['tags_string'] || '',
             }),
         });
     });

@@ -240,6 +240,7 @@ export function init(cfg: PictureModifyConfig): void {
     }
     window.addEventListener('beforeunload', function () {
         if (form_unsaved) return 'Some changes are not registered';
+        return undefined;
     });
 
     void fill_results;

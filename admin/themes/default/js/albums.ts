@@ -1,6 +1,7 @@
 import { initModule } from './moduleInit.js';
 import tippy from 'tippy.js';
-import { PwgTree, TreeNode, TreeNodeData } from './PwgTree.js';
+import { PwgTree, TreeNode } from './PwgTree.js';
+import type { TreeNodeData } from './PwgTree.js';
 import { pwgConfirm } from './pwgConfirm.js';
 
 interface AlbumsConfig {
@@ -269,7 +270,7 @@ export function init(cfg: AlbumsConfig): void {
     document.querySelector<HTMLElement>('.move-cat-title-container')!.addEventListener('click', function (this: HTMLElement) {
         const titleEl = this.querySelector<HTMLElement>('.move-cat-title');
         openRenameAlbumPopIn(titleEl ? (titleEl.getAttribute('title') ?? '') : '');
-        document.querySelector<HTMLElement & { dataset: DOMStringMap }>('.RenameAlbumSubmit')!.dataset.cat_id = this.getAttribute('data-id') ?? '';
+        document.querySelector<HTMLElement>('.RenameAlbumSubmit')!.dataset['cat_id'] = this.getAttribute('data-id') ?? '';
     });
     document.querySelector<HTMLElement>('.CloseRenameAlbum')!.addEventListener('click', function () {
         closeRenameAlbumPopIn();
@@ -279,7 +280,7 @@ export function init(cfg: AlbumsConfig): void {
     });
 
     document.querySelector<HTMLElement>('.RenameAlbumSubmit')!.addEventListener('click', function (this: HTMLElement) {
-        const catToEdit = this.dataset.cat_id ?? '';
+        const catToEdit = this.dataset['cat_id'] ?? '';
         fetch('ws.php?format=json&method=pwg.categories.setInfo', {
             method: 'POST',
             body: new URLSearchParams({
@@ -313,7 +314,7 @@ export function init(cfg: AlbumsConfig): void {
     document.querySelector<HTMLElement>('.DeleteAlbumErrors')!.style.display = 'none';
     document.querySelector<HTMLElement>('.add-album-button')!.addEventListener('click', function () {
         openAddAlbumPopIn(0, pwgTree);
-        document.querySelector<HTMLElement>('.AddAlbumSubmit')!.dataset.a_parent = '0';
+        document.querySelector<HTMLElement>('.AddAlbumSubmit')!.dataset['a_parent'] = '0';
     });
     rebindAddButtons(pwgTree);
     document.querySelector<HTMLElement>('.CloseAddAlbum')!.addEventListener('click', function () {
@@ -330,7 +331,7 @@ export function init(cfg: AlbumsConfig): void {
         this.classList.add('notClickable');
 
         const newAlbumName = (document.querySelector<HTMLInputElement>('.AddAlbumLabelUsername input'))!.value;
-        const newAlbumParent = this.dataset.a_parent ?? '0';
+        const newAlbumParent = this.dataset['a_parent'] ?? '0';
         const newAlbumPosition = (document.querySelector<HTMLInputElement>('input[name=position]:checked'))!.value;
 
         fetch('ws.php?format=json&method=pwg.categories.add', {
@@ -432,8 +433,8 @@ export function init(cfg: AlbumsConfig): void {
 function rebindAddButtons(pwgTree: PwgTree): void {
     document.querySelectorAll<HTMLElement>('.move-cat-add').forEach(function (el) {
         el.addEventListener('click', function (this: HTMLElement) {
-            openAddAlbumPopIn(this.dataset.aid ?? '0', pwgTree);
-            document.querySelector<HTMLElement>('.AddAlbumSubmit')!.dataset.a_parent = this.dataset.aid ?? '0';
+            openAddAlbumPopIn(this.dataset['aid'] ?? '0', pwgTree);
+            document.querySelector<HTMLElement>('.AddAlbumSubmit')!.dataset['a_parent'] = this.dataset['aid'] ?? '0';
         });
     });
 }
@@ -441,7 +442,7 @@ function rebindAddButtons(pwgTree: PwgTree): void {
 function rebindDeleteButtons(pwgTree: PwgTree): void {
     document.querySelectorAll<HTMLElement>('.move-cat-delete').forEach(function (el) {
         el.addEventListener('click', function (this: HTMLElement) {
-            triggerDeleteAlbum(this.dataset.id ?? '', pwgTree);
+            triggerDeleteAlbum(this.dataset['id'] ?? '', pwgTree);
         });
     });
 }
@@ -452,7 +453,7 @@ function rebindTitleContainers(pwgTree: PwgTree): void {
         el.addEventListener('click', function (this: HTMLElement) {
             const titleEl = this.querySelector<HTMLElement>('.move-cat-title');
             openRenameAlbumPopIn(titleEl ? (titleEl.getAttribute('title') ?? '') : '');
-            document.querySelector<HTMLElement>('.RenameAlbumSubmit')!.dataset.cat_id = this.getAttribute('data-id') ?? '';
+            document.querySelector<HTMLElement>('.RenameAlbumSubmit')!.dataset['cat_id'] = this.getAttribute('data-id') ?? '';
         });
     });
 }
@@ -565,7 +566,7 @@ function createAlbumNode(node: TreeNode, li: HTMLElement): void {
     const colors = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
     const colorId = Number(node.id) % 5;
     cont.querySelectorAll<HTMLElement>('span.icon-folder-open, span.icon-sitemap').forEach(function (el) {
-        el.classList.add(colors[colorId]);
+        el.classList.add(colors[colorId]!);
         el.classList.add('node-icon');
     });
 
@@ -696,7 +697,7 @@ function triggerDeleteAlbum(cat_id: string, pwgTree: PwgTree): void {
     })
     .then(function (response) { return response.text(); })
     .then(function (raw_data) {
-        const orphanData = (JSON.parse(raw_data) as { result: OrphanResult[] }).result[0];
+        const orphanData = (JSON.parse(raw_data) as { result: OrphanResult[] }).result[0]!;
         if (orphanData.nb_images_recursive == 0) {
             document.querySelector<HTMLElement>('.deleteAlbumOptions')!.style.display = 'none';
         } else {

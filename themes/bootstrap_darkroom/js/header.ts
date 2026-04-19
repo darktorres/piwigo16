@@ -2,10 +2,10 @@ import { setColorOpacity } from './theme.ts';
 
 export function initHeader(): void {
     const body = document.body;
-    const quicksearchNavbar  = body.dataset.quicksearchNavbar  === '1';
-    const pageHeader         = body.dataset.pageHeader         || '';
-    const pageHeaderBothNavs = body.dataset.pageHeaderBothNavs === '1';
-    const hasMenubar         = body.dataset.hasMenubar         === '1';
+    const quicksearchNavbar  = body.dataset['quicksearchNavbar']  === '1';
+    const pageHeader         = body.dataset['pageHeader']         || '';
+    const pageHeaderBothNavs = body.dataset['pageHeaderBothNavs'] === '1';
+    const hasMenubar         = body.dataset['hasMenubar']         === '1';
 
     if (quicksearchNavbar) {
         const qsearchIcon = document.querySelector('#navbar-menubar>#quicksearch>.fa-search');

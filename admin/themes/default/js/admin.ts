@@ -8,7 +8,7 @@ const _docReady = function (fn: () => void): void {
 const menubar = document.getElementById('menubar');
 if (menubar) {
     const dds = menubar.querySelectorAll<HTMLElement>('dd');
-    const active = parseInt(menubar.dataset.activeMenu ?? '0', 10);
+    const active = parseInt(menubar.dataset['activeMenu'] ?? '0', 10);
     dds.forEach(function (dd, i) {
         dd.style.display = (i === active) ? '' : 'none';
     });

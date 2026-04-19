@@ -69,9 +69,9 @@ export function sprintf(f: string, ...args: (string | number)[]): string {
         } else if (
             (m = /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(remaining))
         ) {
-            let a: string | number = args[(m[1] ? parseInt(m[1]) - 1 : i++)];
-            if (a == null) throw new Error("Too few arguments.");
-            if (/[^s]/.test(m[7]) && typeof a !== "number") throw new Error("Expecting number but found " + typeof a);
+            const aIdx = m[1] ? parseInt(m[1]) - 1 : i++;
+            const a: string | number = args[aIdx] ?? (() => { throw new Error("Too few arguments."); })();
+            if (/[^s]/.test(m[7] ?? '') && typeof a !== "number") throw new Error("Expecting number but found " + typeof a);
 
             let aStr: string;
             const n = a as number;

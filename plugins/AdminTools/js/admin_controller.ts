@@ -58,13 +58,13 @@ export const AdminTools = (function () {
 
             $ato.querySelectorAll<HTMLSelectElement>(".switcher").forEach(function (sel) {
                 sel.addEventListener("change", function () {
-                    if (sel.dataset.type == "theme") {
+                    if (sel.dataset['type'] == "theme") {
                         if (sel.value != state.multiView?.theme) {
                             window.location.href = (state.urlSelf ?? '') + "change_theme=1";
                         }
                     } else {
                         window.location.href =
-                            (state.urlSelf ?? '') + "ato_" + sel.dataset.type + "=" + sel.value;
+                            (state.urlSelf ?? '') + "ato_" + sel.dataset['type'] + "=" + sel.value;
                     }
                 });
                 sel.addEventListener("click", function (e) { e.stopPropagation(); });
@@ -88,7 +88,7 @@ function populateMultiView(
 ): void {
     const multiview = $ato.querySelector<HTMLElement>(".multiview");
     if (!multiview) return;
-    if (multiview.dataset.init) return;
+    if (multiview.dataset['init']) return;
 
     function render(data: MultiViewData): void {
         if (!multiview) return;
@@ -115,21 +115,21 @@ function populateMultiView(
         const langEl = multiview.querySelector<HTMLSelectElement>('select[data-type="lang"]');
         if (langEl) { langEl.innerHTML = html; langEl.value = state.multiView?.lang ?? ''; }
 
-        multiview.dataset.init = "1";
+        multiview.dataset['init'] = "1";
         multiview.querySelectorAll<HTMLElement>(".switcher").forEach(function (el) {
             el.style.display = '';
         });
     }
 
-    if ("sessionStorage" in window && window.sessionStorage.multiView != undefined) {
-        render(JSON.parse(window.sessionStorage.multiView as string) as MultiViewData);
+    if ("sessionStorage" in window && window.sessionStorage['multiView'] != undefined) {
+        render(JSON.parse(window.sessionStorage['multiView'] as string) as MultiViewData);
     } else {
         fetch((state.urlWS ?? '') + "multiView.getData", { method: "POST" })
             .then(function (r) { return r.json(); })
             .then(function (data: { result: MultiViewData }) {
                 render(data.result);
                 if ("sessionStorage" in window) {
-                    window.sessionStorage.multiView = JSON.stringify(data.result);
+                    window.sessionStorage['multiView'] = JSON.stringify(data.result);
                 }
             })
             .catch(function (err) { alert(err); });

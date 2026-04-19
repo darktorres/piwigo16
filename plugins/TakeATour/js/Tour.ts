@@ -59,12 +59,12 @@ export class Tour {
 
     private _show(idx: number): void {
         if (idx < 0 || idx >= this._steps.length) { this.end(); return; }
-        const step = this._steps[idx];
+        const step = this._steps[idx]!;
         sessionStorage.setItem(this._key, String(idx));
 
         if (step.path) {
             const here = window.location.pathname + window.location.search;
-            if (here.indexOf(step.path.split('?')[0]) === -1 || (step.path.indexOf('?') !== -1 && here.indexOf(step.path.split('?')[1]) === -1)) {
+            if (here.indexOf(step.path.split('?')[0]!) === -1 || (step.path.indexOf('?') !== -1 && here.indexOf(step.path.split('?')[1]!) === -1)) {
                 window.location.href = step.path;
                 return;
             }

@@ -11,10 +11,10 @@ export function init(cfg: CatPermConfig): void {
     const cacheKeys = cfg.CACHE_KEYS ?? {};
     const rootUrl = cfg.ROOT_URL ?? '';
 
-    const groupsCache = new GroupsCache({ serverKey: cacheKeys.groups ?? '', serverId: cacheKeys._hash, rootUrl });
+    const groupsCache = new GroupsCache({ serverKey: cacheKeys.groups ?? '', ...(cacheKeys._hash !== undefined ? { serverId: cacheKeys._hash } : {}), rootUrl });
     groupsCache.selectize(document.querySelectorAll('[data-selectize=groups]'));
 
-    const usersCache = new UsersCache({ serverKey: cacheKeys.users ?? '', serverId: cacheKeys._hash, rootUrl });
+    const usersCache = new UsersCache({ serverKey: cacheKeys.users ?? '', ...(cacheKeys._hash !== undefined ? { serverId: cacheKeys._hash } : {}), rootUrl });
     usersCache.selectize(document.querySelectorAll('[data-selectize=users]'));
 
     function checkStatusOptions(): void {

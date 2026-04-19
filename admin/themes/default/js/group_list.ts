@@ -218,7 +218,7 @@ export function init(cfg: GroupListConfig): void {
                 const data = JSON.parse(raw_data) as { stat: string; result: { groups: GroupData[] } };
                 if (data.stat === 'ok') {
                     (document.querySelector<HTMLInputElement>('.addGroupFormLabelAndInput input'))!.value = '';
-                    const group = data.result.groups[0];
+                    const group = data.result.groups[0]!;
                     const groupBox = createGroup(group);
                     document.getElementById('addGroupForm')!.insertAdjacentElement('afterend', groupBox);
                     setupGroupBox(groupBox);
@@ -282,7 +282,7 @@ export function init(cfg: GroupListConfig): void {
         const colors = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
         const colorId = Number(group.id) % 5;
         const icon = newgroup.querySelector<HTMLElement>('.icon-users-1');
-        if (icon) icon.classList.add(colors[colorId]);
+        if (icon) icon.classList.add(colors[colorId]!);
 
         const msg = newgroup.querySelector<HTMLElement>('.groupMessage');
         if (msg) {
@@ -482,7 +482,7 @@ export function init(cfg: GroupListConfig): void {
                 const data = JSON.parse(raw_data) as { stat: string; result: { groups: GroupData[] } };
                 loadState.reverse();
                 if (data.stat === 'ok') {
-                    newName = data.result.groups[0].name;
+                    newName = data.result.groups[0]!.name;
                     const msg = document.querySelector<HTMLElement>('#group-' + id + ' .groupMessage');
                     if (msg) {
                         msg.innerHTML = str_renaming_done;
@@ -637,14 +637,14 @@ export function init(cfg: GroupListConfig): void {
             if (data.stat === 'ok') {
                 const opts = document.querySelector<HTMLElement>('#group-' + id + ' #GroupOptions');
                 if (opts) opts.style.display = 'none';
-                const group = data.result.groups[0];
+                const group = data.result.groups[0]!;
                 const groupbox = createGroup(group);
                 document.getElementById('group-' + id)?.insertAdjacentElement('afterend', groupbox);
                 setupGroupBox(groupbox);
                 updateBadge();
 
-                if (data.result.groups[0].is_default == 'true') {
-                    setupDefaultActions(String(data.result.groups[0].id), true);
+                if (group.is_default == 'true') {
+                    setupDefaultActions(String(group.id), true);
                 }
             }
         })
@@ -917,8 +917,8 @@ export function init(cfg: GroupListConfig): void {
 
             if (selectize) {
                 for (const [, value] of Object.entries(selectize.options as Record<string, Record<string, string>>)) {
-                    if (value.username === 'guest') {
-                        selectize.removeOption(value.id);
+                    if (value['username'] === 'guest') {
+                        selectize.removeOption(value['id'] ?? '');
                     }
                 }
             }
@@ -961,7 +961,7 @@ export function init(cfg: GroupListConfig): void {
                 let i = 0;
                 const userListEl = document.querySelector<HTMLElement>('.UsersInGroupList');
                 while (userListEl && userListEl.offsetHeight <= maxOffsetUserCont && usersInGroup[i] != undefined) {
-                    const userEl = getUserDisplay(usersInGroup[i].username, usersInGroup[i].id, grp_id);
+                    const userEl = getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grp_id);
                     userListEl.appendChild(userEl);
                     i++;
                 }
@@ -1153,7 +1153,7 @@ export function init(cfg: GroupListConfig): void {
 
             let i = 0;
             while (userList && userList.offsetHeight <= maxOffsetUserCont && usersInGroup[i] != undefined) {
-                const userEl = getUserDisplay(usersInGroup[i].username, usersInGroup[i].id, grp_id);
+                const userEl = getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grp_id);
                 userList.appendChild(userEl);
                 i++;
             }

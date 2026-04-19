@@ -28,15 +28,15 @@ export function init(cfg: StatsConfig): void {
 
     const dataEl = document.getElementById('data');
     const data: Record<string, Record<string, number> | null> = {};
-    data['hours'] = dataEl ? JSON.parse(dataEl.dataset.hours ?? 'null') as Record<string, number> | null : null;
-    data['days'] = dataEl ? JSON.parse(dataEl.dataset.days ?? 'null') as Record<string, number> | null : null;
-    data['months'] = dataEl ? JSON.parse(dataEl.dataset.months ?? 'null') as Record<string, number> | null : null;
-    data['years'] = dataEl ? JSON.parse(dataEl.dataset.years ?? 'null') as Record<string, number> | null : null;
-    data['compare-years'] = dataEl ? JSON.parse(dataEl.dataset.compareYears ?? 'null') as Record<string, number> | null : null;
+    data['hours'] = dataEl ? JSON.parse(dataEl.dataset['hours'] ?? 'null') as Record<string, number> | null : null;
+    data['days'] = dataEl ? JSON.parse(dataEl.dataset['days'] ?? 'null') as Record<string, number> | null : null;
+    data['months'] = dataEl ? JSON.parse(dataEl.dataset['months'] ?? 'null') as Record<string, number> | null : null;
+    data['years'] = dataEl ? JSON.parse(dataEl.dataset['years'] ?? 'null') as Record<string, number> | null : null;
+    data['compare-years'] = dataEl ? JSON.parse(dataEl.dataset['compareYears'] ?? 'null') as Record<string, number> | null : null;
 
     interface MonthStats { month: Record<string, number>[]; avg: number }
     let monthStats: MonthStats | null = null;
-    if (dataEl) monthStats = JSON.parse(dataEl.dataset.monthStats ?? 'null') as MonthStats | null;
+    if (dataEl) monthStats = JSON.parse(dataEl.dataset['monthStats'] ?? 'null') as MonthStats | null;
 
     const data_unit: Record<string, string> = {
         hours: 'day',
@@ -98,8 +98,8 @@ export function init(cfg: StatsConfig): void {
             };
             statGraph.options.scales?.xAxes?.forEach((axe) => {
                 if (axe.time) {
-                    axe.time.tooltipFormat = str_tooltip_format[dataType];
-                    axe.time.unit = data_unit[dataType];
+                    if (str_tooltip_format[dataType] !== undefined) axe.time.tooltipFormat = str_tooltip_format[dataType];
+                    if (data_unit[dataType] !== undefined) axe.time.unit = data_unit[dataType] as 'millisecond' | 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'quarter' | 'year';
                     axe.time.displayFormats = str_unit_format;
                 }
             });
@@ -128,7 +128,7 @@ export function init(cfg: StatsConfig): void {
     }
 
     function getValues(d: Record<string, number>): { x: Date; y: number }[] {
-        return Object.keys(d).map(key => ({ x: new Date(key), y: d[key] }));
+        return Object.keys(d).map(key => ({ x: new Date(key), y: d[key]! }));
     }
 
     function getComparedYearDataset(): unknown[] {
@@ -141,7 +141,7 @@ export function init(cfg: StatsConfig): void {
             const date = new Date(key);
             const yr = date.getFullYear();
             if (values[yr] === undefined) values[yr] = [];
-            values[yr][date.getMonth()] = compareYears[key];
+            values[yr]![date.getMonth()] = compareYears[key]!;
         });
 
         Object.keys(values).forEach(key => {
@@ -167,7 +167,7 @@ export function init(cfg: StatsConfig): void {
                 const days_data: number[] = [];
                 Object.keys(values).forEach(key => {
                     date = new Date(key);
-                    days_data[date.getUTCDate() - 1] = values[key];
+                    days_data[date.getUTCDate() - 1] = values[key]!;
                 });
                 dataset.push({
                     label: str_months[date.getMonth()] + ' ' + date.getFullYear(),
@@ -193,7 +193,7 @@ export function init(cfg: StatsConfig): void {
 
     document.querySelectorAll<HTMLElement>('.stat-data-selector label').forEach(label => {
         label.addEventListener('click', function () {
-            const dataType = (this).dataset.value;
+            const dataType = (this).dataset['value'];
             if (dataType) changeData(dataType);
         });
     });
@@ -214,18 +214,18 @@ export function init(cfg: StatsConfig): void {
                     changeData('years');
                 } else {
                     checkedLabel = document.querySelector<HTMLElement>('.stat-data-selector input:checked + label');
-                    if (checkedLabel?.dataset.value) changeData(checkedLabel.dataset.value);
+                    if (checkedLabel?.dataset['value']) changeData(checkedLabel.dataset['value']);
                 }
             } else {
                 document.querySelectorAll<HTMLElement>('#hours-selector + label, #days-selector + label').forEach(el => el.classList.remove('unavailable'));
                 checkedLabel = document.querySelector<HTMLElement>('.stat-data-selector input:checked + label');
-                if (checkedLabel?.dataset.value) changeData(checkedLabel.dataset.value);
+                if (checkedLabel?.dataset['value']) changeData(checkedLabel.dataset['value']);
             }
         });
     });
 
     const checkedLabel = document.querySelector<HTMLElement>('.stat-data-selector input:checked + label');
-    if (checkedLabel?.dataset.value) changeData(checkedLabel.dataset.value);
+    if (checkedLabel?.dataset['value']) changeData(checkedLabel.dataset['value']);
 }
 
 initModule(init);

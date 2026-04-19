@@ -82,7 +82,7 @@ export function init(cfg: PluginsNewConfig): void {
 
     document.querySelectorAll<HTMLElement>('.buttonInstall').forEach(function (el) {
         const pluginBox = el.closest<HTMLElement>('.pluginBox');
-        const plugin_name = pluginBox?.dataset.name ?? '';
+        const plugin_name = pluginBox?.dataset['name'] ?? '';
         pwgConfirmFollowHref(el as HTMLAnchorElement, {
             alert_title: str_install_title.replace('%s', plugin_name),
             alert_confirm: str_confirm_msg,
@@ -93,7 +93,7 @@ export function init(cfg: PluginsNewConfig): void {
     tippy('.certification', { delay: 0, placement: 'top' });
 
     document.querySelectorAll<HTMLElement>('.pluginRating').forEach(function (node) {
-        const rating = node.dataset.rating ?? '0';
+        const rating = node.dataset['rating'] ?? '0';
         displayStars(node.querySelector<HTMLElement>('.rating-star-container')!, rating);
     });
 
@@ -101,10 +101,10 @@ export function init(cfg: PluginsNewConfig): void {
     const tagsNames: { value: string; text: string }[] = [{ value: '', text: '-' }];
 
     document.querySelectorAll<HTMLElement>('.pluginBox').forEach(function (el) {
-        (el.dataset.author ?? '').split(', ').forEach(name => {
+        (el.dataset['author'] ?? '').split(', ').forEach(name => {
             if (!authorNames.find(a => a.value === name)) authorNames.push({ value: name, text: name });
         });
-        (el.dataset.tags ?? '').split(', ').forEach(tag => {
+        (el.dataset['tags'] ?? '').split(', ').forEach(tag => {
             if (!tagsNames.find(t => t.value === tag)) tagsNames.push({ value: tag, text: tag });
         });
     });
@@ -251,20 +251,20 @@ export function init(cfg: PluginsNewConfig): void {
         filters[changed] = value;
 
         sort(function (pluginBox: HTMLElement): boolean {
-            const pluginRating = parseFloat(pluginBox.querySelector<HTMLElement>('.pluginRating')?.dataset.rating ?? '0');
-            const pluginCertification = parseInt(pluginBox.querySelector<HTMLElement>('.certification')?.dataset.certification ?? '0');
-            const pluginAuthors = (pluginBox.dataset.author ?? '').split(', ');
-            const pluginName = (pluginBox.dataset.name ?? '').toUpperCase();
-            const pluginTags = (pluginBox.dataset.tags ?? '').split(', ');
-            const pluginRevisionOld = monthDiff(new Date(parseInt(pluginBox.dataset.revision ?? '0') * 1000), new Date());
+            const pluginRating = parseFloat(pluginBox.querySelector<HTMLElement>('.pluginRating')?.dataset['rating'] ?? '0');
+            const pluginCertification = parseInt(pluginBox.querySelector<HTMLElement>('.certification')?.dataset['certification'] ?? '0');
+            const pluginAuthors = (pluginBox.dataset['author'] ?? '').split(', ');
+            const pluginName = (pluginBox.dataset['name'] ?? '').toUpperCase();
+            const pluginTags = (pluginBox.dataset['tags'] ?? '').split(', ');
+            const pluginRevisionOld = monthDiff(new Date(parseInt(pluginBox.dataset['revision'] ?? '0') * 1000), new Date());
 
             return (
-                pluginRating >= (filters.rating as number) &&
-                pluginCertification >= (filters.certification as number) &&
-                (filters.search === '' || pluginName.indexOf(filters.search as string) !== -1) &&
-                (filters.author === '' || pluginAuthors.includes(filters.author as string)) &&
-                (filters.tag === '' || pluginTags.includes(filters.tag as string)) &&
-                pluginRevisionOld <= (filters.revision as number)
+                pluginRating >= (filters['rating'] as number) &&
+                pluginCertification >= (filters['certification'] as number) &&
+                (filters['search'] === '' || pluginName.indexOf(filters['search'] as string) !== -1) &&
+                (filters['author'] === '' || pluginAuthors.includes(filters['author'] as string)) &&
+                (filters['tag'] === '' || pluginTags.includes(filters['tag'] as string)) &&
+                pluginRevisionOld <= (filters['revision'] as number)
             );
         });
     }

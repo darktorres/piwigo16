@@ -65,7 +65,7 @@ export function init(cfg: TagsConfig): void {
     if (_sel100) _sel100.checked = true;
 
     document.querySelector('.info-warning p a')?.addEventListener('click', () => {
-        const url = (document.querySelector('.info-warning p a') as HTMLAnchorElement | null)?.dataset.url ?? '';
+        const url = (document.querySelector('.info-warning p a'))?.dataset.url ?? '';
         const tags = orphan_tag_names;
         const str_orphans = str_orphan_tags
             .replace('%s1', String(tags.length))
@@ -245,8 +245,8 @@ export function init(cfg: TagsConfig): void {
             })
                 .then(response => response.text())
                 .then(raw_data => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const data = JSON.parse(raw_data) as any;
+                     
+                    const data = JSON.parse(raw_data);
                     if (data.stat === 'ok') {
                         const newTag = createTagBox(data.result.id, data.result.name, data.result.url_name, 0);
                         const container = document.querySelector('.tag-container');
@@ -383,8 +383,8 @@ export function init(cfg: TagsConfig): void {
         })
             .then(response => response.text())
             .then(raw_data => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const data = JSON.parse(raw_data) as any;
+                 
+                const data = JSON.parse(raw_data);
                 if (data.stat === 'ok') {
                     document.querySelector('.tag-box[data-id="' + id + '"]')?.remove();
                     dataTags = dataTags.filter((tag) => tag.id != id);
@@ -407,8 +407,8 @@ export function init(cfg: TagsConfig): void {
             })
                 .then(response => response.text())
                 .then(raw_data => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const data = JSON.parse(raw_data) as any;
+                     
+                    const data = JSON.parse(raw_data);
                     console.log(data);
                     if (data.stat === 'ok') {
                         document.querySelectorAll<HTMLElement>(
@@ -452,8 +452,8 @@ export function init(cfg: TagsConfig): void {
             })
                 .then(response => response.text())
                 .then(raw_data => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const data = JSON.parse(raw_data) as any;
+                     
+                    const data = JSON.parse(raw_data);
                     if (data.stat === 'ok') {
                         const newTag = createTagBox(data.result.id, data.result.name, data.result.url_name, data.result.count);
                         const afterEl = document.querySelector('.tag-box[data-id="' + id + '"]');
@@ -758,8 +758,8 @@ export function init(cfg: TagsConfig): void {
             .then(response => response.text())
             .then(raw_data => {
                 const trimmed = raw_data.slice(raw_data.search('{'));
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const data = JSON.parse(trimmed) as any;
+                 
+                const data = JSON.parse(trimmed);
                 if (data.stat === 'ok') {
                     selected.forEach(id => { document.querySelector('.tag-box[data-id="' + id + '"]')?.remove(); });
                     dataTags = dataTags.filter((tag) => !selected.includes(String(tag.id)));
@@ -796,8 +796,8 @@ export function init(cfg: TagsConfig): void {
             .then(response => response.text())
             .then(raw_data => {
                 const trimmed = raw_data.slice(raw_data.search('{'));
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const data = JSON.parse(trimmed) as any;
+                 
+                const data = JSON.parse(trimmed);
                 if (data.stat === 'ok') {
                     (data.result.deleted_tag as (string | number)[]).forEach((id) => {
                         if (data.result.destination_tag != id) {
@@ -850,7 +850,7 @@ export function init(cfg: TagsConfig): void {
 
     function isDataSearched(tagObj: TagData): boolean {
         const name = String(tagObj.raw_name).toLowerCase();
-        const stringSearch = (document.querySelector('#search-tag .search-input') as HTMLInputElement | null)?.value ?? '';
+        const stringSearch = (document.querySelector('#search-tag .search-input'))?.value ?? '';
         return name.includes(stringSearch.toLowerCase());
     }
 
@@ -876,7 +876,7 @@ export function init(cfg: TagsConfig): void {
 
     /*------- Pagination -------*/
 
-    let per_page: number = parseInt((document.querySelector('.tag-container') as HTMLElement | null)?.dataset.per_page ?? '20');
+    let per_page: number = parseInt((document.querySelector('.tag-container'))?.dataset.per_page ?? '20');
     let promisePending = false;
     let updateAsk = false;
     let actualPage = 1;

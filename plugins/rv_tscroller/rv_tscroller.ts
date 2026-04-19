@@ -76,7 +76,7 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
             let url = cfg.ajaxUrlModel
                 .replace("%start%", String(newStart))
                 .replace("%per%", String(reqCount));
-            const loaderEl = document.getElementById('ajaxLoader') as HTMLElement | null;
+            const loaderEl = document.getElementById('ajaxLoader');
             if (loaderEl) loaderEl.style.display = '';
             cfg.loadingUp = 1;
             fetch(url)
@@ -117,7 +117,7 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
                 url += "&adj=" + cfg.adjust;
                 cfg.adjust = 0;
             }
-            const loaderEl = document.getElementById('ajaxLoader') as HTMLElement | null;
+            const loaderEl = document.getElementById('ajaxLoader');
             if (loaderEl) loaderEl.style.display = '';
             cfg.loading = 1;
             fetch(url)
@@ -242,7 +242,7 @@ export function initRVTS_CATS(RVTS_CATS: Partial<RVTSCATSConfig> & Pick<RVTSCATS
             if (cfg.loading || cfg.next >= cfg.total) return;
             const url = cfg.ajaxUrlModel
                 .replace('%startcat%', String(cfg.next));
-            const loaderEl = document.getElementById('ajaxLoader') as HTMLElement | null;
+            const loaderEl = document.getElementById('ajaxLoader');
             if (loaderEl) loaderEl.style.display = '';
             cfg.loading = 1;
             fetch(url)

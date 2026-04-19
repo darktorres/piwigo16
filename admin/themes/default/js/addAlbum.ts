@@ -28,7 +28,7 @@ export function pwgAddAlbum(btn: HTMLElement, options: AddAlbumOptions = {}): HT
     const popup = document.getElementById('addAlbumForm') as HTMLDialogElement | null;
     const albumParentEl = popup ? popup.querySelector<HTMLSelectWithTomSelect>('[name="category_parent"]') : null;
     const targetEl = btn ? document.querySelector<HTMLSelectWithTomSelect>('[name="' + btn.dataset.addAlbum + '"]') : null;
-    const cache = targetEl ? (targetEl as HTMLSelectWithTomSelect)._pwgCache : null;
+    const cache = targetEl ? (targetEl)._pwgCache : null;
 
     if (targetEl && !targetEl.tomselect) {
         throw new Error('pwgAddAlbum: target must use TomSelect');
@@ -55,8 +55,8 @@ export function pwgAddAlbum(btn: HTMLElement, options: AddAlbumOptions = {}): HT
         popup.querySelector('form')?.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            const parent_id = albumParentEl!.tomselect ? albumParentEl!.tomselect.getValue() : albumParentEl!.value;
-            const nameEl = popup!.querySelector<HTMLInputElement>('[name=category_name]');
+            const parent_id = albumParentEl.tomselect ? albumParentEl.tomselect.getValue() : albumParentEl.value;
+            const nameEl = popup.querySelector<HTMLInputElement>('[name=category_name]');
             const name = nameEl?.value ?? '';
 
             const errEl = document.getElementById('categoryNameError');
@@ -80,9 +80,9 @@ export function pwgAddAlbum(btn: HTMLElement, options: AddAlbumOptions = {}): HT
                 .then(function (data: { result: { id: number } }) {
                     if (loadingEl) loadingEl.style.display = 'none';
                     document.querySelectorAll<HTMLElement>('.albumCreationButton').forEach(el => { el.style.display = ''; });
-                    popup!.close();
+                    popup.close();
 
-                    const parentSelectize = albumParentEl!.tomselect!;
+                    const parentSelectize = albumParentEl.tomselect!;
                     const newAlbum: CategoryItem = {
                         id: data.result.id,
                         name,

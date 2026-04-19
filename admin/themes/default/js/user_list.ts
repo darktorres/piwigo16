@@ -534,8 +534,8 @@ export function init(cfg: UserListConfig): void {
     /* Photos bar slider */
     (function () {
         function makePhotosSlider(scope: string): void {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const el = document.querySelector(scope + ' .photos-select-bar .slider-bar-container') as any;
+             
+            const el = document.querySelector(scope + ' .photos-select-bar .slider-bar-container');
             if (!el) return;
             noUiSlider.create(el, {
                 start: [nb_image_page_init],
@@ -570,8 +570,8 @@ export function init(cfg: UserListConfig): void {
     /* recent_period slider */
     (function () {
         function makePeriodSlider(scope: string): void {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const el = document.querySelector(scope + ' .period-select-bar .slider-bar-container') as any;
+             
+            const el = document.querySelector(scope + ' .period-select-bar .slider-bar-container');
             if (!el) return;
             noUiSlider.create(el, {
                 start: [recent_period_init],
@@ -600,8 +600,8 @@ export function init(cfg: UserListConfig): void {
         makePeriodSlider('#GuestUserList');
         makePeriodSlider('#permitActionUserList');
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const permitPhotosSlider = document.querySelector('#permitActionUserList .photos-select-bar .slider-bar-container') as any;
+         
+        const permitPhotosSlider = document.querySelector('#permitActionUserList .photos-select-bar .slider-bar-container');
         if (permitPhotosSlider?.noUiSlider) permitPhotosSlider.noUiSlider.set(0);
 
         const permitActionPeriodInfo = document.querySelector<HTMLElement>('#permitActionUserList .period-select-bar .recent_period_infos');
@@ -726,8 +726,8 @@ export function init(cfg: UserListConfig): void {
     }
 
     function setupRegisterDates(reg_dates: string[]): void {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const el = document.querySelector('.advanced-filter .dates-select-bar .slider-bar-container') as any;
+         
+        const el = document.querySelector('.advanced-filter .dates-select-bar .slider-bar-container');
         if (el) {
             noUiSlider.create(el, {
                 start: [0, reg_dates.length - 1],
@@ -777,7 +777,7 @@ export function init(cfg: UserListConfig): void {
         if (addUser) {
             addUser.querySelectorAll<HTMLInputElement>('.AddUserInput').forEach(el => { el.value = ''; });
             addUser.style.display = 'flex';
-            (document.querySelector<HTMLElement>('.AddUserLabelUsername input') as HTMLElement | null)?.focus();
+            (document.querySelector<HTMLElement>('.AddUserLabelUsername input'))?.focus();
         }
     }
 
@@ -797,21 +797,21 @@ export function init(cfg: UserListConfig): void {
         const curr_container = this.closest<HTMLElement>('.user-container');
         const in_container = curr_container !== null;
         const curr_user = in_container
-            ? current_users[parseInt(curr_container!.getAttribute('key') ?? '0')]
+            ? current_users[parseInt(curr_container.getAttribute('key') ?? '0')]
             : { id: -1 };
         if (this.getAttribute('data-selected') === '1') {
             this.setAttribute('data-selected', '0');
             this.querySelectorAll<HTMLElement>('i').forEach(el => { el.style.display = 'none'; });
             if (in_container) {
-                curr_container!.classList.remove('container-selected');
+                curr_container.classList.remove('container-selected');
                 selection = selection.filter((elem) => elem.id !== curr_user.id);
             }
         } else {
             this.setAttribute('data-selected', '1');
             this.querySelectorAll<HTMLElement>('i').forEach(el => { el.style.display = ''; });
             if (in_container && 'username' in curr_user) {
-                curr_container!.classList.add('container-selected');
-                selection.push({ id: curr_user.id, username: (curr_user as UserData).username });
+                curr_container.classList.add('container-selected');
+                selection.push({ id: curr_user.id, username: (curr_user).username });
             }
         }
         if (in_container) update_selection_content();
@@ -982,7 +982,7 @@ export function init(cfg: UserListConfig): void {
             container_checkbox.querySelectorAll<HTMLElement>('i').forEach(el => { el.style.display = ''; });
             this.classList.add('container-selected');
             if ('username' in curr_user) {
-                selection.push({ id: curr_user.id, username: (curr_user as UserData).username });
+                selection.push({ id: curr_user.id, username: (curr_user).username });
             }
         }
         update_selection_content();
@@ -1186,8 +1186,8 @@ export function init(cfg: UserListConfig): void {
         const slider_key_photos = getSliderKeyFromValue(parseInt(String(user_to_edit.nb_image_page)), nb_image_page_values);
         const slider_key_period = getSliderKeyFromValue(parseInt(String(user_to_edit.recent_period)), recent_period_values);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const photosSlider = pop_in.querySelector('.photos-select-bar .slider-bar-container') as any;
+         
+        const photosSlider = pop_in.querySelector('.photos-select-bar .slider-bar-container');
         if (photosSlider?.noUiSlider) photosSlider.noUiSlider.set(slider_key_photos);
 
         pop_in.querySelectorAll<HTMLOptionElement>('.user-property-theme select option').forEach(option => {
@@ -1197,8 +1197,8 @@ export function init(cfg: UserListConfig): void {
             if (option.value === user_to_edit.language) option.selected = true;
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const periodSlider = pop_in.querySelector('.period-select-bar .slider-bar-container') as any;
+         
+        const periodSlider = pop_in.querySelector('.period-select-bar .slider-bar-container');
         if (periodSlider?.noUiSlider) periodSlider.noUiSlider.set(slider_key_period);
 
         const expandCheckbox = pop_in.querySelector<HTMLElement>('.user-list-checkbox[name="expand_all_albums"]');
@@ -1370,14 +1370,14 @@ export function init(cfg: UserListConfig): void {
         ajax_data['language'] = langSelect ? langSelect.value : '';
 
         let photosValue = 0;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const photosSlider2 = pop_in.querySelector('.photos-select-bar .slider-bar-container') as any;
+         
+        const photosSlider2 = pop_in.querySelector('.photos-select-bar .slider-bar-container');
         if (photosSlider2?.noUiSlider) photosValue = Math.round(parseFloat(String(photosSlider2.noUiSlider.get())));
         ajax_data['nb_image_page'] = nb_image_page_values[photosValue];
 
         let periodValue = 0;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const periodSlider2 = pop_in.querySelector('.period-select-bar .slider-bar-container') as any;
+         
+        const periodSlider2 = pop_in.querySelector('.period-select-bar .slider-bar-container');
         if (periodSlider2?.noUiSlider) periodValue = Math.round(parseFloat(String(periodSlider2.noUiSlider.get())));
         ajax_data['recent_period'] = recent_period_values[periodValue];
 
@@ -1423,8 +1423,8 @@ export function init(cfg: UserListConfig): void {
         const groupSelect = document.querySelector<HTMLSelectElement>('.advanced-filter-select[name=filter_group]');
         const levelSelect = document.querySelector<HTMLSelectElement>('.advanced-filter-select[name=filter_level]');
         let minRegister = 0, maxRegister = 0;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const _datesSliderWS = document.querySelector('.dates-select-bar .slider-bar-container') as any;
+         
+        const _datesSliderWS = document.querySelector('.dates-select-bar .slider-bar-container');
         if (_datesSliderWS?.noUiSlider) {
             const _v = (Array.isArray(_datesSliderWS.noUiSlider.get())
                 ? _datesSliderWS.noUiSlider.get()
@@ -1661,8 +1661,8 @@ export function init(cfg: UserListConfig): void {
             update_data['min_level'] = levelSelect ? levelSelect.value : '';
             update_data['max_level'] = levelSelect ? levelSelect.value : '';
             let minRegister = 0, maxRegister = 0;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const _datesSliderUL = document.querySelector('.dates-select-bar .slider-bar-container') as any;
+             
+            const _datesSliderUL = document.querySelector('.dates-select-bar .slider-bar-container');
             if (_datesSliderUL?.noUiSlider) {
                 const _v = (Array.isArray(_datesSliderUL.noUiSlider.get())
                     ? _datesSliderUL.noUiSlider.get()
@@ -1719,8 +1719,8 @@ export function init(cfg: UserListConfig): void {
                 if (groupVal && groupVal.value !== '') nb_filters += 1;
                 const levelVal = document.querySelector<HTMLSelectElement>('.advanced-filter-select[name=filter_level]');
                 if (levelVal && levelVal.value !== '') nb_filters += 1;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const _datesSliderF = document.querySelector('.dates-select-bar .slider-bar-container') as any;
+                 
+                const _datesSliderF = document.querySelector('.dates-select-bar .slider-bar-container');
                 if (_datesSliderF?.noUiSlider) {
                     const _v = (Array.isArray(_datesSliderF.noUiSlider.get())
                         ? _datesSliderF.noUiSlider.get()
@@ -1885,8 +1885,8 @@ export function init(cfg: UserListConfig): void {
                         data['language'] = document.querySelector<HTMLSelectElement>('#permitActionUserList select[name=language]')?.value;
                         break;
                     case 'recent_period': {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const _ps = document.querySelector('#permitActionUserList .period-select-bar .slider-bar-container') as any;
+                         
+                        const _ps = document.querySelector('#permitActionUserList .period-select-bar .slider-bar-container');
                         data['recent_period'] = recent_period_values[_ps?.noUiSlider ? Math.round(parseFloat(String(_ps.noUiSlider.get()))) : 0];
                         break;
                     }

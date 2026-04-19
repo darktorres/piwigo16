@@ -34,7 +34,7 @@ export function init(cfg: ConfigWatermarkConfig): void {
     document.querySelectorAll<HTMLInputElement>("input[name='w[position]']").forEach(function (el) {
         el.addEventListener('change', function () {
             const pcd = document.getElementById('positionCustomDetails');
-            if (pcd) pcd.style.display = (this as HTMLInputElement).value === 'custom' ? '' : 'none';
+            if (pcd) pcd.style.display = (this).value === 'custom' ? '' : 'none';
         });
     });
 

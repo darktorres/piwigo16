@@ -384,7 +384,7 @@ if (fields.added_by) {
     });
 
     PS_params.added_by =
-        (fields.added_by as (string|number)[]).length > 0
+        (fields.added_by).length > 0
             ? fields.added_by
             : "";
 
@@ -996,7 +996,7 @@ function performSearch(params: Record<string, unknown>, reload: boolean): void {
 
 function linked_albums_open(): void {
     const addLinkedAlbum = document.getElementById('addLinkedAlbum');
-    if (addLinkedAlbum) (addLinkedAlbum as HTMLElement).style.display = '';
+    if (addLinkedAlbum) (addLinkedAlbum).style.display = '';
     const searchInput = document.querySelector<HTMLInputElement>('.search-input');
     if (searchInput) { searchInput.value = ''; searchInput.focus(); }
     const searchResult = document.getElementById('searchResult');
@@ -1058,7 +1058,7 @@ function set_up_popin(): void {
 
 function linked_albums_close(): void {
     const addLinkedAlbum = document.getElementById("addLinkedAlbum");
-    if (addLinkedAlbum) (addLinkedAlbum as HTMLElement).style.display = 'none';
+    if (addLinkedAlbum) (addLinkedAlbum).style.display = 'none';
 }
 
 function fill_results(cats: AlbumCategory[]): void {

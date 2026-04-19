@@ -211,7 +211,7 @@ export function init(cfg: HistoryConfig): void {
 
         document.querySelectorAll<HTMLElement>('.search-line .toggle-img-option').forEach(function (el) {
             el.addEventListener('click', function () {
-                const imgOption = (this as HTMLElement).closest<HTMLElement>('.search-line')?.querySelector<HTMLElement>('.img-option');
+                const imgOption = (this).closest<HTMLElement>('.search-line')?.querySelector<HTMLElement>('.img-option');
                 if (imgOption) imgOption.style.display = getComputedStyle(imgOption).display === 'none' ? '' : 'none';
             });
         });
@@ -275,7 +275,7 @@ export function init(cfg: HistoryConfig): void {
                 new_user_item.dataset.userId = String(id_of[key]);
                 new_user_item.addEventListener('click', function () {
                     if (current_param.user_id !== String(id_of[key])) {
-                        current_param.user_id = (this as HTMLElement).dataset.userId ?? '-1';
+                        current_param.user_id = (this).dataset.userId ?? '-1';
                         addUserFilter(key);
                         fillHistoryResult(current_param);
                     }
@@ -367,9 +367,9 @@ export function init(cfg: HistoryConfig): void {
 
         if (current_param.user_id === '-1') {
             newLine.querySelector<HTMLElement>('.user-name')?.addEventListener('click', function () {
-                current_param.user_id = (this as HTMLElement).id;
+                current_param.user_id = (this).id;
                 current_param.pageNumber = 0;
-                addUserFilter((this as HTMLElement).innerHTML);
+                addUserFilter((this).innerHTML);
                 fillHistoryResult(current_param);
             });
         }
@@ -378,9 +378,9 @@ export function init(cfg: HistoryConfig): void {
         newLine.querySelector<HTMLElement>('.user-ip')!.dataset.ip = line.IP;
         if (current_param.ip === '') {
             newLine.querySelector<HTMLElement>('.user-ip')?.addEventListener('click', function () {
-                current_param.ip = (this as HTMLElement).dataset.ip ?? '';
+                current_param.ip = (this).dataset.ip ?? '';
                 current_param.pageNumber = 0;
-                addIpFilter((this as HTMLElement).innerHTML);
+                addIpFilter((this).innerHTML);
                 fillHistoryResult(current_param);
             });
         }
@@ -388,9 +388,9 @@ export function init(cfg: HistoryConfig): void {
         newLine.querySelector<HTMLElement>('.add-img-as-filter')!.dataset.imgId = line.IMAGEID;
         if (current_param.image_id === '') {
             newLine.querySelector<HTMLElement>('.add-img-as-filter')?.addEventListener('click', function () {
-                current_param.image_id = (this as HTMLElement).dataset.imgId ?? '';
+                current_param.image_id = (this).dataset.imgId ?? '';
                 current_param.pageNumber = 0;
-                addImageFilter((this as HTMLElement).dataset.imgId ?? '');
+                addImageFilter((this).dataset.imgId ?? '');
                 fillHistoryResult(current_param);
             });
         }
@@ -476,7 +476,7 @@ export function init(cfg: HistoryConfig): void {
                 const active_search_details: Record<string, string | string[] | Record<string, string>> = {};
                 Object.keys(search_details).forEach((key) => {
                     if (search_details[key] !== null) {
-                        active_search_details[key] = search_details[key] as string | string[] | Record<string, string>;
+                        active_search_details[key] = search_details[key];
                     }
                 });
                 let count_item = 1;
@@ -522,11 +522,11 @@ export function init(cfg: HistoryConfig): void {
                             if (key !== 'allwords' && key !== 'cat' && key !== 'tags') {
                                 let array_key: string[];
                                 if (Array.isArray(active_search_details[key])) {
-                                    array_key = active_search_details[key] as string[];
+                                    array_key = active_search_details[key];
                                 } else if (typeof active_search_details[key] === 'object') {
-                                    array_key = Object.values(active_search_details[key] as Record<string, string>);
+                                    array_key = Object.values(active_search_details[key]);
                                 } else {
-                                    array_key = [active_search_details[key] as string];
+                                    array_key = [active_search_details[key]];
                                 }
                                 const detailEl = newLine.querySelector<HTMLElement>('.detail-item-' + String(count_item))!;
                                 detailEl.innerHTML = array_key.join(' + ');
@@ -551,13 +551,13 @@ export function init(cfg: HistoryConfig): void {
                         .map(([key, value]) => {
                             let value_str: string;
                             if (Array.isArray(value)) {
-                                value_str = (value as string[]).join(' + ');
+                                value_str = (value).join(' + ');
                             } else if (typeof value === 'object') {
-                                value_str = Object.entries(value as Record<string, string>)
+                                value_str = Object.entries(value)
                                     .map(([_k, v]) => v)
                                     .join(' + ');
                             } else {
-                                value_str = value as string;
+                                value_str = value;
                             }
                             if (key === 'cat') {
                                 const temp_div = document.createElement('div');
@@ -681,7 +681,7 @@ export function init(cfg: HistoryConfig): void {
         newFilter.querySelector<HTMLElement>('.filter-title')!.innerHTML = username;
         newFilter.querySelector<HTMLElement>('.filter-icon')!.classList.add('icon-user');
         newFilter.querySelector<HTMLElement>('.remove-filter')?.addEventListener('click', function () {
-            (this as HTMLElement).parentElement?.remove();
+            (this).parentElement?.remove();
             current_param.user_id = '-1';
             current_param.pageNumber = 0;
             fillHistoryResult(current_param);
@@ -699,7 +699,7 @@ export function init(cfg: HistoryConfig): void {
         newFilter.querySelector<HTMLElement>('.filter-title')!.innerHTML = username;
         newFilter.querySelector<HTMLElement>('.filter-icon')!.classList.add('icon-user-secret');
         newFilter.querySelector<HTMLElement>('.remove-filter')?.addEventListener('click', function () {
-            (this as HTMLElement).parentElement?.remove();
+            (this).parentElement?.remove();
             current_param.user_id = '-1';
             current_param.pageNumber = 0;
             fillHistoryResult(current_param);
@@ -717,7 +717,7 @@ export function init(cfg: HistoryConfig): void {
         filterIcon.innerHTML = 'IP ';
         filterIcon.classList.add('bold');
         newFilter.querySelector<HTMLElement>('.remove-filter')?.addEventListener('click', function () {
-            (this as HTMLElement).parentElement?.remove();
+            (this).parentElement?.remove();
             current_param.ip = '';
             current_param.pageNumber = 0;
             fillHistoryResult(current_param);
@@ -733,7 +733,7 @@ export function init(cfg: HistoryConfig): void {
         newFilter.querySelector<HTMLElement>('.filter-title')!.innerHTML = 'Image #' + img_id;
         newFilter.querySelector<HTMLElement>('.filter-icon')!.classList.add('icon-picture');
         newFilter.querySelector<HTMLElement>('.remove-filter')?.addEventListener('click', function () {
-            (this as HTMLElement).parentElement?.remove();
+            (this).parentElement?.remove();
             current_param.image_id = '';
             current_param.pageNumber = 0;
             fillHistoryResult(current_param);

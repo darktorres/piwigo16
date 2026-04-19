@@ -15,7 +15,7 @@ export function init(_cfg: Record<string, unknown>): void {
         targetEl.style.display = triggerEl.checked ? '' : 'none';
 
         triggerEl.addEventListener('change', function () {
-            targetEl.style.display = (this as HTMLInputElement).checked ? '' : 'none';
+            targetEl.style.display = (this).checked ? '' : 'none';
         });
     });
 

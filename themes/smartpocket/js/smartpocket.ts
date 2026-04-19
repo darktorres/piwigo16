@@ -19,7 +19,7 @@ export function initSmartpocket(): void {
     lb.on('slide_changed', function (...args: unknown[]) {
         const [, current] = args as [unknown, { slideNode?: Element; index?: number } | null];
         if (!current || !current.slideNode) return;
-        const slideNode = current.slideNode as Element;
+        const slideNode = current.slideNode;
         const li = slideNode.closest('li');
         let a = li ? li.querySelector<HTMLAnchorElement>('a[data-image-id]') : null;
         if (!a) {

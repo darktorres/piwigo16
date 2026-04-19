@@ -61,7 +61,7 @@ const gdThumb_start = function (): void {
 
     setTimeout(function () {
         const gc = document.getElementById('generate_cache');
-        if (gc) (gc as HTMLElement).style.display = '';
+        if (gc) (gc).style.display = '';
         _setBtn('startLink', true, 0.5);
         _setGroup('#pauseLink,#stopLink', false, 1);
     }, 0);
@@ -140,7 +140,7 @@ function loaderChanged(type: string, img?: HTMLImageElement): void {
                 last_image_show_time = now;
                 const h   = img.height;
                 const url = img.src;
-                const wrap = document.getElementById('feedbackWrap') as HTMLElement | null;
+                const wrap = document.getElementById('feedbackWrap');
                 const fimg = document.getElementById('feedbackImg') as HTMLImageElement | null;
                 if (wrap && fimg) {
                     wrap.style.transition = 'opacity 0.25s';

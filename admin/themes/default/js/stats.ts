@@ -59,8 +59,8 @@ export function init(cfg: StatsConfig): void {
     }
 
     // Chart.js v2 global defaults
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const defaults = (Chart as any).defaults.global;
+     
+    const defaults = (Chart).defaults.global;
     defaults.elements.point.radius = 0.1;
     defaults.elements.point.hitRadius = 10;
     defaults.defaultFontSize = 14;
@@ -68,8 +68,8 @@ export function init(cfg: StatsConfig): void {
     defaults.tooltips.intersect = false;
     defaults.legend.onClick = null;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const statGraph = new (Chart as any)(ctx, { type: 'line', maintainAspectRatio: false });
+     
+    const statGraph = new (Chart)(ctx, { type: 'line', maintainAspectRatio: false });
 
     const displayOptions = {
         backgroundColor: gradient(255, 119, 0),
@@ -192,14 +192,14 @@ export function init(cfg: StatsConfig): void {
 
     document.querySelectorAll<HTMLElement>('.stat-data-selector label').forEach(label => {
         label.addEventListener('click', function () {
-            const dataType = (this as HTMLElement).dataset.value;
+            const dataType = (this).dataset.value;
             if (dataType) changeData(dataType);
         });
     });
 
     document.querySelectorAll<HTMLInputElement>('.stat-compare-mode input').forEach(input => {
         input.addEventListener('change', function () {
-            compareMode = (this as HTMLInputElement).checked;
+            compareMode = (this).checked;
             let checkedLabel: HTMLElement | null;
 
             if (compareMode) {

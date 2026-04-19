@@ -43,6 +43,7 @@ export default [
       parserOptions: {
         ecmaVersion: 2020,
         sourceType: "module",
+        project: "./tsconfig.app.json",
       },
       globals: {
         ...globals.browser,
@@ -52,7 +53,7 @@ export default [
       "@typescript-eslint": tseslint,
     },
     rules: {
-      ...tseslint.configs.recommended.rules,
+      ...tseslint.configs['recommended-type-checked'].rules,
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" }],
     },
   },

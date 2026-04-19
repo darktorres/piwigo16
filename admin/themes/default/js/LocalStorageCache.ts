@@ -114,7 +114,7 @@ abstract class AbstractSelectizer extends LocalStorageCache {
 
                 if (options.default !== undefined) {
                     if (ts.getValue() === "") ts.addItem(String(options.default));
-                    if ((el as HTMLSelectElement).multiple) {
+                    if ((el).multiple) {
                         const defaultItem = ts.getItem(String(options.default));
                         if (defaultItem) {
                             const removeBtn = defaultItem.querySelector<HTMLElement>(".remove");

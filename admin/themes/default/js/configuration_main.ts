@@ -22,7 +22,7 @@ export function init(cfg: ConfigMainConfig): void {
         if (!targetEl || !sourceEl) return;
         targetEl.style.display = sourceEl.checked ? '' : 'none';
         sourceEl.addEventListener('change', function () {
-            targetEl.style.display = (this as HTMLInputElement).checked ? '' : 'none';
+            targetEl.style.display = (this).checked ? '' : 'none';
         });
     });
 
@@ -72,7 +72,7 @@ export function init(cfg: ConfigMainConfig): void {
         const addFilterBtn = document.querySelector<HTMLElement>('#order_filters .addFilter');
         if (addFilterBtn) {
             addFilterBtn.addEventListener('click', function () {
-                const prevFilter = (addFilterBtn as HTMLElement).previousElementSibling;
+                const prevFilter = (addFilterBtn).previousElementSibling;
                 if (prevFilter && prevFilter.matches('span.filter')) {
                     const clone = prevFilter.cloneNode(true) as HTMLElement;
                     addFilterBtn.parentNode?.insertBefore(clone, addFilterBtn);
@@ -94,7 +94,7 @@ export function init(cfg: ConfigMainConfig): void {
                 const ts = inp.closest<HTMLElement>('.themeSelect');
                 if (ts) ts.classList.remove('themeDefault');
             });
-            const myTs = (el as HTMLInputElement).closest<HTMLElement>('.themeSelect');
+            const myTs = (el).closest<HTMLElement>('.themeSelect');
             if (myTs) myTs.classList.add('themeDefault');
         });
     });

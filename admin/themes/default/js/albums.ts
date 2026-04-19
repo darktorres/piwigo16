@@ -528,7 +528,7 @@ function createAlbumNode(node: TreeNode, li: HTMLElement): void {
     cont.querySelectorAll<HTMLElement>('.toggle-cat-option').forEach(function (el) {
         el.addEventListener('click', function () {
             document.querySelectorAll<HTMLElement>('.cat-option').forEach(function (opt) { opt.style.display = 'none'; });
-            const options = (el as HTMLElement).querySelector<HTMLElement>('.cat-option');
+            const options = (el).querySelector<HTMLElement>('.cat-option');
             if (options) {
                 options.style.display = options.style.display === 'none' ? '' : 'none';
             }

@@ -231,4 +231,12 @@
         class="icon-film buttonGradient">{'Generate video thumbnails'|translate}</a>
     </p>
   </fieldset>
+
+  <fieldset id="syncThumbnails">
+    <legend><span class="icon-picture icon-purple"></span>{'Thumbnails'|translate}</legend>
+    <p style="text-align:left">
+      <a href="admin.php?page=generate_thumbnails"
+        class="icon-picture buttonGradient">{'Generate thumbnails'|translate}</a>
+    </p>
+  </fieldset>
 {/if}{*isset $introduction*}

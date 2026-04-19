@@ -12,11 +12,11 @@
     "typecheck:tests": "cd tests && bunx tsc --noEmit",
     "lint": "bunx eslint admin themes plugins --max-warnings=0",
     "lint:tests": "cd tests && bunx eslint src",
-    "lint:css": "bunx stylelint \"admin/**/*.css\" \"themes/**/*.css\" \"plugins/**/*.css\"",
-    "lint:ox": "bunx oxlint admin themes plugins --deny-warnings",
+    "lint:css": "bunx stylelint \"admin/**/*.css\" \"themes/**/*.css\" \"plugins/**/*.css\" \"!**/node_modules/**\"",
+    "lint:ox": "bunx oxlint admin themes plugins --deny-warnings --ignore-pattern \"**/node_modules/**\" --ignore-pattern \"**/dist/**\"",
     "lint:biome": "bunx biome lint admin themes plugins",
-    "format": "bunx prettier --write \"admin/**/*.{ts,js,css}\" \"themes/**/*.{ts,js,css}\" \"plugins/**/*.{ts,js,css}\"",
-    "format:check": "bunx prettier --check \"admin/**/*.{ts,js,css}\" \"themes/**/*.{ts,js,css}\" \"plugins/**/*.{ts,js,css}\"",
+    "format": "bunx prettier --write \"admin/**/*.{ts,js,css}\" \"themes/**/*.{ts,js,css}\" \"plugins/**/*.{ts,js,css}\" --ignore-path .gitignore",
+    "format:check": "bunx prettier --check \"admin/**/*.{ts,js,css}\" \"themes/**/*.{ts,js,css}\" \"plugins/**/*.{ts,js,css}\" --ignore-path .gitignore",
     "knip": "bunx knip"
   },
   "dependencies": {

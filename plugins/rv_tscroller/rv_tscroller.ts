@@ -158,7 +158,7 @@ export function initRVTS(RVTS: Partial<RVTSConfig> & Pick<RVTSConfig, 'ajaxUrlMo
                 tBot = (scrollEl as HTMLElement).scrollHeight;
                 wBot = (scrollEl as HTMLElement).scrollTop + (scrollEl as HTMLElement).clientHeight;
             }
-            tBot -= !evt ? 0 : 100;
+            tBot -= !evt ? 0 : (scrollEl === window ? window.innerHeight : (scrollEl as HTMLElement).clientHeight);
             return tBot <= wBot ? (cfg.doAutoScroll(), 1) : 0;
         },
 
@@ -281,7 +281,7 @@ export function initRVTS_CATS(RVTS_CATS: Partial<RVTSCATSConfig> & Pick<RVTSCATS
             const wBot = scrollEl === window
                 ? window.scrollY + window.innerHeight
                 : (scrollEl as HTMLElement).scrollTop + (scrollEl as HTMLElement).clientHeight;
-            tBot -= 100;
+            tBot -= scrollEl === window ? window.innerHeight : (scrollEl as HTMLElement).clientHeight;
             return tBot <= wBot ? (cfg.doAutoScroll(), 1) : 0;
         },
 

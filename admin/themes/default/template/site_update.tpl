@@ -1,4 +1,5 @@
 {if $vite_site_update}
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 <script type="module" src="admin/themes/default/js/dist/{$vite_site_update}"></script>
 {/if}
 

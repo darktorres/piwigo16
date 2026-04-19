@@ -1559,6 +1559,10 @@ if ($sse_mode && isset($_POST['submit'])) {
 // +-----------------------------------------------------------------------+
 // |                        template initialization                        |
 // +-----------------------------------------------------------------------+
+require_once __DIR__ . '/../inc/vite_helper.php';
+\Piwigo\Vite\vite_assign_modules($template, ['site_update']);
+$template->assign('page_data_json', json_encode((object) []));
+
 $template->set_filenames([
     'update' => 'site_update.tpl',
 ]);

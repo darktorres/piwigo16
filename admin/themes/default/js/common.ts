@@ -98,7 +98,7 @@ export function sprintf(f: string, ...args: (string | number)[]): string {
             throw "Huh ?!";
         }
 
-        remaining = remaining.substring(m![0].length);
+        remaining = remaining.substring(m[0].length);
     }
 
     return o.join("");
@@ -115,7 +115,7 @@ document.querySelectorAll(".search-cancel").forEach(function (el) {
 
 document.querySelectorAll<HTMLInputElement>(".search-input").forEach(function (el) {
     el.addEventListener("input", function () {
-        const show = (this as HTMLInputElement).value !== "";
+        const show = (this).value !== "";
         document.querySelectorAll<HTMLElement>(".search-cancel").forEach(function (cancel) {
             cancel.style.display = show ? '' : 'none';
         });
@@ -132,7 +132,7 @@ export class TemporaryState {
     private htmlChanges: HtmlChange[] = [];
 
     changeAttribute(obj: Element | NodeList, attr: string, tempVal: string): void {
-        const elements: Element[] = obj instanceof NodeList ? Array.from(obj) as Element[] : [obj as Element];
+        const elements: Element[] = obj instanceof NodeList ? Array.from(obj) as Element[] : [obj];
         for (const el of elements) {
             this.attrChanges.push({ object: el, attribute: attr, value: el.getAttribute(attr) });
             el.setAttribute(attr, tempVal);
@@ -140,7 +140,7 @@ export class TemporaryState {
     }
 
     changeClass(obj: Element | NodeList, st: boolean, tempclass: string): void {
-        const elements: Element[] = obj instanceof NodeList ? Array.from(obj) as Element[] : [obj as Element];
+        const elements: Element[] = obj instanceof NodeList ? Array.from(obj) as Element[] : [obj];
         for (const el of elements) {
             if (!(el.classList.contains(tempclass) && st)) {
                 this.classChanges.push({ object: el, state: !st, class: tempclass });
@@ -159,7 +159,7 @@ export class TemporaryState {
     }
 
     changeHTML(obj: Element | NodeList, temphtml: string): void {
-        const elements: Element[] = obj instanceof NodeList ? Array.from(obj) as Element[] : [obj as Element];
+        const elements: Element[] = obj instanceof NodeList ? Array.from(obj) as Element[] : [obj];
         for (const el of elements) {
             this.htmlChanges.push({ object: el, html: el.innerHTML });
             el.innerHTML = temphtml;

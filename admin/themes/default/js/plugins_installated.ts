@@ -89,21 +89,21 @@ export function init(cfg: PluginsInstalledConfig): void {
             const lbl = document.querySelector<HTMLElement>("label[for='seeActive']");
             if (lbl) lbl.style.display = 'none';
             if ((document.getElementById('seeActive') as HTMLInputElement | null)?.checked) {
-                (document.getElementById('seeAll') as HTMLElement | null)?.click();
+                (document.getElementById('seeAll'))?.click();
             }
         }
         if (nb_plugin.inactive === 0) {
             const lbl = document.querySelector<HTMLElement>("label[for='seeInactive']");
             if (lbl) lbl.style.display = 'none';
             if ((document.getElementById('seeInactive') as HTMLInputElement | null)?.checked) {
-                (document.getElementById('seeAll') as HTMLElement | null)?.click();
+                (document.getElementById('seeAll'))?.click();
             }
         }
         if (nb_plugin.other === 0) {
             const lbl = document.querySelector<HTMLElement>("label[for='seeOther']");
             if (lbl) lbl.style.display = 'none';
             if ((document.getElementById('seeOther') as HTMLInputElement | null)?.checked) {
-                (document.getElementById('seeAll') as HTMLElement | null)?.click();
+                (document.getElementById('seeAll'))?.click();
             }
         }
     }
@@ -244,7 +244,7 @@ export function init(cfg: PluginsInstalledConfig): void {
 
     if (nb_plugin.active > 0) {
         document.querySelectorAll<HTMLElement>('.pluginMiniBox').forEach(el => { if (!el.classList.contains('plugin-active')) el.style.display = 'none'; });
-        (document.getElementById('seeActive') as HTMLElement | null)?.click();
+        (document.getElementById('seeActive'))?.click();
     } else {
         document.querySelectorAll<HTMLElement>('.pluginMiniBox').forEach(el => { el.style.display = ''; });
     }

@@ -169,7 +169,7 @@ export function init(cfg: VtConfig): void {
         const total = data.total as number ?? 0;
         const pct = total > 0 ? Math.round((current / total) * 100) : 0;
         const fill = document.getElementById('vtProgressFill');
-        if (fill) (fill as HTMLElement).style.width = pct + '%';
+        if (fill) (fill).style.width = pct + '%';
         const text = document.getElementById('vtProgressText');
         if (text) text.textContent = current + ' / ' + total;
         const fileLabel = document.getElementById('vtCurrentFile');

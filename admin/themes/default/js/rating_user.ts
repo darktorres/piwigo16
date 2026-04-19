@@ -36,7 +36,7 @@ export function init(cfg: RatingUserConfig): void {
     function uidFromCell(cell: HTMLElement): { uid: string; aid: string } {
         let tr = cell;
         while (tr.nodeName !== 'TR') tr = tr.parentNode as HTMLElement;
-        return JSON.parse((tr as HTMLElement).dataset.usr ?? '{}') as { uid: string; aid: string };
+        return JSON.parse((tr).dataset.usr ?? '{}') as { uid: string; aid: string };
     }
 
     const rateTable = document.getElementById('rateTable');

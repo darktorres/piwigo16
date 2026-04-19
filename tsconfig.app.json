@@ -12,7 +12,8 @@
   "include": [
     "admin/themes/default/js/**/*",
     "themes/*/js/**/*",
-    "plugins/*/js/**/*"
+    "plugins/*/js/**/*",
+    "plugins/*/*.ts"
   ],
   "exclude": ["**/dist/**", "node_modules/**", "tests/**"]
 }

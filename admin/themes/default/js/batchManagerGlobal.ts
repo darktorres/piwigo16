@@ -186,7 +186,7 @@ export function init(cfg: BatchManagerConfig): void {
         filter: function (this: Element, categories, options) {
             if ((this as HTMLSelectElement).name == 'dissociate') {
                 const filtered = categories.filter(function (cat) {
-                    return !!(cfg.associatedCategories as Record<string | number, unknown>)[(cat as { id: string | number }).id];
+                    return !!(cfg.associatedCategories)[(cat as { id: string | number }).id];
                 });
                 if (filtered.length > 0) options.default = (filtered[0] as { id: string | number }).id;
                 return filtered;

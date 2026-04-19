@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", function () {
             setCookie("view", "list");
             btnList.classList.add("active");
             document.getElementById("btn-grid")?.classList.remove("active");
-            const content = document.getElementById("content") as HTMLElement | null;
+            const content = document.getElementById("content");
             if (!content) return;
             content.classList.remove("content-grid");
             content.classList.add("content-list");
@@ -185,7 +185,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    const sidebar = document.getElementById("sidebar") as HTMLElement | null;
+    const sidebar = document.getElementById("sidebar");
     const navigationButtons = document.getElementById("navigationButtons");
     if (sidebar && navigationButtons) {
         const navTop = navigationButtons.getBoundingClientRect().top + window.scrollY;
@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (infoLink) {
             infoLink.addEventListener("click", function (e) {
                 e.preventDefault();
-                const sidebarEl = document.getElementById("sidebar") as HTMLElement | null;
+                const sidebarEl = document.getElementById("sidebar");
                 if (sidebarEl) {
                     const rightValue = parseInt(window.getComputedStyle(sidebarEl).right);
                     const newRight = rightValue < 0 ? rightValue + 250 : rightValue - 250;

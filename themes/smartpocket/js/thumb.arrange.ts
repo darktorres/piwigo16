@@ -192,7 +192,7 @@ export class SPThumbs {
             li.style.height = liH + "px";
         }
 
-        const a = img.parentElement as HTMLElement | null;
+        const a = img.parentElement;
         if (a) {
             a.style.left = Math.round((liW - imgW) / 2) + "px";
             a.style.top = Math.round((liH - imgH) / 2) + "px";

@@ -51,7 +51,7 @@ export class TreeNode {
     getLevel(): number {
         let level = 0;
         let p: TreeNode | RootNode = this.parent;
-        while (p && p.id !== undefined) { level++; p = (p as TreeNode).parent; }
+        while (p && p.id !== undefined) { level++; p = (p).parent; }
         return level;
     }
 

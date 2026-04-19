@@ -33,7 +33,7 @@ final class DummyTheme_maintain extends ThemeMaintain
     public function deactivate(): void
     {
         if (is_callable('theme_deactivate')) {
-            theme_deactivate($this->theme_id);
+            call_user_func('theme_deactivate', $this->theme_id);
         }
     }
 

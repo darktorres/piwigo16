@@ -4099,7 +4099,8 @@ final class functions_admin
         string $post_keyname,
         array $check_key_treated = []
     ): void {
-        global $env_nbm, $base_url, $page, $must_repost;
+        global $env_nbm, $page, $must_repost;
+        $base_url = isset($GLOBALS['base_url']) ? (string) $GLOBALS['base_url'] : '';
 
         if ($env_nbm['is_sendmail_timeout'] && isset($_POST[$post_keyname])) {
             $post_count = count($_POST[$post_keyname]);
@@ -4143,6 +4144,7 @@ final class functions_admin
     public static function insert_new_data_user_mail_notification(): void
     {
         global $conf, $page, $env_nbm;
+        $base_url = isset($GLOBALS['base_url']) ? (string) $GLOBALS['base_url'] : '';
 
         // Set null mail_address empty
         $query = <<<SQL

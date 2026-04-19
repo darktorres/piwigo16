@@ -947,6 +947,7 @@ final class functions_search
             $options['images_where'] ?? '',
         ]);
 
+        $res = null;
         if ($persistent_cache->get($cache_key, $res)) {
             return $res;
         }
@@ -1054,6 +1055,7 @@ final class functions_search
         // allow plugins to evaluate their own scopes
         functions_plugins::trigger_notify('qsearch_before_eval', $expression, $qsr);
 
+        $tmp = null;
         $ids = self::qsearch_eval($expression, $qsr, $tmp, $search_results['qs']['unmatched_terms']);
 
         $debug[] = "<!--\nparsed: " . htmlspecialchars($expression);

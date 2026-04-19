@@ -220,7 +220,7 @@ final class pwg_image
         $fp = fopen($source_filepath, 'rb');
 
         if (! $fp) {
-            throw new Exception("webp_info(): fopen({$f}): Failed");
+            throw new Exception("webp_info(): fopen({$source_filepath}): Failed");
         }
 
         $buf = fread($fp, 25);

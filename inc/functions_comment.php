@@ -367,7 +367,7 @@ final class functions_comment
 
         // website
         if (! empty($comment['website_url'])) {
-            $comm['website_url'] = strip_tags($comm['website_url']);
+            $comment['website_url'] = strip_tags($comment['website_url']);
 
             if (! preg_match('/^https?/i', $comment['website_url'])) {
                 $comment['website_url'] = 'http://' . $comment['website_url'];

@@ -25,7 +25,7 @@ final class DummyPlugin_maintain extends PluginMaintain
         array &$errors = []
     ): void {
         if (is_callable('plugin_install')) {
-            plugin_install($this->plugin_id, $plugin_version, $errors);
+            call_user_func('plugin_install', $this->plugin_id, $plugin_version, $errors);
         }
     }
 
@@ -35,7 +35,7 @@ final class DummyPlugin_maintain extends PluginMaintain
         array &$errors = []
     ): void {
         if (is_callable('plugin_activate')) {
-            plugin_activate($this->plugin_id, $plugin_version, $errors);
+            call_user_func('plugin_activate', $this->plugin_id, $plugin_version, $errors);
         }
     }
 
@@ -43,7 +43,7 @@ final class DummyPlugin_maintain extends PluginMaintain
     public function deactivate(): void
     {
         if (is_callable('plugin_deactivate')) {
-            plugin_deactivate($this->plugin_id);
+            call_user_func('plugin_deactivate', $this->plugin_id);
         }
     }
 

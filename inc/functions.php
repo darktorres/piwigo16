@@ -1936,6 +1936,7 @@ final class functions
                 }
 
                 // load language content
+                $lang = [];
                 if (file_exists($source_file)) {
                     require $source_file;
                 }

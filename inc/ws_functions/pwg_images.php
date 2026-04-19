@@ -1117,7 +1117,7 @@ final class pwg_images
 
         // since Piwigo 2.4 and derivatives, we do not take the imported "thumb" into account
         if ($params['type'] == 'thumb') {
-            self::remove_chunks($image['md5sum'], $type);
+            self::remove_chunks($image['md5sum'], $params['type']);
             return true;
         }
 

@@ -209,3 +209,7 @@ ul.thumbnails.nowrap .gdthumb .thumbLegend {
     overflow: hidden;
     height: auto;
 }
+
+
+.pswp__button--rate-button { color: rgba(255,255,255,0.75); }
+.pswp__button--rate-button.pswp__button--rated { color: #ffd700; }

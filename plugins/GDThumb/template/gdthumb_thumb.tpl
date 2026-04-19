@@ -60,7 +60,7 @@
       {assign var=src_size value=$derivative->src_image->get_size()}
       {assign var=is_video value=(isset($thumbnail.path_ext) and ($thumbnail.path_ext == 'mp4' or $thumbnail.path_ext == 'm4v' or $thumbnail.path_ext == 'webm' or $thumbnail.path_ext == 'ogv' or $thumbnail.path_ext == 'mov' or $thumbnail.path_ext == 'mkv'))}
       {assign var=is_animated value=(isset($thumbnail.path_ext) and ($thumbnail.path_ext == 'webp' or $thumbnail.path_ext == 'gif'))}
-      <a href="{$thumbnail.URL}"
+      <a href="{$thumbnail.URL}" data-image-id="{$thumbnail.id}"
         {if $is_video}
           data-pswp-src="{$ROOT_URL}{$thumbnail.path}"
           data-pswp-width="{if $thumbnail.width}{$thumbnail.width}{else}1920{/if}"
@@ -128,6 +128,30 @@
           content.element = container;
           content.state = 'loaded';
         }
+      });
+
+      lightbox.on('uiRegister', function() {
+        lightbox.pswp.ui.registerElement({
+          name: 'rate-button',
+          order: 9,
+          isButton: true,
+          html: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>',
+          onClick(e, el, pswp) {
+            const imageId = pswp.currSlide.data.element.dataset.imageId;
+            if (!imageId) return;
+            const rated = el.classList.toggle('pswp__button--rated');
+            fetch('{$ROOT_URL}ws.php?format=json', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: 'method=pwg.images.rate&image_id=' + encodeURIComponent(imageId) + '&rate=5'
+            });
+          }
+        });
+      });
+
+      lightbox.on('change', function() {
+        const btn = lightbox.pswp.element.querySelector('.pswp__button--rate-button');
+        if (btn) btn.classList.remove('pswp__button--rated');
       });
 
       lightbox.on('contentDeactivate', ({ content }) => {

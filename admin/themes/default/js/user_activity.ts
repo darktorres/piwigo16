@@ -68,7 +68,7 @@ export function init(cfg: UserActivityConfig): void {
 
         fetch('ws.php?format=json&method=pwg.activity.getList', {
             method: 'POST',
-            body: new URLSearchParams({ page: String(page - 1), uid: uid ?? '' }),
+            body: new URLSearchParams(uid ? { page: String(page - 1), uid } : { page: String(page - 1) }),
         })
             .then(r => r.json())
             .then(function (data: { result: { result_lines: ActivityLine[]; max_page: number } }) {

@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Piwigo\admin\inc\pwg_image;
 use Piwigo\inc\derivative_std_params;
 use Piwigo\inc\functions;
@@ -36,12 +38,10 @@ if (file_exists(__DIR__ . '/local/config/database.php')) {
     require __DIR__ . '/local/config/database.php';
 }
 
-$logger = new Katzgrau\KLogger\Logger('./' . $conf->data_location . $conf->log_dir, $conf->log_level, [
-    // we use an hashed filename to prevent direct file access, and we salt with
-    // the db_password instead of secret_key because the log must be usable in i.php
-    // (secret_key is in the database)
-    'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf->db_password) . '.txt',
-]);
+// filename hashed to prevent direct access; salted with db_password (secret_key unavailable here)
+$logFile = './' . $conf->data_location . $conf->log_dir . '/log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf->db_password) . '.txt';
+$logger = new Logger('piwigo');
+$logger->pushHandler(new StreamHandler($logFile, $conf->log_level));
 
 // end fast bootstrap
 

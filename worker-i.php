@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
 use Piwigo\admin\inc\pwg_image;
@@ -36,9 +38,9 @@ if (file_exists(__DIR__ . '/local/config/database.php')) {
     require __DIR__ . '/local/config/database.php';
 }
 
-$logger = new Katzgrau\KLogger\Logger('./' . $conf->data_location . $conf->log_dir, $conf->log_level, [
-    'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf->db_password) . '.txt',
-]);
+$logFile = './' . $conf->data_location . $conf->log_dir . '/log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf->db_password) . '.txt';
+$logger = new Logger('piwigo');
+$logger->pushHandler(new StreamHandler($logFile, $conf->log_level));
 
 $conf->sql_backend::pwg_db_connect(
     $conf->db_host,

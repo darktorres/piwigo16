@@ -121,12 +121,10 @@ try {
 
 functions::load_conf_from_db();
 
-$logger = new Katzgrau\KLogger\Logger('./' . $conf->data_location . $conf->log_dir, $conf->log_level, [
-    // we use an hashed filename to prevent direct file access, and we salt with
-    // the db_password instead of secret_key because the log must be usable in i.php
-    // (secret_key is in the database)
-    'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf->db_password) . '.txt',
-]);
+// filename hashed to prevent direct access; salted with db_password (secret_key unavailable in i.php)
+$logFile = './' . $conf->data_location . $conf->log_dir . '/log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf->db_password) . '.txt';
+$logger = new Monolog\Logger('piwigo');
+$logger->pushHandler(new Monolog\Handler\StreamHandler($logFile, $conf->log_level));
 
 if (! $conf->check_upgrade_feed && (! isset($conf->piwigo_db_version) || $conf->piwigo_db_version != functions::get_branch_from_version(PHPWG_VERSION))) {
     functions::redirect(functions_url::get_root_url() . 'upgrade.php');

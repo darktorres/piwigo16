@@ -391,8 +391,7 @@ final class functions_html
 
         ini_set('display_errors', false); // if possible turn off error display (we display it)
 
-        error_reporting(E_ALL);
-        trigger_error(strip_tags($msg) . $btrace_msg, E_USER_ERROR);
+        exit(strip_tags($msg) . $btrace_msg);
     }
 
     /**

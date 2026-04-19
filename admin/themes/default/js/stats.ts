@@ -1,5 +1,6 @@
 import { initModule } from './moduleInit.js';
-import Chart from 'chart.js';
+import Chart from 'chart.js/auto';
+import 'chartjs-adapter-moment';
 import moment from 'moment';
 
 interface StatsConfig {
@@ -49,33 +50,34 @@ export function init(cfg: StatsConfig): void {
 
     const ctxEl = document.getElementById('stat-graph') as HTMLCanvasElement | null;
     if (!ctxEl) return;
-    const ctx = ctxEl.getContext('2d')!;
+
+    // Chart.js v4 defaults
+    Chart.defaults.elements.point.radius = 0.1;
+    Chart.defaults.elements.point.hitRadius = 10;
+    Chart.defaults.font.size = 14;
+    Chart.defaults.color = '#888';
+    Chart.defaults.plugins.tooltip.intersect = false;
+    Chart.defaults.plugins.legend.onClick = () => { /* noop */ };
+
+    const statGraph = new Chart(ctxEl, {
+        type: 'line',
+        data: { datasets: [] },
+        options: { maintainAspectRatio: false },
+    });
+
+    const displayOptions = {
+        backgroundColor: gradient(255, 119, 0),
+        borderColor: 'rgba(255,119,0,1)',
+        tension: 0.2,
+    };
 
     function gradient(r: number, g: number, b: number): CanvasGradient {
+        const ctx = ctxEl.getContext('2d')!;
         const grad = ctx.createLinearGradient(0, 400, 0, 0);
         grad.addColorStop(0, `rgba(${r},${g},${b},0)`);
         grad.addColorStop(1, `rgba(${r},${g},${b},1)`);
         return grad;
     }
-
-    // Chart.js v2 global defaults
-     
-    const defaults = (Chart).defaults.global;
-    defaults.elements.point.radius = 0.1;
-    defaults.elements.point.hitRadius = 10;
-    defaults.defaultFontSize = 14;
-    defaults.defaultFontColor = '#888';
-    defaults.tooltips.intersect = false;
-    defaults.legend.onClick = null;
-
-     
-    const statGraph = new (Chart)(ctx, { type: 'line', maintainAspectRatio: false });
-
-    const displayOptions = {
-        backgroundColor: gradient(255, 119, 0),
-        borderColor: 'rgba(255,119,0,1)',
-        lineTension: 0.2,
-    };
 
     function changeData(dataType: string, options?: typeof displayOptions): void {
         options = options ?? displayOptions;
@@ -88,53 +90,57 @@ export function init(cfg: StatsConfig): void {
                 }],
             };
             statGraph.options = {
+                maintainAspectRatio: false,
                 scales: {
-                    xAxes: [{ type: 'time', time: { tooltipFormat: 'll' }, gridLines: { display: false } }],
-                    yAxes: [{ ticks: { min: 0 } }],
+                    x: {
+                        type: 'time',
+                        time: {
+                            tooltipFormat: str_tooltip_format[dataType] ?? 'll',
+                            unit: (data_unit[dataType] ?? 'day') as 'millisecond' | 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'quarter' | 'year',
+                            displayFormats: str_unit_format,
+                        },
+                        grid: { display: false },
+                    },
+                    y: { min: 0 },
                 },
-                legend: { display: false },
-                tooltips: { mode: 'index' },
-                hover: { intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { mode: 'index', intersect: false },
+                },
             };
-            statGraph.options.scales?.xAxes?.forEach((axe) => {
-                if (axe.time) {
-                    if (str_tooltip_format[dataType] !== undefined) axe.time.tooltipFormat = str_tooltip_format[dataType];
-                    if (data_unit[dataType] !== undefined) axe.time.unit = data_unit[dataType] as 'millisecond' | 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'quarter' | 'year';
-                    axe.time.displayFormats = str_unit_format;
-                }
-            });
             statGraph.update();
         } else {
-            if (statGraph.options.legend) statGraph.options.legend.display = true;
-            statGraph.options.hover = { intersect: true };
-            statGraph.options.tooltips = { mode: 'nearest' };
+            if (statGraph.options.plugins) {
+                if (statGraph.options.plugins.legend) statGraph.options.plugins.legend.display = true;
+                statGraph.options.plugins.tooltip = { mode: 'nearest', intersect: true };
+            }
             if (dataType === 'years') {
                 statGraph.data = { datasets: getComparedYearDataset() };
                 statGraph.options.scales = {
-                    xAxes: [{ type: 'category', labels: str_months, gridLines: { display: false } }],
-                    yAxes: [{ scaleLabel: { display: true, labelString: str_number_page_visited }, tick: { min: 0 } }],
+                    x: { type: 'category', labels: str_months, grid: { display: false } },
+                    y: { min: 0, title: { display: true, text: str_number_page_visited } },
                 };
             } else if (dataType === 'months') {
                 const days: number[] = [];
                 for (let i = 1; i <= 31; i++) days.push(i);
                 statGraph.data = { datasets: getMonthStatsDataset() };
                 statGraph.options.scales = {
-                    xAxes: [{ type: 'category', labels: days, gridLines: { display: false } }],
-                    yAxes: [{ scaleLabel: { display: true, labelString: str_number_page_visited } }],
+                    x: { type: 'category', labels: days.map(String), grid: { display: false } },
+                    y: { title: { display: true, text: str_number_page_visited } },
                 };
             }
             statGraph.update();
         }
     }
 
-    function getValues(d: Record<string, number>): { x: Date; y: number }[] {
-        return Object.keys(d).map(key => ({ x: new Date(key), y: d[key]! }));
+    function getValues(d: Record<string, number>): { x: number; y: number }[] {
+        return Object.keys(d).map(key => ({ x: new Date(key).getTime(), y: d[key]! }));
     }
 
-    function getComparedYearDataset(): unknown[] {
+    function getComparedYearDataset(): object[] {
         const colors = ['#ffa744', '#ff5252', '#896af3', '#2883c3', '#6ece5e'];
         const values: Record<number, number[]> = {};
-        const dataset: unknown[] = [];
+        const dataset: object[] = [];
         const compareYears = data['compare-years'] ?? {};
 
         Object.keys(compareYears).forEach(key => {
@@ -148,7 +154,7 @@ export function init(cfg: StatsConfig): void {
             dataset.push({
                 label: key,
                 data: values[parseInt(key)],
-                lineTension: 0.2,
+                tension: 0.2,
                 borderColor: colors[parseInt(key) % colors.length],
                 backgroundColor: 'rgba(0,0,0,0)',
             });
@@ -156,9 +162,9 @@ export function init(cfg: StatsConfig): void {
         return dataset;
     }
 
-    function getMonthStatsDataset(): unknown[] {
+    function getMonthStatsDataset(): object[] {
         const colors = ['#ffa744', '#ff5252', '#896af3', '#2883c3', '#6ece5e'];
-        const dataset: unknown[] = [];
+        const dataset: object[] = [];
         let colorIndice = 0;
         let date = new Date();
 
@@ -172,7 +178,7 @@ export function init(cfg: StatsConfig): void {
                 dataset.push({
                     label: str_months[date.getMonth()] + ' ' + date.getFullYear(),
                     data: days_data,
-                    lineTension: 0.2,
+                    tension: 0.2,
                     borderColor: colors[colorIndice % colors.length],
                     backgroundColor: 'rgba(0,0,0,0)',
                 });
@@ -183,7 +189,7 @@ export function init(cfg: StatsConfig): void {
             dataset.push({
                 label: str_avg,
                 data: averageTab,
-                lineTension: 0.2,
+                tension: 0.2,
                 borderColor: colors[4],
                 backgroundColor: 'rgba(0,0,0,0)',
             });

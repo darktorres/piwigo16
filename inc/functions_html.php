@@ -369,7 +369,8 @@ final class functions_html
 
             for ($i = 1; $i < $counter; $i++) {
                 $class = isset($bt[$i]['class']) ? ($bt[$i]['class'] . '::') : '';
-                $btrace_msg .= "#{$i}\t" . $class . $bt[$i]['function'] . ' ' . $bt[$i]['file'] . '(' . $bt[$i]['line'] . ")\n";
+                $location = isset($bt[$i]['file']) ? ($bt[$i]['file'] . '(' . ($bt[$i]['line'] ?? '?') . ')') : '[internal]';
+                $btrace_msg .= "#{$i}\t" . $class . $bt[$i]['function'] . ' ' . $location . "\n";
             }
 
             $btrace_msg = trim($btrace_msg);

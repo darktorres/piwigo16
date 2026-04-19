@@ -176,17 +176,87 @@ Smarty-injected globals (`global_params`, `search_id`, etc.) are covered by Phas
 
 **Goal:** Remove all remaining legacy patterns and enable strict TypeScript ESLint rules.
 
-1. **Audit remaining `{combine_script}` for node_modules**: verify each referenced lib is already `import`ed at the module level; remove redundant template tags.
-2. **Convert 2 remaining inline Smarty→JS variable assignments** to JSON island pattern:
-   - `admin/themes/default/template/cat_perm.tpl` — `const cat_nav = '{$CATEGORIES_NAV|...}'`
-   - `admin/themes/default/template/element_set_ranks.tpl` — same pattern
+1. **Audit remaining `{combine_script}` for node_modules**: verify each referenced lib is already `import`ed at the module level; remove redundant template tags. ✅ *Partially done — see "Remaining combine_script calls" below.*
+2. **Convert 2 remaining inline Smarty→JS variable assignments** to JSON island pattern: ✅ *Done — both were dead code (no TS file referenced `cat_nav`), so removed outright.*
+   - `admin/themes/default/template/cat_perm.tpl` — removed
+   - `admin/themes/default/template/element_set_ranks.tpl` — removed
 3. **Enable type-aware ESLint rules** in `eslint.config.js`:
    - Switch to `@typescript-eslint/recommended-type-checked` for `.ts` files
    - Point TS parser to `tsconfig.app.json`
 4. Remove `globals.d.ts` entries that were ESLint workarounds (now enforced by TS).
-5. Remove the custom globals from `eslint.config.js` that are now covered by `globals.d.ts`.
+5. Update `tsconfig.app.json` include paths to cover final file locations.
 
 **Verification:** `bun run lint` + `bun run typecheck` + `bun run build` all pass clean. Zero `.js` files remain in `admin/themes/default/js/` (source), `themes/*/js/`, `plugins/*/js/`.
+
+---
+
+## Remaining `{combine_script}` Calls — Status & Reasons
+
+After Phase 7 step 1, these node_modules `{combine_script}` calls are intentionally kept. Each has a specific reason it cannot simply be removed.
+
+### Removed (redundant)
+
+| Template | Library | Why removed |
+|----------|---------|-------------|
+| `admin/themes/default/template/inc/add_album.inc.tpl` | `tom-select` | `LocalStorageCache.ts` imports and instantiates TomSelect; bundled in every Vite module that uses the add-album dialog. No inline script uses the global. |
+| `themes/default/template/inc/search_filters.inc.tpl` | `tom-select` | Removed in Phase 6 when `mcs.ts` began importing TomSelect via npm. |
+| `themes/default/template/search.tpl` | `tom-select` | Converted to `gallery_search.ts` Vite entry; inline `<script>` block moved to the module. |
+| `themes/bootstrap_darkroom/template/search.tpl` | `tom-select` | Same — reuses `gallery_search.ts`. |
+| `themes/smartpocket/template/search.tpl` | `tom-select` | Same — reuses `gallery_search.ts`. |
+
+### Kept — reason: no Vite entry covers that page
+
+| Template | Library | Reason |
+|----------|---------|--------|
+| `admin/themes/default/template/inc/colorbox.inc.tpl` | `glightbox` | Included by `themes/modus/admin/modus_admin.tpl`, which has **no Vite entry** (see below). Cannot remove without breaking modus admin. Admin Vite module pages also include this file and double-load GLightbox, but that is harmless. |
+| `themes/bootstrap_darkroom/template/add_photos.tpl` | `glightbox` | Public BD gallery page; the existing BD Vite entries (`bd_header`, `bd_theme`, `bd_rating`) do not import GLightbox. An inline `GLightbox({...})` call in the template requires the global. |
+| `themes/bootstrap_darkroom/template/add_photos.tpl` | `dropzone` | Same page; Dropzone is used as a global. `photos_add_direct.ts` bundles Dropzone but that is the **admin** upload page, not this public BD page. |
+| `themes/bootstrap_darkroom/template/add_photos.tpl` | `piecon` | Same page; no Vite module imports piecon. |
+| `themes/bootstrap_darkroom/template/header.tpl` | `bootstrap` (BD local) | Bootstrap JS is required on every BD page for component initialization. No Vite entry imports it. |
+| `themes/bootstrap_darkroom/template/tags.tpl` | `wordcloud2` (BD local) | Conditional tag-cloud feature; no Vite entry imports wordcloud2. |
+| `themes/bootstrap_darkroom/template/_slick_js.tpl` | `swiper` (BD local) | Picture slideshow; no Vite entry imports swiper. |
+| `themes/modus/admin/modus_admin.tpl` | `nouislider` | Modus theme admin has no Vite entries at all (see below). |
+| `plugins/AdminTools/template/public_controller.tpl` | `tom-select` | `public_controller.js` uses `TomSelect` as a global (see below). |
+| `plugins/AdminTools/template/public_controller.tpl` | `mousetrap` | Same file uses `Mousetrap` as a global (see below). |
+| `plugins/LocalFilesEditor/template/admin.tpl` | `codemirror` (×7) | Plugin has no TS files and no Vite entry; CodeMirror is used directly from inline template scripts. |
+| `plugins/LocalFilesEditor/template/show_default.tpl` | `codemirror` (×7) | Same plugin. |
+
+---
+
+## Why These Pages Have No Vite Entry
+
+### AdminTools `public_controller.js`
+
+`plugins/AdminTools/template/public_controller.tpl` loads its JS via a **direct filesystem import**:
+
+```smarty
+import { AdminTools } from './{$ADMINTOOLS_PATH}template/public_controller.js';
+```
+
+This bypasses the Vite build entirely — the file is served as raw JS from the template directory, not from the dist manifest. Because it is not bundled, it cannot resolve npm imports; it declares `/* global TomSelect, Mousetrap */` and relies on the globals provided by `{combine_script}`.
+
+**To fix:** move `plugins/AdminTools/template/public_controller.js` to `plugins/AdminTools/js/public_controller.ts`, add a `['at_public_controller', 'plugins/AdminTools/js/public_controller']` Vite entry, use `import TomSelect from 'tom-select'` and `import Mousetrap from 'mousetrap'` inside the module, then update the template to load via the manifest.
+
+### Modus Theme Admin
+
+The modus theme has no `themes/modus/js/` directory and no Vite entries. Its admin page (`themes/modus/admin/modus_admin.tpl`) uses GLightbox and nouislider via `{combine_script}` the same way the whole codebase did before the migration. The modus theme was out of scope for Phases 5–6.
+
+**To fix:** create `themes/modus/js/` with TypeScript source files, add Vite entries for the modus admin page, import GLightbox and nouislider there, and remove the `{combine_script}` calls.
+
+### Bootstrap Darkroom — Uncovered Libraries
+
+The BD Vite entries (`bd_header.ts`, `bd_theme.ts`, `bd_rating.ts`) were created for the TypeScript migration of specific BD functionality. Several BD libraries were not included:
+
+- **bootstrap.bundle.js**, **swiper**, **wordcloud2** — live in `themes/bootstrap_darkroom/node_modules/` (a separate local node_modules, not the root one) and are not imported by any migrated TS file.
+- **dropzone**, **piecon**, **glightbox** on `add_photos.tpl` — this is a public gallery upload page. The admin-side `photos_add_direct.ts` bundles Dropzone for the *admin* upload page; the BD public page is a separate template with separate JS needs that was not given its own Vite entry.
+
+**To fix:** create a `bd_add_photos.ts` entry that imports dropzone, piecon, and glightbox for the BD public upload page; create a `bd_picture.ts` entry for the swiper slideshow; add wordcloud2 to a `bd_tags.ts` entry; add bootstrap to `bd_header.ts` or a new base entry.
+
+### LocalFilesEditor Plugin
+
+This third-party plugin has no JS/TS source files in its directory — all JavaScript is written inline in Smarty templates using CodeMirror as a global. There is no TS file to add an `import CodeMirror from 'codemirror'` statement to.
+
+**To fix:** extract the inline JavaScript into a `plugins/LocalFilesEditor/js/editor.ts`, add a Vite entry, import CodeMirror as an ES module, and remove the `{combine_script}` calls.
 
 ---
 

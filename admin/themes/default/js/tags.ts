@@ -65,7 +65,7 @@ export function init(cfg: TagsConfig): void {
     if (_sel100) _sel100.checked = true;
 
     document.querySelector('.info-warning p a')?.addEventListener('click', () => {
-        const url = (document.querySelector('.info-warning p a'))?.dataset.url ?? '';
+        const url = (document.querySelector<HTMLAnchorElement>('.info-warning p a'))?.dataset.url ?? '';
         const tags = orphan_tag_names;
         const str_orphans = str_orphan_tags
             .replace('%s1', String(tags.length))
@@ -245,8 +245,7 @@ export function init(cfg: TagsConfig): void {
             })
                 .then(response => response.text())
                 .then(raw_data => {
-                     
-                    const data = JSON.parse(raw_data);
+                    const data = JSON.parse(raw_data) as { stat: string; result: { id: string | number; name: string; url_name: string } };
                     if (data.stat === 'ok') {
                         const newTag = createTagBox(data.result.id, data.result.name, data.result.url_name, 0);
                         const container = document.querySelector('.tag-container');
@@ -262,10 +261,10 @@ export function init(cfg: TagsConfig): void {
                         updateBadge();
                         resolve();
                     } else {
-                        reject(str_already_exist.replace('%s', name));
+                        reject(new Error(str_already_exist.replace('%s', name)));
                     }
                 })
-                .catch((error: Error) => reject(error));
+                .catch((error: unknown) => reject(error instanceof Error ? error : new Error(String(error))));
         });
     }
 
@@ -343,7 +342,7 @@ export function init(cfg: TagsConfig): void {
         if (dupBtn) {
             dupBtn.addEventListener('click', function () {
                 const nameEl = tagBox.querySelector<HTMLElement>('.tag-name');
-                duplicateTag(tagBox.dataset.id ?? '', nameEl?.dataset.rawname ?? '').then((data) => {
+                void duplicateTag(tagBox.dataset.id ?? '', nameEl?.dataset.rawname ?? '').then((data) => {
                     showMessage(str_tag_created.replace('%s', data.result.name));
                 });
             });
@@ -376,15 +375,14 @@ export function init(cfg: TagsConfig): void {
     }
 
     function removeTag(id: string, name: string): void {
-        fetch('ws.php?format=json&method=pwg.tags.delete', {
+        void fetch('ws.php?format=json&method=pwg.tags.delete', {
             method: 'POST',
             body: new URLSearchParams({ tag_id: id, pwg_token }),
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         })
             .then(response => response.text())
             .then(raw_data => {
-                 
-                const data = JSON.parse(raw_data);
+                const data = JSON.parse(raw_data) as { stat: string };
                 if (data.stat === 'ok') {
                     document.querySelector('.tag-box[data-id="' + id + '"]')?.remove();
                     dataTags = dataTags.filter((tag) => tag.id != id);
@@ -407,8 +405,7 @@ export function init(cfg: TagsConfig): void {
             })
                 .then(response => response.text())
                 .then(raw_data => {
-                     
-                    const data = JSON.parse(raw_data);
+                    const data = JSON.parse(raw_data) as { stat: string; result: { name: string; url_name: string } };
                     console.log(data);
                     if (data.stat === 'ok') {
                         document.querySelectorAll<HTMLElement>(
@@ -417,17 +414,16 @@ export function init(cfg: TagsConfig): void {
                         const editableEl = document.querySelector<HTMLInputElement>('.tag-box[data-id="' + id + '"] .tag-name-editable');
                         if (editableEl) editableEl.value = data.result.name;
                         const viewLink = document.querySelector<HTMLAnchorElement>('.dropdown-option.view');
-                        if (viewLink) viewLink.href = 'index.php?/tags/' + id + '-' + String(data.result.url_name);
+                        if (viewLink) viewLink.href = 'index.php?/tags/' + id + '-' + data.result.url_name;
                         const index = dataTags.findIndex((tag) => tag.id == id);
                         dataTags[index].name = data.result.name;
                         dataTags[index].url_name = data.result.url_name;
                         resolve(data);
                     } else {
-                        reject(str_already_exist.replace('%s', new_name));
+                        reject(new Error(str_already_exist.replace('%s', new_name)));
                     }
                 })
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .catch((error: any) => reject(error.statusText || error));
+                .catch((error: unknown) => reject(error instanceof Error ? error : new Error(String(error))));
         });
     }
 
@@ -452,8 +448,7 @@ export function init(cfg: TagsConfig): void {
             })
                 .then(response => response.text())
                 .then(raw_data => {
-                     
-                    const data = JSON.parse(raw_data);
+                    const data = JSON.parse(raw_data) as { stat: string; result: { id: string | number; name: string; url_name: string; count: number } };
                     if (data.stat === 'ok') {
                         const newTag = createTagBox(data.result.id, data.result.name, data.result.url_name, data.result.count);
                         const afterEl = document.querySelector('.tag-box[data-id="' + id + '"]');
@@ -472,8 +467,7 @@ export function init(cfg: TagsConfig): void {
                         resolve(data);
                     }
                 })
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .catch((error: any) => reject(error.statusText || error));
+                .catch((error: unknown) => reject(error instanceof Error ? error : new Error(String(error))));
         });
     }
 
@@ -643,7 +637,7 @@ export function init(cfg: TagsConfig): void {
     });
 
     document.getElementById('selectAll')?.addEventListener('click', function () {
-        selectAll(tagToDisplay());
+        void selectAll(tagToDisplay());
         updateSelectionContent();
         if (selected.length < dataTags.length) {
             showSelectMessage(
@@ -655,7 +649,7 @@ export function init(cfg: TagsConfig): void {
                     const div = document.querySelector<HTMLElement>('.tag-select-message div');
                     if (div) div.innerHTML = "<i class='icon-spin6 animate-spin'> </i>";
                     setTimeout(() => {
-                        selectAll(dataTags).then(() => {
+                        void selectAll(dataTags).then(() => {
                             updateSelectionContent();
                             showSelectMessage(
                                 str_tag_selected.replace(/%d/g, String(selected.length)),
@@ -750,7 +744,7 @@ export function init(cfg: TagsConfig): void {
     });
 
     function removeSelectedTags(): void {
-        fetch('ws.php?format=json&method=pwg.tags.delete', {
+        void fetch('ws.php?format=json&method=pwg.tags.delete', {
             method: 'POST',
             body: new URLSearchParams({ pwg_token, tag_id: selected.join(',') }),
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -758,8 +752,7 @@ export function init(cfg: TagsConfig): void {
             .then(response => response.text())
             .then(raw_data => {
                 const trimmed = raw_data.slice(raw_data.search('{'));
-                 
-                const data = JSON.parse(trimmed);
+                const data = JSON.parse(trimmed) as { stat: string };
                 if (data.stat === 'ok') {
                     selected.forEach(id => { document.querySelector('.tag-box[data-id="' + id + '"]')?.remove(); });
                     dataTags = dataTags.filter((tag) => !selected.includes(String(tag.id)));
@@ -788,7 +781,7 @@ export function init(cfg: TagsConfig): void {
             .replace('%s1', tagListToString(merge_name))
             .replace('%s2', destination_name);
 
-        fetch('ws.php?format=json&method=pwg.tags.merge', {
+        void fetch('ws.php?format=json&method=pwg.tags.merge', {
             method: 'POST',
             body: new URLSearchParams({ pwg_token, destination_tag_id: destination_id, merge_tag_id: merge_ids.join(',') }),
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -796,24 +789,23 @@ export function init(cfg: TagsConfig): void {
             .then(response => response.text())
             .then(raw_data => {
                 const trimmed = raw_data.slice(raw_data.search('{'));
-                 
-                const data = JSON.parse(trimmed);
+                const data = JSON.parse(trimmed) as { stat: string; result: { deleted_tag: (string | number)[]; destination_tag: string | number; images_in_merged_tag: unknown[] } };
                 if (data.stat === 'ok') {
-                    (data.result.deleted_tag as (string | number)[]).forEach((id) => {
+                    data.result.deleted_tag.forEach((id) => {
                         if (data.result.destination_tag != id) {
                             document.querySelector('.tag-box[data-id="' + String(id) + '"]')?.remove();
                             dataTags = dataTags.filter((tag) => id != tag.id);
                         }
                     });
-                    if ((data.result.images_in_merged_tag as unknown[]).length > 0) {
+                    if (data.result.images_in_merged_tag.length > 0) {
                         const tagBox = document.querySelector<HTMLElement>('.tag-box[data-id="' + String(data.result.destination_tag) + '"]');
                         if (tagBox) {
                             tagBox.querySelectorAll<HTMLElement>('.dropdown-option.view, .dropdown-option.manage, .tag-dropdown-header i').forEach(el => { el.style.display = ''; });
                             const headerI = tagBox.querySelector<HTMLElement>('.tag-dropdown-header i');
-                            if (headerI) headerI.innerHTML = str_number_photos.replace('%d', String((data.result.images_in_merged_tag as unknown[]).length));
+                            if (headerI) headerI.innerHTML = str_number_photos.replace('%d', String(data.result.images_in_merged_tag.length));
                         }
                         const index = dataTags.findIndex((tag) => tag.id == data.result.destination_tag);
-                        dataTags[index].counter = (data.result.images_in_merged_tag as unknown[]).length;
+                        dataTags[index].counter = data.result.images_in_merged_tag.length;
                     }
                     document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => el.setAttribute('data-selected', '0'));
                     clearSelection();
@@ -850,7 +842,7 @@ export function init(cfg: TagsConfig): void {
 
     function isDataSearched(tagObj: TagData): boolean {
         const name = String(tagObj.raw_name).toLowerCase();
-        const stringSearch = (document.querySelector('#search-tag .search-input'))?.value ?? '';
+        const stringSearch = (document.querySelector<HTMLInputElement>('#search-tag .search-input'))?.value ?? '';
         return name.includes(stringSearch.toLowerCase());
     }
 
@@ -876,7 +868,7 @@ export function init(cfg: TagsConfig): void {
 
     /*------- Pagination -------*/
 
-    let per_page: number = parseInt((document.querySelector('.tag-container'))?.dataset.per_page ?? '20');
+    let per_page: number = parseInt((document.querySelector<HTMLElement>('.tag-container'))?.dataset.per_page ?? '20');
     let promisePending = false;
     let updateAsk = false;
     let actualPage = 1;
@@ -884,7 +876,7 @@ export function init(cfg: TagsConfig): void {
     function askUpdatePage(): void {
         if (!promisePending) {
             promisePending = true;
-            updatePage().then(promiseFinish);
+            void updatePage().then(promiseFinish);
         } else {
             updateAsk = true;
         }
@@ -1006,7 +998,7 @@ export function init(cfg: TagsConfig): void {
                     res();
                 });
 
-                displayTags.then(() => {
+                void displayTags.then(() => {
                     if (pageLoad) pageLoad.style.display = 'none';
                     if (tagContainer) tagContainer.style.opacity = '1';
                     const tagPag = document.querySelector<HTMLElement>('.tag-pagination');

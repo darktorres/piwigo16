@@ -535,7 +535,7 @@ export function init(cfg: BatchManagerConfig): void {
         body.append('max_urls', String(params.max_urls));
         params.ids.forEach(function (id) { body.append('ids[]', id); });
         params.types.forEach(function (t) { body.append('types[]', t); });
-        fetch('ws.php?format=json&method=pwg.getMissingDerivatives', { method: 'POST', body: body })
+        void fetch('ws.php?format=json&method=pwg.getMissingDerivatives', { method: 'POST', body: body })
             .then(function (r) { return r.json(); })
             .then(function (data: { stat?: string; result: { urls: string[] } }) {
                 if (!data.stat || data.stat != 'ok') return;

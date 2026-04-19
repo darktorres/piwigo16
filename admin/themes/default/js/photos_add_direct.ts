@@ -6,6 +6,10 @@ import { initModule } from './moduleInit.js';
 import Dropzone from 'dropzone';
 import Piecon from 'piecon';
 
+interface PwigoDropzoneFile extends Dropzone.DropzoneFile {
+    format_of?: number;
+}
+
 interface PhotosAddDirectConfig {
     formatMode?: boolean;
     haveFormatsOriginal?: boolean;
@@ -102,7 +106,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
 
     document.querySelectorAll<HTMLElement>('.dont-show-again').forEach(function (el) {
         el.addEventListener('click', function () {
-            fetch('ws.php?format=json&method=pwg.users.preferences.set', {
+            void fetch('ws.php?format=json&method=pwg.users.preferences.set', {
                 method: 'POST',
                 body: new URLSearchParams({ param: 'promote-mobile-apps', value: 'false' }),
             })
@@ -136,16 +140,14 @@ export function init(cfg: PhotosAddDirectConfig): void {
         });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (Dropzone as any).autoDiscover = false;
+    Dropzone.autoDiscover = false;
 
     let beforeUnloadHandler: ((e: BeforeUnloadEvent) => string) | null = null;
     let uploadStarted = false;
     const chunkSizeBytes = chunkSize > 0 ? (chunkSize * 1024) : (100 * 1024 * 1024);
     const acceptedExtensions = (formatMode ? formatExt : fileExt).split(',').map(ext => '.' + ext.trim()).join(',');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dz = new (Dropzone as any)('#uploader', {
+    const dz = new Dropzone('#uploader', {
         url: 'ws.php?method=pwg.images.upload&format=json',
         clickable: '#addFiles',
         acceptedFiles: acceptedExtensions,
@@ -161,7 +163,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
     });
 
     function updateQueueButtons(): void {
-        const files = dz.files as unknown[];
+        const files = dz.files as PwigoDropzoneFile[];
         const addFiles = document.getElementById('addFiles');
         const startUpload = document.getElementById('startUpload') as HTMLButtonElement | null;
         if (files.length > 0) {
@@ -177,7 +179,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
         Piecon.reset();
 
         if (!formatMode && uploadCategory) {
-            fetch('ws.php?format=json&method=pwg.images.uploadCompleted', {
+            void fetch('ws.php?format=json&method=pwg.images.uploadCompleted', {
                 method: 'POST',
                 body: new URLSearchParams({ pwgToken, image_id: uploadedPhotos.join(','), category_id: String(uploadCategory.id) }),
             });
@@ -186,7 +188,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
         document.querySelectorAll<HTMLElement>('#uploadForm, #permissions, .showFieldset').forEach(el => { el.style.display = 'none'; });
 
         const infoText = formatMode
-            ? sprintf(formatsUploadedLabel, uploadedPhotos.length, [...new Set((dz.files as Array<{ format_of?: number }>).map(f => f.format_of))].length)
+            ? sprintf(formatsUploadedLabel, uploadedPhotos.length, [...new Set((dz.files as PwigoDropzoneFile[]).map(f => f.format_of))].length)
             : sprintf(photosUploadedLabel, uploadedPhotos.length);
 
         const infosEl = document.querySelector<HTMLElement>('.infos');
@@ -218,15 +220,12 @@ export function init(cfg: PhotosAddDirectConfig): void {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dz.on('addedfile', function (_file: any) { updateQueueButtons(); });
+    dz.on('addedfile', function (_file: Dropzone.DropzoneFile) { updateQueueButtons(); });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dz.on('addedfiles', async function (files: any[]) {
+    dz.on('addedfiles', function (files: PwigoDropzoneFile[]) { void (async () => {
         if (formatMode && !haveFormatsOriginal) {
             const fileNames: Record<string, string> = {};
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            files.forEach((f: any) => { fileNames[f.upload.uuid] = f.name; });
+            files.forEach((f) => { fileNames[f.upload?.uuid ?? ''] = f.name; });
 
             const result = await fetch('ws.php?format=json&method=pwg.images.formats.searchImage', {
                 method: 'POST',
@@ -239,14 +238,13 @@ export function init(cfg: PhotosAddDirectConfig): void {
             const notFound: string[] = [];
             const multiple: string[] = [];
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            files.forEach((f: any) => {
-                const search = result.result[f.upload.uuid];
+            files.forEach((f) => {
+                const search = result.result[f.upload?.uuid ?? ''];
                 if (search?.status === 'found') {
                     f.format_of = search.image_id;
                 } else {
-                    if (search?.status === 'multiple') multiple.push(f.name as string);
-                    else notFound.push(f.name as string);
+                    if (search?.status === 'multiple') multiple.push(f.name);
+                    else notFound.push(f.name);
                     dz.removeFile(f);
                 }
             });
@@ -268,26 +266,23 @@ export function init(cfg: PhotosAddDirectConfig): void {
                 });
             }
         } else if (formatMode && haveFormatsOriginal) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            files.forEach((f: any) => { f.format_of = originalImageId; });
+            files.forEach((f) => { f.format_of = originalImageId; });
         }
-    });
+    })(); });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dz.on('removedfile', function (_file: any) { updateQueueButtons(); });
+    dz.on('removedfile', function (_file: Dropzone.DropzoneFile) { updateQueueButtons(); });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dz.on('sending', function (file: any, _xhr: unknown, formData: FormData) {
+    dz.on('sending', function (file: PwigoDropzoneFile, _xhr: unknown, formData: FormData) {
         if (formData.get) {
             const chunkIdx = formData.get('dzchunkindex');
             const totalChunks = formData.get('dztotalchunkcount');
             if (chunkIdx !== null) {
-                formData.set('chunk', String(parseInt(String(chunkIdx))));
-                formData.set('chunks', String(parseInt(String(totalChunks))));
+                formData.set('chunk', String(parseInt(chunkIdx as string)));
+                formData.set('chunks', String(parseInt((totalChunks ?? '0') as string)));
             }
         }
         formData.append('pwgToken', pwgToken);
-        formData.append('name', file.name as string);
+        formData.append('name', file.name);
         if (formatMode) {
             if (file.format_of) formData.append('format_of', String(file.format_of));
         } else {
@@ -298,8 +293,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
         }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dz.on('processing', function (_file: any) {
+    dz.on('processing', function (_file: Dropzone.DropzoneFile) {
         if (!uploadStarted) {
             uploadStarted = true;
             document.querySelectorAll<HTMLElement>('#startUpload, .selectFilesButtonBlock, .selectAlbumBlock').forEach(el => { el.style.display = 'none'; });
@@ -324,7 +318,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
             beforeUnloadHandler = function (e: BeforeUnloadEvent) {
                 e.preventDefault();
                 e.returnValue = cfg.strUploadInProgress ?? 'Upload in progress';
-                return e.returnValue;
+                return e.returnValue as string;
             };
             window.addEventListener('beforeunload', beforeUnloadHandler);
             const levelEl = document.querySelector<HTMLSelectElement>('select[name=level]');
@@ -339,8 +333,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
     });
 
     type UploadResponseData = { stat?: string; message?: string; result?: { image_id: string; square_src: string; name: string; category: { id: string; label: string; nb_photos: string } } } | null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dz.on('success', function (file: any, response: unknown) {
+    dz.on('success', function (file: Dropzone.DropzoneFile, response: unknown) {
         let data: UploadResponseData = null;
         if (typeof response === 'object') {
             data = response as UploadResponseData;
@@ -358,7 +351,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
 
         if (!data?.result) return;
 
-        if (file.previewElement) (file.previewElement as HTMLElement).style.display = 'none';
+        if (file.previewElement) file.previewElement.style.display = 'none';
 
         const uploadedPhotosEl = document.getElementById('uploadedPhotos');
         if (uploadedPhotosEl) {
@@ -368,7 +361,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
 
         let html = '<a href="admin.php?page=photo-' + data.result.image_id + '" style="position:relative" target="_blank">';
         html += '<img src="' + data.result.square_src + '" class="thumbnail" title="' + data.result.name + '">';
-        if (formatMode) html += '<div class="format-ext-name" title="' + (file.name as string) + '"><span>' + (file.name as string).slice((file.name as string).indexOf('.')) + '</span></div>';
+        if (formatMode) html += '<div class="format-ext-name" title="' + file.name + '"><span>' + file.name.slice(file.name.indexOf('.')) + '</span></div>';
         html += '</a> ';
 
         if (uploadedPhotosEl) uploadedPhotosEl.insertAdjacentHTML('afterbegin', html);
@@ -376,8 +369,7 @@ export function init(cfg: PhotosAddDirectConfig): void {
         if (!formatMode) uploadCategory = data.result.category;
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dz.on('error', function (_file: any, message: unknown, xhr: XMLHttpRequest | null) {
+    dz.on('error', function (_file: Dropzone.DropzoneFile, message: unknown, xhr: XMLHttpRequest | null) {
         let errMsg = typeof message === 'string' ? message : ((message as { message?: string })?.message ?? 'Upload error');
         if (xhr?.responseText) {
             try { const parsed = JSON.parse(xhr.responseText) as { message?: string }; if (parsed.message) errMsg = parsed.message; } catch (_e) { /* ignore */ }

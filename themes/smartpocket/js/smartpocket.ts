@@ -27,7 +27,7 @@ export function initSmartpocket(): void {
             a = (current.index !== undefined ? links[current.index] : null) || null;
         }
         if (!a) return;
-        fetch('ws.php?format=json&method=pwg.history.log', {
+        void fetch('ws.php?format=json&method=pwg.history.log', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({

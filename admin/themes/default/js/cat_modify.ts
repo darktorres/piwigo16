@@ -199,7 +199,7 @@ export function init(cfg: CatModifyConfig): void {
     }
 
     document.querySelector<HTMLElement>('.deleteAlbum')?.addEventListener('click', function () {
-        fetch('ws.php?format=json&method=pwg.categories.calculateOrphans&' + new URLSearchParams({ category_id: String(album_id) }))
+        fetch('ws.php?format=json&method=pwg.categories.calculateOrphans&' + new URLSearchParams({ category_id: String(album_id) }).toString())
             .then(r => r.json())
             .then(function (raw_json: { result: OrphanData[] }) {
                 const orphan = raw_json.result[0];
@@ -270,7 +270,7 @@ export function init(cfg: CatModifyConfig): void {
             })
                 .then(r => r.json())
                 .then(function (_data: unknown) { res(); })
-                .catch(function (error: unknown) { rej(error); });
+                .catch(function (error: unknown) { rej(error instanceof Error ? error : new Error(String(error))); });
         });
     }
 

@@ -39,7 +39,7 @@ class LocalStorageCache {
     get(callback: (data: CacheItem[]) => void): void {
         const now = new Date().getTime();
         if (this.ready && this.storage[this.key] !== undefined) {
-            const cache = JSON.parse(this.storage[this.key]) as { timestamp: number; key: string; data: CacheItem[] };
+            const cache = JSON.parse(this.storage[this.key] as string) as { timestamp: number; key: string; data: CacheItem[] };
             if (now - cache.timestamp <= this.lifetime && cache.key === this.serverKey) {
                 callback(cache.data);
                 return;
@@ -70,6 +70,14 @@ class LocalStorageCache {
     clear(): void {
         if (this.ready) this.storage.removeItem(this.key);
     }
+
+    getFromStorage(): CacheItem[] | null {
+        if (!this.ready || this.storage[this.key] === undefined) return null;
+        try {
+            const cached = JSON.parse(this.storage[this.key] as string) as { data: CacheItem[] };
+            return cached.data;
+        } catch { return null; }
+    }
 }
 
 type TomSelectRenderTemplates = {
@@ -77,6 +85,8 @@ type TomSelectRenderTemplates = {
     item: (data: CacheItem, escape: (s: string) => string) => string;
     option_create: (data: { input: string }, escape: (s: string) => string) => string;
 };
+
+type TomSelectOnFn = { on(event: string, fn: (...args: unknown[]) => void): void };
 
 abstract class AbstractSelectizer extends LocalStorageCache {
     protected _selectize(els: HTMLSelectElement[], globalOptions: SelectizeOptions): void {
@@ -102,9 +112,11 @@ abstract class AbstractSelectizer extends LocalStorageCache {
                 if (options.value !== undefined) {
                     const vals = Array.isArray(options.value) ? options.value : [options.value];
                     for (const cat of vals) {
-                        const n = parseFloat(String(cat));
-                        if (!isNaN(n) && isFinite(Number(cat))) ts.addItem(String(cat));
-                        else ts.addItem(String((cat as { id: string | number }).id));
+                        if (typeof cat === 'object') {
+                            ts.addItem(String(cat.id));
+                        } else {
+                            ts.addItem(String(cat));
+                        }
                     }
                 }
 
@@ -120,17 +132,17 @@ abstract class AbstractSelectizer extends LocalStorageCache {
                             const removeBtn = defaultItem.querySelector<HTMLElement>(".remove");
                             if (removeBtn) removeBtn.style.display = 'none';
                         }
-                        ts.on("item_remove", function (this: TomSelect, id: string) {
+                        (ts as unknown as TomSelectOnFn).on("item_remove", (id: string) => {
                             if (id === String(options.default)) {
-                                this.addItem(id);
-                                const itemEl = this.getItem(id);
+                                ts.addItem(id);
+                                const itemEl = ts.getItem(id);
                                 const btn = itemEl?.querySelector<HTMLElement>(".remove");
                                 if (btn) btn.style.display = 'none';
                             }
                         });
                     } else {
-                        ts.on("dropdown_close", function (this: TomSelect) {
-                            if (this.getValue() === "") this.addItem(String(options.default));
+                        (ts as unknown as TomSelectOnFn).on("dropdown_close", () => {
+                            if (ts.getValue() === "") ts.addItem(String(options.default));
                         });
                     }
                 }
@@ -155,7 +167,7 @@ export class CategoriesCache extends AbstractSelectizer {
         super();
         options.key = "categoriesAdminList";
         options.loader = (callback) => {
-            fetch((options.rootUrl ?? '') + "ws.php?format=json&method=pwg.categories.getAdminList")
+            void fetch((options.rootUrl ?? '') + "ws.php?format=json&method=pwg.categories.getAdminList")
                 .then((r) => r.json())
                 .then((data: { result: { categories: CacheItem[] } }) => {
                     const cats = data.result.categories.map((c, i) => {
@@ -193,7 +205,7 @@ export class TagsCache extends AbstractSelectizer {
         super();
         options.key = "tagsAdminList";
         options.loader = (callback) => {
-            fetch((options.rootUrl ?? '') + "ws.php?format=json&method=pwg.tags.getAdminList")
+            void fetch((options.rootUrl ?? '') + "ws.php?format=json&method=pwg.tags.getAdminList")
                 .then((r) => r.json())
                 .then((data: { result: { tags: CacheItem[] } }) => {
                     const tags = data.result.tags.map((t) => {
@@ -231,7 +243,7 @@ export class GroupsCache extends AbstractSelectizer {
         super();
         options.key = "groupsAdminList";
         options.loader = (callback) => {
-            fetch((options.rootUrl ?? '') + "ws.php?format=json&method=pwg.groups.getList&per_page=9999")
+            void fetch((options.rootUrl ?? '') + "ws.php?format=json&method=pwg.groups.getList&per_page=9999")
                 .then((r) => r.json())
                 .then((data: { result: { groups: CacheItem[] } }) => {
                     const groups = data.result.groups.map((g) => {
@@ -269,7 +281,7 @@ export class UsersCache extends AbstractSelectizer {
         options.loader = (callback) => {
             const users: CacheItem[] = [];
             const load = (page: number) => {
-                fetch(
+                void fetch(
                     (options.rootUrl ?? '') +
                     "ws.php?format=json&method=pwg.users.getList&display=username&per_page=9999&page=" + page,
                 )

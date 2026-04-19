@@ -70,7 +70,7 @@ export class PwgWS {
         if (xhr.status === 200) {
             let resp: { stat: string; result: unknown; err?: number; message?: string } | null = null;
             try {
-                resp = JSON.parse(xhr.responseText);
+                resp = JSON.parse(xhr.responseText) as { stat: string; result: unknown; err?: number; message?: string };
             } catch (e) {
                 this.error(200, (e as Error).message + "\n" + xhr.responseText.substring(0, 512));
                 return;

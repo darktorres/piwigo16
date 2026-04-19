@@ -1,7 +1,7 @@
 import { initModule } from './moduleInit.js';
 import tippy from 'tippy.js';
 import TomSelect from 'tom-select';
-import noUiSlider from 'nouislider';
+import noUiSlider, { type API as NoUiSliderAPI } from 'nouislider';
 import { pwgConfirmFollowHref } from './pwgConfirm.js';
 
 interface PluginsNewConfig {
@@ -16,8 +16,7 @@ interface PluginsNewConfig {
     str_from_beginning?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface NoUiTarget extends HTMLElement { noUiSlider?: any }
+interface NoUiTarget extends HTMLElement { noUiSlider?: NoUiSliderAPI }
 
 export function init(cfg: PluginsNewConfig): void {
     const {
@@ -67,7 +66,7 @@ export function init(cfg: PluginsNewConfig): void {
                 boxes.sort(sortPlugins);
                 boxes.forEach(el => container.appendChild(el));
             }
-            fetch('admin.php?plugins_new_order=' + sortOrder);
+            void fetch('admin.php?plugins_new_order=' + sortOrder);
         });
     }
 

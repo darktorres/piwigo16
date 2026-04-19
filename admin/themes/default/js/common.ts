@@ -70,8 +70,8 @@ export function sprintf(f: string, ...args: (string | number)[]): string {
             (m = /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(remaining))
         ) {
             let a: string | number = args[(m[1] ? parseInt(m[1]) - 1 : i++)];
-            if (a == null) throw "Too few arguments.";
-            if (/[^s]/.test(m[7]) && typeof a !== "number") throw "Expecting number but found " + typeof a;
+            if (a == null) throw new Error("Too few arguments.");
+            if (/[^s]/.test(m[7]) && typeof a !== "number") throw new Error("Expecting number but found " + typeof a);
 
             let aStr: string;
             const n = a as number;
@@ -86,7 +86,7 @@ export function sprintf(f: string, ...args: (string | number)[]): string {
                 case "u": aStr = String(Math.abs(n)); break;
                 case "x": aStr = n.toString(16); break;
                 case "X": aStr = n.toString(16).toUpperCase(); break;
-                default: throw "Huh ?!";
+                default: throw new Error("Huh ?!");
             }
 
             if (/[def]/.test(m[7]) && m[2] && n >= 0) aStr = "+" + aStr;
@@ -95,7 +95,7 @@ export function sprintf(f: string, ...args: (string | number)[]): string {
             const pad = width > aStr.length ? str_repeat(c, width - aStr.length) : "";
             o.push(m[4] ? aStr + pad : pad + aStr);
         } else {
-            throw "Huh ?!";
+            throw new Error("Huh ?!");
         }
 
         remaining = remaining.substring(m[0].length);

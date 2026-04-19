@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     if (cfg.CHECK_FOR_UPDATES) {
-        fetch('ws.php?method=pwg.extensions.checkUpdates&format=json')
+        void fetch('ws.php?method=pwg.extensions.checkUpdates&format=json')
             .then(r => r.json())
             .then(function (data: { stat: string; result: { piwigo_need_update: boolean; ext_need_update: boolean } }) {
                 if (data.stat !== 'ok') return;
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.newsletter-subscription a').forEach(function (el) {
         el.addEventListener('click', function (event) {
             document.querySelectorAll<HTMLElement>('.newsletter-subscription').forEach(function (ns) { ns.style.display = 'none'; });
-            fetch('admin.php?action=hide_newsletter_subscription');
+            void fetch('admin.php?action=hide_newsletter_subscription');
             if ((el as HTMLElement).classList.contains('newsletter-hide')) event.preventDefault();
         });
     });

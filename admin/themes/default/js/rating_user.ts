@@ -1,5 +1,5 @@
 import { initModule } from './moduleInit.js';
-import DataTable from 'datatables.net';
+import DataTable, { type Api as DataTableApi } from 'datatables.net';
 import { pwgConfirm } from './pwgConfirm.js';
 import { PwgWS } from './pwgws.js';
 
@@ -17,8 +17,7 @@ export function init(cfg: RatingUserConfig): void {
     const h1 = document.querySelector('h1');
     if (h1) h1.insertAdjacentHTML('beforeend', "<span class='badge-number'>" + nbElements + '</span>');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const oTable = new (DataTable as any)('#rateTable', {
+    const oTable: DataTableApi<unknown> = new DataTable('#rateTable', {
         dom: '<"dtBar"filp>rt<"dtBar"ilp>',
         pageLength: 100,
         lengthMenu: [[25, 50, 100, 500, -1], [25, 50, 100, 500, 'All']],

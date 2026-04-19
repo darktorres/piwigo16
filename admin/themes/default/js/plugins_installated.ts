@@ -61,7 +61,7 @@ export function init(cfg: PluginsInstalledConfig): void {
         }
         let pending = showEls.length;
         showEls.forEach(function (el) {
-            el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).finished.then(function () {
+            void el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).finished.then(function () {
                 el.style.display = 'none';
                 if (--pending === 0) {
                     document.querySelectorAll<HTMLElement>('.plugin-inactive').forEach(function (inEl) {
@@ -129,7 +129,7 @@ export function init(cfg: PluginsInstalledConfig): void {
     function activatePlugin(id: string): void {
         const switchEl = document.querySelector<HTMLButtonElement>('#' + id + ' .switch');
         if (switchEl) switchEl.disabled = true;
-        fetch('ws.php?' + new URLSearchParams({ method: 'pwg.plugins.performAction', action: 'activate', plugin: id, pwg_token, format: 'json' }))
+        fetch('ws.php?' + new URLSearchParams({ method: 'pwg.plugins.performAction', action: 'activate', plugin: id, pwg_token, format: 'json' }).toString())
             .then(r => r.json())
             .then(function (data: { stat: string }) {
                 const sw = document.querySelector<HTMLButtonElement>('#' + id + ' .switch');
@@ -154,7 +154,7 @@ export function init(cfg: PluginsInstalledConfig): void {
     function deactivatePlugin(id: string): void {
         const switchEl = document.querySelector<HTMLButtonElement>('#' + id + ' .switch');
         if (switchEl) switchEl.disabled = true;
-        fetch('ws.php?' + new URLSearchParams({ method: 'pwg.plugins.performAction', action: 'deactivate', plugin: id, pwg_token, format: 'json' }))
+        fetch('ws.php?' + new URLSearchParams({ method: 'pwg.plugins.performAction', action: 'deactivate', plugin: id, pwg_token, format: 'json' }).toString())
             .then(r => r.json())
             .then(function (data: { stat: string }) {
                 const sw = document.querySelector<HTMLButtonElement>('#' + id + ' .switch');
@@ -177,7 +177,7 @@ export function init(cfg: PluginsInstalledConfig): void {
     }
 
     function deletePlugin(id: string): void {
-        fetch('ws.php?' + new URLSearchParams({ method: 'pwg.plugins.performAction', action: 'delete', plugin: id, pwg_token, format: 'json' }))
+        fetch('ws.php?' + new URLSearchParams({ method: 'pwg.plugins.performAction', action: 'delete', plugin: id, pwg_token, format: 'json' }).toString())
             .then(r => r.json())
             .then(function (data: { stat: string }) {
                 if (data.stat === 'ok') {
@@ -195,7 +195,7 @@ export function init(cfg: PluginsInstalledConfig): void {
     }
 
     function restorePlugin(id: string): void {
-        fetch('ws.php?' + new URLSearchParams({ method: 'pwg.plugins.performAction', action: 'restore', plugin: id, pwg_token, format: 'json' }))
+        fetch('ws.php?' + new URLSearchParams({ method: 'pwg.plugins.performAction', action: 'restore', plugin: id, pwg_token, format: 'json' }).toString())
             .then(r => r.json())
             .then(function (data: { stat: string }) {
                 if (data.stat === 'ok') {
@@ -213,7 +213,7 @@ export function init(cfg: PluginsInstalledConfig): void {
     }
 
     function uninstallPlugin(id: string): void {
-        fetch('ws.php?' + new URLSearchParams({ method: 'pwg.plugins.performAction', action: 'uninstall', plugin: id, pwg_token, format: 'json' }))
+        fetch('ws.php?' + new URLSearchParams({ method: 'pwg.plugins.performAction', action: 'uninstall', plugin: id, pwg_token, format: 'json' }).toString())
             .then(r => r.json())
             .then(function () {
                 document.getElementById(id)?.remove();
@@ -400,7 +400,7 @@ export function init(cfg: PluginsInstalledConfig): void {
     });
 
     function set_view_selector(view_type: string): void {
-        fetch('ws.php?format=json&method=pwg.users.preferences.set', {
+        void fetch('ws.php?format=json&method=pwg.users.preferences.set', {
             method: 'POST',
             body: new URLSearchParams({ param: 'plugin-manager-view', value: view_type }),
         });
@@ -409,7 +409,7 @@ export function init(cfg: PluginsInstalledConfig): void {
     function performPluginDeactivate(id: string): void {
         _deactivateTotal++;
         _deactivateQueue = _deactivateQueue.then(function () {
-            return fetch('ws.php?' + new URLSearchParams({ method: 'pwg.plugins.performAction', action: 'deactivate', plugin: id, pwg_token, format: 'json' }))
+            return fetch('ws.php?' + new URLSearchParams({ method: 'pwg.plugins.performAction', action: 'deactivate', plugin: id, pwg_token, format: 'json' }).toString())
                 .then(r => r.json())
                 .then(function (data: { stat: string }) {
                     if (data.stat === 'ok') {
@@ -454,7 +454,7 @@ export function init(cfg: PluginsInstalledConfig): void {
         });
     });
 
-    fetch('admin.php?' + new URLSearchParams({ page: 'plugins_installed', incompatible_plugins: 'true' }))
+    void fetch('admin.php?' + new URLSearchParams({ page: 'plugins_installed', incompatible_plugins: 'true' }).toString())
         .then(r => r.json())
         .then(function (data: string[]) {
             for (let i = 0; i < data.length; i++) {

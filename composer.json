@@ -13,7 +13,7 @@
         "smarty/smarty": "^5.5.1",
         "tedivm/jshrink": "^1.7",
         "tubalmartin/cssmin": "^4.1.1",
-        "spiral/roadrunner-http": "^2.2",
+        "spiral/roadrunner-http": "4.1",
         "nyholm/psr7": "^1.8",
         "spiral/roadrunner": "^2025.1",
         "monolog/monolog": "3.0"

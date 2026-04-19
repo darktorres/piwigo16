@@ -13,7 +13,10 @@
         "pclzip/pclzip": "^2.8.2",
         "smarty/smarty": "^5.5.1",
         "tedivm/jshrink": "^1.7",
-        "tubalmartin/cssmin": "^4.1.1"
+        "tubalmartin/cssmin": "^4.1.1",
+        "spiral/roadrunner-http": "^2.2",
+        "nyholm/psr7": "^1.8",
+        "spiral/roadrunner": "^2025.1"
     },
     "require-dev": {
         "phpstan/phpstan": "^2.1.17",

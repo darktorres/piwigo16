@@ -1,0 +1,17 @@
+version: "3"
+
+server:
+  command: "php worker-i.php"
+  relay: "tcp://127.0.0.1:6001"
+
+http:
+  address: "127.0.0.1:8080"
+  pool:
+    num_workers: 4
+    max_jobs: 64
+    supervisor:
+      max_worker_memory: 128
+
+logs:
+  mode: development
+  level: warn

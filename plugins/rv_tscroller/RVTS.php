@@ -113,7 +113,7 @@ final class RVTS
         require_once PHPWG_ROOT_PATH . 'inc/ViteManifest.php';
         $rvts_dist = \Piwigo\Vite\ViteManifest::getFile('plugins/rv_tscroller/rv_tscroller');
         $rvts_cats_js_url = $rvts_dist
-            ? functions_url::get_root_url() . 'admin/themes/default/js/dist/' . $rvts_dist
+            ? './' . functions_url::get_root_url() . 'admin/themes/default/js/dist/' . $rvts_dist
             : './plugins/' . $my_base_name . '/rv_tscroller.js';
 
         $next                = $startcat + $per_page;
@@ -172,7 +172,7 @@ final class RVTS
         require_once PHPWG_ROOT_PATH . 'inc/ViteManifest.php';
         $rvts_dist2 = \Piwigo\Vite\ViteManifest::getFile('plugins/rv_tscroller/rv_tscroller');
         $rvts_js_url = $rvts_dist2
-            ? functions_url::get_root_url() . 'admin/themes/default/js/dist/' . $rvts_dist2
+            ? './' . functions_url::get_root_url() . 'admin/themes/default/js/dist/' . $rvts_dist2
             : './plugins/' . $my_base_name . '/rv_tscroller.js';
         $start = (int) $page['start'];
         $per_page = $page['nb_image_page'];

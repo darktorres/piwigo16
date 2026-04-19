@@ -4,7 +4,7 @@ export const GDThumb = {
 
     _initialized: false,
 
-    setup(method: string, max_height: number, margin: number): void {
+    setup(_method: string, max_height: number, margin: number): void {
         if (GDThumb._initialized) return;
         GDThumb._initialized = true;
 

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { collectConsoleIssues, assertNoErrors, ensureTestPhotoExists } from "../helpers/index.js";
-import { dbGetFirstPhotoId, dbGetFirstPhysicalAlbumId } from "../helpers/db.js";
+import { dbGetFirstPhotoId, dbGetFirstPhysicalAlbumId, dbGetAlbumWithPhotosId } from "../helpers/db.js";
 
 test.describe("Gallery JS interactions", () => {
     async function getPhotoUrl(): Promise<string> {
@@ -10,7 +10,7 @@ test.describe("Gallery JS interactions", () => {
     }
 
     async function getAlbumUrl(): Promise<string> {
-        const catId = await dbGetFirstPhysicalAlbumId();
+        const catId = await dbGetAlbumWithPhotosId();
         return `index.php?/category/${catId!}`;
     }
 

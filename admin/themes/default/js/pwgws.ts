@@ -20,7 +20,7 @@ export class PwgWS {
             Object.assign(this.options, options);
         }
         this.xhr = new XMLHttpRequest();
-        this.xhr.onreadystatechange = () => this.onStateChange();
+        this.xhr.onreadystatechange = () => { this.onStateChange(); };
 
         let url = this.urlRoot + "ws.php?format=json&method=" + method;
         let body = "";

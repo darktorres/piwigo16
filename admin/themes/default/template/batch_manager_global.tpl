@@ -454,7 +454,7 @@
 
           <!-- author -->
           <div id="action_author" class="bulkAction">
-            <input type="text" class="large" name="author" placeholder="{'Type here the author name'|translate}">
+            <input type="text" class="large" name="author" placeholder="{'Type the author name here'|translate}">
             <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_author">
               {'remove author'|translate}</label>
           </div>

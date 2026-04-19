@@ -63,12 +63,12 @@ export function init(cfg: PictureModifyConfig): void {
                 if (itemAdd) {
                     itemAdd.classList.add('notClickable');
                     itemAdd.setAttribute('title', str_already_in_related_cats);
-                    itemAdd.addEventListener('click', e => e.preventDefault());
+                    itemAdd.addEventListener('click', e => { e.preventDefault(); });
                 }
                 searchResult.querySelectorAll<HTMLElement>('.search-result-item').forEach(function (item) {
                     item.classList.add('notClickable');
                     item.setAttribute('title', str_already_in_related_cats);
-                    item.addEventListener('click', e => e.preventDefault());
+                    item.addEventListener('click', e => { e.preventDefault(); });
                 });
             } else {
                 const resultItem = searchResult.querySelector<HTMLElement>('.search-result-item#' + cat.id);
@@ -132,12 +132,12 @@ export function init(cfg: PictureModifyConfig): void {
         document.querySelectorAll<HTMLElement>('.linked-albums-badge').forEach(el => { el.innerHTML = String(mutableIds.length); });
 
         if (mutableIds.length === 0) {
-            document.querySelectorAll<HTMLElement>('.linked-albums-badge').forEach(el => el.classList.add('badge-red'));
-            document.querySelectorAll<HTMLElement>('.add-item').forEach(el => el.classList.add('highlight'));
+            document.querySelectorAll<HTMLElement>('.linked-albums-badge').forEach(el => { el.classList.add('badge-red'); });
+            document.querySelectorAll<HTMLElement>('.add-item').forEach(el => { el.classList.add('highlight'); });
             document.querySelectorAll<HTMLElement>('.orphan-photo').forEach(el => { el.innerHTML = str_orphan; el.style.display = ''; });
         } else {
-            document.querySelectorAll<HTMLElement>('.linked-albums-badge.badge-red').forEach(el => el.classList.remove('badge-red'));
-            document.querySelectorAll<HTMLElement>('.add-item.highlight').forEach(el => el.classList.remove('highlight'));
+            document.querySelectorAll<HTMLElement>('.linked-albums-badge.badge-red').forEach(el => { el.classList.remove('badge-red'); });
+            document.querySelectorAll<HTMLElement>('.add-item.highlight').forEach(el => { el.classList.remove('highlight'); });
             document.querySelectorAll<HTMLElement>('.orphan-photo').forEach(el => { el.style.display = 'none'; });
         }
     }

@@ -9,6 +9,11 @@ interface Window {
     _pwgRatingAutoQueue: { push: (opts: unknown) => void };
     var_loop?: boolean;
     SPThumbsOpts?: { hMargin: number; rowHeight: number };
+    toggleAddFilterDropdown?: () => void;
+    selectGenerateDerivAll?: () => void;
+    selectGenerateDerivNone?: () => void;
+    selectDelDerivAll?: () => void;
+    selectDelDerivNone?: () => void;
 }
 
 interface Document {

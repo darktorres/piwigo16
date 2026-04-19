@@ -61,10 +61,10 @@ export function init(cfg: UserActivityConfig): void {
             });
         }
         document.querySelectorAll<HTMLElement>('.loading').forEach(el => { el.style.display = ''; });
-        document.querySelectorAll<HTMLElement>('.pagination-arrow.right').forEach(el => el.classList.add('unavailable'));
-        document.querySelectorAll<HTMLElement>('.pagination-arrow.left').forEach(el => el.classList.add('unavailable'));
+        document.querySelectorAll<HTMLElement>('.pagination-arrow.right').forEach(el => { el.classList.add('unavailable'); });
+        document.querySelectorAll<HTMLElement>('.pagination-arrow.left').forEach(el => { el.classList.add('unavailable'); });
         document.querySelectorAll<HTMLElement>('.pagination-item-container').forEach(el => { el.style.display = 'none'; });
-        document.querySelectorAll<HTMLElement>('.user-update-spinner').forEach(el => el.classList.add('icon-spin6'));
+        document.querySelectorAll<HTMLElement>('.user-update-spinner').forEach(el => { el.classList.add('icon-spin6'); });
 
         fetch('ws.php?format=json&method=pwg.activity.getList', {
             method: 'POST',
@@ -76,9 +76,9 @@ export function init(cfg: UserActivityConfig): void {
                 const lines = data.result.result_lines;
                 setCreationDate(lines[lines.length - 1]!.date, lines[0]!.date);
                 document.querySelectorAll<HTMLElement>('.loading').forEach(el => { el.style.display = 'none'; });
-                lines.forEach(line => lineConstructor(line));
+                lines.forEach(line => { lineConstructor(line); });
                 max_page = data.result.max_page;
-                document.querySelectorAll<HTMLElement>('.user-update-spinner').forEach(el => el.classList.remove('icon-spin6'));
+                document.querySelectorAll<HTMLElement>('.user-update-spinner').forEach(el => { el.classList.remove('icon-spin6'); });
                 document.querySelectorAll<HTMLElement>('.pagination-item-container').forEach(el => { el.style.display = ''; });
                 update_pagination_menu();
             })
@@ -225,10 +225,10 @@ export function init(cfg: UserActivityConfig): void {
     }
 
     document.querySelectorAll<HTMLElement>('.pagination-arrow.right').forEach(el => {
-        el.addEventListener('click', () => move_to_page(actual_page + 1));
+        el.addEventListener('click', () => { move_to_page(actual_page + 1); });
     });
     document.querySelectorAll<HTMLElement>('.pagination-arrow.left').forEach(el => {
-        el.addEventListener('click', () => move_to_page(actual_page - 1));
+        el.addEventListener('click', () => { move_to_page(actual_page - 1); });
     });
 
     function update_pagination_menu(): void {
@@ -249,7 +249,7 @@ export function init(cfg: UserActivityConfig): void {
     }
 
     function update_pagination_items(): void {
-        document.querySelectorAll<HTMLElement>('.pagination-item-container a, .pagination-item-container span').forEach(el => el.remove());
+        document.querySelectorAll<HTMLElement>('.pagination-item-container a, .pagination-item-container span').forEach(el => { el.remove(); });
         append_pagination_item(1);
         if (actual_page > 2) append_pagination_item(null);
         if (actual_page !== 1 && actual_page !== max_page) append_pagination_item(actual_page);

@@ -264,7 +264,7 @@ export function init(cfg: TagsConfig): void {
                         reject(new Error(str_already_exist.replace('%s', name)));
                     }
                 })
-                .catch((error: unknown) => reject(error instanceof Error ? error : new Error(String(error))));
+                .catch((error: unknown) => { reject(error instanceof Error ? error : new Error(String(error))); });
         });
     }
 
@@ -420,7 +420,7 @@ export function init(cfg: TagsConfig): void {
                         reject(new Error(str_already_exist.replace('%s', new_name)));
                     }
                 })
-                .catch((error: unknown) => reject(error instanceof Error ? error : new Error(String(error))));
+                .catch((error: unknown) => { reject(error instanceof Error ? error : new Error(String(error))); });
         });
     }
 
@@ -464,7 +464,7 @@ export function init(cfg: TagsConfig): void {
                         resolve(data);
                     }
                 })
-                .catch((error: unknown) => reject(error instanceof Error ? error : new Error(String(error))));
+                .catch((error: unknown) => { reject(error instanceof Error ? error : new Error(String(error))); });
         });
     }
 
@@ -484,15 +484,15 @@ export function init(cfg: TagsConfig): void {
 
     function selectionMode(isSelection: boolean): void {
         if (isSelection) {
-            document.querySelectorAll<HTMLElement>('.in-selection-mode').forEach(el => el.classList.add('show'));
-            document.querySelectorAll<HTMLElement>('.not-in-selection-mode').forEach(el => el.classList.add('hide'));
+            document.querySelectorAll<HTMLElement>('.in-selection-mode').forEach(el => { el.classList.add('show'); });
+            document.querySelectorAll<HTMLElement>('.not-in-selection-mode').forEach(el => { el.classList.add('hide'); });
             document.querySelector('.tag-container')?.classList.add('selection');
-            document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => el.classList.remove('edit-name'));
+            document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => { el.classList.remove('edit-name'); });
         } else {
-            document.querySelectorAll<HTMLElement>('.in-selection-mode').forEach(el => el.classList.remove('show'));
-            document.querySelectorAll<HTMLElement>('.not-in-selection-mode').forEach(el => el.classList.remove('hide'));
+            document.querySelectorAll<HTMLElement>('.in-selection-mode').forEach(el => { el.classList.remove('show'); });
+            document.querySelectorAll<HTMLElement>('.not-in-selection-mode').forEach(el => { el.classList.remove('hide'); });
             document.querySelector('.tag-container')?.classList.remove('selection');
-            document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => el.setAttribute('data-selected', '0'));
+            document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => { el.setAttribute('data-selected', '0'); });
             const selectMsg = document.querySelector<HTMLElement>('.tag-select-message');
             if (selectMsg && selectMsg.style.display !== 'none') selectMsg.style.display = 'none';
             clearSelection();
@@ -697,7 +697,7 @@ export function init(cfg: TagsConfig): void {
     });
 
     function selectNone(): void {
-        document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => el.setAttribute('data-selected', '0'));
+        document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => { el.setAttribute('data-selected', '0'); });
         clearSelection();
     }
 
@@ -804,7 +804,7 @@ export function init(cfg: TagsConfig): void {
                         const index = dataTags.findIndex((tag) => tag.id=== data.result.destination_tag);
                         dataTags[index]!.counter = data.result.images_in_merged_tag.length;
                     }
-                    document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => el.setAttribute('data-selected', '0'));
+                    document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => { el.setAttribute('data-selected', '0'); });
                     clearSelection();
                     updatePaginationMenu();
                     updateBadge();
@@ -953,7 +953,7 @@ export function init(cfg: TagsConfig): void {
     }
 
     function movePage(toRight = true): void {
-        document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => el.classList.remove('edit-name'));
+        document.querySelectorAll<HTMLElement>('.tag-box').forEach(el => { el.classList.remove('edit-name'); });
         if (toRight) {
             if (actualPage < getNumberPages()) { actualPage++; updatePaginationMenu(); }
         } else {
@@ -1028,7 +1028,7 @@ export function init(cfg: TagsConfig): void {
         el.addEventListener('click', function (this: HTMLElement) {
             per_page = parseInt(this.innerHTML);
             updatePaginationMenu();
-            document.querySelectorAll<HTMLElement>('.pagination-per-page .selected').forEach(s => s.classList.remove('selected'));
+            document.querySelectorAll<HTMLElement>('.pagination-per-page .selected').forEach(s => { s.classList.remove('selected'); });
             this.classList.add('selected');
             document.cookie = 'pwg_tags_per_page=' + String(per_page) + '; path=/; SameSite=Lax';
         });
@@ -1055,7 +1055,7 @@ export function init(cfg: TagsConfig): void {
         const match = document.cookie.match(/(?:^|;)\s*pwg_tags_per_page=([^;]*)/);
         const saved = match ? match[1] : null;
         if (saved) {
-            document.querySelectorAll<HTMLElement>('.pagination-per-page .selected').forEach(el => el.classList.remove('selected'));
+            document.querySelectorAll<HTMLElement>('.pagination-per-page .selected').forEach(el => { el.classList.remove('selected'); });
             const el = document.getElementById(saved);
             if (el) el.click();
         }

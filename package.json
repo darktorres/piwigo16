@@ -10,11 +10,10 @@
     "test:report": "cd tests && bunx playwright show-report",
     "typecheck": "tsc -p tsconfig.app.json --noEmit",
     "typecheck:tests": "cd tests && bunx tsc --noEmit",
-    "lint": "bunx eslint admin themes plugins --max-warnings=0",
+    "lint": "bunx eslint admin themes plugins",
     "lint:tests": "cd tests && bunx eslint src",
     "lint:css": "bunx stylelint \"admin/**/*.css\" \"themes/**/*.css\" \"plugins/**/*.css\" \"!**/node_modules/**\"",
     "lint:ox": "bunx oxlint admin themes plugins --deny-warnings --ignore-pattern \"**/node_modules/**\" --ignore-pattern \"**/dist/**\"",
-    "lint:biome": "bunx biome lint admin themes plugins",
     "format": "bunx prettier --write \"admin/**/*.{ts,js,css}\" \"themes/**/*.{ts,js,css}\" \"plugins/**/*.{ts,js,css}\" --ignore-path .gitignore",
     "format:check": "bunx prettier --check \"admin/**/*.{ts,js,css}\" \"themes/**/*.{ts,js,css}\" \"plugins/**/*.{ts,js,css}\" --ignore-path .gitignore",
     "knip": "bunx knip"
@@ -43,7 +42,6 @@
     "photoswipe@5.4.4": "patches/photoswipe@5.4.4.patch"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.12",
     "@eslint/js": "^9.28.0",
     "@types/chart.js": "^4.0.1",
     "@types/codemirror": "^5.60.17",

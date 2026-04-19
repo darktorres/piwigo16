@@ -70,6 +70,13 @@ export async function dbGetFirstPhysicalAlbumId(): Promise<number | null> {
     return rows.length > 0 ? parseInt(rows[0][0], 10) : null;
 }
 
+export async function dbGetAlbumWithPhotosId(): Promise<number | null> {
+    const rows = await run(
+        "SELECT c.id FROM categories c JOIN image_category ic ON c.id = ic.category_id WHERE c.dir IS NOT NULL GROUP BY c.id HAVING COUNT(ic.image_id) > 0 ORDER BY c.id LIMIT 1",
+    );
+    return rows.length > 0 ? parseInt(rows[0][0], 10) : null;
+}
+
 export async function dbGetFirstGroupId(): Promise<number | null> {
     const rows = await run("SELECT id FROM user_groups ORDER BY id LIMIT 1");
     return rows.length > 0 ? parseInt(rows[0][0], 10) : null;

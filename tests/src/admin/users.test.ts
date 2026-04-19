@@ -47,11 +47,15 @@ test.describe("Admin — users", () => {
 
         const dbUser = await dbFindUser(username);
         expect(dbUser, `User '${username}' should exist in DB`).not.toBeNull();
-        const userId = parseInt(dbUser!.id, 10);
 
         // Navigate to user list and find the user row to delete
         await page.goto("admin.php?page=user_list");
         await page.waitForLoadState("load");
+
+        // Search for the username to ensure it appears regardless of pagination
+        const searchInput = page.locator("#user_search");
+        await expect(searchInput).toBeVisible();
+        await searchInput.fill(username);
 
         // Find the user container in the dynamically-rendered list
         const userContainer = page
@@ -70,14 +74,12 @@ test.describe("Admin — users", () => {
 
         const confirmBtn = page.locator("#pwg-confirm-dialog .pwg-confirm-buttons button.btn-red");
         await expect(confirmBtn).toBeVisible({ timeout: 5_000 });
+        const deleteResponsePromise = page.waitForResponse(r => r.url().includes("pwg.users.delete"));
         await confirmBtn.click();
-        // Wait for the user container to disappear after deletion
-        await expect(userContainer).not.toBeVisible({ timeout: 10_000 });
+        await deleteResponsePromise;
 
         const dbUserAfter = await dbFindUser(username);
         expect(dbUserAfter, `User '${username}' should be deleted from DB`).toBeNull();
-
-        void userId;
     });
 
     test("grant user access to private album → verify DB → revoke → verify gone", async ({ page }) => {

@@ -166,7 +166,7 @@ export function init(cfg: PluginsNewConfig): void {
     const showBetaEl = document.getElementById('showBetaTestPlugin') as HTMLInputElement | null;
     if (showBetaEl) {
         showBetaEl.addEventListener('change', function (e) {
-            document.querySelectorAll<HTMLElement>('.beta-test-plugin-switch .slider').forEach(el => el.classList.add('loading'));
+            document.querySelectorAll<HTMLElement>('.beta-test-plugin-switch .slider').forEach(el => { el.classList.add('loading'); });
             const queryParams = new URLSearchParams(window.location.search);
             queryParams.set('beta-test', ((e.currentTarget as HTMLInputElement).checked).toString());
             history.replaceState(null, '', '?' + queryParams.toString());

@@ -131,7 +131,7 @@ export function init(_cfg: Record<string, unknown>): void {
         if (paused) {
             paused = false;
             btn.textContent = 'Pause';
-            document.querySelectorAll('.syncPausedLabel').forEach(el => el.remove());
+            document.querySelectorAll('.syncPausedLabel').forEach(el => { el.remove(); });
             if (resumeResolve) { const fn = resumeResolve; resumeResolve = null; fn(); }
         } else {
             paused = true;

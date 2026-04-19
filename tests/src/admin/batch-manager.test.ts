@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { collectConsoleIssues, assertNoErrors, ensureTestPhotoExists } from "../helpers/index.js";
-import { dbGetFirstPhotoId, dbGetPhotoAuthor } from "../helpers/db.js";
+import { dbGetPhotoAuthor } from "../helpers/db.js";
 
 test.describe("Admin — batch manager", () => {
     test.beforeEach(async ({ page }) => {
@@ -257,10 +257,6 @@ test.describe("Admin — batch manager", () => {
     // -------------------------------------------------------------------------
 
     test("apply author action → verify DB → restore original author", async ({ page }) => {
-        const photoId = await dbGetFirstPhotoId();
-        expect(photoId, "At least one photo must exist").not.toBeNull();
-
-        const originalAuthor = await dbGetPhotoAuthor(photoId!);
         const testAuthor = `batch_test_author_${Date.now()}`;
 
         const getIssues = collectConsoleIssues(page);
@@ -273,6 +269,12 @@ test.describe("Admin — batch manager", () => {
         await firstLabel.click();
         const firstCheckbox = page.locator(".thumbnails input[type=checkbox]").first();
         await expect(firstCheckbox).toBeChecked();
+
+        // Get the photo id from the checkbox value (may differ from DB min id due to sort order)
+        const photoIdStr = await firstCheckbox.getAttribute("value");
+        expect(photoIdStr, "First checkbox must have a value").not.toBeNull();
+        const photoId = parseInt(photoIdStr!, 10);
+        const originalAuthor = await dbGetPhotoAuthor(photoId);
 
         // Select the "author" action
         const actionSelect = page.locator('select[name="selectAction"]');
@@ -295,8 +297,8 @@ test.describe("Admin — batch manager", () => {
         await page.waitForLoadState("load");
 
         // Verify DB: the photo's author has been updated
-        const updatedAuthor = await dbGetPhotoAuthor(photoId!);
-        expect(updatedAuthor, `Photo ${photoId!} author should be '${testAuthor}' in DB`).toBe(testAuthor);
+        const updatedAuthor = await dbGetPhotoAuthor(photoId);
+        expect(updatedAuthor, `Photo ${photoId} author should be '${testAuthor}' in DB`).toBe(testAuthor);
 
         // Restore the original author via the unit section (uses session's current selection)
         await page.goto("admin.php?page=batch_manager&mode=unit");

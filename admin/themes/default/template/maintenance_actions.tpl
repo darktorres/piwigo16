@@ -18,8 +18,6 @@
         <a href="{$U_MAINT_UNLOCK_GALLERY}"
           class="lock-gallery-button icon-lock maintenance-action">{'Unlock gallery'|translate}</a>
       {/if}
-      <a href="admin.php?page=generate_video_thumbnails"
-        class="icon-film maintenance-action">{'Generate video thumbnails'|translate}</a>
       <a href="{$U_MAINT_CATEGORIES}"
         class="icon-folder-open maintenance-action">{'Update albums information'|translate}</a>
       <a href="{$U_MAINT_IMAGES}"

@@ -95,9 +95,10 @@
   </script>
 
   {footer_script}<script type="module">
+    import PhotoSwipeLightbox from './node_modules/photoswipe/dist/photoswipe-lightbox.esm.js';
+
     if (!window._pswpInitialized) {
       window._pswpInitialized = true;
-      const { default: PhotoSwipeLightbox } = await import('./node_modules/photoswipe/dist/photoswipe-lightbox.esm.js');
       const lightbox = new PhotoSwipeLightbox({
         gallery: '#thumbnails',
         children: 'a[data-pswp-src]',

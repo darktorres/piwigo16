@@ -28,7 +28,7 @@ body {
 #thumbnails > li,
 .albThumbs > li,
 .navThumb img {
-    border-radius: 0 !important;
+    border-radius: 0;
 }
 
 .infos {
@@ -145,7 +145,7 @@ input[type="reset"],
 }
 
 #menubar input {
-    background-color: transparent !important;
+    background-color: transparent;
 }
 
 input[type="submit"] {
@@ -444,7 +444,7 @@ textarea {
 }
 
 .calItem:hover {
-    text-decoration: underline !important;
+    text-decoration: underline;
 }
 
 .content .navigationBar,
@@ -455,7 +455,7 @@ span.calItem:hover,
 td.calDayCellEmpty:hover {
     color: #777;
     padding: 10px;
-    text-decoration: none !important;
+    text-decoration: none;
     border: 1px solid transparent;
 }
 

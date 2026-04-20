@@ -83,7 +83,7 @@ input[type="password"],
 .selectize-input {
     background-color: #27498c !important;
     color: white !important;
-    border-radius: 0 !important;
+    border-radius: 0;
 }
 
 .selectize-control .plugin-remove_button [data-value] .remove {
@@ -699,7 +699,7 @@ a.addCollection {
 .filter-tag-form .selectize-input input,
 .filter-author-form .selectize-input input,
 .filter-added_by-form .selectize-input input {
-    background: transparent !important;
+    background: transparent;
     color: white !important;
 }
 

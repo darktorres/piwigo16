@@ -481,8 +481,8 @@ textarea {
 .selectize-input input {
     background-color: #93c2d6 !important;
     color: black !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .date_today {
@@ -777,7 +777,7 @@ form.properties a {
 #word-search {
     background-color: #93c2d6 !important;
     color: black !important;
-    border-radius: 0 !important;
+    border-radius: 0;
 }
 
 .filetypes-option:nth-child(odd),
@@ -894,7 +894,7 @@ form.properties a {
 .filter-tag-form .selectize-input input,
 .filter-author-form .selectize-input input,
 .filter-added_by-form .selectize-input input {
-    background: transparent !important;
+    background: transparent;
     color: white !important;
 }
 

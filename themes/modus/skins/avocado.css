@@ -1,3 +1,9 @@
+:root {
+    --radius-control: 10px;
+    --radius-comment-element: 10px;
+    --color-comment-bg: #65a603;
+}
+
 body {
     background-color: #e7ffe7;
     color: #022601;
@@ -318,8 +324,6 @@ dd {
 
 .commentElement {
     margin: 15px 0;
-    background-color: #65a603 !important;
-    border-radius: 10px !important;
     color: #ceffce;
     clear: both;
     padding: 20px;
@@ -346,8 +350,7 @@ input[type="text"],
 input[type="password"],
 select,
 textarea {
-    background-color: #65a603 !important;
-    border-radius: 10px !important;
+    background-color: #65a603;
     color: #ceffce;
 }
 
@@ -370,8 +373,7 @@ textarea {
 
 .selectize-input,
 .selectize-control.single .selectize-input.input-active {
-    background-color: #65a603 !important;
-    border-radius: 10px !important;
+    background-color: #65a603;
     border: 0;
 }
 
@@ -425,7 +427,7 @@ textarea {
 }
 
 .calItem:hover {
-    text-decoration: underline !important;
+    text-decoration: underline;
 }
 
 .content .navigationBar,
@@ -434,7 +436,7 @@ span.calItem,
 span.calItem:hover {
     color: #467302;
     padding: 10px;
-    text-decoration: none !important;
+    text-decoration: none;
     border: none;
     border-radius: 5px;
 }
@@ -731,7 +733,7 @@ td .nbEntries {
 .filter-tag-form .selectize-input input,
 .filter-author-form .selectize-input input,
 .filter-added_by-form .selectize-input input {
-    background: transparent !important;
+    background: transparent;
     color: white !important;
 }
 

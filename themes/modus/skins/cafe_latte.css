@@ -581,7 +581,7 @@ td .nbEntries {
 }
 
 ul.token-input-list li input {
-    background-color: transparent !important;
+    background-color: transparent;
 }
 
 form.properties a {
@@ -748,7 +748,7 @@ form.properties a {
 #word-search {
     background-color: #dcd0c0 !important;
     color: #373737 !important;
-    border-radius: 0 !important;
+    border-radius: 0;
 }
 
 .filetypes-option:nth-child(odd),
@@ -864,7 +864,7 @@ form.properties a {
 .filter-tag-form .selectize-input input,
 .filter-author-form .selectize-input input,
 .filter-added_by-form .selectize-input input {
-    background: transparent !important;
+    background: transparent;
     color: white !important;
 }
 

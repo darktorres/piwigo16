@@ -300,7 +300,7 @@ export function init(cfg: HistoryConfig): void {
         const body = new URLSearchParams();
         for (const [k, v] of Object.entries(ajaxParam)) {
             if (k === 'types') {
-                Object.values(ajaxParam.types).forEach((t, i) => body.append(`types[${i}]`, t));
+                Object.values(ajaxParam.types).forEach((t, i) => { body.append(`types[${i}]`, t); });
             } else {
                 body.append(k, String(v));
             }

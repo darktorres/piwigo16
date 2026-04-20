@@ -388,7 +388,7 @@ input[type="submit"]:hover, button:hover { background: #3a6a9d; }
     cursor: pointer;
 }
 .ui-li-desc { text-overflow: clip; white-space: normal; }
-#colorbox, #cboxOverlay, #cboxWrapper { display: none !important; }
+#colorbox, #cboxOverlay, #cboxWrapper { display: none !important; } /* js-toggled */
 
 /* ── Search filter responsive fixes ─────────────────────── */
 @media (width <= 600px) {

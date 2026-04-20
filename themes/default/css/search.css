@@ -393,12 +393,12 @@
 }
 
 .head-button-2 p {
-    margin: 0 !important;
+    margin: 0;
     white-space: nowrap;
 }
 
 .head-button-2:hover {
-    text-decoration: none !important;
+    text-decoration: none;
 }
 
 .breadcrumb-item {
@@ -638,7 +638,7 @@
 .filter-added_by-form .selectize-input input:focus-visible,
 .filter-tag-form .selectize-input input:focus-visible {
     border: none;
-    outline: none !important;
+    outline: none;
 }
 
 .filter-tag-form .selectize-control.multi .selectize-input > div,

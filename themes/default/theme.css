@@ -683,23 +683,23 @@ fieldset {
 }
 
 .tagLevel5 {
-    font-size: 150% !important;
+    font-size: 150%;
 }
 
 .tagLevel4 {
-    font-size: 140% !important;
+    font-size: 140%;
 }
 
 .tagLevel3 {
-    font-size: 120% !important;
+    font-size: 120%;
 }
 
 .tagLevel2 {
-    font-size: 100% !important;
+    font-size: 100%;
 }
 
 .tagLevel1 {
-    font-size: 90% !important;
+    font-size: 90%;
 }
 
 /* Popup help page */
@@ -1027,7 +1027,7 @@ because of this it needs to specifically be added to each theme */
     font-weight: 700;
     color: #fafafa;
     margin-left: 5px;
-    padding: 2px 5px !important;
+    padding: 2px 5px !important; /* js-toggled */
     font-size: 10px;
     background: #777;
 }
@@ -1072,7 +1072,7 @@ html:has(#thumbnails) #content {
     min-height: 0;
     position: relative;
     padding-bottom: 50px;
-    margin-left: 0 !important;
+    margin-left: 0 !important; /* overrides JS-set margin from menubar layout */
 }
 
 html:has(#thumbnails) .contentWithMenu {

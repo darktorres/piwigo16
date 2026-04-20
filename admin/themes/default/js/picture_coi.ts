@@ -28,36 +28,28 @@ if (img) {
     const coiRaw = img.dataset['coi'];
     const coiData: CoiData | null = coiRaw ? JSON.parse(coiRaw) as CoiData : null;
 
-    const cropperConfig: Cropper.Options<HTMLImageElement> = {
-        viewMode: 1,
-        autoCrop: false,
-        movable: true,
-        rotatable: false,
-        scalable: false,
-        zoomable: false,
-        zoomOnTouch: false,
-        zoomOnWheel: false,
-        dragMode: 'crop',
-        crop: function (event: { detail: { x: number; y: number; width: number; height: number } }) {
-            jOnChange(event.detail);
-        },
-    };
+    const cropper = new Cropper(img);
+    const cropperImage = cropper.getCropperImage();
+    const cropperSelection = cropper.getCropperSelection();
 
-    if (coiData) {
-        cropperConfig.ready = function () {
-            cropper.setData({
-                x: from_coi(coiData.l, img.naturalWidth),
-                y: from_coi(coiData.t, img.naturalHeight),
-                width: from_coi(coiData.r, img.naturalWidth) - from_coi(coiData.l, img.naturalWidth),
-                height: from_coi(coiData.b, img.naturalHeight) - from_coi(coiData.t, img.naturalHeight),
-            });
-        };
+    cropperSelection?.addEventListener('change', function (event) {
+        const sel = event as CustomEvent<{ x: number; y: number; width: number; height: number }>;
+        jOnChange(sel.detail);
+    });
+
+    if (coiData && cropperImage) {
+        void cropperImage.$ready(function () {
+            cropperSelection?.$change(
+                from_coi(coiData.l, img.naturalWidth),
+                from_coi(coiData.t, img.naturalHeight),
+                from_coi(coiData.r, img.naturalWidth) - from_coi(coiData.l, img.naturalWidth),
+                from_coi(coiData.b, img.naturalHeight) - from_coi(coiData.t, img.naturalHeight),
+            );
+        });
     }
 
-    const cropper = new Cropper(img, cropperConfig);
-
     document.getElementById('jcrop-clear')?.addEventListener('click', function () {
-        cropper.clear();
+        cropperSelection?.$clear();
         jOnRelease();
     });
 }

@@ -1,14 +1,16 @@
-.navThumb,
-#addComment {
-    display: none;
-}
+@media print {
+    .navThumb,
+    #addComment {
+        display: none;
+    }
 
-body {
-    margin: 0;
-    color: #000;
-    background: #fff;
-}
+    body {
+        margin: 0;
+        color: #000;
+        background: #fff;
+    }
 
-.content {
-    margin: 0;
+    .content {
+        margin: 0;
+    }
 }

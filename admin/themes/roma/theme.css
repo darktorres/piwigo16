@@ -119,7 +119,6 @@ ul.thumbnails span.wrap2 {
     background-repeat: repeat-x;
 }
 
-
 fieldset {
     border: none;
 }
@@ -197,8 +196,6 @@ ul.actions,
     color: #8d8d8d;
 }
 
-
-
 .search-input {
     background-color: #333 !important;
 }
@@ -206,8 +203,6 @@ ul.actions,
 .search-input:hover {
     background-color: #222 !important;
 }
-
-
 
 .pagination-per-page {
     background-color: #555;
@@ -242,7 +237,6 @@ ul.actions,
     background-color: #111;
 }
 
-
 .ui-resizable {
     position: relative;
 }
@@ -255,7 +249,6 @@ ul.actions,
 .ui-wrapper textarea {
     border: 0;
 }
-
 
 .ui-resizable-handle {
     position: absolute;
@@ -474,7 +467,6 @@ input[type="reset"]:disabled {
     color: transparent;
 }
 
-
 .stat-box {
     color: #777;
 }
@@ -485,9 +477,7 @@ a.stat-box:hover {
 
 .stat-data-selector label {
     color: #777;
-    padding: 10px;
     background-color: #333;
-    transition: 0.2s ease;
 }
 
 .stat-data-selector label:hover {
@@ -555,7 +545,6 @@ a.stat-box:hover {
 .storage-chart-legend div:nth-child(1) span {
     background-color: #d47f44;
 }
-
 
 * html[lang="en"] body .content h2,
 * + html[lang="en"] body .content h2 {
@@ -700,7 +689,6 @@ a.stat-box:hover {
     color: #c1c1c1;
 }
 
-
 #batchManagerGlobal .thumbnails .font-checkbox [class*="icon-check"]::before {
     color: #777;
 }
@@ -748,7 +736,6 @@ a.stat-box:hover {
     color: #bfbfbf;
 }
 
-
 ul.token-input-list {
     border-color: #666 !important;
     background-color: #444 !important;
@@ -779,7 +766,6 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
     background: #3c3939;
 }
 
-
 #picture-content input[type="text"],
 #picture-content textarea,
 #picture-content .selectize-input,
@@ -798,15 +784,12 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
     border-color: #333 !important;
 }
 
-
-
 .orCreateAlbum {
     background-color: #333;
     color: #777;
 }
 
 .orCreateAlbum:hover {
-    text-decoration: none;
     color: #777;
 }
 
@@ -830,7 +813,6 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 .disabledToggle .move-cat-toggler {
     color: gray !important;
     opacity: 0.5;
-    pointer-events: none;
 }
 
 .move-cat-container.disabledToggle:hover .move-cat-toggler {
@@ -884,13 +866,6 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
     color: #3f3e40;
     background-color: #f70;
 }
-
-.DeleteAlbumSubmit {
-    background-color: #e74c3c;
-    color: #fff;
-}
-
-
 
 .selectedComment {
     background-color: #555;
@@ -977,8 +952,6 @@ label > p.group_select {
     color: #e0e0e0;
 }
 
-
-
 .groups .Group-name {
     color: #777;
 }
@@ -987,8 +960,6 @@ label > p.group_select {
     border: 1px solid #303030 !important;
     background-color: #1a1a1a;
 }
-
-
 
 .groups fieldset input[type="text"]::placeholder {
     color: #d5d5d5;
@@ -1003,15 +974,11 @@ label > p.group_select {
     background-color: #f70;
 }
 
-
-
 #GroupOptions {
     background-color: #5c5c5c;
     box-shadow: -1px 1px 2px #393939;
     color: #c0c0c0;
 }
-
-
 
 .groups .manage-users,
 .groups .manage-permissions {
@@ -1025,8 +992,6 @@ label > p.group_select {
     border: 1px solid #ffa744;
     cursor: pointer;
 }
-
-
 
 .UserListPopInContainer {
     background-color: #444;
@@ -1063,8 +1028,6 @@ label > p.group_select {
 .LinkUserManager {
     color: #3c3c3c;
 }
-
-
 
 .slider {
     background-color: #333;
@@ -1110,8 +1073,6 @@ input:focus + .slider {
     color: black !important;
 }
 
-
-
 .SelectionModeGroupList {
     color: #c0c0c0;
 }
@@ -1139,8 +1100,6 @@ input:focus + .slider {
     background-color: #ffa744;
 }
 
-
-
 #MergeOptionsBlock p {
     color: #777;
 }
@@ -1148,8 +1107,6 @@ input:focus + .slider {
 #MergeOptionsBlock a {
     color: #c0c0c0;
 }
-
-
 
 .ConfirmMergeButton {
     background-color: #ffa744;
@@ -1159,8 +1116,6 @@ input:focus + .slider {
     background-color: #1a1a1a;
     box-shadow: 0 0 2px #c5c5c5;
 }
-
-
 
 .groups .group-checkmark {
     border: 2px solid #c76a23;
@@ -1176,10 +1131,7 @@ input:focus + .slider {
 
 .groups .Group-checkbox .group-checkmark::after {
     border: solid #ebebeb;
-    border-width: 0 3px 3px 0;
 }
-
-
 
 .groups .manage-users,
 .groups .manage-users:hover,
@@ -1192,8 +1144,6 @@ input:focus + .slider {
 .groups .manage-permissions:hover {
     color: #3c3c3c;
 }
-
-
 
 .CloseUserList,
 .CloseAddAlbum,
@@ -1246,8 +1196,6 @@ input:focus + .slider {
     color: #4c4c4c;
 }
 
-
-
 .userSeparator {
     color: #666;
     visibility: hidden;
@@ -1256,8 +1204,6 @@ input:focus + .slider {
 .GuestUserListPopInContainer {
     background-color: #444 !important;
 }
-
-
 
 .user_form_popin .ui-slider-horizontal .ui-slider-handle {
     background-color: #ffa646;
@@ -1331,7 +1277,6 @@ table.qsearch_help_table td {
 
 .afterUploadActions a {
     color: #3c3c3c;
-    font-weight: bold;
     background-color: #ffa646;
 }
 
@@ -1521,7 +1466,6 @@ li.plupload_delete a:hover {
 .albumIconLineHover {
     background: #ae5d1e !important;
     color: #ffa96b !important;
-    transition: 0.5s ease;
     border-color: #ae5d1e !important;
 }
 
@@ -1659,8 +1603,6 @@ li.plupload_delete a:hover {
     background-color: #202020;
 }
 
-
-
 .errors {
     color: #fec6c7;
     background-color: #bc4b4a;
@@ -1676,8 +1618,6 @@ li.plupload_delete a:hover {
     padding: 2px 7px;
     color: #fff;
 }
-
-
 
 .infos {
     color: #b8feee;
@@ -1695,8 +1635,6 @@ li.plupload_delete a:hover {
     color: #fff;
 }
 
-
-
 .warnings {
     color: #fedac0;
     background-color: #d47f44;
@@ -1708,8 +1646,6 @@ li.plupload_delete a:hover {
     padding: 2px 7px;
     color: #fff;
 }
-
-
 
 .messages {
     color: #bad6ff;
@@ -1723,8 +1659,6 @@ li.plupload_delete a:hover {
     padding: 2px 7px;
 }
 
-
-
 .jconfirm .jconfirm-box {
     background-color: #333 !important;
 }
@@ -1736,11 +1670,6 @@ li.plupload_delete a:hover {
 .jconfirmAlert .jconfirm-icon-c i {
     color: #c2f5c2 !important;
     background-color: #0a0 !important;
-}
-
-.jconfirmWarning .jconfirm-icon-c i {
-    color: #ffa744 !important;
-    background-color: #ffe9cf !important;
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-default {
@@ -1756,8 +1685,6 @@ li.plupload_delete a:hover {
 .jconfirm .jconfirm-box.loading::before {
     background: #333 !important;
 }
-
-
 
 .tag-box,
 .tag-header .selection-controller a {
@@ -1829,7 +1756,6 @@ li.plupload_delete a:hover {
     background-color: #f22;
 }
 
-
 .move-cat-container,
 .search-album-elem {
     background-color: #333;
@@ -1845,7 +1771,6 @@ li.plupload_delete a:hover {
     color: white;
 }
 
-
 .search-album-ghost div {
     background-image: linear-gradient(#333, #444);
 }
@@ -1854,8 +1779,6 @@ li.plupload_delete a:hover {
     background-color: #5a5757;
     color: #c1c1c1;
 }
-
-
 
 .icon-red {
     color: #fec6c7;
@@ -1916,23 +1839,7 @@ li.plupload_delete a:hover {
     color: #666;
 }
 
-.pluginTypeFilter {
-    display: flex;
-    flex-direction: row;
-    position: absolute;
-    left: 225px;
-    z-index: 2;
-    transform: translateY(13px);
-}
-
 .pluginTypeFilter label {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    width: auto;
-    height: 30px;
-    padding: 0 10px;
     color: #c1c1c1;
     background: #555;
     box-shadow: 0 2px #0006;
@@ -1960,7 +1867,6 @@ li.plupload_delete a:hover {
 }
 
 .pluginContainer.line .pluginBox:hover .pluginContent {
-    transition: 0.4s;
     background: #333;
 }
 
@@ -2058,8 +1964,6 @@ li.plupload_delete a:hover {
     color: #ededed;
 }
 
-
-
 .AlbumViewSelector,
 .UserViewSelector {
     background: #555 !important;
@@ -2067,17 +1971,6 @@ li.plupload_delete a:hover {
 
 .AlbumViewSelector label span {
     background: #555;
-}
-
-.AlbumViewSelector input:checked + label,
-.UserViewSelector input:checked + label {
-    background: transparent;
-    color: white;
-}
-
-.AlbumViewSelector input:checked + label span,
-.UserViewSelector input:checked + label span {
-    background: orange;
 }
 
 .AlbumViewSelector input:checked + label .icon-th-large,
@@ -2137,8 +2030,6 @@ li.plupload_delete a:hover {
     background-color: transparent !important;
 }
 
-
-
 .user-container.container-selected
     .user-container-checkbox.user-list-checkbox
     .select-checkbox {
@@ -2147,13 +2038,7 @@ li.plupload_delete a:hover {
 }
 
 .user-container.container-selected {
-    display: flex;
-    width: 100%;
-    height: 80px;
     background-color: #f9852c;
-    font-weight: bold;
-    border-radius: 10px;
-    margin-bottom: 20px;
 }
 
 .user-container.container-selected .user-container-username {
@@ -2181,8 +2066,6 @@ li.plupload_delete a:hover {
 .user-groups {
     padding: 6px 15px !important;
 }
-
-
 
 .group-bonus {
     color: #ddd;
@@ -2307,16 +2190,9 @@ li.plupload_delete a:hover {
     color: #c1c1c1;
 }
 
-
-
 .select-user {
     background: #555;
-    height: 50%;
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
     box-shadow: 0 2px 4px #00000024;
-    border-radius: 5px;
 }
 
 .select-user-title {
@@ -2325,16 +2201,11 @@ li.plupload_delete a:hover {
 
 .start-date,
 .end-date {
-    padding: 5px 10px;
     background: #555;
-    border-radius: 50px;
-    margin: 5px;
     color: #bbb;
 }
 
 .activity-time-text {
-    font-size: 13px;
-    font-weight: bold;
     color: #bbb;
 }
 
@@ -2346,40 +2217,18 @@ li.plupload_delete a:hover {
 
 .line {
     background: transparent;
-    display: flex;
-    flex-direction: row;
-    height: 40px;
-    align-items: center;
-    margin-bottom: 10px;
     color: #bbb;
 }
 
 .line .detail-item {
     background: #555;
-    margin: 0 10px 0 0;
-    padding: 3px 6px;
-    border-radius: 20px;
     min-width: 50px;
     max-width: 150px;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: default;
-    white-space: nowrap;
 }
 
 .download_csv {
-    margin-left: auto;
-    height: 25px;
-    width: 30px;
     background: #555;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
     color: #b8b8b8;
-    cursor: pointer;
-    border-radius: 5px;
 }
 
 .download_csv:hover {
@@ -2518,7 +2367,6 @@ li.plupload_delete a:hover {
 #start_unset,
 #end_unset {
     color: #a1a1a1;
-    text-decoration: none;
 }
 
 .hasDatepicker,
@@ -2533,7 +2381,6 @@ li.plupload_delete a:hover {
 .filter-icon {
     color: #777;
     background: #252525;
-    padding: 5px 0;
 }
 
 .applicationCard {
@@ -2580,7 +2427,6 @@ li.plupload_delete a:hover {
     background-color: #5d5d5d !important;
     color: #373737 !important;
 }
-
 
 ul.jqtree-tree span.jqtree-border {
     border: solid 2px #ededed !important;
@@ -2635,7 +2481,6 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
 .jqtree-moving .move-cat-container .icon-green {
     opacity: 60% !important;
 }
-
 
 .desc-modal-content {
     background-color: #444;

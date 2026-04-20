@@ -76,7 +76,6 @@ ul.thumbnails span.wrap2 {
     background-color: transparent;
 }
 
-
 fieldset {
     border: none;
 }
@@ -165,7 +164,6 @@ ul.actions,
     background-color: #ddd;
 }
 
-
 .ui-resizable {
     position: relative;
 }
@@ -179,11 +177,9 @@ ul.actions,
     border: 0;
 }
 
-
 #tiptip_holder a {
     color: #42b0ff;
 }
-
 
 .ui-resizable-handle {
     position: absolute;
@@ -344,7 +340,6 @@ input[type="text"].large {
     padding: 10px;
 }
 
-
 * html[lang="en"] body .content h2,
 * + html[lang="en"] body .content h2 {
     text-transform: capitalize;
@@ -436,7 +431,6 @@ input[type="text"].large {
 ul.thumbnails li.rank-of-image {
     background-color: #ddd;
 }
-
 
 #batchManagerGlobal .thumbnails .font-checkbox [class*="icon-check"]::before {
     color: #999;
@@ -622,8 +616,6 @@ label > p.group_select {
     color: #e0e0e0;
 }
 
-
-
 .groups .Group-name {
     color: #3c3c3c;
 }
@@ -632,8 +624,6 @@ label > p.group_select {
     border: 1px solid #3c3c3c;
     background-color: white;
 }
-
-
 
 .groups fieldset input[type="text"]::placeholder {
     color: #d5d5d5;
@@ -648,8 +638,6 @@ label > p.group_select {
     background-color: #f70;
 }
 
-
-
 .groups .manage-users,
 .groups .manage-permissions {
     border: 1px solid #e7e7e7;
@@ -662,8 +650,6 @@ label > p.group_select {
     border: 1px solid #ffa744;
     cursor: pointer;
 }
-
-
 
 .UserListPopInContainer {
     background-color: white;
@@ -700,8 +686,6 @@ label > p.group_select {
 .LinkUserManager {
     color: #3c3c3c;
 }
-
-
 
 .slider {
     background-color: #e0e0e0;
@@ -741,8 +725,6 @@ input:focus + .slider {
     color: #f70;
 }
 
-
-
 .SelectionModeGroupList {
     color: #a0a0a0;
 }
@@ -768,8 +750,6 @@ input:focus + .slider {
     background-color: #ffa744;
 }
 
-
-
 #MergeOptionsBlock p {
     color: #777;
 }
@@ -777,8 +757,6 @@ input:focus + .slider {
 #MergeOptionsBlock a {
     color: #3c3c3c;
 }
-
-
 
 .ConfirmMergeButton {
     background-color: #ffa744;
@@ -788,8 +766,6 @@ input:focus + .slider {
     background-color: white;
     box-shadow: 0 0 2px #c5c5c5;
 }
-
-
 
 .groups .group-checkmark {
     border: 2px solid #ffa646;
@@ -803,16 +779,12 @@ input:focus + .slider {
     background-color: #ffa646;
 }
 
-
-
 .groups .manage-users,
 .groups .manage-users:hover,
 .groups .manage-permissions,
 .groups .manage-permissions:hover {
     color: #3c3c3c;
 }
-
-
 
 .CloseUserList,
 .CloseAddAlbum,
@@ -845,8 +817,6 @@ input:focus + .slider {
 .ValidationUserDissociated p {
     color: #0a0;
 }
-
-
 
 .userSeparator {
     visibility: hidden;
@@ -936,7 +906,6 @@ form#categoryOrdering p.albumActions .userSeparator {
 
 .afterUploadActions a {
     color: #3c3c3c;
-    font-weight: bold;
     background-color: #ffa646;
 }
 
@@ -1151,7 +1120,6 @@ li.plupload_delete a:hover {
 #batchManagerGlobal .font-checkbox.selected {
     color: #777;
 }
-
 
 .categoryContainer {
     margin: 0;

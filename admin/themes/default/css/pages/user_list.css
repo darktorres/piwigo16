@@ -7,7 +7,7 @@
     position: absolute;
     left: 240px;
     top: 29px;
-    z-index: 100; {*used to fix firefox auto fill input*}
+    z-index: 100; /* used to fix firefox auto fill input */
   }
 
   /* general */

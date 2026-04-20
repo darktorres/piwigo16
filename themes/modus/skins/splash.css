@@ -97,7 +97,7 @@ input[type="password"],
     background-color: #e8e8ea;
 }
 
-#qsearchInput:placeholder {
+#qsearchInput::placeholder {
     color: #717175;
 }
 

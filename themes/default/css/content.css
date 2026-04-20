@@ -1,0 +1,281 @@
+/**
+ * Content
+ */
+.contentWithMenu {
+    margin-left: 20em; /* = #menubar width + 2em */
+}
+
+.content .navigationBar,
+.content .additional_info,
+.content .calendarBar {
+    margin: 8px 4px;
+    text-align: center;
+}
+
+.content .pageNumberSelected {
+    font-style: italic;
+    font-weight: bold;
+}
+
+.content .additional_info {
+    font-size: 110%;
+}
+
+.content .titrePage {
+    padding: 0 0 3px;
+}
+
+.content .notification {
+    padding: 0 25px;
+}
+
+#menubar .badge {
+    margin-left: 5px;
+}
+
+.badge::before {
+    content: "[";
+}
+
+.badge::after {
+    content: "]";
+}
+
+.badge.badgeCategories::before {
+    content: "(";
+}
+
+.badge.badgeCategories::after {
+    content: ")";
+}
+
+/* A nicer (more modern) way to present badge, with a background color and no brackets */
+
+/*
+.badge::before, .badge::after {
+  content:none;
+}
+
+.badge {
+  display: inline-block;
+  min-width: 5px;
+  padding: 3px 7px;
+  color: #eee;
+  line-height: 1;
+  vertical-align: middle;
+  white-space: nowrap;
+  text-align: center;
+  background-color: #666;
+  border-radius: 10px;
+}
+*/
+
+/* category and tag results paragraphs on a quick search */
+.search_results {
+    font-size: 16px;
+    margin: 10px 16px;
+}
+
+/* actions */
+.categoryActions {
+    margin: 0 2px;
+    width: auto;
+    padding: 0;
+    text-indent: 0;
+    list-style: none;
+    text-align: center;
+    float: right;
+}
+
+.categoryActions li {
+    display: inline;
+}
+
+/* begin chronology/calendar elements */
+.calendarViews {
+    float: right;
+    margin: 5px 5px 0 0;
+}
+
+.calItem {
+    font-weight: bold;
+    margin: 0 1px;
+    padding: 0 1px;
+    border: 1px solid gray;
+}
+
+.calendarCalBar {
+    margin: 10px;
+}
+
+.calCalHead {
+    font-weight: bold;
+    font-size: 110%;
+    margin: 0 2px;
+}
+
+.calCal {
+    margin: 0 2px;
+}
+
+/* nice looking month calendar */
+table.calMonth {
+    border: 0;
+    border-collapse: collapse;
+    margin-bottom: 10px; /* <-IE ignores this */
+}
+
+td.calDayCellFull,
+td.calDayCellEmpty {
+    vertical-align: top;
+    font-weight: bold;
+    font-size: 18px;
+    border: 1px solid gray;
+}
+
+.calBackDate {
+    padding-left: 4px;
+    padding-top: 0;
+    z-index: 2;
+    position: absolute;
+    vertical-align: top;
+    color: #000;
+}
+
+.calForeDate {
+    padding-left: 5px;
+    padding-top: 1px;
+    z-index: 3;
+    position: absolute;
+    vertical-align: top;
+    color: #fff;
+}
+
+/* Category thumbnails on main page, CSS code inspired from MOD subcatify */
+.thumbnailCategories {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow: hidden;
+    width: 100%;
+}
+
+.thumbnailCategories li {
+    margin: 0;
+    padding: 0;
+    float: left;
+    width: 49.7%; /* 49.7% for 2 per line, 33.2% for 3 per line */
+}
+
+.thumbnailCategory {
+    display: block;
+    padding: 2px 0 0 2px;
+    margin: 5px;
+}
+
+.thumbnailCategory .description {
+    font-size: 90%;
+    overflow: auto;
+
+    /* width: inherit; */
+}
+
+.thumbnailCategory .description h3 {
+    text-align: left;
+    margin: 0;
+    padding: 0.1em;
+    font-size: 120%;
+}
+
+.thumbnailCategory .description p {
+    margin: 0;
+}
+
+.illustration {
+    /* also used by comment lists */
+    text-align: left;
+    margin: 2px 0 0 2px;
+    float: left;
+}
+
+/* Loader gif new in 2.5 */
+.loader {
+    display: none;
+    position: fixed;
+    right: 0;
+    bottom: 0;
+}
+
+/* User comments */
+#comments {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.commentsList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow: hidden;
+    width: 100%;
+}
+
+.commentElement {
+    border-radius: 5px;
+    margin: 5px;
+    padding: 2px 0 0 2px;
+    float: left;
+    width: 99%;
+}
+
+.commentElement .description {
+    overflow: auto;
+
+    /* width: inherit; */
+}
+
+/* Thumbnails */
+
+/* Thumbnail "elastic" layout */
+.thumbnails {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-align: center; /* to center the whole collection in .content */
+}
+
+.thumbnails li {
+    display: inline;
+}
+
+.thumbnails .wrap1 {
+    margin: 0 7px 5px;
+    display: table-cell;
+    display: inline-table;
+    display: inline-block; /* Why 3 display option ??? */
+    vertical-align: top; /* OK with Opera and IE6 not Geko */
+    text-align: center; /* to center the thumbnail and legend in Geko/Opera */
+}
+
+.thumbnails .wrap2 {
+    margin: 0; /* important reset the margins */
+    display: table-cell; /* block prevents vertical-align here */
+    vertical-align: middle; /* Ok with Opera and Geko not IE6 */
+    border-radius: 4px; /* round corners with CSS3 compliant browsers */
+}
+
+.thumbnails .wrap2 a {
+    display: block;
+    border-bottom: 0;
+}
+
+.thumbnails img {
+    vertical-align: middle;
+    max-width: 100%;
+}
+
+.thumbnails span.thumbLegend {
+    overflow: hidden; /* oversized legend is clipped */
+    display: block; /* display: none; if you don't want legend */
+    height: 4em; /* legend height (don't set auto to be Gecko friendly) */
+}

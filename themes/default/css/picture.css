@@ -1,0 +1,140 @@
+/**
+ * Picture
+ */
+#imageHeaderBar {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    overflow: hidden;
+    width: 100%;
+}
+
+#imageHeaderBar .browsePath {
+    float: left;
+    margin-left: 10px;
+}
+
+#imageToolBar .imageNumber {
+    float: right;
+    margin: -20px 9px 0 0;
+}
+
+#imageHeaderBar h2 {
+    display: inline;
+    text-align: center;
+    padding: 0;
+}
+
+#imageToolBar {
+    text-align: center;
+    margin-bottom: 2px;
+    padding: 0;
+    height: 28px;
+}
+
+#imageToolBar .actionButtons {
+    float: left;
+}
+
+#imageToolBar .navigationButtons {
+    float: right;
+}
+
+#imageToolBar .pwg-button {
+    width: 42px;
+}
+
+.switchBox {
+    padding: 0.5em 5px;
+    border-radius: 4px;
+    z-index: 100;
+    text-align: left;
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0; /* left, right set through js */
+}
+
+.switchBoxTitle {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+}
+
+#downloadSwitchBox ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+#theImage {
+    text-align: center;
+}
+
+#imageInfos {
+    position: relative; /* for IE7 positioning of "who can see this photo" */
+    min-height: 120px;
+}
+
+#linkPrev {
+    float: left;
+    margin: 5px 10px 0 5px;
+}
+
+#linkNext {
+    float: right;
+    margin: 5px 5px 0 10px;
+    text-align: right;
+}
+
+#linkPrev img.svgImg,
+#linkNext img.svgImg {
+    width: 50px;
+    height: 50px;
+}
+
+div.thumbHover {
+    /* only first & last holders are divs */
+    width: 108px;
+    height: 118px;
+    border: 1px solid gray;
+    padding: 0 5px;
+    line-height: 1.2;
+}
+
+.imageInfoTable ul {
+    /* this is the album list */
+    margin: 0;
+    padding: 0 0 0 1em;
+    list-style-type: square;
+}
+
+.rateButton,
+.rateButtonSelected,
+.rateButtonStarFull,
+.rateButtonStarEmpty {
+    padding: 0;
+    border: 0;
+    color: inherit;
+    background-color: transparent !important; /* Konqueror doesn't accept transparent here */
+}
+
+.rateButton,
+.rateButtonStarFull,
+.rateButtonStarEmpty {
+    cursor: pointer;
+}
+
+.rateButtonSelected {
+    font-weight: bold;
+    font-size: 120%;
+}
+
+.rateButtonStarFull {
+    background: url("../icon/rating-stars.gif") no-repeat -16px center;
+    width: 16px;
+}
+
+.rateButtonStarEmpty {
+    background: url("../icon/rating-stars.gif") no-repeat 0 center;
+    width: 16px;
+}

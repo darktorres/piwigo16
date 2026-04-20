@@ -1,17 +1,5 @@
 /* Tables & forms */
 
-select,
-textarea {
-    color: #999;
-    background-color: #666;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-    background-color: #444; /* whitesmoke */
-}
-
 /* some theme set a border on INPUT  which is not pretty for radio/checkbox */
 input[type="radio"],
 input[type="checkbox"] {

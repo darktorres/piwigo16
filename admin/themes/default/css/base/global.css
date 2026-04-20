@@ -1,0 +1,90 @@
+/* Admin global theme rules driven by CSS custom properties */
+
+html,
+body {
+    min-height: 100%;
+    height: 100%;
+    background-color: var(--admin-bg-page);
+}
+
+body,
+h3,
+dt,
+h2,
+.throw,
+.content,
+label {
+    color: var(--admin-text);
+}
+
+th {
+    color: var(--admin-text-th);
+}
+
+legend {
+    color: var(--admin-text-legend);
+}
+
+.showInfo {
+    color: var(--admin-text-muted);
+}
+
+.showInfo:hover {
+    color: var(--admin-text);
+}
+
+a {
+    color: var(--admin-link);
+}
+
+a:hover,
+a:active {
+    color: var(--admin-link-hover);
+    cursor: pointer;
+}
+
+h3,
+.row2 {
+    background-color: var(--admin-bg-row2);
+}
+
+.throw,
+.row1 {
+    background-color: var(--admin-bg-row1);
+}
+
+#content {
+    background-color: var(--admin-bg-content);
+}
+
+input,
+select,
+textarea {
+    color: var(--admin-text-input);
+    background-color: var(--admin-bg-input);
+    border: 1px solid var(--admin-border-input);
+}
+
+option[disabled] {
+    background-color: var(--admin-bg-input);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    background-color: var(--admin-bg-input-focus);
+    color: var(--admin-text-input);
+}
+
+.menuLi {
+    background: var(--admin-bg-surface);
+}
+
+.menuLi_hidden {
+    background: var(--admin-bg-surface);
+}
+
+.ui-tooltip {
+    background-color: var(--admin-tooltip-bg);
+    color: var(--admin-tooltip-color);
+}

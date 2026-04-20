@@ -14,17 +14,17 @@ ul.jqtree-tree ul.jqtree_common {
 }
 
 ul.jqtree-tree span.jqtree-border {
-    border: solid 2px #ffbd4d !important;
+    border: var(--admin-jqtree-highlight) !important;
     width: 98%;
 }
 
 ul.jqtree-tree li.jqtree-ghost span.jqtree-circle {
-    border: solid 2px #ffbd4d !important;
+    border: var(--admin-jqtree-highlight) !important;
     margin: 0 !important;
 }
 
 ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
-    background-color: #ffbd4d !important;
+    background-color: var(--admin-jqtree-highlight) !important;
     position: relative !important;
     height: 2px !important;
     margin: 0 !important;

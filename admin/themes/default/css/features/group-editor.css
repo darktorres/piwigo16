@@ -102,8 +102,8 @@
 }
 
 .jconfirmAlert .jconfirm-icon-c i {
-    color: #0a0 !important;
-    background-color: #c2f5c2 !important;
+    color: var(--admin-action-success-color) !important;
+    background-color: var(--admin-action-success-bg) !important;
 }
 
 .jconfirmWarning .jconfirm-icon-c i {

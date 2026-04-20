@@ -27,6 +27,23 @@
     --admin-tooltip-color: #eee;
     --admin-shadow-card: -1px 1px 2px #1a1a1a;
     --admin-shadow-surface: 0 2px #00000070;
+    --admin-bg-lifted: #555;
+    --admin-bg-field: #252525;
+    --admin-action-success-color: #c2f5c2;
+    --admin-action-success-bg: #0a0;
+    --admin-action-success-border: #a9f6e3;
+    --admin-action-error-color: #ffd5dc;
+    --admin-action-error-bg: #f22;
+    --admin-accent-selected-bg: #f9852c;
+    --admin-accent-selected-deep: #c76a23;
+    --admin-accent-selected-text: #faa96b;
+    --admin-text-on-accent: white;
+    --admin-text-success: #a9f6e3;
+    --admin-disabled-color: #373737;
+    --admin-disabled-bg: #5d5d5d;
+    --admin-jqtree-highlight: #ededed;
+    --admin-tooltip-arrow: #333;
+    --admin-pagination-hover-bg: #888;
 }
 
 h2 {
@@ -174,29 +191,12 @@ ul.actions,
     color: #8d8d8d;
 }
 
-.search-input {
-    background-color: #333 !important;
-}
-
 .search-input:hover {
     background-color: #222 !important;
 }
 
-.pagination-per-page {
-    background-color: #555;
-}
-
-.pagination-per-page span {
-    color: #c1c1c1;
-}
-
-.pagination-per-page a {
-    color: #c1c1c1;
-}
-
 .pagination-per-page a:hover {
-    background-color: #888;
-    color: #444;
+color: #444;
 }
 
 .selected-pagination {
@@ -445,10 +445,6 @@ input[type="reset"]:disabled {
     color: transparent;
 }
 
-.stat-box {
-    color: #777;
-}
-
 a.stat-box:hover {
     color: #aeaeae;
 }
@@ -462,25 +458,12 @@ a.stat-box:hover {
     background-color: #555;
 }
 
-.chart-title {
-    color: #777;
-}
-
 .intro-charts .tooltip {
-    background-color: #333;
-    box-shadow: none;
-}
-
-.intro-charts .tooltip::after {
-    border-color: transparent transparent #333;
+box-shadow: none;
 }
 
 .storage-tooltips .separated {
     background: #777;
-}
-
-.storage-tooltips .tooltip-arrow {
-    border-color: transparent transparent #333;
 }
 
 .storage-tooltips .tooltip-arrow.bottom {
@@ -640,15 +623,6 @@ a.stat-box:hover {
     color: #aaa;
 }
 
-.groupError {
-    color: #ffd5dc;
-    background-color: #f22;
-}
-
-.group-rename input {
-    color: #999;
-}
-
 .GroupBackgroundSelected .Group-name {
     color: #333 !important;
 }
@@ -703,10 +677,6 @@ a.stat-box:hover {
 #batchManagerGlobal #applyFilter:hover {
     color: white;
     background-color: #ffc17e;
-}
-
-#batchManagerGlobal #filterList li {
-    background-color: #3c3c3c;
 }
 
 #batchManagerGlobal legend {
@@ -774,8 +744,7 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 }
 
 .move-cat-action a:hover {
-    color: #777;
-    background: #111;
+background: #111;
 }
 
 .disabledToggle .move-cat-toggler {
@@ -905,9 +874,7 @@ label > p.group_select {
 }
 
 #addGroupNameInput {
-    color: #999;
-    background-color: #252525 !important;
-    border: none !important;
+border: none !important;
     outline: none;
 }
 
@@ -962,8 +929,7 @@ label > p.group_select {
 }
 
 .UserListPopInContainer {
-    background-color: #444;
-    border-radius: 10px;
+border-radius: 10px;
 }
 
 #UserList .AddUserBlock button {
@@ -1130,8 +1096,7 @@ input:focus + .slider {
 
 .Tooltip p.TooltipText {
     color: #f3f3f3;
-    background-color: #3c3c3c;
-    border: 1px solid #f3f3f3;
+border: 1px solid #f3f3f3;
 }
 
 .ValidationUserAssociated,
@@ -1167,10 +1132,6 @@ input:focus + .slider {
 .userSeparator {
     color: #666;
     visibility: hidden;
-}
-
-.GuestUserListPopInContainer {
-    background-color: #444 !important;
 }
 
 .user_form_popin .ui-slider-horizontal .ui-slider-handle {
@@ -1346,8 +1307,7 @@ li.plupload_delete a:hover {
 
 .addAlbum form input {
     color: #777 !important;
-    background-color: #252525 !important;
-    border: none !important;
+border: none !important;
 }
 
 .addAlbum form input::placeholder {
@@ -1406,7 +1366,6 @@ li.plupload_delete a:hover {
 
 .cat-modify-footer {
     border-color: rgb(0, 0, 0, 0.2);
-    background: #444;
 }
 
 .cat-modify-actions a:hover .cat-modify-actions .toggle-comment-option:hover {
@@ -1419,8 +1378,7 @@ li.plupload_delete a:hover {
 }
 
 .cat-modify-input-container #cat-parent {
-    background: #333;
-    box-shadow: 0 2px #00000024;
+box-shadow: 0 2px #00000024;
 }
 
 .albumActions a:hover span {
@@ -1611,11 +1569,6 @@ li.plupload_delete a:hover {
     color: #777 !important;
 }
 
-.jconfirmAlert .jconfirm-icon-c i {
-    color: #c2f5c2 !important;
-    background-color: #0a0 !important;
-}
-
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-default {
     color: #777 !important;
     background-color: #222 !important;
@@ -1649,13 +1602,8 @@ li.plupload_delete a:hover {
     background-color: #222 !important;
 }
 
-.tag-header .selection-controller p {
-    color: #c1c1c1;
-}
-
 .tag-container.selection .tag-box[data-selected="1"] {
-    background-color: #f9852c !important;
-    box-shadow: none;
+box-shadow: none;
 }
 
 .tag-container .tag-box[data-selected="1"] .select-checkbox,
@@ -1665,9 +1613,7 @@ li.plupload_delete a:hover {
 }
 
 .tag-container .tag-box .tag-rename .tag-name-editable {
-    background-color: #666;
-    color: white;
-    border-color: #333;
+border-color: #333;
 }
 
 .tag-container .tag-box .tag-rename span {
@@ -1697,12 +1643,7 @@ li.plupload_delete a:hover {
 }
 
 .cat-move-order-popin .order-popin-container {
-    background-color: #444;
-    color: white;
-}
-
-.cat-move-order-popin .album-name {
-    color: white;
+color: white;
 }
 
 .search-album-ghost div {
@@ -1774,8 +1715,7 @@ li.plupload_delete a:hover {
 }
 
 .pluginTypeFilter label {
-    color: #c1c1c1;
-    background: #555;
+background: #555;
     box-shadow: 0 2px #0006;
 }
 
@@ -1863,19 +1803,6 @@ li.plupload_delete a:hover {
     background-color: #0a0;
 }
 
-.PluginActionError span {
-    color: #ffd5dc;
-}
-
-.PluginActionError label {
-    background-color: #f22;
-    color: #ffd5dc;
-}
-
-.pluginTags > span {
-    background-color: #444;
-}
-
 .pluginLink {
     color: #999;
 }
@@ -1941,10 +1868,6 @@ li.plupload_delete a:hover {
     background-color: #222 !important;
 }
 
-.user-container {
-    background-color: #333;
-}
-
 .user-first-col:hover {
     box-sizing: border-box;
     background-color: #d47f44;
@@ -1971,10 +1894,6 @@ li.plupload_delete a:hover {
     background-color: #c76a23 !important;
 }
 
-.user-container.container-selected {
-    background-color: #f9852c;
-}
-
 .user-container.container-selected .user-container-username {
     color: #333;
 }
@@ -1985,9 +1904,7 @@ li.plupload_delete a:hover {
 }
 
 .user-container.container-selected .user-container-initials-wrapper > span {
-    background-color: #c76a23;
-    color: #faa96b;
-    border: solid #c76a23 2px;
+border: solid #c76a23 2px;
 }
 
 .user-container.container-selected .user-groups,
@@ -2021,11 +1938,6 @@ li.plupload_delete a:hover {
     background: transparent;
 }
 
-.user-property-select {
-    background-color: #333;
-    color: #c1c1c1;
-}
-
 .UserListPopInContainer {
     background-color: #444;
 }
@@ -2033,11 +1945,6 @@ li.plupload_delete a:hover {
 .user-property-column-title,
 .edit-username-title {
     color: #c1c1c1;
-}
-
-.user-property-button {
-    color: #c1c1c1;
-    background-color: #333;
 }
 
 .user-property-button a {
@@ -2052,30 +1959,8 @@ li.plupload_delete a:hover {
     
 }
 
-.user-property-input {
-    color: #c1c1c1;
-    background-color: #333;
-}
-
-.user-property-input[type="text"] {
-    background-color: #333;
-}
-
 .user-property-group .selectize-input.items {
     background-color: transparent;
-}
-
-.user-property-register-visit .icon-calendar {
-    color: #c1c1c1;
-}
-
-.delete-user-button {
-    color: #c1c1c1;
-    background-color: #333;
-}
-
-.slider-bar-wrapper .ui-slider-horizontal {
-    background-color: #666;
 }
 
 .slider-bar-wrapper .ui-slider-horizontal .ui-slider-handle {
@@ -2086,10 +1971,6 @@ li.plupload_delete a:hover {
 .preferences-container,
 .properties-container {
     border-left: solid 1px #333;
-}
-
-.update-container {
-    border-top: solid 1px #333;
 }
 
 .user-property-input.user-property-input-username:hover {
@@ -2125,8 +2006,7 @@ li.plupload_delete a:hover {
 }
 
 .select-user {
-    background: #555;
-    box-shadow: 0 2px 4px #00000024;
+box-shadow: 0 2px 4px #00000024;
 }
 
 .select-user-title {
@@ -2161,8 +2041,7 @@ li.plupload_delete a:hover {
 }
 
 .download_csv {
-    background: #555;
-    color: #b8b8b8;
+color: #b8b8b8;
 }
 
 .download_csv:hover {
@@ -2206,17 +2085,8 @@ li.plupload_delete a:hover {
     border: solid 2px #151515;
 }
 
-#AddUserSuccess span {
-    color: #a9f6e3;
-}
-
 #AddUserSuccess label {
     background-color: #50a48f;
-    border-left: 2px solid #a9f6e3;
-    color: #a9f6e3;
-}
-
-.update-user-success {
     border-left: 2px solid #a9f6e3;
 }
 
@@ -2262,9 +2132,7 @@ li.plupload_delete a:hover {
 }
 
 .search-result-item {
-    background-color: #333;
-    box-shadow: 0 2px #00000070;
-    color: #777;
+color: #777;
 }
 
 .search-result-item .icon-plus-circled {
@@ -2276,8 +2144,7 @@ li.plupload_delete a:hover {
 }
 
 .search-line {
-    background: #333;
-    color: #a1a1a1;
+color: #a1a1a1;
 }
 
 .search-line .date-section,
@@ -2293,8 +2160,7 @@ li.plupload_delete a:hover {
 }
 
 .history-filter {
-    background: #333 !important;
-    color: #a1a1a1;
+color: #a1a1a1;
     box-shadow: 0 2px 4px #00000024;
 }
 
@@ -2344,34 +2210,12 @@ li.plupload_delete a:hover {
     background: #333;
 }
 
-.badge-dropdown::after {
-    border-color: transparent transparent #333;
-}
-
-.cat-modify-ariane a.icon-sitemap::after {
-    background-color: #111;
-}
-
 .cat-modify-footer-see-out.disabled {
     background: #5d5d5d !important;
-    color: #373737 !important;
 }
 
 .see-out.disabled p {
     background-color: #5d5d5d !important;
-    color: #373737 !important;
-}
-
-ul.jqtree-tree span.jqtree-border {
-    border: solid 2px #ededed !important;
-}
-
-ul.jqtree-tree li.jqtree-ghost span.jqtree-circle {
-    border: solid 2px #ededed !important;
-}
-
-ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
-    background-color: #ededed !important;
 }
 
 .jqtree-moving .move-cat-container {

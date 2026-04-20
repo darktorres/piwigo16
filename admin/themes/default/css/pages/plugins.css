@@ -360,7 +360,7 @@
 }
 
 .pluginTags > span {
-    background-color: #e0e0e0;
+    background-color: var(--admin-bg-content);
     border-radius: 10px;
     padding: 3px 10px;
     margin-right: 5px;
@@ -488,9 +488,9 @@
     width: auto;
     height: 30px;
     padding: 0 10px;
-    color: #898989;
-    background: #f3f3f3;
-    box-shadow: 0 2px #00000024;
+    color: var(--admin-text-legend);
+    background: var(--admin-bg-lifted);
+    box-shadow: var(--admin-shadow-surface);
     font-weight: 600;
 }
 
@@ -588,17 +588,17 @@
 .AddPluginSuccess label,
 .DeactivatePluginSuccess label,
 .RestorePluginSuccess label {
-    background-color: #c2f5c2;
-    color: #0a0;
+    background-color: var(--admin-action-success-bg);
+    color: var(--admin-action-success-color);
 }
 
 .PluginActionError span {
-    color: rgb(170, 0, 0);
+    color: var(--admin-action-error-color);
 }
 
 .PluginActionError label {
-    background-color: #f5c2c2;
-    color: rgb(170, 0, 0);
+    background-color: var(--admin-action-error-bg);
+    color: var(--admin-action-error-color);
 }
 
 .PluginOptionsBlock {
@@ -922,7 +922,7 @@ legend {
     padding: 10px;
     background-color: #c2f5c2;
     cursor: default;
-    color: #0a0;
+    color: var(--admin-action-success-color);
     border-radius: 30px;
 }
 

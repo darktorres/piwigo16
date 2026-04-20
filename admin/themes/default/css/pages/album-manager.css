@@ -19,7 +19,7 @@
 }
 
 .move-cat-container:hover {
-    background-color: #ffd7ad;
+    background-color: var(--admin-accent-selected-bg);
 }
 
 
@@ -173,7 +173,7 @@
 }
 
 .move-cat-action a:hover {
-    color: #000;
+    color: var(--admin-text);
     text-decoration: none;
     background: #f98100;
 }
@@ -191,7 +191,7 @@
 }
 
 .cat-move-order-popin .order-popin-container {
-    background-color: #f3f3f3;
+    background-color: var(--admin-bg-content);
     border-radius: 10px;
     display: block;
     width: 25%;
@@ -219,7 +219,7 @@
 
 .cat-move-order-popin .album-name {
     font-size: 14px;
-    color: #3c3c3c;
+    color: var(--admin-text-on-accent);
     font-weight: 600;
     text-align: center;
 }

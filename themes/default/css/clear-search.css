@@ -1,4 +1,5 @@
 /* Search — clear colorscheme variables */
+
 /* !important below overrides mcs-search plugin CSS */
 :root {
     --search-icon-color: #474747;

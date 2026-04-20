@@ -1,9 +1,6 @@
+{combine_css path='admin/themes/default/css/pages/help.css' order=-10}
 {if not $ENABLE_SYNCHRONIZATION}
-    {html_style}<style>
-        #helpSynchro {
-            display: none;
-        }
-    </style>{/html_style}
+    
 {/if}
 
 <h2>{'Help'|translate} &raquo; {$HELP_SECTION_TITLE}</h2>

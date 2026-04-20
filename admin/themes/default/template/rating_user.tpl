@@ -1,34 +1,7 @@
+{combine_css path='admin/themes/default/css/pages/rating_user.css' order=-10}
 
 {combine_css path='node_modules/datatables.net-dt/css/dataTables.dataTables.css'}
-{html_style}<style>
-
-	.dtBar {
-		text-align: left;
-		padding: 10px 0 10px 20px
-	}
-
-	.dtBar DIV {
-		display: inline;
-		padding-right: 5px;
-	}
-
-	.dataTables_paginate A {
-		padding-left: 3px;
-	}
-
-	.ui-tooltip {
-		padding: 8px;
-		position: absolute;
-		z-index: 9999;
-		max-width: {3*$TN_WIDTH}px;
-		-webkit-box-shadow: 0 0 5px #aaa;
-		box-shadow: 0 0 5px #aaa;
-	}
-
-	body .ui-tooltip {
-		border-width: 2px;
-	}
-</style>{/html_style}
+{html_style}{/html_style}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 <form action="{$F_ACTION}" method="GET">

@@ -1,3 +1,4 @@
+{combine_css path='admin/themes/default/css/pages/intro.css' order=-10}
 {if $vite_intro}
 <script type="module" src="admin/themes/default/js/dist/{$vite_intro}"></script>
 {/if}
@@ -16,16 +17,6 @@
   "translate_files": "{'%d files'|translate|escape:javascript}"
 {rdelim}
 </script>
-
-{html_style}<style>
-  .eiw .messages ul li {
-    list-style-type: none !important;
-  }
-
-  .eiw .messages .eiw-icon {
-    margin-right: 10px !important;
-  }
-</style>{/html_style}
 
 <h2>{'Piwigo Administration'|translate}</h2>
 
@@ -217,7 +208,6 @@
   {if $ENABLE_SYNCHRONIZATION}
     <a href="{$U_QUICK_SYNC}" class="icon-exchange">{'Quick Local Synchronization'|translate}</a>
   {/if}
-
 
   {if isset($SUBSCRIBE_BASE_URL)}
     <br><span class="newsletter-subscription"><a href="{$SUBSCRIBE_BASE_URL}{$EMAIL}" id="newsletterSubscribe"

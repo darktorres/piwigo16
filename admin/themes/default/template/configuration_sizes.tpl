@@ -1,3 +1,4 @@
+{combine_css path='admin/themes/default/css/pages/configuration_sizes.css' order=-10}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_configuration_sizes}
@@ -8,42 +9,7 @@
 <script type="module" src="admin/themes/default/js/dist/{$vite_configuration}"></script>
 {/if}
 
-
-{html_style}<style>
-  .sizeEnable {
-    width: 50px;
-  }
-
-  .sizeEnable .icon-ok {
-    position: relative;
-    left: 2px;
-  }
-
-  .sizeEditForm {
-    margin: 0 0 10px 20px;
-  }
-
-  .sizeEdit {
-    display: none;
-  }
-
-  #sizesConf table {
-    margin: 0;
-  }
-
-  .showDetails {
-    padding: 0;
-  }
-
-  .sizeDetails {
-    display: none;
-    margin-left: 10px;
-  }
-
-  .sizeEditOpen {
-    margin-left: 10px;
-  }
-</style>{/html_style}
+{html_style}{/html_style}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

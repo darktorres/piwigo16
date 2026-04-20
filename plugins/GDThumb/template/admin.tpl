@@ -1,3 +1,4 @@
+{combine_css path='plugins/GDThumb/css/admin_page.css' order=-10}
 <div class="titrePage">
   <h2>GDThumb - {$GDTHUMB_VERSION}</h2>
   <div class="left-links">
@@ -117,16 +118,7 @@
 
 {combine_css path=$GDTHUMB_PATH|cat:"/css/admin.css"}
 {html_head}
-<style>
-  #generate_cache p.buttons {
-    margin-top: 0;
-  }
 
-  .content select {
-    width: 20.4em !important;
-    margin-right: 0.6em;
-  }
-</style>
 {/html_head}
 
 <script type="module" src="{$ROOT_URL}admin/themes/default/js/dist/{$vite_gdthumb_admin}"></script>

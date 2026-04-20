@@ -1,83 +1,7 @@
+{combine_css path='themes/modus/css/modus_admin.css' order=-10}
 {include file='inc/colorbox.inc.tpl'}
 {combine_script id='nouislider' load='footer' path='node_modules/nouislider/dist/nouislider.min.js'}
 {combine_css path='node_modules/nouislider/dist/nouislider.min.css'}
-
-{html_style}<style>
-  .graphicalCheckbox {
-    font-size: 16px;
-    line-height: 16px;
-  }
-
-  .graphicalCheckbox+input {
-    display: none;
-  }
-
-  #album_thumb_size {
-    width: 400px;
-    display: inline-block;
-    margin-right: 10px;
-  }
-
-  #album_square_thumbs {
-    margin-top: 5px;
-  }
-
-  .themeShot {
-    margin: 10px 0;
-  }
-
-  .themeShot img {
-    width: 280px;
-    border: 1px solid white;
-    margin: 0 15px;
-  }
-
-  .themeBox {
-    padding: 5px 5px 10px 5px;
-    background-color: #e5e5e5;
-    display: inline-table;
-  }
-
-  .themeBoxModusConfig {
-    text-align: center;
-    margin: 5px;
-    border-radius: 5px;
-    overflow: hidden;
-    box-shadow: none;
-    padding: 5px 5px 10px 5px;
-    background-color: #e5e5e5;
-    display: inline-table;
-    position: relative;
-    height: 192px;
-  }
-
-  .themeNameModusConfig {
-    color: black;
-    margin: 5px 0;
-    position: relative;
-  }
-
-  .themeDefault {
-    background-color: #333;
-  }
-
-  .themeDefault .themeNameModusConfig {
-    color: #fff;
-  }
-
-  .themeDefault a {
-    color: #aaa;
-  }
-
-  .fieldsetModusConfig {
-    border-top: 2px solid #ddd;
-  }
-
-  .legendModusConfig {
-    padding: 0 10px;
-  }
-</style>{/html_style}
-
 
 {footer_script}<script type="module">
   import { sprintf } from './admin/themes/default/js/dist/{$vite_common}';
@@ -137,7 +61,6 @@
 <h2>{'Modus theme config'|translate}</h2>
 
 <form method="post" action="" id="modus-config">
-
 
   <fieldset class="fieldsetModusConfig">
     <legend class="legendModusConfig">{'Skin'|translate}</legend>
@@ -206,7 +129,6 @@
       <b>{'Display page banner'|translate}</b>
     </label>
   </fieldset>
-
 
   {*
 <fieldset><legend>Full row thumbnail layout</legend>

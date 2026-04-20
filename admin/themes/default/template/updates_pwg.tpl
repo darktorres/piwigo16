@@ -1,3 +1,4 @@
+{combine_css path='admin/themes/default/css/pages/updates_pwg.css' order=-10}
 {footer_script}<script>
   document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('input[name="submit"]').forEach(function(btn) {
@@ -18,52 +19,7 @@
 </script>{/footer_script}
 
 {html_head}
-<style>
-  form {
-    width: 750px;
-  }
 
-  fieldset {
-    padding-bottom: 30px;
-  }
-
-  p,
-  form p {
-    text-align: left;
-    margin-left: 20px;
-  }
-
-  li {
-    margin: 5px;
-  }
-
-  .badge-release {
-    padding: 5px 10px;
-    border-radius: 5px;
-  }
-
-  a.badge-release:hover {
-    text-decoration: none;
-    color: currentColor;
-  }
-
-  .goto-update-page {
-    padding: 5px 10px;
-    font-weight: bold;
-  }
-
-  .goto-update-page:hover {
-    text-decoration: none;
-  }
-
-  .update-recommendation {
-    margin-top: 30px;
-  }
-
-  p.release .errors {
-    margin: 0
-  }
-</style>
 {/html_head}
 
 {if isset($MINOR_RELEASE_PHP_REQUIRED) and isset($MAJOR_RELEASE_PHP_REQUIRED)}

@@ -1,12 +1,7 @@
+{combine_css path='admin/themes/default/css/pages/menubar.css' order=-10}
 {if $vite_menubar}
 <script type="module" src="admin/themes/default/js/dist/{$vite_menubar}"></script>
 {/if}
-
-{html_style}<style>
-  .font-checkbox i {
-    margin-left: 5px;
-  }
-</style>{/html_style}
 
 <form id="menuOrdering" action="{$F_ACTION}" method="post">
   <ul class="menuUl">

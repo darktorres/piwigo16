@@ -1,3 +1,4 @@
+{combine_css path='plugins/TakeATour/css/tour_privacy.css' order=-10}
 {footer_script require='jquery.bootstrap-tour'}<script>
   var tour = new Tour({
     name: "privacy",
@@ -181,12 +182,3 @@
     });
   });
 </script>{/footer_script}
-{html_style}<style>
-  #step-21 {
-    max-width: 476px;
-  }
-
-  #step-22 {
-    max-width: 376px;
-  }
-</style>{/html_style}

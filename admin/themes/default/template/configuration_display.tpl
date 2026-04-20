@@ -1,23 +1,9 @@
+{combine_css path='admin/themes/default/css/pages/configuration_display.css' order=-10}
 {if $vite_configuration}
 <script type="module" src="admin/themes/default/js/dist/{$vite_configuration}"></script>
 {/if}
 
-{html_style}<style>
-  /*
-.adminOnlyIcon::before {
-  content:"(";
-}
-.adminOnlyIcon::after {
-  content:")";
-}
-*/
-  .adminOnlyIcon {
-    background-color: #ddd;
-    padding: 2px 5px;
-    border-radius: 5px;
-    font-size: 90%;
-  }
-</style>{/html_style}
+{html_style}{/html_style}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

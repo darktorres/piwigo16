@@ -1,13 +1,5 @@
-{html_style}<style>
-  .graphicalCheckbox {
-    font-size: 16px;
-    line-height: 16px;
-  }
+{combine_css path='plugins/AdminTools/template/admin.css' order=-10}
 
-  .graphicalCheckbox+input {
-    display: none;
-  }
-</style>{/html_style}
 
 {footer_script}<script type="module" src="{$ROOT_URL}admin/themes/default/js/dist/{$vite_at_admin}"></script>{/footer_script}
 

@@ -1,16 +1,7 @@
+{combine_css path='themes/bootstrap_darkroom/css/stuffs_lastcoms.css' order=-10}
 {if !empty($block.MAX_WIDTH) or !empty($block.MAX_HEIGHT) or !empty($block.NB_COMMENTS_LINE)}
     {html_head}
-    <style>
-        {if !empty($block.MAX_WIDTH)}
-            .stuffs #comments img { max-width:{$block.MAX_WIDTH}px; }
-        {/if}
-        {if !empty($block.MAX_HEIGHT)}
-            .stuffs #comments img { max-height:{$block.MAX_HEIGHT}px; }
-        {/if}
-        {if !empty($block.NB_COMMENTS_LINE)}
-            .stuffs #comments li { width:{$block.NB_COMMENTS_LINE} !important; }
-        {/if}
-    </style>
+    
     {/html_head}
 {/if}
 

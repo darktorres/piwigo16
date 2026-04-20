@@ -1,3 +1,4 @@
+{combine_css path='themes/bootstrap_darkroom/css/add_photos.css' order=-10}
 {combine_script id='dropzone' load='footer' path='node_modules/dropzone/dist/dropzone.js'}
 
 {combine_css path='node_modules/dropzone/dist/basic.css'}
@@ -201,7 +202,6 @@
       shadow: '#fff',
       fallback: 'force'
     });
-
 
     var pwg_token = '{$pwg_token}';
     var photosUploaded_label = "{'%d photos uploaded into album "%s"'|translate|escape}";
@@ -421,233 +421,6 @@
   });
 </script>{/footer_script}
 
-<style>
-  /*
-#photosAddContent form p {
-  text-align:left;
-}
-
-#photosAddContent FIELDSET {
-  width:650px;
-  margin:20px auto;
-}
-*/
-
-  #photosAddContent fieldset#photoProperties {
-    padding-bottom: 0
-  }
-
-  #photosAddContent fieldset#photoProperties p {
-    text-align: left;
-    margin: 0 0 1em 0;
-    line-height: 20px;
-  }
-
-  #photosAddContent fieldset#photoProperties input[type="text"] {
-    width: 320px
-  }
-
-  #photosAddContent fieldset#photoProperties textarea {
-    width: 500px;
-    height: 100px
-  }
-
-  #photosAddContent P {
-    margin: 0;
-  }
-
-  p#uploadWarningsSummary {
-    text-align: left;
-    margin-bottom: 1em;
-    font-size: 90%;
-    color: #999;
-    line-height: 2.5em
-  }
-
-  p#uploadWarningsSummary .showInfo {
-    position: static;
-    display: inline;
-    padding: 1px 6px;
-    margin-left: 3px;
-  }
-
-  p#uploadWarnings {
-    display: none;
-    text-align: left;
-    margin-bottom: 1em;
-    font-size: 90%;
-    color: #999;
-  }
-
-  p#uploadModeInfos {
-    text-align: left;
-    margin-top: 1em;
-    font-size: 90%;
-    color: #999;
-  }
-
-  #photosAddContent p.showFieldset {
-    text-align: left;
-    margin: 0 auto 10px auto;
-  }
-
-  #uploadProgress {
-    width: 650px;
-    margin: 10px auto;
-    font-size: 90%;
-  }
-
-  #progressbar {
-    border: 1px solid #ccc;
-    background-color: #eee;
-  }
-
-  .ui-progressbar-value {
-    background-image: url(admin/themes/default/images/pbar-ani.gif);
-    height: 10px;
-    margin: -1px;
-    border: 1px solid #E78F08;
-  }
-
-  /* Upload Form */
-  .plupload_header {
-    display: none;
-  }
-
-  #uploadForm .plupload_container {
-    padding: 0
-  }
-
-  #uploadForm .plupload_scroll .plupload_filelist {
-    height: 250px;
-  }
-
-  #uploadForm li.plupload_droptext {
-    line-height: 230px;
-    font-size: 2em;
-  }
-
-  #uploadBoxes .file {
-    margin-bottom: 5px;
-    text-align: left;
-  }
-
-  #uploadBoxes {
-    margin-top: 20px;
-  }
-
-  #addUploadBox {
-    margin-bottom: 2em;
-  }
-
-  p.uploadInfo {
-    text-align: left;
-    font-size: 90%;
-    color: #999;
-  }
-
-  p#uploadWarningsSummary {
-    text-align: left;
-    margin-bottom: 1em;
-    font-size: 90%;
-    color: #999;
-  }
-
-  p#uploadWarningsSummary .showInfo {
-    margin-left: 3px;
-  }
-
-  p#uploadWarnings {
-    display: none;
-    text-align: left;
-    margin-bottom: 1em;
-    font-size: 90%;
-    color: #999;
-  }
-
-  p#uploadModeInfos {
-    text-align: left;
-    margin-top: 1em;
-    font-size: 90%;
-    color: #999;
-  }
-
-  #photosAddContent p.showFieldset {
-    text-align: left;
-    margin: 1em;
-  }
-
-  #uploadForm .plupload_buttons,
-  #uploadForm .plupload_progress {
-    display: none !important;
-  }
-
-  #uploadForm #startUpload {
-    margin: 5px 0 15px 15px;
-    padding: 5px 10px;
-    font-size: 1.1em;
-  }
-
-  #uploadForm #startUpload:before {
-    margin-right: 0.5em;
-  }
-
-  #uploadForm #addFiles {
-    margin-right: 10px;
-    float: left;
-  }
-
-  #uploadForm #uploadingActions {
-    margin: 10px 10px 10px 15px;
-  }
-
-  #uploadForm .big-progressbar {
-    vertical-align: middle;
-    display: inline-block;
-    margin-left: 10px;
-  }
-
-  .big-progressbar {
-    width: 100%;
-    max-width: 600px;
-    background: #fff;
-    padding: 0;
-    border-radius: 5px;
-    position: relative;
-    height: 18px;
-  }
-
-  @keyframes animatedBackground {
-    from {
-      background-position: 0 0;
-    }
-
-    to {
-      background-position: 33px 0;
-    }
-  }
-
-  @-webkit-keyframes animatedBackground {
-    from {
-      background-position: 0 0;
-    }
-
-    to {
-      background-position: 33px 0;
-    }
-  }
-
-  .big-progressbar .progressbar {
-    height: 18px;
-    min-width: 5px;
-    background: #444;
-    border-radius: 5px 0 0 5px;
-    background-size: 33px 25px;
-    animation: animatedBackground 1s linear infinite;
-    -webkit-animation: animatedBackground 1s linear infinite;
-  }
-</style>
-
 <div id="photosAddContent" class="col-lg-8 col-md-10 col-sm-12 col-centered">
 
   <div class="infos" style="display:none"><i class="eiw-icon icon-ok"></i></div>
@@ -678,7 +451,6 @@
         <div class="hideButton" style="text-align:center"><a href="{$hide_warnings_link}">{'Hide'|translate}</a></div>
       </div>
     {/if}
-
 
     {if !empty($thumbnails)}
       <fieldset>

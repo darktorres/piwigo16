@@ -1,26 +1,13 @@
+{combine_css path='themes/smartpocket/css/search.css' order=-10}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {footer_script}<script type="module" src="{$ROOT_URL}admin/themes/default/js/dist/{$vite_gallery_search}"></script>{/footer_script}
-
-{html_style}<style>
-  .ui-checkbox,
-  .ui-radio,
-  .ui-btn-text {
-    z-index: 0;
-  }
-
-  .form-actions {
-    margin-top: 3em;
-    margin-bottom: 3em;
-  }
-</style>{/html_style}
 
 {include file='infos_errors.tpl'}
 <div>
   <ul>
     <li class="sp-divider">{'Search'|translate}</li>
   </ul>
-
 
   <form class="filter" method="post" name="search" action="{$F_SEARCH_ACTION}">
     <fieldset>
@@ -90,7 +77,6 @@
       <input type="checkbox" name="subcats-included" value="1" checked="checked" id="subcats-included">
       <label for="subcats-included">{'Search in sub-albums'|translate}</label>
     </fieldset>
-
 
     <div class="form-actions">
       <input class="submit" type="submit" name="submit" value="{'Submit'|translate}">

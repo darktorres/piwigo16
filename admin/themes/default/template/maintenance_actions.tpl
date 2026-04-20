@@ -1,3 +1,4 @@
+{combine_css path='admin/themes/default/css/pages/maintenance.css' order=-10}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
@@ -113,81 +114,3 @@
   </fieldset>
 
 {/if}
-<style>
-  #label-delete-size-checkbox {
-    font-weight: bold;
-    white-space: nowrap;
-  }
-
-  .maintenance-action:hover {
-    color: #ff7700;
-    text-decoration: none;
-  }
-
-  .maintenance-action {
-    border: solid 1px;
-    padding: 8px 10px;
-    margin-right: 20px;
-    margin-bottom: 20px;
-  }
-
-  .maintenance-action.icon-th-list {
-    font-size: 13px;
-  }
-
-  .delete-size-checks {
-    display: flex;
-    text-align: left;
-    margin-bottom: 5px;
-
-    flex-direction: column;
-  }
-
-  .delete-check-container {
-    display: flex;
-    flex-wrap: wrap;
-    margin-top: 15px;
-  }
-
-  .delete-size-check {
-    margin-right: 15px;
-    margin-bottom: 10px;
-    display: flex;
-    cursor: pointer
-  }
-
-  .select-checkbox {
-    display: inline-block;
-  }
-
-  .delete-sizes {
-    display: block;
-    width: max-content;
-    text-align: left;
-  }
-
-  .delete-sizes {
-    cursor: pointer;
-    padding: 8px 10px;
-    font-weight: bold;
-    background-color: #ffa744;
-    color: #3c3c3c;
-  }
-
-  .delete-sizes:hover {
-    background-color: #ff7700;
-    color: #3c3c3c;
-    text-decoration: none;
-  }
-
-  .rotate-anim {
-    animation: spin 4s linear infinite;
-  }
-
-  @keyframes spin {
-    100% {
-      -webkit-transform: rotate(360deg);
-      transform: rotate(360deg);
-    }
-  }
-</style>

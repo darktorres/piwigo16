@@ -1,3 +1,4 @@
+{combine_css path='admin/themes/default/css/pages/cat_search.css' order=-10}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {if $vite_cat_search}
@@ -42,10 +43,3 @@
   {'No albums found'|translate}
 </div>
 
-<style>
-  .limit-album-reached {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-</style>

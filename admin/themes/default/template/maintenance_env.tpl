@@ -1,3 +1,4 @@
+{combine_css path='admin/themes/default/css/pages/maintenance.css' order=-10}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10}
 {* order 10 is required, see issue 1080 *}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
@@ -51,23 +52,3 @@
   </ul>
 </fieldset>
 
-<style>
-  .cache-size-value {
-    background: transparent;
-    padding: 0;
-  }
-
-  .cache-size-text,
-  .cache-size-value {
-    font-size: 13px;
-  }
-
-  .cache-lastCalculated-text,
-  .cache-lastCalculated-value {
-    font-size: 10px;
-  }
-
-  .badge-number {
-    color: white;
-  }
-</style>

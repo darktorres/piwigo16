@@ -1,0 +1,143 @@
+/* Upload Form */
+.plupload_header {
+    display: none;
+}
+
+#uploadForm .plupload_container {
+    padding: 0;
+}
+
+#uploadForm .plupload_scroll .plupload_filelist {
+    height: 250px;
+    overflow-y: hidden;
+}
+
+#uploadForm li.plupload_droptext {
+    line-height: 230px;
+    font-size: 2em;
+}
+
+#uploadBoxes .file {
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+#uploadBoxes {
+    margin-top: 20px;
+}
+
+#addUploadBox {
+    margin-bottom: 2em;
+}
+
+p.uploadInfo {
+    text-align: left;
+}
+
+p#uploadWarningsSummary {
+    text-align: left;
+}
+
+p#uploadWarningsSummary .showInfo {
+    margin-left: 3px;
+}
+
+p#uploadWarnings {
+    display: none;
+    text-align: left;
+    margin-bottom: 1em;
+    font-size: 90%;
+    color: #999;
+}
+
+p#uploadModeInfos {
+    text-align: left;
+    margin-top: 1em;
+    font-size: 90%;
+    color: #999;
+}
+
+#photosAddContent p.showFieldset {
+    text-align: left;
+    display: none !important; /* js-toggled */
+}
+
+a#showPermissions {
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 35px;
+}
+
+a#showPermissions:hover {
+    text-decoration: none;
+}
+
+#uploadForm .plupload_buttons,
+#uploadForm .plupload_progress {
+    display: none !important; /* js-toggled */
+}
+
+#uploadForm #startUpload {
+    margin: 5px 0 15px 25px;
+    padding: 8px 10px;
+    font-size: 1.1em;
+}
+
+#uploadForm #startUpload::before {
+    margin-right: 0.5em;
+}
+
+#uploadForm #addFiles {
+    margin-right: 10px;
+    float: left;
+    height: 45.6px;
+}
+
+#uploadForm #uploadingActions {
+    margin: 10px 10px 10px 15px;
+}
+
+#uploadForm .big-progressbar {
+    vertical-align: middle;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.big-progressbar {
+    width: 100%;
+    max-width: 90%;
+    padding: 0;
+    border-radius: 15px;
+    position: relative;
+    height: 8px;
+}
+
+@keyframes animatedBackground {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 33px 0;
+    }
+}
+
+@keyframes animatedBackground {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 33px 0;
+    }
+}
+
+.big-progressbar .progressbar {
+    height: 8px;
+    min-width: 5px;
+    background: #ffbd4d;
+    border-radius: 5px 0 0 5px;
+    background-size: 33px 25px;
+}
+

@@ -1,0 +1,81 @@
+/* Dropdown */
+
+.dropdown {
+    z-index: 100;
+    padding: 5px 0;
+    border-radius: 10px;
+    background: linear-gradient(130deg, #f70 0%, #ffa744 100%);
+    color: white;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.dropdown::after {
+    content: " ";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #f70;
+}
+
+#catOptionsSmall.dropdown::after {
+    content: " ";
+    position: absolute;
+    bottom: 15%;
+    left: 103%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #ffa33e;
+    transform: rotate(90deg);
+}
+
+.dropdown-content {
+    position: relative;
+}
+
+.dropdown-option {
+    white-space: nowrap;
+    display: block;
+    text-align: initial;
+    padding: 5px 10px;
+    font-size: 13px;
+    padding-right: 15px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.dropdown-option-content {
+    white-space: nowrap;
+    display: block;
+    text-align: initial;
+    padding: 5px 10px;
+    font-size: 13px;
+    padding-right: 15px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.dropdown-option:hover {
+    text-decoration: none;
+    color: white;
+    background-color: #00000012;
+}
+
+.badge-number {
+    border-radius: 20px;
+    background-color: #777;
+    font-size: 16px;
+    margin-left: 10px;
+    font-weight: 700;
+    position: absolute;
+    transform: translateY(3px);
+    text-align: center;
+    color: #ccc;
+    padding: 0 7px;
+}
+

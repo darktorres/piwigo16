@@ -1,0 +1,58 @@
+/* local-layout */
+
+/* You can modify this file */
+
+/* Maintenance */
+
+.template-purge {
+    height: 100px;
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.cache-infos {
+    margin-bottom: 20px;
+}
+
+.cache-infos a {
+    margin-left: 10px;
+    font-size: 15px;
+}
+
+.cache-size-value {
+    background: #ddd;
+    padding: 1px 8px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.cache-size-text {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.cache-lastCalculated-text,
+.cache-lastCalculated-value {
+    font-weight: bold;
+}
+
+.multiple-pictures-sizes,
+.multiple-compiledTemplate-sizes {
+    background: #ddd;
+    padding: 1px 8px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #777;
+}
+
+.multiple-compiledTemplate-sizes {
+    margin-left: 10px;
+}
+
+.multiple-pictures-sizes {
+    margin-left: 10px;
+}
+

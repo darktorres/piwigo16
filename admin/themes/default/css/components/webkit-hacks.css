@@ -1,0 +1,16 @@
+/* Webkit Hacks  */
+@media screen and (min-device-pixel-ratio: 0) {
+    #tiptip_content {
+        padding: 4px 8px 5px;
+        background-color: rgb(45, 45, 45, 0.88);
+    }
+
+    #tiptip_holder.tip_bottom #tiptip_arrow_inner {
+        border-bottom-color: rgb(45, 45, 45, 0.88);
+    }
+
+    #tiptip_holder.tip_top #tiptip_arrow_inner {
+        border-top-color: rgb(20, 20, 20, 0.92);
+    }
+}
+

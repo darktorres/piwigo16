@@ -1,0 +1,81 @@
+/* thumbnails.css */
+ul.thumbnails {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-align: center; /* to center the whole collection in .content */
+    float: left;
+}
+
+ul.thumbnails li {
+    display: inline;
+}
+
+ul.thumbnails li.rank-of-image {
+    float: left;
+    background-color: #333;
+    color: #666;
+    border-radius: 5px;
+    display: block;
+    width: 120px;
+    height: 120px;
+    cursor: move;
+    margin: 4px;
+    overflow: hidden;
+}
+
+.clipwrapper {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    margin: 3px;
+}
+
+.clip {
+    position: absolute;
+}
+
+ul.thumbnails span.wrap1 {
+    margin: 5px;
+    display: table-cell;
+    display: inline-table;
+    display: inline-block; /* Why 3 display option ??? */
+    vertical-align: top; /* OK with Opera and IE6 not Geko */
+    text-align: center; /* to center the thumbnail and legend in Geko/Opera */
+}
+
+ul.thumbnails span.wrap2 {
+    margin: 0; /* important reset the margins */
+    display: table-cell; /* block prevents vertical-align here */
+    vertical-align: middle; /* Ok with Opera and Geko not IE6 */
+    border-radius: 4px;
+}
+
+ul.thumbnails label {
+    position: relative;
+    display: block;
+    border-bottom: none;
+}
+
+ul.thumbnails img {
+    vertical-align: middle;
+    margin-top: 12px;
+}
+
+ul.thumbnails input {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+}
+
+ul.thumbnails .levelIndicatorF {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    text-shadow: 0 0 1px #000;
+    padding: 0 0 2px 5px;
+    color: white;
+    font-weight: bold;
+    z-index: 10;
+}
+

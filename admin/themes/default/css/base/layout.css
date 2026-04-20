@@ -1,0 +1,99 @@
+/* default-layout.css */
+
+/* History tables */
+table.table2 {
+    border: 1px solid #111;
+    margin: 0 auto;
+    padding: 0;
+}
+
+table.table2 td,
+table.table2 th {
+    padding: 0 5px;
+}
+
+table.table2 tr {
+    text-align: left;
+}
+
+table.table2 thead td {
+    padding: 7px 10px 3px;
+}
+
+table.table2 tr.throw {
+    text-align: center;
+}
+
+.sort {
+    display: block;
+    padding: 1em 2em 0;
+    text-align: left;
+}
+
+.sort .icon-sort-number-up {
+    margin-left: 25px;
+}
+
+.hour {
+    white-space: pre;
+}
+
+.number {
+    text-align: right;
+}
+
+table#dailyStats {
+    width: 60%;
+}
+
+table#detailedStats {
+    width: 99%;
+}
+
+/* Plugins, languages tables */
+table.plugins,
+table.languages {
+    min-width: 500px;
+}
+
+table.plugins a {
+    border: 0;
+}
+
+table.plugins tr td {
+    padding: 4px 10px;
+}
+
+table.languages tr td {
+    padding: 7px 20px;
+}
+
+/* Slider */
+.slider-bar-wrapper {
+    padding-left: 10px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+.slider-bar-wrapper .slider-bar-container {
+    height: 2px;
+}
+
+.slider-bar-wrapper .ui-slider-horizontal .ui-slider-handle {
+    background-color: #ffaf58;
+    border: 1px solid #ffaf58;
+    border-radius: 25px;
+    top: -.7em !important;
+    width: 1.4em;
+    height: 1.4em;
+}
+
+.slider-bar-wrapper .ui-slider-horizontal .ui-slider-range {
+    background-color: #ffaf58;
+}
+
+.slider-bar-wrapper .ui-slider-horizontal {
+    border: none;
+    border-radius: 25px;
+}
+

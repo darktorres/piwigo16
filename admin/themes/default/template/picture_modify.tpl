@@ -1,3 +1,4 @@
+{combine_css path='admin/themes/default/css/pages/picture_modify.css' order=-10}
 {include file='inc/autosize.inc.tpl'}
 {include file='inc/datepicker.inc.tpl'}
 {include file='inc/colorbox.inc.tpl'}
@@ -70,7 +71,6 @@
           </div>
         </div>
       </div>
-
 
       <p>
         <strong>{'Title'|translate}</strong>
@@ -167,30 +167,3 @@
 searchPlaceholder={'Search'|translate}
 }
 
-<style>
-  .ts-control .item,
-  .ts-control .item.active {
-    background-image: none !important;
-    background-color: #ffa646 !important;
-    border-color: transparent !important;
-    color: black !important;
-
-    border-radius: 20px !important;
-  }
-
-  .ts-control .item .remove,
-  .ts-control .item .remove {
-    background-color: transparent !important;
-    border-top-right-radius: 20px !important;
-    border-bottom-right-radius: 20px !important;
-    color: black !important;
-
-    border-left: 1px solid transparent !important;
-
-  }
-
-  .ts-control .item .remove:hover,
-  .ts-control .item .remove:hover {
-    background-color: #ff7700 !important;
-  }
-</style>

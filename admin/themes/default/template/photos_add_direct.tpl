@@ -1,3 +1,4 @@
+{combine_css path='admin/themes/default/css/pages/photos_add_direct.css' order=-10}
 {combine_css path='node_modules/dropzone/dist/basic.css'}
 
 {if !$DISPLAY_FORMATS}
@@ -6,13 +7,7 @@
 
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
-{html_style}<style>
-  .addAlbumFormParent {
-    display: none;
-  }
-
-  /* specific to this page, do not move in theme.css */
-</style>{/html_style}
+{html_style}{/html_style}
 
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 

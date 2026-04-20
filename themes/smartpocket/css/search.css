@@ -1,0 +1,10 @@
+.ui-checkbox,
+  .ui-radio,
+  .ui-btn-text {
+    z-index: 0;
+  }
+
+  .form-actions {
+    margin-top: 3em;
+    margin-bottom: 3em;
+  }

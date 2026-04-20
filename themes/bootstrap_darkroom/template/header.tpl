@@ -1,3 +1,4 @@
+{combine_css path='themes/bootstrap_darkroom/css/header.css' order=-10}
 <!DOCTYPE html>
 <html lang="{$lang_info.code}" dir="{$lang_info.direction}">
 
@@ -164,13 +165,7 @@
     {/if}
 
     {if $theme_config->page_header == 'fancy' && $theme_config->page_header_both_navs && empty($MENUBAR)}
-      {html_style}<style>
-        .navbar-contextual {
-          background-color: #000 !important;
-          padding-top: 5px;
-          padding-bottom: 5px;
-        }
-      </style>{/html_style}
+      
     {/if}
 
     {if not empty($header_msgs)}

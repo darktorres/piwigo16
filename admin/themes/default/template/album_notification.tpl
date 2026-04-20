@@ -1,21 +1,11 @@
+{combine_css path='admin/themes/default/css/pages/album_notification.css' order=-10}
 {combine_css path='node_modules/tom-select/dist/css/tom-select.default.css'}
 
 {if $vite_album_notification}
 <script type="module" src="admin/themes/default/js/dist/{$vite_album_notification}"></script>
 {/if}
 
-{html_style}<style>
-  .who_option {
-    margin-top: 5px;
-  }
-
-  span.errors {
-    background-image: none;
-    padding: 2px 5px;
-    margin: 0;
-    border-radius: 5px;
-  }
-</style>{/html_style}
+{html_style}{/html_style}
 
 <form action="{$F_ACTION}" method="post" id="categoryNotify">
 

@@ -1,3 +1,4 @@
+{combine_css path='plugins/LocalFilesEditor/template/show_default.css' order=-10}
 {combine_script id="codemirror" path="node_modules/codemirror/lib/codemirror.js"}
 {combine_script id="codemirror.xml" require="codemirror" path="node_modules/codemirror/mode/xml/xml.js"}
 {combine_script id="codemirror.javascript" require="codemirror" path="node_modules/codemirror/mode/javascript/javascript.js"}
@@ -16,13 +17,7 @@
 </script>{/footer_script}
 
 {html_head}
-<style>
-  #headbranch,
-  #theHeader,
-  #copyright {
-    display: none;
-  }
-</style>
+
 {/html_head}
 
 <div id="LocalFilesEditor">

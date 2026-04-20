@@ -1,6 +1,7 @@
 {combine_css path=$ADMINTOOLS_PATH|cat:'template/public_style.css'}
 {combine_css path='admin/themes/default/fontello/css/fontello.css'}
 {combine_css path=$ADMINTOOLS_PATH|cat:'template/fontello/css/fontello-ato.css'}
+{combine_css path=$ADMINTOOLS_PATH|cat:'template/public_controller.css' order=-10}
 
 {if isset($ato.QUICK_EDIT)}
   {combine_script id='mousetrap' load='footer' path='node_modules/mousetrap/mousetrap.js'}
@@ -142,7 +143,6 @@
 </div>
 
 {if isset($ato.QUICK_EDIT)}
-  <style>#ato_quick_edit_dlg { border: none; border-radius: 6px; padding: 0; max-width: 520px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,.3); }</style>
   <dialog id="ato_quick_edit_dlg">
     <div id="ato_quick_edit" title="{'Quick edit'|translate}">
       <form method="post" action="{$ato.U_SELF}">

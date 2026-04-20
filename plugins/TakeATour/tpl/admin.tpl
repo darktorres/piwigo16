@@ -1,3 +1,4 @@
+{combine_css path='plugins/TakeATour/css/admin_page.css' order=-10}
 {footer_script require="tippy.js"}<script>
   document.querySelectorAll('.TAT_description a[href*="piwigo.org"]').forEach(function(el) {
     el.classList.add("externalLink");
@@ -20,17 +21,6 @@
     });
   }
 </script>{/footer_script}
-
-{html_style}<style>
-  .pluginBox {
-    display: none;
-  }
-
-  .showDetails {
-    padding: 0;
-    margin: -1em -1em 0.5em 0;
-  }
-</style>{/html_style}
 
 <div class="titrePage">
   <h2>{'takeatour_configpage'|translate}</h2>

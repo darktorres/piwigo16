@@ -1,13 +1,5 @@
-{html_style}<style>
-  .graphicalCheckbox {
-    font-size: 16px;
-    line-height: 16px;
-  }
+{combine_css path='themes/smartpocket/css/admin.css' order=-10}
 
-  input[type=checkbox] {
-    display: none;
-  }
-</style>{/html_style}
 
 {footer_script}<script>
   document.addEventListener('DOMContentLoaded', function() {

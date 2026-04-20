@@ -2,12 +2,12 @@
       font-size: 12px;
     }
 
-    #content {
+    #the_page #content {
       width: 800px;
       margin: auto;
       text-align: center;
       padding: 0;
-      background-color: transparent !important; /* overrides global.css #content bg — loads before theme.css in combined */
+      background-color: transparent; /* #the_page #content specificity (0,2,0,0) beats global.css #content (0,1,0,0) */
       border: none;
     }
 
@@ -104,12 +104,12 @@
       font-size: 12px;
     }
 
-    .content {
+    #the_page .content {
       width: 800px;
       margin: auto;
       text-align: center;
       padding: 0;
-      background-color: transparent !important; /* overrides global.css #content bg — loads before theme.css in combined */
+      background-color: transparent; /* #the_page .content specificity (0,1,1,0) beats global.css #content (0,1,0,0) */
       border: none;
     }
 

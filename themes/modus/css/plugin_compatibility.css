@@ -73,7 +73,7 @@
 }
 
 @media (max-width: 576px) {
-    .thumbnailCategories LI {
+    .thumbnailCategories LI:not(.gdthumb) {
         width: 75% !important;
         margin: 0 auto !important;
         float: unset;

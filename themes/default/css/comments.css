@@ -1,0 +1,76 @@
+/* User comments listing (index/category pages) */
+#comments {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.commentsList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow: hidden;
+    width: 100%;
+}
+
+.commentElement {
+    border-radius: 5px;
+    margin: 5px;
+    padding: 2px 0 0 2px;
+    float: left;
+    width: 99%;
+}
+
+.commentElement .description {
+    overflow: auto;
+
+    /* width: inherit; */
+}
+
+/* image comments rules (picture page) */
+
+#commentAdd,
+#pictureCommentList {
+    width: 48%;
+    padding: 0 1%;
+}
+
+#commentAdd {
+    float: left;
+}
+
+#pictureCommentList {
+    float: right;
+}
+
+#commentAdd input[type="text"],
+#comments textarea {
+    max-width: 99%;
+    width: 99%;
+}
+
+.commentAuthor {
+    font-weight: bold;
+}
+
+.commentDate {
+    font-style: italic;
+}
+
+#pictureCommentList .commentsOrder {
+    float: left;
+    margin-bottom: 5px;
+}
+
+#pictureCommentList .navigationBar {
+    float: right;
+    margin-bottom: 5px;
+}
+
+#pictureComments h4 {
+    margin: 0;
+}
+
+#comments form p {
+    margin: 5px 0;
+    text-align: left;
+}

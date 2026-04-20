@@ -1,6 +1,10 @@
 @import "iconset.css";
 @import "css/menubar.css";
 @import "css/content.css";
+@import "css/calendar.css";
+@import "css/categories.css";
+@import "css/comments.css";
+@import "css/thumbnails.css";
 @import "css/picture.css";
 @import "css/layout.css";
 @import "css/colors.css";

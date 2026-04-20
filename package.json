@@ -42,6 +42,7 @@
     "photoswipe@5.4.4": "patches/photoswipe@5.4.4.patch"
   },
   "devDependencies": {
+    "@eslint/css": "^1.1.0",
     "@eslint/js": "^10.0.1",
     "@types/chart.js": "^4.0.1",
     "@types/codemirror": "^5.60.17",

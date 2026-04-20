@@ -4,7 +4,7 @@
     margin: 0 0 20px;
     padding: 0 0 0 10px;
     border: none;
-    background-color: #f3f3f3;
+    background-color: var(--admin-tab-bg);
 }
 
 .tabsheet {
@@ -40,7 +40,7 @@
     text-align: right;
     text-decoration: none;
     margin: 0;
-    color: #898989;
+    color: var(--admin-tab-inactive-color);
 }
 
 .tabsheet a::first-letter {
@@ -49,7 +49,7 @@
 
 .tabsheet li.selected_tab {
     border-bottom: none;
-    background-color: #fff;
+    background-color: var(--admin-tab-selected-bg);
 }
 
 .tabsheet li:hover,
@@ -62,7 +62,7 @@
 
 /* .tabsheet a:hover */
 .tabsheet li.selected_tab a {
-    color: #555;
+    color: var(--admin-tab-active-color);
 }
 
 .tabsheet a span {
@@ -219,7 +219,7 @@
 
 .themeActions span {
     font-size: 11px;
-    background-color: #ddd;
+    background-color: var(--admin-theme-span-bg);
     opacity: 0.5;
 }
 
@@ -286,7 +286,7 @@ h1 .bc-albums {
     font-weight: bold;
     text-align: center;
     border-radius: 7px;
-    background-color: #c6c6c6;
+    background-color: var(--admin-badge-albums-bg);
     font-size: 12px;
     position: relative;
     top: -3px;
@@ -345,7 +345,7 @@ h2:lang(en) {
 }
 
 .infos ul {
-    color: #3c3c3c;
+    color: var(--admin-state-success-color);
 }
 
 .eiw-icon {
@@ -355,34 +355,34 @@ h2:lang(en) {
 }
 
 .infos {
-    color: #0a0;
-    background-color: #c2f5c2;
+    color: var(--admin-state-success-color);
+    background-color: var(--admin-state-success-bg);
 }
 
 .infos a {
-    color: #3c3c3c;
+    color: var(--admin-state-success-color);
 }
 
 .errors {
-    color: #f22;
-    background-color: #ffd5dc;
-    border-left: 4px solid #f22;
+    color: var(--admin-state-error-color);
+    background-color: var(--admin-state-error-bg);
+    border-left: 4px solid var(--admin-state-error-color);
 }
 
 .warnings {
-    color: #e80;
-    background-color: #fd9;
-    border-left: 4px solid #e80;
+    color: var(--admin-state-warning-color);
+    background-color: var(--admin-state-warning-bg);
+    border-left: 4px solid var(--admin-state-warning-color);
 }
 
 .messages {
-    color: #00529b;
-    background-color: #bde5f8;
-    border-left: 4px solid #00529b;
+    color: var(--admin-state-message-color);
+    background-color: var(--admin-state-message-bg);
+    border-left: 4px solid var(--admin-state-message-color);
 }
 
 .badge {
-    background-color: #0a0;
+    background-color: var(--admin-state-success-color);
     color: white;
     padding: 1px 5px;
     border-radius: 10px;

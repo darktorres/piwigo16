@@ -733,7 +733,7 @@
     height: 26px;
     border: none;
     background: var(--search-selectize-input-bg);
-    color: var(--search-selectize-input-color) !important;
+    color: var(--search-selectize-input-color) !important; /* overrides selectize.js own color rule */
 }
 
 .filter-author-form .selectize-input input:focus-visible,

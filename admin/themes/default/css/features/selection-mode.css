@@ -188,8 +188,8 @@ input:checked + .slider::after {
 
 #selection-mode-block button.unavailable {
     opacity: 0.3;
-    background: none !important;
-    border: none !important;
+    background: none;
+    border: none;
     cursor: auto;
 }
 

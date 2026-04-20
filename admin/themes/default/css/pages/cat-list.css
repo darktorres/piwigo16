@@ -167,13 +167,13 @@
     width: 159px;
     margin-top: 20px;
     font-size: 15px;
-    color: var(--admin-text-legend) !important;
-    background-color: var(--admin-bg-field) !important;
-    border: none !important;
+    color: var(--admin-text-legend);
+    background-color: var(--admin-bg-field);
+    border: none;
 }
 
 .addAlbum form input::placeholder {
-    color: var(--admin-text-legend) !important;
+    color: var(--admin-text-legend);
 }
 
 .addAlbum button,
@@ -184,7 +184,7 @@
 }
 
 .addAlbum.input-mode .addAlbumHead {
-    transform: translateY(0) !important;
+    transform: translateY(0);
     margin-top: 0;
 }
 

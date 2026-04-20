@@ -1,6 +1,6 @@
 /* content.css */
 [class*="icon-"]::before {
-    text-decoration: none !important;
+    text-decoration: none;
 }
 
 .showInfo {

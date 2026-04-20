@@ -64,7 +64,7 @@
 }
 
 .advanced-filter-new-plugin .advanced-filter-container {
-    display: grid !important;
+    display: grid;
     grid-template-columns: repeat(5, 20%);
 }
 
@@ -74,7 +74,7 @@
 }
 
 .advanced-filter-revision-date .advanced-filter-item-label {
-    display: inline !important;
+    display: inline;
 }
 
 .pluginFilter {
@@ -113,7 +113,7 @@
     .pluginBigBox {
         max-width: 100%;
         min-width: 100%;
-        margin-right: 0 !important;
+        margin-right: 0;
     }
 }
 
@@ -231,7 +231,7 @@
 }
 
 .buttonInstall {
-    margin-left: 0 !important;
+    margin-left: 0;
     margin-right: 5px;
 }
 
@@ -375,7 +375,7 @@
 }
 
 .pluginUpdateContainer {
-    margin-bottom: 5px !important;
+    margin-bottom: 5px;
 }
 
 .pluginUpdateContainer legend {
@@ -383,7 +383,7 @@
 }
 
 .pluginUpdateContainer .pluginActions {
-    margin-right: 0 !important;
+    margin-right: 0;
 }
 
 /* 
@@ -967,7 +967,7 @@ legend {
 
 .pluginContainer.line-form .pluginBox .pluginDesc {
     margin: auto 10px;
-    display: flex !important;
+    display: flex;
     align-items: center;
     white-space: nowrap;
     overflow: hidden;

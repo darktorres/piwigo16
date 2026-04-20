@@ -4,14 +4,14 @@
     padding: 10px;
     box-shadow: 0 2px #00000024;
     border: none;
-    background-color: var(--admin-bg-surface) !important;
+    background-color: var(--admin-bg-surface);
     padding-left: 30px;
     width: 200px;
     margin: 4px;
 }
 
 .search-input:hover {
-    background-color: var(--admin-bg-row2) !important;
+    background-color: var(--admin-bg-row2);
 }
 
 .search-info {

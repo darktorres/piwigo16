@@ -63,7 +63,7 @@
 }
 
 .tag-header #add-tag.input-mode .add-tag-container input:hover {
-    background-color: var(--admin-bg-row2) !important;
+    background-color: var(--admin-bg-row2);
 }
 
 .tag-header #add-tag span.icon-cancel-circled {
@@ -73,7 +73,7 @@
     top: 50%;
     transform: translate(15px, -53%);
     z-index: 2;
-    font-size: 22px !important;
+    font-size: 22px;
     cursor: pointer;
 }
 

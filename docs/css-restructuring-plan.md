@@ -1,10 +1,11 @@
 # CSS Restructuring Plan — Piwigo Fork
 
-## Status: All 7 steps complete + two post-cleanup passes done
+## Status: All 7 steps complete + three post-cleanup passes done
 
-All 7 execution steps are complete. Two further cleanup passes have been completed:
+All 7 execution steps are complete. Three further cleanup passes have been completed:
 1. **Post-cleanup pass 1** — general.css and print.css folded into theme.css; structural duplicates and covered color overrides removed from clear/roma; variable contract expanded with 18 new `--admin-*` variables; gallery CSS split into per-concern files (calendar, categories, comments, thumbnails).
 2. **Post-cleanup pass 2** — gallery `layout.css` split into `forms.css` + `popup.css`; `colors.css` trimmed (imageInfoTable → `picture.css`, mcs-side-results → `search-in-set.css`); `bootstrap_darkroom/theme.css` plugin-compat section extracted to `css/plugin-compat.css`.
+3. **Post-cleanup pass 3** — variable contract expanded from 46 → 63 variables (17 new `--admin-*` vars across 5 new semantic groups); 101 `var()` replacements applied across 15 parent CSS files; 68 redundant declarations removed from `roma/theme.css` body (2555 → 2399 lines).
 
 ---
 
@@ -25,7 +26,7 @@ The CSS in this fork had drifted into several pain shapes:
 | Area | File | Lines (before → after) | Status |
 |---|---|---|---|
 | admin default | `admin/themes/default/theme.css` | 8798 → 35 | **Done** — thin `@import` manifest |
-| admin default | `admin/themes/default/css/base/variables.css` | new (46 vars) | **Done** — 46 `--admin-*` custom properties across 6 semantic groups |
+| admin default | `admin/themes/default/css/base/variables.css` | new (63 vars) | **Done** — 63 `--admin-*` custom properties across 11 semantic groups |
 | admin default | `admin/themes/default/css/base/global.css` | new (90) | **Done** — page-level rules consuming variables |
 | admin default | `admin/themes/default/css/base/content.css` | new (93) | **Done** |
 | admin default | `admin/themes/default/css/base/layout.css` | new (99) | **Done** |
@@ -36,8 +37,8 @@ The CSS in this fork had drifted into several pain shapes:
 | admin default | `admin/themes/default/css/features/` (3 files) | new | **Done** |
 | admin default | `admin/themes/default/css/components/general.css` | 361 | **Done** — now imported by `theme.css`; `{* Temporary solution *}` removed |
 | admin default | `admin/themes/default/print.css` | 14 → 17 | **Done** — wrapped in `@media print {}`; imported by `theme.css` |
-| admin clear | `admin/themes/clear/theme.css` | 1392 → 1293 | **Partial** — `:root {}` expanded to 46 variable overrides; structural rules remain |
-| admin roma | `admin/themes/roma/theme.css` | 2716 → 2555 | **Partial** — 5 exact dupes deleted, structural props stripped, covered color overrides removed |
+| admin clear | `admin/themes/clear/theme.css` | 1392 → 1320 | **Partial** — `:root {}` expanded to 63 variable overrides; structural rules remain |
+| admin roma | `admin/themes/roma/theme.css` | 2716 → 2399 | **Partial** — 68 redundant body declarations removed; `:root {}` has 63 variable overrides |
 | gallery default | `themes/default/theme.css` | 1087 → 6 | **Done** — thin `@import` manifest |
 | gallery default | `themes/default/css/menubar.css` | new (90) | **Done** |
 | gallery default | `themes/default/css/content.css` | 281 → 92 | **Done** — Content section only |
@@ -113,7 +114,7 @@ All static `<style>` blocks were extracted. Each tpl now has a `{combine_css pat
 ```
 admin/themes/default/css/
 ├── base/
-│   ├── variables.css     (46 vars) — --admin-* custom properties, dark/roma defaults
+│   ├── variables.css     (63 vars) — --admin-* custom properties, dark/roma defaults
 │   ├── global.css        (90)   — page-level selectors consuming var()
 │   ├── content.css       (93)
 │   ├── layout.css        (99)
@@ -260,7 +261,7 @@ The plan suggested creating dedicated `admin/themes/{clear,roma}/css/takeatour.c
 
 ---
 
-## Variable contract (current: 46 variables)
+## Variable contract (current: 63 variables)
 
 `admin/themes/default/css/base/variables.css` defines dark defaults; `admin/themes/clear/theme.css` overrides with light values. Groups:
 
@@ -276,10 +277,15 @@ The plan suggested creating dedicated `admin/themes/{clear,roma}/css/takeatour.c
 | Notification boxes | `--admin-state-error-color/bg`, `--admin-state-success-color/bg`, `--admin-state-warning-color/bg`, `--admin-state-message-color/bg` | used in `tabsheets.css` |
 | Inline notices | `--admin-inline-warning-color/bg`, `--admin-inline-error-color/bg` | colors invert between light/dark; used in `general.css` |
 | Misc | `--admin-badge-albums-bg`, `--admin-theme-span-bg` | used in `tabsheets.css` |
+| Alternative surfaces | `--admin-bg-lifted`, `--admin-bg-field` | elevated surface and field background |
+| Action states | `--admin-action-success-color/bg/border`, `--admin-action-error-color/bg` | inverted between light/dark |
+| Accent / selected | `--admin-accent-selected-bg`, `--admin-accent-selected-deep`, `--admin-accent-selected-text`, `--admin-text-on-accent`, `--admin-text-success` | |
+| Disabled states | `--admin-disabled-color`, `--admin-disabled-bg` | |
+| Component-specific | `--admin-jqtree-highlight`, `--admin-tooltip-arrow`, `--admin-pagination-hover-bg` | |
 
 ## Remaining work (diminishing returns)
 
-- **admin/themes/{clear,roma}/ remaining color overrides** — ~178 selector/property combos still have hardcoded colors in the parent that are overridden in roma. These span many page-specific files (user-manager: 65, tag-manager: 12, dashboard: 12, album-manager: 11, plugins: 9, …). Covering them would require 50+ new page-specific variables with limited semantic reuse.
+- **admin/themes/{clear,roma}/ remaining color overrides** — ~77 selector/property combos still have hardcoded colors in parent files that are overridden in roma (down from ~178; post-cleanup pass 3 eliminated 101 via `var()`). The remaining cases are one-off colors with no semantic grouping — covering them would require purely page-specific variables with no reuse benefit.
 - **admin/themes/clear/roma structural rules** — both skins still carry structural CSS (layout, font, spacing rules). These predate this fork's work. Removing them requires either moving rules to the parent or verifying they are genuinely skin-specific.
 - **themes/elegant/theme.css** (680 lines) — skin overlay on default; no clear split candidates identified.
 - **admin pages/ large files** — `user_list.css` (1466), `album-manager.css` (1157), `user-manager.css` (1150), `plugins.css` (1043) are large but each covers a single page; splitting would need multiple `{combine_css}` lines per tpl with no HTTP benefit.

@@ -124,11 +124,17 @@ Static hex values replaced with `var(--color-*)` references where applicable.
 
 ---
 
-## Step 6 — Clean Up Admin Theme CSS ❌ DEFERRED
+## Step 6 — Clean Up Admin Theme CSS ⚠️ PARTIALLY DONE
 
-**Files:** `admin/themes/clear/theme.css`, `admin/themes/default/theme.css`, `admin/themes/roma/theme.css`, `admin/themes/default/css/components/general.css`
+**Files:** `admin/themes/clear/theme.css`, `admin/themes/default/theme.css`, `admin/themes/roma/theme.css`, `admin/themes/default/css/components/general.css`, `admin/themes/roma/css/components/general.css`
 
-~323 `!important` instances remain. These are structural overrides between admin theme files (roma/clear override default). Deferred — requires deep specificity analysis per-rule and visual testing in the admin panel to avoid breaking the UI.
+**Done:**
+- `clear/theme.css`: Removed 18 redundant `!important` — class/pseudo-class selectors with sufficient specificity (`.menuLi_hidden`, `a.Piwigo`, `.pluginBox.incompatible`, `:disabled` buttons, `.GroupBackgroundSelected`, `.OrangeIcon`, `.OrangeFont`, `.ValidationUser*`, `#addAlbumForm`, `:hover` rules, `.dimension-cancel`, `.pageNumberSelected`, `.breadcrumb-item.add-item.highlight`)
+- `default/theme.css`: Removed 13 redundant `!important` (`.albumIconLineHover`, `.albumActions a:hover span`, `.pluginUnavailableAction:hover`, `.unavailablePlugin:hover`, 8× `.pluginMiniBox.*`); annotated 3 `display: none !important` with `/* js-toggled */`
+- `default/css/components/general.css`: Removed 3 (`.head-button-1/2:hover` text-decoration/color, `.tree .badge-container i::before` margin)
+- `roma/theme.css`: Removed 4 (`.menuLi_hidden`, `a.Piwigo`, `.selected-pagination` bg/color)
+
+**Not done:** ~278 `!important` remain across admin files — the bulk are in `roma/theme.css` (135) and `default/theme.css` (107) fighting third-party library CSS (jQuery UI datepicker, selectize, plupload, DataTables, jconfirm). These require knowing the competing library CSS to safely remove.
 
 **Approach when resuming:**
 1. Introduce `:root` variable blocks for repeated colors/spacing values
@@ -199,7 +205,7 @@ Annotated justified `!important` throughout the codebase with comments:
 | Step | Status | Remaining effort |
 |------|--------|-----------------|
 | Step 5 (skin files) | ⚠️ Partial | Introduce per-component color variables to eliminate ~140 skin `!important` |
-| Step 6 (admin themes) | ❌ Deferred | ~323 `!important` across 4 files, needs specificity analysis + visual testing |
+| Step 6 (admin themes) | ⚠️ Partial | ~278 `!important` remain, mostly third-party lib overrides (jQuery UI, selectize, plupload, DataTables) |
 | Step 7 (front-end themes) | ⚠️ Partial | Annotate ~25 justified search CSS `!important`; `:root` variables not added |
 | Step 9 (breakpoints) | ⚠️ Partial | Decide on + apply actual 640px → 576px value change across modus files |
 
@@ -207,7 +213,7 @@ Annotated justified `!important` throughout the codebase with comments:
 
 ## Verification
 
-1. `bun run lint:css` — 0 errors, 451 warnings currently
+1. `bun run lint:css` — 0 errors, 410 warnings currently
 2. Visual: load category page at desktop + 390px mobile width
 3. Switch 3+ modus skins — verify colors correct
 4. Admin panel: verify admin themes render correctly

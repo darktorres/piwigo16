@@ -201,11 +201,11 @@ label {
 }
 
 .menuLi_hidden {
-    background: #ccc !important;
+    background: #ccc;
 }
 
 a.Piwigo {
-    font-family: verdana, arial, helvetica, sans-serif !important;
+    font-family: verdana, arial, helvetica, sans-serif;
     font-size: 11px;
     font-weight: normal;
     letter-spacing: 0;
@@ -517,7 +517,7 @@ input[type="text"].large {
 }
 
 .pluginBox.incompatible {
-    border-color: #a00 !important;
+    border-color: #a00;
 }
 
 .languageBox {
@@ -633,8 +633,8 @@ input[type="reset"]:hover {
 input[type="submit"]:disabled,
 input[type="button"]:disabled,
 input[type="reset"]:disabled {
-    background: #ececec !important;
-    color: #d5d5d5 !important;
+    background: #ececec;
+    color: #d5d5d5;
     cursor: not-allowed;
 }
 
@@ -728,7 +728,7 @@ label > p.group_select {
 }
 
 .groups .Group-name .Group-name-container p:focus {
-    border: 1px solid #3c3c3c !important;
+    border: 1px solid #3c3c3c;
     background-color: white;
 }
 
@@ -828,16 +828,16 @@ input:focus + .slider {
 }
 
 .GroupBackgroundSelected {
-    background-color: #ffd7ad !important;
+    background-color: #ffd7ad;
 }
 
 .OrangeIcon {
-    background-color: #f98100 !important;
-    color: #ffe4c7 !important;
+    background-color: #f98100;
+    color: #ffe4c7;
 }
 
 .OrangeFont {
-    color: #f70 !important;
+    color: #f70;
 }
 
 /* Selection mode content */
@@ -936,13 +936,13 @@ input:focus + .slider {
 
 .ValidationUserAssociated,
 .ValidationUserDissociated {
-    color: #0a0 !important;
+    color: #0a0;
     background-color: #c2f5c2;
 }
 
 .ValidationUserAssociated p,
 .ValidationUserDissociated p {
-    color: #0a0 !important;
+    color: #0a0;
 }
 
 /* ------ */
@@ -1111,8 +1111,8 @@ li.plupload_delete a:hover {
 }
 
 #addAlbumForm input[name="category_name"] {
-    border: none !important;
-    margin-top: 5px !important;
+    border: none;
+    margin-top: 5px;
 }
 
 #addAlbumForm input[name="category_name"]:focus {
@@ -1189,7 +1189,7 @@ li.plupload_delete a:hover {
 #filter_filesize .slider-choice:hover,
 .dimension-cancel:hover {
     text-decoration: none;
-    background-color: #ffa646 !important;
+    background-color: #ffa646;
     color: initial;
 }
 
@@ -1209,11 +1209,11 @@ li.plupload_delete a:hover {
 }
 
 .dimension-cancel {
-    background-color: #f8f8f8 !important;
+    background-color: #f8f8f8;
 }
 
 .pageNumberSelected {
-    color: #fff !important;
+    color: #fff;
     font-weight: bold;
 }
 
@@ -1372,7 +1372,7 @@ li.plupload_delete a:hover {
 .breadcrumb-item.add-item.highlight {
     background: #ffa646;
     box-shadow: 0 2px #af7200;
-    color: white !important;
+    color: white;
 }
 
 .move-cat-container:hover .badge-container i,

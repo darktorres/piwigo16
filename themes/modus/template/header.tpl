@@ -17,7 +17,9 @@
 	{combine_css path="themes/`$themeconf.id`/css/plugin_compatibility.css" order=-10}
 
 	{if isset($MODUS_CSS_SKIN)}
-		{combine_css path="themes/`$themeconf.id`/css/hf_base.css" order=-10}
+		{combine_css path="themes/`$themeconf.id`/css/hf_layout.css" order=-10}
+		{combine_css path="themes/`$themeconf.id`/css/hf_components.css" order=-10}
+		{combine_css path="themes/`$themeconf.id`/css/hf_typography.css" order=-10}
 		{combine_css path="themes/`$themeconf.id`/css/hf_responsive.css" order=-10}
 		{* load base CSS for skins designed by Hannah *}
 		{combine_css path="themes/`$themeconf.id`/skins/`$MODUS_CSS_SKIN`.css" order=-10}

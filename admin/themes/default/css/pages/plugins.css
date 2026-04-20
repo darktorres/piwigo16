@@ -680,25 +680,6 @@
     line-height: 18px;
 }
 
-#ui-datepicker-div {
-    border-radius: 5px;
-}
-
-#ui-datepicker-div .ui-icon-circle-triangle-w,
-#ui-datepicker-div .ui-icon-circle-triangle-e {
-    color: transparent;
-}
-
-#ui-datepicker-div a.ui-datepicker-prev,
-#ui-datepicker-div a.ui-datepicker-next {
-    background-color: transparent;
-}
-
-#ui-datepicker-div a.ui-datepicker-prev:hover,
-#ui-datepicker-div a.ui-datepicker-next:hover {
-    border-radius: 5px;
-}
-
 .HelpActions {
     float: right;
     margin: 0;
@@ -1040,4 +1021,3 @@ legend {
     flex-direction: row;
     align-items: center;
 }
-

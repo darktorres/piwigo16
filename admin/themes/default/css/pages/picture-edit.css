@@ -66,8 +66,7 @@
 }
 
 #picture-content input[type="text"],
-#picture-content textarea,
-#picture-content .selectize-input {
+#picture-content textarea{
     width: calc(100% - 15px);
     background-color: #f8f8f8;
     padding: 8px;
@@ -78,14 +77,8 @@
         "Bitstream Vera Sans", sans-serif;
 }
 
-#picture-content .selectize-input {
-    width: 100%;
-    overflow-y: scroll;
-}
-
 #picture-content input[type="text"],
-#picture-content textarea,
-#picture-content .selectize-control {
+#picture-content textarea{
     margin-top: 5px;
 }
 
@@ -204,4 +197,3 @@
     z-index: 2;
     font-size: 20px;
 }
-

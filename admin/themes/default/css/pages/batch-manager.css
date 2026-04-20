@@ -142,15 +142,6 @@
     margin: 10px 0 0;
 }
 
-#batchManagerGlobal .ui-slider-horizontal {
-    width: 280px;
-    margin: 10px 0 10px 9px;
-}
-
-#batchManagerGlobal #filter_dimension .ui-slider-horizontal {
-    width: 580px;
-}
-
 #batchManagerGlobal #duplicates_options label {
     margin-left: 10px;
 }
@@ -246,4 +237,3 @@
     font-style: italic;
     margin-left: 20px;
 }
-

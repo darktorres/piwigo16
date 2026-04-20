@@ -135,12 +135,6 @@ input[type="reset"] {
     margin: 12px 0 0;
 }
 
-.selectize-control.single .selectize-input {
-    border-radius: 0;
-    font-weight: bold;
-    font-size: 12px;
-}
-
 .buttonLike {
     padding: 8px 10px;
     margin-left: 5px;
@@ -171,55 +165,6 @@ input[type="reset"] {
 #uploader {
     margin-top: 25px;
     font-weight: bold !important;
-}
-
-.plupload_filelist_header {
-    display: none;
-}
-
-.plupload_filelist {
-    scrollbar-width: thin !important;
-}
-
-.plupload_wrapper,
-.plupload_file_size {
-    font-weight: bold;
-}
-
-.plupload_filelist li {
-    background: none !important;
-    font-weight: bold;
-}
-
-li.plupload_delete a {
-    background: url("../../images/cancel.svg") !important;
-    background-size: cover !important;
-    width: 10px;
-    height: 10px;
-    margin-top: 3px;
-}
-
-li.plupload_delete a:hover {
-    background: url("../../images/cancelhover.svg") !important;
-    background-size: cover !important;
-}
-
-.plupload_file_status {
-    margin-right: 45px;
-}
-
-.plupload_file_size {
-    margin-right: 25px;
-}
-
-.plupload_total_file_size {
-    margin-right: -8px;
-}
-
-.plupload_total_status {
-    color: #707070 !important;
-    margin-right: -8px;
-    font-weight: bold;
 }
 
 /* Thumbnail after picture upload */
@@ -272,4 +217,3 @@ li.plupload_delete a:hover {
     left: 50%;
     transform: translateX(-50%) translateX(102px);
 }
-

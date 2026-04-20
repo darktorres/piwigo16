@@ -66,59 +66,6 @@
     display: none;
 }
 
-.jconfirmDeleteConfirm,
-.jconfirmAlert {
-    padding-bottom: 0 !important;
-    color: #3c3c3c !important;
-    line-height: 28px !important;
-}
-
-.jconfirmAlert {
-    margin-bottom: -2px !important;
-}
-
-.jconfirmDeleteConfirm ~ .jconfirm-content-pane,
-.jconfirmAlert ~ .jconfirm-content-pane {
-    /* height: 0px !important; */
-    margin: 0 !important;
-}
-
-.jconfirmDeleteConfirm ~ .jconfirm-buttons button {
-    text-transform: none !important;
-}
-
-.jconfirmAlert .jconfirm-icon-c i {
-    border-radius: 60px;
-    padding: 2px;
-    font-size: 45px;
-}
-
-.jconfirmAlert .jconfirm-icon-c {
-    margin-bottom: 25px !important;
-}
-
-.jconfirmAlert .jconfirm-title {
-    font-size: 20px !important;
-}
-
-.jconfirmAlert .jconfirm-icon-c i {
-    color: var(--admin-action-success-color) !important;
-    background-color: var(--admin-action-success-bg) !important;
-}
-
-.jconfirmWarning .jconfirm-icon-c i {
-    color: #ffa744 !important;
-    background-color: #ffe9cf !important;
-}
-
-.jconfirm-title {
-    line-height: 1.5em;
-}
-
-.jconfirm-buttons .btn {
-    text-transform: none !important;
-}
-
 /* Group checkbox */
 
 .Group-checkbox {
@@ -307,4 +254,3 @@
         display: block;
     }
 }
-

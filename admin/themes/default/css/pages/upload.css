@@ -1,22 +1,3 @@
-/* Upload Form */
-.plupload_header {
-    display: none;
-}
-
-#uploadForm .plupload_container {
-    padding: 0;
-}
-
-#uploadForm .plupload_scroll .plupload_filelist {
-    height: 250px;
-    overflow-y: hidden;
-}
-
-#uploadForm li.plupload_droptext {
-    line-height: 230px;
-    font-size: 2em;
-}
-
 #uploadBoxes .file {
     margin-bottom: 5px;
     text-align: left;
@@ -71,11 +52,6 @@ a#showPermissions {
 
 a#showPermissions:hover {
     text-decoration: none;
-}
-
-#uploadForm .plupload_buttons,
-#uploadForm .plupload_progress {
-    display: none !important; /* js-toggled */
 }
 
 #uploadForm #startUpload {
@@ -140,4 +116,3 @@ a#showPermissions:hover {
     border-radius: 5px 0 0 5px;
     background-size: 33px 25px;
 }
-

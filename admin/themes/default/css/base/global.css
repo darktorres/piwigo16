@@ -83,8 +83,3 @@ textarea:focus {
 .menuLi_hidden {
     background: var(--admin-bg-surface);
 }
-
-.ui-tooltip {
-    background-color: var(--admin-tooltip-bg);
-    color: var(--admin-tooltip-color);
-}

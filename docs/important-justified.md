@@ -1,6 +1,6 @@
 # Justified `!important` Declarations
 
-All 151 remaining `!important` instances fall into one of the categories below. None should be removed without first resolving the underlying constraint they document.
+All 142 remaining `!important` instances fall into one of the categories below. None should be removed without first resolving the underlying constraint they document.
 
 ---
 
@@ -23,7 +23,7 @@ The CSS-variable migration is complete. The parent (`admin/themes/default/theme.
 
 mcs-search injects its own `<link>` stylesheet at runtime. Our rules must beat it regardless of injection order. All 15 instances target mcs-search selectors.
 
-### 2b. Gallery search feature — TomSelect and filter overrides (13)
+### 2b. Gallery search feature — TomSelect and filter overrides (8)
 
 **File:** `themes/default/css/search.css`
 
@@ -31,17 +31,14 @@ TomSelect (which replaced Selectize.js) ships its own CSS and uses the same `.se
 
 | Line | Property | Reason |
 |------|----------|--------|
-| 273–275 | `background`, `border`, `color` on filled filter | Beats TomSelect own filled-state styles |
+| 273–275 | `background`, `border`, `color` on filled filter | Beats mcs-search plugin injected CSS |
 | 279 | `color` on filled filter item | Same |
-| 474 | `color` on hover button | Higher-specificity rule in parent chain |
-| 513 | `margin-left: auto` | Overrides flex margin from parent container |
+| 474 | `color` on hover button | Higher-specificity rule in parent chain (unresolved) |
 | 736 | `color` on selectize input | Overrides TomSelect own input color rule |
 | 823 | `min-width: 150px` | Overrides `style="min-width:…"` set by TomSelect inline |
-| 827 | `z-index: 10` | Overrides Bootstrap `sticky-top` z-index |
-| 851 | `box-shadow: none` | Overrides desktop box-shadow in mobile media query |
-| 873 | `display: block` | Overrides `flex` set by a higher-specificity rule |
-| 919 | `white-space: unset` | Overrides higher-specificity `nowrap` rule |
 | 936 | `font-size: 16px` | Prevents iOS auto-zoom on input focus |
+
+**Resolved (removed `!important`):** `margin-left: auto` (L513, element is `position: absolute` so margin has no effect), `z-index: 10` (L827, selector specificity (0,2,0) already beats Bootstrap's (0,1,0)), `box-shadow: none` (L851, same-specificity rule later in file wins), `display: block` (L873, expanded selector to match desktop `.filter-tag-form .search-params` at (0,3,0)), `white-space: unset` (L919, added `.breadcrumb-item .link-path` to selector).
 
 ### 2c. dark-search color variant (4)
 
@@ -103,15 +100,11 @@ JavaScript adds/removes CSS classes to show or hide elements. The `display: none
 
 ---
 
-## 8. CSS load-order fix (2)
+## 8. CSS load-order fix — resolved (0)
 
-**File:** `admin/themes/default/css/pages/install-upgrade.css`
+~~`install-upgrade.css` loaded before `global.css` so it couldn't beat `#content { background-color }` without `!important`.~~
 
-```css
-background-color: transparent !important; /* overrides global.css #content bg — loads before theme.css in combined */
-```
-
-`install-upgrade.css` is registered at `order=-10` in `install.tpl`, which places it **before** `global.css` in the combined bundle. `global.css` sets `#content { background-color: var(--admin-bg-content) }` at specificity (1,0,1). Without `!important` the install page inherits the admin content background instead of being transparent.
+**Fixed:** selectors changed to `#the_page #content` and `#the_page .content`, which have higher specificity than `#content` in `global.css`.
 
 ---
 

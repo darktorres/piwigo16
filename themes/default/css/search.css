@@ -510,7 +510,7 @@
 
 .breadcrumb-item .icon-cancel-circled,
 .breadcrumb-item .help-item {
-    margin-left: auto !important; /* overrides flex margin in parent */
+    margin-left: auto;
     cursor: pointer;
     position: absolute;
     right: 10px;
@@ -824,7 +824,7 @@
 }
 
 .section-search .sticky-top {
-    z-index: 10 !important; /* overrides Bootstrap sticky-top z-index */
+    z-index: 10;
 }
 
 .search-input {
@@ -848,7 +848,7 @@
         width: 100vw;
         padding: 15px;
         border-radius: 0;
-        box-shadow: none !important; /* overrides desktop box-shadow on mobile */
+        box-shadow: none;
         top: 37px;
         border-top: var(--search-media-filter-form-border);
         border-bottom: var(--search-media-filter-form-border);
@@ -869,8 +869,11 @@
     }
 
     .search-params-title,
-    .search-params {
-        display: block !important; /* overrides flex display set by higher-specificity rule */
+    .search-params,
+    .filter-tag-form .search-params,
+    .filter-album-form .search-params,
+    .filter-word-form .search-params {
+        display: block;
     }
 
     .word-search-options {
@@ -915,8 +918,9 @@
     }
 
     .search-result-path,
-    .link-path {
-        white-space: unset !important; /* overrides higher-specificity nowrap rule */
+    .link-path,
+    .breadcrumb-item .link-path {
+        white-space: unset;
     }
 
     .delete,

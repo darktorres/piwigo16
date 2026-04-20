@@ -138,3 +138,28 @@ div.thumbHover {
     background: url("../icon/rating-stars.gif") no-repeat 0 center;
     width: 16px;
 }
+
+/* image info table */
+
+.imageInfoTable {
+    display: table;
+    margin: auto;
+}
+
+.imageInfo {
+    display: table-row;
+    line-height: 20px;
+}
+
+.imageInfo dt {
+    display: table-cell;
+    text-align: right;
+    font-weight: bold;
+    padding-right: 0.5em;
+}
+
+.imageInfo dd {
+    display: table-cell;
+    text-align: left;
+    font-weight: normal;
+}

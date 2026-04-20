@@ -1,0 +1,52 @@
+/* Popup help page */
+#thePopuphelpPage #copyright {
+    display: none;
+}
+
+#thePopuphelpPage p {
+    padding: 0.5em;
+}
+
+#thePopuphelpPage dl {
+    margin: 0 25px 25px;
+}
+
+tr.tagLine {
+    border-bottom: 1px solid #ddd;
+}
+
+td.nbEntries {
+    text-align: right;
+    font-style: italic;
+    font-size: 90%;
+}
+
+fieldset.tagLetter {
+    border: 1px solid #d3d3d3;
+    width: 200px;
+    margin: 0.5em;
+    padding: 10px;
+}
+
+legend.tagLetterLegend {
+    border: 1px solid #d3d3d3;
+    font-size: 120%;
+    font-weight: bold;
+    padding: 0 5px;
+    font-style: normal;
+}
+
+table.tagLetterContent {
+    width: 100%;
+    font-size: 80%;
+    border-collapse: collapse;
+}
+
+#theHeader {
+    text-align: center;
+}
+
+/* jQuery datepicker */
+img.ui-datepicker-trigger {
+    cursor: pointer;
+}

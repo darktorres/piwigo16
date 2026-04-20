@@ -5,20 +5,22 @@ dt,
 .throw,
 .content,
 label,
-LEGEND {
+legend {
     color: #777;
 }
 
-INPUT,
+input,
 select,
 textarea {
     color: #999;
     background-color: #444;
 }
+
 option[disabled] {
     background-color: #999;
     color: #444;
 }
+
 input[type="radio"],
 input[type="checkbox"] {
     background-color: transparent;
@@ -27,6 +29,7 @@ input[type="checkbox"] {
 .showInfo {
     color: #666;
 }
+
 .showInfo:hover {
     color: #999;
 }
@@ -36,13 +39,14 @@ h2 {
 }
 
 .header_notes {
-    background: transparent url(../default/icon/note.png) no-repeat right top;
+    background: transparent url("../default/icon/note.png") no-repeat right top;
     border: none;
     min-height: 48px;
     padding: 15px 60px 0 0;
     right: 0;
     width: 550px;
 }
+
 html,
 body {
     min-height: 100%;
@@ -54,16 +58,19 @@ body {
 }
 
 /* #the_page { margin: 0; padding: 0; z-index: 1; top:0px; */
+
 /* padding-top: 0; min-height: 100%; width:100%; position:absolute; left:0px; } */
 h3,
 .row2,
 .content {
     background-color: #222;
 }
+
 .throw,
 .row1 {
     background-color: #111;
 }
+
 .throw em {
     font-style: normal;
     color: #ff3363;
@@ -74,13 +81,14 @@ h3,
 }
 
 #content {
-    background-color: #444444;
+    background-color: #444;
 }
 
 h1 {
     background-color: #565656;
     color: #c1c1c1;
 }
+
 h1 .bc-albums {
     background-color: #333;
 }
@@ -92,9 +100,11 @@ h1 .bc-albums {
 .tabsheet li.selected_tab {
     background-color: #444;
 }
+
 .tabsheet li.selected_tab a {
     color: #c1c1c1;
 }
+
 .tabsheet a {
     color: #7e7e7e;
     font-weight: normal;
@@ -112,9 +122,11 @@ h1 .bc-albums {
     background: none;
     border: 0;
 }
+
 .content h3 ~ h3 {
     margin-top: 40px;
 }
+
 .content h4 {
     font-size: 14px;
     text-align: left;
@@ -127,24 +139,26 @@ dd {
     margin: 5px;
 }
 
-UL.thumbnails span.wrap2 {
+ul.thumbnails span.wrap2 {
     background-color: #333;
 }
 
 /* .throw, */ td h3 {
-    background-image: url(images/fillet.png);
+    background-image: url("images/fillet.png");
     background-repeat: repeat-x;
 }
+
 /* borders */
 fieldset {
     border: none;
 }
 
-INPUT,
-SELECT,
-TEXTAREA {
+input,
+select,
+textarea {
     border: 1px solid #666;
 }
+
 input:focus,
 select:focus,
 textarea:focus {
@@ -152,19 +166,23 @@ textarea:focus {
     color: #999;
 }
 
-TEXTAREA {
+textarea {
     cursor: text;
     font-size: 13px;
 }
+
 .tagSelection label {
     padding-right: 12px;
 }
-.tagSelection LI.tagSelected {
+
+.tagSelection li.tagSelected {
     background-color: #aaa;
 }
-.tagSelected LABEL {
+
+.tagSelected label {
     color: #000;
 }
+
 ul.thumbnails input {
     color: #999;
     font-size: 10px;
@@ -172,15 +190,18 @@ ul.thumbnails input {
     background-color: #444;
     text-align: center;
 }
-INPUT[type="submit"]:hover,
-INPUT[type="reset"]:hover {
+
+input[type="submit"]:hover,
+input[type="reset"]:hover {
     cursor: pointer;
 }
-INPUT.bigbutton:hover {
+
+input.bigbutton:hover {
     background-color: #222;
     color: #f33;
     border: 0;
 }
+
 .throw {
     font-size: 120%;
     line-height: 26px;
@@ -188,15 +209,19 @@ INPUT.bigbutton:hover {
     font-weight: bold;
     color: #ff3363;
 }
+
 label {
     cursor: pointer;
 }
+
 .menuLi {
     background: #333;
 }
+
 .menuLi_hidden {
     background: #333 !important;
 }
+
 a.Piwigo {
     font-family: verdana, arial, helvetica, sans-serif !important;
     font-size: 11px;
@@ -206,6 +231,7 @@ a.Piwigo {
     text-decoration: none;
     border: 0;
 }
+
 a.Piwigo:hover span.Piwigo {
     border-bottom: 1px solid #ff3363;
 }
@@ -217,18 +243,20 @@ a.Piwigo:hover span.Piwigo {
 a {
     color: #777;
 }
+
 a:hover,
 a:active {
     color: #f70;
     cursor: pointer;
 }
+
 ul.actions,
 .content form#waiting {
     text-align: center;
 }
 
-#adminHome A,
-#menubar li A,
+#adminHome a,
+#menubar li a,
 #menubar dt {
     color: #8d8d8d;
 }
@@ -272,22 +300,27 @@ ul.actions,
     color: #eee;
     background-color: #000;
 }
+
 .cluetip-outer {
     border-color: #666;
     color: #666;
     background-color: #222;
 }
+
 .cluetip-title {
     color: #ff3363;
     background-color: #111;
 }
+
 /* jQuery ui resizable */
 .ui-resizable {
     position: relative;
 }
+
 .ui-wrapper {
     border: 0;
 }
+
 .ui-wrapper input,
 .ui-wrapper textarea {
     border: 0;
@@ -299,9 +332,11 @@ ul.actions,
     display: none;
     font-size: 0.1px;
 }
+
 .ui-resizable .ui-resizable-handle {
     display: block;
 }
+
 body .ui-resizable-disabled .ui-resizable-handle {
     display: none;
 } /* use 'body' to make it more specific (css order) */
@@ -313,26 +348,33 @@ body .ui-resizable-autohide .ui-resizable-handle {
     background-color: #555;
     border: 2px solid #333;
 }
+
 #ui-datepicker-div .ui-datepicker-title {
     color: white;
 }
+
 #ui-datepicker-div .ui-icon-circle-triangle-w {
-    background: transparent url(icon/prev.png) no-repeat;
+    background: transparent url("icon/prev.png") no-repeat;
 }
+
 #ui-datepicker-div .ui-icon-circle-triangle-e {
-    background: transparent url(icon/next.png) no-repeat;
+    background: transparent url("icon/next.png") no-repeat;
 }
-#ui-datepicker-div A.ui-datepicker-prev:hover,
-#ui-datepicker-div A.ui-datepicker-next:hover {
+
+#ui-datepicker-div a.ui-datepicker-prev:hover,
+#ui-datepicker-div a.ui-datepicker-next:hover {
     background-color: #eee;
     border: 1px solid #aaa;
 }
+
 .ui-datepicker th {
     color: #ccc;
 }
+
 .ui-state-disabled {
     color: #aaa;
 }
+
 .ui-timepicker-div,
 .ui-timepicker-div dt {
     color: #ccc;
@@ -343,11 +385,13 @@ body .ui-resizable-autohide .ui-resizable-handle {
     border-radius: 2px;
     border: 1px solid #666;
 }
+
 .ui-slider .ui-slider-handle {
     border: 1px solid #f36;
     background: #222;
     border-radius: 0.6em;
 }
+
 .ui-slider .ui-slider-range {
     background: #666;
     border-radius: 2px;
@@ -358,9 +402,11 @@ body .ui-resizable-autohide .ui-resizable-handle {
     background-color: #111;
     color: #f70 !important;
 }
+
 #ui-datepicker-div .ui-datepicker-days-row {
     background-color: #444;
 }
+
 #ui-datepicker-div .ui-datepicker-week-end-cell,
 #ui-datepicker-div .ui-datepicker-week-end-cell a {
     background-color: #222;
@@ -369,41 +415,50 @@ body .ui-resizable-autohide .ui-resizable-handle {
     border-top-color: #222;
     border-left-color: #222;
 }
+
 #ui-datepicker-div .ui-datepicker-title-row {
     background-color: #111;
 }
+
 #ui-datepicker-div .ui-datepicker-title-row .ui-datepicker-week-end-cell a {
     color: #f33;
 }
+
 #ui-datepicker-div a:hover {
-    color: #ff3333 !important;
+    color: #f33 !important;
     border: 0;
     background-color: #111 !important;
 }
+
 #ui-datepicker-div .ui-datepicker-header select {
     background-color: #444;
     color: #999;
     font-weight: normal;
 }
+
 #ui-datepicker-div .ui-datepicker-links {
     background-color: #222;
 }
+
 #ui-datepicker-div .ui-datepicker-header {
     background-color: #444;
 }
+
 #ui-datepicker-div .ui-datepicker-current-day {
     background-color: #111 !important;
     border-color: #444;
     border-top-color: #111;
     border-left-color: #111;
 }
+
 #ui-datepicker-div .ui-datepicker-days-cell {
     background-color: #444;
     border: 1px solid #222;
     border-top-color: #444;
     border-left-color: #444;
 }
-INPUT[type="text"].large {
+
+input[type="text"].large {
     width: 317px;
 }
 
@@ -419,7 +474,6 @@ input[type="reset"] {
 input[type="button"]:hover,
 input[type="submit"]:hover,
 input[type="reset"]:hover {
-    color: #000;
     text-decoration: none;
     background-color: #f70;
     color: #000;
@@ -437,19 +491,20 @@ input[type="reset"]:disabled {
 }
 
 .bigbutton {
-    background: transparent url(images/quickLocalSync_inactiv.png) no-repeat
+    background: transparent url("images/quickLocalSync_inactiv.png") no-repeat
         scroll left top;
     display: block;
     color: #111;
     font-size: 28px;
     height: 161px;
     margin: 0 20px 0 auto;
-    padding: 0 18px 0;
+    padding: 0 18px;
     text-align: center;
     width: 625px;
     position: relative;
     z-index: 50;
 }
+
 .bigtext {
     display: block;
     font-weight: bold;
@@ -460,13 +515,15 @@ input[type="reset"]:disabled {
     z-index: 55;
     cursor: pointer;
 }
+
 .bigbutton:hover {
-    background: transparent url(images/quickLocalSync_hover.png) no-repeat
+    background: transparent url("images/quickLocalSync_hover.png") no-repeat
         scroll left top;
     color: #000;
 }
+
 .bigbutton input {
-    background: transparent url(images/transparent.gif) repeat scroll left top;
+    background: transparent url("images/transparent.gif") repeat scroll left top;
     border: 0;
     display: block;
     height: 85px;
@@ -478,9 +535,10 @@ input[type="reset"]:disabled {
     padding: 0;
     color: transparent;
 }
+
 .bigbutton input:hover {
     cursor: pointer;
-    background: transparent url(images/transparent.gif) repeat scroll left top;
+    background: transparent url("images/transparent.gif") repeat scroll left top;
     border: 0;
     padding: 0;
     color: transparent;
@@ -511,12 +569,12 @@ a.stat-box:hover {
 }
 
 .intro-charts .tooltip {
-    background-color: #333333;
+    background-color: #333;
     box-shadow: none;
 }
 
 .intro-charts .tooltip::after {
-    border-color: transparent transparent #333333 transparent;
+    border-color: transparent transparent #333;
 }
 
 .storage-tooltips .separated {
@@ -524,11 +582,11 @@ a.stat-box:hover {
 }
 
 .storage-tooltips .tooltip-arrow {
-    border-color: transparent transparent #333333 transparent;
+    border-color: transparent transparent #333;
 }
 
 .storage-tooltips .tooltip-arrow.bottom {
-    border-color: #333333 transparent transparent transparent;
+    border-color: #333 transparent transparent;
 }
 
 .intro-charts .tooltip .tooltip-details-title,
@@ -576,9 +634,10 @@ a.stat-box:hover {
 * + html .bigtext {
     left: 70px;
 }
+
 * + html .bigbutton input,
 * html .bigbutton input {
-    left: 0px;
+    left: 0;
     position: relative;
     top: -40px;
 }
@@ -590,31 +649,39 @@ a.stat-box:hover {
 .themeBox {
     background-color: #333;
 }
+
 .themeName {
     color: #ccc;
 }
+
 .themeSelect {
     background-color: #333;
     box-shadow: none;
 }
+
 .themeSelect.themeDefault {
     background-color: #f9852c;
 }
+
 .themeSelect.themeDefault a,
 .themeSelect.themeDefault span,
 .themeSelect.themeDefault .themeName {
     color: #333;
 }
-.themeActions A {
+
+.themeActions a {
     border-bottom: none;
 }
+
 .themeActions span {
-    background-color: #888888;
-    color: #666666;
+    background-color: #888;
+    color: #666;
 }
+
 .showInfo-dropdown-header a {
     color: #3a3a3a;
 }
+
 #pluginsMenuSeparator {
     border: 1px solid #333;
 }
@@ -622,7 +689,7 @@ a.stat-box:hover {
 #helpContent,
 #pLoaderPage,
 #ftpPage,
-#ftpPage LEGEND {
+#ftpPage legend {
     color: #aaa;
 }
 
@@ -635,6 +702,7 @@ a.stat-box:hover {
     box-shadow: none;
     border-left: none;
 }
+
 .pluginContainer.line-form .pluginBox:hover .pluginContent {
     background: #1e1e1d;
 }
@@ -642,45 +710,58 @@ a.stat-box:hover {
 .pluginName {
     color: #aaa;
 }
+
 .pluginBox.incompatible {
     border-color: #800 !important;
 }
+
 .pluginActionLevel1 {
     color: #333;
 }
+
 .pluginActionLevel2 {
-    color: #bbbbbb;
+    color: #bbb;
 }
+
 .pluginFilter {
     color: #c1c1c1;
 }
+
 .pluginFilter input {
     border-color: #c1c1c1;
 }
+
 .languageBox {
     background-color: #333;
 }
+
 .languageName {
     color: #ccc;
 }
+
 .languageDefault {
     background-color: #555;
     color: #aaa;
 }
+
 .groupError {
     color: #ffd5dc;
     background-color: #f22;
 }
+
 .group-rename input {
     color: #999;
 }
+
 .GroupBackgroundSelected .Group-name {
     color: #333 !important;
 }
+
 .GroupContainer .group_name-editable {
     background-color: #323232 !important;
     border: 1px solid #666 !important;
 }
+
 .GroupContainer .group-rename .icon-ok {
     color: #222;
 }
@@ -702,7 +783,7 @@ a.stat-box:hover {
     display: block;
 }
 
-#batchManagerGlobal UL.thumbnails li:hover .wrap2 {
+#batchManagerGlobal ul.thumbnails li:hover .wrap2 {
     color: white;
 }
 
@@ -742,19 +823,24 @@ ul.token-input-list {
     border-color: #666 !important;
     background-color: #444 !important;
 }
+
 ul.token-input-list li input {
     background-color: #444 !important;
 }
+
 li.token-input-token span {
     color: #878787 !important;
 }
+
 div.token-input-dropdown {
     background-color: #eee !important;
     border-color: #666 !important;
 }
+
 div.token-input-dropdown ul li {
     background-color: #eee !important;
 }
+
 div.token-input-dropdown ul li.token-input-selected-dropdown-item {
     background-color: #ff7800 !important;
 }
@@ -768,7 +854,7 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 #picture-content textarea,
 #picture-content .selectize-input,
 #picture-content select {
-    background-color: #444444;
+    background-color: #444;
     border: 1px solid #666;
     color: #c1c1c1;
 }
@@ -788,10 +874,12 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
     background-color: #333;
     color: #777;
 }
+
 .orCreateAlbum:hover {
     text-decoration: none;
     color: #777;
 }
+
 .move-cat-container:hover {
     background-color: #232323;
 }
@@ -814,6 +902,7 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
     opacity: 0.5;
     pointer-events: none;
 }
+
 .move-cat-container.disabledToggle:hover .move-cat-toggler {
     opacity: 0.5;
     pointer-events: none;
@@ -825,12 +914,14 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 .RenameAlbumPopInContainer {
     background-color: #333;
 }
+
 .AddUserPopInContainer .AddIconTitle,
 .AddAlbumPopInContainer .AddIconTitle,
 .DeleteAlbumPopInContainer .DeleteIconTitle,
 .RenameAlbumPopInContainer .RenameAlbumTitle {
     color: #777;
 }
+
 .AddUserPopInContainer .AddUserInput,
 .AddAlbumPopInContainer .user-property-input,
 .DeleteAlbumPopInContainer .DeleteAlbumInput,
@@ -851,16 +942,19 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 .RenameAlbumCancel:hover {
     background-color: #ffc17e;
 }
+
 .AddAlbumSubmit,
 .RenameAlbumSubmit {
     color: #3f3e40;
     background-color: #ffa744;
 }
+
 .AddAlbumSubmit:hover,
 .RenameAlbumSubmit:hover {
     color: #3f3e40;
     background-color: #f70;
 }
+
 .DeleteAlbumSubmit {
     background-color: #e74c3c;
     color: #fff;
@@ -933,7 +1027,7 @@ label > p.group_select {
 }
 
 .groups input[type="text"] {
-    background-color: #444444;
+    background-color: #444;
     border: 1px solid #d5d5d5;
 }
 
@@ -953,7 +1047,7 @@ label > p.group_select {
     color: #e0e0e0;
 }
 
-/*Edit group name*/
+/* Edit group name */
 
 .groups .Group-name {
     color: #777;
@@ -964,9 +1058,9 @@ label > p.group_select {
     background-color: #1a1a1a;
 }
 
-/*Add Group */
+/* Add Group */
 
-.groups fieldset INPUT[type="text"]::placeholder {
+.groups fieldset input[type="text"]::placeholder {
     color: #d5d5d5;
 }
 
@@ -976,10 +1070,10 @@ label > p.group_select {
 }
 
 .groups button.submit:hover {
-    background-color: #ff7700;
+    background-color: #f70;
 }
 
-/* Group Options*/
+/* Group Options */
 
 #GroupOptions {
     background-color: #5c5c5c;
@@ -987,7 +1081,7 @@ label > p.group_select {
     color: #c0c0c0;
 }
 
-/*Group manager buttons*/
+/* Group manager buttons */
 
 .groups .manage-users,
 .groups .manage-permissions {
@@ -1002,7 +1096,7 @@ label > p.group_select {
     cursor: pointer;
 }
 
-/*UserList Pop in*/
+/* UserList Pop in */
 
 .UserListPopInContainer {
     background-color: #444;
@@ -1015,7 +1109,7 @@ label > p.group_select {
 }
 
 #UserList .AddUserBlock button:hover {
-    background-color: #ff7700;
+    background-color: #f70;
 }
 
 #UserList .AddUserBlock input,
@@ -1033,7 +1127,7 @@ label > p.group_select {
 }
 
 .UsersInGroupList .icon-cancel:hover {
-    color: #ff7700;
+    color: #f70;
 }
 
 .LinkUserManager {
@@ -1046,7 +1140,7 @@ label > p.group_select {
     background-color: #333;
 }
 
-.slider:before {
+.slider::before {
     background-color: #151515;
 }
 
@@ -1086,7 +1180,7 @@ input:focus + .slider {
     color: black !important;
 }
 
-/*Selection mode content*/
+/* Selection mode content */
 
 .SelectionModeGroupList {
     color: #c0c0c0;
@@ -1115,7 +1209,7 @@ input:focus + .slider {
     background-color: #ffa744;
 }
 
-/*Merge Options*/
+/* Merge Options */
 
 #MergeOptionsBlock p {
     color: #777;
@@ -1125,7 +1219,7 @@ input:focus + .slider {
     color: #c0c0c0;
 }
 
-/*Merge options Radio buttons*/
+/* Merge options Radio buttons */
 
 .ConfirmMergeButton {
     background-color: #ffa744;
@@ -1136,7 +1230,7 @@ input:focus + .slider {
     box-shadow: 0 0 2px #c5c5c5;
 }
 
-/*Group checkbox*/
+/* Group checkbox */
 
 .groups .group-checkmark {
     border: 2px solid #c76a23;
@@ -1150,12 +1244,12 @@ input:focus + .slider {
     background-color: #c76a23;
 }
 
-.groups .Group-checkbox .group-checkmark:after {
+.groups .Group-checkbox .group-checkmark::after {
     border: solid #ebebeb;
     border-width: 0 3px 3px 0;
 }
 
-/*Group manager buttons*/
+/* Group manager buttons */
 
 .groups .manage-users,
 .groups .manage-users:hover,
@@ -1169,7 +1263,7 @@ input:focus + .slider {
     color: #3c3c3c;
 }
 
-/*UserList Pop in*/
+/* UserList Pop in */
 
 .CloseUserList,
 .CloseAddAlbum,
@@ -1194,7 +1288,7 @@ input:focus + .slider {
 
 .ValidationUserAssociated,
 .ValidationUserDissociated {
-    background-color: #00aa00;
+    background-color: #0a0;
 }
 
 .ValidationUserAssociated p,
@@ -1213,6 +1307,7 @@ input:focus + .slider {
     background-color: #003751;
     color: #379bbc;
 }
+
 .advanced-filter-select {
     border: 1px solid transparent;
 }
@@ -1220,7 +1315,8 @@ input:focus + .slider {
 .advanced-filter-select-container::before {
     color: #4c4c4c;
 }
-/*------*/
+
+/* ------ */
 
 .userSeparator {
     color: #666;
@@ -1231,7 +1327,7 @@ input:focus + .slider {
     background-color: #444 !important;
 }
 
-/*Edit user popin*/
+/* Edit user popin */
 
 .user_form_popin .ui-slider-horizontal .ui-slider-handle {
     background-color: #ffa646;
@@ -1241,6 +1337,7 @@ input:focus + .slider {
 .user_form_popin .ui-slider-horizontal .ui-slider-range-min {
     background-color: #5a5a5a;
 }
+
 .user_form_popin .ui-slider-horizontal {
     background-color: #151515;
 }
@@ -1273,6 +1370,7 @@ table.dataTable.no-footer {
 .userPropertiesContainer {
     border-color: #333;
 }
+
 .userPrefs {
     border-color: #333;
 }
@@ -1281,7 +1379,7 @@ table.qsearch_help_table td {
     border-color: #444;
 }
 
-.font-checkbox [class*="icon-check"]:before {
+.font-checkbox [class*="icon-check"]::before {
     color: #aaa;
 }
 
@@ -1306,66 +1404,82 @@ table.qsearch_help_table td {
     font-weight: bold;
     background-color: #ffa646;
 }
+
 .afterUploadActions a:hover {
     text-decoration: none;
-    background-color: #ff7700;
+    background-color: #f70;
 }
+
 .font-checkbox {
     color: #898888;
 }
+
 .font-checkbox:hover {
     color: #ffa646;
 }
+
 .with-border legend,
 .with-border strong {
     color: #c0c0c0;
 }
+
 .font-checkbox.selected {
     color: #ffa646;
 }
 
-LEGEND {
+legend {
     color: #c1c1c1;
 }
+
 a#showPermissions {
     color: #d6d6d6;
     border: 1px solid #d6d6d6;
     background-color: #414141;
 }
+
 a#showPermissions:hover {
     border-color: #a5a5a5;
 }
+
 .icon-plus.cboxElement {
     border: 1px solid #777;
     color: #c0c0c0;
 }
+
 .icon-plus.cboxElement:hover {
     border: 1px solid #aaa;
 }
+
 .selectize-control.single .selectize-input {
     border: 2px solid #fac17e !important;
     color: #d5d5d5;
 }
+
 .selectize-control.single .selectize-input:hover {
     border-color: #ffa646 !important;
 }
+
 .plupload_filelist {
-    background-color: #444444 !important;
-    scrollbar-color: #555 #444444 !important;
+    background-color: #444 !important;
+    scrollbar-color: #555 #444 !important;
 }
+
 .plupload_filelist li {
     border-bottom: 1px solid #343434 !important;
     color: #a5a5a5 !important;
 }
+
 .plupload_filelist_footer {
     background-color: #3c3939 !important;
     border: 0 !important;
     color: #a5a5a5 !important;
 }
+
 li.plupload_delete a {
     background: url("images/cancel.svg") !important;
     background-size: cover !important;
 }
+
 li.plupload_delete a:hover {
     background: url("images/cancelhover.svg") !important;
     background-size: cover !important;
@@ -1374,20 +1488,25 @@ li.plupload_delete a:hover {
 .addAlbumEmpty {
     color: #c1c1c1;
 }
+
 .buttonSeparator {
     color: #c1c1c1;
 }
+
 #cboxTitle {
     color: #7f7f7f !important;
 }
+
 #addAlbumForm {
     color: #999;
 }
+
 .addAlbum form input {
     color: #777 !important;
     background-color: #252525 !important;
     border: none !important;
 }
+
 .addAlbum form input::placeholder {
     color: #777 !important;
 }
@@ -1396,26 +1515,32 @@ li.plupload_delete a:hover {
     background-color: #343434 !important;
     color: #777 !important;
 }
+
 .addFilesButtonChanged {
     background-color: #888;
 }
+
 .addFilesButtonChanged:hover {
     background-color: #777;
 }
+
 .categoryBox,
 .addAlbum {
     background-color: #333 !important;
     box-shadow: -1px 1px 2px #1a1a1a;
 }
+
 .categoryBox.line_cat:hover {
     background: #f9852c !important;
     color: #333 !important;
     transition: 0.2s linear;
 }
+
 .categoryBox.line_cat:hover .albumInfos {
     color: #333 !important;
     transition: 0.2s linear;
 }
+
 .categoryBox.line_cat:hover .albumActions a span {
     color: #333;
     transition: 0.2s linear;
@@ -1437,8 +1562,8 @@ li.plupload_delete a:hover {
 }
 
 .cat-modify-footer {
-    border-color: rgba(0, 0, 0, 0.2);
-    background: #444444;
+    border-color: rgb(0, 0, 0, 0.2);
+    background: #444;
 }
 
 .cat-modify-actions a:hover .cat-modify-actions .toggle-comment-option:hover {
@@ -1451,13 +1576,14 @@ li.plupload_delete a:hover {
 }
 
 .cat-modify-input-container #cat-parent {
-    background: #333333;
-    box-shadow: 0px 2px #00000024;
+    background: #333;
+    box-shadow: 0 2px #00000024;
 }
 
 .albumActions a:hover span {
     color: #fff !important;
 }
+
 .albumActions a {
     text-decoration: none;
 }
@@ -1473,41 +1599,48 @@ li.plupload_delete a:hover {
 .deleteDerivButtons a {
     background-color: #393939;
 }
+
 #addFilter,
 #filterList select,
 .pictureLevels select,
 #permitAction select,
 .sort-by select {
-    background-color: #444444;
+    background-color: #444;
     color: #bfbfbf;
 }
+
 #filter_category .selectize-input.items.full.has-options.has-items,
 #filter_tags .selectize-input.items.not-full.has-options,
 #filter_tags .selectize-input.items.not-full,
 #filter_search input,
 #action_associate .selectize-input.items.full.has-options.has-items,
 #action_dissociate .selectize-input.items.full.has-options.has-items {
-    background-color: #444444;
+    background-color: #444;
     color: #bfbfbf;
     border: 1px solid #666;
     box-shadow: none;
 }
+
 #permitAction select {
     background: #3c3c3c;
     color: #c0c0c0;
 }
+
 #set_date_creation input {
     background: #3c3c3c;
     color: #c0c0c0;
 }
+
 #action_associate a:last-child {
     color: #c0c0c0;
     background-color: #464646;
 }
+
 #filter_dimension .slider-choice,
 #filter_filesize .slider-choice {
     background-color: #393939;
 }
+
 #filter_dimension .slider-choice:hover,
 #filter_filesize .slider-choice:hover,
 .dimension-cancel:hover {
@@ -1515,6 +1648,7 @@ li.plupload_delete a:hover {
     background-color: #ffa646 !important;
     color: initial;
 }
+
 #forbidAction,
 .selectionEmptyBlock,
 .noFilter {
@@ -1525,18 +1659,22 @@ li.plupload_delete a:hover {
 .pageNumberSelected {
     background-color: #b4b4b4;
 }
+
 #action_title .large,
 #action_author .large {
     background-color: #333;
     color: #fefefe;
 }
+
 #addFilter optgroup,
 #batchManagerGlobal option[disabled] {
     background-color: #555;
 }
+
 .dimension-cancel {
     background-color: #555 !important;
 }
+
 .pageNumberSelected {
     color: #777 !important;
     font-weight: bold;
@@ -1548,29 +1686,35 @@ li.plupload_delete a:hover {
     border: 1px solid #ffaf58;
     background: #ffaf58;
 }
+
 #batchManagerGlobal .ui-state-hover,
 #batchManagerGlobal .ui-widget-content .ui-state-hover,
 #batchManagerGlobal .ui-widget-header .ui-state-hover {
     background: #ffaf58;
 }
+
 #batchManagerGlobal .ui-state-focus,
 #batchManagerGlobal .ui-widget-content .ui-state-focus,
 #batchManagerGlobal .ui-widget-header .ui-state-focus {
     border: 1px solid #ffaf58;
     background: #ffaf58;
 }
+
 #batchManagerGlobal .ui-state-active,
 #batchManagerGlobal .ui-widget-content .ui-state-active,
 #batchManagerGlobal .ui-widget-header .ui-state-active {
     background: #ffaf58;
 }
+
 #batchManagerGlobal .ui-widget-content {
     background: #666;
     border: 1px solid #666;
 }
+
 #batchManagerGlobal .ui-slider .ui-slider-range {
-    background-color: #aaaaaa;
+    background-color: #aaa;
 }
+
 #batchManagerGlobal .ui-slider-range.ui-widget-header.ui-corner-all {
     border: 1px solid #ffaf58;
     background-color: #ffaf58;
@@ -1584,7 +1728,8 @@ li.plupload_delete a:hover {
 #batchManagerGlobal #applyFilter:hover {
     background-color: #202020;
 }
-/*Error message*/
+
+/* Error message */
 
 .errors {
     color: #fec6c7;
@@ -1593,16 +1738,16 @@ li.plupload_delete a:hover {
 }
 
 .errors li {
-    color: #ffffff;
+    color: #fff;
 }
 
 .errors a {
     background-color: #6b3030;
     padding: 2px 7px;
-    color: #ffffff;
+    color: #fff;
 }
 
-/*Success message*/
+/* Success message */
 
 .infos {
     color: #b8feee;
@@ -1611,16 +1756,16 @@ li.plupload_delete a:hover {
 }
 
 .infos li {
-    color: #ffffff;
+    color: #fff;
 }
 
 .infos a {
     background-color: #28554a;
     padding: 2px 7px;
-    color: #ffffff;
+    color: #fff;
 }
 
-/*Warning message*/
+/* Warning message */
 
 .warnings {
     color: #fedac0;
@@ -1631,10 +1776,10 @@ li.plupload_delete a:hover {
 .warnings a {
     background-color: #734627;
     padding: 2px 7px;
-    color: #ffffff;
+    color: #fff;
 }
 
-/*announcement message*/
+/* announcement message */
 
 .messages {
     color: #bad6ff;
@@ -1644,11 +1789,11 @@ li.plupload_delete a:hover {
 
 .eiw .messages a {
     background-color: #273d5f;
-    color: #ffffff;
+    color: #fff;
     padding: 2px 7px;
 }
 
-/* Popin Jconfirm*/
+/* Popin Jconfirm */
 
 .jconfirm .jconfirm-box {
     background-color: #333 !important;
@@ -1739,8 +1884,8 @@ li.plupload_delete a:hover {
 }
 
 .info-warning {
-    color: #ffdd99;
-    background-color: #ee8800;
+    color: #fd9;
+    background-color: #e80;
 }
 
 .info-warning a,
@@ -1774,12 +1919,13 @@ li.plupload_delete a:hover {
 .search-album-ghost div {
     background-image: linear-gradient(#333, #444);
 }
+
 .search-album-ghost span {
     background-color: #5a5757;
     color: #c1c1c1;
 }
 
-/* Icon colors*/
+/* Icon colors */
 
 .icon-red {
     color: #fec6c7;
@@ -1803,7 +1949,7 @@ li.plupload_delete a:hover {
 
 .icon-blue-full {
     background-color: #1c5b88;
-    border: 0px;
+    border: 0;
     color: #379bbc;
 }
 
@@ -1828,7 +1974,7 @@ li.plupload_delete a:hover {
 
 .themeActions a:nth-child(2),
 .plugin-inactive .pluginContent .pluginActionLevel1 {
-    background-color: #999999;
+    background-color: #999;
 }
 
 .pluginContent {
@@ -1843,12 +1989,9 @@ li.plupload_delete a:hover {
 .pluginTypeFilter {
     display: flex;
     flex-direction: row;
-
     position: absolute;
-
     left: 225px;
     z-index: 2;
-
     transform: translateY(13px);
 }
 
@@ -1857,19 +2000,17 @@ li.plupload_delete a:hover {
     flex-direction: row;
     justify-content: center;
     align-items: center;
-
     width: auto;
     height: 30px;
     padding: 0 10px;
-
     color: #c1c1c1;
-    background: #555555;
-    box-shadow: 0px 2px #00000066;
+    background: #555;
+    box-shadow: 0 2px #0006;
 }
 
 .pluginTypeFilter input:checked + label {
     background: #ffa500;
-    color: #444444;
+    color: #444;
     box-shadow: 0 2px #925f00;
 }
 
@@ -1890,17 +2031,17 @@ li.plupload_delete a:hover {
 
 .pluginContainer.line .pluginBox:hover .pluginContent {
     transition: 0.4s;
-    background: #333333;
+    background: #333;
 }
 
 .pluginContainer.line .pluginBox:hover.plugin-inactive .slider {
     transition: 0.4s;
-    background: #777777;
+    background: #777;
 }
 
 .pluginContainer .pluginBox.plugin-inactive .slider {
     transition: 0.4s;
-    background: #777777;
+    background: #777;
 }
 
 .pluginContainer.line .pluginBox:hover .pluginContent .pluginActions a {
@@ -1915,7 +2056,7 @@ li.plupload_delete a:hover {
     a {
     background: transparent;
     opacity: 1;
-    color: #777777;
+    color: #777;
 }
 
 .pluginContainer.line .pluginBox:hover .pluginUnavailableAction {
@@ -1926,7 +2067,7 @@ li.plupload_delete a:hover {
     .pluginBox.plugin-inactive:hover
     .pluginUnavailableAction {
     color: #3c3c3c !important;
-    background: #dddddddd !important;
+    background: #dddd !important;
 }
 
 .pluginBox.active .pluginActionsSmallIcons a span {
@@ -1935,7 +2076,7 @@ li.plupload_delete a:hover {
 }
 
 .pluginBox.active .pluginActionsSmallIcons a span:hover {
-    background: #ff7700;
+    background: #f70;
     color: #111;
 }
 
@@ -1987,7 +2128,7 @@ li.plupload_delete a:hover {
     color: #ededed;
 }
 
-/*Album view selector css*/
+/* Album view selector css */
 
 .AlbumViewSelector,
 .UserViewSelector {
@@ -2055,16 +2196,18 @@ li.plupload_delete a:hover {
 .user-first-col:hover .icon-pencil {
     color: #fedac0;
 }
+
 .user-first-col:hover .select-checkbox {
     border: solid #ffa646 2px !important;
     background-color: #ffa646 !important;
 }
+
 .user-first-col .select-checkbox {
     border: solid #ffa646 2px !important;
     background-color: transparent !important;
 }
 
-/* Selected container in userManager*/
+/* Selected container in userManager */
 
 .user-container.container-selected
     .user-container-checkbox.user-list-checkbox
@@ -2109,10 +2252,10 @@ li.plupload_delete a:hover {
     padding: 6px 15px !important;
 }
 
-/*****/
+/****  */
 
 .group-bonus {
-    color: #dddddd;
+    color: #ddd;
     background: transparent;
 }
 
@@ -2152,11 +2295,13 @@ li.plupload_delete a:hover {
 
 .user-property-button a {
     color: #c1c1c1;
+
     /* text-decoration: none; */
 }
 
 .user-property-button a:hover {
     color: #f70;
+
     /* text-decoration: none; */
 }
 
@@ -2203,6 +2348,7 @@ li.plupload_delete a:hover {
 .user-property-input.user-property-input-username:hover {
     background-color: #333;
 }
+
 .user-property-input.user-property-input-password:hover {
     background-color: #333;
 }
@@ -2219,7 +2365,7 @@ li.plupload_delete a:hover {
 .multiple-pictures-sizes,
 .multiple-compiledTemplate-sizes,
 .cache-size-value {
-    background: #555555;
+    background: #555;
     color: #c1c1c1;
 }
 
@@ -2234,73 +2380,61 @@ li.plupload_delete a:hover {
 /* Activity Tab in user manager */
 
 .select-user {
-    background: #555555;
+    background: #555;
     height: 50%;
-
     display: flex;
     align-items: center;
-
     padding: 0 20px;
-
-    box-shadow: 0px 2px 4px #00000024;
+    box-shadow: 0 2px 4px #00000024;
     border-radius: 5px;
 }
 
 .select-user-title {
-    color: #bbbbbb;
+    color: #bbb;
 }
 
 .start-date,
 .end-date {
     padding: 5px 10px;
-    background: #555555;
+    background: #555;
     border-radius: 50px;
     margin: 5px;
-    color: #bbbbbb;
+    color: #bbb;
 }
 
 .activity-time-text {
     font-size: 13px;
     font-weight: bold;
-    color: #bbbbbb;
+    color: #bbb;
 }
 
 .compactView .user-container-initials-wrapper > span {
     height: 50px !important;
     width: 50px !important;
-
     box-sizing: border-box;
 }
 
 .line {
     background: transparent;
-
     display: flex;
     flex-direction: row;
-
     height: 40px;
-
     align-items: center;
-
     margin-bottom: 10px;
-    color: #bbbbbb;
+    color: #bbb;
 }
 
 .line .detail-item {
-    background: #555555;
+    background: #555;
     margin: 0 10px 0 0;
     padding: 3px 6px;
     border-radius: 20px;
-
     min-width: 50px;
     max-width: 150px;
-
     text-align: center;
-
     overflow: hidden;
     text-overflow: ellipsis;
     cursor: default;
-
     white-space: nowrap;
 }
 
@@ -2308,7 +2442,7 @@ li.plupload_delete a:hover {
     margin-left: auto;
     height: 25px;
     width: 30px;
-    background: #555555;
+    background: #555;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -2319,17 +2453,18 @@ li.plupload_delete a:hover {
 }
 
 .download_csv:hover {
-    background: #777777;
-    color: #dddddd;
+    background: #777;
+    color: #ddd;
 }
 
 .selectedAlbum .selectedAlbum-first {
-    background-color: #333333;
+    background-color: #333;
 }
 
 .selectedAlbum span a {
     color: #777 !important;
 }
+
 .selectedAlbum span {
     background-color: #343434;
 }
@@ -2388,16 +2523,19 @@ li.plupload_delete a:hover {
 
 .breadcrumb-item {
     background-color: #333;
-    box-shadow: 0px 2px #00000070;
+    box-shadow: 0 2px #00000070;
     color: #777;
 }
+
 .breadcrumb-item:hover {
     background: #f9852c;
 }
+
 .breadcrumb-item:hover a,
 .breadcrumb-item:hover span {
     color: #000;
 }
+
 .breadcrumb-item .icon-cancel-circled:hover {
     color: #ae5d1e;
 }
@@ -2405,14 +2543,15 @@ li.plupload_delete a:hover {
 .linkedAlbumPopInContainer {
     background-color: #444;
 }
+
 .AddIconTitle,
 .limitReached {
-    color: #cccccc;
+    color: #ccc;
 }
 
 .search-result-item {
     background-color: #333;
-    box-shadow: 0px 2px #00000070;
+    box-shadow: 0 2px #00000070;
     color: #777;
 }
 
@@ -2421,7 +2560,7 @@ li.plupload_delete a:hover {
 }
 
 .search-result-item .icon-plus-circled:hover {
-    color: #ff7700;
+    color: #f70;
 }
 
 .search-line {
@@ -2444,7 +2583,7 @@ li.plupload_delete a:hover {
 .history-filter {
     background: #333 !important;
     color: #a1a1a1;
-    box-shadow: 0px 2px 4px #00000024;
+    box-shadow: 0 2px 4px #00000024;
 }
 
 #start_unset,
@@ -2486,18 +2625,21 @@ li.plupload_delete a:hover {
     box-shadow: 0 2px #af7200;
     color: #444 !important;
 }
+
 .breadcrumb-item.add-item:hover {
     color: #000;
 }
+
 .badge-dropdown {
     background: #333;
 }
+
 .badge-dropdown::after {
-    border-color: transparent transparent #333 transparent;
+    border-color: transparent transparent #333;
 }
 
 .cat-modify-ariane a.icon-sitemap::after {
-    background-color: #111111;
+    background-color: #111;
 }
 
 .cat-modify-footer-see-out.disabled {
@@ -2510,7 +2652,7 @@ li.plupload_delete a:hover {
     color: #373737 !important;
 }
 
-/*Jqtree*/
+/* Jqtree */
 ul.jqtree-tree span.jqtree-border {
     border: solid 2px #ededed !important;
 }

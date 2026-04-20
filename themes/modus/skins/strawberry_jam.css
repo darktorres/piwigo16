@@ -13,15 +13,15 @@ body {
     background-color: #f9f9f9;
 }
 
-#copyright A {
+#copyright a {
     color: #666;
 }
 
-#copyright A:hover {
+#copyright a:hover {
     color: #bf0d08;
 }
 
-.albThumbs LI {
+.albThumbs li {
     border-radius: 0;
 }
 
@@ -32,7 +32,7 @@ body {
 }
 
 .infos {
-    background: #096a09 url(../../default/icon/infos.png) no-repeat center right;
+    background: #096a09 url("../../default/icon/infos.png") no-repeat center right;
     color: white;
 }
 
@@ -44,12 +44,12 @@ h2 {
     color: white;
 }
 
-H3,
+h3,
 label {
     color: #7f0906;
 }
 
-A {
+a {
     color: #7f0906;
 }
 
@@ -67,7 +67,7 @@ a:hover {
     color: white !important;
 }
 
-#menubar LI.selected > A {
+#menubar li.selected > a {
     color: #7f0906;
 }
 
@@ -81,12 +81,12 @@ a:hover {
     color: #d2d2d2;
 }
 
-#commentAdd INPUT[type="text"],
-INPUT[type="password"],
-#commentAdd SELECT,
-#commentAdd TEXTAREA,
+#commentAdd input[type="text"],
+input[type="password"],
+#commentAdd select,
+#commentAdd textarea,
 #comments input[type="text"],
-#comments TEXTAREA {
+#comments textarea {
     background-color: #2d2d2d;
     color: white;
 }
@@ -108,53 +108,53 @@ INPUT[type="password"],
 }
 
 .selectize-control .plugin-remove_button [data-value] .remove {
-    border-left-color: #333333;
+    border-left-color: #333;
 }
 
-#menubar DT,
-#menubar DT A {
+#menubar dt,
+#menubar dt a {
     color: white;
 }
 
-#menubar DT:hover,
-#menubar DT A:hover {
+#menubar dt:hover,
+#menubar dt a:hover {
     color: white;
 }
 
-#menubar DD {
+#menubar dd {
     background-color: white;
     color: #7f0906;
     box-shadow: 5px 5px 10px black;
     border-radius: 0;
 }
 
-#menubar DD A {
+#menubar dd a {
     color: #7f0906;
 }
 
-#menubar DD A:hover {
+#menubar dd a:hover {
     background-color: #bf0d08;
     color: white;
 }
 
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-#menubar INPUT {
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+#menubar input {
     color: white;
 }
 
-#menubar INPUT {
+#menubar input {
     background-color: transparent !important;
 }
 
-INPUT[type="submit"] {
+input[type="submit"] {
     background-color: #400403;
     border: none;
     color: white;
 }
 
-INPUT[type="submit"]:hover {
+input[type="submit"]:hover {
     background-color: #400403;
     border: none;
     color: white;
@@ -209,13 +209,13 @@ INPUT[type="submit"]:hover {
     color: white;
 }
 
-A .pwg-icon,
-.pwg-icon-calendar:before,
-.pwg-icon-camera-calendar:before {
+a .pwg-icon,
+.pwg-icon-calendar::before,
+.pwg-icon-camera-calendar::before {
     color: #7f0906;
 }
 
-A .pwg-icon:hover {
+a .pwg-icon:hover {
     color: #bf0d08;
 }
 
@@ -254,15 +254,15 @@ dd {
     color: black;
 }
 
-.titrePage H2 span.badge {
+.titrePage h2 span.badge {
     background-color: #bf0d08;
     color: white;
 }
 
-.titrePage A,
-.titrePage A:hover,
-.titrePage H2 A,
-.titrePage H2 A:hover {
+.titrePage a,
+.titrePage a:hover,
+.titrePage h2 a,
+.titrePage h2 a:hover {
     color: #7f0906;
 }
 
@@ -270,7 +270,7 @@ dd {
     color: #7f0906;
 }
 
-.titrePage .switchBox A {
+.titrePage .switchBox a {
     color: #7f0906;
 }
 
@@ -282,7 +282,7 @@ dd {
     box-shadow: 5px 5px 10px black;
 }
 
-.titrePage .switchBox A:hover {
+.titrePage .switchBox a:hover {
     background-color: #bf0d08;
     color: white;
 }
@@ -296,13 +296,13 @@ dd {
 }
 
 #thePicturePage .titrePage h2,
-#thePicturePage .titrePage A,
+#thePicturePage .titrePage a,
 #thePicturePage .browsePath {
     color: white;
 }
 
 #thePicturePage .titrePage h2:hover,
-#thePicturePage .titrePage A:hover,
+#thePicturePage .titrePage a:hover,
 #thePicturePage .browsePath:hover {
     color: white;
 }
@@ -313,13 +313,13 @@ dd {
     border-radius: 0;
 }
 
-#derivativeSwitchBox A:hover {
+#derivativeSwitchBox a:hover {
     color: white;
     background-color: #bf0d08;
     text-decoration: none;
 }
 
-#derivativeSwitchBox A:hover span {
+#derivativeSwitchBox a:hover span {
     color: white;
 }
 
@@ -356,7 +356,7 @@ dd {
 }
 
 .overDesc {
-    background-color: rgba(229, 16, 10, 0.6);
+    background-color: rgb(229, 16, 10, 0.6);
     color: white;
 }
 
@@ -390,10 +390,10 @@ hr {
 .filter input,
 .filter input:focus,
 .selectize-input > input,
-INPUT[type="text"],
-INPUT[type="password"],
-SELECT,
-TEXTAREA {
+input[type="text"],
+input[type="password"],
+select,
+textarea {
     background-color: #bf0d08;
     border-radius: 0;
     color: white;
@@ -409,6 +409,7 @@ TEXTAREA {
 .date_today:hover {
     color: black;
 }
+
 #start_day,
 #start_month,
 #end_day,
@@ -447,23 +448,23 @@ TEXTAREA {
 }
 
 .content .navigationBar,
-SPAN.calItem,
-TD.calDayCellEmpty,
+span.calItem,
+td.calDayCellEmpty,
 .content .navigationBar:hover,
-SPAN.calItem:hover,
-TD.calDayCellEmpty:hover {
+span.calItem:hover,
+td.calDayCellEmpty:hover {
     color: #777;
     padding: 10px;
     text-decoration: none !important;
     border: 1px solid transparent;
 }
 
-DIV.thumbHover {
+div.thumbHover {
     color: white;
     height: 100px !important;
     width: 100px;
     font-weight: normal;
-    border-radius: 0px;
+    border-radius: 0;
     border: 1px solid white;
     text-shadow: none;
     padding: 10px;
@@ -478,8 +479,8 @@ DIV.thumbHover {
     color: #bf0d08;
 }
 
-LEGEND.tagLetterLegend,
-FIELDSET.tagLetter {
+legend.tagLetterLegend,
+fieldset.tagLetter {
     border: none;
     color: #e5100a;
 }
@@ -495,7 +496,7 @@ td .nbEntries {
 }
 
 .selectize-control.plugin-remove_button [data-value] .remove {
-    border-left: solid 1px #333333;
+    border-left: solid 1px #333;
 }
 
 .message {
@@ -507,7 +508,7 @@ td .nbEntries {
     color: white !important;
 }
 
-@media screen and (max-width: 640px) {
+@media screen and (width <= 640px) {
     #menubar {
         box-shadow: none;
         padding: 20px;
@@ -516,23 +517,27 @@ td .nbEntries {
     #derivativeSwitchLink .pwg-icon .pwg-icon-sizes {
         color: white;
     }
+
     #albumActionsSwitcher + .categoryActions .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
-    .actionButtons A .pwg-icon,
-    .actionButtons A .pwg-icon:hover {
+    .actionButtons a .pwg-icon,
+    .actionButtons a .pwg-icon:hover {
         color: black;
     }
+
     #albumActionsSwitcher + .categoryActions {
         background-color: white;
         color: #7f0906;
         box-shadow: 5px 5px 10px black;
     }
+
     .categoryActions a .pwg-icon {
         color: white;
     }
-    #theTagsPage A .pwg-icon,
-    #theTagsPage A:hover .pwg-icon {
+
+    #theTagsPage a .pwg-icon,
+    #theTagsPage a:hover .pwg-icon {
         color: black;
     }
 }
@@ -541,7 +546,7 @@ td .nbEntries {
     background-color: #e8e8ea;
 }
 
-/*Search*/
+/* Search */
 
 .filter-manager-popin .mcs-popin-title,
 .tags-found-popin .mcs-popin-title,

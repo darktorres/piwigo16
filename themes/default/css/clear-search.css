@@ -6,7 +6,7 @@
 .filter-manager-popin,
 .tags-found-popin,
 .albums-found-popin {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgb(0, 0, 0, 0.7);
 }
 
 .filter-manager-popin-container,
@@ -24,7 +24,7 @@
 .filter-manager-popin .mcs-popin-title,
 .tags-found-popin .mcs-popin-title,
 .albums-found-popin .mcs-popin-title {
-    color: #ff7700;
+    color: #f70;
 }
 
 .mcs-popin-desc {
@@ -54,13 +54,13 @@
 
 .filter-manager,
 .filter-validate {
-    background: #ff7700bb;
+    background: #f70b;
     color: white;
 }
 
 .filter-manager:hover,
 .filter-validate:hover {
-    background: #ff7700;
+    background: #f70;
 }
 
 .filter-cancel {
@@ -78,7 +78,7 @@
 
 .filter-form {
     background: white;
-    box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 5px 10px 0 rgb(0, 0, 0, 0.6);
     color: black;
 }
 
@@ -92,12 +92,12 @@
 
 .mcs-container .filter-filled {
     background: #ffeacf;
-    border: 1px solid #ff7700 !important;
-    color: #ff7700 !important;
+    border: 1px solid #f70 !important;
+    color: #f70 !important;
 }
 
 .mcs-container .filter-filled .filter-icon {
-    color: #ff7700 !important;
+    color: #f70 !important;
 }
 
 .word-help {
@@ -118,13 +118,13 @@
 .filetypes-option label .checked-icon,
 .added_by-option label .checked-icon,
 .date_posted-option label .checked-icon {
-    color: #ff7700;
+    color: #f70;
 }
 
 .filetypes-option label .ext-badge,
 .added_by-option label .added_by-badge,
 .date_posted-option label .date_posted-badge {
-    background: #ff7700;
+    background: #f70;
     color: white;
 }
 
@@ -133,7 +133,7 @@
 }
 
 .date_posted-option input:checked + label {
-    background: rgba(244, 171, 79, 0.17);
+    background: rgb(244, 171, 79, 0.17);
 }
 
 .head-button-2 {
@@ -142,7 +142,7 @@
 
 .head-button-2 {
     background: #fafafa;
-    box-shadow: 0px 2px #00000024;
+    box-shadow: 0 2px #00000024;
 }
 
 .head-button-2:hover {
@@ -168,11 +168,11 @@
 }
 
 .breadcrumb-item .icon-cancel-circled:hover {
-    color: #ff7700;
+    color: #f70;
 }
 
 .linkedAlbumPopIn {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgb(0, 0, 0, 0.7);
 }
 
 .linkedAlbumPopInContainer {
@@ -189,7 +189,7 @@
 
 .search-result-item {
     background-color: #fafafa;
-    box-shadow: 0px 2px #00000024;
+    box-shadow: 0 2px #00000024;
     color: #777;
 }
 
@@ -198,11 +198,11 @@
 }
 
 .clear-all.clickable {
-    color: #ff7700;
+    color: #f70;
 }
 
 .mcs-no-result .text span:first-child {
-    color: #ff7700;
+    color: #f70;
 }
 
 .mcs-no-result .text span:last-child {
@@ -210,7 +210,7 @@
 }
 
 .filter-form .filter-form-title {
-    color: #ff7700;
+    color: #f70;
 }
 
 .filter-tag-form .selectize-input,
@@ -275,16 +275,16 @@
     color: #000;
 }
 
-@media (max-width: 600px) {
+@media (width <= 600px) {
     .filter-form {
         width: 101vw;
-        border-top: 1px solid #aaaaaa;
-        border-bottom: 1px solid #aaaaaa;
+        border-top: 1px solid #aaa;
+        border-bottom: 1px solid #aaa;
     }
 
     .arrow-border {
         fill: transparent;
-        stroke: #aaaaaa;
+        stroke: #aaa;
     }
 
     .arrow-fill {

@@ -4,7 +4,7 @@ body {
     font-family: "Open Sans", sans-serif;
     -moz-osx-font-smoothing: grayscale;
     box-shadow: none;
-    border: 0px;
+    border: 0;
     padding-bottom: 50px;
 }
 
@@ -21,12 +21,15 @@ body {
 #menubar .menuInfoCat::before {
     content: "";
 }
+
 #menubar .menuInfoCat::after {
     content: "";
 }
+
 #content {
     flex: 1 0 auto;
 }
+
 #copyright {
     flex-shrink: 0;
 }
@@ -35,7 +38,7 @@ body {
     min-height: auto;
 }
 
-#rateForm INPUT[type="button"] {
+#rateForm input[type="button"] {
     padding: 0;
 }
 
@@ -63,7 +66,7 @@ body {
 
 .errors {
     border: none;
-    background: #ffc4bf url(../../default/icon/errors.png) no-repeat center
+    background: #ffc4bf url("../../default/icon/errors.png") no-repeat center
         right;
     font-family: "Open Sans", sans-serif;
     margin: 0;
@@ -72,7 +75,7 @@ body {
 }
 
 h2 {
-    padding: 2px 5px 0px 0px;
+    padding: 2px 5px 0 0;
     font-size: 17px;
 }
 
@@ -93,19 +96,19 @@ h2 {
     padding-left: 16px;
     font-weight: normal;
     width: auto;
-    border-radius: 0px;
+    border-radius: 0;
 }
 
-#menubar dt A {
+#menubar dt a {
     font-weight: normal;
 }
 
-#menubar dt A:hover {
+#menubar dt a:hover {
     font-weight: normal;
 }
 
-#menubar DT,
-#menubar DT A {
+#menubar dt,
+#menubar dt a {
     padding-right: 1.25em;
 }
 
@@ -113,20 +116,20 @@ h2 {
     display: none !important;
 }
 
-#commentAdd INPUT[type="text"],
-INPUT[type="password"],
-#commentAdd SELECT,
-#commentAdd TEXTAREA,
+#commentAdd input[type="text"],
+input[type="password"],
+#commentAdd select,
+#commentAdd textarea,
 #comments input[type="text"],
-#comments TEXTAREA {
+#comments textarea {
     border-color: transparent;
     font-family: "Open Sans", sans-serif;
     padding: 10px;
     cursor: pointer;
 }
 
-INPUT:focus,
-TEXTAREA:focus {
+input:focus,
+textarea:focus {
     outline: none;
     box-shadow: none;
     cursor: pointer;
@@ -158,54 +161,55 @@ TEXTAREA:focus {
     box-shadow: none;
 }
 
-#menubar DD {
+#menubar dd {
     box-shadow: none;
 }
 
-#menubar DD A {
+#menubar dd a {
     text-decoration: none;
     font-size: 15px;
     font-weight: normal;
 }
 
-#menubar DD A:hover {
+#menubar dd a:hover {
     font-size: 15px;
     font-weight: normal;
 }
 
 li,
-#mbCategories UL {
+#mbCategories ul {
     list-style-type: none;
     padding-left: 0;
 }
 
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-INPUT[type="button"]:hover,
-INPUT[type="submit"]:hover,
-INPUT[type="reset"]:hover,
-#menubar INPUT {
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="button"]:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover,
+#menubar input {
     font-family: "Open Sans", sans-serif;
     background-image: none;
     box-shadow: none;
+
     /*
   padding: 10px 20px;
-  margin-top: 10px;*/
+  margin-top: 10px; */
     cursor: pointer;
 }
 
-INPUT[type="submit"] {
+input[type="submit"] {
     border: 0;
 }
 
-.contact INPUT[type="submit"] {
+.contact input[type="submit"] {
     margin-right: 5px;
     cursor: pointer;
 }
 
 .wide #imageToolBar {
-    padding: 15px 5px 10px 5px;
+    padding: 15px 5px 10px;
 }
 
 #imageToolBar {
@@ -226,7 +230,6 @@ INPUT[type="submit"] {
 }
 
 .badge {
-    font-size: 90%;
     border-radius: 20px;
     margin-left: 5px;
     padding: 2px 5px !important;
@@ -239,12 +242,12 @@ INPUT[type="submit"] {
     padding: 5px;
 }
 
-#menubar LI.selected > A {
+#menubar li.selected > a {
     font-weight: normal;
     text-decoration: underline;
 }
 
-#menubar DL {
+#menubar dl {
     margin: 0;
     padding-top: 2px;
     padding-left: 0;
@@ -252,11 +255,11 @@ INPUT[type="submit"] {
 
 .wide .imageInfoTable,
 .wide #imageInfos {
-    border-radius: 0px;
-    padding: 0px;
+    border-radius: 0;
+    padding: 0;
 }
 
-.wide .imageInfo DT {
+.wide .imageInfo dt {
     font-weight: bold;
     display: table-cell;
 }
@@ -281,7 +284,7 @@ INPUT[type="submit"] {
 }
 
 #commentAdd {
-    padding: 0px;
+    padding: 0;
 }
 
 #quickconnect fieldset {
@@ -301,7 +304,7 @@ fieldset {
 .properties input:focus {
     border-color: transparent;
     padding: 10px;
-    border: 0px;
+    border: 0;
     box-shadow: none;
     cursor: pointer;
     margin: 0;
@@ -317,7 +320,7 @@ fieldset legend {
     margin: 15px 0;
 }
 
-.properties P {
+.properties p {
     margin-top: 0;
     margin-bottom: 50px;
 }
@@ -331,19 +334,19 @@ fieldset legend {
     z-index: 1;
 }
 
-.titrePage H2 span.badge::before,
-.titrePage H2 span.badge::after {
+.titrePage h2 span.badge::before,
+.titrePage h2 span.badge::after {
     content: "";
 }
 
-.titrePage H2 span.badge {
+.titrePage h2 span.badge {
     margin-left: 5px;
     padding: 2px 7px;
     font-size: 12px;
     font-weight: bold;
 }
 
-.titrePage .switchBox A,
+.titrePage .switchBox a,
 .titrePage .switchBox {
     padding: 10px;
 }
@@ -371,17 +374,17 @@ fieldset legend {
     padding: 20px;
 }
 
-#thePicturePage #derivativeSwitchBox A:last-child {
+#thePicturePage #derivativeSwitchBox a:last-child {
     padding: 15px 10px;
 }
 
 #sortOrderBox {
     min-width: 190px;
     padding: 20px;
-    border-radius: 0px;
+    border-radius: 0;
 }
 
-#derivativeSwitchBox A,
+#derivativeSwitchBox a,
 #derivativeSwitchBox span,
 #sortOrderBox span,
 #sortOrderBox a {
@@ -416,7 +419,7 @@ fieldset legend {
     padding-top: 15px;
 }
 
-.imageInfo DT {
+.imageInfo dt {
     font-size: 15px;
     font-weight: normal;
 }
@@ -433,7 +436,7 @@ fieldset legend {
     padding: 0;
 }
 
-.albLegend H4 {
+.albLegend h4 {
     font-weight: normal;
     font-size: 15px;
     margin-bottom: 0;
@@ -473,10 +476,10 @@ hr {
 #theSearchPage .filter input,
 #theSearchPage .filter input:focus,
 #theSearchPage .selectize-input > input,
-INPUT[type="text"],
-INPUT[type="password"],
-SELECT,
-s TEXTAREA {
+input[type="text"],
+input[type="password"],
+select,
+s textarea {
     border-radius: 0;
     border: 0;
     padding: 10px;
@@ -494,8 +497,8 @@ s TEXTAREA {
     cursor: pointer;
 }
 
-INPUT,
-SELECT {
+input,
+select {
     font-size: 13px;
     padding: 10px;
     cursor: pointer;
@@ -535,11 +538,11 @@ SELECT {
     padding-top: 10px;
 }
 
-.contact INPUT[type="submit"] {
+.contact input[type="submit"] {
     margin-right: 5px;
 }
 
-.properties SPAN.property {
+.properties span.property {
     padding: 0 10px 0 0;
 }
 
@@ -605,15 +608,15 @@ h2 .calendarTitle {
 }
 
 .content .navigationBar,
-TD.calDayCellEmpty,
+td.calDayCellEmpty,
 content .navigationBar:hover,
-TD.calDayCellEmpty:hover {
+td.calDayCellEmpty:hover {
     padding: 20px;
     text-decoration: none;
 }
 
-SPAN.calItem,
-SPAN.calItem:hover {
+span.calItem,
+span.calItem:hover {
     padding: 10px;
     text-decoration: none;
 }
@@ -635,11 +638,11 @@ SPAN.calItem:hover {
     margin: 0;
 }
 
-DIV.thumbHover {
+div.thumbHover {
     height: 100px;
     width: 100px;
     font-weight: normal;
-    border-radius: 0px;
+    border-radius: 0;
     text-shadow: none;
     padding: 10px;
     text-align: center;
@@ -647,18 +650,18 @@ DIV.thumbHover {
 
 .thumbnailCategory {
     border: none;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgb(0, 0, 0, 0.2);
 }
 
 /* Track */
 .thumbnailCategory .description::-webkit-scrollbar {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgb(0, 0, 0, 0.2);
     border-radius: 15px;
 }
 
 /* Handle */
 .thumbnailCategory .description::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.4);
+    background: rgb(0, 0, 0, 0.4);
     border-radius: 15px;
 }
 
@@ -676,19 +679,19 @@ DIV.thumbHover {
     padding: 5px;
 }
 
-FIELDSET.tagLetter {
+fieldset.tagLetter {
     padding: 15px 10px;
     width: 180px;
     margin: 15px;
 }
 
-LEGEND.tagLetterLegend {
+legend.tagLetterLegend {
     padding: 0;
     font-weight: bold;
     font-size: 30px;
 }
 
-TABLE.tagLetterContent {
+table.tagLetterContent {
     border-collapse: separate;
     border-spacing: 4px;
     margin-top: -10px;
@@ -705,9 +708,11 @@ TABLE.tagLetterContent {
 .tagLevel2 {
     font-size: 100%;
 }
+
 .tagLevel3 {
     font-size: 125%;
 }
+
 .tagLevel4 {
     font-size: 150%;
 }
@@ -750,7 +755,7 @@ td .nbEntries {
     margin: 0 auto;
 }
 
-@media screen and (max-width: 1100px) {
+@media screen and (width <= 1100px) {
     #fullTagCloud {
         transform: none;
         position: relative;
@@ -761,7 +766,7 @@ td .nbEntries {
     }
 }
 
-@media screen and (max-height: 490px) {
+@media screen and (height <= 490px) {
     #fullTagCloud {
         transform: none;
         position: relative;
@@ -772,58 +777,72 @@ td .nbEntries {
     }
 }
 
-@media screen and (max-width: 640px) {
+@media screen and (width <= 640px) {
     #menubar {
         box-shadow: none;
         padding: 20px;
     }
+
     #mbCategories dd:onclick {
         display: block;
     }
+
     .pwg-icon pwg-icon-ellipsis {
         display: none;
         color: transparent;
         opacity: 0;
     }
+
     #copyright a {
         display: block;
     }
+
     #menuSwitcher {
         padding-top: 22px;
         padding-left: 10px;
     }
+
     #thumbnails > li {
         display: block;
     }
+
     fieldset ul {
         display: block;
         float: none;
     }
+
     #thePicturePage #pictureCommentList {
         float: left;
         width: 100%;
     }
+
     #pictureComments #commentAdd {
         width: 100%;
     }
+
     #menubar dl {
         padding: 5px 0;
     }
-    DIV.thumbHover {
+
+    div.thumbHover {
         height: auto;
         font-size: 10px;
     }
+
     #profile {
         text-align: center;
     }
-    .properties SPAN.property {
+
+    .properties span.property {
         width: 40%;
     }
+
     .calItem {
         padding-bottom: 10px;
         display: inline-block;
         width: 70px;
     }
+
     #fullTagCloud {
         transform: none;
         position: relative;
@@ -832,12 +851,15 @@ td .nbEntries {
         left: 0;
         padding: 15px;
     }
+
     .pwg-icon {
         font-size: 20px;
     }
+
     .actionButtonsWrapper .actionButtons {
         box-shadow: none;
     }
+
     .imageInfoTable {
         padding: 5px;
     }
@@ -846,7 +868,7 @@ td .nbEntries {
 .albThumbs .path-ext-svg a img,
 .albThumbs .file-ext-svg a img {
     left: 0 !important;
-    top: 0px !important;
+    top: 0 !important;
     max-width: 250px;
     max-height: 250px;
 }
@@ -863,8 +885,8 @@ li.path-ext-svg a img {
     min-height: 100px;
 }
 
-@media screen and (max-width: 800px),
-    screen and (-webkit-min-device-pixel-ratio: 1.3) {
+@media screen and (width <= 800px),
+    screen and (min-device-pixel-ratio: 1.3) {
     .navThumb,
     .thumbHover {
         width: 100px !important;
@@ -872,7 +894,7 @@ li.path-ext-svg a img {
     }
 }
 
-@media screen and (max-width: 640px) {
+@media screen and (width <= 640px) {
     .navThumb,
     .thumbHover {
         width: auto !important;
@@ -887,7 +909,7 @@ li.path-ext-svg a img {
 
 @media screen {
     .wide #theImage {
-        width: 75%; /*min default picture derivative width*/
+        width: 75%; /* min default picture derivative width */
     }
 }
 

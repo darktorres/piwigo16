@@ -13,19 +13,19 @@ body {
     background-color: #326471;
 }
 
-#copyright A:hover {
+#copyright a:hover {
     color: #93c2d6;
     font-weight: normal;
     text-shadow: none;
     text-decoration: underline;
 }
 
-#copyright A {
+#copyright a {
     color: #93c2d6;
 }
 
 .infos {
-    background: #096a09 url(../../default/icon/infos.png) no-repeat center right;
+    background: #096a09 url("../../default/icon/infos.png") no-repeat center right;
     color: black;
 }
 
@@ -64,12 +64,12 @@ h2 {
     text-shadow: none;
 }
 
-H3,
+h3,
 label {
     color: #93c2d6;
 }
 
-A {
+a {
     color: #93c2d6;
 }
 
@@ -83,31 +83,31 @@ a:hover {
     background-color: #16262e;
 }
 
-#menubar UL {
-    border-radius: 0px;
+#menubar ul {
+    border-radius: 0;
 }
 
 #menubar dt {
     color: #0391aa;
 }
 
-#menubar dt A:hover {
+#menubar dt a:hover {
     color: white;
     text-shadow: none;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
 }
 
-#menubar dt A {
+#menubar dt a {
     font-weight: normal;
     color: #0391aa;
 }
 
-#commentAdd INPUT[type="text"],
-INPUT[type="password"],
-#commentAdd SELECT,
-#commentAdd TEXTAREA,
+#commentAdd input[type="text"],
+input[type="password"],
+#commentAdd select,
+#commentAdd textarea,
 #comments input[type="text"],
-#comments TEXTAREA {
+#comments textarea {
     background-color: #f2f2f2;
     color: black;
 }
@@ -136,38 +136,38 @@ INPUT[type="password"],
 }
 
 .selectize-control .plugin-remove_button [data-value] .remove {
-    border-left-color: #333333;
+    border-left-color: #333;
 }
 
-#menubar DD {
+#menubar dd {
     background-color: rgb(50, 100, 113);
     color: #93c2d6;
 }
 
-#menubar DD A:hover {
+#menubar dd a:hover {
     color: white;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
 }
 
-#menubar DD A {
+#menubar dd a {
     color: #93c2d6;
 }
 
-#menubar INPUT {
+#menubar input {
     background-image: none;
     font-family: "Open Sans", sans-serif;
     background-color: #f2f2f2;
-    border-radius: 0px;
+    border-radius: 0;
     cursor: pointer;
 }
 
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-INPUT[type="button"]:hover,
-INPUT[type="submit"]:hover,
-INPUT[type="reset"]:hover {
-    border-radius: 0px;
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="button"]:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover {
+    border-radius: 0;
     color: black;
     background-color: #93c2d6;
 }
@@ -182,7 +182,7 @@ INPUT[type="reset"]:hover {
 
 .switchBox {
     background-color: rgb(50, 100, 113);
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 .switchCheck {
@@ -193,7 +193,7 @@ INPUT[type="reset"]:hover {
     background-color: #16262e;
     border-radius: 20px;
     color: #0391aa;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
 }
 
 #menubar li,
@@ -201,11 +201,11 @@ INPUT[type="reset"]:hover {
     padding: 5px;
 }
 
-#menubar LI.selected > A {
+#menubar li.selected > a {
     font-weight: normal;
     text-decoration: none;
     color: white;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
 }
 
 .wide .imageInfoTable,
@@ -238,7 +238,7 @@ INPUT[type="reset"]:hover {
     text-decoration: underline;
 }
 
-.wide .imageInfo DT {
+.wide .imageInfo dt {
     font-weight: normal;
     color: #131d23;
 }
@@ -252,7 +252,7 @@ INPUT[type="reset"]:hover {
     background-color: #2e4756;
 }
 
-A .pwg-icon {
+a .pwg-icon {
     color: #93c2d6;
     text-shadow: none;
 }
@@ -267,7 +267,7 @@ A .pwg-icon {
 }
 
 .pwg-state-default .pwg-button {
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 fieldset h3,
@@ -288,34 +288,34 @@ fieldset legend {
     color: #93c2d6;
 }
 
-#imageHeaderBar H2 {
+#imageHeaderBar h2 {
     color: black;
     text-shadow: none;
 }
 
-.titrePage H2 A:hover {
+.titrePage h2 a:hover {
     color: white;
     text-shadow: none;
     text-decoration: underline;
 }
 
-.titrePage H2 A {
+.titrePage h2 a {
     color: #93c2d6;
     text-shadow: none;
 }
 
-.titrePage H2 span.badge {
+.titrePage h2 span.badge {
     background-color: #16262e;
     border-radius: 20px;
     color: #0391aa;
 }
 
-.titrePage A {
+.titrePage a {
     color: #93c2d6;
     font-weight: normal;
 }
 
-.titrePage A:hover {
+.titrePage a:hover {
     color: white;
     text-decoration: underline;
 }
@@ -323,15 +323,15 @@ fieldset legend {
 .titrePage .switchBox {
     color: white;
     padding: 10px;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
 }
 
-.titrePage .switchBox A {
+.titrePage .switchBox a {
     color: #93c2d6;
     text-shadow: none;
 }
 
-.titrePage .switchBox A:hover {
+.titrePage .switchBox a:hover {
     color: white;
     text-shadow: none;
 }
@@ -349,27 +349,27 @@ fieldset legend {
     color: #0391aa;
 }
 
-#thePicturePage .titrePage A {
+#thePicturePage .titrePage a {
     color: #0391aa;
     text-shadow: none;
 }
 
-#thePicturePage .titrePage A:hover {
+#thePicturePage .titrePage a:hover {
     color: white;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
 }
 
 .overDesc {
     color: #93c2d6;
-    background-color: rgba(50, 100, 113, 0.9);
+    background-color: rgb(50, 100, 113, 0.9);
 }
 
 #derivativeSwitchBox,
 #sortOrderBox {
-    border-radius: 0px;
+    border-radius: 0;
 }
 
-#derivativeSwitchBox A {
+#derivativeSwitchBox a {
     padding: 5px;
     display: inline-block;
     font-weight: normal;
@@ -420,14 +420,14 @@ fieldset legend {
 #thumbnails > li,
 .albThumbs > li,
 .navThumb img {
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 .properties fieldset span label {
     color: #0391aa;
 }
 
-.imageInfo DT {
+.imageInfo dt {
     color: #16262e;
 }
 
@@ -466,11 +466,11 @@ hr {
 }
 
 .selectize-input > input,
-INPUT[type="text"],
-INPUT[type="password"],
-SELECT,
-TEXTAREA {
-    border-radius: 0px;
+input[type="text"],
+input[type="password"],
+select,
+textarea {
+    border-radius: 0;
     color: black;
     background-color: #93c2d6;
 }
@@ -481,7 +481,7 @@ TEXTAREA {
 .selectize-input input {
     background-color: #93c2d6 !important;
     color: black !important;
-    border-radius: 0px !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
 }
 
@@ -512,7 +512,7 @@ TEXTAREA {
 .contact input[type="text"],
 .contact textarea,
 .contact select {
-    border-radius: 0px;
+    border-radius: 0;
     background-color: #93c2d6;
     color: black;
 }
@@ -543,12 +543,12 @@ TEXTAREA {
 }
 
 .content .navigationBar,
-SPAN.calItem,
-TD.calDayCellFull,
-TD.calDayCellEmpty,
+span.calItem,
+td.calDayCellFull,
+td.calDayCellEmpty,
 .content .navigationBar:hover,
-SPAN.calItem:hover,
-TD.calDayCellEmpty:hover {
+span.calItem:hover,
+td.calDayCellEmpty:hover {
     color: #0391aa;
     border: none;
 }
@@ -557,12 +557,12 @@ TD.calDayCellEmpty:hover {
     color: white;
 }
 
-DIV.thumbHover {
+div.thumbHover {
     color: #93c2d6;
     border: 1px solid #93c2d6;
 }
 
-DIV.thumbHover:hover {
+div.thumbHover:hover {
     color: white;
     text-decoration: underline;
 }
@@ -574,11 +574,11 @@ DIV.thumbHover:hover {
 
 #fullTagCloud span a:hover {
     text-decoration: underline;
-    color: #000000;
+    color: #000;
 }
 
-LEGEND.tagLetterLegend,
-FIELDSET.tagLetter {
+legend.tagLetterLegend,
+fieldset.tagLetter {
     border: none;
     color: #93c2d6;
 }
@@ -597,7 +597,7 @@ td .nbEntries {
 }
 
 .selectize-control.plugin-remove_button [data-value] .remove {
-    border-left: solid 1px #333333;
+    border-left: solid 1px #333;
 }
 
 .message {
@@ -620,7 +620,7 @@ td .nbEntries {
 
 form.properties a {
     border: solid 1px;
-    border-radius: 0px;
+    border-radius: 0;
     padding: 2px 5px 5px 2px;
     margin: 0 5px;
 }
@@ -629,34 +629,40 @@ form.properties a {
     color: black !important;
 }
 
-@media screen and (max-width: 640px) {
+@media screen and (width <= 640px) {
     #menubar {
-        border-radius: 0px;
+        border-radius: 0;
     }
+
     #copyright a {
         color: #93c2d6;
     }
+
     #derivativeSwitchLink .pwg-icon pwg-icon-sizes {
         color: black;
     }
+
     #albumActionsSwitcher + .categoryActions .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
-    .actionButtons A .pwg-icon,
-    .actionButtons A .pwg-icon:hover {
+    .actionButtons a .pwg-icon,
+    .actionButtons a .pwg-icon:hover {
         color: #0391aa !important;
         background-color: #16262e;
     }
+
     #albumActionsSwitcher + .categoryActions {
-        border-radius: 0px;
-        box-shadow: 0px 0px transparent;
+        border-radius: 0;
+        box-shadow: 0 0 transparent;
         background-color: #16262e;
     }
+
     .categoryActions a .pwg-icon {
         color: #0391aa;
     }
-    #theTagsPage A .pwg-icon,
-    #theTagsPage A:hover .pwg-icon {
+
+    #theTagsPage a .pwg-icon,
+    #theTagsPage a:hover .pwg-icon {
         color: black;
     }
 }
@@ -669,7 +675,7 @@ form.properties a {
 .filter-manager-popin,
 .tags-found-popin,
 .albums-found-popin {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgb(0, 0, 0, 0.7);
 }
 
 .filter-manager-popin-container,
@@ -678,9 +684,9 @@ form.properties a {
     background: #2e4756;
 }
 
-.filter-manager-close.pwg-icon-cancel:before,
-.tags-found-close.pwg-icon-cancel:before,
-.albums-found-close.pwg-icon-cancel:before {
+.filter-manager-close.pwg-icon-cancel::before,
+.tags-found-close.pwg-icon-cancel::before,
+.albums-found-close.pwg-icon-cancel::before {
     color: white;
 }
 
@@ -742,7 +748,7 @@ form.properties a {
 
 .filter-form {
     background: #16262e;
-    box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 5px 10px 0 rgb(0, 0, 0, 0.6);
     color: white;
 }
 
@@ -771,7 +777,7 @@ form.properties a {
 #word-search {
     background-color: #93c2d6 !important;
     color: black !important;
-    border-radius: 0px !important;
+    border-radius: 0 !important;
 }
 
 .filetypes-option:nth-child(odd),
@@ -806,7 +812,7 @@ form.properties a {
 .head-button-2 {
     background: #93c2d6;
     color: #16262e;
-    box-shadow: 0px 2px #00000024;
+    box-shadow: 0 2px #00000024;
 }
 
 .head-button-2:hover {
@@ -833,11 +839,11 @@ form.properties a {
 }
 
 .breadcrumb-item .icon-cancel-circled:hover {
-    color: #ff7700;
+    color: #f70;
 }
 
 .linkedAlbumPopIn {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgb(0, 0, 0, 0.7);
 }
 
 .linkedAlbumPopInContainer {
@@ -855,7 +861,7 @@ form.properties a {
 
 .search-result-item {
     background-color: #326471;
-    box-shadow: 0px 2px #00000024;
+    box-shadow: 0 2px #00000024;
     color: #93c2d6;
 }
 

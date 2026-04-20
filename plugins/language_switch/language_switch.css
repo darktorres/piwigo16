@@ -16,8 +16,9 @@
     margin-top: 5px;
 }
 
-[class*="langflag-"] {
-    background-image: url("flag_sprite.jpg") !important;
+#languageSwitchBox [class*="langflag-"],
+#languageSwitchLink [class*="langflag-"] {
+    background-image: url("flag_sprite.jpg");
     background-repeat: no-repeat;
     background-position: 24px 16px;
     margin-right: 3px;

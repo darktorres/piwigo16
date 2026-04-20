@@ -1,8 +1,8 @@
 # CSS Restructuring Plan — Piwigo Fork
 
-## Status: All 7 steps complete
+## Status: All 7 steps complete + post-cleanup pass done
 
-All execution steps have been implemented. This document reflects the actual state of the codebase after implementation, noting where the approach deviated from the original plan.
+All 7 execution steps are complete. A further cleanup pass addressed the remaining items from the "Remaining work" section: general.css and print.css folded into theme.css; structural duplicates and covered color overrides removed from clear/roma; variable contract expanded with 18 new `--admin-*` variables.
 
 ---
 
@@ -23,19 +23,19 @@ The CSS in this fork had drifted into several pain shapes:
 | Area | File | Lines (before → after) | Status |
 |---|---|---|---|
 | admin default | `admin/themes/default/theme.css` | 8798 → 35 | **Done** — thin `@import` manifest |
-| admin default | `admin/themes/default/css/base/variables.css` | new (40) | **Done** — 28 `--admin-*` custom properties |
+| admin default | `admin/themes/default/css/base/variables.css` | new (46 vars) | **Done** — 46 `--admin-*` custom properties across 6 semantic groups |
 | admin default | `admin/themes/default/css/base/global.css` | new (90) | **Done** — page-level rules consuming variables |
 | admin default | `admin/themes/default/css/base/content.css` | new (93) | **Done** |
 | admin default | `admin/themes/default/css/base/layout.css` | new (99) | **Done** |
 | admin default | `admin/themes/default/css/base/forms.css` | new (62) | **Done** |
 | admin default | `admin/themes/default/css/base/maintenance.css` | new (58) | **Done** |
-| admin default | `admin/themes/default/css/components/` (13 files) | new | **Done** — see layout below |
+| admin default | `admin/themes/default/css/components/` (14 files) | new | **Done** — see layout below |
 | admin default | `admin/themes/default/css/pages/` (13 theme + 26 per-page) | new | **Done** — see layout below |
 | admin default | `admin/themes/default/css/features/` (3 files) | new | **Done** |
-| admin default | `admin/themes/default/css/components/general.css` | 361 (360) | Kept; loaded via `{* Temporary solution *}` in header.tpl |
-| admin default | `admin/themes/default/print.css` | 14 | Not yet wired into `header.tpl` |
-| admin clear | `admin/themes/clear/theme.css` | 1392 → 1299 | **Partial** — `:root {}` variable block added at top; structural rules remain |
-| admin roma | `admin/themes/roma/theme.css` | 2716 → 2776 | **Partial** — `:root {}` variable block added at top; grew slightly (TakeATour append) |
+| admin default | `admin/themes/default/css/components/general.css` | 361 | **Done** — now imported by `theme.css`; `{* Temporary solution *}` removed |
+| admin default | `admin/themes/default/print.css` | 14 → 17 | **Done** — wrapped in `@media print {}`; imported by `theme.css` |
+| admin clear | `admin/themes/clear/theme.css` | 1392 → 1293 | **Partial** — `:root {}` expanded to 46 variable overrides; structural rules remain |
+| admin roma | `admin/themes/roma/theme.css` | 2716 → 2555 | **Partial** — 5 exact dupes deleted, structural props stripped, covered color overrides removed |
 | gallery default | `themes/default/theme.css` | 1087 → 6 | **Done** — thin `@import` manifest |
 | gallery default | `themes/default/css/menubar.css` | new (90) | **Done** |
 | gallery default | `themes/default/css/content.css` | new (281) | **Done** — includes Content, Thumbnails, Comments, Calendar, Popup sections |
@@ -233,12 +233,28 @@ The plan suggested creating dedicated `admin/themes/{clear,roma}/css/takeatour.c
 
 ---
 
-## Remaining work (not yet done)
+## Variable contract (current: 46 variables)
 
-- **admin/themes/{clear,roma}/ structural deduplication** — both skins still carry large amounts of structural CSS duplicated from the parent. The variable contract is in place but the cleanup of duplicated rules was not done.
-- **gallery split granularity** — `content.css` (281 lines) folds together Content, Thumbnails, Comments, Calendar, and Popup sections. Could be split further if needed.
-- **`admin/themes/default/print.css`** (14 lines) — exists but is not wired into `header.tpl`.
-- **`admin/themes/default/css/components/general.css`** — still loaded via the `{* Temporary solution *}` note in `header.tpl:24`. Could be merged into the main split or the comment removed once the intent is satisfied.
+`admin/themes/default/css/base/variables.css` defines dark defaults; `admin/themes/clear/theme.css` overrides with light values. Groups:
+
+| Group | Variables | Notes |
+|---|---|---|
+| Text | `--admin-text`, `--admin-text-th`, `--admin-text-input`, `--admin-text-muted`, `--admin-text-dim`, `--admin-text-legend` | |
+| Links | `--admin-link`, `--admin-link-hover` | |
+| Page/layout bg | `--admin-bg-page`, `--admin-bg-surface`, `--admin-bg-content`, `--admin-bg-row1`, `--admin-bg-row2`, `--admin-bg-head`, `--admin-color-head`, `--admin-bg-h1`, `--admin-color-h1` | |
+| Form bg | `--admin-bg-input`, `--admin-bg-input-focus` | |
+| Borders | `--admin-border`, `--admin-border-medium`, `--admin-border-input` | |
+| UI components | `--admin-tooltip-bg`, `--admin-tooltip-color`, `--admin-shadow-card`, `--admin-shadow-surface` | |
+| Tab navigation | `--admin-tab-bg`, `--admin-tab-selected-bg`, `--admin-tab-active-color`, `--admin-tab-inactive-color` | used in `tabsheets.css` |
+| Notification boxes | `--admin-state-error-color/bg`, `--admin-state-success-color/bg`, `--admin-state-warning-color/bg`, `--admin-state-message-color/bg` | used in `tabsheets.css` |
+| Inline notices | `--admin-inline-warning-color/bg`, `--admin-inline-error-color/bg` | colors invert between light/dark; used in `general.css` |
+| Misc | `--admin-badge-albums-bg`, `--admin-theme-span-bg` | used in `tabsheets.css` |
+
+## Remaining work (partial — diminishing returns)
+
+- **admin/themes/{clear,roma}/ remaining color overrides** — ~178 selector/property combos still have hardcoded colors in the parent that are overridden in roma. These span many page-specific files (user-manager: 65, tag-manager: 12, dashboard: 12, album-manager: 11, plugins: 9, …). Covering them would require 50+ new page-specific variables with limited semantic reuse.
+- **gallery split granularity** — `content.css` (281 lines) folds Content, Thumbnails, Comments, Calendar, and Popup sections. Could be split further if needed.
+- **admin/themes/clear/roma structural rules** — both skins still carry structural CSS (layout, font, spacing rules). These predate this fork's work. Removing them requires either moving rules to the parent or verifying they are genuinely skin-specific.
 
 ---
 

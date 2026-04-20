@@ -155,7 +155,7 @@ input[type="text"].dError {
     width: 130px;
     margin: 4px;
     font-weight: bold;
-    color: #3c3c3c;
+    color: var(--admin-text-input);
     font-family: "Open Sans", "Lucida Grande", Verdana, Arial,
         "Bitstream Vera Sans", sans-serif;
     margin-left: 9px;
@@ -192,8 +192,8 @@ input[type="text"].dError {
 }
 
 #addGroupNameInput {
-    color: #353535;
-    background-color: #f3f3f3 !important;
+    color: var(--admin-text-input);
+    background-color: var(--admin-bg-field) !important;
     border: none !important;
     margin-top: 15px;
 }
@@ -232,8 +232,8 @@ input[type="text"].dError {
     z-index: 2;
     display: none;
     position: absolute;
-    color: #f22;
-    background-color: #ffd5dc;
+    color: var(--admin-action-error-color);
+    background-color: var(--admin-action-error-bg);
     min-height: 17px;
     padding: 10px;
     border-radius: 30px;

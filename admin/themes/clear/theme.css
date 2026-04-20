@@ -52,6 +52,33 @@
     --admin-inline-warning-bg: #fd9;
     --admin-inline-error-color: #f22;
     --admin-inline-error-bg: #ffd5dc;
+    /* Alternative surface levels */
+    --admin-bg-lifted: #f0f0f0;
+    --admin-bg-field: #f3f3f3;
+
+    /* Action state colors */
+    --admin-action-success-color: #0a0;
+    --admin-action-success-bg: #c2f5c2;
+    --admin-action-success-border: #0f0;
+    --admin-action-error-color: rgb(170, 0, 0);
+    --admin-action-error-bg: #f5c2c2;
+
+    /* Accent / selected states */
+    --admin-accent-selected-bg: #ffd7ad;
+    --admin-accent-selected-deep: #ffa646;
+    --admin-accent-selected-text: #fee7bd;
+    --admin-text-on-accent: #3c3c3c;
+    --admin-text-success: #0a0;
+
+    /* Disabled states */
+    --admin-disabled-color: #b8b8b8;
+    --admin-disabled-bg: #ececec;
+
+    /* Component-specific */
+    --admin-jqtree-highlight: #ffbd4d;
+    --admin-tooltip-arrow: white;
+    --admin-pagination-hover-bg: #ffd2a1;
+
 }
 
 #copyright {

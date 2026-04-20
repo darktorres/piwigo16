@@ -54,7 +54,7 @@
 }
 
 .pagination-per-page {
-    background-color: #f9f9f9;
+    background-color: var(--admin-bg-lifted);
     border-radius: 10px;
     display: flex;
     font-size: 12px;
@@ -71,17 +71,17 @@
 
 .pagination-per-page span {
     padding-left: 17px;
-    color: #bbb;
+    color: var(--admin-text-legend);
     font-weight: bold;
 }
 
 .pagination-per-page a {
     border: none;
-    color: #3a3a3a;
+    color: var(--admin-text-legend);
 }
 
 .pagination-per-page a:hover {
-    background-color: #ffd2a1;
+    background-color: var(--admin-pagination-hover-bg);
     color: #666;
     text-decoration: none;
 }

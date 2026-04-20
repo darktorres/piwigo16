@@ -299,7 +299,7 @@
   }
 
   .jqtree-moving .move-cat-container {
-    background-color: #ffd7ad;
+    background-color: var(--admin-accent-selected-bg);
   }
 
   .jqtree-moving .move-cat-container .badge-container i,

@@ -104,17 +104,17 @@
 }
 
 #AddUserSuccess span {
-    color: #0a0;
+    color: var(--admin-text-success);
 }
 
 #AddUserSuccess label {
-    background-color: #c2f5c2;
-    border-left: 2px solid #0f0;
-    color: #0a0;
+    background-color: var(--admin-action-success-bg);
+    border-left: var(--admin-action-success-border);
+    color: var(--admin-text-success);
 }
 
 .update-user-success {
-    border-left: 2px solid #0f0;
+    border-left: var(--admin-action-success-border);
 }
 
 #UserList .AddUserBlock p,
@@ -192,12 +192,12 @@
 .Tooltip p.TooltipText {
     visibility: hidden;
     width: 157px;
-    background-color: #f3f3f3;
-    color: #3c3c3c;
+    background-color: var(--admin-bg-head);
+    color: var(--admin-tooltip-color);
     text-align: left;
     padding: 5px 10px;
     border-radius: 10px;
-    border: 1px solid #3c3c3c;
+    border: var(--admin-border-medium);
     font-weight: 700;
     font-size: 10px;
     position: absolute;
@@ -463,7 +463,7 @@ a.group_users {
 
 .see-out.disabled p {
     background-color: #ececec;
-    color: #b8b8b8;
+    color: var(--admin-disabled-color);
 }
 
 /* Edit user popin */
@@ -535,7 +535,7 @@ table.qsearch_help_table td {
 
 .AlbumViewSelector,
 .UserViewSelector {
-    background: #fafafa !important;
+    background: var(--admin-bg-lifted) !important;
 }
 
 .AlbumViewSelector input:checked + label,
@@ -554,11 +554,11 @@ table.qsearch_help_table td {
 }
 
 .user-container {
-    background-color: #f3f3f3;
+    background-color: var(--admin-bg-surface);
 }
 
 .user-first-col:hover {
-    background-color: #ffc276;
+    background-color: var(--admin-accent-selected-deep);
 }
 
 .user-first-col:hover .icon-pencil {
@@ -574,7 +574,7 @@ table.qsearch_help_table td {
 .user-container.container-selected
     .user-container-checkbox.user-list-checkbox
     .select-checkbox {
-    background-color: #ffa646;
+    background-color: var(--admin-accent-selected-deep);
     border: solid #ffa646 2px;
 }
 
@@ -582,15 +582,15 @@ table.qsearch_help_table td {
     display: flex;
     width: 100%;
     height: 80px;
-    background-color: #ffd9a7;
+    background-color: var(--admin-accent-selected-bg);
     font-weight: bold;
     border-radius: 10px;
     margin-bottom: 20px;
 }
 
 .user-container.container-selected .user-container-initials-wrapper > span {
-    background-color: #ff7b00;
-    color: #fee7bd;
+    background-color: var(--admin-accent-selected-deep);
+    color: var(--admin-accent-selected-text);
 }
 
 .user-container.container-selected .user-groups,
@@ -610,31 +610,31 @@ table.qsearch_help_table td {
 }
 
 .user-property-select {
-    background-color: #f3f3f3;
-    color: #353535;
+    background-color: var(--admin-bg-surface);
+    color: var(--admin-text-legend);
 }
 
 .UserListPopInContainer {
-    background-color: white;
+    background-color: var(--admin-bg-content);
 }
 
 .user-property-column-title,
 .edit-username-title {
-    color: #353535;
+    color: var(--admin-text-legend);
 }
 
 .user-property-button {
-    color: #353535;
-    background-color: #f3f3f3;
+    color: var(--admin-text-legend);
+    background-color: var(--admin-bg-surface);
 }
 
 .user-property-input {
-    color: #353535;
-    background-color: #f3f3f3;
+    color: var(--admin-text-legend);
+    background-color: var(--admin-bg-surface);
 }
 
 .user-property-input[type="text"] {
-    background-color: #f3f3f3;
+    background-color: var(--admin-bg-surface);
 }
 
 .user-property-group .selectize-input.items {
@@ -642,39 +642,39 @@ table.qsearch_help_table td {
 }
 
 .user-property-register-visit .icon-calendar {
-    color: #4c4c4c;
+    color: var(--admin-text-legend);
 }
 
 .delete-user-button {
-    color: #353535;
-    background-color: #f3f3f3;
+    color: var(--admin-text-legend);
+    background-color: var(--admin-bg-surface);
 }
 
 .slider-bar-wrapper .ui-slider-horizontal {
-    background-color: #e3e3e3;
+    background-color: var(--admin-text-muted);
 }
 
 .preferences-container,
 .properties-container {
-    border-left: solid 1px #ddd;
+    border-left: var(--admin-border);
 }
 
 .update-container {
-    border-top: solid 1px #ddd;
+    border-top: var(--admin-border);
 }
 
 .user-property-input.user-property-input-username:hover {
-    background-color: #f0f0f0;
+    background-color: var(--admin-bg-row2);
 }
 
 .user-property-input.user-property-input-password:hover {
-    background-color: #f0f0f0;
+    background-color: var(--admin-bg-row2);
 }
 
 /* Activity Tab in user manager */
 
 .select-user {
-    background: #fafafa;
+    background: var(--admin-bg-lifted);
     height: 50%;
     display: flex;
     align-items: center;
@@ -686,7 +686,7 @@ table.qsearch_help_table td {
 .start-date,
 .end-date {
     padding: 5px 10px;
-    background: #eaeaea;
+    background: var(--admin-bg-lifted);
     border-radius: 50px;
     margin: 5px;
     white-space: nowrap;
@@ -724,7 +724,7 @@ table.qsearch_help_table td {
     margin-left: auto;
     height: 25px;
     width: 30px;
-    background: #ddd;
+    background: var(--admin-bg-lifted);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -743,14 +743,14 @@ table.qsearch_help_table td {
 .AddAlbumPopInContainer,
 .DeleteAlbumPopInContainer,
 .RenameAlbumPopInContainer {
-    background-color: white;
+    background-color: var(--admin-bg-content);
 }
 
 .AddUserPopInContainer .AddIconTitle,
 .AddAlbumPopInContainer .AddIconTitle,
 .DeleteAlbumPopInContainer .DeleteIconTitle,
 .RenameAlbumPopInContainer .RenameAlbumTitle {
-    color: #000;
+    color: var(--admin-text);
 }
 
 .AddUserPopInContainer .AddUserLabel,
@@ -935,8 +935,8 @@ table.qsearch_help_table td {
     margin: 10px 0;
     padding: 5px 10px;
     height: 25px;
-    background-color: #fafafa;
-    box-shadow: 0 2px #00000024;
+    background-color: var(--admin-bg-surface);
+    box-shadow: var(--admin-shadow-surface);
     border-radius: 5px;
     font-weight: bold;
     color: #777;
@@ -977,13 +977,13 @@ table.qsearch_help_table td {
 }
 
 .search-line {
-    background: #fafafa;
+    background: var(--admin-bg-surface);
 }
 
 .search-line .date-section,
 .search-line .user-section,
 .search-line .type-section {
-    border-right: 1px solid #bbb;
+    border-right: var(--admin-border-medium);
 }
 
 .detail-item-1,
@@ -997,12 +997,12 @@ table.qsearch_help_table td {
 }
 
 .history-filter {
-    background: #f3f3f3;
+    background: var(--admin-bg-surface);
 }
 
 .hasDatepicker,
 .elem-type-select {
-    background: white !important;
+    background: var(--admin-bg-field) !important;
 }
 
 .selectable-filter label {
@@ -1017,7 +1017,7 @@ table.qsearch_help_table td {
 .remove-filter,
 .filter-icon {
     color: #777;
-    background: #fff;
+    background: var(--admin-bg-field);
     padding: 5px 0;
 }
 
@@ -1145,6 +1145,6 @@ table.qsearch_help_table td {
 }
 
 .badge-dropdown::after {
-    border-color: transparent transparent white;
+    border-color: var(--admin-tooltip-arrow);
 }
 

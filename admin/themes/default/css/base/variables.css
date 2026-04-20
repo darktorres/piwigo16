@@ -63,4 +63,31 @@
     --admin-inline-warning-bg: #e80;
     --admin-inline-error-color: #ffd5dc;
     --admin-inline-error-bg: #f22;
+    /* Alternative surface levels */
+    --admin-bg-lifted: #555;
+    --admin-bg-field: #252525;
+
+    /* Action state colors (inverted between themes) */
+    --admin-action-success-color: #c2f5c2;
+    --admin-action-success-bg: #0a0;
+    --admin-action-success-border: #a9f6e3;
+    --admin-action-error-color: #ffd5dc;
+    --admin-action-error-bg: #f22;
+
+    /* Accent / selected states */
+    --admin-accent-selected-bg: #f9852c;
+    --admin-accent-selected-deep: #c76a23;
+    --admin-accent-selected-text: #faa96b;
+    --admin-text-on-accent: white;
+    --admin-text-success: #a9f6e3;
+
+    /* Disabled states */
+    --admin-disabled-color: #373737;
+    --admin-disabled-bg: #5d5d5d;
+
+    /* Component-specific */
+    --admin-jqtree-highlight: #ededed;
+    --admin-tooltip-arrow: #333;
+    --admin-pagination-hover-bg: #888;
+
 }

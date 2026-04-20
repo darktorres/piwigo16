@@ -857,7 +857,7 @@ form.properties a {
 .filter-tag-form .selectize-input input,
 .filter-author-form .selectize-input input,
 .filter-added_by-form .selectize-input input {
-    background: transparent !important;
+    background: transparent;
     color: white !important;
 }
 

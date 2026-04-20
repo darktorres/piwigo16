@@ -1,8 +1,10 @@
 # CSS Restructuring Plan — Piwigo Fork
 
-## Status: All 7 steps complete + post-cleanup pass done
+## Status: All 7 steps complete + two post-cleanup passes done
 
-All 7 execution steps are complete. A further cleanup pass addressed the remaining items from the "Remaining work" section: general.css and print.css folded into theme.css; structural duplicates and covered color overrides removed from clear/roma; variable contract expanded with 18 new `--admin-*` variables.
+All 7 execution steps are complete. Two further cleanup passes have been completed:
+1. **Post-cleanup pass 1** — general.css and print.css folded into theme.css; structural duplicates and covered color overrides removed from clear/roma; variable contract expanded with 18 new `--admin-*` variables; gallery CSS split into per-concern files (calendar, categories, comments, thumbnails).
+2. **Post-cleanup pass 2** — gallery `layout.css` split into `forms.css` + `popup.css`; `colors.css` trimmed (imageInfoTable → `picture.css`, mcs-side-results → `search-in-set.css`); `bootstrap_darkroom/theme.css` plugin-compat section extracted to `css/plugin-compat.css`.
 
 ---
 
@@ -38,10 +40,19 @@ The CSS in this fork had drifted into several pain shapes:
 | admin roma | `admin/themes/roma/theme.css` | 2716 → 2555 | **Partial** — 5 exact dupes deleted, structural props stripped, covered color overrides removed |
 | gallery default | `themes/default/theme.css` | 1087 → 6 | **Done** — thin `@import` manifest |
 | gallery default | `themes/default/css/menubar.css` | new (90) | **Done** |
-| gallery default | `themes/default/css/content.css` | new (281) | **Done** — includes Content, Thumbnails, Comments, Calendar, Popup sections |
-| gallery default | `themes/default/css/picture.css` | new (140) | **Done** |
-| gallery default | `themes/default/css/layout.css` | new (240) | **Done** — includes Layout and Filter forms sections |
-| gallery default | `themes/default/css/colors.css` | new (330) | **Done** — includes Default colors, Tables & forms, and other global color rules |
+| gallery default | `themes/default/css/content.css` | 281 → 92 | **Done** — Content section only |
+| gallery default | `themes/default/css/calendar.css` | new (59) | **Done** — split from content.css |
+| gallery default | `themes/default/css/categories.css` | new (54) | **Done** — split from content.css |
+| gallery default | `themes/default/css/comments.css` | new (76) | **Done** — split from content.css |
+| gallery default | `themes/default/css/thumbnails.css` | new (99) | **Done** — split from content.css + colors.css |
+| gallery default | `themes/default/css/picture.css` | 140 → 165 | **Done** — gained imageInfoTable from colors.css |
+| gallery default | `themes/default/css/layout.css` | 240 → 82 | **Done** — core layout only |
+| gallery default | `themes/default/css/forms.css` | new (105) | **Done** — split from layout.css |
+| gallery default | `themes/default/css/popup.css` | new (52) | **Done** — split from layout.css |
+| gallery default | `themes/default/css/colors.css` | 330 → 128 | **Done** — imageInfoTable → picture.css, mcs-side-results → search-in-set.css |
+| gallery default | `themes/default/css/search-in-set.css` | new (73) | **Done** — split from colors.css |
+| bootstrap_darkroom | `themes/bootstrap_darkroom/theme.css` | 1113 → 951 | **Done** — plugin-compat extracted |
+| bootstrap_darkroom | `themes/bootstrap_darkroom/css/plugin-compat.css` | new (162) | **Done** |
 | gallery default | `themes/default/css/no_photo_yet.css` | new (170) | **Done** — extracted from `no_photo_yet.tpl` (step 2) |
 | gallery default | `themes/default/iconset.css` | 196 | Kept (already clean) |
 | gallery default | `themes/default/fix-khtml.css` | 16 → deleted | **Done** |
@@ -102,14 +113,14 @@ All static `<style>` blocks were extracted. Each tpl now has a `{combine_css pat
 ```
 admin/themes/default/css/
 ├── base/
-│   ├── variables.css     (40)   — 28 --admin-* custom properties, dark/roma defaults
+│   ├── variables.css     (46 vars) — --admin-* custom properties, dark/roma defaults
 │   ├── global.css        (90)   — page-level selectors consuming var()
 │   ├── content.css       (93)
 │   ├── layout.css        (99)
 │   ├── forms.css         (62)
 │   └── maintenance.css   (58)
 ├── components/
-│   ├── general.css       (360)  — unchanged; loaded via {* Temporary solution *} in header.tpl
+│   ├── general.css       (361)  — loaded via @import in theme.css
 │   ├── thumbnails.css    (81)
 │   ├── search-bar.css    (63)
 │   ├── dropdown.css      (81)
@@ -176,33 +187,49 @@ admin/themes/default/css/
 
 ```
 themes/default/css/
-├── menubar.css       (90)
-├── content.css       (281)  — Content + Thumbnails + Comments + Calendar + Popup sections
-├── picture.css       (140)
-├── layout.css        (240)  — Default Layout + Filter forms sections
-├── colors.css        (330)  — Default colors + Tables & forms + global color rules
-├── no_photo_yet.css  (170)  — per-page, loaded via {combine_css} in no_photo_yet.tpl
-├── search.css        (948)  — variable-driven (always loaded)
-├── clear-search.css  (59)   — :root {} with --search-* light values
-└── dark-search.css   (78)   — :root {} with --search-* dark values + dark-only structural rules
+├── menubar.css        (90)
+├── content.css        (92)   — Content section only (contentWithMenu, navigationBar, badge, search_results, categoryActions)
+├── calendar.css       (59)   — calendarViews, calItem, calMonth, calBackDate/ForeDate
+├── categories.css     (54)   — thumbnailCategories, thumbnailCategory, illustration, loader
+├── comments.css       (76)   — comment listing + image comment form (#commentAdd, #pictureCommentList)
+├── thumbnails.css     (99)   — elastic layout + thumbnail-only scroll layout (html:has(#thumbnails) rules)
+├── picture.css        (165)  — Picture section + imageInfoTable
+├── layout.css         (82)   — core page structure (body, h1, h2, a, #copyright, form/table base)
+├── forms.css          (105)  — filter forms, .properties, tag cloud (#fullTagCloud, tagLevel*)
+├── popup.css          (52)   — popup help page, tag tables, jQuery datepicker trigger
+├── colors.css         (128)  — Default colors, Tables & forms, Selectize, message/error/info boxes
+├── search-in-set.css  (73)   — mcs-side-results component (must be in theme, not search-only CSS)
+├── no_photo_yet.css   (170)  — per-page, loaded via {combine_css} in no_photo_yet.tpl
+├── search.css         (948)  — variable-driven (always loaded)
+├── clear-search.css   (59)   — :root {} with --search-* light values
+└── dark-search.css    (78)   — :root {} with --search-* dark values + dark-only structural rules
+```
+
+### themes/bootstrap_darkroom/
+
+```
+themes/bootstrap_darkroom/
+├── theme.css              (951)  — core theme; plugin-compat section replaced with @import
+└── css/
+    ├── plugin-compat.css  (162)  — GThumb+, OSM, BatchDownloader, UserCollections, PWGStuffs, RVAuto, ExtDesc, LangSwitch
+    ├── add_photos.css     (...)  — extracted from add_photos.tpl (step 2)
+    ├── header.css         (...)  — extracted from header.tpl (step 2)
+    └── stuffs_lastcoms.css (...)
 ```
 
 ---
 
 ## Deviations from original plan
 
-### Step 3 (gallery theme.css split) — coarser than planned
+### Step 3 (gallery theme.css split) — now close to plan
 
-The plan proposed 14 separate files; the implementation split into 5 (plus `no_photo_yet.css`). Several planned files were folded into larger ones:
+Initially coarser than planned (5 files vs 14). Post-cleanup passes brought it close to the original target. Remaining deviation:
 
 | Planned file | Where it ended up |
 |---|---|
-| `forms.css` | folded into `colors.css` |
-| `calendar.css` | folded into `content.css` |
-| `thumbnails.css` | folded into `content.css` |
-| `comments.css` | folded into `content.css` |
-| `popup.css` | folded into `content.css` or `layout.css` |
 | `search-skin.css` | not created (see step 4 deviation) |
+
+All other planned files now exist: `calendar.css`, `categories.css`, `comments.css`, `thumbnails.css`, `picture.css`, `layout.css`, `forms.css`, `popup.css`, `colors.css`, `search-in-set.css`, `menubar.css`, `iconset.css`, `print.css`.
 
 ### Step 4 (search variant collapse) — kept two files
 
@@ -250,11 +277,12 @@ The plan suggested creating dedicated `admin/themes/{clear,roma}/css/takeatour.c
 | Inline notices | `--admin-inline-warning-color/bg`, `--admin-inline-error-color/bg` | colors invert between light/dark; used in `general.css` |
 | Misc | `--admin-badge-albums-bg`, `--admin-theme-span-bg` | used in `tabsheets.css` |
 
-## Remaining work (partial — diminishing returns)
+## Remaining work (diminishing returns)
 
 - **admin/themes/{clear,roma}/ remaining color overrides** — ~178 selector/property combos still have hardcoded colors in the parent that are overridden in roma. These span many page-specific files (user-manager: 65, tag-manager: 12, dashboard: 12, album-manager: 11, plugins: 9, …). Covering them would require 50+ new page-specific variables with limited semantic reuse.
-- **gallery split granularity** — `content.css` (281 lines) folds Content, Thumbnails, Comments, Calendar, and Popup sections. Could be split further if needed.
 - **admin/themes/clear/roma structural rules** — both skins still carry structural CSS (layout, font, spacing rules). These predate this fork's work. Removing them requires either moving rules to the parent or verifying they are genuinely skin-specific.
+- **themes/elegant/theme.css** (680 lines) — skin overlay on default; no clear split candidates identified.
+- **admin pages/ large files** — `user_list.css` (1466), `album-manager.css` (1157), `user-manager.css` (1150), `plugins.css` (1043) are large but each covers a single page; splitting would need multiple `{combine_css}` lines per tpl with no HTTP benefit.
 
 ---
 

@@ -1,19 +1,32 @@
 {
   "extends": ["stylelint-config-standard"],
   "ignoreFiles": [
-    "node_modules/**",
+    "_data/**",
+    "admin/themes/default/fontello/**",
+    "admin/themes/default/fonts/**",
     "dist/**",
+    "galleries/**",
+    "node_modules/**",
+    "plugins/AdminTools/template/fontello/**",
     "tests/**",
-    "themes/bootstrap_darkroom/**"
+    "themes/bootstrap_darkroom/**",
+    "themes/default/fontello/**",
+    "themes/default/js/plugins/**",
+    "themes/modus/css/fontello/**",
+    "themes/modus/css/open-sans/**",
+    "vendor/**"
   ],
   "rules": {
     "no-descending-specificity": null,
     "selector-class-pattern": null,
     "selector-id-pattern": null,
-    "custom-property-pattern": null,
+    "custom-property-pattern": "^[a-z][a-z0-9-]*$",
     "keyframes-name-pattern": null,
     "alpha-value-notation": null,
     "color-function-notation": null,
-    "import-notation": null
+    "import-notation": null,
+    "declaration-no-important": [true, { "severity": "warning" }],
+    "color-no-invalid-hex": true,
+    "shorthand-property-no-redundant-values": true
   }
 }

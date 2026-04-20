@@ -4,7 +4,7 @@
 
 The JS/TS stack has been fully modernized (TypeScript, Vite, stylelint, ESLint), but CSS has had no equivalent attention. The result: 572 `!important` declarations across project CSS, zero CSS custom properties anywhere, hardcoded colors/values throughout, and inconsistent media query breakpoints. This plan covers the entire project CSS — all themes, all plugins — not just modus/GDThumb.
 
-**Current state (after completed steps):** 0 errors, 517 warnings (down from 3557 errors / 572 warnings).
+**Current state (after completed steps):** 0 errors, 451 warnings (down from 3557 errors / 572 warnings).
 
 ## Full File Inventory (31 files, all in scope)
 
@@ -115,10 +115,12 @@ Static hex values replaced with `var(--color-*)` references where applicable.
 - Added `:root { --radius-control: Xpx; }` blocks to skins with non-zero radius values, replacing `border-radius: Xpx !important` instances throughout each skin
 - Removed redundant `!important` on `border-radius: 0` (equal to variable default, no override needed)
 - Removed `!important` from `background: transparent`, `box-shadow: none`, `text-decoration` rules across all skins
+- Removed redundant `!important` from: mobile action button selectors (high specificity wins), `#quickconnect input` / `#t4u-update-tags` (ID specificity wins), `.selectize-input` bg/color/border, `input[type="text"]` bg, `#menubar input` bg, `.switchBox` bg, `input[type="submit"]` padding/color/bg, `.tagLevel5` color, `.head-button-2:hover` color, `.token-input-input-token` bg, `#derivativeSwitchBox` bg, `div.thumbHover` height, `#menubar li:hover a` color
+- Added `/* Search colors — !important below overrides mcs-search plugin CSS */` annotation to the search section of each skin
 
-**Result:** ~140 `!important` warnings remaining in skin files (down from 176).
+**Result:** ~74 `!important` warnings remaining in skin files (down from 176).
 
-**Not done:** The original goal was to reduce each skin to a single `:root {}` block of variable overrides. Most skins still contain hundreds of element-level rules that duplicate `hf_components.css` with color differences. To fully eliminate the remaining ~140 warnings, more CSS variables would need to be introduced for component-specific colors (menubar background, badge colors, search accent colors, etc.) so skins can override variables instead of elements.
+**Not done:** The original goal was to reduce each skin to a single `:root {}` block of variable overrides. Most skins still contain hundreds of element-level rules that duplicate `hf_components.css` with color differences. The remaining ~74 warnings are all in `/* Search colors */` sections — they override the mcs-search plugin's CSS with `!important` and cannot be removed without changing both sides.
 
 ---
 
@@ -205,7 +207,7 @@ Annotated justified `!important` throughout the codebase with comments:
 
 ## Verification
 
-1. `bun run lint:css` — 0 errors, 517 warnings currently
+1. `bun run lint:css` — 0 errors, 451 warnings currently
 2. Visual: load category page at desktop + 390px mobile width
 3. Switch 3+ modus skins — verify colors correct
 4. Admin panel: verify admin themes render correctly

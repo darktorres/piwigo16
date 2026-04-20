@@ -88,7 +88,7 @@ input[type="password"],
 
 .selectize-control.multi .selectize-input [data-value].active,
 .selectize-control.multi .selectize-input > div {
-    background-color: #65a603 !important;
+    background-color: #65a603;
     color: #ddd;
 }
 
@@ -122,9 +122,9 @@ input[type="submit"],
 input[type="reset"],
 .filter input[type="submit"],
 .filter input[type="reset"] {
-    padding: 10px 20px !important;
-    color: #65a603 !important;
-    background-color: #022601 !important;
+    padding: 10px 20px;
+    color: #65a603;
+    background-color: #022601;
 }
 
 .wide #imageToolBar {
@@ -195,7 +195,7 @@ fieldset label {
     color: #ceffce;
     border: 0;
     box-shadow: none;
-    background-color: #062601 !important;
+    background-color: #062601;
 }
 
 .properties input,
@@ -497,16 +497,16 @@ td .nbEntries {
     #imageToolBar .actionButtons .pwg-button-text,
     .actionButtons a .pwg-icon,
     .actionButtons a .pwg-icon:hover {
-        color: #84bf04 !important;
+        color: #84bf04;
     }
 
     .categoryActions a .pwg-icon {
-        color: #84bf04 !important;
+        color: #84bf04;
     }
 
     #theTagsPage a .pwg-icon,
     #theTagsPage a:hover .pwg-icon {
-        color: #84bf04 !important;
+        color: #84bf04;
     }
 }
 
@@ -514,7 +514,7 @@ td .nbEntries {
     background-color: #74bf04;
 }
 
-/* Search colors */
+/* Search colors — !important below overrides mcs-search plugin CSS */
 .filter .filter-icon {
     color: #474747;
 }
@@ -660,7 +660,7 @@ td .nbEntries {
 
 .head-button-2:hover {
     background: #eee;
-    color: #555 !important;
+    color: #555;
 }
 
 .breadcrumb-item {

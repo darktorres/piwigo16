@@ -64,7 +64,7 @@ a:hover {
 
 #menubar li:hover a {
     text-decoration: none;
-    color: white !important;
+    color: white;
 }
 
 #menubar li.selected > a {
@@ -103,7 +103,7 @@ input[type="password"],
 
 .selectize-control.multi .selectize-input [data-value].active,
 .selectize-control.multi .selectize-input > div {
-    background-color: #7f0906 !important;
+    background-color: #7f0906;
     color: #ddd;
 }
 
@@ -231,7 +231,7 @@ fieldset label {
     padding: 10px;
     color: white;
     box-shadow: none;
-    background-color: #7f0906 !important;
+    background-color: #7f0906;
 }
 
 .properties input,
@@ -309,7 +309,7 @@ dd {
 
 #derivativeSwitchBox {
     box-shadow: 5px 5px 10px black;
-    background-color: white !important;
+    background-color: white;
     border-radius: 0;
 }
 
@@ -461,7 +461,7 @@ td.calDayCellEmpty:hover {
 
 div.thumbHover {
     color: white;
-    height: 100px !important;
+    height: 100px;
     width: 100px;
     font-weight: normal;
     border-radius: 0;
@@ -505,7 +505,7 @@ td .nbEntries {
 
 #t4u-update-tags .t4u-disabled {
     background-color: #400403;
-    color: white !important;
+    color: white;
 }
 
 @media screen and (width <= 640px) {
@@ -546,7 +546,7 @@ td .nbEntries {
     background-color: #e8e8ea;
 }
 
-/* Search */
+/* Search — !important below overrides mcs-search plugin CSS */
 
 .filter-manager-popin .mcs-popin-title,
 .tags-found-popin .mcs-popin-title,

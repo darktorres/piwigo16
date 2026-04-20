@@ -173,7 +173,7 @@ input[type="reset"]:hover {
 }
 
 .switchBox {
-    background-color: #5889ad !important;
+    background-color: #5889ad;
     border-radius: 0;
 }
 
@@ -464,9 +464,9 @@ textarea {
 .selectize-input.focus,
 .selectize-dropdown,
 .selectize-input input {
-    background-color: #93c2d6 !important;
-    color: #2e4756 !important;
-    border: none !important;
+    background-color: #93c2d6;
+    color: #2e4756;
+    border: none;
     border-radius: 0;
     box-shadow: none;
 }
@@ -622,11 +622,11 @@ form.properties a {
 }
 
 #t4u-update-tags .t4u-disabled {
-    color: #2e4756 !important;
+    color: #2e4756;
 }
 
 .token-input-input-token {
-    background-color: white !important;
+    background-color: white;
 }
 
 @media screen and (width <= 640px) {
@@ -648,8 +648,8 @@ form.properties a {
     #imageToolBar .actionButtons .pwg-button-text,
     .actionButtons a .pwg-icon,
     .actionButtons a .pwg-icon:hover {
-        color: #c0d2df !important;
-        background-color: #5889ad !important;
+        color: #c0d2df;
+        background-color: #5889ad;
     }
 
     #albumActionsSwitcher + .categoryActions {
@@ -676,7 +676,7 @@ form.properties a {
     color: #3f6379;
 }
 
-/* Search colors */
+/* Search colors — !important below overrides mcs-search plugin CSS */
 .filter .filter-icon {
     color: #5889ad;
 }
@@ -826,7 +826,7 @@ form.properties a {
 
 .head-button-2:hover {
     background: #eee;
-    color: #555 !important;
+    color: #555;
 }
 
 .breadcrumb-item {

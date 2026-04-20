@@ -185,7 +185,6 @@ fieldset label {
 #quickconnect input,
 .properties input,
 .properties input:focus {
-    border-color: transparent;
     padding: 10px;
     color: #ceffce;
     border: 0;
@@ -365,7 +364,7 @@ textarea {
     border-radius: 15px;
 }
 
-.selectize-control.plugin-remove_button [data-value] .option active {
+.selectize-control.plugin-remove_button [data-value] .option.active {
     background-color: #022601;
 }
 

@@ -119,7 +119,7 @@ input[type="reset"]:hover {
     color: #eaeae9;
 }
 
-#qsearchInput:placeholder {
+#qsearchInput::placeholder {
     color: #c7d3e1;
 }
 
@@ -274,7 +274,7 @@ fieldset label {
 }
 
 #quickconnect input,
-.properties ::input-placeholder {
+.properties ::placeholder {
     color: #eaeae9;
 }
 

@@ -302,7 +302,6 @@ fieldset {
 #quickconnect input,
 .properties input,
 .properties input:focus {
-    border-color: transparent;
     padding: 10px;
     border: 0;
     box-shadow: none;
@@ -783,7 +782,7 @@ td .nbEntries {
         padding: 20px;
     }
 
-    #mbCategories dd:onclick {
+    #mbCategories dd:focus {
         display: block;
     }
 

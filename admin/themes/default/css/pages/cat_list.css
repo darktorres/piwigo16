@@ -4,26 +4,24 @@
 
   #tabsheet,
   .selectedAlbum {
-    margin: 0 0 10px 0 !important;
+    margin: 0 0 10px !important;
   }
 
   .selectedAlbum {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-
     padding: 0 34px 0 22px;
-
     align-items: baseline;
   }
 
   .selectedAlbum-first {
-    margin-left: 0px;
+    margin-left: 0;
   }
 
   .AlbumViewSelector {
-    padding: 7px 0px;
-    margin-right: 0px;
+    padding: 7px 0;
+    margin-right: 0;
     border-radius: 10px;
   }
 
@@ -51,7 +49,6 @@
   .icon-pause {
     padding: 10px;
     font-size: 19px;
-
     transition: 0.3s;
   }
 
@@ -64,7 +61,7 @@
   }
 
   .categoryContainer {
-    padding: 0 20px 0 20px;
+    padding: 0 20px;
   }
 
   /*
@@ -78,10 +75,8 @@
   .albumTop {
     display: flex;
     flex-direction: row;
-
-    padding: 0px 20px;
+    padding: 0 20px;
     height: 75px;
-
     align-items: baseline;
   }
 
@@ -101,7 +96,6 @@
 
   .albumInfos {
     color: #a9a9a9;
-
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -116,9 +110,7 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-
     margin-top: auto;
-
     width: 100%;
     margin-bottom: auto;
   }
@@ -140,9 +132,7 @@
   .addAlbum form input {
     border: none;
     border-radius: 5px;
-
-    margin: 0px 10px;
-
+    margin: 0 10px;
     max-width: 200px;
     width: 75%;
   }

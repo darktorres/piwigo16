@@ -1,14 +1,12 @@
   .applicationContainer {
     width: 100%;
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-flow: row wrap;
   }
 
   .applicationCard {
     max-width: 500px;
     margin: 20px;
-
     display: flex;
     flex-direction: row;
   }
@@ -27,7 +25,7 @@
   .applicationCard .applicationName {
     font-size: 15px;
     font-weight: bold;
-    margin: 20px 0 10px 0;
+    margin: 20px 0 10px;
     padding-right: 15px;
     text-align: left;
   }
@@ -35,7 +33,6 @@
   .applicationCard .applicationDesc {
     text-align: left;
     padding-right: 15px;
-
     display: -webkit-box;
     -webkit-line-clamp: 6;
     -webkit-box-orient: vertical;

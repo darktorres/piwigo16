@@ -9,7 +9,6 @@
     background-color: #ffa646;
     border-color: transparent;
     color: black;
-
     border-radius: 20px;
   }
 
@@ -19,12 +18,11 @@
     border-top-right-radius: 20px;
     border-bottom-right-radius: 20px;
     color: black;
-
     border-left: 1px solid transparent;
 
   }
 
   #action_add_tags .item .remove:hover,
   #action_add_tags .item .remove:hover {
-    background-color: #ff7700;
+    background-color: #f70;
   }

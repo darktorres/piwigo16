@@ -52,6 +52,7 @@
     --admin-inline-warning-bg: #fd9;
     --admin-inline-error-color: #f22;
     --admin-inline-error-bg: #ffd5dc;
+
     /* Alternative surface levels */
     --admin-bg-lifted: #f0f0f0;
     --admin-bg-field: #f3f3f3;
@@ -247,6 +248,7 @@ ul.actions,
 body .ui-resizable-disabled .ui-resizable-handle {
     display: none;
 } 
+
 body .ui-resizable-autohide .ui-resizable-handle {
     display: none;
 } 
@@ -397,6 +399,7 @@ input[type="text"].large {
 * + html[lang="en"] body .content h2 {
     text-transform: capitalize;
 } 
+
 * + html .bigtext {
     left: 70px;
 }

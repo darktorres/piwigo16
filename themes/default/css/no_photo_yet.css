@@ -4,11 +4,11 @@ body {
       background-color: #f9f9f9;
     }
 
-    P {
+    p {
       text-align: center;
     }
 
-    TD {
+    td {
       color: #888;
       letter-spacing: 1px;
     }
@@ -20,12 +20,14 @@ body {
       width: 700px;
       height: 400px;
       margin-top: -200px;
+
       /* height half */
       margin-left: -350px;
+
       /* width half */
 
       background-color: #f1f1f1;
-      border: 2px solid #dddddd;
+      border: 2px solid #ddd;
     }
 
     #noPhotoWelcome {
@@ -45,11 +47,9 @@ body {
 
     .bigButton a {
       background-color: #666;
-      padding: 10px;
       text-decoration: none;
-      margin: 0px 5px 0px 5px;
-      -moz-border-radius: 6px;
-      -webkit-border-radius: 6px;
+      margin: 0 5px;
+      border-radius: 6px;
       color: #fff;
       font-size: 25px;
       letter-spacing: 2px;
@@ -57,7 +57,7 @@ body {
     }
 
     .bigButton a:hover {
-      background-color: #ff7700;
+      background-color: #f70;
       outline: none;
       color: #fff;
       border: none;
@@ -68,7 +68,6 @@ body {
       bottom: 10px;
       text-align: center;
       width: 100%;
-
       font-style: normal;
       font-size: 1.0em;
     }
@@ -79,13 +78,13 @@ body {
       font-weight: normal;
     }
 
-    #deactivate A {
+    #deactivate a {
       text-decoration: none;
       border: none;
       color: #f70;
     }
 
-    #deactivate A:hover {
+    #deactivate a:hover {
       border-bottom: 1px dotted #f70;
     }
 
@@ -106,7 +105,7 @@ body {
       margin-top: 3px;
       background-color: #ddd;
       border: 2px solid #ccc;
-      -moz-border-radius: 5px;
+      border-radius: 5px;
       padding: 2px;
 
     }
@@ -114,7 +113,7 @@ body {
     #quickconnect input[type="text"]:focus,
     #quickconnect input[type="password"]:focus {
       background-color: #fff;
-      border: 2px solid #ff7700;
+      border: 2px solid #f70;
     }
 
     #quickconnect input[type="submit"] {
@@ -122,14 +121,14 @@ body {
       font-weight: bold;
       letter-spacing: 2px;
       border: none;
-      background-color: #666666;
+      background-color: #666;
       color: #fff;
       padding: 5px;
-      -moz-border-radius: 5px;
+      border-radius: 5px;
     }
 
     #quickconnect input[type="submit"]:hover {
-      background-color: #ff7700;
+      background-color: #f70;
       color: white;
     }
 
@@ -143,7 +142,7 @@ body {
         border-color: #444;
       }
 
-      TD {
+      td {
         color: #aaa;
       }
 
@@ -165,6 +164,6 @@ body {
       #quickconnect input[type="text"]:focus,
       #quickconnect input[type="password"]:focus {
         background-color: #444;
-        border-color: #ff7700;
+        border-color: #f70;
       }
     }

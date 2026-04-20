@@ -28,7 +28,7 @@
   }
 
   .themeBox {
-    padding: 5px 5px 10px 5px;
+    padding: 5px 5px 10px;
     background-color: #e5e5e5;
     display: inline-table;
   }
@@ -39,7 +39,7 @@
     border-radius: 5px;
     overflow: hidden;
     box-shadow: none;
-    padding: 5px 5px 10px 5px;
+    padding: 5px 5px 10px;
     background-color: #e5e5e5;
     display: inline-table;
     position: relative;

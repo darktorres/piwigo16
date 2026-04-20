@@ -16,13 +16,14 @@
   .badge-number {
     color: white;
   }
+
   #label-delete-size-checkbox {
     font-weight: bold;
     white-space: nowrap;
   }
 
   .maintenance-action:hover {
-    color: #ff7700;
+    color: #f70;
     text-decoration: none;
   }
 
@@ -41,7 +42,6 @@
     display: flex;
     text-align: left;
     margin-bottom: 5px;
-
     flex-direction: column;
   }
 
@@ -77,7 +77,7 @@
   }
 
   .delete-sizes:hover {
-    background-color: #ff7700;
+    background-color: #f70;
     color: #3c3c3c;
     text-decoration: none;
   }
@@ -88,17 +88,17 @@
 
   @keyframes spin {
     100% {
-      -webkit-transform: rotate(360deg);
       transform: rotate(360deg);
     }
   }
+
   #label-delete-size-checkbox {
     font-weight: bold;
     white-space: nowrap;
   }
 
   .maintenance-action:hover {
-    color: #ff7700;
+    color: #f70;
     text-decoration: none;
   }
 
@@ -117,7 +117,6 @@
     display: flex;
     text-align: left;
     margin-bottom: 5px;
-
     flex-direction: column;
   }
 
@@ -153,7 +152,7 @@
   }
 
   .delete-sizes:hover {
-    background-color: #ff7700;
+    background-color: #f70;
     color: #3c3c3c;
     text-decoration: none;
   }
@@ -164,7 +163,6 @@
 
   @keyframes spin {
     100% {
-      -webkit-transform: rotate(360deg);
       transform: rotate(360deg);
     }
   }

@@ -4,9 +4,10 @@
   flex-wrap: wrap;
   padding: 10px 0;
   gap: 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgb(255,255,255,0.1);
 }
 .sync-phase:last-child { border-bottom: none; }
+
 .sync-phase .phase-status {
   width: 22px;
   text-align: center;
@@ -18,6 +19,7 @@
 .sync-phase.running .phase-label { font-weight: 600; color: #fff; }
 .sync-phase .phase-detail { color: #aaa; font-size: 13px; }
 .sync-phase .phase-time { margin-left: auto; color: #999; font-size: 12px; }
+
 .sync-progress-bar {
   width: 100%;
   display: flex;
@@ -26,6 +28,7 @@
   margin-top: 2px;
   padding-left: 30px;
 }
+
 .progress-track {
   flex: 1;
   height: 16px;
@@ -33,6 +36,7 @@
   border-radius: 8px;
   overflow: hidden;
 }
+
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #0073aa, #00a0d2);
@@ -42,7 +46,9 @@
 }
 .progress-text { font-size: 12px; color: #bbb; white-space: nowrap; }
 .sync-elapsed { margin-top: 12px; color: #aaa; font-size: 13px; }
+
 @keyframes spin { to { transform: rotate(360deg); } }
+
 .spinner {
   display: inline-block;
   width: 14px;
@@ -52,6 +58,7 @@
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
+
 .sync-substep {
   display: flex;
   align-items: center;
@@ -60,9 +67,10 @@
   padding-left: 32px;
   gap: 8px;
   font-size: 13px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgb(255,255,255,0.05);
 }
 .sync-substep:last-child { border-bottom: none; }
+
 .sync-substep .substep-status {
   width: 18px;
   text-align: center;
@@ -81,6 +89,7 @@
 #syncResults h4 { margin: 15px 0 5px; }
 #syncResults ul { margin: 0 0 5px 20px; }
 #syncControls { margin-left: 20px; }
+
 .syncControlBtn {
   padding: 4px 14px;
   font-size: 12px;
@@ -89,11 +98,13 @@
   border: none;
   border-radius: 3px;
 }
+
 .syncAbortBtn {
   background: #b32d2e;
   color: #fff;
 }
 .syncAbortBtn:hover { background: #9b2324; }
+
 .syncPausedLabel {
   color: #f0c33c;
   font-weight: 600;

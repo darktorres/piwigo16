@@ -1,0 +1,40 @@
+/* Admin theme CSS custom properties — dark defaults (matches roma skin) */
+:root {
+    /* Text colors */
+    --admin-text: #777;
+    --admin-text-th: #777;
+    --admin-text-input: #999;
+    --admin-text-muted: #666;
+    --admin-text-dim: #aaa;
+    --admin-text-legend: #c1c1c1;
+
+    /* Link colors */
+    --admin-link: #777;
+    --admin-link-hover: #f70;
+
+    /* Page/layout backgrounds */
+    --admin-bg-page: #444;
+    --admin-bg-surface: #333;
+    --admin-bg-content: #444;
+    --admin-bg-row1: #111;
+    --admin-bg-row2: #222;
+    --admin-bg-head: #3c3c3c;
+    --admin-color-head: #d5d5d5;
+    --admin-bg-h1: #565656;
+    --admin-color-h1: #c1c1c1;
+
+    /* Form backgrounds */
+    --admin-bg-input: #444;
+    --admin-bg-input-focus: #444;
+
+    /* Borders */
+    --admin-border: #333;
+    --admin-border-medium: #666;
+    --admin-border-input: #666;
+
+    /* UI components */
+    --admin-tooltip-bg: #000;
+    --admin-tooltip-color: #eee;
+    --admin-shadow-card: -1px 1px 2px #1a1a1a;
+    --admin-shadow-surface: 0 2px #00000070;
+}

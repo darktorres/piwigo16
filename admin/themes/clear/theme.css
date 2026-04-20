@@ -1,82 +1,31 @@
-/* generic colors - clear
-.gcText { color: #777777; }                 used for text
-.gcText2 { color: #777777; }                used for table header
-.gcText3 { color: #555555; }                used for tabs text
-.gcTextInput { color:#666666; }             used for inputs
-.gcLink { color: #005E89; }                 used for link
-.gcLinkHover { color: #D54E21; }            used for link
-.gcBgPage { background-color: #F9F9F9; }               used for page background
-.gcBgTabSheet { background-color: #F1F1F1; }           used inside tabsheet & menu
-.gcBgTableRow1 { background-color: #DDDDDD; }            used in for tables rows background
-.gcBgTableRow2 { background-color: #EEEEEE; }            used in tables rows & some widgets background
-.gcBgInput { background-color:#CCCCCC; }                      used for inputs
-.gcBorder    { border-color: #AAAAAA; }            used for borders
-.gcBorder2   { border-color: #666666; }            used for widgets borders
-.gcBorderInput { border-color:#777777; }           used for inputs
-*/
-
-/* text color */
-
-body,
-h3,
-dt,
-h2,
-.throw,
-.content,
-label,
-legend {
-    color: #777;
-}
-
-th {
-    color: #888;
-}
-
-input,
-select,
-textarea {
-    color: #666;
-    background-color: #ccc;
-}
-
-option[disabled] {
-    background-color: #ccc;
-}
-
-input[type="radio"],
-input[type="checkbox"] {
-    background-color: transparent;
-}
-
-input[type="text"],
-input[type="file"] {
-    background-color: #ddd;
-}
-
-select,
-textarea {
-    background-color: #ddd;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-    background-color: #eee;
-    color: #666;
-}
-
-input,
-select,
-textarea {
-    border: 1px solid #999;
-}
-
-.showInfo {
-    color: #999;
-}
-
-.showInfo:hover {
-    color: #333;
+/* clear (light) skin — CSS variable overrides */
+:root {
+    --admin-text: #777;
+    --admin-text-th: #888;
+    --admin-text-input: #666;
+    --admin-text-muted: #999;
+    --admin-text-dim: #aaa;
+    --admin-text-legend: #3c3c3c;
+    --admin-link: #3a3a3a;
+    --admin-link-hover: #ffa646;
+    --admin-bg-page: #fff;
+    --admin-bg-surface: #fafafa;
+    --admin-bg-content: #fff;
+    --admin-bg-row1: #ddd;
+    --admin-bg-row2: #eee;
+    --admin-bg-head: #333;
+    --admin-color-head: #ccc;
+    --admin-bg-h1: #333;
+    --admin-color-h1: #ccc;
+    --admin-bg-input: #ddd;
+    --admin-bg-input-focus: #eee;
+    --admin-border: #ddd;
+    --admin-border-medium: #aaa;
+    --admin-border-input: #999;
+    --admin-tooltip-bg: #eee;
+    --admin-tooltip-color: #000;
+    --admin-shadow-card: 0 2px 5px #00000024;
+    --admin-shadow-surface: 0 2px #00000024;
 }
 
 #copyright {
@@ -94,30 +43,6 @@ textarea {
     right: 0;
     width: 550px;
     top: 70px;
-}
-
-html,
-body {
-    min-height: 100%;
-    height: 100%;
-    background-color: #fff;
-}
-
-/* #the_page { margin: 0; padding: 0; z-index: 1; top:0px; */
-
-/* padding-top: 0; min-height: 100%; width:100%; position:absolute; left:0px; } */
-h3,
-.throw,
-.row1 {
-    background-color: #ddd;
-}
-
-.row2 {
-    background-color: #eee;
-}
-
-#content {
-    background: #fff;
 }
 
 .content h3 {
@@ -151,7 +76,7 @@ ul.thumbnails span.wrap2 {
     background-color: transparent;
 }
 
-/* borders */
+
 fieldset {
     border: none;
 }
@@ -196,14 +121,6 @@ label {
     cursor: pointer;
 }
 
-.menuLi {
-    background: #f3f3f3;
-}
-
-.menuLi_hidden {
-    background: #ccc;
-}
-
 a.Piwigo {
     font-family: verdana, arial, helvetica, sans-serif;
     font-size: 11px;
@@ -233,25 +150,9 @@ a:focus {
     -moz-outline-width: 0;
 }
 
-a {
-    color: #3a3a3a;
-}
-
-a:hover,
-a:active {
-    color: #ffa646;
-    cursor: pointer;
-}
-
 ul.actions,
 .content form#waiting {
     text-align: center;
-}
-
-/* jQuery tooltips */
-.ui-tooltip {
-    color: #000;
-    background-color: #eee;
 }
 
 .cluetip-outer {
@@ -264,7 +165,7 @@ ul.actions,
     background-color: #ddd;
 }
 
-/* jQuery ui resizable */
+
 .ui-resizable {
     position: relative;
 }
@@ -278,12 +179,12 @@ ul.actions,
     border: 0;
 }
 
-/* jQuery tiptip */
+
 #tiptip_holder a {
     color: #42b0ff;
 }
 
-/* Global handle styles */
+
 .ui-resizable-handle {
     position: absolute;
     display: none;
@@ -296,10 +197,10 @@ ul.actions,
 
 body .ui-resizable-disabled .ui-resizable-handle {
     display: none;
-} /* use 'body' to make it more specific (css order) */
+} 
 body .ui-resizable-autohide .ui-resizable-handle {
     display: none;
-} /* use 'body' to make it more specific (css order) */
+} 
 
 #ui-datepicker-div {
     background-color: #f1f1f1;
@@ -443,11 +344,11 @@ input[type="text"].large {
     padding: 10px;
 }
 
-/* hacks */
+
 * html[lang="en"] body .content h2,
 * + html[lang="en"] body .content h2 {
     text-transform: capitalize;
-} /* IE */
+} 
 * + html .bigtext {
     left: 70px;
 }
@@ -536,7 +437,7 @@ ul.thumbnails li.rank-of-image {
     background-color: #ddd;
 }
 
-/* Batch Manager */
+
 #batchManagerGlobal .thumbnails .font-checkbox [class*="icon-check"]::before {
     color: #999;
 }
@@ -721,7 +622,7 @@ label > p.group_select {
     color: #e0e0e0;
 }
 
-/* Edit group name */
+
 
 .groups .Group-name {
     color: #3c3c3c;
@@ -732,7 +633,7 @@ label > p.group_select {
     background-color: white;
 }
 
-/* Add Group */
+
 
 .groups fieldset input[type="text"]::placeholder {
     color: #d5d5d5;
@@ -747,7 +648,7 @@ label > p.group_select {
     background-color: #f70;
 }
 
-/* Group manager buttons */
+
 
 .groups .manage-users,
 .groups .manage-permissions {
@@ -762,7 +663,7 @@ label > p.group_select {
     cursor: pointer;
 }
 
-/* UserList Pop in */
+
 
 .UserListPopInContainer {
     background-color: white;
@@ -800,7 +701,7 @@ label > p.group_select {
     color: #3c3c3c;
 }
 
-/* Selection mode */
+
 
 .slider {
     background-color: #e0e0e0;
@@ -840,7 +741,7 @@ input:focus + .slider {
     color: #f70;
 }
 
-/* Selection mode content */
+
 
 .SelectionModeGroupList {
     color: #a0a0a0;
@@ -867,7 +768,7 @@ input:focus + .slider {
     background-color: #ffa744;
 }
 
-/* Merge Options */
+
 
 #MergeOptionsBlock p {
     color: #777;
@@ -877,7 +778,7 @@ input:focus + .slider {
     color: #3c3c3c;
 }
 
-/* Merge options Radio buttons */
+
 
 .ConfirmMergeButton {
     background-color: #ffa744;
@@ -888,7 +789,7 @@ input:focus + .slider {
     box-shadow: 0 0 2px #c5c5c5;
 }
 
-/* Group checkbox */
+
 
 .groups .group-checkmark {
     border: 2px solid #ffa646;
@@ -902,7 +803,7 @@ input:focus + .slider {
     background-color: #ffa646;
 }
 
-/* Group manager buttons */
+
 
 .groups .manage-users,
 .groups .manage-users:hover,
@@ -911,7 +812,7 @@ input:focus + .slider {
     color: #3c3c3c;
 }
 
-/* UserList Pop in */
+
 
 .CloseUserList,
 .CloseAddAlbum,
@@ -945,7 +846,7 @@ input:focus + .slider {
     color: #0a0;
 }
 
-/* ------ */
+
 
 .userSeparator {
     visibility: hidden;
@@ -1251,7 +1152,7 @@ li.plupload_delete a:hover {
     color: #777;
 }
 
-/* Category List */
+
 .categoryContainer {
     margin: 0;
 }

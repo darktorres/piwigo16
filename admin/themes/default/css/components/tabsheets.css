@@ -267,12 +267,12 @@
 }
 
 h1 {
-    background-color: #f3f3f3;
+    background-color: var(--admin-bg-h1);
     margin: 0;
     padding: 20px;
     text-align: left;
     font-weight: normal;
-    color: #333;
+    color: var(--admin-color-h1);
     font-size: 22px;
 }
 

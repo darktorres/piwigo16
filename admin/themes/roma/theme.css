@@ -1,37 +1,32 @@
-/* text color */
-body,
-h3,
-dt,
-.throw,
-.content,
-label,
-legend {
-    color: #777;
-}
-
-input,
-select,
-textarea {
-    color: #999;
-    background-color: #444;
-}
-
-option[disabled] {
-    background-color: #999;
-    color: #444;
-}
-
-input[type="radio"],
-input[type="checkbox"] {
-    background-color: transparent;
-}
-
-.showInfo {
-    color: #666;
-}
-
-.showInfo:hover {
-    color: #999;
+/* roma (dark) skin — CSS variable overrides */
+/* Values match defaults in variables.css; listed here for reference */
+:root {
+    --admin-text: #777;
+    --admin-text-th: #777;
+    --admin-text-input: #999;
+    --admin-text-muted: #666;
+    --admin-text-dim: #aaa;
+    --admin-text-legend: #c1c1c1;
+    --admin-link: #777;
+    --admin-link-hover: #f70;
+    --admin-bg-page: #444;
+    --admin-bg-surface: #333;
+    --admin-bg-content: #444;
+    --admin-bg-row1: #111;
+    --admin-bg-row2: #222;
+    --admin-bg-head: #3c3c3c;
+    --admin-color-head: #d5d5d5;
+    --admin-bg-h1: #565656;
+    --admin-color-h1: #c1c1c1;
+    --admin-bg-input: #444;
+    --admin-bg-input-focus: #444;
+    --admin-border: #333;
+    --admin-border-medium: #666;
+    --admin-border-input: #666;
+    --admin-tooltip-bg: #000;
+    --admin-tooltip-color: #eee;
+    --admin-shadow-card: -1px 1px 2px #1a1a1a;
+    --admin-shadow-surface: 0 2px #00000070;
 }
 
 h2 {
@@ -47,28 +42,8 @@ h2 {
     width: 550px;
 }
 
-html,
-body {
-    min-height: 100%;
-    height: 100%;
-}
-
 body {
     background-color: #444;
-}
-
-/* #the_page { margin: 0; padding: 0; z-index: 1; top:0px; */
-
-/* padding-top: 0; min-height: 100%; width:100%; position:absolute; left:0px; } */
-h3,
-.row2,
-.content {
-    background-color: #222;
-}
-
-.throw,
-.row1 {
-    background-color: #111;
 }
 
 .throw em {
@@ -78,10 +53,6 @@ h3,
 
 #menubar li:hover {
     background-color: transparent;
-}
-
-#content {
-    background-color: #444;
 }
 
 h1 {
@@ -143,27 +114,14 @@ ul.thumbnails span.wrap2 {
     background-color: #333;
 }
 
-/* .throw, */ td h3 {
+ td h3 {
     background-image: url("images/fillet.png");
     background-repeat: repeat-x;
 }
 
-/* borders */
+
 fieldset {
     border: none;
-}
-
-input,
-select,
-textarea {
-    border: 1px solid #666;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-    background-color: #444;
-    color: #999;
 }
 
 textarea {
@@ -214,14 +172,6 @@ label {
     cursor: pointer;
 }
 
-.menuLi {
-    background: #333;
-}
-
-.menuLi_hidden {
-    background: #333;
-}
-
 a.Piwigo {
     font-family: verdana, arial, helvetica, sans-serif;
     font-size: 11px;
@@ -236,20 +186,6 @@ a.Piwigo:hover span.Piwigo {
     border-bottom: 1px solid #ff3363;
 }
 
-/* RADU - I comment this because it makes FF form controls activation very slow)
-*, *:focus, *:active, input:active, a:active, input:focus, a:focus { outline: none; -moz-outline-width: 0px; }
-*/
-
-a {
-    color: #777;
-}
-
-a:hover,
-a:active {
-    color: #f70;
-    cursor: pointer;
-}
-
 ul.actions,
 .content form#waiting {
     text-align: center;
@@ -261,7 +197,7 @@ ul.actions,
     color: #8d8d8d;
 }
 
-/* Filter */
+
 
 .search-input {
     background-color: #333 !important;
@@ -271,7 +207,7 @@ ul.actions,
     background-color: #222 !important;
 }
 
-/* Pagination */
+
 
 .pagination-per-page {
     background-color: #555;
@@ -295,12 +231,6 @@ ul.actions,
     color: #444;
 }
 
-/* jQuery tooltips */
-.ui-tooltip {
-    color: #eee;
-    background-color: #000;
-}
-
 .cluetip-outer {
     border-color: #666;
     color: #666;
@@ -312,7 +242,7 @@ ul.actions,
     background-color: #111;
 }
 
-/* jQuery ui resizable */
+
 .ui-resizable {
     position: relative;
 }
@@ -326,7 +256,7 @@ ul.actions,
     border: 0;
 }
 
-/* Global handle styles */
+
 .ui-resizable-handle {
     position: absolute;
     display: none;
@@ -339,10 +269,10 @@ ul.actions,
 
 body .ui-resizable-disabled .ui-resizable-handle {
     display: none;
-} /* use 'body' to make it more specific (css order) */
+} 
 body .ui-resizable-autohide .ui-resizable-handle {
     display: none;
-} /* use 'body' to make it more specific (css order) */
+} 
 
 #ui-datepicker-div {
     background-color: #555;
@@ -544,7 +474,7 @@ input[type="reset"]:disabled {
     color: transparent;
 }
 
-/* dashboard */
+
 .stat-box {
     color: #777;
 }
@@ -626,11 +556,11 @@ a.stat-box:hover {
     background-color: #d47f44;
 }
 
-/* hacks */
+
 * html[lang="en"] body .content h2,
 * + html[lang="en"] body .content h2 {
     text-transform: capitalize;
-} /* IE */
+} 
 * + html .bigtext {
     left: 70px;
 }
@@ -770,7 +700,7 @@ a.stat-box:hover {
     color: #c1c1c1;
 }
 
-/* Batch Manager */
+
 #batchManagerGlobal .thumbnails .font-checkbox [class*="icon-check"]::before {
     color: #777;
 }
@@ -818,7 +748,7 @@ a.stat-box:hover {
     color: #bfbfbf;
 }
 
-/* TokenInput (with Facebook style for ROMA) */
+
 ul.token-input-list {
     border-color: #666 !important;
     background-color: #444 !important;
@@ -849,7 +779,7 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
     background: #3c3939;
 }
 
-/* Picture edit */
+
 #picture-content input[type="text"],
 #picture-content textarea,
 #picture-content .selectize-input,
@@ -868,7 +798,7 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
     border-color: #333 !important;
 }
 
-/* Album edit */
+
 
 .orCreateAlbum {
     background-color: #333;
@@ -960,7 +890,7 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
     color: #fff;
 }
 
-/* Cat modify */
+
 
 .selectedComment {
     background-color: #555;
@@ -1047,7 +977,7 @@ label > p.group_select {
     color: #e0e0e0;
 }
 
-/* Edit group name */
+
 
 .groups .Group-name {
     color: #777;
@@ -1058,7 +988,7 @@ label > p.group_select {
     background-color: #1a1a1a;
 }
 
-/* Add Group */
+
 
 .groups fieldset input[type="text"]::placeholder {
     color: #d5d5d5;
@@ -1073,7 +1003,7 @@ label > p.group_select {
     background-color: #f70;
 }
 
-/* Group Options */
+
 
 #GroupOptions {
     background-color: #5c5c5c;
@@ -1081,7 +1011,7 @@ label > p.group_select {
     color: #c0c0c0;
 }
 
-/* Group manager buttons */
+
 
 .groups .manage-users,
 .groups .manage-permissions {
@@ -1096,7 +1026,7 @@ label > p.group_select {
     cursor: pointer;
 }
 
-/* UserList Pop in */
+
 
 .UserListPopInContainer {
     background-color: #444;
@@ -1134,7 +1064,7 @@ label > p.group_select {
     color: #3c3c3c;
 }
 
-/* Selection mode */
+
 
 .slider {
     background-color: #333;
@@ -1180,7 +1110,7 @@ input:focus + .slider {
     color: black !important;
 }
 
-/* Selection mode content */
+
 
 .SelectionModeGroupList {
     color: #c0c0c0;
@@ -1209,7 +1139,7 @@ input:focus + .slider {
     background-color: #ffa744;
 }
 
-/* Merge Options */
+
 
 #MergeOptionsBlock p {
     color: #777;
@@ -1219,7 +1149,7 @@ input:focus + .slider {
     color: #c0c0c0;
 }
 
-/* Merge options Radio buttons */
+
 
 .ConfirmMergeButton {
     background-color: #ffa744;
@@ -1230,7 +1160,7 @@ input:focus + .slider {
     box-shadow: 0 0 2px #c5c5c5;
 }
 
-/* Group checkbox */
+
 
 .groups .group-checkmark {
     border: 2px solid #c76a23;
@@ -1249,7 +1179,7 @@ input:focus + .slider {
     border-width: 0 3px 3px 0;
 }
 
-/* Group manager buttons */
+
 
 .groups .manage-users,
 .groups .manage-users:hover,
@@ -1263,7 +1193,7 @@ input:focus + .slider {
     color: #3c3c3c;
 }
 
-/* UserList Pop in */
+
 
 .CloseUserList,
 .CloseAddAlbum,
@@ -1316,7 +1246,7 @@ input:focus + .slider {
     color: #4c4c4c;
 }
 
-/* ------ */
+
 
 .userSeparator {
     color: #666;
@@ -1327,7 +1257,7 @@ input:focus + .slider {
     background-color: #444 !important;
 }
 
-/* Edit user popin */
+
 
 .user_form_popin .ui-slider-horizontal .ui-slider-handle {
     background-color: #ffa646;
@@ -1729,7 +1659,7 @@ li.plupload_delete a:hover {
     background-color: #202020;
 }
 
-/* Error message */
+
 
 .errors {
     color: #fec6c7;
@@ -1747,7 +1677,7 @@ li.plupload_delete a:hover {
     color: #fff;
 }
 
-/* Success message */
+
 
 .infos {
     color: #b8feee;
@@ -1765,7 +1695,7 @@ li.plupload_delete a:hover {
     color: #fff;
 }
 
-/* Warning message */
+
 
 .warnings {
     color: #fedac0;
@@ -1779,7 +1709,7 @@ li.plupload_delete a:hover {
     color: #fff;
 }
 
-/* announcement message */
+
 
 .messages {
     color: #bad6ff;
@@ -1793,7 +1723,7 @@ li.plupload_delete a:hover {
     padding: 2px 7px;
 }
 
-/* Popin Jconfirm */
+
 
 .jconfirm .jconfirm-box {
     background-color: #333 !important;
@@ -1827,7 +1757,7 @@ li.plupload_delete a:hover {
     background: #333 !important;
 }
 
-/* Tag Manager */
+
 
 .tag-box,
 .tag-header .selection-controller a {
@@ -1899,7 +1829,7 @@ li.plupload_delete a:hover {
     background-color: #f22;
 }
 
-/* Album Move (and album search) */
+
 .move-cat-container,
 .search-album-elem {
     background-color: #333;
@@ -1915,7 +1845,7 @@ li.plupload_delete a:hover {
     color: white;
 }
 
-/* Album search */
+
 .search-album-ghost div {
     background-image: linear-gradient(#333, #444);
 }
@@ -1925,7 +1855,7 @@ li.plupload_delete a:hover {
     color: #c1c1c1;
 }
 
-/* Icon colors */
+
 
 .icon-red {
     color: #fec6c7;
@@ -2045,7 +1975,7 @@ li.plupload_delete a:hover {
 }
 
 .pluginContainer.line .pluginBox:hover .pluginContent .pluginActions a {
-    /* color: #ffffff; */
+    
     opacity: 1;
 }
 
@@ -2128,7 +2058,7 @@ li.plupload_delete a:hover {
     color: #ededed;
 }
 
-/* Album view selector css */
+
 
 .AlbumViewSelector,
 .UserViewSelector {
@@ -2207,7 +2137,7 @@ li.plupload_delete a:hover {
     background-color: transparent !important;
 }
 
-/* Selected container in userManager */
+
 
 .user-container.container-selected
     .user-container-checkbox.user-list-checkbox
@@ -2252,7 +2182,7 @@ li.plupload_delete a:hover {
     padding: 6px 15px !important;
 }
 
-/****  */
+
 
 .group-bonus {
     color: #ddd;
@@ -2296,13 +2226,13 @@ li.plupload_delete a:hover {
 .user-property-button a {
     color: #c1c1c1;
 
-    /* text-decoration: none; */
+    
 }
 
 .user-property-button a:hover {
     color: #f70;
 
-    /* text-decoration: none; */
+    
 }
 
 .user-property-input {
@@ -2377,7 +2307,7 @@ li.plupload_delete a:hover {
     color: #c1c1c1;
 }
 
-/* Activity Tab in user manager */
+
 
 .select-user {
     background: #555;
@@ -2651,7 +2581,7 @@ li.plupload_delete a:hover {
     color: #373737 !important;
 }
 
-/* Jqtree */
+
 ul.jqtree-tree span.jqtree-border {
     border: solid 2px #ededed !important;
 }
@@ -2706,7 +2636,7 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
     opacity: 60% !important;
 }
 
-/* Cat modify description modal */
+
 .desc-modal-content {
     background-color: #444;
 }

@@ -430,7 +430,7 @@
 
 .breadcrumb-item .icon-cancel-circled,
 .breadcrumb-item .help-item {
-    margin-left: auto !important;
+    margin-left: auto !important; /* overrides flex margin in parent */
     cursor: pointer;
     position: absolute;
     right: 10px;
@@ -709,11 +709,11 @@
 
 .filetypes-option,
 .added_by-option {
-    min-width: 150px !important;
+    min-width: 150px !important; /* overrides inline min-width set by selectize */
 }
 
 .section-search .sticky-top {
-    z-index: 10 !important;
+    z-index: 10 !important; /* overrides Bootstrap sticky-top z-index */
 }
 
 .search-input {
@@ -732,7 +732,7 @@
         width: 100vw;
         padding: 15px;
         border-radius: 0;
-        box-shadow: none !important;
+        box-shadow: none !important; /* overrides desktop box-shadow on mobile */
         top: 37px;
     }
 
@@ -752,7 +752,7 @@
 
     .search-params-title,
     .search-params {
-        display: block !important;
+        display: block !important; /* overrides flex display set by higher-specificity rule */
     }
 
     .word-search-options {
@@ -798,7 +798,7 @@
 
     .search-result-path,
     .link-path {
-        white-space: unset !important;
+        white-space: unset !important; /* overrides higher-specificity nowrap rule */
     }
 
     .delete,
@@ -815,7 +815,7 @@
     input,
     select,
     textarea {
-        font-size: 16px !important;
+        font-size: 16px !important; /* prevents iOS auto-zoom on input focus */
     }
 
     #word-search {

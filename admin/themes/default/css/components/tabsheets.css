@@ -182,11 +182,15 @@
     -moz-osx-font-smoothing: initial;
 }
 
+.showInfo-dropdown-action,
+.showInfo-dropdown-action:hover {
+    text-decoration: none;
+}
+
 .showInfo-dropdown-action {
     padding: 8px 10px;
     border-top: 1px solid #ffffff45;
     color: white;
-    text-decoration: none !important;
     display: block;
     margin-top: 5px;
     border-radius: 0 0 10px 10px;

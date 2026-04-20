@@ -1,0 +1,24 @@
+/* Override tom-select.default.css gradient styling.
+   Selectors are scoped to beat tom-select's (0,4,0)–(0,5,0) specificity
+   without !important. */
+
+.ts-wrapper.multi .ts-control .item[data-value],
+.ts-wrapper.multi .ts-control .item.active[data-value] {
+  background-image: none;
+  background-color: #ffa646;
+  border-color: transparent;
+  color: black;
+  border-radius: 20px;
+}
+
+.ts-wrapper.plugin-remove_button .ts-control .item[data-value] .remove {
+  background-color: transparent;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  color: black;
+  border-left: 1px solid transparent;
+}
+
+.ts-wrapper.plugin-remove_button .ts-control .item[data-value] .remove:hover {
+  background-color: #f70;
+}

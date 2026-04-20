@@ -66,8 +66,8 @@ ul.jqtree-tree .jqtree-element {
 
 .afterUploadActions {
     text-align: center;
-    margin-bottom: 30px !important;
-    margin-top: 45px !important;
+    margin-bottom: 30px !important; /* overrides inline style="margin:10px" set by upload JS */
+    margin-top: 45px !important; /* overrides inline style="margin:10px" set by upload JS */
 }
 
 .afterUploadActions a {

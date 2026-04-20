@@ -9,7 +9,7 @@
 }
 
 #batchManagerGlobal #action_del_tags ul.tagSelection {
-    margin: 0 !important;
+    margin: 0;
     width: 620px;
 }
 

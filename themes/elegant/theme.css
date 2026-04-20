@@ -663,7 +663,7 @@ td.nbEntries {
 /* plugins */
 
 #the_page .content .stuffs {
-    margin: 0 !important;
+    margin: 0 !important; /* overrides margin set by pwgStuffs plugin */
 }
 
 .categoryActions .theme_menuf {

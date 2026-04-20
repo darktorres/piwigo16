@@ -3,7 +3,7 @@
   }
 
   .no-img {
-    cursor: default !important;
+    cursor: default;
   }
 
   .container {
@@ -408,7 +408,7 @@
   }
 
   .summary-users .summary-data {
-    margin: 0 5px 0 0 !important;
+    margin: 0 5px 0 0;
   }
 
   .summary-data {

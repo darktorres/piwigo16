@@ -1,5 +1,5 @@
   .icon-help-circled {
-    color: #777777 !important;
+    color: #777777;
     cursor: help;
   }
 
@@ -12,7 +12,7 @@
 
   /* general */
   .no-flex-grow {
-    flex-grow: 0 !important;
+    flex-grow: 0;
   }
 
   #template {
@@ -217,7 +217,7 @@
 
   .user-header-registration,
   .user-container-registration {
-    width: 10% !important;
+    width: 10%;
     max-width: 700px;
     min-width: 130px;
     margin-left: auto;
@@ -296,10 +296,6 @@
 
   .user-container-status {
     text-transform: capitalize;
-  }
-
-  .user-container-registration {
-    width: 15%;
   }
 
   .user-container-registration>div {
@@ -1256,7 +1252,7 @@ Advanced filter
 
     width: min-content;
 
-    margin: 20px 20px 0 0 !important;
+    margin: 20px 20px 0 0;
     border-radius: 25px;
 
     position: relative;
@@ -1351,7 +1347,7 @@ Advanced filter
   }
 
   .ts-control.has-items .item {
-    color: #000 !important;
+    color: #000;
   }
 
   /* Selection mode */
@@ -1373,7 +1369,7 @@ Advanced filter
   }
 
   .selectable:hover .select-checkbox {
-    background-color: #ffa646 !important;
+    background-color: #ffa646;
   }
 
   .selectable .user-first-col:hover {

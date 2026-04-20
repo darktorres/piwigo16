@@ -117,7 +117,7 @@ legend {
 /* Selectize */
 .selectize-dropdown [data-selectable],
 .selectize-dropdown .optgroup-header {
-    padding: 0 5px !important;
+    padding: 0 5px !important; /* overrides selectize.js own padding rule at higher specificity */
 }
 
 #TagsGroupRemoveTag span,

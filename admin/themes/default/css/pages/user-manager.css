@@ -235,9 +235,9 @@
 }
 
 .ValidationUserDissociated p {
-    margin: 0 !important;
-    font-size: 12px !important;
-    font-weight: 500 !important;
+    margin: 0;
+    font-size: 12px;
+    font-weight: 500;
 }
 
 #UserList .FilterUserBlock .AmountOfUsersShown {
@@ -515,7 +515,7 @@ table.qsearch_help_table td {
 
 .AlbumViewSelector,
 .UserViewSelector {
-    background: var(--admin-bg-lifted) !important;
+    background: var(--admin-bg-lifted);
 }
 
 .AlbumViewSelector input:checked + label,
@@ -804,7 +804,7 @@ table.qsearch_help_table td {
 
 .breadcrumb-item .icon-cancel-circled,
 .breadcrumb-item .help-item {
-    margin-left: auto !important;
+    margin-left: auto;
     cursor: pointer;
     position: absolute;
     right: 10px;
@@ -974,7 +974,7 @@ table.qsearch_help_table td {
 
 .hasDatepicker,
 .elem-type-select {
-    background: var(--admin-bg-field) !important;
+    background: var(--admin-bg-field);
 }
 
 .selectable-filter label {
@@ -982,7 +982,7 @@ table.qsearch_help_table td {
 }
 
 .selectable-filter .elem-type-select {
-    margin-top: 5px !important;
+    margin-top: 5px;
 }
 
 .filter-title,
@@ -1001,7 +1001,7 @@ table.qsearch_help_table td {
 
 .search-result-item .notClickable {
     opacity: 0.3;
-    color: black !important;
+    color: black;
 }
 
 .promote-apps {

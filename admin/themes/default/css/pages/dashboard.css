@@ -515,7 +515,7 @@ a.stat-box:hover {
     padding: 0 5px;
     margin-bottom: 8px;
     border-radius: 15px;
-    background: none !important;
+    background: none;
 }
 
 .intro-charts .tooltip .tooltip-detail {
@@ -608,8 +608,8 @@ a.stat-box:hover {
     border-color: white transparent transparent;
 }
 
-.storage-tooltips .separated {
-    display: block !important;
+.storage-tooltips .tooltip .separated {
+    display: block;
     width: 100%;
     height: 1px;
     background: #ccc;
@@ -621,43 +621,43 @@ a.stat-box:hover {
     padding: 15px 20px;
 }
 
-.storage-tooltips .tooltip-header {
-    display: grid !important;
+.storage-tooltips .tooltip .tooltip-header {
+    display: grid;
     grid-template-columns: 1fr auto 1fr;
 }
 
-.storage-tooltips .tooltip-title {
+.storage-tooltips .tooltip .tooltip-title {
     grid-column: 1;
     text-align: start;
-    margin: 0 !important;
+    margin: 0;
 }
 
-.storage-tooltips .tooltip-size {
+.storage-tooltips .tooltip .tooltip-size {
     grid-column: 2;
     text-align: center;
-    margin: 0 !important;
+    margin: 0;
 }
 
-.storage-tooltips .tooltip-files {
+.storage-tooltips .tooltip .tooltip-files {
     grid-column: 3;
     text-align: end;
-    margin: 0 !important;
+    margin: 0;
     font-size: 12px;
     font-style: italic;
     align-self: self-end;
 }
 
-.storage-tooltips .tooltip-details {
+.storage-tooltips .tooltip .tooltip-details {
     flex-wrap: wrap;
     justify-content: center;
 }
 
-.storage-tooltips .tooltip-details-cont {
+.storage-tooltips .tooltip .tooltip-details-cont {
     width: 33%;
-    align-items: center !important;
-    margin: 0 !important;
-    margin-top: 10px !important;
-    margin-bottom: 5px !important;
+    align-items: center;
+    margin: 0;
+    margin-top: 10px;
+    margin-bottom: 5px;
 }
 
 .storage-tooltips .tooltip-details-ext,
@@ -795,7 +795,7 @@ ul.tagSelection {
 
 ul.tagSelection li {
     display: inline-block;
-    width: 150px !important;
+    width: 150px;
     overflow: hidden;
     white-space: nowrap;
 }

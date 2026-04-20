@@ -4,10 +4,6 @@
     padding: 1em;
 }
 
-#addAlbumForm .selectize-dropdown-content {
-    max-height: 170px;
-}
-
 #addAlbumForm input[name="category_name"] {
     width: 565px;
     padding: 8px;
@@ -21,7 +17,6 @@
 .move-cat-container:hover {
     background-color: var(--admin-accent-selected-bg);
 }
-
 
 /* Move Album */
 .cat-move-header {
@@ -279,7 +274,6 @@
     margin-right: 10px;
 }
 
-
 /* .addAlbumEmptyCenter {position: relative; margin: auto; height: calc(100vh - 280px);} */
 .addAlbumEmptyTitle {
     font-size: 35px;
@@ -374,10 +368,6 @@
     font-size: 15px;
 }
 
-.plupload_filelist_footer {
-    display: none;
-}
-
 .permitActionListButton .actionButtons {
     display: flex;
     flex-direction: column;
@@ -436,31 +426,6 @@
     margin-bottom: 15px;
 }
 
-#filter_tags .selectize-input.items.not-full.has-options,
-#filter_tags .selectize-input.items.not-full {
-    padding: 10px 18px;
-}
-
-#filter_tags .selectize-input {
-    width: 300px;
-    box-shadow: none;
-    border-radius: inherit;
-}
-
-#filter_tags .selectize-control.multi.plugin-remove_button {
-    width: 300px !important;
-}
-
-#filter_category .selectize-input.items.full.has-options.has-items {
-    padding: 10px 18px;
-    width: 610px;
-    margin-bottom: 5px;
-}
-
-#filterList .selectize-input.items.not-full.has-options {
-    margin-bottom: 5px;
-}
-
 #applyFilter,
 .addFilter-button {
     margin-left: 0;
@@ -513,15 +478,6 @@
 .permitActionItem {
     margin-left: 30px;
     width: 225px;
-}
-
-.permitActionItem .selectize-control.single.plugin-remove_button {
-    width: auto !important;
-}
-
-.permitActionItem .selectize-input.items.full.has-options.has-items {
-    width: 500px !important;
-    line-height: 23px;
 }
 
 #action_associate {
@@ -615,10 +571,6 @@
     margin-top: 35px;
 }
 
-#filter_category .selectize-control.single .selectize-input::after {
-    content: none;
-}
-
 #filter_category {
     width: 600px;
 }
@@ -648,7 +600,6 @@
 #applyFilter,
 #addFilter,
 #filterList select,
-#filter_tags .selectize-input.items.not-full.has-options,
 .pictureLevels select,
 #permitAction select,
 .sort-by select {
@@ -694,25 +645,6 @@
     padding: 12px 10px;
     border: 1px solid #787777a6;
     margin-bottom: 8px;
-}
-
-#action_add_tags .selectize-input.items.not-full.has-options,
-#action_add_tags
-    .selectize-input.items.not-full.has-options.focus.input-active.dropdown-active,
-.selectize-input.items.not-full,
-.selectize-input.items.full {
-    padding: 10px;
-    height: 45px;
-    box-shadow: none;
-    border-radius: 0;
-    border: 1px solid #787777a6;
-}
-
-#pictureModify .selectize-input.items.not-full,
-.elementEdit .selectize-input.items.not-full {
-    height: auto !important;
-    min-height: 45px;
-    max-height: 184px;
 }
 
 .pageNumberSelected {
@@ -831,19 +763,6 @@
     display: block;
 }
 
-#filter_category .selectize-input.items.full.has-options.has-items .item,
-#filter_category .selectize-input.items.not-full.has-options .item,
-#filter_category .selectize-input.items.not-full .item {
-    width: 561px;
-    text-overflow: ellipsis;
-}
-
-#filter_category .selectize-input.items.full.has-options.has-items,
-#filter_category .selectize-input.items.not-full.has-options,
-#filter_category .selectize-input.items.not-full {
-    width: 100%;
-}
-
 #forbidAction {
     text-align: center;
     font-weight: 600;
@@ -915,36 +834,10 @@
     margin-bottom: 15px;
 }
 
-#filter_dimension blockquote div:last-child .ui-slider-horizontal {
-    margin-top: 5px;
-}
-
-#batchManagerGlobal .ui-slider-horizontal .ui-slider-handle {
-    top: -.7em !important;
-    width: 1.4em;
-    height: 1.4em;
-}
-
-#batchManagerGlobal .ui-slider-handle.ui-state-default.ui-corner-all {
-    border-radius: 10px;
-}
-
 #action_delete .errors {
     display: block;
     min-height: initial;
     margin: 10px 0 0;
-}
-
-#batchManagerGlobal .ui-slider-horizontal .ui-slider-range {
-    height: 2px;
-}
-
-#batchManagerGlobal .ui-slider-horizontal {
-    height: 2px;
-}
-
-#batchManagerGlobal .ui-slider-range.ui-widget-header.ui-corner-all {
-    margin-top: -1px;
 }
 
 #batchManagerGlobal .font-checkbox.selected span:first-child::before {
@@ -1154,4 +1047,3 @@
     display: flex;
     justify-content: center;
 }
-

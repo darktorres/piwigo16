@@ -78,22 +78,3 @@ table.languages tr td {
 .slider-bar-wrapper .slider-bar-container {
     height: 2px;
 }
-
-.slider-bar-wrapper .ui-slider-horizontal .ui-slider-handle {
-    background-color: #ffaf58;
-    border: 1px solid #ffaf58;
-    border-radius: 25px;
-    top: -.7em !important;
-    width: 1.4em;
-    height: 1.4em;
-}
-
-.slider-bar-wrapper .ui-slider-horizontal .ui-slider-range {
-    background-color: #ffaf58;
-}
-
-.slider-bar-wrapper .ui-slider-horizontal {
-    border: none;
-    border-radius: 25px;
-}
-

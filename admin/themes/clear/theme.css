@@ -208,163 +208,8 @@ ul.actions,
     text-align: center;
 }
 
-.cluetip-outer {
-    border-color: #999;
-    color: #777;
-    background-color: #eee;
-}
-
-.cluetip-title {
-    background-color: #ddd;
-}
-
-.ui-resizable {
-    position: relative;
-}
-
-.ui-wrapper {
-    border: 0;
-}
-
-.ui-wrapper input,
-.ui-wrapper textarea {
-    border: 0;
-}
-
 #tiptip_holder a {
     color: #42b0ff;
-}
-
-.ui-resizable-handle {
-    position: absolute;
-    display: none;
-    font-size: 0.1px;
-}
-
-.ui-resizable .ui-resizable-handle {
-    display: block;
-}
-
-body .ui-resizable-disabled .ui-resizable-handle {
-    display: none;
-} 
-
-body .ui-resizable-autohide .ui-resizable-handle {
-    display: none;
-} 
-
-#ui-datepicker-div {
-    background-color: #f1f1f1;
-    border: 2px solid #aaa;
-}
-
-#ui-datepicker-div .ui-datepicker-title {
-    color: black;
-}
-
-#ui-datepicker-div .ui-icon-circle-triangle-w {
-    background: transparent url("icon/prev.png") no-repeat;
-}
-
-#ui-datepicker-div .ui-icon-circle-triangle-e {
-    background: transparent url("icon/next.png") no-repeat;
-}
-
-#ui-datepicker-div .ui-datepicker-control,
-#ui-datepicker-div a {
-    background-color: #fff !important;
-}
-
-#ui-datepicker-div a.ui-datepicker-prev,
-#ui-datepicker-div a.ui-datepicker-next {
-    background-color: transparent !important;
-}
-
-#ui-datepicker-div a.ui-datepicker-prev:hover,
-#ui-datepicker-div a.ui-datepicker-next:hover {
-    background-color: #eee !important;
-    border: 1px solid #aaa;
-}
-
-#ui-datepicker-div .ui-datepicker-control,
-#ui-datepicker-div a {
-    background-color: #eee;
-    color: #08f !important;
-}
-
-#ui-datepicker-div .ui-datepicker-days-row {
-    background-color: #bbb;
-}
-
-#ui-datepicker-div .ui-datepicker-week-end-cell,
-#ui-datepicker-div .ui-datepicker-week-end-cell a {
-    background-color: #ddd;
-    color: #0cc;
-    border-color: #bbb;
-    border-top-color: #ddd;
-    border-left-color: #ddd;
-}
-
-#ui-datepicker-div .ui-datepicker-title-row {
-    background-color: #eee;
-}
-
-#ui-datepicker-div .ui-datepicker-title-row .ui-datepicker-week-end-cell a {
-    color: #0cc;
-}
-
-#ui-datepicker-div a:hover {
-    color: #0cc !important;
-    background-color: #eee !important;
-}
-
-#ui-datepicker-div .ui-datepicker-header select {
-    background-color: #bbb;
-    color: #666;
-    font-weight: normal;
-}
-
-#ui-datepicker-div .ui-datepicker-links {
-    background-color: #ddd;
-}
-
-#ui-datepicker-div .ui-datepicker-header {
-    background-color: #bbb;
-}
-
-#ui-datepicker-div .ui-datepicker-current-day {
-    background-color: #eee !important;
-    border-color: #bbb;
-    border-top-color: #eee;
-    border-left-color: #eee;
-}
-
-#ui-datepicker-div .ui-datepicker-days-cell {
-    background-color: #bbb;
-    border: 1px solid #ddd;
-    border-top-color: #bbb;
-    border-left-color: #bbb;
-}
-
-img.ui-datepicker-trigger {
-    margin: -2px 10px 1px -2px;
-}
-
-.ui-slider {
-    background: #fff;
-    border-radius: 2px;
-    border: none;
-}
-
-.ui-slider .ui-slider-range {
-    background: #aaa;
-    border-radius: 2px;
-}
-
-.ui-slider .ui-slider-handle {
-    background-color: #ddd;
-    border: 1px solid #aaa;
-    border-radius: 3px;
 }
 
 input[type="text"].large {
@@ -1000,34 +845,6 @@ a#showPermissions:hover {
     background-color: #f2f2f2;
 }
 
-.selectize-control.single .selectize-input {
-    border: 2px solid #ffa646 !important;
-    color: #3c3c3c;
-}
-
-.selectize-control.single .selectize-input:hover {
-    border-color: #fac17e !important;
-}
-
-.plupload_filelist {
-    scrollbar-color: #cbcbcb #fff !important;
-    background-color: #fff !important;
-}
-
-.plupload_filelist_footer {
-    background-color: #f5f5f5 !important;
-}
-
-li.plupload_delete a {
-    background: url("images/cancel.svg") !important;
-    background-size: cover !important;
-}
-
-li.plupload_delete a:hover {
-    background: url("images/cancelhover.svg") !important;
-    background-size: cover !important;
-}
-
 .addAlbumEmpty {
     color: #3c3c3c;
 }
@@ -1047,10 +864,6 @@ li.plupload_delete a:hover {
 
 .buttonSeparator {
     color: #3c3c3c;
-}
-
-#uploadForm li.plupload_droptext {
-    background-color: #f5f5f5 !important;
 }
 
 .addFilesButtonChanged {
@@ -1076,12 +889,7 @@ li.plupload_delete a:hover {
     outline: none !important;
 }
 
-#filter_category .selectize-input.items.full.has-options.has-items,
-#filter_tags .selectize-input.items.not-full.has-options,
-#filter_tags .selectize-input.items.not-full,
-#filter_search input,
-#action_associate .selectize-input.items.full.has-options.has-items,
-#action_dissociate .selectize-input.items.full.has-options.has-items {
+#filter_search input{
     border: 2px solid #7070704f !important;
     background: #fff;
     color: #3c3c3cbd;
@@ -1119,17 +927,6 @@ li.plupload_delete a:hover {
     color: initial;
 }
 
-#filterList .ui-slider .ui-slider-range {
-    background: rgb(255, 166, 70, 0.9);
-    margin-top: -1px;
-    border: 1px solid #ffaf58;
-}
-
-#filterList .ui-widget-content {
-    border: 1px solid #eee;
-    background: #ddd;
-}
-
 #batchManagerGlobal option[disabled] {
     background-color: #eee;
 }
@@ -1141,36 +938,6 @@ li.plupload_delete a:hover {
 .pageNumberSelected {
     color: #fff;
     font-weight: bold;
-}
-
-#batchManagerGlobal .ui-state-default,
-#batchManagerGlobal .ui-widget-content .ui-state-default,
-#batchManagerGlobal .ui-widget-header .ui-state-default {
-    border: 1px solid #ffaf58;
-    background: #ffaf58;
-}
-
-#batchManagerGlobal .ui-state-hover,
-#batchManagerGlobal .ui-widget-content .ui-state-hover,
-#batchManagerGlobal .ui-widget-header .ui-state-hover {
-    background: #ffaf58;
-}
-
-#batchManagerGlobal .ui-state-focus,
-#batchManagerGlobal .ui-widget-content .ui-state-focus,
-#batchManagerGlobal .ui-widget-header .ui-state-focus {
-    border: 1px solid #ffaf58;
-    background: #ffaf58;
-}
-
-#batchManagerGlobal .ui-state-active,
-#batchManagerGlobal .ui-widget-content .ui-state-active,
-#batchManagerGlobal .ui-widget-header .ui-state-active {
-    background: #ffaf58;
-}
-
-#batchManagerGlobal .ui-slider-range.ui-widget-header.ui-corner-all {
-    border: 1px solid #ffaf58;
 }
 
 #batchManagerGlobal .font-checkbox.selected {

@@ -466,25 +466,6 @@ a.group_users {
     color: var(--admin-disabled-color);
 }
 
-/* Edit user popin */
-
-.user_form_popin .ui-slider-horizontal .ui-slider-handle {
-    background-color: #ffa646;
-    border-radius: 25px;
-    border: 1px solid #818181;
-}
-
-.user_form_popin .ui-slider-horizontal .ui-slider-range-min {
-    background-color: #818181;
-    border-radius: 25px;
-}
-
-.user_form_popin .ui-slider-horizontal {
-    background-color: #e3e3e3;
-    border: none;
-    border-radius: 25px;
-}
-
 /* table in help/quick_search.html */
 table.qsearch_help_table {
     border-collapse: collapse;
@@ -529,7 +510,6 @@ table.qsearch_help_table td {
 .font-checkbox input[type="radio"] {
     display: none;
 }
-
 
 /* View selectors css (colors) */
 
@@ -637,10 +617,6 @@ table.qsearch_help_table td {
     background-color: var(--admin-bg-surface);
 }
 
-.user-property-group .selectize-input.items {
-    background-color: #f3f3f3;
-}
-
 .user-property-register-visit .icon-calendar {
     color: var(--admin-text-legend);
 }
@@ -648,10 +624,6 @@ table.qsearch_help_table td {
 .delete-user-button {
     color: var(--admin-text-legend);
     background-color: var(--admin-bg-surface);
-}
-
-.slider-bar-wrapper .ui-slider-horizontal {
-    background-color: var(--admin-text-muted);
 }
 
 .preferences-container,
@@ -1147,4 +1119,3 @@ table.qsearch_help_table td {
 .badge-dropdown::after {
     border-color: var(--admin-tooltip-arrow);
 }
-

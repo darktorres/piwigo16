@@ -205,162 +205,6 @@ color: #444;
     color: #444;
 }
 
-.cluetip-outer {
-    border-color: #666;
-    color: #666;
-    background-color: #222;
-}
-
-.cluetip-title {
-    color: #ff3363;
-    background-color: #111;
-}
-
-.ui-resizable {
-    position: relative;
-}
-
-.ui-wrapper {
-    border: 0;
-}
-
-.ui-wrapper input,
-.ui-wrapper textarea {
-    border: 0;
-}
-
-.ui-resizable-handle {
-    position: absolute;
-    display: none;
-    font-size: 0.1px;
-}
-
-.ui-resizable .ui-resizable-handle {
-    display: block;
-}
-
-body .ui-resizable-disabled .ui-resizable-handle {
-    display: none;
-} 
-
-body .ui-resizable-autohide .ui-resizable-handle {
-    display: none;
-} 
-
-#ui-datepicker-div {
-    background-color: #555;
-    border: 2px solid #333;
-}
-
-#ui-datepicker-div .ui-datepicker-title {
-    color: white;
-}
-
-#ui-datepicker-div .ui-icon-circle-triangle-w {
-    background: transparent url("icon/prev.png") no-repeat;
-}
-
-#ui-datepicker-div .ui-icon-circle-triangle-e {
-    background: transparent url("icon/next.png") no-repeat;
-}
-
-#ui-datepicker-div a.ui-datepicker-prev:hover,
-#ui-datepicker-div a.ui-datepicker-next:hover {
-    background-color: #eee;
-    border: 1px solid #aaa;
-}
-
-.ui-datepicker th {
-    color: #ccc;
-}
-
-.ui-state-disabled {
-    color: #aaa;
-}
-
-.ui-timepicker-div,
-.ui-timepicker-div dt {
-    color: #ccc;
-}
-
-.ui-slider {
-    background: #444;
-    border-radius: 2px;
-    border: 1px solid #666;
-}
-
-.ui-slider .ui-slider-handle {
-    border: 1px solid #f36;
-    background: #222;
-    border-radius: 0.6em;
-}
-
-.ui-slider .ui-slider-range {
-    background: #666;
-    border-radius: 2px;
-}
-
-#ui-datepicker-div .ui-datepicker-control,
-#ui-datepicker-div a {
-    background-color: #111;
-    color: #f70 !important;
-}
-
-#ui-datepicker-div .ui-datepicker-days-row {
-    background-color: #444;
-}
-
-#ui-datepicker-div .ui-datepicker-week-end-cell,
-#ui-datepicker-div .ui-datepicker-week-end-cell a {
-    background-color: #222;
-    color: #f33;
-    border-color: #444;
-    border-top-color: #222;
-    border-left-color: #222;
-}
-
-#ui-datepicker-div .ui-datepicker-title-row {
-    background-color: #111;
-}
-
-#ui-datepicker-div .ui-datepicker-title-row .ui-datepicker-week-end-cell a {
-    color: #f33;
-}
-
-#ui-datepicker-div a:hover {
-    color: #f33 !important;
-    border: 0;
-    background-color: #111 !important;
-}
-
-#ui-datepicker-div .ui-datepicker-header select {
-    background-color: #444;
-    color: #999;
-    font-weight: normal;
-}
-
-#ui-datepicker-div .ui-datepicker-links {
-    background-color: #222;
-}
-
-#ui-datepicker-div .ui-datepicker-header {
-    background-color: #444;
-}
-
-#ui-datepicker-div .ui-datepicker-current-day {
-    background-color: #111 !important;
-    border-color: #444;
-    border-top-color: #111;
-    border-left-color: #111;
-}
-
-#ui-datepicker-div .ui-datepicker-days-cell {
-    background-color: #444;
-    border: 1px solid #222;
-    border-top-color: #444;
-    border-left-color: #444;
-}
-
 input[type="text"].large {
     width: 317px;
 }
@@ -686,39 +530,12 @@ box-shadow: none;
     color: #bfbfbf;
 }
 
-ul.token-input-list {
-    border-color: #666 !important;
-    background-color: #444 !important;
-}
-
-ul.token-input-list li input {
-    background-color: #444 !important;
-}
-
-li.token-input-token span {
-    color: #878787 !important;
-}
-
-div.token-input-dropdown {
-    background-color: #eee !important;
-    border-color: #666 !important;
-}
-
-div.token-input-dropdown ul li {
-    background-color: #eee !important;
-}
-
-div.token-input-dropdown ul li.token-input-selected-dropdown-item {
-    background-color: #ff7800 !important;
-}
-
 .big-progressbar {
     background: #3c3939;
 }
 
 #picture-content input[type="text"],
 #picture-content textarea,
-#picture-content .selectize-input,
 #picture-content select {
     background-color: #444;
     border: 1px solid #666;
@@ -1137,19 +954,6 @@ border: 1px solid #f3f3f3;
     visibility: hidden;
 }
 
-.user_form_popin .ui-slider-horizontal .ui-slider-handle {
-    background-color: #ffa646;
-    border: 1px solid #5a5a5a;
-}
-
-.user_form_popin .ui-slider-horizontal .ui-slider-range-min {
-    background-color: #5a5a5a;
-}
-
-.user_form_popin .ui-slider-horizontal {
-    background-color: #151515;
-}
-
 table.dataTable tr.even {
     background-color: #111 !important;
 }
@@ -1257,41 +1061,6 @@ a#showPermissions:hover {
     border: 1px solid #aaa;
 }
 
-.selectize-control.single .selectize-input {
-    border: 2px solid #fac17e !important;
-    color: #d5d5d5;
-}
-
-.selectize-control.single .selectize-input:hover {
-    border-color: #ffa646 !important;
-}
-
-.plupload_filelist {
-    background-color: #444 !important;
-    scrollbar-color: #555 #444 !important;
-}
-
-.plupload_filelist li {
-    border-bottom: 1px solid #343434 !important;
-    color: #a5a5a5 !important;
-}
-
-.plupload_filelist_footer {
-    background-color: #3c3939 !important;
-    border: 0 !important;
-    color: #a5a5a5 !important;
-}
-
-li.plupload_delete a {
-    background: url("images/cancel.svg") !important;
-    background-size: cover !important;
-}
-
-li.plupload_delete a:hover {
-    background: url("images/cancelhover.svg") !important;
-    background-size: cover !important;
-}
-
 .addAlbumEmpty {
     color: #c1c1c1;
 }
@@ -1314,11 +1083,6 @@ border: none !important;
 }
 
 .addAlbum form input::placeholder {
-    color: #777 !important;
-}
-
-#uploadForm li.plupload_droptext {
-    background-color: #343434 !important;
     color: #777 !important;
 }
 
@@ -1412,12 +1176,7 @@ box-shadow: 0 2px #00000024;
     color: #bfbfbf;
 }
 
-#filter_category .selectize-input.items.full.has-options.has-items,
-#filter_tags .selectize-input.items.not-full.has-options,
-#filter_tags .selectize-input.items.not-full,
-#filter_search input,
-#action_associate .selectize-input.items.full.has-options.has-items,
-#action_dissociate .selectize-input.items.full.has-options.has-items {
+#filter_search input{
     background-color: #444;
     color: #bfbfbf;
     border: 1px solid #666;
@@ -1483,46 +1242,6 @@ box-shadow: 0 2px #00000024;
     font-weight: bold;
 }
 
-#batchManagerGlobal .ui-state-default,
-#batchManagerGlobal .ui-widget-content .ui-state-default,
-#batchManagerGlobal .ui-widget-header .ui-state-default {
-    border: 1px solid #ffaf58;
-    background: #ffaf58;
-}
-
-#batchManagerGlobal .ui-state-hover,
-#batchManagerGlobal .ui-widget-content .ui-state-hover,
-#batchManagerGlobal .ui-widget-header .ui-state-hover {
-    background: #ffaf58;
-}
-
-#batchManagerGlobal .ui-state-focus,
-#batchManagerGlobal .ui-widget-content .ui-state-focus,
-#batchManagerGlobal .ui-widget-header .ui-state-focus {
-    border: 1px solid #ffaf58;
-    background: #ffaf58;
-}
-
-#batchManagerGlobal .ui-state-active,
-#batchManagerGlobal .ui-widget-content .ui-state-active,
-#batchManagerGlobal .ui-widget-header .ui-state-active {
-    background: #ffaf58;
-}
-
-#batchManagerGlobal .ui-widget-content {
-    background: #666;
-    border: 1px solid #666;
-}
-
-#batchManagerGlobal .ui-slider .ui-slider-range {
-    background-color: #aaa;
-}
-
-#batchManagerGlobal .ui-slider-range.ui-widget-header.ui-corner-all {
-    border: 1px solid #ffaf58;
-    background-color: #ffaf58;
-}
-
 #batchManagerGlobal #applyFilter {
     color: #bfbfbf;
     background-color: #3c3c3c;
@@ -1562,28 +1281,6 @@ box-shadow: 0 2px #00000024;
     background-color: #273d5f;
     color: #fff;
     padding: 2px 7px;
-}
-
-.jconfirm .jconfirm-box {
-    background-color: #333 !important;
-}
-
-.jconfirm-title {
-    color: #777 !important;
-}
-
-.jconfirm .jconfirm-box .jconfirm-buttons button.btn-default {
-    color: #777 !important;
-    background-color: #222 !important;
-}
-
-.jconfirm .jconfirm-box .jconfirm-buttons button.btn-default:hover {
-    color: #222 !important;
-    background-color: #777 !important;
-}
-
-.jconfirm .jconfirm-box.loading::before {
-    background: #333 !important;
 }
 
 .tag-box,
@@ -1959,15 +1656,6 @@ border: solid #c76a23 2px;
     color: #f70;
 
     
-}
-
-.user-property-group .selectize-input.items {
-    background-color: transparent;
-}
-
-.slider-bar-wrapper .ui-slider-horizontal .ui-slider-handle {
-    background-color: #ffa500;
-    border: 1px solid #ffa500;
 }
 
 .preferences-container,

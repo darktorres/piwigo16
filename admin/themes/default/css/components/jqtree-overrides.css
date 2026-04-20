@@ -1,37 +1,37 @@
-/* Overwrite JQtree CSS */
+/* PwgTree overrides */
 
 .jqtree_common {
-    margin: 20px 0 !important;
+    margin: 20px 0;
 }
 
 li.jqtree-ghost {
-    display: flex !important;
-    margin: 0 !important;
+    display: flex;
+    margin: 0;
 }
 
 ul.jqtree-tree ul.jqtree_common {
-    margin-left: 50px !important;
+    margin-left: 50px;
 }
 
 ul.jqtree-tree span.jqtree-border {
-    border: var(--admin-jqtree-highlight) !important;
+    border: var(--admin-jqtree-highlight);
     width: 98%;
 }
 
 ul.jqtree-tree li.jqtree-ghost span.jqtree-circle {
-    border: var(--admin-jqtree-highlight) !important;
-    margin: 0 !important;
+    border: var(--admin-jqtree-highlight);
+    margin: 0;
 }
 
 ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
-    background-color: var(--admin-jqtree-highlight) !important;
-    position: relative !important;
-    height: 2px !important;
-    margin: 0 !important;
+    background-color: var(--admin-jqtree-highlight);
+    position: relative;
+    height: 2px;
+    margin: 0;
 }
 
 ul.jqtree-tree .jqtree-element {
-    cursor: move !important;
+    cursor: move;
 }
 
 .albumBlock {
@@ -101,4 +101,3 @@ ul.jqtree-tree .jqtree-element {
 .sub-setting {
     margin: 10px 0 10px 20px;
 }
-

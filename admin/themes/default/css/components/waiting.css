@@ -1,0 +1,21 @@
+/* Waiting Message */
+
+.waiting-message {
+    position: fixed;
+    right: 0;
+    top: 0;
+    margin: 10px;
+    z-index: 1000;
+    background-color: #ffbd4d;
+    color: white;
+    padding: 20px;
+    font-weight: bold;
+    border-radius: 34px;
+    transform: translateY(calc(-100% - 10px));
+    transition: 0.5s ease;
+}
+
+.waiting-message.visible {
+    transform: translateY(80%);
+}
+

@@ -1,0 +1,81 @@
+/* Merge Options */
+
+#MergeOptionsBlock {
+    display: none;
+    position: relative;
+    margin-top: 40px;
+}
+
+#MergeOptionsBlock p {
+    margin: 20px;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+#MergeOptionsBlock .ItalicTextInfo {
+    font-weight: 400;
+    font-style: italic;
+    margin-top: 0;
+    margin-bottom: 40px;
+}
+
+#MergeOptionsBlock a {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.MergeOptionsChoice {
+    display: block;
+    font-size: 15px;
+}
+
+.MergeOptionsChoice input {
+    margin: 0 5px;
+}
+
+/* Merge options Radio buttons */
+
+.MergeOptionsContainer {
+    display: block;
+    position: relative;
+}
+
+.MergeOptionsContainer input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.ConfirmMergeButton {
+    display: block;
+    margin: 20px auto;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 13px 40px;
+    border: none;
+    margin-top: 40px;
+}
+
+.MergeOptionsContainer {
+    font-size: 15px;
+}
+
+.MergeOptionsContainer label,
+.MergeOptionsContainer select {
+    display: block;
+    margin: 10px auto;
+}
+
+.MergeOptionsContainer select,
+.MergeOptionsContainer option {
+    width: 182px;
+}
+
+.MergeOptionsContainer select {
+    padding: 10px 5px;
+    border: none;
+    background-color: white;
+    box-shadow: 0 0 2px #c5c5c5;
+    border-radius: 5px;
+}
+

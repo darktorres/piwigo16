@@ -1,0 +1,439 @@
+/* tabsheets are often used in admin  pages => No specific css files */
+#tabsheet {
+    width: auto;
+    margin: 0 0 20px;
+    padding: 0 0 0 10px;
+    border: none;
+    background-color: #f3f3f3;
+}
+
+.tabsheet {
+    display: table;
+    white-space: nowrap;
+    padding-left: 10px;
+    margin: 0;
+    width: auto;
+    list-style-type: none;
+    list-style-image: none;
+    text-decoration: none;
+}
+
+.tabsheet li {
+    background-color: transparent;
+    float: left;
+    margin: 0 6px 0 0;
+    overflow: hidden;
+    text-align: right;
+    border: none;
+    position: relative;
+    top: 11px;
+    border-radius: 5px 5px 0 0;
+}
+
+.tabsheet a {
+    display: block;
+    font-size: 11px;
+    border: 0;
+    font-weight: bold;
+    overflow: hidden;
+    padding: 10px 20px;
+    text-align: right;
+    text-decoration: none;
+    margin: 0;
+    color: #898989;
+}
+
+.tabsheet a::first-letter {
+    text-transform: capitalize;
+}
+
+.tabsheet li.selected_tab {
+    border-bottom: none;
+    background-color: #fff;
+}
+
+.tabsheet li:hover,
+.tabsheet li.selected_tab {
+    margin-top: 4px;
+    padding-bottom: 3px;
+    padding-top: 3px;
+    top: 1px;
+}
+
+/* .tabsheet a:hover */
+.tabsheet li.selected_tab a {
+    color: #555;
+}
+
+.tabsheet a span {
+    font-size: 14px;
+    margin-right: 2px;
+    padding: 0 3px 0 1px;
+}
+
+.sort {
+    clear: none;
+}
+
+.content {
+    padding: 0;
+    margin: 0 0 0 205px;
+    z-index: 99;
+}
+
+#content {
+    border: none;
+    min-height: 467px;
+    margin-left: 205px;
+    margin-top: 0;
+}
+
+#thePopuphelpPage {
+    min-width: 0; /* reset default min width because no scrollbar here */
+}
+
+#thePopuphelpPage #pwgHead {
+    display: none;
+}
+
+#thePopuphelpPage #footer {
+    display: none;
+}
+
+.themeBox {
+    display: inline-table;
+    text-align: center;
+    height: 192px;
+    margin: 0 0 15px 15px;
+    position: relative;
+}
+
+.themeShot a {
+    height: 200px;
+    width: 200px;
+    position: relative;
+    overflow: hidden;
+    display: block;
+}
+
+.themeBox img {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.themeName {
+    font-size: 14px;
+    margin: 10px;
+    position: relative;
+    text-transform: capitalize;
+    font-weight: bold;
+    text-align: left;
+    white-space: nowrap;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.themeName em {
+    font-weight: normal;
+}
+
+.themeName .showInfo {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.themeBox .showInfo-dropdown {
+    position: absolute;
+    right: 0;
+    transform: translateX(40%);
+    display: none;
+    text-align: left;
+    padding-bottom: 0;
+}
+
+.themeSelect {
+    box-shadow: 0 2px 1px #00000024;
+    display: inline-block;
+    text-align: center;
+    padding: 0 10px 8px;
+    margin-right: 10px;
+    transition: 0.4s ease;
+}
+
+.showInfo-dropdown-header {
+    padding: 5px 10px;
+    white-space: nowrap;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.showInfo-dropdown-header a:hover {
+    color: white;
+}
+
+.showInfo-dropdown-content {
+    padding: 5px 10px;
+    -moz-osx-font-smoothing: initial;
+}
+
+.showInfo-dropdown-action {
+    padding: 8px 10px;
+    border-top: 1px solid #ffffff45;
+    color: white;
+    text-decoration: none !important;
+    display: block;
+    margin-top: 5px;
+    border-radius: 0 0 10px 10px;
+    font-weight: bold;
+}
+
+.showInfo-dropdown-action:hover {
+    background-color: rgb(0, 0, 0, 0.192);
+    color: white;
+}
+
+.themeActions {
+    display: flex;
+    flex-direction: column;
+}
+
+.themeActions div {
+    display: table-cell;
+    vertical-align: middle;
+    line-height: 18px;
+}
+
+.themeActions span,
+.themeActions a {
+    padding: 10px;
+    margin: 0 10px 10px;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.themeActions span {
+    font-size: 11px;
+    background-color: #ddd;
+    opacity: 0.5;
+}
+
+.themeActions .pluginUnavailableAction {
+    padding: 10px;
+    margin: 0 10px 10px;
+    font-weight: bold;
+    font-size: 12px;
+    background: #ebebeb;
+}
+
+.themeActions a:nth-child(1) {
+    background-color: #ffc17e;
+    color: #222;
+}
+
+.themeActions a:nth-child(1):hover {
+    background-color: #f70;
+    color: white;
+    text-decoration: none;
+}
+
+.themeActions a:nth-child(2) {
+    background-color: #ececec;
+    color: #222;
+}
+
+.themeActions a:nth-child(2):hover {
+    background-color: #ff9b32;
+    color: #111;
+    text-decoration: none;
+}
+
+#themesContent h3 {
+    font-size: 16px;
+    text-align: left;
+    border-bottom: 1px solid #444;
+    letter-spacing: 1px;
+    margin: 5px;
+}
+
+.themeBoxes {
+    min-height: 0;
+    text-align: left;
+}
+
+h1 {
+    background-color: #f3f3f3;
+    margin: 0;
+    padding: 20px;
+    text-align: left;
+    font-weight: normal;
+    color: #333;
+    font-size: 22px;
+}
+
+h1 .image-id {
+    font-weight: 100;
+    opacity: 0.5;
+}
+
+h1 .bc-albums {
+    padding: 4px 8px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 7px;
+    background-color: #c6c6c6;
+    font-size: 12px;
+    position: relative;
+    top: -3px;
+}
+
+h2 {
+    letter-spacing: 1px;
+    font-weight: bold;
+    display: none;
+}
+
+h2:lang(en) {
+    text-transform: capitalize;
+}
+
+#pluginsMenuSeparator {
+    width: 80%;
+    margin: 5px auto;
+}
+
+#helpContent p {
+    text-align: left;
+    margin-left: 10px;
+}
+
+#helpContent li,
+#ftpPage li {
+    margin-top: 10px;
+}
+
+#helpContent p.nextStepLink {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/**
+ * Information box in administration
+ */
+.infos,
+.errors,
+.warnings,
+.messages {
+    text-align: left;
+    margin: 20px;
+    padding: 5px;
+    font-weight: bold;
+    min-height: 54px;
+}
+
+.infos ul,
+.errors ul,
+.warnings ul,
+.messages ul {
+    margin-top: 18px;
+}
+
+.infos ul {
+    color: #3c3c3c;
+}
+
+.eiw-icon {
+    float: left;
+    font-size: 40px;
+    margin-right: 10px;
+}
+
+.infos {
+    color: #0a0;
+    background-color: #c2f5c2;
+}
+
+.infos a {
+    color: #3c3c3c;
+}
+
+.errors {
+    color: #f22;
+    background-color: #ffd5dc;
+    border-left: 4px solid #f22;
+}
+
+.warnings {
+    color: #e80;
+    background-color: #fd9;
+    border-left: 4px solid #e80;
+}
+
+.messages {
+    color: #00529b;
+    background-color: #bde5f8;
+    border-left: 4px solid #00529b;
+}
+
+.badge {
+    background-color: #0a0;
+    color: white;
+    padding: 1px 5px;
+    border-radius: 10px;
+    margin-left: 5px;
+}
+
+.infos li,
+.errors li,
+.warnings li,
+.messages li {
+    list-style-type: none;
+}
+
+.infos .submit {
+    margin-left: 30px;
+}
+
+.checkActions {
+    text-align: left;
+    padding: 0;
+    margin: 0;
+}
+
+#user-table-content #checkActions {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+#user-table-content #checkActions a {
+    padding: 10px;
+    margin: 0 4px;
+}
+
+#checkActions {
+    text-align: left;
+    margin: 0 0 20px;
+}
+
+.ActionUserList #checkActions {
+    margin: 20px 0;
+}
+
+.emptyResearch {
+    opacity: 0.3;
+    text-align: center;
+    left: 45%;
+    font-weight: bold;
+    font-size: 30px;
+    position: absolute;
+    display: none;
+}
+

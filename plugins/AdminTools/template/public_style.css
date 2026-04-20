@@ -3,7 +3,7 @@
 }
 
 .token-input-dropdown {
-    z-index: 10000 !important;
+    z-index: 10000;
 }
 
 #ato_header,
@@ -190,7 +190,7 @@
 
 #ato_header > ul .saved {
     display: none;
-    border: none !important;
+    border: none; /* js-toggled */
     animation: blink 0.8s infinite;
 }
 

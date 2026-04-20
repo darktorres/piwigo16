@@ -5,7 +5,7 @@ ul.thumbnails {
 
 ul.thumbnails .gdthumb {
     overflow: hidden;
-    background: inherit !important;
+    background: inherit;
 }
 
 ul.thumbnails .gdthumb a {

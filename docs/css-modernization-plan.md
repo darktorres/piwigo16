@@ -33,7 +33,7 @@ The JS/TS stack has been fully modernized (TypeScript, Vite, stylelint, ESLint),
 - `themes/bootstrap_darkroom/css/**` (Bootstrap library ~30 files)
 - `themes/modus/css/fontello/**`, `themes/default/fontello/**`
 - `themes/modus/css/open-sans/**`
-- `themes/default/js/plugins/selectize.*.css`
+- `themes/default/js/plugins/selectize.*.css` (removed; replaced by TomSelect)
 - `themes/elegant/admin/jquery.ui.button.css`
 
 ---
@@ -134,7 +134,7 @@ Static hex values replaced with `var(--color-*)` references where applicable.
 - `default/css/components/general.css`: Removed 3 (`.head-button-1/2:hover` text-decoration/color, `.tree .badge-container i::before` margin)
 - `roma/theme.css`: Removed 4 (`.menuLi_hidden`, `a.Piwigo`, `.selected-pagination` bg/color)
 
-**Not done:** ~278 `!important` remain across admin files — the bulk are in `roma/theme.css` (135) and `default/theme.css` (107) fighting third-party library CSS (jQuery UI datepicker, selectize, plupload, DataTables, jconfirm). These require knowing the competing library CSS to safely remove.
+**Not done:** ~278 `!important` remain across admin files — the bulk are in `roma/theme.css` (135) and `default/theme.css` (107) fighting third-party library CSS (jQuery UI datepicker, TomSelect, plupload, DataTables, jconfirm). These require knowing the competing library CSS to safely remove.
 
 **Approach when resuming:**
 1. Introduce `:root` variable blocks for repeated colors/spacing values
@@ -205,7 +205,7 @@ Annotated justified `!important` throughout the codebase with comments:
 | Step | Status | Remaining effort |
 |------|--------|-----------------|
 | Step 5 (skin files) | ⚠️ Partial | Introduce per-component color variables to eliminate ~140 skin `!important` |
-| Step 6 (admin themes) | ⚠️ Partial | ~278 `!important` remain, mostly third-party lib overrides (jQuery UI, selectize, plupload, DataTables) |
+| Step 6 (admin themes) | ⚠️ Partial | ~278 `!important` remain, mostly third-party lib overrides (jQuery UI, TomSelect, plupload, DataTables) |
 | Step 7 (front-end themes) | ⚠️ Partial | Annotate ~25 justified search CSS `!important`; `:root` variables not added |
 | Step 9 (breakpoints) | ⚠️ Partial | Decide on + apply actual 640px → 576px value change across modus files |
 

@@ -22,20 +22,20 @@ Both child themes are loaded by the `{combine_css}` bundler **after** the parent
 
 mcs-search injects its own `<link>` stylesheet at runtime. Our rules must beat it regardless of injection order. All 15 instances target mcs-search selectors.
 
-### 2b. Gallery search feature — selectize and filter overrides (13)
+### 2b. Gallery search feature — TomSelect and filter overrides (13)
 
 **File:** `themes/default/css/search.css`
 
-Selectize.js ships its own CSS. Our theme rules override colors, backgrounds, and dimensions. Key instances:
+TomSelect (which replaced Selectize.js) ships its own CSS and uses the same `.selectize-*` class names. Our theme rules override colors, backgrounds, and dimensions. Key instances:
 
 | Line | Property | Reason |
 |------|----------|--------|
-| 273–275 | `background`, `border`, `color` on filled filter | Beats selectize own filled-state styles |
+| 273–275 | `background`, `border`, `color` on filled filter | Beats TomSelect own filled-state styles |
 | 279 | `color` on filled filter item | Same |
 | 474 | `color` on hover button | Higher-specificity rule in parent chain |
 | 513 | `margin-left: auto` | Overrides flex margin from parent container |
-| 736 | `color` on selectize input | Overrides selectize own input color rule |
-| 823 | `min-width: 150px` | Overrides `style="min-width:…"` set by selectize inline |
+| 736 | `color` on selectize input | Overrides TomSelect own input color rule |
+| 823 | `min-width: 150px` | Overrides `style="min-width:…"` set by TomSelect inline |
 | 827 | `z-index: 10` | Overrides Bootstrap `sticky-top` z-index |
 | 851 | `box-shadow: none` | Overrides desktop box-shadow in mobile media query |
 | 873 | `display: block` | Overrides `flex` set by a higher-specificity rule |
@@ -114,18 +114,18 @@ background-color: transparent !important; /* overrides global.css #content bg �
 
 ---
 
-## 9. Third-party selectize override — gallery colors (1)
+## 9. Third-party TomSelect override — gallery colors (1)
 
 **File:** `themes/default/css/colors.css`
 
 ```css
 .selectize-dropdown [data-selectable],
 .selectize-dropdown .optgroup-header {
-    padding: 0 5px !important; /* overrides selectize.js own padding rule at higher specificity */
+    padding: 0 5px !important; /* overrides TomSelect own padding rule at higher specificity */
 }
 ```
 
-Selectize's own stylesheet uses a more-specific selector for dropdown item padding. Our rule at (0,1,1) loses without `!important`.
+TomSelect (which replaced Selectize.js) ships its own stylesheet and uses the same `.selectize-*` class names. It uses a more-specific selector for dropdown item padding. Our rule at (0,1,1) loses without `!important`.
 
 ---
 

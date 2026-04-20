@@ -312,8 +312,8 @@ Info
 }
 
 .info-warning {
-    color: #e80;
-    background-color: #fd9;
+    color: var(--admin-inline-warning-color);
+    background-color: var(--admin-inline-warning-bg);
 }
 
 .info-message {
@@ -323,8 +323,8 @@ Info
 }
 
 .info-error {
-    color: #f22;
-    background-color: #ffd5dc;
+    color: var(--admin-inline-error-color);
+    background-color: var(--admin-inline-error-bg);
     display: none;
     animation-name: info-error-appear;
     animation-duration: 0.4s;

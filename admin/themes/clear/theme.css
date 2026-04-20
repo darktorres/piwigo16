@@ -1291,3 +1291,9 @@ li.plupload_delete a:hover {
 #wImg {
     background-color: #e5e5e5;
 }
+
+/* TakeATour tour skin overrides */
+.popover-title,
+.popover-content {
+    color: #666;
+}

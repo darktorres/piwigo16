@@ -130,6 +130,38 @@ window.PwgWS = PwgWS;
 				{/foreach}
 			{/if}
 			{if isset($PLUGIN_PICTURE_ACTIONS)}{$PLUGIN_PICTURE_ACTIONS}{/if}
+			<button id="orientationToggleBtn" title="{'Toggle orientation'|translate}" class="pwg-state-default pwg-button">
+				<span class="pwg-icon">
+					<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+						<path d="M13.5 8a5.5 5.5 0 0 0-9.53-3.74L2.5 2.79V6h3.21L4.44 4.73A4 4 0 1 1 4 8H2.5A5.5 5.5 0 0 0 13.5 8z"/>
+						<path d="M10.5 8l-3-3v2H4v2h3.5v2z"/>
+					</svg>
+				</span>
+				<span class="pwg-button-text">{'Rotate'|translate}</span>
+			</button>
+			{footer_script}<script>
+				(function() {
+					var btn = document.getElementById('orientationToggleBtn');
+					if (!btn) return;
+					var supported = screen.orientation && typeof screen.orientation.lock === 'function';
+					btn.addEventListener('click', function() {
+						if (!supported) {
+							alert("{'Orientation lock is not supported by your browser.'|translate}");
+							return;
+						}
+						var current = screen.orientation.type;
+						var next = current.startsWith('portrait') ? 'landscape' : 'portrait';
+						var doLock = function() {
+							screen.orientation.lock(next).catch(function() {});
+						};
+						if (!document.fullscreenElement) {
+							document.documentElement.requestFullscreen().then(doLock).catch(doLock);
+						} else {
+							doLock();
+						}
+					});
+				})();
+			</script>{/footer_script}
 			{if isset($favorite)}
 				<a href="{$favorite.U_FAVORITE}"
 					title="{if $favorite.IS_FAVORITE}{'delete this photo from your favorites'|translate}{else}{'add this photo to your favorites'|translate}{/if}"

@@ -63,7 +63,7 @@
     .tab-title .date-title,
     .tab-title .user-title {
         text-align: left;
-        {* width: 22%; *}
+        /* width: 22%; */
     }
 
     .line .action-section,

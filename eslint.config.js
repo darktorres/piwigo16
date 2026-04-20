@@ -3,6 +3,7 @@ import globals from "globals";
 import tseslint from "@typescript-eslint/eslint-plugin";
 import tsparser from "@typescript-eslint/parser";
 import no_jquery from "eslint-plugin-no-jquery";
+import css from "@eslint/css";
 
 export default [
   {
@@ -12,7 +13,35 @@ export default [
       "vendor/**",
       "tests/**",
       "dist/**",
+      "_data/**",
+      "admin/themes/default/fontello/**",
+      "admin/themes/default/fonts/**",
+      "themes/bootstrap_darkroom/**",
+      "themes/default/fontello/**",
+      "themes/modus/css/fontello/**",
+      "themes/modus/css/open-sans/**",
+      "plugins/AdminTools/template/fontello/**",
     ],
+  },
+  {
+    files: ["**/*.css"],
+    ignores: ["**/dist/**"],
+    plugins: { css },
+    language: "css/css",
+    rules: {
+      ...css.configs.recommended.rules,
+      // Custom properties are defined in variables.css and used cross-file;
+      // the linter can't resolve them statically.
+      "css/no-invalid-properties": "off",
+      // !important is used intentionally in several places (JS-toggled display,
+      // child-theme overrides). Flag as warning rather than error.
+      "css/no-important": "warn",
+      // use-baseline flags experimental/limited-availability properties.
+      // Too noisy for a project targeting a wide browser range.
+      "css/use-baseline": "off",
+      // font-family: inherit is a valid CSS-wide keyword but triggers this rule.
+      "css/font-family-fallbacks": "off",
+    },
   },
   {
     files: ["**/postcss.config.js"],

@@ -5,6 +5,14 @@
     --color-scrollbar-thumb: rgb(0 0 0 / 40%);
     --z-page-title: 1;
     --z-footer: 500;
+
+    /* Form control shape tokens — overridden per skin */
+    --radius-control: 0;
+    --radius-comment-element: 0;
+    --radius-thumb-hover: 0;
+    --radius-image-info: 0;
+    --radius-sortbox: 0;
+    --radius-menubar-dd: 0;
 }
 
 body {
@@ -263,7 +271,7 @@ input[type="submit"] {
 
 .wide .imageInfoTable,
 .wide #imageInfos {
-    border-radius: 0;
+    border-radius: var(--radius-image-info);
     padding: 0;
 }
 
@@ -388,7 +396,7 @@ fieldset legend {
 #sortOrderBox {
     min-width: 190px;
     padding: 20px;
-    border-radius: 0;
+    border-radius: var(--radius-sortbox);
 }
 
 #derivativeSwitchBox a,
@@ -432,7 +440,7 @@ fieldset legend {
 }
 
 .commentElement {
-    border-radius: 0;
+    border-radius: var(--radius-comment-element);
     margin: 15px 0;
     clear: both;
     padding: 20px;
@@ -487,7 +495,7 @@ input[type="text"],
 input[type="password"],
 select,
 s textarea {
-    border-radius: 0;
+    border-radius: var(--radius-control);
     border: 0;
     padding: 10px;
     cursor: pointer;
@@ -497,7 +505,7 @@ s textarea {
 #theSearchPage .selectize-input.focus,
 #theSearchPage .selectize-dropdown,
 #theSearchPage .selectize-input input {
-    border-radius: 0;
+    border-radius: var(--radius-control);
     box-shadow: none;
     border: 0;
     padding: 10px;
@@ -516,7 +524,7 @@ select {
 #end_day,
 #end_month {
     padding: 10px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
 }
 
 #theIdentificationPage legend {
@@ -525,14 +533,14 @@ select {
 
 .filter select {
     padding: 10px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     border: 0;
 }
 
 .contact input[type="text"],
 .contact textarea,
 .contact select {
-    border-radius: 0;
+    border-radius: var(--radius-control);
     padding: 10px;
     font-family: "Open Sans", sans-serif;
 }
@@ -649,7 +657,7 @@ div.thumbHover {
     height: 100px;
     width: 100px;
     font-weight: normal;
-    border-radius: 0;
+    border-radius: var(--radius-thumb-hover);
     text-shadow: none;
     padding: 10px;
     text-align: center;

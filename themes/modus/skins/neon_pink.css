@@ -1,3 +1,7 @@
+:root {
+    --radius-control: 5px;
+}
+
 body {
     background-color: white;
     color: black;
@@ -418,7 +422,7 @@ input[type="password"],
 select,
 textarea {
     background-color: #e8e8ea !important;
-    border-radius: 5px !important;
+    border-radius: 5px;
     color: black;
 }
 
@@ -432,10 +436,10 @@ textarea {
 
 .selectize-input {
     background-color: #e8e8ea !important;
-    border-radius: 5px !important;
+    border-radius: 5px;
     color: black !important;
     border: none !important;
-    box-shadow: none !important;
+    box-shadow: none;
 }
 
 .date_today {
@@ -571,7 +575,7 @@ form.properties a {
 }
 
 ul.token-input-list li input {
-    background-color: transparent !important;
+    background-color: transparent;
 }
 
 @media screen and (width <= 640px) {

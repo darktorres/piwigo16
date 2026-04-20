@@ -164,7 +164,7 @@
 }
 
 .cat-modify-infos .cat-modify-info-card {
-    background: #fafafa;
+    background: var(--admin-bg-surface);
     padding: 5px 10px;
     display: grid;
     grid-template-rows: repeat(3, 33%);
@@ -180,7 +180,7 @@
 
 .cat-modify-infos .cat-modify-info-content {
     font-size: 15px;
-    color: #333;
+    color: var(--admin-text-legend);
     font-weight: bold;
 }
 
@@ -260,8 +260,8 @@
 .cat-modify-input-container input {
     width: 100%;
     resize: none;
-    color: #353535;
-    background-color: #f3f3f3;
+    color: var(--admin-text-legend);
+    background-color: var(--admin-bg-surface);
     border: none;
     box-sizing: border-box;
     padding: 8px 12px;

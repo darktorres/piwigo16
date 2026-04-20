@@ -75,6 +75,9 @@
     --admin-disabled-color: #b8b8b8;
     --admin-disabled-bg: #ececec;
 
+    /* Head button colors */
+    --admin-head-button-1-color: white;
+
     /* Component-specific */
     --admin-jqtree-highlight: #ffbd4d;
     --admin-tooltip-arrow: white;
@@ -351,11 +354,11 @@ ul.thumbnails li.rank-of-image {
 }
 
 #batchManagerGlobal .thumbSelected {
-    background-color: transparent !important;
+    background-color: transparent;
 }
 
 #batchManagerGlobal .thumbSelected .wrap2 {
-    background-color: transparent !important;
+    background-color: transparent;
 }
 
 #batchManagerGlobal #selectedMessage {
@@ -885,12 +888,12 @@ a#showPermissions:hover {
 .sort-by select {
     background-color: #fff;
     color: #4e4e4e;
-    border: 2px solid #7070704f !important;
-    outline: none !important;
+    border: 2px solid #7070704f;
+    outline: none;
 }
 
 #filter_search input{
-    border: 2px solid #7070704f !important;
+    border: 2px solid #7070704f;
     background: #fff;
     color: #3c3c3cbd;
 }

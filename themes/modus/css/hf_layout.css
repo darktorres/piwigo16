@@ -1,0 +1,255 @@
+/* Structural rules and page containers */
+
+:root {
+    --color-error-bg: #ffc4bf;
+    --color-error-border: #d31100;
+    --color-thumb-overlay: rgb(0 0 0 / 20%);
+    --color-scrollbar-thumb: rgb(0 0 0 / 40%);
+    --z-page-title: 1;
+    --z-footer: 500;
+
+    /* Form control shape tokens — overridden per skin */
+    --radius-control: 0;
+    --radius-comment-element: 0;
+    --radius-thumb-hover: 0;
+    --radius-image-info: 0;
+    --radius-sortbox: 0;
+    --radius-menubar-dd: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    font-family: "Open Sans", sans-serif;
+    -moz-osx-font-smoothing: grayscale;
+    box-shadow: none;
+    border: 0;
+    padding-bottom: 50px;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+#content {
+    flex: 1 0 auto;
+}
+
+#copyright {
+    flex-shrink: 0;
+}
+
+.stuffs_block.content {
+    min-height: auto;
+}
+
+#copyright {
+    display: inline-block;
+    font-size: 12px;
+    padding: 15px 0;
+    margin-top: auto;
+    margin-bottom: 0;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: var(--z-footer);
+    background-color: inherit;
+}
+
+.wide .imageInfoTable,
+.wide #imageInfos {
+    border-radius: var(--radius-image-info);
+    padding: 0;
+}
+
+.wide .imageInfo dt {
+    font-weight: bold;
+    display: table-cell;
+}
+
+.wide #imageInfos {
+    margin-left: 75%;
+    margin-right: 0;
+    padding: 20px;
+}
+
+#thePicturePage #comments {
+    margin: 45px;
+    padding: 0;
+}
+
+#thePicturePage #pictureCommentList {
+    width: 49%;
+    float: right;
+    padding-top: 15px;
+}
+
+#theCommentsPage .filter,
+#theCommentsPage #comments {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 15px;
+}
+
+#theSearchPage .filter {
+    max-width: 1000px;
+    margin: 20px auto;
+}
+
+#pictureComments #commentAdd {
+    width: 49%;
+}
+
+.wide #theImage {
+    margin-bottom: 5px;
+}
+
+#theImage {
+    padding-bottom: 20px;
+}
+
+.wide .navThumb img,
+.wide .navThumb,
+.wide .thumbHover,
+.navThumb img {
+    width: 100px;
+    height: auto;
+}
+
+.wide .navThumbs {
+    min-width: 215px;
+}
+
+#thumbnails {
+    margin-left: 0;
+    margin-bottom: 0;
+}
+
+.albThumbs {
+    margin-top: 0;
+}
+
+#linkPrev,
+#linkNext {
+    margin: 5px;
+}
+
+#thumbnails > li,
+.albThumbs > li,
+.navThumb img {
+    overflow: hidden;
+}
+
+.thumbnailCategory {
+    border: none;
+    background-color: var(--color-thumb-overlay);
+}
+
+/* Track */
+.thumbnailCategory .description::-webkit-scrollbar {
+    background: var(--color-thumb-overlay);
+    border-radius: 15px;
+}
+
+/* Handle */
+.thumbnailCategory .description::-webkit-scrollbar-thumb {
+    background: var(--color-scrollbar-thumb);
+    border-radius: 15px;
+}
+
+#fullTagCloud {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 15px;
+    text-align: center;
+    padding-top: 50px;
+    position: relative;
+}
+
+#fullTagCloud span a {
+    margin-left: 5px;
+    padding: 5px;
+}
+
+fieldset.tagLetter {
+    padding: 15px 10px;
+    width: 180px;
+    margin: 15px;
+}
+
+table.tagLetterContent {
+    border-collapse: separate;
+    border-spacing: 4px;
+    margin-top: -10px;
+}
+
+#thePopuphelpPage {
+    margin: 0 15px;
+}
+
+#lostPassword,
+.notification {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.calForeDate,
+.calBackDate {
+    padding: 20px;
+}
+
+#piwigoAbout {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.albThumbs .path-ext-svg a img,
+.albThumbs .file-ext-svg a img {
+    left: 0 !important; /* overrides inline position set by masonry */
+    top: 0 !important; /* overrides inline position set by masonry */
+    max-width: 250px;
+    max-height: 250px;
+}
+
+img.file-ext-svg,
+img.path-ext-svg {
+    min-width: 100px;
+    min-height: 100px;
+}
+
+li.file-ext-svg a img,
+li.path-ext-svg a img {
+    min-width: 100px;
+    min-height: 100px;
+}
+
+.mcs-container,
+.mcs-side-results.search-in-set-button {
+    margin-top: 0;
+}
+
+/* === Thumbnail-only scroll layout === */
+html:has(#thumbnails) body {
+    overflow: hidden;
+    padding-bottom: 0;
+}
+
+html:has(#thumbnails) #content {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: 50px;
+}
+
+html:has(#thumbnails) #content .titrePage {
+    position: sticky;
+    top: 0;
+}
+
+html:has(#thumbnails) #copyright,
+html:has(#thumbnails) #copyright a {
+    font-size: 1rem;
+    color: #fff;
+}

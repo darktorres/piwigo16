@@ -13,17 +13,17 @@ body {
     background-color: #f2f2f2;
 }
 
-#copyright A:hover {
-    color: #ff7700;
+#copyright a:hover {
+    color: #f70;
     font-weight: normal;
 }
 
-#copyright A {
+#copyright a {
     color: black;
 }
 
 .infos {
-    background: #096a09 url(../../default/icon/infos.png) no-repeat center right;
+    background: #096a09 url("../../default/icon/infos.png") no-repeat center right;
     color: black;
 }
 
@@ -35,7 +35,7 @@ h2 {
 .albLegend,
 .albLegend:hover {
     color: white;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    text-shadow: 1px 1px 3px rgb(0, 0, 0, 0.8);
 }
 
 .albSymbol {
@@ -43,52 +43,53 @@ h2 {
 }
 
 #mbCategories .albSymbol {
-    color: #ff7700;
+    color: #f70;
 }
 
 .albLegendRight .albSymbol {
     color: white;
 }
 
-H3,
+h3,
 label {
     color: #8e8e93;
 }
 
-A {
-    color: #ff7700;
+a {
+    color: #f70;
 }
 
 a:hover {
     text-decoration: none;
     font-weight: normal;
-    color: #ff7700;
+    color: #f70;
 }
 
 #menubar {
-    background-color: #ff7700;
-    /*background: linear-gradient(to bottom right, #ff7700 20%, #ffad66 80%);*/
+    background-color: #f70;
+
+    /* background: linear-gradient(to bottom right, #ff7700 20%, #ffad66 80%); */
 }
 
-#menubar UL {
+#menubar ul {
     border-radius: 5px;
 }
 
-#menubar dt A:hover {
+#menubar dt a:hover {
     color: white;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
 }
 
-#menubar dt A {
+#menubar dt a {
     color: black;
 }
 
-#commentAdd INPUT[type="text"],
-INPUT[type="password"],
-#commentAdd SELECT,
-#commentAdd TEXTAREA,
+#commentAdd input[type="text"],
+input[type="password"],
+#commentAdd select,
+#commentAdd textarea,
 #comments input[type="text"],
-#comments TEXTAREA {
+#comments textarea {
     background-color: #f2f2f2;
     color: black;
 }
@@ -108,7 +109,7 @@ INPUT[type="password"],
 
 .search_results a,
 .search_results a:hover {
-    color: #ff7700;
+    color: #f70;
 }
 
 .selectize-control.multi .selectize-input [data-value].active,
@@ -125,24 +126,24 @@ INPUT[type="password"],
 }
 
 .selectize-control .plugin-remove_button [data-value] .remove {
-    border-left-color: #333333;
+    border-left-color: #333;
 }
 
-#menubar DD {
+#menubar dd {
     background-color: #e8e8ea;
     color: black;
     border-radius: 5px;
 }
 
-#menubar DD A:hover {
-    color: #ff7700;
+#menubar dd a:hover {
+    color: #f70;
 }
 
-#menubar DD A {
+#menubar dd a {
     color: black;
 }
 
-#menubar INPUT {
+#menubar input {
     background-image: none;
     font-family: "Open Sans", sans-serif;
     background-color: #f9d499 !important;
@@ -150,20 +151,20 @@ INPUT[type="password"],
     cursor: pointer;
 }
 
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-INPUT[type="button"]:hover,
-INPUT[type="submit"]:hover,
-INPUT[type="reset"]:hover {
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="button"]:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover {
     border-radius: 5px;
     color: white;
-    background-color: #ff7700;
+    background-color: #f70;
 }
 
 .wide #imageToolBar {
     background-color: white;
-    padding: 15px 5px 10px 5px;
+    padding: 15px 5px 10px;
 }
 
 #imageToolBar {
@@ -181,24 +182,23 @@ INPUT[type="reset"]:hover {
 }
 
 .switchCheck {
-    color: #ff7700;
+    color: #f70;
 }
 
 li,
-#mbCategories UL {
+#mbCategories ul {
     list-style-type: none;
     padding-left: 0;
 }
 
 .badge {
-    background-color: #ff7700;
+    background-color: #f70;
     border-radius: 20px;
-    color: #fff;
     color: #e8e8ea;
 }
 
-#menubar LI.selected > A {
-    color: #ff7700;
+#menubar li.selected > a {
+    color: #f70;
 }
 
 .wide .imageInfoTable,
@@ -213,7 +213,7 @@ li,
 
 .imageInfoTable a,
 .imageInfoTable a:hover {
-    color: #ff7700;
+    color: #f70;
 }
 
 .wide .imageInfoTable,
@@ -223,11 +223,11 @@ li,
 
 .wide #imageInfos a,
 .wide #imageInfos a:hover {
-    color: #ff7700;
+    color: #f70;
     font-weight: normal;
 }
 
-.wide .imageInfo DT {
+.wide .imageInfo dt {
     color: #8e8e93;
 }
 
@@ -240,14 +240,15 @@ li,
     color: black;
 }
 
-A .pwg-icon,
-A .pwg-icon:hover {
-    color: #ff7700;
+a .pwg-icon,
+a .pwg-icon:hover {
+    color: #f70;
 }
 
 .pwg-icon {
     font-size: 17px;
 }
+
 .pwg-state-disabled .pwg-icon {
     color: #8e8e93;
 }
@@ -259,7 +260,7 @@ A .pwg-icon:hover {
 }
 
 #commentAdd {
-    padding: 0px;
+    padding: 0;
 }
 
 fieldset h3,
@@ -286,41 +287,41 @@ dd {
     color: black;
 }
 
-#imageHeaderBar H2 {
+#imageHeaderBar h2 {
     color: black;
     text-shadow: none;
 }
 
-.titrePage H2 A:hover {
-    color: #ff7700;
+.titrePage h2 a:hover {
+    color: #f70;
 }
 
-.titrePage H2 A {
+.titrePage h2 a {
     color: black;
 }
 
-.titrePage H2 span.badge {
-    background-color: #ff7700;
+.titrePage h2 span.badge {
+    background-color: #f70;
     color: #fff;
 }
 
-.titrePage A,
-.titrePage A:hover {
-    color: #ff7700;
+.titrePage a,
+.titrePage a:hover {
+    color: #f70;
     font-weight: normal;
 }
 
 .titrePage .switchBox {
-    color: #ff7700;
+    color: #f70;
     padding: 10px;
 }
 
-.titrePage .switchBox A {
+.titrePage .switchBox a {
     color: black;
 }
 
-.titrePage .switchBox A:hover {
-    color: #ff7700;
+.titrePage .switchBox a:hover {
+    color: #f70;
 }
 
 .browsePath {
@@ -336,17 +337,17 @@ dd {
     color: black;
 }
 
-#thePicturePage .titrePage A {
+#thePicturePage .titrePage a {
     color: black;
 }
 
-#thePicturePage .titrePage A:hover {
-    color: #ff7700;
+#thePicturePage .titrePage a:hover {
+    color: #f70;
 }
 
 .overDesc {
     color: black;
-    background-color: rgba(232, 232, 234, 0.8);
+    background-color: rgb(232, 232, 234, 0.8);
 }
 
 #derivativeSwitchBox,
@@ -354,12 +355,12 @@ dd {
     border-radius: 5px;
 }
 
-#derivativeSwitchBox A {
+#derivativeSwitchBox a {
     color: black;
 }
 
 .switchCheck {
-    color: #ff7700;
+    color: #f70;
 }
 
 .derivativeSizeDetails {
@@ -397,7 +398,7 @@ dd {
     color: black;
 }
 
-.imageInfo DT {
+.imageInfo dt {
     color: #8e8e93;
 }
 
@@ -406,7 +407,7 @@ dd {
 }
 
 .commentsList a {
-    color: #ff7700;
+    color: #f70;
 }
 
 .commentElement {
@@ -419,7 +420,7 @@ hr {
 }
 
 #menuTagCloud a {
-    color: #ff7700;
+    color: #f70;
 }
 
 #theSearchPage fieldset legend {
@@ -431,10 +432,10 @@ hr {
 }
 
 .selectize-input > input,
-INPUT[type="text"],
-INPUT[type="password"],
-SELECT,
-TEXTAREA {
+input[type="text"],
+input[type="password"],
+select,
+textarea {
     background-color: #e8e8ea !important;
     border-radius: 5px !important;
     color: black;
@@ -455,7 +456,7 @@ TEXTAREA {
 
 .date_today:hover {
     font-weight: normal;
-    color: #ff7700;
+    color: #f70;
 }
 
 #start_day #start_month,
@@ -485,29 +486,29 @@ TEXTAREA {
 }
 
 .calItem {
-    border: 1px solid #ff7700;
+    border: 1px solid #f70;
 }
 
 .calItem a,
 .calItem:hover {
-    color: #ff7700;
+    color: #f70;
 }
 
 .content .navigationBar,
-SPAN.calItem,
+span.calItem,
 .content .navigationBar:hover,
-SPAN.calItem:hover {
+span.calItem:hover {
     color: #8e8e93;
     border: none;
 }
 
-TD.calDayCellEmpty,
-TD.calDayCellEmpty:hover {
+td.calDayCellEmpty,
+td.calDayCellEmpty:hover {
     border: 1px solid #8e8e93;
 }
 
-DIV.thumbHover,
-DIV.thumbHover:hover {
+div.thumbHover,
+div.thumbHover:hover {
     color: black;
     border-radius: 5px;
 }
@@ -519,11 +520,11 @@ DIV.thumbHover:hover {
 
 #fullTagCloud span a:hover {
     text-decoration: none;
-    color: #ff7700;
+    color: #f70;
 }
 
-LEGEND.tagLetterLegend,
-FIELDSET.tagLetter {
+legend.tagLetterLegend,
+fieldset.tagLetter {
     border: none;
     color: black;
 }
@@ -533,11 +534,11 @@ FIELDSET.tagLetter {
 }
 
 .tagLine td a:hover {
-    color: #ff7700;
+    color: #f70;
 }
 
 .tagLevel5 {
-    color: #ff7700 !important;
+    color: #f70 !important;
 }
 
 td .nbEntries {
@@ -551,7 +552,7 @@ td .nbEntries {
 }
 
 .selectize-control.plugin-remove_button [data-value] .remove {
-    border-left: solid 1px #333333;
+    border-left: solid 1px #333;
 }
 
 .message {
@@ -565,7 +566,7 @@ td .nbEntries {
 }
 
 .notification a:hover {
-    color: #ff7700;
+    color: #f70;
 }
 
 form.properties a {
@@ -583,33 +584,39 @@ ul.token-input-list li input {
     background-color: transparent !important;
 }
 
-@media screen and (max-width: 640px) {
+@media screen and (width <= 640px) {
     #menubar {
         border-radius: 5px;
     }
+
     #copyright a {
         color: black;
     }
+
     #derivativeSwitchLink .pwg-icon pwg-icon-sizes {
         color: black;
     }
+
     #albumActionsSwitcher + .categoryActions .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
-    .actionButtons A .pwg-icon,
-    .actionButtons A .pwg-icon:hover {
+    .actionButtons a .pwg-icon,
+    .actionButtons a .pwg-icon:hover {
         color: black !important;
     }
+
     #albumActionsSwitcher + .categoryActions {
         border-radius: 5px;
-        box-shadow: 0px 0px transparent;
+        box-shadow: 0 0 transparent;
     }
+
     .categoryActions a .pwg-icon {
-        color: #ff7700;
+        color: #f70;
     }
-    #theTagsPage A .pwg-icon,
-    #theTagsPage A:hover .pwg-icon {
-        color: #ff7700;
+
+    #theTagsPage a .pwg-icon,
+    #theTagsPage a:hover .pwg-icon {
+        color: #f70;
     }
 }
 

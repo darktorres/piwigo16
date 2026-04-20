@@ -3,7 +3,7 @@ body {
     background-repeat: no-repeat;
     background-attachment: fixed;
     background-color: #c1c7d9;
-    background-image: linear-gradient(#27498c, #c1c7d9, #ebebf2, #ffffff);
+    background-image: linear-gradient(#27498c, #c1c7d9, #ebebf2, #fff);
     color: #2a3e40;
     background-size: cover;
 }
@@ -18,7 +18,7 @@ body {
     background-color: #ebebf2;
 }
 
-#copyright A {
+#copyright a {
     color: #1e3259;
 }
 
@@ -35,13 +35,13 @@ h2 {
     color: white;
 }
 
-H3,
+h3,
 label {
-    color: #000000;
+    color: #000;
 }
 
-A {
-    color: #000000;
+a {
+    color: #000;
 }
 
 a:hover {
@@ -54,12 +54,12 @@ a:hover {
     background-image: linear-gradient(#1e3259, #223d73, #27498c);
 }
 
-#commentAdd INPUT[type="text"],
-INPUT[type="password"],
-#commentAdd SELECT,
-#commentAdd TEXTAREA,
+#commentAdd input[type="text"],
+input[type="password"],
+#commentAdd select,
+#commentAdd textarea,
 #comments input[type="text"],
-#comments TEXTAREA {
+#comments textarea {
     background-color: #2d2d2d;
     color: white;
 }
@@ -87,40 +87,40 @@ INPUT[type="password"],
 }
 
 .selectize-control .plugin-remove_button [data-value] .remove {
-    border-left-color: #333333;
+    border-left-color: #333;
 }
 
-#menubar DT,
-#menubar DT A {
+#menubar dt,
+#menubar dt a {
     color: #ebebf2;
 }
 
-#menubar DD {
+#menubar dd {
     background-image: linear-gradient(#1e3259, #27498c);
     color: white;
     box-shadow: 5px 5px 10px black;
 }
 
-#menubar DD A {
+#menubar dd a {
     color: white;
 }
 
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-#menubar INPUT {
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+#menubar input {
     background-color: #1e3259;
     background-image: linear-gradient(#1e3259, #223d73, #27498c);
     color: white;
 }
 
-INPUT[type="submit"] {
+input[type="submit"] {
     background-color: #1e3259;
     background-image: linear-gradient(#1e3259, #223d73, #27498c);
     color: white;
 }
 
-INPUT[type="submit"]:hover {
+input[type="submit"]:hover {
     color: white;
 }
 
@@ -171,11 +171,11 @@ INPUT[type="submit"]:hover {
     color: white;
 }
 
-A .pwg-icon {
+a .pwg-icon {
     color: white;
 }
 
-A .pwg-icon:hover {
+a .pwg-icon:hover {
     color: #0e25a5;
 }
 
@@ -214,28 +214,28 @@ dd {
     color: #1e3259;
 }
 
-.titrePage H2 A,
-#imageHeaderBar H2 {
+.titrePage h2 a,
+#imageHeaderBar h2 {
     color: white;
 }
 
-.titrePage H2 A:hover,
-#imageHeaderBar H2:hover {
+.titrePage h2 a:hover,
+#imageHeaderBar h2:hover {
     text-decoration: underline;
     color: white;
 }
 
-.titrePage H2 span.badge {
+.titrePage h2 span.badge {
     background-color: #c1c7d9;
     color: black;
 }
 
-.titrePage A,
+.titrePage a,
 #calendarViewSwitchLink {
     color: black;
 }
 
-.titrePage .switchBox A,
+.titrePage .switchBox a,
 .titrePage .switchBox {
     color: white;
 }
@@ -250,12 +250,12 @@ dd {
 }
 
 #thePicturePage .titrePage h2,
-#thePicturePage .titrePage A,
+#thePicturePage .titrePage a,
 #thePicturePage .browsePath {
     color: white;
 }
 
-#derivativeSwitchBox A {
+#derivativeSwitchBox a {
     color: white;
 }
 
@@ -287,7 +287,7 @@ dd {
 }
 
 .overDesc {
-    background-color: rgba(30, 50, 89, 0.8);
+    background-color: rgb(30, 50, 89, 0.8);
 }
 
 .properties fieldset span label {
@@ -318,10 +318,10 @@ hr {
 .filter input,
 .filter input:focus,
 .selectize-input > input,
-INPUT[type="text"],
-INPUT[type="password"],
-SELECT,
-TEXTAREA {
+input[type="text"],
+input[type="password"],
+select,
+textarea {
     background-color: #27498c !important;
     color: white;
 }
@@ -336,6 +336,7 @@ TEXTAREA {
 .date_today:hover {
     color: black;
 }
+
 #start_day,
 #start_month,
 #end_day,
@@ -362,19 +363,19 @@ TEXTAREA {
 }
 
 .content .navigationBar,
-SPAN.calItem,
+span.calItem,
 .content .navigationBar:hover,
-SPAN.calItem:hover {
+span.calItem:hover {
     color: #1e3259;
     border: none;
 }
 
-TD.calDayCellEmpty,
-TD.calDayCellEmpty:hover {
+td.calDayCellEmpty,
+td.calDayCellEmpty:hover {
     border: 1px solid #1e3259;
 }
 
-DIV.thumbHover {
+div.thumbHover {
     color: white;
     border: 1px solid white;
 }
@@ -389,8 +390,8 @@ DIV.thumbHover {
     color: #c1c7d9;
 }
 
-LEGEND.tagLetterLegend,
-FIELDSET.tagLetter {
+legend.tagLetterLegend,
+fieldset.tagLetter {
     border: none;
     color: #1e3259;
 }
@@ -406,7 +407,7 @@ td .nbEntries {
 }
 
 .selectize-control.plugin-remove_button [data-value] .remove {
-    border-left: solid 1px #333333;
+    border-left: solid 1px #333;
 }
 
 .message {
@@ -436,25 +437,29 @@ a.addCollection {
     color: white;
 }
 
-@media screen and (max-width: 640px) {
+@media screen and (width <= 640px) {
     #derivativeSwitchLink .pwg-icon .pwg-icon-sizes {
         color: white;
     }
+
     #albumActionsSwitcher + .categoryActions .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
-    .actionButtons A .pwg-icon,
-    .actionButtons A .pwg-icon:hover {
+    .actionButtons a .pwg-icon,
+    .actionButtons a .pwg-icon:hover {
         color: white;
         background-color: transparent;
     }
+
     .categoryActions a .pwg-icon {
         color: white;
     }
-    #theTagsPage A .pwg-icon,
-    #theTagsPage A:hover .pwg-icon {
+
+    #theTagsPage a .pwg-icon,
+    #theTagsPage a:hover .pwg-icon {
         color: black;
     }
+
     #albumActionsSwitcher + .categoryActions {
         background-image: linear-gradient(#1e3259, #27498c);
         color: white;
@@ -479,7 +484,7 @@ a.addCollection {
 .filter-manager-popin,
 .tags-found-popin,
 .albums-found-popin {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgb(0, 0, 0, 0.7);
 }
 
 .filter-manager-popin-container,
@@ -553,7 +558,7 @@ a.addCollection {
 
 .filter-form {
     background: #ebebf2;
-    box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 5px 10px 0 rgb(0, 0, 0, 0.6);
     color: black;
 }
 
@@ -616,7 +621,7 @@ a.addCollection {
 
 .head-button-2 {
     background: #fafafa;
-    box-shadow: 0px 2px #00000024;
+    box-shadow: 0 2px #00000024;
 }
 
 .head-button-2:hover {
@@ -643,7 +648,7 @@ a.addCollection {
 }
 
 .linkedAlbumPopIn {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgb(0, 0, 0, 0.7);
 }
 
 .linkedAlbumPopInContainer {
@@ -661,7 +666,7 @@ a.addCollection {
 
 .search-result-item {
     background-color: #fafafa;
-    box-shadow: 0px 2px #00000024;
+    box-shadow: 0 2px #00000024;
     color: #777;
 }
 

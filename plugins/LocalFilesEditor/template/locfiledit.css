@@ -16,16 +16,16 @@
     float: right;
 }
 
-#LocalFilesEditor TD {
+#LocalFilesEditor td {
     padding: 0.5em;
 }
 
-#LocalFilesEditor TEXTAREA,
+#LocalFilesEditor textarea,
 .CodeMirror {
-    background-color: #eeeeee;
+    background-color: #eee;
     font-family: monospace, Arial, sans-serif;
     font-size: 1.2em;
-    border: 1px solid #999999;
+    border: 1px solid #999;
     margin: 0.5em 0;
     width: 100%;
     min-height: 500px;

@@ -1,4 +1,4 @@
-.icon-ato-null:before {
+.icon-ato-null::before {
     content: " ";
 }
 
@@ -20,29 +20,34 @@
     background: #fefefe;
     padding: 0;
     margin: 0;
-    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+    box-shadow: 3px 3px 5px rgb(0, 0, 0, 0.5);
 }
+
 #ato_container > ul li {
     list-style: none;
     line-height: 16px;
     font-size: 13px;
     white-space: nowrap;
 }
+
 #ato_container > ul li > * {
     display: inline-block;
     padding: 5px 10px;
     border: none;
     text-decoration: none;
     color: #444;
-    text-shadow: 1px 1px 0px #eee;
+    text-shadow: 1px 1px 0 #eee;
 }
-#ato_container > ul li > *:before {
+
+#ato_container > ul li > *::before {
     font-size: 16px;
     margin-right: 0.5em;
 }
+
 #ato_container > ul li:hover {
     background: #dedede;
 }
+
 #ato_container > ul label {
     font-weight: bold;
     color: #777;
@@ -52,6 +57,7 @@
     text-align: right;
     font-size: 11px;
 }
+
 #ato_container > ul select,
 #ato_container > ul option {
     font-size: 13px;
@@ -61,11 +67,13 @@
     border-radius: 2px;
     text-shadow: none;
 }
+
 #ato_container > ul select {
     border: 1px solid #777;
     height: 22px;
     padding: 2px 3px;
 }
+
 #ato_container .switcher {
     display: none;
 }

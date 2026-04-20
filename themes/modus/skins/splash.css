@@ -13,17 +13,17 @@ body {
     background-color: #f2f2f2;
 }
 
-#copyright A:hover {
+#copyright a:hover {
     color: #0b6aff;
     font-weight: normal;
 }
 
-#copyright A {
+#copyright a {
     color: #8e8e93;
 }
 
 .infos {
-    background: #096a09 url(../../default/icon/infos.png) no-repeat center right;
+    background: #096a09 url("../../default/icon/infos.png") no-repeat center right;
     color: black;
 }
 
@@ -35,7 +35,7 @@ h2 {
 .albLegend,
 .albLegend:hover {
     color: white;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    text-shadow: 1px 1px 3px rgb(0, 0, 0, 0.8);
 }
 
 .albSymbol {
@@ -46,12 +46,12 @@ h2 {
     color: white;
 }
 
-H3,
+h3,
 label {
     color: #8e8e93;
 }
 
-A {
+a {
     color: #0b6aff;
 }
 
@@ -66,24 +66,24 @@ a:hover {
     border-radius: 5px;
 }
 
-#menubar UL {
+#menubar ul {
     border-radius: 5px;
 }
 
-#menubar dt A:hover {
+#menubar dt a:hover {
     color: #0b6aff;
 }
 
-#menubar dt A {
+#menubar dt a {
     color: black;
 }
 
-#commentAdd INPUT[type="text"],
-INPUT[type="password"],
-#commentAdd SELECT,
-#commentAdd TEXTAREA,
+#commentAdd input[type="text"],
+input[type="password"],
+#commentAdd select,
+#commentAdd textarea,
 #comments input[type="text"],
-#comments TEXTAREA {
+#comments textarea {
     background-color: #f2f2f2;
     color: black;
 }
@@ -112,34 +112,34 @@ INPUT[type="password"],
 }
 
 .selectize-control .plugin-remove_button [data-value] .remove {
-    border-left-color: #333333;
+    border-left-color: #333;
 }
 
-#menubar DD {
+#menubar dd {
     background-color: #e8e8ea;
     color: black;
     border-radius: 5px;
 }
 
-#menubar DD A {
+#menubar dd a {
     color: black;
 }
 
-#menubar DD A:hover {
+#menubar dd a:hover {
     color: #0b6aff;
 }
 
-#menubar INPUT {
+#menubar input {
     background-color: #e8e8ea !important;
     border-radius: 5px;
 }
 
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-INPUT[type="button"]:hover,
-INPUT[type="submit"]:hover,
-INPUT[type="reset"]:hover {
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="button"]:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover {
     border-radius: 5px;
     color: black;
     background-color: #e8e8ea;
@@ -168,7 +168,7 @@ INPUT[type="reset"]:hover {
     color: #e8e8ea;
 }
 
-#menubar LI.selected > A {
+#menubar li.selected > a {
     color: #0b6aff;
 }
 
@@ -198,7 +198,7 @@ INPUT[type="reset"]:hover {
     font-weight: normal;
 }
 
-.wide .imageInfo DT {
+.wide .imageInfo dt {
     color: #8e8e93;
 }
 
@@ -211,8 +211,8 @@ INPUT[type="reset"]:hover {
     color: black;
 }
 
-A .pwg-icon,
-A .pwg-icon:hover {
+a .pwg-icon,
+a .pwg-icon:hover {
     color: #0b6aff;
 }
 
@@ -248,27 +248,27 @@ dd {
     color: black;
 }
 
-#imageHeaderBar H2 {
+#imageHeaderBar h2 {
     color: black;
     text-shadow: none;
 }
 
-.titrePage H2 A:hover {
+.titrePage h2 a:hover {
     color: #0b6aff;
 }
 
-.titrePage H2 A {
+.titrePage h2 a {
     color: black;
     text-shadow: none;
 }
 
-.titrePage A,
-.titrePage A:hover {
+.titrePage a,
+.titrePage a:hover {
     color: #0b6aff;
     font-weight: normal;
 }
 
-.titrePage H2 span.badge {
+.titrePage h2 span.badge {
     background-color: #0b6aff;
     border-radius: 20px;
     color: #e8e8ea;
@@ -279,11 +279,11 @@ dd {
     padding: 10px;
 }
 
-.titrePage .switchBox A {
+.titrePage .switchBox a {
     color: black;
 }
 
-.titrePage .switchBox A:hover {
+.titrePage .switchBox a:hover {
     color: #0b6aff;
 }
 
@@ -300,17 +300,17 @@ dd {
     color: black;
 }
 
-#thePicturePage .titrePage A {
+#thePicturePage .titrePage a {
     color: black;
 }
 
-#thePicturePage .titrePage A:hover {
+#thePicturePage .titrePage a:hover {
     color: #0b6aff;
 }
 
 .overDesc {
     color: black;
-    background-color: rgba(232, 232, 234, 0.6);
+    background-color: rgb(232, 232, 234, 0.6);
 }
 
 #derivativeSwitchBox,
@@ -318,7 +318,7 @@ dd {
     border-radius: 5px;
 }
 
-#derivativeSwitchBox A {
+#derivativeSwitchBox a {
     color: black;
 }
 
@@ -361,7 +361,7 @@ dd {
     color: black;
 }
 
-.imageInfo DT {
+.imageInfo dt {
     color: #8e8e93;
 }
 
@@ -395,10 +395,10 @@ hr {
 }
 
 .selectize-input > input,
-INPUT[type="text"],
-INPUT[type="password"],
-SELECT,
-TEXTAREA {
+input[type="text"],
+input[type="password"],
+select,
+textarea {
     background-color: #e8e8ea;
     border-radius: 5px;
     color: black;
@@ -459,17 +459,17 @@ TEXTAREA {
 }
 
 .content .navigationBar,
-SPAN.calItem,
-TD.calDayCellEmpty,
+span.calItem,
+td.calDayCellEmpty,
 .content .navigationBar:hover,
-SPAN.calItem:hover,
-TD.calDayCellEmpty:hover {
+span.calItem:hover,
+td.calDayCellEmpty:hover {
     color: #8e8e93;
     border: none;
 }
 
-DIV.thumbHover,
-DIV.thumbHover:hover {
+div.thumbHover,
+div.thumbHover:hover {
     color: black;
     border-radius: 5px;
 }
@@ -484,8 +484,8 @@ DIV.thumbHover:hover {
     color: #0b6aff;
 }
 
-LEGEND.tagLetterLegend,
-FIELDSET.tagLetter {
+legend.tagLetterLegend,
+fieldset.tagLetter {
     border: none;
     color: black;
 }
@@ -513,7 +513,7 @@ td .nbEntries {
 }
 
 .selectize-control.plugin-remove_button [data-value] .remove {
-    border-left: solid 1px #333333;
+    border-left: solid 1px #333;
 }
 
 .message {
@@ -545,32 +545,38 @@ form.properties a {
     color: black;
 }
 
-@media screen and (max-width: 640px) {
+@media screen and (width <= 640px) {
     #menubar {
         border-radius: 5px;
     }
+
     #copyright a {
         color: #0b6aff;
     }
+
     #derivativeSwitchLink .pwg-icon pwg-icon-sizes {
         color: black;
     }
+
     #albumActionsSwitcher + .categoryActions .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
-    .actionButtons A .pwg-icon,
-    .actionButtons A .pwg-icon:hover {
+    .actionButtons a .pwg-icon,
+    .actionButtons a .pwg-icon:hover {
         color: black !important;
     }
+
     #albumActionsSwitcher + .categoryActions {
         border-radius: 5px;
-        box-shadow: 0px 0px transparent;
+        box-shadow: 0 0 transparent;
     }
+
     .categoryActions a .pwg-icon {
         color: #0b6aff;
     }
-    #theTagsPage A .pwg-icon,
-    #theTagsPage A:hover .pwg-icon {
+
+    #theTagsPage a .pwg-icon,
+    #theTagsPage a:hover .pwg-icon {
         color: #0b6aff;
     }
 }

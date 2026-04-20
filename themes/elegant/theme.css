@@ -1,4 +1,4 @@
-﻿/* backgrounds */ html,
+/* backgrounds */ html,
 body {
     background-color: #111;
 }
@@ -7,6 +7,7 @@ body {
 .content {
     background-color: #222;
 }
+
 .content .titrePage {
     background-color: #111;
 }
@@ -20,13 +21,16 @@ body {
 #imageHeaderBar {
     background-color: #111;
 }
+
 #imageInfos,
 #infoSwitcher.infohidden {
     background-color: #333;
 }
+
 #thePicturePage #comments {
     background-color: #333;
 }
+
 #pictureCommentList li {
     background-color: #444;
 }
@@ -39,28 +43,31 @@ body {
 .header_notes {
     background-color: #555;
 }
+
 .thumbnailCategory,
 .commentElement {
     background-color: #333;
 }
+
 .message {
     background-color: #666;
 }
 
-INPUT[type="text"],
-INPUT[type="password"],
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-INPUT[type="file"],
-SELECT,
-TEXTAREA,
-OPTION {
+input[type="text"],
+input[type="password"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="file"],
+select,
+textarea,
+option {
     background-color: #555;
 }
-INPUT:focus,
-SELECT:focus,
-TEXTAREA:focus {
+
+input:focus,
+select:focus,
+textarea:focus {
     background-color: #666;
 }
 
@@ -70,39 +77,47 @@ body,
 legend {
     color: #aaa;
 }
+
 a {
     color: #ccc;
 }
+
 a:hover {
     color: #fff;
 }
-INPUT.rateButton {
+
+input.rateButton {
     color: #fff;
 }
-H1,
-H3,
-INPUT.rateButtonSelected {
+
+h1,
+h3,
+input.rateButtonSelected {
     color: #ccc;
 }
+
 .message {
     color: #fff;
 }
+
 .commentContent .comments_toggle:hover {
     color: #fff;
 }
-INPUT[type="text"],
-INPUT[type="password"],
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-INPUT[type="file"],
-SELECT,
-TEXTAREA {
+
+input[type="text"],
+input[type="password"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="file"],
+select,
+textarea {
     color: #ccc;
 }
-INPUT:focus,
-SELECT:focus,
-TEXTAREA:focus {
+
+input:focus,
+select:focus,
+textarea:focus {
     color: #fff;
 }
 
@@ -113,10 +128,12 @@ TEXTAREA:focus {
 .content .titrePage {
     border-bottom: 2px solid #444;
 }
+
 #imageHeaderBar {
     border: solid 0 #444;
     border-bottom-width: 2px;
 }
+
 #copyright {
     border-top-width: 2px;
     position: fixed;
@@ -126,24 +143,30 @@ TEXTAREA:focus {
     z-index: 500;
     background-color: inherit;
 }
+
 #content .calendarTitleBar {
     border-bottom: none;
 }
+
 .calendarTitle {
     border-top: 2px solid #444;
 }
+
 .switchBox {
     border: 1px solid #000;
 }
+
 .switchBoxTitle {
     border-bottom: 1px solid #444;
 }
-INPUT,
-SELECT,
-TEXTAREA {
+
+input,
+select,
+textarea {
     border: 1px solid #666;
 }
-FIELDSET {
+
+fieldset {
     border: 2px solid #444;
 }
 
@@ -151,6 +174,7 @@ FIELDSET {
 legend {
     font-style: normal;
 }
+
 #qsearchInput {
     margin-left: -20px;
 }
@@ -158,10 +182,11 @@ legend {
 /* icons */
 
 .pwg-icon {
-    background-image: url(icon/icons_sprite.png);
+    background-image: url("icon/icons_sprite.png");
 }
-A:hover .pwg-icon {
-    background-image: url(icon/icons_sprite-hover.png);
+
+a:hover .pwg-icon {
+    background-image: url("icon/icons_sprite-hover.png");
 }
 
 /* general rules */
@@ -170,9 +195,11 @@ body {
     margin: 5px 0;
     padding-bottom: 50px;
 }
+
 a:hover {
     border-bottom: none;
 }
+
 #copyright {
     padding: 0 4px 0 0;
     text-align: right;
@@ -185,10 +212,12 @@ a:hover {
 .contentWithMenu {
     margin-left: 240px;
 }
+
 #the_page #content.menuhidden,
 #the_page > .content.menuhidden {
     margin-left: 35px;
 }
+
 #the_page #content,
 #the_page > .content {
     margin-right: 0;
@@ -199,14 +228,17 @@ a:hover {
     margin-bottom: 4px;
     padding-bottom: 4px;
 }
+
 #thePicturePage #content {
     padding-bottom: 0;
 }
+
 .content .titrePage {
     padding: 0;
     margin-bottom: 4px;
 }
-.content .titrePage H2 {
+
+.content .titrePage h2 {
     line-height: 20px;
     padding: 8px 0 0 2px;
 }
@@ -220,19 +252,22 @@ a:hover {
     margin: 28px 8px 10px 0;
     padding: 0;
 }
-#menubar DT {
+
+#menubar dt {
     text-align: left;
 }
+
 #menubar dd {
     padding: 0 0 1em 1em;
 }
+
 #menubar .pwg-icon-filter {
     display: none;
 }
 
-#quickconnect FIELDSET {
+#quickconnect fieldset {
     margin: 0 10px 0 -10px;
-    border: 2px solid #444444;
+    border: 2px solid #444;
 }
 
 /* switchers */
@@ -250,10 +285,12 @@ a:hover {
 #infoSwitcher.infohidden {
     border-radius: 10px 0 0 10px;
 }
+
 #menubar,
 #the_page #menuSwitcher.menuhidden {
     border-radius: 0 10px 10px 0;
 }
+
 #the_page #menuSwitcher.menuhidden {
     width: 25px;
     margin-left: 0;
@@ -284,6 +321,7 @@ a:hover {
     margin: auto;
     overflow: visible;
 }
+
 #theImage.infohidden {
     width: 100%;
 }
@@ -293,6 +331,7 @@ a:hover {
     margin: 2px 0;
     cursor: pointer;
 }
+
 .noCommentContent #commentsSwitcher {
     display: none;
 }
@@ -302,27 +341,35 @@ a:hover {
     height: 16px;
     margin: 8px 5px 8px 4px;
 }
+
 .switchArrow {
     background: transparent url("icon/arrows_ccc.png");
 }
+
 .switchArrow:hover {
     background: transparent url("icon/arrows_fff.png");
 }
+
 .menuhidden .switchArrow {
     background-position: 0 0;
 }
+
 .menushown .switchArrow {
     background-position: -16px 0;
 }
+
 .infohidden .switchArrow {
     background-position: -16px 0;
 }
+
 .infoshown .switchArrow {
     background-position: 0 0;
 }
+
 .commentshidden .switchArrow {
     background-position: -48px 0;
 }
+
 .commentsshown .switchArrow {
     background-position: -32px 0;
 }
@@ -330,11 +377,12 @@ a:hover {
 /* switchboxes */
 
 .switchBox {
-    border-radius: 4px 4px 4px 4px;
+    border-radius: 4px;
     padding: 0.5em 10px;
     text-align: left;
     z-index: 100;
 }
+
 .derivativeSizeDetails {
     display: none;
 }
@@ -344,6 +392,7 @@ a:hover {
 #thumbnails {
     padding-top: 5px;
 }
+
 .thumbnailCategory .illustration,
 .commentElement .illustration {
     margin: 2px;
@@ -355,16 +404,20 @@ a:hover {
 .contentWithMenu #imageHeaderBar {
     padding: 0;
 }
+
 #imageHeaderBar {
     padding: 0 0 0 10px;
 }
+
 #imageHeaderBar {
     width: auto;
 }
+
 #imageHeaderBar h2 {
     font-size: 100%;
     font-weight: inherit;
 }
+
 #imageHeaderBar .browsePath {
     display: inline-block;
     float: left;
@@ -374,6 +427,7 @@ a:hover {
     font-weight: bold;
     margin: 0;
 }
+
 #imageToolBar .imageNumber {
     display: inline-block;
     float: right;
@@ -382,14 +436,17 @@ a:hover {
     min-width: 40px;
     text-align: center;
 }
+
 #imageToolBar {
     margin-top: -28px;
     margin-bottom: 0;
     float: right;
 }
+
 #thePicturePage .pwg-button {
     width: 26px;
 }
+
 #thePicturePage .actionButtons {
     margin-right: 26px;
 }
@@ -399,18 +456,20 @@ a:hover {
     width: 100%;
     position: relative;
 }
+
 #theImage {
     display: inline-block;
     width: 75%;
     vertical-align: top;
     overflow: auto;
-    padding: 10px 0 5px 0;
+    padding: 10px 0 5px;
 }
 
 .rateButtonStarFull {
     background: url("icon/rating-stars.png") no-repeat -16px center;
     width: 16px;
 }
+
 .rateButtonStarEmpty {
     background: url("icon/rating-stars.png") no-repeat 0 center;
     width: 16px;
@@ -425,7 +484,7 @@ a:hover {
     padding-top: 35px;
     padding-bottom: 5px;
     margin: 10px 0 10px 0.5%;
-    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 #imageInfos .navThumbs {
@@ -434,28 +493,35 @@ a:hover {
     margin: auto;
     padding: 0 5px;
 }
+
 #imageInfos .navThumb {
     position: relative;
     margin: 0;
     overflow: hidden;
 }
+
 #imageInfos #linkPrev {
     float: left;
 }
+
 #imageInfos #linkNext {
     float: right;
 }
+
 #imageInfos .prevThumbHover {
-    background: transparent url(icon/none.png) no-repeat center center;
+    background: transparent url("icon/none.png") no-repeat center center;
 }
+
 #imageInfos .prevThumbHover:hover {
-    background: transparent url(icon/img_prev.png) no-repeat center center;
+    background: transparent url("icon/img_prev.png") no-repeat center center;
 }
+
 #imageInfos .nextThumbHover {
-    background: transparent url(icon/none.png) no-repeat center center;
+    background: transparent url("icon/none.png") no-repeat center center;
 }
+
 #imageInfos .nextThumbHover:hover {
-    background: transparent url(icon/img_next.png) no-repeat center center;
+    background: transparent url("icon/img_next.png") no-repeat center center;
 }
 
 #imageInfos dl.imageInfoTable {
@@ -463,21 +529,25 @@ a:hover {
     padding: 0 15px;
     margin: 12px auto;
 }
+
 #imageInfos .imageInfo {
     display: block;
     line-height: 16px;
 }
+
 #imageInfos .imageInfo dt {
     display: block;
     font-weight: bold;
     text-align: left;
     padding: 0;
 }
+
 #imageInfos .imageInfo dd {
     display: block;
     text-align: left;
     margin: 0 0 5px 20px;
 }
+
 #imageInfos h3 {
     margin: 20px 0 10px;
 }
@@ -488,12 +558,15 @@ a:hover {
     padding: 2px 5px;
     position: relative;
 }
+
 #thePicturePage #comments h3 {
     margin: 10px 0;
 }
+
 #thePicturePage #comments form {
     margin: 10px 0;
 }
+
 #thePicturePage #comments fieldset {
     margin: 0 1em;
 }
@@ -501,6 +574,7 @@ a:hover {
 .commentshidden #pictureComments {
     display: none;
 }
+
 .commentContent .comments_toggle {
     cursor: pointer;
 }
@@ -510,9 +584,11 @@ a:hover {
     width: 48%;
     padding: 0 1%;
 }
+
 #commentAdd {
     float: left;
 }
+
 #pictureCommentList {
     float: right;
 }
@@ -523,50 +599,58 @@ a:hover {
     font-family: Arial, Helvetica, sans-serif;
     font-size: 100%;
 }
+
 #pictureCommentList .commentsOrder {
     float: left;
     margin-bottom: 5px;
 }
+
 #pictureCommentList .navigationBar {
     float: right;
     margin-bottom: 5px;
 }
+
 #pictureComments h4 {
     margin: 0;
 }
+
 #pictureComments form p {
     margin: 5px 0;
 }
+
 #pictureComments form p textarea {
     margin: 10px 0;
 }
-#pictureComments INPUT {
+
+#pictureComments input {
     margin: 10px;
 }
-#pictureComments INPUT[type="submit"] {
+
+#pictureComments input[type="submit"] {
     margin: 0;
 }
+
 .commentElement .description {
     padding: 5px;
 }
 
 /* tag page */
 
-FIELDSET.tagLetter,
-LEGEND.tagLetterLegend,
-TR.tagLine {
+fieldset.tagLetter,
+legend.tagLetterLegend,
+tr.tagLine {
     border-color: #333;
 }
 
-FIELDSET.tagLetter {
+fieldset.tagLetter {
     width: 250px;
 }
 
-TABLE.tagLetterContent {
+table.tagLetterContent {
     font-size: inherit;
 }
 
-TD.nbEntries {
+td.nbEntries {
     white-space: nowrap;
 }
 
@@ -581,6 +665,7 @@ TD.nbEntries {
 #the_page .content .stuffs {
     margin: 0 !important;
 }
+
 .categoryActions .theme_menuf {
     display: none;
 }

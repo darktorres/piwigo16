@@ -13,19 +13,19 @@ body {
     color: #f3f6f9;
 }
 
-#copyright A:hover {
+#copyright a:hover {
     color: #5889ad;
     font-weight: normal;
     text-shadow: none;
     text-decoration: underline;
 }
 
-#copyright A {
+#copyright a {
     color: #f3f6f9;
 }
 
 .infos {
-    background: #096a09 url(../../default/icon/infos.png) no-repeat center right;
+    background: #096a09 url("../../default/icon/infos.png") no-repeat center right;
     color: #f3f6f9;
 }
 
@@ -58,12 +58,12 @@ h2 {
     text-shadow: none;
 }
 
-H3,
+h3,
 label {
     color: #93c2d6;
 }
 
-A {
+a {
     color: #93c2d6;
 }
 
@@ -77,29 +77,29 @@ a:hover {
     background-color: #7ca2bc;
 }
 
-#menubar UL {
-    border-radius: 0px;
+#menubar ul {
+    border-radius: 0;
 }
 
 #menubar dt {
     color: #3f6379;
 }
 
-#menubar dt A:hover {
+#menubar dt a:hover {
     color: white;
     text-shadow: none;
 }
 
-#menubar dt A {
+#menubar dt a {
     color: #3f6379;
 }
 
-#commentAdd INPUT[type="text"],
-INPUT[type="password"],
-#commentAdd SELECT,
-#commentAdd TEXTAREA,
+#commentAdd input[type="text"],
+input[type="password"],
+#commentAdd select,
+#commentAdd textarea,
 #comments input[type="text"],
-#comments TEXTAREA {
+#comments textarea {
     background-color: #f2f2f2;
     color: #2e4756;
 }
@@ -128,37 +128,37 @@ INPUT[type="password"],
 }
 
 .selectize-control .plugin-remove_button [data-value] .remove {
-    border-left-color: #333333;
+    border-left-color: #333;
 }
 
-#menubar DD {
+#menubar dd {
     background-color: #5889ad;
     color: #c0d2df;
 }
 
-#menubar DD A:hover {
+#menubar dd a:hover {
     color: white;
 }
 
-#menubar DD A {
+#menubar dd a {
     color: #c0d2df;
 }
 
-#menubar INPUT {
+#menubar input {
     background-image: none;
     font-family: "Open Sans", sans-serif;
     background-color: #f2f2f2;
-    border-radius: 0px;
+    border-radius: 0;
     cursor: pointer;
 }
 
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-INPUT[type="button"]:hover,
-INPUT[type="submit"]:hover,
-INPUT[type="reset"]:hover {
-    border-radius: 0px;
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="button"]:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover {
+    border-radius: 0;
     color: #2e4756;
     background-color: #93c2d6;
 }
@@ -174,7 +174,7 @@ INPUT[type="reset"]:hover {
 
 .switchBox {
     background-color: #5889ad !important;
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 .switchCheck {
@@ -189,7 +189,8 @@ INPUT[type="reset"]:hover {
     color: #9cb9cf;
     font-size: 12px;
     font-weight: normal;
-    /*text-shadow:0px 0px 5px black;*/
+
+    /* text-shadow:0px 0px 5px black; */
 }
 
 #menubar li,
@@ -197,11 +198,12 @@ INPUT[type="reset"]:hover {
     padding: 5px;
 }
 
-#menubar LI.selected > A {
+#menubar li.selected > a {
     font-weight: normal;
     text-decoration: none;
     color: white;
-    /*text-shadow:0px 0px 5px black;*/
+
+    /* text-shadow:0px 0px 5px black; */
 }
 
 .wide .imageInfoTable,
@@ -234,7 +236,7 @@ INPUT[type="reset"]:hover {
     text-decoration: underline;
 }
 
-.wide .imageInfo DT {
+.wide .imageInfo dt {
     font-weight: normal;
     color: #c0d2df;
 }
@@ -248,7 +250,7 @@ INPUT[type="reset"]:hover {
     background-color: #2e4756;
 }
 
-A .pwg-icon {
+a .pwg-icon {
     color: #326c84;
     text-shadow: none;
 }
@@ -263,7 +265,7 @@ A .pwg-icon {
 }
 
 .pwg-state-default .pwg-button {
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 fieldset h3,
@@ -285,18 +287,18 @@ fieldset legend {
     padding-top: 20px;
 }
 
-#imageHeaderBar H2 {
+#imageHeaderBar h2 {
     color: #2e4756;
     text-shadow: none;
 }
 
-.titrePage H2 A:hover {
+.titrePage h2 a:hover {
     color: #2e4756;
     text-shadow: none;
     text-decoration: underline;
 }
 
-.titrePage H2 A {
+.titrePage h2 a {
     color: #2e4756;
     text-shadow: none;
 }
@@ -307,17 +309,17 @@ fieldset legend {
     background-color: #2c465a;
 }
 
-.titrePage H2 span.badge {
+.titrePage h2 span.badge {
     background-color: #7ca2bc;
     color: #fff;
 }
 
-.titrePage A {
+.titrePage a {
     color: #93c2d6;
     font-weight: normal;
 }
 
-.titrePage A:hover {
+.titrePage a:hover {
     color: white;
     text-decoration: underline;
 }
@@ -327,12 +329,12 @@ fieldset legend {
     padding: 10px;
 }
 
-.titrePage .switchBox A {
+.titrePage .switchBox a {
     color: #c0d2df;
     text-shadow: none;
 }
 
-.titrePage .switchBox A:hover {
+.titrePage .switchBox a:hover {
     color: white;
     text-shadow: none;
 }
@@ -350,23 +352,23 @@ fieldset legend {
     color: #3f6379;
 }
 
-#thePicturePage .titrePage A {
+#thePicturePage .titrePage a {
     color: #3f6379;
     text-shadow: none;
 }
 
-#thePicturePage .titrePage A:hover {
+#thePicturePage .titrePage a:hover {
     color: white;
 }
 
 .overDesc {
     color: white;
-    background-color: rgba(88, 137, 173, 0.9);
+    background-color: rgb(88, 137, 173, 0.9);
 }
 
 #derivativeSwitchBox,
 #sortOrderBox {
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 .switchCheck {
@@ -403,14 +405,14 @@ fieldset legend {
 #thumbnails > li,
 .albThumbs > li,
 .navThumb img {
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 .properties fieldset span label {
     color: #2e4756;
 }
 
-.imageInfo DT {
+.imageInfo dt {
     color: #c0d2df;
 }
 
@@ -449,11 +451,11 @@ hr {
 }
 
 .selectize-input > input,
-INPUT[type="text"],
-INPUT[type="password"],
-SELECT,
-TEXTAREA {
-    border-radius: 0px !important;
+input[type="text"],
+input[type="password"],
+select,
+textarea {
+    border-radius: 0 !important;
     color: #2e4756;
     background-color: #93c2d6;
 }
@@ -496,7 +498,7 @@ TEXTAREA {
 .contact input[type="text"],
 .contact textarea,
 .contact select {
-    border-radius: 0px;
+    border-radius: 0;
     background-color: #93c2d6;
     color: #2e4756;
 }
@@ -522,12 +524,12 @@ TEXTAREA {
 }
 
 .content .navigationBar,
-SPAN.calItem,
-TD.calDayCellFull,
-TD.calDayCellEmpty,
+span.calItem,
+td.calDayCellFull,
+td.calDayCellEmpty,
 .content .navigationBar:hover,
-SPAN.calItem:hover,
-TD.calDayCellEmpty:hover {
+span.calItem:hover,
+td.calDayCellEmpty:hover {
     color: #0391aa;
     border: none;
 }
@@ -554,12 +556,12 @@ TD.calDayCellEmpty:hover {
     color: #2e4756;
 }
 
-DIV.thumbHover {
+div.thumbHover {
     color: #93c2d6;
     border: 1px solid #93c2d6;
 }
 
-DIV.thumbHover:hover {
+div.thumbHover:hover {
     color: white;
     text-decoration: underline;
 }
@@ -574,8 +576,8 @@ DIV.thumbHover:hover {
     color: #16262e;
 }
 
-LEGEND.tagLetterLegend,
-FIELDSET.tagLetter {
+legend.tagLetterLegend,
+fieldset.tagLetter {
     border: none;
     color: #2e4756;
 }
@@ -594,7 +596,7 @@ td .nbEntries {
 }
 
 .selectize-control.plugin-remove_button [data-value] .remove {
-    border-left: solid 1px #333333;
+    border-left: solid 1px #333;
 }
 
 .message {
@@ -614,7 +616,7 @@ td .nbEntries {
 
 form.properties a {
     border: solid 1px;
-    border-radius: 0px;
+    border-radius: 0;
     padding: 2px 5px 5px 2px;
     margin: 0 5px;
 }
@@ -627,35 +629,41 @@ form.properties a {
     background-color: white !important;
 }
 
-@media screen and (max-width: 640px) {
+@media screen and (width <= 640px) {
     #menubar {
-        border-radius: 0px;
+        border-radius: 0;
         opacity: 1;
     }
+
     #copyright a {
         color: #f3f6f9;
     }
+
     #derivativeSwitchLink .pwg-icon pwg-icon-sizes {
         color: #2e4756;
     }
+
     #albumActionsSwitcher + .categoryActions .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
-    .actionButtons A .pwg-icon,
-    .actionButtons A .pwg-icon:hover {
+    .actionButtons a .pwg-icon,
+    .actionButtons a .pwg-icon:hover {
         color: #c0d2df !important;
         background-color: #5889ad !important;
     }
+
     #albumActionsSwitcher + .categoryActions {
-        border-radius: 0px;
-        box-shadow: 0px 0px transparent;
+        border-radius: 0;
+        box-shadow: 0 0 transparent;
         background-color: #5889ad;
     }
+
     .categoryActions a .pwg-icon {
         color: #c0d2df;
     }
-    #theTagsPage A .pwg-icon,
-    #theTagsPage A:hover .pwg-icon {
+
+    #theTagsPage a .pwg-icon,
+    #theTagsPage a:hover .pwg-icon {
         color: #2e4756;
     }
 }
@@ -664,7 +672,7 @@ form.properties a {
     background-color: #afc6d6;
 }
 
-.thumbnailCategory .description H3 a {
+.thumbnailCategory .description h3 a {
     color: #3f6379;
 }
 
@@ -676,7 +684,7 @@ form.properties a {
 .filter-manager-popin,
 .tags-found-popin,
 .albums-found-popin {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgb(0, 0, 0, 0.7);
 }
 
 .filter-manager-popin-container,
@@ -750,7 +758,7 @@ form.properties a {
 
 .filter-form {
     background: #5889ad;
-    box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 5px 10px 0 rgb(0, 0, 0, 0.6);
     color: black;
 }
 
@@ -813,7 +821,7 @@ form.properties a {
 
 .head-button-2 {
     background: #fafafa;
-    box-shadow: 0px 2px #00000024;
+    box-shadow: 0 2px #00000024;
 }
 
 .head-button-2:hover {
@@ -840,7 +848,7 @@ form.properties a {
 }
 
 .linkedAlbumPopIn {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgb(0, 0, 0, 0.7);
 }
 
 .linkedAlbumPopInContainer {
@@ -858,7 +866,7 @@ form.properties a {
 
 .search-result-item {
     background-color: #fafafa;
-    box-shadow: 0px 2px #00000024;
+    box-shadow: 0 2px #00000024;
     color: #777;
 }
 

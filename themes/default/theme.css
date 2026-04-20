@@ -1,4 +1,5 @@
 @import "iconset.css";
+
 /**
  * Menubar
  */
@@ -10,9 +11,9 @@
     width: 18em;
 }
 
-#menubar DL,
-#menubar DT,
-#menubar DD {
+#menubar dl,
+#menubar dt,
+#menubar dd {
     margin: 0;
     padding: 0;
     display: block;
@@ -24,32 +25,34 @@
 }
 
 /* H2 properties copied here */
-#menubar DT {
+#menubar dt {
     font-weight: bold;
     padding: 5px;
     font-size: 120%;
     text-align: center;
 }
 
-#menubar UL,
-#menubar FORM,
-#menubar P {
+#menubar ul,
+#menubar form,
+#menubar p {
     font-size: 92%;
     margin: 10px 0 10px 5px;
 }
-#menubar UL {
+
+#menubar ul {
     list-style-type: square;
     list-style-position: inside;
     padding: 0 0 0 2px;
 }
-#menubar UL UL {
+
+#menubar ul ul {
     font-size: 100%;
     margin-top: 0;
     margin-bottom: 0;
 }
 
-/*IE6 needs override because of > selector*/
-#menubar LI.selected > A {
+/* IE6 needs override because of > selector */
+#menubar li.selected > a {
     font-weight: bold;
 }
 
@@ -58,22 +61,22 @@
     font-style: italic;
 }
 
-#mbCategories IMG {
-    vertical-align: bottom; /*otherwise line height changes*/
+#mbCategories img {
+    vertical-align: bottom; /* otherwise line height changes */
 }
 
-#menubar INPUT {
+#menubar input {
     text-indent: 2px;
 }
 
 /* quickconnect form */
 
-#quickconnect FIELDSET {
+#quickconnect fieldset {
     margin: 0 5px 0 0;
-    padding: 0; /*IE6 requires padding 0*/
+    padding: 0; /* IE6 requires padding 0 */
 }
 
-#quickconnect DIV {
+#quickconnect div {
     margin: 8px 5px;
     padding: 0;
 }
@@ -83,7 +86,7 @@
     margin: 5px 0;
 }
 
-#menuTagCloud SPAN {
+#menuTagCloud span {
     white-space: nowrap;
     margin-right: 5px;
 }
@@ -134,6 +137,7 @@
 .badge.badgeCategories::before {
     content: "(";
 }
+
 .badge.badgeCategories::after {
     content: ")";
 }
@@ -176,11 +180,11 @@
     float: right;
 }
 
-.categoryActions LI {
+.categoryActions li {
     display: inline;
 }
 
-/* begin chronology/calendar elements*/
+/* begin chronology/calendar elements */
 .calendarViews {
     float: right;
     margin: 5px 5px 0 0;
@@ -207,15 +211,15 @@
     margin: 0 2px;
 }
 
-/* nice looking month calendar*/
-TABLE.calMonth {
+/* nice looking month calendar */
+table.calMonth {
     border: 0;
     border-collapse: collapse;
-    margin-bottom: 10px; /*<-IE ignores this */
+    margin-bottom: 10px; /* <-IE ignores this */
 }
 
-TD.calDayCellFull,
-TD.calDayCellEmpty {
+td.calDayCellFull,
+td.calDayCellEmpty {
     vertical-align: top;
     font-weight: bold;
     font-size: 18px;
@@ -249,11 +253,11 @@ TD.calDayCellEmpty {
     width: 100%;
 }
 
-.thumbnailCategories LI {
+.thumbnailCategories li {
     margin: 0;
     padding: 0;
     float: left;
-    width: 49.7%; /* 49.7% for 2 per line, 33.2% for 3 per line*/
+    width: 49.7%; /* 49.7% for 2 per line, 33.2% for 3 per line */
 }
 
 .thumbnailCategory {
@@ -265,22 +269,23 @@ TD.calDayCellEmpty {
 .thumbnailCategory .description {
     font-size: 90%;
     overflow: auto;
-    /*width: inherit;*/
+
+    /* width: inherit; */
 }
 
-.thumbnailCategory .description H3 {
+.thumbnailCategory .description h3 {
     text-align: left;
     margin: 0;
     padding: 0.1em;
     font-size: 120%;
 }
 
-.thumbnailCategory .description P {
+.thumbnailCategory .description p {
     margin: 0;
 }
 
 .illustration {
-    /*also used by comment lists*/
+    /* also used by comment lists */
     text-align: left;
     margin: 2px 0 0 2px;
     float: left;
@@ -318,7 +323,8 @@ TD.calDayCellEmpty {
 
 .commentElement .description {
     overflow: auto;
-    /*width: inherit;*/
+
+    /* width: inherit; */
 }
 
 /* Thumbnails */
@@ -330,18 +336,20 @@ TD.calDayCellEmpty {
     list-style: none;
     text-align: center; /* to center the whole collection in .content */
 }
-.thumbnails LI {
+
+.thumbnails li {
     display: inline;
 }
 
 .thumbnails .wrap1 {
-    margin: 0 7px 5px 7px;
+    margin: 0 7px 5px;
     display: table-cell;
     display: inline-table;
     display: inline-block; /* Why 3 display option ??? */
     vertical-align: top; /* OK with Opera and IE6 not Geko */
     text-align: center; /* to center the thumbnail and legend in Geko/Opera */
 }
+
 .thumbnails .wrap2 {
     margin: 0; /* important reset the margins */
     display: table-cell; /* block prevents vertical-align here */
@@ -349,19 +357,20 @@ TD.calDayCellEmpty {
     border-radius: 4px; /* round corners with CSS3 compliant browsers */
 }
 
-.thumbnails .wrap2 A {
+.thumbnails .wrap2 a {
     display: block;
     border-bottom: 0;
 }
-.thumbnails IMG {
+
+.thumbnails img {
     vertical-align: middle;
     max-width: 100%;
 }
 
-.thumbnails SPAN.thumbLegend {
+.thumbnails span.thumbLegend {
     overflow: hidden; /* oversized legend is clipped */
     display: block; /* display: none; if you don't want legend */
-    height: 4em; /* legend height (don't set auto to be Gecko friendly)*/
+    height: 4em; /* legend height (don't set auto to be Gecko friendly) */
 }
 
 /**
@@ -384,7 +393,7 @@ TD.calDayCellEmpty {
     margin: -20px 9px 0 0;
 }
 
-#imageHeaderBar H2 {
+#imageHeaderBar h2 {
     display: inline;
     text-align: center;
     padding: 0;
@@ -400,9 +409,11 @@ TD.calDayCellEmpty {
 #imageToolBar .actionButtons {
     float: left;
 }
+
 #imageToolBar .navigationButtons {
     float: right;
 }
+
 #imageToolBar .pwg-button {
     width: 42px;
 }
@@ -415,7 +426,7 @@ TD.calDayCellEmpty {
     display: none;
     position: absolute;
     left: 0;
-    top: 0; /*left, right set through js*/
+    top: 0; /* left, right set through js */
 }
 
 .switchBoxTitle {
@@ -435,7 +446,7 @@ TD.calDayCellEmpty {
 }
 
 #imageInfos {
-    position: relative; /*for IE7 positioning of "who can see this photo"*/
+    position: relative; /* for IE7 positioning of "who can see this photo" */
     min-height: 120px;
 }
 
@@ -456,8 +467,8 @@ TD.calDayCellEmpty {
     height: 50px;
 }
 
-DIV.thumbHover {
-    /*only first & last holders are divs*/
+div.thumbHover {
+    /* only first & last holders are divs */
     width: 108px;
     height: 118px;
     border: 1px solid gray;
@@ -465,8 +476,8 @@ DIV.thumbHover {
     line-height: 1.2;
 }
 
-.imageInfoTable UL {
-    /*this is the album list*/
+.imageInfoTable ul {
+    /* this is the album list */
     margin: 0;
     padding: 0 0 0 1em;
     list-style-type: square;
@@ -506,52 +517,54 @@ DIV.thumbHover {
 /**
  * Default Layout
  */
-BODY {
+body {
     margin: 5px;
     padding: 0;
     font-size: 0.8em;
     font-family: Arial, Helvetica, sans-serif;
-    min-width: 60em; /* ~ 3* #menubar width; width of the page before getting a scrollbar; IE6 doesn't get that*/
+    min-width: 60em; /* ~ 3* #menubar width; width of the page before getting a scrollbar; IE6 doesn't get that */
 }
 
-IMG {
-    border: 0; /*IE<=9 adds border for linked images*/
+img {
+    border: 0; /* IE<=9 adds border for linked images */
 }
 
 #thePopuphelpPage {
-    min-width: 0; /*reset the min width*/
+    min-width: 0; /* reset the min width */
 }
 
-H1 {
+h1 {
     text-align: center;
     font-size: 150%;
     font-weight: bold;
     padding: 0;
-    margin: 0.5em 0 1em 0;
+    margin: 0.5em 0 1em;
 }
 
-H2 {
+h2 {
     margin: 0;
     padding: 5px 0.5em;
     text-align: left;
     font-size: 120%;
 }
 
-A {
+a {
     text-decoration: none;
 }
-A:hover {
+
+a:hover {
     border-bottom: 1px solid #858460;
 }
-A.pwg-state-default:hover {
-    border-bottom: 0; /*reset above for icons*/
+
+a.pwg-state-default:hover {
+    border-bottom: 0; /* reset above for icons */
 }
 
 #copyright {
     clear: both;
     font-size: 83%;
     text-align: center;
-    margin: 0 0 10px 0;
+    margin: 0 0 10px;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -560,24 +573,24 @@ A.pwg-state-default:hover {
     background-color: inherit;
 }
 
-INPUT,
-SELECT {
+input,
+select {
     margin: 0;
     font-size: 1em; /* <= some browsers don't set it correctly */
 }
 
-TABLE {
+table {
     /* horizontally centered */
     margin-left: auto;
     margin-right: auto;
 }
 
-FORM {
+form {
     padding: 0;
     margin: 0;
 }
 
-FORM P {
+form p {
     text-align: center;
     margin-top: 2em;
     margin-bottom: 2em;
@@ -588,30 +601,30 @@ FORM P {
  * below the label. Use an UL to make a group (radiobox for instance).
  * Use a SPAN to group objects in line
  */
-FIELDSET {
+fieldset {
     padding: 1em;
     margin: 1em;
 }
 
-.filter UL {
+.filter ul {
     display: block;
     float: left;
     margin: 0 1em 1em 0;
     padding: 0;
 }
 
-.filter LI {
+.filter li {
     list-style: none;
     margin-bottom: 0.5em;
 }
 
-.filter FIELDSET {
+.filter fieldset {
     padding-bottom: 0;
 }
 
-.filter P {
+.filter p {
     text-align: left;
-    margin: 0 0 15px 0;
+    margin: 0 0 15px;
     line-height: 20px;
 }
 
@@ -621,8 +634,8 @@ FIELDSET {
     width: 500px;
 }
 
-.filter P input[type="checkbox"],
-.filter P input[type="radio"] {
+.filter p input[type="checkbox"],
+.filter p input[type="radio"] {
     vertical-align: middle;
     margin-top: -4px;
 }
@@ -631,24 +644,24 @@ FIELDSET {
     margin-left: 1em;
 }
 
-.filter P LABEL {
+.filter p label {
     margin-right: 1em;
 }
 
-.properties UL {
+.properties ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
 }
 
-.properties LI {
+.properties li {
     margin-bottom: 0.5em;
     padding: 0;
     line-height: 1.8em;
     clear: left;
 }
 
-.properties SPAN.property {
+.properties span.property {
     font-weight: bold;
     float: left;
     width: 50%;
@@ -664,7 +677,7 @@ FIELDSET {
     margin: 1em;
 }
 
-#fullTagCloud SPAN {
+#fullTagCloud span {
     white-space: nowrap;
     margin: 0 2px;
 }
@@ -672,15 +685,19 @@ FIELDSET {
 .tagLevel5 {
     font-size: 150% !important;
 }
+
 .tagLevel4 {
     font-size: 140% !important;
 }
+
 .tagLevel3 {
     font-size: 120% !important;
 }
+
 .tagLevel2 {
     font-size: 100% !important;
 }
+
 .tagLevel1 {
     font-size: 90% !important;
 }
@@ -690,31 +707,32 @@ FIELDSET {
     display: none;
 }
 
-#thePopuphelpPage P {
+#thePopuphelpPage p {
     padding: 0.5em;
 }
 
-#thePopuphelpPage DL {
+#thePopuphelpPage dl {
     margin: 0 25px 25px;
 }
 
-TR.tagLine {
+tr.tagLine {
     border-bottom: 1px solid #ddd;
 }
-TD.nbEntries {
+
+td.nbEntries {
     text-align: right;
     font-style: italic;
     font-size: 90%;
 }
 
-FIELDSET.tagLetter {
+fieldset.tagLetter {
     border: 1px solid #d3d3d3;
     width: 200px;
     margin: 0.5em;
     padding: 10px;
 }
 
-LEGEND.tagLetterLegend {
+legend.tagLetterLegend {
     border: 1px solid #d3d3d3;
     font-size: 120%;
     font-weight: bold;
@@ -722,7 +740,7 @@ LEGEND.tagLetterLegend {
     font-style: normal;
 }
 
-TABLE.tagLetterContent {
+table.tagLetterContent {
     width: 100%;
     font-size: 80%;
     border-collapse: collapse;
@@ -733,7 +751,7 @@ TABLE.tagLetterContent {
 }
 
 /* jQuery datepicker */
-IMG.ui-datepicker-trigger {
+img.ui-datepicker-trigger {
     cursor: pointer;
 }
 
@@ -743,38 +761,39 @@ IMG.ui-datepicker-trigger {
 
 /* So that non-links are slightly greyed out */
 .content .navigationBar,
-SPAN.calItem,
-TD.calDayCellEmpty {
+span.calItem,
+td.calDayCellEmpty {
     color: #b0b0b0;
 }
 
 /* Tables & forms */
+
 /* IE <= 6 is so bad with this that you can't merge with the following rule */
-INPUT[type="text"],
-INPUT[type="password"],
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-INPUT[type="file"] {
+input[type="text"],
+input[type="password"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="file"] {
     color: #000;
     background-color: #d3d3d3; /* lightgrey */
 }
 
-SELECT,
-TEXTAREA {
+select,
+textarea {
     color: #000;
     background-color: #d3d3d3; /* lightgrey */
 }
 
-INPUT:focus,
-SELECT:focus,
-TEXTAREA:focus {
+input:focus,
+select:focus,
+textarea:focus {
     background-color: #f5f5f5; /* whitesmoke */
 }
 
 /* some theme set a border on INPUT  which is not pretty for radio/checkbox */
-INPUT[type="radio"],
-INPUT[type="checkbox"] {
+input[type="radio"],
+input[type="checkbox"] {
     border: none; /* <= Opera needs this */
 }
 
@@ -790,19 +809,19 @@ INPUT[type="checkbox"] {
     font-weight: bold;
     margin: 5px;
     border: 1px solid red;
-    background: #ffe1e1 url(icon/errors.png) no-repeat center right;
+    background: #ffe1e1 url("icon/errors.png") no-repeat center right;
     padding: 10px 50px 10px 10px;
 }
 
 /* Information box */
 .infos {
     color: #002000;
-    background: #98fb98 url(icon/infos.png) no-repeat center right;
+    background: #98fb98 url("icon/infos.png") no-repeat center right;
     margin: 5px;
     padding: 10px 50px 10px 10px;
 }
 
-/* Header message like upgrade*/
+/* Header message like upgrade */
 .header_msgs {
     text-align: center;
     font-weight: bold;
@@ -816,23 +835,24 @@ INPUT[type="checkbox"] {
 .header_notes {
     border: 1px solid #aaa;
     text-align: center;
-    background-image: url(icon/note.png);
+    background-image: url("icon/note.png");
     background-repeat: no-repeat;
     background-position: top left;
     font-weight: bold;
     margin: 14px;
-    padding: 5px 0 0 0;
+    padding: 5px 0 0;
 }
 
-LEGEND {
+legend {
     font-style: italic;
-    color: inherit; /*for IE*/
+    color: inherit; /* for IE */
 }
 
 #piwigoAbout {
     width: 600px;
     margin: 0 auto;
 }
+
 #linkToPiwigo {
     text-align: center;
 }
@@ -842,9 +862,6 @@ LEGEND {
     color: #333;
     margin-bottom: 1em;
     padding: 12px;
-    -moz-border-radius: 3px;
-    -khtml-border-radius: 3px;
-    -webkit-border-radius: 3px;
     border-radius: 3px;
 }
 
@@ -861,15 +878,17 @@ LEGEND {
     width: 48%;
     padding: 0 1%;
 }
+
 #commentAdd {
     float: left;
 }
+
 #pictureCommentList {
     float: right;
 }
 
 #commentAdd input[type="text"],
-#comments TEXTAREA {
+#comments textarea {
     max-width: 99%;
     width: 99%;
 }
@@ -886,14 +905,17 @@ LEGEND {
     float: left;
     margin-bottom: 5px;
 }
+
 #pictureCommentList .navigationBar {
     float: right;
     margin-bottom: 5px;
 }
+
 #pictureComments h4 {
     margin: 0;
 }
-#comments FORM P {
+
+#comments form p {
     margin: 5px 0;
     text-align: left;
 }
@@ -904,16 +926,19 @@ LEGEND {
     display: table;
     margin: auto;
 }
+
 .imageInfo {
     display: table-row;
     line-height: 20px;
 }
+
 .imageInfo dt {
     display: table-cell;
     text-align: right;
     font-weight: bold;
     padding-right: 0.5em;
 }
+
 .imageInfo dd {
     display: table-cell;
     text-align: left;
@@ -923,7 +948,7 @@ LEGEND {
 /* Selectize */
 .selectize-dropdown [data-selectable],
 .selectize-dropdown .optgroup-header {
-    padding: 0px 5px !important;
+    padding: 0 5px !important;
 }
 
 #TagsGroupRemoveTag span,
@@ -939,16 +964,20 @@ because of this it needs to specifically be added to each theme */
     /* margin-top:-15px; */
     margin-bottom: 30px;
 }
+
 .mcs-side-results.search-in-set-button p {
     margin: 0;
 }
+
 .mcs-side-results.search-in-set-button a {
     color: #777;
     font-weight: 600;
 }
+
 .mcs-side-results.search-in-set-button a::before {
     margin-right: 10px;
 }
+
 .mcs-side-results.search-in-set-button a:hover {
     color: #777;
     font-weight: 600;
@@ -964,7 +993,7 @@ because of this it needs to specifically be added to each theme */
 
 .mcs-side-results > div {
     background: #555;
-    box-shadow: 0px 2px #00000024;
+    box-shadow: 0 2px #00000024;
     position: relative;
     padding: 4px 10px;
     border-radius: 5px;
@@ -981,6 +1010,7 @@ because of this it needs to specifically be added to each theme */
     background: #444;
     color: #777;
 }
+
 .mcs-side-results > div:active {
     transform: translateY(2px);
     box-shadow: none;

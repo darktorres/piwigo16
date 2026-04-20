@@ -5,7 +5,7 @@
     text-align: center !important;
 }
 
-.thumbnailCategories LI:not(.gdthumb) {
+.thumbnailCategories li:not(.gdthumb) {
     width: 31% !important;
     margin-left: 15px !important;
 }
@@ -72,8 +72,8 @@
     font-size: 17px !important;
 }
 
-@media (max-width: 576px) {
-    .thumbnailCategories LI:not(.gdthumb) {
+@media (width <= 576px) {
+    .thumbnailCategories li:not(.gdthumb) {
         width: 75% !important;
         margin: 0 auto !important;
         float: unset;

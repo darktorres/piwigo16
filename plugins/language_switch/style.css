@@ -6,7 +6,7 @@
     display: none;
     position: absolute;
     left: 0;
-    top: 0; /*left, right set through js*/
+    top: 0; /* left, right set through js */
     background-color: #555;
     border: 1px solid #000;
 }
@@ -16,9 +16,11 @@
     margin-bottom: 5px;
     border-bottom: 1px solid #444;
 }
+
 #languageSwitchBox a {
     color: #aaa;
 }
+
 #languageSwitchBox a:hover {
     color: #ddd;
 }

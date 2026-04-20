@@ -13,18 +13,18 @@ body {
     background-color: rgb(220, 208, 192);
 }
 
-#copyright A:hover {
+#copyright a:hover {
     color: #373737;
     font-weight: normal;
     text-shadow: 1px 1px 1px #c0b283;
 }
 
-#copyright A {
+#copyright a {
     color: #373737;
 }
 
 .infos {
-    background: #096a09 url(../../default/icon/infos.png) no-repeat center right;
+    background: #096a09 url("../../default/icon/infos.png") no-repeat center right;
     color: #373737;
 }
 
@@ -38,7 +38,7 @@ h2 {
     font-weight: 700;
 }
 
-.albLegend H4 {
+.albLegend h4 {
     font-weight: 700;
 }
 
@@ -53,7 +53,7 @@ h2 {
 
 .albSymbol {
     color: #373737;
-    text-shadow: 0px 0px 10px #f4f4f4;
+    text-shadow: 0 0 10px #f4f4f4;
 }
 
 .albLegendRight .albSymbol {
@@ -61,12 +61,12 @@ h2 {
     text-shadow: none;
 }
 
-H3,
+h3,
 label {
     color: #c0b283;
 }
 
-A {
+a {
     color: #373737;
 }
 
@@ -80,25 +80,25 @@ a:hover {
     background-color: #c0b283;
 }
 
-#menubar UL {
-    border-radius: 0px;
+#menubar ul {
+    border-radius: 0;
 }
 
-#menubar dt A:hover {
+#menubar dt a:hover {
     color: #f4f4f4;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
 }
 
-#menubar dt A {
+#menubar dt a {
     color: #373737;
 }
 
-#commentAdd INPUT[type="text"],
-INPUT[type="password"],
-#commentAdd SELECT,
-#commentAdd TEXTAREA,
+#commentAdd input[type="text"],
+input[type="password"],
+#commentAdd select,
+#commentAdd textarea,
 #comments input[type="text"],
-#comments TEXTAREA {
+#comments textarea {
     background-color: #f2f2f2;
     color: #373737;
 }
@@ -127,40 +127,40 @@ INPUT[type="password"],
 }
 
 .selectize-control .plugin-remove_button [data-value] .remove {
-    border-left-color: #333333;
+    border-left-color: #333;
 }
 
-#menubar DD {
+#menubar dd {
     background-color: rgb(220, 208, 192);
     color: #373737;
 }
 
-#menubar DD A:hover {
+#menubar dd a:hover {
     color: #f4f4f4;
-    text-shadow: 0px 0px 10px #373737;
+    text-shadow: 0 0 10px #373737;
 }
 
-#menubar DD A {
+#menubar dd a {
     color: #373737;
 }
 
-#menubar INPUT {
+#menubar input {
     background-image: none;
     font-family: "Open Sans", sans-serif;
     background-color: rgb(220, 208, 192) !important;
-    border-radius: 0px;
+    border-radius: 0;
     cursor: pointer;
 }
 
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-INPUT[type="button"]:hover,
-INPUT[type="submit"]:hover,
-INPUT[type="reset"]:hover {
-    border-radius: 0px;
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="button"]:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover {
+    border-radius: 0;
     color: #f4f4f4;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
     background-color: #c0b283;
 }
 
@@ -174,7 +174,7 @@ INPUT[type="reset"]:hover {
 
 .switchBox {
     background-color: rgb(220, 208, 192);
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 .switchCheck {
@@ -184,20 +184,19 @@ INPUT[type="reset"]:hover {
 .badge {
     background-color: #c0b283;
     border-radius: 20px;
-    color: #f4f4f4;
     color: #e8e8ea;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
 }
 
-#menubar LI.selected > A {
+#menubar li.selected > a {
     color: #f4f4f4;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
 }
 
 .wide .imageInfoTable,
 .wide #imageInfos {
     background-color: rgb(220, 208, 192);
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 .imageInfoTable h3 {
@@ -222,10 +221,10 @@ INPUT[type="reset"]:hover {
 .wide #imageInfos a:hover {
     color: #373737;
     font-weight: normal;
-    text-shadow: 0px 0px 10px #c0b283;
+    text-shadow: 0 0 10px #c0b283;
 }
 
-.wide .imageInfo DT {
+.wide .imageInfo dt {
     color: #c0b283;
 }
 
@@ -238,7 +237,7 @@ INPUT[type="reset"]:hover {
     background-color: #dcd0c0;
 }
 
-A .pwg-icon {
+a .pwg-icon {
     color: #998e68;
     text-shadow: none;
 }
@@ -252,7 +251,7 @@ A .pwg-icon {
 }
 
 .pwg-state-default .pwg-button {
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 fieldset h3,
@@ -279,46 +278,46 @@ dd {
     color: #373737;
 }
 
-#imageHeaderBar H2 {
+#imageHeaderBar h2 {
     color: #373737;
     text-shadow: none;
 }
 
-.titrePage H2 A:hover {
+.titrePage h2 a:hover {
     color: #c0b283;
 }
 
-.titrePage H2 A {
+.titrePage h2 a {
     color: #373737;
     text-shadow: none;
 }
 
-.titrePage H2 span.badge {
+.titrePage h2 span.badge {
     background-color: #c0b283;
     border-radius: 20px;
     color: #fff;
 }
 
-.titrePage A,
-.titrePage A:hover {
+.titrePage a,
+.titrePage a:hover {
     color: #373737;
     font-weight: normal;
 }
 
 .titrePage .switchBox {
     color: #f4f4f4;
-    text-shadow: 0px 0px 10px #373737;
+    text-shadow: 0 0 10px #373737;
 }
 
-.titrePage .switchBox A {
+.titrePage .switchBox a {
     color: #373737;
     text-shadow: none;
-    text-shadow: 0px 0px 10px #f4f4f4;
+    text-shadow: 0 0 10px #f4f4f4;
 }
 
-.titrePage .switchBox A:hover {
+.titrePage .switchBox a:hover {
     color: #f4f4f4;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
 }
 
 .browsePath {
@@ -334,25 +333,25 @@ dd {
     color: #373737;
 }
 
-#thePicturePage .titrePage A {
+#thePicturePage .titrePage a {
     color: #373737;
     text-shadow: none;
 }
 
-#thePicturePage .titrePage A:hover {
+#thePicturePage .titrePage a:hover {
     color: #f4f4f4;
-    text-shadow: 0px 0px 10px #373737;
+    text-shadow: 0 0 10px #373737;
 }
 
 .overDesc {
     color: #373737;
-    text-shadow: 0px 0px 10px #f4f4f4;
-    background-color: rgba(192, 178, 131, 0.8);
+    text-shadow: 0 0 10px #f4f4f4;
+    background-color: rgb(192, 178, 131, 0.8);
 }
 
 #derivativeSwitchBox,
 #sortOrderBox {
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 .switchCheck {
@@ -385,14 +384,14 @@ dd {
 #thumbnails > li,
 .albThumbs > li,
 .navThumb img {
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 .albThumbs:hover .properties fieldset span label {
     color: #373737;
 }
 
-.imageInfo DT {
+.imageInfo dt {
     color: #c0b283;
 }
 
@@ -429,12 +428,12 @@ hr {
 }
 
 .selectize-input > input,
-INPUT[type="text"],
-INPUT[type="password"],
-SELECT,
-TEXTAREA {
+input[type="text"],
+input[type="password"],
+select,
+textarea {
     background-color: #dcd0c0;
-    border-radius: 0px;
+    border-radius: 0;
     color: #373737;
 }
 
@@ -472,7 +471,7 @@ TEXTAREA {
 .contact input[type="text"],
 .contact textarea,
 .contact select {
-    border-radius: 0px;
+    border-radius: 0;
     background-color: #e8e8ea;
     color: #373737;
 }
@@ -481,7 +480,7 @@ TEXTAREA {
 .wide .navThumb,
 .wide .thumbHover {
     color: #c0b283;
-    text-shadow: 0px 0px 10px #f4f4f4;
+    text-shadow: 0 0 10px #f4f4f4;
 }
 
 .wide .thumbHover:hover {
@@ -498,15 +497,15 @@ TEXTAREA {
 }
 
 .content .navigationBar,
-SPAN.calItem,
+span.calItem,
 .content .navigationBar:hover,
-SPAN.calItem:hover {
+span.calItem:hover {
     color: #8e8e8e;
     border: none;
 }
 
-TD.calDayCellEmpty,
-TD.calDayCellEmpty:hover {
+td.calDayCellEmpty,
+td.calDayCellEmpty:hover {
     border: 1px solid #8e8e8e;
 }
 
@@ -519,15 +518,15 @@ TD.calDayCellEmpty:hover {
     color: #c0b283;
 }
 
-DIV.thumbHover {
+div.thumbHover {
     color: #c0b283;
     border: 1px solid #dcd0c0;
-    text-shadow: 0px 0px 10px #f4f4f4;
+    text-shadow: 0 0 10px #f4f4f4;
 }
 
-DIV.thumbHover:hover {
+div.thumbHover:hover {
     color: #373737;
-    text-shadow: 0px 0px 10px #c0b283;
+    text-shadow: 0 0 10px #c0b283;
 }
 
 #fullTagCloud span a {
@@ -540,8 +539,8 @@ DIV.thumbHover:hover {
     color: #c0b283;
 }
 
-LEGEND.tagLetterLegend,
-FIELDSET.tagLetter {
+legend.tagLetterLegend,
+fieldset.tagLetter {
     border: none;
     color: #373737;
 }
@@ -560,7 +559,7 @@ td .nbEntries {
 }
 
 .selectize-control.plugin-remove_button [data-value] .remove {
-    border-left: solid 1px #333333;
+    border-left: solid 1px #333;
 }
 
 .message {
@@ -587,7 +586,7 @@ ul.token-input-list li input {
 
 form.properties a {
     border: solid 1px;
-    border-radius: 0px;
+    border-radius: 0;
     padding: 2px 5px 5px 2px;
     margin: 0 5px;
 }
@@ -598,10 +597,11 @@ form.properties a {
     color: #373737;
 }
 
-@media screen and (max-width: 640px) {
+@media screen and (width <= 640px) {
     #menubar {
-        border-radius: 0px;
+        border-radius: 0;
     }
+
     #copyright a {
         color: #373737;
     }
@@ -609,22 +609,26 @@ form.properties a {
     #derivativeSwitchLink .pwg-icon pwg-icon-sizes {
         color: #373737;
     }
+
     #albumActionsSwitcher + .categoryActions .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
     #imageToolBar .actionButtons .pwg-button-text,
-    .actionButtons A .pwg-icon,
-    .actionButtons A .pwg-icon:hover {
+    .actionButtons a .pwg-icon,
+    .actionButtons a .pwg-icon:hover {
         color: #373737 !important;
     }
+
     #albumActionsSwitcher + .categoryActions {
-        border-radius: 0px;
-        box-shadow: 0px 0px transparent;
+        border-radius: 0;
+        box-shadow: 0 0 transparent;
     }
+
     .categoryActions a .pwg-icon {
         color: #373737;
     }
-    #theTagsPage A .pwg-icon,
-    #theTagsPage A:hover .pwg-icon {
+
+    #theTagsPage a .pwg-icon,
+    #theTagsPage a:hover .pwg-icon {
         color: #373737;
     }
 }
@@ -641,7 +645,7 @@ form.properties a {
 .filter-manager-popin,
 .tags-found-popin,
 .albums-found-popin {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgb(0, 0, 0, 0.7);
 }
 
 .filter-manager-popin-container,
@@ -715,7 +719,7 @@ form.properties a {
 
 .filter-form {
     background: #f4f0ec;
-    box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 5px 10px 0 rgb(0, 0, 0, 0.6);
     color: #373737;
 }
 
@@ -744,7 +748,7 @@ form.properties a {
 #word-search {
     background-color: #dcd0c0 !important;
     color: #373737 !important;
-    border-radius: 0px !important;
+    border-radius: 0 !important;
 }
 
 .filetypes-option:nth-child(odd),
@@ -764,7 +768,7 @@ form.properties a {
 .date_posted-option label .date_posted-badge {
     background-color: #c0b283;
     color: #fff;
-    text-shadow: 0px 0px 10px black;
+    text-shadow: 0 0 10px black;
 }
 
 .filetypes-option input:checked + label,
@@ -777,13 +781,13 @@ form.properties a {
 .head-button-2 {
     background: #dcd0c0;
     color: #666;
-    box-shadow: 0px 2px #00000024;
+    box-shadow: 0 2px #00000024;
 }
 
 .head-button-2:hover {
     color: white !important;
     background: #dcd0c0;
-    text-shadow: 0px 0px 10px #373737;
+    text-shadow: 0 0 10px #373737;
 }
 
 .breadcrumb-item {
@@ -805,11 +809,11 @@ form.properties a {
 }
 
 .breadcrumb-item .icon-cancel-circled:hover {
-    color: #ff7700;
+    color: #f70;
 }
 
 .linkedAlbumPopIn {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgb(0, 0, 0, 0.7);
 }
 
 .linkedAlbumPopInContainer {
@@ -828,7 +832,7 @@ form.properties a {
 .search-result-item {
     background: #c0b283;
     color: white !important;
-    box-shadow: 0px 2px #00000024;
+    box-shadow: 0 2px #00000024;
 }
 
 .clear-all {

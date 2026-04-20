@@ -579,13 +579,11 @@ final class functions
         }
 
         $ip = $_SERVER['REMOTE_ADDR'];
-        // In case of "too long" ipv6 address, we take only the 15 first chars.
-        //
-        // It would be "cleaner" to increase length of history.IP to 50 chars, but
-        // the alter table is very long on such a big table. We should plan this
-        // for a future version, once history table is kept "smaller".
+        // Truncate long IPv6 to 15 chars for MySQL's VARCHAR column limit.
+        // PostgreSQL uses the native inet type which accepts full IPv6 addresses.
         if (str_contains($ip, ':') &&
-            strlen($ip) > 15
+            strlen($ip) > 15 &&
+            !str_ends_with($conf->sql_backend, 'functions_pgsql')
         ) {
             $ip = substr($ip, 0, 15);
         }

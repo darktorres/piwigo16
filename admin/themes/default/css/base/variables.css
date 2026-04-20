@@ -86,6 +86,9 @@
     --admin-disabled-color: #373737;
     --admin-disabled-bg: #5d5d5d;
 
+    /* Head button colors */
+    --admin-head-button-1-color: #444;
+
     /* Component-specific */
     --admin-jqtree-highlight: #ededed;
     --admin-tooltip-arrow: #333;

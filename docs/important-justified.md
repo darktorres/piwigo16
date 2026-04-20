@@ -1,16 +1,17 @@
 # Justified `!important` Declarations
 
-All 235 remaining `!important` instances fall into one of the categories below. None should be removed without first resolving the underlying constraint they document.
+All 151 remaining `!important` instances fall into one of the categories below. None should be removed without first resolving the underlying constraint they document.
 
 ---
 
-## 1. Child admin themes — loading-order override (97)
+## 1. Child admin themes — DataTables and Colorbox overrides (13)
 
-**Files:** `admin/themes/roma/theme.css` (86), `admin/themes/clear/theme.css` (11)
+**Files:** `admin/themes/roma/theme.css` (7), `admin/themes/clear/theme.css` (6)
 
-Both child themes are loaded by the `{combine_css}` bundler **after** the parent `admin/themes/default/theme.css`, which means they win by cascade order at equal specificity — except where the parent itself uses `!important`. Until the admin CSS is migrated to a CSS-variable contract (`:root { --admin-* }` in parent, overridden in child), these `!important` declarations are the only reliable way for the child to win those properties.
+The CSS-variable migration is complete. The parent (`admin/themes/default/theme.css`) now uses `var(--admin-*)` everywhere; child themes win all color/background rules by cascade order at equal specificity and need no `!important`. The only remaining `!important` rules in child themes are:
 
-**Resolution path:** Complete the CSS-variable migration planned in the restructuring plan (Step 6). Once the parent uses `var(--admin-*)` everywhere, children only need a `:root {}` override block and these `!important` rules disappear.
+- **DataTables (6 Roma + 6 Clear):** DataTables ships its own CSS with `!important` on row background colors. Child theme rules must also use `!important` to override them for dark/light theming.
+- **Colorbox (1 Roma):** Colorbox sets `background-color` as an inline style on `#cboxLoadedContent`. Inline styles have specificity (1,0,0,0) — unreachable without `!important`.
 
 ---
 

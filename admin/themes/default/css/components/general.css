@@ -29,7 +29,7 @@ or
 }
 
 .head-button-1 {
-    color: white;
+    color: var(--admin-head-button-1-color);
     background: #ffa646;
     box-shadow: 0 2px #bb7932;
 }
@@ -43,16 +43,16 @@ or
 .head-button-1:hover {
     background: #f70;
     text-decoration: none;
-    color: white;
+    color: var(--admin-head-button-1-color);
 }
 
 .head-button-2 {
-    background: #fafafa;
+    background: var(--admin-bg-surface);
     box-shadow: 0 2px #00000024;
 }
 
 .head-button-2:hover {
-    background: #eee;
+    background: var(--admin-bg-row2);
     text-decoration: none;
     color: inherit;
 }
@@ -205,7 +205,7 @@ Info Framed
 
 .info-framed {
     display: flex;
-    border: #eee solid 2px;
+    border: var(--admin-border) solid 2px;
     padding: 20px;
     border-radius: 5px;
     margin: 0 10px;
@@ -221,7 +221,7 @@ a.info-framed:hover {
     font-size: 34px;
     margin-right: 20px;
     display: flex;
-    color: #3c3c3c;
+    color: var(--admin-text-legend);
 }
 
 .info-framed-icon i {
@@ -239,7 +239,7 @@ a.info-framed:hover {
 }
 
 .info-framed-title {
-    color: #3c3c3c;
+    color: var(--admin-text-legend);
     font-weight: bold;
 }
 

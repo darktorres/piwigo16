@@ -1,0 +1,99 @@
+/* Thumbnails */
+
+/* Thumbnail "elastic" layout */
+.thumbnails {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-align: center; /* to center the whole collection in .content */
+}
+
+.thumbnails li {
+    display: inline;
+}
+
+.thumbnails .wrap1 {
+    margin: 0 7px 5px;
+    display: table-cell;
+    display: inline-table;
+    display: inline-block; /* Why 3 display option ??? */
+    vertical-align: top; /* OK with Opera and IE6 not Geko */
+    text-align: center; /* to center the thumbnail and legend in Geko/Opera */
+}
+
+.thumbnails .wrap2 {
+    margin: 0; /* important reset the margins */
+    display: table-cell; /* block prevents vertical-align here */
+    vertical-align: middle; /* Ok with Opera and Geko not IE6 */
+    border-radius: 4px; /* round corners with CSS3 compliant browsers */
+}
+
+.thumbnails .wrap2 a {
+    display: block;
+    border-bottom: 0;
+}
+
+.thumbnails img {
+    vertical-align: middle;
+    max-width: 100%;
+}
+
+.thumbnails span.thumbLegend {
+    overflow: hidden; /* oversized legend is clipped */
+    display: block; /* display: none; if you don't want legend */
+    height: 4em; /* legend height (don't set auto to be Gecko friendly) */
+}
+
+/* === Thumbnail-only scroll layout (:has scopes to index/category pages only) === */
+
+html:has(#thumbnails),
+html:has(#thumbnails) body {
+    height: 100%;
+    overflow: hidden;
+}
+
+html:has(#thumbnails) body {
+    padding-bottom: 0;
+}
+
+html:has(#thumbnails) #the_page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+html:has(#thumbnails) #content_area {
+    display: flex;
+    flex-direction: row;
+    flex: 1 1 0%;
+    overflow: hidden;
+    min-height: 0;
+}
+
+html:has(#thumbnails) #menubar {
+    float: none;
+    flex-shrink: 0;
+    width: 18em;
+    margin: 0 0 0 1em;
+    overflow-y: auto;
+}
+
+html:has(#thumbnails) #content {
+    flex: 1 1 0%;
+    overflow-y: auto;
+    min-height: 0;
+    position: relative;
+    padding-bottom: 50px;
+    margin-left: 0 !important; /* overrides JS-set margin from menubar layout */
+}
+
+html:has(#thumbnails) .contentWithMenu {
+    margin-left: 0;
+}
+
+html:has(#thumbnails) #content .titrePage {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background-color: inherit;
+}

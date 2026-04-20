@@ -1,0 +1,54 @@
+/* Category thumbnails on main page, CSS code inspired from MOD subcatify */
+.thumbnailCategories {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow: hidden;
+    width: 100%;
+}
+
+.thumbnailCategories li {
+    margin: 0;
+    padding: 0;
+    float: left;
+    width: 49.7%; /* 49.7% for 2 per line, 33.2% for 3 per line */
+}
+
+.thumbnailCategory {
+    display: block;
+    padding: 2px 0 0 2px;
+    margin: 5px;
+}
+
+.thumbnailCategory .description {
+    font-size: 90%;
+    overflow: auto;
+
+    /* width: inherit; */
+}
+
+.thumbnailCategory .description h3 {
+    text-align: left;
+    margin: 0;
+    padding: 0.1em;
+    font-size: 120%;
+}
+
+.thumbnailCategory .description p {
+    margin: 0;
+}
+
+.illustration {
+    /* also used by comment lists */
+    text-align: left;
+    margin: 2px 0 0 2px;
+    float: left;
+}
+
+/* Loader gif new in 2.5 */
+.loader {
+    display: none;
+    position: fixed;
+    right: 0;
+    bottom: 0;
+}

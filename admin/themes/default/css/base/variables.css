@@ -37,4 +37,24 @@
     --admin-tooltip-color: #eee;
     --admin-shadow-card: -1px 1px 2px #1a1a1a;
     --admin-shadow-surface: 0 2px #00000070;
+
+    /* Tab navigation */
+    --admin-tab-bg: #565656;
+    --admin-tab-selected-bg: #444;
+    --admin-tab-active-color: #c1c1c1;
+    --admin-tab-inactive-color: #7e7e7e;
+
+    /* Notification state boxes */
+    --admin-state-error-color: #fec6c7;
+    --admin-state-error-bg: #bc4b4a;
+    --admin-state-success-color: #b8feee;
+    --admin-state-success-bg: #50a48f;
+    --admin-state-warning-color: #fedac0;
+    --admin-state-warning-bg: #d47f44;
+    --admin-state-message-color: #bad6ff;
+    --admin-state-message-bg: #4f71a4;
+
+    /* Badges and theme switcher */
+    --admin-badge-albums-bg: #333;
+    --admin-theme-span-bg: #888;
 }

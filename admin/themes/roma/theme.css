@@ -55,29 +55,7 @@ body {
     background-color: transparent;
 }
 
-h1 {
-    background-color: #565656;
-    color: #c1c1c1;
-}
-
-h1 .bc-albums {
-    background-color: #333;
-}
-
-#tabsheet {
-    background-color: #565656;
-}
-
-.tabsheet li.selected_tab {
-    background-color: #444;
-}
-
-.tabsheet li.selected_tab a {
-    color: #c1c1c1;
-}
-
 .tabsheet a {
-    color: #7e7e7e;
     font-weight: normal;
 }
 
@@ -593,7 +571,6 @@ a.stat-box:hover {
 }
 
 .themeActions span {
-    background-color: #888;
     color: #666;
 }
 
@@ -1603,12 +1580,6 @@ li.plupload_delete a:hover {
     background-color: #202020;
 }
 
-.errors {
-    color: #fec6c7;
-    background-color: #bc4b4a;
-    border-left: 4px solid #fec6c7;
-}
-
 .errors li {
     color: #fff;
 }
@@ -1617,12 +1588,6 @@ li.plupload_delete a:hover {
     background-color: #6b3030;
     padding: 2px 7px;
     color: #fff;
-}
-
-.infos {
-    color: #b8feee;
-    background-color: #50a48f;
-    border-left: 4px solid #b8feee;
 }
 
 .infos li {
@@ -1635,22 +1600,10 @@ li.plupload_delete a:hover {
     color: #fff;
 }
 
-.warnings {
-    color: #fedac0;
-    background-color: #d47f44;
-    border-left: 4px solid #fedac0;
-}
-
 .warnings a {
     background-color: #734627;
     padding: 2px 7px;
     color: #fff;
-}
-
-.messages {
-    color: #bad6ff;
-    background-color: #4f71a4;
-    border-left: 4px solid #bad6ff;
 }
 
 .eiw .messages a {

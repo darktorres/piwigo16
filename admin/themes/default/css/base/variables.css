@@ -57,4 +57,10 @@
     /* Badges and theme switcher */
     --admin-badge-albums-bg: #333;
     --admin-theme-span-bg: #888;
+
+    /* Inline field validation notices (colors invert between light/dark) */
+    --admin-inline-warning-color: #fd9;
+    --admin-inline-warning-bg: #e80;
+    --admin-inline-error-color: #ffd5dc;
+    --admin-inline-error-bg: #f22;
 }

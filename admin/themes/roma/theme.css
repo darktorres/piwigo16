@@ -761,15 +761,6 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
     border-color: #333 !important;
 }
 
-.orCreateAlbum {
-    background-color: #333;
-    color: #777;
-}
-
-.orCreateAlbum:hover {
-    color: #777;
-}
-
 .move-cat-container:hover {
     background-color: #232323;
 }
@@ -1693,20 +1684,10 @@ li.plupload_delete a:hover {
     color: #0051a5;
 }
 
-.info-warning {
-    color: #fd9;
-    background-color: #e80;
-}
-
 .info-warning a,
 .info-message a,
 .info-error a {
     color: white;
-}
-
-.info-error {
-    color: #ffd5dc;
-    background-color: #f22;
 }
 
 .move-cat-container,

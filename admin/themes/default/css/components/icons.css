@@ -118,7 +118,7 @@ input[type="reset"] {
 .orCreateAlbum {
     margin: 7px 0 9px 20px;
     padding: 7px 10px;
-    background-color: #fafafa;
+    background-color: var(--admin-bg-surface);
     box-shadow: 0 2px #00000024;
     border-radius: 5px;
     font-weight: bold;

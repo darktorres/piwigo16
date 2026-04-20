@@ -46,6 +46,12 @@
     /* Badges and theme switcher */
     --admin-badge-albums-bg: #c6c6c6;
     --admin-theme-span-bg: #ddd;
+
+    /* Inline field validation notices */
+    --admin-inline-warning-color: #e80;
+    --admin-inline-warning-bg: #fd9;
+    --admin-inline-error-color: #f22;
+    --admin-inline-error-bg: #ffd5dc;
 }
 
 #copyright {

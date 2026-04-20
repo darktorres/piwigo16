@@ -130,7 +130,7 @@ input[type="password"],
 }
 
 #menubar input {
-    background-color: #e8e8ea !important;
+    background-color: #e8e8ea;
     border-radius: 5px;
 }
 
@@ -499,7 +499,7 @@ fieldset.tagLetter {
 }
 
 .tagLevel5 {
-    color: #0b6aff !important;
+    color: #0b6aff;
 }
 
 td .nbEntries {
@@ -538,7 +538,7 @@ form.properties a {
 }
 
 #t4u-update-tags .t4u-disabled {
-    color: black !important;
+    color: black;
 }
 
 #lostPassword fieldset .message {
@@ -563,7 +563,7 @@ form.properties a {
     #imageToolBar .actionButtons .pwg-button-text,
     .actionButtons a .pwg-icon,
     .actionButtons a .pwg-icon:hover {
-        color: black !important;
+        color: black;
     }
 
     #albumActionsSwitcher + .categoryActions {
@@ -585,7 +585,7 @@ form.properties a {
     background-color: #e8e8ea;
 }
 
-/* Search colors */
+/* Search colors — !important below overrides mcs-search plugin CSS */
 .mcs-container .filter,
 .filter .filter-icon {
     color: #888;

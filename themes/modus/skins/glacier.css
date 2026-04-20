@@ -76,13 +76,13 @@ input[type="password"],
 
 .selectize-control.multi .selectize-input [data-value].active,
 .selectize-control.multi .selectize-input > div {
-    background-color: #1e3259 !important;
+    background-color: #1e3259;
     color: #ddd;
 }
 
 .selectize-input {
-    background-color: #27498c !important;
-    color: white !important;
+    background-color: #27498c;
+    color: white;
     border-radius: 0;
 }
 
@@ -193,7 +193,7 @@ fieldset label {
 .properties input,
 .properties input:focus {
     color: white;
-    background-color: #27498c !important;
+    background-color: #27498c;
 }
 
 .properties input,
@@ -322,7 +322,7 @@ input[type="text"],
 input[type="password"],
 select,
 textarea {
-    background-color: #27498c !important;
+    background-color: #27498c;
     color: white;
 }
 
@@ -423,13 +423,13 @@ td .nbEntries {
 }
 
 ul.token-input-list li input {
-    background-color: white !important;
+    background-color: white;
 }
 
 #t4u-update-tags .t4u-disabled {
-    background-image: none !important;
-    background-color: white !important;
-    color: black !important;
+    background-image: none;
+    background-color: white;
+    color: black;
 }
 
 #collectionsDropdown a,
@@ -476,7 +476,7 @@ a.addCollection {
     color: #1e3259;
 }
 
-/* Search colors */
+/* Search colors — !important below overrides mcs-search plugin CSS */
 .filter .filter-icon {
     color: #27498c;
 }
@@ -626,7 +626,7 @@ a.addCollection {
 
 .head-button-2:hover {
     background: #eee;
-    color: #555 !important;
+    color: #555;
 }
 
 .breadcrumb-item {

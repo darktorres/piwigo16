@@ -147,7 +147,7 @@ input[type="password"],
 #menubar input {
     background-image: none;
     font-family: "Open Sans", sans-serif;
-    background-color: rgb(220, 208, 192) !important;
+    background-color: rgb(220, 208, 192);
     border-radius: 0;
     cursor: pointer;
 }
@@ -577,7 +577,7 @@ td .nbEntries {
 }
 
 #t4u-update-tags .t4u-disabled {
-    color: black !important;
+    color: black;
 }
 
 ul.token-input-list li input {
@@ -615,7 +615,7 @@ form.properties a {
     #imageToolBar .actionButtons .pwg-button-text,
     .actionButtons a .pwg-icon,
     .actionButtons a .pwg-icon:hover {
-        color: #373737 !important;
+        color: #373737;
     }
 
     #albumActionsSwitcher + .categoryActions {
@@ -637,7 +637,7 @@ form.properties a {
     background-color: rgb(220, 208, 192);
 }
 
-/* Search colors */
+/* Search colors — !important below overrides mcs-search plugin CSS */
 .filter .filter-icon {
     color: #998e68;
 }
@@ -785,7 +785,7 @@ form.properties a {
 }
 
 .head-button-2:hover {
-    color: white !important;
+    color: white;
     background: #dcd0c0;
     text-shadow: 0 0 10px #373737;
 }

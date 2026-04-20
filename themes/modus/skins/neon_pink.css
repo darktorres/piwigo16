@@ -141,7 +141,7 @@ input[type="password"],
 #menubar input {
     background-image: none;
     font-family: "Open Sans", sans-serif;
-    background-color: #ff96af !important;
+    background-color: #ff96af;
     border-radius: 5px;
     cursor: pointer;
 }
@@ -421,7 +421,7 @@ input[type="text"],
 input[type="password"],
 select,
 textarea {
-    background-color: #e8e8ea !important;
+    background-color: #e8e8ea;
     border-radius: 5px;
     color: black;
 }
@@ -435,10 +435,10 @@ textarea {
 }
 
 .selectize-input {
-    background-color: #e8e8ea !important;
+    background-color: #e8e8ea;
     border-radius: 5px;
-    color: black !important;
-    border: none !important;
+    color: black;
+    border: none;
     box-shadow: none;
 }
 
@@ -532,7 +532,7 @@ fieldset.tagLetter {
 }
 
 .tagLevel5 {
-    color: #ff2f63 !important;
+    color: #ff2f63;
 }
 
 td .nbEntries {
@@ -571,7 +571,7 @@ form.properties a {
 }
 
 #t4u-update-tags .t4u-disabled {
-    color: white !important;
+    color: white;
 }
 
 ul.token-input-list li input {
@@ -596,7 +596,7 @@ ul.token-input-list li input {
     #imageToolBar .actionButtons .pwg-button-text,
     .actionButtons a .pwg-icon,
     .actionButtons a .pwg-icon:hover {
-        color: black !important;
+        color: black;
     }
 
     #albumActionsSwitcher + .categoryActions {
@@ -618,7 +618,7 @@ ul.token-input-list li input {
     background-color: #f2f2f2;
 }
 
-/* Search */
+/* Search — !important below overrides mcs-search plugin CSS */
 
 .filter-manager-popin .mcs-popin-title,
 .tags-found-popin .mcs-popin-title,

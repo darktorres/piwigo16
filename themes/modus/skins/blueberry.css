@@ -479,8 +479,8 @@ textarea {
 .selectize-input.focus,
 .selectize-dropdown,
 .selectize-input input {
-    background-color: #93c2d6 !important;
-    color: black !important;
+    background-color: #93c2d6;
+    color: black;
     border-radius: 0;
     box-shadow: none;
 }
@@ -626,7 +626,7 @@ form.properties a {
 }
 
 #t4u-update-tags .t4u-disabled {
-    color: black !important;
+    color: black;
 }
 
 @media screen and (width <= 640px) {
@@ -647,7 +647,7 @@ form.properties a {
     #imageToolBar .actionButtons .pwg-button-text,
     .actionButtons a .pwg-icon,
     .actionButtons a .pwg-icon:hover {
-        color: #0391aa !important;
+        color: #0391aa;
         background-color: #16262e;
     }
 
@@ -667,7 +667,7 @@ form.properties a {
     }
 }
 
-/* Search colors */
+/* Search colors — !important below overrides mcs-search plugin CSS */
 .filter .filter-icon {
     color: #93c2d6;
 }
@@ -817,7 +817,7 @@ form.properties a {
 
 .head-button-2:hover {
     background: #eee;
-    color: #16262e !important;
+    color: #16262e;
 }
 
 .breadcrumb-item {

@@ -132,7 +132,7 @@ admin/themes/default/css/
 │   ├── webkit-hacks.css  (16)
 │   ├── menubar.css       (133)
 │   ├── tabsheets.css     (439)
-│   ├── selectize.css     (6)
+│   ├── selectize.css     (6)  ← TomSelect overrides (TomSelect uses .selectize-* class names)
 │   ├── jqtree-overrides.css (104)
 │   └── icons.css         (275)
 ├── pages/
@@ -242,7 +242,7 @@ The plan proposed replacing `clear-search.css` + `dark-search.css` with a single
 
 The plan proposed `reset-defaults.css` + `typography.css`. The actual names are `content.css`, `forms.css`, `layout.css`, `maintenance.css` (more descriptive of content). `variables.css` and `global.css` were added in step 6.
 
-The plan put `selectize.css` and `jqtree-overrides.css` in `features/`; they went into `components/` instead.
+The plan put `selectize.css` (TomSelect overrides) and `jqtree-overrides.css` in `features/`; they went into `components/` instead.
 
 The plan included `history.css` in the always-loaded `@import` set; it was extracted from the inline style (step 2) and loads per-page only via `{combine_css}` in `history.tpl`.
 

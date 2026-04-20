@@ -114,10 +114,10 @@ legend {
     line-height: 1.5em;
 }
 
-/* Selectize */
+/* TomSelect (uses .selectize-* class names) */
 .selectize-dropdown [data-selectable],
 .selectize-dropdown .optgroup-header {
-    padding: 0 5px !important; /* overrides selectize.js own padding rule at higher specificity */
+    padding: 0 5px !important; /* overrides TomSelect own padding rule at higher specificity */
 }
 
 #TagsGroupRemoveTag span,

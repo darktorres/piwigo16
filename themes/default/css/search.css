@@ -733,7 +733,7 @@
     height: 26px;
     border: none;
     background: var(--search-selectize-input-bg);
-    color: var(--search-selectize-input-color) !important; /* overrides selectize.js own color rule */
+    color: var(--search-selectize-input-color) !important; /* overrides TomSelect own color rule */
 }
 
 .filter-author-form .selectize-input input:focus-visible,
@@ -820,7 +820,7 @@
 
 .filetypes-option,
 .added_by-option {
-    min-width: 150px !important; /* overrides inline min-width set by selectize */
+    min-width: 150px !important; /* overrides inline min-width set by TomSelect */
 }
 
 .section-search .sticky-top {

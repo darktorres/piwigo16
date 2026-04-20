@@ -772,116 +772,6 @@ td .nbEntries {
     margin: 0 auto;
 }
 
-@media screen and (width <= 1100px) {
-    #fullTagCloud {
-        transform: none;
-        position: relative;
-        display: block;
-        top: 0;
-        left: 0;
-        padding: 15px;
-    }
-}
-
-@media screen and (height <= 490px) {
-    #fullTagCloud {
-        transform: none;
-        position: relative;
-        display: block;
-        top: 0;
-        left: 0;
-        padding: 15px;
-    }
-}
-
-@media screen and (width <= 640px) {
-    #menubar {
-        box-shadow: none;
-        padding: 20px;
-    }
-
-    #mbCategories dd:focus {
-        display: block;
-    }
-
-    .pwg-icon pwg-icon-ellipsis {
-        display: none;
-        color: transparent;
-        opacity: 0;
-    }
-
-    #copyright a {
-        display: block;
-    }
-
-    #menuSwitcher {
-        padding-top: 22px;
-        padding-left: 10px;
-    }
-
-    #thumbnails > li {
-        display: block;
-    }
-
-    fieldset ul {
-        display: block;
-        float: none;
-    }
-
-    #thePicturePage #pictureCommentList {
-        float: left;
-        width: 100%;
-    }
-
-    #pictureComments #commentAdd {
-        width: 100%;
-    }
-
-    #menubar dl {
-        padding: 5px 0;
-    }
-
-    div.thumbHover {
-        height: auto;
-        font-size: 10px;
-    }
-
-    #profile {
-        text-align: center;
-    }
-
-    .properties span.property {
-        width: 40%;
-    }
-
-    .calItem {
-        padding-bottom: 10px;
-        display: inline-block;
-        width: 70px;
-    }
-
-    #fullTagCloud {
-        transform: none;
-        position: relative;
-        display: block;
-        top: 0;
-        left: 0;
-        padding: 15px;
-    }
-
-    .pwg-icon {
-        font-size: 20px;
-    }
-
-    .actionButtonsWrapper .actionButtons {
-        box-shadow: none;
-    }
-
-    .imageInfoTable {
-        padding: 5px;
-    }
-}
-
 .albThumbs .path-ext-svg a img,
 .albThumbs .file-ext-svg a img {
     left: 0 !important; /* overrides inline position set by masonry */
@@ -902,32 +792,9 @@ li.path-ext-svg a img {
     min-height: 100px;
 }
 
-@media screen and (width <= 800px),
-    screen and (min-device-pixel-ratio: 1.3) {
-    .navThumb,
-    .thumbHover {
-        width: 100px !important;
-        height: 100px !important;
-    }
-}
-
-@media screen and (width <= 640px) {
-    .navThumb,
-    .thumbHover {
-        width: auto !important;
-        height: auto !important;
-    }
-}
-
 .mcs-container,
 .mcs-side-results.search-in-set-button {
     margin-top: 0;
-}
-
-@media screen {
-    .wide #theImage {
-        width: 75%; /* min default picture derivative width */
-    }
 }
 
 /* === Thumbnail-only scroll layout === */

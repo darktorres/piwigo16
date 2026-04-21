@@ -57,7 +57,7 @@ final class SrcImage
         } else {
             $this->rel_path = functions_plugins::trigger_change('get_mimetype_location', functions::get_themeconf('mime_icon_dir') . $ext . '.png', $ext);
             $this->flags |= self::IS_MIMETYPE;
-            $size = getimagesize('./' . $this->rel_path);
+            $size = file_exists('./' . $this->rel_path) ? getimagesize('./' . $this->rel_path) : false;
 
             if ($size === false) {
                 $this->rel_path = $ext === 'svg' ? $infos['path'] : 'themes/default/icon/mimetypes/unknown.png';

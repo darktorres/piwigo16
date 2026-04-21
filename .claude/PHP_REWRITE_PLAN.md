@@ -27,10 +27,19 @@
 18. [Internationalization](#18-internationalization)
 19. [Developer Experience](#19-developer-experience)
 20. [Release Engineering and Governance](#20-release-engineering-and-governance)
-21. [What Goes Away](#21-what-goes-away)
-22. [What Carries Over (Conceptually)](#22-what-carries-over-conceptually)
-23. [Repository Structure](#23-repository-structure)
-24. [Installation and Rollout](#24-installation-and-rollout)
+21. [Search Architecture](#21-search-architecture)
+22. [JSON API v1 Design](#22-json-api-v1-design)
+23. [Plugin Event Catalog](#23-plugin-event-catalog)
+24. [Upload and Filesystem Sync](#24-upload-and-filesystem-sync)
+25. [Admin UI and UX](#25-admin-ui-and-ux)
+26. [Performance and Scaling](#26-performance-and-scaling)
+27. [Data Privacy and Compliance](#27-data-privacy-and-compliance)
+28. [Media Types Beyond Photos](#28-media-types-beyond-photos)
+29. [End-to-End Workflow Walkthroughs](#29-end-to-end-workflow-walkthroughs)
+30. [What Goes Away](#30-what-goes-away)
+31. [What Carries Over (Conceptually)](#31-what-carries-over-conceptually)
+32. [Repository Structure](#32-repository-structure)
+33. [Installation and Rollout](#33-installation-and-rollout)
 
 ---
 
@@ -93,7 +102,7 @@ To keep the scope honest, the rewrite will **not**:
 
 - Run Piwigo 14 plugins or themes. They were written against a different system and should not be expected to work; attempting compatibility would dictate architecture.
 - Serve Piwigo 14 URLs. `index.php?/category/N-slug`, `picture.php?image_id=N`, and `ws.php` are legacy artifacts; the new URL scheme is designed fresh.
-- Provide a one-click migration wizard from an existing Piwigo install. See [Installation and Rollout](#24-installation-and-rollout) for the no-supported-migration stance.
+- Provide a one-click migration wizard from an existing Piwigo install. See [Installation and Rollout](#33-installation-and-rollout) for the no-supported-migration stance.
 - Match feature parity with Piwigo 14 on day one. Features are prioritized by value and built in order; some seldom-used corners (LDAP sync, specific RSS variants, obscure plugin hooks) may never return.
 - Ship a WYSIWYG web installer. Installation is CLI-first; a first-run web flow may come later but is not a v1 requirement.
 
@@ -4418,7 +4427,2018 @@ If the project ever stops being maintained:
 
 ---
 
-## 21. What Goes Away
+## 21. Search Architecture
+
+**Decision:** start with native DB full-text (MySQL `FULLTEXT` / Postgres `tsvector`) behind a `SearchEngine` interface; make Meilisearch a first-class alternative for large installs.
+
+### What's searchable
+
+| Surface | Fields | Weight |
+|---|---|---|
+| Images | `title`, `description`, `original_name`, `author`, camera/lens from EXIF | title 3× > description 2× > filename 1× > EXIF 0.5× |
+| Tags | `name`, `slug` | tag match on image = 2× of a word-match |
+| Albums | `name`, `description` | same weight as image title |
+| Comments | `body` | opt-in; off by default |
+
+Searchable surfaces are configurable; the default is images + tags + albums.
+
+### Engine choice
+
+Three realistic backends, picked by deployment size:
+
+| Backend | When | Upsides | Downsides |
+|---|---|---|---|
+| **MySQL FULLTEXT** | Default for MySQL installs < 100k images | Zero extra infra, native `MATCH AGAINST`, inverted index kept in-engine | No good multilingual stemming, ranking is `WITH QUERY EXPANSION`-based and mediocre, no typo tolerance |
+| **Postgres `tsvector` + `GIN`** | Default for Postgres installs < 1M images | Mature, good `to_tsvector` stemming per language, ranking via `ts_rank_cd()`, generated-column index | Per-language config matters, no typo tolerance without `pg_trgm` extension |
+| **Meilisearch** | Any install that wants typo tolerance, instant search, or > 1M images | Sub-50 ms p95 even at scale, typo-tolerant, facets/filters built in, minimal ops | One more service to run, index lives outside the DB transaction boundary |
+
+Opinionated defaults plus a clean abstraction. A site can migrate backends later without domain-code changes.
+
+### `SearchEngine` interface
+
+```php
+interface SearchEngine
+{
+    public function index(Indexable $doc): void;
+    public function bulkIndex(iterable $docs, int $batchSize = 500): void;
+    public function remove(string $type, int $id): void;
+    public function search(SearchQuery $query): SearchResult;
+    public function suggest(string $prefix, int $limit = 8): array;
+    public function rebuildIndex(string $type, \Closure $progress = null): void;
+}
+
+final readonly class SearchQuery
+{
+    public function __construct(
+        public string $term,
+        public array $tags = [],              // tag IDs, AND semantics
+        public array $excludedTags = [],      // NOT
+        public ?DateRange $dateTaken = null,
+        public ?DateRange $dateUploaded = null,
+        public ?int $authorId = null,
+        public ?AccessLevel $maxLevel = null, // filter by viewer's access
+        public SortMode $sort = SortMode::Relevance,
+        public int $page = 1,
+        public int $pageSize = 30,
+    ) {}
+}
+
+final readonly class SearchResult
+{
+    public function __construct(
+        public array $hits,                    // Image | Album | Tag DTOs
+        public int $totalHits,
+        public int $elapsedMs,
+        public array $facets = [],             // { 'tag' => [['id'=>1,'name'=>'beach','count'=>42], ...], ... }
+    ) {}
+}
+```
+
+Three implementations: `MySqlFullTextSearchEngine`, `PostgresTsvectorSearchEngine`, `MeilisearchEngine`. Selected by config.
+
+### Query grammar
+
+The public search UI accepts a natural-feeling syntax, parsed into a `SearchQuery`:
+
+```
+sunset beach                     → term "sunset beach"
+"golden hour"                    → phrase match
+tag:beach                        → must have tag
+-tag:portrait                    → must NOT have tag
+tag:(beach OR ocean)             → tag combinator
+author:alice                     → images by alice
+taken:2024-06..2024-09           → date-taken range
+uploaded:>2026-01-01             → date-uploaded cutoff
+camera:"X-T5"                    → EXIF camera match
+sort:newest                      → sort override
+```
+
+Parser is `SearchQueryParser`, unit-tested thoroughly. Invalid syntax doesn't throw — unknown tokens fall back to free-text terms. The UI shows a hint bar with the parsed interpretation.
+
+### Indexing strategy
+
+Two paths: direct-write (small installs) and event-driven (everyone else).
+
+**Direct-write** — when the search engine is the same DB (MySQL / Postgres), the `FULLTEXT` / `tsvector` index is maintained automatically by the engine on `INSERT`/`UPDATE`/`DELETE`. No app code needed beyond correct `CREATE INDEX`.
+
+**Event-driven** — when the engine is external (Meilisearch), the app dispatches `ReindexSearchMessage` on every domain event that changes searchable content:
+
+```php
+#[AsEventListener]
+final class QueueReindexOnImageChange
+{
+    public function __invoke(
+        ImageCreatedEvent|ImageUpdatedEvent|ImageDeletedEvent $event,
+    ): void {
+        $this->bus->dispatch(new ReindexSearchMessage(
+            type: 'image',
+            id: $event->image->id,
+            action: $event instanceof ImageDeletedEvent ? 'delete' : 'upsert',
+        ));
+    }
+}
+```
+
+The handler invokes `$searchEngine->index()` or `->remove()`. Queued, retryable, batched.
+
+### Postgres-specific design
+
+```sql
+ALTER TABLE images ADD COLUMN search_doc tsvector
+    GENERATED ALWAYS AS (
+        setweight(to_tsvector('simple', coalesce(title, '')),       'A') ||
+        setweight(to_tsvector('simple', coalesce(description, '')), 'B') ||
+        setweight(to_tsvector('simple', coalesce(original_name, '')), 'C')
+    ) STORED;
+
+CREATE INDEX images_search_idx ON images USING GIN (search_doc);
+```
+
+Multi-language deployments parameterize `'simple'` with the current locale's config (`'english'`, `'french'`, etc.); cross-language searches fall back to `'simple'`.
+
+### MySQL-specific design
+
+```sql
+ALTER TABLE images ADD FULLTEXT INDEX images_search_idx (title, description, original_name);
+```
+
+Queried with `MATCH(...) AGAINST(:term IN BOOLEAN MODE)` for explicit-operator support (`+required`, `-excluded`, `"phrase"`).
+
+### Meilisearch-specific design
+
+One index per type (`images`, `albums`, `tags`). Settings configured at init:
+
+```json
+{
+    "searchableAttributes": ["title", "description", "original_name", "tags_names"],
+    "filterableAttributes": ["tag_ids", "album_ids", "author_id", "min_level", "taken_at", "created_at"],
+    "sortableAttributes": ["taken_at", "created_at", "view_count"],
+    "rankingRules": ["words", "typo", "proximity", "attribute", "sort", "exactness"],
+    "stopWords": ["the", "a", "an", "of", "in", "on", ...],
+    "synonyms": { "photo": ["picture", "image"], "beach": ["shore", "coast"] }
+}
+```
+
+### Result ranking
+
+- **MySQL:** `MATCH AGAINST` score + boost for tag-equal matches.
+- **Postgres:** `ts_rank_cd()` with the weighted `tsvector`.
+- **Meilisearch:** default ranking rules with optional per-install tuning.
+
+Fallback sort when relevance is tied or `sort:newest` is explicit: `taken_at DESC` then `created_at DESC` then `id DESC` (deterministic).
+
+### Permission filtering
+
+Hits are filtered post-retrieval by the viewer's access — the search index doesn't store ACLs. Filter logic:
+
+```php
+$hits = $this->engine->search($query);
+return $hits->filter(fn ($h) => $this->permissions->canView($viewer, $h));
+```
+
+This is O(n) over a page of ~30 hits — negligible. For very private installs, a pre-filter on `min_level` narrows the initial query.
+
+### Suggestions / autocomplete
+
+- **Postgres:** `pg_trgm` + a GIST index on `tags.name` for prefix + similarity suggestions.
+- **MySQL:** `LIKE 'prefix%'` on `tags.name` with a secondary index.
+- **Meilisearch:** the engine does this natively.
+
+Shown in a dropdown as the user types; debounced 150 ms.
+
+### Saved searches
+
+A user can save a query with a name; saved searches are rows in `saved_searches(user_id, name, query_json)`. The UI shows them as one-click links; they're also subscribable (a saved search becomes an RSS/Atom feed URL).
+
+### Incremental vs full reindex
+
+- **Incremental:** driven by events; the normal path.
+- **Full reindex:** CLI command for disaster recovery or initial import:
+
+```
+php bin/piwigo search:reindex           # all types
+php bin/piwigo search:reindex images    # just one type
+php bin/piwigo search:reindex --since=2026-01-01
+```
+
+Batched (500 docs/batch); progress bar; resumable via a checkpoint row.
+
+### Search analytics
+
+Optional (off by default). When enabled, records anonymized `(query, hit_count, ip_hash, user_id)` for popularity metrics; retained per the global retention config. Feeds the "trending searches" widget if a theme opts in.
+
+### Testing
+
+- **Unit:** parser tests covering every grammar construct.
+- **Integration:** each engine tested against fixture data — identical queries must produce overlapping top-10 hits across backends (exact ranking can differ; the set shouldn't).
+- **Property-based:** random query strings should never throw, never return invalid results, always respect permissions.
+- **Performance:** p95 < 100 ms for a 10k-image corpus across all backends; benchmark nightly.
+
+### Not in scope for v1
+
+- Visual similarity search (image-to-image via embeddings). Separate engine class, could be a plugin later.
+- AI-powered "find photos of my dog" semantic search. Plugin territory.
+- Cross-install federated search. Out of scope.
+
+---
+
+## 22. JSON API v1 Design
+
+The JSON API is a **first-class surface**, not an afterthought. Mobile apps, CLI tools, third-party integrations, and the admin UI itself all consume it. Getting this right once beats retrofitting it later.
+
+### Design principles
+
+1. **RESTish, not dogmatic REST.** Paths are resource-oriented; verbs are HTTP methods; but pragmatic deviations (batch endpoints, RPC-style `/actions`) are fine where REST would be tortured.
+2. **Nouns in URLs, verbs in methods.** `POST /api/v1/photos` not `POST /api/v1/uploadPhoto`.
+3. **Stable is better than elegant.** A v1 is a contract; breakage moves to v2.
+4. **Predictable.** Pagination, errors, filtering, sorting all look the same across every endpoint.
+5. **Discoverable.** OpenAPI spec is generated from the code; endpoints that aren't in the spec don't exist.
+
+### URL structure
+
+```
+/api/v1/{resource}                          collection
+/api/v1/{resource}/{id}                     single item
+/api/v1/{resource}/{id}/{subresource}       related collection
+/api/v1/{resource}/{id}/actions/{verb}      RPC-style action
+```
+
+Always `/api/vN/`. Never unversioned `/api/`.
+
+### Authentication
+
+Two mechanisms:
+
+| Mechanism | Used by | Header |
+|---|---|---|
+| Session cookie | Browser (admin UI) | `Cookie: session=...` |
+| Personal access token | CLI, mobile apps, integrations | `Authorization: Bearer {token}` |
+
+Tokens carry scopes: `read`, `write`, `admin`. A request attempting an out-of-scope operation returns 403.
+
+### Response envelopes
+
+No envelope for single resources:
+
+```http
+GET /api/v1/photos/42
+
+{
+  "id": "0198f3c5-7e5a-7c2d-9b1a-b37a2f0c8100",
+  "title": "Beach sunset",
+  "description": "...",
+  "created_at": "2026-04-20T12:00:00Z",
+  ...
+}
+```
+
+Collections return an envelope with pagination + facets:
+
+```http
+GET /api/v1/photos?album=17&sort=-taken_at&page_size=30
+
+{
+  "data": [ {...}, {...}, ... ],
+  "page": {
+    "size": 30,
+    "next_cursor": "eyJ0YWtlbl9hdCI6I...",
+    "prev_cursor": null,
+    "has_more": true
+  },
+  "meta": {
+    "total_estimate": 12400
+  }
+}
+```
+
+### Pagination: cursor-based
+
+Offset pagination is deliberately **not** supported — it breaks at scale (`OFFSET 100000` scans 100k rows), produces duplicates/skips when data changes mid-scroll, and is a subtle footgun.
+
+Cursor shape: opaque base64-encoded tuple of the sort key + tiebreaker. Example for `sort=-taken_at`:
+
+```
+cursor = base64({ "taken_at": "2026-04-20T12:00:00Z", "id": 42 })
+```
+
+Next page: `WHERE (taken_at, id) < (:cursor_taken_at, :cursor_id)`. Stable under concurrent writes; O(1) page fetch.
+
+`total_estimate` is approximate (from index stats, not `COUNT(*)`) — exact counts would defeat the purpose.
+
+### Filtering
+
+Query-parameter filters, with an operator suffix convention borrowed from JSON:API / Django:
+
+```
+GET /api/v1/photos?author=42
+GET /api/v1/photos?taken_at[gte]=2024-01-01&taken_at[lt]=2025-01-01
+GET /api/v1/photos?tags[in]=beach,sunset
+GET /api/v1/photos?min_width[gte]=1920
+GET /api/v1/photos?q=sunset                   # free-text search
+```
+
+Operators: `eq` (default), `ne`, `lt`, `lte`, `gt`, `gte`, `in`, `nin`, `like`. Invalid filters return 400 with field details, never 500.
+
+### Sorting
+
+```
+GET /api/v1/photos?sort=-taken_at,id       # multi-key, `-` prefix = desc
+```
+
+Allowed sort keys are per-resource and documented. Unknown keys → 400.
+
+### Sparse fieldsets
+
+```
+GET /api/v1/photos/42?fields=id,title,taken_at
+```
+
+Omitting `fields` returns the full resource. Clients that know they only need a few fields save bandwidth and render time.
+
+### Relationships
+
+Side-loaded via `include`:
+
+```
+GET /api/v1/photos/42?include=author,tags,albums
+
+{
+  "id": "...",
+  "title": "...",
+  "author": { "id": "...", "username": "alice" },
+  "tags":   [ { "id": "...", "name": "beach" } ],
+  "albums": [ { "id": "...", "name": "Vacation 2024" } ]
+}
+```
+
+Without `include`, relationships are returned as IDs (or omitted), not full objects — avoid accidental over-fetching.
+
+### DTOs
+
+Every endpoint's request and response shape is a PHP class (a DTO), validated and serialized the same way:
+
+```php
+final readonly class PhotoResponse
+{
+    public function __construct(
+        public string $id,
+        public string $title,
+        public ?string $description,
+        public int $width,
+        public int $height,
+        public int $filesize,
+        public \DateTimeImmutable $created_at,
+        public ?\DateTimeImmutable $taken_at,
+        public DerivativeUrls $derivatives,
+        public ?AuthorSummary $author = null,
+        /** @var TagSummary[] */
+        public array $tags = [],
+    ) {}
+
+    public static function from(Image $image, ?IncludeList $include = null): self { ... }
+}
+```
+
+DTOs are where OpenAPI schemas come from (via attribute-introspection). They're the single source of truth for the API shape.
+
+### Request DTOs
+
+```php
+final readonly class CreatePhotoRequest
+{
+    public function __construct(
+        public ?string $title = null,
+        public ?string $description = null,
+        public array $tagNames = [],
+        public array $albumIds = [],
+    ) {}
+
+    public static function fromRequest(ServerRequestInterface $req): self
+    {
+        $body = json_decode(
+            (string) $req->getBody(),
+            associative: true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+
+        return (new self(
+            title:       trim((string) ($body['title'] ?? '')) ?: null,
+            description: trim((string) ($body['description'] ?? '')) ?: null,
+            tagNames:    is_array($body['tag_names'] ?? null) ? $body['tag_names'] : [],
+            albumIds:    is_array($body['album_ids'] ?? null) ? $body['album_ids'] : [],
+        ))->validate();
+    }
+}
+```
+
+Validation throws `ValidationException`; middleware maps to 422.
+
+### Error format — RFC 7807
+
+```http
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/problem+json
+
+{
+  "type": "https://example.org/problems/validation-failed",
+  "title": "Validation failed",
+  "status": 422,
+  "detail": "One or more fields are invalid",
+  "instance": "/api/v1/photos",
+  "errors": {
+    "title": ["required"],
+    "album_ids": ["at least one is invalid: 9999 not found"]
+  },
+  "request_id": "01J9X2H7B0Q4Z5VXGYQ4ARBTVM"
+}
+```
+
+Canonical `type` URIs resolve to documentation pages describing the error class.
+
+### Rate limiting (recap from §11)
+
+Every response includes:
+
+```
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 58
+X-RateLimit-Reset: 1714651200
+```
+
+Exceeded → 429 with `Retry-After`.
+
+### OpenAPI spec
+
+Generated from PHP via attributes + DTO introspection:
+
+```php
+#[OpenApi\Operation(
+    summary: 'List photos',
+    tags: ['photos'],
+    responses: [200 => PhotoListResponse::class, 401, 403],
+)]
+#[OpenApi\Filter('tags[in]', array: true, description: 'Tag ID allowlist')]
+#[OpenApi\Sort(['taken_at', 'created_at', 'view_count'])]
+public function index(ServerRequestInterface $req): ResponseInterface { ... }
+```
+
+`php bin/piwigo openapi:dump > docs/api/v1/openapi.yaml` produces the spec on demand; CI regenerates it and fails if it diverges from the committed copy. Drift between code and spec is a bug.
+
+Served at `/api/v1/openapi.yaml` + interactive docs via Scalar or Swagger UI at `/api/v1/docs`.
+
+### Long-running operations
+
+Some operations (full sync, bulk reindex, large batch edits) take minutes. Pattern:
+
+```http
+POST /api/v1/albums/17/actions/sync
+{ "directory": "/photos/vacation-2024" }
+
+HTTP/1.1 202 Accepted
+Location: /api/v1/operations/op-a7b3c2
+
+{
+  "id": "op-a7b3c2",
+  "status": "queued",
+  "progress": 0,
+  "created_at": "..."
+}
+```
+
+```http
+GET /api/v1/operations/op-a7b3c2
+
+{
+  "id": "op-a7b3c2",
+  "status": "running",
+  "progress": 0.42,
+  "message": "indexed 420 of 1000 images",
+  "result": null
+}
+```
+
+When `status` is `succeeded` or `failed`, `result` contains the outcome or a problem-details object. The operation record is retained for 24 hours, then purged.
+
+### Batch endpoints
+
+When the natural shape is "do N things at once":
+
+```http
+POST /api/v1/photos/actions/batch-tag
+{
+  "photo_ids": ["...", "...", "..."],
+  "add_tags": ["summer", "beach"],
+  "remove_tags": ["draft"]
+}
+```
+
+Batch results report per-item success/failure:
+
+```json
+{
+  "succeeded": 98,
+  "failed": 2,
+  "items": [
+    { "id": "...", "status": "ok" },
+    { "id": "...", "status": "error", "error": { "type": "...", "detail": "..." } }
+  ]
+}
+```
+
+Never silently skip failures in a batch — the caller is told exactly which items failed and why.
+
+### Webhooks out
+
+Users configure webhooks in admin; events they subscribe to trigger `DeliverWebhookMessage`:
+
+```json
+POST https://example.com/piwigo-webhook
+X-Piwigo-Event: image.uploaded
+X-Piwigo-Delivery: dlv-a7b3c2
+X-Piwigo-Signature: sha256=a7b3c2...
+
+{
+  "event": "image.uploaded",
+  "delivered_at": "...",
+  "data": {
+    "image": { ... full PhotoResponse ... }
+  }
+}
+```
+
+Signature: `HMAC_SHA256(webhook_secret, payload)`. Retry: exponential backoff up to 24 h; then dead-letter.
+
+### Webhooks in
+
+Not in v1. Users needing inbound webhooks write a plugin that exposes an auth-gated endpoint.
+
+### Client SDKs
+
+Not shipped with core in v1. The OpenAPI spec makes generated clients straightforward (`openapi-generator`, `swagger-codegen`). A community-contributed PHP client may live under `contrib/`.
+
+### Deprecation
+
+API v1 is frozen for the life of the v1.x release line. Breaking changes → v2 at `/api/v2/`, with v1 running alongside. v1 marked deprecated when v2 is stable; retired no earlier than 12 months after v2 release.
+
+Non-breaking additions are allowed within v1: new optional fields in responses (clients must tolerate unknown fields), new endpoints, new filters. Removals and shape changes are never allowed.
+
+### CORS
+
+`Access-Control-Allow-Origin: *` for public read endpoints (e.g., public album content). Credentialed endpoints (cookie/token) use a configured `ALLOWED_ORIGINS` allowlist.
+
+### Caching
+
+- Read endpoints on public resources: `Cache-Control: public, max-age=60`.
+- Authenticated reads: `Cache-Control: private, must-revalidate`, `ETag` on the response.
+- Conditional requests (`If-None-Match`) → 304.
+- Writes: `Cache-Control: no-store`.
+
+### Contract tests
+
+Every endpoint has a contract test that:
+
+1. Builds a fixture state.
+2. Hits the endpoint.
+3. Asserts response status, headers, body matches the DTO's expected JSON shape.
+4. Asserts the OpenAPI schema validates the response.
+
+Breaking a contract test fails CI; a PR that changes a response shape must include both the code change and the schema update.
+
+---
+
+## 23. Plugin Event Catalog
+
+Full catalog of events the rewrite ships in v1. Partial list was given in §7; this is the authoritative reference plugins code against.
+
+### Naming conventions (recap)
+
+- **Past tense for facts** (`UserCreated`, `AlbumDeleted`) — listeners react; event is immutable.
+- **Present participle for "before" hooks** (`UserAuthenticating`, `ImageUploading`) — listeners may veto or mutate.
+- **Imperative for render hooks** (`RenderPicturePage`, `BuildAdminMenu`) — listeners contribute content/data.
+- **Noun only for scheduled** (`CronTick`, `HourlyTick`) — listeners run periodic work.
+
+Namespaces: `Piwigo\Event\{Area}\{EventName}`.
+
+Cancellation: mutable "before" events implement `CancellableEventInterface`; calling `$event->cancel('reason')` aborts the operation and returns a meaningful error to the caller.
+
+### Auth events (`Piwigo\Event\Auth\`)
+
+| Event | Fired when | Payload | Mutable |
+|---|---|---|---|
+| `UserAuthenticating` | Credentials submitted, before password verify | `$username`, `$ipAddress`, cancellable with reason | Yes |
+| `UserAuthenticated` | Successful login (before session regen) | `User $user`, `AuthMethod $method` | No |
+| `UserAuthenticationFailed` | Bad password / unknown user / locked | `$username`, `FailureReason $reason`, `$ipAddress` | No |
+| `SessionStarted` | Session initialized for a request | `SessionService $session` | No |
+| `SessionRegenerated` | Session ID rotated (on login, privilege change) | `$oldId`, `$newId` | No |
+| `UserLoggedOut` | Logout endpoint invoked | `User $user` | No |
+| `TokenCreated` | Personal access token issued | `ApiToken $token` (value shown once) | No |
+| `TokenRevoked` | Token deleted by user or admin | `ApiToken $token`, `User $revokedBy` | No |
+| `RememberMeConsumed` | Valid remember-me cookie auto-loggged in user | `User $user`, `RememberToken $token` | No |
+| `PasswordResetRequested` | User requested reset email | `User $user`, `$resetToken` | No |
+| `PasswordResetCompleted` | Password actually changed via reset | `User $user` | No |
+| `TwoFactorChallengeRequired` | 2FA enabled on account, awaiting code | `User $user` | No |
+
+### User lifecycle events (`Piwigo\Event\User\`)
+
+| Event | Fired when | Payload | Mutable |
+|---|---|---|---|
+| `UserRegistering` | Registration submitted, before row insert | `RegistrationInput $input`, cancellable | Yes |
+| `UserCreated` | Row inserted into `users` | `User $user`, `?Request $request` | No |
+| `UserUpdating` | Profile update, before commit | `User $user`, `UserUpdate $changes` | Yes |
+| `UserUpdated` | Profile update committed | `User $before`, `User $after` | No |
+| `UserDeleting` | Account deletion, before commit | `User $user`, cancellable | Yes |
+| `UserDeleted` | Account deleted | `User $user` (read-only snapshot) | No |
+| `UserAccessLevelChanged` | Role promoted/demoted | `User $user`, `AccessLevel $old`, `AccessLevel $new` | No |
+
+### Album lifecycle events (`Piwigo\Event\Album\`)
+
+| Event | Fired when | Payload | Mutable |
+|---|---|---|---|
+| `AlbumCreating` | Before row insert | `CreateAlbumInput $input`, cancellable | Yes |
+| `AlbumCreated` | After commit | `Album $album` | No |
+| `AlbumUpdating` | Before commit | `Album $album`, `AlbumUpdate $changes` | Yes |
+| `AlbumUpdated` | After commit | `Album $before`, `Album $after` | No |
+| `AlbumDeleting` | Before delete | `Album $album`, cancellable | Yes |
+| `AlbumDeleted` | After delete | `Album $snapshot` | No |
+| `AlbumMoved` | Parent changed (tree move) | `Album $album`, `?Album $oldParent`, `?Album $newParent` | No |
+| `AlbumPermissionsChanged` | User/group ACL or `min_level` changed | `Album $album`, `PermissionDiff $diff` | No |
+| `AlbumCoverImageChanged` | Cover image reassigned | `Album $album`, `?Image $old`, `?Image $new` | No |
+
+### Image lifecycle events (`Piwigo\Event\Image\`)
+
+| Event | Fired when | Payload | Mutable |
+|---|---|---|---|
+| `ImageUploading` | File received, before validation | `UploadedFile $file`, `User $uploader`, cancellable | Yes |
+| `ImageValidating` | After magic-byte check, before save | `ProbedImage $probe`, cancellable | Yes |
+| `ImageSaving` | Before DB row insert | `Image $image`, mutable metadata | Yes |
+| `ImageCreated` | After commit, before derivative queue | `Image $image` | No |
+| `ImageUpdating` | Metadata edit, before commit | `Image $image`, `ImageUpdate $changes` | Yes |
+| `ImageUpdated` | Metadata edit committed | `Image $before`, `Image $after` | No |
+| `ImageDeleting` | Before delete | `Image $image`, cancellable | Yes |
+| `ImageDeleted` | After delete (derivatives cleaned, row removed) | `Image $snapshot` | No |
+| `ImageMovedBetweenAlbums` | Membership change | `Image $image`, `Album[] $added`, `Album[] $removed` | No |
+| `ImageTagsChanged` | Tag membership change | `Image $image`, `Tag[] $added`, `Tag[] $removed` | No |
+| `ImageRatingChanged` | Rating updated | `Image $image`, `?int $old`, `?int $new` | No |
+| `ImageViewed` | Public view recorded (throttled to one per session per image) | `Image $image`, `?User $viewer` | No |
+
+### Derivative events (`Piwigo\Event\Derivative\`)
+
+| Event | Fired when | Payload | Mutable |
+|---|---|---|---|
+| `DerivativeRequested` | Cache miss on `/i/...` | `DerivativeRequest $req`, `Image $source` | No |
+| `DerivativeGenerating` | Before libvips runs | `Image $source`, `DerivativeParams $params`, cancellable | Yes |
+| `DerivativeGenerated` | File written to cache | `Image $source`, `DerivativeParams $params`, `$path`, `$bytes` | No |
+| `DerivativeFlushed` | Manual or scheduled purge | `Image $source` | No |
+| `DerivativeBatchPrunedOrphans` | Scheduled prune ran | `int $removedCount`, `int $freedBytes` | No |
+
+### Tag events (`Piwigo\Event\Tag\`)
+
+| Event | Fired when | Payload | Mutable |
+|---|---|---|---|
+| `TagCreated` | New tag inserted | `Tag $tag` | No |
+| `TagRenamed` | Tag name/slug changed | `Tag $tag`, `$oldName`, `$newName` | No |
+| `TagMerged` | Two tags merged | `Tag $survivor`, `Tag $absorbed`, `int $imagesUpdated` | No |
+| `TagDeleted` | Tag removed (with cascade) | `Tag $snapshot`, `int $imagesDetached` | No |
+
+### Comment events (`Piwigo\Event\Comment\`)
+
+| Event | Fired when | Payload | Mutable |
+|---|---|---|---|
+| `CommentSubmitting` | Before validation (spam check hook) | `CommentInput $input`, cancellable | Yes |
+| `CommentCreated` | After commit (may be `pending`) | `Comment $comment` | No |
+| `CommentApproved` | Moderator approves | `Comment $comment`, `User $moderator` | No |
+| `CommentRejected` | Moderator rejects | `Comment $comment`, `User $moderator`, `$reason` | No |
+| `CommentDeleted` | Comment removed | `Comment $snapshot` | No |
+
+### Search events (`Piwigo\Event\Search\`)
+
+| Event | Fired when | Payload | Mutable |
+|---|---|---|---|
+| `SearchBuilding` | Query about to be parsed | `$rawQuery`, `User $viewer`, mutable | Yes |
+| `SearchQueryBuilt` | After parse, before execute | `SearchQuery $query` | Yes |
+| `SearchCompleted` | Results assembled | `SearchQuery $query`, `SearchResult $result`, `int $elapsedMs` | No |
+| `SuggestionsRequested` | Autocomplete hit | `$prefix`, array of suggestions | Yes |
+
+### API events (`Piwigo\Event\Api\`)
+
+| Event | Fired when | Payload | Mutable |
+|---|---|---|---|
+| `ApiRequestReceived` | Top of any `/api/v*` request | `ServerRequestInterface $req` | No |
+| `ApiResponseSending` | Just before response write | `ResponseInterface $res`, `$request` | Yes |
+| `ApiRateLimitExceeded` | 429 about to be returned | `$key`, `$limit`, `$resetAt` | No |
+| `WebhookDelivering` | Before outbound HTTP call | `WebhookDelivery $delivery`, cancellable | Yes |
+| `WebhookDelivered` | 2xx response from endpoint | `WebhookDelivery $delivery`, `$responseTimeMs` | No |
+| `WebhookFailed` | Non-2xx or network error (per attempt) | `WebhookDelivery $delivery`, `int $attemptNumber`, `\Throwable $error` | No |
+| `WebhookDeadLettered` | All retries exhausted | `WebhookDelivery $delivery` | No |
+
+### Render events (`Piwigo\Event\Render\`)
+
+Hook-point events plugins use to contribute HTML/data:
+
+| Event | Fired when | Payload | Mutable |
+|---|---|---|---|
+| `RenderHead` | `<head>` building | `HeadBuilder $head` — `->addScript()`, `->addStyle()`, `->addMeta()`, `->addLink()` | Yes |
+| `RenderGalleryIndex` | Index page template data being built | `GalleryIndexData $data` | Yes |
+| `RenderAlbum` | Album page template data | `AlbumViewData $data` | Yes |
+| `RenderPicture` | Picture page template data | `PictureViewData $data` | Yes |
+| `RenderSearchResults` | Search results template data | `SearchViewData $data` | Yes |
+| `RenderFooter` | Before `</body>` | `FooterBuilder $footer` | Yes |
+| `RenderPictureMetadata` | Metadata panel (EXIF, GPS) rendering | `Image $image`, `MetadataPanel $panel` | Yes |
+| `RenderThumbnailCell` | Each thumbnail cell in a grid | `Image $image`, `ThumbnailCell $cell` | Yes |
+
+### Admin events (`Piwigo\Event\Admin\`)
+
+| Event | Fired when | Payload | Mutable |
+|---|---|---|---|
+| `BuildAdminMenu` | Building sidebar | `AdminMenu $menu` — `->add('Settings', '/admin/settings', icon: …, order: 50)` | Yes |
+| `BuildAdminDashboard` | Dashboard widgets | `DashboardBuilder $builder` | Yes |
+| `AdminActionExecuted` | Any admin action (audit trail) | `$action`, `User $admin`, `$target`, `$details` | No |
+| `PluginEnabled` | Plugin toggled on | `Plugin $plugin`, `User $admin` | No |
+| `PluginDisabled` | Plugin toggled off | `Plugin $plugin`, `User $admin` | No |
+| `PluginInstalled` | Plugin installed | `Plugin $plugin` | No |
+| `PluginUninstalled` | Plugin removed | `Plugin $plugin`, `bool $dataDropped` | No |
+| `MaintenanceModeChanged` | Maintenance toggled | `bool $enabled`, `?string $message` | No |
+| `SettingChanged` | Any `settings` row updated | `$key`, mixed `$oldValue`, mixed `$newValue` | No |
+
+### Scheduled / cron events (`Piwigo\Event\Cron\`)
+
+Plugins subscribe for periodic work without running their own cron:
+
+| Event | Fired | Payload |
+|---|---|---|
+| `MinuteTick` | Every minute | `\DateTimeImmutable $now` |
+| `FiveMinuteTick` | Every 5 minutes | `\DateTimeImmutable $now` |
+| `HourlyTick` | Every hour | `\DateTimeImmutable $now` |
+| `DailyTick` | Daily 03:00 UTC | `\DateTimeImmutable $now` |
+| `WeeklyTick` | Sunday 04:00 UTC | `\DateTimeImmutable $now` |
+| `MonthlyTick` | 1st of month 05:00 UTC | `\DateTimeImmutable $now` |
+
+Listeners should enqueue their own `Message`s rather than blocking the tick dispatcher.
+
+### System events (`Piwigo\Event\System\`)
+
+| Event | Fired when | Payload |
+|---|---|---|
+| `AppBooted` | Once per worker, after container built | `Container $container` |
+| `AppShuttingDown` | Worker receiving SIGTERM | `int $requestsHandled` |
+| `RequestStarted` | Top of middleware stack | `ServerRequestInterface $req` |
+| `RequestCompleted` | Response about to flush | `ServerRequestInterface $req`, `ResponseInterface $res`, `int $elapsedMs` |
+| `ExceptionCaught` | Error middleware caught an exception | `\Throwable $exception`, `ServerRequestInterface $req` |
+| `DatabaseQueryExecuted` | After every query (dev/trace mode only) | `$sql`, `$params`, `int $elapsedUs` |
+
+### Custom events
+
+Plugins dispatch their own event classes via the same dispatcher. Naming convention: `VendorName\PluginName\Event\*`. Other plugins can subscribe to them — an event bus is a feature, not a closed catalog.
+
+### Event deprecation
+
+If an event is renamed or removed:
+
+- Old event continues firing alongside the new one for one minor version.
+- Listener registration to the old name logs a deprecation warning with the new name.
+- Removed in the next minor; hard break only at a major version bump.
+
+### Event discovery
+
+```
+php bin/piwigo events:list
+php bin/piwigo events:list --filter=Image
+php bin/piwigo events:show Piwigo\Event\Image\ImageCreated    # full payload schema + listeners currently subscribed
+```
+
+Generates event reference docs as part of `docs/events.md` at CI time.
+
+---
+
+## 24. Upload and Filesystem Sync
+
+Two paths bring photos into the app: **uploads** (user-driven, per-file or batch) and **sync** (admin-driven, directory-tree mirror). They share the validation pipeline but have different UX, different concurrency profiles, and different failure modes.
+
+### Upload protocols
+
+Three supported, each for a different client type:
+
+| Protocol | Client | Max size | Resumable |
+|---|---|---|---|
+| `multipart/form-data` | Browser form (no-JS fallback) | 100 MB default | No |
+| Chunked via `multipart` + range | Browser with JS | Unbounded | Yes |
+| tus (Resumable Uploads Protocol) | Mobile apps, CLI, third parties | Unbounded | Yes |
+
+tus is the primary path for non-browser clients. The tus server implementation uses `srmklive/laravel-tus-upload` (rewritten for our stack) or a self-rolled minimal tus server — the protocol is small.
+
+### Client-side (browser, JS)
+
+`upload.js` provides:
+
+- **Drag-drop zone + file-picker fallback.**
+- **Parallel uploads**, default 3 concurrent; configurable.
+- **Per-file progress bar.**
+- **Retry on transient errors**, exponential backoff up to 5 attempts.
+- **Chunked upload** for files > 5 MB; client splits and uploads chunks, server reassembles.
+- **Resume on refresh** — partial uploads recorded in `localStorage` with tus URL; page reload lists them for one-click resume.
+- **Client-side pre-checks:** file size, MIME allowlist, max-dim (optional — declines obvious non-images before upload).
+
+No upload library dependency — tus has a small client; we ship it.
+
+### Server-side validation pipeline (recap from §5)
+
+```
+Received bytes (stream or completed file)
+    ↓
+1. Content-length within config max → else 413
+    ↓
+2. MIME in allowlist → else 415
+    ↓
+3. File in quarantine dir with randomized name (not web-reachable)
+    ↓
+4. Magic-byte probe via libvips → else 422 "not an image"
+    ↓
+5. libvips loads headers (dimensions, format, animation, color profile)
+    ↓
+6. EXIF extraction (try/catch — non-fatal)
+    ↓
+7. sha256 + perceptual hash
+    ↓
+8. Duplicate detection (see below)
+    ↓
+9. Optional ClamAV scan
+    ↓
+10. Dispatch ImageUploading + ImageValidating (plugins can veto)
+    ↓
+11. Move to originals/YYYY/MM/uuid.ext
+    ↓
+12. Quota debit (transactional with row insert)
+    ↓
+13. INSERT images row + image_albums rows + image_tags rows
+    ↓
+14. Dispatch ImageCreated
+    ↓
+15. Enqueue GenerateDerivativesMessage for all presets
+```
+
+Failure at any step → quarantine file deleted, error returned. No partial state.
+
+### Duplicate detection
+
+Two-level:
+
+- **Exact** — `sha256` match. Hard block (or configurable: replace, add to album, skip).
+- **Perceptual** — pHash Hamming distance ≤ 6 out of 64. Soft warning with preview: "looks similar to image #42 — upload anyway?"
+
+Configurable per-install: block, warn, or silent.
+
+### Quota enforcement
+
+Before the INSERT (step 13), quota is checked + debited inside the same DB transaction:
+
+```sql
+UPDATE user_quotas
+SET bytes_used = bytes_used + :size,
+    files_used = files_used + 1
+WHERE user_id = :user_id
+  AND (bytes_limit IS NULL OR bytes_used + :size <= bytes_limit)
+  AND (files_limit IS NULL OR files_used + 1 <= files_limit);
+```
+
+Zero affected rows → quota exceeded → 413 with current/limit breakdown. Atomic with the image insert: no way to insert the row and skip the debit.
+
+### Batch upload UX
+
+The upload page supports selecting many files at once:
+
+- Files queued client-side; uploaded N at a time (configurable parallelism).
+- Each file shows progress; failures show the error inline with a retry button.
+- Overall progress bar (e.g. "uploading 42 of 100 — 1.2 GB of 3.4 GB").
+- On completion: summary with success/failure counts, links to the created images.
+
+All files receive the same initial album + tags set by the user in the form; per-file adjustments happen in the batch manager afterwards.
+
+### Filesystem sync
+
+For admins importing large directory trees (existing photo library, scanned-film archive, camera SD dump), the CLI sync walks a filesystem and reconciles with the DB.
+
+```
+php bin/piwigo sync /photos/2024-vacation [--options]
+```
+
+Options:
+
+| Flag | Effect |
+|---|---|
+| `--dry-run` | Report would-be changes, write nothing |
+| `--album=17` | Target a specific album as the root (default: infer from top-level dir) |
+| `--mirror-tree` | Create sub-albums mirroring the directory structure |
+| `--tag-from-path` | Infer tags from directory names (excluding album-mapped ones) |
+| `--delete-missing` | Remove DB rows for files no longer on disk |
+| `--force-rehash` | Recompute sha256/pHash for unchanged files (disaster-recovery use) |
+| `--watch` | Keep running; react to filesystem changes (inotify/fsnotify) |
+| `--concurrency=4` | Parallel workers (default: CPU count) |
+| `--progress` | Show live progress bar + ETA |
+| `--resume` | Pick up from the last checkpoint (sync writes checkpoints every 100 files) |
+
+### Sync walk algorithm
+
+```
+1. Scan target directory tree into a list of (path, mtime, size).
+2. Load the album's current image set into an in-memory set keyed by storage_path.
+3. For each file on disk:
+   a. If already in the set with matching mtime + size → skip.
+   b. If new → run the validation pipeline, insert.
+   c. If path matches but mtime/size differ → re-probe, update row, flush derivatives.
+4. If --delete-missing:
+   Files in the DB set but not on disk → remove DB row, dispatch ImageDeleted.
+5. If --mirror-tree:
+   Directories become albums; moved files become album-membership changes.
+6. Write checkpoint every 100 files.
+```
+
+### Dry-run output
+
+```
+$ php bin/piwigo sync /photos/2024-vacation --mirror-tree --dry-run
+
+Sync plan for /photos/2024-vacation → album "Vacation 2024"
+────────────────────────────────────────────────────────────
+Albums to create:
+  + /Vacation 2024/Iceland
+  + /Vacation 2024/Iceland/Day 1
+  + /Vacation 2024/Iceland/Day 2
+  + /Vacation 2024/Norway
+
+Images to import: 1,243
+  - 1,103 new
+  - 42 updated (mtime differs)
+  - 98 already in sync (skipped)
+
+Quota impact:
+  Author: alice
+  Current: 12.4 GB / 50.0 GB
+  After:   34.2 GB / 50.0 GB  (+21.8 GB)
+
+Estimated time: 18 min (at 1.2 images/sec)
+
+Run without --dry-run to apply.
+```
+
+### Tag inference from paths
+
+With `--tag-from-path`, directory names (other than those mapped to albums) become tag candidates. Example:
+
+```
+/photos/2024/Iceland/landscape/sunset/IMG_0042.jpg
+```
+
+With `--mirror-tree` mapping `/photos/2024/Iceland/` to albums, the remaining path `landscape/sunset` infers tags `landscape` and `sunset`. Separator is `/`; tags are lowercased + slug-normalized.
+
+A stop-word list filters out nonsense (`thumbnails`, `originals`, `exports`, `.cache`, `__MACOSX`); configurable.
+
+### Watch-folder mode
+
+`--watch` runs the sync continuously using inotify (Linux) or fsnotify (cross-platform fallback). Newly-appearing files trigger the validation pipeline in real time; modified files re-probe; deleted files optionally remove rows.
+
+Debounced — camera uploading to a watched folder often writes in chunks; the watcher waits 5 s of quiescence per file before processing.
+
+### Conflict resolution
+
+Files can change in ways that matter:
+
+| Detection | Action |
+|---|---|
+| Same path, same sha256, same mtime | No-op |
+| Same path, same sha256, different mtime | Update `updated_at` only |
+| Same path, different sha256 | Re-probe; if still valid, update the row + flush derivatives |
+| New path, known sha256 | "File moved" — update `storage_path`, preserve DB ID + albums + tags |
+| Known path gone, same sha256 appears elsewhere | Same as "file moved" |
+| Known path gone, no match | If `--delete-missing`, delete; else warn |
+
+Moves preserve identity: the image's DB ID, URLs, album memberships, tags, comments, and ratings all survive a disk reorganization.
+
+### Error handling
+
+The walk is fault-tolerant:
+
+- Single-file failures are logged, sync continues.
+- At end, a summary reports per-error-type counts + pointer to log.
+- Fatal errors (DB down, disk full) abort with a checkpoint written — `--resume` picks up.
+
+### Sync via the API
+
+The same operation is available as a long-running API operation (see §22):
+
+```
+POST /api/v1/albums/17/actions/sync { "directory": "/photos/2024", "mirror_tree": true }
+→ 202 Accepted, Location: /api/v1/operations/op-a7b3c2
+```
+
+Clients poll the operation endpoint for progress.
+
+### Permissions for upload
+
+- Uploader must have `can_upload` on at least one album the upload targets.
+- Sync via admin CLI requires `Admin` access level.
+- API uploads need a token with `write` scope.
+
+### Security recap (from §11)
+
+- Files never served from the upload directory.
+- UUIDv7 filenames on disk; user's filename is display-only.
+- Magic-byte check via libvips.
+- SVG rejected by default.
+- ClamAV optional.
+- Upload pipeline events let plugins veto.
+
+### Testing the pipeline
+
+- Fixture images from `tests/fixtures/images/` (EXIF orientations, HEIC, AVIF, animated WebP, CMYK, pathological JPEGs).
+- Each fixture uploaded through the pipeline → assertions on DB state, storage layout, derivative existence.
+- Quota enforcement exercised with fixtures that would exceed quota.
+- Malicious fixtures (zip bombs disguised as JPEGs, embedded PHP in JFIF comment) must fail gracefully.
+- Sync walk tested against a tree fixture with known expected DB state.
+
+---
+
+## 25. Admin UI and UX
+
+The admin UI is an **application in its own right**, not an afterthought. A power user spends most of their time here; slow, clunky, or cryptic admin is a day-to-day tax.
+
+### Design principles
+
+1. **Keyboard-first.** Every action reachable without the mouse. Visible shortcuts everywhere.
+2. **Progressive enhancement.** No-JS users can still do basic admin — maybe slower, never broken.
+3. **Bulk by default.** A user editing one photo is an accident; the real workload is editing hundreds.
+4. **Dense but discoverable.** Information density matters for power users; hover/focus reveals affordances without crowding.
+5. **No surprise writes.** Destructive actions confirm; destructive batch actions double-confirm with the affected count.
+6. **Audit everything.** Every admin write produces an audit-log entry automatically.
+
+### Navigation structure
+
+```
+Dashboard                     (home for admin — system health, recent activity)
+├── Content
+│   ├── Albums                (tree view, drag-drop reorder, bulk ops)
+│   ├── Photos                (batch manager)
+│   ├── Tags                  (rename, merge, delete)
+│   └── Comments              (moderation queue)
+├── People
+│   ├── Users
+│   └── Groups
+├── Plugins
+│   ├── Installed
+│   └── Browse                (future — marketplace, not v1)
+├── Appearance
+│   └── Themes
+├── System
+│   ├── Sync                  (import / filesystem sync)
+│   ├── Maintenance           (cache, derivatives, DB checks)
+│   ├── Queues                (job queue monitor)
+│   ├── Audit Log             (filter + export)
+│   ├── Deprecations          (APIs/config in use that are deprecated)
+│   └── Settings              (grouped by area)
+└── About
+    ├── Version
+    ├── Health Check
+    └── Logs                  (live tail, filtered)
+```
+
+Persistent left sidebar with collapsible groups; top bar has breadcrumb + global search + user menu.
+
+### Dashboard
+
+At-a-glance snapshot, refreshed via HTMX every 30 s:
+
+- **System status:** all-green / warning / error light per subsystem (DB, storage, queues, mail).
+- **Storage:** originals + derivatives + free space, with trend sparkline.
+- **Queues:** depth per queue, processed/min.
+- **Recent uploads:** last 20.
+- **Recent comments awaiting moderation.**
+- **Recent security events:** logins from new IPs, failed login bursts.
+- **Deprecation usage:** any APIs/hooks in use that are marked for removal.
+
+### Album admin
+
+Tree view with lazy-loaded children:
+
+- **Drag-drop reorder** (siblings) and **drag-drop move** (different parent).
+- **Keyboard:** arrow keys navigate, space expands, `e` edits, `Delete` deletes (with confirm), `n` creates sibling, `Shift+n` creates child.
+- **Bulk select** via checkbox; bulk actions: delete, move, change permissions, set cover image.
+- **Inline edit** for name/rank; full edit opens a drawer without leaving the tree.
+- **Permission editor** per album (next section).
+
+### Photo batch manager
+
+The bread and butter of admin work. Goal: edit metadata on hundreds of photos without carpal tunnel.
+
+Layout:
+
+- **Filter sidebar:** albums, tags, date range, author, camera, has-GPS, rating, permissions, missing-metadata (no title / no description / no tags).
+- **Grid view** with thumbnails; infinite scroll with virtualized DOM.
+- **Selection:** click to select; Shift-click for range; Cmd/Ctrl-click for toggle; select-all / select-none / invert.
+- **Action bar** appears when ≥ 1 photo selected — fixed to top of grid:
+  - Add tags / remove tags.
+  - Add to album / remove from album / move between albums.
+  - Change author.
+  - Set rating.
+  - Change permissions (min_level, ACL).
+  - Regenerate derivatives.
+  - Delete (double-confirm with count).
+  - Export (ZIP with originals + metadata).
+- **Undo** for most actions — the action creates an audit entry that can be reverted within 5 minutes.
+
+Every batch action dispatches a `BulkXxxOperation` (see §22 batch endpoints) which runs async for > 50 items; UI shows progress and links to the operation details.
+
+### Keyboard shortcuts catalog
+
+Documented in `?` help modal:
+
+```
+Global
+    /         focus global search
+    g then d  go to dashboard
+    g then p  go to photos
+    g then a  go to albums
+    g then u  go to users
+    ?         keyboard shortcuts help
+
+Batch manager
+    j / k     move selection down / up
+    x         toggle current photo selection
+    Shift+x   extend selection range
+    a         select all visible
+    A         clear selection
+    e         open edit drawer for selection
+    t         open tag picker
+    Del       delete (with confirm)
+    r         regenerate derivatives
+
+Album tree
+    ↑ / ↓     navigate siblings
+    ← / →     collapse / expand
+    Enter     open
+    n         new sibling
+    Shift+n   new child
+    e         edit
+    Del       delete
+```
+
+### User / group admin
+
+- **Users list:** search, filter by role, filter by last-active window.
+- **User detail:** profile, permissions (resolved effective + explicit per-album), recent activity, API tokens, sessions.
+- **Bulk actions:** change role, force logout (revoke sessions), delete.
+- **Group editor:** members, per-album ACL, default groups auto-assigned to new users.
+
+### Permission editor
+
+The hardest UX in the admin. Goal: "make this album private except for alice and the 'family' group" should be obvious.
+
+Layout per-album:
+
+```
+Album: Vacation 2024
+───────────────────────────────────────────────────
+Access level required:    [Guest ▾]  (inheriting: Guest)
+
+Public (unchecked)
+
+Overrides:
+  ┌─────────────────────────────────────────────┐
+  │ User / Group      View   Upload    Manage   │
+  ├─────────────────────────────────────────────┤
+  │ [+] alice          ✓      ✓         —       │
+  │ [+] @family        ✓      —         —       │
+  │ [×] bob            ✓      —         —       │
+  └─────────────────────────────────────────────┘
+
+Effective: Users who can view this album
+  alice (explicit), @family (bob, carol, dave via group)
+```
+
+- Inheritance from parent shown with "inheriting from: …" labels.
+- Conflicts (group grants, user denies) shown with explicit resolution ("user override wins").
+- **"Preview as user X"** — shows what a specific user would see if they visited the album.
+
+### Plugin admin
+
+- List of installed plugins, toggleable on/off.
+- Per-plugin settings page (plugins declare their settings schema; admin UI auto-renders a form).
+- Install by Composer package name (admin UI shells out to `composer require`); uninstall reverses.
+- Plugin-shipped migrations visible and runnable.
+
+### Sync UI
+
+Admin-facing wrapper over the CLI sync (§24):
+
+- Form to enter path + options.
+- Dry-run preview before committing.
+- Live progress (SSE or polling).
+- Log tail displayed during run.
+- Cancelable (graceful — in-flight file completes, then stop).
+
+### Maintenance page
+
+One-click actions with clear blast radius:
+
+- Clear response cache.
+- Clear Latte compile cache.
+- Prune orphaned derivatives.
+- Recompute album image counts.
+- Rebuild search index.
+- Check + fix broken-link rows (DB → missing file).
+- Trigger a queue flush (process DLQ one by one with operator review).
+
+### Audit log viewer
+
+Filterable table: actor, event, target, date range. Export to CSV for compliance reviews. Retention is configurable (default 365 days).
+
+### Queue monitor
+
+- Per-queue: depth, processed/min, average time, oldest job age, DLQ count.
+- DLQ viewer: expand a failed message, see stack trace, retry or drop.
+- Restart a worker (if the admin has shell access and the deployment supports it).
+
+### Settings
+
+Grouped by area: general, storage, uploads, derivatives, email, security, privacy, search, advanced. Each setting has a tooltip explaining its effect; some settings require a worker restart (indicated inline).
+
+### Theme and dark mode
+
+Admin UI has its own theme — intentionally neutral (doesn't look like the public gallery). Dark mode follows OS preference or per-user override. WCAG AA contrast throughout.
+
+### Responsive
+
+Admin works on a phone for read-only tasks (check queue, moderate comments, approve a user). Data-heavy tasks (batch manager) degrade to a list view on narrow screens with a note that a larger screen is better.
+
+### Framework choices (recap)
+
+- **HTMX** for most admin interactions — small, no SPA, partial updates via `hx-swap`.
+- **Alpine.js** for local state (dropdowns, modals, keyboard-shortcut handling).
+- **Vanilla JS** for the batch-manager grid (virtualized rendering, drag-drop).
+- No React / Vue / Svelte.
+
+### Testing
+
+- Browser tests cover every admin happy-path workflow (upload → edit → permission → delete).
+- Accessibility tests on every admin page (axe-core).
+- Keyboard-only test: a scripted test drives every core workflow using only keyboard events.
+- Permission tests: non-admin users attempting admin routes return 403, not 500.
+
+---
+
+## 26. Performance and Scaling
+
+Scattered performance notes appear in several sections (FrankenPHP worker model in §2, caching in §14, DB design in §4, derivative pipeline in §5). This section pulls them into a unified story: what the app does when it gets popular.
+
+### Baseline targets
+
+Single-server reference deployment (4 vCPU, 8 GB RAM, SSD, commodity hardware, no CDN):
+
+| Workload | Target (p95) |
+|---|---|
+| Anonymous gallery index (cached) | < 5 ms |
+| Anonymous gallery index (cache miss) | < 20 ms |
+| Authenticated album page (50 thumbs) | < 30 ms |
+| Picture page | < 15 ms |
+| Derivative serve (cache hit, by Caddy) | < 2 ms |
+| Derivative serve (cache miss, generate) | < 200 ms for ≤ 10 MP source |
+| API GET single resource | < 10 ms |
+| API list (30 items, paginated) | < 25 ms |
+| Login | < 150 ms (bcrypt/argon2 dominant) |
+| Upload (5 MB JPEG, validation only) | < 500 ms |
+| Search (10k images, cache miss) | < 100 ms |
+
+Targets are **measured, not aspirational.** The benchmark suite in `tests/Performance/` asserts these; a regression > 20% fails the nightly run.
+
+### Single-server capacity
+
+With the above numbers and the response cache hit rate at ~80% for public gallery traffic, a 4-core single server handles:
+
+- ~2,000 req/s on cached gallery pages.
+- ~200 req/s on cache-miss gallery pages.
+- ~500 req/s on API reads.
+- ~20 uploads/s (CPU-bound on libvips).
+
+Enough for low-six-figure monthly visitors on a commodity server.
+
+### Scaling horizontally
+
+When one server isn't enough, the architecture scales horizontally with these components swapped from local-disk or in-process to shared:
+
+| Component | Local (default) | Scaled-out |
+|---|---|---|
+| Session store | DB table | Redis |
+| Response cache | APCu + local Redis | Shared Redis |
+| Queue | DB table (Doctrine transport) | Redis / RabbitMQ |
+| Derivative storage | Local disk | S3-compatible bucket |
+| Originals storage | Local disk | S3-compatible bucket |
+| Search index | Local MySQL / Postgres | Meilisearch cluster |
+| Lock store (for derivative stampede) | flock | Redis SETNX |
+
+Nothing else needs to change. Two FrankenPHP instances behind a load balancer serve the same DB + Redis + S3 + search transparently.
+
+### Load balancer configuration
+
+- **Layer 7** (HTTP-aware) preferred — HAProxy, Caddy as LB, or a cloud LB.
+- **Session stickiness not required** — sessions are in shared storage. Stickiness is fine, not required.
+- **Health checks** hit `/readyz`; remove failing instance from rotation within 10 s.
+- **Graceful drain** — LB respects `Connection: close` on shutdown; workers drain before exit.
+
+### Session pinning vs. shared session
+
+Two options:
+
+**Pinned (sticky sessions):**
+- LB routes a given user's subsequent requests to the same backend.
+- Simpler; a worker's in-process cache is more effective.
+- Failure of a backend drops its users' sessions unless storage is still shared.
+
+**Shared (default):**
+- Any worker serves any request.
+- Requires Redis / DB session storage.
+- Slightly higher per-request latency (fetch session from Redis vs. local).
+
+Recommendation: shared. The latency cost (~0.5 ms) is negligible vs. the operational simplicity of any-backend-handles-any-request.
+
+### DB scaling
+
+**Vertical first.** A well-indexed Postgres or MySQL on modern hardware handles tens of millions of images without complaint.
+
+**Read replicas** — when a write-heavy workload saturates the primary:
+
+```php
+// Readonly accessor hits a replica; writes always go to primary
+$albums = $this->db->readonly()->fetchAll('SELECT ...');
+$this->db->execute('INSERT ...');   // primary
+```
+
+Opt-in per-repository method; stale-reads acceptable for anonymous gallery listings, unacceptable for a user reading-after-write their own data. Architecture tests flag any `readonly()` call inside a transaction (wrong primitive).
+
+**Sharding** — not planned. A gallery that needs horizontal DB sharding has crossed a threshold this project isn't designed for.
+
+### Queue scaling
+
+Per-queue worker count is the knob. Each queue has a `systemd` unit (`piwigo-worker@images`, `piwigo-worker@mail`, etc.); scaling up is `systemctl start piwigo-worker@images-2 piwigo-worker@images-3 …`.
+
+Auto-scaling: a Prometheus alert fires at "queue depth > 100 for 5 min"; an ops operator adds more workers. More automation (K8s HPA against queue depth) is possible but not scope for v1.
+
+### Search scaling
+
+- **MySQL/Postgres fulltext:** scales with the DB.
+- **Meilisearch:** up to ~10M docs on a single instance; cluster mode for larger.
+
+The `SearchEngine` interface makes the swap transparent; no domain code changes.
+
+### CDN for derivatives
+
+Derivative URLs are content-addressed (URL includes a hash of params), so they're `Cache-Control: public, max-age=31536000, immutable` — ideal for any CDN:
+
+- **Cloudflare / Fastly / Bunny.net / CloudFront** all cache by URL + Vary.
+- CDN hit serves the derivative without the origin seeing the request at all.
+- CDN miss proxies to origin; origin serves from local cache or generates.
+
+For installs with a CDN, the origin is almost never bothered by derivative traffic — it's just responsible for generating new derivatives and serving the HTML that references them.
+
+### HTTP/3 benefits
+
+FrankenPHP's embedded Caddy speaks HTTP/3 over QUIC. For a gallery page with 50 thumbnails:
+
+- HTTP/1.1: serialized requests, connection-per-origin limit, ~2–3 s on a mobile network.
+- HTTP/2: multiplexed over one TCP connection, ~800 ms.
+- HTTP/3: multiplexed over QUIC, no head-of-line blocking, ~500 ms.
+
+Real gains on mobile networks with packet loss.
+
+### Image delivery optimizations
+
+- **Format negotiation** (§5): AVIF for modern browsers (~50% smaller than JPEG at equivalent quality), WebP for most, JPEG fallback.
+- **Responsive images** via `<picture>` + `srcset` + `sizes`: browser chooses the smallest derivative that fits the viewport.
+- **Lazy loading** via `loading="lazy"`: below-the-fold thumbnails don't block initial render.
+- **Preload hints** on the picture page: `<link rel="preload">` the large derivative while the page HTML renders.
+
+### SLIs and SLOs
+
+Service level indicators the project measures:
+
+| SLI | Definition |
+|---|---|
+| **Availability** | `1 - (5xx responses / total responses)` over 30-day window |
+| **Latency** | p95 response time on `/` and `/albums/*` |
+| **Derivative freshness** | p95 time from upload → first derivative available |
+| **Queue lag** | p95 time from message enqueued → handled |
+| **Error rate** | 5xx per minute |
+
+Example SLOs a deployment might adopt:
+
+| SLO | Target | Budget |
+|---|---|---|
+| Availability | 99.5% / 30 d | ~3.6 h of 5xx allowed / month |
+| p95 gallery latency | < 500 ms | 5% slow tolerated |
+| p95 queue lag | < 60 s | 5% stale tolerated |
+| Error rate | < 0.1% | 1 in 1000 requests may 5xx |
+
+Burn-rate alerts (2% of monthly budget in 1 h → page; 10% in 6 h → warn) catch trouble early.
+
+### Capacity planning
+
+A rough guide for "how much server":
+
+| Images | Users (monthly unique) | Baseline | Recommended |
+|---|---|---|---|
+| < 10k | < 1k | 1 vCPU / 2 GB / SSD | 2 vCPU / 4 GB |
+| < 100k | < 10k | 2 vCPU / 4 GB | 4 vCPU / 8 GB |
+| < 1M | < 100k | 4 vCPU / 8 GB | 8 vCPU / 16 GB + CDN |
+| < 10M | < 1M | 8 vCPU / 16 GB + CDN | 2× instance + shared Redis + S3 |
+| ≥ 10M | ≥ 1M | 2× instance + CDN | 4× instance + Meilisearch cluster |
+
+Memory scales with `num_threads` (FrankenPHP workers) × ~50 MB baseline per worker. Add libvips cache (~256 MB per derivative worker). Plan for opcache (~256 MB) + JIT buffer (~128 MB) on top.
+
+### Benchmarking methodology
+
+`tests/Performance/` uses `k6` or a custom harness:
+
+- Seed DB with a reproducible fixture (1k / 10k / 100k images).
+- Run each scenario 10× for 60 s each.
+- Record p50 / p95 / p99.
+- Results posted to a dashboard; regressions tracked over time.
+
+Benchmarks run nightly on a dedicated bench host to avoid noise from shared CI runners.
+
+### Common bottlenecks (known unknowns)
+
+Things that historically bite gallery apps and have explicit mitigations:
+
+| Bottleneck | Mitigation |
+|---|---|
+| N+1 queries on album listings | QueryBuilder + `IN (:ids)` preload pattern; `X-Query-Count` header in dev flags regressions |
+| Derivative thundering herd | Lock-based `withLock()` in `DerivativeStorage` |
+| Permission check on every image in a listing | Batch-resolve via `PermissionService::allowedAlbumIdsFor($user)` once per request |
+| Full-table scan on `images` when sorting by `taken_at` | Composite index `(min_level, taken_at DESC, id DESC)` |
+| Session table bloat | Nightly `PurgeExpiredSessions` job + index on `expires_at` |
+| Log volume on high-traffic endpoints | Sampling in `RequestLoggerMiddleware` for healthy 2xx; full logging for non-2xx |
+| Queue backlog on derivative generation after bulk upload | Dedicated `images` queue with adjustable concurrency |
+
+### Perf budget enforcement
+
+Every PR runs the perf benchmarks on a subset of scenarios (cheap); nightly runs the full suite. A regression of > 20% on any scenario fails the PR; a regression of > 5% posts a CI comment for reviewer awareness.
+
+---
+
+## 27. Data Privacy and Compliance
+
+A photo gallery stores personal data: who uploaded what, when, from what IP, with what metadata, and sometimes who the photos are *of*. GDPR, CCPA, and similar regimes aren't optional for public deployments.
+
+> This section describes design to make compliance achievable. It is not legal advice.
+
+### PII inventory
+
+Exact list of personally identifiable data the app stores, to make consent and export/delete workflows mechanical:
+
+| Data | Where | Purpose | Retention default |
+|---|---|---|---|
+| Username + email | `users` | Identity, notifications | Until account deletion |
+| Password hash | `users.password_hash` | Authentication | Until account deletion |
+| IP address (hashed) | `sessions.ip_hash`, `audit_log.actor_ip`, `comments.ip_hash` | Security, rate limiting | 90 days (sessions), per-install (audit), 90 days (comments) |
+| User-agent | `sessions.user_agent` | Security diagnostics | Same as session |
+| Last-login timestamp | `users.last_login_at` | UX, stale-account detection | Account lifetime |
+| Photos (uploaded by user) | Filesystem / S3 | Primary app function | Until account deletion / explicit image delete |
+| EXIF metadata (incl. GPS) | `images.exif`, `images.gps_*` | Display, search, organization | Bound to image lifetime |
+| Comments | `comments` | App function | Until account/image deletion |
+| Search history | `search_log` (if enabled) | Analytics | Configurable; off by default |
+| Audit events | `audit_log` | Security, compliance | Configurable; default 365 days |
+| Webhook delivery records | `webhook_deliveries` | Debugging | 30 days |
+
+Documented in `docs/privacy/pii-inventory.md` and kept in sync with schema changes via a CI check.
+
+### Retention policies
+
+Configurable, with sane defaults:
+
+```
+# .env
+RETENTION_SESSIONS_DAYS=90
+RETENTION_COMMENT_IP_DAYS=90
+RETENTION_AUDIT_LOG_DAYS=365
+RETENTION_WEBHOOK_DELIVERIES_DAYS=30
+RETENTION_SEARCH_LOG_DAYS=30
+RETENTION_DELETED_USER_SOFT_DELETE_DAYS=30       # before hard-delete
+```
+
+Scheduled jobs enforce retention:
+
+- `PurgeExpiredSessionsMessage` (daily) — delete expired sessions.
+- `RedactCommentIpsMessage` (daily) — clear `comments.ip_hash` on rows older than retention.
+- `PruneAuditLogMessage` (weekly) — purge audit rows older than retention.
+- `PurgeWebhookDeliveriesMessage` (daily) — remove delivery records older than retention.
+- `PurgeSoftDeletedUsersMessage` (daily) — hard-delete users whose `deleted_at` is older than the soft-delete retention.
+
+### Data subject rights (DSR)
+
+Three core rights, each with a workflow:
+
+**Export (right of access / portability):**
+
+```
+POST /api/v1/me/export              # self-service
+POST /api/v1/admin/users/{id}/export # admin on behalf of user
+```
+
+Enqueues a `UserDataExportMessage`; handler produces a ZIP:
+
+```
+export-alice-20260501.zip
+├── README.txt                    # explains what's inside
+├── profile.json                  # user row (minus password hash)
+├── sessions.json
+├── api_tokens.json               # names + scopes + created_at (not the tokens)
+├── audit_events.json             # events where user was actor
+├── comments.json                 # comments authored
+├── uploaded_photos/
+│   ├── manifest.json             # image metadata (EXIF, tags, albums)
+│   └── {uuid}.{ext}              # original files
+├── photos_you_appear_in.json     # tagged/in-album, requires admin processing
+└── consent_log.json              # what the user consented to and when
+```
+
+Generated async; user notified by email when ready. Signed download URL expires in 7 days.
+
+**Rectification:**
+
+Users can edit their own profile via `/account`. Corrections to EXIF on their uploads via the batch manager.
+
+**Erasure ("right to be forgotten"):**
+
+```
+DELETE /api/v1/me                                     # self-service (confirm via email)
+DELETE /api/v1/admin/users/{id}  Header: X-Erase: true   # admin
+```
+
+The erasure workflow:
+
+1. `UserDeletingEvent` dispatched; plugins can add side-effects (unsubscribe from external services, revoke integrations).
+2. User's uploaded photos: deleted by default, or reassigned to "[deleted user]" via `UserDeletion::reassign($to)` option.
+3. Comments: body preserved by default (deleting others' replies-in-context is often wrong) but author identity replaced with "[deleted]". Configurable per-install.
+4. Audit log: retained — it's a security/compliance record. Actor entries show `[deleted:42]`.
+5. User row soft-deleted (`deleted_at` timestamp).
+6. After `RETENTION_DELETED_USER_SOFT_DELETE_DAYS`, hard-deleted; cascade FKs clean up remaining rows.
+7. Confirmation email sent (via a one-time-use address the user supplies at erasure — their account email is gone).
+
+Edge cases documented:
+
+- If the user is the sole admin: erasure requires naming a successor first.
+- If the user has pending webhook subscriptions: they're revoked immediately.
+- If there are comments on the user's photos by others: configurable (delete with photo, or reattach to "[deleted user]").
+
+### Anonymization vs. deletion
+
+Where data can't be fully deleted without breaking referential integrity or compliance-evidence obligations (audit log), we **anonymize**:
+
+- `actor_id` → NULL, `actor_ip` → NULL on audit rows older than retention.
+- Comment `author_name` → "[deleted]", `author_email` → NULL, `user_id` → NULL.
+
+Separate from retention purge: anonymization reduces re-identification risk while preserving counts/patterns useful for operations.
+
+### Cookie policy
+
+- **Strictly necessary** cookies (session, CSRF): always set, no consent needed (required for functionality).
+- **Functional** cookies (theme, locale preference): set on user action; clearly explained in the privacy policy.
+- **Analytics / tracking** cookies: **none by default**. The app ships without any. Plugins that add tracking must register their cookie set with the `CookieRegistry` and surface it in the consent UI.
+
+Consent banner (shown to unauthenticated users in EEA deployments if analytics plugins are enabled):
+
+```
+We use cookies.  Required ✓   Functional [Allow] [Deny]   Analytics [Allow] [Deny]
+```
+
+Choices stored in a cookie; respected across subsequent page loads.
+
+### Privacy policy template
+
+`docs/privacy/policy-template.md` is a starting point site owners customize. Covers:
+
+- What's collected (from PII inventory above).
+- Legal basis for each (contract, legitimate interest, consent).
+- Who it's shared with (hopefully nobody outside the install).
+- Retention periods (from config).
+- User rights + how to exercise them.
+- Contact info for the data controller.
+
+Not a generated legal document — operators adapt it to their jurisdiction.
+
+### Processor agreements (DPAs)
+
+If the deployment uses third-party processors (S3 provider, email provider, CDN, error tracker), operators need DPAs with each. The app surfaces the list in admin: `Admin → Privacy → External processors` — lists each integration, its data flow, and a pointer to the vendor's DPA template.
+
+### Audit log of data access
+
+A stricter deployment mode (`PRIVACY_AUDIT_MODE=strict` env flag) logs every admin read of user data to the audit log:
+
+- Admin viewed user profile → `admin.user.viewed`.
+- Admin exported user data → `admin.user.exported`.
+- Admin accessed comment IPs → `admin.comment.ip_accessed`.
+
+Users can request their access log as part of export.
+
+### Encryption at rest
+
+- **Originals and derivatives:** disk encryption is an operator concern (dm-crypt / LUKS / cloud-provider KMS). The app doesn't re-encrypt files at the application layer — performance cost too high for the marginal threat-model improvement over FDE.
+- **DB:** TLS in transit always; at-rest encryption per deployment.
+- **Backup volumes:** encryption strongly recommended; operators responsible.
+- **Field-level encryption:** available for specific columns via a plugin hook; not core.
+
+### Data minimization defaults
+
+Where in doubt, **collect less**:
+
+- IP addresses stored as salted hashes, not plaintext.
+- User-agent truncated to 255 chars.
+- Session payload is a compact PHP-serialized blob, not a JSON tree.
+- EXIF GPS preserved in uploads by default but a per-install flag can strip it for privacy-conscious deployments (particularly important for public-facing galleries).
+
+### Geo-filtering uploads (optional)
+
+Installs that want to help users avoid geotagging leaks can enable auto-strip GPS on upload:
+
+```
+PRIVACY_STRIP_GPS_ON_UPLOAD=true        # removes gps_lat/gps_lng from EXIF before storing
+```
+
+Warning shown in upload UI: "GPS coordinates will be removed for privacy."
+
+### Takedown workflow
+
+For content that must be removed (DMCA, defamation, CSAM reporting):
+
+```
+php bin/piwigo takedown --image={id} --reason="DMCA notice 2026-04-20" --notify-uploader
+```
+
+- Image marked `deleted_at` (not purged immediately).
+- Hash (sha256 + pHash) added to a takedown blocklist; re-uploading the same file is blocked at validation.
+- Uploader notified (configurable).
+- Admin gets a receipt ID they can provide to the takedown requester.
+
+### Compliance flags
+
+- **GDPR-strict mode:** shorter default retention, consent banner default-on, strip-GPS default-on, admin-read audit default-on.
+- **US operator mode:** consent banner off, 7-year audit retention for some events (configurable).
+
+Not a substitute for legal review; a starting point.
+
+---
+
+## 28. Media Types Beyond Photos
+
+v1 is photo-first. This section states the **scope** for other media types and the design path if they're added.
+
+### v1 scope
+
+**In scope:**
+
+- Still images: JPEG, PNG, WebP, AVIF, HEIC / HEIF, GIF (static + animated), TIFF (first page), JPEG XL (if libvips build supports it).
+- RAW file previews: the embedded JPEG preview inside DNG / NEF / CR2 / ARW / RAF is extracted and treated as the image; the RAW file itself is preserved but not rendered.
+
+**Explicitly out of v1:**
+
+- Video (any format).
+- Audio.
+- PDFs as gallery content (PDFs-as-documents is a different app).
+- 360° / VR content.
+- 3D / glTF.
+
+"Out of v1" doesn't mean "never" — it means no ship gate, no architecture commitments.
+
+### The test for adding a media type
+
+Before a media type becomes core scope:
+
+1. A real user population requests it with weight (not one-off).
+2. The domain model changes (if any) are minor — the `images` table can host it with new columns, not a new table.
+3. A derivative strategy exists (renders cleanly in a gallery grid, opens in a picture-view context).
+4. Storage implications are bounded (no "each video is 4 GB, plan for petabytes").
+5. Maintenance cost is bounded (no dependency on half-abandoned codecs).
+
+If those pass, design proceeds below.
+
+### Video — design sketch (likely post-v1)
+
+If video is added, this is how it would look:
+
+**Storage:**
+
+- `images` → renamed `media` (migration), with a `media_type` enum column (`image` | `video`).
+- Originals and derivatives both stored in the same layout; paths and URL grammar unchanged.
+- Video-specific columns: `duration_seconds`, `codec`, `has_audio`, `fps`.
+
+**Ingest:**
+
+- `libav` (via `php-ffmpeg/php-ffmpeg`) for probing and transcoding.
+- Allowed input formats: MP4 (H.264, H.265, AV1), WebM (VP9, AV1), MOV.
+- Reject non-allowlisted containers / codecs.
+
+**Derivatives:**
+
+- **Poster frame** — libvips renders a JPEG from a frame at 10% duration.
+- **Thumbnails** — the poster frame is the thumbnail; no video thumbnails in v1.
+- **Transcoded variants** — 480p / 720p / 1080p H.264 (broad compatibility) + 720p / 1080p AV1 (smaller) if client supports.
+- **HLS / DASH streaming** — generated once, served as static files; Caddy does byte-range serving natively.
+
+**Delivery:**
+
+- `<video>` with `<source>` elements; browser picks the best it supports.
+- Playback component in the picture-page view.
+
+**Storage cost:**
+
+- A 10 min 1080p H.264 at reasonable bitrate is ~500 MB.
+- Transcoded variants ~2-4× storage of the original.
+- Install-wide "max upload video duration" setting is mandatory.
+
+**Admin UX:**
+
+- Upload progress must show transcoding state separately from upload state.
+- Transcoding is async, often minutes — jobs visible in the queue monitor.
+- Failed transcodes show in admin with re-queue option.
+
+**Permissions, search, tags, comments:** identical to images — the added media type doesn't branch the UX.
+
+**Testing:**
+
+- Fixture videos for each codec/container combo.
+- Golden-frame tests for poster generation.
+- Transcode output validated by re-probing (dimensions, codec correct).
+
+**Non-trivial concerns:**
+
+- Transcoding is CPU-heavy; dedicated `videos` queue with 1-2 workers, not full parallelism.
+- Client bandwidth caps — adaptive bitrate (HLS) is a real requirement at scale.
+- Subtitle / caption tracks (out of initial video scope; add if popular).
+
+### RAW — design sketch (likely v1.x)
+
+- libvips supports common RAWs via `dcraw` integration. Configurable per-install (may require a libvips rebuild with specific flags).
+- Preview-JPEG extraction is fast; treated as the displayable image.
+- Original RAW preserved as a separate download (`GET /api/v1/media/{id}/raw`).
+- Not every install wants RAW support — flag-gated, default off.
+
+### Audio — no plan
+
+Piwigo has never been an audio app; v1 isn't either. Audio would require a fundamentally different UI (waveform display, seekbar, playlist) — different enough that a separate app is the right answer.
+
+### 360° / VR — plugin territory
+
+Spherical viewer (Marzipano, Pannellum) integration makes sense as a plugin, not core. The image-upload pipeline handles them as regular images; a plugin detects the metadata (`XMP-GPano`) and replaces the picture-view component with a spherical renderer.
+
+### Scope creep guardrails
+
+The temptation to grow into "a media management system" is real. Guardrails:
+
+- New media types require an RFC-style PR with the test-for-adding checklist answered.
+- Each media type increases the test matrix; maintainers commit to that ongoing cost explicitly.
+- Features that favor one media type at the expense of others (e.g., auto-generated video trailers that don't apply to images) get plugin treatment, not core treatment.
+
+---
+
+## 29. End-to-End Workflow Walkthroughs
+
+The per-section designs describe each layer; this section traces specific flows end-to-end. Purpose: surface coupling, make the interactions concrete, and give a new contributor a "whole picture" view.
+
+Five walkthroughs:
+
+1. User uploads 50 photos.
+2. Admin changes an album's permissions.
+3. Admin runs filesystem sync on a 10,000-photo directory.
+4. User searches "sunset vacation".
+5. Plugin dispatches a webhook to an external service.
+
+Each walkthrough names the files/classes involved — a breadcrumb trail through the codebase.
+
+### Walkthrough 1: Upload 50 photos
+
+**Client:** user on `/upload`, drops 50 files into the drop zone.
+
+1. `upload.js` queues 50 uploads; starts 3 in parallel (configurable).
+2. Per file, client issues `POST /api/v1/uploads` (tus init):
+   - Middleware chain (§3): `ErrorHandler` → `Logger` → `Cors` → `SecurityHeaders` → `Session` → `Auth` (loads User) → `Csrf` → `Locale` → `Router`.
+   - `AuthMiddleware` populates `$request->user`.
+   - Router dispatches to `Api\V1\UploadController::init`.
+3. Controller validates the user has `can_upload` on the target album (via `PermissionService`).
+4. Controller creates a tus upload record in `_data/uploads/tmp/` and returns a `Location` header with the upload URL.
+5. Client PATCHes chunks to that URL; server appends bytes.
+6. After final chunk: `UploadController::complete` triggers the validation pipeline (§5 + §24):
+   - `VipsProcessor::probe()` → magic bytes + dimensions.
+   - `ExifExtractor::extract()` → EXIF/XMP/IPTC.
+   - `PerceptualHasher::hash()` → pHash.
+   - `ImageDeduplicator::check()` → sha256 + pHash lookup; if duplicate, configurable behavior.
+   - `ImageUploadingEvent` dispatched → plugins may veto.
+   - `QuotaService::debit()` inside DB transaction; fails with 413 if exceeded.
+   - `StorageBackend::put()` → write to `_data/originals/2026/05/{uuid}.jpg`.
+   - `ImageRepository::save()` → INSERT `images` row + `image_albums` + `image_tags`.
+   - Transaction commits.
+   - `ImageCreatedEvent` dispatched → `QueueReindexOnImageChange` listener enqueues `ReindexSearchMessage`.
+   - `GenerateDerivativesMessage` enqueued to the `images` queue for all standard presets.
+   - `RefreshAlbumCounts` listener enqueues `UpdateImageCountersMessage`.
+   - Cache invalidation listeners bump `content_version` for the album.
+7. Response: 201 with the new `PhotoResponse` DTO.
+8. Client updates UI: green check on that file's row.
+9. Meanwhile, the `images` queue worker consumes `GenerateDerivativesMessage`:
+   - `DerivativeService::ensureGenerated()` for each preset.
+   - libvips runs, derivative bytes written to `_data/derivatives/{shard}/{uuid}/{preset}.{hash}.{ext}`.
+   - `DerivativeGeneratedEvent` dispatched.
+
+**What's visible in logs:**
+
+```
+[upload] 201 /api/v1/uploads/init user=42 size=5242880 request_id=...
+[upload] 200 /api/v1/uploads/{id}/complete image_id=1234 request_id=...
+[queue] GenerateDerivativesMessage image=1234 presets=[thumbnail,small,medium,large,xlarge] queued
+[queue] GenerateDerivativesMessage image=1234 done elapsed=1840ms
+```
+
+**Touched files:**
+
+- `src/Controller/Api/V1/UploadController.php`
+- `src/Image/VipsProcessor.php`, `ExifExtractor.php`, `PerceptualHasher.php`
+- `src/Domain/Image/ImageRepository.php`
+- `src/Storage/StorageBackend.php` (implementation)
+- `src/Event/Image/ImageCreatedEvent.php`
+- `src/Job/GenerateDerivativesHandler.php`
+
+### Walkthrough 2: Admin changes album permissions
+
+**Actor:** admin on `/admin/albums/17/permissions`.
+
+1. Admin toggles "Public" off and adds user `alice` with `can_view`.
+2. Client submits the form (HTMX `hx-patch` to `/admin/albums/17`).
+3. Middleware chain runs; `AdminAuthMiddleware` verifies admin role.
+4. `Admin\AlbumController::updatePermissions` receives the request:
+   - Builds `AlbumPermissionUpdate` DTO from form data.
+   - Calls `AlbumService::updatePermissions($album, $update, $admin)`.
+5. `AlbumService`:
+   - Opens DB transaction.
+   - Dispatches `AlbumPermissionsChangingEvent` (mutable, cancellable).
+   - Plugins may adjust (e.g., a plugin enforces "Moderator group must always have view").
+   - Applies changes to `album_user_access` / `album_group_access`.
+   - Updates `albums.is_public`, `albums.min_level`.
+   - Inserts `audit_log` row (`album.permissions_changed`, details = diff).
+   - Commits.
+   - Dispatches `AlbumPermissionsChangedEvent`.
+6. `AlbumPermissionsChangedEvent` listeners:
+   - `InvalidateAlbumCaches` → drops `album.{id}` cache keys.
+   - `InvalidatePermissionCaches` → drops per-user memoized permission resolves that touched this album.
+   - `BumpContentVersion` → invalidates the response cache for that album and its ancestors.
+   - `NotifyAffectedUsers` → optionally emails users who just gained/lost access.
+7. HTMX swaps the updated permission editor fragment into the page — no full reload.
+
+**What changes downstream:**
+
+- Alice's next gallery visit: she sees the album in her listing.
+- An anonymous visitor's cached listing: invalidated by the `content_version` bump; next fetch rebuilds and excludes the now-private album.
+- Audit-log viewer shows the change with before/after diff.
+
+**Touched files:**
+
+- `src/Controller/Admin/AlbumController.php`
+- `src/Domain/Album/AlbumService.php`
+- `src/Event/Album/AlbumPermissionsChangedEvent.php`
+- `src/Event/Listener/InvalidateAlbumCaches.php`
+- `src/Domain/Permission/PermissionService.php`
+
+### Walkthrough 3: Filesystem sync imports 10,000 photos
+
+**Actor:** admin runs `php bin/piwigo sync /photos/2024 --mirror-tree --progress` on a server shell.
+
+1. CLI entry point (`bin/piwigo`) boots a minimal container (no HTTP middleware needed).
+2. `SyncCommand::execute`:
+   - Validates the path exists and is readable.
+   - Resolves the root album (creates one if `--mirror-tree` and missing).
+   - Loads the album's current image set.
+3. Walk phase (one pass):
+   - `DirectoryScanner::scan()` yields `(path, mtime, size)` tuples.
+   - For each tuple, classifier picks: new | update | skip | moved.
+4. Import phase (parallel workers, default = CPU count):
+   - Each worker pulls from a thread-safe queue of "new" files.
+   - Per file, runs the **same validation pipeline as uploads** (§24).
+   - `UploadedFile`s come from the filesystem rather than HTTP, but the downstream is identical.
+   - Writes progress every 100 files: `[3420/10000] 34.2% — 18 min remaining`.
+5. If `--mirror-tree`:
+   - New directories → new `AlbumCreatedEvent`s.
+   - Album membership set via `image_albums`.
+6. If `--tag-from-path` (not in this walkthrough), tags inferred.
+7. Cleanup phase (if `--delete-missing`):
+   - Files in DB but not on disk → delete rows.
+8. Checkpoint written every 100 files (`--resume`-able).
+9. End-of-run summary: created / updated / skipped / errored counts; log path.
+
+**Side effects:**
+
+- `GenerateDerivativesMessage` enqueued for every imported file → derivative queue works through them for minutes after sync completes.
+- `ReindexSearchMessage` enqueued for each.
+- `AlbumCreatedEvent`s fire, bumping caches.
+- Audit log: one `sync.completed` row summarizing the run.
+
+**Failure modes handled:**
+
+- File fails validation (corrupt / wrong format): logged, sync continues.
+- DB error mid-sync: checkpoint written, retry instructs operator to `--resume`.
+- Disk full: sync aborts with actionable error; partial import is consistent (transactions).
+- Quota exceeded: per-file 413-equivalent logged; sync continues for subsequent files attributable to other uploaders if `--per-user-quota` is honored.
+
+**Touched files:**
+
+- `src/Cli/Command/SyncCommand.php`
+- `src/Sync/DirectoryScanner.php`, `FileClassifier.php`, `SyncWorkerPool.php`
+- Same validation pipeline as upload
+
+### Walkthrough 4: User searches "sunset vacation"
+
+**Actor:** logged-in user types in the search box; client submits `/search?q=sunset+vacation`.
+
+1. Middleware chain runs.
+2. `SearchController::index`:
+   - Parses `q` via `SearchQueryParser` → `SearchQuery(term: "sunset vacation")`.
+   - Dispatches `SearchBuildingEvent` (plugins may rewrite the query).
+   - Dispatches `SearchQueryBuiltEvent` (plugins may inject filters — e.g., "hide NSFW tag for this user").
+   - Calls `SearchEngine::search($query)`.
+3. Engine (e.g. Postgres `tsvector`):
+   - Runs `WHERE search_doc @@ plainto_tsquery('english', 'sunset vacation') AND min_level <= :user_level ORDER BY ts_rank_cd(...) DESC LIMIT 30`.
+   - Returns `SearchResult` with hits + rough total.
+4. Controller:
+   - Runs permission post-filter (viewer's album access).
+   - Dispatches `SearchCompletedEvent` with result + elapsed ms.
+   - Passes `SearchViewData` to the template.
+5. Template renders; includes facet counts in the sidebar.
+
+**Caching:**
+
+- Search pages are per-user (permission-sensitive); response cache bypassed.
+- Facet counts for anonymous users *can* be cached (keyed by content_version).
+
+**Logs:**
+
+```
+[search] query="sunset vacation" user=42 hits=18 elapsed=23ms request_id=...
+```
+
+**Touched files:**
+
+- `src/Controller/SearchController.php`
+- `src/Domain/Search/SearchQueryParser.php`
+- `src/Search/{MySqlFullTextSearchEngine,PostgresTsvectorSearchEngine,MeilisearchEngine}.php`
+- `src/Event/Search/SearchCompletedEvent.php`
+
+### Walkthrough 5: Plugin dispatches a webhook
+
+**Context:** user has configured a webhook for `image.uploaded` events; plugin translates the event into an outbound POST.
+
+1. An image is uploaded (see Walkthrough 1).
+2. `ImageCreatedEvent` fires.
+3. `WebhookSubscriptionListener` (core, not a plugin) inspects active webhook subscriptions:
+   - Looks up rows in `webhook_subscriptions` where `event = 'image.uploaded'`.
+   - For each, dispatches a `DeliverWebhookMessage` to the `webhooks` queue.
+4. `webhooks` queue worker processes `DeliverWebhookMessage`:
+   - `WebhookDeliverer::deliver()`:
+     - Builds payload: `{ event, delivered_at, data: {...} }`.
+     - Computes HMAC-SHA256 signature using the subscription's secret.
+     - Sends via Guzzle with timeouts (5 s connect, 30 s total).
+     - On 2xx: `WebhookDeliveredEvent` fires; marks delivery successful in `webhook_deliveries` table.
+     - On 4xx (non-retryable) / 5xx / network (retryable): `WebhookFailedEvent` fires; retry scheduled with exponential backoff.
+     - After N retries exhausted: `WebhookDeadLetteredEvent`; entry appears in admin's DLQ view.
+5. Admin UI: webhook subscription page shows recent deliveries, success/failure counts, last attempt time, retry button.
+
+**Security:**
+
+- Webhook target URL validated by `SsrfGuard` (no private IPs, no non-HTTP schemes).
+- Payload signed; receiver verifies by recomputing HMAC.
+- Signature includes a timestamp to prevent replay; receivers reject deliveries older than ~5 minutes.
+
+**Observability:**
+
+- Every delivery attempt logged.
+- Metrics: `webhook_deliveries_total{status="ok|failed|dead"}`.
+- DLQ growth triggers an admin alert.
+
+**Touched files:**
+
+- `src/Webhook/WebhookSubscriptionListener.php`
+- `src/Job/DeliverWebhookHandler.php`
+- `src/Webhook/WebhookDeliverer.php`
+- `src/Security/SsrfGuard.php`
+- `src/Controller/Admin/WebhookController.php`
+
+### What the walkthroughs reveal
+
+Reading these in sequence surfaces the architectural glue:
+
+- **Events are the spine.** Almost every cross-cutting concern (cache invalidation, search indexing, webhooks, audit log) is a listener. The core of a feature is a few hundred lines; the rest is in listeners that can evolve independently.
+- **Queues decouple hot paths from slow work.** Upload responds in 100 ms; the derivative generation that actually takes 1-2 s runs out of band.
+- **Permission checks batch-resolve.** A list of 30 images does one permission query, not 30.
+- **The same validation pipeline serves three entry points** (HTTP upload, API upload, CLI sync). Shared tests cover them all.
+- **Audit and observability are never side-projects** — they're part of the request flow, never swept to the side.
+
+These walkthroughs are **executable documentation**. A contributor reading them should be able to trace any request through the codebase and predict the touched files.
+
+---
+
+## 30. What Goes Away
 
 Removed wholesale. Each row has a specific reason listed; nothing is dropped for ideology.
 
@@ -4454,7 +6474,7 @@ Every one of these is a net reduction in surface area. The rewrite is not adding
 
 ---
 
-## 22. What Carries Over (Conceptually)
+## 31. What Carries Over (Conceptually)
 
 Nothing is preserved for compatibility. What carries over is the **domain model and feature surface** — what a photo gallery *does* — reimplemented from scratch on a clean schema and a new API. This section is a design checkpoint: "of the things Piwigo does, which of them still belong in the rewrite?"
 
@@ -4511,7 +6531,7 @@ An unsupported example import script may exist in `contrib/` as a starting point
 
 ---
 
-## 23. Repository Structure
+## 32. Repository Structure
 
 ### Top-level layout
 
@@ -4838,7 +6858,7 @@ The directory structure is a map of the domain, not a map of architecture layers
 
 ---
 
-## 24. Installation and Rollout
+## 33. Installation and Rollout
 
 This is a **fresh install**, not a migration. There is no import tool, no legacy adapter, no backward-compatible shim. An existing Piwigo installation and the rewrite are two separate applications that happen to share a problem domain.
 

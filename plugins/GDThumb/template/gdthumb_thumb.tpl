@@ -157,6 +157,21 @@
         if (btn) btn.classList.remove('pswp__button--rated');
       });
 
+      let lastWheelNav = 0;
+      lightbox.on('wheel', (e) => {
+        const pswp = lightbox.pswp;
+        if (!pswp || !pswp.currSlide) return;
+        const oe = e.originalEvent;
+        if (oe.ctrlKey || pswp.options.wheelToZoom) return;
+        if (pswp.currSlide.currZoomLevel > pswp.currSlide.zoomLevels.initial) return;
+        if (Math.abs(oe.deltaY) <= Math.abs(oe.deltaX)) return;
+        e.preventDefault();
+        const now = Date.now();
+        if (now - lastWheelNav < 300) return;
+        lastWheelNav = now;
+        if (oe.deltaY > 0) pswp.next(); else pswp.prev();
+      });
+
       lightbox.on('contentDeactivate', ({ content }) => {
         if (content.type === 'video' && content.element) {
           const video = content.element.querySelector('video');

@@ -1,6 +1,6 @@
 # Piwigo PHP Rewrite — Ground-Up Architecture
 
-> A clean-room PHP 8.4 rewrite of Piwigo, designed for worker-mode from day one.  
+> A clean-room PHP 8.5 rewrite of Piwigo, designed for worker-mode from day one.  
 > No legacy baggage. No `exit()`. No globals. No Smarty.
 
 ---
@@ -31,7 +31,7 @@ Three paths exist for getting Piwigo to a clean, modern state:
 |---|---|---|
 | **Incremental migration** | No big-bang risk, ships continuously | Worker mode blocked by 263 `exit()` calls and `define()` pollution — architectural debt never resolves |
 | **Rust rewrite** | Maximum performance, compile-time SQL safety, single binary | Months of ramp-up, template system requires ~40-50% custom Rust infrastructure, no PHP Composer ecosystem |
-| **PHP rewrite** | Worker-native from day one, PHP 8.4 features, full Composer ecosystem, fastest path to production | Still PHP — ceiling is lower than Rust |
+| **PHP rewrite** | Worker-native from day one, PHP 8.5 features, full Composer ecosystem, fastest path to production | Still PHP — ceiling is lower than Rust |
 
 The PHP rewrite targets **clean worker-mode architecture** from the first line of code:
 
@@ -40,7 +40,7 @@ The PHP rewrite targets **clean worker-mode architecture** from the first line o
 - No superglobal mutation in business logic
 - No procedural globals (`$conf`, `$user`, `$page`, `$template`)
 - PSR-7/PSR-15 throughout
-- PHP 8.4: `readonly` classes, property hooks, enums, fibers where useful
+- PHP 8.5: pipe operator (`|>`), clone-with, `#[\NoDiscard]`, `array_first()`/`array_last()`, asymmetric visibility, closures in constant expressions, plus 8.4's `readonly` classes, property hooks, enums, fibers where useful
 
 ---
 

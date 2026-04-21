@@ -17,10 +17,20 @@
 8. [Sessions and Auth](#8-sessions-and-auth)
 9. [Routing](#9-routing)
 10. [Testing and Quality Gates](#10-testing-and-quality-gates)
-11. [What Goes Away](#11-what-goes-away)
-12. [What Carries Over (Conceptually)](#12-what-carries-over-conceptually)
-13. [Repository Structure](#13-repository-structure)
-14. [Installation and Rollout](#14-installation-and-rollout)
+11. [Security Model](#11-security-model)
+12. [Observability and Operations](#12-observability-and-operations)
+13. [Background Jobs and Scheduling](#13-background-jobs-and-scheduling)
+14. [Caching Architecture](#14-caching-architecture)
+15. [Storage and Backup](#15-storage-and-backup)
+16. [Data Model](#16-data-model)
+17. [Frontend Architecture](#17-frontend-architecture)
+18. [Internationalization](#18-internationalization)
+19. [Developer Experience](#19-developer-experience)
+20. [Release Engineering and Governance](#20-release-engineering-and-governance)
+21. [What Goes Away](#21-what-goes-away)
+22. [What Carries Over (Conceptually)](#22-what-carries-over-conceptually)
+23. [Repository Structure](#23-repository-structure)
+24. [Installation and Rollout](#24-installation-and-rollout)
 
 ---
 
@@ -83,7 +93,7 @@ To keep the scope honest, the rewrite will **not**:
 
 - Run Piwigo 14 plugins or themes. They were written against a different system and should not be expected to work; attempting compatibility would dictate architecture.
 - Serve Piwigo 14 URLs. `index.php?/category/N-slug`, `picture.php?image_id=N`, and `ws.php` are legacy artifacts; the new URL scheme is designed fresh.
-- Provide a one-click migration wizard from an existing Piwigo install. See [Installation and Rollout](#14-installation-and-rollout) for the no-supported-migration stance.
+- Provide a one-click migration wizard from an existing Piwigo install. See [Installation and Rollout](#24-installation-and-rollout) for the no-supported-migration stance.
 - Match feature parity with Piwigo 14 on day one. Features are prioritized by value and built in order; some seldom-used corners (LDAP sync, specific RSS variants, obscure plugin hooks) may never return.
 - Ship a WYSIWYG web installer. Installation is CLI-first; a first-run web flow may come later but is not a v1 requirement.
 
@@ -2371,7 +2381,2044 @@ If question 3 can't be answered, the change is under-tested.
 
 ---
 
-## 11. What Goes Away
+## 11. Security Model
+
+**Principle:** defense in depth. Every layer assumes the layer in front of it has failed. No single mitigation is load-bearing.
+
+### Input validation philosophy
+
+Input comes in at three boundaries — HTTP, CLI, and filesystem sync. At each boundary, input is coerced into typed value objects before it reaches domain code. Domain code never sees a raw `$_POST` array; it sees `CreateAlbumInput` with a typed `name` string, a validated `parentId` integer, a bounded `description` length.
+
+Typed form objects do the enforcement:
+
+```php
+final readonly class CreateAlbumInput
+{
+    private function __construct(
+        public string $name,
+        public ?int $parentId,
+        public string $description,
+    ) {}
+
+    public static function fromRequest(ServerRequestInterface $req): self
+    {
+        $data = (array) $req->getParsedBody();
+
+        $name = trim((string)($data['name'] ?? ''));
+        if ($name === '' || mb_strlen($name) > 255) {
+            throw new ValidationException(['name' => 'required, 1-255 chars']);
+        }
+
+        $parentId = null;
+        if (isset($data['parent_id']) && $data['parent_id'] !== '') {
+            $parentId = filter_var($data['parent_id'], FILTER_VALIDATE_INT);
+            if ($parentId === false) {
+                throw new ValidationException(['parent_id' => 'must be int']);
+            }
+        }
+
+        $description = (string) ($data['description'] ?? '');
+        if (mb_strlen($description) > 10_000) {
+            throw new ValidationException(['description' => 'max 10000 chars']);
+        }
+
+        return new self($name, $parentId, $description);
+    }
+}
+```
+
+Validation throws `ValidationException`; the error middleware maps it to 422 with field-level details.
+
+### Output encoding
+
+Latte handles it. (See section 6.) The security argument for Latte over Twig is precisely that output encoding is automatic and context-correct. Architecture tests forbid `echo` / `print` in application code — all output goes through Latte or JSON responses.
+
+For JSON responses, `json_encode` with `JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE` is the only codepath; a `JsonResponse` wrapper enforces it.
+
+### File upload security
+
+Uploads are the highest-risk input surface. The pipeline:
+
+```
+Multipart file received
+    ↓
+1. Reject if content-length > configured max (default 100 MB)
+    ↓
+2. Reject if declared MIME isn't in the allowed list
+    ↓
+3. Stream to quarantine dir (not web-accessible) with randomized name
+    ↓
+4. Probe magic bytes via libvips — file MUST be what it claims
+    ↓
+5. libvips loads headers — corrupt or malicious files fail here
+    ↓
+6. Extract EXIF in try/catch — failures log but don't abort upload
+    ↓
+7. Scan with ClamAV (optional, via clamav-client)
+    ↓
+8. If all pass → move to originals/ with UUIDv7 filename
+    ↓
+9. Dispatch BeforeImageSaveEvent — plugins can veto
+    ↓
+10. Write DB row, enqueue derivative generation
+```
+
+Non-negotiables:
+
+- **Files are never served from the upload directory.** Originals get UUID filenames; the mapping from user filename → UUID is a one-way door.
+- **Magic-byte check via libvips.** Trusting `Content-Type` or file extension is never sufficient.
+- **EXIF stripping** is the default for derivatives. Originals keep EXIF; derivatives don't.
+- **Streaming via libvips** keeps memory bounded — a 100 MB malicious JPEG doesn't load 100 MB into RAM.
+- **Filename sanitization on display.** User-provided original filenames are stored for UI but never used on disk.
+- **No SVG uploads** without sandboxing. SVG is executable XML; by default rejected. Opt-in per-install re-enables with a strict sanitizer.
+
+### CSRF deep dive
+
+Introduced in section 8. Key details:
+
+- **SameSite=Lax** for session cookies. Blocks most cross-origin POSTs.
+- **SameSite=Strict** for admin-scope cookies. Admin actions never succeed cross-origin.
+- **Double-submit cookie** pattern is the default for API clients.
+- **Token rotated on login.** An unauthenticated session gets a fresh token when elevated.
+- **Per-form tokens not required.** A single session-scoped token suffices; per-form would be defense-in-depth we don't need here.
+
+### Content Security Policy
+
+Strict CSP by default, per-response nonce for inline `<script>` / `<style>` (the Latte engine injects the nonce automatically):
+
+```
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'nonce-{generated}';
+  style-src 'self' 'nonce-{generated}';
+  img-src 'self' data:;
+  font-src 'self';
+  connect-src 'self';
+  frame-ancestors 'none';
+  form-action 'self';
+  base-uri 'self';
+  upgrade-insecure-requests
+```
+
+Deployments with an external image CDN extend `img-src`; plugins declaring third-party script origins add them via a manifest. No `unsafe-inline`, no `unsafe-eval`.
+
+CSP violations are reported to `/api/csp-report` and counted as metrics — a spike in violations is an alert.
+
+### Other security headers
+
+- `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` when `APP_URL` is HTTPS.
+- `X-Frame-Options: DENY` (belt-and-braces with `frame-ancestors 'none'`).
+- `Referrer-Policy: strict-origin-when-cross-origin`.
+- `Permissions-Policy: camera=(), microphone=(), geolocation=(self)` — default-deny, per-feature opt-in.
+- `X-Content-Type-Options: nosniff`.
+- `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp` where compatible.
+
+All set by `SecurityHeadersMiddleware`.
+
+### SSRF protection
+
+Any feature fetching a user-supplied URL (import from URL, OAuth redirect, webhook dispatch) goes through an `SsrfGuard`:
+
+- **Pinned IP resolution.** DNS resolved once; the HTTP request is made to the resolved IP with the original Host header — DNS-rebinding attacks lose their target.
+- **Private-range rejection.** Resolved IPs in RFC 1918 (10/8, 172.16/12, 192.168/16), loopback (127/8), link-local (169.254/16), IPv6 equivalents — all refused.
+- **Scheme allowlist.** Only HTTP/HTTPS. No `file://`, `gopher://`, `dict://`, `ldap://`.
+- **Redirect follow-through.** Each hop re-runs the guard.
+- **Bounded response size + timeouts.** Response capped at configurable max (default 10 MB); 5 s connect, 30 s read.
+
+### XML / XXE prevention
+
+`libxml_disable_entity_loader()` is no longer needed on PHP 8.0+, but the app never passes `LIBXML_NOENT` or `LIBXML_DTDLOAD`. Sitemaps and RSS are **generated**, not parsed. Any incoming XML (rare — the API is JSON) is rejected unless explicitly enabled via config, in which case entity substitution is disabled at parse time.
+
+### Open redirect
+
+`RedirectResponse::to($url)` validates the target against an allowlist: relative URLs only, or absolute URLs matching `APP_URL`. A login `?next=/albums/42` param validates the same way; external redirects return 400.
+
+### Timing attacks
+
+- Password verification uses `password_verify()` (constant-time).
+- Session IDs and tokens compared with `hash_equals()`.
+- Login response time for valid-username-wrong-password vs. unknown-username normalized — both trigger a bcrypt/argon2 verify against a dummy hash so the response time doesn't leak account existence.
+
+### Secrets management
+
+- `APP_SECRET` is a 32-byte random hex. Used for CSRF tokens, signed URLs, remember-me HMACs. Rotating it logs out every session and invalidates every remember-me — acceptable trade-off, documented.
+- `.env` is never committed. `.env.example` is committed as a template.
+- Prod secrets: read from environment (Docker / systemd `EnvironmentFile=`); the `.env` in prod is root-owned, mode `600`.
+- Backup procedures explicitly exclude `.env`.
+- Optional: `APP_KEY_PROVIDER=vault|aws-secrets-manager|gcp-secret-manager` reads secrets at boot from an external store; the secret never lives on disk.
+
+### Rate limiting catalog
+
+Per-endpoint limits (configurable, defaults sized for small-to-medium sites):
+
+| Endpoint | Key | Limit | Action over limit |
+|---|---|---|---|
+| `POST /login` | IP + username | 5 fails / 10 min, then 30 min lock | 429 with `Retry-After` |
+| `POST /register` | IP | 3 / hour | 429 |
+| `POST /password/reset` | IP + email | 3 / hour | 429 |
+| Any `POST /api/v1/*` | token or IP | 60 / min | 429 |
+| `POST /api/v1/photos` (upload) | token | 100 / hour, 10 GB / day | 429 |
+| `POST /comments` | IP | 10 / hour | 429 |
+| Any endpoint | IP (global) | 300 / min | 429 |
+
+Implemented via leaky-bucket counters in Redis (or DB fallback). Not a full-blown rate limiter (no distributed consensus), just enough to make automated attacks unprofitable.
+
+### Dependency auditing
+
+- `composer audit` runs in CI on every PR; any CVE on a direct or transitive dep fails the build unless explicitly waived in `composer.json conflict` with a justification comment and a time-bounded removal issue.
+- `bun audit` in CI for JS.
+- **Renovate** (or Dependabot) manages version bumps: patch bumps merge automatically after CI; minor bumps need human review; major bumps create tracking issues.
+- A weekly CI job audits all release branches, even dormant ones — stale branches don't drift unnoticed.
+
+### `security.txt`
+
+Served by the app at `/.well-known/security.txt`:
+
+```
+Contact: mailto:security@example.org
+Contact: https://example.org/security/report
+Expires: 2027-01-01T00:00:00Z
+Preferred-Languages: en
+Canonical: https://example.org/.well-known/security.txt
+Encryption: https://example.org/pgp.txt
+Policy: https://example.org/security/policy
+```
+
+Generated dynamically so the `Expires` can refresh automatically.
+
+### Responsible disclosure
+
+A public `SECURITY.md` in the repo describes:
+
+- How to report (email + GPG public key, or GHSA private vulnerability report).
+- Response SLA (acknowledge within 72 h, patch ETA within 14 days for Critical / High).
+- Safe-harbor language for good-faith researchers.
+- A hall-of-fame / credit page for accepted reports.
+
+### Threat model document
+
+Living document at `docs/security/threat-model.md`. Enumerates:
+
+- **Assets:** user credentials, session tokens, admin credentials, user photos (some potentially private), server filesystem, derivative cache, audit log.
+- **Actors:** unauthenticated visitor, registered user, authenticated admin, attacker with a stolen session token, compromised plugin, malicious upload, malicious link handler.
+- **Vectors** for each asset × actor pair.
+- **Mitigations** in place, planned, and explicitly accepted risks.
+
+Reviewed at each major release and whenever a security advisory is filed.
+
+---
+
+## 12. Observability and Operations
+
+Operating the app without visibility is operating blind. Observability is a first-class concern — built in from the start, not bolted on after a production incident teaches the value of it.
+
+### Three pillars
+
+- **Structured logging** — what happened, with enough context to investigate.
+- **Metrics** — aggregate trends (request rate, latency, error rate, queue depth).
+- **Traces** — per-request causal paths through the system.
+
+Error tracking (Sentry) sits on top of logs; it is not a substitute for them.
+
+### Structured logging
+
+All logs are JSON, one event per line. Shape:
+
+```json
+{
+    "ts": "2026-05-01T14:23:01.123Z",
+    "level": "info",
+    "msg": "user.login",
+    "request_id": "01J9X2H7B0Q4Z5VXGYQ4ARBTVM",
+    "user_id": 42,
+    "ip": "203.0.113.5",
+    "duration_ms": 18,
+    "channel": "auth"
+}
+```
+
+- `ts` — ISO 8601 millisecond precision, UTC.
+- `level` — PSR-3 severity: `debug|info|notice|warning|error|critical|alert|emergency`.
+- `msg` — short, template-like. Not a full sentence; not an error dump.
+- `request_id` — ULID, generated by `RequestLoggerMiddleware`, on every log line within a request.
+- `user_id` — if authenticated.
+- `ip` — client IP after `TrustedProxyMiddleware` unwrapping.
+- `duration_ms` — set on request-end events.
+- `channel` — `auth`, `upload`, `derivative`, `api`, `admin`, `sync`, `db`, `mail`, etc.
+
+Per-event context fields add to this base. PII-bearing fields (email, full username, passwords, tokens, IPs in some deployments) are redacted by Monolog processors before the event leaves PHP.
+
+### Log levels — when to use each
+
+| Level | Use for | Volume |
+|---|---|---|
+| `debug` | Dev-only. Disabled in prod. | High |
+| `info` | Expected events: login success, album created, derivative generated. | High, bounded |
+| `notice` | Expected anomalies: login failure, unknown route, DB reconnect. | Moderate |
+| `warning` | Unexpected non-fatal: slow query, retryable failure, deprecated API use. | Low |
+| `error` | Request-level failure a user experienced: 500, upload rejected, job failed. | Low |
+| `critical` | Broken: DB unreachable, libvips crashed, disk full. | Rare |
+| `alert` / `emergency` | Paging-level. | Should be zero |
+
+### Request correlation
+
+`RequestLoggerMiddleware` sets a ULID request ID at the top of the stack and injects it into:
+
+- Every Monolog event (via a processor).
+- The `X-Request-Id` response header — so bug reports can cite it.
+- OpenTelemetry span attributes.
+- `$_SERVER['REQUEST_ID']` for any code that needs a fallback.
+
+A report with an `X-Request-Id` lets a maintainer grep related log lines in seconds across any log backend.
+
+### OpenTelemetry tracing
+
+OTLP traces emitted via `open-telemetry/sdk`. Spans cover:
+
+- Request lifecycle (root span per request).
+- DB queries (child spans, with hashed SQL as an attribute).
+- libvips operations (child spans with preset + duration).
+- External HTTP calls.
+- Cache hits and misses.
+- Plugin event listeners (child span per listener invocation, if tracing enabled for plugins).
+
+Sampling is head-based: 100% of 5xx requests; 100% of requests > 1 s; 1% of healthy requests. Configurable.
+
+Exporter is OTLP/HTTP — Jaeger, Tempo, Honeycomb, Datadog, Grafana Cloud all speak it.
+
+### Metrics (Prometheus format)
+
+Exposed at `/metrics` (gated by IP allowlist or basic auth — never public):
+
+```
+# HELP http_requests_total HTTP request count
+# TYPE http_requests_total counter
+http_requests_total{method="GET",route="album.show",status="200"} 12345
+
+# HELP http_request_duration_seconds Request latency (seconds)
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{route="album.show",le="0.01"} 11000
+http_request_duration_seconds_bucket{route="album.show",le="0.05"} 12200
+...
+
+# Other metrics
+db_query_duration_seconds{kind="select"} ...
+derivative_cache_hits_total ...
+derivative_cache_misses_total ...
+upload_bytes_total ...
+jobs_in_queue{queue="images"} ...
+jobs_processed_total{queue="images",status="success"} ...
+worker_requests_handled_total ...
+worker_memory_bytes ...
+db_connections_active ...
+cache_hits_total{layer="response"} ...
+cache_misses_total{layer="response"} ...
+```
+
+`MetricsCollector` is a singleton; middleware and services record into it. `/metrics` renders the current snapshot.
+
+### Error tracking (Sentry, opt-in)
+
+If `SENTRY_DSN` is set, unhandled exceptions report to Sentry. Fields:
+
+- Request ID.
+- User ID (pseudonymized — never email or username).
+- Breadcrumbs: last 50 log events + last 20 DB queries.
+- Release: git tag or SHA.
+- Environment: `production` / `staging`.
+
+404s and validation errors are excluded by default — they're expected, not bugs.
+
+### Health checks
+
+- **`/healthz`** — *liveness* probe. Returns 200 if the PHP worker can reach the dispatcher. Does not touch dependencies. Kubernetes uses this to decide whether to restart the pod.
+- **`/readyz`** — *readiness* probe. Checks DB connectivity, storage write access, Redis if configured. Returns 200 only when ready to serve traffic. Kubernetes uses this to decide whether to route traffic.
+- **`/version`** — returns git SHA + semver. No auth. Useful for deploy verification.
+
+CLI equivalents:
+
+```
+php bin/piwigo healthcheck                 # exits 0/1 — suitable for monit / systemd
+php bin/piwigo healthcheck --verbose       # dumps each check's result
+```
+
+### Monitoring dashboards
+
+`docs/monitoring/grafana-dashboard.json` ships with panels:
+
+- Request rate + error rate, broken down by route.
+- p50 / p95 / p99 latency.
+- DB query count per request (surfaces N+1 regressions).
+- Derivative cache hit ratio.
+- Queue depth over time.
+- Worker memory trend — flat is healthy; growing is a leak.
+- Uploads per hour + upload error rate.
+- Login success / failure rate.
+
+### Alerting policies
+
+Example Prometheus alert rules ship in `docs/monitoring/alerts.yaml`:
+
+- **Error rate > 1% for 5 min** → page.
+- **p99 latency > 5 s for 10 min** → warn.
+- **Queue depth growing for 15 min** → warn.
+- **Worker memory > 500 MB for 10 min** → investigate (likely a leak).
+- **DB connection failures** → page.
+- **Disk usage > 85%** → warn; > 95% → page.
+- **Derivative write failure rate > 1%** → warn.
+- **5xx on `/healthz` or `/readyz`** → page.
+
+### Debug mode in production
+
+The `?_debug=1` URL parameter is a trap. Even in dev, it requires an env flag to enable. In prod it is a hard no-op. Stack traces never reach end-users; they go to logs and the error tracker. Prod's `error.latte` shows a friendly message with the request ID — the user can send that ID to the admin.
+
+### Audit log vs operational log
+
+Two distinct stores, answering different questions:
+
+- **Operational log** — Monolog → stdout (FrankenPHP) or file → log aggregator. High volume, short retention (7–30 days typical).
+- **Audit log** — DB table, append-only. Security-relevant events (login, permission change, admin action). Long retention (1 year+). Queryable via admin UI.
+
+"What was the system doing at 02:13 last Tuesday?" → operational.
+"Who deleted that album last month?" → audit.
+
+### Log retention
+
+- Structured logs: the app doesn't store them. Log aggregation (Loki, Elasticsearch, Datadog, Grafana Cloud, etc.) is the deployment's responsibility.
+- Audit log: configurable retention (default 365 days); `php bin/piwigo audit:prune` removes rows older than the window.
+
+### Operational runbooks
+
+`docs/operations/runbooks/` holds procedural docs for common alerts:
+
+- `disk-full.md`
+- `db-unreachable.md`
+- `queue-backlog.md`
+- `memory-leak.md`
+- `derivative-cache-corruption.md`
+- `security-incident.md`
+
+Each describes: what the alert means, first diagnostic steps, common root causes, mitigation, and post-incident checklist.
+
+---
+
+## 13. Background Jobs and Scheduling
+
+**Decision:** `symfony/messenger` with a Doctrine DBAL transport as the default. Redis and RabbitMQ as alternatives.
+
+### Why not run things inline
+
+Some work doesn't belong on the request path:
+
+- **Email sending.** Synchronous SMTP can block a request for seconds.
+- **Derivative generation beyond the first preset.** The first thumbnail is generated on demand; the full preset set (small / medium / large / xlarge / AVIF variants) is queued.
+- **Sync / reindex.** Walking a filesystem tree is minutes of work.
+- **Cleanup.** Orphan files, expired sessions, old audit rows.
+- **Webhook delivery.** Retryable outbound HTTP.
+- **Plugin work.** Plugins may enqueue their own arbitrary async work.
+
+A request that blocks on any of these is doing the wrong thing.
+
+### Why `symfony/messenger`
+
+- **Transport-agnostic.** Dev uses a sync transport; prod picks DB/Redis/RabbitMQ via config.
+- **Typed messages.** Each job is a PHP class; dispatch is `$bus->dispatch(new SendEmail(...))`.
+- **Retry + dead-letter built-in.** Configurable per message type.
+- **Middleware support.** Adds logging, tracing, auth-scoping to every dispatch without touching handlers.
+- **Scheduler bridge.** `symfony/scheduler` handles recurring jobs from the same infrastructure.
+
+### Message shape
+
+```php
+final readonly class GenerateDerivativesMessage
+{
+    public function __construct(
+        public int $imageId,
+        public array $presetNames,
+    ) {}
+}
+
+final readonly class SendEmailMessage
+{
+    public function __construct(
+        public string $recipientEmail,
+        public string $templateKey,
+        public array $context,
+    ) {}
+}
+```
+
+Messages are PHP `readonly` DTOs. State needed to run the job is encoded in the payload; handlers never assume prior state beyond the database.
+
+### Handlers
+
+```php
+#[AsMessageHandler]
+final readonly class GenerateDerivativesHandler
+{
+    public function __construct(
+        private ImageRepository $images,
+        private DerivativeService $derivatives,
+    ) {}
+
+    public function __invoke(GenerateDerivativesMessage $msg): void
+    {
+        $image = $this->images->findByIdOrFail($msg->imageId);
+        foreach ($msg->presetNames as $preset) {
+            $this->derivatives->ensureGenerated($image, $preset);
+        }
+    }
+}
+```
+
+A handler is a plain class with a single `__invoke`; Symfony's dispatcher discovers it via the attribute.
+
+### Transports
+
+Configured via `.env`:
+
+```
+# DB-backed (default — one less moving part)
+MESSENGER_TRANSPORT_DSN=doctrine://default?queue_name=default
+
+# Redis
+MESSENGER_TRANSPORT_DSN=redis://redis:6379/messages
+
+# RabbitMQ
+MESSENGER_TRANSPORT_DSN=amqp://rabbitmq:5672/%2f/messages
+```
+
+### Queues and routing
+
+```php
+// config/messenger.php
+return [
+    'routing' => [
+        GenerateDerivativesMessage::class => 'images',
+        SendEmailMessage::class           => 'mail',
+        ReindexSearchMessage::class       => 'search',
+        WebhookDeliveryMessage::class     => 'webhooks',
+        // unrouted messages → default queue
+    ],
+];
+```
+
+Four named queues with distinct concurrency profiles:
+
+- `images` — CPU-bound; 2–4 workers with libvips concurrency throttled.
+- `mail` — I/O-bound, low volume; 1 worker.
+- `search` — I/O-bound, short; 1–2 workers.
+- `webhooks` — I/O-bound with retries; 2–4 workers.
+
+### Running workers
+
+Each queue is a long-lived process:
+
+```
+php bin/piwigo messenger:consume images \
+    --limit=1000 \
+    --time-limit=3600 \
+    --memory-limit=256M
+```
+
+Systemd unit (template `piwigo-worker@.service`, instantiated per queue):
+
+```ini
+[Unit]
+Description=Piwigo worker (%i queue)
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/php /app/bin/piwigo messenger:consume %i --limit=1000 --time-limit=3600
+Restart=always
+User=piwigo
+WorkingDirectory=/app
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Instantiated: `systemctl enable --now piwigo-worker@images piwigo-worker@mail …`.
+
+`--limit` and `--time-limit` cycle the worker (same release-valve as FrankenPHP workers), so leaks don't accumulate indefinitely.
+
+### Retry semantics
+
+```php
+// per-message retry policy
+RetryStrategy::exponential(
+    delaysMs: [1_000, 5_000, 30_000, 300_000],  // 1s, 5s, 30s, 5min
+    multiplier: 1,
+)
+```
+
+After all retries are exhausted, the message moves to the **dead-letter queue** (`failed_messages` table). The admin UI exposes DLQ contents with "retry" and "drop" actions. DLQ growth rate is monitored — a spike is an alert.
+
+### Transactional outbox
+
+Messages dispatched inside a DB transaction are queued to an outbox table, not sent to the transport immediately:
+
+- Transaction commits → outbox flushed to transport.
+- Transaction rolls back → messages discarded.
+
+Guarantees: you never enqueue work for state that then rolls back. Implemented via a middleware wrapping the bus.
+
+### Scheduler
+
+`symfony/scheduler` handles recurring work:
+
+```php
+#[AsSchedule('default')]
+final readonly class DefaultSchedule implements ScheduleProviderInterface
+{
+    public function getSchedule(): Schedule
+    {
+        return (new Schedule())->add(
+            RecurringMessage::cron('0 3 * * *', new PurgeExpiredSessionsMessage()),
+            RecurringMessage::cron('0 * * * *', new DeliverPendingWebhooksMessage()),
+            RecurringMessage::every('5 minutes', new CheckFeedsMessage()),
+            RecurringMessage::cron('0 4 * * 0', new AuditLogPruneMessage()),
+            RecurringMessage::cron('30 2 * * *', new DerivativesPruneMessage()),
+        );
+    }
+}
+```
+
+Runs as its own process:
+
+```
+php bin/piwigo messenger:consume scheduler_default
+```
+
+No crontab entries on the host — scheduler is PHP, versioned with the app.
+
+### Jobs shipped with core
+
+- `GenerateDerivativesMessage` — generate a named preset (or list) for an image.
+- `SendEmailMessage` — dispatched via Symfony Mailer.
+- `PurgeExpiredSessionsMessage` — daily session GC.
+- `PruneExpiredApiTokensMessage` — remove tokens past `expires_at`.
+- `PruneOrphanedDerivativesMessage` — derivatives whose source image no longer exists.
+- `AuditLogPruneMessage` — rows older than retention window.
+- `ReindexSearchMessage` — rebuild full-text search index for an image or album.
+- `DeliverWebhookMessage` — outbound webhook with retry.
+- `SyncAlbumMessage` — filesystem sync for one album.
+- `UpdateImageCountersMessage` — refresh denormalized `image_count` on albums and tags (consistency belt).
+
+Plugins add their own by providing `AsMessageHandler`-attributed handlers and dispatching matching messages.
+
+### Monitoring queue depth
+
+`jobs_in_queue{queue="images"}` gauge → Prometheus. Dashboard alert if any queue grows unbounded.
+
+Per-queue panel shows:
+
+- Current depth.
+- Processed / minute.
+- Failure rate.
+- Average processing time.
+- Oldest-job-age.
+
+### Testing
+
+The sync transport runs jobs inline, so tests can:
+
+```php
+it('enqueues derivative generation after upload', function () {
+    $this->app->handle(postUpload(sampleImage()));
+
+    expect(messengerTransport('images'))
+        ->toHaveMessageOfType(GenerateDerivativesMessage::class);
+});
+
+it('generates all configured derivatives', function () {
+    $image = ImageFactory::new()->create();
+
+    $this->app->dispatch(new GenerateDerivativesMessage(
+        imageId: $image->id,
+        presetNames: ['thumbnail', 'medium', 'large'],
+    ));
+
+    expect($this->derivatives->count($image))->toBe(3);
+});
+```
+
+Handlers are unit-testable in isolation — no queue involved.
+
+### Graceful worker shutdown
+
+On `SIGTERM`:
+
+- Worker finishes the current message.
+- Refuses new messages.
+- Exits.
+
+Systemd's default `KillSignal=SIGTERM` + `TimeoutStopSec=60s` gives a clean draining window. Deploys can `systemctl reload` worker units without losing in-flight work.
+
+---
+
+## 14. Caching Architecture
+
+Caching is layered. Each layer has a distinct purpose and invalidation story. The goal is *right*, not *fast* — caches that lie are worse than no caches.
+
+### The layers
+
+```
+Client
+   │
+   ▼
+┌──────────────────────────────────┐
+│ Browser cache (HTTP headers)     │  Cache-Control / ETag on response
+├──────────────────────────────────┤
+│ CDN (optional)                   │  Caches by URL + Vary
+├──────────────────────────────────┤
+│ Caddy reverse cache (optional)   │  Static assets + derivatives
+├──────────────────────────────────┤
+│ HTTP response cache              │  App-level page cache for anon gallery
+├──────────────────────────────────┤
+│ Query/object cache (PSR-16)      │  Repo-level (permission resolves, etc.)
+├──────────────────────────────────┤
+│ Latte compile cache              │  Parse .latte once per content change
+├──────────────────────────────────┤
+│ Opcache (JIT)                    │  Compiled PHP bytecode, kernel-level
+├──────────────────────────────────┤
+│ PDO statement cache              │  Prepared statements held across requests
+└──────────────────────────────────┘
+```
+
+### PSR-16 everywhere
+
+App-level caching goes through `symfony/cache` behind PSR-16 (`Psr\SimpleCache\CacheInterface`):
+
+```php
+final class PermissionService
+{
+    public function __construct(
+        private AlbumRepository $albums,
+        private CacheInterface $cache,
+    ) {}
+
+    public function allowedAlbumIdsFor(User $user): array
+    {
+        return $this->cache->get(
+            key: "user.{$user->id}.allowed_albums",
+            callback: fn () => $this->resolveFromDb($user),
+            ttl: 300,
+        );
+    }
+}
+```
+
+Backends:
+
+- **APCu** — per-worker, zero-latency; used for small, hot, immutable caches (enum decodes, route table, locale catalog).
+- **Redis** — cross-worker, cross-server; user-scoped and shared caches.
+- **Filesystem** — fallback; acceptable for single-server installs without Redis.
+
+The container wires the configured backend; services never know which one they're hitting.
+
+### HTTP caching
+
+Responses declare `Cache-Control` based on content:
+
+| Content | Cache-Control |
+|---|---|
+| Static assets (Vite-fingerprinted) | `public, max-age=31536000, immutable` |
+| Derivative images | `public, max-age=31536000, immutable` (URL is content-addressed) |
+| Anonymous gallery pages | `public, max-age=60, stale-while-revalidate=300` |
+| Authenticated gallery pages | `private, no-cache, must-revalidate` |
+| API responses | `no-store` by default; specific endpoints opt-in to `max-age` |
+| Auth / admin pages | `no-store` |
+
+`ETag` is set on gallery pages; `If-None-Match` handled → 304 response.
+
+`Vary: Accept, Accept-Language, Cookie` set appropriately. A gallery page with a session cookie isn't served from cache to an anonymous user.
+
+### Application response cache
+
+Unauthenticated gallery pages get a response-cache middleware storing rendered HTML keyed by URL + locale + theme + content version:
+
+```
+key = hash("{url}|{locale}|{theme_version}|{content_version}")
+```
+
+`content_version` is bumped by events that invalidate content (album updated, image uploaded, permission changed). Incrementing is a Redis `INCR`; invalidation is effectively free.
+
+Miss → render → store with short TTL (60 s).
+
+Authenticated pages bypass this cache — permission-sensitive content never lives in a shared cache.
+
+### Latte compile cache
+
+Latte compiles `.latte` → PHP; compiled files live in `var/cache/templates/`. Latte tracks source mtime; a changed template triggers recompilation. In prod, the compiled files sit in opcache; render is near-instant.
+
+Deploys invalidate the cache via a compile-stamp file; Latte refuses to use compiled files older than the stamp.
+
+### Opcache
+
+Enabled in all environments. Prod settings:
+
+```ini
+opcache.enable=1
+opcache.memory_consumption=256
+opcache.max_accelerated_files=20000
+opcache.validate_timestamps=0        ; deploys trigger restart, not timestamp check
+opcache.jit=tracing
+opcache.jit_buffer_size=128M
+opcache.revalidate_freq=0
+```
+
+Deployment runs `opcache_reset()` (via a CLI command or a restart signal) when new code rolls out.
+
+### PDO statement cache
+
+Prepared statements held in the `Database` service for the worker lifetime (LRU at 500 entries). Subsequent requests with the same SQL skip the `prepare()` step. See section 4.
+
+### Cache invalidation via events
+
+Events drive invalidation; no scattered `$cache->clear()` calls:
+
+```php
+#[AsEventListener]
+final readonly class InvalidateAlbumCaches
+{
+    public function __construct(
+        private CacheInterface $cache,
+        private VersionBumper $version,
+    ) {}
+
+    public function __invoke(AlbumUpdatedEvent $event): void
+    {
+        $this->cache->delete("album.{$event->album->id}");
+        $this->cache->delete("album.{$event->album->id}.children");
+        $this->version->bump('content_version');
+    }
+}
+```
+
+Listeners register per-event; invalidation lives beside the event definition, not scattered across call sites.
+
+### Cache tags
+
+`symfony/cache`'s tagged adapter supports group invalidation:
+
+```php
+$cache->get('user.42.feed', fn () => ..., tags: ['user.42', 'album.17']);
+
+// Later — invalidate anything touching album 17
+$cache->invalidateTags(['album.17']);
+```
+
+### Cache warm-up
+
+CLI command for post-deploy warm-up:
+
+```
+php bin/piwigo cache:warm --routes --permissions --top-albums=10
+```
+
+Pre-computes the route table, common permission resolves, and the first page of the N most-viewed albums. Optional — for installs that can't afford the first post-deploy request being slow.
+
+### Cache anti-patterns avoided
+
+- **No cache-aside in domain code.** Domain code doesn't know there's a cache. Only repositories read/write the cache.
+- **No "cache everything with a long TTL".** Each TTL is chosen against how quickly the data goes stale; long TTL without invalidation is a bug.
+- **No cache-stampede risk.** `symfony/cache`'s `get()` uses lock semantics; simultaneous misses don't all recompute.
+- **No shared cache for private content.** Per-user or per-session caches, never key-collision via "oh it's the same URL".
+
+### Performance budgets
+
+For each page, a performance budget (as tests):
+
+- Anonymous gallery index: p95 < 20 ms server time, ≤ 50 KB HTML compressed.
+- Album page (50 thumbnails): p95 < 30 ms server time, ≤ 100 KB HTML compressed.
+- Picture page: p95 < 15 ms server time, ≤ 30 KB HTML compressed.
+- Derivative serve (cache hit): p95 < 5 ms.
+
+A regression of > 20% fails the nightly benchmark run.
+
+---
+
+## 15. Storage and Backup
+
+The app has several categories of persistent data. Each has its own retention, backup, and replication story.
+
+### Data categories
+
+| Category | What it is | Where it lives | Recovery priority |
+|---|---|---|---|
+| **Originals** | User-uploaded source files, never modified after write | `_data/originals/` or S3 bucket | Non-negotiable — losing this is data loss |
+| **Derivatives** | On-demand-regeneratable thumbnails / medium / large / AVIF | `_data/derivatives/` or S3 bucket | Regenerable — acceptable to lose |
+| **Database** | All metadata: users, permissions, albums, tags, comments, audit log | MySQL / PostgreSQL | Non-negotiable |
+| **Session store** | Sessions, CSRF tokens, remember-me tokens | DB or Redis | Disposable — users re-login |
+| **Temporary uploads** | In-flight multipart uploads before validation | `_data/uploads/tmp/` | Disposable — ephemeral |
+| **Logs (operational)** | Application stdout/file logs | Log aggregator | Operational — short retention |
+| **Logs (audit)** | Security-relevant events | DB table | Long retention (365+ days) |
+
+### Originals layout
+
+Content-addressed with a date-prefixed tree:
+
+```
+_data/originals/
+├── 2026/
+│   ├── 04/
+│   │   ├── 0198f3c5-7e5a-7c2d-9b1a-b37a2f0c8100.jpg
+│   │   ├── 0198f3c6-4d8b-7a12-bc04-e8f1223aa001.heic
+│   │   └── ...
+│   └── 05/
+│       └── ...
+```
+
+- **Year/month prefix** keeps any single directory under ~10k entries.
+- **UUIDv7 filenames.** Time-ordered, globally unique, no collision possible, sort nicely.
+- **Extension preserved** from the user's file (`.jpg`, `.heic`, `.webp`).
+- **No user-supplied paths.** The user sees "beach-sunset.jpg"; the disk sees `0198f3c6....jpg`.
+
+The DB column `images.storage_path` records the relative path. Migrating between storage backends updates the column; files move, rows follow.
+
+### Derivatives layout
+
+```
+_data/derivatives/
+├── 01/                                     # first 2 chars of UUID
+│   └── 98/                                 # next 2 chars
+│       └── 0198f3c5.../
+│           ├── thumbnail.a7b3c2.jpg
+│           ├── thumbnail.a7b3c2.webp
+│           ├── thumbnail.a7b3c2.avif
+│           ├── medium.d4e5f6.jpg
+│           └── ...
+```
+
+- Sharded by UUID prefix — no single directory balloons.
+- Filename includes preset + params-hash + format — immutable, content-addressed.
+- Regeneration uses `withLock()` (see section 5) to avoid duplicate work.
+
+### S3 / object-storage backend
+
+For deployments that prefer object storage, `StorageBackend` abstracts over local disk and S3-compatible APIs:
+
+```php
+interface StorageBackend
+{
+    public function exists(string $key): bool;
+    public function put(string $key, StreamInterface $body, string $contentType): void;
+    public function get(string $key): StreamInterface;
+    public function delete(string $key): void;
+    public function presignedUrl(string $key, \DateInterval $expires): string;
+    public function stat(string $key): StorageMetadata;
+}
+```
+
+Configuration:
+
+```
+# S3-compatible
+STORAGE_ORIGINALS_DSN=s3://originals-bucket?region=us-east-1
+STORAGE_DERIVATIVES_DSN=s3://derivatives-bucket?region=us-east-1
+
+# Local
+STORAGE_ORIGINALS_DSN=file:///srv/piwigo/originals
+STORAGE_DERIVATIVES_DSN=file:///srv/piwigo/derivatives
+```
+
+The S3 implementation uses the AWS SDK's streaming upload — originals never buffer in PHP memory. For private originals, the app issues presigned URLs with short TTLs instead of proxying bytes.
+
+Hybrid deployments (originals on S3, derivative cache on local disk) work — the two DSNs are independent.
+
+### Uploads / temp directory
+
+Uploads stream to `_data/uploads/tmp/` before validation. A scheduled job removes stale files (> 24 h) not attached to an in-progress multipart upload.
+
+Resumable uploads (tus protocol) use this directory with an ID; the client can reconnect and resume an interrupted upload.
+
+### Backup strategy
+
+Two-tier:
+
+**Tier 1: Database**
+
+- Daily `mysqldump --single-transaction --routines --triggers --events` (MySQL) or `pg_dump --clean --create` (Postgres) to a dedicated backup volume.
+- Streamed to cold storage (S3 Glacier, B2, Wasabi, etc.).
+- Retention: 7 daily + 4 weekly + 12 monthly (configurable).
+- **Restore tested monthly** — a scheduled CI job restores the latest backup into an empty DB and runs a smoke test. An untested backup is a "maybe".
+
+**Tier 2: Originals**
+
+- **Filesystem-level snapshots** (ZFS, Btrfs, LVM) if the OS supports them. Cheapest, fastest.
+- **rsync** to a secondary location nightly. Delta-only.
+- **S3 cross-region replication** if using S3.
+- Never store backups on the same disk as live data.
+
+Derivatives are **not** backed up — they regenerate from originals.
+
+### Restore procedure
+
+Documented step-by-step in `docs/operations/restore.md`:
+
+1. Provision a new host with the same PHP / MySQL / libvips versions.
+2. `composer install --no-dev`.
+3. Restore DB from the most recent known-good backup.
+4. Restore originals (from backup or sync from S3).
+5. `php bin/piwigo migrate` (no-op if backup includes current schema).
+6. `php bin/piwigo cache:clear`.
+7. Start FrankenPHP.
+8. Verify `/healthz`, `/readyz`, and a handful of known URLs.
+9. Derivative cache warms up on access — first page loads are slower; users notice nothing.
+
+RTO target: 1 hour for single-server. RPO: 24 hours (daily backups).
+
+### Disk usage monitoring
+
+Metrics + alerts:
+
+- `storage_originals_bytes`
+- `storage_derivatives_bytes`
+- `storage_free_bytes`
+
+Warn at > 85% used; page at > 95%.
+
+### Orphan detection
+
+Files on disk not referenced in the DB (crashes during upload, manual file moves, bugs):
+
+```
+php bin/piwigo storage:orphans            # dry-run report
+php bin/piwigo storage:orphans --delete   # after human review
+```
+
+Symmetric: DB rows referencing non-existent files:
+
+```
+php bin/piwigo storage:broken-links
+```
+
+Run weekly via the scheduler; findings logged to audit.
+
+### Quotas
+
+Per-user upload quotas (bytes, file count) enforced at upload time:
+
+```sql
+CREATE TABLE user_quotas (
+    user_id        BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    bytes_limit    BIGINT,         -- NULL = unlimited
+    bytes_used     BIGINT NOT NULL DEFAULT 0,
+    files_limit    INT,            -- NULL = unlimited
+    files_used     INT NOT NULL DEFAULT 0
+);
+```
+
+Quota updates happen inside the upload's DB transaction. Exceeded quota → 413 Payload Too Large with a quota-specific error code and current-usage breakdown.
+
+### Multi-tenancy — not planned
+
+One install serves one gallery. Multi-tenancy (multiple isolated galleries behind one install) is out of scope for v1. The design doesn't exclude it — row-level scoping via `site_id` would be the path — but the complexity cost isn't justified without a concrete audience.
+
+---
+
+## 16. Data Model
+
+This is the concrete schema the rewrite starts from. Subject to refinement during milestone 1, but the shape is committed.
+
+### Core tables
+
+```sql
+-- ─────────────────────────────────────────────────────────────
+-- Users and auth
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE users (
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid               BINARY(16) NOT NULL UNIQUE,
+    username           VARCHAR(100) NOT NULL UNIQUE,
+    email              VARCHAR(255) NOT NULL UNIQUE,
+    email_verified_at  TIMESTAMP NULL,
+    password_hash      VARCHAR(255) NOT NULL,
+    access_level       TINYINT UNSIGNED NOT NULL DEFAULT 2,   -- AccessLevel enum
+    locale             VARCHAR(10) NOT NULL DEFAULT 'en',
+    timezone           VARCHAR(64) NOT NULL DEFAULT 'UTC',
+    theme              VARCHAR(50) NOT NULL DEFAULT 'default',
+    last_login_at      TIMESTAMP NULL,
+    created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                         ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at         TIMESTAMP NULL,
+    INDEX (access_level),
+    INDEX (deleted_at)
+);
+
+CREATE TABLE groups (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL UNIQUE,
+    is_default  BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_groups (
+    user_id   BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    group_id  BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, group_id),
+    INDEX (group_id)
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- Sessions, tokens
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE sessions (
+    id           VARCHAR(128) PRIMARY KEY,
+    user_id      BIGINT NULL REFERENCES users(id) ON DELETE CASCADE,
+    payload      MEDIUMBLOB NOT NULL,
+    ip_hash      BINARY(32),
+    user_agent   VARCHAR(255),
+    last_active  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at   TIMESTAMP NOT NULL,
+    INDEX (user_id),
+    INDEX (expires_at)
+);
+
+CREATE TABLE remember_tokens (
+    selector     CHAR(32) PRIMARY KEY,
+    hash         BINARY(32) NOT NULL,
+    user_id      BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at   TIMESTAMP NOT NULL,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (user_id),
+    INDEX (expires_at)
+);
+
+CREATE TABLE api_tokens (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id       BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name          VARCHAR(100) NOT NULL,
+    token_hash    BINARY(32) NOT NULL UNIQUE,
+    scopes        JSON NOT NULL,
+    expires_at    TIMESTAMP NULL,
+    last_used_at  TIMESTAMP NULL,
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (user_id)
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- Albums (Piwigo called them "categories"; we call them albums)
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE albums (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid            BINARY(16) NOT NULL UNIQUE,
+    parent_id       BIGINT NULL REFERENCES albums(id) ON DELETE SET NULL,
+    name            VARCHAR(255) NOT NULL,
+    slug            VARCHAR(255) NOT NULL,
+    description     TEXT,
+    cover_image_id  BIGINT NULL,                     -- FK added after images
+    rank            INT NOT NULL DEFAULT 0,
+    min_level       TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    is_public       BOOLEAN NOT NULL DEFAULT TRUE,
+    image_count     INT NOT NULL DEFAULT 0,          -- denormalized
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                         ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY albums_parent_slug (parent_id, slug),
+    INDEX (parent_id, rank),
+    INDEX (is_public, min_level)
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- Images
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE images (
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid               BINARY(16) NOT NULL UNIQUE,
+    storage_path       VARCHAR(500) NOT NULL,          -- e.g. 2026/04/0198...jpg
+    original_name      VARCHAR(255) NOT NULL,          -- user-supplied, display only
+    mime_type          VARCHAR(100) NOT NULL,
+    width              INT NOT NULL,
+    height             INT NOT NULL,
+    filesize           BIGINT NOT NULL,
+    sha256             BINARY(32) NOT NULL,
+    perceptual_hash    BINARY(8),                      -- pHash for duplicate detection
+    author_id          BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+    title              VARCHAR(255),
+    description        TEXT,
+    rating             TINYINT UNSIGNED,               -- 0-5
+    exif               JSON,                           -- typed EXIF; queryable
+    taken_at           TIMESTAMP NULL,                 -- EXIF DateTimeOriginal
+    taken_at_offset    SMALLINT NULL,                  -- preserved tz offset minutes
+    gps_lat            DECIMAL(10, 7) NULL,
+    gps_lng            DECIMAL(10, 7) NULL,
+    min_level          TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    view_count         BIGINT NOT NULL DEFAULT 0,
+    created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                         ON UPDATE CURRENT_TIMESTAMP,
+    INDEX (author_id),
+    INDEX (taken_at),
+    INDEX (min_level, created_at),
+    INDEX (sha256),
+    INDEX (perceptual_hash)
+);
+
+ALTER TABLE albums
+    ADD FOREIGN KEY (cover_image_id) REFERENCES images(id) ON DELETE SET NULL;
+
+CREATE TABLE image_albums (
+    image_id   BIGINT NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+    album_id   BIGINT NOT NULL REFERENCES albums(id) ON DELETE CASCADE,
+    rank       INT NOT NULL DEFAULT 0,
+    added_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (image_id, album_id),
+    INDEX (album_id, rank)
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- Tags
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE tags (
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name         VARCHAR(100) NOT NULL UNIQUE,
+    slug         VARCHAR(100) NOT NULL UNIQUE,
+    image_count  INT NOT NULL DEFAULT 0,              -- denormalized
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE image_tags (
+    image_id   BIGINT NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+    tag_id     BIGINT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+    added_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (image_id, tag_id),
+    INDEX (tag_id)
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- Permissions (album ACL)
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE album_user_access (
+    album_id     BIGINT NOT NULL REFERENCES albums(id) ON DELETE CASCADE,
+    user_id      BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    can_view     BOOLEAN NOT NULL DEFAULT TRUE,
+    can_upload   BOOLEAN NOT NULL DEFAULT FALSE,
+    can_manage   BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (album_id, user_id),
+    INDEX (user_id)
+);
+
+CREATE TABLE album_group_access (
+    album_id     BIGINT NOT NULL REFERENCES albums(id) ON DELETE CASCADE,
+    group_id     BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    can_view     BOOLEAN NOT NULL DEFAULT TRUE,
+    can_upload   BOOLEAN NOT NULL DEFAULT FALSE,
+    can_manage   BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (album_id, group_id),
+    INDEX (group_id)
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- Comments
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE comments (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    image_id      BIGINT NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+    user_id       BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+    author_name   VARCHAR(100),                        -- anonymous
+    author_email  VARCHAR(255),
+    body          TEXT NOT NULL,
+    status        ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    ip_hash       BINARY(32),
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    approved_at   TIMESTAMP NULL,
+    INDEX (image_id, status),
+    INDEX (status, created_at)
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- Audit log (append-only)
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE audit_log (
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    actor_id     BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+    actor_ip     BINARY(16),
+    event        VARCHAR(100) NOT NULL,               -- 'user.login', 'album.permission_changed', ...
+    target_type  VARCHAR(100),
+    target_id    BIGINT,
+    details      JSON,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (actor_id, created_at),
+    INDEX (event, created_at),
+    INDEX (target_type, target_id)
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- Messenger failed messages (DLQ)
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE failed_messages (
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    body         LONGBLOB NOT NULL,
+    headers      JSON NOT NULL,
+    queue_name   VARCHAR(100) NOT NULL,
+    error_class  VARCHAR(255) NOT NULL,
+    error_msg    TEXT NOT NULL,
+    stack_trace  TEXT NOT NULL,
+    failed_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (queue_name, failed_at)
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- Schema version
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE schema_migrations (
+    version     VARCHAR(255) PRIMARY KEY,
+    name        VARCHAR(255) NOT NULL,
+    checksum    CHAR(64) NOT NULL,
+    applied_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- Settings (key/value, typed via JSON)
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE settings (
+    key_name    VARCHAR(100) PRIMARY KEY,
+    value       JSON NOT NULL,
+    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                   ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+### Key design decisions
+
+- **`BIGINT` surrogate PKs** on every table for internal relations. `AUTO_INCREMENT` on MySQL, `GENERATED ALWAYS AS IDENTITY` on Postgres.
+- **`BINARY(16)` UUIDv7** on user / album / image for external exposure. Time-ordered, index-friendly. On Postgres, native `UUID`.
+- **Soft delete on users only.** Audit log retention depends on historical user IDs being resolvable. Images and albums hard-delete (with audit entries); their referenced rows cascade.
+- **JSON for EXIF and settings.** MySQL's `JSON` type + `JSON_EXTRACT` functional indexes for querying specific fields. Postgres uses native `JSONB`.
+- **Denormalized counts** (`image_count` on albums and tags) maintained via event listeners. Refreshed nightly as a belt-and-suspenders consistency check.
+- **No `is_deleted` flag.** Where soft-delete applies, a nullable `deleted_at` timestamp is both the flag and the "when".
+- **IP addresses as hashes.** `ip_hash` is a salted hash (salt rotates weekly). Preserves utility for rate-limit and audit; avoids making the DB a surveillance goldmine.
+- **Email uniqueness is case-insensitive.** Generated column on MySQL; `CITEXT` on Postgres.
+
+### Permission resolution algorithm
+
+"Can user U view album A?" resolves in order:
+
+1. If `U.access_level >= Webmaster` → **allow**.
+2. If `U.access_level < A.min_level` → **deny**.
+3. If `A.is_public` and no ancestor restricts access → **allow**.
+4. Otherwise, walk from A up to root:
+   - At each level, check for an explicit `album_user_access(can_view=1)` row for U.
+   - Or a matching row in `album_group_access(can_view=1)` for any group U belongs to.
+   - If any level has an explicit permit → **allow**.
+   - If any level has an explicit deny (can_view=0) → **deny**, short-circuit.
+5. Default → **deny**.
+
+Resolution is memoized per-user per-request; changes to permissions dispatch `PermissionChangedEvent`, invalidating the per-user cache.
+
+### ERD summary
+
+```
+users ──┬──── user_groups ────── groups
+        │            │               │
+        ├─ api_tokens│               ├── album_group_access ──┐
+        ├─ remember_tokens           │                        │
+        ├─ album_user_access ────────┤                        ├── albums ──┬── image_albums ──┐
+        │                            │                        │            │                  │
+        └─ comments ──── images ─────┘            tags ◄────┐ │            ├── image_tags ──┤
+                          │                                 │ │                              │
+                          ├── exif (JSON)                   └─┴──────────────────────────────┘
+                          └── (storage_path → filesystem/S3)
+
+audit_log ──── sessions ──── settings ──── schema_migrations ──── failed_messages
+```
+
+### Migrations strategy
+
+SQL-first migrations in `database/migrations/`. The initial migration creates everything above as one file (`20260501120000_initial_schema.sql`). Subsequent migrations are additive — column adds, new tables, new indexes. Destructive migrations (drop columns, drop tables) happen only in major-version bumps and are explicit in release notes.
+
+Every migration is checksummed; modifying an applied migration's file is caught by the runner. Backfills that require code (e.g., recomputing `perceptual_hash` for existing rows) go in a separate "data migration" CLI command, not in schema migrations.
+
+### Naming conventions (recap)
+
+- Tables: plural snake_case (`albums`, `image_tags`).
+- Columns: snake_case.
+- Booleans: `is_*` / `can_*` / `has_*` prefix.
+- Timestamps: `*_at` (no `*_date`).
+- Foreign keys: `{referenced_table_singular}_id` (`user_id`, `album_id`).
+- Explicit indexes on every FK and every column used in WHERE.
+
+---
+
+## 17. Frontend Architecture
+
+**Decision:** server-rendered HTML (Latte) enhanced with vanilla JavaScript ESM modules and a small set of focused libraries. No SPA framework.
+
+### Why not an SPA
+
+A photo gallery is a document-oriented app, not a stateful one. SPAs add:
+
+- **Bundle weight.** Every user pays for React / Vue on every page, even the ones doing nothing interactive.
+- **Two sources of truth.** Server state + client state, plus a hydration layer between them. Bugs hide in the seams.
+- **SEO friction.** SSR-for-SPAs is its own stack (Next, Nuxt), doubling the runtime complexity.
+- **Accessibility regressions.** Custom routing breaks browser back, focus management, skip-links.
+
+The gallery renders HTML; JavaScript enhances it. The few genuinely interactive surfaces (upload, batch manager, tag editor) use small focused components that don't require a framework.
+
+### Build pipeline: Vite
+
+Per-theme asset bundles via Vite:
+
+```
+themes/default/
+├── vite.config.js
+├── assets/
+│   ├── src/
+│   │   ├── main.js
+│   │   ├── main.css
+│   │   ├── upload.js
+│   │   └── photoswipe-init.js
+│   └── dist/                     # Vite output (gitignored; built on deploy)
+│       ├── assets/
+│       │   ├── main-a7b3c2.js
+│       │   └── main-a7b3c2.css
+│       └── manifest.json
+```
+
+Dev:
+
+```
+bun run dev      # vite dev server on :5173 with HMR
+```
+
+Prod:
+
+```
+bun run build    # writes dist/ + manifest.json
+```
+
+Latte reads the manifest at render time (cached); `{asset 'main.js'}` resolves to the fingerprinted filename.
+
+### JavaScript architecture
+
+- **ESM only.** No CommonJS fallback, no UMD wrappers.
+- **No jQuery.** Modern DOM APIs are sufficient.
+- **No Webpack.** Vite is the only bundler.
+- **One module per feature.** `upload.js`, `photoswipe-init.js`, `batch-manager.js` — loaded only where needed via `<script type="module">`.
+- **Progressive enhancement.** Every page works with JS disabled (with some degraded interactivity).
+
+### Libraries (budgeted small)
+
+| Library | Purpose | Size (gzip) |
+|---|---|---|
+| PhotoSwipe | Lightbox for picture viewer | ~40 KB |
+| TomSelect | Tag input, user picker | ~20 KB |
+| HTMX | Partial updates in admin (batch manager, live filters) | ~15 KB |
+| Alpine.js | Small interactive components (dropdowns, modals, tooltips) — optional | ~15 KB |
+| Leaflet | Map display — loaded only when the map plugin is active | ~50 KB |
+
+No library ≥ 60 KB. Each library is evaluated against "could we do this in 20 lines of vanilla?" — sometimes yes.
+
+### CSS methodology
+
+- **Native CSS.** No preprocessor (Sass / Less / Stylus). Modern CSS has variables, nesting, `:has()`, container queries, layers.
+- **Cascade layers via `@layer`.** `@layer reset, base, components, utilities, overrides;` — specificity is predictable without `!important` wars.
+- **Design tokens as custom properties.**
+
+```css
+:root {
+    --color-bg: #0a0a0a;
+    --color-fg: #f0f0f0;
+    --color-accent: #ff6b35;
+    --color-surface: #141414;
+    --color-border: #2a2a2a;
+
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 2rem;
+    --space-xl: 4rem;
+
+    --font-body: system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Consolas, monospace;
+
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 16px;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+
+    --transition-fast: 120ms;
+    --transition-normal: 200ms;
+}
+
+[data-theme="light"] {
+    --color-bg: #f0f0f0;
+    --color-fg: #0a0a0a;
+    --color-surface: #ffffff;
+    --color-border: #e0e0e0;
+}
+```
+
+- **Container queries** for components. Thumbnail grids reflow based on their own width, not viewport.
+- **No utility-class framework** (no Tailwind). A handful of utility classes for one-off layout (`.u-center`, `.u-visually-hidden`) exist, but not at Tailwind scale.
+- **No CSS-in-JS.** CSS is a file.
+
+### Progressive enhancement patterns
+
+- Upload form submits multipart/form-data without JS. JS-enhanced → per-file progress, drag-drop, chunked resumable uploads.
+- Search input submits a GET form without JS. JS-enhanced → live results via HTMX.
+- PhotoSwipe lightbox: no-JS → click navigates to a dedicated picture page; JS → opens in-place.
+- Pagination: no-JS → links to numbered pages; JS → infinite scroll option (off by default — clicks are more accessible).
+
+### Accessibility — WCAG 2.1 AA target
+
+- Semantic HTML: `<nav>`, `<main>`, `<article>`, `<section>`, `<figure>` / `<figcaption>`.
+- Every image carries `alt`. If the user didn't provide text, alt falls back to the filename-derived title; `alt=""` only on purely decorative imagery.
+- Form labels associated via `for` / `id`.
+- Keyboard nav: every interactive element reachable with Tab; custom widgets expose `role` / `aria-*`.
+- Focus ring: `:focus-visible` with high-contrast outline; never `outline: none` without a replacement.
+- Skip-link to main content on every page.
+- Color contrast verified per WCAG ratio; `prefers-color-scheme` respected; `prefers-reduced-motion` disables transitions and animations.
+
+Automated check: `axe-core` runs in browser tests against every rendered page. Failures are blockers.
+
+### Responsive design
+
+- Mobile-first CSS — base styles target small screens; `@media (min-width: …)` layers on larger.
+- Container queries for internal component responsiveness.
+- Images served in appropriate sizes via `<picture>` + `srcset` + `sizes`. Derivative formats negotiated per request.
+- No horizontal scroll at any viewport width ≥ 320 px.
+
+### Dark mode
+
+First-class:
+
+- `prefers-color-scheme` detected on first visit.
+- User can override in account settings (stored on `users.theme`).
+- All themes ship light + dark variants; `[data-theme="light"]` / `[data-theme="dark"]` on `<html>`.
+- Images render natively; UI chrome flips.
+
+### Print stylesheet
+
+`@media print` rules on every theme:
+
+- Hide navigation, footer, admin controls.
+- Render images at reasonable print size (one per page for picture view; grid for albums).
+- Add footer with page title and canonical URL.
+
+Tested via Chrome headless PDF generation in browser tests.
+
+### No service worker in v1
+
+PWA / offline-first is a later concern. v1 is web-first, web-only. The service-worker API is in the backlog.
+
+### Asset CSP
+
+Vite-generated bundles are fingerprinted → `Cache-Control: immutable`. Served by Caddy directly; PHP never touches them.
+
+---
+
+## 18. Internationalization
+
+**Goal:** every user-facing string is translatable; translators work in standard tools; new locales ship without code changes.
+
+### Message catalog format: gettext `.po` / `.mo`
+
+Gettext is the least-interesting choice, which makes it the right one. Mature tooling (Poedit, Weblate, Transifex, Crowdin all speak it); stable format; decades of translator familiarity; robust plural support.
+
+```
+locales/
+├── en.po            # source of truth, written by developers
+├── fr.po
+├── de.po
+├── ja.po
+├── zh-CN.po
+└── ...
+```
+
+Compiled `.mo` files are built at deploy time:
+
+```
+bun run build:locales   # or: php bin/piwigo translations:compile
+```
+
+PHP reads them via the native gettext extension or `symfony/translation`'s gettext loader (fallback if the extension isn't compiled into the PHP build).
+
+### Extraction workflow
+
+```
+php bin/piwigo translations:extract     # scans src/, templates/, plugins/, writes .pot
+```
+
+Extracts strings from:
+
+- PHP: `_('string')` and `$this->translator->trans('string')` calls.
+- Latte: `{_'string'}` tags.
+- JS: `t('string')` calls (Vite plugin).
+
+Output is a `.pot` template; translators produce `.po` files per locale. Transifex / Weblate syncs them back into the repo as PRs.
+
+### Using translations in code
+
+```php
+// In a service
+$this->translator->trans('album.created', ['name' => $album->name]);
+```
+
+```latte
+{* In a template *}
+<h1>{_'Welcome, %name%', name: $user->name}</h1>
+
+{* Pluralization via ICU MessageFormat *}
+<p>{_'{count, plural, one {# photo} other {# photos}}', count: $count}</p>
+```
+
+```javascript
+// In JS
+t('upload.in_progress')
+```
+
+### Pluralization via ICU MessageFormat
+
+Gettext's native plural forms handle simple cases; ICU handles complex ones:
+
+```
+{count, plural,
+    =0 {no photos}
+    one {# photo}
+    few {# photos}
+    many {# photos}
+    other {# photos}
+}
+```
+
+`symfony/translation` supports ICU. Each locale declares its plural rule family in metadata; translators don't have to know CLDR rules — the tooling handles it.
+
+### Locale negotiation
+
+Precedence in order:
+
+1. Authenticated user's stored preference (`users.locale`).
+2. `?lang=fr` query parameter (sticky via cookie once used).
+3. `Accept-Language` header, parsed against available locales.
+4. `DEFAULT_LOCALE` env var (typically `en`).
+
+Resolved by `LocaleMiddleware` and written to request attributes; downstream code reads `$request->getAttribute('locale')`.
+
+### Date / number formatting
+
+All formatting through `IntlDateFormatter` and `NumberFormatter`:
+
+```php
+$formatter = new IntlDateFormatter(
+    $locale,
+    IntlDateFormatter::MEDIUM,
+    IntlDateFormatter::SHORT,
+    timezone: $user->timezone,
+);
+$formatter->format($image->takenAt);
+```
+
+In templates:
+
+```latte
+<time datetime="{$image->takenAt|atom}">{$image->takenAt|date}</time>
+<span>{$image->filesize|filesize}</span>    {* "4.2 MB" *}
+<span>{$duration|duration}</span>            {* "2 min 14 s" *}
+```
+
+The `|date`, `|filesize`, `|duration`, `|number`, `|currency` filters dispatch on locale.
+
+### RTL language support
+
+- `dir="rtl"` on `<html>` for RTL locales (ar, he, fa, ur).
+- Theme CSS uses logical properties (`margin-inline-start`, not `margin-left`) everywhere.
+- Directional icons (back/forward arrows) flip via `transform: scaleX(-1)` inside `[dir="rtl"]`.
+- Themes tested in both directions — snapshot tests include an RTL locale.
+
+### Translator tooling
+
+- `.po` files in the repo. Translators can PR directly (small changes) or sync via Weblate (larger installs).
+- Missing translations fall back to the source string — visible in the UI, not blank. Translators see them in context and prioritize.
+- `msgfmt --check` runs on every `.po` in CI; malformed translations fail the build.
+
+### Adding a new locale
+
+1. Add `ja.po` by copying `en.po` and translating.
+2. `bun run build:locales`.
+3. Add `'ja'` to `AVAILABLE_LOCALES` in config.
+4. Ship.
+
+No code change to add a locale beyond the config list.
+
+### Untranslated string audit
+
+```
+php bin/piwigo translations:audit --locale=ja
+```
+
+Reports missing strings and percent-complete. Useful for PRs that touch UI strings — did we add new strings that need translation?
+
+### Timezone handling
+
+- All timestamps stored as UTC.
+- Users have a `timezone` preference (default `UTC`); times are formatted in their tz on display.
+- `taken_at` (from EXIF) stored as UTC with `taken_at_offset` preserving the original offset; displayed in the original tz unless the user prefers otherwise.
+
+### Character set
+
+UTF-8 / utf8mb4 everywhere. No Latin-1. `mb_*` string functions throughout — `strlen` / `substr` used on user-supplied text is a bug.
+
+### CLDR data
+
+Locale-specific data (first day of week, number grouping, currency symbols) comes from ICU, which ships CLDR data. No hand-maintained tables of "this is how French formats numbers."
+
+---
+
+## 19. Developer Experience
+
+First-day contributors should be running the app locally within 30 minutes. First PR should land within a week.
+
+### Local dev stack
+
+Docker Compose for dependencies (`docker-compose.dev.yml`) — the PHP app runs on the host for fast iteration:
+
+```yaml
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: dev
+      MYSQL_DATABASE: piwigo_dev
+    ports: ["3306:3306"]
+    volumes: ["db-data:/var/lib/mysql"]
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  mailpit:                                # SMTP sink with web UI
+    image: axllent/mailpit
+    ports: ["8025:8025", "1025:1025"]
+
+  minio:                                  # S3-compatible for storage-backend testing
+    image: minio/minio
+    command: server /data
+    ports: ["9000:9000", "9001:9001"]
+    environment:
+      MINIO_ROOT_USER: dev
+      MINIO_ROOT_PASSWORD: devsecret
+```
+
+Setup:
+
+```
+docker compose -f docker-compose.dev.yml up -d
+cp .env.example .env.dev
+php bin/piwigo migrate
+php bin/piwigo db:seed --with-demo-data   # creates ~500 sample photos
+frankenphp run --config Caddyfile.dev
+bun run dev                                 # Vite dev server on :5173
+```
+
+`Caddyfile.dev` wires `/` to FrankenPHP in watch mode and proxies `/assets/*` to Vite's dev server at 5173 for HMR.
+
+### Hot reload
+
+- **Templates:** Latte recompiles on source change (opcache timestamp validation in dev).
+- **PHP:** FrankenPHP watch mode reloads workers when `src/` changes — 1–2 s feedback loop.
+- **CSS/JS:** Vite HMR — instant (CSS hot-swap) or sub-second (JS module replacement).
+
+### Xdebug in worker mode
+
+Xdebug + long-running workers is workable:
+
+- `xdebug.mode=debug,coverage` in `php.ini.dev`.
+- `xdebug.start_with_request=trigger` — only starts debugging when the request carries `XDEBUG_TRIGGER` (cookie, query param, header). Zero overhead on non-debug requests.
+- Worker must be restarted when breakpoints at module-load time are added — most breakpoints are inside request scope, no restart needed.
+- PHPStorm / VS Code config files ship in `.idea/` and `.vscode/`.
+
+### Debug toolbar
+
+Dev-only middleware injects a footer toolbar with:
+
+- Request timing (total + per-middleware + per-query).
+- All DB queries (SQL, params, duration).
+- Cache hits / misses.
+- Log messages accumulated during the request.
+- Current user, locale, theme.
+- Request ID.
+- Dispatched events and which listeners fired.
+
+Toggleable; zero impact in prod (middleware not wired).
+
+### Demo data
+
+`php bin/piwigo db:seed --with-demo-data` creates:
+
+- 20 users at various access levels.
+- 5 groups.
+- 30 nested albums with realistic permissions.
+- ~500 sample photos (CC0-licensed fixtures from a curated mirror, small files).
+- Random tags, comments, ratings.
+
+Reproducible via fixed random seed; useful for reproducing bugs.
+
+### Adding a feature: the happy path
+
+Documented in `docs/CONTRIBUTING.md`, but the gist:
+
+1. Write a failing HTTP test for the feature.
+2. Add the route to `config/routes.php`.
+3. Implement the controller with an unimplemented method.
+4. Write a unit test for each domain service the controller calls.
+5. Implement the domain services.
+6. Implement the controller method.
+7. Add / update the Latte template (with snapshot test).
+8. `bun run dev` to iterate on frontend.
+9. `pest --parallel` — green.
+10. `pint && phpstan` — green.
+11. Push PR.
+
+A scaffolding command generates file stubs:
+
+```
+php bin/piwigo make:feature "album export"
+```
+
+Creates: route entry, controller class, test file, template, empty migration. Delete what's not needed.
+
+### Pre-commit hooks
+
+`.githooks/pre-commit` runs:
+
+- `pint --test` on changed PHP files.
+- `phpstan analyse` on changed PHP files.
+- Arch tests (fast, always all).
+- `bun run lint` on changed JS / CSS files.
+
+Failing hook blocks commit. `--no-verify` is possible but CI catches it.
+
+### CI parity locally
+
+```
+php bin/piwigo ci
+```
+
+Runs the same checks CI runs, in the same order. "Green locally → green in CI" is the goal; flake-free CI is the discipline.
+
+### First-contribution tutorial
+
+`docs/tutorial/first-change.md` walks a newcomer through:
+
+1. Setting up the dev stack.
+2. Finding a "good first issue" on the issue tracker.
+3. Writing the test first.
+4. Implementing the change.
+5. Running checks.
+6. Opening the PR.
+
+Aimed at a developer new to this codebase but comfortable with PHP.
+
+### IDE configuration
+
+- `.idea/` (PHPStorm) and `.vscode/` (VS Code) shipped with recommended settings + extensions.
+- Code-style config auto-applied via Pint's rules file.
+- PHPStan config detected automatically.
+- Latte plugin recommended for syntax highlighting.
+- Xdebug adapter configured for the dev stack ports.
+
+### Useful local commands
+
+```
+php bin/piwigo about                        # environment summary
+php bin/piwigo route:list                   # all routes + their middleware
+php bin/piwigo container:dump               # DI wiring inspection
+php bin/piwigo tinker                       # REPL via psy/psysh
+php bin/piwigo db:dump > dump.sql           # DB dump including data
+php bin/piwigo migrate:fresh --seed=demo    # nuke + rebuild with demo data
+php bin/piwigo translations:audit           # missing-translation report
+php bin/piwigo events:list                  # all registered event listeners
+```
+
+### Docs as code
+
+- Architecture decisions live in `docs/adr/` as numbered Markdown files (`0001-use-frankenphp.md`, `0002-no-orm.md`, …).
+- Significant decisions require a PR adding an ADR.
+- Existing ADRs are not rewritten; when a decision is superseded, a new ADR notes the change and links back.
+
+### Communication
+
+- Public chat (Matrix / Discord / IRC) for live discussion.
+- Async via GitHub Issues and Discussions.
+- Optional weekly office-hours call, time-zone-friendly rotation.
+
+### Gotchas documented up-front
+
+A `docs/gotchas.md` page lists things that trip up newcomers:
+
+- Worker-mode pitfalls (static state, persistent connections, `ini_set` leaks).
+- FrankenPHP-specific behaviors (Caddy routing, module loading order).
+- Latte context-aware escape quirks.
+- libvips memory-cap settings.
+- Pest parallel execution + DB isolation.
+
+Read this page during onboarding; reference it when an odd behavior shows up.
+
+---
+
+## 20. Release Engineering and Governance
+
+### Versioning
+
+**Semantic Versioning 2.0.** Breaking changes to any of the following bump the major version:
+
+- Plugin API (`PluginInterface`, event classes, hook-point signatures).
+- CLI flags and command shapes.
+- JSON API (each version under `/api/vN/`).
+- Theme contract (`theme.json`, Latte extension API).
+- `.env` key names and semantics.
+
+Additive changes bump minor. Fixes bump patch.
+
+`v1.0.0` is the first stable release. Pre-1.0 (`v0.x.y`) is beta — backward compatibility is *not* guaranteed between 0.x versions.
+
+### Release cadence
+
+- **Patches** released as needed — typically weekly.
+- **Minors** released monthly.
+- **Majors** released every 18–24 months, with a 6-month deprecation runway.
+
+### Branching model
+
+- `main` — always green, always deployable.
+- `release/1.x` — backport branch for the current stable line.
+- Feature branches merge into `main` via PR.
+- Releases are tagged on `main` or `release/1.x`.
+
+No long-lived feature branches — features land behind flags or in small PRs. Flags for unfinished features live on `users.feature_flags` or a runtime config.
+
+### Release artifacts
+
+For each tag:
+
+- **Composer package** pushed to Packagist.
+- **Docker image** pushed to GHCR and Docker Hub: `ghcr.io/org/piwigo:1.0.0`, `:1.0`, `:1`, `:latest`.
+- **Source tarball** attached to the GitHub release with SHA256 checksum.
+- **SBOM** (Software Bill of Materials) in CycloneDX format attached.
+- **Release notes** in `CHANGELOG.md` (keep-a-changelog format) + GitHub release body.
+- **Signatures:**
+  - Docker images signed with cosign.
+  - Source tarball signed with the maintainer's GPG key.
+  - Public keys published on the project website and via `keys.openpgp.org`.
+
+### Changelog management
+
+`CHANGELOG.md` follows keep-a-changelog:
+
+```
+## [Unreleased]
+
+### Added
+- Plugin API: new `AlbumDeletedEvent` (#128)
+
+### Changed
+- Default derivative JPEG quality lowered from 85 to 82 (#132)
+
+### Deprecated
+- `DerivativeConfig::$oldField` — use `newField`; removed in 2.0 (#134)
+
+### Fixed
+- Memory leak in libvips operation cache (#142)
+
+### Security
+- Upload validation rejects malformed JPEGs that could trigger DoS (GHSA-…)
+```
+
+Every PR touching user-visible behavior updates the `Unreleased` section. Release cuts promote `Unreleased` → a dated version.
+
+### Security advisories
+
+GitHub Security Advisories (GHSA) with CVSS scores. Workflow:
+
+1. Private report — `security@` email or GHSA form.
+2. Triage within 72 h.
+3. Fix on a private fork; coordinate with the reporter.
+4. Publish fix + advisory simultaneously.
+5. Credit the reporter (unless they decline).
+6. Issue a patch release; the advisory links to the patch commit.
+
+### License
+
+**GPL-2.0-or-later** — matches Piwigo's license (allowing contributors familiar with the existing Piwigo-world to transition comfortably even though technical compatibility is deliberately broken).
+
+All contributors sign a Developer Certificate of Origin (DCO) via `Signed-off-by` in the commit. No CLA.
+
+### Governance
+
+- **Maintainers:** named individuals with commit access. Initial set is small (2–3). Becoming a maintainer requires sustained contribution plus agreement from existing maintainers.
+- **Decisions:** proposed via GitHub Discussions or RFC-style PRs in `docs/rfc/`. Maintainers approve via comment. Contentious decisions escalate to an async vote.
+- **Code review:** every PR requires approval from one maintainer who did not author it. Significant architectural changes require two.
+- **Issue triage:** weekly rotation among maintainers. Stale bot closes issues inactive for 90 days after a grace-period ping.
+
+### Contributing
+
+`CONTRIBUTING.md` covers:
+
+- Dev environment setup (pointer to section 19).
+- PR checklist (tests, changelog entry, docs if user-facing, ADR if architectural).
+- PR template (auto-populates via GitHub).
+- Review expectations — response within 3 business days.
+- Code of conduct (Contributor Covenant).
+
+### Roadmap
+
+Public on GitHub Milestones. Each milestone has:
+
+- Target date (always estimate; communicate when it slips).
+- List of issues.
+- Acceptance criteria.
+
+Shipping early is fine. Slipping is announced with a root-cause note.
+
+This document is the **architecture** roadmap. The **feature** roadmap is separate — what gets built when, based on user feedback and maintainer bandwidth.
+
+### Deprecation communication
+
+Deprecations surface in three places:
+
+- `@deprecated` PHPDoc on the affected code (visible in IDEs).
+- Release notes with the removal version.
+- A `/admin/deprecations` page in-app showing any deprecated API or config the current install is using (sourced from `trigger_deprecation()` events logged during operation).
+
+### Support channels
+
+- **Bugs:** GitHub Issues.
+- **Feature requests:** GitHub Discussions.
+- **Security:** `security@` email or GHSA.
+- **Dev chat:** Matrix / Discord.
+- **Commercial support:** not offered by the project. Third parties may offer it.
+
+### Metrics and public health
+
+`docs/health.md` auto-updates weekly via CI:
+
+- Latest release.
+- Open / closed issue counts.
+- Median PR time-to-merge.
+- CI success rate.
+- Test coverage trend.
+- Active contributors in the last 90 days.
+
+Maintained automatically — a stalled project is visible, not hidden.
+
+### Sunset plan
+
+If the project ever stops being maintained:
+
+- Public notice in the README and on the website.
+- Six-month archival notice with last-known-good release.
+- Repo and release artifacts remain available indefinitely.
+- Existing installs continue to work (no required phone-home, no remote kill switch).
+
+---
+
+## 21. What Goes Away
 
 Removed wholesale. Each row has a specific reason listed; nothing is dropped for ideology.
 
@@ -2407,7 +4454,7 @@ Every one of these is a net reduction in surface area. The rewrite is not adding
 
 ---
 
-## 12. What Carries Over (Conceptually)
+## 22. What Carries Over (Conceptually)
 
 Nothing is preserved for compatibility. What carries over is the **domain model and feature surface** — what a photo gallery *does* — reimplemented from scratch on a clean schema and a new API. This section is a design checkpoint: "of the things Piwigo does, which of them still belong in the rewrite?"
 
@@ -2464,7 +4511,7 @@ An unsupported example import script may exist in `contrib/` as a starting point
 
 ---
 
-## 13. Repository Structure
+## 23. Repository Structure
 
 ### Top-level layout
 
@@ -2791,7 +4838,7 @@ The directory structure is a map of the domain, not a map of architecture layers
 
 ---
 
-## 14. Installation and Rollout
+## 24. Installation and Rollout
 
 This is a **fresh install**, not a migration. There is no import tool, no legacy adapter, no backward-compatible shim. An existing Piwigo installation and the rewrite are two separate applications that happen to share a problem domain.
 

@@ -1,7 +1,7 @@
 # Piwigo PHP Rewrite — Ground-Up Architecture
 
-> A clean-room PHP 8.5 rewrite of Piwigo, designed for worker-mode from day one.  
-> No legacy baggage. No `exit()`. No globals. No Smarty.
+> A clean-room PHP 8.5 rewrite inspired by Piwigo, designed for worker-mode and test-first from day one.  
+> No legacy baggage. No `exit()`. No globals. No Smarty. No backward compatibility — greenfield schema, greenfield API, modern tools and concepts throughout.
 
 ---
 
@@ -16,10 +16,11 @@
 7. [Plugin System](#7-plugin-system)
 8. [Sessions and Auth](#8-sessions-and-auth)
 9. [Routing](#9-routing)
-10. [What Goes Away](#10-what-goes-away)
-11. [What Is Preserved](#11-what-is-preserved)
-12. [Repository Structure](#12-repository-structure)
-13. [Migration Strategy](#13-migration-strategy)
+10. [Testing and Quality Gates](#10-testing-and-quality-gates)
+11. [What Goes Away](#11-what-goes-away)
+12. [What Carries Over (Conceptually)](#12-what-carries-over-conceptually)
+13. [Repository Structure](#13-repository-structure)
+14. [Installation and Rollout](#14-installation-and-rollout)
 
 ---
 
@@ -33,7 +34,7 @@ Three paths exist for getting Piwigo to a clean, modern state:
 | **Rust rewrite** | Maximum performance, compile-time SQL safety, single binary | Months of ramp-up, template system requires ~40-50% custom Rust infrastructure, no PHP Composer ecosystem |
 | **PHP rewrite** | Worker-native from day one, PHP 8.5 features, full Composer ecosystem, fastest path to production | Still PHP — ceiling is lower than Rust |
 
-The PHP rewrite targets **clean worker-mode architecture** from the first line of code:
+The PHP rewrite targets **clean worker-mode architecture and test-first discipline** from the first line of code:
 
 - No `exit()` or `die()` anywhere in application code
 - No `define()` inside request scope
@@ -41,6 +42,11 @@ The PHP rewrite targets **clean worker-mode architecture** from the first line o
 - No procedural globals (`$conf`, `$user`, `$page`, `$template`)
 - PSR-7/PSR-15 throughout
 - PHP 8.5: pipe operator (`|>`), clone-with, `#[\NoDiscard]`, `array_first()`/`array_last()`, asymmetric visibility, closures in constant expressions, plus 8.4's `readonly` classes, property hooks, enums, fibers where useful
+- Every feature ships with tests — unit, integration, and (where applicable) browser. Code without tests is not merged. See [Testing and Quality Gates](#10-testing-and-quality-gates).
+
+### Not a Piwigo drop-in
+
+This is **not** a Piwigo-compatible replacement. It borrows the domain (photo gallery with albums, permissions, derivatives, plugins) but does not preserve Piwigo's database schema, web-service API, URL layout, theme format, or plugin contracts. Existing Piwigo installations cannot be "upgraded" to it. The goal is a from-scratch modernization, not a migration target.
 
 ---
 
@@ -136,8 +142,12 @@ A PSR-15 middleware stack gives a proper request lifecycle with zero opinion abo
 | Event/hook system | `league/event` (PSR-14) | See [Plugin System](#7-plugin-system) |
 | Logging | `monolog/monolog` | Already in `composer.json` |
 | CLI (sync, migrations) | `symfony/console` | Just the Console component, not the full framework |
+| Testing | `pestphp/pest` | Built on PHPUnit; terser syntax; parallel + architecture + mutation plugins |
+| Static analysis | `phpstan/phpstan` (level `max`) | Gated in CI |
+| Code style | `laravel/pint` | Opinionated PHP-CS-Fixer wrapper |
+| Browser tests | `symfony/panther` | Headless Chrome driver for end-to-end flows |
 
-5 new packages total. The full DI-wired application is operational.
+The full DI-wired application — including the test harness — is operational once these are installed.
 
 ### Middleware stack (inner to outer)
 
@@ -494,7 +504,7 @@ GET  /admin/plugins                 → Admin\PluginController::index
 GET  /admin/sync                    → Admin\SyncController::index
 ... (all current admin pages)
 
-POST /api                           → ApiController::handle    (ws.php equivalent)
+POST /api                           → ApiController::handle
 GET  /api                           → ApiController::handle
 
 GET  /i/{params:.+}                 → DerivativeController::serve
@@ -502,9 +512,79 @@ GET  /i/{params:.+}                 → DerivativeController::serve
 
 Admin routes are wrapped in `AdminAuthMiddleware`. API routes are wrapped in `ApiAuthMiddleware` (session or token).
 
+The URL layout is a **fresh design**, not a mirror of Piwigo's legacy entry points. There is no commitment to preserving `picture.php?image_id=…`, `index.php?/category/…`, or the `ws.php` query shape — old Piwigo URLs will not resolve.
+
 ---
 
-## 10. What Goes Away
+## 10. Testing and Quality Gates
+
+**Decision:** The rewrite is **test-first from commit one**. No feature is considered complete without tests. CI enforces this — not as a soft goal, but as a gate.
+
+### Test pyramid
+
+| Layer | Framework | Scope | Speed target |
+|---|---|---|---|
+| Unit | Pest | Pure domain logic (permission resolution, derivative params, search query building, tag graph traversal) — no I/O | < 1 ms each |
+| Integration | Pest | Services wired to a real database + real libvips. Migrations run against a SQLite or test-Postgres DB per suite | < 100 ms each |
+| HTTP | Pest + `nyholm/psr7` | Boot the full middleware stack, hand in a PSR-7 request, assert on the response — no browser | < 50 ms each |
+| Browser | Pest + Symfony Panther | End-to-end flows (login, upload, view album, edit photo, admin actions) against a FrankenPHP dev server | seconds |
+| Architecture | Pest Arch | Rule enforcement: no `exit()`/`die()` in `src/`, no `echo`/`print`, controllers only depend on `Domain\*`, no PDO use outside `Database\*`, no superglobals outside middleware | ms |
+| Mutation | Infection | Runs nightly; any PR that drops mutation score below threshold blocks | minutes |
+
+### Architecture tests (Pest Arch)
+
+These replace code-review vigilance with compiler-grade enforcement:
+
+```php
+arch('no forbidden functions in application code')
+    ->expect(['exit', 'die', 'echo', 'print_r', 'var_dump'])
+    ->not->toBeUsedIn('Piwigo\\');
+
+arch('controllers stay thin')
+    ->expect('Piwigo\\Controller')
+    ->toOnlyUse(['Piwigo\\Domain', 'Psr\\Http', 'Piwigo\\Template']);
+
+arch('no raw PDO outside Database layer')
+    ->expect('PDO')
+    ->toOnlyBeUsedIn('Piwigo\\Database');
+
+arch('no superglobals outside middleware')
+    ->expect(['$_GET', '$_POST', '$_SERVER', '$_SESSION', '$_COOKIE', '$_FILES'])
+    ->not->toBeUsedIn('Piwigo\\Domain');
+```
+
+If someone adds an `exit()` to a controller, CI fails before the PR can be merged. The rules in the "No legacy baggage" banner are enforced mechanically, not by discipline.
+
+### Coverage and static analysis gates
+
+- **Line coverage:** ≥ 85% on `src/Domain/**`, ≥ 70% overall. Enforced in CI.
+- **Mutation score:** ≥ 70% on domain code. Nightly job posts trend.
+- **PHPStan:** `level: max` — no baselines, no ignores without a `// phpstan-ignore-line` with a justification comment.
+- **Pint:** runs on every commit; style violations fail CI.
+- **Pest parallel runner:** full unit + integration suite under 30 s on a laptop.
+
+### Test fixtures, not shared state
+
+- Every test gets a fresh DB (SQLite in-memory for most, Postgres via `testcontainers` when a dialect-specific behavior is under test).
+- No `setUp` chains with 20 factory calls — each test builds the precise state it needs via tiny domain factories (`ImageFactory::make()->inAlbum($album)->withTags(['vacation'])->create()`).
+- The sample image fixtures live in `tests/fixtures/images/` — a small set covering EXIF orientations, HEIC, animated WebP, and the known-pathological JPEGs that have broken derivative generation in the past.
+
+### CI workflow
+
+Every PR must pass, in order:
+
+1. `pint --test` — style
+2. `phpstan analyse` — static analysis, level max
+3. `pest --parallel --coverage --min=70` — unit + integration + HTTP + arch tests with coverage threshold
+4. `pest tests/Browser` — browser tests against a FrankenPHP dev server booted in the job
+
+Nightly: `infection --min-msi=70` on the main branch.
+
+A failing test is never skipped with `->skip()` to get a merge through. Either fix it, delete it (with justification in the PR), or don't merge.
+
+---
+
+## 11. What Goes Away
 
 | Current | Replacement |
 |---|---|
@@ -525,18 +605,25 @@ Admin routes are wrapped in `AdminAuthMiddleware`. API routes are wrapped in `Ap
 
 ---
 
-## 11. What Is Preserved
+## 12. What Carries Over (Conceptually)
 
-- **MySQL + PostgreSQL** — PDO adapters replace `functions_mysqli.php` / `functions_pgsql.php`
-- **Derivative URL scheme** (`/i/...`) — same URL structure, `DerivativeController` handles it
-- **`ws.php` API surface** — same method names, same JSON response structure — external clients (apps, scripts) don't break
-- **Album/image/tag/user/permission data model** — schema migration not redesign; existing databases importable
-- **Theme override mechanism** — Latte `{extends}` replaces Smarty `{extends}`
-- **Plugin event catalog** — same hook points, typed classes instead of string keys
+Nothing is preserved for compatibility. What carries over is the **domain model and feature surface** — what a photo gallery *does* — reimplemented from scratch on a clean schema and a new API.
+
+| Concept | Carried over | Not carried over |
+|---|---|---|
+| Database engines | MySQL + PostgreSQL support | Table names, column names, foreign-key layout, charset choices, legacy indexes, `piwigo_` prefix |
+| Permission model | Album-level ACL + per-user access levels (guest/normal/admin/webmaster) | Exact representation; `user_access` / `group_access` tables get redesigned |
+| Derivative system | On-demand generation with deterministic URLs + disk cache | Legacy `/i/…` URL grammar, existing cached-derivative path layout |
+| Web-service API | JSON HTTP API for third-party clients exists | `ws.php` method names, request/response shape, error codes — **the new API is its own surface**, versioned and documented fresh |
+| Themes | Child-theme override mechanism (via Latte `{extends}`) | Smarty `.tpl` files, `{combine_*}`, `{footer_script}` — existing themes do not load |
+| Plugins | Event/hook extension points | `trigger_change`/`trigger_notify` string keys, `functions_plugins.php`, existing plugin packages |
+| Image pipeline | libvips-backed resize/crop/rotate/sharpen/watermark | `pwg_image` class, GD/Imagick backends, existing derivative params format |
+
+**Existing Piwigo databases are not importable.** Existing clients of `ws.php` will not work. Existing themes and plugins will not load. This is intentional — dragging the schema and API forward would re-import the constraints the rewrite exists to escape.
 
 ---
 
-## 12. Repository Structure
+## 13. Repository Structure
 
 ```
 piwigo-rewrite/
@@ -574,38 +661,58 @@ piwigo-rewrite/
 ├── config/
 │   ├── container.php           # PHP-DI definitions
 │   └── routes.php              # FastRoute definitions
+├── tests/
+│   ├── Unit/                   # Pest unit tests — mirror src/ structure
+│   ├── Integration/            # Pest integration tests (real DB, real libvips)
+│   ├── Http/                   # PSR-7 in, PSR-7 out — full middleware stack
+│   ├── Browser/                # Symfony Panther end-to-end flows
+│   ├── Arch/                   # Pest Arch rules
+│   ├── Factories/              # Domain object factories for tests
+│   └── fixtures/               # Sample images, SQL seed data
 ├── franken-worker.php          # FrankenPHP worker entry point
 ├── franken-worker-i.php        # Derivative worker entry point
 ├── Caddyfile
+├── phpstan.neon
+├── pint.json
+├── infection.json5
 └── composer.json
 ```
 
 ---
 
-## 13. Migration Strategy
+## 14. Installation and Rollout
 
-The rewrite does not carry forward any PHP source files. However, the **database schema is preserved** — an existing Piwigo installation can be migrated:
+This is a **fresh install**, not a migration. There is no import tool, no legacy adapter, no backward-compatible shim. An existing Piwigo installation and the rewrite are two separate applications that happen to share a problem domain.
 
-1. Run `php piwigo import:legacy --from=/path/to/old/piwigo` — reads the old `config.php`, connects to the database, migrates any schema differences, verifies image paths
-2. Point Caddy at the new codebase
-3. Existing URLs continue to work (same routing patterns)
-4. Existing API clients continue to work (same `ws.php` method surface)
-5. Themes need to be ported from Smarty `.tpl` to Latte `.latte` — largely mechanical (same block names, same variable names, different delimiters)
-6. Plugins need to be rewritten against the PSR-14 event API — not compatible with the old hook system
+### Fresh install
 
-### Template migration (Smarty → Latte)
+```
+git clone … piwigo-rewrite
+cd piwigo-rewrite
+composer install
+cp .env.example .env         # configure DB creds, storage paths
+php piwigo migrate           # create schema from scratch
+php piwigo admin:create      # create the webmaster account
+frankenphp run --config Caddyfile
+```
 
-| Smarty | Latte |
-|---|---|
-| `{$var}` | `{$var}` (identical) |
-| `{$var\|escape:'html'}` | `{$var}` (automatic) |
-| `{foreach $items as $item}` | `{foreach $items as $item}` (identical) |
-| `{if $cond}` | `{if $cond}` (identical) |
-| `{extends 'base.tpl'}` | `{extends 'base.latte'}` |
-| `{block name='content'}` | `{block content}` |
-| `{include file='partial.tpl'}` | `{include 'partial.latte'}` |
-| `{assign var=x value=y}` | `{var $x = y}` |
-| `{footer_script}...{/footer_script}` | Custom Latte tag registered by asset system |
-| `{combine_css path=...}` | Custom Latte tag registered by Vite helper |
+No `install.php` wizard. No legacy `config/database.inc.php`. All configuration is `.env` + typed config classes.
 
-The mechanical differences are small. A Rector-style script could automate 80% of the migration.
+### For users coming from Piwigo
+
+There is no supported upgrade path. Users who want to move their library will use the same tools anyone else uses to move between gallery systems: bulk re-upload via the API/CLI, plus a user-supplied script if they want to preserve tags and album structure. The project may publish an *unsupported* example script that reads a Piwigo database and emits CLI calls against the new system, but it is not a product feature and is not on the roadmap gate.
+
+### Build order
+
+The rewrite is built vertically feature by feature, each with full test coverage, each shippable:
+
+1. **Foundations** — DI container, middleware stack, PDO + QueryBuilder, Latte wiring, CLI skeleton, test harness, CI pipeline. Arch tests guard the "no legacy baggage" rules from day one.
+2. **Auth + users** — login, registration, sessions, access levels. Full HTTP + browser test coverage.
+3. **Albums + images + upload** — storage service, album CRUD, image upload with libvips-generated derivatives.
+4. **Gallery rendering** — public-facing album/picture pages, themes, PhotoSwipe integration.
+5. **Search + tags + comments + calendar** — remaining public features.
+6. **Admin UI** — batch manager, user/group admin, permission editor.
+7. **Plugin system** — PSR-14 dispatcher, plugin loader, example plugin.
+8. **JSON API** — v1 of the new API, OpenAPI spec, versioning policy.
+
+Each step lands behind passing tests. "Ship when the tests pass" is the whole release criterion.

@@ -12,18 +12,23 @@ final class UpgradeChainTest extends TestCase
     private const FIXTURE = __DIR__ . '/../../dev/fixtures/piwigo-16.x.sql';
 
     private string $dbHost;
+    private int $dbPort;
     private string $dbUser;
     private string $dbPass;
     private string $dbName;
+    private string $webDbHost;
     private string $baseUrl;
 
     protected function setUp(): void
     {
-        $this->dbHost = (string) (getenv('PIWIGO_DB_HOST') ?: '127.0.0.1');
-        $this->dbUser = (string) (getenv('PIWIGO_DB_USER') ?: 'piwigo');
-        $this->dbPass = (string) (getenv('PIWIGO_DB_PASSWORD') ?: 'piwigo');
-        $this->dbName = (string) (getenv('PIWIGO_DB_BASE') ?: 'piwigo_test');
-        $this->baseUrl = rtrim((string) (getenv('PIWIGO_BASE_URL') ?: 'http://localhost:8080'), '/');
+        $this->dbHost   = (string) (getenv('PIWIGO_DB_HOST') ?: '127.0.0.1');
+        $this->dbPort   = (int)    (getenv('PIWIGO_DB_PORT') ?: 3306);
+        $this->dbUser   = (string) (getenv('PIWIGO_DB_USER') ?: 'piwigo');
+        $this->dbPass   = (string) (getenv('PIWIGO_DB_PASSWORD') ?: 'piwigo');
+        $this->dbName   = (string) (getenv('PIWIGO_DB_BASE') ?: 'piwigo_test');
+        // Hostname as seen from *inside* the web container (Docker service name).
+        $this->webDbHost = (string) (getenv('PIWIGO_WEB_DB_HOST') ?: 'db');
+        $this->baseUrl  = rtrim((string) (getenv('PIWIGO_BASE_URL') ?: 'http://localhost:8080'), '/');
 
         $this->resetDatabase();
         $this->loadFixture(self::FIXTURE);
@@ -55,12 +60,13 @@ final class UpgradeChainTest extends TestCase
         $version = $this->queryScalar(
             "SELECT value FROM piwigo_config WHERE param = 'piwigo_db_version'"
         );
-        self::assertSame('16.3', $version, 'upgrade.php must land on current branch version');
+        // get_branch_from_version('16.3.0') returns '16' (first segment only, per Piwigo ≥ 11 convention)
+        self::assertSame('16', $version, 'upgrade.php must land on current branch version');
     }
 
     private function resetDatabase(): void
     {
-        $db = new \mysqli($this->dbHost, $this->dbUser, $this->dbPass);
+        $db = new \mysqli($this->dbHost, $this->dbUser, $this->dbPass, '', $this->dbPort);
         $db->query("DROP DATABASE IF EXISTS `{$this->dbName}`");
         $db->query("CREATE DATABASE `{$this->dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
         $db->close();
@@ -73,6 +79,7 @@ final class UpgradeChainTest extends TestCase
         $proc = new Process([
             'mysql',
             "-h{$this->dbHost}",
+            "-P{$this->dbPort}",
             "-u{$this->dbUser}",
             "-p{$this->dbPass}",
             $this->dbName,
@@ -87,9 +94,10 @@ final class UpgradeChainTest extends TestCase
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
+        // Uses webDbHost (the in-container service name) so upgrade.php can reach the DB.
         $cfg = sprintf(
-            "<?php\n\$conf['dblayer'] = 'mysqli';\n\$conf['db_host'] = '%s';\n\$conf['db_user'] = '%s';\n\$conf['db_password'] = '%s';\n\$conf['db_base'] = '%s';\n\$conf['db_table_prefix'] = 'piwigo_';\n",
-            addslashes($this->dbHost),
+            "<?php\n\$conf['dblayer'] = 'mysqli';\n\$conf['db_host'] = '%s';\n\$conf['db_user'] = '%s';\n\$conf['db_password'] = '%s';\n\$conf['db_base'] = '%s';\n\$prefixeTable = 'piwigo_';\ndefine('PHPWG_INSTALLED', true);\ndefine('PWG_CHARSET', 'utf-8');\ndefine('DB_CHARSET', 'utf8');\ndefine('DB_COLLATE', '');\n?>",
+            addslashes($this->webDbHost),
             addslashes($this->dbUser),
             addslashes($this->dbPass),
             addslashes($this->dbName),
@@ -107,7 +115,7 @@ final class UpgradeChainTest extends TestCase
 
     private function queryScalar(string $sql): string
     {
-        $db = new \mysqli($this->dbHost, $this->dbUser, $this->dbPass, $this->dbName);
+        $db = new \mysqli($this->dbHost, $this->dbUser, $this->dbPass, $this->dbName, $this->dbPort);
         $result = $db->query($sql);
         self::assertInstanceOf(\mysqli_result::class, $result);
         $row = $result->fetch_row();

@@ -345,7 +345,8 @@ final class UpgradeChainTest extends TestCase
         self::assertSame(200, $statusCode);
 
         $version = $this->queryScalar("SELECT value FROM piwigo_config WHERE param = 'piwigo_db_version'");
-        self::assertSame('16.3', $version, 'upgrade.php must land on current branch version');
+        // get_branch_from_version('16.3.0') returns '16' (first segment only, Piwigo ≥11 convention)
+        self::assertSame('16', $version, 'upgrade.php must land on current branch version');
     }
 
     private function resetDatabase(): void

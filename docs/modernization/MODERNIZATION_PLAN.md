@@ -65,7 +65,7 @@ Establish the entire toolchain — composer, PHPStan, Rector, Pint, PHPUnit, Doc
 
 7. ✅ **Capture the 16.x fixture.** Run a real install on the dev stack — create albums, upload photos, create users with permissions, post comments, set tags, change config values. `mysqldump` to `dev/fixtures/piwigo-16.x.sql`. **Fixture contents: 3 albums (2 root, 1 sub), 391 images (8 real uploads + 383 metadata rows), 4 users (guest + fixture_admin + viewer_alice + uploader_bob), 4 tags (nature, portrait, mountain, outdoor), 3 comments, gallery_title set, logging enabled. Dump size: 246 KB.** Admin credentials: `fixture_admin` / `fixture_admin`. Regeneration instructions in `dev/fixtures/README.md`.
 
-8. ✅ **Author the CI workflow.** `.github/workflows/ci.yml` runs three jobs in parallel: `lint` (Pint test mode + PHPStan), `unit` (PHPUnit `Unit` suite — placeholder, returns 0), `e2e` (boots `docker compose up -d --wait db web`, drives all six Playwright specs, then runs `UpgradeChainTest` against the fixture). Matrix on `php-version: ['8.5']` only. Done when a PR with no source changes goes green. **Blocked on step 7** (fixture not yet committed; `e2e` job will fail until `dev/fixtures/piwigo-16.x.sql` exists).
+8. ✅ **Author the CI workflow.** `.github/workflows/ci.yml` runs three jobs in parallel: `lint` (Pint test mode + PHPStan), `unit` (PHPUnit `Unit` suite — placeholder, returns 0), `e2e` (boots `docker compose up -d --wait db web`, drives all six Playwright specs, then runs `UpgradeChainTest` against the fixture). Matrix on `php-version: ['8.5']` only. Done when a push with no source changes goes green. **Blocked on step 7** (fixture not yet committed; `e2e` job will fail until `dev/fixtures/piwigo-16.x.sql` exists).
 
 9. ✅ **Scaffold `tests/Integration/UpgradeChainTest.php`.** This test loads the 16.x fixture into a throwaway DB, writes `local/config/database.inc.php` pointing at it, then makes an HTTP request to `/upgrade.php` with `username=fixture_admin&password=fixture_admin`, then asserts the post-upgrade `piwigo_config.version` matches `'16.3'`. Uses `curl_init` for the HTTP call (no Guzzle dependency) and `Symfony\Component\Process\Process` to shell out to `mysql` CLI for fixture loading. Cleans up `local/config/database.inc.php` in `tearDown`. Done when the test runs green against an unmodified codebase — **green once the fixture exists**.
 
@@ -430,14 +430,14 @@ test('fresh install completes end-to-end', async ({ page }) => {
 | `composer.json` + first `composer install` | S |
 | `phpstan.neon` + bootstrap + baseline generation | M |
 | `rector.php` Phase 0 dry-run | S |
-| `pint.json` + run-and-commit-the-churn PR | M |
+| `pint.json` + run-and-commit-the-churn | M |
 | `phpunit.xml.dist` | S |
 | `docker-compose.yml` (apache + mariadb + playwright orchestration) | M |
 | 16.x fixture capture (must be done by hand on a real install) | M |
 | `ci.yml` (3 jobs, matrix, caching) | M |
 | `UpgradeChainTest.php` (load-bearing, subprocess driving) | L |
 | 6 Playwright specs (selectors against unstable templates) | L |
-| Phase 0 PR + green CI | S |
+| Phase 0 CI validation | S |
 
 **Phase total: L.**
 
@@ -468,7 +468,7 @@ PIWIGO_DB_HOST=127.0.0.1 PIWIGO_DB_PORT=3307 PIWIGO_DB_USER=piwigo \
 vendor/bin/phpunit --testsuite Integration       # 1/1 passing once fixture loaded (dev/fixtures/piwigo-16.x.sql, 246 KB)
 ```
 
-Manual break check: edit `include/common.inc.php:90` to point at a nonexistent dblayer file, push to a PR — CI must fail in `e2e` (install.spec.ts) within minutes. Revert.
+Manual break check: edit `include/common.inc.php:90` to point at a nonexistent dblayer file, push to branch — CI must fail in `e2e` (install.spec.ts) within minutes. Revert.
 
 ---
 
@@ -483,7 +483,7 @@ With Phase 0's safety net in place, get every entry point — `index.php`, `pict
 
 2. **Replace the 4 `utf8_encode/decode` call sites.** Verified-live sites: `include/functions.inc.php:1953` (`utf8_encode`), `:1957` (`utf8_decode`), `admin/include/functions_upgrade.php:222` (`utf8_decode`), `:223` (`utf8_decode`). All other matches are vendored JS (out of scope). Replace each with `mb_convert_encoding`. Done when `grep -rn 'utf8_\(en\|de\)code' include/ admin/ install.php upgrade.php` returns zero matches.
 
-3. **Apply Rector PHP 8.0 set in dry-run, review, apply.** Add `->withPhpSets(php80: true)` to `rector.php`. Slice by directory: `include/` first, then `admin/`, then root entry points. Each slice is one PR, each PR runs the full CI matrix. PHP 8.0 set hits: `each()` removal (only `feedcreator.class.php:1414`, which is excluded), `(unset)` cast removal, `${var}` interpolation rewriting, `Throwable` matchers. Done when `vendor/bin/rector process --dry-run` reports zero changes for the 8.0 set on each merged slice.
+3. **Apply Rector PHP 8.0 set in dry-run, review, apply.** Add `->withPhpSets(php80: true)` to `rector.php`. Slice by directory: `include/` first, then `admin/`, then root entry points. Each slice is one commit, each commit runs the full CI matrix. PHP 8.0 set hits: `each()` removal (only `feedcreator.class.php:1414`, which is excluded), `(unset)` cast removal, `${var}` interpolation rewriting, `Throwable` matchers. Done when `vendor/bin/rector process --dry-run` reports zero changes for the 8.0 set on each merged slice.
 
 4. **Apply Rector PHP 8.1 set.** Adds readonly properties, `never` returns, `enum` opportunities, `new in initializers`. Same slicing strategy. Be disciplined: only accept rewrites that pass E2E, defer `readonly` on globals to Phase 4. Done when 8.1-set dry-run is empty per slice.
 
@@ -1022,11 +1022,11 @@ Convert ~3,490 phpdoc `@param`/`@return`/`@var` annotations across `include/`, `
 
 3. **Apply, hand-fix Rector residue, commit `include/`.** Run `vendor/bin/rector process` (no `--dry-run`). For every file Rector modifies, manually add `declare(strict_types=1);` as the first line after `<?php` — Rector's `DeclareStrictTypesRector` is staged for step 5, but adding it now per-file in `include/` makes the diff reviewable. Hand-fix the cases flagged in step 2: e.g. `register_user()` at `include/functions_user.inc.php:123` has phpdoc `@return int|false user id or false` but the body has paths that fall off the end returning `null` — change to `: int|false|null` and refactor to ensure all paths return explicitly. Run the Phase 0 Playwright + UpgradeChainTest suite. Commit. **Exit signal**: CI green; only `include/` files modified plus exactly one `declare(strict_types=1);` per touched file.
 
-4. **Repeat the slice for the rest of the included tree.** Separate PRs, in this order: `admin/` (excluding `admin/include/pclzip.lib.php` — vendored zip code), then `ws.php` + `include/ws_core.inc.php` + `include/ws_functions/*.php` + `include/ws_protocols/*.php`, then root entry points (every entry from `index.php` through `notification.php`), then `themes/default/*.php` (11 files, mostly trivial), then `install/` **excluding `install/db/`**. Each slice is one PR. **Exit signal per slice**: CI green; PHPStan baseline file shrinks (or stays equal — never grows) when the level later moves up.
+4. **Repeat the slice for the rest of the included tree.** Separate commits, in this order: `admin/` (excluding `admin/include/pclzip.lib.php` — vendored zip code), then `ws.php` + `include/ws_core.inc.php` + `include/ws_functions/*.php` + `include/ws_protocols/*.php`, then root entry points (every entry from `index.php` through `notification.php`), then `themes/default/*.php` (11 files, mostly trivial), then `install/` **excluding `install/db/`**. Each slice is one commit. **Exit signal per slice**: CI green; PHPStan baseline file shrinks (or stays equal — never grows) when the level later moves up.
 
-5. **Apply `DeclareStrictTypesRector` codebase-wide in one sweep.** Switch on `Rector\Php70\Rector\FileWithoutNamespace\DeclareStrictTypesRector` and run `vendor/bin/rector process`. One-line-per-file diff but it touches ~500 files. Single PR titled "phase2: declare(strict_types=1) everywhere". The Rector config must still skip `install/db/`, `language/`, and the vendored libs listed in step 2 — `strict_types` in those files would break the upgrade chain (the install/db scripts pass `'1'` as int parameters routinely). Add a CI grep guard: `! grep -rL 'declare(strict_types=1)' include/ admin/ themes/default/*.php` (must return empty). **Exit signal**: every non-excluded PHP file declares strict types; CI grep guard passes; UpgradeChainTest still green.
+5. **Apply `DeclareStrictTypesRector` codebase-wide in one sweep.** Switch on `Rector\Php70\Rector\FileWithoutNamespace\DeclareStrictTypesRector` and run `vendor/bin/rector process`. One-line-per-file diff but it touches ~500 files. Single commit titled "phase2: declare(strict_types=1) everywhere". The Rector config must still skip `install/db/`, `language/`, and the vendored libs listed in step 2 — `strict_types` in those files would break the upgrade chain (the install/db scripts pass `'1'` as int parameters routinely). Add a CI grep guard: `! grep -rL 'declare(strict_types=1)' include/ admin/ themes/default/*.php` (must return empty). **Exit signal**: every non-excluded PHP file declares strict types; CI grep guard passes; UpgradeChainTest still green.
 
-6. **Walk PHPStan from level 0 to level 8, one PR per level.** At each level, regenerate the baseline (`vendor/bin/phpstan analyse --level=N --generate-baseline`), hand-fix as many entries as appetite allows, then commit the shrunken baseline. Level-by-level guidance:
+6. **Walk PHPStan from level 0 to level 8, one commit per level.** At each level, regenerate the baseline (`vendor/bin/phpstan analyse --level=N --generate-baseline`), hand-fix as many entries as appetite allows, then commit the shrunken baseline. Level-by-level guidance:
 
    | Level | New error class | Typical Piwigo finding |
    |---|---|---|
@@ -1864,13 +1864,13 @@ The Phase 3 audit list (`include/functions_calendar.inc.php:126`, `include/funct
 
 #### D. Custom PHPStan rule — baseline-grow guard
 
-PHPStan baselines are append-only by default; a sloppy PR can add 50 new errors and `--generate-baseline` will silently absorb them. This guard runs after analysis and rejects baselines that grew.
+PHPStan baselines are append-only by default; a sloppy push can add 50 new errors and `--generate-baseline` will silently absorb them. This guard runs after analysis and rejects baselines that grew.
 
 `tools/check-baseline.sh`:
 
 ```bash
 #!/usr/bin/env bash
-## Baseline-grow guard. Runs after PHPStan, rejects any PR that introduces
+## Baseline-grow guard. Runs after PHPStan, rejects any push that introduces
 ## new baseline entries. Use as a CI step in the `lint` job.
 
 set -euo pipefail
@@ -2127,7 +2127,7 @@ return RectorConfig::configure()
     ->withParallel();
 ```
 
-Run as a one-shot (`vendor/bin/rector process`), commit the resulting churn as one PR ("phase2: strip redundant phpdoc"). Expected diff scale per Phase 2 step 9: drops `grep -c '@param' include/*.inc.php` from ~3,490 to ~800.
+Run as a one-shot (`vendor/bin/rector process`), commit the resulting churn as one commit ("phase2: strip redundant phpdoc"). Expected diff scale per Phase 2 step 9: drops `grep -c '@param' include/*.inc.php` from ~3,490 to ~800.
 
 ---
 
@@ -2207,9 +2207,9 @@ Move every first-party class file from `include/*.class.php`, `admin/include/*.c
    Document in `INSTALL.md`: tarball ships with `vendor/` populated (production deps only). For developer clones, `composer install` pulls dev deps. CI builds the release tarball via `git archive --format=tar.gz HEAD` followed by `composer install --no-dev --optimize-autoloader --classmap-authoritative` inside the staged directory. **Exit signal**: tarball generated, untar'd, `php -S localhost:8080` serves the gallery without `composer install`.
 
 8. **Entry-point migration in dependency order.** Add `require __DIR__ . '/vendor/autoload.php';` as the first non-comment line of each entry point. Order:
-   - PR 1: `index.php`, `picture.php`, `comments.php`, `feed.php`, `search.php`, `tags.php`, `notification.php`, `about.php`, `popuphelp.php`, `password.php`, `register.php`, `identification.php`, `profile.php`, `i.php`, `action.php`.
-   - PR 2: `admin.php`, `ws.php`.
-   - PR 3 (last): `install.php`, `upgrade.php`. These run **before** `common.inc.php` is fully wired. The autoload `require` must work without `$conf`/`PHPWG_ROOT_PATH` already defined. Mitigation: `define('PHPWG_ROOT_PATH', __DIR__ . '/');` at the very top, then `require PHPWG_ROOT_PATH . 'vendor/autoload.php';`.
+   - Commit 1: `index.php`, `picture.php`, `comments.php`, `feed.php`, `search.php`, `tags.php`, `notification.php`, `about.php`, `popuphelp.php`, `password.php`, `register.php`, `identification.php`, `profile.php`, `i.php`, `action.php`.
+   - Commit 2: `admin.php`, `ws.php`.
+   - Commit 3 (last): `install.php`, `upgrade.php`. These run **before** `common.inc.php` is fully wired. The autoload `require` must work without `$conf`/`PHPWG_ROOT_PATH` already defined. Mitigation: `define('PHPWG_ROOT_PATH', __DIR__ . '/');` at the very top, then `require PHPWG_ROOT_PATH . 'vendor/autoload.php';`.
 
    **Exit signal**: every entry point loads `vendor/autoload.php`; UpgradeChainTest green; fresh-install Playwright spec green.
 
@@ -2326,15 +2326,15 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 | --- | --- |
 | `composer.json` autoload + green-baseline `dump-autoload --strict-psr` | S |
 | `tools/list-classes.php` + committed inventory CSV | S |
-| Move leaf cluster (~10 PRs of small diffs) | M |
+| Move leaf cluster (~10 commits of small diffs) | M |
 | Move calendar, search, derivative classes (extraction needed) | M |
 | Move `Template` + `ScriptLoader` + `CssLoader` + adapter (deep Smarty entanglement) | L |
 | Move WS layer (`PwgError`, `PwgServer`, handlers, encoders) | L |
 | Move admin class cluster | M |
-| Configure Rector `RenameClassRector` rules per PR | S |
+| Configure Rector `RenameClassRector` rules per commit | S |
 | Audit and special-case `new $classname()` (7 sites) | M |
 | `.gitattributes` + tarball CI job + `INSTALL.md` | S |
-| Entry-point migration, three PRs | M |
+| Entry-point migration, three commits | M |
 
 **Phase total: L.**
 
@@ -2348,7 +2348,7 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
 4. **Tarball install workflow breaks if `vendor/` is dirty.** If a contributor commits dev deps, the tarball ships with phpstan/rector binaries. Mitigation: `.gitattributes` `export-ignore` rules + CI check that builds the release tarball, untars, and asserts `! [ -d vendor/phpstan ]`.
 
-5. **`install.php`/`upgrade.php` boot order.** These run before `common.inc.php` finishes wiring, before `Conf` array is hydrated, before dblayer is loaded. Mitigation: keep these in the last PR of Phase 3; UpgradeChainTest is the gating test; small rollback (revert one PR) if regression.
+5. **`install.php`/`upgrade.php` boot order.** These run before `common.inc.php` finishes wiring, before `Conf` array is hydrated, before dblayer is loaded. Mitigation: keep these in the last commit of Phase 3; UpgradeChainTest is the gating test; small rollback (revert one commit) if regression.
 
 ### Verification
 
@@ -2533,7 +2533,7 @@ Every move is the same eight numbered steps. No exceptions. The leaf-vs-trunk de
 
 #### Worked example — `PersistentCache`/`PersistentFileCache`
 
-**Step 1.** `grep -rn "extends PersistentCache" --include='*.php' include/ admin/` → one hit, `include/cache.class.php:58` (`PersistentFileCache extends PersistentCache`). Both classes move together in the same PR.
+**Step 1.** `grep -rn "extends PersistentCache" --include='*.php' include/ admin/` → one hit, `include/cache.class.php:58` (`PersistentFileCache extends PersistentCache`). Both classes move together in the same commit.
 
 **Step 2.** Two new files. `src/Piwigo/Cache/PersistentCache.php`:
 
@@ -2639,7 +2639,7 @@ grep -rn 'new PersistentFileCache\b' --include='*.php' .                # empty
 grep -rn 'new \\\\Piwigo\\\\Cache\\\\PersistentFileCache' --include='*.php' .  # exactly one hit, common.inc.php
 ```
 
-PR diff: +2 files (~70 lines), -1 file (-128 lines), -1 line in `common.inc.php`, +5 lines in `rector.php`. Tightly reviewable.
+Commit-sized diff: +2 files (~70 lines), -1 file (-128 lines), -1 line in `common.inc.php`, +5 lines in `rector.php`. Tightly reviewable.
 
 ---
 
@@ -2677,7 +2677,7 @@ Smarty 5 autoloadability: `include/smarty/composer.json` does **not** exist in t
 }
 ```
 
-Option B is recommended — zero new files, one line change, and Smarty stays exactly where the rest of the codebase expects it. Confirm with `php -r "require 'vendor/autoload.php'; var_dump(class_exists(\Smarty\Smarty::class));"` → `bool(true)`. Once verified, the `require_once` at `include/template.class.php:13` is dead and gets deleted in this PR.
+Option B is recommended — zero new files, one line change, and Smarty stays exactly where the rest of the codebase expects it. Confirm with `php -r "require 'vendor/autoload.php'; var_dump(class_exists(\Smarty\Smarty::class));"` → `bool(true)`. Once verified, the `require_once` at `include/template.class.php:13` is dead and gets deleted in this commit.
 
 #### 2. Move 1 — leaf classes first
 
@@ -2796,7 +2796,7 @@ class PwgTemplateAdapter
 }
 ```
 
-Note the `use Piwigo\Image\DerivativeImage` — `PwgTemplateAdapter` depends on the derivative cluster, so section E must land first or in the same PR. The original `func_get_args()` + `call_user_func_array('sprintf', ...)` becomes a variadic + spread.
+Note the `use Piwigo\Image\DerivativeImage` — `PwgTemplateAdapter` depends on the derivative cluster, so section E must land first or in the same commit. The original `func_get_args()` + `call_user_func_array('sprintf', ...)` becomes a variadic + spread.
 
 #### 4. Move 3 — `Template`
 
@@ -2863,7 +2863,7 @@ class Template
 
 Critical changes from the original:
 
-- Line 13's `require_once(PHPWG_ROOT_PATH . 'include/smarty/libs/Smarty.class.php');` is **deleted from the codebase** in this PR. Composer autoloads `Smarty\Smarty` via `include/smarty/src/`.
+- Line 13's `require_once(PHPWG_ROOT_PATH . 'include/smarty/libs/Smarty.class.php');` is **deleted from the codebase** in this commit. Composer autoloads `Smarty\Smarty` via `include/smarty/src/`.
 - The `use Smarty\Smarty;` import stays.
 - `$this->smarty = new Smarty;` becomes `$this->smarty = new Smarty();`.
 - `$this->scriptLoader = new ScriptLoader;` becomes `$this->scriptLoader = new ScriptLoader();` (same namespace, no FQN needed).
@@ -2915,7 +2915,7 @@ test('admin renders after Template move', async ({ page }) => {
 });
 ```
 
-If either fails, the most likely cause is a `<!-- COMBINED_SCRIPTS -->` tag not being substituted because `ScriptLoader::get_head_scripts()` threw — usually because a sibling class wasn't moved together. Move all eight together; do not split the PR.
+If either fails, the most likely cause is a `<!-- COMBINED_SCRIPTS -->` tag not being substituted because `ScriptLoader::get_head_scripts()` threw — usually because a sibling class wasn't moved together. Move all eight together; do not split the commit.
 
 ---
 
@@ -3279,11 +3279,11 @@ Composer's autoloader includes `files` entries on every request, so the aliases 
 
 ### H. Migration checklist (CI-enforceable)
 
-A bash script `tools/ci/phase3-checks.sh` runs after every Phase 3 PR. It exits non-zero on any failure. The patterns are deliberately conservative — false negatives are fine (the smoke spec catches behaviour), false positives are not (we don't want to fail green PRs).
+A bash script `tools/ci/phase3-checks.sh` runs after every Phase 3 push. It exits non-zero on any failure. The patterns are deliberately conservative — false negatives are fine (the smoke spec catches behaviour), false positives are not (we don't want to fail green commits).
 
 ```bash
 #!/usr/bin/env bash
-## tools/ci/phase3-checks.sh — must exit 0 for Phase 3 PR to merge
+## tools/ci/phase3-checks.sh — must exit 0 for Phase 3 push
 set -euo pipefail
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
@@ -3419,9 +3419,9 @@ Eliminate the implicit, untyped, append-anywhere `$conf` / `$page` / `$user` / `
 
 6. **Build `Piwigo\Core\ServiceLocator` (NOT a full DI container).** Static map `array<class-string, object>`. Methods: `register(string $id, object $svc)`, `get<T>(class-string<T> $id): T`, `has(string $id): bool`. No autowiring, no factories — Piwigo has 358 classes and 2300+ free functions; a real DI container would dominate the change budget. PSR-11 compatibility is gratis (`Container::get/has`). **Exit signal:** `ServiceLocator::get(Config::class)` returns the same instance as `Config::instance()`.
 
-7. **WAVE A — typed READERS ship alongside globals.** New code calls `Config::get('upload_dir')` and `PageState::current()->errors`. `Config` reads stay forwarded to the underlying `$conf` array (no copy), so per-album `$conf` overrides at runtime keep being visible to typed readers. Old code (`global $conf; $conf['upload_dir']`) keeps working unchanged — no proxy yet, just the underlying global array. PHPStan custom rule (added in this PR) flags **new** `global $conf` declarations in `src/` (allowed in `include/`). **Exit signal:** PHPStan green at level 8; Playwright green; UpgradeChainTest green; staging-soak one week.
+7. **WAVE A — typed READERS ship alongside globals.** New code calls `Config::get('upload_dir')` and `PageState::current()->errors`. `Config` reads stay forwarded to the underlying `$conf` array (no copy), so per-album `$conf` overrides at runtime keep being visible to typed readers. Old code (`global $conf; $conf['upload_dir']`) keeps working unchanged — no proxy yet, just the underlying global array. PHPStan custom rule (added in this commit) flags **new** `global $conf` declarations in `src/` (allowed in `include/`). **Exit signal:** PHPStan green at level 8; Playwright green; UpgradeChainTest green; staging-soak one week.
 
-8. **WAVE B — typed WRITERS migrate.** All ~152 push sites for `$page['errors'][]`, `$page['warnings'][]`, `$page['messages'][]`, `$page['infos'][]` (counted by grep across 46 files: 19 in `admin/maintenance_actions.php`, 11 in `admin/include/functions_notification_by_mail.inc.php`, 9 each in `admin/batch_manager_global.php`/`admin/plugins_new.php`/`admin/themes_new.php`/`admin/languages_new.php`, etc.) migrate one PR per directory slice to `PageState::current()->addError($s)`. The few `$conf` write sites — per-album overrides in `include/category_default.inc.php`/picture flow, admin saves in `admin/configuration.php` (~7 push sites) — get explicit `Config::override(string $key, mixed $value): void` for transient runtime overrides and `Config::persist(string $key, mixed $value): void` (delegates to existing `conf_update_param()` free function — that stays). Rector regex rules can mechanically convert ~80% of the simple cases; the rest are touched by hand. **Exit signal:** `grep -rE "\\$page\\['(errors|warnings|messages|infos)'\\]\\[\\]" admin/ include/` returns hits only from `install/db/`, `local/`, plugin paths, or vendored code.
+8. **WAVE B — typed WRITERS migrate.** All ~152 push sites for `$page['errors'][]`, `$page['warnings'][]`, `$page['messages'][]`, `$page['infos'][]` (counted by grep across 46 files: 19 in `admin/maintenance_actions.php`, 11 in `admin/include/functions_notification_by_mail.inc.php`, 9 each in `admin/batch_manager_global.php`/`admin/plugins_new.php`/`admin/themes_new.php`/`admin/languages_new.php`, etc.) migrate one commit per directory slice to `PageState::current()->addError($s)`. The few `$conf` write sites — per-album overrides in `include/category_default.inc.php`/picture flow, admin saves in `admin/configuration.php` (~7 push sites) — get explicit `Config::override(string $key, mixed $value): void` for transient runtime overrides and `Config::persist(string $key, mixed $value): void` (delegates to existing `conf_update_param()` free function — that stays). Rector regex rules can mechanically convert ~80% of the simple cases; the rest are touched by hand. **Exit signal:** `grep -rE "\\$page\\['(errors|warnings|messages|infos)'\\]\\[\\]" admin/ include/` returns hits only from `install/db/`, `local/`, plugin paths, or vendored code.
 
 9. **WAVE C (cuttable) — globals become deprecation-emitting `ArrayObject` proxies.** A new class `Piwigo\Core\GlobalsBridge` lazily yields proxies. The proxy extends `\ArrayObject` and overrides `offsetGet`, `offsetSet`, `offsetExists`, `offsetUnset` to:
    ```php
@@ -3444,7 +3444,7 @@ Eliminate the implicit, untyped, append-anywhere `$conf` / `$page` / `$user` / `
        return false;
    }
    ```
-   `common.inc.php` is rewritten so `$conf`, `$page`, `$user`, `$lang` are assigned proxy instances at the top, replacing lines 52–65. The backtrace gate keeps `install/db/61-database.php` through `install/db/181-database.php` silent. A second allowlist pattern covers `language/*.php` and `local/config/config.inc.php`. `config_default.inc.php` is exempt because it *writes* via `$conf['x'] = ...` at file scope. **Exit signal:** UpgradeChainTest green with no `E_USER_DEPRECATED` lines in captured error log; `find . -path ./vendor -prune -o -name '*.php' -print | xargs grep -l "global \$conf" | wc -l` is monotonically decreasing PR-over-PR.
+   `common.inc.php` is rewritten so `$conf`, `$page`, `$user`, `$lang` are assigned proxy instances at the top, replacing lines 52–65. The backtrace gate keeps `install/db/61-database.php` through `install/db/181-database.php` silent. A second allowlist pattern covers `language/*.php` and `local/config/config.inc.php`. `config_default.inc.php` is exempt because it *writes* via `$conf['x'] = ...` at file scope. **Exit signal:** UpgradeChainTest green with no `E_USER_DEPRECATED` lines in captured error log; `find . -path ./vendor -prune -o -name '*.php' -print | xargs grep -l "global \$conf" | wc -l` is monotonically decreasing commit-over-commit.
 
 10. **Cut-point decision at end of Wave B.** Evaluate honestly: how many push sites remain that the regex slice did not catch? How noisy will `E_USER_DEPRECATED` be in existing error logs? If Wave C is shaping up to be 4+ weeks of whack-a-mole on the long tail (especially around dynamic property writes on `$page` from `ws_core.inc.php` and `template.class.php`), document the cut-point decision in `docs/ARCHITECTURE.md` ("Wave C deferred indefinitely; globals remain live `ArrayObject`s without deprecation noise") and stop. You retain the typed-reader/typed-writer wins from Waves A+B. **Exit signal:** decision logged; if cut, Phase 6's "ArrayObject proxy removal" sub-task is also deleted.
 
@@ -4917,10 +4917,7 @@ If Wave C is cut, append **`Phase 4 close-out — Wave C cut`** with:
 - the measured numbers vs. the target,
 - a one-paragraph "what we'd need to ship Wave C in the future" note.
 
-The cut-point decision is reviewed by the same person who signed off on the
-Phase 4 plan (the lead modernization reviewer) plus one additional engineer
-who has shipped at least one plugin against the Phase 3 baseline. Both
-reviewers must approve the cut decision in writing on the close-out PR before
+Document the cut decision in writing in the close-out commit message before
 Phase 5 work starts.
 ```
 
@@ -5101,7 +5098,7 @@ Convert ~91 authored first-party JS files (counted by `find` excluding `.min.js`
    | --- | --- | --- |
    | Leaf utilities | `themes/default/js/scripts.js`, `switchbox.js`, `pngfix.js`, `jquery.cookie.js`, `themes/standard_pages/js/toaster.js` | No internal deps; `scripts.js` defines `pwgBind()`, `phpWGOpenWindow()` used as inline-script callbacks — keep them on `window` via `(window as any).pwgBind = pwgBind`. |
    | Leaf admin utilities | `admin/themes/default/js/LocalStorageCache.js`, `doubleSlider.js`, `datepicker.js`, `album_selector.js`, `jquery.geoip.js` | jQuery-plugin pattern (`$.fn.foo = …`) — needs the augmentation file. |
-   | Mid-layer admin pages | `addAlbum.js`, `cat_search.js`, `cat_modify.js`, `cat_list.js`, `albums.js`, `comments.js`, `group_list.js`, `history.js`, `tags.js`, `picture_formats.js`, `picture_modify.js`, `intro_tooltips.js`, `maintenance.js`, `maintenance_env.js`, `maintenance_sys.js`, `plugins_*.js`, `stats.js`, `user_activity.js`, `user_list.js` | One PR per ~5 files. Type the AJAX response shape inline. |
+   | Mid-layer admin pages | `addAlbum.js`, `cat_search.js`, `cat_modify.js`, `cat_list.js`, `albums.js`, `comments.js`, `group_list.js`, `history.js`, `tags.js`, `picture_formats.js`, `picture_modify.js`, `intro_tooltips.js`, `maintenance.js`, `maintenance_env.js`, `maintenance_sys.js`, `plugins_*.js`, `stats.js`, `user_activity.js`, `user_list.js` | One commit per ~5 files. Type the AJAX response shape inline. |
    | Frontend gallery | `themes/default/js/rating.js`, `mcs.js`, `thumbnails.loader.js`, `themes/standard_pages/js/profile.js`, `standard_pages.js` | `rating.js` reads three module-scope `var`s — convert to module-locals. |
    | Trunk | `admin/themes/default/js/common.js`, `batchManager{Global,Unit,Filter}.js`, `photos_add_direct.js` | `common.js` declares `$.fn.fontCheckbox`, `$.fn.coloris` — bulk consumer of jQuery types. |
    | Skip | `themes/default/js/jquery.js`, anything under `themes/default/js/plugins/` and `themes/default/js/ui/` | Vendored. |
@@ -5591,7 +5588,7 @@ window.UsersCache = UsersCache;
 }
 ```
 
-**PR-sized diff:**
+**Commit-sized diff:**
 
 - New: `admin/themes/default/js/LocalStorageCache.ts` (above).
 - New: `src/types/jquery-plugins.d.ts` adds `selectize` to the `JQuery` interface (see Part G).
@@ -6164,7 +6161,7 @@ Remove the scaffolding that the earlier phases used to keep the tree runnable, r
    ```
    The entire 1.3.0→2.10.0 detection ladder (lines 271–345) becomes dead code and is deleted in the same commit. **Exit signal:** UpgradeChainTest from the 16.x fixture stays green; new test fixture `dev/fixtures/piwigo-15.x.sql` (optional) drives `upgrade.php` and asserts response `409` with the polite refusal.
 
-3. **Delete the pre-16 install/db scripts in one PR.**
+3. **Delete the pre-16 install/db scripts in one commit.**
    ```bash
    # Dry run:
    ls install/db/*-database.php | sort -t- -k1 -n | awk -F- '$1+0 <= 181 {print}'
@@ -6222,7 +6219,7 @@ Remove the scaffolding that the earlier phases used to keep the tree runnable, r
 
 ### Risks specific to Phase 6
 
-- **Aggressive level-9 cleanup might break working code.** `treatPhpDocTypesAsCertain: true` at level 9 surfaces narrowing assumptions (`if (is_int($x))` followed by `$x + 1` — PHPStan trusts phpdoc more than the runtime check). Some "fixes" are bug-introductions. Mitigate: every level-9 fix lands in its own micro-PR with a Playwright spec exercising the touched path; if no such spec exists, write it first.
+- **Aggressive level-9 cleanup might break working code.** `treatPhpDocTypesAsCertain: true` at level 9 surfaces narrowing assumptions (`if (is_int($x))` followed by `$x + 1` — PHPStan trusts phpdoc more than the runtime check). Some "fixes" are bug-introductions. Mitigate: every level-9 fix lands in its own micro-commit with a Playwright spec exercising the touched path; if no such spec exists, write it first.
 - **Deleting `pgsql`/`sqlite` branches has unknown blast radius.** A theme or fork may rely on `$conf['dblayer'] === 'pgsql'`. Phase 1 self-heal protects only `mysql`. Mitigate: keep step 7 optional and do it only after staging logs show no `dblayer` other than `mysqli` reaches the code in question.
 - **The 15.x rejection fixture is hand-authored.** Must produce a DB that fails `in_array(181, $applied)` but is otherwise structurally valid (so table-existence checks earlier in `upgrade.php` succeed enough to reach the guard). Easiest: take the 16.x fixture and `DELETE FROM piwigo_upgrade WHERE id IN (175, 176, 177, 178, 179, 180, 181)` plus drop a table or two added between 14.x and 15.x.
 
@@ -6261,7 +6258,7 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 // page-specific work below
 ```
 
-**Step 1**: `declare(strict_types=1);` is mandatory in every first-party file. Type coercion at function boundaries is a `TypeError`, never a silent string-to-int convert. The CI grep guard rejects PRs that drop this declaration.
+**Step 1**: `declare(strict_types=1);` is mandatory in every first-party file. Type coercion at function boundaries is a `TypeError`, never a silent string-to-int convert. The CI grep guard rejects pushes that drop this declaration.
 
 **Step 2**: `PHPWG_ROOT_PATH` is the historical anchor used by every legacy `include` in `include/` and `admin/`. It is set before the autoloader so that legacy files which reference the constant load correctly.
 
@@ -6343,7 +6340,7 @@ Constraint #3 of the modernization plan: a real Piwigo 16.x MySQL database upgra
 
 The `applied_upgrades` table records which scripts have run. The mechanic in `upgrade.php` reads `SELECT id FROM piwigo_upgrade`, then for each numbered file in `install/db/` whose id is not present, runs the file and inserts the id row. The chain is therefore append-only — never mutate an already-shipped script.
 
-**Rule 5: `UpgradeChainTest` gates every PR.** `tests/Integration/UpgradeChainTest.php` loads `dev/fixtures/piwigo-16.x.sql`, drives `upgrade.php` via HTTP, and asserts `piwigo_config.piwigo_db_version` matches `PHPWG_VERSION` afterwards. CI runs this on every PR; failure blocks merge. Any PR that touches `install/db/` must additionally describe the upgrade-chain impact in its description (enforced by a `.github/CODEOWNERS` review gate).
+**Rule 5: `UpgradeChainTest` gates every push.** `tests/Integration/UpgradeChainTest.php` loads `dev/fixtures/piwigo-16.x.sql`, drives `upgrade.php` via HTTP, and asserts `piwigo_config.piwigo_db_version` matches `PHPWG_VERSION` afterwards. CI runs this on every push; failure blocks merge. Any commit that touches `install/db/` must additionally describe the upgrade-chain impact in its commit message.
 
 ### 4. Globals, typed services, and the `Config` reader pattern
 
@@ -6378,12 +6375,12 @@ $dir = \Piwigo\Core\Config::get('upload_dir');       // mixed, fallback
 
 #### Adding a new config key
 
-The standard PR flow:
+The standard workflow:
 
 1. Add the key with a sensible default to `include/config_default.inc.php`. Document its purpose in a comment, following the existing convention.
 2. Add the key to the `Conf` `@phpstan-type` alias in `tools/phpstan-types.php`. Pick the narrowest type (use string-enum unions where applicable, e.g. `'small'|'medium'|'large'` rather than bare `string`).
 3. If the key is read frequently or hot-pathed, add a typed getter to `Piwigo\Core\Config` (`public static function myKey(): string`).
-4. Run `php tools/check-conf-shape.php` locally. CI runs it too, and will fail the PR if step 1 and step 2 diverge.
+4. Run `php tools/check-conf-shape.php` locally. CI runs it too, and will fail the push if step 1 and step 2 diverge.
 
 ### 5. JS build pipeline
 
@@ -6495,7 +6492,7 @@ Honest about residual debt:
 
 ### 8. CI gates
 
-CI runs four jobs per PR. All four must pass for merge.
+CI runs four jobs per push. All four must pass for merge.
 
 #### `lint`
 
@@ -6557,9 +6554,9 @@ Secondary but referenced throughout:
 2. **Never linted at level >0.** Pinned in `phpstan.neon` `excludePaths`.
 3. **The free functions they depend on (`pwg_query`, `pwg_db_fetch_assoc`, `pwg_db_real_escape_string`, `mysqli_*`) never go away**, even after Phase 4. Internal implementation can change; signatures cannot.
 4. **`$conf` superglobal stays a working `ArrayObject` proxy through Phase 4** so `install/db/*.php` keeps reading `$conf['dblayer']`, `$conf['db_base']` etc. unchanged. The Wave C proxy gates deprecation by stack-frame inspection so install/db callers stay silent.
-5. **UpgradeChainTest is the gating test** — runs in CI on every PR. Phase 6's deletion of pre-floor scripts is the only allowed mutation of this directory, gated on a fixture swap.
+5. **UpgradeChainTest is the gating test** — runs in CI on every push. Phase 6's deletion of pre-floor scripts is the only allowed mutation of this directory, gated on a fixture swap.
 
-A CI rule additionally requires: any PR modifying a file in `install/db/` must declare upgrade-chain impact in the PR description.
+A CI rule additionally requires: any commit modifying a file in `install/db/` must declare upgrade-chain impact in the commit message.
 
 ---
 
@@ -6579,6 +6576,6 @@ Each phase has its own exit criteria above. The cross-cutting verification at ev
 - **Phase 4 is the iceberg.** If you have to cut, cut Wave C. Ship Waves A+B; leave globals as live `ArrayObject`s.
 - **Phase 5 will tempt you to also replace vendored libs** (jQuery → vanilla, jQuery UI → headless, plupload → uppy). Don't. Each is a multi-week project. Out of scope.
 - **PHPStan level 9 with `treatPhpDocTypesAsCertain: true` is aspirational.** Settle for level 8 with no baseline if Phase 6 stretches.
-- **The new Playwright suite is the only safety net for user-visible behavior, and it starts thin.** A regression in a flow that doesn't have a spec yet won't be caught. Discipline: when a phase touches an untested flow, add the spec in the same PR. Don't let the suite stagnate at Phase 0 coverage forever.
+- **The new Playwright suite is the only safety net for user-visible behavior, and it starts thin.** A regression in a flow that doesn't have a spec yet won't be caught. Discipline: when a phase touches an untested flow, add the spec in the same commit. Don't let the suite stagnate at Phase 0 coverage forever.
 - **Tracked `vendor/` is unfashionable but correct here.** Don't let bikeshedding delay Phase 0.
 - **If forced to ship only three phases ever, ship 0, 1, 2.** That alone takes Piwigo from "won't run on PHP 8" to "runs on PHP 8.5, type-safe, CI-protected" — most of the user-visible upside.

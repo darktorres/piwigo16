@@ -1,0 +1,28 @@
+{
+    "name": "piwigo/piwigo",
+    "description": "Piwigo photo gallery — modernized",
+    "type": "project",
+    "require": {
+        "php": "^8.5",
+        "ext-mysqli": "*",
+        "ext-mbstring": "*",
+        "ext-gd": "*"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.18",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "phpunit/phpunit": "^11.4",
+        "rector/rector": "^2.0",
+        "symfony/process": "^7.1"
+    },
+    "autoload": {},
+    "autoload-dev": {
+        "psr-4": { "Piwigo\\Tests\\": "tests/" }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {}
+    }
+}

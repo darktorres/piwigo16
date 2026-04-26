@@ -1,0 +1,853 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 2
+			path: admin/album_notification.php
+
+		-
+			message: '''
+				#^Call to deprecated function simple_hash_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/album_notification.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/albums.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/batch_manager_unit.php
+
+		-
+			message: '''
+				#^Call to deprecated function hash_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/cat_list.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 5
+			path: admin/cat_perm.php
+
+		-
+			message: '''
+				#^Call to deprecated function simple_hash_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 2
+			path: admin/cat_perm.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 2
+			path: admin/configuration.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/extend_for_templates.php
+
+		-
+			message: '#^Array has 2 duplicate keys with value ''correction_error_fct'' \(''correction_error_fct'', ''correction_error_fct''\)\.$#'
+			identifier: array.duplicateKey
+			count: 1
+			path: admin/include/check_integrity.class.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Call to deprecated function curl_close\(\)\.$#'
+			identifier: function.deprecated
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/include/functions_history.inc.php
+
+		-
+			message: '''
+				#^Call to deprecated function hash_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/include/functions_permalinks.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/include/functions_upgrade.php
+
+		-
+			message: '#^Call to deprecated function utf8_decode\(\)\.$#'
+			identifier: function.deprecated
+			count: 2
+			path: admin/include/functions_upgrade.php
+
+		-
+			message: '#^Call to deprecated function finfo_close\(\)\.$#'
+			identifier: function.deprecated
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Call to deprecated function imagedestroy\(\)\.$#'
+			identifier: function.deprecated
+			count: 7
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Undefined variable\: \$f$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Call to deprecated function get_magic_quotes_runtime\(\)\.$#'
+			identifier: function.deprecated
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Call to function unset\(\) contains undefined variable \$v_header_list\.$#'
+			identifier: unset.variable
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Function PclError not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Function PclErrorCode not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Function PclErrorReset not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Function PclErrorString not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Undefined variable\: \$v_file$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Function plugin_activate not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Function plugin_deactivate not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Function plugin_install not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Function plugin_uninstall not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Function theme_activate not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Function theme_deactivate not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Function theme_delete not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Undefined variable\: \$base_url$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/picture_modify.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/rating_user.php
+
+		-
+			message: '''
+				#^Call to deprecated function hash_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/site_manager.php
+
+		-
+			message: '''
+				#^Call to deprecated function hash_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/site_update.php
+
+		-
+			message: '''
+				#^Call to deprecated function simple_hash_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/site_update.php
+
+		-
+			message: '''
+				#^Call to deprecated function simple_hash_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: admin/tags.php
+
+		-
+			message: '#^Call to deprecated function finfo_close\(\)\.$#'
+			identifier: function.deprecated
+			count: 1
+			path: admin/themes_standard_pages.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 2
+			path: admin/user_list.php
+
+		-
+			message: '#^Instantiated class FeedItem not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: feed.php
+
+		-
+			message: '#^Instantiated class UniversalFeedCreator not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: feed.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Function create_function not found\.$#'
+			identifier: function.notFound
+			count: 3
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function do_maintenance_all_tables\(\) should return none but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_affected_rows not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_close not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_connect not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_errno not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_error not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_fetch_array not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_fetch_assoc not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_fetch_object not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_fetch_row not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_free_result not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_get_server_info not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_insert_id not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_num_rows not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_query not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_real_escape_string not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_select_db not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_set_charset not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Method DerivativeImage\:\:get_scaled_size_htm\(\) should return string but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Method DerivativeImage\:\:get_size_css\(\) should return string but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Method DerivativeImage\:\:get_size_hr\(\) should return string but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Method DerivativeImage\:\:get_size_htm\(\) should return string but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: include/filter.inc.php
+
+		-
+			message: '#^Call to deprecated function utf8_decode\(\)\.$#'
+			identifier: function.deprecated
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Call to deprecated function utf8_encode\(\)\.$#'
+			identifier: function.deprecated
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: include/functions_calendar.inc.php
+
+		-
+			message: '#^Undefined variable\: \$comm$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/functions_comment.inc.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 3
+			path: include/functions_mail.inc.php
+
+		-
+			message: '#^Undefined variable\: \$cached$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/functions_notification.inc.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 2
+			path: include/functions_rate.inc.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Undefined variable\: \$res$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Undefined variable\: \$tag_counters$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/functions_tag.inc.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Function check_status\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Cannot unset property JShrink\\Minifier\:\:\$c because it might have hooks in a subclass\.$#'
+			identifier: unset.possiblyHookedProperty
+			count: 3
+			path: include/jshrink.class.php
+
+		-
+			message: '#^Cannot unset property JShrink\\Minifier\:\:\$input because it might have hooks in a subclass\.$#'
+			identifier: unset.possiblyHookedProperty
+			count: 1
+			path: include/jshrink.class.php
+
+		-
+			message: '#^Cannot unset property JShrink\\Minifier\:\:\$options because it might have hooks in a subclass\.$#'
+			identifier: unset.possiblyHookedProperty
+			count: 1
+			path: include/jshrink.class.php
+
+		-
+			message: '''
+				#^Class MatthiasMullie\\Minify\\Exceptions\\BasicException extends deprecated class MatthiasMullie\\Minify\\Exception\:
+				Use Exceptions\\BasicException instead$#
+			'''
+			identifier: class.extendsDeprecatedClass
+			count: 1
+			path: include/minify/src/Exceptions/BasicException.php
+
+		-
+			message: '#^Parameter \$item of method MatthiasMullie\\Minify\\Minify\:\:cache\(\) has invalid type Psr\\Cache\\CacheItemInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^Deprecated in PHP 8\.4\: Parameter \#3 \$use_include_path \(int\) is implicitly nullable via default value null\.$#'
+			identifier: parameter.implicitlyNullable
+			count: 1
+			path: include/php_compat/gzopen.php
+
+		-
+			message: '#^Function gzopen64 not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/php_compat/gzopen.php
+
+		-
+			message: '#^Instantiated class League\\OAuth2\\Client\\Grant\\RefreshToken not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/OAuth.php
+
+		-
+			message: '#^7\.2 Use \{@see INTL_IDNA_VARIANT_UTS46\} instead\.$#'
+			identifier: constant.deprecated
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '''
+				#^Access to deprecated property \$SingleTo of class PHPMailer\\PHPMailer\\PHPMailer\:
+				6\.0\.0 PHPMailer isn't a mailing list manager\!$#
+			'''
+			identifier: property.deprecated
+			count: 3
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Call to deprecated function openssl_pkey_free\(\)\.$#'
+			identifier: function.deprecated
+			count: 2
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Class Psr\\Log\\LoggerInterface not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Class Psr\\Log\\LoggerInterface not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
+			message: '#^Access to an undefined static property QRtools\:\:\$frames\.$#'
+			identifier: staticProperty.notFound
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Call to deprecated function imagedestroy\(\)\.$#'
+			identifier: function.deprecated
+			count: 3
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Cannot unset property QRinputItem\:\:\$bstream because it might have hooks in a subclass\.$#'
+			identifier: unset.possiblyHookedProperty
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Class qrstr referenced with incorrect case\: QRstr\.$#'
+			identifier: class.nameCase
+			count: 7
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Instantiated class QRbitrtream not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Static call to instance method QRinput\:\:estimateBitsModeKanji\(\)\.$#'
+			identifier: method.staticCall
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Undefined variable\: \$ret$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Undefined variable\: \$run$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Call to static method display_debug\(\) on an unknown class Smarty_Internal_Debug\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Instantiated class Smarty\\Smarty not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Undefined variable\: \$tmp$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/template.class.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: include/ws_functions/pwg.groups.php
+
+		-
+			message: '#^Undefined variable\: \$type$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: include/ws_functions/pwg.permissions.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 2
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: install.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: install.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: picture.php
+
+		-
+			message: '''
+				#^Call to deprecated function hash_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: picture.php
+
+		-
+			message: '#^Cannot unset offset ''CHANGE_COLUMN'' on array\{tags\: non\-empty\-list\<non\-empty\-array\>, TITLE\?\: string\}\.$#'
+			identifier: unset.offset
+			count: 1
+			path: tags.php
+
+		-
+			message: '''
+				#^Call to deprecated function array_from_query\(\)\:
+				2\.6$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: upgrade.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: upgrade.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: upgrade.php

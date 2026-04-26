@@ -1,0 +1,9 @@
+import { Page } from '@playwright/test';
+
+export async function loginAsAdmin(page: Page): Promise<void> {
+    await page.goto('/identification.php');
+    await page.fill('input[name="username"]', 'admin');
+    await page.fill('input[name="password"]', 'p4ssword!');
+    await page.click('input[name="login"]');
+    await page.waitForURL(url => !url.pathname.includes('identification.php'));
+}

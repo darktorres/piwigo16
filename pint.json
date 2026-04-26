@@ -1,0 +1,18 @@
+{
+    "preset": "psr12",
+    "exclude": [
+        "install/db",
+        "language",
+        "include/smarty",
+        "include/feedcreator.class.php",
+        "themes",
+        "vendor"
+    ],
+    "rules": {
+        "declare_strict_types": false,
+        "single_quote": true,
+        "ordered_imports": { "sort_algorithm": "alpha" },
+        "no_unused_imports": true,
+        "trailing_comma_in_multiline": true
+    }
+}

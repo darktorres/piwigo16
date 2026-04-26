@@ -99,13 +99,13 @@ array(
   'name' => 'delete_tags',
   'type' => 'trigger_notify',
   'vars' => array('array', 'tag_ids'),
-  'files' => array('admin\include\functions.inc.php (delete_tags)')
+  'files' => array('admin\include\functions.inc.php (delete_tags)'),
 ),
 array(
   'name' => 'merge_tags',
   'type' => 'trigger_notify',
   'vars' => array('array', 'destination_tag_id', 'array', 'merge_tag'),
-  'files' => array('admin\include\ws_functions/pwg.tags.php (merge_tags)')
+  'files' => array('admin\include\ws_functions/pwg.tags.php (merge_tags)'),
 ),
 array(
   'name' => 'delete_user',
@@ -996,34 +996,35 @@ array(
   </thead>
   <tbody>
 
-  <?php  
-    foreach ($core as $trigger)
-    {
-      echo '
+  <?php
+    foreach ($core as $trigger) {
+        echo '
     <tr>
       <td>'.$trigger['name'].'</td>
       <td>'.$trigger['type'].'</td>
       <td>';
-      for ($i=0; $i<count($trigger['vars']); $i+=2)
-      {
-        if ($i>0) echo ', ';
-        echo $trigger['vars'][$i].' '.(!empty($trigger['vars'][$i+1])?'<i>$'.$trigger['vars'][$i+1].'</i>':null);
-      }
-      echo '
+        for ($i = 0; $i < count($trigger['vars']); $i += 2) {
+            if ($i > 0) {
+                echo ', ';
+            }
+            echo $trigger['vars'][$i].' '.(!empty($trigger['vars'][$i + 1]) ? '<i>$'.$trigger['vars'][$i + 1].'</i>' : null);
+        }
+        echo '
       </td>
       <td>';
-      $f=1;
-      foreach ($trigger['files'] as $file)
-      {
-        if (!$f) echo '<br>'; $f=0;
-        echo preg_replace('#\((.+)\)#', '(<i>$1</i>)', $file);
-      }
-      echo '
+        $f = 1;
+        foreach ($trigger['files'] as $file) {
+            if (!$f) {
+                echo '<br>';
+            } $f = 0;
+            echo preg_replace('#\((.+)\)#', '(<i>$1</i>)', $file);
+        }
+        echo '
       </td>
       <td>'.@$trigger['infos'].'</td>
     </tr>';
     }
-  ?>
+?>
 
   </tbody>
   <tfoot>

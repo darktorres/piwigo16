@@ -1,0 +1,34 @@
+services:
+  db:
+    image: mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: piwigo
+      MARIADB_USER: piwigo
+      MARIADB_PASSWORD: piwigo
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports: ["3306:3306"]
+
+  web:
+    image: php:8.5-rc-apache
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes: ["./:/var/www/html"]
+    ports: ["8080:80"]
+    command: >
+      bash -c "docker-php-ext-install mysqli gd mbstring &&
+               a2enmod rewrite && apache2-foreground"
+
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.48.0-jammy
+    depends_on: [web]
+    working_dir: /work
+    volumes: ["./:/work"]
+    environment:
+      BASE_URL: http://web
+    command: ["sleep", "infinity"]

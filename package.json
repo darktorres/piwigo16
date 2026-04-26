@@ -1,0 +1,12 @@
+{
+    "name": "piwigo-e2e",
+    "private": true,
+    "scripts": {
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.48.0",
+        "typescript": "^5.6.0"
+    }
+}

@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -6,16 +7,12 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-if (!defined('PHPWG_ROOT_PATH'))
-{
-  die ('This page cannot be loaded directly, load upgrade.php');
-}
-else
-{
-  if (!defined('PHPWG_IN_UPGRADE') or !PHPWG_IN_UPGRADE)
-  {
-    die ('Hacking attempt!');
-  }
+if (!defined('PHPWG_ROOT_PATH')) {
+    die('This page cannot be loaded directly, load upgrade.php');
+} else {
+    if (!defined('PHPWG_IN_UPGRADE') or !PHPWG_IN_UPGRADE) {
+        die('Hacking attempt!');
+    }
 }
 
 $last_time = get_moment();
@@ -53,30 +50,30 @@ pwg_query($query);
 
 $queries = array(
 
-  "
+  '
 ALTER TABLE piwigo_categories
   CHANGE COLUMN date_last date_last datetime default NULL
-;",
+;',
 
-  "
+  '
 ALTER TABLE piwigo_comments
   ADD COLUMN validation_date datetime default NULL
-;",
+;',
 
-  "
+  '
 UPDATE piwigo_comments
   SET validation_date = date
-",
+',
 
-  "
+  '
 ALTER TABLE piwigo_comments
   ADD INDEX comments_i1 (image_id)
-;",
+;',
 
-  "
+  '
 ALTER TABLE piwigo_comments
   ADD INDEX comments_i2 (validation_date)
-;",
+;',
 
   "
 ALTER TABLE piwigo_favorites
@@ -104,19 +101,19 @@ ALTER TABLE piwigo_user_access
   CHANGE COLUMN user_id user_id smallint(5) NOT NULL default '0'
 ;",
 
-  "
+  '
 DROP TABLE piwigo_user_forbidden
-;",
+;',
 
   "
 ALTER TABLE piwigo_user_group
  CHANGE COLUMN user_id user_id smallint(5) NOT NULL default '0'
 ;",
 
-  "
+  '
 ALTER TABLE piwigo_users
   CHANGE COLUMN id id smallint(5) NOT NULL auto_increment
-;",
+;',
 
   "
 CREATE TABLE piwigo_caddie (
@@ -160,13 +157,12 @@ CREATE TABLE piwigo_user_infos (
   registration_date datetime NOT NULL default '0000-00-00 00:00:00',
   UNIQUE KEY user_infos_ui1 (user_id)
 ) ENGINE=MyISAM
-;"
+;",
   );
 
-foreach ($queries as $query)
-{
-  $query = str_replace('piwigo_', PREFIX_TABLE, $query);
-  pwg_query($query);
+foreach ($queries as $query) {
+    $query = str_replace('piwigo_', PREFIX_TABLE, $query);
+    pwg_query($query);
 }
 
 // user datas migration from piwigo_users to piwigo_user_infos
@@ -179,17 +175,16 @@ $datas = array();
 list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
 
 $result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result))
-{
-  $row['user_id'] = $row['id'];
-  $row['registration_date'] = $dbnow;
-  array_push($datas, $row);
+while ($row = pwg_db_fetch_assoc($result)) {
+    $row['user_id'] = $row['id'];
+    $row['registration_date'] = $dbnow;
+    array_push($datas, $row);
 }
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 mass_inserts(
-  USER_INFOS_TABLE,
-  array(
+    USER_INFOS_TABLE,
+    array(
     'user_id',
     'nb_image_line',
     'nb_line_page',
@@ -201,39 +196,39 @@ mass_inserts(
     'show_nb_comments',
     'recent_period',
     'template',
-    'registration_date'
+    'registration_date',
     ),
-  $datas
-  );
+    $datas
+);
 
 $queries = array(
 
-  "
-UPDATE ".USER_INFOS_TABLE."
+  '
+UPDATE '.USER_INFOS_TABLE."
   SET template = 'yoga'
 ;",
 
-  "
-UPDATE ".USER_INFOS_TABLE."
+  '
+UPDATE '.USER_INFOS_TABLE."
   SET language = 'en_UK.iso-8859-1'
   WHERE language NOT IN ('en_UK.iso-8859-1', 'fr_FR.iso-8859-1')
 ;",
 
-  "
-UPDATE ".CONFIG_TABLE."
+  '
+UPDATE '.CONFIG_TABLE."
   SET value = 'en_UK.iso-8859-1'
   WHERE param = 'default_language'
     AND value NOT IN ('en_UK.iso-8859-1', 'fr_FR.iso-8859-1')
 ;",
 
-  "
-UPDATE ".CONFIG_TABLE."
+  '
+UPDATE '.CONFIG_TABLE."
   SET value = 'yoga'
   WHERE param = 'default_template'
 ;",
 
-  "
-INSERT INTO ".CONFIG_TABLE."
+  '
+INSERT INTO '.CONFIG_TABLE."
   (param,value,comment)
   VALUES
   (
@@ -243,8 +238,8 @@ INSERT INTO ".CONFIG_TABLE."
   )
 ;",
 
-  "
-INSERT INTO ".CONFIG_TABLE."
+  '
+INSERT INTO '.CONFIG_TABLE."
   (param,value,comment)
   VALUES
   (
@@ -252,21 +247,19 @@ INSERT INTO ".CONFIG_TABLE."
     'My photos web site',
     'Short description displayed with gallery title'
   )
-;"
+;",
 
   );
 
-foreach ($queries as $query)
-{
-  $query = str_replace('piwigo_', PREFIX_TABLE, $query);
-  pwg_query($query);
+foreach ($queries as $query) {
+    $query = str_replace('piwigo_', PREFIX_TABLE, $query);
+    pwg_query($query);
 }
 
-if ($prefix_thumbnail != 'TN-')
-{
-  array_push(
-    $page['infos'],
-    'the thumbnail prefix configuration parameter was moved to configuration
+if ($prefix_thumbnail != 'TN-') {
+    array_push(
+        $page['infos'],
+        'the thumbnail prefix configuration parameter was moved to configuration
 file, copy config.inc.php from "tools" directory to "local/config" directory
 and edit $conf[\'prefix_thumbnail\'] = '.$prefix_thumbnail
     );
@@ -274,4 +267,3 @@ and edit $conf[\'prefix_thumbnail\'] = '.$prefix_thumbnail
 
 // now we upgrade from 1.5.0 to 1.6.0
 include_once(PHPWG_ROOT_PATH.'install/upgrade_1.5.0.php');
-?>

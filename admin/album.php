@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -6,9 +7,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-if( !defined("PHPWG_ROOT_PATH") )
-{
-  die ("Hacking attempt!");
+if (!defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+
@@ -28,9 +28,8 @@ SELECT *
 ;';
 $category = pwg_db_fetch_assoc(pwg_query($query));
 
-if (!isset($category['id']))
-{
-  die("unknown album");
+if (!isset($category['id'])) {
+    die('unknown album');
 }
 
 // +-----------------------------------------------------------------------+
@@ -41,9 +40,8 @@ include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
 
 $page['tab'] = 'properties';
 
-if (isset($_GET['tab']))
-{
-  $page['tab'] = $_GET['tab'];
+if (isset($_GET['tab'])) {
+    $page['tab'] = $_GET['tab'];
 }
 
 $tabsheet = new tabsheet();
@@ -56,30 +54,22 @@ $tabsheet->assign();
 // +-----------------------------------------------------------------------+
 
 $category_name = trigger_change(
-  'render_category_name',
-  $category['name'],
-  'get_cat_display_name_cache'
-  );
+    'render_category_name',
+    $category['name'],
+    'get_cat_display_name_cache'
+);
 $template->assign(array(
   'ADMIN_PAGE_TITLE' => l10n('Edit album').' <strong>'.$category_name.'</strong>',
   'ADMIN_PAGE_OBJECT_ID' => '#'.$category['id'],
 ));
 
-if ('properties' == $page['tab'])
-{
-  include(PHPWG_ROOT_PATH.'admin/cat_modify.php');
+if ('properties' == $page['tab']) {
+    include(PHPWG_ROOT_PATH.'admin/cat_modify.php');
+} elseif ('sort_order' == $page['tab']) {
+    include(PHPWG_ROOT_PATH.'admin/element_set_ranks.php');
+} elseif ('permissions' == $page['tab']) {
+    $_GET['cat'] = $_GET['cat_id'];
+    include(PHPWG_ROOT_PATH.'admin/cat_perm.php');
+} else {
+    include(PHPWG_ROOT_PATH.'admin/album_'.$page['tab'].'.php');
 }
-elseif ('sort_order' == $page['tab'])
-{
-  include(PHPWG_ROOT_PATH.'admin/element_set_ranks.php');
-}
-elseif ('permissions' == $page['tab'])
-{
-  $_GET['cat'] = $_GET['cat_id'];
-  include(PHPWG_ROOT_PATH.'admin/cat_perm.php');
-}
-else
-{
-  include(PHPWG_ROOT_PATH.'admin/album_'.$page['tab'].'.php');
-}
-?>

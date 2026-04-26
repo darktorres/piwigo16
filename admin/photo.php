@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -6,9 +7,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-if( !defined("PHPWG_ROOT_PATH") )
-{
-  die ("Hacking attempt!");
+if (!defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+
@@ -25,14 +25,13 @@ $admin_photo_base_url = get_root_url().'admin.php?page=photo-'.$_GET['image_id']
 // retrieving direct information about picture
 $page['image'] = get_image_infos($_GET['image_id'], true);
 
-if (isset($_GET['cat_id']))
-{
-  $query = '
+if (isset($_GET['cat_id'])) {
+    $query = '
 SELECT *
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$_GET['cat_id'].'
 ;';
-  $category = pwg_db_fetch_assoc(pwg_query($query));
+    $category = pwg_db_fetch_assoc(pwg_query($query));
 }
 
 // +-----------------------------------------------------------------------+
@@ -43,9 +42,8 @@ include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
 
 $page['tab'] = 'properties';
 
-if (isset($_GET['tab']))
-{
-  $page['tab'] = $_GET['tab'];
+if (isset($_GET['tab'])) {
+    $page['tab'] = $_GET['tab'];
 }
 
 $tabsheet = new tabsheet();
@@ -54,29 +52,21 @@ $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
 $template->assign(
-  array(
+    array(
     'ADMIN_PAGE_TITLE' => l10n('Edit photo').' <span class="image-id">#'.$_GET['image_id'].'</span>',
     )
-  );
+);
 
 // +-----------------------------------------------------------------------+
 // | Load the tab                                                          |
 // +-----------------------------------------------------------------------+
 
-if ('properties' == $page['tab'])
-{
-  include(PHPWG_ROOT_PATH.'admin/picture_modify.php');
+if ('properties' == $page['tab']) {
+    include(PHPWG_ROOT_PATH.'admin/picture_modify.php');
+} elseif ('coi' == $page['tab']) {
+    include(PHPWG_ROOT_PATH.'admin/picture_coi.php');
+} elseif ('formats' == $page['tab'] && $conf['enable_formats']) {
+    include(PHPWG_ROOT_PATH.'admin/picture_formats.php');
+} else {
+    include(PHPWG_ROOT_PATH.'admin/photo_'.$page['tab'].'.php');
 }
-elseif ('coi' == $page['tab'])
-{
-  include(PHPWG_ROOT_PATH.'admin/picture_coi.php');
-}
-elseif ('formats' == $page['tab'] && $conf['enable_formats'])
-{
-  include(PHPWG_ROOT_PATH.'admin/picture_formats.php');
-}
-else
-{
-  include(PHPWG_ROOT_PATH.'admin/photo_'.$page['tab'].'.php');
-}
-?>

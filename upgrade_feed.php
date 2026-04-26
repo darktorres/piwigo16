@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -7,9 +8,8 @@
 // +-----------------------------------------------------------------------+
 
 //check php version
-if (version_compare(PHP_VERSION, '5', '<'))
-{
-  die('Piwigo requires PHP 5 or above.');
+if (version_compare(PHP_VERSION, '5', '<')) {
+    die('Piwigo requires PHP 5 or above.');
 }
 
 define('PHPWG_ROOT_PATH', './');
@@ -30,9 +30,8 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
 // | Check Access and exit when it is not ok                               |
 // +-----------------------------------------------------------------------+
 
-if (!$conf['check_upgrade_feed'])
-{
-  die("upgrade feed is not active");
+if (!$conf['check_upgrade_feed']) {
+    die('upgrade feed is not active');
 }
 
 prepare_conf_upgrade();
@@ -43,14 +42,15 @@ define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 // +-----------------------------------------------------------------------+
 // |                         Database connection                           |
 // +-----------------------------------------------------------------------+
-try
-{
-  pwg_db_connect($conf['db_host'], $conf['db_user'],
-                 $conf['db_password'], $conf['db_base']);
-}
-catch (Exception $e)
-{
-  my_error(l10n($e->getMessage(), true)); 
+try {
+    pwg_db_connect(
+        $conf['db_host'],
+        $conf['db_user'],
+        $conf['db_password'],
+        $conf['db_base']
+    );
+} catch (Exception $e) {
+    my_error(l10n($e->getMessage(), true));
 }
 
 pwg_db_check_charset();
@@ -75,27 +75,25 @@ $to_apply = array_diff($existing, $applied);
 echo '<pre>';
 echo count($to_apply).' upgrades to apply';
 
-foreach ($to_apply as $upgrade_id)
-{
-  unset($upgrade_description);
+foreach ($to_apply as $upgrade_id) {
+    unset($upgrade_description);
 
-  echo "\n\n";
-  echo '=== upgrade '.$upgrade_id."\n";
+    echo "\n\n";
+    echo '=== upgrade '.$upgrade_id."\n";
 
-  // include & execute upgrade script. Each upgrade script must contain
-  // $upgrade_description variable which describe briefly what the upgrade
-  // script does.
-  include(UPGRADES_PATH.'/'.$upgrade_id.'-database.php');
+    // include & execute upgrade script. Each upgrade script must contain
+    // $upgrade_description variable which describe briefly what the upgrade
+    // script does.
+    include(UPGRADES_PATH.'/'.$upgrade_id.'-database.php');
 
-  // notify upgrade
-  $query = '
+    // notify upgrade
+    $query = '
 INSERT INTO '.PREFIX_TABLE.'upgrade
   (id, applied, description)
   VALUES
   (\''.$upgrade_id.'\', NOW(), \''.$upgrade_description.'\')
 ;';
-  pwg_query($query);
+    pwg_query($query);
 }
 
 echo '</pre>';
-?>

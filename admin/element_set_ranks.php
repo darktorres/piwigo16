@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -11,9 +12,8 @@
  *
  */
 
-if (!defined('PHPWG_ROOT_PATH'))
-{
-  die('Hacking attempt!');
+if (!defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -42,9 +42,8 @@ $sort_fields = array(
 // +-----------------------------------------------------------------------+
 check_status(ACCESS_ADMINISTRATOR);
 
-if (!isset($_GET['cat_id']) or !is_numeric($_GET['cat_id']))
-{
-  trigger_error('missing cat_id param', E_USER_ERROR);
+if (!isset($_GET['cat_id']) or !is_numeric($_GET['cat_id'])) {
+    trigger_error('missing cat_id param', E_USER_ERROR);
 }
 
 $page['category_id'] = $_GET['cat_id'];
@@ -56,74 +55,67 @@ $page['category_id'] = $_GET['cat_id'];
 $image_order_choices = array('default', 'rank', 'user_define');
 $image_order_choice = 'default';
 
-if (isset($_POST['submit']))
-{
-  if (isset($_POST['rank_of_image']))
-  {
-    asort($_POST['rank_of_image'], SORT_NUMERIC);
+if (isset($_POST['submit'])) {
+    if (isset($_POST['rank_of_image'])) {
+        asort($_POST['rank_of_image'], SORT_NUMERIC);
 
-    save_images_order(
-      $page['category_id'],
-      array_keys($_POST['rank_of_image'])
-      );
-  }
-
-  if (!empty($_POST['image_order_choice'])
-      && in_array($_POST['image_order_choice'], $image_order_choices))
-  {
-    $image_order_choice = $_POST['image_order_choice'];
-  }
-
-  $message = l10n('Album updated successfully');
-
-  $image_order = null;
-  if ($image_order_choice=='user_define')
-  {
-    for ($i=0; $i<3; $i++)
-    {
-      if (!empty($_POST['image_order'][$i]) and in_array($_POST['image_order'][$i], array_keys($sort_fields)))
-      {
-        if (!empty($image_order)) $image_order.= ',';
-        $image_order.= $_POST['image_order'][$i];
-      }
+        save_images_order(
+            $page['category_id'],
+            array_keys($_POST['rank_of_image'])
+        );
     }
-  }
-  elseif ($image_order_choice=='rank')
-  {
-    $image_order = '`rank` ASC';
 
-    $message = l10n('Images manual order was saved');
-  }
-  $query = '
+    if (!empty($_POST['image_order_choice'])
+        && in_array($_POST['image_order_choice'], $image_order_choices)) {
+        $image_order_choice = $_POST['image_order_choice'];
+    }
+
+    $message = l10n('Album updated successfully');
+
+    $image_order = null;
+    if ($image_order_choice == 'user_define') {
+        for ($i = 0; $i < 3; $i++) {
+            if (!empty($_POST['image_order'][$i]) and in_array($_POST['image_order'][$i], array_keys($sort_fields))) {
+                if (!empty($image_order)) {
+                    $image_order .= ',';
+                }
+                $image_order .= $_POST['image_order'][$i];
+            }
+        }
+    } elseif ($image_order_choice == 'rank') {
+        $image_order = '`rank` ASC';
+
+        $message = l10n('Images manual order was saved');
+    }
+    $query = '
 UPDATE '.CATEGORIES_TABLE.' 
   SET image_order = '.(isset($image_order) ? '\''.$image_order.'\'' : 'NULL').'
   WHERE id='.$page['category_id'];
-  pwg_query($query);
+    pwg_query($query);
 
-  if (isset($_POST['image_order_subcats']))
-  {
-    $cat_info = get_cat_info($page['category_id']);
+    if (isset($_POST['image_order_subcats'])) {
+        $cat_info = get_cat_info($page['category_id']);
 
-    $query = '
+        $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET image_order = '.(isset($image_order) ? '\''.$image_order.'\'' : 'NULL').'
   WHERE uppercats LIKE \''.$cat_info['uppercats'].',%\'';
-    pwg_query($query);
-  }
+        pwg_query($query);
+    }
 
-  $template->assign(
-    array(
-      'save_success' => $message,
+    $template->assign(
+        array(
+        'save_success' => $message,
     )
-  );
+    );
 }
 
 // +-----------------------------------------------------------------------+
 // |                             template init                             |
 // +-----------------------------------------------------------------------+
 $template->set_filenames(
-  array('element_set_ranks' => 'element_set_ranks.tpl')
-  );
+    array('element_set_ranks' => 'element_set_ranks.tpl')
+);
 
 $base_url = get_root_url().'admin.php';
 
@@ -134,27 +126,24 @@ SELECT *
 ;';
 $category = pwg_db_fetch_assoc(pwg_query($query));
 
-if ($category['image_order']=='rank ASC' or $category['image_order']=='`rank` ASC')
-{
-  $image_order_choice = 'rank';
-}
-elseif ($category['image_order']!='')
-{
-  $image_order_choice = 'user_define';
+if ($category['image_order'] == 'rank ASC' or $category['image_order'] == '`rank` ASC') {
+    $image_order_choice = 'rank';
+} elseif ($category['image_order'] != '') {
+    $image_order_choice = 'user_define';
 }
 
 // Navigation path
 $navigation = get_cat_display_name_cache(
-  $category['uppercats'],
-  get_root_url().'admin.php?page=album-'
-  );
+    $category['uppercats'],
+    get_root_url().'admin.php?page=album-'
+);
 
 $template->assign(
-  array(
-    'CATEGORIES_NAV' => preg_replace("# {2,}#"," ",preg_replace("#(\r\n|\n\r|\n|\r)#"," ",$navigation)),
+    array(
+    'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
     'F_ACTION' => $base_url.get_query_string_diff(array()),
    )
- );
+);
 
 // +-----------------------------------------------------------------------+
 // |                              thumbnails                               |
@@ -175,52 +164,43 @@ SELECT
   ORDER BY `rank`
 ;';
 $result = pwg_query($query);
-if (pwg_db_num_rows($result) > 0)
-{
-	// template thumbnail initialization
-	$current_rank = 1;
-  $derivativeParams = ImageStdParams::get_by_type(IMG_SQUARE);
-	while ($row = pwg_db_fetch_assoc($result))
-	{
-    $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
+if (pwg_db_num_rows($result) > 0) {
+    // template thumbnail initialization
+    $current_rank = 1;
+    $derivativeParams = ImageStdParams::get_by_type(IMG_SQUARE);
+    while ($row = pwg_db_fetch_assoc($result)) {
+        $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
 
-		if ( !empty( $row['name'] ) )
-		{
-			$thumbnail_name = $row['name'];
-		}
-		else
-		{
-			$file_wo_ext = get_filename_wo_extension($row['file']);
-			$thumbnail_name = str_replace('_', ' ', $file_wo_ext);
-		}
-		$current_rank++;
-		$template->append(
-			'thumbnails',
-			array(
-				'ID' => $row['id'],
-				'NAME' => $thumbnail_name,
-				'TN_SRC' => $derivative->get_url(),
-				'RANK' => $current_rank * 10,
-				'SIZE' => $derivative->get_size(),
-				)
-			);
-	}
+        if (!empty($row['name'])) {
+            $thumbnail_name = $row['name'];
+        } else {
+            $file_wo_ext = get_filename_wo_extension($row['file']);
+            $thumbnail_name = str_replace('_', ' ', $file_wo_ext);
+        }
+        $current_rank++;
+        $template->append(
+            'thumbnails',
+            array(
+                'ID' => $row['id'],
+                'NAME' => $thumbnail_name,
+                'TN_SRC' => $derivative->get_url(),
+                'RANK' => $current_rank * 10,
+                'SIZE' => $derivative->get_size(),
+                )
+        );
+    }
 }
 // image order management
 $template->assign('image_order_options', $sort_fields);
 
-$image_order = explode(',', isset($category['image_order']) ? $category['image_order'] : "");
+$image_order = explode(',', isset($category['image_order']) ? $category['image_order'] : '');
 
-for ($i=0; $i<3; $i++) // 3 fields
-{
-  if ( isset($image_order[$i]) )
-  {
-    $template->append('image_order', $image_order[$i]);
-  }
-  else
-  {
-    $template->append('image_order', '');
-  }
+for ($i = 0; $i < 3; $i++) { // 3 fields
+    if (isset($image_order[$i])) {
+        $template->append('image_order', $image_order[$i]);
+    } else {
+        $template->append('image_order', '');
+    }
 }
 
 $template->assign('image_order_choice', $image_order_choice);
@@ -231,4 +211,3 @@ $template->assign('image_order_choice', $image_order_choice);
 // +-----------------------------------------------------------------------+
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'element_set_ranks');
-?>

@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -36,14 +37,13 @@ SELECT id, name, COUNT(ug.user_id) as nb_users_of
 ;';
 $result = pwg_query($query);
 
-while ($row = pwg_db_fetch_assoc($result))
-{
-  $groups[$row['id']] = $row['name'];
-  $groups_for_filter[] = array(
-    'id' => $row['id'],
-    'name' => $row['name'],
-    'counter' => $row['nb_users_of']
-  );
+while ($row = pwg_db_fetch_assoc($result)) {
+    $groups[$row['id']] = $row['name'];
+    $groups_for_filter[] = array(
+      'id' => $row['id'],
+      'name' => $row['name'],
+      'counter' => $row['nb_users_of'],
+    );
 }
 
 $template->assign('groups_for_filter', $groups_for_filter);
@@ -62,26 +62,25 @@ ORDER BY registration_date
 $result = pwg_query($query);
 
 $register_dates = array();
-while ($row = pwg_db_fetch_assoc($result))
-{
-  $register_dates[] = $row['registration_year'].'-'.sprintf('%02u', $row['registration_month']);
+while ($row = pwg_db_fetch_assoc($result)) {
+    $register_dates[] = $row['registration_year'].'-'.sprintf('%02u', $row['registration_month']);
 }
 
-$template->assign('register_dates', implode(',' , $register_dates));
+$template->assign('register_dates', implode(',', $register_dates));
 
 
 // +-----------------------------------------------------------------------+
 // | template                                                              |
 // +-----------------------------------------------------------------------+
 $template->assign(
-  array(
+    array(
     'ADMIN_PAGE_TITLE' => l10n('Users'),
     'ACTIVATE_COMMENTS' => $conf['activate_comments'],
-    'Double_Password' => $conf['double_password_type_in_admin']
+    'Double_Password' => $conf['double_password_type_in_admin'],
   )
 );
 
-$template->set_filenames(array('user_list'=>'user_list.tpl'));
+$template->set_filenames(array('user_list' => 'user_list.tpl'));
 
 $default_user = get_default_user_info(true);
 
@@ -95,20 +94,19 @@ $protected_users = array(
 $password_protected_users = array($conf['guest_id']);
 
 // an admin can't delete other admin/webmaster
-if ('admin' == $user['status'])
-{
-  $query = '
+if ('admin' == $user['status']) {
+    $query = '
 SELECT
     user_id
   FROM '.USER_INFOS_TABLE.'
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-  $admin_ids = query2array($query, null, 'user_id');
-  
-  $protected_users = array_merge($protected_users, $admin_ids);
+    $admin_ids = query2array($query, null, 'user_id');
 
-  // we add all admin+webmaster users BUT the user herself
-  $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, array($user['id'])));
+    $protected_users = array_merge($protected_users, $admin_ids);
+
+    // we add all admin+webmaster users BUT the user herself
+    $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, array($user['id'])));
 }
 
 $query = '
@@ -121,7 +119,7 @@ SELECT
 $owner_username = query2array($query, null, 'username');
 
 $template->assign(
-  array(
+    array(
     'U_HISTORY' => get_root_url().'admin.php?page=history&filter_user_id=',
     'PWG_TOKEN' => get_pwg_token(),
     'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
@@ -136,22 +134,20 @@ $template->assign(
     'guest_user' => $conf['guest_id'],
     'filter_group' => (isset($_GET['group']) ? $_GET['group'] : null),
     'search_input' => (isset($_GET['user_id']) ? 'id:'.$_GET['user_id'] : null),
-    'connected_user' => $user["id"],
+    'connected_user' => $user['id'],
     'connected_user_status' => $user['status'],
     'owner' => $conf['webmaster_id'],
-    'owner_username' => $owner_username[0]
+    'owner_username' => $owner_username[0],
     )
-  );
+);
 
-if (isset($_GET['show_add_user']))
-{
-  $template->assign('show_add_user', true);
+if (isset($_GET['show_add_user'])) {
+    $template->assign('show_add_user', true);
 }
 
 // Status options
-foreach (get_enums(USER_INFOS_TABLE, 'status') as $status)
-{
-  $label_of_status[$status] = l10n('user_status_'.$status);
+foreach (get_enums(USER_INFOS_TABLE, 'status') as $status) {
+    $label_of_status[$status] = l10n('user_status_'.$status);
 }
 
 $query = '
@@ -164,12 +160,11 @@ SELECT
 ';
 
 $result = pwg_query($query);
-while($row = pwg_db_fetch_assoc($result))
-{
-  $nb_users_by_status[$row['status']] = array(
-    'name' => l10n('user_status_'.$row['status']),
-    'counter' => $row['nb_users_of'],
-  );
+while ($row = pwg_db_fetch_assoc($result)) {
+    $nb_users_by_status[$row['status']] = array(
+      'name' => l10n('user_status_'.$row['status']),
+      'counter' => $row['nb_users_of'],
+    );
 }
 
 $nb_users_by_status = array_merge($label_of_status, $nb_users_by_status);
@@ -177,10 +172,9 @@ $nb_users_by_status = array_merge($label_of_status, $nb_users_by_status);
 $pref_status_options = $label_of_status;
 
 // a simple "admin" can't set/remove statuses webmaster/admin
-if ('admin' == $user['status'])
-{
-  unset($pref_status_options['webmaster']);
-  unset($pref_status_options['admin']);
+if ('admin' == $user['status']) {
+    unset($pref_status_options['webmaster']);
+    unset($pref_status_options['admin']);
 }
 
 $template->assign('label_of_status', $label_of_status);
@@ -189,9 +183,8 @@ $template->assign('pref_status_selected', 'normal');
 $template->assign('nb_users_by_status', $nb_users_by_status);
 
 // user level options
-foreach ($conf['available_permission_levels'] as $level)
-{
-  $level_options[$level] = l10n(sprintf('Level %d', $level));
+foreach ($conf['available_permission_levels'] as $level) {
+    $level_options[$level] = l10n(sprintf('Level %d', $level));
 }
 
 $query = '
@@ -205,12 +198,11 @@ SELECT
 
 $result = pwg_query($query);
 $nb_users_by_level = $level_options;
-while($row = pwg_db_fetch_assoc($result))
-{
-  $nb_users_by_level[$row['level']] = array(
-    'name' => l10n(sprintf('Level %d', $row['level'])),
-    'counter' => $row['nb_users_of']
-  );
+while ($row = pwg_db_fetch_assoc($result)) {
+    $nb_users_by_level[$row['level']] = array(
+      'name' => l10n(sprintf('Level %d', $row['level'])),
+      'counter' => $row['nb_users_of'],
+    );
 }
 
 $template->assign('level_options', $level_options);
@@ -226,48 +218,41 @@ $result = pwg_query($query);
 
 $groups_arr_id = [];
 $groups_arr_name = [];
-while ($row = pwg_db_fetch_assoc($result))
-{
-  $groups_arr_name[] = '"'.pwg_db_real_escape_string($row["name"]).'"';
-  $groups_arr_id[] = $row["id"];
+while ($row = pwg_db_fetch_assoc($result)) {
+    $groups_arr_name[] = '"'.pwg_db_real_escape_string($row['name']).'"';
+    $groups_arr_id[] = $row['id'];
 }
 
 $template->assign('groups_arr_id', implode(',', $groups_arr_id));
 $template->assign('groups_arr_name', implode(',', $groups_arr_name));
-$template->assign('guest_id', $conf["guest_id"]);
+$template->assign('guest_id', $conf['guest_id']);
 
 $template->assign('view_selector', userprefs_get_param('user-manager-view', 'line'));
 
-if (userprefs_get_param('user-manager-view', 'line') == 'line') 
-{
-  //Show 5 users by default
-  $template->assign('pagination', userprefs_get_param('user-manager-pagination', 5));
-}
-else
-{
-  //Show 10 users by default
-  $template->assign('pagination', userprefs_get_param('user-manager-pagination', 10));
+if (userprefs_get_param('user-manager-view', 'line') == 'line') {
+    //Show 5 users by default
+    $template->assign('pagination', userprefs_get_param('user-manager-pagination', 5));
+} else {
+    //Show 10 users by default
+    $template->assign('pagination', userprefs_get_param('user-manager-pagination', 10));
 }
 
 function webmaster_id_is_local()
 {
-  $conf = array();
-  include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
-  @include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
-  if (isset($conf['local_dir_site']))
-  {
-    @include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR. 'config/config.inc.php');
-  }
-  return $conf['webmaster_id'] ?? false;
+    $conf = array();
+    include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
+    @include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
+    if (isset($conf['local_dir_site'])) {
+        @include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR. 'config/config.inc.php');
+    }
+    return $conf['webmaster_id'] ?? false;
 }
 
-if (webmaster_id_is_local())
-{
-  $page['warnings'][] = l10n('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!');
+if (webmaster_id_is_local()) {
+    $page['warnings'][] = l10n('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!');
 }
 // +-----------------------------------------------------------------------+
 // | html code display                                                     |
 // +-----------------------------------------------------------------------+
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'user_list');
-?>

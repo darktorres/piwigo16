@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -6,9 +7,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-if (!defined('PHPWG_ROOT_PATH'))
-{
-  die ("Hacking attempt!");
+if (!defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -20,9 +20,8 @@ include_once(PHPWG_ROOT_PATH.'admin/include/image.class.php');
 
 check_status(ACCESS_ADMINISTRATOR);
 
-if (isset($_GET['action']))
-{
-  check_pwg_token();
+if (isset($_GET['action'])) {
+    check_pwg_token();
 }
 // +-----------------------------------------------------------------------+
 // | Commons parameters                                                    |
@@ -93,7 +92,7 @@ $maint_actions = array(
     'icon' => 'icon-file-code',
     'label' => l10n('Purge compiled templates'),
   ),
-); 
+);
 
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
@@ -102,14 +101,11 @@ $maint_actions = array(
 include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
 $my_base_url = get_root_url().'admin.php?page=';
 
-if (isset($_GET['tab']))
-{
-  check_input_parameter('tab', $_GET, false, '/^(actions|env|sys)$/');
-  $page['tab'] = $_GET['tab'];
-}
-else
-{
-  $page['tab'] = 'actions';
+if (isset($_GET['tab'])) {
+    check_input_parameter('tab', $_GET, false, '/^(actions|env|sys)$/');
+    $page['tab'] = $_GET['tab'];
+} else {
+    $page['tab'] = 'actions';
 }
 
 
@@ -121,5 +117,5 @@ $tabsheet->assign();
 include(PHPWG_ROOT_PATH.'admin/maintenance_'.$page['tab'].'.php');
 
 $template->assign(
-  array('ADMIN_PAGE_TITLE' => l10n('Maintenance'))
+    array('ADMIN_PAGE_TITLE' => l10n('Maintenance'))
 );

@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -6,54 +7,48 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-if (!defined('PHPWG_ROOT_PATH'))
-{
-  die('Hacking attempt!');
+if (!defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 $script = script_basename();
 
 if (($script != 'install' and $script != 'upgrade')
-  or version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '>='))
-{
-  die('Nothing to do here...');
+  or version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '>=')) {
+    die('Nothing to do here...');
 }
 
 function initPHP5()
 {
-  include(PHPWG_ROOT_PATH.'install/hosting.php');
-  $htaccess = PHPWG_ROOT_PATH.'.htaccess';
-  
-  if ((file_exists($htaccess) and (!is_readable($htaccess) or !is_writable($htaccess)))
-    or !($my_hostname = @gethostbyaddr($_SERVER['SERVER_ADDR'])))
-  {
-    return false;
-  }
+    include(PHPWG_ROOT_PATH.'install/hosting.php');
+    $htaccess = PHPWG_ROOT_PATH.'.htaccess';
 
-  foreach ($hosting as $hostname => $rule)
-  {
-    if (preg_match('!'.preg_quote($hostname).'$!',$my_hostname))
-    {
-      if (false !== ($fh = @fopen($htaccess,"ab")))
-      {
-        fwrite($fh,"\n".$rule);
-        fclose($fh);
-        return true;
-      }
+    if ((file_exists($htaccess) and (!is_readable($htaccess) or !is_writable($htaccess)))
+      or !($my_hostname = @gethostbyaddr($_SERVER['SERVER_ADDR']))) {
+        return false;
     }
-  }
-  return false;
+
+    foreach ($hosting as $hostname => $rule) {
+        if (preg_match('!'.preg_quote($hostname).'$!', $my_hostname)) {
+            if (false !== ($fh = @fopen($htaccess, 'ab'))) {
+                fwrite($fh, "\n".$rule);
+                fclose($fh);
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 function openPage()
 {
-  global $script;
+    global $script;
 
-  $title = 'Piwigo '.PHPWG_VERSION.' - '.l10n(ucwords($script));
+    $title = 'Piwigo '.PHPWG_VERSION.' - '.l10n(ucwords($script));
 
-  header('Content-Type: text/html; charset=UTF-8');
+    header('Content-Type: text/html; charset=UTF-8');
 
-  echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
 "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
@@ -122,7 +117,7 @@ h1 { text-align: left; }
 
 function closePage()
 {
-  echo '
+    echo '
 </div>
 <div style="text-align: center">'.sprintf(l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.'), PHPWG_URL.'/forum').'</div>
 </div>
@@ -130,41 +125,34 @@ function closePage()
 </html>';
 }
 
-if (isset($_GET['setphp5']))
-{
-  // Try to configure php5
-  if (initPHP5())
-  {
-    header('Location: '.$script.'.php?language='.$language);
-  }
-  else
-  {
-    openPage();
-    echo '
+if (isset($_GET['setphp5'])) {
+    // Try to configure php5
+    if (initPHP5()) {
+        header('Location: '.$script.'.php?language='.$language);
+    } else {
+        openPage();
+        echo '
 <h1>'.l10n('Sorry!').'</h1>
 <p>
 '.l10n('Piwigo was not able to configure PHP 5.').'<br>
 '.l10n("You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself.").'<br>
 '.l10n('Hope to see you back soon.').'
 </p>';
-    closePage();
-  }
-}
-else
-{
-  openPage();
-  echo '
+        closePage();
+    }
+} else {
+    openPage();
+    echo '
   <table>
   <tr>
     <td>'.l10n('Language').'</td>
     <td>
       <select name="language" onchange="document.location = \''.$script.'.php?language=\'+this.options[this.selectedIndex].value;">';
-  foreach ($languages->fs_languages as $code => $fs_language)
-  {
-    echo '
+    foreach ($languages->fs_languages as $code => $fs_language) {
+        echo '
       <option label="'.$fs_language['name'].'" value="'.$code.'" '.($code == $language ? 'selected="selected"' : '') .'>'.$fs_language['name'].'</option>';
-  }
-  echo '
+    }
+    echo '
       </select>
     </td>
   </tr>
@@ -179,8 +167,7 @@ else
 <p style="text-align: center;"><br>
 <input type="button" value="'.l10n('Try to configure PHP 5').'" onClick="document.location = \''.$script.'.php?language='.$language.'&amp;setphp5=\';">
 </p>';
-  closePage();
+    closePage();
 }
 
 exit();
-?>

@@ -21,3 +21,11 @@
 # Eclipse
 .settings
 .project
+
+# PHP tooling
+.phpunit.cache
+
+# Node / Playwright
+node_modules/
+playwright-report/
+test-results/

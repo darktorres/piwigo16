@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the JShrink package.
  *
@@ -164,7 +165,7 @@ class Minifier
     protected function initialize($js, $options)
     {
         $this->options = array_merge(static::$defaultOptions, $options);
-        $this->input = str_replace(["\r\n", '/**/', "\r"], ["\n", "", "\n"], $js);
+        $this->input = str_replace(["\r\n", '/**/', "\r"], ["\n", '', "\n"], $js);
 
         // We add a newline to the end of the script to make it easier to deal
         // with comments at the bottom of the script- this prevents the unclosed
@@ -215,9 +216,9 @@ class Minifier
                         break;
                     }
 
-                // otherwise we treat the newline like a space
+                    // otherwise we treat the newline like a space
 
-                // no break
+                    // no break
                 case ' ':
                     if (static::isAlphaNumeric($this->b)) {
                         echo $this->a;
@@ -246,7 +247,7 @@ class Minifier
                                 break;
                             }
 
-                        // no break
+                            // no break
                         default:
                             // check for some regex that breaks stuff
                             if ($this->a === '/' && ($this->b === '\'' || $this->b === '"')) {
@@ -401,7 +402,7 @@ class Minifier
                 // we need to echo a and fill it with a space before moving on.
                 if ($startIndex > 0) {
                     echo $this->a;
-                    $this->a = " ";
+                    $this->a = ' ';
 
                     // If the comment started on a new line we let it stay on the new line
                     if ($this->input[($startIndex - 1)] === "\n") {
@@ -489,10 +490,10 @@ class Minifier
                 case $stringType:
                     break 2;
 
-                // New lines in strings without line delimiters are bad- actual
-                // new lines will be represented by the string \n and not the actual
-                // character, so those will be treated just fine using the switch
-                // block below.
+                    // New lines in strings without line delimiters are bad- actual
+                    // new lines will be represented by the string \n and not the actual
+                    // character, so those will be treated just fine using the switch
+                    // block below.
                 case "\n":
                     if ($stringType === '`') {
                         echo $this->a;
@@ -501,7 +502,7 @@ class Minifier
                     }
                     break;
 
-                // Escaped characters get picked up here. If it's an escaped new line it's not really needed
+                    // Escaped characters get picked up here. If it's an escaped new line it's not really needed
                 case '\\':
 
                     // a is a slash. We want to keep it, and the next character,
@@ -519,8 +520,8 @@ class Minifier
                     break;
 
 
-                // Since we're not dealing with any special cases we simply
-                // output the character and continue our loop.
+                    // Since we're not dealing with any special cases we simply
+                    // output the character and continue our loop.
                 default:
                     echo $this->a;
             }

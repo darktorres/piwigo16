@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -41,4 +42,3 @@ $hosting = array(
   //Web1.fr - NFrance
     'nfrance.com' => 'AddHandler php-fastcgi5 .php',
 );
-?>

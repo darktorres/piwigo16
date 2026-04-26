@@ -19,4 +19,6 @@ use MatthiasMullie\Minify\Exception;
  *
  * @author Matthias Mullie <minify@mullie.eu>
  */
-abstract class BasicException extends Exception {}
+abstract class BasicException extends Exception
+{
+}

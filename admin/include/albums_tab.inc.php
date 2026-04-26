@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -22,9 +23,7 @@ SELECT COUNT(*)
 
 list($nb_cats) = pwg_db_fetch_row(pwg_query($query));
 $template->assign(
-  array(
+    array(
     'nb_cats' => $nb_cats,
   )
 );
-
-?>

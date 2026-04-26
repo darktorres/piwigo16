@@ -11,7 +11,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    ports: ["3306:3306"]
+    ports: ["3307:3306"]
 
   web:
     image: php:8.5-rc-apache
@@ -19,9 +19,12 @@ services:
       db:
         condition: service_healthy
     volumes: ["./:/var/www/html"]
-    ports: ["8080:80"]
+    ports: ["8090:80"]
     command: >
-      bash -c "docker-php-ext-install mysqli gd mbstring &&
+      bash -c "apt-get update -qq &&
+               apt-get install -y --no-install-recommends libpng-dev libjpeg-dev zlib1g-dev libwebp-dev libfreetype6-dev &&
+               docker-php-ext-configure gd --with-jpeg --with-freetype --with-webp &&
+               docker-php-ext-install mysqli gd exif &&
                a2enmod rewrite && apache2-foreground"
 
   e2e:

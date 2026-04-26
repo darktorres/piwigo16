@@ -61,9 +61,9 @@ Establish the entire toolchain — composer, PHPStan, Rector, Pint, PHPUnit, Doc
 
 5. ✅ **Wire PHPUnit.** `phpunit.xml.dist` declares two suites: `Unit` (placeholder, will populate Phase 2+) and `Integration` (holds `UpgradeChainTest`). Done when `vendor/bin/phpunit --list-suites` shows both. **PHPUnit 11 only lists suites that contain at least one test class** — `tests/Unit/PlaceholderTest.php` (a single `assertTrue(true)` test) was added to make the Unit suite discoverable; delete it in Phase 2 when real unit tests arrive.
 
-6. ✅ **Stand up the Docker dev stack.** `docker-compose.yml` brings up `mariadb:10.11` (locked over MySQL 8 — Piwigo's audience runs shared hosting, conservative SQL is correct) plus `php:8.5-rc-apache` (RC image used because PHP 8.5 final was not yet available; swap to `php:8.5-apache` once GA ships) with the working tree bind-mounted at `/var/www/html`, plus a Playwright service. Wait-loop on the MariaDB healthcheck before the PHP service binds (`depends_on.condition: service_healthy`) so CI doesn't race. Done when `docker compose up -d` followed by `curl http://localhost:8080/install.php` returns 200.
+6. ✅ **Stand up the Docker dev stack.** `docker-compose.yml` brings up `mariadb:10.11` (locked over MySQL 8 — Piwigo's audience runs shared hosting, conservative SQL is correct) plus `php:8.5-rc-apache` (RC image used because PHP 8.5 final was not yet available; swap to `php:8.5-apache` once GA ships) with the working tree bind-mounted at `/var/www/html`, plus a Playwright service. Wait-loop on the MariaDB healthcheck before the PHP service binds (`depends_on.condition: service_healthy`) so CI doesn't race. **Host port mapping:** db uses `3307:3306` and web uses `8090:80` to avoid conflicts with a local MySQL on 3306 and local Apache on 8080. The `command` installs `libpng-dev libpng-dev libjpeg-dev zlib1g-dev libwebp-dev libfreetype6-dev` via apt-get before `docker-php-ext-install` (required; the base image ships no GD/exif system deps). `mbstring` is pre-bundled in the base image, not compiled. Done when `docker compose up -d` followed by `curl http://localhost:8090/install.php` returns 200.
 
-7. ⏳ **Capture the 16.x fixture.** Run a real install on the dev stack — create albums, upload photos, create users with permissions, post a comment, set tags, change a couple of config values that hit the `$conf` write path. `mysqldump` to `dev/fixtures/piwigo-16.x.sql`. Commit. This is the load-bearing artifact for `UpgradeChainTest` — without it, Phase 1's "did I break upgrade?" question has no answer. Done when the file is checked in and ≥ 200 KB (small enough to commit, large enough to exercise representative tables). Regeneration instructions in `dev/fixtures/README.md`.
+7. ✅ **Capture the 16.x fixture.** Run a real install on the dev stack — create albums, upload photos, create users with permissions, post comments, set tags, change config values. `mysqldump` to `dev/fixtures/piwigo-16.x.sql`. **Fixture contents: 3 albums (2 root, 1 sub), 391 images (8 real uploads + 383 metadata rows), 4 users (guest + fixture_admin + viewer_alice + uploader_bob), 4 tags (nature, portrait, mountain, outdoor), 3 comments, gallery_title set, logging enabled. Dump size: 246 KB.** Admin credentials: `fixture_admin` / `fixture_admin`. Regeneration instructions in `dev/fixtures/README.md`.
 
 8. ✅ **Author the CI workflow.** `.github/workflows/ci.yml` runs three jobs in parallel: `lint` (Pint test mode + PHPStan), `unit` (PHPUnit `Unit` suite — placeholder, returns 0), `e2e` (boots `docker compose up -d --wait db web`, drives all six Playwright specs, then runs `UpgradeChainTest` against the fixture). Matrix on `php-version: ['8.5']` only. Done when a PR with no source changes goes green. **Blocked on step 7** (fixture not yet committed; `e2e` job will fail until `dev/fixtures/piwigo-16.x.sql` exists).
 
@@ -71,7 +71,7 @@ Establish the entire toolchain — composer, PHPStan, Rector, Pint, PHPUnit, Doc
 
 10. ✅ **Author the Playwright bootstrap and the six initial specs.** `package.json` adds `@playwright/test ^1.48`, `typescript ^5.6`. `playwright.config.ts` points `baseURL` at `http://localhost:8080` (or `$BASE_URL` for CI) and references `tests/e2e/global-setup.ts` which resets the DB via the `mysql` CLI before the install spec runs (no test PHP endpoint needed). Six specs under `tests/e2e/`: `install.spec.ts`, `smoke-gallery.spec.ts`, `smoke-admin.spec.ts`, `upload-photo.spec.ts`, `create-album.spec.ts`, `change-setting.spec.ts`. Admin login shared via `tests/e2e/helpers/admin-login.ts`. Critical-flow specs use the `pwg.categories.add` web-service API for album creation and the `gallery_title` conf key for the `$conf` write-path tripwire. Do NOT restore the abandoned `ceb1390e6` suite — written from scratch.
 
-11. ⏳ **Assemble the green CI run.** Open a no-op PR ("Phase 0 scaffolding"). Watch all three jobs go green. Merge. From this moment forward, any red CI is a regression, not a setup gap. **Blocked on step 7** — the `e2e` job will stay red until the fixture is committed.
+11. ⏳ **Assemble the green CI run.** Open a no-op PR ("Phase 0 scaffolding"). Watch all three jobs go green. Merge. From this moment forward, any red CI is a regression, not a setup gap. Fixture is committed; the `e2e` job needs Playwright `npm ci` + `npx playwright install` to be verified locally before the PR opens.
 
 ### Concrete artifacts
 
@@ -245,9 +245,12 @@ services:
     image: php:8.5-rc-apache
     depends_on: { db: { condition: service_healthy } }
     volumes: ["./:/var/www/html"]
-    ports: ["8080:80"]
+    ports: ["8090:80"]
     command: >
-      bash -c "docker-php-ext-install mysqli gd mbstring &&
+      bash -c "apt-get update -qq &&
+               apt-get install -y --no-install-recommends libpng-dev libjpeg-dev zlib1g-dev libwebp-dev libfreetype6-dev &&
+               docker-php-ext-configure gd --with-jpeg --with-freetype --with-webp &&
+               docker-php-ext-install mysqli gd exif &&
                a2enmod rewrite && apache2-foreground"
   e2e:
     image: mcr.microsoft.com/playwright:v1.48.0-jammy
@@ -456,11 +459,11 @@ vendor/bin/phpstan analyse --memory-limit=1G     # exit 0, 169 errors in baselin
 vendor/bin/rector process --dry-run --no-progress-bar  # exit 0, no rule sets active
 vendor/bin/phpunit --list-suites                 # shows Unit (1 test) + Integration (1 test)
 
-# ⏳ pending fixture
-docker compose up -d --wait db web
-curl -fsS http://localhost:8080/install.php > /dev/null
+# ⏳ pending green CI run (Playwright not yet verified end-to-end in CI)
+docker compose up -d --wait db web              # ports: db→3307, web→8090
+curl -fsS http://localhost:8090/install.php > /dev/null
 npx playwright test                              # 6/6 passing (needs running docker stack)
-vendor/bin/phpunit --testsuite Integration       # 1/1 passing (needs dev/fixtures/piwigo-16.x.sql)
+vendor/bin/phpunit --testsuite Integration       # 1/1 passing (fixture committed: dev/fixtures/piwigo-16.x.sql, 246 KB)
 ```
 
 Manual break check: edit `include/common.inc.php:90` to point at a nonexistent dblayer file, push to a PR — CI must fail in `e2e` (install.spec.ts) within minutes. Revert.

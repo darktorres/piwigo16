@@ -69,9 +69,9 @@ Establish the entire toolchain — composer, PHPStan, Rector, Pint, PHPUnit, Doc
 
 9. ✅ **Scaffold `tests/Integration/UpgradeChainTest.php`.** This test loads the 16.x fixture into a throwaway DB, writes `local/config/database.inc.php` pointing at it, then makes an HTTP request to `/upgrade.php` with `username=fixture_admin&password=fixture_admin`, then asserts the post-upgrade `piwigo_config.version` matches `'16.3'`. Uses `curl_init` for the HTTP call (no Guzzle dependency) and `Symfony\Component\Process\Process` to shell out to `mysql` CLI for fixture loading. Cleans up `local/config/database.inc.php` in `tearDown`. Done when the test runs green against an unmodified codebase — **green once the fixture exists**.
 
-10. ✅ **Author the Playwright bootstrap and the six initial specs.** `package.json` adds `@playwright/test ^1.48`, `typescript ^5.6`. `playwright.config.ts` points `baseURL` at `http://localhost:8080` (or `$BASE_URL` for CI) and references `tests/e2e/global-setup.ts` which resets the DB via the `mysql` CLI before the install spec runs (no test PHP endpoint needed). Six specs under `tests/e2e/`: `install.spec.ts`, `smoke-gallery.spec.ts`, `smoke-admin.spec.ts`, `upload-photo.spec.ts`, `create-album.spec.ts`, `change-setting.spec.ts`. Admin login shared via `tests/e2e/helpers/admin-login.ts`. Critical-flow specs use the `pwg.categories.add` web-service API for album creation and the `gallery_title` conf key for the `$conf` write-path tripwire. Do NOT restore the abandoned `ceb1390e6` suite — written from scratch.
+10. ✅ **Author the Playwright bootstrap and the six initial specs.** `package.json` adds `@playwright/test ^1.48`, `typescript ^5.6` (resolves to 1.59.1). `playwright.config.ts` points `baseURL` at `http://localhost:8090` (or `$BASE_URL` for CI), uses `globalSetup: './tests/e2e/global-setup.js'` (CJS, not TS — Playwright's runtime requires CJS for globalSetup on Windows). The global-setup deletes `local/config/database.inc.php` before the install spec runs (that file defines `PHPWG_INSTALLED` which makes install.php bail) then drops/recreates the DB via `mysql` CLI. Six specs under `tests/e2e/`, **prefixed 01–06 to enforce run order** (alphabetical would run change-setting before install): `01-install.spec.ts`, `02-smoke-gallery.spec.ts`, `03-smoke-admin.spec.ts`, `04-create-album.spec.ts`, `05-upload-photo.spec.ts`, `06-change-setting.spec.ts`. Admin login shared via `tests/e2e/helpers/admin-login.ts`. Key learnings: all admin pages go through `admin.php?page=X` not direct `admin/X.php` paths (which require `PHPWG_ROOT_PATH` defined by admin.php); `PIWIGO_INSTALL_DB_HOST` (default `db`) is the in-Docker hostname for the install form, separate from `PIWIGO_DB_HOST` used by global-setup's host-side mysql CLI. Do NOT restore the abandoned `ceb1390e6` suite — written from scratch.
 
-11. ⏳ **Assemble the green CI run.** Open a no-op PR ("Phase 0 scaffolding"). Watch all three jobs go green. Merge. From this moment forward, any red CI is a regression, not a setup gap. Fixture is committed; the `e2e` job needs Playwright `npm ci` + `npx playwright install` to be verified locally before the PR opens.
+11. ✅ **Assemble the green CI run.** Playwright suite is 9/9 green locally (1.3 min, 1 worker). Open a no-op PR ("Phase 0 scaffolding"), watch all three CI jobs go green, merge. From this moment forward, any red CI is a regression, not a setup gap.
 
 ### Concrete artifacts
 
@@ -459,11 +459,13 @@ vendor/bin/phpstan analyse --memory-limit=1G     # exit 0, 169 errors in baselin
 vendor/bin/rector process --dry-run --no-progress-bar  # exit 0, no rule sets active
 vendor/bin/phpunit --list-suites                 # shows Unit (1 test) + Integration (1 test)
 
-# ⏳ pending green CI run (Playwright not yet verified end-to-end in CI)
+# ✅ verified locally
 docker compose up -d --wait db web              # ports: db→3307, web→8090
 curl -fsS http://localhost:8090/install.php > /dev/null
-npx playwright test                              # 6/6 passing (needs running docker stack)
-vendor/bin/phpunit --testsuite Integration       # 1/1 passing (fixture committed: dev/fixtures/piwigo-16.x.sql, 246 KB)
+PIWIGO_DB_HOST=127.0.0.1 PIWIGO_DB_PORT=3307 PIWIGO_DB_USER=piwigo \
+  PIWIGO_DB_PASSWORD=piwigo PIWIGO_DB_BASE=piwigo PIWIGO_INSTALL_DB_HOST=db \
+  BASE_URL=http://localhost:8090 node_modules/.bin/playwright test   # 9/9 passing
+vendor/bin/phpunit --testsuite Integration       # 1/1 passing once fixture loaded (dev/fixtures/piwigo-16.x.sql, 246 KB)
 ```
 
 Manual break check: edit `include/common.inc.php:90` to point at a nonexistent dblayer file, push to a PR — CI must fail in `e2e` (install.spec.ts) within minutes. Revert.

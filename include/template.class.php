@@ -184,9 +184,7 @@ class Template
     /**
      * Loads theme's parameters.
      *
-     * @param string $root
      * @param string $theme
-     * @param string $path
      * @param bool $load_css
      * @param bool $load_local_head
      */
@@ -291,7 +289,6 @@ class Template
      *
      * @param string $handle
      * @param string $filename
-     * @return bool
      */
     public function set_filename($handle, $filename): bool
     {
@@ -325,10 +322,8 @@ class Template
      *
      * @param string $filename
      * @param mixed $param
-     * @param string $dir
      * @param bool $overwrite
      * @param string $theme
-     * @return bool
      */
     public function set_extent($filename, $param, string $dir = '', $overwrite = true, $theme = 'N/A'): bool
     {
@@ -339,10 +334,8 @@ class Template
      * Sets template extentions filenames for handles.
      *
      * @param string[] $filename_array hashmap of handle=>filename
-     * @param string $dir
      * @param bool $overwrite
      * @param string $theme
-     * @return bool
      */
     public function set_extents($filename_array, string $dir = '', $overwrite = true, $theme = 'N/A'): bool
     {
@@ -432,7 +425,6 @@ class Template
      * Performs a string concatenation.
      *
      * @param string $tpl_var
-     * @param string $value
      */
     public function concat($tpl_var, string $value): void
     {
@@ -612,9 +604,6 @@ class Template
      *    - {'Comment'|translate}
      *    - {'%d comments'|translate:$count}
      * @see l10n()
-     *
-     * @param array $params
-     * @return string
      */
     public static function modcompiler_translate(array $params): string
     {
@@ -647,9 +636,6 @@ class Template
      * Usage :
      *    - {$count|translate_dec:'%d comment':'%d comments'}
      * @see l10n_dec()
-     *
-     * @param array $params
-     * @return string
      */
     public static function modcompiler_translate_dec(array $params): string
     {
@@ -679,7 +665,6 @@ class Template
      *
      * @param string $text
      * @param string $delimiter
-     * @return array
      */
     public static function mod_explode($text, $delimiter = ','): array
     {
@@ -1225,7 +1210,6 @@ class PwgTemplateAdapter
     /**
      * @param string $type
      * @param array $img
-     * @return DerivativeImage
      */
     public function derivative($type, $img): \DerivativeImage
     {
@@ -1237,7 +1221,7 @@ class PwgTemplateAdapter
      * @param array $img
      * @return string
      */
-    public function derivative_url($type, $img)
+    public function derivative_url($type, $img): string|array
     {
         return DerivativeImage::url($type, $img);
     }
@@ -1275,9 +1259,6 @@ class Combinable
         }
     }
 
-    /**
-     * @return bool
-     */
     public function is_remote(): bool
     {
         return url_is_remote($this->path) || str_starts_with($this->path, '//');
@@ -1440,9 +1421,6 @@ class ScriptLoader
         $this->did_head = $this->did_footer = false;
     }
 
-    /**
-     * @return bool
-     */
     public function did_head(): bool
     {
         return $this->did_head;
@@ -1530,7 +1508,7 @@ class ScriptLoader
      *
      * @return Combinable[]
      */
-    public function get_head_scripts()
+    public function get_head_scripts(): array
     {
         self::check_load_dep($this->registered_scripts);
         foreach (array_keys($this->registered_scripts) as $id) {
@@ -1588,7 +1566,6 @@ class ScriptLoader
 
     /**
      * @param Script[] $scripts
-     * @param int $load_mode
      * @return Combinable[]
      */
     private static function do_combine(array $scripts, int $load_mode): array
@@ -1631,7 +1608,6 @@ class ScriptLoader
      * Fill a script dependancies with the known jQuery UI scripts.
      *
      * @param string $id in FileCombiner::$known_paths
-     * @param Script $script
      */
     private static function fill_well_known($id, \Script $script): void
     {
@@ -1670,7 +1646,6 @@ class ScriptLoader
      *
      * @param string $id in FileCombiner::$known_paths
      * @param int $load_mode
-     * @return bool
      */
     private function load_known_required_script($id, $load_mode): bool
     {
@@ -1818,10 +1793,7 @@ final class FileCombiner
     /**
      * Process a set of pending files.
      *
-     * @param array &$result
-     * @param array &$pending
      * @param string[] $key
-     * @param bool $force
      */
     private function flush_pending(array &$result, array &$pending, array $key, bool $force): void
     {
@@ -1855,8 +1827,6 @@ final class FileCombiner
      * Process one combinable file.
      *
      * @param Combinable $combinable
-     * @param bool $return_content
-     * @param bool $force
      * @param string $header CSS directives that must appear first in
      *                       the minified file (only used when
      *                       $return_content===true)
@@ -1912,7 +1882,6 @@ final class FileCombiner
      *
      * @param string $js file content
      * @param string $file
-     * @return string
      */
     private static function process_js($js, $file): string
     {
@@ -1955,7 +1924,6 @@ final class FileCombiner
      * Resolves relative links in CSS file.
      *
      * @param string $css file content
-     * @param string $dir
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      * @return string

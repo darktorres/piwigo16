@@ -240,8 +240,6 @@ WHERE '.$conf['user_fields']['username'].'=\''.$username.'\'
 
 /**
  * which upgrades are available ?
- *
- * @return array
  */
 function get_available_upgrade_ids(): array
 {

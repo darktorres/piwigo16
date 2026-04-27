@@ -985,7 +985,7 @@ function ws_edit_api_key(array $params, &$service)
  * @since 15
  * @param mixed[] $params
  */
-function ws_get_api_key(array $params, &$service)
+function ws_get_api_key(array $params, &$service): \PwgError|array|false
 {
     global $user;
 

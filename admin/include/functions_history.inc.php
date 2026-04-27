@@ -42,7 +42,6 @@ function history_compare(array $a, array $b): int
  * Perform history search.
  *
  * @param array $data  - used in trigger_change
- * @param array $search
  * @param string[] $types
  * @param array
  */

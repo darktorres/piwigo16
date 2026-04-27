@@ -66,7 +66,6 @@ class plugins
     /**
      * Returns the maintain class of a plugin
      * or build a new class with the procedural methods
-     * @param string $plugin_id
      */
     private static function build_maintain_class(string $plugin_id)
     {

@@ -7,19 +7,14 @@ declare(strict_types=1);
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
 /**
  * @package functions\picture
  */
-
-
 /**
  * Returns slideshow default params.
  * - period
  * - repeat
  * - play
- *
- * @return array
  */
 function get_default_slideshow_params(): array
 {
@@ -34,9 +29,6 @@ function get_default_slideshow_params(): array
 
 /**
  * Checks and corrects slideshow params
- *
- * @param array $params
- * @return array
  */
 function correct_slideshow_params(array $params = []): array
 {
@@ -55,7 +47,6 @@ function correct_slideshow_params(array $params = []): array
  * Decodes slideshow string params into array
  *
  * @param string $encode_params
- * @return array
  */
 function decode_slideshow_params($encode_params = null): array
 {
@@ -87,9 +78,6 @@ function decode_slideshow_params($encode_params = null): array
 
 /**
  * Encodes slideshow array params into a string
- *
- * @param array $decode_params
- * @return string
  */
 function encode_slideshow_params(array $decode_params = []): string
 {

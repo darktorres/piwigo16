@@ -195,7 +195,6 @@ function add_level_to_tags($tags)
  * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
  * @param string $order_by - optionally overwrite default photo order
  * @param bool $user_permissions
- * @return array
  */
 function get_image_ids_for_tags($tag_ids, $mode = 'AND', ?string $extra_images_where_sql = '', $order_by = '', $use_permissions = true): array
 {

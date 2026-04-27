@@ -274,7 +274,6 @@ SELECT id
  *
  * @param int $user_id
  * @param boolean $user_cache
- * @return array
  */
 function build_user($user_id, $use_cache = true): array
 {
@@ -1010,8 +1009,6 @@ function log_user($user_id, $remember_me): void
 
 /**
  * Performs auto-connection when cookie remember_me exists.
- *
- * @return bool
  */
 function auto_login(): bool
 {
@@ -1137,7 +1134,6 @@ add_event_handler('try_log_user', 'pwg_login');
  * @param string $username
  * @param string $password
  * @param bool $remember_me
- * @return bool
  */
 function pwg_login($success, $username, $password, $remember_me): bool
 {
@@ -1297,7 +1293,6 @@ function generate_fake_user()
  * Clear current session fake user cache
  *
  * @since 16
- * @return void
  */
 function clear_fake_user_cache(): void
 {
@@ -1422,7 +1417,6 @@ function check_status($access_type, $user_status = ''): void
  * Returns if user is generic.
  *
  * @param string $user_status used if $user not initialized
- * @return bool
  */
 function is_generic($user_status = ''): bool
 {
@@ -1433,7 +1427,6 @@ function is_generic($user_status = ''): bool
  * Returns if user is a guest.
  *
  * @param string $user_status used if $user not initialized
- * @return bool
  */
 function is_a_guest($user_status = ''): bool
 {
@@ -1444,7 +1437,6 @@ function is_a_guest($user_status = ''): bool
  * Returns if user is, at least, a classic user.
  *
  * @param string $user_status used if $user not initialized
- * @return bool
  */
 function is_classic_user($user_status = ''): bool
 {
@@ -1455,7 +1447,6 @@ function is_classic_user($user_status = ''): bool
  * Returns if user is, at least, an administrator.
  *
  * @param string $user_status used if $user not initialized
- * @return bool
  */
 function is_admin($user_status = ''): bool
 {
@@ -1466,7 +1457,6 @@ function is_admin($user_status = ''): bool
  * Returns if user is a webmaster.
  *
  * @param string $user_status used if $user not initialized
- * @return bool
  */
 function is_webmaster($user_status = ''): bool
 {
@@ -1478,7 +1468,6 @@ function is_webmaster($user_status = ''): bool
  *
  * @param string $action edit/delete/validate
  * @param int $comment_author_id
- * @return bool
  */
 function can_manage_comment($action, $comment_author_id): bool
 {
@@ -1522,7 +1511,6 @@ function can_manage_comment($action, $comment_author_id): bool
  *    - visible_images
  * @param string $prefix_condition prefixes query if condition is not empty
  * @param boolean $force_one_condition use at least "1 = 1"
- * @return string
  */
 function get_sql_condition_FandF(
     $condition_fields,
@@ -1600,9 +1588,6 @@ function get_sql_condition_FandF(
 
 /**
  * Returns sql WHERE condition for recent photos/albums for current user.
- *
- * @param string $db_field
- * @return string
  */
 function get_recent_photos_sql(string $db_field): string
 {
@@ -1619,8 +1604,6 @@ function get_recent_photos_sql(string $db_field): string
  * Performs auto-connection if authentication key is valid.
  *
  * @since 2.8
- *
- * @return bool
  */
 function auth_key_login($auth_key, $connection_by_header = false): bool
 {
@@ -1806,7 +1789,6 @@ SELECT
  *
  * @since 2.8
  * @param int $user_id
- * @return null
  */
 function deactivate_user_auth_keys($user_id): void
 {
@@ -1825,7 +1807,6 @@ UPDATE '.USER_AUTH_KEYS_TABLE.'
  *
  * @since 11
  * @param int $user_id
- * @return null
  */
 function deactivate_password_reset_key($user_id): void
 {
@@ -2399,7 +2380,6 @@ SELECT
  *
  * @since 16
  * @param int $user_id
- * @param string $pkid
  * @return string|bool
  */
 function revoke_api_key($user_id, string $pkid)
@@ -2435,7 +2415,6 @@ SELECT
  *
  * @since 16
  * @param int $user_id
- * @param string $pkid
  * @return string|bool
  */
 function edit_api_key($user_id, string $pkid, $api_name)
@@ -2469,7 +2448,6 @@ SELECT
  * Get all api_key
  *
  * @since 16
- * @param string $user_id
  * @return array|false
  */
 function get_api_key(string $user_id): false|array
@@ -2544,7 +2522,6 @@ SELECT
  * Get all available api_key
  *
  * @since 16
- * @param string $user_id
  * @return array|false
  */
 function get_available_api_key(string $user_id)
@@ -2569,7 +2546,6 @@ function get_available_api_key(string $user_id)
  * Is connected with pwg_ui (identification.php)
  *
  * @since 16
- * @return bool
  */
 function connected_with_pwg_ui(): bool
 {
@@ -2638,7 +2614,6 @@ function generate_user_code(): array
  * @since 16
  * @param string $secret
  * @param string $code
- * @return bool
  */
 function verify_user_code($secret, $code): bool
 {

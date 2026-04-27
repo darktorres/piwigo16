@@ -775,13 +775,13 @@ parameters:
 			path: admin/include/check_integrity.class.php
 
 		-
-			message: '#^PHPDoc tag @param has invalid value \(void\)\: Unexpected token "\\n     \* ", expected variable at offset 54 on line 4$#'
+			message: '#^PHPDoc tag @param has invalid value \(void\)\: Unexpected token "\\n     ", expected variable at offset 54 on line 4$#'
 			identifier: phpDoc.parseError
 			count: 2
 			path: admin/include/check_integrity.class.php
 
 		-
-			message: '#^PHPDoc tag @param has invalid value \(void\)\: Unexpected token "\\n     \* ", expected variable at offset 59 on line 4$#'
+			message: '#^PHPDoc tag @param has invalid value \(void\)\: Unexpected token "\\n     ", expected variable at offset 59 on line 4$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: admin/include/check_integrity.class.php
@@ -1489,7 +1489,7 @@ parameters:
 			path: admin/include/functions_history.inc.php
 
 		-
-			message: '#^PHPDoc tag @param has invalid value \(array\)\: Unexpected token "\\n ", expected variable at offset 147 on line 7$#'
+			message: '#^PHPDoc tag @param has invalid value \(array\)\: Unexpected token "\\n ", expected variable at offset 123 on line 6$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: admin/include/functions_history.inc.php
@@ -1924,6 +1924,12 @@ parameters:
 			path: admin/include/functions_upload.inc.php
 
 		-
+			message: '#^Binary operation "\." between ''add_uploaded_file \:…'' and array\<string\>\|string\|null results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
 			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
 			identifier: function.resultUnused
 			count: 2
@@ -2218,7 +2224,7 @@ parameters:
 			path: admin/include/functions_upload.inc.php
 
 		-
-			message: '#^Parameter \#1 \$src of function fetchRemote expects string, string\|null given\.$#'
+			message: '#^Parameter \#1 \$src of function fetchRemote expects string, array\<string\>\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/functions_upload.inc.php
@@ -5941,6 +5947,12 @@ parameters:
 			path: admin/photos_add_ftp.php
 
 		-
+			message: '#^Binary operation "\." between array\|string and string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: admin/picture_coi.php
+
+		-
 			message: '#^Parameter \#2 \$type of function delete_element_derivatives expects ''all''\|int, ''custom'' given\.$#'
 			identifier: argument.type
 			count: 1
@@ -7285,12 +7297,6 @@ parameters:
 			path: i.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
-			identifier: include.fileNotFound
-			count: 1
-			path: i.php
-
-		-
 			message: '#^Variable \$conf might not be defined\.$#'
 			identifier: variable.undefined
 			count: 11
@@ -8347,7 +8353,7 @@ parameters:
 			path: include/dblayer/functions_mysqli.inc.php
 
 		-
-			message: '#^PHPDoc tag @param has invalid value \(int\)\: Unexpected token "\\n ", expected variable at offset 119 on line 6$#'
+			message: '#^PHPDoc tag @param has invalid value \(int\)\: Unexpected token "\\n ", expected variable at offset 70 on line 4$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: include/dblayer/functions_mysqli.inc.php
@@ -8485,14 +8491,20 @@ parameters:
 			path: include/derivative.inc.php
 
 		-
-			message: '#^Method DerivativeImage\:\:get_url\(\) should return string but returns array\|string\.$#'
-			identifier: return.type
-			count: 2
+			message: '#^Method DerivativeImage\:\:get_url\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
 			path: include/derivative.inc.php
 
 		-
 			message: '#^Method DerivativeImage\:\:thumb_url\(\) has parameter \$infos with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Method DerivativeImage\:\:thumb_url\(\) should return string but returns array\|string\.$#'
+			identifier: return.type
 			count: 1
 			path: include/derivative.inc.php
 
@@ -8503,9 +8515,9 @@ parameters:
 			path: include/derivative.inc.php
 
 		-
-			message: '#^Method DerivativeImage\:\:url\(\) should return string but returns array\|string\.$#'
-			identifier: return.type
-			count: 2
+			message: '#^Method DerivativeImage\:\:url\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
 			path: include/derivative.inc.php
 
 		-
@@ -8523,12 +8535,6 @@ parameters:
 		-
 			message: '#^PHPDoc tag @param references unknown parameter\: \$mawh$#'
 			identifier: parameter.notFound
-			count: 2
-			path: include/derivative.inc.php
-
-		-
-			message: '#^PHPDoc tag @return with type bool is incompatible with native type int\.$#'
-			identifier: return.phpDocType
 			count: 2
 			path: include/derivative.inc.php
 
@@ -8575,12 +8581,6 @@ parameters:
 			path: include/derivative_params.inc.php
 
 		-
-			message: '#^Method DerivativeParams\:\:__serialize\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/derivative_params.inc.php
-
-		-
 			message: '#^Method DerivativeParams\:\:add_url_tokens\(\) has parameter \$tokens with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -8617,7 +8617,7 @@ parameters:
 			path: include/derivative_params.inc.php
 
 		-
-			message: '#^PHPDoc tag @param has invalid value \(float\)\: Unexpected token "\\n \* ", expected variable at offset 59 on line 4$#'
+			message: '#^PHPDoc tag @param has invalid value \(float\)\: Unexpected token "\\n ", expected variable at offset 59 on line 4$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: include/derivative_params.inc.php
@@ -9046,12 +9046,6 @@ parameters:
 			path: include/functions.inc.php
 
 		-
-			message: '#^Function format_date\(\) has parameter \$original with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: include/functions.inc.php
-
-		-
 			message: '#^Function format_date\(\) has parameter \$show with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -9322,7 +9316,7 @@ parameters:
 			path: include/functions.inc.php
 
 		-
-			message: '#^PHPDoc tag @param has invalid value \(mixed options can contain\)\: Unexpected token "options", expected variable at offset 240 on line 9$#'
+			message: '#^PHPDoc tag @param has invalid value \(mixed options can contain\)\: Unexpected token "options", expected variable at offset 213 on line 8$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: include/functions.inc.php
@@ -9358,12 +9352,6 @@ parameters:
 			path: include/functions.inc.php
 
 		-
-			message: '#^PHPDoc tag @return with type int is incompatible with native type string\.$#'
-			identifier: return.phpDocType
-			count: 1
-			path: include/functions.inc.php
-
-		-
 			message: '#^PHPDoc tag @return with type string is incompatible with native type array\.$#'
 			identifier: return.phpDocType
 			count: 1
@@ -9379,6 +9367,12 @@ parameters:
 			message: '#^Parameter \#1 \$hour of method DateTime\:\:setTime\(\) expects int, int\|string given\.$#'
 			identifier: argument.type
 			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#1 \$original of function format_date expects int\|string\|null, DateTime\|false given\.$#'
+			identifier: argument.type
+			count: 5
 			path: include/functions.inc.php
 
 		-
@@ -9518,12 +9512,6 @@ parameters:
 
 		-
 			message: '#^Function display_select_cat_wrapper\(\) has parameter \$fullname with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: include/functions_category.inc.php
-
-		-
-			message: '#^Function display_select_cat_wrapper\(\) has parameter \$query with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
 			path: include/functions_category.inc.php
@@ -11104,12 +11092,6 @@ parameters:
 			path: include/functions_search.inc.php
 
 		-
-			message: '#^PHPDoc tag @return with type null is incompatible with native type void\.$#'
-			identifier: return.phpDocType
-			count: 1
-			path: include/functions_session.inc.php
-
-		-
 			message: '#^Parameter \#1 \$length of function random_bytes expects int\<1, max\>, int given\.$#'
 			identifier: argument.type
 			count: 1
@@ -11512,19 +11494,19 @@ parameters:
 			path: include/functions_url.inc.php
 
 		-
-			message: '#^PHPDoc tag @param has invalid value \(array\)\: Unexpected token "\\n \* ", expected variable at offset 171 on line 7$#'
+			message: '#^PHPDoc tag @param has invalid value \(array\)\: Unexpected token "\\n ", expected variable at offset 171 on line 7$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: include/functions_url.inc.php
 
 		-
-			message: '#^PHPDoc tag @param has invalid value \(array\)\: Unexpected token "\\n \* ", expected variable at offset 67 on line 4$#'
+			message: '#^PHPDoc tag @param has invalid value \(array\)\: Unexpected token "\\n ", expected variable at offset 67 on line 4$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: include/functions_url.inc.php
 
 		-
-			message: '#^PHPDoc tag @param has invalid value \(array\)\: Unexpected token "\\n \* ", expected variable at offset 91 on line 4$#'
+			message: '#^PHPDoc tag @param has invalid value \(array\)\: Unexpected token "\\n ", expected variable at offset 91 on line 4$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: include/functions_url.inc.php
@@ -11548,13 +11530,13 @@ parameters:
 			path: include/functions_url.inc.php
 
 		-
-			message: '#^PHPDoc tag @param has invalid value \(null\)\: Unexpected token "\\n \* ", expected variable at offset 61 on line 4$#'
+			message: '#^PHPDoc tag @param has invalid value \(null\)\: Unexpected token "\\n ", expected variable at offset 61 on line 4$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: include/functions_url.inc.php
 
 		-
-			message: '#^PHPDoc tag @param has invalid value \(null\)\: Unexpected token "\\n \* ", expected variable at offset 74 on line 4$#'
+			message: '#^PHPDoc tag @param has invalid value \(null\)\: Unexpected token "\\n ", expected variable at offset 74 on line 4$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: include/functions_url.inc.php
@@ -11575,12 +11557,6 @@ parameters:
 			message: '#^PHPDoc tag @return has invalid value \(\$url embellished\)\: Unexpected token "\$url", expected type at offset 63 on line 5$#'
 			identifier: phpDoc.parseError
 			count: 1
-			path: include/functions_url.inc.php
-
-		-
-			message: '#^PHPDoc tag @return with type null is incompatible with native type void\.$#'
-			identifier: return.phpDocType
-			count: 2
 			path: include/functions_url.inc.php
 
 		-
@@ -11866,12 +11842,6 @@ parameters:
 			message: '#^PHPDoc tag @return with type int is incompatible with native type void\.$#'
 			identifier: return.phpDocType
 			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			message: '#^PHPDoc tag @return with type null is incompatible with native type void\.$#'
-			identifier: return.phpDocType
-			count: 2
 			path: include/functions_user.inc.php
 
 		-
@@ -18100,6 +18070,12 @@ parameters:
 			path: include/template.class.php
 
 		-
+			message: '#^Method PwgTemplateAdapter\:\:derivative_url\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: include/template.class.php
+
+		-
 			message: '#^Method PwgTemplateAdapter\:\:l10n\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -20048,6 +20024,18 @@ parameters:
 			path: include/ws_functions/pwg.permissions.php
 
 		-
+			message: '#^Binary operation "\." between ''\<span\>\<img src\="'' and array\|string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Binary operation "\." between array\|string and non\-falsy\-string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -20456,14 +20444,14 @@ parameters:
 			path: include/ws_functions/pwg.users.php
 
 		-
-			message: '#^Function ws_get_api_key\(\) has no return type specified\.$#'
-			identifier: missingType.return
+			message: '#^Function ws_get_api_key\(\) has parameter \$service with no type specified\.$#'
+			identifier: missingType.parameter
 			count: 1
 			path: include/ws_functions/pwg.users.php
 
 		-
-			message: '#^Function ws_get_api_key\(\) has parameter \$service with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Function ws_get_api_key\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: include/ws_functions/pwg.users.php
 
@@ -20732,8 +20720,8 @@ parameters:
 			path: include/ws_protocols/rest_encoder.php
 
 		-
-			message: '#^Method PwgRestEncoder\:\:encode_array\(\) has parameter \$xml_attributes with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Method PwgRestEncoder\:\:encode_array\(\) has parameter \$xml_attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: include/ws_protocols/rest_encoder.php
 

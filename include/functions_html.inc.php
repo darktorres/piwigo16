@@ -7,12 +7,9 @@ declare(strict_types=1);
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
 /**
  * @package functions\html
  */
-
-
 /**
  * Generates breadcrumb from categories list.
  * Categories string returned contains categories as given in the input
@@ -22,7 +19,6 @@ declare(strict_types=1);
  *
  * @param array $cat_informations
  * @param string|null $url
- * @return string
  */
 function get_cat_display_name($cat_informations, $url = ''): string
 {
@@ -77,7 +73,6 @@ function get_cat_display_name($cat_informations, $url = ''): string
  * @param string|null $url
  * @param bool $single_link
  * @param string|null $link_class
- * @return string
  */
 function get_cat_display_name_cache(
     $uppercats,
@@ -160,7 +155,6 @@ SELECT id, name, permalink
  *
  * @param int $cat_id
  * @param string|null $url
- * @return string
  */
 function get_cat_display_name_from_id($cat_id, $url = ''): string
 {
@@ -263,7 +257,6 @@ function access_denied(): void
  * Exits the current script with 403 code.
  * @todo nice display if $template loaded
  *
- * @param string $msg
  * @param string|null $alternate_url redirect to this url
  */
 function page_forbidden(string $msg, $alternate_url = null): void
@@ -285,7 +278,6 @@ function page_forbidden(string $msg, $alternate_url = null): void
  * Exits the current script with 400 code.
  * @todo nice display if $template loaded
  *
- * @param string $msg
  * @param string|null $alternate_url redirect to this url
  */
 function bad_request(string $msg, $alternate_url = null): void
@@ -307,7 +299,6 @@ function bad_request(string $msg, $alternate_url = null): void
  * Exits the current script with 404 code.
  * @todo nice display if $template loaded
  *
- * @param string $msg
  * @param string|null $alternate_url redirect to this url
  */
 function page_not_found(string $msg, $alternate_url = null): void
@@ -329,7 +320,6 @@ function page_not_found(string $msg, $alternate_url = null): void
  * Exits the current script with 500 code.
  * @todo nice display if $template loaded
  *
- * @param string $msg
  * @param string|null $title
  * @param bool $show_trace
  */
@@ -370,8 +360,6 @@ $btrace_msg
 
 /**
  * Returns the breadcrumb to be displayed above thumbnails on tag page.
- *
- * @return string
  */
 function get_tags_content_title(): string
 {
@@ -385,8 +373,6 @@ function get_tags_content_title(): string
 
 /**
  * Returns the breadcrumb to be displayed above thumbnails on combined categories page.
- *
- * @return string
  */
 function get_combined_categories_content_title(): string
 {
@@ -476,7 +462,6 @@ function set_status_header($code, $text = ''): void
  * This method is called by a trigger_notify()
  *
  * @param string $desc
- * @return string
  */
 function render_category_literal_description($desc): string
 {

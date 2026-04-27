@@ -29,12 +29,9 @@ check_input_parameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end
 // +-----------------------------------------------------------------------+
 // | Functions                                                             |
 // +-----------------------------------------------------------------------+
-
 /**
  * checks the validity of input parameters, fills $page['errors'] and
  * $page['infos'] and send an email with the verification code
- *
- * @return bool
  */
 function process_verification_code(): bool
 {

@@ -591,7 +591,6 @@ function get_fs_directories($path, $recursive = true): array
  * category
  *
  * @param array categories
- * @return void
  */
 function save_categories_order($categories): void
 {
@@ -1039,7 +1038,6 @@ SELECT id, uppercats, site_id
  * Returns an array with all file system files according to $conf['file_ext']
  *
  *
- * @param string $path
  * @param bool $recursive
  * @return array
  */
@@ -2156,7 +2154,6 @@ function create_table_add_character_set($query)
  *
  * @param int $MinLevelAccess
  * @param int $MaxLevelAccess
- * @return array
  */
 function get_user_access_level_html_options($MinLevelAccess = ACCESS_FREE, $MaxLevelAccess = ACCESS_CLOSED): array
 {
@@ -2244,7 +2241,6 @@ SELECT id
  * will be replaced by admin cat_modify page
  *
  * @param int $category_id
- * @return bool
  */
 function cat_admin_access($category_id): bool
 {
@@ -2265,7 +2261,6 @@ function cat_admin_access($category_id): bool
  * @param string|Ressource $dest - can be a file ressource or string
  * @param array $get_data - data added to request url
  * @param array $post_data - data transmitted with POST
- * @param string $user_agent
  * @param int $step (internal use)
  * @return bool
  */
@@ -2523,7 +2518,6 @@ SELECT '.$conf['user_fields']['username'].'
  * Get url on piwigo.org for newsletter subscription
  *
  * @param string $language (unused)
- * @return string
  */
 function get_newsletter_subscribe_base_url($language = 'en_UK'): string
 {
@@ -2534,7 +2528,6 @@ function get_newsletter_subscribe_base_url($language = 'en_UK'): string
  * Get url on piwigo.org for old newsletters
  *
  * @param string $language (unused)
- * @return string
  */
 function get_old_newsletters_base_url($language = 'en_UK'): string
 {
@@ -2605,7 +2598,6 @@ function get_active_menu($menu_page)
 /**
  * Get tags list from SQL query (ids are surrounded by ~~, for get_tag_ids()).
  *
- * @param string $query
  * @param boolean $only_user_language - if true, only local name is returned for
  *    multilingual tags (if ExtendedDescription plugin is active)
  * @return array[] ('id', 'name')
@@ -2894,7 +2886,6 @@ function delete_element_derivatives(array $infos, $type = 'all'): void
 /**
  * Returns an array containing sub-directories, excluding ".svn"
  *
- * @param string $directory
  * @return string[]
  */
 function get_dirs(string $directory): array
@@ -2917,7 +2908,6 @@ function get_dirs(string $directory): array
 /**
  * Recursively delete a directory.
  *
- * @param string $path
  * @param string $trash_path, try to move the directory to this path if it cannot be delete
  */
 function deltree(string $path, $trash_path = null)
@@ -3121,7 +3111,6 @@ SELECT
  *
  * @param int category_id
  * @param int[] images
- * @return void
  */
 function save_images_order($category_id, $images): void
 {

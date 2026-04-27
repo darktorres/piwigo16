@@ -50,8 +50,6 @@ function get_mail_sender_email()
  * - smtp_secure
  * - email_webmaster
  * - name_webmaster
- *
- * @return array
  */
 function get_mail_configuration(): array
 {
@@ -81,7 +79,6 @@ function get_mail_configuration(): array
  *
  * @param string $name
  * @param string $email
- * @return string
  */
 function format_email($name, $email): string
 {
@@ -183,7 +180,6 @@ function get_clean_recipients_list($data): array
  * Returns an email address list with minimal email string.
  *
  * @param string $email_list - comma separated
- * @return string
  */
 #[\Deprecated(message: '2.6')]
 function get_strict_email_list($email_list): string
@@ -205,7 +201,6 @@ function get_strict_email_list($email_list): string
  * Return an new mail template.
  *
  * @param string $email_format - text/html or text/plain
- * @return Template
  */
 function &get_mail_template(string $email_format): \Template
 {
@@ -217,7 +212,6 @@ function &get_mail_template(string $email_format): \Template
  * Return string email format (text/html or text/plain).
  *
  * @param bool $is_html
- * @return string
  */
 function get_str_email_format($is_html): string
 {
@@ -865,7 +859,6 @@ function move_css_to_body($content)
  *
  * @param boolean $success
  * @param PHPMailer $mail
- * @param array $args
  */
 function pwg_send_mail_test($success, $mail, array $args): void
 {
@@ -894,9 +887,6 @@ function pwg_send_mail_test($success, $mail, array $args): void
  *
  * Return the content mail to send
  * @since 15
- * @param string $username
- * @param string $password_link
- * @param string $gallery_title
  * @param string $remaining_time
  * @return array mail content
  */
@@ -930,7 +920,6 @@ function pwg_generate_reset_password_mail(string $username, string $password_lin
  *
  * Return the content mail to send
  * @since 15
- * @param string $username
  * @param string $password_link
  * @param string $gallery_title
  * @param string $remaining_time
@@ -967,7 +956,6 @@ function pwg_generate_set_password_mail(string $username, string $set_password_l
  *
  * Return the content mail to send
  * @since 16
- * @param string $code
  * @return array mail content
  */
 function pwg_generate_code_verification_mail(string $code): array

@@ -100,7 +100,6 @@ class BlockManager
      * Returns true if the block is hidden.
      *
      * @param string $block_id
-     * @return bool
      */
     public function is_hidden($block_id): bool
     {

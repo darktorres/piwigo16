@@ -115,7 +115,6 @@ function pwg_get_db_version()
 /**
  * Execute a query
  *
- * @param string $query
  * @return mysqli_result|bool
  */
 function pwg_query(string $query)
@@ -164,8 +163,6 @@ function pwg_query(string $query)
 /**
  * Get max value plus one of a particular column.
  *
- * @param string $column
- * @param string $table
  * @param int
  */
 function pwg_db_nextval(string $column, string $table)
@@ -256,7 +253,6 @@ define('MASS_UPDATES_SKIP_EMPTY', 1);
 /**
  * Updates multiple lines in a table.
  *
- * @param string $tablename
  * @param array $dbfields - contains 'primary' and 'update' arrays
  * @param array $datas - indexed by column names
  * @param int $flags - if MASS_UPDATES_SKIP_EMPTY, empty values do not overwrite existing ones
@@ -614,7 +610,6 @@ function pwg_db_cast_to_text($string)
 /**
  * Returns an array containing the possible values of an enum field.
  *
- * @param string $table
  * @param string $field
  * @return string[]
  */
@@ -792,10 +787,8 @@ function my_error(string $header, $die): void
  *
  * @since 2.6
  *
- * @param string $query
  * @param string $key_name
  * @param string $value_name
- * @return array
  */
 function query2array(string $query, $key_name = null, $value_name = null): array
 {

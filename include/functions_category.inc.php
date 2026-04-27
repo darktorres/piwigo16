@@ -275,7 +275,7 @@ function display_select_categories(
  * @see display_select_categories()
  */
 function display_select_cat_wrapper(
-    $query,
+    string $query,
     $selecteds,
     string $blockname,
     $fullname = true
@@ -368,8 +368,6 @@ UPDATE '.OLD_PERMALINKS_TABLE.' SET last_hit=NOW(), hit=hit+1
  * @param int $cat_count_images nb images in category (including subcats)
  * @param int $cat_count_categories nb subcats
  * @param bool $short_message if true append " in this album"
- * @param string $separator
- * @return string
  */
 function get_display_images_count($cat_nb_images, $cat_count_images, $cat_count_categories, $short_message = true, string $separator = '\n'): string
 {
@@ -446,9 +444,7 @@ SELECT image_id
  * Get computed array of categories, that means cache data of all categories
  * available for the current user (count_categories, count_images, etc.).
  *
- * @param array &$userdata
  * @param int $filter_days number of recent days to filter on or null
- * @return array
  */
 function get_computed_categories(array &$userdata, $filter_days = null): array
 {
@@ -545,7 +541,6 @@ FROM '.CATEGORIES_TABLE.' as c
 /**
  * Removes a category from computed array of categories and updates counters.
  *
- * @param array &$cats
  * @param array $cat category to remove
  */
 function remove_computed_category(array &$cats, array $cat): void
@@ -577,7 +572,6 @@ function remove_computed_category(array &$cats, array $cat): void
  * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
  * @param string $order_by - optionally overwrite default photo order
  * @param bool $user_permissions
- * @return array
  */
 function get_image_ids_for_categories($cat_ids, $mode = 'AND', ?string $extra_images_where_sql = '', $order_by = '', $use_permissions = true): array
 {

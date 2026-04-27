@@ -56,7 +56,6 @@ class themes
     /**
      * Returns the maintain class of a theme
      * or build a new class with the procedural methods
-     * @param string $theme_id
      */
     private static function build_maintain_class(string $theme_id)
     {

@@ -7,17 +7,13 @@ declare(strict_types=1);
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
 /**
  * @package Derivatives
  */
-
-
 /**
  * Formats a size name into a 2 chars identifier usable in filename.
  *
  * @param string $t one of IMG_*
- * @return string
  */
 function derivative_to_url($t): string
 {
@@ -41,7 +37,6 @@ function size_to_url(array $s): int|string
 /**
  * @param int[] $s1
  * @param int[] $s2
- * @return bool
  */
 function size_equals(array $s1, array $s2): bool
 {
@@ -63,7 +58,6 @@ function char_to_fraction($c): float|int
  * Converts a float into a char a-z.
  *
  * @param float
- * @return string
  */
 function fraction_to_char($f): string
 {
@@ -196,7 +190,6 @@ final class SizingParams
      *
      * @param int $w
      * @param int $h
-     * @return SizingParams
      */
     public static function classic($w, $h): \SizingParams
     {
@@ -207,7 +200,6 @@ final class SizingParams
      * Returns a square SizingParams object.
      *
      * @param int $x
-     * @return SizingParams
      */
     public static function square($w): \SizingParams
     {
@@ -311,9 +303,6 @@ final class DerivativeParams
     {
     }
 
-    /**
-     * @return array
-     */
     public function __serialize(): array
     {
         return ['last_mod_time' => $this->last_mod_time, 'sizing' => $this->sizing, 'sharpen' => $this->sharpen];
@@ -356,8 +345,6 @@ final class DerivativeParams
 
     /**
      * @todo : description of DerivativeParams::is_identity
-     *
-     * @return bool
      */
     public function is_identity($in_size): bool
     {

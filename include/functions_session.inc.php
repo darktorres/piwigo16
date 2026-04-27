@@ -53,7 +53,6 @@ if (isset($conf['session_save_handler'])
  * Characters used are a-z A-Z and numerical values.
  *
  * @param int $size
- * @return string
  */
 function generate_key($size): string
 {
@@ -94,8 +93,6 @@ function pwg_session_close(): bool
 
 /**
  * Returns a hash from current user IP
- *
- * @return string
  */
 function get_remote_addr_session_hash(): string
 {
@@ -117,7 +114,6 @@ function get_remote_addr_session_hash(): string
 /**
  * Called by PHP session manager, retrieves data stored in the sessions table.
  *
- * @param string $session_id
  * @return string
  */
 function pwg_session_read(string $session_id)
@@ -137,7 +133,6 @@ SELECT data
 /**
  * Called by PHP session manager, writes data in the sessions table.
  *
- * @param string $session_id
  * @param sring $data
  * @return true
  */
@@ -161,7 +156,6 @@ REPLACE INTO '.SESSIONS_TABLE.'
 /**
  * Called by PHP session manager, deletes data in the sessions table.
  *
- * @param string $session_id
  * @return true
  */
 function pwg_session_destroy(string $session_id): bool
@@ -197,9 +191,7 @@ DELETE
 /**
  * Persistently stores a variable for the current session.
  *
- * @param string $var
  * @param mixed $value
- * @return bool
  */
 function pwg_set_session_var(string $var, $value): bool
 {
@@ -213,7 +205,6 @@ function pwg_set_session_var(string $var, $value): bool
 /**
  * Retrieves the value of a persistent variable for the current session.
  *
- * @param string $var
  * @param mixed $default
  * @return mixed
  */
@@ -224,9 +215,6 @@ function pwg_get_session_var(string $var, $default = null)
 
 /**
  * Deletes a persistent variable for the current session.
- *
- * @param string $var
- * @return bool
  */
 function pwg_unset_session_var(string $var): bool
 {
@@ -242,7 +230,6 @@ function pwg_unset_session_var(string $var): bool
  *
  * @since 2.8
  * @param int $user_id
- * @return null
  */
 function delete_user_sessions($user_id): void
 {

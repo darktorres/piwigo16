@@ -114,7 +114,6 @@ function add_url_params($url, $params, $arg_separator = '&amp;')
  * build an index URL for a specific section
  *
  * @param array
- * @return string
  */
 function make_index_url(array $params = []): string
 {
@@ -151,9 +150,8 @@ function make_index_url(array $params = []): string
  *
  * @param array redefined keys
  * @param array removed keys
- * @return string
  */
-function duplicate_index_url($redefined = [], $removed = [])
+function duplicate_index_url($redefined = [], $removed = []): string
 {
     return make_index_url(
         params_for_duplication($redefined, $removed)
@@ -190,9 +188,8 @@ function params_for_duplication($redefined, $removed)
  *
  * @param array redefined keys
  * @param array removed keys
- * @return string
  */
-function duplicate_picture_url($redefined = [], $removed = [])
+function duplicate_picture_url($redefined = [], $removed = []): string
 {
     return make_picture_url(
         params_for_duplication($redefined, $removed)
@@ -203,7 +200,6 @@ function duplicate_picture_url($redefined = [], $removed = [])
  * create a picture URL on a specific section for a specific picture
  *
  * @param array
- * @return string
  */
 function make_picture_url(array $params): string
 {
@@ -277,7 +273,6 @@ function add_well_known_params_in_url(string $url, array $params): string
  * for details)
  *
  * @param array
- * @return string
  */
 function make_section_in_url(array $params): string
 {
@@ -403,7 +398,6 @@ function make_section_in_url(array $params): string
  *
  * @param array of url tokens to parse
  * @param int the index in the array of url tokens; in/out
- * @return array
  */
 function parse_section_url(array $tokens, &$next_token): array
 {
@@ -675,7 +669,6 @@ function get_element_url(array $element_info)
  * Indicate to build url with full path
  *
  * @param null
- * @return null
  */
 function set_make_full_url(): void
 {
@@ -696,7 +689,6 @@ function set_make_full_url(): void
  * Restore old parameter to build url with full path
  *
  * @param null
- * @return null
  */
 function unset_make_full_url(): void
 {

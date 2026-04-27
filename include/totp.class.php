@@ -93,7 +93,6 @@ class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @param int $timestamp timestamp used in second (default: 30)
      * @param int $check_interval Number of 30s steps to check before/after current (default: 1)
-     * @return bool
      */
     public static function verifyCode($code, $secret, $timestamp = 30, $check_interval = 1): bool
     {

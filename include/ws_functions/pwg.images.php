@@ -170,9 +170,6 @@ SELECT category_id, MAX(`rank`) AS max_rank
 
 /**
  * Merge chunks added by pwg.images.addChunk
- * @param string $output_filepath
- * @param string $original_sum
- * @param string $type
  */
 function merge_chunks(string $output_filepath, string $original_sum, string $type)
 {
@@ -231,7 +228,6 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
 
 /**
  * Deletes chunks added with pwg.images.addChunk
- * @param string $original_sum
  * @param string $type
  *
  * Function introduced for Piwigo 2.4 and the new "multiple size"

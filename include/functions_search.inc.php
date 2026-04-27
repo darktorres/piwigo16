@@ -89,9 +89,7 @@ function get_search_array($search_id): mixed
 /**
  * Returns the list of items corresponding to the advanced search array.
  *
- * @param array $search
  * @param string $images_where optional additional restriction on images table
- * @return array
  */
 function get_regular_search_results(array $search, ?string $images_where = ''): array
 {
@@ -694,8 +692,6 @@ SELECT
  * @since 15
  *
  * @param string $filter_name
- *
- * @return string
  */
 function get_clause_for_filter($filter_name): string
 {

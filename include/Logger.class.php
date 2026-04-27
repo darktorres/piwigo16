@@ -148,8 +148,6 @@ class Logger
 
     /**
      * Returns logger status.
-     *
-     * @return int
      */
     public function status(): int
     {
@@ -169,11 +167,10 @@ class Logger
     /**
      * Writes a $line to the log with a severity level of DEBUG.
      *
-     * @param string $line
      * @param string $cat
      * @param array $args
      */
-    public function debug($line, $cat = null, $args = []): void
+    public function debug(string $line, $cat = null, $args = []): void
     {
         $this->log(self::DEBUG, $line, $cat, $args);
     }
@@ -181,11 +178,10 @@ class Logger
     /**
      * Writes a $line to the log with a severity level of INFO.
      *
-     * @param string $line
      * @param string $cat
      * @param array $args
      */
-    public function info($line, $cat = null, $args = []): void
+    public function info(string $line, $cat = null, $args = []): void
     {
         $this->log(self::INFO, $line, $cat, $args);
     }
@@ -193,11 +189,10 @@ class Logger
     /**
      * Writes a $line to the log with a severity level of NOTICE.
      *
-     * @param string $line
      * @param string $cat
      * @param array $args
      */
-    public function notice($line, $cat = null, $args = []): void
+    public function notice(string $line, $cat = null, $args = []): void
     {
         $this->log(self::NOTICE, $line, $cat, $args);
     }
@@ -205,11 +200,10 @@ class Logger
     /**
      * Writes a $line to the log with a severity level of WARNING.
      *
-     * @param string $line
      * @param string $cat
      * @param array $args
      */
-    public function warn($line, $cat = null, $args = []): void
+    public function warn(string $line, $cat = null, $args = []): void
     {
         $this->log(self::WARNING, $line, $cat, $args);
     }
@@ -217,11 +211,10 @@ class Logger
     /**
      * Writes a $line to the log with a severity level of ERROR.
      *
-     * @param string $line
      * @param string $cat
      * @param array $args
      */
-    public function error($line, $cat = null, $args = []): void
+    public function error(string $line, $cat = null, $args = []): void
     {
         $this->log(self::ERROR, $line, $cat, $args);
     }
@@ -229,11 +222,10 @@ class Logger
     /**
      * Writes a $line to the log with a severity level of ALERT.
      *
-     * @param string $line
      * @param string $cat
      * @param array $args
      */
-    public function alert($line, $cat = null, $args = []): void
+    public function alert(string $line, $cat = null, $args = []): void
     {
         $this->log(self::ALERT, $line, $cat, $args);
     }
@@ -241,11 +233,10 @@ class Logger
     /**
      * Writes a $line to the log with a severity level of CRITICAL.
      *
-     * @param string $line
      * @param string $cat
      * @param array $args
      */
-    public function critical($line, $cat = null, $args = []): void
+    public function critical(string $line, $cat = null, $args = []): void
     {
         $this->log(self::CRITICAL, $line, $cat, $args);
     }
@@ -253,11 +244,10 @@ class Logger
     /**
      * Writes a $line to the log with a severity level of EMERGENCY.
      *
-     * @param string $line
      * @param string $cat
      * @param array $args
      */
-    public function emergency($line, $cat = null, $args = []): void
+    public function emergency(string $line, $cat = null, $args = []): void
     {
         $this->log(self::EMERGENCY, $line, $cat, $args);
     }
@@ -316,9 +306,7 @@ class Logger
      * Formats the message for logging.
      *
      * @param  string $level
-     * @param  string $message
      * @param  array  $context
-     * @return string
      */
     private function formatMessage($level, string $message, ?string $cat, $context): string
     {
@@ -339,8 +327,6 @@ class Logger
      *
      * PHP DateTime is dumb, and you have to resort to trickery to get microseconds
      * to work correctly, so here it is.
-     *
-     * @return string
      */
     private function getTimestamp(): string
     {
@@ -354,7 +340,6 @@ class Logger
      * Takes the given context and converts it to a string.
      *
      * @param  array $context
-     * @return string
      */
     private function contextToString($context): string
     {
@@ -395,7 +380,6 @@ class Logger
      * Converts level constants to string name.
      *
      * @param int $level
-     * @return string
      */
     public static function levelToCode($level): string
     {
@@ -414,9 +398,6 @@ class Logger
 
     /**
      * Converts level names to constant.
-     *
-     * @param string $code
-     * @return int
      */
     public static function codeToLevel(string $code): int
     {

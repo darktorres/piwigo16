@@ -21,7 +21,6 @@ include_once(PHPWG_ROOT_PATH.'/include/functions_metadata.inc.php');
  * @toto : clean code (factorize foreach)
  *
  * @param string $file
- * @return array
  */
 function get_sync_iptc_data($file): array
 {
@@ -62,9 +61,6 @@ function get_sync_iptc_data($file): array
 
 /**
  * Returns EXIF metadata to sync from a file, depending on EXIF mapping.
- *
- * @param string $file
- * @return array
  */
 function get_sync_exif_data(string $file): array
 {
@@ -307,14 +303,13 @@ SELECT id, path, representative_ext
  * @param int $site_id
  * @param boolean $recursive
  * @param boolean $only_new
- * @return array
  */
 function get_filelist(
     $category_id = '',
     $site_id = 1,
     $recursive = false,
     $only_new = false
-) {
+): array {
     // filling $cat_ids : all categories required
     $cat_ids = [];
 
@@ -364,7 +359,6 @@ SELECT id, path, representative_ext
  * commas. Other separators are converted into commas.
  *
  * @param string $keywords_string
- * @return string
  */
 function metadata_normalize_keywords_string($keywords_string): string
 {

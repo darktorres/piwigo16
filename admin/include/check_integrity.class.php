@@ -25,7 +25,6 @@ class check_integrity
      * Check integrities
      *
      * @param void
-     * @return void
      */
     public function check(): void
     {
@@ -139,7 +138,6 @@ class check_integrity
      * Display anomalies list
      *
      * @param void
-     * @return void
      */
     public function display(): void
     {
@@ -218,7 +216,6 @@ class check_integrity
      * Add anomaly data
      *
      * @param anomaly arguments
-     * @return void
      */
     public function add_anomaly(string $anomaly, $correction_fct = null, $correction_fct_args = null, $correction_msg = null): void
     {
@@ -242,7 +239,6 @@ class check_integrity
      * Update table config
      *
      * @param ignore list array
-     * @return void
      */
     public function update_conf($conf_ignore_list = []): void
     {
@@ -257,7 +253,6 @@ class check_integrity
      * Apply maintenance
      *
      * @param void
-     * @return void
      */
     public function maintenance(): void
     {

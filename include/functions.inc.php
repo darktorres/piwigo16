@@ -27,8 +27,6 @@ include_once(PHPWG_ROOT_PATH .'include/derivative.inc.php');
 
 /**
  * returns the current microsecond since Unix epoch
- *
- * @return int
  */
 function micro_seconds(): string
 {
@@ -42,8 +40,6 @@ function micro_seconds(): string
  * returns a float value coresponding to the number of seconds since
  * the unix epoch (1st January 1970) and the microseconds are precised
  * e.g. 1052343429.89276600
- *
- * @return float
  */
 function get_moment(): float
 {
@@ -100,7 +96,6 @@ function input_bool(string $key, ?bool $default = null, array $source = []): ?bo
  * returns the part of the string after the last "."
  *
  * @param string $filename
- * @return string
  */
 function get_extension($filename): string
 {
@@ -138,7 +133,6 @@ define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR
  *
  * @param string $dir
  * @param int $flags combination of MKGETDIR_xxx
- * @return bool
  */
 function mkgetdir($dir, $flags = MKGETDIR_DEFAULT): bool
 {
@@ -449,7 +443,6 @@ function do_log($image_id = null, $image_type = null)
  *
  * @param int $image_id
  * @param string $image_type
- * @return bool
  */
 function pwg_log($image_id = null, $image_type = null, $format_id = null): bool
 {
@@ -679,7 +672,6 @@ function pwg_activity($object, $object_id, $action, array $details = []): void
  *
  * @param DateTime $date1
  * @param DateTime $date2
- * @return DateInterval|stdClass
  */
 function dateDiff($date1, $date2): \DateInterval|\stdClass
 {
@@ -846,7 +838,7 @@ function format_date_legacy(int|string|null $original, $show = null, $format = n
  * @return string
  * @since 16
  */
-function format_date($original, $show = null, $format = null)
+function format_date(int|string|null $original, $show = null, $format = null)
 {
     global $user;
 
@@ -1007,8 +999,6 @@ function transform_date($original, $format_in, $format_out, $default = null)
 
 /**
  * append a variable to _$debug_ global
- *
- * @param string $string
  */
 function pwg_debug(string $string): void
 {
@@ -1030,7 +1020,6 @@ function pwg_debug(string $string): void
  * (presence of an exit() instruction.
  *
  * @param string $url
- * @return void
  */
 function redirect_http($url): void
 {
@@ -1053,7 +1042,6 @@ function redirect_http($url): void
  * @param string $url
  * @param string $msg
  * @param integer $refresh_time
- * @return void
  */
 function redirect_html($url, $msg = '', $refresh_time = 0): void
 {
@@ -1099,7 +1087,6 @@ function redirect_html($url, $msg = '', $refresh_time = 0): void
  * @param string $url
  * @param string $msg
  * @param integer $refresh_time
- * @return void
  */
 function redirect($url, $msg = '', $refresh_time = 0): void
 {
@@ -1156,9 +1143,6 @@ SELECT
 
 /**
  * check if a theme is installed (directory exsists)
- *
- * @param string $theme_id
- * @return bool
  */
 function check_theme_installed(string $theme_id): bool
 {
@@ -1172,7 +1156,6 @@ function check_theme_installed(string $theme_id): bool
  *
  * @param string $path
  * @param string $representative_ext
- * @return string
  */
 function original_to_representative($path, $representative_ext): string
 {
@@ -1187,7 +1170,6 @@ function original_to_representative($path, $representative_ext): string
  *
  * @param string $path
  * @param string $format_ext
- * @return string
  */
 function original_to_format($path, $format_ext): string
 {
@@ -1292,7 +1274,6 @@ function l10n(?string $key)
  * @param string $singular_key
  * @param string $plural_key
  * @param int $decimal
- * @return string
  */
 function l10n_dec($singular_key, $plural_key, $decimal): string
 {
@@ -1334,7 +1315,6 @@ function get_l10n_args($key, $args = ''): array
  *
  * @param array $key_args one l10n_args element or array of l10n_args elements
  * @param string $sep used when translated elements are concatened
- * @return string
  */
 function l10n_args($key_args, string $sep = "\n"): string
 {
@@ -1396,7 +1376,6 @@ SELECT '.$conf['user_fields']['email'].'
  * Add configuration parameters from database to global $conf array
  *
  * @param string $condition SQL condition
- * @return void
  */
 function load_conf_from_db(?string $condition = '', $die_on_condition_with_no_result = true): void
 {
@@ -1431,8 +1410,6 @@ SELECT param, value
  * Is the config table currentable writeable?
  *
  * @since 14
- *
- * @return boolean
  */
 function pwg_is_dbconf_writeable(): bool
 {
@@ -1450,14 +1427,13 @@ function pwg_is_dbconf_writeable(): bool
 }
 
 /**
- * Add or update a config parameter
- *
- * @param string $param
- * @param string $value
- * @param boolean $updateGlobal update global *$conf* variable
- * @param callable $parser function to apply to the value before save in database
-      (eg: serialize, json_encode) will not be applied to *$conf* if *$parser* is *true*
- */
+* Add or update a config parameter
+*
+* @param string $value
+* @param boolean $updateGlobal update global *$conf* variable
+* @param callable $parser function to apply to the value before save in database
+     (eg: serialize, json_encode) will not be applied to *$conf* if *$parser* is *true*
+*/
 function conf_update_param(string $param, $value, $updateGlobal = false, $parser = null): void
 {
     if ($parser != null) {
@@ -1577,13 +1553,11 @@ function prepend_append_array_items($array, $prepend_str, $append_str)
  * creates an simple hashmap based on a SQL query.
  * choose one to be the key, another one to be the value.
  *
- * @param string $query
  * @param string $keyname
  * @param string $valuename
- * @return array
  */
 #[\Deprecated(message: '2.6')]
-function simple_hash_from_query($query, $keyname, $valuename): array
+function simple_hash_from_query(string $query, $keyname, $valuename): array
 {
     return query2array($query, $keyname, $valuename);
 }
@@ -1592,12 +1566,10 @@ function simple_hash_from_query($query, $keyname, $valuename): array
  * creates an associative array based on a SQL query.
  * choose one to be the key
  *
- * @param string $query
  * @param string $keyname
- * @return array
  */
 #[\Deprecated(message: '2.6')]
-function hash_from_query($query, $keyname): array
+function hash_from_query(string $query, $keyname): array
 {
     return query2array($query, $keyname);
 }
@@ -1607,12 +1579,10 @@ function hash_from_query($query, $keyname): array
  * if _$fieldname_ is empty the returned value will be an array of arrays
  * if _$fieldname_ is provided the returned value will be a one dimension array
  *
- * @param string $query
  * @param string $fieldname
- * @return array
  */
 #[\Deprecated(message: '2.6')]
-function array_from_query($query, $fieldname = false): array
+function array_from_query(string $query, $fieldname = false): array
 {
     if (false === $fieldname) {
         return query2array($query);
@@ -1624,8 +1594,6 @@ function array_from_query($query, $fieldname = false): array
 /**
  * Return the basename of the current script.
  * The lowercase case filename of the current script without extension
- *
- * @return string
  */
 function script_basename(): string
 {
@@ -1669,7 +1637,6 @@ function get_filter_page_value($value_name)
 
 /**
  * return the character set used by Piwigo
- * @return string
  */
 function get_pwg_charset(): string
 {
@@ -1709,7 +1676,6 @@ function get_parent_language($lang_id = null)
  * tries to load in descending order:
  *   param language, user language, default language
  *
- * @param string $filename
  * @param string $dirname
  * @param mixed options can contain
  *     @option string language - language to load
@@ -1718,7 +1684,6 @@ function get_parent_language($lang_id = null)
  *     @option bool|string force_fallback - force pre-loading of another language
  *        default language if *true* or specified language
  *     @option bool local - if true load file from local directory
- * @return boolean|string
  */
 function load_language(string $filename, $dirname = '', array $options = []): string|bool
 {
@@ -1834,7 +1799,6 @@ function load_language(string $filename, $dirname = '', array $options = []): st
  *
  * @param string $str
  * @param string $source_charset
- * @param string $dest_charset
  */
 function convert_charset($str, $source_charset, string $dest_charset)
 {
@@ -1858,8 +1822,6 @@ function convert_charset($str, $source_charset, string $dest_charset)
 
 /**
  * makes sure a index.htm protects the directory from browser file listing
- *
- * @param string $dir
  */
 function secure_directory(string $dir): void
 {
@@ -1873,8 +1835,6 @@ function secure_directory(string $dir): void
  * returns a "secret key" that is to be sent back when a user posts a form
  *
  * @param int $valid_after_seconds - key validity start time from now
- * @param string $aditionnal_data_to_hash
- * @return string
  */
 function get_ephemeral_key($valid_after_seconds, string $aditionnal_data_to_hash = ''): string
 {
@@ -1892,8 +1852,6 @@ function get_ephemeral_key($valid_after_seconds, string $aditionnal_data_to_hash
  * verify a key sent back with a form
  *
  * @param string $key
- * @param string $aditionnal_data_to_hash
- * @return bool
  */
 function verify_ephemeral_key(array $key, string $aditionnal_data_to_hash = ''): bool
 {
@@ -1922,8 +1880,6 @@ function verify_ephemeral_key(array $key, string $aditionnal_data_to_hash = ''):
  * @param int $start
  * @param int $nb_element_page
  * @param bool $clean_url
- * @param string $param_name
- * @return array
  */
 function create_navigation_bar(string $url, $nb_element, $start, $nb_element_page, $clean_url = false, string $param_name = 'start'): array
 {
@@ -2034,8 +1990,6 @@ function check_pwg_token(): void
 
 /**
  * get pwg_token used to prevent csrf attacks
- *
- * @return string
  */
 function get_pwg_token(): string
 {
@@ -2116,7 +2070,6 @@ function get_privacy_level_options(): array
  * return the branch from the version. For example version 11.1.2 is on branch 11
  *
  * @param string $version
- * @return string
  */
 function get_branch_from_version($version): string
 {
@@ -2202,7 +2155,6 @@ function url_check_format($url)
  * check email format
  *
  * @param string $mail_address
- * @return bool
  */
 function email_check_format($mail_address): bool
 {
@@ -2879,8 +2831,6 @@ function get_container_info(): array
  * Possible values : YYYY-MM-DD HH-MM-SS or YYYY-MM-DD
  *
  * @since 16.3
- * @param string $datetime
- * @return bool
  */
 function is_valid_mysql_datetime(string $datetime): bool
 {

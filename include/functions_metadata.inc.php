@@ -7,18 +7,14 @@ declare(strict_types=1);
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
 /**
  * @package functions\metadata
  */
-
-
 /**
  * returns informations from IPTC metadata, mapping is done in this function.
  *
  * @param string $filename
  * @param array $map
- * @return array
  */
 function get_iptc_data($filename, $map, $array_sep = ','): array
 {
@@ -106,9 +102,7 @@ function clean_iptc_value($value)
 /**
  * returns informations from EXIF metadata, mapping is done in this function.
  *
- * @param string $filename
  * @param array $map
- * @return array
  */
 function get_exif_data(string $filename, $map): array
 {

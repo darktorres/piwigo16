@@ -7,12 +7,9 @@ declare(strict_types=1);
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
 /**
  * @package functions\notification
  */
-
-
 /**
  * Get standard sql where in order to restrict and filter categories and images.
  * IMAGE_CATEGORY_TABLE must be named "ic" in the query
@@ -20,7 +17,6 @@ declare(strict_types=1);
  * @param string $prefix_condition
  * @param string $img_field
  * @param bool $force_one_condition
- * @return string
  */
 function get_std_sql_where_restrict_filter(
     $prefix_condition,
@@ -320,7 +316,6 @@ function new_users($start = null, $end = null)
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return boolean
  */
 function news_exists($start = null, $end = null): bool
 {
@@ -365,7 +360,6 @@ function add_news_line(&$news, $count, $singular_key, $plural_key, ?string $url 
  * @param string $end (mysql datetime format)
  * @param bool $exclude_img_cats if true, no info about new images/categories
  * @param bool $add_url add html link around news
- * @return array
  */
 function news($start = null, $end = null, $exclude_img_cats = false, $add_url = false, $auth_key = null): array
 {
@@ -500,7 +494,6 @@ SELECT
  * Same as get_recent_post_dates() but parameters as an indexed array.
  * @see get_recent_post_dates()
  *
- * @param array $args
  * @return array
  */
 function get_recent_post_dates_array(array $args)
@@ -518,7 +511,6 @@ function get_recent_post_dates_array(array $args)
  * @todo clean up HTML output, currently messy and invalid !
  *
  * @param array $date_detail returned value of get_recent_post_dates()
- * @return string
  */
 function get_html_description_recent_post_date(array $date_detail, $auth_key = null): string
 {
@@ -581,7 +573,6 @@ function get_html_description_recent_post_date(array $date_detail, $auth_key = n
  * Returns title about recently published elements grouped by post date.
  *
  * @param array $date_detail returned value of get_recent_post_dates()
- * @return string
  */
 function get_title_recent_post_date(array $date_detail): string
 {

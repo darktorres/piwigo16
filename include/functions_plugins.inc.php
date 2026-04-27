@@ -271,7 +271,6 @@ function trigger_notify($event): void
  *
  * @param string $plugin_id
  * @param mixed &$data
- * @return bool
  */
 function set_plugin_data($plugin_id, &$data): bool
 {
@@ -302,7 +301,6 @@ function &get_plugin_data($plugin_id)
  *
  * @param string $state optional filter
  * @param string $id returns only data about given plugin
- * @return array
  */
 function get_db_plugins(?string $state = '', ?string $id = ''): array
 {

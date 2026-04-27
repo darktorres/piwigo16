@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\DeadCode\Rector\ClassMethod\RemoveUselessParamTagRector;
+use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector;
+use Rector\DeadCode\Rector\Property\RemoveUselessVarTagRector;
 use Rector\Set\ValueObject\SetList;
 use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
 
@@ -30,6 +33,11 @@ return RectorConfig::configure()
     ])
     ->withPhpSets(php85: true)
     ->withSets([SetList::TYPE_DECLARATION])
-    ->withRules([DeclareStrictTypesRector::class])
+    ->withRules([
+        DeclareStrictTypesRector::class,
+        RemoveUselessParamTagRector::class,
+        RemoveUselessReturnTagRector::class,
+        RemoveUselessVarTagRector::class,
+    ])
     ->withImportNames(importShortClasses: false, removeUnusedImports: false)
     ->withParallel();

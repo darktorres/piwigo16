@@ -84,25 +84,16 @@ final class SrcImage
         }
     }
 
-    /**
-     * @return bool
-     */
     public function is_original(): int
     {
         return $this->flags & self::IS_ORIGINAL;
     }
 
-    /**
-     * @return bool
-     */
     public function is_mimetype(): int
     {
         return $this->flags & self::IS_MIMETYPE;
     }
 
-    /**
-     * @return string
-     */
     public function get_path(): string
     {
         return PHPWG_ROOT_PATH.$this->rel_path;
@@ -120,9 +111,6 @@ final class SrcImage
         return embellish_url($url);
     }
 
-    /**
-     * @return bool
-     */
     public function has_size(): bool
     {
         return $this->size != null;
@@ -198,7 +186,7 @@ final class DerivativeImage
      * @param array|SrcImage $infos array of info from db or SrcImage
      * @return string
      */
-    public static function url($type, $infos)
+    public static function url($type, $infos): string|array
     {
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
         $params = is_string($type) ? ImageStdParams::get_by_type($type) : $type;
@@ -344,9 +332,6 @@ final class DerivativeImage
         }
     }
 
-    /**
-     * @return string
-     */
     public function get_path(): string
     {
         return PHPWG_ROOT_PATH.$this->rel_path;
@@ -355,7 +340,7 @@ final class DerivativeImage
     /**
      * @return string
      */
-    public function get_url()
+    public function get_url(): string|array
     {
         if ($this->params == null) {
             return $this->src_image->get_url();
@@ -371,9 +356,6 @@ final class DerivativeImage
         );
     }
 
-    /**
-     * @return bool
-     */
     public function same_as_source(): bool
     {
         return $this->params == null;
@@ -479,9 +461,6 @@ final class DerivativeImage
         }
     }
 
-    /**
-     * @return bool
-     */
     public function is_cached(): bool
     {
         return $this->is_cached;

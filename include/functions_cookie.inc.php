@@ -74,7 +74,6 @@ function cookie_path(): ?string
  * @param string $car
  * @param mixed $value
  * @param int|null $expire
- * @return bool
  */
 function pwg_set_cookie_var(string $var, $value, $expire = null): bool
 {
@@ -93,7 +92,6 @@ function pwg_set_cookie_var(string $var, $value, $expire = null): bool
  * Retrieves the value of a persistent variable in pwg cookie
  * @see pwg_set_cookie_var
  *
- * @param string $var
  * @param mixed $default
  * @return mixed
  */

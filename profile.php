@@ -316,7 +316,6 @@ function save_profile_from_post(array $userdata, &$errors): bool
  *
  * @param string $url_action
  * @param string $url_redirect
- * @param array $userdata
  */
 function load_profile_in_template($url_action, $url_redirect, array $userdata, $template_prefixe = null): void
 {

@@ -135,7 +135,6 @@ final class ImageStdParams
      * @param float $crop
      * @param int $minw
      * @param int $minh
-     * @return DerivativeParams
      */
     public static function get_custom($w, $h, $crop = 0, $minw = null, $minh = null): \DerivativeParams
     {

@@ -181,7 +181,7 @@ class PwgRestEncoder extends PwgResponseEncoder
         return 'text/xml';
     }
 
-    public function encode_array($data, $itemName, $xml_attributes = []): void
+    public function encode_array($data, $itemName, array $xml_attributes = []): void
     {
         foreach ($data as $item) {
             $this->_writer->start_element($itemName);

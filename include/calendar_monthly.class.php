@@ -106,7 +106,6 @@ class CalendarMonthly extends CalendarBase
      * Returns a sql WHERE subquery for the date field.
      *
      * @param int $max_levels (e.g. 2=only year and month)
-     * @return string
      */
     public function get_date_where($max_levels = 3): string
     {
@@ -179,9 +178,6 @@ class CalendarMonthly extends CalendarBase
 
     /**
      * Build global calendar and assign the result in _$tpl_var_
-     *
-     * @param array $tpl_var
-     * @return bool
      */
     protected function build_global_calendar(array &$tpl_var): bool
     {
@@ -242,9 +238,6 @@ class CalendarMonthly extends CalendarBase
 
     /**
      * Build year calendar and assign the result in _$tpl_var_
-     *
-     * @param array $tpl_var
-     * @return bool
      */
     protected function build_year_calendar(array &$tpl_var): bool
     {
@@ -300,9 +293,6 @@ class CalendarMonthly extends CalendarBase
 
     /**
      * Build month calendar and assign the result in _$tpl_var_
-     *
-     * @param array $tpl_var
-     * @return bool
      */
     protected function build_month_calendar(array &$tpl_var): bool
     {

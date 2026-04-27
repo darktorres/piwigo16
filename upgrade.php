@@ -47,11 +47,8 @@ include_once(PHPWG_ROOT_PATH . 'include/template.class.php');
 // +-----------------------------------------------------------------------+
 // |                              functions                                |
 // +-----------------------------------------------------------------------+
-
 /**
  * list all tables in an array
- *
- * @return array
  */
 function get_tables(): array
 {

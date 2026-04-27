@@ -83,7 +83,6 @@ class CalendarWeekly extends CalendarBase
      * Returns a sql WHERE subquery for the date field.
      *
      * @param int $max_levels (e.g. 2=only year and month)
-     * @return string
      */
     public function get_date_where($max_levels = 3): string
     {

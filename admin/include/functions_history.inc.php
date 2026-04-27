@@ -137,7 +137,7 @@ SELECT
   WHERE '.$where_separator.'
 ;';
 
-    // LIMIT '.$conf['nb_logs_page'].' OFFSET '.$page['start'].'
+    // LIMIT '.\Piwigo\Core\Config::nbLogsPage().' OFFSET '.$page['start'].'
 
     $result = pwg_query($query);
 
@@ -350,9 +350,9 @@ SELECT *
  */
 function history_autopurge(): void
 {
-    global $conf, $logger;
+    global $logger;
 
-    if (0 == $conf['history_autopurge_keep_lines']) {
+    if (0 == \Piwigo\Core\Config::historyAutopurgeKeepLines()) {
         return;
     }
 
@@ -365,7 +365,7 @@ SELECT
 ;';
     [$count] = pwg_db_fetch_row(pwg_query($query));
 
-    if ($count <= $conf['history_autopurge_keep_lines']) {
+    if ($count <= \Piwigo\Core\Config::historyAutopurgeKeepLines()) {
         history_remove_summarized_column();
         return; // no need to purge for now
     }
@@ -414,8 +414,8 @@ SELECT
 
     $search_min = [
       $history_id_last_summarized,
-      $history_id_latest - $conf['history_autopurge_keep_lines'],
-      $history_id_oldest + $conf['history_autopurge_blocksize'],
+      $history_id_latest - \Piwigo\Core\Config::historyAutopurgeKeepLines(),
+      $history_id_oldest + \Piwigo\Core\Config::historyAutopurgeBlocksize(),
       ];
 
     $history_id_delete_before = min($search_min);
@@ -434,9 +434,7 @@ DELETE
 
 function history_remove_summarized_column(): void
 {
-    global $conf;
-
-    if (isset($conf['history_summarized_dropped']) and $conf['history_summarized_dropped']) {
+    if (\Piwigo\Core\Config::has('history_summarized_dropped') and \Piwigo\Core\Config::get('history_summarized_dropped')) {
         return;
     }
 
@@ -447,7 +445,7 @@ SELECT
 ;';
     [$count] = pwg_db_fetch_row(pwg_query($query));
 
-    if ($count > $conf['history_autopurge_keep_lines'] + $conf['history_autopurge_blocksize']) {
+    if ($count > \Piwigo\Core\Config::historyAutopurgeKeepLines() + \Piwigo\Core\Config::historyAutopurgeBlocksize()) {
         // it's not yet time to remove history.summarized
         return;
     }

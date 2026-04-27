@@ -31,9 +31,9 @@ if (is_webmaster()) {
       performed_by,
       occured_on,
       details,
-  IF(performed_by = 0, \'System\', '.$conf['user_fields']['username'].') AS username
+  IF(performed_by = 0, \'System\', '.\Piwigo\Core\Config::userFields()['username'].') AS username
   FROM '.ACTIVITY_TABLE.'
-  LEFT JOIN '.USERS_TABLE.' ON performed_by = '.$conf['user_fields']['id'].'
+  LEFT JOIN '.USERS_TABLE.' ON performed_by = '.\Piwigo\Core\Config::userFields()['id'].'
   WHERE object = \'system\'
   ORDER BY activity_id DESC';
 

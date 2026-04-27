@@ -95,28 +95,28 @@ function get_tab_status($mode): int
  */
 function insert_new_data_user_mail_notification(): void
 {
-    global $conf, $page, $env_nbm;
+    global $page, $env_nbm;
 
     // Set null mail_address empty
     $query = '
 update
   '.USERS_TABLE.'
 set
-  '.$conf['user_fields']['email'].' = null
+  '.\Piwigo\Core\Config::userFields()['email'].' = null
 where
-  trim('.$conf['user_fields']['email'].') = \'\';';
+  trim('.\Piwigo\Core\Config::userFields()['email'].') = \'\';';
     pwg_query($query);
 
     // null mail_address are not selected in the list
     $query = '
 select
-  u.'.$conf['user_fields']['id'].' as user_id,
-  u.'.$conf['user_fields']['username'].' as username,
-  u.'.$conf['user_fields']['email'].' as mail_address
+  u.'.\Piwigo\Core\Config::userFields()['id'].' as user_id,
+  u.'.\Piwigo\Core\Config::userFields()['username'].' as username,
+  u.'.\Piwigo\Core\Config::userFields()['email'].' as mail_address
 from
-  '.USERS_TABLE.' as u left join '.USER_MAIL_NOTIFICATION_TABLE.' as m on u.'.$conf['user_fields']['id'].' = m.user_id
+  '.USERS_TABLE.' as u left join '.USER_MAIL_NOTIFICATION_TABLE.' as m on u.'.\Piwigo\Core\Config::userFields()['id'].' = m.user_id
 where
-  u.'.$conf['user_fields']['email'].' is not null and
+  u.'.\Piwigo\Core\Config::userFields()['email'].' is not null and
   m.user_id is null
 order by
   user_id;';
@@ -153,7 +153,7 @@ order by
         // Update field enabled with specific function
         $check_key_treated = do_subscribe_unsubscribe_notification_by_mail(
             true,
-            $conf['nbm_default_value_user_enabled'],
+            \Piwigo\Core\Config::nbmDefaultValueUserEnabled(),
             $check_key_list
         );
 
@@ -176,9 +176,7 @@ order by
  */
 function render_global_customize_mail_content($customize_mail_content)
 {
-    global $conf;
-
-    if ($conf['nbm_send_html_mail'] and !(str_starts_with((string) $customize_mail_content, '<'))) {
+    if (\Piwigo\Core\Config::nbmSendHtmlMail() and !(str_starts_with((string) $customize_mail_content, '<'))) {
         // On HTML mail, detects if the content are HTML format.
         // If it's plain text format, convert content to readable HTML
         return nl2br(htmlspecialchars((string) $customize_mail_content));
@@ -197,7 +195,7 @@ function render_global_customize_mail_content($customize_mail_content)
  */
 function do_action_send_mail_notification($action = 'list_to_send', $check_key_list = [], $customize_mail_content = ''): array
 {
-    global $conf, $page, $user, $lang_info, $lang, $env_nbm;
+    global $page, $user, $lang_info, $lang, $env_nbm;
     $return_list = [];
 
     if (in_array($action, ['list_to_send', 'send'])) {
@@ -209,7 +207,7 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
         $data_users = get_user_notifications('send', $check_key_list);
 
         // List all if it's define on options or on timeout
-        $is_list_all_without_test = ($env_nbm['is_sendmail_timeout'] or $conf['nbm_list_all_enabled_users_to_send']);
+        $is_list_all_without_test = ($env_nbm['is_sendmail_timeout'] or \Piwigo\Core\Config::nbmListAllEnabledUsersToSend());
 
         // Check if exist news to list user or send mails
         if ((!$is_list_all_without_test) or ($is_action_send)) {
@@ -217,7 +215,7 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
                 $datas = [];
 
                 if (!isset($customize_mail_content)) {
-                    $customize_mail_content = $conf['nbm_complementary_mail_content'];
+                    $customize_mail_content = \Piwigo\Core\Config::nbmComplementaryMailContent();
                 }
 
                 $customize_mail_content =
@@ -264,15 +262,15 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
                         // Fill return list of "treated" check_key for 'send'
                         $return_list[] = $nbm_user['check_key'];
 
-                        if ($conf['nbm_send_detailed_content']) {
-                            $news = news($nbm_user['last_send'], $dbnow, false, $conf['nbm_send_html_mail'], $auth);
+                        if (\Piwigo\Core\Config::nbmSendDetailedContent()) {
+                            $news = news($nbm_user['last_send'], $dbnow, false, \Piwigo\Core\Config::nbmSendHtmlMail(), $auth);
                             $exist_data = count($news) > 0;
                         } else {
                             $exist_data = news_exists($nbm_user['last_send'], $dbnow);
                         }
 
                         if ($exist_data) {
-                            $subject = '['.$conf['gallery_title'].'] '.l10n('New photos added');
+                            $subject = '['.\Piwigo\Core\Config::galleryTitle().'] '.l10n('New photos added');
 
                             // Assign current var for nbm mail
                             assign_vars_nbm_mail_content($nbm_user);
@@ -294,7 +292,7 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
                                 );
                             }
 
-                            if ($conf['nbm_send_detailed_content']) {
+                            if (\Piwigo\Core\Config::nbmSendDetailedContent()) {
                                 $env_nbm['mail_template']->assign('global_new_lines', $news);
                             }
 
@@ -311,9 +309,9 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
                                 );
                             }
 
-                            if ($conf['nbm_send_html_mail'] and $conf['nbm_send_recent_post_dates']) {
+                            if (\Piwigo\Core\Config::nbmSendHtmlMail() and \Piwigo\Core\Config::nbmSendRecentPostDates()) {
                                 $recent_post_dates = get_recent_post_dates_array(
-                                    $conf['recent_post_dates']['NBM']
+                                    \Piwigo\Core\Config::get('recent_post_dates')['NBM']
                                 );
                                 foreach ($recent_post_dates as $date_detail) {
                                     $env_nbm['mail_template']->append(
@@ -328,7 +326,7 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
 
                             $env_nbm['mail_template']->assign(
                                 [
-                                'GOTO_GALLERY_TITLE' => $conf['gallery_title'],
+                                'GOTO_GALLERY_TITLE' => \Piwigo\Core\Config::galleryTitle(),
                                 'GOTO_GALLERY_URL' => add_url_params(get_gallery_home_url(), $add_url_params),
                                 'SEND_AS_NAME'      => $env_nbm['send_as_name'],
                 ]
@@ -541,11 +539,11 @@ switch ($page['mode']) {
             $template->assign(
                 $page['mode'],
                 [
-                'SEND_HTML_MAIL' => $conf['nbm_send_html_mail'],
-                'SEND_MAIL_AS' => $conf['nbm_send_mail_as'],
-                'SEND_DETAILED_CONTENT' => $conf['nbm_send_detailed_content'],
-                'COMPLEMENTARY_MAIL_CONTENT' => $conf['nbm_complementary_mail_content'],
-                'SEND_RECENT_POST_DATES' => $conf['nbm_send_recent_post_dates'],
+                'SEND_HTML_MAIL' => \Piwigo\Core\Config::nbmSendHtmlMail(),
+                'SEND_MAIL_AS' => \Piwigo\Core\Config::nbmSendMailAs(),
+                'SEND_DETAILED_CONTENT' => \Piwigo\Core\Config::nbmSendDetailedContent(),
+                'COMPLEMENTARY_MAIL_CONTENT' => \Piwigo\Core\Config::nbmComplementaryMailContent(),
+                'SEND_RECENT_POST_DATES' => \Piwigo\Core\Config::nbmSendRecentPostDates(),
                 ]
             );
             break;
@@ -602,7 +600,7 @@ switch ($page['mode']) {
             $tpl_var['CUSTOMIZE_MAIL_CONTENT'] =
               isset($_POST['send_customize_mail_content'])
                 ? stripslashes((string) $_POST['send_customize_mail_content'])
-                : $conf['nbm_complementary_mail_content'];
+                : \Piwigo\Core\Config::nbmComplementaryMailContent();
 
             if (count($data_users)) {
                 foreach ($data_users as $nbm_user) {
@@ -626,11 +624,11 @@ switch ($page['mode']) {
             }
             $template->assign($page['mode'], $tpl_var);
 
-            if ($conf['auth_key_duration'] > 0) {
+            if (\Piwigo\Core\Config::authKeyDuration() > 0) {
                 $template->assign(
                     'auth_key_duration',
                     time_since(
-                        strtotime('now -'.$conf['auth_key_duration'].' second'),
+                        strtotime('now -'.\Piwigo\Core\Config::authKeyDuration().' second'),
                         'second',
                         null,
                         false

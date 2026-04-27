@@ -62,7 +62,7 @@ if ('recent_cats' != $page['section']) {
 }
 
 $query .= '
-  LIMIT '.$conf['nb_categories_page'].' OFFSET '.($page['startcat'] ?? 0).'
+  LIMIT '.\Piwigo\Core\Config::get('nb_categories_page').' OFFSET '.($page['startcat'] ?? 0).'
 ;';
 
 $query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
@@ -82,7 +82,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
         $image_id = $row['user_representative_picture_id'];
     } elseif (!empty($row['representative_picture_id'])) { // if a representative picture is set, it has priority
         $image_id = $row['representative_picture_id'];
-    } elseif ($conf['allow_random_representative']) { // searching a random representant among elements in sub-categories
+    } elseif (\Piwigo\Core\Config::allowRandomRepresentative()) { // searching a random representant among elements in sub-categories
         $image_id = get_random_image_in_category($row);
     } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) { // at this point, $row['count_images'] should always be >0 (used as condition in SQL)
         // searching a random representant among representant of sub-categories
@@ -109,7 +109,7 @@ SELECT representative_picture_id
 
 
     if (isset($image_id)) {
-        if ($conf['representative_cache_on_subcats'] and $row['user_representative_picture_id'] != $image_id) {
+        if (\Piwigo\Core\Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] != $image_id) {
             $user_representative_updates_for[ $row['id'] ] = $image_id;
         }
 
@@ -129,7 +129,7 @@ SELECT representative_picture_id
     unset($image_id);
 }
 
-if ($conf['display_fromto']) {
+if (\Piwigo\Core\Config::get('display_fromto')) {
     if (count($category_ids) > 0) {
         $query = '
 SELECT
@@ -187,7 +187,7 @@ SELECT *
                         $new_image_ids[] = $image_id;
                     }
 
-                    if ($conf['representative_cache_on_level']) {
+                    if (\Piwigo\Core\Config::representativeCacheOnLevel()) {
                         $user_representative_updates_for[ $category['id'] ] = $image_id;
                     }
 
@@ -297,11 +297,11 @@ if (count($categories) > 0) {
                 ),
               'NAME'  => $name,
             ]);
-        if ($conf['index_new_icon']) {
+        if (\Piwigo\Core\Config::indexNewIcon()) {
             $tpl_var['icon_ts'] = get_icon($category['max_date_last'], $category['is_child_date_last']);
         }
 
-        if ($conf['display_fromto']) {
+        if (\Piwigo\Core\Config::get('display_fromto')) {
             if (isset($dates_of_category[ $category['id'] ])) {
                 $from = $dates_of_category[ $category['id'] ]['from'];
                 $to   = $dates_of_category[ $category['id'] ]['to'];
@@ -321,7 +321,7 @@ if (count($categories) > 0) {
     $derivative_params = trigger_change('get_index_album_derivative_params', ImageStdParams::get_by_type(IMG_THUMB));
     $tpl_thumbnails_var_selection = trigger_change('loc_end_index_category_thumbnails', $tpl_thumbnails_var_selection);
     $template->assign([
-      'maxRequests' => $conf['max_requests'],
+      'maxRequests' => \Piwigo\Core\Config::maxRequests(),
       'category_thumbnails' => $tpl_thumbnails_var_selection,
       'derivative_params' => $derivative_params,
       ]);
@@ -330,12 +330,12 @@ if (count($categories) > 0) {
 
     // navigation bar
     $page['cats_navigation_bar'] = [];
-    if ($page['total_categories'] > $conf['nb_categories_page']) {
+    if ($page['total_categories'] > \Piwigo\Core\Config::get('nb_categories_page')) {
         $page['cats_navigation_bar'] = create_navigation_bar(
             duplicate_index_url([], ['startcat']),
             $page['total_categories'],
             $page['startcat'],
-            $conf['nb_categories_page'],
+            \Piwigo\Core\Config::get('nb_categories_page'),
             true,
             'startcat'
         );

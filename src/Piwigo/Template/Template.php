@@ -54,7 +54,7 @@ class Template
      */
     public function __construct($root = '.', $theme = '', string $path = 'template')
     {
-        global $conf, $lang_info;
+        global $lang_info;
 
         // \Smarty\Exception::$escape = false;
 
@@ -62,22 +62,22 @@ class Template
         $this->cssLoader = new CssLoader();
         $this->smarty = new Smarty();
         $this->smarty->escape_html = false;
-        $this->smarty->debugging = $conf['debug_template'];
+        $this->smarty->debugging = \Piwigo\Core\Config::debugTemplate();
         if (!$this->smarty->debugging) {
             $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
         }
-        $this->smarty->compile_check = $conf['template_compile_check'];
-        $this->smarty->force_compile = $conf['template_force_compile'];
+        $this->smarty->compile_check = \Piwigo\Core\Config::templateCompileCheck();
+        $this->smarty->force_compile = \Piwigo\Core\Config::templateForceCompile();
 
-        if (!isset($conf['data_dir_checked'])) {
-            $dir = PHPWG_ROOT_PATH.$conf['data_location'];
+        if (!\Piwigo\Core\Config::has('data_dir_checked')) {
+            $dir = PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation();
             mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
             if (!is_writable($dir)) {
                 load_language('admin.lang');
                 fatal_error(
                     l10n(
                         'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',
-                        $conf['data_location']
+                        \Piwigo\Core\Config::dataLocation()
                     ),
                     l10n('an error happened'),
                     false // show trace
@@ -88,7 +88,7 @@ class Template
             }
         }
 
-        $compile_dir = PHPWG_ROOT_PATH.$conf['data_location'].'templates_c';
+        $compile_dir = PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'templates_c';
         mkgetdir($compile_dir);
 
         $this->smarty->setCompileDir($compile_dir);
@@ -140,7 +140,7 @@ class Template
         $this->smarty->registerPlugin('modifier', 'sizeOf', 'sizeOf');
         $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
 
-        if ($conf['compiled_template_cache_language']) {
+        if (\Piwigo\Core\Config::compiledTemplateCacheLanguage()) {
             $this->smarty->registerFilter('post', self::postfilter_language(...));
         }
 
@@ -164,8 +164,8 @@ class Template
 
         $this->smarty->assign('lang_info', $lang_info);
 
-        if (!defined('IN_ADMIN') and isset($conf['extents_for_templates'])) {
-            $tpl_extents = unserialize($conf['extents_for_templates']);
+        if (!defined('IN_ADMIN') and \Piwigo\Core\Config::extentsForTemplates() !== null) {
+            $tpl_extents = unserialize(\Piwigo\Core\Config::extentsForTemplates() ?? '');
             $this->set_extents($tpl_extents, './template-extension/', true, $theme);
         }
     }
@@ -464,8 +464,8 @@ class Template
         $save_compile_id = $this->smarty->compile_id;
         $this->load_external_filters($handle);
 
-        global $conf, $lang_info;
-        if ($conf['compiled_template_cache_language'] and isset($lang_info['code'])) {
+        global $lang_info;
+        if (\Piwigo\Core\Config::compiledTemplateCacheLanguage() and isset($lang_info['code'])) {
             $this->smarty->compile_id .= '_'.$lang_info['code'];
         }
 
@@ -596,11 +596,11 @@ class Template
      */
     public static function modcompiler_translate(array $params): string
     {
-        global $conf, $lang;
+        global $lang;
 
         switch (count($params)) {
             case 1:
-                if ($conf['compiled_template_cache_language']
+                if (\Piwigo\Core\Config::compiledTemplateCacheLanguage()
                   && ($key = self::get_php_str_val($params[0])) !== null
                   && isset($lang[$key])
                 ) {
@@ -609,7 +609,7 @@ class Template
                 return 'l10n('.$params[0].')';
 
             default:
-                if ($conf['compiled_template_cache_language']) {
+                if (\Piwigo\Core\Config::compiledTemplateCacheLanguage()) {
                     $ret = 'sprintf(';
                     $ret .= self::modcompiler_translate([$params[0]]);
                     $ret .= ','. implode(',', array_slice($params, 1));
@@ -628,8 +628,8 @@ class Template
      */
     public static function modcompiler_translate_dec(array $params): string
     {
-        global $conf, $lang, $lang_info;
-        if ($conf['compiled_template_cache_language']) {
+        global $lang, $lang_info;
+        if (\Piwigo\Core\Config::compiledTemplateCacheLanguage()) {
             $ret = 'sprintf(';
             if ($lang_info['zero_plural']) {
                 $ret .= '($tmp=('.$params[0].'))>1||$tmp==0';
@@ -1040,7 +1040,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     }
 
     /**
-     * Postfilter used when $conf['compiled_template_cache_language'] is true.
+     * Postfilter used when \Piwigo\Core\Config::compiledTemplateCacheLanguage() is true.
      *
      * @param string $source
      * @param Smarty $smarty
@@ -1096,7 +1096,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public function load_themeconf($dir)
     {
-        global $themeconfs, $conf;
+        global $themeconfs;
 
         $dir = realpath($dir);
         if (!isset($themeconfs[$dir])) {

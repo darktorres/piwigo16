@@ -161,7 +161,6 @@ DELETE FROM '.USER_CACHE_CATEGORIES_TABLE.'
  */
 function delete_element_files($ids): int|array
 {
-    global $conf;
     if (count($ids) == 0) {
         return 0;
     }
@@ -213,7 +212,7 @@ SELECT
         }
 
         $ok = true;
-        if (!isset($conf['never_delete_originals'])) {
+        if (!\Piwigo\Core\Config::has('never_delete_originals')) {
             foreach ($files as $path) {
                 if (is_file($path) and !unlink($path)) {
                     $ok = false;
@@ -343,7 +342,6 @@ SELECT
  */
 function delete_user($user_id): void
 {
-    global $conf;
     $tables = [
       // destruction of the access linked to the user
       USER_ACCESS_TABLE,
@@ -380,7 +378,7 @@ DELETE FROM '.$table.'
     // destruction of the user
     $query = '
 DELETE FROM '.USERS_TABLE.'
-  WHERE '.$conf['user_fields']['id'].' = '.$user_id.'
+  WHERE '.\Piwigo\Core\Config::userFields()['id'].' = '.$user_id.'
 ;';
     pwg_query($query);
 
@@ -430,8 +428,6 @@ SELECT
  */
 function update_category($ids = 'all')
 {
-    global $conf;
-
     if ($ids == 'all') {
         $where_cats = '1=1';
     } elseif (!is_array($ids)) {
@@ -464,7 +460,7 @@ UPDATE '.CATEGORIES_TABLE.'
         pwg_query($query);
     }
 
-    if (!$conf['allow_random_representative']) {
+    if (!\Piwigo\Core\Config::allowRandomRepresentative()) {
         // If the random representant is not allowed, we need to find
         // categories with elements and with no representant. Those categories
         // must be added to the list of categories to set to a random
@@ -556,13 +552,11 @@ DELETE
  */
 function get_fs_directories($path, $recursive = true): array
 {
-    global $conf;
-
     $dirs = [];
     $path = rtrim((string) $path, '/');
 
     $exclude_folders = array_merge(
-        $conf['sync_exclude_folders'],
+        \Piwigo\Core\Config::syncExcludeFolders(),
         [
         '.', '..', '.svn',
         'thumbnail', 'pwg_high',
@@ -1040,7 +1034,7 @@ SELECT id, uppercats, site_id
 }
 
 /**
- * Returns an array with all file system files according to $conf['file_ext']
+ * Returns an array with all file system files according to \Piwigo\Core\Config::fileExtensions()
  *
  *
  * @param bool $recursive
@@ -1049,14 +1043,12 @@ SELECT id, uppercats, site_id
 #[\Deprecated(message: '2.4')]
 function get_fs(string $path, $recursive = true)
 {
-    global $conf;
-
     // because isset is faster than in_array...
-    if (!isset($conf['flip_picture_ext'])) {
-        $conf['flip_picture_ext'] = array_flip($conf['picture_ext']);
+    if (!\Piwigo\Core\Config::has('flip_picture_ext')) {
+        \Piwigo\Core\Config::override('flip_picture_ext', array_flip(\Piwigo\Core\Config::pictureExtensions()));
     }
-    if (!isset($conf['flip_file_ext'])) {
-        $conf['flip_file_ext'] = array_flip($conf['file_ext']);
+    if (!\Piwigo\Core\Config::has('flip_file_ext')) {
+        \Piwigo\Core\Config::override('flip_file_ext', array_flip(\Piwigo\Core\Config::fileExtensions()));
     }
 
     $fs['elements'] = [];
@@ -1074,7 +1066,7 @@ function get_fs(string $path, $recursive = true)
                 if (is_file($path.'/'.$node)) {
                     $extension = get_extension($node);
 
-                    if (isset($conf['flip_picture_ext'][$extension])) {
+                    if (isset(\Piwigo\Core\Config::get('flip_picture_ext')[$extension])) {
                         if (basename($path) == 'thumbnail') {
                             $fs['thumbnails'][] = $path.'/'.$node;
                         } elseif (basename($path) == 'pwg_representative') {
@@ -1082,7 +1074,7 @@ function get_fs(string $path, $recursive = true)
                         } else {
                             $fs['elements'][] = $path.'/'.$node;
                         }
-                    } elseif (isset($conf['flip_file_ext'][$extension])) {
+                    } elseif (isset(\Piwigo\Core\Config::get('flip_file_ext')[$extension])) {
                         $fs['elements'][] = $path.'/'.$node;
                     }
                 } elseif (is_dir($path.'/'.$node) and $node != 'pwg_high' and $recursive) {
@@ -1124,10 +1116,8 @@ function get_fs(string $path, $recursive = true)
  */
 function sync_users(): void
 {
-    global $conf;
-
     $query = '
-SELECT '.$conf['user_fields']['id'].' AS id
+SELECT '.\Piwigo\Core\Config::userFields()['id'].' AS id
   FROM '.USERS_TABLE.'
 ;';
     $base_users = query2array($query, null, 'id');
@@ -1343,7 +1333,7 @@ SELECT status
  */
 function create_virtual_category($category_name, $parent_id = null, array $options = []): array
 {
-    global $conf, $user;
+    global $user;
 
     // is the given category name only containing blank spaces ?
     if (preg_match('/^\s*$/', $category_name)) {
@@ -1351,7 +1341,7 @@ function create_virtual_category($category_name, $parent_id = null, array $optio
     }
 
     $rank = 0;
-    if ('last' == $conf['newcat_default_position']) {
+    if ('last' == \Piwigo\Core\Config::newcatDefaultPosition()) {
         //what is the current higher rank for this parent?
         $query = '
 SELECT MAX(`rank`) AS max_rank
@@ -1375,7 +1365,7 @@ SELECT MAX(`rank`) AS max_rank
     if (isset($options['commentable']) and is_bool($options['commentable'])) {
         $insert['commentable'] = $options['commentable'];
     } else {
-        $insert['commentable'] = $conf['newcat_default_commentable'];
+        $insert['commentable'] = \Piwigo\Core\Config::newcatDefaultCommentable();
     }
     $insert['commentable'] = boolean_to_string($insert['commentable']);
 
@@ -1385,7 +1375,7 @@ SELECT MAX(`rank`) AS max_rank
     if (isset($options['visible']) and is_bool($options['visible'])) {
         $insert['visible'] = $options['visible'];
     } else {
-        $insert['visible'] = $conf['newcat_default_visible'];
+        $insert['visible'] = \Piwigo\Core\Config::newcatDefaultVisible();
     }
     $insert['visible'] = boolean_to_string($insert['visible']);
 
@@ -1393,12 +1383,12 @@ SELECT MAX(`rank`) AS max_rank
     if (isset($options['status']) and 'private' == $options['status']) {
         $insert['status'] = 'private';
     } else {
-        $insert['status'] = $conf['newcat_default_status'];
+        $insert['status'] = \Piwigo\Core\Config::newcatDefaultStatus();
     }
 
     // any description for this album?
     if (isset($options['comment'])) {
-        $insert['comment'] = $conf['allow_html_descriptions'] ? $options['comment'] : strip_tags($options['comment']);
+        $insert['comment'] = \Piwigo\Core\Config::allowHtmlDescriptions() ? $options['comment'] : strip_tags($options['comment']);
     }
 
     if (!empty($parent_id) and is_numeric($parent_id)) {
@@ -1443,7 +1433,7 @@ SELECT id, uppercats, global_rank, visible, status
 
     update_global_rank();
 
-    if ('private' == $insert['status'] and !empty($insert['id_uppercat']) and ((isset($options['inherit']) and $options['inherit']) or $conf['inheritance_by_default'])) {
+    if ('private' == $insert['status'] and !empty($insert['id_uppercat']) and ((isset($options['inherit']) and $options['inherit']) or \Piwigo\Core\Config::inheritanceByDefault())) {
         $query = '
       SELECT group_id
       FROM '.GROUP_ACCESS_TABLE.'
@@ -1797,10 +1787,10 @@ function fill_lounge($images, $categories): void
  */
 function empty_lounge($invalidate_user_cache = true)
 {
-    global $logger, $conf;
+    global $logger;
 
-    if (isset($conf['empty_lounge_running'])) {
-        [$running_exec_id, $running_exec_start_time] = explode('-', $conf['empty_lounge_running']);
+    if (\Piwigo\Core\Config::has('empty_lounge_running')) {
+        [$running_exec_id, $running_exec_start_time] = explode('-', \Piwigo\Core\Config::get('empty_lounge_running'));
         if (time() - $running_exec_start_time > 60) {
             $logger->debug(__FUNCTION__.', exec='.$running_exec_id.', timeout stopped by another call to the function');
             conf_delete_param('empty_lounge_running');
@@ -2271,8 +2261,6 @@ function cat_admin_access($category_id): bool
  */
 function fetchRemote($src, &$dest, $get_data = [], $post_data = [], string $user_agent = 'Piwigo', $step = 0)
 {
-    global $conf;
-
     // Try to retrieve data from local file?
     if (!url_is_remote($src)) {
         $content = @file_get_contents($src);
@@ -2305,11 +2293,11 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], string $user
     if (function_exists('curl_init') && function_exists('curl_exec')) {
         $ch = @curl_init();
 
-        if (isset($conf['use_proxy']) && $conf['use_proxy']) {
+        if (\Piwigo\Core\Config::has('use_proxy') && \Piwigo\Core\Config::useProxy()) {
             @curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, 0);
-            @curl_setopt($ch, CURLOPT_PROXY, $conf['proxy_server']);
-            if (isset($conf['proxy_auth']) && !empty($conf['proxy_auth'])) {
-                @curl_setopt($ch, CURLOPT_PROXYUSERPWD, $conf['proxy_auth']);
+            @curl_setopt($ch, CURLOPT_PROXY, \Piwigo\Core\Config::proxyServer());
+            if (\Piwigo\Core\Config::has('proxy_auth') && !empty(\Piwigo\Core\Config::proxyAuth())) {
+                @curl_setopt($ch, CURLOPT_PROXYUSERPWD, \Piwigo\Core\Config::proxyAuth());
             }
         }
 
@@ -2502,12 +2490,10 @@ DELETE
  */
 function get_username($user_id): false|string
 {
-    global $conf;
-
     $query = '
-SELECT '.$conf['user_fields']['username'].'
+SELECT '.\Piwigo\Core\Config::userFields()['username'].'
   FROM '.USERS_TABLE.'
-  WHERE '.$conf['user_fields']['id'].' = '.intval($user_id).'
+  WHERE '.\Piwigo\Core\Config::userFields()['id'].' = '.intval($user_id).'
 ;';
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
@@ -3223,9 +3209,9 @@ function get_cache_size_derivatives(string $path): array
  */
 function fs_quick_check(): void
 {
-    global $page, $conf;
+    global $page;
 
-    if ($conf['fs_quick_check_period'] == 0) {
+    if (\Piwigo\Core\Config::fsQuickCheckPeriod() == 0) {
         return;
     }
 
@@ -3361,13 +3347,11 @@ function get_piwigo_news()
 
 function get_graphics_library()
 {
-    global $conf;
-
     $library = pwg_image::get_library();
 
     switch (pwg_image::get_library()) {
         case 'ext_imagick':
-            exec($conf['ext_imagick_dir'].pwg_image::get_ext_imagick_command().' -version', $returnarray);
+            exec(\Piwigo\Core\Config::extImagickDir().pwg_image::get_ext_imagick_command().' -version', $returnarray);
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 $library .= '/'.$match[1];
             }

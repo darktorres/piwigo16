@@ -18,8 +18,6 @@ declare(strict_types=1);
  */
 function get_iptc_data($filename, $map, $array_sep = ','): array
 {
-    global $conf;
-
     $result = [];
 
     $imginfo = [];
@@ -45,7 +43,7 @@ function get_iptc_data($filename, $map, $array_sep = ','): array
                     foreach (array_keys($map, $iptc_key) as $pwg_key) {
                         $result[$pwg_key] = $value;
 
-                        if (!$conf['allow_html_in_metadata']) {
+                        if (!\Piwigo\Core\Config::allowHtmlInMetadata()) {
                             // in case the origin of the photo is unsecure (user upload), we
                             // remove HTML tags to avoid XSS (malicious execution of
                             // javascript)
@@ -106,7 +104,7 @@ function clean_iptc_value($value)
  */
 function get_exif_data(string $filename, $map): array
 {
-    global $conf, $logger;
+    global $logger;
 
     $result = [];
 
@@ -156,7 +154,7 @@ function get_exif_data(string $filename, $map): array
         }
     }
 
-    if (!$conf['allow_html_in_metadata']) {
+    if (!\Piwigo\Core\Config::allowHtmlInMetadata()) {
         foreach ($result as $key => $value) {
             // in case the origin of the photo is unsecure (user upload), we remove
             // HTML tags to avoid XSS (malicious execution of javascript)

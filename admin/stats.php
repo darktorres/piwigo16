@@ -358,7 +358,7 @@ if (count(get_last(60, 'year')) > 1) {
 ksort($lang['month']);
 
 $template->assign([
-  'compareYears' => get_month_of_last_years($conf['stat_compare_year_displayed']),
+  'compareYears' => get_month_of_last_years(\Piwigo\Core\Config::statCompareYearDisplayed()),
   'monthStats' => get_month_stats(),
   'lastHours' => $last_hours,
   'lastDays' => $last_days,

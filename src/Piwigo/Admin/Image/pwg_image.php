@@ -15,8 +15,6 @@ class pwg_image
 
     public function __construct(public $source_filepath, $library = null)
     {
-        global $conf;
-
         trigger_notify('load_image_library', [&$this]);
 
         if (is_object($this->image)) {
@@ -25,7 +23,7 @@ class pwg_image
 
         $extension = strtolower(get_extension($this->source_filepath));
 
-        if (!in_array($extension, $conf['picture_ext'])) {
+        if (!in_array($extension, \Piwigo\Core\Config::pictureExtensions())) {
             die('[Image] unsupported file extension');
         }
 
@@ -307,13 +305,13 @@ class pwg_image
 
     public static function get_ext_imagick_command()
     {
-        global $page, $conf;
+        global $page;
 
         if (!isset($page['ext_imagick_command'])) {
             $retval = null;
             $cmd_out = null;
             // check if magick is in path
-            exec('command -v '.$conf['ext_imagick_dir'].'magick', $cmd_out, $retval);
+            exec('command -v '.\Piwigo\Core\Config::extImagickDir().'magick', $cmd_out, $retval);
             if (0 == $retval) {
                 $page['ext_imagick_command'] = 'magick';
             } else {
@@ -326,13 +324,11 @@ class pwg_image
 
     public static function is_ext_imagick(): bool
     {
-        global $conf;
-
         if (!function_exists('exec')) {
             return false;
         }
 
-        @exec($conf['ext_imagick_dir'].pwg_image::get_ext_imagick_command().' -version', $returnarray);
+        @exec(\Piwigo\Core\Config::extImagickDir().pwg_image::get_ext_imagick_command().' -version', $returnarray);
         if (is_array($returnarray) and !empty($returnarray[0]) and preg_match('/ImageMagick/i', $returnarray[0])) {
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];
@@ -349,10 +345,8 @@ class pwg_image
 
     public static function get_library($library = null, $extension = null)
     {
-        global $conf;
-
         if (is_null($library)) {
-            $library = $conf['graphics_library'];
+            $library = \Piwigo\Core\Config::graphicsLibrary();
         }
 
         // Choose image library

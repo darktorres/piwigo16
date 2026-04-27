@@ -23,8 +23,7 @@ class image_ext_imagick implements imageInterface
 
     public function __construct(public $source_filepath)
     {
-        global $conf;
-        $this->imagickdir = $conf['ext_imagick_dir'];
+        $this->imagickdir = \Piwigo\Core\Config::extImagickDir();
 
         if (str_starts_with((string) @$_SERVER['SCRIPT_FILENAME'], '/kunden/')) {  // 1and1
             @putenv('MAGICK_THREAD_LIMIT=1');
@@ -104,13 +103,11 @@ class image_ext_imagick implements imageInterface
 
     public function set_compression_quality($quality): bool
     {
-        global $conf;
-
         if ($this->is_animated_webp) {
             // in cas of animated WebP, we need to maximize quality to 70 to avoid
             // heavy thumbnails (or square or whatever is displayed on the thumbnails
             // page)
-            $quality = min($quality, $conf['animated_webp_compression_quality']);
+            $quality = min($quality, \Piwigo\Core\Config::animatedWebpCompressionQuality());
         }
 
         $this->add_command('quality', $quality);

@@ -194,7 +194,7 @@ $template->assign(
     'isWebmaster' => (is_webmaster()) ? 1 : 0,
     'ADMIN_PAGE_TITLE' => l10n('Plugins'),
     'view_selector' => userprefs_get_param('plugin-manager-view', 'classic'),
-    'CONF_ENABLE_EXTENSIONS_INSTALL' => $conf['enable_extensions_install'],
+    'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Core\Config::enableExtensionsInstall(),
     ]
 );
 

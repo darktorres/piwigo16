@@ -112,7 +112,7 @@ SELECT
 
             $query = '
 SELECT
-    '.$conf['user_fields']['id'].' AS id
+    '.\Piwigo\Core\Config::userFields()['id'].' AS id
   FROM '.USERS_TABLE.'
 ;';
             $all_user_ids = query2array($query, 'id', null);
@@ -302,8 +302,8 @@ $template->assign(
     'PHP_DATATIME' => $php_current_timestamp,
     'DB_DATATIME' => $db_current_date,
     'pwg_token' => $pwg_token,
-    'cache_sizes' => (isset($conf['cache_sizes'])) ? unserialize($conf['cache_sizes']) : null,
-    'time_elapsed_since_last_calc' => (isset($conf['cache_sizes'])) ? time_since(unserialize($conf['cache_sizes'])[3]['value'], 'year') : null,
+    'cache_sizes' => (\Piwigo\Core\Config::has('cache_sizes')) ? unserialize(\Piwigo\Core\Config::get('cache_sizes')) : null,
+    'time_elapsed_since_last_calc' => (\Piwigo\Core\Config::has('cache_sizes')) ? time_since(unserialize(\Piwigo\Core\Config::get('cache_sizes'))[3]['value'], 'year') : null,
     ]
 );
 
@@ -311,7 +311,7 @@ $template->assign(
 switch (pwg_image::get_library()) {
     case 'ext_imagick':
         $library = 'External ImageMagick';
-        exec($conf['ext_imagick_dir'].pwg_image::get_ext_imagick_command().' -version', $returnarray);
+        exec(\Piwigo\Core\Config::extImagickDir().pwg_image::get_ext_imagick_command().' -version', $returnarray);
         if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
             $library .= ' ' . $match[1];
         }
@@ -334,7 +334,7 @@ switch (pwg_image::get_library()) {
         break;
 }
 
-if ($conf['gallery_locked']) {
+if (\Piwigo\Core\Config::get('gallery_locked')) {
     $template->assign(
         [
         'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

@@ -119,10 +119,10 @@ function pwg_get_db_version()
  */
 function pwg_query(string $query)
 {
-    global $mysqli, $conf, $page, $debug, $t2;
+    global $mysqli, $page, $debug, $t2;
 
     $start = microtime(true);
-    ($result = $mysqli->query($query)) or my_error($query, $conf['die_on_sql_error']);
+    ($result = $mysqli->query($query)) or my_error($query, \Piwigo\Core\Config::dieOnSqlError());
 
     $time = microtime(true) - $start;
 
@@ -134,7 +134,7 @@ function pwg_query(string $query)
     $page['count_queries']++;
     $page['queries_time'] += $time;
 
-    if ($conf['show_queries']) {
+    if (\Piwigo\Core\Config::showQueries()) {
         $output = '';
         $output .= '<pre>['.$page['count_queries'].'] ';
         $output .= "\n".$query;

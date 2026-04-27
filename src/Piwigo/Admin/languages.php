@@ -27,9 +27,7 @@ class languages
      */
     public function perform_action($action, string $language_id): array
     {
-        global $conf;
-
-        if (!$conf['enable_extensions_install'] and 'delete' == $action) {
+        if (!\Piwigo\Core\Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -100,7 +98,7 @@ UPDATE '.USER_INFOS_TABLE.'
                 $query = '
 UPDATE '.USER_INFOS_TABLE.'
   SET language = \''.$language_id.'\'
-  WHERE user_id IN ('.$conf['default_user_id'].', '.$conf['guest_id'].')
+  WHERE user_id IN ('.\Piwigo\Core\Config::defaultUserId().', '.\Piwigo\Core\Config::guestId().')
 ;';
                 pwg_query($query);
                 break;
@@ -187,10 +185,10 @@ UPDATE '.USER_INFOS_TABLE.'
      */
     public function get_server_languages($new = false): bool
     {
-        global $user, $conf;
+        global $user;
 
         $get_data = [
-          'category_id' => $conf['pem_languages_category'],
+          'category_id' => \Piwigo\Core\Config::pemLanguagesCategory(),
           'format' => 'php',
         ];
 

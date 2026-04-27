@@ -45,9 +45,9 @@ SELECT
     ip_address,
     occured_on,
     details,
-    '.$conf['user_fields']['username'].' AS username
+    '.\Piwigo\Core\Config::userFields()['username'].' AS username
   FROM '.ACTIVITY_TABLE.'
-    JOIN '.USERS_TABLE.' AS u ON performed_by = u.'.$conf['user_fields']['id'].'
+    JOIN '.USERS_TABLE.' AS u ON performed_by = u.'.\Piwigo\Core\Config::userFields()['id'].'
     WHERE object = \'user\'
   ORDER BY activity_id DESC
 ;';
@@ -97,7 +97,7 @@ $template->assign('ADMIN_PAGE_TITLE', l10n('Users'));
 // +-----------------------------------------------------------------------+
 $template->assign([
   'PWG_TOKEN' => get_pwg_token(),
-  'INHERIT' => $conf['inheritance_by_default'],
+  'INHERIT' => \Piwigo\Core\Config::inheritanceByDefault(),
   'CACHE_KEYS' => get_admin_client_cache_keys(['users']),
   ]);
 
@@ -115,10 +115,10 @@ $nb_lines_for_user = query2array($query, 'performed_by', 'counter');
 if (count($nb_lines_for_user) > 0) {
     $query = '
   SELECT 
-      '.$conf['user_fields']['id'].' AS id, 
-      '.$conf['user_fields']['username'].' AS username 
+      '.\Piwigo\Core\Config::userFields()['id'].' AS id, 
+      '.\Piwigo\Core\Config::userFields()['username'].' AS username 
     FROM '.USERS_TABLE.' 
-    WHERE '.$conf['user_fields']['id'].' IN ('.implode(',', array_keys($nb_lines_for_user)).');';
+    WHERE '.\Piwigo\Core\Config::userFields()['id'].' IN ('.implode(',', array_keys($nb_lines_for_user)).');';
 }
 
 $username_of = query2array($query, 'id', 'username');

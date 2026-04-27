@@ -21,9 +21,7 @@ use Piwigo\Ws\PwgError;
  */
 function ws_userComments_getList(array $params, &$service): PwgError|array
 {
-    global $conf;
-
-    if (!$conf['activate_comments']) {
+    if (!\Piwigo\Core\Config::activateComments()) {
         return new PwgError(403, 'Comments are disabled');
     }
 
@@ -98,7 +96,7 @@ SELECT
     c.date,
     c.author,
     c.author_id,
-    '.$conf['user_fields']['username'].' AS username,
+    '.\Piwigo\Core\Config::userFields()['username'].' AS username,
     ui.status,
     c.content,
     i.path,
@@ -111,7 +109,7 @@ SELECT
     INNER JOIN '.IMAGES_TABLE.' AS i
       ON i.id = c.image_id
     LEFT JOIN '.USERS_TABLE.' AS u
-      ON u.'.$conf['user_fields']['id'].' = c.author_id
+      ON u.'.\Piwigo\Core\Config::userFields()['id'].' = c.author_id
     LEFT JOIN '.USER_INFOS_TABLE.' AS ui
       ON ui.user_id = c.author_id
   WHERE '.implode(' AND ', $where_clauses).'
@@ -132,7 +130,7 @@ SELECT
       ]
         )->get_url();
 
-        if (empty($row['author_id']) or $row['author_id'] == $conf['guest_id']) {
+        if (empty($row['author_id']) or $row['author_id'] == \Piwigo\Core\Config::guestId()) {
             $author_name = $row['author'];
         } else {
             $author_name = stripslashes((string) ($row['username'] ?? $row['author'] ?? l10n('guest')));
@@ -145,7 +143,7 @@ SELECT
           'file' => $row['file'],
           'image_date_available' => format_date($row['date_available'], ['day_name','day','month','year','time']),
           'author' => trigger_change('render_comment_author', $author_name),
-          'author_status' => $conf['webmaster_id'] == $row['author_id'] ? 'main_user' : $row['status'],
+          'author_status' => \Piwigo\Core\Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'],
           'date' => format_date($row['date'], ['day_name','day','month','year','time']),
           'content' => trigger_change('render_comment_content', $row['content']),
           'raw_content' => $row['content'],

@@ -74,10 +74,10 @@ $group_counter = 0;
 
 while ($row = pwg_db_fetch_assoc($result)) {
     $query = '
-SELECT u.'. $conf['user_fields']['username'].' AS username
+SELECT u.'. \Piwigo\Core\Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.' AS u
   INNER JOIN '.USER_GROUP_TABLE.' AS ug
-    ON u.'.$conf['user_fields']['id'].' = ug.user_id
+    ON u.'.\Piwigo\Core\Config::userFields()['id'].' = ug.user_id
   WHERE ug.group_id = '.$row['id'].'
 ;';
     $members = [];

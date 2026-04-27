@@ -27,9 +27,7 @@ use Piwigo\Menu\RegisteredBlock;
  */
 function get_cat_display_name($cat_informations, $url = ''): string
 {
-    global $conf;
-
-    //$output = '<a href="'.get_absolute_root_url().$conf['home_page'].'">'.l10n('Home').'</a>';
+    //$output = '<a href="'.get_absolute_root_url().\Piwigo\Core\Config::get('home_page').'">'.l10n('Home').'</a>';
     $output = '';
     $is_first = true;
 
@@ -48,7 +46,7 @@ function get_cat_display_name($cat_informations, $url = ''): string
         if ($is_first) {
             $is_first = false;
         } else {
-            $output .= $conf['level_separator'];
+            $output .= \Piwigo\Core\Config::levelSeparator();
         }
 
         if (!isset($url)) {
@@ -86,7 +84,7 @@ function get_cat_display_name_cache(
     $link_class = null,
     $auth_key = null
 ): string {
-    global $cache, $conf;
+    global $cache;
 
     $add_url_params = [];
     if (isset($auth_key)) {
@@ -124,7 +122,7 @@ SELECT id, name, permalink
         if ($is_first) {
             $is_first = false;
         } else {
-            $output .= '<span>'.$conf['level_separator'].'</span>';
+            $output .= '<span>'.\Piwigo\Core\Config::levelSeparator().'</span>';
         }
 
         if (!isset($url) or $single_link) {
@@ -237,7 +235,7 @@ function tag_alpha_compare(array $a, array $b): int
  */
 function access_denied(): void
 {
-    global $user, $conf;
+    global $user;
 
     if (isset($user) and !is_a_guest()) {
         set_status_header(401);
@@ -540,7 +538,7 @@ function render_element_description(array $info, $param = '')
  */
 function get_thumbnail_title(array $info, $title, $comment = '')
 {
-    global $conf, $user;
+    global $user;
 
     $details = [];
 
@@ -548,7 +546,7 @@ function get_thumbnail_title(array $info, $title, $comment = '')
         $details[] = l10n('%d visits', $info['hit']);
     }
 
-    if ($conf['rate'] and !empty($info['rating_score'])) {
+    if (\Piwigo\Core\Config::get('rate') and !empty($info['rating_score'])) {
         $details[] = l10n('rating score %s', $info['rating_score']);
     }
 
@@ -592,10 +590,9 @@ function get_src_image_url_protection_handler($url, $src_image)
  */
 function get_element_url_protection_handler($url, array $infos)
 {
-    global $conf;
-    if ('images' == $conf['original_url_protection']) {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
+    if ('images' == \Piwigo\Core\Config::originalUrlProtection()) {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
         $ext = get_extension($infos['path']);
-        if (!in_array($ext, $conf['picture_ext'])) {
+        if (!in_array($ext, \Piwigo\Core\Config::pictureExtensions())) {
             return $url;
         }
     }

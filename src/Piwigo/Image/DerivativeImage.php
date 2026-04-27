@@ -174,8 +174,7 @@ final class DerivativeImage
 
         $rel_path = PWG_DERIVATIVE_DIR.$loc;
 
-        global $conf;
-        $url_style = $conf['derivative_url_style'];
+        $url_style = \Piwigo\Core\Config::get('derivative_url_style');
         if (!$url_style) {
             $mtime = @filemtime(PHPWG_ROOT_PATH.$rel_path);
             if ($mtime === false or $mtime < $params->last_mod_time) {
@@ -188,10 +187,10 @@ final class DerivativeImage
 
         if ($url_style == 2) {
             $rel_url = 'i';
-            if ($conf['php_extension_in_urls']) {
+            if (\Piwigo\Core\Config::phpExtensionInUrls()) {
                 $rel_url .= '.php';
             }
-            if ($conf['question_mark_in_urls']) {
+            if (\Piwigo\Core\Config::questionMarkInUrls()) {
                 $rel_url .= '?';
             }
             $rel_url .= '/'.$loc;

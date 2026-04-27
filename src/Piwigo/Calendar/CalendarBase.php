@@ -58,11 +58,11 @@ abstract class CalendarBase
      */
     public function get_display_name()
     {
-        global $conf, $page;
+        global $page;
         $res = '';
 
         for ($i = 0; $i < count($page['chronology_date']); $i++) {
-            $res .= $conf['level_separator'];
+            $res .= \Piwigo\Core\Config::levelSeparator();
             if (isset($page['chronology_date'][$i + 1])) {
                 $chronology_date = array_slice($page['chronology_date'], 0, $i + 1);
                 $url = duplicate_index_url(
@@ -138,11 +138,11 @@ abstract class CalendarBase
         $show_empty = false,
         $labels = null
     ) {
-        global $conf, $page, $template;
+        global $page, $template;
 
         $nav_bar_datas = [];
 
-        if ($conf['calendar_show_empty'] and $show_empty and !empty($labels)) {
+        if (\Piwigo\Core\Config::calendarShowEmpty() and $show_empty and !empty($labels)) {
             foreach ($labels as $item => $label) {
                 if (! isset($items[$item])) {
                     $items[$item] = -1;
@@ -177,7 +177,7 @@ abstract class CalendarBase
 
         }
 
-        if ($conf['calendar_show_any'] and $show_any and count($items) > 1 and
+        if (\Piwigo\Core\Config::calendarShowAny() and $show_any and count($items) > 1 and
               count($date_components) < count($this->calendar_levels) - 1) {
             $url = duplicate_index_url(
                 ['chronology_date' => array_merge($date_components, ['any'])],
@@ -199,7 +199,7 @@ abstract class CalendarBase
      */
     protected function build_nav_bar($level, $labels = null)
     {
-        global $template, $conf, $page;
+        global $template, $page;
 
         $query = '
 SELECT DISTINCT('.$this->calendar_levels[$level]['sql'].') as period,

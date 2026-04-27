@@ -116,7 +116,7 @@ final class PageState
     }
 
     /**
-     * Merges $conf['header_notes'] (informational strings set by plugins or config)
+     * Merges \Piwigo\Core\Config::headerNotes() (informational strings set by plugins or config)
      * into the infos bucket so they appear in the page output.
      *
      * @param list<string> $headerNotes

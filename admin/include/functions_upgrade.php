@@ -99,7 +99,7 @@ WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
 // Deactivate all non-standard themes
 function deactivate_non_standard_themes(): void
 {
-    global $page, $conf;
+    global $page;
 
     $standard_themes = [
       'modus',
@@ -137,7 +137,7 @@ DELETE
         $query = '
 SELECT theme
   FROM '.PREFIX_TABLE.'user_infos
-  WHERE user_id = '.$conf['default_user_id'].'
+  WHERE user_id = '.\Piwigo\Core\Config::defaultUserId().'
 ;';
         [$default_theme] = pwg_db_fetch_row(pwg_query($query));
 
@@ -161,7 +161,7 @@ SELECT
             $query = '
 UPDATE '.PREFIX_TABLE.'user_infos
   SET theme = \''.PHPWG_DEFAULT_TEMPLATE.'\'
-  WHERE user_id = '.$conf['default_user_id'].'
+  WHERE user_id = '.\Piwigo\Core\Config::defaultUserId().'
 ;';
             pwg_query($query);
         }
@@ -177,7 +177,7 @@ function deactivate_templates(): void
 // Check access rights
 function check_upgrade_access_rights(): void
 {
-    global $conf, $page, $current_release;
+    global $page, $current_release;
 
     if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
         // Check if user is already connected as webmaster
@@ -225,13 +225,13 @@ WHERE username = \''.$username.'\'
 SELECT u.password, ui.status
 FROM '.USERS_TABLE.' AS u
 INNER JOIN '.USER_INFOS_TABLE.' AS ui
-ON u.'.$conf['user_fields']['id'].'=ui.user_id
-WHERE '.$conf['user_fields']['username'].'=\''.$username.'\'
+ON u.'.\Piwigo\Core\Config::userFields()['id'].'=ui.user_id
+WHERE '.\Piwigo\Core\Config::userFields()['username'].'=\''.$username.'\'
 ;';
     }
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
-    if (!$conf['password_verify']($password, $row['password'])) {
+    if (!\Piwigo\Core\Config::passwordVerify()($password, $row['password'])) {
         \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
     } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
         \Piwigo\Core\PageState::current()->addError(l10n('You do not have access rights to run upgrade'));
@@ -284,14 +284,12 @@ SELECT id
 
 function upgrade_db_connect(): void
 {
-    global $conf;
-
     try {
         pwg_db_connect(
-            $conf['db_host'],
-            $conf['db_user'],
-            $conf['db_password'],
-            $conf['db_base']
+            \Piwigo\Core\Config::get('db_host'),
+            \Piwigo\Core\Config::get('db_user'),
+            \Piwigo\Core\Config::get('db_password'),
+            \Piwigo\Core\Config::get('db_base')
         );
         pwg_db_check_version();
     } catch (Exception $e) {

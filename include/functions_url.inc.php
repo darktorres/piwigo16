@@ -32,7 +32,6 @@ function get_root_url()
  */
 function get_absolute_root_url($with_scheme = true): string
 {
-    global $conf;
     // TODO - add HERE the possibility to call PWG functions from external scripts
 
     // Support X-Forwarded-Proto header for HTTPS detection in PHP
@@ -57,15 +56,15 @@ function get_absolute_root_url($with_scheme = true): string
 
             $url_port = null;
 
-            if ('none' == $conf['url_port']) {
+            if ('none' == \Piwigo\Core\Config::urlPort()) {
                 // do nothing
-            } elseif ('auto' == $conf['url_port']) {
+            } elseif ('auto' == \Piwigo\Core\Config::urlPort()) {
                 if ((!$is_https && $_SERVER['SERVER_PORT'] != 80) || ($is_https && $_SERVER['SERVER_PORT'] != 443)) {
                     $url_port = ':'.$_SERVER['SERVER_PORT'];
                 }
             } else {
                 // we have a custom port
-                $url_port = ':'.$conf['url_port'];
+                $url_port = ':'.\Piwigo\Core\Config::urlPort();
             }
 
             if (!empty($url_port) and strrchr($url, ':') != $url_port) {
@@ -117,12 +116,11 @@ function add_url_params($url, $params, $arg_separator = '&amp;')
  */
 function make_index_url(array $params = []): string
 {
-    global $conf;
     $url = get_root_url().'index';
-    if ($conf['php_extension_in_urls']) {
+    if (\Piwigo\Core\Config::phpExtensionInUrls()) {
         $url .= '.php';
     }
-    if ($conf['question_mark_in_urls']) {
+    if (\Piwigo\Core\Config::questionMarkInUrls()) {
         $url .= '?';
     }
 
@@ -203,17 +201,15 @@ function duplicate_picture_url($redefined = [], $removed = []): string
  */
 function make_picture_url(array $params): string
 {
-    global $conf;
-
     $url = get_root_url().'picture';
-    if ($conf['php_extension_in_urls']) {
+    if (\Piwigo\Core\Config::phpExtensionInUrls()) {
         $url .= '.php';
     }
-    if ($conf['question_mark_in_urls']) {
+    if (\Piwigo\Core\Config::questionMarkInUrls()) {
         $url .= '?';
     }
     $url .= '/';
-    switch ($conf['picture_url_style']) {
+    switch (\Piwigo\Core\Config::pictureUrlStyle()) {
         case 'id-file':
             $url .= $params['image_id'];
             if (isset($params['image_file'])) {
@@ -276,7 +272,6 @@ function add_well_known_params_in_url(string $url, array $params): string
  */
 function make_section_in_url(array $params): string
 {
-    global $conf;
     $section_string = '';
     $section = @$params['section'];
     if (!isset($section)) {
@@ -317,7 +312,7 @@ function make_section_in_url(array $params): string
                     $section_string .= '/category/';
                     if (empty($params['category']['permalink'])) {
                         $section_string .= $params['category']['id'];
-                        if ($conf['category_url_style'] == 'id-name') {
+                        if (\Piwigo\Core\Config::categoryUrlStyle() == 'id-name') {
                             $section_string .= '-'.str2url($params['category']['name']);
                         }
                     } else {
@@ -330,7 +325,7 @@ function make_section_in_url(array $params): string
 
                             if (empty($category['permalink'])) {
                                 $section_string .= $category['id'];
-                                if ($conf['category_url_style'] == 'id-name') {
+                                if (\Piwigo\Core\Config::categoryUrlStyle() == 'id-name') {
                                     $section_string .= '-'.str2url($category['name']);
                                 }
                             } else {
@@ -347,7 +342,7 @@ function make_section_in_url(array $params): string
                 $section_string .= '/tags';
 
                 foreach ($params['tags'] as $tag) {
-                    switch ($conf['tag_url_style']) {
+                    switch (\Piwigo\Core\Config::tagUrlStyle()) {
                         case 'id':
                             $section_string .= '/'.$tag['id'];
                             break;
@@ -495,8 +490,6 @@ function parse_section_url(array $tokens, &$next_token): array
             $page['combined_categories'] = $combined_categories;
         }
     } elseif ('tags' == @$tokens[$next_token]) {
-        global $conf;
-
         $page['section'] = 'tags';
         $page['tags'] = [];
 
@@ -513,7 +506,7 @@ function parse_section_url(array $tokens, &$next_token): array
                 break;
             }
 
-            if ($conf['tag_url_style'] != 'tag' and preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
+            if (\Piwigo\Core\Config::tagUrlStyle() != 'tag' and preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
                 $requested_tag_ids[] = $matches[1];
             } else {
                 $requested_tag_url_names[] = $tokens[$i];
@@ -733,12 +726,11 @@ function embellish_url($url): string|array
  */
 function get_gallery_home_url()
 {
-    global $conf;
-    if (!empty($conf['gallery_url'])) {
-        if (url_is_remote($conf['gallery_url']) or $conf['gallery_url'][0] == '/') {
-            return $conf['gallery_url'];
+    if (!empty(\Piwigo\Core\Config::galleryUrl())) {
+        if (url_is_remote(\Piwigo\Core\Config::galleryUrl()) or \Piwigo\Core\Config::galleryUrl()[0] == '/') {
+            return \Piwigo\Core\Config::galleryUrl();
         }
-        return get_root_url().$conf['gallery_url'];
+        return get_root_url().\Piwigo\Core\Config::galleryUrl();
     } else {
         return make_index_url();
     }

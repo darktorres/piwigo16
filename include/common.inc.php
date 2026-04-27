@@ -93,22 +93,22 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
         header('Location: install.php');
         exit;
     }
-    // Self-heal: pre-fork installs may have $conf['dblayer'] = 'mysql' (removed extension).
-    if (($conf['dblayer'] ?? 'mysqli') === 'mysql') {
-        $conf['dblayer'] = 'mysqli';
+    // Self-heal: pre-fork installs may have \Piwigo\Core\Config::dbLayer() = 'mysql' (removed extension).
+    if ((\Piwigo\Core\Config::dbLayer() ?? 'mysqli') === 'mysql') {
+        \Piwigo\Core\Config::override('dblayer', 'mysqli');
     }
-    include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$conf['dblayer'].'.inc.php');
+    include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.\Piwigo\Core\Config::dbLayer().'.inc.php');
 
-    if (isset($conf['show_php_errors']) && !empty($conf['show_php_errors'])) {
-        @ini_set('error_reporting', $conf['show_php_errors']);
-        if ($conf['show_php_errors_on_frontend']) {
+    if (\Piwigo\Core\Config::has('show_php_errors') && !empty(\Piwigo\Core\Config::showPhpErrors())) {
+        @ini_set('error_reporting', \Piwigo\Core\Config::showPhpErrors());
+        if (\Piwigo\Core\Config::showPhpErrorsOnFrontend()) {
             @ini_set('display_errors', true);
         }
     }
 
-    if ($conf['session_gc_probability'] > 0) {
+    if (\Piwigo\Core\Config::sessionGcProbability() > 0) {
         @ini_set('session.gc_divisor', 100);
-        @ini_set('session.gc_probability', min((int)$conf['session_gc_probability'], 100));
+        @ini_set('session.gc_probability', min((int)\Piwigo\Core\Config::sessionGcProbability(), 100));
     }
 
     include(PHPWG_ROOT_PATH . 'include/constants.php');
@@ -121,10 +121,10 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     // Database connection
     try {
         pwg_db_connect(
-            $conf['db_host'],
-            $conf['db_user'],
-            $conf['db_password'],
-            $conf['db_base']
+            \Piwigo\Core\Config::get('db_host'),
+            \Piwigo\Core\Config::get('db_user'),
+            \Piwigo\Core\Config::get('db_password'),
+            \Piwigo\Core\Config::get('db_base')
         );
     } catch (Exception $e) {
         my_error(l10n($e->getMessage()), true);
@@ -135,23 +135,25 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     // in Piwigo 15, configuration setting webmaster_id is moved from config files
     // to database. It may be undefined at some point, with Piwigo 15+ scripts and
     // a Piwigo 14 database schema not upgraded yet. Let's avoid any problem.
-    $conf['webmaster_id'] ??= 1;
+    if (!\Piwigo\Core\Config::has('webmaster_id')) {
+        \Piwigo\Core\Config::override('webmaster_id', 1);
+    }
 
     load_conf_from_db();
 
     $logger = new Logger([
-      'directory' => PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'],
-      'severity' => $conf['log_level'],
+      'directory' => PHPWG_ROOT_PATH . \Piwigo\Core\Config::dataLocation() . \Piwigo\Core\Config::logDir(),
+      'severity' => \Piwigo\Core\Config::logLevel(),
       // we use an hashed filename to prevent direct file access, and we salt with
       // the db_password instead of secret_key because the log must be usable in i.php
       // (secret_key is in the database)
-      'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf['db_password']) . '.txt',
+      'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Core\Config::get('db_password')) . '.txt',
       'globPattern' => 'log_*.txt',
-      'archiveDays' => $conf['log_archive_days'],
+      'archiveDays' => \Piwigo\Core\Config::logArchiveDays(),
       ]);
 
-    if (!$conf['check_upgrade_feed']) {
-        if (!isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != get_branch_from_version(PHPWG_VERSION)) {
+    if (!\Piwigo\Core\Config::checkUpgradeFeed()) {
+        if (!\Piwigo\Core\Config::has('piwigo_db_version') or \Piwigo\Core\Config::get('piwigo_db_version') != get_branch_from_version(PHPWG_VERSION)) {
             redirect(get_root_url().'upgrade.php');
         }
     }
@@ -161,25 +163,25 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     session_start();
     load_plugins();
 
-    if (!isset($conf['piwigo_installed_version'])) {
+    if (!\Piwigo\Core\Config::has('piwigo_installed_version')) {
         conf_update_param('piwigo_installed_version', PHPWG_VERSION);
-    } elseif ($conf['piwigo_installed_version'] != PHPWG_VERSION) {
+    } elseif (\Piwigo\Core\Config::get('piwigo_installed_version') != PHPWG_VERSION) {
         // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
-        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', ['from_version' => $conf['piwigo_installed_version'], 'to_version' => PHPWG_VERSION]);
+        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', ['from_version' => \Piwigo\Core\Config::get('piwigo_installed_version'), 'to_version' => PHPWG_VERSION]);
         conf_update_param('piwigo_installed_version', PHPWG_VERSION);
     }
 
 //Check if last major update conf is set if not set it
-if (!isset($conf['last_major_update'])) {
+if (!\Piwigo\Core\Config::has('last_major_update')) {
     [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
     conf_update_param('last_major_update', $dbnow, true);
 }
 
-// 2022-02-25 due to escape on "rank" (becoming a mysql keyword in version 8), the $conf['order_by'] might
+// 2022-02-25 due to escape on "rank" (becoming a mysql keyword in version 8), the \Piwigo\Core\Config::orderBy() might
 // use a "rank", even if admin/configuration.php should have removed it. We must remove it.
 // TODO remove this data update as soon as 2025 arrives
-if (preg_match('/(, )?`rank` ASC/', $conf['order_by'])) {
-    $order_by = preg_replace('/(, )?`rank` ASC/', '', $conf['order_by']);
+if (preg_match('/(, )?`rank` ASC/', \Piwigo\Core\Config::orderBy())) {
+    $order_by = preg_replace('/(, )?`rank` ASC/', '', \Piwigo\Core\Config::orderBy());
     if ('ORDER BY ' == $order_by) {
         $order_by = 'ORDER BY id ASC';
     }
@@ -187,11 +189,11 @@ if (preg_match('/(, )?`rank` ASC/', $conf['order_by'])) {
 }
 
 // users can have defined a custom order pattern, incompatible with GUI form
-if (isset($conf['order_by_custom'])) {
-    $conf['order_by'] = $conf['order_by_custom'];
+if (\Piwigo\Core\Config::has('order_by_custom')) {
+    \Piwigo\Core\Config::override('order_by', \Piwigo\Core\Config::orderByCustom());
 }
-if (isset($conf['order_by_inside_category_custom'])) {
-    $conf['order_by_inside_category'] = $conf['order_by_inside_category_custom'];
+if (\Piwigo\Core\Config::has('order_by_inside_category_custom')) {
+    \Piwigo\Core\Config::override('order_by_inside_category', \Piwigo\Core\Config::orderByInsideCategoryCustom());
 }
 
 check_lounge();
@@ -209,8 +211,8 @@ if (in_array(substr($user['language'], 0, 2), ['fr','it','de','es','pl','ru','nl
 }
 define('PHPWG_URL', 'https://'.PHPWG_DOMAIN);
 
-if (isset($conf['alternative_pem_url']) and $conf['alternative_pem_url'] != '') {
-    define('PEM_URL', $conf['alternative_pem_url']);
+if (\Piwigo\Core\Config::has('alternative_pem_url') and \Piwigo\Core\Config::alternativePemUrl() != '') {
+    define('PEM_URL', \Piwigo\Core\Config::alternativePemUrl());
 } else {
     define('PEM_URL', 'https://'.PHPWG_DOMAIN.'/ext');
 }
@@ -268,12 +270,12 @@ if (defined('IN_ADMIN') and IN_ADMIN) {// Admin template
 } else { // Classic template
     $theme = $user['theme'];
     if (script_basename() != 'ws' and mobile_theme()) {
-        $theme = $conf['mobile_theme'];
+        $theme = \Piwigo\Core\Config::mobilTheme();
     }
     $template = new Template(PHPWG_ROOT_PATH.'themes', $theme);
 }
 
-if (!isset($conf['no_photo_yet'])) {
+if (!\Piwigo\Core\Config::has('no_photo_yet')) {
     include(PHPWG_ROOT_PATH.'include/no_photo_yet.inc.php');
 }
 
@@ -283,7 +285,7 @@ if (isset($user['internal_status']['guest_must_be_guest'])
     $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
 }
 
-if ($conf['gallery_locked']) {
+if (\Piwigo\Core\Config::get('gallery_locked')) {
     $header_msgs[] = l10n('The gallery is locked for maintenance. Please, come back later.');
 
     if (script_basename() != 'identification' and !is_admin()) {
@@ -296,7 +298,7 @@ if ($conf['gallery_locked']) {
     }
 }
 
-if ($conf['check_upgrade_feed']) {
+if (\Piwigo\Core\Config::checkUpgradeFeed()) {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
     if (check_upgrade_feed()) {
         $header_msgs[] = 'Some database upgrades are missing, '
@@ -309,26 +311,26 @@ if (count($header_msgs) > 0) {
     $header_msgs = [];
 }
 
-if (!empty($conf['filter_pages']) and get_filter_page_value('used')) {
+if (!empty(\Piwigo\Core\Config::filterPages()) and get_filter_page_value('used')) {
     include(PHPWG_ROOT_PATH.'include/filter.inc.php');
 } else {
     $filter['enabled'] = false;
 }
 
-if (isset($conf['header_notes'])) {
-    $header_notes = array_merge($header_notes, $conf['header_notes']);
+if (\Piwigo\Core\Config::has('header_notes')) {
+    $header_notes = array_merge($header_notes, \Piwigo\Core\Config::headerNotes());
 }
 
 // default event handlers
 add_event_handler('render_category_literal_description', 'render_category_literal_description');
-if (!$conf['allow_html_descriptions']) {
+if (!\Piwigo\Core\Config::allowHtmlDescriptions()) {
     add_event_handler('render_category_description', 'pwg_nl2br');
 }
 add_event_handler('render_comment_content', 'render_comment_content');
 add_event_handler('render_comment_author', 'strip_tags');
 add_event_handler('render_tag_url', 'str2url');
 add_event_handler('blockmanager_register_blocks', 'register_default_menubar_blocks', EVENT_HANDLER_PRIORITY_NEUTRAL - 1);
-if (!empty($conf['original_url_protection'])) {
+if (!empty(\Piwigo\Core\Config::originalUrlProtection())) {
     add_event_handler('get_element_url', 'get_element_url_protection_handler');
     add_event_handler('get_src_image_url', 'get_src_image_url_protection_handler');
 }

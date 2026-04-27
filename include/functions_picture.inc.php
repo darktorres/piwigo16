@@ -18,11 +18,9 @@ declare(strict_types=1);
  */
 function get_default_slideshow_params(): array
 {
-    global $conf;
-
     return [
-      'period' => $conf['slideshow_period'],
-      'repeat' => $conf['slideshow_repeat'],
+      'period' => \Piwigo\Core\Config::slideshowPeriod(),
+      'repeat' => \Piwigo\Core\Config::slideshowRepeat(),
       'play' => true,
       ];
 }
@@ -32,12 +30,10 @@ function get_default_slideshow_params(): array
  */
 function correct_slideshow_params(array $params = []): array
 {
-    global $conf;
-
-    if ($params['period'] < $conf['slideshow_period_min']) {
-        $params['period'] = $conf['slideshow_period_min'];
-    } elseif ($params['period'] > $conf['slideshow_period_max']) {
-        $params['period'] = $conf['slideshow_period_max'];
+    if ($params['period'] < \Piwigo\Core\Config::slideshowPeriodMin()) {
+        $params['period'] = \Piwigo\Core\Config::slideshowPeriodMin();
+    } elseif ($params['period'] > \Piwigo\Core\Config::slideshowPeriodMax()) {
+        $params['period'] = \Piwigo\Core\Config::slideshowPeriodMax();
     }
 
     return $params;
@@ -50,8 +46,6 @@ function correct_slideshow_params(array $params = []): array
  */
 function decode_slideshow_params($encode_params = null): array
 {
-    global $conf;
-
     $result = get_default_slideshow_params();
 
     if (is_numeric($encode_params)) {
@@ -81,8 +75,6 @@ function decode_slideshow_params($encode_params = null): array
  */
 function encode_slideshow_params(array $decode_params = []): string
 {
-    global $conf;
-
     $params = array_diff_assoc(correct_slideshow_params($decode_params), get_default_slideshow_params());
     $result = '';
 

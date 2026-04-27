@@ -416,9 +416,9 @@ UPDATE '. PLUGINS_TABLE .'
  */
 function load_plugins(): void
 {
-    global $conf, $pwg_loaded_plugins;
+    global $pwg_loaded_plugins;
     $pwg_loaded_plugins = [];
-    if ($conf['enable_plugins']) {
+    if (\Piwigo\Core\Config::enablePlugins()) {
         $plugins = get_db_plugins('active');
         foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
             load_plugin($plugin);

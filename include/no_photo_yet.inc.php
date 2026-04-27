@@ -53,7 +53,7 @@ SELECT
         $template->set_filenames(['no_photo_yet' => 'no_photo_yet.tpl']);
 
         if (is_admin()) {
-            $url = $conf['no_photo_yet_url'];
+            $url = \Piwigo\Core\Config::noPhotoYetUrl();
             if (!str_starts_with((string) $url, 'http')) {
                 $url = get_root_url().$url;
             }

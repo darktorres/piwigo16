@@ -13,7 +13,7 @@ declare(strict_types=1);
  *
  */
 
-if ($conf['rate']) {
+if (\Piwigo\Core\Config::get('rate')) {
     $rate_summary = [ 'count' => 0, 'score' => $picture['current']['rating_score'], 'average' => null ];
     if (null != $rate_summary['score']) {
         $query = '
@@ -27,7 +27,7 @@ SELECT COUNT(rate) AS count
     $template->assign('rate_summary', $rate_summary);
 
     $user_rate = null;
-    if ($conf['rate_anonymous'] or is_autorize_status(ACCESS_CLASSIC)) {
+    if (\Piwigo\Core\Config::get('rate_anonymous') or is_autorize_status(ACCESS_CLASSIC)) {
         if ($rate_summary['count'] > 0) {
             $query = 'SELECT rate
       FROM '.RATE_TABLE.'
@@ -58,7 +58,7 @@ SELECT COUNT(rate) AS count
                   ['action' => 'rate']
               ),
               'USER_RATE' => $user_rate,
-              'marks'    => $conf['rate_items'],
+              'marks'    => \Piwigo\Core\Config::rateItems(),
             ]
         );
     }

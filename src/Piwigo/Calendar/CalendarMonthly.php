@@ -48,7 +48,7 @@ class CalendarMonthly extends CalendarBase
      */
     public function generate_category_content(): bool
     {
-        global $conf, $page;
+        global $page;
 
         $view_type = $page['chronology_view'];
         if ($view_type == CAL_VIEW_CALENDAR) {
@@ -293,7 +293,7 @@ class CalendarMonthly extends CalendarBase
      */
     protected function build_month_calendar(array &$tpl_var): bool
     {
-        global $page, $lang, $conf;
+        global $page, $lang;
 
         $query = 'SELECT '.pwg_db_get_dayofmonth($this->date_field).' as period,
               COUNT(DISTINCT id) as count';
@@ -338,7 +338,7 @@ class CalendarMonthly extends CalendarBase
             //first_day_dow = week day corresponding to the first day of this month
             $wday_labels = $lang['day'];
 
-            if ('monday' == $conf['week_starts_on']) {
+            if ('monday' == \Piwigo\Core\Config::get('week_starts_on')) {
                 if ($first_day_dow == 0) {
                     $first_day_dow = 6;
                 } else {

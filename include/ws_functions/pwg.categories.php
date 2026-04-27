@@ -27,7 +27,7 @@ use Piwigo\Ws\PwgNamedStruct;
  */
 function ws_categories_getImages(array $params, &$service): PwgError|array
 {
-    global $user, $conf;
+    global $user;
 
     $params['cat_id'] = array_unique($params['cat_id']);
 
@@ -100,7 +100,7 @@ SELECT
         ) {
             $order_by = $cats[ $params['cat_id'][0] ]['image_order'];
         }
-        $order_by = empty($order_by) ? $conf['order_by'] : 'ORDER BY '.$order_by;
+        $order_by = empty($order_by) ? \Piwigo\Core\Config::orderBy() : 'ORDER BY '.$order_by;
         $favorite_ids = get_user_favorites();
 
         $query = '
@@ -236,7 +236,7 @@ SELECT
  */
 function ws_categories_getList(array $params, &$service): PwgError|array
 {
-    global $user, $conf;
+    global $user;
 
     if (!in_array($params['thumbnail_size'], array_keys(ImageStdParams::get_defined_type_map()))) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid thumbnail_size');
@@ -269,7 +269,7 @@ function ws_categories_getList(array $params, &$service): PwgError|array
         $where[] = 'status = "public"';
         $where[] = 'visible = "true"';
 
-        $join_user = $conf['guest_id'];
+        $join_user = \Piwigo\Core\Config::guestId();
     } elseif (is_admin()) {
         // in this very specific case, we don't want to hide empty
         // categories. Function calculate_permissions will only return
@@ -298,7 +298,7 @@ SELECT SQL_CALC_FOUND_ROWS
         $query .= '
     AND name LIKE \'%'.pwg_db_real_escape_string($params['search']).'%\'';
         if (!isset($params['limit'])) {
-            $query .= ' LIMIT '.$conf['linked_album_search_limit'];
+            $query .= ' LIMIT '.\Piwigo\Core\Config::linkedAlbumSearchLimit();
         }
     }
 
@@ -378,7 +378,7 @@ SELECT SQL_CALC_FOUND_ROWS
             $image_id = $row['user_representative_picture_id'];
         } elseif (!empty($row['representative_picture_id'])) { // if a representative picture is set, it has priority
             $image_id = $row['representative_picture_id'];
-        } elseif ($conf['allow_random_representative']) {
+        } elseif (\Piwigo\Core\Config::allowRandomRepresentative()) {
             // searching a random representant among elements in sub-categories
             $image_id = get_random_image_in_category($row);
         } else { // searching a random representant among representant of sub-categories
@@ -406,7 +406,7 @@ SELECT representative_picture_id
         }
 
         if (isset($image_id)) {
-            if ($conf['representative_cache_on_subcats'] and $row['user_representative_picture_id'] != $image_id) {
+            if (\Piwigo\Core\Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] != $image_id) {
                 $user_representative_updates_for[ $row['id'] ] = $image_id;
             }
 
@@ -418,7 +418,7 @@ SELECT representative_picture_id
         // management of the album thumbnail -- stops here
 
         if (empty($row['image_order'])) {
-            $row['image_order'] = str_replace('ORDER BY ', '', $conf['order_by']);
+            $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Core\Config::orderBy());
         }
 
         $cats[] = $row;
@@ -456,7 +456,7 @@ SELECT id, path, representative_ext, level
                         if (isset($image_id) and !in_array($image_id, $image_ids)) {
                             $new_image_ids[] = $image_id;
                         }
-                        if ($conf['representative_cache_on_level']) {
+                        if (\Piwigo\Core\Config::representativeCacheOnLevel()) {
                             $user_representative_updates_for[ $category['id'] ] = $image_id;
                         }
 
@@ -540,8 +540,6 @@ SELECT id, path, representative_ext
  */
 function ws_categories_getAdminList(array $params, &$service): array
 {
-    global $conf;
-
     if (!isset($params['additional_output'])) {
         $params['additional_output'] = '';
     }
@@ -580,7 +578,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
     if (isset($params['search']) and $params['search'] != '') {
         $query .= ' 
   AND name LIKE \'%'.pwg_db_real_escape_string($params['search']).'%\'
-  LIMIT '.$conf['linked_album_search_limit'];
+  LIMIT '.\Piwigo\Core\Config::linkedAlbumSearchLimit();
     }
 
     $query .= '
@@ -618,7 +616,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
         );
 
         if (empty($row['image_order'])) {
-            $row['image_order'] = str_replace('ORDER BY ', '', $conf['order_by']);
+            $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Core\Config::orderBy());
         }
 
         if (in_array('full_name_with_admin_links', $params['additional_output'])) {
@@ -650,7 +648,7 @@ SELECT
     }
 
     $limit_reached = false;
-    if ($counter > $conf['linked_album_search_limit']) {
+    if ($counter > \Piwigo\Core\Config::linkedAlbumSearchLimit()) {
         $limit_reached = true;
     }
 
@@ -661,7 +659,7 @@ SELECT
           'category',
           ['id', 'nb_images', 'name', 'uppercats', 'global_rank', 'status', 'test']
       ),
-      'limit' => $conf['linked_album_search_limit'],
+      'limit' => \Piwigo\Core\Config::linkedAlbumSearchLimit(),
       'limit_reached' => $limit_reached,
       ];
 }
@@ -681,15 +679,13 @@ function ws_categories_add(array $params, &$service): PwgError|array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    global $conf;
-
     if (isset($params['pwg_token']) and get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
     if (!empty($params['position']) and in_array($params['position'], ['first','last'])) {
         //TODO make persistent with user prefs
-        $conf['newcat_default_position'] = $params['position'];
+        \Piwigo\Core\Config::override('newcat_default_position', $params['position']);
     }
 
     $options = [];
@@ -698,11 +694,11 @@ function ws_categories_add(array $params, &$service): PwgError|array
     }
 
     if (!empty($params['comment'])) {
-        $options['comment'] = (!$conf['allow_html_descriptions'] or !isset($params['pwg_token'])) ? strip_tags((string) $params['comment']) : $params['comment'];
+        $options['comment'] = (!\Piwigo\Core\Config::allowHtmlDescriptions() or !isset($params['pwg_token'])) ? strip_tags((string) $params['comment']) : $params['comment'];
     }
 
     $creation_output = create_virtual_category(
-        (!$conf['allow_html_descriptions'] or !isset($params['pwg_token'])) ? strip_tags((string) $params['name']) : $params['name'],
+        (!\Piwigo\Core\Config::allowHtmlDescriptions() or !isset($params['pwg_token'])) ? strip_tags((string) $params['name']) : $params['name'],
         $params['parent'],
         $options
     );
@@ -804,8 +800,6 @@ SELECT id
  */
 function ws_categories_setInfo(array $params, &$service)
 {
-    global $conf;
-
     if (isset($params['pwg_token']) and get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
@@ -855,7 +849,7 @@ SELECT *
     foreach ($info_columns as $key) {
         if (isset($params[$key])) {
             $perform_update = true;
-            $update[$key] = (!$conf['allow_html_descriptions'] or !isset($params['pwg_token'])) ? strip_tags((string) $params[$key]) : $params[$key];
+            $update[$key] = (!\Piwigo\Core\Config::allowHtmlDescriptions() or !isset($params['pwg_token'])) ? strip_tags((string) $params[$key]) : $params[$key];
         }
     }
 
@@ -935,15 +929,13 @@ UPDATE '. USER_CACHE_CATEGORIES_TABLE .'
  * API method
  *
  * Deletes the album thumbnail. Only possible if
- * $conf['allow_random_representative'] or if the album has no direct photos.
+ * \Piwigo\Core\Config::allowRandomRepresentative() or if the album has no direct photos.
  *
  * @param mixed[] $params
  *    @option int category_id
  */
 function ws_categories_deleteRepresentative(array $params, &$service)
 {
-    global $conf;
-
     // does the category really exist?
     $query = '
 SELECT id
@@ -962,7 +954,7 @@ SELECT COUNT(*)
 ;';
     [$nb_images] = pwg_db_fetch_row(pwg_query($query));
 
-    if (!$conf['allow_random_representative'] and $nb_images != 0) {
+    if (!\Piwigo\Core\Config::allowRandomRepresentative() and $nb_images != 0) {
         return new PwgError(401, 'not permitted');
     }
 
@@ -986,8 +978,6 @@ UPDATE '.CATEGORIES_TABLE.'
  */
 function ws_categories_refreshRepresentative(array $params, &$service): PwgError|array
 {
-    global $conf;
-
     // does the category really exist?
     $query = '
 SELECT id
@@ -1249,8 +1239,6 @@ SELECT
  */
 function ws_categories_calculateOrphans(array $param, &$service)
 {
-    global $conf;
-
     $category_id = $param['category_id'][0];
 
     $query = '

@@ -68,7 +68,7 @@ SELECT id, file, path, representative_ext
     }
 
     $args = [
-      'subject' => l10n('[%s] Visit album %s', $conf['gallery_title'], trigger_change('render_category_name', $category['name'], 'admin_cat_list')),
+      'subject' => l10n('[%s] Visit album %s', \Piwigo\Core\Config::galleryTitle(), trigger_change('render_category_name', $category['name'], 'admin_cat_list')),
       // TODO : change this language variable to 'Visit album %s'
       // TODO : 'language_selected' => ....
       ];
@@ -107,10 +107,10 @@ SELECT
     ui.user_id,
     ui.status,
     ui.language,
-    u.'.$conf['user_fields']['email'].' AS email,
-    u.'.$conf['user_fields']['username'].' AS username
+    u.'.\Piwigo\Core\Config::userFields()['email'].' AS email,
+    u.'.\Piwigo\Core\Config::userFields()['username'].' AS username
   FROM '.USER_INFOS_TABLE.' AS ui
-    JOIN '.USERS_TABLE.' AS u ON u.'.$conf['user_fields']['id'].' = ui.user_id
+    JOIN '.USERS_TABLE.' AS u ON u.'.\Piwigo\Core\Config::userFields()['id'].' = ui.user_id
   WHERE ui.user_id IN ('.implode(',', $_POST['users']).')
 ;';
         $users = query2array($query);
@@ -195,11 +195,11 @@ $template->assign(
     ]
 );
 
-if ($conf['auth_key_duration'] > 0) {
+if (\Piwigo\Core\Config::authKeyDuration() > 0) {
     $template->assign(
         'auth_key_duration',
         time_since(
-            strtotime('now -'.$conf['auth_key_duration'].' second'),
+            strtotime('now -'.\Piwigo\Core\Config::authKeyDuration().' second'),
             'second',
             null,
             false
@@ -293,8 +293,8 @@ SELECT
 if (count($user_ids) > 0) {
     $query = '
 SELECT
-    '.$conf['user_fields']['id'].' AS id,
-    '.$conf['user_fields']['username'].' AS username
+    '.\Piwigo\Core\Config::userFields()['id'].' AS id,
+    '.\Piwigo\Core\Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.'
   WHERE id IN ('.implode(',', $user_ids).')
 ;';

@@ -20,8 +20,6 @@ use Piwigo\Ws\PwgNamedArray;
  */
 function ws_isInvokeAllowed($res, $methodName, $params)
 {
-    global $conf;
-
     if (str_starts_with((string) $methodName, 'reflection.')) { // OK for reflection
         return $res;
     }

@@ -22,7 +22,7 @@ $prefilters = [
   ['ID' => 'all_photos', 'NAME' => l10n('All')],
 ];
 
-if ($conf['enable_synchronization']) {
+if (\Piwigo\Core\Config::enableSynchronization()) {
     $prefilters[] = ['ID' => 'no_virtual_album', 'NAME' => l10n('With no virtual album')];
     $prefilters[] = ['ID' => 'no_sync_md5sum', 'NAME' => l10n('With no checksum')];
 }
@@ -39,7 +39,7 @@ usort($prefilters, fn (array $a, array $b): int => strcmp(strtolower((string) $a
 
 $template->assign(
     [
-    'conf_checksum_compute_blocksize' => $conf['checksum_compute_blocksize'],
+    'conf_checksum_compute_blocksize' => \Piwigo\Core\Config::checksumComputeBlocksize(),
     'prefilters' => $prefilters,
     'filter' => $_SESSION['bulk_manager_filter'],
     'selection' => $collection,
@@ -63,7 +63,7 @@ if (isset($page['no_md5sum_number'])) {
 }
 
 // privacy level
-foreach ($conf['available_permission_levels'] as $level) {
+foreach (\Piwigo\Core\Config::availablePermissionLevels() as $level) {
     $level_options[$level] = l10n(sprintf('Level %d', $level));
 
     if (0 == $level) {

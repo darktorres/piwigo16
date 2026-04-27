@@ -11,7 +11,7 @@ declare(strict_types=1);
 /* nbm_global_var */
 $env_nbm = [
             'start_time' => get_moment(),
-            'sendmail_timeout' => (intval(ini_get('max_execution_time')) * $conf['nbm_max_treatment_timeout_percent']),
+            'sendmail_timeout' => (intval(ini_get('max_execution_time')) * \Piwigo\Core\Config::nbmMaxTreatmentTimeoutPercent()),
             'is_sendmail_timeout' => false,
           ];
 
@@ -20,7 +20,7 @@ if (
     (!is_numeric($env_nbm['sendmail_timeout'])) or
     ($env_nbm['sendmail_timeout'] <= 0)
 ) {
-    $env_nbm['sendmail_timeout'] = $conf['nbm_treatment_timeout_default'];
+    $env_nbm['sendmail_timeout'] = \Piwigo\Core\Config::nbmTreatmentTimeoutDefault();
 }
 
 /*
@@ -86,8 +86,6 @@ function quote_check_key_list($check_key_list = []): array
  */
 function get_user_notifications($action, $check_key_list = [], $enabled_filter_value = ''): array
 {
-    global $conf;
-
     $data_users = [];
 
     if (in_array($action, ['subscribe', 'send'])) {
@@ -103,13 +101,13 @@ function get_user_notifications($action, $check_key_list = [], $enabled_filter_v
 select
   N.user_id,
   N.check_key,
-  U.'.$conf['user_fields']['username'].' as username,
-  U.'.$conf['user_fields']['email'].' as mail_address,
+  U.'.\Piwigo\Core\Config::userFields()['username'].' as username,
+  U.'.\Piwigo\Core\Config::userFields()['email'].' as mail_address,
   N.enabled,
   N.last_send,
   UI.status
 from '.USER_MAIL_NOTIFICATION_TABLE.' as N
-  JOIN '.USERS_TABLE.' as U on N.user_id =  U.'.$conf['user_fields']['id'].'
+  JOIN '.USERS_TABLE.' as U on N.user_id =  U.'.\Piwigo\Core\Config::userFields()['id'].'
   JOIN '.USER_INFOS_TABLE.' as UI on UI.user_id = N.user_id
 where 1=1';
 
@@ -117,7 +115,7 @@ where 1=1';
             // No mail empty and all users enabled
             $query .= ' and
   N.enabled = \'true\' and
-  U.'.$conf['user_fields']['email'].' is not null';
+  U.'.\Piwigo\Core\Config::userFields()['email'].' is not null';
         }
 
         $query .= $query_and_check_key;
@@ -158,7 +156,7 @@ order by';
  */
 function begin_users_env_nbm($is_to_send_mail = false): void
 {
-    global $user, $lang, $lang_info, $conf, $env_nbm;
+    global $user, $lang, $lang_info, $env_nbm;
 
     // Save $user, $lang_info and $lang arrays (include/user.inc.php has been executed)
     $env_nbm['save_user'] = $user;
@@ -169,8 +167,8 @@ function begin_users_env_nbm($is_to_send_mail = false): void
 
     if ($is_to_send_mail) {
         // Init mail configuration
-        $env_nbm['email_format'] = get_str_email_format($conf['nbm_send_html_mail']);
-        $env_nbm['send_as_name'] = ((isset($conf['nbm_send_mail_as']) and !empty($conf['nbm_send_mail_as'])) ? $conf['nbm_send_mail_as'] : get_mail_sender_name());
+        $env_nbm['email_format'] = get_str_email_format(\Piwigo\Core\Config::nbmSendHtmlMail());
+        $env_nbm['send_as_name'] = ((\Piwigo\Core\Config::has('nbm_send_mail_as') and !empty(\Piwigo\Core\Config::nbmSendMailAs())) ? \Piwigo\Core\Config::nbmSendMailAs() : get_mail_sender_name());
         $env_nbm['send_as_mail_address'] = get_webmaster_mail_address();
         $env_nbm['send_as_mail_formated'] = format_email($env_nbm['send_as_name'], $env_nbm['send_as_mail_address']);
         // Init mail counter
@@ -341,7 +339,7 @@ function assign_vars_nbm_mail_content(array $nbm_user): void
  */
 function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_subscribe = false, $check_key_list = []): array
 {
-    global $conf, $page, $env_nbm, $conf;
+    global $page, $env_nbm;
 
     set_make_full_url();
 
@@ -383,7 +381,7 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
                 // set env nbm user
                 set_user_on_env_nbm($nbm_user, true);
 
-                $subject = '['.$conf['gallery_title'].'] '.($is_subscribe ? l10n('Subscribe to notification by mail') : l10n('Unsubscribe from notification by mail'));
+                $subject = '['.\Piwigo\Core\Config::galleryTitle().'] '.($is_subscribe ? l10n('Subscribe to notification by mail') : l10n('Unsubscribe from notification by mail'));
 
                 // Assign current var for nbm mail
                 assign_vars_nbm_mail_content($nbm_user);
@@ -393,7 +391,7 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
                 $env_nbm['mail_template']->assign(
                     [
                     $section_action_by => true,
-                    'GOTO_GALLERY_TITLE' => $conf['gallery_title'],
+                    'GOTO_GALLERY_TITLE' => \Piwigo\Core\Config::galleryTitle(),
                     'GOTO_GALLERY_URL' => get_gallery_home_url(),
           ]
                 );

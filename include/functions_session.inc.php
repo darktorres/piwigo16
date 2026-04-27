@@ -24,19 +24,21 @@ if (version_compare(PHP_VERSION, '8.0.0') < 0) {
     include_once(PHPWG_ROOT_PATH.'/include/pwgsession_php7.class.php');
 }
 
-if (isset($conf['session_save_handler'])
-  and ($conf['session_save_handler'] == 'db')
+// Config class may not be autoloaded yet during install.php bootstrap.
+if (class_exists(\Piwigo\Core\Config::class, false)
+  and \Piwigo\Core\Config::has('session_save_handler')
+  and (\Piwigo\Core\Config::sessionSaveHandler() == 'db')
   and defined('PHPWG_INSTALLED')) {
     session_set_save_handler(new PwgSession());
 
     if (function_exists('ini_set')) {
-        ini_set('session.use_cookies', $conf['session_use_cookies']);
-        ini_set('session.use_only_cookies', $conf['session_use_only_cookies']);
-        ini_set('session.use_trans_sid', intval($conf['session_use_trans_sid']));
+        ini_set('session.use_cookies', \Piwigo\Core\Config::sessionUseCookies());
+        ini_set('session.use_only_cookies', \Piwigo\Core\Config::sessionUseOnlyCookies());
+        ini_set('session.use_trans_sid', intval(\Piwigo\Core\Config::sessionUseTransSid()));
         ini_set('session.cookie_httponly', 1);
     }
 
-    session_name($conf['session_name']);
+    session_name(\Piwigo\Core\Config::sessionName());
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => cookie_path(),
@@ -96,9 +98,7 @@ function pwg_session_close(): bool
  */
 function get_remote_addr_session_hash(): string
 {
-    global $conf;
-
-    if (!$conf['session_use_ip_address']) {
+    if (!\Piwigo\Core\Config::sessionUseIpAddress()) {
         return '';
     }
 
@@ -176,13 +176,11 @@ DELETE
  */
 function pwg_session_gc(): bool
 {
-    global $conf;
-
     $query = '
 DELETE
   FROM '.SESSIONS_TABLE.'
   WHERE '.pwg_db_date_to_ts('NOW()').' - '.pwg_db_date_to_ts('expiration').' > '
-    .$conf['session_length'].'
+    .\Piwigo\Core\Config::sessionLength().'
 ;';
     pwg_query($query);
     return true;

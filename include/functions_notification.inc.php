@@ -435,7 +435,7 @@ function news($start = null, $end = null, $exclude_img_cats = false, $add_url = 
  */
 function get_recent_post_dates($max_dates, $max_elements, $max_cats)
 {
-    global $conf, $user, $persistent_cache;
+    global $user, $persistent_cache;
 
     $cache_key = $persistent_cache->make_key('recent_posts'.$user['id'].$user['cache_update_time'].$max_dates.$max_elements.$max_cats);
     if ($persistent_cache->get($cache_key, $cached)) {
@@ -517,8 +517,6 @@ function get_recent_post_dates_array(array $args)
  */
 function get_html_description_recent_post_date(array $date_detail, $auth_key = null): string
 {
-    global $conf;
-
     $add_url_params = [];
     if (isset($auth_key)) {
         $add_url_params['auth'] = $auth_key;

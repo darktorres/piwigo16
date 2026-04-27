@@ -25,19 +25,18 @@ if (isset($_GET['f_min_rates'])) {
     $filter_min_rates = (int)$_GET['f_min_rates'];
 }
 
-$consensus_top_number = $conf['top_number'];
+$consensus_top_number = \Piwigo\Core\Config::topNumber();
 if (isset($_GET['consensus_top_number'])) {
     $consensus_top_number = (int)$_GET['consensus_top_number'];
 }
 
 // build users
-global $conf;
 $query = 'SELECT DISTINCT
-  u.'.$conf['user_fields']['id'].' AS id,
-  u.'.$conf['user_fields']['username'].' AS name,
+  u.'.\Piwigo\Core\Config::userFields()['id'].' AS id,
+  u.'.\Piwigo\Core\Config::userFields()['username'].' AS name,
   ui.status
   FROM '.USERS_TABLE.' AS u INNER JOIN '.USER_INFOS_TABLE.' AS ui
-    ON u.'.$conf['user_fields']['id'].' = ui.user_id';
+    ON u.'.\Piwigo\Core\Config::userFields()['id'].' = ui.user_id';
 
 $users_by_id = [];
 $result = pwg_query($query);
@@ -49,7 +48,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
 }
 
 $by_user_rating_model = [ 'rates' => [] ];
-foreach ($conf['rate_items'] as $rate) {
+foreach (\Piwigo\Core\Config::rateItems() as $rate) {
     $by_user_rating_model['rates'][$rate] = [];
 }
 
@@ -231,7 +230,7 @@ $template->assign([
   'F_ACTION' => get_root_url().'admin.php',
   'F_MIN_RATES' => $filter_min_rates,
   'CONSENSUS_TOP_NUMBER' => $consensus_top_number,
-  'available_rates' => $conf['rate_items'],
+  'available_rates' => \Piwigo\Core\Config::rateItems(),
   'ratings' => $by_user_ratings,
   'image_urls' => $image_urls,
   'TN_WIDTH' => ImageStdParams::get_by_type(IMG_SQUARE)->sizing->ideal_size[0],

@@ -8,7 +8,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-$filters_views = safe_unserialize(conf_get_param('filters_views', $conf['default_filters_views']));
+$filters_views = safe_unserialize(conf_get_param('filters_views', \Piwigo\Core\Config::defaultFiltersViews()));
 
 $template->assign('display_filter', $filters_views);
 
@@ -362,10 +362,10 @@ SELECT
 
             $query = '
 SELECT
-    '.$conf['user_fields']['id'].' AS id,
-    '.$conf['user_fields']['username'].' AS username
+    '.\Piwigo\Core\Config::userFields()['id'].' AS id,
+    '.\Piwigo\Core\Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.'
-  WHERE '.$conf['user_fields']['id'].' IN ('.implode(',', $user_ids).')
+  WHERE '.\Piwigo\Core\Config::userFields()['id'].' IN ('.implode(',', $user_ids).')
 ;';
             $username_of = query2array($query, 'id', 'username');
 
@@ -463,7 +463,7 @@ SELECT
     }
 
     // For rating
-    if ($conf['rate']) {
+    if (\Piwigo\Core\Config::get('rate')) {
         $template->assign('SHOW_FILTER_RATINGS', true);
 
         if (isset($my_search['fields']['ratings']) and $display_filters['rating']['access']) {

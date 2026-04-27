@@ -60,12 +60,10 @@ final class ImageStdParams
      */
     public static function get_disabled_type_map()
     {
-        global $conf;
-
         if (count(self::$disabled_type_map)) {
             return self::$disabled_type_map;
         }
-        return $conf['disabled_derivatives'] ?? [];
+        return \Piwigo\Core\Config::get('disabled_derivatives') ?? [];
     }
 
     /**
@@ -119,8 +117,7 @@ final class ImageStdParams
      */
     public static function load_from_db(): void
     {
-        global $conf;
-        $arr = @unserialize($conf['derivatives'] ?? '');
+        $arr = @unserialize(\Piwigo\Core\Config::get('derivatives') ?? '');
         if (false !== $arr) {
             self::$type_map = $arr['d'];
             self::$watermark = @$arr['w'];

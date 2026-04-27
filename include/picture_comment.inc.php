@@ -24,7 +24,7 @@ foreach ($related_categories as $category) {
 }
 
 if ($page['show_comments'] and isset($_POST['content'])) {
-    if (is_a_guest() and !$conf['comments_forall']) {
+    if (is_a_guest() and !\Piwigo\Core\Config::get('comments_forall')) {
         die('Session expired');
     }
 
@@ -91,7 +91,7 @@ SELECT
         duplicate_picture_url([], ['start']),
         $row['nb_comments'],
         $page['start'],
-        $conf['nb_comment_page'],
+        \Piwigo\Core\Config::get('nb_comment_page'),
         true // We want a clean URL
     );
 
@@ -108,7 +108,7 @@ SELECT
         if (!empty($_GET['comments_order']) && in_array(strtoupper((string) $_GET['comments_order']), ['ASC', 'DESC'])) {
             pwg_set_session_var('comments_order', $_GET['comments_order']);
         }
-        $comments_order = pwg_get_session_var('comments_order', $conf['comments_order']);
+        $comments_order = pwg_get_session_var('comments_order', \Piwigo\Core\Config::get('comments_order'));
 
         $template->assign([
           'COMMENTS_ORDER_URL' => add_url_params(duplicate_picture_url(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC') ]),
@@ -120,7 +120,7 @@ SELECT
     com.id,
     com.author,
     com.author_id,
-    u.'.$conf['user_fields']['email'].' AS user_email,
+    u.'.\Piwigo\Core\Config::userFields()['email'].' AS user_email,
     com.date,
     com.image_id,
     com.website_url,
@@ -129,11 +129,11 @@ SELECT
     com.validated
   FROM '.COMMENTS_TABLE.' AS com
   LEFT JOIN '.USERS_TABLE.' AS u
-    ON u.'.$conf['user_fields']['id'].' = author_id
+    ON u.'.\Piwigo\Core\Config::userFields()['id'].' = author_id
   WHERE com.image_id = '.$page['image_id'].'
     '.$validated_clause.'
   ORDER BY com.date '.$comments_order.'
-  LIMIT '.$conf['nb_comment_page'].' OFFSET '.$page['start'].'
+  LIMIT '.\Piwigo\Core\Config::get('nb_comment_page').' OFFSET '.$page['start'].'
 ;';
         $result = pwg_query($query);
 
@@ -207,7 +207,7 @@ SELECT
     if (isset($edit_comment)) {
         $show_add_comment_form = false;
     }
-    if (is_a_guest() and !$conf['comments_forall']) {
+    if (is_a_guest() and !\Piwigo\Core\Config::get('comments_forall')) {
         $show_add_comment_form = false;
     }
 
@@ -219,13 +219,13 @@ SELECT
             'KEY' =>              $key,
             'CONTENT' =>          '',
             'SHOW_AUTHOR' =>      !is_classic_user(),
-            'AUTHOR_MANDATORY' => $conf['comments_author_mandatory'],
+            'AUTHOR_MANDATORY' => \Piwigo\Core\Config::get('comments_author_mandatory'),
             'AUTHOR' =>           '',
             'WEBSITE_URL' =>      '',
             'SHOW_EMAIL' =>       !is_classic_user() or empty($user['email']),
-            'EMAIL_MANDATORY' =>  $conf['comments_email_mandatory'],
+            'EMAIL_MANDATORY' =>  \Piwigo\Core\Config::get('comments_email_mandatory'),
             'EMAIL' =>            '',
-            'SHOW_WEBSITE' =>     $conf['comments_enable_website'],
+            'SHOW_WEBSITE' =>     \Piwigo\Core\Config::get('comments_enable_website'),
           ];
 
         if ('reject' == @$comment_action) {

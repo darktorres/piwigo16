@@ -62,9 +62,7 @@ class plugins
      */
     public function perform_action($action, string $plugin_id, array $options = [])
     {
-        global $conf;
-
-        if (!$conf['enable_extensions_install'] and 'delete' == $action) {
+        if (!\Piwigo\Core\Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -344,10 +342,8 @@ DELETE FROM '. PLUGINS_TABLE .'
      */
     public function get_versions_to_check($beta_test = false, $version = PHPWG_VERSION): array
     {
-        global $conf;
-
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php?category_id='. $conf['pem_plugins_category'] .'&format=php';
+        $url = PEM_URL . '/api/get_version_list.php?category_id='. \Piwigo\Core\Config::pemPluginsCategory() .'&format=php';
         if (fetchRemote($url, $result) and $pem_versions = @unserialize($result)) {
             $i = 0;
 
@@ -385,7 +381,7 @@ DELETE FROM '. PLUGINS_TABLE .'
      */
     public function get_server_plugins($new = false, $beta_test = false): bool
     {
-        global $user, $conf;
+        global $user;
 
         $versions_to_check = $this->get_versions_to_check($beta_test);
         if (empty($versions_to_check)) {
@@ -403,7 +399,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         // Retrieve PEM plugins infos
         $url = PEM_URL . '/api/get_revision_list-next.php';
         $get_data = [
-          'category_id' => $conf['pem_plugins_category'],
+          'category_id' => \Piwigo\Core\Config::pemPluginsCategory(),
           'format' => 'php',
           'last_revision_only' => 'true',
           'version' => implode(',', $versions_to_check),
@@ -445,8 +441,6 @@ DELETE FROM '. PLUGINS_TABLE .'
             return false;
         }
 
-        global $conf;
-
         // Plugins to check
         $plugins_to_check = [];
         foreach ($this->fs_plugins as $fs_plugin) {
@@ -458,7 +452,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         // Retrieve PEM plugins infos
         $url = PEM_URL . '/api/get_revision_list.php';
         $get_data = [
-          'category_id' => $conf['pem_plugins_category'],
+          'category_id' => \Piwigo\Core\Config::pemPluginsCategory(),
           'format' => 'php',
           'version' => implode(',', $versions_to_check),
           'extension_include' => implode(',', $plugins_to_check),

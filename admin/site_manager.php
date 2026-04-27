@@ -21,7 +21,7 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-if (!$conf['enable_synchronization']) {
+if (!\Piwigo\Core\Config::enableSynchronization()) {
     die('synchronization is disabled');
 }
 

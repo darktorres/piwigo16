@@ -21,7 +21,7 @@ class CalendarWeekly extends CalendarBase
     public function initialize($inner_sql): void
     {
         parent::initialize($inner_sql);
-        global $lang, $conf;
+        global $lang;
         $week_no_labels = [];
         for ($i = 1; $i <= 53; $i++) {
             $week_no_labels[$i] = l10n('Week %d', $i);
@@ -44,7 +44,7 @@ class CalendarWeekly extends CalendarBase
          ];
         //Comment next lines for week starting on Sunday or if MySQL version<4.0.17
         //WEEK(date,5) = "0-53 - Week 1=the first week with a Monday in this year"
-        if ('monday' == $conf['week_starts_on']) {
+        if ('monday' == \Piwigo\Core\Config::get('week_starts_on')) {
             $this->calendar_levels[CWEEK]['sql'] = pwg_db_get_week($this->date_field, 5).'+1';
             $this->calendar_levels[CDAY]['sql'] = pwg_db_get_weekday($this->date_field);
             $this->calendar_levels[CDAY]['labels'][] = array_shift($this->calendar_levels[CDAY]['labels']);
@@ -58,7 +58,7 @@ class CalendarWeekly extends CalendarBase
      */
     public function generate_category_content(): bool
     {
-        global $conf, $page;
+        global $page;
 
         if (count($page['chronology_date']) == 0) {
             $this->build_nav_bar(CYEAR); // years

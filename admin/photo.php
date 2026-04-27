@@ -67,7 +67,7 @@ if ('properties' == $page['tab']) {
     include(PHPWG_ROOT_PATH.'admin/picture_modify.php');
 } elseif ('coi' == $page['tab']) {
     include(PHPWG_ROOT_PATH.'admin/picture_coi.php');
-} elseif ('formats' == $page['tab'] && $conf['enable_formats']) {
+} elseif ('formats' == $page['tab'] && \Piwigo\Core\Config::isFormatsEnabled()) {
     include(PHPWG_ROOT_PATH.'admin/picture_formats.php');
 } else {
     include(PHPWG_ROOT_PATH.'admin/photo_'.$page['tab'].'.php');

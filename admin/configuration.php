@@ -112,11 +112,11 @@ $display_info_checkboxes = [
     'rating_score',
   ];
 
-if (!isset($conf['filters_views'])) {
-    \Piwigo\Core\Config::persist('filters_views', $conf['default_filters_views']);
+if (!\Piwigo\Core\Config::has('filters_views')) {
+    \Piwigo\Core\Config::persist('filters_views', \Piwigo\Core\Config::defaultFiltersViews());
 }
 
-$filters_names_checkboxes = array_values(array_diff(array_keys(safe_unserialize($conf['filters_views'])), ['last_filters_conf']));
+$filters_names_checkboxes = array_values(array_diff(array_keys(safe_unserialize(\Piwigo\Core\Config::get('filters_views'))), ['last_filters_conf']));
 
 // image order management
 $sort_fields = [
@@ -156,7 +156,7 @@ if (isset($_POST['submit'])) {
     switch ($page['section']) {
         case 'main':
             {
-                if (!isset($conf['order_by_custom']) and !isset($conf['order_by_inside_category_custom'])) {
+                if (!\Piwigo\Core\Config::has('order_by_custom') and !\Piwigo\Core\Config::has('order_by_inside_category_custom')) {
                     if (!empty($_POST['order_by'])) {
                         check_input_parameter('order_by', $_POST, true, '/^('.implode('|', array_keys($sort_fields)).')$/');
 
@@ -280,7 +280,7 @@ if (isset($_POST['submit'])) {
                 $value = $_POST[$row['param']];
 
                 if ('gallery_title' == $row['param']) {
-                    if (!$conf['allow_html_descriptions']) {
+                    if (!\Piwigo\Core\Config::allowHtmlDescriptions()) {
                         $value = strip_tags((string) $value);
                     }
                 }
@@ -352,23 +352,23 @@ switch ($page['section']) {
                 $conf = [];
                 include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
                 @include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
-                if (isset($conf['local_dir_site'])) {
+                if (\Piwigo\Core\Config::has('local_dir_site')) {
                     @include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR. 'config/config.inc.php');
                 }
 
-                return isset($conf['order_by']) or isset($conf['order_by_inside_category']);
+                return \Piwigo\Core\Config::has('order_by') or \Piwigo\Core\Config::has('order_by_inside_category');
             }
 
             if (order_by_is_local()) {
-                \Piwigo\Core\PageState::current()->addWarning(l10n('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !'));
+                \Piwigo\Core\PageState::current()->addWarning(l10n('You have specified <i>' . '$' . 'conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>' . '$' . 'conf[\'order_by_custom\']</i> !'));
             }
 
-            if (isset($conf['order_by_custom']) or isset($conf['order_by_inside_category_custom'])) {
+            if (\Piwigo\Core\Config::has('order_by_custom') or \Piwigo\Core\Config::has('order_by_inside_category_custom')) {
                 $order_by = [''];
                 $template->assign('ORDER_BY_IS_CUSTOM', true);
             } else {
                 $out = [];
-                $order_by = trim((string) $conf['order_by_inside_category']);
+                $order_by = trim((string) \Piwigo\Core\Config::orderByInsideCategory());
                 $order_by = str_replace('ORDER BY ', '', $order_by);
                 $order_by = explode(', ', $order_by);
             }
@@ -376,20 +376,20 @@ switch ($page['section']) {
             $template->assign(
                 'main',
                 [
-                'CONF_GALLERY_TITLE' => htmlspecialchars((string) $conf['gallery_title']),
-                'CONF_PAGE_BANNER' => htmlspecialchars((string) $conf['page_banner']),
+                'CONF_GALLERY_TITLE' => htmlspecialchars((string) \Piwigo\Core\Config::galleryTitle()),
+                'CONF_PAGE_BANNER' => htmlspecialchars((string) \Piwigo\Core\Config::pageBanner()),
                 'week_starts_on_options' => [
                   'sunday' => $lang['day'][0],
                   'monday' => $lang['day'][1],
                   ],
-                'week_starts_on_options_selected' => $conf['week_starts_on'],
-                'mail_theme' => $conf['mail_theme'],
+                'week_starts_on_options_selected' => \Piwigo\Core\Config::get('week_starts_on'),
+                'mail_theme' => \Piwigo\Core\Config::get('mail_theme'),
                 'mail_theme_options' => $mail_themes,
                 'order_by' => $order_by,
                 'order_by_options' => $sort_fields,
-                'email_admin_on_new_user' => 'none' != $conf['email_admin_on_new_user'],
-                'email_admin_on_new_user_filter' => in_array($conf['email_admin_on_new_user'], ['none', 'all']) ? 'all' : 'group',
-                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', (string) $conf['email_admin_on_new_user'], $matches) ? $matches[1] : -1,
+                'email_admin_on_new_user' => 'none' != \Piwigo\Core\Config::get('email_admin_on_new_user'),
+                'email_admin_on_new_user_filter' => in_array(\Piwigo\Core\Config::get('email_admin_on_new_user'), ['none', 'all']) ? 'all' : 'group',
+                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', (string) \Piwigo\Core\Config::get('email_admin_on_new_user'), $matches) ? $matches[1] : -1,
                 ]
             );
 
@@ -413,7 +413,7 @@ switch ($page['section']) {
                 $template->append(
                     'main',
                     [
-                      $checkbox => $conf[$checkbox],
+                      $checkbox => \Piwigo\Core\Config::get($checkbox),
                       ],
                     true
                 );
@@ -425,8 +425,8 @@ switch ($page['section']) {
             $template->assign(
                 'comments',
                 [
-                'NB_COMMENTS_PAGE' => $conf['nb_comment_page'],
-                'comments_order' => $conf['comments_order'],
+                'NB_COMMENTS_PAGE' => \Piwigo\Core\Config::get('nb_comment_page'),
+                'comments_order' => \Piwigo\Core\Config::get('comments_order'),
                 'comments_order_options' => $comments_order,
                 ]
             );
@@ -435,7 +435,7 @@ switch ($page['section']) {
                 $template->append(
                     'comments',
                     [
-                      $checkbox => $conf[$checkbox],
+                      $checkbox => \Piwigo\Core\Config::get($checkbox),
                       ],
                     true
                 );
@@ -444,13 +444,13 @@ switch ($page['section']) {
         }
     case 'default':
         {
-            $edit_user = build_user($conf['guest_id'], false);
+            $edit_user = build_user(\Piwigo\Core\Config::guestId(), false);
             include_once(PHPWG_ROOT_PATH.'profile.php');
 
             $errors = [];
             if (save_profile_from_post($edit_user, $errors)) {
                 // Reload user
-                $edit_user = build_user($conf['guest_id'], false);
+                $edit_user = build_user(\Piwigo\Core\Config::guestId(), false);
                 \Piwigo\Core\PageState::current()->addInfo(l10n('Information data registered in database'));
             }
             $page['errors'] = array_merge($page['errors'], $errors);
@@ -470,7 +470,7 @@ switch ($page['section']) {
                 $template->append(
                     'display',
                     [
-                      $checkbox => $conf[$checkbox],
+                      $checkbox => \Piwigo\Core\Config::get($checkbox),
                       ],
                     true
                 );
@@ -478,8 +478,8 @@ switch ($page['section']) {
             $template->append(
                 'display',
                 [
-                  'picture_informations' => unserialize($conf['picture_informations'] ?? ''),
-                  'NB_CATEGORIES_PAGE' => $conf['nb_categories_page'],
+                  'picture_informations' => unserialize(\Piwigo\Core\Config::get('picture_informations') ?? ''),
+                  'NB_CATEGORIES_PAGE' => \Piwigo\Core\Config::get('nb_categories_page'),
                   ],
                 true
             );
@@ -495,9 +495,9 @@ switch ($page['section']) {
                 $template->assign(
                     'sizes',
                     [
-                    'original_resize_maxwidth' => $conf['original_resize_maxwidth'],
-                    'original_resize_maxheight' => $conf['original_resize_maxheight'],
-                    'original_resize_quality' => $conf['original_resize_quality'],
+                    'original_resize_maxwidth' => \Piwigo\Core\Config::originalResizeMaxwidth(),
+                    'original_resize_maxheight' => \Piwigo\Core\Config::originalResizeMaxheight(),
+                    'original_resize_quality' => \Piwigo\Core\Config::originalResizeQuality(),
                     ]
                 );
 
@@ -505,7 +505,7 @@ switch ($page['section']) {
                     $template->append(
                         'sizes',
                         [
-                        $checkbox => $conf[$checkbox],
+                        $checkbox => \Piwigo\Core\Config::get($checkbox),
                         ],
                         true
                     );
@@ -523,7 +523,7 @@ switch ($page['section']) {
                     $tpl_var = [];
 
                     $tpl_var['must_square'] = ($type == IMG_SQUARE ? true : false);
-                    $tpl_var['must_enable'] = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == $conf['derivative_default_size']) ? true : false;
+                    $tpl_var['must_enable'] = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == \Piwigo\Core\Config::derivativeDefaultSize()) ? true : false;
 
                     if ($params = @$enabled[$type]) {
                         $tpl_var['enabled'] = true;
@@ -621,11 +621,11 @@ switch ($page['section']) {
             $template->assign(
                 'search',
                 [
-                  'filters_views' => safe_unserialize($conf['filters_views']),
+                  'filters_views' => safe_unserialize(\Piwigo\Core\Config::get('filters_views')),
                   'filters_names' => $filters_names_checkboxes,
                 ],
             );
-            $template->assign('SHOW_FILTER_RATINGS', $conf['rate']);
+            $template->assign('SHOW_FILTER_RATINGS', \Piwigo\Core\Config::get('rate'));
         }
 }
 

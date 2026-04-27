@@ -27,7 +27,7 @@ define('CAL_VIEW_CALENDAR', 'calendar');
  */
 function initialize_calendar(): void
 {
-    global $page, $conf, $user, $template, $persistent_cache, $filter;
+    global $page, $user, $template, $persistent_cache, $filter;
 
     //------------------ initialize the condition on items to take into account ---
     $inner_sql = ' FROM ' . IMAGES_TABLE;
@@ -227,7 +227,7 @@ WHERE id IN (' . implode(',', $page['items']) .')';
 
     if ($must_show_list) {
         if (isset($page['super_order_by'])) {
-            $order_by = $conf['order_by'];
+            $order_by = \Piwigo\Core\Config::orderBy();
         } else {
             if (count($page['chronology_date']) == 0
                  or in_array('any', $page['chronology_date'])) {// selected period is very big so we show newest first
@@ -238,7 +238,7 @@ WHERE id IN (' . implode(',', $page['items']) .')';
             $order_by = str_replace(
                 'ORDER BY ',
                 'ORDER BY '.$calendar->date_field.$order,
-                $conf['order_by']
+                \Piwigo\Core\Config::orderBy()
             );
         }
 

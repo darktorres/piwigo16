@@ -136,7 +136,7 @@ if (isset($_POST['submitFilter'])) {
     if (isset($_POST['filter_level_use'])) {
         check_input_parameter('filter_level', $_POST, false, '/^\d+$/');
 
-        if (in_array($_POST['filter_level'], $conf['available_permission_levels'])) {
+        if (in_array($_POST['filter_level'], \Piwigo\Core\Config::availablePermissionLevels())) {
             $_SESSION['bulk_manager_filter']['level'] = $_POST['filter_level'];
 
             if (isset($_POST['filter_level_include_lower'])) {
@@ -211,7 +211,7 @@ elseif (isset($_GET['filter'])) {
                 break;
 
             case 'level':
-                if (is_numeric($value) && in_array($value, $conf['available_permission_levels'])) {
+                if (is_numeric($value) && in_array($value, \Piwigo\Core\Config::availablePermissionLevels())) {
                     $_SESSION['bulk_manager_filter']['level'] = $value;
                 }
                 break;
@@ -428,7 +428,7 @@ SELECT
                 $query = '
 SELECT id
   FROM '.IMAGES_TABLE.'
-  '.$conf['order_by'];
+  '.\Piwigo\Core\Config::orderBy();
 
                 $filter_sets[] = query2array($query, null, 'id');
             }
@@ -479,7 +479,7 @@ if (isset($_SESSION['bulk_manager_filter']['level'])) {
 SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE level '.$operator.' '.$_SESSION['bulk_manager_filter']['level'].'
-  '.$conf['order_by'];
+  '.\Piwigo\Core\Config::orderBy();
 
     $filter_sets[] = query2array($query, null, 'id');
 }
@@ -520,7 +520,7 @@ if (isset($_SESSION['bulk_manager_filter']['dimension'])) {
 SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE '.implode(' AND ', $where_clause).'
-  '.$conf['order_by'];
+  '.\Piwigo\Core\Config::orderBy();
 
     $filter_sets[] = query2array($query, null, 'id');
 }
@@ -542,7 +542,7 @@ if (isset($_SESSION['bulk_manager_filter']['filesize'])) {
 SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE '.implode(' AND ', $where_clause).'
-  '.$conf['order_by'];
+  '.\Piwigo\Core\Config::orderBy();
 
     $filter_sets[] = query2array($query, null, 'id');
 }

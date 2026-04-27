@@ -22,18 +22,18 @@ declare(strict_types=1);
  */
 function rate_picture($image_id, $rate)
 {
-    global $conf, $user;
+    global $user;
 
     if (!isset($rate)
-        or !$conf['rate']
+        or !\Piwigo\Core\Config::get('rate')
         or !preg_match('/^[0-9]+$/', $rate)
-        or !in_array($rate, $conf['rate_items'])) {
+        or !in_array($rate, \Piwigo\Core\Config::rateItems())) {
         return false;
     }
 
     $user_anonymous = is_autorize_status(ACCESS_CLASSIC) ? false : true;
 
-    if ($user_anonymous and !$conf['rate_anonymous']) {
+    if ($user_anonymous and !\Piwigo\Core\Config::get('rate_anonymous')) {
         return false;
     }
 

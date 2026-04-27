@@ -18,8 +18,8 @@ use Piwigo\Admin\Image\pwg_image;
 $template->assign(
     [
       'F_ADD_ACTION' => PHOTOS_ADD_BASE_URL,
-      'chunk_size' => $conf['upload_form_chunk_size'],
-      'max_file_size' => $conf['upload_form_max_file_size'],
+      'chunk_size' => \Piwigo\Core\Config::uploadFormChunkSize(),
+      'max_file_size' => \Piwigo\Core\Config::uploadFormMaxFileSize(),
       'ADMIN_PAGE_TITLE' => l10n('Upload Photos'),
     ]
 );
@@ -50,11 +50,11 @@ if (pwg_image::get_library() == 'gd') {
 }
 
 //warn the user if the picture will be resized after upload
-if ($conf['original_resize']) {
+if (\Piwigo\Core\Config::originalResize()) {
     $template->assign(
         [
-          'original_resize_maxwidth' => $conf['original_resize_maxwidth'],
-          'original_resize_maxheight' => $conf['original_resize_maxheight'],
+          'original_resize_maxwidth' => \Piwigo\Core\Config::originalResizeMaxwidth(),
+          'original_resize_maxheight' => \Piwigo\Core\Config::originalResizeMaxheight(),
         ]
     );
 }
@@ -70,7 +70,7 @@ $template->assign(
 $unique_exts = array_unique(
     array_map(
         strtolower(...),
-        $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext']
+        \Piwigo\Core\Config::uploadFormAllTypes() ? \Piwigo\Core\Config::fileExtensions() : \Piwigo\Core\Config::pictureExtensions()
     )
 );
 
@@ -178,7 +178,7 @@ if (isset($_GET['hide_warnings'])) {
 if (!isset($_SESSION['upload_hide_warnings'])) {
     $setup_warnings = [];
 
-    if ($conf['use_exif'] and !function_exists('exif_read_data')) {
+    if (\Piwigo\Core\Config::useExif() and !function_exists('exif_read_data')) {
         $setup_warnings[] = l10n('Exif extension not available, admin should disable exif use');
     }
 
@@ -190,10 +190,10 @@ if (!isset($_SESSION['upload_hide_warnings'])) {
         );
     }
 
-    if (get_ini_size('upload_max_filesize') < $conf['upload_form_chunk_size'] * 1024) {
+    if (get_ini_size('upload_max_filesize') < \Piwigo\Core\Config::uploadFormChunkSize() * 1024) {
         $setup_warnings[] = sprintf(
             'Piwigo setting upload_form_chunk_size (%ukB) should be smaller than PHP configuration setting upload_max_filesize (%ukB)',
-            $conf['upload_form_chunk_size'],
+            \Piwigo\Core\Config::uploadFormChunkSize(),
             ceil(get_ini_size('upload_max_filesize') / 1024)
         );
     }

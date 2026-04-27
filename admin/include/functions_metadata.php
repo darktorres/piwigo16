@@ -24,9 +24,7 @@ include_once(PHPWG_ROOT_PATH.'/include/functions_metadata.inc.php');
  */
 function get_sync_iptc_data($file): array
 {
-    global $conf;
-
-    $map = $conf['use_iptc_mapping'];
+    $map = \Piwigo\Core\Config::useIptcMapping();
 
     $iptc = get_iptc_data($file, $map);
 
@@ -64,9 +62,7 @@ function get_sync_iptc_data($file): array
  */
 function get_sync_exif_data(string $file): array
 {
-    global $conf;
-
-    $exif = get_exif_data($file, $conf['use_exif_mapping']);
+    $exif = get_exif_data($file, \Piwigo\Core\Config::useExifMapping());
 
     foreach ($exif as $pwg_key => $value) {
         if (in_array($pwg_key, ['date_creation', 'date_available'])) {
@@ -105,24 +101,22 @@ function get_sync_exif_data(string $file): array
  */
 function get_sync_metadata_attributes(): array
 {
-    global $conf;
-
     $update_fields = ['filesize', 'width', 'height'];
 
-    if ($conf['use_exif']) {
+    if (\Piwigo\Core\Config::useExif()) {
         $update_fields =
           array_merge(
               $update_fields,
-              array_keys($conf['use_exif_mapping']),
+              array_keys(\Piwigo\Core\Config::useExifMapping()),
               ['latitude', 'longitude']
           );
     }
 
-    if ($conf['use_iptc']) {
+    if (\Piwigo\Core\Config::useIptc()) {
         $update_fields =
           array_merge(
               $update_fields,
-              array_keys($conf['use_iptc_mapping'])
+              array_keys(\Piwigo\Core\Config::useIptcMapping())
           );
     }
 
@@ -137,7 +131,6 @@ function get_sync_metadata_attributes(): array
  */
 function get_sync_metadata($infos)
 {
-    global $conf;
     $file = PHPWG_ROOT_PATH.$infos['path'];
     $fs = @filesize($file);
 
@@ -201,12 +194,12 @@ function get_sync_metadata($infos)
         $file = PHPWG_ROOT_PATH.$infos['path'];
     }
 
-    if ($conf['use_exif']) {
+    if (\Piwigo\Core\Config::useExif()) {
         $exif = get_sync_exif_data($file);
         $infos = array_merge($infos, $exif);
     }
 
-    if ($conf['use_iptc']) {
+    if (\Piwigo\Core\Config::useIptc()) {
         $iptc = get_sync_iptc_data($file);
         $infos = array_merge($infos, $iptc);
     }
@@ -230,8 +223,6 @@ function get_sync_metadata($infos)
  */
 function sync_metadata($ids): void
 {
-    global $conf;
-
     if (!defined('CURRENT_DATE')) {
         define('CURRENT_DATE', date('Y-m-d'));
     }
@@ -362,9 +353,7 @@ SELECT id, path, representative_ext
  */
 function metadata_normalize_keywords_string($keywords_string): string
 {
-    global $conf;
-
-    $keywords_string = preg_replace($conf['metadata_keyword_separator_regex'], ',', $keywords_string);
+    $keywords_string = preg_replace(\Piwigo\Core\Config::metadataKeywordSeparatorRegex(), ',', $keywords_string);
     // new lines are always considered as keyword separators
     $keywords_string = str_replace(["\r\n", "\n", "\r"], ',', $keywords_string);
     $keywords_string = preg_replace('/,+/', ',', $keywords_string);

@@ -425,8 +425,8 @@ if (!empty($_GET['display'])) {
     } else {
         $page['nb_images'] = intval($_GET['display']);
     }
-} elseif (in_array($conf['batch_manager_images_per_page_global'], [20, 50, 100])) {
-    $page['nb_images'] = $conf['batch_manager_images_per_page_global'];
+} elseif (in_array(\Piwigo\Core\Config::batchManagerImagesPerPageGlobal(), [20, 50, 100])) {
+    $page['nb_images'] = \Piwigo\Core\Config::batchManagerImagesPerPageGlobal();
 } else {
     $page['nb_images'] = 20;
 }
@@ -465,7 +465,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
     if ($is_category) {
         $category_info = get_cat_info($_SESSION['bulk_manager_filter']['category']);
 
-        \Piwigo\Core\Config::override('order_by', $conf['order_by_inside_category']);
+        \Piwigo\Core\Config::override('order_by', \Piwigo\Core\Config::orderByInsideCategory());
         if (!empty($category_info['image_order'])) {
             \Piwigo\Core\Config::override('order_by', ' ORDER BY '.$category_info['image_order']);
         }
@@ -483,7 +483,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
     }
 
     $query .= '
-  '.$conf['order_by'].'
+  '.\Piwigo\Core\Config::orderBy().'
   LIMIT '.$page['nb_images'].' OFFSET '.$page['start'].'
 ;';
     $result = pwg_query($query);

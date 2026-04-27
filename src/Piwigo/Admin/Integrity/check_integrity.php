@@ -24,10 +24,10 @@ class check_integrity
      */
     public function check(): void
     {
-        global $header_notes, $conf;
+        global $header_notes;
 
         // Ignore list
-        $conf_c13y_ignore = unserialize($conf['c13y_ignore'] ?? '');
+        $conf_c13y_ignore = unserialize(\Piwigo\Core\Config::get('c13y_ignore') ?? '');
         if (
             is_array($conf_c13y_ignore) and
             isset($conf_c13y_ignore['version']) and

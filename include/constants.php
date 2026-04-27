@@ -17,9 +17,11 @@ define('PHPWG_DEFAULT_LANGUAGE', 'en_UK');
 // default value (see file install/piwigo_structure-mysql.sql)
 define('PHPWG_DEFAULT_TEMPLATE', 'modus');
 
-define('PHPWG_THEMES_PATH', $conf['themes_dir'].'/');
-defined('PWG_COMBINED_DIR') or define('PWG_COMBINED_DIR', $conf['data_location'].'combined/');
-defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $conf['data_location'].'i/');
+// Use $GLOBALS['conf'] directly: constants.php is included before the
+// Composer autoloader in some entry points (install.php, upgrade.php).
+define('PHPWG_THEMES_PATH', ($GLOBALS['conf']['themes_dir'] ?? PHPWG_ROOT_PATH.'themes').'/');
+defined('PWG_COMBINED_DIR') or define('PWG_COMBINED_DIR', ($GLOBALS['conf']['data_location'] ?? '_data/').'combined/');
+defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', ($GLOBALS['conf']['data_location'] ?? '_data/').'i/');
 
 // Required versions
 define('REQUIRED_PHP_VERSION', '7.4.0');
@@ -85,7 +87,7 @@ if (!defined('USER_GROUP_TABLE')) {
     define('USER_GROUP_TABLE', $prefixeTable.'user_group');
 }
 if (!defined('USERS_TABLE')) {
-    define('USERS_TABLE', $conf['users_table'] ?? $prefixeTable . 'users');
+    define('USERS_TABLE', ($GLOBALS['conf']['users_table'] ?? null) ?? $prefixeTable . 'users');
 }
 if (!defined('USER_INFOS_TABLE')) {
     define('USER_INFOS_TABLE', $prefixeTable.'user_infos');

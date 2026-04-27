@@ -147,8 +147,6 @@ SELECT *
  */
 function add_level_to_tags($tags)
 {
-    global $conf;
-
     if (count($tags) == 0) {
         return $tags;
     }
@@ -164,9 +162,9 @@ function add_level_to_tags($tags)
 
     // tag levels threshold calculation: a tag with an average rate must have
     // the middle level.
-    for ($i = 1; $i < $conf['tags_levels']; $i++) {
+    for ($i = 1; $i < \Piwigo\Core\Config::tagsLevels(); $i++) {
         $threshold_of_level[$i] =
-          2 * $i * $tag_average_count / $conf['tags_levels'];
+          2 * $i * $tag_average_count / \Piwigo\Core\Config::tagsLevels();
     }
 
     // display sorted tags
@@ -174,7 +172,7 @@ function add_level_to_tags($tags)
         $tag['level'] = 1;
 
         // based on threshold, determine current tag level
-        for ($i = $conf['tags_levels'] - 1; $i >= 1; $i--) {
+        for ($i = \Piwigo\Core\Config::tagsLevels() - 1; $i >= 1; $i--) {
             if ($tag['counter'] > $threshold_of_level[$i]) {
                 $tag['level'] = $i + 1;
                 break;
@@ -198,7 +196,6 @@ function add_level_to_tags($tags)
  */
 function get_image_ids_for_tags($tag_ids, $mode = 'AND', ?string $extra_images_where_sql = '', $order_by = '', $use_permissions = true): array
 {
-    global $conf;
     if (empty($tag_ids)) {
         return [];
     }
@@ -234,7 +231,7 @@ SELECT id
         $query .= '
   HAVING COUNT(DISTINCT tag_id)='.count($tag_ids);
     }
-    $query .= "\n".(empty($order_by) ? $conf['order_by'] : $order_by);
+    $query .= "\n".(empty($order_by) ? \Piwigo\Core\Config::orderBy() : $order_by);
 
     return query2array($query, null, 'id');
 }

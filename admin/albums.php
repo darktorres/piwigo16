@@ -133,9 +133,9 @@ $template->assign(
     ]
 );
 
-$template->assign('delay_before_autoOpen', $conf['album_move_delay_before_auto_opening']);
+$template->assign('delay_before_autoOpen', \Piwigo\Core\Config::albumMoveDelayBeforeAutoOpening());
 
-$template->assign('POS_PREF', $conf['newcat_default_position']); //TODO use user pref if it exists
+$template->assign('POS_PREF', \Piwigo\Core\Config::newcatDefaultPosition()); //TODO use user pref if it exists
 
 // +-----------------------------------------------------------------------+
 // |                          Album display                                |
@@ -253,7 +253,7 @@ $template->assign(
     'PWG_TOKEN' => get_pwg_token(),
     'nb_albums' => count($allAlbum),
     'ADMIN_PAGE_TITLE' => l10n('Albums'),
-    'light_album_manager' => ($albums_counter > $conf['light_album_manager_threshold']) ? 1 : 0,
+    'light_album_manager' => ($albums_counter > \Piwigo\Core\Config::lightAlbumManagerThreshold()) ? 1 : 0,
   ]
 );
 

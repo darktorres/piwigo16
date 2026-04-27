@@ -50,9 +50,10 @@ if (isset($_POST['submit'])) {
     }
     delete_element_derivatives($row, IMG_CUSTOM);
     $uid = '&b='.time();
-    $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
-    if ($conf['derivative_url_style'] == 1) {
-        $conf['derivative_url_style'] = 0; //auto
+    \Piwigo\Core\Config::override('question_mark_in_urls', true);
+    \Piwigo\Core\Config::override('php_extension_in_urls', true);
+    if (\Piwigo\Core\Config::get('derivative_url_style') == 1) {
+        \Piwigo\Core\Config::override('derivative_url_style', 0); //auto
     }
 } else {
     $uid = '';

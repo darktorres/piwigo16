@@ -43,12 +43,6 @@ parameters:
 			path: admin/album_notification.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 8
-			path: admin/album_notification.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 10
@@ -88,12 +82,6 @@ parameters:
 			path: admin/albums.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 3
-			path: admin/albums.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 7
@@ -121,12 +109,6 @@ parameters:
 			message: '#^Parameter \#4 \$order_by of function get_image_ids_for_tags expects string, null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: admin/batch_manager.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 6
 			path: admin/batch_manager.php
 
 		-
@@ -166,12 +148,6 @@ parameters:
 			path: admin/batch_manager_global.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
-			path: admin/batch_manager_global.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 12
@@ -208,12 +184,6 @@ parameters:
 			message: '#^Variable \$cache might not be defined\.$#'
 			identifier: variable.undefined
 			count: 2
-			path: admin/batch_manager_unit.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 8
 			path: admin/batch_manager_unit.php
 
 		-
@@ -268,12 +238,6 @@ parameters:
 			path: admin/cat_list.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: admin/cat_list.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 6
@@ -319,12 +283,6 @@ parameters:
 			message: '#^Variable \$admin_album_base_url might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
-			path: admin/cat_modify.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 3
 			path: admin/cat_modify.php
 
 		-
@@ -382,12 +340,6 @@ parameters:
 			path: admin/cat_perm.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 3
-			path: admin/cat_perm.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 11
@@ -403,36 +355,6 @@ parameters:
 			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 1
-			path: admin/configuration.php
-
-		-
-			message: '#^Offset ''local_dir_site'' on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: admin/configuration.php
-
-		-
-			message: '#^Offset ''order_by'' on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: admin/configuration.php
-
-		-
-			message: '#^Offset ''order_by_inside…'' on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: admin/configuration.php
-
-		-
-			message: '#^Result of or is always false\.$#'
-			identifier: logicalOr.alwaysFalse
-			count: 1
-			path: admin/configuration.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 26
 			path: admin/configuration.php
 
 		-
@@ -469,16 +391,16 @@ parameters:
 			path: admin/extend_for_templates.php
 
 		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: admin/extend_for_templates.php
+
+		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 5
 			path: admin/extend_for_templates.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: admin/group_list.php
 
 		-
 			message: '#^Variable \$template might not be defined\.$#'
@@ -559,12 +481,6 @@ parameters:
 			path: admin/history.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: admin/history.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 9
@@ -625,12 +541,6 @@ parameters:
 			path: admin/include/batch_manager_filters.inc.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 3
-			path: admin/include/batch_manager_filters.inc.php
-
-		-
 			message: '#^Variable \$level_options might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -647,12 +557,6 @@ parameters:
 			identifier: variable.undefined
 			count: 8
 			path: admin/include/batch_manager_filters.inc.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/include/configuration_sizes_process.inc.php
 
 		-
 			message: '#^Variable \$template might not be defined\.$#'
@@ -1414,12 +1318,6 @@ parameters:
 			path: admin/include/functions_metadata.php
 
 		-
-			message: '#^Function get_sync_metadata_attributes\(\) should return array\<string\> but returns array\<int, int\|string\>\.$#'
-			identifier: return.type
-			count: 1
-			path: admin/include/functions_metadata.php
-
-		-
 			message: '#^Parameter \#1 \$data of function simplexml_load_string expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
@@ -1594,15 +1492,9 @@ parameters:
 			path: admin/include/functions_notification_by_mail.inc.php
 
 		-
-			message: '#^Offset ''sendmail_timeout'' on array\{start_time\: float, sendmail_timeout\: \(float\|int\), is_sendmail_timeout\: false\} in isset\(\) always exists and is not nullable\.$#'
+			message: '#^Offset ''sendmail_timeout'' on array\{start_time\: float, sendmail_timeout\: float, is_sendmail_timeout\: false\} in isset\(\) always exists and is not nullable\.$#'
 			identifier: isset.offset
 			count: 1
-			path: admin/include/functions_notification_by_mail.inc.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
 			path: admin/include/functions_notification_by_mail.inc.php
 
 		-
@@ -1740,6 +1632,12 @@ parameters:
 		-
 			message: '#^Parameter \#2 \$value of function conf_update_param expects string, array given\.$#'
 			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upgrade.php
+
+		-
+			message: '#^Trying to invoke string but it might not be a callable\.$#'
+			identifier: callable.nonCallable
 			count: 1
 			path: admin/include/functions_upgrade.php
 
@@ -2032,6 +1930,12 @@ parameters:
 			path: admin/include/functions_upload.inc.php
 
 		-
+			message: '#^Negated boolean expression is always true\.$#'
+			identifier: booleanNot.alwaysTrue
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
 			message: '#^PHPDoc tag @return has invalid value \(array\(width, height\)\)\: Unexpected token "\(", expected TOKEN_HORIZONTAL_WS at offset 236 on line 7$#'
 			identifier: phpDoc.parseError
 			count: 1
@@ -2068,6 +1972,12 @@ parameters:
 			path: admin/include/functions_upload.inc.php
 
 		-
+			message: '#^Parameter \#2 \$max_width of function need_resize expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
 			message: '#^Parameter \#2 \$value of function conf_update_param expects string, false given\.$#'
 			identifier: argument.type
 			count: 1
@@ -2075,6 +1985,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#2 \$value of function conf_update_param expects string, true given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#3 \$max_height of function need_resize expects string, int given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/functions_upload.inc.php
@@ -3232,12 +3148,6 @@ parameters:
 			path: admin/include/pclzip.lib.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 11
-			path: admin/include/photos_add_direct_prepare.inc.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 12
@@ -3283,12 +3193,6 @@ parameters:
 			message: '#^Offset ''number'' might not exist on array\{details\: non\-empty\-array\<string, non\-empty\-array\<string, mixed\>\>, number\: \(array\|float\|int\), date\: string\}\|array\{details\: non\-empty\-array\<string, non\-empty\-array\<string, mixed\>\>\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
-			path: admin/intro.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 7
 			path: admin/intro.php
 
 		-
@@ -3340,12 +3244,6 @@ parameters:
 			path: admin/languages.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/languages_installed.php
-
-		-
 			message: '#^Variable \$page might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -3356,12 +3254,6 @@ parameters:
 			identifier: variable.undefined
 			count: 8
 			path: admin/languages_installed.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/languages_new.php
 
 		-
 			message: '#^Variable \$page might not be defined\.$#'
@@ -3406,12 +3298,6 @@ parameters:
 			path: admin/maintenance_actions.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 3
-			path: admin/maintenance_actions.php
-
-		-
 			message: '#^Variable \$maint_actions might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -3442,12 +3328,6 @@ parameters:
 			path: admin/maintenance_env.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: admin/maintenance_env.php
-
-		-
 			message: '#^Variable \$persistent_cache might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -3458,12 +3338,6 @@ parameters:
 			identifier: variable.undefined
 			count: 9
 			path: admin/maintenance_env.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: admin/maintenance_sys.php
 
 		-
 			message: '#^Variable \$template might not be defined\.$#'
@@ -3498,12 +3372,6 @@ parameters:
 		-
 			message: '#^Parameter \#2 \$callback of function uasort expects callable\(mixed, mixed\)\: int, Closure\(mixed, mixed\)\: \(float\|int\) given\.$#'
 			identifier: argument.type
-			count: 1
-			path: admin/menubar.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
 			count: 1
 			path: admin/menubar.php
 
@@ -3622,12 +3490,6 @@ parameters:
 			path: admin/notification_by_mail.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 8
-			path: admin/notification_by_mail.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 13
@@ -3688,12 +3550,6 @@ parameters:
 			path: admin/permalinks.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/photo.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -3721,12 +3577,6 @@ parameters:
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 1
-			path: admin/photos_add_direct.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
 			path: admin/photos_add_direct.php
 
 		-
@@ -3811,12 +3661,6 @@ parameters:
 			path: admin/picture_modify.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 5
-			path: admin/picture_modify.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 13
@@ -3847,12 +3691,6 @@ parameters:
 			path: admin/plugins_installed.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/plugins_installed.php
-
-		-
 			message: '#^Variable \$page might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -3879,12 +3717,6 @@ parameters:
 		-
 			message: '#^Parameter \#3 \$subject of function preg_replace expects array\<float\|int\|string\>\|string, int\|false given\.$#'
 			identifier: argument.type
-			count: 1
-			path: admin/plugins_new.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
 			count: 1
 			path: admin/plugins_new.php
 
@@ -3940,12 +3772,6 @@ parameters:
 			message: '#^Possibly invalid array key type float\|int\|string\.$#'
 			identifier: offsetAccess.invalidOffset
 			count: 1
-			path: admin/rating.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
 			path: admin/rating.php
 
 		-
@@ -4036,12 +3862,6 @@ parameters:
 			path: admin/rating_user.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/rating_user.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 5
@@ -4053,12 +3873,6 @@ parameters:
 				2\.6$#
 			'''
 			identifier: function.deprecated
-			count: 1
-			path: admin/site_manager.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
 			count: 1
 			path: admin/site_manager.php
 
@@ -4189,12 +4003,6 @@ parameters:
 			path: admin/site_update.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 9
-			path: admin/site_update.php
-
-		-
 			message: '#^Variable \$counts might not be defined\.$#'
 			identifier: variable.undefined
 			count: 5
@@ -4303,12 +4111,6 @@ parameters:
 			path: admin/stats.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/stats.php
-
-		-
 			message: '#^Variable \$date_add might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -4384,12 +4186,6 @@ parameters:
 			path: admin/themes_installed.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/themes_installed.php
-
-		-
 			message: '#^Variable \$page might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -4400,12 +4196,6 @@ parameters:
 			identifier: variable.undefined
 			count: 7
 			path: admin/themes_installed.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/themes_new.php
 
 		-
 			message: '#^Variable \$page might not be defined\.$#'
@@ -4462,18 +4252,6 @@ parameters:
 			path: admin/themes_standard_pages.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: admin/updates.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/updates_ext.php
-
-		-
 			message: '#^Variable \$page might not be defined\.$#'
 			identifier: variable.undefined
 			count: 3
@@ -4484,12 +4262,6 @@ parameters:
 			identifier: variable.undefined
 			count: 8
 			path: admin/updates_ext.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/updates_pwg.php
 
 		-
 			message: '#^Variable \$template might not be defined\.$#'
@@ -4516,39 +4288,21 @@ parameters:
 			path: admin/user_activity.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 6
-			path: admin/user_activity.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 9
 			path: admin/user_activity.php
 
 		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: admin/user_list.php
+
+		-
 			message: '#^Function webmaster_id_is_local\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
-			path: admin/user_list.php
-
-		-
-			message: '#^Offset ''local_dir_site'' on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: admin/user_list.php
-
-		-
-			message: '#^Offset ''webmaster_id'' on array\{\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: admin/user_list.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 15
 			path: admin/user_list.php
 
 		-
@@ -5170,12 +4924,6 @@ parameters:
 			path: include/category_cats.inc.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 10
-			path: include/category_cats.inc.php
-
-		-
 			message: '#^Variable \$logger might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -5218,12 +4966,6 @@ parameters:
 			path: include/category_default.inc.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
-			path: include/category_default.inc.php
-
-		-
 			message: '#^Variable \$page might not be defined\.$#'
 			identifier: variable.undefined
 			count: 3
@@ -5260,6 +5002,12 @@ parameters:
 			path: include/common.inc.php
 
 		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: include/common.inc.php
+
+		-
 			message: '#^Function sanitize_mysql_kv\(\) has parameter \$k with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -5280,19 +5028,7 @@ parameters:
 		-
 			message: '#^If condition is always false\.$#'
 			identifier: if.alwaysFalse
-			count: 5
-			path: include/common.inc.php
-
-		-
-			message: '#^If condition is always true\.$#'
-			identifier: if.alwaysTrue
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Offset ''alternative_pem_url'' on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
+			count: 3
 			path: include/common.inc.php
 
 		-
@@ -5302,32 +5038,8 @@ parameters:
 			path: include/common.inc.php
 
 		-
-			message: '#^Offset ''dblayer'' does not exist on array\{\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Offset ''dblayer'' on array\{\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: include/common.inc.php
-
-		-
 			message: '#^Offset ''email'' does not exist on array\{\}\|array\{username\: string\}\.$#'
 			identifier: offsetAccess.notFound
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Offset ''filter_pages'' on array\{\} in empty\(\) does not exist\.$#'
-			identifier: empty.offset
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Offset ''header_notes'' on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
 			count: 1
 			path: include/common.inc.php
 
@@ -5350,61 +5062,7 @@ parameters:
 			path: include/common.inc.php
 
 		-
-			message: '#^Offset ''last_major_update'' on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Offset ''no_photo_yet'' on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: include/common.inc.php
-
-		-
 			message: '#^Offset ''notify_api_key…'' on array\{infos\: array\{\}, errors\: array\{\}, warnings\: array\{\}, messages\: array\{\}, body_classes\: array\{\}, body_data\: array\{\}, execution_uuid\: string\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Offset ''order_by_custom'' on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Offset ''order_by_inside…'' on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Offset ''original_url…'' on array\{\} in empty\(\) does not exist\.$#'
-			identifier: empty.offset
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Offset ''piwigo_db_version'' on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Offset ''piwigo_installed…'' on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Offset ''session_gc_probability'' does not exist on array\{\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Offset ''show_php_errors'' on array\{\} in isset\(\) does not exist\.$#'
 			identifier: isset.offset
 			count: 1
 			path: include/common.inc.php
@@ -5422,27 +5080,15 @@ parameters:
 			path: include/common.inc.php
 
 		-
-			message: '#^Offset ''webmaster_id'' on array\{\} on left side of \?\?\= does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
+			message: '#^Parameter \#2 \$value of function conf_update_param expects string, string\|null given\.$#'
+			identifier: argument.type
 			count: 1
 			path: include/common.inc.php
 
 		-
 			message: '#^Result of and is always false\.$#'
 			identifier: logicalAnd.alwaysFalse
-			count: 5
-			path: include/common.inc.php
-
-		-
-			message: '#^Result of or is always true\.$#'
-			identifier: logicalOr.alwaysTrue
-			count: 1
+			count: 3
 			path: include/common.inc.php
 
 		-
@@ -5450,18 +5096,6 @@ parameters:
 			identifier: logicalAnd.rightAlwaysTrue
 			count: 2
 			path: include/common.inc.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between ''mysqli'' and ''mysql'' will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 3
-			path: include/constants.php
 
 		-
 			message: '#^Variable \$prefixeTable might not be defined\.$#'
@@ -6931,6 +6565,12 @@ parameters:
 			message: '#^Parameter \#1 \$key of function verify_ephemeral_key expects array, string given\.$#'
 			identifier: argument.type
 			count: 2
+			path: include/functions_comment.inc.php
+
+		-
+			message: '#^Parameter \#1 \$seconds of function pwg_db_get_flood_period_expression expects string, int\<1, max\> given\.$#'
+			identifier: argument.type
+			count: 1
 			path: include/functions_comment.inc.php
 
 		-
@@ -9124,6 +8764,12 @@ parameters:
 			path: include/functions_user.inc.php
 
 		-
+			message: '#^Parameter \#1 \.\.\.\$arg1 of function max expects non\-empty\-array, list\<int\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
 			message: '#^Parameter \#2 \$date2 of function dateDiff expects DateTime, DateTime\|false given\.$#'
 			identifier: argument.type
 			count: 1
@@ -9131,12 +8777,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#2 \$time of function calculate_auto_login_key expects int, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			message: '#^Parameter \#3 \$options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict''\}, array\{expires\: \(float\|int\), path\: string\|null, domain\: string\|false, secure\: string\|false, httponly\: string\|false\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/functions_user.inc.php
@@ -9151,6 +8791,24 @@ parameters:
 			message: '#^Parameter \#3 \$options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict''\}, array\{expires\: 0, path\: string\|null, domain\: string\|false\} given\.$#'
 			identifier: argument.type
 			count: 3
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Parameter \#3 \$options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict''\}, array\{expires\: int, path\: string\|null, domain\: string\|false, secure\: string\|false, httponly\: string\|false\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Trying to invoke string but it might not be a callable\.$#'
+			identifier: callable.nonCallable
+			count: 4
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Trying to invoke true but it''s not a callable\.$#'
+			identifier: callable.nonCallable
+			count: 1
 			path: include/functions_user.inc.php
 
 		-
@@ -10864,12 +10522,6 @@ parameters:
 			path: include/no_photo_yet.inc.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/no_photo_yet.inc.php
-
-		-
 			message: '#^Variable \$user might not be defined\.$#'
 			identifier: variable.undefined
 			count: 2
@@ -10891,12 +10543,6 @@ parameters:
 			message: '#^Right side of and is always true\.$#'
 			identifier: logicalAnd.rightAlwaysTrue
 			count: 1
-			path: include/page_header.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 5
 			path: include/page_header.php
 
 		-
@@ -10927,12 +10573,6 @@ parameters:
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
-			path: include/page_tail.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
 			path: include/page_tail.php
 
 		-
@@ -14797,12 +14437,6 @@ parameters:
 			path: include/picture_comment.inc.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 10
-			path: include/picture_comment.inc.php
-
-		-
 			message: '#^Variable \$related_categories might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -14821,12 +14455,6 @@ parameters:
 			path: include/picture_comment.inc.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 5
-			path: include/picture_metadata.inc.php
-
-		-
 			message: '#^Variable \$picture might not be defined\.$#'
 			identifier: variable.undefined
 			count: 2
@@ -14837,12 +14465,6 @@ parameters:
 			identifier: variable.undefined
 			count: 2
 			path: include/picture_metadata.inc.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 3
-			path: include/picture_rate.inc.php
 
 		-
 			message: '#^Variable \$page might not be defined\.$#'
@@ -14890,12 +14512,6 @@ parameters:
 			message: '#^Variable \$all_exts might not be defined\.$#'
 			identifier: variable.undefined
 			count: 3
-			path: include/search_filters.inc.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 5
 			path: include/search_filters.inc.php
 
 		-
@@ -14971,12 +14587,6 @@ parameters:
 			path: include/section_init.inc.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 15
-			path: include/section_init.inc.php
-
-		-
 			message: '#^Variable \$filter might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -15028,12 +14638,6 @@ parameters:
 			message: '#^Right side of and is always true\.$#'
 			identifier: logicalAnd.rightAlwaysTrue
 			count: 1
-			path: include/user.inc.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
 			path: include/user.inc.php
 
 		-
@@ -16394,6 +15998,12 @@ parameters:
 			path: include/ws_functions/pwg.images.php
 
 		-
+			message: '#^Parameter \#1 \$array of function usort is passed by reference, so it expects variables only\.$#'
+			identifier: argument.byRef
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
 			message: '#^Parameter \#1 \$ids of function update_category expects ''all''\|array\<int\>\|int, non\-empty\-array\<int\<0, max\>, string\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -17077,6 +16687,12 @@ parameters:
 		-
 			message: '#^Parameter \#2 \$timestamp of function date expects int\|null, int\|false given\.$#'
 			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.users.php
+
+		-
+			message: '#^Trying to invoke string but it might not be a callable\.$#'
+			identifier: callable.nonCallable
 			count: 1
 			path: include/ws_functions/pwg.users.php
 
@@ -18083,12 +17699,6 @@ parameters:
 			path: src/Piwigo/Admin/Image/imageInterface.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 2
-			path: src/Piwigo/Admin/Image/image_ext_imagick.php
-
-		-
 			message: '#^Call to function is_array\(\) with list\<string\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 3
@@ -18509,12 +18119,6 @@ parameters:
 			path: src/Piwigo/Admin/Image/image_imagick.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 4
-			path: src/Piwigo/Admin/Image/pwg_image.php
-
-		-
 			message: '#^Avoid ''global \$page'' in src/ — use PageState\:\:current\(\) instead\.$#'
 			identifier: piwigo.noGlobalInSrc
 			count: 1
@@ -18887,12 +18491,6 @@ parameters:
 			path: src/Piwigo/Admin/Image/pwg_image.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 4
-			path: src/Piwigo/Admin/Integrity/c13y_internal.php
-
-		-
 			message: '#^Avoid ''global \$page'' in src/ — use PageState\:\:current\(\) instead\.$#'
 			identifier: piwigo.noGlobalInSrc
 			count: 1
@@ -18955,12 +18553,6 @@ parameters:
 		-
 			message: '#^Array has 2 duplicate keys with value ''correction_error_fct'' \(''correction_error_fct'', ''correction_error_fct''\)\.$#'
 			identifier: array.duplicateKey
-			count: 1
-			path: src/Piwigo/Admin/Integrity/check_integrity.php
-
-		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
 			count: 1
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
 
@@ -19145,12 +18737,6 @@ parameters:
 			path: src/Piwigo/Admin/ThemeMaintain.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 2
-			path: src/Piwigo/Admin/languages.php
-
-		-
 			message: '#^Avoid ''global \$user'' in src/ — use CurrentUser\:\:get\(\) instead\.$#'
 			identifier: piwigo.noGlobalInSrc
 			count: 1
@@ -19329,12 +18915,6 @@ parameters:
 			identifier: variable.undefined
 			count: 2
 			path: src/Piwigo/Admin/languages.php
-
-		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 4
-			path: src/Piwigo/Admin/plugins.php
 
 		-
 			message: '#^Avoid ''global \$user'' in src/ — use CurrentUser\:\:get\(\) instead\.$#'
@@ -19751,12 +19331,6 @@ parameters:
 			path: src/Piwigo/Admin/tabsheet.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 4
-			path: src/Piwigo/Admin/themes.php
-
-		-
 			message: '#^Avoid ''global \$user'' in src/ — use CurrentUser\:\:get\(\) instead\.$#'
 			identifier: piwigo.noGlobalInSrc
 			count: 1
@@ -20040,12 +19614,6 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: src/Piwigo/Admin/themes.php
-
-		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 4
-			path: src/Piwigo/Admin/updates.php
 
 		-
 			message: '#^Avoid ''global \$page'' in src/ — use PageState\:\:current\(\) instead\.$#'
@@ -20372,12 +19940,6 @@ parameters:
 			path: src/Piwigo/Cache/PersistentCache.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 1
-			path: src/Piwigo/Cache/PersistentFileCache.php
-
-		-
 			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -20406,12 +19968,6 @@ parameters:
 			identifier: identical.alwaysTrue
 			count: 1
 			path: src/Piwigo/Cache/PersistentFileCache.php
-
-		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 3
-			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
 			message: '#^Avoid ''global \$page'' in src/ — use PageState\:\:current\(\) instead\.$#'
@@ -20498,12 +20054,6 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 2
-			path: src/Piwigo/Calendar/CalendarMonthly.php
-
-		-
 			message: '#^Avoid ''global \$lang'' in src/ — use Lang\:\:t\(\) instead\.$#'
 			identifier: piwigo.noGlobalInSrc
 			count: 4
@@ -20576,12 +20126,6 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarMonthly.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 2
-			path: src/Piwigo/Calendar/CalendarWeekly.php
-
-		-
 			message: '#^Avoid ''global \$lang'' in src/ — use Lang\:\:t\(\) instead\.$#'
 			identifier: piwigo.noGlobalInSrc
 			count: 1
@@ -20616,6 +20160,18 @@ parameters:
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Piwigo/Calendar/CalendarWeekly.php
+
+		-
+			message: '#^Method Piwigo\\Core\\Config\:\:apiKeyDuration\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Core/Config.php
+
+		-
+			message: '#^Method Piwigo\\Core\\Config\:\:src\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Core/Config.php
 
 		-
 			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
@@ -20742,12 +20298,6 @@ parameters:
 			identifier: deadCode.unreachable
 			count: 1
 			path: src/Piwigo/Core/Logger.php
-
-		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 1
-			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
 			message: '#^Cannot access property \$type on array\.$#'
@@ -20978,12 +20528,6 @@ parameters:
 			path: src/Piwigo/Image/ImageRect.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 2
-			path: src/Piwigo/Image/ImageStdParams.php
-
-		-
 			message: '#^Method Piwigo\\Image\\ImageStdParams\:\:get_by_type\(\) has parameter \$type with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -21074,12 +20618,6 @@ parameters:
 			path: src/Piwigo/Image/SizingParams.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 1
-			path: src/Piwigo/Image/SrcImage.php
-
-		-
 			message: '#^Cannot access offset 0 on array\{0\: int\<0, max\>, 1\: int\<0, max\>, 2\: int, 3\: string, mime\: string, channels\?\: int, bits\?\: int\}\|false\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -21102,12 +20640,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Piwigo/Image/SrcImage.php
-
-		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 1
-			path: src/Piwigo/Menu/BlockManager.php
 
 		-
 			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
@@ -21524,12 +21056,6 @@ parameters:
 			path: src/Piwigo/Template/CssLoader.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 2
-			path: src/Piwigo/Template/FileCombiner.php
-
-		-
 			message: '#^Binary operation "\." between ''url\('' and array\|string results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -21698,12 +21224,6 @@ parameters:
 			path: src/Piwigo/Template/Script.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 1
-			path: src/Piwigo/Template/ScriptLoader.php
-
-		-
 			message: '#^Default value of the parameter \#5 \$version \(int\) of method Piwigo\\Template\\ScriptLoader\:\:add\(\) is incompatible with type string\.$#'
 			identifier: parameter.defaultValue
 			count: 1
@@ -21770,12 +21290,6 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 5
-			path: src/Piwigo/Template/Template.php
-
-		-
 			message: '#^Avoid ''global \$lang'' in src/ — use Lang\:\:t\(\) instead\.$#'
 			identifier: piwigo.noGlobalInSrc
 			count: 2
@@ -21820,6 +21334,12 @@ parameters:
 		-
 			message: '#^Cannot assign new offset to string\.$#'
 			identifier: offsetAssign.dimType
+			count: 1
+			path: src/Piwigo/Template/Template.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
 			count: 1
 			path: src/Piwigo/Template/Template.php
 
@@ -21986,7 +21506,7 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
-			message: '#^PHPDoc tag @param has invalid value \(return string\)\: Unexpected token "string", expected variable at offset 169 on line 6$#'
+			message: '#^PHPDoc tag @param has invalid value \(return string\)\: Unexpected token "string", expected variable at offset 180 on line 6$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: src/Piwigo/Template/Template.php
@@ -22060,6 +21580,12 @@ parameters:
 		-
 			message: '#^Property Piwigo\\Template\\Template\:\:\$picture_buttons type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Template/Template.php
+
+		-
+			message: '#^Property Smarty\\TemplateBase\:\:\$compile_check \(int\) does not accept bool\.$#'
+			identifier: assign.propertyType
 			count: 1
 			path: src/Piwigo/Template/Template.php
 
@@ -22477,12 +22003,6 @@ parameters:
 			identifier: missingType.parameter
 			count: 1
 			path: src/Piwigo/Ws/PwgRequestHandler.php
-
-		-
-			message: '#^Avoid ''global \$conf'' in src/ — use Config\:\:get\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 1
-			path: src/Piwigo/Ws/PwgServer.php
 
 		-
 			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'

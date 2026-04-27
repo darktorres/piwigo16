@@ -160,7 +160,7 @@ trigger_notify('loc_end_themes_installed');
 
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
 $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
-$template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $conf['enable_extensions_install']);
+$template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Core\Config::enableExtensionsInstall());
 
 $template->set_filenames(['themes' => 'themes_installed.tpl']);
 $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');

@@ -30,13 +30,11 @@ final class SrcImage
      */
     public function __construct(array $infos)
     {
-        global $conf;
-
         $this->id = $infos['id'];
         $ext = strtolower(get_extension($infos['path']));
         $infos['file_ext'] = @strtolower(get_extension($infos['file']));
         $infos['path_ext'] = $ext;
-        if (in_array($ext, $conf['picture_ext'])) {
+        if (in_array($ext, \Piwigo\Core\Config::pictureExtensions())) {
             $this->rel_path = $infos['path'];
             $this->flags |= self::IS_ORIGINAL;
         } elseif (!empty($infos['representative_ext'])) {

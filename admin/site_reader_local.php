@@ -13,12 +13,11 @@ class LocalSiteReader
 {
     public function __construct(public $site_url)
     {
-        global $conf;
-        if (!isset($conf['flip_file_ext'])) {
-            $conf['flip_file_ext'] = array_flip($conf['file_ext']);
+        if (!\Piwigo\Core\Config::has('flip_file_ext')) {
+            \Piwigo\Core\Config::override('flip_file_ext', array_flip(\Piwigo\Core\Config::fileExtensions()));
         }
-        if (!isset($conf['flip_picture_ext'])) {
-            $conf['flip_picture_ext'] = array_flip($conf['picture_ext']);
+        if (!\Piwigo\Core\Config::has('flip_picture_ext')) {
+            \Piwigo\Core\Config::override('flip_picture_ext', array_flip(\Piwigo\Core\Config::pictureExtensions()));
         }
     }
 
@@ -54,15 +53,13 @@ class LocalSiteReader
     }
 
     /**
-     * Returns an array with all file system files according to $conf['file_ext']
-     * and $conf['picture_ext']
+     * Returns an array with all file system files according to \Piwigo\Core\Config::fileExtensions()
+     * and \Piwigo\Core\Config::pictureExtensions()
      * @param string $path recurse in this directory
      * @return array like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
     public function get_elements(string $path): array
     {
-        global $conf;
-
         $subdirs = [];
         $fs = [];
         if (is_dir($path) && $contents = opendir($path)) {
@@ -75,15 +72,15 @@ class LocalSiteReader
                     $extension = strtolower(get_extension($node));
                     $filename_wo_ext = get_filename_wo_extension($node);
 
-                    if (isset($conf['flip_file_ext'][$extension])) {
+                    if (isset(\Piwigo\Core\Config::get('flip_file_ext')[$extension])) {
                         $representative_ext = null;
-                        if (! isset($conf['flip_picture_ext'][$extension])) {
+                        if (! isset(\Piwigo\Core\Config::get('flip_picture_ext')[$extension])) {
                             $representative_ext = $this->get_representative_ext($path, $filename_wo_ext);
                         }
 
                         $fs[ $path.'/'.$node ] = ['representative_ext' => $representative_ext];
 
-                        if ($conf['enable_formats']) {
+                        if (\Piwigo\Core\Config::isFormatsEnabled()) {
                             $fs[ $path.'/'.$node ]['formats'] = $this->get_formats($path, $filename_wo_ext);
                         }
                     }
@@ -115,14 +112,13 @@ class LocalSiteReader
 
     public function get_element_update_attributes($file): array
     {
-        global $conf;
         $data = [];
 
         $filename = basename((string) $file);
         $extension = get_extension($filename);
 
         $representative_ext = null;
-        if (! isset($conf['flip_picture_ext'][$extension])) {
+        if (! isset(\Piwigo\Core\Config::get('flip_picture_ext')[$extension])) {
             $dirname = dirname((string) $file);
             $filename_wo_ext = get_filename_wo_extension($filename);
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
@@ -149,9 +145,8 @@ class LocalSiteReader
     //-------------------------------------------------- private functions --------
     public function get_representative_ext(string $path, string $filename_wo_ext)
     {
-        global $conf;
         $base_test = $path.'/pwg_representative/'.$filename_wo_ext.'.';
-        foreach ($conf['picture_ext'] as $ext) {
+        foreach (\Piwigo\Core\Config::pictureExtensions() as $ext) {
             $test = $base_test.$ext;
             if (is_file($test)) {
                 return $ext;
@@ -165,13 +160,11 @@ class LocalSiteReader
      */
     public function get_formats(string $path, string $filename_wo_ext): array
     {
-        global $conf;
-
         $formats = [];
 
         $base_test = $path.'/pwg_format/'.$filename_wo_ext.'.';
 
-        foreach ($conf['format_ext'] as $ext) {
+        foreach (\Piwigo\Core\Config::formatExtensions() as $ext) {
             $test = $base_test.$ext;
 
             if (is_file($test)) {

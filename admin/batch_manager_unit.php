@@ -57,7 +57,7 @@ SELECT id, date_creation
         $data['author'] = $_POST['author-'.$row['id']];
         $data['level'] = $_POST['level-'.$row['id']];
 
-        if ($conf['allow_html_descriptions']) {
+        if (\Piwigo\Core\Config::allowHtmlDescriptions()) {
             $data['comment'] = @$_POST['description-'.$row['id']];
         } else {
             $data['comment'] = strip_tags((string) @$_POST['description-'.$row['id']]);
@@ -149,10 +149,10 @@ $template->assign('ACTIVE_PLUGINS', array_keys($pwg_loaded_plugins));
 // how many items to display on this page
 if (!empty($_GET['display'])) {
     // conf_update_param('batch_manager_images_per_page_unit' , intval($_GET['display']));
-    // $page['nb_images'] = $conf['batch_manager_images_per_page_unit'];
+    // $page['nb_images'] = \Piwigo\Core\Config::batchManagerImagesPerPageUnit();
     $page['nb_images'] = intval($_GET['display']);
-} elseif (in_array($conf['batch_manager_images_per_page_unit'], [5, 10, 50])) {
-    $page['nb_images'] = $conf['batch_manager_images_per_page_unit'];
+} elseif (in_array(\Piwigo\Core\Config::batchManagerImagesPerPageUnit(), [5, 10, 50])) {
+    $page['nb_images'] = \Piwigo\Core\Config::batchManagerImagesPerPageUnit();
 } else {
     $page['nb_images'] = 5;
 }
@@ -188,7 +188,7 @@ SELECT *
     if ($is_category) {
         $category_info = get_cat_info($_SESSION['bulk_manager_filter']['category']);
 
-        \Piwigo\Core\Config::override('order_by', $conf['order_by_inside_category']);
+        \Piwigo\Core\Config::override('order_by', \Piwigo\Core\Config::orderByInsideCategory());
         if (!empty($category_info['image_order'])) {
             \Piwigo\Core\Config::override('order_by', ' ORDER BY '.$category_info['image_order']);
         }
@@ -206,7 +206,7 @@ SELECT *
     }
 
     $query .= '
-  '.$conf['order_by'].'
+  '.\Piwigo\Core\Config::orderBy().'
   LIMIT '.$page['nb_images'].' OFFSET '.$page['start'].'
 ;';
     // $result = pwg_query($query);
@@ -215,10 +215,10 @@ SELECT *
     if (count($added_by_ids) > 0) {
         $query = '
 SELECT 
-    '.$conf['user_fields']['username'].' AS username,
-    '.$conf['user_fields']['id'].' AS id
+    '.\Piwigo\Core\Config::userFields()['username'].' AS username,
+    '.\Piwigo\Core\Config::userFields()['id'].' AS id
   FROM '.USERS_TABLE.'
-  WHERE '.$conf['user_fields']['id'].' IN ( '.implode(',', $added_by_ids).' )
+  WHERE '.\Piwigo\Core\Config::userFields()['id'].' IN ( '.implode(',', $added_by_ids).' )
 ;';
         $added_by_username_of = query2array($query, 'id', 'username');
     }

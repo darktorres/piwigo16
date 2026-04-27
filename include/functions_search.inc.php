@@ -93,7 +93,7 @@ function get_search_array($search_id): mixed
  */
 function get_regular_search_results(array $search, ?string $images_where = ''): array
 {
-    global $conf, $logger;
+    global $logger;
 
     $logger->debug(__FUNCTION__, 'search', $search);
 
@@ -110,7 +110,7 @@ function get_regular_search_results(array $search, ?string $images_where = ''): 
 
     $image_ids_for_filter = [];
 
-    $display_filters = safe_unserialize(conf_get_param('filters_views', $conf['default_filters_views']));
+    $display_filters = safe_unserialize(conf_get_param('filters_views', \Piwigo\Core\Config::defaultFiltersViews()));
 
     foreach ($display_filters as $filt_name => $filt_conf) {
         if (isset($filt_conf['access'])) {
@@ -550,7 +550,7 @@ SELECT
     //
     // ratings
     //
-    if ($conf['rate'] and !empty($search['fields']['ratings']) and $display_filters['rating']['access']) {
+    if (\Piwigo\Core\Config::get('rate') and !empty($search['fields']['ratings']) and $display_filters['rating']['access']) {
         $has_filters_filled = true;
 
         $filter_clauses = [];
@@ -670,7 +670,7 @@ SELECT
     id
   FROM '.IMAGES_TABLE.' i
   WHERE id IN ('.implode(',', $items).')
-  '.$conf['order_by'];
+  '.\Piwigo\Core\Config::orderBy();
 
         $items = array_from_query($query, 'id');
     }
@@ -1539,7 +1539,7 @@ SELECT image_id FROM '.IMAGE_TAG_TABLE.'
 
 function qsearch_get_categories(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResults $qsr): void
 {
-    global $user, $conf;
+    global $user;
 
     $token_cat_ids = $qsr->cat_iids = array_fill(0, count($expr->stokens), []);
     $all_cats = [];
@@ -1586,7 +1586,7 @@ SELECT
         $token = $expr->stokens[$i];
 
         if (!empty($cat_ids)) {
-            if ($conf['quick_search_include_sub_albums']) {
+            if (\Piwigo\Core\Config::quickSearchIncludeSubAlbums()) {
                 $query = '
 SELECT
     id
@@ -1698,11 +1698,11 @@ function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults 
  */
 function get_quick_search_results($q, array $options)
 {
-    global $persistent_cache, $conf, $user;
+    global $persistent_cache, $user;
 
     $cache_key = $persistent_cache->make_key([
       strtolower($q),
-      $conf['order_by'],
+      \Piwigo\Core\Config::orderBy(),
       $user['id'],$user['cache_update_time'],
       isset($options['permissions']) ? (bool)$options['permissions'] : true,
       $options['images_where'] ?? '',
@@ -1724,8 +1724,6 @@ function get_quick_search_results($q, array $options)
  */
 function get_quick_search_results_no_cache($q, array $options)
 {
-    global $conf;
-
     $q = trim(stripslashes((string) $q));
     $search_results =
       [
@@ -1751,7 +1749,7 @@ function get_quick_search_results_no_cache($q, array $options)
 
     $createdDateAliases = ['taken', 'shot'];
     $postedDateAliases = ['added'];
-    if ($conf['calendar_datefield'] == 'date_creation') {
+    if (\Piwigo\Core\Config::calendarDatefield() == 'date_creation') {
         $createdDateAliases[] = 'date';
     } else {
         $postedDateAliases[] = 'date';
@@ -1849,7 +1847,7 @@ SELECT DISTINCT(id) FROM '.IMAGES_TABLE.' i';
     }
     $query .= '
   WHERE '.implode("\n AND ", $where_clauses)."\n".
-    $conf['order_by'];
+    \Piwigo\Core\Config::orderBy();
 
     $ids = query2array($query, null, 'id');
 

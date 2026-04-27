@@ -52,9 +52,9 @@ if (isset($_GET['order_by']) and is_numeric($_GET['order_by'])) {
 $page['user_filter'] = '';
 if (isset($_GET['users'])) {
     if ($_GET['users'] == 'user') {
-        $page['user_filter'] = ' AND r.user_id <> '.$conf['guest_id'];
+        $page['user_filter'] = ' AND r.user_id <> '.\Piwigo\Core\Config::guestId();
     } elseif ($_GET['users'] == 'guest') {
-        $page['user_filter'] = ' AND r.user_id = '.$conf['guest_id'];
+        $page['user_filter'] = ' AND r.user_id = '.\Piwigo\Core\Config::guestId();
     }
 }
 
@@ -69,7 +69,7 @@ if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
 
 $users = [];
 $query = '
-SELECT '.$conf['user_fields']['username'].' as username, '.$conf['user_fields']['id'].' as id
+SELECT '.\Piwigo\Core\Config::userFields()['username'].' as username, '.\Piwigo\Core\Config::userFields()['id'].' as id
   FROM '.USERS_TABLE.'
 ;';
 $result = pwg_query($query);

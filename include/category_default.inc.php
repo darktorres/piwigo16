@@ -62,7 +62,7 @@ if (count($pictures) > 0) {
           ($_GET['slideshow'] ?? '')]
       );
 
-    if ($conf['activate_comments'] and $user['show_nb_comments']) {
+    if (\Piwigo\Core\Config::activateComments() and $user['show_nb_comments']) {
         $query = '
 SELECT image_id, COUNT(*) AS nb_comments
   FROM '.COMMENTS_TABLE.'
@@ -107,7 +107,7 @@ foreach ($pictures as $row) {
       'file_ext' => strtolower(get_extension($row['file'])),
       ]);
 
-    if ($conf['index_new_icon']) {
+    if (\Piwigo\Core\Config::indexNewIcon()) {
         $tpl_var['icon_ts'] = get_icon($row['date_available']);
     }
 
@@ -135,8 +135,8 @@ foreach ($pictures as $row) {
 
 $template->assign([
   'derivative_params' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type(pwg_get_session_var('index_deriv', IMG_THUMB))),
-  'maxRequests' => $conf['max_requests'],
-  'SHOW_THUMBNAIL_CAPTION' => $conf['show_thumbnail_caption'],
+  'maxRequests' => \Piwigo\Core\Config::maxRequests(),
+  'SHOW_THUMBNAIL_CAPTION' => \Piwigo\Core\Config::showThumbnailCaption(),
     ]);
 $tpl_thumbnails_var = trigger_change('loc_end_index_thumbnails', $tpl_thumbnails_var, $pictures);
 $template->assign('thumbnails', $tpl_thumbnails_var);

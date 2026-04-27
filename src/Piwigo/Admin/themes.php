@@ -51,9 +51,7 @@ class themes
      */
     public function perform_action($action, string $theme_id): array
     {
-        global $conf;
-
-        if (!$conf['enable_extensions_install'] and 'delete' == $action) {
+        if (!\Piwigo\Core\Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -89,8 +87,8 @@ class themes
                 }
 
                 if ($this->fs_themes[$theme_id]['mobile']
-                    and !empty($conf['mobile_theme'])
-                    and $conf['mobile_theme'] != $theme_id) {
+                    and !empty(\Piwigo\Core\Config::mobilTheme())
+                    and \Piwigo\Core\Config::mobilTheme() != $theme_id) {
                     $errors[] = l10n('You can activate only one mobile theme.');
                     break;
                 }
@@ -233,8 +231,6 @@ DELETE
 
     public function set_default_theme(string $theme_id): void
     {
-        global $conf;
-
         // first we need to know which users are using the current default theme
         $default_theme = get_default_theme();
 
@@ -247,7 +243,7 @@ SELECT
         $user_ids = array_unique(
             array_merge(
                 array_from_query($query, 'user_id'),
-                [$conf['guest_id'], $conf['default_user_id']]
+                [\Piwigo\Core\Config::guestId(), \Piwigo\Core\Config::defaultUserId()]
             )
         );
 
@@ -358,7 +354,6 @@ SELECT
                     if (file_exists($screenshot_path)) {
                         $theme['screenshot'] = $screenshot_path;
                     } else {
-                        global $conf;
                         $theme['screenshot'] =
                           PHPWG_ROOT_PATH.'admin/themes/'
                           .userprefs_get_param('admin_theme', 'clear')
@@ -406,10 +401,10 @@ SELECT
      */
     public function get_server_themes($new = false): bool
     {
-        global $user, $conf;
+        global $user;
 
         $get_data = [
-          'category_id' => $conf['pem_themes_category'],
+          'category_id' => \Piwigo\Core\Config::pemThemesCategory(),
           'format' => 'php',
         ];
 

@@ -20,8 +20,6 @@ class c13y_internal
      */
     public function c13y_version($c13y): void
     {
-        global $conf;
-
         $check_list = [];
 
         $check_list[] = [
@@ -57,15 +55,13 @@ class c13y_internal
      */
     public function c13y_exif($c13y): void
     {
-        global $conf;
-
         foreach (['show_exif', 'use_exif'] as $value) {
-            if (($conf[$value]) and (!function_exists('exif_read_data'))) {
+            if ((\Piwigo\Core\Config::get($value)) and (!function_exists('exif_read_data'))) {
                 $c13y->add_anomaly(
-                    sprintf(l10n('%s value is not correct file because exif are not supported'), '$conf[\''.$value.'\']'),
+                    sprintf(l10n('%s value is not correct file because exif are not supported'), '$' . 'conf[\''.$value.'\']'),
                     null,
                     null,
-                    sprintf(l10n('%s must be to set to false in your local/config/config.inc.php file'), '$conf[\''.$value.'\']')
+                    sprintf(l10n('%s must be to set to false in your local/config/config.inc.php file'), '$' . 'conf[\''.$value.'\']')
           .'<br>'.
           $c13y->get_htlm_links_more_info()
                 );
@@ -80,32 +76,30 @@ class c13y_internal
      */
     public function c13y_user($c13y): void
     {
-        global $conf;
-
         $c13y_users = [];
-        $c13y_users[$conf['guest_id']] = [
+        $c13y_users[\Piwigo\Core\Config::guestId()] = [
           'status' => 'guest',
           'l10n_non_existent' => 'Main "guest" user does not exist',
           'l10n_bad_status' => 'Main "guest" user status is incorrect'];
 
-        if ($conf['guest_id'] != $conf['default_user_id']) {
-            $c13y_users[$conf['default_user_id']] = [
+        if (\Piwigo\Core\Config::guestId() != \Piwigo\Core\Config::defaultUserId()) {
+            $c13y_users[\Piwigo\Core\Config::defaultUserId()] = [
               'password' => null,
               'l10n_non_existent' => 'Default user does not exist'];
         }
 
-        $c13y_users[$conf['webmaster_id']] = [
+        $c13y_users[\Piwigo\Core\Config::webmasterId()] = [
           'status' => 'webmaster',
           'l10n_non_existent' => 'Main "webmaster" user does not exist',
           'l10n_bad_status' => 'Main "webmaster" user status is incorrect'];
 
         $query = '
-  select u.'.$conf['user_fields']['id'].' as id, ui.status
+  select u.'.\Piwigo\Core\Config::userFields()['id'].' as id, ui.status
   from '.USERS_TABLE.' as u
     left join '.USER_INFOS_TABLE.' as ui
-        on u.'.$conf['user_fields']['id'].' = ui.user_id
+        on u.'.\Piwigo\Core\Config::userFields()['id'].' = ui.user_id
   where
-    u.'.$conf['user_fields']['id'].' in ('.implode(',', array_keys($c13y_users)).')
+    u.'.\Piwigo\Core\Config::userFields()['id'].' in ('.implode(',', array_keys($c13y_users)).')
   ;';
 
 
@@ -141,20 +135,20 @@ class c13y_internal
      */
     public function c13y_correction_user($id, $action)
     {
-        global $conf, $page;
+        global $page;
 
         $result = false;
 
         if (!empty($id)) {
             switch ($action) {
                 case 'creation':
-                    if ($id == $conf['guest_id']) {
+                    if ($id == \Piwigo\Core\Config::guestId()) {
                         $name = 'guest';
                         $password = null;
-                    } elseif ($id == $conf['default_user_id']) {
+                    } elseif ($id == \Piwigo\Core\Config::defaultUserId()) {
                         $name = 'guest';
                         $password = null;
-                    } elseif ($id == $conf['webmaster_id']) {
+                    } elseif ($id == \Piwigo\Core\Config::webmasterId()) {
                         $name = 'webmaster';
                         $password = generate_key(6);
                     }
@@ -185,11 +179,11 @@ class c13y_internal
                     }
                     break;
                 case 'status':
-                    if ($id == $conf['guest_id']) {
+                    if ($id == \Piwigo\Core\Config::guestId()) {
                         $status = 'guest';
-                    } elseif ($id == $conf['default_user_id']) {
+                    } elseif ($id == \Piwigo\Core\Config::defaultUserId()) {
                         $status = 'guest';
-                    } elseif ($id == $conf['webmaster_id']) {
+                    } elseif ($id == \Piwigo\Core\Config::webmasterId()) {
                         $status = 'webmaster';
                     }
 

@@ -69,7 +69,7 @@ if (isset($page['search_id'])) {
         get_root_url().'admin.php'.get_query_string_diff(['start']),
         $page['nb_lines'],
         $page['start'],
-        $conf['nb_logs_page']
+        \Piwigo\Core\Config::nbLogsPage()
     );
 
     $template->assign('navbar', $navbar);
@@ -133,7 +133,7 @@ $template->assign(
 
 $template->assign('display_thumbnails', $display_thumbnails);
 $template->assign('display_thumbnail_selected', $form['display_thumbnail']);
-$template->assign('guest_id', $conf['guest_id']);
+$template->assign('guest_id', \Piwigo\Core\Config::guestId());
 $template->assign('ADMIN_PAGE_TITLE', l10n('History'));
 
 // +-----------------------------------------------------------------------+

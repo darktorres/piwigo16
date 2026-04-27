@@ -76,8 +76,8 @@ $template->assign('register_dates', implode(',', $register_dates));
 $template->assign(
     [
     'ADMIN_PAGE_TITLE' => l10n('Users'),
-    'ACTIVATE_COMMENTS' => $conf['activate_comments'],
-    'Double_Password' => $conf['double_password_type_in_admin'],
+    'ACTIVATE_COMMENTS' => \Piwigo\Core\Config::activateComments(),
+    'Double_Password' => \Piwigo\Core\Config::doublePasswordTypeInAdmin(),
   ]
 );
 
@@ -87,12 +87,12 @@ $default_user = get_default_user_info(true);
 
 $protected_users = [
   $user['id'],
-  $conf['guest_id'],
-  $conf['default_user_id'],
-  $conf['webmaster_id'],
+  \Piwigo\Core\Config::guestId(),
+  \Piwigo\Core\Config::defaultUserId(),
+  \Piwigo\Core\Config::webmasterId(),
   ];
 
-$password_protected_users = [$conf['guest_id']];
+$password_protected_users = [\Piwigo\Core\Config::guestId()];
 
 // an admin can't delete other admin/webmaster
 if ('admin' == $user['status']) {
@@ -112,9 +112,9 @@ SELECT
 
 $query = '
 SELECT
-    '.$conf['user_fields']['username'].' AS username
+    '.\Piwigo\Core\Config::userFields()['username'].' AS username
     FROM '.USERS_TABLE.'
-    WHERE '.$conf['user_fields']['id'].' = '.$conf['webmaster_id'].'
+    WHERE '.\Piwigo\Core\Config::userFields()['id'].' = '.\Piwigo\Core\Config::webmasterId().'
 ;';
 
 $owner_username = query2array($query, null, 'username');
@@ -132,12 +132,12 @@ $template->assign(
     'association_options' => $groups,
     'protected_users' => implode(',', array_unique($protected_users)),
     'password_protected_users' => implode(',', array_unique($password_protected_users)),
-    'guest_user' => $conf['guest_id'],
+    'guest_user' => \Piwigo\Core\Config::guestId(),
     'filter_group' => ($_GET['group'] ?? null),
     'search_input' => (isset($_GET['user_id']) ? 'id:'.$_GET['user_id'] : null),
     'connected_user' => $user['id'],
     'connected_user_status' => $user['status'],
-    'owner' => $conf['webmaster_id'],
+    'owner' => \Piwigo\Core\Config::webmasterId(),
     'owner_username' => $owner_username[0],
     ]
 );
@@ -156,7 +156,7 @@ SELECT
     status,
     COUNT(*) AS nb_users_of
   FROM '. USER_INFOS_TABLE .'
-  WHERE user_id != '. $conf['guest_id'] .'
+  WHERE user_id != '. \Piwigo\Core\Config::guestId() .'
   GROUP BY status
 ';
 
@@ -184,7 +184,7 @@ $template->assign('pref_status_selected', 'normal');
 $template->assign('nb_users_by_status', $nb_users_by_status);
 
 // user level options
-foreach ($conf['available_permission_levels'] as $level) {
+foreach (\Piwigo\Core\Config::availablePermissionLevels() as $level) {
     $level_options[$level] = l10n(sprintf('Level %d', $level));
 }
 
@@ -193,7 +193,7 @@ SELECT
     level,
     COUNT(*) AS nb_users_of
   FROM '. USER_INFOS_TABLE .'
-  WHERE user_id != '. $conf['guest_id'] .'
+  WHERE user_id != '. \Piwigo\Core\Config::guestId() .'
   GROUP BY level
 ';
 
@@ -226,7 +226,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
 
 $template->assign('groups_arr_id', implode(',', $groups_arr_id));
 $template->assign('groups_arr_name', implode(',', $groups_arr_name));
-$template->assign('guest_id', $conf['guest_id']);
+$template->assign('guest_id', \Piwigo\Core\Config::guestId());
 
 $template->assign('view_selector', userprefs_get_param('user-manager-view', 'line'));
 
@@ -243,14 +243,14 @@ function webmaster_id_is_local()
     $conf = [];
     include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
     @include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
-    if (isset($conf['local_dir_site'])) {
+    if (\Piwigo\Core\Config::has('local_dir_site')) {
         @include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR. 'config/config.inc.php');
     }
-    return $conf['webmaster_id'] ?? false;
+    return \Piwigo\Core\Config::webmasterId() ?? false;
 }
 
 if (webmaster_id_is_local()) {
-    \Piwigo\Core\PageState::current()->addWarning(l10n('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
+    \Piwigo\Core\PageState::current()->addWarning(l10n('You have specified <i>' . '$' . 'conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
 }
 // +-----------------------------------------------------------------------+
 // | html code display                                                     |

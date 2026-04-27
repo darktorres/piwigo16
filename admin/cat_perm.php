@@ -204,8 +204,8 @@ $template->assign('groups_selected', $group_granted_ids);
 $users = [];
 
 $query = '
-SELECT '.$conf['user_fields']['id'].' AS id,
-       '.$conf['user_fields']['username'].' AS username
+SELECT '.\Piwigo\Core\Config::userFields()['id'].' AS id,
+       '.\Piwigo\Core\Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.'
 ;';
 $users = simple_hash_from_query($query, 'id', 'username');
@@ -276,7 +276,7 @@ SELECT user_id, group_id
 // +-----------------------------------------------------------------------+
 $template->assign([
   'PWG_TOKEN' => get_pwg_token(),
-  'INHERIT' => $conf['inheritance_by_default'],
+  'INHERIT' => \Piwigo\Core\Config::inheritanceByDefault(),
   'CACHE_KEYS' => get_admin_client_cache_keys(['groups', 'users']),
   ]);
 

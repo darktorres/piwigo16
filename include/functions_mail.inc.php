@@ -21,9 +21,7 @@ use Piwigo\Template\Template;
  */
 function get_mail_sender_name()
 {
-    global $conf;
-
-    return (empty($conf['mail_sender_name']) ? $conf['gallery_title'] : $conf['mail_sender_name']);
+    return (empty(\Piwigo\Core\Config::mailSenderName()) ? \Piwigo\Core\Config::galleryTitle() : \Piwigo\Core\Config::mailSenderName());
 }
 
 /**
@@ -34,9 +32,7 @@ function get_mail_sender_name()
  */
 function get_mail_sender_email()
 {
-    global $conf;
-
-    return (empty($conf['mail_sender_email']) ? get_webmaster_mail_address() : $conf['mail_sender_email']);
+    return (empty(\Piwigo\Core\Config::mailSenderEmail()) ? get_webmaster_mail_address() : \Piwigo\Core\Config::mailSenderEmail());
 }
 
 /**
@@ -53,17 +49,15 @@ function get_mail_sender_email()
  */
 function get_mail_configuration(): array
 {
-    global $conf;
-
     $conf_mail = [
-      'send_bcc_mail_webmaster' => $conf['send_bcc_mail_webmaster'],
-      'mail_allow_html' => $conf['mail_allow_html'],
-      'mail_theme' => $conf['mail_theme'],
-      'use_smtp' => !empty($conf['smtp_host']),
-      'smtp_host' => $conf['smtp_host'],
-      'smtp_user' => $conf['smtp_user'],
-      'smtp_password' => $conf['smtp_password'],
-      'smtp_secure' => $conf['smtp_secure'],
+      'send_bcc_mail_webmaster' => \Piwigo\Core\Config::sendBccMailWebmaster(),
+      'mail_allow_html' => \Piwigo\Core\Config::mailAllowHtml(),
+      'mail_theme' => \Piwigo\Core\Config::get('mail_theme'),
+      'use_smtp' => !empty(\Piwigo\Core\Config::smtpHost()),
+      'smtp_host' => \Piwigo\Core\Config::smtpHost(),
+      'smtp_user' => \Piwigo\Core\Config::smtpUser(),
+      'smtp_password' => \Piwigo\Core\Config::smtpPassword(),
+      'smtp_secure' => \Piwigo\Core\Config::smtpSecure(),
       'email_webmaster' => get_mail_sender_email(),
       'name_webmaster' => get_mail_sender_name(),
       ];
@@ -319,7 +313,7 @@ function pwg_mail_notification_admins($subject, $content, $send_technical_detail
         return false;
     }
 
-    global $conf, $user;
+    global $user;
 
     if (is_array($subject) or is_array($content)) {
         switch_lang_to(get_default_language());
@@ -345,8 +339,8 @@ function pwg_mail_notification_admins($subject, $content, $send_technical_detail
 
     return pwg_mail_admins(
         [
-        'subject' => '['. $conf['gallery_title'] .'] '. $subject,
-        'mail_title' => $conf['gallery_title'],
+        'subject' => '['. \Piwigo\Core\Config::galleryTitle() .'] '. $subject,
+        'mail_title' => \Piwigo\Core\Config::galleryTitle(),
         'mail_subtitle' => $subject,
         'content' => $content,
         'content_format' => 'text/plain',
@@ -377,7 +371,7 @@ function pwg_mail_admins(array $args = [], $tpl = [], $exclude_current_user = tr
         return false;
     }
 
-    global $conf, $user;
+    global $user;
     $return = true;
 
     $user_statuses = ['webmaster'];
@@ -389,11 +383,11 @@ function pwg_mail_admins(array $args = [], $tpl = [], $exclude_current_user = tr
     $query = '
 SELECT
     i.user_id,
-    u.'.$conf['user_fields']['username'].' AS name,
-    u.'.$conf['user_fields']['email'].' AS email
+    u.'.\Piwigo\Core\Config::userFields()['username'].' AS name,
+    u.'.\Piwigo\Core\Config::userFields()['email'].' AS email
   FROM '.USERS_TABLE.' AS u
     JOIN '.USER_INFOS_TABLE.' AS i
-    ON i.user_id =  u.'.$conf['user_fields']['id'];
+    ON i.user_id =  u.'.\Piwigo\Core\Config::userFields()['id'];
 
     if (!is_null($group_id)) {
         $query .= '
@@ -403,7 +397,7 @@ SELECT
 
     $query .= '
   WHERE i.status in (\''.implode("','", $user_statuses).'\')
-    AND u.'.$conf['user_fields']['email'].' IS NOT NULL';
+    AND u.'.\Piwigo\Core\Config::userFields()['email'].' IS NOT NULL';
 
     if (!is_null($group_id)) {
         $query .= '
@@ -449,7 +443,6 @@ function pwg_mail_group($group_id, array $args = [], $tpl = []): bool|int
         return false;
     }
 
-    global $conf;
     $return = true;
 
     // get distinct languages of targeted users
@@ -457,11 +450,11 @@ function pwg_mail_group($group_id, array $args = [], $tpl = []): bool|int
 SELECT DISTINCT language
   FROM '.USER_GROUP_TABLE.' AS ug
     INNER JOIN '.USERS_TABLE.' AS u
-    ON '.$conf['user_fields']['id'].' = ug.user_id
+    ON '.\Piwigo\Core\Config::userFields()['id'].' = ug.user_id
     INNER JOIN '.USER_INFOS_TABLE.' AS ui
     ON ui.user_id = ug.user_id
   WHERE group_id = '.$group_id.'
-    AND '.$conf['user_fields']['email'].' <> ""';
+    AND '.\Piwigo\Core\Config::userFields()['email'].' <> ""';
     if (!empty($args['language_selected'])) {
         $query .= '
     AND language = \''.$args['language_selected'].'\'';
@@ -481,15 +474,15 @@ SELECT DISTINCT language
 SELECT
     ui.user_id,
     ui.status,
-    u.'.$conf['user_fields']['username'].' AS name,
-    u.'.$conf['user_fields']['email'].' AS email
+    u.'.\Piwigo\Core\Config::userFields()['username'].' AS name,
+    u.'.\Piwigo\Core\Config::userFields()['email'].' AS email
   FROM '.USER_GROUP_TABLE.' AS ug
     INNER JOIN '.USERS_TABLE.' AS u
-    ON '.$conf['user_fields']['id'].' = ug.user_id
+    ON '.\Piwigo\Core\Config::userFields()['id'].' = ug.user_id
     INNER JOIN '.USER_INFOS_TABLE.' AS ui
     ON ui.user_id = ug.user_id
   WHERE group_id = '.$group_id.'
-    AND '.$conf['user_fields']['email'].' <> ""
+    AND '.\Piwigo\Core\Config::userFields()['email'].' <> ""
     AND language = \''.$language.'\'
 ;';
         $users = array_from_query($query);
@@ -545,7 +538,7 @@ SELECT
  *       o content_format: format of mail content [default value 'text/plain']
  *       o email_format: global mail format [default value $conf_mail['default_email_format']]
  *       o theme: theme to use [default value $conf_mail['mail_theme']]
- *       o mail_title: main title of the mail [default value $conf['gallery_title']]
+ *       o mail_title: main title of the mail [default value \Piwigo\Core\Config::galleryTitle()]
  *       o mail_subtitle: subtitle of the mail [default value subject]
  *       o auth_key: authentication key to add on footer link [default value null]
  * @param array $tpl - use these options to define a custom content template file
@@ -557,7 +550,7 @@ SELECT
  */
 function pwg_mail($to, array $args = [], array $tpl = [])
 {
-    global $conf, $conf_mail, $lang_info, $page;
+    global $conf_mail, $lang_info, $page;
 
     if (empty($to) and empty($args['Cc']) and empty($args['Bcc'])) {
         return true;
@@ -640,7 +633,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
         }
     }
     if (!isset($args['mail_title'])) {
-        $args['mail_title'] = $conf['gallery_title'];
+        $args['mail_title'] = \Piwigo\Core\Config::galleryTitle();
     }
     if (!isset($args['mail_subtitle'])) {
         $args['mail_subtitle'] = $args['subject'];
@@ -684,8 +677,8 @@ function pwg_mail($to, array $args = [], array $tpl = [])
             $template->assign(
                 [
                 'GALLERY_URL' => add_url_params(get_gallery_home_url(), $add_url_params),
-                'GALLERY_TITLE' => $page['gallery_title'] ?? $conf['gallery_title'],
-                'VERSION' => $conf['show_version'] ? PHPWG_VERSION : '',
+                'GALLERY_TITLE' => $page['gallery_title'] ?? \Piwigo\Core\Config::galleryTitle(),
+                'VERSION' => \Piwigo\Core\Config::showVersion() ? PHPWG_VERSION : '',
                 'PHPWG_URL' => defined('PHPWG_URL') ? PHPWG_URL : '',
                 'CONTENT_ENCODING' => get_pwg_charset(),
                 'CONTACT_MAIL' => $conf_mail['email_webmaster'],
@@ -813,7 +806,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
         if (!$ret and (!ini_get('display_errors') or is_admin())) {
             trigger_error('Mailer Error: ' . $mail->ErrorInfo, E_USER_WARNING);
         }
-        if ($conf['debug_mail']) {
+        if (\Piwigo\Core\Config::debugMail()) {
             pwg_send_mail_test($ret, $mail, $args);
         }
     }
@@ -862,9 +855,9 @@ function move_css_to_body($content)
  */
 function pwg_send_mail_test($success, $mail, array $args): void
 {
-    global $conf, $user, $lang_info;
+    global $user, $lang_info;
 
-    $dir = PHPWG_ROOT_PATH.$conf['data_location'].'tmp';
+    $dir = PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'tmp';
     if (mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
         $filename = $dir.'/mail.'.stripslashes((string) $user['username']).'.'.$lang_info['code'].'-'.date('YmdHis').($success ? '' : '.ERROR');
         if ($args['content_format'] == 'text/plain') {
@@ -960,7 +953,6 @@ function pwg_generate_set_password_mail(string $username, string $set_password_l
  */
 function pwg_generate_code_verification_mail(string $code): array
 {
-    global $conf;
     set_make_full_url();
     $message = '<p style="margin: 20px 0">';
     $message .= l10n('Here is your verification code:').' <br />';
@@ -969,7 +961,7 @@ function pwg_generate_code_verification_mail(string $code): array
     $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
     unset_make_full_url();
 
-    $subject = '['.$conf['gallery_title'].'] '.l10n('Your verification code');
+    $subject = '['.\Piwigo\Core\Config::galleryTitle().'] '.l10n('Your verification code');
     return [
       'subject' => $subject,
       'content' => $message,
@@ -987,7 +979,6 @@ function pwg_generate_code_verification_mail(string $code): array
  */
 function pwg_generate_success_reset_password_mail($username, $nb_of_apikeys): array
 {
-    global $conf;
     set_make_full_url();
     $profile_url = get_root_url().'profile.php';
 
@@ -1008,7 +999,7 @@ function pwg_generate_success_reset_password_mail($username, $nb_of_apikeys): ar
     }
     unset_make_full_url();
 
-    $subject = '['.$conf['gallery_title'].'] '.l10n('Your password has been reset');
+    $subject = '['.\Piwigo\Core\Config::galleryTitle().'] '.l10n('Your password has been reset');
     return [
       'subject' => $subject,
       'content' => $message,

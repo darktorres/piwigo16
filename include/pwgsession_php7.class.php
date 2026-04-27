@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // see https://php.watch/versions/8.4/session_set_save_handler-alt-signature-deprecated
 // https://github.com/Piwigo/Piwigo/issues/2296
 class PwgSession implements SessionHandlerInterface

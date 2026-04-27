@@ -13,6 +13,21 @@ jobs:
       - run: composer install --no-progress --prefer-dist
       - run: vendor/bin/pint --test
       - run: vendor/bin/phpstan analyse --no-progress
+      - name: strict_types coverage check
+        run: |
+          MISSING=$(find include admin -name "*.php" \
+            -not -path "*/smarty/*" -not -path "*/minify/*" -not -path "*/phpmailer/*" \
+            -not -name "jshrink.class.php" -not -name "passwordhash.class.php" \
+            -not -name "mdetect.php" -not -name "emogrifier.class.php" \
+            -not -name "feedcreator.class.php" -not -name "phpqrcode.php" \
+            -not -name "pclzip.lib.php" \
+            -not -path "*/install/db/*" -not -path "*/language/*" -not -path "*/vendor/*" \
+            | xargs grep -rL "declare(strict_types" 2>/dev/null || true)
+          if [ -n "$MISSING" ]; then
+            echo "Files missing declare(strict_types=1):"
+            echo "$MISSING"
+            exit 1
+          fi
 
   unit:
     runs-on: ubuntu-latest

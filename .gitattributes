@@ -1,7 +1,26 @@
-# Ensure vendor Unix binaries stay executable on Linux CI regardless of commit OS.
-vendor/bin/php-parse    eol=lf
-vendor/bin/phpstan      eol=lf
-vendor/bin/phpstan.phar eol=lf
-vendor/bin/phpunit      eol=lf
-vendor/bin/pint         eol=lf
-vendor/bin/rector       eol=lf
+# Normalise line endings to LF in the repo — Pint PSR-12 enforces LF on Linux CI.
+* text=auto eol=lf
+
+# Windows batch files must stay CRLF.
+*.bat text eol=crlf
+
+# Vendor Unix binaries must be executable and LF.
+vendor/bin/php-parse    text eol=lf
+vendor/bin/phpstan      text eol=lf
+vendor/bin/phpstan.phar text eol=lf
+vendor/bin/phpunit      text eol=lf
+vendor/bin/pint         text eol=lf
+vendor/bin/rector       text eol=lf
+
+# Binary assets — no line-ending conversion.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.sql -text

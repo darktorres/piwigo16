@@ -21,6 +21,12 @@ services:
         condition: service_healthy
     volumes: ["./:/var/www/html"]
     ports: ["8090:80"]
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost/install.php"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 180s
     command: >
       bash -c "apt-get update -qq &&
                apt-get install -y --no-install-recommends libpng-dev libjpeg-dev zlib1g-dev libwebp-dev libfreetype6-dev &&

@@ -18,7 +18,6 @@ if (!defined('PHPWG_ROOT_PATH')) {
 }
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/image.class.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -160,7 +159,6 @@ DELETE
         }
     case 'c13y':
         {
-            include_once(PHPWG_ROOT_PATH.'admin/include/check_integrity.class.php');
             $c13y = new check_integrity();
             $c13y->maintenance();
             break;

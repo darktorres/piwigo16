@@ -16,7 +16,6 @@ if (!defined('PHPWG_ROOT_PATH')) {
 }
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/image.class.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -102,7 +101,6 @@ $maint_actions = [
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
 $my_base_url = get_root_url().'admin.php?page=';
 
 if (isset($_GET['tab'])) {

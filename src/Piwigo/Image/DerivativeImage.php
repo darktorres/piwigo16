@@ -111,7 +111,7 @@ final class DerivativeImage
      * @param array|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage|null null if $type not found
      */
-    public static function get_one($type, $src_image): ?\Piwigo\Image\DerivativeImage
+    public static function get_one($type, $src_image): ?DerivativeImage
     {
         if (!is_object($src_image)) {
             $src_image = new SrcImage($src_image);

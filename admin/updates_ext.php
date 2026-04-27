@@ -25,7 +25,6 @@ if (!is_webmaster()) {
 
 $conf['updates_ignored'] = unserialize($conf['updates_ignored'] ?? '');
 
-include_once(PHPWG_ROOT_PATH.'admin/include/updates.class.php');
 $autoupdate = new updates($page['page']);
 
 $show_reset = false;

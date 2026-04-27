@@ -15,8 +15,6 @@ if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/plugins.class.php');
-
 $template->set_filenames(['plugins' => 'plugins_installed.tpl']);
 
 // should we display details on plugins?

@@ -61,7 +61,6 @@ function execute_sqlfile($filepath, $replaced, $replacing, $dblayer): void
  */
 function activate_core_themes(): void
 {
-    include_once(PHPWG_ROOT_PATH.'admin/include/themes.class.php');
     $themes = new themes();
     foreach ($themes->fs_themes as $theme_id => $fs_theme) {
         if (in_array($theme_id, ['modus'])) {
@@ -75,8 +74,6 @@ function activate_core_themes(): void
  */
 function activate_core_plugins(): void
 {
-    include_once(PHPWG_ROOT_PATH.'admin/include/plugins.class.php');
-
     $plugins = new plugins();
 
     foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {

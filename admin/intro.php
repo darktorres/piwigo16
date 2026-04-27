@@ -18,8 +18,6 @@ if (!defined('PHPWG_ROOT_PATH')) {
 }
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/check_integrity.class.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/c13y_internal.class.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -35,8 +33,6 @@ if (isset($_GET['action']) and 'hide_newsletter_subscription' == $_GET['action']
     userprefs_update_param('show_newsletter_subscription', 'false');
     exit();
 }
-
-include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
 
 $my_base_url = get_root_url().'admin.php?page=';
 

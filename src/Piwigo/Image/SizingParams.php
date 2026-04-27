@@ -26,7 +26,7 @@ final class SizingParams
      * @param int $w
      * @param int $h
      */
-    public static function classic($w, $h): \Piwigo\Image\SizingParams
+    public static function classic($w, $h): SizingParams
     {
         return new SizingParams([$w,$h]);
     }
@@ -36,7 +36,7 @@ final class SizingParams
      *
      * @param int $x
      */
-    public static function square($w): \Piwigo\Image\SizingParams
+    public static function square($w): SizingParams
     {
         return new SizingParams([$w,$w], 1, [$w,$w]);
     }

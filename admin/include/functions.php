@@ -2548,56 +2548,14 @@ function get_old_newsletters_base_url($language = 'en_UK'): string
 function get_active_menu($menu_page)
 {
     global $page;
-
-    if (isset($page['active_menu'])) {
-        return $page['active_menu'];
-    }
-
-    switch ($menu_page) {
-        case 'photo':
-        case 'photos_add':
-        case 'rating':
-        case 'tags':
-        case 'batch_manager':
-            return 0;
-
-        case 'album':
-        case 'cat_list':
-        case 'albums':
-        case 'cat_options':
-        case 'cat_search':
-        case 'permalinks':
-            return 1;
-
-        case 'user_list':
-        case 'user_perm':
-        case 'group_list':
-        case 'group_perm':
-        case 'notification_by_mail':
-        case 'user_activity':
-            return 2;
-
-        case 'site_manager':
-        case 'site_update':
-        case 'stats':
-        case 'history':
-        case 'maintenance':
-        case 'comments':
-        case 'updates':
-            return 3;
-
-        case 'configuration':
-        case 'derivatives':
-        case 'extend_for_templates':
-        case 'menubar':
-        case 'themes':
-        case 'theme':
-        case 'languages':
-            return 4;
-
-        default:
-            return -1;
-    }
+    return $page['active_menu'] ?? match ($menu_page) {
+        'photo', 'photos_add', 'rating', 'tags', 'batch_manager' => 0,
+        'album', 'cat_list', 'albums', 'cat_options', 'cat_search', 'permalinks' => 1,
+        'user_list', 'user_perm', 'group_list', 'group_perm', 'notification_by_mail', 'user_activity' => 2,
+        'site_manager', 'site_update', 'stats', 'history', 'maintenance', 'comments', 'updates' => 3,
+        'configuration', 'derivatives', 'extend_for_templates', 'menubar', 'themes', 'theme', 'languages' => 4,
+        default => -1,
+    };
 }
 
 /**
@@ -3404,8 +3362,6 @@ function get_piwigo_news()
 function get_graphics_library()
 {
     global $conf;
-
-    include_once(PHPWG_ROOT_PATH.'admin/include/image.class.php');
 
     $library = pwg_image::get_library();
 

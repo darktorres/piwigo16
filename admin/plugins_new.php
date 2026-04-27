@@ -19,8 +19,6 @@ if (!$conf['enable_extensions_install']) {
     die('Piwigo extensions install/update system is disabled');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/plugins.class.php');
-
 $template->set_filenames(['plugins' => 'plugins_new.tpl']);
 
 $base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];

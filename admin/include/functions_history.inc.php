@@ -16,8 +16,6 @@ use Piwigo\Admin\tabsheet;
  */
 
 
-include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
-
 /**
  * Init tabsheet for history pages
  * @ignore

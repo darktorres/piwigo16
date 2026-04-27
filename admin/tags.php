@@ -22,8 +22,6 @@ check_status(ACCESS_ADMINISTRATOR);
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
-
 $my_base_url = get_root_url().'admin.php?page=';
 
 $tabsheet = new tabsheet();

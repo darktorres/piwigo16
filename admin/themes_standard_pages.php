@@ -118,7 +118,6 @@ if (isset($_FILES['std_pgs_logo']) and !empty($_FILES['std_pgs_logo']['tmp_name'
 }
 
 //We want to now if any themes use standard pages and which ones
-include_once(PHPWG_ROOT_PATH.'admin/include/themes.class.php');
 $themes = new themes();
 $themes->get_fs_themes();
 

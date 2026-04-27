@@ -40,8 +40,6 @@ if (!isset($category['id'])) {
 // | Tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
-
 $page['tab'] = 'properties';
 
 if (isset($_GET['tab'])) {

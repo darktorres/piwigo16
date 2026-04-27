@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Calendar\CalendarMonthly;
+use Piwigo\Calendar\CalendarWeekly;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -90,12 +94,12 @@ WHERE id IN (' . implode(',', $page['items']) .')';
       // Monthly style
       'monthly' => [
         'view_calendar'  => true,
-        'classname'      => \Piwigo\Calendar\CalendarMonthly::class,
+        'classname'      => CalendarMonthly::class,
         ],
       // Weekly style
       'weekly' => [
         'view_calendar'  => false,
-        'classname'      => \Piwigo\Calendar\CalendarWeekly::class,
+        'classname'      => CalendarWeekly::class,
         ],
       ];
 

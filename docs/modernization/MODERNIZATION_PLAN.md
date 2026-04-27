@@ -6614,4 +6614,60 @@ Each phase has its own exit criteria above. The cross-cutting verification at ev
 - **PHPStan level 9 with `treatPhpDocTypesAsCertain: true` is aspirational.** Settle for level 8 with no baseline if Phase 6 stretches.
 - **The new Playwright suite is the only safety net for user-visible behavior, and it starts thin.** A regression in a flow that doesn't have a spec yet won't be caught. Discipline: when a phase touches an untested flow, add the spec in the same commit. Don't let the suite stagnate at Phase 0 coverage forever.
 - **Tracked `vendor/` is unfashionable but correct here.** Don't let bikeshedding delay Phase 0.
+
+---
+
+## Phase 4 close-out — Wave C cut
+
+**Date:** 2026-04-27  
+**Commit range:** Phase 4 Wave A + Wave B (see git log from `phase4-start` tag)  
+**Decision:** Wave C (ArrayObject proxy) is cut. Waves A and B shipped.
+
+### Cut-point checklist results
+
+| Item | Target | Measured | Pass/Fail |
+|------|--------|----------|-----------|
+| `global $conf` in `src/` | 0 | 38 declarations | FAIL |
+| Bare `$conf[...]` reads outside exempt paths | ≤ 50 | 1 073 | FAIL |
+| Bare `$conf[...]` reads in `admin/` alone | — | 325 | — |
+| Bare `$conf[...]` reads in `include/` (excl. config_default) | — | 474 | — |
+| Bare `$conf[...]` reads in `src/` | — | 88 | — |
+| Estimated deprecations per page load | ≤ 200 | ~350+ (admin page) | FAIL |
+| PHPStan + unit tests on `src/Piwigo/Core/` | green | green ✓ | PASS |
+| Playwright e2e | green | 9/9 ✓ | PASS |
+
+### Why
+
+The codebase has 1 073 bare `$conf[key]` reads outside the allowlisted paths. A single admin
+page load hits roughly 300–400 of these. Enabling the ArrayObject proxy would emit 300+ `E_USER_DEPRECATED`
+notices per request — well above the ≤ 200 gate and in the range the plan calls "too chatty → cut."
+The 38 remaining `global $conf;` declarations in `src/` are a secondary failure: the proxy surface is
+not small enough to be safe without first completing a full typed-getter migration across all those files.
+
+### What we shipped
+
+- **Wave A:** Six typed service classes (`Config`, `PageState`, `Lang`, `ServiceLocator`, `Kernel`,
+  `CurrentUser`). Reference bridge (`Config::attachGlobals()`) means `$GLOBALS['conf']` and
+  `Config::$data` are the same array — no behavioural change, typed reads available everywhere.
+- **Wave B:** All `$page['errors|warnings|messages|infos'][]` push sites migrated to
+  `PageState::current()->add*()`. Six `$conf['order_by']` per-request overrides migrated to
+  `Config::override()`. DB-persisted writes use `Config::persist()`.
+- **NoGlobalInSrcRule:** PHPStan custom rule blocks new `global $conf/page/user/lang` statements
+  in `src/` — prevents the debt from growing.
+
+### What Wave C would need to ship in the future
+
+1. Reduce bare `$conf[...]` reads to ≤ 50 by extending typed getter coverage across the remaining
+   hot files in `admin/` and `include/` (particularly `functions.inc.php`, `functions_html.inc.php`,
+   category/picture controllers). This is the dominant work item — roughly 2–3 weeks.
+2. Eliminate the 38 `global $conf;` declarations in `src/` by replacing each with `Config::get()`.
+3. Run the Apache Bench benchmark (Section E.3) against the proxy build and confirm p95 ≤ Phase 3 × 1.05.
+4. Run plugin smoke tests with the top 5 third-party plugins and count deprecations on a single
+   `index.php` load; confirm ≤ 200.
+5. If deprecation noise exceeds the threshold even after step 1–2, downgrade from `trigger_error`
+   to a dedicated deprecation log file and recheck.
+
+The Wave C source (`GlobalsBridge.php`, `ConfProxy`, `PageProxy`) is fully specified in Section E of
+this document — it only needs to be wired into `Kernel::boot()` after the typed getter coverage is
+sufficient to make the proxy quiet.
 - **If forced to ship only three phases ever, ship 0, 1, 2.** That alone takes Piwigo from "won't run on PHP 8" to "runs on PHP 8.5, type-safe, CI-protected" — most of the user-visible upside.

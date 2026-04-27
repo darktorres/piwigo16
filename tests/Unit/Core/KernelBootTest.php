@@ -98,6 +98,15 @@ final class KernelBootTest extends TestCase
         self::assertSame('alice@example.com', $user->email);
     }
 
+    /** Step 3 exit signal: CurrentUser::get()->username === $user['username'] after boot. */
+    public function test_CurrentUser_username_equals_global_user_username_after_boot(): void
+    {
+        $this->simulateGlobals(['user' => ['id' => 7, 'username' => 'bob', 'email' => '', 'language' => 'fr_FR', 'theme' => 'elegant', 'status' => 'normal', 'enabled_high' => false]]);
+        Kernel::boot();
+
+        self::assertSame($GLOBALS['user']['username'], CurrentUser::get()->username);
+    }
+
     public function test_Lang_t_reads_from_globals_after_boot(): void
     {
         $this->simulateGlobals(['lang' => ['guest' => 'Guest', 'Login' => 'Login']]);

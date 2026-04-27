@@ -88,6 +88,38 @@ final class PageStateTest extends TestCase
         self::assertCount(1, $ps->messages);
     }
 
+    /** Step 2 exit signal: pushes one of each kind, asserts read accessors return them in order. */
+    public function test_push_one_of_each_kind_and_read_values_in_order(): void
+    {
+        $ps = PageState::current();
+        $ps->addError('error1');
+        $ps->addWarning('warn1');
+        $ps->addInfo('info1');
+        $ps->addMessage('msg1');
+
+        self::assertSame(['error1'], $ps->errors);
+        self::assertSame(['warn1'], $ps->warnings);
+        self::assertSame(['info1'], $ps->infos);
+        self::assertSame(['msg1'], $ps->messages);
+    }
+
+    public function test_mergeFromConf_appends_notes_to_infos(): void
+    {
+        $ps = PageState::current();
+        $ps->mergeFromConf(['note A', 'note B']);
+
+        self::assertSame(['note A', 'note B'], $ps->infos);
+    }
+
+    public function test_mergeFromConf_preserves_existing_infos(): void
+    {
+        $ps = PageState::current();
+        $ps->addInfo('existing');
+        $ps->mergeFromConf(['from conf']);
+
+        self::assertSame(['existing', 'from conf'], $ps->infos);
+    }
+
     public function test_reset_clears_singleton(): void
     {
         $first = PageState::current();

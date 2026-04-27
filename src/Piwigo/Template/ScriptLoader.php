@@ -95,6 +95,12 @@ class ScriptLoader
             trigger_error("Attempt to add script $id but the footer has been written", E_USER_WARNING);
         }
         if (! isset($this->registered_scripts[$id])) {
+            if ($manifest = self::manifest()) {
+                if (isset($manifest[$id])) {
+                    $path = 'dist/' . $manifest[$id]['file'];
+                    $require = []; // Vite already encoded import order via chunks
+                }
+            }
             $script = new Script($load_mode, $id, $path, $version, $require);
             $script->is_template = $is_template;
             self::fill_well_known($id, $script);
@@ -308,6 +314,30 @@ class ScriptLoader
         }
         $max++;
         return ($script->extra['order'] = $max);
+    }
+
+    /** @var array<string,array{file:string,imports:string[],css:string[]}>|false|null */
+    private static array|false|null $manifest = null;
+
+    /**
+     * Returns the Piwigo manifest (dist/manifest.json) if it exists.
+     * Returns null when the file is absent (legacy concat path is used).
+     *
+     * @return array<string,array{file:string,imports:string[],css:string[]}>|null
+     */
+    private static function manifest(): ?array
+    {
+        if (self::$manifest !== null) {
+            return self::$manifest ?: null;
+        }
+        $f = PHPWG_ROOT_PATH . 'dist/manifest.json';
+        if (!is_file($f)) {
+            self::$manifest = false;
+            return null;
+        }
+        $decoded = json_decode((string) file_get_contents($f), true);
+        self::$manifest = is_array($decoded) ? $decoded : false;
+        return self::$manifest ?: null;
     }
 
     /**

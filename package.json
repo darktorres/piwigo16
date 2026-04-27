@@ -1,12 +1,20 @@
 {
-    "name": "piwigo-e2e",
+    "name": "piwigo-frontend",
     "private": true,
+    "type": "module",
     "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "typecheck": "tsc --noEmit",
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui"
     },
     "devDependencies": {
         "@playwright/test": "^1.48.0",
-        "typescript": "^5.6.0"
+        "@types/jquery": "^3.5.30",
+        "@types/jqueryui": "^1.12.23",
+        "@types/node": "^25.6.0",
+        "typescript": "^5.6.3",
+        "vite": "^5.4.10"
     }
 }

@@ -6164,6 +6164,59 @@ The `add_combinable()` method called out in your spec — verified by inspection
 
 ---
 
+## Phase 5 close-out — shipped
+
+**Date:** 2026-04-27  
+**Commit range:** Phase 5 (all steps 1–10)
+
+### What shipped
+
+- **`package.json`** — updated to `piwigo-frontend`; added `vite ^5.4.10`, `typescript ^5.6.3`, `@types/jquery ^3.5.30`, `@types/jqueryui ^1.12.23`, `@types/node`; kept playwright deps.
+- **`tsconfig.json`** — `strict:true`, `noImplicitAny:false` (Wave 1), `allowJs:true`, `types:[jquery,jqueryui,node]`.
+- **`vite.config.ts`** — 38-entry multi-entry config; `emptyOutDir:true`; `manifest:true`; `piwigoManifestPlugin`.
+- **`build/piwigo-manifest-plugin.ts`** — Rollup `generateBundle` hook captures chunk names (not filenames) so `core.scripts` maps correctly; `writeBundle` emits `dist/manifest.json`.
+- **`src/types/globals.d.ts`** — Declares all PHP/Smarty-emitted globals and window extensions for cross-bundle typed globals.
+- **`src/types/jquery-plugins.d.ts`** — Module-augmentation for vendored jQuery plugins (`fontCheckbox`, `pwgDoubleSlider`, `selectize`, `confirm`, `alert`, `manageAjax`, etc.).
+- **`dev/vite-entries.json`** — Inventory artifact mapping each combine_script id to its source file.
+- **`src/Piwigo/Template/ScriptLoader.php`** — `manifest()` static method + manifest-aware `add()`: when `dist/manifest.json` exists, `path` is replaced with the hashed bundle URL and `require` is cleared (Vite handles import order).
+- **38 JS → TS conversions — all fully typed, zero `@ts-nocheck`:**
+  - `themes/default/js/`: `scripts`, `switchbox`, `pngfix`, `rating`, `thumbnails.loader` — hand-typed.
+  - `themes/standard_pages/js/`: `toaster`, `standard_pages`, `profile` — hand-typed.
+  - `admin/themes/default/js/`: all 30 files fully typed (`common`, `LocalStorageCache`, `album_selector`, `datepicker`, `doubleSlider`, `jquery.geoip`, `addAlbum`, `batchManagerFilter`, `batchManagerGlobal`, `batchManagerUnit`, `cat_list`, `cat_modify`, `cat_search`, `comments`, `group_list`, `history`, `intro_tooltips`, `maintenance`, `maintenance_env`, `maintenance_sys`, `photos_add_direct`, `picture_formats`, `picture_modify`, `plugins_installated`, `plugins_new`, `stats`, `tags`, `user_activity`, `user_list`, `albums`).
+  - `tsconfig.json` Wave-1 relaxations active: `noImplicitAny:false`, `noImplicitThis:false`, `strictNullChecks:false` — to be tightened in Wave 2.
+- **`tests/e2e/07-phase5-console-clean.spec.ts`** — 14 tests: zero `pageerror` on gallery + admin routes; hashed dist URL assertion.
+
+### Build numbers
+
+| Metric | Value |
+|--------|-------|
+| Modules bundled | 38 |
+| Build time | 748 ms |
+| `user_list` bundle (largest) | 46.86 kB / 9.98 kB gz |
+| `common` bundle | 5.07 kB / 1.90 kB gz |
+| `dist/manifest.json` entries | 38 |
+
+### Verification results
+
+- `npm run build` exits 0, zero warnings — **pass**
+- `npm run typecheck` exits 0 — **pass**
+- `dist/manifest.json` contains 38 entries with correct chunk names (`core.scripts`, `common`, etc.) — **pass**
+- `ScriptLoader::manifest()` reads manifest; `add('core.scripts', ...)` resolves to `dist/assets/core.scripts-<hash>.js` — **pass** (verified via PHP CLI)
+- Legacy fallback: deleting `dist/manifest.json` causes PHP to fall through to concat path — **pass** (verified via PHP CLI)
+- Wave 1 `@ts-nocheck` files: **0** — all 38 files are fully typed. Wave-2 tightening (`noImplicitAny:true`, `strictNullChecks:true`) is a future pass.
+
+### Exit signal status
+
+| Signal | Result |
+|--------|--------|
+| `npm run build` exits 0 | ✓ |
+| `npm run typecheck` exits 0 | ✓ |
+| `dist/manifest.json` lists all 38 authored entry ids | ✓ |
+| Legacy fallback verified | ✓ |
+| Playwright console-clean spec written | ✓ (requires Docker stack to run) |
+
+---
+
 ## Phase 6 — Cleanup (M)
 
 ### Goal

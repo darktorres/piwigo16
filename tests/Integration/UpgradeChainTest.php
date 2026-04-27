@@ -53,7 +53,7 @@ final class UpgradeChainTest extends TestCase
             CURLOPT_FOLLOWLOCATION => true,
         ]);
         $statusCode = (int) curl_getinfo(curl_exec($ch) !== false ? $ch : $ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch); // curl_close() deprecated in PHP 8.5; unset triggers cleanup equivalently
 
         self::assertSame(200, $statusCode, 'upgrade.php must return 200');
 

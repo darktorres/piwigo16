@@ -18965,12 +18965,6 @@ parameters:
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
 
 		-
-			message: '#^Avoid ''global \$page'' in src/ — use PageState\:\:current\(\) instead\.$#'
-			identifier: piwigo.noGlobalInSrc
-			count: 1
-			path: src/Piwigo/Admin/Integrity/check_integrity.php
-
-		-
 			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
 			identifier: function.resultUnused
 			count: 1

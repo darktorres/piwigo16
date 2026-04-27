@@ -537,8 +537,8 @@ class updates
                             $template->delete_compiled_templates();
                             conf_delete_param('fs_quick_check_last_check');
 
-                            $page['infos'][] = l10n('Update Complete');
-                            $page['infos'][] = $upgrade_to;
+                            \Piwigo\Core\PageState::current()->addInfo(l10n('Update Complete'));
+                            \Piwigo\Core\PageState::current()->addInfo($upgrade_to);
                             $page['updated_version'] = $upgrade_to;
                             $step = -1;
                         } else {
@@ -547,17 +547,17 @@ class updates
                     } else {
                         file_put_contents(PHPWG_ROOT_PATH.$conf['data_location'].'update/log_error.txt', $error);
 
-                        $page['errors'][] = l10n(
+                        \Piwigo\Core\PageState::current()->addError(l10n(
                             'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
                             get_root_url().$conf['data_location'].'update/log_error.txt'
-                        );
+                        ));
                     }
                 } else {
                     deltree(PHPWG_ROOT_PATH.$conf['data_location'].'update');
-                    $page['errors'][] = l10n('An error has occured during upgrade.');
+                    \Piwigo\Core\PageState::current()->addError(l10n('An error has occured during upgrade.'));
                 }
             } else {
-                $page['errors'][] = l10n('Piwigo cannot retrieve upgrade file from server');
+                \Piwigo\Core\PageState::current()->addError(l10n('Piwigo cannot retrieve upgrade file from server'));
             }
         }
     }

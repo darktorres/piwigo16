@@ -24,7 +24,7 @@ class check_integrity
      */
     public function check(): void
     {
-        global $page, $header_notes, $conf;
+        global $header_notes, $conf;
 
         // Ignore list
         $conf_c13y_ignore = unserialize($conf['c13y_ignore'] ?? '');
@@ -83,18 +83,18 @@ class check_integrity
             }
 
             if ($corrected_count > 0) {
-                $page['infos'][] = l10n_dec(
+                \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
                     '%d anomaly has been corrected.',
                     '%d anomalies have been detected corrected.',
                     $corrected_count
-                );
+                ));
             }
             if ($not_corrected_count > 0) {
-                $page['errors'][] = l10n_dec(
+                \Piwigo\Core\PageState::current()->addError(l10n_dec(
                     '%d anomaly has not been corrected.',
                     '%d anomalies have not been corrected.',
                     $not_corrected_count
-                );
+                ));
             }
         } else {
             if (isset($_POST['c13y_submit_ignore']) and isset($_POST['c13y_selection'])) {
@@ -109,11 +109,11 @@ class check_integrity
                 }
 
                 if ($ignored_count > 0) {
-                    $page['infos'][] = l10n_dec(
+                    \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
                         '%d anomaly has been ignored.',
                         '%d anomalies have been ignored.',
                         $ignored_count
-                    );
+                    ));
                 }
             }
         }

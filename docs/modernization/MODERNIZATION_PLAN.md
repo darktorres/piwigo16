@@ -3459,7 +3459,9 @@ Eliminate the implicit, untyped, append-anywhere `$conf` / `$page` / `$user` / `
 
 8. **WAVE B — typed WRITERS migrate.** All ~152 push sites for `$page['errors'][]`, `$page['warnings'][]`, `$page['messages'][]`, `$page['infos'][]` (counted by grep across 46 files: 19 in `admin/maintenance_actions.php`, 11 in `admin/include/functions_notification_by_mail.inc.php`, 9 each in `admin/batch_manager_global.php`/`admin/plugins_new.php`/`admin/themes_new.php`/`admin/languages_new.php`, etc.) migrate one commit per directory slice to `PageState::current()->addError($s)`. The few `$conf` write sites — per-album overrides in `include/category_default.inc.php`/picture flow, admin saves in `admin/configuration.php` (~7 push sites) — get explicit `Config::override(string $key, mixed $value): void` for transient runtime overrides and `Config::persist(string $key, mixed $value): void` (delegates to existing `conf_update_param()` free function — that stays). Rector regex rules can mechanically convert ~80% of the simple cases; the rest are touched by hand. **Exit signal:** `grep -rE "\\$page\\['(errors|warnings|messages|infos)'\\]\\[\\]" admin/ include/` returns hits only from `install/db/`, `local/`, plugin paths, or vendored code.
 
-9. **WAVE C (cuttable) — globals become deprecation-emitting `ArrayObject` proxies.** A new class `Piwigo\Core\GlobalsBridge` lazily yields proxies. The proxy extends `\ArrayObject` and overrides `offsetGet`, `offsetSet`, `offsetExists`, `offsetUnset` to:
+9. **WAVE B.5 — migrate all bare `$conf[key]` reads to typed getters.** Every direct `$conf['key']` read in `admin/`, `include/`, and `src/` (outside `install/db/`, `local/config/`, `language/`, and `config_default.inc.php`) is replaced with its typed getter (`Config::key()`) or, for genuinely dynamic key lookups, `Config::get($key)`. Before the first commit, run `grep -rE "\\\$conf\[" admin/ include/ src/ --include="*.php"` and record the baseline count (~1 073 at Wave B close). Add any typed getters missing from `Config` first — if a key appears in `config_default.inc.php` but has no getter yet, add the getter in the same commit as the first migration that uses it. Work directory-by-directory (one commit per directory or logical group); each commit must leave PHPStan and unit tests green. Dynamic reads (`$conf[$variable]`) that cannot be replaced with a typed getter are replaced with `Config::get($variable)` and noted in the commit message. `global $conf` declarations in migrated files are removed once no bare reads remain in that file. **Exit signal:** `grep -rE "\\\$conf\[" admin/ include/ src/ --include="*.php" | grep -vE "(install/db/|local/config/|language/|config_default)"` returns zero hits; all 38 `global \$conf` declarations previously in `src/` are gone.
+
+10. **WAVE C (cuttable) — globals become deprecation-emitting `ArrayObject` proxies.** A new class `Piwigo\Core\GlobalsBridge` lazily yields proxies. The proxy extends `\ArrayObject` and overrides `offsetGet`, `offsetSet`, `offsetExists`, `offsetUnset` to:
    ```php
    public function offsetGet(mixed $key): mixed
    {
@@ -3482,7 +3484,7 @@ Eliminate the implicit, untyped, append-anywhere `$conf` / `$page` / `$user` / `
    ```
    `common.inc.php` is rewritten so `$conf`, `$page`, `$user`, `$lang` are assigned proxy instances at the top, replacing lines 52–65. The backtrace gate keeps `install/db/61-database.php` through `install/db/181-database.php` silent. A second allowlist pattern covers `language/*.php` and `local/config/config.inc.php`. `config_default.inc.php` is exempt because it *writes* via `$conf['x'] = ...` at file scope. **Exit signal:** UpgradeChainTest green with no `E_USER_DEPRECATED` lines in captured error log; `find . -path ./vendor -prune -o -name '*.php' -print | xargs grep -l "global \$conf" | wc -l` is monotonically decreasing commit-over-commit.
 
-10. **Cut-point decision at end of Wave B.** Evaluate honestly: how many push sites remain that the regex slice did not catch? How noisy will `E_USER_DEPRECATED` be in existing error logs? If Wave C is shaping up to be 4+ weeks of whack-a-mole on the long tail (especially around dynamic property writes on `$page` from `ws_core.inc.php` and `template.class.php`), document the cut-point decision in `docs/ARCHITECTURE.md` ("Wave C deferred indefinitely; globals remain live `ArrayObject`s without deprecation noise") and stop. You retain the typed-reader/typed-writer wins from Waves A+B. **Exit signal:** decision logged; if cut, Phase 6's "ArrayObject proxy removal" sub-task is also deleted.
+11. **Cut-point decision at end of Wave B.5.** Evaluate honestly: are all bare `$conf[key]` reads eliminated? How noisy will `E_USER_DEPRECATED` be in existing error logs after Wave B.5 (should be near-zero from first-party code; any remaining noise comes from plugins)? If Wave C is shaping up to be 4+ weeks of whack-a-mole on the long tail (especially around dynamic property writes on `$page` from `ws_core.inc.php` and `template.class.php`), document the cut-point decision in `docs/ARCHITECTURE.md` ("Wave C deferred indefinitely; globals remain live `ArrayObject`s without deprecation noise") and stop. You retain the typed-reader/typed-writer wins from Waves A, B, and B.5. **Exit signal:** decision logged; if cut, Phase 6's "ArrayObject proxy removal" sub-task is also deleted.
 
 ### Concrete artifacts
 
@@ -3648,11 +3650,12 @@ final class User
 | Wave A roll-out + PHPStan custom rule for new code | M |
 | Wave B: 152 push-site rewrites across 46 files | L |
 | Wave B: `$conf` writer audit (admin/configuration.php etc.) | M |
+| Wave B.5: migrate all ~1 073 bare `$conf[key]` reads to typed getters | XL |
 | Wave C: `ArrayObject` proxy + backtrace gate | L |
-| Wave C: deprecation log triage and long-tail fixes | XL |
+| Wave C: deprecation log triage and long-tail fixes | S (near-zero after B.5) |
 | Cut-point evaluation + decision write-up | S |
 
-**Phase total without Wave C: L–XL. With Wave C: XL.**
+**Phase total without Wave C: XL. With Wave C: XL+L.**
 
 ### Risks specific to Phase 4
 
@@ -4913,17 +4916,17 @@ checklist. Anything that fails the threshold is a vote to cut.
 - [ ] **Push sites caught by the Rector rule**: count files where the rule
       successfully rewrote every `$page['errors'][]` push. Target: ≥ 95% of
       the original 151. Failure mode: long tail of plugin-side custom shapes.
-- [ ] **`global $conf` declarations remaining in `src/`**: target zero. If the
-      typed-services slice left orphan `global $conf;` lines anywhere, list
-      them and decide whether to migrate by hand.
+- [ ] **`global $conf` declarations remaining in `src/`**: target zero. Wave B.5
+      removes these as a side-effect of replacing every bare read in each file;
+      if any remain after B.5, list them and migrate by hand before proceeding.
 - [ ] **Bare `$conf[...]` reads remaining outside `local/`, `install/db/`,
-      `language/`, and `config_default.inc.php`**: target ≤ 50. Anything
-      higher means typed getter coverage is incomplete and Wave C will be
-      noisy.
-- [ ] **Estimated person-days for the Wave C long tail**: include the proxy
-      itself, deprecation noise triage, plugin compatibility regression
-      sweeps, and benchmark pass/fail iteration. Target ≤ 6 person-days.
-      Above 10 → cut.
+      `language/`, and `config_default.inc.php`**: target **zero**. Wave B.5 is
+      the step that drives this to zero — do not start Wave C until B.5's exit
+      signal is green. Any surviving reads mean Wave C will emit deprecations on
+      normal page loads, which defeats the purpose of the proxy.
+- [ ] **Estimated person-days for Wave C itself** (proxy only, after B.5 is
+      done): proxy implementation + benchmark + plugin smoke tests. Target ≤ 3
+      person-days. Above 6 → cut.
 - [ ] **Performance regression from `ab` benchmark**: Wave C p95 ≤ Phase 3 p95
       × 1.05. Above 5% → cut or downgrade to log-only deprecations.
 - [ ] **CI green on PHP 8.5 strict**: the typed services must pass
@@ -6657,15 +6660,16 @@ not small enough to be safe without first completing a full typed-getter migrati
 
 ### What Wave C would need to ship in the future
 
-1. Reduce bare `$conf[...]` reads to ≤ 50 by extending typed getter coverage across the remaining
-   hot files in `admin/` and `include/` (particularly `functions.inc.php`, `functions_html.inc.php`,
-   category/picture controllers). This is the dominant work item — roughly 2–3 weeks.
-2. Eliminate the 38 `global $conf;` declarations in `src/` by replacing each with `Config::get()`.
-3. Run the Apache Bench benchmark (Section E.3) against the proxy build and confirm p95 ≤ Phase 3 × 1.05.
-4. Run plugin smoke tests with the top 5 third-party plugins and count deprecations on a single
-   `index.php` load; confirm ≤ 200.
-5. If deprecation noise exceeds the threshold even after step 1–2, downgrade from `trigger_error`
-   to a dedicated deprecation log file and recheck.
+1. **Complete Wave B.5** — migrate all 1 073 bare `$conf[key]` reads in `admin/`, `include/`, and
+   `src/` to typed getters or `Config::get()`. This eliminates all 38 remaining `global $conf;`
+   declarations in `src/` as a side-effect. Exit signal: zero hits from the B.5 grep. This is the
+   dominant work item.
+2. Run the Apache Bench benchmark (Section E.3) against the proxy build and confirm p95 ≤ Phase 3 × 1.05.
+3. Run plugin smoke tests with the top 5 third-party plugins and count deprecations on a single
+   `index.php` load; confirm ≤ 200 (after B.5, all deprecations will be plugin-origin — measurable
+   and actionable, not first-party noise).
+4. If deprecation noise from plugins exceeds the threshold, downgrade from `trigger_error` to a
+   dedicated deprecation log file and recheck.
 
 The Wave C source (`GlobalsBridge.php`, `ConfProxy`, `PageProxy`) is fully specified in Section E of
 this document — it only needs to be wired into `Kernel::boot()` after the typed getter coverage is

@@ -30,6 +30,13 @@ services:
       timeout: 5s
       retries: 18
       start_period: 30s
+    command: >
+      bash -c "mkdir -p /var/www/html/_data/templates_c
+                        /var/www/html/_data/cache
+                        /var/www/html/_data/combined
+                        /var/www/html/_data/i
+                        /var/www/html/_data/logs &&
+               apache2-foreground"
 
   e2e:
     image: mcr.microsoft.com/playwright:v1.48.0-jammy

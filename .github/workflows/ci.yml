@@ -15,7 +15,7 @@ jobs:
       - run: vendor/bin/phpstan analyse --no-progress
       - name: strict_types coverage check
         run: |
-          MISSING=$(find include admin -name "*.php" \
+          MISSING=$(find include admin install -name "*.php" \
             -not -path "*/smarty/*" -not -path "*/minify/*" -not -path "*/phpmailer/*" \
             -not -name "jshrink.class.php" -not -name "passwordhash.class.php" \
             -not -name "mdetect.php" -not -name "emogrifier.class.php" \

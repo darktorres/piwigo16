@@ -775,8 +775,8 @@ function str2DateTime(int|string|null $original, $format = null)
             }
 
             $date = new DateTime();
-            $date->setDate($ymdhms[0], $ymdhms[1], $ymdhms[2]);
-            $date->setTime($ymdhms[3], $ymdhms[4], $ymdhms[5]);
+            $date->setDate((int) $ymdhms[0], (int) $ymdhms[1], (int) $ymdhms[2]);
+            $date->setTime((int) $ymdhms[3], (int) $ymdhms[4], (int) $ymdhms[5]);
             return $date;
         }
     }

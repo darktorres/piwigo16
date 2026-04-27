@@ -3715,15 +3715,9 @@ parameters:
 			path: admin/plugins_new.php
 
 		-
-			message: '#^Parameter \#3 \$subject of function preg_replace expects array\<float\|int\|string\>\|string, int\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: admin/plugins_new.php
-
-		-
 			message: '#^Variable \$page might not be defined\.$#'
 			identifier: variable.undefined
-			count: 2
+			count: 1
 			path: admin/plugins_new.php
 
 		-
@@ -6163,12 +6157,6 @@ parameters:
 			path: include/functions.inc.php
 
 		-
-			message: '#^Parameter \#1 \$hour of method DateTime\:\:setTime\(\) expects int, int\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/functions.inc.php
-
-		-
 			message: '#^Parameter \#1 \$original of function format_date expects int\|string\|null, DateTime\|false given\.$#'
 			identifier: argument.type
 			count: 5
@@ -6193,12 +6181,6 @@ parameters:
 			path: include/functions.inc.php
 
 		-
-			message: '#^Parameter \#1 \$year of method DateTime\:\:setDate\(\) expects int, int\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/functions.inc.php
-
-		-
 			message: '#^Parameter \#2 \$callback of function preg_replace_callback expects callable\(array\<string\>\)\: string, Closure\(mixed\)\: int\<0, 255\> given\.$#'
 			identifier: argument.type
 			count: 2
@@ -6212,18 +6194,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#2 \$datetime of static method DateTime\:\:createFromFormat\(\) expects string, int\<min, \-1\>\|int\<1, max\>\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/functions.inc.php
-
-		-
-			message: '#^Parameter \#2 \$minute of method DateTime\:\:setTime\(\) expects int, int\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/functions.inc.php
-
-		-
-			message: '#^Parameter \#2 \$month of method DateTime\:\:setDate\(\) expects int, string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/functions.inc.php
@@ -6247,19 +6217,7 @@ parameters:
 			path: include/functions.inc.php
 
 		-
-			message: '#^Parameter \#3 \$day of method DateTime\:\:setDate\(\) expects int, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/functions.inc.php
-
-		-
 			message: '#^Parameter \#3 \$length of function substr expects int\|null, int\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/functions.inc.php
-
-		-
-			message: '#^Parameter \#3 \$second of method DateTime\:\:setTime\(\) expects int, int\|string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/functions.inc.php
